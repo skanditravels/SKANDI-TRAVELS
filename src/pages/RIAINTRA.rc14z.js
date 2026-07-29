@@ -6,10 +6,10 @@ import { authentication } from "wix-members-frontend";
 import {
   loginStaffWithSkId,
   getStaffPortalSession
-} from "backend/RIA/staffPortalAuth.web";
+} from "src/backend/RIA/staffPortalAuth.web";
 
 const EMBED_ID = "#staffLoginEmbed";
-const STAFF_DASHBOARD_PATH = "/riaintra/staff-portal";
+const STAFF_DASHBOARD_PATH = "/riaintra/success-factors";
 
 $w.onReady(function () {
   const html = $w(EMBED_ID);
