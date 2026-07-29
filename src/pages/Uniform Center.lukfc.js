@@ -1,12 +1,12 @@
 import wixLocation from "wix-location";
-import { getStaffPortalSession } from "backend/RIA/staffPortalAuth.web";
+import { getStaffPortalSession } from "src/backend/RIA/staffPortalAuth.web";
 
 import {
   getUniformEmployeeBootstrap,
   submitUniformEmployeeOrder,
   acknowledgeUniformPolicy
-} from "backend/uniformCenterCms.web";
-import { bindInternalHtmlBridge } from 'public/internalHtmlBridge';
+} from "src/backend/uniformCenterCms.web";
+import { bindInternalHtmlBridge } from 'src/public/internalHtmlBridge';
 import {
   getHrSession,
   listStaff,
@@ -15,13 +15,13 @@ import {
   generateSkId,
   printStaffBadge,
   getStaffHrReports,
-} from 'backend/RIA/staffHR.web';
+} from 'src/backend/RIA/staffHR.web';
 import {
   savePayrollProfile,
   createPayrollPeriod,
   calculatePayrollRun,
   finalizePayrollRun,
-} from 'backend/RIA/staffPayroll.web';
+} from 'src/backend/RIA/staffPayroll.web';
 
 const HR_TYPES = new Set([
   'HR_READY', 'HR_REFRESH', 'HR_SAVE_STAFF', 'HR_DEACTIVATE', 'HR_REACTIVATE',
