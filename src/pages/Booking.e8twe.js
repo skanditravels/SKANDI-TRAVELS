@@ -11,22 +11,22 @@ import {
   savePassengerApisAndReprice,
   bookingHasFlight,
   authorizePaymentAndCommitBooking
-} from "backend/bookingOrchestrator.web";
+} from "src/backend/bookingOrchestrator.web";
 
 import {
   getApisRulesForCart,
   refreshTravelRequirements
-} from "backend/bookingApisRules.web";
+} from "src/backend/bookingApisRules.web";
 
 import {
   getSeatmapForCart,
   saveSeatSelections
-} from "backend/bookingSeats.web";
+} from "src/backend/bookingSeats.web";
 
 import {
   getSourceAwareBookingConfirmation,
   getTravelDocumentsForCart
-} from "backend/bookingDocuments.web";
+} from "src/backend/bookingDocuments.web";
 
 /**
  * SKANDI /booking multi-state controller
