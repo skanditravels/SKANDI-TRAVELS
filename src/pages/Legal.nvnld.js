@@ -1,4 +1,4 @@
-import { getPublicLegalHubPayload } from "backend/LEGAL/legalPolicyService.web";
+import { getPublicLegalHubPayload } from "src/backend/LEGAL/legalPolicyService.web";
 
 const EMBED_ID = "#legalHubEmbed";
 const HTML_SOURCE = "SKANDI_LEGAL_HUB";
