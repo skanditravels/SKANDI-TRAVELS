@@ -9,7 +9,7 @@ import {
   adminSaveCategory,
   adminDeleteCategory,
   adminSearchAudit
-} from "backend/alteaDocunetV2.web";
+} from "src/backend/alteaDocunetV2.web";
 
 const HTML_ID = "#alteaDocunetAdminEmbed";
 const UPLOAD_ID = "#docControlUploadButton";
