@@ -1,4 +1,4 @@
-import { createCustomerCase } from "backend/domains/support/service";
+import { createCustomerCase } from "src/backend/domains/support/service";
 
 export async function handleCustomerAlexandraMessage(payload = {}) {
   const supportCase = await createCustomerCase({
