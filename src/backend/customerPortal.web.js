@@ -1,28 +1,28 @@
 import { webMethod, Permissions } from "wix-web-module";
 
-import { requireCustomerContext } from "backend/core/authContext";
-import { ok, fail } from "backend/core/response";
+import { requireCustomerContext } from "src/backend/core/authContext";
+import { ok, fail } from "src/backend/core/response";
 
 import {
   getPortalState,
   loadPortalData,
   saveProfile,
   enrollClub
-} from "backend/domains/customer/service";
+} from "src/backend/domains/customer/service";
 
 import {
   saveTraveler,
   deleteTraveler
-} from "backend/domains/traveler/service";
+} from "src/backend/domains/traveler/service";
 
 import {
   saveDocument,
   deleteDocument
-} from "backend/domains/document/service";
+} from "src/backend/domains/document/service";
 
 import {
   removeFavorite
-} from "backend/domains/favorite/service";
+} from "src/backend/domains/favorite/service";
 
 export const getCustomerPortalState = webMethod(
   Permissions.SiteMember,
