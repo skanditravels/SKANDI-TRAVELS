@@ -1,7 +1,7 @@
 import {
   getPolicyAcknowledgementPacket,
   submitPublicPolicyAcknowledgement
-} from "backend/LEGAL/legalPolicyService.web";
+} from "src/backend/LEGAL/legalPolicyService.web";
 
 const EMBED_ID = "#policyAcknowledgementEmbed";
 const HTML_SOURCE = "SKANDI_POLICY_ACKNOWLEDGEMENT";
