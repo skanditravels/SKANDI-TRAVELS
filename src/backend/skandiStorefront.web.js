@@ -543,6 +543,15 @@ async function queryProductPage(cursor, limit) {
     }
   };
 
+  try {
+    // Let Wix return the full default payload (which includes media)
+    return await productsV3.queryProducts(query);
+  } catch (error) {
+    console.warn("Product query failed.", error);
+    return { products: [] };
+  }
+}
+
   const preferredFields = [
     "MEDIA_ITEMS_INFO",
     "CURRENCY",
@@ -590,9 +599,8 @@ async function getProductWithMedia(product = {}) {
   if (!productId) return product;
 
   try {
-    const response = await productsV3.getProduct(productId, {
-      fields: ["MEDIA_ITEMS_INFO", "CURRENCY", "URL", "DESCRIPTION"]
-    });
+    // Request the product without field restrictions
+    const response = await productsV3.getProduct(productId);
     const detailed = response?.product || response || {};
 
     return {
@@ -645,9 +653,17 @@ async function queryVisibleCategories() {
 
   const options = {
     treeReference: TREE_REFERENCE,
-    returnNonVisibleCategories: false,
-    fields: ["DESCRIPTION", "BREADCRUMBS_INFO"]
+    returnNonVisibleCategories: false
   };
+
+  try {
+    const response = await categories.queryCategories(query, options);
+    return response.categories || response.items || [];
+  } catch (error) {
+    console.warn("Category query failed.", error);
+    return [];
+  }
+}
 
   try {
     const response = await categories.queryCategories(query, options);
@@ -861,9 +877,8 @@ export const resolveStoreVariant = webMethod(
       return { variantId: "" };
     }
 
-    const product = await productsV3.getProduct(String(productId), {
-      fields: ["VARIANT_OPTION_CHOICE_NAMES", "CURRENCY"]
-    });
+    // Remove the fields parameter here to prevent checkout crashes
+    const product = await productsV3.getProduct(String(productId));
 
     const variants =
       product?.variantsInfo?.variants ||
