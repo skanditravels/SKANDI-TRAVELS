@@ -1,3 +1,3 @@
-export * from "backend/domains/document/service";
-export * from "backend/domains/document/repository";
-export * from "backend/domains/document/mapper";
+export * from "src/backend/domains/document/service";
+export * from "src/backend/domains/document/repository";
+export * from "src/backend/domains/document/mapper";
