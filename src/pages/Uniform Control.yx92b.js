@@ -1,7 +1,7 @@
 import wixLocation from "wix-location";
 import { authentication } from "wix-members-frontend";
-import { getStaffPortalSession } from "backend/RIA/staffPortalAuth.web";
-import { runInternalGlobalSearch } from "backend/FINAL/internalChrome.web";
+import { getStaffPortalSession } from "src/backend/RIA/staffPortalAuth.web";
+import { runInternalGlobalSearch } from "src/backend/FINAL/internalChrome.web";
 
 import {
   getUniformAdminBootstrap,
@@ -11,7 +11,7 @@ import {
   adminUniformOrderAction,
   adminAdjustUniformWallet,
   adminDeleteUniformItem
-} from "backend/uniformCenterCms.web";
+} from "src/backend/uniformCenterCms.web";
 
 const HTML_ID = "#uniformControlEmbed";
 const CHILD_SOURCE = "SKANDI_UNIFORM_ADMIN";
@@ -19,7 +19,7 @@ const CHROME_SOURCE = "SKANDI_INTERNAL_CHROME";
 const PARENT_SOURCE = "SKANDI_WIX_PARENT";
 const LOGIN_PATH = "/riaintra";
 const HOME_PATH = "/";
-import { bindInternalHtmlBridge } from 'public/internalHtmlBridge';
+import { bindInternalHtmlBridge } from 'src/public/internalHtmlBridge';
 import {
   getHrSession,
   listStaff,
@@ -28,13 +28,13 @@ import {
   generateSkId,
   printStaffBadge,
   getStaffHrReports,
-} from 'backend/RIA/staffHR.web';
+} from 'src/backend/RIA/staffHR.web';
 import {
   savePayrollProfile,
   createPayrollPeriod,
   calculatePayrollRun,
   finalizePayrollRun,
-} from 'backend/RIA/staffPayroll.web';
+} from 'src/backend/RIA/staffPayroll.web';
 
 const HR_TYPES = new Set([
   'HR_READY', 'HR_REFRESH', 'HR_SAVE_STAFF', 'HR_DEACTIVATE', 'HR_REACTIVATE',
