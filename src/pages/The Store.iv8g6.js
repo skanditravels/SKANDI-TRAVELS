@@ -284,6 +284,21 @@ async function loadProducts() {
         context: "public"
       });
 
+    // --- NEW: Explicitly extract the image URL before sending to HTML ---
+    if (storefrontData && Array.isArray(storefrontData.products)) {
+      storefrontData.products = storefrontData.products.map((product) => {
+        // Find the main media object using standard Wix Stores structure
+        const mediaObject = product.media?.mainMedia || product.media?.items?.[0] || product.mainMedia || {};
+        
+        return {
+          ...product,
+          // Re-use your existing function to guarantee a flat URL string
+          imageUrl: product.imageUrl || normalizeMediaUrl(mediaObject)
+        };
+      });
+    }
+    // --------------------------------------------------------------------
+
     send("STOREFRONT_PRODUCTS", storefrontData || {});
     await sendCart();
 
