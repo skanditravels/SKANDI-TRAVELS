@@ -1,6 +1,6 @@
 import wixLocation from "wix-location";
 import { authentication } from "wix-members-frontend";
-import { bindInternalHtmlBridge } from 'public/internalHtmlBridge';
+import { bindInternalHtmlBridge } from 'src/public/internalHtmlBridge';
 import {
   getHrSession,
   listStaff,
@@ -9,13 +9,13 @@ import {
   generateSkId,
   printStaffBadge,
   getStaffHrReports,
-} from 'backend/RIA/staffHR.web';
+} from 'src/backend/RIA/staffHR.web';
 import {
   savePayrollProfile,
   createPayrollPeriod,
   calculatePayrollRun,
   finalizePayrollRun,
-} from 'backend/RIA/staffPayroll.web';
+} from 'src/backend/RIA/staffPayroll.web';
 
 const HR_TYPES = new Set([
   'HR_READY', 'HR_REFRESH', 'HR_SAVE_STAFF', 'HR_DEACTIVATE', 'HR_REACTIVATE',
