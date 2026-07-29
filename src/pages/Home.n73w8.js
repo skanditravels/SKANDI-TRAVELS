@@ -8,16 +8,16 @@ import {
   getHomeBootstrap,
   searchUnifiedOffers,
   createBookingCartFromOffer
-} from "backend/bookingOrchestrator.web";
+} from "src/backend/bookingOrchestrator.web";
 
 import {
   getOldStyleHomeContent
-} from "backend/homeContent.web";
+} from "src/backend/homeContent.web";
 
 import {
   getCustomerHeaderSession,
   subscribeCustomerNewsletter
-} from "backend/customerHeader.web";
+} from "src/backend/customerHeader.web";
 
 /*
  * This must be the ID of the HTML Component containing the complete
