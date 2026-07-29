@@ -1,6 +1,6 @@
-import { getPublicLegalDocument } from "backend/LEGAL/legalPolicyService.web";
-import { sbInsert, sbSelect, sbUpdate, eq, and, order } from "backend/supabaseClient";
-import { uid, nowIso } from "backend/core/response";
+import { getPublicLegalDocument } from "src/backend/LEGAL/legalPolicyService.web";
+import { sbInsert, sbSelect, sbUpdate, eq, and, order } from "src/backend/supabaseClient";
+import { uid, nowIso } from "src/backend/core/response";
 
 const EMBED_ID = "#legalCookiesEmbed";
 const HTML_SOURCE = "SKANDI_LEGAL_DOCUMENT";
