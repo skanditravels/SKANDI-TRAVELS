@@ -1,4 +1,4 @@
-import { sbSelect, sbInsert, eq } from "backend/supabaseClient";
+import { sbSelect, sbInsert, eq } from "src/backend/supabaseClient";
 
 const CLUB = "club_profiles";
 const TIERS = "club_tiers";
