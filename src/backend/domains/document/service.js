@@ -1,8 +1,8 @@
-import { requireCustomerContext } from "backend/core/authContext";
-import { nowIso } from "backend/core/response";
-import { publishEvent } from "backend/core/eventBus";
-import { listByMember, createRecord, updateRecord } from "backend/domains/document/repository";
-import { mapDocument } from "backend/domains/document/mapper";
+import { requireCustomerContext } from "src/backend/core/authContext";
+import { nowIso } from "src/backend/core/response";
+import { publishEvent } from "src/backend/core/eventBus";
+import { listByMember, createRecord, updateRecord } from "src/backend/domains/document/repository";
+import { mapDocument } from "src/backend/domains/document/mapper";
 
 export async function listCurrentCustomerDocuments() {
   const ctx = await requireCustomerContext();
