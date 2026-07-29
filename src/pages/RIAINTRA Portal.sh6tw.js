@@ -5,13 +5,13 @@
 
 import wixLocation from "wix-location";
 import { authentication } from "wix-members-frontend";
-import { getStaffPortalSession } from "backend/RIA/staffPortalAuth.web";
+import { getStaffPortalSession } from "src/backend/RIA/staffPortalAuth.web";
 import {
   getIntranetHomeData,
   updateMyEmployeeProfile,
   searchColleagues
-} from "backend/RIA/staffIntranet.web";
-import { runInternalGlobalSearch } from "backend/FINAL/internalChrome.web";
+} from "src/backend/RIA/staffIntranet.web";
+import { runInternalGlobalSearch } from "src/backend/FINAL/internalChrome.web";
 
 const DASHBOARD_EMBED_ID = "#staffDashboardEmbed";
 const CHROME_EMBED_ID = "#staffInternalChromeEmbed";
