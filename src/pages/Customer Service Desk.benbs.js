@@ -3,12 +3,12 @@ import {
   getAgentSupportCase,
   replyAgentSupportCase,
   updateAgentSupportCase
-} from "backend/chatwootSupport.web";
+} from "src/backend/chatwootSupport.web";
 
 const HTML_ID = "#customerServiceCenterEmbed";
 const CHILD_SOURCE = "SKANDI_SUPPORT_AGENT";
 const PARENT_SOURCE = "SKANDI_WIX_PARENT";
-import { insertMessageToPostgres, triggerPusherEvent } from 'backend/omnichannel.jsw';
+import { insertMessageToPostgres, triggerPusherEvent } from 'src/backend/omnichannel.jsw';
 
 $w.onReady(function () {
     $w("#html1").onMessage(async (event) => {
