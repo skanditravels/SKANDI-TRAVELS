@@ -4,8 +4,8 @@
 
 import wixLocation from "wix-location";
 import { authentication } from "wix-members-frontend";
-import { getStaffPortalSession } from "backend/RIA/staffPortalAuth.web";
-import { runInternalGlobalSearch } from "backend/FINAL/internalChrome.web";
+import { getStaffPortalSession } from "src/backend/RIA/staffPortalAuth.web";
+import { runInternalGlobalSearch } from "src/backend/FINAL/internalChrome.web";
 import {
   getInventorySchema,
   listInventoryItems,
@@ -13,7 +13,7 @@ import {
   saveInventoryItem,
   duplicateInventoryItem,
   deleteInventoryItem
-} from "backend/AMADEUS/inventoryControl.web";
+} from "src/backend/AMADEUS/inventoryControl.web";
 
 const EMBED_ID = "#inventoryControlEmbed";
 const INVENTORY_SOURCE = "SKANDI_INVENTORY_EMBED";
