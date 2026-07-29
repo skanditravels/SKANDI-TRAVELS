@@ -3,7 +3,7 @@ import {
   createTravelInfoSupportRequest,
   askTravelInfoAgent,
   getTravelWeather
-} from "backend/travelInfoService.web";
+} from "src/backend/travelInfoService.web";
 import wixLocation from 'wix-location';
 const HELP_CENTER_HTML_ID = "#travelInfoHtml";
 const PARENT_SOURCE = "SKANDI_WIX_PARENT";
