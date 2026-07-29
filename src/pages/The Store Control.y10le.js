@@ -11,7 +11,7 @@ import {
   updateFulfillment,
   saveCollection,
   savePromotionDraft,
-} from "backend/skandiStorefront.web";
+} from "src/backend/skandiStorefront.web";
 
 const HTML_COMPONENT_ID = "#skandiStorefrontFrame";
 const SOURCE_UI = "SKANDI_STOREFRONT_ADMIN";
