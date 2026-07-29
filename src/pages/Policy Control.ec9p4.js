@@ -1,7 +1,7 @@
 import wixLocation from "wix-location";
 import { authentication } from "wix-members-frontend";
-import { getStaffPortalSession } from "backend/RIA/staffPortalAuth.web";
-import { runInternalGlobalSearch } from "backend/FINAL/internalChrome.web";
+import { getStaffPortalSession } from "src/backend/RIA/staffPortalAuth.web";
+import { runInternalGlobalSearch } from "src/backend/FINAL/internalChrome.web";
 import {
   getPolicyControlBootstrap,
   listPolicyDocuments,
@@ -10,7 +10,7 @@ import {
   publishPolicyDocument,
   archivePolicyDocument,
   savePolicyAttachment
-} from "backend/LEGAL/policyControl.web";
+} from "src/backend/LEGAL/policyControl.web";
 
 const EMBED_ID = "#policyControlEmbed";
 const EMBED_SOURCE = "SKANDI_POLICY_CONTROL";
