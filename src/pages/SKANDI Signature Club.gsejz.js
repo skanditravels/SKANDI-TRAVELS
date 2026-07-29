@@ -1,6 +1,6 @@
 import wixLocation from "wix-location";
 import { authentication, currentMember } from "wix-members-frontend";
-import { getSkandiClubPublicPayload } from "backend/CLUB/skandiClubPublic.web";
+import { getSkandiClubPublicPayload } from "src/backend/CLUB/skandiClubPublic.web";
 
 const EMBED_ID = "#skandiClubInfoEmbed";
 const AUTH_MODAL_ID = "#skandiClubAuthModal";
