@@ -1,5 +1,5 @@
 import { webMethod, Permissions } from "wix-web-module";
-import { sbSelect } from "backend/supabaseClient";
+import { sbSelect } from "src/backend/supabaseClient";
 
 export const testSupabaseConnection = webMethod(
   Permissions.Admin,
