@@ -2,7 +2,7 @@ import {
   getTravelInfoAdminData,
   saveTravelInfoRecord,
   archiveTravelInfoRecord
-} from "backend/FINAL/travelInfoAdminService.web";
+} from "src/backend/FINAL/travelInfoAdminService.web";
 
 const HTML_ID = "#helpCenterAdminHtml";
 const SOURCE = "SKANDI_HELP_DATA_CONTROLLER";
