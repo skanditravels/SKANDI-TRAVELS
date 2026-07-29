@@ -1,4 +1,4 @@
-import { sbSelect, sbInsert, eq, order } from "backend/supabaseClient";
+import { sbSelect, sbInsert, eq, order } from "src/backend/supabaseClient";
 
 const LEDGER = "skandi_points_ledger";
 
