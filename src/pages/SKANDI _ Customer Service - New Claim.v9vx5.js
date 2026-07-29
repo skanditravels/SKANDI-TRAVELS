@@ -1,4 +1,4 @@
-import { processIncomingClaim } from 'backend/claimProcessor';
+import { processIncomingClaim } from '/srcbackend/claimProcessor';
 
 $w.onReady(function () {
   
