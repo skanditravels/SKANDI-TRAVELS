@@ -141,11 +141,6 @@ $w.onReady(async function () {
   }
 
   // 2. Customer Header & Footer Listeners
-  if (header) {
-    header.onMessage(async (event) => {
-      try { await handleHeaderMessage(header, event.data || {}); } catch (error) {}
-    });
-  }
 
   if (footer) {
     footer.onMessage(async (event) => {
