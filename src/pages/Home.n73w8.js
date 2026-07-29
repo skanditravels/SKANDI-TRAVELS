@@ -1,5 +1,8 @@
-import wixLocation from "wix-location-frontend";
-import { currentMember, authentication } from "wix-members-frontend";
+import wixLocationFrontend from "wix-location-frontend";
+import {
+  currentMember,
+  authentication
+} from "wix-members-frontend";
 
 import {
   getHomeBootstrap,
@@ -17,9 +20,8 @@ import {
 } from "backend/customerHeader.web";
 
 /*
- * IMPORTANT:
- * This must be the ID of the actual Wix HTML Component,
- * not the page, section, strip, box or container.
+ * This must be the ID of the HTML Component containing the complete
+ * Home page, header, mobile drawer and footer.
  */
 const EMBED_ID = "#htmlHome";
 
@@ -28,13 +30,17 @@ const HEADER_SOURCE = "SKANDI_CUSTOMER_HEADER_EXPANDBAR";
 const FOOTER_SOURCE = "SKANDI_CUSTOMER_FOOTER";
 const PARENT_SOURCE = "SKANDI_WIX_PARENT";
 
+/* -------------------------------------------------------------------------- */
+/* Shared helpers                                                             */
+/* -------------------------------------------------------------------------- */
+
 function getHtmlComponent(selector) {
-  let element = null;
+  let element;
 
   try {
     element = $w(selector);
   } catch (error) {
-    console.error(`[Home] Missing element ${selector}.`, error);
+    console.error(`[Home] Element ${selector} was not found.`, error);
     return null;
   }
 
@@ -44,8 +50,8 @@ function getHtmlComponent(selector) {
     typeof element.postMessage !== "function"
   ) {
     console.error(
-      `[Home] ${selector} is not an HTML Component. ` +
-      "Select the HTML embed in Wix and confirm its element ID."
+      `[Home] ${selector} is not a Wix HTML Component. ` +
+      "Select the HTML embed and verify its element ID."
     );
 
     return null;
@@ -73,7 +79,33 @@ function postHomeError(html, error) {
 }
 
 function closeHeaderPanels(html) {
-  postToHtml(html, "CLOSE_CUSTOMER_HEADER_PANELS", {});
+  postToHtml(html, "CLOSE_CUSTOMER_HEADER_PANELS");
+}
+
+function navigateTo(html, rawPath) {
+  const path = String(rawPath || "").trim();
+
+  if (!path) {
+    return;
+  }
+
+  const isInternalPath = path.startsWith("/");
+  const isExternalUrl = /^https?:\/\//i.test(path);
+  const isEmailLink = /^mailto:/i.test(path);
+  const isPhoneLink = /^tel:/i.test(path);
+
+  if (
+    !isInternalPath &&
+    !isExternalUrl &&
+    !isEmailLink &&
+    !isPhoneLink
+  ) {
+    console.warn(`[Home] Blocked invalid navigation target: ${path}`);
+    return;
+  }
+
+  closeHeaderPanels(html);
+  wixLocationFrontend.to(path);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -87,6 +119,9 @@ async function sendHeaderState(html) {
     if (!member) {
       postToHtml(html, "CUSTOMER_HEADER_STATE", {
         loggedIn: false,
+        displayName: "",
+        points: 0,
+        tierName: "",
         menu: []
       });
 
@@ -95,15 +130,21 @@ async function sendHeaderState(html) {
 
     const session = await getCustomerHeaderSession();
 
-    postToHtml(html, "CUSTOMER_HEADER_STATE", session || {
+    postToHtml(html, "CUSTOMER_HEADER_STATE", {
       loggedIn: true,
-      menu: []
+      displayName: session?.displayName || "",
+      points: Number(session?.points || 0),
+      tierName: session?.tierName || "",
+      menu: Array.isArray(session?.menu) ? session.menu : []
     });
   } catch (error) {
     console.error("[Home] Could not load customer header state.", error);
 
     postToHtml(html, "CUSTOMER_HEADER_STATE", {
       loggedIn: false,
+      displayName: "",
+      points: 0,
+      tierName: "",
       menu: []
     });
   }
@@ -116,43 +157,61 @@ async function handleHeaderMessage(html, message) {
   switch (message.type) {
     case "HEADER_READY":
       await sendHeaderState(html);
-      return;
+      return true;
 
+    /*
+     * Compatibility handler. The current combined HTML normally sends
+     * HOME_NAVIGATE for menu links, but older header versions may still
+     * send HEADER_NAVIGATE.
+     */
     case "HEADER_NAVIGATE":
-      closeHeaderPanels(html);
-
-      if (path) {
-        wixLocation.to(path);
-      }
-
-      return;
+      navigateTo(html, path);
+      return true;
 
     case "HEADER_SEARCH":
       closeHeaderPanels(html);
 
       /*
-       * The header and Home search now live inside the same HTML Component.
-       * Tell the Home HTML to scroll to the search instead of reloading /home.
+       * Header and Home search are inside the same HTML Component.
+       * Ask the HTML to reveal and focus its existing search form.
        */
-      postToHtml(html, "HOME_FOCUS_SEARCH", {});
-      return;
+      postToHtml(html, "HOME_FOCUS_SEARCH");
+      return true;
 
     case "HEADER_LOGIN":
       closeHeaderPanels(html);
 
-      await authentication.promptLogin();
+      try {
+        await authentication.promptLogin();
+      } catch (error) {
+        /*
+         * promptLogin() rejects when the visitor closes the login dialog.
+         * Treat that as a cancelled action instead of a page-level failure.
+         */
+        console.info("[Home] Login was cancelled or did not complete.", error);
+      }
+
       await sendHeaderState(html);
-      return;
+      return true;
 
     case "HEADER_LOGOUT":
       closeHeaderPanels(html);
 
-      await authentication.logout();
-      wixLocation.to("/home");
-      return;
+      authentication.logout();
+
+      postToHtml(html, "CUSTOMER_HEADER_STATE", {
+        loggedIn: false,
+        displayName: "",
+        points: 0,
+        tierName: "",
+        menu: []
+      });
+
+      wixLocationFrontend.to("/home");
+      return true;
 
     default:
-      return;
+      return false;
   }
 }
 
@@ -169,21 +228,20 @@ async function handleFooterMessage(html, message) {
       postToHtml(html, "CUSTOMER_FOOTER_STATE", {
         ready: true
       });
-      return;
 
+      return true;
+
+    /*
+     * Compatibility handler. The current combined HTML normally sends
+     * HOME_NAVIGATE for footer links.
+     */
     case "FOOTER_NAVIGATE":
-      closeHeaderPanels(html);
-
-      if (path) {
-        wixLocation.to(path);
-      }
-
-      return;
+      navigateTo(html, path);
+      return true;
 
     case "FOOTER_STAFF_LOGIN":
-      closeHeaderPanels(html);
-      wixLocation.to("/riaintra");
-      return;
+      navigateTo(html, "/riaintra");
+      return true;
 
     case "FOOTER_NEWSLETTER_SIGNUP": {
       const email = String(
@@ -198,7 +256,7 @@ async function handleFooterMessage(html, message) {
           message: "Please enter your email address."
         });
 
-        return;
+        return true;
       }
 
       const result = await subscribeCustomerNewsletter({
@@ -215,16 +273,16 @@ async function handleFooterMessage(html, message) {
         }
       );
 
-      return;
+      return true;
     }
 
     default:
-      return;
+      return false;
   }
 }
 
 /* -------------------------------------------------------------------------- */
-/* Home booking and content                                                    */
+/* Home booking, content and navigation                                       */
 /* -------------------------------------------------------------------------- */
 
 async function handleHomeMessage(html, message) {
@@ -242,7 +300,7 @@ async function handleHomeMessage(html, message) {
         content: content || {}
       });
 
-      return;
+      return true;
     }
 
     case "HOME_SEARCH": {
@@ -252,15 +310,12 @@ async function handleHomeMessage(html, message) {
         search
       });
 
-      postToHtml(
-        html,
-        "HOME_SEARCH_RESULT",
-        result || {
-          items: []
-        }
-      );
+      postToHtml(html, "HOME_SEARCH_RESULT", {
+        ...(result || {}),
+        items: Array.isArray(result?.items) ? result.items : []
+      });
 
-      return;
+      return true;
     }
 
     case "HOME_SELECT_OFFER": {
@@ -284,30 +339,71 @@ async function handleHomeMessage(html, message) {
 
       postToHtml(html, "HOME_NAVIGATE_TO_OFFER", result);
 
-      wixLocation.to(
+      navigateTo(
+        html,
         `/booking?step=offer&cartId=${encodeURIComponent(result.cartId)}`
       );
 
-      return;
+      return true;
     }
 
+    /*
+     * All current header, mobile drawer, Home and footer links use this
+     * one message type through navigateParent() in the HTML.
+     */
     case "HOME_NAVIGATE": {
       const path = message.path || payload.path || "";
 
-      if (path) {
-        wixLocation.to(path);
-      }
-
-      return;
+      navigateTo(html, path);
+      return true;
     }
 
     default:
-      return;
+      return false;
   }
 }
 
 /* -------------------------------------------------------------------------- */
-/* Initialize the single combined HTML Component                              */
+/* Error routing                                                              */
+/* -------------------------------------------------------------------------- */
+
+function handleMessageError(html, message, error) {
+  console.error(
+    `[Home] ${message.source || "Unknown source"} / ` +
+    `${message.type || "Unknown message"} failed.`,
+    error
+  );
+
+  if (message.source === HOME_SOURCE) {
+    postHomeError(html, error);
+    return;
+  }
+
+  if (
+    message.source === FOOTER_SOURCE &&
+    message.type === "FOOTER_NEWSLETTER_SIGNUP"
+  ) {
+    postToHtml(html, "FOOTER_NEWSLETTER_RESULT", {
+      ok: false,
+      message: error?.message || "Newsletter signup failed."
+    });
+
+    return;
+  }
+
+  if (message.source === HEADER_SOURCE) {
+    postToHtml(html, "CUSTOMER_HEADER_STATE", {
+      loggedIn: false,
+      displayName: "",
+      points: 0,
+      tierName: "",
+      menu: []
+    });
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/* Initialize the combined Home HTML Component                                */
 /* -------------------------------------------------------------------------- */
 
 $w.onReady(function () {
@@ -319,6 +415,10 @@ $w.onReady(function () {
 
   html.onMessage(async (event) => {
     const message = event.data || {};
+
+    if (!message.source || !message.type) {
+      return;
+    }
 
     try {
       if (message.source === HOME_SOURCE) {
@@ -333,34 +433,14 @@ $w.onReady(function () {
 
       if (message.source === FOOTER_SOURCE) {
         await handleFooterMessage(html, message);
+        return;
       }
-    } catch (error) {
-      console.error(
-        `[Home] ${message.source || "Unknown source"} / ` +
-        `${message.type || "Unknown message"} failed.`,
-        error
+
+      console.warn(
+        `[Home] Ignored message from unknown source: ${message.source}`
       );
-
-      if (message.source === HOME_SOURCE) {
-        postHomeError(html, error);
-        return;
-      }
-
-      if (message.source === FOOTER_SOURCE) {
-        postToHtml(html, "FOOTER_NEWSLETTER_RESULT", {
-          ok: false,
-          message: error?.message || "Newsletter signup failed."
-        });
-
-        return;
-      }
-
-      if (message.source === HEADER_SOURCE) {
-        postToHtml(html, "CUSTOMER_HEADER_STATE", {
-          loggedIn: false,
-          menu: []
-        });
-      }
+    } catch (error) {
+      handleMessageError(html, message, error);
     }
   });
 });
