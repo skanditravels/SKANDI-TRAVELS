@@ -3,7 +3,7 @@ import { currentMember, authentication } from "wix-members-frontend";
 import {
   getCustomerHeaderSession,
   subscribeCustomerNewsletter
-} from "backend/customerHeader.web";
+} from "src/backend/customerHeader.web";
 
 const HEADER_EMBED = "#skandiCustomerHeaderEmbed";
 const FOOTER_EMBED = "#skandiCustomerFooterEmbed";
