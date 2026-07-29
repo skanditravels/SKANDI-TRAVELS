@@ -1,7 +1,7 @@
 import {
   getPublicNewsroomData,
   subscribeToNewsroom
-} from "backend/FINAL/newsroomService.web";
+} from "src/backend/FINAL/newsroomService.web";
 
 const EMBED_ID = "#newsroomEmbed";
 const PARENT_SOURCE = "SKANDI_WIX_PARENT";
