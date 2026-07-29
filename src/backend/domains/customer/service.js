@@ -1,9 +1,9 @@
-import { requireCustomerContext } from "backend/core/authContext";
-import { clean, nowIso } from "backend/core/response";
-import { auditLog } from "backend/core/auditLogger";
-import { publishEvent } from "backend/core/eventBus";
-import { mapCustomerProfile } from "backend/domains/customer/mapper";
-import { updateCustomerProfile } from "backend/domains/customer/repository";
+import { requireCustomerContext } from "src/backend/core/authContext";
+import { clean, nowIso } from "src/backend/core/response";
+import { auditLog } from "src/backend/core/auditLogger";
+import { publishEvent } from "src/backend/core/eventBus";
+import { mapCustomerProfile } from "src/backend/domains/customer/mapper";
+import { updateCustomerProfile } from "src/backend/domains/customer/repository";
 
 export async function getCurrentCustomer() {
   const ctx = await requireCustomerContext();
