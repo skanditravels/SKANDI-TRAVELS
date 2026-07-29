@@ -1,11 +1,11 @@
 import wixData from "wix-data";
 import wixLocation from "wix-location";
-import { getDestinationFlightSuggestions } from "backend/AMADEUS/destinationFlightOffers.web";
+import { getDestinationFlightSuggestions } from "src/backend/AMADEUS/destinationFlightOffers.web";
 
 const HTML_ID = "#htmlDestinations";
 
-const DEFAULT_ORIGIN_IATA = "ARN"; // Change later if you want JFK, EWR, CPH, etc.
-const DEFAULT_CURRENCY = "SEK";
+const DEFAULT_ORIGIN_IATA = "JFK"; // Change later if you want JFK, EWR, CPH, etc.
+const DEFAULT_CURRENCY = "USD";
 
 const FALLBACK_IMAGE =
   "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1400&q=85";
