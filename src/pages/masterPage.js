@@ -142,13 +142,6 @@ $w.onReady(async function () {
 
   // 2. Customer Header & Footer Listeners
 
-  if (footer) {
-    footer.onMessage(async (event) => {
-      try { await handleFooterMessage(footer, event.data || {}); }
-      catch (error) { postToEmbed(footer, "FOOTER_ERROR", { message: "Footer action failed." }); }
-    });
-  }
-
   // 3. Altea Global Header Listener (Combined)
   if (alteaHeader) {
     alteaHeader.onMessage((event) => {
