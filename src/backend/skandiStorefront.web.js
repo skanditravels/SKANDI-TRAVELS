@@ -544,14 +544,14 @@ async function queryProductPage(cursor, limit) {
   };
 
   try {
-    // Let Wix return the full default payload (which includes media)
+    // Attempt to fetch full data (including images)
     return await productsV3.queryProducts(query);
   } catch (error) {
-    console.warn("Product query failed.", error);
-    return { products: [] };
+    console.warn("Full product query failed, using safe fallback.", error);
+    // SAFE FALLBACK: Ensures products ALWAYS load even if image fields fail
+    return await productsV3.queryProducts(query, { fields: [] });
   }
 }
-
   const preferredFields = [
     "MEDIA_ITEMS_INFO",
     "CURRENCY",
@@ -599,7 +599,7 @@ async function getProductWithMedia(product = {}) {
   if (!productId) return product;
 
   try {
-    // Request the product without field restrictions
+    // Attempt to fetch full product details (including images)
     const response = await productsV3.getProduct(productId);
     const detailed = response?.product || response || {};
 
@@ -607,18 +607,16 @@ async function getProductWithMedia(product = {}) {
       ...product,
       ...detailed,
       media: detailed.media || product.media,
-      actualPriceRange:
-        detailed.actualPriceRange || product.actualPriceRange,
-      compareAtPriceRange:
-        detailed.compareAtPriceRange || product.compareAtPriceRange,
+      actualPriceRange: detailed.actualPriceRange || product.actualPriceRange,
+      compareAtPriceRange: detailed.compareAtPriceRange || product.compareAtPriceRange,
       options: detailed.options || product.options
     };
   } catch (error) {
     console.warn(`Product media could not be hydrated for ${productId}.`, error);
+    // SAFE FALLBACK: Return text-only product if it fails
     return product;
   }
 }
-
 async function hydrateMissingProductMedia(productList = []) {
   const output = [...productList];
   const missingIndexes = output
@@ -660,25 +658,10 @@ async function queryVisibleCategories() {
     const response = await categories.queryCategories(query, options);
     return response.categories || response.items || [];
   } catch (error) {
-    console.warn("Category query failed.", error);
-    return [];
-  }
-}
-
-  try {
-    const response = await categories.queryCategories(query, options);
-    return response.categories || response.items || [];
-  } catch (error) {
-    console.warn(
-      "Category description projection was not accepted. Retrying with default fields.",
-      error
-    );
-    const response = await categories.queryCategories(query, {
-      treeReference: TREE_REFERENCE,
-      returnNonVisibleCategories: false,
-      fields: []
-    });
-    return response.categories || response.items || [];
+    console.warn("Category query failed, using safe fallback.", error);
+    // SAFE FALLBACK
+    const fallback = await categories.queryCategories(query, { ...options, fields: [] });
+    return fallback.categories || fallback.items || [];
   }
 }
 
