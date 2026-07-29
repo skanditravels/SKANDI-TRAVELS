@@ -14,6 +14,40 @@ const PARENT_SOURCE = "SKANDI_WIX_PARENT";
 
 const INTERNAL_PREFIXES = ["/riaintra", "/_functions"];
 
+$w.onReady(async function () {
+  const embed = $w('#riaintraHeader');
+
+  // 1. Listen for the iframe to say it's ready
+  embed.onMessage(async (event) => {
+    const message = event.data || {};
+
+    // 2. When HTML is ready, fetch member info
+    if (message.type === 'UI_READY') {
+      try {
+        const member = await currentMember.getMember();
+        
+        if (member) {
+          // Member is logged in - send their data to HTML
+          embed.postMessage({
+            type: 'MEMBER_DATA',
+            payload: {
+              firstName: member.contactDetails?.firstName || "Traveller",
+              lastName: member.contactDetails?.lastName || "",
+              email: member.loginEmail || "",
+              // Extract photo URL if it exists
+              photo: member.profile?.profilePhoto?.url || ""
+            }
+          });
+        } else {
+          // No member logged in (Guest)
+          embed.postMessage({ type: 'GUEST_DATA' });
+        }
+      } catch (error) {
+        console.error("Error fetching member", error);
+      }
+    }
+  });
+});
 // --- Helper Functions ---
 function safeEl(id) {
   try { return $w(id); } catch (error) { return null; }
