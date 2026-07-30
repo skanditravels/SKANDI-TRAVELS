@@ -1,6 +1,6 @@
 import wixData from "wix-data";
 import wixLocation from "wix-location";
-import { getDestinationFlightSuggestions } from "src/backend/destinationFlightOffers.web";
+import { getDestinationFlightSuggestions } from "backend/destinationFlightOffers.web";
 
 const HTML_ID = "#htmlDestinations";
 const HTML_SOURCE = "SKANDI_DESTINATION_FINDER";
