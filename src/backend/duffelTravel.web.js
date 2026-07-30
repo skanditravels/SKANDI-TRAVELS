@@ -10,7 +10,7 @@ import {
   attachDuffelOrderToPaymentIntent,
   getStripePublishableKey,
   getProviderEnvironment
-} from "src/backend/duffelClient";
+} from "backend/duffelClient";
 import { getStaffPortalSession } from "backend/RIA/staffPortalAuth.web";
 
 const CABIN_CLASSES = new Set(["economy", "premium_economy", "business", "first"]);
