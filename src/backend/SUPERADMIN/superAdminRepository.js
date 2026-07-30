@@ -13,12 +13,12 @@ import {
   normalizeOperation,
   redactValue,
   requireReason
-} from "./superAdminConfig";
+} from "backend/SUPERADMIN/superAdminConfig";
 import {
   callAdminRpc,
   getRuntimeConfig,
   supabaseAdminRequest
-} from "./supabaseAdminServer";
+} from "backend/SUPERADMIN/supabaseAdminServer";
 
 const CATALOG_TTL_MS = 60 * 1000;
 let catalogCache = null;
