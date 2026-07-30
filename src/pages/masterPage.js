@@ -1,6 +1,6 @@
 import wixLocationFrontend from "wix-location-frontend";
 import { currentMember, authentication } from "wix-members-frontend";
-import { getCustomerHeaderSession, subscribeCustomerNewsletter } from "src/backend/customerHeader.web";
+import { getCustomerHeaderSession, subscribeCustomerNewsletter } from "backend/customerHeader.web";
 
 // --- Configuration & Constants ---
 const HEADER_EMBED = "#skandiCustomerHeaderEmbed"; 
