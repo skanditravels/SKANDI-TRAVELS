@@ -1,13 +1,13 @@
-import { requireCustomerContext } from "src/backend/core/authContext";
-import { nowIso } from "src/backend/core/response";
-import { publishEvent } from "src/backend/core/eventBus";
-import { listByMember, createRecord, updateRecord } from "src/backend/domains/notification/repository";
-import { mapNotification } from "src/backend/domains/notification/mapper";
+import { requireCustomerContext } from "backend/core/authContext";
+import { nowIso } from "backend/core/response";
+import { publishEvent } from "backend/core/eventBus";
+import { listByMember, createRecord, updateRecord } from "backend/domains/notification/repository";
+import { mapNotification } from "backend/domains/notification/mapper";
 import {
   createNotification,
   listNotifications,
   markNotificationRead
-} from "src/backend/domains/notification/repository";
+} from "backend/domains/notification/repository";
 
 export async function listCurrentCustomerNotifications() {
   const ctx = await requireCustomerContext();
