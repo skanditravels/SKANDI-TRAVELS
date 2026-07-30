@@ -2,8 +2,8 @@ import wixLocationFrontend from "wix-location-frontend";
 import wixEcomFrontend from "wix-ecom-frontend";
 import { currentCart } from "wix-ecom-backend";
 
-import { listStorefrontProducts } from "src/backend/skandiStorefront.web";
-import { createPublicSupportCase } from "src/backend/chatwootSupport.web";
+import { listStorefrontProducts } from "backend/skandiStorefront.web";
+import { createPublicSupportCase } from "backend/chatwootSupport.web";
 
 const EMBED_ID = "#skandiStoreEmbed";
 
