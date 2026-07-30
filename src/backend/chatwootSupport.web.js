@@ -3,7 +3,7 @@ import { secrets } from "wix-secrets-backend.v2";
 import { elevate } from "wix-auth";
 import { fetch } from "wix-fetch";
 import { createHash, randomUUID } from "crypto";
-import { requireCustomerContext } from "src/backend/core/authContext";
+import { requireCustomerContext } from "backend/core/authContext";
 import {
   createCase,
   listCustomerCases,
@@ -11,7 +11,7 @@ import {
   getAgentCase,
   replyAgentCase,
   updateAgentCase
-} from "src/backend/domains/support/service";
+} from "backend/domains/support/service";
 
 const getSecretValue = elevate(secrets.getSecretValue);
 
