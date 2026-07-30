@@ -1,6 +1,8 @@
 import { Permissions, webMethod } from "wix-web-module";
 import { productsV3 } from "@wix/stores";
 import { categories } from "@wix/categories";
+import { requireInternalAgent, text as internalText, isUuid, writeInternalAudit } from "./RIA/internalAccess.js";
+import { restRequest } from "./RIA/supabaseServer.js";
 
 const WIX_STORES_APP_ID = "215238eb-22a5-4c36-9e7b-e7c08025e04e";
 const TREE_REFERENCE = {
@@ -543,15 +545,6 @@ async function queryProductPage(cursor, limit) {
     }
   };
 
-  try {
-    // Attempt to fetch full data (including images)
-    return await productsV3.queryProducts(query);
-  } catch (error) {
-    console.warn("Full product query failed, using safe fallback.", error);
-    // SAFE FALLBACK: Ensures products ALWAYS load even if image fields fail
-    return await productsV3.queryProducts(query, { fields: [] });
-  }
-}
   const preferredFields = [
     "MEDIA_ITEMS_INFO",
     "CURRENCY",
@@ -563,11 +556,7 @@ async function queryProductPage(cursor, limit) {
     return await productsV3.queryProducts(query, {
       fields: preferredFields
     });
-  } catch (error) {
-    console.warn(
-      "Product query field projection was not accepted. Retrying with default fields.",
-      error
-    );
+  } catch {
     return productsV3.queryProducts(query, { fields: [] });
   }
 }
@@ -599,24 +588,26 @@ async function getProductWithMedia(product = {}) {
   if (!productId) return product;
 
   try {
-    // Attempt to fetch full product details (including images)
-    const response = await productsV3.getProduct(productId);
+    const response = await productsV3.getProduct(productId, {
+      fields: ["MEDIA_ITEMS_INFO", "CURRENCY", "URL", "DESCRIPTION"]
+    });
     const detailed = response?.product || response || {};
 
     return {
       ...product,
       ...detailed,
       media: detailed.media || product.media,
-      actualPriceRange: detailed.actualPriceRange || product.actualPriceRange,
-      compareAtPriceRange: detailed.compareAtPriceRange || product.compareAtPriceRange,
+      actualPriceRange:
+        detailed.actualPriceRange || product.actualPriceRange,
+      compareAtPriceRange:
+        detailed.compareAtPriceRange || product.compareAtPriceRange,
       options: detailed.options || product.options
     };
-  } catch (error) {
-    console.warn(`Product media could not be hydrated for ${productId}.`, error);
-    // SAFE FALLBACK: Return text-only product if it fails
+  } catch {
     return product;
   }
 }
+
 async function hydrateMissingProductMedia(productList = []) {
   const output = [...productList];
   const missingIndexes = output
@@ -651,17 +642,20 @@ async function queryVisibleCategories() {
 
   const options = {
     treeReference: TREE_REFERENCE,
-    returnNonVisibleCategories: false
+    returnNonVisibleCategories: false,
+    fields: ["DESCRIPTION", "BREADCRUMBS_INFO"]
   };
 
   try {
     const response = await categories.queryCategories(query, options);
     return response.categories || response.items || [];
-  } catch (error) {
-    console.warn("Category query failed, using safe fallback.", error);
-    // SAFE FALLBACK
-    const fallback = await categories.queryCategories(query, { ...options, fields: [] });
-    return fallback.categories || fallback.items || [];
+  } catch {
+    const response = await categories.queryCategories(query, {
+      treeReference: TREE_REFERENCE,
+      returnNonVisibleCategories: false,
+      fields: []
+    });
+    return response.categories || response.items || [];
   }
 }
 
@@ -720,9 +714,7 @@ async function mapCategoriesToProducts(productList) {
 
         if (productId) mapping.set(String(productId), categoryIds);
       });
-    } catch (error) {
-      console.warn("Product-category mapping could not be loaded.", error);
-    }
+    } catch {}
   }
 
   return mapping;
@@ -860,8 +852,9 @@ export const resolveStoreVariant = webMethod(
       return { variantId: "" };
     }
 
-    // Remove the fields parameter here to prevent checkout crashes
-    const product = await productsV3.getProduct(String(productId));
+    const product = await productsV3.getProduct(String(productId), {
+      fields: ["VARIANT_OPTION_CHOICE_NAMES", "CURRENCY"]
+    });
 
     const variants =
       product?.variantsInfo?.variants ||
@@ -898,3 +891,35 @@ export const resolveStoreVariant = webMethod(
     };
   }
 );
+
+// SQL-only administration contract for the Store Control HTML embed. Public
+// storefront reads above can continue using Wix Stores; operational control
+// records are retained in Supabase and never in Wix CMS.
+function adminNow() { return new Date().toISOString(); }
+function adminKey(prefix) { return `${prefix}-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2, 7).toUpperCase()}`; }
+function adminUrl(value) { const url = internalText(value, 2000); return /^https:\/\//i.test(url) ? url : ''; }
+function adminProductMap(row = {}) { return { id: row.id || '', productId: row.product_id || row.id || '', title: row.title || '', productType: row.product_type || '', destination: row.destination || '', basePrice: Number(row.base_price || 0), livePrice: Number(row.live_price || 0), currency: row.currency || 'SEK', availabilityStatus: row.availability_status || '', status: row.status || '', customerVisible: row.customer_visible === true, imageUrl: row.image_url || '', shortDescription: row.short_description || '', payload: row.payload || {} }; }
+async function requireStoreAdmin() { return requireInternalAgent({ capability: 'manage' }); }
+async function findAdminProduct(input = {}) { const id = internalText(input.id || input.productId || input.product_id, 160); if (!id) return null; const query = isUuid(id) ? { select: '*', id: `eq.${id}`, limit: 1 } : { select: '*', product_id: `eq.${id}`, limit: 1 }; const rows = await restRequest({ table: 'travel_products', query }); return rows?.[0] || null; }
+async function storefrontAudit(agent, action, target, after = {}) { await writeInternalAudit({ agent, action: `STOREFRONT_${action}`, target, after }).catch(() => null); }
+async function storefrontBootstrapInternal() {
+  const { profile } = await requireStoreAdmin();
+  const [products, collections, promotions, orders] = await Promise.all([
+    restRequest({ table: 'travel_products', query: { select: '*', order: 'updated_at.desc', limit: 2000 } }),
+    restRequest({ table: 'storefront_collections', query: { select: '*', order: 'title.asc', limit: 1000 } }),
+    restRequest({ table: 'storefront_promotions', query: { select: '*', order: 'updated_at.desc', limit: 1000 } }),
+    restRequest({ table: 'storefront_orders', query: { select: '*', order: 'updated_at.desc', limit: 1000 } }),
+  ]);
+  return { ok: true, profile, apps: [], products: (products || []).map(adminProductMap), collections: collections || [], promotions: promotions || [], orders: orders || [] };
+}
+async function saveProductInternal(input = {}) {
+  const { agent } = await requireStoreAdmin(); const item = input.product || input.item || input; const existing = await findAdminProduct(item); const productId = internalText(item.productId || item.product_id || existing?.product_id, 160) || adminKey('STORE'); const body = { product_id: productId, product_type: internalText(item.productType || item.product_type || existing?.product_type || 'MERCHANDISE', 100), title: internalText(item.title || item.name, 500) || 'Untitled product', destination: internalText(item.destination, 240) || null, base_price: Number(item.basePrice ?? item.base_price) || 0, live_price: Number(item.livePrice ?? item.live_price ?? item.price) || 0, currency: internalText(item.currency || existing?.currency || 'SEK', 3), availability_status: internalText(item.availabilityStatus || item.inventoryStatus || existing?.availability_status || 'AVAILABLE', 80), customer_visible: item.customerVisible === true || item.visible === true, staff_visible: true, altea_visible: false, booking_flow: 'STORE', status: internalText(item.status || existing?.status || 'DRAFT', 80).toUpperCase(), image_url: adminUrl(item.imageUrl || item.image_url) || null, short_description: internalText(item.shortDescription || item.description, 4000) || null, payload: { ...(existing?.payload || {}), ...item, productId }, created_by_agent_user_id: existing?.created_by_agent_user_id || agent.id, updated_at: adminNow() }; const rows = existing ? await restRequest({ table: 'travel_products', method: 'PATCH', query: { id: `eq.${existing.id}` }, body }) : await restRequest({ table: 'travel_products', method: 'POST', body: { ...body, created_at: adminNow() } }); const saved = rows?.[0] || existing; await storefrontAudit(agent, 'PRODUCT_SAVED', saved?.id, { productId }); return { ok: true, product: adminProductMap(saved || {}) };
+}
+
+export const bootstrapStorefront = webMethod(Permissions.SiteMember, async () => storefrontBootstrapInternal());
+export const saveProduct = webMethod(Permissions.SiteMember, async (input = {}) => saveProductInternal(input));
+export const deleteProduct = webMethod(Permissions.SiteMember, async (input = {}) => { const { agent } = await requireStoreAdmin(); const row = await findAdminProduct(input.product || input); if (!row) throw new Error('STOREFRONT_PRODUCT_NOT_FOUND'); const rows = await restRequest({ table: 'travel_products', method: 'PATCH', query: { id: `eq.${row.id}` }, body: { status: 'ARCHIVED', customer_visible: false, updated_at: adminNow() } }); const saved = rows?.[0] || row; await storefrontAudit(agent, 'PRODUCT_ARCHIVED', saved.id); return { ok: true, product: adminProductMap(saved) }; });
+export const updateInventory = webMethod(Permissions.SiteMember, async (input = {}) => { const { agent } = await requireStoreAdmin(); const item = input.item || input.product || input; const row = await findAdminProduct(item); if (!row) throw new Error('STOREFRONT_PRODUCT_NOT_FOUND'); const inventory = { ...((row.payload || {}).inventory || {}), quantity: Number(item.quantity ?? item.inventoryQuantity) || 0, updatedAt: adminNow() }; const rows = await restRequest({ table: 'travel_products', method: 'PATCH', query: { id: `eq.${row.id}` }, body: { availability_status: internalText(item.availabilityStatus || (inventory.quantity > 0 ? 'AVAILABLE' : 'OUT_OF_STOCK'), 80), payload: { ...(row.payload || {}), inventory }, updated_at: adminNow() } }); const saved = rows?.[0] || row; await storefrontAudit(agent, 'INVENTORY_UPDATED', saved.id); return { ok: true, product: adminProductMap(saved) }; });
+export const updateFulfillment = webMethod(Permissions.SiteMember, async (input = {}) => { const { agent } = await requireStoreAdmin(); const item = input.order || input.item || input; const orderId = internalText(item.orderId || item.id, 160); if (!orderId) throw new Error('STOREFRONT_ORDER_REQUIRED'); const existingRows = await restRequest({ table: 'storefront_orders', query: { select: '*', order_id: `eq.${orderId}`, limit: 1 } }); const existing = existingRows?.[0] || null; const body = { order_id: orderId, status: internalText(item.status || existing?.status || 'OPEN', 80), fulfillment_status: internalText(item.fulfillmentStatus || item.status || existing?.fulfillment_status || 'UNFULFILLED', 80), payload: { ...(existing?.payload || {}), ...item, updatedBy: agent.id }, updated_at: adminNow() }; const rows = existing ? await restRequest({ table: 'storefront_orders', method: 'PATCH', query: { id: `eq.${existing.id}` }, body }) : await restRequest({ table: 'storefront_orders', method: 'POST', body: { ...body, created_at: adminNow() } }); const saved = rows?.[0] || existing; await storefrontAudit(agent, 'FULFILLMENT_UPDATED', saved?.id, { orderId }); return { ok: true, order: saved || null }; });
+export const saveCollection = webMethod(Permissions.SiteMember, async (input = {}) => { const { agent } = await requireStoreAdmin(); const item = input.collection || input.item || input; const collectionId = internalText(item.collectionId || item.id, 160) || adminKey('COL'); const found = await restRequest({ table: 'storefront_collections', query: { select: '*', collection_id: `eq.${collectionId}`, limit: 1 } }); const existing = found?.[0] || null; const body = { collection_id: collectionId, title: internalText(item.title || item.name, 500) || 'Untitled collection', slug: internalText(item.slug, 240) || null, active: item.active !== false, payload: { ...(existing?.payload || {}), ...item, assignOnly: input.assignOnly === true }, updated_at: adminNow() }; const rows = existing ? await restRequest({ table: 'storefront_collections', method: 'PATCH', query: { id: `eq.${existing.id}` }, body }) : await restRequest({ table: 'storefront_collections', method: 'POST', body: { ...body, created_at: adminNow() } }); const saved = rows?.[0] || existing; await storefrontAudit(agent, 'COLLECTION_SAVED', saved?.id, { collectionId }); return { ok: true, collection: saved || null }; });
+export const savePromotionDraft = webMethod(Permissions.SiteMember, async (input = {}) => { const { agent } = await requireStoreAdmin(); const item = input.promotion || input.item || input; const promotionId = internalText(item.promotionId || item.id, 160) || adminKey('PROMO'); const found = await restRequest({ table: 'storefront_promotions', query: { select: '*', promotion_id: `eq.${promotionId}`, limit: 1 } }); const existing = found?.[0] || null; const body = { promotion_id: promotionId, title: internalText(item.title || item.name, 500) || 'Untitled promotion', status: internalText(item.status || 'DRAFT', 80).toUpperCase(), payload: { ...(existing?.payload || {}), ...item }, updated_at: adminNow() }; const rows = existing ? await restRequest({ table: 'storefront_promotions', method: 'PATCH', query: { id: `eq.${existing.id}` }, body }) : await restRequest({ table: 'storefront_promotions', method: 'POST', body: { ...body, created_at: adminNow() } }); const saved = rows?.[0] || existing; await storefrontAudit(agent, 'PROMOTION_SAVED', saved?.id, { promotionId }); return { ok: true, promotion: saved || null }; });

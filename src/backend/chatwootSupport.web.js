@@ -4,6 +4,7 @@ import { elevate } from "wix-auth";
 import { fetch } from "wix-fetch";
 import { createHash, randomUUID } from "crypto";
 import { requireCustomerContext } from "backend/core/authContext";
+import { requireInternalAgent } from "backend/RIA/internalAccess";
 import {
   createCase,
   listCustomerCases,
@@ -71,8 +72,7 @@ async function requiredSecret(name) {
     const value = secretText(await getSecretValue(name));
     if (!value) throw new Error(`Secret ${name} is empty.`);
     return value;
-  } catch (error) {
-    console.error(`Missing or unreadable secret: ${name}`, error);
+  } catch {
     throw new Error(
       "Customer service is temporarily unavailable. Please try again later."
     );
@@ -107,7 +107,6 @@ async function configuration() {
   const inboxId = Number(inboxIdText);
 
   if (!Number.isInteger(accountId) || !Number.isInteger(inboxId)) {
-    console.error("Chatwoot account or inbox secret is not numeric.");
     throw new Error(
       "Customer service is temporarily unavailable. Please try again later."
     );
@@ -239,9 +238,7 @@ async function updateContact(config, contact, input) {
         }
       }
     );
-  } catch (error) {
-    console.warn("Existing Chatwoot contact could not be updated.", error);
-  }
+  } catch {}
 }
 
 async function ensureContactInbox(config, contact) {
@@ -525,12 +522,7 @@ export const createPublicSupportCase = webMethod(
         status: conversation.status || "open",
         createdAt: new Date().toISOString()
       };
-    } catch (error) {
-      console.error("Chatwoot support case creation failed.", {
-        message: error?.message,
-        status: error?.status,
-        payload: error?.payload
-      });
+    } catch {
       throw new Error(
         "Your request could not be submitted. Please try again shortly."
       );
@@ -548,31 +540,31 @@ export const listCustomerSupportCases = webMethod(
 export const listAgentSupportCases = webMethod(
   Permissions.SiteMember,
   async function (filters = {}) {
-    const ctx = await requireCustomerContext();
-    return listAgentCases(ctx, filters);
+    await requireInternalAgent({ capability: "manage" });
+    return listAgentCases(filters);
   }
 );
 
 export const getAgentSupportCase = webMethod(
   Permissions.SiteMember,
   async function ({ caseId } = {}) {
-    const ctx = await requireCustomerContext();
-    return getAgentCase(ctx, caseId);
+    await requireInternalAgent({ capability: "manage" });
+    return getAgentCase(null, caseId);
   }
 );
 
 export const replyAgentSupportCase = webMethod(
   Permissions.SiteMember,
   async function ({ caseId, content } = {}) {
-    const ctx = await requireCustomerContext();
-    return replyAgentCase(ctx, { caseId, content });
+    await requireInternalAgent({ capability: "manage" });
+    return replyAgentCase(null, { caseId, content });
   }
 );
 
 export const updateAgentSupportCase = webMethod(
   Permissions.SiteMember,
   async function ({ caseId, updates = {} } = {}) {
-    const ctx = await requireCustomerContext();
-    return updateAgentCase(ctx, { caseId, updates });
+    await requireInternalAgent({ capability: "manage" });
+    return updateAgentCase(null, { caseId, updates });
   }
 );

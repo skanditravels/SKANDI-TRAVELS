@@ -6,7 +6,7 @@ import { fetch } from "wix-fetch";
 import {
   findAgentByMemberOrEmail,
   isAgentAuthorized
-} from "backend/RIA/staffPortalAuth.repository.js";
+} from "./RIA/staffPortalAuth.repository.js";
 
 const SUPABASE_URL_SECRET = "SUPABASE_URL";
 const SUPABASE_SERVICE_ROLE_SECRET = "SUPABASE_SERVICE_ROLE_KEY";
@@ -728,7 +728,7 @@ function itemSavePayload(item = {}, agent = {}) {
 }
 
 export const getUniformAdminBootstrap = webMethod(
-  Permissions.Anyone,
+  Permissions.SiteMember,
   async (input = {}) => {
     try {
       const { agent } = await requireUniformAdmin();
@@ -800,7 +800,7 @@ export const getUniformAdminBootstrap = webMethod(
 
 
 export const adminUploadUniformImage = webMethod(
-  Permissions.Anyone,
+  Permissions.SiteMember,
   async (input = {}) => {
     try {
       const { agent } = await requireUniformAdmin();
@@ -841,7 +841,7 @@ export const adminUploadUniformImage = webMethod(
 );
 
 export const adminSaveUniformCatalogItem = webMethod(
-  Permissions.Anyone,
+  Permissions.SiteMember,
   async (input = {}) => {
     try {
       const { agent } = await requireUniformAdmin();
@@ -894,7 +894,7 @@ export const adminSaveUniformCatalogItem = webMethod(
 );
 
 export const adminSaveUniformCategory = webMethod(
-  Permissions.Anyone,
+  Permissions.SiteMember,
   async (input = {}) => {
     try {
       const { agent } = await requireUniformAdmin();
@@ -939,7 +939,7 @@ export const adminSaveUniformCategory = webMethod(
 );
 
 export const adminSaveUniformAllowanceRule = webMethod(
-  Permissions.Anyone,
+  Permissions.SiteMember,
   async (input = {}) => {
     try {
       const { agent } = await requireUniformAdmin();
@@ -987,7 +987,7 @@ export const adminSaveUniformAllowanceRule = webMethod(
 );
 
 export const adminUniformOrderAction = webMethod(
-  Permissions.Anyone,
+  Permissions.SiteMember,
   async (input = {}) => {
     try {
       const { agent } = await requireUniformAdmin();
@@ -1103,7 +1103,7 @@ export const adminUniformOrderAction = webMethod(
 );
 
 export const adminAdjustUniformWallet = webMethod(
-  Permissions.Anyone,
+  Permissions.SiteMember,
   async (input = {}) => {
     try {
       const { agent } = await requireUniformAdmin();
@@ -1154,7 +1154,7 @@ export const adminAdjustUniformWallet = webMethod(
 );
 
 export const adminDeleteUniformItem = webMethod(
-  Permissions.Anyone,
+  Permissions.SiteMember,
   async (input = {}) => {
     try {
       const { agent } = await requireUniformAdmin();
@@ -1195,7 +1195,7 @@ export const adminDeleteUniformItem = webMethod(
 );
 
 export const getUniformEmployeeBootstrap = webMethod(
-  Permissions.Anyone,
+  Permissions.SiteMember,
   async () => {
     try {
       const { agent } = await requireAgent();
@@ -1233,7 +1233,7 @@ export const getUniformEmployeeBootstrap = webMethod(
 );
 
 export const submitUniformEmployeeOrder = webMethod(
-  Permissions.Anyone,
+  Permissions.SiteMember,
   async (input = {}) => {
     try {
       const { agent } = await requireAgent();
@@ -1349,7 +1349,7 @@ export const submitUniformEmployeeOrder = webMethod(
 );
 
 export const acknowledgeUniformPolicy = webMethod(
-  Permissions.Anyone,
+  Permissions.SiteMember,
   async (input = {}) => {
     try {
       const { agent } = await requireAgent();
