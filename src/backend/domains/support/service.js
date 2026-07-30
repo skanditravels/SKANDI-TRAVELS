@@ -1,6 +1,6 @@
-import { requireCustomerContext } from "src/backend/core/authContext";
-import { clean, uid, nowIso } from "src/backend/core/response";
-import { publishEvent } from "src/ackend/core/eventBus";
+import { requireCustomerContext } from "backend/core/authContext";
+import { clean, uid, nowIso } from "backend/core/response";
+import { publishEvent } from "ackend/core/eventBus";
 import {
   createSupportCase,
   createSupportMessage,
@@ -9,8 +9,8 @@ import {
   getCaseByCaseId,
   listMessagesByCaseId,
   updateCase
-} from "src/backend/domains/support/repository";
-import { mapSupportCase, mapSupportMessage } from "src/backend/domains/support/mapper";
+} from "backend/domains/support/repository";
+import { mapSupportCase, mapSupportMessage } from "backend/domains/support/mapper";
 
 export async function createCustomerCase(input = {}) {
   const ctx = await requireCustomerContext();
