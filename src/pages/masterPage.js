@@ -1,11 +1,9 @@
-import wixLocation from "wix-location";
+import wixLocationFrontend from "wix-location-frontend";
 import { currentMember, authentication } from "wix-members-frontend";
-import {
-  getCustomerHeaderSession,
-  subscribeCustomerNewsletter
-} from "src/backend/customerHeader.web";
+import { getCustomerHeaderSession, subscribeCustomerNewsletter } from "src/backend/customerHeader.web";
 
-const HEADER_EMBED = "#skandiCustomerHeaderEmbed";
+// --- Configuration & Constants ---
+const HEADER_EMBED = "#skandiCustomerHeaderEmbed"; 
 const FOOTER_EMBED = "#skandiCustomerFooterEmbed";
 
 const HEADER_SOURCE = "SKANDI_CUSTOMER_HEADER_EXPANDBAR";
@@ -14,47 +12,13 @@ const PARENT_SOURCE = "SKANDI_WIX_PARENT";
 
 const INTERNAL_PREFIXES = ["/riaintra", "/_functions"];
 
-$w.onReady(async function () {
-  const embed = $w('#riaintraHeader');
-
-  // 1. Listen for the iframe to say it's ready
-  embed.onMessage(async (event) => {
-    const message = event.data || {};
-
-    // 2. When HTML is ready, fetch member info
-    if (message.type === 'UI_READY') {
-      try {
-        const member = await currentMember.getMember();
-        
-        if (member) {
-          // Member is logged in - send their data to HTML
-          embed.postMessage({
-            type: 'MEMBER_DATA',
-            payload: {
-              firstName: member.contactDetails?.firstName || "Traveller",
-              lastName: member.contactDetails?.lastName || "",
-              email: member.loginEmail || "",
-              // Extract photo URL if it exists
-              photo: member.profile?.profilePhoto?.url || ""
-            }
-          });
-        } else {
-          // No member logged in (Guest)
-          embed.postMessage({ type: 'GUEST_DATA' });
-        }
-      } catch (error) {
-        console.error("Error fetching member", error);
-      }
-    }
-  });
-});
 // --- Helper Functions ---
 function safeEl(id) {
   try { return $w(id); } catch (error) { return null; }
 }
 
 function currentPathString() {
-  const path = wixLocation.path || [];
+  const path = wixLocationFrontend.path || [];
   return "/" + path.join("/");
 }
 
@@ -93,6 +57,8 @@ async function sendHeaderState(header) {
   }
 }
 
+// --- Message Handlers ---
+
 async function handleHeaderMessage(header, message = {}) {
   if (message.source !== HEADER_SOURCE) return;
   const payload = message.payload || {};
@@ -103,11 +69,11 @@ async function handleHeaderMessage(header, message = {}) {
       break;
     case "HEADER_NAVIGATE":
       closeCustomerHeaderPanels(header);
-      if (message.path || payload.path) wixLocation.to(message.path || payload.path);
+      if (message.path || payload.path) wixLocationFrontend.to(message.path || payload.path);
       break;
     case "HEADER_SEARCH":
       closeCustomerHeaderPanels(header);
-      wixLocation.to("/home?focus=search");
+      wixLocationFrontend.to("/home?focus=search");
       break;
     case "HEADER_LOGIN":
       closeCustomerHeaderPanels(header);
@@ -117,8 +83,27 @@ async function handleHeaderMessage(header, message = {}) {
     case "HEADER_LOGOUT":
       closeCustomerHeaderPanels(header);
       await authentication.logout();
-      wixLocation.to("/home");
+      wixLocationFrontend.to("/home");
       break;
+      
+    // --- New Inline Form Auth Handling ---
+    case "HEADER_LOGIN_SUBMIT":
+      authentication.login(message.email, message.password)
+        .then(() => {
+          // Refresh page upon successful inline login
+          wixLocationFrontend.to(wixLocationFrontend.url); 
+        })
+        .catch((error) => {
+          console.error("Login failed:", error);
+          // Send error message back to the HTML component directly
+          header.postMessage({ type: "HOME_ERROR", message: "Invalid email or password. Please try again." });
+        });
+      break;
+    case "HEADER_FORGOT_PASSWORD":
+      closeCustomerHeaderPanels(header);
+      authentication.promptForgotPassword();
+      break;
+      
     default:
       break;
   }
@@ -136,11 +121,11 @@ async function handleFooterMessage(footer, message = {}) {
       break;
     case "FOOTER_NAVIGATE":
       closeCustomerHeaderPanels(header);
-      if (path) wixLocation.to(path);
+      if (path) wixLocationFrontend.to(path);
       break;
     case "FOOTER_STAFF_LOGIN":
       closeCustomerHeaderPanels(header);
-      wixLocation.to("/riaintra");
+      wixLocationFrontend.to("/riaintra");
       break;
     case "FOOTER_NEWSLETTER_SIGNUP": {
       const email = String(message.email || payload.email || "").trim();
@@ -157,13 +142,14 @@ async function handleFooterMessage(footer, message = {}) {
   }
 }
 
-// --- Single onReady Block ---
+// --- Main Page Ready Execution ---
 $w.onReady(async function () {
   const header = safeEl(HEADER_EMBED);
   const footer = safeEl(FOOTER_EMBED);
+  const riaintraHeader = safeEl("#riaintraHeader");
   const alteaHeader = safeEl("#alteaHeader");
   const htmlDropdown = safeEl("#htmlDropdown");
-  const adminMenu = safeEl("#adminMenu"); // Assumes this is the ID of your admin menu container
+  const adminMenu = safeEl("#adminMenu");
 
   // 1. Hide/Show Customer Header based on URL
   if (isInternalPage()) {
@@ -175,47 +161,72 @@ $w.onReady(async function () {
   }
 
   // 2. Customer Header & Footer Listeners
+  if (header) {
+    header.onMessage((event) => handleHeaderMessage(header, event.data));
+  }
+  
+  if (footer) {
+    footer.onMessage((event) => handleFooterMessage(footer, event.data));
+  }
 
-  // 3. Altea Global Header Listener (Combined)
-  if (alteaHeader) {
-    alteaHeader.onMessage((event) => {
-      const message = event.data;
-      
-      // Handle Desktop Navigation
-      if (message.source === "SKANDI_GLOBAL_HEADER" && message.type === "ALTEA_NAVIGATE") {
-        wixLocation.to(message.payload.path);
-      }
-      
-      // Handle admin Burger Toggle
-      if (message.source === "SKANDI_GLOBAL_HEADER" && message.type === "TOGGLE_admin_MENU") {
-        if (adminMenu) {
-            if (adminMenu.hidden) {
-                adminMenu.show("fade", { duration: 150 });
-            } else {
-                adminMenu.hide("fade", { duration: 150 });
-            }
+  // 3. riaintra Header Listener
+  if (riaintraHeader) {
+    riaintraHeader.onMessage(async (event) => {
+      const message = event.data || {};
+      if (message.type === 'UI_READY') {
+        try {
+          const member = await currentMember.getMember();
+          if (member) {
+            riaintraHeader.postMessage({
+              type: 'MEMBER_DATA',
+              payload: {
+                firstName: member.contactDetails?.firstName || "Traveller",
+                lastName: member.contactDetails?.lastName || "",
+                email: member.loginEmail || "",
+                photo: member.profile?.profilePhoto?.url || ""
+              }
+            });
+          } else {
+            riaintraHeader.postMessage({ type: 'GUEST_DATA' });
+          }
+        } catch (error) {
+          console.error("Error fetching member", error);
         }
       }
     });
   }
 
-  // 4. admin Dropdown Listener
+  // 4. Altea Global Header Listener
+  if (alteaHeader) {
+    alteaHeader.onMessage((event) => {
+      const message = event.data;
+      if (message.source === "SKANDI_GLOBAL_HEADER" && message.type === "ALTEA_NAVIGATE") {
+        wixLocationFrontend.to(message.payload.path);
+      }
+      if (message.source === "SKANDI_GLOBAL_HEADER" && message.type === "TOGGLE_admin_MENU") {
+        if (adminMenu) {
+          adminMenu.hidden ? adminMenu.show("fade", { duration: 150 }) : adminMenu.hide("fade", { duration: 150 });
+        }
+      }
+    });
+  }
+
+  // 5. Admin Dropdown Listener
   if (htmlDropdown) {
     htmlDropdown.onMessage((event) => {
         if (event.data.type === 'CLOSE_admin_MENU') {
             htmlDropdown.hide("fade", { duration: 150 });
         }
-        
         if (event.data.type === 'NAVIGATE') {
-            const targetPath = event.data.path; // Make sure your data-path includes the leading slash (e.g., "/riaintra")
+            const targetPath = event.data.path; 
             htmlDropdown.hide("fade", { duration: 150 }).then(() => {
-                wixLocation.to(targetPath);
+                wixLocationFrontend.to(targetPath);
             });
         }
     });
   }
 
-  // 5. Auth & Init
+  // 6. Global Auth Setup & Initialization
   authentication.onLogin(async () => {
     if (header) await sendHeaderState(header);
   });
