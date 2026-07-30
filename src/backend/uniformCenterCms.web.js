@@ -6,7 +6,7 @@ import { fetch } from "wix-fetch";
 import {
   findAgentByMemberOrEmail,
   isAgentAuthorized
-} from "./RIA/staffPortalAuth.repository.js";
+} from "backend/RIA/staffPortalAuth.repository.js";
 
 const SUPABASE_URL_SECRET = "SUPABASE_URL";
 const SUPABASE_SERVICE_ROLE_SECRET = "SUPABASE_SERVICE_ROLE_KEY";
