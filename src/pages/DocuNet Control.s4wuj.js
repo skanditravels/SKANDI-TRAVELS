@@ -1,124 +1,132 @@
 import wixLocation from "wix-location";
+import { getStaffPortalSession } from "backend/RIA/staffPortalAuth.web";
 import {
-  getDocAdminBootstrap,
-  searchDocAdminDocuments,
-  adminSaveDocumentWithFile,
-  adminSaveDocumentMetadata,
-  adminSetDocumentStatus,
-  adminDeleteDocument,
-  adminSaveCategory,
-  adminDeleteCategory,
-  adminSearchAudit
-} from "src/backend/alteaDocunetV2.web";
+  getDocuNetAdminBootstrap,
+  searchDocuNetAdminDocuments,
+  createDocuNetUpload,
+  finalizeDocuNetUpload,
+  saveDocuNetMetadata,
+  setDocuNetDocumentStatus,
+  deleteDocuNetDocument,
+  saveDocuNetCategory,
+  deleteDocuNetCategory,
+  searchDocuNetAudit
+} from "backend/RIA/docuNet.web";
 
-const HTML_ID = "#alteaDocunetAdminEmbed";
-const UPLOAD_ID = "#docControlUploadButton";
+const EMBED = "#docuNetAdminEmbed";
+const SOURCES = new Set(["SKANDI_DOCUNET_ADMIN", "SKANDI_ALTEA_DOC_ADMIN"]);
+const STAFF_LOGIN_PATH = "/riaintra";
+const ALLOWED_PATH_PREFIXES = ["/riaintra"];
+let sessionPromise = null;
 
-$w.onReady(function () {
-  const html = $w(HTML_ID);
-  const upload = uploadElement();
-  if (upload?.show) upload.show();
+function post(type, payload = {}, extra = {}) {
+  $w(EMBED).postMessage({ type, payload, ...extra });
+}
 
-  html.onMessage(async (event) => {
-    const msg = event.data || {};
-    if (msg.source !== "SKANDI_ALTEA_DOC_ADMIN") return;
+function fail(error) {
+  post("ADMIN_ERROR", {}, { message: error?.message || "DocuNet request failed." });
+}
 
+async function bootstrap() {
+  post("ADMIN_BOOTSTRAP_RESULT", await getDocuNetAdminBootstrap());
+}
+
+async function getSession() {
+  if (!sessionPromise) sessionPromise = getStaffPortalSession().finally(() => { sessionPromise = null; });
+  return sessionPromise;
+}
+
+async function sendStaffProfile() {
+  const session = await getSession();
+  const profile = session?.profile || session?.agent || null;
+  if (session?.authorized !== true || !profile) {
+    post("PROFILE_ERROR", { code: session?.code || "STAFF_ACCESS_DENIED" });
+    wixLocation.to(STAFF_LOGIN_PATH);
+    return;
+  }
+  post("MEMBER_DATA", profile);
+}
+
+function openInternalPath(rawPath) {
+  const path = String(rawPath || "").trim();
+  if (!path || !ALLOWED_PATH_PREFIXES.some(prefix => path === prefix || path.startsWith(`${prefix}/`))) {
+    throw new Error("Invalid internal destination.");
+  }
+  wixLocation.to(path);
+}
+
+$w.onReady(() => {
+  $w(EMBED).onMessage(async event => {
+    const message = event.data || {};
+    if (!SOURCES.has(message.source)) return;
     try {
-      if (msg.type === "ADMIN_READY" || msg.type === "ADMIN_BOOTSTRAP") {
-        const payload = await getDocAdminBootstrap();
-        html.postMessage({ source: "SKANDI_WIX_PARENT", type: "ADMIN_BOOTSTRAP_RESULT", payload });
+      if (message.type === "NAVIGATE") {
+        openInternalPath(message.path || message.payload?.path);
         return;
       }
-
-      if (msg.type === "ADMIN_SEARCH_DOCS") {
-        const payload = await searchDocAdminDocuments({ filters: msg.filters || {} });
-        html.postMessage({ source: "SKANDI_WIX_PARENT", type: "ADMIN_DOC_SEARCH_RESULT", payload });
+      if (["UI_READY", "PROFILE_REFRESH", "INTERNAL_CHROME_READY"].includes(message.type)) {
+        await sendStaffProfile();
         return;
       }
-
-      if (msg.type === "ADMIN_DOC_SAVE_WITH_UPLOAD") {
-        const uploadButton = uploadElement();
-        if (!uploadButton) throw new Error("Upload Button #docControlUploadButton is missing.");
-        const uploaded = await uploadButton.uploadFiles();
-        const file = uploaded?.[0];
-        if (!file) throw new Error("Select a PDF using #docControlUploadButton before saving.");
-
-        const payload = await adminSaveDocumentWithFile({
-          metadata: msg.metadata || {},
-          file: {
-            fileUrl: file.fileUrl || file.url,
-            fileName: file.fileName || file.originalFileName || "document.pdf",
-            originalFileName: file.originalFileName || file.fileName || "",
-            fileSize: file.fileSize || file.size || 0,
-            mediaId: file.mediaId || file.fileId || ""
-          }
-        });
-
-        html.postMessage({
-          source: "SKANDI_WIX_PARENT",
-          type: "ADMIN_DOC_RESULT",
-          payload,
-          message: "Document and PDF saved."
-        });
-        return;
-      }
-
-      if (msg.type === "ADMIN_DOC_SAVE_METADATA") {
-        const payload = await adminSaveDocumentMetadata({ metadata: msg.metadata || {} });
-        html.postMessage({ source: "SKANDI_WIX_PARENT", type: "ADMIN_DOC_RESULT", payload, message: "Metadata saved." });
-        return;
-      }
-
-      if (msg.type === "ADMIN_DOC_STATUS") {
-        const payload = await adminSetDocumentStatus({
-          documentId: msg.documentId,
-          publishStatus: msg.publishStatus
-        });
-        html.postMessage({ source: "SKANDI_WIX_PARENT", type: "ADMIN_DOC_RESULT", payload, message: "Document status updated." });
-        return;
-      }
-
-      if (msg.type === "ADMIN_DOC_DELETE") {
-        const payload = await adminDeleteDocument({ documentId: msg.documentId });
-        html.postMessage({ source: "SKANDI_WIX_PARENT", type: "ADMIN_DOC_RESULT", payload, message: "Document deleted." });
-        return;
-      }
-
-      if (msg.type === "ADMIN_CATEGORY_SAVE") {
-        const payload = await adminSaveCategory({ category: msg.category || {} });
-        html.postMessage({ source: "SKANDI_WIX_PARENT", type: "ADMIN_CATEGORIES_RESULT", payload, message: "Category saved." });
-        return;
-      }
-
-      if (msg.type === "ADMIN_CATEGORY_DELETE") {
-        const payload = await adminDeleteCategory({ categoryId: msg.categoryId });
-        html.postMessage({ source: "SKANDI_WIX_PARENT", type: "ADMIN_CATEGORIES_RESULT", payload, message: "Category deleted." });
-        return;
-      }
-
-      if (msg.type === "ADMIN_AUDIT_SEARCH") {
-        const payload = await adminSearchAudit({ filters: msg.filters || {} });
-        html.postMessage({ source: "SKANDI_WIX_PARENT", type: "ADMIN_AUDIT_RESULT", payload });
-        return;
-      }
-
-      if (msg.type === "ADMIN_NAVIGATE_STAFF") {
-        wixLocation.to("/riaintra/altea/documents");
+      switch (message.type) {
+        case "ADMIN_READY":
+        case "ADMIN_BOOTSTRAP":
+          await bootstrap();
+          break;
+        case "ADMIN_SEARCH_DOCS":
+          post("ADMIN_DOC_SEARCH_RESULT", await searchDocuNetAdminDocuments(message.payload || message));
+          break;
+        case "ADMIN_AUDIT_SEARCH":
+          post("ADMIN_AUDIT_RESULT", await searchDocuNetAudit(message.payload || {}));
+          break;
+        case "ADMIN_SUPABASE_UPLOAD_INIT":
+          post("ADMIN_SUPABASE_UPLOAD_READY", await createDocuNetUpload(message.payload || message), {
+            requestId: message.requestId
+          });
+          break;
+        case "ADMIN_DOC_SAVE_WITH_UPLOAD": {
+          const result = await finalizeDocuNetUpload({ requestId: message.requestId });
+          post("ADMIN_DOC_RESULT", result, { message: "Document revision saved." });
+          await bootstrap();
+          break;
+        }
+        case "ADMIN_DOC_SAVE_METADATA": {
+          const result = await saveDocuNetMetadata(message.metadata || message.payload?.metadata || {});
+          post("ADMIN_DOC_RESULT", result, { message: "Document metadata saved." });
+          await bootstrap();
+          break;
+        }
+        case "ADMIN_DOC_STATUS": {
+          const result = await setDocuNetDocumentStatus(message.payload || message);
+          post("ADMIN_DOC_RESULT", result, { message: "Document status updated." });
+          await bootstrap();
+          break;
+        }
+        case "ADMIN_DOC_DELETE": {
+          const result = await deleteDocuNetDocument(message.payload || message);
+          post("ADMIN_DOC_RESULT", result, { message: "Document removed from DocuNet." });
+          await bootstrap();
+          break;
+        }
+        case "ADMIN_CATEGORY_SAVE": {
+          await saveDocuNetCategory(message.category || message.payload?.category || {});
+          const result = await getDocuNetAdminBootstrap();
+          post("ADMIN_CATEGORIES_RESULT", { categories: result.categories }, { message: "Category saved." });
+          break;
+        }
+        case "ADMIN_CATEGORY_DELETE": {
+          await deleteDocuNetCategory(message.payload || message);
+          const result = await getDocuNetAdminBootstrap();
+          post("ADMIN_CATEGORIES_RESULT", { categories: result.categories }, { message: "Category deleted." });
+          break;
+        }
+        case "ADMIN_NAVIGATE_STAFF":
+          wixLocation.to("/riaintra/success-factors/docunet");
+          break;
       }
     } catch (error) {
-      html.postMessage({
-        source: "SKANDI_WIX_PARENT",
-        type: "ADMIN_ERROR",
-        message: error.message || "Document admin action failed."
-      });
+      fail(error);
     }
   });
+  sendStaffProfile().catch(fail);
 });
-
-function uploadElement() {
-  try {
-    return $w(UPLOAD_ID);
-  } catch (error) {
-    return null;
-  }
-}
