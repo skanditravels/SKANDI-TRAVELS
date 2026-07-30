@@ -12,11 +12,11 @@ import {
   removeCustomerFavorite,
   loadCustomerPortalData,
   redeemWixLoyaltyReward
-} from "src/backend/customerPortal.web";
+} from "backend/customerPortal.web";
 
 import {
   createCustomerSupportCase
-} from "src/backend/chatwootSupport.web";
+} from "backend/chatwootSupport.web";
 
 const EMBED_ID = "#customerProfileEmbed";
 
