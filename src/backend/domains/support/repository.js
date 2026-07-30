@@ -1,4 +1,4 @@
-import { sbInsert, sbSelect, sbUpdate, eq, order } from "src/backend/supabaseClient";
+import { sbInsert, sbSelect, sbUpdate, eq, order } from "backend/supabaseClient";
 
 const CASES = "customer_support_cases";
 const MESSAGES = "customer_support_messages";
