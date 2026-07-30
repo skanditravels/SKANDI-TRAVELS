@@ -1,7 +1,7 @@
 import wixLocation from "wix-location";
 import { authentication } from "wix-members-frontend";
-import { getStaffPortalSession } from "src/backend/RIA/staffPortalAuth.web";
-import { runInternalGlobalSearch } from "src/backend/FINAL/internalChrome.web";
+import { getStaffPortalSession } from "backend/RIA/staffPortalAuth.web";
+import { runInternalGlobalSearch } from "backend/FINAL/internalChrome.web";
 import {
   getMailBootstrap,
   listMailMessages,
@@ -10,7 +10,7 @@ import {
   saveMailDraft,
   updateMailUserState,
   getMailDirectory
-} from "src/backend/MAIL/mail.web";
+} from "backend/MAIL/mail.web";
 
 const EMBED = "#mailEmbed";
 const EMBED_SOURCE = "SKANDI_MAIL_EMBED";
