@@ -1,8 +1,8 @@
-import { requireCustomerContext } from "src/backend/core/authContext";
-import { nowIso } from "src/backend/core/response";
-import { publishEvent } from "src/backend/core/eventBus";
-import { listByMember, createRecord, updateRecord } from "src/backend/domains/favorite/repository";
-import { mapFavorite } from "src/backend/domains/favorite/mapper";
+import { requireCustomerContext } from "backend/core/authContext";
+import { nowIso } from "backend/core/response";
+import { publishEvent } from "backend/core/eventBus";
+import { listByMember, createRecord, updateRecord } from "backend/domains/favorite/repository";
+import { mapFavorite } from "backend/domains/favorite/mapper";
 
 export async function listCurrentCustomerFavorites() {
   const ctx = await requireCustomerContext();
