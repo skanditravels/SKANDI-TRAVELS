@@ -1,4 +1,4 @@
-import { searchFlightStatus } from "src/backend/FINAL/flightStatusService.web";
+import { searchFlightStatus } from "backend/FINAL/flightStatusService.web";
 
 const EMBED_ID = "#flightStatusEmbed";
 const HTML_SOURCE = "SKANDI_FLIGHT_STATUS";
