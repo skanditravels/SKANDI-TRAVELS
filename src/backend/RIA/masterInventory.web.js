@@ -4,7 +4,7 @@ import { currentMember } from "wix-members-backend";
 import {
   findAgentByMemberOrEmail,
   isAgentAuthorized
-} from "./staffPortalAuth.repository.js";
+} from "backend/RIA/staffPortalAuth.repository.js";
 
 import {
   getMasterInventorySnapshot,
@@ -22,7 +22,7 @@ import {
   getPackageBundles,
   savePackageBundle,
   insertAuditEvent
-} from "./masterInventory.repository.js";
+} from "backend/RIA/masterInventory.repository.js";
 
 function cleanError(error) {
   return error?.message || "Master inventory request failed.";
