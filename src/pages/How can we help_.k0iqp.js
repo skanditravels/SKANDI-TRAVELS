@@ -1,5 +1,5 @@
 import wixLocation from "wix-location";
-import { createPublicSupportCase } from "src/backend/chatwootSupport.web";
+import { createPublicSupportCase } from "backend/chatwootSupport.web";
 
 const HTML_ID = "#skandiHelpCenterEmbed";
 const CHILD_SOURCE = "SKANDI_SUPPORT_PUBLIC";
