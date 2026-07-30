@@ -4,14 +4,14 @@ set -euo pipefail
 # Configuration
 REPO_PATH="/workspace/scratch/5db7355b47f3/repo"
 FILES=(
-  "src/backend/FINAL/internalChrome.web.js"
-  "src/backend/RIA/staffIntranet.web.js"
-  "src/backend/RIA/staffPayroll.web.js"
-  "src/backend/RIA/staffPortalAuth.repository.js"
-  "src/backend/RIA/staffPortalAuth.web.js"
-  "src/backend/RIA/supabaseServer.js"
-  "src/pages/RIAINTRA Portal.sh6tw.js"
-  "src/pages/RIAINTRA.rc14z.js"
+  "backend/FINAL/internalChrome.web.js"
+  "backend/RIA/staffIntranet.web.js"
+  "backend/RIA/staffPayroll.web.js"
+  "backend/RIA/staffPortalAuth.repository.js"
+  "backend/RIA/staffPortalAuth.web.js"
+  "backend/RIA/supabaseServer.js"
+  "pages/RIAINTRA Portal.sh6tw.js"
+  "pages/RIAINTRA.rc14z.js"
 )
 BRANCH="agent/sh7074-riaintra-staff-portal"
 PR_TITLE="Fix RIAINTRA staff portal integration"
