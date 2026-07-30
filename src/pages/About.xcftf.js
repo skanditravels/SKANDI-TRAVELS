@@ -1,4 +1,4 @@
-import { getAboutPagePayload } from "src/backend/skandiAboutSignature.web";
+import { getAboutPagePayload } from "backend/skandiAboutSignature.web";
 
 const EMBED_ID = "#aboutSkandiEmbed";
 const HTML_SOURCE = "SKANDI_ABOUT_PAGE";
