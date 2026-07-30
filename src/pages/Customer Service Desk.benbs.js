@@ -3,12 +3,12 @@ import {
   getAgentSupportCase,
   replyAgentSupportCase,
   updateAgentSupportCase
-} from "src/backend/chatwootSupport.web";
+} from "backend/chatwootSupport.web";
 
 import {
   insertMessageToPostgres,
   triggerPusherEvent
-} from "src/backend/omnichannel.jsw";
+} from "backend/omnichannel.jsw";
 
 const HTML_ID = "#customerServiceCenterEmbed";
 const CHILD_SOURCE = "SKANDI_SUPPORT_AGENT";
