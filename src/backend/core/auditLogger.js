@@ -1,5 +1,5 @@
-import { sbInsert } from "src/backend/supabaseClient";
-import { uid } from "src/backend/core/response";
+import { sbInsert } from "backend/supabaseClient";
+import { uid } from "backend/core/response";
 
 const AUDIT_TABLE = "admin_audit_logs";
 
