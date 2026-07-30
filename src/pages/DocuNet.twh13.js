@@ -1,180 +1,77 @@
-// pages/riaintra-altea-inventory-control.js
-// Production Wix page bridge for ALTEA Inventory Control.
-// Page contains one HTML embed with element ID: #inventoryControlEmbed
-
 import wixLocation from "wix-location";
-import { authentication } from "wix-members-frontend";
-import { getStaffPortalSession } from "src/backend/RIA/staffPortalAuth.web";
-import { runInternalGlobalSearch } from "src/backend/FINAL/internalChrome.web";
+import { getStaffPortalSession } from "backend/RIA/staffPortalAuth.web";
 import {
-  getInventorySchema,
-  listInventoryItems,
-  getInventoryItem,
-  saveInventoryItem,
-  duplicateInventoryItem,
-  deleteInventoryItem
-} from "src/backend/AMADEUS/inventoryControl.web";
+  getDocuNetViewerBootstrap,
+  getDocuNetDocumentAccess,
+  acknowledgeDocuNetDocument
+} from "backend/RIA/docuNet.web";
 
-const EMBED_ID = "#inventoryControlEmbed";
-const INVENTORY_SOURCE = "SKANDI_INVENTORY_EMBED";
-const LEGACY_INVENTORY_SOURCE = "ALTEA_INVENTORY_EMBED";
-const PARENT_SOURCE = "SKANDI_INVENTORY_PARENT";
-const CHROME_SOURCE = "SKANDI_INTERNAL_CHROME";
-const LOGIN_PATH = "/riaintra";
-const HOME_PATH = "/";
+const EMBED = "#docuNetViewerEmbed";
+const SOURCE = "SKANDI_DOCUNET_VIEWER";
+const STAFF_LOGIN_PATH = "/riaintra";
+const ALLOWED_PATH_PREFIXES = ["/riaintra"];
+let sessionPromise = null;
 
-function currentPath() {
-  return "/" + wixLocation.path.join("/");
+function post(type, payload = {}, extra = {}) {
+  $w(EMBED).postMessage({ type, payload, ...extra });
 }
 
-function post(html, type, payload = {}) {
-  html.postMessage({
-    source: PARENT_SOURCE,
-    type,
-    payload,
-    timestamp: new Date().toISOString()
-  });
+function fail(error) {
+  post("DOCUNET_ERROR", {}, { message: error?.message || "DocuNet request failed." });
 }
 
-function allowedInternalPath(path) {
-  const p = String(path || "");
-  return p === "/" || p === LOGIN_PATH || p.startsWith("/riaintra") || p.startsWith("/altea");
+async function getSession() {
+  if (!sessionPromise) sessionPromise = getStaffPortalSession().finally(() => { sessionPromise = null; });
+  return sessionPromise;
 }
 
-function normalizeProfile(session = {}) {
-  const p = session.profile || session.staff || session.user || session.agent || {};
-  return {
-    name: p.name || [p.firstName, p.lastName].filter(Boolean).join(" ") || p.email || "",
-    firstName: p.firstName || "",
-    lastName: p.lastName || "",
-    email: p.email || "",
-    skId: p.skId || p.employeeId || "",
-    role: p.role || "",
-    position: p.position || p.jobTitle || p.role || "",
-    base: p.base || p.station || "",
-    station: p.station || p.base || ""
-  };
-}
-
-async function getAuthorizedSession() {
-  const session = await getStaffPortalSession().catch(() => null);
-  if (!session || session.authorized === false || session.ok === false) {
-    wixLocation.to(LOGIN_PATH);
-    return null;
+async function sendStaffProfile() {
+  const session = await getSession();
+  const profile = session?.profile || session?.agent || null;
+  if (session?.authorized !== true || !profile) {
+    post("PROFILE_ERROR", { code: session?.code || "STAFF_ACCESS_DENIED" });
+    wixLocation.to(STAFF_LOGIN_PATH);
+    return;
   }
-  return session;
+  post("MEMBER_DATA", profile);
 }
 
-async function sendChromeBootstrap(html) {
-  const session = await getAuthorizedSession();
-  if (!session) return null;
-
-  post(html, "INTERNAL_CHROME_BOOTSTRAP", {
-    pageName: "Inventory Control",
-    pagePath: currentPath(),
-    pageSubtitle: "ALTEA product, content and operations records",
-    profile: normalizeProfile(session),
-    apps: session.apps || [],
-    isAltea: true
-  });
-
-  return session;
-}
-
-async function doLogout() {
-  try {
-    await authentication.logout();
-  } catch (err) {
-    console.warn("Logout warning:", err);
+function openInternalPath(rawPath) {
+  const path = String(rawPath || "").trim();
+  if (!path || !ALLOWED_PATH_PREFIXES.some(prefix => path === prefix || path.startsWith(`${prefix}/`))) {
+    throw new Error("Invalid internal destination.");
   }
-  wixLocation.to(HOME_PATH);
+  wixLocation.to(path);
 }
 
-$w.onReady(function () {
-  const html = $w(EMBED_ID);
-
-  html.onMessage(async (event) => {
-    const msg = event.data || {};
-    const source = msg.source || "";
-    const type = msg.type || msg.event || "";
-    const payload = msg.payload || {};
-
+$w.onReady(() => {
+  $w(EMBED).onMessage(async event => {
+    const message = event.data || {};
+    if (message.source !== SOURCE) return;
     try {
-      if (source === CHROME_SOURCE) {
-        if (type === "INTERNAL_CHROME_READY") {
-          await sendChromeBootstrap(html);
-          return;
-        }
-
-        if (type === "INTERNAL_LOGOUT") {
-          await doLogout();
-          return;
-        }
-
-        if (type === "INTERNAL_NAVIGATE") {
-          const path = payload.path || msg.path;
-          if (allowedInternalPath(path)) wixLocation.to(path);
-          return;
-        }
-
-        if (type === "INTERNAL_GLOBAL_SEARCH") {
-          const query = payload.query || msg.query || "";
-          const result = await runInternalGlobalSearch(query);
-          post(html, "INTERNAL_SEARCH_RESULTS", {
-            requestId: payload.requestId || msg.requestId || "",
-            query,
-            results: result.results || result.items || []
-          });
-          return;
-        }
-      }
-
-      if (source && source !== INVENTORY_SOURCE && source !== LEGACY_INVENTORY_SOURCE) {
+      if (message.type === "NAVIGATE") {
+        openInternalPath(message.path || message.payload?.path);
         return;
       }
-
-      if (type === "INV_READY") {
-        const session = await sendChromeBootstrap(html);
-        if (!session) return;
-
-        const schema = await getInventorySchema();
-        post(html, "INV_SCHEMA", { schema });
+      if (["UI_READY", "PROFILE_REFRESH", "INTERNAL_CHROME_READY"].includes(message.type)) {
+        await sendStaffProfile();
         return;
       }
-
-      if (type === "INV_LIST_REQUEST") {
-        const result = await listInventoryItems(payload);
-        post(html, "INV_LIST", result);
-        return;
-      }
-
-      if (type === "INV_GET_REQUEST") {
-        const result = await getInventoryItem(payload);
-        post(html, "INV_ITEM", result);
-        return;
-      }
-
-      if (type === "INV_SAVE_REQUEST") {
-        const result = await saveInventoryItem(payload);
-        post(html, "INV_SAVE_OK", result);
-        return;
-      }
-
-      if (type === "INV_DUPLICATE_REQUEST") {
-        const result = await duplicateInventoryItem(payload);
-        post(html, "INV_DUPLICATE_OK", result);
-        return;
-      }
-
-      if (type === "INV_DELETE_REQUEST") {
-        const result = await deleteInventoryItem(payload);
-        post(html, "INV_DELETE_OK", result);
-        return;
+      switch (message.type) {
+        case "DOCUNET_READY":
+        case "DOCUNET_BOOTSTRAP":
+          post("DOCUNET_BOOTSTRAP_RESULT", await getDocuNetViewerBootstrap());
+          break;
+        case "DOCUNET_OPEN_DOCUMENT":
+          post("DOCUNET_DOCUMENT_ACCESS_RESULT", await getDocuNetDocumentAccess(message.payload || {}));
+          break;
+        case "DOCUNET_ACKNOWLEDGE":
+          post("DOCUNET_ACKNOWLEDGE_RESULT", await acknowledgeDocuNetDocument(message.payload || {}));
+          break;
       }
     } catch (error) {
-      post(html, "INV_ERROR", {
-        message: error.message || "Inventory action failed."
-      });
+      fail(error);
     }
   });
+  sendStaffProfile().catch(fail);
 });
