@@ -1,5 +1,5 @@
-import { sbInsert } from "src/backend/supabaseClient";
-import { uid, nowIso } from "src/backend/core/response";
+import { sbInsert } from "backend/supabaseClient";
+import { uid, nowIso } from "backend/core/response";
 
 const EVENTS_TABLE = "platform_events";
 
