@@ -3,16 +3,14 @@ import { currentMember } from 'wix-members';
 // IMPORT YOUR SUPABASE BACKEND FUNCTION HERE
 // Example: import { insertReportToSupabase } from "backend/supabaseReports.web";
 
-const HTML_ID = "#helpdeskEmbed"; // IMPORTANT: Change this to your actual HTML element ID
+const HTML_ID = "#helpdeskEmbed"; // IMPORTANT: Change this to your actual HTML element ID in Wix
 const CHILD_SOURCE = "SKANDI_EMPLOYEE_HELPDESK";
 const PARENT_SOURCE = "SKANDI_WIX_PARENT";
 
-// Helper to safely parse objects
 function asObject(value) {
     return value && typeof value === "object" && !Array.isArray(value) ? value : {};
 }
 
-// Helper to flatten the payload
 function childPayload(message) {
     return {
         ...asObject(message),
@@ -20,7 +18,6 @@ function childPayload(message) {
     };
 }
 
-// Helper to securely send messages back to the HTML iframe
 function postToEmbed(html, type, payload = {}, requestId = "") {
     html.postMessage({
         source: PARENT_SOURCE,
@@ -57,20 +54,27 @@ $w.onReady(function () {
         try {
             switch (message.type) {
                 
-                // 1. WHEN THE IFRAME LOADS
+                // 1. WHEN THE IFRAME LOADS - PASS MEMBER DATA & MANAGER DATA
                 case "UI_READY":
-                    // Automatically grab the logged-in Wix Member's identity
                     try {
                         const member = await currentMember.getMember();
                         if (member && member.contactDetails) {
+                            
+                            // NOTE: Replace these manager variables with how you actually retrieve manager data from your database.
+                            // For now, this simulates fetching it from a database query.
+                            const mockManagerName = "Director Operations";
+                            const mockManagerEmail = "operations@skanditravels.com";
+
                             postToEmbed(htmlComponent, "MEMBER_DATA", {
                                 firstName: member.contactDetails.firstName || "",
                                 lastName: member.contactDetails.lastName || "",
-                                employeeId: member.profile?.nickname || "" // Use your preferred ID field
+                                employeeId: member.profile?.nickname || "",
+                                managerName: mockManagerName,
+                                managerEmail: mockManagerEmail
                             }, requestId);
                         }
                     } catch (err) {
-                        console.warn("No active member session found. Form will require manual entry.", err);
+                        console.warn("No active member session found. Dashboard will require manual entry.", err);
                     }
                     break;
 
