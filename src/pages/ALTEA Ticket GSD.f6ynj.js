@@ -1,7 +1,6 @@
 // pages/riaintra-altea.js
-// Page URL: /riaintra/altea
-// ALTEA HTML Embed ID: #alteaMasterEmbed
-// Global Staff Chrome HTML Embed ID: #staffInternalChromeEmbed
+// Page URL: /riaintra/success-factors/altea/ticketing
+// ALTEA HTML Embed ID: #alteaTicketingEmbed
 
 import wixLocation from "wix-location";
 import { authentication } from "wix-members-frontend";
@@ -103,8 +102,7 @@ $w.onReady(() => {
     },
   });
 });
-const ALTEA_EMBED_ID = "#alteaMasterEmbed";
-const CHROME_EMBED_ID = "#staffInternalChromeEmbed";
+const ALTEA_EMBED_ID = "#alteaTicketingEmbed";
 
 const STAFF_LOGIN_PATH = "/riaintra";
 const HOME_PATH = "/";
