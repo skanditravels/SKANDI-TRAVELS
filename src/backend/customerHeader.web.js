@@ -1,5 +1,5 @@
 import { webMethod, Permissions } from "wix-web-module";
-import { requireCustomerContext } from "src/backend/core/authContext";
+import { requireCustomerContext } from "backend/core/authContext";
 
 export const getCustomerHeaderSession = webMethod(
   Permissions.Anyone,
