@@ -7,7 +7,7 @@ import {
   isAgentAuthorized,
   publicAgent,
   updateAgentLogin,
-} from './staffPortalAuth.repository.js';
+} from 'backend/RIA/staffPortalAuth.repository.js';
 
 function normalizeSkId(value) {
   return typeof value === 'string' ? value.trim().toUpperCase() : '';
