@@ -1,6 +1,6 @@
 import { webMethod, Permissions } from 'wix-web-module';
-import { requireInternalAgent, text, writeInternalAudit } from '../RIA/internalAccess.js';
-import { restRequest } from '../RIA/supabaseServer.js';
+import { requireInternalAgent, text, writeInternalAudit } from 'backend/RIA/internalAccess.js';
+import { restRequest } from 'backend/RIA/supabaseServer.js';
 
 function now() { return new Date().toISOString(); }
 function messageMap(row = {}) { const payload = row.payload && typeof row.payload === 'object' ? row.payload : {}; return { id: row.id || '', subject: row.title || '', body: row.body || '', to: row.member_id || '', status: row.status || '', folder: payload.folder || (row.status === 'DRAFT' ? 'Drafts' : 'Sent'), from: payload.from || '', createdAt: row.created_at || '', updatedAt: row.updated_at || '', payload }; }
