@@ -1,3 +1,3 @@
-export * from "src/backend/domains/loyalty/service";
-export * from "src/backend/domains/loyalty/repository";
-export * from "src/backend/domains/loyalty/mapper";
+export * from "backend/domains/loyalty/service";
+export * from "backend/domains/loyalty/repository";
+export * from "backend/domains/loyalty/mapper";
