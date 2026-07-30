@@ -6,7 +6,7 @@ import { authentication } from "wix-members-frontend";
 import {
   loginStaffWithSkId,
   getStaffPortalSession
-} from "src/backend/RIA/staffPortalAuth.web";
+} from "backend/RIA/staffPortalAuth.web";
 
 const EMBED_ID = "#staffLoginEmbed";
 const CHILD_SOURCE = "SKANDI_STAFF_LOGIN";
