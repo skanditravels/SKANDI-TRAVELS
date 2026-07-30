@@ -11,7 +11,7 @@ import {
   getStripePublishableKey,
   getProviderEnvironment
 } from "src/backend/duffelClient";
-import { getStaffPortalSession } from "src/backend/RIA/staffPortalAuth.web";
+import { getStaffPortalSession } from "backend/RIA/staffPortalAuth.web";
 
 const CABIN_CLASSES = new Set(["economy", "premium_economy", "business", "first"]);
 const PASSENGER_TYPES = new Set(["adult"]);
