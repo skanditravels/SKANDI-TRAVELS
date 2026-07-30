@@ -1,7 +1,7 @@
 import {
   getDocumentPacketForExecution,
   submitDocumentExecution
-} from "src/backend/documentExecution.web";
+} from "backend/documentExecution.web";
 
 import wixLocation from "wix-location-frontend";
 
