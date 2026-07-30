@@ -1,6 +1,6 @@
 import { Permissions, webMethod } from "wix-web-module";
-import { requireSuperAdmin } from "src/backend/SUPERADMIN/superAdminAuth";
-import { publicError } from "src/backend/SUPERADMIN/superAdminConfig";
+import { requireSuperAdmin } from "backend/SUPERADMIN/superAdminAuth";
+import { publicError } from "backend/SUPERADMIN/superAdminConfig";
 import {
   getSuperAdminBootstrap as buildSuperAdminBootstrap,
   listAuthUsers,
@@ -11,7 +11,7 @@ import {
   mutateAuthUser,
   mutateStorage,
   mutateTableRecord
-} from "src/backend/SUPERADMIN/superAdminRepository";
+} from "backend/SUPERADMIN/superAdminRepository";
 
 async function runAuthorized(operationName, handler) {
   try {
