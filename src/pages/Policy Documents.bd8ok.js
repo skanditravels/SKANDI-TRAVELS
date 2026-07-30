@@ -2,37 +2,60 @@ import { getPublicLegalDocument } from "src/backend/LEGAL/legalPolicyService.web
 import { sbInsert, sbSelect, sbUpdate, eq, and, order } from "src/backend/supabaseClient";
 import { uid, nowIso } from "src/backend/core/response";
 
-const EMBED_ID = "#legalCookiesEmbed";
+// Map each Multi-State Box state to its respective embed ID and legal policy type
+const STATE_CONFIG = {
+  legalCookies: { embedId: "#legalCookiesEmbed", type: "cookies" },
+  legalPrivacy: { embedId: "#legalPrivacyEmbed", type: "privacy" },
+  legalDisclaimer: { embedId: "#legalDisclaimerEmbed", type: "disclaimer" },
+  legalBooking: { embedId: "#legalBookingEmbed", type: "booking" },
+  legalAccessibility: { embedId: "#legalAccessibilityEmbed", type: "accessibility" }
+};
+
 const HTML_SOURCE = "SKANDI_LEGAL_DOCUMENT";
 const PARENT_SOURCE = "SKANDI_WIX_PARENT";
-const LEGAL_TYPE = "cookies";
 const TABLE = "customer_notifications";
 
+function getCurrentConfig() {
+  const currentState = $w("#legalMultiDoc").currentState?.id;
+  return STATE_CONFIG[currentState] || STATE_CONFIG.legalCookies;
+}
+
 function send(type, payload = {}) {
-  $w(EMBED_ID).postMessage({ source: PARENT_SOURCE, type, payload, timestamp: new Date().toISOString() });
+  const config = getCurrentConfig();
+  $w(config.embedId).postMessage({ source: PARENT_SOURCE, type, payload, timestamp: new Date().toISOString() });
 }
 
 async function load() {
   try {
-    send("LEGAL_DOCUMENT_DATA", await getPublicLegalDocument({ type: LEGAL_TYPE }));
+    const config = getCurrentConfig();
+    send("LEGAL_DOCUMENT_DATA", await getPublicLegalDocument({ type: config.type }));
   } catch (error) {
     send("LEGAL_ERROR", { message: "This legal document is temporarily unavailable." });
   }
 }
 
 $w.onReady(function () {
-  const embed = $w(EMBED_ID);
-  embed.onMessage(async (event) => {
-    const msg = event.data || {};
-    if (msg.source && msg.source !== HTML_SOURCE) return;
-    if (msg.type === "LEGAL_DOCUMENT_READY" || msg.type === "LEGAL_DOCUMENT_REFRESH") await load();
+  // Listen for state changes inside the multi-state box
+  $w("#legalMultiDoc").onStateChanged(() => {
+    load();
   });
+
+  // Attach message listener to all relevant embeds or the current one
+  Object.values(STATE_CONFIG).forEach(config => {
+    const embed = $w(config.embedId);
+    if (embed) {
+      embed.onMessage(async (event) => {
+        const msg = event.data || {};
+        if (msg.source && msg.source !== HTML_SOURCE) return;
+        if (msg.type === "LEGAL_DOCUMENT_READY" || msg.type === "LEGAL_DOCUMENT_REFRESH") await load();
+      });
+    }
+  });
+
   load();
 });
 
-
-
-
+// Your backend notification exports remain untouched below
 export async function createNotification(data = {}) {
   const rows = await sbInsert(TABLE, {
     notification_id: uid("NOTIF"),
