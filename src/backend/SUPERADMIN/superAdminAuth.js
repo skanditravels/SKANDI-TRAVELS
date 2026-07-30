@@ -1,5 +1,5 @@
 import { currentMember } from "wix-members-backend";
-import { getRuntimeConfig } from "./supabaseAdminServer";
+import { getRuntimeConfig } from "backend/SUPERADMIN/supabaseAdminServer";
 
 function firstEmail(member) {
   return (
