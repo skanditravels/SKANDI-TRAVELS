@@ -1,6 +1,6 @@
 import { currentMember } from "wix-members-backend";
-import { sbSelect, sbInsert, sbUpdate, eq } from "src/backend/supabaseClient";
-import { clean, nowIso } from "src/backend/core/response";
+import { sbSelect, sbInsert, sbUpdate, eq } from "backend/supabaseClient";
+import { clean, nowIso } from "backend/core/response";
 
 const PROFILE_TABLE = "customer_profiles";
 
