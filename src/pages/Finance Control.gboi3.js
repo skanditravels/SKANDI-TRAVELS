@@ -1,6 +1,6 @@
 import wixLocation from "wix-location";
 import { authentication } from "wix-members-frontend";
-import { bindInternalHtmlBridge } from 'src/public/internalHtmlBridge';
+import { bindInternalHtmlBridge } from 'public/internalHtmlBridge';
 import {
   getHrSession,
   listStaff,
@@ -9,13 +9,13 @@ import {
   generateSkId,
   printStaffBadge,
   getStaffHrReports,
-} from 'src/backend/RIA/staffHR.web';
+} from 'backend/RIA/staffHR.web';
 import {
   savePayrollProfile,
   createPayrollPeriod,
   calculatePayrollRun,
   finalizePayrollRun,
-} from 'src/backend/RIA/staffPayroll.web';
+} from 'backend/RIA/staffPayroll.web';
 
 const HR_TYPES = new Set([
   'HR_READY', 'HR_REFRESH', 'HR_SAVE_STAFF', 'HR_DEACTIVATE', 'HR_REACTIVATE',
@@ -26,7 +26,7 @@ const HR_TYPES = new Set([
 
 $w.onReady(() => {
   bindInternalHtmlBridge({
-    embed: $w('#staffHrEmbed'),
+    embed: $w('#staffDasboardEmbed'),
     allowedSources: new Set(['SKANDI_HR_STAFF', 'SKANDI_CAREERS_CONTROL']),
     allowedTypes: HR_TYPES,
     toError: () => ({ type: 'HR_ERROR', payload: { code: 'ACTION_FAILED' } }),
