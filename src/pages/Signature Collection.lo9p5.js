@@ -1,7 +1,7 @@
 import {
   getSignatureCollectionPayload,
   searchSignatureCollectionPackages
-} from "src/backend/skandiAboutSignature.web";
+} from "backend/skandiAboutSignature.web";
 
 const EMBED_ID = "#signatureCollectionEmbed";
 const HTML_SOURCE = "SKANDI_SIGNATURE_COLLECTION";
