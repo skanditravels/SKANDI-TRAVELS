@@ -197,7 +197,7 @@ async function handleHeaderMessage(html, message) {
     case "HEADER_LOGOUT":
       closeHeaderPanels(html);
 
-      authentication.logout();
+      await authentication.logout();
 
       postToHtml(html, "CUSTOMER_HEADER_STATE", {
         loggedIn: false,
@@ -326,10 +326,33 @@ async function handleHomeMessage(html, message) {
         offer.searchContext ||
         {};
 
-      const result = await createBookingCartFromOffer({
+      let result = await createBookingCartFromOffer({
         offer,
         search
       });
+
+      if (result?.requiresLogin) {
+        try {
+          await authentication.promptLogin();
+        } catch (error) {
+          postHomeError(html, {
+            message: "Sign in was cancelled. The offer was not saved."
+          });
+          return true;
+        }
+
+        await sendHeaderState(html);
+        result = await createBookingCartFromOffer({
+          offer,
+          search
+        });
+      }
+
+      if (result?.requiresLogin) {
+        throw new Error(
+          result.message || "Sign in to continue with this offer."
+        );
+      }
 
       if (!result?.cartId) {
         throw new Error(
@@ -339,9 +362,20 @@ async function handleHomeMessage(html, message) {
 
       postToHtml(html, "HOME_NAVIGATE_TO_OFFER", result);
 
+      const step = [
+        "offer",
+        "extras",
+        "transfer",
+        "apis",
+        "seats",
+        "payment",
+        "confirmation"
+      ].includes(result.step)
+        ? result.step
+        : "offer";
       navigateTo(
         html,
-        `/booking?step=offer&cartId=${encodeURIComponent(result.cartId)}`
+        `/booking?step=${encodeURIComponent(step)}&cartId=${encodeURIComponent(result.cartId)}`
       );
 
       return true;
