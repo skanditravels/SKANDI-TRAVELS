@@ -1,4 +1,4 @@
-import { getPublicNetworkMapData } from "src/backend/networkMapService.web";
+import { getPublicNetworkMapData } from backend/networkMapService.web";
 
 const HTML_ID = "#htmlSkandiMap";
 const HTML_SOURCE = "SKANDI_PUBLIC_NETWORK_MAP";
