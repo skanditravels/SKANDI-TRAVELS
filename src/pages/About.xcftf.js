@@ -1,12 +1,9 @@
 import wixLocationFrontend from "wix-location-frontend";
+
 import {
   currentMember,
   authentication
 } from "wix-members-frontend";
-
-import {
-  getAboutPagePayload
-} from "backend/skandiAboutSignature.web";
 
 import {
   getCustomerHeaderSession,
@@ -19,7 +16,6 @@ const ABOUT_SOURCE = "SKANDI_ABOUT_PAGE";
 const FOOTER_SOURCE = "SKANDI_CUSTOMER_FOOTER";
 const PARENT_SOURCE = "SKANDI_WIX_PARENT";
 
-let aboutLoadPromise = null;
 let headerLoadPromise = null;
 
 /* ==========================================================================
@@ -67,11 +63,9 @@ function parseMessage(data) {
     }
   }
 
-  if (!data || typeof data !== "object") {
-    return null;
-  }
-
-  return data;
+  return data && typeof data === "object"
+    ? data
+    : null;
 }
 
 function send(html, type, payload = {}) {
@@ -96,6 +90,30 @@ function closeHeaderPanels(html) {
 }
 
 /* ==========================================================================
+   ABOUT PAGE CONTENT
+   ========================================================================== */
+
+/*
+ * The About HTML contains its own default facts and timeline.
+ *
+ * Sending empty arrays tells the HTML to use those defaults.
+ * No skandiAboutSignature.web.js backend is required.
+ */
+
+function sendAboutPageData(html) {
+  send(
+    html,
+    "ABOUT_PAGE_DATA",
+    {
+      settings: {},
+      facts: [],
+      timeline: [],
+      partners: []
+    }
+  );
+}
+
+/* ==========================================================================
    NAVIGATION
    ========================================================================== */
 
@@ -106,17 +124,13 @@ function navigateTo(html, rawPath) {
     return;
   }
 
-  const isInternalPath = path.startsWith("/");
-  const isExternalUrl = /^https?:\/\//i.test(path);
-  const isEmailLink = /^mailto:/i.test(path);
-  const isPhoneLink = /^tel:/i.test(path);
+  const validTarget =
+    path.startsWith("/") ||
+    /^https?:\/\//i.test(path) ||
+    /^mailto:/i.test(path) ||
+    /^tel:/i.test(path);
 
-  if (
-    !isInternalPath &&
-    !isExternalUrl &&
-    !isEmailLink &&
-    !isPhoneLink
-  ) {
+  if (!validTarget) {
     console.warn(
       `[About] Blocked invalid navigation target: ${path}`
     );
@@ -137,73 +151,10 @@ function navigateTo(html, rawPath) {
 }
 
 /* ==========================================================================
-   ABOUT PAGE DATA
+   CUSTOMER HEADER
    ========================================================================== */
 
-async function sendAboutPageData(
-  html,
-  forceRefresh = false
-) {
-  if (aboutLoadPromise && !forceRefresh) {
-    return aboutLoadPromise;
-  }
-
-  aboutLoadPromise = (async () => {
-    try {
-      const result = await getAboutPagePayload();
-
-      const payload = {
-        settings:
-          result?.settings &&
-          typeof result.settings === "object"
-            ? result.settings
-            : {},
-
-        facts: Array.isArray(result?.facts)
-          ? result.facts
-          : [],
-
-        timeline: Array.isArray(result?.timeline)
-          ? result.timeline
-          : [],
-
-        partners: Array.isArray(result?.partners)
-          ? result.partners
-          : []
-      };
-
-      send(
-        html,
-        "ABOUT_PAGE_DATA",
-        payload
-      );
-    } catch (error) {
-      console.error(
-        "[About] Could not load page payload.",
-        error
-      );
-
-      send(
-        html,
-        "ABOUT_PAGE_ERROR",
-        {
-          message:
-            "About page content is temporarily unavailable."
-        }
-      );
-    } finally {
-      aboutLoadPromise = null;
-    }
-  })();
-
-  return aboutLoadPromise;
-}
-
-/* ==========================================================================
-   CUSTOMER HEADER SESSION
-   ========================================================================== */
-
-function createGuestHeaderState() {
+function guestHeaderState() {
   return {
     loggedIn: false,
     displayName: "",
@@ -217,19 +168,23 @@ async function sendCustomerHeaderState(
   html,
   forceRefresh = false
 ) {
-  if (headerLoadPromise && !forceRefresh) {
+  if (
+    headerLoadPromise &&
+    !forceRefresh
+  ) {
     return headerLoadPromise;
   }
 
   headerLoadPromise = (async () => {
     try {
-      const member = await currentMember.getMember();
+      const member =
+        await currentMember.getMember();
 
       if (!member) {
         send(
           html,
           "CUSTOMER_HEADER_STATE",
-          createGuestHeaderState()
+          guestHeaderState()
         );
 
         return;
@@ -238,34 +193,36 @@ async function sendCustomerHeaderState(
       const session =
         await getCustomerHeaderSession();
 
+      const displayName =
+        session?.displayName ||
+        session?.name ||
+        session?.member?.displayName ||
+        member?.profile?.nickname ||
+        member?.profile?.title ||
+        member?.loginEmail ||
+        "";
+
+      const points = Number(
+        session?.points ||
+        session?.clubPoints ||
+        session?.rewards?.points ||
+        0
+      );
+
+      const tierName =
+        session?.tierName ||
+        session?.tier ||
+        session?.clubTier ||
+        "";
+
       send(
         html,
         "CUSTOMER_HEADER_STATE",
         {
           loggedIn: true,
-
-          displayName:
-            session?.displayName ||
-            session?.name ||
-            session?.member?.displayName ||
-            member?.profile?.nickname ||
-            member?.profile?.title ||
-            member?.loginEmail ||
-            "",
-
-          points: Number(
-            session?.points ||
-            session?.clubPoints ||
-            session?.rewards?.points ||
-            0
-          ),
-
-          tierName:
-            session?.tierName ||
-            session?.tier ||
-            session?.clubTier ||
-            "",
-
+          displayName,
+          points,
+          tierName,
           menu: Array.isArray(session?.menu)
             ? session.menu
             : []
@@ -280,7 +237,7 @@ async function sendCustomerHeaderState(
       send(
         html,
         "CUSTOMER_HEADER_STATE",
-        createGuestHeaderState()
+        guestHeaderState()
       );
     } finally {
       headerLoadPromise = null;
@@ -291,14 +248,15 @@ async function sendCustomerHeaderState(
 }
 
 /* ==========================================================================
-   ABOUT AND HEADER MESSAGE HANDLERS
+   ABOUT PAGE AND HEADER MESSAGES
    ========================================================================== */
 
 async function handleAboutMessage(
   html,
   message
 ) {
-  const payload = message.payload || {};
+  const payload =
+    message.payload || {};
 
   const path = String(
     message.path ||
@@ -308,23 +266,23 @@ async function handleAboutMessage(
 
   switch (message.type) {
     case "ABOUT_PAGE_READY":
-      await Promise.all([
-        sendAboutPageData(html),
-        sendCustomerHeaderState(html)
-      ]);
+      sendAboutPageData(html);
 
-      return true;
-
-    case "ABOUT_PAGE_REFRESH":
-      await sendAboutPageData(
-        html,
-        true
+      await sendCustomerHeaderState(
+        html
       );
 
       return true;
 
+    case "ABOUT_PAGE_REFRESH":
+      sendAboutPageData(html);
+
+      return true;
+
     case "HEADER_READY":
-      await sendCustomerHeaderState(html);
+      await sendCustomerHeaderState(
+        html
+      );
 
       return true;
 
@@ -352,11 +310,11 @@ async function handleAboutMessage(
         await authentication.promptLogin();
       } catch (error) {
         /*
-         * promptLogin() can reject when the visitor
-         * closes the login dialog without signing in.
+         * Wix rejects this promise when the visitor
+         * closes the login window without signing in.
          */
         console.info(
-          "[About] Login was cancelled or did not complete.",
+          "[About] Login cancelled or incomplete.",
           error
         );
       }
@@ -385,7 +343,7 @@ async function handleAboutMessage(
       send(
         html,
         "CUSTOMER_HEADER_STATE",
-        createGuestHeaderState()
+        guestHeaderState()
       );
 
       wixLocationFrontend.to("/home");
@@ -396,9 +354,6 @@ async function handleAboutMessage(
       /*
        * Language and currency are stored in the
        * HTML component's localStorage.
-       *
-       * This event is intentionally accepted without
-       * changing member, booking, or API data.
        */
       return true;
 
@@ -408,14 +363,15 @@ async function handleAboutMessage(
 }
 
 /* ==========================================================================
-   FOOTER MESSAGE HANDLERS
+   FOOTER MESSAGES
    ========================================================================== */
 
 async function handleFooterMessage(
   html,
   message
 ) {
-  const payload = message.payload || {};
+  const payload =
+    message.payload || {};
 
   const path = String(
     message.path ||
@@ -526,7 +482,8 @@ async function handleFooterMessage(
    ========================================================================== */
 
 $w.onReady(function () {
-  const html = getHtmlComponent();
+  const html =
+    getHtmlComponent();
 
   if (!html) {
     return;
@@ -611,18 +568,18 @@ $w.onReady(function () {
   });
 
   /*
-   * Load immediately.
-   *
-   * The HTML also sends ABOUT_PAGE_READY and HEADER_READY.
-   * The promise guards prevent duplicate backend calls.
+   * Initial bootstrap.
+   * The promise guard prevents duplicate member calls
+   * when HEADER_READY is received immediately afterward.
    */
-  Promise.all([
-    sendAboutPageData(html),
-    sendCustomerHeaderState(html)
-  ]).catch((error) => {
-    console.error(
-      "[About] Initial page bootstrap failed.",
-      error
-    );
-  });
+
+  sendAboutPageData(html);
+
+  sendCustomerHeaderState(html)
+    .catch((error) => {
+      console.error(
+        "[About] Initial header bootstrap failed.",
+        error
+      );
+    });
 });
