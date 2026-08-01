@@ -1,4 +1,5 @@
 import wixLocationFrontend from "wix-location-frontend";
+
 import {
   currentMember,
   authentication
@@ -20,8 +21,16 @@ import {
 } from "backend/customerHeader.web";
 
 /*
- * This must be the ID of the HTML Component containing the complete
- * Home page, header, mobile drawer and footer.
+ * Wix page: /home
+ * HTML Component ID: #htmlHome
+ *
+ * The HTML contains:
+ * - Home booking search
+ * - Locked SKANDI customer header
+ * - Language and currency controls
+ * - Mobile navigation
+ * - SKANDI Club panel
+ * - Locked SKANDI customer footer
  */
 const EMBED_ID = "#htmlHome";
 
@@ -30,37 +39,64 @@ const HEADER_SOURCE = "SKANDI_CUSTOMER_HEADER_EXPANDBAR";
 const FOOTER_SOURCE = "SKANDI_CUSTOMER_FOOTER";
 const PARENT_SOURCE = "SKANDI_WIX_PARENT";
 
-/* -------------------------------------------------------------------------- */
-/* Shared helpers                                                             */
-/* -------------------------------------------------------------------------- */
+let bootstrapPromise = null;
+let headerPromise = null;
 
-function getHtmlComponent(selector) {
-  let element;
+/* ==========================================================================
+   HTML COMPONENT HELPERS
+   ========================================================================== */
 
+function getHtmlComponent() {
   try {
-    element = $w(selector);
-  } catch (error) {
-    console.error(`[Home] Element ${selector} was not found.`, error);
-    return null;
-  }
+    const html = $w(EMBED_ID);
 
-  if (
-    !element ||
-    typeof element.onMessage !== "function" ||
-    typeof element.postMessage !== "function"
-  ) {
+    if (
+      !html ||
+      typeof html.onMessage !== "function" ||
+      typeof html.postMessage !== "function"
+    ) {
+      console.error(
+        `[Home] ${EMBED_ID} is not configured as a Wix HTML Component.`
+      );
+
+      return null;
+    }
+
+    return html;
+  } catch (error) {
     console.error(
-      `[Home] ${selector} is not a Wix HTML Component. ` +
-      "Select the HTML embed and verify its element ID."
+      `[Home] HTML Component ${EMBED_ID} was not found.`,
+      error
     );
 
     return null;
   }
-
-  return element;
 }
 
-function postToHtml(html, type, payload = {}) {
+function parseMessage(data) {
+  if (typeof data === "string") {
+    try {
+      return JSON.parse(data);
+    } catch (error) {
+      console.warn(
+        "[Home] Ignored an invalid JSON message.",
+        error
+      );
+
+      return null;
+    }
+  }
+
+  return data && typeof data === "object"
+    ? data
+    : null;
+}
+
+function postToHtml(
+  html,
+  type,
+  payload = {}
+) {
   html.postMessage({
     source: PARENT_SOURCE,
     type,
@@ -69,113 +105,206 @@ function postToHtml(html, type, payload = {}) {
   });
 }
 
-function postHomeError(html, error) {
-  html.postMessage({
-    source: PARENT_SOURCE,
-    type: "HOME_ERROR",
-    message: error?.message || "The request failed.",
-    timestamp: new Date().toISOString()
-  });
+function postHomeError(
+  html,
+  error
+) {
+  postToHtml(
+    html,
+    "HOME_ERROR",
+    {
+      message:
+        error?.message ||
+        "The request could not be completed."
+    }
+  );
 }
 
 function closeHeaderPanels(html) {
-  postToHtml(html, "CLOSE_CUSTOMER_HEADER_PANELS");
+  postToHtml(
+    html,
+    "CLOSE_CUSTOMER_HEADER_PANELS",
+    {}
+  );
 }
 
-function navigateTo(html, rawPath) {
-  const path = String(rawPath || "").trim();
+/* ==========================================================================
+   NAVIGATION
+   ========================================================================== */
+
+function navigateTo(
+  html,
+  rawPath
+) {
+  const path =
+    String(rawPath || "").trim();
 
   if (!path) {
     return;
   }
 
-  const isInternalPath = path.startsWith("/");
-  const isExternalUrl = /^https?:\/\//i.test(path);
-  const isEmailLink = /^mailto:/i.test(path);
-  const isPhoneLink = /^tel:/i.test(path);
+  const validTarget =
+    path.startsWith("/") ||
+    /^https?:\/\//i.test(path) ||
+    /^mailto:/i.test(path) ||
+    /^tel:/i.test(path);
 
-  if (
-    !isInternalPath &&
-    !isExternalUrl &&
-    !isEmailLink &&
-    !isPhoneLink
-  ) {
-    console.warn(`[Home] Blocked invalid navigation target: ${path}`);
+  if (!validTarget) {
+    console.warn(
+      `[Home] Blocked invalid navigation target: ${path}`
+    );
+
     return;
   }
 
   closeHeaderPanels(html);
-  wixLocationFrontend.to(path);
-}
 
-/* -------------------------------------------------------------------------- */
-/* Customer header                                                            */
-/* -------------------------------------------------------------------------- */
-
-async function sendHeaderState(html) {
   try {
-    const member = await currentMember.getMember();
-
-    if (!member) {
-      postToHtml(html, "CUSTOMER_HEADER_STATE", {
-        loggedIn: false,
-        displayName: "",
-        points: 0,
-        tierName: "",
-        menu: []
-      });
-
-      return;
-    }
-
-    const session = await getCustomerHeaderSession();
-
-    postToHtml(html, "CUSTOMER_HEADER_STATE", {
-      loggedIn: true,
-      displayName: session?.displayName || "",
-      points: Number(session?.points || 0),
-      tierName: session?.tierName || "",
-      menu: Array.isArray(session?.menu) ? session.menu : []
-    });
+    wixLocationFrontend.to(path);
   } catch (error) {
-    console.error("[Home] Could not load customer header state.", error);
-
-    postToHtml(html, "CUSTOMER_HEADER_STATE", {
-      loggedIn: false,
-      displayName: "",
-      points: 0,
-      tierName: "",
-      menu: []
-    });
+    console.error(
+      `[Home] Navigation failed for ${path}.`,
+      error
+    );
   }
 }
 
-async function handleHeaderMessage(html, message) {
-  const payload = message.payload || {};
-  const path = message.path || payload.path || "";
+/* ==========================================================================
+   CUSTOMER HEADER
+   ========================================================================== */
+
+function createGuestHeaderState() {
+  return {
+    loggedIn: false,
+    displayName: "",
+    points: 0,
+    tierName: "",
+    menu: []
+  };
+}
+
+async function sendHeaderState(
+  html,
+  forceRefresh = false
+) {
+  if (
+    headerPromise &&
+    !forceRefresh
+  ) {
+    return headerPromise;
+  }
+
+  headerPromise = (async () => {
+    try {
+      const member =
+        await currentMember.getMember();
+
+      if (!member) {
+        postToHtml(
+          html,
+          "CUSTOMER_HEADER_STATE",
+          createGuestHeaderState()
+        );
+
+        return;
+      }
+
+      const session =
+        await getCustomerHeaderSession();
+
+      const displayName =
+        session?.displayName ||
+        session?.name ||
+        session?.member?.displayName ||
+        member?.profile?.nickname ||
+        member?.profile?.title ||
+        member?.loginEmail ||
+        "";
+
+      const points = Number(
+        session?.points ||
+        session?.clubPoints ||
+        session?.rewards?.points ||
+        0
+      );
+
+      const tierName =
+        session?.tierName ||
+        session?.tier ||
+        session?.clubTier ||
+        "";
+
+      postToHtml(
+        html,
+        "CUSTOMER_HEADER_STATE",
+        {
+          loggedIn: true,
+          displayName,
+          points,
+          tierName,
+          menu: Array.isArray(session?.menu)
+            ? session.menu
+            : []
+        }
+      );
+    } catch (error) {
+      console.error(
+        "[Home] Could not load customer header state.",
+        error
+      );
+
+      postToHtml(
+        html,
+        "CUSTOMER_HEADER_STATE",
+        createGuestHeaderState()
+      );
+    } finally {
+      headerPromise = null;
+    }
+  })();
+
+  return headerPromise;
+}
+
+async function handleHeaderMessage(
+  html,
+  message
+) {
+  const payload =
+    message.payload || {};
+
+  const path = String(
+    message.path ||
+    payload.path ||
+    ""
+  ).trim();
 
   switch (message.type) {
     case "HEADER_READY":
       await sendHeaderState(html);
       return true;
 
-    /*
-     * Compatibility handler. The current combined HTML normally sends
-     * HOME_NAVIGATE for menu links, but older header versions may still
-     * send HEADER_NAVIGATE.
-     */
     case "HEADER_NAVIGATE":
-      navigateTo(html, path);
+      navigateTo(
+        html,
+        path
+      );
+
       return true;
 
     case "HEADER_SEARCH":
       closeHeaderPanels(html);
 
       /*
-       * Header and Home search are inside the same HTML Component.
-       * Ask the HTML to reveal and focus its existing search form.
+       * The search form is in the same HTML Component.
+       * Ask the HTML to return to the Home search area.
        */
-      postToHtml(html, "HOME_FOCUS_SEARCH");
+      postToHtml(
+        html,
+        "HOME_FOCUS_SEARCH",
+        {}
+      );
+
       return true;
 
     case "HEADER_LOGIN":
@@ -185,29 +314,54 @@ async function handleHeaderMessage(html, message) {
         await authentication.promptLogin();
       } catch (error) {
         /*
-         * promptLogin() rejects when the visitor closes the login dialog.
-         * Treat that as a cancelled action instead of a page-level failure.
+         * Wix rejects the promise when the visitor closes
+         * the login dialog without completing sign-in.
          */
-        console.info("[Home] Login was cancelled or did not complete.", error);
+        console.info(
+          "[Home] Login was cancelled or incomplete.",
+          error
+        );
       }
 
-      await sendHeaderState(html);
+      await sendHeaderState(
+        html,
+        true
+      );
+
       return true;
 
     case "HEADER_LOGOUT":
       closeHeaderPanels(html);
 
-      await authentication.logout();
+      try {
+        await Promise.resolve(
+          authentication.logout()
+        );
+      } catch (error) {
+        console.warn(
+          "[Home] Logout returned an error.",
+          error
+        );
+      }
 
-      postToHtml(html, "CUSTOMER_HEADER_STATE", {
-        loggedIn: false,
-        displayName: "",
-        points: 0,
-        tierName: "",
-        menu: []
-      });
+      postToHtml(
+        html,
+        "CUSTOMER_HEADER_STATE",
+        createGuestHeaderState()
+      );
 
       wixLocationFrontend.to("/home");
+
+      return true;
+
+    case "UPDATE_SETTINGS":
+      /*
+       * Language and currency are stored by the HTML
+       * Component in localStorage.
+       *
+       * This event is accepted so the same header contract
+       * works across every public SKANDI page.
+       */
       return true;
 
     default:
@@ -215,32 +369,49 @@ async function handleHeaderMessage(html, message) {
   }
 }
 
-/* -------------------------------------------------------------------------- */
-/* Customer footer                                                            */
-/* -------------------------------------------------------------------------- */
+/* ==========================================================================
+   CUSTOMER FOOTER
+   ========================================================================== */
 
-async function handleFooterMessage(html, message) {
-  const payload = message.payload || {};
-  const path = message.path || payload.path || "";
+async function handleFooterMessage(
+  html,
+  message
+) {
+  const payload =
+    message.payload || {};
+
+  const path = String(
+    message.path ||
+    payload.path ||
+    ""
+  ).trim();
 
   switch (message.type) {
     case "FOOTER_READY":
-      postToHtml(html, "CUSTOMER_FOOTER_STATE", {
-        ready: true
-      });
+      postToHtml(
+        html,
+        "CUSTOMER_FOOTER_STATE",
+        {
+          ready: true
+        }
+      );
 
       return true;
 
-    /*
-     * Compatibility handler. The current combined HTML normally sends
-     * HOME_NAVIGATE for footer links.
-     */
     case "FOOTER_NAVIGATE":
-      navigateTo(html, path);
+      navigateTo(
+        html,
+        path
+      );
+
       return true;
 
     case "FOOTER_STAFF_LOGIN":
-      navigateTo(html, "/riaintra");
+      navigateTo(
+        html,
+        "/riaintra"
+      );
+
       return true;
 
     case "FOOTER_NEWSLETTER_SIGNUP": {
@@ -251,27 +422,59 @@ async function handleFooterMessage(html, message) {
       ).trim();
 
       if (!email) {
-        postToHtml(html, "FOOTER_NEWSLETTER_RESULT", {
-          ok: false,
-          message: "Please enter your email address."
-        });
+        postToHtml(
+          html,
+          "FOOTER_NEWSLETTER_RESULT",
+          {
+            ok: false,
+            message:
+              "Please enter your email address."
+          }
+        );
 
         return true;
       }
 
-      const result = await subscribeCustomerNewsletter({
-        email,
-        source: payload.source || "Footer"
-      });
+      try {
+        const result =
+          await subscribeCustomerNewsletter({
+            email,
+            source:
+              payload.source ||
+              "Footer"
+          });
 
-      postToHtml(
-        html,
-        "FOOTER_NEWSLETTER_RESULT",
-        result || {
-          ok: true,
-          message: "Thank you for subscribing."
-        }
-      );
+        postToHtml(
+          html,
+          "FOOTER_NEWSLETTER_RESULT",
+          {
+            ok: true,
+
+            message:
+              result?.status === "updated"
+                ? "Your subscription is already active."
+                : "Thank you for subscribing.",
+
+            ...(result || {})
+          }
+        );
+      } catch (error) {
+        console.error(
+          "[Home] Newsletter signup failed.",
+          error
+        );
+
+        postToHtml(
+          html,
+          "FOOTER_NEWSLETTER_RESULT",
+          {
+            ok: false,
+            message:
+              error?.message ||
+              "Newsletter signup failed."
+          }
+        );
+      }
 
       return true;
     }
@@ -281,76 +484,160 @@ async function handleFooterMessage(html, message) {
   }
 }
 
-/* -------------------------------------------------------------------------- */
-/* Home booking, content and navigation                                       */
-/* -------------------------------------------------------------------------- */
+/* ==========================================================================
+   HOME BOOTSTRAP
+   ========================================================================== */
 
-async function handleHomeMessage(html, message) {
-  const payload = message.payload || {};
+async function sendHomeBootstrap(
+  html,
+  forceRefresh = false
+) {
+  if (
+    bootstrapPromise &&
+    !forceRefresh
+  ) {
+    return bootstrapPromise;
+  }
 
-  switch (message.type) {
-    case "HOME_READY": {
-      const [booking, content] = await Promise.all([
+  bootstrapPromise = (async () => {
+    try {
+      const [
+        booking,
+        content
+      ] = await Promise.all([
         getHomeBootstrap({}),
         getOldStyleHomeContent({})
       ]);
 
-      postToHtml(html, "HOME_BOOTSTRAP_RESULT", {
-        booking: booking || {},
-        content: content || {}
-      });
+      postToHtml(
+        html,
+        "HOME_BOOTSTRAP_RESULT",
+        {
+          booking:
+            booking || {},
+
+          content:
+            content || {}
+        }
+      );
+    } catch (error) {
+      console.error(
+        "[Home] Bootstrap failed.",
+        error
+      );
+
+      postHomeError(
+        html,
+        error
+      );
+    } finally {
+      bootstrapPromise = null;
+    }
+  })();
+
+  return bootstrapPromise;
+}
+
+/* ==========================================================================
+   HOME SEARCH AND BOOKING
+   ========================================================================== */
+
+async function handleHomeMessage(
+  html,
+  message
+) {
+  const payload =
+    message.payload || {};
+
+  switch (message.type) {
+    case "HOME_READY":
+      await sendHomeBootstrap(html);
+      return true;
+
+    case "HOME_REFRESH":
+      await sendHomeBootstrap(
+        html,
+        true
+      );
 
       return true;
-    }
 
     case "HOME_SEARCH": {
-      const search = message.search || payload.search || {};
+      const search =
+        message.search ||
+        payload.search ||
+        {};
 
-      const result = await searchUnifiedOffers({
-        search
-      });
+      const result =
+        await searchUnifiedOffers({
+          search
+        });
 
-      postToHtml(html, "HOME_SEARCH_RESULT", {
-        ...(result || {}),
-        items: Array.isArray(result?.items) ? result.items : []
-      });
+      postToHtml(
+        html,
+        "HOME_SEARCH_RESULT",
+        {
+          ...(result || {}),
+
+          items:
+            Array.isArray(result?.items)
+              ? result.items
+              : []
+        }
+      );
 
       return true;
     }
 
     case "HOME_SELECT_OFFER": {
-      const offer = message.offer || payload.offer || {};
+      const offer =
+        message.offer ||
+        payload.offer ||
+        {};
+
       const search =
         message.search ||
         payload.search ||
         offer.searchContext ||
         {};
 
-      let result = await createBookingCartFromOffer({
-        offer,
-        search
-      });
+      let result =
+        await createBookingCartFromOffer({
+          offer,
+          search
+        });
 
       if (result?.requiresLogin) {
         try {
           await authentication.promptLogin();
         } catch (error) {
-          postHomeError(html, {
-            message: "Sign in was cancelled. The offer was not saved."
-          });
+          postHomeError(
+            html,
+            {
+              message:
+                "Sign in was cancelled. The offer was not saved."
+            }
+          );
+
           return true;
         }
 
-        await sendHeaderState(html);
-        result = await createBookingCartFromOffer({
-          offer,
-          search
-        });
+        await sendHeaderState(
+          html,
+          true
+        );
+
+        result =
+          await createBookingCartFromOffer({
+            offer,
+            search
+          });
       }
 
       if (result?.requiresLogin) {
         throw new Error(
-          result.message || "Sign in to continue with this offer."
+          result?.message ||
+          "Sign in to continue with this offer."
         );
       }
 
@@ -360,9 +647,13 @@ async function handleHomeMessage(html, message) {
         );
       }
 
-      postToHtml(html, "HOME_NAVIGATE_TO_OFFER", result);
+      postToHtml(
+        html,
+        "HOME_NAVIGATE_TO_OFFER",
+        result
+      );
 
-      const step = [
+      const allowedSteps = [
         "offer",
         "extras",
         "transfer",
@@ -370,9 +661,13 @@ async function handleHomeMessage(html, message) {
         "seats",
         "payment",
         "confirmation"
-      ].includes(result.step)
-        ? result.step
-        : "offer";
+      ];
+
+      const step =
+        allowedSteps.includes(result?.step)
+          ? result.step
+          : "offer";
+
       navigateTo(
         html,
         `/booking?step=${encodeURIComponent(step)}&cartId=${encodeURIComponent(result.cartId)}`
@@ -381,14 +676,18 @@ async function handleHomeMessage(html, message) {
       return true;
     }
 
-    /*
-     * All current header, mobile drawer, Home and footer links use this
-     * one message type through navigateParent() in the HTML.
-     */
     case "HOME_NAVIGATE": {
-      const path = message.path || payload.path || "";
+      const path = String(
+        message.path ||
+        payload.path ||
+        ""
+      ).trim();
 
-      navigateTo(html, path);
+      navigateTo(
+        html,
+        path
+      );
+
       return true;
     }
 
@@ -397,84 +696,136 @@ async function handleHomeMessage(html, message) {
   }
 }
 
-/* -------------------------------------------------------------------------- */
-/* Error routing                                                              */
-/* -------------------------------------------------------------------------- */
+/* ==========================================================================
+   ERROR ROUTING
+   ========================================================================== */
 
-function handleMessageError(html, message, error) {
+function handleMessageError(
+  html,
+  message,
+  error
+) {
   console.error(
-    `[Home] ${message.source || "Unknown source"} / ` +
-    `${message.type || "Unknown message"} failed.`,
+    `[Home] ${
+      message.source ||
+      "Unknown source"
+    } / ${
+      message.type ||
+      "Unknown message"
+    } failed.`,
     error
   );
 
-  if (message.source === HOME_SOURCE) {
-    postHomeError(html, error);
+  if (
+    message.source === HOME_SOURCE
+  ) {
+    postHomeError(
+      html,
+      error
+    );
+
     return;
   }
 
   if (
     message.source === FOOTER_SOURCE &&
-    message.type === "FOOTER_NEWSLETTER_SIGNUP"
+    message.type ===
+      "FOOTER_NEWSLETTER_SIGNUP"
   ) {
-    postToHtml(html, "FOOTER_NEWSLETTER_RESULT", {
-      ok: false,
-      message: error?.message || "Newsletter signup failed."
-    });
+    postToHtml(
+      html,
+      "FOOTER_NEWSLETTER_RESULT",
+      {
+        ok: false,
+        message:
+          error?.message ||
+          "Newsletter signup failed."
+      }
+    );
 
     return;
   }
 
-  if (message.source === HEADER_SOURCE) {
-    postToHtml(html, "CUSTOMER_HEADER_STATE", {
-      loggedIn: false,
-      displayName: "",
-      points: 0,
-      tierName: "",
-      menu: []
-    });
+  if (
+    message.source === HEADER_SOURCE
+  ) {
+    postToHtml(
+      html,
+      "CUSTOMER_HEADER_STATE",
+      createGuestHeaderState()
+    );
   }
 }
 
-/* -------------------------------------------------------------------------- */
-/* Initialize the combined Home HTML Component                                */
-/* -------------------------------------------------------------------------- */
+/* ==========================================================================
+   PAGE INITIALIZATION
+   ========================================================================== */
 
 $w.onReady(function () {
-  const html = getHtmlComponent(EMBED_ID);
+  const html =
+    getHtmlComponent();
 
   if (!html) {
     return;
   }
 
   html.onMessage(async (event) => {
-    const message = event.data || {};
+    const message =
+      parseMessage(event.data);
 
-    if (!message.source || !message.type) {
+    if (
+      !message ||
+      !message.source ||
+      !message.type
+    ) {
       return;
     }
 
     try {
-      if (message.source === HOME_SOURCE) {
-        await handleHomeMessage(html, message);
+      if (
+        message.source === HOME_SOURCE
+      ) {
+        await handleHomeMessage(
+          html,
+          message
+        );
+
         return;
       }
 
-      if (message.source === HEADER_SOURCE) {
-        await handleHeaderMessage(html, message);
+      if (
+        message.source === HEADER_SOURCE
+      ) {
+        await handleHeaderMessage(
+          html,
+          message
+        );
+
         return;
       }
 
-      if (message.source === FOOTER_SOURCE) {
-        await handleFooterMessage(html, message);
+      if (
+        message.source === FOOTER_SOURCE
+      ) {
+        await handleFooterMessage(
+          html,
+          message
+        );
+
         return;
       }
 
       console.warn(
-        `[Home] Ignored message from unknown source: ${message.source}`
+        `[Home] Ignored message from unknown source: ${
+          message.source
+        }`
       );
     } catch (error) {
-      handleMessageError(html, message, error);
+      handleMessageError(
+        html,
+        message,
+        error
+      );
     }
   });
 });
