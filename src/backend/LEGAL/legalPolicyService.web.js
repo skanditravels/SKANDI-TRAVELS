@@ -277,7 +277,7 @@ async function requirePolicyAdmin() {
 function routeFor(policy = {}) {
   const scope = normalizeScope(policy.scope);
   if (scope === "internal") {
-    return `/riaintra/success-factors/legal/policies?slug=${encodeURIComponent(policy.slug || "")}`;
+    return `/riaintra/success-factors/legal-internal/policies-internal?slug=${encodeURIComponent(policy.slug || "")}`;
   }
   const type = normalizePublicType(policy.public_type || policy.publicType);
   if (type) return `/about/legal/policies?type=${encodeURIComponent(type)}`;
