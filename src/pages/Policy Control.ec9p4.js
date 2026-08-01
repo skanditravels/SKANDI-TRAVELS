@@ -1,27 +1,19 @@
-import wixLocation from "wix-location";
-import { authentication } from "wix-members-frontend";
-import { getStaffPortalSession } from "src/backend/RIA/staffPortalAuth.web";
-import { runInternalGlobalSearch } from "src/backend/FINAL/internalChrome.web";
+import wixLocation from "wix-location-frontend";
 import {
-  getPolicyControlBootstrap,
-  listPolicyDocuments,
-  getPolicyDocument,
-  savePolicyDocument,
-  publishPolicyDocument,
-  archivePolicyDocument,
-  savePolicyAttachment
-} from "src/backend/LEGAL/policyControl.web";
+  getPolicyAdminBootstrap,
+  adminListLegalPolicies,
+  adminGetLegalPolicy,
+  adminSaveLegalPolicy,
+  adminPublishLegalPolicy,
+  adminArchiveLegalPolicy,
+  adminDeleteLegalPolicy,
+  adminRegenerateLegalPolicyPdf,
+  adminParseLegalPolicyPdfText
+} from "backend/LEGAL/legalPolicyService.web";
 
 const EMBED_ID = "#policyControlEmbed";
-const EMBED_SOURCE = "SKANDI_POLICY_CONTROL";
+const HTML_SOURCE = "SKANDI_POLICY_CONTROL";
 const PARENT_SOURCE = "SKANDI_WIX_PARENT";
-const CHROME_SOURCE = "SKANDI_INTERNAL_CHROME";
-const LOGIN_PATH = "/riaintra";
-const HOME_PATH = "/";
-
-function currentPath() {
-  return "/" + wixLocation.path.join("/");
-}
 
 function send(type, payload = {}) {
   $w(EMBED_ID).postMessage({
@@ -32,130 +24,78 @@ function send(type, payload = {}) {
   });
 }
 
-function cleanError(err) {
-  const msg = String(err?.message || err || "").trim();
-  if (!msg) return "Something went wrong.";
-  if (msg.length > 220) return "Something went wrong.";
-  return msg;
-}
-
-function allowedInternalPath(path) {
-  const p = String(path || "");
-  return p === "/" || p === LOGIN_PATH || p.startsWith("/riaintra") || p.startsWith("/altea");
-}
-
-async function logout() {
-  try { await authentication.logout(); } catch (err) {}
-  wixLocation.to(HOME_PATH);
+function errorPayload(error) {
+  return { message: error?.message || "Policy Control request failed." };
 }
 
 async function bootstrap() {
-  const portalSession = await getStaffPortalSession().catch(() => null);
-  if (!portalSession || portalSession.authorized === false || portalSession.ok === false) {
-    wixLocation.to(LOGIN_PATH);
-    return;
+  try {
+    send("POLICY_BOOTSTRAP", await getPolicyAdminBootstrap());
+  } catch (error) {
+    send("POLICY_ERROR", errorPayload(error));
   }
-
-  const data = await getPolicyControlBootstrap();
-  send("POLICY_BOOTSTRAP", data);
-
-  send("INTERNAL_CHROME_BOOTSTRAP", {
-    pageName: "Policy Control",
-    pagePath: currentPath(),
-    pageSubtitle: "Controlled documents, versions and acknowledgements",
-    profile: data.profile || portalSession.profile || {},
-    apps: data.apps || [],
-    isAltea: false
-  });
 }
 
 $w.onReady(function () {
   const embed = $w(EMBED_ID);
 
   embed.onMessage(async (event) => {
-    const msg = event.data || {};
-    const source = msg.source || "";
-    const type = msg.type || "";
-    const payload = msg.payload || {};
+    const message = event.data || {};
+    if (message.source && message.source !== HTML_SOURCE) return;
+    const payload = message.payload || {};
 
     try {
-      if (source === CHROME_SOURCE) {
-        if (type === "INTERNAL_CHROME_READY") {
+      switch (message.type) {
+        case "POLICY_READY":
+        case "POLICY_BOOTSTRAP_REQUEST":
           await bootstrap();
-          return;
-        }
+          break;
 
-        if (type === "INTERNAL_LOGOUT") {
-          await logout();
-          return;
-        }
+        case "POLICY_LIST_REQUEST":
+          send("POLICY_LIST", await adminListLegalPolicies(payload));
+          break;
 
-        if (type === "INTERNAL_NAVIGATE") {
-          const path = payload.path || msg.path || "";
-          if (allowedInternalPath(path)) wixLocation.to(path);
-          return;
-        }
+        case "POLICY_GET_REQUEST":
+          send("POLICY_DETAIL", await adminGetLegalPolicy(payload));
+          break;
 
-        if (type === "INTERNAL_GLOBAL_SEARCH") {
-          send("INTERNAL_SEARCH_RESULTS", await runInternalGlobalSearch(payload.query || ""));
-          return;
-        }
+        case "POLICY_SAVE_REQUEST":
+          send("POLICY_SAVED", await adminSaveLegalPolicy(payload));
+          break;
+
+        case "POLICY_PUBLISH_REQUEST":
+          send("POLICY_SAVED", await adminPublishLegalPolicy(payload));
+          break;
+
+        case "POLICY_ARCHIVE_REQUEST":
+          send("POLICY_SAVED", await adminArchiveLegalPolicy(payload));
+          break;
+
+        case "POLICY_DELETE_REQUEST":
+          send("POLICY_DELETED", await adminDeleteLegalPolicy(payload));
+          break;
+
+        case "POLICY_PDF_REGENERATE_REQUEST":
+          send("POLICY_SAVED", await adminRegenerateLegalPolicyPdf(payload));
+          break;
+
+        case "POLICY_PDF_PARSE_REQUEST":
+          send("POLICY_PDF_PARSED", await adminParseLegalPolicyPdfText(payload));
+          break;
+
+        case "POLICY_NAVIGATE":
+          if (payload.path && String(payload.path).startsWith("/")) {
+            wixLocation.to(payload.path);
+          }
+          break;
+
+        default:
+          break;
       }
-
-      if (source && source !== EMBED_SOURCE) return;
-
-      if (type === "POLICY_READY") {
-        await bootstrap();
-        return;
-      }
-
-      if (type === "POLICY_LIST_REQUEST") {
-        send("POLICY_LIST", await listPolicyDocuments(payload));
-        return;
-      }
-
-      if (type === "POLICY_GET_REQUEST") {
-        send("POLICY_DETAIL", await getPolicyDocument(payload));
-        return;
-      }
-
-      if (type === "POLICY_SAVE_REQUEST") {
-        const result = await savePolicyDocument(payload.policy || {});
-        if (!result.ok) throw new Error(result.error || "Policy save failed.");
-        send("POLICY_SAVED", result);
-        send("POLICY_LIST", await listPolicyDocuments({}));
-        return;
-      }
-
-      if (type === "POLICY_PUBLISH_REQUEST") {
-        const result = await publishPolicyDocument(payload);
-        if (!result.ok) throw new Error(result.error || "Policy publish failed.");
-        send("POLICY_SAVED", result);
-        send("POLICY_LIST", await listPolicyDocuments({}));
-        return;
-      }
-
-      if (type === "POLICY_ARCHIVE_REQUEST") {
-        const result = await archivePolicyDocument(payload);
-        if (!result.ok) throw new Error(result.error || "Policy archive failed.");
-        send("POLICY_SAVED", result);
-        send("POLICY_LIST", await listPolicyDocuments({}));
-        return;
-      }
-
-      if (type === "POLICY_ATTACHMENT_SAVE_REQUEST") {
-        const result = await savePolicyAttachment(payload.attachment || {});
-        if (!result.ok) throw new Error(result.error || "Attachment save failed.");
-        send("POLICY_ATTACHMENT_SAVED", result);
-        return;
-      }
-
-      if (type === "POLICY_NAVIGATE") {
-        if (allowedInternalPath(payload.path)) wixLocation.to(payload.path);
-        return;
-      }
-    } catch (err) {
-      send("POLICY_ERROR", { message: cleanError(err), action: type });
+    } catch (error) {
+      send("POLICY_ERROR", errorPayload(error));
     }
   });
+
+  bootstrap();
 });
