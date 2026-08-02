@@ -42,6 +42,56 @@ const PARENT_SOURCE = "SKANDI_WIX_PARENT";
 let bootstrapPromise = null;
 let headerPromise = null;
 
+let currentSettings = {
+  language: "EN",
+  currency: "USD"
+};
+
+const SUPPORTED_LANGUAGES = [
+  "EN",
+  "SV",
+  "NO",
+  "DA",
+  "ES",
+  "FI",
+  "FR-FR",
+  "FR-CA",
+  "DE",
+  "TH"
+];
+
+const SUPPORTED_CURRENCIES = [
+  "USD",
+  "SEK",
+  "NOK",
+  "DKK",
+  "EUR"
+];
+
+function normalizeSettings(value = {}) {
+  const language =
+    String(value?.language || "")
+      .trim()
+      .toUpperCase();
+
+  const currency =
+    String(value?.currency || "")
+      .trim()
+      .toUpperCase();
+
+  return {
+    language:
+      SUPPORTED_LANGUAGES.includes(language)
+        ? language
+        : "EN",
+
+    currency:
+      SUPPORTED_CURRENCIES.includes(currency)
+        ? currency
+        : "USD"
+  };
+}
+
 /* ==========================================================================
    HTML COMPONENT HELPERS
    ========================================================================== */
@@ -355,13 +405,29 @@ async function handleHeaderMessage(
       return true;
 
     case "UPDATE_SETTINGS":
+      currentSettings =
+        normalizeSettings(payload);
+
       /*
-       * Language and currency are stored by the HTML
-       * Component in localStorage.
-       *
-       * This event is accepted so the same header contract
-       * works across every public SKANDI page.
+       * Refresh public content using the selected locale and
+       * currency. Backends may return localized content fields,
+       * translated records and currency-specific card prices.
        */
+      await sendHomeBootstrap(
+        html,
+        true,
+        currentSettings
+      );
+
+      postToHtml(
+        html,
+        "HOME_SETTINGS_APPLIED",
+        {
+          settings:
+            currentSettings
+        }
+      );
+
       return true;
 
     default:
@@ -427,6 +493,8 @@ async function handleFooterMessage(
           "FOOTER_NEWSLETTER_RESULT",
           {
             ok: false,
+            code:
+              "EMAIL_REQUIRED",
             message:
               "Please enter your email address."
           }
@@ -450,6 +518,11 @@ async function handleFooterMessage(
           {
             ok: true,
 
+            code:
+              result?.status === "updated"
+                ? "ALREADY_ACTIVE"
+                : "SUBSCRIBED",
+
             message:
               result?.status === "updated"
                 ? "Your subscription is already active."
@@ -469,6 +542,8 @@ async function handleFooterMessage(
           "FOOTER_NEWSLETTER_RESULT",
           {
             ok: false,
+            code:
+              "SIGNUP_FAILED",
             message:
               error?.message ||
               "Newsletter signup failed."
@@ -490,7 +565,8 @@ async function handleFooterMessage(
 
 async function sendHomeBootstrap(
   html,
-  forceRefresh = false
+  forceRefresh = false,
+  settingsOverride = null
 ) {
   if (
     bootstrapPromise &&
@@ -499,14 +575,32 @@ async function sendHomeBootstrap(
     return bootstrapPromise;
   }
 
+  if (settingsOverride) {
+    currentSettings =
+      normalizeSettings(
+        settingsOverride
+      );
+  }
+
   bootstrapPromise = (async () => {
     try {
+      const request = {
+        locale:
+          currentSettings.language,
+
+        language:
+          currentSettings.language,
+
+        currency:
+          currentSettings.currency
+      };
+
       const [
         booking,
         content
       ] = await Promise.all([
-        getHomeBootstrap({}),
-        getOldStyleHomeContent({})
+        getHomeBootstrap(request),
+        getOldStyleHomeContent(request)
       ]);
 
       postToHtml(
@@ -517,7 +611,10 @@ async function sendHomeBootstrap(
             booking || {},
 
           content:
-            content || {}
+            content || {},
+
+          settings:
+            currentSettings
         }
       );
     } catch (error) {
@@ -551,22 +648,51 @@ async function handleHomeMessage(
 
   switch (message.type) {
     case "HOME_READY":
-      await sendHomeBootstrap(html);
+      currentSettings =
+        normalizeSettings(
+          message.settings ||
+          payload.settings ||
+          currentSettings
+        );
+
+      await sendHomeBootstrap(
+        html,
+        false,
+        currentSettings
+      );
+
       return true;
 
     case "HOME_REFRESH":
       await sendHomeBootstrap(
         html,
-        true
+        true,
+        currentSettings
       );
 
       return true;
 
     case "HOME_SEARCH": {
-      const search =
+      const rawSearch =
         message.search ||
         payload.search ||
         {};
+
+      const search = {
+        ...rawSearch,
+
+        locale:
+          rawSearch.locale ||
+          currentSettings.language,
+
+        language:
+          rawSearch.language ||
+          currentSettings.language,
+
+        currency:
+          rawSearch.currency ||
+          currentSettings.currency
+      };
 
       const result =
         await searchUnifiedOffers({
