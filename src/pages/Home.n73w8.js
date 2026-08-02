@@ -20,6 +20,22 @@ import {
   subscribeCustomerNewsletter
 } from "backend/customerHeader.web";
 
+$w.onReady(function () {
+    // Listen for messages coming from your HTML iFrame
+    $w("#htmlhome").onMessage((event) => {
+        const message = event.data;
+
+        // Check if the message is a navigation request from the Header, Footer, or Home body
+        if (
+            message.type === "HEADER_NAVIGATE" || 
+            message.type === "FOOTER_NAVIGATE" || 
+            message.type === "HOME_NAVIGATE"
+        ) {
+            // Use Wix Location to actually navigate the user
+            wixLocationFrontend.to(message.payload.path || message.path);
+        }
+    });
+});
 /*
  * Wix page: /home
  * HTML Component ID: #htmlHome
