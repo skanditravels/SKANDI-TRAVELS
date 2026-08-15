@@ -3,12 +3,12 @@ import { currentMember } from "wix-members-backend";
 import {
   searchFlightOffers,
   priceFlightOffer
-} from "./amadeusClient.js";
+} from "backend/AMADEUS/amadeusClient.js";
 import {
   findAgentByMemberOrEmail,
   isAgentAuthorized,
   publicAgent
-} from "./staffPortalAuth.repository.js";
+} from "backend/FINAL/staffPortalAuth.repository.js";
 
 import {
   getAlteaDashboardSnapshot,
