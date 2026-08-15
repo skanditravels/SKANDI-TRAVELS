@@ -1,4 +1,4 @@
-import { restRequest } from 'backend/RIA//supabaseServer.js';
+import { restRequest } from 'backend/RIA/supabaseServer.js';
 
 const AGENT_FIELDS = [
   'id',
