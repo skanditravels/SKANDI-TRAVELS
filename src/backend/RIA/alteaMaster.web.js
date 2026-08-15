@@ -26,7 +26,7 @@ import {
   saveFidsFlight,
   insertPnrHistory,
   insertSyncEvent
-} from "./alteaMaster.repository.js";
+} from "backend/ALTEA/alteaMaster.repository.js";
 
 function getMemberEmail(member = {}) {
   return (
