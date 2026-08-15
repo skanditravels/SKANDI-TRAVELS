@@ -1,10 +1,10 @@
 import { webMethod, Permissions } from 'wix-web-module';
 import { restRequest } from 'backend/RIA/supabaseServer.js';
-import { requestLiveFlights } from "backend/FINAL/flightStatusProvider";
+import { requestLiveFlights } from "../flightStatusProvider.js";
 import {
   normalizeFlights,
   resultMessage
-} from "backend/FINAL/flightStatusMapper";
+} from "../flightStatusMapper.js";
 
 const CACHE_TTL_MS = 60 * 1000;
 const MAX_CACHE_ENTRIES = 75;
