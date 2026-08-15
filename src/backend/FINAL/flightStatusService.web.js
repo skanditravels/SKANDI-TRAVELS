@@ -1,6 +1,6 @@
 import { webMethod, Permissions } from 'wix-web-module';
 import { restRequest } from 'backend/RIA/supabaseServer.js';
-import { requestLiveFlights } from "../flightStatusProvider.js";
+import { requestLiveFlights } from 'backend/flightStatusProvider.js';
 import {
   normalizeFlights,
   resultMessage
