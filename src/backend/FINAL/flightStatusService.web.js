@@ -4,7 +4,7 @@ import { requestLiveFlights } from 'backend/flightStatusProvider.js';
 import {
   normalizeFlights,
   resultMessage
-} from "../flightStatusMapper.js";
+} from "backend/flightStatusMapper.js";
 
 const CACHE_TTL_MS = 60 * 1000;
 const MAX_CACHE_ENTRIES = 75;
