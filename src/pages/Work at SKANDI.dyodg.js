@@ -1,7 +1,7 @@
 import {
   getPublicCareerData,
   submitCareerApplication
-} from "src/backend/careersService.web";
+} from "backend/careersService.web";
 
 const EMBED_ID = "#careersEmbed";
 const HTML_SOURCE = "SKANDI_CAREERS_PUBLIC";
