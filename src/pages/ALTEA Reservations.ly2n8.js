@@ -1,8 +1,7 @@
-// Wix page code for /riaintra/success-factors/altea/reservations
-// HTML Embed ID: #alteaOpsEmbed
+// Wix page code for /riaintra/altea/reservations
+// HTML Embed ID: #alteaReservationsEmbed
 /* global $w */
 
-import wixLocation from "wix-location-frontend";
 import {
   getDuffelWorkspaceBootstrap,
   searchDuffelOffers,
@@ -14,10 +13,9 @@ import {
   createDuffelOrder,
   createDuffelOrderCancellation,
   confirmDuffelOrderCancellation
-} from "backend/duffelTravel.web";
+} from "src/backend/duffelTravel.web";
 
 const EMBED_ID = "#alteaReservationsEmbed";
-const STAFF_LOGIN_PATH = "/riaintra";
 const CHILD_SOURCE = "SKANDI_DUFFEL_RESERVATIONS";
 const PARENT_SOURCE = "SKANDI_WIX_PARENT";
 
@@ -93,16 +91,10 @@ $w.onReady(function () {
       const payload = await action.run(message.payload || {});
       postToEmbed(html, action.resultType, payload || {}, requestId);
     } catch (error) {
-      const code = cleanErrorCode(error);
-
       postToEmbed(html, "DUFFEL_ERROR", {
-        code,
+        code: cleanErrorCode(error),
         message: cleanErrorMessage(error)
       }, requestId);
-
-      if (code === "AUTH_REQUIRED") {
-        wixLocation.to(STAFF_LOGIN_PATH);
-      }
     }
   });
 });
