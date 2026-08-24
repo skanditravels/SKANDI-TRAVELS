@@ -267,20 +267,38 @@ $w.onReady(function () {
       }
 
       if (type === "NEWSROOM_PUBLISH_POST") {
+        let cmsId = payload._id || payload.item?._id || "";
+        let postId = payload.postId || payload.item?.postId || "";
+
+        // Always save the editor payload first. This guarantees that a new
+        // Wix CMS record exists and gives us its real _id before publishing.
         if (payload.item) {
           const saved = await saveNewsroomPost(payload.item);
-          if (!saved.ok) throw new Error(saved.error || "Post save failed.");
+          if (!saved?.ok) {
+            throw new Error(saved?.error || "Post save failed.");
+          }
+          cmsId = saved?.post?._id || cmsId;
+          postId = saved?.post?.postId || postId;
         }
-        const result = await publishNewsroomPost(payload);
-        if (!result.ok) throw new Error(result.error || "Post publish failed.");
+
+        const result = await publishNewsroomPost({ _id: cmsId, postId });
+        if (!result?.ok) {
+          throw new Error(result?.error || "Post publish failed.");
+        }
+
         send("NEWSROOM_ADMIN_SAVED", result);
         await refreshNewsroom({});
         return;
       }
 
       if (type === "NEWSROOM_ARCHIVE_POST") {
-        const result = await archiveNewsroomPost(payload);
-        if (!result.ok) throw new Error(result.error || "Post archive failed.");
+        const result = await archiveNewsroomPost({
+          _id: payload._id || payload.item?._id || "",
+          postId: payload.postId || payload.item?.postId || ""
+        });
+        if (!result?.ok) {
+          throw new Error(result?.error || "Post archive failed.");
+        }
         send("NEWSROOM_ADMIN_SAVED", result);
         await refreshNewsroom({});
         return;
@@ -516,7 +534,7 @@ function userMessage(error, fallback) {
   const message = error instanceof Error ? error.message : String(error || "");
   const map = {
     VOY_EDITOR_ACCESS_DENIED:
-      "You do not have Magazine Manager editor access.",
+      "Your Wix account does not have Magazine Manager editor access.",
     VOY_NOT_AUTHENTICATED: "Sign in to RIAINTRA and try again.",
     VOY_PUBLIC_ORGANIZATION_NOT_CONFIGURED:
       "Add VOY_PUBLIC_ORGANIZATION_ID to Wix Secrets Manager.",
