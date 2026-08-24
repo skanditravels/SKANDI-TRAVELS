@@ -1,5 +1,5 @@
 // Wix page code
-// Suggested route: /voy-magazine
+// Route: /voy-magazine
 // HTML Component ID: #voyMagazineEmbed
 
 import wixLocation from "wix-location";
@@ -12,6 +12,7 @@ import {
 const EMBED_ID = "#voyMagazineEmbed";
 const CHILD_SOURCE = "SKANDI_VOY_MAGAZINE";
 const PARENT_SOURCE = "SKANDI_WIX_PARENT";
+
 const ALLOWED_PUBLIC_PREFIXES = [
   "/destinations",
   "/signature-collection",
@@ -22,10 +23,13 @@ const ALLOWED_PUBLIC_PREFIXES = [
   "/transfers",
   "/packages",
   "/my-trip",
+  "/my-profile",
   "/plan-your-trip",
   "/voy-magazine",
   "/about/contact",
-  "/about/support"
+  "/about/support",
+  "/contact",
+  "/support"
 ];
 
 let embed = null;
@@ -43,40 +47,46 @@ function send(type, payload = {}) {
 
 function allowedPublicPath(path) {
   const value = String(path || "").trim();
-  return (
-    value.startsWith("/") &&
-    !value.startsWith("//") &&
-    ALLOWED_PUBLIC_PREFIXES.some(
-      (prefix) => value === prefix || value.startsWith(`${prefix}/`) || value.startsWith(`${prefix}?`)
-    )
+  if (!value.startsWith("/") || value.startsWith("//")) return false;
+
+  return ALLOWED_PUBLIC_PREFIXES.some(
+    (prefix) =>
+      value === prefix ||
+      value.startsWith(`${prefix}/`) ||
+      value.startsWith(`${prefix}?`)
   );
 }
 
 async function loadMagazine(force = false) {
   if (bootstrapPromise && !force) return bootstrapPromise;
+
   bootstrapPromise = getVoyPublicBootstrap();
+
   try {
     const result = await bootstrapPromise;
     if (!result || result.ok === false) {
       throw new Error(result?.error || "VOY bootstrap failed.");
     }
+
     send("VOY_BOOTSTRAP_RESULT", {
       ...result,
       requestedIssue: wixLocation.query?.issue || ""
     });
+
     return result;
   } finally {
     bootstrapPromise = null;
   }
 }
 
-async function track(type, payload) {
+async function track(eventType, payload = {}) {
   if (!payload.issueId) return;
+
   try {
     await trackVoyInteraction({
       issueId: payload.issueId,
       interactionId: payload.interactionId || "",
-      eventType: type,
+      eventType,
       page: payload.page || null,
       metadata: {
         label: payload.label || "",
@@ -85,7 +95,7 @@ async function track(type, payload) {
       }
     });
   } catch (error) {
-    // Analytics is best-effort and must never block reading the magazine.
+    // Analytics must never block the reader.
     console.warn("[VOY] Interaction tracking failed.", error);
   }
 }
@@ -101,7 +111,8 @@ $w.onReady(function () {
   embed.onMessage(async (event) => {
     const message = event?.data || {};
     if (message.source !== CHILD_SOURCE) return;
-    const type = message.type || "";
+
+    const type = String(message.type || "");
     const payload =
       message.payload && typeof message.payload === "object"
         ? message.payload
@@ -119,7 +130,9 @@ $w.onReady(function () {
       }
 
       if (type === "VOY_NAVIGATE") {
-        if (allowedPublicPath(payload.path)) wixLocation.to(payload.path);
+        if (allowedPublicPath(payload.path)) {
+          wixLocation.to(payload.path);
+        }
         return;
       }
 
@@ -134,7 +147,12 @@ $w.onReady(function () {
       }
 
       if (type === "VOY_SAVE_ISSUE") {
-        const result = await saveVoyIssueForMember({ issueId: payload.issueId });
+        if (!payload.issueId) {
+          throw new Error("VOY_ISSUE_ID_REQUIRED");
+        }
+        const result = await saveVoyIssueForMember({
+          issueId: payload.issueId
+        });
         send("VOY_ISSUE_SAVED", result);
         return;
       }
@@ -148,6 +166,7 @@ $w.onReady(function () {
         await track(type, payload);
       }
     } catch (error) {
+      console.error(`[VOY] ${type} failed.`, error);
       send("VOY_ERROR", {
         message: userMessage(error)
       });
@@ -159,11 +178,16 @@ $w.onReady(function () {
 
 function userMessage(error) {
   const message = error instanceof Error ? error.message : String(error || "");
+
   if (message.includes("VOY_NOT_AUTHENTICATED")) {
     return "Sign in to your SKANDI account to save this issue.";
   }
   if (message.includes("VOY_PUBLIC_ORGANIZATION_NOT_CONFIGURED")) {
     return "VOY Magazine is not configured for public publishing yet.";
   }
+  if (message.includes("VOY_ISSUE_NOT_FOUND")) {
+    return "This VOY issue is no longer available.";
+  }
+
   return "VOY Magazine could not complete that action. Please try again.";
 }
