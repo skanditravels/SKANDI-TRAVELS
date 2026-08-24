@@ -15,7 +15,7 @@ import {
   archiveNewsroomPost,
   saveNewsroomMediaAsset,
   saveNewsroomPressContact
-} from "backend/FINAL/newsService.web";
+} from "backend/FINAL/newsroomService.web";
 import {
   getVoyAdminBootstrap,
   saveVoyIssue,
@@ -516,7 +516,7 @@ function userMessage(error, fallback) {
   const message = error instanceof Error ? error.message : String(error || "");
   const map = {
     VOY_EDITOR_ACCESS_DENIED:
-      "Your Wix account does not have Magazine Manager editor access.",
+      "You do not have Magazine Manager editor access.",
     VOY_NOT_AUTHENTICATED: "Sign in to RIAINTRA and try again.",
     VOY_PUBLIC_ORGANIZATION_NOT_CONFIGURED:
       "Add VOY_PUBLIC_ORGANIZATION_ID to Wix Secrets Manager.",
