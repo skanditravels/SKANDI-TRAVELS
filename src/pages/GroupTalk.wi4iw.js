@@ -1,10 +1,16 @@
-// GroupTalk Wix page code
+// Page: /riaintra/altea/grouptalk
 // HTML Component: #htmlGroupTalk
-// Supabase Realtime replaces Pusher. LiveKit remains voice transport.
-// The GroupTalk HTML is headerless.
+// Custom Element: #groupTalkVoiceBridge
+//
+// Supabase backend = single staff authorization gate.
+// Supabase Realtime = realtime signaling/presence.
+// Wix Window API = geolocation.
+// Wix Custom Element + LiveKit = microphone/audio.
+// The GroupTalk visual HTML stays headerless.
 
 import wixLocation from "wix-location";
-import { getStaffPortalSession } from "backend/RIA/staffPortalAuth.web";
+import wixWindowFrontend from "wix-window-frontend";
+
 import {
   getGroupTalkBootstrap,
   getGroupTalkRealtimeConfig,
@@ -23,146 +29,1682 @@ import {
   adminSetMembership,
   getTicketCategories,
   saveTicketCategory,
-  deleteTicketCategory
+  deleteTicketCategory,
+  getGroupTalkDiagnostics
 } from "backend/GROUPTALK/grouptalk.web";
 
-const EMBED = "#htmlGroupTalk";
-const GROUPTALK_SOURCE = "GROUPTALK_HTML";
-const PARENT_SOURCE = "SKANDI_WIX_PARENT";
-const LOGIN_PATH = "/riaintra";
-let html = null;
-let bootstrapPromise = null;
 
-function delay(ms){ return new Promise(resolve=>setTimeout(resolve,ms)); }
-function allowedInternalPath(path){ const p=String(path||"").trim(); return p==="/" || p===LOGIN_PATH || p.startsWith("/riaintra") || p.startsWith("/altea"); }
-function messageOf(error,fallback="GroupTalk action failed."){ const m=String(error?.message||error||"").trim(); return m&&m.length<=220?m:fallback; }
-function post(type,payload={}){
-  if(!html||typeof html.postMessage!=="function"){console.warn("[GroupTalk] #htmlGroupTalk is not an HTML Component.");return false;}
-  try{ html.postMessage({source:PARENT_SOURCE,type,payload,timestamp:new Date().toISOString()}); return true; }
-  catch(error){ console.error(`[GroupTalk] postMessage failed for ${type}.`,error); return false; }
-}
+const HTML_ID =
+  "#htmlGroupTalk";
 
-async function authorizedSession(){
-  const waits=[0,150,400]; let last=null;
-  for(const wait of waits){
-    if(wait)await delay(wait);
-    try{last=await getStaffPortalSession();if(last?.authorized===true&&last?.ok!==false)return last;}
-    catch(error){console.warn("[GroupTalk] Staff session lookup warning.",error);}
+const VOICE_ID =
+  "#groupTalkVoiceBridge";
+
+const GROUPTALK_SOURCE =
+  "GROUPTALK_HTML";
+
+const PARENT_SOURCE =
+  "SKANDI_WIX_PARENT";
+
+const LOGIN_PATH =
+  "/riaintra";
+
+
+const AUTH_ERRORS =
+  new Set([
+    "WIX_MEMBER_SESSION_REQUIRED",
+    "GROUPTALK_STAFF_NOT_FOUND",
+    "GROUPTALK_STAFF_INACTIVE",
+    "GROUPTALK_STAFF_NOT_AUTHORIZED",
+    "GROUPTALK_STAFF_BLOCKED",
+    "GROUPTALK_ACCESS_DISABLED"
+  ]);
+
+
+let html =
+  null;
+
+let voice =
+  null;
+
+let bootstrapPromise =
+  null;
+
+let locationTimer =
+  null;
+
+let locationGroupId =
+  "";
+
+let locationBusy =
+  false;
+
+const voiceCallbacks =
+  new Map();
+
+
+function safeElement(
+  selector
+) {
+  try {
+    return $w(
+      selector
+    );
+  } catch (_) {
+    return null;
   }
-  return last;
 }
 
-async function bootstrap(force=false){
-  if(bootstrapPromise&&!force)return bootstrapPromise;
-  bootstrapPromise=(async()=>{
-    const session=await authorizedSession();
-    if(!session||session.authorized!==true||session.ok===false){
-      post("GT_ERROR",{action:"BOOTSTRAP",message:"Your RIAINTRA staff session is not authorized."});
-      wixLocation.to(LOGIN_PATH);return null;
+
+function messageOf(
+  error,
+  fallback =
+    "GroupTalk action failed."
+) {
+  const message =
+    String(
+      error?.message ||
+      error ||
+      ""
+    ).trim();
+
+  return (
+    message &&
+    message.length <=
+      260
+  )
+    ? message
+    : fallback;
+}
+
+
+function errorCode(
+  error
+) {
+  const direct =
+    String(
+      error?.code ||
+      ""
+    ).trim();
+
+  if (
+    direct &&
+    direct !==
+      "SUPABASE_HTTP_ERROR"
+  ) {
+    return direct;
+  }
+
+  return String(
+    error?.message ||
+    error ||
+    ""
+  )
+    .trim()
+    .split(
+      ":"
+    )[0];
+}
+
+
+function requestId(
+  prefix =
+    "REQ"
+) {
+  return `${prefix}-${Date.now()}-${Math.random()
+    .toString(36)
+    .slice(2, 9)}`;
+}
+
+
+function allowedInternalPath(
+  path
+) {
+  const value =
+    String(
+      path ||
+      ""
+    ).trim();
+
+  return (
+    value ===
+      "/" ||
+    value ===
+      LOGIN_PATH ||
+    value.startsWith(
+      "/riaintra"
+    ) ||
+    value.startsWith(
+      "/altea"
+    )
+  );
+}
+
+
+function post(
+  type,
+  payload = {}
+) {
+  if (
+    !html ||
+    typeof html.postMessage !==
+      "function"
+  ) {
+    console.error(
+      "[GroupTalk] #htmlGroupTalk must be an HTML Component."
+    );
+
+    return false;
+  }
+
+  try {
+    html.postMessage({
+      source:
+        PARENT_SOURCE,
+
+      type,
+
+      payload,
+
+      timestamp:
+        new Date()
+          .toISOString()
+    });
+
+    return true;
+
+  } catch (error) {
+
+    console.error(
+      `[GroupTalk] postMessage failed: ${type}`,
+      error
+    );
+
+    return false;
+  }
+}
+
+
+/* ==========================================================================
+   BOOTSTRAP / DIAGNOSTICS
+   ========================================================================== */
+
+async function bootstrap(
+  force =
+    false
+) {
+  if (
+    bootstrapPromise &&
+    !force
+  ) {
+    return bootstrapPromise;
+  }
+
+  bootstrapPromise =
+    (async () => {
+      const result =
+        await getGroupTalkBootstrap();
+
+      if (
+        !result?.ok
+      ) {
+        throw new Error(
+          result?.message ||
+          "GROUPTALK_BOOTSTRAP_FAILED"
+        );
+      }
+
+      post(
+        "GT_BOOTSTRAP",
+        result
+      );
+
+      return result;
+    })();
+
+  try {
+    return await bootstrapPromise;
+
+  } catch (error) {
+
+    const code =
+      errorCode(
+        error
+      );
+
+    post(
+      "GT_ERROR",
+      {
+        action:
+          "BOOTSTRAP",
+
+        code,
+
+        message:
+          messageOf(
+            error,
+            "GroupTalk could not initialize."
+          )
+      }
+    );
+
+    if (
+      AUTH_ERRORS.has(
+        code
+      )
+    ) {
+      wixLocation.to(
+        LOGIN_PATH
+      );
     }
-    const result=await getGroupTalkBootstrap();
-    if(!result)throw new Error("GroupTalk bootstrap returned no data.");
-    post("GT_BOOTSTRAP",result);return result;
-  })();
-  try{return await bootstrapPromise;}finally{bootstrapPromise=null;}
+
+    throw error;
+
+  } finally {
+
+    bootstrapPromise =
+      null;
+  }
 }
 
-async function handle(type,payload){
-  switch(type){
-    case "GT_READY": await bootstrap(); return;
-    case "GT_REFRESH": await bootstrap(true); return;
+
+async function pushDiagnostics() {
+  try {
+    const diagnostics =
+      await getGroupTalkDiagnostics();
+
+    console.info(
+      "[GroupTalk] Diagnostics",
+      diagnostics
+    );
+
+    post(
+      "GT_DIAGNOSTICS",
+      diagnostics
+    );
+
+  } catch (error) {
+
+    console.warn(
+      "[GroupTalk] Diagnostics unavailable.",
+      error
+    );
+  }
+}
+
+
+/* ==========================================================================
+   GEOLOCATION - OUTSIDE THE HTML IFRAME
+   ========================================================================== */
+
+function stopLocationSharing({
+  notify =
+    true
+} = {}) {
+  if (
+    locationTimer
+  ) {
+    clearInterval(
+      locationTimer
+    );
+
+    locationTimer =
+      null;
+  }
+
+  const oldGroupId =
+    locationGroupId;
+
+  locationGroupId =
+    "";
+
+  locationBusy =
+    false;
+
+  if (
+    notify
+  ) {
+    post(
+      "LOCATION_SHARING_STATE",
+      {
+        active:
+          false,
+
+        groupId:
+          oldGroupId
+      }
+    );
+  }
+}
+
+
+async function currentLocationWithTimeout(
+  timeoutMs =
+    12_000
+) {
+  let timer =
+    null;
+
+  try {
+    return await Promise.race([
+      wixWindowFrontend
+        .getCurrentGeolocation(),
+
+      new Promise(
+        (
+          resolve,
+          reject
+        ) => {
+          timer =
+            setTimeout(
+              () =>
+                reject(
+                  new Error(
+                    "LOCATION_TIMEOUT"
+                  )
+                ),
+              timeoutMs
+            );
+        }
+      )
+    ]);
+
+  } finally {
+
+    if (
+      timer
+    ) {
+      clearTimeout(
+        timer
+      );
+    }
+  }
+}
+
+
+async function pingCurrentLocation() {
+  if (
+    !locationGroupId ||
+    locationBusy
+  ) {
+    return;
+  }
+
+  locationBusy =
+    true;
+
+  const groupId =
+    locationGroupId;
+
+  try {
+    const position =
+      await currentLocationWithTimeout();
+
+    const coords =
+      position?.coords ||
+      {};
+
+    const latitude =
+      Number(
+        coords.latitude
+      );
+
+    const longitude =
+      Number(
+        coords.longitude
+      );
+
+    if (
+      !Number.isFinite(
+        latitude
+      ) ||
+      !Number.isFinite(
+        longitude
+      )
+    ) {
+      throw new Error(
+        "LOCATION_COORDINATES_INVALID"
+      );
+    }
+
+    const result =
+      await sendLocationPing({
+        groupId,
+
+        latitude,
+
+        longitude,
+
+        accuracy:
+          coords.accuracy,
+
+        heading:
+          coords.heading,
+
+        speed:
+          coords.speed,
+
+        timestamp:
+          position?.timestamp ||
+          Date.now()
+      });
+
+    post(
+      "LOCATION_PING_RESULT",
+      result ||
+      {
+        ok:
+          true
+      }
+    );
+
+  } catch (error) {
+
+    const message =
+      messageOf(
+        error,
+        "Location permission was denied or unavailable."
+      );
+
+    console.warn(
+      "[GroupTalk] Location update failed.",
+      error
+    );
+
+    post(
+      "LOCATION_SHARING_STATE",
+      {
+        active:
+          false,
+
+        groupId,
+
+        error:
+          true,
+
+        message
+      }
+    );
+
+    stopLocationSharing({
+      notify:
+        false
+    });
+
+  } finally {
+
+    locationBusy =
+      false;
+  }
+}
+
+
+async function startLocationSharing(
+  groupId
+) {
+  const value =
+    String(
+      groupId ||
+      ""
+    ).trim();
+
+  if (
+    !value
+  ) {
+    throw new Error(
+      "GROUPTALK_GROUP_REQUIRED_FOR_LOCATION"
+    );
+  }
+
+  stopLocationSharing({
+    notify:
+      false
+  });
+
+  locationGroupId =
+    value;
+
+  await pingCurrentLocation();
+
+  if (
+    !locationGroupId
+  ) {
+    return;
+  }
+
+  locationTimer =
+    setInterval(
+      () => {
+        void pingCurrentLocation();
+      },
+      8_000
+    );
+
+  post(
+    "LOCATION_SHARING_STATE",
+    {
+      active:
+        true,
+
+      groupId:
+        locationGroupId
+    }
+  );
+}
+
+
+/* ==========================================================================
+   LIVEKIT CUSTOM ELEMENT
+   ========================================================================== */
+
+function eventDetail(
+  event
+) {
+  return (
+    event?.detail ||
+    event?.data ||
+    event ||
+    {}
+  );
+}
+
+
+function wireVoiceBridge() {
+  voice =
+    safeElement(
+      VOICE_ID
+    );
+
+  if (
+    !voice
+  ) {
+    console.warn(
+      "[GroupTalk] #groupTalkVoiceBridge is missing. Voice is unavailable."
+    );
+
+    return;
+  }
+
+  if (
+    typeof voice.on !==
+      "function" ||
+    typeof voice.setAttribute !==
+      "function"
+  ) {
+    console.error(
+      "[GroupTalk] #groupTalkVoiceBridge must be a Wix Custom Element."
+    );
+
+    voice =
+      null;
+
+    return;
+  }
+
+
+  voice.on(
+    "voice-state",
+    (
+      event
+    ) => {
+      const detail =
+        eventDetail(
+          event
+        );
+
+      const callback =
+        detail?.commandId
+          ? voiceCallbacks.get(
+              detail.commandId
+            )
+          : null;
+
+      if (
+        callback
+      ) {
+        voiceCallbacks.delete(
+          detail.commandId
+        );
+
+        callback.resolve(
+          detail
+        );
+      }
+
+      post(
+        "VOICE_STATE",
+        detail
+      );
+    }
+  );
+
+
+  voice.on(
+    "voice-error",
+    (
+      event
+    ) => {
+      const detail =
+        eventDetail(
+          event
+        );
+
+      const callback =
+        detail?.commandId
+          ? voiceCallbacks.get(
+              detail.commandId
+            )
+          : null;
+
+      if (
+        callback
+      ) {
+        voiceCallbacks.delete(
+          detail.commandId
+        );
+
+        callback.reject(
+          new Error(
+            detail.message ||
+            detail.code ||
+            "VOICE_ACTION_FAILED"
+          )
+        );
+      }
+
+      post(
+        "VOICE_ERROR",
+        detail
+      );
+    }
+  );
+
+
+  voice.on(
+    "voice-speakers",
+    (
+      event
+    ) => {
+      post(
+        "VOICE_SPEAKERS",
+        eventDetail(
+          event
+        )
+      );
+    }
+  );
+
+
+  voice.on(
+    "voice-track",
+    (
+      event
+    ) => {
+      post(
+        "VOICE_TRACK",
+        eventDetail(
+          event
+        )
+      );
+    }
+  );
+}
+
+
+function voiceCommand(
+  command,
+  {
+    wait =
+      true,
+    timeoutMs =
+      18_000
+  } = {}
+) {
+  if (
+    !voice ||
+    typeof voice.setAttribute !==
+      "function"
+  ) {
+    return Promise.reject(
+      new Error(
+        "GROUPTALK_VOICE_CUSTOM_ELEMENT_MISSING"
+      )
+    );
+  }
+
+  const id =
+    command.id ||
+    requestId(
+      "VOICE"
+    );
+
+  const data = {
+    ...command,
+    id
+  };
+
+  if (
+    !wait
+  ) {
+    voice.setAttribute(
+      "command",
+      JSON.stringify(
+        data
+      )
+    );
+
+    return Promise.resolve({
+      commandId:
+        id,
+      accepted:
+        true
+    });
+  }
+
+  return new Promise(
+    (
+      resolve,
+      reject
+    ) => {
+      const timer =
+        setTimeout(
+          () => {
+            voiceCallbacks.delete(
+              id
+            );
+
+            reject(
+              new Error(
+                "VOICE_COMMAND_TIMEOUT"
+              )
+            );
+          },
+          timeoutMs
+        );
+
+      voiceCallbacks.set(
+        id,
+        {
+          resolve:
+            (
+              value
+            ) => {
+              clearTimeout(
+                timer
+              );
+
+              resolve(
+                value
+              );
+            },
+
+          reject:
+            (
+              error
+            ) => {
+              clearTimeout(
+                timer
+              );
+
+              reject(
+                error
+              );
+            }
+        }
+      );
+
+      voice.setAttribute(
+        "command",
+        JSON.stringify(
+          data
+        )
+      );
+    }
+  );
+}
+
+
+async function connectVoice(
+  payload = {}
+) {
+  const token =
+    await createLiveKitToken({
+      groupId:
+        payload.groupId,
+
+      sessionKey:
+        payload.sessionKey ||
+        ""
+    });
+
+  if (
+    !token?.ok
+  ) {
+    throw new Error(
+      token?.message ||
+      "LIVEKIT_TOKEN_FAILED"
+    );
+  }
+
+  const result =
+    await voiceCommand({
+      action:
+        "connect",
+
+      livekitUrl:
+        token.livekitUrl,
+
+      token:
+        token.token,
+
+      roomName:
+        token.roomName ||
+        token.room,
+
+      silent:
+        payload.silent ===
+        true,
+
+      microphone:
+        payload.microphone ===
+        true
+    });
+
+  return {
+    ok:
+      true,
+
+    ...result,
+
+    roomName:
+      token.roomName ||
+      token.room,
+
+    identity:
+      token.identity ||
+      ""
+  };
+}
+
+
+/* ==========================================================================
+   HTML EVENT CONTRACT
+   ========================================================================== */
+
+async function handleGroupTalkMessage(
+  type,
+  payload
+) {
+  switch (
+    type
+  ) {
+
+    case "GT_READY":
+
+      await Promise.all([
+        bootstrap(),
+        pushDiagnostics()
+      ]);
+
+      return;
+
+
+    case "GT_REFRESH":
+
+      await bootstrap(
+        true
+      );
+
+      return;
+
 
     case "SUPABASE_REALTIME_CONFIG_REQUEST": {
-      const result=await getGroupTalkRealtimeConfig({groupId:payload.groupId});
-      post("SUPABASE_REALTIME_CONFIG_RESPONSE",{requestId:payload.requestId||"",...(result||{})}); return;
-    }
-    case "SUPABASE_PRESENCE_UPDATE": {
-      const result=await updateGroupTalkPresence({groupId:payload.groupId,sessionKey:payload.sessionKey,status:payload.status,heartbeat:payload.heartbeat===true});
-      post("SUPABASE_PRESENCE_UPDATE_RESPONSE",{requestId:payload.requestId||"",...(result||{})}); return;
-    }
-    case "SUPABASE_PRESENCE_REQUEST": {
-      const result=await getGroupTalkPresence({groupId:payload.groupId});
-      post("SUPABASE_PRESENCE_RESPONSE",{requestId:payload.requestId||"",...(result||{})}); return;
+
+      const result =
+        await getGroupTalkRealtimeConfig({
+          groupId:
+            payload.groupId
+        });
+
+      post(
+        "SUPABASE_REALTIME_CONFIG_RESPONSE",
+        {
+          requestId:
+            payload.requestId ||
+            "",
+
+          ...(
+            result ||
+            {}
+          )
+        }
+      );
+
+      return;
     }
 
+
+    case "SUPABASE_PRESENCE_UPDATE": {
+
+      const result =
+        await updateGroupTalkPresence({
+          groupId:
+            payload.groupId,
+
+          sessionKey:
+            payload.sessionKey,
+
+          status:
+            payload.status,
+
+          heartbeat:
+            payload.heartbeat ===
+            true
+        });
+
+      post(
+        "SUPABASE_PRESENCE_UPDATE_RESPONSE",
+        {
+          requestId:
+            payload.requestId ||
+            "",
+
+          ...(
+            result ||
+            {}
+          )
+        }
+      );
+
+      return;
+    }
+
+
+    case "SUPABASE_PRESENCE_REQUEST": {
+
+      const result =
+        await getGroupTalkPresence({
+          groupId:
+            payload.groupId
+        });
+
+      post(
+        "SUPABASE_PRESENCE_RESPONSE",
+        {
+          requestId:
+            payload.requestId ||
+            "",
+
+          ...(
+            result ||
+            {}
+          )
+        }
+      );
+
+      return;
+    }
+
+
+    case "VOICE_CONNECT_REQUEST": {
+
+      const result =
+        await connectVoice(
+          payload
+        );
+
+      post(
+        "VOICE_CONNECT_RESPONSE",
+        {
+          requestId:
+            payload.requestId ||
+            "",
+
+          ...result
+        }
+      );
+
+      return;
+    }
+
+
+    case "VOICE_MIC_REQUEST": {
+
+      const result =
+        await voiceCommand({
+          action:
+            "microphone",
+
+          enabled:
+            payload.enabled ===
+            true
+        });
+
+      post(
+        "VOICE_MIC_RESPONSE",
+        {
+          requestId:
+            payload.requestId ||
+            "",
+
+          ok:
+            true,
+
+          ...result
+        }
+      );
+
+      return;
+    }
+
+
+    case "VOICE_SILENT_SET":
+
+      await voiceCommand(
+        {
+          action:
+            "silent",
+
+          enabled:
+            payload.enabled ===
+            true
+        },
+        {
+          wait:
+            false
+        }
+      );
+
+      return;
+
+
+    case "VOICE_DISCONNECT":
+
+      await voiceCommand(
+        {
+          action:
+            "disconnect"
+        },
+        {
+          wait:
+            false
+        }
+      );
+
+      return;
+
+
     case "LIVEKIT_TOKEN_REQUEST": {
-      const result=await createLiveKitToken({groupId:payload.groupId});
-      post("LIVEKIT_TOKEN_RESPONSE",{requestId:payload.requestId||"",ok:true,...(result||{})}); return;
+
+      const result =
+        await createLiveKitToken({
+          groupId:
+            payload.groupId,
+
+          sessionKey:
+            payload.sessionKey ||
+            ""
+        });
+
+      post(
+        "LIVEKIT_TOKEN_RESPONSE",
+        {
+          requestId:
+            payload.requestId ||
+            "",
+
+          ...(
+            result ||
+            {}
+          )
+        }
+      );
+
+      return;
     }
+
+
     case "PTT_EVENT": {
-      const result=await triggerGroupTalkEvent(payload);
-      post("PTT_EVENT_RESULT",{requestId:payload.requestId||"",ok:true,...(result||{})}); return;
+
+      const result =
+        await triggerGroupTalkEvent(
+          payload
+        );
+
+      post(
+        "PTT_EVENT_RESULT",
+        {
+          requestId:
+            payload.requestId ||
+            "",
+
+          ...(
+            result ||
+            {}
+          )
+        }
+      );
+
+      return;
     }
+
+
     case "PHONEBOOK_REQUEST": {
-      const result=await getPhoneBook(payload);
-      post("PHONEBOOK_RESPONSE",{requestId:payload.requestId||"",...(result||{})}); return;
+
+      const result =
+        await getPhoneBook(
+          payload
+        );
+
+      post(
+        "PHONEBOOK_RESPONSE",
+        {
+          requestId:
+            payload.requestId ||
+            "",
+
+          ...(
+            result ||
+            {}
+          )
+        }
+      );
+
+      return;
     }
+
+
+    case "LOCATION_SHARING_START":
+
+      await startLocationSharing(
+        payload.groupId
+      );
+
+      return;
+
+
+    case "LOCATION_SHARING_STOP":
+
+      stopLocationSharing();
+
+      return;
+
+
     case "LOCATION_PING": {
-      const result=await sendLocationPing(payload);
-      post("LOCATION_PING_RESULT",{requestId:payload.requestId||"",...(result||{})}); return;
+
+      const result =
+        await sendLocationPing(
+          payload
+        );
+
+      post(
+        "LOCATION_PING_RESULT",
+        result ||
+        {}
+      );
+
+      return;
     }
+
+
     case "LIVE_LOCATIONS_REQUEST": {
-      const result=await getLiveLocations(payload);
-      post("LIVE_LOCATIONS_RESPONSE",{requestId:payload.requestId||"",...(result||{})}); return;
+
+      const result =
+        await getLiveLocations(
+          payload
+        );
+
+      post(
+        "LIVE_LOCATIONS_RESPONSE",
+        {
+          requestId:
+            payload.requestId ||
+            "",
+
+          ...(
+            result ||
+            {}
+          )
+        }
+      );
+
+      return;
     }
+
+
     case "TICKET_CREATE": {
-      const result=await createGroupTalkTicket(payload);
-      post("TICKET_CREATE_RESPONSE",{requestId:payload.requestId||"",...(result||{})}); return;
+
+      const result =
+        await createGroupTalkTicket(
+          payload
+        );
+
+      post(
+        "TICKET_CREATE_RESPONSE",
+        {
+          requestId:
+            payload.requestId ||
+            "",
+
+          ...(
+            result ||
+            {}
+          )
+        }
+      );
+
+      return;
     }
+
+
     case "TICKET_LIST_REQUEST": {
-      const result=await getGroupTalkTickets(payload);
-      post("TICKET_LIST_RESPONSE",{requestId:payload.requestId||"",...(result||{})}); return;
+
+      const result =
+        await getGroupTalkTickets(
+          payload
+        );
+
+      post(
+        "TICKET_LIST_RESPONSE",
+        {
+          requestId:
+            payload.requestId ||
+            "",
+
+          ...(
+            result ||
+            {}
+          )
+        }
+      );
+
+      return;
     }
+
+
     case "TICKET_REPLY": {
-      const result=await replyToGroupTalkTicket(payload);
-      post("TICKET_REPLY_RESPONSE",{requestId:payload.requestId||"",...(result||{})}); return;
+
+      const result =
+        await replyToGroupTalkTicket(
+          payload
+        );
+
+      post(
+        "TICKET_REPLY_RESPONSE",
+        {
+          requestId:
+            payload.requestId ||
+            "",
+
+          ...(
+            result ||
+            {}
+          )
+        }
+      );
+
+      return;
     }
+
+
     case "HISTORY_SEARCH_REQUEST": {
-      const result=await searchGroupTalkHistory(payload);
-      post("HISTORY_SEARCH_RESPONSE",{requestId:payload.requestId||"",...(result||{})}); return;
+
+      const result =
+        await searchGroupTalkHistory(
+          payload
+        );
+
+      post(
+        "HISTORY_SEARCH_RESPONSE",
+        {
+          requestId:
+            payload.requestId ||
+            "",
+
+          ...(
+            result ||
+            {}
+          )
+        }
+      );
+
+      return;
     }
+
+
     case "TICKET_CATEGORY_LIST_REQUEST": {
-      const result=await getTicketCategories(payload);
-      post("TICKET_CATEGORY_LIST_RESPONSE",{requestId:payload.requestId||"",...(result||{})}); return;
+
+      const result =
+        await getTicketCategories();
+
+      post(
+        "TICKET_CATEGORY_LIST_RESPONSE",
+        {
+          requestId:
+            payload.requestId ||
+            "",
+
+          ...(
+            result ||
+            {}
+          )
+        }
+      );
+
+      return;
     }
+
+
     case "TICKET_CATEGORY_SAVE": {
-      const result=await saveTicketCategory(payload);
-      post("TICKET_CATEGORY_SAVE_RESPONSE",{requestId:payload.requestId||"",...(result||{})}); return;
+
+      const result =
+        await saveTicketCategory(
+          payload
+        );
+
+      post(
+        "TICKET_CATEGORY_SAVE_RESPONSE",
+        {
+          requestId:
+            payload.requestId ||
+            "",
+
+          ...(
+            result ||
+            {}
+          )
+        }
+      );
+
+      return;
     }
+
+
     case "TICKET_CATEGORY_DELETE": {
-      const result=await deleteTicketCategory(payload);
-      post("TICKET_CATEGORY_DELETE_RESPONSE",{requestId:payload.requestId||"",...(result||{})}); return;
+
+      const result =
+        await deleteTicketCategory(
+          payload
+        );
+
+      post(
+        "TICKET_CATEGORY_DELETE_RESPONSE",
+        {
+          requestId:
+            payload.requestId ||
+            "",
+
+          ...(
+            result ||
+            {}
+          )
+        }
+      );
+
+      return;
     }
+
+
     case "ADMIN_SAVE_GROUP": {
-      const result=await adminSaveGroup(payload);
-      post("ADMIN_SAVE_GROUP_RESPONSE",{requestId:payload.requestId||"",...(result||{})});
-      await bootstrap(true); return;
+
+      const result =
+        await adminSaveGroup(
+          payload
+        );
+
+      post(
+        "ADMIN_SAVE_GROUP_RESPONSE",
+        {
+          requestId:
+            payload.requestId ||
+            "",
+
+          ...(
+            result ||
+            {}
+          )
+        }
+      );
+
+      await bootstrap(
+        true
+      );
+
+      return;
     }
+
+
     case "ADMIN_SET_MEMBERSHIP": {
-      const result=await adminSetMembership(payload);
-      post("ADMIN_SET_MEMBERSHIP_RESPONSE",{requestId:payload.requestId||"",...(result||{})});
-      await bootstrap(true); return;
+
+      const result =
+        await adminSetMembership(
+          payload
+        );
+
+      post(
+        "ADMIN_SET_MEMBERSHIP_RESPONSE",
+        {
+          requestId:
+            payload.requestId ||
+            "",
+
+          ...(
+            result ||
+            {}
+          )
+        }
+      );
+
+      await bootstrap(
+        true
+      );
+
+      return;
     }
-    case "GT_NAVIGATE": if(allowedInternalPath(payload.path))wixLocation.to(payload.path); return;
-    default: console.info("[GroupTalk] Unhandled message:",type);
+
+
+    case "GT_NAVIGATE":
+
+      if (
+        allowedInternalPath(
+          payload.path
+        )
+      ) {
+        wixLocation.to(
+          payload.path
+        );
+      }
+
+      return;
+
+
+    default:
+
+      console.info(
+        "[GroupTalk] Unhandled HTML message:",
+        type
+      );
   }
 }
 
-$w.onReady(function(){
-  try{html=$w(EMBED);}catch(error){console.error("[GroupTalk] #htmlGroupTalk is missing.",error);return;}
-  if(!html||typeof html.onMessage!=="function"||typeof html.postMessage!=="function"){
-    console.error("[GroupTalk] #htmlGroupTalk must be an HTML Component.");return;
-  }
-  html.onMessage(async event=>{
-    const msg=event?.data||{}, source=msg.source||"", type=msg.type||msg.event||msg.action||"", payload=msg.payload||{};
-    if(source!==GROUPTALK_SOURCE)return;
-    try{await handle(type,payload);}
-    catch(error){
-      console.error(`[GroupTalk] ${type||"UNKNOWN"} failed.`,error); const message=messageOf(error);
-      if(type==="LIVEKIT_TOKEN_REQUEST"){post("LIVEKIT_TOKEN_RESPONSE",{requestId:payload.requestId||"",ok:false,message});return;}
-      if(type==="SUPABASE_REALTIME_CONFIG_REQUEST"){post("SUPABASE_REALTIME_CONFIG_RESPONSE",{requestId:payload.requestId||"",ok:false,message});return;}
-      post("GT_ERROR",{requestId:payload.requestId||"",action:type,message});
+
+/* ==========================================================================
+   INIT
+   ========================================================================== */
+
+$w.onReady(
+  function () {
+    /*
+     * GroupTalk uses browser-only APIs: HTML messaging, geolocation and the
+     * LiveKit Custom Element. Avoid starting those during Wix SSR.
+     */
+    if (
+      wixWindowFrontend.rendering?.env &&
+      wixWindowFrontend.rendering.env !== "browser"
+    ) {
+      return;
     }
-  });
-  void bootstrap().catch(error=>post("GT_ERROR",{action:"INITIAL_BOOTSTRAP",message:messageOf(error,"GroupTalk could not initialize.")}));
-});
+
+    html =
+      safeElement(
+        HTML_ID
+      );
+
+    if (
+      !html ||
+      typeof html.onMessage !==
+        "function" ||
+      typeof html.postMessage !==
+        "function"
+    ) {
+      console.error(
+        "[GroupTalk] #htmlGroupTalk must be the HTML Component itself, not a section or box."
+      );
+
+      return;
+    }
+
+
+    wireVoiceBridge();
+
+
+    html.onMessage(
+      async (
+        event
+      ) => {
+        const incoming =
+          event?.data ||
+          {};
+
+        if (
+          incoming.source !==
+          GROUPTALK_SOURCE
+        ) {
+          return;
+        }
+
+        const type =
+          incoming.type ||
+          incoming.event ||
+          incoming.action ||
+          "";
+
+        const payload =
+          incoming.payload ||
+          {};
+
+        try {
+          await handleGroupTalkMessage(
+            type,
+            payload
+          );
+
+        } catch (error) {
+
+          const code =
+            errorCode(
+              error
+            );
+
+          const text =
+            messageOf(
+              error
+            );
+
+          console.error(
+            `[GroupTalk] ${type || "UNKNOWN"} failed.`,
+            error
+          );
+
+          if (
+            type ===
+            "SUPABASE_REALTIME_CONFIG_REQUEST"
+          ) {
+            post(
+              "SUPABASE_REALTIME_CONFIG_RESPONSE",
+              {
+                requestId:
+                  payload.requestId ||
+                  "",
+
+                ok:
+                  false,
+
+                code,
+
+                message:
+                  text
+              }
+            );
+
+            return;
+          }
+
+
+          if (
+            type ===
+            "VOICE_CONNECT_REQUEST"
+          ) {
+            post(
+              "VOICE_CONNECT_RESPONSE",
+              {
+                requestId:
+                  payload.requestId ||
+                  "",
+
+                ok:
+                  false,
+
+                code,
+
+                message:
+                  text
+              }
+            );
+
+            return;
+          }
+
+
+          post(
+            "GT_ERROR",
+            {
+              requestId:
+                payload.requestId ||
+                "",
+
+              action:
+                type,
+
+              code,
+
+              message:
+                text
+            }
+          );
+
+
+          if (
+            AUTH_ERRORS.has(
+              code
+            )
+          ) {
+            wixLocation.to(
+              LOGIN_PATH
+            );
+          }
+        }
+      }
+    );
+
+
+    void bootstrap()
+      .then(
+        () =>
+          pushDiagnostics()
+      )
+      .catch(
+        () => {}
+      );
+  }
+);
