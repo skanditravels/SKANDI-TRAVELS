@@ -168,14 +168,17 @@ const MASTER_CONFIG = Object.freeze({
 
 const CUSTOMER_HEADER_EMBED = "#skandiCustomerHeaderEmbed";
 const CUSTOMER_FOOTER_EMBED = "#skandiCustomerFooterEmbed";
-const RIAINTRA_HEADER_EMBED = "#riaintraHeader";
-const RIAINTRA_FOOTER_EMBED = "#riaintraFooter";
-const ALTEA_HEADER_EMBED = "#alteaHeader";
+const RIAINTRA_HEADER_EMBED = "#riaintraHeaderEmbed";
+const RIAINTRA_FOOTER_EMBED = "#riaintraFooterEmbed";
+const ALTEA_HEADER_EMBED = "#altea-header";
 
 const PARENT_SOURCE = "SKANDI_WIX_PARENT";
 const CUSTOMER_HEADER_SOURCE = "SKANDI_CUSTOMER_HEADER_EXPANDBAR";
 const CUSTOMER_FOOTER_SOURCE = "SKANDI_CUSTOMER_FOOTER";
 const INTERNAL_PREFIXES = ["/riaintra", "/altea", "/_functions"];
+
+// Runtime ALTEA module context supplied by the currently open ALTEA application.
+let alteaRuntimeContext = {};
 
 function safeEl(id) {
   try { return $w(id); } catch (_) { return null; }
@@ -325,6 +328,36 @@ async function handleMasterMessage(embed, message = {}) {
       routes: MASTER_CONFIG.routes,
       currentPath: currentPathString()
     });
+    return true;
+  }
+
+  // ALTEA applications can tell the master page which system/module is open.
+  // This is useful when several ALTEA systems run inside the same Wix route.
+  if (type === "ALTEA_SYSTEM_CONTEXT" && isInternalPath()) {
+    const clean = {
+      systemName: String(payload.systemName || "").trim().slice(0, 80),
+      systemContext: String(payload.systemContext || "").trim().slice(0, 120),
+      station: String(payload.station || "").trim().toUpperCase().slice(0, 12),
+      timeZone: String(payload.timeZone || "").trim().slice(0, 80)
+    };
+
+    alteaRuntimeContext = {
+      ...alteaRuntimeContext,
+      ...Object.fromEntries(
+        Object.entries(clean).filter(([, value]) => Boolean(value))
+      )
+    };
+
+    const alteaHeader = safeEl(ALTEA_HEADER_EMBED);
+
+    if (alteaHeader) {
+      postToEmbed(
+        alteaHeader,
+        "ALTEA_HEADER_CONTEXT",
+        alteaRuntimeContext
+      );
+    }
+
     return true;
   }
 
