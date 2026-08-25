@@ -1,7 +1,6 @@
 import wixLocationFrontend from "wix-location-frontend";
 
 import {
-  currentMember,
   authentication
 } from "wix-members-frontend";
 
@@ -15,48 +14,20 @@ import {
   getOldStyleHomeContent
 } from "backend/homeContent.web";
 
-import {
-  getCustomerHeaderSession,
-  subscribeCustomerNewsletter
-} from "backend/customerHeader.web";
-
-$w.onReady(function () {
-    // Listen for messages coming from your HTML iFrame
-    $w("#htmlhome").onMessage((event) => {
-        const message = event.data;
-
-        // Check if the message is a navigation request from the Header, Footer, or Home body
-        if (
-            message.type === "HEADER_NAVIGATE" || 
-            message.type === "FOOTER_NAVIGATE" || 
-            message.type === "HOME_NAVIGATE"
-        ) {
-            // Use Wix Location to actually navigate the user
-            wixLocationFrontend.to(message.payload.path || message.path);
-        }
-    });
-});
 /*
  * Wix page: /home
  * HTML Component ID: #htmlHome
  *
- * The HTML contains:
- * - Home booking search
- * - Locked SKANDI customer header
- * - Language and currency controls
- * - Mobile navigation
- * - SKANDI Club panel
- * - Locked SKANDI customer footer
+ * Global customer header/footer are controlled by masterPage.js.
+ * This page code handles only Home content, live search, offer selection,
+ * booking-cart continuation, and page-level language/currency context.
  */
-const EMBED_ID = "#htmlHome";
 
+const EMBED_ID = "#htmlHome";
 const HOME_SOURCE = "SKANDI_HOME_OLD_STYLE";
-const HEADER_SOURCE = "SKANDI_CUSTOMER_HEADER_EXPANDBAR";
-const FOOTER_SOURCE = "SKANDI_CUSTOMER_FOOTER";
 const PARENT_SOURCE = "SKANDI_WIX_PARENT";
 
 let bootstrapPromise = null;
-let headerPromise = null;
 
 let currentSettings = {
   language: "EN",
@@ -186,22 +157,11 @@ function postHomeError(
   );
 }
 
-function closeHeaderPanels(html) {
-  postToHtml(
-    html,
-    "CLOSE_CUSTOMER_HEADER_PANELS",
-    {}
-  );
-}
-
 /* ==========================================================================
    NAVIGATION
    ========================================================================== */
 
-function navigateTo(
-  html,
-  rawPath
-) {
+function navigateTo(rawPath) {
   const path =
     String(rawPath || "").trim();
 
@@ -223,8 +183,6 @@ function navigateTo(
     return;
   }
 
-  closeHeaderPanels(html);
-
   try {
     wixLocationFrontend.to(path);
   } catch (error) {
@@ -232,346 +190,6 @@ function navigateTo(
       `[Home] Navigation failed for ${path}.`,
       error
     );
-  }
-}
-
-/* ==========================================================================
-   CUSTOMER HEADER
-   ========================================================================== */
-
-function createGuestHeaderState() {
-  return {
-    loggedIn: false,
-    displayName: "",
-    points: 0,
-    tierName: "",
-    menu: []
-  };
-}
-
-async function sendHeaderState(
-  html,
-  forceRefresh = false
-) {
-  if (
-    headerPromise &&
-    !forceRefresh
-  ) {
-    return headerPromise;
-  }
-
-  headerPromise = (async () => {
-    try {
-      const member =
-        await currentMember.getMember();
-
-      if (!member) {
-        postToHtml(
-          html,
-          "CUSTOMER_HEADER_STATE",
-          createGuestHeaderState()
-        );
-
-        return;
-      }
-
-      const session =
-        await getCustomerHeaderSession();
-
-      const displayName =
-        session?.displayName ||
-        session?.name ||
-        session?.member?.displayName ||
-        member?.profile?.nickname ||
-        member?.profile?.title ||
-        member?.loginEmail ||
-        "";
-
-      const points = Number(
-        session?.points ||
-        session?.clubPoints ||
-        session?.rewards?.points ||
-        0
-      );
-
-      const tierName =
-        session?.tierName ||
-        session?.tier ||
-        session?.clubTier ||
-        "";
-
-      postToHtml(
-        html,
-        "CUSTOMER_HEADER_STATE",
-        {
-          loggedIn: true,
-          displayName,
-          points,
-          tierName,
-          menu: Array.isArray(session?.menu)
-            ? session.menu
-            : []
-        }
-      );
-    } catch (error) {
-      console.error(
-        "[Home] Could not load customer header state.",
-        error
-      );
-
-      postToHtml(
-        html,
-        "CUSTOMER_HEADER_STATE",
-        createGuestHeaderState()
-      );
-    } finally {
-      headerPromise = null;
-    }
-  })();
-
-  return headerPromise;
-}
-
-async function handleHeaderMessage(
-  html,
-  message
-) {
-  const payload =
-    message.payload || {};
-
-  const path = String(
-    message.path ||
-    payload.path ||
-    ""
-  ).trim();
-
-  switch (message.type) {
-    case "HEADER_READY":
-      await sendHeaderState(html);
-      return true;
-
-    case "HEADER_NAVIGATE":
-      navigateTo(
-        html,
-        path
-      );
-
-      return true;
-
-    case "HEADER_SEARCH":
-      closeHeaderPanels(html);
-
-      /*
-       * The search form is in the same HTML Component.
-       * Ask the HTML to return to the Home search area.
-       */
-      postToHtml(
-        html,
-        "HOME_FOCUS_SEARCH",
-        {}
-      );
-
-      return true;
-
-    case "HEADER_LOGIN":
-      closeHeaderPanels(html);
-
-      try {
-        await authentication.promptLogin();
-      } catch (error) {
-        /*
-         * Wix rejects the promise when the visitor closes
-         * the login dialog without completing sign-in.
-         */
-        console.info(
-          "[Home] Login was cancelled or incomplete.",
-          error
-        );
-      }
-
-      await sendHeaderState(
-        html,
-        true
-      );
-
-      return true;
-
-    case "HEADER_LOGOUT":
-      closeHeaderPanels(html);
-
-      try {
-        await Promise.resolve(
-          authentication.logout()
-        );
-      } catch (error) {
-        console.warn(
-          "[Home] Logout returned an error.",
-          error
-        );
-      }
-
-      postToHtml(
-        html,
-        "CUSTOMER_HEADER_STATE",
-        createGuestHeaderState()
-      );
-
-      wixLocationFrontend.to("/home");
-
-      return true;
-
-    case "UPDATE_SETTINGS":
-      currentSettings =
-        normalizeSettings(payload);
-
-      /*
-       * Refresh public content using the selected locale and
-       * currency. Backends may return localized content fields,
-       * translated records and currency-specific card prices.
-       */
-      await sendHomeBootstrap(
-        html,
-        true,
-        currentSettings
-      );
-
-      postToHtml(
-        html,
-        "HOME_SETTINGS_APPLIED",
-        {
-          settings:
-            currentSettings
-        }
-      );
-
-      return true;
-
-    default:
-      return false;
-  }
-}
-
-/* ==========================================================================
-   CUSTOMER FOOTER
-   ========================================================================== */
-
-async function handleFooterMessage(
-  html,
-  message
-) {
-  const payload =
-    message.payload || {};
-
-  const path = String(
-    message.path ||
-    payload.path ||
-    ""
-  ).trim();
-
-  switch (message.type) {
-    case "FOOTER_READY":
-      postToHtml(
-        html,
-        "CUSTOMER_FOOTER_STATE",
-        {
-          ready: true
-        }
-      );
-
-      return true;
-
-    case "FOOTER_NAVIGATE":
-      navigateTo(
-        html,
-        path
-      );
-
-      return true;
-
-    case "FOOTER_STAFF_LOGIN":
-      navigateTo(
-        html,
-        "/riaintra"
-      );
-
-      return true;
-
-    case "FOOTER_NEWSLETTER_SIGNUP": {
-      const email = String(
-        message.email ||
-        payload.email ||
-        ""
-      ).trim();
-
-      if (!email) {
-        postToHtml(
-          html,
-          "FOOTER_NEWSLETTER_RESULT",
-          {
-            ok: false,
-            code:
-              "EMAIL_REQUIRED",
-            message:
-              "Please enter your email address."
-          }
-        );
-
-        return true;
-      }
-
-      try {
-        const result =
-          await subscribeCustomerNewsletter({
-            email,
-            source:
-              payload.source ||
-              "Footer"
-          });
-
-        postToHtml(
-          html,
-          "FOOTER_NEWSLETTER_RESULT",
-          {
-            ok: true,
-
-            code:
-              result?.status === "updated"
-                ? "ALREADY_ACTIVE"
-                : "SUBSCRIBED",
-
-            message:
-              result?.status === "updated"
-                ? "Your subscription is already active."
-                : "Thank you for subscribing.",
-
-            ...(result || {})
-          }
-        );
-      } catch (error) {
-        console.error(
-          "[Home] Newsletter signup failed.",
-          error
-        );
-
-        postToHtml(
-          html,
-          "FOOTER_NEWSLETTER_RESULT",
-          {
-            ok: false,
-            code:
-              "SIGNUP_FAILED",
-            message:
-              error?.message ||
-              "Newsletter signup failed."
-          }
-        );
-      }
-
-      return true;
-    }
-
-    default:
-      return false;
   }
 }
 
@@ -664,6 +282,7 @@ async function handleHomeMessage(
 
   switch (message.type) {
     case "HOME_READY":
+    case "HOME_SETTINGS_CHANGED":
       currentSettings =
         normalizeSettings(
           message.settings ||
@@ -673,9 +292,20 @@ async function handleHomeMessage(
 
       await sendHomeBootstrap(
         html,
-        false,
+        message.type === "HOME_SETTINGS_CHANGED",
         currentSettings
       );
+
+      if (message.type === "HOME_SETTINGS_CHANGED") {
+        postToHtml(
+          html,
+          "HOME_SETTINGS_APPLIED",
+          {
+            settings:
+              currentSettings
+          }
+        );
+      }
 
       return true;
 
@@ -752,7 +382,7 @@ async function handleHomeMessage(
       if (result?.requiresLogin) {
         try {
           await authentication.promptLogin();
-        } catch (error) {
+        } catch (_) {
           postHomeError(
             html,
             {
@@ -764,11 +394,11 @@ async function handleHomeMessage(
           return true;
         }
 
-        await sendHeaderState(
-          html,
-          true
-        );
-
+        /*
+         * masterPage.js owns the global customer header and listens for
+         * Wix authentication changes. The Home page does not need to
+         * maintain a duplicate header session anymore.
+         */
         result =
           await createBookingCartFromOffer({
             offer,
@@ -811,7 +441,6 @@ async function handleHomeMessage(
           : "offer";
 
       navigateTo(
-        html,
         `/booking?step=${encodeURIComponent(step)}&cartId=${encodeURIComponent(result.cartId)}`
       );
 
@@ -819,83 +448,20 @@ async function handleHomeMessage(
     }
 
     case "HOME_NAVIGATE": {
-      const path = String(
-        message.path ||
-        payload.path ||
-        ""
-      ).trim();
+      const path =
+        String(
+          message.path ||
+          payload.path ||
+          ""
+        ).trim();
 
-      navigateTo(
-        html,
-        path
-      );
+      navigateTo(path);
 
       return true;
     }
 
     default:
       return false;
-  }
-}
-
-/* ==========================================================================
-   ERROR ROUTING
-   ========================================================================== */
-
-function handleMessageError(
-  html,
-  message,
-  error
-) {
-  console.error(
-    `[Home] ${
-      message.source ||
-      "Unknown source"
-    } / ${
-      message.type ||
-      "Unknown message"
-    } failed.`,
-    error
-  );
-
-  if (
-    message.source === HOME_SOURCE
-  ) {
-    postHomeError(
-      html,
-      error
-    );
-
-    return;
-  }
-
-  if (
-    message.source === FOOTER_SOURCE &&
-    message.type ===
-      "FOOTER_NEWSLETTER_SIGNUP"
-  ) {
-    postToHtml(
-      html,
-      "FOOTER_NEWSLETTER_RESULT",
-      {
-        ok: false,
-        message:
-          error?.message ||
-          "Newsletter signup failed."
-      }
-    );
-
-    return;
-  }
-
-  if (
-    message.source === HEADER_SOURCE
-  ) {
-    postToHtml(
-      html,
-      "CUSTOMER_HEADER_STATE",
-      createGuestHeaderState()
-    );
   }
 }
 
@@ -923,49 +489,30 @@ $w.onReady(function () {
       return;
     }
 
+    if (
+      message.source !==
+      HOME_SOURCE
+    ) {
+      /*
+       * Header/footer messages belong to masterPage.js now.
+       * Do not duplicate those handlers here.
+       */
+      return;
+    }
+
     try {
-      if (
-        message.source === HOME_SOURCE
-      ) {
-        await handleHomeMessage(
-          html,
-          message
-        );
-
-        return;
-      }
-
-      if (
-        message.source === HEADER_SOURCE
-      ) {
-        await handleHeaderMessage(
-          html,
-          message
-        );
-
-        return;
-      }
-
-      if (
-        message.source === FOOTER_SOURCE
-      ) {
-        await handleFooterMessage(
-          html,
-          message
-        );
-
-        return;
-      }
-
-      console.warn(
-        `[Home] Ignored message from unknown source: ${
-          message.source
-        }`
+      await handleHomeMessage(
+        html,
+        message
       );
     } catch (error) {
-      handleMessageError(
+      console.error(
+        `[Home] ${message.type} failed.`,
+        error
+      );
+
+      postHomeError(
         html,
-        message,
         error
       );
     }
