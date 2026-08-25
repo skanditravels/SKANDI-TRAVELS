@@ -651,7 +651,17 @@ function safePostToEmbed(
     return false;
   }
 }
-
+function delay(
+  milliseconds
+) {
+  return new Promise(
+    (resolve) =>
+      setTimeout(
+        resolve,
+        milliseconds
+      )
+  );
+}
 
 function safeBindMessages(
   selector,
@@ -1105,27 +1115,88 @@ async function refreshCustomerSession() {
    STAFF SESSION
    ========================================================================== */
 
-async function loadStaffSession() {
-  try {
-    const result =
-      await getStaffPortalSession();
+async function loadStaffSession({
+  retries = 2
+} = {}) {
+  let lastResult =
+    null;
 
-    staffSession =
-      result ||
-      null;
+  for (
+    let attempt = 0;
+    attempt <= retries;
+    attempt += 1
+  ) {
+    try {
+      const result =
+        await getStaffPortalSession();
 
-    return staffSession;
-  } catch (error) {
-    console.warn(
-      "[MasterPage] Staff session unavailable.",
-      error
-    );
+      lastResult =
+        result ||
+        null;
 
-    staffSession =
-      null;
+      if (
+        lastResult?.authorized ===
+        true
+      ) {
+        staffSession =
+          lastResult;
 
-    return null;
+        return staffSession;
+      }
+
+      /*
+       * Wix can briefly report no current member immediately
+       * after applySessionToken() + navigation.
+       */
+      if (
+        attempt <
+        retries
+      ) {
+        await delay(
+          attempt === 0
+            ? 150
+            : 400
+        );
+
+        continue;
+      }
+
+    } catch (error) {
+
+      console.warn(
+        "[MasterPage] Staff session lookup failed.",
+        {
+          attempt:
+            attempt +
+            1,
+
+          message:
+            error?.message ||
+            String(
+              error
+            )
+        }
+      );
+
+      if (
+        attempt <
+        retries
+      ) {
+        await delay(
+          attempt === 0
+            ? 150
+            : 400
+        );
+
+        continue;
+      }
+    }
   }
+
+  staffSession =
+    lastResult;
+
+  return staffSession;
 }
 
 
@@ -1295,9 +1366,16 @@ function internalChromePayload() {
 
 
 function sendInternalChrome() {
+  const path =
+    currentPath();
+
   const payload =
     internalChromePayload();
 
+
+  /*
+   * Main RIAINTRA chrome.
+   */
   safePostToEmbed(
     RIAINTRA_HEADER_EMBED,
     "INTERNAL_CHROME_BOOTSTRAP",
@@ -1310,8 +1388,15 @@ function sendInternalChrome() {
     payload
   );
 
+
+  /*
+   * Do NOT send anything to the ALTEA header
+   * unless this is actually an ALTEA route.
+   */
   if (
-    isAlteaPath()
+    isAlteaPath(
+      path
+    )
   ) {
     safePostToEmbed(
       ALTEA_HEADER_EMBED,
@@ -2008,16 +2093,50 @@ async function signOutInternal() {
    ========================================================================== */
 
 function bindGlobalEmbeds() {
-  safeBindMessages(
-    CUSTOMER_HEADER_EMBED,
-    handleCustomerHeaderMessage
-  );
+  const path =
+    currentPath();
 
-  safeBindMessages(
-    CUSTOMER_FOOTER_EMBED,
-    handleCustomerFooterMessage
-  );
+  /*
+   * PUBLIC WEBSITE
+   * Only bind customer chrome.
+   */
+  if (
+    !isInternalPath(
+      path
+    )
+  ) {
+    safeBindMessages(
+      CUSTOMER_HEADER_EMBED,
+      handleCustomerHeaderMessage
+    );
 
+    safeBindMessages(
+      CUSTOMER_FOOTER_EMBED,
+      handleCustomerFooterMessage
+    );
+
+    return;
+  }
+
+
+  /*
+   * RIAINTRA LOGIN
+   *
+   * Global authenticated chrome is hidden here.
+   * Do not bind unnecessary components.
+   */
+  if (
+    isStaffLoginPage(
+      path
+    )
+  ) {
+    return;
+  }
+
+
+  /*
+   * RIAINTRA INTERNAL PAGES
+   */
   safeBindMessages(
     RIAINTRA_HEADER_EMBED,
     handleRiaintraHeaderMessage
@@ -2028,10 +2147,20 @@ function bindGlobalEmbeds() {
     handleRiaintraFooterMessage
   );
 
-  safeBindMessages(
-    ALTEA_HEADER_EMBED,
-    handleAlteaHeaderMessage
-  );
+
+  /*
+   * ALTEA is stacked only on actual ALTEA routes.
+   */
+  if (
+    isAlteaPath(
+      path
+    )
+  ) {
+    safeBindMessages(
+      ALTEA_HEADER_EMBED,
+      handleAlteaHeaderMessage
+    );
+  }
 }
 
 
@@ -2073,38 +2202,126 @@ async function bootstrapMasterPage() {
   await updateChromeVisibility();
 
 
+if (
+  isInternalPath(
+    path
+  )
+) {
+
+  /*
+   * /riaintra itself is the login page.
+   */
   if (
-    isInternalPath(
+    isStaffLoginPage(
       path
     )
   ) {
-
-    /*
-     * Login screen itself does not require a staff session bootstrap.
-     */
-    if (
-      !isStaffLoginPage(
-        path
-      )
-    ) {
-      await loadStaffSession();
-
-      if (
-        !staffSession?.authorized
-      ) {
-        console.warn(
-          "[MasterPage] Internal page has no authorized staff session.",
-          {
-            path
-          }
-        );
-      }
-
-      sendInternalChrome();
-    }
-
     return;
   }
+
+
+  /*
+   * Try to resolve the recently authenticated Wix member.
+   *
+   * IMPORTANT:
+   * MasterPage does NOT redirect the user if this initial
+   * lookup is not ready.
+   *
+   * The individual internal page remains responsible for
+   * enforcing its own staff authorization.
+   */
+  await loadStaffSession({
+    retries:
+      2
+  });
+
+
+  if (
+    staffSession?.authorized ===
+    true
+  ) {
+
+    sendInternalChrome();
+
+  } else {
+
+    console.info(
+      "[MasterPage] Staff session not ready during initial chrome bootstrap.",
+      {
+        path,
+
+        loggedIn:
+          staffSession?.loggedIn ===
+          true,
+
+        authenticated:
+          staffSession?.authenticated ===
+          true,
+
+        code:
+          staffSession?.code ||
+          ""
+      }
+    );
+
+
+    /*
+     * Send a minimal chrome bootstrap rather than pretending
+     * the employee is unauthorized.
+     */
+    safePostToEmbed(
+      RIAINTRA_HEADER_EMBED,
+      "INTERNAL_CHROME_BOOTSTRAP",
+      {
+        masterVersion:
+          MASTER_VERSION,
+
+        pageName:
+          pageNameForPath(
+            path
+          ),
+
+        pagePath:
+          path,
+
+        pageSubtitle:
+          "SKANDI internal staff system",
+
+        profile:
+          {},
+
+        apps:
+          [],
+
+        permissions:
+          {},
+
+        session:
+          staffSession,
+
+        assets:
+          ASSETS,
+
+        routes:
+          ROUTES,
+
+        isAltea:
+          isAlteaPath(
+            path
+          ),
+
+        authorized:
+          false,
+
+        sessionPending:
+          true
+      }
+    );
+  }
+
+
+  return;
+}
 
 
   /*
