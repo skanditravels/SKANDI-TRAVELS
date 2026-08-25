@@ -11,6 +11,14 @@ const STAFF_LOGIN_PATH = "/riaintra";
 const ALLOWED_PATH_PREFIXES = ["/riaintra"];
 
 let sessionPromise = null;
+$w.onReady(function () {
+    // Replace "#yourHtmlComponentId" with the actual ID of your embed element
+    $w("#alteaDashboardEmbed").onMessage((event) => { 
+        if (event.data.type === "NAVIGATE" && event.data.path) {
+            wixLocation.to(event.data.path);
+        }
+    });
+});
 
 $w.onReady(function () {
   const html = $w(EMBED_ID);
