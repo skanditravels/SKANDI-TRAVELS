@@ -1,6 +1,6 @@
 import {
-  getPublicStoreCatalog
-} from "backend/storeCatalogBridge.web";
+  listStorefrontProducts
+} from "backend/skandiStorefront.web";
 
 const EMBED_ID =
   "#skandiStoreEmbed";
@@ -12,7 +12,7 @@ const PARENT_SOURCE =
   "SKANDI_WIX_PARENT";
 
 let embed = null;
-let loadPromise = null;
+let loadingPromise = null;
 let cachedCatalog = null;
 
 function parseMessage(
@@ -42,15 +42,22 @@ function send(
   type,
   payload = {}
 ) {
-  if (!embed) {
+  if (
+    !embed ||
+    typeof embed.postMessage !==
+      "function"
+  ) {
     return;
   }
 
   embed.postMessage({
     source:
       PARENT_SOURCE,
+
     type,
+
     payload,
+
     timestamp:
       new Date()
         .toISOString()
@@ -73,29 +80,29 @@ async function loadCatalog(
   }
 
   if (
-    loadPromise &&
+    loadingPromise &&
     !force
   ) {
-    return loadPromise;
+    return loadingPromise;
   }
 
-  loadPromise =
+  loadingPromise =
     (async () => {
       try {
         send(
           "STOREFRONT_PROGRESS",
           {
             message:
-              "Reading Wix Stores products…"
+              "Loading Wix Catalog V3 products…"
           }
         );
 
         console.log(
-          "[Store Page] Calling getPublicStoreCatalog()."
+          "[Store Page] Calling Catalog V3 storefront backend."
         );
 
         const result =
-          await getPublicStoreCatalog({
+          await listStorefrontProducts({
             limit:
               100
           });
@@ -107,7 +114,7 @@ async function loadCatalog(
           throw new Error(
             result?.message ||
             result?.error ||
-            "Wix Stores returned an invalid catalog response."
+            "Catalog V3 returned an invalid response."
           );
         }
 
@@ -130,10 +137,11 @@ async function loadCatalog(
         };
 
         console.log(
-          "[Store Page] Wix catalog loaded.",
+          "[Store Page] Catalog V3 payload ready.",
           {
             products:
               cachedCatalog.products.length,
+
             meta:
               cachedCatalog.meta ||
               {}
@@ -148,7 +156,7 @@ async function loadCatalog(
         return cachedCatalog;
       } catch (error) {
         console.error(
-          "[Store Page] Wix catalog load failed.",
+          "[Store Page] Catalog V3 failed.",
           error
         );
 
@@ -156,27 +164,27 @@ async function loadCatalog(
           "STOREFRONT_ERROR",
           {
             stage:
-              "catalog-only-bridge",
+              "catalog-v3",
 
             message:
               error?.message ||
-              "Wix Stores products could not be loaded."
+              "Wix Catalog V3 could not be loaded."
           }
         );
 
         throw error;
       } finally {
-        loadPromise =
+        loadingPromise =
           null;
       }
     })();
 
-  return loadPromise;
+  return loadingPromise;
 }
 
 $w.onReady(function () {
   console.log(
-    "[Store Page] Catalog-only page code started."
+    "[Store Page] Catalog V3 page code started."
   );
 
   try {
@@ -186,7 +194,7 @@ $w.onReady(function () {
       );
   } catch (error) {
     console.error(
-      `[Store Page] ${EMBED_ID} does not exist on this Wix page.`,
+      `[Store Page] ${EMBED_ID} does not exist.`,
       error
     );
 
@@ -195,20 +203,22 @@ $w.onReady(function () {
 
   if (
     !embed ||
-    typeof embed.onMessage !== "function" ||
-    typeof embed.postMessage !== "function"
+    typeof embed.onMessage !==
+      "function" ||
+    typeof embed.postMessage !==
+      "function"
   ) {
     console.error(
-      `[Store Page] ${EMBED_ID} is not an HTML Component.`
+      `[Store Page] ${EMBED_ID} is not a Wix HTML Component.`
     );
 
     return;
   }
 
   console.log(
-    "[Store Page] HTML Component connected.",
+    "[Store Page] HTML bridge connected.",
     {
-      embedId:
+      id:
         EMBED_ID
     }
   );
@@ -229,11 +239,8 @@ $w.onReady(function () {
       }
 
       console.log(
-        "[Store Page] HTML message received.",
-        {
-          type:
-            message.type
-        }
+        "[Store Page] Message from storefront HTML:",
+        message.type
       );
 
       if (
@@ -253,8 +260,9 @@ $w.onReady(function () {
       }
 
       /*
-       * Cart/support are intentionally disabled in this diagnostic bridge.
-       * They will be reconnected only after the catalog transport is proven.
+       * Product transport only for this corrected Catalog V3 build.
+       * Cart/support can be reconnected after catalog transport is
+       * confirmed without putting product rendering at risk.
        */
       if (
         message.type ===
@@ -268,24 +276,21 @@ $w.onReady(function () {
           "STOREFRONT_ERROR",
           {
             stage:
-              "catalog-diagnostic",
+              "catalog-v3-diagnostic",
 
             message:
-              "Catalog is connected. Cart is temporarily disabled while the Wix Stores bridge is being isolated."
+              "Products are connected to Wix Catalog V3. Cart is temporarily disabled in this transport-only build."
           }
         );
       }
     }
   );
 
-  /*
-   * This message proves page code itself is executing.
-   */
   send(
     "STOREFRONT_PARENT_READY",
     {
       bridge:
-        "CATALOG_ONLY",
+        "WIX_CATALOG_V3",
 
       embedId:
         EMBED_ID
@@ -293,8 +298,8 @@ $w.onReady(function () {
   );
 
   /*
-   * Preload immediately. If the iframe has not attached its listener yet,
-   * the HTML's retrying STOREFRONT_READY handshake will replay cached data.
+   * Preload immediately. If the iframe is not listening yet,
+   * its retrying STOREFRONT_READY message will receive cached data.
    */
   void loadCatalog()
     .catch(() => {});
