@@ -13,7 +13,7 @@ import {
   createDuffelOrder,
   createDuffelOrderCancellation,
   confirmDuffelOrderCancellation
-} from "src/backend/duffelTravel.web";
+} from "backend/duffelTravel.web";
 
 const EMBED_ID = "#alteaReservationsEmbed";
 const CHILD_SOURCE = "SKANDI_DUFFEL_RESERVATIONS";
