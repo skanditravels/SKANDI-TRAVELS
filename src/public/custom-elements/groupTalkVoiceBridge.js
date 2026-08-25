@@ -192,13 +192,12 @@ class SkandiGroupTalkVoice
   connectedCallback() {
     this.emit(
       "voice-state",
-      {
-        state:
-          "ready",
-        customElement:
-          true
-      }
+      {state:"ready",customElement:true}
     );
+
+    void loadLiveKit()
+      .then(()=>this.emit("voice-state",{state:"sdk-ready",customElement:true}))
+      .catch(error=>this.emit("voice-error",{code:"LIVEKIT_CLIENT_LOAD_FAILED",message:String(error?.message||error||"LiveKit browser SDK failed to load.")}));
   }
 
 
@@ -300,6 +299,13 @@ class SkandiGroupTalkVoice
       switch (
         command.action
       ) {
+
+        case "ping":
+
+          await loadLiveKit();
+          this.emit("voice-state",{commandId,state:"ready",customElement:true});
+          return;
+
 
         case "connect":
 
