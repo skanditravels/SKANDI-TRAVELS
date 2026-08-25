@@ -4,7 +4,7 @@
 
 import wixLocation from "wix-location";
 import { authentication } from "wix-members-frontend";
-import { getStaffPortalSession } from "src/backend/RIA/staffPortalAuth.web";
+import { getStaffPortalSession } from "backend/RIA/staffPortalAuth.web";
 import {
   getMasterInventoryState,
   fetchFlightInventory,
@@ -20,8 +20,8 @@ import {
   syncPartnerTickets,
   fetchPackageBundles,
   commitPackageBundle
-} from "src/backend/RIA/masterInventory.web";
-import { bindInternalHtmlBridge } from 'src/public/internalHtmlBridge';
+} from "backend/RIA/masterInventory.web";
+import { bindInternalHtmlBridge } from 'public/internalHtmlBridge';
 import {
   getHrSession,
   listStaff,
@@ -30,13 +30,13 @@ import {
   generateSkId,
   printStaffBadge,
   getStaffHrReports,
-} from 'src/backend/RIA/staffHR.web';
+} from 'backend/RIA/staffHR.web';
 import {
   savePayrollProfile,
   createPayrollPeriod,
   calculatePayrollRun,
   finalizePayrollRun,
-} from 'src/backend/RIA/staffPayroll.web';
+} from 'backend/RIA/staffPayroll.web';
 
 const HR_TYPES = new Set([
   'HR_READY', 'HR_REFRESH', 'HR_SAVE_STAFF', 'HR_DEACTIVATE', 'HR_REACTIVATE',
