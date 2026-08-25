@@ -148,6 +148,7 @@ const MASTER_CONFIG = Object.freeze({
             { label: "Travel Wallet &amp; Vouchers", path: "/my-profile?tab=wallet" }
           ])
         },
+        {
         title: "About",
           links: Object.freeze([
             { label: "VOY Magazine", path: "/voy-magazine" },
