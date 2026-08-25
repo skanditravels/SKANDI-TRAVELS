@@ -1,5 +1,8 @@
+// GroupTalk page code
+// HTML Component ID: #htmlGroupTalk
+// This page is GroupTalk-only. Do not bind #staffHrEmbed here.
+
 import wixLocation from "wix-location";
-import { authentication } from "wix-members-frontend";
 import { getStaffPortalSession } from "backend/RIA/staffPortalAuth.web";
 import {
   getGroupTalkBootstrap,
@@ -19,292 +22,254 @@ import {
   saveTicketCategory,
   deleteTicketCategory
 } from "backend/GROUPTALK/grouptalk.web";
-import { bindInternalHtmlBridge } from 'public/internalHtmlBridge';
-import {
-  getHrSession,
-  listStaff,
-  saveStaff,
-  setStaffActive,
-  generateSkId,
-  printStaffBadge,
-  getStaffHrReports,
-} from 'backend/RIA/staffHR.web';
-import {
-  savePayrollProfile,
-  createPayrollPeriod,
-  calculatePayrollRun,
-  finalizePayrollRun,
-} from 'backend/RIA/staffPayroll.web';
 
-const HR_TYPES = new Set([
-  'HR_READY', 'HR_REFRESH', 'HR_SAVE_STAFF', 'HR_DEACTIVATE', 'HR_REACTIVATE',
-  'HR_GENERATE_SKID', 'HR_PRINT_BADGE', 'HR_REPORTS_REQUEST',
-  'PAYROLL_SAVE_PROFILE', 'PAYROLL_CREATE_PERIOD', 'PAYROLL_CALCULATE_RUN', 'PAYROLL_FINALIZE_RUN',
-  // Keep the existing handlers for HR_WIX_*, HR_PORTAL_*, Crewcontrol, and Badge Control.
-]);
-
-$w.onReady(() => {
-  bindInternalHtmlBridge({
-    embed: $w('#staffHrEmbed'),
-    allowedSources: new Set(['SKANDI_HR_STAFF', 'SKANDI_CAREERS_CONTROL']),
-    allowedTypes: HR_TYPES,
-    toError: () => ({ type: 'HR_ERROR', payload: { code: 'ACTION_FAILED' } }),
-    handle: async ({ type, payload }) => {
-      switch (type) {
-        case 'HR_READY':
-        case 'HR_REFRESH': {
-          const [session, staff] = await Promise.all([getHrSession(), listStaff(payload)]);
-          return [
-            { type: 'HR_SESSION', payload: session },
-            { type: 'HR_STAFF_LIST', payload: { staff } },
-          ];
-        }
-        case 'HR_SAVE_STAFF':
-          return { type: 'HR_STAFF_SAVED', payload: await saveStaff(payload) };
-        case 'HR_DEACTIVATE':
-          return { type: 'HR_ACTION_OK', payload: await setStaffActive({ ...payload, active: false }) };
-        case 'HR_REACTIVATE':
-          return { type: 'HR_ACTION_OK', payload: await setStaffActive({ ...payload, active: true }) };
-        case 'HR_GENERATE_SKID':
-          return { type: 'HR_SKID_GENERATED', payload: await generateSkId(payload) };
-        case 'HR_PRINT_BADGE':
-          return { type: 'HR_BADGE_PRINTED', payload: await printStaffBadge(payload) };
-        case 'HR_REPORTS_REQUEST':
-          return { type: 'HR_REPORTS', payload: await getStaffHrReports(payload) };
-        case 'PAYROLL_SAVE_PROFILE':
-          return { type: 'PAYROLL_PROFILE_SAVED', payload: await savePayrollProfile(payload) };
-        case 'PAYROLL_CREATE_PERIOD':
-          return { type: 'PAYROLL_PERIOD_CREATED', payload: await createPayrollPeriod(payload) };
-        case 'PAYROLL_CALCULATE_RUN':
-          return { type: 'PAYROLL_RUN_CALCULATED', payload: await calculatePayrollRun(payload) };
-        case 'PAYROLL_FINALIZE_RUN':
-          return { type: 'PAYROLL_RUN_FINALIZED', payload: await finalizePayrollRun(payload) };
-        default:
-          return { type: 'HR_ERROR', payload: { code: 'UNHANDLED_EVENT' } };
-      }
-    },
-  });
-});
 const EMBED = "#htmlGroupTalk";
 const GROUPTALK_SOURCE = "GROUPTALK_HTML";
-const CHROME_SOURCE = "SKANDI_INTERNAL_CHROME";
 const PARENT_SOURCE = "SKANDI_WIX_PARENT";
 const LOGIN_PATH = "/riaintra";
-const HOME_PATH = "/";
 
-function currentPath() {
-  return "/" + wixLocation.path.join("/");
-}
+let html = null;
+let bootstrapPromise = null;
 
-function post(html, type, payload = {}) {
-  html.postMessage({
-    source: PARENT_SOURCE,
-    type,
-    payload,
-    timestamp: new Date().toISOString()
-  });
+
+function delay(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 function allowedInternalPath(path) {
-  const p = String(path || "");
+  const p = String(path || "").trim();
   return p === "/" || p === LOGIN_PATH || p.startsWith("/riaintra") || p.startsWith("/altea");
 }
 
-async function doLogout() {
-  try {
-    await authentication.logout();
-  } catch (err) {
-    console.warn("Logout warning:", err);
-  }
-  wixLocation.to(HOME_PATH);
+function messageOf(error, fallback = "GroupTalk action failed.") {
+  const message = String(error?.message || error || "").trim();
+  return message && message.length <= 220 ? message : fallback;
 }
 
-async function bootstrap(html) {
-  const session = await getStaffPortalSession().catch(() => null);
-  if (!session || session.authorized === false || session.ok === false) {
-    wixLocation.to(LOGIN_PATH);
-    return;
+function post(type, payload = {}) {
+  if (!html || typeof html.postMessage !== "function") {
+    console.warn("[GroupTalk] #htmlGroupTalk is not an HTML Component.");
+    return false;
   }
+  try {
+    html.postMessage({
+      source: PARENT_SOURCE,
+      type,
+      payload,
+      timestamp: new Date().toISOString()
+    });
+    return true;
+  } catch (error) {
+    console.error(`[GroupTalk] postMessage failed for ${type}.`, error);
+    return false;
+  }
+}
 
-  const gt = await getGroupTalkBootstrap();
-  post(html, "GT_BOOTSTRAP", gt);
 
-  post(html, "INTERNAL_CHROME_BOOTSTRAP", {
-    pageName: "GroupTalk",
-    pagePath: currentPath(),
-    pageSubtitle: "ALTEA live operations voice, map and helpdesk",
-    profile: gt.profile,
-    apps: gt.apps || [],
-    isAltea: true
-  });
+async function authorizedSession() {
+  const waits = [0, 150, 400];
+  let last = null;
+  for (const wait of waits) {
+    if (wait) await delay(wait);
+    try {
+      last = await getStaffPortalSession();
+      if (last?.authorized === true && last?.ok !== false) return last;
+    } catch (error) {
+      console.warn("[GroupTalk] Staff session lookup warning.", error);
+    }
+  }
+  return last;
+}
+
+async function bootstrap(force = false) {
+  if (bootstrapPromise && !force) return bootstrapPromise;
+
+  bootstrapPromise = (async () => {
+    const session = await authorizedSession();
+    if (!session || session.authorized !== true || session.ok === false) {
+      post("GT_ERROR", {
+        action: "BOOTSTRAP",
+        message: "Your RIAINTRA staff session is not authorized."
+      });
+      wixLocation.to(LOGIN_PATH);
+      return null;
+    }
+
+    const result = await getGroupTalkBootstrap();
+    if (!result) throw new Error("GroupTalk bootstrap returned no data.");
+
+    post("GT_BOOTSTRAP", result);
+    return result;
+  })();
+
+  try {
+    return await bootstrapPromise;
+  } finally {
+    bootstrapPromise = null;
+  }
+}
+
+async function handleGroupTalk(type, payload) {
+  switch (type) {
+    case "GT_READY":
+      await bootstrap();
+      return;
+
+    case "GT_REFRESH":
+      await bootstrap(true);
+      return;
+
+    case "PUSHER_AUTHORIZE": {
+      const auth = await authorizePusherChannel(payload);
+      post("PUSHER_AUTH_RESPONSE", { requestId: payload.requestId, ok: true, auth });
+      return;
+    }
+
+    case "LIVEKIT_TOKEN_REQUEST": {
+      const token = await createLiveKitToken(payload);
+      post("LIVEKIT_TOKEN_RESPONSE", { requestId: payload.requestId, ok: true, ...(token || {}) });
+      return;
+    }
+
+    case "PTT_EVENT": {
+      const result = await triggerGroupTalkEvent(payload);
+      post("PTT_EVENT_RESULT", { requestId: payload.requestId, ok: true, ...(result || {}) });
+      return;
+    }
+
+    case "PHONEBOOK_REQUEST": {
+      const result = await getPhoneBook(payload);
+      post("PHONEBOOK_RESPONSE", { requestId: payload.requestId || "", ...(result || {}) });
+      return;
+    }
+
+    case "LOCATION_PING": {
+      const result = await sendLocationPing(payload);
+      post("LOCATION_PING_RESULT", { requestId: payload.requestId || "", ...(result || {}) });
+      return;
+    }
+
+    case "LIVE_LOCATIONS_REQUEST": {
+      const result = await getLiveLocations(payload);
+      post("LIVE_LOCATIONS_RESPONSE", { requestId: payload.requestId || "", ...(result || {}) });
+      return;
+    }
+
+    case "TICKET_CREATE": {
+      const result = await createGroupTalkTicket(payload);
+      post("TICKET_CREATE_RESPONSE", { requestId: payload.requestId || "", ...(result || {}) });
+      return;
+    }
+
+    case "TICKET_LIST_REQUEST": {
+      const result = await getGroupTalkTickets(payload);
+      post("TICKET_LIST_RESPONSE", { requestId: payload.requestId || "", ...(result || {}) });
+      return;
+    }
+
+    case "TICKET_REPLY": {
+      const result = await replyToGroupTalkTicket(payload);
+      post("TICKET_REPLY_RESPONSE", { requestId: payload.requestId || "", ...(result || {}) });
+      return;
+    }
+
+    case "HISTORY_SEARCH_REQUEST": {
+      const result = await searchGroupTalkHistory(payload);
+      post("HISTORY_SEARCH_RESPONSE", { requestId: payload.requestId || "", ...(result || {}) });
+      return;
+    }
+
+    case "TICKET_CATEGORY_LIST_REQUEST": {
+      const result = await getTicketCategories(payload);
+      post("TICKET_CATEGORY_LIST_RESPONSE", { requestId: payload.requestId || "", ...(result || {}) });
+      return;
+    }
+
+    case "TICKET_CATEGORY_SAVE": {
+      const result = await saveTicketCategory(payload);
+      post("TICKET_CATEGORY_SAVE_RESPONSE", { requestId: payload.requestId || "", ...(result || {}) });
+      return;
+    }
+
+    case "TICKET_CATEGORY_DELETE": {
+      const result = await deleteTicketCategory(payload);
+      post("TICKET_CATEGORY_DELETE_RESPONSE", { requestId: payload.requestId || "", ...(result || {}) });
+      return;
+    }
+
+    case "ADMIN_SAVE_GROUP": {
+      const result = await adminSaveGroup(payload);
+      post("ADMIN_SAVE_GROUP_RESPONSE", { requestId: payload.requestId || "", ...(result || {}) });
+      await bootstrap(true);
+      return;
+    }
+
+    case "ADMIN_SET_MEMBERSHIP": {
+      const result = await adminSetMembership(payload);
+      post("ADMIN_SET_MEMBERSHIP_RESPONSE", { requestId: payload.requestId || "", ...(result || {}) });
+      await bootstrap(true);
+      return;
+    }
+
+    case "GT_NAVIGATE":
+      if (allowedInternalPath(payload.path)) wixLocation.to(payload.path);
+      return;
+
+    default:
+      console.info("[GroupTalk] Unhandled message:", type);
+  }
 }
 
 $w.onReady(function () {
-  const html = $w(EMBED);
+  try {
+    html = $w(EMBED);
+  } catch (error) {
+    console.error("[GroupTalk] #htmlGroupTalk is missing.", error);
+    return;
+  }
 
-  html.onMessage(async (event) => {
-    const msg = event.data || {};
+  if (!html || typeof html.onMessage !== "function" || typeof html.postMessage !== "function") {
+    console.error("[GroupTalk] #htmlGroupTalk must be an HTML Component.");
+    return;
+  }
+
+  html.onMessage(async event => {
+    const msg = event?.data || {};
     const source = msg.source || "";
     const type = msg.type || msg.event || msg.action || "";
     const payload = msg.payload || {};
 
     try {
-      if (source === CHROME_SOURCE) {
-        if (type === "INTERNAL_CHROME_READY") {
-          await bootstrap(html);
-          return;
-        }
-
-        if (type === "INTERNAL_LOGOUT") {
-          await doLogout();
-          return;
-        }
-
-        if (type === "INTERNAL_NAVIGATE") {
-          const path = payload.path || msg.path;
-          if (allowedInternalPath(path)) wixLocation.to(path);
-          return;
-        }
-
-        if (type === "INTERNAL_GLOBAL_SEARCH") {
-          const query = payload.query || msg.query || "";
-          const result = await runInternalGlobalSearch(query);
-          post(html, "INTERNAL_SEARCH_RESULTS", {
-            requestId: payload.requestId || msg.requestId || "",
-            query,
-            results: result.results || result.items || []
-          });
-          return;
-        }
-      }
-
       if (source !== GROUPTALK_SOURCE) return;
+      await handleGroupTalk(type, payload);
+    } catch (error) {
+      console.error(`[GroupTalk] ${type || "UNKNOWN"} failed.`, error);
+      const message = messageOf(error);
 
-      switch (type) {
-        case "GT_READY":
-          await bootstrap(html);
-          break;
-
-        case "PUSHER_AUTHORIZE": {
-          const auth = await authorizePusherChannel(payload);
-          post(html, "PUSHER_AUTH_RESPONSE", {
-            requestId: payload.requestId,
-            ok: true,
-            auth
-          });
-          break;
-        }
-
-        case "LIVEKIT_TOKEN_REQUEST": {
-          const token = await createLiveKitToken(payload);
-          post(html, "LIVEKIT_TOKEN_RESPONSE", {
-            requestId: payload.requestId,
-            ok: true,
-            ...token
-          });
-          break;
-        }
-
-        case "PTT_EVENT": {
-          const result = await triggerGroupTalkEvent(payload);
-          post(html, "PTT_EVENT_RESULT", {
-            requestId: payload.requestId,
-            ok: true,
-            ...result
-          });
-          break;
-        }
-
-        case "PHONEBOOK_REQUEST": {
-          const result = await getPhoneBook(payload);
-          post(html, "PHONEBOOK_RESPONSE", result);
-          break;
-        }
-
-        case "LOCATION_PING": {
-          const result = await sendLocationPing(payload);
-          post(html, "LOCATION_PING_RESULT", result);
-          break;
-        }
-
-        case "LIVE_LOCATIONS_REQUEST": {
-          const result = await getLiveLocations(payload);
-          post(html, "LIVE_LOCATIONS_RESPONSE", result);
-          break;
-        }
-
-        case "TICKET_CREATE": {
-          const result = await createGroupTalkTicket(payload);
-          post(html, "TICKET_CREATE_RESPONSE", result);
-          break;
-        }
-
-        case "TICKET_LIST_REQUEST": {
-          const result = await getGroupTalkTickets(payload);
-          post(html, "TICKET_LIST_RESPONSE", result);
-          break;
-        }
-
-        case "TICKET_REPLY": {
-          const result = await replyToGroupTalkTicket(payload);
-          post(html, "TICKET_REPLY_RESPONSE", result);
-          break;
-        }
-
-        case "HISTORY_SEARCH_REQUEST": {
-          const result = await searchGroupTalkHistory(payload);
-          post(html, "HISTORY_SEARCH_RESPONSE", {
-            requestId: payload.requestId,
-            ...result
-          });
-          break;
-        }
-        case "TICKET_CATEGORY_LIST_REQUEST": {
-  const result = await getTicketCategories(payload);
-  post(html, "TICKET_CATEGORY_LIST_RESPONSE", result);
-  break;
-}
-
-case "TICKET_CATEGORY_SAVE": {
-  const result = await saveTicketCategory(payload);
-  post(html, "TICKET_CATEGORY_SAVE_RESPONSE", result);
-  break;
-}
-
-case "TICKET_CATEGORY_DELETE": {
-  const result = await deleteTicketCategory(payload);
-  post(html, "TICKET_CATEGORY_DELETE_RESPONSE", result);
-  break;
-}
-        case "ADMIN_SAVE_GROUP": {
-          const result = await adminSaveGroup(payload);
-          post(html, "ADMIN_SAVE_GROUP_RESPONSE", result);
-          await bootstrap(html);
-          break;
-        }
-
-        case "ADMIN_SET_MEMBERSHIP": {
-          const result = await adminSetMembership(payload);
-          post(html, "ADMIN_SET_MEMBERSHIP_RESPONSE", result);
-          break;
-        }
-
-        case "GT_NAVIGATE": {
-          const path = payload.path || "";
-          if (allowedInternalPath(path)) wixLocation.to(path);
-          break;
-        }
-
-        default:
-          console.log("Unhandled GroupTalk message:", msg);
+      if (type === "PUSHER_AUTHORIZE") {
+        post("PUSHER_AUTH_RESPONSE", { requestId: payload.requestId || "", ok: false, message });
+        return;
       }
-    } catch (err) {
-      console.error("GroupTalk page-code error:", err);
-      post(html, "GT_ERROR", {
+
+      if (type === "LIVEKIT_TOKEN_REQUEST") {
+        post("LIVEKIT_TOKEN_RESPONSE", { requestId: payload.requestId || "", ok: false, message });
+        return;
+      }
+
+      post("GT_ERROR", {
         requestId: payload.requestId || "",
         action: type,
-        message: err.message || "GroupTalk action failed."
+        message
       });
     }
+  });
+
+  // The iframe also sends GT_READY. bootstrapPromise deduplicates both calls.
+  void bootstrap().catch(error => {
+    console.error("[GroupTalk] Initial bootstrap failed.", error);
+    post("GT_ERROR", {
+      action: "INITIAL_BOOTSTRAP",
+      message: messageOf(error, "GroupTalk could not initialize.")
+    });
   });
 });
