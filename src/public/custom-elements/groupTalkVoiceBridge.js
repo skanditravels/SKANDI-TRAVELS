@@ -138,8 +138,8 @@ class SkandiGroupTalkVoice
     this.roomName =
       "";
 
-    this.silent =
-      false;
+    this.outputDeviceId =
+      "";
 
     this.audioElements =
       new Set();
@@ -321,12 +321,57 @@ class SkandiGroupTalkVoice
                     ?.localParticipant
                     ?.isMicrophoneEnabled
                 ),
-              silent:
-                this.silent
+              audioAlwaysOn:
+                true
             }
           );
 
           return;
+
+
+        case "permissions": {
+
+          const microphone =
+            await this.requestMicrophonePermission();
+
+          this.emit(
+            "voice-state",
+            {
+              commandId,
+              state:
+                "permissions",
+              microphone,
+              audioAlwaysOn:
+                true
+            }
+          );
+
+          return;
+        }
+
+
+        case "output-device": {
+
+          const output =
+            await this.setOutputDevice(
+              command.deviceId ||
+              ""
+            );
+
+          this.emit(
+            "voice-state",
+            {
+              commandId,
+              state:
+                "output-device",
+              ...output,
+              audioAlwaysOn:
+                true
+            }
+          );
+
+          return;
+        }
 
 
         case "microphone":
@@ -350,31 +395,8 @@ class SkandiGroupTalkVoice
               microphone:
                 command.enabled ===
                 true,
-              silent:
-                this.silent
-            }
-          );
-
-          return;
-
-
-        case "silent":
-
-          this.setSilent(
-            command.enabled ===
-            true
-          );
-
-          this.emit(
-            "voice-state",
-            {
-              commandId,
-              state:
-                "silent-updated",
-              roomName:
-                this.roomName,
-              silent:
-                this.silent
+              audioAlwaysOn:
+                true
             }
           );
 
@@ -392,7 +414,9 @@ class SkandiGroupTalkVoice
               state:
                 "audio-started",
               roomName:
-                this.roomName
+                this.roomName,
+              audioAlwaysOn:
+                true
             }
           );
 
@@ -452,7 +476,6 @@ class SkandiGroupTalkVoice
     livekitUrl,
     token,
     roomName,
-    silent = false,
     microphone = false
   } = {}) {
     if (
@@ -473,10 +496,10 @@ class SkandiGroupTalkVoice
       this.roomName ===
         roomName
     ) {
-      this.setSilent(
-        silent ===
-        true
-      );
+      await this.startAudio()
+        .catch(
+          () => {}
+        );
 
       if (
         microphone
@@ -526,7 +549,10 @@ class SkandiGroupTalkVoice
           true;
 
         element.muted =
-          this.silent;
+          false;
+
+        element.volume =
+          1;
 
         this.audioElements.add(
           element
@@ -535,6 +561,15 @@ class SkandiGroupTalkVoice
         this.audioHost.appendChild(
           element
         );
+
+        void this.applyOutputDevice(
+          element
+        );
+
+        void element.play()
+          .catch(
+            () => {}
+          );
 
         this.emit(
           "voice-track",
@@ -547,7 +582,9 @@ class SkandiGroupTalkVoice
             participantName:
               participant?.name ||
               participant?.identity ||
-              ""
+              "",
+            muted:
+              false
           }
         );
       }
@@ -638,7 +675,9 @@ class SkandiGroupTalkVoice
               room.canPlaybackAudio
                 ? "audio-allowed"
                 : "audio-blocked",
-            roomName
+            roomName,
+            audioAlwaysOn:
+              true
           }
         );
       }
@@ -700,10 +739,10 @@ class SkandiGroupTalkVoice
     this.roomName =
       roomName;
 
-    this.setSilent(
-      silent ===
-      true
-    );
+    await this.startAudio()
+      .catch(
+        () => {}
+      );
 
     if (
       microphone
@@ -711,6 +750,128 @@ class SkandiGroupTalkVoice
       await this.setMicrophone(
         true
       );
+    }
+  }
+
+
+  async requestMicrophonePermission() {
+    if (
+      !navigator.mediaDevices ||
+      typeof navigator.mediaDevices.getUserMedia !==
+        "function"
+    ) {
+      throw new Error(
+        "MICROPHONE_API_UNAVAILABLE"
+      );
+    }
+
+    const stream =
+      await navigator.mediaDevices
+        .getUserMedia({
+          audio: {
+            echoCancellation:
+              true,
+            noiseSuppression:
+              true,
+            autoGainControl:
+              true
+          },
+
+          video:
+            false
+        });
+
+    try {
+      for (
+        const track of
+        stream.getTracks()
+      ) {
+        track.stop();
+      }
+    } catch (_) {}
+
+    return true;
+  }
+
+
+  async setOutputDevice(
+    deviceId =
+      ""
+  ) {
+    this.outputDeviceId =
+      String(
+        deviceId ||
+        ""
+      ).trim();
+
+    if (
+      !this.outputDeviceId
+    ) {
+      return {
+        selected:
+          false,
+        mode:
+          "default",
+        label:
+          "System default"
+      };
+    }
+
+    let applied =
+      false;
+
+    for (
+      const element of
+      this.audioElements
+    ) {
+      const result =
+        await this.applyOutputDevice(
+          element
+        );
+
+      applied =
+        applied ||
+        result;
+    }
+
+    return {
+      selected:
+        applied ||
+        this.audioElements.size ===
+          0,
+      mode:
+        "selected",
+      label:
+        "Selected output"
+    };
+  }
+
+
+  async applyOutputDevice(
+    element
+  ) {
+    if (
+      !element ||
+      !this.outputDeviceId ||
+      typeof element.setSinkId !==
+        "function"
+    ) {
+      return false;
+    }
+
+    try {
+      await element.setSinkId(
+        this.outputDeviceId
+      );
+
+      return true;
+    } catch (error) {
+      console.warn(
+        "[GroupTalk Voice] Output device could not be applied.",
+        error
+      );
+
+      return false;
     }
   }
 
@@ -726,9 +887,28 @@ class SkandiGroupTalkVoice
 
     if (
       typeof this.room.startAudio ===
-      "function"
+        "function"
     ) {
       await this.room.startAudio();
+    }
+
+    for (
+      const element of
+      this.audioElements
+    ) {
+      try {
+        element.muted =
+          false;
+
+        element.volume =
+          1;
+
+        await this.applyOutputDevice(
+          element
+        );
+
+        await element.play();
+      } catch (_) {}
     }
   }
 
@@ -751,35 +931,12 @@ class SkandiGroupTalkVoice
         true
       );
 
-    if (
-      enabled ===
-      true
-    ) {
-      try {
-        await this.startAudio();
-      } catch (_) {
-        // LiveKit will emit AudioPlaybackStatusChanged if playback is blocked.
-      }
-    }
-  }
-
-
-  setSilent(
-    enabled
-  ) {
-    this.silent =
-      enabled ===
-      true;
-
-    for (
-      const element of
-      this.audioElements
-    ) {
-      try {
-        element.muted =
-          this.silent;
-      } catch (_) {}
-    }
+    /*
+     * Receive audio is always on, including while transmitting.
+     */
+    try {
+      await this.startAudio();
+    } catch (_) {}
   }
 
 
