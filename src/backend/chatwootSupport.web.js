@@ -4,7 +4,6 @@ import { elevate } from "wix-auth";
 import { fetch } from "wix-fetch";
 import { createHash, randomUUID } from "crypto";
 import { requireCustomerContext } from "backend/core/authContext";
-import { requireInternalAgent } from "backend/RIA/internalAccess";
 import {
   createCase,
   listCustomerCases,
@@ -13,6 +12,8 @@ import {
   replyAgentCase,
   updateAgentCase
 } from "backend/domains/support/service";
+
+
 
 const getSecretValue = elevate(secrets.getSecretValue);
 
