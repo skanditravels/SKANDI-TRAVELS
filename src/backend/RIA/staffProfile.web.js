@@ -1,0 +1,1189 @@
+import {
+  webMethod,
+  Permissions
+} from "wix-web-module";
+
+import {
+  getStaffPortalSession
+} from "./staffPortalAuth.web";
+
+import {
+  restRequest
+} from "./supabaseServer.js";
+
+
+const AGENT_TABLE =
+  "agent_users";
+
+const PAYROLL_TABLE =
+  "staff_payroll_profiles";
+
+
+/* ==========================================================================
+   FIELD POLICY
+   ========================================================================== */
+
+/*
+ * These fields are employee self-service profile data and live under
+ * agent_users.payload.selfService.
+ */
+const SELF_SERVICE_FIELDS =
+  Object.freeze([
+    "phone",
+    "homeAddressStreet",
+    "homeAddressLine2",
+    "homeAddressCity",
+    "homeAddressState",
+    "homeAddressPostalCode",
+    "homeAddressCountry",
+    "emergencyContactName",
+    "emergencyContactRelationship",
+    "emergencyContactPhone"
+  ]);
+
+
+/*
+ * These belong to payroll, not the general staff profile.
+ *
+ * They are accepted from the SuccessFactors form but persisted only in
+ * staff_payroll_profiles.payload.paymentPreference.
+ */
+const PAYROLL_PAYMENT_FIELDS =
+  Object.freeze([
+    "bankName",
+    "bankIban",
+    "bankBicSwift",
+    "bankClearingNumber",
+    "bankAccountNumber",
+    "usAccountType",
+    "usRoutingNumber",
+    "usAccountNumber"
+  ]);
+
+
+/*
+ * Raw bank account/routing/IBAN values are never returned to the HTML after
+ * save or bootstrap. The profile UI can replace them, but the browser does
+ * not receive persisted raw bank values.
+ */
+const SENSITIVE_PAYMENT_FIELDS =
+  new Set([
+    "bankIban",
+    "bankClearingNumber",
+    "bankAccountNumber",
+    "usRoutingNumber",
+    "usAccountNumber"
+  ]);
+
+
+/* ==========================================================================
+   HELPERS
+   ========================================================================== */
+
+function clean(
+  value,
+  max = 5000
+) {
+  return String(
+    value ?? ""
+  )
+    .trim()
+    .slice(
+      0,
+      max
+    );
+}
+
+
+function first(
+  rows
+) {
+  return (
+    Array.isArray(
+      rows
+    ) &&
+    rows.length
+  )
+    ? rows[0]
+    : null;
+}
+
+
+function objectValue(
+  value
+) {
+  return (
+    value &&
+    typeof value ===
+      "object" &&
+    !Array.isArray(
+      value
+    )
+  )
+    ? value
+    : {};
+}
+
+
+function displayName(
+  agent = {}
+) {
+  return clean(
+    agent.preferred_name ||
+    agent.display_name ||
+    [
+      agent.first_name,
+      agent.last_name
+    ]
+      .filter(
+        Boolean
+      )
+      .join(
+        " "
+      ) ||
+    agent.email ||
+    agent.sk_id ||
+    "Staff",
+    160
+  );
+}
+
+
+function employmentRole(
+  agent = {}
+) {
+  return clean(
+    agent.role ||
+    agent.position ||
+    agent.job_title ||
+    "",
+    120
+  );
+}
+
+
+function agentSelect() {
+  return [
+    "id",
+    "agent_id",
+    "member_id",
+    "wix_member_id",
+    "contact_id",
+    "email",
+    "corporate_email_address",
+    "sk_id",
+    "first_name",
+    "last_name",
+    "display_name",
+    "preferred_name",
+    "role",
+    "position",
+    "job_title",
+    "department",
+    "station",
+    "base",
+    "manager_name",
+    "employment_status",
+    "status",
+    "active",
+    "portal_access",
+    "authorized",
+    "can_access_payroll",
+    "can_access_grouptalk",
+    "can_manage",
+    "payload",
+    "created_at",
+    "updated_at",
+    "last_login_at"
+  ].join(",");
+}
+
+
+async function requireProfileSession() {
+  const session =
+    await getStaffPortalSession();
+
+  if (
+    !session ||
+    session.ok === false ||
+    session.loggedIn === false ||
+    session.authenticated === false ||
+    session.authorized !==
+      true
+  ) {
+    throw new Error(
+      "STAFF_PROFILE_AUTH_REQUIRED"
+    );
+  }
+
+  const profile =
+    session.profile ||
+    session.staff ||
+    session.agent ||
+    {};
+
+  const agentId =
+    clean(
+      profile.id,
+      80
+    );
+
+  if (!agentId) {
+    throw new Error(
+      "STAFF_PROFILE_AGENT_ID_MISSING"
+    );
+  }
+
+  return {
+    session,
+    profile,
+    agentId
+  };
+}
+
+
+async function loadAgent(
+  agentId
+) {
+  const rows =
+    await restRequest({
+      table:
+        AGENT_TABLE,
+
+      query: {
+        select:
+          agentSelect(),
+
+        id:
+          `eq.${agentId}`,
+
+        limit:
+          1
+      }
+    });
+
+  const agent =
+    first(
+      rows
+    );
+
+  if (!agent) {
+    throw new Error(
+      "STAFF_PROFILE_NOT_FOUND"
+    );
+  }
+
+  return agent;
+}
+
+
+function payrollStaffKey(
+  agent = {}
+) {
+  return clean(
+    agent.sk_id ||
+    agent.agent_id ||
+    agent.id,
+    160
+  );
+}
+
+
+async function loadPayrollProfile(
+  agent
+) {
+  const staffKey =
+    payrollStaffKey(
+      agent
+    );
+
+  if (!staffKey) {
+    return null;
+  }
+
+  const rows =
+    await restRequest({
+      table:
+        PAYROLL_TABLE,
+
+      query: {
+        select:
+          "*",
+
+        staff_key:
+          `eq.${staffKey}`,
+
+        limit:
+          1
+      }
+    });
+
+  return first(
+    rows
+  );
+}
+
+
+function safePaymentView(
+  payroll = {}
+) {
+  const payload =
+    objectValue(
+      payroll.payload
+    );
+
+  const payment =
+    objectValue(
+      payload.paymentPreference
+    );
+
+  const output = {
+    bankName:
+      clean(
+        payment.bankName,
+        120
+      ),
+
+    bankBicSwift:
+      clean(
+        payment.bankBicSwift,
+        40
+      ),
+
+    usAccountType:
+      clean(
+        payment.usAccountType,
+        40
+      ),
+
+    paymentSetupStatus:
+      clean(
+        payroll.bank_status ||
+        payment.paymentSetupStatus ||
+        "",
+        80
+      )
+  };
+
+  /*
+   * Never return raw persisted account identifiers.
+   */
+  SENSITIVE_PAYMENT_FIELDS.forEach(
+    (key) => {
+      output[key] =
+        "";
+    }
+  );
+
+  return output;
+}
+
+
+function publicProfile(
+  agent = {},
+  payroll = null
+) {
+  const payload =
+    objectValue(
+      agent.payload
+    );
+
+  const self =
+    objectValue(
+      payload.selfService
+    );
+
+  return {
+    id:
+      agent.id ||
+      "",
+
+    agentId:
+      agent.agent_id ||
+      "",
+
+    employeeId:
+      agent.id ||
+      "",
+
+    memberId:
+      agent.member_id ||
+      "",
+
+    wixMemberId:
+      agent.wix_member_id ||
+      "",
+
+    skId:
+      agent.sk_id ||
+      "",
+
+    firstName:
+      agent.first_name ||
+      "",
+
+    lastName:
+      agent.last_name ||
+      "",
+
+    displayName:
+      displayName(
+        agent
+      ),
+
+    fullName:
+      displayName(
+        agent
+      ),
+
+    preferredName:
+      agent.preferred_name ||
+      self.preferredName ||
+      "",
+
+    email:
+      agent.email ||
+      "",
+
+    corporateEmailAddress:
+      agent.corporate_email_address ||
+      agent.email ||
+      "",
+
+    role:
+      employmentRole(
+        agent
+      ),
+
+    position:
+      agent.position ||
+      agent.job_title ||
+      agent.role ||
+      "",
+
+    jobTitle:
+      agent.job_title ||
+      agent.position ||
+      agent.role ||
+      "",
+
+    department:
+      agent.department ||
+      "",
+
+    assignedDepartment:
+      agent.department ||
+      "",
+
+    station:
+      agent.station ||
+      agent.base ||
+      "",
+
+    base:
+      agent.base ||
+      agent.station ||
+      "",
+
+    assignedBase:
+      agent.station ||
+      agent.base ||
+      "",
+
+    managerName:
+      agent.manager_name ||
+      "",
+
+    employmentStatus:
+      agent.employment_status ||
+      "",
+
+    status:
+      agent.status ||
+      "",
+
+    active:
+      agent.active ===
+      true,
+
+    portalAccess:
+      agent.portal_access ===
+      true,
+
+    authorized:
+      agent.authorized ===
+      true,
+
+    canManage:
+      agent.can_manage ===
+      true,
+
+    permissions: {
+      payroll:
+        agent.can_access_payroll ===
+        true,
+
+      groupTalk:
+        agent.can_access_grouptalk ===
+        true,
+
+      manage:
+        agent.can_manage ===
+        true
+    },
+
+    phone:
+      clean(
+        self.phone,
+        60
+      ),
+
+    homeAddressStreet:
+      clean(
+        self.homeAddressStreet,
+        160
+      ),
+
+    homeAddressLine2:
+      clean(
+        self.homeAddressLine2,
+        120
+      ),
+
+    homeAddressCity:
+      clean(
+        self.homeAddressCity,
+        80
+      ),
+
+    homeAddressState:
+      clean(
+        self.homeAddressState,
+        80
+      ),
+
+    homeAddressPostalCode:
+      clean(
+        self.homeAddressPostalCode,
+        40
+      ),
+
+    homeAddressCountry:
+      clean(
+        self.homeAddressCountry,
+        80
+      ),
+
+    emergencyContactName:
+      clean(
+        self.emergencyContactName,
+        120
+      ),
+
+    emergencyContactRelationship:
+      clean(
+        self.emergencyContactRelationship,
+        80
+      ),
+
+    emergencyContactPhone:
+      clean(
+        self.emergencyContactPhone,
+        60
+      ),
+
+    ...safePaymentView(
+      payroll ||
+      {}
+    ),
+
+    updatedAt:
+      agent.updated_at ||
+      ""
+  };
+}
+
+
+function requestedSelfService(
+  profile = {}
+) {
+  const output =
+    {};
+
+  SELF_SERVICE_FIELDS.forEach(
+    (key) => {
+      if (
+        Object.prototype.hasOwnProperty.call(
+          profile,
+          key
+        )
+      ) {
+        output[key] =
+          clean(
+            profile[key],
+            key.includes(
+              "Address"
+            )
+              ? 160
+              : 120
+          );
+      }
+    }
+  );
+
+  return output;
+}
+
+
+function requestedPayment(
+  profile = {}
+) {
+  const output =
+    {};
+
+  PAYROLL_PAYMENT_FIELDS.forEach(
+    (key) => {
+      if (
+        Object.prototype.hasOwnProperty.call(
+          profile,
+          key
+        )
+      ) {
+        output[key] =
+          clean(
+            profile[key],
+            160
+          );
+      }
+    }
+  );
+
+  return output;
+}
+
+
+async function savePayrollPayment(
+  agent,
+  paymentPatch
+) {
+  if (
+    !paymentPatch ||
+    !Object.keys(
+      paymentPatch
+    ).length
+  ) {
+    return loadPayrollProfile(
+      agent
+    );
+  }
+
+  const existing =
+    await loadPayrollProfile(
+      agent
+    );
+
+  const staffKey =
+    payrollStaffKey(
+      agent
+    );
+
+  const now =
+    new Date()
+      .toISOString();
+
+  const existingPayload =
+    objectValue(
+      existing?.payload
+    );
+
+  const existingPayment =
+    objectValue(
+      existingPayload
+        .paymentPreference
+    );
+
+  /*
+   * Empty sensitive inputs mean "leave existing value alone".
+   * This prevents the UI's deliberately blank masked fields from clearing
+   * a previously stored bank account on an unrelated profile edit.
+   */
+  const mergedPayment = {
+    ...existingPayment
+  };
+
+  Object.entries(
+    paymentPatch
+  ).forEach(
+    ([key, value]) => {
+      if (
+        SENSITIVE_PAYMENT_FIELDS.has(
+          key
+        ) &&
+        !value
+      ) {
+        return;
+      }
+
+      mergedPayment[key] =
+        value;
+    }
+  );
+
+  const payload = {
+    ...existingPayload,
+
+    paymentPreference:
+      mergedPayment
+  };
+
+  if (existing?.id) {
+    const rows =
+      await restRequest({
+        table:
+          PAYROLL_TABLE,
+
+        method:
+          "PATCH",
+
+        query: {
+          id:
+            `eq.${existing.id}`
+        },
+
+        body: {
+          display_name:
+            displayName(
+              agent
+            ),
+
+          email:
+            agent.corporate_email_address ||
+            agent.email ||
+            null,
+
+          sk_id:
+            agent.sk_id ||
+            null,
+
+          agent_user_id:
+            agent.id,
+
+          payload,
+
+          updated_at:
+            now
+        }
+      });
+
+    return (
+      first(
+        rows
+      ) ||
+      {
+        ...existing,
+        payload
+      }
+    );
+  }
+
+  const rows =
+    await restRequest({
+      table:
+        PAYROLL_TABLE,
+
+      method:
+        "POST",
+
+      body: {
+        staff_key:
+          staffKey,
+
+        agent_user_id:
+          agent.id,
+
+        sk_id:
+          agent.sk_id ||
+          null,
+
+        display_name:
+          displayName(
+            agent
+          ),
+
+        email:
+          agent.corporate_email_address ||
+          agent.email ||
+          null,
+
+        employment_type:
+          "employee",
+
+        payroll_enabled:
+          agent.can_access_payroll ===
+          true,
+
+        bank_status:
+          "not_verified",
+
+        payload,
+
+        created_by_agent_user_id:
+          agent.id,
+
+        updated_at:
+          now
+      }
+    });
+
+  return first(
+    rows
+  );
+}
+
+
+/* ==========================================================================
+   PUBLIC METHODS
+   ========================================================================== */
+
+export const getMyStaffProfile =
+  webMethod(
+    Permissions.SiteMember,
+
+    async function () {
+      const {
+        agentId
+      } =
+        await requireProfileSession();
+
+      const agent =
+        await loadAgent(
+          agentId
+        );
+
+      const payroll =
+        await loadPayrollProfile(
+          agent
+        );
+
+      return {
+        ok:
+          true,
+
+        profile:
+          publicProfile(
+            agent,
+            payroll
+          )
+      };
+    }
+  );
+
+
+export const updateMyStaffProfile =
+  webMethod(
+    Permissions.SiteMember,
+
+    async function ({
+      profile = {}
+    } = {}) {
+      const {
+        agentId
+      } =
+        await requireProfileSession();
+
+      const agent =
+        await loadAgent(
+          agentId
+        );
+
+      const currentPayload =
+        objectValue(
+          agent.payload
+        );
+
+      const currentSelf =
+        objectValue(
+          currentPayload.selfService
+        );
+
+      const selfPatch =
+        requestedSelfService(
+          profile
+        );
+
+      const paymentPatch =
+        requestedPayment(
+          profile
+        );
+
+      const preferredName =
+        Object.prototype.hasOwnProperty.call(
+          profile,
+          "preferredName"
+        )
+          ? clean(
+              profile.preferredName,
+              80
+            )
+          : agent.preferred_name ||
+            "";
+
+      const nextPayload = {
+        ...currentPayload,
+
+        selfService: {
+          ...currentSelf,
+          ...selfPatch,
+
+          preferredName
+        }
+      };
+
+      const now =
+        new Date()
+          .toISOString();
+
+      const updatedRows =
+        await restRequest({
+          table:
+            AGENT_TABLE,
+
+          method:
+            "PATCH",
+
+          query: {
+            id:
+              `eq.${agent.id}`
+          },
+
+          body: {
+            preferred_name:
+              preferredName,
+
+            display_name:
+              displayName({
+                ...agent,
+                preferred_name:
+                  preferredName
+              }),
+
+            payload:
+              nextPayload,
+
+            updated_at:
+              now
+          }
+        });
+
+      const updatedAgent =
+        first(
+          updatedRows
+        ) ||
+        {
+          ...agent,
+          preferred_name:
+            preferredName,
+          payload:
+            nextPayload,
+          updated_at:
+            now
+        };
+
+      const payroll =
+        await savePayrollPayment(
+          updatedAgent,
+          paymentPatch
+        );
+
+      return {
+        ok:
+          true,
+
+        profile:
+          publicProfile(
+            updatedAgent,
+            payroll
+          ),
+
+        synchronized: {
+          agentUsers:
+            true,
+
+          payroll:
+            Object.keys(
+              paymentPatch
+            ).length >
+            0
+        },
+
+        updatedAt:
+          now
+      };
+    }
+  );
+
+
+export const searchStaffDirectory =
+  webMethod(
+    Permissions.SiteMember,
+
+    async function ({
+      query = ""
+    } = {}) {
+      await requireProfileSession();
+
+      const rows =
+        await restRequest({
+          table:
+            AGENT_TABLE,
+
+          query: {
+            select:
+              "id,sk_id,first_name,last_name,preferred_name,display_name,role,position,job_title,department,station,base,corporate_email_address,email,payload",
+
+            active:
+              "eq.true",
+
+            limit:
+              1000,
+
+            order:
+              "last_name.asc"
+          }
+        });
+
+      const needle =
+        clean(
+          query,
+          80
+        )
+          .toLowerCase();
+
+      const items =
+        (
+          Array.isArray(
+            rows
+          )
+            ? rows
+            : []
+        )
+          .filter(
+            (agent) => {
+              if (!needle) {
+                return true;
+              }
+
+              const haystack = [
+                displayName(
+                  agent
+                ),
+                agent.sk_id,
+                agent.role,
+                agent.position,
+                agent.job_title,
+                agent.department,
+                agent.station,
+                agent.base,
+                agent.corporate_email_address,
+                agent.email
+              ]
+                .map(
+                  (value) =>
+                    String(
+                      value ||
+                      ""
+                    )
+                      .toLowerCase()
+                )
+                .join(
+                  " "
+                );
+
+              return haystack.includes(
+                needle
+              );
+            }
+          )
+          .map(
+            (agent) => ({
+              id:
+                agent.id,
+
+              displayName:
+                displayName(
+                  agent
+                ),
+
+              firstName:
+                agent.first_name ||
+                "",
+
+              lastName:
+                agent.last_name ||
+                "",
+
+              preferredName:
+                agent.preferred_name ||
+                "",
+
+              skId:
+                agent.sk_id ||
+                "",
+
+              role:
+                employmentRole(
+                  agent
+                ),
+
+              position:
+                agent.position ||
+                agent.job_title ||
+                agent.role ||
+                "",
+
+              jobTitle:
+                agent.job_title ||
+                agent.position ||
+                agent.role ||
+                "",
+
+              department:
+                agent.department ||
+                "",
+
+              station:
+                agent.station ||
+                agent.base ||
+                "",
+
+              base:
+                agent.base ||
+                agent.station ||
+                "",
+
+              corporateEmailAddress:
+                agent.corporate_email_address ||
+                agent.email ||
+                "",
+
+              workPhone:
+                clean(
+                  objectValue(
+                    agent.payload
+                  )
+                    ?.selfService
+                    ?.workPhone ||
+                  "",
+                  60
+                )
+            })
+          );
+
+      return {
+        ok:
+          true,
+
+        items
+      };
+    }
+  );
