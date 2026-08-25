@@ -1,11 +1,6 @@
 // pages/successfactors-profile-sync.js
-//
 // Page URL: /riaintra/success-factors
 // HTML Embed ID: #staffHrEmbed
-//
-// This file adds the shared RIAINTRA/Supabase profile contract used by the
-// existing SuccessFactors HTML. The HTML already sends INTRANET_READY,
-// INTRANET_REFRESH, INTRANET_SAVE_PROFILE and INTRANET_SEARCH_COLLEAGUES.
 
 import wixLocation from "wix-location";
 
@@ -29,17 +24,12 @@ import {
 
 
 const EMBED_ID =
-  "#staffDashboardEmbed";
+  "#staffHrEmbed";
 
 const CHILD_SOURCES =
   new Set([
-    "SKANDI_HR_STAFF",
-
-    /*
-     * Compatibility for older SuccessFactors builds that shared the
-     * Staff Dashboard source.
-     */
-    "SKANDI_STAFF_DASHBOARD_INTRANET"
+    "SKANDI_STAFF_DASHBOARD_INTRANET",
+    "SKANDI_HR_STAFF"
   ]);
 
 const PARENT_SOURCE =
@@ -89,7 +79,6 @@ function post(
   });
 }
 
-
 function cleanError(
   error
 ) {
@@ -102,13 +91,22 @@ function cleanError(
 
   const map = {
     STAFF_PROFILE_AUTH_REQUIRED:
-      "Your session has expired. Sign in again.",
+      "Your staff session has expired. Sign in again.",
 
     STAFF_PROFILE_NOT_FOUND:
-      "Your SuccessFactors employee profile could not be found.",
+      "Your SuccessFactors employee profile could not be found in Supabase.",
 
-    STAFF_PROFILE_AGENT_ID_MISSING:
-      "Your employee profile is not linked correctly."
+    STAFF_PROFILE_INACTIVE:
+      "Your employee profile is inactive.",
+
+    STAFF_PROFILE_NOT_AUTHORIZED:
+      "Your employee profile is not authorized for RIAINTRA.",
+
+    STAFF_PROFILE_PORTAL_DISABLED:
+      "Your employee profile does not have portal access.",
+
+    WIX_MEMBER_LINK_MISMATCH:
+      "Your Wix member is linked to a different employee profile."
   };
 
   return (
@@ -121,6 +119,155 @@ function cleanError(
     ) ||
     "SuccessFactors could not complete the action."
   );
+}
+
+
+/* ==========================================================================
+   SUCCESSFACTORS ROLE / ACCESS MAPPING
+   ========================================================================== */
+
+function successFactorsRole(
+  profile = {}
+) {
+  const roleText =
+    String(
+      profile.role ||
+      profile.position ||
+      profile.jobTitle ||
+      ""
+    )
+      .trim()
+      .toLowerCase();
+
+  if (
+    roleText.includes(
+      "driver"
+    ) ||
+    roleText.includes(
+      "blue-collar"
+    ) ||
+    roleText.includes(
+      "blue collar"
+    )
+  ) {
+    return "Driver";
+  }
+
+  if (
+    roleText.includes(
+      "manager"
+    ) ||
+    roleText.includes(
+      "supervisor"
+    )
+  ) {
+    return "Manager";
+  }
+
+  if (
+    roleText.includes(
+      "hr"
+    ) ||
+    roleText.includes(
+      "human resources"
+    ) ||
+    roleText.includes(
+      "admin"
+    ) ||
+    roleText.includes(
+      "founder"
+    ) ||
+    roleText.includes(
+      "ceo"
+    ) ||
+    roleText.includes(
+      "owner"
+    ) ||
+    profile.permissions?.payroll ===
+      true ||
+    (
+      profile.canManage ===
+        true &&
+      !roleText
+        .includes(
+          "manager"
+        )
+    )
+  ) {
+    return "HR Admin";
+  }
+
+  if (
+    profile.canManage ===
+    true
+  ) {
+    return "Manager";
+  }
+
+  return "Driver";
+}
+
+function successFactorsProfile(
+  profile = {}
+) {
+  const sfRole =
+    successFactorsRole(
+      profile
+    );
+
+  const hrAdmin =
+    sfRole ===
+    "HR Admin";
+
+  return {
+    ...profile,
+
+    systemRole:
+      sfRole,
+
+    hrisSystemUserRole:
+      sfRole,
+
+    isAdmin:
+      hrAdmin,
+
+    isHr:
+      hrAdmin,
+
+    isHR:
+      hrAdmin,
+
+    isHrAdmin:
+      hrAdmin,
+
+    isHRAdmin:
+      hrAdmin,
+
+    isPayrollAdmin:
+      hrAdmin &&
+      profile.permissions?.payroll ===
+        true,
+
+    canUseHr:
+      hrAdmin,
+
+    canUseHR:
+      hrAdmin,
+
+    canManageEmployees:
+      hrAdmin,
+
+    hrAccess:
+      hrAdmin,
+
+    access: {
+      ...(profile.access || {}),
+      hr:
+        hrAdmin,
+      humanResources:
+        hrAdmin
+    }
+  };
 }
 
 
@@ -144,8 +291,11 @@ async function bootstrap(
         await getStaffPortalSession();
 
       if (
-        !session.loggedIn ||
-        !session.authorized
+        !session ||
+        session.loggedIn === false ||
+        session.authenticated === false ||
+        session.authorized !==
+          true
       ) {
         post(
           "INTRANET_SESSION_EXPIRED",
@@ -172,6 +322,9 @@ async function bootstrap(
           getIntranetHomeData()
             .catch(
               () => ({
+                apps:
+                  session.apps ||
+                  [],
                 news:
                   [],
                 stats:
@@ -180,18 +333,38 @@ async function bootstrap(
             )
         ]);
 
-      /*
-       * One authoritative profile:
-       * Supabase agent_users + staff_payroll_profiles.
-       */
+      if (
+        !profileResult?.ok ||
+        !profileResult?.profile
+      ) {
+        throw new Error(
+          "STAFF_PROFILE_NOT_FOUND"
+        );
+      }
+
       const profile =
-        profileResult.profile ||
-        session.profile ||
-        session.staff ||
-        {};
+        successFactorsProfile(
+          profileResult.profile
+        );
+
+      const sfRole =
+        successFactorsRole(
+          profile
+        );
 
       const payload = {
         profile,
+
+        /*
+         * Current SuccessFactors HTML checks this BEFORE inferRole(profile).
+         * Supplying it explicitly prevents CEO/Founder/Super Admin roles from
+         * being rejected or downgraded by the three-role UI mapper.
+         */
+        currentUserRole:
+          sfRole,
+
+        role:
+          sfRole,
 
         apps:
           intranet.apps ||
@@ -206,10 +379,6 @@ async function bootstrap(
           intranet.stats ||
           {},
 
-        /*
-         * SuccessFactors' normalizePayroll() accepts these aliases.
-         * Sensitive raw bank values are intentionally not returned.
-         */
         payrollProfile: {
           bankStatus:
             profile.paymentSetupStatus ||
@@ -243,8 +412,43 @@ async function bootstrap(
 
           usAccountNumber:
             ""
+        },
+
+        sync: {
+          source:
+            "SUPABASE_AGENT_USERS",
+
+          agentUserId:
+            profile.id ||
+            "",
+
+          wixMemberId:
+            profile.wixMemberId ||
+            profile.memberId ||
+            "",
+
+          updatedAt:
+            profile.updatedAt ||
+            ""
         }
       };
+
+      console.log(
+        "[SuccessFactors Profile] Bootstrap ready.",
+        {
+          skId:
+            profile.skId ||
+            "",
+          role:
+            profile.role ||
+            "",
+          successFactorsRole:
+            sfRole,
+          canManage:
+            profile.canManage ===
+            true
+        }
+      );
 
       post(
         "INTRANET_BOOTSTRAP",
@@ -264,7 +468,7 @@ async function bootstrap(
 
 
 /* ==========================================================================
-   PROFILE ACTIONS
+   PROFILE
    ========================================================================== */
 
 async function saveProfile(
@@ -277,23 +481,24 @@ async function saveProfile(
         {}
     });
 
-  /*
-   * Existing SuccessFactors HTML listens for this and requests refresh.
-   */
+  if (
+    !result?.ok
+  ) {
+    throw new Error(
+      result?.message ||
+      "PROFILE_SAVE_FAILED"
+    );
+  }
+
   post(
     "INTRANET_PROFILE_SAVED",
     result
   );
 
-  /*
-   * Send the new profile immediately as well so header/profile cards and
-   * Staff Portal semantics all match without waiting for another navigation.
-   */
   await bootstrap(
     true
   );
 }
-
 
 async function searchColleagues(
   payload = {}
@@ -352,7 +557,6 @@ function openStaffPath(
   );
 }
 
-
 async function signOut() {
   await authentication.logout();
 
@@ -371,7 +575,7 @@ async function signOut() {
 
 
 /* ==========================================================================
-   MESSAGE HANDLER
+   CURRENT HTML MESSAGE CONTRACT
    ========================================================================== */
 
 async function handleMessage(
@@ -395,6 +599,11 @@ async function handleMessage(
       return true;
 
 
+    /*
+     * CURRENT SUCCESSFACTORS HTML USES INTRANET_PROFILE_SAVE.
+     * Keep the older alias as well so Staff Portal and older builds work.
+     */
+    case "INTRANET_PROFILE_SAVE":
     case "INTRANET_SAVE_PROFILE":
 
       await saveProfile(
@@ -422,8 +631,12 @@ async function handleMessage(
       return true;
 
 
-    case "STAFF_SIGNOUT_REQUEST":
+    /*
+     * CURRENT HTML USES INTRANET_SIGN_OUT.
+     */
+    case "INTRANET_SIGN_OUT":
     case "INTRANET_SIGNOUT":
+    case "STAFF_SIGNOUT_REQUEST":
 
       await signOut();
 
@@ -433,10 +646,9 @@ async function handleMessage(
     default:
 
       /*
-       * IMPORTANT:
-       * Return false for HR_*, CAREERS_*, PAYROLL_* and Crewcontrol/Badge
-       * events. Keep those branches in your existing SuccessFactors page
-       * code unchanged.
+       * HR_*, CAREERS_*, PAYROLL_* and Badge/Crewcontrol messages belong to
+       * the existing SuccessFactors operational handlers. They are not
+       * swallowed by this profile sync bridge.
        */
       return false;
   }
@@ -448,10 +660,19 @@ async function handleMessage(
    ========================================================================== */
 
 $w.onReady(function () {
-  html =
-    $w(
-      EMBED_ID
+  try {
+    html =
+      $w(
+        EMBED_ID
+      );
+  } catch (error) {
+    console.error(
+      `[SuccessFactors Profile] Missing HTML Component ${EMBED_ID}.`,
+      error
     );
+
+    return;
+  }
 
   html.onMessage(
     async (event) => {
@@ -468,9 +689,16 @@ $w.onReady(function () {
       }
 
       try {
-        await handleMessage(
-          message
-        );
+        const handled =
+          await handleMessage(
+            message
+          );
+
+        if (!handled) {
+          console.info(
+            `[SuccessFactors Profile] Passed through ${message.type || "UNKNOWN"} for existing HR/Payroll handlers.`
+          );
+        }
       } catch (error) {
         console.error(
           `[SuccessFactors Profile] ${message.type || "UNKNOWN"} failed.`,
@@ -483,7 +711,11 @@ $w.onReady(function () {
             message:
               cleanError(
                 error
-              )
+              ),
+
+            stage:
+              message.type ||
+              "UNKNOWN"
           }
         );
       }
@@ -491,8 +723,7 @@ $w.onReady(function () {
   );
 
   /*
-   * The HTML also sends INTRANET_READY itself. Preloading here means the
-   * profile is available even if its first ready event is missed.
+   * Do not rely only on the iframe's first READY message.
    */
   void bootstrap()
     .catch(
@@ -500,6 +731,19 @@ $w.onReady(function () {
         console.error(
           "[SuccessFactors Profile] Initial bootstrap failed.",
           error
+        );
+
+        post(
+          "INTRANET_ERROR",
+          {
+            message:
+              cleanError(
+                error
+              ),
+
+            stage:
+              "INITIAL_BOOTSTRAP"
+          }
         );
       }
     );
