@@ -609,35 +609,189 @@ function eventDetail(
 }
 
 
-function wireVoiceBridge() {
-  voice =
+function isWixCustomElement(
+  element
+) {
+  return Boolean(
+    element &&
+    typeof element.on ===
+      "function" &&
+    typeof element.setAttribute ===
+      "function"
+  );
+}
+
+
+function customElementCandidates() {
+  try {
+    const elements =
+      $w(
+        "CustomElement"
+      );
+
+    return Array.isArray(
+      elements
+    )
+      ? elements.filter(
+          isWixCustomElement
+        )
+      : [];
+  } catch (error) {
+    console.warn(
+      "[GroupTalk] Could not enumerate Wix Custom Elements.",
+      error
+    );
+
+    return [];
+  }
+}
+
+
+function describeElement(
+  element
+) {
+  if (!element) {
+    return null;
+  }
+
+  return {
+    id:
+      element.id ||
+      "",
+
+    type:
+      element.type ||
+      "unknown",
+
+    hasOn:
+      typeof element.on ===
+      "function",
+
+    hasSetAttribute:
+      typeof element.setAttribute ===
+      "function"
+  };
+}
+
+
+function resolveVoiceBridge() {
+  const direct =
     safeElement(
       VOICE_ID
     );
 
   if (
-    !voice
+    isWixCustomElement(
+      direct
+    )
   ) {
-    console.warn(
-      "[GroupTalk] #groupTalkVoiceBridge is missing. Voice is unavailable."
-    );
-
-    return;
+    return direct;
   }
 
+
+  const candidates =
+    customElementCandidates();
+
+
+  /*
+   * If the ID currently points to a surrounding Box/Container but there is
+   * exactly one Custom Element on the GroupTalk page, use that Custom Element.
+   */
   if (
-    typeof voice.on !==
-      "function" ||
-    typeof voice.setAttribute !==
-      "function"
+    candidates.length ===
+    1
   ) {
-    console.error(
-      "[GroupTalk] #groupTalkVoiceBridge must be a Wix Custom Element."
+    console.warn(
+      "[GroupTalk] #groupTalkVoiceBridge points to the wrong Wix element. " +
+      "Using the only Custom Element found on the page instead.",
+      {
+        configured:
+          describeElement(
+            direct
+          ),
+
+        resolved:
+          describeElement(
+            candidates[0]
+          )
+      }
     );
 
-    voice =
-      null;
+    return candidates[0];
+  }
 
+
+  /*
+   * Prefer a Custom Element whose Wix ID clearly looks like the voice bridge.
+   */
+  const named =
+    candidates.find(
+      (candidate) =>
+        /grouptalk.*voice|voice.*grouptalk/i.test(
+          String(
+            candidate?.id ||
+            ""
+          )
+        )
+    );
+
+  if (
+    named
+  ) {
+    console.warn(
+      "[GroupTalk] Using a detected GroupTalk voice Custom Element.",
+      {
+        configured:
+          describeElement(
+            direct
+          ),
+
+        resolved:
+          describeElement(
+            named
+          )
+      }
+    );
+
+    return named;
+  }
+
+
+  console.error(
+    "[GroupTalk] LiveKit voice bridge is not connected to a Wix Custom Element.",
+    {
+      configuredSelector:
+        VOICE_ID,
+
+      configuredElement:
+        describeElement(
+          direct
+        ),
+
+      detectedCustomElements:
+        candidates.map(
+          describeElement
+        ),
+
+      requiredTagName:
+        "skandi-grouptalk-voice",
+
+      requiredSource:
+        "public/custom-elements/groupTalkVoiceBridge.js"
+    }
+  );
+
+  return null;
+}
+
+
+function wireVoiceBridge() {
+  voice =
+    resolveVoiceBridge();
+
+  if (
+    !voice
+  ) {
     return;
   }
 
@@ -767,7 +921,7 @@ function voiceCommand(
   ) {
     return Promise.reject(
       new Error(
-        "GROUPTALK_VOICE_CUSTOM_ELEMENT_MISSING"
+        "GROUPTALK_VOICE_CUSTOM_ELEMENT_NOT_CONNECTED"
       )
     );
   }
