@@ -99,7 +99,32 @@ function productImage(product = {}) {
     ""
   );
 }
+function productImageCandidates(product = {}) {
+  const variantMedia =
+    product?.variantSummary?.minPriceVariant?.media;
 
+  const items =
+    mediaItems(product);
+
+  const urls = [
+    product?.media?.main?.image?.url,
+    product?.media?.main?.url,
+    product?.thumbnail?.url,
+    variantMedia?.image?.url,
+    variantMedia?.url,
+    ...items.map(imageUrlFromMedia)
+  ]
+    .map((value) => cleanText(value))
+    .filter(Boolean);
+
+  return [
+    ...new Set(urls)
+  ];
+}
+
+function mainImageUrl(product = {}) {
+  return productImageCandidates(product)[0] || "";
+}
 function money(value = {}) {
   if (value === null || value === undefined) {
     return {
