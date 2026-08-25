@@ -1,7 +1,7 @@
 // pages/staff-portal-intranet-with-chrome.js
 // Page URL: /riaintra/staff-portal
 // Dashboard HTML Embed ID: #staffDashboardEmbed
-// Global Staff Chrome HTML Embed ID: #staffInternalChromeEmbed
+// Global Staff Chrome HTML Embed ID: #staffInternalChromeEmbed 
 
 import wixLocation from "wix-location";
 
