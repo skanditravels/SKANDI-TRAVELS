@@ -3,6 +3,7 @@
 // Single source of truth for customer header/footer, RIAINTRA navigation, and brand assets.
 
 import wixLocationFrontend from "wix-location-frontend";
+import wixSiteFrontend from "wix-site-frontend";
 import { currentMember, authentication } from "wix-members-frontend";
 import {
   getCustomerHeaderSession,
@@ -154,7 +155,7 @@ const MASTER_CONFIG = Object.freeze({
         { id: "service-desk", label: "ServiceDesk", path: "/riaintra/service-desk" }
       ]),
       managementNav: Object.freeze([
-        { id: "magazine-manager", label: "Magazine Manager", path: "/riaintra/magazine-manager/management" }
+        { id: "magazine-manager", label: "Magazine Manager", path: "/riaintra/media-control" }
       ])
     }),
     footer: Object.freeze({
@@ -176,10 +177,13 @@ const ALTEA_HEADER_EMBED = "#altea-header";
 const PARENT_SOURCE = "SKANDI_WIX_PARENT";
 const CUSTOMER_HEADER_SOURCE = "SKANDI_CUSTOMER_HEADER_EXPANDBAR";
 const CUSTOMER_FOOTER_SOURCE = "SKANDI_CUSTOMER_FOOTER";
+const ALTEA_HEADER_SOURCE = "SKANDI_ALTEA_HEADER";
 const INTERNAL_PREFIXES = ["/riaintra", "/altea", "/_functions"];
 
 // Runtime ALTEA module context supplied by the currently open ALTEA application.
 let alteaRuntimeContext = {};
+
+
 
 function safeEl(id) {
   try { return $w(id); } catch (_) { return null; }
@@ -199,7 +203,37 @@ function allHtmlComponents() {
   }
 }
 
+function currentWixPageInfo() {
+  try {
+    const page = wixSiteFrontend.currentPage || {};
+
+    return {
+      name: String(page.name || "").trim(),
+      url: String(page.url || "").trim(),
+      type: String(page.type || "").trim(),
+      isHomePage: page.isHomePage === true
+    };
+  } catch (error) {
+    console.warn("[MasterPage] Could not read wixSiteFrontend.currentPage.", error);
+
+    return {
+      name: "",
+      url: "",
+      type: "",
+      isHomePage: false
+    };
+  }
+}
+
 function currentPathString() {
+  const page = currentWixPageInfo();
+
+  // Prefer the Wix page definition when available.
+  // This keeps the master chrome aligned with the actual Wix page.
+  if (page.url && page.url.startsWith("/")) {
+    return page.url.split("?")[0].replace(/\/+$/, "") || "/";
+  }
+
   const path = wixLocationFrontend.path || [];
   return "/" + path.join("/");
 }
@@ -233,18 +267,36 @@ function postToEmbed(embed, type, payload = {}) {
 }
 
 function masterPayload(extra = {}) {
+  const page = currentWixPageInfo();
   const path = currentPathString();
+  const altea = isAlteaPath(path);
+
   return {
     version: MASTER_VERSION,
     mode: isInternalPath(path) ? "internal" : "customer",
     isInternal: isInternalPath(path),
-    isAltea: isAlteaPath(path),
+    isAltea: altea,
     currentPath: path,
+
+    // Wix page metadata is the source of truth for the ALTEA system title.
+    currentPage: page,
+
     brand: MASTER_CONFIG.brand,
     routes: MASTER_CONFIG.routes,
     customer: MASTER_CONFIG.customer,
     internal: MASTER_CONFIG.internal,
-    altea: { ...alteaRuntimeContext },
+
+    altea: {
+      ...(altea
+        ? {
+            systemName: page.name || "",
+            pageName: page.name || "",
+            pageUrl: page.url || ""
+          }
+        : {}),
+      ...alteaRuntimeContext
+    },
+
     ...extra
   };
 }
@@ -323,8 +375,33 @@ async function handleMasterMessage(embed, message = {}) {
   const payload = message?.payload && typeof message.payload === "object" ? message.payload : {};
 
   if (type === "MASTER_CONFIG_REQUEST" || type === "SKANDI_MASTER_CONFIG_REQUEST") {
-    const extra = isInternalPath() ? { staff: await getStaffState() } : { customerSession: await getCustomerState() };
+    const extra = isInternalPath()
+      ? { staff: await getStaffState() }
+      : { customerSession: await getCustomerState() };
+
     pushMasterConfig(embed, extra);
+
+    // The ALTEA header gets the real Wix page name directly.
+    if (source === ALTEA_HEADER_SOURCE && isAlteaPath()) {
+      const page = currentWixPageInfo();
+      const staff = extra.staff || {};
+
+      postToEmbed(embed, "ALTEA_HEADER_CONTEXT", {
+        systemName: page.name || "ALTEA",
+        pageName: page.name || "",
+        pageUrl: page.url || "",
+        station:
+          alteaRuntimeContext.station ||
+          staff?.profile?.station ||
+          staff?.profile?.stationCode ||
+          "USNYC",
+        timeZone:
+          alteaRuntimeContext.timeZone ||
+          staff?.profile?.timeZone ||
+          ""
+      });
+    }
+
     return true;
   }
 
@@ -533,8 +610,27 @@ async function applyChromeVisibility() {
 
     if (altea) {
       await showChromeElement(alteaHeader);
+
       const staff = await getStaffState();
+      const page = currentWixPageInfo();
+
       pushMasterConfig(alteaHeader, { staff });
+
+      // Explicit page/system context for the stacked ALTEA header.
+      postToEmbed(alteaHeader, "ALTEA_HEADER_CONTEXT", {
+        systemName: page.name || "ALTEA",
+        pageName: page.name || "",
+        pageUrl: page.url || "",
+        station:
+          alteaRuntimeContext.station ||
+          staff?.profile?.station ||
+          staff?.profile?.stationCode ||
+          "USNYC",
+        timeZone:
+          alteaRuntimeContext.timeZone ||
+          staff?.profile?.timeZone ||
+          ""
+      });
     } else {
       await hideChromeElement(alteaHeader);
     }
@@ -552,6 +648,15 @@ async function applyChromeVisibility() {
 }
 
 $w.onReady(async function () {
+  const page = currentWixPageInfo();
+
+  console.log("[MasterPage] Current Wix page:", {
+    name: page.name,
+    url: page.url,
+    type: page.type,
+    isAltea: isAlteaPath()
+  });
+
   wireAllHtmlComponents();
   await applyChromeVisibility();
 
