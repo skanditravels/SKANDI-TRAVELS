@@ -1,46 +1,75 @@
 import {
-  Permissions,
-  webMethod
+  webMethod,
+  Permissions
 } from "wix-web-module";
 
 import {
   productsV3
 } from "@wix/stores";
 
-import {
-  categories
-} from "@wix/categories";
+/*
+ * SKANDI storefront public catalog.
+ *
+ * IMPORTANT:
+ * SKANDI TRAVELS uses Wix Stores Catalog V3.
+ * Do NOT query wixData collection "Stores/Products" on this site.
+ *
+ * Official SDK:
+ *   import { productsV3 } from "@wix/stores";
+ *   productsV3.queryProducts(query, { fields })
+ */
 
-import {
-  currentCart
-} from "wix-ecom-backend";
+const MAX_PRODUCTS = 100;
 
-const WIX_STORES_APP_ID =
-  "215238eb-22a5-4c36-9e7b-e7c08025e04e";
+const PRODUCT_FIELDS = [
+  "CURRENCY",
+  "URL",
+  "PLAIN_DESCRIPTION",
+  "THUMBNAIL",
+  "MEDIA_ITEMS_INFO",
+  "ALL_CATEGORIES_INFO",
+  "MIN_PRICE_VARIANT"
+];
 
-const TREE_REFERENCE = {
-  appNamespace: "@wix/stores",
-  treeKey: null
-};
+function asNumber(value, fallback = 0) {
+  const number = Number(value);
+  return Number.isFinite(number)
+    ? number
+    : fallback;
+}
 
-const PAGE_SIZE = 100;
-const MAX_PRODUCTS = 300;
+function cleanText(value, fallback = "") {
+  if (value === undefined || value === null) {
+    return fallback;
+  }
 
-function text(value, fallback = "") {
-  if (value === null || value === undefined) return fallback;
-  if (typeof value === "string") return value;
-  if (typeof value === "number" || typeof value === "boolean") {
+  if (
+    typeof value === "string" ||
+    typeof value === "number" ||
+    typeof value === "boolean"
+  ) {
     return String(value);
   }
 
-  return (
-    value.value ||
-    value.name ||
-    value.original ||
-    value.translated ||
-    value.text ||
-    fallback
-  );
+  return fallback;
+}
+
+function stripHtml(value = "") {
+  return String(value || "")
+    .replace(/<style[\s\S]*?<\/style>/gi, " ")
+    .replace(/<script[\s\S]*?<\/script>/gi, " ")
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<\/p>/gi, "\n")
+    .replace(/<\/li>/gi, "\n")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/gi, "'")
+    .replace(/[ \t]+/g, " ")
+    .replace(/\n\s+/g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
 }
 
 function firstDefined(...values) {
@@ -52,477 +81,501 @@ function firstDefined(...values) {
   );
 }
 
-function numberValue(value, fallback = 0) {
-  const number = Number(value);
-  return Number.isFinite(number)
-    ? number
-    : fallback;
-}
-
-function imageUrl(value) {
-  if (!value) return "";
-  if (typeof value === "string") return value;
-
-  return (
-    value.url ||
-    value.src ||
-    value.imageUrl ||
-    value.image?.url ||
-    value.image?.src ||
-    value.media?.url ||
-    value.mainMedia?.image?.url ||
-    value.mainMedia?.url ||
-    ""
-  );
-}
-
-function mediaItems(product = {}) {
-  return (
-    product.mediaItemsInfo?.items ||
-    product.mediaItemsInfo?.mediaItems ||
-    product.media?.items ||
-    product.media?.mediaItems ||
-    product.mediaItems ||
-    product.images ||
-    []
-  );
-}
-
-function productImage(product = {}) {
-  return (
-    imageUrl(product.thumbnail) ||
-    imageUrl(product.image) ||
-    imageUrl(product.mainMedia) ||
-    imageUrl(product.media?.mainMedia) ||
-    imageUrl(product.media?.main) ||
-    imageUrl(mediaItems(product)[0]) ||
-    ""
-  );
-}
-
-function money(value = {}) {
-  if (value === null || value === undefined) {
+function moneyFromV3(value = {}, currency = "") {
+  if (!value || typeof value !== "object") {
     return {
       amount: 0,
-      currency: "",
+      currency,
       formatted: ""
     };
   }
 
-  const source =
-    value.actualPrice ||
-    value.price ||
-    value.value ||
-    value.minValue ||
-    value.min ||
-    value;
-
   const amount =
-    numberValue(
+    asNumber(
       firstDefined(
-        source.amount,
-        source.value,
-        value.amount
-      )
-    );
-
-  const currency =
-    text(
-      firstDefined(
-        source.currency,
-        source.currencyCode,
-        value.currency,
-        value.currencyCode
-      )
-    );
-
-  const formatted =
-    text(
-      firstDefined(
-        source.formattedAmount,
-        source.formatted,
-        source.formattedPrice,
-        value.formattedAmount,
-        value.formatted,
-        value.formattedPrice
-      )
+        value.amount,
+        value.value
+      ),
+      0
     );
 
   return {
     amount,
-    currency,
+    currency:
+      cleanText(
+        firstDefined(
+          value.currency,
+          value.currencyCode,
+          currency
+        )
+      ),
     formatted:
-      formatted ||
-      (
-        currency
-          ? `${currency} ${amount.toFixed(2)}`
-          : String(amount)
-      )
-  };
-}
-
-function productPrice(product = {}) {
-  return money(
-    firstDefined(
-      product.variantSummary?.minPriceVariant?.price?.priceAfterDiscount,
-      product.variantSummary?.minPriceVariant?.price?.actualPrice,
-      product.actualPriceRange?.minValue,
-      product.actualPriceRange?.min,
-      product.actualPrice,
-      product.priceData?.price,
-      product.price
-    )
-  );
-}
-
-function comparePrice(product = {}) {
-  return money(
-    firstDefined(
-      product.variantSummary?.minPriceVariant?.price?.compareAtPrice,
-      product.compareAtPriceRange?.minValue,
-      product.compareAtPriceRange?.min,
-      product.compareAtPrice
-    )
-  );
-}
-
-function categoryId(category = {}) {
-  return text(
-    firstDefined(
-      category.id,
-      category._id,
-      category.categoryId
-    )
-  );
-}
-
-function categoryName(category = {}) {
-  return text(
-    firstDefined(
-      category.name,
-      category.title,
-      category.label
-    )
-  );
-}
-
-function normalizeCategory(category = {}, categoryMap = new Map()) {
-  const id = categoryId(category);
-  const parent = category.parentCategory || {};
-  const parentId = text(
-    firstDefined(
-      parent.id,
-      category.parentCategoryId,
-      category.parentId
-    )
-  );
-
-  return {
-    id,
-    _id: id,
-    name: categoryName(category),
-    description:
-      text(
+      cleanText(
         firstDefined(
-          category.description,
-          category.summary
-        )
-      ),
-    imageUrl:
-      imageUrl(
-        firstDefined(
-          category.image,
-          category.coverImage
-        )
-      ),
-    visible:
-      category.visible !== false,
-    slug:
-      text(category.slug),
-    itemCount:
-      numberValue(
-        firstDefined(
-          category.itemCounter,
-          category.itemCount
-        )
-      ),
-    parentCategoryId:
-      parentId,
-    parentCategoryName:
-      text(
-        firstDefined(
-          parent.name,
-          categoryMap.get(parentId)?.name
-        )
-      ),
-    order:
-      numberValue(
-        firstDefined(
-          parent.index,
-          category.sortOrder,
-          category.displayOrder
+          value.formattedAmount,
+          value.formatted,
+          value.formattedPrice
         )
       )
   };
 }
 
-function normalizeProduct(
-  product = {},
-  assignedCategoryIds = [],
-  categoryMap = new Map()
-) {
-  const id =
-    text(
-      firstDefined(
-        product.id,
-        product._id,
-        product.productId
-      )
+function imageUrlFromMedia(media = {}) {
+  if (!media) {
+    return "";
+  }
+
+  if (typeof media === "string") {
+    return media;
+  }
+
+  return cleanText(
+    firstDefined(
+      media?.image?.url,
+      media?.image?.src,
+      media?.url,
+      media?.src,
+      media?.thumbnail?.url,
+      media?.imageInfo?.url,
+      media?.media?.image?.url
+    )
+  );
+}
+
+function mediaItems(product = {}) {
+  const candidates = [
+    product?.mediaItemsInfo?.items,
+    product?.mediaItemsInfo?.mediaItems,
+    product?.media?.items,
+    product?.media?.mediaItems
+  ];
+
+  for (const candidate of candidates) {
+    if (Array.isArray(candidate)) {
+      return candidate;
+    }
+  }
+
+  return [];
+}
+
+function productImageCandidates(product = {}) {
+  const variantMedia =
+    product?.variantSummary?.minPriceVariant?.media;
+
+  const items =
+    mediaItems(product);
+
+  const urls = [
+    product?.media?.main?.image?.url,
+    product?.media?.main?.url,
+    product?.thumbnail?.url,
+    variantMedia?.image?.url,
+    variantMedia?.url,
+    ...items.map(imageUrlFromMedia)
+  ]
+    .map((value) => cleanText(value))
+    .filter(Boolean);
+
+  return [
+    ...new Set(urls)
+  ];
+}
+
+function mainImageUrl(product = {}) {
+  return productImageCandidates(product)[0] || "";
+}
+
+function normalizeChoices(option = {}) {
+  const choices =
+    option?.choicesSettings?.choices;
+
+  if (!Array.isArray(choices)) {
+    return [];
+  }
+
+  return choices
+    .filter(
+      (choice) =>
+        choice?.visible !== false
+    )
+    .map((choice) => {
+      const linkedMedia =
+        Array.isArray(choice?.linkedMedia)
+          ? choice.linkedMedia
+          : [];
+
+      return {
+        id:
+          cleanText(
+            choice?.choiceId
+          ),
+
+        value:
+          cleanText(
+            firstDefined(
+              choice?.key,
+              choice?.name
+            )
+          ),
+
+        description:
+          cleanText(
+            firstDefined(
+              choice?.name,
+              choice?.key
+            )
+          ),
+
+        inStock:
+          choice?.inStock !== false,
+
+        visible:
+          choice?.visible !== false,
+
+        imageUrl:
+          imageUrlFromMedia(
+            linkedMedia[0] || {}
+          )
+      };
+    });
+}
+
+function normalizeOptions(product = {}) {
+  const options =
+    Array.isArray(product?.options)
+      ? product.options
+      : [];
+
+  return options.map(
+    (option) => ({
+      id:
+        cleanText(
+          option?.id
+        ),
+
+      name:
+        cleanText(
+          firstDefined(
+            option?.name,
+            option?.key
+          ),
+          "Option"
+        ),
+
+      key:
+        cleanText(
+          firstDefined(
+            option?.key,
+            option?.name
+          )
+        ),
+
+      renderType:
+        cleanText(
+          option?.optionRenderType
+        ),
+
+      choices:
+        normalizeChoices(
+          option
+        )
+    })
+  );
+}
+
+function normalizeProduct(product = {}) {
+  const currency =
+    cleanText(
+      product?.currency,
+      "USD"
+    );
+
+  const minVariant =
+    product?.variantSummary?.minPriceVariant ||
+    {};
+
+  const actualPriceSource =
+    firstDefined(
+      minVariant?.price?.actualPrice,
+      product?.actualPriceRange?.minValue
+    ) || {};
+
+  const comparePriceSource =
+    firstDefined(
+      minVariant?.price?.compareAtPrice,
+      product?.compareAtPriceRange?.minValue
     );
 
   const price =
-    productPrice(product);
+    moneyFromV3(
+      actualPriceSource,
+      currency
+    );
 
-  const oldPrice =
-    comparePrice(product);
+  const comparePrice =
+    comparePriceSource
+      ? moneyFromV3(
+          comparePriceSource,
+          currency
+        )
+      : null;
 
   const categoryIds =
-    [
-      ...new Set(
-        [
-          ...(product.allCategoriesInfo?.allCategoryIds || []),
-          ...(product.allCategoriesInfo?.directCategoryIds || []),
-          ...(product.directCategoryIds || []),
-          ...(product.categoryIds || []),
-          ...assignedCategoryIds
-        ]
-          .map(String)
+    Array.isArray(
+      product?.allCategoriesInfo?.categories
+    )
+      ? product.allCategoriesInfo.categories
+          .map((category) =>
+            cleanText(category?.id)
+          )
           .filter(Boolean)
-      )
-    ];
-
-  const categoryNames =
-    categoryIds
-      .map((idValue) =>
-        categoryMap.get(String(idValue))?.name
-      )
-      .filter(Boolean);
-
-  const ribbon =
-    text(
-      firstDefined(
-        product.ribbon?.name,
-        product.ribbon,
-        product.primaryRibbon?.name
-      )
-    );
-
-  const description =
-    text(
-      firstDefined(
-        product.plainDescription,
-        product.description,
-        product.descriptionText,
-        product.summary
-      )
-    );
+      : [];
 
   const inventoryStatus =
-    text(
-      firstDefined(
-        product.inventoryStatus,
-        product.inventory?.status
-      )
+    cleanText(
+      product?.inventory?.availabilityStatus
     )
       .toUpperCase();
 
+  /*
+   * IN_STOCK and PARTIALLY_OUT_OF_STOCK both mean at least one
+   * purchasable choice exists. OUT_OF_STOCK means no current stock.
+   */
   const inStock =
-    product.visible !== false &&
-    product.inStock !== false &&
     ![
       "OUT_OF_STOCK",
-      "SOLD_OUT",
       "UNAVAILABLE"
-    ].includes(inventoryStatus);
+    ].includes(
+      inventoryStatus
+    );
+
+  const ribbon =
+    Array.isArray(
+      product?.additionalRibbons
+    ) &&
+    product.additionalRibbons.length
+      ? cleanText(
+          firstDefined(
+            product.additionalRibbons[0]?.name,
+            product.additionalRibbons[0]?.text,
+            product.additionalRibbons[0]
+          )
+        )
+      : "";
 
   return {
-    id,
-    _id: id,
+    id:
+      cleanText(
+        product?.id
+      ),
+
+    _id:
+      cleanText(
+        product?.id
+      ),
+
     name:
-      text(
-        product.name,
+      cleanText(
+        product?.name,
         "Product"
       ),
+
     slug:
-      text(
-        firstDefined(
-          product.slug,
-          product.handle
-        )
+      cleanText(
+        product?.slug
       ),
+
+    handle:
+      cleanText(
+        product?.handle
+      ),
+
     brand:
-      text(
+      cleanText(
         firstDefined(
-          product.brand?.name,
-          product.brand,
-          "SKANDI"
+          product?.brand?.name,
+          product?.brand
         ),
         "SKANDI"
       ),
+
+    brandId:
+      cleanText(
+        product?.brand?.id
+      ),
+
     sku:
-      text(
-        firstDefined(
-          product.sku,
-          product.variantSummary?.minPriceVariant?.sku
-        )
+      cleanText(
+        minVariant?.sku
       ),
-    description,
+
+    description:
+      stripHtml(
+        product?.plainDescription ||
+        ""
+      ),
+
     summary:
-      text(
-        firstDefined(
-          product.summary,
-          description
-        )
+      stripHtml(
+        product?.plainDescription ||
+        ""
       ),
+
     imageUrl:
-      productImage(product),
+      mainImageUrl(
+        product
+      ),
+
+    thumbnailUrl:
+      cleanText(
+        product?.thumbnail?.url
+      ),
+
+    variantImageUrl:
+      imageUrlFromMedia(
+        product?.variantSummary?.minPriceVariant?.media
+      ),
+
+    mediaUrls:
+      productImageCandidates(
+        product
+      ),
+
     price,
+
     comparePrice:
-      oldPrice.amount > price.amount
-        ? oldPrice
+      (
+        comparePrice &&
+        comparePrice.amount > price.amount
+      )
+        ? comparePrice
         : undefined,
+
     ribbon,
+
     badge:
       ribbon,
+
     categoryIds,
-    categoryNames,
-    options: [],
+
+    categoryNames:
+      [],
+
+    mainCategoryId:
+      cleanText(
+        product?.mainCategoryId
+      ),
+
+    options:
+      normalizeOptions(
+        product
+      ),
+
+    variantCount:
+      asNumber(
+        product?.variantSummary?.variantCount,
+        0
+      ),
+
+    defaultVariantId:
+      cleanText(
+        minVariant?.id
+      ),
+
+    productType:
+      cleanText(
+        product?.productType
+      ),
+
+    inventoryStatus,
+
     inStock,
+
     canAddToCart:
       inStock,
-    updatedAt:
-      text(
-        firstDefined(
-          product.updatedDate,
-          product._updatedDate
-        )
-      ),
-    createdAt:
-      text(
-        firstDefined(
-          product.createdDate,
-          product._createdDate
-        )
-      ),
-    recommendationScore:
-      numberValue(
-        firstDefined(
-          product.recommendationScore,
-          product.sortOrder
-        )
-      ),
+
     productPageUrl:
-      text(
+      cleanText(
         firstDefined(
-          product.url?.fullUrl,
-          product.url,
-          product.productPageUrl
+          product?.url?.url,
+          product?.url?.relativePath
         )
+      ),
+
+    createdAt:
+      cleanText(
+        product?.createdDate
+      ),
+
+    updatedAt:
+      cleanText(
+        product?.updatedDate
       )
   };
 }
 
 function responseProducts(response = {}) {
-  return (
-    response.products ||
-    response.items ||
-    []
-  );
+  return Array.isArray(response?.products)
+    ? response.products
+    : [];
 }
 
 function nextCursor(response = {}) {
-  return (
-    response.pagingMetadata?.cursors?.next ||
-    response.metadata?.cursors?.next ||
-    response.paging?.nextCursor ||
-    ""
+  return cleanText(
+    response?.pagingMetadata?.cursors?.next
   );
 }
 
-async function queryProductPage(
-  cursor,
-  limit
-) {
-  const query = {
-    filter: {
-      visible: {
-        $eq: true
-      }
-    },
-    cursorPaging: {
-      limit,
-      ...(cursor
-        ? { cursor }
-        : {})
-    }
-  };
-
-  const fields = [
-    "CURRENCY",
-    "URL",
-    "PLAIN_DESCRIPTION",
-    "THUMBNAIL",
-    "MEDIA_ITEMS_INFO",
-    "ALL_CATEGORIES_INFO",
-    "MIN_PRICE_VARIANT",
-    "DISCOUNT_INFO"
-  ];
-
-  try {
-    return await productsV3.queryProducts(
-      query,
-      { fields }
-    );
-  } catch (error) {
-    console.warn(
-      "[Storefront] Product field projection failed. Retrying basic query.",
-      error
-    );
-
-    return productsV3.queryProducts(
-      query,
-      { fields: [] }
-    );
-  }
-}
-
-async function queryVisibleProducts(
-  limit = MAX_PRODUCTS
-) {
+async function queryVisibleProducts(limit) {
   const output = [];
   let cursor = "";
 
-  while (
-    output.length < limit
-  ) {
+  while (output.length < limit) {
+    const pageLimit =
+      Math.min(
+        100,
+        limit - output.length
+      );
+
+    const query = {
+      cursorPaging: {
+        limit:
+          pageLimit,
+        ...(cursor
+          ? { cursor }
+          : {})
+      }
+
+      /*
+       * Do not add a Catalog V1 filter here.
+       * Public Product Read returns the visible products available
+       * to this caller. Non-visible products require admin scope.
+       */
+    };
+
     const response =
-      await queryProductPage(
-        cursor,
-        Math.min(
-          PAGE_SIZE,
-          limit - output.length
-        )
+      await productsV3.queryProducts(
+        query,
+        {
+          fields:
+            PRODUCT_FIELDS
+        }
       );
 
     const page =
-      responseProducts(response);
+      responseProducts(
+        response
+      );
 
     output.push(
       ...page
     );
 
     const next =
-      nextCursor(response);
+      nextCursor(
+        response
+      );
 
     if (
       !next ||
@@ -541,159 +594,6 @@ async function queryVisibleProducts(
   );
 }
 
-async function queryVisibleCategories() {
-  const query = {
-    filter: {
-      visible: {
-        $eq: true
-      }
-    },
-    cursorPaging: {
-      limit: 1000
-    }
-  };
-
-  try {
-    const response =
-      await categories.queryCategories(
-        query,
-        {
-          treeReference:
-            TREE_REFERENCE,
-          returnNonVisibleCategories:
-            false,
-          fields: [
-            "DESCRIPTION",
-            "BREADCRUMBS_INFO"
-          ]
-        }
-      );
-
-    return (
-      response.categories ||
-      response.items ||
-      []
-    );
-  } catch (error) {
-    console.warn(
-      "[Storefront] Categories could not be loaded. Products will still be returned.",
-      error
-    );
-
-    return [];
-  }
-}
-
-async function categoryAssignments(
-  products
-) {
-  const map =
-    new Map();
-
-  if (!products.length) {
-    return map;
-  }
-
-  const references =
-    products
-      .map((product) => ({
-        catalogItemId:
-          text(
-            firstDefined(
-              product.id,
-              product._id,
-              product.productId
-            )
-          ),
-        appId:
-          WIX_STORES_APP_ID
-      }))
-      .filter(
-        (reference) =>
-          reference.catalogItemId
-      );
-
-  for (
-    let start = 0;
-    start < references.length;
-    start += 100
-  ) {
-    const batch =
-      references.slice(
-        start,
-        start + 100
-      );
-
-    try {
-      const response =
-        await categories.listCategoriesForItems(
-          batch,
-          {
-            treeReference:
-              TREE_REFERENCE
-          }
-        );
-
-      const entries =
-        response.categoriesForItems ||
-        response.items ||
-        response.mappings ||
-        [];
-
-      entries.forEach(
-        (entry) => {
-          const item =
-            entry.item ||
-            entry.itemReference ||
-            {};
-
-          const productId =
-            text(
-              firstDefined(
-                item.catalogItemId,
-                entry.catalogItemId,
-                entry.productId
-              )
-            );
-
-          const ids =
-            [
-              ...new Set(
-                [
-                  ...(entry.directCategoryIds || []),
-                  ...(entry.allCategoryIds || []),
-                  ...(
-                    entry.categories || []
-                  ).map((category) =>
-                    typeof category === "string"
-                      ? category
-                      : categoryId(category)
-                  )
-                ]
-                  .map(String)
-                  .filter(Boolean)
-              )
-            ];
-
-          if (productId) {
-            map.set(
-              productId,
-              ids
-            );
-          }
-        }
-      );
-    } catch (error) {
-      console.warn(
-        "[Storefront] Category assignment mapping failed for one batch.",
-        error
-      );
-    }
-  }
-
-  return map;
-}
-
 export const listStorefrontProducts =
   webMethod(
     Permissions.Anyone,
@@ -710,77 +610,24 @@ export const listStorefrontProducts =
           )
         );
 
-      /*
-       * Products are the critical path.
-       * Categories are intentionally non-fatal.
-       */
+      console.log(
+        "[SKANDI Storefront V3] Querying Catalog V3 products.",
+        {
+          limit:
+            safeLimit
+        }
+      );
+
       const rawProducts =
         await queryVisibleProducts(
           safeLimit
         );
 
-      const rawCategories =
-        await queryVisibleCategories();
-
-      const rawCategoryMap =
-        new Map(
-          rawCategories.map(
-            (category) => [
-              categoryId(category),
-              category
-            ]
-          )
-        );
-
-      const normalizedCategories =
-        rawCategories
-          .map((category) =>
-            normalizeCategory(
-              category,
-              rawCategoryMap
-            )
-          )
-          .filter(
-            (category) =>
-              category.id &&
-              category.name
-          );
-
-      const categoryMap =
-        new Map(
-          normalizedCategories.map(
-            (category) => [
-              category.id,
-              category
-            ]
-          )
-        );
-
-      const assignments =
-        await categoryAssignments(
-          rawProducts
-        );
-
       const products =
         rawProducts
-          .map((product) => {
-            const productId =
-              text(
-                firstDefined(
-                  product.id,
-                  product._id,
-                  product.productId
-                )
-              );
-
-            return normalizeProduct(
-              product,
-              assignments.get(
-                productId
-              ) || [],
-              categoryMap
-            );
-          })
+          .map(
+            normalizeProduct
+          )
           .filter(
             (product) =>
               product.id &&
@@ -788,127 +635,49 @@ export const listStorefrontProducts =
           );
 
       console.log(
-        "[Storefront] Public catalog loaded.",
+        "[SKANDI Storefront V3] Catalog loaded.",
         {
           rawProducts:
             rawProducts.length,
           products:
-            products.length,
-          categories:
-            normalizedCategories.length
+            products.length
         }
       );
 
       return {
-        ok: true,
+        ok:
+          true,
+
         products,
+
+        /*
+         * Product rendering is intentionally independent of the
+         * Categories API. Category names can be reattached after
+         * the catalog transport is confirmed.
+         */
         categories:
-          normalizedCategories,
-        banners: [],
-        travelCards: [],
+          [],
+
+        banners:
+          [],
+
+        travelCards:
+          [],
+
         meta: {
           source:
             "WIX_STORES_CATALOG_V3",
-          catalogVersion:
-            "V3",
-          rawProductCount:
-            rawProducts.length,
+
           productCount:
             products.length,
-          categoryCount:
-            normalizedCategories.length,
+
+          rawProductCount:
+            rawProducts.length,
+
           generatedAt:
             new Date()
               .toISOString()
         }
-      };
-    }
-  );
-
-/* ==========================================================================
-   CART WEB METHODS
-   ========================================================================== */
-
-export const getStorefrontCart =
-  webMethod(
-    Permissions.Anyone,
-    async function () {
-      try {
-        const cart =
-          await currentCart.getCurrentCart();
-
-        return {
-          ok: true,
-          cart
-        };
-      } catch (error) {
-        return {
-          ok: true,
-          cart: {
-            lineItems: []
-          }
-        };
-      }
-    }
-  );
-
-export const addProductToCurrentCart =
-  webMethod(
-    Permissions.Anyone,
-    async function ({
-      lineItems = []
-    } = {}) {
-      if (
-        !Array.isArray(lineItems) ||
-        !lineItems.length
-      ) {
-        throw new Error(
-          "No store item was supplied."
-        );
-      }
-
-      const response =
-        await currentCart.addToCurrentCart({
-          lineItems
-        });
-
-      return {
-        ok: true,
-        cart:
-          response?.cart ||
-          response
-      };
-    }
-  );
-
-export const createStorefrontCheckout =
-  webMethod(
-    Permissions.Anyone,
-    async function () {
-      const cart =
-        await currentCart.getCurrentCart();
-
-      if (
-        !cart?.lineItems?.length
-      ) {
-        throw new Error(
-          "Your shopping bag is empty."
-        );
-      }
-
-      const response =
-        await currentCart.createCheckoutFromCurrentCart({
-          channelType:
-            "WEB"
-        });
-
-      return {
-        ok: true,
-        checkoutId:
-          response?.checkoutId ||
-          response?._id ||
-          response?.id ||
-          response
       };
     }
   );
