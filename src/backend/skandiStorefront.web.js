@@ -4,7 +4,7 @@ import {
 } from "wix-web-module";
 
 import {
-  productsV3
+  productsV3,
   readOnlyVariantsV3
 } from "@wix/stores";
 
@@ -31,6 +31,16 @@ const TREE_REFERENCE = {
 
 const PAGE_SIZE = 100;
 const MAX_PRODUCTS = 300;
+
+const PRODUCT_FIELDS = [
+  "CURRENCY",
+  "URL",
+  "PLAIN_DESCRIPTION",
+  "THUMBNAIL",
+  "MEDIA_ITEMS_INFO",
+  "ALL_CATEGORIES_INFO",
+  "MIN_PRICE_VARIANT"
+];
 
 
 /* ==========================================================================
@@ -101,9 +111,6 @@ function numberValue(
    IMAGE HELPERS
    ========================================================================== */
 
-/*
- * Convert any known Wix Catalog V3 media shape into a browser-ready URL.
- */
 function imageUrl(
   value
 ) {
@@ -140,9 +147,6 @@ function imageUrl(
 }
 
 
-/*
- * Catalog V3 may return additional media when MEDIA_ITEMS_INFO is requested.
- */
 function mediaItems(
   product = {}
 ) {
@@ -174,12 +178,13 @@ function mediaItems(
 
 /*
  * IMPORTANT:
- * The live Catalog V3 response for SKANDI places the canonical product
- * image here:
+ *
+ * For SKANDI's Wix Catalog V3 products the canonical image should be
+ * read from:
  *
  * product.media.main.image.url
  *
- * Keep that FIRST.
+ * Keep that first.
  */
 function productImageCandidates(
   product = {}
@@ -191,21 +196,23 @@ function productImageCandidates(
       ?.media;
 
   const additionalMedia =
-    mediaItems(product);
+    mediaItems(
+      product
+    );
 
   const candidates = [
-    /* Catalog V3 canonical main image */
+    /* Main Catalog V3 image */
     product?.media?.main?.image?.url,
     product?.media?.main?.url,
 
-    /* Minimum-price variant image */
+    /* Minimum price variant image */
     variantMedia?.image?.url,
     variantMedia?.url,
 
-    /* Thumbnail projection */
+    /* Thumbnail */
     product?.thumbnail?.url,
 
-    /* Other possible Wix media shapes */
+    /* Other possible V3 media shapes */
     product?.media?.mainMedia?.image?.url,
     product?.media?.mainMedia?.url,
 
@@ -218,7 +225,9 @@ function productImageCandidates(
     /* Additional media */
     ...additionalMedia.map(
       (item) =>
-        imageUrl(item)
+        imageUrl(
+          item
+        )
     )
   ]
     .map(
@@ -230,7 +239,9 @@ function productImageCandidates(
     .filter(Boolean);
 
   return [
-    ...new Set(candidates)
+    ...new Set(
+      candidates
+    )
   ];
 }
 
@@ -307,6 +318,7 @@ function money(
 
   return {
     amount,
+
     currency,
 
     formatted:
@@ -417,7 +429,9 @@ function normalizeCategory(
   categoryMap = new Map()
 ) {
   const id =
-    categoryId(category);
+    categoryId(
+      category
+    );
 
   const parent =
     category.parentCategory ||
@@ -434,6 +448,7 @@ function normalizeCategory(
 
   return {
     id,
+
     _id:
       id,
 
@@ -459,7 +474,8 @@ function normalizeCategory(
       ),
 
     visible:
-      category.visible !== false,
+      category.visible !==
+        false,
 
     slug:
       text(
@@ -481,7 +497,9 @@ function normalizeCategory(
       text(
         firstDefined(
           parent.name,
-          categoryMap.get(parentId)?.name
+          categoryMap.get(
+            parentId
+          )?.name
         )
       ),
 
@@ -510,7 +528,9 @@ function normalizeOptionChoices(
       ?.choices;
 
   if (
-    !Array.isArray(choices)
+    !Array.isArray(
+      choices
+    )
   ) {
     return [];
   }
@@ -518,7 +538,8 @@ function normalizeOptionChoices(
   return choices
     .filter(
       (choice) =>
-        choice?.visible !== false
+        choice?.visible !==
+          false
     )
     .map(
       (choice) => {
@@ -552,10 +573,12 @@ function normalizeOptionChoices(
             ),
 
           inStock:
-            choice.inStock !== false,
+            choice.inStock !==
+              false,
 
           visible:
-            choice.visible !== false,
+            choice.visible !==
+              false,
 
           imageUrl:
             imageUrl(
@@ -581,7 +604,10 @@ function normalizeProductOptions(
     (option) => ({
       id:
         text(
-          option.id
+          firstDefined(
+            option.id,
+            option._id
+          )
         ),
 
       name:
@@ -616,7 +642,7 @@ function normalizeProductOptions(
 
 
 /* ==========================================================================
-   NORMALIZE PRODUCT
+   PRODUCT NORMALIZATION
    ========================================================================== */
 
 function normalizeProduct(
@@ -643,14 +669,11 @@ function normalizeProduct(
       product
     );
 
-  /*
-   * Catalog V3 returns category IDs inside:
-   *
-   * allCategoriesInfo.categories
-   *
-   * as:
-   * [{ id: "..." }]
-   */
+
+  /* ========================================================================
+     CATEGORIES
+     ======================================================================== */
+
   const v3CategoryIds =
     Array.isArray(
       product
@@ -673,6 +696,7 @@ function normalizeProduct(
           )
           .filter(Boolean)
       : [];
+
 
   const categoryIds =
     [
@@ -711,17 +735,25 @@ function normalizeProduct(
       )
     ];
 
+
   const categoryNames =
     categoryIds
       .map(
         (idValue) =>
           categoryMap
             .get(
-              String(idValue)
+              String(
+                idValue
+              )
             )
             ?.name
       )
       .filter(Boolean);
+
+
+  /* ========================================================================
+     RIBBON
+     ======================================================================== */
 
   const ribbon =
     text(
@@ -734,15 +766,24 @@ function normalizeProduct(
           product.additionalRibbons
         )
           ? (
-              product.additionalRibbons[0]
+              product
+                .additionalRibbons[0]
                 ?.name ||
-              product.additionalRibbons[0]
+
+              product
+                .additionalRibbons[0]
                 ?.text ||
+
               ""
             )
           : ""
       )
     );
+
+
+  /* ========================================================================
+     DESCRIPTION
+     ======================================================================== */
 
   const description =
     text(
@@ -754,15 +795,11 @@ function normalizeProduct(
       )
     );
 
-  /*
-   * Catalog V3 uses:
-   * inventory.availabilityStatus
-   *
-   * Examples:
-   * IN_STOCK
-   * PARTIALLY_OUT_OF_STOCK
-   * OUT_OF_STOCK
-   */
+
+  /* ========================================================================
+     INVENTORY
+     ======================================================================== */
+
   const inventoryStatus =
     text(
       firstDefined(
@@ -779,9 +816,14 @@ function normalizeProduct(
     )
       .toUpperCase();
 
+
   const inStock =
-    product.visible !== false &&
-    product.inStock !== false &&
+    product.visible !==
+      false &&
+
+    product.inStock !==
+      false &&
+
     ![
       "OUT_OF_STOCK",
       "SOLD_OUT",
@@ -790,9 +832,11 @@ function normalizeProduct(
       inventoryStatus
     );
 
-  /*
-   * Extract the image once and reuse it.
-   */
+
+  /* ========================================================================
+     IMAGE
+     ======================================================================== */
+
   const mainImage =
     productImage(
       product
@@ -802,6 +846,11 @@ function normalizeProduct(
     productImageCandidates(
       product
     );
+
+
+  /* ========================================================================
+     RESPONSE
+     ======================================================================== */
 
   return {
     id,
@@ -866,20 +915,13 @@ function normalizeProduct(
       ),
 
 
-    /* ==============================================================
-       IMAGE FIELDS
-       ============================================================== */
+    /* ======================================================================
+       IMAGES
+       ====================================================================== */
 
-    /*
-     * Main field used by SKANDI storefront.
-     */
     imageUrl:
       mainImage,
 
-    /*
-     * Compatibility fields so the existing HTML can find it even if
-     * it expects another property name.
-     */
     image:
       mainImage,
 
@@ -902,15 +944,12 @@ function normalizeProduct(
           ?.media
       ),
 
-    /*
-     * All valid Wix image URLs for fallback rendering.
-     */
     mediaUrls,
 
 
-    /* ==============================================================
-       PRICE
-       ============================================================== */
+    /* ======================================================================
+       PRICING
+       ====================================================================== */
 
     price,
 
@@ -921,9 +960,9 @@ function normalizeProduct(
         : undefined,
 
 
-    /* ==============================================================
+    /* ======================================================================
        PRODUCT META
-       ============================================================== */
+       ====================================================================== */
 
     ribbon,
 
@@ -951,12 +990,26 @@ function normalizeProduct(
           ?.variantCount
       ),
 
+    /*
+     * Catalog V3 requires a variantId when passing the product into
+     * Wix eCommerce.
+     *
+     * The minPriceVariant ID is suitable as the default variant where
+     * the customer hasn't selected another option.
+     */
     defaultVariantId:
       text(
-        product
-          ?.variantSummary
-          ?.minPriceVariant
-          ?.id
+        firstDefined(
+          product
+            ?.variantSummary
+            ?.minPriceVariant
+            ?.id,
+
+          product
+            ?.variantSummary
+            ?.minPriceVariant
+            ?._id
+        )
       ),
 
     inventoryStatus,
@@ -995,12 +1048,6 @@ function normalizeProduct(
         )
       ),
 
-    /*
-     * Catalog V3:
-     *
-     * product.url.url
-     * product.url.relativePath
-     */
     productPageUrl:
       text(
         firstDefined(
@@ -1019,229 +1066,7 @@ function normalizeProduct(
   };
 }
 
-/* ==========================================================================
-   CATALOG V3 VARIANT RESOLUTION
-   ========================================================================== */
 
-function normalizeChoiceValue(
-  value
-) {
-  return String(
-    value ||
-    ""
-  )
-    .trim()
-    .toLowerCase();
-}
-
-
-function variantChoiceMap(
-  variant = {}
-) {
-  const map =
-    new Map();
-
-  const choices =
-    Array.isArray(
-      variant.optionChoices
-    )
-      ? variant.optionChoices
-      : [];
-
-  choices.forEach(
-    (choice) => {
-      const names =
-        choice.optionChoiceNames ||
-        {};
-
-      const optionName =
-        normalizeChoiceValue(
-          names.optionName
-        );
-
-      const choiceName =
-        normalizeChoiceValue(
-          names.choiceName
-        );
-
-      if (
-        optionName &&
-        choiceName
-      ) {
-        map.set(
-          optionName,
-          choiceName
-        );
-      }
-    }
-  );
-
-  return map;
-}
-
-
-function variantMatchesChoices(
-  variant,
-  selectedChoices
-) {
-  const entries =
-    Object.entries(
-      selectedChoices ||
-      {}
-    )
-      .filter(
-        ([key, value]) =>
-          String(key || "").trim() &&
-          String(value || "").trim()
-      );
-
-  if (
-    !entries.length
-  ) {
-    return true;
-  }
-
-  const variantChoices =
-    variantChoiceMap(
-      variant
-    );
-
-  return entries.every(
-    ([optionName, choiceName]) => {
-      const optionKey =
-        normalizeChoiceValue(
-          optionName
-        );
-
-      const selectedValue =
-        normalizeChoiceValue(
-          choiceName
-        );
-
-      return (
-        variantChoices.get(
-          optionKey
-        ) ===
-        selectedValue
-      );
-    }
-  );
-}
-
-
-export const resolveStoreVariant =
-  webMethod(
-    Permissions.Anyone,
-
-    async function ({
-      productId,
-      choices = {}
-    } = {}) {
-      const cleanProductId =
-        String(
-          productId ||
-          ""
-        ).trim();
-
-      if (!cleanProductId) {
-        throw new Error(
-          "Product ID is required."
-        );
-      }
-
-      const response =
-        await readOnlyVariantsV3
-          .queryVariants(
-            {
-              filter: {
-                "productData.productId": {
-                  $eq:
-                    cleanProductId
-                }
-              },
-
-              cursorPaging: {
-                limit:
-                  1000
-              }
-            },
-
-            {
-              fields: [
-                "CURRENCY"
-              ]
-            }
-          );
-
-      const variants =
-        Array.isArray(
-          response?.variants
-        )
-          ? response.variants
-          : [];
-
-      if (
-        !variants.length
-      ) {
-        throw new Error(
-          "No purchasable variants were found for this product."
-        );
-      }
-
-      const matchingVariants =
-        variants.filter(
-          (variant) =>
-            variant.visible !==
-              false &&
-            variantMatchesChoices(
-              variant,
-              choices
-            )
-        );
-
-      /*
-       * Prefer an in-stock variant.
-       */
-      const selected =
-        matchingVariants.find(
-          (variant) =>
-            variant
-              ?.inventoryStatus
-              ?.inStock !== false
-        ) ||
-        matchingVariants[0];
-
-      if (!selected) {
-        return {
-          ok:
-            false,
-
-          message:
-            "That combination is currently unavailable."
-        };
-      }
-
-      return {
-        ok:
-          true,
-
-        productId:
-          cleanProductId,
-
-        variantId:
-          selected.variantId,
-
-        sku:
-          selected.sku ||
-          "",
-
-        inStock:
-          selected
-            ?.inventoryStatus
-            ?.inStock !== false
-      };
-    }
-  );
 /* ==========================================================================
    PRODUCT QUERY
    ========================================================================== */
@@ -1287,7 +1112,8 @@ async function queryProductPage(
   const query = {
     filter: {
       visible: {
-        $eq: true
+        $eq:
+          true
       }
     },
 
@@ -1302,37 +1128,22 @@ async function queryProductPage(
     }
   };
 
-  /*
-   * These are Catalog V3 field ENUMS,
-   * not property names.
-   */
-  const fields = [
-    "CURRENCY",
-    "URL",
-    "PLAIN_DESCRIPTION",
-    "THUMBNAIL",
-    "MEDIA_ITEMS_INFO",
-    "ALL_CATEGORIES_INFO",
-    "MIN_PRICE_VARIANT"
-  ];
 
   try {
     return await productsV3
       .queryProducts(
         query,
         {
-          fields
+          fields:
+            PRODUCT_FIELDS
         }
       );
   } catch (error) {
     console.warn(
-      "[Storefront] Extended Catalog V3 query failed. Retrying default product fields.",
+      "[Storefront] Extended Catalog V3 query failed. Retrying basic product query.",
       error
     );
 
-    /*
-     * Default V3 fields still include core product media.
-     */
     return productsV3
       .queryProducts(
         query,
@@ -1347,7 +1158,8 @@ async function queryProductPage(
 async function queryVisibleProducts(
   limit = MAX_PRODUCTS
 ) {
-  const output = [];
+  const output =
+    [];
 
   let cursor =
     "";
@@ -1367,19 +1179,23 @@ async function queryVisibleProducts(
         )
       );
 
+
     const page =
       responseProducts(
         response
       );
 
+
     output.push(
       ...page
     );
+
 
     const next =
       nextCursor(
         response
       );
+
 
     if (
       !next ||
@@ -1388,9 +1204,11 @@ async function queryVisibleProducts(
       break;
     }
 
+
     cursor =
       next;
   }
+
 
   return output.slice(
     0,
@@ -1407,14 +1225,17 @@ async function queryVisibleCategories() {
   const query = {
     filter: {
       visible: {
-        $eq: true
+        $eq:
+          true
       }
     },
 
     cursorPaging: {
-      limit: 1000
+      limit:
+        1000
     }
   };
+
 
   try {
     const response =
@@ -1435,12 +1256,16 @@ async function queryVisibleCategories() {
           }
         );
 
+
     return (
       response.categories ||
       response.items ||
       []
     );
   } catch (error) {
+    /*
+     * Categories are NOT allowed to break product loading.
+     */
     console.warn(
       "[Storefront] Categories could not be loaded. Products will still be returned.",
       error
@@ -1461,11 +1286,16 @@ async function categoryAssignments(
   const map =
     new Map();
 
+
   if (
+    !Array.isArray(
+      products
+    ) ||
     !products.length
   ) {
     return map;
   }
+
 
   const references =
     products
@@ -1489,6 +1319,7 @@ async function categoryAssignments(
           reference.catalogItemId
       );
 
+
   for (
     let start = 0;
     start <
@@ -1501,6 +1332,7 @@ async function categoryAssignments(
         start + 100
       );
 
+
     try {
       const response =
         await categories
@@ -1512,11 +1344,13 @@ async function categoryAssignments(
             }
           );
 
+
       const entries =
         response.categoriesForItems ||
         response.items ||
         response.mappings ||
         [];
+
 
       entries.forEach(
         (entry) => {
@@ -1524,6 +1358,7 @@ async function categoryAssignments(
             entry.item ||
             entry.itemReference ||
             {};
+
 
           const productId =
             text(
@@ -1533,6 +1368,7 @@ async function categoryAssignments(
                 entry.productId
               )
             );
+
 
           const ids =
             [
@@ -1566,6 +1402,7 @@ async function categoryAssignments(
               )
             ];
 
+
           if (
             productId
           ) {
@@ -1584,12 +1421,13 @@ async function categoryAssignments(
     }
   }
 
+
   return map;
 }
 
 
 /* ==========================================================================
-   PUBLIC STOREFRONT PRODUCT API
+   PUBLIC PRODUCT CATALOG
    ========================================================================== */
 
 export const listStorefrontProducts =
@@ -1612,9 +1450,9 @@ export const listStorefrontProducts =
         );
 
 
-      /* ==============================================================
-         PRODUCTS
-         ============================================================== */
+      /* ====================================================================
+         PRODUCTS — CRITICAL PATH
+         ==================================================================== */
 
       const rawProducts =
         await queryVisibleProducts(
@@ -1622,9 +1460,9 @@ export const listStorefrontProducts =
         );
 
 
-      /* ==============================================================
-         CATEGORIES
-         ============================================================== */
+      /* ====================================================================
+         CATEGORIES — NON-CRITICAL
+         ==================================================================== */
 
       const rawCategories =
         await queryVisibleCategories();
@@ -1677,9 +1515,9 @@ export const listStorefrontProducts =
         );
 
 
-      /* ==============================================================
+      /* ====================================================================
          NORMALIZE PRODUCTS
-         ============================================================== */
+         ==================================================================== */
 
       const products =
         rawProducts
@@ -1693,6 +1531,7 @@ export const listStorefrontProducts =
                     product.productId
                   )
                 );
+
 
               return normalizeProduct(
                 product,
@@ -1712,9 +1551,9 @@ export const listStorefrontProducts =
           );
 
 
-      /* ==============================================================
+      /* ====================================================================
          DIAGNOSTIC
-         ============================================================== */
+         ==================================================================== */
 
       console.log(
         "[Storefront] Public Catalog V3 loaded.",
@@ -1742,23 +1581,20 @@ export const listStorefrontProducts =
                   imageUrl:
                     product.imageUrl,
 
-                  thumbnailUrl:
-                    product.thumbnailUrl,
-
-                  variantImageUrl:
-                    product.variantImageUrl,
-
                   mediaUrls:
-                    product.mediaUrls
+                    product.mediaUrls,
+
+                  defaultVariantId:
+                    product.defaultVariantId
                 })
               )
         }
       );
 
 
-      /* ==============================================================
+      /* ====================================================================
          RESPONSE
-         ============================================================== */
+         ==================================================================== */
 
       return {
         ok:
@@ -1801,7 +1637,396 @@ export const listStorefrontProducts =
 
 
 /* ==========================================================================
-   CART
+   VARIANT RESOLUTION HELPERS
+   ========================================================================== */
+
+function normalizeChoiceValue(
+  value
+) {
+  return String(
+    value ||
+    ""
+  )
+    .trim()
+    .toLowerCase();
+}
+
+
+function variantChoiceMap(
+  variant = {}
+) {
+  const map =
+    new Map();
+
+
+  const choices =
+    Array.isArray(
+      variant.optionChoices
+    )
+      ? variant.optionChoices
+      : [];
+
+
+  choices.forEach(
+    (choice) => {
+      const names =
+        choice.optionChoiceNames ||
+        {};
+
+
+      const optionName =
+        normalizeChoiceValue(
+          names.optionName
+        );
+
+
+      const choiceName =
+        normalizeChoiceValue(
+          names.choiceName
+        );
+
+
+      if (
+        optionName &&
+        choiceName
+      ) {
+        map.set(
+          optionName,
+          choiceName
+        );
+      }
+    }
+  );
+
+
+  return map;
+}
+
+
+function variantMatchesChoices(
+  variant,
+  selectedChoices
+) {
+  const entries =
+    Object.entries(
+      selectedChoices ||
+      {}
+    )
+      .filter(
+        ([key, value]) =>
+          String(
+            key ||
+            ""
+          ).trim() &&
+
+          String(
+            value ||
+            ""
+          ).trim()
+      );
+
+
+  /*
+   * No option choices supplied:
+   * any variant is technically a candidate.
+   */
+  if (
+    !entries.length
+  ) {
+    return true;
+  }
+
+
+  const variantChoices =
+    variantChoiceMap(
+      variant
+    );
+
+
+  return entries.every(
+    ([
+      optionName,
+      choiceName
+    ]) => {
+      const optionKey =
+        normalizeChoiceValue(
+          optionName
+        );
+
+
+      const selectedValue =
+        normalizeChoiceValue(
+          choiceName
+        );
+
+
+      return (
+        variantChoices.get(
+          optionKey
+        ) ===
+        selectedValue
+      );
+    }
+  );
+}
+
+
+function variantAvailable(
+  variant = {}
+) {
+  const status =
+    text(
+      firstDefined(
+        variant
+          ?.inventoryStatus
+          ?.availabilityStatus,
+
+        variant
+          ?.inventoryStatus
+          ?.status,
+
+        variant.inventoryStatus
+      )
+    )
+      .toUpperCase();
+
+
+  if (
+    [
+      "OUT_OF_STOCK",
+      "UNAVAILABLE",
+      "SOLD_OUT"
+    ].includes(
+      status
+    )
+  ) {
+    return false;
+  }
+
+
+  if (
+    variant
+      ?.inventoryStatus
+      ?.inStock ===
+      false
+  ) {
+    return false;
+  }
+
+
+  return true;
+}
+
+
+/* ==========================================================================
+   RESOLVE CATALOG V3 VARIANT
+   ========================================================================== */
+
+export const resolveStoreVariant =
+  webMethod(
+    Permissions.Anyone,
+
+    async function ({
+      productId,
+      choices = {}
+    } = {}) {
+      const cleanProductId =
+        String(
+          productId ||
+          ""
+        ).trim();
+
+
+      if (
+        !cleanProductId
+      ) {
+        throw new Error(
+          "Product ID is required."
+        );
+      }
+
+
+      const response =
+        await readOnlyVariantsV3
+          .queryVariants(
+            {
+              filter: {
+                "productData.productId": {
+                  $eq:
+                    cleanProductId
+                }
+              },
+
+              cursorPaging: {
+                limit:
+                  1000
+              }
+            },
+
+            {
+              fields: [
+                "CURRENCY"
+              ]
+            }
+          );
+
+
+      const variants =
+        Array.isArray(
+          response?.variants
+        )
+          ? response.variants
+          : [];
+
+
+      if (
+        !variants.length
+      ) {
+        return {
+          ok:
+            false,
+
+          message:
+            "No purchasable variants were found for this product."
+        };
+      }
+
+
+      const matchingVariants =
+        variants.filter(
+          (variant) =>
+            variant.visible !==
+              false &&
+
+            variantMatchesChoices(
+              variant,
+              choices
+            )
+        );
+
+
+      if (
+        !matchingVariants.length
+      ) {
+        return {
+          ok:
+            false,
+
+          message:
+            "That option combination is not available."
+        };
+      }
+
+
+      /*
+       * Prefer an available/in-stock matching variant.
+       */
+      const selected =
+        matchingVariants.find(
+          (variant) =>
+            variantAvailable(
+              variant
+            )
+        ) ||
+        matchingVariants[0];
+
+
+      if (
+        !selected?.variantId
+      ) {
+        return {
+          ok:
+            false,
+
+          message:
+            "The Wix Store variant could not be identified."
+        };
+      }
+
+
+      const selectedChoiceLabels =
+        Array.isArray(
+          selected.optionChoices
+        )
+          ? selected.optionChoices
+              .map(
+                (choice) => {
+                  const names =
+                    choice.optionChoiceNames ||
+                    {};
+
+                  const optionName =
+                    text(
+                      names.optionName
+                    );
+
+                  const choiceName =
+                    text(
+                      names.choiceName
+                    );
+
+                  return (
+                    optionName &&
+                    choiceName
+                  )
+                    ? `${optionName}: ${choiceName}`
+                    : "";
+                }
+              )
+              .filter(Boolean)
+          : [];
+
+
+      console.log(
+        "[Storefront] Variant resolved.",
+        {
+          productId:
+            cleanProductId,
+
+          variantId:
+            selected.variantId,
+
+          sku:
+            selected.sku ||
+            "",
+
+          selectedChoices:
+            choices,
+
+          resolvedChoices:
+            selectedChoiceLabels
+        }
+      );
+
+
+      return {
+        ok:
+          true,
+
+        productId:
+          cleanProductId,
+
+        variantId:
+          selected.variantId,
+
+        sku:
+          selected.sku ||
+          "",
+
+        inStock:
+          variantAvailable(
+            selected
+          ),
+
+        choices:
+          selectedChoiceLabels
+      };
+    }
+  );
+
+
+/* ==========================================================================
+   GET CURRENT CART
    ========================================================================== */
 
 export const getStorefrontCart =
@@ -1814,6 +2039,7 @@ export const getStorefrontCart =
           await currentCart
             .getCurrentCart();
 
+
         return {
           ok:
             true,
@@ -1821,17 +2047,22 @@ export const getStorefrontCart =
           cart
         };
       } catch (error) {
+        /*
+         * A visitor without an existing cart should not break the Store UI.
+         */
         console.warn(
-          "[Storefront] Current cart unavailable.",
+          "[Storefront] Current cart unavailable or not yet created.",
           error
         );
+
 
         return {
           ok:
             true,
 
           cart: {
-            lineItems: []
+            lineItems:
+              []
           }
         };
       }
@@ -1840,7 +2071,7 @@ export const getStorefrontCart =
 
 
 /* ==========================================================================
-   ADD TO CART
+   ADD PRODUCT TO CURRENT CART
    ========================================================================== */
 
 export const addProductToCurrentCart =
@@ -1861,11 +2092,111 @@ export const addProductToCurrentCart =
         );
       }
 
+
+      /*
+       * Validate the Wix Stores catalog reference before sending it
+       * to Wix eCommerce.
+       */
+      const normalizedLineItems =
+        lineItems.map(
+          (item) => {
+            const reference =
+              item.catalogReference ||
+              {};
+
+
+            const productId =
+              String(
+                reference.catalogItemId ||
+                ""
+              ).trim();
+
+
+            const variantId =
+              String(
+                reference
+                  ?.options
+                  ?.variantId ||
+                ""
+              ).trim();
+
+
+            if (
+              !productId
+            ) {
+              throw new Error(
+                "A Wix Store product ID is required."
+              );
+            }
+
+
+            if (
+              !variantId
+            ) {
+              throw new Error(
+                "A Wix Catalog V3 variant ID is required."
+              );
+            }
+
+
+            return {
+              catalogReference: {
+                appId:
+                  WIX_STORES_APP_ID,
+
+                catalogItemId:
+                  productId,
+
+                options: {
+                  ...reference.options,
+
+                  variantId
+                }
+              },
+
+              quantity:
+                Math.max(
+                  1,
+
+                  Number(
+                    item.quantity ||
+                    1
+                  )
+                )
+            };
+          }
+        );
+
+
+      console.log(
+        "[Storefront] Adding items to Wix cart.",
+        normalizedLineItems.map(
+          (item) => ({
+            productId:
+              item
+                .catalogReference
+                .catalogItemId,
+
+            variantId:
+              item
+                .catalogReference
+                .options
+                .variantId,
+
+            quantity:
+              item.quantity
+          })
+        )
+      );
+
+
       const response =
         await currentCart
           .addToCurrentCart({
-            lineItems
+            lineItems:
+              normalizedLineItems
           });
+
 
       return {
         ok:
@@ -1880,7 +2211,7 @@ export const addProductToCurrentCart =
 
 
 /* ==========================================================================
-   CHECKOUT
+   CREATE CHECKOUT
    ========================================================================== */
 
 export const createStorefrontCheckout =
@@ -1892,6 +2223,7 @@ export const createStorefrontCheckout =
         await currentCart
           .getCurrentCart();
 
+
       if (
         !cart
           ?.lineItems
@@ -1902,6 +2234,7 @@ export const createStorefrontCheckout =
         );
       }
 
+
       const response =
         await currentCart
           .createCheckoutFromCurrentCart({
@@ -1909,15 +2242,36 @@ export const createStorefrontCheckout =
               "WEB"
           });
 
+
+      const checkoutId =
+        response?.checkoutId ||
+        response?._id ||
+        response?.id ||
+        "";
+
+
+      if (
+        !checkoutId
+      ) {
+        throw new Error(
+          "Wix checkout could not be created."
+        );
+      }
+
+
+      console.log(
+        "[Storefront] Checkout created.",
+        {
+          checkoutId
+        }
+      );
+
+
       return {
         ok:
           true,
 
-        checkoutId:
-          response?.checkoutId ||
-          response?._id ||
-          response?.id ||
-          response
+        checkoutId
       };
     }
   );
