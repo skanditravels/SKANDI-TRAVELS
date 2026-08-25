@@ -63,13 +63,14 @@ const MASTER_CONFIG = Object.freeze({
     home: "/home",
     search: "/home?focus=search",
     flights: "/flights",
+    carRental: "/car-rental",
     hotels: "/hotels",
     packages: "/packages",
     tours: "/tours",
     activities: "/activities",
     transfers: "/transfers",
     destinations: "/destinations",
-    signatureCollection: "/skandi-collection",
+    skandiCollection: "/skandi-collection",
     voy: "/voy-magazine",
     newsroom: "/about/news-room",
     myTrip: "/my-trip",
@@ -77,11 +78,19 @@ const MASTER_CONFIG = Object.freeze({
     support: "/about/support",
     contact: "/about/contact",
     about: "/about",
+    theStore: "/the-store",
+    storeCheckout: "/the-store/store-checkout",
+    storeConfirmation:"/the-store/store-checkout/order-confirmation",
+    ourNetwork: "/about/our-network",
     legal: "/about/legal",
-    staffLogin: "/riaintra",
+    policies: "/about/legal/policies",
+    riaintra: "/riaintra",
     staffPortal: "/riaintra/staff-portal",
     successFactors: "/riaintra/success-factors",
-    altea: "/riaintra/success-factors/altea",
+    alteaLaunchpad: "/riaintra/success-factors/altea",
+    alteaReservations: "/riaintra/success-factors/altea/reservations",
+    alteaTicketing: "/riaintra/success-factors/altea/ticketing",
+    alteaTimatic: "/riaintra/success-factors/altea/timatic",
     mail: "/riaintra/mail",
     docunet: "/riaintra/docunet",
     serviceDesk: "/riaintra/service-desk",
@@ -134,6 +143,8 @@ const MASTER_CONFIG = Object.freeze({
           links: Object.freeze([
             { label: "About SKANDI", path: "/about" },
             { label: "Contact", path: "/about/contact" },
+            { label: "Careers", path: "/about/careers" },
+            { label: "My Job Portal", path: "/about/careers/portal" },
             { label: "Support", path: "/about/support" },
             { label: "Legal", path: "/about/legal" }
           ])
@@ -147,9 +158,9 @@ const MASTER_CONFIG = Object.freeze({
       productName: "SKANDI TRAVELS",
       productContext: "RIAINTRA Enterprise Workforce Suite",
       primaryNav: Object.freeze([
-        { id: "dashboard", label: "Dashboard", path: "/riaintra/staff-portal" },
+        { id: "staff-portal", label: "RIAINTRA", path: "/riaintra" },
         { id: "success-factors", label: "SuccessFactors", path: "/riaintra/success-factors" },
-        { id: "altea", label: "ALTEA", path: "/riaintra/success-factors/altea" },
+        { id: "alteaLaunchpad", label: "ALTEA", path: "/riaintra/success-factors/altea" },
         { id: "mail", label: "Mail", path: "/riaintra/mail" },
         { id: "docunet", label: "DocuNet", path: "/riaintra/docunet" },
         { id: "service-desk", label: "ServiceDesk", path: "/riaintra/service-desk" }
@@ -160,7 +171,7 @@ const MASTER_CONFIG = Object.freeze({
     }),
     footer: Object.freeze({
       links: Object.freeze([
-        { label: "Staff Portal", path: "/riaintra/staff-portal" },
+        { label: "RIAINTRA", path: "/riaintra" },
         { label: "DocuNet", path: "/riaintra/docunet" },
         { label: "ServiceDesk", path: "/riaintra/service-desk" }
       ])
