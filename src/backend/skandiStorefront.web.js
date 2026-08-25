@@ -1,11 +1,27 @@
 import {
-  webMethod,
-  Permissions
+  Permissions,
+  webMethod
 } from "wix-web-module";
 
 import {
   productsV3
 } from "@wix/stores";
+
+import {
+  categories
+} from "@wix/categories";
+
+import {
+  currentCart
+} from "wix-ecom-backend";
+
+const WIX_STORES_APP_ID =
+  "215238eb-22a5-4c36-9e7b-e7c08025e04e";
+
+const TREE_REFERENCE = {
+  appNamespace: "@wix/stores",
+  treeKey: null
+};
 
 /*
  * SKANDI storefront public catalog.
