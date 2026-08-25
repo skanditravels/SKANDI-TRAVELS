@@ -1,41 +1,84 @@
-import { webMethod, Permissions } from 'wix-web-module';
-import { requireInternalAgent, text } from '../RIA/internalAccess.js';
-import { restRequest } from '../RIA/supabaseServer.js';
+// backend/FINAL/internalChrome.web.js
+import { webMethod, Permissions } from "wix-web-module";
+import { currentMember } from "wix-members-backend";
+import { restRequest } from "backend/RIA/supabaseServer.js";
 
-function result(type, title, subtitle, path, id) {
-  return { type, title, subtitle, path, id: id || '' };
+const LINKS = [
+  { title:"Dashboard", type:"APP", path:"/riaintra/staff-portal", summary:"RIAINTRA staff dashboard" },
+  { title:"SuccessFactors", type:"APP", path:"/riaintra/success-factors", summary:"People, HR and employee services" },
+  { title:"ALTEA", type:"APP", path:"/riaintra/success-factors/altea", summary:"ALTEA operations workspace" },
+  { title:"GroupTalk", type:"APP", path:"/riaintra/success-factors/altea/grouptalk", summary:"Live operations voice, location and helpdesk" },
+  { title:"DocuNet", type:"APP", path:"/riaintra/success-factors/altea/docunet", summary:"Controlled operational documents" },
+  { title:"Mail", type:"APP", path:"/riaintra/success-factors/altea/mail", summary:"Internal mail" },
+  { title:"Uniform Center", type:"APP", path:"/riaintra/success-factors/uniform", summary:"Uniform ordering and policy" },
+  { title:"Inventory Control", type:"ADMIN", path:"/riaintra/success-factors/altea/inventory-control", summary:"Operational inventory control" }
+];
+
+function clean(v,max=300){return String(v??"").trim().slice(0,max)}
+function lower(v){return clean(v).toLowerCase()}
+function first(rows){return Array.isArray(rows)&&rows.length?rows[0]:null}
+
+async function staff() {
+  let member = null;
+  try { member = await currentMember.getMember({ fieldsets:["FULL"] }); } catch (_) {}
+  const memberId = clean(member?._id || member?.id, 160);
+  const email = lower(
+    member?.loginEmail ||
+    member?.contactDetails?.emails?.[0] ||
+    member?.profile?.email ||
+    ""
+  );
+
+  let row = null;
+  if (memberId) {
+    row = first(await restRequest({
+      table:"agent_users",
+      query:{select:"*",wix_member_id:`eq.${memberId}`,limit:1}
+    }));
+    if (!row) {
+      row = first(await restRequest({
+        table:"agent_users",
+        query:{select:"*",member_id:`eq.${memberId}`,limit:1}
+      }));
+    }
+  }
+
+  if (!row && email) {
+    row = first(await restRequest({
+      table:"agent_users",
+      query:{select:"*",corporate_email_address:`ilike.${email}`,limit:1}
+    }));
+    if (!row) {
+      row = first(await restRequest({
+        table:"agent_users",
+        query:{select:"*",email:`ilike.${email}`,limit:1}
+      }));
+    }
+  }
+
+  if (!row || row.active !== true || row.authorized !== true || row.portal_access !== true) {
+    throw new Error("STAFF_ACCESS_DENIED");
+  }
+
+  return row;
 }
 
-async function searchRows(table, query, fields, or, mapper) {
-  const q = text(query, 80);
-  if (!q) return [];
-  const rows = await restRequest({
-    table,
-    query: {
-      select: fields,
-      or,
-      limit: 8,
-    },
-  }).catch(() => []);
-  return (rows || []).map(mapper).filter(Boolean);
+function matches(item,q){
+  const haystack=[item.title,item.type,item.path,item.summary].join(" ").toLowerCase();
+  return haystack.includes(q);
 }
 
-export const runInternalGlobalSearch = webMethod(Permissions.SiteMember, async (query = '') => {
-  await requireInternalAgent();
-  const q = text(query, 80);
-  if (q.length < 2) return { query: q, results: [] };
+export const runInternalGlobalSearch = webMethod(
+  Permissions.SiteMember,
+  async (query = "") => {
+    await staff();
+    const q = lower(
+      typeof query === "object" ? query?.query : query
+    );
 
-  const [staff, inventory, tickets] = await Promise.all([
-    searchRows('agent_users', q, 'id,sk_id,display_name,email,role,department', `(display_name.ilike.*${q}*,email.ilike.*${q}*,sk_id.ilike.*${q}*)`, (row) => result(
-      'staff', row.display_name || row.email || row.sk_id, `${row.sk_id || ''} ${row.role || ''}`.trim(), '/riaintra/hr', row.id,
-    )),
-    searchRows('travel_products', q, 'id,product_id,title,destination,status', `(title.ilike.*${q}*,product_id.ilike.*${q}*,destination.ilike.*${q}*)`, (row) => result(
-      'inventory', row.title || row.product_id, `${row.destination || ''} ${row.status || ''}`.trim(), '/riaintra/inventory-control', row.id,
-    )),
-    searchRows('grouptalk_tickets', q, 'id,ticket_number,title,status,priority', `(ticket_number.ilike.*${q}*,title.ilike.*${q}*)`, (row) => result(
-      'ticket', row.title || row.ticket_number, `${row.ticket_number || ''} ${row.status || ''}`.trim(), '/riaintra/grouptalk', row.id,
-    )),
-  ]);
+    if (!q) return { results: [], items: [] };
 
-  return { query: q, results: [...staff, ...inventory, ...tickets].slice(0, 20) };
-});
+    const results = LINKS.filter((item)=>matches(item,q)).slice(0,25);
+    return { results, items: results, query: q };
+  }
+);
