@@ -29,7 +29,7 @@ import {
 
 
 const EMBED_ID =
-  "#stafDashboardEmbed";
+  "#staffDashboardEmbed";
 
 const CHILD_SOURCES =
   new Set([
