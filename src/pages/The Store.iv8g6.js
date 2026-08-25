@@ -1,16 +1,6 @@
-import wixLocationFrontend from "wix-location-frontend";
-import wixEcomFrontend from "wix-ecom-frontend";
-
 import {
-  listStorefrontProducts,
-  getStorefrontCart,
-  addProductToCurrentCart,
-  createStorefrontCheckout
-} from "backend/skandiStorefront.web";
-
-import {
-  createPublicSupportCase
-} from "backend/chatwootSupport.web";
+  getPublicStoreCatalog
+} from "backend/storeCatalogBridge.web";
 
 const EMBED_ID =
   "#skandiStoreEmbed";
@@ -18,28 +8,23 @@ const EMBED_ID =
 const STOREFRONT_SOURCE =
   "SKANDI_STOREFRONT";
 
-const SUPPORT_SOURCE =
-  "SKANDI_SUPPORT_PUBLIC";
-
 const PARENT_SOURCE =
   "SKANDI_WIX_PARENT";
 
-const WIX_STORES_APP_ID =
-  "215238eb-22a5-4c36-9e7b-e7c08025e04e";
-
-const ORDERS_PATH =
-  "/my-orders";
-
 let embed = null;
 let loadPromise = null;
-let lastCatalogPayload = null;
+let cachedCatalog = null;
 
-function parseMessage(value) {
+function parseMessage(
+  value
+) {
   if (
     typeof value === "string"
   ) {
     try {
-      return JSON.parse(value);
+      return JSON.parse(
+        value
+      );
     } catch (_) {
       return null;
     }
@@ -58,10 +43,6 @@ function send(
   payload = {}
 ) {
   if (!embed) {
-    console.warn(
-      "[Store Page] Cannot send before HTML Component is ready.",
-      type
-    );
     return;
   }
 
@@ -76,199 +57,21 @@ function send(
   });
 }
 
-function normalizeMoney(value) {
-  if (
-    value === null ||
-    value === undefined
-  ) {
-    return "";
-  }
-
-  if (
-    typeof value === "string" ||
-    typeof value === "number"
-  ) {
-    return String(value);
-  }
-
-  return (
-    value.formattedAmount ||
-    value.formattedConvertedAmount ||
-    value.formatted ||
-    value.formattedPrice ||
-    value.amount ||
-    value.convertedAmount ||
-    value.price ||
-    ""
-  );
-}
-
-function normalizeMediaUrl(media = {}) {
-  return (
-    media.src ||
-    media.url ||
-    media.image?.url ||
-    media.imageInfo?.url ||
-    ""
-  );
-}
-
-function normalizeDescriptionLines(
-  lines = []
-) {
-  if (
-    !Array.isArray(lines)
-  ) {
-    return "";
-  }
-
-  return lines
-    .map((line) => {
-      const name =
-        line.name?.original ||
-        line.name?.translated ||
-        line.name ||
-        "";
-
-      const value =
-        line.value?.original ||
-        line.value?.translated ||
-        line.value ||
-        "";
-
-      return name
-        ? (
-            value
-              ? `${name}: ${value}`
-              : String(name)
-          )
-        : String(value || "");
-    })
-    .filter(Boolean)
-    .join(", ");
-}
-
-function normalizeCart(
-  response = {}
-) {
-  const raw =
-    response.cart ||
-    response ||
-    {};
-
-  const lineItems =
-    raw.lineItems ||
-    raw.items ||
-    [];
-
-  return {
-    id:
-      raw._id ||
-      raw.id ||
-      "",
-
-    lineItems:
-      lineItems.map((item) => {
-        const catalogReference =
-          item.catalogReference ||
-          {};
-
-        const productName =
-          item.productName ||
-          {};
-
-        const media =
-          item.media ||
-          item.mediaItem ||
-          item.image ||
-          {};
-
-        return {
-          id:
-            item._id ||
-            item.id ||
-            item.lineItemId ||
-            "",
-
-          productId:
-            item.productId ||
-            catalogReference.catalogItemId ||
-            catalogReference.productId ||
-            "",
-
-          name:
-            productName.original ||
-            productName.translated ||
-            item.name ||
-            (
-              typeof item.productName === "string"
-                ? item.productName
-                : ""
-            ) ||
-            "Product",
-
-          quantity:
-            Math.max(
-              1,
-              Number(
-                item.quantity ||
-                1
-              )
-            ),
-
-          imageUrl:
-            normalizeMediaUrl(
-              media
-            ) ||
-            item.imageUrl ||
-            "",
-
-          optionsLabel:
-            normalizeDescriptionLines(
-              item.descriptionLines
-            ) ||
-            item.optionsLabel ||
-            "",
-
-          priceLabel:
-            normalizeMoney(
-              item.lineItemPrice
-            ) ||
-            normalizeMoney(
-              item.totalPrice
-            ) ||
-            normalizeMoney(
-              item.fullPrice
-            ) ||
-            normalizeMoney(
-              item.price
-            )
-        };
-      }),
-
-    totalLabel:
-      normalizeMoney(
-        raw.priceSummary?.total
-      ) ||
-      normalizeMoney(
-        raw.totals?.total
-      ) ||
-      normalizeMoney(
-        raw.subtotalAfterDiscounts
-      ) ||
-      normalizeMoney(
-        raw.subtotal
-      ) ||
-      normalizeMoney(
-        raw.total
-      ) ||
-      ""
-  };
-}
-
-async function loadProducts(
+async function loadCatalog(
   force = false
 ) {
+  if (
+    cachedCatalog &&
+    !force
+  ) {
+    send(
+      "STOREFRONT_PRODUCTS",
+      cachedCatalog
+    );
+
+    return cachedCatalog;
+  }
+
   if (
     loadPromise &&
     !force
@@ -278,372 +81,104 @@ async function loadProducts(
 
   loadPromise =
     (async () => {
-      send(
-        "STOREFRONT_PROGRESS",
-        {
-          message:
-            "Loading Wix Store products…"
-        }
-      );
-
-      console.log(
-        "[Store Page] Calling listStorefrontProducts()."
-      );
-
-      const result =
-        await listStorefrontProducts({
-          limit:
-            300
-        });
-
-      if (
-        !result ||
-        result.ok === false
-      ) {
-        throw new Error(
-          result?.message ||
-          result?.error ||
-          "The Wix Stores catalog request failed."
+      try {
+        send(
+          "STOREFRONT_PROGRESS",
+          {
+            message:
+              "Reading Wix Stores products…"
+          }
         );
-      }
 
-      const products =
-        Array.isArray(
-          result.products
-        )
-          ? result.products
-          : [];
+        console.log(
+          "[Store Page] Calling getPublicStoreCatalog()."
+        );
 
-      const categories =
-        Array.isArray(
-          result.categories
-        )
-          ? result.categories
-          : [];
+        const result =
+          await getPublicStoreCatalog({
+            limit:
+              100
+          });
 
-      lastCatalogPayload = {
-        ...result,
-        products,
-        categories
-      };
+        if (
+          !result ||
+          result.ok === false
+        ) {
+          throw new Error(
+            result?.message ||
+            result?.error ||
+            "Wix Stores returned an invalid catalog response."
+          );
+        }
 
-      console.log(
-        "[Store Page] Catalog ready:",
-        {
+        cachedCatalog = {
+          ...result,
+
           products:
-            products.length,
+            Array.isArray(
+              result.products
+            )
+              ? result.products
+              : [],
+
           categories:
-            categories.length,
-          meta:
-            result.meta ||
-            {}
-        }
-      );
+            Array.isArray(
+              result.categories
+            )
+              ? result.categories
+              : []
+        };
 
-      /*
-       * Critical path:
-       * send products BEFORE cart/support work.
-       */
-      send(
-        "STOREFRONT_PRODUCTS",
-        lastCatalogPayload
-      );
+        console.log(
+          "[Store Page] Wix catalog loaded.",
+          {
+            products:
+              cachedCatalog.products.length,
+            meta:
+              cachedCatalog.meta ||
+              {}
+          }
+        );
 
-      /*
-       * Cart is secondary. A cart failure must never suppress products.
-       */
-      void sendCart();
-
-      return lastCatalogPayload;
-    })();
-
-  try {
-    return await loadPromise;
-  } catch (error) {
-    console.error(
-      "[Store Page] Catalog load failed:",
-      error
-    );
-
-    send(
-      "STOREFRONT_ERROR",
-      {
-        stage:
-          "catalog",
-        message:
-          error?.message ||
-          "The store catalog could not be loaded."
-      }
-    );
-
-    throw error;
-  } finally {
-    loadPromise =
-      null;
-  }
-}
-
-async function sendCart() {
-  try {
-    const result =
-      await getStorefrontCart();
-
-    send(
-      "STOREFRONT_CART",
-      {
-        cart:
-          normalizeCart(
-            result?.cart ||
-            result ||
-            {}
-          )
-      }
-    );
-  } catch (error) {
-    console.warn(
-      "[Store Page] Cart unavailable. Products remain usable.",
-      error
-    );
-
-    send(
-      "STOREFRONT_CART",
-      {
-        cart: {
-          id: "",
-          lineItems: [],
-          totalLabel: ""
-        }
-      }
-    );
-  }
-}
-
-function cartLineItemFromPayload(
-  payload = {}
-) {
-  const productId =
-    payload.productId ||
-    payload.catalogItemId;
-
-  if (!productId) {
-    throw new Error(
-      "The selected product could not be identified."
-    );
-  }
-
-  const catalogReference = {
-    appId:
-      WIX_STORES_APP_ID,
-    catalogItemId:
-      productId
-  };
-
-  if (payload.variantId) {
-    catalogReference.options = {
-      variantId:
-        payload.variantId
-    };
-  } else if (
-    payload.choices &&
-    typeof payload.choices === "object" &&
-    Object.keys(
-      payload.choices
-    ).length
-  ) {
-    catalogReference.options = {
-      options:
-        payload.choices
-    };
-  }
-
-  return {
-    catalogReference,
-    quantity:
-      Math.max(
-        1,
-        Number(
-          payload.quantity ||
-          1
-        )
-      )
-  };
-}
-
-async function addProduct(
-  payload = {}
-) {
-  const lineItem =
-    cartLineItemFromPayload(
-      payload
-    );
-
-  const result =
-    await addProductToCurrentCart({
-      lineItems: [
-        lineItem
-      ]
-    });
-
-  await wixEcomFrontend
-    .refreshCart()
-    .catch(() => {});
-
-  send(
-    "STOREFRONT_CART",
-    {
-      cart:
-        normalizeCart(
-          result?.cart ||
-          result ||
-          {}
-        )
-    }
-  );
-}
-
-async function openCheckout() {
-  const result =
-    await createStorefrontCheckout();
-
-  const checkoutId =
-    result?.checkoutId;
-
-  if (!checkoutId) {
-    throw new Error(
-      "Checkout could not be created."
-    );
-  }
-
-  await wixEcomFrontend
-    .navigateToCheckoutPage(
-      checkoutId
-    );
-}
-
-async function handleStorefrontMessage(
-  message
-) {
-  const payload =
-    message.payload ||
-    {};
-
-  switch (
-    message.type
-  ) {
-    case "STOREFRONT_READY":
-      /*
-       * If data has already loaded, replay it immediately.
-       * This eliminates iframe/page-code race conditions.
-       */
-      if (
-        lastCatalogPayload
-      ) {
         send(
           "STOREFRONT_PRODUCTS",
-          lastCatalogPayload
+          cachedCatalog
         );
-        return;
-      }
 
-      await loadProducts();
-      return;
-
-    case "STOREFRONT_REFRESH":
-      lastCatalogPayload =
-        null;
-      await loadProducts(
-        true
-      );
-      return;
-
-    case "STOREFRONT_CART_REQUEST":
-      await sendCart();
-      return;
-
-    case "STOREFRONT_ADD_TO_CART":
-      send(
-        "STOREFRONT_PROGRESS",
-        {
-          message:
-            "Adding to bag…"
-        }
-      );
-
-      await addProduct(
-        payload
-      );
-      return;
-
-    case "STOREFRONT_CHECKOUT":
-      send(
-        "STOREFRONT_PROGRESS",
-        {
-          message:
-            "Opening checkout…"
-        }
-      );
-
-      await openCheckout();
-      return;
-
-    case "STOREFRONT_ORDERS":
-      wixLocationFrontend.to(
-        ORDERS_PATH
-      );
-      return;
-
-    case "STOREFRONT_NAVIGATE":
-      if (
-        payload.path
-      ) {
-        wixLocationFrontend.to(
-          payload.path
+        return cachedCatalog;
+      } catch (error) {
+        console.error(
+          "[Store Page] Wix catalog load failed.",
+          error
         );
+
+        send(
+          "STOREFRONT_ERROR",
+          {
+            stage:
+              "catalog-only-bridge",
+
+            message:
+              error?.message ||
+              "Wix Stores products could not be loaded."
+          }
+        );
+
+        throw error;
+      } finally {
+        loadPromise =
+          null;
       }
-      return;
+    })();
 
-    default:
-      return;
-  }
-}
-
-async function handleSupportMessage(
-  message
-) {
-  const payload =
-    message.payload ||
-    {};
-
-  if (
-    message.type ===
-    "PUBLIC_SUPPORT_CREATE_CASE"
-  ) {
-    const result =
-      await createPublicSupportCase({
-        input:
-          payload
-      });
-
-    send(
-      "PUBLIC_SUPPORT_CASE_CREATED",
-      result ||
-      {}
-    );
-    return;
-  }
-
-  if (
-    message.type ===
-    "PUBLIC_SUPPORT_NAVIGATE" &&
-    payload.path
-  ) {
-    wixLocationFrontend.to(
-      payload.path
-    );
-  }
+  return loadPromise;
 }
 
 $w.onReady(function () {
+  console.log(
+    "[Store Page] Catalog-only page code started."
+  );
+
   try {
     embed =
       $w(
@@ -651,9 +186,10 @@ $w.onReady(function () {
       );
   } catch (error) {
     console.error(
-      `[Store Page] Missing HTML Component ${EMBED_ID}.`,
+      `[Store Page] ${EMBED_ID} does not exist on this Wix page.`,
       error
     );
+
     return;
   }
 
@@ -665,11 +201,12 @@ $w.onReady(function () {
     console.error(
       `[Store Page] ${EMBED_ID} is not an HTML Component.`
     );
+
     return;
   }
 
   console.log(
-    "[Store Page] Store bridge initialized.",
+    "[Store Page] HTML Component connected.",
     {
       embedId:
         EMBED_ID
@@ -685,63 +222,56 @@ $w.onReady(function () {
 
       if (
         !message ||
-        !message.type
+        message.source !==
+          STOREFRONT_SOURCE
       ) {
         return;
       }
 
+      console.log(
+        "[Store Page] HTML message received.",
+        {
+          type:
+            message.type
+        }
+      );
+
       if (
-        message.source ===
-        SUPPORT_SOURCE
+        message.type ===
+          "STOREFRONT_READY" ||
+        message.type ===
+          "STOREFRONT_REFRESH"
       ) {
         try {
-          await handleSupportMessage(
-            message
+          await loadCatalog(
+            message.type ===
+              "STOREFRONT_REFRESH"
           );
-        } catch (error) {
-          console.error(
-            "[Store Page] Support failed:",
-            error
-          );
-
-          send(
-            "PUBLIC_SUPPORT_ERROR",
-            {
-              message:
-                error?.message ||
-                "Support request failed."
-            }
-          );
-        }
+        } catch (_) {}
 
         return;
       }
 
+      /*
+       * Cart/support are intentionally disabled in this diagnostic bridge.
+       * They will be reconnected only after the catalog transport is proven.
+       */
       if (
-        message.source !==
-        STOREFRONT_SOURCE
+        message.type ===
+          "STOREFRONT_ADD_TO_CART" ||
+        message.type ===
+          "STOREFRONT_CART_REQUEST" ||
+        message.type ===
+          "STOREFRONT_CHECKOUT"
       ) {
-        return;
-      }
-
-      try {
-        await handleStorefrontMessage(
-          message
-        );
-      } catch (error) {
-        console.error(
-          `[Store Page] ${message.type} failed:`,
-          error
-        );
-
         send(
           "STOREFRONT_ERROR",
           {
             stage:
-              message.type,
+              "catalog-diagnostic",
+
             message:
-              error?.message ||
-              "Store action failed."
+              "Catalog is connected. Cart is temporarily disabled while the Wix Stores bridge is being isolated."
           }
         );
       }
@@ -749,23 +279,23 @@ $w.onReady(function () {
   );
 
   /*
-   * Tell the iframe the Wix parent listener now exists.
-   * The iframe will request catalog data after receiving this.
+   * This message proves page code itself is executing.
    */
   send(
     "STOREFRONT_PARENT_READY",
     {
+      bridge:
+        "CATALOG_ONLY",
+
       embedId:
-        EMBED_ID,
-      catalogVersion:
-        "V3"
+        EMBED_ID
     }
   );
 
   /*
-   * Also preload immediately. If the iframe isn't ready yet,
-   * lastCatalogPayload is replayed when STOREFRONT_READY arrives.
+   * Preload immediately. If the iframe has not attached its listener yet,
+   * the HTML's retrying STOREFRONT_READY handshake will replay cached data.
    */
-  void loadProducts()
+  void loadCatalog()
     .catch(() => {});
 });
