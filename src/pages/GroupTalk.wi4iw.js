@@ -1055,10 +1055,6 @@ async function connectVoice(
         token.roomName ||
         token.room,
 
-      silent:
-        payload.silent ===
-        true,
-
       microphone:
         payload.microphone ===
         true
@@ -1077,6 +1073,265 @@ async function connectVoice(
     identity:
       token.identity ||
       ""
+  };
+}
+
+
+
+async function requestVoiceMicrophonePermission() {
+  const result =
+    await voiceCommand({
+      action:
+        "permissions"
+    });
+
+  return {
+    granted:
+      result?.microphone ===
+      true,
+
+    message:
+      result?.microphone ===
+      true
+        ? "Allowed"
+        : (
+            result?.message ||
+            "Microphone unavailable"
+          )
+  };
+}
+
+
+async function configureVoiceOutput(
+  deviceId =
+    ""
+) {
+  const value =
+    String(
+      deviceId ||
+      ""
+    ).trim();
+
+  if (
+    !value
+  ) {
+    return {
+      selected:
+        false,
+
+      mode:
+        "default",
+
+      label:
+        "System default"
+    };
+  }
+
+  const result =
+    await voiceCommand({
+      action:
+        "output-device",
+
+      deviceId:
+        value
+    });
+
+  return {
+    selected:
+      result?.selected ===
+      true,
+
+    mode:
+      result?.selected ===
+      true
+        ? "selected"
+        : "default",
+
+    label:
+      result?.label ||
+      (
+        result?.selected ===
+        true
+          ? "Selected output"
+          : "System default"
+      )
+  };
+}
+
+
+async function requestLocationPermissionOnce() {
+  try {
+    const position =
+      await currentLocationWithTimeout(
+        15_000
+      );
+
+    const latitude =
+      Number(
+        position?.coords?.latitude
+      );
+
+    const longitude =
+      Number(
+        position?.coords?.longitude
+      );
+
+    if (
+      !Number.isFinite(
+        latitude
+      ) ||
+      !Number.isFinite(
+        longitude
+      )
+    ) {
+      throw new Error(
+        "LOCATION_COORDINATES_INVALID"
+      );
+    }
+
+    return {
+      granted:
+        true,
+
+      message:
+        "Allowed"
+    };
+
+  } catch (error) {
+
+    return {
+      granted:
+        false,
+
+      message:
+        messageOf(
+          error,
+          "Location not allowed"
+        )
+    };
+  }
+}
+
+
+async function requestDeviceAccess(
+  payload = {}
+) {
+  const [
+    microphoneResult,
+    locationResult
+  ] =
+    await Promise.allSettled([
+      requestVoiceMicrophonePermission(),
+      requestLocationPermissionOnce()
+    ]);
+
+
+  let speaker = {
+    selected:
+      false,
+
+    mode:
+      "default",
+
+    label:
+      "System default"
+  };
+
+
+  if (
+    payload.speakerDeviceId
+  ) {
+    try {
+      speaker =
+        await configureVoiceOutput(
+          payload.speakerDeviceId
+        );
+    } catch (error) {
+      console.warn(
+        "[GroupTalk] Selected output device could not be applied. Using system default.",
+        error
+      );
+    }
+  }
+
+
+  /*
+   * Connect the receive side with microphone OFF. This also primes LiveKit
+   * audio playback. Receive audio is intentionally always enabled.
+   */
+  if (
+    payload.groupId
+  ) {
+    try {
+      await connectVoice({
+        groupId:
+          payload.groupId,
+
+        microphone:
+          false
+      });
+
+      await voiceCommand(
+        {
+          action:
+            "start-audio"
+        },
+        {
+          wait:
+            false
+        }
+      );
+
+    } catch (error) {
+      console.warn(
+        "[GroupTalk] Receive-audio preload warning.",
+        error
+      );
+    }
+  }
+
+
+  const microphone =
+    microphoneResult.status ===
+      "fulfilled"
+      ? microphoneResult.value
+      : {
+          granted:
+            false,
+
+          message:
+            messageOf(
+              microphoneResult.reason,
+              "Microphone not allowed"
+            )
+        };
+
+
+  const location =
+    locationResult.status ===
+      "fulfilled"
+      ? locationResult.value
+      : {
+          granted:
+            false,
+
+          message:
+            messageOf(
+              locationResult.reason,
+              "Location not allowed"
+            )
+        };
+
+
+  return {
+    ok:
+      true,
+
+    microphone,
+
+    speaker,
+
+    location
   };
 }
 
@@ -1200,6 +1455,28 @@ async function handleGroupTalkMessage(
     }
 
 
+    case "DEVICE_ACCESS_REQUEST": {
+
+      const result =
+        await requestDeviceAccess(
+          payload
+        );
+
+      post(
+        "DEVICE_ACCESS_RESPONSE",
+        {
+          requestId:
+            payload.requestId ||
+            "",
+
+          ...result
+        }
+      );
+
+      return;
+    }
+
+
     case "VOICE_CONNECT_REQUEST": {
 
       const result =
@@ -1250,26 +1527,6 @@ async function handleGroupTalkMessage(
 
       return;
     }
-
-
-    case "VOICE_SILENT_SET":
-
-      await voiceCommand(
-        {
-          action:
-            "silent",
-
-          enabled:
-            payload.enabled ===
-            true
-        },
-        {
-          wait:
-            false
-        }
-      );
-
-      return;
 
 
     case "VOICE_DISCONNECT":
