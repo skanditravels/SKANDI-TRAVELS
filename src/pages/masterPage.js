@@ -67,7 +67,7 @@ const MASTER_CONFIG = Object.freeze({
     activities: "/activities",
     transfers: "/transfers",
     destinations: "/destinations",
-    signatureCollection: "/signature-collection",
+    signatureCollection: "/skandi-collection",
     voy: "/voy-magazine",
     newsroom: "/about/news-room",
     myTrip: "/my-trip",
@@ -79,11 +79,11 @@ const MASTER_CONFIG = Object.freeze({
     staffLogin: "/riaintra",
     staffPortal: "/riaintra/staff-portal",
     successFactors: "/riaintra/success-factors",
-    altea: "/riaintra/altea",
+    altea: "/riaintra/success-factors/altea",
     mail: "/riaintra/mail",
     docunet: "/riaintra/docunet",
     serviceDesk: "/riaintra/service-desk",
-    magazineManager: "/riaintra/magazine-manager/management"
+    magazineManager: "/riaintra/media-control"
   }),
   customer: Object.freeze({
     header: Object.freeze({
@@ -96,7 +96,7 @@ const MASTER_CONFIG = Object.freeze({
       ]),
       secondaryNav: Object.freeze([
         { id: "destinations", label: "Destinations", path: "/destinations" },
-        { id: "signature", label: "Signature Collection", path: "/signature-collection" },
+        { id: "signature", label: "SKANDI Collection", path: "/skandi-collection" },
         { id: "voy", label: "VOY Magazine", path: "/voy-magazine" },
         { id: "newsroom", label: "Newsroom", path: "/about/news-room" }
       ]),
@@ -122,7 +122,7 @@ const MASTER_CONFIG = Object.freeze({
           title: "Discover",
           links: Object.freeze([
             { label: "Destinations", path: "/destinations" },
-            { label: "Signature Collection", path: "/signature-collection" },
+            { label: "SKANDI Collection", path: "/skandi-collection" },
             { label: "VOY Magazine", path: "/voy-magazine" },
             { label: "Newsroom", path: "/about/news-room" }
           ])
@@ -147,7 +147,7 @@ const MASTER_CONFIG = Object.freeze({
       primaryNav: Object.freeze([
         { id: "dashboard", label: "Dashboard", path: "/riaintra/staff-portal" },
         { id: "success-factors", label: "SuccessFactors", path: "/riaintra/success-factors" },
-        { id: "altea", label: "ALTEA", path: "/riaintra/altea" },
+        { id: "altea", label: "ALTEA", path: "/riaintra/success-factors/altea" },
         { id: "mail", label: "Mail", path: "/riaintra/mail" },
         { id: "docunet", label: "DocuNet", path: "/riaintra/docunet" },
         { id: "service-desk", label: "ServiceDesk", path: "/riaintra/service-desk" }
@@ -168,9 +168,9 @@ const MASTER_CONFIG = Object.freeze({
 
 const CUSTOMER_HEADER_EMBED = "#skandiCustomerHeaderEmbed";
 const CUSTOMER_FOOTER_EMBED = "#skandiCustomerFooterEmbed";
-const RIAINTRA_HEADER_EMBED = "#riaintraHeaderEmbed";
-const RIAINTRA_FOOTER_EMBED = "#riaintraFooterEmbed";
-const ALTEA_HEADER_EMBED = "#altea-header";
+const RIAINTRA_HEADER_EMBED = "#riaintraHeader";
+const RIAINTRA_FOOTER_EMBED = "#riaintraFooter";
+const ALTEA_HEADER_EMBED = "#alteaHeader";
 
 const PARENT_SOURCE = "SKANDI_WIX_PARENT";
 const CUSTOMER_HEADER_SOURCE = "SKANDI_CUSTOMER_HEADER_EXPANDBAR";
@@ -187,7 +187,11 @@ function safeEl(id) {
 function allHtmlComponents() {
   try {
     const result = $w("HtmlComponent");
-    return Array.isArray(result) ? result : [];
+    if (!result) return [];
+    if (Array.isArray(result)) return result;
+    if (typeof result[Symbol.iterator] === "function") return Array.from(result);
+    if (typeof result.length === "number") return Array.from(result);
+    return [result];
   } catch (error) {
     console.warn("[MasterPage] Could not enumerate HTML Components.", error);
     return [];
@@ -204,7 +208,13 @@ function isInternalPath(path = currentPathString()) {
 }
 
 function isAlteaPath(path = currentPathString()) {
-  return path === "/altea" || path.startsWith("/altea/") || path === "/riaintra/altea" || path.startsWith("/riaintra/altea/");
+  const value = String(path || "").toLowerCase();
+  const prefixes = [
+    "/riaintra/success-factors/altea",
+    "/riaintra/altea", // legacy fallback
+    "/altea"           // legacy fallback
+  ];
+  return prefixes.some(prefix => value === prefix || value.startsWith(prefix + "/"));
 }
 
 function isSafeRoute(path) {
@@ -233,6 +243,7 @@ function masterPayload(extra = {}) {
     routes: MASTER_CONFIG.routes,
     customer: MASTER_CONFIG.customer,
     internal: MASTER_CONFIG.internal,
+    altea: { ...alteaRuntimeContext },
     ...extra
   };
 }
@@ -459,8 +470,15 @@ async function handleMasterMessage(embed, message = {}) {
   return false;
 }
 
+const wiredEmbedIds = new Set();
+
 function wireHtmlComponent(embed) {
   if (!embed || typeof embed.onMessage !== "function") return;
+
+  const key = embed.id || String(embed);
+  if (wiredEmbedIds.has(key)) return;
+  wiredEmbedIds.add(key);
+
   embed.onMessage(async event => {
     try {
       await handleMasterMessage(embed, event?.data || {});
@@ -472,7 +490,28 @@ function wireHtmlComponent(embed) {
 }
 
 function wireAllHtmlComponents() {
-  allHtmlComponents().forEach(wireHtmlComponent);
+  [
+    safeEl(CUSTOMER_HEADER_EMBED),
+    safeEl(CUSTOMER_FOOTER_EMBED),
+    safeEl(RIAINTRA_HEADER_EMBED),
+    safeEl(RIAINTRA_FOOTER_EMBED),
+    safeEl(ALTEA_HEADER_EMBED),
+    ...allHtmlComponents()
+  ]
+    .filter(Boolean)
+    .forEach(wireHtmlComponent);
+}
+
+async function showChromeElement(element) {
+  if (!element) return;
+  try { if (typeof element.expand === "function") await element.expand(); } catch (_) {}
+  try { if (typeof element.show === "function") await element.show(); } catch (_) {}
+}
+
+async function hideChromeElement(element) {
+  if (!element) return;
+  try { if (typeof element.hide === "function") await element.hide(); } catch (_) {}
+  try { if (typeof element.collapse === "function") await element.collapse(); } catch (_) {}
 }
 
 async function applyChromeVisibility() {
@@ -486,18 +525,26 @@ async function applyChromeVisibility() {
   const alteaHeader = safeEl(ALTEA_HEADER_EMBED);
 
   if (internal) {
-    try { customerHeader?.hide(); } catch (_) {}
-    try { customerFooter?.hide(); } catch (_) {}
-    try { riaHeader?.show(); } catch (_) {}
-    try { riaFooter?.show(); } catch (_) {}
-    try { altea ? alteaHeader?.show() : alteaHeader?.hide(); } catch (_) {}
+    await hideChromeElement(customerHeader);
+    await hideChromeElement(customerFooter);
+    await showChromeElement(riaHeader);
+    await showChromeElement(riaFooter);
+
+    if (altea) {
+      await showChromeElement(alteaHeader);
+      const staff = await getStaffState();
+      pushMasterConfig(alteaHeader, { staff });
+    } else {
+      await hideChromeElement(alteaHeader);
+    }
+
     await pushStaffHeaderState(riaHeader);
   } else {
-    try { customerHeader?.show(); } catch (_) {}
-    try { customerFooter?.show(); } catch (_) {}
-    try { riaHeader?.hide(); } catch (_) {}
-    try { riaFooter?.hide(); } catch (_) {}
-    try { alteaHeader?.hide(); } catch (_) {}
+    await showChromeElement(customerHeader);
+    await showChromeElement(customerFooter);
+    await hideChromeElement(riaHeader);
+    await hideChromeElement(riaFooter);
+    await hideChromeElement(alteaHeader);
     await pushCustomerHeaderState(customerHeader);
     if (customerFooter) pushMasterConfig(customerFooter);
   }
