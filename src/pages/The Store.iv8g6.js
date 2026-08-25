@@ -284,6 +284,25 @@ async function loadProducts() {
         context: "public"
       });
 
+    console.log("[Store Page] listStorefrontProducts returned:", {
+      ok: storefrontData?.ok,
+      productCount: Array.isArray(storefrontData?.products)
+        ? storefrontData.products.length
+        : 0,
+      categoryCount: Array.isArray(storefrontData?.categories)
+        ? storefrontData.categories.length
+        : 0,
+      meta: storefrontData?.meta || {}
+    });
+
+    if (storefrontData?.ok === false) {
+      throw new Error(
+        storefrontData?.message ||
+        storefrontData?.error ||
+        "Wix Stores product query returned an error."
+      );
+    }
+
     // --- NEW: Explicitly extract the image URL before sending to HTML ---
     if (storefrontData && Array.isArray(storefrontData.products)) {
       storefrontData.products = storefrontData.products.map((product) => {
