@@ -154,7 +154,7 @@ const MASTER_CONFIG = Object.freeze({
             { label: "About SKANDI Travels", path: "/about" },
             { label: "Newsroom", path: "/about/news-room" },
             { label: "Careers", path: "/about/careers" },
-            { label: "Our Network", path: "/about/our-network" },
+            { label: "Our Network", path: "/about/our-network" }
           ])
         }
       ]),
