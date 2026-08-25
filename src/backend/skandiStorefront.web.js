@@ -5,6 +5,7 @@ import {
 
 import {
   productsV3
+  readOnlyVariantsV3
 } from "@wix/stores";
 
 import {
@@ -1018,7 +1019,229 @@ function normalizeProduct(
   };
 }
 
+/* ==========================================================================
+   CATALOG V3 VARIANT RESOLUTION
+   ========================================================================== */
 
+function normalizeChoiceValue(
+  value
+) {
+  return String(
+    value ||
+    ""
+  )
+    .trim()
+    .toLowerCase();
+}
+
+
+function variantChoiceMap(
+  variant = {}
+) {
+  const map =
+    new Map();
+
+  const choices =
+    Array.isArray(
+      variant.optionChoices
+    )
+      ? variant.optionChoices
+      : [];
+
+  choices.forEach(
+    (choice) => {
+      const names =
+        choice.optionChoiceNames ||
+        {};
+
+      const optionName =
+        normalizeChoiceValue(
+          names.optionName
+        );
+
+      const choiceName =
+        normalizeChoiceValue(
+          names.choiceName
+        );
+
+      if (
+        optionName &&
+        choiceName
+      ) {
+        map.set(
+          optionName,
+          choiceName
+        );
+      }
+    }
+  );
+
+  return map;
+}
+
+
+function variantMatchesChoices(
+  variant,
+  selectedChoices
+) {
+  const entries =
+    Object.entries(
+      selectedChoices ||
+      {}
+    )
+      .filter(
+        ([key, value]) =>
+          String(key || "").trim() &&
+          String(value || "").trim()
+      );
+
+  if (
+    !entries.length
+  ) {
+    return true;
+  }
+
+  const variantChoices =
+    variantChoiceMap(
+      variant
+    );
+
+  return entries.every(
+    ([optionName, choiceName]) => {
+      const optionKey =
+        normalizeChoiceValue(
+          optionName
+        );
+
+      const selectedValue =
+        normalizeChoiceValue(
+          choiceName
+        );
+
+      return (
+        variantChoices.get(
+          optionKey
+        ) ===
+        selectedValue
+      );
+    }
+  );
+}
+
+
+export const resolveStoreVariant =
+  webMethod(
+    Permissions.Anyone,
+
+    async function ({
+      productId,
+      choices = {}
+    } = {}) {
+      const cleanProductId =
+        String(
+          productId ||
+          ""
+        ).trim();
+
+      if (!cleanProductId) {
+        throw new Error(
+          "Product ID is required."
+        );
+      }
+
+      const response =
+        await readOnlyVariantsV3
+          .queryVariants(
+            {
+              filter: {
+                "productData.productId": {
+                  $eq:
+                    cleanProductId
+                }
+              },
+
+              cursorPaging: {
+                limit:
+                  1000
+              }
+            },
+
+            {
+              fields: [
+                "CURRENCY"
+              ]
+            }
+          );
+
+      const variants =
+        Array.isArray(
+          response?.variants
+        )
+          ? response.variants
+          : [];
+
+      if (
+        !variants.length
+      ) {
+        throw new Error(
+          "No purchasable variants were found for this product."
+        );
+      }
+
+      const matchingVariants =
+        variants.filter(
+          (variant) =>
+            variant.visible !==
+              false &&
+            variantMatchesChoices(
+              variant,
+              choices
+            )
+        );
+
+      /*
+       * Prefer an in-stock variant.
+       */
+      const selected =
+        matchingVariants.find(
+          (variant) =>
+            variant
+              ?.inventoryStatus
+              ?.inStock !== false
+        ) ||
+        matchingVariants[0];
+
+      if (!selected) {
+        return {
+          ok:
+            false,
+
+          message:
+            "That combination is currently unavailable."
+        };
+      }
+
+      return {
+        ok:
+          true,
+
+        productId:
+          cleanProductId,
+
+        variantId:
+          selected.variantId,
+
+        sku:
+          selected.sku ||
+          "",
+
+        inStock:
+          selected
+            ?.inventoryStatus
+            ?.inStock !== false
+      };
+    }
+  );
 /* ==========================================================================
    PRODUCT QUERY
    ========================================================================== */
