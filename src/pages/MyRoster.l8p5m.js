@@ -1,7 +1,7 @@
 import wixLocation from "wix-location";
 import { authentication } from "wix-members-frontend";
-import { getStaffPortalSession } from "src/backend/RIA/staffPortalAuth.web";
-import { runInternalGlobalSearch } from "src/backend/FINAL/internalChrome.web";
+import { getStaffPortalSession } from "backend/RIA/staffPortalAuth.web";
+import { runInternalGlobalSearch } from "backend/FINAL/internalChrome.web";
 import {
   getMyRosterBootstrap,
   getMyRosterBoard,
@@ -13,7 +13,7 @@ import {
   createTripTradeDrop,
   requestTripTradePickup,
   createPayrollRosterExport
-} from "src/backend/ROSTER/myRoster.web";
+} from "backend/ROSTER/myRoster.web";
 
 const EMBED = "#myRosterEmbed";
 const EMBED_SOURCE = "SKANDI_MYROSTER_EMBED";
