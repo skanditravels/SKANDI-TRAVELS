@@ -1,4 +1,4 @@
-// Page: /riaintra/altea/grouptalk
+// Page: /riaintra/success-factors/altea/grouptalk
 // HTML Component: #htmlGroupTalk
 // Custom Element: #groupTalkVoiceBridge
 //
