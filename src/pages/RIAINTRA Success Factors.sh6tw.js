@@ -1,4 +1,4 @@
-// pages/successfactors-profile-sync.js
+// pages/successfactors-profile-sync-v3.js
 // Page URL: /riaintra/success-factors
 // HTML Embed ID: #staffHrEmbed
 
@@ -588,6 +588,7 @@ async function handleMessage(
   switch (
     message.type
   ) {
+    case "HR_READY":
     case "INTRANET_READY":
     case "INTRANET_REFRESH":
 
@@ -613,6 +614,7 @@ async function handleMessage(
       return true;
 
 
+    case "INTRANET_COLLEAGUES_REQUEST":
     case "INTRANET_SEARCH_COLLEAGUES":
 
       await searchColleagues(
