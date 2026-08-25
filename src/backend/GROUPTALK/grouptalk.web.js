@@ -325,6 +325,19 @@ async function startRealtimeSession(agent,group){
   const sessionKey=`GT-RT-${opaque()}`;
   const topic=await ensureTopic(group);
   const livekitIdentity=`${clean(agent.sk_id||agent.id,80)}-${randomPart(8)}`;
+  const stamp=now();
+
+  const previous=await restRequest({
+    table:T.sessions,
+    query:{select:"id,payload,status",agent_user_id:`eq.${agent.id}`,status:"eq.online",limit:100}
+  }).catch(()=>[]);
+
+  for(const item of Array.isArray(previous)?previous:[]){
+    const p=obj(item.payload);
+    if(p.groupId===group.id || p.groupKey===group.group_key){
+      await restRequest({table:T.sessions,method:"PATCH",query:{id:`eq.${item.id}`},body:{status:"offline",left_at:stamp,updated_at:stamp},prefer:"return=minimal"}).catch(()=>null)
+    }
+  }
 
   await restRequest({
     table:T.sessions,
@@ -339,7 +352,7 @@ async function startRealtimeSession(agent,group){
       livekit_room:group.livekit_room||null,
       livekit_identity:livekitIdentity,
       status:"online",
-      joined_at:now(),
+      joined_at:stamp,
       left_at:null,
       payload:{
         provider:"supabase-realtime",
@@ -349,8 +362,8 @@ async function startRealtimeSession(agent,group){
         role:agent.role||agent.position||"",
         base:agent.base||agent.station||""
       },
-      created_at:now(),
-      updated_at:now()
+      created_at:stamp,
+      updated_at:stamp
     },
     prefer:"return=minimal"
   });
