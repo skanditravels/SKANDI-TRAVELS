@@ -19,7 +19,7 @@ const CHROME_SOURCE = "SKANDI_INTERNAL_CHROME";
 const PARENT_SOURCE = "SKANDI_WIX_PARENT";
 const LOGIN_PATH = "/riaintra";
 const HOME_PATH = "/";
-import { bindInternalHtmlBridge } from 'src/public/internalHtmlBridge';
+import { bindInternalHtmlBridge } from "public/internalHtmlBridge";
 import {
   getHrSession,
   listStaff,
