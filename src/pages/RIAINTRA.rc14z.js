@@ -1,300 +1,602 @@
-// pages/staff-login.js
-// HTML Embed ID: #staffLoginEmbed
+// pages/staff-portal-intranet-with-chrome.js
+// Page URL: /riaintra/staff-portal
+// Dashboard HTML Embed ID: #staffDashboardEmbed
+// Global Staff Chrome HTML Embed ID: #staffInternalChromeEmbed
 
-import wixLocationFrontend from "wix-location-frontend";
-import { authentication } from "wix-members-frontend";
+import wixLocation from "wix-location";
+
 import {
-  loginStaffWithSkId,
+  authentication
+} from "wix-members-frontend";
+
+import {
   getStaffPortalSession
 } from "backend/RIA/staffPortalAuth.web";
 
-const EMBED_ID = "#staffLoginEmbed";
-const CHILD_SOURCE = "SKANDI_STAFF_LOGIN";
-const PARENT_SOURCE = "SKANDI_WIX_PARENT";
-const STAFF_DASHBOARD_PATH = "/riaintra/success-factors";
-const SK_ID_PATTERN = /^[A-Z]{2}[0-9]{4}$/;
+import {
+  getIntranetHomeData
+} from "backend/RIA/staffIntranet.web";
 
-let html;
-let actionInProgress = false;
-let redirecting = false;
+import {
+  getMyStaffProfile,
+  updateMyStaffProfile,
+  searchStaffDirectory
+} from "backend/RIA/staffProfile.web";
+
+import {
+  runInternalGlobalSearch
+} from "backend/FINAL/internalChrome.web";
+
+
+const DASHBOARD_EMBED_ID =
+  "#staffLoginEmbed";
+
+const CHROME_EMBED_ID =
+  "#staffInternalChromeEmbed";
+
+const STAFF_LOGIN_PATH =
+  "/riaintra";
+
+const HOME_PATH =
+  "/";
+
+const ALLOWED_PATH_PREFIXES = [
+  "/riaintra",
+  "/altea"
+];
+
+let lastChromeProfile =
+  {};
+
+let lastChromeApps =
+  [];
+
+let dashboardHtml;
+let chromeHtml;
+
+
+/* ==========================================================================
+   INIT
+   ========================================================================== */
 
 $w.onReady(function () {
-  html = $w(EMBED_ID);
-  html.onMessage(handleEmbedMessage);
+  dashboardHtml =
+    $w(
+      DASHBOARD_EMBED_ID
+    );
+
+  chromeHtml =
+    $w(
+      CHROME_EMBED_ID
+    );
+
+  dashboardHtml.onMessage(
+    async (event) => {
+      await handleMessage(
+        event
+      );
+    }
+  );
+
+  chromeHtml.onMessage(
+    async (event) => {
+      await handleMessage(
+        event
+      );
+    }
+  );
 });
 
-async function handleEmbedMessage(event) {
-  const msg = event?.data || {};
 
-  if (msg.source !== CHILD_SOURCE) return;
+/* ==========================================================================
+   MESSAGE ROUTER
+   ========================================================================== */
 
-  const payload = isRecord(msg.payload) ? msg.payload : {};
-  const requestId = cleanRequestId(msg.requestId);
+async function handleMessage(
+  event
+) {
+  const msg =
+    event.data ||
+    {};
+
+  const payload =
+    msg.payload ||
+    {};
 
   try {
-    if (msg.type === "STAFF_LOGIN_READY") {
-      const session = unwrapResult(await getStaffPortalSession());
-
-      if (session?.loggedIn === true && session?.authorized === true) {
-        redirectToDashboard();
-      }
+    if (
+      msg.source ===
+      "SKANDI_INTERNAL_CHROME"
+    ) {
+      await handleInternalChrome(
+        msg,
+        payload
+      );
 
       return;
     }
 
-    if (msg.type === "STAFF_LOGIN_REQUEST") {
-      await handleLoginRequest(payload, requestId);
-      return;
-    }
-
-    if (msg.type === "STAFF_FORGOT_PASSWORD") {
-      await handleForgotPassword(requestId);
-    }
-  } catch (err) {
-    postToEmbed("STAFF_LOGIN_ERROR", {
-      message: cleanError(err)
-    }, requestId);
-  }
-}
-
-async function handleLoginRequest(payload, requestId) {
-  if (actionInProgress) {
-    throw new PublicError("A sign-in action is already in progress.");
-  }
-
-  const skId = cleanSkId(payload.skId);
-  const password =
-    typeof payload.password === "string" ? payload.password : "";
-
-  if (!SK_ID_PATTERN.test(skId)) {
-    throw new PublicError(
-      "Enter a valid SK-ID in the AA0000 format."
-    );
-  }
-
-  if (!password.trim()) {
-    throw new PublicError("Enter your password.");
-  }
-
-  if (password.length > 256) {
-    throw new PublicError("The password is too long.");
-  }
-
-  actionInProgress = true;
-  let loginSucceeded = false;
-
-  try {
-    postToEmbed("STAFF_LOGIN_PROGRESS", {
-      message: "Validating SK-ID..."
-    }, requestId);
-
-    const result = unwrapResult(
-      await loginStaffWithSkId({
-        skId,
-        password
-      })
-    );
-
-    if (result?.success === false) {
-      throw new Error(
-        String(result?.message || result?.error || "Login failed.")
-      );
-    }
-
-    if (result?.authorized === false) {
-      throw new PublicError(
-        "This account is not authorized for the staff portal."
-      );
-    }
-
-    const sessionToken =
-      String(result?.sessionToken || "").trim();
-
-    if (!sessionToken) {
-      throw new Error(
-        "The authentication service did not return a session token."
-      );
-    }
-
-    postToEmbed("STAFF_LOGIN_PROGRESS", {
-      message: "Signing in..."
-    }, requestId);
-
-    await authentication.applySessionToken(sessionToken);
-    loginSucceeded = true;
-
-    postToEmbed("STAFF_LOGIN_OK", {
-      message: "Signed in. Opening staff portal..."
-    }, requestId);
-
-    setTimeout(redirectToDashboard, 600);
-  } finally {
-    if (!loginSucceeded) {
-      actionInProgress = false;
-    }
-  }
-}
-
-async function handleForgotPassword(requestId) {
-  if (actionInProgress) {
-    throw new PublicError("A sign-in action is already in progress.");
-  }
-
-  actionInProgress = true;
-
-  try {
-    postToEmbed("STAFF_LOGIN_PROGRESS", {
-      message: "Opening password reset..."
-    }, requestId);
-
-    try {
-      await authentication.promptForgotPassword();
-    } catch (err) {
-      if (isCancellation(err)) {
-        postToEmbed("STAFF_LOGIN_NOTICE", {
-          message: "Password reset was closed."
-        }, requestId);
+    if (
+      msg.source ===
+      "SKANDI_STAFF_DASHBOARD_INTRANET"
+    ) {
+      if (
+        msg.type ===
+          "INTRANET_READY" ||
+        msg.type ===
+          "INTRANET_REFRESH"
+      ) {
+        await bootstrap();
 
         return;
       }
 
-      throw err;
+      if (
+        msg.type ===
+        "INTRANET_NAVIGATE"
+      ) {
+        openStaffPath(
+          String(
+            payload.path ||
+            ""
+          ).trim()
+        );
+
+        return;
+      }
+
+      if (
+        msg.type ===
+        "INTRANET_SAVE_PROFILE"
+      ) {
+        const result =
+          await updateMyStaffProfile({
+            profile:
+              payload.profile ||
+              {}
+          });
+
+        post(
+          dashboardHtml,
+          "INTRANET_PROFILE_SAVED",
+          result
+        );
+
+        /*
+         * Immediately rebroadcast the same authoritative profile to
+         * dashboard + global chrome.
+         */
+        await bootstrap();
+
+        return;
+      }
+
+      if (
+        msg.type ===
+        "INTRANET_SEARCH_COLLEAGUES"
+      ) {
+        const result =
+          await searchStaffDirectory({
+            query:
+              payload.query ||
+              ""
+          });
+
+        post(
+          dashboardHtml,
+          "INTRANET_COLLEAGUES",
+          result
+        );
+
+        return;
+      }
+
+      if (
+        msg.type ===
+        "STAFF_SIGNOUT_REQUEST"
+      ) {
+        await signOutHome();
+
+        return;
+      }
     }
 
-    postToEmbed("STAFF_LOGIN_NOTICE", {
-      message:
-        "If the account exists, password reset instructions will be sent by Wix."
-    }, requestId);
-  } finally {
-    actionInProgress = false;
+    if (
+      msg.source ===
+      "SKANDI_STAFF_DASHBOARD"
+    ) {
+      if (
+        msg.type ===
+        "STAFF_DASHBOARD_READY"
+      ) {
+        const session =
+          await getStaffPortalSession();
+
+        if (
+          !session.loggedIn ||
+          !session.authorized
+        ) {
+          post(
+            dashboardHtml,
+            "STAFF_DASHBOARD_SESSION",
+            session
+          );
+
+          wixLocation.to(
+            STAFF_LOGIN_PATH
+          );
+
+          return;
+        }
+
+        post(
+          dashboardHtml,
+          "STAFF_DASHBOARD_SESSION",
+          session
+        );
+
+        return;
+      }
+
+      if (
+        msg.type ===
+        "STAFF_DASHBOARD_UNAUTHORIZED"
+      ) {
+        wixLocation.to(
+          STAFF_LOGIN_PATH
+        );
+
+        return;
+      }
+
+      if (
+        msg.type ===
+        "STAFF_OPEN_APP"
+      ) {
+        openStaffPath(
+          String(
+            payload.path ||
+            ""
+          ).trim()
+        );
+
+        return;
+      }
+
+      if (
+        msg.type ===
+        "STAFF_SIGNOUT_REQUEST"
+      ) {
+        await signOutHome();
+
+        return;
+      }
+    }
+  } catch (err) {
+    post(
+      dashboardHtml,
+      "INTRANET_ERROR",
+      {
+        message:
+          cleanError(
+            err
+          )
+      }
+    );
+
+    post(
+      dashboardHtml,
+      "STAFF_DASHBOARD_ERROR",
+      {
+        message:
+          cleanError(
+            err
+          )
+      }
+    );
+
+    post(
+      chromeHtml,
+      "INTERNAL_SEARCH_RESULTS",
+      {
+        results:
+          []
+      }
+    );
   }
 }
 
-function postToEmbed(type, payload = {}, requestId = "") {
-  const message = {
-    source: PARENT_SOURCE,
+
+/* ==========================================================================
+   BOOTSTRAP
+   ========================================================================== */
+
+async function bootstrap() {
+  const session =
+    await getStaffPortalSession();
+
+  if (
+    !session.loggedIn ||
+    !session.authorized
+  ) {
+    wixLocation.to(
+      STAFF_LOGIN_PATH
+    );
+
+    return;
+  }
+
+  const [
+    profileResult,
+    data
+  ] =
+    await Promise.all([
+      getMyStaffProfile(),
+
+      getIntranetHomeData()
+        .catch(
+          () => ({
+            news:
+              [],
+            stats:
+              {}
+          })
+        )
+    ]);
+
+  /*
+   * THIS is now the profile source of truth used everywhere.
+   */
+  const profile =
+    profileResult.profile ||
+    session.profile ||
+    session.staff ||
+    {};
+
+  lastChromeProfile =
+    profile;
+
+  lastChromeApps =
+    data.apps ||
+    session.apps ||
+    [];
+
+  sendChrome(
+    "RIAINTRA Dashboard",
+    lastChromeProfile,
+    lastChromeApps
+  );
+
+  post(
+    dashboardHtml,
+    "INTRANET_BOOTSTRAP",
+    {
+      profile,
+
+      apps:
+        lastChromeApps,
+
+      news:
+        data.news ||
+        [],
+
+      stats:
+        data.stats ||
+        {}
+    }
+  );
+}
+
+
+/* ==========================================================================
+   INTERNAL CHROME
+   ========================================================================== */
+
+async function handleInternalChrome(
+  msg,
+  payload = {}
+) {
+  if (
+    msg.type ===
+    "INTERNAL_CHROME_READY"
+  ) {
+    sendChrome(
+      "RIAINTRA Dashboard",
+      lastChromeProfile,
+      lastChromeApps
+    );
+
+    return;
+  }
+
+  if (
+    msg.type ===
+    "INTERNAL_NAVIGATE"
+  ) {
+    openStaffPath(
+      String(
+        payload.path ||
+        ""
+      ).trim()
+    );
+
+    return;
+  }
+
+  if (
+    msg.type ===
+    "INTERNAL_LOGOUT"
+  ) {
+    await signOutHome();
+
+    return;
+  }
+
+  if (
+    msg.type ===
+    "INTERNAL_GLOBAL_SEARCH"
+  ) {
+    const result =
+      await runInternalGlobalSearch(
+        payload.query ||
+        ""
+      );
+
+    post(
+      chromeHtml,
+      "INTERNAL_SEARCH_RESULTS",
+      result
+    );
+  }
+}
+
+
+function sendChrome(
+  pageName,
+  profile = {},
+  apps = []
+) {
+  post(
+    chromeHtml,
+    "INTERNAL_CHROME_BOOTSTRAP",
+    {
+      pageName,
+
+      pagePath:
+        "/" +
+        wixLocation.path.join(
+          "/"
+        ),
+
+      pageSubtitle:
+        "SKANDI internal staff system",
+
+      profile,
+
+      apps,
+
+      isAltea:
+        wixLocation.path
+          .join(
+            "/"
+          )
+          .includes(
+            "altea"
+          )
+    }
+  );
+}
+
+
+/* ==========================================================================
+   NAVIGATION / LOGOUT
+   ========================================================================== */
+
+function openStaffPath(
+  path
+) {
+  if (!path) {
+    throw new Error(
+      "Missing staff destination."
+    );
+  }
+
+  const isAllowed =
+    ALLOWED_PATH_PREFIXES.some(
+      (prefix) =>
+        path ===
+          prefix ||
+        path.startsWith(
+          `${prefix}/`
+        )
+    );
+
+  if (!isAllowed) {
+    throw new Error(
+      "Invalid staff destination."
+    );
+  }
+
+  wixLocation.to(
+    path
+  );
+}
+
+
+async function signOutHome() {
+  await authentication.logout();
+
+  wixLocation.to(
+    HOME_PATH
+  );
+}
+
+
+/* ==========================================================================
+   PARENT BRIDGE
+   ========================================================================== */
+
+function post(
+  html,
+  type,
+  payload = {}
+) {
+  if (!html) {
+    return;
+  }
+
+  html.postMessage({
+    source:
+      "SKANDI_WIX_PARENT",
+
     type,
+
     payload,
-    timestamp: new Date().toISOString()
+
+    timestamp:
+      new Date()
+        .toISOString()
+  });
+}
+
+
+function cleanError(
+  err
+) {
+  const msg =
+    String(
+      err?.message ||
+      err ||
+      ""
+    ).trim();
+
+  const map = {
+    STAFF_PROFILE_AUTH_REQUIRED:
+      "Your session has expired. Please sign in again.",
+
+    STAFF_PROFILE_NOT_FOUND:
+      "An account with this SK-ID or password could not be found.",
+
+    STAFF_PROFILE_AGENT_ID_MISSING:
+      "Your employee profile is not linked correctly."
   };
 
-  if (requestId) {
-    message.requestId = requestId;
-  }
-
-  html.postMessage(message);
-}
-
-function redirectToDashboard() {
-  if (redirecting) return;
-
-  redirecting = true;
-  wixLocationFrontend.to(STAFF_DASHBOARD_PATH);
-}
-
-function cleanSkId(value) {
-  return String(value || "")
-    .toUpperCase()
-    .replace(/[^A-Z0-9]/g, "")
-    .slice(0, 6);
-}
-
-function cleanRequestId(value) {
-  return typeof value === "string"
-    ? value.slice(0, 100)
-    : "";
-}
-
-function unwrapResult(value) {
-  if (!isRecord(value)) return value;
-
   if (
-    Object.prototype.hasOwnProperty.call(value, "sessionToken") ||
-    Object.prototype.hasOwnProperty.call(value, "loggedIn") ||
-    Object.prototype.hasOwnProperty.call(value, "authorized")
+    map[msg]
   ) {
-    return value;
+    return map[msg];
   }
 
-  for (const key of ["payload", "data", "result"]) {
-    if (isRecord(value[key])) {
-      return value[key];
-    }
-  }
-
-  return value;
-}
-
-function isRecord(value) {
-  return (
-    value !== null &&
-    typeof value === "object" &&
-    !Array.isArray(value)
-  );
-}
-
-function isCancellation(err) {
-  const text =
-    String(err?.message || err || "").toLowerCase();
-
-  return (
-    text.includes("cancel") ||
-    text.includes("closed")
-  );
-}
-
-function cleanError(err) {
-  if (err instanceof PublicError) {
-    return err.message;
-  }
-
-  const text = [
-    err?.code,
-    err?.message,
-    err
-  ]
-    .map((value) => String(value || "").toLowerCase())
-    .join(" ");
-
-  if (
-    text.includes("invalid credential") ||
-    text.includes("incorrect password") ||
-    text.includes("wrong password") ||
-    text.includes("member not found")
-  ) {
-    return "The SK-ID or password is incorrect.";
+  if (!msg) {
+    return "Something went wrong.";
   }
 
   if (
-    text.includes("not authorized") ||
-    text.includes("access denied") ||
-    text.includes("forbidden")
+    msg.length >
+    220
   ) {
-    return "This account is not authorized for the staff portal.";
+    return "Something went wrong.";
   }
 
-  if (
-    text.includes("too many") ||
-    text.includes("rate limit") ||
-    text.includes("throttl")
-  ) {
-    return "Too many sign-in attempts. Please wait and try again.";
-  }
-
-  if (
-    text.includes("network") ||
-    text.includes("timeout") ||
-    text.includes("fetch")
-  ) {
-    return "The sign-in service could not be reached. Please try again.";
-  }
-
-  return "Unable to sign in. Please try again.";
-}
-
-class PublicError extends Error {
-  constructor(message) {
-    super(message);
-    this.name = "PublicError";
-  }
+  return msg;
 }
