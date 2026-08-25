@@ -1,507 +1,602 @@
-import {
-  secrets
-} from "wix-secrets-backend.v2";
+// pages/staff-portal-intranet-with-chrome.js
+// Page URL: /riaintra/staff-portal
+// Dashboard HTML Embed ID: #staffDashboardEmbed
+// Global Staff Chrome HTML Embed ID: #staffInternalChromeEmbed
+
+import wixLocation from "wix-location";
 
 import {
-  elevate
-} from "wix-auth";
+  authentication
+} from "wix-members-frontend";
 
 import {
-  fetch
-} from "wix-fetch";
+  getStaffPortalSession
+} from "backend/RIA/staffPortalAuth.web";
+
+import {
+  getIntranetHomeData
+} from "backend/RIA/staffIntranet.web";
+
+import {
+  getMyStaffProfile,
+  updateMyStaffProfile,
+  searchStaffDirectory
+} from "backend/RIA/staffProfile.web";
+
+import {
+  runInternalGlobalSearch
+} from "backend/FINAL/internalChrome.web";
 
 
-const elevatedGetSecretValue =
-  elevate(
-    secrets.getSecretValue
+const DASHBOARD_EMBED_ID =
+  "#staffLoginEmbed";
+
+const CHROME_EMBED_ID =
+  "#staffInternalChromeEmbed";
+
+const STAFF_LOGIN_PATH =
+  "/riaintra";
+
+const HOME_PATH =
+  "/";
+
+const ALLOWED_PATH_PREFIXES = [
+  "/riaintra",
+  "/altea"
+];
+
+let lastChromeProfile =
+  {};
+
+let lastChromeApps =
+  [];
+
+let dashboardHtml;
+let chromeHtml;
+
+
+/* ==========================================================================
+   INIT
+   ========================================================================== */
+
+$w.onReady(function () {
+  dashboardHtml =
+    $w(
+      DASHBOARD_EMBED_ID
+    );
+
+  chromeHtml =
+    $w(
+      CHROME_EMBED_ID
+    );
+
+  dashboardHtml.onMessage(
+    async (event) => {
+      await handleMessage(
+        event
+      );
+    }
   );
 
-
-let configurationPromise =
-  null;
-
-
-const INTERNAL_TABLES =
-  new Set([
-    "agent_users",
-    "staff_login_audit",
-    "admin_audit_logs",
-
-    "staff_payroll_profiles",
-    "staff_payroll_periods",
-    "staff_payroll_runs",
-    "staff_payroll_run_lines",
-
-    "uniform_categories",
-    "uniform_catalog_items",
-    "uniform_allowance_rules",
-    "uniform_wallets",
-    "uniform_wallet_ledger",
-    "uniform_orders",
-    "uniform_order_items",
-    "uniform_policies",
-    "uniform_policy_acknowledgements",
-    "uniform_audit",
-
-    "grouptalk_groups",
-    "grouptalk_group_members",
-    "grouptalk_phonebook",
-    "grouptalk_ticket_categories",
-    "grouptalk_tickets",
-    "grouptalk_ticket_replies",
-    "grouptalk_locations",
-    "grouptalk_history",
-    "grouptalk_realtime_sessions",
-    "grouptalk_audit",
-
-    "inventory_flight_legs",
-    "inventory_flight_classes",
-    "inventory_schedule_lines",
-    "inventory_nesting_controls",
-    "hotel_allocations",
-    "tour_activity_inventory",
-    "partner_ticket_inventory",
-    "travel_products",
-    "travel_product_components",
-    "travel_product_price_cache",
-    "master_inventory_audit",
-    "altea_offer_cache",
-    "amadeus_offer_cache",
-
-    "career_applicant_accounts",
-    "career_applicant_access_codes",
-    "career_applicant_sessions",
-    "career_application_files",
-    "career_positions",
-
-    "document_acknowledgements",
-    "document_packet_items",
-    "document_packets",
-    "document_templates"
-  ]);
+  chromeHtml.onMessage(
+    async (event) => {
+      await handleMessage(
+        event
+      );
+    }
+  );
+});
 
 
 /* ==========================================================================
-   SECRETS
+   MESSAGE ROUTER
    ========================================================================== */
 
-function secretString(
-  response
+async function handleMessage(
+  event
 ) {
-  if (
-    typeof response ===
-    "string"
-  ) {
-    return response.trim();
-  }
+  const msg =
+    event.data ||
+    {};
 
-  return String(
-    response?.value ??
-    response?.secretValue ??
-    response?.secret?.value ??
-    ""
-  ).trim();
-}
-
-
-async function getSecret(
-  name
-) {
-  const response =
-    await elevatedGetSecretValue(
-      name
-    );
-
-  const value =
-    secretString(
-      response
-    );
-
-  if (
-    !value
-  ) {
-    throw new Error(
-      `WIX_SECRET_EMPTY_${name}`
-    );
-  }
-
-  return value;
-}
-
-
-/* ==========================================================================
-   CONFIGURATION
-   ========================================================================== */
-
-async function getConfiguration() {
-  if (
-    configurationPromise
-  ) {
-    return configurationPromise;
-  }
-
-
-  configurationPromise =
-    (async () => {
-
-      const baseUrl =
-        await getSecret(
-          "SUPABASE_URL"
-        );
-
-
-      let apiKey =
-        "";
-
-      let keyType =
-        "";
-
-
-      /*
-       * Prefer the modern Supabase secret key.
-       */
-      try {
-        apiKey =
-          await getSecret(
-            "SUPABASE_SECRET_KEY"
-          );
-
-        keyType =
-          apiKey.startsWith(
-            "sb_secret_"
-          )
-            ? "secret"
-            : "legacy";
-
-      } catch (_) {
-
-        /*
-         * Fallback for the legacy JWT-based service_role key.
-         */
-        apiKey =
-          await getSecret(
-            "SUPABASE_SERVICE_ROLE_KEY"
-          );
-
-        keyType =
-          "legacy";
-      }
-
-
-      if (
-        !/^https:\/\/[^/]+\.supabase\.co\/?$/i.test(
-          baseUrl
-        )
-      ) {
-        throw new Error(
-          "SUPABASE_URL_INVALID"
-        );
-      }
-
-
-      if (
-        !apiKey
-      ) {
-        throw new Error(
-          "SUPABASE_SERVER_KEY_MISSING"
-        );
-      }
-
-
-      return {
-        baseUrl:
-          baseUrl.replace(
-            /\/+$/,
-            ""
-          ),
-
-        apiKey,
-
-        keyType
-      };
-
-    })();
-
+  const payload =
+    msg.payload ||
+    {};
 
   try {
-    return await configurationPromise;
-
-  } catch (error) {
-
-    configurationPromise =
-      null;
-
-    throw error;
-  }
-}
-
-
-/* ==========================================================================
-   QUERY BUILDER
-   ========================================================================== */
-
-function makeQuery(
-  query = {}
-) {
-  const output =
-    Object.entries(
-      query
-    )
-      .filter(
-        ([, value]) =>
-          value !==
-            undefined &&
-          value !==
-            null &&
-          value !==
-            ""
-      )
-      .map(
-        ([
-          key,
-          value
-        ]) =>
-          `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`
-      )
-      .join(
-        "&"
+    if (
+      msg.source ===
+      "SKANDI_INTERNAL_CHROME"
+    ) {
+      await handleInternalChrome(
+        msg,
+        payload
       );
 
+      return;
+    }
 
-  return output
-    ? `?${output}`
-    : "";
-}
+    if (
+      msg.source ===
+      "SKANDI_STAFF_DASHBOARD_INTRANET"
+    ) {
+      if (
+        msg.type ===
+          "INTRANET_READY" ||
+        msg.type ===
+          "INTRANET_REFRESH"
+      ) {
+        await bootstrap();
 
-
-/* ==========================================================================
-   HEADERS
-   ========================================================================== */
-
-function buildHeaders({
-  apiKey,
-  keyType,
-  prefer
-}) {
-  const headers = {
-    apikey:
-      apiKey,
-
-    Accept:
-      "application/json",
-
-    "Content-Type":
-      "application/json",
-
-    Prefer:
-      prefer
-  };
-
-
-  /*
-   * IMPORTANT:
-   *
-   * Modern sb_secret_... keys are API keys, not JWTs.
-   * They must NOT be sent as Authorization: Bearer.
-   *
-   * Legacy service_role keys are JWTs and may be sent
-   * through both apikey and Authorization.
-   */
-  if (
-    keyType ===
-    "legacy"
-  ) {
-    headers.Authorization =
-      `Bearer ${apiKey}`;
-  }
-
-
-  return headers;
-}
-
-
-/* ==========================================================================
-   SUPABASE REST
-   ========================================================================== */
-
-export async function restRequest({
-  table,
-  method = "GET",
-  query = {},
-  body,
-  prefer = "return=representation"
-}) {
-
-  if (
-    !INTERNAL_TABLES.has(
-      table
-    )
-  ) {
-    throw new Error(
-      "SUPABASE_TABLE_NOT_ALLOWED"
-    );
-  }
-
-
-  const {
-    baseUrl,
-    apiKey,
-    keyType
-  } =
-    await getConfiguration();
-
-
-  const url =
-    `${baseUrl}/rest/v1/${table}${makeQuery(query)}`;
-
-
-  const response =
-    await fetch(
-      url,
-      {
-        method,
-
-        headers:
-          buildHeaders({
-            apiKey,
-            keyType,
-            prefer
-          }),
-
-        body:
-          body ===
-          undefined
-            ? undefined
-            : JSON.stringify(
-                body
-              )
+        return;
       }
-    );
 
-
-  const raw =
-    await response.text();
-
-
-  let payload =
-    null;
-
-
-  if (
-    raw
-  ) {
-    try {
-
-      payload =
-        JSON.parse(
-          raw
+      if (
+        msg.type ===
+        "INTRANET_NAVIGATE"
+      ) {
+        openStaffPath(
+          String(
+            payload.path ||
+            ""
+          ).trim()
         );
 
-    } catch (_) {
+        return;
+      }
 
-      console.error(
-        "[Supabase] Invalid JSON response",
-        {
-          table,
-          method,
-          status:
-            response.status
-        }
-      );
+      if (
+        msg.type ===
+        "INTRANET_SAVE_PROFILE"
+      ) {
+        const result =
+          await updateMyStaffProfile({
+            profile:
+              payload.profile ||
+              {}
+          });
 
-      throw new Error(
-        "SUPABASE_INVALID_RESPONSE"
-      );
+        post(
+          dashboardHtml,
+          "INTRANET_PROFILE_SAVED",
+          result
+        );
+
+        /*
+         * Immediately rebroadcast the same authoritative profile to
+         * dashboard + global chrome.
+         */
+        await bootstrap();
+
+        return;
+      }
+
+      if (
+        msg.type ===
+        "INTRANET_SEARCH_COLLEAGUES"
+      ) {
+        const result =
+          await searchStaffDirectory({
+            query:
+              payload.query ||
+              ""
+          });
+
+        post(
+          dashboardHtml,
+          "INTRANET_COLLEAGUES",
+          result
+        );
+
+        return;
+      }
+
+      if (
+        msg.type ===
+        "STAFF_SIGNOUT_REQUEST"
+      ) {
+        await signOutHome();
+
+        return;
+      }
     }
-  }
 
+    if (
+      msg.source ===
+      "SKANDI_STAFF_DASHBOARD"
+    ) {
+      if (
+        msg.type ===
+        "STAFF_DASHBOARD_READY"
+      ) {
+        const session =
+          await getStaffPortalSession();
 
-  if (
-    !response.ok
-  ) {
+        if (
+          !session.loggedIn ||
+          !session.authorized
+        ) {
+          post(
+            dashboardHtml,
+            "STAFF_DASHBOARD_SESSION",
+            session
+          );
 
-    console.error(
-      "[Supabase]",
+          wixLocation.to(
+            STAFF_LOGIN_PATH
+          );
+
+          return;
+        }
+
+        post(
+          dashboardHtml,
+          "STAFF_DASHBOARD_SESSION",
+          session
+        );
+
+        return;
+      }
+
+      if (
+        msg.type ===
+        "STAFF_DASHBOARD_UNAUTHORIZED"
+      ) {
+        wixLocation.to(
+          STAFF_LOGIN_PATH
+        );
+
+        return;
+      }
+
+      if (
+        msg.type ===
+        "STAFF_OPEN_APP"
+      ) {
+        openStaffPath(
+          String(
+            payload.path ||
+            ""
+          ).trim()
+        );
+
+        return;
+      }
+
+      if (
+        msg.type ===
+        "STAFF_SIGNOUT_REQUEST"
+      ) {
+        await signOutHome();
+
+        return;
+      }
+    }
+  } catch (err) {
+    post(
+      dashboardHtml,
+      "INTRANET_ERROR",
       {
-        table,
-        method,
-        status:
-          response.status
+        message:
+          cleanError(
+            err
+          )
       }
     );
 
+    post(
+      dashboardHtml,
+      "STAFF_DASHBOARD_ERROR",
+      {
+        message:
+          cleanError(
+            err
+          )
+      }
+    );
 
-    throw new Error(
-      `SUPABASE_HTTP_${response.status}`
+    post(
+      chromeHtml,
+      "INTERNAL_SEARCH_RESULTS",
+      {
+        results:
+          []
+      }
     );
   }
-
-
-  return payload;
 }
 
 
 /* ==========================================================================
-   ADMIN AUDIT
+   BOOTSTRAP
    ========================================================================== */
 
-export async function writeAdminAudit({
-  actorId,
-  action,
-  targetMember = null,
-  before = null,
-  after = null
-}) {
+async function bootstrap() {
+  const session =
+    await getStaffPortalSession();
 
   if (
-    !actorId ||
-    !action
+    !session.loggedIn ||
+    !session.authorized
   ) {
+    wixLocation.to(
+      STAFF_LOGIN_PATH
+    );
+
+    return;
+  }
+
+  const [
+    profileResult,
+    data
+  ] =
+    await Promise.all([
+      getMyStaffProfile(),
+
+      getIntranetHomeData()
+        .catch(
+          () => ({
+            news:
+              [],
+            stats:
+              {}
+          })
+        )
+    ]);
+
+  /*
+   * THIS is now the profile source of truth used everywhere.
+   */
+  const profile =
+    profileResult.profile ||
+    session.profile ||
+    session.staff ||
+    {};
+
+  lastChromeProfile =
+    profile;
+
+  lastChromeApps =
+    data.apps ||
+    session.apps ||
+    [];
+
+  sendChrome(
+    "RIAINTRA Dashboard",
+    lastChromeProfile,
+    lastChromeApps
+  );
+
+  post(
+    dashboardHtml,
+    "INTRANET_BOOTSTRAP",
+    {
+      profile,
+
+      apps:
+        lastChromeApps,
+
+      news:
+        data.news ||
+        [],
+
+      stats:
+        data.stats ||
+        {}
+    }
+  );
+}
+
+
+/* ==========================================================================
+   INTERNAL CHROME
+   ========================================================================== */
+
+async function handleInternalChrome(
+  msg,
+  payload = {}
+) {
+  if (
+    msg.type ===
+    "INTERNAL_CHROME_READY"
+  ) {
+    sendChrome(
+      "RIAINTRA Dashboard",
+      lastChromeProfile,
+      lastChromeApps
+    );
+
+    return;
+  }
+
+  if (
+    msg.type ===
+    "INTERNAL_NAVIGATE"
+  ) {
+    openStaffPath(
+      String(
+        payload.path ||
+        ""
+      ).trim()
+    );
+
+    return;
+  }
+
+  if (
+    msg.type ===
+    "INTERNAL_LOGOUT"
+  ) {
+    await signOutHome();
+
+    return;
+  }
+
+  if (
+    msg.type ===
+    "INTERNAL_GLOBAL_SEARCH"
+  ) {
+    const result =
+      await runInternalGlobalSearch(
+        payload.query ||
+        ""
+      );
+
+    post(
+      chromeHtml,
+      "INTERNAL_SEARCH_RESULTS",
+      result
+    );
+  }
+}
+
+
+function sendChrome(
+  pageName,
+  profile = {},
+  apps = []
+) {
+  post(
+    chromeHtml,
+    "INTERNAL_CHROME_BOOTSTRAP",
+    {
+      pageName,
+
+      pagePath:
+        "/" +
+        wixLocation.path.join(
+          "/"
+        ),
+
+      pageSubtitle:
+        "SKANDI internal staff system",
+
+      profile,
+
+      apps,
+
+      isAltea:
+        wixLocation.path
+          .join(
+            "/"
+          )
+          .includes(
+            "altea"
+          )
+    }
+  );
+}
+
+
+/* ==========================================================================
+   NAVIGATION / LOGOUT
+   ========================================================================== */
+
+function openStaffPath(
+  path
+) {
+  if (!path) {
     throw new Error(
-      "AUDIT_INPUT_INVALID"
+      "Missing staff destination."
     );
   }
 
+  const isAllowed =
+    ALLOWED_PATH_PREFIXES.some(
+      (prefix) =>
+        path ===
+          prefix ||
+        path.startsWith(
+          `${prefix}/`
+        )
+    );
 
-  const now =
-    new Date()
-      .toISOString();
+  if (!isAllowed) {
+    throw new Error(
+      "Invalid staff destination."
+    );
+  }
+
+  wixLocation.to(
+    path
+  );
+}
 
 
-  return restRequest({
-    table:
-      "admin_audit_logs",
+async function signOutHome() {
+  await authentication.logout();
 
-    method:
-      "POST",
+  wixLocation.to(
+    HOME_PATH
+  );
+}
 
-    body: {
 
-      log_id:
-        `AUD-${Date.now()}-${Math.random()
-          .toString(36)
-          .slice(2, 10)}`,
+/* ==========================================================================
+   PARENT BRIDGE
+   ========================================================================== */
 
-      timestamp:
-        now,
+function post(
+  html,
+  type,
+  payload = {}
+) {
+  if (!html) {
+    return;
+  }
 
-      admin_id:
-        actorId,
+  html.postMessage({
+    source:
+      "SKANDI_WIX_PARENT",
 
-      target_member:
-        targetMember,
+    type,
 
-      action_performed:
-        action,
+    payload,
 
-      old_value:
-        before,
-
-      new_value:
-        after,
-
-      created_at:
-        now
-    }
+    timestamp:
+      new Date()
+        .toISOString()
   });
+}
+
+
+function cleanError(
+  err
+) {
+  const msg =
+    String(
+      err?.message ||
+      err ||
+      ""
+    ).trim();
+
+  const map = {
+    STAFF_PROFILE_AUTH_REQUIRED:
+      "Your session has expired. Please sign in again.",
+
+    STAFF_PROFILE_NOT_FOUND:
+      "An account with this SK-ID or password could not be found.",
+
+    STAFF_PROFILE_AGENT_ID_MISSING:
+      "Your employee profile is not linked correctly."
+  };
+
+  if (
+    map[msg]
+  ) {
+    return map[msg];
+  }
+
+  if (!msg) {
+    return "Something went wrong.";
+  }
+
+  if (
+    msg.length >
+    220
+  ) {
+    return "Something went wrong.";
+  }
+
+  return msg;
 }
