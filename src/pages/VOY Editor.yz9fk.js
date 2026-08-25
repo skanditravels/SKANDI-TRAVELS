@@ -1,7 +1,7 @@
 import wixLocation from "wix-location";
 import { authentication } from "wix-members-frontend";
-import { getStaffPortalSession } from "src/backend/RIA/staffPortalAuth.web";
-import { runInternalGlobalSearch } from "src/backend/FINAL/internalChrome.web";
+import { getStaffPortalSession } from "backend/RIA/staffPortalAuth.web";
+import { runInternalGlobalSearch } from "backend/FINAL/internalChrome.web";
 import {
   getNewsroomAdminBootstrap,
   listNewsroomAdminData,
@@ -11,7 +11,7 @@ import {
   archiveNewsroomPost,
   saveNewsroomMediaAsset,
   saveNewsroomPressContact
-} from "src/backend/FINAL/newsService.web";
+} from "backend/FINAL/newsService.web";
 
 const EMBED_ID = "#newsroomAdminEmbed";
 const EMBED_SOURCE = "SKANDI_NEWSROOM_CONTROL";
