@@ -42,7 +42,7 @@ const ALLOWED_RT_EVENTS = new Set([
 const ALLOWED_GROUPTALK_EVENTS = new Set([
   "PTT_DOWN","PTT_UP","PTT_DOWN_DESKTOP","PTT_UP_DESKTOP",
   "AUDIO_START","AUDIO_STOP","EMERGENCY","GROUP_CHANGED","LIVEKIT_JOIN",
-  "PHONE_BOOK_CALL","SILENT_CHANGED","SILENT_CHANGED_DESKTOP"
+  "PHONE_BOOK_CALL"
 ]);
 const elevatedGetSecretValue = elevate(secrets.getSecretValue);
 
@@ -495,7 +495,7 @@ export const triggerGroupTalkEvent = webMethod(Permissions.Anyone, async functio
   const {row:group,public:g}=await requireGroup(agent,payload.groupId||payload.group);
   if(type.includes("DESKTOP") && agent.can_manage!==true)throw new Error("GROUPTALK_DESKTOP_ACTION_NOT_ALLOWED");
   if((type.includes("PTT_DOWN")||type.includes("AUDIO_START")) && g.capabilities.canTalk!==true)throw new Error("GROUPTALK_TALK_DISABLED");
-  const data={type,groupId:group.id,groupKey:group.group_key,group:group.name,skId:profile.skId,name:profile.name,role:profile.role,base:profile.base,targetSkId:clean(payload.targetSkId,80)||null,targetName:clean(payload.targetName,160)||null,targetPhone:clean(payload.targetPhone,80)||null,silent:payload.silent===true,priority:clean(payload.priority,40)||null,createdAt:now()};
+  const data={type,groupId:group.id,groupKey:group.group_key,group:group.name,skId:profile.skId,name:profile.name,role:profile.role,base:profile.base,targetSkId:clean(payload.targetSkId,80)||null,targetName:clean(payload.targetName,160)||null,targetPhone:clean(payload.targetPhone,80)||null,priority:clean(payload.priority,40)||null,createdAt:now()};
   const event=type==="EMERGENCY"?"emergency-alert":(type.includes("PTT_DOWN")||type.includes("AUDIO_START"))?"ptt-started":(type.includes("PTT_UP")||type.includes("AUDIO_STOP"))?"ptt-ended":"grouptalk-event";
   await Promise.all([audit(type,{agent,group,entityTable:T.groups,entityId:group.id,payload:data}),history(type,{agent,group,message:event,payload:data})]);
   return {ok:true,eventType:type,realtime:await broadcast(group,event,data)};
