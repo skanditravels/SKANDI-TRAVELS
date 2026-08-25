@@ -2,7 +2,7 @@ import { fetch } from "wix-fetch";
 import { elevate } from "wix-auth";
 import { secrets } from "wix-secrets-backend.v2";
 
-const API_URL = "https://api.aviationstack.com/v1/flights";
+const API_URL = "https://api.aviationstack.com/v1/airports, /v1/airlines, /v1/airplanes, /v1/aircraft_types, /v1/cities, /v1/countries, /v1/taxes";
 const API_KEY_SECRET = "AVIATIONSTACK_API_KEY";
 const MAX_RESULTS = 100;
 const elevatedGetSecretValue = elevate(secrets.getSecretValue);
