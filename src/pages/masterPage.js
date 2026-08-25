@@ -1,20 +1,191 @@
+// masterPage.js
+// SKANDI GLOBAL CHROME CONTROL
+// Single source of truth for customer header/footer, RIAINTRA navigation, and brand assets.
+
 import wixLocationFrontend from "wix-location-frontend";
 import { currentMember, authentication } from "wix-members-frontend";
-import { getCustomerHeaderSession, subscribeCustomerNewsletter } from "backend/customerHeader.web";
+import {
+  getCustomerHeaderSession,
+  subscribeCustomerNewsletter
+} from "backend/customerHeader.web";
+import { getStaffPortalSession } from "backend/RIA/staffPortalAuth.web";
 
-// --- Configuration & Constants ---
-const HEADER_EMBED = "#skandiCustomerHeaderEmbed"; 
-const FOOTER_EMBED = "#skandiCustomerFooterEmbed";
+const MASTER_VERSION = "2026.08.25.1";
 
-const HEADER_SOURCE = "SKANDI_CUSTOMER_HEADER_EXPANDBAR";
-const FOOTER_SOURCE = "SKANDI_CUSTOMER_FOOTER";
+const MASTER_CONFIG = Object.freeze({
+  brand: Object.freeze({
+    groupName: "SKANDI Group",
+    travelName: "SKANDI Travels",
+    internalName: "RIAINTRA",
+    alteaName: "ALTEA",
+    slogans: Object.freeze({
+      en: "Unforgettable Moments",
+      sv: "När du längtar bort",
+      no: "Når du lengter bort",
+      da: "Når du længes væk",
+      fi: "Kun kaipaat pois",
+      altea: "WE MAKE DOOR TO DOOR STAY IN SYNC"
+    }),
+    languages: Object.freeze(["EN", "SV", "NO", "DA"]),
+    currencies: Object.freeze(["USD", "SEK", "NOK", "DKK", "EUR"]),
+    assets: Object.freeze({
+      logos: Object.freeze({
+        skandiPrimary: "https://static.wixstatic.com/media/394052_69299cae98564a63b4a9bb7a8d037a33~mv2.png",
+        skandiWhite: "https://static.wixstatic.com/media/394052_69299cae98564a63b4a9bb7a8d037a33~mv2.png",
+        skandiTravels: "https://static.wixstatic.com/media/394052_69299cae98564a63b4a9bb7a8d037a33~mv2.png",
+        skandiWave: "",
+        skandiGroup: "",
+        riaintra: "",
+        altea: "",
+        voy: "",
+        skandiClub: "",
+        signatureCollection: ""
+      }),
+      icons: Object.freeze({
+        home: "",
+        bookings: "",
+        favorites: "",
+        documents: "",
+        travelers: "",
+        wallet: "",
+        support: "",
+        settings: "",
+        notifications: ""
+      })
+    })
+  }),
+  routes: Object.freeze({
+    home: "/home",
+    search: "/home?focus=search",
+    flights: "/flights",
+    hotels: "/hotels",
+    packages: "/packages",
+    tours: "/tours",
+    activities: "/activities",
+    transfers: "/transfers",
+    destinations: "/destinations",
+    signatureCollection: "/signature-collection",
+    voy: "/voy-magazine",
+    newsroom: "/about/news-room",
+    myTrip: "/my-trip",
+    club: "/skandi-club",
+    support: "/about/support",
+    contact: "/about/contact",
+    about: "/about",
+    legal: "/about/legal",
+    staffLogin: "/riaintra",
+    staffPortal: "/riaintra/staff-portal",
+    successFactors: "/riaintra/success-factors",
+    altea: "/riaintra/altea",
+    mail: "/riaintra/mail",
+    docunet: "/riaintra/docunet",
+    serviceDesk: "/riaintra/service-desk",
+    magazineManager: "/riaintra/magazine-manager/management"
+  }),
+  customer: Object.freeze({
+    header: Object.freeze({
+      primaryNav: Object.freeze([
+        { id: "flights", label: "Flights", path: "/flights" },
+        { id: "hotels", label: "Hotels", path: "/hotels" },
+        { id: "packages", label: "Packages", path: "/packages" },
+        { id: "tours", label: "Tours & Activities", path: "/tours" },
+        { id: "transfers", label: "Transfers", path: "/transfers" }
+      ]),
+      secondaryNav: Object.freeze([
+        { id: "destinations", label: "Destinations", path: "/destinations" },
+        { id: "signature", label: "Signature Collection", path: "/signature-collection" },
+        { id: "voy", label: "VOY Magazine", path: "/voy-magazine" },
+        { id: "newsroom", label: "Newsroom", path: "/about/news-room" }
+      ]),
+      accountNav: Object.freeze([
+        { id: "myTrip", label: "My Trip", path: "/my-trip" },
+        { id: "club", label: "SKANDI Club", path: "/skandi-club" },
+        { id: "support", label: "Support", path: "/about/support" }
+      ])
+    }),
+    footer: Object.freeze({
+      columns: Object.freeze([
+        {
+          title: "Travel",
+          links: Object.freeze([
+            { label: "Flights", path: "/flights" },
+            { label: "Hotels", path: "/hotels" },
+            { label: "Packages", path: "/packages" },
+            { label: "Tours & Activities", path: "/tours" },
+            { label: "Transfers", path: "/transfers" }
+          ])
+        },
+        {
+          title: "Discover",
+          links: Object.freeze([
+            { label: "Destinations", path: "/destinations" },
+            { label: "Signature Collection", path: "/signature-collection" },
+            { label: "VOY Magazine", path: "/voy-magazine" },
+            { label: "Newsroom", path: "/about/news-room" }
+          ])
+        },
+        {
+          title: "SKANDI",
+          links: Object.freeze([
+            { label: "About SKANDI", path: "/about" },
+            { label: "Contact", path: "/about/contact" },
+            { label: "Support", path: "/about/support" },
+            { label: "Legal", path: "/about/legal" }
+          ])
+        }
+      ]),
+      staffLogin: Object.freeze({ label: "Staff Login", path: "/riaintra" })
+    })
+  }),
+  internal: Object.freeze({
+    header: Object.freeze({
+      productName: "SKANDI TRAVELS",
+      productContext: "RIAINTRA Enterprise Workforce Suite",
+      primaryNav: Object.freeze([
+        { id: "dashboard", label: "Dashboard", path: "/riaintra/staff-portal" },
+        { id: "success-factors", label: "SuccessFactors", path: "/riaintra/success-factors" },
+        { id: "altea", label: "ALTEA", path: "/riaintra/altea" },
+        { id: "mail", label: "Mail", path: "/riaintra/mail" },
+        { id: "docunet", label: "DocuNet", path: "/riaintra/docunet" },
+        { id: "service-desk", label: "ServiceDesk", path: "/riaintra/service-desk" }
+      ]),
+      managementNav: Object.freeze([
+        { id: "magazine-manager", label: "Magazine Manager", path: "/riaintra/magazine-manager/management" }
+      ])
+    }),
+    footer: Object.freeze({
+      links: Object.freeze([
+        { label: "Staff Portal", path: "/riaintra/staff-portal" },
+        { label: "DocuNet", path: "/riaintra/docunet" },
+        { label: "ServiceDesk", path: "/riaintra/service-desk" }
+      ])
+    })
+  })
+});
+
+const CUSTOMER_HEADER_EMBED = "#skandiCustomerHeaderEmbed";
+const CUSTOMER_FOOTER_EMBED = "#skandiCustomerFooterEmbed";
+const RIAINTRA_HEADER_EMBED = "#riaintraHeader";
+const RIAINTRA_FOOTER_EMBED = "#riaintraFooter";
+const ALTEA_HEADER_EMBED = "#alteaHeader";
+
 const PARENT_SOURCE = "SKANDI_WIX_PARENT";
+const CUSTOMER_HEADER_SOURCE = "SKANDI_CUSTOMER_HEADER_EXPANDBAR";
+const CUSTOMER_FOOTER_SOURCE = "SKANDI_CUSTOMER_FOOTER";
+const INTERNAL_PREFIXES = ["/riaintra", "/altea", "/_functions"];
 
-const INTERNAL_PREFIXES = ["/riaintra", "/_functions"];
-
-// --- Helper Functions ---
 function safeEl(id) {
-  try { return $w(id); } catch (error) { return null; }
+  try { return $w(id); } catch (_) { return null; }
+}
+
+function allHtmlComponents() {
+  try {
+    const result = $w("HtmlComponent");
+    return Array.isArray(result) ? result : [];
+  } catch (error) {
+    console.warn("[MasterPage] Could not enumerate HTML Components.", error);
+    return [];
+  }
 }
 
 function currentPathString() {
@@ -22,216 +193,290 @@ function currentPathString() {
   return "/" + path.join("/");
 }
 
-function isInternalPage() {
-  const path = currentPathString();
-  return INTERNAL_PREFIXES.some((prefix) => path === prefix || path.startsWith(prefix + "/"));
+function isInternalPath(path = currentPathString()) {
+  return INTERNAL_PREFIXES.some(prefix => path === prefix || path.startsWith(prefix + "/"));
+}
+
+function isAlteaPath(path = currentPathString()) {
+  return path === "/altea" || path.startsWith("/altea/") || path === "/riaintra/altea" || path.startsWith("/riaintra/altea/");
+}
+
+function isSafeRoute(path) {
+  const value = String(path || "").trim();
+  return Boolean(value && value.startsWith("/") && !value.startsWith("//") && !/^(javascript|data|vbscript):/i.test(value));
 }
 
 function postToEmbed(embed, type, payload = {}) {
   if (!embed) return;
-  embed.postMessage({
-    source: PARENT_SOURCE,
-    type,
-    payload,
-    timestamp: new Date().toISOString()
+  try {
+    embed.postMessage({ source: PARENT_SOURCE, type, payload, timestamp: new Date().toISOString() });
+  } catch (error) {
+    console.warn(`[MasterPage] postMessage failed for ${embed.id}.`, error);
+  }
+}
+
+function masterPayload(extra = {}) {
+  const path = currentPathString();
+  return {
+    version: MASTER_VERSION,
+    mode: isInternalPath(path) ? "internal" : "customer",
+    isInternal: isInternalPath(path),
+    isAltea: isAlteaPath(path),
+    currentPath: path,
+    brand: MASTER_CONFIG.brand,
+    routes: MASTER_CONFIG.routes,
+    customer: MASTER_CONFIG.customer,
+    internal: MASTER_CONFIG.internal,
+    ...extra
+  };
+}
+
+function pushMasterConfig(embed, extra = {}) {
+  postToEmbed(embed, "SKANDI_MASTER_CONFIG", masterPayload(extra));
+}
+
+function closeCustomerHeaderPanels() {
+  postToEmbed(safeEl(CUSTOMER_HEADER_EMBED), "CLOSE_CUSTOMER_HEADER_PANELS", {});
+}
+
+function navigate(path) {
+  const value = String(path || "").trim();
+  if (!isSafeRoute(value)) {
+    console.warn("[MasterPage] Blocked unsafe navigation path:", value);
+    return;
+  }
+  closeCustomerHeaderPanels();
+  wixLocationFrontend.to(value);
+}
+
+async function getCustomerState() {
+  try {
+    const member = await currentMember.getMember();
+    if (!member) return { loggedIn: false, displayName: "", points: 0, tierName: "", menu: [] };
+    const session = await getCustomerHeaderSession();
+    return {
+      loggedIn: true,
+      displayName: session?.displayName || member?.profile?.nickname || member?.loginEmail || "",
+      points: Number(session?.points || session?.clubPoints || 0),
+      tierName: session?.tierName || session?.tier || "",
+      menu: Array.isArray(session?.menu) ? session.menu : []
+    };
+  } catch (error) {
+    console.warn("[MasterPage] Customer session unavailable.", error);
+    return { loggedIn: false, displayName: "", points: 0, tierName: "", menu: [] };
+  }
+}
+
+async function pushCustomerHeaderState(embed = safeEl(CUSTOMER_HEADER_EMBED)) {
+  if (!embed) return;
+  postToEmbed(embed, "CUSTOMER_HEADER_STATE", await getCustomerState());
+}
+
+async function getStaffState() {
+  try {
+    const result = await getStaffPortalSession();
+    if (!result || result.ok === false || result.authorized === false) return { authorized: false, profile: {} };
+    return {
+      authorized: true,
+      profile: result.profile || {},
+      permissions: result.permissions || [],
+      apps: result.apps || []
+    };
+  } catch (error) {
+    console.warn("[MasterPage] Staff session unavailable.", error);
+    return { authorized: false, profile: {} };
+  }
+}
+
+async function pushStaffHeaderState(embed = safeEl(RIAINTRA_HEADER_EMBED)) {
+  if (!embed) return;
+  const staff = await getStaffState();
+  pushMasterConfig(embed, { staff });
+  postToEmbed(embed, "RIAINTRA_HEADER_STATE", {
+    ...staff,
+    navigation: MASTER_CONFIG.internal.header,
+    assets: MASTER_CONFIG.brand.assets
   });
 }
 
-function closeCustomerHeaderPanels(header) {
-  postToEmbed(header, "CLOSE_CUSTOMER_HEADER_PANELS", {});
-}
+async function handleMasterMessage(embed, message = {}) {
+  const type = String(message?.type || "");
+  const source = String(message?.source || "");
+  const payload = message?.payload && typeof message.payload === "object" ? message.payload : {};
 
-async function sendHeaderState(header) {
-  try {
-    const member = await currentMember.getMember();
-
-    if (!member) {
-      postToEmbed(header, "CUSTOMER_HEADER_STATE", { loggedIn: false, menu: [] });
-      return;
-    }
-
-    const payload = await getCustomerHeaderSession();
-    postToEmbed(header, "CUSTOMER_HEADER_STATE", payload);
-  } catch (error) {
-    postToEmbed(header, "CUSTOMER_HEADER_STATE", { loggedIn: false, menu: [] });
-  }
-}
-
-// --- Message Handlers ---
-
-async function handleHeaderMessage(header, message = {}) {
-  if (message.source !== HEADER_SOURCE) return;
-  const payload = message.payload || {};
-
-  switch (message.type) {
-    case "HEADER_READY":
-      await sendHeaderState(header);
-      break;
-    case "HEADER_NAVIGATE":
-      closeCustomerHeaderPanels(header);
-      if (message.path || payload.path) wixLocationFrontend.to(message.path || payload.path);
-      break;
-    case "HEADER_SEARCH":
-      closeCustomerHeaderPanels(header);
-      wixLocationFrontend.to("/home?focus=search");
-      break;
-    case "HEADER_LOGIN":
-      closeCustomerHeaderPanels(header);
-      await authentication.promptLogin();
-      await sendHeaderState(header);
-      break;
-    case "HEADER_LOGOUT":
-      closeCustomerHeaderPanels(header);
-      await authentication.logout();
-      wixLocationFrontend.to("/home");
-      break;
-      
-    // --- New Inline Form Auth Handling ---
-    case "HEADER_LOGIN_SUBMIT":
-      authentication.login(message.email, message.password)
-        .then(() => {
-          // Refresh page upon successful inline login
-          wixLocationFrontend.to(wixLocationFrontend.url); 
-        })
-        .catch((error) => {
-          console.error("Login failed:", error);
-          // Send error message back to the HTML component directly
-          header.postMessage({ type: "HOME_ERROR", message: "Invalid email or password. Please try again." });
-        });
-      break;
-    case "HEADER_FORGOT_PASSWORD":
-      closeCustomerHeaderPanels(header);
-      authentication.promptForgotPassword();
-      break;
-      
-    default:
-      break;
-  }
-}
-
-async function handleFooterMessage(footer, message = {}) {
-  if (message.source !== FOOTER_SOURCE) return;
-  const payload = message.payload || {};
-  const path = message.path || payload.path || "";
-  const header = safeEl(HEADER_EMBED);
-
-  switch (message.type) {
-    case "FOOTER_READY":
-      postToEmbed(footer, "CUSTOMER_FOOTER_STATE", { ready: true });
-      break;
-    case "FOOTER_NAVIGATE":
-      closeCustomerHeaderPanels(header);
-      if (path) wixLocationFrontend.to(path);
-      break;
-    case "FOOTER_STAFF_LOGIN":
-      closeCustomerHeaderPanels(header);
-      wixLocationFrontend.to("/riaintra");
-      break;
-    case "FOOTER_NEWSLETTER_SIGNUP": {
-      const email = String(message.email || payload.email || "").trim();
-      if (!email) {
-        postToEmbed(footer, "FOOTER_NEWSLETTER_RESULT", { ok: false, message: "Please enter your email address." });
-        return;
-      }
-      const result = await subscribeCustomerNewsletter({ email, source: payload.source || "Footer" });
-      postToEmbed(footer, "FOOTER_NEWSLETTER_RESULT", result);
-      break;
-    }
-    default:
-      break;
-  }
-}
-
-// --- Main Page Ready Execution ---
-$w.onReady(async function () {
-  const header = safeEl(HEADER_EMBED);
-  const footer = safeEl(FOOTER_EMBED);
-  const riaintraHeader = safeEl("#riaintraHeader");
-  const alteaHeader = safeEl("#alteaHeader");
-  const htmlDropdown = safeEl("#htmlDropdown");
-  const adminMenu = safeEl("#adminMenu");
-
-  // 1. Hide/Show Customer Header based on URL
-  if (isInternalPage()) {
-    try { header?.hide(); } catch (error) {}
-    try { footer?.hide(); } catch (error) {}
-  } else {
-    try { header?.show(); } catch (error) {}
-    try { footer?.show(); } catch (error) {}
+  if (type === "MASTER_CONFIG_REQUEST" || type === "SKANDI_MASTER_CONFIG_REQUEST") {
+    const extra = isInternalPath() ? { staff: await getStaffState() } : { customerSession: await getCustomerState() };
+    pushMasterConfig(embed, extra);
+    return true;
   }
 
-  // 2. Customer Header & Footer Listeners
-  if (header) {
-    header.onMessage((event) => handleHeaderMessage(header, event.data));
-  }
-  
-  if (footer) {
-    footer.onMessage((event) => handleFooterMessage(footer, event.data));
+  if (type === "MASTER_ASSETS_REQUEST") {
+    postToEmbed(embed, "SKANDI_MASTER_ASSETS", MASTER_CONFIG.brand.assets);
+    return true;
   }
 
-  // 3. riaintra Header Listener
-  if (riaintraHeader) {
-    riaintraHeader.onMessage(async (event) => {
-      const message = event.data || {};
-      if (message.type === 'UI_READY') {
+  if (type === "MASTER_NAVIGATION_REQUEST") {
+    postToEmbed(embed, "SKANDI_MASTER_NAVIGATION", {
+      customer: MASTER_CONFIG.customer,
+      internal: MASTER_CONFIG.internal,
+      routes: MASTER_CONFIG.routes,
+      currentPath: currentPathString()
+    });
+    return true;
+  }
+
+  if (type === "MASTER_NAVIGATE") {
+    navigate(message.path || payload.path || "");
+    return true;
+  }
+
+  if (source === CUSTOMER_HEADER_SOURCE) {
+    switch (type) {
+      case "HEADER_READY":
+        pushMasterConfig(embed, { customerSession: await getCustomerState() });
+        await pushCustomerHeaderState(embed);
+        return true;
+      case "HEADER_NAVIGATE":
+        navigate(message.path || payload.path);
+        return true;
+      case "HEADER_SEARCH":
+        navigate(MASTER_CONFIG.routes.search);
+        return true;
+      case "HEADER_LOGIN":
+        closeCustomerHeaderPanels();
+        try { await authentication.promptLogin(); } catch (_) {}
+        await pushCustomerHeaderState(embed);
+        return true;
+      case "HEADER_LOGIN_SUBMIT":
         try {
-          const member = await currentMember.getMember();
-          if (member) {
-            riaintraHeader.postMessage({
-              type: 'MEMBER_DATA',
-              payload: {
-                firstName: member.contactDetails?.firstName || "Traveller",
-                lastName: member.contactDetails?.lastName || "",
-                email: member.loginEmail || "",
-                photo: member.profile?.profilePhoto?.url || ""
-              }
-            });
-          } else {
-            riaintraHeader.postMessage({ type: 'GUEST_DATA' });
-          }
+          await authentication.login(message.email || payload.email, message.password || payload.password);
+          await pushCustomerHeaderState(embed);
+        } catch (_) {
+          postToEmbed(embed, "HOME_ERROR", { message: "Invalid email or password. Please try again." });
+        }
+        return true;
+      case "HEADER_FORGOT_PASSWORD":
+        closeCustomerHeaderPanels();
+        try { await authentication.promptForgotPassword(); } catch (_) {}
+        return true;
+      case "HEADER_LOGOUT":
+        closeCustomerHeaderPanels();
+        try { await authentication.logout(); } catch (_) {}
+        wixLocationFrontend.to(MASTER_CONFIG.routes.home);
+        return true;
+      default:
+        break;
+    }
+  }
+
+  if (source === CUSTOMER_FOOTER_SOURCE) {
+    switch (type) {
+      case "FOOTER_READY":
+        pushMasterConfig(embed);
+        postToEmbed(embed, "CUSTOMER_FOOTER_STATE", {
+          ready: true,
+          navigation: MASTER_CONFIG.customer.footer,
+          assets: MASTER_CONFIG.brand.assets
+        });
+        return true;
+      case "FOOTER_NAVIGATE":
+        navigate(message.path || payload.path);
+        return true;
+      case "FOOTER_STAFF_LOGIN":
+        navigate(MASTER_CONFIG.routes.staffLogin);
+        return true;
+      case "FOOTER_NEWSLETTER_SIGNUP": {
+        const email = String(message.email || payload.email || "").trim();
+        if (!email) {
+          postToEmbed(embed, "FOOTER_NEWSLETTER_RESULT", { ok: false, message: "Please enter your email address." });
+          return true;
+        }
+        try {
+          const result = await subscribeCustomerNewsletter({ email, source: payload.source || "Footer" });
+          postToEmbed(embed, "FOOTER_NEWSLETTER_RESULT", result);
         } catch (error) {
-          console.error("Error fetching member", error);
+          postToEmbed(embed, "FOOTER_NEWSLETTER_RESULT", { ok: false, message: error?.message || "Newsletter signup failed." });
         }
+        return true;
       }
-    });
+      default:
+        break;
+    }
   }
 
-  // 4. Altea Global Header Listener
-  if (alteaHeader) {
-    alteaHeader.onMessage((event) => {
-      const message = event.data;
-      if (message.source === "SKANDI_GLOBAL_HEADER" && message.type === "ALTEA_NAVIGATE") {
-        wixLocationFrontend.to(message.payload.path);
-      }
-      if (message.source === "SKANDI_GLOBAL_HEADER" && message.type === "TOGGLE_admin_MENU") {
-        if (adminMenu) {
-          adminMenu.hidden ? adminMenu.show("fade", { duration: 150 }) : adminMenu.hide("fade", { duration: 150 });
-        }
-      }
-    });
+  if (type === "RIAINTRA_HEADER_READY" || type === "INTERNAL_HEADER_READY") {
+    await pushStaffHeaderState(embed);
+    return true;
   }
 
-  // 5. Admin Dropdown Listener
-  if (htmlDropdown) {
-    htmlDropdown.onMessage((event) => {
-        if (event.data.type === 'CLOSE_admin_MENU') {
-            htmlDropdown.hide("fade", { duration: 150 });
-        }
-        if (event.data.type === 'NAVIGATE') {
-            const targetPath = event.data.path; 
-            htmlDropdown.hide("fade", { duration: 150 }).then(() => {
-                wixLocationFrontend.to(targetPath);
-            });
-        }
-    });
+  if (type === "RIAINTRA_NAVIGATE" || type === "INTERNAL_MASTER_NAVIGATE") {
+    navigate(message.path || payload.path);
+    return true;
   }
 
-  // 6. Global Auth Setup & Initialization
+  if (type === "RIAINTRA_LOGOUT" || type === "INTERNAL_MASTER_LOGOUT") {
+    try { await authentication.logout(); } catch (_) {}
+    wixLocationFrontend.to(MASTER_CONFIG.routes.home);
+    return true;
+  }
+
+  return false;
+}
+
+function wireHtmlComponent(embed) {
+  if (!embed || typeof embed.onMessage !== "function") return;
+  embed.onMessage(async event => {
+    try {
+      await handleMasterMessage(embed, event?.data || {});
+    } catch (error) {
+      console.error(`[MasterPage] Message handling failed for ${embed.id}.`, error);
+    }
+  });
+  pushMasterConfig(embed);
+}
+
+function wireAllHtmlComponents() {
+  allHtmlComponents().forEach(wireHtmlComponent);
+}
+
+async function applyChromeVisibility() {
+  const internal = isInternalPath();
+  const altea = isAlteaPath();
+
+  const customerHeader = safeEl(CUSTOMER_HEADER_EMBED);
+  const customerFooter = safeEl(CUSTOMER_FOOTER_EMBED);
+  const riaHeader = safeEl(RIAINTRA_HEADER_EMBED);
+  const riaFooter = safeEl(RIAINTRA_FOOTER_EMBED);
+  const alteaHeader = safeEl(ALTEA_HEADER_EMBED);
+
+  if (internal) {
+    try { customerHeader?.hide(); } catch (_) {}
+    try { customerFooter?.hide(); } catch (_) {}
+    try { riaHeader?.show(); } catch (_) {}
+    try { riaFooter?.show(); } catch (_) {}
+    try { altea ? alteaHeader?.show() : alteaHeader?.hide(); } catch (_) {}
+    await pushStaffHeaderState(riaHeader);
+  } else {
+    try { customerHeader?.show(); } catch (_) {}
+    try { customerFooter?.show(); } catch (_) {}
+    try { riaHeader?.hide(); } catch (_) {}
+    try { riaFooter?.hide(); } catch (_) {}
+    try { alteaHeader?.hide(); } catch (_) {}
+    await pushCustomerHeaderState(customerHeader);
+    if (customerFooter) pushMasterConfig(customerFooter);
+  }
+}
+
+$w.onReady(async function () {
+  wireAllHtmlComponents();
+  await applyChromeVisibility();
+
   authentication.onLogin(async () => {
-    if (header) await sendHeaderState(header);
+    if (isInternalPath()) await pushStaffHeaderState();
+    else await pushCustomerHeaderState();
   });
 
   setTimeout(() => {
-    if (header) sendHeaderState(header);
-  }, 450);
+    allHtmlComponents().forEach(embed => pushMasterConfig(embed));
+  }, 500);
 });
