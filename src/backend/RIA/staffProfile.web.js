@@ -4,12 +4,12 @@ import {
 } from "wix-web-module";
 
 import {
-  getStaffPortalSession
-} from "./staffPortalAuth.web";
+  currentMember
+} from "wix-members-backend";
 
 import {
   restRequest
-} from "./supabaseServer.js";
+} from "backend/RIA/supabaseServer.js";
 
 
 const AGENT_TABLE =
@@ -23,10 +23,6 @@ const PAYROLL_TABLE =
    FIELD POLICY
    ========================================================================== */
 
-/*
- * These fields are employee self-service profile data and live under
- * agent_users.payload.selfService.
- */
 const SELF_SERVICE_FIELDS =
   Object.freeze([
     "phone",
@@ -41,13 +37,6 @@ const SELF_SERVICE_FIELDS =
     "emergencyContactPhone"
   ]);
 
-
-/*
- * These belong to payroll, not the general staff profile.
- *
- * They are accepted from the SuccessFactors form but persisted only in
- * staff_payroll_profiles.payload.paymentPreference.
- */
 const PAYROLL_PAYMENT_FIELDS =
   Object.freeze([
     "bankName",
@@ -60,12 +49,6 @@ const PAYROLL_PAYMENT_FIELDS =
     "usAccountNumber"
   ]);
 
-
-/*
- * Raw bank account/routing/IBAN values are never returned to the HTML after
- * save or bootstrap. The profile UI can replace them, but the browser does
- * not receive persisted raw bank values.
- */
 const SENSITIVE_PAYMENT_FIELDS =
   new Set([
     "bankIban",
@@ -94,6 +77,15 @@ function clean(
     );
 }
 
+function normalizeEmail(
+  value
+) {
+  return clean(
+    value,
+    254
+  )
+    .toLowerCase();
+}
 
 function first(
   rows
@@ -107,7 +99,6 @@ function first(
     ? rows[0]
     : null;
 }
-
 
 function objectValue(
   value
@@ -124,6 +115,31 @@ function objectValue(
     : {};
 }
 
+function memberEmail(
+  member = {}
+) {
+  const emails =
+    member
+      ?.contactDetails
+      ?.emails;
+
+  const contactEmail =
+    Array.isArray(
+      emails
+    )
+      ? emails[0]
+      : emails;
+
+  return normalizeEmail(
+    member.loginEmail ||
+    contactEmail ||
+    member
+      ?.profile
+      ?.email ||
+    member.email ||
+    ""
+  );
+}
 
 function displayName(
   agent = {}
@@ -148,7 +164,6 @@ function displayName(
   );
 }
 
-
 function employmentRole(
   agent = {}
 ) {
@@ -160,7 +175,6 @@ function employmentRole(
     120
   );
 }
-
 
 function agentSelect() {
   return [
@@ -199,53 +213,121 @@ function agentSelect() {
 }
 
 
-async function requireProfileSession() {
-  const session =
-    await getStaffPortalSession();
+/* ==========================================================================
+   CURRENT MEMBER -> SUPABASE AGENT
+   ========================================================================== */
 
-  if (
-    !session ||
-    session.ok === false ||
-    session.loggedIn === false ||
-    session.authenticated === false ||
-    session.authorized !==
-      true
-  ) {
-    throw new Error(
-      "STAFF_PROFILE_AUTH_REQUIRED"
-    );
+async function currentWixMember() {
+  try {
+    const member =
+      await currentMember
+        .getMember({
+          fieldsets: [
+            "FULL"
+          ]
+        });
+
+    return member ||
+      null;
+  } catch (_) {
+    return null;
   }
-
-  const profile =
-    session.profile ||
-    session.staff ||
-    session.agent ||
-    {};
-
-  const agentId =
-    clean(
-      profile.id,
-      80
-    );
-
-  if (!agentId) {
-    throw new Error(
-      "STAFF_PROFILE_AGENT_ID_MISSING"
-    );
-  }
-
-  return {
-    session,
-    profile,
-    agentId
-  };
 }
 
-
-async function loadAgent(
-  agentId
+async function findAgentByMemberId(
+  memberId
 ) {
-  const rows =
+  const id =
+    clean(
+      memberId,
+      100
+    );
+
+  if (!id) {
+    return null;
+  }
+
+  let agent =
+    first(
+      await restRequest({
+        table:
+          AGENT_TABLE,
+
+        query: {
+          select:
+            agentSelect(),
+
+          wix_member_id:
+            `eq.${id}`,
+
+          limit:
+            1
+        }
+      })
+    );
+
+  if (agent) {
+    return agent;
+  }
+
+  agent =
+    first(
+      await restRequest({
+        table:
+          AGENT_TABLE,
+
+        query: {
+          select:
+            agentSelect(),
+
+          member_id:
+            `eq.${id}`,
+
+          limit:
+            1
+        }
+      })
+    );
+
+  return agent;
+}
+
+async function findAgentByEmail(
+  email
+) {
+  const value =
+    normalizeEmail(
+      email
+    );
+
+  if (!value) {
+    return null;
+  }
+
+  let agent =
+    first(
+      await restRequest({
+        table:
+          AGENT_TABLE,
+
+        query: {
+          select:
+            agentSelect(),
+
+          corporate_email_address:
+            `ilike.${value}`,
+
+          limit:
+            1
+        }
+      })
+    );
+
+  if (agent) {
+    return agent;
+  }
+
+  return first(
     await restRequest({
       table:
         AGENT_TABLE,
@@ -254,28 +336,195 @@ async function loadAgent(
         select:
           agentSelect(),
 
-        id:
-          `eq.${agentId}`,
+        email:
+          `ilike.${value}`,
 
         limit:
           1
       }
-    });
+    })
+  );
+}
 
-  const agent =
-    first(
-      rows
+async function syncMemberLink(
+  agent,
+  member
+) {
+  if (!agent?.id || !member) {
+    return agent;
+  }
+
+  const memberId =
+    clean(
+      member._id ||
+      member.id,
+      100
     );
 
+  if (!memberId) {
+    return agent;
+  }
+
+  const wixId =
+    clean(
+      agent.wix_member_id,
+      100
+    );
+
+  const legacyId =
+    clean(
+      agent.member_id,
+      100
+    );
+
+  if (
+    (wixId && wixId !== memberId) ||
+    (legacyId && legacyId !== memberId)
+  ) {
+    throw new Error(
+      "WIX_MEMBER_LINK_MISMATCH"
+    );
+  }
+
+  if (
+    wixId === memberId &&
+    legacyId === memberId
+  ) {
+    return agent;
+  }
+
+  const rows =
+    await restRequest({
+      table:
+        AGENT_TABLE,
+
+      method:
+        "PATCH",
+
+      query: {
+        id:
+          `eq.${agent.id}`
+      },
+
+      body: {
+        wix_member_id:
+          memberId,
+
+        member_id:
+          memberId,
+
+        updated_at:
+          new Date()
+            .toISOString()
+      }
+    });
+
+  return first(
+    rows
+  ) || {
+    ...agent,
+    wix_member_id:
+      memberId,
+    member_id:
+      memberId
+  };
+}
+
+function assertAgentAccess(
+  agent
+) {
   if (!agent) {
     throw new Error(
       "STAFF_PROFILE_NOT_FOUND"
     );
   }
 
-  return agent;
+  if (
+    agent.active !== true
+  ) {
+    throw new Error(
+      "STAFF_PROFILE_INACTIVE"
+    );
+  }
+
+  if (
+    agent.authorized !== true
+  ) {
+    throw new Error(
+      "STAFF_PROFILE_NOT_AUTHORIZED"
+    );
+  }
+
+  if (
+    agent.portal_access !== true
+  ) {
+    throw new Error(
+      "STAFF_PROFILE_PORTAL_DISABLED"
+    );
+  }
 }
 
+async function requireProfileSession() {
+  const member =
+    await currentWixMember();
+
+  if (
+    !member?._id &&
+    !member?.id
+  ) {
+    throw new Error(
+      "STAFF_PROFILE_AUTH_REQUIRED"
+    );
+  }
+
+  const memberId =
+    clean(
+      member._id ||
+      member.id,
+      100
+    );
+
+  const email =
+    memberEmail(
+      member
+    );
+
+  let agent =
+    await findAgentByMemberId(
+      memberId
+    );
+
+  if (!agent) {
+    agent =
+      await findAgentByEmail(
+        email
+      );
+  }
+
+  assertAgentAccess(
+    agent
+  );
+
+  agent =
+    await syncMemberLink(
+      agent,
+      member
+    );
+
+  return {
+    member,
+    memberId,
+    email,
+    agent,
+    agentId:
+      agent.id
+  };
+}
+
+
+/* ==========================================================================
+   PAYROLL PROFILE
+   ========================================================================== */
 
 function payrollStaffKey(
   agent = {}
@@ -287,7 +536,6 @@ function payrollStaffKey(
     160
   );
 }
-
 
 async function loadPayrollProfile(
   agent
@@ -322,7 +570,6 @@ async function loadPayrollProfile(
     rows
   );
 }
-
 
 function safePaymentView(
   payroll = {}
@@ -365,9 +612,6 @@ function safePaymentView(
       )
   };
 
-  /*
-   * Never return raw persisted account identifiers.
-   */
   SENSITIVE_PAYMENT_FIELDS.forEach(
     (key) => {
       output[key] =
@@ -378,6 +622,10 @@ function safePaymentView(
   return output;
 }
 
+
+/* ==========================================================================
+   PUBLIC PROFILE SHAPE
+   ========================================================================== */
 
 function publicProfile(
   agent = {},
@@ -392,6 +640,14 @@ function publicProfile(
     objectValue(
       payload.selfService
     );
+
+  const canManage =
+    agent.can_manage ===
+    true;
+
+  const payrollAccess =
+    agent.can_access_payroll ===
+    true;
 
   return {
     id:
@@ -514,22 +770,25 @@ function publicProfile(
       agent.authorized ===
       true,
 
-    canManage:
-      agent.can_manage ===
+    canManage,
+
+    canUsePayroll:
+      payrollAccess,
+
+    canUseGroupTalk:
+      agent.can_access_grouptalk ===
       true,
 
     permissions: {
       payroll:
-        agent.can_access_payroll ===
-        true,
+        payrollAccess,
 
       groupTalk:
         agent.can_access_grouptalk ===
         true,
 
       manage:
-        agent.can_manage ===
-        true
+        canManage
     },
 
     phone:
@@ -604,6 +863,10 @@ function publicProfile(
 }
 
 
+/* ==========================================================================
+   PROFILE MUTATIONS
+   ========================================================================== */
+
 function requestedSelfService(
   profile = {}
 ) {
@@ -634,7 +897,6 @@ function requestedSelfService(
   return output;
 }
 
-
 function requestedPayment(
   profile = {}
 ) {
@@ -660,7 +922,6 @@ function requestedPayment(
 
   return output;
 }
-
 
 async function savePayrollPayment(
   agent,
@@ -702,11 +963,6 @@ async function savePayrollPayment(
         .paymentPreference
     );
 
-  /*
-   * Empty sensitive inputs mean "leave existing value alone".
-   * This prevents the UI's deliberately blank masked fields from clearing
-   * a previously stored bank account on an unrelated profile edit.
-   */
   const mergedPayment = {
     ...existingPayment
   };
@@ -775,15 +1031,9 @@ async function savePayrollPayment(
         }
       });
 
-    return (
-      first(
-        rows
-      ) ||
-      {
-        ...existing,
-        payload
-      }
-    );
+    return first(
+      rows
+    ) || existing;
   }
 
   const rows =
@@ -842,23 +1092,18 @@ async function savePayrollPayment(
 
 
 /* ==========================================================================
-   PUBLIC METHODS
+   WEB METHODS
    ========================================================================== */
 
 export const getMyStaffProfile =
   webMethod(
-    Permissions.SiteMember,
+    Permissions.Anyone,
 
     async function () {
       const {
-        agentId
+        agent
       } =
         await requireProfileSession();
-
-      const agent =
-        await loadAgent(
-          agentId
-        );
 
       const payroll =
         await loadPayrollProfile(
@@ -881,20 +1126,15 @@ export const getMyStaffProfile =
 
 export const updateMyStaffProfile =
   webMethod(
-    Permissions.SiteMember,
+    Permissions.Anyone,
 
     async function ({
       profile = {}
     } = {}) {
       const {
-        agentId
+        agent
       } =
         await requireProfileSession();
-
-      const agent =
-        await loadAgent(
-          agentId
-        );
 
       const currentPayload =
         objectValue(
@@ -934,7 +1174,6 @@ export const updateMyStaffProfile =
         selfService: {
           ...currentSelf,
           ...selfPatch,
-
           preferredName
         }
       };
@@ -978,8 +1217,7 @@ export const updateMyStaffProfile =
       const updatedAgent =
         first(
           updatedRows
-        ) ||
-        {
+        ) || {
           ...agent,
           preferred_name:
             preferredName,
@@ -1025,7 +1263,7 @@ export const updateMyStaffProfile =
 
 export const searchStaffDirectory =
   webMethod(
-    Permissions.SiteMember,
+    Permissions.Anyone,
 
     async function ({
       query = ""
