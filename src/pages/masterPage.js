@@ -19,8 +19,8 @@ const MASTER_CONFIG = Object.freeze({
     internalName: "RIAINTRA",
     alteaName: "ALTEA",
     slogans: Object.freeze({
-      en: "https://static.wixstatic.com/media/394052_6d5f53cf8c2d4abdac6578b12fe2758c~mv2.png",
-      sv: "https://static.wixstatic.com/media/394052_370c093c663e45cb999378aaf642b7ef~mv2.png",
+      en: "Unforgettable Moments",
+      sv: "När du längtar bort",
       no: "Når du lengter bort",
       da: "Når du længes væk",
       fi: "Kun kaipaat pois",
@@ -30,17 +30,17 @@ const MASTER_CONFIG = Object.freeze({
     currencies: Object.freeze(["USD", "SEK", "NOK", "DKK", "EUR"]),
     assets: Object.freeze({
       logos: Object.freeze({
+        customerHeader:
+          "https://static.wixstatic.com/media/394052_504704bd94f44f01a95f304bd19640e5~mv2.png",
         skandiPrimary: "https://static.wixstatic.com/media/394052_504704bd94f44f01a95f304bd19640e5~mv2.png",
-        skandiWhite: "https://static.wixstatic.com/media/394052_fafffe6d26434eddbf62eb645ee9c844~mv2.png",
-        skandiTravels: "https://static.wixstatic.com/media/394052_69299cae98564a63b4a9bb7a8d037a33~mv2.png",
-        skandiWave: "https://static.wixstatic.com/media/394052_0c1aaf1dba2c4548ad53ccd8509d338c~mv2.png",
-        skandiGroup: "https://static.wixstatic.com/media/394052_6ed40c4aedc1487d96f387384101bb55~mv2.png",
-        riaintra: "https://static.wixstatic.com/media/394052_ebbf399bc1134fc094d14bb407420eae~mv2.png",
-        riaintraWhite: "https://static.wixstatic.com/media/394052_1024542c47664bff8f4e145d1adf472d~mv2.png",
-        altea: "https://static.wixstatic.com/media/394052_b196c7a1d3554b0682bfafb0de4bd889~mv2.png",
-        alteaWhite: "https://static.wixstatic.com/media/394052_46045c41aebf421d98314b31ef83c677~mv2.png",
-        voy: "https://static.wixstatic.com/media/394052_30b8bebbf5ee493da7d47329d04de494~mv2.png",
-        voyWhite: "https://static.wixstatic.com/media/394052_3770b6753c474d73a77c674b20eab305~mv2.png",
+        skandiWhite: "https://static.wixstatic.com/media/394052_504704bd94f44f01a95f304bd19640e5~mv2.png",
+        skandiTravels:
+          "https://static.wixstatic.com/media/394052_504704bd94f44f01a95f304bd19640e5~mv2.png",
+        skandiWave: "",
+        skandiGroup: "",
+        riaintra: "",
+        altea: "",
+        voy: "",
         skandiClub: "",
         signatureCollection: ""
       }),
@@ -96,7 +96,7 @@ const MASTER_CONFIG = Object.freeze({
       ]),
       secondaryNav: Object.freeze([
         { id: "destinations", label: "Destinations", path: "/destinations" },
-        { id: "signature", label: "SKANDI Collection", path: "/skandi-collection" },
+        { id: "signature", label: "Signature Collection", path: "/signature-collection" },
         { id: "voy", label: "VOY Magazine", path: "/voy-magazine" },
         { id: "newsroom", label: "Newsroom", path: "/about/news-room" }
       ]),
@@ -122,7 +122,7 @@ const MASTER_CONFIG = Object.freeze({
           title: "Discover",
           links: Object.freeze([
             { label: "Destinations", path: "/destinations" },
-            { label: "SKANDI Collection", path: "/skandi-collection" },
+            { label: "Signature Collection", path: "/signature-collection" },
             { label: "VOY Magazine", path: "/voy-magazine" },
             { label: "Newsroom", path: "/about/news-room" }
           ])
@@ -153,7 +153,7 @@ const MASTER_CONFIG = Object.freeze({
         { id: "service-desk", label: "ServiceDesk", path: "/riaintra/service-desk" }
       ]),
       managementNav: Object.freeze([
-        { id: "magazine-manager", label: "Media Manager", path: "/riaintra/media-control" }
+        { id: "magazine-manager", label: "Magazine Manager", path: "/riaintra/magazine-manager/management" }
       ])
     }),
     footer: Object.freeze({
