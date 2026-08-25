@@ -3,16 +3,13 @@ import wixEcomFrontend from "wix-ecom-frontend";
 
 import {
   listStorefrontProducts,
-  resolveStoreVariant,
-  getStorefrontCart,
-  addProductToCurrentCart,
-  createStorefrontCheckout
+  resolveStoreVariant
 } from "backend/skandiStorefront.web";
 
-
-/* ==========================================================================
-   CONFIG
-   ========================================================================== */
+import {
+  getStorefrontCartV2,
+  addProductToCurrentCartV2
+} from "backend/storeCartV2.web";
 
 const EMBED_ID =
   "#skandiStoreEmbed";
@@ -26,596 +23,313 @@ const PARENT_SOURCE =
 const WIX_STORES_APP_ID =
   "215238eb-22a5-4c36-9e7b-e7c08025e04e";
 
+const CHECKOUT_PATH =
+  "/store/checkout";
+
 const ORDERS_PATH =
   "/my-orders";
 
+let embed = null;
+let loadingPromise = null;
+let cachedCatalog = null;
 
-/* ==========================================================================
-   STATE
-   ========================================================================== */
-
-let embed =
-  null;
-
-let loadingPromise =
-  null;
-
-let cachedCatalog =
-  null;
-
-
-/* ==========================================================================
-   MESSAGE HELPERS
-   ========================================================================== */
-
-function parseMessage(
-  value
-) {
-  if (
-    typeof value ===
-    "string"
-  ) {
+function parseMessage(value) {
+  if (typeof value === "string") {
     try {
-      return JSON.parse(
-        value
-      );
+      return JSON.parse(value);
     } catch (_) {
       return null;
     }
   }
-
-  return (
-    value &&
-    typeof value ===
-      "object"
-  )
+  return value && typeof value === "object"
     ? value
     : null;
 }
 
-
-function send(
-  type,
-  payload = {}
-) {
-  if (
-    !embed ||
-    typeof embed.postMessage !==
-      "function"
-  ) {
+function send(type, payload = {}) {
+  if (!embed || typeof embed.postMessage !== "function") {
     return;
   }
 
   embed.postMessage({
     source:
       PARENT_SOURCE,
-
     type,
-
     payload,
-
     timestamp:
-      new Date()
-        .toISOString()
+      new Date().toISOString()
   });
 }
 
+function textValue(value, fallback = "") {
+  if (value === undefined || value === null) {
+    return fallback;
+  }
 
-/* ==========================================================================
-   MONEY
-   ========================================================================== */
-
-function moneyText(
-  value
-) {
   if (
-    value === null ||
-    value === undefined
+    typeof value === "string" ||
+    typeof value === "number"
   ) {
+    return String(value);
+  }
+
+  return (
+    value.translated ||
+    value.original ||
+    value.formattedAmount ||
+    value.formatted ||
+    fallback
+  );
+}
+
+function moneyLabel(value) {
+  if (!value) {
     return "";
   }
 
   if (
-    typeof value ===
-      "string" ||
-    typeof value ===
-      "number"
+    typeof value === "string" ||
+    typeof value === "number"
   ) {
-    return String(
-      value
-    );
+    return String(value);
   }
 
   return (
     value.formattedAmount ||
     value.formattedConvertedAmount ||
     value.formatted ||
-    value.formattedPrice ||
     value.amount ||
     value.convertedAmount ||
-    value.price ||
     ""
   );
 }
 
-
-/* ==========================================================================
-   CART NORMALIZATION
-   ========================================================================== */
-
-function normalizeMediaUrl(
-  value
-) {
-  if (!value) {
-    return "";
-  }
-
-  if (
-    typeof value ===
-    "string"
-  ) {
-    return value;
-  }
-
-  return (
-    value.image?.url ||
-    value.url ||
-    value.src ||
-    value.imageUrl ||
-    value.media?.image?.url ||
-    ""
-  );
-}
-
-
-function normalizeDescriptionLines(
-  lines = []
-) {
-  if (
-    !Array.isArray(
-      lines
-    )
-  ) {
-    return "";
-  }
-
-  return lines
-    .map(
-      (line) => {
-        const name =
-          line?.name?.original ||
-          line?.name?.translated ||
-          line?.name ||
-          "";
-
-        const value =
-          line?.value?.original ||
-          line?.value?.translated ||
-          line?.value ||
-          "";
-
-        if (
-          name &&
-          value
-        ) {
-          return `${name}: ${value}`;
-        }
-
-        return (
-          name ||
-          value ||
-          ""
-        );
-      }
-    )
-    .filter(Boolean)
-    .join(", ");
-}
-
-
-function normalizeCart(
-  response = {}
-) {
-  const raw =
-    response?.cart ||
-    response ||
+function normalizeCartV2(raw = {}) {
+  const cart =
+    raw?.cart ||
+    raw ||
     {};
 
-  const sourceItems =
-    raw.lineItems ||
-    raw.items ||
-    [];
-
-  const lineItems =
-    Array.isArray(
-      sourceItems
-    )
-      ? sourceItems
+  const items =
+    Array.isArray(cart.lineItems)
+      ? cart.lineItems
       : [];
 
   return {
     id:
-      raw._id ||
-      raw.id ||
+      cart._id ||
+      cart.id ||
       "",
 
     lineItems:
-      lineItems.map(
-        (item) => {
-          const catalogReference =
-            item.catalogReference ||
-            {};
+      items.map(
+        (item) => ({
+          id:
+            item._id ||
+            item.id ||
+            "",
 
-          const productName =
-            item.productName ||
-            {};
+          productId:
+            item
+              ?.source
+              ?.catalogReference
+              ?.catalogItemId ||
+            "",
 
-          const media =
-            item.media ||
-            item.mediaItem ||
-            item.image ||
-            {};
+          name:
+            textValue(
+              item.name,
+              "Product"
+            ),
 
-          return {
-            id:
-              item._id ||
-              item.id ||
-              item.lineItemId ||
-              "",
+          quantity:
+            Number(
+              item
+                ?.quantityInfo
+                ?.requestedQuantity ??
+              item
+                ?.quantityInfo
+                ?.confirmedQuantity ??
+              1
+            ),
 
-            productId:
-              item.productId ||
-              catalogReference.catalogItemId ||
-              "",
+          imageUrl:
+            item
+              ?.attributes
+              ?.image
+              ?.url ||
+            "",
 
-            name:
-              productName.original ||
-              productName.translated ||
-              (
-                typeof item.productName ===
-                  "string"
-                  ? item.productName
-                  : ""
-              ) ||
-              item.name ||
-              "Product",
+          optionsLabel:
+            Array.isArray(
+              item
+                ?.attributes
+                ?.descriptionLines
+            )
+              ? item
+                  .attributes
+                  .descriptionLines
+                  .map(
+                    (line) => {
+                      const name =
+                        textValue(
+                          line.name
+                        );
 
-            quantity:
-              Math.max(
-                1,
-                Number(
-                  item.quantity ||
-                  1
-                )
-              ),
+                      const value =
+                        textValue(
+                          line.value
+                        );
 
-            imageUrl:
-              normalizeMediaUrl(
-                media
-              ) ||
-              item.imageUrl ||
-              "",
+                      return (
+                        name &&
+                        value
+                      )
+                        ? `${name}: ${value}`
+                        : (
+                            name ||
+                            value
+                          );
+                    }
+                  )
+                  .filter(Boolean)
+                  .join(", ")
+              : "",
 
-            optionsLabel:
-              normalizeDescriptionLines(
-                item.descriptionLines
-              ) ||
-              item.optionsLabel ||
-              "",
-
-            priceLabel:
-              moneyText(
-                item.lineItemPrice
-              ) ||
-              moneyText(
-                item.totalPrice
-              ) ||
-              moneyText(
-                item.fullPrice
-              ) ||
-              moneyText(
-                item.price
-              )
-          };
-        }
+          priceLabel:
+            moneyLabel(
+              item
+                ?.pricing
+                ?.totalPrice
+            )
+        })
       ),
 
     totalLabel:
-      moneyText(
-        raw.priceSummary?.total
-      ) ||
-      moneyText(
-        raw.totals?.total
-      ) ||
-      moneyText(
-        raw.subtotalAfterDiscounts
-      ) ||
-      moneyText(
-        raw.subtotal
-      ) ||
-      moneyText(
-        raw.total
-      ) ||
-      ""
+      moneyLabel(
+        cart.subtotal
+      )
   };
 }
 
-
-/* ==========================================================================
-   CATALOG
-   ========================================================================== */
-
-async function loadCatalog(
-  force = false
-) {
-  if (
-    cachedCatalog &&
-    !force
-  ) {
+async function loadCatalog(force = false) {
+  if (cachedCatalog && !force) {
     send(
       "STOREFRONT_PRODUCTS",
       cachedCatalog
     );
-
     return cachedCatalog;
   }
 
-  if (
-    loadingPromise &&
-    !force
-  ) {
+  if (loadingPromise && !force) {
     return loadingPromise;
   }
 
   loadingPromise =
     (async () => {
-      try {
-        send(
-          "STOREFRONT_PROGRESS",
-          {
-            message:
-              "Loading store products…"
-          }
+      const result =
+        await listStorefrontProducts({
+          limit: 300
+        });
+
+      if (!result || result.ok === false) {
+        throw new Error(
+          result?.message ||
+          "The Wix Store catalog could not be loaded."
         );
-
-        const result =
-          await listStorefrontProducts({
-            limit:
-              300
-          });
-
-        if (
-          !result ||
-          result.ok === false
-        ) {
-          throw new Error(
-            result?.message ||
-            result?.error ||
-            "The Wix Store catalog could not be loaded."
-          );
-        }
-
-        cachedCatalog = {
-          ...result,
-
-          products:
-            Array.isArray(
-              result.products
-            )
-              ? result.products
-              : [],
-
-          categories:
-            Array.isArray(
-              result.categories
-            )
-              ? result.categories
-              : [],
-
-          banners:
-            Array.isArray(
-              result.banners
-            )
-              ? result.banners
-              : [],
-
-          travelCards:
-            Array.isArray(
-              result.travelCards
-            )
-              ? result.travelCards
-              : []
-        };
-
-        console.log(
-          "[Store Page] Catalog loaded.",
-          {
-            products:
-              cachedCatalog
-                .products
-                .length,
-
-            categories:
-              cachedCatalog
-                .categories
-                .length
-          }
-        );
-
-        /*
-         * Send products BEFORE doing anything with the cart.
-         * A cart failure can therefore never suppress the catalog.
-         */
-        send(
-          "STOREFRONT_PRODUCTS",
-          cachedCatalog
-        );
-
-        /*
-         * Refresh cart independently.
-         */
-        void sendCart();
-
-        return cachedCatalog;
-      } catch (error) {
-        console.error(
-          "[Store Page] Catalog load failed.",
-          error
-        );
-
-        send(
-          "STOREFRONT_ERROR",
-          {
-            stage:
-              "catalog",
-
-            message:
-              error?.message ||
-              "Store products could not be loaded."
-          }
-        );
-
-        throw error;
-      } finally {
-        loadingPromise =
-          null;
       }
+
+      cachedCatalog = {
+        ...result,
+
+        products:
+          Array.isArray(result.products)
+            ? result.products
+            : [],
+
+        categories:
+          Array.isArray(result.categories)
+            ? result.categories
+            : []
+      };
+
+      send(
+        "STOREFRONT_PRODUCTS",
+        cachedCatalog
+      );
+
+      void sendCart();
+
+      return cachedCatalog;
     })();
 
-  return loadingPromise;
+  try {
+    return await loadingPromise;
+  } finally {
+    loadingPromise = null;
+  }
 }
-
-
-/* ==========================================================================
-   CART
-   ========================================================================== */
 
 async function sendCart() {
   try {
     const result =
-      await getStorefrontCart();
-
-    const cart =
-      normalizeCart(
-        result?.cart ||
-        result ||
-        {}
-      );
+      await getStorefrontCartV2();
 
     send(
       "STOREFRONT_CART",
       {
-        cart
+        cart:
+          normalizeCartV2(
+            result?.cart ||
+            {}
+          )
       }
     );
-
-    return cart;
   } catch (error) {
-    console.error(
-      "[Store Page] Cart load failed.",
+    console.warn(
+      "[Store Page] Cart V2 unavailable.",
       error
     );
 
-    /*
-     * Do not break the storefront if the visitor does not yet have a cart.
-     */
-    const cart = {
-      id:
-        "",
-
-      lineItems:
-        [],
-
-      totalLabel:
-        ""
-    };
-
     send(
       "STOREFRONT_CART",
       {
-        cart
+        cart: {
+          id: "",
+          lineItems: [],
+          totalLabel: ""
+        }
       }
     );
-
-    return cart;
   }
 }
 
-
-/* ==========================================================================
-   PRODUCT LOOKUP
-   ========================================================================== */
-
-function findCachedProduct(
-  productId
-) {
-  if (
-    !cachedCatalog ||
-    !Array.isArray(
-      cachedCatalog.products
-    )
-  ) {
-    return null;
-  }
-
+function findProduct(productId) {
   return (
     cachedCatalog
-      .products
-      .find(
+      ?.products
+      ?.find(
         (product) =>
-          String(
-            product.id
-          ) ===
-          String(
-            productId
-          )
+          String(product.id) ===
+          String(productId)
       ) ||
     null
   );
 }
 
-
-/* ==========================================================================
-   VARIANT RESOLUTION
-   ========================================================================== */
-
-async function resolveVariantForCart(
-  productId,
-  choices = {}
-) {
+async function resolveVariant(productId, choices = {}) {
   const product =
-    findCachedProduct(
-      productId
-    );
+    findProduct(productId);
 
-  if (!product) {
-    throw new Error(
-      "The selected product could not be found in the current catalog."
-    );
-  }
-
-  /*
-   * Catalog V3 requires variantId even for products that appear to have
-   * only one purchasable variant.
-   *
-   * For a product without user-selectable options, use the variant already
-   * supplied by the catalog payload.
-   */
   const selectedChoices =
     choices &&
-    typeof choices ===
-      "object"
+    typeof choices === "object"
       ? choices
       : {};
 
-  const hasChoices =
-    Object.keys(
-      selectedChoices
-    ).length > 0;
-
   if (
-    !hasChoices &&
-    product.defaultVariantId
+    !Object.keys(selectedChoices).length &&
+    product?.defaultVariantId
   ) {
     return {
       variantId:
@@ -623,10 +337,6 @@ async function resolveVariantForCart(
     };
   }
 
-  /*
-   * Optioned product: ask the backend to match the buyer's selected option
-   * names against Catalog V3 read-only variants.
-   */
   const result =
     await resolveStoreVariant({
       productId,
@@ -641,21 +351,14 @@ async function resolveVariantForCart(
   ) {
     throw new Error(
       result?.message ||
-      "The selected product options are not available."
+      "The selected product option is unavailable."
     );
   }
 
   return result;
 }
 
-
-/* ==========================================================================
-   ADD TO BAG
-   ========================================================================== */
-
-async function addProductToBag(
-  payload = {}
-) {
+async function addProduct(payload = {}) {
   const productId =
     String(
       payload.productId ||
@@ -681,78 +384,47 @@ async function addProductToBag(
   const choices =
     (
       payload.choices &&
-      typeof payload.choices ===
-        "object"
+      typeof payload.choices === "object"
     )
       ? payload.choices
       : {};
 
-  send(
-    "STOREFRONT_PROGRESS",
-    {
-      message:
-        "Adding to bag…"
-    }
-  );
-
   const variant =
-    await resolveVariantForCart(
+    await resolveVariant(
       productId,
       choices
     );
 
-  const lineItem = {
-    catalogReference: {
-      appId:
-        WIX_STORES_APP_ID,
-
-      catalogItemId:
-        productId,
-
-      options: {
-        variantId:
-          variant.variantId
-      }
-    },
-
-    quantity
-  };
-
-  console.log(
-    "[Store Page] Adding Wix Store item.",
-    {
-      productId,
-      variantId:
-        variant.variantId,
-      quantity,
-      choices
-    }
-  );
-
   const result =
-    await addProductToCurrentCart({
+    await addProductToCurrentCartV2({
       lineItems: [
-        lineItem
+        {
+          catalogReference: {
+            appId:
+              WIX_STORES_APP_ID,
+
+            catalogItemId:
+              productId,
+
+            options: {
+              variantId:
+                variant.variantId
+            }
+          },
+
+          quantity
+        }
       ]
     });
 
-  /*
-   * Update Wix's native eCommerce state.
-   */
   try {
     await wixEcomFrontend
       .refreshCart();
-  } catch (error) {
-    console.warn(
-      "[Store Page] Native cart refresh failed.",
-      error
-    );
-  }
+  } catch (_) {}
 
   const cart =
-    normalizeCart(
+    normalizeCartV2(
       result?.cart ||
-      result ||
       {}
     );
 
@@ -768,274 +440,85 @@ async function addProductToBag(
     {
       action:
         "added",
-
       productId,
-
       quantity,
-
       cart
     }
   );
-
-  return cart;
 }
 
-
-/* ==========================================================================
-   CHECKOUT
-   ========================================================================== */
-
-async function checkout() {
-  send(
-    "STOREFRONT_PROGRESS",
-    {
-      message:
-        "Opening checkout…"
-    }
-  );
-
-  const result =
-    await createStorefrontCheckout();
-
-  const checkoutId =
-    result?.checkoutId;
-
-  if (!checkoutId) {
-    throw new Error(
-      "Wix checkout could not be created."
-    );
-  }
-
-  console.log(
-    "[Store Page] Checkout created.",
-    {
-      checkoutId
-    }
-  );
-
-  await wixEcomFrontend
-    .navigateToCheckoutPage(
-      checkoutId
-    );
-}
-
-
-/* ==========================================================================
-   NAVIGATION
-   ========================================================================== */
-
-function navigate(
-  rawPath
-) {
-  const path =
-    String(
-      rawPath ||
-      ""
-    ).trim();
-
-  if (!path) {
-    return;
-  }
-
-  const allowed =
-    path.startsWith("/") ||
-    /^https?:\/\//i.test(
-      path
-    ) ||
-    /^mailto:/i.test(
-      path
-    ) ||
-    /^tel:/i.test(
-      path
-    );
-
-  if (!allowed) {
-    console.warn(
-      "[Store Page] Blocked invalid navigation:",
-      path
-    );
-
-    return;
-  }
-
-  wixLocationFrontend
-    .to(
-      path
-    );
-}
-
-
-/* ==========================================================================
-   HTML MESSAGE HANDLER
-   ========================================================================== */
-
-async function handleStorefrontMessage(
-  message
-) {
+async function handleMessage(message) {
   const payload =
     message.payload ||
     {};
 
-  switch (
-    message.type
-  ) {
-    /* --------------------------------------------------------------
-       READY
-       -------------------------------------------------------------- */
-
+  switch (message.type) {
     case "STOREFRONT_READY":
-
-      if (
-        cachedCatalog
-      ) {
+      if (cachedCatalog) {
         send(
           "STOREFRONT_PRODUCTS",
           cachedCatalog
         );
-
         void sendCart();
-
         return;
       }
-
       await loadCatalog();
-
       return;
-
-
-    /* --------------------------------------------------------------
-       REFRESH
-       -------------------------------------------------------------- */
 
     case "STOREFRONT_REFRESH":
-
-      cachedCatalog =
-        null;
-
-      await loadCatalog(
-        true
-      );
-
+      cachedCatalog = null;
+      await loadCatalog(true);
       return;
-
-
-    /* --------------------------------------------------------------
-       CART REQUEST
-       -------------------------------------------------------------- */
 
     case "STOREFRONT_CART_REQUEST":
-
       await sendCart();
-
       return;
-
-
-    /* --------------------------------------------------------------
-       ADD PRODUCT
-       -------------------------------------------------------------- */
 
     case "STOREFRONT_ADD_TO_CART":
-
-      await addProductToBag(
-        payload
+      send(
+        "STOREFRONT_PROGRESS",
+        {
+          message:
+            "Adding to bag…"
+        }
       );
-
+      await addProduct(payload);
       return;
 
-
-    /* --------------------------------------------------------------
-       CHECKOUT
-       -------------------------------------------------------------- */
-
+    /*
+     * CUSTOM SKANDI CHECKOUT.
+     * Never call navigateToCheckoutPage().
+     */
     case "STOREFRONT_CHECKOUT":
-
-      await checkout();
-
+      wixLocationFrontend.to(
+        CHECKOUT_PATH
+      );
       return;
-
-
-    /* --------------------------------------------------------------
-       ORDERS
-       -------------------------------------------------------------- */
 
     case "STOREFRONT_ORDERS":
-
-      navigate(
+      wixLocationFrontend.to(
         ORDERS_PATH
       );
-
       return;
-
-
-    /* --------------------------------------------------------------
-       NAVIGATION
-       -------------------------------------------------------------- */
 
     case "STOREFRONT_NAVIGATE":
-
-      navigate(
-        payload.path
-      );
-
+      if (payload.path) {
+        wixLocationFrontend.to(
+          payload.path
+        );
+      }
       return;
 
-
     default:
-
-      console.log(
-        "[Store Page] Unhandled storefront message:",
-        message.type
-      );
-
       return;
   }
 }
 
-
-/* ==========================================================================
-   PAGE INITIALIZATION
-   ========================================================================== */
-
 $w.onReady(function () {
-  console.log(
-    "[Store Page] Production storefront starting."
-  );
-
-  try {
-    embed =
-      $w(
-        EMBED_ID
-      );
-  } catch (error) {
-    console.error(
-      `[Store Page] ${EMBED_ID} does not exist.`,
-      error
+  embed =
+    $w(
+      EMBED_ID
     );
-
-    return;
-  }
-
-  if (
-    !embed ||
-    typeof embed.onMessage !==
-      "function" ||
-    typeof embed.postMessage !==
-      "function"
-  ) {
-    console.error(
-      `[Store Page] ${EMBED_ID} is not a Wix HTML Component.`
-    );
-
-    return;
-  }
-
-  console.log(
-    "[Store Page] HTML storefront bridge connected.",
-    {
-      embedId:
-        EMBED_ID
-    }
-  );
 
   embed.onMessage(
     async (event) => {
@@ -1046,20 +529,14 @@ $w.onReady(function () {
 
       if (
         !message ||
-        !message.type
-      ) {
-        return;
-      }
-
-      if (
         message.source !==
-        STOREFRONT_SOURCE
+          STOREFRONT_SOURCE
       ) {
         return;
       }
 
       try {
-        await handleStorefrontMessage(
+        await handleMessage(
           message
         );
       } catch (error) {
@@ -1083,49 +560,29 @@ $w.onReady(function () {
     }
   );
 
-
-  /* ========================================================================
-     HANDSHAKE
-     ======================================================================== */
-
   send(
     "STOREFRONT_PARENT_READY",
     {
       bridge:
-        "PRODUCTION",
+        "PRODUCTION_CART_V2",
 
       catalogVersion:
         "V3",
 
-      cart:
+      customCheckout:
         true,
 
-      checkout:
-        true,
-
-      embedId:
-        EMBED_ID
+      checkoutPath:
+        CHECKOUT_PATH
     }
   );
 
-
-  /* ========================================================================
-     PRELOAD
-     ======================================================================== */
-
-  /*
-   * Load immediately.
-   *
-   * If the iframe has not attached its event listener yet, the catalog is
-   * cached and replayed when STOREFRONT_READY arrives.
-   */
   void loadCatalog()
     .catch(
-      (error) => {
+      (error) =>
         console.error(
-          "[Store Page] Initial catalog preload failed.",
+          "[Store Page] Initial load failed.",
           error
-        );
-      }
+        )
     );
 });
