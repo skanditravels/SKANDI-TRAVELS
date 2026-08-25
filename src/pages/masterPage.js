@@ -111,31 +111,50 @@ const MASTER_CONFIG = Object.freeze({
     footer: Object.freeze({
       columns: Object.freeze([
         {
-          title: "Travel",
+          title: "Book &amp; Travel",
           links: Object.freeze([
+            { label: "Manage your booking", path: "/my-profile" },
+            { label: "Book a trip", path: "/home" },
+            { label: "SKANDI Collection", path: "/skandi-collection" },
+            { label: "Destinations", path: "/destinations" },
             { label: "Flights", path: "/flights" },
             { label: "Hotels", path: "/hotels" },
             { label: "Packages", path: "/packages" },
             { label: "Tours & Activities", path: "/tours" },
-            { label: "Transfers", path: "/transfers" }
+            { label: "Transfers", path: "/transfers" },
+            { label: "Car Rental", path: "/car-rental" },
+            { label: "The Store", path: "/the-store" }
           ])
         },
         {
-          title: "Discover",
+          title: "Help &amp; Travel Info",
           links: Object.freeze([
-            { label: "Destinations", path: "/destinations" },
-            { label: "SKANDI Collection", path: "/skandi-collection" },
+            { label: "Before you travel", path: "/travel-info" },
+            { label: "Passport &amp; Visa", path: "/travel-info/passport-visa" },
+            { label: "Baggage", path: "/travel-info/baggage" },
+            { label: "Insurance", path: "/travel-info/insurance" },
+            { label: "Flight Status", path: "/travel-info/flight-status" },
+            { label: "Help Center", path: "/help" },
+            { label: "Contact us", path: "/contact" },
+            { label: "Special Assistance", path: "/travel-info/special-assistance" }
+          ])
+        },
+        {
+          title: "SKANDI Club",
+          links: Object.freeze([
+            { label: "Join SKANDI Club", path: "/skandi-club" },
+            { label: "Member Benefits", path: "/skandi-club/benefits" },
+            { label: "My Club Status", path: "/my-profile?tab=club-rewards" },
+            { label: "Travel Wallet &amp; Vouchers", path: "/my-profile?tab=wallet" }
+          ])
+        },
+        title: "About",
+          links: Object.freeze([
             { label: "VOY Magazine", path: "/voy-magazine" },
-            { label: "Newsroom", path: "/about/news-room" }
-          ])
-        },
-        {
-          title: "SKANDI",
-          links: Object.freeze([
-            { label: "About SKANDI", path: "/about" },
-            { label: "Contact", path: "/about/contact" },
-            { label: "Support", path: "/about/support" },
-            { label: "Legal", path: "/about/legal" }
+            { label: "About SKANDI Travels", path: "/about" },
+            { label: "Newsroom", path: "/about/news-room" },
+            { label: "Careers", path: "/about/careers" },
+            { label: "Our Network", path: "/about/our-network" },
           ])
         }
       ]),
