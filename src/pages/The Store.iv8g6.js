@@ -24,7 +24,7 @@ const WIX_STORES_APP_ID =
   "215238eb-22a5-4c36-9e7b-e7c08025e04e";
 
 const CHECKOUT_PATH =
-  "/store/checkout";
+  "/the-store/store-checkout";
 
 const ORDERS_PATH =
   "/my-orders";
