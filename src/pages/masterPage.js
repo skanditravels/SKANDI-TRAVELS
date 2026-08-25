@@ -180,7 +180,6 @@ const CUSTOMER_FOOTER_SOURCE = "SKANDI_CUSTOMER_FOOTER";
 const ALTEA_HEADER_SOURCE = "SKANDI_ALTEA_HEADER";
 const INTERNAL_PREFIXES = ["/riaintra", "/altea", "/_functions"];
 const GROUPTALK_CHROME_FREE_PATHS = Object.freeze([
-  "/riaintra/altea/grouptalk",
   "/riaintra/success-factors/altea/grouptalk"
 ]);
 
@@ -652,7 +651,7 @@ async function applyChromeVisibility() {
   /*
    * GroupTalk owns the complete viewport/application surface.
    * Do not stack RIAINTRA, ALTEA, customer header, or any global footer
-   * on /riaintra/altea/grouptalk.
+   * on /riaintra/success-factors/altea/grouptalk.
    */
   if (isChromeFreeInternalPath()) {
     await hideChromeElement(customerHeader);
