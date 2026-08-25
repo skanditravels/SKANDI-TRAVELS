@@ -30,8 +30,8 @@ const MASTER_CONFIG = Object.freeze({
     currencies: Object.freeze(["USD", "SEK", "NOK", "DKK", "EUR"]),
     assets: Object.freeze({
       logos: Object.freeze({
-        skandiPrimary: "https://static.wixstatic.com/media/394052_69299cae98564a63b4a9bb7a8d037a33~mv2.png",
-        skandiWhite: "https://static.wixstatic.com/media/394052_69299cae98564a63b4a9bb7a8d037a33~mv2.png",
+        skandiPrimary: "https://static.wixstatic.com/media/394052_504704bd94f44f01a95f304bd19640e5~mv2.png",
+        skandiWhite: "https://static.wixstatic.com/media/394052_fafffe6d26434eddbf62eb645ee9c844~mv2.png",
         skandiTravels: "https://static.wixstatic.com/media/394052_69299cae98564a63b4a9bb7a8d037a33~mv2.png",
         skandiWave: "https://static.wixstatic.com/media/394052_0c1aaf1dba2c4548ad53ccd8509d338c~mv2.png",
         skandiGroup: "https://static.wixstatic.com/media/394052_6ed40c4aedc1487d96f387384101bb55~mv2.png",
