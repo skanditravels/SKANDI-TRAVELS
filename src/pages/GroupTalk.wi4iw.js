@@ -1007,12 +1007,18 @@ function voiceCommand(
         }
       );
 
-      voice.setAttribute(
-        "command",
-        JSON.stringify(
-          data
-        )
-      );
+      try {
+        voice.setAttribute(
+          "command",
+          JSON.stringify(
+            data
+          )
+        );
+      } catch (error) {
+        voiceCallbacks.delete(id);
+        clearTimeout(timer);
+        reject(error);
+      }
     }
   );
 }
@@ -1333,6 +1339,22 @@ async function requestDeviceAccess(
 
     location
   };
+}
+
+
+const ERROR_RESPONSE_BY_REQUEST = Object.freeze({
+  SUPABASE_REALTIME_CONFIG_REQUEST: "SUPABASE_REALTIME_CONFIG_RESPONSE",
+  DEVICE_ACCESS_REQUEST: "DEVICE_ACCESS_RESPONSE",
+  VOICE_CONNECT_REQUEST: "VOICE_CONNECT_RESPONSE",
+  VOICE_MIC_REQUEST: "VOICE_MIC_RESPONSE",
+  LIVEKIT_TOKEN_REQUEST: "LIVEKIT_TOKEN_RESPONSE"
+});
+
+function postRequestFailure(type,payload,code,message){
+  const responseType=ERROR_RESPONSE_BY_REQUEST[type];
+  if(!responseType)return false;
+  post(responseType,{requestId:payload?.requestId||"",ok:false,code,message});
+  return true;
 }
 
 
@@ -1979,6 +2001,15 @@ $w.onReady(
     wireVoiceBridge();
 
 
+    if (voice) {
+      voiceCommand({action:"ping"},{timeoutMs:5000})
+        .then(detail=>post("VOICE_BRIDGE_STATUS",{ok:true,state:detail?.state||"ready",elementId:voice?.id||""}))
+        .catch(error=>post("VOICE_BRIDGE_STATUS",{ok:false,code:"VOICE_BRIDGE_PING_FAILED",message:messageOf(error)}));
+    } else {
+      post("VOICE_BRIDGE_STATUS",{ok:false,code:"VOICE_BRIDGE_NOT_FOUND",message:"#groupTalkVoiceBridge is not connected to the Wix Custom Element."});
+    }
+
+
     html.onMessage(
       async (
         event
@@ -2026,56 +2057,9 @@ $w.onReady(
             `[GroupTalk] ${type || "UNKNOWN"} failed.`,
             error
           );
-
-          if (
-            type ===
-            "SUPABASE_REALTIME_CONFIG_REQUEST"
-          ) {
-            post(
-              "SUPABASE_REALTIME_CONFIG_RESPONSE",
-              {
-                requestId:
-                  payload.requestId ||
-                  "",
-
-                ok:
-                  false,
-
-                code,
-
-                message:
-                  text
-              }
-            );
-
+          if (postRequestFailure(type,payload,code,text)) {
             return;
           }
-
-
-          if (
-            type ===
-            "VOICE_CONNECT_REQUEST"
-          ) {
-            post(
-              "VOICE_CONNECT_RESPONSE",
-              {
-                requestId:
-                  payload.requestId ||
-                  "",
-
-                ok:
-                  false,
-
-                code,
-
-                message:
-                  text
-              }
-            );
-
-            return;
-          }
-
 
           post(
             "GT_ERROR",
