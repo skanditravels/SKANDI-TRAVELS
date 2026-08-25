@@ -15,12 +15,12 @@ import {
   resendDocumentPacket,
   exportAuditPackage,
   saveSettings
-} from 'src/backend/careersControl.jsw';
+} from 'backend/careersControl.jsw';
 
 import wixLocation from 'wix-location-frontend';
 
-import { dispatchQueuedCareerEmails } from 'src/backend/outboundEmailDispatcher.web';
-import { syncCareerMailboxReplies } from 'src/backend/inboundCareerMailboxSync.web';
+import { dispatchQueuedCareerEmails } from 'backend/outboundEmailDispatcher.web';
+import { syncCareerMailboxReplies } from 'backend/inboundCareerMailboxSync.web';
 
 const HTML_ID = '#htmlCareersControl';
 
