@@ -60,8 +60,8 @@ const MASTER_CONFIG = Object.freeze({
     })
   }),
   routes: Object.freeze({
-    home: "/home",
-    search: "/home?focus=search",
+    home: "/",
+    search: "/?focus=search",
     flights: "/flights",
     carRental: "/car-rental",
     hotels: "/hotels",
@@ -72,12 +72,12 @@ const MASTER_CONFIG = Object.freeze({
     destinations: "/destinations",
     skandiCollection: "/skandi-collection",
     voy: "/voy-magazine",
-    newsroom: "/about/news-room",
     myTrip: "/my-trip",
     club: "/skandi-club",
+    about: "/about",
     support: "/about/support",
     contact: "/about/contact",
-    about: "/about",
+    newsroom: "/about/news-room",
     theStore: "/the-store",
     storeCheckout: "/the-store/store-checkout",
     storeConfirmation:"/the-store/store-checkout/order-confirmation",
@@ -113,40 +113,54 @@ const MASTER_CONFIG = Object.freeze({
       ]),
       accountNav: Object.freeze([
         { id: "myTrip", label: "My Trip", path: "/my-trip" },
-        { id: "club", label: "SKANDI Club", path: "/skandi-club" },
-        { id: "support", label: "Support", path: "/about/support" }
+        { id: "club", label: "SKANDI Club", path: "/skandi-club" }
       ])
     }),
     footer: Object.freeze({
       columns: Object.freeze([
         {
-          title: "Travel",
+          title: "BOOK & TRAVEL",
           links: Object.freeze([
+            { label: "Book a trip", path: "/home" },
+            { label: "Manage your booking", path: "/my-profile?tab=trips" },
+            { label: "Our Destinations", path: "/destinations" },
             { label: "Flights", path: "/flights" },
             { label: "Hotels", path: "/hotels" },
-            { label: "Packages", path: "/packages" },
             { label: "Tours & Activities", path: "/tours" },
-            { label: "Transfers", path: "/transfers" }
+            { label: "Car Rental", path: "/car-rental" },
+            { label: "Airport Transfer", path: "/transfers" },
+            { label: "Last Chance", path: "/offers" }
           ])
         },
         {
-          title: "Discover",
+          title: "HELP & TRAVEL INFO",
           links: Object.freeze([
-            { label: "Destinations", path: "/destinations" },
-            { label: "SKANDI Collection", path: "/skandi-collection" },
-            { label: "VOY Magazine", path: "/voy-magazine" },
-            { label: "Newsroom", path: "/about/news-room" }
+            { label: "Before you travel", path: "/travel-info" },
+            { label: "Passport & Visa", path: "/travel-info/passport-visa" },
+            { label: "Baggage Allowence", path: "/travel-info/baggage-allowence" },
+            { label: "Travel Insurance", path: "/travel-info/insurance" },
+            { label: "Special Assistance", path: "/travel-info/special-assistance" },
+            { label: "Flight Status", path: "/travel-info/flight-status" },
+            { label: "Help Center", path: "/about/support" }
           ])
         },
         {
           title: "SKANDI",
           links: Object.freeze([
+            { label: "Join SKANDI Club", path: "/skandi-club" },
+            { label: "Log In to My Club", path: "/my-profile" },
+            { label: "SKANDI Collection", path: "/skandi-collection" },
+            { label: "THE STORE", path: "/the-store" },
+            { label: "VOY Magazine", path: "/voy-magazine" }
+          ])
+        },
+        {
+          title: "ABOUT SKANDI",
+          links: Object.freeze([
             { label: "About SKANDI", path: "/about" },
-            { label: "Contact", path: "/about/contact" },
             { label: "Careers", path: "/about/careers" },
-            { label: "My Job Portal", path: "/about/careers/portal" },
-            { label: "Support", path: "/about/support" },
-            { label: "Legal", path: "/about/legal" }
+            { label: "Newwsroom", path: "/about/news-room" },
+            { label: "Our Network", path: "/about/our-network" }
           ])
         }
       ]),
@@ -158,15 +172,15 @@ const MASTER_CONFIG = Object.freeze({
       productName: "SKANDI TRAVELS",
       productContext: "RIAINTRA Enterprise Workforce Suite",
       primaryNav: Object.freeze([
-        { id: "staff-portal", label: "RIAINTRA", path: "/riaintra" },
-        { id: "success-factors", label: "SuccessFactors", path: "/riaintra/success-factors" },
+        { id: "success-factors", label: "SAP RIAINTRA Dashboard", path: "/riaintra/success-factors" },
+        { id: "my-roster". label: "MyRoster", path: "/riaintra/success-factors/my-roster" },
         { id: "alteaLaunchpad", label: "ALTEA", path: "/riaintra/success-factors/altea" },
-        { id: "mail", label: "Mail", path: "/riaintra/mail" },
-        { id: "docunet", label: "DocuNet", path: "/riaintra/docunet" },
-        { id: "service-desk", label: "ServiceDesk", path: "/riaintra/service-desk" }
+        { id: "mail", label: "Mail", path: "/riaintra/success-factors/mail" },
+        { id: "docunet", label: "DocuNet", path: "/riaintra/success-factors/docunet" },
+        { id: "service-desk", label: "ServiceDesk", path: "/riaintra/success-factors/helpdesk" }
       ]),
       managementNav: Object.freeze([
-        { id: "magazine-manager", label: "Magazine Manager", path: "/riaintra/media-control" }
+        { id: "magazine-manager", label: "Media Manager", path: "/riaintra/success-factors/media-control" }
       ])
     }),
     footer: Object.freeze({
@@ -429,8 +443,9 @@ async function handleMasterMessage(embed, message = {}) {
         station:
           alteaRuntimeContext.station ||
           staff?.profile?.station ||
+          "";
           staff?.profile?.stationCode ||
-          "USNYC",
+          "",
         timeZone:
           alteaRuntimeContext.timeZone ||
           staff?.profile?.timeZone ||
@@ -717,35 +732,7 @@ async function applyChromeVisibility() {
     if (customerFooter) pushMasterConfig(customerFooter);
   }
 }
-$w.onReady(function () {
-    // IMPORTANT: Replace '#skandiHeader' with the actual ID of your HTML component
-    const headerComponent = $w('#skandiCustomerHeaderEmbed');
 
-    headerComponent.onMessage((event) => {
-        const message = event.data;
-
-        // Ensure the message is coming from our specific Customer Header
-        if (message.source === "SKANDI_CUSTOMER_HEADER_EXPANDBAR") {
-            
-            // 1. Handle dynamic resizing
-            if (message.type === "SKANDI_EMBED_RESIZE") {
-                // This tells Wix to stretch the box to 1200px (full screen) or shrink it back to 118px
-                headerComponent.height = message.payload.height;
-            }
-
-            // 2. Handle navigation requests from the header
-            if (message.type === "HEADER_NAVIGATE") {
-                import wixLocation from 'wix-location';
-                wixLocation.to(message.payload.path);
-            }
-
-            // 3. Handle login requests
-            if (message.type === "HEADER_LOGIN_SUBMIT") {
-                console.log("User wants to log in with: ", message.payload.email);
-                // Trigger your Wix authentication/login flow here
-            }
-        }
-    });
 });
 $w.onReady(async function () {
   const page = currentWixPageInfo();
