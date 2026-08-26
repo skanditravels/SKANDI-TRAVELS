@@ -191,11 +191,11 @@ const MASTER_CONFIG = Object.freeze({
   })
 });
 
-const CUSTOMER_HEADER_EMBED = "#skandiCustomerHeaderEmbed";
-const CUSTOMER_FOOTER_EMBED = "#skandiCustomerFooterEmbed";
+const CUSTOMER_HEADER_EMBED = "#skandiHeaderEmbed";
+const CUSTOMER_FOOTER_EMBED = "#skandiFooterEmbed";
 const RIAINTRA_HEADER_EMBED = "#riaintraHeaderEmbed";
 const RIAINTRA_FOOTER_EMBED = "#riaintraFooterEmbed";
-const ALTEA_HEADER_EMBED = "#altea-header";
+const ALTEA_HEADER_EMBED = "#alteaHeaderEmbed";
 
 const PARENT_SOURCE = "SKANDI_WIX_PARENT";
 const CUSTOMER_HEADER_SOURCE = "SKANDI_CUSTOMER_HEADER_EXPANDBAR";
