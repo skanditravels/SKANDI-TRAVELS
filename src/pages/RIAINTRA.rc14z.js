@@ -177,7 +177,7 @@ async function handleLoginRequest(
     postToEmbed(
       "STAFF_LOGIN_PROGRESS",
       {
-        message: "Signing in..."
+        message: "Sig in"
       },
       requestId
     );
@@ -192,8 +192,8 @@ async function handleLoginRequest(
      * browser member session.
      */
     await authentication.applySessionToken(
-      sessionToken
-    );
+  result.sessionToken
+);
 
 
     /*
