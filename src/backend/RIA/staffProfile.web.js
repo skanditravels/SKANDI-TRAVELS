@@ -168,8 +168,6 @@ function employmentRole(
   agent = {}
 ) {
   return clean(
-    agent.role ||
-    agent.position ||
     agent.job_title ||
     "",
     120
@@ -190,8 +188,6 @@ function agentSelect() {
     "last_name",
     "display_name",
     "preferred_name",
-    "role",
-    "position",
     "job_title",
     "department",
     "station",
@@ -209,6 +205,8 @@ function agentSelect() {
     "created_at",
     "updated_at",
     "last_login_at"
+    "badge_photo_url",
+
   ].join(",");
 }
 
@@ -711,16 +709,9 @@ function publicProfile(
         agent
       ),
 
-    position:
-      agent.position ||
-      agent.job_title ||
-      agent.role ||
-      "",
 
     jobTitle:
       agent.job_title ||
-      agent.position ||
-      agent.role ||
       "",
 
     department:
@@ -1277,7 +1268,7 @@ export const searchStaffDirectory =
 
           query: {
             select:
-              "id,sk_id,first_name,last_name,preferred_name,display_name,role,position,job_title,department,station,base,corporate_email_address,email,payload",
+              "id,sk_id,first_name,last_name,preferred_name,display_name,job_title,department,station,base,corporate_email_address,email,payload",
 
             active:
               "eq.true",
@@ -1316,8 +1307,6 @@ export const searchStaffDirectory =
                   agent
                 ),
                 agent.sk_id,
-                agent.role,
-                agent.position,
                 agent.job_title,
                 agent.department,
                 agent.station,
