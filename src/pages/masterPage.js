@@ -72,11 +72,10 @@ const MASTER_CONFIG = Object.freeze({
     destinations: "/destinations",
     skandiCollection: "/skandi-collection",
     voy: "/voy-magazine",
-    myTrip: "/my-trip",
+    myTrip: "/my-profile?tab=trips",
     club: "/skandi-club",
     about: "/about",
     support: "/about/support",
-    contact: "/about/contact",
     newsroom: "/about/news-room",
     theStore: "/the-store",
     storeCheckout: "/the-store/store-checkout",
@@ -85,16 +84,15 @@ const MASTER_CONFIG = Object.freeze({
     legal: "/about/legal",
     policies: "/about/legal/policies",
     riaintra: "/riaintra",
-    staffPortal: "/riaintra/staff-portal",
     successFactors: "/riaintra/success-factors",
     alteaLaunchpad: "/riaintra/success-factors/altea",
     alteaReservations: "/riaintra/success-factors/altea/reservations",
     alteaTicketing: "/riaintra/success-factors/altea/ticketing",
     alteaTimatic: "/riaintra/success-factors/altea/timatic",
-    mail: "/riaintra/mail",
-    docunet: "/riaintra/docunet",
-    serviceDesk: "/riaintra/service-desk",
-    magazineManager: "/riaintra/media-control"
+    mail: "/riaintra/success-factors/mail",
+    docunet: "/riaintra/success-factors/docunet",
+    serviceDesk: "/riaintra/success-factors/helpdesk",
+    magazineManager: "/riaintra/success-factors/media-control"
   }),
   customer: Object.freeze({
     header: Object.freeze({
@@ -112,7 +110,7 @@ const MASTER_CONFIG = Object.freeze({
         { id: "newsroom", label: "Newsroom", path: "/about/news-room" }
       ]),
       accountNav: Object.freeze([
-        { id: "myTrip", label: "My Trip", path: "/my-trip" },
+        { id: "myTrip", label: "My Trips", path: "/my-profile?tab=trips" },
         { id: "club", label: "SKANDI Club", path: "/skandi-club" }
       ])
     }),
