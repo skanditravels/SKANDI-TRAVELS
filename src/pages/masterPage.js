@@ -717,7 +717,36 @@ async function applyChromeVisibility() {
     if (customerFooter) pushMasterConfig(customerFooter);
   }
 }
+$w.onReady(function () {
+    // IMPORTANT: Replace '#skandiHeader' with the actual ID of your HTML component
+    const headerComponent = $w('#skandiCustomerHeaderEmbed');
 
+    headerComponent.onMessage((event) => {
+        const message = event.data;
+
+        // Ensure the message is coming from our specific Customer Header
+        if (message.source === "SKANDI_CUSTOMER_HEADER_EXPANDBAR") {
+            
+            // 1. Handle dynamic resizing
+            if (message.type === "SKANDI_EMBED_RESIZE") {
+                // This tells Wix to stretch the box to 1200px (full screen) or shrink it back to 118px
+                headerComponent.height = message.payload.height;
+            }
+
+            // 2. Handle navigation requests from the header
+            if (message.type === "HEADER_NAVIGATE") {
+                import wixLocation from 'wix-location';
+                wixLocation.to(message.payload.path);
+            }
+
+            // 3. Handle login requests
+            if (message.type === "HEADER_LOGIN_SUBMIT") {
+                console.log("User wants to log in with: ", message.payload.email);
+                // Trigger your Wix authentication/login flow here
+            }
+        }
+    });
+});
 $w.onReady(async function () {
   const page = currentWixPageInfo();
 
