@@ -20,7 +20,6 @@ const AGENT_SELECT = [
   "agent_id",
   "member_id",
   "wix_member_id",
-  "contact_id",
   "email",
   "corporate_email_address",
   "sk_id",
@@ -28,8 +27,6 @@ const AGENT_SELECT = [
   "last_name",
   "preferred_name",
   "display_name",
-  "role",
-  "position",
   "job_title",
   "department",
   "station",
@@ -39,6 +36,7 @@ const AGENT_SELECT = [
   "employment_status",
   "portal_access",
   "authorized",
+  "badge_photo_url",
   "can_access_payroll",
   "can_access_grouptalk",
   "can_manage",
@@ -68,7 +66,7 @@ const PORTAL_APPS = Object.freeze([
     id: "staff-portal",
     title: "RIAINTRA",
     subtitle: "Staff portal",
-    path: "/riaintra/staff-portal",
+    path: "/riaintra/",
     group: "Staff",
     icon: "R"
   },
@@ -89,6 +87,46 @@ const PORTAL_APPS = Object.freeze([
     icon: "A"
   },
   {
+    id: "reservations",
+    title: "ALTEA Reservations",
+    subtitle: "Reservations platform",
+    path: "/riaintra/success-factors/altea/reservations",
+    group: "Operations",
+    icon: "AR"
+  },
+  {
+    id: "ticketing",
+    title: "ALTEA Ticketing",
+    subtitle: "Ticketing platform",
+    path: "/riaintra/success-factors/altea/ticketing",
+    group: "Operations",
+    icon: "AT"
+  },
+  {
+    id: "timatic",
+    title: "ALTEA Timatic",
+    subtitle: "Timatic Passenger Document Compliance Check",
+    path: "/riaintra/success-factors/altea/timatic",
+    group: "Operations",
+    icon: "AT"
+  },
+  {
+    id: "occ",
+    title: "ALTEA OCC",
+    subtitle: "OPS Operational Control Center",
+    path: "/riaintra/success-factors/altea/occ",
+    group: "Operations",
+    icon: "AOCC"
+  },
+  {
+    id: "dcs",
+    title: "ALTEA Departure Control",
+    subtitle: "Customer Management / Departure Control",
+    path: "/riaintra/success-factors/altea/departure-control",
+    group: "Operations",
+    icon: "ADC"
+  },
+  {
     id: "mail",
     title: "Mail",
     subtitle: "Internal messages",
@@ -97,36 +135,96 @@ const PORTAL_APPS = Object.freeze([
     icon: "M"
   },
   {
+    id: "inventory",
+    title: "ALTEA Inventory Control",
+    subtitle: "SKANDI's travel inventory center",
+    path: "/riaintra/success-factors/altea/inventory-control",
+    group: "Operations",
+    icon: "AI"
+  },
+  {
     id: "grouptalk",
     title: "GroupTalk",
     subtitle: "Operational team communication",
-    path: "/riaintra/grouptalk",
+    path: "/riaintra/success-factors/alteagrouptalk",
     group: "Communication",
-    icon: "G"
+    icon: "APTT"
   },
   {
     id: "docunet",
     title: "DocuNet",
-    subtitle: "Controlled documents",
-    path: "/riaintra/docunet",
+    subtitle: "Internal documents and manuals library",
+    path: "/riaintra/success-factors/docunet",
     group: "Operations",
     icon: "D"
   },
   {
-    id: "service-desk",
-    title: "Service Desk",
+    id: "helpdesk",
+    title: "HelpDesk",
     subtitle: "Internal support",
-    path: "/riaintra/service-desk",
+    path: "/riaintra/success-factors/helpdesk",
     group: "Support",
-    icon: "H"
+    icon: "HD"
+  },
+  {
+    id: "finance",
+    title: "Finance Center",
+    subtitle: "Corporate Finance Portal",
+    path: "/riaintra/success-factors/finance-control",
+    group: "Administration",
+    icon: "FC",
+    permission: "excecutive"
+  },
+  {
+    id: "uniform-center",
+    title: "Uniform Center",
+    subtitle: "Employee Uniform Portal",
+    path: "/riaintra/success-factors/uniform",
+    group: "Staff",
+    icon: "UC"
+  },
+  {
+    id: "storeadmin",
+    title: "THE STORE Admin",
+    subtitle: "THE STORE Admin Portal",
+    path: "/riaintra/success-factors/store-admin",
+    group: "administration",
+    icon: "SA",
+    permission: "store"
+  },
+  {
+    id: "uniform-control",
+    title: "Uniform Control",
+    subtitle: "Admin UC Portal",
+    path: "/riaintra/success-factors/uniform/uniform-control",
+    group: "Administration",
+    icon: "UCC",
+    permission: "uniform"
+  },
+  {
+    id: "mediacontrol",
+    title: "Media Control",
+    subtitle: "Newsroom, VOY & Marketing Portal",
+    path: "/riaintra/success-factors/media-control",
+    group: "Administration",
+    icon: "MM",
+    permission: "media"
+  },
+  {
+    id: "my-payroll",
+    title: "MyPayroll",
+    subtitle: "Employee Payroll Portal",
+    path: "/riaintra/success-factors/my-payroll",
+    group: "Staff",
+    icon: "P"
   },
   {
     id: "payroll",
-    title: "Payroll",
-    subtitle: "Payroll administration",
-    path: "/riaintra/success-factors",
+    title: "Payroll Admin",
+    subtitle: "Admin Payroll Portal",
+    path: "/riaintra/success-factors/my-payroll/payroll-admin",
     group: "Administration",
-    icon: "P",
+    icon: "PA",
     permission: "payroll"
   }
 ]);
@@ -206,8 +304,6 @@ function publicAgent(agent = {}) {
     name: displayName(agent),
     email: agentLoginEmail(agent),
     corporateEmailAddress: normalizeEmail(agent.corporate_email_address),
-    role: normalizedRole(agent),
-    position: agent.position || agent.job_title || agent.role || "",
     jobTitle: agent.job_title || agent.position || "",
     department: agent.department || "",
     station: agent.station || agent.base || "",
@@ -308,11 +404,14 @@ function appsForAgent(agent = {}) {
 
 async function findAgentBySkId(skId) {
   const value = normalizeSkId(skId);
-  if (!value) return null;
+
+  if (!value) {
+    return null;
+  }
 
   return first(
     await restRequest({
-      table: AGENT_TABLE,
+      table: "agent_users",
       query: {
         select: AGENT_SELECT,
         sk_id: `eq.${value}`,
@@ -601,7 +700,7 @@ function authorizedSession(agent) {
     agent: profile,
     skId: profile.skId,
     station: profile.station,
-    role: profile.role,
+    jobTitle: profile.job_title,
     apps,
     permissions: profile.permissions,
     checkedAt: new Date().toISOString()
@@ -641,100 +740,44 @@ export const loginStaffWithSkId =
         throw new Error("Password is required.");
       }
 
-      const agent = await findAgentBySkId(cleanSkId);
+     const agent =
+  await findAgentBySkId(cleanSkId);
 
-      if (!agent) {
-        await loginAudit({
-          skId: cleanSkId,
-          eventType: "login_failed",
-          success: false,
-          errorMessage: "AGENT_NOT_FOUND"
-        });
-
-        throw new Error(
-          "SK-ID or password is incorrect."
-        );
-      }
-
-      try {
-        assertAuthorized(agent);
-      } catch (error) {
-        await loginAudit({
-          agent,
-          skId: cleanSkId,
-          eventType: "login_failed",
-          success: false,
-          errorMessage: error.code || error.message
-        });
-
-        throw error;
-      }
-
-      const email = agentLoginEmail(agent);
-
-      if (!email) {
-        await loginAudit({
-          agent,
-          skId: cleanSkId,
-          eventType: "login_failed",
-          success: false,
-          errorMessage: "WIX_MEMBER_EMAIL_MISSING"
-        });
-
-        throw new Error(
-          "This SK-ID is not linked to a Wix member email."
-        );
-      }
-
-      let sessionToken;
-
-      try {
-        sessionToken =
-          await authentication.login(
-            email,
-            password
-          );
-      } catch (_) {
-        await loginAudit({
-          agent,
-          skId: cleanSkId,
-          email,
-          eventType: "login_failed",
-          success: false,
-          errorMessage: "WIX_AUTHENTICATION_FAILED"
-        });
-
-        throw new Error(
-          "SK-ID or password is incorrect."
-        );
-      }
-
-      await touchLastLogin(
-        agent.id
-      ).catch(() => {});
-
-      await loginAudit({
-        agent,
-        skId: cleanSkId,
-        email,
-        eventType: "login_attempt",
-        success: true
-      });
-
-      const profile = publicAgent(agent);
-
-      return {
-        ok: true,
-        authorized: true,
-        sessionToken,
-        profile,
-        staff: profile,
-        agent: profile,
-        apps: appsForAgent(agent),
-        permissions: profile.permissions
-      };
-    }
+if (!agent) {
+  throw new Error(
+    "SK-ID or password is incorrect."
   );
+}
+
+const email =
+  normalizeEmail(agent.email);
+
+if (!email) {
+  throw new Error(
+    "This SK-ID is not linked to a Wix email."
+  );
+}
+
+const sessionToken =
+  await authentication.login(
+    email,
+    password
+  );
+
+return {
+  ok: true,
+  sessionToken,
+
+  profile: {
+    skId: agent.sk_id || "",
+    jobTitle: agent.job_title || "",
+    station: agent.station || "",
+    department: agent.department || "",
+    badgePhotoUrl:
+      agent.badge_photo_url || "",
+    email: agent.email || ""
+  }
+};
 
 export const getStaffPortalSession =
   webMethod(
