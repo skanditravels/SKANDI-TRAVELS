@@ -4,10 +4,12 @@ import { currentMember } from "wix-members-backend";
 import { restRequest } from "backend/RIA/supabaseServer.js";
 
 const AGENT_SELECT = [
-  "id","agent_id","wix_member_id","member_id","email","corporate_email_address",
-  "sk_id","first_name","last_name","preferred_name","display_name","role",
-  "position","job_title","department","station","base","active","authorized",
-  "portal_access","employment_status","status","payload","created_at","updated_at"
+  "sk_id",
+  "job_title",
+  "station",
+  "department",
+  "badge_photo_url",
+  "email"
 ].join(",");
 
 function clean(v, max = 500) {
@@ -107,8 +109,6 @@ function publicProfile(agent = {}) {
     displayName: displayName(agent),
     name: displayName(agent),
     email: agent.corporate_email_address || agent.email || "",
-    role: agent.role || agent.position || agent.job_title || "",
-    position: agent.position || agent.job_title || agent.role || "",
     jobTitle: agent.job_title || agent.position || "",
     department: agent.department || "",
     station: agent.station || agent.base || "",
@@ -225,7 +225,7 @@ export const searchColleagues = webMethod(
         if (!q) return true;
         return [
           row.sk_id,row.first_name,row.last_name,row.preferred_name,row.display_name,
-          row.role,row.position,row.job_title,row.department,row.station,row.base,
+          row.job_title,row.department,row.station,row.base,
           row.email,row.corporate_email_address
         ].join(" ").toLowerCase().includes(q);
       })
