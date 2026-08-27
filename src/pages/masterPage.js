@@ -74,6 +74,9 @@ customerFooter:
 skandiPrimary:
 "https://static.wixstatic.com/media/394052_504704bd94f44f01a95f304bd19640e5~mv2.png",
 
+riaintraLight:
+"https://static.wixstatic.com/media/394052_635532ed8a8d446ab22f4fc09ef65858~mv2.png",
+
 skandiTravels:
 "https://static.wixstatic.com/media/394052_504704bd94f44f01a95f304bd19640e5~mv2.png"
 }
