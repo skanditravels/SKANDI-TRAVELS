@@ -154,12 +154,12 @@ const MASTER_CONFIG = {
           id: "travelInfo",
           label: "Travel Info",
           path: "/travel-info"
-        }
+        },
         {
           id: "signature",
           label: "SKANDI Collection",
           path: "/skandi-collection"
-        },
+        }
 
       ],
 
@@ -383,17 +383,11 @@ const MASTER_CONFIG = {
           path: "/about/legal/policies?policy=accessibility"
         },
         {
-          staffLogin: {
           label: "Staff Login",
           path: "/riaintra"
       }
 
       ],
-
-
-      
-
-    }
 
   }
 
