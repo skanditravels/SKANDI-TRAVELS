@@ -5,6 +5,7 @@ const AGENT_FIELDS = [
   "member_id",
   "wix_member_id",
   "email",
+  "corporate_email_address",
   "sk_id",
   "first_name",
   "last_name",
@@ -21,7 +22,8 @@ const AGENT_FIELDS = [
   "authorized",
   "can_access_payroll",
   "can_access_grouptalk",
-  "can_manage"
+  "can_manage",
+  "payload"
 ].join(",");
 
 const BLOCKED_STATUSES = new Set(['blocked', 'inactive', 'suspended', 'terminated']);
@@ -36,12 +38,37 @@ function normalize(value) {
 
 export async function findAgentBySkId(skId) {
   const normalized = normalize(skId).toUpperCase();
-  if (!normalized) return null;
+  if (!normalizedEmail) {
+  return null;
+}
 
-  return first(await restRequest({
-    table: 'agent_users',
-    query: { select: AGENT_FIELDS, sk_id: `eq.${normalized}`, limit: 1 },
-  }));
+let byEmail =
+  first(
+    await restRequest({
+      table: "agent_users",
+      query: {
+        select: AGENT_FIELDS,
+        email: `ilike.${normalizedEmail}`,
+        limit: 1
+      }
+    })
+  );
+
+if (byEmail) {
+  return byEmail;
+}
+
+return first(
+  await restRequest({
+    table: "agent_users",
+    query: {
+      select: AGENT_FIELDS,
+      corporate_email_address:
+        `ilike.${normalizedEmail}`,
+      limit: 1
+    }
+  })
+);
 }
 
 export async function findAgentByMemberOrEmail({ memberId, email }) {
