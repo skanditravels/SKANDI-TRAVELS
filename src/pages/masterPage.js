@@ -1311,10 +1311,10 @@ async function handleMasterMessage(
             page.url || "",
 
           station:
-            alteaRuntimeContext.station ||
-            staff?.profile?.station ||
-            staff?.profile?.stationCode ||
-            "",
+  alteaRuntimeContext.station ||
+  staff?.profile?.station ||
+  staff?.profile?.stationCode ||
+  "",
 
           timeZone:
             alteaRuntimeContext.timeZone ||
