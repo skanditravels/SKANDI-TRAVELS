@@ -1,7 +1,5 @@
 import { webMethod, Permissions } from "wix-web-module";
 import { currentMember } from "wix-members-backend";
-import { getSecret } from "wix-secrets-backend";
-import { fetch } from "wix-fetch";
 import {
   restRequest
 } from "backend/RIA/supabaseServer.js";
@@ -15,7 +13,7 @@ const SUPABASE_SERVICE_ROLE_SECRET = "SUPABASE_SERVICE_ROLE_KEY";
 
 let configCache = null;
 
-async function getSupabaseConfig() {
+async function Config() {
   if (configCache?.url && configCache?.key) {
     return configCache;
   }
