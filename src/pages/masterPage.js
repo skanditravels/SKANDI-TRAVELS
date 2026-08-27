@@ -618,7 +618,7 @@ async function getCustomerState() {
         loggedIn: false,
 
         displayName: "",
-
+        email: "",
         points: 0,
 
         tierName: "",
@@ -642,21 +642,23 @@ async function getCustomerState() {
 
       "Member";
 
+   
 
     return {
 
-      loggedIn: true,
+  loggedIn: true,
 
-      displayName,
+  displayName,
 
-      points: 0,
+  email: "",
 
-      tierName: "",
+  points: 0,
 
-      menu: []
+  tierName: "",
 
-    };
+  menu: []
 
+};
 
   } catch (error) {
 
