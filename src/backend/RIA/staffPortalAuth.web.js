@@ -173,7 +173,7 @@ const PORTAL_APPS = Object.freeze([
     path: "/riaintra/success-factors/finance-control",
     group: "Administration",
     icon: "FC",
-    permission: "excecutive"
+    permission: "executive"  
   },
   {
     id: "uniform-center",
