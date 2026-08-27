@@ -635,9 +635,11 @@ function publicProfile(
     );
 
   const self =
-    objectValue(
-      payload.selfService
-    );
+  payload.selfService &&
+  typeof payload.selfService === "object" &&
+  !Array.isArray(payload.selfService)
+    ? payload.selfService
+    : {};
 
   const canManage =
     agent.can_manage ===
