@@ -779,6 +779,9 @@ return {
   }
 };
 
+    }
+  );
+
 export const getStaffPortalSession =
   webMethod(
     Permissions.Anyone,
