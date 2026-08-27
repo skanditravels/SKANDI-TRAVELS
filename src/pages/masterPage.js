@@ -135,11 +135,8 @@ const MASTER_CONFIG = {
 
 
   customer: {
-
     header: {
-
       primaryNav: [
-
         {
           id: "destinations",
           label: "Destinations",
@@ -160,224 +157,158 @@ const MASTER_CONFIG = {
           label: "SKANDI Collection",
           path: "/skandi-collection"
         }
-
       ],
-
-
       accountNav: [
-
         {
           id: "myTrip",
           label: "My Trips",
           path: "/my-profile?tab=trips"
         },
-
         {
           id: "club",
           label: "SKANDI Club",
           path: "/skandi-club"
         }
-
       ]
-
     },
-
-
     footer: {
-
       newsletter: {
-
-        title:
-          "Get SKANDI offers and travel inspiration",
-
-        description:
-          "Receive destination guides, Signature Collection updates and member offers.",
-
-        placeholder:
-          "Email address",
-
-        buttonLabel:
-          "Sign up"
+        title: "Get SKANDI offers and travel inspiration",
+        description: "Receive destination guides, Signature Collection updates and member offers.",
+        placeholder: "Email address",
+        buttonLabel: "Sign up"
       },
-
-
       columns: [
-
         {
           title: "BOOK & TRAVEL",
-
           links: [
-
             {
               label: "Book a trip",
               path: "/"
             },
-
             {
               label: "Manage your booking",
               path: "/my-profile?tab=trips"
             },
-
             {
               label: "Our Destinations",
               path: "/destinations"
             },
-
             {
               label: "Flights",
               path: "/flights"
             },
-
             {
               label: "Hotels",
               path: "/hotels"
             },
-
             {
               label: "Tours & Activities",
               path: "/tours"
             },
-
             {
               label: "Car Rental",
               path: "/car-rental"
             },
-
             {
               label: "Airport Transfer",
               path: "/transfers"
             }
-
           ]
         },
-
-
         {
           title: "HELP & TRAVEL INFO",
-
           links: [
-
             {
               label: "Before you travel",
               path: "/travel-info"
             },
-
             {
               label: "Passport & Visa",
               path: "/travel-info/passport-visa"
             },
-
             {
               label: "Baggage Allowance",
               path: "/travel-info/baggage-allowence"
             },
-
             {
               label: "Travel Insurance",
               path: "/travel-info/insurance"
             },
-
             {
               label: "Special Assistance",
               path: "/travel-info/special-assistance"
             },
-
             {
               label: "Flight Status",
               path: "/travel-info/flight-status"
             },
-
             {
               label: "Help Center",
               path: "/about/support"
             }
-
           ]
         },
-
-
         {
           title: "SKANDI",
-
           links: [
-
             {
               label: "Join SKANDI Club",
               path: "/skandi-club"
             },
-
             {
               label: "Log In to My Club",
               path: "/my-profile"
             },
-
             {
               label: "SKANDI Collection",
               path: "/skandi-collection"
             },
-
             {
               label: "THE STORE",
               path: "/the-store"
             },
-
             {
               label: "VOY Magazine",
               path: "/voy-magazine"
             }
-
           ]
         },
-
-
         {
           title: "ABOUT SKANDI",
-
           links: [
-
             {
               label: "About SKANDI",
               path: "/about"
             },
-
             {
               label: "Careers",
               path: "/about/careers"
             },
-
             {
               label: "Newsroom",
               path: "/about/news-room"
             },
-
             {
               label: "Our Network",
               path: "/about/our-network"
             }
-
           ]
         }
-
       ],
-
-
       bottomLinks: [
-
         {
           label: "Legal",
           path: "/about/legal"
         },
-
         {
           label: "Privacy",
           path: "/about/legal/policies?policy=privacy"
         },
-
         {
           label: "Terms",
           path: "/about/legal/policies?policy=terms"
         },
-
         {
           label: "Accessibility",
           path: "/about/legal/policies?policy=accessibility"
@@ -385,15 +316,10 @@ const MASTER_CONFIG = {
         {
           label: "Staff Login",
           path: "/riaintra"
-      }
-
-      ],
-
-  }
-
-};
-
-
+        }
+      ]
+    }
+  };
 /* =========================================================
    PATH
 ========================================================= */
