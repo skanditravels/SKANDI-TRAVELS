@@ -721,7 +721,7 @@ export const loginStaffWithSkId =
           skId: cleanSkId || null,
           eventType: "login_failed",
           success: false,
-          errorMessage: "SK_ID_INVALID"
+          errorMessage: "Incorrect login credentials"
         });
 
         throw new Error(
@@ -734,7 +734,7 @@ export const loginStaffWithSkId =
           skId: cleanSkId,
           eventType: "login_failed",
           success: false,
-          errorMessage: "PASSWORD_REQUIRED"
+          errorMessage: "Incorrect Password"
         });
 
         throw new Error("Password is required.");
@@ -750,11 +750,11 @@ if (!agent) {
 }
 
 const email =
-  normalizeEmail(agent.email);
+  normalizeEmail(agent.);
 
 if (!email) {
   throw new Error(
-    "This SK-ID is not linked to a Wix email."
+    "This SK-ID is not a valid"
   );
 }
 
