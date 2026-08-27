@@ -85,7 +85,7 @@ const MASTER_CONFIG = {
 
   routes: {
 
-    home: "/",
+    home: "/home",
 
     search: "/search",
 
