@@ -4,1335 +4,1336 @@
 
 import wixLocationFrontend from "wix-location-frontend";
 import {
-  currentMember,
-  authentication
+currentMember,
+authentication
 } from "wix-members-frontend";
 
 
 /* =========================================================
-   CONSTANTS
+CONSTANTS
 ========================================================= */
 
 const PARENT_SOURCE = "SKANDI_WIX_PARENT";
 
 const HEADER_SOURCE =
-  "SKANDI_CUSTOMER_HEADER_EXPANDBAR";
+"SKANDI_CUSTOMER_HEADER_EXPANDBAR";
 
 const FOOTER_SOURCE =
-  "SKANDI_CUSTOMER_FOOTER";
+"SKANDI_CUSTOMER_FOOTER";
 
 const MASTER_VERSION =
-  "2026.08.27.4";
+"2026.08.27.4";
 
 
 /* =========================================================
-   MASTER CONFIG
+MASTER CONFIG
 ========================================================= */
 
 const MASTER_CONFIG = {
 
-  version: MASTER_VERSION,
+version: MASTER_VERSION,
 
-  brand: {
+brand: {
 
-    groupName: "SKANDI Group",
-    travelName: "SKANDI Travels",
+groupName: "SKANDI Group",
+travelName: "SKANDI Travels",
 
-    slogans: {
-      en: "Unforgettable Moments",
-      sv: "När du längtar bort",
-      no: "Når du lengter bort",
-      da: "Når du længes væk",
-      fi: "Kun kaipaat pois"
-    },
+slogans: {
+en: "Unforgettable Moments",
+sv: "När du längtar bort",
+no: "Når du lengter bort",
+da: "Når du længes væk",
+fi: "Kun kaipaat pois"
+},
 
-    languages: [
-      "EN",
-      "SV",
-      "NO",
-      "DA"
-    ],
+languages: [
+"EN",
+"SV",
+"NO",
+"DA"
+],
 
-    currencies: [
-      "USD",
-      "SEK",
-      "NOK",
-      "DKK",
-      "EUR"
-    ],
+currencies: [
+"USD",
+"SEK",
+"NOK",
+"DKK",
+"EUR"
+],
 
-    assets: {
+assets: {
 
-      logos: {
+logos: {
 
-        customerHeader:
-          "https://static.wixstatic.com/media/394052_504704bd94f44f01a95f304bd19640e5~mv2.png",
+customerHeader:
+"https://static.wixstatic.com/media/394052_504704bd94f44f01a95f304bd19640e5~mv2.png",
 
-        customerFooter:
-          "https://static.wixstatic.com/media/394052_fafffe6d26434eddbf62eb645ee9c844~mv2.png",
+customerFooter:
+"https://static.wixstatic.com/media/394052_fafffe6d26434eddbf62eb645ee9c844~mv2.png",
 
-        skandiPrimary:
-          "https://static.wixstatic.com/media/394052_504704bd94f44f01a95f304bd19640e5~mv2.png",
+skandiPrimary:
+"https://static.wixstatic.com/media/394052_504704bd94f44f01a95f304bd19640e5~mv2.png",
 
-        skandiTravels:
-          "https://static.wixstatic.com/media/394052_504704bd94f44f01a95f304bd19640e5~mv2.png"
-      }
+skandiTravels:
+"https://static.wixstatic.com/media/394052_504704bd94f44f01a95f304bd19640e5~mv2.png"
+}
 
-    }
+}
 
-  },
-
-
-  routes: {
-
-    home: "/home",
-
-    search: "/search",
-
-    flights: "/flights",
-
-    hotels: "/hotels",
-
-    packages: "/packages",
-
-    tours: "/tours",
-
-    activities: "/activities",
-
-    transfers: "/transfers",
-
-    carRental: "/car-rental",
-
-    destinations: "/destinations",
-
-    skandiCollection:
-      "/skandi-collection",
-
-    voy:
-      "/voy-magazine",
-
-    newsroom:
-      "/about/news-room",
-
-    myTrip:
-      "/my-profile?tab=trips",
-
-    club:
-      "/skandi-club",
-
-    support:
-      "/about/support",
-
-    about:
-      "/about",
-
-    legal:
-      "/about/legal",
-
-    riaintra:
-      "/riaintra"
-  },
+},
 
 
-  customer: {
-    header: {
-      primaryNav: [
-        {
-          id: "destinations",
-          label: "Destinations",
-          path: "/destinations"
-        },
-        {
-          id: "tours",
-          label: "Tours & Activities",
-          path: "/tours"
-        },
-        {
-          id: "travelInfo",
-          label: "Travel Info",
-          path: "/travel-info"
-        },
-        {
-          id: "signature",
-          label: "SKANDI Collection",
-          path: "/skandi-collection"
-        }
-      ],
-      accountNav: [
-        {
-          id: "myTrip",
-          label: "My Trips",
-          path: "/my-profile?tab=trips"
-        },
-        {
-          id: "club",
-          label: "SKANDI Club",
-          path: "/skandi-club"
-        }
-      ]
-    },
-    footer: {
-      newsletter: {
-        title: "Get SKANDI offers and travel inspiration",
-        description: "Receive destination guides, Signature Collection updates and member offers.",
-        placeholder: "Email address",
-        buttonLabel: "Sign up"
-      },
-      columns: [
-        {
-          title: "BOOK & TRAVEL",
-          links: [
-            {
-              label: "Book a trip",
-              path: "/"
-            },
-            {
-              label: "Manage your booking",
-              path: "/my-profile?tab=trips"
-            },
-            {
-              label: "Our Destinations",
-              path: "/destinations"
-            },
-            {
-              label: "Flights",
-              path: "/flights"
-            },
-            {
-              label: "Hotels",
-              path: "/hotels"
-            },
-            {
-              label: "Tours & Activities",
-              path: "/tours"
-            },
-            {
-              label: "Car Rental",
-              path: "/car-rental"
-            },
-            {
-              label: "Airport Transfer",
-              path: "/transfers"
-            }
-          ]
-        },
-        {
-          title: "HELP & TRAVEL INFO",
-          links: [
-            {
-              label: "Before you travel",
-              path: "/travel-info"
-            },
-            {
-              label: "Passport & Visa",
-              path: "/travel-info/passport-visa"
-            },
-            {
-              label: "Baggage Allowance",
-              path: "/travel-info/baggage-allowence"
-            },
-            {
-              label: "Travel Insurance",
-              path: "/travel-info/insurance"
-            },
-            {
-              label: "Special Assistance",
-              path: "/travel-info/special-assistance"
-            },
-            {
-              label: "Flight Status",
-              path: "/travel-info/flight-status"
-            },
-            {
-              label: "Help Center",
-              path: "/about/support"
-            }
-          ]
-        },
-        {
-          title: "SKANDI",
-          links: [
-            {
-              label: "Join SKANDI Club",
-              path: "/skandi-club"
-            },
-            {
-              label: "Log In to My Club",
-              path: "/my-profile"
-            },
-            {
-              label: "SKANDI Collection",
-              path: "/skandi-collection"
-            },
-            {
-              label: "THE STORE",
-              path: "/the-store"
-            },
-            {
-              label: "VOY Magazine",
-              path: "/voy-magazine"
-            }
-          ]
-        },
-        {
-          title: "ABOUT SKANDI",
-          links: [
-            {
-              label: "About SKANDI",
-              path: "/about"
-            },
-            {
-              label: "Careers",
-              path: "/about/careers"
-            },
-            {
-              label: "Newsroom",
-              path: "/about/news-room"
-            },
-            {
-              label: "Our Network",
-              path: "/about/our-network"
-            }
-          ]
-        }
-      ],
-      bottomLinks: [
-        {
-          label: "Legal",
-          path: "/about/legal"
-        },
-        {
-          label: "Privacy",
-          path: "/about/legal/policies?policy=privacy"
-        },
-        {
-          label: "Terms",
-          path: "/about/legal/policies?policy=terms"
-        },
-        {
-          label: "Accessibility",
-          path: "/about/legal/policies?policy=accessibility"
-        },
-        {
-          label: "Staff Login",
-          path: "/riaintra"
-        }
-      ]
-    }
-  };
+routes: {
+home: "/home",
+
+search: "/search",
+
+flights: "/flights",
+
+hotels: "/hotels",
+
+packages: "/packages",
+
+tours: "/tours",
+
+activities: "/activities",
+
+transfers: "/transfers",
+
+carRental: "/car-rental",
+
+destinations: "/destinations",
+
+skandiCollection:
+"/skandi-collection",
+
+voy:
+"/voy-magazine",
+
+newsroom:
+"/about/news-room",
+
+myTrip:
+"/my-profile?tab=trips",
+
+club:
+"/skandi-club",
+
+support:
+"/about/support",
+
+about:
+"/about",
+
+legal:
+"/about/legal",
+
+riaintra:
+"/riaintra"
+},
+
+
+customer: {
+header: {
+primaryNav: [
+{
+id: "destinations",
+label: "Destinations",
+path: "/destinations"
+},
+{
+id: "tours",
+label: "Tours & Activities",
+path: "/tours"
+},
+{
+id: "travelInfo",
+label: "Travel Info",
+path: "/travel-info"
+},
+{
+id: "signature",
+label: "SKANDI Collection",
+path: "/skandi-collection"
+}
+],
+accountNav: [
+{
+id: "myTrip",
+label: "My Trips",
+path: "/my-profile?tab=trips"
+},
+{
+id: "club",
+label: "SKANDI Club",
+path: "/skandi-club"
+}
+]
+},
+footer: {
+newsletter: {
+title: "Get SKANDI offers and travel inspiration",
+description: "Receive destination guides, Signature Collection updates and member offers.",
+placeholder: "Email address",
+buttonLabel: "Sign up"
+},
+columns: [
+{
+title: "BOOK & TRAVEL",
+links: [
+{
+label: "Book a trip",
+path: "/"
+},
+{
+label: "Manage your booking",
+path: "/my-profile?tab=trips"
+},
+{
+label: "Our Destinations",
+path: "/destinations"
+},
+{
+label: "Flights",
+path: "/flights"
+},
+{
+label: "Hotels",
+path: "/hotels"
+},
+{
+label: "Tours & Activities",
+path: "/tours"
+},
+{
+label: "Car Rental",
+path: "/car-rental"
+},
+{
+label: "Airport Transfer",
+path: "/transfers"
+}
+]
+},
+{
+title: "HELP & TRAVEL INFO",
+links: [
+{
+label: "Before you travel",
+path: "/travel-info"
+},
+{
+label: "Passport & Visa",
+path: "/travel-info/passport-visa"
+},
+{
+label: "Baggage Allowance",
+path: "/travel-info/baggage-allowence"
+},
+{
+label: "Travel Insurance",
+path: "/travel-info/insurance"
+},
+{
+label: "Special Assistance",
+path: "/travel-info/special-assistance"
+},
+{
+label: "Flight Status",
+path: "/travel-info/flight-status"
+},
+{
+label: "Help Center",
+path: "/about/support"
+}
+]
+},
+{
+title: "SKANDI",
+links: [
+{
+label: "Join SKANDI Club",
+path: "/skandi-club"
+},
+{
+label: "Log In to My Club",
+path: "/my-profile"
+},
+{
+label: "SKANDI Collection",
+path: "/skandi-collection"
+},
+{
+label: "THE STORE",
+path: "/the-store"
+},
+{
+label: "VOY Magazine",
+path: "/voy-magazine"
+}
+]
+},
+{
+title: "ABOUT SKANDI",
+links: [
+{
+label: "About SKANDI",
+path: "/about"
+},
+{
+label: "Careers",
+path: "/about/careers"
+},
+{
+label: "Newsroom",
+path: "/about/news-room"
+},
+{
+label: "Our Network",
+path: "/about/our-network"
+}
+]
+}
+],
+bottomLinks: [
+{
+label: "Legal",
+path: "/about/legal"
+},
+{
+label: "Privacy",
+path: "/about/legal/policies?policy=privacy"
+},
+{
+label: "Terms",
+path: "/about/legal/policies?policy=terms"
+},
+{
+label: "Accessibility",
+path: "/about/legal/policies?policy=accessibility"
+},
+{
+label: "Staff Login",
+path: "/riaintra"
+}
+]
+}
+}
+}
+};
 /* =========================================================
-   PATH
+PATH
 ========================================================= */
 
 function currentPath() {
 
-  try {
+try {
 
-    const path =
-      wixLocationFrontend.path || [];
+const path =
+wixLocationFrontend.path || [];
 
-    return "/" + path.join("/");
+return "/" + path.join("/");
 
-  } catch (_) {
+} catch (_) {
 
-    return "/";
+return "/";
 
-  }
+}
 
 }
 
 
 function isInternalPath() {
 
-  const path =
-    currentPath().toLowerCase();
+const path =
+currentPath().toLowerCase();
 
-  return (
-    path === "/riaintra" ||
-    path.startsWith("/riaintra/") ||
-    path === "/altea" ||
-    path.startsWith("/altea/")
-  );
+return (
+path === "/riaintra" ||
+path.startsWith("/riaintra/") ||
+path === "/altea" ||
+path.startsWith("/altea/")
+);
 
 }
 
 
 /* =========================================================
-   MESSAGE UTILITIES
+MESSAGE UTILITIES
 ========================================================= */
 
 function parseMessage(data) {
 
-  if (
-    typeof data === "string"
-  ) {
+if (
+typeof data === "string"
+) {
 
-    try {
+try {
 
-      return JSON.parse(data);
+return JSON.parse(data);
 
-    } catch (_) {
+} catch (_) {
 
-      return null;
+return null;
 
-    }
+}
 
-  }
+}
 
-  if (
-    data &&
-    typeof data === "object"
-  ) {
+if (
+data &&
+typeof data === "object"
+) {
 
-    return data;
+return data;
 
-  }
+}
 
-  return null;
+return null;
 
 }
 
 
 function post(
-  embed,
-  type,
-  payload = {}
+embed,
+type,
+payload = {}
 ) {
 
-  if (
-    !embed ||
-    typeof embed.postMessage !== "function"
-  ) {
+if (
+!embed ||
+typeof embed.postMessage !== "function"
+) {
 
-    return;
+return;
 
-  }
+}
 
 
-  try {
+try {
 
-    embed.postMessage({
+embed.postMessage({
 
-      source:
-        PARENT_SOURCE,
+source:
+PARENT_SOURCE,
 
-      type,
+type,
 
-      payload,
+payload,
 
-      timestamp:
-        new Date().toISOString()
+timestamp:
+new Date().toISOString()
 
-    });
+});
 
-  } catch (error) {
+} catch (error) {
 
-    console.error(
-      "[SKANDI MASTER] postMessage failed",
-      embed?.id,
-      error
-    );
+console.error(
+"[SKANDI MASTER] postMessage failed",
+embed?.id,
+error
+);
 
-  }
+}
 
 }
 
 
 /* =========================================================
-   MASTER PAYLOAD
+MASTER PAYLOAD
 ========================================================= */
 
 function masterPayload() {
 
-  return {
+return {
 
-    ...MASTER_CONFIG,
+...MASTER_CONFIG,
 
-    currentPath:
-      currentPath(),
+currentPath:
+currentPath(),
 
-    mode:
-      isInternalPath()
-        ? "internal"
-        : "customer",
+mode:
+isInternalPath()
+? "internal"
+: "customer",
 
-    isInternal:
-      isInternalPath()
+isInternal:
+isInternalPath()
 
-  };
+};
 
 }
 
 
 function sendMasterConfig(
-  embed
+embed
 ) {
 
-  console.log(
-    "[SKANDI MASTER] sending config to",
-    embed?.id || "unknown"
-  );
+console.log(
+"[SKANDI MASTER] sending config to",
+embed?.id || "unknown"
+);
 
 
-  post(
-    embed,
-    "SKANDI_MASTER_CONFIG",
-    masterPayload()
-  );
+post(
+embed,
+"SKANDI_MASTER_CONFIG",
+masterPayload()
+);
 
 }
 
 
 /* =========================================================
-   CUSTOMER STATE
+CUSTOMER STATE
 ========================================================= */
 
 async function getCustomerState() {
 
-  try {
+try {
 
-    const member =
-      await currentMember.getMember();
-
-
-    if (!member) {
-
-      return {
-
-        loggedIn: false,
-
-        displayName: "",
-        email: "",
-        points: 0,
-
-        tierName: "",
-
-        menu: []
-
-      };
-
-    }
+const member =
+await currentMember.getMember();
 
 
-    const displayName =
+if (!member) {
 
-      member?.profile?.nickname ||
+return {
 
-      member?.profile?.firstName ||
+loggedIn: false,
 
-      member?.contactDetails?.firstName ||
+displayName: "",
+email: "",
+points: 0,
 
-      member?.loginEmail ||
+tierName: "",
 
-      "Member";
-
-   
-
-    return {
-
-  loggedIn: true,
-
-  displayName,
-
-  email: "",
-
-  points: 0,
-
-  tierName: "",
-
-  menu: []
+menu: []
 
 };
 
-  } catch (error) {
-
-    console.warn(
-      "[SKANDI MASTER] Member state unavailable",
-      error
-    );
+}
 
 
-    return {
+const displayName =
 
-      loggedIn: false,
+member?.profile?.nickname ||
 
-      displayName: "",
+member?.profile?.firstName ||
 
-      points: 0,
+member?.contactDetails?.firstName ||
 
-      tierName: "",
+member?.loginEmail ||
 
-      menu: []
+"Member";
 
-    };
 
-  }
+
+return {
+
+loggedIn: true,
+
+displayName,
+
+email: "",
+
+points: 0,
+
+tierName: "",
+
+menu: []
+
+};
+
+} catch (error) {
+
+console.warn(
+"[SKANDI MASTER] Member state unavailable",
+error
+);
+
+
+return {
+
+loggedIn: false,
+
+displayName: "",
+
+points: 0,
+
+tierName: "",
+
+menu: []
+
+};
+
+}
 
 }
 
 
 async function sendHeaderState(
-  embed
+embed
 ) {
 
-  post(
-    embed,
-    "CUSTOMER_HEADER_STATE",
-    await getCustomerState()
-  );
+post(
+embed,
+"CUSTOMER_HEADER_STATE",
+await getCustomerState()
+);
 
 }
 
 
 /* =========================================================
-   NAVIGATION
+NAVIGATION
 ========================================================= */
 
 function navigate(
-  rawPath
+rawPath
 ) {
 
-  const path =
-    String(
-      rawPath || ""
-    ).trim();
+const path =
+String(
+rawPath || ""
+).trim();
 
 
-  if (!path) {
-    return;
-  }
+if (!path) {
+return;
+}
 
 
-  if (
-    !path.startsWith("/") ||
-    path.startsWith("//") ||
-    /^(javascript|data|vbscript):/i.test(path)
-  ) {
+if (
+!path.startsWith("/") ||
+path.startsWith("//") ||
+/^(javascript|data|vbscript):/i.test(path)
+) {
 
-    console.warn(
-      "[SKANDI MASTER] blocked navigation",
-      path
-    );
+console.warn(
+"[SKANDI MASTER] blocked navigation",
+path
+);
 
-    return;
+return;
 
-  }
-
-
-  console.log(
-    "[SKANDI MASTER] navigate",
-    path
-  );
+}
 
 
-  wixLocationFrontend.to(path);
+console.log(
+"[SKANDI MASTER] navigate",
+path
+);
+
+
+wixLocationFrontend.to(path);
 
 }
 
 
 /* =========================================================
-   SHOW / HIDE CUSTOMER CHROME
+SHOW / HIDE CUSTOMER CHROME
 ========================================================= */
 
 async function showEmbed(
-  embed
+embed
 ) {
 
-  if (!embed) {
-    return;
-  }
+if (!embed) {
+return;
+}
 
 
-  try {
+try {
 
-    if (
-      typeof embed.expand === "function"
-    ) {
+if (
+typeof embed.expand === "function"
+) {
 
-      await embed.expand();
+await embed.expand();
 
-    }
+}
 
-  } catch (_) {}
+} catch (_) {}
 
 
-  try {
+try {
 
-    if (
-      typeof embed.show === "function"
-    ) {
+if (
+typeof embed.show === "function"
+) {
 
-      await embed.show();
+await embed.show();
 
-    }
+}
 
-  } catch (_) {}
+} catch (_) {}
 
 }
 
 
 async function hideEmbed(
-  embed
+embed
 ) {
 
-  if (!embed) {
-    return;
-  }
+if (!embed) {
+return;
+}
 
 
-  try {
+try {
 
-    if (
-      typeof embed.hide === "function"
-    ) {
+if (
+typeof embed.hide === "function"
+) {
 
-      await embed.hide();
+await embed.hide();
 
-    }
+}
 
-  } catch (_) {}
+} catch (_) {}
 
 
-  try {
+try {
 
-    if (
-      typeof embed.collapse === "function"
-    ) {
+if (
+typeof embed.collapse === "function"
+) {
 
-      await embed.collapse();
+await embed.collapse();
 
-    }
+}
 
-  } catch (_) {}
+} catch (_) {}
 
 }
 
 
 async function syncCustomerChrome(
-  embed,
-  source
+embed,
+source
 ) {
 
-  if (
-    source !== HEADER_SOURCE &&
-    source !== FOOTER_SOURCE
-  ) {
+if (
+source !== HEADER_SOURCE &&
+source !== FOOTER_SOURCE
+) {
 
-    return;
-  }
+return;
+}
 
 
-  if (
-    isInternalPath()
-  ) {
+if (
+isInternalPath()
+) {
 
-    await hideEmbed(embed);
+await hideEmbed(embed);
 
-  } else {
+} else {
 
-    await showEmbed(embed);
+await showEmbed(embed);
 
-  }
+}
 
 }
 
 
 /* =========================================================
-   SEARCH
+SEARCH
 ========================================================= */
 
 function runSearch(
-  message,
-  payload
+message,
+payload
 ) {
 
-  const query =
-    String(
+const query =
+String(
 
-      payload?.query ||
+payload?.query ||
 
-      message?.query ||
+message?.query ||
 
-      payload?.value ||
+payload?.value ||
 
-      message?.value ||
+message?.value ||
 
-      ""
+""
 
-    ).trim();
-
-
-  if (!query) {
-
-    navigate("/search");
-
-    return;
-
-  }
+).trim();
 
 
-  navigate(
-    `/search?q=${encodeURIComponent(query)}`
-  );
+if (!query) {
+
+navigate("/search");
+
+return;
+
+}
+
+
+navigate(
+`/search?q=${encodeURIComponent(query)}`
+);
 
 }
 
 
 /* =========================================================
-   HANDLE MESSAGE
+HANDLE MESSAGE
 ========================================================= */
 
 async function handleMessage(
-  embed,
-  event
+embed,
+event
 ) {
 
-  const message =
-    parseMessage(
-      event?.data
-    );
+const message =
+parseMessage(
+event?.data
+);
 
 
-  if (!message) {
-    return;
-  }
+if (!message) {
+return;
+}
 
 
-  const source =
-    String(
-      message.source || ""
-    );
+const source =
+String(
+message.source || ""
+);
 
 
-  const type =
-    String(
-      message.type || ""
-    );
+const type =
+String(
+message.type || ""
+);
 
 
-  const payload =
-    message.payload &&
-    typeof message.payload === "object"
+const payload =
+message.payload &&
+typeof message.payload === "object"
 
-      ? message.payload
+? message.payload
 
-      : {};
+: {};
 
 
-  console.log(
-    "[SKANDI MASTER] message",
-    {
-      embed:
-        embed?.id || "",
-      source,
-      type
-    }
-  );
+console.log(
+"[SKANDI MASTER] message",
+{
+embed:
+embed?.id || "",
+source,
+type
+}
+);
 
 
-  await syncCustomerChrome(
-    embed,
-    source
-  );
+await syncCustomerChrome(
+embed,
+source
+);
 
 
-  /* -------------------------------------------------------
-     GENERIC MASTER REQUEST
-  ------------------------------------------------------- */
+/* -------------------------------------------------------
+GENERIC MASTER REQUEST
+------------------------------------------------------- */
 
-  if (
-    type === "MASTER_CONFIG_REQUEST" ||
-    type === "SKANDI_MASTER_CONFIG_REQUEST"
-  ) {
+if (
+type === "MASTER_CONFIG_REQUEST" ||
+type === "SKANDI_MASTER_CONFIG_REQUEST"
+) {
 
-    sendMasterConfig(embed);
+sendMasterConfig(embed);
 
 
-    if (
-      source === HEADER_SOURCE
-    ) {
+if (
+source === HEADER_SOURCE
+) {
 
-      await sendHeaderState(
-        embed
-      );
+await sendHeaderState(
+embed
+);
 
-    }
+}
 
 
-    if (
-      source === FOOTER_SOURCE
-    ) {
+if (
+source === FOOTER_SOURCE
+) {
 
-      post(
-        embed,
-        "CUSTOMER_FOOTER_STATE",
-        {
-          ready: true
-        }
-      );
+post(
+embed,
+"CUSTOMER_FOOTER_STATE",
+{
+ready: true
+}
+);
 
-    }
+}
 
 
-    return;
+return;
 
-  }
+}
 
 
-  /* -------------------------------------------------------
-     HEADER READY
-  ------------------------------------------------------- */
+/* -------------------------------------------------------
+HEADER READY
+------------------------------------------------------- */
 
-  if (
-    source === HEADER_SOURCE &&
-    type === "HEADER_READY"
-  ) {
+if (
+source === HEADER_SOURCE &&
+type === "HEADER_READY"
+) {
 
-    sendMasterConfig(embed);
+sendMasterConfig(embed);
 
-    await sendHeaderState(
-      embed
-    );
+await sendHeaderState(
+embed
+);
 
-    return;
+return;
 
-  }
+}
 
 
-  /* -------------------------------------------------------
-     FOOTER READY
-  ------------------------------------------------------- */
+/* -------------------------------------------------------
+FOOTER READY
+------------------------------------------------------- */
 
-  if (
-    source === FOOTER_SOURCE &&
-    type === "FOOTER_READY"
-  ) {
+if (
+source === FOOTER_SOURCE &&
+type === "FOOTER_READY"
+) {
 
-    sendMasterConfig(embed);
+sendMasterConfig(embed);
 
-    post(
-      embed,
-      "CUSTOMER_FOOTER_STATE",
-      {
-        ready: true
-      }
-    );
+post(
+embed,
+"CUSTOMER_FOOTER_STATE",
+{
+ready: true
+}
+);
 
-    return;
+return;
 
-  }
+}
 
 
-  /* -------------------------------------------------------
-     HEADER NAVIGATION
-  ------------------------------------------------------- */
+/* -------------------------------------------------------
+HEADER NAVIGATION
+------------------------------------------------------- */
 
-  if (
-    source === HEADER_SOURCE &&
-    type === "HEADER_NAVIGATE"
-  ) {
+if (
+source === HEADER_SOURCE &&
+type === "HEADER_NAVIGATE"
+) {
 
-    navigate(
-      payload.path ||
-      message.path
-    );
+navigate(
+payload.path ||
+message.path
+);
 
-    return;
+return;
 
-  }
+}
 
 
-  /* -------------------------------------------------------
-     SEARCH
-  ------------------------------------------------------- */
+/* -------------------------------------------------------
+SEARCH
+------------------------------------------------------- */
 
-  if (
-    source === HEADER_SOURCE &&
-    type === "HEADER_SEARCH"
-  ) {
+if (
+source === HEADER_SOURCE &&
+type === "HEADER_SEARCH"
+) {
 
-    runSearch(
-      message,
-      payload
-    );
+runSearch(
+message,
+payload
+);
 
-    return;
+return;
 
-  }
+}
 
 
-  /* -------------------------------------------------------
-     LOGIN
-  ------------------------------------------------------- */
+/* -------------------------------------------------------
+LOGIN
+------------------------------------------------------- */
 
-  if (
-    source === HEADER_SOURCE &&
-    type === "HEADER_LOGIN"
-  ) {
+if (
+source === HEADER_SOURCE &&
+type === "HEADER_LOGIN"
+) {
 
-    try {
+try {
 
-      await authentication.promptLogin();
+await authentication.promptLogin();
 
-    } catch (_) {}
+} catch (_) {}
 
 
-    await sendHeaderState(
-      embed
-    );
+await sendHeaderState(
+embed
+);
 
-    return;
+return;
 
-  }
+}
 
 
-  if (
-    source === HEADER_SOURCE &&
-    type === "HEADER_LOGIN_SUBMIT"
-  ) {
+if (
+source === HEADER_SOURCE &&
+type === "HEADER_LOGIN_SUBMIT"
+) {
 
-    const email =
-      String(
-        payload.email ||
-        message.email ||
-        ""
-      ).trim();
+const email =
+String(
+payload.email ||
+message.email ||
+""
+).trim();
 
 
-    const password =
-      String(
-        payload.password ||
-        message.password ||
-        ""
-      );
+const password =
+String(
+payload.password ||
+message.password ||
+""
+);
 
 
-    try {
+try {
 
-      await authentication.login(
-        email,
-        password
-      );
+await authentication.login(
+email,
+password
+);
 
 
-      await sendHeaderState(
-        embed
-      );
+await sendHeaderState(
+embed
+);
 
 
-    } catch (_) {
+} catch (_) {
 
-      post(
-        embed,
-        "HOME_ERROR",
-        {
-          message:
-            "Invalid email or password. Please try again."
-        }
-      );
+post(
+embed,
+"HOME_ERROR",
+{
+message:
+"Invalid email or password. Please try again."
+}
+);
 
-    }
+}
 
 
-    return;
+return;
 
-  }
+}
 
 
-  if (
-    source === HEADER_SOURCE &&
-    type === "HEADER_FORGOT_PASSWORD"
-  ) {
+if (
+source === HEADER_SOURCE &&
+type === "HEADER_FORGOT_PASSWORD"
+) {
 
-    try {
+try {
 
-      await authentication
-        .promptForgotPassword();
+await authentication
+.promptForgotPassword();
 
-    } catch (_) {}
+} catch (_) {}
 
 
-    return;
+return;
 
-  }
+}
 
 
-  if (
-    source === HEADER_SOURCE &&
-    type === "HEADER_LOGOUT"
-  ) {
+if (
+source === HEADER_SOURCE &&
+type === "HEADER_LOGOUT"
+) {
 
-    try {
+try {
 
-      await authentication.logout();
+await authentication.logout();
 
-    } catch (_) {}
+} catch (_) {}
 
 
-    await sendHeaderState(
-      embed
-    );
+await sendHeaderState(
+embed
+);
 
 
-    navigate("/");
+navigate("/");
 
-    return;
+return;
 
-  }
+}
 
 
-  /* -------------------------------------------------------
-     HEADER HEIGHT
-  ------------------------------------------------------- */
+/* -------------------------------------------------------
+HEADER HEIGHT
+------------------------------------------------------- */
 
-  if (
-    source === HEADER_SOURCE &&
-    type === "SKANDI_EMBED_RESIZE"
-  ) {
+if (
+source === HEADER_SOURCE &&
+type === "SKANDI_EMBED_RESIZE"
+) {
 
-    const requested =
-      Number(
-        payload.height
-      );
+const requested =
+Number(
+payload.height
+);
 
 
-    if (
-      Number.isFinite(requested)
-    ) {
+if (
+Number.isFinite(requested)
+) {
 
-      try {
+try {
 
-        embed.height =
-          Math.max(
-            118,
-            Math.min(
-              1200,
-              Math.round(requested)
-            )
-          );
+embed.height =
+Math.max(
+118,
+Math.min(
+1200,
+Math.round(requested)
+)
+);
 
-      } catch (_) {}
+} catch (_) {}
 
-    }
+}
 
 
-    return;
+return;
 
-  }
+}
 
 
-  /* -------------------------------------------------------
-     FOOTER NAVIGATION
-  ------------------------------------------------------- */
+/* -------------------------------------------------------
+FOOTER NAVIGATION
+------------------------------------------------------- */
 
-  if (
-    source === FOOTER_SOURCE &&
-    type === "FOOTER_NAVIGATE"
-  ) {
+if (
+source === FOOTER_SOURCE &&
+type === "FOOTER_NAVIGATE"
+) {
 
-    navigate(
-      payload.path ||
-      message.path
-    );
+navigate(
+payload.path ||
+message.path
+);
 
-    return;
+return;
 
-  }
+}
 
 
-  if (
-    source === FOOTER_SOURCE &&
-    type === "FOOTER_STAFF_LOGIN"
-  ) {
+if (
+source === FOOTER_SOURCE &&
+type === "FOOTER_STAFF_LOGIN"
+) {
 
-    navigate(
-      "/riaintra"
-    );
+navigate(
+"/riaintra"
+);
 
-    return;
+return;
 
-  }
+}
 
 
-  /* -------------------------------------------------------
-     MASTER NAVIGATION
-  ------------------------------------------------------- */
+/* -------------------------------------------------------
+MASTER NAVIGATION
+------------------------------------------------------- */
 
-  if (
-    type === "MASTER_NAVIGATE"
-  ) {
+if (
+type === "MASTER_NAVIGATE"
+) {
 
-    navigate(
-      payload.path ||
-      message.path
-    );
+navigate(
+payload.path ||
+message.path
+);
 
-  }
+}
 
 }
 
 
 /* =========================================================
-   WIRE EVERY HTML COMPONENT
+WIRE EVERY HTML COMPONENT
 ========================================================= */
 
 const wiredEmbeds =
-  new WeakSet();
+new WeakSet();
 
 
 function wireEmbed(
-  embed
+embed
 ) {
 
-  if (
-    !embed ||
-    wiredEmbeds.has(embed) ||
-    typeof embed.onMessage !== "function"
-  ) {
+if (
+!embed ||
+wiredEmbeds.has(embed) ||
+typeof embed.onMessage !== "function"
+) {
 
-    return;
+return;
 
-  }
-
-
-  wiredEmbeds.add(embed);
+}
 
 
-  console.log(
-    "[SKANDI MASTER] wiring HTML component",
-    embed.id
-  );
+wiredEmbeds.add(embed);
 
 
-  embed.onMessage(
-    async event => {
+console.log(
+"[SKANDI MASTER] wiring HTML component",
+embed.id
+);
 
-      try {
 
-        await handleMessage(
-          embed,
-          event
-        );
+embed.onMessage(
+async event => {
 
-      } catch (error) {
+try {
 
-        console.error(
-          "[SKANDI MASTER] message failure",
-          embed?.id,
-          error
-        );
+await handleMessage(
+embed,
+event
+);
 
-      }
+} catch (error) {
 
-    }
-  );
+console.error(
+"[SKANDI MASTER] message failure",
+embed?.id,
+error
+);
+
+}
+
+}
+);
 
 }
 
 
 /* =========================================================
-   READY
+READY
 ========================================================= */
 
 $w.onReady(
-  async function () {
+async function () {
 
-    console.log(
-      "[SKANDI MASTER] READY",
-      MASTER_VERSION,
-      currentPath()
-    );
-
-
-    let components = [];
+console.log(
+"[SKANDI MASTER] READY",
+MASTER_VERSION,
+currentPath()
+);
 
 
-    try {
-
-      components =
-        $w("HtmlComponent") || [];
-
-    } catch (error) {
-
-      console.error(
-        "[SKANDI MASTER] HtmlComponent selector failed",
-        error
-      );
-
-    }
+let components = [];
 
 
-    console.log(
-      "[SKANDI MASTER] HTML COMPONENT COUNT:",
-      components.length
-    );
+try {
+
+components =
+$w("HtmlComponent") || [];
+
+} catch (error) {
+
+console.error(
+"[SKANDI MASTER] HtmlComponent selector failed",
+error
+);
+
+}
 
 
-    components.forEach(
-      wireEmbed
-    );
+console.log(
+"[SKANDI MASTER] HTML COMPONENT COUNT:",
+components.length
+);
 
 
-    /*
-     * Retry the wiring because global/page HTML elements
-     * can finish initialization slightly after masterPage ready.
-     */
-    setTimeout(
-      () => {
-
-        try {
-
-          const later =
-            $w("HtmlComponent") || [];
+components.forEach(
+wireEmbed
+);
 
 
-          later.forEach(
-            wireEmbed
-          );
+/*
+* Retry the wiring because global/page HTML elements
+* can finish initialization slightly after masterPage ready.
+*/
+setTimeout(
+() => {
+
+try {
+
+const later =
+$w("HtmlComponent") || [];
 
 
-          console.log(
-            "[SKANDI MASTER] RETRY COMPONENT COUNT:",
-            later.length
-          );
-
-        } catch (error) {
-
-          console.error(
-            "[SKANDI MASTER] retry failed",
-            error
-          );
-
-        }
-
-      },
-      1000
-    );
+later.forEach(
+wireEmbed
+);
 
 
-    authentication.onLogin(
-      async () => {
+console.log(
+"[SKANDI MASTER] RETRY COMPONENT COUNT:",
+later.length
+);
 
-        try {
+} catch (error) {
 
-          const embeds =
-            $w("HtmlComponent") || [];
+console.error(
+"[SKANDI MASTER] retry failed",
+error
+);
+
+}
+
+},
+1000
+);
 
 
-          for (
-            const embed of embeds
-          ) {
+authentication.onLogin(
+async () => {
 
-            await sendHeaderState(
-              embed
-            );
+try {
 
-          }
+const embeds =
+$w("HtmlComponent") || [];
 
-        } catch (_) {}
 
-      }
-    );
+for (
+const embed of embeds
+) {
 
-  }
+await sendHeaderState(
+embed
+);
+
+}
+
+} catch (_) {}
+
+}
+);
+
+}
 );
