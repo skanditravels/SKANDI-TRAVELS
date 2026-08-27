@@ -1,29 +1,28 @@
 import { restRequest } from 'backend/RIA/supabaseServer.js';
 
 const AGENT_FIELDS = [
-  'id',
-  'member_id',
-  'wix_member_id',
-  'email',
-  'sk_id',
-  'first_name',
-  'last_name',
-  'preferred_name',
-  'display_name',
-  'role',
-  'job_title',
-  'department',
-  'station',
-  'base',
-  'active',
-  'status',
-  'employment_status',
-  'portal_access',
-  'authorized',
-  'can_access_payroll',
-  'can_access_grouptalk',
-  'can_manage',
-].join(',');
+  "id",
+  "member_id",
+  "wix_member_id",
+  "email",
+  "sk_id",
+  "first_name",
+  "last_name",
+  "preferred_name",
+  "display_name",
+  "job_title",
+  "department",
+  "station",
+  "base",
+  "active",
+  "status",
+  "employment_status",
+  "portal_access",
+  "authorized",
+  "can_access_payroll",
+  "can_access_grouptalk",
+  "can_manage"
+].join(",");
 
 const BLOCKED_STATUSES = new Set(['blocked', 'inactive', 'suspended', 'terminated']);
 
@@ -112,7 +111,7 @@ export function publicAgent(agent) {
     id: agent.id,
     skId: agent.sk_id,
     displayName: agent.preferred_name || agent.display_name || [agent.first_name, agent.last_name].filter(Boolean).join(' '),
-    role: agent.role || agent.job_title || null,
+    role: agent.job_title || null,
     department: agent.department || null,
     station: agent.station || agent.base || null,
     permissions: {
