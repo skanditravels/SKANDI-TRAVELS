@@ -304,7 +304,7 @@ function publicAgent(agent = {}) {
     name: displayName(agent),
     email: agentLoginEmail(agent),
     corporateEmailAddress: normalizeEmail(agent.corporate_email_address),
-    jobTitle: agent.job_title || agent.position || "",
+    jobTitle: agent.jobTitle || "",
     department: agent.department || "",
     station: agent.station || agent.base || "",
     base: agent.base || agent.station || "",
