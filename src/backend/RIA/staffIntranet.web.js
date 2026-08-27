@@ -133,15 +133,52 @@ function publicProfile(agent = {}) {
     station: agent.station || agent.base || "",
     base: agent.base || agent.station || "",
     employmentStatus: agent.employment_status || "",
-    phone: payload.phone || payload.personalPhoneMobile || "",
-    homeAddressStreet: payload.homeAddressStreet || "",
-    homeAddressCity: payload.homeAddressCity || "",
-    homeAddressState: payload.homeAddressState || "",
-    homeAddressPostalCode: payload.homeAddressPostalCode || "",
-    homeAddressCountry: payload.homeAddressCountry || "",
-    emergencyContactName: payload.emergencyContactName || "",
-    emergencyContactRelationship: payload.emergencyContactRelationship || "",
-    emergencyContactPhone: payload.emergencyContactPhone || ""
+    phone:
+  self.phone ||
+  self.personalPhoneMobile ||
+  payload.phone ||
+  payload.personalPhoneMobile ||
+  "",
+
+homeAddressStreet:
+  self.homeAddressStreet ||
+  payload.homeAddressStreet ||
+  "",
+
+homeAddressCity:
+  self.homeAddressCity ||
+  payload.homeAddressCity ||
+  "",
+
+homeAddressState:
+  self.homeAddressState ||
+  payload.homeAddressState ||
+  "",
+
+homeAddressPostalCode:
+  self.homeAddressPostalCode ||
+  payload.homeAddressPostalCode ||
+  "",
+
+homeAddressCountry:
+  self.homeAddressCountry ||
+  payload.homeAddressCountry ||
+  "",
+
+emergencyContactName:
+  self.emergencyContactName ||
+  payload.emergencyContactName ||
+  "",
+
+emergencyContactRelationship:
+  self.emergencyContactRelationship ||
+  payload.emergencyContactRelationship ||
+  "",
+
+emergencyContactPhone:
+  self.emergencyContactPhone ||
+  payload.emergencyContactPhone ||
+  ""
   };
 }
 
@@ -191,6 +228,12 @@ export const updateMyEmployeeProfile = webMethod(
       agent.payload && typeof agent.payload === "object" && !Array.isArray(agent.payload)
         ? agent.payload
         : {};
+    const oldSelf =
+  oldPayload.selfService &&
+  typeof oldPayload.selfService === "object" &&
+  !Array.isArray(oldPayload.selfService)
+    ? oldPayload.selfService
+    : {};
 
     const safe = {
       preferredName: clean(profile.preferredName, 80),
@@ -212,8 +255,14 @@ export const updateMyEmployeeProfile = webMethod(
       query: { id: `eq.${agent.id}` },
       body: {
         preferred_name: safe.preferredName || agent.preferred_name || null,
-        payload: { ...oldPayload, ...safe },
-        updated_at: new Date().toISOString()
+payload: {
+  ...oldPayload,
+
+  selfService: {
+    ...oldSelf,
+    ...safe
+  }
+},        updated_at: new Date().toISOString()
       }
     });
 
