@@ -8,58 +8,118 @@ import {
   isAgentAuthorized
 } from "backend/RIA/staffPortalAuth.repository.js";
 
-const SUPABASE_URL_SECRET = "SUPABASE_URL";
-const SUPABASE_SERVICE_ROLE_SECRET = "SUPABASE_SERVICE_ROLE_KEY";
+function parseRestPath(
+  path
+) {
+  const raw =
+    String(
+      path || ""
+    )
+      .replace(
+        /^\/+/,
+        ""
+      );
 
-let configCache = null;
+  const [
+    tablePart,
+    queryPart = ""
+  ] =
+    raw.split(
+      "?"
+    );
 
-async function Config() {
-  if (configCache?.url && configCache?.key) {
-    return configCache;
+  const table =
+    tablePart.trim();
+
+  if (!table) {
+    throw new Error(
+      "PAYROLL_TABLE_REQUIRED"
+    );
   }
 
-  const url = String(await getSecret(SUPABASE_URL_SECRET) || "").replace(/\/$/, "");
-  const key = String(await getSecret(SUPABASE_SERVICE_ROLE_SECRET) || "").trim();
+  const query = {};
 
-  if (!url || !key) {
-    throw new Error("Supabase secrets are missing.");
-  }
+  if (queryPart) {
+    for (
+      const pair
+      of queryPart.split("&")
+    ) {
+      if (!pair) {
+        continue;
+      }
 
-  configCache = { url, key };
-  return configCache;
-}
+      const equals =
+        pair.indexOf("=");
 
-async function supabaseRequest(path, options = {}) {
-  const { url, key } = await getSupabaseConfig();
+      const rawKey =
+        equals >= 0
+          ? pair.slice(
+              0,
+              equals
+            )
+          : pair;
 
-  const response = await fetch(`${url}/rest/v1/${String(path).replace(/^\//, "")}`, {
-    method: options.method || "GET",
-    headers: {
-      apikey: key,
-      Authorization: `Bearer ${key}`,
-      "Content-Type": "application/json",
-      ...(options.prefer ? { Prefer: options.prefer } : {}),
-      ...(options.headers || {})
-    },
-    body: options.body ? JSON.stringify(options.body) : undefined
-  });
+      const rawValue =
+        equals >= 0
+          ? pair.slice(
+              equals + 1
+            )
+          : "";
 
-  const text = await response.text();
-  let data = null;
+      const key =
+        decodeURIComponent(
+          rawKey
+        );
 
-  if (text) {
-    try {
-      data = JSON.parse(text);
-    } catch (err) {
-      data = text;
+      const value =
+        decodeURIComponent(
+          rawValue
+        );
+
+      if (key) {
+        query[key] =
+          value;
+      }
     }
   }
 
-  if (!response.ok) {
-    throw new Error(data?.message || data?.error || `Supabase request failed: ${response.status}`);
-  }
+  return {
+    table,
+    query
+  };
+}
 
-  return data;
+
+async function supabaseRequest(
+  path,
+  options = {}
+) {
+  const {
+    table,
+    query
+  } =
+    parseRestPath(
+      path
+    );
+
+  return restRequest({
+    table,
+
+    method:
+      options.method ||
+      "GET",
+
+    query,
+
+    body:
+      options.body,
+
+    prefer:
+      options.prefer ===
+      undefined
+        ? "return=representation"
+        : options.prefer
+  });
 }
 
 function cleanText(value, max = 255) {
@@ -134,7 +194,25 @@ async function requireStaffAgent() {
 
   return { member, agent };
 }
+async function requirePayrollAdmin() {
+  const session =
+    await requireStaffAgent();
 
+  if (
+    session.agent
+      .can_access_payroll !==
+        true &&
+    session.agent
+      .can_manage !==
+        true
+  ) {
+    throw new Error(
+      "Payroll administrator access required."
+    );
+  }
+
+  return session;
+}
 function profilePayload(input = {}, agent = {}) {
   const item = input.item || input.profile || input;
 
@@ -324,7 +402,7 @@ export const createPayrollPeriod = webMethod(
   Permissions.Anyone,
   async (input = {}) => {
     try {
-      const { agent } = await requireStaffAgent();
+      const { agent } = await requirePayrollAdmin();
 
       const startDate = cleanDate(input.startDate || input.start_date);
       const endDate = cleanDate(input.endDate || input.end_date);
@@ -374,7 +452,7 @@ export const calculatePayrollRun = webMethod(
   Permissions.Anyone,
   async (input = {}) => {
     try {
-      const { agent } = await requireStaffAgent();
+      const { agent } = await requirePayrollAdmin();
 
       const periodCode = cleanUpper(input.periodCode || input.period_code, 40);
 
@@ -518,12 +596,82 @@ export const calculatePayrollRun = webMethod(
     }
   }
 );
+export const getPayrollControlData =
+  webMethod(
+    Permissions.SiteMember,
 
+    async function ({
+      runId = ""
+    } = {}) {
+
+      await requirePayrollAdmin();
+
+      const [
+        profiles,
+        periods,
+        runs
+      ] =
+        await Promise.all([
+
+          supabaseRequest(
+            "staff_payroll_profiles?select=*&order=display_name.asc&limit=1000"
+          ),
+
+          supabaseRequest(
+            "staff_payroll_periods?select=*&order=start_date.desc&limit=100"
+          ),
+
+          supabaseRequest(
+            "staff_payroll_runs?select=*&order=created_at.desc&limit=100"
+          )
+
+        ]);
+
+      let lines = [];
+
+      if (runId) {
+        lines =
+          await supabaseRequest(
+            `staff_payroll_run_lines?payroll_run_id=eq.${encodeURIComponent(
+              runId
+            )}&select=*&order=display_name.asc&limit=2000`
+          );
+      }
+
+      return {
+        ok: true,
+
+        profiles:
+          (profiles || [])
+            .map(
+              mapProfile
+            ),
+
+        periods:
+          (periods || [])
+            .map(
+              mapPeriod
+            ),
+
+        runs:
+          (runs || [])
+            .map(
+              mapRun
+            ),
+
+        lines:
+          (lines || [])
+            .map(
+              mapLine
+            )
+      };
+    }
+  );
 export const finalizePayrollRun = webMethod(
   Permissions.Anyone,
   async (input = {}) => {
     try {
-      const { agent } = await requireStaffAgent();
+      const { agent } = await requirePayrollAdmin();
 
       const runId = cleanText(input.runId || input.id, 160);
       const runCode = cleanUpper(input.runCode || input.run_code, 80);
