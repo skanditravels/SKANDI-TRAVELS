@@ -55,14 +55,31 @@ const INTERNAL_TABLES = new Set([
   "altea_offer_cache",
   "amadeus_offer_cache",
   "career_applicant_accounts",
-  "career_applicant_access_codes",
-  "career_applicant_sessions",
-  "career_application_files",
-  "career_positions",
-  "document_acknowledgements",
-  "document_packet_items",
-  "document_packets",
-  "document_templates"
+"career_applicant_access_codes",
+"career_applicant_sessions",
+"career_application_files",
+"career_positions",
+
+"career_audit_log",
+"career_candidate_history",
+"career_documents",
+"career_sra_vetting",
+"career_document_packets",
+"career_settings",
+"career_integration_snapshots",
+"career_interviews",
+"career_training_records",
+"career_onboarding_tasks",
+"career_history_gaps",
+"career_mailbox_messages",
+"career_maintenance_schedule",
+
+"outbound_messages",
+
+"document_acknowledgements",
+"document_packet_items",
+"document_packets",
+"document_templates"
 ]);
 
 function secretString(response) {
