@@ -69,7 +69,7 @@ const MASTER_CONFIG = {
           "https://static.wixstatic.com/media/394052_504704bd94f44f01a95f304bd19640e5~mv2.png",
 
         customerFooter:
-          "https://static.wixstatic.com/media/394052_504704bd94f44f01a95f304bd19640e5~mv2.png",
+          "https://static.wixstatic.com/media/394052_fafffe6d26434eddbf62eb645ee9c844~mv2.png",
 
         skandiPrimary:
           "https://static.wixstatic.com/media/394052_504704bd94f44f01a95f304bd19640e5~mv2.png",
