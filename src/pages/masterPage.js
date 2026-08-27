@@ -141,63 +141,25 @@ const MASTER_CONFIG = {
       primaryNav: [
 
         {
-          id: "flights",
-          label: "Flights",
-          path: "/flights"
+          id: "destinations",
+          label: "Destinations",
+          path: "/destinations"
         },
-
-        {
-          id: "hotels",
-          label: "Hotels",
-          path: "/hotels"
-        },
-
-        {
-          id: "packages",
-          label: "Packages",
-          path: "/packages"
-        },
-
         {
           id: "tours",
           label: "Tours & Activities",
           path: "/tours"
         },
-
         {
-          id: "transfers",
-          label: "Transfers",
-          path: "/transfers"
+          id: "travelInfo",
+          label: "Travel Info",
+          path: "/travel-info"
         }
-
-      ],
-
-
-      secondaryNav: [
-
-        {
-          id: "destinations",
-          label: "Destinations",
-          path: "/destinations"
-        },
-
         {
           id: "signature",
           label: "SKANDI Collection",
           path: "/skandi-collection"
         },
-
-        {
-          id: "voy",
-          label: "VOY Magazine",
-          path: "/voy-magazine"
-        },
-
-        {
-          id: "newsroom",
-          label: "Newsroom",
-          path: "/about/news-room"
-        }
 
       ],
 
@@ -419,15 +381,17 @@ const MASTER_CONFIG = {
         {
           label: "Accessibility",
           path: "/about/legal/policies?policy=accessibility"
-        }
+        },
+        {
+          staffLogin: {
+          label: "Staff Login",
+          path: "/riaintra"
+      }
 
       ],
 
 
-      staffLogin: {
-        label: "Staff Login",
-        path: "/riaintra"
-      }
+      
 
     }
 
