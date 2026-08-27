@@ -4,12 +4,31 @@ import { currentMember } from "wix-members-backend";
 import { restRequest } from "backend/RIA/supabaseServer.js";
 
 const AGENT_SELECT = [
+  "id",
+  "agent_id",
+  "member_id",
+  "wix_member_id",
   "sk_id",
+  "first_name",
+  "last_name",
+  "preferred_name",
+  "display_name",
   "job_title",
-  "station",
   "department",
+  "station",
+  "base",
   "badge_photo_url",
-  "email"
+  "email",
+  "corporate_email_address",
+  "employment_status",
+  "status",
+  "active",
+  "portal_access",
+  "authorized",
+  "can_access_payroll",
+  "can_access_grouptalk",
+  "can_manage",
+  "payload"
 ].join(",");
 
 function clean(v, max = 500) {
