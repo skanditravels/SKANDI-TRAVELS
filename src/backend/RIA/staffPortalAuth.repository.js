@@ -63,36 +63,79 @@ export async function findAgentBySkId(skId) {
   );
 }
 
-export async function findAgentByMemberOrEmail({ memberId, email }) {
-  const normalizedMemberId = normalize(memberId);
-  const normalizedEmail = normalize(email).toLowerCase();
+export async function findAgentByMemberOrEmail({
+  memberId,
+  email
+}) {
+  const normalizedMemberId =
+    normalize(memberId);
+
+  const normalizedEmail =
+    normalize(email)
+      .toLowerCase();
 
   if (normalizedMemberId) {
-    const byMember = first(await restRequest({
-      table: 'agent_users',
-      query: {
-        select: AGENT_FIELDS,
-        or: `(member_id.eq.${normalizedMemberId},wix_member_id.eq.${normalizedMemberId})`,
-        limit: 1,
-      },
-    }));
-    if (byMember) return byMember;
+    const byMember =
+      first(
+        await restRequest({
+          table:
+            "agent_users",
+
+          query: {
+            select:
+              AGENT_FIELDS,
+
+            or:
+              `(member_id.eq.${normalizedMemberId},wix_member_id.eq.${normalizedMemberId})`,
+
+            limit:
+              1
+          }
+        })
+      );
+
+    if (byMember) {
+      return byMember;
+    }
   }
 
   if (!normalizedEmail) {
-  return null;
-}
+    return null;
+  }
 
-let byEmail =
-  first(
+  const byEmail =
+    first(
+      await restRequest({
+        table:
+          "agent_users",
+
+        query: {
+          select:
+            AGENT_FIELDS,
+
+          email:
+            `ilike.${normalizedEmail}`,
+
+          limit:
+            1
+        }
+      })
+    );
+
+  if (byEmail) {
+    return byEmail;
+  }
+
+  return first(
     await restRequest({
-      table: "agent_users",
+      table:
+        "agent_users",
 
       query: {
         select:
           AGENT_FIELDS,
 
-        email:
+        corporate_email_address:
           `ilike.${normalizedEmail}`,
 
         limit:
@@ -100,27 +143,7 @@ let byEmail =
       }
     })
   );
-
-if (byEmail) {
-  return byEmail;
 }
-
-return first(
-  await restRequest({
-    table: "agent_users",
-
-    query: {
-      select:
-        AGENT_FIELDS,
-
-      corporate_email_address:
-        `ilike.${normalizedEmail}`,
-
-      limit:
-        1
-    }
-  })
-);
 
 export async function updateAgentLogin(agentId) {
   await restRequest({
