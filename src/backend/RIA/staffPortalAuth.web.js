@@ -684,67 +684,7 @@ function loggedOutSession(
   };
 }
 
-function publicAgent(agent = {}) {
-  return {
-    id: agent.id || "",
-    agentId: agent.agent_id || "",
-    skId: agent.sk_id || "",
-    firstName: agent.first_name || "",
-    lastName: agent.last_name || "",
-    preferredName: agent.preferred_name || "",
-    displayName: displayName(agent),
-    name: displayName(agent),
 
-    email:
-      agentLoginEmail(agent),
-
-    corporateEmailAddress:
-      normalizeEmail(
-        agent.corporate_email_address
-      ),
-
-    jobTitle:
-      agent.job_title || "",
-
-    department:
-      agent.department || "",
-
-    station:
-      agent.station || "",
-
-    base:
-      agent.base || "",
-
-    employmentStatus:
-      agent.employment_status || "",
-
-    status:
-      agent.status || "",
-
-    active:
-      agent.active === true,
-
-    portalAccess:
-      agent.portal_access === true,
-
-    authorized:
-      agent.authorized === true,
-
-    canManage:
-      agent.can_manage === true,
-
-    permissions: {
-      payroll:
-        agent.can_access_payroll === true,
-
-      groupTalk:
-        agent.can_access_grouptalk === true,
-
-      manage:
-        agent.can_manage === true
-    }
-  };
-}
 function authorizedSession(agent) {
   const profile =
     publicAgent(agent);
