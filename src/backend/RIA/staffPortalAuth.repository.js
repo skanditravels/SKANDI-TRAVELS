@@ -37,38 +37,30 @@ function normalize(value) {
 }
 
 export async function findAgentBySkId(skId) {
-  const normalized = normalize(skId).toUpperCase();
-  if (!normalizedEmail) {
-  return null;
-}
+  const normalized =
+    normalize(skId)
+      .toUpperCase();
 
-let byEmail =
-  first(
+  if (!normalized) {
+    return null;
+  }
+
+  return first(
     await restRequest({
       table: "agent_users",
+
       query: {
-        select: AGENT_FIELDS,
-        email: `ilike.${normalizedEmail}`,
-        limit: 1
+        select:
+          AGENT_FIELDS,
+
+        sk_id:
+          `eq.${normalized}`,
+
+        limit:
+          1
       }
     })
   );
-
-if (byEmail) {
-  return byEmail;
-}
-
-return first(
-  await restRequest({
-    table: "agent_users",
-    query: {
-      select: AGENT_FIELDS,
-      corporate_email_address:
-        `ilike.${normalizedEmail}`,
-      limit: 1
-    }
-  })
-);
 }
 
 export async function findAgentByMemberOrEmail({ memberId, email }) {
@@ -87,12 +79,48 @@ export async function findAgentByMemberOrEmail({ memberId, email }) {
     if (byMember) return byMember;
   }
 
-  if (!normalizedEmail) return null;
-  return first(await restRequest({
-    table: 'agent_users',
-    query: { select: AGENT_FIELDS, email: `ilike.${normalizedEmail}`, limit: 1 },
-  }));
+  if (!normalizedEmail) {
+  return null;
 }
+
+let byEmail =
+  first(
+    await restRequest({
+      table: "agent_users",
+
+      query: {
+        select:
+          AGENT_FIELDS,
+
+        email:
+          `ilike.${normalizedEmail}`,
+
+        limit:
+          1
+      }
+    })
+  );
+
+if (byEmail) {
+  return byEmail;
+}
+
+return first(
+  await restRequest({
+    table: "agent_users",
+
+    query: {
+      select:
+        AGENT_FIELDS,
+
+      corporate_email_address:
+        `ilike.${normalizedEmail}`,
+
+      limit:
+        1
+    }
+  })
+);
 
 export async function updateAgentLogin(agentId) {
   await restRequest({
