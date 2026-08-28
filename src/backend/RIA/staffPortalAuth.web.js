@@ -710,14 +710,10 @@ function publicAgent(agent = {}) {
       agent.department || "",
 
     station:
-      agent.station ||
-      agent.base ||
-      "",
+      agent.station || "",
 
     base:
-      agent.base ||
-      agent.station ||
-      "",
+      agent.base || "",
 
     employmentStatus:
       agent.employment_status || "",
