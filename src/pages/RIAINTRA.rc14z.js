@@ -139,7 +139,7 @@ async function handleLoginRequest(
     postToEmbed(
       "STAFF_LOGIN_PROGRESS",
       {
-        message: "Validating SK-ID..."
+        message: "Validating..."
       },
       requestId
     );
@@ -177,7 +177,7 @@ async function handleLoginRequest(
     postToEmbed(
       "STAFF_LOGIN_PROGRESS",
       {
-        message: "Sig in"
+        message: "Sign in"
       },
       requestId
     );
