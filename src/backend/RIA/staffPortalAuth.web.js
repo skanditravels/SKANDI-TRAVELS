@@ -80,75 +80,27 @@ const PORTAL_APPS = Object.freeze([
   },
   {
     id: "altea",
-    title: "ALTEA",
+    title: "ALTEA Application Launcher",
     subtitle: "Operations platform",
     path: "/riaintra/success-factors/altea",
     group: "Operations",
     icon: "A"
   },
   {
-    id: "reservations",
-    title: "ALTEA Reservations",
-    subtitle: "Reservations platform",
-    path: "/riaintra/success-factors/altea/reservations",
-    group: "Operations",
-    icon: "AR"
-  },
-  {
-    id: "ticketing",
-    title: "ALTEA Ticketing",
-    subtitle: "Ticketing platform",
-    path: "/riaintra/success-factors/altea/ticketing",
-    group: "Operations",
-    icon: "AT"
-  },
-  {
-    id: "timatic",
-    title: "ALTEA Timatic",
-    subtitle: "Timatic Passenger Document Compliance Check",
-    path: "/riaintra/success-factors/altea/timatic",
-    group: "Operations",
-    icon: "AT"
-  },
-  {
-    id: "occ",
-    title: "ALTEA OCC",
-    subtitle: "OPS Operational Control Center",
-    path: "/riaintra/success-factors/altea/occ",
-    group: "Operations",
-    icon: "AOCC"
-  },
-  {
-    id: "dcs",
-    title: "ALTEA Departure Control",
-    subtitle: "Customer Management / Departure Control",
-    path: "/riaintra/success-factors/altea/departure-control",
-    group: "Operations",
-    icon: "ADC"
-  },
-  {
     id: "mail",
     title: "Mail",
     subtitle: "Internal messages",
-    path: "/riaintra/mail",
+    path: "/riaintra/success-factors/mail",
     group: "Communication",
     icon: "M"
   },
   {
-    id: "inventory",
-    title: "ALTEA Inventory Control",
-    subtitle: "SKANDI's travel inventory center",
-    path: "/riaintra/success-factors/altea/inventory-control",
-    group: "Operations",
-    icon: "AI"
-  },
-  {
-    id: "grouptalk",
-    title: "GroupTalk",
-    subtitle: "Operational team communication",
-    path: "/riaintra/success-factors/alteagrouptalk",
-    group: "Communication",
-    icon: "APTT"
+    id: "my-payroll",
+    title: "MyPayroll",
+    subtitle: "Employee Payroll Portal",
+    path: "/riaintra/success-factors/my-payroll",
+    group: "Staff",
+    icon: "P"
   },
   {
     id: "docunet",
@@ -188,7 +140,7 @@ const PORTAL_APPS = Object.freeze([
     title: "THE STORE Admin",
     subtitle: "THE STORE Admin Portal",
     path: "/riaintra/success-factors/store-admin",
-    group: "administration",
+    group: "Administration",
     icon: "SA",
     permission: "store"
   },
@@ -202,6 +154,24 @@ const PORTAL_APPS = Object.freeze([
     permission: "uniform"
   },
   {
+    id: "travelinfocontrol",
+    title: "Travel Info Control",
+    subtitle: "Passenger Faceing Travel Information Control",
+    path: "/riaintra/success-factors/travel-info-control",
+    group: "Administration",
+    icon: "TIC",
+    permission: "content"
+  },
+  {
+    id: "policycontrol",
+    title: "Policy Control",
+    subtitle: "Passenger & Internal Policy Control",
+    path: "/riaintra/success-factors/policy-control",
+    group: "Administration",
+    icon: "PC",
+    permission: "legal"
+  },
+  {
     id: "mediacontrol",
     title: "Media Control",
     subtitle: "Newsroom, VOY & Marketing Portal",
@@ -209,14 +179,6 @@ const PORTAL_APPS = Object.freeze([
     group: "Administration",
     icon: "MM",
     permission: "media"
-  },
-  {
-    id: "my-payroll",
-    title: "MyPayroll",
-    subtitle: "Employee Payroll Portal",
-    path: "/riaintra/success-factors/my-payroll",
-    group: "Staff",
-    icon: "P"
   },
   {
     id: "payroll",
