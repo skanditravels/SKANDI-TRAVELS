@@ -56,6 +56,8 @@ const INTERNAL_TABLES = new Set([
   "travel_product_components",
   "travel_product_price_cache",
   "master_inventory_audit",
+  "travel_info_airports",
+  "travel_info_airlines",
 
   "inventory_master_entities",
   "inventory_localized_content",
