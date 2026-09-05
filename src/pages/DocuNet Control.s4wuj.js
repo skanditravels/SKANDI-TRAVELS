@@ -17,8 +17,8 @@ import {
 
 const SOURCE = "SKANDI_DOCUNET_ADMIN";
 const PARENT = "SKANDI_WIX_PARENT";
-const HTML_IDS = ["#alteaDocunetAdminEmbed", "#docuNetAdminEmbed", "#docunetAdminEmbed"];
-const STAFF_PATH = "/riaintra/docunet";
+const HTML_IDS = "#docuNetAdminEmbed";
+const STAFF_PATH = "/riaintra/success-factors/docunet";
 
 function htmlElement() {
   for (const id of HTML_IDS) {
