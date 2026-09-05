@@ -1,6 +1,6 @@
-import { sbInsert } from "src/backend/supabaseClient";
-import { uid, nowIso } from "src/backend/core/response";
-import { createNotificationForEvent } from "src/backend/domains/notification/service";
+import { sbInsert } from "backend/supabaseClient";
+import { uid, nowIso } from "backend/core/response";
+import { createNotificationForEvent } from "backend/domains/notification/service";
 
 const EVENTS_TABLE = "platform_events";
 
