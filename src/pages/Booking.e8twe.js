@@ -172,6 +172,42 @@ function postError(step, message, extra = {}) {
   });
 }
 
+function publicBookingError(error) {
+  const raw = String(
+    error?.publicMessage ||
+    error?.message ||
+    "The booking request could not be completed."
+  ).trim();
+
+  const messages = {
+    BOOKING_CART_ACCESS_DENIED: "This secure booking session has expired. Return to Home and select the offer again.",
+    BOOKING_CART_NOT_FOUND: "This booking session could not be found. Return to Home and select the offer again.",
+    BOOKING_OFFER_EXPIRED: "This flight offer has expired. Search again for a current option.",
+    BOOKING_LIVE_OFFER_INVALID: "This flight offer is no longer valid. Search again for a current option.",
+    BOOKING_HOTEL_RESULT_INVALID: "This hotel offer is no longer valid. Search again for current availability.",
+    BOOKING_HOTEL_RATE_UNAVAILABLE: "This hotel rate is no longer available. Search again for current availability.",
+    BOOKING_SEAT_UNAVAILABLE: "That seat is no longer available. Choose another seat or continue without seats.",
+    BOOKING_SEATMAP_UNAVAILABLE: "Seat selection is not available for this flight right now.",
+    BOOKING_PAYMENT_NOT_COMPLETE: "Payment has not completed yet. Check the payment status before retrying.",
+    BOOKING_PAYMENT_AMOUNT_MISMATCH: "The booking price changed after payment was prepared. Please refresh the booking before trying again.",
+    BOOKING_CONTACT_PHONE_INVALID: "Enter the mobile number in international format, including the + country code.",
+    BOOKING_CONTACT_EMAIL_INVALID: "Enter a valid contact email address."
+  };
+
+  if (messages[raw]) return messages[raw];
+
+  if (/network request failed|could not be reached/i.test(raw)) {
+    return "The live travel provider could not be reached. Please try again.";
+  }
+  if (/rate limit|rate limiting/i.test(raw)) {
+    return "Live availability is temporarily busy. Please try again shortly.";
+  }
+  return raw.replace(
+    /BOOKING_[A-Z0-9_]+/g,
+    "The booking request could not be completed."
+  );
+}
+
 function changeStatebox(step) {
   const box = getElement(STATEBOX_ID);
   const stateId = STEPS[step]?.state || STEPS.offer.state;
@@ -215,7 +251,7 @@ function goStep(step, options = {}) {
   Promise.resolve(stateChange).then(() => {
     if (!readyEmbeds.has(next)) return;
     initializeStep(next).catch((error) => {
-      postError(next, error?.message || "Booking step failed.");
+      postError(next, publicBookingError(error));
     });
   });
 }
@@ -266,7 +302,7 @@ async function handleBookingMessage(event, expectedStep) {
     handleGenericNavigate(msg);
   } catch (error) {
     console.error(`[Booking] ${step}:${msg.type || "unknown"} failed`, error);
-    postError(step, error?.message || "Booking step failed.");
+    postError(step, publicBookingError(error));
   } finally {
     if (isMutatingAction) actionsInFlight.delete(actionKey);
   }
@@ -428,7 +464,7 @@ async function handlePayment(msg) {
     if (paymentCommitInFlight) return;
     paymentCommitInFlight = true;
     postToStep("payment", "PAYMENT_PROGRESS", {}, {
-      message: "Verifying payment and creating your Duffel reservation..."
+      message: "Verifying payment and creating your reservation..."
     });
 
     try {
