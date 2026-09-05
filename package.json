@@ -18,7 +18,10 @@
     "livekit-server-sdk": "2.15.5",
     "@wix/members_members": "1.0.74",
     "@wix/stores": "1.0.823",
-    "@wix/members": "1.0.492"
+    "@wix/members": "1.0.492",
+    "sanitize-html": "2.17.7",
+"pdfkit": "0.19.1",
+"html-to-text": "9.0.5"
   },
   "scripts": {
     "postinstall": "wix sync-types",
