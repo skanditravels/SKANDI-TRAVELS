@@ -1,32 +1,54 @@
 import wixLocationFrontend from "wix-location-frontend";
 import { currentMember, authentication } from "wix-members-frontend";
-import { getCustomerHeaderSession, subscribeCustomerNewsletter } from "backend/customerHeader.web";
-import { getToursActivitiesBootstrap, searchToursActivities, getTourActivityDetail, createTourActivityBookingCart, searchNearbyToursActivities } from "backend/FINAL/toursActivitiesService.web";
+import {
+  getToursActivitiesBootstrap,
+  searchToursActivities,
+  getTourActivityDetail,
+  searchNearbyToursActivities
+} from "backend/destinationInventory.web";
+import { createTourActivityBookingCart } from "backend/FINAL/toursActivitiesService.web";
 
-const HTML_ID = "#toursActivitiesHtml";
-const APP_SOURCE = "SKANDI_TOURS_ACTIVITIES";
-const HEADER_SOURCE = "SKANDI_CUSTOMER_HEADER_EXPANDBAR";
-const FOOTER_SOURCE = "SKANDI_CUSTOMER_FOOTER";
-const PARENT_SOURCE = "SKANDI_WIX_PARENT";
-let headerPromise = null;
-let currentSettings = { language: "EN", currency: "USD" };
+const HTML_ID="#toursActivitiesHtml";
+const HTML_SOURCE="SKANDI_TOURS_ACTIVITIES";
+const PARENT_SOURCE="SKANDI_WIX_PARENT";
+let settings={language:"EN",currency:"USD"};
 
-function asObject(value) { return value && typeof value === "object" && !Array.isArray(value) ? value : {}; }
-function parseMessage(data) { if (typeof data === "string") { try { return JSON.parse(data); } catch (_) { return null; } } return asObject(data); }
-function payloadOf(message) { return { ...asObject(message), ...asObject(message?.payload) }; }
-function post(html, type, payload = {}, requestId = "") { html.postMessage({ source: PARENT_SOURCE, type, requestId, payload: { ...asObject(payload), requestId }, timestamp: new Date().toISOString() }); }
-function closePanels(html) { post(html, "CLOSE_CUSTOMER_HEADER_PANELS", {}); }
-function navigate(html, rawPath) { const path = String(rawPath || "").trim(); if (!path) return; if (!path.startsWith("/") && !/^https?:\/\//i.test(path) && !/^mailto:/i.test(path) && !/^tel:/i.test(path)) return; closePanels(html); wixLocationFrontend.to(path); }
-function guestHeader() { return { loggedIn: false, displayName: "", points: 0, tierName: "", menu: [] }; }
-async function memberSafe() { try { return await currentMember.getMember(); } catch (_) { return null; } }
-async function sendHeaderState(html, refresh = false) { if (headerPromise && !refresh) return headerPromise; headerPromise = (async () => { try { const member = await memberSafe(); if (!member) { post(html, "CUSTOMER_HEADER_STATE", guestHeader()); return; } const session = await getCustomerHeaderSession(); post(html, "CUSTOMER_HEADER_STATE", { loggedIn: true, displayName: session?.displayName || member?.profile?.nickname || member?.loginEmail || "", points: Number(session?.points || session?.clubPoints || 0), tierName: session?.tierName || session?.tier || "", menu: Array.isArray(session?.menu) ? session.menu : [] }); } catch (error) { console.error("[Tours] Header state failed.", error); post(html, "CUSTOMER_HEADER_STATE", guestHeader()); } finally { headerPromise = null; } })(); return headerPromise; }
-async function login(html) { closePanels(html); try { await authentication.promptLogin(); } catch (_) {} await sendHeaderState(html, true); }
-async function logout(html) { closePanels(html); try { await Promise.resolve(authentication.logout()); } catch (_) {} post(html, "CUSTOMER_HEADER_STATE", guestHeader()); navigate(html, "/home"); }
-function normalizeSettings(value = {}) { const language = ["EN","SV","NO","DA"].includes(String(value.language || "").toUpperCase()) ? String(value.language).toUpperCase() : "EN"; const currency = ["USD","SEK","NOK","DKK","EUR"].includes(String(value.currency || "").toUpperCase()) ? String(value.currency).toUpperCase() : "USD"; return { language, currency }; }
-function queryState() { const query = wixLocationFrontend.query || {}; return { initialDestination: String(query.destination || ""), initialCategory: String(query.category || ""), initialActivity: String(query.activity || query.slug || "") }; }
+function obj(v){return v&&typeof v==="object"&&!Array.isArray(v)?v:{}}
+function parse(v){if(typeof v==="string"){try{return JSON.parse(v)}catch(_){return null}}return obj(v)}
+function payload(m){return {...obj(m),...obj(m?.payload)}}
+function send(el,type,data={},requestId=""){el.postMessage({source:PARENT_SOURCE,type,requestId,payload:{...obj(data),requestId},timestamp:new Date().toISOString()})}
+function navigate(path){const p=String(path||"").trim();if(p.startsWith("/")||/^https?:\/\//i.test(p))wixLocationFrontend.to(p)}
+async function member(){try{return await currentMember.getMember()}catch(_){return null}}
+async function login(){try{await authentication.promptLogin()}catch(_){}}
+function normalizeSettings(v={}){return{language:String(v.language||"EN").toUpperCase(),currency:String(v.currency||"USD").toUpperCase()}}
+function queryState(){const q=wixLocationFrontend.query||{};return{initialDestination:String(q.destination||""),initialCategory:String(q.category||""),initialActivity:String(q.activity||q.slug||"")}}
 
-async function handleHeader(html, message) { const p = payloadOf(message); if (message.type === "HEADER_READY") { await sendHeaderState(html); return true; } if (message.type === "HEADER_NAVIGATE") { navigate(html, p.path); return true; } if (message.type === "HEADER_SEARCH") { post(html, "TOURS_FOCUS_SEARCH", {}); return true; } if (message.type === "HEADER_LOGIN") { await login(html); return true; } if (message.type === "HEADER_LOGOUT") { await logout(html); return true; } if (message.type === "UPDATE_SETTINGS") { currentSettings = normalizeSettings(p); return true; } return false; }
-async function handleFooter(html, message) { const p = payloadOf(message); if (message.type === "FOOTER_READY") { post(html, "CUSTOMER_FOOTER_STATE", { ready: true }); return true; } if (message.type === "FOOTER_NAVIGATE") { navigate(html, p.path); return true; } if (message.type === "FOOTER_STAFF_LOGIN") { navigate(html, "/riaintra"); return true; } if (message.type === "FOOTER_NEWSLETTER_SIGNUP") { const email = String(p.email || "").trim(); if (!email) { post(html, "FOOTER_NEWSLETTER_RESULT", { ok: false, message: "Please enter your email address." }); return true; } try { const result = await subscribeCustomerNewsletter({ email, source: p.source || "Tours & Activities Footer" }); post(html, "FOOTER_NEWSLETTER_RESULT", { ok: true, message: result?.status === "updated" ? "Your subscription is already active." : "Thank you for subscribing.", ...(result || {}) }); } catch (error) { post(html, "FOOTER_NEWSLETTER_RESULT", { ok: false, message: error?.message || "Newsletter signup failed." }); } return true; } return false; }
-async function handleApp(html, message) { const p = payloadOf(message); const requestId = String(message.requestId || p.requestId || ""); if (message.type === "TOURS_READY") { currentSettings = normalizeSettings(p.settings || currentSettings); const initial = queryState(); const bootstrap = await getToursActivitiesBootstrap({ ...currentSettings, ...initial }); let initialActivity = null; if (initial.initialActivity) { try { const result = await getTourActivityDetail({ activityId: initial.initialActivity, ...currentSettings }); initialActivity = result?.activity || null; } catch (_) {} } post(html, "TOURS_BOOTSTRAP_RESULT", { ...(bootstrap || {}), initialActivity, initialDestination: initial.initialDestination, initialCategory: initial.initialCategory }, requestId); await sendHeaderState(html); return true; } if (message.type === "UPDATE_SETTINGS") { currentSettings = normalizeSettings(p); return true; } if (message.type === "TOURS_SEARCH") { const result = await searchToursActivities({ ...asObject(p.search), ...currentSettings }); post(html, "TOURS_SEARCH_RESULT", { ...(result || {}), items: Array.isArray(result?.items) ? result.items : [] }, requestId); return true; } if (message.type === "TOURS_ACTIVITY_OPEN") { const result = await getTourActivityDetail({ activityId: p.activityId, ...currentSettings }); post(html, "TOURS_ACTIVITY_RESULT", result || {}, requestId); return true; } if (message.type === "TOURS_NEARBY_SEARCH") { const result = await searchNearbyToursActivities({ latitude: Number(p.latitude), longitude: Number(p.longitude), ...currentSettings }); post(html, "TOURS_NEARBY_RESULT", result || {}, requestId); return true; } if (message.type === "TOURS_BOOK_ACTIVITY") { let result = await createTourActivityBookingCart({ activity: p.activity, selection: p.selection, ...currentSettings }); if (result?.requiresLogin) { await login(html); result = await createTourActivityBookingCart({ activity: p.activity, selection: p.selection, ...currentSettings }); } post(html, "TOURS_BOOK_RESULT", result || {}, requestId); return true; } if (message.type === "TOURS_FAVORITE") { if (!(await memberSafe())) await login(html); post(html, "TOURS_FAVORITE_RESULT", { ok: true, activityId: p.activityId }, requestId); return true; } if (message.type === "TOURS_NAVIGATE") { navigate(html, p.path); return true; } return false; }
-
-$w.onReady(function () { let html; try { html = $w(HTML_ID); } catch (error) { console.error(`[Tours] Missing ${HTML_ID}.`, error); return; } html.onMessage(async event => { const message = parseMessage(event.data); if (!message?.source || !message?.type) return; try { if (message.source === APP_SOURCE) { await handleApp(html, message); return; } if (message.source === HEADER_SOURCE) { await handleHeader(html, message); return; } if (message.source === FOOTER_SOURCE) { await handleFooter(html, message); return; } } catch (error) { console.error(`[Tours] ${message.type} failed.`, error); post(html, "TOURS_ERROR", { message: error?.message || "The request could not be completed." }, message.requestId || ""); } }); });
+$w.onReady(function(){
+  let el;try{el=$w(HTML_ID)}catch(error){console.error(error);return}
+  el.onMessage(async event=>{
+    const m=parse(event.data);if(!m||m.source!==HTML_SOURCE)return;
+    const p=payload(m),id=String(m.requestId||p.requestId||"");
+    try{
+      if(m.type==="TOURS_READY"){
+        settings=normalizeSettings(p.settings||settings);
+        const initial=queryState();
+        const bootstrap=await getToursActivitiesBootstrap({...settings,...initial});
+        let initialActivity=null;
+        if(initial.initialActivity){try{initialActivity=(await getTourActivityDetail({activityId:initial.initialActivity,...settings}))?.activity||null}catch(_){}}
+        send(el,"TOURS_BOOTSTRAP_RESULT",{...(bootstrap||{}),initialActivity,...initial},id);
+        return;
+      }
+      if(m.type==="UPDATE_SETTINGS"){settings=normalizeSettings(p);return}
+      if(m.type==="TOURS_SEARCH"){const r=await searchToursActivities({...obj(p.search),...settings});send(el,"TOURS_SEARCH_RESULT",{...(r||{}),items:Array.isArray(r?.items)?r.items:[]},id);return}
+      if(m.type==="TOURS_ACTIVITY_OPEN"){send(el,"TOURS_ACTIVITY_RESULT",await getTourActivityDetail({activityId:p.activityId,...settings}),id);return}
+      if(m.type==="TOURS_NEARBY_SEARCH"){send(el,"TOURS_NEARBY_RESULT",await searchNearbyToursActivities({latitude:Number(p.latitude),longitude:Number(p.longitude),...settings}),id);return}
+      if(m.type==="TOURS_BOOK_ACTIVITY"){
+        if(!(await member()))await login();
+        const result=await createTourActivityBookingCart({activity:p.activity,selection:p.selection,...settings});
+        send(el,"TOURS_BOOK_RESULT",result||{},id);return;
+      }
+      if(m.type==="TOURS_NAVIGATE"){navigate(p.path);return}
+      if(m.type==="TOURS_FAVORITE"){if(!(await member()))await login();send(el,"TOURS_FAVORITE_RESULT",{ok:true,activityId:p.activityId},id)}
+    }catch(error){console.error("[Tours]",error);send(el,"TOURS_ERROR",{message:error?.message||"The request could not be completed."},id)}
+  });
+});
