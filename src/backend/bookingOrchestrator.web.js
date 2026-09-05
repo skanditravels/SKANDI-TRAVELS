@@ -1,17 +1,17 @@
 // SKANDI customer booking orchestrator
-// Canonical customer provider: Duffel Flights + Duffel Stays.
+// Canonical customer booking provider is backend-only; public payloads use SKANDI labels.
 // Public web methods never expose provider credentials.
 
 import { webMethod, Permissions } from "wix-web-module";
 import { randomUUID } from "crypto";
 import {
-  duffelRequest,
-  createStripePaymentIntent,
-  retrieveStripePaymentIntent,
-  attachDuffelOrderToPaymentIntent,
-  getStripePublishableKey,
-  getProviderEnvironment
-} from "./duffelClient.js";
+  travelProviderRequest,
+  prepareSecurePaymentIntent,
+  retrieveSecurePaymentIntent,
+  attachAirOrderToPaymentIntent,
+  getSecurePaymentPublishableKey,
+  getTravelProviderEnvironment
+} from "./liveTravelProvider.js";
 import { restRequest } from "./RIA/supabaseServer.js";
 import {
   loadBookingCart,
@@ -77,6 +77,14 @@ function amountToMinor(amount, currency) {
   return ZERO_DECIMAL_CURRENCIES.has(upper)
     ? Math.round(numeric)
     : Math.round(numeric * 100);
+}
+
+function providerAmountString(amount, currency) {
+  const numeric = money(amount);
+  const upper = cleanCurrency(currency);
+  return ZERO_DECIMAL_CURRENCIES.has(upper)
+    ? String(Math.round(numeric))
+    : roundMoney(numeric).toFixed(2);
 }
 
 function cabinClass(value) {
@@ -189,9 +197,9 @@ function mapFlightOffer(offer, search) {
     offerId: offer?.id || "",
     itemType: "FLIGHT",
     productType: "FLIGHT",
-    provider: "Duffel",
-    source: "Duffel Flights",
-    sourceLabel: owner?.name ? `${owner.name} · Duffel` : "Duffel Flights",
+    provider: "SKANDI",
+    source: "LIVE_AIR",
+    sourceLabel: owner?.name || "Live airline availability",
     title: `${origin} → ${destination}`,
     routeSummary: `${origin} → ${destination}`,
     summary: [
@@ -206,7 +214,7 @@ function mapFlightOffer(offer, search) {
     expiresAt: offer?.expires_at || null,
     departureAt: first?.departing_at || null,
     arrivalAt: last?.arriving_at || null,
-    badges: ["Live Duffel fare"],
+    badges: ["Live fare"],
     searchContext: search
   };
 }
@@ -229,9 +237,9 @@ function mapStayResult(result, search) {
     accommodationId: accommodation?.id || "",
     itemType: "HOTEL",
     productType: "HOTEL",
-    provider: "Duffel",
-    source: "Duffel Stays",
-    sourceLabel: "Duffel Stays",
+    provider: "SKANDI",
+    source: "LIVE_STAY",
+    sourceLabel: "Live hotel availability",
     title: accommodation?.name || city || "Hotel",
     summary: [
       city,
@@ -265,14 +273,14 @@ function packageItems(flights, stays, search) {
       id: `PKG-${flight.offerId}-${stay.staySearchResultId}`,
       itemType: "PACKAGE",
       productType: "PACKAGE",
-      provider: "Duffel",
-      source: "Duffel Flights + Stays",
-      sourceLabel: "SKANDI · Live by Duffel",
+      provider: "SKANDI",
+      source: "SKANDI_PACKAGE",
+      sourceLabel: "SKANDI Flight + Hotel",
       title: `${flight.routeSummary} · ${stay.title}`,
       summary: [
         `${Number(search.nights) || Math.max(1, dayDifference(search.departureDate, search.returnDate))} nights`,
         stay.title,
-        flight.sourceLabel.replace(" · Duffel", "")
+        flight.sourceLabel
       ].filter(Boolean).join(" · "),
       price: { amount: total, total, currency: flight.currency },
       total,
@@ -282,7 +290,7 @@ function packageItems(flights, stays, search) {
       staySearchResultId: stay.staySearchResultId,
       accommodationId: stay.accommodationId,
       imageUrl: stay.imageUrl,
-      badges: ["Flight + Hotel", "Live Duffel pricing"],
+      badges: ["Flight + Hotel", "Live pricing"],
       flight,
       stay,
       searchContext: search
@@ -300,7 +308,7 @@ function dayDifference(from, to) {
 }
 
 async function searchFlights(search) {
-  const response = await duffelRequest("/air/offer_requests", {
+  const response = await travelProviderRequest("/air/offer_requests", {
     method: "POST",
     query: { return_offers: true, supplier_timeout: 15000 },
     body: {
@@ -362,7 +370,7 @@ async function searchStays(search) {
   if (checkOut <= checkIn) throw new Error("BOOKING_CHECK_OUT_DATE_INVALID");
   const location = await resolveStayLocation(search);
 
-  const response = await duffelRequest("/stays/search", {
+  const response = await travelProviderRequest("/stays/search", {
     method: "POST",
     body: {
       data: {
@@ -392,13 +400,13 @@ async function searchStays(search) {
 
 async function retrieveFlightOffer(offerId) {
   const id = text(offerId, 160);
-  if (!/^off_[A-Za-z0-9_]+$/.test(id)) throw new Error("BOOKING_DUFFEL_OFFER_INVALID");
-  const response = await duffelRequest(`/air/offers/${encodeURIComponent(id)}`, {
+  if (!/^off_[A-Za-z0-9_]+$/.test(id)) throw new Error("BOOKING_LIVE_OFFER_INVALID");
+  const response = await travelProviderRequest(`/air/offers/${encodeURIComponent(id)}`, {
     query: { return_available_services: true }
   });
   const offer = response?.data;
   if (!offer?.id || !offer?.expires_at || Date.parse(offer.expires_at) <= Date.now()) {
-    throw new Error("BOOKING_DUFFEL_OFFER_EXPIRED");
+    throw new Error("BOOKING_OFFER_EXPIRED");
   }
   return offer;
 }
@@ -420,8 +428,8 @@ function allStayRates(searchResult) {
 
 async function createStayQuote(searchResultId) {
   const id = text(searchResultId, 160);
-  if (!/^srr_[A-Za-z0-9_]+$/.test(id)) throw new Error("BOOKING_DUFFEL_STAY_RESULT_INVALID");
-  const refreshed = await duffelRequest(
+  if (!/^srr_[A-Za-z0-9_]+$/.test(id)) throw new Error("BOOKING_HOTEL_RESULT_INVALID");
+  const refreshed = await travelProviderRequest(
     `/stays/search_results/${encodeURIComponent(id)}/actions/fetch_all_rates`,
     { method: "POST" }
   );
@@ -431,7 +439,7 @@ async function createStayQuote(searchResultId) {
     .sort((a, b) => money(a.total_amount) - money(b.total_amount));
   if (!rates.length) throw new Error("BOOKING_HOTEL_RATE_UNAVAILABLE");
   const rate = rates[0];
-  const quoteResponse = await duffelRequest("/stays/quotes", {
+  const quoteResponse = await travelProviderRequest("/stays/quotes", {
     method: "POST",
     body: { data: { rate_id: rate.id } }
   });
@@ -455,20 +463,76 @@ async function securedCart(cartId, token) {
   return cart;
 }
 
+
+function displayOfferForCart(row = {}) {
+  const payload = row.payload && typeof row.payload === "object" ? row.payload : {};
+  const flight = payload.flight?.offer || null;
+  const stay = payload.stay?.quote || null;
+  const hasAir = Boolean(flight);
+  const hasHotel = Boolean(stay);
+  const airlineName = flight?.owner?.name || "";
+  const hotelName = stay?.accommodation?.name || "";
+  const route = flight?.routeSummary || "";
+  const productType = hasAir && hasHotel
+    ? "Flight + Hotel"
+    : hasAir
+      ? "Flight"
+      : hasHotel
+        ? "Hotel"
+        : text(payload.productType || "", 40);
+
+  let title = "Selected travel offer";
+  let summary = "";
+  if (hasAir && hasHotel) {
+    title = [route, hotelName].filter(Boolean).join(" · ") || "Flight + Hotel";
+    summary = [airlineName, hotelName, "Flight + Hotel"].filter(Boolean).join(" · ");
+  } else if (hasAir) {
+    title = route || "Flight";
+    summary = [airlineName, flight?.slices?.length > 1 ? "Round trip" : "One way"].filter(Boolean).join(" · ");
+  } else if (hasHotel) {
+    title = hotelName || "Hotel";
+    summary = [
+      stay?.roomName || "",
+      stay?.boardType || "",
+      stay?.accommodation?.address?.city_name || stay?.accommodation?.address?.city || ""
+    ].filter(Boolean).join(" · ");
+  }
+
+  return {
+    title,
+    summary,
+    routeSummary: route,
+    travelType: productType,
+    airlineName,
+    hotelName,
+    sourceLabel: airlineName || (hasHotel ? "Live hotel availability" : "SKANDI"),
+    termsSummary: "Fare, hotel, cancellation and supplier conditions apply."
+  };
+}
+
 function safeCart(row = {}, items = []) {
   const payload = row.payload && typeof row.payload === "object" ? row.payload : {};
-  const { cartAccessToken: _token, paymentIntentClientSecret: _clientSecret, ...safePayload } = payload;
+  const {
+    cartAccessToken: _token,
+    paymentIntentClientSecret: _clientSecret,
+    provider: _provider,
+    ...safePayload
+  } = payload;
+  const currency = cleanCurrency(row.currency || "USD");
+  const total = money(row.total);
   return {
     id: row.id || "",
     cartId: row.cart_id || "",
     status: row.status || "Open",
-    currency: row.currency || "USD",
+    currency,
     subtotal: money(row.subtotal),
     taxes: money(row.taxes),
-    total: money(row.total),
+    total,
+    totalPrice: { amount: total, total, currency },
     selectedOfferId: row.selected_offer_id || "",
+    selectedOffer: displayOfferForCart(row),
     expiresAt: row.expires_at || "",
-    source: row.source || "",
+    source: "SKANDI",
     items,
     ...safePayload
   };
@@ -591,6 +655,173 @@ function hasStay(cart) {
   return Boolean(getPayload(cart)?.stay?.searchResultId);
 }
 
+function optionPrice(row = {}, fallbackCurrency = "USD") {
+  const commercial = row.commercial && typeof row.commercial === "object" ? row.commercial : {};
+  const amount = money(
+    commercial.publicPrice ??
+    commercial.price ??
+    commercial.livePrice ??
+    commercial.basePrice ??
+    0
+  );
+  return {
+    amount,
+    total: amount,
+    currency: cleanCurrency(commercial.currency || fallbackCurrency)
+  };
+}
+
+async function listPublishedMasterOptions(entityType, fallbackCurrency = "USD") {
+  const rows = await restRequest({
+    table: "inventory_master_entities",
+    query: {
+      select: "id,public_id,code,name,details,commercial,payload,sort_priority",
+      entity_type: `eq.${entityType}`,
+      active: "eq.true",
+      customer_visible: "eq.true",
+      status: "eq.PUBLISHED",
+      order: "sort_priority.asc,updated_at.desc",
+      limit: 100
+    }
+  }).catch(() => []);
+
+  return (Array.isArray(rows) ? rows : []).map((row) => {
+    const details = row.details && typeof row.details === "object" ? row.details : {};
+    const payload = row.payload && typeof row.payload === "object" ? row.payload : {};
+    const price = optionPrice(row, fallbackCurrency);
+    return {
+      id: row.id,
+      publicId: row.public_id || "",
+      code: row.code || "",
+      type: text(details.extraType || details.transferType || entityType, 80).toUpperCase(),
+      title: row.name || details.name || "SKANDI service",
+      description: text(
+        details.shortDescription ||
+        details.description ||
+        details.customerDescription ||
+        payload.shortDescription ||
+        payload.description ||
+        "",
+        3000
+      ),
+      includes: Array.isArray(details.includes) ? details.includes.slice(0, 20) : [],
+      price,
+      details,
+      payload
+    };
+  });
+}
+
+function optionCurrencyCompatible(option, cartCurrency) {
+  const amount = money(option?.price?.amount);
+  if (amount <= 0) return true;
+  return cleanCurrency(option?.price?.currency || cartCurrency) === cleanCurrency(cartCurrency);
+}
+
+async function availableAncillaryOptions(cart) {
+  const options = await listPublishedMasterOptions("ANCILLARY", cart.currency || "USD");
+  return options.filter((item) => optionCurrencyCompatible(item, cart.currency));
+}
+
+function transferMatchesCart(option, cart) {
+  const search = getPayload(cart).search || {};
+  const details = option?.details || {};
+  const destination = text(search.destination, 100).toUpperCase();
+  if (!destination) return true;
+
+  const candidates = [
+    details.airportIata,
+    details.airportCode,
+    details.destinationIata,
+    details.destinationCode,
+    details.destination,
+    details.area,
+    details.country
+  ].map((v) => text(v, 160).toUpperCase()).filter(Boolean);
+
+  return !candidates.length || candidates.some((value) =>
+    value === destination || value.includes(destination) || destination.includes(value)
+  );
+}
+
+async function availableTransferOptions(cart) {
+  const options = await listPublishedMasterOptions("TRANSFER", cart.currency || "USD");
+  return options
+    .filter((item) => optionCurrencyCompatible(item, cart.currency))
+    .filter((item) => transferMatchesCart(item, cart));
+}
+
+function selectedOptionTotal(options = [], currency = "USD") {
+  let total = 0;
+  for (const option of Array.isArray(options) ? options : []) {
+    const price = option?.price || {};
+    const amount = money(price.amount ?? price.total);
+    if (amount <= 0) continue;
+    if (cleanCurrency(price.currency || currency) !== cleanCurrency(currency)) {
+      throw new Error("BOOKING_ADDON_CURRENCY_MISMATCH");
+    }
+    total += amount;
+  }
+  return total;
+}
+
+async function liveSeatServiceCatalog(offerId) {
+  if (!offerId) return new Map();
+  const response = await travelProviderRequest("/air/seat_maps", {
+    query: { offer_id: offerId }
+  });
+  const catalog = new Map();
+  for (const seatMap of Array.isArray(response?.data) ? response.data : []) {
+    for (const cabin of seatMap?.cabins || []) {
+      for (const row of cabin?.rows || []) {
+        for (const section of row?.sections || []) {
+          for (const element of section?.elements || []) {
+            if (element?.type !== "seat") continue;
+            for (const service of element?.available_services || []) {
+              if (!service?.id) continue;
+              catalog.set(service.id, {
+                id: service.id,
+                amount: money(service.total_amount),
+                currency: cleanCurrency(service.total_currency || "USD"),
+                passengerIds: service.passenger_ids || (service.passenger_id ? [service.passenger_id] : []),
+                segmentIds: service.segment_ids || (service.segment_id ? [service.segment_id] : []),
+                seat: element.designator || ""
+              });
+            }
+          }
+        }
+      }
+    }
+  }
+  return catalog;
+}
+
+async function priceSeatSelections(cart, currency) {
+  const payload = getPayload(cart);
+  const selections = payload.seatSelections && typeof payload.seatSelections === "object"
+    ? Object.values(payload.seatSelections)
+    : [];
+  if (!payload.flight?.offerId || !selections.length) {
+    return { total: 0, services: [] };
+  }
+
+  const catalog = await liveSeatServiceCatalog(payload.flight.offerId);
+  const services = [];
+  let total = 0;
+  for (const selection of selections) {
+    const serviceId = text(selection?.serviceId, 160);
+    if (!serviceId) continue;
+    const service = catalog.get(serviceId);
+    if (!service) throw new Error("BOOKING_SEAT_UNAVAILABLE");
+    if (service.currency !== cleanCurrency(currency)) throw new Error("BOOKING_SEAT_CURRENCY_MISMATCH");
+    total += service.amount;
+    services.push(service);
+  }
+  return { total: roundMoney(total), services };
+}
+
+
+
 function cartReferenceFromProviders(airOrder, stayBooking, cartId) {
   return airOrder?.booking_reference || stayBooking?.reference || cartId;
 }
@@ -623,7 +854,7 @@ function normalizeTitle(value, gender) {
   return "";
 }
 
-function buildDuffelAirPassengers(cart, refreshedOffer) {
+function buildAirPassengers(cart, refreshedOffer) {
   const payload = getPayload(cart);
   const travelers = Array.isArray(payload.travelers) ? payload.travelers : [];
   const offerPassengers = Array.isArray(refreshedOffer?.passengers) ? refreshedOffer.passengers : [];
@@ -637,8 +868,8 @@ function buildDuffelAirPassengers(cart, refreshedOffer) {
 
   return travelers.map((traveler, index) => {
     const offerPassenger = offerPassengers[index];
-    const givenName = travelerName(traveler, "givenName", "firstName", "first_name");
-    const familyName = travelerName(traveler, "familyName", "lastName", "last_name");
+    const givenName = travelerName(traveler, "givenName", "firstName", "first_name") || text(traveler?.name?.firstName || traveler?.name?.givenName, 80);
+    const familyName = travelerName(traveler, "familyName", "lastName", "last_name") || text(traveler?.name?.lastName || traveler?.name?.familyName, 80);
     const bornOn = isoDate(traveler.dateOfBirth || traveler.bornOn || traveler.birthDate);
     const gender = normalizeGender(traveler.gender || traveler.sex);
     const title = normalizeTitle(traveler.title, gender);
@@ -655,10 +886,20 @@ function buildDuffelAirPassengers(cart, refreshedOffer) {
     if (gender) passenger.gender = gender;
     if (title) passenger.title = title;
 
-    const documentNumber = text(traveler.documentNumber || traveler.passportNumber, 50).toUpperCase();
-    const expiresOn = isoDate(traveler.documentExpiry || traveler.passportExpiry);
+    const primaryDocument = Array.isArray(traveler?.documents) ? traveler.documents[0] || {} : {};
+    const documentNumber = text(
+      traveler.documentNumber || traveler.passportNumber || primaryDocument.number || primaryDocument.documentNumber,
+      50
+    ).toUpperCase();
+    const expiresOn = isoDate(
+      traveler.documentExpiry || traveler.passportExpiry || primaryDocument.expiryDate || primaryDocument.expiresOn
+    );
     const issuingCountryCode = normalizeCountryCode(
-      traveler.issuingCountryCode || traveler.documentIssuingCountry || traveler.nationality
+      traveler.issuingCountryCode ||
+      traveler.documentIssuingCountry ||
+      primaryDocument.issuanceCountry ||
+      primaryDocument.issuingCountryCode ||
+      traveler.nationality
     );
     if (documentNumber && expiresOn && issuingCountryCode) {
       passenger.identity_documents = [{
@@ -672,13 +913,13 @@ function buildDuffelAirPassengers(cart, refreshedOffer) {
   });
 }
 
-function buildDuffelStayGuests(cart) {
+function buildStayGuests(cart) {
   const payload = getPayload(cart);
   const travelers = Array.isArray(payload.travelers) ? payload.travelers : [];
   if (!travelers.length) throw new Error("BOOKING_TRAVELER_REQUIRED");
   return travelers.map((traveler) => {
-    const givenName = travelerName(traveler, "givenName", "firstName", "first_name");
-    const familyName = travelerName(traveler, "familyName", "lastName", "last_name");
+    const givenName = travelerName(traveler, "givenName", "firstName", "first_name") || text(traveler?.name?.firstName || traveler?.name?.givenName, 80);
+    const familyName = travelerName(traveler, "familyName", "lastName", "last_name") || text(traveler?.name?.lastName || traveler?.name?.familyName, 80);
     const bornOn = isoDate(traveler.dateOfBirth || traveler.bornOn || traveler.birthDate);
     if (!givenName || !familyName || !bornOn) throw new Error("BOOKING_TRAVELER_DETAILS_INCOMPLETE");
     return { given_name: givenName, family_name: familyName, born_on: bornOn };
@@ -718,9 +959,23 @@ async function refreshCartPricing(cart) {
   }
 
   if (!flightOffer && !stayQuote) throw new Error("BOOKING_CART_EMPTY");
+
+  total += selectedOptionTotal(payload.selectedExtras || [], currency);
+  if (payload.signatureTransfer) {
+    total += selectedOptionTotal([payload.signatureTransfer], currency);
+  }
+
+  const seatPricing = await priceSeatSelections(cart, currency);
+  total += seatPricing.total;
+
   const expiresAt = minimumExpiry(expiries, 25);
   const updatedPayload = {
     ...payload,
+    seatPricing: {
+      total: seatPricing.total,
+      currency,
+      services: seatPricing.services
+    },
     ...(flightOffer ? { flight: { ...payload.flight, offer: publicFlightSnapshot(flightOffer) } } : {}),
     ...(stayQuote ? {
       stay: {
@@ -746,12 +1001,12 @@ async function refreshCartPricing(cart) {
 
 export const getHomeBootstrap = webMethod(Permissions.Anyone, async () => ({
   ok: true,
-  provider: "Duffel",
-  providers: ["DUFFEL"],
+  provider: "SKANDI",
+  providers: ["LIVE_AIR", "LIVE_STAYS"],
   searchModes: ["package", "flightOnly", "hotelOnly", "signaturePackage"],
   defaultSearchMode: "package",
   searchDefaults: { currency: "USD", adults: 2, rooms: 1, max: 30 },
-  environment: await getProviderEnvironment()
+  environment: await getTravelProviderEnvironment()
 }));
 
 export const searchUnifiedOffers = webMethod(Permissions.Anyone, async ({ search = {} } = {}) => {
@@ -760,7 +1015,7 @@ export const searchUnifiedOffers = webMethod(Permissions.Anyone, async ({ search
 
   if (mode === "hotelonly") {
     const stays = await searchStays(normalized);
-    return { ok: true, provider: "Duffel", mode: "hotelOnly", items: stays };
+    return { ok: true, provider: "SKANDI", mode: "hotelOnly", items: stays };
   }
 
   if (mode === "package" || mode === "signaturepackage" || mode === "holiday") {
@@ -777,7 +1032,7 @@ export const searchUnifiedOffers = webMethod(Permissions.Anyone, async ({ search
     const items = packageItems(flights, stays, normalized);
     return {
       ok: true,
-      provider: "Duffel",
+      provider: "SKANDI",
       mode: "package",
       items,
       meta: { flightCount: flights.length, hotelCount: stays.length, packageCount: items.length }
@@ -785,7 +1040,7 @@ export const searchUnifiedOffers = webMethod(Permissions.Anyone, async ({ search
   }
 
   const flights = await searchFlights(normalized);
-  return { ok: true, provider: "Duffel", mode: "flightOnly", items: flights };
+  return { ok: true, provider: "SKANDI", mode: "flightOnly", items: flights };
 });
 
 export const createBookingCartFromOffer = webMethod(Permissions.Anyone, async ({ offer, search = {} } = {}) => {
@@ -803,7 +1058,7 @@ export const createBookingCartFromOffer = webMethod(Permissions.Anyone, async ({
   const expiries = [];
   const payload = {
     version: 3,
-    provider: "Duffel",
+    provider: "SKANDI",
     productType: type,
     search: normalized,
     cartAccessToken: accessToken,
@@ -856,7 +1111,7 @@ export const createBookingCartFromOffer = webMethod(Permissions.Anyone, async ({
       total: roundMoney(total),
       selected_offer_id: selectedOfferId,
       expires_at: expiresAt,
-      source: "Duffel",
+      source: "SKANDI",
       payload
     }
   });
@@ -870,7 +1125,7 @@ export const createBookingCartFromOffer = webMethod(Permissions.Anyone, async ({
       itemId: flightOffer.id,
       title: mapped.routeSummary,
       amount: money(flightOffer.total_amount),
-      payload: { provider: "Duffel", expiresAt: flightOffer.expires_at }
+      payload: { provider: "SKANDI_LIVE_AIR", expiresAt: flightOffer.expires_at }
     });
   }
   if (stay) {
@@ -881,7 +1136,7 @@ export const createBookingCartFromOffer = webMethod(Permissions.Anyone, async ({
       title: hotel,
       amount: money(stay.quote.total_amount || stay.rate.total_amount),
       payload: {
-        provider: "Duffel Stays",
+        provider: "SKANDI_LIVE_STAY",
         searchResultId: payload.stay.searchResultId,
         rateId: stay.rate.id,
         quoteId: stay.quote.id
@@ -892,7 +1147,7 @@ export const createBookingCartFromOffer = webMethod(Permissions.Anyone, async ({
   const nextPath = `/booking?step=offer&cartId=${encodeURIComponent(cartId)}&cartToken=${encodeURIComponent(accessToken)}`;
   return {
     ok: true,
-    provider: "Duffel",
+    provider: "SKANDI",
     cartId,
     cartAccessToken: accessToken,
     cart: safeCart(cart, await cartItems(cartId)),
@@ -921,14 +1176,30 @@ export const saveOfferDecision = webMethod(Permissions.Anyone, async ({ cartId, 
 });
 
 export const getBookingExtras = webMethod(Permissions.Anyone, async ({ cartId, cartToken } = {}) => {
-  const cart = await loadBookingCart(cartId, cartToken);
-  return { ok: true, cart, extras: [], selectedExtras: cart.selectedExtras || [] };
+  const cart = await securedCart(cartId, cartToken);
+  const extras = await availableAncillaryOptions(cart);
+  return {
+    ok: true,
+    cart: safeCart(cart),
+    extras,
+    selectedExtras: Array.isArray(getPayload(cart).selectedExtras) ? getPayload(cart).selectedExtras : []
+  };
 });
 
 export const saveBookingExtras = webMethod(Permissions.Anyone, async ({ cartId, cartToken, selectedExtras = [] } = {}) => {
   const cart = await securedCart(cartId, cartToken);
-  const extras = Array.isArray(selectedExtras) ? selectedExtras.slice(0, 50) : [];
-  const requiresSignatureTransfer = extras.some((item) => String(item?.type || item?.code || "").toUpperCase().includes("TRANSFER"));
+  const available = await availableAncillaryOptions(cart);
+  const byId = new Map(available.map((item) => [String(item.id), item]));
+  const requestedIds = (Array.isArray(selectedExtras) ? selectedExtras : [])
+    .map((item) => String(item?.id || item?.publicId || item?.code || ""))
+    .filter(Boolean);
+  const extras = requestedIds.map((id) => byId.get(id)).filter(Boolean);
+  if (extras.length !== requestedIds.length) {
+    throw new Error("BOOKING_EXTRA_INVALID");
+  }
+
+  const transferOptions = await availableTransferOptions(cart);
+  const requiresSignatureTransfer = transferOptions.length > 0;
   const saved = await patchCart(cart, {}, {
     selectedExtras: extras,
     workflow: {
@@ -940,19 +1211,29 @@ export const saveBookingExtras = webMethod(Permissions.Anyone, async ({ cartId, 
 });
 
 export const getSignatureTransferOptions = webMethod(Permissions.Anyone, async ({ cartId, cartToken } = {}) => {
-  const cart = await loadBookingCart(cartId, cartToken);
+  const cart = await securedCart(cartId, cartToken);
+  const options = await availableTransferOptions(cart);
   return {
     ok: true,
-    cartId: cart.cartId,
-    options: [],
-    message: "No live Signature transfer is attached to this Duffel booking."
+    cartId: cart.cart_id,
+    options,
+    message: options.length
+      ? "SKANDI Signature transfer options are available for this trip."
+      : "No SKANDI Signature transfer is available for this trip."
   };
 });
 
 export const saveSignatureTransfer = webMethod(Permissions.Anyone, async ({ cartId, cartToken, transfer } = {}) => {
   const cart = await securedCart(cartId, cartToken);
+  let confirmedTransfer = null;
+  if (transfer) {
+    const available = await availableTransferOptions(cart);
+    confirmedTransfer = available.find((item) => String(item.id) === String(transfer?.id || ""));
+    if (!confirmedTransfer) throw new Error("BOOKING_TRANSFER_INVALID");
+  }
+
   const saved = await patchCart(cart, {}, {
-    signatureTransfer: transfer || null,
+    signatureTransfer: confirmedTransfer,
     workflow: { ...(getPayload(cart).workflow || {}), step: "apis" }
   });
   return { ok: true, cart: safeCart(saved) };
@@ -995,14 +1276,14 @@ export const prepareBookingPayment = webMethod(Permissions.Anyone, async ({ cart
   const selectionSignature = `cart:${cart.cart_id}:v3`;
   const idempotencyKey = `skandi_${cart.cart_id}_${amount}_${cart.currency}`.slice(0, 255);
   const [paymentIntent, publishableKey] = await Promise.all([
-    createStripePaymentIntent({
+    prepareSecurePaymentIntent({
       amount,
       currency: cart.currency,
       offerId: referenceId,
       selectionSignature,
       idempotencyKey
     }),
-    getStripePublishableKey()
+    getSecurePaymentPublishableKey()
   ]);
   if (!paymentIntent?.id || !paymentIntent?.client_secret) throw new Error("BOOKING_PAYMENT_SETUP_FAILED");
 
@@ -1033,7 +1314,7 @@ async function verifyCustomerPayment(cart, paymentIntentId) {
   const expectedId = text(payload.paymentIntentId, 160);
   const id = text(paymentIntentId || expectedId, 160);
   if (!id || id !== expectedId || !/^pi_[A-Za-z0-9_]+$/.test(id)) throw new Error("BOOKING_PAYMENT_REFERENCE_INVALID");
-  const payment = await retrieveStripePaymentIntent(id);
+  const payment = await retrieveSecurePaymentIntent(id);
   if (payment?.status !== "succeeded") throw new Error("BOOKING_PAYMENT_NOT_COMPLETE");
   if (cleanCurrency(payment.currency) !== cleanCurrency(cart.currency)) throw new Error("BOOKING_PAYMENT_CURRENCY_MISMATCH");
   if (Number(payment.amount_received) !== amountToMinor(cart.total, cart.currency)) throw new Error("BOOKING_PAYMENT_AMOUNT_MISMATCH");
@@ -1046,28 +1327,43 @@ async function createAirOrder(cart, paymentIntentId) {
   const payload = getPayload(cart);
   if (!payload.flight?.offerId) return null;
   const offer = await retrieveFlightOffer(payload.flight.offerId);
-  const passengers = buildDuffelAirPassengers(cart, offer);
-  const response = await duffelRequest("/air/orders", {
-    method: "POST",
-    body: {
-      data: {
-        type: "instant",
-        selected_offers: [offer.id],
-        passengers,
-        payments: [{
-          type: "balance",
-          amount: offer.total_amount,
-          currency: offer.total_currency
-        }],
-        metadata: {
-          integration: "skandi_customer",
-          skandi_cart_id: cart.cart_id,
-          payment_intent_id: paymentIntentId
-        }
-      }
+  const passengers = buildAirPassengers(cart, offer);
+  const payloadSeatPricing = payload.seatPricing && typeof payload.seatPricing === "object"
+    ? payload.seatPricing
+    : {};
+  const serviceIds = Array.from(new Set(
+    (Array.isArray(payloadSeatPricing.services) ? payloadSeatPricing.services : [])
+      .map((service) => text(service?.id, 160))
+      .filter(Boolean)
+  ));
+  const airProviderTotal = roundMoney(
+    money(offer.total_amount) + money(payloadSeatPricing.total)
+  );
+
+  const orderData = {
+    type: "instant",
+    selected_offers: [offer.id],
+    passengers,
+    payments: [{
+      type: "balance",
+      amount: providerAmountString(airProviderTotal, offer.total_currency),
+      currency: offer.total_currency
+    }],
+    metadata: {
+      integration: "skandi_customer",
+      skandi_cart_id: cart.cart_id,
+      payment_intent_id: paymentIntentId
     }
+  };
+  if (serviceIds.length) {
+    orderData.services = serviceIds.map((id) => ({ id, quantity: 1 }));
+  }
+
+  const response = await travelProviderRequest("/air/orders", {
+    method: "POST",
+    body: { data: orderData }
   });
-  if (!response?.data?.id) throw new Error("BOOKING_DUFFEL_ORDER_STATUS_UNKNOWN");
+  if (!response?.data?.id) throw new Error("BOOKING_AIR_ORDER_STATUS_UNKNOWN");
   return response.data;
 }
 
@@ -1081,13 +1377,13 @@ async function createStayBooking(cart) {
   const phone = text(contact.phone || contact.phoneNumber || contact.mobile, 20);
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error("BOOKING_CONTACT_EMAIL_INVALID");
   if (!/^\+[1-9]\d{7,14}$/.test(phone)) throw new Error("BOOKING_CONTACT_PHONE_INVALID");
-  const response = await duffelRequest("/stays/bookings", {
+  const response = await travelProviderRequest("/stays/bookings", {
     method: "POST",
     body: {
       data: {
         quote_id: quote.id,
         phone_number: phone,
-        guests: buildDuffelStayGuests(cart),
+        guests: buildStayGuests(cart),
         email,
         metadata: {
           integration: "skandi_customer",
@@ -1096,7 +1392,7 @@ async function createStayBooking(cart) {
       }
     }
   });
-  if (!response?.data?.id) throw new Error("BOOKING_DUFFEL_STAY_STATUS_UNKNOWN");
+  if (!response?.data?.id) throw new Error("BOOKING_HOTEL_BOOKING_STATUS_UNKNOWN");
   return response.data;
 }
 
@@ -1149,7 +1445,7 @@ export const authorizePaymentAndCommitBooking = webMethod(Permissions.Anyone, as
           airConfirmedAt: new Date().toISOString()
         }
       });
-      attachDuffelOrderToPaymentIntent(paymentIntentId, airOrder.id).catch(() => {});
+      attachAirOrderToPaymentIntent(paymentIntentId, airOrder.id).catch(() => {});
     }
   } catch (error) {
     await patchCart(cart, { status: "ManualReconciliationRequired" }, {
@@ -1210,7 +1506,7 @@ export const priceCachedOffer = webMethod(Permissions.Anyone, async ({ offerId }
   const offer = await retrieveFlightOffer(offerId);
   return {
     ok: true,
-    provider: "Duffel",
+    provider: "SKANDI",
     offer: publicFlightSnapshot(offer)
   };
 });
