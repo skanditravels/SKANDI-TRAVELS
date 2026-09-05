@@ -1,77 +1,57 @@
-import wixLocation from "wix-location";
-import { getStaffPortalSession } from "backend/RIA/staffPortalAuth.web";
 import {
-  getDocuNetViewerBootstrap,
   getDocuNetDocumentAccess,
   acknowledgeDocuNetDocument
 } from "backend/docuNet.web";
+import {
+  getDocuNetViewerBootstrapSynced
+} from "backend/docuNetSync.web";
 
-const EMBED = "#docuNetViewerEmbed";
 const SOURCE = "SKANDI_DOCUNET_VIEWER";
-const STAFF_LOGIN_PATH = "/riaintra";
-const ALLOWED_PATH_PREFIXES = ["/riaintra"];
-let sessionPromise = null;
+const PARENT = "SKANDI_WIX_PARENT";
+const HTML_IDS = ["#alteaDocunetStaffEmbed", "#docuNetEmbed", "#docunetEmbed"];
 
-function post(type, payload = {}, extra = {}) {
-  $w(EMBED).postMessage({ type, payload, ...extra });
-}
-
-function fail(error) {
-  post("DOCUNET_ERROR", {}, { message: error?.message || "DocuNet request failed." });
-}
-
-async function getSession() {
-  if (!sessionPromise) sessionPromise = getStaffPortalSession().finally(() => { sessionPromise = null; });
-  return sessionPromise;
-}
-
-async function sendStaffProfile() {
-  const session = await getSession();
-  const profile = session?.profile || session?.agent || null;
-  if (session?.authorized !== true || !profile) {
-    post("PROFILE_ERROR", { code: session?.code || "STAFF_ACCESS_DENIED" });
-    wixLocation.to(STAFF_LOGIN_PATH);
-    return;
+function htmlElement() {
+  for (const id of HTML_IDS) {
+    try {
+      const el = $w(id);
+      if (el) return el;
+    } catch (_) {}
   }
-  post("MEMBER_DATA", profile);
+  throw new Error(`DocuNet Viewer HTML component not found. Tried: ${HTML_IDS.join(", ")}`);
 }
 
-function openInternalPath(rawPath) {
-  const path = String(rawPath || "").trim();
-  if (!path || !ALLOWED_PATH_PREFIXES.some(prefix => path === prefix || path.startsWith(`${prefix}/`))) {
-    throw new Error("Invalid internal destination.");
-  }
-  wixLocation.to(path);
+function send(html, type, payload={}, message="") {
+  html.postMessage({ source:PARENT, type, payload, ...(message ? {message} : {}) });
 }
 
 $w.onReady(() => {
-  $w(EMBED).onMessage(async event => {
-    const message = event.data || {};
-    if (message.source !== SOURCE) return;
+  const html = htmlElement();
+
+  html.onMessage(async event => {
+    const msg = event.data || {};
+    if (msg.source !== SOURCE) return;
+    const payload = msg.payload || {};
+
     try {
-      if (message.type === "NAVIGATE") {
-        openInternalPath(message.path || message.payload?.path);
+      if (msg.type === "DOCUNET_READY") {
+        const bootstrap = await getDocuNetViewerBootstrapSynced();
+        send(html, "DOCUNET_BOOTSTRAP_RESULT", bootstrap);
         return;
       }
-      if (["UI_READY", "PROFILE_REFRESH", "INTERNAL_CHROME_READY"].includes(message.type)) {
-        await sendStaffProfile();
+
+      if (msg.type === "DOCUNET_OPEN_DOCUMENT") {
+        const result = await getDocuNetDocumentAccess({ documentId: payload.documentId });
+        send(html, "DOCUNET_DOCUMENT_ACCESS_RESULT", result);
         return;
       }
-      switch (message.type) {
-        case "DOCUNET_READY":
-        case "DOCUNET_BOOTSTRAP":
-          post("DOCUNET_BOOTSTRAP_RESULT", await getDocuNetViewerBootstrap());
-          break;
-        case "DOCUNET_OPEN_DOCUMENT":
-          post("DOCUNET_DOCUMENT_ACCESS_RESULT", await getDocuNetDocumentAccess(message.payload || {}));
-          break;
-        case "DOCUNET_ACKNOWLEDGE":
-          post("DOCUNET_ACKNOWLEDGE_RESULT", await acknowledgeDocuNetDocument(message.payload || {}));
-          break;
+
+      if (msg.type === "DOCUNET_ACKNOWLEDGE") {
+        const result = await acknowledgeDocuNetDocument({ documentId: payload.documentId });
+        send(html, "DOCUNET_ACKNOWLEDGE_RESULT", result);
+        return;
       }
     } catch (error) {
-      fail(error);
+      send(html, "DOCUNET_ERROR", {}, error?.message || "DocuNet request failed.");
     }
   });
-  sendStaffProfile().catch(fail);
 });
