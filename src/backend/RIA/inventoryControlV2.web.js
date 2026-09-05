@@ -10,6 +10,8 @@ import {
 
 const ENTITY_TYPES = new Set([
   "DESTINATION",
+  "COUNTRY",
+  "AREA",
   "AIRPORT",
   "AIRLINE",
   "SUPPLIER",
