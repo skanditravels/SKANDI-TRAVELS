@@ -79,6 +79,12 @@ const INTERNAL_TABLES = new Set([
   "document_acknowledgements",
   "document_packet_items",
   "document_packets",
+  "travel_info_aircraft",
+"travel_info_aircraft_cabins",
+"travel_info_aircraft_views",
+"travel_info_aircraft_hotspots",
+"travel_info_aircraft_walk_scenes",
+"travel_info_aircraft_scene_hotspots",
   "document_templates"
 ]);
 
