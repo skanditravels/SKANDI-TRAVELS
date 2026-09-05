@@ -1,7 +1,7 @@
 import { requireCustomerContext } from "backend/core/authContext";
 import { nowIso } from "backend/core/response";
 import { publishEvent } from "backend/core/eventBus";
-import { listByMember, createRecord, updateRecord } from "ackend/domains/traveler/repository";
+import { listByMember, createRecord, updateRecord } from "backend/domains/traveler/repository";
 import { mapTraveler } from "backend/domains/traveler/mapper";
 
 export async function listCurrentCustomerTravelers() {
