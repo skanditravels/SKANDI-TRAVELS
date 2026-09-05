@@ -77,6 +77,8 @@ function first(rows) {
 function entityPrefix(type) {
   const map = {
     DESTINATION: "DST",
+    COUNTRY: "CNT",
+    AREA: "ARE",
     AIRPORT: "APT",
     AIRLINE: "AIR",
     SUPPLIER: "SUP",
