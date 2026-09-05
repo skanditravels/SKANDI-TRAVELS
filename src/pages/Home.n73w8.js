@@ -60,9 +60,38 @@ function postToHtml(html, type, payload = {}) {
   });
 }
 
+function publicBookingMessage(error) {
+  const raw = String(
+    error?.publicMessage ||
+    error?.message ||
+    "The request could not be completed."
+  ).trim();
+
+  const messages = {
+    BOOKING_OFFER_EXPIRED: "That offer has expired. Search again for a current option.",
+    BOOKING_LIVE_OFFER_INVALID: "That flight offer is no longer valid. Search again.",
+    BOOKING_HOTEL_RESULT_INVALID: "That hotel offer is no longer valid. Search again.",
+    BOOKING_HOTEL_RATE_UNAVAILABLE: "That hotel rate is no longer available. Search again.",
+    BOOKING_HOTEL_DESTINATION_NOT_FOUND: "We could not match that destination to live hotel inventory.",
+    BOOKING_CART_CREATE_FAILED: "We could not start the booking. Please select the offer again."
+  };
+  if (messages[raw]) return messages[raw];
+
+  if (/network request failed|could not be reached/i.test(raw)) {
+    return "The live travel provider could not be reached. Please try again.";
+  }
+  if (/rate limit|rate limiting/i.test(raw)) {
+    return "Live availability is temporarily busy. Please try again shortly.";
+  }
+  if (/BOOKING_[A-Z0-9_]+/.test(raw)) {
+    return "The booking request could not be completed. Please refresh and try again.";
+  }
+  return raw;
+}
+
 function postHomeError(html, error) {
   postToHtml(html, "HOME_ERROR", {
-    message: error?.message || "The request could not be completed."
+    message: publicBookingMessage(error)
   });
 }
 
