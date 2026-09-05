@@ -15,7 +15,7 @@ import {
   resendDocumentPacket,
   exportAuditPackage,
   saveSettings
-} from 'backend/careersControl.jsw';
+} from 'backend/careersControl.web';
 
 import wixLocation from 'wix-location-frontend';
 
