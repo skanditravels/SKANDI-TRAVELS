@@ -1,3 +1,3 @@
-export * from "src/backend/domains/club/service";
-export * from "src/backend/domains/club/repository";
-export * from "src/backend/domains/club/mapper";
+export * from "backend/domains/club/service";
+export * from "backend/domains/club/repository";
+export * from "backend/domains/club/mapper";
