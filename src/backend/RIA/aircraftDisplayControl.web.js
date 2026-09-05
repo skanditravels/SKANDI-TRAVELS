@@ -62,8 +62,25 @@ function mapScene(r={}){return{id:r.id||"",aircraftId:r.aircraft_id||"",sceneCod
 function mapSceneHotspot(r={}){return{id:r.id||"",sceneId:r.scene_id||"",hotspotCode:r.hotspot_code||"",label:r.label||"",title:r.title||"",description:r.description||"",hotspotType:r.hotspot_type||"FEATURE",x:r.x??50,y:r.y??50,action:r.action||"",targetCabinCode:r.target_cabin_code||"",active:r.active!==false,sortOrder:r.sort_order??100}}
 
 async function airlineOptions(){
-  const rows=await restRequest({table:AIRLINE_TABLE,query:{select:'"ID","Title","iataCode","icaoCode",active,status,customer_visible',order:'"Title".asc',limit:500}});
-  return arr(rows).filter(r=>r.active!==false).map(r=>({id:r.ID||"",name:r.Title||"",iataCode:r.iataCode||"",icaoCode:r.icaoCode||"",status:r.status||"PUBLISHED",customerVisible:r.customer_visible!==false}));
+  const rows=await restRequest({
+    table:AIRLINE_TABLE,
+    query:{
+      select:'"ID",title,"iataCode","icaoCode",active,status,customer_visible',
+      order:'title.asc',
+      limit:500
+    }
+  });
+
+  return arr(rows)
+    .filter(r=>r.active!==false)
+    .map(r=>({
+      id:r.ID||"",
+      name:r.title||"",
+      iataCode:r.iataCode||"",
+      icaoCode:r.icaoCode||"",
+      status:r.status||"PUBLISHED",
+      customerVisible:r.customer_visible!==false
+    }));
 }
 
 async function getBundle(aircraftId){
@@ -97,8 +114,14 @@ export const getAircraftDisplayRecord=webMethod(Permissions.SiteMember,async({ai
 export const saveAircraftDisplayRecord=webMethod(Permissions.SiteMember,async(input={})=>{
   await requireStaff();
   const id=text(input.id,80),airlineId=text(input.airlineId,120); if(!airlineId) throw new Error("Airline is required.");
-  const airlines=await restRequest({table:AIRLINE_TABLE,query:{select:'"ID","Title","iataCode"',"ID":`eq.${airlineId}`,limit:1}}); const airline=first(airlines); if(!airline) throw new Error("Airline not found.");
-  const aircraftName=text(input.aircraftName,180); if(!aircraftName) throw new Error("Aircraft name is required.");
+const airlines=await restRequest({
+  table:AIRLINE_TABLE,
+  query:{
+    select:'"ID",title,"iataCode"',
+    "ID":`eq.${airlineId}`,
+    limit:1
+  }
+});  const aircraftName=text(input.aircraftName,180); if(!aircraftName) throw new Error("Aircraft name is required.");
   const aircraftCode=codeify(input.aircraftCode||aircraftName); if(!aircraftCode) throw new Error("Aircraft code is required.");
   const status=STATUS.has(upper(input.status,30))?upper(input.status,30):"DRAFT";
   const viewType=VIEW_TYPES.has(upper(input.defaultViewType,30))?upper(input.defaultViewType,30):"CABIN";
