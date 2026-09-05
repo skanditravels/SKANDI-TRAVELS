@@ -32,6 +32,8 @@ const INTERNAL_TABLES =
     "agent_users",
     "staff_login_audit",
     "admin_audit_logs",
+    "legal_policies",
+"legal_policy_revisions",
 
     "staff_payroll_profiles",
     "staff_payroll_periods",
@@ -742,5 +744,100 @@ export async function writeAdminAudit({
         new Date()
           .toISOString()
     }
+  });
+}
+export function eq(column, value) {
+  return `${encodeURIComponent(column)}=eq.${encodeURIComponent(String(value ?? ""))}`;
+}
+
+export function order(column, direction = "asc") {
+  return `order=${encodeURIComponent(column)}.${direction === "desc" ? "desc" : "asc"}`;
+}
+
+export function and(...filters) {
+  return filters.flat().filter(Boolean).join("&");
+}
+
+async function rawRequest({
+  table,
+  method = "GET",
+  queryString = "",
+  body,
+  prefer = "return=representation"
+}) {
+  if (!INTERNAL_TABLES.has(table)) {
+    throw new Error("SUPABASE_TABLE_NOT_ALLOWED");
+  }
+
+  const { baseUrl, apiKey } = await getConfiguration();
+
+  const headers = {
+    apikey: apiKey,
+    Accept: "application/json",
+    "Content-Type": "application/json",
+    Prefer: prefer
+  };
+
+  // Legacy service_role JWT needs Authorization.
+  // New sb_secret_ server keys do not.
+  if (!apiKey.startsWith("sb_secret_")) {
+    headers.Authorization = `Bearer ${apiKey}`;
+  }
+
+  const query = String(queryString || "").replace(/^\?/, "");
+
+  const response = await fetch(
+    `${baseUrl}/rest/v1/${table}${query ? `?${query}` : ""}`,
+    {
+      method,
+      headers,
+      body: body === undefined ? undefined : JSON.stringify(body)
+    }
+  );
+
+  const raw = await response.text();
+  const data = raw ? JSON.parse(raw) : null;
+
+  if (!response.ok) {
+    throw new Error(
+      `SUPABASE_HTTP_${response.status}: ${
+        data?.message || data?.error || "Request failed"
+      }`
+    );
+  }
+
+  return data;
+}
+
+export async function sbSelect(table, query = "select=*") {
+  return rawRequest({
+    table,
+    method: "GET",
+    queryString: query
+  });
+}
+
+export async function sbInsert(table, body) {
+  return rawRequest({
+    table,
+    method: "POST",
+    body
+  });
+}
+
+export async function sbUpdate(table, filter, body) {
+  return rawRequest({
+    table,
+    method: "PATCH",
+    queryString: filter,
+    body
+  });
+}
+
+export async function sbDelete(table, filter) {
+  return rawRequest({
+    table,
+    method: "DELETE",
+    queryString: filter
   });
 }
