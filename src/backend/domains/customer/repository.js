@@ -1,4 +1,4 @@
-import { sbSelect, sbUpdate, eq } from "src/backend/supabaseClient";
+import { sbSelect, sbUpdate, eq } from "backend/supabaseClient";
 
 const TABLE = "customer_profiles";
 
