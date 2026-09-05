@@ -11,7 +11,7 @@ import {
   saveDocuNetCategory,
   deleteDocuNetCategory,
   searchDocuNetAudit
-} from "backend/RIA/docuNet.web";
+} from "backend/docuNet.web";
 
 const EMBED = "#docuNetAdminEmbed";
 const SOURCES = new Set(["SKANDI_DOCUNET_ADMIN", "SKANDI_ALTEA_DOC_ADMIN"]);
