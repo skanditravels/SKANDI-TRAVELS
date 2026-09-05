@@ -1,5 +1,7 @@
 import { webMethod, Permissions } from "wix-web-module";
-import { getSecret } from "wix-secrets-backend";
+import { secrets } from "wix-secrets-backend.v2";
+import { elevate } from "wix-auth";
+import { fetch } from "wix-fetch";
 import { getStaffPortalSession } from "backend/RIA/staffPortalAuth.web";
 
 const TABLES={master:"inventory_master_entities",localized:"inventory_localized_content",media:"inventory_media_assets",relations:"inventory_entity_relations",dated:"inventory_dated_inventory",audit:"master_inventory_audit"};
@@ -20,21 +22,62 @@ const safeDate=v=>/^\d{4}-\d{2}-\d{2}$/.test(clean(v,20))?clean(v,20):null;
 const safeTime=v=>/^\d{2}:\d{2}(:\d{2})?$/.test(clean(v,12))?clean(v,12):null;
 const eq=(f,v)=>`${f}=eq.${encodeURIComponent(String(v))}`;
 
+const elevatedGetSecretValue=elevate(secrets.getSecretValue);
+let configurationPromise=null;
+function secretString(r){return typeof r==="string"?r.trim():String(r?.value??r?.secretValue??r?.secret?.value??"").trim()}
+async function readSecret(name){const r=await elevatedGetSecretValue(name);const v=secretString(r);if(!v)throw new Error(`WIX_SECRET_EMPTY_${name}`);return v}
 async function cfg(){
-  const url=(await getSecret("SUPABASE_URL")).replace(/\/+$/,"");
-  let key="";try{key=await getSecret("SUPABASE_SECRET_KEY")}catch(_e){}
-  if(!key)key=await getSecret("SUPABASE_SERVICE_ROLE_KEY");
-  if(!url||!key)throw new Error("Supabase backend configuration is incomplete.");
-  return{url,key};
+  if(configurationPromise)return configurationPromise;
+  configurationPromise=(async()=>{
+    const url=(await readSecret("SUPABASE_URL")).replace(/\/+$/,"");
+    let key="";try{key=await readSecret("SUPABASE_SECRET_KEY")}catch(_e){key=await readSecret("SUPABASE_SERVICE_ROLE_KEY")}
+    if(!/^https:\/\/[^/]+\.supabase\.co$/i.test(url))throw new Error("SUPABASE_URL_INVALID");
+    if(!key)throw new Error("SUPABASE_SERVER_KEY_MISSING");
+    return{url,key,keyType:key.startsWith("sb_secret_")?"modern-secret":key.startsWith("eyJ")?"legacy-jwt":"api-key"};
+  })();
+  try{return await configurationPromise}catch(error){configurationPromise=null;throw error}
 }
 async function sb(path,{method="GET",body,headers={}}={}){
   const c=await cfg();
-  const r=await fetch(`${c.url}/rest/v1/${path}`,{method,headers:{apikey:c.key,...(!String(c.key).startsWith("sb_secret_")?{Authorization:`Bearer ${c.key}`} : {}),"Content-Type":"application/json",...(method==="POST"||method==="PATCH"?{Prefer:"return=representation"}:{}),...headers},...(body!==undefined?{body:JSON.stringify(body)}:{})});
+  const r=await fetch(`${c.url}/rest/v1/${path}`,{method,headers:{apikey:c.key,...(c.keyType==="legacy-jwt"?{Authorization:`Bearer ${c.key}`} : {}),"Content-Type":"application/json",...(method==="POST"||method==="PATCH"?{Prefer:"return=representation"}:{}),...headers},...(body!==undefined?{body:JSON.stringify(body)}:{})});
   const t=await r.text();let d=null;if(t){try{d=JSON.parse(t)}catch(_e){d=t}}
   if(!r.ok){const e=new Error(d?.message||d?.error||`${r.status} ${r.statusText}`);e.code=d?.code||"";throw e}return d;
 }
-function profileOf(s={}){const p=s.profile||s.staff||s.user||s.data?.profile||{};return{id:p.id||p.agentUserId||p.agent_user_id||"",skId:upper(p.skId||p.sk_id||p.employeeId||p.employee_id,40),name:clean(p.name||p.displayName||p.display_name||p.email,160),email:clean(p.email,200).toLowerCase(),canManage:bool(p.canManage??p.can_manage??p.permissions?.manage??s.permissions?.manage,false)}}
-async function requireStaff(){const s=await getStaffPortalSession();if(!s||s.ok===false||s.authorized===false||s.loggedIn===false)throw new Error("Inventory Control requires an authorized staff session.");const p=profileOf(s);if(!p.skId)throw new Error("A valid SK-ID is required.");return p}
+function profileOf(s={}){
+  const p=s.profile||s.staff||s.user||s.data?.profile||{};
+  return{
+    wixProfileId:p.id||"",
+    skId:upper(p.skId||p.sk_id||p.employeeId||p.employee_id,40),
+    name:clean(p.name||p.fullName||p.title||p.displayName||p.display_name||p.email,160),
+    email:clean(p.email,200).toLowerCase()
+  };
+}
+async function resolveSupabaseActor(profile){
+  let rows=[];
+  if(profile.skId){
+    rows=await sb(`agent_users?select=id,sk_id,email,active,authorized,portal_access,can_manage&${eq("sk_id",profile.skId)}&limit=1`);
+  }
+  if((!rows||!rows.length)&&profile.email){
+    rows=await sb(`agent_users?select=id,sk_id,email,active,authorized,portal_access,can_manage&${eq("email",profile.email)}&limit=1`);
+  }
+  const actor=rows?.[0]||null;
+  if(!actor)throw new Error("Your Wix staff profile is not linked to Supabase agent_users.");
+  if(actor.active===false||actor.authorized===false||actor.portal_access===false)throw new Error("Your Supabase staff account is not authorized for Inventory Control.");
+  return{
+    id:actor.id,
+    skId:upper(actor.sk_id||profile.skId,40),
+    name:profile.name||profile.email||profile.skId,
+    email:clean(actor.email||profile.email,200).toLowerCase(),
+    canManage:actor.can_manage===true
+  };
+}
+async function requireStaff(){
+  const s=await getStaffPortalSession();
+  if(!s||s.ok===false||s.authorized===false||s.loggedIn===false)throw new Error("Inventory Control requires an authorized staff session.");
+  const p=profileOf(s);
+  if(!p.skId&&!p.email)throw new Error("A valid SK-ID or staff email is required.");
+  return resolveSupabaseActor(p);
+}
 
 function apiRecord(r={}){return{id:r.id,publicId:r.public_id,entityType:r.entity_type,code:r.code,name:r.name,slug:r.slug||"",status:r.status,active:r.active,customerVisible:r.customer_visible,staffVisible:r.staff_visible,alteaVisible:r.altea_visible,featured:r.featured,homepageFeatured:r.homepage_featured,sortPriority:r.sort_priority,parentEntityId:r.parent_entity_id||"",supplierEntityId:r.supplier_entity_id||"",source:r.source||"SKANDI",sourceReference:r.source_reference||"",details:r.details||{},commercial:r.commercial||{},operations:r.operations||{},seo:r.seo||{},publication:r.publication||{},payload:r.payload||{},createdAt:r.created_at,updatedAt:r.updated_at}}
 function apiLocalized(r={}){return{id:r.id,entityId:r.entity_id,language:r.language,title:r.title||"",eyebrow:r.eyebrow||"",shortDescription:r.short_description||"",fullDescription:r.full_description||"",highlights:r.highlights||[],included:r.included||[],notIncluded:r.not_included||[],importantInformation:r.important_information||"",seoTitle:r.seo_title||"",seoDescription:r.seo_description||"",content:r.content||{}}}
@@ -55,7 +98,7 @@ async function smartDefaults(r){const x=JSON.parse(JSON.stringify(r));x.details=
  if(x.entityType==="AIRPORT"){x.details.iata=upper(x.details.iata||(x.code.length===3?x.code:""),3);x.details.icao=upper(x.details.icao,4)}if(x.entityType==="AIRLINE"){x.details.iata=upper(x.details.iata||(x.code.length===2?x.code:""),2);x.details.icao=upper(x.details.icao,3)}if(x.entityType==="HOTEL"&&!x.details.searchAirportIata&&x.details.nearestAirportId)x.details.searchAirportIata=await airportIata(x.details.nearestAirportId);
  if(x.entityType==="PACKAGE"){const a=safeDate(x.details.startDate),b=safeDate(x.details.endDate);if(a&&b){const days=Math.max(1,Math.round((new Date(b+"T12:00:00Z")-new Date(a+"T12:00:00Z"))/86400000)+1);x.details.numberOfDays=days;x.details.numberOfNights=Math.max(0,days-1)}}
  x.commercial.currency=upper(x.commercial.currency||"USD",3);x.commercial.supplierCost=Math.max(0,num(x.commercial.supplierCost,0));x.commercial.publicPrice=Math.max(0,num(x.commercial.publicPrice,0));x.commercial.marginPct=x.commercial.publicPrice>0?Math.round(((x.commercial.publicPrice-x.commercial.supplierCost)/x.commercial.publicPrice)*10000)/100:0;x.seo.canonicalSlug=x.seo.canonicalSlug||x.slug;x.seo.title=x.seo.title||x.name;x.seo.ogTitle=x.seo.ogTitle||x.name;if(x.seo.indexable===undefined)x.seo.indexable=true;x.status=MASTER_STATUSES.has(upper(x.status,20))?upper(x.status,20):"DRAFT";if(x.status==="PUBLISHED")x.active=true;if(["ARCHIVED","SUSPENDED"].includes(x.status)){x.active=false;x.customerVisible=false}if(x.entityType==="SUPPLIER"){x.customerVisible=false;x.featured=false;x.homepageFeatured=false;x.seo.indexable=false}if(x.status!=="PUBLISHED")x.homepageFeatured=false;if(x.homepageFeatured){x.featured=true;x.customerVisible=true}return x}
-function dbMaster(r,p,old=null){const pub={...object(r.publication)};if(r.status==="PUBLISHED"&&(!old||old.status!=="PUBLISHED")){pub.publishedAt=new Date().toISOString();pub.publishedBy=p.id||p.skId}return{...(r.publicId?{public_id:clean(r.publicId,160)}:{}),entity_type:r.entityType,code:r.code,name:r.name,slug:r.slug||null,status:r.status,active:r.active!==false,customer_visible:bool(r.customerVisible,false),staff_visible:bool(r.staffVisible,true),altea_visible:bool(r.alteaVisible,true),featured:bool(r.featured,false),homepage_featured:bool(r.homepageFeatured,false),sort_priority:int(r.sortPriority,100),parent_entity_id:r.parentEntityId||null,supplier_entity_id:r.supplierEntityId||null,source:r.source||"SKANDI",source_reference:clean(r.sourceReference,500)||null,details:object(r.details),commercial:object(r.commercial),operations:object(r.operations),seo:object(r.seo),publication:pub,payload:{...object(r.payload),smartInventoryVersion:"2026-09-05-v3"},updated_by_agent_user_id:p.id||null,...(old?{}:{created_by_agent_user_id:p.id||null})}}
+function dbMaster(r,p,old=null){const pub={...object(r.publication)};if(r.status==="PUBLISHED"&&(!old||old.status!=="PUBLISHED")){pub.publishedAt=new Date().toISOString();pub.publishedBy=p.id||p.skId}return{...(r.publicId?{public_id:clean(r.publicId,160)}:{}),entity_type:r.entityType,code:r.code,name:r.name,slug:r.slug||null,status:r.status,active:r.active!==false,customer_visible:bool(r.customerVisible,false),staff_visible:bool(r.staffVisible,true),altea_visible:bool(r.alteaVisible,true),featured:bool(r.featured,false),homepage_featured:bool(r.homepageFeatured,false),sort_priority:int(r.sortPriority,100),parent_entity_id:r.parentEntityId||null,supplier_entity_id:r.supplierEntityId||null,source:r.source||"SKANDI",source_reference:clean(r.sourceReference,500)||null,details:object(r.details),commercial:object(r.commercial),operations:object(r.operations),seo:object(r.seo),publication:pub,payload:{...object(r.payload),smartInventoryVersion:"2026-09-05-v4"},updated_by_agent_user_id:p.id||null,...(old?{}:{created_by_agent_user_id:p.id||null})}}
 async function audit(p,type,id,message,payload={}){try{await sb(TABLES.audit,{method:"POST",body:{event_type:type,domain:"MASTER_INVENTORY",entity_table:TABLES.master,entity_id:id||null,product_key:payload.publicId||payload.code||null,source:"wix-smart-inventory",message,payload,created_by_agent_user_id:p.id||null,created_by_name:p.name||p.skId}})}catch(_e){}}
 async function replaceLocalized(id,rows=[]){await sb(`${TABLES.localized}?${eq("entity_id",id)}`,{method:"DELETE",headers:{Prefer:"return=minimal"}});const body=rows.filter(x=>LANGUAGES.includes(upper(x.language,2))).map(x=>({entity_id:id,language:upper(x.language,2),title:clean(x.title,500)||null,eyebrow:clean(x.eyebrow,500)||null,short_description:clean(x.shortDescription,5000)||null,full_description:clean(x.fullDescription,20000)||null,highlights:arr(x.highlights),included:arr(x.included),not_included:arr(x.notIncluded),important_information:clean(x.importantInformation,10000)||null,seo_title:clean(x.seoTitle,500)||null,seo_description:clean(x.seoDescription,2000)||null,content:object(x.content)}));if(body.length)await sb(TABLES.localized,{method:"POST",body})}
 async function replaceMedia(id,rows=[]){await sb(`${TABLES.media}?${eq("entity_id",id)}`,{method:"DELETE",headers:{Prefer:"return=minimal"}});const body=rows.filter(x=>clean(x.url,2000)).map((x,i)=>({entity_id:id,media_type:upper(x.mediaType||"IMAGE",30),url:clean(x.url,2000),alt_text:clean(x.altText,1000)||null,caption:clean(x.caption,3000)||null,credit:clean(x.credit,500)||null,language:LANGUAGES.includes(upper(x.language,2))?upper(x.language,2):null,sort_order:int(x.sortOrder,(i+1)*10),is_primary:bool(x.isPrimary,false),is_card:bool(x.isCard,false),is_hero:bool(x.isHero,false),is_mobile:bool(x.isMobile,false),active:bool(x.active,true),payload:object(x.payload)}));if(body.length)await sb(TABLES.media,{method:"POST",body})}
@@ -66,7 +109,7 @@ export const getSmartInventoryBootstrap=webMethod(Permissions.SiteMember,async(i
 export const getSmartInventoryRecord=webMethod(Permissions.SiteMember,async({id}={})=>{await requireStaff();return bundle(clean(id,100))});
 export const saveSmartInventoryRecord=webMethod(Permissions.SiteMember,async(input={})=>{const p=await requireStaff();let r=applyStructures(object(input.record),input.structures);r=await smartDefaults(r);const id=clean(r.id,100);let old=null;if(id){const rows=await sb(`${TABLES.master}?select=*&${eq("id",id)}&limit=1`);old=rows?.[0]||null;if(!old)throw new Error("Inventory master record no longer exists.")}const body=dbMaster(r,p,old);const savedRows=old?await sb(`${TABLES.master}?${eq("id",old.id)}`,{method:"PATCH",body}):await sb(TABLES.master,{method:"POST",body});const saved=savedRows?.[0];if(!saved?.id)throw new Error("Supabase did not return the saved master record.");await Promise.all([replaceLocalized(saved.id,input.localizedContent||[]),replaceMedia(saved.id,input.media||[]),replaceRelations(saved.id,input.relations||[])]);await audit(p,old?"MASTER_UPDATED":"MASTER_CREATED",saved.id,`${saved.entity_type} ${saved.code} ${old?"updated":"created"}.`,{publicId:saved.public_id,code:saved.code,status:saved.status});return{record:apiRecord(saved),bundle:await bundle(saved.id)}});
 export const getSmartDatedInventory=webMethod(Permissions.SiteMember,async({entityId}={})=>{await requireStaff();const id=clean(entityId,100),rows=await sb(`${TABLES.dated}?select=*&${eq("entity_id",id)}&order=service_date.asc,start_time.asc,variant_code.asc&limit=2000`);return{inventory:(rows||[]).map(apiDated),lastSync:new Date().toISOString()}});
-function dbDated(r,p){const total=Math.max(0,int(r.capacityTotal,0)),held=Math.max(0,int(r.held,0)),sold=Math.max(0,int(r.sold,0)),ob=Math.max(0,int(r.overbookingLimit,0)),available=Math.max(0,total+ob-held-sold);let status=DATED_STATUSES.has(upper(r.status,20))?upper(r.status,20):"OPEN";if(bool(r.blackout,false))status="BLACKOUT";else if(bool(r.stopSale,false))status="STOP_SALE";else if(total>0&&available===0)status="SOLD_OUT";else if(["BLACKOUT","STOP_SALE","SOLD_OUT"].includes(status))status="OPEN";const adult=Math.max(0,num(r.adultPrice,0)),pub=Math.max(0,num(r.publicPrice,adult));return{entity_id:clean(r.entityId,100),inventory_type:upper(r.inventoryType||"GENERAL",50),service_date:safeDate(r.serviceDate),start_time:safeTime(r.startTime),end_time:safeTime(r.endTime),variant_code:upper(r.variantCode,80)||null,variant_name:clean(r.variantName,240)||null,capacity_total:total,held,sold,available,waitlist_limit:Math.max(0,int(r.waitlistLimit,0)),overbooking_limit:ob,stop_sale:bool(r.stopSale,false),blackout:bool(r.blackout,false),status,supplier_cost:Math.max(0,num(r.supplierCost,0)),public_price:pub,adult_price:adult,child_price:Math.max(0,num(r.childPrice,0)),infant_price:Math.max(0,num(r.infantPrice,0)),private_price:Math.max(0,num(r.privatePrice,0)),currency:upper(r.currency||"USD",3),price_basis:upper(r.priceBasis||"PER_PERSON",40),booking_cutoff_hours:Math.max(0,int(r.bookingCutoffHours,0)),min_stay:Math.max(0,int(r.minStay,0)),max_stay:Math.max(0,int(r.maxStay,0)),release_days:Math.max(0,int(r.releaseDays,0)),supplier_reference:clean(r.supplierReference,500)||null,payload:{...object(r.payload),calculatedAvailable:available,smartInventoryVersion:"2026-09-05-v3"},updated_by_agent_user_id:p.id||null,...(r.id?{}:{created_by_agent_user_id:p.id||null})}}
+function dbDated(r,p){const total=Math.max(0,int(r.capacityTotal,0)),held=Math.max(0,int(r.held,0)),sold=Math.max(0,int(r.sold,0)),ob=Math.max(0,int(r.overbookingLimit,0)),available=Math.max(0,total+ob-held-sold);let status=DATED_STATUSES.has(upper(r.status,20))?upper(r.status,20):"OPEN";if(bool(r.blackout,false))status="BLACKOUT";else if(bool(r.stopSale,false))status="STOP_SALE";else if(total>0&&available===0)status="SOLD_OUT";else if(["BLACKOUT","STOP_SALE","SOLD_OUT"].includes(status))status="OPEN";const adult=Math.max(0,num(r.adultPrice,0)),pub=Math.max(0,num(r.publicPrice,adult));return{entity_id:clean(r.entityId,100),inventory_type:upper(r.inventoryType||"GENERAL",50),service_date:safeDate(r.serviceDate),start_time:safeTime(r.startTime),end_time:safeTime(r.endTime),variant_code:upper(r.variantCode,80)||null,variant_name:clean(r.variantName,240)||null,capacity_total:total,held,sold,available,waitlist_limit:Math.max(0,int(r.waitlistLimit,0)),overbooking_limit:ob,stop_sale:bool(r.stopSale,false),blackout:bool(r.blackout,false),status,supplier_cost:Math.max(0,num(r.supplierCost,0)),public_price:pub,adult_price:adult,child_price:Math.max(0,num(r.childPrice,0)),infant_price:Math.max(0,num(r.infantPrice,0)),private_price:Math.max(0,num(r.privatePrice,0)),currency:upper(r.currency||"USD",3),price_basis:upper(r.priceBasis||"PER_PERSON",40),booking_cutoff_hours:Math.max(0,int(r.bookingCutoffHours,0)),min_stay:Math.max(0,int(r.minStay,0)),max_stay:Math.max(0,int(r.maxStay,0)),release_days:Math.max(0,int(r.releaseDays,0)),supplier_reference:clean(r.supplierReference,500)||null,payload:{...object(r.payload),calculatedAvailable:available,smartInventoryVersion:"2026-09-05-v4"},updated_by_agent_user_id:p.id||null,...(r.id?{}:{created_by_agent_user_id:p.id||null})}}
 export const saveSmartDatedInventory=webMethod(Permissions.SiteMember,async({row}={})=>{const p=await requireStaff();if(!row?.entityId)throw new Error("Master inventory entity is required.");if(!safeDate(row.serviceDate))throw new Error("Service Date is required.");const body=dbDated(row,p),savedRows=row.id?await sb(`${TABLES.dated}?${eq("id",row.id)}`,{method:"PATCH",body}):await sb(TABLES.dated,{method:"POST",body}),saved=savedRows?.[0];await audit(p,"DATED_INVENTORY_SAVED",row.entityId,`Dated inventory saved for ${row.serviceDate}.`,{entityId:row.entityId,inventoryId:saved?.id,status:saved?.status,available:saved?.available});return{row:apiDated(saved)}});
 export const deleteSmartDatedInventory=webMethod(Permissions.SiteMember,async({id}={})=>{const p=await requireStaff(),rowId=clean(id,100),old=await sb(`${TABLES.dated}?select=*&${eq("id",rowId)}&limit=1`);await sb(`${TABLES.dated}?${eq("id",rowId)}`,{method:"DELETE",headers:{Prefer:"return=minimal"}});await audit(p,"DATED_INVENTORY_DELETED",old?.[0]?.entity_id||null,"Dated inventory row deleted.",{inventoryId:rowId});return{deleted:true,id:rowId}});
 export const getSmartInventoryAudit=webMethod(Permissions.SiteMember,async(input={})=>{await requireStaff();const rows=await sb(`${TABLES.audit}?select=*&order=created_at.desc&limit=500`),d=clean(input.domain,80).toLowerCase(),k=clean(input.productKey,120).toLowerCase(),filtered=(rows||[]).filter(r=>(!d||String(r.domain||"").toLowerCase().includes(d))&&(!k||String(r.product_key||"").toLowerCase().includes(k)));return{audit:filtered.map(r=>({id:r.id,eventType:r.event_type,domain:r.domain,entityTable:r.entity_table,entityId:r.entity_id,productKey:r.product_key,message:r.message,agentName:r.created_by_name,timestamp:r.created_at,payload:r.payload||{}}))}});
