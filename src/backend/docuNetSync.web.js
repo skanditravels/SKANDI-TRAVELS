@@ -1,4 +1,5 @@
 import { webMethod, Permissions } from "wix-web-module";
+import { currentMember } from "wix-members-backend";
 import { getSecret } from "wix-secrets-backend";
 import { createClient } from "@supabase/supabase-js";
 import {
@@ -44,6 +45,139 @@ function normalizedCodes(value, fallback="ALL") {
   )];
   if (!out.length || out.includes("ALL")) return [fallback];
   return out;
+}
+
+
+const MARKET_CODES = new Set([
+  "ALL","NYCXEC","STOXEC","BKKXEC","NYCGOP","ORLGOP","MIAGOP","LAXGOP","LASGOP","SFOGOP",
+  "STOGOP","GOTGOP","KRNGOP","KRNICE","LLAGOP","BDNGOP","OSLGOP","TOSGOP","CPHGOP",
+  "HELGOP","RVNGOP","JMKGOP","CHQGOP","HERGOP","SKGGOP","RHOGOP","JTRGOP","JSIGOP",
+  "AGPGOP","ALCGOP","PMIGOP","TCIGOP","FUEGOP","LPAGOP","LPASWG","LPASEG",
+  "BKKGOP","LNTGOP","HKTGOP","KBVGOP","USMGOP"
+]);
+const STATION_MARKET = {
+  NYC:"NYCGOP", ORL:"ORLGOP", MIA:"MIAGOP", LAX:"LAXGOP", LAS:"LASGOP", SFO:"SFOGOP",
+  STO:"STOGOP", GOT:"GOTGOP", KRN:"KRNGOP", LLA:"LLAGOP", BDN:"BDNGOP",
+  OSL:"OSLGOP", TOS:"TOSGOP", CPH:"CPHGOP", HEL:"HELGOP", RVN:"RVNGOP",
+  JMK:"JMKGOP", CHQ:"CHQGOP", HER:"HERGOP", SKG:"SKGGOP", RHO:"RHOGOP", JTR:"JTRGOP", JSI:"JSIGOP",
+  AGP:"AGPGOP", ALC:"ALCGOP", PMI:"PMIGOP", TCI:"TCIGOP", FUE:"FUEGOP", LPA:"LPAGOP",
+  BKK:"BKKGOP", LNT:"LNTGOP", HKT:"HKTGOP", KBV:"KBVGOP", USM:"USMGOP"
+};
+const ADMIN_ROLE_NAMES = new Set([
+  "admin","administrator","site owner","super admin","system admin","docunet admin","document control","hr admin"
+]);
+
+function firstValue(...values) {
+  return values.find(v => v !== undefined && v !== null && String(v).trim() !== "");
+}
+function customValue(member,key) {
+  const fields = member?.customFields || member?.profile?.customFields || {};
+  const value = fields[key];
+  return value && typeof value === "object" ? firstValue(value.value,value.text,value.name) : value;
+}
+function roleNames(roles=[]) {
+  return roles.map(r=>String(firstValue(r?.name,r?.title,r?.roleName,r?._id,""))).filter(Boolean);
+}
+function extractMarket(...values) {
+  for (const rawValue of values) {
+    const raw = String(rawValue || "").toUpperCase().replace(/[^A-Z0-9_-]/g,"");
+    if (!raw) continue;
+    if (MARKET_CODES.has(raw)) return raw;
+    for (const code of MARKET_CODES) if (code !== "ALL" && raw.includes(code)) return code;
+    if (STATION_MARKET[raw]) return STATION_MARKET[raw];
+  }
+  return "";
+}
+function normalizeAudience(value, department="") {
+  const raw = String(value || "").trim().toUpperCase().replace(/\s+/g,"_");
+  const allowed = new Set(["ALL","OPERATIONS","DESTINATION_STAFF","CUSTOMER_CARE","PARTNER_MANAGEMENT"]);
+  if (allowed.has(raw)) return raw;
+  const dep = String(department || "").toUpperCase();
+  if (/CUSTOMER|CARE|SERVICE/.test(dep)) return "CUSTOMER_CARE";
+  if (/PARTNER|SUPPLIER|COMMERCIAL/.test(dep)) return "PARTNER_MANAGEMENT";
+  if (/DESTINATION|GUIDE|HOST|FIELD/.test(dep)) return "DESTINATION_STAFF";
+  return "OPERATIONS";
+}
+async function currentActor() {
+  const [member, roles] = await Promise.all([currentMember.getMember(), currentMember.getRoles()]);
+  if (!member?._id) throw new Error("A signed-in staff account is required.");
+  const email = String(firstValue(member.loginEmail,member.contactDetails?.emails?.[0],member.profile?.loginEmail,"")).trim().toLowerCase();
+  const client = await db();
+  let agentResponse = await client.from("agent_users").select("*").eq("wix_member_id",member._id).maybeSingle();
+  if (agentResponse.error) throw new Error(agentResponse.error.message || "Unable to resolve staff profile.");
+  if (!agentResponse.data && email) {
+    agentResponse = await client.from("agent_users").select("*").ilike("email",email).maybeSingle();
+    if (agentResponse.error) throw new Error(agentResponse.error.message || "Unable to resolve staff profile.");
+  }
+  const agent = agentResponse.data;
+  if (!agent || agent.active === false || agent.authorized === false || agent.portal_access === false) {
+    throw new Error("This staff account is not authorized for RIA INTRA.");
+  }
+  const rolesList = roleNames(roles);
+  const canManage = Boolean(agent.can_manage) || rolesList.some(r=>ADMIN_ROLE_NAMES.has(r.trim().toLowerCase()));
+  const service = String(firstValue(customValue(member,"serviceLine"),customValue(member,"service"),"ALL")).toUpperCase();
+  const market = extractMarket(
+    customValue(member,"operatingMarket"),
+    customValue(member,"market"),
+    agent.department,
+    agent.base,
+    agent.station
+  ) || (canManage ? "ALL" : "ALL");
+  const audience = normalizeAudience(
+    firstValue(customValue(member,"docuNetAudience"),customValue(member,"department"),""),
+    agent.department
+  );
+  const firstName = firstValue(member.contactDetails?.firstName,member.profile?.firstName,"");
+  const lastName = firstValue(member.contactDetails?.lastName,member.profile?.lastName,"");
+  return {
+    id: member._id,
+    agentUserId: agent.id,
+    skandiId: agent.sk_id || "",
+    name: agent.display_name || `${firstName} ${lastName}`.trim() || email || "Staff member",
+    email: agent.email || email,
+    roles: rolesList,
+    canManage,
+    service: ["ALL","DESTINATION","TRANSFERS","TOURS","PACKAGES"].includes(service) ? service : "ALL",
+    market,
+    audience
+  };
+}
+function matchesApplicability(document,actor) {
+  const matches=(values,value)=>Array.isArray(values) && (values.includes("ALL") || value === "ALL" || values.includes(value));
+  return matches(document.services || ["ALL"],actor.service)
+    && matches(document.markets || ["ALL"],actor.market)
+    && matches(document.audiences || ["ALL"],actor.audience);
+}
+async function currentRevisionMap(client,documents) {
+  const ids = documents.map(d=>d.current_revision_id).filter(Boolean);
+  if (!ids.length) return new Map();
+  const {data,error}=await client.from("docunet_revisions").select("*").in("id",ids);
+  if (error) throw new Error(error.message || "Unable to load document revisions.");
+  return new Map((data||[]).map(r=>[r.id,r]));
+}
+function viewerShape(document,revision,receipt) {
+  return {
+    id: document.id,
+    code: document.document_code,
+    title: document.title,
+    short: document.short_title || document.title,
+    group: document.group_name || document.category_text || "Company Manuals",
+    owner: document.owner,
+    revision: revision.revision,
+    revisionDate: revision.effective_date || "",
+    status: "Active",
+    updated: Boolean(revision.published_at && new Date(revision.published_at) > new Date(Date.now()-30*86400000)),
+    services: document.services || ["ALL"],
+    markets: document.markets || ["ALL"],
+    audiences: document.audiences || ["ALL"],
+    pages: document.page_count || 1,
+    summary: document.summary || "",
+    searchText: revision.search_text || "",
+    requiresAcknowledgement: Boolean(document.requires_acknowledgement),
+    isCritical: Boolean(document.is_critical),
+    acknowledgedAt: receipt?.acknowledged_at || null,
+    viewedAt: receipt?.last_viewed_at || null
+  };
 }
 
 function normalizedAccess(input={}) {
@@ -115,7 +249,7 @@ async function syncDefinition(client, meta={}) {
     ...policy,
     category: definitionCategory(meta),
     document_type: definitionType(meta),
-    generation_mode: "CONTROLLED_PDF",
+    generation_mode: "AUTO_PREFILL_STAFF",
     owner: clean(meta.owner || "SKANDI Travels", 120),
     render_profile: "pdf",
     template_version: clean(meta.revision || "1.0", 40),
@@ -225,16 +359,91 @@ export const saveDocuNetMetadataSynced = webMethod(Permissions.SiteMember, async
 });
 
 export const getDocuNetViewerBootstrapSynced = webMethod(Permissions.SiteMember, async () => {
-  const result = await getDocuNetViewerBootstrap();
+  const actor = await currentActor();
   const client = await db();
-  const map = await definitionMap(client, (result.documents || []).map(d => d.code));
-  const documents = (result.documents || [])
-    .map(d => {
-      const def = map.get(String(d.code || "").toUpperCase());
-      return { ...d, accessPolicy: accessFromDefinition(def) };
-    })
-    .filter(d => d.accessPolicy.docunetAvailable !== false);
-  return { ...result, documents };
+  const {data:documents,error} = await client.from("docunet_documents")
+    .select("*")
+    .eq("publish_status","PUBLISHED")
+    .is("deleted_at",null)
+    .not("current_revision_id","is",null)
+    .order("group_name",{ascending:true})
+    .order("title",{ascending:true});
+  if (error) throw new Error(error.message || "Unable to load DocuNet library.");
+
+  const map = await definitionMap(client,(documents||[]).map(d=>d.document_code));
+  const applicable = (documents||[]).filter(d=>{
+    const access = accessFromDefinition(map.get(String(d.document_code||"").toUpperCase()));
+    return access.docunetAvailable !== false && matchesApplicability(d,actor);
+  });
+  const revisions = await currentRevisionMap(client,applicable);
+  const revisionIds=[...revisions.keys()];
+  let receipts=[];
+  if (revisionIds.length) {
+    const response = await client.from("docunet_receipts")
+      .select("*").eq("staff_id",actor.id).in("revision_id",revisionIds);
+    if (response.error) throw new Error(response.error.message || "Unable to load DocuNet reading status.");
+    receipts=response.data||[];
+  }
+  const receiptMap=new Map(receipts.map(r=>[r.revision_id,r]));
+  return {
+    session: actor,
+    documents: applicable.map(d=>{
+      const revision=revisions.get(d.current_revision_id);
+      return revision ? {...viewerShape(d,revision,receiptMap.get(revision.id)),
+        accessPolicy:accessFromDefinition(map.get(String(d.document_code||"").toUpperCase()))
+      } : null;
+    }).filter(Boolean),
+    syncedAt:new Date().toISOString()
+  };
+});
+
+export const getDocuNetDocumentAccessSynced = webMethod(Permissions.SiteMember, async ({documentId}={}) => {
+  const actor=await currentActor();
+  const client=await db();
+  const id=clean(documentId,80);
+  const doc=await client.from("docunet_documents").select("*")
+    .eq("id",id).eq("publish_status","PUBLISHED").is("deleted_at",null).single();
+  if (doc.error || !doc.data) throw new Error(doc.error?.message || "Document is not available.");
+  if (!matchesApplicability(doc.data,actor)) throw new Error("This document is not assigned to your DocuNet.");
+  const definitions=await definitionMap(client,[doc.data.document_code]);
+  if (accessFromDefinition(definitions.get(String(doc.data.document_code||"").toUpperCase())).docunetAvailable === false) {
+    throw new Error("This document is hidden from DocuNet.");
+  }
+  const revision=await client.from("docunet_revisions").select("*")
+    .eq("id",doc.data.current_revision_id).eq("revision_status","PUBLISHED").single();
+  if (revision.error || !revision.data) throw new Error(revision.error?.message || "Published revision is not available.");
+  const signed=await client.storage.from(revision.data.storage_bucket).createSignedUrl(revision.data.storage_path,600);
+  if (signed.error || !signed.data?.signedUrl) throw new Error(signed.error?.message || "Unable to open the controlled PDF.");
+  const receipt=await client.rpc("docunet_record_receipt",{
+    p_document_id:doc.data.id,p_revision_id:revision.data.id,p_staff_id:actor.id,
+    p_staff_name:actor.name,p_staff_email:actor.email,p_acknowledge:false
+  });
+  if (receipt.error) throw new Error(receipt.error.message || "Unable to record document view.");
+  return {documentId:doc.data.id,revisionId:revision.data.id,revision:revision.data.revision,signedUrl:signed.data.signedUrl,expiresIn:600};
+});
+
+export const acknowledgeDocuNetDocumentSynced = webMethod(Permissions.SiteMember, async ({documentId}={}) => {
+  const actor=await currentActor();
+  const client=await db();
+  const id=clean(documentId,80);
+  const doc=await client.from("docunet_documents").select("*")
+    .eq("id",id).eq("publish_status","PUBLISHED").is("deleted_at",null).single();
+  if (doc.error || !doc.data) throw new Error(doc.error?.message || "Document is not available.");
+  if (!matchesApplicability(doc.data,actor)) throw new Error("This document is not assigned to your DocuNet.");
+  const revision=await client.from("docunet_revisions").select("id,revision")
+    .eq("id",doc.data.current_revision_id).eq("revision_status","PUBLISHED").single();
+  if (revision.error || !revision.data) throw new Error(revision.error?.message || "Published revision is not available.");
+  const receipt=await client.rpc("docunet_record_receipt",{
+    p_document_id:doc.data.id,p_revision_id:revision.data.id,p_staff_id:actor.id,
+    p_staff_name:actor.name,p_staff_email:actor.email,p_acknowledge:true
+  });
+  if (receipt.error) throw new Error(receipt.error.message || "Unable to acknowledge document.");
+  await client.from("docunet_audit_events").insert({
+    event_type:"DOCUMENT_ACKNOWLEDGED",document_id:doc.data.id,revision_id:revision.data.id,
+    actor_id:actor.id,actor_name:actor.name,actor_email:actor.email,
+    payload:{revision:revision.data.revision,agentUserId:actor.agentUserId,skandiId:actor.skandiId}
+  });
+  return {documentId:doc.data.id,revisionId:revision.data.id,acknowledgedAt:receipt.data?.acknowledgedAt || new Date().toISOString()};
 });
 
 export const getDocuNetAdminPreview = webMethod(Permissions.SiteMember, async ({documentId}={}) => {
