@@ -1,14 +1,12 @@
 import {
-  getDocuNetDocumentAccess,
-  acknowledgeDocuNetDocument
-} from "backend/docuNet.web";
-import {
-  getDocuNetViewerBootstrapSynced
+  getDocuNetViewerBootstrapSynced,
+  getDocuNetDocumentAccessSynced,
+  acknowledgeDocuNetDocumentSynced
 } from "backend/docuNetSync.web";
 
 const SOURCE = "SKANDI_DOCUNET_VIEWER";
 const PARENT = "SKANDI_WIX_PARENT";
-const HTML_IDS = ["#alteaDocunetStaffEmbed", "#docuNetEmbed", "#docunetEmbed"];
+const HTML_IDS = "#docuNetViewerEmbed";
 
 function htmlElement() {
   for (const id of HTML_IDS) {
@@ -40,13 +38,13 @@ $w.onReady(() => {
       }
 
       if (msg.type === "DOCUNET_OPEN_DOCUMENT") {
-        const result = await getDocuNetDocumentAccess({ documentId: payload.documentId });
+        const result = await getDocuNetDocumentAccessSynced({ documentId: payload.documentId });
         send(html, "DOCUNET_DOCUMENT_ACCESS_RESULT", result);
         return;
       }
 
       if (msg.type === "DOCUNET_ACKNOWLEDGE") {
-        const result = await acknowledgeDocuNetDocument({ documentId: payload.documentId });
+        const result = await acknowledgeDocuNetDocumentSynced({ documentId: payload.documentId });
         send(html, "DOCUNET_ACKNOWLEDGE_RESULT", result);
         return;
       }
