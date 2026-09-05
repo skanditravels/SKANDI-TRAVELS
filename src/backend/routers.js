@@ -2,7 +2,7 @@
 import { ok, notFound } from 'wix-router';
 // Import whatever backend function you currently use to fetch SKANDI travel data
 import { getDestinationData } from 'backend/FINAL/destinationDetailService.web'; 
-import { getcCountryData } from '/backend/FINAL/countryDestinationService.web';
+import { getcCountryData } from 'backend/FINAL/countryDestinationService.web';
 
 export async function destinations_Router(request) {
     // request.path breaks down the URL after the prefix.
