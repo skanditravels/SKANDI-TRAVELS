@@ -10,7 +10,7 @@
     "@wix/members_badges": "1.0.80",
     "@wix/site-location": "1.34.0",
     "@wix/data": "1.0.466",
-    "@supabase/supabase-js"
+    "@supabase/supabase-js": "",
     "pusher": "5.3.4",
     "wix-data": "0.0.1-security",
     "@wix/members_authorization": "1.0.32",
