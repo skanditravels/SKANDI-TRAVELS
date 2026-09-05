@@ -1,8 +1,5 @@
 import wixLocation from "wix-location";
-import { authentication } from "wix-members-frontend";
 import { getStaffPortalSession } from "backend/RIA/staffPortalAuth.web";
-import { runInternalGlobalSearch } from "backend/FINAL/internalChrome.web";
-
 import {
   getUniformAdminBootstrap,
   adminSaveUniformCatalogItem,
@@ -10,150 +7,45 @@ import {
   adminSaveUniformAllowanceRule,
   adminUniformOrderAction,
   adminAdjustUniformWallet,
-  adminDeleteUniformItem
-} from "backend/uniformCenterCms.web";
+  adminDeleteUniformItem,
+  adminUploadUniformImage
+} from "backend/uniformCenterSupabase.web";
 
 const HTML_ID = "#uniformControlEmbed";
 const CHILD_SOURCE = "SKANDI_UNIFORM_ADMIN";
-const CHROME_SOURCE = "SKANDI_INTERNAL_CHROME";
 const PARENT_SOURCE = "SKANDI_WIX_PARENT";
 const LOGIN_PATH = "/riaintra";
-const HOME_PATH = "/";
-import { bindInternalHtmlBridge } from "public/internalHtmlBridge";
-import {
-  getHrSession,
-  listStaff,
-  saveStaff,
-  setStaffActive,
-  generateSkId,
-  printStaffBadge,
-  getStaffHrReports,
-} from 'backend/RIA/staffHR.web';
-import {
-  savePayrollProfile,
-  createPayrollPeriod,
-  calculatePayrollRun,
-  finalizePayrollRun,
-} from 'backend/RIA/staffPayroll.web';
 
-const HR_TYPES = new Set([
-  'HR_READY', 'HR_REFRESH', 'HR_SAVE_STAFF', 'HR_DEACTIVATE', 'HR_REACTIVATE',
-  'HR_GENERATE_SKID', 'HR_PRINT_BADGE', 'HR_REPORTS_REQUEST',
-  'PAYROLL_SAVE_PROFILE', 'PAYROLL_CREATE_PERIOD', 'PAYROLL_CALCULATE_RUN', 'PAYROLL_FINALIZE_RUN',
-  // Keep the existing handlers for HR_WIX_*, HR_PORTAL_*, Crewcontrol, and Badge Control.
-]);
-
-$w.onReady(() => {
-  bindInternalHtmlBridge({
-    embed: $w('#staffHrEmbed'),
-    allowedSources: new Set(['SKANDI_HR_STAFF', 'SKANDI_CAREERS_CONTROL']),
-    allowedTypes: HR_TYPES,
-    toError: () => ({ type: 'HR_ERROR', payload: { code: 'ACTION_FAILED' } }),
-    handle: async ({ type, payload }) => {
-      switch (type) {
-        case 'HR_READY':
-        case 'HR_REFRESH': {
-          const [session, staff] = await Promise.all([getHrSession(), listStaff(payload)]);
-          return [
-            { type: 'HR_SESSION', payload: session },
-            { type: 'HR_STAFF_LIST', payload: { staff } },
-          ];
-        }
-        case 'HR_SAVE_STAFF':
-          return { type: 'HR_STAFF_SAVED', payload: await saveStaff(payload) };
-        case 'HR_DEACTIVATE':
-          return { type: 'HR_ACTION_OK', payload: await setStaffActive({ ...payload, active: false }) };
-        case 'HR_REACTIVATE':
-          return { type: 'HR_ACTION_OK', payload: await setStaffActive({ ...payload, active: true }) };
-        case 'HR_GENERATE_SKID':
-          return { type: 'HR_SKID_GENERATED', payload: await generateSkId(payload) };
-        case 'HR_PRINT_BADGE':
-          return { type: 'HR_BADGE_PRINTED', payload: await printStaffBadge(payload) };
-        case 'HR_REPORTS_REQUEST':
-          return { type: 'HR_REPORTS', payload: await getStaffHrReports(payload) };
-        case 'PAYROLL_SAVE_PROFILE':
-          return { type: 'PAYROLL_PROFILE_SAVED', payload: await savePayrollProfile(payload) };
-        case 'PAYROLL_CREATE_PERIOD':
-          return { type: 'PAYROLL_PERIOD_CREATED', payload: await createPayrollPeriod(payload) };
-        case 'PAYROLL_CALCULATE_RUN':
-          return { type: 'PAYROLL_RUN_CALCULATED', payload: await calculatePayrollRun(payload) };
-        case 'PAYROLL_FINALIZE_RUN':
-          return { type: 'PAYROLL_RUN_FINALIZED', payload: await finalizePayrollRun(payload) };
-        default:
-          return { type: 'HR_ERROR', payload: { code: 'UNHANDLED_EVENT' } };
-      }
-    },
-  });
-});
-function currentPath() {
-  return "/" + wixLocation.path.join("/");
-}
-
-function post(html, type, payload = {}) {
+function send(html, type, payload = {}, extra = {}) {
   html.postMessage({
     source: PARENT_SOURCE,
     type,
-    payload: payload || {},
-    timestamp: new Date().toISOString()
-  });
-}
-
-function postFlat(html, type, payload = {}) {
-  html.postMessage({
-    source: PARENT_SOURCE,
-    type,
-    ...(payload || {}),
+    payload,
+    ...extra,
     timestamp: new Date().toISOString()
   });
 }
 
 function allowedInternalPath(path) {
-  const p = String(path || "");
+  const p = String(path || "").trim();
   return p === "/" || p === LOGIN_PATH || p.startsWith("/riaintra") || p.startsWith("/altea");
-}
-
-async function logout() {
-  try {
-    await authentication.logout();
-  } catch (err) {
-    console.warn("Logout warning:", err);
-  }
-
-  wixLocation.to(HOME_PATH);
-}
-
-async function sendChromeBootstrap(html, adminPayload = {}) {
-  post(html, "INTERNAL_CHROME_BOOTSTRAP", {
-    pageName: "Uniform Control",
-    pagePath: currentPath(),
-    pageSubtitle: "Enterprise uniform catalog, wallets, allowance rules and order control",
-    profile: adminPayload.profile || adminPayload.session || {},
-    apps: adminPayload.apps || [],
-    isAltea: true
-  });
 }
 
 async function requirePortalSession() {
   const session = await getStaffPortalSession().catch(() => null);
-
-  if (!session || session.authorized === false || session.ok === false) {
+  if (!session || session.ok === false || session.authorized === false) {
     wixLocation.to(LOGIN_PATH);
     return null;
   }
-
   return session;
 }
 
 async function bootstrap(html, query = "") {
-  const portalSession = await requirePortalSession();
-
-  if (!portalSession) {
-    return;
-  }
+  const session = await requirePortalSession();
+  if (!session) return;
 
   const payload = await getUniformAdminBootstrap({ query });
-  postFlat(html, "UNIFORM_ADMIN_BOOTSTRAP_RESULT", { payload });
-  await sendChromeBootstrap(html, payload);
+  send(html, "UNIFORM_ADMIN_BOOTSTRAP_RESULT", payload);
 }
 
 $w.onReady(function () {
@@ -161,104 +53,91 @@ $w.onReady(function () {
 
   html.onMessage(async (event) => {
     const msg = event.data || {};
-    const source = msg.source || "";
-    const type = msg.type || "";
+    if (msg.source !== CHILD_SOURCE) return;
+
     const payload = msg.payload || {};
+    const requestId = msg.requestId || payload.requestId || "";
 
     try {
-      if (source === CHROME_SOURCE) {
-        if (type === "INTERNAL_CHROME_READY") {
-          await bootstrap(html);
+      switch (msg.type) {
+        case "UNIFORM_ADMIN_READY":
+        case "UNIFORM_ADMIN_BOOTSTRAP":
+          await bootstrap(html, msg.query || payload.query || "");
+          return;
+
+        case "UNIFORM_ADMIN_UPLOAD_IMAGE": {
+          const result = await adminUploadUniformImage({
+            fileName: msg.fileName || payload.fileName || "",
+            mimeType: msg.mimeType || payload.mimeType || "",
+            dataUrl: msg.dataUrl || payload.dataUrl || "",
+            base64: msg.base64 || payload.base64 || "",
+            itemId: msg.itemId || payload.itemId || "",
+            itemCode: msg.itemCode || payload.itemCode || "",
+            title: msg.title || payload.title || ""
+          });
+          send(html, "UNIFORM_ADMIN_IMAGE_UPLOADED", result, { requestId });
           return;
         }
 
-        if (type === "INTERNAL_LOGOUT") {
-          await logout();
+        case "UNIFORM_ADMIN_SAVE_ITEM": {
+          const result = await adminSaveUniformCatalogItem({ item: msg.item || payload.item || {} });
+          send(html, "UNIFORM_ADMIN_SAVED", result, { requestId });
           return;
         }
 
-        if (type === "INTERNAL_NAVIGATE") {
-          const path = payload.path || msg.path || "";
+        case "UNIFORM_ADMIN_SAVE_CATEGORY": {
+          const result = await adminSaveUniformCategory({ category: msg.category || payload.category || {} });
+          send(html, "UNIFORM_ADMIN_SAVED", result, { requestId });
+          return;
+        }
+
+        case "UNIFORM_ADMIN_SAVE_RULE": {
+          const result = await adminSaveUniformAllowanceRule({ rule: msg.rule || payload.rule || {} });
+          send(html, "UNIFORM_ADMIN_SAVED", result, { requestId });
+          return;
+        }
+
+        case "UNIFORM_ADMIN_ORDER_ACTION": {
+          const result = await adminUniformOrderAction({
+            orderId: msg.orderId || payload.orderId || "",
+            action: msg.action || payload.action || "",
+            note: msg.note || payload.note || ""
+          });
+          send(html, "UNIFORM_ADMIN_SAVED", result, { requestId });
+          return;
+        }
+
+        case "UNIFORM_ADMIN_ADJUST_WALLET": {
+          const result = await adminAdjustUniformWallet({
+            agentUserId: msg.agentUserId || payload.agentUserId || "",
+            skId: msg.skId || payload.skId || "",
+            email: msg.email || payload.email || "",
+            points: msg.points ?? payload.points,
+            reason: msg.reason || payload.reason || ""
+          });
+          send(html, "UNIFORM_ADMIN_SAVED", result, { requestId });
+          return;
+        }
+
+        case "UNIFORM_ADMIN_DELETE": {
+          const result = await adminDeleteUniformItem({ itemId: msg.itemId || payload.itemId || "" });
+          send(html, "UNIFORM_ADMIN_SAVED", result, { requestId });
+          return;
+        }
+
+        case "UNIFORM_ADMIN_NAVIGATE": {
+          const path = msg.path || payload.path || "";
           if (allowedInternalPath(path)) wixLocation.to(path);
           return;
         }
 
-        if (type === "INTERNAL_GLOBAL_SEARCH") {
-          const query = payload.query || msg.query || "";
-          const result = await runInternalGlobalSearch(query);
-          post(html, "INTERNAL_SEARCH_RESULTS", {
-            requestId: payload.requestId || msg.requestId || "",
-            query,
-            results: result.results || result.items || []
-          });
+        default:
           return;
-        }
-      }
-
-      if (source !== CHILD_SOURCE) {
-        return;
-      }
-
-      if (type === "UNIFORM_ADMIN_BOOTSTRAP") {
-        await bootstrap(html, msg.query || payload.query || "");
-        return;
-      }
-
-      if (type === "UNIFORM_ADMIN_SAVE_ITEM") {
-        const result = await adminSaveUniformCatalogItem({ item: msg.item || payload.item || {} });
-        postFlat(html, "UNIFORM_ADMIN_SAVED", { payload: result });
-        return;
-      }
-
-      if (type === "UNIFORM_ADMIN_SAVE_CATEGORY") {
-        const result = await adminSaveUniformCategory({ category: msg.category || payload.category || {} });
-        postFlat(html, "UNIFORM_ADMIN_SAVED", { payload: result });
-        return;
-      }
-
-      if (type === "UNIFORM_ADMIN_SAVE_RULE") {
-        const result = await adminSaveUniformAllowanceRule({ rule: msg.rule || payload.rule || {} });
-        postFlat(html, "UNIFORM_ADMIN_SAVED", { payload: result });
-        return;
-      }
-
-      if (type === "UNIFORM_ADMIN_ORDER_ACTION") {
-        const result = await adminUniformOrderAction({
-          orderId: msg.orderId || payload.orderId,
-          action: msg.action || payload.action,
-          note: msg.note || payload.note || ""
-        });
-        postFlat(html, "UNIFORM_ADMIN_SAVED", { payload: result });
-        return;
-      }
-
-      if (type === "UNIFORM_ADMIN_ADJUST_WALLET") {
-        const result = await adminAdjustUniformWallet({
-          skId: msg.skId || payload.skId || "",
-          email: msg.email || payload.email || "",
-          points: msg.points ?? payload.points,
-          reason: msg.reason || payload.reason || ""
-        });
-        postFlat(html, "UNIFORM_ADMIN_SAVED", { payload: result });
-        return;
-      }
-
-      if (type === "UNIFORM_ADMIN_DELETE") {
-        const result = await adminDeleteUniformItem({
-          collectionId: msg.collectionId || payload.collectionId || "",
-          itemId: msg.itemId || payload.itemId || ""
-        });
-        postFlat(html, "UNIFORM_ADMIN_SAVED", { payload: result });
-        return;
-      }
-
-      if (type === "UNIFORM_ADMIN_NAVIGATE") {
-        const path = msg.path || payload.path || "";
-        if (allowedInternalPath(path)) wixLocation.to(path);
       }
     } catch (error) {
-      postFlat(html, "UNIFORM_ADMIN_ERROR", {
-        message: error.message || "Uniform Control action failed."
+      send(html, "UNIFORM_ADMIN_ERROR", {}, {
+        requestId,
+        message: error?.message || "Uniform Control action failed."
       });
     }
   });
