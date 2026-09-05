@@ -4,7 +4,7 @@ import {
   getDocuNetViewerBootstrap,
   getDocuNetDocumentAccess,
   acknowledgeDocuNetDocument
-} from "backend/RIA/docuNet.web";
+} from "backend/docuNet.web";
 
 const EMBED = "#docuNetViewerEmbed";
 const SOURCE = "SKANDI_DOCUNET_VIEWER";
