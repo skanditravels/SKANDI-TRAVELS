@@ -38,7 +38,6 @@ function mapAirline(row={}){
   const inv=inventory(row),loc=localized(row),payload=obj(row.payload);
   const title=first(loc.title,row.Title,row.title,inv.name,payload.name,row.shortName,"Airline");
   const iata=text(first(row.iataCode,inv.iata,payload.iataCode,payload.iata_code),12);
-  const baggage=first(row.baggageAllowence,inv.baggageAllowence,payload.baggageAllowence,payload.baggageAllowance);
   const sections=sectionObject(first(row.sectionsJson,inv.sections,payload.sections));
   return {
     ...payload,...inv,
@@ -61,8 +60,6 @@ function mapAirline(row={}){
     accent:first(row.accentColor,inv.accentColor,payload.accentColor,"#d7e6ff"),
     meta:arr(first(row.meta,inv.meta,payload.meta)).length?arr(first(row.meta,inv.meta,payload.meta)):[iata,first(row.locationCountry,inv.country),first(row.alliance,inv.alliance)].filter(Boolean),
     sections,
-    baggageAllowence:typeof baggage==="string"?baggage:JSON.stringify(baggage||[]),
-    baggageAllowance:parse(baggage,[]),
     checkInDeadline:first(row.checkInDeadline,inv.checkInDeadline,payload.checkInDeadline,""),
     lounges:parse(first(row.lounges,inv.lounges,payload.lounges),first(row.lounges,inv.lounges,"")),
     boarding:parse(first(row.boarding,inv.boarding,payload.boarding),null),
@@ -76,8 +73,13 @@ function mapAirline(row={}){
     kids:parse(first(row.childrenInfantsJson,inv.childrenInfants,payload.kids),null),
     sourceUrls:arr(first(row.sourceUrlsJson,row.servicePolicySourceUrlsJson,inv.sourceUrls,payload.sourceUrls)),
     inflightExperience:first(inv.inflightExperience,payload.inflightExperience,sections.inflightExperience,null),
-    aircraftConfigurations:parse(first(row.aircraftConfigurationsJson,inv.aircraftConfigurations,payload.aircraftConfigurations),null),
+    aircraftConfigurations:arr(parse(first(row.aircraftConfigurationsJson,inv.aircraftConfigurations,payload.aircraftConfigurations),[])),
+    aircraftFamilies:first(row.aircraftFamiliesText,inv.aircraftFamilies,payload.aircraftFamilies,""),
     fleetSummary:parse(first(row.fleetSummaryJson,inv.fleetSummary,payload.fleetSummary),null),
+    aircraftConfigSources:arr(parse(first(row.aircraftConfigSourceUrlsJson,inv.aircraftConfigSources,payload.aircraftConfigSources),[])),
+    aircraftConfigReviewNotes:first(row.aircraftConfigReviewNotes,inv.aircraftConfigReviewNotes,payload.aircraftConfigReviewNotes,""),
+    aircraftConfigLastReviewed:first(row.aircraftConfigLastReviewed,inv.aircraftConfigLastReviewed,payload.aircraftConfigLastReviewed,""),
+    aircraftPhotoWalkthrough:first(inv.aircraftPhotoWalkthrough,payload.aircraftPhotoWalkthrough,null),
     loyaltyProgram:first(row.loyaltyProgram,inv.loyaltyProgram,payload.loyaltyProgram,""),
     loyaltyProgramUrl:first(row.loyaltyProgramUrl,inv.loyaltyProgramUrl,payload.loyaltyProgramUrl,"")
   };
@@ -164,7 +166,54 @@ function buildRequirements(rows=[]){
     else if(type==="disclaimer")out.disclaimer=String(value||out.disclaimer);
   }return out;
 }
-function buildBaggage(rows=[]){const baggageRules={},loyaltyPrograms={},excessBaggagePricing={};for(const base of rows){const row={...obj(base.payload),...base},key=first(row.airlineKey,row.airline_key,row.id);if(!key)continue;baggageRules[key]={name:first(row.airlineName,row.airline_name,row.title,key),logo:publicMedia(first(row.logo,row.logoUrl,row.image_url,"")),classes:obj(parse(first(row.classes,row.classesJson,row.classes_json),{}))};Object.assign(loyaltyPrograms,obj(parse(first(row.loyaltyPrograms,row.loyaltyProgramsJson,row.loyalty_programs_json),{})));const e=parse(first(row.excessPricing,row.excessPricingJson,row.excess_pricing_json),null);if(e)excessBaggagePricing[key]=obj(e)}return{baggageRules,loyaltyPrograms,excessBaggagePricing}}
+function buildBaggage(rows=[]){
+  const baggageRules={};
+  for(const base of rows){
+    const p=obj(base.payload), code=text(first(base.airlineCode,p.airlineCode,p.iataCode,""),12).toUpperCase();
+    if(!code)continue;
+    if(!baggageRules[code])baggageRules[code]={
+      airlineCode:code,
+      name:first(p.airlineName,base.airlineName,code),
+      rules:[],
+      sourceUrls:[],
+      lastChecked:first(p.lastChecked,base.updated_at,"")
+    };
+    const rule={
+      id:first(base.ruleId,base.id),
+      title:first(base.title,`${code} baggage rule`),
+      routeId:first(base.routeId,""),
+      fareBrand:first(base.fareBrand,""),
+      cabinClass:first(base.cabinClass,""),
+      checkedBagsIncluded:num(base.checkedBagsIncluded,0),
+      checkedBagWeightKg:num(base.checkedBagWeightKg,null),
+      cabinBagsIncluded:num(base.cabinBagsIncluded,0),
+      cabinBagWeightKg:num(base.cabinBagWeightKg,null),
+      sportsEquipmentPolicy:first(base.sportsEquipmentPolicy,""),
+      infantPolicy:first(base.infantPolicy,""),
+      effectiveFrom:first(base.effectiveFrom,""),
+      effectiveTo:first(base.effectiveTo,""),
+      sourceUrl:first(base.sourceUrl,""),
+      details:{
+        personalItem:parse(p.personalItem,null),
+        underseatBag:parse(p.underseatBag,null),
+        carryOnBag:parse(p.carryOnBag,null),
+        checkedBag:parse(p.checkedBag,null),
+        specialBaggage:parse(p.specialBaggage,null),
+        children:parse(p.children,null),
+        internationalNotes:parse(p.internationalNotes,null),
+        shortHaulFeesCurrent:parse(p.shortHaulFeesCurrent,null),
+        mainPlus:parse(p.mainPlus,null)
+      }
+    };
+    baggageRules[code].rules.push(rule);
+    const urls=[...arr(p.sourceUrls),rule.sourceUrl].filter(Boolean);
+    baggageRules[code].sourceUrls=[...new Set([...baggageRules[code].sourceUrls,...urls])];
+  }
+  Object.values(baggageRules).forEach(group=>group.rules.sort((a,b)=>
+    String(a.cabinClass).localeCompare(String(b.cabinClass)) || String(a.fareBrand).localeCompare(String(b.fareBrand))
+  ));
+  return {baggageRules,loyaltyPrograms:{},excessBaggagePricing:{}};
+}
 async function buildPayload(){
   const [airlineRows,airportRows,hotelRows,transferRows,tourRows,activityRows,ticketRows,faqRows,faqGroupRows,articleRows,requirementRows,baggageRows]=await Promise.all([
     selectSafe(TABLES.airlines),selectSafe(TABLES.airports),selectSafe(TABLES.hotels),selectSafe(TABLES.transfers),selectSafe(TABLES.tours),selectSafe(TABLES.activities),
