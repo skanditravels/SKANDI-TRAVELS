@@ -1,6 +1,6 @@
 import { requireCustomerContext } from "backend/core/authContext";
 import { clean, uid, nowIso } from "backend/core/response";
-import { publishEvent } from "ackend/core/eventBus";
+import { publishEvent } from "backend/core/eventBus";
 import {
   createSupportCase,
   createSupportMessage,
