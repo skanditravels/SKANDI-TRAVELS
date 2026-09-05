@@ -1,49 +1,8 @@
-import {
-  getSignatureCollectionPayload,
-  searchSignatureCollectionPackages
-} from "backend/skandiAboutSignature.web";
+import { getSignatureCollectionData } from "backend/destinationInventory.web";
+import { searchUnifiedOffers } from "backend/bookingOrchestrator.web";
 
-const EMBED_ID = "#signatureCollectionEmbed";
-const HTML_SOURCE = "SKANDI_SIGNATURE_COLLECTION";
-const PARENT_SOURCE = "SKANDI_WIX_PARENT";
-
-function send(type, payload = {}) {
-  $w(EMBED_ID).postMessage({
-    source: PARENT_SOURCE,
-    type,
-    payload,
-    timestamp: new Date().toISOString()
-  });
-}
-
-async function load() {
-  try {
-    send("SIGNATURE_COLLECTION_DATA", await getSignatureCollectionPayload());
-  } catch (error) {
-    send("SIGNATURE_COLLECTION_ERROR", { message: "Signature Collection content is temporarily unavailable." });
-  }
-}
-
-$w.onReady(function () {
-  const embed = $w(EMBED_ID);
-
-  embed.onMessage(async (event) => {
-    const message = event.data || {};
-    if (message.source !== HTML_SOURCE) return;
-
-    try {
-      if (message.type === "SIGNATURE_COLLECTION_READY" || message.type === "SIGNATURE_COLLECTION_REFRESH") {
-        await load();
-        return;
-      }
-
-      if (message.type === "SIGNATURE_PACKAGE_SEARCH") {
-        send("SIGNATURE_PACKAGE_RESULTS", await searchSignatureCollectionPackages(message.payload || {}));
-      }
-    } catch (error) {
-      send("SIGNATURE_COLLECTION_ERROR", { message: error.message || "Signature Collection search failed." });
-    }
-  });
-
-  load();
-});
+const EMBED_ID="#signatureCollectionEmbed",HTML_SOURCE="SKANDI_SIGNATURE_COLLECTION",PARENT_SOURCE="SKANDI_WIX_PARENT";
+function send(type,payload={}){$w(EMBED_ID).postMessage({source:PARENT_SOURCE,type,payload,timestamp:new Date().toISOString()})}
+function item(type,x){return{...x,type,typeLabel:type==="destinations"?"Destination":type==="hotels"?"Hotel":type==="tours"?"Experience":type==="flights"?"Package":type==="airlines"?"Airline":"Airport",title:x.title||x.name||"",summary:x.summary||x.shortDescription||"",imageUrl:x.imageUrl||x.heroImage||x.image||"",destination:x.location||x.destinationName||x.countryName||"",iata:x.iata||x.code||"",country:x.countryName||x.country||"",partnerType:x.partnerStatus||x.skandiTier||""}}
+async function load(){const data=await getSignatureCollectionData({language:"EN",currency:"USD"});const items=[...(data.destinations||[]).map(x=>item("destinations",x)),...(data.hotels||[]).map(x=>item("hotels",x)),...(data.tours||[]).map(x=>item("tours",x)),...(data.flights||[]).map(x=>item("flights",x)),...(data.airlines||[]).map(x=>item("airlines",x)),...(data.airports||[]).map(x=>item("airports",x))];send("SIGNATURE_COLLECTION_DATA",{...data,items,settings:{source:"INVENTORY_CONTROL_V2"}})}
+$w.onReady(function(){const embed=$w(EMBED_ID);embed.onMessage(async event=>{const m=event.data||{};if(m.source!==HTML_SOURCE)return;try{if(m.type==="SIGNATURE_COLLECTION_READY"||m.type==="SIGNATURE_COLLECTION_REFRESH"){await load();return}if(m.type==="SIGNATURE_PACKAGE_SEARCH"){const raw=m.payload||{};const search={...raw,tripType:"holiday",productType:"holiday"};const result=await searchUnifiedOffers({search});const items=(result?.items||[]).map(o=>({title:o.title,route:o.routeSummary||o.title,carriers:o.sourceLabel||"",duration:o.summary||"",segmentsLabel:(o.badges||[]).join(" · "),currency:o.currency||o.price?.currency,total:o.total||o.price?.amount,offer:o}));send("SIGNATURE_PACKAGE_RESULTS",{items,meta:{message:`${items.length} live offer${items.length===1?"":"s"} loaded`}})}}catch(error){console.error("[Signature]",error);send("SIGNATURE_COLLECTION_ERROR",{message:error?.message||"Signature Collection search failed."})}});load().catch(error=>send("SIGNATURE_COLLECTION_ERROR",{message:error.message}))});
