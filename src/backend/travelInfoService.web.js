@@ -9,7 +9,10 @@ const TABLES = Object.freeze({
   tickets:"travel_info_tickets", faq:"travel_info_faq",
   faqGroups:"travel_info_faq_groups", articles:"travel_info_articles",
   requirements:"travel_requirements", baggage:"baggage_allowance",
-  support:"travel_info_support_requests"
+  support:"travel_info_support_requests",
+  aircraft:"travel_info_aircraft", aircraftCabins:"travel_info_aircraft_cabins",
+  aircraftViews:"travel_info_aircraft_views", aircraftHotspots:"travel_info_aircraft_hotspots",
+  aircraftScenes:"travel_info_aircraft_walk_scenes", aircraftSceneHotspots:"travel_info_aircraft_scene_hotspots"
 });
 let configPromise=null;
 const text=(v,m=10000)=>String(v??"").trim().slice(0,m);
@@ -214,18 +217,46 @@ function buildBaggage(rows=[]){
   ));
   return {baggageRules,loyaltyPrograms:{},excessBaggagePricing:{}};
 }
+
+function buildAircraftDisplays(aircraftRows=[],cabinRows=[],viewRows=[],hotspotRows=[],sceneRows=[],sceneHotspotRows=[]){
+  const cabinsByAircraft=new Map(),viewsByAircraft=new Map(),hotspotsByView=new Map(),scenesByAircraft=new Map(),sceneHotspotsByScene=new Map();
+  for(const row of cabinRows){if(!cabinsByAircraft.has(row.aircraft_id))cabinsByAircraft.set(row.aircraft_id,[]);cabinsByAircraft.get(row.aircraft_id).push(row)}
+  for(const row of viewRows){if(!viewsByAircraft.has(row.aircraft_id))viewsByAircraft.set(row.aircraft_id,[]);viewsByAircraft.get(row.aircraft_id).push(row)}
+  for(const row of hotspotRows){if(!hotspotsByView.has(row.view_id))hotspotsByView.set(row.view_id,[]);hotspotsByView.get(row.view_id).push(row)}
+  for(const row of sceneRows){if(!scenesByAircraft.has(row.aircraft_id))scenesByAircraft.set(row.aircraft_id,[]);scenesByAircraft.get(row.aircraft_id).push(row)}
+  for(const row of sceneHotspotRows){if(!sceneHotspotsByScene.has(row.scene_id))sceneHotspotsByScene.set(row.scene_id,[]);sceneHotspotsByScene.get(row.scene_id).push(row)}
+  const byAirline=new Map();
+  for(const a of aircraftRows){
+    const cabins=(cabinsByAircraft.get(a.id)||[]).filter(x=>x.active!==false).sort((x,y)=>Number(x.sort_order||100)-Number(y.sort_order||100)).map(c=>({
+      id:c.id,cabinCode:c.cabin_code,cabinName:c.cabin_name,rank:c.rank??100,seatCount:c.seat_count??null,summary:c.summary||"",description:c.description||"",mealTitle:c.meal_title||"",mealDescription:c.meal_description||"",amenities:c.amenities||[],displaySettings:c.display_settings||{}
+    }));
+    const cabinMap=new Map(cabins.map(c=>[c.id,c]));
+    const views=(viewsByAircraft.get(a.id)||[]).filter(x=>x.active!==false).sort((x,y)=>Number(x.sort_order||100)-Number(y.sort_order||100)).map(v=>({
+      id:v.id,viewCode:v.view_code,label:v.label,viewType:v.view_type,image:publicMedia(v.image_url||""),mobileImage:publicMedia(v.mobile_image_url||""),thumbnail:publicMedia(v.thumbnail_url||""),altText:v.alt_text||"",caption:v.caption||"",credit:v.credit||"",isDefault:v.is_default===true,cabinId:v.cabin_id||"",cabinCode:cabinMap.get(v.cabin_id)?.cabinCode||"",hotspots:(hotspotsByView.get(v.id)||[]).filter(h=>h.active!==false).sort((x,y)=>Number(x.sort_order||100)-Number(y.sort_order||100)).map(h=>({id:h.id,hotspotCode:h.hotspot_code,label:h.label,title:h.title||h.label,description:h.description||"",x:Number(h.x??50),y:Number(h.y??50),action:h.action||"DETAIL",focus:{x:h.focus_x==null?Number(h.x??50):Number(h.focus_x),y:h.focus_y==null?Number(h.y??50):Number(h.focus_y),zoom:h.focus_zoom==null?1.35:Number(h.focus_zoom)},targetCabinCode:h.target_cabin_code||"",thumbnail:publicMedia(h.thumbnail_url||"")}))
+    }));
+    const scenes=(scenesByAircraft.get(a.id)||[]).filter(x=>x.active!==false).sort((x,y)=>Number(x.sort_order||100)-Number(y.sort_order||100)).map(sc=>({
+      id:sc.id,sceneCode:sc.scene_code,title:sc.title,shortTitle:sc.short_title||sc.title,summary:sc.summary||"",image:publicMedia(sc.image_url||""),mobileImage:publicMedia(sc.mobile_image_url||""),forwardSceneId:sc.forward_scene_code||"",backSceneId:sc.back_scene_code||"",forwardLabel:sc.forward_label||"",backLabel:sc.back_label||"",hotspots:(sceneHotspotsByScene.get(sc.id)||[]).filter(h=>h.active!==false).sort((x,y)=>Number(x.sort_order||100)-Number(y.sort_order||100)).map(h=>({id:h.id,hotspotCode:h.hotspot_code,label:h.label,title:h.title||h.label,description:h.description||"",type:h.hotspot_type||"FEATURE",x:Number(h.x??50),y:Number(h.y??50),action:h.action||"",classId:h.target_cabin_code||""}))
+    }));
+    const display={id:a.id,airlineId:a.airline_id,airlineCode:a.airline_code,aircraftCode:a.aircraft_code,aircraftName:a.aircraft_name,manufacturer:a.manufacturer||"",family:a.family||"",variant:a.variant||"",totalSeats:a.total_seats??null,configuration:a.configuration||{},displayTitle:a.display_title||a.aircraft_name,displaySummary:a.display_summary||"",heroImage:publicMedia(a.hero_image_url||""),exteriorImage:publicMedia(a.exterior_image_url||""),seatmapImage:publicMedia(a.seatmap_image_url||""),thumbnailImage:publicMedia(a.thumbnail_image_url||""),defaultCabinCode:a.default_cabin_code||"",defaultViewType:a.default_view_type||"CABIN",cabins,views,walkthrough:scenes.length?{title:a.walkthrough_title||`${a.aircraft_name} Cabin Walkthrough`,subtitle:a.walkthrough_subtitle||"",aircraftType:a.aircraft_name,startSceneId:a.walkthrough_start_scene_code||scenes[0]?.sceneCode||"",accuracyLabel:a.walkthrough_accuracy_label||"",scenes}:null,sourceUrl:a.source_url||"",sourceUrls:a.source_urls||[],reviewNotes:a.review_notes||"",lastReviewed:a.last_reviewed||""};
+    if(!byAirline.has(a.airline_id))byAirline.set(a.airline_id,[]);byAirline.get(a.airline_id).push(display);
+  }
+  return byAirline;
+}
+
 async function buildPayload(){
-  const [airlineRows,airportRows,hotelRows,transferRows,tourRows,activityRows,ticketRows,faqRows,faqGroupRows,articleRows,requirementRows,baggageRows]=await Promise.all([
+  const [airlineRows,airportRows,hotelRows,transferRows,tourRows,activityRows,ticketRows,faqRows,faqGroupRows,articleRows,requirementRows,baggageRows,aircraftRows,cabinRows,viewRows,hotspotRows,sceneRows,sceneHotspotRows]=await Promise.all([
     selectSafe(TABLES.airlines),selectSafe(TABLES.airports),selectSafe(TABLES.hotels),selectSafe(TABLES.transfers),selectSafe(TABLES.tours),selectSafe(TABLES.activities),
-    selectSafe(TABLES.tickets),selectSafe(TABLES.faq),selectSafe(TABLES.faqGroups),selectSafe(TABLES.articles),selectSafe(TABLES.requirements),selectSafe(TABLES.baggage)
+    selectSafe(TABLES.tickets),selectSafe(TABLES.faq),selectSafe(TABLES.faqGroups),selectSafe(TABLES.articles),selectSafe(TABLES.requirements),selectSafe(TABLES.baggage),
+    selectSafe(TABLES.aircraft),selectSafe(TABLES.aircraftCabins),selectSafe(TABLES.aircraftViews),selectSafe(TABLES.aircraftHotspots),selectSafe(TABLES.aircraftScenes),selectSafe(TABLES.aircraftSceneHotspots)
   ]);
-  const airlines={};for(const x of airlineRows.map(mapAirline)){if(x.id)airlines[x.id]=x}
+  const displayByAirline=buildAircraftDisplays(aircraftRows,cabinRows,viewRows,hotspotRows,sceneRows,sceneHotspotRows);
+  const airlines={};for(const x of airlineRows.map(mapAirline)){if(x.id){const displays=displayByAirline.get(x.id)||[];x.aircraftDisplays=displays;x.aircraftConfigurations=displays.map(d=>({aircraftName:d.aircraftName,aircraftCode:d.aircraftCode,totalSeats:d.totalSeats,configuration:d.configuration,notes:d.displaySummary,sourceUrl:d.sourceUrl,displayId:d.id,heroImage:d.heroImage,exteriorImage:d.exteriorImage,seatmapImage:d.seatmapImage,cabins:d.cabins,views:d.views,aircraftPhotoWalkthrough:d.walkthrough}));airlines[x.id]=x}}
   const topics=[...faqRows.map(r=>mapFaqTopic(r,"faq")),...articleRows.map(r=>mapFaqTopic(r,"article"))].filter(x=>x.active!==false).sort((a,b)=>a.sortOrder-b.sortOrder);
   const groups=(faqGroupRows.length?faqGroupRows.map(mapFaqGroup).filter(x=>x.active!==false):fallbackGroups(topics)).sort((a,b)=>a.sortOrder-b.sortOrder);
   const baggage=buildBaggage(baggageRows);
   return{
     generatedAt:new Date().toISOString(),
-    meta:{source:"SUPABASE_TRAVEL_INFO",tables:{airlines:airlineRows.length,airports:airportRows.length,hotels:hotelRows.length,transfers:transferRows.length,tours:tourRows.length,activities:activityRows.length,tickets:ticketRows.length,faq:faqRows.length,faqGroups:faqGroupRows.length,articles:articleRows.length,requirements:requirementRows.length,baggage:baggageRows.length}},
+    meta:{source:"SUPABASE_TRAVEL_INFO",tables:{airlines:airlineRows.length,airports:airportRows.length,hotels:hotelRows.length,transfers:transferRows.length,tours:tourRows.length,activities:activityRows.length,tickets:ticketRows.length,faq:faqRows.length,faqGroups:faqGroupRows.length,articles:articleRows.length,requirements:requirementRows.length,baggage:baggageRows.length,aircraft:aircraftRows.length,aircraftCabins:cabinRows.length,aircraftViews:viewRows.length,aircraftHotspots:hotspotRows.length,aircraftScenes:sceneRows.length}},
     airlines,airports:airportRows.map(mapAirport).filter(x=>x.id),
     hotels:hotelRows.map(r=>mapLibrary("hotels",r)),transfers:transferRows.map(r=>mapLibrary("transfers",r)),
     tours:tourRows.map(r=>mapLibrary("tours",r)),activities:activityRows.map(r=>mapLibrary("activities",r)),tickets:ticketRows.map(r=>mapLibrary("tickets",r)),
