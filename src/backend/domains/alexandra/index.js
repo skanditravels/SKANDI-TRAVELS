@@ -1,1 +1,1 @@
-export * from "src/backend/domains/alexandra/service";
+export * from "backend/domains/alexandra/service";
