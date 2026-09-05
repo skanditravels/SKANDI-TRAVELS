@@ -1,4 +1,4 @@
-import { sbSelect, sbInsert, sbUpdate, eq, and, order } from "src/backend/supabaseClient";
+import { sbSelect, sbInsert, sbUpdate, eq, and, order } from "backend/supabaseClient";
 
 const TABLE = "customer_bookings";
 
