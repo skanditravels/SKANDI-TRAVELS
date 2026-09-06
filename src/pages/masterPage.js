@@ -166,7 +166,7 @@ const MASTER_CONFIG = {
       "/car-rental",
 
     destinations:
-      "/destinations",
+      "/our-destinations",
 
     skandiCollection:
       "/skandi-collection",
