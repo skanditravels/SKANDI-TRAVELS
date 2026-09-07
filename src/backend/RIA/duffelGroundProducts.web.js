@@ -1,6 +1,6 @@
 import { webMethod, Permissions } from "wix-web-module";
 import { currentMember } from "wix-members-backend";
-import { duffelRequest, ProviderError } from "backend/duffelClient";
+import { duffelRequest, ProviderError } from "src/backend/duffelClient";
 import { sbInsert, sbSelect, sbUpdate, eq } from "backend/supabaseClient";
 import { getStaffPortalSession } from "backend/RIA/staffPortalAuth.web";
 
@@ -102,18 +102,20 @@ async function resolveLocation(input = {}) {
   throw publicError("LOCATION_NOT_FOUND", "That location is not yet mapped to coordinates in SKANDI Travel Info.");
 }
 
-function stayGuestTypes(input = {}) {
+function stayGuestTypes(input = {}, rooms = 1) {
   const adults = Math.max(1, Math.min(9, Number(input.adults || 1)));
   const children = Math.max(0, Math.min(8, Number(input.children || 0)));
+  if (adults < rooms) throw publicError("ROOM_ADULT_MISMATCH", "Each hotel room needs at least one adult guest.");
   const ages = safeArray(input.childAges).map(Number).filter(n => Number.isFinite(n) && n >= 0 && n <= 17).slice(0, children);
-  const guests = [{ type: "adult", quantity: adults }];
+  const guests = [];
+  for (let i = 0; i < adults; i += 1) guests.push({ type: "adult" });
   for (let i = 0; i < children; i += 1) guests.push({ type: "child", age: ages[i] ?? 8 });
   return guests;
 }
 
 function normalizeStaySearchResult(result = {}) {
   const a = result.accommodation || {};
-  const address = a.address || {};
+  const address = a.location?.address || a.address || {};
   return {
     id: result.id || "",
     staySearchResultId: result.id || "",
@@ -165,16 +167,25 @@ function ratesFromSearchResult(result = {}) {
 }
 
 function normalizeStayBooking(b = {}) {
+  const bookedRate = safeArray(b?.accommodation?.rooms).flatMap(room => safeArray(room?.rates))[0] || {};
   return {
     id: b.id || "",
     reference: b.reference || "",
     status: b.status || "",
+    quoteId: b.quote_id || b?.metadata?.quote_id || "",
     checkInDate: b.check_in_date || null,
     checkOutDate: b.check_out_date || null,
     rooms: Number(b.rooms || 0),
-    totalAmount: money(b.total_amount),
-    totalCurrency: upper(b.total_currency || "USD", 3),
-    accommodation: b.accommodation ? { id: b.accommodation.id || "", name: b.accommodation.name || "", address: b.accommodation.address || null } : null,
+    totalAmount: money(b.total_amount || bookedRate.total_amount),
+    totalCurrency: upper(b.total_currency || bookedRate.total_currency || "USD", 3),
+    paymentType: bookedRate.payment_type || b.payment_type || "",
+    accommodation: b.accommodation ? {
+      id: b.accommodation.id || "",
+      name: b.accommodation.name || "",
+      address: b.accommodation.location?.address || b.accommodation.address || null,
+      phoneNumber: b.accommodation.phone_number || "",
+      checkInInformation: b.accommodation.check_in_information || null
+    } : null,
     guests: safeArray(b.guests).map(g => ({ givenName: g.given_name || "", familyName: g.family_name || "" })),
     cancelledAt: b.cancelled_at || null,
     confirmedAt: b.confirmed_at || null
@@ -312,20 +323,33 @@ async function searchStaysInternal(input = {}) {
   const checkIn = futureDate(input.checkInDate || input.departureDate, "check-in date");
   const checkOut = futureDate(input.checkOutDate || input.returnDate, "check-out date");
   if (checkOut <= checkIn) throw publicError("INVALID_STAY_DATES", "Check-out must be after check-in.");
-  const location = await resolveLocation(input.location || input);
-  const response = await duffelRequest("/stays/search", {
-    method: "POST",
-    body: { data: {
-      rooms: Math.max(1, Math.min(9, Number(input.rooms || 1))),
-      mobile: false,
-      location: { radius: Math.max(1, Math.min(50, Number(input.radiusKm || 25))), geographic_coordinates: { longitude: location.longitude, latitude: location.latitude } },
-      guests: stayGuestTypes(input),
-      free_cancellation_only: input.freeCancellationOnly === true,
-      instant_payment: input.instantPayment !== false,
-      check_in_date: checkIn,
-      check_out_date: checkOut
-    }}
-  });
+  const rooms = Math.max(1, Math.min(9, Number(input.rooms || 1)));
+  const rawAccommodationIds = safeArray(input.accommodationIds).length
+    ? safeArray(input.accommodationIds)
+    : (input.accommodationId ? [input.accommodationId] : []);
+  const accommodationIds = rawAccommodationIds
+    .map(id => resourceId(id, "acc_", "accommodation"))
+    .slice(0, 100);
+  let location = null;
+  const data = {
+    rooms,
+    mobile: false,
+    guests: stayGuestTypes(input, rooms),
+    free_cancellation_only: input.freeCancellationOnly === true,
+    check_in_date: checkIn,
+    check_out_date: checkOut
+  };
+  if (accommodationIds.length) {
+    data.accommodation = { ids: accommodationIds, fetch_rates: input.fetchRates !== false };
+  } else {
+    location = await resolveLocation(input.location || input);
+    data.location = {
+      radius: Math.max(1, Math.min(50, Number(input.radiusKm || 25))),
+      geographic_coordinates: { longitude: location.longitude, latitude: location.latitude }
+    };
+  }
+  if (input.instantPayment === true || input.instantPayment === false) data.instant_payment = input.instantPayment;
+  const response = await duffelRequest("/stays/search", { method: "POST", body: { data } });
   return { location, searchId: response?.data?.id || "", items: safeArray(response?.data?.results).map(normalizeStaySearchResult).filter(i => i.id) };
 }
 
@@ -341,7 +365,26 @@ export const quoteDuffelStay = webMethod(Permissions.Anyone, async ({ rateId = "
   const id = resourceId(rateId, "rat_", "stay rate");
   const response = await duffelRequest("/stays/quotes", { method: "POST", body: { data: { rate_id: id } } });
   const q = response?.data || {};
-  return { quote: { id: q.id || "", totalAmount: money(q.total_amount), totalCurrency: upper(q.total_currency || "USD", 3), taxAmount: money(q.tax_amount), taxCurrency: upper(q.tax_currency || q.total_currency || "USD", 3), expiresAt: q.expires_at || null, accommodation: q.accommodation ? { id: q.accommodation.id || "", name: q.accommodation.name || "" } : null, rooms: safeArray(q.rooms), supportedLoyaltyProgramme: q.supported_loyalty_programme || null } };
+  const quoteRates = safeArray(q.rooms).flatMap(room => safeArray(room?.rates));
+  const selectedRate = quoteRates[0] || {};
+  return { quote: {
+    id: q.id || "",
+    quoteId: q.id || "",
+    totalAmount: money(q.total_amount),
+    totalCurrency: upper(q.total_currency || "USD", 3),
+    taxAmount: money(q.tax_amount),
+    taxCurrency: upper(q.tax_currency || q.total_currency || "USD", 3),
+    expiresAt: q.expires_at || null,
+    accommodation: q.accommodation ? { id: q.accommodation.id || "", name: q.accommodation.name || "" } : null,
+    rooms: safeArray(q.rooms),
+    paymentType: selectedRate.payment_type || "",
+    availablePaymentMethods: safeArray(selectedRate.available_payment_methods),
+    dueAtAccommodationAmount: money(selectedRate.due_at_accommodation_amount),
+    dueAtAccommodationCurrency: upper(selectedRate.due_at_accommodation_currency || q.total_currency || "USD", 3),
+    cancellationTimeline: safeArray(selectedRate.cancellation_timeline),
+    conditions: safeArray(selectedRate.conditions),
+    supportedLoyaltyProgramme: q.supported_loyalty_programme || null
+  } };
 });
 
 export const searchDuffelCars = webMethod(Permissions.Anyone, async (input = {}) => {
@@ -466,11 +509,12 @@ export const createCustomerDuffelCarBooking = webMethod(Permissions.SiteMember, 
 
 export const getCustomerDuffelCarBooking = webMethod(Permissions.SiteMember, async ({ bookingId = "", alteaBookingId = "" } = {}) => {
   const member = await requireMember();
+  if (!isUuid(alteaBookingId)) throw publicError("BOOKING_REQUIRED", "Choose the SKANDI trip containing this car rental.");
+  const owned = await sbSelect(BOOKINGS, `select=id,customer_member_id&${eq("id", alteaBookingId)}&limit=1`);
+  if (!owned?.[0] || clean(owned[0].customer_member_id, 100) !== member._id) throw publicError("BOOKING_ACCESS_DENIED", "That booking does not belong to this account.");
   const supplierId = resourceId(bookingId, "boo_", "car booking");
-  if (alteaBookingId && isUuid(alteaBookingId)) {
-    const owned = await sbSelect(BOOKINGS, `select=id,customer_member_id&${eq("id", alteaBookingId)}&limit=1`);
-    if (!owned?.[0] || clean(owned[0].customer_member_id, 100) !== member._id) throw publicError("BOOKING_ACCESS_DENIED", "That booking does not belong to this account.");
-  }
+  const linked = await sbSelect(COMPONENTS, `select=id&${eq("booking_id", alteaBookingId)}&${eq("supplier", "DUFFEL")}&${eq("supplier_reference", supplierId)}&limit=1`);
+  if (!linked?.[0]) throw publicError("BOOKING_ACCESS_DENIED", "That car rental is not attached to this SKANDI trip.");
   const response = await duffelRequest(`/cars/bookings/${encodeURIComponent(supplierId)}`);
   return { booking: normalizeCarBooking(response?.data || {}) };
 });
@@ -516,6 +560,130 @@ async function syncGroundComponent(alteaBookingId, type, providerBooking, eventT
 }
 
 
+function stayGuestsForBooking(input = {}) {
+  const guests = safeArray(input.guests).map(g => ({
+    given_name: clean(g.givenName || g.firstName, 80),
+    family_name: clean(g.familyName || g.lastName, 80)
+  })).filter(g => g.given_name && g.family_name);
+  if (!guests.length) throw publicError("GUEST_REQUIRED", "Add at least one hotel guest.");
+  return guests;
+}
+
+async function createStayBookingInternal(input = {}, member = null) {
+  const quoteId = resourceId(input.quoteId, "quo_", "stay quote");
+  const data = {
+    quote_id: quoteId,
+    guests: stayGuestsForBooking(input),
+    email: email(input.email || member?.loginEmail),
+    phone_number: e164(input.phoneNumber || input.phone),
+    metadata: {
+      integration: member ? "skandi_customer" : "skandi_staff",
+      quote_id: quoteId,
+      ...(input.alteaBookingId ? { altea_booking_id: clean(input.alteaBookingId, 36) } : {})
+    }
+  };
+  if (input.specialRequests) data.accommodation_special_requests = clean(input.specialRequests, 500);
+  if (input.loyaltyProgrammeAccountNumber) data.loyalty_programme_account_number = clean(input.loyaltyProgrammeAccountNumber, 80);
+  if (input.threeDSecureSessionId) {
+    data.payment = { three_d_secure_session_id: resourceId(input.threeDSecureSessionId, "3ds_", "3-D Secure session") };
+  }
+  const response = await duffelRequest("/stays/bookings", { method: "POST", body: { data } });
+  if (!response?.data?.id && response?.status === 202) {
+    throw publicError(
+      "BOOKING_PENDING_CONFIRMATION",
+      "The hotel booking is still being confirmed by the accommodation. Do not submit another payment. SKANDI will reconcile it using the Duffel request reference."
+    );
+  }
+  return normalizeStayBooking(response?.data || {});
+}
+
+async function createStandaloneCustomerStayAltea(member, stayBooking, input = {}) {
+  const ref = `SKHOT-${Date.now().toString(36).toUpperCase()}`;
+  const firstGuest = safeArray(input.guests)[0] || {};
+  const rows = await sbInsert(BOOKINGS, {
+    booking_reference: ref,
+    pnr_locator: stayBooking.reference || null,
+    booking_type: "CONFIRMED",
+    product_type: "HOTEL_ONLY",
+    customer_member_id: member._id,
+    customer_email: lower(input.email || member.loginEmail || "", 254) || null,
+    customer_name: clean(`${firstGuest.givenName || firstGuest.firstName || ""} ${firstGuest.familyName || firstGuest.lastName || ""}`, 180) || null,
+    status: "confirmed",
+    payment_status: input.threeDSecureSessionId ? "supplier_card_confirmed" : "paid_from_duffel_balance",
+    fulfillment_status: "confirmed",
+    origin: clean(stayBooking.accommodation?.name, 120) || null,
+    destination: clean(stayBooking.accommodation?.name, 120) || null,
+    departure_date: stayBooking.checkInDate,
+    return_date: stayBooking.checkOutDate,
+    currency: stayBooking.totalCurrency,
+    total_amount: stayBooking.totalAmount,
+    tax_amount: 0,
+    source_page: "hotels",
+    source_channel: "customer",
+    supplier: "DUFFEL",
+    supplier_order_id: stayBooking.id,
+    supplier_booking_reference: stayBooking.reference || null,
+    supplier_offer_id: clean(input.quoteId, 180) || null,
+    ticketing_status: "not_applicable",
+    payload: { provider: "DUFFEL", stayBooking: { id: stayBooking.id, reference: stayBooking.reference, quoteId: input.quoteId || "" } }
+  });
+  const booking = safeArray(rows)[0];
+  if (!booking?.id) throw publicError("ALTEA_SYNC_FAILED", "The hotel was booked but the SKANDI trip file could not be created. Contact SKANDI with the hotel reference before retrying.");
+  await syncGroundComponent(booking.id, "HOTEL", stayBooking, "DUFFEL_STAY_BOOKING_CREATED");
+  await sbInsert(LINKS, {
+    member_id: member._id,
+    booking_reference: ref,
+    last_name: clean(firstGuest.familyName || firstGuest.lastName, 100) || null,
+    status: "Linked",
+    linked_at: new Date().toISOString(),
+    booking_id: booking.id,
+    payload: {}
+  }).catch(() => null);
+  return booking;
+}
+
+export const createCustomerDuffelStayBooking = webMethod(Permissions.SiteMember, async (input = {}) => {
+  const member = await requireMember();
+  const booking = await createStayBookingInternal(input, member);
+  let alteaBookingId = clean(input.alteaBookingId, 36);
+  if (alteaBookingId && isUuid(alteaBookingId)) {
+    const owned = await sbSelect(BOOKINGS, `select=id,customer_member_id&${eq("id", alteaBookingId)}&limit=1`);
+    if (!owned?.[0] || clean(owned[0].customer_member_id, 100) !== member._id) throw publicError("BOOKING_ACCESS_DENIED", "That booking does not belong to this account.");
+    await syncGroundComponent(alteaBookingId, "HOTEL", booking, "DUFFEL_STAY_BOOKING_CREATED");
+  } else {
+    const row = await createStandaloneCustomerStayAltea(member, booking, input);
+    alteaBookingId = row.id;
+  }
+  return { ok: true, booking, alteaBookingId };
+});
+
+export const getCustomerDuffelStayBooking = webMethod(Permissions.SiteMember, async ({ bookingId = "", alteaBookingId = "" } = {}) => {
+  const member = await requireMember();
+  if (!isUuid(alteaBookingId)) throw publicError("BOOKING_REQUIRED", "Choose the SKANDI trip containing this hotel.");
+  const owned = await sbSelect(BOOKINGS, `select=id,customer_member_id&${eq("id", alteaBookingId)}&limit=1`);
+  if (!owned?.[0] || clean(owned[0].customer_member_id, 100) !== member._id) throw publicError("BOOKING_ACCESS_DENIED", "That booking does not belong to this account.");
+  const supplierId = resourceId(bookingId, "bok_", "stay booking");
+  const linked = await sbSelect(COMPONENTS, `select=id&${eq("booking_id", alteaBookingId)}&${eq("supplier", "DUFFEL")}&${eq("supplier_reference", supplierId)}&limit=1`);
+  if (!linked?.[0]) throw publicError("BOOKING_ACCESS_DENIED", "That hotel booking is not attached to this SKANDI trip.");
+  const response = await duffelRequest(`/stays/bookings/${encodeURIComponent(supplierId)}`);
+  return { booking: normalizeStayBooking(response?.data || {}) };
+});
+
+export const cancelCustomerDuffelStayBooking = webMethod(Permissions.SiteMember, async ({ bookingId = "", alteaBookingId = "" } = {}) => {
+  const member = await requireMember();
+  if (!isUuid(alteaBookingId)) throw publicError("BOOKING_REQUIRED", "Choose the SKANDI trip containing this hotel.");
+  const owned = await sbSelect(BOOKINGS, `select=id,customer_member_id&${eq("id", alteaBookingId)}&limit=1`);
+  if (!owned?.[0] || clean(owned[0].customer_member_id, 100) !== member._id) throw publicError("BOOKING_ACCESS_DENIED", "That booking does not belong to this account.");
+  const supplierId = resourceId(bookingId, "bok_", "stay booking");
+  const linked = await sbSelect(COMPONENTS, `select=id&${eq("booking_id", alteaBookingId)}&${eq("supplier", "DUFFEL")}&${eq("supplier_reference", supplierId)}&limit=1`);
+  if (!linked?.[0]) throw publicError("BOOKING_ACCESS_DENIED", "That hotel booking is not attached to this SKANDI trip.");
+  const response = await duffelRequest(`/stays/bookings/${encodeURIComponent(supplierId)}/actions/cancel`, { method: "POST" });
+  const booking = normalizeStayBooking(response?.data || {});
+  await syncGroundComponent(alteaBookingId, "HOTEL", booking, "DUFFEL_STAY_BOOKING_CANCELLED");
+  return { ok: true, booking };
+});
+
+
 export const createDuffelComponentClientKeyStaff = webMethod(Permissions.SiteMember, async () => {
   await requireStaff();
   const response = await duffelRequest("/identity/component_client_keys", { method: "POST", body: {} });
@@ -524,23 +692,7 @@ export const createDuffelComponentClientKeyStaff = webMethod(Permissions.SiteMem
 
 export const createDuffelStayBookingStaff = webMethod(Permissions.SiteMember, async (input = {}) => {
   await requireStaff();
-  const quoteId = resourceId(input.quoteId, "quo_", "stay quote");
-  const guests = safeArray(input.guests).map(g => ({
-    given_name: clean(g.givenName || g.firstName, 80),
-    family_name: clean(g.familyName || g.lastName, 80)
-  })).filter(g => g.given_name && g.family_name);
-  if (!guests.length) throw publicError("GUEST_REQUIRED", "Add at least one hotel guest.");
-  const data = {
-    quote_id: quoteId,
-    guests,
-    email: email(input.email),
-    phone_number: e164(input.phoneNumber || input.phone),
-    metadata: { integration: "skandi_staff", ...(input.alteaBookingId ? { altea_booking_id: clean(input.alteaBookingId, 36) } : {}) }
-  };
-  if (input.specialRequests) data.accommodation_special_requests = clean(input.specialRequests, 500);
-  if (input.loyaltyProgrammeAccountNumber) data.loyalty_programme_account_number = clean(input.loyaltyProgrammeAccountNumber, 80);
-  const response = await duffelRequest("/stays/bookings", { method: "POST", body: { data } });
-  const booking = normalizeStayBooking(response?.data || {});
+  const booking = await createStayBookingInternal(input, null);
   if (isUuid(input.alteaBookingId)) await syncGroundComponent(input.alteaBookingId, "HOTEL", booking, "DUFFEL_STAY_BOOKING_CREATED");
   return { booking };
 });
