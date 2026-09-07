@@ -211,7 +211,7 @@ const MASTER_CONFIG = {
             "Destinations",
 
           path:
-            "/destinations"
+            "/our-destinations"
         },
 
         {
@@ -326,7 +326,7 @@ const MASTER_CONFIG = {
                 "Our Destinations",
 
               path:
-                "/destinations"
+                "/our-destinations"
             },
 
             {
