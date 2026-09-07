@@ -21,12 +21,10 @@ const T = {
 };
 
 const RECOMMENDATION_TYPES = new Set([
-  "HOTEL",
   "TRANSFER",
   "GUIDED_TOUR",
   "ACTIVITY",
   "PARTNER_TICKET",
-  "CAR_RENTAL",
   "PACKAGE",
   "ANCILLARY"
 ]);
@@ -430,14 +428,11 @@ function candidateImage(rows = []) {
 }
 function recommendationPriority(entityType, hasHotel, hasTransfer) {
   if (entityType === "TRANSFER" && !hasTransfer) return 10;
-  if (entityType === "HOTEL" && !hasHotel) return 20;
   if (entityType === "ACTIVITY") return 30;
   if (entityType === "GUIDED_TOUR") return 31;
   if (entityType === "PARTNER_TICKET") return 32;
-  if (entityType === "CAR_RENTAL") return 40;
   if (entityType === "ANCILLARY") return 50;
   if (entityType === "PACKAGE") return 60;
-  if (entityType === "HOTEL") return 70;
   if (entityType === "TRANSFER") return 71;
   return 100;
 }
@@ -498,15 +493,11 @@ async function recommendationsForBooking(booking, components) {
       bookingAvailable: operations.bookingAvailable === true,
       availability: hasDatedRows ? openDated.reduce((sum, row) => sum + Number(row.available || 0), 0) : null,
       priority: recommendationPriority(entity.entity_type, hasHotel, hasTransfer),
-      path: entity.entity_type === "HOTEL"
-        ? `/hotels?hotel=${encodeURIComponent(entity.slug || entity.public_id)}`
-        : entity.entity_type === "TRANSFER"
-          ? "/transfers"
-          : ["ACTIVITY", "GUIDED_TOUR", "PARTNER_TICKET"].includes(entity.entity_type)
-            ? "/tours"
-            : entity.entity_type === "CAR_RENTAL"
-              ? "/car-rental"
-              : "/my-profile?tab=trips"
+      path: entity.entity_type === "TRANSFER"
+        ? "/transfers"
+        : ["ACTIVITY", "GUIDED_TOUR", "PARTNER_TICKET"].includes(entity.entity_type)
+          ? "/tours"
+          : "/my-profile?tab=trips"
     });
   }
 
@@ -515,13 +506,54 @@ async function recommendationsForBooking(booking, components) {
     .slice(0, 24);
 }
 
+function liveSupplierRecommendations(booking, components) {
+  const activeTypes = new Set(components
+    .filter(row => upper(row.status, 40) !== "REMOVED")
+    .map(row => upper(row.component_type, 40)));
+  const productType = upper(booking.product_type, 80);
+  const hasHotel = activeTypes.has("HOTEL") || productType === "HOTEL_ONLY" || productType.includes("PACKAGE");
+  const hasCar = activeTypes.has("CAR_RENTAL") || productType === "CAR_RENTAL_ONLY";
+  const destination = clean(booking.destination || booking.payload?.search?.destination || "", 160);
+  const origin = clean(booking.origin || booking.payload?.search?.origin || "", 160);
+  const from = dateOnly(booking.departure_date);
+  const to = dateOnly(booking.return_date || booking.departure_date);
+  const base = [];
+  if (!hasHotel && destination && from && to && to > from) {
+    const q = new URLSearchParams({ destination, checkIn: from, checkOut: to, bookingId: booking.id, adults: "2", rooms: "1" });
+    base.push({
+      entityId: "DUFFEL_STAYS_LIVE", publicId: "DUFFEL_STAYS_LIVE", entityType: "HOTEL",
+      title: `Find a stay in ${destination}`, imageUrl: "",
+      summary: "Live accommodation availability and current room rates for your actual trip dates.",
+      serviceDate: from, currency: upper(booking.currency || "USD",3), price: 0,
+      requestOnly: false, actionMode: "LIVE_SEARCH", bookingAvailable: true, availability: null,
+      priority: 18, supplier: "DUFFEL", path: `/hotels?${q.toString()}`
+    });
+  }
+  if (!hasCar && destination && from && to) {
+    const pickup = destination || origin;
+    const q = new URLSearchParams({ pickupLocationText: pickup, dropoffLocationText: pickup, pickupDate: from, dropoffDate: to, pickupTime: "10:00", dropoffTime: "10:00", driverAge: "30", residenceCountry: "US", bookingId: booking.id });
+    base.push({
+      entityId: "DUFFEL_CARS_LIVE", publicId: "DUFFEL_CARS_LIVE", entityType: "CAR_RENTAL",
+      title: `Rent a car in ${destination}`, imageUrl: "",
+      summary: "Live Duffel car availability matched to this trip. Final rate and payment requirements are confirmed before booking.",
+      serviceDate: from, currency: upper(booking.currency || "USD",3), price: 0,
+      requestOnly: false, actionMode: "LIVE_SEARCH", bookingAvailable: true, availability: null,
+      priority: 40, supplier: "DUFFEL", path: `/car-rental?${q.toString()}`
+    });
+  }
+  return base;
+}
+
 async function detailForBooking(member, booking) {
   const [passengers, components, documents] = await Promise.all([
     bookingPassengers(booking.id),
     bookingComponents(booking.id),
     bookingDocuments(booking.id)
   ]);
-  const recommendations = await recommendationsForBooking(booking, components);
+  const localRecommendations = await recommendationsForBooking(booking, components);
+  const recommendations = [...liveSupplierRecommendations(booking, components), ...localRecommendations]
+    .sort((a,b) => Number(a.priority||100)-Number(b.priority||100))
+    .slice(0,24);
   const summary = publicBooking(booking, passengers.length, openTaskCount(passengers));
   return {
     ...summary,
@@ -566,7 +598,7 @@ export const getCustomerBookingHubState = webMethod(Permissions.SiteMember, asyn
   const summaries = await bookingSummaries(bookings);
   return {
     ok: true,
-    bookingHubVersion: "2026-09-06-v1",
+    bookingHubVersion: "2026-09-07-duffel-flights-stays-cars",
     bookings: summaries,
     trips: summaries,
     counts: {
@@ -617,6 +649,9 @@ export const addCustomerTripExtra = webMethod(Permissions.SiteMember, async ({ b
   const member = await requireMember();
   const booking = await requireOwnedBooking(member, bookingId);
   const id = clean(entityId, 80);
+  if (["DUFFEL_STAYS_LIVE", "DUFFEL_CARS_LIVE"].includes(id)) {
+    throw publicError("LIVE_SUPPLIER_SEARCH_REQUIRED", "Hotels and car rentals are booked from live Duffel availability. Open the live search from My Trips instead.");
+  }
   if (!isUuid(id)) throw publicError("That trip extra is not available.", "EXTRA_NOT_AVAILABLE");
   const components = await bookingComponents(booking.id);
   if (components.some((row) => row.source_entity_id === id && upper(row.status, 40) !== "REMOVED")) {
