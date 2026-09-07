@@ -1,2175 +1,556 @@
 // masterPage.js
-// SKANDI CUSTOMER CHROME BRIDGE
-// Customer header/footer + first-visit language/currency popup
+// SKANDI GLOBAL CHROME CONTROLLER
+// Customer chrome + RIAINTRA / ALTEA internal header
 
 import wixLocationFrontend from "wix-location-frontend";
 import wixWindowFrontend from "wix-window-frontend";
+import { currentMember, authentication } from "wix-members-frontend";
+import { getStaffPortalSession } from "backend/RIA/staffPortalAuth.web";
 
-import {
-  currentMember,
-  authentication
-} from "wix-members-frontend";
+const PARENT_SOURCE = "SKANDI_WIX_PARENT";
+const CUSTOMER_HEADER_SOURCE = "SKANDI_CUSTOMER_HEADER_EXPANDBAR";
+const CUSTOMER_FOOTER_SOURCE = "SKANDI_CUSTOMER_FOOTER";
+const RIAINTRA_HEADER_SOURCE = "SKANDI_RIAINTRA_HEADER";
+const ALTEA_HEADER_SOURCE = "SKANDI_ALTEA_HEADER";
+const SETTINGS_LIGHTBOX_NAME = "SKANDI Language & Currency";
+const MASTER_VERSION = "2026.09.07.1";
 
+const ALLOWED_LANGUAGES = new Set(["EN", "SV", "NO", "DA"]);
+const ALLOWED_CURRENCIES = new Set(["USD", "SEK", "NOK", "DKK", "EUR"]);
 
-/* =========================================================
-   CONSTANTS
-========================================================= */
-
-const PARENT_SOURCE =
-  "SKANDI_WIX_PARENT";
-
-const HEADER_SOURCE =
-  "SKANDI_CUSTOMER_HEADER_EXPANDBAR";
-
-const FOOTER_SOURCE =
-  "SKANDI_CUSTOMER_FOOTER";
-
-const SETTINGS_LIGHTBOX_NAME =
-  "SKANDI Language & Currency";
-
-const MASTER_VERSION =
-  "2026.08.31.1";
-
-const ALLOWED_LANGUAGES =
-  new Set([
-    "EN",
-    "SV",
-    "NO",
-    "DA"
-  ]);
-
-const ALLOWED_CURRENCIES =
-  new Set([
-    "USD",
-    "SEK",
-    "NOK",
-    "DKK",
-    "EUR"
-  ]);
-
-
-/* =========================================================
-   RUNTIME
-========================================================= */
-
-const wiredEmbeds =
-  new WeakSet();
-
-const headerEmbeds =
-  new Set();
-
-let settingsPopupPromise =
-  null;
-
-
-/* =========================================================
-   MASTER CONFIG
-========================================================= */
+const wiredEmbeds = new WeakSet();
+const customerHeaderEmbeds = new Set();
+const internalHeaderEmbeds = new Set();
+let settingsPopupPromise = null;
+let staffStatePromise = null;
 
 const MASTER_CONFIG = {
-
-  version:
-    MASTER_VERSION,
-
+  version: MASTER_VERSION,
   brand: {
-
-    groupName:
-      "SKANDI Group",
-
-    travelName:
-      "SKANDI Travels",
-
+    groupName: "SKANDI Group",
+    travelName: "SKANDI Travels",
     slogans: {
-      en:
-        "Unforgettable Moments",
-
-      sv:
-        "När du längtar bort",
-
-      no:
-        "Når du lengter bort",
-
-      da:
-        "Når du længes væk",
-
-      fi:
-        "Kun kaipaat pois"
+      en: "Unforgettable Moments",
+      sv: "När du längtar bort",
+      no: "Når du lengter bort",
+      da: "Når du længes væk",
+      fi: "Kun kaipaat pois"
     },
-
-    languages: [
-      "EN",
-      "SV",
-      "NO",
-      "DA"
-    ],
-
-    currencies: [
-      "USD",
-      "SEK",
-      "NOK",
-      "DKK",
-      "EUR"
-    ],
-
+    languages: ["EN", "SV", "NO", "DA"],
+    currencies: ["USD", "SEK", "NOK", "DKK", "EUR"],
     assets: {
-
       logos: {
-
-        customerHeader:
-          "https://static.wixstatic.com/media/394052_504704bd94f44f01a95f304bd19640e5~mv2.png",
-
-        customerFooter:
-          "https://static.wixstatic.com/media/394052_fafffe6d26434eddbf62eb645ee9c844~mv2.png",
-
-        skandiPrimary:
-          "https://static.wixstatic.com/media/394052_504704bd94f44f01a95f304bd19640e5~mv2.png",
-
-        riaintraLight:
-          "https://static.wixstatic.com/media/394052_635532ed8a8d446ab22f4fc09ef65858~mv2.png",
-
-        skandiTravels:
-          "https://static.wixstatic.com/media/394052_504704bd94f44f01a95f304bd19640e5~mv2.png"
+        customerHeader: "https://static.wixstatic.com/media/394052_504704bd94f44f01a95f304bd19640e5~mv2.png",
+        customerFooter: "https://static.wixstatic.com/media/394052_fafffe6d26434eddbf62eb645ee9c844~mv2.png",
+        skandiPrimary: "https://static.wixstatic.com/media/394052_504704bd94f44f01a95f304bd19640e5~mv2.png",
+        riaintraLight: "https://static.wixstatic.com/media/394052_635532ed8a8d446ab22f4fc09ef65858~mv2.png",
+        skandiTravels: "https://static.wixstatic.com/media/394052_504704bd94f44f01a95f304bd19640e5~mv2.png"
       }
-
     }
-
   },
-
-
   routes: {
-
-    home:
-      "/home",
-
-    search:
-      "/search",
-
-    flights:
-      "/flights",
-
-    hotels:
-      "/hotels",
-
-    packages:
-      "/packages",
-
-    tours:
-      "/tours",
-
-    activities:
-      "/activities",
-
-    transfers:
-      "/transfers",
-
-    carRental:
-      "/car-rental",
-
-    destinations:
-      "/our-destinations",
-
-    skandiCollection:
-      "/skandi-collection",
-
-    voy:
-      "/voy-magazine",
-
-    newsroom:
-      "/about/news-room",
-
-    myTrip:
-      "/my-profile?tab=trips",
-
-    club:
-      "/skandi-club",
-
-    support:
-      "/about/support",
-
-    about:
-      "/about",
-
-    legal:
-      "/about/legal",
-
-    riaintra:
-      "/riaintra"
+    home: "/home",
+    search: "/search",
+    flights: "/flights",
+    hotels: "/hotels",
+    packages: "/packages",
+    tours: "/tours",
+    activities: "/activities",
+    transfers: "/transfers",
+    carRental: "/car-rental",
+    destinations: "/our-destinations",
+    skandiCollection: "/skandi-collection",
+    voy: "/voy-magazine",
+    newsroom: "/about/news-room",
+    myTrip: "/my-profile?tab=trips",
+    club: "/skandi-club",
+    support: "/about/support",
+    about: "/about",
+    legal: "/about/legal",
+    riaintra: "/riaintra",
+    riaintraHome: "/riaintra/success-factors",
+    altea: "/riaintra/success-factors/altea"
   },
-
-
   customer: {
-
     header: {
-
       primaryNav: [
-
-        {
-          id:
-            "destinations",
-
-          label:
-            "Destinations",
-
-          path:
-            "/our-destinations"
-        },
-
-        {
-          id:
-            "tours",
-
-          label:
-            "Tours & Activities",
-
-          path:
-            "/tours"
-        },
-
-        {
-          id:
-            "travelInfo",
-
-          label:
-            "Travel Info",
-
-          path:
-            "/travel-info"
-        },
-
-        {
-          id:
-            "signature",
-
-          label:
-            "SKANDI Collection",
-
-          path:
-            "/skandi-collection"
-        }
-
+        { id: "destinations", label: "Destinations", path: "/our-destinations" },
+        { id: "tours", label: "Tours & Activities", path: "/tours" },
+        { id: "travelInfo", label: "Travel Info", path: "/travel-info" },
+        { id: "signature", label: "SKANDI Collection", path: "/skandi-collection" }
       ],
-
-
       accountNav: [
-
-        {
-          id:
-            "myTrip",
-
-          label:
-            "My Trips",
-
-          path:
-            "/my-profile?tab=trips"
-        },
-
-        {
-          id:
-            "club",
-
-          label:
-            "SKANDI Club",
-
-          path:
-            "/skandi-club"
-        }
-
+        { id: "myTrip", label: "My Trips", path: "/my-profile?tab=trips" },
+        { id: "club", label: "SKANDI Club", path: "/skandi-club" }
       ]
-
     },
-
-
     footer: {
-
       newsletter: {
-
-        title:
-          "Get SKANDI offers and travel inspiration",
-
-        description:
-          "Receive destination guides, Signature Collection updates and member offers.",
-
-        placeholder:
-          "Email address",
-
-        buttonLabel:
-          "Sign up"
+        title: "Get SKANDI offers and travel inspiration",
+        description: "Receive destination guides, Signature Collection updates and member offers.",
+        placeholder: "Email address",
+        buttonLabel: "Sign up"
       },
-
-
       columns: [
-
         {
-          title:
-            "BOOK & TRAVEL",
-
+          title: "BOOK & TRAVEL",
           links: [
-
-            {
-              label:
-                "Book a trip",
-
-              path:
-                "/"
-            },
-
-            {
-              label:
-                "Manage your booking",
-
-              path:
-                "/my-profile?tab=trips"
-            },
-
-            {
-              label:
-                "Our Destinations",
-
-              path:
-                "/our-destinations"
-            },
-
-            {
-              label:
-                "Flights",
-
-              path:
-                "/flights"
-            },
-
-            {
-              label:
-                "Hotels",
-
-              path:
-                "/hotels"
-            },
-
-            {
-              label:
-                "Tours & Activities",
-
-              path:
-                "/tours"
-            },
-
-            {
-              label:
-                "Car Rental",
-
-              path:
-                "/car-rental"
-            },
-
-            {
-              label:
-                "Airport Transfer",
-
-              path:
-                "/transfers"
-            }
-
+            { label: "Book a trip", path: "/" },
+            { label: "Manage your booking", path: "/my-profile?tab=trips" },
+            { label: "Our Destinations", path: "/our-destinations" },
+            { label: "Flights", path: "/flights" },
+            { label: "Hotels", path: "/hotels" },
+            { label: "Tours & Activities", path: "/tours" },
+            { label: "Car Rental", path: "/car-rental" },
+            { label: "Airport Transfer", path: "/transfers" }
           ]
         },
-
-
         {
-          title:
-            "HELP & TRAVEL INFO",
-
+          title: "HELP & TRAVEL INFO",
           links: [
-
-            {
-              label:
-                "Before you travel",
-
-              path:
-                "/travel-info"
-            },
-
-            {
-              label:
-                "Passport & Visa",
-
-              path:
-                "/travel-info/passport-visa"
-            },
-
-            {
-              label:
-                "Baggage Allowance",
-
-              path:
-                "/travel-info/baggage-allowence"
-            },
-
-            {
-              label:
-                "Travel Insurance",
-
-              path:
-                "/travel-info/insurance"
-            },
-
-            {
-              label:
-                "Special Assistance",
-
-              path:
-                "/travel-info/special-assistance"
-            },
-
-            {
-              label:
-                "Flight Status",
-
-              path:
-                "/travel-info/flight-status"
-            },
-
-            {
-              label:
-                "Help Center",
-
-              path:
-                "/about/support"
-            }
-
+            { label: "Before you travel", path: "/travel-info" },
+            { label: "Passport & Visa", path: "/travel-info/passport-visa" },
+            { label: "Baggage Allowance", path: "/travel-info/baggage-allowence" },
+            { label: "Travel Insurance", path: "/travel-info/insurance" },
+            { label: "Special Assistance", path: "/travel-info/special-assistance" },
+            { label: "Flight Status", path: "/travel-info/flight-status" },
+            { label: "Help Center", path: "/about/support" }
           ]
         },
-
-
         {
-          title:
-            "SKANDI",
-
+          title: "SKANDI",
           links: [
-
-            {
-              label:
-                "Join SKANDI Club",
-
-              path:
-                "/skandi-club"
-            },
-
-            {
-              label:
-                "Log In to My Club",
-
-              path:
-                "/my-profile"
-            },
-
-            {
-              label:
-                "SKANDI Collection",
-
-              path:
-                "/skandi-collection"
-            },
-
-            {
-              label:
-                "THE STORE",
-
-              path:
-                "/the-store"
-            },
-
-            {
-              label:
-                "VOY Magazine",
-
-              path:
-                "/voy-magazine"
-            }
-
+            { label: "Join SKANDI Club", path: "/skandi-club" },
+            { label: "Log In to My Club", path: "/my-profile" },
+            { label: "SKANDI Collection", path: "/skandi-collection" },
+            { label: "THE STORE", path: "/the-store" },
+            { label: "VOY Magazine", path: "/voy-magazine" }
           ]
         },
-
-
         {
-          title:
-            "ABOUT SKANDI",
-
+          title: "ABOUT SKANDI",
           links: [
-
-            {
-              label:
-                "About SKANDI",
-
-              path:
-                "/about"
-            },
-
-            {
-              label:
-                "Careers",
-
-              path:
-                "/about/careers"
-            },
-
-            {
-              label:
-                "Newsroom",
-
-              path:
-                "/about/news-room"
-            },
-
-            {
-              label:
-                "Our Network",
-
-              path:
-                "/about/our-network"
-            }
-
+            { label: "About SKANDI", path: "/about" },
+            { label: "Careers", path: "/about/careers" },
+            { label: "Newsroom", path: "/about/news-room" },
+            { label: "Our Network", path: "/about/our-network" }
           ]
         }
-
       ],
-
-
       bottomLinks: [
-
-        {
-          label:
-            "Legal",
-
-          path:
-            "/about/legal"
-        },
-
-        {
-          label:
-            "Privacy",
-
-          path:
-            "/about/legal/policies?policy=privacy"
-        },
-
-        {
-          label:
-            "Terms",
-
-          path:
-            "/about/legal/policies?policy=terms"
-        },
-
-        {
-          label:
-            "Accessibility",
-
-          path:
-            "/about/legal/policies?policy=accessibility"
-        },
-
-        {
-          label:
-            "Staff Login",
-
-          path:
-            "/riaintra"
-        }
-
+        { label: "Legal", path: "/about/legal" },
+        { label: "Privacy", path: "/about/legal/policies?policy=privacy" },
+        { label: "Terms", path: "/about/legal/policies?policy=terms" },
+        { label: "Accessibility", path: "/about/legal/policies?policy=accessibility" },
+        { label: "Staff Login", path: "/riaintra" }
       ]
-
     }
-
+  },
+  internal: {
+    header: {
+      logoKey: "riaintraLight",
+      productName: "RIAINTRA",
+      alteaProductName: "ALTEA",
+      primaryNav: [
+        { id: "home", label: "Home", path: "/riaintra/success-factors" },
+        { id: "altea", label: "ALTEA", path: "/riaintra/success-factors/altea" },
+        { id: "mail", label: "Mail", path: "/riaintra/success-factors/mail" },
+        { id: "docunet", label: "DocuNet", path: "/riaintra/success-factors/docunet" },
+        { id: "uniform", label: "Uniform Center", path: "/riaintra/success-factors/uniform" },
+        { id: "help", label: "HelpDesk", path: "/riaintra/success-factors/helpdesk" }
+      ],
+      alteaNav: [
+        { id: "altea-home", label: "ALTEA Home", path: "/riaintra/success-factors/altea" },
+        { id: "ticketing", label: "Ticketing", path: "/riaintra/success-factors/altea/reservations" },
+        { id: "grouptalk", label: "GroupTalk", path: "/riaintra/success-factors/altea/grouptalk" },
+        { id: "docunet", label: "DocuNet", path: "/riaintra/success-factors/docunet" },
+        { id: "ria-home", label: "RIAINTRA", path: "/riaintra/success-factors" }
+      ]
+    }
   }
-
 };
 
-
-/* =========================================================
-   PATH
-========================================================= */
-
 function currentPath() {
-
   try {
-
-    const path =
-      wixLocationFrontend.path ||
-      [];
-
-    return (
-      "/" +
-      path.join("/")
-    );
-
+    return "/" + (wixLocationFrontend.path || []).join("/");
   } catch (_) {
-
     return "/";
-
   }
-
 }
 
-
-function isInternalPath() {
-
-  const path =
-    currentPath()
-      .toLowerCase();
-
-  return (
-
-    path ===
-      "/riaintra" ||
-
-    path.startsWith(
-      "/riaintra/"
-    ) ||
-
-    path ===
-      "/altea" ||
-
-    path.startsWith(
-      "/altea/"
-    )
-
-  );
-
+function isInternalPath(path = currentPath()) {
+  const value = String(path || "").toLowerCase();
+  return value === "/riaintra" || value.startsWith("/riaintra/") || value === "/altea" || value.startsWith("/altea/");
 }
 
-
-/* =========================================================
-   MESSAGE UTILITIES
-========================================================= */
-
-function parseMessage(
-  data
-) {
-
-  if (
-    typeof data ===
-    "string"
-  ) {
-
-    try {
-
-      return JSON.parse(
-        data
-      );
-
-    } catch (_) {
-
-      return null;
-
-    }
-
-  }
-
-
-  if (
-    data &&
-    typeof data ===
-      "object"
-  ) {
-
-    return data;
-
-  }
-
-
-  return null;
-
+function isAlteaPath(path = currentPath()) {
+  const value = String(path || "").toLowerCase();
+  return value === "/altea" || value.startsWith("/altea/") || value.includes("/altea");
 }
 
+function isStaffLoginPath(path = currentPath()) {
+  return String(path || "").toLowerCase() === "/riaintra";
+}
 
-function post(
-  embed,
-  type,
-  payload = {}
-) {
-
-  if (
-    !embed ||
-    typeof embed.postMessage !==
-      "function"
-  ) {
-
-    return false;
-
+function parseMessage(data) {
+  if (typeof data === "string") {
+    try { return JSON.parse(data); } catch (_) { return null; }
   }
+  return data && typeof data === "object" ? data : null;
+}
 
-
+function post(embed, type, payload = {}) {
+  if (!embed || typeof embed.postMessage !== "function") return false;
   try {
-
-    embed.postMessage({
-
-      source:
-        PARENT_SOURCE,
-
-      type,
-
-      payload,
-
-      timestamp:
-        new Date()
-          .toISOString()
-
-    });
-
-
+    embed.postMessage({ source: PARENT_SOURCE, type, payload, timestamp: new Date().toISOString() });
     return true;
-
   } catch (error) {
-
-    console.error(
-      "[SKANDI MASTER] postMessage failed",
-      embed?.id,
-      error
-    );
-
+    console.error("[SKANDI MASTER] postMessage failed", embed?.id, error);
     return false;
-
   }
-
 }
 
-
-/* =========================================================
-   MASTER PAYLOAD
-========================================================= */
-
-function masterPayload() {
-
+function internalHeaderConfig(path = currentPath()) {
+  const base = MASTER_CONFIG.internal.header;
+  const altea = isAlteaPath(path);
   return {
-
-    ...MASTER_CONFIG,
-
-    currentPath:
-      currentPath(),
-
-    mode:
-      isInternalPath()
-        ? "internal"
-        : "customer",
-
-    isInternal:
-      isInternalPath()
-
+    ...base,
+    context: altea ? "altea" : "riaintra",
+    productName: altea ? base.alteaProductName : base.productName,
+    primaryNav: altea ? base.alteaNav : base.primaryNav
   };
-
 }
 
-
-function sendMasterConfig(
-  embed
-) {
-
-  console.log(
-    "[SKANDI MASTER] sending config to",
-    embed?.id ||
-      "unknown"
-  );
-
-
-  post(
-    embed,
-    "SKANDI_MASTER_CONFIG",
-    masterPayload()
-  );
-
+function masterPayload(staff = null) {
+  const path = currentPath();
+  return {
+    ...MASTER_CONFIG,
+    internal: {
+      ...MASTER_CONFIG.internal,
+      header: internalHeaderConfig(path)
+    },
+    currentPath: path,
+    mode: isInternalPath(path) ? "internal" : "customer",
+    isInternal: isInternalPath(path),
+    isAltea: isAlteaPath(path),
+    staff: staff || undefined
+  };
 }
 
-
-/* =========================================================
-   CUSTOMER STATE
-========================================================= */
+function sendMasterConfig(embed, staff = null) {
+  post(embed, "SKANDI_MASTER_CONFIG", masterPayload(staff));
+}
 
 async function getCustomerState() {
-
   try {
-
-    const member =
-      await currentMember
-        .getMember();
-
-
-    if (!member) {
-
-      return {
-
-        loggedIn:
-          false,
-
-        displayName:
-          "",
-
-        email:
-          "",
-
-        points:
-          0,
-
-        tierName:
-          "",
-
-        menu:
-          []
-
-      };
-
-    }
-
-
-    const displayName =
-
-      member
-        ?.profile
-        ?.nickname ||
-
-      member
-        ?.profile
-        ?.firstName ||
-
-      member
-        ?.contactDetails
-        ?.firstName ||
-
-      member
-        ?.loginEmail ||
-
-      "Member";
-
-
-    const email =
-      String(
-        member?.loginEmail ||
-        ""
-      )
-        .trim();
-
-
+    const member = await currentMember.getMember();
+    if (!member) return { loggedIn: false, displayName: "", email: "", points: 0, tierName: "", menu: [] };
+    const displayName = member?.profile?.nickname || member?.profile?.firstName || member?.contactDetails?.firstName || member?.loginEmail || "Member";
     return {
-
-      loggedIn:
-        true,
-
+      loggedIn: true,
       displayName,
-
-      email,
-
-      points:
-        0,
-
-      tierName:
-        "",
-
-      menu:
-        []
-
+      email: String(member?.loginEmail || "").trim(),
+      points: 0,
+      tierName: "",
+      menu: []
     };
-
-
   } catch (error) {
-
-    console.warn(
-      "[SKANDI MASTER] Member state unavailable",
-      error
-    );
-
-
-    return {
-
-      loggedIn:
-        false,
-
-      displayName:
-        "",
-
-      email:
-        "",
-
-      points:
-        0,
-
-      tierName:
-        "",
-
-      menu:
-        []
-
-    };
-
+    console.warn("[SKANDI MASTER] Member state unavailable", error);
+    return { loggedIn: false, displayName: "", email: "", points: 0, tierName: "", menu: [] };
   }
-
 }
 
-
-async function sendHeaderState(
-  embed
-) {
-
-  post(
-    embed,
-    "CUSTOMER_HEADER_STATE",
-    await getCustomerState()
-  );
-
-}
-
-
-/* =========================================================
-   INITIAL LANGUAGE / CURRENCY
-========================================================= */
-
-function normalizeLanguage(
-  value
-) {
-
-  const result =
-    String(
-      value ||
-      "EN"
-    )
-      .trim()
-      .toUpperCase();
-
-
-  return ALLOWED_LANGUAGES
-    .has(result)
-      ? result
-      : "EN";
-
-}
-
-
-function normalizeCurrency(
-  value
-) {
-
-  const result =
-    String(
-      value ||
-      "USD"
-    )
-      .trim()
-      .toUpperCase();
-
-
-  return ALLOWED_CURRENCIES
-    .has(result)
-      ? result
-      : "USD";
-
-}
-
-
-function normalizeSettings(
-  value = {}
-) {
-
-  return {
-
-    language:
-      normalizeLanguage(
-        value.language
-      ),
-
-    currency:
-      normalizeCurrency(
-        value.currency
-      )
-
-  };
-
-}
-
-
-function sendSettingsToHeaders(
-  settings
-) {
-
-  const normalized =
-    normalizeSettings(
-      settings
-    );
-
-
-  for (
-    const embed
-    of headerEmbeds
-  ) {
-
-    post(
-      embed,
-      "CUSTOMER_SETTINGS_APPLY",
-      normalized
-    );
-
+async function getInternalState(force = false) {
+  if (!isInternalPath()) return { loggedIn: false, authorized: false, profile: null, apps: [], permissions: {} };
+  if (!staffStatePromise || force) {
+    staffStatePromise = getStaffPortalSession()
+      .then((session) => {
+        const profile = session?.profile || session?.staff || session?.agent || null;
+        return {
+          loggedIn: session?.loggedIn === true || session?.authenticated === true,
+          authenticated: session?.authenticated === true || session?.loggedIn === true,
+          authorized: session?.authorized === true,
+          profile,
+          staff: profile,
+          agent: profile,
+          apps: Array.isArray(session?.apps) ? session.apps : [],
+          permissions: session?.permissions && typeof session.permissions === "object" ? session.permissions : {},
+          checkedAt: session?.checkedAt || new Date().toISOString(),
+          code: session?.code || ""
+        };
+      })
+      .catch((error) => {
+        console.warn("[SKANDI MASTER] Staff state unavailable", error);
+        return { loggedIn: false, authenticated: false, authorized: false, profile: null, staff: null, agent: null, apps: [], permissions: {}, code: "STAFF_STATE_FAILED" };
+      })
+      .finally(() => {
+        setTimeout(() => { staffStatePromise = null; }, 250);
+      });
   }
-
+  return staffStatePromise;
 }
 
+async function sendCustomerHeaderState(embed) {
+  post(embed, "CUSTOMER_HEADER_STATE", await getCustomerState());
+}
 
-async function openInitialSettingsPopup(
-  requestingEmbed,
-  payload = {}
-) {
+async function sendInternalHeaderState(embed, force = false) {
+  const state = await getInternalState(force);
+  sendMasterConfig(embed, state);
+  post(embed, "RIAINTRA_HEADER_STATE", state);
+  post(embed, "ALTEA_HEADER_STATE", state);
+  post(embed, "INTERNAL_HEADER_STATE", state);
+}
 
-  if (
-    isInternalPath()
-  ) {
+function normalizeLanguage(value) {
+  const result = String(value || "EN").trim().toUpperCase();
+  return ALLOWED_LANGUAGES.has(result) ? result : "EN";
+}
 
-    return;
+function normalizeCurrency(value) {
+  const result = String(value || "USD").trim().toUpperCase();
+  return ALLOWED_CURRENCIES.has(result) ? result : "USD";
+}
 
-  }
+function normalizeSettings(value = {}) {
+  return { language: normalizeLanguage(value.language), currency: normalizeCurrency(value.currency) };
+}
 
+function sendSettingsToHeaders(settings) {
+  const normalized = normalizeSettings(settings);
+  for (const embed of customerHeaderEmbeds) post(embed, "CUSTOMER_SETTINGS_APPLY", normalized);
+}
 
-  if (
-    requestingEmbed
-  ) {
-
-    headerEmbeds.add(
-      requestingEmbed
-    );
-
-  }
-
-
-  /*
-   * Header can fire READY / MASTER request more than once.
-   * Never open duplicate popups.
-   */
-  if (
-    settingsPopupPromise
-  ) {
-
-    return settingsPopupPromise;
-
-  }
-
-
-  const defaults =
-    normalizeSettings(
-      payload
-    );
-
-
-  console.log(
-    "[SKANDI MASTER] opening initial settings popup",
-    defaults
-  );
-
-
-  settingsPopupPromise =
-    wixWindowFrontend
-      .openLightbox(
-        SETTINGS_LIGHTBOX_NAME,
-        defaults
-      )
-      .then(
-        result => {
-
-          if (
-            !result ||
-            typeof result !==
-              "object"
-          ) {
-
-            console.warn(
-              "[SKANDI MASTER] settings popup closed without result"
-            );
-
-            return null;
-
-          }
-
-
-          const language =
-            String(
-              result.language ||
-              ""
-            )
-              .trim()
-              .toUpperCase();
-
-          const currency =
-            String(
-              result.currency ||
-              ""
-            )
-              .trim()
-              .toUpperCase();
-
-
-          if (
-            !ALLOWED_LANGUAGES
-              .has(language) ||
-            !ALLOWED_CURRENCIES
-              .has(currency)
-          ) {
-
-            console.warn(
-              "[SKANDI MASTER] rejected invalid popup result",
-              result
-            );
-
-            return null;
-
-          }
-
-
-          const settings = {
-            language,
-            currency
-          };
-
-
-          console.log(
-            "[SKANDI MASTER] initial settings selected",
-            settings
-          );
-
-
-          /*
-           * Send result back to every known customer-header
-           * instance. The header owns localStorage.
-           */
-          sendSettingsToHeaders(
-            settings
-          );
-
-
-          /*
-           * Also send directly to the requesting embed in case
-           * it has not yet been registered in the set.
-           */
-          if (
-            requestingEmbed
-          ) {
-
-            post(
-              requestingEmbed,
-              "CUSTOMER_SETTINGS_APPLY",
-              settings
-            );
-
-          }
-
-
-          return settings;
-
-        }
-      )
-      .catch(
-        error => {
-
-          console.error(
-            "[SKANDI MASTER] initial settings popup failed",
-            error
-          );
-
-          return null;
-
-        }
-      )
-      .finally(
-        () => {
-
-          settingsPopupPromise =
-            null;
-
-        }
-      );
-
-
+async function openInitialSettingsPopup(requestingEmbed, payload = {}) {
+  if (isInternalPath()) return;
+  if (requestingEmbed) customerHeaderEmbeds.add(requestingEmbed);
+  if (settingsPopupPromise) return settingsPopupPromise;
+  const defaults = normalizeSettings(payload);
+  settingsPopupPromise = wixWindowFrontend
+    .openLightbox(SETTINGS_LIGHTBOX_NAME, defaults)
+    .then((result) => {
+      if (!result || typeof result !== "object") {
+        console.warn("[SKANDI MASTER] settings popup closed without result");
+        return null;
+      }
+      const language = String(result.language || "").trim().toUpperCase();
+      const currency = String(result.currency || "").trim().toUpperCase();
+      if (!ALLOWED_LANGUAGES.has(language) || !ALLOWED_CURRENCIES.has(currency)) return null;
+      const settings = { language, currency };
+      sendSettingsToHeaders(settings);
+      if (requestingEmbed) post(requestingEmbed, "CUSTOMER_SETTINGS_APPLY", settings);
+      return settings;
+    })
+    .catch((error) => {
+      console.error("[SKANDI MASTER] initial settings popup failed", error);
+      return null;
+    })
+    .finally(() => { settingsPopupPromise = null; });
   return settingsPopupPromise;
-
 }
 
-
-/* =========================================================
-   NAVIGATION
-========================================================= */
-
-function navigate(
-  rawPath
-) {
-
-  const path =
-    String(
-      rawPath ||
-      ""
-    )
-      .trim();
-
-
-  if (!path) {
-
+function navigate(rawPath, internalOnly = false) {
+  const path = String(rawPath || "").trim();
+  if (!path || !path.startsWith("/") || path.startsWith("//") || /^(javascript|data|vbscript):/i.test(path)) return;
+  if (internalOnly && !isInternalPath(path)) {
+    console.warn("[SKANDI MASTER] blocked non-internal header navigation", path);
     return;
-
   }
-
-
-  if (
-
-    !path.startsWith("/") ||
-
-    path.startsWith("//") ||
-
-    /^(javascript|data|vbscript):/i
-      .test(path)
-
-  ) {
-
-    console.warn(
-      "[SKANDI MASTER] blocked navigation",
-      path
-    );
-
-    return;
-
-  }
-
-
-  console.log(
-    "[SKANDI MASTER] navigate",
-    path
-  );
-
-
-  wixLocationFrontend
-    .to(path);
-
+  wixLocationFrontend.to(path);
 }
 
-
-/* =========================================================
-   SHOW / HIDE CUSTOMER CHROME
-========================================================= */
-
-async function showEmbed(
-  embed
-) {
-
-  if (!embed) {
-
-    return;
-
-  }
-
-
-  try {
-
-    if (
-      typeof embed.expand ===
-      "function"
-    ) {
-
-      await embed.expand();
-
-    }
-
-  } catch (_) {}
-
-
-  try {
-
-    if (
-      typeof embed.show ===
-      "function"
-    ) {
-
-      await embed.show();
-
-    }
-
-  } catch (_) {}
-
+async function showEmbed(embed) {
+  if (!embed) return;
+  try { if (typeof embed.expand === "function") await embed.expand(); } catch (_) {}
+  try { if (typeof embed.show === "function") await embed.show(); } catch (_) {}
 }
 
-
-async function hideEmbed(
-  embed
-) {
-
-  if (!embed) {
-
-    return;
-
-  }
-
-
-  try {
-
-    if (
-      typeof embed.hide ===
-      "function"
-    ) {
-
-      await embed.hide();
-
-    }
-
-  } catch (_) {}
-
-
-  try {
-
-    if (
-      typeof embed.collapse ===
-      "function"
-    ) {
-
-      await embed.collapse();
-
-    }
-
-  } catch (_) {}
-
+async function hideEmbed(embed) {
+  if (!embed) return;
+  try { if (typeof embed.hide === "function") await embed.hide(); } catch (_) {}
+  try { if (typeof embed.collapse === "function") await embed.collapse(); } catch (_) {}
 }
 
-
-async function syncCustomerChrome(
-  embed,
-  source
-) {
-
-  if (
-
-    source !==
-      HEADER_SOURCE &&
-
-    source !==
-      FOOTER_SOURCE
-
-  ) {
-
-    return;
-
-  }
-
-
-  if (
-    isInternalPath()
-  ) {
-
-    await hideEmbed(
-      embed
-    );
-
-  } else {
-
-    await showEmbed(
-      embed
-    );
-
-  }
-
+function isCustomerChromeSource(source) {
+  return source === CUSTOMER_HEADER_SOURCE || source === CUSTOMER_FOOTER_SOURCE;
 }
 
-
-/* =========================================================
-   SEARCH
-========================================================= */
-
-function runSearch(
-  message,
-  payload
-) {
-
-  const query =
-    String(
-
-      payload?.query ||
-
-      message?.query ||
-
-      payload?.value ||
-
-      message?.value ||
-
-      ""
-
-    )
-      .trim();
-
-
-  if (!query) {
-
-    navigate(
-      "/search"
-    );
-
-    return;
-
-  }
-
-
-  navigate(
-    `/search?q=${encodeURIComponent(
-      query
-    )}`
-  );
-
+function isInternalHeaderSource(source) {
+  return source === RIAINTRA_HEADER_SOURCE || source === ALTEA_HEADER_SOURCE;
 }
 
-
-/* =========================================================
-   HANDLE MESSAGE
-========================================================= */
-
-async function handleMessage(
-  embed,
-  event
-) {
-
-  const message =
-    parseMessage(
-      event?.data
-    );
-
-
-  if (!message) {
-
+async function syncChromeVisibility(embed, source) {
+  if (isCustomerChromeSource(source)) {
+    if (isInternalPath()) await hideEmbed(embed); else await showEmbed(embed);
     return;
+  }
+  if (isInternalHeaderSource(source)) {
+    if (isInternalPath() && !isStaffLoginPath()) await showEmbed(embed); else await hideEmbed(embed);
+  }
+}
 
+function runSearch(message, payload) {
+  const query = String(payload?.query || message?.query || payload?.value || message?.value || "").trim();
+  navigate(query ? `/search?q=${encodeURIComponent(query)}` : "/search");
+}
+
+async function handleMessage(embed, event) {
+  const message = parseMessage(event?.data);
+  if (!message) return;
+  const source = String(message.source || "");
+  const type = String(message.type || "");
+  const payload = message.payload && typeof message.payload === "object" ? message.payload : {};
+
+  if (source === CUSTOMER_HEADER_SOURCE) customerHeaderEmbeds.add(embed);
+  if (isInternalHeaderSource(source)) internalHeaderEmbeds.add(embed);
+
+  await syncChromeVisibility(embed, source);
+
+  if (source === CUSTOMER_HEADER_SOURCE && type === "INITIAL_SETTINGS_REQUIRED") {
+    await openInitialSettingsPopup(embed, payload);
+    return;
   }
 
-
-  const source =
-    String(
-      message.source ||
-      ""
-    );
-
-
-  const type =
-    String(
-      message.type ||
-      ""
-    );
-
-
-  const payload =
-
-    message.payload &&
-
-    typeof message.payload ===
-      "object"
-
-      ? message.payload
-
-      : {};
-
-
-  if (
-    source ===
-    HEADER_SOURCE
-  ) {
-
-    headerEmbeds.add(
-      embed
-    );
-
-  }
-
-
-  console.log(
-    "[SKANDI MASTER] message",
-    {
-      embed:
-        embed?.id || "",
-      source,
-      type
+  if (type === "MASTER_CONFIG_REQUEST" || type === "SKANDI_MASTER_CONFIG_REQUEST") {
+    if (isInternalHeaderSource(source)) {
+      await sendInternalHeaderState(embed);
+    } else {
+      sendMasterConfig(embed);
+      if (source === CUSTOMER_HEADER_SOURCE) await sendCustomerHeaderState(embed);
+      if (source === CUSTOMER_FOOTER_SOURCE) post(embed, "CUSTOMER_FOOTER_STATE", { ready: true });
     }
-  );
-
-
-  await syncCustomerChrome(
-    embed,
-    source
-  );
-
-
-  /* -------------------------------------------------------
-     INITIAL LANGUAGE/CURRENCY
-  ------------------------------------------------------- */
-
-  if (
-
-    source ===
-      HEADER_SOURCE &&
-
-    type ===
-      "INITIAL_SETTINGS_REQUIRED"
-
-  ) {
-
-    await openInitialSettingsPopup(
-      embed,
-      payload
-    );
-
     return;
-
   }
 
-
-  /* -------------------------------------------------------
-     SETTINGS UPDATED
-  ------------------------------------------------------- */
-
-  if (
-
-    source ===
-      HEADER_SOURCE &&
-
-    type ===
-      "UPDATE_SETTINGS"
-
-  ) {
-
-    console.log(
-      "[SKANDI MASTER] customer settings updated",
-      normalizeSettings(
-        payload
-      )
-    );
-
+  if (source === CUSTOMER_HEADER_SOURCE && type === "HEADER_READY") {
+    customerHeaderEmbeds.add(embed);
+    sendMasterConfig(embed);
+    await sendCustomerHeaderState(embed);
     return;
-
   }
 
-
-  /* -------------------------------------------------------
-     GENERIC MASTER REQUEST
-  ------------------------------------------------------- */
-
-  if (
-
-    type ===
-      "MASTER_CONFIG_REQUEST" ||
-
-    type ===
-      "SKANDI_MASTER_CONFIG_REQUEST"
-
-  ) {
-
-    sendMasterConfig(
-      embed
-    );
-
-
-    if (
-      source ===
-      HEADER_SOURCE
-    ) {
-
-      await sendHeaderState(
-        embed
-      );
-
-    }
-
-
-    if (
-      source ===
-      FOOTER_SOURCE
-    ) {
-
-      post(
-        embed,
-        "CUSTOMER_FOOTER_STATE",
-        {
-          ready:
-            true
-        }
-      );
-
-    }
-
-
+  if (source === CUSTOMER_FOOTER_SOURCE && type === "FOOTER_READY") {
+    sendMasterConfig(embed);
+    post(embed, "CUSTOMER_FOOTER_STATE", { ready: true });
     return;
-
   }
 
-
-  /* -------------------------------------------------------
-     HEADER READY
-  ------------------------------------------------------- */
-
-  if (
-
-    source ===
-      HEADER_SOURCE &&
-
-    type ===
-      "HEADER_READY"
-
-  ) {
-
-    headerEmbeds.add(
-      embed
-    );
-
-
-    sendMasterConfig(
-      embed
-    );
-
-
-    await sendHeaderState(
-      embed
-    );
-
-
+  if (isInternalHeaderSource(source) && ["RIAINTRA_HEADER_READY", "ALTEA_HEADER_READY", "INTERNAL_HEADER_READY"].includes(type)) {
+    internalHeaderEmbeds.add(embed);
+    await sendInternalHeaderState(embed, true);
     return;
-
   }
 
-
-  /* -------------------------------------------------------
-     FOOTER READY
-  ------------------------------------------------------- */
-
-  if (
-
-    source ===
-      FOOTER_SOURCE &&
-
-    type ===
-      "FOOTER_READY"
-
-  ) {
-
-    sendMasterConfig(
-      embed
-    );
-
-
-    post(
-      embed,
-      "CUSTOMER_FOOTER_STATE",
-      {
-        ready:
-          true
-      }
-    );
-
-
+  if (isInternalHeaderSource(source) && ["RIAINTRA_NAVIGATE", "ALTEA_NAVIGATE", "INTERNAL_NAVIGATE", "HEADER_NAVIGATE"].includes(type)) {
+    navigate(payload.path || message.path, true);
     return;
-
   }
 
-
-  /* -------------------------------------------------------
-     HEADER NAVIGATION
-  ------------------------------------------------------- */
-
-  if (
-
-    source ===
-      HEADER_SOURCE &&
-
-    type ===
-      "HEADER_NAVIGATE"
-
-  ) {
-
-    navigate(
-      payload.path ||
-      message.path
-    );
-
+  if (isInternalHeaderSource(source) && ["RIAINTRA_PROFILE_REFRESH", "ALTEA_PROFILE_REFRESH", "INTERNAL_PROFILE_REFRESH"].includes(type)) {
+    await sendInternalHeaderState(embed, true);
     return;
-
   }
 
-
-  /* -------------------------------------------------------
-     SEARCH
-  ------------------------------------------------------- */
-
-  if (
-
-    source ===
-      HEADER_SOURCE &&
-
-    type ===
-      "HEADER_SEARCH"
-
-  ) {
-
-    runSearch(
-      message,
-      payload
-    );
-
+  if (isInternalHeaderSource(source) && ["RIAINTRA_LOGOUT", "ALTEA_LOGOUT", "INTERNAL_LOGOUT"].includes(type)) {
+    try { await authentication.logout(); } catch (_) {}
+    navigate("/riaintra");
     return;
-
   }
 
+  if (source === CUSTOMER_HEADER_SOURCE && type === "UPDATE_SETTINGS") return;
+  if (source === CUSTOMER_HEADER_SOURCE && type === "HEADER_NAVIGATE") { navigate(payload.path || message.path); return; }
+  if (source === CUSTOMER_HEADER_SOURCE && type === "HEADER_SEARCH") { runSearch(message, payload); return; }
 
-  /* -------------------------------------------------------
-     LOGIN
-  ------------------------------------------------------- */
+  if (source === CUSTOMER_HEADER_SOURCE && type === "HEADER_LOGIN") {
+    try { await authentication.promptLogin(); } catch (_) {}
+    await sendCustomerHeaderState(embed);
+    return;
+  }
 
-  if (
-
-    source ===
-      HEADER_SOURCE &&
-
-    type ===
-      "HEADER_LOGIN"
-
-  ) {
-
+  if (source === CUSTOMER_HEADER_SOURCE && type === "HEADER_LOGIN_SUBMIT") {
     try {
-
-      await authentication
-        .promptLogin();
-
-    } catch (_) {}
-
-
-    await sendHeaderState(
-      embed
-    );
-
-
-    return;
-
-  }
-
-
-  if (
-
-    source ===
-      HEADER_SOURCE &&
-
-    type ===
-      "HEADER_LOGIN_SUBMIT"
-
-  ) {
-
-    const email =
-      String(
-
-        payload.email ||
-
-        message.email ||
-
-        ""
-
-      )
-        .trim();
-
-
-    const password =
-      String(
-
-        payload.password ||
-
-        message.password ||
-
-        ""
-
-      );
-
-
-    try {
-
-      await authentication
-        .login(
-          email,
-          password
-        );
-
-
-      await sendHeaderState(
-        embed
-      );
-
-
+      await authentication.login(String(payload.email || message.email || "").trim(), String(payload.password || message.password || ""));
+      await sendCustomerHeaderState(embed);
     } catch (error) {
-
-      console.warn(
-        "[SKANDI MASTER] customer login failed",
-        error
-      );
-
-
-      post(
-        embed,
-        "HOME_ERROR",
-        {
-          message:
-            "Invalid email or password. Please try again."
-        }
-      );
-
+      console.warn("[SKANDI MASTER] customer login failed", error);
+      post(embed, "HOME_ERROR", { message: "Invalid email or password. Please try again." });
     }
-
-
     return;
-
   }
 
+  if (source === CUSTOMER_HEADER_SOURCE && type === "HEADER_FORGOT_PASSWORD") {
+    try { await authentication.promptForgotPassword(); } catch (_) {}
+    return;
+  }
 
-  if (
+  if (source === CUSTOMER_HEADER_SOURCE && type === "HEADER_LOGOUT") {
+    try { await authentication.logout(); } catch (_) {}
+    await sendCustomerHeaderState(embed);
+    navigate("/");
+    return;
+  }
 
-    source ===
-      HEADER_SOURCE &&
+  if (source === CUSTOMER_HEADER_SOURCE && type === "SKANDI_EMBED_RESIZE") {
+    const requested = Number(payload.height);
+    if (Number.isFinite(requested)) {
+      try { embed.height = Math.max(118, Math.min(1200, Math.round(requested))); } catch (_) {}
+    }
+    return;
+  }
 
-    type ===
-      "HEADER_FORGOT_PASSWORD"
+  if (source === CUSTOMER_FOOTER_SOURCE && type === "FOOTER_NAVIGATE") { navigate(payload.path || message.path); return; }
+  if (source === CUSTOMER_FOOTER_SOURCE && type === "FOOTER_STAFF_LOGIN") { navigate("/riaintra"); return; }
+  if (type === "MASTER_NAVIGATE") navigate(payload.path || message.path);
+}
 
-  ) {
+function wireEmbed(embed) {
+  if (!embed || wiredEmbeds.has(embed) || typeof embed.onMessage !== "function") return;
+  wiredEmbeds.add(embed);
+  embed.onMessage(async (event) => {
+    try { await handleMessage(embed, event); }
+    catch (error) { console.error("[SKANDI MASTER] message failure", embed?.id, error); }
+  });
+}
 
+async function refreshCustomerHeaders() {
+  const state = await getCustomerState();
+  for (const embed of customerHeaderEmbeds) post(embed, "CUSTOMER_HEADER_STATE", state);
+}
+
+async function refreshInternalHeaders(force = true) {
+  if (!isInternalPath()) return;
+  const state = await getInternalState(force);
+  for (const embed of internalHeaderEmbeds) {
+    sendMasterConfig(embed, state);
+    post(embed, "RIAINTRA_HEADER_STATE", state);
+    post(embed, "ALTEA_HEADER_STATE", state);
+    post(embed, "INTERNAL_HEADER_STATE", state);
+  }
+}
+
+async function syncKnownChromeVisibility() {
+  for (const embed of customerHeaderEmbeds) await syncChromeVisibility(embed, CUSTOMER_HEADER_SOURCE);
+  for (const embed of internalHeaderEmbeds) await syncChromeVisibility(embed, RIAINTRA_HEADER_SOURCE);
+}
+
+$w.onReady(async function () {
+  console.log("[SKANDI MASTER] READY", MASTER_VERSION, currentPath());
+
+  let components = [];
+  try { components = $w("HtmlComponent") || []; }
+  catch (error) { console.error("[SKANDI MASTER] HtmlComponent selector failed", error); }
+  components.forEach(wireEmbed);
+
+  setTimeout(() => {
+    try { ($w("HtmlComponent") || []).forEach(wireEmbed); }
+    catch (error) { console.error("[SKANDI MASTER] retry failed", error); }
+  }, 1000);
+
+  authentication.onLogin(async () => {
     try {
-
-      await authentication
-        .promptForgotPassword();
-
+      await refreshCustomerHeaders();
+      await refreshInternalHeaders(true);
+      await syncKnownChromeVisibility();
     } catch (_) {}
-
-
-    return;
-
-  }
-
-
-  if (
-
-    source ===
-      HEADER_SOURCE &&
-
-    type ===
-      "HEADER_LOGOUT"
-
-  ) {
-
-    try {
-
-      await authentication
-        .logout();
-
-    } catch (_) {}
-
-
-    await sendHeaderState(
-      embed
-    );
-
-
-    navigate(
-      "/"
-    );
-
-
-    return;
-
-  }
-
-
-  /* -------------------------------------------------------
-     HEADER HEIGHT
-     Still retained for normal header dropdown/menu behavior.
-     The initial site popup no longer uses this.
-  ------------------------------------------------------- */
-
-  if (
-
-    source ===
-      HEADER_SOURCE &&
-
-    type ===
-      "SKANDI_EMBED_RESIZE"
-
-  ) {
-
-    const requested =
-      Number(
-        payload.height
-      );
-
-
-    if (
-      Number.isFinite(
-        requested
-      )
-    ) {
-
-      try {
-
-        embed.height =
-          Math.max(
-            118,
-            Math.min(
-              1200,
-              Math.round(
-                requested
-              )
-            )
-          );
-
-      } catch (_) {}
-
-    }
-
-
-    return;
-
-  }
-
-
-  /* -------------------------------------------------------
-     FOOTER NAVIGATION
-  ------------------------------------------------------- */
-
-  if (
-
-    source ===
-      FOOTER_SOURCE &&
-
-    type ===
-      "FOOTER_NAVIGATE"
-
-  ) {
-
-    navigate(
-      payload.path ||
-      message.path
-    );
-
-    return;
-
-  }
-
-
-  if (
-
-    source ===
-      FOOTER_SOURCE &&
-
-    type ===
-      "FOOTER_STAFF_LOGIN"
-
-  ) {
-
-    navigate(
-      "/riaintra"
-    );
-
-    return;
-
-  }
-
-
-  /* -------------------------------------------------------
-     MASTER NAVIGATION
-  ------------------------------------------------------- */
-
-  if (
-    type ===
-    "MASTER_NAVIGATE"
-  ) {
-
-    navigate(
-      payload.path ||
-      message.path
-    );
-
-  }
-
-}
-
-
-/* =========================================================
-   WIRE EVERY HTML COMPONENT
-========================================================= */
-
-function wireEmbed(
-  embed
-) {
-
-  if (
-
-    !embed ||
-
-    wiredEmbeds.has(
-      embed
-    ) ||
-
-    typeof embed.onMessage !==
-      "function"
-
-  ) {
-
-    return;
-
-  }
-
-
-  wiredEmbeds.add(
-    embed
-  );
-
-
-  console.log(
-    "[SKANDI MASTER] wiring HTML component",
-    embed.id
-  );
-
-
-  embed.onMessage(
-    async event => {
-
-      try {
-
-        await handleMessage(
-          embed,
-          event
-        );
-
-      } catch (error) {
-
-        console.error(
-          "[SKANDI MASTER] message failure",
-          embed?.id,
-          error
-        );
-
-      }
-
-    }
-  );
-
-}
-
-
-/* =========================================================
-   PUSH HEADER STATE TO REGISTERED HEADERS
-========================================================= */
-
-async function refreshAllHeaderStates() {
-
-  const state =
-    await getCustomerState();
-
-
-  for (
-    const embed
-    of headerEmbeds
-  ) {
-
-    post(
-      embed,
-      "CUSTOMER_HEADER_STATE",
-      state
-    );
-
-  }
-
-}
-
-
-/* =========================================================
-   READY
-========================================================= */
-
-$w.onReady(
-  async function () {
-
-    console.log(
-      "[SKANDI MASTER] READY",
-      MASTER_VERSION,
-      currentPath()
-    );
-
-
-    let components =
-      [];
-
-
-    try {
-
-      components =
-        $w(
-          "HtmlComponent"
-        ) || [];
-
-    } catch (error) {
-
-      console.error(
-        "[SKANDI MASTER] HtmlComponent selector failed",
-        error
-      );
-
-    }
-
-
-    console.log(
-      "[SKANDI MASTER] HTML COMPONENT COUNT:",
-      components.length
-    );
-
-
-    components.forEach(
-      wireEmbed
-    );
-
-
-    /*
-     * Retry because global/page HTML components can finish
-     * initialization slightly after masterPage ready.
-     */
-    setTimeout(
-      () => {
-
-        try {
-
-          const later =
-            $w(
-              "HtmlComponent"
-            ) || [];
-
-
-          later.forEach(
-            wireEmbed
-          );
-
-
-          console.log(
-            "[SKANDI MASTER] RETRY COMPONENT COUNT:",
-            later.length
-          );
-
-
-        } catch (error) {
-
-          console.error(
-            "[SKANDI MASTER] retry failed",
-            error
-          );
-
-        }
-
-      },
-      1000
-    );
-
-
-    authentication.onLogin(
-      async () => {
-
-        try {
-
-          await refreshAllHeaderStates();
-
-        } catch (_) {}
-
-      }
-    );
-
-  }
-);
+  });
+});
