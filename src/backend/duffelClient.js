@@ -20,6 +20,44 @@ export class ProviderError extends Error {
     this.status = options.status || 500;
     this.retryable = Boolean(options.retryable);
     this.publicMessage = options.publicMessage || "The travel provider could not complete the request.";
+    this.providerRequestId = options.providerRequestId || "";
+  }
+}
+
+function safeHeader(response, name) {
+  try {
+    return String(response?.headers?.get?.(name) || "").slice(0, 240);
+  } catch (_) {
+    return "";
+  }
+}
+
+function safeProviderLog(provider, path, response, raw, reason) {
+  const meta = {
+    provider,
+    path: String(path || "").split("?")[0].slice(0, 180),
+    status: Number(response?.status || 0),
+    contentType: safeHeader(response, "content-type"),
+    requestId: safeHeader(response, "x-request-id"),
+    bodyLength: String(raw || "").length,
+    reason
+  };
+  // Never log credentials, request bodies, card data, or provider response bodies.
+  console.error("[TravelProvider]", meta);
+  return meta;
+}
+
+async function readJsonResponse(response, provider, path) {
+  const rawValue = await response.text();
+  const raw = String(rawValue ?? "").replace(/^\uFEFF/, "").trim();
+  if (!raw) {
+    return { payload: null, validJson: response?.status === 204, raw };
+  }
+  try {
+    return { payload: JSON.parse(raw), validJson: true, raw };
+  } catch (_) {
+    safeProviderLog(provider, path, response, raw, "NON_JSON_RESPONSE");
+    return { payload: null, validJson: false, raw };
   }
 }
 
@@ -28,11 +66,16 @@ export async function duffelRequest(path, options = {}) {
   const url = buildUrl(DUFFEL_BASE_URL, path, options.query);
   const headers = {
     Accept: "application/json",
-    "Accept-Encoding": "gzip",
     Authorization: `Bearer ${token}`,
     "Duffel-Version": DUFFEL_VERSION,
     ...options.headers
   };
+
+  // Do not force Accept-Encoding in Wix. Duffel compression is optional and
+  // Wix's HTTP layer may negotiate/decompress automatically. This avoids
+  // treating an undecoded/gateway response as provider JSON.
+  delete headers["Accept-Encoding"];
+  delete headers["accept-encoding"];
 
   const request = {
     method: options.method || "GET",
@@ -47,24 +90,51 @@ export async function duffelRequest(path, options = {}) {
   let response;
   try {
     response = await fetch(url, request);
-  } catch (error) {
+  } catch (_) {
     throw new ProviderError("Duffel network request failed.", {
       code: "DUFFEL_NETWORK_ERROR",
       status: 503,
       retryable: true,
-      publicMessage: "Duffel could not be reached. Retry without submitting a second payment."
+      publicMessage: "Live travel availability could not be reached. Please try the search again."
     });
   }
 
-  const payload = await parseResponse(response);
+  const { payload, validJson, raw } = await readJsonResponse(response, "DUFFEL", path);
+  const requestId = safeHeader(response, "x-request-id");
+
   if (!response.ok) {
-    throw duffelError(response.status, payload);
+    if (!validJson) {
+      safeProviderLog("DUFFEL", path, response, raw, "HTTP_ERROR_NON_JSON");
+      throw new ProviderError(`Duffel HTTP ${response.status} returned a non-JSON response.`, {
+        code: `DUFFEL_HTTP_${response.status}`,
+        status: response.status,
+        retryable: response.status === 408 || response.status === 429 || response.status >= 500,
+        providerRequestId: requestId,
+        publicMessage: response.status >= 500
+          ? "Live travel availability is temporarily unavailable. Please try again."
+          : "The live travel request could not be completed. Please review the search and try again."
+      });
+    }
+    const error = duffelError(response.status, payload);
+    error.providerRequestId = requestId;
+    throw error;
+  }
+
+  if (!validJson) {
+    throw new ProviderError("Duffel returned invalid JSON.", {
+      code: "INVALID_PROVIDER_RESPONSE",
+      status: 502,
+      retryable: true,
+      providerRequestId: requestId,
+      publicMessage: "Live travel availability returned an invalid response. Please try again."
+    });
   }
 
   return {
     data: payload?.data,
     meta: payload?.meta || null,
-    status: response.status
+    status: response.status,
+    requestId
   };
 }
 
@@ -89,7 +159,6 @@ export async function createStripePaymentIntent({
     form,
     idempotencyKey
   });
-
   return response.data;
 }
 
@@ -103,9 +172,7 @@ export async function attachDuffelOrderToPaymentIntent(paymentIntentId, orderId)
   const id = assertStripeId(paymentIntentId, "pi_");
   const response = await stripeRequest(`/v1/payment_intents/${encodeURIComponent(id)}`, {
     method: "POST",
-    form: {
-      "metadata[duffel_order_id]": orderId
-    }
+    form: { "metadata[duffel_order_id]": orderId }
   });
   return response.data;
 }
@@ -133,10 +200,7 @@ async function stripeRequest(path, options = {}) {
     Accept: "application/json",
     Authorization: `Bearer ${secretKey}`
   };
-  const request = {
-    method: options.method || "GET",
-    headers
-  };
+  const request = { method: options.method || "GET", headers };
 
   if (options.form) {
     headers["Content-Type"] = "application/x-www-form-urlencoded";
@@ -149,7 +213,7 @@ async function stripeRequest(path, options = {}) {
   let response;
   try {
     response = await fetch(`${STRIPE_BASE_URL}${path}`, request);
-  } catch (error) {
+  } catch (_) {
     throw new ProviderError("Stripe network request failed.", {
       code: "STRIPE_NETWORK_ERROR",
       status: 503,
@@ -158,8 +222,17 @@ async function stripeRequest(path, options = {}) {
     });
   }
 
-  const payload = await parseResponse(response);
+  const { payload, validJson, raw } = await readJsonResponse(response, "STRIPE", path);
   if (!response.ok) {
+    if (!validJson) {
+      safeProviderLog("STRIPE", path, response, raw, "HTTP_ERROR_NON_JSON");
+      throw new ProviderError(`Stripe HTTP ${response.status} returned a non-JSON response.`, {
+        code: `STRIPE_HTTP_${response.status}`,
+        status: response.status,
+        retryable: response.status === 429 || response.status >= 500,
+        publicMessage: "The payment provider could not complete the request. Check payment status before retrying."
+      });
+    }
     throw new ProviderError(payload?.error?.message || "Stripe rejected the request.", {
       code: String(payload?.error?.code || "STRIPE_REQUEST_FAILED").toUpperCase(),
       status: response.status,
@@ -168,6 +241,14 @@ async function stripeRequest(path, options = {}) {
     });
   }
 
+  if (!validJson) {
+    throw new ProviderError("Stripe returned invalid JSON.", {
+      code: "INVALID_PAYMENT_PROVIDER_RESPONSE",
+      status: 502,
+      retryable: true,
+      publicMessage: "The payment provider returned an invalid response. Check payment status before retrying."
+    });
+  }
   return { data: payload, status: response.status };
 }
 
@@ -185,7 +266,7 @@ async function loadSecret(name) {
   let result;
   try {
     result = await elevatedGetSecretValue(name);
-  } catch (error) {
+  } catch (_) {
     throw new ProviderError(`Unable to read ${name}.`, {
       code: "SECRET_CONFIGURATION_ERROR",
       status: 500,
@@ -213,23 +294,7 @@ function buildUrl(baseUrl, path, query = {}) {
     const values = Array.isArray(value) ? value : [value];
     return values.map((item) => `${encodeURIComponent(key)}=${encodeURIComponent(String(item))}`);
   }).join("&");
-
   return `${baseUrl}${normalizedPath}?${search}`;
-}
-
-async function parseResponse(response) {
-  const text = await response.text();
-  if (!text) return null;
-  try {
-    return JSON.parse(text);
-  } catch (error) {
-    throw new ProviderError("Provider returned invalid JSON.", {
-      code: "INVALID_PROVIDER_RESPONSE",
-      status: 502,
-      retryable: response.status >= 500,
-      publicMessage: "The provider returned an unreadable response."
-    });
-  }
 }
 
 function duffelError(status, payload) {
@@ -242,15 +307,15 @@ function duffelError(status, payload) {
     OFFER_EXPIRED: "That offer expired. Search again for a current option.",
     PRICE_CHANGED: "The airline changed the price. Refresh the offer before continuing.",
     ALREADY_BOOKED: "This offer has already been booked. Retrieve the existing order.",
-    INSUFFICIENT_BALANCE: "The Duffel balance is insufficient to create this order.",
+    INSUFFICIENT_BALANCE: "The supplier balance is insufficient to create this booking.",
     SERVICE_UNAVAILABLE: "A selected seat or baggage service is no longer available."
   };
 
   const fallback = status === 429
-    ? "Duffel is temporarily rate limiting requests. Retry shortly."
+    ? "Live travel availability is temporarily busy. Please retry shortly."
     : status >= 500
-      ? "Duffel could not complete the request. Check the order by offer ID before retrying."
-      : "Duffel rejected the reservation request. Refresh the offer and review the traveler details.";
+      ? "Live travel availability could not complete the request. Please try again."
+      : "The live travel request was rejected. Refresh the offer and review the traveler details.";
 
   return new ProviderError(firstError?.message || firstError?.title || `Duffel request failed (${status}).`, {
     code,
