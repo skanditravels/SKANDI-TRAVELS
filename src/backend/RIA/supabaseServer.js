@@ -5,7 +5,6 @@ import { fetch } from "wix-fetch";
 const elevatedGetSecretValue = elevate(secrets.getSecretValue);
 let configurationPromise = null;
 
-// Keep this allow-list explicit: this helper uses a server-side Supabase key.
 const INTERNAL_TABLES = new Set([
   "agent_users",
   "staff_login_audit",
@@ -45,57 +44,39 @@ const INTERNAL_TABLES = new Set([
   "travel_product_components",
   "travel_product_price_cache",
   "master_inventory_audit",
-  "travel_info_airports",
-  "travel_info_airlines",
-  "inventory_master_entities",
-  "inventory_localized_content",
-  "inventory_media_assets",
-  "inventory_entity_relations",
-  "inventory_dated_inventory",
   "altea_offer_cache",
   "amadeus_offer_cache",
-  "offer_cache",
-  "booking_carts",
-  "booking_cart_items",
   "career_applicant_accounts",
   "career_applicant_access_codes",
   "career_applicant_sessions",
   "career_application_files",
   "career_positions",
-  "career_audit_log",
-  "career_candidate_history",
-  "career_documents",
-  "career_sra_vetting",
-  "career_document_packets",
-  "career_settings",
-  "career_integration_snapshots",
-  "career_interviews",
-  "career_training_records",
-  "career_onboarding_tasks",
-  "career_history_gaps",
-  "career_mailbox_messages",
-  "career_maintenance_schedule",
-  "outbound_messages",
   "document_acknowledgements",
   "document_packet_items",
   "document_packets",
-  "travel_info_aircraft",
-"travel_info_aircraft_cabins",
-"travel_info_aircraft_views",
-"travel_info_aircraft_hotspots",
-"travel_info_aircraft_walk_scenes",
-"travel_info_aircraft_scene_hotspots",
-  "document_templates"
+  "document_templates",
+
+  // 2026-09 unified SKANDI/Duffel booking stack.
+  "travel_info_airports",
+  "booking_carts",
+  "booking_cart_items",
+  "inventory_master_entities",
+  "inventory_dated_inventory",
+  "inventory_media_assets",
+  "altea_bookings",
+  "altea_passengers",
+  "altea_pnr_history",
+  "altea_booking_components",
+  "altea_booking_documents",
+  "customer_profiles_booking_links",
+  "customer_travelers",
+  "customer_travel_documents",
+  "travel_requirements"
 ]);
 
 function secretString(response) {
   if (typeof response === "string") return response.trim();
-  return String(
-    response?.value ??
-    response?.secretValue ??
-    response?.secret?.value ??
-    ""
-  ).trim();
+  return String(response?.value ?? response?.secretValue ?? response?.secret?.value ?? "").trim();
 }
 
 async function getSecret(name) {
@@ -110,32 +91,15 @@ async function getConfiguration() {
   configurationPromise = (async () => {
     const baseUrl = await getSecret("SUPABASE_URL");
     let apiKey = "";
-    try {
-      apiKey = await getSecret("SUPABASE_SECRET_KEY");
-    } catch (_) {
-      apiKey = await getSecret("SUPABASE_SERVICE_ROLE_KEY");
-    }
-    if (!/^https:\/\/[^/]+\.supabase\.co\/?$/i.test(baseUrl)) {
-      throw new Error("SUPABASE_URL_INVALID");
-    }
+    try { apiKey = await getSecret("SUPABASE_SECRET_KEY"); }
+    catch (_) { apiKey = await getSecret("SUPABASE_SERVICE_ROLE_KEY"); }
+    if (!/^https:\/\/[^/]+\.supabase\.co\/?$/i.test(baseUrl)) throw new Error("SUPABASE_URL_INVALID");
     if (!apiKey) throw new Error("SUPABASE_SERVER_KEY_MISSING");
-    const keyType = apiKey.startsWith("sb_secret_")
-      ? "modern-secret"
-      : apiKey.startsWith("eyJ")
-        ? "legacy-jwt"
-        : "api-key";
-    return {
-      baseUrl: baseUrl.replace(/\/+$/, ""),
-      apiKey,
-      keyType
-    };
+    const keyType = apiKey.startsWith("sb_secret_") ? "modern-secret" : apiKey.startsWith("eyJ") ? "legacy-jwt" : "api-key";
+    return { baseUrl: baseUrl.replace(/\/+$/, ""), apiKey, keyType };
   })();
-  try {
-    return await configurationPromise;
-  } catch (error) {
-    configurationPromise = null;
-    throw error;
-  }
+  try { return await configurationPromise; }
+  catch (error) { configurationPromise = null; throw error; }
 }
 
 function makeQuery(query = {}) {
@@ -147,41 +111,28 @@ function makeQuery(query = {}) {
 }
 
 function buildHeaders({ apiKey, keyType, prefer }) {
-  const headers = {
-    apikey: apiKey,
-    Accept: "application/json",
-    "Content-Type": "application/json"
-  };
+  const headers = { apikey: apiKey, Accept: "application/json", "Content-Type": "application/json" };
   if (keyType === "legacy-jwt") headers.Authorization = `Bearer ${apiKey}`;
   if (prefer) headers.Prefer = prefer;
   return headers;
 }
 
-export async function restRequest({
-  table,
-  method = "GET",
-  query = {},
-  body,
-  prefer = "return=representation"
-}) {
-  if (!INTERNAL_TABLES.has(table)) throw new Error("SUPABASE_TABLE_NOT_ALLOWED");
+export async function restRequest({ table, method = "GET", query = {}, body, prefer = "return=representation" }) {
+  if (!INTERNAL_TABLES.has(table)) {
+    console.error("[Supabase] rejected table", { table: String(table || "").slice(0, 100), method });
+    throw new Error("SUPABASE_TABLE_NOT_ALLOWED");
+  }
   const { baseUrl, apiKey, keyType } = await getConfiguration();
-  const response = await fetch(
-    `${baseUrl}/rest/v1/${table}${makeQuery(query)}`,
-    {
-      method,
-      headers: buildHeaders({ apiKey, keyType, prefer }),
-      body: body === undefined ? undefined : JSON.stringify(body)
-    }
-  );
+  const response = await fetch(`${baseUrl}/rest/v1/${table}${makeQuery(query)}`, {
+    method,
+    headers: buildHeaders({ apiKey, keyType, prefer }),
+    body: body === undefined ? undefined : JSON.stringify(body)
+  });
   const raw = await response.text();
   let payload = null;
   if (raw) {
-    try {
-      payload = JSON.parse(raw);
-    } catch (_) {
-      throw new Error("SUPABASE_INVALID_RESPONSE");
-    }
+    try { payload = JSON.parse(raw); }
+    catch (_) { throw new Error("SUPABASE_INVALID_RESPONSE"); }
   }
   if (!response.ok) {
     const safeError = {
@@ -194,10 +145,7 @@ export async function restRequest({
       hint: String(payload?.hint || "").slice(0, 240)
     };
     console.error("[Supabase]", safeError);
-    const error = new Error(
-      `SUPABASE_HTTP_${response.status}` +
-      (safeError.code ? `_${safeError.code}` : "")
-    );
+    const error = new Error(`SUPABASE_HTTP_${response.status}` + (safeError.code ? `_${safeError.code}` : ""));
     error.status = response.status;
     error.code = safeError.code || "SUPABASE_HTTP_ERROR";
     error.supabase = safeError;
@@ -206,13 +154,7 @@ export async function restRequest({
   return payload;
 }
 
-export async function writeAdminAudit({
-  actorId,
-  action,
-  targetMember = null,
-  before = null,
-  after = null
-}) {
+export async function writeAdminAudit({ actorId, action, targetMember = null, before = null, after = null }) {
   if (!actorId || !action) throw new Error("AUDIT_INPUT_INVALID");
   return restRequest({
     table: "admin_audit_logs",
