@@ -6,7 +6,7 @@ import {
   sbUpdate,
   eq
 } from "backend/supabaseClient";
-import { duffelRequest } from "src/backend/duffelClient";
+import { duffelRequest } from "backend/duffelClient";
 
 const T = {
   bookings: "altea_bookings",
