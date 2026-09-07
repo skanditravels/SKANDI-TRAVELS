@@ -1,21 +1,72 @@
-import wixLocationFrontend from "wix-location-frontend";
-import { getHotelDetailPage } from "backend/destinationInventory.web";
-import { searchUnifiedOffers, createBookingCartFromOffer } from "backend/bookingOrchestrator.web";
-const HTML_ID="#hotelDetailHtml",HTML_SOURCE="SKANDI_HOTEL_DETAIL",PARENT_SOURCE="SKANDI_WIX_PARENT";let currentPage=null;
+import wixLocation from "wix-location-frontend";
+import { session } from "wix-storage";
+import {
+  searchUnifiedOffers,
+  createBookingCartFromOffer
+} from "backend/bookingOrchestrator.web";
+import { getPublicInventoryRecord } from "backend/FINAL/publicInventory.web";
 
-function obj(v){return v&&typeof v==="object"&&!Array.isArray(v)?v:{}}
-function parse(v){if(typeof v==="string"){try{return JSON.parse(v)}catch(_){return null}}return obj(v)}
-function payload(m){return {...obj(m),...obj(m?.payload)}}
-function send(el,type,data={},requestId=""){el.postMessage({source:PARENT_SOURCE,type,requestId,payload:{...obj(data),requestId},timestamp:new Date().toISOString()})}
-function clean(v){return String(v||"").trim().toLowerCase().replace(/[^a-z0-9-]/g,"")}
-function query(){return obj(wixLocationFrontend.query)}
-function allowedPath(path){return path.startsWith("/")||/^https?:\/\//i.test(path)||/^mailto:/i.test(path)||/^tel:/i.test(path)}
-function navigate(path){const target=String(path||"").trim();if(target&&allowedPath(target))wixLocationFrontend.to(target)}
-function accessUrl(result){const allowed=["offer","extras","transfer","apis","seats","payment","confirmation"];const step=allowed.includes(result?.step)?result.step:"offer";const q=new URLSearchParams({step,cartId:String(result?.cartId||"")});if(result?.cartToken)q.set("cartToken",String(result.cartToken));return `/booking?${q.toString()}`}
-async function chooseOffer(offer,search){let result=await createBookingCartFromOffer({offer,search});if(!result?.cartId)throw new Error(result?.message||"Could not create booking cart.");navigate(accessUrl(result));return result}
+const EMBED_ID = "#hotelDetailEmbed";
+const CHILD_SOURCE = "SKANDI_HOTEL_DETAIL";
+const PARENT_SOURCE = "SKANDI_WIX_PARENT";
 
-function route(){const p=(Array.isArray(wixLocationFrontend.path)?wixLocationFrontend.path:[]).map(clean).filter(Boolean),i=p.lastIndexOf("destinations");let h=p[i+4]||"";if(["hotel","hotels","hotell"].includes(h))h=p[i+5]||"";return{countrySlug:p[i+1]||"",destinationSlug:p[i+2]||"",areaSlug:p[i+3]||"",hotelSlug:h}}
-async function load(el,p={},id=""){const r={...route(),...obj(p.query),...p};const result=await getHotelDetailPage({...r,language:p.settings?.language||p.language||"EN",currency:p.settings?.currency||p.currency||"USD"});currentPage=result.page;send(el,"HOTEL_DETAIL_DATA",{page:currentPage},id)}
-function staySearch(raw={}){const s={...obj(raw),tripType:"hotelOnly",productType:"hotelOnly"};s.destination=s.destination||currentPage?.searchAirportIata||currentPage?.destinationIata||currentPage?.destinationName||"";s.destinationRegion=s.destinationRegion||currentPage?.areaName||currentPage?.destinationName||"";return s}
-function onlyThisHotel(items){const wanted=String(currentPage?.providerAccommodationId||"");if(!wanted)return items;return items.filter(item=>String(item.accommodationId||item.hotel?.id||"")===wanted)}
-$w.onReady(()=>{let el;try{el=$w(HTML_ID)}catch(e){console.error(e);return}el.onMessage(async ev=>{const m=parse(ev.data);if(!m||m.source!==HTML_SOURCE)return;const p=payload(m),id=String(m.requestId||p.requestId||"");try{if(m.type==="HOTEL_DETAIL_READY"||m.type==="HOTEL_DETAIL_REFRESH"){await load(el,p,id);return}if(m.type==="HOTEL_DETAIL_CHECK_AVAILABILITY"){const r=await searchUnifiedOffers({search:staySearch(p.search)});const items=onlyThisHotel(Array.isArray(r?.items)?r.items:[]);send(el,"HOTEL_DETAIL_AVAILABILITY_RESULT",{...(r||{}),items},id);return}if(m.type==="HOTEL_DETAIL_SELECT_OFFER"){const offer=obj(p.offer);const r=await chooseOffer(offer,staySearch(p.search||offer.searchContext));send(el,"HOTEL_DETAIL_SELECTED",r,id);return}if(m.type==="HOTEL_DETAIL_NAVIGATE")navigate(p.path)}catch(e){send(el,"HOTEL_DETAIL_ERROR",{message:e?.message||"Hotel request failed."},id)}});load(el).catch(e=>send(el,"HOTEL_DETAIL_ERROR",{message:e.message}))});
+function post(html, type, payload = {}) { html.postMessage({ source: PARENT_SOURCE, type, payload, timestamp: new Date().toISOString() }); }
+function clean(v, max = 500) { return String(v ?? "").trim().slice(0, max); }
+function hotelSlug() {
+  const parts = (wixLocation.path || []).filter(Boolean);
+  return clean(parts[parts.length - 1] || wixLocation.query.hotel || "", 180);
+}
+function searchOf(payload = {}, hotel = {}) {
+  return {
+    tripType: "hotelOnly",
+    destination: clean(payload.destination || hotel?.details?.searchAirportIata || hotel?.details?.city || wixLocation.query.destination || "", 160),
+    departureDate: clean(payload.checkInDate || payload.departureDate || wixLocation.query.checkIn || "", 10),
+    returnDate: clean(payload.checkOutDate || payload.returnDate || wixLocation.query.checkOut || "", 10),
+    adults: Math.max(1, Number(payload.adults || wixLocation.query.adults || 2)),
+    children: Math.max(0, Number(payload.children || wixLocation.query.children || 0)),
+    rooms: Math.max(1, Number(payload.rooms || wixLocation.query.rooms || 1)),
+    currency: clean(payload.currency || wixLocation.query.currency || "USD", 3).toUpperCase()
+  };
+}
+
+let hotelRecord = null;
+$w.onReady(() => {
+  const html = $w(EMBED_ID);
+  html.onMessage(async event => {
+    const message = event.data || {};
+    if (message.source !== CHILD_SOURCE) return;
+    const payload = message.payload || {};
+    try {
+      if (message.type === "HOTEL_DETAIL_READY") {
+        hotelRecord = await getPublicInventoryRecord({ entityType: "HOTEL", slug: hotelSlug() });
+        post(html, "HOTEL_DETAIL_RESULT", { hotel: hotelRecord?.record || hotelRecord || null, supplier: "DUFFEL_STAYS" });
+        return;
+      }
+      if (message.type === "HOTEL_DETAIL_CHECK_AVAILABILITY") {
+        const h = hotelRecord?.record || hotelRecord || {};
+        const search = searchOf(payload.search || payload, h);
+        const result = await searchUnifiedOffers({ search });
+        const targetName = clean(h.name, 180).toLowerCase();
+        const targetAccommodationId = clean(h?.details?.duffelAccommodationId || h?.details?.providerAccommodationId, 180);
+        const items = (result?.items || []).filter(item => {
+          if (targetAccommodationId && item.accommodationId === targetAccommodationId) return true;
+          if (targetName && clean(item.title, 180).toLowerCase() === targetName) return true;
+          return !targetAccommodationId && !targetName;
+        });
+        post(html, "HOTEL_DETAIL_AVAILABILITY_RESULT", { items, search, supplier: "DUFFEL_STAYS" });
+        return;
+      }
+      if (message.type === "HOTEL_DETAIL_SELECT_OFFER") {
+        const offer = payload.offer || {};
+        const h = hotelRecord?.record || hotelRecord || {};
+        const search = searchOf(payload.search || offer.searchContext || {}, h);
+        const cart = await createBookingCartFromOffer({ offer, search });
+        if (cart?.cartId) session.setItem("SKANDI_BOOKING_CART_ID", cart.cartId);
+        if (cart?.cartToken) session.setItem("SKANDI_BOOKING_CART_TOKEN", cart.cartToken);
+        wixLocation.to(`/booking?step=offer&cartId=${encodeURIComponent(cart.cartId)}${cart.cartToken ? `&cartToken=${encodeURIComponent(cart.cartToken)}` : ""}`);
+      }
+    } catch (error) {
+      post(html, "HOTEL_DETAIL_ERROR", { message: error?.publicMessage || error?.message || "Live hotel availability is temporarily unavailable." });
+    }
+  });
+});
