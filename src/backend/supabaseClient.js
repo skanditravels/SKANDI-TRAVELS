@@ -89,7 +89,22 @@ const INTERNAL_TABLES =
     "document_acknowledgements",
     "document_packet_items",
     "document_packets",
-    "document_templates"
+    "document_templates",
+    "travel_info_airports",
+  "booking_carts",
+  "booking_cart_items",
+  "inventory_master_entities",
+  "inventory_dated_inventory",
+  "inventory_media_assets",
+  "altea_bookings",
+  "altea_passengers",
+  "altea_pnr_history",
+  "altea_booking_components",
+  "altea_booking_documents",
+  "customer_profiles_booking_links",
+  "customer_travelers",
+  "customer_travel_documents",
+  "travel_requirements"
   ]);
 
 
