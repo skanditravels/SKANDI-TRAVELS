@@ -14,7 +14,7 @@ import {
   createDuffelOrder,
   createDuffelOrderCancellation,
   confirmDuffelOrderCancellation
-} from "src/backend/duffelTravel.web";
+} from "backend/duffelTravel.web";
 import {
   getAlteaUnifiedBootstrap,
   searchAlteaBookings,
@@ -27,14 +27,14 @@ import {
   addAlteaInventoryComponent,
   updateAlteaBookingComponent,
   createAlteaPassenger
-} from "src/backend/RIA/alteaUnified.web";
+} from "backend/RIA/alteaUnified.web";
 import {
   searchDuffelOrderChanges,
   createDuffelPendingOrderChange,
   getDuffelPendingOrderChange,
   prepareDuffelOrderChangePayment,
   confirmDuffelOrderChange
-} from "src/backend/RIA/duffelServicing.web";
+} from "backend/RIA/duffelServicing.web";
 
 const EMBED_ID = "#alteaReservationsEmbed";
 const STAFF_LOGIN_PATH = "/riaintra";
