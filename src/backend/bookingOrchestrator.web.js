@@ -310,7 +310,7 @@ function dayDifference(from, to) {
 async function searchFlights(search) {
   const response = await travelProviderRequest("/air/offer_requests", {
     method: "POST",
-    query: { return_offers: true, supplier_timeout: 15000 },
+    query: { return_offers: true, supplier_timeout: 9000 },
     body: {
       data: {
         slices: flightSlices(search),
