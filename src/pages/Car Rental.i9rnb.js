@@ -23,7 +23,20 @@ $w.onReady(() => {
     const payload = message.payload || {};
     try {
       if (message.type === "CAR_RENTAL_READY") {
-        post(html, "CAR_RENTAL_BOOTSTRAP", { supplier: "DUFFEL_CARS", bookingId: wixLocation.query.bookingId || "" });
+        post(html, "CAR_RENTAL_BOOTSTRAP", {
+          supplier: "DUFFEL_CARS",
+          bookingId: wixLocation.query.bookingId || "",
+          search: {
+            pickupLocationText: wixLocation.query.pickup || wixLocation.query.destination || wixLocation.query.destinationSlug || "",
+            dropoffLocationText: wixLocation.query.dropoff || wixLocation.query.pickup || wixLocation.query.destination || wixLocation.query.destinationSlug || "",
+            pickupDate: wixLocation.query.pickupDate || wixLocation.query.departureDate || "",
+            dropoffDate: wixLocation.query.dropoffDate || wixLocation.query.returnDate || "",
+            pickupTime: wixLocation.query.pickupTime || "10:00",
+            dropoffTime: wixLocation.query.dropoffTime || "10:00",
+            residenceCountry: wixLocation.query.residenceCountry || "US",
+            driverAge: Number(wixLocation.query.driverAge || 30)
+          }
+        });
         return;
       }
       if (message.type === "CAR_RENTAL_SEARCH") {
