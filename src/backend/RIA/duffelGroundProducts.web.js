@@ -1,6 +1,6 @@
 import { webMethod, Permissions } from "wix-web-module";
 import { currentMember } from "wix-members-backend";
-import { duffelRequest, ProviderError } from "src/backend/duffelClient";
+import { duffelRequest, ProviderError } from "backend/duffelClient";
 import { sbInsert, sbSelect, sbUpdate, eq } from "backend/supabaseClient";
 import { getStaffPortalSession } from "backend/RIA/staffPortalAuth.web";
 
