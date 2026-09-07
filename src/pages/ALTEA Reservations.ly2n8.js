@@ -35,6 +35,20 @@ import {
   prepareDuffelOrderChangePayment,
   confirmDuffelOrderChange
 } from "backend/RIA/duffelServicing.web";
+import {
+  searchDuffelStays,
+  fetchDuffelStayRates,
+  quoteDuffelStay,
+  createDuffelStayBookingStaff,
+  getDuffelStayBookingStaff,
+  cancelDuffelStayBookingStaff,
+  searchDuffelCars,
+  quoteDuffelCar,
+  createDuffelCarBookingStaff,
+  getDuffelCarBookingStaff,
+  cancelDuffelCarBookingStaff,
+  createDuffelComponentClientKeyStaff
+} from "backend/RIA/duffelGroundProducts.web";
 
 const EMBED_ID = "#alteaReservationsEmbed";
 const STAFF_LOGIN_PATH = "/riaintra";
@@ -107,6 +121,20 @@ const ACTIONS = {
   DUFFEL_GET_ORDER_CHANGE: { resultType: "DUFFEL_ORDER_CHANGE_PENDING", run: getDuffelPendingOrderChange },
   DUFFEL_PREPARE_CHANGE_PAYMENT: { resultType: "DUFFEL_CHANGE_PAYMENT_RESULT", progress: "Preparing secure change payment...", run: prepareDuffelOrderChangePayment },
   DUFFEL_CONFIRM_ORDER_CHANGE: { resultType: "DUFFEL_ORDER_CHANGE_CONFIRMED", progress: "Confirming airline change and updating ALTEA...", run: confirmChangeAndSync },
+
+  DUFFEL_SEARCH_STAYS: { resultType: "DUFFEL_STAYS_RESULT", progress: "Searching live Duffel Stays...", run: searchDuffelStays },
+  DUFFEL_FETCH_STAY_RATES: { resultType: "DUFFEL_STAY_RATES_RESULT", progress: "Loading live room rates...", run: fetchDuffelStayRates },
+  DUFFEL_QUOTE_STAY: { resultType: "DUFFEL_STAY_QUOTE_RESULT", progress: "Confirming hotel price and availability...", run: quoteDuffelStay },
+  DUFFEL_CREATE_STAY_BOOKING: { resultType: "DUFFEL_STAY_BOOKING_RESULT", progress: "Creating Duffel stay booking...", run: createDuffelStayBookingStaff },
+  DUFFEL_GET_STAY_BOOKING: { resultType: "DUFFEL_STAY_BOOKING_RESULT", run: getDuffelStayBookingStaff },
+  DUFFEL_CANCEL_STAY_BOOKING: { resultType: "DUFFEL_STAY_CANCEL_RESULT", progress: "Cancelling Duffel stay booking...", run: cancelDuffelStayBookingStaff },
+
+  DUFFEL_SEARCH_CARS: { resultType: "DUFFEL_CARS_RESULT", progress: "Searching live Duffel Cars...", run: searchDuffelCars },
+  DUFFEL_QUOTE_CAR: { resultType: "DUFFEL_CAR_QUOTE_RESULT", progress: "Confirming car price and availability...", run: quoteDuffelCar },
+  DUFFEL_PREPARE_CAR_CARD: { resultType: "DUFFEL_CAR_CARD_READY", progress: "Preparing secure supplier card entry...", run: createDuffelComponentClientKeyStaff },
+  DUFFEL_CREATE_CAR_BOOKING: { resultType: "DUFFEL_CAR_BOOKING_RESULT", progress: "Creating Duffel car booking...", run: createDuffelCarBookingStaff },
+  DUFFEL_GET_CAR_BOOKING: { resultType: "DUFFEL_CAR_BOOKING_RESULT", run: getDuffelCarBookingStaff },
+  DUFFEL_CANCEL_CAR_BOOKING: { resultType: "DUFFEL_CAR_CANCEL_RESULT", progress: "Cancelling Duffel car booking...", run: cancelDuffelCarBookingStaff },
 
   ALTEA_UNIFIED_BOOTSTRAP: { resultType: "ALTEA_UNIFIED_BOOTSTRAP_RESULT", run: getAlteaUnifiedBootstrap },
   ALTEA_SEARCH_BOOKINGS: { resultType: "ALTEA_BOOKINGS_RESULT", run: searchAlteaBookings },
