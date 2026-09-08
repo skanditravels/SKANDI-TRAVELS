@@ -2,9 +2,9 @@ import wixLocation from "wix-location-frontend";
 import { session } from "wix-storage";
 import {
   searchUnifiedOffers,
-  createBookingCartFromOffer
-} from "backend/bookingOrchestrator.web";
-import { getPublicDestinationFinderData } from "backend/FINAL/publicInventory.web";
+  createBookingCartFromOffer,
+  getSearchableDestinationFinderData
+} from "backend/bookingOrchestratorCollection.web";
 
 const EMBED_ID = "#hotelsEmbed";
 const CHILD_SOURCE = "SKANDI_HOTEL_SEARCH";
@@ -182,7 +182,7 @@ $w.onReady(() => {
     const payload = message.payload || {};
     try {
       if (message.type === "HOTEL_SEARCH_READY") {
-        const result = await getPublicDestinationFinderData({ language: payload?.settings?.language || "EN" });
+const result = await getSearchableDestinationFinderData({ language: payload?.settings?.language || "EN" });
         finder = {
           countries: arr(result?.countries),
           areas: arr(result?.areas),
