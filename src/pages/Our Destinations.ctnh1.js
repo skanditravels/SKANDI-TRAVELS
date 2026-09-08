@@ -1,288 +1,48 @@
 import wixLocation from "wix-location";
-import { getPublicDestinationFinderData } from "backend/FINAL/publicInventory.web";
+import { getInventoryDestinationIndex } from "backend/FINAL/destinationFlow.web";
 
-const EMBED_ID = "#htmlDestinations";
+const EMBED_ID="#htmlDestinations";
+const CHILD_SOURCE="SKANDI_DESTINATIONS_INDEX";
+const PARENT_SOURCE="SKANDI_WIX_PARENT";
+let lastLanguage="EN";
 
-const CHILD_SOURCE = "SKANDI_DESTINATIONS_INDEX";
-const PARENT_SOURCE = "SKANDI_WIX_PARENT";
+const clean=(v,m=500)=>String(v??"").trim().slice(0,m);
+const slug=v=>clean(v,180).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9-]+/g,"-").replace(/^-+|-+$/g,"");
+const lang=v=>["EN","SV","NO","DA","FI"].includes(String(v||"EN").toUpperCase())?String(v||"EN").toUpperCase():"EN";
+function html(){try{return $w(EMBED_ID)}catch(_){return null}}
+function post(type,payload={}){html()?.postMessage?.({source:PARENT_SOURCE,type,payload,timestamp:new Date().toISOString()})}
+function go(path){const p=clean(path,700);if(p)wixLocation.to(p.startsWith("/")?p:`/${p}`)}
 
-let lastLanguage = "EN";
-
-function embed() {
-  try {
-    return $w(EMBED_ID);
-  } catch (_error) {
-    return null;
+async function load(language=lastLanguage){
+  lastLanguage=lang(language);
+  post("DESTINATIONS_INDEX_LOADING",{loading:true});
+  try{
+    const result=await getInventoryDestinationIndex({language:lastLanguage});
+    post("DESTINATIONS_INDEX_DATA",{countries:Array.isArray(result?.countries)?result.countries:[]});
+  }catch(error){
+    post("DESTINATIONS_INDEX_ERROR",{message:error?.message||"Destinations are temporarily unavailable."});
   }
 }
 
-function send(type, payload = {}) {
-  const html = embed();
-
-  if (!html?.postMessage) {
-    return;
-  }
-
-  html.postMessage({
-    source: PARENT_SOURCE,
-    type,
-    payload,
-    timestamp: new Date().toISOString()
-  });
-}
-
-function normalizeLanguage(value) {
-  const language = String(value || "EN")
-    .trim()
-    .toUpperCase();
-
-  return ["EN", "SV", "NO", "DA", "FI"].includes(language)
-    ? language
-    : "EN";
-}
-
-function normalizeSlug(value) {
-  return String(value || "")
-    .trim()
-    .toLowerCase()
-    .replace(/^\/+|\/+$/g, "");
-}
-
-function buildPayload(result = {}) {
-  const countries = Array.isArray(result.countries)
-    ? result.countries
-    : [];
-
-  const areas = Array.isArray(result.areas)
-    ? result.areas
-    : [];
-
-  const hotels = Array.isArray(result.hotels)
-    ? result.hotels
-    : [];
-
-  const countryCards = countries.map((country) => {
-    const countryAreas = areas.filter(
-      (area) =>
-        String(area.countryId || "") ===
-        String(country.id || "")
-    );
-
-    const areaIds = new Set(
-      countryAreas.map((area) => String(area.id))
-    );
-
-    const countryHotels = hotels.filter((hotel) =>
-      areaIds.has(String(hotel.areaId || ""))
-    );
-
-    return {
-      ...country,
-
-      areaCount: countryAreas.length,
-      hotelCount: countryHotels.length,
-
-      areas: countryAreas
-        .slice()
-        .sort((a, b) =>
-          String(a.name || "").localeCompare(
-            String(b.name || "")
-          )
-        )
-        .map((area) => ({
-          id: area.id,
-          name: area.name,
-          slug: area.slug,
-          image:
-            area.image ||
-            area.heroImage ||
-            area.cardImage ||
-            "",
-          description:
-            area.description || "",
-          iata:
-            area.destinationIata ||
-            area.airportIata ||
-            area.iata ||
-            ""
-        }))
-    };
-  });
-
-  return {
-    countries: countryCards,
-    totalCountries: countryCards.length,
-    totalAreas: areas.length,
-    totalHotels: hotels.length
-  };
-}
-
-async function loadDestinations(
-  language = lastLanguage
-) {
-  lastLanguage =
-    normalizeLanguage(language);
-
-  send("DESTINATIONS_INDEX_LOADING", {
-    loading: true
-  });
-
-  try {
-    const result =
-      await getPublicDestinationFinderData({
-        language: lastLanguage
-      });
-
-    if (result?.ok === false) {
-      throw new Error(
-        result.message ||
-          "Destination data could not be loaded."
-      );
-    }
-
-    const payload =
-      buildPayload(result);
-
-    send(
-      "DESTINATIONS_INDEX_DATA",
-      payload
-    );
-  } catch (error) {
-    console.error(
-      "[SKANDI Destinations]",
-      error
-    );
-
-    send("DESTINATIONS_INDEX_ERROR", {
-      message:
-        error?.message ||
-        "Destinations are temporarily unavailable."
-    });
-  }
-}
-
-function navigate(path) {
-  const cleanPath =
-    String(path || "").trim();
-
-  if (!cleanPath) {
-    return;
-  }
-
-  wixLocation.to(
-    cleanPath.startsWith("/")
-      ? cleanPath
-      : `/${cleanPath}`
-  );
-}
-
-$w.onReady(async () => {
-  const html = embed();
-
-  if (!html) {
-    console.error(
-      `[SKANDI Destinations] Missing ${EMBED_ID}`
-    );
-    return;
-  }
-
-  html.onMessage(async (event) => {
-    const message =
-      event.data || {};
-
-    if (
-      message.source !== CHILD_SOURCE
-    ) {
-      return;
-    }
-
-    const payload =
-      message.payload || {};
-
-    try {
-      switch (message.type) {
-        case "DESTINATIONS_INDEX_READY":
-          await loadDestinations(
-            payload.language
-          );
-          return;
-
-        case "DESTINATIONS_INDEX_REFRESH":
-          await loadDestinations(
-            payload.language ||
-              lastLanguage
-          );
-          return;
-
-        case "DESTINATIONS_LANGUAGE_CHANGE":
-          await loadDestinations(
-            payload.language
-          );
-          return;
-
-        case "DESTINATIONS_OPEN_COUNTRY": {
-          const slug =
-            normalizeSlug(
-              payload.slug
-            );
-
-          if (slug) {
-            navigate(
-              `/destinations/${slug}`
-            );
-          }
-
-          return;
-        }
-
-        case "DESTINATIONS_OPEN_AREA": {
-          const countrySlug =
-            normalizeSlug(
-              payload.countrySlug
-            );
-
-          const areaSlug =
-            normalizeSlug(
-              payload.areaSlug
-            );
-
-          if (
-            countrySlug &&
-            areaSlug
-          ) {
-            navigate(
-              `/destinations/${countrySlug}/${areaSlug}`
-            );
-          }
-
-          return;
-        }
-
-        default:
-          return;
+$w.onReady(()=>{
+  const el=html();
+  if(!el?.onMessage){console.error(`[Destinations] Missing ${EMBED_ID}`);return}
+  el.onMessage(async event=>{
+    const m=event.data||{},p=m.payload||{};
+    if(m.source!==CHILD_SOURCE)return;
+    try{
+      if(["DESTINATIONS_INDEX_READY","DESTINATIONS_INDEX_REFRESH","DESTINATIONS_LANGUAGE_CHANGE"].includes(m.type)){
+        await load(p.language||lastLanguage);return;
       }
-    } catch (error) {
-      console.error(
-        "[SKANDI Destinations]",
-        error
-      );
-
-      send(
-        "DESTINATIONS_INDEX_ERROR",
-        {
-          message:
-            error?.message ||
-            "The request could not be completed."
-        }
-      );
-    }
+      if(m.type==="DESTINATIONS_OPEN_COUNTRY"){
+        const s=slug(p.slug);if(s)go(`/destinations/${s}`);return;
+      }
+      if(m.type==="DESTINATIONS_OPEN_AREA"||m.type==="DESTINATIONS_OPEN_DESTINATION"){
+        if(p.path){go(p.path);return}
+        const c=slug(p.countrySlug),d=slug(p.destinationSlug||p.areaSlug);
+        if(c&&d)go(`/destinations/${c}/${d}`);return;
+      }
+    }catch(error){post("DESTINATIONS_INDEX_ERROR",{message:error?.message||"The request could not be completed."})}
   });
-
-  // Fallback in case the iframe READY
-  // message happens before Wix attaches.
-  setTimeout(() => {
-    loadDestinations(
-      lastLanguage
-    );
-  }, 500);
+  setTimeout(()=>load(lastLanguage),350);
 });
