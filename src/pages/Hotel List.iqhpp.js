@@ -1,223 +1,168 @@
 import wixLocation from "wix-location-frontend";
+import { currentMember, authentication } from "wix-members-frontend";
+import { getCustomerHeaderSession, subscribeCustomerNewsletter } from "backend/customerHeader.web";
 import { session } from "wix-storage";
+import { getInventoryHotelBrowsePage } from "backend/FINAL/destinationFlow.web";
 import {
   searchUnifiedOffers,
-  createBookingCartFromOffer,
-  getSearchableDestinationFinderData
+  createBookingCartFromOffer
 } from "backend/bookingOrchestratorCollection.web";
 
-const EMBED_ID = "#hotelsEmbed";
-const CHILD_SOURCE = "SKANDI_HOTEL_SEARCH";
-const PARENT_SOURCE = "SKANDI_WIX_PARENT";
+const EMBED_ID="#hotelsEmbed";
+const CHILD_SOURCE="SKANDI_HOTEL_SEARCH";
+const PARENT_SOURCE="SKANDI_WIX_PARENT";
+let pageContext=null;
 
-let finder = { countries: [], areas: [], hotels: [] };
-let pageContext = null;
+const clean=(v,m=500)=>String(v??"").trim().slice(0,m);
+const arr=v=>Array.isArray(v)?v:[];
+const obj=v=>v&&typeof v==="object"&&!Array.isArray(v)?v:{};
+const first=(...v)=>v.find(x=>x!==undefined&&x!==null&&x!=="")??"";
+const slug=v=>clean(v,180).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/&/g," and ").replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"");
+function post(html,type,payload={}){html.postMessage({source:PARENT_SOURCE,type,payload,timestamp:new Date().toISOString()})}
+function bridgePost(html,type,data={}){post(html,type,data)}
 
-function post(html, type, payload = {}) {
-  html.postMessage({ source: PARENT_SOURCE, type, payload, timestamp: new Date().toISOString() });
+const HEADER_SOURCE="SKANDI_CUSTOMER_HEADER_EXPANDBAR";
+const FOOTER_SOURCE="SKANDI_CUSTOMER_FOOTER";
+let headerLoadPromise=null;
+function guestHeaderState(){return{loggedIn:false,displayName:"",points:0,tierName:"",menu:[]}}
+async function sendCustomerHeaderState(html,force=false){
+  if(headerLoadPromise&&!force)return headerLoadPromise;
+  headerLoadPromise=(async()=>{
+    try{
+      const member=await currentMember.getMember();
+      if(!member){bridgePost(html,"CUSTOMER_HEADER_STATE",guestHeaderState());return}
+      const s=await getCustomerHeaderSession();
+      bridgePost(html,"CUSTOMER_HEADER_STATE",{loggedIn:true,displayName:s?.displayName||s?.name||s?.member?.displayName||member?.profile?.nickname||member?.profile?.title||member?.loginEmail||"",points:Number(s?.points||s?.clubPoints||s?.rewards?.points||0),tierName:s?.tierName||s?.tier||s?.clubTier||"",menu:Array.isArray(s?.menu)?s.menu:[]});
+    }catch(error){console.error("[Customer header]",error);bridgePost(html,"CUSTOMER_HEADER_STATE",guestHeaderState())}
+    finally{headerLoadPromise=null}
+  })();
+  return headerLoadPromise;
 }
-function clean(v, max = 500) { return String(v ?? "").trim().slice(0, max); }
-function lower(v, max = 500) { return clean(v, max).toLowerCase(); }
-function arr(v) { return Array.isArray(v) ? v : []; }
-function obj(v) { return v && typeof v === "object" && !Array.isArray(v) ? v : {}; }
-function first(...values) { return values.find(v => v !== undefined && v !== null && v !== "") ?? ""; }
-function slug(v) {
-  return clean(v, 180).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-    .replace(/&/g, " and ").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
-}
-function imageOf(item = {}) {
-  const media = obj(item.media);
-  const gallery = arr(item.gallery);
-  return clean(first(item.image, item.imageUrl, item.heroImage, item.cardImage, media.hero, media.primary,
-    typeof gallery[0] === "string" ? gallery[0] : gallery[0]?.url), 1200);
-}
-function pathParts() { return arr(wixLocation.path).map(v => decodeURIComponent(String(v))); }
-function routeContext() {
-  const p = pathParts();
-  const q = wixLocation.query || {};
-  return {
-    countrySlug: slug(q.country || (p[0] === "hotels" ? p[1] : "")),
-    destinationSlug: slug(q.destination || (p[0] === "hotels" ? p[2] : "")),
-    areaSlug: slug(q.area || (p[0] === "hotels" ? p[3] : ""))
-  };
-}
-function countryFor(countrySlug) {
-  const needle = slug(countrySlug);
-  return finder.countries.find(c => slug(c.slug || c.id || c.name) === needle) || finder.countries[0] || null;
-}
-function areasForCountry(country) {
-  if (!country) return finder.areas;
-  const ids = new Set([clean(country.id), clean(country.slug), slug(country.name)].filter(Boolean));
-  return finder.areas.filter(a => ids.has(clean(a.countryId)) || ids.has(clean(a.countrySlug)) || slug(a.countryName) === slug(country.name));
-}
-function areaFor(country, destinationSlug, areaSlug) {
-  const rows = areasForCountry(country);
-  const candidates = [areaSlug, destinationSlug].map(slug).filter(Boolean);
-  for (const candidate of candidates) {
-    const match = rows.find(a => slug(a.slug || a.id || a.name) === candidate);
-    if (match) return match;
+async function handleSharedChrome(html,m,navigatePath){
+  const p=m?.payload||{};
+  if(m.source===HEADER_SOURCE){
+    if(m.type==="HEADER_READY"){await sendCustomerHeaderState(html);return true}
+    if(m.type==="HEADER_NAVIGATE"){navigatePath(m.path||p.path);return true}
+    if(m.type==="HEADER_SEARCH"){navigatePath("/search");return true}
+    if(m.type==="HEADER_LOGIN"){try{await authentication.promptLogin()}catch(_){ }await sendCustomerHeaderState(html,true);return true}
+    if(m.type==="HEADER_LOGOUT"){try{await Promise.resolve(authentication.logout())}catch(_){ }bridgePost(html,"CUSTOMER_HEADER_STATE",guestHeaderState());navigatePath("/home");return true}
+    return false;
   }
-  return rows[0] || null;
+  if(m.source===FOOTER_SOURCE){
+    if(m.type==="FOOTER_READY"){bridgePost(html,"CUSTOMER_FOOTER_STATE",{ready:true});return true}
+    if(m.type==="FOOTER_NAVIGATE"){navigatePath(m.path||p.path);return true}
+    if(m.type==="FOOTER_STAFF_LOGIN"){navigatePath("/riaintra");return true}
+    if(m.type==="FOOTER_NEWSLETTER_SIGNUP"){
+      const email=String(m.email||p.email||"").trim();
+      if(!email){bridgePost(html,"FOOTER_NEWSLETTER_RESULT",{ok:false,code:"EMAIL_REQUIRED",message:"Please enter your email address."});return true}
+      try{const r=await subscribeCustomerNewsletter({email,source:p.source||"Customer Page Footer"});bridgePost(html,"FOOTER_NEWSLETTER_RESULT",{ok:true,message:r?.status==="updated"?"Your subscription is already active.":"Thank you for subscribing.",...(r||{})})}
+      catch(error){bridgePost(html,"FOOTER_NEWSLETTER_RESULT",{ok:false,message:error?.message||"Newsletter signup failed."})}
+      return true;
+    }
+  }
+  return false;
 }
-function hotelMatchesArea(hotel, area) {
-  if (!area) return true;
-  const areaIds = new Set([clean(area.id), clean(area.slug), slug(area.name)].filter(Boolean));
-  return areaIds.has(clean(hotel.areaId)) || areaIds.has(clean(hotel.destinationId)) || areaIds.has(clean(hotel.areaSlug)) ||
-    slug(hotel.area || hotel.city || hotel.destinationName) === slug(area.name);
-}
-function previewHotel(hotel, countrySlug, destinationSlug) {
-  const details = obj(hotel.details);
+function customerNavigate(path){const p=clean(path,700);if(p&&(p.startsWith("/")||/^https?:\/\//i.test(p)))wixLocation.to(p)}
+function parts(){return arr(wixLocation.path).map(x=>decodeURIComponent(String(x)))}
+function route(){
+  const p=parts(),q=wixLocation.query||{},i=p.indexOf("hotels");
+  const after=i>=0?p.slice(i+1):[];
   return {
-    id: clean(first(hotel.id, hotel.slug, hotel.publicId)),
-    hotelId: clean(first(hotel.id, hotel.publicId)),
-    hotelSlug: slug(first(hotel.slug, hotel.name)),
-    name: clean(hotel.name, 240),
-    location: clean(first(hotel.location, hotel.address, details.city, details.address), 240),
-    area: clean(first(hotel.area, details.city), 160),
-    rating: Number(first(hotel.rating, details.skandiRating, details.officialStarRating, 0)) || 0,
-    score: Number(first(hotel.score, details.guestRating, 0)) || 0,
-    tags: arr(first(hotel.tags, details.facilities, [])),
-    image: imageOf(hotel),
-    imageUrl: imageOf(hotel),
-    gallery: arr(hotel.gallery),
-    summary: clean(first(hotel.description, hotel.summary, details.shortDescription), 1200),
-    price: null,
-    currency: "",
-    isLive: false,
-    supplier: "DUFFEL_STAYS",
-    path: `/hotels/${countrySlug}/${destinationSlug}/${slug(first(hotel.slug, hotel.name))}`
+    countrySlug:slug(first(q.country,after[0])),
+    destinationSlug:slug(first(q.destination,q.region,after[1])),
+    areaSlug:slug(first(q.area,after.length>=4?after[2]:""))
   };
 }
-function buildPage() {
-  const route = routeContext();
-  const country = countryFor(route.countrySlug);
-  const area = areaFor(country, route.destinationSlug, route.areaSlug);
-  const countrySlug = slug(first(country?.slug, country?.id, country?.name, route.countrySlug));
-  const destinationSlug = slug(first(area?.slug, area?.id, area?.name, route.destinationSlug, route.areaSlug));
-  const areaSlug = slug(first(route.areaSlug, destinationSlug));
-  const details = obj(area?.details);
-  const hotels = finder.hotels.filter(h => hotelMatchesArea(h, area));
-  const heroImage = imageOf(area) || imageOf(hotels[0]);
-  const airportIata = clean(first(area?.destinationIata, area?.airportIata, area?.nearestAirportIata, details.searchAirportIata), 3).toUpperCase();
+function normalizeSearch(s={}){
   return {
-    id: clean(first(area?.id, destinationSlug)),
-    slug: areaSlug,
-    areaSlug,
-    name: clean(first(area?.name, destinationSlug), 200),
-    destinationSlug,
-    destinationName: clean(first(area?.name, destinationSlug), 200),
-    countrySlug,
-    countryCode: clean(first(country?.code, country?.countryCode, obj(country?.details).countryCode), 3).toUpperCase(),
-    countryName: clean(first(country?.name, obj(country?.details).countryName, countrySlug), 200),
-    heroImage,
-    intro: clean(first(area?.description, details.description, area?.summary), 1200),
-    searchAirportIata: airportIata,
-    destinationIata: airportIata,
-    previewHotels: hotels.map(h => previewHotel(h, countrySlug, destinationSlug)),
-    supplier: "DUFFEL_STAYS",
-    liveAvailability: true
+    tripType:"hotelOnly",
+    destination:clean(first(s.destination,s.destinationIata,s.searchAirportIata,pageContext?.searchAirportIata,pageContext?.destinationIata,pageContext?.name),160),
+    destinationRegion:clean(first(s.destinationRegion,pageContext?.name),160),
+    departureDate:clean(first(s.checkInDate,s.departureDate,wixLocation.query.checkIn,wixLocation.query.departureDate),10),
+    returnDate:clean(first(s.checkOutDate,s.returnDate,wixLocation.query.checkOut,wixLocation.query.returnDate),10),
+    adults:Math.max(1,Number(first(s.adults,wixLocation.query.adults,2))||2),
+    children:Math.max(0,Number(first(s.children,wixLocation.query.children,0))||0),
+    childAges:arr(s.childAges),
+    rooms:Math.max(1,Number(first(s.rooms,wixLocation.query.rooms,1))||1),
+    currency:clean(first(s.currency,wixLocation.query.currency,"USD"),3).toUpperCase(),
+    language:clean(first(s.language,s.locale,"EN"),12).toUpperCase()
   };
 }
-function normalizeSearch(search = {}) {
-  const destination = clean(first(
-    search.destination,
-    search.destinationIata,
-    search.searchAirportIata,
-    pageContext?.searchAirportIata,
-    search.destinationAreaSlug,
-    search.destinationSlug,
-    search.area,
-    search.city,
-    wixLocation.query.destination,
-    wixLocation.query.area
-  ), 160);
-  return {
-    tripType: "hotelOnly",
-    destination,
-    destinationRegion: clean(first(search.destinationRegion, pageContext?.name), 160),
-    departureDate: clean(first(search.checkInDate, search.departureDate, wixLocation.query.checkIn, wixLocation.query.departureDate), 10),
-    returnDate: clean(first(search.checkOutDate, search.returnDate, wixLocation.query.checkOut, wixLocation.query.returnDate), 10),
-    adults: Math.max(1, Number(first(search.adults, wixLocation.query.adults, 2)) || 2),
-    children: Math.max(0, Number(first(search.children, wixLocation.query.children, 0)) || 0),
-    childAges: arr(search.childAges),
-    rooms: Math.max(1, Number(first(search.rooms, wixLocation.query.rooms, 1)) || 1),
-    currency: clean(first(search.currency, wixLocation.query.currency, "USD"), 3).toUpperCase(),
-    language: clean(first(search.language, search.locale, "EN"), 12).toUpperCase()
-  };
+function canonicalFor(item={}){
+  const hotels=arr(pageContext?.hotels);
+  const mid=clean(item.inventoryMasterId||item.hotelInventoryMasterId,100);
+  if(mid){const x=hotels.find(h=>h.id===mid||h.inventoryMasterId===mid);if(x)return x}
+  const aid=clean(item.accommodationId||item.providerAccommodationId,180);
+  if(aid){const x=hotels.find(h=>clean(h.providerAccommodationId,180)===aid);if(x)return x}
+  const title=clean(item.title||item.hotelName||item.name,240).toLowerCase();
+  return title?hotels.find(h=>clean(h.name,240).toLowerCase()===title)||null:null;
 }
-function liveHotel(item) {
-  const titleKey = lower(item.title, 240);
-  const accommodationId = clean(item.accommodationId, 180);
-  const matched = finder.hotels.find(h => {
-    const d = obj(h.details);
-    return (accommodationId && [d.duffelAccommodationId, d.providerAccommodationId, h.providerAccommodationId].map(clean).includes(accommodationId)) ||
-      (titleKey && lower(h.name, 240) === titleKey);
-  });
-  const countrySlug = pageContext?.countrySlug || "";
-  const destinationSlug = pageContext?.destinationSlug || "";
+function liveHotel(item={}){
+  const h=canonicalFor(item)||{};
   return {
-    ...item,
-    id: clean(first(item.id, item.staySearchResultId)),
-    name: clean(first(matched?.name, item.title), 240),
-    image: imageOf(matched) || clean(item.imageUrl, 1200),
-    imageUrl: imageOf(matched) || clean(item.imageUrl, 1200),
-    location: clean(first(obj(matched?.details).city, item.location, pageContext?.name), 240),
-    rating: Number(first(obj(matched?.details).officialStarRating, matched?.rating, 0)) || 0,
-    score: Number(first(obj(matched?.details).guestRating, matched?.score, 0)) || 0,
-    price: Number(first(item.total, item.price?.total, item.price?.amount, 0)) || 0,
-    currency: clean(first(item.currency, item.price?.currency, "USD"), 3).toUpperCase(),
-    isLive: true,
-    offer: item,
-    supplier: "DUFFEL_STAYS",
-    hotelSlug: matched ? slug(first(matched.slug, matched.name)) : "",
-    path: matched ? `/hotels/${countrySlug}/${destinationSlug}/${slug(first(matched.slug, matched.name))}` : ""
+    ...h,...item,
+    id:clean(first(item.id,item.staySearchResultId,h.id)),
+    inventoryMasterId:h.id||item.inventoryMasterId||"",
+    publicId:h.publicId||"",
+    name:clean(first(h.name,item.title,item.hotelName),240),
+    slug:h.slug||"",
+    hotelSlug:h.hotelSlug||h.slug||"",
+    path:h.path||"",
+    image:h.image||h.imageUrl||item.imageUrl||"",
+    imageUrl:h.image||h.imageUrl||item.imageUrl||"",
+    location:h.location||item.location||pageContext?.name||"",
+    standard:Number(h.standard||h.classification||0),
+    guestRating:Number(h.guestRating||0),
+    beachDistance:Number(h.beachDistance||h.details?.distanceToBeach||0),
+    centerDistance:Number(h.centerDistance||h.details?.distanceToCenter||0),
+    features:arr(h.features||h.tags||h.facilities),
+    price:Number(first(item.total,item.price?.total,item.price?.amount,0))||0,
+    currency:clean(first(item.currency,item.price?.currency,"USD"),3).toUpperCase(),
+    isLive:true,offer:item
   };
 }
 
-$w.onReady(() => {
-  const html = $w(EMBED_ID);
-  html.onMessage(async event => {
-    const message = event.data || {};
-    if (message.source !== CHILD_SOURCE) return;
-    const payload = message.payload || {};
-    try {
-      if (message.type === "HOTEL_SEARCH_READY") {
-const result = await getSearchableDestinationFinderData({ language: payload?.settings?.language || "EN" });
-        finder = {
-          countries: arr(result?.countries),
-          areas: arr(result?.areas),
-          hotels: arr(result?.hotels)
-        };
-        pageContext = buildPage();
-        post(html, "HOTEL_SEARCH_PAGE_RESULT", { page: pageContext });
-        return;
-      }
-      if (message.type === "HOTEL_SEARCH_RUN") {
-        const search = normalizeSearch(payload.search || {});
-        const result = await searchUnifiedOffers({ search });
-        post(html, "HOTEL_SEARCH_RESULTS", {
-          items: arr(result?.items).map(liveHotel), search, supplier: "DUFFEL_STAYS"
+$w.onReady(()=>{
+  const html=$w(EMBED_ID);
+  html.onMessage(async event=>{
+    const m=event.data||{},p=m.payload||{};
+    if(await handleSharedChrome(html,m,customerNavigate))return;if(m.source!==CHILD_SOURCE)return;
+    try{
+      if(m.type==="HOTEL_SEARCH_READY"){
+        const r={...route(),...p};
+        const result=await getInventoryHotelBrowsePage({
+          countrySlug:slug(r.countrySlug),destinationSlug:slug(r.destinationSlug),areaSlug:slug(r.areaSlug),
+          language:p?.settings?.language||p.language||"EN"
         });
+        pageContext=result.page;
+        post(html,"HOTEL_SEARCH_PAGE_RESULT",{page:pageContext,source:result.source});
         return;
       }
-      if (message.type === "HOTEL_SEARCH_SELECT") {
-        const offer = payload.offer || payload.hotel?.offer || payload.hotel || {};
-        const search = normalizeSearch(payload.search || offer.searchContext || {});
-        const cart = await createBookingCartFromOffer({ offer, search });
-        if (!cart?.cartId) throw new Error("The booking cart could not be created.");
-        if (cart.cartId) session.setItem("SKANDI_BOOKING_CART_ID", cart.cartId);
-        if (cart.cartToken) session.setItem("SKANDI_BOOKING_CART_TOKEN", cart.cartToken);
-        post(html, "HOTEL_SEARCH_BOOKING_CART", cart || {});
-        wixLocation.to(`/booking?step=offer&cartId=${encodeURIComponent(cart.cartId)}${cart.cartToken ? `&cartToken=${encodeURIComponent(cart.cartToken)}` : ""}`);
+      if(m.type==="HOTEL_SEARCH_RUN"){
+        const search=normalizeSearch(p.search||{});
+        const result=await searchUnifiedOffers({search});
+        post(html,"HOTEL_SEARCH_RESULTS",{items:arr(result?.items).map(liveHotel),search,supplier:"DUFFEL_STAYS"});
         return;
       }
-      if (message.type === "HOTEL_SEARCH_VIEW_HOTEL") {
-        const path = clean(payload.path || payload.hotel?.path, 600);
-        if (path.startsWith("/hotels/")) wixLocation.to(path);
+      if(m.type==="HOTEL_SEARCH_SELECT"){
+        const offer=p.offer||p.hotel?.offer||{};
+        if(!offer?.id&&!offer?.staySearchResultId)throw new Error("Check live availability before booking this hotel.");
+        const search=normalizeSearch(p.search||offer.searchContext||{});
+        const cart=await createBookingCartFromOffer({offer,search});
+        if(!cart?.cartId)throw new Error("The booking cart could not be created.");
+        session.setItem("SKANDI_BOOKING_CART_ID",cart.cartId);
+        if(cart.cartToken)session.setItem("SKANDI_BOOKING_CART_TOKEN",cart.cartToken);
+        wixLocation.to(`/booking?step=offer&cartId=${encodeURIComponent(cart.cartId)}${cart.cartToken?`&cartToken=${encodeURIComponent(cart.cartToken)}`:""}`);
         return;
       }
-    } catch (error) {
-      post(html, "HOTEL_SEARCH_ERROR", { message: error?.publicMessage || error?.message || "Live hotel availability is temporarily unavailable." });
+      if(m.type==="HOTEL_SEARCH_VIEW_HOTEL"){
+        const path=clean(p.path||p.hotel?.path,700);
+        if(path.startsWith("/hotels/"))wixLocation.to(path);
+        return;
+      }
+    }catch(error){
+      post(html,"HOTEL_SEARCH_ERROR",{message:error?.publicMessage||error?.message||"Hotel data is temporarily unavailable."});
     }
   });
+  sendCustomerHeaderState(html).catch(()=>{});
 });
