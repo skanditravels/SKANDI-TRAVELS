@@ -1,35 +1,61 @@
 import wixLocationFrontend from "wix-location-frontend";
-import { getCountryDestinationPage } from "backend/destinationInventory.web";
-import { searchUnifiedOffers, createBookingCartFromOffer } from "backend/bookingOrchestrator.web";
-
-const HTML_ID="#countryDestinationHtml";
-const HTML_SOURCE="SKANDI_DYNAMIC_COUNTRY_PAGE";
-const PARENT_SOURCE="SKANDI_WIX_PARENT";
+import { currentMember, authentication } from "wix-members-frontend";
+import { getCustomerHeaderSession, subscribeCustomerNewsletter } from "backend/customerHeader.web";
+import { getInventoryCountryPage } from "backend/FINAL/destinationFlow.web";
+import { searchUnifiedOffers, createBookingCartFromOffer } from "backend/bookingOrchestratorCollection.web";
+const HTML_ID="#countryDestinationHtml",HTML_SOURCE="SKANDI_DYNAMIC_COUNTRY_PAGE",PARENT_SOURCE="SKANDI_WIX_PARENT";
 let currentPage=null;
-
-function obj(v){return v&&typeof v==="object"&&!Array.isArray(v)?v:{}}
-function parse(v){if(typeof v==="string"){try{return JSON.parse(v)}catch(_){return null}}return obj(v)}
-function payload(m){return {...obj(m),...obj(m?.payload)}}
+const obj=v=>v&&typeof v==="object"&&!Array.isArray(v)?v:{},parse=v=>{if(typeof v==="string"){try{return JSON.parse(v)}catch(_){return null}}return obj(v)},clean=v=>String(v||"").trim().toLowerCase().replace(/[^a-z0-9-]/g,"");
+function payload(m){return{...obj(m),...obj(m?.payload)}}
 function send(el,type,data={},requestId=""){el.postMessage({source:PARENT_SOURCE,type,requestId,payload:{...obj(data),requestId},timestamp:new Date().toISOString()})}
-function clean(v){return String(v||"").trim().toLowerCase().replace(/[^a-z0-9-]/g,"")}
-function query(){return obj(wixLocationFrontend.query)}
-function allowedPath(path){return path.startsWith("/")||/^https?:\/\//i.test(path)||/^mailto:/i.test(path)||/^tel:/i.test(path)}
-function navigate(path){const target=String(path||"").trim();if(target&&allowedPath(target))wixLocationFrontend.to(target)}
-function accessUrl(result){const allowed=["offer","extras","transfer","apis","seats","payment","confirmation"];const step=allowed.includes(result?.step)?result.step:"offer";const q=new URLSearchParams({step,cartId:String(result?.cartId||"")});if(result?.cartToken)q.set("cartToken",String(result.cartToken));return `/booking?${q.toString()}`}
-async function chooseOffer(offer,search){let result=await createBookingCartFromOffer({offer,search});if(!result?.cartId)throw new Error(result?.message||"Could not create booking cart.");navigate(accessUrl(result));return result}
+function bridgePost(el,type,data={}){send(el,type,data)}
+function navigate(path){const p=String(path||"").trim();if(p&&(p.startsWith("/")||/^https?:\/\//i.test(p)))wixLocationFrontend.to(p)}
+
+const HEADER_SOURCE="SKANDI_CUSTOMER_HEADER_EXPANDBAR";
+const FOOTER_SOURCE="SKANDI_CUSTOMER_FOOTER";
+let headerLoadPromise=null;
+function guestHeaderState(){return{loggedIn:false,displayName:"",points:0,tierName:"",menu:[]}}
+async function sendCustomerHeaderState(html,force=false){
+  if(headerLoadPromise&&!force)return headerLoadPromise;
+  headerLoadPromise=(async()=>{
+    try{
+      const member=await currentMember.getMember();
+      if(!member){bridgePost(html,"CUSTOMER_HEADER_STATE",guestHeaderState());return}
+      const s=await getCustomerHeaderSession();
+      bridgePost(html,"CUSTOMER_HEADER_STATE",{loggedIn:true,displayName:s?.displayName||s?.name||s?.member?.displayName||member?.profile?.nickname||member?.profile?.title||member?.loginEmail||"",points:Number(s?.points||s?.clubPoints||s?.rewards?.points||0),tierName:s?.tierName||s?.tier||s?.clubTier||"",menu:Array.isArray(s?.menu)?s.menu:[]});
+    }catch(error){console.error("[Customer header]",error);bridgePost(html,"CUSTOMER_HEADER_STATE",guestHeaderState())}
+    finally{headerLoadPromise=null}
+  })();
+  return headerLoadPromise;
+}
+async function handleSharedChrome(html,m,navigatePath){
+  const p=m?.payload||{};
+  if(m.source===HEADER_SOURCE){
+    if(m.type==="HEADER_READY"){await sendCustomerHeaderState(html);return true}
+    if(m.type==="HEADER_NAVIGATE"){navigatePath(m.path||p.path);return true}
+    if(m.type==="HEADER_SEARCH"){navigatePath("/search");return true}
+    if(m.type==="HEADER_LOGIN"){try{await authentication.promptLogin()}catch(_){ }await sendCustomerHeaderState(html,true);return true}
+    if(m.type==="HEADER_LOGOUT"){try{await Promise.resolve(authentication.logout())}catch(_){ }bridgePost(html,"CUSTOMER_HEADER_STATE",guestHeaderState());navigatePath("/home");return true}
+    return false;
+  }
+  if(m.source===FOOTER_SOURCE){
+    if(m.type==="FOOTER_READY"){bridgePost(html,"CUSTOMER_FOOTER_STATE",{ready:true});return true}
+    if(m.type==="FOOTER_NAVIGATE"){navigatePath(m.path||p.path);return true}
+    if(m.type==="FOOTER_STAFF_LOGIN"){navigatePath("/riaintra");return true}
+    if(m.type==="FOOTER_NEWSLETTER_SIGNUP"){
+      const email=String(m.email||p.email||"").trim();
+      if(!email){bridgePost(html,"FOOTER_NEWSLETTER_RESULT",{ok:false,code:"EMAIL_REQUIRED",message:"Please enter your email address."});return true}
+      try{const r=await subscribeCustomerNewsletter({email,source:p.source||"Customer Page Footer"});bridgePost(html,"FOOTER_NEWSLETTER_RESULT",{ok:true,message:r?.status==="updated"?"Your subscription is already active.":"Thank you for subscribing.",...(r||{})})}
+      catch(error){bridgePost(html,"FOOTER_NEWSLETTER_RESULT",{ok:false,message:error?.message||"Newsletter signup failed."})}
+      return true;
+    }
+  }
+  return false;
+}
 
 function routeSlug(){const p=Array.isArray(wixLocationFrontend.path)?wixLocationFrontend.path:[];return clean(p[p.length-1]||"")}
-async function load(el,p={},requestId=""){const result=await getCountryDestinationPage({slug:clean(p.slug)||routeSlug(),language:p.settings?.language||p.language||"EN",currency:p.settings?.currency||p.currency||"USD"});currentPage=result.page;send(el,"COUNTRY_PAGE_RESULT",{page:currentPage},requestId)}
-function liveSearch(raw={},destinationIata=""){const s={...obj(raw),tripType:"holiday"};if(!s.destination)s.destination=destinationIata||currentPage?.searchAirportIata||currentPage?.destinationIata||"";if(!s.destinationRegion)s.destinationRegion=currentPage?.name||"";return s}
-async function searchCountry(raw={}){
-  const airports=[...new Set((currentPage?.destinations||[]).map(x=>x.searchAirportIata||x.destinationIata).filter(x=>/^[A-Z]{3}$/.test(String(x||"").toUpperCase())))].slice(0,6);
-  if(!airports.length){
-    const one=liveSearch(raw);
-    if(!/^[A-Z]{3}$/.test(String(one.destination||"").toUpperCase()))throw new Error("Add a Search Airport IATA to at least one published destination in Inventory Control.");
-    return searchUnifiedOffers({search:one});
-  }
-  const results=await Promise.all(airports.map(iata=>searchUnifiedOffers({search:liveSearch(raw,String(iata).toUpperCase())}).catch(()=>({items:[]}))));
-  const items=results.flatMap(r=>Array.isArray(r?.items)?r.items:[]).sort((a,b)=>Number(a.total||a.price?.amount||0)-Number(b.total||b.price?.amount||0)).slice(0,30);
-  return {ok:true,provider:"SKANDI",mode:"holiday",items};
-}
-$w.onReady(function(){let el;try{el=$w(HTML_ID)}catch(e){console.error(e);return}el.onMessage(async event=>{const m=parse(event.data);if(!m||m.source!==HTML_SOURCE)return;const p=payload(m),id=String(m.requestId||p.requestId||"");try{if(m.type==="COUNTRY_READY"||m.type==="COUNTRY_REFRESH"){await load(el,p,id);return}if(m.type==="COUNTRY_SELECT_COUNTRY"){navigate(`/destinations/${clean(p.slug)}`);return}if(m.type==="COUNTRY_SEARCH_OFFERS"){const result=await searchCountry(p.search);send(el,"COUNTRY_OFFERS_RESULT",{...(result||{}),items:Array.isArray(result?.items)?result.items:[]},id);return}if(m.type==="COUNTRY_SELECT_OFFER"){const result=await chooseOffer(obj(p.offer),liveSearch(p.search||p.searchContext||p.offer?.searchContext));send(el,"COUNTRY_OFFER_SELECTED",result,id);return}if(m.type==="COUNTRY_NAVIGATE")navigate(p.path)}catch(error){console.error("[Country]",error);send(el,"COUNTRY_ERROR",{message:error?.message||"Country page request failed."},id)}});load(el,{slug:routeSlug()}).catch(e=>send(el,"COUNTRY_ERROR",{message:e.message}))});
+function bookingUrl(r){const q=new URLSearchParams({step:r?.step||"offer",cartId:String(r?.cartId||"")});if(r?.cartToken)q.set("cartToken",String(r.cartToken));return `/booking?${q}`}
+async function load(el,p={},id=""){const r=await getInventoryCountryPage({slug:clean(p.slug)||routeSlug(),language:p.settings?.language||p.language||"EN"});currentPage=r.page;send(el,"COUNTRY_PAGE_RESULT",{page:currentPage,source:r.source},id)}
+function liveSearch(raw={},iata=""){const s={...obj(raw),tripType:"holiday"};if(!s.destination)s.destination=iata||currentPage?.searchAirportIata||"";s.destinationRegion=s.destinationRegion||currentPage?.name||"";return s}
+async function searchCountry(raw={}){const airports=[...new Set((currentPage?.destinations||[]).map(x=>x.searchAirportIata||x.destinationIata).filter(Boolean))].slice(0,8);if(!airports.length)return{items:[]};const rs=await Promise.all(airports.map(i=>searchUnifiedOffers({search:liveSearch(raw,i)}).catch(()=>({items:[]}))));return{items:rs.flatMap(x=>Array.isArray(x?.items)?x.items:[]).slice(0,30)}}
+$w.onReady(()=>{const el=$w(HTML_ID);el.onMessage(async ev=>{const m=parse(ev.data);if(!m)return;try{if(await handleSharedChrome(el,m,navigate))return;if(m.source!==HTML_SOURCE)return;const p=payload(m),id=String(m.requestId||p.requestId||"");if(m.type==="COUNTRY_READY"||m.type==="COUNTRY_REFRESH"){await load(el,p,id);return}if(m.type==="COUNTRY_SELECT_COUNTRY"){navigate(`/destinations/${clean(p.slug)}`);return}if(m.type==="COUNTRY_SEARCH_OFFERS"){send(el,"COUNTRY_OFFERS_RESULT",await searchCountry(p.search),id);return}if(m.type==="COUNTRY_SELECT_OFFER"){const offer=obj(p.offer),search=liveSearch(p.search||offer.searchContext||{}),r=await createBookingCartFromOffer({offer,search});if(!r?.cartId)throw new Error("Could not create booking cart.");navigate(bookingUrl(r));return}if(m.type==="COUNTRY_NAVIGATE")navigate(p.path)}catch(e){send(el,"COUNTRY_ERROR",{message:e?.publicMessage||e?.message||"Country page request failed."})}});sendCustomerHeaderState(el).catch(()=>{});setTimeout(()=>load(el).catch(e=>send(el,"COUNTRY_ERROR",{message:e.message})),250)});
