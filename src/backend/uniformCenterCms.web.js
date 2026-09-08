@@ -1016,6 +1016,215 @@ function eligibilityArray(value) {
   )];
 }
 
+
+function fitOptionsArray(value) {
+  const raw = Array.isArray(value)
+    ? value
+    : value === null || value === undefined || value === ""
+      ? []
+      : String(value).split(",");
+
+  const values = [];
+
+  for (const entry of raw) {
+    const key = String(entry || "").trim().toUpperCase();
+
+    if (key === "REGULAR" && !values.includes("Regular")) {
+      values.push("Regular");
+    }
+
+    if (key === "SLIM" && !values.includes("Slim")) {
+      values.push("Slim");
+    }
+  }
+
+  return values;
+}
+
+function cleanHexColor(value = "") {
+  const text = String(value || "").trim();
+
+  if (!text) {
+    return "";
+  }
+
+  const withHash = text.startsWith("#")
+    ? text
+    : `#${text}`;
+
+  return /^#[0-9A-F]{6}$/i.test(withHash)
+    ? withHash.toUpperCase()
+    : "";
+}
+
+function styleGroupKey(item = {}) {
+  return cleanUpper(
+    item.styleGroup ||
+    item.style_group ||
+    item.itemCode ||
+    item.item_code ||
+    item.id ||
+    "",
+    120
+  );
+}
+
+function itemCodeValue(item = {}) {
+  return cleanUpper(
+    item.itemCode ||
+    item.item_code ||
+    "",
+    80
+  );
+}
+
+function addMonthsIso(value, months) {
+  const date = new Date(value);
+
+  if (
+    !value ||
+    Number.isNaN(date.getTime()) ||
+    !Number.isFinite(Number(months))
+  ) {
+    return "";
+  }
+
+  const result = new Date(date.getTime());
+  result.setUTCMonth(
+    result.getUTCMonth() + Math.max(0, intValue(months, 0))
+  );
+
+  return result.toISOString();
+}
+
+function replacementStateForItem(
+  item = {},
+  orders = [],
+  catalog = []
+) {
+  const cycleMonths = Math.max(
+    0,
+    intValue(
+      item.replacementCycleMonths ??
+      item.replacement_cycle_months,
+      0
+    )
+  );
+
+  if (!cycleMonths) {
+    return {
+      replacementEligible: true,
+      replacementPending: false,
+      replacementCycleMonths: 0,
+      replacementLastIssuedAt: "",
+      replacementNextEligibleAt: "",
+      replacementMessage: ""
+    };
+  }
+
+  const group = styleGroupKey(item);
+  const siblingCodes = new Set(
+    (catalog || [])
+      .filter(row => styleGroupKey(row) === group)
+      .map(itemCodeValue)
+      .filter(Boolean)
+  );
+
+  if (!siblingCodes.size) {
+    const code = itemCodeValue(item);
+    if (code) siblingCodes.add(code);
+  }
+
+  const matchingOrders = [];
+
+  for (const order of orders || []) {
+    const status = cleanUpper(order.status || "", 60);
+    const hasSibling = (order.items || []).some(line =>
+      siblingCodes.has(itemCodeValue(line))
+    );
+
+    if (!hasSibling) {
+      continue;
+    }
+
+    matchingOrders.push({
+      order,
+      status
+    });
+  }
+
+  const open = matchingOrders.find(({ status }) =>
+    ["PENDING", "APPROVED", "FULFILLMENT_READY"].includes(status)
+  );
+
+  if (open) {
+    return {
+      replacementEligible: false,
+      replacementPending: true,
+      replacementCycleMonths: cycleMonths,
+      replacementLastIssuedAt:
+        open.order.approvedAt ||
+        open.order.fulfillmentReadyAt ||
+        open.order.createdAt ||
+        "",
+      replacementNextEligibleAt: "",
+      replacementMessage:
+        "An existing request for this uniform style is still in progress."
+    };
+  }
+
+  const completed = matchingOrders
+    .filter(({ status }) => status === "COMPLETED")
+    .map(({ order }) => ({
+      order,
+      issuedAt:
+        order.completedAt ||
+        order.fulfilledAt ||
+        order.fulfillmentReadyAt ||
+        order.approvedAt ||
+        order.createdAt ||
+        ""
+    }))
+    .filter(entry => entry.issuedAt)
+    .sort(
+      (a, b) =>
+        new Date(b.issuedAt).getTime() -
+        new Date(a.issuedAt).getTime()
+    );
+
+  if (!completed.length) {
+    return {
+      replacementEligible: true,
+      replacementPending: false,
+      replacementCycleMonths: cycleMonths,
+      replacementLastIssuedAt: "",
+      replacementNextEligibleAt: "",
+      replacementMessage: ""
+    };
+  }
+
+  const lastIssuedAt = completed[0].issuedAt;
+  const nextEligibleAt = addMonthsIso(
+    lastIssuedAt,
+    cycleMonths
+  );
+
+  const eligible =
+    !nextEligibleAt ||
+    Date.now() >= new Date(nextEligibleAt).getTime();
+
+  return {
+    replacementEligible: eligible,
+    replacementPending: false,
+    replacementCycleMonths: cycleMonths,
+    replacementLastIssuedAt: lastIssuedAt,
+    replacementNextEligibleAt: nextEligibleAt,
+    replacementMessage: eligible
+      ? ""
+      : `Replacement becomes available after ${nextEligibleAt.slice(0, 10)}.`
+  };
+}
+
 function dimensionAllows(allowed = [], candidates = []) {
   const rules = eligibilityArray(allowed);
 
@@ -1206,6 +1415,18 @@ function mapCatalogItem(row = {}, storageRows = []) {
       "",
     subCategory:
       row.sub_category || "",
+    styleGroup:
+      row.style_group || row.item_code || "",
+    colorName:
+      row.color_name || "",
+    colorHex:
+      cleanHexColor(row.color_hex || ""),
+    fitOptions:
+      fitOptionsArray(row.fit_options || []),
+    initialIssueQuantity:
+      Math.max(0, intValue(row.initial_issue_quantity, 0)),
+    replacementCycleMonths:
+      Math.max(0, intValue(row.replacement_cycle_months, 0)),
     availableRoles:
       eligibilityArray(row.available_roles || []),
     availableDepartments:
@@ -1316,11 +1537,18 @@ function mapOrder(row = {}, items = []) {
           .map(
             i =>
               `${i.quantity || 1}× ${i.title}` +
-              `${i.size ? ` (${i.size})` : ""}`
+              `${i.colorName ? ` · ${i.colorName}` : ""}` +
+              `${i.size ? ` · ${i.size}` : ""}` +
+              `${i.fit ? ` · ${i.fit}` : ""}`
           )
           .join(", ")
       : row.note || "",
     items,
+    approvedAt: row.approved_at || "",
+    fulfillmentReadyAt:
+      row.fulfillment_ready_at || row.fulfilled_at || "",
+    fulfilledAt: row.fulfilled_at || "",
+    completedAt: row.completed_at || "",
     createdAt: row.created_at || "",
     updatedAt: row.updated_at || ""
   };
@@ -1334,6 +1562,19 @@ function mapOrderItem(row = {}) {
       row.item_code || "",
     title: row.title || "",
     category: row.category || "",
+    styleGroup:
+      row.style_group ||
+      row.payload?.catalogSnapshot?.style_group ||
+      row.item_code ||
+      "",
+    colorName:
+      row.color_name ||
+      row.payload?.catalogSnapshot?.color_name ||
+      "",
+    fit:
+      row.fit ||
+      row.payload?.requested?.fit ||
+      "",
     size: row.size || "",
     quantity: row.quantity || 1,
     pointsCost:
@@ -1916,6 +2157,48 @@ function itemSavePayload(
         item.subCategory ||
         item.sub_category,
         180
+      ),
+    style_group:
+      cleanUpper(
+        item.styleGroup ||
+        item.style_group ||
+        itemCode,
+        120
+      ) || itemCode || null,
+    color_name:
+      cleanText(
+        item.colorName ||
+        item.color_name,
+        120
+      ),
+    color_hex:
+      cleanHexColor(
+        item.colorHex ||
+        item.color_hex
+      ) || null,
+    fit_options:
+      fitOptionsArray(
+        item.fitOptions ||
+        item.fit_options ||
+        []
+      ),
+    initial_issue_quantity:
+      Math.max(
+        0,
+        intValue(
+          item.initialIssueQuantity ??
+          item.initial_issue_quantity,
+          0
+        )
+      ),
+    replacement_cycle_months:
+      Math.max(
+        0,
+        intValue(
+          item.replacementCycleMonths ??
+          item.replacement_cycle_months,
+          0
+        )
       ),
     available_roles:
       eligibilityArray(
@@ -3304,20 +3587,31 @@ export const getUniformEmployeeBootstrap =
           },
           wallet:
             mapWallet(wallet),
-          catalog:
-            (catalogRows || [])
-              .filter(row =>
-                itemEligibleForAgent(
-                  row,
-                  agent
+          catalog: (() => {
+            const eligibleCatalog =
+              (catalogRows || [])
+                .filter(row =>
+                  itemEligibleForAgent(
+                    row,
+                    agent
+                  )
                 )
+                .map(row =>
+                  mapCatalogItem(
+                    row,
+                    storageRows
+                  )
+                );
+
+            return eligibleCatalog.map(item => ({
+              ...item,
+              ...replacementStateForItem(
+                item,
+                orders,
+                eligibleCatalog
               )
-              .map(row =>
-                mapCatalogItem(
-                  row,
-                  storageRows
-                )
-              ),
+            }));
+          })(),
           categories:
             (categoryRows || [])
               .map(mapCategory),
@@ -3353,8 +3647,33 @@ export const submitUniformEmployeeOrder =
           );
         }
 
-        const wallet =
-          await ensureWallet(agent);
+        const [
+          wallet,
+          historyOrders,
+          activeCatalogRows
+        ] = await Promise.all([
+          ensureWallet(agent),
+          listOrders(
+            "uniform_orders?" +
+            "select=*&" +
+            `agent_user_id=eq.${encodeURIComponent(agent.id)}&` +
+            "order=created_at.desc&" +
+            "limit=500"
+          ),
+          supabaseRequest(
+            "uniform_catalog_items?" +
+            "select=*&" +
+            "active=eq.true&" +
+            "stock_status=neq.DELETED&" +
+            "limit=1000"
+          )
+        ]);
+
+        const mappedActiveCatalog =
+          (activeCatalogRows || [])
+            .map(row =>
+              mapCatalogItem(row, [])
+            );
 
         const orderItems = [];
         let totalPoints = 0;
@@ -3366,9 +3685,17 @@ export const submitUniformEmployeeOrder =
             cartItem.id ||
             cartItem.itemCode;
 
+          const rawKey = cleanText(rawItemId, 160);
           const catalogItem =
-            await getCatalogItemByIdOrCode(
-              rawItemId
+            (activeCatalogRows || []).find(row =>
+              (
+                isUuid(rawKey) &&
+                String(row.id || "") === rawKey
+              ) ||
+              (
+                cleanUpper(row.item_code || "", 80) ===
+                cleanUpper(rawKey, 80)
+              )
             );
 
           if (!catalogItem) {
@@ -3387,6 +3714,63 @@ export const submitUniformEmployeeOrder =
               `Uniform item ${catalogItem.item_code || catalogItem.title || ""} is not available for your role, department or base.`
             );
           }
+
+          const mappedItem =
+            mappedActiveCatalog.find(row =>
+              row.itemId === catalogItem.id
+            ) ||
+            mapCatalogItem(catalogItem, []);
+
+          const replacement =
+            replacementStateForItem(
+              mappedItem,
+              historyOrders,
+              mappedActiveCatalog
+            );
+
+          if (!replacement.replacementEligible) {
+            throw new Error(
+              replacement.replacementMessage ||
+              `Uniform item ${catalogItem.item_code || catalogItem.title || ""} is not yet eligible for replacement.`
+            );
+          }
+
+          const allowedFits =
+            fitOptionsArray(
+              catalogItem.fit_options || []
+            );
+
+          const fit =
+            cleanText(
+              cartItem.fit ||
+              cartItem.selectedFit ||
+              cartItem.activeFit,
+              40
+            );
+
+          if (
+            allowedFits.length &&
+            !fit
+          ) {
+            throw new Error(
+              `Select Regular or Slim fit for ${catalogItem.title || catalogItem.item_code || "this uniform item"}.`
+            );
+          }
+
+          if (
+            fit &&
+            allowedFits.length &&
+            !allowedFits.includes(
+              fitOptionsArray([fit])[0] || ""
+            )
+          ) {
+            throw new Error(
+              `The selected fit is not available for ${catalogItem.title || catalogItem.item_code || "this uniform item"}.`
+            );
+          }
+
+          const normalizedFit =
+            fitOptionsArray([fit])[0] || "";
 
           const quantity =
             Math.max(
@@ -3437,6 +3821,15 @@ export const submitUniformEmployeeOrder =
               catalogItem.category_title ||
               catalogItem.category_key ||
               "",
+            style_group:
+              catalogItem.style_group ||
+              catalogItem.item_code ||
+              "",
+            color_name:
+              catalogItem.color_name ||
+              "",
+            fit:
+              normalizedFit,
             size,
             quantity,
             points_cost:
