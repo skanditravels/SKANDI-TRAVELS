@@ -22,7 +22,7 @@ const TABLES = Object.freeze({
 
 const REFERENCE_TYPES = new Set(["AIRPORT", "AIRLINE"]);
 const ENTITY_TYPES = new Set([
-  "COUNTRY", "AREA", "DESTINATION", "AIRPORT", "AIRLINE", "SUPPLIER", "HOTEL", "GUIDED_TOUR",
+  "DESTINATION", "AIRPORT", "AIRLINE", "SUPPLIER", "HOTEL", "GUIDED_TOUR",
   "ACTIVITY", "PARTNER_TICKET", "TRANSFER", "CAR_RENTAL", "PACKAGE", "ANCILLARY"
 ]);
 const MASTER_STATUSES = new Set(["DRAFT", "REVIEW", "PUBLISHED", "HIDDEN", "SUSPENDED", "ARCHIVED"]);
@@ -651,4 +651,154 @@ export const createInventoryMediaUploadTicket = webMethod(Permissions.SiteMember
 
 export const getInventorySourceHealth = webMethod(Permissions.SiteMember, async () => {
   await requireStaff(); const [registry, health] = await Promise.all([sb(`${TABLES.sourceRegistry}?select=*&active=eq.true&order=category.asc`), sb(`${TABLES.sourceHealth}?select=*&order=category.asc`)]); return { registry: registry || [], health: health || [], canonicalView: TABLES.canonical, searchableView: TABLES.searchable, generatedAt: new Date().toISOString() };
+});
+
+// V4.4 operational air reads are intentionally kept inside this web module.
+// This prevents the Inventory Control page from statically importing the legacy
+// legacy operational backend chain, which can stop the page controller from loading.
+function opEq(parts, field, value) {
+  const v = clean(value, 120);
+  if (v) parts.push(`${field}=eq.${encodeURIComponent(v)}`);
+}
+function opDate(parts, field, value) {
+  const v = safeDate(value);
+  if (v) parts.push(`${field}=eq.${encodeURIComponent(v)}`);
+}
+function mapOperationalFlightLeg(r = {}) {
+  return {
+    id: r.id || "",
+    flightNumber: r.flight_number || "",
+    departureDate: r.departure_date || "",
+    boardPoint: r.board_point || "",
+    offPoint: r.off_point || "",
+    equipmentType: r.equipment_type || "",
+    physicalCapacity: int(r.physical_capacity, 0),
+    yieldIndex: r.yield_index || "",
+    controlMode: r.control_mode || "",
+    revenueBand: r.revenue_band || "",
+    status: r.status || "",
+    source: r.source || "",
+    lastSyncAt: r.last_sync_at || "",
+    payload: r.payload || {},
+    updatedAt: r.updated_at || ""
+  };
+}
+function mapOperationalFlightClass(r = {}) {
+  return {
+    id: r.id || "",
+    flightLegId: r.flight_leg_id || "",
+    flightNumber: r.flight_number || "",
+    departureDate: r.departure_date || "",
+    boardPoint: r.board_point || "",
+    offPoint: r.off_point || "",
+    classCode: r.class_code || "",
+    cabin: r.cabin || "",
+    nest: r.nest || "",
+    authorized: int(r.authorized, 0),
+    sold: int(r.sold, 0),
+    available: int(r.available, 0),
+    waitlistLimit: int(r.waitlist_limit, 0),
+    overbookingLimit: int(r.overbooking_limit, 0),
+    protection: int(r.protection, 0),
+    status: r.status || "open",
+    note: r.note || "",
+    payload: r.payload || {},
+    updatedAt: r.updated_at || ""
+  };
+}
+function mapOperationalSchedule(r = {}) {
+  return {
+    id: r.id || "",
+    seasonCode: r.season_code || "",
+    flightNumber: r.flight_number || "",
+    daysOfOperation: r.days_of_operation || "",
+    boardPoint: r.board_point || "",
+    offPoint: r.off_point || "",
+    viaPoint: r.via_point || "",
+    std: r.std || "",
+    sta: r.sta || "",
+    equipmentType: r.equipment_type || "",
+    capacity: int(r.capacity, 0),
+    effectiveDate: r.effective_date || "",
+    discontinueDate: r.discontinue_date || "",
+    status: r.status || "draft",
+    payload: r.payload || {},
+    updatedAt: r.updated_at || ""
+  };
+}
+function mapOperationalNesting(r = {}) {
+  return {
+    id: r.id || "",
+    flightNumber: r.flight_number || "",
+    departureDate: r.departure_date || "",
+    boardPoint: r.board_point || "",
+    offPoint: r.off_point || "",
+    classCode: r.class_code || "",
+    cabin: r.cabin || "",
+    nest: r.nest || "",
+    parentClass: r.parent_class || "",
+    bidPrice: num(r.bid_price, 0),
+    hurdle: num(r.hurdle, 0),
+    minStay: r.min_stay || "",
+    waitlistLimit: int(r.waitlist_limit, 0),
+    overbookingLimit: int(r.overbooking_limit, 0),
+    authorized: int(r.authorized, 0),
+    protection: int(r.protection, 0),
+    waitlistPolicy: r.waitlist_policy || "CLASS",
+    status: r.status || "open",
+    payload: r.payload || {},
+    updatedAt: r.updated_at || ""
+  };
+}
+
+export const getSmartFlightInventory = webMethod(Permissions.SiteMember, async (input = {}) => {
+  await requireStaff();
+  const f = object(input.filters || input);
+  const flightNumber = upper(f.flightNumber || f.flight, 20);
+  const departureDate = safeDate(f.departureDate || f.date);
+  const boardPoint = upper(f.boardPoint || f.origin, 8);
+  const offPoint = upper(f.offPoint || f.destination, 8);
+
+  const legParts = ["select=*", "order=updated_at.desc", "limit=1"];
+  opEq(legParts, "flight_number", flightNumber);
+  opDate(legParts, "departure_date", departureDate);
+  opEq(legParts, "board_point", boardPoint);
+  opEq(legParts, "off_point", offPoint);
+  const legs = await sb(`inventory_flight_legs?${legParts.join("&")}`);
+  const flight = mapOperationalFlightLeg(legs?.[0] || {});
+
+  const classParts = ["select=*", "order=cabin.asc,nest.asc,class_code.asc", "limit=500"];
+  if (flight.id) opEq(classParts, "flight_leg_id", flight.id);
+  else {
+    opEq(classParts, "flight_number", flightNumber);
+    opDate(classParts, "departure_date", departureDate);
+    opEq(classParts, "board_point", boardPoint);
+    opEq(classParts, "off_point", offPoint);
+  }
+  const classes = await sb(`inventory_flight_classes?${classParts.join("&")}`);
+  return { flight: flight.id ? flight : null, classes: (classes || []).map(mapOperationalFlightClass), lastSync: new Date().toISOString() };
+});
+
+export const getSmartScheduleInventory = webMethod(Permissions.SiteMember, async (input = {}) => {
+  await requireStaff();
+  const f = object(input.filters || input);
+  const parts = ["select=*", "order=flight_number.asc,effective_date.asc", "limit=500"];
+  opEq(parts, "season_code", clean(f.seasonCode, 40));
+  opEq(parts, "flight_number", upper(f.flightNumber, 20));
+  opEq(parts, "board_point", upper(f.boardPoint || f.origin, 8));
+  opEq(parts, "off_point", upper(f.offPoint || f.destination, 8));
+  const rows = await sb(`inventory_schedule_lines?${parts.join("&")}`);
+  return { schedule: (rows || []).map(mapOperationalSchedule), lastSync: new Date().toISOString() };
+});
+
+export const getSmartNestingInventory = webMethod(Permissions.SiteMember, async (input = {}) => {
+  await requireStaff();
+  const f = object(input.filters || input);
+  const parts = ["select=*", "order=cabin.asc,nest.asc,class_code.asc", "limit=500"];
+  opEq(parts, "flight_number", upper(f.flightNumber, 20));
+  opDate(parts, "departure_date", f.departureDate || f.date);
+  opEq(parts, "board_point", upper(f.boardPoint || f.origin, 8));
+  opEq(parts, "off_point", upper(f.offPoint || f.destination, 8));
+  const rows = await sb(`inventory_nesting_controls?${parts.join("&")}`);
+  return { nesting: (rows || []).map(mapOperationalNesting), lastSync: new Date().toISOString() };
 });
