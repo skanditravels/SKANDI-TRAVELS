@@ -14,6 +14,23 @@ import {
 } from "backend/RIA/staffProfile.web";
 
 import {
+  getSuccessFactorsHrBootstrap,
+  saveSuccessFactorsHrStaff,
+  archiveSuccessFactorsHrStaff,
+  reactivateSuccessFactorsHrStaff,
+  generateSuccessFactorsSkId,
+  saveSuccessFactorsHrAccess,
+  lookupSuccessFactorsWixMember,
+  createSuccessFactorsWixMember,
+  syncSuccessFactorsWixMember,
+  sendSuccessFactorsWixPasswordEmail,
+  approveSuccessFactorsWixMember,
+  blockSuccessFactorsWixMember,
+  printSuccessFactorsStaffBadge,
+  getSuccessFactorsHrReports
+} from "backend/RIA/successFactorsHR.web";
+
+import {
   getCareersBootstrap,
   saveCandidate,
   saveJobPosting,
@@ -54,6 +71,7 @@ const ALLOWED_PATH_PREFIXES = ["/riaintra", "/altea", "/success-factors", "/care
 
 let html = null;
 let bootstrapPromise = null;
+let currentSuccessFactorsProfile = null;
 
 function post(type, payload = {}) {
   if (!html) return;
@@ -131,12 +149,12 @@ function successFactorsAccess(profile = {}) {
   const fullHrRole = /(human resources|people operations|people & culture|hr administrator|hr admin|hr director|head of hr|chief people|people director)/i.test(roleText);
   const executiveAdmin = /(super admin|administrator|founder|chief executive|\bceo\b|\bowner\b)/i.test(roleText);
 
-  const fullHr = fullHrRole || executiveAdmin || has("hr_admin", "human resources", "people operations", "all");
+  const fullHr = fullHrRole || executiveAdmin || has("hr", "hr_admin", "human resources", "people operations", "all");
   const recruiting = fullHr || recruitingRole || has(
-    "recruiting", "recruiter", "recruiting_admin", "talent acquisition", "careers_control", "all"
+    "recruiting", "recruiter", "recruiting_admin", "talent acquisition", "careers_control", "careers-control", "all"
   );
   const payroll = fullHr || payrollRole || profile.permissions?.payroll === true || has("payroll", "payroll_admin", "all");
-  const badge = fullHr || badgeRole || has("badge", "badge_generator", "badge_control", "all");
+  const badge = fullHr || badgeRole || has("badge", "badge_generator", "badge-generator", "badge_control", "badge-control", "all");
 
   return {
     fullHr,
@@ -244,6 +262,7 @@ async function bootstrap(force = false) {
     }
 
     const profile = successFactorsProfile(profileResult.profile);
+    currentSuccessFactorsProfile = profile;
     const sfRole = successFactorsRole(profile);
 
     const payload = {
@@ -316,6 +335,155 @@ async function signOut() {
   await authentication.logout();
   post("INTRANET_SIGNED_OUT", { message: "You have signed out." });
   wixLocation.to(HOME_PATH);
+}
+
+function canUseFullHrAdministration() {
+  return currentSuccessFactorsProfile?.successFactorsAccess?.fullHr === true;
+}
+
+async function refreshHrAdministration(payload = {}) {
+  if (!canUseFullHrAdministration()) return null;
+
+  const result = await getSuccessFactorsHrBootstrap(payload || {});
+  if (!result?.authorized) {
+    post("HR_SESSION", {
+      authorized: false,
+      code: result?.code || "STAFF_ROLE_REQUIRED"
+    });
+    return result;
+  }
+
+  post("HR_SESSION", {
+    authorized: true,
+    profile: result.profile || currentSuccessFactorsProfile || {},
+    permissions: currentSuccessFactorsProfile?.permissions || {}
+  });
+  post("HR_STAFF_LIST", result);
+  return result;
+}
+
+function normalizeStaffActionPayload(payload = {}) {
+  const item = payload?.item && typeof payload.item === "object"
+    ? payload.item
+    : payload || {};
+  return item;
+}
+
+async function handleHrMessage(message) {
+  const payload = message.payload || {};
+
+  switch (message.type) {
+    case "HR_READY":
+      await bootstrap();
+      if (canUseFullHrAdministration()) {
+        await refreshHrAdministration({ selectedId: payload.selectedId || "" });
+      }
+      return true;
+
+    case "HR_REFRESH":
+      if (!canUseFullHrAdministration()) return true;
+      await refreshHrAdministration(payload || {});
+      return true;
+
+    case "HR_STAFF_SAVE":
+    case "HR_SAVE_STAFF": {
+      const result = await saveSuccessFactorsHrStaff({
+        item: normalizeStaffActionPayload(payload)
+      });
+      post("HR_STAFF_SAVED", result);
+      return true;
+    }
+
+    case "HR_STAFF_ARCHIVE":
+    case "HR_DEACTIVATE": {
+      const result = await archiveSuccessFactorsHrStaff({
+        id: payload.id || payload.employeeId || payload.staffId || payload._id || ""
+      });
+      post("HR_STAFF_SAVED", result);
+      return true;
+    }
+
+    case "HR_REACTIVATE":
+    case "HR_STAFF_REACTIVATE": {
+      const result = await reactivateSuccessFactorsHrStaff({
+        id: payload.id || payload.employeeId || payload.staffId || payload._id || ""
+      });
+      post("HR_STAFF_SAVED", result);
+      return true;
+    }
+
+    case "HR_GENERATE_SKID": {
+      const result = await generateSuccessFactorsSkId(payload || {});
+      post("HR_SKID_GENERATED", result);
+      return true;
+    }
+
+    case "HR_ACCESS_SAVE": {
+      const result = await saveSuccessFactorsHrAccess(payload || {});
+      post("HR_STAFF_SAVED", {
+        ...result,
+        message: result?.message || "Employee access updated."
+      });
+      return true;
+    }
+
+    case "HR_WIX_LOOKUP":
+    case "HR_PORTAL_LOOKUP": {
+      const result = await lookupSuccessFactorsWixMember(payload || {});
+      post("HR_WIX_RESULT", result);
+      return true;
+    }
+
+    case "HR_WIX_CREATE":
+    case "HR_PORTAL_CREATE": {
+      const result = await createSuccessFactorsWixMember(payload || {});
+      post("HR_WIX_RESULT", result);
+      return true;
+    }
+
+    case "HR_WIX_SYNC":
+    case "HR_PORTAL_SYNC": {
+      const result = await syncSuccessFactorsWixMember(payload || {});
+      post("HR_WIX_RESULT", result);
+      return true;
+    }
+
+    case "HR_WIX_SEND_PASSWORD":
+    case "HR_PORTAL_SEND_PASSWORD": {
+      const result = await sendSuccessFactorsWixPasswordEmail(payload || {});
+      post("HR_WIX_RESULT", result);
+      return true;
+    }
+
+    case "HR_WIX_APPROVE":
+    case "HR_PORTAL_APPROVE": {
+      const result = await approveSuccessFactorsWixMember(payload || {});
+      post("HR_WIX_RESULT", result);
+      return true;
+    }
+
+    case "HR_WIX_BLOCK":
+    case "HR_PORTAL_BLOCK": {
+      const result = await blockSuccessFactorsWixMember(payload || {});
+      post("HR_WIX_RESULT", result);
+      return true;
+    }
+
+    case "HR_PRINT_BADGE": {
+      const result = await printSuccessFactorsStaffBadge(payload || {});
+      post("HR_BADGE_PRINTED", result);
+      return true;
+    }
+
+    case "HR_REPORTS_REQUEST": {
+      const result = await getSuccessFactorsHrReports(payload || {});
+      post("HR_REPORTS", result?.reports || result || {});
+      return true;
+    }
+
+    default:
+      return false;
+  }
 }
 
 function itemPayload(payload = {}) {
@@ -533,13 +701,17 @@ async function handleCareersMessage(message) {
 
 async function handleMessage(message) {
   const payload = message.payload || {};
+  const type = String(message.type || "");
 
-  if (String(message.type || "").startsWith("CAREERS_")) {
+  if (type.startsWith("CAREERS_")) {
     return handleCareersMessage(message);
   }
 
+  if (type.startsWith("HR_")) {
+    return handleHrMessage(message);
+  }
+
   switch (message.type) {
-    case "HR_READY":
     case "INTRANET_READY":
     case "INTRANET_REFRESH":
       await bootstrap(message.type === "INTRANET_REFRESH");
@@ -591,9 +763,14 @@ $w.onReady(function () {
       }
     } catch (error) {
       console.error(`[SuccessFactors] ${message.type || "UNKNOWN"} failed.`, error);
-      const type = String(message.type || "").startsWith("CAREERS_")
+      const messageType = String(message.type || "");
+      const type = messageType.startsWith("CAREERS_")
         ? "CAREERS_ERROR"
-        : "INTRANET_ERROR";
+        : messageType.startsWith("HR_")
+          ? "HR_ERROR"
+          : messageType.startsWith("PAYROLL_")
+            ? "PAYROLL_ERROR"
+            : "INTRANET_ERROR";
       post(type, {
         message: cleanError(error),
         stage: message.type || "UNKNOWN"
