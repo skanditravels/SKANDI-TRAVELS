@@ -40,7 +40,7 @@ import {
 import { dispatchQueuedCareerEmails } from "backend/outboundEmailDispatcher.web";
 import { syncCareerMailboxReplies } from "backend/inboundCareerMailboxSync.web";
 
-const EMBED_ID = "#HrEmbed";
+const EMBED_ID = "#staffHrEmbed";
 const PARENT_SOURCE = "SKANDI_WIX_PARENT";
 const CHILD_SOURCES = new Set([
   "SKANDI_STAFF_DASHBOARD_INTRANET",
