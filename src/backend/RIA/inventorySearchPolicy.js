@@ -83,7 +83,7 @@ export async function getSearchableCatalogPolicy() {
     airlines: data.airlines.map(x => ({ id: x.id || x.ID, name: x.name || x.Title, code: x.code || x.iataCode, details: x.details || {}, ...collectionMeta(x) })),
     destinations: data.destinations.map(x => ({ id: x.id, name: x.name, code: x.code, slug: x.slug, details: x.details || {}, ...collectionMeta(x) })),
     hotels: data.hotels.map(x => ({ id: x.id, name: x.name, code: x.code, slug: x.slug, providerAccommodationIds: hotelProviderIds(x), ...collectionMeta(x) })),
-    rule: "Only PUBLISHED + active + customer-visible records marked searchable and assigned to SKANDI_COLLECTION or SKANDI_PARTNER are searchable."
+    rule: "Only records referenced by an active, searchable inventory_catalog_entries row in SKANDI_COLLECTION or SKANDI_PARTNER are customer-searchable. Base master/reference records are never searchable by themselves."
   };
 }
 
