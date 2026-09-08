@@ -6,7 +6,7 @@ import { findAgentByMemberOrEmail, isAgentAuthorized } from "./staffPortalAuth.r
 
 const URL_SECRET="SUPABASE_URL";
 const KEY_SECRET="SUPABASE_SERVICE_ROLE_KEY";
-const T={airlines:"travel_info_airlines",aircraft:"travel_info_aircraft",cabins:"travel_info_aircraft_cabins",views:"travel_info_aircraft_views",hotspots:"travel_info_aircraft_hotspots",scenes:"travel_info_aircraft_walk_scenes",sceneHotspots:"travel_info_aircraft_scene_hotspots"};
+const T={airlines:"aircraft_display_airlines",aircraft:"travel_info_aircraft",cabins:"travel_info_aircraft_cabins",views:"travel_info_aircraft_views",hotspots:"travel_info_aircraft_hotspots",scenes:"travel_info_aircraft_walk_scenes",sceneHotspots:"travel_info_aircraft_scene_hotspots"};
 let cfgCache=null;
 let airlineCatalogCache={rows:null,expiresAt:0};
 
@@ -38,41 +38,40 @@ function cabinTemplates(configuration={}){return Object.entries(obj(configuratio
 
 function mapAirline(row={}){
   const inventory=obj(row.inventory_details);
-  const id=text(
-    row.ID ||
-    row.id ||
-    row["Record ID"] ||
-    inventory.id ||
-    "",
-    160
-  );
-
-  const name=text(
-    row.Title ||
-    row.title ||
-    row.shortName ||
-    inventory.title ||
-    "",
-    220
-  );
 
   const a={
-    id,
-    name,
-    shortName:text(
-      row.shortName ||
+    id:text(
+      row.airline_id ||
+      row.ID ||
+      row.id ||
+      row["Record ID"] ||
+      "",
+      160
+    ),
+    name:text(
+      row.airline_name ||
       row.Title ||
       row.title ||
-      name,
+      "",
+      220
+    ),
+    shortName:text(
+      row.short_name ||
+      row.shortName ||
+      row.airline_name ||
+      row.Title ||
+      "",
       160
     ),
     iataCode:upper(
+      row.iata_code ||
       row.iataCode ||
       inventory.iata ||
       "",
       20
     ),
     icaoCode:upper(
+      row.icao_code ||
       row.icaoCode ||
       inventory.icao ||
       "",
@@ -86,47 +85,53 @@ function mapAirline(row={}){
     ),
     summary:text(
       row.summary ||
-      inventory.summary ||
       "",
       4000
     ),
     heroAircraftUrl:text(
+      row.hero_aircraft_url ||
       row.heroAircraftUrl ||
       inventory.heroImageUrl ||
-      inventory.heroAircraftUrl ||
       "",
       2000
     ),
     aircraftFamiliesText:text(
+      row.aircraft_families_text ||
       row.aircraftFamiliesText ||
-      inventory.aircraftFamiliesText ||
       "",
       4000
     ),
     aircraftConfigLastReviewed:text(
+      row.aircraft_config_last_reviewed ||
       row.aircraftConfigLastReviewed ||
       "",
       80
     ),
     aircraftConfigSourceUrls:arr(
       parse(
+        row.aircraft_config_source_urls_json ||
         row.aircraftConfigSourceUrlsJson ||
-        row.sourceUrlsJson ||
         [],
         []
       )
     )
       .map(x=>text(x,1600))
       .filter(Boolean),
+    reviewNotes:text(
+      row.aircraft_config_review_notes ||
+      row.aircraftConfigReviewNotes ||
+      "",
+      5000
+    ),
     active:row.active!==false,
     staffVisible:row.staff_visible!==false,
     status:upper(row.status||"",40),
-    slug:text(row.slug||row["Record ID"]||"",180)
+    slug:text(row.slug||"",180)
   };
 
   const raw=parse(
+    row.aircraft_configurations_json ||
     row.aircraftConfigurationsJson ||
-    inventory.aircraftConfigurationsJson ||
     [],
     []
   );
@@ -136,8 +141,9 @@ function mapAirline(row={}){
       .map((c,i)=>normalizeTemplate(a,c,i))
       .filter(t=>t.aircraftCode||t.aircraftName);
 
-  return a
+  return a;
 }
+
 function normalizeTemplate(a,c={},i=0){const aircraftName=text(c.aircraftName||c.name||c.aircraft||"",220),aircraftCode=upper(c.aircraftCode||c.code||c.iataCode||"",80),totalSeats=integer(c.totalSeats??c.seats,null),configuration=obj(c.configuration||c.cabins||{}),inf=infer(aircraftName,aircraftCode),cabins=cabinTemplates(configuration),sourceUrl=text(c.sourceUrl||c.source||"",1600),sourceUrls=uniq([sourceUrl,...arr(a.aircraftConfigSourceUrls)]),airlineLabel=a.shortName||a.name||a.iataCode||"",notes=text(c.notes||c.summary||"",4000),displayTitle=aircraftName&&airlineLabel&&!aircraftName.toLowerCase().includes(airlineLabel.toLowerCase())?`${airlineLabel} ${aircraftName}`:aircraftName;return{templateId:`${a.id}:${aircraftCode||"AIRCRAFT"}:${totalSeats??"NA"}:${i}`,airlineId:a.id,airlineName:a.name,airlineCode:a.iataCode||a.icaoCode||a.id,aircraftCode,aircraftName,manufacturer:inf.manufacturer,family:inf.family,variant:inf.variant,totalSeats,configuration,cabinTemplates:cabins,defaultCabinCode:cabins[0]?.cabinCode||"",displayTitle,displaySummary:notes||(aircraftName&&totalSeats?`${aircraftName} configured with ${totalSeats} seats.`:aircraftName),heroImageUrl:a.heroAircraftUrl||"",thumbnailImageUrl:a.heroAircraftUrl||"",sourceUrl,sourceUrls,reviewNotes:notes,lastReviewed:a.aircraftConfigLastReviewed||"",walkthroughTitle:aircraftName?`Explore the ${aircraftName}`:"Explore the aircraft",walkthroughSubtitle:"Take a look around the cabin before you fly.",walkthroughAccuracyLabel:"Aircraft and cabin configuration are representative and may vary by operating aircraft.",operatorBrand:text(c.operatorBrand||a.shortName||a.name,180),notes}}
 
 function mapAircraft(r={}){return{id:r.id||"",airlineId:r.airline_id||"",airlineCode:r.airline_code||"",aircraftCode:r.aircraft_code||"",aircraftName:r.aircraft_name||"",manufacturer:r.manufacturer||"",family:r.family||"",variant:r.variant||"",totalSeats:r.total_seats??null,configuration:obj(r.configuration),displayTitle:r.display_title||"",displaySummary:r.display_summary||"",heroImageUrl:r.hero_image_url||"",exteriorImageUrl:r.exterior_image_url||"",seatmapImageUrl:r.seatmap_image_url||"",thumbnailImageUrl:r.thumbnail_image_url||"",defaultCabinCode:r.default_cabin_code||"",defaultViewType:r.default_view_type||"CABIN",walkthroughTitle:r.walkthrough_title||"",walkthroughSubtitle:r.walkthrough_subtitle||"",walkthroughStartSceneCode:r.walkthrough_start_scene_code||"",walkthroughAccuracyLabel:r.walkthrough_accuracy_label||"",sourceUrl:r.source_url||"",sourceUrls:Array.isArray(r.source_urls)?r.source_urls:[],reviewNotes:r.review_notes||"",lastReviewed:r.last_reviewed||"",status:r.status||"DRAFT",customerVisible:r.customer_visible!==false,staffVisible:r.staff_visible!==false,active:r.active!==false,sortOrder:r.sort_order??100,source:r.source||"SKANDI",sourceReference:r.source_reference||"",createdAt:r.created_at||"",updatedAt:r.updated_at||""}}
@@ -158,19 +164,23 @@ async function rawAirlineCatalog(force=false){
     return airlineCatalogCache.rows;
   }
 
-  // travel_info_airlines is a small master-data table (21 live rows).
-  // Read the real row shape instead of maintaining a brittle projection.
   const rows=await db(
     T.airlines,
     {
-      select:"*",
+      select:
+        "airline_id,airline_name,short_name,iata_code,icao_code,website,summary," +
+        "hero_aircraft_url,aircraft_families_text,aircraft_configurations_json," +
+        "aircraft_config_source_urls_json,aircraft_config_review_notes," +
+        "aircraft_config_last_reviewed,active,staff_visible,status,slug",
+      active:"eq.true",
+      order:"airline_name.asc",
       limit:1000
     }
   );
 
   if(!Array.isArray(rows)){
     throw new Error(
-      "travel_info_airlines did not return an array."
+      "aircraft_display_airlines did not return an array."
     );
   }
 
@@ -196,17 +206,17 @@ async function airlineById(id){
   const key=text(id,160);
   if(!key)return null;
 
-  // Avoid PostgREST filtering directly on the legacy capitalized "ID"
-  // column. The catalog is tiny, so resolve the row safely in JS.
+  const normalizedKey=upper(key,40);
   const airlines=await listAirlines();
 
   return airlines.find(a=>
     a.id===key ||
     a.slug===key ||
-    a.iataCode===upper(key,20) ||
-    a.icaoCode===upper(key,20)
-  )||null
-}`,limit:1});return rows?.[0]?mapAirline(rows[0]):null}
+    a.iataCode===normalizedKey ||
+    a.icaoCode===normalizedKey
+  )||null;
+}
+
 function pickTemplate(a,input={}){let matches=a?.aircraftConfigurations||[];if(!matches.length)return{template:null,matches:[]};const code=upper(input.aircraftCode||input.aircraft_code||"",80),name=text(input.aircraftName||input.aircraft_name||"",220).toLowerCase(),seats=integer(input.totalSeats??input.total_seats,null);if(code){const x=matches.filter(t=>upper(t.aircraftCode,80)===code);if(x.length)matches=x}if(name){const x=matches.filter(t=>{const n=t.aircraftName.toLowerCase();return n===name||n.includes(name)||name.includes(n)});if(x.length)matches=x}if(seats!=null){const x=matches.filter(t=>t.totalSeats===seats);if(x.length)matches=x}return{template:matches[0]||null,matches}}
 
 function smart(input={},a=null,t=null,overwrite=false){const currentConfig=obj(input.configuration||input.config||{}),aircraftName=text(input.aircraftName||input.aircraft_name,220)||t?.aircraftName||"",aircraftCode=upper(input.aircraftCode||input.aircraft_code,80)||t?.aircraftCode||"",inf=infer(aircraftName||t?.aircraftName||"",aircraftCode||t?.aircraftCode||"");const choose=(cur,sug)=>overwrite?(sug!==undefined&&sug!==null&&sug!==""?sug:cur):(cur!==undefined&&cur!==null&&cur!==""?cur:sug);const configuration=Object.keys(currentConfig).length?currentConfig:obj(t?.configuration),cabins=cabinTemplates(configuration),sources=uniq([...arr(input.sourceUrls||input.source_urls),...arr(t?.sourceUrls),t?.sourceUrl||""]);return{...input,airlineId:text(input.airlineId||input.airline_id,160)||a?.id||"",airlineCode:upper(input.airlineCode||input.airline_code,40)||a?.iataCode||a?.icaoCode||"",aircraftCode:choose(aircraftCode,t?.aircraftCode||aircraftCode)||"",aircraftName:choose(aircraftName,t?.aircraftName||aircraftName)||"",manufacturer:choose(text(input.manufacturer,120),t?.manufacturer||inf.manufacturer)||"",family:choose(text(input.family,120),t?.family||inf.family)||"",variant:choose(text(input.variant,180),t?.variant||inf.variant)||"",totalSeats:choose(integer(input.totalSeats??input.total_seats,null),t?.totalSeats),configuration,displayTitle:choose(text(input.displayTitle||input.display_title,260),t?.displayTitle||aircraftName)||"",displaySummary:choose(text(input.displaySummary||input.display_summary,5000),t?.displaySummary||"")||"",heroImageUrl:text(input.heroImageUrl||input.hero_image_url,2000)||t?.heroImageUrl||a?.heroAircraftUrl||"",exteriorImageUrl:text(input.exteriorImageUrl||input.exterior_image_url,2000),seatmapImageUrl:text(input.seatmapImageUrl||input.seatmap_image_url,2000),thumbnailImageUrl:text(input.thumbnailImageUrl||input.thumbnail_image_url,2000)||t?.thumbnailImageUrl||t?.heroImageUrl||a?.heroAircraftUrl||"",defaultCabinCode:choose(upper(input.defaultCabinCode||input.default_cabin_code,40),t?.defaultCabinCode||cabins[0]?.cabinCode||"")||"",defaultViewType:upper(input.defaultViewType||input.default_view_type,40)||"CABIN",walkthroughTitle:choose(text(input.walkthroughTitle||input.walkthrough_title,300),t?.walkthroughTitle||(aircraftName?`Explore the ${aircraftName}`:""))||"",walkthroughSubtitle:choose(text(input.walkthroughSubtitle||input.walkthrough_subtitle,3000),t?.walkthroughSubtitle||"")||"",walkthroughStartSceneCode:upper(input.walkthroughStartSceneCode||input.walkthrough_start_scene_code,80),walkthroughAccuracyLabel:choose(text(input.walkthroughAccuracyLabel||input.walkthrough_accuracy_label,1000),t?.walkthroughAccuracyLabel||"")||"",sourceUrl:text(input.sourceUrl||input.source_url,1600)||t?.sourceUrl||a?.website||"",sourceUrls:sources,reviewNotes:choose(text(input.reviewNotes||input.review_notes,5000),t?.reviewNotes||"")||"",lastReviewed:text(input.lastReviewed||input.last_reviewed,80)||t?.lastReviewed||"",status:["DRAFT","REVIEW","PUBLISHED","HIDDEN","SUSPENDED","ARCHIVED"].includes(upper(input.status||"DRAFT",40))?upper(input.status||"DRAFT",40):"DRAFT",customerVisible:bool(input.customerVisible??input.customer_visible,true),staffVisible:bool(input.staffVisible??input.staff_visible,true),active:bool(input.active,true),sortOrder:integer(input.sortOrder??input.sort_order,100),source:upper(input.source||"SKANDI",80)||"SKANDI",sourceReference:text(input.sourceReference||input.source_reference||(t?`airline-config:${a?.id||""}:${t.aircraftCode}:${t.totalSeats??""}`:""),1000)}}
@@ -223,7 +233,55 @@ async function syncCabins(id,overwrite=false){const a=await rawAircraft(id);if(!
 function smartPatch(raw,s){const p={};for(const[dbKey,key]of[["manufacturer","manufacturer"],["family","family"],["variant","variant"],["display_title","displayTitle"],["display_summary","displaySummary"],["hero_image_url","heroImageUrl"],["thumbnail_image_url","thumbnailImageUrl"],["default_cabin_code","defaultCabinCode"],["walkthrough_title","walkthroughTitle"],["walkthrough_subtitle","walkthroughSubtitle"],["walkthrough_accuracy_label","walkthroughAccuracyLabel"],["source_url","sourceUrl"],["review_notes","reviewNotes"],["source_reference","sourceReference"]])if((raw[dbKey]==null||raw[dbKey]==="")&&s[key]!=null&&s[key]!=="")p[dbKey]=s[key];if(raw.total_seats==null&&s.totalSeats!=null)p.total_seats=s.totalSeats;if((!raw.configuration||typeof raw.configuration!=="object"||Array.isArray(raw.configuration)||!Object.keys(raw.configuration).length)&&Object.keys(obj(s.configuration)).length)p.configuration=obj(s.configuration);if((!Array.isArray(raw.source_urls)||!raw.source_urls.length)&&s.sourceUrls?.length)p.source_urls=s.sourceUrls;if(!raw.last_reviewed&&/^\d{4}-\d{2}-\d{2}$/.test(s.lastReviewed||""))p.last_reviewed=s.lastReviewed;if(!raw.airline_code&&s.airlineCode)p.airline_code=s.airlineCode;if(Object.keys(p).length)p.updated_at=new Date().toISOString();return p}
 async function batched(items,n,fn){const out=[];for(let i=0;i<items.length;i+=n)out.push(...await Promise.all(items.slice(i,i+n).map(fn)));return out}
 
-export const getAircraftControlBootstrap=webMethod(Permissions.Anyone,async()=>{try{const agent=await requireStaff(false);const[airlines,aircraft]=await Promise.all([listAirlines(true),listAircraft()]);const aircraftTemplates=airlines.flatMap(a=>a.aircraftConfigurations||[]);return{ok:true,session:session(agent),portalSession:session(agent),airlines,aircraft,aircraftTemplates,stats:{airlines:airlines.length,aircraft:aircraft.length,templates:aircraftTemplates.length},airlineSource:"travel_info_airlines",airlineReadOk:airlines.length>0,lastSync:new Date().toISOString()}}catch(e){throw new Error(e?.message||"Aircraft Display Control bootstrap failed.")}});
+export const getAircraftControlBootstrap=webMethod(
+  Permissions.Anyone,
+  async()=>{
+    try{
+      const agent=await requireStaff(false);
+
+      const aircraft=await listAircraft();
+
+      let airlines=[];
+      let airlineReadError="";
+
+      try{
+        airlines=await listAirlines(true);
+      }catch(error){
+        airlineReadError=
+          error?.message ||
+          "Aircraft airline master data could not be loaded.";
+      }
+
+      const aircraftTemplates=
+        airlines.flatMap(
+          a=>a.aircraftConfigurations||[]
+        );
+
+      return{
+        ok:true,
+        session:session(agent),
+        portalSession:session(agent),
+        airlines,
+        aircraft,
+        aircraftTemplates,
+        stats:{
+          airlines:airlines.length,
+          aircraft:aircraft.length,
+          templates:aircraftTemplates.length
+        },
+        airlineSource:"aircraft_display_airlines",
+        airlineReadOk:airlines.length>0,
+        airlineReadError,
+        lastSync:new Date().toISOString()
+      };
+    }catch(e){
+      throw new Error(
+        e?.message ||
+        "Aircraft Display Control bootstrap failed."
+      );
+    }
+  }
+);
 export const getAircraftControlRecord=webMethod(Permissions.Anyone,async({aircraftId}={})=>{try{await requireStaff(false);return{ok:true,...await record(aircraftId)}}catch(e){throw new Error(e?.message||"Aircraft record could not be loaded.")}});
 export const smartFillAircraft=webMethod(Permissions.Anyone,async(input={})=>{try{await requireStaff(false);const id=text(input.airlineId||input.airline_id,160);if(!id)throw new Error("Select an airline before using Smart Fill.");const a=await airlineById(id);if(!a)throw new Error("Selected airline was not found.");const{template,matches}=pickTemplate(a,input),suggestion=smart(input,a,template,true);return{ok:true,suggestion,template,matches,ambiguous:matches.length>1,message:matches.length>1?`Found ${matches.length} matching fleet configurations. Choose the correct seat configuration if needed.`:template?`Matched ${template.aircraftName} (${template.aircraftCode}).`:"No exact fleet template matched; manufacturer/family fields were inferred where possible."}}catch(e){throw new Error(e?.message||"Aircraft Smart Fill failed.")}});
 
