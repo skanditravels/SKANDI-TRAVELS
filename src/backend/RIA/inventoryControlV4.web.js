@@ -2,7 +2,6 @@ import { webMethod, Permissions } from "wix-web-module";
 import { secrets } from "wix-secrets-backend.v2";
 import { elevate } from "wix-auth";
 import { fetch } from "wix-fetch";
-import { createClient } from "@supabase/supabase-js";
 import { getStaffPortalSession } from "backend/RIA/staffPortalAuth.web";
 
 const TABLES = Object.freeze({
@@ -70,7 +69,6 @@ function jsonText(v) { return v == null || v === "" ? null : (typeof v === "stri
 
 const elevatedGetSecretValue = elevate(secrets.getSecretValue);
 let configPromise = null;
-let storagePromise = null;
 function secretString(r) { return typeof r === "string" ? r.trim() : String(r?.value ?? r?.secretValue ?? r?.secret?.value ?? "").trim(); }
 async function readSecret(name) {
   const response = await elevatedGetSecretValue(name);
@@ -114,9 +112,37 @@ async function sb(path, { method = "GET", body, headers = {} } = {}) {
   }
   return data;
 }
-async function storageClient() {
-  if (!storagePromise) storagePromise = cfg().then(c => createClient(c.url, c.key, { auth: { persistSession: false, autoRefreshToken: false } }));
-  return storagePromise;
+async function createSignedInventoryUpload(path) {
+  const c = await cfg();
+  const storagePath = `${INVENTORY_BUCKET}/${path}`;
+  const response = await fetch(`${c.url}/storage/v1/object/upload/sign/${storagePath}`, {
+    method: "POST",
+    headers: {
+      apikey: c.key,
+      ...(c.legacyJwt ? { Authorization: `Bearer ${c.key}` } : {}),
+      "Content-Type": "application/json"
+    },
+    body: "{}"
+  });
+  const raw = await response.text();
+  let data = null;
+  if (raw) { try { data = JSON.parse(raw); } catch (_) { data = raw; } }
+  if (!response.ok) {
+    const error = new Error(data?.message || data?.error || `Storage upload-sign failed (${response.status}).`);
+    error.code = data?.statusCode || data?.code || "STORAGE_SIGN_FAILED";
+    throw error;
+  }
+  const relative = data?.url || data?.signedURL || data?.signedUrl || "";
+  if (!relative) throw new Error("Supabase Storage did not return a signed upload URL.");
+  const signedUrl = /^https?:\/\//i.test(relative)
+    ? relative
+    : `${c.url}/storage/v1${relative.startsWith("/") ? relative : `/${relative}`}`;
+  let token = data?.token || "";
+  if (!token) {
+    try { token = new URL(signedUrl).searchParams.get("token") || ""; } catch (_) {}
+  }
+  if (!token) throw new Error("Supabase Storage did not return an upload token.");
+  return { signedUrl, token, path };
 }
 
 function profileOf(session = {}) {
@@ -601,17 +627,15 @@ export const createInventoryMediaUploadTicket = webMethod(Permissions.SiteMember
   const base = slugify(clean(input.fileName, 240).replace(/\.[^.]+$/, "")) || role.toLowerCase();
   const date = new Date().toISOString().slice(0, 10);
   const path = `${entityType}/${code}/${date}/${makeUuid()}-${base}.${ext}`;
-  const client = await storageClient();
-  const { data, error } = await client.storage.from(INVENTORY_BUCKET).createSignedUploadUrl(path, { upsert: false });
-  if (error || !data?.signedUrl || !data?.token) throw new Error(error?.message || "Could not create the image upload URL.");
+  const signed = await createSignedInventoryUpload(path);
   const c = await cfg();
   const publicUrl = `${c.url}/storage/v1/object/public/${INVENTORY_BUCKET}/${path.split('/').map(encodeURIComponent).join('/')}`;
   await audit(actor, "MEDIA_UPLOAD_TICKET_CREATED", input.entityId || null, `Inventory media upload prepared (${role}).`, {
     sourceTable: TABLES.media, storageBucket: INVENTORY_BUCKET, storagePath: path, role, mimeType, fileSizeBytes
   });
   return {
-    signedUrl: data.signedUrl,
-    token: data.token,
+    signedUrl: signed.signedUrl,
+    token: signed.token,
     path,
     publicUrl,
     role,
