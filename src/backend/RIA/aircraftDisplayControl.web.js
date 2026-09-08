@@ -6,6 +6,8 @@ import { findAgentByMemberOrEmail, isAgentAuthorized } from "./staffPortalAuth.r
 
 const URL_SECRET="SUPABASE_URL";
 const KEY_SECRET="SUPABASE_SERVICE_ROLE_KEY";
+const AIRCRAFT_ASSET_BUCKET="aircraft-assets";
+const MAX_AIRCRAFT_ASSET_BYTES=15*1024*1024;
 const T={airlines:"aircraft_display_airlines",aircraft:"travel_info_aircraft",cabins:"travel_info_aircraft_cabins",views:"travel_info_aircraft_views",hotspots:"travel_info_aircraft_hotspots",scenes:"travel_info_aircraft_walk_scenes",sceneHotspots:"travel_info_aircraft_scene_hotspots"};
 let cfgCache=null;
 let airlineCatalogCache={rows:null,expiresAt:0};
@@ -24,6 +26,145 @@ function qs(q={}){const s=Object.entries(q).filter(([,v])=>v!==undefined&&v!==nu
 
 async function config(){if(cfgCache?.url&&cfgCache?.key)return cfgCache;const url=String(await getSecret(URL_SECRET)||"").replace(/\/$/,"");const key=String(await getSecret(KEY_SECRET)||"").trim();if(!url||!key)throw new Error("Supabase secrets are missing.");cfgCache={url,key};return cfgCache}
 async function db(table,query={},options={}){const {url,key}=await config();const r=await fetch(`${url}/rest/v1/${table}${qs(query)}`,{method:options.method||"GET",headers:{apikey:key,Authorization:`Bearer ${key}`,"Content-Type":"application/json",...(options.prefer?{Prefer:options.prefer}:{}),...(options.headers||{})},body:options.body===undefined?undefined:JSON.stringify(options.body)});const raw=await r.text();let p=null;if(raw){try{p=JSON.parse(raw)}catch(_){p=raw}}if(!r.ok)throw new Error(p?.message||p?.error||`Supabase ${table} request failed (${r.status}).`);return p}
+
+
+function storageObjectPath(path=""){
+  return String(path||"")
+    .split("/")
+    .map(encodeURIComponent)
+    .join("/");
+}
+function storagePublicUrl(baseUrl,bucket,path){
+  return `${String(baseUrl||"").replace(/\/$/,"")}/storage/v1/object/public/${encodeURIComponent(bucket)}/${storageObjectPath(path)}`;
+}
+function cleanAssetPart(value,fallback="asset"){
+  const part=String(value||"")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9_-]+/g,"-")
+    .replace(/-+/g,"-")
+    .replace(/^-|-$/g,"")
+    .slice(0,100);
+  return part||fallback;
+}
+function assetExtension(mime=""){
+  const m=String(mime||"").toLowerCase();
+  if(m==="image/jpeg"||m==="image/jpg")return"jpg";
+  if(m==="image/png")return"png";
+  if(m==="image/webp")return"webp";
+  if(m==="image/avif")return"avif";
+  if(m==="image/gif")return"gif";
+  return"";
+}
+function assetObjectPath(input={}){
+  const aircraftPart=cleanAssetPart(
+    input.aircraftCode||
+    input.aircraft_code||
+    input.aircraftId||
+    input.aircraft_id||
+    "draft-aircraft",
+    "draft-aircraft"
+  );
+  const scope=cleanAssetPart(input.scope||"aircraft","aircraft");
+  const role=cleanAssetPart(input.assetRole||input.asset_role||"image","image");
+  const recordPart=cleanAssetPart(
+    input.recordCode||
+    input.record_code||
+    input.recordId||
+    input.record_id||
+    scope,
+    scope
+  );
+  const ext=assetExtension(input.mimeType||input.mime_type||"");
+  const stamp=new Date().toISOString().replace(/[-:.TZ]/g,"").slice(0,14);
+  const random=Math.random().toString(36).slice(2,9);
+
+  if(scope==="aircraft"){
+    return `aircraft/${aircraftPart}/${role}/${stamp}-${random}.${ext}`;
+  }
+  return `aircraft/${aircraftPart}/${scope}/${recordPart}/${role}-${stamp}-${random}.${ext}`;
+}
+async function createSignedAircraftAssetUpload(input={}){
+  await requireStaff(true);
+
+  const mime=text(input.mimeType||input.mime_type||"",120).toLowerCase();
+  const ext=assetExtension(mime);
+  const size=Number(input.size||input.fileSize||input.file_size||0);
+
+  if(!ext){
+    throw new Error("Only JPEG, PNG, WebP, AVIF and GIF images are allowed.");
+  }
+  if(!Number.isFinite(size)||size<=0){
+    throw new Error("Image file size is required.");
+  }
+  if(size>MAX_AIRCRAFT_ASSET_BYTES){
+    throw new Error("Aircraft image is too large. Maximum size is 15 MB.");
+  }
+
+  const objectPath=assetObjectPath({...input,mimeType:mime});
+  const {url,key}=await config();
+
+  const response=await fetch(
+    `${url}/storage/v1/object/upload/sign/${encodeURIComponent(AIRCRAFT_ASSET_BUCKET)}/${storageObjectPath(objectPath)}`,
+    {
+      method:"POST",
+      headers:{
+        apikey:key,
+        Authorization:`Bearer ${key}`,
+        "Content-Type":"application/json"
+      },
+      body:"{}"
+    }
+  );
+
+  const raw=await response.text();
+  let data=null;
+  if(raw){
+    try{data=JSON.parse(raw)}catch(_){data=raw}
+  }
+
+  if(!response.ok){
+    throw new Error(
+      data?.message||
+      data?.error||
+      `Could not create aircraft asset upload (${response.status}).`
+    );
+  }
+
+  let signedUrl=String(
+    data?.signedUrl||
+    data?.signedURL||
+    data?.url||
+    ""
+  ).trim();
+
+  if(!signedUrl){
+    throw new Error("Supabase did not return a signed aircraft asset upload URL.");
+  }
+
+  if(!/^https?:\/\//i.test(signedUrl)){
+    if(signedUrl.startsWith("/storage/v1/")){
+      signedUrl=`${url}${signedUrl}`;
+    }else if(signedUrl.startsWith("/object/")){
+      signedUrl=`${url}/storage/v1${signedUrl}`;
+    }else{
+      signedUrl=`${url}/storage/v1/${signedUrl.replace(/^\/+/,"")}`;
+    }
+  }
+
+  return{
+    ok:true,
+    bucket:AIRCRAFT_ASSET_BUCKET,
+    objectPath,
+    signedUrl,
+    publicUrl:storagePublicUrl(url,AIRCRAFT_ASSET_BUCKET,objectPath),
+    mimeType:mime,
+    size,
+    fileName:text(input.fileName||input.file_name||"",240),
+    assetRole:text(input.assetRole||input.asset_role||"image",80),
+    scope:text(input.scope||"aircraft",80)
+  };
+}
 
 function displayName(a={}){return a.preferred_name||a.display_name||a.full_name||[a.first_name,a.last_name].filter(Boolean).join(" ")||a.email||a.sk_id||"Staff"}
 function role(a={}){return text(a.role||a.job_title||a.position||"",100)}
@@ -232,6 +373,47 @@ async function syncCabins(id,overwrite=false){const a=await rawAircraft(id);if(!
 
 function smartPatch(raw,s){const p={};for(const[dbKey,key]of[["manufacturer","manufacturer"],["family","family"],["variant","variant"],["display_title","displayTitle"],["display_summary","displaySummary"],["hero_image_url","heroImageUrl"],["thumbnail_image_url","thumbnailImageUrl"],["default_cabin_code","defaultCabinCode"],["walkthrough_title","walkthroughTitle"],["walkthrough_subtitle","walkthroughSubtitle"],["walkthrough_accuracy_label","walkthroughAccuracyLabel"],["source_url","sourceUrl"],["review_notes","reviewNotes"],["source_reference","sourceReference"]])if((raw[dbKey]==null||raw[dbKey]==="")&&s[key]!=null&&s[key]!=="")p[dbKey]=s[key];if(raw.total_seats==null&&s.totalSeats!=null)p.total_seats=s.totalSeats;if((!raw.configuration||typeof raw.configuration!=="object"||Array.isArray(raw.configuration)||!Object.keys(raw.configuration).length)&&Object.keys(obj(s.configuration)).length)p.configuration=obj(s.configuration);if((!Array.isArray(raw.source_urls)||!raw.source_urls.length)&&s.sourceUrls?.length)p.source_urls=s.sourceUrls;if(!raw.last_reviewed&&/^\d{4}-\d{2}-\d{2}$/.test(s.lastReviewed||""))p.last_reviewed=s.lastReviewed;if(!raw.airline_code&&s.airlineCode)p.airline_code=s.airlineCode;if(Object.keys(p).length)p.updated_at=new Date().toISOString();return p}
 async function batched(items,n,fn){const out=[];for(let i=0;i<items.length;i+=n)out.push(...await Promise.all(items.slice(i,i+n).map(fn)));return out}
+
+
+export const createAircraftAssetUpload=webMethod(
+  Permissions.Anyone,
+  async(input={})=>{
+    try{
+      return await createSignedAircraftAssetUpload(input);
+    }catch(e){
+      throw new Error(e?.message||"Aircraft asset upload could not be prepared.");
+    }
+  }
+);
+
+export const completeAircraftAssetUpload=webMethod(
+  Permissions.Anyone,
+  async(input={})=>{
+    try{
+      await requireStaff(true);
+      const objectPath=text(input.objectPath||input.object_path||"",1200);
+      const publicUrl=text(input.publicUrl||input.public_url||"",2200);
+      if(!objectPath||!objectPath.startsWith("aircraft/")){
+        throw new Error("Invalid aircraft asset path.");
+      }
+      if(!publicUrl||!publicUrl.includes(`/storage/v1/object/public/${AIRCRAFT_ASSET_BUCKET}/`)){
+        throw new Error("Invalid aircraft asset public URL.");
+      }
+      return{
+        ok:true,
+        bucket:AIRCRAFT_ASSET_BUCKET,
+        objectPath,
+        publicUrl,
+        imageUrl:publicUrl,
+        assetRole:text(input.assetRole||input.asset_role||"image",80),
+        scope:text(input.scope||"aircraft",80),
+        uploadedAt:new Date().toISOString()
+      };
+    }catch(e){
+      throw new Error(e?.message||"Aircraft asset upload could not be completed.");
+    }
+  }
+);
 
 export const getAircraftControlBootstrap=webMethod(
   Permissions.Anyone,
