@@ -1,23 +1,51 @@
 import wixLocation from "wix-location";
+import { getStaffPortalSession } from "backend/RIA/staffPortalAuth.web";
+
 import {
   getUniformEmployeeBootstrap,
   submitUniformEmployeeOrder,
   acknowledgeUniformPolicy
-} from "backend/uniformCenterCMS.web";
+} from "backend/uniformCenterCms.web";
 
 const HTML_ID = "#uniformCenterEmbed";
 const CHILD_SOURCE = "SKANDI_UNIFORM_EMPLOYEE";
 const PARENT_SOURCE = "SKANDI_WIX_PARENT";
 const LOGIN_PATH = "/riaintra";
 
-function send(html, type, payload = {}, extra = {}) {
+function postFlat(html, type, payload = {}) {
   html.postMessage({
     source: PARENT_SOURCE,
     type,
-    payload,
-    ...extra,
+    ...(payload || {}),
     timestamp: new Date().toISOString()
   });
+}
+
+async function requirePortalSession() {
+  const session = await getStaffPortalSession().catch(() => null);
+
+  if (!session || session.authorized === false || session.ok === false) {
+    wixLocation.to(LOGIN_PATH);
+    return null;
+  }
+
+  return session;
+}
+
+async function bootstrap(html) {
+  const portalSession = await requirePortalSession();
+
+  if (!portalSession) {
+    return;
+  }
+
+  const payload = await getUniformEmployeeBootstrap();
+
+  postFlat(
+    html,
+    "UNIFORM_EMPLOYEE_BOOTSTRAP_RESULT",
+    { payload }
+  );
 }
 
 $w.onReady(function () {
@@ -25,46 +53,86 @@ $w.onReady(function () {
 
   html.onMessage(async (event) => {
     const msg = event.data || {};
-    if (msg.source !== CHILD_SOURCE) return;
-
+    const source = msg.source || "";
+    const type = msg.type || "";
     const payload = msg.payload || {};
-    const requestId = msg.requestId || payload.requestId || "";
+
+    if (source !== CHILD_SOURCE) {
+      return;
+    }
 
     try {
-      if (msg.type === "UNIFORM_EMPLOYEE_READY" || msg.type === "UNIFORM_EMPLOYEE_BOOTSTRAP") {
-        const result = await getUniformEmployeeBootstrap();
-        send(html, "UNIFORM_EMPLOYEE_BOOTSTRAP_RESULT", result, { requestId });
+      if (
+        type === "UNIFORM_EMPLOYEE_READY" ||
+        type === "UNIFORM_EMPLOYEE_BOOTSTRAP"
+      ) {
+        await bootstrap(html);
         return;
       }
 
-      if (msg.type === "UNIFORM_EMPLOYEE_SUBMIT_ORDER") {
+      if (type === "UNIFORM_EMPLOYEE_SUBMIT_ORDER") {
         const result = await submitUniformEmployeeOrder({
-          items: msg.items || payload.items || [],
-          note: msg.note || payload.note || ""
+          items:
+            msg.items ||
+            payload.items ||
+            [],
+          note:
+            msg.note ||
+            payload.note ||
+            ""
         });
-        send(html, "UNIFORM_EMPLOYEE_ORDER_SUBMITTED", result, { requestId });
+
+        postFlat(
+          html,
+          "UNIFORM_EMPLOYEE_ORDER_SUBMITTED",
+          { payload: result }
+        );
         return;
       }
 
-      if (msg.type === "UNIFORM_EMPLOYEE_ACK_POLICY") {
+      if (type === "UNIFORM_EMPLOYEE_ACK_POLICY") {
         const result = await acknowledgeUniformPolicy({
-          policyId: msg.policyId || payload.policyId || "",
-          policyVersion: msg.policyVersion || payload.policyVersion || ""
+          policyId:
+            msg.policyId ||
+            payload.policyId ||
+            "",
+          policyVersion:
+            msg.policyVersion ||
+            payload.policyVersion ||
+            ""
         });
-        send(html, "UNIFORM_EMPLOYEE_ACK_OK", result, { requestId });
+
+        postFlat(
+          html,
+          "UNIFORM_EMPLOYEE_ACK_OK",
+          { payload: result }
+        );
         return;
       }
 
-      if (msg.type === "UNIFORM_EMPLOYEE_NAVIGATE") {
-        const path = String(msg.path || payload.path || "");
-        if (path.startsWith("/riaintra")) wixLocation.to(path);
+      if (type === "UNIFORM_EMPLOYEE_NAVIGATE") {
+        const path =
+          msg.path ||
+          payload.path ||
+          "";
+
+        if (
+          path.startsWith("/riaintra") ||
+          path.startsWith("/altea")
+        ) {
+          wixLocation.to(path);
+        }
       }
     } catch (error) {
-      const message = error?.message || "Uniform Center action failed.";
-      if (/staff login required/i.test(message)) {
-        wixLocation.to(LOGIN_PATH);
-      }
-      send(html, "UNIFORM_EMPLOYEE_ERROR", {}, { requestId, message });
+      postFlat(
+        html,
+        "UNIFORM_EMPLOYEE_ERROR",
+        {
+          message:
+            error.message ||
+            "Uniform Center action failed."
+        }
+      );
     }
   });
 });
