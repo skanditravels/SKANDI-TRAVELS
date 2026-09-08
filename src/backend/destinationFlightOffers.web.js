@@ -1,8 +1,8 @@
 import { webMethod, Permissions } from "wix-web-module";
-import { searchUnifiedOffers } from "./bookingOrchestrator.web.js";
+import { searchUnifiedOffers } from "./bookingOrchestratorCollection.web.js";
 
-// Compatibility adapter for destination pages.
-// Live airline availability now uses the same backend-only provider adapter as the booking flow.
+// Destination page adapter. The Collection/Partner wrapper filters live supplier
+// availability before any option is returned to customer-facing HTML.
 export const getDestinationFlightSuggestions = webMethod(Permissions.Anyone, async (input = {}) => {
   const request = input.search || input || {};
   const max = Math.min(Math.max(Number(request.max) || 6, 1), 20);
@@ -38,7 +38,9 @@ export const getDestinationFlightSuggestions = webMethod(Permissions.Anyone, asy
     stops: Array.isArray(offer.badges) && offer.badges.some(x => /nonstop/i.test(String(x))) ? 0 : null,
     validatingAirlineCodes: [],
     itineraries: [],
-    source: "LIVE_AIR"
+    source: "SKANDI_COLLECTION",
+    collectionType: offer.collectionType || "",
+    collectionLabel: offer.collectionLabel || ""
   }));
 
   const totals = offers.map(x => x.total).filter(x => Number.isFinite(x) && x > 0);
@@ -46,6 +48,7 @@ export const getDestinationFlightSuggestions = webMethod(Permissions.Anyone, asy
     ok: true,
     offers,
     dictionaries: {},
+    collectionPolicyApplied: true,
     priceSummary: totals.length ? { from: Math.min(...totals), currency: offers[0]?.currency || search.currency } : null
   };
 });
