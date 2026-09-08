@@ -11,7 +11,12 @@ const slug=v=>clean(v,180).toLowerCase().normalize("NFD").replace(/[\u0300-\u036
 const lang=v=>["EN","SV","NO","DA","FI"].includes(String(v||"EN").toUpperCase())?String(v||"EN").toUpperCase():"EN";
 function html(){try{return $w(EMBED_ID)}catch(_){return null}}
 function post(type,payload={}){html()?.postMessage?.({source:PARENT_SOURCE,type,payload,timestamp:new Date().toISOString()})}
-function go(path){const p=clean(path,700);if(p)wixLocation.to(p.startsWith("/")?p:`/${p}`)}
+function routeUrl(base,params={}){
+  const q=new URLSearchParams();
+  Object.entries(params).forEach(([k,v])=>{const x=slug(v);if(x)q.set(k,x)});
+  return q.toString()?`${base}?${q}`:base;
+}
+function go(path){const p=clean(path,800);if(p)wixLocation.to(p)}
 
 async function load(language=lastLanguage){
   lastLanguage=lang(language);
@@ -35,14 +40,18 @@ $w.onReady(()=>{
         await load(p.language||lastLanguage);return;
       }
       if(m.type==="DESTINATIONS_OPEN_COUNTRY"){
-        const s=slug(p.slug);if(s)go(`/destinations/${s}`);return;
+        const country=slug(p.slug||p.countrySlug);
+        if(country)go(routeUrl("/our-destinations/country",{country}));
+        return;
       }
       if(m.type==="DESTINATIONS_OPEN_AREA"||m.type==="DESTINATIONS_OPEN_DESTINATION"){
-        if(p.path){go(p.path);return}
-        const c=slug(p.countrySlug),d=slug(p.destinationSlug||p.areaSlug);
-        if(c&&d)go(`/destinations/${c}/${d}`);return;
+        const country=slug(p.countrySlug);
+        const destination=slug(p.destinationSlug||p.areaSlug);
+        if(country&&destination)go(routeUrl("/our-destinations/country/destination",{country,destination}));
       }
-    }catch(error){post("DESTINATIONS_INDEX_ERROR",{message:error?.message||"The request could not be completed."})}
+    }catch(error){
+      post("DESTINATIONS_INDEX_ERROR",{message:error?.message||"The request could not be completed."});
+    }
   });
   setTimeout(()=>load(lastLanguage),350);
 });
