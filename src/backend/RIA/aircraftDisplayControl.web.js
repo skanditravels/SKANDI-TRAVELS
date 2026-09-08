@@ -65,7 +65,7 @@ async function airlineOptions(){
   const rows=await restRequest({
     table:AIRLINE_TABLE,
     query:{
-      select:'"ID",title,"iataCode","icaoCode",active,status,customer_visible',
+      select:'"ID",Title,"iataCode","icaoCode",active,status,customer_visible',
       order:'title.asc',
       limit:500
     }
@@ -75,7 +75,7 @@ async function airlineOptions(){
     .filter(r=>r.active!==false)
     .map(r=>({
       id:r.ID||"",
-      name:r.title||"",
+      name:r.Title||"",
       iataCode:r.iataCode||"",
       icaoCode:r.icaoCode||"",
       status:r.status||"PUBLISHED",
@@ -117,7 +117,7 @@ export const saveAircraftDisplayRecord=webMethod(Permissions.SiteMember,async(in
 const airlines=await restRequest({
   table:AIRLINE_TABLE,
   query:{
-    select:'"ID",title,"iataCode"',
+    select:'"ID",Title,"iataCode"',
     "ID":`eq.${airlineId}`,
     limit:1
   }
