@@ -268,6 +268,7 @@ function publicAgent(agent = {}) {
     department: agent.department || "",
     station: agent.station || agent.base || "",
     base: agent.base || agent.station || "",
+    badgePhotoUrl: agent.badge_photo_url || "",
     employmentStatus: agent.employment_status || "",
     status: agent.status || "",
     active: agent.active === true,
