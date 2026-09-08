@@ -1,16 +1,24 @@
 /*
- * Renderer for the single internal master-page header HTML component.
- * All navigation/profile/config decisions come from src/pages/masterPage.js.
+ * RIAINTRA / ALTEA internal header renderer.
+ *
+ * This file contains NO staff database logic.
+ * masterPage.js is the controller and sends the current agent_users-derived state.
+ * The same header changes between RIAINTRA and ALTEA from the current route.
  */
-const RIA_SOURCE = "SKANDI_RIAINTRA_HEADER";
-const ALTEA_SOURCE = "SKANDI_ALTEA_HEADER";
+
+const SOURCE = "SKANDI_INTERNAL_HEADER";
 const PARENT_SOURCE = "SKANDI_WIX_PARENT";
 
 let config = null;
 let staffState = null;
-let activeSource = RIA_SOURCE;
 
-const $ = (id) => document.getElementById(id);
+function firstElement(...selectors) {
+  for (const selector of selectors) {
+    const element = document.querySelector(selector);
+    if (element) return element;
+  }
+  return null;
+}
 
 function esc(value = "") {
   return String(value)
@@ -22,149 +30,241 @@ function esc(value = "") {
 }
 
 function post(type, payload = {}) {
-  window.parent.postMessage({
-    source: activeSource,
-    type,
-    payload,
-    timestamp: new Date().toISOString()
-  }, "*");
-}
-
-function initials(profile = {}) {
-  const first = profile.firstName || profile.first_name || profile.preferredName || "";
-  const last = profile.lastName || profile.last_name || "";
-  const fromName = String(profile.displayName || profile.name || "")
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean);
-  return [first || fromName[0], last || fromName[fromName.length - 1]]
-    .filter(Boolean)
-    .map((part) => String(part).charAt(0))
-    .join("")
-    .slice(0, 2)
-    .toUpperCase() || "--";
+  window.parent.postMessage(
+    {
+      source: SOURCE,
+      type,
+      payload,
+      timestamp: new Date().toISOString()
+    },
+    "*"
+  );
 }
 
 function headerConfig() {
   return config?.internal?.header || {};
 }
 
-function profileFromState(state = staffState || {}) {
-  return state?.profile || state?.staff || state?.agent || state || {};
+function profile() {
+  return staffState?.profile || {};
+}
+
+function initials(agent = {}) {
+  const full = String(agent.displayName || "")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+
+  const first = agent.firstName || full[0] || "";
+  const last = agent.lastName || full[full.length - 1] || "";
+
+  return [first, last]
+    .filter(Boolean)
+    .map((value) => String(value).charAt(0))
+    .join("")
+    .slice(0, 2)
+    .toUpperCase() || "--";
 }
 
 function applyContext() {
   const header = headerConfig();
-  const isAltea = header.context === "altea" || config?.isAltea === true;
-  activeSource = isAltea ? ALTEA_SOURCE : RIA_SOURCE;
+  const context = header.context === "altea" ? "altea" : "riaintra";
 
-  const product = $("riaMasterProductName") || $("amadeusProductName") || $("internalProductName");
-  if (product) product.textContent = header.productName || (isAltea ? "ALTEA" : "RIAINTRA");
+  document.documentElement.dataset.internalContext = context;
 
-  document.documentElement.dataset.internalContext = isAltea ? "altea" : "riaintra";
+  const product = firstElement(
+    "#internalProductName",
+    "[data-internal-product]"
+  );
+
+  if (product) {
+    product.textContent = header.productName || (context === "altea" ? "ALTEA" : "RIAINTRA");
+  }
 }
 
 function applyLogo() {
-  const logo = $("riaMasterLogo");
+  const logo = firstElement(
+    "#internalMasterLogo",
+    "[data-internal-logo]"
+  );
+
   if (!logo) return;
+
   const logos = config?.brand?.assets?.logos || {};
   const key = headerConfig().logoKey || "riaintraLight";
   const url = logos[key] || logos.riaintraLight || logos.skandiPrimary || "";
-  if (url) logo.src = url;
-}
 
-function navItems() {
-  const configured = Array.isArray(headerConfig().primaryNav)
-    ? headerConfig().primaryNav
-    : [];
-  return configured.filter((item) => item && item.path && item.label);
+  if (url) {
+    logo.src = url;
+  }
 }
 
 function renderNavigation() {
-  const desktop = $("riaMasterDesktopNav");
-  const mobile = $("riaMasterMobileNav");
-  const currentPath = String(config?.currentPath || "");
-  const markup = navItems().map((item) => {
-    const path = String(item.path || "");
-    const active = currentPath === path || currentPath.startsWith(`${path}/`);
-    return `<button class="nav-item-amadeus ${active ? "active" : ""}" type="button" data-master-path="${esc(path)}">${esc(item.label)}</button>`;
-  }).join("");
+  const desktop = firstElement(
+    "#internalDesktopNav",
+    "[data-internal-nav-desktop]"
+  );
+
+  const mobile = firstElement(
+    "#internalMobileNav",
+    "[data-internal-nav-mobile]"
+  );
+
+  const items = Array.isArray(headerConfig().primaryNav)
+    ? headerConfig().primaryNav
+    : [];
+
+  const currentPath = String(config?.currentPath || "").replace(/\/$/, "");
+
+  const markup = items
+    .filter((item) => item && item.path && item.label)
+    .map((item) => {
+      const path = String(item.path).replace(/\/$/, "");
+      const active = currentPath === path || currentPath.startsWith(`${path}/`);
+
+      return `<button class="internal-nav-item${active ? " active" : ""}" type="button" data-internal-path="${esc(path)}">${esc(item.label)}</button>`;
+    })
+    .join("");
+
   if (desktop) desktop.innerHTML = markup;
   if (mobile) mobile.innerHTML = markup;
 }
 
-function renderProfile(state = staffState || {}) {
-  staffState = state || {};
-  const profile = profileFromState(staffState);
-  const fullName = profile.displayName || profile.fullName || profile.name || [profile.firstName, profile.lastName].filter(Boolean).join(" ") || "Employee";
-  const skId = profile.skId || profile.skID || profile.employeeId || profile.sk_id || "";
-  const role = profile.jobTitle || profile.position || profile.role || profile.job_title || "RIAINTRA";
+function renderProfile() {
+  const agent = profile();
 
-  if ($("amadeusUserName")) $("amadeusUserName").textContent = fullName;
-  if ($("amadeusUserSkid")) $("amadeusUserSkid").textContent = skId || "SIGNED IN";
-  if ($("amadeusUserRole")) $("amadeusUserRole").textContent = role;
+  const name = firstElement(
+    "#internalUserName",
+    "[data-agent-name]"
+  );
 
-  const photo = profile.photoUrl || profile.profilePhotoUrl || profile.photo || profile.avatarUrl || profile.badgePhotoUrl || profile.badge_photo_url || "";
-  const image = $("amadeusUserAvatarImg");
-  const fallback = $("amadeusUserAvatarInitials");
+  const skId = firstElement(
+    "#internalUserSkid",
+    "[data-agent-skid]"
+  );
 
-  if (image && fallback) {
-    if (photo) {
-      image.src = photo;
-      image.style.display = "block";
-      fallback.style.display = "none";
-    } else {
-      image.removeAttribute("src");
-      image.style.display = "none";
-      fallback.style.display = "grid";
-      fallback.textContent = initials(profile);
-    }
+  const role = firstElement(
+    "#internalUserRole",
+    "[data-agent-role]"
+  );
+
+  const station = firstElement(
+    "#internalUserStation",
+    "[data-agent-station]"
+  );
+
+  if (name) {
+    name.textContent = agent.displayName || "Employee";
   }
+
+  if (skId) {
+    skId.textContent = agent.skId || "SIGNED IN";
+  }
+
+  if (role) {
+    role.textContent = agent.jobTitle || "RIAINTRA";
+  }
+
+  if (station) {
+    station.textContent = agent.station || agent.base || "";
+  }
+
+  const image = firstElement(
+    "#internalUserAvatarImg",
+    "[data-agent-avatar-image]"
+  );
+
+  const fallback = firstElement(
+    "#internalUserAvatarInitials",
+    "[data-agent-avatar-initials]"
+  );
+
+  if (!image || !fallback) return;
+
+  const photo = String(agent.badgePhotoUrl || "").trim();
+
+  if (photo) {
+    image.src = photo;
+    image.style.display = "block";
+    fallback.style.display = "none";
+  } else {
+    image.removeAttribute("src");
+    image.style.display = "none";
+    fallback.style.display = "grid";
+    fallback.textContent = initials(agent);
+  }
+}
+
+function renderAuthorization() {
+  const root = firstElement(
+    "#internalHeaderRoot",
+    "[data-internal-header-root]"
+  );
+
+  if (!root) return;
+
+  const authorized = staffState?.authorized === true;
+  root.dataset.authorized = authorized ? "true" : "false";
 }
 
 function renderAll() {
   applyContext();
   applyLogo();
   renderNavigation();
-  if (staffState) renderProfile(staffState);
+  renderProfile();
+  renderAuthorization();
 }
 
 document.addEventListener("click", (event) => {
-  const nav = event.target.closest("[data-master-path]");
+  const nav = event.target.closest("[data-internal-path]");
+
   if (nav) {
-    const path = nav.getAttribute("data-master-path");
-    if (path) post(activeSource === ALTEA_SOURCE ? "ALTEA_NAVIGATE" : "RIAINTRA_NAVIGATE", { path });
+    const path = nav.getAttribute("data-internal-path");
+    if (path) {
+      post("INTERNAL_NAVIGATE", { path });
+    }
     return;
   }
 
-  const logout = event.target.closest("[data-internal-logout],#amadeusLogout,#riaMasterLogout");
-  if (logout) post(activeSource === ALTEA_SOURCE ? "ALTEA_LOGOUT" : "RIAINTRA_LOGOUT");
+  const logout = event.target.closest(
+    "#internalLogout,[data-internal-logout]"
+  );
+
+  if (logout) {
+    post("INTERNAL_LOGOUT");
+  }
 });
 
 window.addEventListener("message", (event) => {
   const message = event.data || {};
+
   if (message.source !== PARENT_SOURCE) return;
 
   if (message.type === "SKANDI_MASTER_CONFIG") {
     config = message.payload || {};
-    if (config.staff) staffState = config.staff;
     renderAll();
     return;
   }
 
-  if (["RIAINTRA_HEADER_STATE", "ALTEA_HEADER_STATE", "INTERNAL_HEADER_STATE"].includes(message.type)) {
+  if (message.type === "INTERNAL_HEADER_STATE") {
     staffState = message.payload || {};
-    renderProfile(staffState);
+    renderAll();
+    return;
+  }
+
+  if (message.type === "INTERNAL_HEADER_ERROR") {
+    document.documentElement.dataset.internalHeaderError =
+      String(message.payload?.code || "UNKNOWN");
   }
 });
 
-/*
- * Start as RIAINTRA so masterPage.js can hear the first handshake.
- * masterPage.js will immediately return the current context and the renderer
- * switches to ALTEA when the page path is inside ALTEA.
- */
-post("RIAINTRA_HEADER_READY");
+post("INTERNAL_HEADER_READY");
 post("MASTER_CONFIG_REQUEST", { context: "internal-header" });
 
-setTimeout(() => post("MASTER_CONFIG_REQUEST", { context: "internal-header-retry" }), 600);
-setTimeout(() => post("MASTER_CONFIG_REQUEST", { context: "internal-header-retry" }), 1500);
+setTimeout(() => {
+  post("MASTER_CONFIG_REQUEST", { context: "internal-header-retry" });
+}, 600);
+
+setTimeout(() => {
+  post("MASTER_CONFIG_REQUEST", { context: "internal-header-retry" });
+}, 1500);
