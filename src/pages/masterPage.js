@@ -218,7 +218,7 @@ const MASTER_CONFIG = {
   routes: {
 
     home:
-      "/home",
+      "/",
 
     search:
       "/search",
@@ -346,7 +346,7 @@ const MASTER_CONFIG = {
         {
           id: "home",
           label: "Book",
-          path: "/home"
+          path: "/"
         },
         {
           id: "destinations",
@@ -375,7 +375,7 @@ const MASTER_CONFIG = {
         {
           id: "home",
           label: "Book",
-          path: "/home"
+          path: "/"
         },
         {
           id: "destinations",
