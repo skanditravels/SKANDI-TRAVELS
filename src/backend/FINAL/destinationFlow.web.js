@@ -1,5 +1,7 @@
 import { webMethod, Permissions } from "wix-web-module";
-import { listPublicInventoryInternal } from "./publicInventory.js";
+import { secrets } from "wix-secrets-backend.v2";
+import { elevate } from "wix-auth";
+import { fetch } from "wix-fetch";
 
 const clean=(v,m=1000)=>String(v??"").trim().slice(0,m);
 const upper=(v,m=100)=>clean(v,m).toUpperCase();
@@ -9,6 +11,65 @@ const obj=v=>v&&typeof v==="object"&&!Array.isArray(v)?v:{};
 const num=(v,d=0)=>Number.isFinite(Number(v))?Number(v):d;
 const slug=v=>clean(v,200).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/&/g," and ").replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"");
 const LEVELS=new Set(["COUNTRY","DESTINATION","AREA"]);
+
+
+// Public destination browsing reads the published Inventory Control view directly.
+// This keeps the entire country -> hotel flow in one backend module and avoids a
+// missing/old publicInventory.js or supabaseClient.js dependency breaking the page.
+const elevatedGetSecretValue=elevate(secrets.getSecretValue);
+let publicCfgPromise=null;
+function secretValue(r){return typeof r==="string"?r.trim():String(r?.value??r?.secretValue??r?.secret?.value??"").trim()}
+async function publicSecret(name){const v=secretValue(await elevatedGetSecretValue(name));if(!v)throw new Error(`WIX_SECRET_EMPTY_${name}`);return v}
+async function publicCfg(){
+  if(publicCfgPromise)return publicCfgPromise;
+  publicCfgPromise=(async()=>{
+    const url=(await publicSecret("SUPABASE_URL")).replace(/\/+$/,"");
+    let key="";try{key=await publicSecret("SUPABASE_SECRET_KEY")}catch(_){key=await publicSecret("SUPABASE_SERVICE_ROLE_KEY")}
+    if(!/^https:\/\/[^/]+\.supabase\.co$/i.test(url))throw new Error("SUPABASE_URL_INVALID");
+    if(!key)throw new Error("SUPABASE_SERVER_KEY_MISSING");
+    return{url,key,legacyJwt:key.startsWith("eyJ")};
+  })();
+  try{return await publicCfgPromise}catch(e){publicCfgPromise=null;throw e}
+}
+async function publicRows(entityType){
+  const c=await publicCfg();
+  const type=upper(entityType,50);
+  const qs=["select=*",`entity_type=eq.${encodeURIComponent(type)}`,"order=sort_priority.asc,name.asc","limit=1000"].join("&");
+  const res=await fetch(`${c.url}/rest/v1/inventory_public_entities_v?${qs}`,{headers:{apikey:c.key,...(c.legacyJwt?{Authorization:`Bearer ${c.key}`}:{})}});
+  const raw=await res.text();let data=[];if(raw){try{data=JSON.parse(raw)}catch(_){throw new Error("SUPABASE_INVALID_PUBLIC_INVENTORY_RESPONSE")}}
+  if(!res.ok)throw new Error(data?.message||data?.error||`SUPABASE_PUBLIC_INVENTORY_${res.status}`);
+  return Array.isArray(data)?data:[];
+}
+function arrayValue(v){
+  if(Array.isArray(v))return v;
+  if(v==null||v==="")return [];
+  if(typeof v==="string"){try{const p=JSON.parse(v);if(Array.isArray(p))return p}catch(_){};return []}
+  return [];
+}
+function localizedValue(row,language){
+  const list=arrayValue(row.localized),lng=upper(language||"EN",10);
+  return list.find(x=>upper(x?.language,10)===lng)||list.find(x=>upper(x?.language,10)==="EN")||list[0]||{};
+}
+function normalizePublicRow(row,language="EN"){
+  const l=localizedValue(row,language),det=obj(row.details),com=obj(row.commercial),seo=obj(row.seo),media=arrayValue(row.media).filter(x=>x?.url);
+  const hero=media.find(x=>x.isHero||x.is_hero)||media.find(x=>x.isPrimary||x.is_primary)||media.find(x=>x.isCard||x.is_card)||media[0]||{};
+  const card=media.find(x=>x.isCard||x.is_card)||media.find(x=>x.isHero||x.is_hero)||media.find(x=>x.isPrimary||x.is_primary)||media[0]||{};
+  return{
+    id:row.id,publicId:row.public_id||"",entityType:row.entity_type||"",code:row.code||"",
+    name:clean(l.title||row.name,500),baseName:row.name||"",slug:row.slug||"",
+    featured:Boolean(row.featured),homepageFeatured:Boolean(row.homepage_featured),sortPriority:Number(row.sort_priority||100),
+    parentEntityId:row.parent_entity_id||"",details:det,commercial:com,seo,
+    localized:l,localizedAll:arrayValue(row.localized),media,heroImage:hero.url||"",cardImage:card.url||"",gallery:media.map(x=>x.url),
+    description:clean(l.shortDescription||l.short_description||det.shortDescription||det.description||det.summary||seo.description||"",5000),
+    fullDescription:clean(l.fullDescription||l.full_description||det.fullDescription||"",20000),
+    highlights:arrayValue(l.highlights||det.highlights),price:{amount:num(com.publicPrice||com.public_price,0),currency:upper(com.currency||"USD",3)},
+    updatedAt:row.updated_at||""
+  };
+}
+async function listPublicInventoryInternal({entityType,language="EN",limit=1000}={}){
+  const rows=await publicRows(entityType);
+  return rows.slice(0,Math.min(Math.max(Number(limit)||1,1),1000)).map(r=>normalizePublicRow(r,language));
+}
 
 function d(r){return obj(r?.details)}
 function level(r){return upper(d(r).level,20)}
@@ -68,17 +129,20 @@ function basePage(r){
 }
 
 async function inventory(language="EN"){
-  const [destinations,hotels,airports,activities,tours]=await Promise.all([
+  const [countryRows,destinationRows,areaRows,hotels,airports,activities,tours]=await Promise.all([
+    listPublicInventoryInternal({entityType:"COUNTRY",language,limit:1000}),
     listPublicInventoryInternal({entityType:"DESTINATION",language,limit:1000}),
+    listPublicInventoryInternal({entityType:"AREA",language,limit:1000}),
     listPublicInventoryInternal({entityType:"HOTEL",language,limit:1000}),
     listPublicInventoryInternal({entityType:"AIRPORT",language,limit:1000}),
     listPublicInventoryInternal({entityType:"ACTIVITY",language,limit:1000}),
     listPublicInventoryInternal({entityType:"GUIDED_TOUR",language,limit:1000})
   ]);
-  const countries=destinations.filter(x=>level(x)==="COUNTRY");
-  const places=destinations.filter(x=>LEVELS.has(level(x))&&level(x)!=="COUNTRY");
-  const destinationsOnly=places.filter(x=>level(x)==="DESTINATION");
-  const areas=places.filter(x=>level(x)==="AREA");
+  // Accept legacy level-tagged rows too, but canonical entity_type is authoritative.
+  const countries=[...countryRows,...destinationRows.filter(x=>level(x)==="COUNTRY")].filter((x,i,a)=>a.findIndex(y=>y.id===x.id)===i);
+  const destinationsOnly=destinationRows.filter(x=>level(x)!=="COUNTRY"&&level(x)!=="AREA");
+  const areas=[...areaRows,...destinationRows.filter(x=>level(x)==="AREA")].filter((x,i,a)=>a.findIndex(y=>y.id===x.id)===i);
+  const destinations=[...countries,...destinationsOnly,...areas];
   const allMap=byId(destinations);
   const countryMap=byId(countries);
   const destinationMap=byId(destinationsOnly);
@@ -86,7 +150,7 @@ async function inventory(language="EN"){
 
   function countryFor(place){
     if(!place)return null;
-    if(level(place)==="COUNTRY")return place;
+    if(place.entityType==="COUNTRY"||level(place)==="COUNTRY")return place;
     const x=d(place);
     const direct=countryMap.get(place.parentEntityId)||countryMap.get(x.countryId);
     if(direct)return direct;
@@ -95,13 +159,12 @@ async function inventory(language="EN"){
   }
   function destinationFor(areaOrHotel){
     if(!areaOrHotel)return null;
-    if(level(areaOrHotel)==="DESTINATION")return areaOrHotel;
+    if(areaOrHotel.entityType==="DESTINATION"&&level(areaOrHotel)!=="AREA"&&level(areaOrHotel)!=="COUNTRY")return areaOrHotel;
     const x=d(areaOrHotel);
-    if(level(areaOrHotel)==="AREA"){
+    if(areaOrHotel.entityType==="AREA"||level(areaOrHotel)==="AREA"){
       return destinationMap.get(areaOrHotel.parentEntityId)||destinationMap.get(x.destinationId)||null;
     }
-    return destinationMap.get(x.destinationId)||destinationMap.get(areaOrHotel.parentEntityId)||
-      destinationMap.get(x.areaId)||null;
+    return destinationMap.get(x.destinationId)||destinationMap.get(areaOrHotel.parentEntityId)||null;
   }
   function areaFor(hotel){
     const x=d(hotel);
