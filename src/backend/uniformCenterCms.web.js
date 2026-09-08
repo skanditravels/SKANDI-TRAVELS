@@ -968,6 +968,115 @@ function agentRole(agent = {}) {
   ).toUpperCase();
 }
 
+function agentDepartment(agent = {}) {
+  return (
+    agent.department ||
+    agent.assigned_department ||
+    agent.assignedDepartment ||
+    agent.department_name ||
+    agent.departmentName ||
+    ""
+  );
+}
+
+function agentBase(agent = {}) {
+  return (
+    agent.base ||
+    agent.station ||
+    agent.assigned_base ||
+    agent.assignedBase ||
+    agent.base_airport_iata ||
+    agent.baseAirportIata ||
+    ""
+  );
+}
+
+function normalizeEligibilityToken(value = "") {
+  return String(value || "")
+    .trim()
+    .toUpperCase()
+    .replace(/[\s./]+/g, "_")
+    .replace(/-+/g, "_")
+    .replace(/_+/g, "_");
+}
+
+function eligibilityArray(value) {
+  const values = Array.isArray(value)
+    ? value
+    : value === null || value === undefined || value === ""
+      ? []
+      : String(value)
+          .split(",")
+          .map(v => v.trim());
+
+  return [...new Set(
+    values
+      .map(normalizeEligibilityToken)
+      .filter(Boolean)
+  )];
+}
+
+function dimensionAllows(allowed = [], candidates = []) {
+  const rules = eligibilityArray(allowed);
+
+  if (!rules.length || rules.includes("ALL")) {
+    return true;
+  }
+
+  const actual = eligibilityArray(candidates);
+  return actual.some(value => rules.includes(value));
+}
+
+function itemEligibleForAgent(row = {}, agent = {}) {
+  const roles = [
+    agent.role,
+    agent.position,
+    agent.job_title,
+    agent.jobTitle,
+    agentRole(agent)
+  ];
+
+  const departments = [
+    agent.department,
+    agent.assigned_department,
+    agent.assignedDepartment,
+    agent.department_name,
+    agent.departmentName,
+    agentDepartment(agent)
+  ];
+
+  const bases = [
+    agent.base,
+    agent.station,
+    agent.assigned_base,
+    agent.assignedBase,
+    agent.base_airport_iata,
+    agent.baseAirportIata,
+    agentBase(agent)
+  ];
+
+  return (
+    dimensionAllows(
+      row.available_roles ||
+      row.availableRoles ||
+      [],
+      roles
+    ) &&
+    dimensionAllows(
+      row.available_departments ||
+      row.availableDepartments ||
+      [],
+      departments
+    ) &&
+    dimensionAllows(
+      row.available_bases ||
+      row.availableBases ||
+      [],
+      bases
+    )
+  );
+}
+
 function agentCanManageUniform(agent = {}) {
   if (
     agent.can_manage_uniforms === true ||
@@ -1097,6 +1206,14 @@ function mapCatalogItem(row = {}, storageRows = []) {
       "",
     subCategory:
       row.sub_category || "",
+    availableRoles:
+      eligibilityArray(row.available_roles || []),
+    availableDepartments:
+      eligibilityArray(row.available_departments || []),
+    availableBases:
+      eligibilityArray(row.available_bases || []),
+    itemRegulations:
+      row.item_regulations || "",
     pointsCost: row.points_cost || 0,
     stockStatus:
       row.stock_status ||
@@ -1240,6 +1357,12 @@ function mapPolicy(row = {}) {
     title: row.title || "",
     policyVersion:
       row.policy_version || "",
+    effectiveDate:
+      row.effective_date || "",
+    documentId:
+      row.document_id || "",
+    pdfUrl:
+      row.pdf_url || "",
     body: row.body || "",
     active: row.active !== false,
     payload: row.payload || {}
@@ -1794,6 +1917,30 @@ function itemSavePayload(
         item.sub_category,
         180
       ),
+    available_roles:
+      eligibilityArray(
+        item.availableRoles ||
+        item.available_roles ||
+        []
+      ),
+    available_departments:
+      eligibilityArray(
+        item.availableDepartments ||
+        item.available_departments ||
+        []
+      ),
+    available_bases:
+      eligibilityArray(
+        item.availableBases ||
+        item.available_bases ||
+        []
+      ),
+    item_regulations:
+      cleanText(
+        item.itemRegulations ||
+        item.item_regulations,
+        12000
+      ),
     points_cost:
       Math.max(
         0,
@@ -1837,6 +1984,55 @@ function itemSavePayload(
       item,
     created_by_agent_user_id:
       agent?.id || null
+  };
+}
+
+async function uniformEligibilityOptions() {
+  const rows = await supabaseRequest(
+    "agent_users?" +
+    "select=job_title,department,base,station&" +
+    "limit=5000"
+  ).catch(() => []);
+
+  const fixedRoles = [
+    "ALL",
+    "GUIDE",
+    "FIELD_STAFF",
+    "DCS_AGENT",
+    "SALES_AGENT",
+    "DISPATCHER",
+    "DESTINATION_CONTROLLER",
+    "OCC_CONTROLLER",
+    "UNIFORM_ADMIN",
+    "UNIFORM_MANAGER",
+    "HR_ADMIN",
+    "HR_MANAGER",
+    "MANAGER"
+  ];
+
+  const roles = new Set(fixedRoles);
+  const departments = new Set(["ALL"]);
+  const bases = new Set(["ALL"]);
+
+  for (const row of rows || []) {
+    if (row.job_title) {
+      roles.add(normalizeEligibilityToken(row.job_title));
+    }
+    if (row.department) {
+      departments.add(normalizeEligibilityToken(row.department));
+    }
+    if (row.base) {
+      bases.add(normalizeEligibilityToken(row.base));
+    }
+    if (row.station) {
+      bases.add(normalizeEligibilityToken(row.station));
+    }
+  }
+
+  return {
+    roles: [...roles].sort(),
+    departments: [...departments].sort(),
+    bases: [...bases].sort()
   };
 }
 
@@ -1884,7 +2080,9 @@ export const getUniformAdminBootstrap =
           walletRows,
           orders,
           auditRows,
-          storageRows
+          storageRows,
+          policy,
+          eligibilityOptions
         ] = await Promise.all([
           supabaseRequest(
             `uniform_catalog_items?${catalogParams.join("&")}`
@@ -1914,7 +2112,9 @@ export const getUniformAdminBootstrap =
             "order=created_at.desc&" +
             "limit=300"
           ),
-          listUniformStorageAssets()
+          listUniformStorageAssets(),
+          latestPolicy(),
+          uniformEligibilityOptions()
         ]);
 
         const categories =
@@ -1985,8 +2185,152 @@ export const getUniformAdminBootstrap =
           audit:
             (auditRows || [])
               .map(mapAudit),
+          policy,
+          eligibilityOptions,
           lastSync:
             new Date().toISOString()
+        };
+      } catch (error) {
+        throw new Error(
+          cleanError(error)
+        );
+      }
+    }
+  );
+
+export const adminSaveUniformPolicy =
+  webMethod(
+    Permissions.Anyone,
+    async (input = {}) => {
+      try {
+        const { agent } =
+          await requireUniformAdmin();
+
+        const policy =
+          input.policy ||
+          input;
+
+        const policyKey =
+          cleanUpper(
+            policy.policyKey ||
+            policy.policy_key ||
+            "SKANDI_UNIFORM_REGULATIONS",
+            120
+          ) || "SKANDI_UNIFORM_REGULATIONS";
+
+        const title =
+          cleanText(
+            policy.title ||
+            "SKANDI Uniform Regulations",
+            240
+          );
+
+        const policyVersion =
+          cleanText(
+            policy.policyVersion ||
+            policy.policy_version ||
+            "CURRENT",
+            80
+          );
+
+        const body =
+          cleanText(
+            policy.body,
+            50000
+          );
+
+        if (!body) {
+          throw new Error(
+            "Uniform Regulations body is required."
+          );
+        }
+
+        const existing =
+          await supabaseRequest(
+            "uniform_policies?" +
+            "select=id&" +
+            `policy_key=eq.${encodeURIComponent(policyKey)}&` +
+            "limit=1"
+          );
+
+        const row = {
+          policy_key: policyKey,
+          title,
+          policy_version:
+            policyVersion,
+          body,
+          active:
+            boolValue(
+              policy.active,
+              true
+            ),
+          effective_date:
+            cleanText(
+              policy.effectiveDate ||
+              policy.effective_date,
+              20
+            ) || null,
+          document_id:
+            cleanText(
+              policy.documentId ||
+              policy.document_id,
+              120
+            ),
+          pdf_url:
+            cleanText(
+              policy.pdfUrl ||
+              policy.pdf_url,
+              1000
+            ),
+          payload:
+            policy.payload ||
+            {},
+          created_by_agent_user_id:
+            agent.id
+        };
+
+        const result =
+          await supabaseRequest(
+            existing?.[0]?.id
+              ? (
+                  "uniform_policies?" +
+                  `id=eq.${encodeURIComponent(existing[0].id)}`
+                )
+              : "uniform_policies",
+            {
+              method:
+                existing?.[0]?.id
+                  ? "PATCH"
+                  : "POST",
+              body: row,
+              prefer:
+                "return=representation"
+            }
+          );
+
+        const saved =
+          result?.[0] ||
+          null;
+
+        await logAudit(
+          "uniform_policy_saved",
+          {
+            entityTable:
+              "uniform_policies",
+            entityId:
+              saved?.id || "",
+            message:
+              "Uniform Regulations saved.",
+            payload:
+              saved
+          },
+          agent
+        );
+
+        return {
+          ok: true,
+          policy:
+            mapPolicy(saved)
         };
       } catch (error) {
         throw new Error(
@@ -2945,20 +3289,29 @@ export const getUniformEmployeeBootstrap =
             email:
               agentEmail(agent),
             role:
-              agent.role || "",
+              agent.role ||
+              agent.position ||
+              agent.job_title ||
+              "",
             position:
               agent.position ||
               agent.job_title ||
               "",
+            department:
+              agentDepartment(agent),
             base:
-              agent.base ||
-              agent.station ||
-              ""
+              agentBase(agent)
           },
           wallet:
             mapWallet(wallet),
           catalog:
             (catalogRows || [])
+              .filter(row =>
+                itemEligibleForAgent(
+                  row,
+                  agent
+                )
+              )
               .map(row =>
                 mapCatalogItem(
                   row,
@@ -3021,6 +3374,17 @@ export const submitUniformEmployeeOrder =
           if (!catalogItem) {
             throw new Error(
               "One or more uniform items are no longer available."
+            );
+          }
+
+          if (
+            !itemEligibleForAgent(
+              catalogItem,
+              agent
+            )
+          ) {
+            throw new Error(
+              `Uniform item ${catalogItem.item_code || catalogItem.title || ""} is not available for your role, department or base.`
             );
           }
 
@@ -3260,6 +3624,49 @@ export const submitUniformEmployeeOrder =
             ),
           wallet:
             mapWallet(heldWallet)
+        };
+      } catch (error) {
+        throw new Error(
+          cleanError(error)
+        );
+      }
+    }
+  );
+
+export const getUniformRegulationsBootstrap =
+  webMethod(
+    Permissions.Anyone,
+    async () => {
+      try {
+        const { agent } =
+          await requireAgent();
+
+        const policy =
+          await latestPolicy();
+
+        return {
+          ok: true,
+          profile: {
+            id: agent.id || "",
+            skId:
+              agentSkId(agent),
+            displayName:
+              displayName(agent),
+            email:
+              agentEmail(agent),
+            role:
+              agent.role ||
+              agent.position ||
+              agent.job_title ||
+              "",
+            department:
+              agentDepartment(agent),
+            base:
+              agentBase(agent)
+          },
+          policy,
+          lastSync:
+            new Date().toISOString()
         };
       } catch (error) {
         throw new Error(
