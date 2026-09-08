@@ -776,684 +776,175 @@ export const getUniformAdminBootstrap = webMethod(Permissions.SiteMember, async 
   };
 });
 
-export const adminUploadUniformImage = webMethod(Permissions.SiteMember, async (input = {}) => {
-  const { agent } = await requireUniformAdmin();
-  const image = await uploadImage(input);
+// REPLACE ONLY the existing adminUploadUniformImage export block with this.
+// Do NOT add any new named exports for signed uploads.
 
-  await audit("uniform_image_uploaded", {
-    entityTable: "uniform_catalog_items",
-    entityId: clean(input.itemId, 160),
-    message: "Uniform catalog image uploaded.",
-    payload: image
-  }, agent);
-
-  return { ok: true, image, ...image };
-});
-
-export const adminSaveUniformCatalogItem = webMethod(Permissions.SiteMember, async (input = {}) => {
-  const { agent } = await requireUniformAdmin();
-  const row = itemSavePayload(input.item || input, agent);
-  if (!row.title) throw new Error("Uniform item title is required.");
-
-  if (row.category_key && row.category_title) {
-    await supabaseRequest("uniform_categories?on_conflict=category_key", {
-      method: "POST",
-      body: {
-        category_key: row.category_key,
-        title: row.category_title,
-        active: true,
-        updated_at: now(),
-        created_by_agent_user_id: agent.id
-      },
-      prefer: "resolution=merge-duplicates,return=minimal"
-    });
-  }
-
-  const path = row.id
-    ? `uniform_catalog_items?id=eq.${encodeURIComponent(row.id)}`
-    : (row.item_code ? "uniform_catalog_items?on_conflict=item_code" : "uniform_catalog_items");
-
-  const writeRow = { ...row };
-  if (row.id) {
-    delete writeRow.id;
-    // Preserve original creator metadata when adjusting an existing record.
-    delete writeRow.created_by_agent_user_id;
-  }
-
-  const saved = first(await supabaseRequest(path, {
-    method: row.id ? "PATCH" : "POST",
-    body: writeRow,
-    prefer: row.id ? "return=representation" : "resolution=merge-duplicates,return=representation"
-  }));
-
-  await audit("uniform_item_saved", {
-    entityTable: "uniform_catalog_items",
-    entityId: saved?.id || "",
-    message: "Uniform catalog item saved.",
-    payload: saved || {}
-  }, agent);
-
-  return { ok: true, item: mapCatalogItem(saved) };
-});
-
-export const adminSaveUniformCategory = webMethod(Permissions.SiteMember, async (input = {}) => {
-  const { agent } = await requireUniformAdmin();
-  const category = input.category || input;
-  const categoryKey = key(category.categoryKey || category.category_key || category.title, 100);
-  if (!categoryKey) throw new Error("Category key is required.");
-
-  const saved = first(await supabaseRequest("uniform_categories?on_conflict=category_key", {
-    method: "POST",
-    body: {
-      category_key: categoryKey,
-      title: clean(category.title || categoryKey, 180),
-      description: clean(category.description, 1000),
-      sort_order: numberValue(category.sortOrder ?? category.sort_order, 100),
-      active: booleanValue(category.active, true),
-      payload: category.payload || {},
-      updated_at: now(),
-      created_by_agent_user_id: agent.id
-    },
-    prefer: "resolution=merge-duplicates,return=representation"
-  }));
-
-  await audit("uniform_category_saved", {
-    entityTable: "uniform_categories",
-    entityId: saved?.id || "",
-    message: "Uniform category saved.",
-    payload: saved || {}
-  }, agent);
-
-  return { ok: true, category: mapCategory(saved) };
-});
-
-export const adminSaveUniformAllowanceRule = webMethod(Permissions.SiteMember, async (input = {}) => {
-  const { agent } = await requireUniformAdmin();
-  const rule = input.rule || input;
-  const roleKey = upper(rule.roleKey || rule.role_key || "ALL", 80).replace(/[^A-Z0-9_-]+/g, "_") || "ALL";
-  const ruleKey = key(rule.ruleKey || rule.rule_key || roleKey || rule.title, 100);
-  if (!ruleKey) throw new Error("Allowance rule key is required.");
-
-  const saved = first(await supabaseRequest("uniform_allowance_rules?on_conflict=rule_key", {
-    method: "POST",
-    body: {
-      rule_key: ruleKey,
-      title: clean(rule.title || ruleKey, 180),
-      role_key: roleKey,
-      role: clean(rule.role || rule.roleKey || "", 180) || null,
-      monthly_points: Math.max(0, numberValue(rule.monthlyPoints ?? rule.monthly_points, 0)),
-      yearly_points: Math.max(0, numberValue(rule.yearlyPoints ?? rule.yearly_points, 0)) || null,
-      max_items: Math.max(0, numberValue(rule.maxItems ?? rule.max_items, 0)) || null,
-      renewal_months: Math.max(0, numberValue(rule.renewalMonths ?? rule.renewal_months, 0)) || null,
-      summary: clean(rule.summary, 1000),
-      status: booleanValue(rule.active, true) ? "ACTIVE" : "INACTIVE",
-      active: booleanValue(rule.active, true),
-      sort_order: numberValue(rule.sortOrder ?? rule.sort_order, 100),
-      payload: rule.payload || {},
-      updated_at: now(),
-      created_by_agent_user_id: agent.id
-    },
-    prefer: "resolution=merge-duplicates,return=representation"
-  }));
-
-  await audit("uniform_allowance_rule_saved", {
-    entityTable: "uniform_allowance_rules",
-    entityId: saved?.id || "",
-    message: "Uniform allowance rule saved.",
-    payload: saved || {}
-  }, agent);
-
-  return { ok: true, rule: mapRule(saved) };
-});
-
-export const adminUniformOrderAction = webMethod(Permissions.SiteMember, async (input = {}) => {
-  const { agent } = await requireUniformAdmin();
-  const orderId = clean(input.orderId || input.id, 160);
-  const action = normalizeOrderAction(input.action);
-  if (!isUuid(orderId)) throw new Error("Valid order ID is required.");
-  if (!action) throw new Error("Valid uniform order action is required.");
-
-  const order = first(await supabaseRequest(`uniform_orders?select=*&id=eq.${encodeURIComponent(orderId)}&limit=1`));
-  if (!order) throw new Error("Uniform order was not found.");
-
-  const wallet = order.wallet_id
-    ? first(await supabaseRequest(`uniform_wallets?select=*&id=eq.${encodeURIComponent(order.wallet_id)}&limit=1`))
-    : null;
-
-  let effect = order.wallet_effect_status || "NONE";
-  const currentStatus = upper(order.status || "PENDING", 80);
-  if (action === currentStatus) {
-    return { ok: true, order: mapOrder(order) };
-  }
-
-  const transitions = {
-    PENDING: new Set(["APPROVED", "REJECTED", "CANCELLED"]),
-    APPROVED: new Set(["FULFILLMENT_READY", "REJECTED", "CANCELLED"]),
-    FULFILLMENT_READY: new Set(["COMPLETED", "CANCELLED"])
-  };
-  if (!transitions[currentStatus]?.has(action)) {
-    throw new Error(`Uniform order cannot move from ${currentStatus} to ${action}.`);
-  }
-
-  const totalPoints = numberValue(order.total_points ?? order.points_total, 0);
-  const patch = {
-    status: action,
-    action_note: clean(input.note, 1000),
-    updated_by: agent.id,
-    updated_at: now()
-  };
-
-  if (action === "APPROVED") {
-    patch.approved_at = now();
-    patch.approved_by = agent.id;
-    if (wallet && ["NONE", "RELEASED"].includes(effect)) {
-      await patchWallet(wallet, { available: -totalPoints, held: totalPoints }, {
-        eventType: "ORDER_HELD",
-        pointsDelta: -totalPoints,
-        orderId: order.id,
-        orderNumber: order.order_number,
-        reason: "Uniform order approved and points held."
-      }, agent);
-      effect = "HELD";
-    }
-  }
-
-  if (["REJECTED", "CANCELLED", "RETURNED"].includes(action)) {
-    patch.rejected_at = now();
-    patch.rejected_by = agent.id;
-    if (wallet && effect === "HELD") {
-      await patchWallet(wallet, { available: totalPoints, held: -totalPoints }, {
-        eventType: "ORDER_RELEASED",
-        pointsDelta: totalPoints,
-        orderId: order.id,
-        orderNumber: order.order_number,
-        reason: `Uniform order ${action.toLowerCase()} and held points released.`
-      }, agent);
-      effect = "RELEASED";
-    }
-  }
-
-  if (action === "FULFILLMENT_READY") {
-    patch.fulfillment_ready_at = now();
-    patch.fulfilled_at = now();
-    patch.fulfilled_by = agent.id;
-  }
-
-  if (action === "COMPLETED") {
-    if (!wallet || effect !== "HELD") {
-      throw new Error("Uniform order must have held points before completion.");
-    }
-    await patchWallet(wallet, { held: -totalPoints, spent: totalPoints }, {
-      eventType: "ORDER_SPENT",
-      pointsDelta: -totalPoints,
-      orderId: order.id,
-      orderNumber: order.order_number,
-      reason: "Uniform order completed and held points spent."
-    }, agent);
-    effect = "SPENT";
-    patch.completed_at = now();
-  }
-
-  patch.wallet_effect_status = effect;
-
-  const updated = first(await supabaseRequest(`uniform_orders?id=eq.${encodeURIComponent(order.id)}`, {
-    method: "PATCH",
-    body: patch,
-    prefer: "return=representation"
-  })) || order;
-
-  await audit("uniform_order_action", {
-    entityTable: "uniform_orders",
-    entityId: updated.id,
-    orderNumber: updated.order_number,
-    message: `Uniform order action: ${action}`,
-    payload: { action, before: order, after: updated }
-  }, agent);
-
-  return { ok: true, order: mapOrder(updated) };
-});
-
-export const adminAdjustUniformWallet = webMethod(Permissions.SiteMember, async (input = {}) => {
-  const { agent } = await requireUniformAdmin();
-  const points = numberValue(input.points, 0);
-  if (!points) throw new Error("Wallet point adjustment cannot be zero.");
-
-  let wallet = await findWallet(input);
-  if (!wallet) {
-    const target = await findAgent(input);
-    if (!target?.id) throw new Error("Wallet or staff member was not found.");
-    wallet = await ensureWallet(target);
-  }
-
-  const updated = await patchWallet(wallet, { available: points }, {
-    eventType: "ADMIN_ADJUSTMENT",
-    pointsDelta: points,
-    reason: clean(input.reason || "Uniform Control wallet adjustment.", 1000),
-    payload: { skId: input.skId || "", email: input.email || "" }
-  }, agent);
-
-  await audit("uniform_wallet_adjusted", {
-    entityTable: "uniform_wallets",
-    entityId: updated.id,
-    message: "Uniform wallet adjusted.",
-    payload: { points, reason: input.reason || "", wallet: updated }
-  }, agent);
-
-  return { ok: true, wallet: mapWallet(updated) };
-});
-
-export const adminDeleteUniformItem = webMethod(Permissions.SiteMember, async (input = {}) => {
-  const { agent } = await requireUniformAdmin();
-  const itemId = clean(input.itemId || input.id, 160);
-  if (!isUuid(itemId)) throw new Error("Valid uniform item ID is required.");
-
-  const saved = first(await supabaseRequest(`uniform_catalog_items?id=eq.${encodeURIComponent(itemId)}`, {
-    method: "PATCH",
-    body: { active: false, stock_status: "DELETED", updated_at: now() },
-    prefer: "return=representation"
-  }));
-
-  await audit("uniform_item_deleted", {
-    entityTable: "uniform_catalog_items",
-    entityId: itemId,
-    message: "Uniform item removed from the active catalog.",
-    payload: saved || {}
-  }, agent);
-
-  return { ok: true, deleted: true, itemId, item: mapCatalogItem(saved) };
-});
-
-export const getUniformEmployeeBootstrap = webMethod(Permissions.SiteMember, async () => {
-  const { agent } = await requireAgent();
-  const wallet = await ensureWallet(agent);
-
-  const [catalogRows, categoryRows, orders, policy] = await Promise.all([
-    supabaseRequest("uniform_catalog_items?select=*&active=eq.true&stock_status=neq.DELETED&order=title.asc&limit=1000"),
-    supabaseRequest("uniform_categories?select=*&active=eq.true&order=sort_order.asc,title.asc&limit=1000"),
-    listOrders(`uniform_orders?select=*&agent_user_id=eq.${encodeURIComponent(agent.id)}&order=created_at.desc&limit=200`),
-    latestPolicy()
-  ]);
-
-  return {
-    ok: true,
-    profile: {
-      id: agent.id || "",
-      skId: agentSkId(agent),
-      displayName: displayName(agent),
-      email: agentEmail(agent),
-      jobTitle: agent.job_title || "",
-      department: agent.department || "",
-      position: agent.job_title || "",
-      base: agent.base || agent.station || ""
-    },
-    wallet: mapWallet(wallet),
-    catalog: (catalogRows || []).map(mapCatalogItem),
-    categories: (categoryRows || []).map(mapCategory),
-    orders,
-    policy,
-    lastSync: now(),
-    dataSource: "SUPABASE"
-  };
-});
-
-export const submitUniformEmployeeOrder = webMethod(Permissions.SiteMember, async (input = {}) => {
-  const { agent } = await requireAgent();
-  const cart = Array.isArray(input.items) ? input.items.slice(0, 50) : [];
-  if (!cart.length) throw new Error("Uniform order requires at least one item.");
-
-  const wallet = await ensureWallet(agent);
-  const orderItems = [];
-  let totalPoints = 0;
-
-  for (const cartItem of cart) {
-    const catalogItem = await catalogItemByIdOrCode(cartItem.itemId || cartItem._id || cartItem.id || cartItem.itemCode);
-    if (!catalogItem) throw new Error("One or more uniform items are no longer available.");
-    if (upper(catalogItem.stock_status, 80) === "OUT_OF_STOCK") {
-      throw new Error(`${catalogItem.title || "A uniform item"} is out of stock.`);
-    }
-
-    const quantity = Math.max(1, Math.min(20, numberValue(cartItem.quantity, 1)));
-    const size = clean(cartItem.size || cartItem.selectedSize || cartItem.activeSize, 80);
-    const availableSizes = Array.isArray(catalogItem.sizes) ? catalogItem.sizes.map(v => String(v)) : [];
-    if (availableSizes.length && size && !availableSizes.includes(String(size))) {
-      throw new Error(`Selected size for ${catalogItem.title || "uniform item"} is not available.`);
-    }
-
-    const pointsCost = Math.max(0, numberValue(catalogItem.points_cost, 0));
-    const linePoints = pointsCost * quantity;
-    totalPoints += linePoints;
-
-    orderItems.push({
-      item_id: catalogItem.id,
-      product_id: catalogItem.id,
-      item_code: catalogItem.item_code || "",
-      title: catalogItem.title || "",
-      category: catalogItem.category_title || catalogItem.category_key || "",
-      size,
-      quantity,
-      points_cost: pointsCost,
-      unit_price: 0,
-      line_points: linePoints,
-      status: "PENDING",
-      payload: {
-        requested: {
-          itemId: catalogItem.id,
-          itemCode: catalogItem.item_code || "",
-          size,
-          quantity
-        }
-      }
-    });
-  }
-
-  if (numberValue(wallet.available_points, 0) < totalPoints) {
-    throw new Error("Not enough uniform wallet points for this request.");
-  }
-
-  const number = orderNumber();
-  let heldWallet = null;
-  let order = null;
-
-  try {
-    heldWallet = await patchWallet(wallet, { available: -totalPoints, held: totalPoints }, {
-      eventType: "ORDER_HELD",
-      pointsDelta: -totalPoints,
-      orderNumber: number,
-      reason: "Uniform request submitted and points held."
-    }, agent);
-
-    order = first(await supabaseRequest("uniform_orders", {
-      method: "POST",
-      body: {
-        order_id: number,
-        employee_ref: agent.id,
-        order_number: number,
-        agent_user_id: agent.id,
-        sk_id: agentSkId(agent),
-        staff_name: displayName(agent),
-        email: agentEmail(agent),
-        status: "PENDING",
-        points_total: totalPoints,
-        total_points: totalPoints,
-        points_hold: totalPoints,
-        total: 0,
-        cash_total: 0,
-        cash_deduction: 0,
-        cash_deduction_required: false,
-        payment_method: "UNIFORM_POINTS",
-        note: clean(input.note, 2000),
-        order_note: clean(input.note, 2000),
-        wallet_id: heldWallet.id,
-        wallet_effect_status: "HELD",
-        lines: orderItems.map(item => ({
-          itemId: item.item_id,
-          itemCode: item.item_code,
-          title: item.title,
-          size: item.size,
-          quantity: item.quantity,
-          pointsCost: item.points_cost,
-          linePoints: item.line_points
-        })),
-        payload: { source: "UNIFORM_CENTER", submittedAt: now() },
-        created_by: agent.id,
-        created_by_agent_user_id: agent.id
-      },
-      prefer: "return=representation"
-    }));
-
-    if (!order?.id) throw new Error("Uniform order could not be created.");
-
-    const lines = orderItems.map(item => ({ ...item, order_id: order.id }));
-    const savedLines = await supabaseRequest("uniform_order_items", {
-      method: "POST",
-      body: lines,
-      prefer: "return=representation"
-    });
-
-    await audit("uniform_order_submitted", {
-      entityTable: "uniform_orders",
-      entityId: order.id,
-      orderNumber: order.order_number,
-      message: "Uniform order submitted.",
-      payload: { orderId: order.id, totalPoints, itemCount: savedLines?.length || lines.length }
-    }, agent);
-
-    return {
-      ok: true,
-      order: mapOrder(order, (savedLines || []).map(mapOrderItem)),
-      wallet: mapWallet(heldWallet)
-    };
-  } catch (error) {
-    // Compensate the wallet hold if a later insert fails.
-    if (heldWallet && !order?.id) {
-      await patchWallet(heldWallet, { available: totalPoints, held: -totalPoints }, {
-        eventType: "ORDER_HOLD_ROLLBACK",
-        pointsDelta: totalPoints,
-        orderNumber: number,
-        reason: "Uniform order creation failed; points hold reversed."
-      }, agent).catch(() => null);
-    }
-    throw error;
-  }
-});
-
-export const acknowledgeUniformPolicy = webMethod(Permissions.SiteMember, async (input = {}) => {
-  const { agent } = await requireAgent();
-  const requestedPolicyId = clean(input.policyId || input.id, 160);
-  let policy = null;
-
-  if (isUuid(requestedPolicyId)) {
-    policy = first(await supabaseRequest(`uniform_policies?select=*&id=eq.${encodeURIComponent(requestedPolicyId)}&limit=1`));
-  }
-  if (!policy) policy = await latestPolicy();
-
-  if (!policy?.id) {
-    return { ok: true, acknowledged: false, message: "No active uniform policy exists." };
-  }
-
-  const result = first(await supabaseRequest("uniform_policy_acknowledgements?on_conflict=policy_key,policy_version,agent_user_id", {
-    method: "POST",
-    body: {
-      policy_id: policy.id,
-      policy_key: policy.policy_key || "",
-      policy_version: clean(input.policyVersion || input.policy_version || policy.policy_version, 80),
-      agent_user_id: agent.id,
-      sk_id: agentSkId(agent),
-      email: agentEmail(agent),
-      acknowledged_at: now(),
-      payload: { source: "UNIFORM_CENTER" }
-    },
-    prefer: "resolution=merge-duplicates,return=representation"
-  }));
-
-  await audit("uniform_policy_acknowledged", {
-    entityTable: "uniform_policy_acknowledgements",
-    entityId: result?.id || "",
-    message: "Uniform policy acknowledged.",
-    payload: { policyId: policy.id, policyVersion: policy.policy_version || "" }
-  }, agent);
-
-  return { ok: true, acknowledged: true, policy: mapPolicy(policy) };
-  
-// SKANDI Uniform Control — signed Supabase image upload patch
-// ADD this to backend/uniformCenterCms.web.js.
-//
-// Reuses existing helpers already present in the file:
-// getSupabaseConfig, storagePublicUrl, storageObjectPath, imageExtension,
-// cleanText, cleanKey, cleanError, requireUniformAdmin and logAudit.
-//
-// Keep the existing adminUploadUniformImage export during rollout.
-
-export const adminCreateUniformImageUpload = webMethod(
+export const adminUploadUniformImage = webMethod(
   Permissions.Anyone,
   async (input = {}) => {
     try {
-      await requireUniformAdmin();
+      const mode = cleanUpper(input.mode || "", 40);
 
-      const requestId = cleanText(input.requestId || input.request_id || "", 120);
-      const fileName = cleanText(input.fileName || input.file_name || "", 240);
-      const mimeType = cleanText(input.mimeType || input.mime_type || "", 120).toLowerCase();
-      const size = Number(input.size || input.fileSize || input.file_size || 0);
-      const extension = imageExtension(mimeType);
+      // ------------------------------------------------------------
+      // MODE 1: Create a time-limited signed Supabase upload URL.
+      // ------------------------------------------------------------
+      if (mode === "CREATE_SIGNED_UPLOAD") {
+        await requireUniformAdmin();
 
-      if (!extension) {
-        throw new Error("Only PNG, JPG, WebP and GIF images are allowed.");
-      }
+        const requestId = cleanText(input.requestId || input.request_id || "", 120);
+        const fileName = cleanText(input.fileName || input.file_name || "", 240);
+        const mimeType = cleanText(input.mimeType || input.mime_type || "", 120).toLowerCase();
+        const size = Number(input.size || input.fileSize || input.file_size || 0);
+        const extension = imageExtension(mimeType);
 
-      if (!Number.isFinite(size) || size <= 0) {
-        throw new Error("Image file size is required.");
-      }
-
-      if (size > 5 * 1024 * 1024) {
-        throw new Error("Image is too large. Maximum size is 5 MB.");
-      }
-
-      const itemPart =
-        cleanKey(
-          input.itemCode ||
-          input.item_code ||
-          input.itemId ||
-          input.item_id ||
-          input.title ||
-          "uniform-item",
-          80
-        ) || "uniform-item";
-
-      // Always write a fresh path to avoid stale CDN objects.
-      const stamp = new Date()
-        .toISOString()
-        .replace(/[-:.TZ]/g, "")
-        .slice(0, 14);
-
-      const random = Math.random().toString(36).slice(2, 10);
-      const objectPath = `catalog/${itemPart}-${stamp}-${random}.${extension}`;
-
-      const { url, key } = await getSupabaseConfig();
-
-      // Supabase createSignedUploadUrl:
-      // POST /storage/v1/object/upload/sign/{bucket}/{path}
-      const response = await fetch(
-        `${url}/storage/v1/object/upload/sign/${encodeURIComponent(UNIFORM_IMAGE_BUCKET)}/${storageObjectPath(objectPath)}`,
-        {
-          method: "POST",
-          headers: {
-            apikey: key,
-            Authorization: `Bearer ${key}`,
-            "Content-Type": "application/json"
-          },
-          body: "{}"
+        if (!extension) {
+          throw new Error("Only PNG, JPG, WebP and GIF images are allowed.");
         }
-      );
 
-      const text = await response.text();
-      let data = null;
-
-      if (text) {
-        try {
-          data = JSON.parse(text);
-        } catch (err) {
-          data = text;
+        if (!Number.isFinite(size) || size <= 0) {
+          throw new Error("Image file size is required.");
         }
-      }
 
-      if (!response.ok) {
-        throw new Error(
-          data?.message ||
-          data?.error ||
-          `Could not create signed Uniform image upload: ${response.status}`
+        if (size > 5 * 1024 * 1024) {
+          throw new Error("Image is too large. Maximum size is 5 MB.");
+        }
+
+        const itemPart =
+          cleanKey(
+            input.itemCode ||
+            input.item_code ||
+            input.itemId ||
+            input.item_id ||
+            input.title ||
+            "uniform-item",
+            80
+          ) || "uniform-item";
+
+        const stamp = new Date()
+          .toISOString()
+          .replace(/[-:.TZ]/g, "")
+          .slice(0, 14);
+
+        const random = Math.random().toString(36).slice(2, 10);
+        const objectPath = `catalog/${itemPart}-${stamp}-${random}.${extension}`;
+        const { url, key } = await getSupabaseConfig();
+
+        const response = await fetch(
+          `${url}/storage/v1/object/upload/sign/${encodeURIComponent(UNIFORM_IMAGE_BUCKET)}/${storageObjectPath(objectPath)}`,
+          {
+            method: "POST",
+            headers: {
+              apikey: key,
+              Authorization: `Bearer ${key}`,
+              "Content-Type": "application/json"
+            },
+            body: "{}"
+          }
         );
-      }
 
-      const returnedUrl = String(
-        data?.url ||
-        data?.signedUrl ||
-        data?.signedURL ||
-        ""
-      ).trim();
+        const text = await response.text();
+        let data = null;
 
-      if (!returnedUrl) {
-        throw new Error("Supabase did not return a signed upload URL.");
-      }
-
-      let signedUrl = returnedUrl;
-
-      if (!/^https?:\/\//i.test(signedUrl)) {
-        if (signedUrl.startsWith("/storage/v1/")) {
-          signedUrl = `${url}${signedUrl}`;
-        } else if (signedUrl.startsWith("/object/")) {
-          signedUrl = `${url}/storage/v1${signedUrl}`;
-        } else {
-          signedUrl = `${url}/storage/v1/${signedUrl.replace(/^\/+/, "")}`;
+        if (text) {
+          try {
+            data = JSON.parse(text);
+          } catch (err) {
+            data = text;
+          }
         }
+
+        if (!response.ok) {
+          throw new Error(
+            data?.message ||
+            data?.error ||
+            `Could not create signed Uniform image upload: ${response.status}`
+          );
+        }
+
+        const returnedUrl = String(
+          data?.url ||
+          data?.signedUrl ||
+          data?.signedURL ||
+          ""
+        ).trim();
+
+        if (!returnedUrl) {
+          throw new Error("Supabase did not return a signed upload URL.");
+        }
+
+        let signedUrl = returnedUrl;
+
+        if (!/^https?:\/\//i.test(signedUrl)) {
+          if (signedUrl.startsWith("/storage/v1/")) {
+            signedUrl = `${url}${signedUrl}`;
+          } else if (signedUrl.startsWith("/object/")) {
+            signedUrl = `${url}/storage/v1${signedUrl}`;
+          } else {
+            signedUrl = `${url}/storage/v1/${signedUrl.replace(/^\/+/, "")}`;
+          }
+        }
+
+        const tokenMatch = signedUrl.match(/[?&]token=([^&]+)/i);
+        const token = tokenMatch ? decodeURIComponent(tokenMatch[1]) : "";
+
+        return {
+          ok: true,
+          mode,
+          requestId,
+          fileName,
+          mimeType,
+          size,
+          bucket: UNIFORM_IMAGE_BUCKET,
+          objectPath,
+          storagePath: objectPath,
+          signedUrl,
+          token,
+          imageUrl: storagePublicUrl(UNIFORM_IMAGE_BUCKET, objectPath),
+          publicUrl: storagePublicUrl(UNIFORM_IMAGE_BUCKET, objectPath)
+        };
       }
 
-      const tokenMatch = signedUrl.match(/[?&]token=([^&]+)/i);
-      const token = tokenMatch ? decodeURIComponent(tokenMatch[1]) : "";
+      // ------------------------------------------------------------
+      // MODE 2: Browser completed direct binary upload; audit/finalize.
+      // ------------------------------------------------------------
+      if (mode === "COMPLETE_SIGNED_UPLOAD") {
+        const { agent } = await requireUniformAdmin();
 
-      return {
-        ok: true,
-        requestId,
-        fileName,
-        mimeType,
-        size,
-        bucket: UNIFORM_IMAGE_BUCKET,
-        objectPath,
-        storagePath: objectPath,
-        signedUrl,
-        token,
-        imageUrl: storagePublicUrl(UNIFORM_IMAGE_BUCKET, objectPath),
-        publicUrl: storagePublicUrl(UNIFORM_IMAGE_BUCKET, objectPath)
-      };
-    } catch (error) {
-      throw new Error(cleanError(error));
-    }
-  }
-);
+        const requestId = cleanText(input.requestId || input.request_id || "", 120);
+        const objectPath = cleanText(
+          input.objectPath ||
+          input.storagePath ||
+          input.object_path ||
+          input.storage_path ||
+          "",
+          1000
+        );
+        const fileName = cleanText(input.fileName || input.file_name || "", 240);
+        const mimeType = cleanText(input.mimeType || input.mime_type || "", 120).toLowerCase();
+        const size = Number(input.size || input.fileSize || input.file_size || 0);
+        const itemId = cleanText(input.itemId || input.item_id || "", 160);
+        const extension = imageExtension(mimeType);
 
-export const adminCompleteUniformImageUpload = webMethod(
-  Permissions.Anyone,
-  async (input = {}) => {
-    try {
-      const { agent } = await requireUniformAdmin();
+        if (!objectPath || !objectPath.startsWith("catalog/")) {
+          throw new Error("Invalid Uniform image storage path.");
+        }
 
-      const requestId = cleanText(input.requestId || input.request_id || "", 120);
-      const objectPath = cleanText(
-        input.objectPath ||
-        input.storagePath ||
-        input.object_path ||
-        input.storage_path ||
-        "",
-        1000
-      );
-      const fileName = cleanText(input.fileName || input.file_name || "", 240);
-      const mimeType = cleanText(input.mimeType || input.mime_type || "", 120).toLowerCase();
-      const size = Number(input.size || input.fileSize || input.file_size || 0);
-      const itemId = cleanText(input.itemId || input.item_id || "", 160);
+        if (!extension) {
+          throw new Error("Invalid Uniform image MIME type.");
+        }
 
-      if (!objectPath || !objectPath.startsWith("catalog/")) {
-        throw new Error("Invalid Uniform image storage path.");
-      }
+        if (!objectPath.toLowerCase().endsWith(`.${extension}`)) {
+          throw new Error("Uniform image extension does not match its MIME type.");
+        }
 
-      const extension = imageExtension(mimeType);
+        if (!Number.isFinite(size) || size <= 0 || size > 5 * 1024 * 1024) {
+          throw new Error("Invalid Uniform image size.");
+        }
 
-      if (!extension) {
-        throw new Error("Invalid Uniform image MIME type.");
-      }
+        const imageUrl = storagePublicUrl(UNIFORM_IMAGE_BUCKET, objectPath);
+        const uploadedAt = new Date().toISOString();
 
-      if (!objectPath.toLowerCase().endsWith(`.${extension}`)) {
-        throw new Error("Uniform image extension does not match its MIME type.");
-      }
-
-      if (!Number.isFinite(size) || size <= 0 || size > 5 * 1024 * 1024) {
-        throw new Error("Invalid Uniform image size.");
-      }
-
-      const imageUrl = storagePublicUrl(UNIFORM_IMAGE_BUCKET, objectPath);
-      const uploadedAt = new Date().toISOString();
-
-      await logAudit(
-        "uniform_image_uploaded",
-        {
+        await logAudit("uniform_image_uploaded", {
           entityTable: "uniform_catalog_items",
           entityId: itemId,
           message: "Uniform catalog image uploaded with signed Storage URL.",
@@ -1465,27 +956,62 @@ export const adminCompleteUniformImageUpload = webMethod(
             mimeType,
             size
           }
-        },
-        agent
-      );
+        }, agent);
+
+        return {
+          ok: true,
+          mode,
+          requestId,
+          imageUrl,
+          url: imageUrl,
+          storagePath: objectPath,
+          objectPath,
+          mimeType,
+          size,
+          fileName,
+          image: {
+            url: imageUrl,
+            imageUrl,
+            storagePath: objectPath,
+            mimeType,
+            fileName,
+            uploadedAt
+          }
+        };
+      }
+
+      // ------------------------------------------------------------
+      // LEGACY MODE: keep old Base64 upload working as a fallback.
+      // ------------------------------------------------------------
+      const { agent } = await requireUniformAdmin();
+      const uploaded = await uploadUniformImageToStorage(input);
+
+      await logAudit("uniform_image_uploaded", {
+        entityTable: "uniform_catalog_items",
+        entityId: cleanText(input.itemId || input.item_id || "", 160),
+        message: "Uniform catalog image uploaded.",
+        payload: {
+          objectPath: uploaded.objectPath,
+          imageUrl: uploaded.url,
+          mimeType: uploaded.mimeType,
+          size: uploaded.size
+        }
+      }, agent);
 
       return {
         ok: true,
-        requestId,
-        imageUrl,
-        url: imageUrl,
-        storagePath: objectPath,
-        objectPath,
-        mimeType,
-        size,
-        fileName,
+        imageUrl: uploaded.url,
+        url: uploaded.url,
+        storagePath: uploaded.objectPath,
+        mimeType: uploaded.mimeType,
+        size: uploaded.size,
         image: {
-          url: imageUrl,
-          imageUrl,
-          storagePath: objectPath,
-          mimeType,
-          fileName,
-          uploadedAt
+          url: uploaded.url,
+          imageUrl: uploaded.url,
+          storagePath: uploaded.objectPath,
+          mimeType: uploaded.mimeType,
+          fileName: cleanText(input.fileName || input.file_name || "", 240),
+          uploadedAt: new Date().toISOString()
         }
       };
     } catch (error) {
@@ -1493,4 +1019,3 @@ export const adminCompleteUniformImageUpload = webMethod(
     }
   }
 );
-
