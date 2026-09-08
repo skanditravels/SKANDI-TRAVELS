@@ -3,9 +3,9 @@ import { session } from "wix-storage";
 import {
   searchUnifiedOffers,
   createBookingCartFromOffer
-} from "backend/bookingOrchestrator.web";
+} from "backend/bookingOrchestratorCollection.web";
 import { getPublicInventoryRecord } from "backend/FINAL/publicInventory.web";
-import { searchDuffelStays } from "backend/RIA/duffelGroundProducts.web";
+import { searchCollectionHotelStays } from "backend/bookingOrchestratorCollection.web";
 
 const EMBED_ID = "#hotelDetailEmbed";
 const CHILD_SOURCE = "SKANDI_HOTEL_DETAIL";
@@ -178,8 +178,9 @@ $w.onReady(() => {
         const accommodationId = clean(first(d.duffelAccommodationId, d.providerAccommodationId), 180);
         let items = [];
         if (accommodationId) {
-          const targeted = await searchDuffelStays({
-            accommodationId,
+          const targeted = await searchCollectionHotelStays({
+  inventoryMasterId: hotelRecord?.id || "",
+  accommodationId,
             checkInDate: search.departureDate,
             checkOutDate: search.returnDate,
             adults: search.adults,
