@@ -6,7 +6,7 @@ import { getStaffPortalSession } from "backend/RIA/staffPortalAuth.web";
 
 const TABLES={master:"inventory_master_entities",localized:"inventory_localized_content",media:"inventory_media_assets",relations:"inventory_entity_relations",dated:"inventory_dated_inventory",audit:"master_inventory_audit",airports:"travel_info_airports",airlines:"travel_info_airlines"};
 const REFERENCE_TYPES=new Set(["AIRPORT","AIRLINE"]);
-const ENTITY_TYPES=new Set(["DESTINATION","AIRPORT","AIRLINE","SUPPLIER","HOTEL","GUIDED_TOUR","ACTIVITY","PARTNER_TICKET","TRANSFER","CAR_RENTAL","PACKAGE","ANCILLARY"]);
+const ENTITY_TYPES=new Set(["COUNTRY", "AREA", DESTINATION","AIRPORT","AIRLINE","SUPPLIER","HOTEL","GUIDED_TOUR","ACTIVITY","PARTNER_TICKET","TRANSFER","CAR_RENTAL","PACKAGE","ANCILLARY"]);
 const MASTER_STATUSES=new Set(["DRAFT","REVIEW","PUBLISHED","HIDDEN","SUSPENDED","ARCHIVED"]);
 const DATED_STATUSES=new Set(["OPEN","CLOSED","STOP_SALE","BLACKOUT","SOLD_OUT"]);
 const LANGUAGES=["EN","SV","NO","DA","FI"];
