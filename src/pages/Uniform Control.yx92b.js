@@ -1,5 +1,11 @@
-// Uniform Control page code with multi-image upload support.
-// ORIGINAL bootstrap-safe contract.
+// SKANDI Uniform Control — FULL REPLACEMENT PAGE CODE v3
+// Replace the entire Wix page code for the Uniform Control page.
+//
+// IMPORTANT:
+// - Keeps the locked existing backend export contract.
+// - Echoes requestId on every request/response.
+// - Handles UNIFORM_ADMIN_READY and UNIFORM_ADMIN_BOOTSTRAP.
+// - Signed image upload reuses existing adminUploadUniformImage export.
 
 import wixLocation from "wix-location";
 import { authentication } from "wix-members-frontend";
@@ -37,18 +43,37 @@ function post(html, type, payload = {}) {
   });
 }
 
-function postFlat(html, type, payload = {}) {
+function reply(html, type, requestId = "", payload = {}) {
   html.postMessage({
     source: PARENT_SOURCE,
     type,
-    ...(payload || {}),
+    requestId: requestId || "",
+    payload: payload || {},
+    timestamp: new Date().toISOString()
+  });
+}
+
+function replyError(html, requestId = "", error) {
+  html.postMessage({
+    source: PARENT_SOURCE,
+    type: "UNIFORM_ADMIN_ERROR",
+    requestId: requestId || "",
+    message: error?.message || "Uniform Control action failed.",
+    payload: {
+      message: error?.message || "Uniform Control action failed."
+    },
     timestamp: new Date().toISOString()
   });
 }
 
 function allowedInternalPath(path) {
   const p = String(path || "");
-  return p === "/" || p === LOGIN_PATH || p.startsWith("/riaintra") || p.startsWith("/altea");
+  return (
+    p === "/" ||
+    p === LOGIN_PATH ||
+    p.startsWith("/riaintra") ||
+    p.startsWith("/altea")
+  );
 }
 
 async function logout() {
@@ -91,7 +116,7 @@ async function bootstrap(html, query = "") {
   }
 
   const payload = await getUniformAdminBootstrap({ query });
-  postFlat(html, "UNIFORM_ADMIN_BOOTSTRAP_RESULT", { payload });
+  reply(html, "UNIFORM_ADMIN_BOOTSTRAP_RESULT", "", payload);
   await sendChromeBootstrap(html, payload);
 }
 
@@ -103,6 +128,7 @@ $w.onReady(function () {
     const source = msg.source || "";
     const type = msg.type || "";
     const payload = msg.payload || {};
+    const requestId = msg.requestId || payload.requestId || "";
 
     try {
       if (source === CHROME_SOURCE) {
@@ -125,8 +151,9 @@ $w.onReady(function () {
         if (type === "INTERNAL_GLOBAL_SEARCH") {
           const query = payload.query || msg.query || "";
           const result = await runInternalGlobalSearch(query);
+
           post(html, "INTERNAL_SEARCH_RESULTS", {
-            requestId: payload.requestId || msg.requestId || "",
+            requestId,
             query,
             results: result.results || result.items || []
           });
@@ -138,134 +165,144 @@ $w.onReady(function () {
         return;
       }
 
-      if (type === "UNIFORM_ADMIN_BOOTSTRAP") {
-        await bootstrap(html, msg.query || payload.query || "");
+      // The HTML sends READY on startup. Treat it as a bootstrap handshake.
+      if (type === "UNIFORM_ADMIN_READY") {
+        await bootstrap(html, "");
         return;
       }
 
-      // Signed upload: use the EXISTING adminUploadUniformImage export.
-      // No new named backend imports are introduced, so catalog bootstrap
-      // remains independent from the upload enhancement.
+      if (type === "UNIFORM_ADMIN_BOOTSTRAP") {
+        await bootstrap(html, payload.query || msg.query || "");
+        return;
+      }
+
       if (type === "UNIFORM_ADMIN_CREATE_IMAGE_UPLOAD") {
-        const requestId = msg.requestId || payload.requestId || "";
         const result = await adminUploadUniformImage({
           mode: "CREATE_SIGNED_UPLOAD",
           requestId,
-          fileName: msg.fileName || payload.fileName || "",
-          mimeType: msg.mimeType || payload.mimeType || "",
-          size: msg.size ?? payload.size ?? 0,
-          itemId: msg.itemId || payload.itemId || "",
-          itemCode: msg.itemCode || payload.itemCode || "",
-          title: msg.title || payload.title || ""
+          fileName: payload.fileName || msg.fileName || "",
+          mimeType: payload.mimeType || msg.mimeType || "",
+          size: payload.size ?? msg.size ?? 0,
+          itemId: payload.itemId || msg.itemId || "",
+          itemCode: payload.itemCode || msg.itemCode || "",
+          title: payload.title || msg.title || ""
         });
 
-        postFlat(html, "UNIFORM_ADMIN_IMAGE_UPLOAD_READY", {
-          payload: {
-            ...result,
-            requestId: result.requestId || requestId
-          }
-        });
+        reply(html, "UNIFORM_ADMIN_IMAGE_UPLOAD_READY", requestId, result);
         return;
       }
 
       if (type === "UNIFORM_ADMIN_COMPLETE_IMAGE_UPLOAD") {
         const result = await adminUploadUniformImage({
           mode: "COMPLETE_SIGNED_UPLOAD",
-          requestId: msg.requestId || payload.requestId || "",
+          requestId,
           objectPath:
-            msg.objectPath ||
             payload.objectPath ||
-            msg.storagePath ||
+            msg.objectPath ||
             payload.storagePath ||
+            msg.storagePath ||
             "",
           storagePath:
-            msg.storagePath ||
             payload.storagePath ||
-            msg.objectPath ||
+            msg.storagePath ||
             payload.objectPath ||
+            msg.objectPath ||
             "",
-          fileName: msg.fileName || payload.fileName || "",
-          mimeType: msg.mimeType || payload.mimeType || "",
-          size: msg.size ?? payload.size ?? 0,
-          itemId: msg.itemId || payload.itemId || "",
-          itemCode: msg.itemCode || payload.itemCode || "",
-          title: msg.title || payload.title || ""
+          fileName: payload.fileName || msg.fileName || "",
+          mimeType: payload.mimeType || msg.mimeType || "",
+          size: payload.size ?? msg.size ?? 0,
+          itemId: payload.itemId || msg.itemId || "",
+          itemCode: payload.itemCode || msg.itemCode || "",
+          title: payload.title || msg.title || ""
         });
 
-        postFlat(html, "UNIFORM_ADMIN_IMAGE_UPLOADED", { payload: result });
+        reply(html, "UNIFORM_ADMIN_IMAGE_UPLOADED", requestId, result);
         return;
       }
 
+      // Legacy Base64 fallback remains available.
       if (type === "UNIFORM_ADMIN_UPLOAD_IMAGE") {
         const result = await adminUploadUniformImage({
-          fileName: msg.fileName || payload.fileName || "",
-          mimeType: msg.mimeType || payload.mimeType || "",
-          dataUrl: msg.dataUrl || payload.dataUrl || "",
-          base64: msg.base64 || payload.base64 || "",
-          itemId: msg.itemId || payload.itemId || "",
-          itemCode: msg.itemCode || payload.itemCode || "",
-          title: msg.title || payload.title || ""
+          fileName: payload.fileName || msg.fileName || "",
+          mimeType: payload.mimeType || msg.mimeType || "",
+          dataUrl: payload.dataUrl || msg.dataUrl || "",
+          base64: payload.base64 || msg.base64 || "",
+          itemId: payload.itemId || msg.itemId || "",
+          itemCode: payload.itemCode || msg.itemCode || "",
+          title: payload.title || msg.title || ""
         });
-        postFlat(html, "UNIFORM_ADMIN_IMAGE_UPLOADED", { payload: result });
+
+        reply(html, "UNIFORM_ADMIN_IMAGE_UPLOADED", requestId, result);
         return;
       }
 
       if (type === "UNIFORM_ADMIN_SAVE_ITEM") {
-        const result = await adminSaveUniformCatalogItem({ item: msg.item || payload.item || {} });
-        postFlat(html, "UNIFORM_ADMIN_SAVED", { payload: result });
+        const result = await adminSaveUniformCatalogItem({
+          item: payload.item || msg.item || {}
+        });
+
+        reply(html, "UNIFORM_ADMIN_SAVED", requestId, result);
         return;
       }
 
       if (type === "UNIFORM_ADMIN_SAVE_CATEGORY") {
-        const result = await adminSaveUniformCategory({ category: msg.category || payload.category || {} });
-        postFlat(html, "UNIFORM_ADMIN_SAVED", { payload: result });
+        const result = await adminSaveUniformCategory({
+          category: payload.category || msg.category || {}
+        });
+
+        reply(html, "UNIFORM_ADMIN_SAVED", requestId, result);
         return;
       }
 
       if (type === "UNIFORM_ADMIN_SAVE_RULE") {
-        const result = await adminSaveUniformAllowanceRule({ rule: msg.rule || payload.rule || {} });
-        postFlat(html, "UNIFORM_ADMIN_SAVED", { payload: result });
+        const result = await adminSaveUniformAllowanceRule({
+          rule: payload.rule || msg.rule || {}
+        });
+
+        reply(html, "UNIFORM_ADMIN_SAVED", requestId, result);
         return;
       }
 
       if (type === "UNIFORM_ADMIN_ORDER_ACTION") {
         const result = await adminUniformOrderAction({
-          orderId: msg.orderId || payload.orderId,
-          action: msg.action || payload.action,
-          note: msg.note || payload.note || ""
+          orderId: payload.orderId || msg.orderId,
+          action: payload.action || msg.action,
+          note: payload.note || msg.note || ""
         });
-        postFlat(html, "UNIFORM_ADMIN_SAVED", { payload: result });
+
+        reply(html, "UNIFORM_ADMIN_SAVED", requestId, result);
         return;
       }
 
       if (type === "UNIFORM_ADMIN_ADJUST_WALLET") {
         const result = await adminAdjustUniformWallet({
-          skId: msg.skId || payload.skId || "",
-          email: msg.email || payload.email || "",
-          points: msg.points ?? payload.points,
-          reason: msg.reason || payload.reason || ""
+          skId: payload.skId || msg.skId || "",
+          email: payload.email || msg.email || "",
+          points: payload.points ?? msg.points,
+          reason: payload.reason || msg.reason || ""
         });
-        postFlat(html, "UNIFORM_ADMIN_SAVED", { payload: result });
+
+        reply(html, "UNIFORM_ADMIN_SAVED", requestId, result);
         return;
       }
 
       if (type === "UNIFORM_ADMIN_DELETE") {
         const result = await adminDeleteUniformItem({
-          collectionId: msg.collectionId || payload.collectionId || "",
-          itemId: msg.itemId || payload.itemId || ""
+          collectionId: payload.collectionId || msg.collectionId || "",
+          itemId: payload.itemId || msg.itemId || ""
         });
-        postFlat(html, "UNIFORM_ADMIN_SAVED", { payload: result });
+
+        reply(html, "UNIFORM_ADMIN_SAVED", requestId, result);
         return;
       }
 
       if (type === "UNIFORM_ADMIN_NAVIGATE") {
-        const path = msg.path || payload.path || "";
+        const path = payload.path || msg.path || "";
         if (allowedInternalPath(path)) wixLocation.to(path);
+        return;
       }
     } catch (error) {
-      postFlat(html, "UNIFORM_ADMIN_ERROR", {
-        message: error.message || "Uniform Control action failed."
-      });
+      replyError(html, requestId, error);
     }
   });
 });
