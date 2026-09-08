@@ -1,5 +1,5 @@
 import { webMethod, Permissions } from "wix-web-module";
-import { searchUnifiedOffers } from "./bookingOrchestratorCollection.web.js";
+import { searchUnifiedOffers } from "./bookingOrchestratorCatalog.web.js";
 
 // Destination page adapter. The Collection/Partner wrapper filters live supplier
 // availability before any option is returned to customer-facing HTML.
