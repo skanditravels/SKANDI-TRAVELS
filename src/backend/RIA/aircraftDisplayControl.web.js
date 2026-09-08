@@ -7,10 +7,15 @@ import { findAgentByMemberOrEmail, isAgentAuthorized } from "./staffPortalAuth.r
 const URL_SECRET="SUPABASE_URL";
 const KEY_SECRET="SUPABASE_SERVICE_ROLE_KEY";
 const AIRCRAFT_ASSET_BUCKET="aircraft-assets";
+const AIRLINE_RPC="get_aircraft_display_airlines";
+const AIRLINE_VIEW="aircraft_display_airlines";
+const AIRLINE_LEGACY_TABLE="travel_info_airlines";
 const MAX_AIRCRAFT_ASSET_BYTES=15*1024*1024;
 const T={airlines:"aircraft_display_airlines",aircraft:"travel_info_aircraft",cabins:"travel_info_aircraft_cabins",views:"travel_info_aircraft_views",hotspots:"travel_info_aircraft_hotspots",scenes:"travel_info_aircraft_walk_scenes",sceneHotspots:"travel_info_aircraft_scene_hotspots"};
 let cfgCache=null;
 let airlineCatalogCache={rows:null,expiresAt:0};
+let lastAirlineSource="";
+let lastAirlineReadErrors=[];
 
 const text=(v,m=1000)=>String(v??"").trim().slice(0,m);
 const upper=(v,m=100)=>text(v,m).toUpperCase();
@@ -26,6 +31,41 @@ function qs(q={}){const s=Object.entries(q).filter(([,v])=>v!==undefined&&v!==nu
 
 async function config(){if(cfgCache?.url&&cfgCache?.key)return cfgCache;const url=String(await getSecret(URL_SECRET)||"").replace(/\/$/,"");const key=String(await getSecret(KEY_SECRET)||"").trim();if(!url||!key)throw new Error("Supabase secrets are missing.");cfgCache={url,key};return cfgCache}
 async function db(table,query={},options={}){const {url,key}=await config();const r=await fetch(`${url}/rest/v1/${table}${qs(query)}`,{method:options.method||"GET",headers:{apikey:key,Authorization:`Bearer ${key}`,"Content-Type":"application/json",...(options.prefer?{Prefer:options.prefer}:{}),...(options.headers||{})},body:options.body===undefined?undefined:JSON.stringify(options.body)});const raw=await r.text();let p=null;if(raw){try{p=JSON.parse(raw)}catch(_){p=raw}}if(!r.ok)throw new Error(p?.message||p?.error||`Supabase ${table} request failed (${r.status}).`);return p}
+
+
+async function rpc(name,body={}){
+  const {url,key}=await config();
+  const response=await fetch(
+    `${url}/rest/v1/rpc/${encodeURIComponent(name)}`,
+    {
+      method:"POST",
+      headers:{
+        apikey:key,
+        Authorization:`Bearer ${key}`,
+        "Content-Type":"application/json"
+      },
+      body:JSON.stringify(body||{})
+    }
+  );
+
+  const raw=await response.text();
+  let payload=null;
+
+  if(raw){
+    try{payload=JSON.parse(raw)}
+    catch(_){payload=raw}
+  }
+
+  if(!response.ok){
+    throw new Error(
+      payload?.message||
+      payload?.error||
+      `Supabase RPC ${name} failed (${response.status}).`
+    );
+  }
+
+  return payload;
+}
 
 
 function storageObjectPath(path=""){
@@ -182,76 +222,77 @@ function mapAirline(row={}){
 
   const a={
     id:text(
-      row.airline_id ||
-      row.ID ||
-      row.id ||
-      row["Record ID"] ||
+      row.airline_id||
+      row.ID||
+      row.id||
+      row["Record ID"]||
       "",
       160
     ),
     name:text(
-      row.airline_name ||
-      row.Title ||
-      row.title ||
+      row.airline_name||
+      row.Title||
+      row.title||
       "",
       220
     ),
     shortName:text(
-      row.short_name ||
-      row.shortName ||
-      row.airline_name ||
-      row.Title ||
+      row.short_name||
+      row.shortName||
+      row.airline_name||
+      row.Title||
       "",
       160
     ),
     iataCode:upper(
-      row.iata_code ||
-      row.iataCode ||
-      inventory.iata ||
+      row.iata_code||
+      row.iataCode||
+      inventory.iata||
       "",
       20
     ),
     icaoCode:upper(
-      row.icao_code ||
-      row.icaoCode ||
-      inventory.icao ||
+      row.icao_code||
+      row.icaoCode||
+      inventory.icao||
       "",
       20
     ),
     website:text(
-      row.website ||
-      inventory.website ||
+      row.website||
+      inventory.website||
       "",
       1600
     ),
     summary:text(
-      row.summary ||
+      row.summary||
       "",
       4000
     ),
     heroAircraftUrl:text(
-      row.hero_aircraft_url ||
-      row.heroAircraftUrl ||
-      inventory.heroImageUrl ||
+      row.hero_aircraft_url||
+      row.heroAircraftUrl||
+      inventory.heroImageUrl||
+      inventory.heroAircraftUrl||
       "",
       2000
     ),
     aircraftFamiliesText:text(
-      row.aircraft_families_text ||
-      row.aircraftFamiliesText ||
+      row.aircraft_families_text||
+      row.aircraftFamiliesText||
       "",
       4000
     ),
     aircraftConfigLastReviewed:text(
-      row.aircraft_config_last_reviewed ||
-      row.aircraftConfigLastReviewed ||
+      row.aircraft_config_last_reviewed||
+      row.aircraftConfigLastReviewed||
       "",
       80
     ),
     aircraftConfigSourceUrls:arr(
       parse(
-        row.aircraft_config_source_urls_json ||
-        row.aircraftConfigSourceUrlsJson ||
+        row.aircraft_config_source_urls_json||
+        row.aircraftConfigSourceUrlsJson||
         [],
         []
       )
@@ -259,20 +300,21 @@ function mapAirline(row={}){
       .map(x=>text(x,1600))
       .filter(Boolean),
     reviewNotes:text(
-      row.aircraft_config_review_notes ||
-      row.aircraftConfigReviewNotes ||
+      row.aircraft_config_review_notes||
+      row.aircraftConfigReviewNotes||
       "",
       5000
     ),
     active:row.active!==false,
     staffVisible:row.staff_visible!==false,
     status:upper(row.status||"",40),
-    slug:text(row.slug||"",180)
+    slug:text(row.slug||row["Record ID"]||"",180)
   };
 
   const raw=parse(
-    row.aircraft_configurations_json ||
-    row.aircraftConfigurationsJson ||
+    row.aircraft_configurations_json||
+    row.aircraftConfigurationsJson||
+    inventory.aircraftConfigurationsJson||
     [],
     []
   );
@@ -305,23 +347,85 @@ async function rawAirlineCatalog(force=false){
     return airlineCatalogCache.rows;
   }
 
-  const rows=await db(
-    T.airlines,
-    {
-      select:
-        "airline_id,airline_name,short_name,iata_code,icao_code,website,summary," +
-        "hero_aircraft_url,aircraft_families_text,aircraft_configurations_json," +
-        "aircraft_config_source_urls_json,aircraft_config_review_notes," +
-        "aircraft_config_last_reviewed,active,staff_visible,status,slug",
-      active:"eq.true",
-      order:"airline_name.asc",
-      limit:1000
-    }
-  );
+  const errors=[];
+  let rows=null;
+  let source="";
 
-  if(!Array.isArray(rows)){
+  // 1) Primary path: dedicated normalized RPC.
+  try{
+    const rpcRows=await rpc(AIRLINE_RPC,{});
+    if(Array.isArray(rpcRows)&&rpcRows.length){
+      rows=rpcRows;
+      source=`rpc:${AIRLINE_RPC}`;
+    }else{
+      errors.push("Airline RPC returned no rows.");
+    }
+  }catch(error){
+    errors.push(`RPC: ${error?.message||error}`);
+  }
+
+  // 2) Fallback: normalized view.
+  if(!rows){
+    try{
+      const viewRows=await db(
+        AIRLINE_VIEW,
+        {
+          select:
+            "airline_id,airline_name,short_name,iata_code,icao_code,website,summary,"+
+            "hero_aircraft_url,aircraft_families_text,aircraft_configurations_json,"+
+            "aircraft_config_source_urls_json,aircraft_config_review_notes,"+
+            "aircraft_config_last_reviewed,active,staff_visible,status,slug",
+          active:"eq.true",
+          order:"airline_name.asc",
+          limit:1000
+        }
+      );
+
+      if(Array.isArray(viewRows)&&viewRows.length){
+        rows=viewRows;
+        source=`view:${AIRLINE_VIEW}`;
+      }else{
+        errors.push("Normalized airline view returned no rows.");
+      }
+    }catch(error){
+      errors.push(`View: ${error?.message||error}`);
+    }
+  }
+
+  // 3) Final fallback: legacy source table using only known live columns.
+  if(!rows){
+    try{
+      const legacyRows=await db(
+        AIRLINE_LEGACY_TABLE,
+        {
+          select:
+            "ID,Title,shortName,iataCode,icaoCode,website,summary,heroAircraftUrl,"+
+            "aircraftFamiliesText,aircraftConfigurationsJson,aircraftConfigSourceUrlsJson,"+
+            "aircraftConfigReviewNotes,aircraftConfigLastReviewed,active,staff_visible,status,slug",
+          active:"eq.true",
+          limit:1000
+        }
+      );
+
+      if(Array.isArray(legacyRows)&&legacyRows.length){
+        rows=legacyRows;
+        source=`table:${AIRLINE_LEGACY_TABLE}`;
+      }else{
+        errors.push("Legacy airline table returned no rows.");
+      }
+    }catch(error){
+      errors.push(`Table: ${error?.message||error}`);
+    }
+  }
+
+  lastAirlineSource=source;
+  lastAirlineReadErrors=errors;
+
+  if(!Array.isArray(rows)||!rows.length){
     throw new Error(
-      "aircraft_display_airlines did not return an array."
+      errors.length
+        ? `Airline catalog failed. ${errors.join(" | ")}`
+        : "Airline catalog returned no rows."
     );
   }
 
@@ -430,7 +534,7 @@ export const getAircraftControlBootstrap=webMethod(
         airlines=await listAirlines(true);
       }catch(error){
         airlineReadError=
-          error?.message ||
+          error?.message||
           "Aircraft airline master data could not be loaded.";
       }
 
@@ -451,19 +555,21 @@ export const getAircraftControlBootstrap=webMethod(
           aircraft:aircraft.length,
           templates:aircraftTemplates.length
         },
-        airlineSource:"aircraft_display_airlines",
+        airlineSource:lastAirlineSource||"",
         airlineReadOk:airlines.length>0,
         airlineReadError,
+        airlineReadErrors:lastAirlineReadErrors||[],
         lastSync:new Date().toISOString()
       };
     }catch(e){
       throw new Error(
-        e?.message ||
+        e?.message||
         "Aircraft Display Control bootstrap failed."
       );
     }
   }
 );
+
 export const getAircraftControlRecord=webMethod(Permissions.Anyone,async({aircraftId}={})=>{try{await requireStaff(false);return{ok:true,...await record(aircraftId)}}catch(e){throw new Error(e?.message||"Aircraft record could not be loaded.")}});
 export const smartFillAircraft=webMethod(Permissions.Anyone,async(input={})=>{try{await requireStaff(false);const id=text(input.airlineId||input.airline_id,160);if(!id)throw new Error("Select an airline before using Smart Fill.");const a=await airlineById(id);if(!a)throw new Error("Selected airline was not found.");const{template,matches}=pickTemplate(a,input),suggestion=smart(input,a,template,true);return{ok:true,suggestion,template,matches,ambiguous:matches.length>1,message:matches.length>1?`Found ${matches.length} matching fleet configurations. Choose the correct seat configuration if needed.`:template?`Matched ${template.aircraftName} (${template.aircraftCode}).`:"No exact fleet template matched; manufacturer/family fields were inferred where possible."}}catch(e){throw new Error(e?.message||"Aircraft Smart Fill failed.")}});
 
