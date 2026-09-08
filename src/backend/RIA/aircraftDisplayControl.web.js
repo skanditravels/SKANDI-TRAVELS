@@ -197,6 +197,7 @@ async function createSignedAircraftAssetUpload(input={}){
     bucket:AIRCRAFT_ASSET_BUCKET,
     objectPath,
     signedUrl,
+    token:String(data?.token||""),
     publicUrl:storagePublicUrl(url,AIRCRAFT_ASSET_BUCKET,objectPath),
     mimeType:mime,
     size,
