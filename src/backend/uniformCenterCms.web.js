@@ -776,29 +776,43 @@ export const getUniformAdminBootstrap = webMethod(Permissions.SiteMember, async 
   };
 });
 
-// REPLACE ONLY the existing adminUploadUniformImage export block with this.
-// Do NOT add any new named exports for signed uploads.
-
 export const adminUploadUniformImage = webMethod(
   Permissions.Anyone,
   async (input = {}) => {
     try {
       const mode = cleanUpper(input.mode || "", 40);
 
-      // ------------------------------------------------------------
-      // MODE 1: Create a time-limited signed Supabase upload URL.
-      // ------------------------------------------------------------
+      // ==========================================================
+      // CREATE SIGNED UPLOAD
+      // ==========================================================
       if (mode === "CREATE_SIGNED_UPLOAD") {
         await requireUniformAdmin();
 
-        const requestId = cleanText(input.requestId || input.request_id || "", 120);
-        const fileName = cleanText(input.fileName || input.file_name || "", 240);
-        const mimeType = cleanText(input.mimeType || input.mime_type || "", 120).toLowerCase();
-        const size = Number(input.size || input.fileSize || input.file_size || 0);
+        const requestId = cleanText(
+          input.requestId || input.request_id || "",
+          120
+        );
+
+        const fileName = cleanText(
+          input.fileName || input.file_name || "",
+          240
+        );
+
+        const mimeType = cleanText(
+          input.mimeType || input.mime_type || "",
+          120
+        ).toLowerCase();
+
+        const size = Number(
+          input.size || input.fileSize || input.file_size || 0
+        );
+
         const extension = imageExtension(mimeType);
 
         if (!extension) {
-          throw new Error("Only PNG, JPG, WebP and GIF images are allowed.");
+          throw new Error(
+            "Only PNG, JPG, WebP and GIF images are allowed."
+          );
         }
 
         if (!Number.isFinite(size) || size <= 0) {
@@ -806,7 +820,9 @@ export const adminUploadUniformImage = webMethod(
         }
 
         if (size > 5 * 1024 * 1024) {
-          throw new Error("Image is too large. Maximum size is 5 MB.");
+          throw new Error(
+            "Image is too large. Maximum size is 5 MB."
+          );
         }
 
         const itemPart =
@@ -820,17 +836,26 @@ export const adminUploadUniformImage = webMethod(
             80
           ) || "uniform-item";
 
+        // Never overwrite an existing asset. A fresh object path avoids
+        // stale CDN propagation and removes the need for upsert.
         const stamp = new Date()
           .toISOString()
           .replace(/[-:.TZ]/g, "")
           .slice(0, 14);
 
-        const random = Math.random().toString(36).slice(2, 10);
-        const objectPath = `catalog/${itemPart}-${stamp}-${random}.${extension}`;
+        const random = Math.random()
+          .toString(36)
+          .slice(2, 10);
+
+        const objectPath =
+          `catalog/${itemPart}-${stamp}-${random}.${extension}`;
+
         const { url, key } = await getSupabaseConfig();
 
         const response = await fetch(
-          `${url}/storage/v1/object/upload/sign/${encodeURIComponent(UNIFORM_IMAGE_BUCKET)}/${storageObjectPath(objectPath)}`,
+          `${url}/storage/v1/object/upload/sign/` +
+          `${encodeURIComponent(UNIFORM_IMAGE_BUCKET)}/` +
+          `${storageObjectPath(objectPath)}`,
           {
             method: "POST",
             headers: {
@@ -869,7 +894,9 @@ export const adminUploadUniformImage = webMethod(
         ).trim();
 
         if (!returnedUrl) {
-          throw new Error("Supabase did not return a signed upload URL.");
+          throw new Error(
+            "Supabase did not return a signed upload URL."
+          );
         }
 
         let signedUrl = returnedUrl;
@@ -880,12 +907,18 @@ export const adminUploadUniformImage = webMethod(
           } else if (signedUrl.startsWith("/object/")) {
             signedUrl = `${url}/storage/v1${signedUrl}`;
           } else {
-            signedUrl = `${url}/storage/v1/${signedUrl.replace(/^\/+/, "")}`;
+            signedUrl =
+              `${url}/storage/v1/` +
+              signedUrl.replace(/^\/+/, "");
           }
         }
 
-        const tokenMatch = signedUrl.match(/[?&]token=([^&]+)/i);
-        const token = tokenMatch ? decodeURIComponent(tokenMatch[1]) : "";
+        const tokenMatch =
+          signedUrl.match(/[?&]token=([^&]+)/i);
+
+        const token = tokenMatch
+          ? decodeURIComponent(tokenMatch[1])
+          : "";
 
         return {
           ok: true,
@@ -899,18 +932,30 @@ export const adminUploadUniformImage = webMethod(
           storagePath: objectPath,
           signedUrl,
           token,
-          imageUrl: storagePublicUrl(UNIFORM_IMAGE_BUCKET, objectPath),
-          publicUrl: storagePublicUrl(UNIFORM_IMAGE_BUCKET, objectPath)
+          imageUrl:
+            storagePublicUrl(
+              UNIFORM_IMAGE_BUCKET,
+              objectPath
+            ),
+          publicUrl:
+            storagePublicUrl(
+              UNIFORM_IMAGE_BUCKET,
+              objectPath
+            )
         };
       }
 
-      // ------------------------------------------------------------
-      // MODE 2: Browser completed direct binary upload; audit/finalize.
-      // ------------------------------------------------------------
+      // ==========================================================
+      // COMPLETE SIGNED UPLOAD
+      // ==========================================================
       if (mode === "COMPLETE_SIGNED_UPLOAD") {
         const { agent } = await requireUniformAdmin();
 
-        const requestId = cleanText(input.requestId || input.request_id || "", 120);
+        const requestId = cleanText(
+          input.requestId || input.request_id || "",
+          120
+        );
+
         const objectPath = cleanText(
           input.objectPath ||
           input.storagePath ||
@@ -919,44 +964,91 @@ export const adminUploadUniformImage = webMethod(
           "",
           1000
         );
-        const fileName = cleanText(input.fileName || input.file_name || "", 240);
-        const mimeType = cleanText(input.mimeType || input.mime_type || "", 120).toLowerCase();
-        const size = Number(input.size || input.fileSize || input.file_size || 0);
-        const itemId = cleanText(input.itemId || input.item_id || "", 160);
+
+        const fileName = cleanText(
+          input.fileName || input.file_name || "",
+          240
+        );
+
+        const mimeType = cleanText(
+          input.mimeType || input.mime_type || "",
+          120
+        ).toLowerCase();
+
+        const size = Number(
+          input.size || input.fileSize || input.file_size || 0
+        );
+
+        const itemId = cleanText(
+          input.itemId || input.item_id || "",
+          160
+        );
+
         const extension = imageExtension(mimeType);
 
-        if (!objectPath || !objectPath.startsWith("catalog/")) {
-          throw new Error("Invalid Uniform image storage path.");
+        if (
+          !objectPath ||
+          !objectPath.startsWith("catalog/")
+        ) {
+          throw new Error(
+            "Invalid Uniform image storage path."
+          );
         }
 
         if (!extension) {
-          throw new Error("Invalid Uniform image MIME type.");
+          throw new Error(
+            "Invalid Uniform image MIME type."
+          );
         }
 
-        if (!objectPath.toLowerCase().endsWith(`.${extension}`)) {
-          throw new Error("Uniform image extension does not match its MIME type.");
+        if (
+          !objectPath
+            .toLowerCase()
+            .endsWith(`.${extension}`)
+        ) {
+          throw new Error(
+            "Uniform image extension does not match its MIME type."
+          );
         }
 
-        if (!Number.isFinite(size) || size <= 0 || size > 5 * 1024 * 1024) {
-          throw new Error("Invalid Uniform image size.");
+        if (
+          !Number.isFinite(size) ||
+          size <= 0 ||
+          size > 5 * 1024 * 1024
+        ) {
+          throw new Error(
+            "Invalid Uniform image size."
+          );
         }
 
-        const imageUrl = storagePublicUrl(UNIFORM_IMAGE_BUCKET, objectPath);
-        const uploadedAt = new Date().toISOString();
+        const imageUrl =
+          storagePublicUrl(
+            UNIFORM_IMAGE_BUCKET,
+            objectPath
+          );
 
-        await logAudit("uniform_image_uploaded", {
-          entityTable: "uniform_catalog_items",
-          entityId: itemId,
-          message: "Uniform catalog image uploaded with signed Storage URL.",
-          payload: {
-            requestId,
-            objectPath,
-            imageUrl,
-            fileName,
-            mimeType,
-            size
-          }
-        }, agent);
+        const uploadedAt =
+          new Date().toISOString();
+
+        await logAudit(
+          "uniform_image_uploaded",
+          {
+            entityTable:
+              "uniform_catalog_items",
+            entityId: itemId,
+            message:
+              "Uniform catalog image uploaded with signed Storage URL.",
+            payload: {
+              requestId,
+              objectPath,
+              imageUrl,
+              fileName,
+              mimeType,
+              size
+            }
+          },
+          agent
+        );
 
         return {
           ok: true,
@@ -980,38 +1072,69 @@ export const adminUploadUniformImage = webMethod(
         };
       }
 
-      // ------------------------------------------------------------
-      // LEGACY MODE: keep old Base64 upload working as a fallback.
-      // ------------------------------------------------------------
-      const { agent } = await requireUniformAdmin();
-      const uploaded = await uploadUniformImageToStorage(input);
+      // ==========================================================
+      // LEGACY BASE64 FALLBACK
+      // ==========================================================
+      const { agent } =
+        await requireUniformAdmin();
 
-      await logAudit("uniform_image_uploaded", {
-        entityTable: "uniform_catalog_items",
-        entityId: cleanText(input.itemId || input.item_id || "", 160),
-        message: "Uniform catalog image uploaded.",
-        payload: {
-          objectPath: uploaded.objectPath,
-          imageUrl: uploaded.url,
-          mimeType: uploaded.mimeType,
-          size: uploaded.size
-        }
-      }, agent);
+      const uploaded =
+        await uploadUniformImageToStorage(input);
+
+      await logAudit(
+        "uniform_image_uploaded",
+        {
+          entityTable:
+            "uniform_catalog_items",
+          entityId: cleanText(
+            input.itemId ||
+            input.item_id ||
+            "",
+            160
+          ),
+          message:
+            "Uniform catalog image uploaded.",
+          payload: {
+            objectPath:
+              uploaded.objectPath,
+            imageUrl:
+              uploaded.url,
+            mimeType:
+              uploaded.mimeType,
+            size:
+              uploaded.size
+          }
+        },
+        agent
+      );
 
       return {
         ok: true,
         imageUrl: uploaded.url,
         url: uploaded.url,
-        storagePath: uploaded.objectPath,
-        mimeType: uploaded.mimeType,
-        size: uploaded.size,
+        storagePath:
+          uploaded.objectPath,
+        mimeType:
+          uploaded.mimeType,
+        size:
+          uploaded.size,
         image: {
-          url: uploaded.url,
-          imageUrl: uploaded.url,
-          storagePath: uploaded.objectPath,
-          mimeType: uploaded.mimeType,
-          fileName: cleanText(input.fileName || input.file_name || "", 240),
-          uploadedAt: new Date().toISOString()
+          url:
+            uploaded.url,
+          imageUrl:
+            uploaded.url,
+          storagePath:
+            uploaded.objectPath,
+          mimeType:
+            uploaded.mimeType,
+          fileName: cleanText(
+            input.fileName ||
+            input.file_name ||
+            "",
+            240
+          ),
+          uploadedAt:
+            new Date().toISOString()
         }
       };
     } catch (error) {
