@@ -15,7 +15,7 @@ import {
   adminAdjustUniformWallet,
   adminDeleteUniformItem,
   adminUploadUniformImage
-} from "backend/uniformCenterSupabase.web";
+} from "backend/uniformCenterCms.web";
 
 const HTML_ID = "#uniformControlEmbed";
 const CHILD_SOURCE = "SKANDI_UNIFORM_ADMIN";
