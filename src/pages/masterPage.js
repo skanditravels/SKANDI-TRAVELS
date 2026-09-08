@@ -143,7 +143,7 @@ const MASTER_CONFIG = {
       "SKANDI Group",
 
     travelName:
-      "SKANDI Travels",
+      "SKANDI TRAVELS",
 
     slogans: {
 
@@ -271,6 +271,8 @@ const MASTER_CONFIG = {
     legal:
       "/about/legal",
 
+    careers:
+      "/about/careers",
 
     // --------------------------------------------------------
     // RIAINTRA
@@ -341,25 +343,26 @@ const MASTER_CONFIG = {
     header: {
 
       primaryNav: [
-
+        {
+          id: "home",
+          label: "Book",
+          path: "/home"
+        },
         {
           id: "destinations",
           label: "Destinations",
           path: "/our-destinations"
         },
-
         {
           id: "tours",
           label: "Tours & Activities",
           path: "/tours"
         },
-
         {
           id: "travelInfo",
           label: "Travel Info",
           path: "/travel-info"
         },
-
         {
           id: "signature",
           label: "SKANDI Collection",
@@ -369,17 +372,35 @@ const MASTER_CONFIG = {
 
 
       accountNav: [
-
+        {
+          id: "home",
+          label: "Book",
+          path: "/home"
+        },
+        {
+          id: "destinations",
+          label: "Destinations",
+          path: "/our-destinations"
+        },
+        {
+          id: "tours",
+          label: "Tours & Activities",
+          path: "/tours"
+        },
+        {
+          id: "travelInfo",
+          label: "Travel Info",
+          path: "/travel-info"
+        },
+        {
+          id: "signature",
+          label: "SKANDI Collection",
+          path: "/skandi-collection"
+        },
         {
           id: "myTrip",
           label: "My Trips",
           path: "/my-profile?tab=trips"
-        },
-
-        {
-          id: "club",
-          label: "SKANDI Club",
-          path: "/skandi-club"
         }
       ]
     },
@@ -572,7 +593,10 @@ const MASTER_CONFIG = {
           label: "Legal",
           path: "/about/legal"
         },
-
+        {
+          label: "Cookies",
+          path: "/about/legal/policies?policy=cookies"
+        },
         {
           label: "Privacy",
           path: "/about/legal/policies?policy=privacy"
