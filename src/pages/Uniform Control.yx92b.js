@@ -1,14 +1,5 @@
- SKANDI Uniform Control page code
-// Signed Supabase Storage upload version.
-// Replaces uniform-control-pagecode-multi-image-upload.js.
-//
-// New flow:
-// HTML -> UNIFORM_ADMIN_CREATE_IMAGE_UPLOAD
-// -> backend authorizes + creates signed URL
-// -> HTML uploads binary directly to signed Supabase URL
-// -> UNIFORM_ADMIN_COMPLETE_IMAGE_UPLOAD
-// -> backend audits/finalizes
-// -> existing UNIFORM_ADMIN_IMAGE_UPLOADED gallery event
+// Uniform Control page code with multi-image upload support.
+// ORIGINAL bootstrap-safe contract.
 
 import wixLocation from "wix-location";
 import { authentication } from "wix-members-frontend";
@@ -23,10 +14,8 @@ import {
   adminUniformOrderAction,
   adminAdjustUniformWallet,
   adminDeleteUniformItem,
-  adminUploadUniformImage, // legacy rollout fallback
-  adminCreateUniformImageUpload,
-  adminCompleteUniformImageUpload
-} from "backend/uniformCenterSupabase.web";
+  adminUploadUniformImage
+} from "backend/uniformCenterCms.web";
 
 const HTML_ID = "#uniformControlEmbed";
 const CHILD_SOURCE = "SKANDI_UNIFORM_ADMIN";
@@ -59,12 +48,7 @@ function postFlat(html, type, payload = {}) {
 
 function allowedInternalPath(path) {
   const p = String(path || "");
-  return (
-    p === "/" ||
-    p === LOGIN_PATH ||
-    p.startsWith("/riaintra") ||
-    p.startsWith("/altea")
-  );
+  return p === "/" || p === LOGIN_PATH || p.startsWith("/riaintra") || p.startsWith("/altea");
 }
 
 async function logout() {
@@ -141,7 +125,6 @@ $w.onReady(function () {
         if (type === "INTERNAL_GLOBAL_SEARCH") {
           const query = payload.query || msg.query || "";
           const result = await runInternalGlobalSearch(query);
-
           post(html, "INTERNAL_SEARCH_RESULTS", {
             requestId: payload.requestId || msg.requestId || "",
             query,
@@ -160,10 +143,13 @@ $w.onReady(function () {
         return;
       }
 
+      // Signed upload: use the EXISTING adminUploadUniformImage export.
+      // No new named backend imports are introduced, so catalog bootstrap
+      // remains independent from the upload enhancement.
       if (type === "UNIFORM_ADMIN_CREATE_IMAGE_UPLOAD") {
         const requestId = msg.requestId || payload.requestId || "";
-
-        const result = await adminCreateUniformImageUpload({
+        const result = await adminUploadUniformImage({
+          mode: "CREATE_SIGNED_UPLOAD",
           requestId,
           fileName: msg.fileName || payload.fileName || "",
           mimeType: msg.mimeType || payload.mimeType || "",
@@ -183,13 +169,20 @@ $w.onReady(function () {
       }
 
       if (type === "UNIFORM_ADMIN_COMPLETE_IMAGE_UPLOAD") {
-        const result = await adminCompleteUniformImageUpload({
+        const result = await adminUploadUniformImage({
+          mode: "COMPLETE_SIGNED_UPLOAD",
           requestId: msg.requestId || payload.requestId || "",
           objectPath:
             msg.objectPath ||
             payload.objectPath ||
             msg.storagePath ||
             payload.storagePath ||
+            "",
+          storagePath:
+            msg.storagePath ||
+            payload.storagePath ||
+            msg.objectPath ||
+            payload.objectPath ||
             "",
           fileName: msg.fileName || payload.fileName || "",
           mimeType: msg.mimeType || payload.mimeType || "",
@@ -203,7 +196,6 @@ $w.onReady(function () {
         return;
       }
 
-      // Legacy fallback. New HTML does not call this.
       if (type === "UNIFORM_ADMIN_UPLOAD_IMAGE") {
         const result = await adminUploadUniformImage({
           fileName: msg.fileName || payload.fileName || "",
@@ -214,31 +206,24 @@ $w.onReady(function () {
           itemCode: msg.itemCode || payload.itemCode || "",
           title: msg.title || payload.title || ""
         });
-
         postFlat(html, "UNIFORM_ADMIN_IMAGE_UPLOADED", { payload: result });
         return;
       }
 
       if (type === "UNIFORM_ADMIN_SAVE_ITEM") {
-        const result = await adminSaveUniformCatalogItem({
-          item: msg.item || payload.item || {}
-        });
+        const result = await adminSaveUniformCatalogItem({ item: msg.item || payload.item || {} });
         postFlat(html, "UNIFORM_ADMIN_SAVED", { payload: result });
         return;
       }
 
       if (type === "UNIFORM_ADMIN_SAVE_CATEGORY") {
-        const result = await adminSaveUniformCategory({
-          category: msg.category || payload.category || {}
-        });
+        const result = await adminSaveUniformCategory({ category: msg.category || payload.category || {} });
         postFlat(html, "UNIFORM_ADMIN_SAVED", { payload: result });
         return;
       }
 
       if (type === "UNIFORM_ADMIN_SAVE_RULE") {
-        const result = await adminSaveUniformAllowanceRule({
-          rule: msg.rule || payload.rule || {}
-        });
+        const result = await adminSaveUniformAllowanceRule({ rule: msg.rule || payload.rule || {} });
         postFlat(html, "UNIFORM_ADMIN_SAVED", { payload: result });
         return;
       }
