@@ -3,7 +3,7 @@ import {
   getUniformEmployeeBootstrap,
   submitUniformEmployeeOrder,
   acknowledgeUniformPolicy
-} from "backend/uniformCenterSupabase.web";
+} from "backend/uniformCenterCMS.web";
 
 const HTML_ID = "#uniformCenterEmbed";
 const CHILD_SOURCE = "SKANDI_UNIFORM_EMPLOYEE";
