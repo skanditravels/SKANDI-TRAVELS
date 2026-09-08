@@ -158,7 +158,7 @@ $w.onReady(function () {
           break;
       }
     } catch (error) {
-      console.error("[Inventory Control V4]", msg.type, error);
+      console.error("[Inventory Control V4.1]", msg.type, error);
       send("INVENTORY_ERROR", cleanError(error), requestId);
     }
   });
@@ -170,7 +170,7 @@ $w.onReady(function () {
       send("INVENTORY_V4_BOOTSTRAP", payload);
     })
     .catch(error => {
-      console.error("[Inventory Control V4] bootstrap", error);
+      console.error("[Inventory Control V4.1] bootstrap", error);
       send("INVENTORY_ERROR", cleanError(error));
     });
 });
