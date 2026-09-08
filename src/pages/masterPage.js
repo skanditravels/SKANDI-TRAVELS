@@ -148,10 +148,10 @@ const MASTER_CONFIG = {
     slogans: {
 
       en:
-        "Unforgettable Moments",
+        "https://static.wixstatic.com/media/394052_6d5f53cf8c2d4abdac6578b12fe2758c~mv2.png",
 
       sv:
-        "När du längtar bort",
+        "https://static.wixstatic.com/media/394052_370c093c663e45cb999378aaf642b7ef~mv2.png",
 
       no:
         "Når du lengter bort",
