@@ -5,7 +5,8 @@
 // - Keeps the locked existing backend export contract.
 // - Echoes requestId on every request/response.
 // - Handles UNIFORM_ADMIN_READY and UNIFORM_ADMIN_BOOTSTRAP.
-// - Signed image upload reuses existing adminUploadUniformImage export.
+// - Product images are resolved automatically from uniform-assets by SKU.
+// - No image upload event is used by this page.
 
 import wixLocation from "wix-location";
 import { authentication } from "wix-members-frontend";
@@ -17,10 +18,10 @@ import {
   adminSaveUniformCatalogItem,
   adminSaveUniformCategory,
   adminSaveUniformAllowanceRule,
+  adminSaveUniformPolicy,
   adminUniformOrderAction,
   adminAdjustUniformWallet,
-  adminDeleteUniformItem,
-  adminUploadUniformImage
+  adminDeleteUniformItem
 } from "backend/uniformCenterCms.web";
 
 const HTML_ID = "#uniformControlEmbed";
@@ -90,7 +91,7 @@ async function sendChromeBootstrap(html, adminPayload = {}) {
   post(html, "INTERNAL_CHROME_BOOTSTRAP", {
     pageName: "Uniform Control",
     pagePath: currentPath(),
-    pageSubtitle: "Enterprise uniform catalog, wallets, allowance rules and order control",
+    pageSubtitle: "Enterprise uniform catalog, eligibility, regulations, SKU asset mapping, wallets and order control",
     profile: adminPayload.profile || adminPayload.session || {},
     apps: adminPayload.apps || [],
     isAltea: true
@@ -176,66 +177,6 @@ $w.onReady(function () {
         return;
       }
 
-      if (type === "UNIFORM_ADMIN_CREATE_IMAGE_UPLOAD") {
-        const result = await adminUploadUniformImage({
-          mode: "CREATE_SIGNED_UPLOAD",
-          requestId,
-          fileName: payload.fileName || msg.fileName || "",
-          mimeType: payload.mimeType || msg.mimeType || "",
-          size: payload.size ?? msg.size ?? 0,
-          itemId: payload.itemId || msg.itemId || "",
-          itemCode: payload.itemCode || msg.itemCode || "",
-          title: payload.title || msg.title || ""
-        });
-
-        reply(html, "UNIFORM_ADMIN_IMAGE_UPLOAD_READY", requestId, result);
-        return;
-      }
-
-      if (type === "UNIFORM_ADMIN_COMPLETE_IMAGE_UPLOAD") {
-        const result = await adminUploadUniformImage({
-          mode: "COMPLETE_SIGNED_UPLOAD",
-          requestId,
-          objectPath:
-            payload.objectPath ||
-            msg.objectPath ||
-            payload.storagePath ||
-            msg.storagePath ||
-            "",
-          storagePath:
-            payload.storagePath ||
-            msg.storagePath ||
-            payload.objectPath ||
-            msg.objectPath ||
-            "",
-          fileName: payload.fileName || msg.fileName || "",
-          mimeType: payload.mimeType || msg.mimeType || "",
-          size: payload.size ?? msg.size ?? 0,
-          itemId: payload.itemId || msg.itemId || "",
-          itemCode: payload.itemCode || msg.itemCode || "",
-          title: payload.title || msg.title || ""
-        });
-
-        reply(html, "UNIFORM_ADMIN_IMAGE_UPLOADED", requestId, result);
-        return;
-      }
-
-      // Legacy Base64 fallback remains available.
-      if (type === "UNIFORM_ADMIN_UPLOAD_IMAGE") {
-        const result = await adminUploadUniformImage({
-          fileName: payload.fileName || msg.fileName || "",
-          mimeType: payload.mimeType || msg.mimeType || "",
-          dataUrl: payload.dataUrl || msg.dataUrl || "",
-          base64: payload.base64 || msg.base64 || "",
-          itemId: payload.itemId || msg.itemId || "",
-          itemCode: payload.itemCode || msg.itemCode || "",
-          title: payload.title || msg.title || ""
-        });
-
-        reply(html, "UNIFORM_ADMIN_IMAGE_UPLOADED", requestId, result);
-        return;
-      }
-
       if (type === "UNIFORM_ADMIN_SAVE_ITEM") {
         const result = await adminSaveUniformCatalogItem({
           item: payload.item || msg.item || {}
@@ -257,6 +198,15 @@ $w.onReady(function () {
       if (type === "UNIFORM_ADMIN_SAVE_RULE") {
         const result = await adminSaveUniformAllowanceRule({
           rule: payload.rule || msg.rule || {}
+        });
+
+        reply(html, "UNIFORM_ADMIN_SAVED", requestId, result);
+        return;
+      }
+
+      if (type === "UNIFORM_ADMIN_SAVE_POLICY") {
+        const result = await adminSaveUniformPolicy({
+          policy: payload.policy || msg.policy || {}
         });
 
         reply(html, "UNIFORM_ADMIN_SAVED", requestId, result);
