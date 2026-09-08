@@ -617,6 +617,140 @@ async function completeUniformSignedUpload(input = {}) {
   };
 }
 
+
+/* =========================================================
+   SKU-DRIVEN STORAGE ASSETS
+   ========================================================= */
+
+function assetFileName(storagePath = "") {
+  const parts = String(storagePath || "").split("/");
+  return parts[parts.length - 1] || "";
+}
+
+function assetStem(storagePath = "") {
+  return assetFileName(storagePath)
+    .replace(/\.(png|jpe?g|webp|gif)$/i, "");
+}
+
+function assetMimeType(row = {}) {
+  const metadata = row.metadata || {};
+  const supplied = cleanText(
+    metadata.mimetype ||
+    metadata.mimeType ||
+    metadata.contentType ||
+    "",
+    120
+  ).toLowerCase();
+
+  if (supplied) {
+    return supplied;
+  }
+
+  const fileName = assetFileName(row.name).toLowerCase();
+
+  if (fileName.endsWith(".png")) return "image/png";
+  if (fileName.endsWith(".jpg") || fileName.endsWith(".jpeg")) return "image/jpeg";
+  if (fileName.endsWith(".webp")) return "image/webp";
+  if (fileName.endsWith(".gif")) return "image/gif";
+
+  return "";
+}
+
+function isSupportedUniformAsset(row = {}) {
+  return Boolean(imageExtension(assetMimeType(row)));
+}
+
+function uniformAssetsForSku(storageRows = [], skuValue = "") {
+  const sku = cleanUpper(skuValue, 80);
+
+  if (!sku) {
+    return {
+      gallery: [],
+      exactMainFound: false,
+      matchedFiles: []
+    };
+  }
+
+  const matches = (storageRows || [])
+    .filter(isSupportedUniformAsset)
+    .map(row => {
+      const stem = assetStem(row.name);
+      const upperStem = String(stem || "").toUpperCase();
+
+      if (
+        upperStem !== sku &&
+        !upperStem.startsWith(`${sku}-`)
+      ) {
+        return null;
+      }
+
+      const exact = upperStem === sku;
+      const fileName = assetFileName(row.name);
+      const mimeType = assetMimeType(row);
+      const storagePath = String(row.name || "");
+      const publicUrl = storagePublicUrl(
+        UNIFORM_IMAGE_BUCKET,
+        storagePath
+      );
+
+      return {
+        exact,
+        storagePath,
+        fileName,
+        mimeType,
+        publicUrl,
+        createdAt: row.created_at || "",
+        updatedAt: row.updated_at || ""
+      };
+    })
+    .filter(Boolean)
+    .sort((a, b) => {
+      if (a.exact !== b.exact) {
+        return a.exact ? -1 : 1;
+      }
+
+      return a.fileName.localeCompare(
+        b.fileName,
+        undefined,
+        { sensitivity: "base" }
+      );
+    });
+
+  const gallery = matches
+    .slice(0, MAX_UNIFORM_IMAGES)
+    .map((asset, index) => ({
+      url: asset.publicUrl,
+      imageUrl: asset.publicUrl,
+      storagePath: asset.storagePath,
+      mimeType: asset.mimeType,
+      fileName: asset.fileName,
+      alt: index === 0
+        ? sku
+        : `${sku} ${assetStem(asset.fileName).slice(sku.length + 1) || `image ${index + 1}`}`,
+      sortOrder: index + 1,
+      uploadedAt: asset.createdAt || asset.updatedAt || ""
+    }));
+
+  return {
+    gallery,
+    exactMainFound: matches.some(asset => asset.exact),
+    matchedFiles: matches.map(asset => asset.storagePath)
+  };
+}
+
+async function listUniformStorageAssets() {
+  const rows = await supabaseRequest(
+    "uniform_storage_assets?" +
+    "select=name,metadata,created_at,updated_at&" +
+    "order=name.asc&" +
+    "limit=5000"
+  );
+
+  return Array.isArray(rows)
+    ? rows
+    : [];
+}
+
 /* =========================================================
    CLEANING / NORMALIZATION
    ========================================================= */
@@ -942,11 +1076,14 @@ function mapCategory(row = {}) {
   };
 }
 
-function mapCatalogItem(row = {}) {
-  const imageGallery =
-    Array.isArray(row.image_gallery)
-      ? row.image_gallery
-      : [];
+function mapCatalogItem(row = {}, storageRows = []) {
+  const skuAssets = uniformAssetsForSku(
+    storageRows,
+    row.item_code || ""
+  );
+
+  const imageGallery = skuAssets.gallery;
+  const primary = imageGallery[0] || {};
 
   return {
     _id: row.id || "",
@@ -958,6 +1095,8 @@ function mapCatalogItem(row = {}) {
       row.category_title ||
       row.category_key ||
       "",
+    subCategory:
+      row.sub_category || "",
     pointsCost: row.points_cost || 0,
     stockStatus:
       row.stock_status ||
@@ -966,31 +1105,31 @@ function mapCatalogItem(row = {}) {
     sizes: Array.isArray(row.sizes)
       ? row.sizes
       : [],
-    imageUrl: row.image_url || "",
+    imageUrl:
+      primary.url || "",
     imageStoragePath:
-      row.image_storage_path || "",
+      primary.storagePath || "",
     imageMimeType:
-      row.image_mime_type || "",
+      primary.mimeType || "",
     imageUploadedAt:
-      row.image_uploaded_at || "",
+      primary.uploadedAt || "",
     imageGallery,
-    imageUrls: imageGallery.length
-      ? imageGallery
-          .map(img =>
-            typeof img === "string"
-              ? img
-              : (
-                  img?.url ||
-                  img?.imageUrl ||
-                  ""
-                )
-          )
-          .filter(Boolean)
-      : row.image_url
-        ? [row.image_url]
-        : [],
+    imageUrls:
+      imageGallery
+        .map(img => img.url || img.imageUrl || "")
+        .filter(Boolean),
+    imageAssetSource: "SKU_STORAGE",
+    imageAssetCount: imageGallery.length,
+    imageAssetMainExact:
+      skuAssets.exactMainFound,
+    imageAssetFiles:
+      skuAssets.matchedFiles,
     description:
       row.description || "",
+    details:
+      row.details || "",
+    careInstructions:
+      row.care_instructions || "",
     payload: row.payload || {},
     createdAt: row.created_at || "",
     updatedAt: row.updated_at || ""
@@ -1622,66 +1761,6 @@ function itemSavePayload(
       100
     );
 
-  const galleryInput =
-    item.imageGallery ||
-    item.image_gallery ||
-    item.images ||
-    item.imageUrls ||
-    [];
-
-  const gallery =
-    cleanImageGallery(galleryInput);
-
-  const primaryImage =
-    gallery[0] || {};
-
-  const primaryImageUrl =
-    cleanText(
-      item.imageUrl ||
-      item.image_url ||
-      primaryImage.url ||
-      "",
-      1000
-    );
-
-  const primaryStoragePath =
-    cleanText(
-      item.imageStoragePath ||
-      item.image_storage_path ||
-      primaryImage.storagePath ||
-      "",
-      1000
-    );
-
-  const primaryMimeType =
-    cleanText(
-      item.imageMimeType ||
-      item.image_mime_type ||
-      primaryImage.mimeType ||
-      "",
-      120
-    );
-
-  const normalizedGallery =
-    gallery.length
-      ? gallery.map(
-          (img, index) => ({
-            ...img,
-            sortOrder: index + 1
-          })
-        )
-      : primaryImageUrl
-        ? cleanImageGallery([
-            {
-              url: primaryImageUrl,
-              storagePath:
-                primaryStoragePath,
-              mimeType:
-                primaryMimeType
-            }
-          ])
-        : [];
-
   return {
     ...(isUuid(
       item.itemId ||
@@ -1709,6 +1788,12 @@ function itemSavePayload(
         categoryRaw,
         180
       ),
+    sub_category:
+      cleanText(
+        item.subCategory ||
+        item.sub_category,
+        180
+      ),
     points_cost:
       Math.max(
         0,
@@ -1732,22 +1817,21 @@ function itemSavePayload(
       ),
     sizes:
       arr(item.sizes),
-    image_url:
-      primaryImageUrl,
-    image_storage_path:
-      primaryStoragePath,
-    image_mime_type:
-      primaryMimeType,
-    image_gallery:
-      normalizedGallery,
-    image_uploaded_at:
-      primaryImageUrl
-        ? new Date().toISOString()
-        : null,
     description:
       cleanText(
         item.description,
-        4000
+        8000
+      ),
+    details:
+      cleanText(
+        item.details,
+        8000
+      ),
+    care_instructions:
+      cleanText(
+        item.careInstructions ||
+        item.care_instructions,
+        8000
       ),
     payload:
       item,
@@ -1788,7 +1872,8 @@ export const getUniformAdminBootstrap =
           catalogParams.push(
             `or=(title.ilike.*${q}*,` +
             `item_code.ilike.*${q}*,` +
-            `category_title.ilike.*${q}*)`
+            `category_title.ilike.*${q}*,` +
+            `sub_category.ilike.*${q}*)`
           );
         }
 
@@ -1798,7 +1883,8 @@ export const getUniformAdminBootstrap =
           ruleRows,
           walletRows,
           orders,
-          auditRows
+          auditRows,
+          storageRows
         ] = await Promise.all([
           supabaseRequest(
             `uniform_catalog_items?${catalogParams.join("&")}`
@@ -1827,7 +1913,8 @@ export const getUniformAdminBootstrap =
             "select=*&" +
             "order=created_at.desc&" +
             "limit=300"
-          )
+          ),
+          listUniformStorageAssets()
         ]);
 
         const categories =
@@ -1836,7 +1923,12 @@ export const getUniformAdminBootstrap =
 
         const catalog =
           (catalogRows || [])
-            .map(mapCatalogItem);
+            .map(row =>
+              mapCatalogItem(
+                row,
+                storageRows
+              )
+            );
 
         const wallets =
           (walletRows || [])
@@ -2112,10 +2204,17 @@ export const adminSaveUniformCatalogItem =
           agent
         );
 
+        const storageRows =
+          await listUniformStorageAssets()
+            .catch(() => []);
+
         return {
           ok: true,
           item:
-            mapCatalogItem(saved)
+            mapCatalogItem(
+              saved,
+              storageRows
+            )
         };
       } catch (error) {
         throw new Error(
@@ -2806,7 +2905,8 @@ export const getUniformEmployeeBootstrap =
           catalogRows,
           categoryRows,
           orders,
-          policy
+          policy,
+          storageRows
         ] = await Promise.all([
           supabaseRequest(
             "uniform_catalog_items?" +
@@ -2830,7 +2930,8 @@ export const getUniformEmployeeBootstrap =
             "order=created_at.desc&" +
             "limit=200"
           ),
-          latestPolicy()
+          latestPolicy(),
+          listUniformStorageAssets()
         ]);
 
         return {
@@ -2858,7 +2959,12 @@ export const getUniformEmployeeBootstrap =
             mapWallet(wallet),
           catalog:
             (catalogRows || [])
-              .map(mapCatalogItem),
+              .map(row =>
+                mapCatalogItem(
+                  row,
+                  storageRows
+                )
+              ),
           categories:
             (categoryRows || [])
               .map(mapCategory),
