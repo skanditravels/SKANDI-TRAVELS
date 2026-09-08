@@ -7,6 +7,7 @@ import { getStaffPortalSession } from "backend/RIA/staffPortalAuth.web";
 
 const TABLES = Object.freeze({
   master: "inventory_master_entities",
+  catalog: "inventory_catalog_entries",
   canonical: "inventory_canonical_entities_v",
   searchable: "inventory_searchable_catalog_v",
   localized: "inventory_localized_content",
@@ -30,7 +31,7 @@ const DATED_STATUSES = new Set(["OPEN", "CLOSED", "STOP_SALE", "BLACKOUT", "SOLD
 const COLLECTION_TYPES = new Set(["NONE", "SKANDI_COLLECTION", "SKANDI_PARTNER"]);
 const LANGUAGES = ["EN", "SV", "NO", "DA", "FI"];
 const MEDIA_ROLES = new Set(["PRIMARY", "HERO", "CARD", "MOBILE", "GALLERY", "OG", "LOGO", "MAP", "ROOM", "THUMBNAIL"]);
-const IMAGE_MIMES = new Set(["image/jpeg", "image/png", "img/svg", "image/webp", "image/avif", "image/gif"]);
+const IMAGE_MIMES = new Set(["image/jpeg", "image/png", "image/webp", "image/avif", "image/gif"]);
 const INVENTORY_BUCKET = "inventory-media";
 const MAX_IMAGE_BYTES = 15 * 1024 * 1024;
 
@@ -262,8 +263,8 @@ async function smartDefaults(record, input = {}) {
   x.entityType = upper(x.entityType, 40);
   x.details = object(x.details); x.commercial = object(x.commercial); x.operations = object(x.operations); x.seo = object(x.seo); x.publication = object(x.publication); x.payload = object(x.payload);
   x.code = upper(x.code, 80); x.name = clean(x.name, 240); x.slug = slugify(x.slug || x.name); x.source = clean(x.source || "SKANDI", 80) || "SKANDI";
-  x.collectionType = COLLECTION_TYPES.has(upper(x.collectionType, 40)) ? upper(x.collectionType, 40) : "NONE";
-  x.partnerTier = clean(x.partnerTier, 80); x.searchPriority = Math.max(0, int(x.searchPriority, 100)); x.searchKeywords = arr(x.searchKeywords).slice(0, 100);
+  // Search merchandising is intentionally separate from master/reference data.
+  x.collectionType = "NONE"; x.partnerTier = ""; x.searchPriority = 100; x.searchKeywords = []; x.searchable = false;
   if (!x.code) throw new Error("System Code is required."); if (!x.name) throw new Error("Master Name / Title is required."); if (!ENTITY_TYPES.has(x.entityType)) throw new Error("Unsupported inventory entity type.");
   if (x.entityType === "DESTINATION") {
     x.details.level = upper(x.details.level || "DESTINATION", 20);
@@ -280,7 +281,6 @@ async function smartDefaults(record, input = {}) {
   }
   if (x.entityType === "HOTEL") {
     if (!x.details.searchAirportIata && x.details.nearestAirportId) x.details.searchAirportIata = await airportIata(x.details.nearestAirportId);
-    if (x.collectionType === "NONE" && ["SELECT", "SIGNATURE", "EXCELSIOR"].includes(upper(x.details.skandiTier, 40))) x.collectionType = "SKANDI_COLLECTION";
   }
   if (x.entityType === "PACKAGE") {
     const a = safeDate(x.details.startDate), b = safeDate(x.details.endDate);
@@ -288,10 +288,9 @@ async function smartDefaults(record, input = {}) {
   }
   x.status = MASTER_STATUSES.has(upper(x.status, 20)) ? upper(x.status, 20) : "DRAFT";
   x.commercial.currency = upper(x.commercial.currency || "USD", 3); x.commercial.supplierCost = Math.max(0, num(x.commercial.supplierCost, 0)); x.commercial.publicPrice = Math.max(0, num(x.commercial.publicPrice, 0)); x.commercial.marginPct = x.commercial.publicPrice > 0 ? Math.round(((x.commercial.publicPrice - x.commercial.supplierCost) / x.commercial.publicPrice) * 10000) / 100 : 0;
-  if (x.entityType === "SUPPLIER") { x.customerVisible = false; x.featured = false; x.homepageFeatured = false; x.searchable = false; x.collectionType = "NONE"; x.seo.indexable = false; }
+  if (x.entityType === "SUPPLIER") { x.customerVisible = false; x.featured = false; x.homepageFeatured = false; x.seo.indexable = false; }
   if (x.status === "PUBLISHED") x.active = true;
-  if (["ARCHIVED", "SUSPENDED"].includes(x.status)) { x.active = false; x.customerVisible = false; x.searchable = false; }
-  if (x.collectionType === "NONE" || x.status !== "PUBLISHED" || x.active === false || x.customerVisible !== true) x.searchable = false;
+  if (["ARCHIVED", "SUSPENDED"].includes(x.status)) { x.active = false; x.customerVisible = false; }
   if (x.status !== "PUBLISHED") x.homepageFeatured = false;
   if (x.homepageFeatured) { x.featured = true; x.customerVisible = true; }
   const hints = localizedSeoHints(input, x), title = hints.title || x.name;
@@ -302,7 +301,7 @@ async function smartDefaults(record, input = {}) {
   x.seo.ogDescription = clean(x.seo.ogDescription || x.seo.description, 200);
   x.seo.ogImage = clean(x.seo.ogImage || mediaSeoImage(input), 2000);
   if (x.seo.indexable === undefined) x.seo.indexable = true;
-  x.payload.smartInventoryVersion = "2026-09-08-v5"; x.payload.canonicalSource = REFERENCE_TYPES.has(x.entityType) ? (x.entityType === "AIRPORT" ? TABLES.airports : TABLES.airlines) : TABLES.master;
+  x.payload.smartInventoryVersion = "2026-09-08-v7"; x.payload.canonicalSource = REFERENCE_TYPES.has(x.entityType) ? (x.entityType === "AIRPORT" ? TABLES.airports : TABLES.airlines) : TABLES.master;
   return x;
 }
 function dbMaster(r, actor, old = null) {
@@ -311,10 +310,10 @@ function dbMaster(r, actor, old = null) {
   return {
     ...(r.publicId ? { public_id: clean(r.publicId, 160) } : {}), entity_type: r.entityType, code: r.code, name: r.name, slug: r.slug || null,
     status: r.status, active: r.active !== false, customer_visible: bool(r.customerVisible, false), staff_visible: bool(r.staffVisible, true), altea_visible: bool(r.alteaVisible, true),
-    searchable: bool(r.searchable, false), collection_type: r.collectionType, partner_tier: r.partnerTier || null, search_priority: r.searchPriority, search_keywords: r.searchKeywords,
+    searchable: false, collection_type: "NONE", partner_tier: null, search_priority: 100, search_keywords: [],
     featured: bool(r.featured, false), homepage_featured: bool(r.homepageFeatured, false), sort_priority: int(r.sortPriority, 100), parent_entity_id: r.parentEntityId || null, supplier_entity_id: r.supplierEntityId || null,
     source: r.source || "SKANDI", source_reference: clean(r.sourceReference, 500) || null, details: object(r.details), commercial: object(r.commercial), operations: object(r.operations), seo: object(r.seo), publication,
-    payload: { ...object(r.payload), smartInventoryVersion: "2026-09-08-v5", canonicalSource: TABLES.master }, updated_by_agent_user_id: actor.id || null, ...(old ? {} : { created_by_agent_user_id: actor.id || null })
+    payload: { ...object(r.payload), smartInventoryVersion: "2026-09-08-v7", canonicalSource: TABLES.master }, updated_by_agent_user_id: actor.id || null, ...(old ? {} : { created_by_agent_user_id: actor.id || null })
   };
 }
 
@@ -322,20 +321,19 @@ function referenceStatus(r = {}) { const s = upper(r.status, 20); if (MASTER_STA
 function referenceDefaults(record, input = {}) {
   const r = JSON.parse(JSON.stringify(record || {})); r.entityType = upper(r.entityType, 40); r.details = object(r.details); r.commercial = object(r.commercial); r.operations = object(r.operations); r.seo = object(r.seo); r.publication = object(r.publication); r.payload = object(r.payload);
   r.name = clean(r.name, 240); r.slug = slugify(r.slug || r.name); r.status = MASTER_STATUSES.has(upper(r.status, 20)) ? upper(r.status, 20) : "DRAFT"; r.source = clean(r.source || "SKANDI", 80) || "SKANDI";
-  r.searchable = bool(r.searchable, false); r.collectionType = COLLECTION_TYPES.has(upper(r.collectionType, 40)) ? upper(r.collectionType, 40) : "NONE"; r.partnerTier = clean(r.partnerTier, 80); r.searchPriority = Math.max(0, int(r.searchPriority, 100)); r.searchKeywords = arr(r.searchKeywords).slice(0, 100);
+  r.searchable = false; r.collectionType = "NONE"; r.partnerTier = ""; r.searchPriority = 100; r.searchKeywords = [];
   if (!r.name) throw new Error("Master Name / Title is required.");
   if (r.entityType === "AIRPORT") { r.details.iata = upper(r.details.iata || r.code, 12); r.details.icao = upper(r.details.icao, 12); r.code = r.details.iata; r.searchable = false; r.collectionType = "NONE"; if (!r.details.iata) throw new Error("IATA Code is required."); }
-  else if (r.entityType === "AIRLINE") { r.details.iata = upper(r.details.iata || r.code, 20); r.details.icao = upper(r.details.icao, 20); r.code = r.details.iata; if (!r.details.iata) throw new Error("Airline IATA Code is required."); if (r.collectionType === "NONE" && ["PARTNER", "PREFERRED"].includes(upper(r.details.partnerStatus, 30))) r.collectionType = "SKANDI_PARTNER"; }
+  else if (r.entityType === "AIRLINE") { r.details.iata = upper(r.details.iata || r.code, 20); r.details.icao = upper(r.details.icao, 20); r.code = r.details.iata; if (!r.details.iata) throw new Error("Airline IATA Code is required."); }
   else throw new Error("Unsupported reference entity type.");
-  if (r.status === "PUBLISHED") r.active = true; if (["ARCHIVED", "SUSPENDED"].includes(r.status)) { r.active = false; r.customerVisible = false; r.searchable = false; }
-  if (r.collectionType === "NONE" || r.status !== "PUBLISHED" || r.active === false || r.customerVisible !== true) r.searchable = false;
+  if (r.status === "PUBLISHED") r.active = true; if (["ARCHIVED", "SUSPENDED"].includes(r.status)) { r.active = false; r.customerVisible = false; }
   const hints = localizedSeoHints(input, r), title = hints.title || r.name;
   r.seo.canonicalSlug = r.seo.canonicalSlug || r.slug; r.seo.title = clean(r.seo.title || `${title} | SKANDI Travels`, 70); r.seo.description = clean(r.seo.description || hints.description || `Travel information for ${title} from SKANDI Travels.`, 160); r.seo.ogTitle = clean(r.seo.ogTitle || r.seo.title, 100); r.seo.ogDescription = clean(r.seo.ogDescription || r.seo.description, 200); r.seo.ogImage = clean(r.seo.ogImage || mediaSeoImage(input), 2000); if (r.seo.indexable === undefined) r.seo.indexable = true;
   return r;
 }
 function inlineReferencePayload(record, input = {}) {
   const media = (Array.isArray(input.media) ? input.media : []).map((x, i) => ({ ...x, role: upper(x.role || (x.isHero ? "HERO" : x.isCard ? "CARD" : x.isMobile ? "MOBILE" : "GALLERY"), 30), sortOrder: int(x.sortOrder, (i + 1) * 10), active: x.active !== false }));
-  return { payload: { ...object(record.payload), inventoryRelations: Array.isArray(input.relations) ? input.relations : [], smartInventoryVersion: "2026-09-08-v5" }, localized_content: Array.isArray(input.localizedContent) ? input.localizedContent : [], media_assets: media };
+  return { payload: { ...object(record.payload), inventoryRelations: Array.isArray(input.relations) ? input.relations : [], smartInventoryVersion: "2026-09-08-v7" }, localized_content: Array.isArray(input.localizedContent) ? input.localizedContent : [], media_assets: media };
 }
 function dbAirport(r, input = {}) {
   const d = object(r.details), extra = inlineReferencePayload(r, input);
@@ -366,7 +364,7 @@ function dbAirline(r, input = {}, old = null) {
     damagedBaggageJson: jsonText(d.damagedBaggageJson), lostFoundJson: jsonText(d.lostFoundJson), childrenInfantsJson: jsonText(d.childrenInfantsJson), ticketTypesJson: jsonText(d.ticketTypesJson), baggageAllowence: clean(d.baggageAllowance, 20000) || null,
     contactUrl: clean(d.contactUrl, 2000) || null, sectionsJson: jsonText(d.sectionsJson), lastReviewed: d.lastReviewed || null, active: r.active !== false, iataCode: upper(d.iata || r.code, 20) || null, icaoCode: upper(d.icao, 20) || null,
     sort_order: int(r.sortPriority, 100), status: r.status, customer_visible: bool(r.customerVisible, false), staff_visible: bool(r.staffVisible, true), altea_visible: bool(r.alteaVisible, true),
-    searchable: bool(r.searchable, false), collection_type: r.collectionType, partner_tier: r.partnerTier || null, search_priority: r.searchPriority, search_keywords: r.searchKeywords,
+    searchable: false, collection_type: "NONE", partner_tier: null, search_priority: 100, search_keywords: [],
     featured: bool(r.featured, false), homepage_featured: bool(r.homepageFeatured, false), published: r.status === "PUBLISHED", source: r.source || "SKANDI", source_reference: clean(r.sourceReference, 500) || null,
     inventory_details: d, commercial: object(r.commercial), operations: object(r.operations), seo: object(r.seo), publication: object(r.publication), ...extra
   };
@@ -418,7 +416,7 @@ async function replaceRelations(id, rows = []) {
   if (body.length) await sb(TABLES.relations, { method: "POST", body });
 }
 async function audit(actor, eventType, entityId, message, payload = {}) {
-  try { await sb(TABLES.audit, { method: "POST", body: { event_type: eventType, domain: "MASTER_INVENTORY", entity_table: payload.sourceTable || TABLES.master, entity_id: entityId || null, product_key: payload.publicId || payload.code || entityId || null, source: "wix-smart-inventory-v3", message, payload, created_by_agent_user_id: actor.id || null, created_by_name: actor.name || actor.skId } }); } catch (_) {}
+  try { await sb(TABLES.audit, { method: "POST", body: { event_type: eventType, domain: "MASTER_INVENTORY", entity_table: payload.sourceTable || TABLES.master, entity_id: entityId || null, product_key: payload.publicId || payload.code || entityId || null, source: "wix-smart-inventory-v4", message, payload, created_by_agent_user_id: actor.id || null, created_by_name: actor.name || actor.skId } }); } catch (_) {}
 }
 
 function dbDated(r, actor) {
@@ -426,7 +424,59 @@ function dbDated(r, actor) {
   const available = Math.max(0, total + overbooking - held - sold); let status = DATED_STATUSES.has(upper(r.status, 20)) ? upper(r.status, 20) : "OPEN";
   if (bool(r.blackout, false)) status = "BLACKOUT"; else if (bool(r.stopSale, false)) status = "STOP_SALE"; else if (total > 0 && available === 0) status = "SOLD_OUT"; else if (["BLACKOUT", "STOP_SALE", "SOLD_OUT"].includes(status)) status = "OPEN";
   const adult = Math.max(0, num(r.adultPrice, 0)), publicPrice = Math.max(0, num(r.publicPrice, adult));
-  return { entity_id: clean(r.entityId, 100), inventory_type: upper(r.inventoryType || "GENERAL", 50), service_date: safeDate(r.serviceDate), start_time: safeTime(r.startTime), end_time: safeTime(r.endTime), variant_code: upper(r.variantCode, 80) || null, variant_name: clean(r.variantName, 240) || null, capacity_total: total, held, sold, available, waitlist_limit: Math.max(0, int(r.waitlistLimit, 0)), overbooking_limit: overbooking, stop_sale: bool(r.stopSale, false), blackout: bool(r.blackout, false), status, supplier_cost: Math.max(0, num(r.supplierCost, 0)), public_price: publicPrice, adult_price: adult, child_price: Math.max(0, num(r.childPrice, 0)), infant_price: Math.max(0, num(r.infantPrice, 0)), private_price: Math.max(0, num(r.privatePrice, 0)), currency: upper(r.currency || "USD", 3), price_basis: upper(r.priceBasis || "PER_PERSON", 40), booking_cutoff_hours: Math.max(0, int(r.bookingCutoffHours, 0)), min_stay: Math.max(0, int(r.minStay, 0)), max_stay: Math.max(0, int(r.maxStay, 0)), release_days: Math.max(0, int(r.releaseDays, 0)), supplier_reference: clean(r.supplierReference, 500) || null, payload: { ...object(r.payload), calculatedAvailable: available, smartInventoryVersion: "2026-09-08-v5" }, updated_by_agent_user_id: actor.id || null, ...(r.id ? {} : { created_by_agent_user_id: actor.id || null }) };
+  return { entity_id: clean(r.entityId, 100), inventory_type: upper(r.inventoryType || "GENERAL", 50), service_date: safeDate(r.serviceDate), start_time: safeTime(r.startTime), end_time: safeTime(r.endTime), variant_code: upper(r.variantCode, 80) || null, variant_name: clean(r.variantName, 240) || null, capacity_total: total, held, sold, available, waitlist_limit: Math.max(0, int(r.waitlistLimit, 0)), overbooking_limit: overbooking, stop_sale: bool(r.stopSale, false), blackout: bool(r.blackout, false), status, supplier_cost: Math.max(0, num(r.supplierCost, 0)), public_price: publicPrice, adult_price: adult, child_price: Math.max(0, num(r.childPrice, 0)), infant_price: Math.max(0, num(r.infantPrice, 0)), private_price: Math.max(0, num(r.privatePrice, 0)), currency: upper(r.currency || "USD", 3), price_basis: upper(r.priceBasis || "PER_PERSON", 40), booking_cutoff_hours: Math.max(0, int(r.bookingCutoffHours, 0)), min_stay: Math.max(0, int(r.minStay, 0)), max_stay: Math.max(0, int(r.maxStay, 0)), release_days: Math.max(0, int(r.releaseDays, 0)), supplier_reference: clean(r.supplierReference, 500) || null, payload: { ...object(r.payload), calculatedAvailable: available, smartInventoryVersion: "2026-09-08-v7" }, updated_by_agent_user_id: actor.id || null, ...(r.id ? {} : { created_by_agent_user_id: actor.id || null }) };
+}
+
+
+function apiCatalog(r = {}, ref = null) {
+  return {
+    id: r.id || "",
+    targetEntityId: r.target_entity_id || "",
+    targetRecordType: upper(r.target_record_type || ref?.entityType || "", 40),
+    targetRecordId: clean(r.target_record_id || ref?.id || "", 120),
+    targetCode: upper(r.target_code || ref?.code || "", 80),
+    targetName: clean(ref?.name || "", 240),
+    targetSlug: clean(ref?.slug || "", 180),
+    catalogType: upper(r.catalog_type || "SKANDI_COLLECTION", 40),
+    partnerTier: clean(r.partner_tier, 80),
+    searchable: r.searchable === true,
+    featured: r.featured === true,
+    homepageFeatured: r.homepage_featured === true,
+    searchPriority: int(r.search_priority, 100),
+    searchKeywords: r.search_keywords || [],
+    marketCodes: r.market_codes || [],
+    salesChannels: r.sales_channels || ["WEB"],
+    publicLabel: clean(r.public_label, 160),
+    badge: clean(r.badge, 120),
+    validFrom: r.valid_from || "",
+    validTo: r.valid_to || "",
+    notes: clean(r.notes, 5000),
+    active: r.active !== false,
+    createdAt: r.created_at,
+    updatedAt: r.updated_at,
+    eligibleNow: Boolean(ref && ref.status === "PUBLISHED" && ref.active !== false && ref.customerVisible === true && !["AIRPORT","SUPPLIER"].includes(ref.entityType))
+  };
+}
+async function catalogRows() {
+  const [rows, refs] = await Promise.all([
+    sb(`${TABLES.catalog}?select=*&order=search_priority.asc,created_at.asc&limit=4000`).catch(() => []),
+    references()
+  ]);
+  const byId = new Map(refs.map(x => [String(x.id), x]));
+  return (rows || []).map(r => {
+    const key = String(r.target_entity_id || r.target_record_id || "");
+    const ref = byId.get(key) || refs.find(x => r.target_record_type && x.entityType === r.target_record_type && (String(x.id) === String(r.target_record_id) || upper(x.code,80) === upper(r.target_code,80))) || null;
+    return apiCatalog(r, ref);
+  });
+}
+async function resolveCatalogTarget(input = {}) {
+  const id = clean(input.targetEntityId || input.targetRecordId || input.targetId, 120);
+  if (!id) throw new Error("Select a master/reference record for the catalog entry.");
+  const refs = await references();
+  const ref = refs.find(x => String(x.id) === id);
+  if (!ref) throw new Error("The selected catalog target no longer exists.");
+  if (["AIRPORT","SUPPLIER"].includes(ref.entityType)) throw new Error(`${ref.entityType} records cannot be customer-search catalog entries.`);
+  return ref;
 }
 
 export const getSmartInventoryBootstrap = webMethod(Permissions.SiteMember, async (input = {}) => {
@@ -436,15 +486,68 @@ export const getSmartInventoryBootstrap = webMethod(Permissions.SiteMember, asyn
   if (input.status && MASTER_STATUSES.has(upper(input.status, 20))) filters.push(eq("status", upper(input.status, 20)));
   if (input.customerVisible === true || input.customerVisible === "true") filters.push("customer_visible=eq.true");
   if (input.customerVisible === false || input.customerVisible === "false") filters.push("customer_visible=eq.false");
-  if (input.collectionType && COLLECTION_TYPES.has(upper(input.collectionType, 40))) filters.push(eq("collection_type", upper(input.collectionType, 40)));
-  if (input.searchable === true || input.searchable === "true") filters.push("searchable=eq.true");
-  if (input.searchable === false || input.searchable === "false") filters.push("searchable=eq.false");
-  filters.push("order=search_priority.asc,sort_priority.asc,name.asc", "limit=3000");
+  filters.push("order=sort_priority.asc,name.asc", "limit=3000");
   let rows = await sb(`${TABLES.canonical}?${filters.join("&")}`);
   const search = clean(input.query, 200).toLowerCase();
   if (search) rows = (rows || []).filter(r => [r.public_id, r.entity_type, r.code, r.name, r.slug, ...(r.search_keywords || [])].join(" ").toLowerCase().includes(search));
-  const [refs, registry, health] = await Promise.all([references(), sb(`${TABLES.sourceRegistry}?select=*&active=eq.true&order=category.asc`).catch(() => []), sb(`${TABLES.sourceHealth}?select=*&order=category.asc`).catch(() => [])]);
-  return { session: actor, records: (rows || []).map(apiRecord), references: refs, sourceRegistry: registry || [], sourceHealth: health || [], lastSync: new Date().toISOString(), canonicalSource: TABLES.canonical };
+  const [refs, registry, health, catalog] = await Promise.all([references(), sb(`${TABLES.sourceRegistry}?select=*&active=eq.true&order=category.asc`).catch(() => []), sb(`${TABLES.sourceHealth}?select=*&order=category.asc`).catch(() => []), catalogRows()]);
+  return { session: actor, records: (rows || []).map(apiRecord), references: refs, catalog, sourceRegistry: registry || [], sourceHealth: health || [], lastSync: new Date().toISOString(), canonicalSource: TABLES.canonical, catalogSource: TABLES.catalog };
+});
+
+
+export const listInventoryCatalogEntries = webMethod(Permissions.SiteMember, async () => {
+  await requireStaff();
+  return { entries: await catalogRows(), generatedAt: new Date().toISOString() };
+});
+
+export const saveInventoryCatalogEntry = webMethod(Permissions.SiteMember, async ({ entry = {} } = {}) => {
+  const actor = await requireStaff();
+  const ref = await resolveCatalogTarget(entry);
+  const catalogType = upper(entry.catalogType || "SKANDI_COLLECTION", 40);
+  if (!new Set(["SKANDI_COLLECTION","SKANDI_PARTNER"]).has(catalogType)) throw new Error("Catalog Type must be SKANDI Collection or SKANDI Partner.");
+  const eligible = ref.status === "PUBLISHED" && ref.active !== false && ref.customerVisible === true;
+  const searchable = eligible && bool(entry.searchable, false);
+  const body = {
+    target_entity_id: ref.sourceTable === TABLES.master ? ref.id : null,
+    target_record_type: ref.entityType,
+    target_record_id: String(ref.id),
+    target_code: ref.code || null,
+    catalog_type: catalogType,
+    partner_tier: clean(entry.partnerTier,80) || null,
+    searchable,
+    featured: bool(entry.featured,false),
+    homepage_featured: bool(entry.homepageFeatured,false),
+    search_priority: Math.max(0,int(entry.searchPriority,100)),
+    search_keywords: arr(entry.searchKeywords).slice(0,100),
+    market_codes: arr(entry.marketCodes).map(x=>upper(x,20)).slice(0,100),
+    sales_channels: arr(entry.salesChannels).map(x=>upper(x,40)).slice(0,40).length ? arr(entry.salesChannels).map(x=>upper(x,40)).slice(0,40) : ["WEB"],
+    public_label: clean(entry.publicLabel,160) || null,
+    badge: clean(entry.badge,120) || null,
+    valid_from: safeDate(entry.validFrom),
+    valid_to: safeDate(entry.validTo),
+    notes: clean(entry.notes,5000) || null,
+    active: entry.active !== false,
+    updated_by_agent_user_id: actor.id || null,
+    ...(entry.id ? {} : { created_by_agent_user_id: actor.id || null })
+  };
+  let saved;
+  if (entry.id) {
+    saved = (await sb(`${TABLES.catalog}?${eq("id",clean(entry.id,120))}`, { method:"PATCH", body }))?.[0];
+  } else {
+    saved = (await sb(TABLES.catalog, { method:"POST", body }))?.[0];
+  }
+  if (!saved?.id) throw new Error("Supabase did not return the saved catalog entry.");
+  await audit(actor, entry.id ? "CATALOG_UPDATED" : "CATALOG_CREATED", String(ref.id), `${ref.entityType} ${ref.code} catalog entry ${entry.id ? "updated" : "created"}.`, { sourceTable: TABLES.catalog, catalogType, searchable });
+  const entries = await catalogRows();
+  return { entry: entries.find(x=>x.id===saved.id) || apiCatalog(saved,ref), entries };
+});
+
+export const deleteInventoryCatalogEntry = webMethod(Permissions.SiteMember, async ({ id } = {}) => {
+  const actor = await requireStaff();
+  const key = clean(id,120); if (!key) throw new Error("Catalog entry ID is required.");
+  await sb(`${TABLES.catalog}?${eq("id",key)}`, { method:"DELETE", headers:{Prefer:"return=minimal"} });
+  await audit(actor,"CATALOG_DELETED",key,"Collection/Partner catalog entry deleted.",{sourceTable:TABLES.catalog});
+  return { ok:true, id:key, entries:await catalogRows() };
 });
 
 export const getSmartInventoryRecord = webMethod(Permissions.SiteMember, async ({ id } = {}) => { await requireStaff(); return bundle(clean(id, 120)); });
