@@ -7,7 +7,7 @@ const getSecretValue = elevate(secrets.getSecretValue);
 
 const TIERS = ["SELECT", "SIGNATURE", "EXCELSIOR"];
 const PUBLIC_ENTITY_TYPES = new Set([
-  "DESTINATION", "HOTEL", "GUIDED_TOUR", "ACTIVITY",
+  "COUNTRY", "AREA", "DESTINATION", "HOTEL", "GUIDED_TOUR", "ACTIVITY",
   "AIRLINE", "AIRPORT", "PACKAGE", "TRANSFER", "CAR_RENTAL"
 ]);
 
