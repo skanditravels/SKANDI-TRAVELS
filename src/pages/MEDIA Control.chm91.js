@@ -1,11 +1,11 @@
 // Wix page code
-// Suggested route: /riaintra/magazine-manager/management
+// Magazine Manager / VOY Control
 // HTML Component ID: #newsroomAdminEmbed
 
 import wixLocation from "wix-location";
 import { authentication } from "wix-members-frontend";
-import { getStaffPortalSession } from "backend/RIA/staffPortalAuth.web";
-import { runInternalGlobalSearch } from "backend/FINAL/internalChrome.web";
+import { getStaffPortalSession } from "src/backend/RIA/staffPortalAuth.web";
+import { runInternalGlobalSearch } from "src/backend/FINAL/internalChrome.web";
 import {
   getNewsroomAdminBootstrap,
   listNewsroomAdminData,
@@ -15,7 +15,7 @@ import {
   archiveNewsroomPost,
   saveNewsroomMediaAsset,
   saveNewsroomPressContact
-} from "backend/FINAL/newsroomService.web";
+} from "src/backend/FINAL/newsService.web";
 import {
   getVoyAdminBootstrap,
   saveVoyIssue,
@@ -29,7 +29,13 @@ import {
   archiveVoyIssue,
   saveVoyEntity,
   deleteVoyEntity
-} from "backend/FINAL/voyMagazineService.web";
+} from "src/backend/FINAL/voyMagazineService.web";
+import {
+  listMediaAssets,
+  createMediaUpload,
+  finalizeMediaUpload,
+  refreshMediaAssetUrl
+} from "src/backend/FINAL/mediaControl.web";
 
 const EMBED_ID = "#newsroomAdminEmbed";
 const EMBED_SOURCE = "SKANDI_NEWSROOM_CONTROL";
@@ -38,6 +44,7 @@ const CHROME_SOURCE = "SKANDI_INTERNAL_CHROME";
 const LOGIN_PATH = "/riaintra";
 const HOME_PATH = "/";
 const PUBLIC_VOY_PATH = "/voy-magazine";
+const MEDIA_CONTROL_PATH = "/media-control";
 
 let embed = null;
 let bootstrapPromise = null;
@@ -61,6 +68,7 @@ function allowedInternalPath(path) {
   return (
     value === "/" ||
     value === LOGIN_PATH ||
+    value === MEDIA_CONTROL_PATH ||
     value.startsWith("/riaintra") ||
     value.startsWith("/altea")
   );
@@ -192,9 +200,20 @@ async function saveEntity(type, item) {
 function unsupportedConnector(type) {
   send("VOY_ADMIN_ERROR", {
     message:
-      "This connector needs its provider credentials and backend adapter before it can run. The magazine publishing, page editing and public delivery functions are already connected.",
+      "This connector needs its provider credentials and backend adapter before it can run. The magazine publishing, page editing, Supabase media library and public delivery functions are connected.",
     action: type
   });
+}
+
+async function sendMediaLibrary(payload = {}) {
+  const result = await listMediaAssets({
+    bucket: payload.bucket || "",
+    query: payload.query || payload.search || "",
+    imagesOnly: payload.imagesOnly === true,
+    limit: payload.limit || 5000
+  });
+  send("VOY_MEDIA_LIBRARY_RESULT", result);
+  return result;
 }
 
 $w.onReady(function () {
@@ -267,38 +286,20 @@ $w.onReady(function () {
       }
 
       if (type === "NEWSROOM_PUBLISH_POST") {
-        let cmsId = payload._id || payload.item?._id || "";
-        let postId = payload.postId || payload.item?.postId || "";
-
-        // Always save the editor payload first. This guarantees that a new
-        // Wix CMS record exists and gives us its real _id before publishing.
         if (payload.item) {
           const saved = await saveNewsroomPost(payload.item);
-          if (!saved?.ok) {
-            throw new Error(saved?.error || "Post save failed.");
-          }
-          cmsId = saved?.post?._id || cmsId;
-          postId = saved?.post?.postId || postId;
+          if (!saved.ok) throw new Error(saved.error || "Post save failed.");
         }
-
-        const result = await publishNewsroomPost({ _id: cmsId, postId });
-        if (!result?.ok) {
-          throw new Error(result?.error || "Post publish failed.");
-        }
-
+        const result = await publishNewsroomPost(payload);
+        if (!result.ok) throw new Error(result.error || "Post publish failed.");
         send("NEWSROOM_ADMIN_SAVED", result);
         await refreshNewsroom({});
         return;
       }
 
       if (type === "NEWSROOM_ARCHIVE_POST") {
-        const result = await archiveNewsroomPost({
-          _id: payload._id || payload.item?._id || "",
-          postId: payload.postId || payload.item?.postId || ""
-        });
-        if (!result?.ok) {
-          throw new Error(result?.error || "Post archive failed.");
-        }
+        const result = await archiveNewsroomPost(payload);
+        if (!result.ok) throw new Error(result.error || "Post archive failed.");
         send("NEWSROOM_ADMIN_SAVED", result);
         await refreshNewsroom({});
         return;
@@ -320,6 +321,35 @@ $w.onReady(function () {
         return;
       }
 
+      // ---------- Shared Supabase Media Control ----------
+      if (
+        type === "VOY_MEDIA_LIBRARY_REQUEST" ||
+        type === "VOY_ASSET_UPLOAD_OPEN_REQUEST"
+      ) {
+        await sendMediaLibrary({ ...payload, imagesOnly: payload.imagesOnly !== false });
+        return;
+      }
+
+      if (type === "VOY_MEDIA_UPLOAD_CREATE") {
+        send("VOY_MEDIA_UPLOAD_READY", await createMediaUpload(payload));
+        return;
+      }
+
+      if (type === "VOY_MEDIA_UPLOAD_FINALIZE") {
+        send("VOY_MEDIA_UPLOAD_COMPLETE", await finalizeMediaUpload(payload));
+        return;
+      }
+
+      if (type === "VOY_MEDIA_REFRESH_URL") {
+        send("VOY_MEDIA_REFRESH_URL_RESULT", await refreshMediaAssetUrl(payload));
+        return;
+      }
+
+      if (type === "VOY_OPEN_MEDIA_CONTROL") {
+        wixLocation.to(MEDIA_CONTROL_PATH);
+        return;
+      }
+
       if (type === "VOY_ADMIN_SAVE_ISSUE_METADATA") {
         await runVoyMutation(type, () => saveVoyIssue({ issue: payload.issue }));
         await refreshVoy();
@@ -330,7 +360,7 @@ $w.onReady(function () {
         await runVoyMutation(type, () => saveVoyIssue({ issue: payload.issue }));
         send("VOY_ADMIN_ERROR", {
           message:
-            "Issue metadata was saved. Add a Supabase Storage upload adapter before using direct PDF upload; structured HTML pages publish without a PDF.",
+            "Issue metadata was saved. Use Media Control for image assets; structured HTML pages publish without a PDF.",
           action: type
         });
         await refreshVoy();
@@ -522,7 +552,8 @@ $w.onReady(function () {
         : "VOY_ADMIN_ERROR";
       send(target, {
         message: userMessage(error, "Magazine Manager action failed."),
-        action: type
+        action: type,
+        requestId: payload.requestId || ""
       });
     }
   });
@@ -542,7 +573,12 @@ function userMessage(error, fallback) {
       "Archive a published issue before deleting it.",
     VOY_ISSUE_HAS_NO_PAGES: "Add at least one page before publishing.",
     VOY_SERVICE_UNAVAILABLE:
-      "The VOY publishing service is temporarily unavailable."
+      "The VOY publishing service is temporarily unavailable.",
+    MEDIA_NOT_AUTHENTICATED: "Sign in to RIAINTRA and try again.",
+    MEDIA_ACCESS_DENIED: "Your staff account does not have Media Control access.",
+    MEDIA_BUCKET_NOT_FOUND: "The selected Supabase Storage bucket no longer exists.",
+    MEDIA_FILE_TOO_LARGE: "The selected file is larger than the bucket limit.",
+    MEDIA_FILE_TYPE_NOT_ALLOWED: "That file type is not allowed in the selected bucket."
   };
   const code = Object.keys(map).find((key) => message.includes(key));
   return code ? map[code] : message || fallback;
