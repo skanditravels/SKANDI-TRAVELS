@@ -7,8 +7,11 @@ import {
   deleteSmartDatedInventory,
   getSmartInventoryAudit,
   createInventoryMediaUploadTicket,
-  getInventorySourceHealth
-} from "backend/RIA/inventoryControlV3.web";
+  getInventorySourceHealth,
+  listInventoryCatalogEntries,
+  saveInventoryCatalogEntry,
+  deleteInventoryCatalogEntry
+} from "backend/RIA/inventoryControlV4.web";
 import {
   fetchFlightInventory,
   updateFlightClassCapacity,
@@ -55,48 +58,57 @@ $w.onReady(function () {
     try {
       switch (msg.type) {
         case "MASTER_INVENTORY_READY":
-        case "INVENTORY_V3_READY":
-        case "INVENTORY_V3_LIST":
+        case "INVENTORY_V4_READY":
+        case "INVENTORY_V4_LIST":
         case "INVENTORY_V2_LIST": {
           const result = await bootstrap(p);
-          send(msg.type === "INVENTORY_V2_LIST" ? "INVENTORY_V2_BOOTSTRAP" : "INVENTORY_V3_BOOTSTRAP", result, requestId);
+          send(msg.type === "INVENTORY_V2_LIST" ? "INVENTORY_V2_BOOTSTRAP" : "INVENTORY_V4_BOOTSTRAP", result, requestId);
           break;
         }
-        case "INVENTORY_V3_GET":
+        case "INVENTORY_V4_GET":
         case "INVENTORY_V2_GET": {
           const result = await getSmartInventoryRecord(p);
-          send(msg.type === "INVENTORY_V2_GET" ? "INVENTORY_V2_RECORD" : "INVENTORY_V3_RECORD", result, requestId);
+          send(msg.type === "INVENTORY_V2_GET" ? "INVENTORY_V2_RECORD" : "INVENTORY_V4_RECORD", result, requestId);
           break;
         }
-        case "INVENTORY_V3_SAVE":
+        case "INVENTORY_V4_SAVE":
         case "INVENTORY_V2_SAVE": {
           const result = await saveSmartInventoryRecord(p);
-          send(msg.type === "INVENTORY_V2_SAVE" ? "INVENTORY_V2_SAVED" : "INVENTORY_V3_SAVED", result, requestId);
+          send(msg.type === "INVENTORY_V2_SAVE" ? "INVENTORY_V2_SAVED" : "INVENTORY_V4_SAVED", result, requestId);
           break;
         }
-        case "INVENTORY_V3_GET_DATED":
+        case "INVENTORY_V4_GET_DATED":
         case "INVENTORY_V2_GET_DATED": {
           const result = await getSmartDatedInventory(p);
-          send(msg.type === "INVENTORY_V2_GET_DATED" ? "INVENTORY_V2_DATED" : "INVENTORY_V3_DATED", result, requestId);
+          send(msg.type === "INVENTORY_V2_GET_DATED" ? "INVENTORY_V2_DATED" : "INVENTORY_V4_DATED", result, requestId);
           break;
         }
-        case "INVENTORY_V3_SAVE_DATED":
+        case "INVENTORY_V4_SAVE_DATED":
         case "INVENTORY_V2_SAVE_DATED": {
           const result = await saveSmartDatedInventory(p);
-          send(msg.type === "INVENTORY_V2_SAVE_DATED" ? "INVENTORY_V2_DATED_SAVED" : "INVENTORY_V3_DATED_SAVED", result, requestId);
+          send(msg.type === "INVENTORY_V2_SAVE_DATED" ? "INVENTORY_V2_DATED_SAVED" : "INVENTORY_V4_DATED_SAVED", result, requestId);
           break;
         }
-        case "INVENTORY_V3_DELETE_DATED":
+        case "INVENTORY_V4_DELETE_DATED":
         case "INVENTORY_V2_DELETE_DATED": {
           const result = await deleteSmartDatedInventory(p);
-          send(msg.type === "INVENTORY_V2_DELETE_DATED" ? "INVENTORY_V2_DATED_DELETED" : "INVENTORY_V3_DATED_DELETED", result, requestId);
+          send(msg.type === "INVENTORY_V2_DELETE_DATED" ? "INVENTORY_V2_DATED_DELETED" : "INVENTORY_V4_DATED_DELETED", result, requestId);
           break;
         }
-        case "INVENTORY_V3_MEDIA_UPLOAD_TICKET":
-          send("INVENTORY_V3_MEDIA_UPLOAD_TICKET_RESULT", await createInventoryMediaUploadTicket(p), requestId);
+        case "INVENTORY_V4_MEDIA_UPLOAD_TICKET":
+          send("INVENTORY_V4_MEDIA_UPLOAD_TICKET_RESULT", await createInventoryMediaUploadTicket(p), requestId);
           break;
-        case "INVENTORY_V3_SOURCE_HEALTH":
-          send("INVENTORY_V3_SOURCE_HEALTH_RESULT", await getInventorySourceHealth(), requestId);
+        case "INVENTORY_V4_SOURCE_HEALTH":
+          send("INVENTORY_V4_SOURCE_HEALTH_RESULT", await getInventorySourceHealth(), requestId);
+          break;
+        case "INVENTORY_V4_LIST_CATALOG":
+          send("INVENTORY_V4_CATALOG_RESULT", await listInventoryCatalogEntries(p), requestId);
+          break;
+        case "INVENTORY_V4_SAVE_CATALOG":
+          send("INVENTORY_V4_CATALOG_SAVED", await saveInventoryCatalogEntry(p), requestId);
+          break;
+        case "INVENTORY_V4_DELETE_CATALOG":
+          send("INVENTORY_V4_CATALOG_DELETED", await deleteInventoryCatalogEntry(p), requestId);
           break;
         case "INVENTORY_FETCH_AUDIT":
           send("INVENTORY_AUDIT_RESULT", await getSmartInventoryAudit(p), requestId);
@@ -146,7 +158,7 @@ $w.onReady(function () {
           break;
       }
     } catch (error) {
-      console.error("[Inventory Control V3]", msg.type, error);
+      console.error("[Inventory Control V4]", msg.type, error);
       send("INVENTORY_ERROR", cleanError(error), requestId);
     }
   });
@@ -154,11 +166,11 @@ $w.onReady(function () {
   // Proactive bootstrap prevents a missed iframe READY event from leaving Inventory Control blank.
   bootstrap({})
     .then(payload => {
-      send("INVENTORY_PAGE_READY", { version: "3.0", session: payload.session, canonicalSource: payload.canonicalSource });
-      send("INVENTORY_V3_BOOTSTRAP", payload);
+      send("INVENTORY_PAGE_READY", { version: "4.0", session: payload.session, canonicalSource: payload.canonicalSource });
+      send("INVENTORY_V4_BOOTSTRAP", payload);
     })
     .catch(error => {
-      console.error("[Inventory Control V3] bootstrap", error);
+      console.error("[Inventory Control V4] bootstrap", error);
       send("INVENTORY_ERROR", cleanError(error));
     });
 });
