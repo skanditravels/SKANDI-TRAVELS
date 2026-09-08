@@ -32,20 +32,34 @@ async function requirePortalSession() {
   return session;
 }
 
-async function bootstrap(html) {
-  const portalSession = await requirePortalSession();
+let bootstrapPromise = null;
 
-  if (!portalSession) {
-    return;
+async function bootstrap(html) {
+  if (bootstrapPromise) {
+    return bootstrapPromise;
   }
 
-  const payload = await getUniformEmployeeBootstrap();
+  bootstrapPromise = (async () => {
+    const portalSession = await requirePortalSession();
 
-  postFlat(
-    html,
-    "UNIFORM_EMPLOYEE_BOOTSTRAP_RESULT",
-    { payload }
-  );
+    if (!portalSession) {
+      return;
+    }
+
+    const payload = await getUniformEmployeeBootstrap();
+
+    postFlat(
+      html,
+      "UNIFORM_EMPLOYEE_BOOTSTRAP_RESULT",
+      { payload }
+    );
+  })();
+
+  try {
+    await bootstrapPromise;
+  } finally {
+    bootstrapPromise = null;
+  }
 }
 
 $w.onReady(function () {
@@ -134,5 +148,20 @@ $w.onReady(function () {
         }
       );
     }
+  });
+
+  // Do not depend on the iframe READY event. The HTML iframe can finish
+  // loading before Velo has attached onMessage(), which would otherwise
+  // lose the only startup handshake.
+  bootstrap(html).catch((error) => {
+    postFlat(
+      html,
+      "UNIFORM_EMPLOYEE_ERROR",
+      {
+        message:
+          error?.message ||
+          "Uniform Center could not synchronize."
+      }
+    );
   });
 });
