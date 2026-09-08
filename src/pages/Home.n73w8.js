@@ -4,7 +4,7 @@ import {
   getHomeBootstrap,
   searchUnifiedOffers,
   createBookingCartFromOffer
-} from "backend/bookingOrchestrator.web";
+} from "backend/bookingOrchestratorCollection.web";
 import { getOldStyleHomeContent } from "backend/homeContent.web";
 
 const EMBED_ID = "#htmlHome";
