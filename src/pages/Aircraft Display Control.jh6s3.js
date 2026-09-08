@@ -17,7 +17,9 @@ import {
   saveAircraftControlSceneHotspot,
   deleteAircraftControlSceneHotspot,
   syncAircraftCabinsFromConfiguration,
-  smartSyncAircraftCatalog
+  smartSyncAircraftCatalog,
+  createAircraftAssetUpload,
+  completeAircraftAssetUpload
 } from "backend/RIA/aircraftDisplayControl.web";
 
 const HTML_ID = "#aircraftDisplayControlEmbed";
@@ -80,6 +82,18 @@ $w.onReady(function () {
     try {
       if (type === "AIRCRAFT_CONTROL_READY" || type === "AIRCRAFT_CONTROL_REFRESH") {
         await bootstrap(html, requestId);
+        return;
+      }
+
+      if (type === "AIRCRAFT_CONTROL_CREATE_ASSET_UPLOAD") {
+        const result = await createAircraftAssetUpload(payload);
+        post(html, "AIRCRAFT_CONTROL_ASSET_UPLOAD_READY", result, requestId);
+        return;
+      }
+
+      if (type === "AIRCRAFT_CONTROL_COMPLETE_ASSET_UPLOAD") {
+        const result = await completeAircraftAssetUpload(payload);
+        post(html, "AIRCRAFT_CONTROL_ASSET_UPLOADED", result, requestId);
         return;
       }
 
