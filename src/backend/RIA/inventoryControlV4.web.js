@@ -17,6 +17,7 @@ const TABLES = Object.freeze({
   sourceRegistry: "inventory_source_registry",
   sourceHealth: "inventory_source_health_v",
   airports: "travel_info_airports",
+  countries: "countries_list",
   airlines: "travel_info_airlines"
 });
 
