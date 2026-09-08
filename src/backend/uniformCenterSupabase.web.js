@@ -1274,4 +1274,223 @@ export const acknowledgeUniformPolicy = webMethod(Permissions.SiteMember, async 
   }, agent);
 
   return { ok: true, acknowledged: true, policy: mapPolicy(policy) };
-});
+  
+// SKANDI Uniform Control — signed Supabase image upload patch
+// ADD this to backend/uniformCenterCms.web.js.
+//
+// Reuses existing helpers already present in the file:
+// getSupabaseConfig, storagePublicUrl, storageObjectPath, imageExtension,
+// cleanText, cleanKey, cleanError, requireUniformAdmin and logAudit.
+//
+// Keep the existing adminUploadUniformImage export during rollout.
+
+export const adminCreateUniformImageUpload = webMethod(
+  Permissions.Anyone,
+  async (input = {}) => {
+    try {
+      await requireUniformAdmin();
+
+      const requestId = cleanText(input.requestId || input.request_id || "", 120);
+      const fileName = cleanText(input.fileName || input.file_name || "", 240);
+      const mimeType = cleanText(input.mimeType || input.mime_type || "", 120).toLowerCase();
+      const size = Number(input.size || input.fileSize || input.file_size || 0);
+      const extension = imageExtension(mimeType);
+
+      if (!extension) {
+        throw new Error("Only PNG, JPG, WebP and GIF images are allowed.");
+      }
+
+      if (!Number.isFinite(size) || size <= 0) {
+        throw new Error("Image file size is required.");
+      }
+
+      if (size > 5 * 1024 * 1024) {
+        throw new Error("Image is too large. Maximum size is 5 MB.");
+      }
+
+      const itemPart =
+        cleanKey(
+          input.itemCode ||
+          input.item_code ||
+          input.itemId ||
+          input.item_id ||
+          input.title ||
+          "uniform-item",
+          80
+        ) || "uniform-item";
+
+      // Always write a fresh path to avoid stale CDN objects.
+      const stamp = new Date()
+        .toISOString()
+        .replace(/[-:.TZ]/g, "")
+        .slice(0, 14);
+
+      const random = Math.random().toString(36).slice(2, 10);
+      const objectPath = `catalog/${itemPart}-${stamp}-${random}.${extension}`;
+
+      const { url, key } = await getSupabaseConfig();
+
+      // Supabase createSignedUploadUrl:
+      // POST /storage/v1/object/upload/sign/{bucket}/{path}
+      const response = await fetch(
+        `${url}/storage/v1/object/upload/sign/${encodeURIComponent(UNIFORM_IMAGE_BUCKET)}/${storageObjectPath(objectPath)}`,
+        {
+          method: "POST",
+          headers: {
+            apikey: key,
+            Authorization: `Bearer ${key}`,
+            "Content-Type": "application/json"
+          },
+          body: "{}"
+        }
+      );
+
+      const text = await response.text();
+      let data = null;
+
+      if (text) {
+        try {
+          data = JSON.parse(text);
+        } catch (err) {
+          data = text;
+        }
+      }
+
+      if (!response.ok) {
+        throw new Error(
+          data?.message ||
+          data?.error ||
+          `Could not create signed Uniform image upload: ${response.status}`
+        );
+      }
+
+      const returnedUrl = String(
+        data?.url ||
+        data?.signedUrl ||
+        data?.signedURL ||
+        ""
+      ).trim();
+
+      if (!returnedUrl) {
+        throw new Error("Supabase did not return a signed upload URL.");
+      }
+
+      let signedUrl = returnedUrl;
+
+      if (!/^https?:\/\//i.test(signedUrl)) {
+        if (signedUrl.startsWith("/storage/v1/")) {
+          signedUrl = `${url}${signedUrl}`;
+        } else if (signedUrl.startsWith("/object/")) {
+          signedUrl = `${url}/storage/v1${signedUrl}`;
+        } else {
+          signedUrl = `${url}/storage/v1/${signedUrl.replace(/^\/+/, "")}`;
+        }
+      }
+
+      const tokenMatch = signedUrl.match(/[?&]token=([^&]+)/i);
+      const token = tokenMatch ? decodeURIComponent(tokenMatch[1]) : "";
+
+      return {
+        ok: true,
+        requestId,
+        fileName,
+        mimeType,
+        size,
+        bucket: UNIFORM_IMAGE_BUCKET,
+        objectPath,
+        storagePath: objectPath,
+        signedUrl,
+        token,
+        imageUrl: storagePublicUrl(UNIFORM_IMAGE_BUCKET, objectPath),
+        publicUrl: storagePublicUrl(UNIFORM_IMAGE_BUCKET, objectPath)
+      };
+    } catch (error) {
+      throw new Error(cleanError(error));
+    }
+  }
+);
+
+export const adminCompleteUniformImageUpload = webMethod(
+  Permissions.Anyone,
+  async (input = {}) => {
+    try {
+      const { agent } = await requireUniformAdmin();
+
+      const requestId = cleanText(input.requestId || input.request_id || "", 120);
+      const objectPath = cleanText(
+        input.objectPath ||
+        input.storagePath ||
+        input.object_path ||
+        input.storage_path ||
+        "",
+        1000
+      );
+      const fileName = cleanText(input.fileName || input.file_name || "", 240);
+      const mimeType = cleanText(input.mimeType || input.mime_type || "", 120).toLowerCase();
+      const size = Number(input.size || input.fileSize || input.file_size || 0);
+      const itemId = cleanText(input.itemId || input.item_id || "", 160);
+
+      if (!objectPath || !objectPath.startsWith("catalog/")) {
+        throw new Error("Invalid Uniform image storage path.");
+      }
+
+      const extension = imageExtension(mimeType);
+
+      if (!extension) {
+        throw new Error("Invalid Uniform image MIME type.");
+      }
+
+      if (!objectPath.toLowerCase().endsWith(`.${extension}`)) {
+        throw new Error("Uniform image extension does not match its MIME type.");
+      }
+
+      if (!Number.isFinite(size) || size <= 0 || size > 5 * 1024 * 1024) {
+        throw new Error("Invalid Uniform image size.");
+      }
+
+      const imageUrl = storagePublicUrl(UNIFORM_IMAGE_BUCKET, objectPath);
+      const uploadedAt = new Date().toISOString();
+
+      await logAudit(
+        "uniform_image_uploaded",
+        {
+          entityTable: "uniform_catalog_items",
+          entityId: itemId,
+          message: "Uniform catalog image uploaded with signed Storage URL.",
+          payload: {
+            requestId,
+            objectPath,
+            imageUrl,
+            fileName,
+            mimeType,
+            size
+          }
+        },
+        agent
+      );
+
+      return {
+        ok: true,
+        requestId,
+        imageUrl,
+        url: imageUrl,
+        storagePath: objectPath,
+        objectPath,
+        mimeType,
+        size,
+        fileName,
+        image: {
+          url: imageUrl,
+          imageUrl,
+          storagePath: objectPath,
+          mimeType,
+          fileName,
+          uploadedAt
+        }
+      };
+    } catch (error) {
+      throw new Error(cleanError(error));
+    }
+  }
+);
+
