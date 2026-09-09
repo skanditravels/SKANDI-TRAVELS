@@ -1,264 +1,143 @@
+// Wix popup page code
+// Popup name: Language & Currency
+// HTML Component ID: #languageCurrencyPopupHtml
+
 import wixWindowFrontend from "wix-window-frontend";
 
-const EMBED_ID =
-  "#languageCurrencyPopupEmbed";
+const HTML_ID = "#languageCurrencyPopupHtml";
+const CHILD_SOURCE = "SKANDI_LANGUAGE_CURRENCY_POPUP";
+const PARENT_SOURCE = "SKANDI_WIX_POPUP";
 
-const CHILD_SOURCE =
-  "SKANDI_LANGUAGE_CURRENCY_POPUP";
+const LANGUAGES = ["EN","SV","NO","DA"];
+const CURRENCIES = ["USD","SEK","NOK","DKK","EUR"];
 
-const PARENT_SOURCE =
-  "SKANDI_WIX_PARENT";
+let html = null;
 
-const LANGUAGES =
-  new Set([
-    "EN",
-    "SV",
-    "NO",
-    "DA"
-  ]);
+function normalize(value = {}) {
+  const source =
+    value?.settings && typeof value.settings === "object"
+      ? value.settings
+      : value;
 
-const CURRENCIES =
-  new Set([
-    "USD",
-    "SEK",
-    "NOK",
-    "DKK",
-    "EUR"
-  ]);
+  const language =
+    String(source?.language || "")
+      .trim()
+      .toUpperCase();
 
+  const currency =
+    String(source?.currency || "")
+      .trim()
+      .toUpperCase();
 
-function parseMessage(
-  data
-) {
+  return {
+    language:
+      LANGUAGES.includes(language)
+        ? language
+        : "EN",
+    currency:
+      CURRENCIES.includes(currency)
+        ? currency
+        : "USD"
+  };
+}
 
+function post(type, payload = {}) {
   if (
-    typeof data ===
-    "string"
+    !html ||
+    typeof html.postMessage !== "function"
   ) {
+    return;
+  }
+
+  html.postMessage({
+    source: PARENT_SOURCE,
+    type,
+    payload,
+    timestamp: new Date().toISOString()
+  });
+}
+
+function contextSettings() {
+  try {
+    const context =
+      wixWindowFrontend.lightbox.getContext() || {};
+
+    return normalize(
+      context?.settings || context
+    );
+  } catch (_) {
+    return normalize({});
+  }
+}
+
+function sendBootstrap() {
+  post(
+    "SETTINGS_POPUP_BOOTSTRAP",
+    contextSettings()
+  );
+}
+
+$w.onReady(function () {
+  try {
+    html =
+      $w(HTML_ID);
+  } catch (error) {
+    console.error(
+      `[Language/Currency] Missing HTML Component ${HTML_ID}.`,
+      error
+    );
+    return;
+  }
+
+  html.onMessage(async event => {
+    const message =
+      event?.data || {};
+
+    if (
+      message.source !== CHILD_SOURCE
+    ) {
+      return;
+    }
 
     try {
-
-      return JSON.parse(
-        data
-      );
-
-    } catch (_) {
-
-      return null;
-
-    }
-
-  }
-
-
-  if (
-    data &&
-    typeof data ===
-      "object"
-  ) {
-
-    return data;
-
-  }
-
-
-  return null;
-
-}
-
-
-function normalizeLanguage(
-  value
-) {
-
-  const result =
-    String(
-      value ||
-      "EN"
-    )
-      .trim()
-      .toUpperCase();
-
-
-  return LANGUAGES
-    .has(result)
-      ? result
-      : "EN";
-
-}
-
-
-function normalizeCurrency(
-  value
-) {
-
-  const result =
-    String(
-      value ||
-      "USD"
-    )
-      .trim()
-      .toUpperCase();
-
-
-  return CURRENCIES
-    .has(result)
-      ? result
-      : "USD";
-
-}
-
-
-$w.onReady(
-  function () {
-
-    const embed =
-      $w(
-        EMBED_ID
-      );
-
-
-    const context =
-      wixWindowFrontend
-        .lightbox
-        .getContext() ||
-      {};
-
-
-    const initial = {
-
-      language:
-        normalizeLanguage(
-          context.language
-        ),
-
-      currency:
-        normalizeCurrency(
-          context.currency
-        )
-
-    };
-
-
-    function send(
-      type,
-      payload = {}
-    ) {
-
-      embed.postMessage({
-
-        source:
-          PARENT_SOURCE,
-
-        type,
-
-        payload,
-
-        timestamp:
-          new Date()
-            .toISOString()
-
-      });
-
-    }
-
-
-    embed.onMessage(
-      event => {
-
-        const message =
-          parseMessage(
-            event?.data
-          );
-
-
-        if (!message) {
-
+      switch (message.type) {
+        case "SETTINGS_POPUP_READY":
+          sendBootstrap();
           return;
 
-        }
+        case "SETTINGS_POPUP_SAVE": {
+          const settings =
+            normalize(message.payload || {});
 
-
-        if (
-          message.source !==
-          CHILD_SOURCE
-        ) {
-
-          return;
-
-        }
-
-
-        const type =
-          String(
-            message.type ||
-            ""
-          );
-
-
-        const payload =
-          message.payload &&
-          typeof message.payload ===
-            "object"
-
-            ? message.payload
-
-            : {};
-
-
-        if (
-          type ===
-          "POPUP_READY"
-        ) {
-
-          send(
-            "POPUP_INIT",
-            initial
-          );
+          wixWindowFrontend.lightbox.close({
+            ok: true,
+            ...settings
+          });
 
           return;
-
         }
 
-
-        if (
-          type ===
-          "POPUP_SUBMIT"
-        ) {
-
-          const language =
-            normalizeLanguage(
-              payload.language
-            );
-
-
-          const currency =
-            normalizeCurrency(
-              payload.currency
-            );
-
-
-          wixWindowFrontend
-            .lightbox
-            .close({
-              language,
-              currency
-            });
-
-        }
-
+        default:
+          return;
       }
-    );
+    } catch (error) {
+      console.error(
+        "[Language/Currency] Popup action failed.",
+        error
+      );
 
+      post(
+        "SETTINGS_POPUP_ERROR",
+        {
+          message:
+            "Your preferences could not be saved. Please try again."
+        }
+      );
+    }
+  });
 
-    /*
-     * Also initialize immediately in case POPUP_READY
-     * fired just before the listener was registered.
-     */
-    send(
-      "POPUP_INIT",
-      initial
-    );
-
-  }
-);
+  setTimeout(
+    sendBootstrap,
+    80
+  );
+});
