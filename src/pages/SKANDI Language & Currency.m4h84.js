@@ -3,17 +3,19 @@
 // HTML Component ID: #languageCurrencyPopupHtml
 
 import wixWindowFrontend from "wix-window-frontend";
+import { local } from "wix-storage-frontend";
 
 const HTML_ID = "#languageCurrencyPopupHtml";
 const CHILD_SOURCE = "SKANDI_LANGUAGE_CURRENCY_POPUP";
 const PARENT_SOURCE = "SKANDI_WIX_POPUP";
 
-const LANGUAGES = ["EN","SV","NO","DA"];
-const CURRENCIES = ["USD","SEK","NOK","DKK","EUR"];
+const STORAGE_KEY = "skandi_user_settings";
+const LANGUAGES = new Set(["EN","SV","NO","DA"]);
+const CURRENCIES = new Set(["USD","SEK","NOK","DKK","EUR"]);
 
 let html = null;
 
-function normalize(value = {}) {
+function normalize(value = {}, requireValid = false) {
   const source =
     value?.settings && typeof value.settings === "object"
       ? value.settings
@@ -29,16 +31,105 @@ function normalize(value = {}) {
       .trim()
       .toUpperCase();
 
+  const languageValid =
+    LANGUAGES.has(language);
+
+  const currencyValid =
+    CURRENCIES.has(currency);
+
+  if (
+    requireValid &&
+    (
+      !languageValid ||
+      !currencyValid
+    )
+  ) {
+    return null;
+  }
+
   return {
     language:
-      LANGUAGES.includes(language)
+      languageValid
         ? language
         : "EN",
+
     currency:
-      CURRENCIES.includes(currency)
+      currencyValid
         ? currency
         : "USD"
   };
+}
+
+function readStored() {
+  try {
+    const raw =
+      local.getItem(STORAGE_KEY);
+
+    if (!raw) {
+      return null;
+    }
+
+    const parsed =
+      JSON.parse(raw);
+
+    if (
+      !parsed ||
+      parsed.confirmed !== true
+    ) {
+      return null;
+    }
+
+    return normalize(
+      parsed,
+      true
+    );
+  } catch (_) {
+    return null;
+  }
+}
+
+function writeStored(settings) {
+  const value =
+    normalize(
+      settings,
+      true
+    );
+
+  if (!value) {
+    throw new Error(
+      "INVALID_CUSTOMER_SETTINGS"
+    );
+  }
+
+  local.setItem(
+    STORAGE_KEY,
+    JSON.stringify({
+      ...value,
+      confirmed:true,
+      version:4,
+      updatedAt:
+        new Date().toISOString()
+    })
+  );
+
+  return value;
+}
+
+function popupContext() {
+  try {
+    const context =
+      wixWindowFrontend.lightbox
+        .getContext() || {};
+
+    return (
+      context &&
+      typeof context === "object"
+        ? context
+        : {}
+    );
+  } catch (_) {
+    return {};
+  }
 }
 
 function post(type, payload = {}) {
@@ -50,34 +141,57 @@ function post(type, payload = {}) {
   }
 
   html.postMessage({
-    source: PARENT_SOURCE,
+    source:PARENT_SOURCE,
     type,
     payload,
-    timestamp: new Date().toISOString()
+    timestamp:new Date().toISOString()
   });
 }
 
-function contextSettings() {
-  try {
-    const context =
-      wixWindowFrontend.lightbox.getContext() || {};
-
-    return normalize(
-      context?.settings || context
-    );
-  } catch (_) {
-    return normalize({});
-  }
-}
-
 function sendBootstrap() {
+  const context =
+    popupContext();
+
+  const value =
+    normalize(
+      context?.settings ||
+      context ||
+      readStored() ||
+      {}
+    );
+
   post(
     "SETTINGS_POPUP_BOOTSTRAP",
-    contextSettings()
+    value
   );
 }
 
 $w.onReady(function () {
+  const context =
+    popupContext();
+
+  const stored =
+    readStored();
+
+  const openedByMaster =
+    context?.source ===
+    "SKANDI_MASTERPAGE";
+
+  // If Wix is still configured to auto-display this popup, do not
+  // show it again after a confirmed preference already exists.
+  if (
+    stored &&
+    !openedByMaster
+  ) {
+    wixWindowFrontend.lightbox.close({
+      ok:false,
+      skipped:true,
+      ...stored
+    });
+
+    return;
+  }
+
   try {
     html =
       $w(HTML_ID);
@@ -94,7 +208,8 @@ $w.onReady(function () {
       event?.data || {};
 
     if (
-      message.source !== CHILD_SOURCE
+      message.source !==
+      CHILD_SOURCE
     ) {
       return;
     }
@@ -107,10 +222,12 @@ $w.onReady(function () {
 
         case "SETTINGS_POPUP_SAVE": {
           const settings =
-            normalize(message.payload || {});
+            writeStored(
+              message.payload || {}
+            );
 
           wixWindowFrontend.lightbox.close({
-            ok: true,
+            ok:true,
             ...settings
           });
 
