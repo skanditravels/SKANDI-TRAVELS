@@ -215,7 +215,11 @@ async function safeSelect(key, table, query) {
 
 async function buildHomeContent() {
   const results = await Promise.all([
+    // Public homepage content: only records deliberately published to customers.
     safeSelect("inventory", T.inventory, "select=id,public_id,entity_type,code,name,slug,parent_entity_id,status,active,customer_visible,homepage_featured,sort_priority,details,payload&status=eq.PUBLISHED&active=eq.true&customer_visible=eq.true&order=sort_priority.asc,name.asc&limit=1000"),
+    // Booking search catalogue: intentionally separate from homepage publication.
+    // REVIEW destinations remain hidden as editorial/page cards but must still be searchable in the booking engine.
+    safeSelect("searchInventory", T.inventory, "select=id,public_id,entity_type,code,name,slug,parent_entity_id,status,active,customer_visible,homepage_featured,sort_priority,search_priority,search_keywords,details,payload&active=eq.true&order=search_priority.asc,sort_priority.asc,name.asc&limit=1000"),
     safeSelect("media", T.media, "select=entity_id,url,is_card,is_primary,is_hero,sort_order,active&active=eq.true&order=sort_order.asc&limit=2000"),
     // storefront_promotions currently stores commercial display fields in payload. Do not order by a non-existent priority column.
     safeSelect("offers", T.offers, "select=id,promotion_id,title,status,payload,created_at,updated_at&status=eq.PUBLISHED&order=updated_at.desc&limit=100"),
@@ -225,16 +229,24 @@ async function buildHomeContent() {
 
   const byKey = Object.fromEntries(results.map(r => [r.key, r]));
   const entities = arr(byKey.inventory?.rows);
+  const searchEntities = arr(byKey.searchInventory?.rows)
+    .filter(r => r.active !== false && ["DESTINATION","AREA"].includes(upper(r.entity_type, 30)));
   const media = arr(byKey.media?.rows);
   const airportRows = arr(byKey.airports?.rows);
   const airports = airportRows.filter(r => r.iata).map(airportCard);
   const airportByIata = new Map(airportRows.filter(r => r.iata).map(r => [upper(r.iata, 3), r]));
-  const byId = new Map(entities.map(r => [clean(r.id), r]));
+  const allEntityRows = [...searchEntities, ...entities];
+  const byId = new Map(allEntityRows.map(r => [clean(r.id), r]));
   const featured = entities.filter(r => r.homepage_featured === true);
 
-  const searchDestinations = entities
-    .filter(r => ["DESTINATION","AREA"].includes(upper(r.entity_type, 30)))
-    .map(r => destinationCard(r, media, byId, airportByIata));
+  const searchDestinations = searchEntities
+    .map(r => destinationCard(r, media, byId, airportByIata))
+    .sort((a,b) => {
+      const aRow = searchEntities.find(r => clean(r.id) === clean(a.id)) || {};
+      const bRow = searchEntities.find(r => clean(r.id) === clean(b.id)) || {};
+      return Number(aRow.search_priority ?? aRow.sort_priority ?? 100) - Number(bRow.search_priority ?? bRow.sort_priority ?? 100)
+        || String(a.title || "").localeCompare(String(b.title || ""));
+    });
 
   const destinations = featured
     .filter(r => ["DESTINATION","AREA"].includes(upper(r.entity_type, 30)))
@@ -276,6 +288,7 @@ async function buildHomeContent() {
       counts: {
         airports: airports.length,
         publishedEntities: entities.length,
+        activeSearchEntities: searchEntities.length,
         searchDestinations: searchDestinations.length,
         homepageDestinations: destinations.length,
         homepageHotels: hotels.length,
