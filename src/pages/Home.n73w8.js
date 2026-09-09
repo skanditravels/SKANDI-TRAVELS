@@ -7,7 +7,7 @@ import {
   createBookingCartFromOffer
 } from "backend/bookingOrchestrator.web";
 
-import { getHomeContent } from "backend/homeContent.web";
+import { getHomeContent, getHomeSearchLocations } from "backend/homeContent.web";
 import { searchDuffelStays } from "src/backend/RIA/duffelGroundProducts.web";
 
 import {
@@ -281,6 +281,21 @@ async function hydrateLiveHomePrices(content = {}, priceSearch) {
   return { ...content, destinations, hotels, priceSearch:search, livePriceSupplier:"DUFFEL_STAYS" };
 }
 
+async function sendHomeLocations(html) {
+  try {
+    const locations = await getHomeSearchLocations();
+    postToHtml(html, "HOME_LOCATION_DATA", locations || { airports:[], destinations:[] });
+    return locations || { airports:[], destinations:[] };
+  } catch (error) {
+    console.error("[Home] Location catalogue failed.", error);
+    postToHtml(html, "HOME_LOCATION_DATA", {
+      airports:[], destinations:[],
+      sync:{ ok:false, fetchedAt:new Date().toISOString(), counts:{airports:0,destinations:0}, errors:[{source:"LOCATION_CATALOG",message:clean(error?.message || error,300)}] }
+    });
+    return { airports:[], destinations:[] };
+  }
+}
+
 async function sendHomeBootstrap(html, forceRefresh = false, settingsOverride = null) {
   if (bootstrapPromise && !forceRefresh) return bootstrapPromise;
   if (settingsOverride) currentSettings = normalizeSettings(settingsOverride);
@@ -288,14 +303,24 @@ async function sendHomeBootstrap(html, forceRefresh = false, settingsOverride = 
     const request = { locale:currentSettings.language, language:currentSettings.language, currency:currentSettings.currency };
     try {
       // Content and booking are intentionally isolated. A booking/Duffel issue must not blank Supabase Home content.
-      const [bookingResult, contentResult] = await Promise.allSettled([
+      const [bookingResult, contentResult, locationResult] = await Promise.allSettled([
         getHomeBootstrap(request),
-        getHomeContent(request)
+        getHomeContent(request),
+        getHomeSearchLocations()
       ]);
 
       const booking = bookingResult.status === "fulfilled" ? (bookingResult.value || {}) : {};
       let content = contentResult.status === "fulfilled" ? (contentResult.value || {}) : {};
+      const locations = locationResult.status === "fulfilled" ? (locationResult.value || {}) : { airports:[], destinations:[] };
       const bootstrapErrors = [];
+
+      // Location autocomplete is a separate data plane. Always merge it into Home content and send it independently.
+      content = {
+        ...content,
+        airports: Array.isArray(locations.airports) && locations.airports.length ? locations.airports : (Array.isArray(content.airports) ? content.airports : []),
+        searchDestinations: Array.isArray(locations.destinations) && locations.destinations.length ? locations.destinations : (Array.isArray(content.searchDestinations) ? content.searchDestinations : [])
+      };
+      postToHtml(html, "HOME_LOCATION_DATA", locations);
 
       if (bookingResult.status === "rejected") {
         console.warn("[Home] Booking bootstrap unavailable.", bookingResult.reason);
@@ -304,6 +329,10 @@ async function sendHomeBootstrap(html, forceRefresh = false, settingsOverride = 
       if (contentResult.status === "rejected") {
         console.error("[Home] Supabase Home content unavailable.", contentResult.reason);
         bootstrapErrors.push({ source:"SUPABASE_HOME_CONTENT", message:clean(contentResult.reason?.message || contentResult.reason, 300) });
+      }
+      if (locationResult.status === "rejected") {
+        console.error("[Home] Supabase location catalogue unavailable.", locationResult.reason);
+        bootstrapErrors.push({ source:"SUPABASE_LOCATION_CATALOG", message:clean(locationResult.reason?.message || locationResult.reason, 300) });
       }
 
       if (contentResult.status === "fulfilled") {
@@ -342,6 +371,9 @@ async function handleHomeMessage(html, message) {
       currentSettings = normalizeSettings(message.settings || payload.settings || currentSettings);
       homePriceSearch = normalizePriceSearch(message.priceSearch || payload.priceSearch || homePriceSearch || {});
       await sendHomeBootstrap(html, false, currentSettings);
+      return true;
+    case "HOME_LOCATIONS_REQUEST":
+      await sendHomeLocations(html);
       return true;
     case "HOME_REFRESH":
       if (message.priceSearch || payload.priceSearch) homePriceSearch = normalizePriceSearch(message.priceSearch || payload.priceSearch);
