@@ -284,15 +284,15 @@ async function hydrateLiveHomePrices(content = {}, priceSearch) {
 async function sendHomeLocations(html) {
   try {
     const locations = await getHomeSearchLocations();
-    postToHtml(html, "HOME_LOCATION_DATA", locations || { airports:[], destinations:[] });
-    return locations || { airports:[], destinations:[] };
+    postToHtml(html, "HOME_LOCATION_DATA", locations || { airports:[], destinations:[], searchDestinations:[] });
+    return locations || { airports:[], destinations:[], searchDestinations:[] };
   } catch (error) {
     console.error("[Home] Location catalogue failed.", error);
     postToHtml(html, "HOME_LOCATION_DATA", {
-      airports:[], destinations:[],
+      airports:[], destinations:[], searchDestinations:[],
       sync:{ ok:false, fetchedAt:new Date().toISOString(), counts:{airports:0,destinations:0}, errors:[{source:"LOCATION_CATALOG",message:clean(error?.message || error,300)}] }
     });
-    return { airports:[], destinations:[] };
+    return { airports:[], destinations:[], searchDestinations:[] };
   }
 }
 
@@ -422,6 +422,14 @@ function handleMessageError(html, message, error) {
 $w.onReady(function () {
   const html = getHtmlComponent();
   if (!html) return;
+
+  // Push the location catalogue proactively. This is intentionally independent of HOME_READY,
+  // because Wix HTML iframes can start before their own boot message reaches page code.
+  sendHomeLocations(html).catch(error => console.error("[Home] Initial location push failed.", error));
+  setTimeout(() => {
+    sendHomeLocations(html).catch(error => console.error("[Home] Retry location push failed.", error));
+  }, 900);
+
   html.onMessage(async event => {
     const message = parseMessage(event.data);
     if (!message?.source || !message?.type) return;
