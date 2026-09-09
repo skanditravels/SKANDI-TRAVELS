@@ -13,6 +13,8 @@ import {
   searchStaffDirectory
 } from "backend/RIA/staffProfile.web";
 
+import { getOrgStructureBootstrap, provisionStaffOrganization } from "backend/RIA/orgStructure.web";
+
 import {
   getSuccessFactorsHrBootstrap,
   saveSuccessFactorsHrStaff,
@@ -93,7 +95,9 @@ function cleanError(error) {
     STAFF_PROFILE_PORTAL_DISABLED: "Your employee profile does not have portal access.",
     WIX_MEMBER_LINK_MISMATCH: "Your Wix member is linked to a different employee profile.",
     INTERNAL_ACCESS_DENIED: "Your current employee role does not include this SuccessFactors module.",
-    INTERNAL_ACCESS_AUTH_REQUIRED: "Your staff session has expired. Sign in again."
+    INTERNAL_ACCESS_AUTH_REQUIRED: "Your staff session has expired. Sign in again.",
+    STAFF_ROLE_REQUIRED: "Your current employee role does not include HR Administration.",
+    HR_ORG_PERMISSION_REQUIRED: "Your employee profile does not have permission to manage the company structure."
   };
   return map[raw] || (raw.length <= 240 ? raw : "") || "SuccessFactors could not complete the action.";
 }
@@ -117,12 +121,20 @@ function permissionTokens(profile = {}) {
 
   [
     profile.permissions,
+    profile.permissionKeys,
     profile.permissionGroups,
     profile.allowedApps,
     profile.entitlements,
     profile.accessGroups,
     profile.roles,
     profile.access,
+    profile.accessRole,
+    profile.permissionPreset,
+    profile.payload?.permissions,
+    profile.payload?.permissionKeys,
+    profile.payload?.permissionGroups,
+    profile.payload?.allowedApps,
+    profile.payload?.accessRole,
     profile.portalAccess,
     profile.role,
     profile.position,
@@ -149,7 +161,7 @@ function successFactorsAccess(profile = {}) {
   const fullHrRole = /(human resources|people operations|people & culture|hr administrator|hr admin|hr director|head of hr|chief people|people director)/i.test(roleText);
   const executiveAdmin = /(super admin|administrator|founder|chief executive|\bceo\b|\bowner\b)/i.test(roleText);
 
-  const fullHr = fullHrRole || executiveAdmin || has("hr", "hr_admin", "human resources", "people operations", "all");
+  const fullHr = fullHrRole || executiveAdmin || has("hr", "hr_admin", "hr_manager", "human resources", "people operations", "all");
   const recruiting = fullHr || recruitingRole || has(
     "recruiting", "recruiter", "recruiting_admin", "talent acquisition", "careers_control", "careers-control", "all"
   );
@@ -353,13 +365,21 @@ async function refreshHrAdministration(payload = {}) {
     return result;
   }
 
+  const org = await getOrgStructureBootstrap();
+
   post("HR_SESSION", {
     authorized: true,
     profile: result.profile || currentSuccessFactorsProfile || {},
     permissions: currentSuccessFactorsProfile?.permissions || {}
   });
+
   post("HR_STAFF_LIST", result);
-  return result;
+  post("HR_ORG_CATALOG", org);
+
+  return {
+    ...result,
+    orgCatalog: org
+  };
 }
 
 function normalizeStaffActionPayload(payload = {}) {
@@ -367,6 +387,147 @@ function normalizeStaffActionPayload(payload = {}) {
     ? payload.item
     : payload || {};
   return item;
+}
+
+function firstValue(...values) {
+  return values.find(value => value !== undefined && value !== null && String(value).trim() !== "");
+}
+
+function savedStaffRecord(result = {}, fallback = {}) {
+  return (
+    result.item ||
+    result.record ||
+    result.staff ||
+    result.employee ||
+    result.data?.item ||
+    result.data?.record ||
+    fallback ||
+    {}
+  );
+}
+
+function orgAssignmentRequested(item = {}) {
+  return Boolean(
+    firstValue(
+      item.roleId,
+      item.role_id,
+      item.jobCode,
+      item.job_code
+    )
+  );
+}
+
+async function saveStaffAndProvisionOrganization(payload = {}) {
+  const item = normalizeStaffActionPayload(payload);
+
+  // First let the existing SuccessFactors HR backend create/update the employee.
+  // This remains the canonical employee writer for personal/contact/employment data.
+  const savedResult = await saveSuccessFactorsHrStaff({ item });
+  if (savedResult?.ok === false) {
+    throw new Error(savedResult?.message || "Employee save failed.");
+  }
+
+  const savedItem = savedStaffRecord(savedResult, item);
+
+  // Only run organization provisioning when the Company Structure controls
+  // supplied a canonical Job Title / Job Code selection.
+  if (!orgAssignmentRequested(item)) {
+    return savedResult;
+  }
+
+  const employeeId = String(
+    firstValue(
+      savedItem.id,
+      savedItem._id,
+      savedItem.agentUserId,
+      savedItem.agent_user_id,
+      item.id,
+      item._id,
+      item.agentUserId,
+      item.agent_user_id
+    ) || ""
+  ).trim();
+
+  const skId = String(
+    firstValue(
+      savedItem.skId,
+      savedItem.sk_id,
+      savedItem.employeeId,
+      savedItem.employee_id,
+      item.skId,
+      item.sk_id,
+      item.employeeId,
+      item.employee_id
+    ) || ""
+  ).trim();
+
+  if (!employeeId && !skId) {
+    throw new Error("The employee was saved, but no employee ID or SK-ID was returned for organization provisioning.");
+  }
+
+  const provisioned = await provisionStaffOrganization({
+    employeeId,
+    skId,
+
+    companyCode: firstValue(item.companyCode, item.company_code, "SK01"),
+
+    roleId: firstValue(
+      item.roleId,
+      item.role_id,
+      item.jobCode,
+      item.job_code
+    ),
+
+    jobCode: firstValue(
+      item.jobCode,
+      item.job_code,
+      item.roleId,
+      item.role_id
+    ),
+
+    baseCode: firstValue(
+      item.baseCode,
+      item.base_code,
+      item.assignedBase,
+      item.assignedBaseId,
+      item.base
+    ),
+
+    managerAgentUserId: firstValue(
+      item.managerAgentUserId,
+      item.manager_agent_user_id
+    ),
+
+    effectiveFrom: firstValue(
+      item.effectiveFrom,
+      item.effective_from,
+      new Date().toISOString().slice(0, 10)
+    ),
+
+    reason: firstValue(
+      item.organizationChangeReason,
+      item.reason,
+      payload.reason,
+      "SuccessFactors employee assignment"
+    )
+  });
+
+  if (provisioned?.ok === false) {
+    throw new Error(provisioned?.message || "Organization provisioning failed.");
+  }
+
+  return {
+    ...savedResult,
+    ...provisioned,
+    ok: true,
+    item: provisioned?.item || savedItem,
+    assignment: provisioned?.assignment || null,
+    managerResolution: provisioned?.managerResolution || "",
+    message:
+      provisioned?.message ||
+      savedResult?.message ||
+      "Employee and organization assignment saved."
+  };
 }
 
 async function handleHrMessage(message) {
@@ -385,11 +546,16 @@ async function handleHrMessage(message) {
       await refreshHrAdministration(payload || {});
       return true;
 
+    case "HR_ORG_REFRESH": {
+      if (!canUseFullHrAdministration()) return true;
+      const org = await getOrgStructureBootstrap();
+      post("HR_ORG_CATALOG", org);
+      return true;
+    }
+
     case "HR_STAFF_SAVE":
     case "HR_SAVE_STAFF": {
-      const result = await saveSuccessFactorsHrStaff({
-        item: normalizeStaffActionPayload(payload)
-      });
+      const result = await saveStaffAndProvisionOrganization(payload);
       post("HR_STAFF_SAVED", result);
       return true;
     }
