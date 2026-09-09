@@ -219,7 +219,7 @@ async function buildHomeContent() {
     safeSelect("inventory", T.inventory, "select=id,public_id,entity_type,code,name,slug,parent_entity_id,status,active,customer_visible,homepage_featured,sort_priority,details,payload&status=eq.PUBLISHED&active=eq.true&customer_visible=eq.true&order=sort_priority.asc,name.asc&limit=1000"),
     // Booking search catalogue: intentionally separate from homepage publication.
     // REVIEW destinations remain hidden as editorial/page cards but must still be searchable in the booking engine.
-    safeSelect("searchInventory", T.inventory, "select=id,public_id,entity_type,code,name,slug,parent_entity_id,status,active,customer_visible,homepage_featured,sort_priority,search_priority,search_keywords,details,payload&active=eq.true&order=search_priority.asc,sort_priority.asc,name.asc&limit=1000"),
+    safeSelect("searchInventory", T.inventory, "select=id,public_id,entity_type,code,name,slug,parent_entity_id,status,active,details,payload&active=eq.true&limit=1000"),
     safeSelect("media", T.media, "select=entity_id,url,is_card,is_primary,is_hero,sort_order,active&active=eq.true&order=sort_order.asc&limit=2000"),
     // storefront_promotions currently stores commercial display fields in payload. Do not order by a non-existent priority column.
     safeSelect("offers", T.offers, "select=id,promotion_id,title,status,payload,created_at,updated_at&status=eq.PUBLISHED&order=updated_at.desc&limit=100"),
@@ -241,12 +241,7 @@ async function buildHomeContent() {
 
   const searchDestinations = searchEntities
     .map(r => destinationCard(r, media, byId, airportByIata))
-    .sort((a,b) => {
-      const aRow = searchEntities.find(r => clean(r.id) === clean(a.id)) || {};
-      const bRow = searchEntities.find(r => clean(r.id) === clean(b.id)) || {};
-      return Number(aRow.search_priority ?? aRow.sort_priority ?? 100) - Number(bRow.search_priority ?? bRow.sort_priority ?? 100)
-        || String(a.title || "").localeCompare(String(b.title || ""));
-    });
+    .sort((a,b) => String(a.title || "").localeCompare(String(b.title || "")));
 
   const destinations = featured
     .filter(r => ["DESTINATION","AREA"].includes(upper(r.entity_type, 30)))
@@ -305,6 +300,42 @@ async function buildHomeContent() {
     }
   };
 }
+
+async function buildHomeSearchLocations() {
+  // Keep booking autocomplete independent from homepage publication and pricing.
+  // These use deliberately simple, proven sbSelect queries so an unrelated Home source cannot blank location search.
+  const [inventoryResult, airportResult] = await Promise.all([
+    safeSelect("locationInventory", T.inventory, "select=id,public_id,entity_type,code,name,slug,parent_entity_id,status,active,details,payload&active=eq.true&limit=1000"),
+    safeSelect("locationAirports", T.airports, "select=iata,icao,title,locationCity,country,active,published,customer_visible,status&active=eq.true&limit=1000")
+  ]);
+
+  const entityRows = arr(inventoryResult.rows)
+    .filter(r => r.active !== false && ["DESTINATION","AREA"].includes(upper(r.entity_type, 30)));
+  const airportRows = arr(airportResult.rows).filter(r => r.active !== false && clean(r.iata));
+  const airports = airportRows.map(airportCard).sort((a,b) => String(a.city || a.name || "").localeCompare(String(b.city || b.name || "")));
+  const airportByIata = new Map(airportRows.map(r => [upper(r.iata, 3), r]));
+  const byId = new Map(entityRows.map(r => [clean(r.id), r]));
+  const destinations = entityRows
+    .map(r => destinationCard(r, [], byId, airportByIata))
+    .sort((a,b) => String(a.title || "").localeCompare(String(b.title || "")));
+
+  const errors = [inventoryResult, airportResult].filter(r => r.error).map(r => ({ source:r.key, message:r.error }));
+  return {
+    airports,
+    destinations,
+    source:"SUPABASE_LOCATION_CATALOG",
+    sync:{
+      ok:errors.length===0,
+      fetchedAt:new Date().toISOString(),
+      counts:{ airports:airports.length, destinations:destinations.length },
+      errors
+    }
+  };
+}
+
+export const getHomeSearchLocations = webMethod(Permissions.Anyone, async function () {
+  return buildHomeSearchLocations();
+});
 
 export const getHomeContent = webMethod(Permissions.Anyone, async function () {
   return buildHomeContent();
