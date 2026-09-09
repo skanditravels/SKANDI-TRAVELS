@@ -7,7 +7,7 @@ import {
   createBookingCartFromOffer
 } from "backend/bookingOrchestrator.web";
 
-import { getOldStyleHomeContent } from "backend/homeContent.web";
+import { getHomeContent } from "backend/homeContent.web";
 import { searchDuffelStays } from "src/backend/RIA/duffelGroundProducts.web";
 
 import {
@@ -16,7 +16,8 @@ import {
 } from "backend/customerHeader.web";
 
 const EMBED_ID = "#htmlHome";
-const HOME_SOURCE = "SKANDI_HOME_OLD_STYLE";
+const HOME_SOURCE = "SKANDI_HOME";
+const HOME_SOURCES = new Set(["SKANDI_HOME","SKANDI_HOME_LONG_DISCOVERY_V2","SKANDI_HOME_OLD_STYLE"]);
 const HEADER_SOURCE = "SKANDI_CUSTOMER_HEADER_EXPANDBAR";
 const FOOTER_SOURCE = "SKANDI_CUSTOMER_FOOTER";
 const PARENT_SOURCE = "SKANDI_WIX_PARENT";
@@ -274,8 +275,8 @@ async function priceHotel(card, priceSearch) {
 async function hydrateLiveHomePrices(content = {}, priceSearch) {
   const search = normalizePriceSearch(priceSearch || homePriceSearch || {});
   const [destinations, hotels] = await Promise.all([
-    mapWithConcurrency(arr(content.destinations).slice(0,8), 3, card => priceDestination(card, search)),
-    mapWithConcurrency(arr(content.hotels).slice(0,6), 3, card => priceHotel(card, search))
+    mapWithConcurrency(arr(content.destinations).slice(0,12), 3, card => priceDestination(card, search)),
+    mapWithConcurrency(arr(content.hotels).slice(0,10), 3, card => priceHotel(card, search))
   ]);
   return { ...content, destinations, hotels, priceSearch:search, livePriceSupplier:"DUFFEL_STAYS" };
 }
@@ -284,11 +285,48 @@ async function sendHomeBootstrap(html, forceRefresh = false, settingsOverride = 
   if (bootstrapPromise && !forceRefresh) return bootstrapPromise;
   if (settingsOverride) currentSettings = normalizeSettings(settingsOverride);
   bootstrapPromise = (async () => {
+    const request = { locale:currentSettings.language, language:currentSettings.language, currency:currentSettings.currency };
     try {
-      const request = { locale:currentSettings.language, language:currentSettings.language, currency:currentSettings.currency };
-      const [booking, rawContent] = await Promise.all([getHomeBootstrap(request), getOldStyleHomeContent(request)]);
-      const content = await hydrateLiveHomePrices(rawContent || {}, homePriceSearch);
-      postToHtml(html, "HOME_BOOTSTRAP_RESULT", { booking:booking || {}, content, settings:currentSettings });
+      // Content and booking are intentionally isolated. A booking/Duffel issue must not blank Supabase Home content.
+      const [bookingResult, contentResult] = await Promise.allSettled([
+        getHomeBootstrap(request),
+        getHomeContent(request)
+      ]);
+
+      const booking = bookingResult.status === "fulfilled" ? (bookingResult.value || {}) : {};
+      let content = contentResult.status === "fulfilled" ? (contentResult.value || {}) : {};
+      const bootstrapErrors = [];
+
+      if (bookingResult.status === "rejected") {
+        console.warn("[Home] Booking bootstrap unavailable.", bookingResult.reason);
+        bootstrapErrors.push({ source:"BOOKING_BOOTSTRAP", message:clean(bookingResult.reason?.message || bookingResult.reason, 300) });
+      }
+      if (contentResult.status === "rejected") {
+        console.error("[Home] Supabase Home content unavailable.", contentResult.reason);
+        bootstrapErrors.push({ source:"SUPABASE_HOME_CONTENT", message:clean(contentResult.reason?.message || contentResult.reason, 300) });
+      }
+
+      if (contentResult.status === "fulfilled") {
+        try {
+          content = await hydrateLiveHomePrices(content, homePriceSearch);
+        } catch (priceError) {
+          console.warn("[Home] Duffel Home price hydration failed; canonical content will still render.", priceError);
+          bootstrapErrors.push({ source:"DUFFEL_HOME_PRICE", message:clean(priceError?.message || priceError, 300) });
+        }
+      }
+
+      postToHtml(html, "HOME_BOOTSTRAP_RESULT", {
+        booking,
+        content,
+        settings:currentSettings,
+        sync:{
+          ok: contentResult.status === "fulfilled",
+          fetchedAt:new Date().toISOString(),
+          errors:bootstrapErrors
+        }
+      });
+
+      if (contentResult.status === "rejected") postHomeError(html, contentResult.reason);
     } catch (error) {
       console.error("[Home] Bootstrap failed.", error);
       postHomeError(html, error);
@@ -327,7 +365,7 @@ async function handleHomeMessage(html, message) {
         result = await createBookingCartFromOffer({ offer, search });
       }
       if (result?.requiresLogin) throw new Error(result?.message || "Sign in to continue with this offer.");
-      if (!result?.cartId) throw new Error("The booking cart was not created because no cart was returned.");
+      if (!result?.cartId) throw new Error("The booking cart was not created because no cart ID was returned.");
       postToHtml(html, "HOME_NAVIGATE_TO_OFFER", result);
       const allowed = ["offer","extras","transfer","apis","seats","payment","confirmation"];
       const step = allowed.includes(result?.step) ? result.step : "offer";
@@ -343,7 +381,7 @@ async function handleHomeMessage(html, message) {
 
 function handleMessageError(html, message, error) {
   console.error(`[Home] ${message.source || "Unknown"}/${message.type || "Unknown"} failed.`, error);
-  if (message.source === HOME_SOURCE) postHomeError(html, error);
+  if (HOME_SOURCES.has(message.source)) postHomeError(html, error);
   else if (message.source === FOOTER_SOURCE && message.type === "FOOTER_NEWSLETTER_SIGNUP") {
     postToHtml(html, "FOOTER_NEWSLETTER_RESULT", { ok:false, message:error?.message || "Newsletter signup failed." });
   } else if (message.source === HEADER_SOURCE) postToHtml(html, "CUSTOMER_HEADER_STATE", guestHeaderState());
@@ -356,7 +394,7 @@ $w.onReady(function () {
     const message = parseMessage(event.data);
     if (!message?.source || !message?.type) return;
     try {
-      if (message.source === HOME_SOURCE) { await handleHomeMessage(html, message); return; }
+      if (HOME_SOURCES.has(message.source)) { await handleHomeMessage(html, message); return; }
       if (message.source === HEADER_SOURCE) { await handleHeaderMessage(html, message); return; }
       if (message.source === FOOTER_SOURCE) { await handleFooterMessage(html, message); return; }
     } catch (error) { handleMessageError(html, message, error); }
