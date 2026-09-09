@@ -15,6 +15,7 @@ const arr = v => Array.isArray(v) ? v : [];
 const obj = v => v && typeof v === "object" && !Array.isArray(v) ? v : {};
 const first = (...values) => values.find(v => v !== undefined && v !== null && v !== "") ?? "";
 const num = v => Number.isFinite(Number(v)) ? Number(v) : null;
+const bool = (v, fallback = true) => v === undefined || v === null || v === "" ? fallback : (v === true || v === "true" || v === 1 || v === "1" || upper(v) === "YES");
 
 function slug(value) {
   return clean(value, 180)
@@ -29,13 +30,10 @@ function tagArray(value) {
   if (Array.isArray(value)) return value.map(v => clean(v, 80)).filter(Boolean);
   return clean(value, 1000).split(/[|,]/).map(v => v.trim()).filter(Boolean);
 }
-function activePublished(row = {}) {
-  return upper(row.status) === "PUBLISHED" && row.active !== false && row.customer_visible !== false;
-}
-function validNow(row = {}) {
+function validDateRange(fromValue, toValue) {
   const now = Date.now();
-  const from = row.valid_from ? Date.parse(row.valid_from) : NaN;
-  const to = row.valid_to ? Date.parse(row.valid_to) : NaN;
+  const from = fromValue ? Date.parse(fromValue) : NaN;
+  const to = toValue ? Date.parse(toValue) : NaN;
   return (!Number.isFinite(from) || from <= now) && (!Number.isFinite(to) || to >= now);
 }
 function entitySummary(row = {}) {
@@ -55,12 +53,14 @@ function entitySummary(row = {}) {
   ), 900);
 }
 function mediaFor(entityId, media = []) {
-  const rows = media.filter(m => clean(m.entity_id) === clean(entityId) && m.active !== false && m.url);
+  const rows = media
+    .filter(m => clean(m.entity_id) === clean(entityId) && m.active !== false && m.url)
+    .sort((a,b) => Number(a.sort_order ?? 100) - Number(b.sort_order ?? 100));
   return clean(
     rows.find(m => m.is_card)?.url ||
     rows.find(m => m.is_primary)?.url ||
     rows.find(m => m.is_hero)?.url ||
-    rows.sort((a,b) => Number(a.sort_order || 100) - Number(b.sort_order || 100))[0]?.url ||
+    rows[0]?.url ||
     "",
     1600
   );
@@ -83,29 +83,37 @@ function entityPath(row = {}, byId = new Map()) {
   }
   return "/destinations";
 }
-function destinationCard(row, media, byId) {
+function destinationCard(row, media, byId, airportByIata) {
   const d = obj(row.details);
+  const iata = upper(first(d.searchAirportIata, d.nearestAirportIata), 3);
+  const airport = airportByIata.get(iata) || {};
+  const title = clean(row.name, 220);
+  const country = clean(first(d.countryName, d.countryCode), 120);
   return {
     id: row.id,
     publicId: row.public_id || "",
     entityType: row.entity_type,
-    title: row.name,
-    name: row.name,
-    slug: row.slug || slug(row.name),
-    destinationCode: row.code || "",
-    iata: upper(first(d.searchAirportIata, d.nearestAirportIata), 3),
-    country: first(d.countryName, d.countryCode),
+    title,
+    name: title,
+    slug: row.slug || slug(title),
+    destinationCode: upper(row.code, 20),
+    iata,
+    icao: upper(airport.icao, 4),
+    airportName: clean(airport.title, 220),
+    airportCity: clean(airport.locationCity, 160),
+    country,
     description: entitySummary(row),
     imageUrl: mediaFor(row.id, media),
-    tags: tagArray(first(d.homepageTags, d.tags, d.goodFor)).slice(0, 4),
+    tags: tagArray(first(d.homepageTags, d.tags, d.goodFor)).slice(0, 6),
     path: entityPath(row, byId),
     livePrice: true,
+    searchTerms: [title, row.code, country, iata, airport.title, airport.locationCity, airport.icao, ...tagArray(d.tags)].filter(Boolean),
     priceLookup: {
-      destination: first(row.code, row.name),
-      iata: upper(first(d.searchAirportIata, d.nearestAirportIata), 3),
+      destination: first(row.code, title),
+      iata,
       latitude: num(d.latitude),
       longitude: num(d.longitude),
-      label: row.name
+      label: title
     }
   };
 }
@@ -138,21 +146,30 @@ function hotelCard(row, media, byId) {
     }
   };
 }
+function offerVisible(row = {}) {
+  const p = obj(row.payload);
+  if (upper(row.status) !== "PUBLISHED") return false;
+  if (!bool(first(p.active, p.enabled), true)) return false;
+  if (!bool(first(p.customerVisible, p.customer_visible), true)) return false;
+  return validDateRange(first(p.validFrom, p.valid_from), first(p.validTo, p.valid_to));
+}
 function offerCard(row = {}) {
   const p = obj(row.payload);
-  const tags = [...arr(row.destinations), ...arr(row.product_types), ...tagArray(p.tags)].filter(Boolean);
+  const tags = [...arr(p.destinations), ...arr(p.productTypes), ...tagArray(p.tags)].filter(Boolean);
   return {
     id: row.id,
     promotionId: row.promotion_id || "",
-    title: row.title || "SKANDI Offer",
-    description: clean(first(row.subtitle, row.banner_text, p.description, p.summary), 900),
-    imageUrl: clean(first(row.image_url, p.imageUrl, p.image), 1600),
-    badge: clean(first(p.badge, row.promotion_type, "Offer"), 80),
+    title: row.title || clean(first(p.title, "SKANDI Offer"), 220),
+    description: clean(first(p.subtitle, p.bannerText, p.description, p.summary), 900),
+    imageUrl: clean(first(p.imageUrl, p.image_url, p.image), 1600),
+    badge: clean(first(p.badge, p.promotionType, "Offer"), 80),
     tags: [...new Set(tags)].slice(0, 4),
     path: clean(first(p.path, p.linkUrl, p.url, "/offers"), 600),
     search: obj(p.search),
-    terms: clean(row.terms, 1400),
-    priority: Number(row.priority || 100)
+    terms: clean(first(p.terms, p.termsSummary), 1400),
+    fromPrice: num(first(p.fromPrice, p.priceFrom, p.price)),
+    currency: upper(first(p.currency, "USD"), 3),
+    priority: Number(first(p.priority, p.sortOrder, 100)) || 100
   };
 }
 function inspirationCard(row = {}) {
@@ -166,61 +183,82 @@ function inspirationCard(row = {}) {
     category: row.category || "",
     tags: tagArray(first(row.tags, p.tags)).slice(0, 4),
     path: clean(first(row.path, p.path, p.linkUrl, row.slug ? `/travel-info/${row.slug}` : "/travel-info"), 600),
-    sortOrder: Number(row.sort_order || 100)
+    sortOrder: Number(row.sort_order ?? 100)
   };
 }
 function airportCard(row = {}) {
+  const city = clean(first(row.locationCity, row.title, row.iata), 160);
+  const name = clean(first(row.title, row.locationCity, row.iata), 220);
+  const iata = upper(row.iata, 3);
+  const icao = upper(row.icao, 4);
+  const country = clean(row.country, 120);
   return {
-    city: first(row.locationCity, row.title, row.iata),
-    name: first(row.title, row.locationCity, row.iata),
-    iata: upper(row.iata, 3),
-    icao: upper(row.icao, 4),
-    country: first(row.country, "")
+    city,
+    name,
+    iata,
+    icao,
+    country,
+    searchTerms: [city, name, iata, icao, country].filter(Boolean)
   };
 }
 
-export const getOldStyleHomeContent = webMethod(Permissions.Anyone, async function () {
-  const [entities, media, offersRaw, inspirationRaw, airportsRaw] = await Promise.all([
-    sbSelect(T.inventory, "select=id,public_id,entity_type,code,name,slug,parent_entity_id,status,active,customer_visible,homepage_featured,sort_priority,details,payload&status=eq.PUBLISHED&active=eq.true&customer_visible=eq.true&order=sort_priority.asc,name.asc&limit=500").catch(() => []),
-    sbSelect(T.media, "select=entity_id,url,is_card,is_primary,is_hero,sort_order,active&active=eq.true&limit=1000").catch(() => []),
-    sbSelect(T.offers, "select=*&status=eq.PUBLISHED&order=priority.asc,updated_at.desc&limit=50").catch(() => []),
-    sbSelect(T.inspiration, "select=id,title,slug,category,body,image_url,active,sort_order,status,customer_visible,homepage_featured,excerpt,path,kicker,tags,payload&status=eq.PUBLISHED&active=eq.true&customer_visible=eq.true&order=sort_order.asc,updated_at.desc&limit=50").catch(() => []),
-    sbSelect(T.airports, "select=iata,icao,title,locationCity,country,active,published,customer_visible&limit=500").catch(() => [])
+async function safeSelect(key, table, query) {
+  try {
+    const rows = await sbSelect(table, query);
+    return { key, rows: arr(rows), error: "" };
+  } catch (error) {
+    const message = clean(error?.message || error || "SUPABASE_QUERY_FAILED", 500);
+    console.error(`[HomeContent] ${key} failed:`, message);
+    return { key, rows: [], error: message };
+  }
+}
+
+async function buildHomeContent() {
+  const results = await Promise.all([
+    safeSelect("inventory", T.inventory, "select=id,public_id,entity_type,code,name,slug,parent_entity_id,status,active,customer_visible,homepage_featured,sort_priority,details,payload&status=eq.PUBLISHED&active=eq.true&customer_visible=eq.true&order=sort_priority.asc,name.asc&limit=1000"),
+    safeSelect("media", T.media, "select=entity_id,url,is_card,is_primary,is_hero,sort_order,active&active=eq.true&order=sort_order.asc&limit=2000"),
+    // storefront_promotions currently stores commercial display fields in payload. Do not order by a non-existent priority column.
+    safeSelect("offers", T.offers, "select=id,promotion_id,title,status,payload,created_at,updated_at&status=eq.PUBLISHED&order=updated_at.desc&limit=100"),
+    safeSelect("inspiration", T.inspiration, "select=id,title,slug,category,body,image_url,active,sort_order,status,customer_visible,homepage_featured,excerpt,path,kicker,tags,payload,updated_at&status=eq.PUBLISHED&active=eq.true&customer_visible=eq.true&order=sort_order.asc,updated_at.desc&limit=100"),
+    safeSelect("airports", T.airports, "select=iata,icao,title,locationCity,country,active,published,customer_visible,status&active=eq.true&published=eq.true&customer_visible=eq.true&order=locationCity.asc,title.asc&limit=1000")
   ]);
 
-  const rows = arr(entities);
-  const byId = new Map(rows.map(r => [clean(r.id), r]));
-  const featured = rows.filter(r => r.homepage_featured === true);
+  const byKey = Object.fromEntries(results.map(r => [r.key, r]));
+  const entities = arr(byKey.inventory?.rows);
+  const media = arr(byKey.media?.rows);
+  const airportRows = arr(byKey.airports?.rows);
+  const airports = airportRows.filter(r => r.iata).map(airportCard);
+  const airportByIata = new Map(airportRows.filter(r => r.iata).map(r => [upper(r.iata, 3), r]));
+  const byId = new Map(entities.map(r => [clean(r.id), r]));
+  const featured = entities.filter(r => r.homepage_featured === true);
 
-  const searchDestinations = rows
+  const searchDestinations = entities
     .filter(r => ["DESTINATION","AREA"].includes(upper(r.entity_type, 30)))
-    .map(r => destinationCard(r, arr(media), byId));
+    .map(r => destinationCard(r, media, byId, airportByIata));
 
   const destinations = featured
     .filter(r => ["DESTINATION","AREA"].includes(upper(r.entity_type, 30)))
-    .slice(0, 8)
-    .map(r => destinationCard(r, arr(media), byId));
+    .slice(0, 12)
+    .map(r => destinationCard(r, media, byId, airportByIata));
 
   const hotels = featured
     .filter(r => upper(r.entity_type, 30) === "HOTEL")
-    .slice(0, 6)
-    .map(r => hotelCard(r, arr(media), byId));
+    .slice(0, 10)
+    .map(r => hotelCard(r, media, byId));
 
-  const offers = arr(offersRaw)
-    .filter(row => activePublished({ ...row, active: true, customer_visible: true }) && validNow(row))
+  const offers = arr(byKey.offers?.rows)
+    .filter(offerVisible)
+    .map(offerCard)
     .sort((a,b) => Number(a.priority || 100) - Number(b.priority || 100))
-    .slice(0, 8)
-    .map(offerCard);
+    .slice(0, 12);
 
-  const inspiration = arr(inspirationRaw)
-    .filter(activePublished)
-    .slice(0, 8)
-    .map(inspirationCard);
+  const inspiration = arr(byKey.inspiration?.rows)
+    .filter(row => upper(row.status) === "PUBLISHED" && row.active !== false && row.customer_visible !== false)
+    .map(inspirationCard)
+    .sort((a,b) => Number(a.sortOrder || 100) - Number(b.sortOrder || 100))
+    .slice(0, 12);
 
-  const airports = arr(airportsRaw)
-    .filter(r => r.active !== false && r.published !== false && r.customer_visible !== false && r.iata)
-    .map(airportCard);
-
+  const errors = results.filter(r => r.error).map(r => ({ source:r.key, message:r.error }));
   return {
     airports,
     destinations,
@@ -232,10 +270,34 @@ export const getOldStyleHomeContent = webMethod(Permissions.Anyone, async functi
     trust: [],
     why: [],
     source: "SUPABASE_CANONICAL_HOME",
+    sync: {
+      ok: errors.length === 0,
+      fetchedAt: new Date().toISOString(),
+      counts: {
+        airports: airports.length,
+        publishedEntities: entities.length,
+        searchDestinations: searchDestinations.length,
+        homepageDestinations: destinations.length,
+        homepageHotels: hotels.length,
+        offers: offers.length,
+        inspiration: inspiration.length,
+        media: media.length
+      },
+      errors
+    },
     pricing: {
       supplier: "DUFFEL_STAYS",
       destinationMode: "LIVE_LOCATION_CHEAPEST_STAY",
       hotelMode: "LIVE_EXACT_ACCOMMODATION"
     }
   };
+}
+
+export const getHomeContent = webMethod(Permissions.Anyone, async function () {
+  return buildHomeContent();
+});
+
+// Backwards-compatible export for any older page code still importing the previous name.
+export const getOldStyleHomeContent = webMethod(Permissions.Anyone, async function () {
+  return buildHomeContent();
 });
