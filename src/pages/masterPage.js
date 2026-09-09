@@ -21,7 +21,7 @@ import {
   getStaffPortalSession
 } from "backend/RIA/staffPortalAuth.web";
 
-const MASTER_VERSION = "2026.09.09.3";
+const MASTER_VERSION = "2026.09.09.4";
 
 const MASTER_CONFIG = Object.freeze({
   brand: Object.freeze({
