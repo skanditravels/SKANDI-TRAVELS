@@ -69,19 +69,73 @@ function countrySlug(row = {}) {
   const d = obj(row.details);
   return slug(first(d.countrySlug, d.countryName, d.countryCode));
 }
+function ancestorRows(row = {}, byId = new Map()) {
+  const out = [];
+  const seen = new Set();
+  let cursor = row;
+  for (let i = 0; i < 10; i += 1) {
+    const parentId = clean(cursor?.parent_entity_id || obj(cursor?.details).parentId);
+    if (!parentId || seen.has(parentId)) break;
+    seen.add(parentId);
+    const parent = byId.get(parentId);
+    if (!parent) break;
+    out.push(parent);
+    cursor = parent;
+  }
+  return out;
+}
+function routeParam(value) {
+  return encodeURIComponent(clean(value, 240));
+}
 function entityPath(row = {}, byId = new Map()) {
   const d = obj(row.details);
   const type = upper(row.entity_type, 30);
-  const cSlug = countrySlug(row);
+  const ownSlug = slug(first(row.slug, row.name));
+  const ancestors = ancestorRows(row, byId);
+  const country = countrySlug(row) || slug(first(
+    ancestors.find(a => upper(a.entity_type, 30) === "COUNTRY")?.slug,
+    ancestors.find(a => upper(a.entity_type, 30) === "COUNTRY")?.name,
+    d.countryName,
+    d.countryCode
+  ));
+
+  if (type === "DESTINATION") {
+    return `/our-destinations/country/destination?country=${routeParam(country)}&destination=${routeParam(ownSlug)}`;
+  }
+
+  if (type === "AREA") {
+    const destinationAncestor = ancestors.find(a => upper(a.entity_type, 30) === "DESTINATION");
+    if (destinationAncestor) {
+      return `/our-destinations/country/destination/area?country=${routeParam(country)}&destination=${routeParam(slug(first(destinationAncestor.slug, destinationAncestor.name)))}&area=${routeParam(ownSlug)}`;
+    }
+    // Some canonical islands/regions (for example Koh Samui) are AREA records directly under COUNTRY.
+    // They are destination-level choices in the public flow, so route them through the Destination page.
+    return `/our-destinations/country/destination?country=${routeParam(country)}&destination=${routeParam(ownSlug)}`;
+  }
+
   if (type === "HOTEL") {
-    const destination = byId.get(clean(d.destinationId)) || byId.get(clean(row.parent_entity_id)) || null;
-    const dSlug = slug(first(d.destinationSlug, destination?.slug, destination?.name, d.city));
-    return `/hotels/${cSlug || "destination"}/${dSlug || "destination"}/${slug(first(row.slug, row.name))}`;
+    const destination = ancestors.find(a => upper(a.entity_type, 30) === "DESTINATION") || null;
+    const area = ancestors.find(a => upper(a.entity_type, 30) === "AREA") || null;
+    const destinationSlug = slug(first(
+      d.destinationSlug,
+      destination?.slug,
+      destination?.name,
+      area?.slug,
+      area?.name,
+      d.city
+    ));
+    const areaSlug = destination && area ? slug(first(area.slug, area.name)) : "";
+    const params = [
+      `country=${routeParam(country)}`,
+      `destination=${routeParam(destinationSlug)}`,
+      areaSlug ? `area=${routeParam(areaSlug)}` : "",
+      `hotel=${routeParam(ownSlug)}`,
+      `hotelId=${routeParam(first(row.id, row.public_id))}`
+    ].filter(Boolean).join("&");
+    return `/hotel-detail?${params}`;
   }
-  if (type === "DESTINATION" || type === "AREA") {
-    return `/destinations/${cSlug || "destination"}/${slug(first(row.slug, row.name))}`;
-  }
-  return "/destinations";
+
+  return "/our-destinations";
 }
 function destinationCard(row, media, byId, airportByIata) {
   const d = obj(row.details);
@@ -164,7 +218,7 @@ function offerCard(row = {}) {
     imageUrl: clean(first(p.imageUrl, p.image_url, p.image), 1600),
     badge: clean(first(p.badge, p.promotionType, "Offer"), 80),
     tags: [...new Set(tags)].slice(0, 4),
-    path: clean(first(p.path, p.linkUrl, p.url, "/offers"), 600),
+    path: clean(first(p.path, p.linkUrl, p.url), 600),
     search: obj(p.search),
     terms: clean(first(p.terms, p.termsSummary), 1400),
     fromPrice: num(first(p.fromPrice, p.priceFrom, p.price)),
@@ -182,7 +236,7 @@ function inspirationCard(row = {}) {
     kicker: clean(first(row.kicker, p.kicker, row.category, "Travel inspiration"), 100),
     category: row.category || "",
     tags: tagArray(first(row.tags, p.tags)).slice(0, 4),
-    path: clean(first(row.path, p.path, p.linkUrl, row.slug ? `/travel-info/${row.slug}` : "/travel-info"), 600),
+    path: clean(first(row.path, p.path, p.linkUrl), 600),
     sortOrder: Number(row.sort_order ?? 100)
   };
 }
@@ -323,6 +377,7 @@ async function buildHomeSearchLocations() {
   return {
     airports,
     destinations,
+    searchDestinations: destinations,
     source:"SUPABASE_LOCATION_CATALOG",
     sync:{
       ok:errors.length===0,
