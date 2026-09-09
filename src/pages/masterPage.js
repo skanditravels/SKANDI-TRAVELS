@@ -595,21 +595,24 @@ const MASTER_CONFIG = {
         },
         {
           label: "Cookies",
-          path: "/about/legal/policies?policy=cookies"
+          path: "/about/legal/policies?type=cookies"
         },
         {
           label: "Privacy",
-          path: "/about/legal/policies?policy=privacy"
+          path: "/about/legal/policies?type=privacy"
         },
-
         {
-          label: "Terms",
-          path: "/about/legal/policies?policy=terms"
+          label: "Website Disclaimer",
+          path: "/about/legal/policies?slug=disclaimer"
+        },
+        {
+          label: "Bookinng Terms",
+          path: "/about/legal/policies?type=bookingTerms"
         },
 
         {
           label: "Accessibility",
-          path: "/about/legal/policies?policy=accessibility"
+          path: "/about/legal/policies?type=accessibility"
         },
 
         {
