@@ -72,9 +72,9 @@ const MASTER_CONFIG = Object.freeze({
   routes: Object.freeze({
     home: "/",
     search: "/search",
-    flights: "/flights",
+    flights: "/home?tab=flights",
     carRental: "/car-rental",
-    hotels: "/hotels",
+    hotels: "/destinationshotels",
     packages: "/packages",
     tours: "/tours",
     activities: "/activities",
