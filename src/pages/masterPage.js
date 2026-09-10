@@ -44,7 +44,7 @@ const MASTER_CONFIG = Object.freeze({
         voy: "https://static.wixstatic.com/media/394052_30b8bebbf5ee493da7d47329d04de494~mv2.png",
         voyWhite: "https://static.wixstatic.com/media/394052_3770b6753c474d73a77c674b20eab305~mv2.png",
         skandiClub: "https://static.wixstatic.com/media/394052_191b0c7832294e6db41f8d81f678f03b~mv2.png",
-        signatureCollection: ""
+        signatureCollection: "https://static.wixstatic.com/media/394052_8e09fa73724c443aa305ebedb11d094d~mv2.png"
       }),
       icons: Object.freeze({
         home: "", bookings: "", favorites: "", documents: "", travelers: "",
