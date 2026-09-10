@@ -101,17 +101,19 @@ const MASTER_CONFIG = Object.freeze({
   customer: Object.freeze({
     header: Object.freeze({
       primaryNav: Object.freeze([
-        { id:"flights", label:"Flights", path:"/flights" },
+        { id:"home", label:"Book", path:"/" },
         { id:"hotels", label:"Hotels", path:"/hotels" },
         { id:"packages", label:"Packages", path:"/packages" },
         { id:"tours", label:"Tours & Activities", path:"/tours" },
-        { id:"transfers", label:"Transfers", path:"/transfers" }
-      ]),
-      secondaryNav: Object.freeze([
         { id:"destinations", label:"Our Destinations", path:"/destinations" },
         { id:"signature", label:"SKANDI Collection", path:"/skandi-collection" },
-        { id:"voy", label:"VOY Magazine", path:"/voy-magazine" },
-        { id:"newsroom", label:"Newsroom", path:"/about/news-room" }
+        { id:"travelInfo", label:"Travel Info", path:"/travel-info" }
+
+
+      ]),
+      secondaryNav: Object.freeze([
+        { id:"voy", label:"VOY Magazine", path:"/voy-magazine" }
+        
       ]),
       accountNav: Object.freeze([
         { id:"myTrip", label:"My Trips", path:"/my-profile?tab=trips" },
@@ -166,7 +168,10 @@ const MASTER_CONFIG = Object.freeze({
           ])
         }
       ]),
-      staffLogin: Object.freeze({ label:"Staff Login", path:"/riaintra" })
+      footer:Object.freeze({
+      links:Object.freeze([
+        { label:"Legal", path:"/about/legal" },
+        { label:"Staff Login", path:"/riaintra" })
     })
   }),
 
