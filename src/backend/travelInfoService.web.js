@@ -1,294 +1,309 @@
+// backend/travelInfoService.web.js
+// SKANDI Travel Info V9 — Inventory Control + Aircraft Display Control unified public service.
+// Version 2026.09.10.9
+
 import { webMethod, Permissions } from "wix-web-module";
-import { getSecret } from "wix-secrets-backend";
 import { fetch } from "wix-fetch";
+import { secrets } from "wix-secrets-backend.v2";
+import { elevate } from "wix-auth";
+import { restRequest } from "backend/RIA/supabaseServer.js";
 
-const TABLES = Object.freeze({
-  airlines:"travel_info_airlines", airports:"travel_info_airports",
-  hotels:"travel_info_hotels", transfers:"travel_info_transfers",
-  tours:"travel_info_tours", activities:"travel_info_activities",
-  tickets:"travel_info_tickets", faq:"travel_info_faq",
-  faqGroups:"travel_info_faq_groups", articles:"travel_info_articles",
-  requirements:"travel_requirements", baggage:"baggage_allowance",
-  support:"travel_info_support_requests",
-  aircraft:"travel_info_aircraft", aircraftCabins:"travel_info_aircraft_cabins",
-  aircraftViews:"travel_info_aircraft_views", aircraftHotspots:"travel_info_aircraft_hotspots",
-  aircraftScenes:"travel_info_aircraft_walk_scenes", aircraftSceneHotspots:"travel_info_aircraft_scene_hotspots"
-});
-let configPromise=null;
-const text=(v,m=10000)=>String(v??"").trim().slice(0,m);
-const obj=v=>v&&typeof v==="object"&&!Array.isArray(v)?v:{};
-function arr(v){if(Array.isArray(v))return v;if(v==null||v==="")return[];if(typeof v==="string"){try{const p=JSON.parse(v);return Array.isArray(p)?p:[p]}catch(_){return[v]}}return[v]}
-const first=(...v)=>v.find(x=>x!==undefined&&x!==null&&String(x).trim()!=="");
-const num=(v,f=null)=>Number.isFinite(Number(v))?Number(v):f;
-const has=(o,k)=>Object.prototype.hasOwnProperty.call(o||{},k);
-function parse(v,f=null){if(v&&typeof v==="object")return v;if(typeof v==="string"&&v.trim()){try{return JSON.parse(v)}catch(_){}}return f}
-function safeSlug(v){return text(v,180).toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")}
-function titleFromSlug(v){return text(v,180).replace(/^\/+|\/+$/g,"").split("/").pop().replace(/[-_]+/g," ").replace(/\b\w/g,c=>c.toUpperCase())}
-function publicMedia(v){const raw=text(v,3000);if(!raw)return"";if(/^https:\/\//i.test(raw))return raw;const m=raw.match(/^wix:(?:image|vector):\/\/v1\/([^/#]+)/i);return m?`https://static.wixstatic.com/media/${m[1]}`:raw}
-function localized(row){const list=arr(row?.localized_content);return list.find(x=>text(x?.language,12).toUpperCase()==="EN")||list[0]||{}}
-function inventory(row){return obj(row?.inventory_details)}
-function media(row,kind="hero"){const list=arr(row?.media_assets).filter(x=>x&&x.active!==false);const x=(kind==="hero"?list.find(x=>x.isHero===true||x.is_hero===true):null)||(kind==="card"?list.find(x=>x.isCard===true||x.is_card===true):null)||list.find(x=>x.isPrimary===true||x.is_primary===true)||list[0];return publicMedia(x?.url||"")}
-function isPublic(row={}){const status=text(row.status,30).toUpperCase();if(status&&status!=="PUBLISHED")return false;if(has(row,"customer_visible")&&row.customer_visible===false)return false;if(has(row,"published")&&row.published===false)return false;if(has(row,"active")&&row.active===false)return false;return true}
-function sortRows(rows){return [...rows].sort((a,b)=>{const aa=Number(first(a.sort_order,a.sortOrder,999)),bb=Number(first(b.sort_order,b.sortOrder,999));return aa!==bb?aa-bb:text(first(a.Title,a.title,a.slug)).localeCompare(text(first(b.Title,b.title,b.slug)))})}
-async function secret(name){try{return text(await getSecret(name),10000)}catch(_){return""}}
-async function config(){if(configPromise)return configPromise;configPromise=(async()=>{const[url,k1,k2]=await Promise.all([secret("SUPABASE_URL"),secret("SUPABASE_SECRET_KEY"),secret("SUPABASE_SERVICE_ROLE_KEY")]);const clean=text(url).replace(/\/+$/,""),key=k1||k2;if(!/^https:\/\/[^/]+\.supabase\.co$/i.test(clean))throw new Error("SUPABASE_URL is missing or invalid.");if(!key)throw new Error("Supabase server key is missing.");if(key.startsWith("sb_publishable_"))throw new Error("Travel Info requires a server-only Supabase key.");return{url:clean,key,modern:key.startsWith("sb_secret_")}})();try{return await configPromise}catch(e){configPromise=null;throw e}}
-async function db(path,{method="GET",body,prefer=""}={}){const{url,key,modern}=await config();const headers={apikey:key,Accept:"application/json","Content-Type":"application/json"};if(!modern)headers.Authorization=`Bearer ${key}`;if(prefer)headers.Prefer=prefer;const r=await fetch(`${url}/rest/v1/${String(path).replace(/^\/+/,"")}`,{method,headers,body:body===undefined?undefined:JSON.stringify(body)});const raw=await r.text();let data=null;if(raw){try{data=JSON.parse(raw)}catch(_){data=raw}}if(!r.ok)throw new Error(`Supabase ${method} failed (${r.status}): ${typeof data==="string"?data:(data?.message||data?.error||JSON.stringify(data||{}))}`);return data}
-async function selectAll(table){const rows=await db(`${table}?select=*`);return sortRows((Array.isArray(rows)?rows:[]).filter(isPublic))}
-async function selectSafe(table){try{return await selectAll(table)}catch(e){console.warn(`[Travel Info] ${table}:`,e?.message||e);return[]}}
+const elevatedGetSecretValue = elevate(secrets.getSecretValue);
+const VERSION = "2026.09.10.9";
+const PUBLIC_AIRCRAFT_STATUS = "PUBLISHED";
+const SUPPORTED_LANGUAGES = new Set(["EN","SV","NO","DA","FI"]);
 
-function sectionObject(v){const p=parse(v,null);return p&&!Array.isArray(p)&&typeof p==="object"?p:{}}
-function mapAirline(row={}){
-  const inv=inventory(row),loc=localized(row),payload=obj(row.payload);
-  const title=first(loc.title,row.Title,row.title,inv.name,payload.name,row.shortName,"Airline");
-  const iata=text(first(row.iataCode,inv.iata,payload.iataCode,payload.iata_code),12);
-  const sections=sectionObject(first(row.sectionsJson,inv.sections,payload.sections));
-  return {
-    ...payload,...inv,
-    id:first(row.ID,row["Record ID"],row.id,payload.id,iata),
-    recordId:first(row["Record ID"],row.ID,row.id,payload.id),
-    title,name:title,shortName:first(row.shortName,inv.shortName,payload.shortName,title),
-    initials:iata,iataCode:iata,icaoCode:text(first(row.icaoCode,inv.icao,payload.icaoCode),12),
-    country:first(row.locationCountry,inv.country,payload.country,""),
-    city:first(row.locationCity,inv.city,payload.city,""),
-    alliance:first(row.alliance,inv.alliance,payload.alliance,""),
-    brandGroup:first(row.brandGroup,inv.brandGroup,payload.brandGroup,""),
-    hub:first(row.hub,inv.hub,payload.hub,""),hubs:parse(first(row.hubsJson,inv.hubs,payload.hubs),[]),
-    website:first(row.website,inv.website,payload.website,""),
-    contactUrl:first(row.contactUrl,inv.contactUrl,payload.contactUrl,row.website,""),
-    summary:first(loc.shortDescription,loc.short_description,row.summary,inv.summary,payload.summary,""),
-    intro:first(loc.fullDescription,loc.full_description,row.summary,inv.summary,payload.intro,payload.summary,""),
-    logo:publicMedia(first(row.logoFile,row.logoIcon,inv.logoUrl,inv.logoIconUrl,payload.logo,payload.logoUrl,media(row,"card"),"")),
-    heroImage:publicMedia(first(row.heroAircraftUrl,inv.heroImageUrl,payload.heroImage,media(row,"hero"),"")),
-    color:first(row.primaryColor,inv.primaryColor,payload.primaryColor,"#022e64"),
-    accent:first(row.accentColor,inv.accentColor,payload.accentColor,"#d7e6ff"),
-    meta:arr(first(row.meta,inv.meta,payload.meta)).length?arr(first(row.meta,inv.meta,payload.meta)):[iata,first(row.locationCountry,inv.country),first(row.alliance,inv.alliance)].filter(Boolean),
-    sections,
-    checkInDeadline:first(row.checkInDeadline,inv.checkInDeadline,payload.checkInDeadline,""),
-    lounges:parse(first(row.lounges,inv.lounges,payload.lounges),first(row.lounges,inv.lounges,"")),
-    boarding:parse(first(row.boarding,inv.boarding,payload.boarding),null),
-    ticketTypes:parse(first(row.ticketTypesJson,inv.ticketTypes,payload.ticketTypes),null),
-    cabins:parse(first(row.cabinsJson,inv.cabins,payload.cabins),null),
-    food:parse(first(row.foodDrinksJson,inv.foodDrinks,payload.food,payload.foodDrinks),null),
-    wifi:parse(first(row.wifiOnboardJson,inv.wifiOnboard,payload.wifi),null),
-    irregularities:parse(first(row.delayCancellationJson,inv.delayCancellation,payload.irregularities),null),
-    damaged:parse(first(row.damagedBaggageJson,inv.damagedBaggage,payload.damaged),null),
-    lost:parse(first(row.lostFoundJson,inv.lostFound,payload.lost),null),
-    kids:parse(first(row.childrenInfantsJson,inv.childrenInfants,payload.kids),null),
-    sourceUrls:arr(first(row.sourceUrlsJson,row.servicePolicySourceUrlsJson,inv.sourceUrls,payload.sourceUrls)),
-    inflightExperience:first(inv.inflightExperience,payload.inflightExperience,sections.inflightExperience,null),
-    aircraftConfigurations:arr(parse(first(row.aircraftConfigurationsJson,inv.aircraftConfigurations,payload.aircraftConfigurations),[])),
-    aircraftFamilies:first(row.aircraftFamiliesText,inv.aircraftFamilies,payload.aircraftFamilies,""),
-    fleetSummary:parse(first(row.fleetSummaryJson,inv.fleetSummary,payload.fleetSummary),null),
-    aircraftConfigSources:arr(parse(first(row.aircraftConfigSourceUrlsJson,inv.aircraftConfigSources,payload.aircraftConfigSources),[])),
-    aircraftConfigReviewNotes:first(row.aircraftConfigReviewNotes,inv.aircraftConfigReviewNotes,payload.aircraftConfigReviewNotes,""),
-    aircraftConfigLastReviewed:first(row.aircraftConfigLastReviewed,inv.aircraftConfigLastReviewed,payload.aircraftConfigLastReviewed,""),
-    aircraftPhotoWalkthrough:first(inv.aircraftPhotoWalkthrough,payload.aircraftPhotoWalkthrough,null),
-    loyaltyProgram:first(row.loyaltyProgram,inv.loyaltyProgram,payload.loyaltyProgram,""),
-    loyaltyProgramUrl:first(row.loyaltyProgramUrl,inv.loyaltyProgramUrl,payload.loyaltyProgramUrl,"")
-  };
+const clean = (v, max=8000) => String(v ?? "").trim().slice(0,max);
+const upper = (v, max=8000) => clean(v,max).toUpperCase();
+const arr = v => Array.isArray(v) ? v : [];
+const obj = v => v && typeof v === "object" && !Array.isArray(v) ? v : {};
+const num = v => Number.isFinite(Number(v)) ? Number(v) : null;
+const first = (...xs) => xs.find(v => v !== undefined && v !== null && v !== "") ?? "";
+
+function parseJson(value, fallback=null) {
+  if (value === undefined || value === null || value === "") return fallback;
+  if (typeof value === "object") return value;
+  try { return JSON.parse(String(value)); } catch (_) { return fallback; }
 }
-function mapAirport(row={}){
-  const inv=inventory(row),loc=localized(row),payload=obj(row.payload);
-  const code=text(first(row.iata,inv.iata,payload.iata,payload.iataCode),3).toUpperCase();
-  const title=first(loc.title,row.title,inv.name,payload.name,code||"Airport");
-  return {
-    ...payload,...inv,
-    id:first(row.ID,row.id,row.itemId,code),recordId:first(row.ID,row.id,row.itemId,code),
-    code,iata:code,icao:text(first(row.icao,inv.icao,payload.icao),8).toUpperCase(),
-    title,name:title,city:first(row.locationCity,inv.city,payload.city,""),
-    country:first(row.country,inv.country,payload.country,""),region:first(inv.region,payload.region,""),
-    summary:first(loc.shortDescription,loc.short_description,row.summary,row.information,inv.summary,payload.summary,""),
-    intro:first(loc.fullDescription,loc.full_description,row.information,row.summary,inv.information,payload.intro,""),
-    tagline:first(row.summary,row.information,inv.tagline,payload.tagline,""),
-    logo:publicMedia(first(row.logoUrl,row.logoIconUrl,inv.logoUrl,payload.logo,media(row,"card"),"")),
-    heroImage:publicMedia(first(row.heroImageUrl,inv.heroImageUrl,payload.heroImage,media(row,"hero"),"")),
-    latitude:num(first(row.latitude,inv.latitude,payload.latitude)),longitude:num(first(row.longitude,inv.longitude,payload.longitude)),
-    timezone:first(row.timezone,inv.timezone,payload.timezone,""),website:first(row.website,inv.website,payload.website,""),
-    contactUrl:first(row.contactUrl,inv.contactUrl,payload.contactUrl,row.website,""),
-    distanceToCityCenterKm:num(first(row.distanceToCityCenterKm,inv.distanceToCityCenterKm,payload.distanceToCityCenterKm)),
-    quickFacts:arr(first(row.quickFactsJson,inv.quickFacts,payload.quickFacts)).map(x=>parse(x,x)),
-    transport:arr(first(row.transportJson,inv.transport,payload.transport)).map(x=>parse(x,x)),
-    runways:arr(first(row.runwaysJson,inv.runways,payload.runways)).map(x=>parse(x,x)),
-    terminals:arr(first(row.terminalsJson,inv.terminals,payload.terminals)).map(x=>parse(x,x)),
-    lounges:parse(first(row.lounges,inv.lounges,payload.lounges),first(row.lounges,inv.lounges,"")),
-    foodDrinks:arr(first(row.foodDrinksJson,inv.foodDrinks,payload.foodDrinks)).map(x=>parse(x,x)),
-    airportHotels:parse(first(row.airportHotels,inv.airportHotels,payload.airportHotels),first(row.airportHotels,inv.airportHotels,"")),
-    lostFound:arr(first(row.lostFoundJson,inv.lostFound,payload.lostFound)).map(x=>parse(x,x)),
-    destinationsServing:first(row.destinationsServing,inv.destinationsServing,payload.destinationsServing,""),
-    sections:sectionObject(first(row.sectionsJson,inv.sections,payload.sections)),
-    sectionsJson:parse(first(row.sectionsJson,inv.sectionsJson,payload.sectionsJson),null),
-    meta:arr(first(row.meta,inv.meta,payload.meta)).length?arr(first(row.meta,inv.meta,payload.meta)):[code,first(row.locationCity,inv.city),first(row.country,inv.country)].filter(Boolean),
-    badges:[first(row.locationCity,inv.city),first(row.country,inv.country),code].filter(Boolean),
-    sourceUrls:arr(first(row.sourceUrlsJson,inv.sourceUrls,payload.sourceUrls))
-  };
+function slug(value) {
+  return clean(value,240).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+    .replace(/&/g," and ").replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"");
 }
-function mapLibrary(type,row={}){
-  const payload=obj(row.payload),inv=inventory(row),loc=localized(row);
-  const title=first(loc.title,payload.name,payload.title,row.title,inv.name,titleFromSlug(row.slug),"Travel information");
+function normalizeLanguage(value) {
+  const lang = upper(value,8);
+  return SUPPORTED_LANGUAGES.has(lang) ? lang : "EN";
+}
+function publicInventoryEntity(row={}) {
+  return row.active === true && row.customer_visible === true && upper(row.status,30) === "PUBLISHED";
+}
+function publicAircraft(row={}) {
+  return row.active === true && row.customer_visible === true && upper(row.status,30) === PUBLIC_AIRCRAFT_STATUS;
+}
+function normalizedStringArray(value) {
+  if (Array.isArray(value)) return value.map(x=>clean(x,500)).filter(Boolean);
+  const parsed = parseJson(value, null);
+  if (Array.isArray(parsed)) return parsed.map(x=>clean(x,500)).filter(Boolean);
+  return clean(value,4000) ? [clean(value,4000)] : [];
+}
+
+async function select(table, query={}) {
+  const result = await restRequest({ table, method:"GET", query, prefer:"" });
+  return arr(result);
+}
+async function insert(table, body) {
+  const result = await restRequest({ table, method:"POST", body, prefer:"return=representation" });
+  return arr(result)[0] || null;
+}
+
+function airlineRecord(row={}, aircraftCount=0) {
+  const baggageParsed = parseJson(row.baggageAllowence, null);
+  const baggage = Array.isArray(baggageParsed) || (baggageParsed && typeof baggageParsed === "object")
+    ? { mode:"structured", data:baggageParsed }
+    : { mode:"narrative", text:clean(row.baggageAllowence,16000) };
   return {
-    ...payload,...inv,id:first(payload.id,payload.recordId,row.id,row.ID),recordId:first(payload.recordId,payload.id,row.id,row.ID),
-    type,slug:first(payload.slug,row.slug,safeSlug(title)),title,name:title,category:first(payload.category,row.category,""),
-    publicType:first(payload.publicType,payload.activityType,payload.transferType,payload.ticketType,row.category,""),
-    city:first(payload.city,inv.city,""),country:first(payload.country,inv.country,""),region:first(payload.region,payload.destination,inv.region,""),
-    destination:first(payload.destination,payload.region,inv.destination,""),
-    summary:first(loc.shortDescription,loc.short_description,payload.summary,row.body,""),
-    intro:first(loc.fullDescription,loc.full_description,payload.intro,payload.summary,row.body,""),
-    heroImage:publicMedia(first(payload.heroImage,payload.hero_image,row.image_url,media(row,"hero"),"")),
-    logo:publicMedia(first(payload.logo,payload.logoUrl,media(row,"card"),"")),
-    badges:arr(first(payload.badges,payload.badgesJson)),amenities:arr(first(payload.amenities,payload.amenitiesJson)),
-    included:arr(first(payload.included,payload.includedJson)),gallery:arr(first(payload.gallery,payload.galleryJson)).map(publicMedia),
-    sections:sectionObject(first(payload.sections,payload.sectionsJson)),bookingUrl:first(payload.bookingUrl,payload.booking_url,""),
-    meetingPoint:first(payload.meetingPoint,payload.meeting_point,""),fromLocation:first(payload.fromLocation,payload.from_location,""),
-    toLocation:first(payload.toLocation,payload.to_location,""),starRating:num(first(payload.starRating,payload.star_rating)),
-    durationText:first(payload.durationText,payload.duration_text,""),difficulty:first(payload.difficulty,""),
-    latitude:num(first(payload.latitude,inv.latitude)),longitude:num(first(payload.longitude,inv.longitude))
+    id: clean(row.ID || row["Record ID"] || row.iataCode,180),
+    name: clean(row.Title || row.shortName,240),
+    shortName: clean(row.shortName || row.Title,120),
+    iataCode: upper(row.iataCode,8),
+    icaoCode: upper(row.icaoCode,8),
+    country: clean(row.locationCountry,120),
+    city: clean(row.locationCity,120),
+    alliance: clean(row.alliance,120),
+    brandGroup: clean(row.brandGroup,120),
+    website: clean(row.website,1200),
+    contactUrl: clean(row.contactUrl,1200),
+    summary: clean(row.summary,12000),
+    logo: clean(row.logoFile || row.logoIcon,1800),
+    logoIcon: clean(row.logoIcon,1800),
+    heroImage: clean(row.heroAircraftUrl,1800),
+    primaryColor: clean(row.primaryColor,40),
+    accentColor: clean(row.accentColor,40),
+    quickFacts: parseJson(row.quickFactsJson, []),
+    hubs: parseJson(row.hubsJson, []),
+    sections: parseJson(row.sectionsJson, {}),
+    foodDrinks: parseJson(row.foodDrinksJson, []),
+    wifiOnboard: parseJson(row.wifiOnboardJson, []),
+    delayCancellation: parseJson(row.delayCancellationJson, []),
+    damagedBaggage: parseJson(row.damagedBaggageJson, []),
+    lostFound: parseJson(row.lostFoundJson, []),
+    childrenInfants: parseJson(row.childrenInfantsJson, []),
+    ticketTypes: parseJson(row.ticketTypesJson, []),
+    checkInDeadline: clean(row.checkInDeadline,1200),
+    boarding: clean(row.boarding,6000),
+    lounges: clean(row.lounges,6000),
+    loyaltyProgram: clean(row.loyaltyProgram,240),
+    loyaltyProgramUrl: clean(row.loyaltyProgramUrl,1200),
+    baggage,
+    aircraftFamilies: normalizedStringArray(row.aircraftFamiliesText),
+    aircraftCount,
+    sourceUrls: normalizedStringArray(row.sourceUrlsJson),
+    lastReviewed: clean(row.lastReviewed,80)
   };
 }
 
-function mapFaqTopic(row={},source="faq"){
-  const p=obj(row.payload);
-  const groupId=text(first(row.groupId,row.group_id,p.groupId,row.category,"general"),100).toLowerCase().replace(/[^a-z0-9_-]+/g,"-");
-  return {topicId:first(row.topicId,p.topicId,row.id),groupId,title:first(p.question,row.title,p.title,"Travel information"),
-    subtitle:first(row.subtitle,p.subtitle,p.summary,""),body:first(p.answer,row.body,p.body,p.summary,""),
-    bullets:arr(first(row.bulletsJson,p.bullets,p.bulletsJson)),tags:first(row.tags,p.tags,""),
-    actionType:first(row.actionType,p.actionType,"article"),actionTarget:first(row.actionTarget,p.actionTarget,""),
-    linkedLibrary:first(row.linkedLibrary,p.linkedLibrary,""),sortOrder:Number(first(row.sort_order,p.sortOrder,999)),
-    active:row.active!==false&&p.active!==false,featured:row.featured===true||p.featured===true,source};
-}
-function mapFaqGroup(row={}){return{groupId:first(row.group_id,row.groupId,row.id),title:first(row.title,"General"),subtitle:first(row.subtitle,""),eyebrow:first(row.eyebrow,"SKANDI Help Center"),icon:first(row.icon,"support"),sortOrder:Number(first(row.sort_order,999)),active:row.active!==false}}
-function fallbackGroups(topics=[]){const m=new Map();for(const t of topics){if(!m.has(t.groupId))m.set(t.groupId,{groupId:t.groupId,title:text(t.groupId).replace(/[-_]+/g," ").replace(/\b\w/g,c=>c.toUpperCase()),subtitle:"",eyebrow:"SKANDI Help Center",icon:"support",sortOrder:m.size+1,active:true})}return[...m.values()]}
-function buildRequirements(rows=[]){
-  const out={countries:[],visaDurations:{},passportValidityRules:{},healthRules:{},transitRules:{},airlineOverrides:{},disclaimer:"Travel rules change. Check official destination and carrier guidance before departure."};
-  for(const base of rows){const row={...obj(base.payload),...base},type=first(row.ruleType,row.rule_type,row.category,""),key=first(row.key,row.region,row.countryName,row.country_name,row.slug,""),value=parse(first(row.value,row.valueJson,row.value_json,row.valueText,row.value_text,row.body,""),first(row.value,row.body,""));
-    if(type==="country")out.countries.push({name:first(row.countryName,row.country_name,row.title,""),region:first(row.region,row.key,"")});
-    else if(type==="visaDuration"&&key)out.visaDurations[key]=value;
-    else if(type==="passportValidity"&&key)out.passportValidityRules[key]=value;
-    else if(type==="health"&&key)out.healthRules[key]=arr(value);
-    else if(type==="transit"&&key)out.transitRules[key]=value;
-    else if(type==="airlineOverride"&&key)out.airlineOverrides[key]=arr(value);
-    else if(type==="disclaimer")out.disclaimer=String(value||out.disclaimer);
-  }return out;
-}
-function buildBaggage(rows=[]){
-  const baggageRules={};
-  for(const base of rows){
-    const p=obj(base.payload), code=text(first(base.airlineCode,p.airlineCode,p.iataCode,""),12).toUpperCase();
-    if(!code)continue;
-    if(!baggageRules[code])baggageRules[code]={
-      airlineCode:code,
-      name:first(p.airlineName,base.airlineName,code),
-      rules:[],
-      sourceUrls:[],
-      lastChecked:first(p.lastChecked,base.updated_at,"")
-    };
-    const rule={
-      id:first(base.ruleId,base.id),
-      title:first(base.title,`${code} baggage rule`),
-      routeId:first(base.routeId,""),
-      fareBrand:first(base.fareBrand,""),
-      cabinClass:first(base.cabinClass,""),
-      checkedBagsIncluded:num(base.checkedBagsIncluded,0),
-      checkedBagWeightKg:num(base.checkedBagWeightKg,null),
-      cabinBagsIncluded:num(base.cabinBagsIncluded,0),
-      cabinBagWeightKg:num(base.cabinBagWeightKg,null),
-      sportsEquipmentPolicy:first(base.sportsEquipmentPolicy,""),
-      infantPolicy:first(base.infantPolicy,""),
-      effectiveFrom:first(base.effectiveFrom,""),
-      effectiveTo:first(base.effectiveTo,""),
-      sourceUrl:first(base.sourceUrl,""),
-      details:{
-        personalItem:parse(p.personalItem,null),
-        underseatBag:parse(p.underseatBag,null),
-        carryOnBag:parse(p.carryOnBag,null),
-        checkedBag:parse(p.checkedBag,null),
-        specialBaggage:parse(p.specialBaggage,null),
-        children:parse(p.children,null),
-        internationalNotes:parse(p.internationalNotes,null),
-        shortHaulFeesCurrent:parse(p.shortHaulFeesCurrent,null),
-        mainPlus:parse(p.mainPlus,null)
-      }
-    };
-    baggageRules[code].rules.push(rule);
-    const urls=[...arr(p.sourceUrls),rule.sourceUrl].filter(Boolean);
-    baggageRules[code].sourceUrls=[...new Set([...baggageRules[code].sourceUrls,...urls])];
-  }
-  Object.values(baggageRules).forEach(group=>group.rules.sort((a,b)=>
-    String(a.cabinClass).localeCompare(String(b.cabinClass)) || String(a.fareBrand).localeCompare(String(b.fareBrand))
-  ));
-  return {baggageRules,loyaltyPrograms:{},excessBaggagePricing:{}};
+function airportRecord(row={}) {
+  return {
+    id: clean(row.ID || row.itemId || row.iata,180),
+    code: upper(row.iata,8),
+    iata: upper(row.iata,8),
+    icao: upper(row.icao,8),
+    name: clean(row.title,240),
+    city: clean(row.locationCity,160),
+    country: clean(row.country,160),
+    timezone: clean(row.timezone,120),
+    latitude: num(row.latitude),
+    longitude: num(row.longitude),
+    distanceToCityCenterKm: num(row.distanceToCityCenterKm),
+    website: clean(row.website,1200),
+    contactUrl: clean(row.contactUrl,1200),
+    summary: clean(row.summary || row.body,12000),
+    information: clean(row.information,12000),
+    heroImage: clean(row.heroImageUrl || row.image_url,1800),
+    logo: clean(row.logoUrl || row.logoIconUrl,1800),
+    quickFacts: arr(row.quickFactsJson),
+    transport: arr(row.transportJson),
+    terminals: arr(row.terminalsJson),
+    runways: arr(row.runwaysJson),
+    foodDrinks: arr(row.foodDrinksJson),
+    lostFound: arr(row.lostFoundJson),
+    lounges: clean(row.lounges,6000),
+    airportHotels: clean(row.airportHotels,6000),
+    destinationsServing: clean(row.destinationsServing,6000),
+    sections: arr(row.sectionsJson),
+    lastReviewed: clean(row.lastReviewed,80)
+  };
 }
 
-function buildAircraftDisplays(aircraftRows=[],cabinRows=[],viewRows=[],hotspotRows=[],sceneRows=[],sceneHotspotRows=[]){
-  const cabinsByAircraft=new Map(),viewsByAircraft=new Map(),hotspotsByView=new Map(),scenesByAircraft=new Map(),sceneHotspotsByScene=new Map();
-  for(const row of cabinRows){if(!cabinsByAircraft.has(row.aircraft_id))cabinsByAircraft.set(row.aircraft_id,[]);cabinsByAircraft.get(row.aircraft_id).push(row)}
-  for(const row of viewRows){if(!viewsByAircraft.has(row.aircraft_id))viewsByAircraft.set(row.aircraft_id,[]);viewsByAircraft.get(row.aircraft_id).push(row)}
-  for(const row of hotspotRows){if(!hotspotsByView.has(row.view_id))hotspotsByView.set(row.view_id,[]);hotspotsByView.get(row.view_id).push(row)}
-  for(const row of sceneRows){if(!scenesByAircraft.has(row.aircraft_id))scenesByAircraft.set(row.aircraft_id,[]);scenesByAircraft.get(row.aircraft_id).push(row)}
-  for(const row of sceneHotspotRows){if(!sceneHotspotsByScene.has(row.scene_id))sceneHotspotsByScene.set(row.scene_id,[]);sceneHotspotsByScene.get(row.scene_id).push(row)}
-  const byAirline=new Map();
-  for(const a of aircraftRows){
-    const cabins=(cabinsByAircraft.get(a.id)||[]).filter(x=>x.active!==false).sort((x,y)=>Number(x.sort_order||100)-Number(y.sort_order||100)).map(c=>({
-      id:c.id,cabinCode:c.cabin_code,cabinName:c.cabin_name,rank:c.rank??100,seatCount:c.seat_count??null,summary:c.summary||"",description:c.description||"",mealTitle:c.meal_title||"",mealDescription:c.meal_description||"",amenities:c.amenities||[],displaySettings:c.display_settings||{}
-    }));
-    const cabinMap=new Map(cabins.map(c=>[c.id,c]));
-    const views=(viewsByAircraft.get(a.id)||[]).filter(x=>x.active!==false).sort((x,y)=>Number(x.sort_order||100)-Number(y.sort_order||100)).map(v=>({
-      id:v.id,viewCode:v.view_code,label:v.label,viewType:v.view_type,image:publicMedia(v.image_url||""),mobileImage:publicMedia(v.mobile_image_url||""),thumbnail:publicMedia(v.thumbnail_url||""),altText:v.alt_text||"",caption:v.caption||"",credit:v.credit||"",isDefault:v.is_default===true,cabinId:v.cabin_id||"",cabinCode:cabinMap.get(v.cabin_id)?.cabinCode||"",hotspots:(hotspotsByView.get(v.id)||[]).filter(h=>h.active!==false).sort((x,y)=>Number(x.sort_order||100)-Number(y.sort_order||100)).map(h=>({id:h.id,hotspotCode:h.hotspot_code,label:h.label,title:h.title||h.label,description:h.description||"",x:Number(h.x??50),y:Number(h.y??50),action:h.action||"DETAIL",focus:{x:h.focus_x==null?Number(h.x??50):Number(h.focus_x),y:h.focus_y==null?Number(h.y??50):Number(h.focus_y),zoom:h.focus_zoom==null?1.35:Number(h.focus_zoom)},targetCabinCode:h.target_cabin_code||"",thumbnail:publicMedia(h.thumbnail_url||"")}))
-    }));
-    const scenes=(scenesByAircraft.get(a.id)||[]).filter(x=>x.active!==false).sort((x,y)=>Number(x.sort_order||100)-Number(y.sort_order||100)).map(sc=>({
-      id:sc.id,sceneCode:sc.scene_code,title:sc.title,shortTitle:sc.short_title||sc.title,summary:sc.summary||"",image:publicMedia(sc.image_url||""),mobileImage:publicMedia(sc.mobile_image_url||""),forwardSceneId:sc.forward_scene_code||"",backSceneId:sc.back_scene_code||"",forwardLabel:sc.forward_label||"",backLabel:sc.back_label||"",hotspots:(sceneHotspotsByScene.get(sc.id)||[]).filter(h=>h.active!==false).sort((x,y)=>Number(x.sort_order||100)-Number(y.sort_order||100)).map(h=>({id:h.id,hotspotCode:h.hotspot_code,label:h.label,title:h.title||h.label,description:h.description||"",type:h.hotspot_type||"FEATURE",x:Number(h.x??50),y:Number(h.y??50),action:h.action||"",classId:h.target_cabin_code||""}))
-    }));
-    const display={id:a.id,airlineId:a.airline_id,airlineCode:a.airline_code,aircraftCode:a.aircraft_code,aircraftName:a.aircraft_name,manufacturer:a.manufacturer||"",family:a.family||"",variant:a.variant||"",totalSeats:a.total_seats??null,configuration:a.configuration||{},displayTitle:a.display_title||a.aircraft_name,displaySummary:a.display_summary||"",heroImage:publicMedia(a.hero_image_url||""),exteriorImage:publicMedia(a.exterior_image_url||""),seatmapImage:publicMedia(a.seatmap_image_url||""),thumbnailImage:publicMedia(a.thumbnail_image_url||""),defaultCabinCode:a.default_cabin_code||"",defaultViewType:a.default_view_type||"CABIN",cabins,views,walkthrough:scenes.length?{title:a.walkthrough_title||`${a.aircraft_name} Cabin Walkthrough`,subtitle:a.walkthrough_subtitle||"",aircraftType:a.aircraft_name,startSceneId:a.walkthrough_start_scene_code||scenes[0]?.sceneCode||"",accuracyLabel:a.walkthrough_accuracy_label||"",scenes}:null,sourceUrl:a.source_url||"",sourceUrls:a.source_urls||[],reviewNotes:a.review_notes||"",lastReviewed:a.last_reviewed||""};
-    if(!byAirline.has(a.airline_id))byAirline.set(a.airline_id,[]);byAirline.get(a.airline_id).push(display);
-  }
-  return byAirline;
+function localizedFor(entityId, language, rows=[]) {
+  const exact = rows.find(r => clean(r.entity_id,80) === entityId && upper(r.language,8) === language);
+  const en = rows.find(r => clean(r.entity_id,80) === entityId && upper(r.language,8) === "EN");
+  return exact || en || {};
+}
+function mediaFor(entityId, rows=[]) {
+  return rows.filter(r => clean(r.entity_id,80) === entityId && r.active !== false)
+    .sort((a,b)=>Number(a.sort_order||0)-Number(b.sort_order||0));
+}
+function inventoryRecord(row={}, localizedRows=[], mediaRows=[], language="EN") {
+  const id = clean(row.id,80);
+  const l = localizedFor(id, language, localizedRows);
+  const details = obj(row.details); const commercial = obj(row.commercial); const operations = obj(row.operations); const payload = obj(row.payload);
+  const media = mediaFor(id, mediaRows);
+  const hero = media.find(x=>x.is_hero===true) || media.find(x=>x.is_primary===true) || media[0] || {};
+  const type = upper(row.entity_type,40);
+  return {
+    id, publicId:clean(row.public_id,160), type,
+    code:clean(row.code,160), name:clean(l.title || row.name,300), title:clean(l.title || row.name,300), slug:clean(row.slug || slug(row.name),240),
+    eyebrow:clean(l.eyebrow,240), summary:clean(l.short_description || first(details.summary,payload.summary),12000),
+    description:clean(l.full_description || first(details.description,payload.description),24000),
+    highlights:arr(l.highlights), included:arr(l.included), notIncluded:arr(l.not_included), importantInformation:clean(l.important_information,12000),
+    heroImage:clean(hero.url || first(details.heroImage,payload.heroImage),1800),
+    gallery:media.map(m=>({url:clean(m.url,1800),alt:clean(m.alt_text,400),caption:clean(m.caption,1000),role:clean(m.role,80)})),
+    details, commercial, operations, payload,
+    city:clean(first(details.city,operations.city,payload.city),160), country:clean(first(details.country,operations.country,payload.country),160),
+    destination:clean(first(details.destination,operations.destination,payload.destination),200),
+    durationText:clean(first(details.durationText,operations.durationText,payload.durationText),200),
+    meetingPoint:clean(first(details.meetingPoint,operations.meetingPoint,payload.meetingPoint),1000),
+    fromLocation:clean(first(details.fromLocation,operations.fromLocation,payload.fromLocation),1000),
+    toLocation:clean(first(details.toLocation,operations.toLocation,payload.toLocation),1000),
+    starRating:num(first(details.starRating,payload.starRating)),
+    bookingUrl:clean(first(commercial.bookingUrl,payload.bookingUrl),1600),
+    partnerTier:clean(row.partner_tier,80), featured:row.featured===true
+  };
 }
 
-async function buildPayload(){
-  const [airlineRows,airportRows,hotelRows,transferRows,tourRows,activityRows,ticketRows,faqRows,faqGroupRows,articleRows,requirementRows,baggageRows,aircraftRows,cabinRows,viewRows,hotspotRows,sceneRows,sceneHotspotRows]=await Promise.all([
-    selectSafe(TABLES.airlines),selectSafe(TABLES.airports),selectSafe(TABLES.hotels),selectSafe(TABLES.transfers),selectSafe(TABLES.tours),selectSafe(TABLES.activities),
-    selectSafe(TABLES.tickets),selectSafe(TABLES.faq),selectSafe(TABLES.faqGroups),selectSafe(TABLES.articles),selectSafe(TABLES.requirements),selectSafe(TABLES.baggage),
-    selectSafe(TABLES.aircraft),selectSafe(TABLES.aircraftCabins),selectSafe(TABLES.aircraftViews),selectSafe(TABLES.aircraftHotspots),selectSafe(TABLES.aircraftScenes),selectSafe(TABLES.aircraftSceneHotspots)
+function faqGroup(row={}) { return { id:clean(row.group_id || row.id,120), title:clean(row.title,300), subtitle:clean(row.subtitle,1200), eyebrow:clean(row.eyebrow,240), icon:clean(row.icon,80), sortOrder:Number(row.sort_order||0) }; }
+function faq(row={}) { return { id:clean(row.topicId || row.id,120), groupId:clean(row.groupId,120), title:clean(row.title,500), subtitle:clean(row.subtitle,1000), body:clean(row.body,16000), bullets:arr(row.bulletsJson), tags:clean(row.tags,1200), featured:row.featured===true, actionType:clean(row.actionType,80), actionTarget:clean(row.actionTarget,1200), linkedLibrary:clean(row.linkedLibrary,80), sortOrder:Number(row.sort_order||0) }; }
+
+function requirementRecord(row={}) {
+  const p = obj(row.payload);
+  return { id:clean(row.id,80), title:clean(row.title,300), slug:clean(row.slug,240), category:clean(row.category,120), body:clean(row.body,16000), image:clean(row.image_url,1800), ...p };
+}
+
+async function buildTravelInfoPayload(input={}) {
+  const language = normalizeLanguage(input.language);
+  const [airlinesRaw, airportsRaw, aircraftRaw, groupsRaw, faqRaw, articlesRaw, entitiesRaw, localizedRaw, mediaRaw, requirementsRaw] = await Promise.all([
+    select("travel_info_airlines", {select:"*",active:"eq.true",customer_visible:"eq.true",published:"eq.true",order:"sort_order.asc"}),
+    select("travel_info_airports", {select:"*",active:"eq.true",customer_visible:"eq.true",published:"eq.true",order:"sort_order.asc"}),
+    select("travel_info_aircraft", {select:"id,airline_id,airline_code,status,active,customer_visible",active:"eq.true",customer_visible:"eq.true",status:"eq.PUBLISHED"}),
+    select("travel_info_faq_groups", {select:"*",active:"eq.true",order:"sort_order.asc"}),
+    select("travel_info_faq", {select:"*",active:"eq.true",order:"sort_order.asc"}),
+    select("travel_info_articles", {select:"*",active:"eq.true",customer_visible:"eq.true",order:"sort_order.asc"}),
+    select("inventory_master_entities", {select:"*",entity_type:"in.(HOTEL,TRANSFER,TOUR,ACTIVITY,TICKET)",active:"eq.true",customer_visible:"eq.true",status:"eq.PUBLISHED",order:"sort_priority.asc"}),
+    select("inventory_localized_content", {select:"*",language:`in.(EN,${language})`}),
+    select("inventory_media_assets", {select:"*",active:"eq.true",order:"sort_order.asc"}),
+    select("travel_requirements", {select:"*",active:"eq.true",order:"sort_order.asc"})
   ]);
-  const displayByAirline=buildAircraftDisplays(aircraftRows,cabinRows,viewRows,hotspotRows,sceneRows,sceneHotspotRows);
-  const airlines={};for(const x of airlineRows.map(mapAirline)){if(x.id){const displays=displayByAirline.get(x.id)||[];x.aircraftDisplays=displays;x.aircraftConfigurations=displays.map(d=>({aircraftName:d.aircraftName,aircraftCode:d.aircraftCode,totalSeats:d.totalSeats,configuration:d.configuration,notes:d.displaySummary,sourceUrl:d.sourceUrl,displayId:d.id,heroImage:d.heroImage,exteriorImage:d.exteriorImage,seatmapImage:d.seatmapImage,cabins:d.cabins,views:d.views,aircraftPhotoWalkthrough:d.walkthrough}));airlines[x.id]=x}}
-  const topics=[...faqRows.map(r=>mapFaqTopic(r,"faq")),...articleRows.map(r=>mapFaqTopic(r,"article"))].filter(x=>x.active!==false).sort((a,b)=>a.sortOrder-b.sortOrder);
-  const groups=(faqGroupRows.length?faqGroupRows.map(mapFaqGroup).filter(x=>x.active!==false):fallbackGroups(topics)).sort((a,b)=>a.sortOrder-b.sortOrder);
-  const baggage=buildBaggage(baggageRows);
-  return{
+
+  const counts = {};
+  aircraftRaw.forEach(a => { const k=clean(a.airline_id || a.airline_code,180); if(k) counts[k]=(counts[k]||0)+1; });
+  const airlines = airlinesRaw.map(r => airlineRecord(r, counts[clean(r.ID,180)] || counts[upper(r.iataCode,8)] || 0));
+  const records = entitiesRaw.filter(publicInventoryEntity).map(r=>inventoryRecord(r,localizedRaw,mediaRaw,language));
+  const byType = type => records.filter(r=>r.type===type);
+
+  return {
+    ok:true,
+    source:"SKANDI_TRAVEL_INFO_V9",
+    version:VERSION,
     generatedAt:new Date().toISOString(),
-    meta:{source:"SUPABASE_TRAVEL_INFO",tables:{airlines:airlineRows.length,airports:airportRows.length,hotels:hotelRows.length,transfers:transferRows.length,tours:tourRows.length,activities:activityRows.length,tickets:ticketRows.length,faq:faqRows.length,faqGroups:faqGroupRows.length,articles:articleRows.length,requirements:requirementRows.length,baggage:baggageRows.length,aircraft:aircraftRows.length,aircraftCabins:cabinRows.length,aircraftViews:viewRows.length,aircraftHotspots:hotspotRows.length,aircraftScenes:sceneRows.length}},
-    airlines,airports:airportRows.map(mapAirport).filter(x=>x.id),
-    hotels:hotelRows.map(r=>mapLibrary("hotels",r)),transfers:transferRows.map(r=>mapLibrary("transfers",r)),
-    tours:tourRows.map(r=>mapLibrary("tours",r)),activities:activityRows.map(r=>mapLibrary("activities",r)),tickets:ticketRows.map(r=>mapLibrary("tickets",r)),
-    helpCenter:{groups,topics},travelRequirements:buildRequirements(requirementRows),
-    baggageRules:baggage.baggageRules,loyaltyPrograms:baggage.loyaltyPrograms,excessBaggagePricing:baggage.excessBaggagePricing
+    language,
+    airlines,
+    airports:airportsRaw.map(airportRecord),
+    hotels:byType("HOTEL"),
+    transfers:byType("TRANSFER"),
+    tours:byType("TOUR"),
+    activities:byType("ACTIVITY"),
+    tickets:byType("TICKET"),
+    helpCenter:{groups:groupsRaw.map(faqGroup),topics:faqRaw.map(faq)},
+    articles:articlesRaw.map(r=>({id:clean(r.id,80),title:clean(r.title,400),slug:clean(r.slug,240),category:clean(r.category,120),excerpt:clean(r.excerpt,2000),body:clean(r.body,20000),image:clean(r.image_url,1800),path:clean(r.path,1000),kicker:clean(r.kicker,240),tags:arr(r.tags)})),
+    travelRequirements:requirementsRaw.map(requirementRecord),
+    sync:{
+      airlines:airlines.length, airports:airportsRaw.length, aircraft:aircraftRaw.length,
+      hotels:byType("HOTEL").length, transfers:byType("TRANSFER").length, tours:byType("TOUR").length,
+      activities:byType("ACTIVITY").length, tickets:byType("TICKET").length,
+      faq:faqRaw.length, faqGroups:groupsRaw.length, articles:articlesRaw.length, requirements:requirementsRaw.length
+    }
   };
 }
-export const getTravelInfoPayload=webMethod(Permissions.Anyone,async()=>buildPayload());
 
-function ref(prefix){return`${prefix}-${new Date().toISOString().slice(0,10).replaceAll("-","")}-${Math.random().toString(36).slice(2,8).toUpperCase()}`}
-export const createTravelInfoSupportRequest=webMethod(Permissions.Anyone,async(input={})=>{
-  const message=text(input.message,5000);if(!message)return{ok:false,message:"Message is required."};const ticketId=ref("TRAVEL"),now=new Date().toISOString();
-  const record={title:`Travel Info request ${ticketId}`,slug:ticketId.toLowerCase(),category:text(input.category||"General",100),body:message,active:true,sort_order:0,payload:{ticketId,source:"travel-info",name:text(input.name,200),email:text(input.email,254).toLowerCase(),bookingReference:text(input.bookingReference,100),category:text(input.category||"General",100),message,status:"New",createdAt:now}};
-  const rows=await db(TABLES.support,{method:"POST",body:record,prefer:"return=representation"}),saved=Array.isArray(rows)?rows[0]:rows;
-  return{ok:true,ticketId,id:saved?.id||"",message:"Your request has been received."};
-});
-function norm(v){return text(v,10000).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"")}
-export const askTravelInfoAgent=webMethod(Permissions.Anyone,async(input={})=>{
-  const question=text(input.question,1500);if(!question)return{ok:false,answer:"Please type a travel information question."};const q=norm(question),data=await buildPayload(),c=[];
-  Object.values(data.airlines||{}).forEach(x=>c.push({title:x.name,body:[x.summary,x.intro,x.checkInDeadline].filter(Boolean).join("\n")}));
-  (data.airports||[]).forEach(x=>c.push({title:x.name,body:[x.summary,x.intro].filter(Boolean).join("\n")}));
-  for(const k of["hotels","transfers","tours","activities","tickets"])(data[k]||[]).forEach(x=>c.push({title:x.name,body:[x.summary,x.intro].filter(Boolean).join("\n")}));
-  (data.helpCenter?.topics||[]).forEach(x=>c.push({title:x.title,body:[x.body,...arr(x.bullets)].filter(Boolean).join("\n")}));
-  const words=q.split(/\s+/).filter(w=>w.length>2),ranked=c.map(x=>({...x,score:words.reduce((s,w)=>s+(norm(`${x.title} ${x.body}`).includes(w)?1:0),0)+(norm(`${x.title} ${x.body}`).includes(q)?5:0)})).filter(x=>x.score>0).sort((a,b)=>b.score-a.score);
-  if(!ranked.length)return{ok:true,answer:"I could not find that answer in the published SKANDI Travel Information records. Please contact SKANDI support for help.",source:"TRAVEL_INFO_ONLY"};
-  return{ok:true,answer:`${ranked[0].title}\n\n${ranked[0].body}`.slice(0,3500),source:"TRAVEL_INFO_ONLY"};
+export const getTravelInfoPayload = webMethod(Permissions.Anyone, async (input={}) => buildTravelInfoPayload(input));
+
+export const getTravelInfoAircraft = webMethod(Permissions.Anyone, async (input={}) => {
+  const aircraftId = clean(input.aircraftId,80);
+  const airlineId = clean(input.airlineId,180);
+  const airlineCode = upper(input.airlineCode,8);
+  const query = {select:"*",active:"eq.true",customer_visible:"eq.true",status:"eq.PUBLISHED",order:"sort_order.asc"};
+  if (aircraftId) query.id = `eq.${aircraftId}`;
+  else if (airlineId) query.airline_id = `eq.${airlineId}`;
+  else if (airlineCode) query.airline_code = `eq.${airlineCode}`;
+  else return {ok:false,error:"AIRLINE_OR_AIRCRAFT_REQUIRED",aircraft:[]};
+
+  const aircraft = (await select("travel_info_aircraft", query)).filter(publicAircraft);
+  const ids = aircraft.map(a=>clean(a.id,80)).filter(Boolean);
+  if (!ids.length) return {ok:true,aircraft:[],cabins:[],views:[],hotspots:[],scenes:[],sceneHotspots:[]};
+  const inIds = `in.(${ids.join(",")})`;
+  const [cabins,views,scenes] = await Promise.all([
+    select("travel_info_aircraft_cabins", {select:"*",aircraft_id:inIds,active:"eq.true",order:"sort_order.asc"}),
+    select("travel_info_aircraft_views", {select:"*",aircraft_id:inIds,active:"eq.true",order:"sort_order.asc"}),
+    select("travel_info_aircraft_walk_scenes", {select:"*",aircraft_id:inIds,active:"eq.true",order:"sort_order.asc"})
+  ]);
+  const viewIds = views.map(v=>clean(v.id,80)).filter(Boolean);
+  const sceneIds = scenes.map(v=>clean(v.id,80)).filter(Boolean);
+  const [hotspots,sceneHotspots] = await Promise.all([
+    viewIds.length ? select("travel_info_aircraft_hotspots", {select:"*",view_id:`in.(${viewIds.join(",")})`,active:"eq.true",order:"sort_order.asc"}) : [],
+    sceneIds.length ? select("travel_info_aircraft_scene_hotspots", {select:"*",scene_id:`in.(${sceneIds.join(",")})`,active:"eq.true",order:"sort_order.asc"}) : []
+  ]);
+  return {ok:true,source:"AIRCRAFT_DISPLAY_CONTROL_V9",aircraft,cabins,views,hotspots,scenes,sceneHotspots};
 });
 
-async function weatherLocations(){const rows=await selectSafe(TABLES.airports);return rows.filter(r=>Number.isFinite(Number(r.latitude))&&Number.isFinite(Number(r.longitude))).sort((a,b)=>{const af=(a.homepage_featured===true?2:0)+(a.featured===true?1:0),bf=(b.homepage_featured===true?2:0)+(b.featured===true?1:0);return af!==bf?bf-af:Number(first(a.sort_order,a.sortOrder,999))-Number(first(b.sort_order,b.sortOrder,999))}).slice(0,4).map(r=>({locationId:text(first(r.iata,r.ID,r.id),100).toUpperCase(),title:first(r.locationCity,r.title,r.iata,"Airport"),label:first(r.locationCity,r.title,r.iata,"Airport"),airportHint:text(r.iata,3).toUpperCase(),country:first(r.country,""),latitude:Number(r.latitude),longitude:Number(r.longitude)}))}
-export const getTravelWeather=webMethod(Permissions.Anyone,async()=>{
-  const locations=await weatherLocations();if(!locations.length)return{ok:false,source:"OPENWEATHER",status:"no_locations",locations:[],message:"No published Travel Info airports with coordinates are available."};
-  const key=await secret("OPENWEATHER_API_KEY");if(!key)return{ok:false,source:"OPENWEATHER",status:"setup_needed",locations:[],message:"Weather service is not configured."};
-  const results=await Promise.all(locations.map(async l=>{try{const u=`https://api.openweathermap.org/data/2.5/weather?lat=${encodeURIComponent(l.latitude)}&lon=${encodeURIComponent(l.longitude)}&appid=${encodeURIComponent(key)}&units=metric`,r=await fetch(u),raw=await r.text();let d={};try{d=JSON.parse(raw)}catch(_){}if(!r.ok)throw new Error(d?.message||`Weather request failed (${r.status})`);return{...l,ok:true,status:"live",condition:first(d?.weather?.[0]?.main,d?.weather?.[0]?.description,""),description:first(d?.weather?.[0]?.description,""),iconUrl:d?.weather?.[0]?.icon?`https://openweathermap.org/img/wn/${encodeURIComponent(d.weather[0].icon)}@2x.png`:"",tempC:num(d?.main?.temp),feelsLikeC:num(d?.main?.feels_like),humidity:num(d?.main?.humidity),windSpeed:num(d?.wind?.speed),source:"OpenWeather"}}catch(e){return{...l,ok:false,status:"error",error:text(e?.message||e,300),source:"OpenWeather"}}}));
-  return{ok:results.some(x=>x.ok),source:"OPENWEATHER",status:results.some(x=>x.ok)?"live":"error",updatedAt:new Date().toISOString(),locations:results};
+export const createTravelInfoSupportRequest = webMethod(Permissions.Anyone, async (input={}) => {
+  const message = clean(input.message,12000);
+  if (!message) return {ok:false,error:"MESSAGE_REQUIRED",message:"Please enter a message."};
+  const now = new Date().toISOString();
+  const ticket = `TRAVEL-${Date.now()}-${Math.random().toString(36).slice(2,7).toUpperCase()}`;
+  const saved = await insert("travel_info_support_requests", {
+    title:`Travel Info request ${ticket}`,
+    slug:ticket.toLowerCase(),
+    category:clean(input.category || "General",120),
+    body:message,
+    image_url:"",
+    active:true,
+    sort_order:0,
+    payload:{ticketId:ticket,name:clean(input.name,300),email:clean(input.email,400).toLowerCase(),bookingReference:clean(input.bookingReference,120),source:"travel-info-v9",status:"New",createdAt:now}
+  });
+  return {ok:true,ticketId:ticket,id:saved?.id || "",message:"Your request has been received."};
+});
+
+async function openWeatherKey() {
+  const r = await elevatedGetSecretValue("OPENWEATHER_API_KEY");
+  return clean(r?.value ?? r?.secretValue ?? r?.secret?.value ?? r,500);
+}
+export const getTravelWeather = webMethod(Permissions.Anyone, async (input={}) => {
+  const key = await openWeatherKey();
+  if (!key) return {ok:false,source:"OPENWEATHER",locations:[],error:"WEATHER_NOT_CONFIGURED"};
+  const locations = arr(input.locations).slice(0,8);
+  if (!locations.length) return {ok:true,source:"OPENWEATHER",locations:[]};
+  const output=[];
+  for (const l of locations) {
+    const lat=num(l.latitude ?? l.lat), lon=num(l.longitude ?? l.lng ?? l.lon);
+    if (lat===null || lon===null) continue;
+    const url=`https://api.openweathermap.org/data/2.5/weather?lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}&appid=${encodeURIComponent(key)}&units=metric`;
+    try {
+      const response=await fetch(url,{method:"get"}); const raw=await response.json();
+      if(!response.ok) throw new Error("WEATHER_HTTP_"+response.status);
+      output.push({ok:true,id:clean(l.id||l.code,120),title:clean(l.title||l.name,240),latitude:lat,longitude:lon,tempC:num(raw?.main?.temp),feelsLikeC:num(raw?.main?.feels_like),humidity:num(raw?.main?.humidity),condition:clean(raw?.weather?.[0]?.main,120),description:clean(raw?.weather?.[0]?.description,240),icon:clean(raw?.weather?.[0]?.icon,20)});
+    } catch(error) { output.push({ok:false,id:clean(l.id||l.code,120),title:clean(l.title||l.name,240),error:clean(error?.message,240)}); }
+  }
+  return {ok:true,source:"OPENWEATHER",generatedAt:new Date().toISOString(),locations:output};
+});
+
+function tokenize(s="") { return clean(s,4000).toLowerCase().split(/[^a-z0-9]+/).filter(x=>x.length>2); }
+export const askTravelInfoAgent = webMethod(Permissions.Anyone, async (input={}) => {
+  const question=clean(input.question,2000); if(!question) return {ok:false,answer:"Please enter a travel question."};
+  const data=await buildTravelInfoPayload({language:input.language||"EN"});
+  const terms=new Set(tokenize(question));
+  const pool=[...arr(data?.helpCenter?.topics).map(x=>({...x,kind:"FAQ"})),...arr(data?.airlines).map(x=>({...x,kind:"Airline"})),...arr(data?.airports).map(x=>({...x,kind:"Airport"}))];
+  const scored=pool.map(x=>{const text=tokenize(`${x.title||x.name||""} ${x.subtitle||""} ${x.body||x.summary||""}`);let score=0;text.forEach(t=>{if(terms.has(t))score+=1});return{x,score}}).filter(x=>x.score>0).sort((a,b)=>b.score-a.score).slice(0,3);
+  if(!scored.length) return {ok:true,answer:"I couldn't find a precise match in the current SKANDI Travel Info library. Please use the support form for itinerary-specific help.",matches:[]};
+  const best=scored[0].x; const answer=clean(best.body || best.summary || best.subtitle || `${best.title||best.name} is available in SKANDI Travel Info.`,1800);
+  return {ok:true,answer,matches:scored.map(s=>({kind:s.x.kind,title:s.x.title||s.x.name||"",score:s.score}))};
 });
