@@ -14,9 +14,9 @@ import {
   finalizeAssetUploadCore,
   registerAssetUsageCore
 } from "./assets.js";
-import { checkExternalTravelRequirements } from "backend/RIA/travelRequirementsProvider.web";
+import { checkExternalTravelRequirements } from "./providers/travelRequirements.js";
 
-export const RESERVATIONS_CORE_VERSION = "R-005.1";
+export const RESERVATIONS_CORE_VERSION = "R-005.2";
 
 const clean=(v,n=12000)=>String(v??"").trim().slice(0,n);
 const upper=(v,n=12000)=>clean(v,n).toUpperCase();
