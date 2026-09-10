@@ -1,6 +1,6 @@
 // backend/travelInfoService.web.js
 // SKANDI Travel Info V9 — Inventory Control + Aircraft Display Control unified public service.
-// Version 2026.09.10.9
+// Version 2026.09.10.11
 
 import { webMethod, Permissions } from "wix-web-module";
 import { fetch } from "wix-fetch";
@@ -9,7 +9,7 @@ import { elevate } from "wix-auth";
 import { restRequest } from "backend/RIA/supabaseServer.js";
 
 const elevatedGetSecretValue = elevate(secrets.getSecretValue);
-const VERSION = "2026.09.10.9";
+const VERSION = "2026.09.10.11";
 const PUBLIC_AIRCRAFT_STATUS = "PUBLISHED";
 const SUPPORTED_LANGUAGES = new Set(["EN","SV","NO","DA","FI"]);
 
