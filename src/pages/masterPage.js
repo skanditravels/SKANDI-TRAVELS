@@ -37,13 +37,13 @@ const MASTER_CONFIG = Object.freeze({
         skandiPrimary: "https://static.wixstatic.com/media/394052_504704bd94f44f01a95f304bd19640e5~mv2.png",
         skandiWhite: "https://static.wixstatic.com/media/394052_504704bd94f44f01a95f304bd19640e5~mv2.png",
         skandiTravels: "https://static.wixstatic.com/media/394052_504704bd94f44f01a95f304bd19640e5~mv2.png",
-        skandiWave: "",
+        skandiWave: "https://static.wixstatic.com/media/394052_0c1aaf1dba2c4548ad53ccd8509d338c~mv2.png",
         skandiGroup: "",
         riaintra: "https://static.wixstatic.com/media/394052_1024542c47664bff8f4e145d1adf472d~mv2.png",
         altea: "https://static.wixstatic.com/media/394052_46045c41aebf421d98314b31ef83c677~mv2.png",
         voy: "https://static.wixstatic.com/media/394052_30b8bebbf5ee493da7d47329d04de494~mv2.png",
         voyWhite: "https://static.wixstatic.com/media/394052_3770b6753c474d73a77c674b20eab305~mv2.png",
-        skandiClub: "",
+        skandiClub: "https://static.wixstatic.com/media/394052_191b0c7832294e6db41f8d81f678f03b~mv2.png",
         signatureCollection: ""
       }),
       icons: Object.freeze({
