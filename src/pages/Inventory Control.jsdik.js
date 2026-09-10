@@ -1,105 +1,39 @@
-// Inventory Control page code — SKANDI V9
-// Single secure backend boundary. Global internal chrome remains owned by masterPage.js.
+// Wix page code — Unified Inventory Control V9.12
+// Route: /riaintra/success-factors/altea/inventory-control
+// Preferred HTML Component: #inventoryControlEmbed
 
-import wixLocationFrontend from "wix-location-frontend";
-import { inventoryControlDispatch } from "backend/RIA/inventoryControlV4.web";
+import {
+  getUnifiedInventoryBootstrap,getUnifiedInventoryRecord,saveUnifiedInventoryRecord,
+  saveInventoryLocalizedContent,saveInventoryMediaAsset,saveInventoryDatedRow,saveAirInventoryRow,getInventoryQualityReport,
+  getAircraftControlRecord,saveAircraftControl,archiveAircraftControl,saveAircraftControlChild,archiveAircraftControlChild,
+  smartFillAircraft,smartSyncAllAircraft,getCabinNormalizationPreview
+} from "backend/RIA/inventoryControlV9.web";
 
-const EMBED_IDS = [
-  "#inventoryControlEmbed",
-  "#alteaInventoryControlEmbed",
-  "#masterInventoryEmbed"
-];
-
-const INVENTORY_SOURCES = new Set([
-  "SKANDI_INVENTORY_EMBED",
-  "SKANDI_ALTEA_MASTER",      // migration compatibility only
-  "ALTEA_INVENTORY_EMBED"     // migration compatibility only
-]);
-
-const PARENT_SOURCE = "SKANDI_INVENTORY_PARENT";
-const LOGIN_PATH = "/riaintra";
-const VERSION = "2026.09.10.9";
-
-function getInventoryEmbed() {
-  for (const id of EMBED_IDS) {
-    try {
-      const candidate = $w(id);
-      if (
-        candidate &&
-        typeof candidate.onMessage === "function" &&
-        typeof candidate.postMessage === "function"
-      ) {
-        console.log(`[Inventory Control V9] Bound HTML Component ${id}.`);
-        return { html: candidate, id };
-      }
-    } catch (_) {}
-  }
-  console.error(`[Inventory Control V9] No HTML Component found. Checked: ${EMBED_IDS.join(", ")}`);
-  return null;
-}
-
-function post(html, type, payload = {}, requestId = "") {
-  html.postMessage({
-    source: PARENT_SOURCE,
-    type,
-    payload,
-    ...(requestId ? { requestId } : {}),
-    version: VERSION,
-    timestamp: new Date().toISOString()
-  });
-}
-
-function cleanError(error) {
-  const message = String(error?.message || error || "").trim();
-  if (!message || message.length > 240) return "Inventory Control could not complete the request.";
-  return message;
-}
-
-function shouldReturnToLogin(payload = {}) {
-  const code = String(payload.code || "").toUpperCase();
-  return code === "INVENTORY_AUTH_REQUIRED" || code === "INVENTORY_ACCESS_DENIED";
-}
-
-$w.onReady(function () {
-  const resolved = getInventoryEmbed();
-  if (!resolved) return;
-
-  const { html, id } = resolved;
-
-  // Listener is registered before any host message or backend request.
-  html.onMessage(async (event) => {
-    const msg = event.data || {};
-    if (!INVENTORY_SOURCES.has(String(msg.source || ""))) return;
-
-    const type = String(msg.type || msg.event || "").trim();
-    const payload = msg.payload && typeof msg.payload === "object" ? msg.payload : {};
-    const requestId = String(msg.requestId || "");
-    if (!type) return;
-
-    try {
-      const result = await inventoryControlDispatch(type, payload);
-      const responseType = result?.type || (result?.ok === false ? "INVENTORY_ERROR" : "INVENTORY_ERROR");
-      const responsePayload = result?.payload || {
-        code: "INVENTORY_EMPTY_RESPONSE",
-        message: "Inventory Control received an empty system response."
-      };
-
-      post(html, responseType, responsePayload, requestId);
-
-      if (responseType === "INVENTORY_ERROR" && shouldReturnToLogin(responsePayload)) {
-        wixLocationFrontend.to(LOGIN_PATH);
-      }
-    } catch (error) {
-      post(html, "INVENTORY_ERROR", {
-        code: "INVENTORY_PAGE_BRIDGE_ERROR",
-        message: cleanError(error)
-      }, requestId);
-    }
-  });
-
-  post(html, "INVENTORY_V9_HOST_READY", {
-    embedId: id,
-    supportedEmbedIds: EMBED_IDS,
-    version: VERSION
-  });
-});
+const IDS=["#inventoryControlEmbed","#alteaInventoryControlEmbed","#masterInventoryEmbed"];
+const CHILD="SKANDI_INVENTORY_EMBED";
+const PARENT="SKANDI_WIX_PARENT";
+const VERSION="2026.09.10.12";
+function find(){for(const id of IDS){try{const e=$w(id);if(e&&typeof e.onMessage==="function"&&typeof e.postMessage==="function")return e}catch(_){}}return null}
+function parse(v){if(typeof v==="string"){try{return JSON.parse(v)}catch(_){return null}}return v&&typeof v==="object"?v:null}
+function post(e,type,payload={},requestId=""){try{e.postMessage({source:PARENT,type,payload,requestId,timestamp:new Date().toISOString()})}catch(_){}}
+function fail(e,error,requestId=""){post(e,"INVENTORY_ERROR",{code:String(error?.code||"INVENTORY_ERROR"),message:String(error?.publicMessage||error?.message||"Inventory request failed.").slice(0,700)},requestId)}
+async function bootstrap(e){post(e,"INVENTORY_BOOTSTRAP",await getUnifiedInventoryBootstrap())}
+const ACTIONS={
+  INVENTORY_REFRESH:{type:"INVENTORY_BOOTSTRAP",run:getUnifiedInventoryBootstrap},
+  INVENTORY_GET_RECORD:{type:"INVENTORY_RECORD",run:getUnifiedInventoryRecord},
+  INVENTORY_SAVE_RECORD:{type:"INVENTORY_RECORD_SAVED",run:saveUnifiedInventoryRecord},
+  INVENTORY_SAVE_LOCALIZED:{type:"INVENTORY_LOCALIZED_SAVED",run:saveInventoryLocalizedContent},
+  INVENTORY_SAVE_MEDIA:{type:"INVENTORY_MEDIA_SAVED",run:saveInventoryMediaAsset},
+  INVENTORY_SAVE_DATED:{type:"INVENTORY_DATED_SAVED",run:saveInventoryDatedRow},
+  INVENTORY_SAVE_AIR_ROW:{type:"INVENTORY_AIR_ROW_SAVED",run:saveAirInventoryRow},
+  INVENTORY_QUALITY_REPORT:{type:"INVENTORY_QUALITY_RESULT",run:getInventoryQualityReport},
+  INVENTORY_GET_AIRCRAFT:{type:"INVENTORY_AIRCRAFT_RECORD",run:p=>getAircraftControlRecord({aircraftId:p.aircraftId||p.id})},
+  INVENTORY_SAVE_AIRCRAFT:{type:"INVENTORY_AIRCRAFT_SAVED",run:p=>saveAircraftControl({aircraft:p.aircraft||p})},
+  INVENTORY_ARCHIVE_AIRCRAFT:{type:"INVENTORY_AIRCRAFT_ARCHIVED",run:p=>archiveAircraftControl({aircraftId:p.aircraftId||p.id})},
+  INVENTORY_SAVE_AIRCRAFT_CHILD:{type:"INVENTORY_AIRCRAFT_CHILD_SAVED",run:saveAircraftControlChild},
+  INVENTORY_ARCHIVE_AIRCRAFT_CHILD:{type:"INVENTORY_AIRCRAFT_CHILD_ARCHIVED",run:archiveAircraftControlChild},
+  INVENTORY_SMART_FILL_AIRCRAFT:{type:"INVENTORY_SMART_FILL_RESULT",run:smartFillAircraft},
+  INVENTORY_SMART_SYNC_AIRCRAFT:{type:"INVENTORY_SMART_SYNC_RESULT",run:smartSyncAllAircraft},
+  INVENTORY_CABIN_NORMALIZATION_PREVIEW:{type:"INVENTORY_CABIN_NORMALIZATION_RESULT",run:getCabinNormalizationPreview}
+};
+$w.onReady(()=>{const e=find();if(!e){console.error("[Inventory V9.12] HTML component not found");return}e.onMessage(async event=>{const m=parse(event?.data);if(!m||m.source!==CHILD)return;const p=m.payload&&typeof m.payload==="object"?m.payload:{};try{if(m.type==="INVENTORY_V9_READY"){await bootstrap(e);return}const a=ACTIONS[m.type];if(!a)return;post(e,"INVENTORY_PROGRESS",{action:m.type});const result=await a.run(p);post(e,a.type,result||{},m.requestId||"")}catch(err){fail(e,err,m.requestId||"")}});post(e,"INVENTORY_HOST_READY",{protocolVersion:VERSION,embedId:e.id||"",readyAt:new Date().toISOString()})});
