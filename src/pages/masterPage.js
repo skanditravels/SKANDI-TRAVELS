@@ -10,7 +10,7 @@ import { getCustomerHeaderSession, subscribeCustomerNewsletter } from "backend/c
 import { getStaffPortalSession } from "backend/RIA/staffPortalAuth.web";
 
 
-const MASTER_VERSION = "2026.09.10.12";
+const MASTER_VERSION = "2026.09.10.12.1";
 const PARENT_SOURCE = "SKANDI_WIX_PARENT";
 const CUSTOMER_HEADER_SOURCE = "SKANDI_CUSTOMER_HEADER_EXPANDBAR";
 const CUSTOMER_FOOTER_SOURCE = "SKANDI_CUSTOMER_FOOTER";
