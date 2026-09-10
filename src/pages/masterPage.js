@@ -102,7 +102,7 @@ const MASTER_CONFIG = Object.freeze({
         { id:"transfers", label:"Transfers", path:"/transfers" }
       ]),
       secondaryNav: Object.freeze([
-        { id:"destinations", label:"Destinations", path:"/destinations" },
+        { id:"destinations", label:"Our Destinations", path:"/destinations" },
         { id:"signature", label:"SKANDI Collection", path:"/skandi-collection" },
         { id:"voy", label:"VOY Magazine", path:"/voy-magazine" },
         { id:"newsroom", label:"Newsroom", path:"/about/news-room" }
@@ -166,8 +166,8 @@ const MASTER_CONFIG = Object.freeze({
 
   internal: Object.freeze({
     header: Object.freeze({
-      productName:"SKANDI TRAVELS",
-      productContext:"RIAINTRA Enterprise Workforce Suite",
+      productName:"SRIAINTRA",
+      productContext:"SKANDI Enterprise Workforce Suite",
       primaryNav:Object.freeze([
         { id:"success-factors", label:"SAP RIAINTRA Dashboard", path:"/riaintra/success-factors" },
         { id:"my-roster", label:"MyRoster", path:"/riaintra/success-factors/my-roster" },
@@ -183,7 +183,7 @@ const MASTER_CONFIG = Object.freeze({
     footer:Object.freeze({
       links:Object.freeze([
         { label:"RIAINTRA", path:"/riaintra" },
-        { label:"DocuNet", path:"/riaintra/success-factors/docunet" },
+        { label:"Legal", path:"/riaintra/success-factors/legal" },
         { label:"ServiceDesk", path:"/riaintra/success-factors/helpdesk" }
       ])
     })
