@@ -24,14 +24,14 @@ const MASTER_CONFIG = Object.freeze({
     internalName: "RIAINTRA",
     alteaName: "ALTEA",
     slogans: Object.freeze({
-      en: "Signature Travels, Unforgettable Moments.",
+      en: "Unforgettable Moments.",
       sv: "När du längtar bort",
       no: "Når du lengter bort",
       da: "Når du længes væk",
       fi: "Kun kaipaat pois",
       altea: "WE MAKE DOOR TO DOOR STAY IN SYNC"
     }),
-    languages: Object.freeze(["EN", "SV", "NO", "DA"]),
+    languages: Object.freeze(["EN", "SV", "NO", "DA", "FI"]),
     currencies: Object.freeze(["USD", "SEK", "NOK", "DKK", "EUR"]),
     assets: Object.freeze({
       logos: Object.freeze({
@@ -102,12 +102,11 @@ const MASTER_CONFIG = Object.freeze({
       primaryNav: Object.freeze([
         { id:"flights", label:"Flights", path:"/flights" },
         { id:"hotels", label:"Hotels", path:"/hotels" },
-        { id:"packages", label:"Packages", path:"/packages" },
         { id:"tours", label:"Tours & Activities", path:"/tours" },
-        { id:"transfers", label:"Transfers", path:"/transfers" }
+        { id:"destinations", label:"Our Destinations", path:"/destinations" },
+        { id:"travelInfo", label:"Travel Info", path:"/travel-info" }        
       ]),
       secondaryNav: Object.freeze([
-        { id:"destinations", label:"Our Destinations", path:"/destinations" },
         { id:"signature", label:"SKANDI Collection", path:"/skandi-collection" },
         { id:"voy", label:"VOY Magazine", path:"/voy-magazine" },
         { id:"newsroom", label:"Newsroom", path:"/about/news-room" }
@@ -172,7 +171,7 @@ const MASTER_CONFIG = Object.freeze({
 
   internal: Object.freeze({
     header: Object.freeze({
-      productName:"SRIAINTRA",
+      productName:"RIAINTRA",
       productContext:"SKANDI Enterprise Workforce Suite",
       primaryNav:Object.freeze([
         { id:"success-factors", label:"SAP RIAINTRA Dashboard", path:"/riaintra/success-factors" },
