@@ -8,7 +8,7 @@ import {
 
 import {
   searchDuffelStays
-} from "src/backend/RIA/duffelGroundProducts.web";
+} from "backend/RIA/duffelGroundProducts.web";
 
 import {
   getDestinationFlowCatalog
