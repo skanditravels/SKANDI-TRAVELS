@@ -29,6 +29,7 @@ const SUCCESSFACTORS_HR_ADMIN_ROLES = Object.freeze([
   "hr administrator",
   "hr admin",
   "hr manager",
+  "president & chief executive officer",
   "hr director",
   "head of hr",
   "chief people",
