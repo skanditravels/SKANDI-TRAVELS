@@ -1,4 +1,4 @@
-// Wix page code: /riaintra/aircraft-display-control
+// Wix page code: /riaintra/success-factors/altea/aircraft-display-control
 // HTML Component: #aircraftDisplayControlEmbed (legacy fallback #aircraftControlEmbed)
 // SKANDI Aircraft Display Control V9
 
