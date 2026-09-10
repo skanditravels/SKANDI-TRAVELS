@@ -63,7 +63,31 @@ const INTERNAL_TABLES = new Set([
   "travel_info_airports",
   "inventory_master_entities",
   "booking_carts",
-  "booking_cart_items"
+  "booking_cart_items",
+
+  // Travel Info V9 public/read + support data plane.
+  "travel_info_airlines",
+  "travel_info_airports",
+  "travel_info_faq",
+  "travel_info_faq_groups",
+  "travel_info_articles",
+  "travel_info_support_requests",
+  "travel_requirements",
+
+  // Canonical Inventory Control V9 content used by Travel Info.
+  "inventory_localized_content",
+  "inventory_media_assets",
+  "inventory_entity_relations",
+  "inventory_public_entities_v",
+  "inventory_canonical_entities_v",
+
+  // Aircraft Display Control V9 detailed aircraft authority.
+  "travel_info_aircraft",
+  "travel_info_aircraft_cabins",
+  "travel_info_aircraft_views",
+  "travel_info_aircraft_hotspots",
+  "travel_info_aircraft_walk_scenes",
+  "travel_info_aircraft_scene_hotspots"
 ]);
 
 function secretString(response) {
