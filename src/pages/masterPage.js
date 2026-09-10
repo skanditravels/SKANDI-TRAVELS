@@ -94,7 +94,7 @@ const MASTER_CONFIG = Object.freeze({
     docunet: "/riaintra/success-factors/docunet",
     serviceDesk: "/riaintra/success-factors/helpdesk",
     magazineManager: "/riaintra/success-factors/media-control",
-    aircraftDisplayControl: "/riaintra/aircraft-display-control"
+    aircraftDisplayControl: "/riaintra/success-factors/altea/aircraft-display-control"
   }),
 
 
