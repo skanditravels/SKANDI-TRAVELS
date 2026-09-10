@@ -27,7 +27,7 @@ const HOTEL_SEARCH_SOURCES = new Set([
 ]);
 const HOTEL_DETAIL_SOURCE = "SKANDI_HOTEL_DETAIL";
 const PARENT_SOURCE = "SKANDI_WIX_PARENT";
-const PROTOCOL_VERSION = "2026.09.10.destination-v9";
+const PROTOCOL_VERSION = "2026.09.10.destination-v9.2";
 
 let catalog = [];
 let catalogPromise = null;
