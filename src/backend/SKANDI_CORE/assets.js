@@ -41,7 +41,7 @@ const PRIVATE_MIME = new Set([
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
   "application/vnd.ms-powerpoint",
   "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-  "text/plain","text/csv","application/json"
+  "text/plain","text/csv","application/json","text/html"
 ]);
 
 const clean=(v,max=10000)=>String(v??"").trim().slice(0,max);
@@ -166,12 +166,13 @@ async function possibleLegacyMatches({sizeBytes,mimeType,originalName}){
     .slice(0,20)
     .map(normalizeAsset);
 }
-async function exactShaMatches(sha256){
+async function exactShaMatches(sha256,visibility=""){
   const hash=lower(sha256,80);
   if(!/^[a-f0-9]{64}$/.test(hash))return[];
-  return (await select("platform_assets",{
-    select:"*",status:"eq.ACTIVE",sha256:qeq(hash),order:"created_at.asc",limit:"50"
-  })).map(normalizeAsset);
+  const query={select:"*",status:"eq.ACTIVE",sha256:qeq(hash),order:"created_at.asc",limit:"50"};
+  const scope=upper(visibility,20);
+  if(["PUBLIC","PRIVATE"].includes(scope))query.visibility=qeq(scope);
+  return (await select("platform_assets",query)).map(normalizeAsset);
 }
 
 export async function listAssetsCore(input={}){
@@ -214,7 +215,7 @@ export async function listAssetsCore(input={}){
 export async function checkAssetDuplicateCore(input={}){
   await requireAssetAccess();
   const sha256=lower(input.sha256,80);
-  const exact=await exactShaMatches(sha256);
+  const exact=await exactShaMatches(sha256,input.visibility||"");
   const possible=exact.length?[]:await possibleLegacyMatches({
     sizeBytes:Number(input.sizeBytes||0),
     mimeType:input.mimeType,
@@ -242,7 +243,7 @@ export async function prepareAssetUploadCore(input={}){
   if(!allowed.has(mimeType))throw new Error("ASSET_MIME_NOT_ALLOWED");
   if(sizeBytes>maxBytes)throw new Error("ASSET_FILE_TOO_LARGE");
 
-  const exact=await exactShaMatches(sha256);
+  const exact=await exactShaMatches(sha256,visibility);
   if(exact.length){
     return{ok:true,duplicate:true,exactDuplicates:exact,upload:null};
   }
@@ -330,7 +331,7 @@ export async function finalizeAssetUploadCore(input={}){
   if(upload.finalized_at)throw new Error("ASSET_UPLOAD_ALREADY_FINALIZED");
   if(new Date(upload.expires_at).getTime()<Date.now())throw new Error("ASSET_UPLOAD_SESSION_EXPIRED");
 
-  const exact=await exactShaMatches(upload.sha256);
+  const exact=await exactShaMatches(upload.sha256,upload.visibility);
   if(exact.length){
     return{ok:true,duplicate:true,asset:exact[0]};
   }
@@ -371,7 +372,7 @@ export async function finalizeAssetUploadCore(input={}){
     }))?.[0];
   }catch(error){
     // Database-level unique hash guard wins concurrent races.
-    const race=await exactShaMatches(upload.sha256);
+    const race=await exactShaMatches(upload.sha256,upload.visibility);
     if(race.length){
       await restRequest({
         table:"platform_asset_upload_sessions",method:"PATCH",query:{request_id:qeq(requestId)},
