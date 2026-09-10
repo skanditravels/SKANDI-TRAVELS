@@ -208,7 +208,7 @@ function successFactorsAccess(profile = {}) {
   const fullHrRole = /(human resources|people operations|people & culture|hr administrator|hr admin|hr director|head of hr|chief people|people director)/i.test(roleText);
   const executiveAdmin = /(super admin|administrator|founder|chief executive|\bceo\b|\bowner\b)/i.test(roleText);
 
-  const fullHr = fullHrRole || executiveAdmin || has("hr", "hr_admin", "human resources", "people operations", "all");
+  const fullHr = fullHrRole || executiveAdmin || has("hr", "hr_admin", "board chair", "human resources", "people operations", "all");
   const recruiting = fullHr || recruitingRole || has("recruiting", "recruiter", "recruiting_admin", "talent acquisition", "careers_control", "careers-control", "all");
   const payroll = fullHr || payrollRole || profile.permissions?.payroll === true || has("payroll", "payroll_admin", "all");
   const badge = fullHr || badgeRole || has("badge", "badge_generator", "badge-generator", "badge_control", "badge-control", "all");
