@@ -1,5 +1,5 @@
 // backend/RIA/supabaseServer.js
-// Shared backend-only Supabase REST client.
+// Shared backend-only Supabase REST/RPC client — V9.12 unified Inventory + ALTEA.
 
 import { secrets } from "wix-secrets-backend.v2";
 import { elevate } from "wix-auth";
@@ -87,6 +87,28 @@ const INTERNAL_TABLES = new Set([
   "travel_info_aircraft_views",
   "travel_info_aircraft_hotspots",
   "travel_info_aircraft_walk_scenes",
+  "inventory_catalog_entries",
+  "inventory_dated_inventory",
+  "inventory_source_registry",
+  "altea_bookings",
+  "altea_booking_components",
+  "altea_booking_documents",
+  "altea_documents",
+  "altea_passengers",
+  "altea_pnr_history",
+  "altea_segments",
+  "altea_queue_items",
+  "altea_sync_events",
+  "altea_package_inventory",
+  "altea_search_logs",
+  "club_profiles",
+  "club_tiers",
+  "bus_manifests",
+  "bus_manifest_passengers",
+  "bus_routes",
+  "bus_route_stops",
+  "operational_manifests",
+  "airport_transfers",
   "travel_info_aircraft_scene_hotspots"
 ]);
 
@@ -237,6 +259,32 @@ export async function restRequest({
     throw error;
   }
 
+  return payload;
+}
+
+
+export async function rpcRequest({ functionName, body = {}, prefer = "" }) {
+  const allowed = new Set([
+    "inventory_altea_add_component_v9",
+    "inventory_altea_release_component_v9"
+  ]);
+  if (!allowed.has(String(functionName || ""))) throw new Error("SUPABASE_RPC_NOT_ALLOWED");
+  const { baseUrl, apiKey, keyType } = await getConfiguration();
+  const response = await fetch(`${baseUrl}/rest/v1/rpc/${encodeURIComponent(functionName)}`, {
+    method: "POST",
+    headers: buildHeaders({ apiKey, keyType, prefer }),
+    body: JSON.stringify(body || {})
+  });
+  const raw = await response.text();
+  let payload = null;
+  if (raw) { try { payload = JSON.parse(raw); } catch (_) { throw new Error("SUPABASE_INVALID_RESPONSE"); } }
+  if (!response.ok) {
+    const error = new Error(`SUPABASE_RPC_HTTP_${response.status}`);
+    error.status = response.status;
+    error.code = String(payload?.code || "SUPABASE_RPC_ERROR");
+    error.supabase = { message:String(payload?.message || "").slice(0,240), details:String(payload?.details || "").slice(0,240), hint:String(payload?.hint || "").slice(0,240) };
+    throw error;
+  }
   return payload;
 }
 
