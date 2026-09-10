@@ -7,13 +7,15 @@ import {
   getDatedInventory,saveDatedInventory,deleteDatedInventory,
   getAirInventory,saveAirInventoryRow,
   getAircraftRecord,saveAircraft,archiveAircraft,saveAircraftChild,archiveAircraftChild,
-  smartSyncAircraft,getCabinNormalizationPreview,getInventoryAudit,getInventoryQuality
+  smartSyncAircraft,getCabinNormalizationPreview,getInventoryAudit,getInventoryQuality,
+  listAssetLibrary,checkAssetLibraryDuplicate,prepareAssetLibraryUpload,finalizeAssetLibraryUpload,
+  getAssetLibraryAccessUrl,registerAssetLibraryUsage,archiveAssetLibraryItem
 } from "backend/SKANDI_CORE/inventory.web";
 
 const EMBED_IDS=["#inventoryControlEmbed","#alteaInventoryControlEmbed","#masterInventoryEmbed"];
 const CHILD_SOURCE="SKANDI_INVENTORY_EMBED";
 const PARENT_SOURCE="SKANDI_INVENTORY_PARENT";
-const VERSION="R-003.1";
+const VERSION="R-003.3";
 
 function findEmbed(){
   for(const id of EMBED_IDS){
@@ -39,7 +41,12 @@ function errorPayload(error){
     INVENTORY_WRITE_ACCESS_DENIED:"Your role does not allow this Inventory change.",
     INVENTORY_DUPLICATE_CODE:"That code is already in use for this record family.",
     INVENTORY_DUPLICATE_SLUG:"That URL slug is already in use for this record family.",
-    INVENTORY_PARENT_CYCLE:"That parent selection would create a geography loop."
+    INVENTORY_PARENT_CYCLE:"That parent selection would create a geography loop.",
+    ASSET_AUTH_REQUIRED:"Your staff session has expired. Sign in again.",
+    ASSET_WRITE_ACCESS_DENIED:"Your role does not allow Asset Library uploads.",
+    ASSET_MIME_NOT_ALLOWED:"That file type is not allowed in this Asset Library.",
+    ASSET_FILE_TOO_LARGE:"That file exceeds the Asset Library size limit.",
+    ASSET_FOLDER_REQUIRED:"Choose an Asset Library root and folder before uploading."
   };
   return{code,message:friendly[code]||String(error?.publicMessage||error?.message||"Inventory request failed.").slice(0,700)};
 }
@@ -62,7 +69,14 @@ const ACTIONS={
   INVENTORY_V9_SAVE_AIRCRAFT_CHILD:{response:"INVENTORY_V9_AIRCRAFT_CHILD_SAVED",run:saveAircraftChild},
   INVENTORY_V9_ARCHIVE_AIRCRAFT_CHILD:{response:"INVENTORY_V9_AIRCRAFT_CHILD_ARCHIVED",run:archiveAircraftChild},
   INVENTORY_V9_SMART_SYNC_AIRCRAFT:{response:"INVENTORY_V9_SMART_SYNC_RESULT",run:smartSyncAircraft},
-  INVENTORY_V9_CABIN_NORMALIZATION_PREVIEW:{response:"INVENTORY_V9_CABIN_NORMALIZATION_RESULT",run:getCabinNormalizationPreview}
+  INVENTORY_V9_CABIN_NORMALIZATION_PREVIEW:{response:"INVENTORY_V9_CABIN_NORMALIZATION_RESULT",run:getCabinNormalizationPreview},
+  INVENTORY_ASSET_LIST:{response:"INVENTORY_ASSET_LIST_RESULT",run:listAssetLibrary},
+  INVENTORY_ASSET_CHECK_DUPLICATE:{response:"INVENTORY_ASSET_DUPLICATE_RESULT",run:checkAssetLibraryDuplicate},
+  INVENTORY_ASSET_PREPARE_UPLOAD:{response:"INVENTORY_ASSET_UPLOAD_PREPARED",run:prepareAssetLibraryUpload},
+  INVENTORY_ASSET_FINALIZE_UPLOAD:{response:"INVENTORY_ASSET_UPLOAD_FINALIZED",run:finalizeAssetLibraryUpload},
+  INVENTORY_ASSET_ACCESS_URL:{response:"INVENTORY_ASSET_ACCESS_URL_RESULT",run:getAssetLibraryAccessUrl},
+  INVENTORY_ASSET_REGISTER_USAGE:{response:"INVENTORY_ASSET_USAGE_REGISTERED",run:registerAssetLibraryUsage},
+  INVENTORY_ASSET_ARCHIVE:{response:"INVENTORY_ASSET_ARCHIVED",run:archiveAssetLibraryItem}
 };
 
 $w.onReady(()=>{
