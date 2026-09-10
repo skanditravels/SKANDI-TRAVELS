@@ -10,7 +10,7 @@ import { getCustomerHeaderSession, subscribeCustomerNewsletter } from "backend/c
 import { getStaffPortalSession } from "backend/RIA/staffPortalAuth.web";
 
 
-const MASTER_VERSION = "2026.09.10.10";
+const MASTER_VERSION = "2026.09.10.12";
 const PARENT_SOURCE = "SKANDI_WIX_PARENT";
 const CUSTOMER_HEADER_SOURCE = "SKANDI_CUSTOMER_HEADER_EXPANDBAR";
 const CUSTOMER_FOOTER_SOURCE = "SKANDI_CUSTOMER_FOOTER";
@@ -24,7 +24,7 @@ const MASTER_CONFIG = Object.freeze({
     internalName: "RIAINTRA",
     alteaName: "ALTEA",
     slogans: Object.freeze({
-      en: "Unforgettable Moments.",
+      en: "Signature Travels, Unforgettable Moments.",
       sv: "När du längtar bort",
       no: "Når du lengter bort",
       da: "Når du længes væk",
@@ -94,26 +94,24 @@ const MASTER_CONFIG = Object.freeze({
     docunet: "/riaintra/success-factors/docunet",
     serviceDesk: "/riaintra/success-factors/helpdesk",
     magazineManager: "/riaintra/success-factors/media-control",
-    aircraftDisplayControl: "/riaintra/success-factors/altea/aircraft-display-control"
+    inventoryControl: "/riaintra/success-factors/altea/inventory-control"
   }),
 
 
   customer: Object.freeze({
     header: Object.freeze({
       primaryNav: Object.freeze([
-        { id:"home", label:"Book", path:"/" },
+        { id:"flights", label:"Flights", path:"/flights" },
         { id:"hotels", label:"Hotels", path:"/hotels" },
         { id:"packages", label:"Packages", path:"/packages" },
         { id:"tours", label:"Tours & Activities", path:"/tours" },
-        { id:"destinations", label:"Our Destinations", path:"/destinations" },
-        { id:"signature", label:"SKANDI Collection", path:"/skandi-collection" },
-        { id:"travelInfo", label:"Travel Info", path:"/travel-info" }
-
-
+        { id:"transfers", label:"Transfers", path:"/transfers" }
       ]),
       secondaryNav: Object.freeze([
-        { id:"voy", label:"VOY Magazine", path:"/voy-magazine" }
-        
+        { id:"destinations", label:"Our Destinations", path:"/destinations" },
+        { id:"signature", label:"SKANDI Collection", path:"/skandi-collection" },
+        { id:"voy", label:"VOY Magazine", path:"/voy-magazine" },
+        { id:"newsroom", label:"Newsroom", path:"/about/news-room" }
       ]),
       accountNav: Object.freeze([
         { id:"myTrip", label:"My Trips", path:"/my-profile?tab=trips" },
@@ -168,10 +166,7 @@ const MASTER_CONFIG = Object.freeze({
           ])
         }
       ]),
-      footer:Object.freeze({
-      links:Object.freeze([
-        { label:"Legal", path:"/about/legal" },
-        { label:"Staff Login", path:"/riaintra" })
+      staffLogin: Object.freeze({ label:"Staff Login", path:"/riaintra" })
     })
   }),
 
@@ -190,7 +185,7 @@ const MASTER_CONFIG = Object.freeze({
       ]),
       managementNav:Object.freeze([
         { id:"magazine-manager", label:"Media Manager", path:"/riaintra/success-factors/media-control" },
-        { id:"aircraft-display-control", label:"Aircraft Display Control", path:"/riaintra/aircraft-display-control" }
+        { id:"inventory-control", label:"Inventory Control", path:"/riaintra/success-factors/altea/inventory-control" }
       ])
     }),
     footer:Object.freeze({
@@ -210,7 +205,7 @@ const IDS = Object.freeze({
   internalHeaders:["#riaintraHeaderEmbed", "#riaintraHeader", "#staffInternalChromeEmbed"],
   internalFooters:["#riaintraFooterEmbed", "#riaintraFooter"],
   alteaHeaders:["#alteaHeaderEmbed", "#alteaHeader"],
-  pageEmbeds:["#travelInfoHtml", "#aircraftDisplayControlEmbed", "#aircraftControlEmbed"]
+  pageEmbeds:["#travelInfoHtml", "#inventoryControlEmbed", "#alteaInventoryControlEmbed", "#masterInventoryEmbed", "#alteaReservationsEmbed"]
 });
 
 
