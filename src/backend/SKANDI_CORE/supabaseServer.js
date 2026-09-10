@@ -92,6 +92,11 @@ const REST_OBJECTS = new Set([
   "inventory_searchable_catalog_v",
   "inventory_source_health_v",
 
+  // Global platform Asset Library
+  "platform_assets",
+  "platform_asset_usages",
+  "platform_asset_upload_sessions",
+
   // Inventory operational compatibility layers
   "hotel_allocations",
   "tour_activity_inventory",
@@ -443,6 +448,263 @@ export async function rpcRequest({
   });
 }
 
+
+const STORAGE_BUCKETS = Object.freeze({
+  "skandi-public-assets": Object.freeze({ public: true, write: true }),
+  "skandi-private-assets": Object.freeze({ public: false, write: true }),
+
+  // Legacy buckets are readable/indexed during recovery but no new platform upload
+  // may be created in them.
+  "inventory-media": Object.freeze({ public: true, write: false }),
+  "aircraft-assets": Object.freeze({ public: true, write: false }),
+  "uniform-assets": Object.freeze({ public: true, write: false }),
+  "docunet-controlled": Object.freeze({ public: false, write: false }),
+  "internal-mail-attachments": Object.freeze({ public: false, write: false })
+});
+
+function assertStorageBucket(bucket, { write = false } = {}) {
+  const name = clean(bucket, 120);
+  const config = STORAGE_BUCKETS[name];
+  if (!config) throw new Error("SUPABASE_STORAGE_BUCKET_NOT_ALLOWED");
+  if (write && config.write !== true) {
+    throw new Error("SUPABASE_STORAGE_BUCKET_READ_ONLY");
+  }
+  return { name, ...config };
+}
+
+function encodeStoragePath(path) {
+  return clean(path, 3000)
+    .replace(/^\/+|\/+$/g, "")
+    .split("/")
+    .filter(Boolean)
+    .map((segment) => encodeURIComponent(segment))
+    .join("/");
+}
+
+async function storageJsonRequest({
+  path,
+  method = "GET",
+  body,
+  extraHeaders = {}
+}) {
+  const normalizedMethod = clean(method, 12).toUpperCase();
+  if (!ALLOWED_METHODS.has(normalizedMethod)) {
+    throw new Error("SUPABASE_STORAGE_METHOD_NOT_ALLOWED");
+  }
+
+  const { baseUrl, apiKey, keyType } = await getServerConfiguration();
+
+  const response = await fetch(`${baseUrl}/storage/v1${path}`, {
+    method: normalizedMethod,
+    headers: headersFor({
+      apiKey,
+      keyType,
+      extra: extraHeaders
+    }),
+    body: body === undefined ? undefined : JSON.stringify(body)
+  });
+
+  if (normalizedMethod === "HEAD" || response.status === 204) {
+    if (!response.ok) {
+      const error = new Error(`SUPABASE_STORAGE_HTTP_${response.status}`);
+      error.status = response.status;
+      throw error;
+    }
+    return null;
+  }
+
+  const raw = await response.text();
+  let payload = null;
+  if (raw) {
+    try {
+      payload = JSON.parse(raw);
+    } catch (_) {
+      const error = new Error("SUPABASE_STORAGE_INVALID_JSON_RESPONSE");
+      error.status = response.status;
+      throw error;
+    }
+  }
+
+  if (!response.ok) {
+    const safe = safeErrorPayload(payload);
+    console.error("[SKANDI Supabase Storage]", {
+      status: response.status,
+      path: clean(path, 260),
+      ...safe
+    });
+    const error = new Error(
+      `SUPABASE_STORAGE_HTTP_${response.status}` +
+      (safe.code ? `_${safe.code}` : "")
+    );
+    error.status = response.status;
+    error.code = safe.code || "SUPABASE_STORAGE_HTTP_ERROR";
+    error.supabase = safe;
+    throw error;
+  }
+
+  return payload;
+}
+
+/**
+ * Creates a two-hour signed upload URL for one approved canonical asset bucket.
+ * The returned URL/token may be handed to a browser after domain authorization.
+ */
+export async function storageCreateSignedUploadUrl({
+  bucket,
+  path,
+  upsert = false
+}) {
+  const config = assertStorageBucket(bucket, { write: true });
+  const encodedBucket = encodeURIComponent(config.name);
+  const encodedPath = encodeStoragePath(path);
+
+  const data = await storageJsonRequest({
+    path: `/object/upload/sign/${encodedBucket}/${encodedPath}`,
+    method: "POST",
+    body: {},
+    extraHeaders: upsert ? { "x-upsert": "true" } : { "x-upsert": "false" }
+  });
+
+  const { baseUrl } = await getServerConfiguration();
+  const relative = clean(data?.url || data?.signedURL || data?.signedUrl, 5000);
+  if (!relative) throw new Error("SUPABASE_STORAGE_SIGNED_UPLOAD_URL_MISSING");
+
+  const signedUrl = /^https?:\/\//i.test(relative)
+    ? relative
+    : `${baseUrl}/storage/v1${relative.startsWith("/") ? "" : "/"}${relative}`;
+
+  const token = (() => {
+    try {
+      return new URL(signedUrl).searchParams.get("token") || "";
+    } catch (_) {
+      return "";
+    }
+  })();
+
+  if (!token) throw new Error("SUPABASE_STORAGE_SIGNED_UPLOAD_TOKEN_MISSING");
+
+  return {
+    bucket: config.name,
+    path: clean(path, 3000).replace(/^\/+/, ""),
+    signedUrl,
+    token,
+    public: config.public === true
+  };
+}
+
+/**
+ * Creates a short-lived signed read URL for a private asset.
+ */
+export async function storageCreateSignedReadUrl({
+  bucket,
+  path,
+  expiresIn = 600,
+  download = false
+}) {
+  const config = assertStorageBucket(bucket);
+  const encodedBucket = encodeURIComponent(config.name);
+  const encodedPath = encodeStoragePath(path);
+  const seconds = Math.min(60 * 60, Math.max(30, Number(expiresIn) || 600));
+
+  if (config.public) {
+    return {
+      bucket: config.name,
+      path,
+      signedUrl: await storagePublicUrl({ bucket: config.name, path, download }),
+      expiresIn: null,
+      public: true
+    };
+  }
+
+  const data = await storageJsonRequest({
+    path: `/object/sign/${encodedBucket}/${encodedPath}`,
+    method: "POST",
+    body: { expiresIn: seconds }
+  });
+
+  const { baseUrl } = await getServerConfiguration();
+  const relative = clean(data?.signedURL || data?.signedUrl || data?.url, 5000);
+  if (!relative) throw new Error("SUPABASE_STORAGE_SIGNED_READ_URL_MISSING");
+
+  let signedUrl = /^https?:\/\//i.test(relative)
+    ? relative
+    : `${baseUrl}/storage/v1${relative.startsWith("/") ? "" : "/"}${relative}`;
+
+  if (download) {
+    signedUrl += `${signedUrl.includes("?") ? "&" : "?"}download=`;
+  }
+
+  return {
+    bucket: config.name,
+    path,
+    signedUrl,
+    expiresIn: seconds,
+    public: false
+  };
+}
+
+/**
+ * Verifies an uploaded object and returns authoritative Storage metadata.
+ */
+export async function storageGetObjectInfo({ bucket, path }) {
+  const config = assertStorageBucket(bucket);
+  const encodedBucket = encodeURIComponent(config.name);
+  const encodedPath = encodeStoragePath(path);
+  return storageJsonRequest({
+    path: `/object/info/${encodedBucket}/${encodedPath}`,
+    method: "GET"
+  });
+}
+
+/**
+ * Lists objects in an approved bucket. Used only by platform recovery/index tools.
+ */
+export async function storageListObjects({
+  bucket,
+  prefix = "",
+  limit = 100,
+  offset = 0,
+  search = ""
+}) {
+  const config = assertStorageBucket(bucket);
+  return storageJsonRequest({
+    path: `/object/list/${encodeURIComponent(config.name)}`,
+    method: "POST",
+    body: {
+      prefix: clean(prefix, 2000).replace(/^\/+|\/+$/g, ""),
+      limit: Math.min(1000, Math.max(1, Number(limit) || 100)),
+      offset: Math.max(0, Number(offset) || 0),
+      sortBy: { column: "name", order: "asc" },
+      search: clean(search, 300)
+    }
+  });
+}
+
+/**
+ * Public CDN URL helper. Does not perform a network request.
+ */
+export async function storageGetPublicUrl({ bucket, path, download = false }) {
+  return {
+    publicUrl: await storagePublicUrl({ bucket, path, download })
+  };
+}
+
+function storagePublicUrl({ bucket, path, download = false }) {
+  const config = assertStorageBucket(bucket);
+  if (!config.public) throw new Error("SUPABASE_STORAGE_BUCKET_NOT_PUBLIC");
+
+  const encodedBucket = encodeURIComponent(config.name);
+  const encodedPath = encodeStoragePath(path);
+
+  // URL is built server-side so the browser never receives the project secret.
+  // SUPABASE_URL itself is not a credential, but retaining URL construction here
+  // keeps every asset consumer on the same source of truth.
+  return getServerConfiguration().then(({ baseUrl }) =>
+    `${baseUrl}/storage/v1/object/public/${encodedBucket}/${encodedPath}` +
+    (download ? "?download=" : "")
+  );
+}
+
 /**
  * Public Realtime configuration for an authorized backend to hand to a browser.
  * This returns only the publishable/anon key, never the server secret.
@@ -465,7 +727,8 @@ export async function getSupabaseServerDiagnostics() {
     host: new URL(config.baseUrl).host,
     keyType: config.keyType,
     allowedObjectCount: REST_OBJECTS.size,
-    allowedRpcCount: RPC_FUNCTIONS.size
+    allowedRpcCount: RPC_FUNCTIONS.size,
+    allowedStorageBucketCount: Object.keys(STORAGE_BUCKETS).length
   };
 }
 

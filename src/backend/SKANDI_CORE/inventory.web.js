@@ -11,6 +11,10 @@ import {
   saveAircraftChildCore,archiveAircraftChildCore,smartSyncAircraftCore,getCabinNormalizationPreviewCore,
   getInventoryAuditCore,getInventoryQualityCore
 } from "./inventory.js";
+import {
+  listAssetsCore,checkAssetDuplicateCore,prepareAssetUploadCore,finalizeAssetUploadCore,
+  getAssetAccessUrlCore,registerAssetUsageCore,archiveAssetCore
+} from "./assets.js";
 
 export const getInventoryBootstrap=webMethod(Permissions.SiteMember,getInventoryBootstrapCore);
 export const getInventoryRecord=webMethod(Permissions.SiteMember,getInventoryRecordCore);
@@ -31,3 +35,13 @@ export const smartSyncAircraft=webMethod(Permissions.SiteMember,smartSyncAircraf
 export const getCabinNormalizationPreview=webMethod(Permissions.SiteMember,getCabinNormalizationPreviewCore);
 export const getInventoryAudit=webMethod(Permissions.SiteMember,getInventoryAuditCore);
 export const getInventoryQuality=webMethod(Permissions.SiteMember,getInventoryQualityCore);
+
+// Platform Asset Library is exposed through the single Inventory facade so the
+// Inventory Wix page keeps exactly one backend dependency.
+export const listAssetLibrary=webMethod(Permissions.SiteMember,listAssetsCore);
+export const checkAssetLibraryDuplicate=webMethod(Permissions.SiteMember,checkAssetDuplicateCore);
+export const prepareAssetLibraryUpload=webMethod(Permissions.SiteMember,prepareAssetUploadCore);
+export const finalizeAssetLibraryUpload=webMethod(Permissions.SiteMember,finalizeAssetUploadCore);
+export const getAssetLibraryAccessUrl=webMethod(Permissions.SiteMember,getAssetAccessUrlCore);
+export const registerAssetLibraryUsage=webMethod(Permissions.SiteMember,registerAssetUsageCore);
+export const archiveAssetLibraryItem=webMethod(Permissions.SiteMember,archiveAssetCore);
