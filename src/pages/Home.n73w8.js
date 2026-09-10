@@ -8,7 +8,7 @@ import {
   createBookingCartFromOffer
 } from "backend/bookingOrchestrator.web";
 import { getHomeContent, getHomeSearchLocations } from "backend/homeContent.web";
-import { searchDuffelStays } from "src/backend/RIA/duffelGroundProducts.web";
+import { searchDuffelStays } from "backend/RIA/duffelGroundProducts.web";
 
 const HOME_EMBED_IDS = ["#htmlHome", "#htmlhome", "#home"];
 const HOME_SOURCE = "SKANDI_HOME";
