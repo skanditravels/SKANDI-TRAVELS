@@ -10,7 +10,7 @@ import { getCustomerHeaderSession, subscribeCustomerNewsletter } from "backend/c
 import { getStaffPortalSession } from "backend/RIA/staffPortalAuth.web";
 
 
-const MASTER_VERSION = "2026.09.09.9";
+const MASTER_VERSION = "2026.09.10.10";
 const PARENT_SOURCE = "SKANDI_WIX_PARENT";
 const CUSTOMER_HEADER_SOURCE = "SKANDI_CUSTOMER_HEADER_EXPANDBAR";
 const CUSTOMER_FOOTER_SOURCE = "SKANDI_CUSTOMER_FOOTER";
@@ -24,14 +24,14 @@ const MASTER_CONFIG = Object.freeze({
     internalName: "RIAINTRA",
     alteaName: "ALTEA",
     slogans: Object.freeze({
-      en: "Unforgettable Moments.",
+      en: "Signature Travels, Unforgettable Moments.",
       sv: "När du längtar bort",
       no: "Når du lengter bort",
       da: "Når du længes væk",
       fi: "Kun kaipaat pois",
       altea: "WE MAKE DOOR TO DOOR STAY IN SYNC"
     }),
-    languages: Object.freeze(["EN", "SV", "NO", "DA", "FI"]),
+    languages: Object.freeze(["EN", "SV", "NO", "DA"]),
     currencies: Object.freeze(["USD", "SEK", "NOK", "DKK", "EUR"]),
     assets: Object.freeze({
       logos: Object.freeze({
@@ -93,7 +93,8 @@ const MASTER_CONFIG = Object.freeze({
     mail: "/riaintra/success-factors/mail",
     docunet: "/riaintra/success-factors/docunet",
     serviceDesk: "/riaintra/success-factors/helpdesk",
-    magazineManager: "/riaintra/success-factors/media-control"
+    magazineManager: "/riaintra/success-factors/media-control",
+    aircraftDisplayControl: "/riaintra/aircraft-display-control"
   }),
 
 
@@ -102,11 +103,12 @@ const MASTER_CONFIG = Object.freeze({
       primaryNav: Object.freeze([
         { id:"flights", label:"Flights", path:"/flights" },
         { id:"hotels", label:"Hotels", path:"/hotels" },
+        { id:"packages", label:"Packages", path:"/packages" },
         { id:"tours", label:"Tours & Activities", path:"/tours" },
-        { id:"destinations", label:"Our Destinations", path:"/destinations" },
-        { id:"travelInfo", label:"Travel Info", path:"/travel-info" }        
+        { id:"transfers", label:"Transfers", path:"/transfers" }
       ]),
       secondaryNav: Object.freeze([
+        { id:"destinations", label:"Our Destinations", path:"/destinations" },
         { id:"signature", label:"SKANDI Collection", path:"/skandi-collection" },
         { id:"voy", label:"VOY Magazine", path:"/voy-magazine" },
         { id:"newsroom", label:"Newsroom", path:"/about/news-room" }
@@ -171,7 +173,7 @@ const MASTER_CONFIG = Object.freeze({
 
   internal: Object.freeze({
     header: Object.freeze({
-      productName:"RIAINTRA",
+      productName:"SRIAINTRA",
       productContext:"SKANDI Enterprise Workforce Suite",
       primaryNav:Object.freeze([
         { id:"success-factors", label:"SAP RIAINTRA Dashboard", path:"/riaintra/success-factors" },
@@ -182,7 +184,8 @@ const MASTER_CONFIG = Object.freeze({
         { id:"service-desk", label:"ServiceDesk", path:"/riaintra/success-factors/helpdesk" }
       ]),
       managementNav:Object.freeze([
-        { id:"magazine-manager", label:"Media Manager", path:"/riaintra/success-factors/media-control" }
+        { id:"magazine-manager", label:"Media Manager", path:"/riaintra/success-factors/media-control" },
+        { id:"aircraft-display-control", label:"Aircraft Display Control", path:"/riaintra/aircraft-display-control" }
       ])
     }),
     footer:Object.freeze({
@@ -201,7 +204,8 @@ const IDS = Object.freeze({
   customerFooters:["#skandiFooterEmbed", "#skandiCustomerFooterEmbed"],
   internalHeaders:["#riaintraHeaderEmbed", "#riaintraHeader", "#staffInternalChromeEmbed"],
   internalFooters:["#riaintraFooterEmbed", "#riaintraFooter"],
-  alteaHeaders:["#alteaHeaderEmbed", "#alteaHeader"]
+  alteaHeaders:["#alteaHeaderEmbed", "#alteaHeader"],
+  pageEmbeds:["#travelInfoHtml", "#aircraftDisplayControlEmbed", "#aircraftControlEmbed"]
 });
 
 
@@ -588,7 +592,8 @@ function wireAllHtmlComponents() {
     ...IDS.customerFooters,
     ...IDS.internalHeaders,
     ...IDS.internalFooters,
-    ...IDS.alteaHeaders
+    ...IDS.alteaHeaders,
+    ...IDS.pageEmbeds
   ];
   for (const id of idGroups) {
     const el = safeEl(id);
@@ -630,8 +635,32 @@ async function applyChromeVisibility() {
 }
 
 
+function registeredHtmlComponents() {
+  const found = new Map();
+
+  const idGroups = [
+    ...IDS.customerHeaders,
+    ...IDS.customerFooters,
+    ...IDS.internalHeaders,
+    ...IDS.internalFooters,
+    ...IDS.alteaHeaders,
+    ...IDS.pageEmbeds
+  ];
+
+  for (const id of idGroups) {
+    const el = safeEl(id);
+    if (isHtmlEmbed(el)) found.set(el.id || id, el);
+  }
+
+  for (const el of allHtmlComponents()) {
+    found.set(el.id || String(el), el);
+  }
+
+  return Array.from(found.values());
+}
+
 function pushConfigToAll() {
-  for (const embed of allHtmlComponents()) pushMasterConfig(embed);
+  for (const embed of registeredHtmlComponents()) pushMasterConfig(embed);
 }
 
 
