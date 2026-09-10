@@ -4,7 +4,7 @@
 // IMPORTANT: No webMethod wrappers, UI routes, or navigation live in this file.
 
 import { authentication, currentMember } from "wix-members-backend";
-import { restRequest } from "../RIA/supabaseServer.js";
+import { restRequest } from "./supabaseServer.js";
 
 const SK_ID_PATTERN = /^[A-Z]{2}[0-9]{4}$/;
 const BLOCKED_EMPLOYMENT_STATUSES = new Set([
