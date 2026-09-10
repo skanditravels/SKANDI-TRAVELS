@@ -1,179 +1,105 @@
-import {
-  getSmartInventoryBootstrap,
-  getSmartInventoryRecord,
-  saveSmartInventoryRecord,
-  getSmartDatedInventory,
-  saveSmartDatedInventory,
-  deleteSmartDatedInventory,
-  getSmartInventoryAudit,
-  createInventoryMediaUploadTicket,
-  getInventorySourceHealth,
-  listInventoryCatalogEntries,
-  saveInventoryCatalogEntry,
-  deleteInventoryCatalogEntry,
-  getSmartFlightInventory,
-  getSmartScheduleInventory,
-  getSmartNestingInventory
-} from "backend/RIA/inventoryControlV4.web";
+// Inventory Control page code — SKANDI V9
+// Single secure backend boundary. Global internal chrome remains owned by masterPage.js.
 
-const HTML_SOURCE = "SKANDI_ALTEA_MASTER";
-const PARENT_SOURCE = "SKANDI_WIX_PARENT";
-const EMBED_IDS = ["#inventoryControlEmbed", "#alteaInventoryControlEmbed", "#masterInventoryEmbed"];
+import wixLocationFrontend from "wix-location-frontend";
+import { inventoryControlDispatch } from "backend/RIA/inventoryControlV4.web";
 
-function embed() {
+const EMBED_IDS = [
+  "#inventoryControlEmbed",
+  "#alteaInventoryControlEmbed",
+  "#masterInventoryEmbed"
+];
+
+const INVENTORY_SOURCES = new Set([
+  "SKANDI_INVENTORY_EMBED",
+  "SKANDI_ALTEA_MASTER",      // migration compatibility only
+  "ALTEA_INVENTORY_EMBED"     // migration compatibility only
+]);
+
+const PARENT_SOURCE = "SKANDI_INVENTORY_PARENT";
+const LOGIN_PATH = "/riaintra";
+const VERSION = "2026.09.10.9";
+
+function getInventoryEmbed() {
   for (const id of EMBED_IDS) {
     try {
-      const el = $w(id);
-      if (el) return el;
+      const candidate = $w(id);
+      if (
+        candidate &&
+        typeof candidate.onMessage === "function" &&
+        typeof candidate.postMessage === "function"
+      ) {
+        console.log(`[Inventory Control V9] Bound HTML Component ${id}.`);
+        return { html: candidate, id };
+      }
     } catch (_) {}
   }
-  throw new Error("Inventory Control HTML embed was not found. Expected #inventoryControlEmbed, #alteaInventoryControlEmbed, or #masterInventoryEmbed.");
+  console.error(`[Inventory Control V9] No HTML Component found. Checked: ${EMBED_IDS.join(", ")}`);
+  return null;
 }
-function send(type, payload = {}, requestId = "") {
-  embed().postMessage({
+
+function post(html, type, payload = {}, requestId = "") {
+  html.postMessage({
     source: PARENT_SOURCE,
     type,
     payload,
     ...(requestId ? { requestId } : {}),
+    version: VERSION,
     timestamp: new Date().toISOString()
   });
 }
+
 function cleanError(error) {
-  return {
-    message: error?.publicMessage || error?.message || "Inventory request failed.",
-    code: error?.code || ""
-  };
+  const message = String(error?.message || error || "").trim();
+  if (!message || message.length > 240) return "Inventory Control could not complete the request.";
+  return message;
 }
-function replyType(requestType, v4Type, v3Type = "", v2Type = "") {
-  const t = String(requestType || "");
-  if (t.startsWith("INVENTORY_V3_") && v3Type) return v3Type;
-  if (t.startsWith("INVENTORY_V2_") && v2Type) return v2Type;
-  return v4Type;
+
+function shouldReturnToLogin(payload = {}) {
+  const code = String(payload.code || "").toUpperCase();
+  return code === "INVENTORY_AUTH_REQUIRED" || code === "INVENTORY_ACCESS_DENIED";
 }
 
 $w.onReady(function () {
-  let box;
-  try {
-    box = embed();
-  } catch (error) {
-    console.error("[Inventory Control V4.4] EMBED", error);
-    return;
-  }
+  const resolved = getInventoryEmbed();
+  if (!resolved) return;
 
-  // Tell the iframe immediately that page code is alive, before any backend call.
-  send("INVENTORY_PAGE_READY", {
-    version: "4.4",
-    bridge: "single-backend",
-    backend: "backend/RIA/inventoryControlV4.web"
-  });
+  const { html, id } = resolved;
 
-  box.onMessage(async event => {
+  // Listener is registered before any host message or backend request.
+  html.onMessage(async (event) => {
     const msg = event.data || {};
-    if (msg.source !== HTML_SOURCE) return;
-    const p = msg.payload || {};
-    const requestId = msg.requestId || "";
+    if (!INVENTORY_SOURCES.has(String(msg.source || ""))) return;
+
+    const type = String(msg.type || msg.event || "").trim();
+    const payload = msg.payload && typeof msg.payload === "object" ? msg.payload : {};
+    const requestId = String(msg.requestId || "");
+    if (!type) return;
 
     try {
-      switch (msg.type) {
-        case "MASTER_INVENTORY_READY":
-        case "INVENTORY_V4_READY":
-        case "INVENTORY_V4_LIST":
-        case "INVENTORY_V3_READY":
-        case "INVENTORY_V3_LIST":
-        case "INVENTORY_V2_READY":
-        case "INVENTORY_V2_LIST": {
-          const result = await getSmartInventoryBootstrap(p || {});
-          send(replyType(msg.type, "INVENTORY_V4_BOOTSTRAP", "INVENTORY_V3_BOOTSTRAP", "INVENTORY_V2_BOOTSTRAP"), result, requestId);
-          break;
-        }
+      const result = await inventoryControlDispatch(type, payload);
+      const responseType = result?.type || (result?.ok === false ? "INVENTORY_ERROR" : "INVENTORY_ERROR");
+      const responsePayload = result?.payload || {
+        code: "INVENTORY_EMPTY_RESPONSE",
+        message: "Inventory Control received an empty system response."
+      };
 
-        case "INVENTORY_V4_GET":
-        case "INVENTORY_V3_GET":
-        case "INVENTORY_V2_GET":
-          send(replyType(msg.type, "INVENTORY_V4_RECORD", "INVENTORY_V3_RECORD", "INVENTORY_V2_RECORD"), await getSmartInventoryRecord(p), requestId);
-          break;
+      post(html, responseType, responsePayload, requestId);
 
-        case "INVENTORY_V4_SAVE":
-        case "INVENTORY_V3_SAVE":
-        case "INVENTORY_V2_SAVE":
-          send(replyType(msg.type, "INVENTORY_V4_SAVED", "INVENTORY_V3_SAVED", "INVENTORY_V2_SAVED"), await saveSmartInventoryRecord(p), requestId);
-          break;
-
-        case "INVENTORY_V4_GET_DATED":
-        case "INVENTORY_V3_GET_DATED":
-        case "INVENTORY_V2_GET_DATED":
-          send(replyType(msg.type, "INVENTORY_V4_DATED", "INVENTORY_V3_DATED", "INVENTORY_V2_DATED"), await getSmartDatedInventory(p), requestId);
-          break;
-
-        case "INVENTORY_V4_SAVE_DATED":
-        case "INVENTORY_V3_SAVE_DATED":
-        case "INVENTORY_V2_SAVE_DATED":
-          send(replyType(msg.type, "INVENTORY_V4_DATED_SAVED", "INVENTORY_V3_DATED_SAVED", "INVENTORY_V2_DATED_SAVED"), await saveSmartDatedInventory(p), requestId);
-          break;
-
-        case "INVENTORY_V4_DELETE_DATED":
-        case "INVENTORY_V3_DELETE_DATED":
-        case "INVENTORY_V2_DELETE_DATED":
-          send(replyType(msg.type, "INVENTORY_V4_DATED_DELETED", "INVENTORY_V3_DATED_DELETED", "INVENTORY_V2_DATED_DELETED"), await deleteSmartDatedInventory(p), requestId);
-          break;
-
-        case "INVENTORY_V4_MEDIA_UPLOAD_TICKET":
-        case "INVENTORY_V3_MEDIA_UPLOAD_TICKET":
-          send(replyType(msg.type, "INVENTORY_V4_MEDIA_UPLOAD_TICKET_RESULT", "INVENTORY_V3_MEDIA_UPLOAD_TICKET_RESULT"), await createInventoryMediaUploadTicket(p), requestId);
-          break;
-
-        case "INVENTORY_V4_SOURCE_HEALTH":
-        case "INVENTORY_V3_SOURCE_HEALTH":
-          send(replyType(msg.type, "INVENTORY_V4_SOURCE_HEALTH_RESULT", "INVENTORY_V3_SOURCE_HEALTH_RESULT"), await getInventorySourceHealth(), requestId);
-          break;
-
-        case "INVENTORY_V4_LIST_CATALOG":
-        case "INVENTORY_V3_LIST_CATALOG":
-          send(replyType(msg.type, "INVENTORY_V4_CATALOG_RESULT", "INVENTORY_V3_CATALOG_RESULT"), await listInventoryCatalogEntries(p), requestId);
-          break;
-
-        case "INVENTORY_V4_SAVE_CATALOG":
-        case "INVENTORY_V3_SAVE_CATALOG":
-          send(replyType(msg.type, "INVENTORY_V4_CATALOG_SAVED", "INVENTORY_V3_CATALOG_SAVED"), await saveInventoryCatalogEntry(p), requestId);
-          break;
-
-        case "INVENTORY_V4_DELETE_CATALOG":
-        case "INVENTORY_V3_DELETE_CATALOG":
-          send(replyType(msg.type, "INVENTORY_V4_CATALOG_DELETED", "INVENTORY_V3_CATALOG_DELETED"), await deleteInventoryCatalogEntry(p), requestId);
-          break;
-
-        case "INVENTORY_FETCH_AUDIT":
-          send("INVENTORY_AUDIT_RESULT", await getSmartInventoryAudit(p), requestId);
-          break;
-
-        case "INVENTORY_FETCH_FLIGHT":
-          send("INVENTORY_FLIGHT_RESULT", await getSmartFlightInventory(p), requestId);
-          break;
-
-        case "INVENTORY_FETCH_SCHEDULE":
-          send("INVENTORY_SCHEDULE_RESULT", await getSmartScheduleInventory(p), requestId);
-          break;
-
-        case "INVENTORY_FETCH_NESTING":
-          send("INVENTORY_NESTING_RESULT", await getSmartNestingInventory(p), requestId);
-          break;
-
-        default:
-          console.warn("[Inventory Control V4.4] Unhandled message", msg.type);
+      if (responseType === "INVENTORY_ERROR" && shouldReturnToLogin(responsePayload)) {
+        wixLocationFrontend.to(LOGIN_PATH);
       }
     } catch (error) {
-      console.error("[Inventory Control V4.4]", msg.type, error);
-      send("INVENTORY_ERROR", cleanError(error), requestId);
+      post(html, "INVENTORY_ERROR", {
+        code: "INVENTORY_PAGE_BRIDGE_ERROR",
+        message: cleanError(error)
+      }, requestId);
     }
   });
 
-  // Proactive live bootstrap. If this fails, HTML gets a real error instead of fake snapshot data.
-  getSmartInventoryBootstrap({})
-    .then(payload => {
-      send("INVENTORY_V4_BOOTSTRAP", payload);
-    })
-    .catch(error => {
-      console.error("[Inventory Control V4.4] bootstrap", error);
-      send("INVENTORY_ERROR", cleanError(error));
-    });
+  post(html, "INVENTORY_V9_HOST_READY", {
+    embedId: id,
+    supportedEmbedIds: EMBED_IDS,
+    version: VERSION
+  });
 });
