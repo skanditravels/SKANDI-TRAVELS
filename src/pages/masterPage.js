@@ -38,7 +38,7 @@ const MASTER_CONFIG = Object.freeze({
         skandiWhite: "https://static.wixstatic.com/media/394052_fafffe6d26434eddbf62eb645ee9c844~mv2.png",
         skandiTravels: "https://static.wixstatic.com/media/394052_504704bd94f44f01a95f304bd19640e5~mv2.png",
         skandiWave: "https://static.wixstatic.com/media/394052_0c1aaf1dba2c4548ad53ccd8509d338c~mv2.png",
-        skandiGroup: "",
+        skandiGroup: "https://static.wixstatic.com/media/394052_02ed0c030fea4f14b5e5677fdaeae197~mv2.png",
         riaintra: "https://static.wixstatic.com/media/394052_1024542c47664bff8f4e145d1adf472d~mv2.png",
         altea: "https://static.wixstatic.com/media/394052_46045c41aebf421d98314b31ef83c677~mv2.png",
         voy: "https://static.wixstatic.com/media/394052_30b8bebbf5ee493da7d47329d04de494~mv2.png",
@@ -47,8 +47,8 @@ const MASTER_CONFIG = Object.freeze({
         signatureCollection: "https://static.wixstatic.com/media/394052_8e09fa73724c443aa305ebedb11d094d~mv2.png"
       }),
       icons: Object.freeze({
-        home: "", bookings: "", favorites: "", documents: "", travelers: "",
-        wallet: "", support: "", settings: "", notifications: ""
+        home: "https://static.wixstatic.com/media/394052_d44e97e6ec66459bb69b19f8a9cfbc82~mv2.png", bookings: "https://static.wixstatic.com/media/394052_c10010c35d594e1590400524a04c8fb2~mv2.png", favorites: "https://static.wixstatic.com/media/394052_4084f82a4f9342beb83237d648504c46~mv2.png", documents: "https://static.wixstatic.com/media/394052_f941a08c326143728a0e05e566546296~mv2.png", travelers: "https://static.wixstatic.com/media/394052_10152e32f8cb4af3bfb06eb5e7ea1c36~mv2.png",
+        wallet: "https://static.wixstatic.com/media/394052_ed65c346875642aca102f881a8e0f045~mv2.png", support: "https://static.wixstatic.com/media/394052_70b6b37f2c62423ebd7949f1cb7bc053~mv2.png", settings: "https://static.wixstatic.com/media/394052_856c7430a7b640ee8f062ab0d23b1dc4~mv2.png", notifications: ""
       })
     })
   }),
