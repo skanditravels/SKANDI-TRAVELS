@@ -8,7 +8,7 @@ import {
 
 import {
   searchDuffelStays
-} from "backend/RIA/duffelGroundProducts.web";
+} from "src/backend/RIA/duffelGroundProducts.web";
 
 import {
   getDestinationFlowCatalog
@@ -367,7 +367,12 @@ async function ensureCatalog() {
     catalogPromise = getDestinationFlowCatalog()
       .then(result => {
         if (!result?.ok) {
-          throw new Error("Destination inventory is unavailable.");
+          const code = clean(result?.code, 160);
+          const message = clean(
+            result?.publicMessage || "Destination inventory is unavailable.",
+            500
+          );
+          throw new Error(code ? `${message} [${code}]` : message);
         }
         catalog = arr(result.records);
         return catalog;
