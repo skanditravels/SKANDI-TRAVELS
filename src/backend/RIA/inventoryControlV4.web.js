@@ -1,805 +1,941 @@
+// backend/RIA/inventoryControlV4.web.js
+// SKANDI Inventory Control V9 — single secure backend boundary.
+// Direct Supabase REST/Storage access. No browser credentials and no Supabase npm client.
+
 import { webMethod, Permissions } from "wix-web-module";
+import { currentMember } from "wix-members-backend";
 import { secrets } from "wix-secrets-backend.v2";
 import { elevate } from "wix-auth";
 import { fetch } from "wix-fetch";
-import { getStaffPortalSession } from "backend/RIA/staffPortalAuth.web";
 
-const TABLES = Object.freeze({
-  master: "inventory_master_entities",
-  catalog: "inventory_catalog_entries",
-  canonical: "inventory_canonical_entities_v",
-  searchable: "inventory_searchable_catalog_v",
-  localized: "inventory_localized_content",
-  media: "inventory_media_assets",
-  relations: "inventory_entity_relations",
-  dated: "inventory_dated_inventory",
-  audit: "master_inventory_audit",
-  sourceRegistry: "inventory_source_registry",
-  sourceHealth: "inventory_source_health_v",
-  airports: "travel_info_airports",
-  countries: "countries_list",
-  airlines: "travel_info_airlines"
-});
-
-const REFERENCE_TYPES = new Set(["AIRPORT", "AIRLINE"]);
-const ENTITY_TYPES = new Set([
-  "COUNTRY", "AREA", "DESTINATION", "AIRPORT", "AIRLINE", "SUPPLIER", "HOTEL", "GUIDED_TOUR",
-  "ACTIVITY", "PARTNER_TICKET", "TRANSFER", "CAR_RENTAL", "PACKAGE", "ANCILLARY"
-]);
-const MASTER_STATUSES = new Set(["DRAFT", "REVIEW", "PUBLISHED", "HIDDEN", "SUSPENDED", "ARCHIVED"]);
-const DATED_STATUSES = new Set(["OPEN", "CLOSED", "STOP_SALE", "BLACKOUT", "SOLD_OUT"]);
-const COLLECTION_TYPES = new Set(["NONE", "SKANDI_COLLECTION", "SKANDI_PARTNER"]);
-const LANGUAGES = ["EN", "SV", "NO", "DA", "FI"];
-const MEDIA_ROLES = new Set(["PRIMARY", "HERO", "CARD", "MOBILE", "GALLERY", "OG", "LOGO", "MAP", "ROOM", "THUMBNAIL"]);
-const IMAGE_MIMES = new Set(["image/jpeg", "image/png", "image/webp", "image/avif", "image/gif"]);
+const VERSION = "2026.09.10.9";
 const INVENTORY_BUCKET = "inventory-media";
-const MAX_IMAGE_BYTES = 15 * 1024 * 1024;
-
-const clean = (v, m = 1000) => String(v ?? "").trim().slice(0, m);
-const upper = (v, m = 1000) => clean(v, m).toUpperCase();
-const object = v => v && typeof v === "object" && !Array.isArray(v) ? v : {};
-function bool(v, fallback = false) {
-  if ([true, "true", "TRUE", "YES", 1, "1"].includes(v)) return true;
-  if ([false, "false", "FALSE", "NO", 0, "0"].includes(v)) return false;
-  return fallback;
-}
-function num(v, fallback = 0) { const n = Number(v); return Number.isFinite(n) ? n : fallback; }
-const int = (v, fallback = 0) => Math.trunc(num(v, fallback));
-function arr(v) {
-  if (Array.isArray(v)) return v;
-  if (v == null || v === "") return [];
-  return String(v).split(/\n|,/).map(x => x.trim()).filter(Boolean);
-}
-const slugify = v => clean(v, 240).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 160);
-const safeDate = v => /^\d{4}-\d{2}-\d{2}$/.test(clean(v, 20)) ? clean(v, 20) : null;
-const safeTime = v => /^\d{2}:\d{2}(:\d{2})?$/.test(clean(v, 12)) ? clean(v, 12) : null;
-const eq = (field, value) => `${field}=eq.${encodeURIComponent(String(value))}`;
-function makeUuid() {
-  if (globalThis.crypto && typeof globalThis.crypto.randomUUID === "function") return globalThis.crypto.randomUUID();
-  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, c => {
-    const r = Math.random() * 16 | 0, v = c === "x" ? r : (r & 3 | 8); return v.toString(16);
-  });
-}
-function listValue(v) {
-  if (Array.isArray(v)) return v;
-  if (v == null || v === "") return [];
-  if (typeof v === "string") { try { const p = JSON.parse(v); return Array.isArray(p) ? p : []; } catch (_) { return []; } }
-  return [];
-}
-function jsonText(v) { return v == null || v === "" ? null : (typeof v === "string" ? v : JSON.stringify(v)); }
+const MAX_MEDIA_BYTES = 15 * 1024 * 1024;
+const ALLOWED_MEDIA_TYPES = new Set(["image/jpeg","image/png","image/webp","image/avif","image/gif"]);
+const MASTER_TYPES = new Set(["COUNTRY","DESTINATION","AREA","SUPPLIER","HOTEL","GUIDED_TOUR","ACTIVITY","PARTNER_TICKET","TRANSFER","CAR_RENTAL","PACKAGE","ANCILLARY"]);
+const REFERENCE_TYPES = new Set(["AIRPORT","AIRLINE"]);
+const GEO_TYPES = new Set(["COUNTRY","DESTINATION","AREA"]);
+const CATALOG_ELIGIBLE = new Set(["COUNTRY","AREA","DESTINATION","AIRLINE","HOTEL","GUIDED_TOUR","ACTIVITY","PARTNER_TICKET","TRANSFER","CAR_RENTAL","PACKAGE"]);
+const INVENTORY_ROLES = new Set(["SUPER_ADMIN","OWNER","COMPANY_OWNER","DESTINATION_CONTROLLER","INVENTORY_ADMIN","OCC_CONTROLLER"]);
+const SUPPORTED_LANGUAGES = new Set(["EN","SV","NO","DA"]);
+const STATUS = new Set(["DRAFT","REVIEW","PUBLISHED","HIDDEN","SUSPENDED","ARCHIVED"]);
 
 const elevatedGetSecretValue = elevate(secrets.getSecretValue);
-let configPromise = null;
-function secretString(r) { return typeof r === "string" ? r.trim() : String(r?.value ?? r?.secretValue ?? r?.secret?.value ?? "").trim(); }
-async function readSecret(name) {
+let configurationPromise = null;
+
+function clean(value, max = 5000) {
+  return String(value ?? "").trim().slice(0, max);
+}
+function upper(value, max = 5000) { return clean(value, max).toUpperCase(); }
+function arr(value) { return Array.isArray(value) ? value : []; }
+function obj(value) { return value && typeof value === "object" && !Array.isArray(value) ? value : {}; }
+function first(rows) { return Array.isArray(rows) && rows.length ? rows[0] : null; }
+function bool(value, fallback = false) {
+  if (value === true || value === "true" || value === "YES" || value === 1) return true;
+  if (value === false || value === "false" || value === "NO" || value === 0) return false;
+  return fallback;
+}
+function nullableNumber(value) {
+  if (value === "" || value === null || value === undefined) return null;
+  const n = Number(value);
+  return Number.isFinite(n) ? n : null;
+}
+function intOr(value, fallback = 0) {
+  const n = Number(value);
+  return Number.isFinite(n) ? Math.trunc(n) : fallback;
+}
+function dateOnly(value) {
+  const s = clean(value, 10);
+  return /^\d{4}-\d{2}-\d{2}$/.test(s) ? s : null;
+}
+function timeOnly(value) {
+  const s = clean(value, 8);
+  return /^\d{2}:\d{2}(?::\d{2})?$/.test(s) ? s : null;
+}
+function slugify(value) {
+  return clean(value, 300).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/&/g," and ").replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"");
+}
+function uniq(values) { return [...new Set(arr(values).map(v => clean(v, 300)).filter(Boolean))]; }
+function uuidV4() {
+  try { if (globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID(); } catch (_) {}
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, c => {
+    const r = Math.random() * 16 | 0;
+    const v = c === "x" ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
+function errorCode(error) {
+  return clean(error?.code || error?.message || error || "INVENTORY_ERROR", 240);
+}
+function safeMessage(error) {
+  const raw = errorCode(error);
+  const known = {
+    INVENTORY_AUTH_REQUIRED: "Your staff session has expired. Sign in again.",
+    INVENTORY_ACCESS_DENIED: "Your staff account does not have Inventory Control access.",
+    INVENTORY_PARENT_CYCLE: "That parent would create a circular destination hierarchy.",
+    INVENTORY_DUPLICATE_CODE: "Another record already uses that code in this inventory family.",
+    INVENTORY_DUPLICATE_SLUG: "Another record already uses that URL slug in this inventory family.",
+    INVENTORY_RECORD_NOT_FOUND: "The inventory record could not be found.",
+    INVENTORY_MEDIA_TYPE_NOT_ALLOWED: "That image format is not allowed.",
+    INVENTORY_MEDIA_TOO_LARGE: "The image exceeds the 15 MB upload limit."
+  };
+  return known[raw] || (raw.startsWith("INVENTORY_") ? raw.replaceAll("_"," ") : "Inventory Control could not complete the request.");
+}
+
+function secretString(response) {
+  if (typeof response === "string") return response.trim();
+  return String(response?.value ?? response?.secretValue ?? response?.secret?.value ?? "").trim();
+}
+async function getSecret(name) {
   const response = await elevatedGetSecretValue(name);
   const value = secretString(response);
   if (!value) throw new Error(`WIX_SECRET_EMPTY_${name}`);
   return value;
 }
-async function cfg() {
-  if (configPromise) return configPromise;
-  configPromise = (async () => {
-    const url = (await readSecret("SUPABASE_URL")).replace(/\/+$/, "");
-    let key = "";
-    try { key = await readSecret("SUPABASE_SECRET_KEY"); }
-    catch (_) { key = await readSecret("SUPABASE_SERVICE_ROLE_KEY"); }
-    if (!/^https:\/\/[^/]+\.supabase\.co$/i.test(url)) throw new Error("SUPABASE_URL_INVALID");
-    if (!key) throw new Error("SUPABASE_SERVER_KEY_MISSING");
-    return { url, key, legacyJwt: key.startsWith("eyJ") };
-  })();
-  try { return await configPromise; } catch (e) { configPromise = null; throw e; }
-}
-async function sb(path, { method = "GET", body, headers = {} } = {}) {
-  const c = await cfg();
-  const response = await fetch(`${c.url}/rest/v1/${path}`, {
-    method,
-    headers: {
-      apikey: c.key,
-      ...(c.legacyJwt ? { Authorization: `Bearer ${c.key}` } : {}),
-      "Content-Type": "application/json",
-      ...(method === "POST" || method === "PATCH" ? { Prefer: "return=representation" } : {}),
-      ...headers
-    },
-    ...(body !== undefined ? { body: JSON.stringify(body) } : {})
-  });
-  const raw = await response.text();
-  let data = null;
-  if (raw) { try { data = JSON.parse(raw); } catch (_) { data = raw; } }
-  if (!response.ok) {
-    const error = new Error(data?.message || data?.error || `${response.status} ${response.statusText}`);
-    error.code = data?.code || "";
+async function getConfiguration() {
+  if (!configurationPromise) {
+    configurationPromise = (async () => {
+      const baseUrl = (await getSecret("SUPABASE_URL")).replace(/\/+$/g, "");
+      let apiKey = "";
+      try { apiKey = await getSecret("SUPABASE_SECRET_KEY"); }
+      catch (_) { apiKey = await getSecret("SUPABASE_SERVICE_ROLE_KEY"); }
+      if (!/^https:\/\/[^/]+\.supabase\.co$/i.test(baseUrl)) throw new Error("SUPABASE_URL_INVALID");
+      if (!apiKey) throw new Error("SUPABASE_SERVER_KEY_MISSING");
+      const keyType = apiKey.startsWith("sb_secret_") ? "modern-secret" : apiKey.startsWith("eyJ") ? "legacy-jwt" : "api-key";
+      return { baseUrl, apiKey, keyType };
+    })();
+  }
+  try {
+    return await configurationPromise;
+  } catch (error) {
+    configurationPromise = null;
     throw error;
+  }
+}
+function queryString(query = {}) {
+  const params = new URLSearchParams();
+  for (const [key, value] of Object.entries(query || {})) {
+    if (value === undefined || value === null || value === "") continue;
+    params.set(key, String(value));
+  }
+  return params.toString();
+}
+async function rest(table, { method = "GET", query = {}, body, prefer = "return=representation" } = {}) {
+  const { baseUrl, apiKey, keyType } = await getConfiguration();
+  const qs = queryString(query);
+  const url = `${baseUrl}/rest/v1/${table}${qs ? `?${qs}` : ""}`;
+  const headers = {
+    apikey: apiKey,
+    Accept: "application/json",
+    Prefer: prefer
+  };
+  if (keyType === "legacy-jwt") headers.Authorization = `Bearer ${apiKey}`;
+  const options = { method, headers };
+  if (body !== undefined) {
+    headers["Content-Type"] = "application/json";
+    options.body = JSON.stringify(body);
+  }
+  const response = await fetch(url, options);
+  const text = await response.text();
+  let data = null;
+  try { data = text ? JSON.parse(text) : null; } catch (_) { data = text; }
+  if (!response.ok) {
+    const detail = typeof data === "object" && data ? (data.message || data.details || data.hint || data.code) : text;
+    throw new Error(`INVENTORY_SUPABASE_${response.status}:${clean(detail, 500)}`);
   }
   return data;
 }
-async function createSignedInventoryUpload(path) {
-  const c = await cfg();
-  const storagePath = `${INVENTORY_BUCKET}/${path}`;
-  const response = await fetch(`${c.url}/storage/v1/object/upload/sign/${storagePath}`, {
+async function storageSignUpload(path) {
+  const { baseUrl, apiKey, keyType } = await getConfiguration();
+  const encodedPath = String(path).split("/").map(encodeURIComponent).join("/");
+  const url = `${baseUrl}/storage/v1/object/upload/sign/${encodeURIComponent(INVENTORY_BUCKET)}/${encodedPath}`;
+  const headers = { apikey: apiKey, "Content-Type": "application/json", Accept: "application/json" };
+  if (keyType === "legacy-jwt") headers.Authorization = `Bearer ${apiKey}`;
+  const response = await fetch(url, {
     method: "POST",
-    headers: {
-      apikey: c.key,
-      ...(c.legacyJwt ? { Authorization: `Bearer ${c.key}` } : {}),
-      "Content-Type": "application/json"
-    },
+    headers,
     body: "{}"
   });
-  const raw = await response.text();
-  let data = null;
-  if (raw) { try { data = JSON.parse(raw); } catch (_) { data = raw; } }
-  if (!response.ok) {
-    const error = new Error(data?.message || data?.error || `Storage upload-sign failed (${response.status}).`);
-    error.code = data?.statusCode || data?.code || "STORAGE_SIGN_FAILED";
-    throw error;
+  const text = await response.text();
+  let data = {};
+  try { data = text ? JSON.parse(text) : {}; } catch (_) {}
+  if (!response.ok) throw new Error(`INVENTORY_STORAGE_SIGN_${response.status}`);
+  const token = clean(data.token || data.signedToken || "", 5000);
+  if (!token) throw new Error("INVENTORY_STORAGE_SIGN_TOKEN_MISSING");
+  return {
+    token,
+    signedUrl: `${baseUrl}/storage/v1/object/upload/sign/${encodeURIComponent(INVENTORY_BUCKET)}/${encodedPath}`,
+    publicUrl: `${baseUrl}/storage/v1/object/public/${encodeURIComponent(INVENTORY_BUCKET)}/${encodedPath}`
+  };
+}
+
+function memberEmail(member = {}) {
+  const emails = member?.contactDetails?.emails;
+  return clean(member.loginEmail || (Array.isArray(emails) ? emails[0] : emails) || member?.profile?.email || "", 254).toLowerCase();
+}
+async function currentIdentity() {
+  try {
+    const member = await currentMember.getMember({ fieldsets: ["FULL"] });
+    return { memberId: clean(member?._id || member?.id, 200), email: memberEmail(member) };
+  } catch (_) {
+    return { memberId: "", email: "" };
   }
-  const relative = data?.url || data?.signedURL || data?.signedUrl || "";
-  if (!relative) throw new Error("Supabase Storage did not return a signed upload URL.");
-  const signedUrl = /^https?:\/\//i.test(relative)
-    ? relative
-    : `${c.url}/storage/v1${relative.startsWith("/") ? relative : `/${relative}`}`;
-  let token = data?.token || "";
-  if (!token) {
-    try { token = new URL(signedUrl).searchParams.get("token") || ""; } catch (_) {}
+}
+async function findAgent(identity) {
+  const select = "id,member_id,wix_member_id,email,first_name,last_name,preferred_name,display_name,job_title,department,station,base,active,status,employment_status,portal_access,authorized,can_manage,access_role,role_id,permission_preset,permission_keys,allowed_apps";
+  if (identity.memberId) {
+    let row = first(await rest("agent_users", { query: { select, member_id: `eq.${identity.memberId}`, limit: 1 } }));
+    if (row) return row;
+    row = first(await rest("agent_users", { query: { select, wix_member_id: `eq.${identity.memberId}`, limit: 1 } }));
+    if (row) return row;
   }
-  if (!token) throw new Error("Supabase Storage did not return an upload token.");
-  return { signedUrl, token, path };
-}
-
-function profileOf(session = {}) {
-  const p = session.profile || session.staff || session.user || session.data?.profile || {};
-  return {
-    skId: upper(p.skId || p.sk_id || p.employeeId || p.employee_id, 40),
-    name: clean(p.name || p.fullName || p.title || p.displayName || p.display_name || p.email, 160),
-    email: clean(p.email || p.corporateEmailAddress, 200).toLowerCase()
-  };
-}
-async function requireStaff() {
-  const session = await getStaffPortalSession();
-  if (!session || session.ok === false || session.authorized === false || session.loggedIn === false) {
-    throw new Error("Inventory Control requires an authorized staff session.");
+  if (identity.email) {
+    return first(await rest("agent_users", { query: { select, email: `ilike.${identity.email}`, limit: 1 } }));
   }
-  const p = profileOf(session);
-  let rows = [];
-  if (p.skId) rows = await sb(`agent_users?select=id,sk_id,email,active,authorized,portal_access,can_manage&${eq("sk_id", p.skId)}&limit=1`);
-  if ((!rows || !rows.length) && p.email) rows = await sb(`agent_users?select=id,sk_id,email,active,authorized,portal_access,can_manage&${eq("email", p.email)}&limit=1`);
-  const actor = rows?.[0];
-  if (!actor) throw new Error("Your Wix staff profile is not linked to Supabase agent_users.");
-  if (actor.active === false || actor.authorized === false || actor.portal_access === false) throw new Error("Your Supabase staff account is not authorized for Inventory Control.");
-  return { id: actor.id, skId: upper(actor.sk_id || p.skId, 40), name: p.name || p.email || p.skId, email: clean(actor.email || p.email, 200).toLowerCase(), canManage: actor.can_manage === true };
+  return null;
 }
-
-function apiRecord(r = {}) {
+function agentHasInventoryAccess(agent) {
+  if (!agent || agent.active !== true || agent.portal_access !== true || agent.authorized !== true) return false;
+  const employment = clean(agent.employment_status, 80).toLowerCase();
+  if (employment && employment !== "active") return false;
+  const status = clean(agent.status, 80).toLowerCase();
+  if (["inactive","blocked","suspended","terminated","deleted"].includes(status)) return false;
+  const keys = arr(agent.permission_keys).map(v => clean(v, 120).toLowerCase());
+  const apps = arr(agent.allowed_apps).map(v => clean(v, 120).toLowerCase());
+  const roles = [agent.access_role,agent.role_id,agent.permission_preset,agent.job_title].map(v => upper(v, 120)).filter(Boolean);
+  return agent.can_manage === true || keys.includes("inventory-control") || apps.includes("inventory") || apps.includes("inventory-control") || roles.some(r => INVENTORY_ROLES.has(r));
+}
+async function requireInventoryAgent() {
+  const identity = await currentIdentity();
+  if (!identity.memberId) throw new Error("INVENTORY_AUTH_REQUIRED");
+  const agent = await findAgent(identity);
+  if (!agent) throw new Error("INVENTORY_ACCESS_DENIED");
+  if (!agentHasInventoryAccess(agent)) throw new Error("INVENTORY_ACCESS_DENIED");
   return {
-    id: r.id, publicId: r.public_id, entityType: r.entity_type, code: r.code, name: r.name,
-    slug: r.slug || "", status: r.status, active: r.active, customerVisible: r.customer_visible,
-    staffVisible: r.staff_visible, alteaVisible: r.altea_visible,
-    searchable: bool(r.searchable, false), collectionType: upper(r.collection_type || "NONE", 40),
-    partnerTier: r.partner_tier || "", searchPriority: int(r.search_priority, 100), searchKeywords: r.search_keywords || [],
-    featured: r.featured, homepageFeatured: r.homepage_featured, sortPriority: r.sort_priority,
-    parentEntityId: r.parent_entity_id || "", supplierEntityId: r.supplier_entity_id || "",
-    source: r.source || "SKANDI", sourceReference: r.source_reference || "", sourceTable: r.source_table || "",
-    details: r.details || {}, commercial: r.commercial || {}, operations: r.operations || {}, seo: r.seo || {},
-    publication: r.publication || {}, payload: r.payload || {}, createdAt: r.created_at, updatedAt: r.updated_at
+    id: agent.id,
+    skId: clean(agent.sk_id || agent.agent_id || "", 40),
+    displayName: clean(agent.preferred_name || agent.display_name || [agent.first_name,agent.last_name].filter(Boolean).join(" ") || agent.email || "Staff", 180),
+    role: clean(agent.access_role || agent.role_id || agent.job_title || "", 120),
+    department: clean(agent.department || "", 120),
+    station: clean(agent.station || agent.base || "", 80)
   };
 }
-function apiLocalized(r = {}) {
-  return { id: r.id, entityId: r.entity_id, language: r.language, title: r.title || "", eyebrow: r.eyebrow || "", shortDescription: r.short_description || "", fullDescription: r.full_description || "", highlights: r.highlights || [], included: r.included || [], notIncluded: r.not_included || [], importantInformation: r.important_information || "", seoTitle: r.seo_title || "", seoDescription: r.seo_description || "", content: r.content || {} };
-}
-function apiMedia(r = {}) {
+
+function toUiRecord(row = {}) {
   return {
-    id: r.id, entityId: r.entity_id, mediaType: r.media_type || "IMAGE", url: r.url || "", altText: r.alt_text || "",
-    caption: r.caption || "", credit: r.credit || "", language: r.language || "", sortOrder: r.sort_order,
-    role: upper(r.role || (r.is_hero ? "HERO" : r.is_card ? "CARD" : r.is_mobile ? "MOBILE" : "GALLERY"), 30),
-    isPrimary: r.is_primary, isCard: r.is_card, isHero: r.is_hero, isMobile: r.is_mobile, active: r.active,
-    storageBucket: r.storage_bucket || "", storagePath: r.storage_path || "", mimeType: r.mime_type || "",
-    fileSizeBytes: r.file_size_bytes || null, width: r.width_px || null, height: r.height_px || null,
-    focalX: r.focal_x == null ? null : Number(r.focal_x), focalY: r.focal_y == null ? null : Number(r.focal_y),
-    sourceKind: r.source_kind || "URL", payload: r.payload || {}
+    id: row.id || "",
+    publicId: row.public_id || "",
+    entityType: upper(row.entity_type, 40),
+    code: clean(row.code, 120),
+    name: clean(row.name, 500),
+    slug: clean(row.slug, 500),
+    status: upper(row.status || "DRAFT", 40),
+    active: row.active !== false,
+    customerVisible: row.customer_visible === true,
+    staffVisible: row.staff_visible !== false,
+    alteaVisible: row.altea_visible !== false,
+    searchable: row.searchable === true,
+    collectionType: clean(row.collection_type || "NONE", 80),
+    partnerTier: clean(row.partner_tier || "", 80),
+    searchPriority: intOr(row.search_priority, 100),
+    searchKeywords: arr(row.search_keywords),
+    featured: row.featured === true,
+    homepageFeatured: row.homepage_featured === true,
+    sortPriority: intOr(row.sort_priority, 100),
+    parentEntityId: row.parent_entity_id || "",
+    supplierEntityId: row.supplier_entity_id || "",
+    source: clean(row.source || "SKANDI", 120),
+    sourceReference: clean(row.source_reference || "", 500),
+    details: obj(row.details),
+    commercial: obj(row.commercial),
+    operations: obj(row.operations),
+    seo: obj(row.seo),
+    publication: obj(row.publication),
+    payload: obj(row.payload),
+    sourceTable: clean(row.source_table || "inventory_master_entities", 120),
+    createdAt: row.created_at || null,
+    updatedAt: row.updated_at || null
   };
 }
-function apiRelation(r = {}) { return { id: r.id, sourceEntityId: r.source_entity_id, targetEntityId: r.target_entity_id, relationType: r.relation_type, sequenceNo: r.sequence_no, active: r.active, payload: r.payload || {} }; }
-function apiDated(r = {}) {
-  return { id: r.id, entityId: r.entity_id, inventoryType: r.inventory_type, serviceDate: r.service_date, startTime: r.start_time || "", endTime: r.end_time || "", variantCode: r.variant_code || "", variantName: r.variant_name || "", capacityTotal: r.capacity_total, held: r.held, sold: r.sold, available: r.available, waitlistLimit: r.waitlist_limit, overbookingLimit: r.overbooking_limit, stopSale: r.stop_sale, blackout: r.blackout, status: r.status, supplierCost: Number(r.supplier_cost || 0), publicPrice: Number(r.public_price || 0), adultPrice: Number(r.adult_price || 0), childPrice: Number(r.child_price || 0), infantPrice: Number(r.infant_price || 0), privatePrice: Number(r.private_price || 0), currency: r.currency, priceBasis: r.price_basis, bookingCutoffHours: r.booking_cutoff_hours, minStay: r.min_stay, maxStay: r.max_stay, releaseDays: r.release_days, supplierReference: r.supplier_reference || "", payload: r.payload || {}, createdAt: r.created_at, updatedAt: r.updated_at };
-}
-
-function canonicalInlineBundle(row = {}) {
-  const localized = Array.isArray(row.localized) ? row.localized : listValue(row.localized);
-  const media = Array.isArray(row.media) ? row.media : listValue(row.media);
-  const relations = Array.isArray(row.relations) ? row.relations : listValue(row.relations);
+function toCatalog(entry = {}) {
   return {
-    record: apiRecord(row),
-    localizedContent: localized.map(x => ({ ...x, language: upper(x.language, 12) })),
-    media: media.map(x => ({ ...x, role: x.role || (x.isHero ? "HERO" : x.isCard ? "CARD" : x.isMobile ? "MOBILE" : "GALLERY") })),
-    relations
+    id: entry.id || "",
+    targetEntityId: entry.target_entity_id || "",
+    targetRecordType: upper(entry.target_record_type, 40),
+    targetRecordId: clean(entry.target_record_id, 200),
+    targetCode: clean(entry.target_code, 120),
+    catalogType: clean(entry.catalog_type || "NONE", 80),
+    partnerTier: clean(entry.partner_tier || "", 80),
+    searchable: entry.searchable === true,
+    featured: entry.featured === true,
+    homepageFeatured: entry.homepage_featured === true,
+    searchPriority: intOr(entry.search_priority, 100),
+    searchKeywords: arr(entry.search_keywords),
+    marketCodes: arr(entry.market_codes),
+    salesChannels: arr(entry.sales_channels),
+    publicLabel: clean(entry.public_label, 300),
+    badge: clean(entry.badge, 160),
+    validFrom: entry.valid_from || "",
+    validTo: entry.valid_to || "",
+    notes: clean(entry.notes, 5000),
+    active: entry.active !== false
   };
 }
-async function bundle(id) {
-  const rows = await sb(`${TABLES.canonical}?select=*&${eq("id", id)}&limit=1`);
-  const row = rows?.[0];
-  if (!row) throw new Error("Inventory record not found.");
-  if (row.source_table !== TABLES.master) return canonicalInlineBundle(row);
-  const [localized, media, relations] = await Promise.all([
-    sb(`${TABLES.localized}?select=*&${eq("entity_id", id)}&order=language.asc`),
-    sb(`${TABLES.media}?select=*&${eq("entity_id", id)}&order=sort_order.asc`),
-    sb(`${TABLES.relations}?select=*&${eq("source_entity_id", id)}&order=sequence_no.asc`)
-  ]);
-  return { record: apiRecord(row), localizedContent: (localized || []).map(apiLocalized), media: (media || []).map(apiMedia), relations: (relations || []).map(apiRelation) };
+function localizedFromCanonical(row = {}) {
+  return arr(row.localized).map(item => ({
+    id: item.id || "",
+    language: upper(item.language, 12),
+    title: clean(item.title, 1000),
+    eyebrow: clean(item.eyebrow, 500),
+    shortDescription: clean(item.shortDescription ?? item.short_description, 5000),
+    fullDescription: clean(item.fullDescription ?? item.full_description, 30000),
+    highlights: arr(item.highlights),
+    included: arr(item.included),
+    notIncluded: arr(item.notIncluded ?? item.not_included),
+    importantInformation: clean(item.importantInformation ?? item.important_information, 10000),
+    seoTitle: clean(item.seoTitle ?? item.seo_title, 1000),
+    seoDescription: clean(item.seoDescription ?? item.seo_description, 5000),
+    content: obj(item.content)
+  }));
+}
+function mediaFromCanonical(row = {}) { return arr(row.media); }
+function relationsFromCanonical(row = {}) { return arr(row.relations); }
+
+async function canonicalRows() {
+  const data = await rest("inventory_canonical_entities_v", { query: { select: "*", order: "sort_priority.asc,name.asc", limit: 1000 } });
+  return arr(data);
+}
+async function listCatalogRows() {
+  return arr(await rest("inventory_catalog_entries", { query: { select: "*", order: "search_priority.asc,updated_at.desc", limit: 1000 } }));
+}
+async function loadBootstrap(payload = {}) {
+  const rows = await canonicalRows();
+  const records = filterRecords(rows.map(toUiRecord), payload);
+  const references = rows.filter(r => r.active !== false).map(toUiRecord).map(r => ({
+    id:r.id, publicId:r.publicId, entityType:r.entityType, code:r.code, name:r.name, slug:r.slug,
+    parentEntityId:r.parentEntityId, sourceTable:r.sourceTable, details:r.details
+  }));
+  const catalog = (await listCatalogRows()).map(toCatalog);
+  return { version: VERSION, records, references, catalog, total: rows.length };
+}
+function filterRecords(records, payload = {}) {
+  const type = upper(payload.entityType, 40);
+  const query = clean(payload.query, 300).toLowerCase();
+  const status = upper(payload.status, 40);
+  const cv = payload.customerVisible;
+  return arr(records).filter(r => {
+    if (type && r.entityType !== type) return false;
+    if (status && r.status !== status) return false;
+    if (cv !== undefined && cv !== null && cv !== "" && r.customerVisible !== bool(cv)) return false;
+    if (query) {
+      const hay = [r.publicId,r.id,r.entityType,r.code,r.name,r.slug,r.details?.iata,r.details?.icao,r.details?.city,r.details?.country].join(" ").toLowerCase();
+      if (!hay.includes(query)) return false;
+    }
+    return true;
+  });
+}
+async function listRecords(payload = {}) {
+  const rows = (await canonicalRows()).map(toUiRecord);
+  return { records: filterRecords(rows, payload), total: rows.length };
+}
+async function getRecordBundle(payload = {}) {
+  const id = clean(payload.id, 200);
+  if (!id) throw new Error("INVENTORY_RECORD_NOT_FOUND");
+  const row = first(await rest("inventory_canonical_entities_v", { query: { select: "*", id: `eq.${id}`, limit: 1 } }));
+  if (!row) throw new Error("INVENTORY_RECORD_NOT_FOUND");
+  const record = toUiRecord(row);
+  return {
+    record,
+    localizedContent: localizedFromCanonical(row),
+    media: mediaFromCanonical(row),
+    relations: relationsFromCanonical(row)
+  };
 }
 
-async function references() {
-  const rows = await sb(`${TABLES.canonical}?select=id,public_id,entity_type,code,name,slug,status,active,details,source_table&order=entity_type.asc,name.asc&limit=4000`);
-  return (rows || []).map(r => ({ id: r.id, publicId: r.public_id, entityType: r.entity_type, code: r.code, name: r.name, slug: r.slug, status: r.status, active: r.active, details: r.details || {}, sourceTable: r.source_table }));
+function normalizeLocalized(items) {
+  return arr(items).map(item => {
+    const language = upper(item.language, 12);
+    if (!SUPPORTED_LANGUAGES.has(language)) return null;
+    return {
+      id: clean(item.id, 100), language,
+      title: clean(item.title, 1000), eyebrow: clean(item.eyebrow, 500),
+      shortDescription: clean(item.shortDescription, 5000), fullDescription: clean(item.fullDescription, 30000),
+      highlights: uniq(item.highlights), included: uniq(item.included), notIncluded: uniq(item.notIncluded),
+      importantInformation: clean(item.importantInformation, 10000),
+      seoTitle: clean(item.seoTitle, 1000), seoDescription: clean(item.seoDescription, 5000),
+      content: obj(item.content)
+    };
+  }).filter(Boolean);
 }
-
-const STRUCT = {
-  facts: [["label"], ["value"]], faqs: [["question"], ["answer"]],
-  climate: [["month"], ["avg_low_c", "number"], ["avg_high_c", "number"], ["daylight_hours", "number"], ["precipitation_mm", "number"]],
-  signature: [["title"], ["description"]],
-  rooms: [["code"], ["name"], ["roomType"], ["maxGuests", "number"], ["bedType"], ["sizeSqm", "number"], ["description"]],
-  itinerary: [["sequence", "number"], ["stopName"], ["durationMinutes", "number"], ["description"], ["latitude", "number"], ["longitude", "number"]],
-  pickups: [["name"], ["hotelId"], ["timeOffsetMinutes", "number"], ["instructions"]],
-  zones: [["code"], ["name"], ["durationMinutes", "number"], ["distanceKm", "number"], ["price", "number"], ["currency"]],
-  sourceUrls: [["label"], ["url"]], quickFacts: [["label"], ["value"]], hubs: [["iata"], ["name"]], fleet: [["aircraft"], ["count", "number"], ["notes"]]
-};
-function cleanRows(v, schema) {
-  return (Array.isArray(v) ? v : []).slice(0, 300).map(row => {
-    const out = {}; for (const [key, type] of schema) out[key] = type === "number" ? num(row?.[key], 0) : clean(row?.[key], 5000); return out;
-  }).filter(row => Object.values(row).some(v => v !== "" && v !== null && v !== undefined));
+function normalizeMedia(items) {
+  return arr(items).map((item, index) => ({
+    id: clean(item.id, 100), mediaType: upper(item.mediaType || "IMAGE", 40), role: upper(item.role || "GALLERY", 40),
+    url: clean(item.url, 5000), altText: clean(item.altText, 1000), caption: clean(item.caption, 3000), credit: clean(item.credit, 1000),
+    language: upper(item.language, 12), sortOrder: intOr(item.sortOrder, (index + 1) * 10),
+    isPrimary: bool(item.isPrimary), isHero: bool(item.isHero), isCard: bool(item.isCard), isMobile: bool(item.isMobile), active: item.active !== false,
+    storageBucket: clean(item.storageBucket, 120), storagePath: clean(item.storagePath, 1000), mimeType: clean(item.mimeType, 120),
+    fileSizeBytes: nullableNumber(item.fileSizeBytes), width: nullableNumber(item.width), height: nullableNumber(item.height),
+    focalX: nullableNumber(item.focalX), focalY: nullableNumber(item.focalY), sourceKind: clean(item.sourceKind || "URL", 80)
+  })).filter(item => item.url);
+}
+function normalizeRelations(items) {
+  return arr(items).map((item, index) => ({
+    relationType: upper(item.relationType || "OTHER", 80),
+    targetEntityId: clean(item.targetEntityId, 100),
+    sequenceNo: intOr(item.sequenceNo, (index + 1) * 10),
+    active: item.active !== false
+  })).filter(item => item.targetEntityId);
 }
 function applyStructures(record, structures = {}) {
-  const d = { ...object(record.details) }, o = { ...object(record.operations) };
-  if (structures.facts) d.facts = cleanRows(structures.facts, STRUCT.facts);
-  if (structures.quickFacts) { const x = cleanRows(structures.quickFacts, STRUCT.quickFacts); d.pageFacts = x; d.quickFactsJson = x; }
-  if (structures.faqs) d.faqs = cleanRows(structures.faqs, STRUCT.faqs);
-  if (structures.climate) d.climate = cleanRows(structures.climate, STRUCT.climate);
-  if (structures.signature) d.signature = cleanRows(structures.signature, STRUCT.signature);
-  if (structures.rooms) d.rooms = cleanRows(structures.rooms, STRUCT.rooms);
-  if (structures.sourceUrls) d.sourceUrlsJson = cleanRows(structures.sourceUrls, STRUCT.sourceUrls);
-  if (structures.hubs) d.hubsJson = cleanRows(structures.hubs, STRUCT.hubs);
-  if (structures.fleet) d.fleetSummaryJson = cleanRows(structures.fleet, STRUCT.fleet);
-  if (structures.itinerary) o.itinerary = cleanRows(structures.itinerary, STRUCT.itinerary);
-  if (structures.pickups) o.pickups = cleanRows(structures.pickups, STRUCT.pickups);
-  if (structures.zones) o.transferZones = cleanRows(structures.zones, STRUCT.zones);
-  for (const key of ["goodFor", "tags", "facilities", "languages", "boardOptions", "aircraftFamilies"]) if (structures[key]) d[key] = arr(structures[key]).slice(0, 300);
-  return { ...record, details: d, operations: o };
+  const d = { ...obj(record.details) };
+  const o = { ...obj(record.operations) };
+  const s = obj(structures);
+  const dMap = {
+    facts:"facts", quickFacts:"quickFactsJson", faqs:"faqs", climate:"climate", signature:"signature", rooms:"rooms",
+    sourceUrls:"sourceUrlsJson", hubs:"hubsJson", fleet:"fleetSummaryJson",
+    goodFor:"goodFor", tags:"tags", facilities:"facilities", languages:"languages", boardOptions:"boardOptions"
+  };
+  for (const [key, target] of Object.entries(dMap)) if (key in s) d[target] = arr(s[key]);
+  if ("itinerary" in s) o.itinerary = arr(s.itinerary);
+  if ("pickups" in s) o.pickups = arr(s.pickups);
+  if ("zones" in s) o.transferZones = arr(s.zones);
+  return { ...record, details:d, operations:o };
 }
-async function airportIata(id) {
-  if (!id) return "";
-  const rows = await sb(`${TABLES.airports}?select=ID,iata&${eq("ID", id)}&limit=1`);
-  return upper(rows?.[0]?.iata, 12);
+function normalizeRecord(input = {}, structures = {}) {
+  const raw = applyStructures(obj(input), structures);
+  const type = upper(raw.entityType, 40);
+  if (!MASTER_TYPES.has(type) && !REFERENCE_TYPES.has(type)) throw new Error("INVENTORY_TYPE_INVALID");
+  const details = obj(raw.details);
+  const code = type === "AIRPORT" ? upper(details.iata || raw.code, 12) : type === "AIRLINE" ? upper(details.iata || raw.code, 12) : upper(raw.code, 120);
+  const name = clean(raw.name, 500);
+  const slug = clean(raw.slug, 500) || slugify(name || code);
+  const status = STATUS.has(upper(raw.status, 40)) ? upper(raw.status,40) : "DRAFT";
+  const record = {
+    id: clean(raw.id, 100), publicId: clean(raw.publicId, 200), entityType:type, code, name, slug,
+    status, active: raw.active !== false, customerVisible: bool(raw.customerVisible), staffVisible: raw.staffVisible !== false,
+    alteaVisible: raw.alteaVisible !== false, searchable: bool(raw.searchable), collectionType: clean(raw.collectionType || "NONE", 80),
+    partnerTier: clean(raw.partnerTier, 80), searchPriority: intOr(raw.searchPriority, 100), searchKeywords: uniq(raw.searchKeywords),
+    featured: bool(raw.featured), homepageFeatured: bool(raw.homepageFeatured), sortPriority: intOr(raw.sortPriority, 100),
+    parentEntityId: clean(raw.parentEntityId, 100), supplierEntityId: clean(raw.supplierEntityId, 100),
+    source: clean(raw.source || "SKANDI", 120), sourceReference: clean(raw.sourceReference, 500),
+    details, commercial:obj(raw.commercial), operations:obj(raw.operations), seo:obj(raw.seo), publication:obj(raw.publication), payload:obj(raw.payload),
+    sourceTable: clean(raw.sourceTable, 120)
+  };
+  if (type === "COUNTRY" && !record.code) record.code = upper(details.countryCode, 12);
+  if (!record.publicId && MASTER_TYPES.has(type)) record.publicId = `${type}-${record.code || slugify(record.name) || uuidV4().slice(0,8).toUpperCase()}`;
+  return record;
 }
-async function lookupMaster(id) {
-  if (!id) return null;
-  const rows = await sb(`${TABLES.master}?select=*&${eq("id", id)}&limit=1`); return rows?.[0] || null;
+function normalizeCatalog(input, record) {
+  if (!CATALOG_ELIGIBLE.has(record.entityType)) return null;
+  const c = obj(input);
+  const catalogType = ["SKANDI_COLLECTION","SKANDI_PARTNER"].includes(upper(c.catalogType,80)) ? upper(c.catalogType,80) : "NONE";
+  const searchable = catalogType !== "NONE" && bool(c.searchable);
+  const featured = catalogType !== "NONE" && bool(c.featured);
+  const homepageFeatured = catalogType !== "NONE" && bool(c.homepageFeatured);
+  return {
+    id:clean(c.id,100), catalogType, partnerTier: catalogType === "SKANDI_PARTNER" ? upper(c.partnerTier,80) : "",
+    searchable, featured: homepageFeatured || featured, homepageFeatured,
+    active: catalogType !== "NONE" && c.active !== false,
+    searchPriority:intOr(c.searchPriority, record.sortPriority || 100), searchKeywords:uniq(c.searchKeywords),
+    marketCodes:uniq(c.marketCodes).map(v=>upper(v,12)), salesChannels:uniq(c.salesChannels).map(v=>upper(v,20)),
+    publicLabel:clean(c.publicLabel,300), badge:clean(c.badge,160), validFrom:dateOnly(c.validFrom), validTo:dateOnly(c.validTo), notes:clean(c.notes,5000)
+  };
 }
-function localizedSeoHints(input = {}, record = {}) {
-  const list = Array.isArray(input.localizedContent) ? input.localizedContent : [];
-  const en = list.find(x => upper(x.language, 12) === "EN") || list[0] || {};
-  const title = clean(en.title || record.name, 240);
-  const description = clean(en.seoDescription || en.shortDescription || en.fullDescription || record.details?.summary || record.details?.description, 5000);
-  return { title, description };
+function syncRecordCatalog(record, catalog) {
+  const listed = catalog && catalog.catalogType !== "NONE";
+  // Search merchandising is authoritative in inventory_catalog_entries.
+  // Core master entities deliberately keep their compatibility search fields at DB defaults.
+  // Airlines retain equivalent compatibility fields because their canonical reference-table trigger supports them.
+  if (record.entityType === "AIRLINE") {
+    record.searchable = listed ? catalog.searchable : false;
+    record.collectionType = listed ? catalog.catalogType : "NONE";
+    record.partnerTier = listed ? catalog.partnerTier : "";
+    record.searchPriority = listed ? catalog.searchPriority : 100;
+    record.searchKeywords = listed ? catalog.searchKeywords : [];
+  }
+  record.featured = listed ? catalog.featured : false;
+  record.homepageFeatured = listed ? catalog.homepageFeatured : false;
+  return record;
 }
-function mediaSeoImage(input = {}) {
-  const media = Array.isArray(input.media) ? input.media : [];
-  const pick = media.find(x => upper(x.role, 30) === "OG") || media.find(x => x.isHero || upper(x.role, 30) === "HERO") || media.find(x => x.isCard || upper(x.role, 30) === "CARD") || media[0];
-  return clean(pick?.url, 2000);
+function validateBundle(record, catalog) {
+  const d = record.details;
+  if (!record.name) throw new Error("INVENTORY_NAME_REQUIRED");
+  if (!record.code && record.entityType !== "SUPPLIER") throw new Error("INVENTORY_CODE_REQUIRED");
+  if (!record.slug && record.entityType !== "SUPPLIER") throw new Error("INVENTORY_SLUG_REQUIRED");
+  const finalizing = record.status === "PUBLISHED" || record.status === "REVIEW";
+  if (record.entityType === "COUNTRY" && !upper(d.countryCode || record.code,12)) throw new Error("INVENTORY_COUNTRY_CODE_REQUIRED");
+  if (finalizing && ["AREA","DESTINATION"].includes(record.entityType) && !record.parentEntityId) throw new Error("INVENTORY_PARENT_REQUIRED");
+  if (finalizing && record.entityType === "HOTEL" && !d.destinationId && !d.areaId) throw new Error("INVENTORY_GEO_REQUIRED");
+  if (finalizing && ["GUIDED_TOUR","ACTIVITY","PARTNER_TICKET","PACKAGE"].includes(record.entityType) && !d.destinationId && !d.areaId) throw new Error("INVENTORY_GEO_REQUIRED");
+  if (finalizing && record.entityType === "TRANSFER" && (!d.airportId || (!d.destinationId && !d.areaId))) throw new Error("INVENTORY_TRANSFER_ROUTE_REQUIRED");
+  if (finalizing && record.entityType === "CAR_RENTAL" && !d.destinationId && !d.airportId) throw new Error("INVENTORY_CAR_LOCATION_REQUIRED");
+  if (catalog?.catalogType === "SKANDI_PARTNER" && ["HOTEL","GUIDED_TOUR","ACTIVITY","PARTNER_TICKET","TRANSFER","CAR_RENTAL","PACKAGE"].includes(record.entityType) && !record.supplierEntityId) throw new Error("INVENTORY_SUPPLIER_REQUIRED");
+  if (catalog?.validFrom && catalog?.validTo && catalog.validTo < catalog.validFrom) throw new Error("INVENTORY_CATALOG_DATE_INVALID");
+  if (catalog && catalog.catalogType !== "NONE" && record.status === "PUBLISHED") record.customerVisible = true;
+  if (record.entityType === "SUPPLIER") record.customerVisible = false;
 }
-async function smartDefaults(record, input = {}) {
-  const x = JSON.parse(JSON.stringify(record || {}));
-  x.entityType = upper(x.entityType, 40);
-  x.details = object(x.details); x.commercial = object(x.commercial); x.operations = object(x.operations); x.seo = object(x.seo); x.publication = object(x.publication); x.payload = object(x.payload);
-  x.code = upper(x.code, 80); x.name = clean(x.name, 240); x.slug = slugify(x.slug || x.name); x.source = clean(x.source || "SKANDI", 80) || "SKANDI";
-  // Search merchandising is intentionally separate from master/reference data.
-  x.collectionType = "NONE"; x.partnerTier = ""; x.searchPriority = 100; x.searchKeywords = []; x.searchable = false;
-  if (!x.code) throw new Error("System Code is required."); if (!x.name) throw new Error("Master Name / Title is required."); if (!ENTITY_TYPES.has(x.entityType)) throw new Error("Unsupported inventory entity type.");
-  if (x.entityType === "DESTINATION") {
-    x.details.level = upper(x.details.level || "DESTINATION", 20);
-    const parent = await lookupMaster(x.parentEntityId);
-    if (parent?.entity_type === "DESTINATION") {
-      const pd = object(parent.details);
-      for (const key of ["countryCode", "countryName", "currency", "languages", "drivingSide", "electricalPlug", "emergencyNumber", "passportSummary", "visaSummary", "timezone"]) {
-        if (x.details[key] === undefined || x.details[key] === null || x.details[key] === "" || (Array.isArray(x.details[key]) && !x.details[key].length)) {
-          if (pd[key] !== undefined && pd[key] !== null && pd[key] !== "") x.details[key] = pd[key];
-        }
-      }
+async function assertNoDuplicate(record) {
+  if (!MASTER_TYPES.has(record.entityType)) return;
+  if (record.code) {
+    const rows = arr(await rest("inventory_master_entities", { query:{ select:"id", entity_type:`eq.${record.entityType}`, code:`eq.${record.code}`, limit:2 } }));
+    if (rows.some(r => String(r.id) !== String(record.id || ""))) throw new Error("INVENTORY_DUPLICATE_CODE");
+  }
+  if (record.slug) {
+    const rows = arr(await rest("inventory_master_entities", { query:{ select:"id", entity_type:`eq.${record.entityType}`, slug:`eq.${record.slug}`, limit:2 } }));
+    if (rows.some(r => String(r.id) !== String(record.id || ""))) throw new Error("INVENTORY_DUPLICATE_SLUG");
+  }
+}
+async function assertNoHierarchyCycle(record) {
+  if (!MASTER_TYPES.has(record.entityType) || !record.parentEntityId || !record.id) return;
+  if (record.parentEntityId === record.id) throw new Error("INVENTORY_PARENT_CYCLE");
+  const rows = arr(await rest("inventory_master_entities", { query:{ select:"id,parent_entity_id", limit:1000 } }));
+  const parentById = new Map(rows.map(r => [String(r.id), String(r.parent_entity_id || "")]));
+  let current = record.parentEntityId;
+  const seen = new Set();
+  while (current) {
+    if (current === record.id) throw new Error("INVENTORY_PARENT_CYCLE");
+    if (seen.has(current)) throw new Error("INVENTORY_PARENT_CYCLE");
+    seen.add(current);
+    current = parentById.get(current) || "";
+  }
+}
+
+function masterBody(r) {
+  return {
+    public_id:r.publicId, entity_type:r.entityType, code:r.code, name:r.name, slug:r.slug, status:r.status, active:r.active,
+    customer_visible:r.customerVisible, staff_visible:r.staffVisible, altea_visible:r.alteaVisible,
+    featured:r.featured, homepage_featured:r.homepageFeatured, sort_priority:r.sortPriority,
+    parent_entity_id:r.parentEntityId || null, supplier_entity_id:r.supplierEntityId || null, source:r.source, source_reference:r.sourceReference || null,
+    details:r.details, commercial:r.commercial, operations:r.operations, seo:r.seo, publication:r.publication, payload:r.payload
+  };
+}
+function airportBody(r, localized, media) {
+  const d = r.details;
+  return {
+    title:r.name, slug:r.slug, active:r.active, sort_order:r.sortPriority,
+    iata:upper(d.iata || r.code,12), icao:upper(d.icao,12), country:clean(d.country,200), locationCity:clean(d.city,200), timezone:clean(d.timezone,120),
+    latitude:nullableNumber(d.latitude), longitude:nullableNumber(d.longitude), distanceToCityCenterKm:nullableNumber(d.distanceToCityCenterKm),
+    website:clean(d.website,2000), contactUrl:clean(d.contactUrl,2000), summary:clean(d.overview || d.summary,10000),
+    status:r.status, customer_visible:r.customerVisible, staff_visible:r.staffVisible, altea_visible:r.alteaVisible, featured:r.featured, homepage_featured:r.homepageFeatured,
+    published:r.status === "PUBLISHED", source:r.source, source_reference:r.sourceReference || null,
+    inventory_details:d, commercial:r.commercial, operations:r.operations, seo:r.seo, publication:r.publication,
+    localized_content:localized, media_assets:media, payload:r.payload
+  };
+}
+function airlineBody(r, localized, media) {
+  const d = r.details;
+  return {
+    "Title":r.name, slug:r.slug, "Record ID":r.publicId || r.id, "iataCode":upper(d.iata || r.code,12), "icaoCode":upper(d.icao,12),
+    "shortName":clean(d.shortName,200), alliance:clean(d.alliance,200), "brandGroup":clean(d.brandGroup,200), "locationCountry":clean(d.country,200), "locationCity":clean(d.city,200),
+    website:clean(d.website,2000), summary:clean(d.summary || d.overview,10000),
+    checkInDeadline:clean(d.checkInDeadline,3000), baggageAllowence:clean(d.baggageAllowance,5000),
+    loyaltyProgram:clean(d.loyaltyProgram,500), loyaltyProgramUrl:clean(d.loyaltyProgramUrl,2000),
+    active:r.active, sort_order:r.sortPriority, status:r.status, customer_visible:r.customerVisible, staff_visible:r.staffVisible, altea_visible:r.alteaVisible,
+    featured:r.featured, homepage_featured:r.homepageFeatured, published:r.status === "PUBLISHED", source:r.source, source_reference:r.sourceReference || null,
+    inventory_details:d, commercial:r.commercial, operations:r.operations, seo:r.seo, publication:r.publication, localized_content:localized, media_assets:media, payload:r.payload,
+    searchable:r.searchable, collection_type:r.collectionType || "NONE", partner_tier:r.partnerTier || null, search_priority:r.searchPriority, search_keywords:r.searchKeywords
+  };
+}
+async function savePrimary(record, localized, media) {
+  if (MASTER_TYPES.has(record.entityType)) {
+    const body = masterBody(record);
+    if (record.id) {
+      const rows = arr(await rest("inventory_master_entities", { method:"PATCH", query:{id:`eq.${record.id}`}, body }));
+      if (!rows.length) throw new Error("INVENTORY_RECORD_NOT_FOUND");
+      return toUiRecord({ ...rows[0], source_table:"inventory_master_entities" });
     }
-    if (!x.details.searchAirportIata && x.details.nearestAirportId) x.details.searchAirportIata = await airportIata(x.details.nearestAirportId);
+    const rows = arr(await rest("inventory_master_entities", { method:"POST", body }));
+    return toUiRecord({ ...first(rows), source_table:"inventory_master_entities" });
   }
-  if (x.entityType === "HOTEL") {
-    if (!x.details.searchAirportIata && x.details.nearestAirportId) x.details.searchAirportIata = await airportIata(x.details.nearestAirportId);
+  if (record.entityType === "AIRPORT") {
+    const body = airportBody(record, localized, media);
+    if (record.id) {
+      const rows = arr(await rest("travel_info_airports", { method:"PATCH", query:{ID:`eq.${record.id}`}, body }));
+      const saved = first(rows);
+      if (!saved) throw new Error("INVENTORY_RECORD_NOT_FOUND");
+      return { ...record, id:saved.ID || record.id, code:upper(saved.iata || body.iata,12), sourceTable:"travel_info_airports" };
+    }
+    const rows = arr(await rest("travel_info_airports", { method:"POST", body }));
+    const saved = first(rows);
+    return { ...record, id:saved?.ID || "", code:upper(saved?.iata || body.iata,12), sourceTable:"travel_info_airports" };
   }
-  if (x.entityType === "PACKAGE") {
-    const a = safeDate(x.details.startDate), b = safeDate(x.details.endDate);
-    if (a && b) { const days = Math.max(1, Math.round((new Date(`${b}T12:00:00Z`) - new Date(`${a}T12:00:00Z`)) / 86400000) + 1); x.details.numberOfDays = days; x.details.numberOfNights = Math.max(0, days - 1); }
+  if (record.entityType === "AIRLINE") {
+    const id = record.id || uuidV4();
+    const body = { ID:id, ...airlineBody({ ...record, id }, localized, media) };
+    if (record.id) {
+      const updateBody = { ...body }; delete updateBody.ID;
+      const rows = arr(await rest("travel_info_airlines", { method:"PATCH", query:{ID:`eq.${record.id}`}, body:updateBody }));
+      const saved = first(rows);
+      if (!saved) throw new Error("INVENTORY_RECORD_NOT_FOUND");
+      return { ...record, id, code:upper(saved.iataCode || body.iataCode,12), sourceTable:"travel_info_airlines" };
+    }
+    const rows = arr(await rest("travel_info_airlines", { method:"POST", body }));
+    const saved = first(rows);
+    return { ...record, id:saved?.ID || id, code:upper(saved?.iataCode || body.iataCode,12), sourceTable:"travel_info_airlines" };
   }
-  x.status = MASTER_STATUSES.has(upper(x.status, 20)) ? upper(x.status, 20) : "DRAFT";
-  x.commercial.currency = upper(x.commercial.currency || "USD", 3); x.commercial.supplierCost = Math.max(0, num(x.commercial.supplierCost, 0)); x.commercial.publicPrice = Math.max(0, num(x.commercial.publicPrice, 0)); x.commercial.marginPct = x.commercial.publicPrice > 0 ? Math.round(((x.commercial.publicPrice - x.commercial.supplierCost) / x.commercial.publicPrice) * 10000) / 100 : 0;
-  if (x.entityType === "SUPPLIER") { x.customerVisible = false; x.featured = false; x.homepageFeatured = false; x.seo.indexable = false; }
-  if (x.status === "PUBLISHED") x.active = true;
-  if (["ARCHIVED", "SUSPENDED"].includes(x.status)) { x.active = false; x.customerVisible = false; }
-  if (x.status !== "PUBLISHED") x.homepageFeatured = false;
-  if (x.homepageFeatured) { x.featured = true; x.customerVisible = true; }
-  const hints = localizedSeoHints(input, x), title = hints.title || x.name;
-  x.seo.canonicalSlug = x.seo.canonicalSlug || x.slug;
-  x.seo.title = clean(x.seo.title || `${title} | SKANDI Travels`, 70);
-  x.seo.description = clean(x.seo.description || hints.description || (x.entityType === "DESTINATION" ? `Explore ${title} with SKANDI Travels.` : `Discover ${title} with SKANDI Travels.`), 160);
-  x.seo.ogTitle = clean(x.seo.ogTitle || x.seo.title, 100);
-  x.seo.ogDescription = clean(x.seo.ogDescription || x.seo.description, 200);
-  x.seo.ogImage = clean(x.seo.ogImage || mediaSeoImage(input), 2000);
-  if (x.seo.indexable === undefined) x.seo.indexable = true;
-  x.payload.smartInventoryVersion = "2026-09-08-v7"; x.payload.canonicalSource = REFERENCE_TYPES.has(x.entityType) ? (x.entityType === "AIRPORT" ? TABLES.airports : TABLES.airlines) : TABLES.master;
-  return x;
-}
-function dbMaster(r, actor, old = null) {
-  const publication = { ...object(r.publication) };
-  if (r.status === "PUBLISHED" && (!old || old.status !== "PUBLISHED")) { publication.publishedAt = new Date().toISOString(); publication.publishedBy = actor.id || actor.skId; }
-  return {
-    ...(r.publicId ? { public_id: clean(r.publicId, 160) } : {}), entity_type: r.entityType, code: r.code, name: r.name, slug: r.slug || null,
-    status: r.status, active: r.active !== false, customer_visible: bool(r.customerVisible, false), staff_visible: bool(r.staffVisible, true), altea_visible: bool(r.alteaVisible, true),
-    searchable: false, collection_type: "NONE", partner_tier: null, search_priority: 100, search_keywords: [],
-    featured: bool(r.featured, false), homepage_featured: bool(r.homepageFeatured, false), sort_priority: int(r.sortPriority, 100), parent_entity_id: r.parentEntityId || null, supplier_entity_id: r.supplierEntityId || null,
-    source: r.source || "SKANDI", source_reference: clean(r.sourceReference, 500) || null, details: object(r.details), commercial: object(r.commercial), operations: object(r.operations), seo: object(r.seo), publication,
-    payload: { ...object(r.payload), smartInventoryVersion: "2026-09-08-v7", canonicalSource: TABLES.master }, updated_by_agent_user_id: actor.id || null, ...(old ? {} : { created_by_agent_user_id: actor.id || null })
-  };
+  throw new Error("INVENTORY_TYPE_INVALID");
 }
 
-function referenceStatus(r = {}) { const s = upper(r.status, 20); if (MASTER_STATUSES.has(s)) return s; if (r.published === true) return "PUBLISHED"; if (r.active === false) return "HIDDEN"; return "DRAFT"; }
-function referenceDefaults(record, input = {}) {
-  const r = JSON.parse(JSON.stringify(record || {})); r.entityType = upper(r.entityType, 40); r.details = object(r.details); r.commercial = object(r.commercial); r.operations = object(r.operations); r.seo = object(r.seo); r.publication = object(r.publication); r.payload = object(r.payload);
-  r.name = clean(r.name, 240); r.slug = slugify(r.slug || r.name); r.status = MASTER_STATUSES.has(upper(r.status, 20)) ? upper(r.status, 20) : "DRAFT"; r.source = clean(r.source || "SKANDI", 80) || "SKANDI";
-  r.searchable = false; r.collectionType = "NONE"; r.partnerTier = ""; r.searchPriority = 100; r.searchKeywords = [];
-  if (!r.name) throw new Error("Master Name / Title is required.");
-  if (r.entityType === "AIRPORT") { r.details.iata = upper(r.details.iata || r.code, 12); r.details.icao = upper(r.details.icao, 12); r.code = r.details.iata; r.searchable = false; r.collectionType = "NONE"; if (!r.details.iata) throw new Error("IATA Code is required."); }
-  else if (r.entityType === "AIRLINE") { r.details.iata = upper(r.details.iata || r.code, 20); r.details.icao = upper(r.details.icao, 20); r.code = r.details.iata; if (!r.details.iata) throw new Error("Airline IATA Code is required."); }
-  else throw new Error("Unsupported reference entity type.");
-  if (r.status === "PUBLISHED") r.active = true; if (["ARCHIVED", "SUSPENDED"].includes(r.status)) { r.active = false; r.customerVisible = false; }
-  const hints = localizedSeoHints(input, r), title = hints.title || r.name;
-  r.seo.canonicalSlug = r.seo.canonicalSlug || r.slug; r.seo.title = clean(r.seo.title || `${title} | SKANDI Travels`, 70); r.seo.description = clean(r.seo.description || hints.description || `Travel information for ${title} from SKANDI Travels.`, 160); r.seo.ogTitle = clean(r.seo.ogTitle || r.seo.title, 100); r.seo.ogDescription = clean(r.seo.ogDescription || r.seo.description, 200); r.seo.ogImage = clean(r.seo.ogImage || mediaSeoImage(input), 2000); if (r.seo.indexable === undefined) r.seo.indexable = true;
-  return r;
-}
-function inlineReferencePayload(record, input = {}) {
-  const media = (Array.isArray(input.media) ? input.media : []).map((x, i) => ({ ...x, role: upper(x.role || (x.isHero ? "HERO" : x.isCard ? "CARD" : x.isMobile ? "MOBILE" : "GALLERY"), 30), sortOrder: int(x.sortOrder, (i + 1) * 10), active: x.active !== false }));
-  return { payload: { ...object(record.payload), inventoryRelations: Array.isArray(input.relations) ? input.relations : [], smartInventoryVersion: "2026-09-08-v7" }, localized_content: Array.isArray(input.localizedContent) ? input.localizedContent : [], media_assets: media };
-}
-function dbAirport(r, input = {}) {
-  const d = object(r.details), extra = inlineReferencePayload(r, input);
-  return {
-    title: r.name, slug: r.slug || null, active: r.active !== false, sort_order: int(r.sortPriority, 100), iata: upper(d.iata || r.code, 12) || null, icao: upper(d.icao, 12) || null,
-    country: clean(d.country, 160) || null, locationCity: clean(d.city, 240) || null, distanceToCityCenterKm: num(d.distanceToCityCenterKm, 0), website: clean(d.website, 2000) || null,
-    summary: clean(d.overview || d.summary, 10000) || null, latitude: num(d.latitude, 0), longitude: num(d.longitude, 0), information: clean(d.information, 20000) || null,
-    quickFactsJson: Array.isArray(d.quickFactsJson) ? d.quickFactsJson : [], transportJson: Array.isArray(d.transportJson) ? d.transportJson : [], runwaysJson: Array.isArray(d.runwaysJson) ? d.runwaysJson : [], terminalsJson: Array.isArray(d.terminalsJson) ? d.terminalsJson : [],
-    logoUrl: clean(d.logoUrl, 2000) || null, logoIconUrl: clean(d.logoIconUrl, 2000) || null, logoAltText: clean(d.logoAltText, 1000) || null, heroImageUrl: clean(d.heroImageUrl, 2000) || null,
-    sourceUrlsJson: Array.isArray(d.sourceUrlsJson) ? d.sourceUrlsJson : [], lounges: clean(d.lounges, 20000) || null, foodDrinksJson: Array.isArray(d.foodDrinksJson) ? d.foodDrinksJson : [], airportHotels: clean(d.airportHotels, 10000) || null,
-    lostFoundJson: Array.isArray(d.lostFoundJson) ? d.lostFoundJson : [], destinationsServing: clean(d.destinationsServing, 10000) || null, contactUrl: clean(d.contactUrl, 2000) || null, sectionsJson: Array.isArray(d.sectionsJson) ? d.sectionsJson : [], lastReviewed: d.lastReviewed || null,
-    primaryColor: clean(d.primaryColor, 40) || null, accentColor: clean(d.accentColor, 40) || null, notes: clean(d.notes, 20000) || null,
-    status: r.status, customer_visible: bool(r.customerVisible, false), staff_visible: bool(r.staffVisible, true), altea_visible: bool(r.alteaVisible, true), featured: bool(r.featured, false), homepage_featured: bool(r.homepageFeatured, false), published: r.status === "PUBLISHED",
-    source: r.source || "SKANDI", source_reference: clean(r.sourceReference, 500) || null, timezone: clean(d.timezone, 120) || null, inventory_details: d, commercial: object(r.commercial), operations: object(r.operations), seo: object(r.seo), publication: object(r.publication), ...extra,
-    ...(r.publicId ? { itemId: clean(r.publicId, 160) } : {})
-  };
-}
-function dbAirline(r, input = {}, old = null) {
-  const d = object(r.details), extra = inlineReferencePayload(r, input), id = clean(r.id || old?.ID, 120) || makeUuid();
-  return {
-    ID: id, Title: r.name, "Record ID": clean(r.publicId || old?.["Record ID"] || r.slug, 160) || null, slug: r.slug || null,
-    shortName: clean(d.shortName, 240) || null, alliance: clean(d.alliance, 120) || null, brandGroup: clean(d.brandGroup, 160) || null, locationCountry: clean(d.country, 160) || null, locationCity: clean(d.city, 160) || null,
-    website: clean(d.website, 2000) || null, quickFactsJson: d.quickFactsJson ?? [], primaryColor: clean(d.primaryColor, 40) || null, accentColor: clean(d.accentColor, 40) || null, notes: clean(d.notes, 20000) || null,
-    cabinsJson: jsonText(d.cabinsJson), logoFile: clean(d.logoUrl, 2000) || null, logoIcon: clean(d.logoIconUrl, 2000) || null, logoAltText: clean(d.logoAltText, 1000) || null, heroAircraftUrl: clean(d.heroImageUrl, 2000) || null,
-    sourceUrlsJson: jsonText(d.sourceUrlsJson), checkInDeadline: clean(d.checkInDeadline, 10000) || null, lounges: clean(d.lounges, 20000) || null, classComparisonText: clean(d.classComparisonText, 20000) || null,
-    loyaltyProgram: clean(d.loyaltyProgram, 1000) || null, loyaltyProgramUrl: clean(d.loyaltyProgramUrl, 2000) || null, hubsJson: d.hubsJson ?? [], fleetSummaryJson: jsonText(d.fleetSummaryJson), aircraftFamiliesText: clean(d.aircraftFamiliesText, 20000) || null,
-    aircraftConfigurationsJson: jsonText(d.aircraftConfigurationsJson), boarding: clean(d.boarding, 20000) || null, foodDrinksJson: jsonText(d.foodDrinksJson), wifiOnboardJson: jsonText(d.wifiOnboardJson), delayCancellationJson: jsonText(d.delayCancellationJson),
-    damagedBaggageJson: jsonText(d.damagedBaggageJson), lostFoundJson: jsonText(d.lostFoundJson), childrenInfantsJson: jsonText(d.childrenInfantsJson), ticketTypesJson: jsonText(d.ticketTypesJson), baggageAllowence: clean(d.baggageAllowance, 20000) || null,
-    contactUrl: clean(d.contactUrl, 2000) || null, sectionsJson: jsonText(d.sectionsJson), lastReviewed: d.lastReviewed || null, active: r.active !== false, iataCode: upper(d.iata || r.code, 20) || null, icaoCode: upper(d.icao, 20) || null,
-    sort_order: int(r.sortPriority, 100), status: r.status, customer_visible: bool(r.customerVisible, false), staff_visible: bool(r.staffVisible, true), altea_visible: bool(r.alteaVisible, true),
-    searchable: false, collection_type: "NONE", partner_tier: null, search_priority: 100, search_keywords: [],
-    featured: bool(r.featured, false), homepage_featured: bool(r.homepageFeatured, false), published: r.status === "PUBLISHED", source: r.source || "SKANDI", source_reference: clean(r.sourceReference, 500) || null,
-    inventory_details: d, commercial: object(r.commercial), operations: object(r.operations), seo: object(r.seo), publication: object(r.publication), ...extra
-  };
-}
-async function saveReferenceRecord(actor, input = {}) {
-  let r = applyStructures(object(input.record), input.structures); r = referenceDefaults(r, input);
-  const id = clean(r.id, 120); let old = null;
-  if (id) {
-    const table = r.entityType === "AIRPORT" ? TABLES.airports : TABLES.airlines;
-    const rows = await sb(`${table}?select=*&${eq("ID", id)}&limit=1`); old = rows?.[0] || null;
-    if (!old) throw new Error(`${r.entityType} record no longer exists.`);
+async function saveLocalized(entityId, items) {
+  for (const item of items) {
+    const existing = first(await rest("inventory_localized_content", { query:{select:"id",entity_id:`eq.${entityId}`,language:`eq.${item.language}`,limit:1} }));
+    const body = {
+      entity_id:entityId, language:item.language, title:item.title || null, eyebrow:item.eyebrow || null,
+      short_description:item.shortDescription || null, full_description:item.fullDescription || null,
+      highlights:item.highlights, included:item.included, not_included:item.notIncluded,
+      important_information:item.importantInformation || null, seo_title:item.seoTitle || null, seo_description:item.seoDescription || null, content:item.content
+    };
+    if (existing?.id) await rest("inventory_localized_content", {method:"PATCH",query:{id:`eq.${existing.id}`},body});
+    else await rest("inventory_localized_content", {method:"POST",body});
   }
-  const table = r.entityType === "AIRPORT" ? TABLES.airports : TABLES.airlines;
-  const body = r.entityType === "AIRPORT" ? dbAirport(r, input) : dbAirline(r, input, old);
-  const savedRows = old ? await sb(`${table}?${eq("ID", old.ID)}`, { method: "PATCH", body }) : await sb(table, { method: "POST", body });
-  const saved = savedRows?.[0]; if (!saved) throw new Error("Supabase did not return the saved reference record.");
-  await audit(actor, old ? "REFERENCE_UPDATED" : "REFERENCE_CREATED", saved.ID, `${r.entityType} ${r.code} ${old ? "updated" : "created"}.`, { sourceTable: table, code: r.code, status: r.status });
-  return { record: apiRecord((await sb(`${TABLES.canonical}?select=*&${eq("id", saved.ID)}&limit=1`))?.[0] || {}), bundle: await bundle(saved.ID) };
 }
-
-async function replaceLocalized(id, rows = [], record = {}) {
-  await sb(`${TABLES.localized}?${eq("entity_id", id)}`, { method: "DELETE", headers: { Prefer: "return=minimal" } });
-  const body = (Array.isArray(rows) ? rows : []).filter(x => LANGUAGES.includes(upper(x.language, 12))).map(x => {
-    const language = upper(x.language, 12), title = clean(x.title || record.name, 500), short = clean(x.shortDescription, 10000), full = clean(x.fullDescription, 50000);
-    return { entity_id: id, language, title: title || null, eyebrow: clean(x.eyebrow, 500) || null, short_description: short || null, full_description: full || null, highlights: Array.isArray(x.highlights) ? x.highlights : [], included: Array.isArray(x.included) ? x.included : [], not_included: Array.isArray(x.notIncluded) ? x.notIncluded : [], important_information: clean(x.importantInformation, 20000) || null, seo_title: clean(x.seoTitle || (title ? `${title} | SKANDI Travels` : ""), 70) || null, seo_description: clean(x.seoDescription || short || full, 160) || null, content: object(x.content) };
-  });
-  if (body.length) await sb(TABLES.localized, { method: "POST", body });
-}
-async function replaceMedia(id, rows = [], record = {}) {
-  await sb(`${TABLES.media}?${eq("entity_id", id)}`, { method: "DELETE", headers: { Prefer: "return=minimal" } });
-  const body = (Array.isArray(rows) ? rows : []).filter(x => clean(x.url, 2000)).map((x, i) => {
-    const role = MEDIA_ROLES.has(upper(x.role, 30)) ? upper(x.role, 30) : (x.isHero ? "HERO" : x.isCard ? "CARD" : x.isMobile ? "MOBILE" : "GALLERY");
-    const alt = clean(x.altText || `${record.name || "SKANDI"}${role === "GALLERY" ? "" : ` – ${role.toLowerCase()} image`}`, 1000);
-    return { entity_id: id, media_type: upper(x.mediaType || "IMAGE", 30), url: clean(x.url, 2000), alt_text: alt || null, caption: clean(x.caption, 3000) || null, credit: clean(x.credit, 1000) || null, language: upper(x.language, 12) || null, sort_order: int(x.sortOrder, (i + 1) * 10), role,
-      is_primary: role === "PRIMARY" || bool(x.isPrimary, false), is_hero: role === "HERO", is_card: role === "CARD", is_mobile: role === "MOBILE", active: x.active !== false,
-      storage_bucket: clean(x.storageBucket, 100) || null, storage_path: clean(x.storagePath, 1000) || null, mime_type: clean(x.mimeType, 100) || null, file_size_bytes: x.fileSizeBytes == null ? null : Math.max(0, int(x.fileSizeBytes, 0)), width_px: x.width == null ? null : Math.max(0, int(x.width, 0)), height_px: x.height == null ? null : Math.max(0, int(x.height, 0)), focal_x: x.focalX == null ? null : Math.max(0, Math.min(100, num(x.focalX, 50))), focal_y: x.focalY == null ? null : Math.max(0, Math.min(100, num(x.focalY, 50))), source_kind: upper(x.sourceKind || (x.storagePath ? "UPLOAD" : "URL"), 20), payload: object(x.payload) };
-  });
-  if (body.length) await sb(TABLES.media, { method: "POST", body });
-}
-async function replaceRelations(id, rows = []) {
-  await sb(`${TABLES.relations}?${eq("source_entity_id", id)}`, { method: "DELETE", headers: { Prefer: "return=minimal" } });
-  const body = [];
-  for (const [i, x] of (Array.isArray(rows) ? rows : []).entries()) {
-    const target = clean(x.targetEntityId, 120); if (!target || target === id || !x.relationType) continue;
-    const check = await sb(`${TABLES.master}?select=id&${eq("id", target)}&limit=1`).catch(() => []);
-    if (!check?.[0]) continue; // Airport/airline links belong in typed reference fields, never fake FK relations.
-    body.push({ source_entity_id: id, target_entity_id: target, relation_type: upper(x.relationType, 80), sequence_no: int(x.sequenceNo, (i + 1) * 10), active: bool(x.active, true), payload: object(x.payload) });
+async function saveMedia(entityId, items) {
+  const existing = arr(await rest("inventory_media_assets", {query:{select:"*",entity_id:`eq.${entityId}`,limit:1000}}));
+  const seen = new Set();
+  for (const item of items) {
+    const body = {
+      entity_id:entityId, media_type:item.mediaType, url:item.url, alt_text:item.altText || null, caption:item.caption || null, credit:item.credit || null,
+      language:item.language || null, sort_order:item.sortOrder, is_primary:item.isPrimary, is_card:item.isCard, is_hero:item.isHero, is_mobile:item.isMobile,
+      active:item.active, role:item.role, storage_bucket:item.storageBucket || null, storage_path:item.storagePath || null, mime_type:item.mimeType || null,
+      file_size_bytes:item.fileSizeBytes, width_px:item.width, height_px:item.height, focal_x:item.focalX, focal_y:item.focalY, source_kind:item.sourceKind || "URL"
+    };
+    if (item.id && existing.some(x => String(x.id) === item.id)) {
+      await rest("inventory_media_assets", {method:"PATCH",query:{id:`eq.${item.id}`},body});
+      seen.add(item.id);
+    } else {
+      const rows = arr(await rest("inventory_media_assets", {method:"POST",body}));
+      if (first(rows)?.id) seen.add(String(first(rows).id));
+    }
   }
-  if (body.length) await sb(TABLES.relations, { method: "POST", body });
+  for (const old of existing) {
+    if (old.active === true && !seen.has(String(old.id))) await rest("inventory_media_assets", {method:"PATCH",query:{id:`eq.${old.id}`},body:{active:false}});
+  }
 }
-async function audit(actor, eventType, entityId, message, payload = {}) {
-  try { await sb(TABLES.audit, { method: "POST", body: { event_type: eventType, domain: "MASTER_INVENTORY", entity_table: payload.sourceTable || TABLES.master, entity_id: entityId || null, product_key: payload.publicId || payload.code || entityId || null, source: "wix-smart-inventory-v4", message, payload, created_by_agent_user_id: actor.id || null, created_by_name: actor.name || actor.skId } }); } catch (_) {}
+async function saveRelations(entityId, items) {
+  const existing = arr(await rest("inventory_entity_relations", {query:{select:"*",source_entity_id:`eq.${entityId}`,limit:1000}}));
+  const matched = new Set();
+  for (const item of items) {
+    const old = existing.find(x => String(x.target_entity_id) === item.targetEntityId && upper(x.relation_type,80) === item.relationType);
+    const body = { source_entity_id:entityId, target_entity_id:item.targetEntityId, relation_type:item.relationType, sequence_no:item.sequenceNo, active:item.active };
+    if (old?.id) {
+      await rest("inventory_entity_relations", {method:"PATCH",query:{id:`eq.${old.id}`},body});
+      matched.add(String(old.id));
+    } else {
+      const rows = arr(await rest("inventory_entity_relations", {method:"POST",body}));
+      if (first(rows)?.id) matched.add(String(first(rows).id));
+    }
+  }
+  for (const old of existing) {
+    if (old.active === true && !matched.has(String(old.id))) await rest("inventory_entity_relations", {method:"PATCH",query:{id:`eq.${old.id}`},body:{active:false}});
+  }
 }
-
-function dbDated(r, actor) {
-  const total = Math.max(0, int(r.capacityTotal, 0)), held = Math.max(0, int(r.held, 0)), sold = Math.max(0, int(r.sold, 0)), overbooking = Math.max(0, int(r.overbookingLimit, 0));
-  const available = Math.max(0, total + overbooking - held - sold); let status = DATED_STATUSES.has(upper(r.status, 20)) ? upper(r.status, 20) : "OPEN";
-  if (bool(r.blackout, false)) status = "BLACKOUT"; else if (bool(r.stopSale, false)) status = "STOP_SALE"; else if (total > 0 && available === 0) status = "SOLD_OUT"; else if (["BLACKOUT", "STOP_SALE", "SOLD_OUT"].includes(status)) status = "OPEN";
-  const adult = Math.max(0, num(r.adultPrice, 0)), publicPrice = Math.max(0, num(r.publicPrice, adult));
-  return { entity_id: clean(r.entityId, 100), inventory_type: upper(r.inventoryType || "GENERAL", 50), service_date: safeDate(r.serviceDate), start_time: safeTime(r.startTime), end_time: safeTime(r.endTime), variant_code: upper(r.variantCode, 80) || null, variant_name: clean(r.variantName, 240) || null, capacity_total: total, held, sold, available, waitlist_limit: Math.max(0, int(r.waitlistLimit, 0)), overbooking_limit: overbooking, stop_sale: bool(r.stopSale, false), blackout: bool(r.blackout, false), status, supplier_cost: Math.max(0, num(r.supplierCost, 0)), public_price: publicPrice, adult_price: adult, child_price: Math.max(0, num(r.childPrice, 0)), infant_price: Math.max(0, num(r.infantPrice, 0)), private_price: Math.max(0, num(r.privatePrice, 0)), currency: upper(r.currency || "USD", 3), price_basis: upper(r.priceBasis || "PER_PERSON", 40), booking_cutoff_hours: Math.max(0, int(r.bookingCutoffHours, 0)), min_stay: Math.max(0, int(r.minStay, 0)), max_stay: Math.max(0, int(r.maxStay, 0)), release_days: Math.max(0, int(r.releaseDays, 0)), supplier_reference: clean(r.supplierReference, 500) || null, payload: { ...object(r.payload), calculatedAvailable: available, smartInventoryVersion: "2026-09-08-v7" }, updated_by_agent_user_id: actor.id || null, ...(r.id ? {} : { created_by_agent_user_id: actor.id || null }) };
+async function findCatalogForRecord(record) {
+  if (MASTER_TYPES.has(record.entityType)) {
+    return first(await rest("inventory_catalog_entries", {query:{select:"*",target_entity_id:`eq.${record.id}`,limit:1}}));
+  }
+  return first(await rest("inventory_catalog_entries", {query:{select:"*",target_record_type:`eq.${record.entityType}`,target_record_id:`eq.${record.id}`,limit:1}}));
 }
-
-
-function apiCatalog(r = {}, ref = null) {
-  return {
-    id: r.id || "",
-    targetEntityId: r.target_entity_id || "",
-    targetRecordType: upper(r.target_record_type || ref?.entityType || "", 40),
-    targetRecordId: clean(r.target_record_id || ref?.id || "", 120),
-    targetCode: upper(r.target_code || ref?.code || "", 80),
-    targetName: clean(ref?.name || "", 240),
-    targetSlug: clean(ref?.slug || "", 180),
-    catalogType: upper(r.catalog_type || "SKANDI_COLLECTION", 40),
-    partnerTier: clean(r.partner_tier, 80),
-    searchable: r.searchable === true,
-    featured: r.featured === true,
-    homepageFeatured: r.homepage_featured === true,
-    searchPriority: int(r.search_priority, 100),
-    searchKeywords: r.search_keywords || [],
-    marketCodes: r.market_codes || [],
-    salesChannels: r.sales_channels || ["WEB"],
-    publicLabel: clean(r.public_label, 160),
-    badge: clean(r.badge, 120),
-    validFrom: r.valid_from || "",
-    validTo: r.valid_to || "",
-    notes: clean(r.notes, 5000),
-    active: r.active !== false,
-    createdAt: r.created_at,
-    updatedAt: r.updated_at,
-    eligibleNow: Boolean(ref && ref.status === "PUBLISHED" && ref.active !== false && ref.customerVisible === true && !["AIRPORT","SUPPLIER"].includes(ref.entityType))
-  };
-}
-async function catalogRows() {
-  const [rows, refs] = await Promise.all([
-    sb(`${TABLES.catalog}?select=*&order=search_priority.asc,created_at.asc&limit=4000`).catch(() => []),
-    references()
-  ]);
-  const byId = new Map(refs.map(x => [String(x.id), x]));
-  return (rows || []).map(r => {
-    const key = String(r.target_entity_id || r.target_record_id || "");
-    const ref = byId.get(key) || refs.find(x => r.target_record_type && x.entityType === r.target_record_type && (String(x.id) === String(r.target_record_id) || upper(x.code,80) === upper(r.target_code,80))) || null;
-    return apiCatalog(r, ref);
-  });
-}
-async function resolveCatalogTarget(input = {}) {
-  const id = clean(input.targetEntityId || input.targetRecordId || input.targetId, 120);
-  if (!id) throw new Error("Select a master/reference record for the catalog entry.");
-  const refs = await references();
-  const ref = refs.find(x => String(x.id) === id);
-  if (!ref) throw new Error("The selected catalog target no longer exists.");
-  if (["AIRPORT","SUPPLIER"].includes(ref.entityType)) throw new Error(`${ref.entityType} records cannot be customer-search catalog entries.`);
-  return ref;
-}
-
-export const getSmartInventoryBootstrap = webMethod(Permissions.SiteMember, async (input = {}) => {
-  const actor = await requireStaff();
-  const filters = ["select=*"]; const type = upper(input.entityType, 40);
-  if (type && ENTITY_TYPES.has(type)) filters.push(eq("entity_type", type));
-  if (input.status && MASTER_STATUSES.has(upper(input.status, 20))) filters.push(eq("status", upper(input.status, 20)));
-  if (input.customerVisible === true || input.customerVisible === "true") filters.push("customer_visible=eq.true");
-  if (input.customerVisible === false || input.customerVisible === "false") filters.push("customer_visible=eq.false");
-  filters.push("order=sort_priority.asc,name.asc", "limit=3000");
-  let rows = await sb(`${TABLES.canonical}?${filters.join("&")}`);
-  const search = clean(input.query, 200).toLowerCase();
-  if (search) rows = (rows || []).filter(r => [r.public_id, r.entity_type, r.code, r.name, r.slug, ...(r.search_keywords || [])].join(" ").toLowerCase().includes(search));
-  const [refs, registry, health, catalog] = await Promise.all([references(), sb(`${TABLES.sourceRegistry}?select=*&active=eq.true&order=category.asc`).catch(() => []), sb(`${TABLES.sourceHealth}?select=*&order=category.asc`).catch(() => []), catalogRows()]);
-  return { session: actor, records: (rows || []).map(apiRecord), references: refs, catalog, sourceRegistry: registry || [], sourceHealth: health || [], lastSync: new Date().toISOString(), canonicalSource: TABLES.canonical, catalogSource: TABLES.catalog };
-});
-
-
-export const listInventoryCatalogEntries = webMethod(Permissions.SiteMember, async () => {
-  await requireStaff();
-  return { entries: await catalogRows(), generatedAt: new Date().toISOString() };
-});
-
-export const saveInventoryCatalogEntry = webMethod(Permissions.SiteMember, async ({ entry = {} } = {}) => {
-  const actor = await requireStaff();
-  const ref = await resolveCatalogTarget(entry);
-  const catalogType = upper(entry.catalogType || "SKANDI_COLLECTION", 40);
-  if (!new Set(["SKANDI_COLLECTION","SKANDI_PARTNER"]).has(catalogType)) throw new Error("Catalog Type must be SKANDI Collection or SKANDI Partner.");
-  const eligible = ref.status === "PUBLISHED" && ref.active !== false && ref.customerVisible === true;
-  const searchable = eligible && bool(entry.searchable, false);
+async function saveCatalog(record, catalog) {
+  if (!CATALOG_ELIGIBLE.has(record.entityType)) return null;
+  const existing = await findCatalogForRecord(record);
+  if (!catalog || catalog.catalogType === "NONE") {
+    if (existing?.id) await rest("inventory_catalog_entries", {method:"DELETE",query:{id:`eq.${existing.id}`},prefer:"return=minimal"});
+    return null;
+  }
+  const target = MASTER_TYPES.has(record.entityType)
+    ? { target_entity_id:record.id, target_record_type:record.entityType, target_record_id:record.id, target_code:record.code }
+    : { target_entity_id:null, target_record_type:record.entityType, target_record_id:record.id, target_code:record.code };
   const body = {
-    target_entity_id: ref.sourceTable === TABLES.master ? ref.id : null,
-    target_record_type: ref.entityType,
-    target_record_id: String(ref.id),
-    target_code: ref.code || null,
-    catalog_type: catalogType,
-    partner_tier: clean(entry.partnerTier,80) || null,
-    searchable,
-    featured: bool(entry.featured,false),
-    homepage_featured: bool(entry.homepageFeatured,false),
-    search_priority: Math.max(0,int(entry.searchPriority,100)),
-    search_keywords: arr(entry.searchKeywords).slice(0,100),
-    market_codes: arr(entry.marketCodes).map(x=>upper(x,20)).slice(0,100),
-    sales_channels: arr(entry.salesChannels).map(x=>upper(x,40)).slice(0,40).length ? arr(entry.salesChannels).map(x=>upper(x,40)).slice(0,40) : ["WEB"],
-    public_label: clean(entry.publicLabel,160) || null,
-    badge: clean(entry.badge,120) || null,
-    valid_from: safeDate(entry.validFrom),
-    valid_to: safeDate(entry.validTo),
-    notes: clean(entry.notes,5000) || null,
-    active: entry.active !== false,
-    updated_by_agent_user_id: actor.id || null,
-    ...(entry.id ? {} : { created_by_agent_user_id: actor.id || null })
+    ...target, catalog_type:catalog.catalogType, partner_tier:catalog.partnerTier || null, searchable:catalog.searchable,
+    featured:catalog.featured, homepage_featured:catalog.homepageFeatured, search_priority:catalog.searchPriority,
+    search_keywords:catalog.searchKeywords, market_codes:catalog.marketCodes, sales_channels:catalog.salesChannels.length ? catalog.salesChannels : ["WEB"],
+    public_label:catalog.publicLabel || null, badge:catalog.badge || null, valid_from:catalog.validFrom, valid_to:catalog.validTo, notes:catalog.notes || null, active:catalog.active
   };
-  let saved;
-  if (entry.id) {
-    saved = (await sb(`${TABLES.catalog}?${eq("id",clean(entry.id,120))}`, { method:"PATCH", body }))?.[0];
-  } else {
-    saved = (await sb(TABLES.catalog, { method:"POST", body }))?.[0];
+  if (existing?.id) return first(arr(await rest("inventory_catalog_entries", {method:"PATCH",query:{id:`eq.${existing.id}`},body})));
+  return first(arr(await rest("inventory_catalog_entries", {method:"POST",body})));
+}
+
+async function snapshotBundle(record) {
+  if (!record.id) return { isNew:true, primary:null, localized:[], media:[], relations:[], catalog:null };
+  if (MASTER_TYPES.has(record.entityType)) {
+    return {
+      isNew:false,
+      primary:first(await rest("inventory_master_entities",{query:{select:"*",id:`eq.${record.id}`,limit:1}})),
+      localized:arr(await rest("inventory_localized_content",{query:{select:"*",entity_id:`eq.${record.id}`,limit:1000}})),
+      media:arr(await rest("inventory_media_assets",{query:{select:"*",entity_id:`eq.${record.id}`,limit:1000}})),
+      relations:arr(await rest("inventory_entity_relations",{query:{select:"*",source_entity_id:`eq.${record.id}`,limit:1000}})),
+      catalog:await findCatalogForRecord(record)
+    };
   }
-  if (!saved?.id) throw new Error("Supabase did not return the saved catalog entry.");
-  await audit(actor, entry.id ? "CATALOG_UPDATED" : "CATALOG_CREATED", String(ref.id), `${ref.entityType} ${ref.code} catalog entry ${entry.id ? "updated" : "created"}.`, { sourceTable: TABLES.catalog, catalogType, searchable });
-  const entries = await catalogRows();
-  return { entry: entries.find(x=>x.id===saved.id) || apiCatalog(saved,ref), entries };
-});
-
-export const deleteInventoryCatalogEntry = webMethod(Permissions.SiteMember, async ({ id } = {}) => {
-  const actor = await requireStaff();
-  const key = clean(id,120); if (!key) throw new Error("Catalog entry ID is required.");
-  await sb(`${TABLES.catalog}?${eq("id",key)}`, { method:"DELETE", headers:{Prefer:"return=minimal"} });
-  await audit(actor,"CATALOG_DELETED",key,"Collection/Partner catalog entry deleted.",{sourceTable:TABLES.catalog});
-  return { ok:true, id:key, entries:await catalogRows() };
-});
-
-export const getSmartInventoryRecord = webMethod(Permissions.SiteMember, async ({ id } = {}) => { await requireStaff(); return bundle(clean(id, 120)); });
-
-export const saveSmartInventoryRecord = webMethod(Permissions.SiteMember, async (input = {}) => {
-  const actor = await requireStaff(); const entityType = upper(input?.record?.entityType, 40);
-  if (REFERENCE_TYPES.has(entityType)) return saveReferenceRecord(actor, input);
-  let r = applyStructures(object(input.record), input.structures); r = await smartDefaults(r, input);
-  const id = clean(r.id, 100); let old = null;
-  if (id) { const rows = await sb(`${TABLES.master}?select=*&${eq("id", id)}&limit=1`); old = rows?.[0] || null; if (!old) throw new Error("Inventory master record no longer exists."); }
-  const body = dbMaster(r, actor, old); const savedRows = old ? await sb(`${TABLES.master}?${eq("id", old.id)}`, { method: "PATCH", body }) : await sb(TABLES.master, { method: "POST", body });
-  const saved = savedRows?.[0]; if (!saved?.id) throw new Error("Supabase did not return the saved master record.");
-  await replaceLocalized(saved.id, input.localizedContent || [], r); await replaceMedia(saved.id, input.media || [], r); await replaceRelations(saved.id, input.relations || []);
-  // If OG image was not explicitly set, inherit from the canonical media role after media save.
-  if (!clean(saved.seo?.ogImage, 2000)) {
-    const mediaRows = await sb(`${TABLES.media}?select=url,role,is_hero,is_card,sort_order&${eq("entity_id", saved.id)}&active=eq.true&order=sort_order.asc`);
-    const image = mediaRows?.find(x => x.role === "OG")?.url || mediaRows?.find(x => x.role === "HERO" || x.is_hero)?.url || mediaRows?.find(x => x.role === "CARD" || x.is_card)?.url || mediaRows?.[0]?.url || "";
-    if (image) await sb(`${TABLES.master}?${eq("id", saved.id)}`, { method: "PATCH", body: { seo: { ...object(saved.seo), ogImage: image } } });
+  const table = record.entityType === "AIRPORT" ? "travel_info_airports" : "travel_info_airlines";
+  const key = "ID";
+  return { isNew:false, primary:first(await rest(table,{query:{select:"*",[key]:`eq.${record.id}`,limit:1}})), localized:[],media:[],relations:[],catalog:await findCatalogForRecord(record), table };
+}
+function rollbackPatchBody(row, table) {
+  const body = { ...obj(row) };
+  if (table === "inventory_master_entities") {
+    delete body.id; delete body.created_at; delete body.updated_at;
+    delete body.created_by_agent_user_id; delete body.updated_by_agent_user_id;
+  } else if (table === "travel_info_airports") {
+    delete body.ID; delete body.created_at; delete body.updated_at;
+  } else if (table === "travel_info_airlines") {
+    delete body.ID; delete body["Created Date"]; delete body.updated_at;
   }
-  await audit(actor, old ? "MASTER_UPDATED" : "MASTER_CREATED", saved.id, `${saved.entity_type} ${saved.code} ${old ? "updated" : "created"}.`, { publicId: saved.public_id, code: saved.code, status: saved.status });
-  return { record: apiRecord(saved), bundle: await bundle(saved.id) };
-});
-
-export const getSmartDatedInventory = webMethod(Permissions.SiteMember, async ({ entityId } = {}) => {
-  await requireStaff(); const id = clean(entityId, 100); const rows = await sb(`${TABLES.dated}?select=*&${eq("entity_id", id)}&order=service_date.asc,start_time.asc,variant_code.asc&limit=3000`); return { inventory: (rows || []).map(apiDated), lastSync: new Date().toISOString() };
-});
-export const saveSmartDatedInventory = webMethod(Permissions.SiteMember, async ({ row } = {}) => {
-  const actor = await requireStaff(); if (!row?.entityId) throw new Error("Master inventory entity is required."); if (!safeDate(row.serviceDate)) throw new Error("Service Date is required.");
-  const body = dbDated(row, actor), savedRows = row.id ? await sb(`${TABLES.dated}?${eq("id", row.id)}`, { method: "PATCH", body }) : await sb(TABLES.dated, { method: "POST", body }); const saved = savedRows?.[0];
-  await audit(actor, "DATED_INVENTORY_SAVED", row.entityId, `Dated inventory saved for ${row.serviceDate}.`, { entityId: row.entityId, inventoryId: saved?.id, status: saved?.status, available: saved?.available }); return { row: apiDated(saved) };
-});
-export const deleteSmartDatedInventory = webMethod(Permissions.SiteMember, async ({ id } = {}) => {
-  const actor = await requireStaff(), rowId = clean(id, 100), old = await sb(`${TABLES.dated}?select=*&${eq("id", rowId)}&limit=1`); await sb(`${TABLES.dated}?${eq("id", rowId)}`, { method: "DELETE", headers: { Prefer: "return=minimal" } }); await audit(actor, "DATED_INVENTORY_DELETED", old?.[0]?.entity_id || null, "Dated inventory row deleted.", { inventoryId: rowId }); return { deleted: true, id: rowId };
-});
-export const getSmartInventoryAudit = webMethod(Permissions.SiteMember, async (input = {}) => {
-  await requireStaff(); const rows = await sb(`${TABLES.audit}?select=*&order=created_at.desc&limit=750`), domain = clean(input.domain, 80).toLowerCase(), key = clean(input.productKey, 120).toLowerCase();
-  const filtered = (rows || []).filter(r => (!domain || String(r.domain || "").toLowerCase().includes(domain)) && (!key || String(r.product_key || "").toLowerCase().includes(key)));
-  return { audit: filtered.map(r => ({ id: r.id, eventType: r.event_type, domain: r.domain, entityTable: r.entity_table, entityId: r.entity_id, productKey: r.product_key, message: r.message, agentName: r.created_by_name, timestamp: r.created_at, payload: r.payload || {} })) };
-});
-
-export const createInventoryMediaUploadTicket = webMethod(Permissions.SiteMember, async (input = {}) => {
-  const actor = await requireStaff();
-  const mimeType = clean(input.mimeType, 100).toLowerCase();
-  const fileSizeBytes = Math.max(0, int(input.fileSizeBytes, 0));
-  if (!IMAGE_MIMES.has(mimeType)) throw new Error("Only JPG, PNG, WebP, AVIF and GIF images are supported.");
-  if (!fileSizeBytes || fileSizeBytes > MAX_IMAGE_BYTES) throw new Error("Image must be 15 MB or smaller.");
-  const ext = ({ "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp", "image/avif": "avif", "image/gif": "gif" })[mimeType] || "img";
-  const entityType = slugify(input.entityType || "general") || "general";
-  const code = slugify(input.code || input.entityId || "draft") || "draft";
-  const role = MEDIA_ROLES.has(upper(input.role, 30)) ? upper(input.role, 30) : "GALLERY";
-  const base = slugify(clean(input.fileName, 240).replace(/\.[^.]+$/, "")) || role.toLowerCase();
-  const date = new Date().toISOString().slice(0, 10);
-  const path = `${entityType}/${code}/${date}/${makeUuid()}-${base}.${ext}`;
-  const signed = await createSignedInventoryUpload(path);
-  const c = await cfg();
-  const publicUrl = `${c.url}/storage/v1/object/public/${INVENTORY_BUCKET}/${path.split('/').map(encodeURIComponent).join('/')}`;
-  await audit(actor, "MEDIA_UPLOAD_TICKET_CREATED", input.entityId || null, `Inventory media upload prepared (${role}).`, {
-    sourceTable: TABLES.media, storageBucket: INVENTORY_BUCKET, storagePath: path, role, mimeType, fileSizeBytes
-  });
-  return {
-    signedUrl: signed.signedUrl,
-    token: signed.token,
-    path,
-    publicUrl,
-    role,
-    storageBucket: INVENTORY_BUCKET,
-    storagePath: path,
-    mimeType,
-    fileSizeBytes,
-    sourceKind: "UPLOAD",
-    cacheControl: "31536000",
-    expiresInSeconds: 7200
-  };
-});
-
-export const getInventorySourceHealth = webMethod(Permissions.SiteMember, async () => {
-  await requireStaff(); const [registry, health] = await Promise.all([sb(`${TABLES.sourceRegistry}?select=*&active=eq.true&order=category.asc`), sb(`${TABLES.sourceHealth}?select=*&order=category.asc`)]); return { registry: registry || [], health: health || [], canonicalView: TABLES.canonical, searchableView: TABLES.searchable, generatedAt: new Date().toISOString() };
-});
-
-// V4.4 operational air reads are intentionally kept inside this web module.
-// This prevents the Inventory Control page from statically importing the legacy
-// legacy operational backend chain, which can stop the page controller from loading.
-function opEq(parts, field, value) {
-  const v = clean(value, 120);
-  if (v) parts.push(`${field}=eq.${encodeURIComponent(v)}`);
-}
-function opDate(parts, field, value) {
-  const v = safeDate(value);
-  if (v) parts.push(`${field}=eq.${encodeURIComponent(v)}`);
-}
-function mapOperationalFlightLeg(r = {}) {
-  return {
-    id: r.id || "",
-    flightNumber: r.flight_number || "",
-    departureDate: r.departure_date || "",
-    boardPoint: r.board_point || "",
-    offPoint: r.off_point || "",
-    equipmentType: r.equipment_type || "",
-    physicalCapacity: int(r.physical_capacity, 0),
-    yieldIndex: r.yield_index || "",
-    controlMode: r.control_mode || "",
-    revenueBand: r.revenue_band || "",
-    status: r.status || "",
-    source: r.source || "",
-    lastSyncAt: r.last_sync_at || "",
-    payload: r.payload || {},
-    updatedAt: r.updated_at || ""
-  };
-}
-function mapOperationalFlightClass(r = {}) {
-  return {
-    id: r.id || "",
-    flightLegId: r.flight_leg_id || "",
-    flightNumber: r.flight_number || "",
-    departureDate: r.departure_date || "",
-    boardPoint: r.board_point || "",
-    offPoint: r.off_point || "",
-    classCode: r.class_code || "",
-    cabin: r.cabin || "",
-    nest: r.nest || "",
-    authorized: int(r.authorized, 0),
-    sold: int(r.sold, 0),
-    available: int(r.available, 0),
-    waitlistLimit: int(r.waitlist_limit, 0),
-    overbookingLimit: int(r.overbooking_limit, 0),
-    protection: int(r.protection, 0),
-    status: r.status || "open",
-    note: r.note || "",
-    payload: r.payload || {},
-    updatedAt: r.updated_at || ""
-  };
-}
-function mapOperationalSchedule(r = {}) {
-  return {
-    id: r.id || "",
-    seasonCode: r.season_code || "",
-    flightNumber: r.flight_number || "",
-    daysOfOperation: r.days_of_operation || "",
-    boardPoint: r.board_point || "",
-    offPoint: r.off_point || "",
-    viaPoint: r.via_point || "",
-    std: r.std || "",
-    sta: r.sta || "",
-    equipmentType: r.equipment_type || "",
-    capacity: int(r.capacity, 0),
-    effectiveDate: r.effective_date || "",
-    discontinueDate: r.discontinue_date || "",
-    status: r.status || "draft",
-    payload: r.payload || {},
-    updatedAt: r.updated_at || ""
-  };
-}
-function mapOperationalNesting(r = {}) {
-  return {
-    id: r.id || "",
-    flightNumber: r.flight_number || "",
-    departureDate: r.departure_date || "",
-    boardPoint: r.board_point || "",
-    offPoint: r.off_point || "",
-    classCode: r.class_code || "",
-    cabin: r.cabin || "",
-    nest: r.nest || "",
-    parentClass: r.parent_class || "",
-    bidPrice: num(r.bid_price, 0),
-    hurdle: num(r.hurdle, 0),
-    minStay: r.min_stay || "",
-    waitlistLimit: int(r.waitlist_limit, 0),
-    overbookingLimit: int(r.overbooking_limit, 0),
-    authorized: int(r.authorized, 0),
-    protection: int(r.protection, 0),
-    waitlistPolicy: r.waitlist_policy || "CLASS",
-    status: r.status || "open",
-    payload: r.payload || {},
-    updatedAt: r.updated_at || ""
-  };
+  return body;
 }
 
-export const getSmartFlightInventory = webMethod(Permissions.SiteMember, async (input = {}) => {
-  await requireStaff();
-  const f = object(input.filters || input);
-  const flightNumber = upper(f.flightNumber || f.flight, 20);
-  const departureDate = safeDate(f.departureDate || f.date);
-  const boardPoint = upper(f.boardPoint || f.origin, 8);
-  const offPoint = upper(f.offPoint || f.destination, 8);
-
-  const legParts = ["select=*", "order=updated_at.desc", "limit=1"];
-  opEq(legParts, "flight_number", flightNumber);
-  opDate(legParts, "departure_date", departureDate);
-  opEq(legParts, "board_point", boardPoint);
-  opEq(legParts, "off_point", offPoint);
-  const legs = await sb(`inventory_flight_legs?${legParts.join("&")}`);
-  const flight = mapOperationalFlightLeg(legs?.[0] || {});
-
-  const classParts = ["select=*", "order=cabin.asc,nest.asc,class_code.asc", "limit=500"];
-  if (flight.id) opEq(classParts, "flight_leg_id", flight.id);
-  else {
-    opEq(classParts, "flight_number", flightNumber);
-    opDate(classParts, "departure_date", departureDate);
-    opEq(classParts, "board_point", boardPoint);
-    opEq(classParts, "off_point", offPoint);
+async function restoreSnapshot(record, savedRecord, snap) {
+  try {
+    const id = savedRecord?.id || record.id;
+    if (snap.isNew) {
+      if (MASTER_TYPES.has(record.entityType)) {
+        if (id) {
+          await rest("inventory_catalog_entries",{method:"DELETE",query:{target_entity_id:`eq.${id}`},prefer:"return=minimal"}).catch(()=>{});
+          await rest("inventory_entity_relations",{method:"DELETE",query:{source_entity_id:`eq.${id}`},prefer:"return=minimal"}).catch(()=>{});
+          await rest("inventory_media_assets",{method:"DELETE",query:{entity_id:`eq.${id}`},prefer:"return=minimal"}).catch(()=>{});
+          await rest("inventory_localized_content",{method:"DELETE",query:{entity_id:`eq.${id}`},prefer:"return=minimal"}).catch(()=>{});
+          await rest("inventory_master_entities",{method:"DELETE",query:{id:`eq.${id}`},prefer:"return=minimal"}).catch(()=>{});
+        }
+      } else if (id) {
+        const table = record.entityType === "AIRPORT" ? "travel_info_airports" : "travel_info_airlines";
+        await rest("inventory_catalog_entries",{method:"DELETE",query:{target_record_type:`eq.${record.entityType}`,target_record_id:`eq.${id}`},prefer:"return=minimal"}).catch(()=>{});
+        await rest(table,{method:"DELETE",query:{ID:`eq.${id}`},prefer:"return=minimal"}).catch(()=>{});
+      }
+      return;
+    }
+    if (MASTER_TYPES.has(record.entityType)) {
+      if (snap.primary) await rest("inventory_master_entities",{method:"PATCH",query:{id:`eq.${record.id}`},body:rollbackPatchBody(snap.primary,"inventory_master_entities")});
+      await rest("inventory_localized_content",{method:"DELETE",query:{entity_id:`eq.${record.id}`},prefer:"return=minimal"}).catch(()=>{});
+      if (snap.localized.length) await rest("inventory_localized_content",{method:"POST",body:snap.localized});
+      await rest("inventory_media_assets",{method:"DELETE",query:{entity_id:`eq.${record.id}`},prefer:"return=minimal"}).catch(()=>{});
+      if (snap.media.length) await rest("inventory_media_assets",{method:"POST",body:snap.media});
+      await rest("inventory_entity_relations",{method:"DELETE",query:{source_entity_id:`eq.${record.id}`},prefer:"return=minimal"}).catch(()=>{});
+      if (snap.relations.length) await rest("inventory_entity_relations",{method:"POST",body:snap.relations});
+    } else if (snap.primary) {
+      await rest(snap.table,{method:"PATCH",query:{ID:`eq.${record.id}`},body:rollbackPatchBody(snap.primary,snap.table)});
+    }
+    const existingCatalog = await findCatalogForRecord(record).catch(()=>null);
+    if (existingCatalog?.id) await rest("inventory_catalog_entries",{method:"DELETE",query:{id:`eq.${existingCatalog.id}`},prefer:"return=minimal"}).catch(()=>{});
+    if (snap.catalog) await rest("inventory_catalog_entries",{method:"POST",body:snap.catalog}).catch(()=>{});
+  } catch (_) {
+    // Rollback is best-effort. The original error is preserved for the caller.
   }
-  const classes = await sb(`inventory_flight_classes?${classParts.join("&")}`);
-  return { flight: flight.id ? flight : null, classes: (classes || []).map(mapOperationalFlightClass), lastSync: new Date().toISOString() };
-});
+}
+async function insertAudit(agent, eventType, record, message, extra = {}) {
+  await rest("master_inventory_audit", {method:"POST",body:{
+    event_type:eventType, domain:"INVENTORY_CONTROL", entity_table:record.sourceTable || (MASTER_TYPES.has(record.entityType)?"inventory_master_entities":record.entityType==="AIRPORT"?"travel_info_airports":"travel_info_airlines"),
+    entity_id:record.id || null, product_key:record.publicId || record.code || record.id || null, source:"WIX_INVENTORY_V9", message,
+    payload:{version:VERSION,entityType:record.entityType,code:record.code,status:record.status,...extra}, created_by_agent_user_id:agent.id || null, created_by_name:agent.displayName || null
+  },prefer:"return=minimal"});
+}
+async function saveBundle(payload, agent) {
+  let record = normalizeRecord(payload.record, payload.structures);
+  const hasCatalogPayload = Object.prototype.hasOwnProperty.call(obj(payload), "catalog");
+  let catalog = hasCatalogPayload ? normalizeCatalog(payload.catalog, record) : null;
+  if (!hasCatalogPayload && record.id && CATALOG_ELIGIBLE.has(record.entityType)) {
+    const existing = await findCatalogForRecord(record);
+    catalog = existing ? normalizeCatalog(toCatalog(existing), record) : normalizeCatalog(null, record);
+  }
+  syncRecordCatalog(record, catalog);
+  validateBundle(record, catalog);
+  await assertNoDuplicate(record);
+  await assertNoHierarchyCycle(record);
+  const localized = normalizeLocalized(payload.localizedContent);
+  const media = normalizeMedia(payload.media);
+  const relations = normalizeRelations(payload.relations);
+  const snap = await snapshotBundle(record);
+  let savedRecord = null;
+  try {
+    savedRecord = await savePrimary(record, localized, media);
+    record = { ...record, ...savedRecord, id:savedRecord.id || record.id };
+    if (MASTER_TYPES.has(record.entityType)) {
+      await saveLocalized(record.id, localized);
+      await saveMedia(record.id, media);
+      await saveRelations(record.id, relations);
+    }
+    const savedCatalog = await saveCatalog(record, catalog);
+    await insertAudit(agent,"SAVE_BUNDLE",record,`${record.entityType} ${record.code || record.name} saved.`,{catalogType:catalog?.catalogType||"NONE"});
+    const fresh = await getRecordBundle({id:record.id});
+    return { bundle:fresh, record:fresh.record, catalog:savedCatalog ? toCatalog(savedCatalog) : null, version:VERSION };
+  } catch (error) {
+    await restoreSnapshot(record, savedRecord, snap);
+    throw error;
+  }
+}
 
-export const getSmartScheduleInventory = webMethod(Permissions.SiteMember, async (input = {}) => {
-  await requireStaff();
-  const f = object(input.filters || input);
-  const parts = ["select=*", "order=flight_number.asc,effective_date.asc", "limit=500"];
-  opEq(parts, "season_code", clean(f.seasonCode, 40));
-  opEq(parts, "flight_number", upper(f.flightNumber, 20));
-  opEq(parts, "board_point", upper(f.boardPoint || f.origin, 8));
-  opEq(parts, "off_point", upper(f.offPoint || f.destination, 8));
-  const rows = await sb(`inventory_schedule_lines?${parts.join("&")}`);
-  return { schedule: (rows || []).map(mapOperationalSchedule), lastSync: new Date().toISOString() };
-});
+async function saveCatalogOnly(payload, agent) {
+  const recordInput = obj(payload.record || payload.entry?.record);
+  let record = normalizeRecord(recordInput);
+  if (!record.id && payload.entry) {
+    const e = payload.entry;
+    record.id = clean(e.targetEntityId || e.targetRecordId,100);
+    record.entityType = upper(e.targetRecordType || record.entityType,40);
+    record.code = clean(e.targetCode || record.code,120);
+  }
+  if (!record.id) throw new Error("INVENTORY_RECORD_NOT_FOUND");
+  const row = first(await rest("inventory_canonical_entities_v",{query:{select:"*",id:`eq.${record.id}`,limit:1}}));
+  if (!row) throw new Error("INVENTORY_RECORD_NOT_FOUND");
+  record = toUiRecord(row);
+  const input = payload.entry ? {
+    ...payload.entry,
+    catalogType:payload.entry.catalogType,
+    partnerTier:payload.entry.partnerTier,
+    searchable:payload.entry.searchable,featured:payload.entry.featured,homepageFeatured:payload.entry.homepageFeatured,
+    active:payload.entry.active,searchPriority:payload.entry.searchPriority,searchKeywords:payload.entry.searchKeywords,marketCodes:payload.entry.marketCodes,
+    salesChannels:payload.entry.salesChannels,publicLabel:payload.entry.publicLabel,badge:payload.entry.badge,validFrom:payload.entry.validFrom,validTo:payload.entry.validTo,notes:payload.entry.notes
+  } : payload.catalog;
+  const catalog = normalizeCatalog(input,record);
+  const saved = await saveCatalog(record,catalog);
+  syncRecordCatalog(record,catalog);
+  if (MASTER_TYPES.has(record.entityType)) await rest("inventory_master_entities",{method:"PATCH",query:{id:`eq.${record.id}`},body:{featured:record.featured,homepage_featured:record.homepageFeatured}});
+  if (record.entityType === "AIRLINE") await rest("travel_info_airlines",{method:"PATCH",query:{ID:`eq.${record.id}`},body:{searchable:record.searchable,collection_type:record.collectionType,partner_tier:record.partnerTier||null,search_priority:record.searchPriority,search_keywords:record.searchKeywords,featured:record.featured,homepage_featured:record.homepageFeatured}});
+  await insertAudit(agent,"SAVE_CATALOG",record,"Website catalog placement saved.",{catalogType:catalog?.catalogType||"NONE"});
+  return saved ? toCatalog(saved) : null;
+}
+async function deleteCatalogOnly(payload, agent) {
+  const id = clean(payload.id,100);
+  if (!id) return;
+  const entry = first(await rest("inventory_catalog_entries",{query:{select:"*",id:`eq.${id}`,limit:1}}));
+  if (!entry) return;
+  await rest("inventory_catalog_entries",{method:"DELETE",query:{id:`eq.${id}`},prefer:"return=minimal"});
+  if (entry.target_entity_id) {
+    await rest("inventory_master_entities",{method:"PATCH",query:{id:`eq.${entry.target_entity_id}`},body:{featured:false,homepage_featured:false}}).catch(()=>{});
+  } else if (entry.target_record_type === "AIRLINE" && entry.target_record_id) {
+    await rest("travel_info_airlines",{method:"PATCH",query:{ID:`eq.${entry.target_record_id}`},body:{searchable:false,collection_type:"NONE",partner_tier:null,featured:false,homepage_featured:false}}).catch(()=>{});
+  }
+  await insertAudit(agent,"DELETE_CATALOG",{id:entry.target_entity_id||entry.target_record_id,entityType:entry.target_record_type||"CATALOG",code:entry.target_code,sourceTable:"inventory_catalog_entries"},"Website catalog placement removed.");
+}
 
-export const getSmartNestingInventory = webMethod(Permissions.SiteMember, async (input = {}) => {
-  await requireStaff();
-  const f = object(input.filters || input);
-  const parts = ["select=*", "order=cabin.asc,nest.asc,class_code.asc", "limit=500"];
-  opEq(parts, "flight_number", upper(f.flightNumber, 20));
-  opDate(parts, "departure_date", f.departureDate || f.date);
-  opEq(parts, "board_point", upper(f.boardPoint || f.origin, 8));
-  opEq(parts, "off_point", upper(f.offPoint || f.destination, 8));
-  const rows = await sb(`inventory_nesting_controls?${parts.join("&")}`);
-  return { nesting: (rows || []).map(mapOperationalNesting), lastSync: new Date().toISOString() };
+function normalizeDatedRow(input = {}) {
+  const total = Math.max(0,intOr(input.capacityTotal,0));
+  const held = Math.max(0,intOr(input.held,0));
+  const sold = Math.max(0,intOr(input.sold,0));
+  const over = Math.max(0,intOr(input.overbookingLimit,0));
+  const available = Math.max(0,total + over - held - sold);
+  const blackout = bool(input.blackout);
+  const stopSale = bool(input.stopSale);
+  let status = "OPEN";
+  if (blackout) status = "BLACKOUT";
+  else if (stopSale) status = "STOP_SALE";
+  else if (total > 0 && available === 0) status = "SOLD_OUT";
+  return {
+    id:clean(input.id,100), entityId:clean(input.entityId,100), inventoryType:upper(input.inventoryType,40), serviceDate:dateOnly(input.serviceDate),
+    startTime:timeOnly(input.startTime), endTime:timeOnly(input.endTime), variantCode:clean(input.variantCode,120), variantName:clean(input.variantName,300),
+    capacityTotal:total, held, sold, overbookingLimit:over, waitlistLimit:Math.max(0,intOr(input.waitlistLimit,0)), available, stopSale, blackout, status,
+    supplierCost:nullableNumber(input.supplierCost), publicPrice:nullableNumber(input.publicPrice), adultPrice:nullableNumber(input.adultPrice), childPrice:nullableNumber(input.childPrice),
+    infantPrice:nullableNumber(input.infantPrice), privatePrice:nullableNumber(input.privatePrice), currency:upper(input.currency||"USD",3), priceBasis:upper(input.priceBasis||"PER_PERSON",40),
+    bookingCutoffHours:nullableNumber(input.bookingCutoffHours), minStay:nullableNumber(input.minStay), maxStay:nullableNumber(input.maxStay), releaseDays:nullableNumber(input.releaseDays), supplierReference:clean(input.supplierReference,500)
+  };
+}
+function datedDb(r) {
+  return {entity_id:r.entityId,inventory_type:r.inventoryType,service_date:r.serviceDate,start_time:r.startTime,end_time:r.endTime,variant_code:r.variantCode||null,variant_name:r.variantName||null,
+    capacity_total:r.capacityTotal,held:r.held,sold:r.sold,available:r.available,waitlist_limit:r.waitlistLimit,overbooking_limit:r.overbookingLimit,stop_sale:r.stopSale,blackout:r.blackout,status:r.status,
+    supplier_cost:r.supplierCost,public_price:r.publicPrice,adult_price:r.adultPrice,child_price:r.childPrice,infant_price:r.infantPrice,private_price:r.privatePrice,currency:r.currency,price_basis:r.priceBasis,
+    booking_cutoff_hours:r.bookingCutoffHours,min_stay:r.minStay,max_stay:r.maxStay,release_days:r.releaseDays,supplier_reference:r.supplierReference||null};
+}
+function datedUi(row={}) {
+  return {id:row.id,entityId:row.entity_id,inventoryType:row.inventory_type,serviceDate:row.service_date,startTime:row.start_time,endTime:row.end_time,variantCode:row.variant_code,variantName:row.variant_name,
+    capacityTotal:row.capacity_total,held:row.held,sold:row.sold,available:row.available,waitlistLimit:row.waitlist_limit,overbookingLimit:row.overbooking_limit,stopSale:row.stop_sale,blackout:row.blackout,status:row.status,
+    supplierCost:row.supplier_cost,publicPrice:row.public_price,adultPrice:row.adult_price,childPrice:row.child_price,infantPrice:row.infant_price,privatePrice:row.private_price,currency:row.currency,priceBasis:row.price_basis,
+    bookingCutoffHours:row.booking_cutoff_hours,minStay:row.min_stay,maxStay:row.max_stay,releaseDays:row.release_days,supplierReference:row.supplier_reference,updatedAt:row.updated_at};
+}
+async function getDated(payload={}) {
+  const entityId=clean(payload.entityId,100); if(!entityId) return {inventory:[]};
+  const rows=arr(await rest("inventory_dated_inventory",{query:{select:"*",entity_id:`eq.${entityId}`,order:"service_date.asc,start_time.asc",limit:1000}}));
+  return {inventory:rows.map(datedUi)};
+}
+async function saveDated(payload,agent) {
+  const row=normalizeDatedRow(payload.row); if(!row.entityId||!row.serviceDate) throw new Error("INVENTORY_DATED_DATE_REQUIRED");
+  const body=datedDb(row); let saved;
+  if(row.id) saved=first(arr(await rest("inventory_dated_inventory",{method:"PATCH",query:{id:`eq.${row.id}`},body})));
+  else saved=first(arr(await rest("inventory_dated_inventory",{method:"POST",body})));
+  await insertAudit(agent,"SAVE_DATED",{id:row.entityId,entityType:row.inventoryType,code:row.variantCode,sourceTable:"inventory_dated_inventory"},"Dated inventory saved.",{serviceDate:row.serviceDate,status:row.status});
+  return {row:datedUi(saved||body)};
+}
+async function deleteDated(payload,agent) {
+  const id=clean(payload.id,100); if(!id)return {};
+  const old=first(await rest("inventory_dated_inventory",{query:{select:"*",id:`eq.${id}`,limit:1}}));
+  await rest("inventory_dated_inventory",{method:"DELETE",query:{id:`eq.${id}`},prefer:"return=minimal"});
+  if(old) await insertAudit(agent,"DELETE_DATED",{id:old.entity_id,entityType:old.inventory_type,code:old.variant_code,sourceTable:"inventory_dated_inventory"},"Dated inventory deleted.",{serviceDate:old.service_date});
+  return {};
+}
+
+function flightFilter(payload={}) {
+  const q={select:"*",limit:500};
+  if(clean(payload.flightNumber,20)) q.flight_number=`eq.${upper(payload.flightNumber,20)}`;
+  if(dateOnly(payload.departureDate)) q.departure_date=`eq.${dateOnly(payload.departureDate)}`;
+  if(clean(payload.boardPoint,8)) q.board_point=`eq.${upper(payload.boardPoint,8)}`;
+  if(clean(payload.offPoint,8)) q.off_point=`eq.${upper(payload.offPoint,8)}`;
+  return q;
+}
+async function fetchFlight(payload={}) {
+  const q=flightFilter(payload); const legs=arr(await rest("inventory_flight_legs",{query:{...q,order:"departure_date.asc,flight_number.asc"}}));
+  const classes=arr(await rest("inventory_flight_classes",{query:{...q,order:"departure_date.asc,flight_number.asc,class_code.asc"}}));
+  const leg=first(legs);
+  return {flight:leg?{id:leg.id,flightNumber:leg.flight_number,departureDate:leg.departure_date,boardPoint:leg.board_point,offPoint:leg.off_point,equipmentType:leg.equipment_type,physicalCapacity:leg.physical_capacity,status:leg.status}:null,
+    classes:classes.map(c=>({id:c.id,flightNumber:c.flight_number,departureDate:c.departure_date,boardPoint:c.board_point,offPoint:c.off_point,classCode:c.class_code,cabin:c.cabin,nest:c.nest,authorized:c.authorized,sold:c.sold,available:c.available,status:c.status}))};
+}
+async function fetchSchedule(payload={}) {
+  const q={select:"*",limit:500,order:"season_code.asc,flight_number.asc"};
+  if(clean(payload.flightNumber,20)) q.flight_number=`eq.${upper(payload.flightNumber,20)}`;
+  if(clean(payload.boardPoint,8)) q.board_point=`eq.${upper(payload.boardPoint,8)}`;
+  if(clean(payload.offPoint,8)) q.off_point=`eq.${upper(payload.offPoint,8)}`;
+  if(clean(payload.seasonCode,40)) q.season_code=`eq.${upper(payload.seasonCode,40)}`;
+  const rows=arr(await rest("inventory_schedule_lines",{query:q}));
+  return {schedule:rows.map(r=>({id:r.id,seasonCode:r.season_code,flightNumber:r.flight_number,daysOfOperation:r.days_of_operation,boardPoint:r.board_point,offPoint:r.off_point,viaPoint:r.via_point,std:r.std,sta:r.sta,equipmentType:r.equipment_type,capacity:r.capacity,status:r.status}))};
+}
+async function fetchNesting(payload={}) {
+  const q={...flightFilter(payload),order:"departure_date.asc,flight_number.asc,class_code.asc"};
+  const rows=arr(await rest("inventory_nesting_controls",{query:q}));
+  return {nesting:rows.map(r=>({id:r.id,flightNumber:r.flight_number,departureDate:r.departure_date,boardPoint:r.board_point,offPoint:r.off_point,classCode:r.class_code,cabin:r.cabin,nest:r.nest,parentClass:r.parent_class,bidPrice:r.bid_price,hurdle:r.hurdle,authorized:r.authorized,protection:r.protection,status:r.status}))};
+}
+async function fetchAudit(payload={}) {
+  const rows=arr(await rest("master_inventory_audit",{query:{select:"*",order:"created_at.desc",limit:Math.min(500,Math.max(1,intOr(payload.limit,200)))}}));
+  return {audit:rows.map(r=>({id:r.id,timestamp:r.created_at,eventType:r.event_type,productKey:r.product_key,entityId:r.entity_id,message:r.message,agentName:r.created_by_name,source:r.source}))};
+}
+async function createMediaTicket(payload={}) {
+  const mime=clean(payload.mimeType,120).toLowerCase(); const size=Number(payload.fileSizeBytes||0);
+  if(!ALLOWED_MEDIA_TYPES.has(mime)) throw new Error("INVENTORY_MEDIA_TYPE_NOT_ALLOWED");
+  if(!Number.isFinite(size)||size<1||size>MAX_MEDIA_BYTES) throw new Error("INVENTORY_MEDIA_TOO_LARGE");
+  const type=slugify(payload.entityType||"record")||"record"; const id=slugify(payload.entityId||"draft")||"draft"; const role=slugify(payload.role||"gallery")||"gallery";
+  const ext={"image/jpeg":"jpg","image/png":"png","image/webp":"webp","image/avif":"avif","image/gif":"gif"}[mime]||"bin";
+  const path=`${type}/${id}/${Date.now()}-${role}-${uuidV4().slice(0,8)}.${ext}`;
+  const signed=await storageSignUpload(path);
+  return {...signed,storageBucket:INVENTORY_BUCKET,storagePath:path,mimeType:mime,fileSizeBytes:size,cacheControl:"31536000",sourceKind:"UPLOAD"};
+}
+
+async function dispatch(type,payload,agent) {
+  switch(type) {
+    case "INVENTORY_V4_READY": return {type:"INVENTORY_V4_BOOTSTRAP",payload:await loadBootstrap(payload)};
+    case "INVENTORY_V4_LIST": return {type:"INVENTORY_V4_BOOTSTRAP",payload:{...(await loadBootstrap(payload))}};
+    case "INVENTORY_V4_GET": return {type:"INVENTORY_V4_RECORD",payload:await getRecordBundle(payload)};
+    case "INVENTORY_V9_SAVE_BUNDLE": return {type:"INVENTORY_V4_SAVED",payload:await saveBundle(payload,agent)};
+    case "INVENTORY_V4_SAVE": return {type:"INVENTORY_V4_SAVED",payload:await saveBundle(payload,agent)};
+    case "INVENTORY_V4_LIST_CATALOG": return {type:"INVENTORY_V4_CATALOG_RESULT",payload:{entries:(await listCatalogRows()).map(toCatalog)}};
+    case "INVENTORY_V4_SAVE_CATALOG": {
+      const saved=await saveCatalogOnly(payload,agent); return {type:"INVENTORY_V4_CATALOG_SAVED",payload:{entry:saved,entries:(await listCatalogRows()).map(toCatalog)}};
+    }
+    case "INVENTORY_V4_DELETE_CATALOG": {
+      await deleteCatalogOnly(payload,agent); return {type:"INVENTORY_V4_CATALOG_DELETED",payload:{entries:(await listCatalogRows()).map(toCatalog)}};
+    }
+    case "INVENTORY_V4_GET_DATED": return {type:"INVENTORY_V4_DATED",payload:await getDated(payload)};
+    case "INVENTORY_V4_SAVE_DATED": return {type:"INVENTORY_V4_DATED_SAVED",payload:await saveDated(payload,agent)};
+    case "INVENTORY_V4_DELETE_DATED": return {type:"INVENTORY_V4_DATED_DELETED",payload:await deleteDated(payload,agent)};
+    case "INVENTORY_V4_MEDIA_UPLOAD_TICKET": return {type:"INVENTORY_V4_MEDIA_UPLOAD_TICKET_RESULT",payload:await createMediaTicket(payload)};
+    case "INVENTORY_FETCH_FLIGHT": return {type:"INVENTORY_FLIGHT_RESULT",payload:await fetchFlight(payload)};
+    case "INVENTORY_FETCH_SCHEDULE": return {type:"INVENTORY_SCHEDULE_RESULT",payload:await fetchSchedule(payload)};
+    case "INVENTORY_FETCH_NESTING": return {type:"INVENTORY_NESTING_RESULT",payload:await fetchNesting(payload)};
+    case "INVENTORY_FETCH_AUDIT": return {type:"INVENTORY_AUDIT_RESULT",payload:await fetchAudit(payload)};
+    default: throw new Error("INVENTORY_EVENT_NOT_SUPPORTED");
+  }
+}
+
+export const inventoryControlDispatch = webMethod(Permissions.SiteMember, async (type, payload = {}) => {
+  try {
+    const agent = await requireInventoryAgent();
+    const result = await dispatch(clean(type,120), obj(payload), agent);
+    return {ok:true,version:VERSION,...result};
+  } catch (error) {
+    return {ok:false,version:VERSION,type:"INVENTORY_ERROR",payload:{code:errorCode(error),message:safeMessage(error)}};
+  }
 });
