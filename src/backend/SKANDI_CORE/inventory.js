@@ -7,7 +7,7 @@ import { randomUUID } from "crypto";
 import { restRequest } from "./supabaseServer.js";
 import { getStaffPortalSessionCore } from "./staffAuth.js";
 
-export const INVENTORY_CORE_VERSION = "R-003.1";
+export const INVENTORY_CORE_VERSION = "R-003.5";
 
 const MASTER_TYPES = new Set([
   "COUNTRY","DESTINATION","AREA","SUPPLIER","HOTEL","GUIDED_TOUR","ACTIVITY",
@@ -940,11 +940,15 @@ export async function saveDatedInventoryCore(input={}){
   const r=object(input.row||input),id=clean(r.id,80),entityId=clean(r.entityId??r.entity_id,80);
   const serviceDate=clean(r.serviceDate??r.service_date,20);
   if(!isUuid(entityId)||!serviceDate)throw new Error("DATED_INVENTORY_INPUT_INVALID");
-  const cap=nullableNumber(r.capacityTotal??r.capacity_total,{integer:true,min:0});
-  const held=nullableNumber(r.held,{integer:true,min:0});
-  const sold=nullableNumber(r.sold,{integer:true,min:0});
-  const over=nullableNumber(r.overbookingLimit??r.overbooking_limit,{integer:true,min:0});
-  const available=cap===null?null:Math.max(cap+(over||0)-(held||0)-(sold||0),0);
+  // inventory_dated_inventory has NOT NULL numeric columns with database defaults of 0.
+  // PostgREST defaults do not apply when a client explicitly sends null, so normalize the
+  // complete write contract here. Zero is the canonical neutral value for controls that
+  // do not apply to a product type (for example min/max stay on a guided tour).
+  const cap=nullableNumber(r.capacityTotal??r.capacity_total,{integer:true,min:0})??0;
+  const held=nullableNumber(r.held,{integer:true,min:0})??0;
+  const sold=nullableNumber(r.sold,{integer:true,min:0})??0;
+  const over=nullableNumber(r.overbookingLimit??r.overbooking_limit,{integer:true,min:0})??0;
+  const available=Math.max(cap+over-held-sold,0);
   let status=upper(r.status||"OPEN",40);
   if(bool(r.blackout,false))status="BLACKOUT";
   else if(bool(r.stopSale??r.stop_sale,false))status="STOP_SALE";
@@ -954,15 +958,15 @@ export async function saveDatedInventoryCore(input={}){
     service_date:serviceDate,start_time:clean(r.startTime??r.start_time,20)||null,end_time:clean(r.endTime??r.end_time,20)||null,
     variant_code:clean(r.variantCode??r.variant_code,120)||null,variant_name:clean(r.variantName??r.variant_name,240)||null,
     capacity_total:cap,held,sold,available,
-    waitlist_limit:nullableNumber(r.waitlistLimit??r.waitlist_limit,{integer:true,min:0}),
+    waitlist_limit:nullableNumber(r.waitlistLimit??r.waitlist_limit,{integer:true,min:0})??0,
     overbooking_limit:over,stop_sale:bool(r.stopSale??r.stop_sale,false),blackout:bool(r.blackout,false),status,
-    supplier_cost:nullableNumber(r.supplierCost??r.supplier_cost),public_price:nullableNumber(r.publicPrice??r.public_price),
-    adult_price:nullableNumber(r.adultPrice??r.adult_price),child_price:nullableNumber(r.childPrice??r.child_price),
-    infant_price:nullableNumber(r.infantPrice??r.infant_price),private_price:nullableNumber(r.privatePrice??r.private_price),
+    supplier_cost:nullableNumber(r.supplierCost??r.supplier_cost)??0,public_price:nullableNumber(r.publicPrice??r.public_price)??0,
+    adult_price:nullableNumber(r.adultPrice??r.adult_price)??0,child_price:nullableNumber(r.childPrice??r.child_price)??0,
+    infant_price:nullableNumber(r.infantPrice??r.infant_price)??0,private_price:nullableNumber(r.privatePrice??r.private_price)??0,
     currency:upper(r.currency||"USD",8),price_basis:upper(r.priceBasis??r.price_basis??"PER_PERSON",40),
-    booking_cutoff_hours:nullableNumber(r.bookingCutoffHours??r.booking_cutoff_hours,{integer:true,min:0}),
-    min_stay:nullableNumber(r.minStay??r.min_stay,{integer:true,min:0}),max_stay:nullableNumber(r.maxStay??r.max_stay,{integer:true,min:0}),
-    release_days:nullableNumber(r.releaseDays??r.release_days,{integer:true,min:0}),
+    booking_cutoff_hours:nullableNumber(r.bookingCutoffHours??r.booking_cutoff_hours,{integer:true,min:0})??0,
+    min_stay:nullableNumber(r.minStay??r.min_stay,{integer:true,min:0})??0,max_stay:nullableNumber(r.maxStay??r.max_stay,{integer:true,min:0})??0,
+    release_days:nullableNumber(r.releaseDays??r.release_days,{integer:true,min:0})??0,
     supplier_reference:clean(r.supplierReference??r.supplier_reference,500)||null,payload:object(r.payload),
     updated_by_agent_user_id:actorId(session)
   };
