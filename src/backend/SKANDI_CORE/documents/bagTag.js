@@ -1,5 +1,5 @@
 // /src/backend/SKANDI_CORE/documents/bagTag.js
-// SKANDI R-005.4 — canonical long-form baggage tag renderer.
+// SKANDI R-006.6 — canonical long-form baggage tag renderer.
 // Visual source: approved IATA-style 2 × 17 inch / 203 DPI prototype.
 // Unlike the approved visual prototype, this production renderer replaces
 // decorative bars with a scannable Code 128 representation of the supplied

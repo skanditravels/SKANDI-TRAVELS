@@ -1,5 +1,5 @@
 // /src/backend/SKANDI_CORE/documents/atbTicket.js
-// SKANDI R-005.4 — one ATB-size renderer for:
+// SKANDI R-006.6 — one ATB-size renderer for:
 //   BOARDING_CARD, TRANSFER_TICKET, TOUR_TICKET
 // Visual source of truth: boarding_card_atb_pdf417_airline_operated_by.html
 // Physical stock remains 203.20 × 82.55 mm.
@@ -54,7 +54,7 @@ function providerName(component = {}, segment = {}, booking = {}) {
 function pdf417Url(payload) {
   return "https://bwipjs-api.metafloor.com/?bcid=pdf417&text=" +
     encodeURIComponent(payload) +
-    "&columns=6&eclevel=2&scale=3&paddingwidth=4&paddingheight=2";
+    "&columns=6&eclevel=3&scale=3&paddingwidth=8&paddingheight=4";
 }
 function fill(template, values) {
   let out = template;
@@ -64,7 +64,7 @@ function fill(template, values) {
   return out;
 }
 
-function dataForVariant(variant, booking, passenger, segment, component, documentNumber, authority) {
+function dataForVariant(variant, booking, passenger, segment, component, documentNumber, authority, authoritativeBcbp = "") {
   const bp = obj(booking.payload), pp = obj(passenger.payload), sp = obj(segment.payload), cp = obj(component.payload);
   const ref = upper(booking.booking_reference || booking.bookingReference || booking.pnr_locator || booking.pnrLocator || documentNumber, 120);
   const pax = passengerName(passenger);
@@ -160,6 +160,20 @@ function dataForVariant(variant, booking, passenger, segment, component, documen
     };
   }
 
+  const bcbpPayload = text(
+    authoritativeBcbp ||
+    sp.bcbpPayload || sp.bcbp_payload || sp.bcbp ||
+    pp.bcbpPayload || pp.bcbp_payload ||
+    bp.bcbpPayload || bp.bcbp_payload,
+    4000
+  );
+  if (!bcbpPayload) {
+    throw new Error("AUTHORITATIVE_BCBP_PAYLOAD_REQUIRED");
+  }
+  if (!/^M[1-4]/.test(bcbpPayload) || /[^\x20-\x7E]/.test(bcbpPayload)) {
+    throw new Error("BCBP_FORMAT_M_PAYLOAD_REQUIRED");
+  }
+
   const flight = upper(segment.flight_number || segment.flightNumber || sp.flightNumber || sp.serviceNumber || documentNumber, 80);
   const originCode = code(segment.origin || sp.originCode || booking.origin, "ORG");
   const destinationCode = code(segment.destination || sp.destinationCode || booking.destination, "DST");
@@ -198,11 +212,11 @@ function dataForVariant(variant, booking, passenger, segment, component, documen
     seatValue: seat,
     bookingRef: ref,
     loyalty,
-    noticeLine1: "SKANDI-CONTROLLED BOARDING DOCUMENT",
-    noticeLine2: "NOT VALID FOR A SUPPLIER-CONTROLLED FLIGHT WITHOUT AIRLINE / DCS AUTHORITY",
+    noticeLine1: "SKANDI DCS BOARDING DOCUMENT",
+    noticeLine2: "BCBP DATA SUPPLIED BY AUTHORITATIVE DCS · TRAVEL RIGHTS REMAIN IN DCS",
     watermark: "SKANDI TRAVELS",
-    barcodeCaption: "SKANDI DCS DATA",
-    barcodePayload: ["SKANDI","BOARDING_CARD",documentNumber,ref,pax,flight,originCode,destinationCode,dateDisplay(date),timeDisplay(boarding),seat].join("|")
+    barcodeCaption: "BCBP DATA",
+    barcodePayload: bcbpPayload
   };
 }
 
@@ -213,10 +227,11 @@ export function renderAtbTicket({
   segment = {},
   component = {},
   documentNumber = "",
-  authority = "SKANDI_BOOKING"
+  authority = "SKANDI_BOOKING",
+  bcbpPayload = ""
 } = {}) {
   const v = upper(variant, 40);
-  const data = dataForVariant(v, booking, passenger, segment, component, documentNumber, authority);
+  const data = dataForVariant(v, booking, passenger, segment, component, documentNumber, authority, bcbpPayload);
   const values = {
     HTML_TITLE: esc(data.htmlTitle),
     STATUS_MARK: esc(data.statusMark),
