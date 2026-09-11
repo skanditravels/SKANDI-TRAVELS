@@ -1,23 +1,26 @@
 // /src/pages/ALTEA Reservations.<WIX_PAGE_ID>.js
-// SKANDI Recovery R-005.2 — ALTEA Reservations Wix boundary fix.
+// SKANDI Recovery R-005.4.1 — ALTEA Reservations document bridge hotfix.
 //
 // IMPORTANT:
 // Retain the existing Wix-generated page filename/internal page ID.
 // Replace the COMPLETE contents with this file.
 //
-// Architecture for R-005.2:
-// - SKANDI-owned ALTEA logic -> one canonical reservations.web facade.
-// - Existing Duffel .web provider methods -> invoked at the Wix page boundary.
-// - R-006 will extract reusable provider .js cores and then remove the
-//   temporary page-level provider imports.
+// Architecture for R-005.4.1:
+// - SKANDI-owned ALTEA logic remains in one canonical reservations.web facade.
+// - R-005.4 generated HTML is uploaded/finalized through the private Asset Library here.
+// - Broken Duffel provider exports are guarded so internal ALTEA remains usable.
+// - R-006 still owns Duffel provider consolidation.
 //
 // HTML Embed: #alteaReservationsEmbed
 
+
 import wixLocation from "wix-location-frontend";
+
 
 import {
   handleReservationsAction
 } from "backend/SKANDI_CORE/reservations.web";
+
 
 import {
   getDuffelWorkspaceBootstrap,
@@ -32,6 +35,7 @@ import {
   confirmDuffelOrderCancellation
 } from "backend/duffelTravel.web";
 
+
 import {
   searchDuffelOrderChanges,
   createDuffelPendingOrderChange,
@@ -39,6 +43,7 @@ import {
   prepareDuffelOrderChangePayment,
   confirmDuffelOrderChange
 } from "backend/RIA/duffelServicing.web";
+
 
 import {
   searchDuffelStays,
@@ -55,11 +60,13 @@ import {
   createDuffelComponentClientKeyStaff
 } from "backend/RIA/duffelGroundProducts.web";
 
+
 const EMBED_ID = "#alteaReservationsEmbed";
 const STAFF_LOGIN_PATH = "/riaintra";
 const CHILD_SOURCE = "SKANDI_DUFFEL_RESERVATIONS";
 const PARENT_SOURCE = "SKANDI_WIX_PARENT";
-const VERSION = "R-005.2";
+const VERSION = "R-005.4.1";
+
 
 function parse(value) {
   if (typeof value === "string") {
@@ -72,10 +79,12 @@ function parse(value) {
   return value && typeof value === "object" ? value : null;
 }
 
+
 function cleanRequestId(value) {
   const requestId = String(value || "");
   return /^[A-Za-z0-9_-]{1,100}$/.test(requestId) ? requestId : "";
 }
+
 
 function postToEmbed(embed, type, payload = {}, requestId = "") {
   embed.postMessage({
@@ -87,6 +96,7 @@ function postToEmbed(embed, type, payload = {}, requestId = "") {
   });
 }
 
+
 function errorCode(error) {
   const raw = String(
     error?.code ||
@@ -95,8 +105,10 @@ function errorCode(error) {
     "ALTEA_ACTION_FAILED"
   ).toUpperCase();
 
+
   return raw.match(/[A-Z][A-Z0-9_]{2,80}/)?.[0] || "ALTEA_ACTION_FAILED";
 }
+
 
 function publicMessage(error, fallback = "The reservation action could not be completed.") {
   const raw =
@@ -106,7 +118,9 @@ function publicMessage(error, fallback = "The reservation action could not be co
     error?.message ||
     fallback;
 
+
   const text = String(raw).trim();
+
 
   // Wix can replace backend messages with a generic platform string.
   // Do not echo a misleading generic message when we have a stable action code.
@@ -114,8 +128,10 @@ function publicMessage(error, fallback = "The reservation action could not be co
     return fallback;
   }
 
+
   return text.slice(0, 600);
 }
+
 
 function progressFor(type) {
   const messages = {
@@ -146,6 +162,7 @@ function progressFor(type) {
   return messages[type] || "";
 }
 
+
 async function runCore(type, payload = {}) {
   const result = await handleReservationsAction({ type, payload });
   return {
@@ -154,8 +171,92 @@ async function runCore(type, payload = {}) {
   };
 }
 
+
+async function uploadGeneratedAsset(assetUpload = {}) {
+  const upload = assetUpload?.upload || {};
+  const signedUrl = String(upload?.signedUrl || "").trim();
+  const body = assetUpload?.content;
+
+  if (!assetUpload?.requestId || !signedUrl || typeof body !== "string") {
+    throw new Error("GENERATED_ASSET_UPLOAD_CONTRACT_INVALID");
+  }
+
+  if (typeof globalThis.fetch !== "function") {
+    throw new Error("BROWSER_FETCH_UNAVAILABLE");
+  }
+
+  const response = await globalThis.fetch(signedUrl, {
+    method: String(upload?.method || "PUT").toUpperCase(),
+    headers: {
+      "Content-Type": String(assetUpload?.mimeType || upload?.contentType || "text/html"),
+      "cache-control": String(upload?.cacheControl || "3600"),
+      "x-upsert": "false"
+    },
+    body
+  });
+
+  if (!response.ok) {
+    const error = new Error(`GENERATED_ASSET_UPLOAD_HTTP_${response.status}`);
+    error.code = `GENERATED_ASSET_UPLOAD_HTTP_${response.status}`;
+    throw error;
+  }
+
+  return true;
+}
+
+async function finalizeGeneratedCoreResult(type, inputPayload = {}, result = {}) {
+  const payload = result?.payload || {};
+  const assetUpload = payload?.assetUpload;
+
+  if (!assetUpload?.requestId) {
+    return result;
+  }
+
+  await uploadGeneratedAsset(assetUpload);
+
+  const finalized = await runCore("ALTEA_FINALIZE_GENERATED_ASSET", {
+    requestId: assetUpload.requestId,
+    bookingId: inputPayload?.bookingId || payload?.document?.bookingId || "",
+    documentId: assetUpload.documentId || payload?.document?.id || "",
+    manifestId: assetUpload.manifestId || payload?.manifest?.id || ""
+  });
+
+  const finalWorkspace =
+    finalized?.payload?.workspace ||
+    payload?.workspace ||
+    null;
+
+  let finalDocument = payload?.document || null;
+  if (finalDocument?.id && finalWorkspace?.documents?.length) {
+    finalDocument =
+      finalWorkspace.documents.find((item) => item?.id === finalDocument.id) ||
+      finalDocument;
+  }
+
+  return {
+    responseType: result?.responseType || (
+      type === "ALTEA_SEND_MANIFEST"
+        ? "ALTEA_MANIFEST_SENT"
+        : "ALTEA_DOCUMENT_GENERATED"
+    ),
+    payload: {
+      ...payload,
+      assetUpload: null,
+      asset: finalized?.payload?.asset || payload?.asset || null,
+      workspace: finalWorkspace,
+      ...(finalDocument ? { document: finalDocument } : {})
+    }
+  };
+}
+
+function providerCallable(action) {
+  return Boolean(action && typeof action.run === "function");
+}
+
+
 async function syncSupplierOrder(order, bookingInput = {}, eventType = "DUFFEL_ORDER_SYNCED") {
   if (!order?.id) return null;
+
 
   const sync = await runCore("ALTEA_SYNC_DUFFEL_ORDER", {
     order,
@@ -163,8 +264,10 @@ async function syncSupplierOrder(order, bookingInput = {}, eventType = "DUFFEL_O
     eventType
   });
 
+
   return sync?.payload?.workspace || null;
 }
+
 
 async function createAndSyncOrder(input = {}) {
   const result = await createDuffelOrder(input);
@@ -176,15 +279,18 @@ async function createAndSyncOrder(input = {}) {
       : "DUFFEL_ORDER_CREATED"
   );
 
+
   return {
     ...result,
     alteaWorkspace
   };
 }
 
+
 async function retrieveAndSyncOrder(input = {}) {
   const result = await getDuffelOrder(input);
   let alteaWorkspace = null;
+
 
   try {
     alteaWorkspace = await syncSupplierOrder(
@@ -194,10 +300,11 @@ async function retrieveAndSyncOrder(input = {}) {
     );
   } catch (error) {
     console.warn(
-      "[ALTEA R-005.2] Supplier order retrieved, but internal ALTEA sync refresh failed.",
+      "[ALTEA R-005.4.1] Supplier order retrieved, but internal ALTEA sync refresh failed.",
       error
     );
   }
+
 
   return {
     ...result,
@@ -205,9 +312,11 @@ async function retrieveAndSyncOrder(input = {}) {
   };
 }
 
+
 async function cancelAndSyncOrder(input = {}) {
   const result = await confirmDuffelOrderCancellation(input);
   let alteaWorkspace = null;
+
 
   try {
     alteaWorkspace = await syncSupplierOrder(
@@ -217,10 +326,11 @@ async function cancelAndSyncOrder(input = {}) {
     );
   } catch (error) {
     console.warn(
-      "[ALTEA R-005.2] Cancellation confirmed, but internal ALTEA sync refresh failed.",
+      "[ALTEA R-005.4.1] Cancellation confirmed, but internal ALTEA sync refresh failed.",
       error
     );
   }
+
 
   return {
     ...result,
@@ -228,14 +338,18 @@ async function cancelAndSyncOrder(input = {}) {
   };
 }
 
+
 async function confirmChangeAndSyncOrder(input = {}) {
   const result = await confirmDuffelOrderChange(input);
+
 
   const latest = await getDuffelOrder({
     orderIdOrReference: result?.orderId
   });
 
+
   let alteaWorkspace = null;
+
 
   try {
     alteaWorkspace = await syncSupplierOrder(
@@ -245,10 +359,11 @@ async function confirmChangeAndSyncOrder(input = {}) {
     );
   } catch (error) {
     console.warn(
-      "[ALTEA R-005.2] Order change confirmed, but internal ALTEA sync refresh failed.",
+      "[ALTEA R-005.4.1] Order change confirmed, but internal ALTEA sync refresh failed.",
       error
     );
   }
+
 
   return {
     ...result,
@@ -256,6 +371,7 @@ async function confirmChangeAndSyncOrder(input = {}) {
     alteaWorkspace
   };
 }
+
 
 const DUFFEL_ACTIONS = Object.freeze({
   DUFFEL_APP_READY: {
@@ -299,6 +415,7 @@ const DUFFEL_ACTIONS = Object.freeze({
     run: cancelAndSyncOrder
   },
 
+
   DUFFEL_SEARCH_ORDER_CHANGES: {
     responseType: "DUFFEL_ORDER_CHANGE_OFFERS",
     run: searchDuffelOrderChanges
@@ -319,6 +436,7 @@ const DUFFEL_ACTIONS = Object.freeze({
     responseType: "DUFFEL_ORDER_CHANGE_CONFIRMED",
     run: confirmChangeAndSyncOrder
   },
+
 
   DUFFEL_SEARCH_STAYS: {
     responseType: "DUFFEL_STAYS_RESULT",
@@ -344,6 +462,7 @@ const DUFFEL_ACTIONS = Object.freeze({
     responseType: "DUFFEL_STAY_CANCEL_RESULT",
     run: cancelDuffelStayBookingStaff
   },
+
 
   DUFFEL_SEARCH_CARS: {
     responseType: "DUFFEL_CARS_RESULT",
@@ -371,6 +490,7 @@ const DUFFEL_ACTIONS = Object.freeze({
   }
 });
 
+
 function isCoreAction(type) {
   return (
     type.startsWith("ALTEA_") ||
@@ -378,16 +498,20 @@ function isCoreAction(type) {
   );
 }
 
+
 $w.onReady(() => {
   const embed = $w(EMBED_ID);
+
 
   // Listener FIRST. This is the proven SKANDI/Wix embed bootstrap rule.
   embed.onMessage(async (event) => {
     const input = parse(event?.data);
 
+
     if (!input || input.source !== CHILD_SOURCE) {
       return;
     }
+
 
     const type = String(input.type || "").toUpperCase();
     const payload =
@@ -396,6 +520,7 @@ $w.onReady(() => {
         : {};
     const requestId = cleanRequestId(input.requestId);
 
+
     if (type === "MASTER_NAVIGATE") {
       const path = String(payload?.path || input?.path || "").trim();
       if (path.startsWith("/") && !path.startsWith("//")) {
@@ -403,6 +528,7 @@ $w.onReady(() => {
       }
       return;
     }
+
 
     const progress = progressFor(type);
     if (progress) {
@@ -414,10 +540,44 @@ $w.onReady(() => {
       );
     }
 
+
     try {
       const providerAction = DUFFEL_ACTIONS[type];
 
+      // R-005.4.1 isolates the known revision-906 Duffel export mismatch.
+      // Internal ALTEA must not fail because a supplier provider method is
+      // currently unresolved in Wix runtime.
+      if (type === "DUFFEL_APP_READY") {
+        if (!providerCallable(providerAction)) {
+          postToEmbed(
+            embed,
+            "DUFFEL_ERROR",
+            {
+              code: "DUFFEL_PROVIDER_DEGRADED",
+              action: type,
+              message: "Supplier services are temporarily unavailable. Internal ALTEA remains available."
+            },
+            requestId
+          );
+          return;
+        }
+      }
+
       if (providerAction) {
+        if (!providerCallable(providerAction)) {
+          postToEmbed(
+            embed,
+            "DUFFEL_ERROR",
+            {
+              code: "DUFFEL_PROVIDER_METHOD_UNAVAILABLE",
+              action: type,
+              message: "This supplier action is temporarily unavailable. Internal ALTEA remains available."
+            },
+            requestId
+          );
+          return;
+        }
+
         const result = await providerAction.run(payload);
         postToEmbed(
           embed,
@@ -428,8 +588,15 @@ $w.onReady(() => {
         return;
       }
 
+
       if (isCoreAction(type)) {
-        const result = await runCore(type, payload);
+        let result = await runCore(type, payload);
+
+        if (type === "ALTEA_GENERATE_DOCUMENT" || type === "ALTEA_DCS_RECORD_DOCUMENT" ||
+            type === "ALTEA_TRANSFER_DCS_RECORD_DOCUMENT" || type === "ALTEA_SEND_MANIFEST") {
+          result = await finalizeGeneratedCoreResult(type, payload, result);
+        }
+
 
         if (result.responseType) {
           postToEmbed(
@@ -442,20 +609,23 @@ $w.onReady(() => {
         return;
       }
 
+
       console.warn(
-        "[ALTEA R-005.2] Ignored unsupported embed action:",
+        "[ALTEA R-005.4.1] Ignored unsupported embed action:",
         type
       );
     } catch (error) {
       const code = errorCode(error);
       const isProvider = type.startsWith("DUFFEL_");
 
-      console.error("[ALTEA R-005.2]", {
+
+      console.error("[ALTEA R-005.4.1]", {
         type,
         code,
         message: String(error?.message || ""),
         error
       });
+
 
       postToEmbed(
         embed,
@@ -473,11 +643,13 @@ $w.onReady(() => {
         requestId
       );
 
+
       if (code === "AUTH_REQUIRED") {
         wixLocation.to(STAFF_LOGIN_PATH);
       }
     }
   });
+
 
   // Parent handshake only after the listener exists.
   postToEmbed(embed, "DUFFEL_PARENT_READY", {
@@ -485,6 +657,8 @@ $w.onReady(() => {
     version: VERSION,
     unified: true,
     wixBoundaryFix: true,
+    documentBridgeHotfix: true,
+    generatedAssetAutoFinalize: true,
     providerWebMethodsPageBound: true,
     providerInternalizationTarget: "R-006",
     inventoryControl: true,
