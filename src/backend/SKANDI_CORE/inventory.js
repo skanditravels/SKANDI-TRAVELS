@@ -7,13 +7,14 @@ import { randomUUID } from "crypto";
 import { restRequest } from "./supabaseServer.js";
 import { getStaffPortalSessionCore } from "./staffAuth.js";
 
-export const INVENTORY_CORE_VERSION = "R-003.5";
+export const INVENTORY_CORE_VERSION = "R-003.6";
 
 const MASTER_TYPES = new Set([
   "COUNTRY","DESTINATION","AREA","SUPPLIER","HOTEL","GUIDED_TOUR","ACTIVITY",
   "PARTNER_TICKET","TRANSFER","CAR_RENTAL","PACKAGE","ANCILLARY"
 ]);
 const REFERENCE_TYPES = new Set(["AIRPORT","AIRLINE"]);
+const SELLABLE_TYPES = new Set(["HOTEL","GUIDED_TOUR","ACTIVITY","PARTNER_TICKET","TRANSFER","CAR_RENTAL","PACKAGE","ANCILLARY"]);
 const STATUS = new Set(["DRAFT","REVIEW","PUBLISHED","HIDDEN","SUSPENDED","ARCHIVED"]);
 const CATALOG_TYPES = new Set(["NONE","SKANDI_COLLECTION","SKANDI_PARTNER"]);
 const MEDIA_ROLES = new Set(["PRIMARY","HERO","CARD","MOBILE","GALLERY","OG","LOGO","MAP","ROOM","THUMBNAIL"]);
@@ -87,6 +88,10 @@ function nullableNumber(v,{integer=false,min=null,max=null}={}){
   if(min!==null) out=Math.max(min,out);
   if(max!==null) out=Math.min(max,out);
   return out;
+}
+function numberOrZero(v,{integer=false,min=0,max=null}={}){
+  const n=nullableNumber(v,{integer,min,max});
+  return n===null?0:n;
 }
 function safeStatus(v, fallback="DRAFT"){
   const s=upper(v,40);
@@ -215,19 +220,19 @@ function normalizeDated(row={}){
     id:clean(row.id,80),entityId:clean(row.entity_id,80),inventoryType:upper(row.inventory_type,80),
     serviceDate:clean(row.service_date,20),startTime:clean(row.start_time,20),endTime:clean(row.end_time,20),
     variantCode:clean(row.variant_code,120),variantName:clean(row.variant_name,240),
-    capacityTotal:nullableNumber(row.capacity_total,{integer:true,min:0}),
-    held:nullableNumber(row.held,{integer:true,min:0}),sold:nullableNumber(row.sold,{integer:true,min:0}),
-    available:nullableNumber(row.available,{integer:true,min:0}),
-    waitlistLimit:nullableNumber(row.waitlist_limit,{integer:true,min:0}),
-    overbookingLimit:nullableNumber(row.overbooking_limit,{integer:true,min:0}),
+    capacityTotal:numberOrZero(row.capacity_total,{integer:true,min:0}),
+    held:numberOrZero(row.held,{integer:true,min:0}),sold:numberOrZero(row.sold,{integer:true,min:0}),
+    available:numberOrZero(row.available,{integer:true,min:0}),
+    waitlistLimit:numberOrZero(row.waitlist_limit,{integer:true,min:0}),
+    overbookingLimit:numberOrZero(row.overbooking_limit,{integer:true,min:0}),
     stopSale:row.stop_sale===true,blackout:row.blackout===true,status:upper(row.status,40),
-    supplierCost:nullableNumber(row.supplier_cost),publicPrice:nullableNumber(row.public_price),
-    adultPrice:nullableNumber(row.adult_price),childPrice:nullableNumber(row.child_price),
-    infantPrice:nullableNumber(row.infant_price),privatePrice:nullableNumber(row.private_price),
+    supplierCost:numberOrZero(row.supplier_cost),publicPrice:numberOrZero(row.public_price),
+    adultPrice:numberOrZero(row.adult_price),childPrice:numberOrZero(row.child_price),
+    infantPrice:numberOrZero(row.infant_price),privatePrice:numberOrZero(row.private_price),
     currency:upper(row.currency,8),priceBasis:upper(row.price_basis,40),
-    bookingCutoffHours:nullableNumber(row.booking_cutoff_hours,{integer:true,min:0}),
-    minStay:nullableNumber(row.min_stay,{integer:true,min:0}),maxStay:nullableNumber(row.max_stay,{integer:true,min:0}),
-    releaseDays:nullableNumber(row.release_days,{integer:true,min:0}),
+    bookingCutoffHours:numberOrZero(row.booking_cutoff_hours,{integer:true,min:0}),
+    minStay:numberOrZero(row.min_stay,{integer:true,min:0}),maxStay:numberOrZero(row.max_stay,{integer:true,min:0}),
+    releaseDays:numberOrZero(row.release_days,{integer:true,min:0}),
     supplierReference:clean(row.supplier_reference,500),payload:object(row.payload)
   };
 }
@@ -516,14 +521,161 @@ async function assertNoHierarchyCycle(record){
   }
 }
 
+async function resolveCanonicalReference(value,allowedTypes=[]){
+  const raw=clean(value,180);
+  if(!raw)return null;
+  const allowed=new Set(array(allowedTypes).map(x=>upper(x,40)).filter(Boolean));
+  const query={select:"*",limit:"25"};
+  if(isUuid(raw))query.id=qeq(raw);else query.code=qeq(upper(raw,180));
+  const rows=await select("inventory_canonical_entities_v",query);
+  const found=rows.map(normalizeCanonical).find(r=>!allowed.size||allowed.has(r.entityType));
+  return found||null;
+}
+function inheritMissing(target,source,keys){
+  for(const key of keys){
+    const current=target?.[key];
+    if((current===undefined||current===null||current===""||(Array.isArray(current)&&!current.length)) && source?.[key]!==undefined && source?.[key]!==null && source?.[key]!==""){
+      target[key]=source[key];
+    }
+  }
+}
+async function canonicalizeMasterRecord(input={}){
+  const record={...input,details:{...object(input.details)},commercial:{...object(input.commercial)},operations:{...object(input.operations)},seo:{...object(input.seo)},publication:{...object(input.publication)},payload:{...object(input.payload)}};
+  const type=upper(record.entityType||record.entity_type,40);
+  const d=record.details;
+
+  if(type==="COUNTRY"){
+    d.countryCode=upper(d.countryCode||record.code,8);
+    if(!record.code)record.code=d.countryCode;
+    if(record.name)d.countryName=record.name;
+  }
+  if(type==="DESTINATION")d.level="DESTINATION";
+
+  // R-003.6 canonical field-path recovery. Older/newer Inventory generations
+  // wrote a few product attributes to competing paths. Keep one write contract
+  // and migrate aliases only when the canonical field is empty. Unknown fields
+  // remain untouched so compatibility data is never silently discarded.
+  if(type==="GUIDED_TOUR"){
+    const o=record.operations;
+    if(o.guideRequired===undefined&&d.guideRequired!==undefined)o.guideRequired=d.guideRequired;
+    if(o.languagesRequired===undefined&&d.languagesRequired!==undefined)o.languagesRequired=d.languagesRequired;
+    if(o.guideBriefing===undefined&&d.guideBriefing!==undefined)o.guideBriefing=d.guideBriefing;
+    if(!Array.isArray(o.itinerary)&&Array.isArray(d.itinerary))o.itinerary=d.itinerary;
+    if(!Array.isArray(o.pickups)){
+      if(Array.isArray(d.pickups))o.pickups=d.pickups;
+      else if(Array.isArray(d.pickupPoints))o.pickups=d.pickupPoints;
+    }
+    delete d.guideRequired;
+    delete d.languagesRequired;
+    delete d.guideBriefing;
+    delete d.itinerary;
+    delete d.pickups;
+    delete d.pickupPoints;
+  }
+  if(type==="PARTNER_TICKET"&&d.duration===undefined&&d.durationMinutes!==undefined){
+    d.duration=d.durationMinutes;
+    delete d.durationMinutes;
+  }
+  if(type==="PACKAGE"&&record.operations.bookingFlow===undefined&&d.bookingFlow!==undefined){
+    record.operations.bookingFlow=d.bookingFlow;
+    delete d.bookingFlow;
+  }
+  if(type==="ANCILLARY"){
+    if(d.extraType===undefined&&d.ancillaryType!==undefined)d.extraType=d.ancillaryType;
+    if(d.maxQuantity===undefined&&d.maximumQuantity!==undefined)d.maxQuantity=d.maximumQuantity;
+    delete d.ancillaryType;
+    delete d.maximumQuantity;
+  }
+
+  if(["AREA","DESTINATION"].includes(type) && record.parentEntityId){
+    const parent=await resolveCanonicalReference(record.parentEntityId,["COUNTRY","AREA","DESTINATION"]);
+    if(parent){
+      record.parentEntityId=parent.id;
+      const pd=object(parent.details);
+      d.parentPublicId=parent.publicId||d.parentPublicId||"";
+      if(parent.entityType==="COUNTRY"){
+        d.countryCode=upper(pd.countryCode||parent.code,8);
+        d.countryName=pd.countryName||parent.name||d.countryName||"";
+      }else{
+        if(pd.countryCode)d.countryCode=upper(pd.countryCode,8);
+        if(pd.countryName)d.countryName=pd.countryName;
+      }
+      inheritMissing(d,pd,["timezone","currency","drivingSide","electricalPlug","emergencyNumber","passportSummary","visaSummary","languages","nearestAirportId","secondaryAirportId"]);
+    }
+  }
+
+  if(SELLABLE_TYPES.has(type)){
+    if(record.supplierEntityId){
+      const supplier=await resolveCanonicalReference(record.supplierEntityId,["SUPPLIER"]);
+      if(supplier)record.supplierEntityId=supplier.id;
+    }
+    const area=await resolveCanonicalReference(d.areaId,["AREA"]);
+    const destination=await resolveCanonicalReference(d.destinationId,["DESTINATION"]);
+    if(area)d.areaId=area.id;
+    if(destination)d.destinationId=destination.id;
+    const geo=area||destination;
+    if(geo){
+      record.parentEntityId=geo.id;
+      const gd=object(geo.details);
+      d.parentPublicId=geo.publicId||d.parentPublicId||"";
+      d.destinationCode=destination?.code||gd.destinationCode||d.destinationCode||"";
+      if(gd.countryCode)d.countryCode=upper(gd.countryCode,8);
+      if(gd.countryName)d.countryName=gd.countryName;
+      inheritMissing(d,gd,["timezone","currency","nearestAirportId","secondaryAirportId"]);
+    }
+  }
+
+  for(const field of ["airportId","nearestAirportId","secondaryAirportId"]){
+    if(!d[field])continue;
+    const airport=await resolveCanonicalReference(d[field],["AIRPORT"]);
+    if(!airport)continue;
+    d[field]=airport.id;
+    const ad=object(airport.details);
+    const iata=upper(ad.iata||airport.code,8);
+    if(field==="nearestAirportId"||field==="airportId")d.searchAirportIata=iata||d.searchAirportIata||"";
+    if(field==="secondaryAirportId")d.secondaryAirportIata=iata||d.secondaryAirportIata||"";
+    if(type==="TRANSFER"&&field==="airportId")d.airportIata=iata||d.airportIata||"";
+  }
+
+  if(type==="TRANSFER"){
+    const c=record.commercial;
+    const oneWayPublic=nullableNumber(c.oneWayPublicPrice);
+    const oneWayCost=nullableNumber(c.internalCostOneWay??c.supplierCost);
+    if(oneWayPublic!==null)c.publicPrice=oneWayPublic;
+    if(oneWayCost!==null)c.supplierCost=oneWayCost;
+  }else if(record.commercial.internalCost!==undefined && record.commercial.supplierCost===undefined){
+    record.commercial.supplierCost=record.commercial.internalCost;
+  }
+
+  return record;
+}
+function validateMasterRecord(record,bundle={}){
+  const type=upper(record.entityType||record.entity_type,40);
+  const d=object(record.details), status=safeStatus(record.status);
+  const finalizing=status==="REVIEW"||status==="PUBLISHED";
+  if(type==="COUNTRY"&&!upper(d.countryCode||record.code,8))throw new Error("INVENTORY_COUNTRY_CODE_REQUIRED");
+  if(finalizing&&["AREA","DESTINATION"].includes(type)&&!isUuid(record.parentEntityId))throw new Error("INVENTORY_PARENT_REQUIRED");
+  if(finalizing&&type==="HOTEL"&&!isUuid(d.destinationId)&&!isUuid(d.areaId))throw new Error("INVENTORY_DESTINATION_REQUIRED");
+  if(finalizing&&["GUIDED_TOUR","ACTIVITY","PARTNER_TICKET","PACKAGE"].includes(type)&&!isUuid(d.destinationId)&&!isUuid(d.areaId))throw new Error("INVENTORY_DESTINATION_REQUIRED");
+  if(finalizing&&type==="TRANSFER"&&!isUuid(d.airportId))throw new Error("INVENTORY_AIRPORT_REQUIRED");
+  if(finalizing&&type==="TRANSFER"&&!isUuid(d.destinationId)&&!isUuid(d.areaId))throw new Error("INVENTORY_DESTINATION_REQUIRED");
+  if(finalizing&&type==="CAR_RENTAL"&&!isUuid(d.destinationId)&&!isUuid(d.airportId))throw new Error("INVENTORY_LOCATION_REQUIRED");
+  const catalog=object(bundle.catalog),catalogType=upper(catalog.catalogType??catalog.catalog_type??"NONE",80);
+  if(finalizing&&catalogType==="SKANDI_PARTNER"&&["HOTEL","GUIDED_TOUR","ACTIVITY","PARTNER_TICKET","TRANSFER","CAR_RENTAL","PACKAGE"].includes(type)&&!isUuid(record.supplierEntityId))throw new Error("INVENTORY_SUPPLIER_REQUIRED");
+  const from=clean(catalog.validFrom??catalog.valid_from,20),to=clean(catalog.validTo??catalog.valid_to,20);
+  if(from&&to&&to<from)throw new Error("INVENTORY_CATALOG_DATE_INVALID");
+  if(type==="SUPPLIER")record.customerVisible=false;
+  if(status==="PUBLISHED"&&catalogType!=="NONE")record.customerVisible=true;
+  return record;
+}
+
 function masterBody(record,session){
   const type=upper(record.entityType||record.entity_type,40);
   const code=upper(record.code,180);
   const name=clean(record.name,300);
   if(!MASTER_TYPES.has(type))throw new Error("INVENTORY_MASTER_TYPE_INVALID");
   if(!code||!name)throw new Error("INVENTORY_REQUIRED_FIELDS_MISSING");
-  return{
-    public_id:clean(record.publicId||record.public_id,180)||`${type.toLowerCase()}-${randomUUID()}`,
+  const body={
     entity_type:type,code,name,
     slug:clean(record.slug,240)||slugify(name),
     status:safeStatus(record.status),
@@ -543,6 +695,11 @@ function masterBody(record,session){
     updated_by_agent_user_id:actorId(session)
     // Catalog/search fields are intentionally NOT written here.
   };
+  const explicitPublicId=clean(record.publicId||record.public_id,180);
+  if(explicitPublicId)body.public_id=explicitPublicId;
+  // For new records an empty public_id is omitted entirely. The canonical
+  // inventory_smart_entity_defaults trigger creates ENTITY-CODE / LEVEL-CODE.
+  return body;
 }
 
 function referenceBody(type,record,catalog){
@@ -850,8 +1007,9 @@ async function compensateBundleSave(snapshot,savedRecord=null){
 async function savePrimary(session,bundle){
   const r=object(bundle.record),type=upper(r.entityType||r.entity_type,40);
   if(MASTER_TYPES.has(type)){
-    await assertUniqueMaster(r);await assertNoHierarchyCycle(r);
-    const id=clean(r.id,80),body=masterBody(r,session);
+    const canonical=validateMasterRecord(await canonicalizeMasterRecord(r),bundle);
+    await assertUniqueMaster(canonical);await assertNoHierarchyCycle(canonical);
+    const id=clean(canonical.id,80),body=masterBody(canonical,session);
     if(id){
       const saved=(await restRequest({table:"inventory_master_entities",method:"PATCH",query:{id:qeq(id)},body,prefer:"return=representation"}))?.[0];
       return normalizeMaster(saved||{...body,id});
@@ -940,33 +1098,33 @@ export async function saveDatedInventoryCore(input={}){
   const r=object(input.row||input),id=clean(r.id,80),entityId=clean(r.entityId??r.entity_id,80);
   const serviceDate=clean(r.serviceDate??r.service_date,20);
   if(!isUuid(entityId)||!serviceDate)throw new Error("DATED_INVENTORY_INPUT_INVALID");
-  // inventory_dated_inventory has NOT NULL numeric columns with database defaults of 0.
-  // PostgREST defaults do not apply when a client explicitly sends null, so normalize the
-  // complete write contract here. Zero is the canonical neutral value for controls that
-  // do not apply to a product type (for example min/max stay on a guided tour).
-  const cap=nullableNumber(r.capacityTotal??r.capacity_total,{integer:true,min:0})??0;
-  const held=nullableNumber(r.held,{integer:true,min:0})??0;
-  const sold=nullableNumber(r.sold,{integer:true,min:0})??0;
-  const over=nullableNumber(r.overbookingLimit??r.overbooking_limit,{integer:true,min:0})??0;
+
+  // R-003.5/R-003.6 contract: every NOT NULL numeric control is written as a
+  // real zero when blank/not-applicable. Postgres defaults do not replace an
+  // explicitly supplied null.
+  const cap=numberOrZero(r.capacityTotal??r.capacity_total,{integer:true,min:0});
+  const held=numberOrZero(r.held,{integer:true,min:0});
+  const sold=numberOrZero(r.sold,{integer:true,min:0});
+  const over=numberOrZero(r.overbookingLimit??r.overbooking_limit,{integer:true,min:0});
   const available=Math.max(cap+over-held-sold,0);
   let status=upper(r.status||"OPEN",40);
   if(bool(r.blackout,false))status="BLACKOUT";
   else if(bool(r.stopSale??r.stop_sale,false))status="STOP_SALE";
-  else if(cap!==null&&available===0)status="SOLD_OUT";
+  else if(available===0&&cap>0)status="SOLD_OUT";
   const body={
     entity_id:entityId,inventory_type:upper(r.inventoryType??r.inventory_type??"GENERAL",80),
     service_date:serviceDate,start_time:clean(r.startTime??r.start_time,20)||null,end_time:clean(r.endTime??r.end_time,20)||null,
     variant_code:clean(r.variantCode??r.variant_code,120)||null,variant_name:clean(r.variantName??r.variant_name,240)||null,
     capacity_total:cap,held,sold,available,
-    waitlist_limit:nullableNumber(r.waitlistLimit??r.waitlist_limit,{integer:true,min:0})??0,
+    waitlist_limit:numberOrZero(r.waitlistLimit??r.waitlist_limit,{integer:true,min:0}),
     overbooking_limit:over,stop_sale:bool(r.stopSale??r.stop_sale,false),blackout:bool(r.blackout,false),status,
-    supplier_cost:nullableNumber(r.supplierCost??r.supplier_cost)??0,public_price:nullableNumber(r.publicPrice??r.public_price)??0,
-    adult_price:nullableNumber(r.adultPrice??r.adult_price)??0,child_price:nullableNumber(r.childPrice??r.child_price)??0,
-    infant_price:nullableNumber(r.infantPrice??r.infant_price)??0,private_price:nullableNumber(r.privatePrice??r.private_price)??0,
+    supplier_cost:numberOrZero(r.supplierCost??r.supplier_cost),public_price:numberOrZero(r.publicPrice??r.public_price),
+    adult_price:numberOrZero(r.adultPrice??r.adult_price),child_price:numberOrZero(r.childPrice??r.child_price),
+    infant_price:numberOrZero(r.infantPrice??r.infant_price),private_price:numberOrZero(r.privatePrice??r.private_price),
     currency:upper(r.currency||"USD",8),price_basis:upper(r.priceBasis??r.price_basis??"PER_PERSON",40),
-    booking_cutoff_hours:nullableNumber(r.bookingCutoffHours??r.booking_cutoff_hours,{integer:true,min:0})??0,
-    min_stay:nullableNumber(r.minStay??r.min_stay,{integer:true,min:0})??0,max_stay:nullableNumber(r.maxStay??r.max_stay,{integer:true,min:0})??0,
-    release_days:nullableNumber(r.releaseDays??r.release_days,{integer:true,min:0})??0,
+    booking_cutoff_hours:numberOrZero(r.bookingCutoffHours??r.booking_cutoff_hours,{integer:true,min:0}),
+    min_stay:numberOrZero(r.minStay??r.min_stay,{integer:true,min:0}),max_stay:numberOrZero(r.maxStay??r.max_stay,{integer:true,min:0}),
+    release_days:numberOrZero(r.releaseDays??r.release_days,{integer:true,min:0}),
     supplier_reference:clean(r.supplierReference??r.supplier_reference,500)||null,payload:object(r.payload),
     updated_by_agent_user_id:actorId(session)
   };

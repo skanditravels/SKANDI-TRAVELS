@@ -147,12 +147,6 @@ const REST_OBJECTS = new Set([
   "altea_search_logs",
   "altea_segments",
   "altea_sync_events",
-  "club_profiles",
-  "club_tiers",
-  "travel_requirements",
-  "bus_manifests",
-  "bus_manifest_passengers",
-  "operational_manifests",
 
   // Existing compatibility cache retained until provider recovery
   "amadeus_offer_cache",
