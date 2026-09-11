@@ -1,5 +1,5 @@
 // /src/pages/ALTEA Reservations.ly2n8.js
-// SKANDI Recovery R-006.2 — systematic unified Reservations page bridge.
+// SKANDI Recovery R-006.3 — systematic unified Reservations page bridge.
 // HTML Embed: #alteaReservationsEmbed
 //
 // Page rule:
@@ -16,7 +16,7 @@ const EMBED_ID = "#alteaReservationsEmbed";
 const STAFF_LOGIN_PATH = "/riaintra";
 const CHILD_SOURCE = "SKANDI_DUFFEL_RESERVATIONS";
 const PARENT_SOURCE = "SKANDI_WIX_PARENT";
-const VERSION = "R-006.2";
+const VERSION = "R-006.3";
 
 function parse(value) {
   if (typeof value === "string") {
@@ -158,7 +158,7 @@ async function finalizeGeneratedAsset(embed, originalPayload, result, requestId)
       requestId
     );
   } catch (error) {
-    console.error("[ALTEA R-006.2] Generated asset finalization failed after document creation.", error);
+    console.error("[ALTEA R-006.3] Generated asset finalization failed after document creation.", error);
     postToEmbed(
       embed,
       "ALTEA_ASSET_WARNING",
@@ -216,7 +216,7 @@ $w.onReady(() => {
     } catch (error) {
       const code = errorCode(error);
       const providerAction = type.startsWith("DUFFEL_");
-      console.error("[ALTEA R-006.2]", {
+      console.error("[ALTEA R-006.3]", {
         type,
         code,
         message: String(error?.message || ""),
