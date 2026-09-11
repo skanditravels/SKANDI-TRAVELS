@@ -1,7 +1,7 @@
 // /src/backend/SKANDI_CORE/duffelClient.js
-// SKANDI R-006.2 — canonical Duffel + Stripe server provider transport.
-// Backend-only. No page/webMethod/UI ownership.
-
+// SKANDI canonical server-only Duffel + Stripe transport.
+// Recovery R-006.5: bounded request lifecycle, Duffel request tracing,
+// current retry semantics, rate-limit metadata, and 130s booking mutations.
 // Never import this file from public page code.
 
 
@@ -28,6 +28,10 @@ export class ProviderError extends Error {
     this.retryable = Boolean(options.retryable);
     this.publicMessage = options.publicMessage || "The travel provider could not complete the request.";
     this.providerRequestId = options.providerRequestId || "";
+    this.correlationId = options.correlationId || "";
+    this.retryAfter = options.retryAfter || "";
+    this.rateLimit = options.rateLimit || null;
+    this.outcomeUnknown = Boolean(options.outcomeUnknown);
   }
 }
 
@@ -74,50 +78,59 @@ async function readJsonResponse(response, provider, path) {
 
 export async function duffelRequest(path, options = {}) {
   const token = await getRequiredSecret("DUFFEL_ACCESS_TOKEN");
+  const method = String(options.method || "GET").toUpperCase();
+  const correlationId = cleanCorrelationId(options.correlationId) || makeCorrelationId();
+  const timeoutMs = resolveDuffelTimeout(path, method, options.timeoutMs);
   const url = buildUrl(DUFFEL_BASE_URL, path, options.query);
   const headers = {
     Accept: "application/json",
     Authorization: `Bearer ${token}`,
     "Duffel-Version": DUFFEL_VERSION,
+    "x-client-correlation-id": correlationId,
     ...options.headers
   };
 
-
-  // Do not force Accept-Encoding in Wix. Duffel compression is optional and
-  // Wix's HTTP layer may negotiate/decompress automatically. This avoids
-  // treating an undecoded/gateway response as provider JSON.
+  // Wix can negotiate/decompress automatically. Do not force gzip here because
+  // some Wix gateway responses otherwise surface as undecoded/non-JSON bodies.
   delete headers["Accept-Encoding"];
   delete headers["accept-encoding"];
 
-
-  const request = {
-    method: options.method || "GET",
-    headers
-  };
-
-
+  const request = { method, headers };
   if (options.body !== undefined) {
     headers["Content-Type"] = "application/json";
     request.body = JSON.stringify(options.body);
   }
 
-
   let response;
   try {
-    response = await fetch(url, request);
-  } catch (_) {
+    response = await withTimeout(
+      fetch(url, request),
+      timeoutMs,
+      () => new ProviderError("Duffel request timed out before Wix received a response.", {
+        code: "DUFFEL_CLIENT_TIMEOUT",
+        status: 504,
+        retryable: isSafeToRetryAfterClientTimeout(method, path),
+        publicMessage: timeoutPublicMessage(method, path),
+        correlationId,
+        outcomeUnknown: isTransactionalMutation(method, path)
+      })
+    );
+  } catch (error) {
+    if (error instanceof ProviderError) throw error;
     throw new ProviderError("Duffel network request failed.", {
       code: "DUFFEL_NETWORK_ERROR",
       status: 503,
-      retryable: true,
-      publicMessage: "Live travel availability could not be reached. Please try the search again."
+      retryable: isSafeToRetryAfterNetworkFailure(method, path),
+      publicMessage: isTransactionalMutation(method, path)
+        ? "The supplier connection ended before the booking outcome was known. Do not retry the booking. Reconcile the supplier order first."
+        : "Live travel availability could not be reached. Please try the search again.",
+      correlationId,
+      outcomeUnknown: isTransactionalMutation(method, path)
     });
   }
 
-
   const { payload, validJson, raw } = await readJsonResponse(response, "DUFFEL", path);
-  const requestId = safeHeader(response, "x-request-id");
-
+  const diagnostics = readDuffelDiagnostics(response, correlationId);
 
   if (!response.ok) {
     if (!validJson) {
@@ -125,38 +138,131 @@ export async function duffelRequest(path, options = {}) {
       throw new ProviderError(`Duffel HTTP ${response.status} returned a non-JSON response.`, {
         code: `DUFFEL_HTTP_${response.status}`,
         status: response.status,
-        retryable: response.status === 408 || response.status === 429 || response.status >= 500,
-        providerRequestId: requestId,
-        publicMessage: response.status >= 500
-          ? "Live travel availability is temporarily unavailable. Please try again."
-          : "The live travel request could not be completed. Please review the search and try again."
+        retryable: duffelStatusIsRetryable(response.status),
+        providerRequestId: diagnostics.requestId,
+        correlationId: diagnostics.correlationId,
+        retryAfter: diagnostics.retryAfter || diagnostics.rateLimit?.reset || "",
+        rateLimit: diagnostics.rateLimit,
+        outcomeUnknown: response.status === 500 || response.status === 502,
+        publicMessage: duffelHttpPublicMessage(response.status, diagnostics)
       });
     }
-    const error = duffelError(response.status, payload);
-    error.providerRequestId = requestId;
+
+    const error = duffelError(response.status, payload, diagnostics);
     throw error;
   }
-
 
   if (!validJson) {
     throw new ProviderError("Duffel returned invalid JSON.", {
       code: "INVALID_PROVIDER_RESPONSE",
       status: 502,
-      retryable: true,
-      providerRequestId: requestId,
-      publicMessage: "Live travel availability returned an invalid response. Please try again."
+      retryable: false,
+      providerRequestId: diagnostics.requestId,
+      correlationId: diagnostics.correlationId,
+      rateLimit: diagnostics.rateLimit,
+      outcomeUnknown: isTransactionalMutation(method, path),
+      publicMessage: "Duffel returned an invalid response. Do not automatically retry a booking mutation. Use the provider request reference for reconciliation."
     });
   }
-
 
   return {
     data: payload?.data,
     meta: payload?.meta || null,
     status: response.status,
-    requestId
+    requestId: diagnostics.requestId,
+    correlationId: diagnostics.correlationId,
+    rateLimit: diagnostics.rateLimit,
+    retryAfter: diagnostics.retryAfter || ""
   };
 }
 
+function readDuffelDiagnostics(response, fallbackCorrelationId = "") {
+  const requestId = safeHeader(response, "x-request-id");
+  const correlationId = safeHeader(response, "x-client-correlation-id") || fallbackCorrelationId;
+  const limit = safeHeader(response, "ratelimit-limit");
+  const remaining = safeHeader(response, "ratelimit-remaining");
+  const reset = safeHeader(response, "ratelimit-reset");
+  const retryAfter = safeHeader(response, "retry-after");
+  return {
+    requestId,
+    correlationId,
+    retryAfter,
+    rateLimit: (limit || remaining || reset) ? { limit, remaining, reset } : null
+  };
+}
+
+function resolveDuffelTimeout(path, method, explicitValue) {
+  const explicit = Number(explicitValue);
+  if (Number.isFinite(explicit) && explicit >= 1000 && explicit <= 135000) return Math.round(explicit);
+  if (isTransactionalMutation(method, path)) return 130000;
+  if (String(path || "").startsWith("/air/offer_requests")) return 30000;
+  return 45000;
+}
+
+function isTransactionalMutation(method, path) {
+  if (method !== "POST") return false;
+  const value = String(path || "").split("?")[0];
+  return (
+    value === "/air/orders" ||
+    value === "/stays/bookings" ||
+    value === "/cars/bookings" ||
+    value.includes("/actions/confirm")
+  );
+}
+
+function isSafeToRetryAfterClientTimeout(method, path) {
+  return !isTransactionalMutation(method, path);
+}
+
+function isSafeToRetryAfterNetworkFailure(method, path) {
+  return !isTransactionalMutation(method, path);
+}
+
+function timeoutPublicMessage(method, path) {
+  if (isTransactionalMutation(method, path)) {
+    return "The supplier did not settle the booking response in time. Do not retry or submit payment again. Reconcile the supplier booking first.";
+  }
+  return "Live travel availability took too long to respond. Please run the search again.";
+}
+
+function duffelStatusIsRetryable(status) {
+  return status === 429 || status === 503 || status === 504;
+}
+
+function duffelHttpPublicMessage(status, diagnostics = {}) {
+  const ref = diagnostics.requestId ? ` Provider reference: ${diagnostics.requestId}.` : "";
+  if (status === 429) {
+    const reset = diagnostics.retryAfter || diagnostics.rateLimit?.reset;
+    return reset
+      ? `Duffel rate-limited the request. Retry after ${reset}.${ref}`
+      : `Duffel rate-limited the request. Retry after the current rate-limit window.${ref}`;
+  }
+  if (status === 500 || status === 502) {
+    return `Duffel could not confirm the provider outcome. Do not automatically retry this request.${ref}`;
+  }
+  if (status === 503 || status === 504) {
+    return `Duffel is temporarily unavailable. Retry later.${ref}`;
+  }
+  return `The live travel request could not be completed. Review the request and try again if it is safe to do so.${ref}`;
+}
+
+function cleanCorrelationId(value) {
+  const text = String(value || "").trim();
+  return /^[A-Za-z0-9._:-]{1,120}$/.test(text) ? text : "";
+}
+
+function makeCorrelationId() {
+  const random = Math.random().toString(36).slice(2, 12);
+  return `skandi-${Date.now().toString(36)}-${random}`;
+}
+
+function withTimeout(promise, timeoutMs, errorFactory) {
+  let timer;
+  const timeout = new Promise((_, reject) => {
+    timer = setTimeout(() => reject(errorFactory()), timeoutMs);
+  });
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+}
 
 export async function createStripePaymentIntent({
   amount,
@@ -333,37 +439,38 @@ function buildUrl(baseUrl, path, query = {}) {
 }
 
 
-function duffelError(status, payload) {
+function duffelError(status, payload, diagnostics = {}) {
   const firstError = Array.isArray(payload?.errors) ? payload.errors[0] : null;
   const code = String(firstError?.code || `DUFFEL_HTTP_${status}`).toUpperCase();
-  const retryable = status === 408 || status === 409 || status === 425 || status === 429 || status >= 500;
-
+  const retryable = duffelStatusIsRetryable(status);
 
   const publicMessages = {
     OFFER_NO_LONGER_AVAILABLE: "That offer is no longer available. Search again for a current option.",
     OFFER_EXPIRED: "That offer expired. Search again for a current option.",
     PRICE_CHANGED: "The airline changed the price. Refresh the offer before continuing.",
     ALREADY_BOOKED: "This offer has already been booked. Retrieve the existing order.",
+    DUPLICATE_BOOKING: "The airline found a possible duplicate booking. Do not create another order until the existing booking is reconciled.",
     INSUFFICIENT_BALANCE: "The supplier balance is insufficient to create this booking.",
-    SERVICE_UNAVAILABLE: "A selected seat or baggage service is no longer available."
+    SERVICE_UNAVAILABLE: "A selected seat or baggage service is no longer available.",
+    ANCILLARY_SERVICE_NOT_AVAILABLE: "A selected seat or baggage service is no longer available."
   };
 
-
-  const fallback = status === 429
-    ? "Live travel availability is temporarily busy. Please retry shortly."
-    : status >= 500
-      ? "Live travel availability could not complete the request. Please try again."
-      : "The live travel request was rejected. Refresh the offer and review the traveler details.";
-
-
-  return new ProviderError(firstError?.message || firstError?.title || `Duffel request failed (${status}).`, {
-    code,
-    status,
-    retryable,
-    publicMessage: publicMessages[code] || fallback
-  });
+  const fallback = duffelHttpPublicMessage(status, diagnostics);
+  return new ProviderError(
+    firstError?.message || firstError?.title || `Duffel request failed (${status}).`,
+    {
+      code,
+      status,
+      retryable,
+      publicMessage: publicMessages[code] || fallback,
+      providerRequestId: diagnostics.requestId || payload?.meta?.request_id || "",
+      correlationId: diagnostics.correlationId || "",
+      retryAfter: diagnostics.retryAfter || diagnostics.rateLimit?.reset || "",
+      rateLimit: diagnostics.rateLimit || null,
+      outcomeUnknown: status === 500 || status === 502
+    }
+  );
 }
-
 
 function safeStripeMessage(payload, status) {
   if (status === 402) return payload?.error?.message || "Payment was declined.";
