@@ -1,11 +1,11 @@
 // /src/pages/ALTEA Reservations.<WIX_PAGE_ID>.js
-// SKANDI Recovery R-005.4.1 — ALTEA Reservations document bridge hotfix.
+// SKANDI Recovery R-005.4.2 — ALTEA Reservations document visibility hotfix.
 //
 // IMPORTANT:
 // Retain the existing Wix-generated page filename/internal page ID.
 // Replace the COMPLETE contents with this file.
 //
-// Architecture for R-005.4.1:
+// Architecture for R-005.4.2:
 // - SKANDI-owned ALTEA logic remains in one canonical reservations.web facade.
 // - R-005.4 generated HTML is uploaded/finalized through the private Asset Library here.
 // - Broken Duffel provider exports are guarded so internal ALTEA remains usable.
@@ -65,7 +65,7 @@ const EMBED_ID = "#alteaReservationsEmbed";
 const STAFF_LOGIN_PATH = "/riaintra";
 const CHILD_SOURCE = "SKANDI_DUFFEL_RESERVATIONS";
 const PARENT_SOURCE = "SKANDI_WIX_PARENT";
-const VERSION = "R-005.4.1";
+const VERSION = "R-005.4.2";
 
 
 function parse(value) {
@@ -204,49 +204,65 @@ async function uploadGeneratedAsset(assetUpload = {}) {
   return true;
 }
 
-async function finalizeGeneratedCoreResult(type, inputPayload = {}, result = {}) {
+async function finalizeGeneratedAssetAfterResponse(embed, type, inputPayload = {}, result = {}, requestId = "") {
   const payload = result?.payload || {};
   const assetUpload = payload?.assetUpload;
 
   if (!assetUpload?.requestId) {
-    return result;
+    return;
   }
 
-  await uploadGeneratedAsset(assetUpload);
+  try {
+    await uploadGeneratedAsset(assetUpload);
 
-  const finalized = await runCore("ALTEA_FINALIZE_GENERATED_ASSET", {
-    requestId: assetUpload.requestId,
-    bookingId: inputPayload?.bookingId || payload?.document?.bookingId || "",
-    documentId: assetUpload.documentId || payload?.document?.id || "",
-    manifestId: assetUpload.manifestId || payload?.manifest?.id || ""
-  });
+    const finalized = await runCore("ALTEA_FINALIZE_GENERATED_ASSET", {
+      requestId: assetUpload.requestId,
+      bookingId: inputPayload?.bookingId || payload?.document?.bookingId || "",
+      documentId: assetUpload.documentId || payload?.document?.id || "",
+      manifestId: assetUpload.manifestId || payload?.manifest?.id || ""
+    });
 
-  const finalWorkspace =
-    finalized?.payload?.workspace ||
-    payload?.workspace ||
-    null;
+    const finalWorkspace =
+      finalized?.payload?.workspace ||
+      payload?.workspace ||
+      null;
 
-  let finalDocument = payload?.document || null;
-  if (finalDocument?.id && finalWorkspace?.documents?.length) {
-    finalDocument =
-      finalWorkspace.documents.find((item) => item?.id === finalDocument.id) ||
-      finalDocument;
-  }
-
-  return {
-    responseType: result?.responseType || (
-      type === "ALTEA_SEND_MANIFEST"
-        ? "ALTEA_MANIFEST_SENT"
-        : "ALTEA_DOCUMENT_GENERATED"
-    ),
-    payload: {
-      ...payload,
-      assetUpload: null,
-      asset: finalized?.payload?.asset || payload?.asset || null,
-      workspace: finalWorkspace,
-      ...(finalDocument ? { document: finalDocument } : {})
+    if (finalWorkspace) {
+      postToEmbed(
+        embed,
+        "ALTEA_BOOKING_RESULT",
+        { workspace: finalWorkspace },
+        ""
+      );
     }
-  };
+
+    postToEmbed(
+      embed,
+      "ALTEA_GENERATED_ASSET_FINALIZED",
+      finalized?.payload || {},
+      requestId
+    );
+  } catch (error) {
+    const code = errorCode(error);
+
+    console.error("[ALTEA R-005.4.2] Generated document asset finalization failed after document creation.", {
+      type,
+      code,
+      message: String(error?.message || ""),
+      error
+    });
+
+    postToEmbed(
+      embed,
+      "ALTEA_ASSET_WARNING",
+      {
+        code,
+        action: type,
+        message: "Document created in ALTEA, but private file storage could not be finalized."
+      },
+      requestId
+    );
+  }
 }
 
 function providerCallable(action) {
@@ -300,7 +316,7 @@ async function retrieveAndSyncOrder(input = {}) {
     );
   } catch (error) {
     console.warn(
-      "[ALTEA R-005.4.1] Supplier order retrieved, but internal ALTEA sync refresh failed.",
+      "[ALTEA R-005.4.2] Supplier order retrieved, but internal ALTEA sync refresh failed.",
       error
     );
   }
@@ -326,7 +342,7 @@ async function cancelAndSyncOrder(input = {}) {
     );
   } catch (error) {
     console.warn(
-      "[ALTEA R-005.4.1] Cancellation confirmed, but internal ALTEA sync refresh failed.",
+      "[ALTEA R-005.4.2] Cancellation confirmed, but internal ALTEA sync refresh failed.",
       error
     );
   }
@@ -359,7 +375,7 @@ async function confirmChangeAndSyncOrder(input = {}) {
     );
   } catch (error) {
     console.warn(
-      "[ALTEA R-005.4.1] Order change confirmed, but internal ALTEA sync refresh failed.",
+      "[ALTEA R-005.4.2] Order change confirmed, but internal ALTEA sync refresh failed.",
       error
     );
   }
@@ -590,13 +606,7 @@ $w.onReady(() => {
 
 
       if (isCoreAction(type)) {
-        let result = await runCore(type, payload);
-
-        if (type === "ALTEA_GENERATE_DOCUMENT" || type === "ALTEA_DCS_RECORD_DOCUMENT" ||
-            type === "ALTEA_TRANSFER_DCS_RECORD_DOCUMENT" || type === "ALTEA_SEND_MANIFEST") {
-          result = await finalizeGeneratedCoreResult(type, payload, result);
-        }
-
+        const result = await runCore(type, payload);
 
         if (result.responseType) {
           postToEmbed(
@@ -606,12 +616,24 @@ $w.onReady(() => {
             requestId
           );
         }
+
+        if (type === "ALTEA_GENERATE_DOCUMENT" || type === "ALTEA_DCS_RECORD_DOCUMENT" ||
+            type === "ALTEA_TRANSFER_DCS_RECORD_DOCUMENT" || type === "ALTEA_SEND_MANIFEST") {
+          await finalizeGeneratedAssetAfterResponse(
+            embed,
+            type,
+            payload,
+            result,
+            requestId
+          );
+        }
+
         return;
       }
 
 
       console.warn(
-        "[ALTEA R-005.4.1] Ignored unsupported embed action:",
+        "[ALTEA R-005.4.2] Ignored unsupported embed action:",
         type
       );
     } catch (error) {
@@ -619,7 +641,7 @@ $w.onReady(() => {
       const isProvider = type.startsWith("DUFFEL_");
 
 
-      console.error("[ALTEA R-005.4.1]", {
+      console.error("[ALTEA R-005.4.2]", {
         type,
         code,
         message: String(error?.message || ""),
@@ -658,6 +680,7 @@ $w.onReady(() => {
     unified: true,
     wixBoundaryFix: true,
     documentBridgeHotfix: true,
+    documentVisibilityFirst: true,
     generatedAssetAutoFinalize: true,
     providerWebMethodsPageBound: true,
     providerInternalizationTarget: "R-006",
