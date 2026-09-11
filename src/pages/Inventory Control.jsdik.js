@@ -10,7 +10,7 @@ import {
   smartSyncAircraft,getCabinNormalizationPreview,getInventoryAudit,getInventoryQuality,
   listAssetLibrary,checkAssetLibraryDuplicate,prepareAssetLibraryUpload,finalizeAssetLibraryUpload,
   getAssetLibraryAccessUrl,registerAssetLibraryUsage,archiveAssetLibraryItem
-} from "backend/RIA/inventoryControlV4.web";
+} from "backend/SKANDI_ORE/inventoryControl.web";
 
 const EMBED_IDS=["#inventoryControlEmbed","#alteaInventoryControlEmbed","#masterInventoryEmbed"];
 const CHILD_SOURCE="SKANDI_INVENTORY_EMBED";
