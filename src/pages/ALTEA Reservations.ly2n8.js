@@ -17,7 +17,7 @@ import wixLocation from "wix-location-frontend";
 
 import {
   handleReservationsAction
-} from "src/backend/SKANDI_CORE/reservations.web";
+} from "backend/SKANDI_CORE/reservations.web";
 
 import {
   getDuffelWorkspaceBootstrap,
@@ -30,7 +30,7 @@ import {
   createDuffelOrder,
   createDuffelOrderCancellation,
   confirmDuffelOrderCancellation
-} from "src/backend/duffelTravel.web";
+} from "backend/duffelTravel.web";
 
 import {
   searchDuffelOrderChanges,
@@ -38,7 +38,7 @@ import {
   getDuffelPendingOrderChange,
   prepareDuffelOrderChangePayment,
   confirmDuffelOrderChange
-} from "src/backend/RIA/duffelServicing.web";
+} from "backend/RIA/duffelServicing.web";
 
 import {
   searchDuffelStays,
@@ -53,7 +53,7 @@ import {
   getDuffelCarBookingStaff,
   cancelDuffelCarBookingStaff,
   createDuffelComponentClientKeyStaff
-} from "src/backend/RIA/duffelGroundProducts.web";
+} from "backend/RIA/duffelGroundProducts.web";
 
 const EMBED_ID = "#alteaReservationsEmbed";
 const STAFF_LOGIN_PATH = "/riaintra";
