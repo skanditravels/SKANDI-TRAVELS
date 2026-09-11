@@ -1,6 +1,6 @@
 // /src/backend/staffPortalAuth.web.js
 // SKANDI Staff Portal Auth — legacy import-path compatibility facade.
-// R-003.6
+// R-003.8
 //
 // DEPRECATED PATH: new/current page code must import
 // "backend/RIA/staffPortalAuth.web".
@@ -11,5 +11,6 @@
 export {
   loginStaffWithSkId,
   getStaffPortalSession,
-  getPortalApps
+  getPortalApps,
+  getAlteaLaunchpadApps
 } from "./RIA/staffPortalAuth.web.js";
