@@ -7,8 +7,16 @@ import {
   deleteTravelCompanion,
   saveTravelDocument,
   deleteTravelDocument,
-  redeemWixLoyaltyReward
+  redeemWixLoyaltyReward,
+  saveCustomerPreferences,
+  enrollCustomerClub,
+  saveCustomerCommunication,
+  getCustomerAirportDirectory
 } from "backend/customerPortal.web";
+import {
+  startCustomerSupportChat,
+  sendCustomerSupportChatMessage
+} from "backend/supportCenter.web";
 import {
   getCustomerBookingHubState,
   getCustomerBookingDetail,
@@ -145,6 +153,63 @@ $w.onReady(function () {
           await deleteTravelDocument(payload?._id);
           await sendState("Document deleted");
           return;
+
+        case "CUSTOMER_SAVE_DOCUMENTS":
+          await progress("Saving travel documents...");
+          await saveCustomerPreferences({ visas: Array.isArray(payload.visas) ? payload.visas : [] });
+          await sendState("Travel documents saved");
+          return;
+
+        case "CUSTOMER_SAVE_FLIGHT_PREFS":
+          await progress("Saving travel preferences...");
+          await saveCustomerPreferences(payload);
+          await sendState("Travel preferences saved");
+          return;
+
+        case "CUSTOMER_UPDATE_COMMUNICATION":
+          await progress("Saving communication preferences...");
+          await saveCustomerCommunication(payload);
+          await sendState("Communication preferences saved");
+          return;
+
+        case "CUSTOMER_ENROLL_CLUB":
+          await progress("Activating SKANDI Club...");
+          await enrollCustomerClub(payload);
+          await sendState("SKANDI Club activated");
+          return;
+
+        case "REQUEST_SUPABASE_AIRPORTS": {
+          const result = await getCustomerAirportDirectory();
+          post("SUPABASE_AIRPORTS_DATA", { airports: Array.isArray(result?.airports) ? result.airports : [] });
+          return;
+        }
+
+        case "CUSTOMER_CHANGE_PASSWORD":
+          await authentication.promptForgotPassword();
+          post("CUSTOMER_PORTAL_PROGRESS", { message: "Password reset instructions requested." });
+          return;
+
+        case "CUSTOMER_SUPPORT_CHAT_START": {
+          const result = await startCustomerSupportChat({
+            page: "my-profile",
+            tab: String(payload.tab || currentRouteState().tab || "overview"),
+            bookingRef: String(payload.bookingRef || wixLocation.query.booking || "")
+          });
+          post("CUSTOMER_SUPPORT_CHAT_SESSION", result);
+          return;
+        }
+
+        case "CUSTOMER_SUPPORT_CHAT_SEND": {
+          const result = await sendCustomerSupportChatMessage({
+            caseId: String(payload.caseId || ""),
+            content: String(payload.message || payload.content || ""),
+            page: "my-profile",
+            tab: String(payload.tab || currentRouteState().tab || "overview"),
+            bookingRef: String(payload.bookingRef || wixLocation.query.booking || "")
+          });
+          post("CUSTOMER_SUPPORT_CHAT_MESSAGE_SENT", result);
+          return;
+        }
 
         case "CUSTOMER_REDEEM_REWARD": {
           await progress("Redeeming reward...");
