@@ -22,7 +22,7 @@ import { renderBagTag } from "./documents/bagTag.js";
 import { renderInvoice } from "./documents/invoice.js";
 
 
-export const RESERVATIONS_CORE_VERSION = "R-006.6";
+export const RESERVATIONS_CORE_VERSION = "R-006.9";
 
 
 const clean=(v,n=12000)=>String(v??"").trim().slice(0,n);
@@ -389,6 +389,16 @@ export async function addAlteaHistoryNoteCore(input={}){
   const rows=await history(bookingId,input.eventType||"AGENT_NOTE",{note},session);
   return{ok:true,history:rows.map(historyView)};
 }
+export async function getAlteaDocumentCore(input={}){
+  await requireReservationsAccessCore();
+  const id=clean(input.documentId,80);
+  if(!isUuid(id))throw new Error("DOCUMENT_REQUIRED");
+  const row=(await select("altea_documents",{select:"*",id:qeq(id),limit:"1"}))[0];
+  if(!row)throw new Error("DOCUMENT_NOT_FOUND");
+  if(input.bookingId&&clean(input.bookingId,80)!==String(row.booking_id||""))throw new Error("DOCUMENT_BOOKING_MISMATCH");
+  return{ok:true,document:documentView(row)};
+}
+
 export async function updateAlteaDocumentStatusCore(input={}){
   const session=await requireReservationsAccessCore({write:true});
   const id=clean(input.documentId,80);if(!isUuid(id))throw new Error("DOCUMENT_REQUIRED");
@@ -668,9 +678,18 @@ function requestedDocNumber(value,variant){
   return v||`SK-${prefix}-${Date.now().toString().slice(-10)}`;
 }
 function isSkandiDcsBooking(b={}){
-  const p=obj(b.payload),kind=upper(b.booking_type||b.product_type,80);
-  return upper(b.supplier,40)==="SKANDI"||upper(p.dcsAuthority,40)==="SKANDI"||
-    upper(p.operatingControl,40)==="SKANDI"||p.isCharter===true||kind.includes("CHARTER");
+  const p=obj(b.payload);
+  const bookingType=upper(b.booking_type,80);
+  const productType=upper(b.product_type,80);
+  const dcsAuthority=upper(p.dcsAuthority,40);
+  const operatingControl=upper(p.operatingControl,40);
+  const explicitCharter=p.isCharter===true||lower(p.isCharter,20)==="true";
+
+  return dcsAuthority==="SKANDI"||
+    operatingControl==="SKANDI"||
+    explicitCharter||
+    bookingType.includes("CHARTER")||
+    productType.includes("CHARTER");
 }
 async function hasTransferAuthority(bookingId,componentId=""){
   const rows=await select("altea_booking_components",{select:"id,booking_id,component_type,status",booking_id:qeq(bookingId),limit:"500"});
