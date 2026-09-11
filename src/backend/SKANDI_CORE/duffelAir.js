@@ -1,8 +1,7 @@
 // /src/backend/SKANDI_CORE/duffelAir.js
-// SKANDI R-006.2 — reusable Duffel Air provider core. No Wix webMethod boundary here.
-
-// src/backend/duffelTravel.web.js
-// Authenticated Wix web-method facade for Duffel Flights API v2.
+// SKANDI canonical internal Duffel Flights implementation.
+// Recovery R-006.5. This is business/provider logic only; Wix page authorization
+// remains owned by /src/backend/SKANDI_CORE/reservations.web.js.
 
 
 import {
@@ -13,7 +12,9 @@ import {
   attachDuffelOrderToPaymentIntent,
   getStripePublishableKey,
   getProviderEnvironment
-} from "./duffelClient.js";
+} from "backend/SKANDI_CORE/duffelClient";
+
+
 const CABIN_CLASSES = new Set(["economy", "premium_economy", "business", "first"]);
 const PASSENGER_TYPES = new Set(["adult"]);
 const ORDER_TYPES = new Set(["instant", "hold"]);
@@ -30,7 +31,7 @@ const ZERO_DECIMAL_CURRENCIES = new Set([
 ]);
 
 
-export const getDuffelWorkspaceBootstrapCore = secureCore(async () => {
+export const getDuffelWorkspaceBootstrap = coreMethod(async () => {
   const [environment, ordersResponse] = await Promise.all([
     getProviderEnvironment(),
     duffelRequest("/air/orders", {
@@ -47,14 +48,16 @@ export const getDuffelWorkspaceBootstrapCore = secureCore(async () => {
 });
 
 
-export const searchDuffelOffersCore = secureCore(async (input) => {
+export const searchDuffelOffers = coreMethod(async (input) => {
   const request = validateOfferSearch(input);
   const response = await duffelRequest("/air/offer_requests", {
     method: "POST",
     query: {
       return_offers: true,
+      view: "offers",
       supplier_timeout: request.supplierTimeout
     },
+    timeoutMs: Math.max(30000, request.supplierTimeout + 10000),
     body: {
       data: {
         slices: request.slices.map((slice) => ({
@@ -77,12 +80,15 @@ export const searchDuffelOffersCore = secureCore(async (input) => {
 
   return {
     offerRequestId: response.data?.id || null,
-    offers
+    offers,
+    providerRequestId: response.requestId || null,
+    correlationId: response.correlationId || null,
+    rateLimit: response.rateLimit || null
   };
 });
 
 
-export const refreshDuffelOfferCore = secureCore(async (input) => {
+export const refreshDuffelOffer = coreMethod(async (input) => {
   const offerId = assertResourceId(input?.offerId, "off_", "offer");
   const offer = await retrieveOffer(offerId);
   assertBookableOffer(offer);
@@ -90,16 +96,7 @@ export const refreshDuffelOfferCore = secureCore(async (input) => {
 });
 
 
-
-export const priceDuffelOfferCore = secureCore(async (input = {}) => {
-  const offerId = assertResourceId(input?.offerId, "off_", "offer");
-  const services = validateServiceSelectionShape(input?.services);
-  const offer = await priceOffer(offerId, services);
-  return { offer: normalizeOffer(offer) };
-});
-
-
-export const getDuffelSeatMapsCore = secureCore(async (input) => {
+export const getDuffelSeatMaps = coreMethod(async (input) => {
   const offerId = assertResourceId(input?.offerId, "off_", "offer");
   const response = await duffelRequest("/air/seat_maps", {
     query: { offer_id: offerId }
@@ -110,7 +107,7 @@ export const getDuffelSeatMapsCore = secureCore(async (input) => {
 });
 
 
-export const prepareDuffelPaymentCore = secureCore(async (input) => {
+export const prepareDuffelPayment = coreMethod(async (input) => {
   const offerId = assertResourceId(input?.offerId, "off_", "offer");
   const services = validateServiceSelectionShape(input?.services);
   const pricedOffer = await priceOffer(offerId, services);
@@ -156,7 +153,7 @@ export const prepareDuffelPaymentCore = secureCore(async (input) => {
 });
 
 
-export const listDuffelOrdersCore = secureCore(async (input) => {
+export const listDuffelOrders = coreMethod(async (input) => {
   const limit = clampInteger(input?.limit, 1, 200, 50);
   const response = await duffelRequest("/air/orders", {
     query: {
@@ -171,7 +168,7 @@ export const listDuffelOrdersCore = secureCore(async (input) => {
 });
 
 
-export const getDuffelOrderCore = secureCore(async (input) => {
+export const getDuffelOrder = coreMethod(async (input) => {
   const query = cleanString(input?.orderIdOrReference, 100);
   if (!query) throw portalError("ORDER_REFERENCE_REQUIRED", "Enter a Duffel order ID or booking reference.");
 
@@ -181,7 +178,7 @@ export const getDuffelOrderCore = secureCore(async (input) => {
 });
 
 
-export const createDuffelOrderCore = secureCore(async (input) => {
+export const createDuffelOrder = coreMethod(async (input) => {
   const offerId = assertResourceId(input?.offerId, "off_", "offer");
   const orderType = cleanString(input?.orderType, 20).toLowerCase();
   if (!ORDER_TYPES.has(orderType)) throw portalError("INVALID_ORDER_TYPE", "Choose instant purchase or hold.");
@@ -224,8 +221,10 @@ export const createDuffelOrderCore = secureCore(async (input) => {
 
 
   const passengers = buildOrderPassengers(input?.passengers, pricedOffer);
+  const confirmationDeliveryPolicy = validateConfirmationDeliveryPolicy(input?.confirmationDeliveryPolicy);
   const metadata = {
     integration: "skandi_duffel",
+    confirmation_delivery_policy: confirmationDeliveryPolicy,
     ...(cleanString(input?.internalReference, 100)
       ? { internal_reference: cleanString(input.internalReference, 100) }
       : {})
@@ -263,18 +262,27 @@ export const createDuffelOrderCore = secureCore(async (input) => {
 
   const response = await duffelRequest("/air/orders", {
     method: "POST",
+    timeoutMs: 130000,
     body: { data }
   });
 
 
-  let order = response.data;
+  const order = response.data;
   if (!order?.id && response.status === 202) {
-    order = await waitForOrderByOfferId(offerId);
+    const pending = portalError(
+      "ORDER_PENDING_PROVIDER",
+      "Duffel accepted the order and is still resolving the supplier booking. Do not retry or submit payment again. Reconcile the existing offer/order after provider completion."
+    );
+    pending.pendingProvider = true;
+    pending.offerId = offerId;
+    pending.providerRequestId = response.requestId || "";
+    pending.correlationId = response.correlationId || "";
+    throw pending;
   }
   if (!order?.id) {
     throw portalError(
       "ORDER_STATUS_UNKNOWN",
-      "The airline order is still resolving. Do not submit another payment; retrieve the order using the selected offer."
+      "Duffel did not return a confirmed order. Do not create another booking until the supplier outcome has been reconciled."
     );
   }
 
@@ -288,12 +296,15 @@ export const createDuffelOrderCore = secureCore(async (input) => {
 
   return {
     order: normalizeOrder(order),
-    recoveredExistingOrder: false
+    recoveredExistingOrder: false,
+    confirmationDeliveryPolicy,
+    providerRequestId: response.requestId || null,
+    correlationId: response.correlationId || null
   };
 });
 
 
-export const createDuffelOrderCancellationCore = secureCore(async (input) => {
+export const createDuffelOrderCancellation = coreMethod(async (input) => {
   const orderId = assertResourceId(input?.orderId, "ord_", "order");
   const order = await retrieveOrder(orderId);
   if (!(order.available_actions || []).includes("cancel")) {
@@ -315,7 +326,7 @@ export const createDuffelOrderCancellationCore = secureCore(async (input) => {
 });
 
 
-export const confirmDuffelOrderCancellationCore = secureCore(async (input) => {
+export const confirmDuffelOrderCancellation = coreMethod(async (input) => {
   const cancellationId = assertGenericResourceId(input?.cancellationId, "cancellation");
   const response = await duffelRequest(
     `/air/order_cancellations/${encodeURIComponent(cancellationId)}/actions/confirm`,
@@ -466,14 +477,6 @@ async function findOrderByOfferId(offerId) {
   return response.data?.[0] || null;
 }
 
-
-async function waitForOrderByOfferId(offerId) {
-  for (let attempt = 0; attempt < 3; attempt += 1) {
-    const order = await findOrderByOfferId(offerId);
-    if (order) return order;
-  }
-  return null;
-}
 
 
 function validateOfferSearch(input) {
@@ -713,7 +716,10 @@ function normalizeOrder(order) {
       type: document.type || null,
       uniqueIdentifier: document.unique_identifier || null,
       passengerIds: document.passenger_ids || []
-    }))
+    })),
+    confirmationDeliveryPolicy: validateConfirmationDeliveryPolicy(
+      order?.metadata?.confirmation_delivery_policy || "SKANDI"
+    )
   };
 }
 
@@ -919,28 +925,19 @@ function amountToMinor(amount, currency) {
 }
 
 
-function secureCore(handler) {
-  return async (input = {}) => {
-    try {
-      return await handler(input);
-    } catch (error) {
-      throw sanitizeError(error);
-    }
-  };
+function coreMethod(handler) {
+  return async (input = {}) => handler(input);
 }
 
 
-function sanitizeError(error) {
-  const safe = new Error(
-    cleanString(error?.publicMessage, 300) ||
-    (error instanceof ProviderError ? "The travel provider could not complete the request." : "The reservation backend could not complete the request.")
+function validateConfirmationDeliveryPolicy(value) {
+  const policy = cleanString(value || "SKANDI", 40).toUpperCase();
+  if (policy === "SKANDI" || policy === "DUFFEL") return policy;
+  throw portalError(
+    "INVALID_CONFIRMATION_DELIVERY_POLICY",
+    "Confirmation delivery policy must be SKANDI or DUFFEL."
   );
-  safe.name = "ReservationError";
-  safe.code = cleanErrorCode(error?.code);
-  safe.publicMessage = safe.message;
-  return safe;
 }
-
 
 function portalError(code, message) {
   const error = new Error(message);
@@ -1022,3 +1019,16 @@ function clampInteger(value, min, max, fallback) {
   if (!Number.isInteger(number) || number < min || number > max) return fallback;
   return number;
 }
+
+// Canonical R-006 internal aliases. Existing compatibility facades may keep the
+// non-Core names until their own page recovery is reached.
+export const getDuffelWorkspaceBootstrapCore = getDuffelWorkspaceBootstrap;
+export const searchDuffelOffersCore = searchDuffelOffers;
+export const refreshDuffelOfferCore = refreshDuffelOffer;
+export const getDuffelSeatMapsCore = getDuffelSeatMaps;
+export const prepareDuffelPaymentCore = prepareDuffelPayment;
+export const listDuffelOrdersCore = listDuffelOrders;
+export const getDuffelOrderCore = getDuffelOrder;
+export const createDuffelOrderCore = createDuffelOrder;
+export const createDuffelOrderCancellationCore = createDuffelOrderCancellation;
+export const confirmDuffelOrderCancellationCore = confirmDuffelOrderCancellation;
