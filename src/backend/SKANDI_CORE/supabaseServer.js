@@ -1,6 +1,6 @@
 // /src/backend/SKANDI_CORE/supabaseServer.js
 // SKANDI canonical backend-only Supabase transport.
-// Recovery R-003.7 source of truth.
+// Recovery R-002 source of truth.
 //
 // Rules:
 // - Never import this file from Wix page/frontend code.
@@ -131,20 +131,7 @@ const REST_OBJECTS = new Set([
   "booking_carts",
   "booking_cart_items",
   "customer_profiles",
-  "club_profiles",
-  "club_tiers",
-  "skandi_points_ledger",
-  "customer_travelers",
-  "customer_travel_documents",
-  "customer_favorites",
-  "customer_payment_methods",
   "customer_profiles_booking_links",
-  "customer_support_cases",
-  "customer_support_messages",
-  "customer_notifications",
-  "customer_wallet_items",
-  "countries_list",
-  "languages",
 
   // ALTEA operational booking ledger
   "altea_bookings",

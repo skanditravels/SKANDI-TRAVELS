@@ -1,6 +1,6 @@
 // /src/backend/SKANDI_CORE/staffAuth.js
 // SKANDI canonical staff identity + authorization core.
-// R-003.6
+// R-003.8
 //
 // Source-of-truth contract:
 // - Wix Members authenticates credentials / owns the browser session.
@@ -101,6 +101,82 @@ const APP_CATALOG = Object.freeze({
     icon: "P"
   }),
 });
+
+const ALTEA_LAUNCHPAD_CATALOG = Object.freeze([
+  Object.freeze({
+    id: "ardw",
+    title: "Amadeus Altéa Reservation Desktop Web (ARDW)",
+    description: "Create and service passenger name records, air segments, ancillary services, and customer itineraries.",
+    icon: "plane",
+    code: "RESERVATIONS",
+    accent: "#005eb8",
+    path: "/riaintra/success-factors/altea/reservations",
+    groups: Object.freeze(["sales", "operations", "occ", "destination", "system-admin"])
+  }),
+  Object.freeze({
+    id: "inventory",
+    title: "Amadeus Altéa Inventory",
+    description: "Manage SKANDI flight, product, capacity, aircraft and inventory controls.",
+    icon: "inventory",
+    code: "INVENTORY",
+    accent: "#006f8f",
+    path: "/riaintra/success-factors/altea/inventory-control",
+    requiredApp: "inventory-control",
+    groups: Object.freeze(["inventory", "system-admin"])
+  }),
+  Object.freeze({
+    id: "ticketing",
+    title: "Amadeus Ticketing Platform",
+    description: "Issue, revalidate, exchange, refund and audit electronic tickets and EMD transactions.",
+    icon: "barcode",
+    code: "TICKETING",
+    accent: "#3155a6",
+    path: "/riaintra/success-factors/altea/ticketing",
+    groups: Object.freeze(["sales", "operations", "occ", "system-admin"])
+  }),
+  Object.freeze({
+    id: "pss-dcs",
+    title: "Amadeus Altéa Passenger Service System (PSS / DCS)",
+    description: "Run check-in, seating, baggage, boarding and departure-control workflows.",
+    icon: "passenger",
+    code: "PSS / DCS",
+    accent: "#007a64",
+    path: "/riaintra/success-factors/altea/departure-control",
+    groups: Object.freeze(["airport", "operations", "occ", "system-admin"])
+  }),
+  Object.freeze({
+    id: "timatic",
+    title: "IATA Timatic (Regulatory & Document Check)",
+    description: "Validate passport, visa, health and destination entry requirements before passenger acceptance.",
+    icon: "passport",
+    code: "DOCUMENT CHECK",
+    accent: "#6650a4",
+    path: "/riaintra/success-factors/altea/timatic",
+    groups: Object.freeze(["sales", "airport", "destination", "operations", "occ", "system-admin"])
+  }),
+  Object.freeze({
+    id: "grouptalk",
+    title: "GroupTalk",
+    description: "Operational team communication, voice, field coordination and support channels.",
+    icon: "communication",
+    code: "GROUPTALK",
+    accent: "#005eb8",
+    path: "/riaintra/success-factors/altea/grouptalk",
+    requiredApp: "grouptalk",
+    requiresGroupTalk: true,
+    groups: Object.freeze(["airport", "sales", "destination", "operations", "occ", "managers", "system-admin"])
+  }),
+  Object.freeze({
+    id: "occ",
+    title: "OCC (Operations Control Center)",
+    description: "Coordinate flights, disruptions, operational recovery and network control.",
+    icon: "arrow",
+    code: "OPERATIONS CONTROL",
+    accent: "#6650a4",
+    path: "/riaintra/success-factors/altea/occ",
+    groups: Object.freeze(["operations", "occ", "system-admin"])
+  })
+]);
 
 // Role/preset definitions are slow-changing control data. Cache only those
 // definitions in the backend process; never cache staff identity/session rows.
@@ -542,6 +618,40 @@ function navigableApps(allowedApps = []) {
     .map((app) => ({ ...app }));
 }
 
+function alteaLaunchpadApps(session = {}) {
+  const allowedApps = new Set(array(session.allowedApps).map((id) => lower(id, 100)));
+  const permissionKeys = new Set(array(session.permissionKeys).map((id) => lower(id, 100)));
+  const permissionGroups = new Set(array(session.permissionGroups).map((id) => lower(id, 100)));
+  const role = upper(session.accessRole || session.profile?.accessRole, 80);
+  const privilegedRole = ["OWNER", "COMPANY_OWNER", "SUPER_ADMIN"].includes(role);
+  const systemAdmin = session.isSystemAdmin === true || privilegedRole || permissionGroups.has("system-admin");
+  const hasAltea = allowedApps.has("altea") || permissionKeys.has("altea") || systemAdmin;
+
+  return ALTEA_LAUNCHPAD_CATALOG.filter((app) => {
+    if (systemAdmin) return true;
+    if (!hasAltea) return false;
+
+    if (app.requiredApp) {
+      const required = lower(app.requiredApp, 100);
+      if (!allowedApps.has(required) && !permissionKeys.has(required)) return false;
+    }
+
+    if (app.requiresGroupTalk && session.canAccessGroupTalk !== true) return false;
+
+    const requiredGroups = array(app.groups).map((group) => lower(group, 100));
+    if (!requiredGroups.length) return true;
+    return requiredGroups.some((group) => permissionGroups.has(group));
+  }).map((app) => ({
+    id: app.id,
+    title: app.title,
+    description: app.description,
+    icon: app.icon,
+    code: app.code,
+    accent: app.accent,
+    path: app.path
+  }));
+}
+
 function unauthorizedSession({ loggedIn = false, reason = "STAFF_AUTH_REQUIRED" } = {}) {
   return {
     ok: true,
@@ -730,5 +840,17 @@ export async function getPortalAppsCore() {
     accessRole: session.accessRole,
     permissionPreset: session.permissionPreset,
     canManage: session.canManage
+  };
+}
+
+export async function getAlteaLaunchpadAppsCore() {
+  const session = await requireStaffPortalSessionCore();
+  const apps = alteaLaunchpadApps(session);
+  return {
+    ok: true,
+    profile: session.profile,
+    apps,
+    accessRole: session.accessRole,
+    permissionPreset: session.permissionPreset
   };
 }
