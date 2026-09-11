@@ -35,7 +35,7 @@ export const getDuffelWorkspaceBootstrap = coreMethod(async () => {
   const [environment, ordersResponse] = await Promise.all([
     getProviderEnvironment(),
     duffelRequest("/air/orders", {
-      query: { limit: 25, sort: "-created_at" }
+      query: { limit: 50, sort: "-created_at" }
     })
   ]);
 
