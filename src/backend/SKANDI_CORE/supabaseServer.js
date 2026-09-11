@@ -133,6 +133,15 @@ const REST_OBJECTS = new Set([
   "customer_profiles",
   "customer_profiles_booking_links",
 
+  // RIA Mail canonical Supabase mailbox
+  "internal_mail_accounts",
+  "internal_mail_threads",
+  "internal_mail_messages",
+  "internal_mail_recipients",
+  "internal_mail_entries",
+  "internal_mail_attachments",
+  "internal_mail_events",
+
   // ALTEA operational booking ledger
   "altea_bookings",
   "altea_booking_components",
@@ -459,7 +468,7 @@ const STORAGE_BUCKETS = Object.freeze({
   "aircraft-assets": Object.freeze({ public: true, write: false }),
   "uniform-assets": Object.freeze({ public: true, write: false }),
   "docunet-controlled": Object.freeze({ public: false, write: false }),
-  "internal-mail-attachments": Object.freeze({ public: false, write: false })
+  "internal-mail-attachments": Object.freeze({ public: false, write: true })
 });
 
 function assertStorageBucket(bucket, { write = false } = {}) {
@@ -543,6 +552,73 @@ async function storageJsonRequest({
   }
 
   return payload;
+}
+
+
+/**
+ * Backend-only upload for small private objects already received by a trusted
+ * domain web method as base64. RIA Mail uses this for current compose
+ * compatibility; browser code never receives the service/secret key.
+ */
+export async function storageUploadBase64Object({
+  bucket,
+  path,
+  dataBase64,
+  mimeType = "application/octet-stream",
+  maxBytes = 10 * 1024 * 1024,
+  upsert = false
+}) {
+  const config = assertStorageBucket(bucket, { write: true });
+  const cleanPath = clean(path, 3000).replace(/^\/+/, "");
+  if (!cleanPath) throw new Error("SUPABASE_STORAGE_PATH_REQUIRED");
+
+  const raw = String(dataBase64 || "");
+  const payload = raw.includes(",") ? raw.split(",").pop() : raw;
+  if (!payload) throw new Error("SUPABASE_STORAGE_BASE64_REQUIRED");
+
+  const buffer = Buffer.from(payload, "base64");
+  const limit = Math.min(25 * 1024 * 1024, Math.max(1, Number(maxBytes) || 1));
+  if (!buffer.length || buffer.length > limit) {
+    throw new Error("SUPABASE_STORAGE_OBJECT_SIZE_INVALID");
+  }
+
+  const { baseUrl, apiKey, keyType } = await getServerConfiguration();
+  const encodedBucket = encodeURIComponent(config.name);
+  const encodedPath = encodeStoragePath(cleanPath);
+  const response = await fetch(`${baseUrl}/storage/v1/object/${encodedBucket}/${encodedPath}`, {
+    method: "POST",
+    headers: headersFor({
+      apiKey,
+      keyType,
+      extra: {
+        "Content-Type": clean(mimeType, 150) || "application/octet-stream",
+        "x-upsert": upsert ? "true" : "false"
+      }
+    }),
+    body: buffer
+  });
+
+  const rawResponse = await response.text();
+  let result = null;
+  if (rawResponse) {
+    try { result = JSON.parse(rawResponse); } catch (_) {}
+  }
+  if (!response.ok) {
+    const safe = safeErrorPayload(result);
+    const error = new Error(`SUPABASE_STORAGE_HTTP_${response.status}` + (safe.code ? `_${safe.code}` : ""));
+    error.status = response.status;
+    error.code = safe.code || "SUPABASE_STORAGE_HTTP_ERROR";
+    throw error;
+  }
+
+  return {
+    ok: true,
+    bucket: config.name,
+    path: cleanPath,
+    sizeBytes: buffer.length,
+    mimeType: clean(mimeType, 150) || "application/octet-stream",
+    result
+  };
 }
 
 /**

@@ -1,6 +1,6 @@
 // /src/backend/SKANDI_CORE/staffAuth.js
 // SKANDI canonical staff identity + authorization core.
-// R-003.8
+// R-003.9
 //
 // Source-of-truth contract:
 // - Wix Members authenticates credentials / owns the browser session.
@@ -40,7 +40,7 @@ const APP_CATALOG = Object.freeze({
     id: "mail",
     title: "H-Mail",
     subtitle: "Internal messages and station notices",
-    path: "/riaintra/success-factors/mail",
+    path: "/riaintra/mail",
     group: "Communication",
     icon: "M"
   }),
