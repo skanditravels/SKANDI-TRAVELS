@@ -1,39 +1,74 @@
 // /src/backend/RIA/inventoryControlV4.web.js
-// TEMPORARY R-003 compatibility facade.
-// Canonical implementation: /src/backend/SKANDI_CORE/inventory.js
-// Do not add Inventory business logic here.
+// SKANDI Inventory Control — canonical web boundary.
+// R-003.6
+//
+// This file intentionally contains no Inventory business logic. The single
+// Inventory page boundary delegates to SKANDI_CORE and exposes the central
+// Asset Library through the same facade so the Wix page keeps one backend
+// dependency.
 
 import { webMethod, Permissions } from "wix-web-module";
 import {
-  getInventoryBootstrapCore,getInventoryRecordCore,saveInventoryBundleCore,archiveInventoryRecordCore,
-  getDatedInventoryCore,saveDatedInventoryCore,deleteDatedInventoryCore,
-  getAirInventoryCore,saveAirInventoryRowCore,getInventoryAuditCore,getInventoryQualityCore,
-  getAircraftBootstrapCore,getAircraftRecordCore,saveAircraftCore,archiveAircraftCore,
-  saveAircraftChildCore,archiveAircraftChildCore,smartSyncAircraftCore,getCabinNormalizationPreviewCore
+  getInventoryBootstrapCore,
+  getInventoryRecordCore,
+  saveInventoryBundleCore,
+  archiveInventoryRecordCore,
+  getDatedInventoryCore,
+  saveDatedInventoryCore,
+  deleteDatedInventoryCore,
+  getAirInventoryCore,
+  saveAirInventoryRowCore,
+  getAircraftBootstrapCore,
+  getAircraftRecordCore,
+  saveAircraftCore,
+  archiveAircraftCore,
+  saveAircraftChildCore,
+  archiveAircraftChildCore,
+  smartSyncAircraftCore,
+  getCabinNormalizationPreviewCore,
+  getInventoryAuditCore,
+  getInventoryQualityCore
 } from "../SKANDI_CORE/inventory.js";
+import {
+  listAssetsCore,
+  checkAssetDuplicateCore,
+  prepareAssetUploadCore,
+  finalizeAssetUploadCore,
+  getAssetAccessUrlCore,
+  registerAssetUsageCore,
+  archiveAssetCore
+} from "../SKANDI_CORE/assets.js";
 
-// Current recovery contract
-export const getInventoryBootstrap=webMethod(Permissions.SiteMember,getInventoryBootstrapCore);
-export const getInventoryRecord=webMethod(Permissions.SiteMember,getInventoryRecordCore);
-export const saveInventoryBundle=webMethod(Permissions.SiteMember,saveInventoryBundleCore);
-export const archiveInventoryRecord=webMethod(Permissions.SiteMember,archiveInventoryRecordCore);
-export const getDatedInventory=webMethod(Permissions.SiteMember,getDatedInventoryCore);
-export const saveDatedInventory=webMethod(Permissions.SiteMember,saveDatedInventoryCore);
-export const deleteDatedInventory=webMethod(Permissions.SiteMember,deleteDatedInventoryCore);
-export const getAirInventory=webMethod(Permissions.SiteMember,getAirInventoryCore);
-export const saveAirInventoryRow=webMethod(Permissions.SiteMember,saveAirInventoryRowCore);
-export const getInventoryAudit=webMethod(Permissions.SiteMember,getInventoryAuditCore);
-export const getInventoryQuality=webMethod(Permissions.SiteMember,getInventoryQualityCore);
+const MEMBER = Permissions.SiteMember;
 
-// Legacy V4/V9 names intentionally forwarded to the same core.
-export const getInventoryBootstrapV4=webMethod(Permissions.SiteMember,getInventoryBootstrapCore);
-export const getInventoryRecordV4=webMethod(Permissions.SiteMember,getInventoryRecordCore);
-export const saveInventoryBundleV4=webMethod(Permissions.SiteMember,saveInventoryBundleCore);
-export const getAircraftControlBootstrap=webMethod(Permissions.SiteMember,getAircraftBootstrapCore);
-export const getAircraftControlRecord=webMethod(Permissions.SiteMember,getAircraftRecordCore);
-export const saveAircraftControl=webMethod(Permissions.SiteMember,saveAircraftCore);
-export const archiveAircraftControl=webMethod(Permissions.SiteMember,archiveAircraftCore);
-export const saveAircraftControlChild=webMethod(Permissions.SiteMember,saveAircraftChildCore);
-export const archiveAircraftControlChild=webMethod(Permissions.SiteMember,archiveAircraftChildCore);
-export const smartSyncAllAircraft=webMethod(Permissions.SiteMember,smartSyncAircraftCore);
-export const getCabinNormalizationPreview=webMethod(Permissions.SiteMember,getCabinNormalizationPreviewCore);
+export const getInventoryBootstrap = webMethod(MEMBER, getInventoryBootstrapCore);
+export const getInventoryRecord = webMethod(MEMBER, getInventoryRecordCore);
+export const saveInventoryBundle = webMethod(MEMBER, saveInventoryBundleCore);
+export const archiveInventoryRecord = webMethod(MEMBER, archiveInventoryRecordCore);
+
+export const getDatedInventory = webMethod(MEMBER, getDatedInventoryCore);
+export const saveDatedInventory = webMethod(MEMBER, saveDatedInventoryCore);
+export const deleteDatedInventory = webMethod(MEMBER, deleteDatedInventoryCore);
+
+export const getAirInventory = webMethod(MEMBER, getAirInventoryCore);
+export const saveAirInventoryRow = webMethod(MEMBER, saveAirInventoryRowCore);
+
+export const getAircraftBootstrap = webMethod(MEMBER, getAircraftBootstrapCore);
+export const getAircraftRecord = webMethod(MEMBER, getAircraftRecordCore);
+export const saveAircraft = webMethod(MEMBER, saveAircraftCore);
+export const archiveAircraft = webMethod(MEMBER, archiveAircraftCore);
+export const saveAircraftChild = webMethod(MEMBER, saveAircraftChildCore);
+export const archiveAircraftChild = webMethod(MEMBER, archiveAircraftChildCore);
+export const smartSyncAircraft = webMethod(MEMBER, smartSyncAircraftCore);
+export const getCabinNormalizationPreview = webMethod(MEMBER, getCabinNormalizationPreviewCore);
+
+export const getInventoryAudit = webMethod(MEMBER, getInventoryAuditCore);
+export const getInventoryQuality = webMethod(MEMBER, getInventoryQualityCore);
+
+export const listAssetLibrary = webMethod(MEMBER, listAssetsCore);
+export const checkAssetLibraryDuplicate = webMethod(MEMBER, checkAssetDuplicateCore);
+export const prepareAssetLibraryUpload = webMethod(MEMBER, prepareAssetUploadCore);
+export const finalizeAssetLibraryUpload = webMethod(MEMBER, finalizeAssetUploadCore);
+export const getAssetLibraryAccessUrl = webMethod(MEMBER, getAssetAccessUrlCore);
+export const registerAssetLibraryUsage = webMethod(MEMBER, registerAssetUsageCore);
+export const archiveAssetLibraryItem = webMethod(MEMBER, archiveAssetCore);

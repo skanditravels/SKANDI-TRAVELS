@@ -1,7 +1,9 @@
 // /src/backend/RIA/staffPortalAuth.web.js
-// TEMPORARY R-001 compatibility facade.
-// Do not add business logic here. Retire after all imports use:
-// backend/SKANDI_CORE/staffAuth.web
+// SKANDI Staff Portal Auth — canonical web compatibility boundary.
+// R-003.6
+//
+// No identity or authorization logic belongs in this file. All logic lives in
+// SKANDI_CORE/staffAuth.js and reads Supabase as the single staff source.
 
 import { webMethod, Permissions } from "wix-web-module";
 import {

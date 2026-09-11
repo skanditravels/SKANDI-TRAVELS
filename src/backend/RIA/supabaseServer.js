@@ -1,17 +1,19 @@
 // /src/backend/RIA/supabaseServer.js
-// TEMPORARY compatibility facade.
-// Canonical implementation: /src/backend/SKANDI_CORE/supabaseServer.js
-// Do not add secrets, REST, RPC, Storage, or audit logic here.
+// SKANDI Supabase compatibility facade — R-003.6
+//
+// Canonical Supabase transport, secret handling, allowlists and storage logic
+// live exclusively in SKANDI_CORE/supabaseServer.js. This file exists only so
+// older RIA modules can resolve the historical path while they are migrated.
 
 export {
   restRequest,
   rpcRequest,
-  getSupabaseRealtimeBrowserConfig,
-  getSupabaseServerDiagnostics,
-  writeAdminAudit,
   storageCreateSignedUploadUrl,
   storageCreateSignedReadUrl,
   storageGetObjectInfo,
   storageListObjects,
-  storageGetPublicUrl
+  storageGetPublicUrl,
+  getSupabaseRealtimeBrowserConfig,
+  getSupabaseServerDiagnostics,
+  writeAdminAudit
 } from "../SKANDI_CORE/supabaseServer.js";
