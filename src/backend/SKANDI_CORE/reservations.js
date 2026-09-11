@@ -21,7 +21,7 @@ import { renderAtbTicket } from "./atbTicket.js";
 import { renderBagTag } from "./bagTag.js";
 
 
-export const RESERVATIONS_CORE_VERSION = "R-006.2";
+export const RESERVATIONS_CORE_VERSION = "R-006.3";
 
 
 const clean=(v,n=12000)=>String(v??"").trim().slice(0,n);
@@ -576,44 +576,180 @@ export async function getReservationInventoryStatusCore(input={}){
 }
 
 
-function clubView(r={}){
-  const p=obj(r.payload);
-  return{id:r.id,memberId:r.member_id,memberNumber:clean(p.memberNumber||p.member_number||r.club_id||r.member_id,100),
-    clubId:r.club_id,name:clean(p.name||p.displayName||p.customerName||p.fullName||r.member_id,300),
-    email:clean(p.email||p.customerEmail,400),tier:upper(p.tier||p.tierName||"MEMBER",80),
-    pointsBalance:Number(p.pointsBalance??p.points??0)||0,status:r.status||"Active",
-    dateOfBirth:r.date_of_birth||null,nationalityId:r.nationality_id||null,
-    homeAirportId:r.home_airport_id||null,payload:p};
+function customerProfileView(r={},tier={}){
+  const p=obj(r.payload),first=clean(r.first_name,160),last=clean(r.last_name,160);
+  const name=clean(r.display_name||[first,last].filter(Boolean).join(" ")||p.name||p.displayName||r.email||r.member_id,300);
+  const isLoyaltyMember=r.is_loyalty_member===true||Boolean(r.club_number)||Boolean(r.club_tier_id);
+  const points=Number(
+    p.pointsBalance??p.points??p.loyaltyPoints??p.wixLoyaltyPoints??0
+  )||0;
+  return{
+    id:r.id,
+    customerProfileId:r.id,
+    memberId:clean(r.member_id,160),
+    memberNumber:r.club_number!=null?String(r.club_number):clean(p.memberNumber||p.clubNumber,100),
+    name,firstName:first,lastName:last,
+    email:clean(r.email,400),phone:clean(r.phone,80),
+    isLoyaltyMember,
+    tierId:r.club_tier_id||"",
+    tierKey:clean(tier.tier_key||p.tierKey,80),
+    tier:clean(tier.tier_name||p.tierName||(isLoyaltyMember?"Member":"Not enrolled"),80),
+    pointsBalance:points,
+    preferredCurrency:upper(r.preferred_currency,3),
+    customerType:clean(r.customer_type,80),
+    status:clean(r.status||"Active",80),
+    payload:p
+  };
+}
+async function customerTierMap(){
+  const rows=await select("club_tiers",{select:"*",active:qeq(true),order:"sort_order.asc"});
+  return new Map(rows.map(r=>[r.id,r]));
+}
+async function customerProfileById(profileId){
+  if(!isUuid(profileId))return null;
+  const [rows,tiers]=await Promise.all([
+    select("customer_profiles",{select:"*",id:qeq(profileId),limit:"1"}),
+    customerTierMap()
+  ]);
+  const row=rows[0];
+  return row?customerProfileView(row,tiers.get(row.club_tier_id)||{}):null;
 }
 export async function searchSkandiClubMembersCore(input={}){
   await requireReservationsAccessCore();
-  const q=lower(input.query,200);
-  const rows=await select("club_profiles",{select:"*",limit:"500",order:"updated_at.desc"});
-  return{ok:true,members:rows.map(clubView).filter(x=>!q||`${x.memberNumber} ${x.memberId} ${x.name} ${x.email}`.toLowerCase().includes(q)).slice(0,100)};
+  const query=lower(input.query,200),searchType=upper(input.searchType||"ALL",40);
+  const membershipFilter=upper(input.membershipFilter||"ALL",40);
+  const [rows,tiers]=await Promise.all([
+    select("customer_profiles",{select:"*",limit:"500",order:"updated_at.desc"}),
+    customerTierMap()
+  ]);
+  const items=rows.map(r=>customerProfileView(r,tiers.get(r.club_tier_id)||{})).filter(profile=>{
+    if(membershipFilter==="MEMBERS"&&!profile.isLoyaltyMember)return false;
+    if(membershipFilter==="NOT_ENROLLED"&&profile.isLoyaltyMember)return false;
+    if(!query)return true;
+    const fields={
+      NAME:`${profile.firstName} ${profile.lastName} ${profile.name}`,
+      EMAIL:profile.email,
+      CLUB:`${profile.memberNumber} ${profile.tier}`,
+      MEMBER:`${profile.memberId} ${profile.customerProfileId}`,
+      ALL:`${profile.firstName} ${profile.lastName} ${profile.name} ${profile.email} ${profile.memberNumber} ${profile.memberId} ${profile.customerProfileId} ${profile.tier}`
+    };
+    return lower(fields[searchType]||fields.ALL,2000).includes(query);
+  }).slice(0,150);
+  return{ok:true,members:items,total:items.length,source:"customer_profiles"};
 }
 export async function linkSkandiClubMemberCore(input={}){
   const session=await requireReservationsAccessCore({write:true});
-  if(!isUuid(input.passengerId)||!isUuid(input.memberId))throw new Error("CLUB_LINK_INPUT_INVALID");
-  const [p,members]=await Promise.all([passengerRow(input.passengerId),select("club_profiles",{select:"*",id:qeq(input.memberId),limit:"1"})]);
-  const member=members[0];if(!p||!member)throw new Error("CLUB_MEMBER_OR_PASSENGER_NOT_FOUND");
-  const view=clubView(member),payload={...obj(p.payload),clubProfile:view,clubProfileId:member.id};
-  await patch("altea_passengers",{id:qeq(p.id)},{payload,updated_at:now()});
-  if(isUuid(input.bookingId))await patch("altea_bookings",{id:qeq(input.bookingId)},{customer_member_id:member.member_id,updated_at:now()});
-  await history(input.bookingId||p.booking_id,"SKANDI_CLUB_LINKED",{passengerId:p.id,memberId:member.id,memberNumber:view.memberNumber},session);
-  return{ok:true,passengerId:p.id,member:view,message:"SKANDI Club member linked to passenger."};
+  const passengerId=clean(input.passengerId,80);
+  const customerProfileId=clean(input.customerProfileId||input.memberId,80);
+  if(!isUuid(passengerId)||!isUuid(customerProfileId))throw new Error("CUSTOMER_LINK_INPUT_INVALID");
+
+  const p=await passengerRow(passengerId);
+  const customer=await customerProfileById(customerProfileId);
+  if(!p||!customer)throw new Error("CUSTOMER_PROFILE_OR_PASSENGER_NOT_FOUND");
+
+  const passengerPayload={...obj(p.payload),customerProfile:customer,customerProfileId:customer.id};
+  if(customer.isLoyaltyMember){
+    passengerPayload.clubProfile=customer;
+    passengerPayload.clubProfileId=customer.id;
+  }else{
+    delete passengerPayload.clubProfile;
+    delete passengerPayload.clubProfileId;
+  }
+
+  await patch("altea_passengers",{id:qeq(p.id)},{payload:passengerPayload,updated_at:now()});
+
+  const bookingId=isUuid(input.bookingId)?input.bookingId:p.booking_id;
+  const booking=bookingId?await bookingRow(bookingId):null;
+  if(bookingId){
+    await patch("altea_bookings",{id:qeq(bookingId)},{customer_member_id:customer.memberId||null,updated_at:now()});
+
+    const existing=await select("customer_profiles_booking_links",{
+      select:"*",
+      booking_id:qeq(bookingId),
+      member_id:qeq(customer.memberId),
+      limit:"1"
+    });
+    const linkBody={
+      member_id:customer.memberId||null,
+      booking_id:bookingId,
+      booking_reference:booking?.booking_reference||booking?.pnr_locator||"",
+      last_name:customer.lastName||"",
+      status:"ACTIVE",
+      linked_at:now(),
+      link_source:"ALTEA_RESERVATIONS",
+      verified_at:now(),
+      payload:{
+        passengerId:p.id,
+        customerProfileId:customer.id,
+        isLoyaltyMember:customer.isLoyaltyMember,
+        clubNumber:customer.memberNumber||"",
+        tier:customer.tier||""
+      },
+      updated_at:now()
+    };
+    if(existing[0])await patch("customer_profiles_booking_links",{id:qeq(existing[0].id)},linkBody);
+    else await insert("customer_profiles_booking_links",linkBody);
+  }
+
+  await history(bookingId||p.booking_id,"CUSTOMER_PROFILE_LINKED",{
+    passengerId:p.id,
+    customerProfileId:customer.id,
+    memberId:customer.memberId,
+    clubNumber:customer.memberNumber||null,
+    isLoyaltyMember:customer.isLoyaltyMember
+  },session);
+
+  return{
+    ok:true,
+    passengerId:p.id,
+    member:customer,
+    customerProfile:customer,
+    message:customer.isLoyaltyMember
+      ?"SKANDI Club member connected to passenger."
+      :"Customer profile connected. This customer is not currently enrolled in SKANDI Club."
+  };
 }
 export async function adjustSkandiClubPointsCore(input={}){
   const session=await requireReservationsAccessCore({write:true});
-  if(!isUuid(input.memberId))throw new Error("CLUB_MEMBER_REQUIRED");
-  const row=(await select("club_profiles",{select:"*",id:qeq(input.memberId),limit:"1"}))[0];
-  if(!row)throw new Error("CLUB_MEMBER_NOT_FOUND");
+  const customerProfileId=clean(input.customerProfileId||input.memberId,80);
+  if(!isUuid(customerProfileId))throw new Error("CUSTOMER_PROFILE_REQUIRED");
+  const customer=await customerProfileById(customerProfileId);
+  if(!customer)throw new Error("CUSTOMER_PROFILE_NOT_FOUND");
+  if(!customer.isLoyaltyMember)throw new Error("CUSTOMER_NOT_ENROLLED_IN_SKANDI_CLUB");
   const delta=Math.trunc(Number(input.delta||0)),reason=clean(input.reason,1000);
-  if(!delta)throw new Error("POINTS_DELTA_REQUIRED");if(!reason)throw new Error("POINTS_REASON_REQUIRED");
-  const p=obj(row.payload),next=Math.max(0,(Number(p.pointsBalance??p.points??0)||0)+delta);
-  p.pointsBalance=next;p.points=next;p.lastPointsAdjustment={delta,reason,at:now(),actorId:actor(session)};
-  const updated=(await patch("club_profiles",{id:qeq(row.id)},{payload:p,updated_at:now()}))[0]||{...row,payload:p};
-  await history(input.bookingId,"SKANDI_CLUB_POINTS_ADJUSTED",{memberId:row.id,passengerId:input.passengerId||null,delta,reason,balance:next},session);
-  return{ok:true,passengerId:input.passengerId||"",member:clubView(updated),message:`SKANDI Club points updated by ${delta}.`};
+  if(!delta)throw new Error("POINTS_DELTA_REQUIRED");
+  if(!reason)throw new Error("POINTS_REASON_REQUIRED");
+
+  const transactionId=`ALTEA-${Date.now()}-${Math.random().toString(36).slice(2,8).toUpperCase()}`;
+  await insert("skandi_points_ledger",{
+    transaction_id:transactionId,
+    member_id:customer.memberId,
+    booking_id:isUuid(input.bookingId)?input.bookingId:null,
+    booking_reference:clean(input.bookingReference,100),
+    transaction_date:now(),
+    type:delta>0?"MANUAL_CREDIT":"MANUAL_DEBIT",
+    amount:delta,
+    description:reason,
+    status:"Posted",
+    is_manual_adjustment:true,
+    admin_id:clean(session?.profile?.id||session?.profile?.skId||"",160),
+    payload:{passengerId:input.passengerId||null,customerProfileId:customer.id,source:"ALTEA_RESERVATIONS"},
+    created_at:now()
+  });
+
+  await history(input.bookingId,"SKANDI_CLUB_POINTS_ADJUSTED",{
+    customerProfileId:customer.id,
+    memberId:customer.memberId,
+    passengerId:input.passengerId||null,
+    delta,reason,transactionId
+  },session);
+
+  const ledger=await select("skandi_points_ledger",{select:"amount,status",member_id:qeq(customer.memberId),limit:"1000"});
+  const balance=ledger
+    .filter(x=>upper(x.status,40)!=="VOID"&&upper(x.status,40)!=="CANCELLED")
+    .reduce((sum,x)=>sum+(Number(x.amount)||0),0);
+  const member={...customer,pointsBalance:balance};
+  return{ok:true,passengerId:input.passengerId||"",member,message:`SKANDI Club points adjusted by ${delta}.`};
 }
 
 

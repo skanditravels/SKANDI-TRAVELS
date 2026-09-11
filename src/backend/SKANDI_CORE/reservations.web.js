@@ -1,6 +1,6 @@
 // /src/backend/SKANDI_CORE/reservations.web.js
 // SKANDI ALTEA Reservations — canonical SKANDI-owned web-method facade.
-// Recovery R-006.2 — one page-callable Reservations facade.
+// Recovery R-006.3 — one page-callable Reservations facade.
 //
 // IMPORTANT WIX BOUNDARY:
 // This module imports reusable backend .js cores only. The Reservations page
@@ -140,10 +140,10 @@ async function unifiedBootstrap(input = {}) {
     transferDcsPersistence: true,
     capabilities: {
       ...(base?.capabilities || {}),
-      wixBoundaryVersion: "R-005.2",
+      wixBoundaryVersion: "R-006.3",
       skandiOwnedFacade: true,
-      providerWebMethodsPageBound: true,
-      providerInternalizationTarget: "R-006",
+      providerWebMethodsPageBound: false,
+      providerInternalized: true,
       inventoryControl: true,
       atomicInventory: true,
       transferDcs: true,
