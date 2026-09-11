@@ -1,5 +1,5 @@
 // /src/pages/Inventory Control.jsdik.js
-// SKANDI Inventory Control — R-003 canonical page bridge.
+// SKANDI Inventory Control — R-003.6 canonical page bridge.
 // Preferred HTML component: #inventoryControlEmbed
 
 import {
@@ -10,12 +10,12 @@ import {
   smartSyncAircraft,getCabinNormalizationPreview,getInventoryAudit,getInventoryQuality,
   listAssetLibrary,checkAssetLibraryDuplicate,prepareAssetLibraryUpload,finalizeAssetLibraryUpload,
   getAssetLibraryAccessUrl,registerAssetLibraryUsage,archiveAssetLibraryItem
-} from "backend/SKANDI_CORE/inventory.web";
+} from "backend/RIA/inventoryControlV4.web";
 
 const EMBED_IDS=["#inventoryControlEmbed","#alteaInventoryControlEmbed","#masterInventoryEmbed"];
 const CHILD_SOURCE="SKANDI_INVENTORY_EMBED";
 const PARENT_SOURCE="SKANDI_INVENTORY_PARENT";
-const VERSION="R-003.3";
+const VERSION="R-003.6";
 
 function findEmbed(){
   for(const id of EMBED_IDS){
