@@ -4,6 +4,7 @@ import { duffelRequest, ProviderError } from "backend/duffelClient";
 import { sbInsert, sbSelect, sbUpdate, eq } from "backend/supabaseClient";
 import { getStaffPortalSession } from "backend/RIA/staffPortalAuth.web";
 
+
 const AIRPORTS = "travel_info_airports";
 const DESTINATIONS = "inventory_master_entities";
 const BOOKINGS = "altea_bookings";
@@ -11,12 +12,14 @@ const COMPONENTS = "altea_booking_components";
 const HISTORY = "altea_pnr_history";
 const LINKS = "customer_profiles_booking_links";
 
+
 const clean = (v, max = 2000) => String(v ?? "").trim().slice(0, max);
 const upper = (v, max = 2000) => clean(v, max).toUpperCase();
 const lower = (v, max = 2000) => clean(v, max).toLowerCase();
 const money = v => Number.isFinite(Number(v)) ? Number(v) : 0;
 const safeArray = v => Array.isArray(v) ? v : [];
 const isUuid = v => /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(clean(v));
+
 
 function publicError(code, message) {
   const e = new Error(message);
@@ -62,6 +65,7 @@ function resourceId(value, prefix, label) {
   return v;
 }
 
+
 async function resolveLocation(input = {}) {
   const explicitLat = Number(input.latitude);
   const explicitLon = Number(input.longitude);
@@ -69,10 +73,12 @@ async function resolveLocation(input = {}) {
     return { latitude: explicitLat, longitude: explicitLon, label: clean(input.label || input.locationText || "Location", 160), iata: upper(input.iata, 3) };
   }
 
+
   const needleRaw = clean(input.iata || input.locationId || input.locationText || input.destination || input.destinationSlug, 180);
   if (!needleRaw) throw publicError("LOCATION_REQUIRED", "Choose a destination, airport, pickup or drop-off location.");
   const needle = lower(needleRaw, 180);
   const iataNeedle = upper(needleRaw, 3);
+
 
   const airports = await sbSelect(AIRPORTS, "select=iata,title,locationCity,country,latitude,longitude,active,published,customer_visible&limit=500").catch(() => []);
   const usableAirports = safeArray(airports).filter(r => Number.isFinite(Number(r.latitude)) && Number.isFinite(Number(r.longitude)) && (Number(r.latitude) !== 0 || Number(r.longitude) !== 0));
@@ -83,6 +89,7 @@ async function resolveLocation(input = {}) {
   if (airport) {
     return { latitude: Number(airport.latitude), longitude: Number(airport.longitude), label: clean(airport.locationCity || airport.title || airport.iata, 160), iata: upper(airport.iata, 3) };
   }
+
 
   const destinations = await sbSelect(DESTINATIONS, "select=id,public_id,code,name,slug,details&entity_type=eq.DESTINATION&active=eq.true&limit=500").catch(() => []);
   let destination = safeArray(destinations).find(r => [r.code, r.slug, r.public_id, r.name].map(v => lower(v, 220)).includes(needle));
@@ -99,8 +106,10 @@ async function resolveLocation(input = {}) {
     if (fallback) return { latitude: Number(fallback.latitude), longitude: Number(fallback.longitude), label: clean(destination.name, 160), iata: fallbackIata };
   }
 
+
   throw publicError("LOCATION_NOT_FOUND", "That location is not yet mapped to coordinates in SKANDI Travel Info.");
 }
+
 
 function stayGuestTypes(input = {}, rooms = 1) {
   const adults = Math.max(1, Math.min(9, Number(input.adults || 1)));
@@ -112,6 +121,7 @@ function stayGuestTypes(input = {}, rooms = 1) {
   for (let i = 0; i < children; i += 1) guests.push({ type: "child", age: ages[i] ?? 8 });
   return guests;
 }
+
 
 function normalizeStaySearchResult(result = {}) {
   const a = result.accommodation || {};
@@ -140,6 +150,7 @@ function normalizeStaySearchResult(result = {}) {
   };
 }
 
+
 function ratesFromSearchResult(result = {}) {
   const out = [];
   for (const room of safeArray(result?.accommodation?.rooms)) {
@@ -165,6 +176,7 @@ function ratesFromSearchResult(result = {}) {
   }
   return out.sort((a, b) => a.totalAmount - b.totalAmount);
 }
+
 
 function normalizeStayBooking(b = {}) {
   const bookedRate = safeArray(b?.accommodation?.rooms).flatMap(room => safeArray(room?.rates))[0] || {};
@@ -192,6 +204,7 @@ function normalizeStayBooking(b = {}) {
   };
 }
 
+
 function normalizeCarLocation(loc = {}) {
   return {
     name: loc.name || "",
@@ -211,6 +224,7 @@ function normalizeCarLocation(loc = {}) {
   };
 }
 
+
 function normalizeCar(car = {}) {
   return {
     name: car.name || "Vehicle",
@@ -225,6 +239,7 @@ function normalizeCar(car = {}) {
     images: safeArray(car.images).map(i => i?.url).filter(Boolean)
   };
 }
+
 
 function normalizeCarRate(rate = {}) {
   return {
@@ -245,6 +260,7 @@ function normalizeCarRate(rate = {}) {
     source: "DUFFEL_CARS"
   };
 }
+
 
 function normalizeCarQuote(q = {}) {
   return {
@@ -269,6 +285,7 @@ function normalizeCarQuote(q = {}) {
     source: "DUFFEL_CARS"
   };
 }
+
 
 function normalizeCarBooking(b = {}) {
   return {
@@ -296,17 +313,20 @@ function normalizeCarBooking(b = {}) {
   };
 }
 
+
 async function requireStaff() {
   const session = await getStaffPortalSession();
   if (!session?.loggedIn || !session?.authorized) throw publicError("AUTH_REQUIRED", "An authorized SKANDI staff session is required.");
   return session;
 }
 
+
 async function requireMember() {
   const member = await currentMember.getMember();
   if (!member?._id) throw publicError("LOGIN_REQUIRED", "Sign in to manage or book this trip.");
   return member;
 }
+
 
 function driverPayload(input = {}) {
   const driver = input.driver || {};
@@ -318,6 +338,7 @@ function driverPayload(input = {}) {
     date_of_birth: isoDate(driver.dateOfBirth, "driver date of birth")
   };
 }
+
 
 async function searchStaysInternal(input = {}) {
   const checkIn = futureDate(input.checkInDate || input.departureDate, "check-in date");
@@ -353,13 +374,16 @@ async function searchStaysInternal(input = {}) {
   return { location, searchId: response?.data?.id || "", items: safeArray(response?.data?.results).map(normalizeStaySearchResult).filter(i => i.id) };
 }
 
+
 export const searchDuffelStays = webMethod(Permissions.Anyone, async input => searchStaysInternal(input || {}));
+
 
 export const fetchDuffelStayRates = webMethod(Permissions.Anyone, async ({ searchResultId = "" } = {}) => {
   const id = resourceId(searchResultId, "srr_", "stay search result");
   const response = await duffelRequest(`/stays/search_results/${encodeURIComponent(id)}/actions/fetch_all_rates`, { method: "POST" });
   return { searchResultId: id, accommodation: normalizeStaySearchResult(response?.data || {}), rates: ratesFromSearchResult(response?.data || {}) };
 });
+
 
 export const quoteDuffelStay = webMethod(Permissions.Anyone, async ({ rateId = "" } = {}) => {
   const id = resourceId(rateId, "rat_", "stay rate");
@@ -387,6 +411,7 @@ export const quoteDuffelStay = webMethod(Permissions.Anyone, async ({ rateId = "
   } };
 });
 
+
 export const searchDuffelCars = webMethod(Permissions.Anyone, async (input = {}) => {
   const pickupDate = futureDate(input.pickupDate, "pickup date");
   const dropoffDate = futureDate(input.dropoffDate, "drop-off date");
@@ -409,11 +434,13 @@ export const searchDuffelCars = webMethod(Permissions.Anyone, async (input = {})
   return { searchId: response?.data?.id || "", pickup, dropoff, items: safeArray(response?.data?.rates).map(normalizeCarRate).filter(r => r.id) };
 });
 
+
 export const quoteDuffelCar = webMethod(Permissions.Anyone, async ({ rateId = "" } = {}) => {
   const id = resourceId(rateId, "rae_", "car rate");
   const response = await duffelRequest("/cars/quotes", { method: "POST", body: { data: { rate_id: id } } });
   return { quote: normalizeCarQuote(response?.data || {}) };
 });
+
 
 export const createDuffelComponentClientKey = webMethod(Permissions.SiteMember, async () => {
   await requireMember();
@@ -421,15 +448,29 @@ export const createDuffelComponentClientKey = webMethod(Permissions.SiteMember, 
   return { componentClientKey: clean(response?.data?.component_client_key, 5000) };
 });
 
+
 async function createCarBookingInternal(input = {}, member = null) {
   const quoteId = resourceId(input.quoteId, "qut_", "car quote");
   const latestQuote = (await duffelRequest(`/cars/quotes/${encodeURIComponent(quoteId)}`).catch(() => null))?.data || null;
   const paymentType = lower(latestQuote?.payment_type || input.paymentType, 30);
+  const privacyPolicies = safeArray(latestQuote?.privacy_policies);
+  if (privacyPolicies.length && input.privacyPoliciesAccepted !== true) {
+    throw publicError(
+      "CAR_PRIVACY_ACCEPTANCE_REQUIRED",
+      "The customer must independently accept the rental privacy policy disclosures before the car can be booked."
+    );
+  }
+  const privacyAcceptedAt = privacyPolicies.length ? new Date().toISOString() : "";
   const data = {
     quote_id: quoteId,
     driver: driverPayload(input),
     metadata: {
       integration: member ? "skandi_customer" : "skandi_staff",
+      ...(privacyPolicies.length ? {
+        privacy_policies_accepted: "true",
+        privacy_policies_accepted_at: privacyAcceptedAt,
+        privacy_policy_count: String(privacyPolicies.length)
+      } : {}),
       ...(input.alteaBookingId ? { altea_booking_id: clean(input.alteaBookingId, 36) } : {})
     }
   };
@@ -442,6 +483,7 @@ async function createCarBookingInternal(input = {}, member = null) {
   const response = await duffelRequest("/cars/bookings", { method: "POST", body: { data } });
   return normalizeCarBooking(response?.data || {});
 }
+
 
 async function createStandaloneCustomerCarAltea(member, carBooking, input = {}) {
   const ref = `SKCAR-${Date.now().toString(36).toUpperCase()}`;
@@ -492,6 +534,7 @@ async function createStandaloneCustomerCarAltea(member, carBooking, input = {}) 
   return booking;
 }
 
+
 export const createCustomerDuffelCarBooking = webMethod(Permissions.SiteMember, async (input = {}) => {
   const member = await requireMember();
   const booking = await createCarBookingInternal(input, member);
@@ -507,6 +550,7 @@ export const createCustomerDuffelCarBooking = webMethod(Permissions.SiteMember, 
   return { ok: true, booking, alteaBookingId };
 });
 
+
 export const getCustomerDuffelCarBooking = webMethod(Permissions.SiteMember, async ({ bookingId = "", alteaBookingId = "" } = {}) => {
   const member = await requireMember();
   if (!isUuid(alteaBookingId)) throw publicError("BOOKING_REQUIRED", "Choose the SKANDI trip containing this car rental.");
@@ -519,6 +563,7 @@ export const getCustomerDuffelCarBooking = webMethod(Permissions.SiteMember, asy
   return { booking: normalizeCarBooking(response?.data || {}) };
 });
 
+
 export const cancelCustomerDuffelCarBooking = webMethod(Permissions.SiteMember, async ({ bookingId = "", alteaBookingId = "" } = {}) => {
   const member = await requireMember();
   if (!isUuid(alteaBookingId)) throw publicError("BOOKING_REQUIRED", "Choose the SKANDI trip containing this car rental.");
@@ -530,6 +575,7 @@ export const cancelCustomerDuffelCarBooking = webMethod(Permissions.SiteMember, 
   await syncGroundComponent(alteaBookingId, "CAR_RENTAL", booking, "DUFFEL_CAR_BOOKING_CANCELLED");
   return { ok: true, booking };
 });
+
 
 async function syncGroundComponent(alteaBookingId, type, providerBooking, eventType) {
   if (!isUuid(alteaBookingId)) throw publicError("INVALID_BOOKING_ID", "The ALTEA booking reference is invalid.");
@@ -560,6 +606,8 @@ async function syncGroundComponent(alteaBookingId, type, providerBooking, eventT
 }
 
 
+
+
 function stayGuestsForBooking(input = {}) {
   const guests = safeArray(input.guests).map(g => ({
     given_name: clean(g.givenName || g.firstName, 80),
@@ -568,6 +616,7 @@ function stayGuestsForBooking(input = {}) {
   if (!guests.length) throw publicError("GUEST_REQUIRED", "Add at least one hotel guest.");
   return guests;
 }
+
 
 async function createStayBookingInternal(input = {}, member = null) {
   const quoteId = resourceId(input.quoteId, "quo_", "stay quote");
@@ -596,6 +645,7 @@ async function createStayBookingInternal(input = {}, member = null) {
   }
   return normalizeStayBooking(response?.data || {});
 }
+
 
 async function createStandaloneCustomerStayAltea(member, stayBooking, input = {}) {
   const ref = `SKHOT-${Date.now().toString(36).toUpperCase()}`;
@@ -642,6 +692,7 @@ async function createStandaloneCustomerStayAltea(member, stayBooking, input = {}
   return booking;
 }
 
+
 export const createCustomerDuffelStayBooking = webMethod(Permissions.SiteMember, async (input = {}) => {
   const member = await requireMember();
   const booking = await createStayBookingInternal(input, member);
@@ -657,6 +708,7 @@ export const createCustomerDuffelStayBooking = webMethod(Permissions.SiteMember,
   return { ok: true, booking, alteaBookingId };
 });
 
+
 export const getCustomerDuffelStayBooking = webMethod(Permissions.SiteMember, async ({ bookingId = "", alteaBookingId = "" } = {}) => {
   const member = await requireMember();
   if (!isUuid(alteaBookingId)) throw publicError("BOOKING_REQUIRED", "Choose the SKANDI trip containing this hotel.");
@@ -668,6 +720,7 @@ export const getCustomerDuffelStayBooking = webMethod(Permissions.SiteMember, as
   const response = await duffelRequest(`/stays/bookings/${encodeURIComponent(supplierId)}`);
   return { booking: normalizeStayBooking(response?.data || {}) };
 });
+
 
 export const cancelCustomerDuffelStayBooking = webMethod(Permissions.SiteMember, async ({ bookingId = "", alteaBookingId = "" } = {}) => {
   const member = await requireMember();
@@ -684,11 +737,14 @@ export const cancelCustomerDuffelStayBooking = webMethod(Permissions.SiteMember,
 });
 
 
+
+
 export const createDuffelComponentClientKeyStaff = webMethod(Permissions.SiteMember, async () => {
   await requireStaff();
   const response = await duffelRequest("/identity/component_client_keys", { method: "POST", body: {} });
   return { componentClientKey: clean(response?.data?.component_client_key, 5000) };
 });
+
 
 export const createDuffelStayBookingStaff = webMethod(Permissions.SiteMember, async (input = {}) => {
   await requireStaff();
@@ -703,6 +759,7 @@ export const getDuffelStayBookingStaff = webMethod(Permissions.SiteMember, async
   return { booking: normalizeStayBooking(response?.data || {}) };
 });
 
+
 export const cancelDuffelStayBookingStaff = webMethod(Permissions.SiteMember, async ({ bookingId = "", alteaBookingId = "" } = {}) => {
   await requireStaff();
   const id = resourceId(bookingId, "bok_", "stay booking");
@@ -712,6 +769,7 @@ export const cancelDuffelStayBookingStaff = webMethod(Permissions.SiteMember, as
   return { booking };
 });
 
+
 export const getDuffelCarBookingStaff = webMethod(Permissions.SiteMember, async ({ bookingId = "" } = {}) => {
   await requireStaff();
   const id = resourceId(bookingId, "boo_", "car booking");
@@ -719,12 +777,14 @@ export const getDuffelCarBookingStaff = webMethod(Permissions.SiteMember, async 
   return { booking: normalizeCarBooking(response?.data || {}) };
 });
 
+
 export const createDuffelCarBookingStaff = webMethod(Permissions.SiteMember, async (input = {}) => {
   await requireStaff();
   const booking = await createCarBookingInternal(input, null);
   if (isUuid(input.alteaBookingId)) await syncGroundComponent(input.alteaBookingId, "CAR_RENTAL", booking, "DUFFEL_CAR_BOOKING_CREATED");
   return { booking };
 });
+
 
 export const cancelDuffelCarBookingStaff = webMethod(Permissions.SiteMember, async ({ bookingId = "", alteaBookingId = "" } = {}) => {
   await requireStaff();
@@ -735,6 +795,7 @@ export const cancelDuffelCarBookingStaff = webMethod(Permissions.SiteMember, asy
   return { booking };
 });
 
+
 export const syncDuffelStayBookingToAltea = webMethod(Permissions.SiteMember, async ({ alteaBookingId = "", stayBooking = null, bookingId = "" } = {}) => {
   await requireStaff();
   let b = stayBooking;
@@ -744,6 +805,7 @@ export const syncDuffelStayBookingToAltea = webMethod(Permissions.SiteMember, as
   return { ok: true };
 });
 
+
 export const syncDuffelCarBookingToAltea = webMethod(Permissions.SiteMember, async ({ alteaBookingId = "", carBooking = null, bookingId = "" } = {}) => {
   await requireStaff();
   let b = carBooking;
@@ -752,6 +814,7 @@ export const syncDuffelCarBookingToAltea = webMethod(Permissions.SiteMember, asy
   await syncGroundComponent(alteaBookingId, "CAR_RENTAL", b, "DUFFEL_CAR_BOOKING_SYNCED");
   return { ok: true };
 });
+
 
 export function sanitizeGroundProviderError(error) {
   if (error instanceof ProviderError) return publicError(error.code || "DUFFEL_ERROR", error.publicMessage || "Duffel could not complete the request.");
