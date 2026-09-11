@@ -6,6 +6,7 @@
 // Duffel supplier adapters remain separate internal dependencies until R-006.
 // Customer confirmed-cart -> ALTEA synchronization remains database-trigger owned.
 
+
 import { createHash } from "crypto";
 import { restRequest, rpcRequest } from "./supabaseServer.js";
 import { getStaffPortalSessionCore } from "./staffAuth.js";
@@ -15,8 +16,13 @@ import {
   registerAssetUsageCore
 } from "./assets.js";
 import { checkExternalTravelRequirements } from "./providers/travelRequirements.js";
+import { renderBookingConfirmation } from "./documents/bookingConfirmation.js";
+import { renderAtbTicket } from "./documents/atbTicket.js";
+import { renderBagTag } from "./documents/bagTag.js";
 
-export const RESERVATIONS_CORE_VERSION = "R-005.2";
+
+export const RESERVATIONS_CORE_VERSION = "R-005.4";
+
 
 const clean=(v,n=12000)=>String(v??"").trim().slice(0,n);
 const upper=(v,n=12000)=>clean(v,n).toUpperCase();
@@ -26,6 +32,7 @@ const obj=v=>v&&typeof v==="object"&&!Array.isArray(v)?v:{};
 const isUuid=v=>/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(clean(v,80));
 const qeq=v=>`eq.${clean(v,500)}`;
 const now=()=>new Date().toISOString();
+
 
 const PRODUCT_TYPES=new Set([
   "CHARTER_PACKAGE","FLIGHT_ONLY","HOTEL_ONLY","TRANSFER_ONLY",
@@ -46,6 +53,7 @@ const SELLABLE_TYPES=new Set([
   "HOTEL","TRANSFER","GUIDED_TOUR","ACTIVITY","PARTNER_TICKET",
   "PACKAGE","ANCILLARY","CAR_RENTAL"
 ]);
+
 
 function normalizedPermissionValues(session){
   const p=obj(session?.profile);
@@ -77,6 +85,7 @@ async function select(table,query={}){return arr(await restRequest({table,method
 async function insert(table,body){return arr(await restRequest({table,method:"POST",body,prefer:"return=representation"}))}
 async function patch(table,query,body){return arr(await restRequest({table,method:"PATCH",query,body,prefer:"return=representation"}))}
 async function remove(table,query){return restRequest({table,method:"DELETE",query,prefer:"return=minimal"})}
+
 
 function bookingView(r={}){
   const p=obj(r.payload);
@@ -133,7 +142,7 @@ function documentView(r={}){
   const p=obj(r.payload);
   return{
     id:r.id,bookingId:r.booking_id||"",passengerId:r.passenger_id||"",
-    documentType:upper(r.document_type,80),storageDocumentType:r.document_type,
+    documentType:upper(p.renderVariant||r.document_type,80),storageDocumentType:r.document_type,
     documentNumber:r.document_number||"",status:upper(r.status,40),
     storageStatus:r.status,pdfUrl:r.pdf_url||"",htmlSnapshot:r.html_snapshot||"",
     assetId:p.assetId||"",assetCode:p.assetCode||"",assetStatus:p.assetStatus||"",
@@ -194,6 +203,7 @@ function safeApis(v){
   const x=lower(v,40);return APIS_STATUSES.has(x)?x:"not_started";
 }
 
+
 export async function getAlteaBookingWorkspaceCore(input={}){
   await requireReservationsAccessCore();
   const id=clean(input.bookingId||input.id,80);
@@ -219,6 +229,7 @@ export async function getAlteaBookingWorkspaceCore(input={}){
   }};
 }
 
+
 export async function searchAlteaBookingsCore(input={}){
   await requireReservationsAccessCore();
   const q=lower(input.query,250),status=lower(input.status,80);
@@ -230,6 +241,7 @@ export async function searchAlteaBookingsCore(input={}){
   ].join(" ").toLowerCase().includes(q));
   return{ok:true,bookings:rows.slice(0,250).map(bookingView)};
 }
+
 
 export async function getAlteaUnifiedBootstrapCore(input={}){
   const session=await requireReservationsAccessCore();
@@ -249,6 +261,7 @@ export async function getAlteaUnifiedBootstrapCore(input={}){
     }
   };
 }
+
 
 export async function createAlteaLocalBookingCore(input={}){
   const session=await requireReservationsAccessCore({write:true});
@@ -283,6 +296,7 @@ export async function createAlteaLocalBookingCore(input={}){
   return getAlteaBookingWorkspaceCore({bookingId:booking.id});
 }
 
+
 function bookingPatch(input={}){
   const p=obj(input),db={},payload={};
   if(p.bookingType!==undefined)db.booking_type=upper(p.bookingType,80);
@@ -315,6 +329,7 @@ export async function updateAlteaBookingCore(input={}){
   await history(id,"BOOKING_UPDATED",{changed:Object.keys({...mapped.db,...mapped.payload})},session);
   return{ok:true,booking:bookingView(updated)};
 }
+
 
 function passengerPatch(input={},before={}){
   const p=obj(input),body={},payload={...obj(before.payload)};
@@ -409,6 +424,7 @@ export async function updateAlteaBookingComponentCore(input={}){
   return{ok:true,component:componentView(updated)};
 }
 
+
 function supplierStatus(order={}){
   const s=lower(order.status,80);
   if(s.includes("cancel"))return"cancelled";
@@ -466,6 +482,7 @@ export async function syncDuffelOrderToAlteaCore(input={}){
   }
   if(!saved?.id)throw new Error("ALTEA_DUFFEL_SYNC_FAILED");
 
+
   const pax=orderPassengers(order);
   for(let i=0;i<pax.length;i++){
     const p=obj(pax[i]),pref=clean(p.id||p.passengerRef,120)||`PAX${i+1}`;
@@ -484,6 +501,7 @@ export async function syncDuffelOrderToAlteaCore(input={}){
   await history(saved.id,input.eventType||"DUFFEL_ORDER_SYNCED",{supplierOrderId:order.id,bookingReference:ref},session);
   return getAlteaBookingWorkspaceCore({bookingId:saved.id});
 }
+
 
 export async function searchReservationInventoryCore(input={}){
   await requireReservationsAccessCore();
@@ -547,6 +565,7 @@ export async function getReservationInventoryStatusCore(input={}){
   return{ok:true,booking:booking?bookingView(booking):null,components:components.map(componentView)};
 }
 
+
 function clubView(r={}){
   const p=obj(r.payload);
   return{id:r.id,memberId:r.member_id,memberNumber:clean(p.memberNumber||p.member_number||r.club_id||r.member_id,100),
@@ -587,6 +606,7 @@ export async function adjustSkandiClubPointsCore(input={}){
   return{ok:true,passengerId:input.passengerId||"",member:clubView(updated),message:`SKANDI Club points updated by ${delta}.`};
 }
 
+
 function normalizeRequirement(r={}){return{id:r.id,title:r.title||"Travel requirement",category:r.category||"GUIDANCE",body:r.body||"",payload:obj(r.payload)}}
 export async function checkAlteaTravelRequirementsCore(input={}){
   const session=await requireReservationsAccessCore({write:true});
@@ -616,23 +636,35 @@ export async function checkAlteaTravelRequirementsCore(input={}){
   return{ok:true,provider:decision.provider,decision};
 }
 
-function requestedDocType(value){
+
+
+function requestedDocumentSpec(value,component=null){
   const t=upper(value||"BOOKING_CONFIRMATION",80).replace(/[\s-]+/g,"_");
   if(["ETKT","E_TICKET","EMD","AIRLINE_BOARDING_PASS","AIRLINE_BAG_TAG"].includes(t))throw new Error("SUPPLIER_DOCUMENT_AUTHORITY_REQUIRED");
-  if(t==="BOOKING_CONFIRMATION"||t==="CONFIRMATION")return"booking_confirmation";
-  if(t==="BOARDING_PASS")return"boarding_pass";
-  if(t==="BAG_TAG"||t==="BAGGAGE_TAG")return"baggage_tag";
-  if(t==="INVOICE")return"invoice";
-  if(t==="APIS_REPORT")return"apis_report";
-  if(t.includes("VOUCHER")||t.startsWith("TRANSFER_")||t==="TRANSFER_DOCUMENT")return"voucher";
-  if(t==="TICKET")return"ticket";
-  const lowerType=t.toLowerCase();
-  if(DOCUMENT_TYPES.has(lowerType))return lowerType;
-  return"booking_confirmation";
+  if(t==="BOOKING_CONFIRMATION"||t==="CONFIRMATION")return{storageType:"booking_confirmation",variant:"BOOKING_CONFIRMATION"};
+  if(t==="BOARDING_PASS"||t==="BOARDING_CARD")return{storageType:"boarding_pass",variant:"BOARDING_CARD"};
+  if(t==="BAG_TAG"||t==="BAGGAGE_TAG")return{storageType:"baggage_tag",variant:"BAGGAGE_TAG"};
+  if(t==="TRANSFER_TICKET"||t==="TRANSFER_DOCUMENT"||t.startsWith("TRANSFER_"))return{storageType:"voucher",variant:"TRANSFER_TICKET"};
+  if(t==="TOUR_TICKET"||t==="ACTIVITY_TICKET"||t==="EXCURSION_TICKET"||t.startsWith("TOUR_")||t.startsWith("ACTIVITY_")||t.startsWith("EXCURSION_"))return{storageType:"voucher",variant:"TOUR_TICKET"};
+  if(t==="INVOICE")return{storageType:"invoice",variant:"INVOICE"};
+  if(t==="APIS_REPORT")return{storageType:"apis_report",variant:"APIS_REPORT"};
+  if(t==="TICKET")return{storageType:"ticket",variant:"SERVICE_VOUCHER"};
+  if(t.includes("VOUCHER")){
+    const ct=upper(component?.component_type||component?.componentType,80);
+    if(ct.includes("TRANSFER"))return{storageType:"voucher",variant:"TRANSFER_TICKET"};
+    if(ct.includes("TOUR")||ct.includes("ACTIVITY")||ct.includes("EXCURSION")||ct.includes("GUIDED"))return{storageType:"voucher",variant:"TOUR_TICKET"};
+    return{storageType:"voucher",variant:"SERVICE_VOUCHER"};
+  }
+  return{storageType:"booking_confirmation",variant:"BOOKING_CONFIRMATION"};
 }
-function requestedDocNumber(value,type){
+function requestedDocNumber(value,variant){
   const v=upper(value,120).replace(/[^A-Z0-9-]/g,"").slice(0,80);
-  return v||`SK-${upper(type,24).replace(/[^A-Z0-9]/g,"").slice(0,12)}-${Date.now().toString().slice(-10)}`;
+  const prefix={
+    BOOKING_CONFIRMATION:"BC",BOARDING_CARD:"BP",BAGGAGE_TAG:"BAG",
+    TRANSFER_TICKET:"TRF",TOUR_TICKET:"TOUR",SERVICE_VOUCHER:"VCH",
+    INVOICE:"INV",APIS_REPORT:"APIS"
+  }[upper(variant,40)]||"DOC";
+  return v||`SK-${prefix}-${Date.now().toString().slice(-10)}`;
 }
 function isSkandiDcsBooking(b={}){
   const p=obj(b.payload),kind=upper(b.booking_type||b.product_type,80);
@@ -643,15 +675,73 @@ async function hasTransferAuthority(bookingId,componentId=""){
   const rows=await select("altea_booking_components",{select:"id,booking_id,component_type,status",booking_id:qeq(bookingId),limit:"500"});
   return rows.some(c=>(!componentId||c.id===componentId)&&upper(c.component_type,80).includes("TRANSFER")&&!["REMOVED","CANCELLED"].includes(upper(c.status,80)));
 }
-function docHtml(type,b,p=null,authority="SKANDI_BOOKING"){
+function isTourComponent(component={}){
+  const type=upper(component.component_type||component.componentType,80);
+  return type.includes("TOUR")||type.includes("ACTIVITY")||type.includes("EXCURSION")||type.includes("GUIDED");
+}
+function baggageLicensePlate(input={},booking={},passenger={},segments=[]){
+  const bp=obj(booking.payload),pp=obj(passenger?.payload);
+  const seg=arr(segments).find(s=>upper(s.segment_type||s.segmentType,80).includes("FLIGHT"))||arr(segments)[0]||{};
+  const sp=obj(seg.payload);
+  const candidate=clean(
+    input.licensePlate||input.baggageLicensePlate||
+    pp.baggageLicensePlate||pp.baggageTagLicensePlate||
+    sp.baggageLicensePlate||bp.baggageLicensePlate,
+    40
+  ).replace(/\D/g,"");
+  if(!/^\d{10}$/.test(candidate))throw new Error("BAGGAGE_LICENSE_PLATE_10_DIGITS_REQUIRED");
+  return candidate;
+}
+async function generatedDocumentContext(bookingId,input={}){
+  const [passengers,components,segments]=await Promise.all([
+    select("altea_passengers",{select:"*",booking_id:qeq(bookingId),order:"created_at.asc",limit:"500"}),
+    select("altea_booking_components",{select:"*",booking_id:qeq(bookingId),order:"created_at.asc",limit:"1000"}),
+    select("altea_segments",{select:"*",booking_id:qeq(bookingId),order:"created_at.asc",limit:"1000"})
+  ]);
+  const passenger=isUuid(input.passengerId)?passengers.find(x=>x.id===input.passengerId)||null:passengers[0]||null;
+  const requestedComponentId=clean(input.componentId||input.departureId,80);
+  const component=isUuid(requestedComponentId)?components.find(x=>x.id===requestedComponentId)||null:null;
+  const requestedSegmentId=clean(input.segmentId,80);
+  const segment=isUuid(requestedSegmentId)?segments.find(x=>x.id===requestedSegmentId)||null:
+    segments.find(x=>upper(x.segment_type,80).includes("FLIGHT"))||segments[0]||null;
+  return{passengers,components,segments,passenger,component,segment};
+}
+function controlledFallbackHtml(variant,b,p=null,authority="SKANDI_BOOKING"){
   const ref=clean(b?.booking_reference||b?.pnr_locator||b?.id,120);
   const name=clean(p?.display_name||`${p?.first_name||""} ${p?.last_name||""}`.trim()||b?.customer_name||"Customer",300);
-  const notice=authority==="SKANDI_CHARTER_DCS"
-    ?"Valid only for the SKANDI-controlled charter departure recorded in ALTEA. It is not an airline-issued document for a supplier-controlled flight."
-    :authority==="SKANDI_TRANSFER"
-      ?"This is a SKANDI transfer operations document. It is not an airline boarding pass, airline ticket, EMD or airline baggage tag."
-      :"This is a SKANDI-controlled booking document. Airline-issued tickets, EMDs, boarding passes and airline baggage tags remain supplier-controlled.";
-  return`<!doctype html><html><head><meta charset="utf-8"><title>SKANDI ${clean(type,120)}</title></head><body style="font-family:Arial,sans-serif;padding:32px;color:#17212b"><h1 style="color:#005eb8">SKANDI TRAVELS</h1><h2>${clean(type,120)}</h2><p><b>Booking reference:</b> ${ref}</p><p><b>Passenger/Customer:</b> ${name}</p><p>${notice}</p></body></html>`;
+  const notice=authority==="SKANDI_TRANSFER"
+    ?"SKANDI ground-service document."
+    :authority==="SKANDI_TOUR"
+      ?"SKANDI tour/activity service document."
+      :"SKANDI-controlled booking document.";
+  return`<!doctype html><html><head><meta charset="utf-8"><title>SKANDI ${clean(variant,120)}</title></head><body style="font-family:Arial,sans-serif;padding:32px;color:#17212b"><h1 style="color:#005eb8">SKANDI TRAVELS</h1><h2>${clean(variant,120).replaceAll("_"," ")}</h2><p><b>Booking reference:</b> ${ref}</p><p><b>Passenger/Customer:</b> ${name}</p><p>${notice}</p></body></html>`;
+}
+function renderGeneratedDocument({spec,booking,context,documentNumber,authority,input}){
+  if(spec.variant==="BOOKING_CONFIRMATION"){
+    return renderBookingConfirmation({
+      booking,passengers:context.passengers,segments:context.segments,
+      components:context.components,documentNumber,generatedAt:now()
+    });
+  }
+  if(spec.variant==="BAGGAGE_TAG"){
+    return renderBagTag({
+      booking,passenger:context.passenger||{},segments:context.segments,
+      documentNumber,licensePlate:baggageLicensePlate(input,booking,context.passenger,context.segments),
+      weightKg:input.weightKg??context.passenger?.payload?.baggageWeight,
+      pieceNumber:input.pieceNumber||1,
+      pieceCount:input.pieceCount||context.passenger?.payload?.baggageCount||1,
+      journeyStatus:input.journeyStatus||context.passenger?.payload?.baggageStatus,
+      issuedAt:now()
+    });
+  }
+  if(["BOARDING_CARD","TRANSFER_TICKET","TOUR_TICKET"].includes(spec.variant)){
+    return renderAtbTicket({
+      variant:spec.variant,booking,passenger:context.passenger||{},
+      segment:context.segment||{},component:context.component||{},
+      documentNumber,authority
+    });
+  }
+  return controlledFallbackHtml(spec.variant,booking,context.passenger,authority);
 }
 async function prepareGeneratedHtmlAsset({html,booking,documentId,documentNumber,documentType,manifestId=""}){
   const bytes=new TextEncoder().encode(html);
@@ -679,40 +769,62 @@ export async function generateAlteaBookingDocumentCore(input={}){
   const session=await requireReservationsAccessCore({write:true});
   const id=clean(input.bookingId,80);if(!isUuid(id))throw new Error("BOOKING_REQUIRED");
   const b=await bookingRow(id);if(!b)throw new Error("BOOKING_NOT_FOUND");
-  const p=isUuid(input.passengerId)?await passengerRow(input.passengerId):null;
-  const type=requestedDocType(input.documentType),requested=upper(input.documentType||"",80);
+  const context=await generatedDocumentContext(id,input);
+  const spec=requestedDocumentSpec(input.documentType,context.component);
   let authority="SKANDI_BOOKING";
-  if(type==="boarding_pass"||type==="baggage_tag"){
+
+  if(spec.variant==="BOARDING_CARD"||spec.variant==="BAGGAGE_TAG"){
     if(!isSkandiDcsBooking(b))throw new Error("SKANDI_DCS_AUTHORITY_REQUIRED");
     authority="SKANDI_CHARTER_DCS";
   }
-  if(requested.startsWith("TRANSFER_")||requested==="TRANSFER_DOCUMENT"){
+  if(spec.variant==="TRANSFER_TICKET"){
     const componentId=clean(input.componentId||input.departureId,80);
     if(!(await hasTransferAuthority(id,componentId)))throw new Error("SKANDI_TRANSFER_AUTHORITY_REQUIRED");
     authority="SKANDI_TRANSFER";
   }
-  const number=requestedDocNumber(input.documentNumber,type),html=docHtml(type,b,p,authority);
+  if(spec.variant==="TOUR_TICKET"){
+    if(!context.component||!isTourComponent(context.component)||["REMOVED","CANCELLED"].includes(upper(context.component.status,80))){
+      throw new Error("SKANDI_TOUR_AUTHORITY_REQUIRED");
+    }
+    authority="SKANDI_TOUR";
+  }
+  if(["BOARDING_CARD","BAGGAGE_TAG","TRANSFER_TICKET","TOUR_TICKET"].includes(spec.variant)&&!context.passenger){
+    throw new Error("PASSENGER_REQUIRED");
+  }
+
+  const number=requestedDocNumber(input.documentNumber,spec.variant);
+  const html=renderGeneratedDocument({spec,booking:b,context,documentNumber:number,authority,input});
   const rows=await insert("altea_documents",{
-    booking_id:id,passenger_id:p?.id||null,document_type:type,document_number:number,
+    booking_id:id,passenger_id:context.passenger?.id||null,document_type:spec.storageType,document_number:number,
     status:"draft",pdf_url:null,html_snapshot:html,issued_at:null,issued_by_agent_user_id:actor(session),
     payload:{source:"SKANDI_CORE_RESERVATIONS",bookingReference:b.booking_reference,provider:"SKANDI",
-      authority,componentId:input.componentId||input.departureId||null,assetStatus:"PENDING"}
+      authority,renderVariant:spec.variant,componentId:input.componentId||input.departureId||null,
+      segmentId:input.segmentId||context.segment?.id||null,assetStatus:"PENDING"}
   });
   const d=rows[0];if(!d?.id)throw new Error("DOCUMENT_CREATE_FAILED");
   await insert("altea_booking_documents",{
-    booking_id:id,passenger_id:p?.id||null,provider:"SKANDI",provider_document_id:d.id,
-    document_type:type,document_number:number,status:"DRAFT",
-    payload:{alteaDocumentId:d.id,authority,componentId:input.componentId||input.departureId||null,assetStatus:"PENDING"}
+    booking_id:id,passenger_id:context.passenger?.id||null,provider:"SKANDI",provider_document_id:d.id,
+    document_type:spec.storageType,document_number:number,status:"DRAFT",
+    payload:{alteaDocumentId:d.id,authority,renderVariant:spec.variant,
+      componentId:input.componentId||input.departureId||null,
+      segmentId:input.segmentId||context.segment?.id||null,assetStatus:"PENDING"}
   });
-  let assetUpload=await prepareGeneratedHtmlAsset({html,booking:b,documentId:d.id,documentNumber:number,documentType:type});
+  let assetUpload=await prepareGeneratedHtmlAsset({html,booking:b,documentId:d.id,documentNumber:number,documentType:spec.variant});
   if(assetUpload.duplicate&&assetUpload.asset){
     await linkGeneratedAsset({documentId:d.id,asset:assetUpload.asset,session});
     assetUpload=null;
   }
-  await history(id,"DOCUMENT_GENERATED",{documentId:d.id,documentType:type,documentNumber:number,authority,assetUploadRequired:!!assetUpload},session);
+  await history(id,"DOCUMENT_GENERATED",{
+    documentId:d.id,documentType:spec.storageType,renderVariant:spec.variant,
+    documentNumber:number,authority,assetUploadRequired:!!assetUpload
+  },session);
   const current=(await select("altea_documents",{select:"*",id:qeq(d.id),limit:"1"}))[0]||d;
-  return{ok:true,document:documentView(current),assetUpload,message:"SKANDI document generated. File persistence is handled by the Platform Asset Library."};
+  return{
+    ok:true,document:documentView(current),assetUpload,
+    message:`SKANDI ${spec.variant.replaceAll("_"," ").toLowerCase()} generated. File persistence is handled by the Platform Asset Library.`
+  };
 }
+
 async function linkGeneratedAsset({documentId,manifestId,asset,session}){
   if(documentId){
     const d=(await select("altea_documents",{select:"*",id:qeq(documentId),limit:"1"}))[0];
@@ -756,6 +868,7 @@ export async function updateAlteaDcsPassengerCore(input={}){
   await history(bookingId,"DCS_PASSENGER_UPDATED",{passengerId:p.id,patch:change},session);
   return{ok:true,passenger:passengerView(updated)};
 }
+
 
 function transferDeparture(component,booking,passengers){
   const p=obj(component.payload),state=obj(p.transferDcsState);
