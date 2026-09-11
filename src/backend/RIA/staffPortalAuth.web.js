@@ -1,6 +1,6 @@
 // /src/backend/RIA/staffPortalAuth.web.js
 // SKANDI Staff Portal Auth — canonical web compatibility boundary.
-// R-003.6
+// R-003.8
 //
 // No identity or authorization logic belongs in this file. All logic lives in
 // SKANDI_CORE/staffAuth.js and reads Supabase as the single staff source.
@@ -9,7 +9,8 @@ import { webMethod, Permissions } from "wix-web-module";
 import {
   loginStaffWithSkIdCore,
   getStaffPortalSessionCore,
-  getPortalAppsCore
+  getPortalAppsCore,
+  getAlteaLaunchpadAppsCore
 } from "../SKANDI_CORE/staffAuth.js";
 
 export const loginStaffWithSkId = webMethod(
@@ -25,4 +26,9 @@ export const getStaffPortalSession = webMethod(
 export const getPortalApps = webMethod(
   Permissions.SiteMember,
   getPortalAppsCore
+);
+
+export const getAlteaLaunchpadApps = webMethod(
+  Permissions.SiteMember,
+  getAlteaLaunchpadAppsCore
 );

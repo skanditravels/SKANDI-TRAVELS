@@ -1,5 +1,5 @@
 // /src/backend/RIA/supabaseServer.js
-// SKANDI Supabase compatibility facade — R-003.6
+// SKANDI Supabase compatibility facade — R-003.8
 //
 // Canonical Supabase transport, secret handling, allowlists and storage logic
 // live exclusively in SKANDI_CORE/supabaseServer.js. This file exists only so
