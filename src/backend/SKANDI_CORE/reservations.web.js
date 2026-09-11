@@ -1,14 +1,14 @@
 // /src/backend/SKANDI_CORE/reservations.web.js
 // SKANDI ALTEA Reservations — canonical SKANDI-owned web-method facade.
-// Recovery R-005.2.
+// Recovery R-006.2 — one page-callable Reservations facade.
 //
 // IMPORTANT WIX BOUNDARY:
-// This module imports ONLY reusable backend .js code.
-// It must not import Duffel page-callable .web.js provider modules.
-// Existing Duffel .web providers remain page-boundary dependencies until R-006
-// extracts reusable internal provider .js modules.
+// This module imports reusable backend .js cores only. The Reservations page
+// must not import Duffel provider .web modules directly.
+
 
 import { webMethod, Permissions } from "wix-web-module";
+
 
 import {
   RESERVATIONS_CORE_VERSION,
@@ -33,6 +33,7 @@ import {
   adjustSkandiClubPointsCore,
   checkAlteaTravelRequirementsCore,
   generateAlteaBookingDocumentCore,
+  getAlteaDocumentCore,
   finalizeGeneratedReservationsAssetCore,
   requestAlteaDocumentDeliveryCore,
   updateAlteaDcsPassengerCore,
@@ -43,15 +44,55 @@ import {
   sendAlteaManifestCore
 } from "./reservations.js";
 
+
+import {
+  getDuffelWorkspaceBootstrapCore,
+  searchDuffelOffersCore,
+  refreshDuffelOfferCore,
+  getDuffelSeatMapsCore,
+  prepareDuffelPaymentCore,
+  listDuffelOrdersCore,
+  getDuffelOrderCore,
+  createDuffelOrderCore,
+  createDuffelOrderCancellationCore,
+  confirmDuffelOrderCancellationCore
+} from "./duffelAir.js";
+
+import {
+  searchDuffelOrderChangesCore,
+  createDuffelPendingOrderChangeCore,
+  getDuffelPendingOrderChangeCore,
+  prepareDuffelOrderChangePaymentCore,
+  confirmDuffelOrderChangeCore
+} from "./duffelServicing.js";
+
+import {
+  searchDuffelStaysCore,
+  fetchDuffelStayRatesCore,
+  quoteDuffelStayCore,
+  createDuffelStayBookingStaffCore,
+  getDuffelStayBookingStaffCore,
+  cancelDuffelStayBookingStaffCore,
+  searchDuffelCarsCore,
+  quoteDuffelCarCore,
+  createDuffelCarBookingStaffCore,
+  getDuffelCarBookingStaffCore,
+  cancelDuffelCarBookingStaffCore,
+  createDuffelComponentClientKeyStaffCore
+} from "./duffelGroundProducts.js";
+
 const VERSION = RESERVATIONS_CORE_VERSION;
+
 
 function clean(value, max = 500) {
   return String(value ?? "").trim().slice(0, max);
 }
 
+
 function upper(value, max = 500) {
   return clean(value, max).toUpperCase();
 }
+
 
 async function workspace(bookingId) {
   if (!bookingId) return null;
@@ -61,6 +102,7 @@ async function workspace(bookingId) {
     return null;
   }
 }
+
 
 async function refreshResult(input = {}, result = {}) {
   const bookingId =
@@ -72,11 +114,13 @@ async function refreshResult(input = {}, result = {}) {
     result?.passenger?.bookingId ||
     null;
 
+
   return {
     ...result,
     workspace: await workspace(bookingId)
   };
 }
+
 
 async function unifiedBootstrap(input = {}) {
   const [base, inventory, dcs] = await Promise.all([
@@ -87,6 +131,7 @@ async function unifiedBootstrap(input = {}) {
     }),
     getTransferDcsBootstrapCore({})
   ]);
+
 
   return {
     ...(base || {}),
@@ -110,6 +155,7 @@ async function unifiedBootstrap(input = {}) {
     }
   };
 }
+
 
 async function updatePassengerAndRefresh(input = {}) {
   return refreshResult(input, await updateAlteaPassengerCore(input));
@@ -187,7 +233,77 @@ async function transferDocumentAndRefresh(input = {}) {
   return refreshResult(input, await recordTransferDcsDocumentCore(input));
 }
 
+
+async function syncSupplierOrder(order, bookingInput={}, eventType="DUFFEL_ORDER_SYNCED"){
+  if(!order?.id)return null;
+  const sync=await syncDuffelOrderToAlteaCore({order,bookingInput,eventType});
+  return sync?.workspace||null;
+}
+
+async function createAndSyncOrder(input={}){
+  const result=await createDuffelOrderCore(input);
+  const alteaWorkspace=await syncSupplierOrder(
+    result?.order,input,
+    result?.recoveredExistingOrder?"DUFFEL_ORDER_RECOVERED":"DUFFEL_ORDER_CREATED"
+  );
+  return{...result,alteaWorkspace};
+}
+
+async function retrieveAndSyncOrder(input={}){
+  const result=await getDuffelOrderCore(input);
+  let alteaWorkspace=null;
+  try{alteaWorkspace=await syncSupplierOrder(result?.order,{},"DUFFEL_ORDER_RETRIEVED");}catch(_){}
+  return{...result,alteaWorkspace};
+}
+
+async function cancelAndSyncOrder(input={}){
+  const result=await confirmDuffelOrderCancellationCore(input);
+  let alteaWorkspace=null;
+  try{alteaWorkspace=await syncSupplierOrder(result?.order,{},"DUFFEL_ORDER_CANCELLED");}catch(_){}
+  return{...result,alteaWorkspace};
+}
+
+async function confirmChangeAndSyncOrder(input={}){
+  const result=await confirmDuffelOrderChangeCore(input);
+  const latest=await getDuffelOrderCore({orderIdOrReference:result?.orderId});
+  let alteaWorkspace=null;
+  try{alteaWorkspace=await syncSupplierOrder(latest?.order,{},"DUFFEL_ORDER_CHANGED");}catch(_){}
+  return{...result,order:latest?.order||result?.order||null,alteaWorkspace};
+}
+
 const ACTIONS = Object.freeze({
+  DUFFEL_APP_READY: ["DUFFEL_BOOTSTRAP_RESULT", getDuffelWorkspaceBootstrapCore],
+  DUFFEL_SEARCH_OFFERS: ["DUFFEL_OFFERS_RESULT", searchDuffelOffersCore],
+  DUFFEL_REFRESH_OFFER: ["DUFFEL_OFFER_RESULT", refreshDuffelOfferCore],
+  DUFFEL_GET_SEAT_MAPS: ["DUFFEL_SEAT_MAPS_RESULT", getDuffelSeatMapsCore],
+  DUFFEL_PREPARE_PAYMENT: ["DUFFEL_PAYMENT_RESULT", prepareDuffelPaymentCore],
+  DUFFEL_LIST_ORDERS: ["DUFFEL_ORDERS_RESULT", listDuffelOrdersCore],
+  DUFFEL_GET_ORDER: ["DUFFEL_ORDER_RESULT", retrieveAndSyncOrder],
+  DUFFEL_CREATE_ORDER: ["DUFFEL_ORDER_CREATED", createAndSyncOrder],
+  DUFFEL_CREATE_CANCELLATION: ["DUFFEL_CANCELLATION_QUOTED", createDuffelOrderCancellationCore],
+  DUFFEL_CONFIRM_CANCELLATION: ["DUFFEL_CANCELLATION_CONFIRMED", cancelAndSyncOrder],
+
+  DUFFEL_SEARCH_ORDER_CHANGES: ["DUFFEL_ORDER_CHANGE_OFFERS", searchDuffelOrderChangesCore],
+  DUFFEL_CREATE_ORDER_CHANGE: ["DUFFEL_ORDER_CHANGE_PENDING", createDuffelPendingOrderChangeCore],
+  DUFFEL_GET_ORDER_CHANGE: ["DUFFEL_ORDER_CHANGE_PENDING", getDuffelPendingOrderChangeCore],
+  DUFFEL_PREPARE_CHANGE_PAYMENT: ["DUFFEL_CHANGE_PAYMENT_RESULT", prepareDuffelOrderChangePaymentCore],
+  DUFFEL_CONFIRM_ORDER_CHANGE: ["DUFFEL_ORDER_CHANGE_CONFIRMED", confirmChangeAndSyncOrder],
+
+  DUFFEL_SEARCH_STAYS: ["DUFFEL_STAYS_RESULT", searchDuffelStaysCore],
+  DUFFEL_FETCH_STAY_RATES: ["DUFFEL_STAY_RATES_RESULT", fetchDuffelStayRatesCore],
+  DUFFEL_QUOTE_STAY: ["DUFFEL_STAY_QUOTE_RESULT", quoteDuffelStayCore],
+  DUFFEL_CREATE_STAY_BOOKING: ["DUFFEL_STAY_BOOKING_RESULT", createDuffelStayBookingStaffCore],
+  DUFFEL_GET_STAY_BOOKING: ["DUFFEL_STAY_BOOKING_RESULT", getDuffelStayBookingStaffCore],
+  DUFFEL_CANCEL_STAY_BOOKING: ["DUFFEL_STAY_CANCEL_RESULT", cancelDuffelStayBookingStaffCore],
+
+  DUFFEL_SEARCH_CARS: ["DUFFEL_CARS_RESULT", searchDuffelCarsCore],
+  DUFFEL_QUOTE_CAR: ["DUFFEL_CAR_QUOTE_RESULT", quoteDuffelCarCore],
+  DUFFEL_PREPARE_CAR_CARD: ["DUFFEL_CAR_CARD_READY", createDuffelComponentClientKeyStaffCore],
+  DUFFEL_CREATE_CAR_BOOKING: ["DUFFEL_CAR_BOOKING_RESULT", createDuffelCarBookingStaffCore],
+  DUFFEL_GET_CAR_BOOKING: ["DUFFEL_CAR_BOOKING_RESULT", getDuffelCarBookingStaffCore],
+  DUFFEL_CANCEL_CAR_BOOKING: ["DUFFEL_CAR_CANCEL_RESULT", cancelDuffelCarBookingStaffCore],
+
+
   ALTEA_UNIFIED_BOOTSTRAP: [
     "ALTEA_UNIFIED_BOOTSTRAP_RESULT",
     unifiedBootstrap
@@ -229,12 +345,14 @@ const ACTIONS = Object.freeze({
     updateBookingAndRefresh
   ],
 
+
   // Supplier order synchronization remains ALTEA-owned even while Duffel
   // web methods are temporarily invoked at the Wix page boundary.
   ALTEA_SYNC_DUFFEL_ORDER: [
     "ALTEA_DUFFEL_SYNC_RESULT",
     syncDuffelOrderToAlteaCore
   ],
+
 
   INVENTORY_SEARCH_SELLABLE: [
     "INVENTORY_SEARCH_RESULT",
@@ -257,6 +375,7 @@ const ACTIONS = Object.freeze({
     addInventoryAndRefresh
   ],
 
+
   ALTEA_CLUB_SEARCH: [
     "ALTEA_CLUB_SEARCH_RESULT",
     searchSkandiClubMembersCore
@@ -274,9 +393,14 @@ const ACTIONS = Object.freeze({
     requirementsAndRefresh
   ],
 
+
   ALTEA_GENERATE_DOCUMENT: [
     "ALTEA_DOCUMENT_GENERATED",
     documentAndRefresh
+  ],
+  ALTEA_GET_DOCUMENT: [
+    "ALTEA_DOCUMENT_RESULT",
+    getAlteaDocumentCore
   ],
   ALTEA_SEND_DOCUMENT: [
     "ALTEA_DOCUMENT_SENT",
@@ -287,6 +411,7 @@ const ACTIONS = Object.freeze({
     finalizeGeneratedReservationsAssetCore
   ],
 
+
   ALTEA_DCS_UPDATE_PASSENGER: [
     "ALTEA_DCS_PASSENGER_UPDATED",
     dcsPassengerAndRefresh
@@ -295,6 +420,7 @@ const ACTIONS = Object.freeze({
     "ALTEA_DCS_DOCUMENT_RECORDED",
     documentAndRefresh
   ],
+
 
   ALTEA_TRANSFER_DCS_BOOTSTRAP: [
     "ALTEA_TRANSFER_DCS_BOOTSTRAP_RESULT",
@@ -313,20 +439,24 @@ const ACTIONS = Object.freeze({
     transferDocumentAndRefresh
   ],
 
+
   ALTEA_SEND_MANIFEST: [
     "ALTEA_MANIFEST_SENT",
     sendAlteaManifestCore
   ]
 });
 
+
 async function dispatch(input = {}) {
   await requireReservationsAccessCore();
+
 
   const type = upper(input.type, 100);
   const payload =
     input.payload && typeof input.payload === "object"
       ? input.payload
       : {};
+
 
   if (type === "ALTEA_ENTERPRISE_MODULE_READY") {
     return {
@@ -338,6 +468,7 @@ async function dispatch(input = {}) {
     };
   }
 
+
   const action = ACTIONS[type];
   if (!action) {
     const error = new Error("ALTEA_ACTION_NOT_SUPPORTED");
@@ -345,12 +476,14 @@ async function dispatch(input = {}) {
     throw error;
   }
 
+
   const result = await action[1](payload);
   return {
     responseType: action[0],
     payload: result || {}
   };
 }
+
 
 export const handleReservationsAction = webMethod(
   Permissions.SiteMember,

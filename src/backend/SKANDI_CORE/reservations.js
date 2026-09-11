@@ -15,13 +15,13 @@ import {
   finalizeAssetUploadCore,
   registerAssetUsageCore
 } from "./assets.js";
-import { checkExternalTravelRequirements } from "./providers/travelRequirements.js";
-import { renderBookingConfirmation } from "./documents/bookingConfirmation.js";
-import { renderAtbTicket } from "./documents/atbTicket.js";
-import { renderBagTag } from "./documents/bagTag.js";
+import { checkExternalTravelRequirements } from "./travelRequirements.js";
+import { renderBookingConfirmation } from "./bookingConfirmation.js";
+import { renderAtbTicket } from "./atbTicket.js";
+import { renderBagTag } from "./bagTag.js";
 
 
-export const RESERVATIONS_CORE_VERSION = "R-005.4";
+export const RESERVATIONS_CORE_VERSION = "R-006.2";
 
 
 const clean=(v,n=12000)=>String(v??"").trim().slice(0,n);
@@ -138,13 +138,13 @@ function componentView(r={}){
     operationalNotes:p.operationalNotes||"",payload:p,createdAt:r.created_at||"",updatedAt:r.updated_at||""
   };
 }
-function documentView(r={}){
-  const p=obj(r.payload);
+function documentView(r={},options={}){
+  const p=obj(r.payload),includeHtml=options.includeHtml===true;
   return{
     id:r.id,bookingId:r.booking_id||"",passengerId:r.passenger_id||"",
     documentType:upper(p.renderVariant||r.document_type,80),storageDocumentType:r.document_type,
     documentNumber:r.document_number||"",status:upper(r.status,40),
-    storageStatus:r.status,pdfUrl:r.pdf_url||"",htmlSnapshot:r.html_snapshot||"",
+    storageStatus:r.status,pdfUrl:r.pdf_url||"",htmlSnapshot:includeHtml?(r.html_snapshot||""):"",
     assetId:p.assetId||"",assetCode:p.assetCode||"",assetStatus:p.assetStatus||"",
     provider:p.provider||"SKANDI",authority:p.authority||"",payload:p,
     issuedAt:r.issued_at||"",createdAt:r.created_at||"",updatedAt:r.updated_at||""
@@ -262,6 +262,16 @@ export async function getAlteaUnifiedBootstrapCore(input={}){
   };
 }
 
+
+export async function getAlteaDocumentCore(input={}){
+  await requireReservationsAccessCore();
+  const documentId=clean(input.documentId,80);
+  if(!isUuid(documentId))throw new Error("DOCUMENT_REQUIRED");
+  const rows=await select("altea_documents",{select:"*",id:qeq(documentId),limit:"1"});
+  const row=rows[0];if(!row)throw new Error("DOCUMENT_NOT_FOUND");
+  if(isUuid(input.bookingId)&&row.booking_id!==input.bookingId)throw new Error("DOCUMENT_BOOKING_MISMATCH");
+  return{ok:true,document:documentView(row,{includeHtml:true})};
+}
 
 export async function createAlteaLocalBookingCore(input={}){
   const session=await requireReservationsAccessCore({write:true});
