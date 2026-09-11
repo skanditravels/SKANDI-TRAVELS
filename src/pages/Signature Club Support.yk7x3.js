@@ -1,155 +1,143 @@
-// pages/Signature Club Support.yk7x3.js
-import wixLocationFrontend from "wix-location-frontend";
-import { currentMember, authentication } from "wix-members-frontend";
-
+import wixLocation from "wix-location";
+import { authentication } from "wix-members-frontend";
 import {
   getCustomerSupportBootstrap,
   createCustomerSupportCase,
   listCustomerSupportCases,
   getCustomerSupportCase,
   addCustomerSupportMessage
-} from "backend/chatwootSupport.web";
+} from "backend/supportCenter.web";
 
-import {
-  getCustomerHeaderSession,
-  subscribeCustomerNewsletter
-} from "backend/customerHeader.web";
+const EMBED_ID = "#skandiMySupportEmbed";
+const CHILD_SOURCE = "SKANDI_SUPPORT_CUSTOMER_PORTAL";
+const PARENT_SOURCE = "SKANDI_WIX_PARENT";
 
-const EMBED_ID="#helpdeskEmbed";
-const SOURCE="SKANDI_SUPPORT_CUSTOMER_PORTAL";
-const PARENT="SKANDI_WIX_PARENT";
-
-function html(){
-  try{
-    const el=$w(EMBED_ID);
-    return el&&typeof el.onMessage==="function"&&typeof el.postMessage==="function"?el:null;
-  }catch(_){return null}
+function objectOf(value) {
+  return value && typeof value === "object" && !Array.isArray(value) ? value : {};
 }
-function post(el,type,payload={},requestId=""){
-  el.postMessage({source:PARENT,type,requestId,payload,timestamp:new Date().toISOString()});
+
+function payloadOf(message) {
+  return { ...objectOf(message), ...objectOf(message?.payload) };
 }
-function payload(m){return m?.payload&&typeof m.payload==="object"?m.payload:{}}
-async function memberSafe(){try{return await currentMember.getMember()}catch(_){return null}}
-async function headerState(el){
-  const member=await memberSafe();
-  if(!member){
-    post(el,"CUSTOMER_HEADER_STATE",{loggedIn:false,displayName:"",points:0,tierName:"",menu:[]});
-    return;
-  }
-  const s=await getCustomerHeaderSession().catch(()=>({}));
-  post(el,"CUSTOMER_HEADER_STATE",{
-    loggedIn:true,
-    displayName:s?.displayName||member?.profile?.nickname||member?.loginEmail||"",
-    points:Number(s?.points||s?.clubPoints||0),
-    tierName:s?.tierName||s?.tier||"",
-    menu:Array.isArray(s?.menu)?s.menu:[]
+
+function post(html, type, payload = {}, requestId = "") {
+  html.postMessage({
+    source: PARENT_SOURCE,
+    type,
+    requestId,
+    payload: { ...objectOf(payload), requestId }
   });
 }
-async function bootstrap(el){
-  const member=await memberSafe();
-  const data=await getCustomerSupportBootstrap().catch(()=>({}));
-  post(el,"CUSTOMER_PORTAL_STATE",{loggedIn:Boolean(member),...(data||{})});
-  await headerState(el);
-  if(member){
-    const list=await listCustomerSupportCases().catch(()=>({cases:[]}));
-    post(el,"CUSTOMER_CASE_LIST",list||{cases:[]});
-  }else{
-    post(el,"CUSTOMER_CASE_LIST",{cases:[],requiresLogin:true});
+
+function currentContext() {
+  return {
+    bookingRef: String(wixLocation.query.booking || wixLocation.query.pnr || "").trim(),
+    topic: String(wixLocation.query.topic || "").trim()
+  };
+}
+
+function caseIdOf(payload) {
+  return String(payload.caseId || payload.case_id || payload.id || "").trim();
+}
+
+function messageOf(error) {
+  return String(error?.publicMessage || error?.message || "Support Center action failed.").slice(0, 300);
+}
+
+async function bootstrap(html, requestId = "") {
+  const result = await getCustomerSupportBootstrap(currentContext());
+  post(html, "CUSTOMER_PORTAL_STATE", {
+    profile: result?.profile || null,
+    clubProfile: result?.clubProfile || null,
+    supportContext: result?.supportContext || currentContext(),
+    livekit: result?.livekit || { configured: false }
+  }, requestId);
+  post(html, "CUSTOMER_CASE_LIST", { cases: Array.isArray(result?.cases) ? result.cases : [] }, requestId);
+}
+
+$w.onReady(function () {
+  let html;
+  try {
+    html = $w(EMBED_ID);
+  } catch (error) {
+    console.error(`[My Support] Missing HTML component ${EMBED_ID}.`, error);
+    return;
   }
-}
-async function ensureLogin(){
-  let member=await memberSafe();
-  if(member) return member;
-  await authentication.promptLogin();
-  member=await memberSafe();
-  if(!member) throw new Error("Sign in to continue.");
-  return member;
-}
 
-$w.onReady(function(){
-  const el=html();
-  if(!el) return;
+  html.onMessage(async event => {
+    const message = objectOf(event.data);
+    if (message.source !== CHILD_SOURCE) return;
 
-  el.onMessage(async(event)=>{
-    const m=event?.data;
-    if(!m||typeof m!=="object"||m.source!==SOURCE||!m.type) return;
-    const p=payload(m);
-    const requestId=String(m.requestId||p.requestId||"");
+    const payload = payloadOf(message);
+    const requestId = String(message.requestId || payload.requestId || "");
 
-    try{
-      switch(m.type){
+    try {
+      switch (message.type) {
         case "CUSTOMER_READY":
-          await bootstrap(el);
+          await bootstrap(html, requestId);
           return;
-        case "CUSTOMER_LIST_CASES":{
-          await ensureLogin();
-          post(el,"CUSTOMER_CASE_LIST",await listCustomerSupportCases(),requestId);
-          return;
-        }
-        case "CUSTOMER_OPEN_CASE":{
-          await ensureLogin();
-          post(el,"CUSTOMER_CASE_DETAIL",await getCustomerSupportCase({caseId:String(p.caseId||"")}),requestId);
+
+        case "CUSTOMER_LIST_CASES": {
+          const result = await listCustomerSupportCases({});
+          post(html, "CUSTOMER_CASE_LIST", result, requestId);
           return;
         }
-        case "CUSTOMER_REPLY_CASE":{
-          await ensureLogin();
-          const result=await addCustomerSupportMessage({
-            caseId:String(p.caseId||""),
-            content:String(p.content||p.message||"").trim()
+
+        case "CUSTOMER_OPEN_CASE": {
+          const result = await getCustomerSupportCase({ caseId: caseIdOf(payload) });
+          post(html, "CUSTOMER_CASE_DETAIL", result, requestId);
+          return;
+        }
+
+        case "CUSTOMER_REPLY_CASE": {
+          const result = await addCustomerSupportMessage({
+            caseId: caseIdOf(payload),
+            content: String(payload.content || payload.message || "")
           });
-          post(el,"CUSTOMER_REPLY_SENT",result||{ok:true},requestId);
-          post(el,"CUSTOMER_CASE_DETAIL",await getCustomerSupportCase({caseId:String(p.caseId||"")}),requestId);
+          post(html, "CUSTOMER_REPLY_SENT", result, requestId);
           return;
         }
-        case "CUSTOMER_CREATE_CASE":{
-          await ensureLogin();
-          const input=p.case||p.input||p;
-          const result=await createCustomerSupportCase({input});
-          post(el,"CUSTOMER_CASE_CREATED",{...(result||{}),case:result||{}},requestId);
-          post(el,"CUSTOMER_CASE_LIST",await listCustomerSupportCases(),requestId);
+
+        case "CUSTOMER_CREATE_CASE": {
+          const input = objectOf(payload.case);
+          const result = await createCustomerSupportCase(Object.keys(input).length ? input : payload);
+          post(html, "CUSTOMER_CASE_CREATED", result, requestId);
           return;
         }
-        case "HEADER_READY":
-          await headerState(el);
+
+        case "CUSTOMER_INITIATE_DOCUSIGN":
+          post(html, "CUSTOMER_ERROR", { message: "Secure signature requests are handled through the canonical SKANDI document workflow, not the Support Center chat." }, requestId);
           return;
-        case "HEADER_LOGIN":
-          await authentication.promptLogin().catch(()=>{});
-          await bootstrap(el);
-          return;
-        case "HEADER_LOGOUT":
-        case "CUSTOMER_LOGOUT":
-          await Promise.resolve(authentication.logout()).catch(()=>{});
-          await bootstrap(el);
-          return;
-        case "HEADER_NAVIGATE":
+
         case "CUSTOMER_NAVIGATE":
-        case "FOOTER_NAVIGATE":{
-          const path=String(p.path||m.path||"").trim();
-          if(path) wixLocationFrontend.to(path);
+          if (payload.path) wixLocation.to(String(payload.path));
           return;
-        }
-        case "FOOTER_STAFF_LOGIN":
-          wixLocationFrontend.to("/riaintra");
+
+        case "CUSTOMER_LOGOUT":
+          await authentication.logout();
+          wixLocation.to("/");
           return;
-        case "FOOTER_READY":
-          post(el,"CUSTOMER_FOOTER_STATE",{ready:true});
-          return;
-        case "FOOTER_NEWSLETTER_SIGNUP":{
-          const email=String(p.email||"").trim();
-          if(!email){
-            post(el,"FOOTER_NEWSLETTER_RESULT",{ok:false,message:"Please enter your email address."});
-            return;
-          }
-          const result=await subscribeCustomerNewsletter({email,source:p.source||"Support Footer"});
-          post(el,"FOOTER_NEWSLETTER_RESULT",{ok:true,...(result||{})});
-          return;
-        }
+
         default:
           return;
       }
-    }catch(error){
-      console.error("[Customer Support]",m.type,error);
-      post(el,"CUSTOMER_ERROR",{message:error?.message||"Customer support action failed."},requestId);
+    } catch (error) {
+      console.error(`[My Support] ${message.type || "Unknown action"} failed.`, error);
+      const code = String(error?.code || error?.name || "");
+      const text = messageOf(error);
+      if (code === "NOT_LOGGED_IN" || text.includes("Sign in")) {
+        try {
+          await authentication.promptLogin({ mode: "login" });
+          await bootstrap(html, requestId);
+          return;
+        } catch (_loginError) {}
+      }
+      post(html, "CUSTOMER_ERROR", { message: text }, requestId);
     }
+  });
+
+  // Listener-first, then proactive bootstrap to cover iframe READY races.
+  bootstrap(html).catch(error => {
+    post(html, "CUSTOMER_ERROR", { message: messageOf(error) });
   });
 });
