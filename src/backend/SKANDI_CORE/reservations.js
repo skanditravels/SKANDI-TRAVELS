@@ -1,25 +1,24 @@
 // /src/backend/SKANDI_CORE/reservations.js
 // SKANDI ALTEA Reservations — canonical SKANDI-owned booking/operations logic.
-// Recovery R-005 source of truth for Inventory sales, Club, documents,
-// travel-requirements orchestration, transfer Departure Control and manifests.
-//
-// Duffel supplier adapters remain separate internal dependencies until R-006.
+// SKANDI Backend Base 1.0 — B-007 Reservations core.
+// Preserves the accepted R-006.9 booking, Inventory, Club, document and DCS behavior.
+// Staff ground-product persistence is owned here; provider HTTP stays in duffelGround.js.
 // Customer confirmed-cart -> ALTEA synchronization remains database-trigger owned.
 
 
 import { createHash } from "crypto";
-import { restRequest, rpcRequest } from "./supabaseServer.js";
-import { getStaffPortalSessionCore } from "./staffAuth.js";
+import { restRequest, rpcRequest } from "backend/SKANDI_CORE/supabaseServer.js";
+import { getStaffPortalSessionCore } from "backend/SKANDI_CORE/staffAuth.js";
 import {
   prepareAssetUploadCore,
   finalizeAssetUploadCore,
   registerAssetUsageCore
-} from "./assets.js";
-import { checkExternalTravelRequirements } from "./travelRequirements.js";
-import { renderBookingConfirmation } from "./bookingConfirmation.js";
-import { renderAtbTicket } from "./atbTicket.js";
-import { renderBagTag } from "./bagTag.js";
-import { renderInvoice } from "./invoice.js";
+} from "backend/SKANDI_CORE/assets.js";
+import { checkExternalTravelRequirements } from "backend/SKANDI_CORE/travelRequirements.js";
+import { renderBookingConfirmation } from "backend/SKANDI_CORE/bookingConfirmation.js";
+import { renderAtbTicket } from "backend/SKANDI_CORE/atbTicket.js";
+import { renderBagTag } from "backend/SKANDI_CORE/bagTag.js";
+import { renderInvoice } from "backend/SKANDI_CORE/invoice.js";
 
 
 export const RESERVATIONS_CORE_VERSION = "BACKEND-BASE-1.0-B007";
@@ -50,6 +49,20 @@ const DOCUMENT_TYPES=new Set([
   "ticket","emd","invoice","apis_report"
 ]);
 const DOCUMENT_STATUSES=new Set(["draft","issued","voided","reissued","sent","failed"]);
+const DOCUMENT_UI_TO_STORAGE=Object.freeze({
+  DRAFT:"draft",ACTIVE:"issued",ISSUED:"issued",SENT:"sent",VOID:"voided",VOIDED:"voided",
+  REFUNDED:"voided",SUPERSEDED:"reissued",REISSUED:"reissued",FAILED:"failed"
+});
+const DOCUMENT_STORAGE_TO_UI=Object.freeze({
+  draft:"DRAFT",issued:"ACTIVE",sent:"ACTIVE",voided:"VOID",reissued:"SUPERSEDED",failed:"FAILED"
+});
+function storageDocumentStatus(value){
+  const raw=upper(value,40);
+  const mapped=DOCUMENT_UI_TO_STORAGE[raw]||lower(value,40);
+  if(!DOCUMENT_STATUSES.has(mapped))throw new Error("DOCUMENT_STATUS_INVALID");
+  return mapped;
+}
+function uiDocumentStatus(value){return DOCUMENT_STORAGE_TO_UI[lower(value,40)]||upper(value,40)||"DRAFT";}
 const SELLABLE_TYPES=new Set([
   "HOTEL","TRANSFER","GUIDED_TOUR","ACTIVITY","PARTNER_TICKET",
   "PACKAGE","ANCILLARY","CAR_RENTAL"
@@ -144,8 +157,8 @@ function documentView(r={}){
   return{
     id:r.id,bookingId:r.booking_id||"",passengerId:r.passenger_id||"",
     documentType:upper(p.renderVariant||r.document_type,80),storageDocumentType:r.document_type,
-    documentNumber:r.document_number||"",status:upper(r.status,40),
-    storageStatus:r.status,pdfUrl:r.pdf_url||"",htmlSnapshot:r.html_snapshot||"",
+    documentNumber:r.document_number||"",status:uiDocumentStatus(r.status),
+    storageStatus:lower(r.status,40),pdfUrl:r.pdf_url||"",htmlSnapshot:r.html_snapshot||"",
     assetId:p.assetId||"",assetCode:p.assetCode||"",assetStatus:p.assetStatus||"",
     provider:p.provider||"SKANDI",authority:p.authority||"",payload:p,
     issuedAt:r.issued_at||"",createdAt:r.created_at||"",updatedAt:r.updated_at||""
@@ -404,7 +417,7 @@ export async function updateAlteaDocumentStatusCore(input={}){
   const id=clean(input.documentId,80);if(!isUuid(id))throw new Error("DOCUMENT_REQUIRED");
   const before=(await select("altea_documents",{select:"*",id:qeq(id),limit:"1"}))[0];
   if(!before)throw new Error("DOCUMENT_NOT_FOUND");
-  const status=lower(input.status,40);if(!DOCUMENT_STATUSES.has(status))throw new Error("DOCUMENT_STATUS_INVALID");
+  const status=storageDocumentStatus(input.status);
   const updated=(await patch("altea_documents",{id:qeq(id)},{status,updated_at:now()}))[0]||before;
   await patch("altea_booking_documents",{provider_document_id:qeq(id)},{
     status:status==="issued"||status==="sent"||status==="reissued"?"ACTIVE":status.toUpperCase(),
@@ -514,56 +527,59 @@ export async function syncDuffelOrderToAlteaCore(input={}){
 }
 
 
-
+function groundBookingType(value){
+  const t=upper(value,80);
+  if(t==="HOTEL"||t==="STAY"||t==="STAYS")return"HOTEL";
+  if(t==="CAR"||t==="CARS"||t==="CAR_RENTAL")return"CAR_RENTAL";
+  throw new Error("GROUND_COMPONENT_TYPE_INVALID");
+}
+function groundBookingTitle(type,b={}){
+  if(type==="HOTEL")return clean(b.accommodation?.name||b.title||"Hotel",220);
+  return clean([b.car?.name,b.supplier?.name].filter(Boolean).join(" · ")||b.title||"Car Rental",220);
+}
+function groundBookingPayload(type,b={}){
+  if(type==="HOTEL")return{
+    provider:"DUFFEL",reference:b.reference||"",quoteId:b.quoteId||"",
+    checkInDate:b.checkInDate||null,checkOutDate:b.checkOutDate||null,
+    paymentType:b.paymentType||"",accommodation:b.accommodation||null,
+    guests:arr(b.guests),cancelledAt:b.cancelledAt||null,confirmedAt:b.confirmedAt||null
+  };
+  return{
+    provider:"DUFFEL",reference:b.reference||"",quoteId:b.quoteId||"",paymentType:b.paymentType||"",
+    pickupDate:b.pickupDate||null,pickupTime:b.pickupTime||"",dropoffDate:b.dropoffDate||null,
+    dropoffTime:b.dropoffTime||"",pickupLocation:b.pickupLocation||null,dropoffLocation:b.dropoffLocation||null,
+    car:b.car||null,supplier:b.supplier||null,driver:b.driver||null,conditions:arr(b.conditions),charges:arr(b.charges),
+    privacyPolicies:arr(b.privacyPolicies),cancelledAt:b.cancelledAt||null,confirmedAt:b.confirmedAt||null
+  };
+}
 export async function syncDuffelGroundBookingToAlteaCore(input={}){
   const session=await requireReservationsAccessCore({write:true});
   const bookingId=clean(input.alteaBookingId||input.bookingId,80);
-  if(!isUuid(bookingId)||!(await bookingRow(bookingId)))throw new Error("BOOKING_REQUIRED");
-  const componentType=upper(input.componentType,80);
-  if(!["HOTEL","CAR_RENTAL"].includes(componentType))throw new Error("GROUND_COMPONENT_TYPE_INVALID");
-  const booking=obj(input.booking);
-  const supplierReference=clean(booking.id,180);
-  if(!supplierReference)throw new Error(componentType==="HOTEL"?"STAY_BOOKING_REQUIRED":"CAR_BOOKING_REQUIRED");
+  if(!isUuid(bookingId)||!(await bookingRow(bookingId)))throw new Error("BOOKING_NOT_FOUND");
+  const providerBooking=obj(input.providerBooking||input.booking);
+  const supplierReference=clean(providerBooking.id,180);
+  if(!supplierReference)throw new Error("DUFFEL_GROUND_BOOKING_REQUIRED");
+  const type=groundBookingType(input.componentType||input.type||input.productType);
   const existing=(await select("altea_booking_components",{
     select:"*",booking_id:qeq(bookingId),supplier:qeq("DUFFEL"),supplier_reference:qeq(supplierReference),limit:"1"
   }))[0]||null;
-  const title=componentType==="HOTEL"
-    ? clean(booking.accommodation?.name||booking.hotelName||input.title||"Hotel",400)
-    : clean([booking.car?.name,booking.supplier?.name].filter(Boolean).join(" · ")||input.title||"Car Rental",400);
-  const amount=Math.max(0,Number(booking.totalAmount??booking.total_amount??0));
-  const currency=upper(booking.totalCurrency||booking.total_currency||"USD",3);
+  const amount=Math.max(0,Number(providerBooking.totalAmount||0));
   const body={
-    booking_id:bookingId,
-    component_type:componentType,
-    supplier:"DUFFEL",
-    supplier_reference:supplierReference,
-    title,
-    status:upper(booking.status||"CONFIRMED",80),
-    quantity:1,
-    currency,
-    unit_amount:amount,
-    total_amount:amount,
-    payload:{
-      ...obj(existing?.payload),
-      provider:"DUFFEL",
-      providerBooking:booking,
-      bookingReference:clean(booking.reference||booking.bookingReference,180)||null,
-      syncedAt:now()
-    },
-    updated_at:now()
+    booking_id:bookingId,component_type:type,supplier:"DUFFEL",supplier_reference:supplierReference,
+    title:groundBookingTitle(type,providerBooking),status:upper(providerBooking.status||"CONFIRMED",40),quantity:1,
+    currency:upper(providerBooking.totalCurrency||existing?.currency||"USD",3),unit_amount:amount,total_amount:amount,
+    payload:{...obj(existing?.payload),...groundBookingPayload(type,providerBooking),lastSupplierSyncAt:now()},updated_at:now()
   };
-  let component;
-  if(existing?.id)component=(await patch("altea_booking_components",{id:qeq(existing.id)},body))[0]||existing;
-  else{
-    delete body.updated_at;
-    component=(await insert("altea_booking_components",body))[0];
-  }
-  if(!component?.id)throw new Error("GROUND_COMPONENT_SYNC_FAILED");
-  await history(bookingId,input.eventType||`DUFFEL_${componentType}_BOOKING_SYNCED`,{
-    componentId:component.id,supplierReference,bookingReference:booking.reference||booking.bookingReference||null
+  let saved;
+  if(existing?.id)saved=(await patch("altea_booking_components",{id:qeq(existing.id)},body))[0]||existing;
+  else saved=(await insert("altea_booking_components",body))[0]||null;
+  if(!saved?.id)throw new Error("ALTEA_GROUND_SYNC_FAILED");
+  await history(bookingId,input.eventType||`DUFFEL_${type}_BOOKING_SYNCED`,{
+    componentId:saved.id,supplierReference,eventType:input.eventType||null
   },session);
-  return{ok:true,component:componentView(component),workspace:(await getAlteaBookingWorkspaceCore({bookingId})).workspace};
+  return getAlteaBookingWorkspaceCore({bookingId});
 }
+
 
 export async function searchReservationInventoryCore(input={}){
   await requireReservationsAccessCore();

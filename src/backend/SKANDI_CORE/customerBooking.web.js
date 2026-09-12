@@ -100,6 +100,7 @@ export const createHotelCart = member(createHotelCartCore);
 export const saveHotelGuests = member(saveHotelGuestsCore);
 export const prepareHotelPayment = member(prepareHotelPaymentCore);
 export const commitHotelBooking = member(commitHotelBookingCore);
+
 export const createCarCart = member(createCarCartCore);
 export const saveCarDriver = member(saveCarDriverCore);
 export const prepareCarCheckout = member(prepareCarCheckoutCore);

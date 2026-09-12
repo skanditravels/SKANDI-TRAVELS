@@ -1,6 +1,6 @@
 // /src/backend/SKANDI_CORE/customerBooking.js
 // SKANDI Backend Base 1.0 — B-007 canonical customer booking orchestration.
-// Owns customer cart/checkout state and customer-payment capture timing.
+// Owns customer Air/Hotel checkout plus Duffel-native Cars checkout state.
 // Does NOT write ALTEA. booking_carts status=Confirmed remains the single customer->ALTEA handoff.
 
 import {
@@ -23,9 +23,9 @@ import {
   searchDuffelCarsCore,
   quoteDuffelCarCore,
   getDuffelCarQuoteCore,
+  createDuffelComponentClientKeyCore,
   createDuffelCarBookingCore,
-  getDuffelCarBookingCore,
-  createDuffelComponentClientKeyCore
+  getDuffelCarBookingCore
 } from "backend/SKANDI_CORE/duffelGround.js";
 import {
   createStripePaymentIntent,
@@ -543,11 +543,11 @@ export async function loadBookingConfirmationCore(context, input = {}) {
   if (row.payload?.airOrder?.id) row = await refreshConfirmedAirOrder(context, row);
   if (row.payload?.stayBooking?.id) {
     const stay = await getDuffelStayBookingCore({ bookingId: row.payload.stayBooking.id });
-    row = await updateOwnedCart(context, row.cart_id, { payload: { ...(row.payload || {}), stayBooking: stay.booking } });
+    row = await updateOwnedCart(context, row.cart_id, { payload: { ...(row.payload || {}), stayBooking: stay.booking || stay } });
   }
   if (row.payload?.carBooking?.id) {
     const car = await getDuffelCarBookingCore({ bookingId: row.payload.carBooking.id });
-    row = await updateOwnedCart(context, row.cart_id, { payload: { ...(row.payload || {}), carBooking: enrichCarBookingForTrigger(car.booking) } });
+    row = await updateOwnedCart(context, row.cart_id, { payload: { ...(row.payload || {}), carBooking: car.booking || car } });
   }
   return confirmationFromRow(row);
 }
@@ -603,11 +603,7 @@ function confirmationFromRow(row) {
   const car = row.payload?.carBooking || {};
   const selectedOffer = row.payload?.selectedOffer || {};
   const productType = row.payload?.productType || "SKANDI booking";
-  const title = productType === "HOTEL_ONLY"
-    ? "Your hotel is confirmed"
-    : productType === "CAR_RENTAL_ONLY"
-      ? "Your car rental is confirmed"
-      : "Your trip is confirmed";
+  const title = productType === "HOTEL_ONLY" ? "Your hotel is confirmed" : productType === "CAR_RENTAL_ONLY" ? "Your car is confirmed" : "Your trip is confirmed";
   return {
     cartId: row.cart_id,
     title,
@@ -819,60 +815,71 @@ export async function searchLiveCarsCore(input = {}) {
 export async function quoteCarCore(input = {}) { return quoteDuffelCarCore(input); }
 export async function getCarQuoteCore(input = {}) { return getDuffelCarQuoteCore(input); }
 
-function carPaymentStatus(paymentType) {
-  const mode = lower(paymentType, 30);
-  if (mode === "prepaid") return "paid_supplier_card";
-  if (mode === "guarantee") return "guaranteed_supplier_card";
-  return "pay_at_supplier";
+function carQuoteFromResult(result = {}) { return result?.quote || result || {}; }
+function carBookingFromResult(result = {}) { return result?.booking || (result?.id ? result : null); }
+function carPaymentType(value) {
+  const type = lower(value, 30);
+  if (!["postpaid", "guarantee", "prepaid"].includes(type)) throw bookingError("CAR_PAYMENT_TYPE_INVALID", "The rental supplier returned an unsupported payment type.", 409);
+  return type;
 }
-function carRequiresCard(paymentType) {
-  return ["prepaid", "guarantee"].includes(lower(paymentType, 30));
-}
-function enrichCarBookingForTrigger(booking = {}) {
-  return {
-    ...booking,
-    carName: text(booking?.car?.name, 200) || null,
-    supplierName: text(booking?.supplier?.name, 200) || null
+function carDriver(input = {}) {
+  const d = record(input.driver || input);
+  const out = {
+    givenName: text(d.givenName || d.firstName, 80),
+    familyName: text(d.familyName || d.lastName, 80),
+    email: lower(d.email, 254),
+    phoneNumber: text(d.phoneNumber || d.phone, 20),
+    dateOfBirth: text(d.dateOfBirth || d.bornOn, 10)
   };
+  if (!out.givenName || !out.familyName) throw bookingError("DRIVER_NAME_REQUIRED", "Enter the main driver's full name.");
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(out.email)) throw bookingError("INVALID_EMAIL", "Enter a valid driver email address.");
+  if (!/^\+[1-9]\d{7,14}$/.test(out.phoneNumber)) throw bookingError("INVALID_PHONE", "Enter the driver's phone number in international format.");
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(out.dateOfBirth)) throw bookingError("INVALID_DATE", "Enter the driver's date of birth as YYYY-MM-DD.");
+  const parsed = new Date(`${out.dateOfBirth}T00:00:00Z`);
+  if (Number.isNaN(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== out.dateOfBirth) throw bookingError("INVALID_DATE", "Enter a valid driver date of birth.");
+  return out;
 }
-function validateCarDriver(input = {}) {
-  const driver = record(input.driver || input);
-  const givenName = text(driver.givenName || driver.firstName, 80);
-  const familyName = text(driver.familyName || driver.lastName, 80);
-  const email = lower(driver.email, 254);
-  const phoneNumber = text(driver.phoneNumber || driver.phone, 20);
-  const dateOfBirth = text(driver.dateOfBirth || driver.bornOn, 10);
-  if (!givenName || !familyName) throw bookingError("DRIVER_NAME_REQUIRED", "Enter the main driver's full name.");
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateOfBirth)) throw bookingError("DRIVER_DATE_OF_BIRTH_REQUIRED", "Enter the main driver's date of birth.");
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw bookingError("INVALID_EMAIL", "Enter a valid driver email address.");
-  if (!/^\+[1-9]\d{7,14}$/.test(phoneNumber)) throw bookingError("INVALID_PHONE", "Enter an international driver phone number.");
-  return { givenName, familyName, email, phoneNumber, dateOfBirth };
+function privacyPolicyKey(policy = {}, index = 0) {
+  return text(policy.id || policy.url || policy.href || policy.name || policy.title || `policy-${index + 1}`, 500);
+}
+function acceptedCarPrivacy(quote = {}, input = {}, existing = null) {
+  const policies = arr(quote.privacyPolicies);
+  if (!policies.length) return { accepted: true, acceptedAt: existing?.acceptedAt || nowIso(), policies: [] };
+  const blanket = input.privacyPoliciesAccepted === true || existing?.accepted === true;
+  const supplied = new Set(arr(input.privacyPolicyAcceptances).map((entry, index) => {
+    if (typeof entry === "string") return text(entry, 500);
+    if (entry?.accepted === false) return "";
+    return privacyPolicyKey(record(entry), index);
+  }).filter(Boolean));
+  const acceptedPolicies = policies.map((policy, index) => ({
+    key: privacyPolicyKey(record(policy), index),
+    accepted: blanket || supplied.has(privacyPolicyKey(record(policy), index)),
+    policy
+  }));
+  if (acceptedPolicies.some(item => !item.accepted)) throw bookingError("CAR_PRIVACY_POLICY_REQUIRED", "Accept every rental supplier privacy policy before booking.", 409);
+  return { accepted: true, acceptedAt: nowIso(), policies: acceptedPolicies };
 }
 
 export async function createCarCartCore(context, input = {}) {
   requireMemberContext(context);
-  const quoteResult = await getDuffelCarQuoteCore({ quoteId: input.quoteId });
-  const quote = quoteResult.quote;
-  if (!quote?.id) throw bookingError("CAR_QUOTE_REQUIRED", "The car quote could not be found.");
+  const quote = carQuoteFromResult(await getDuffelCarQuoteCore({ quoteId: input.quoteId }));
+  if (!quote?.id) throw bookingError("CAR_QUOTE_REQUIRED", "The rental quote could not be found.");
+  const paymentType = carPaymentType(quote.paymentType);
   const payload = {
     version: 4,
     provider: "Duffel",
     productType: "CAR_RENTAL_ONLY",
     carQuote: quote,
     carBooking: null,
-    travelers: [],
     secureTravelers: null,
-    paymentStatus: carPaymentStatus(quote.paymentType),
+    travelers: [],
+    carPrivacy: null,
+    payment: { provider: "Duffel", paymentType, status: "not_prepared" },
     search: {
-      origin: upper(input.pickupIata || quote.pickupLocation?.iataCode, 3) || null,
-      destination: upper(input.dropoffIata || quote.dropoffLocation?.iataCode, 3) || null,
+      origin: quote.pickupLocation?.name || input.pickupLocationText || input.pickupIata || null,
+      destination: quote.dropoffLocation?.name || input.dropoffLocationText || input.dropoffIata || null,
       departureDate: quote.pickupDate || input.pickupDate || null,
       returnDate: quote.dropoffDate || input.dropoffDate || null
-    },
-    carCheckout: {
-      paymentType: lower(quote.paymentType, 30),
-      requiresSupplierCard: carRequiresCard(quote.paymentType),
-      privacyPolicyCount: arr(quote.privacyPolicies).length
     },
     flow: { currentStep: "driver", createdAt: nowIso() }
   };
@@ -887,125 +894,123 @@ export async function createCarCartCore(context, input = {}) {
     source: "customer"
   });
   await addCartItem(row.cart_id, {
-    itemType: "car_rental",
+    itemType: "car",
     itemId: quote.id,
-    title: [quote.car?.name, quote.supplier?.name].filter(Boolean).join(" · ") || "Car Rental",
+    title: quote.car?.name || "Car rental",
     quantity: 1,
     unitPrice: quote.totalAmount,
     total: quote.totalAmount,
-    payload: { provider: "Duffel", quoteId: quote.id, paymentType: quote.paymentType, car: quote.car, supplier: quote.supplier }
+    payload: { provider: "Duffel", quoteId: quote.id, supplier: quote.supplier || null, paymentType }
   });
-  return { cartId: row.cart_id, step: "driver", quote };
+  return { cartId: row.cart_id, step: "driver", paymentType };
 }
 
 export async function saveCarDriverCore(context, input = {}) {
   const row = await requireOwnedCart(context, input.cartId);
   assertEditable(row);
   if (row.payload?.productType !== "CAR_RENTAL_ONLY") throw bookingError("INVALID_PRODUCT_TYPE", "This is not a car-rental checkout.");
-  const driver = validateCarDriver(input.driver || input);
-  const secureTravelers = await encryptBookingData({ driver });
-  const travelers = [{
+  const quote = carQuoteFromResult(await getDuffelCarQuoteCore({ quoteId: row.payload?.carQuote?.id }));
+  if (!quote?.id) throw bookingError("CAR_QUOTE_REQUIRED", "The rental quote has expired or cannot be retrieved.", 409);
+  const driver = carDriver(input.driver || input);
+  const secure = await encryptBookingData({ driver });
+  const triggerTravelers = [{
+    id: "CAR_DRIVER_1",
     givenName: driver.givenName,
     familyName: driver.familyName,
     dateOfBirth: driver.dateOfBirth,
-    nationality: upper(input.nationality || input.nationalityCode, 2) || null,
-    gender: lower(input.gender, 5) || null,
+    nationality: null,
+    gender: null,
     paxType: "ADT"
   }];
+  const privacy = acceptedCarPrivacy(quote, input, row.payload?.carPrivacy);
   const payload = {
     ...(row.payload || {}),
-    secureTravelers,
-    travelers,
+    carQuote: quote,
+    secureTravelers: secure,
+    travelers: triggerTravelers,
     travelerCount: 1,
+    carPrivacy: privacy,
+    payment: { provider: "Duffel", paymentType: carPaymentType(quote.paymentType), status: "not_prepared" },
     flow: { ...(row.payload?.flow || {}), currentStep: "payment" }
   };
-  const updated = await updateOwnedCart(context, row.cart_id, { email: driver.email, status: "PaymentReady", payload });
-  return { cart: toPublicCart(updated) };
+  const updated = await updateOwnedCart(context, row.cart_id, { email: driver.email, status: "PaymentReady", currency: quote.totalCurrency, subtotal: decimal(quote.totalAmount), taxes: "0.00", total: decimal(quote.totalAmount), payload });
+  return { cart: toPublicCart(updated), paymentType: carPaymentType(quote.paymentType) };
 }
 
 export async function prepareCarCheckoutCore(context, input = {}) {
   const row = await requireOwnedCart(context, input.cartId);
   if (row.payload?.productType !== "CAR_RENTAL_ONLY") throw bookingError("INVALID_PRODUCT_TYPE", "This is not a car-rental checkout.");
-  if (!row.payload?.secureTravelers) throw bookingError("DRIVER_REQUIRED", "Save the main driver before checkout.");
-  const quoteResult = await getDuffelCarQuoteCore({ quoteId: row.payload?.carQuote?.id });
-  const quote = quoteResult.quote;
-  if (!quote?.id) throw bookingError("CAR_QUOTE_REQUIRED", "The car quote is no longer available.");
-  const requiresCard = carRequiresCard(quote.paymentType);
-  const component = requiresCard ? await createDuffelComponentClientKeyCore({}) : null;
-  const payload = {
-    ...(row.payload || {}),
-    carQuote: quote,
-    paymentStatus: carPaymentStatus(quote.paymentType),
-    carCheckout: {
-      ...(row.payload?.carCheckout || {}),
-      paymentType: lower(quote.paymentType, 30),
-      requiresSupplierCard: requiresCard,
-      preparedAt: nowIso()
-    },
-    flow: { ...(row.payload?.flow || {}), currentStep: "payment" }
-  };
-  const updated = await updateOwnedCart(context, row.cart_id, {
-    status: "PaymentReady",
+  if (!row.payload?.secureTravelers) throw bookingError("DRIVER_REQUIRED", "Save the main driver before booking.");
+  const quote = carQuoteFromResult(await getDuffelCarQuoteCore({ quoteId: row.payload?.carQuote?.id }));
+  if (!quote?.id) throw bookingError("CAR_QUOTE_REQUIRED", "The rental quote has expired or cannot be retrieved.", 409);
+  const privacy = acceptedCarPrivacy(quote, input, row.payload?.carPrivacy);
+  const paymentType = carPaymentType(quote.paymentType);
+  let componentClientKey = null;
+  if (paymentType !== "postpaid") {
+    const key = await createDuffelComponentClientKeyCore({});
+    componentClientKey = text(key?.componentClientKey || key?.component_client_key, 5000);
+    if (!componentClientKey) throw bookingError("DUFFEL_COMPONENT_KEY_UNAVAILABLE", "The secure rental card form could not be prepared. Try again.", 503);
+  }
+  const payment = {
+    provider: "Duffel",
+    paymentType,
+    status: paymentType === "postpaid" ? "pay_at_counter" : "awaiting_duffel_card_3ds",
+    method: paymentType === "postpaid" ? "PAY_AT_COUNTER" : "DUFFEL_CARD_3DS",
+    quoteId: quote.id,
+    amount: quote.totalAmount,
     currency: quote.totalCurrency,
-    subtotal: decimal(quote.totalAmount),
-    taxes: "0.00",
-    total: decimal(quote.totalAmount),
-    payload
-  });
+    requiresCard: paymentType !== "postpaid",
+    requiresThreeDS: paymentType !== "postpaid",
+    preparedAt: nowIso()
+  };
+  const payload = { ...(row.payload || {}), carQuote: quote, carPrivacy: privacy, payment, flow: { ...(row.payload?.flow || {}), currentStep: "payment" } };
+  const updated = await updateOwnedCart(context, row.cart_id, { status: "PaymentPending", currency: quote.totalCurrency, subtotal: decimal(quote.totalAmount), taxes: "0.00", total: decimal(quote.totalAmount), payload });
   return {
     cart: toPublicCart(updated),
-    quote,
-    payment: {
-      paymentType: lower(quote.paymentType, 30),
-      mode: requiresCard ? "DUFFEL_CUSTOMER_CARD" : "PAY_AT_COUNTER",
-      requiresSupplierCard: requiresCard,
-      requiresThreeDSecure: requiresCard,
-      componentClientKey: component?.componentClientKey || null,
-      stripeUsed: false
+    checkout: {
+      ...payment,
+      componentClientKey,
+      threeDSResourceId: quote.id,
+      threeDSResourceType: "car_quote"
     }
   };
 }
 
 export async function commitCarBookingCore(context, input = {}) {
-  if (input.termsAccepted !== true) throw bookingError("TERMS_REQUIRED", "Accept the rental terms before continuing.");
-  if (input.privacyPoliciesAccepted !== true) throw bookingError("PRIVACY_POLICIES_REQUIRED", "Accept the rental supplier privacy disclosures before continuing.");
+  if (input.termsAccepted !== true) throw bookingError("TERMS_REQUIRED", "Accept the booking and rental terms before continuing.");
   let row = await requireOwnedCart(context, input.cartId);
   if (row.status === "Confirmed") return confirmedResult(row);
   if (row.status === "ReconciliationRequired") throw bookingError("BOOKING_RECONCILIATION_REQUIRED", "This car booking is being reconciled. Do not book again.", 409);
   if (row.payload?.productType !== "CAR_RENTAL_ONLY") throw bookingError("INVALID_PRODUCT_TYPE", "This is not a car-rental checkout.");
   if (!row.payload?.secureTravelers) throw bookingError("DRIVER_REQUIRED", "Save the main driver before booking.");
-
-  const quoted = await getDuffelCarQuoteCore({ quoteId: row.payload?.carQuote?.id });
-  const quote = quoted.quote;
-  if (!quote?.id) throw bookingError("CAR_QUOTE_REQUIRED", "The car quote is no longer available.");
-  const requiresCard = carRequiresCard(quote.paymentType);
+  const quote = carQuoteFromResult(await getDuffelCarQuoteCore({ quoteId: row.payload?.carQuote?.id }));
+  if (!quote?.id) throw bookingError("CAR_QUOTE_REQUIRED", "The rental quote has expired or cannot be retrieved.", 409);
+  const privacy = acceptedCarPrivacy(quote, input, row.payload?.carPrivacy);
+  const paymentType = carPaymentType(quote.paymentType);
   const threeDSecureSessionId = text(input.threeDSecureSessionId, 180);
-  if (requiresCard && !/^3ds_[A-Za-z0-9_]+$/.test(threeDSecureSessionId)) {
-    throw bookingError("CAR_3DS_REQUIRED", "Complete the supplier card verification before booking this rental.");
+  if (paymentType !== "postpaid" && !/^3ds_[A-Za-z0-9_]+$/.test(threeDSecureSessionId)) {
+    throw bookingError("CAR_3DS_REQUIRED", "Complete the secure Duffel card and 3-D Secure step before booking this rental.", 409);
   }
-
-  if (row.status === "PaymentReady") {
-    const claimed = await transitionOwnedCart(context, row.cart_id, "PaymentReady", "Committing");
+  if (["PaymentReady", "PaymentPending"].includes(row.status)) {
+    const claimed = await transitionOwnedCart(context, row.cart_id, row.status, "Committing");
     row = await requireOwnedCart(context, row.cart_id);
-    if (!claimed && row.status !== "Committing") throw bookingError("BOOKING_COMMIT_CONFLICT", "This car booking is already being processed.", 409);
+    if (!claimed && row.status !== "Committing") throw bookingError("BOOKING_COMMIT_CONFLICT", "This rental is already being processed.", 409);
   } else if (row.status !== "Committing") {
-    throw bookingError("CAR_CHECKOUT_NOT_READY", "Prepare the car checkout before booking.", 409);
+    throw bookingError("BOOKING_NOT_READY", "Prepare the rental checkout before booking.", 409);
   }
-
   const secure = await decryptBookingData(row.payload.secureTravelers);
-  const driver = validateCarDriver(secure?.driver || {});
+  const driver = carDriver(secure?.driver || {});
   let provider;
   try {
     provider = await createDuffelCarBookingCore({
       quoteId: quote.id,
       driver,
-      threeDSecureSessionId: requiresCard ? threeDSecureSessionId : undefined,
+      paymentType,
+      ...(paymentType !== "postpaid" ? { threeDSecureSessionId } : {}),
       inboundFlightNumber: input.inboundFlightNumber,
       supplierLoyaltyProgrammeAccountNumber: input.supplierLoyaltyProgrammeAccountNumber,
       internalReference: row.cart_id,
-      integration: "skandi_customer",
-      deviceIp: input.deviceIp,
-      deviceUserAgent: input.deviceUserAgent
+      integration: "skandi_customer"
     });
   } catch (error) {
     if (["DUFFEL_TIMEOUT", "DUFFEL_HTTP_500", "DUFFEL_HTTP_502", "DUFFEL_HTTP_503", "DUFFEL_HTTP_504"].includes(String(error?.code || ""))) {
@@ -1014,58 +1019,42 @@ export async function commitCarBookingCore(context, input = {}) {
         code: safeCode(error.code),
         providerRequestId: error.providerRequestId,
         correlationId: error.correlationId,
-        paymentType: quote.paymentType
+        paymentType
       });
       throw bookingError("BOOKING_RECONCILIATION_REQUIRED", `The car booking outcome is being reconciled. Do not retry. Cart: ${updated.cart_id}`, 409);
     }
-    await updateOwnedCart(context, row.cart_id, {
-      status: "PaymentReady",
-      payload: { ...(row.payload || {}), reconciliation: null }
-    });
+    await updateOwnedCart(context, row.cart_id, { status: "PaymentReady", payload: { ...(row.payload || {}), carQuote: quote, carPrivacy: privacy, payment: { ...(row.payload?.payment || {}), status: "provider_declined_or_failed" } } });
     throw error;
   }
-
-  if (provider.reconciliationRequired || !provider.booking?.id) {
+  const booking = carBookingFromResult(provider);
+  if (provider?.reconciliationRequired || !booking?.id) {
     const updated = await markBookingReconciliationRequired(context, row, {
       kind: "CAR_BOOKING_PENDING",
       code: "DUFFEL_CAR_PENDING",
-      providerRequestId: provider.requestId,
-      correlationId: provider.correlationId,
-      providerStatus: provider.providerStatus,
-      paymentType: quote.paymentType
+      providerRequestId: provider?.requestId,
+      correlationId: provider?.correlationId,
+      providerStatus: provider?.providerStatus,
+      paymentType
     });
     return { cartId: updated.cart_id, status: updated.status, reconciliationRequired: true };
   }
-
-  const booking = enrichCarBookingForTrigger(provider.booking);
+  const paymentStatus = paymentType === "postpaid" ? "pay_at_supplier" : paymentType === "guarantee" ? "guaranteed_at_supplier" : "supplier_card_confirmed";
   const payload = {
     ...(row.payload || {}),
     carQuote: quote,
     carBooking: booking,
+    carPrivacy: privacy,
     bookingReference: booking.reference || row.cart_id,
-    paymentStatus: carPaymentStatus(booking.paymentType || quote.paymentType),
-    carCheckout: {
-      ...(row.payload?.carCheckout || {}),
-      paymentType: lower(booking.paymentType || quote.paymentType, 30),
-      requiresSupplierCard: requiresCard,
-      threeDSCompleted: requiresCard,
-      bookedAt: nowIso()
-    },
+    paymentIntentId: null,
+    payment: { provider: "Duffel", paymentType, status: paymentStatus, method: paymentType === "postpaid" ? "PAY_AT_COUNTER" : "DUFFEL_CARD_3DS", confirmedAt: nowIso() },
     reconciliation: null,
     flow: { ...(row.payload?.flow || {}), currentStep: "confirmation", confirmedAt: nowIso() }
   };
-  const updated = await updateOwnedCart(context, row.cart_id, {
-    status: "Confirmed",
-    currency: booking.totalCurrency || quote.totalCurrency,
-    subtotal: decimal(booking.totalAmount || quote.totalAmount),
-    taxes: "0.00",
-    total: decimal(booking.totalAmount || quote.totalAmount),
-    payload
-  });
+  const updated = await updateOwnedCart(context, row.cart_id, { status: "Confirmed", currency: booking.totalCurrency || quote.totalCurrency, subtotal: decimal(booking.totalAmount || quote.totalAmount), taxes: "0.00", total: decimal(booking.totalAmount || quote.totalAmount), payload });
   return confirmedResult(updated);
 }
 
-// Compatibility alias for the B-006 public method name.
+// Compatibility alias retained for consumers that used the B-006 name.
 export async function createCustomerCarBookingCore(context, input = {}) {
   return commitCarBookingCore(context, input);
 }

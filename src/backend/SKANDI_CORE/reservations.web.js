@@ -1,6 +1,6 @@
 // /src/backend/SKANDI_CORE/reservations.web.js
 // SKANDI ALTEA Reservations — canonical SKANDI-owned web-method facade.
-// Recovery R-006.3 — one page-callable Reservations facade.
+// SKANDI Backend Base 1.0 — B-007 one page-callable Reservations facade.
 //
 // IMPORTANT WIX BOUNDARY:
 // This module imports reusable backend .js cores only. The Reservations page
@@ -24,6 +24,7 @@ import {
   updateAlteaDocumentStatusCore,
   updateAlteaBookingComponentCore,
   syncDuffelOrderToAlteaCore,
+  syncDuffelGroundBookingToAlteaCore,
   searchReservationInventoryCore,
   addReservationInventoryComponentCore,
   releaseReservationInventoryComponentCore,
@@ -41,9 +42,8 @@ import {
   updateTransferDcsPassengerCore,
   updateTransferDcsDepartureCore,
   recordTransferDcsDocumentCore,
-  sendAlteaManifestCore,
-  syncDuffelGroundBookingToAlteaCore
-} from "./reservations.js";
+  sendAlteaManifestCore
+} from "backend/SKANDI_CORE/reservations.js";
 
 
 import {
@@ -57,7 +57,7 @@ import {
   createDuffelOrderCore,
   createDuffelOrderCancellationCore,
   confirmDuffelOrderCancellationCore
-} from "./duffelAir.js";
+} from "backend/SKANDI_CORE/duffelAir.js";
 
 import {
   searchDuffelOrderChangesCore,
@@ -65,7 +65,7 @@ import {
   getDuffelPendingOrderChangeCore,
   prepareDuffelOrderChangePaymentCore,
   confirmDuffelOrderChangeCore
-} from "./duffelServicing.js";
+} from "backend/SKANDI_CORE/duffelServicing.js";
 
 import {
   searchDuffelStaysCore,
@@ -80,7 +80,7 @@ import {
   getDuffelCarBookingCore,
   cancelDuffelCarBookingCore,
   createDuffelComponentClientKeyCore
-} from "./duffelGround.js";
+} from "backend/SKANDI_CORE/duffelGround.js";
 
 const VERSION = RESERVATIONS_CORE_VERSION;
 
@@ -235,39 +235,6 @@ async function transferDocumentAndRefresh(input = {}) {
 }
 
 
-
-async function syncGroundBooking(result,input={},componentType="HOTEL",eventType="DUFFEL_GROUND_BOOKING_SYNCED"){
-  const booking=result?.booking||null;
-  if(!booking?.id||!input.alteaBookingId)return{...result,alteaWorkspace:null};
-  const sync=await syncDuffelGroundBookingToAlteaCore({
-    alteaBookingId:input.alteaBookingId,
-    componentType,
-    booking,
-    eventType
-  });
-  return{...result,alteaWorkspace:sync?.workspace||null};
-}
-async function createStayAndSync(input={}){
-  return syncGroundBooking(await createDuffelStayBookingCore(input),input,"HOTEL","DUFFEL_STAY_BOOKING_CREATED");
-}
-async function getStayAndSync(input={}){
-  const result=await getDuffelStayBookingCore(input);
-  try{return await syncGroundBooking(result,input,"HOTEL","DUFFEL_STAY_BOOKING_RETRIEVED");}catch(_){return result;}
-}
-async function cancelStayAndSync(input={}){
-  return syncGroundBooking(await cancelDuffelStayBookingCore(input),input,"HOTEL","DUFFEL_STAY_BOOKING_CANCELLED");
-}
-async function createCarAndSync(input={}){
-  return syncGroundBooking(await createDuffelCarBookingCore(input),input,"CAR_RENTAL","DUFFEL_CAR_BOOKING_CREATED");
-}
-async function getCarAndSync(input={}){
-  const result=await getDuffelCarBookingCore(input);
-  try{return await syncGroundBooking(result,input,"CAR_RENTAL","DUFFEL_CAR_BOOKING_RETRIEVED");}catch(_){return result;}
-}
-async function cancelCarAndSync(input={}){
-  return syncGroundBooking(await cancelDuffelCarBookingCore(input),input,"CAR_RENTAL","DUFFEL_CAR_BOOKING_CANCELLED");
-}
-
 async function syncSupplierOrder(order, bookingInput={}, eventType="DUFFEL_ORDER_SYNCED"){
   if(!order?.id)return null;
   const sync=await syncDuffelOrderToAlteaCore({order,bookingInput,eventType});
@@ -303,6 +270,45 @@ async function confirmChangeAndSyncOrder(input={}){
   let alteaWorkspace=null;
   try{alteaWorkspace=await syncSupplierOrder(latest?.order,{},"DUFFEL_ORDER_CHANGED");}catch(_){}
   return{...result,order:latest?.order||result?.order||null,alteaWorkspace};
+}
+
+
+function providerBooking(result){
+  if(result?.booking?.id)return result.booking;
+  if(result?.id)return result;
+  return null;
+}
+function normalizedGroundResult(result){
+  if(result?.booking||result?.reconciliationRequired)return result||{};
+  return result?.id?{booking:result}:{...(result||{})};
+}
+async function syncGroundResult(input,result,componentType,eventType){
+  const out=normalizedGroundResult(result);
+  const b=providerBooking(out);
+  const alteaBookingId=clean(input.alteaBookingId||input.bookingId,80);
+  if(!b?.id||!alteaBookingId)return out;
+  const synced=await syncDuffelGroundBookingToAlteaCore({
+    alteaBookingId,componentType,providerBooking:b,eventType
+  });
+  return{...out,alteaWorkspace:synced?.workspace||null};
+}
+async function createStayAndSync(input={}){
+  return syncGroundResult(input,await createDuffelStayBookingCore(input),"HOTEL","DUFFEL_STAY_BOOKING_CREATED");
+}
+async function getStayAndSync(input={}){
+  return syncGroundResult(input,await getDuffelStayBookingCore(input),"HOTEL","DUFFEL_STAY_BOOKING_RETRIEVED");
+}
+async function cancelStayAndSync(input={}){
+  return syncGroundResult(input,await cancelDuffelStayBookingCore(input),"HOTEL","DUFFEL_STAY_BOOKING_CANCELLED");
+}
+async function createCarAndSync(input={}){
+  return syncGroundResult(input,await createDuffelCarBookingCore(input),"CAR_RENTAL","DUFFEL_CAR_BOOKING_CREATED");
+}
+async function getCarAndSync(input={}){
+  return syncGroundResult(input,await getDuffelCarBookingCore(input),"CAR_RENTAL","DUFFEL_CAR_BOOKING_RETRIEVED");
+}
+async function cancelCarAndSync(input={}){
+  return syncGroundResult(input,await cancelDuffelCarBookingCore(input),"CAR_RENTAL","DUFFEL_CAR_BOOKING_CANCELLED");
 }
 
 const ACTIONS = Object.freeze({
