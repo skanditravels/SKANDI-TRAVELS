@@ -84,7 +84,6 @@ const MASTER_CONFIG = Object.freeze({
     successFactors: "/riaintra/success-factors",
     alteaLaunchpad: "/riaintra/success-factors/altea",
     alteaReservations: "/riaintra/success-factors/altea/reservations",
-    alteaTicketing: "/riaintra/success-factors/altea/ticketing",
     alteaTimatic: "/riaintra/success-factors/altea/timatic",
     mail: "/riaintra/success-factors/mail",
     docunet: "/riaintra/success-factors/docunet",
