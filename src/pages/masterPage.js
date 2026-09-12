@@ -21,7 +21,7 @@ const MASTER_CONFIG = Object.freeze({
     internalName: "RIAINTRA",
     alteaName: "ALTEA",
     slogans: Object.freeze({
-      en: "Signature Travels, Unforgettable Moments.",
+      en: "Unforgettable Moments.",
       sv: "När du längtar bort",
       no: "Når du lengter bort",
       da: "Når du længes væk",
