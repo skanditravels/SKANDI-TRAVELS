@@ -1,6 +1,6 @@
 // /src/backend/SKANDI_CORE/travelReference.web.js
 // SKANDI shared frontend-callable travel reference facade.
-// R-003.8
+// R-003.9.1
 //
 // Public-safe reference data only. Commercial/provider-management mutations such
 // as negotiated rates stay behind Inventory Control and are not exposed here.
@@ -25,7 +25,7 @@ import {
   listDuffelStayLoyaltyProgrammesCore,
   searchDuffelAccommodationSuggestionsCore,
   getDuffelAccommodationCore
-} from "./travelReference.js";
+} from "backend/SKANDI_CORE/travelReference.js";
 
 const ANYONE = Permissions.Anyone;
 const publicInput = input => ({ ...(input || {}), includeRaw: false });
