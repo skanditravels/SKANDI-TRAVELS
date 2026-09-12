@@ -1,5 +1,5 @@
 // /src/pages/Inventory Control.jsdik.js
-// SKANDI Inventory Control — R-003.7 canonical page bridge.
+// SKANDI Inventory Control — R-003.8 canonical page bridge.
 // Preferred HTML component: #inventoryControlEmbed
 
 import {
@@ -8,6 +8,8 @@ import {
   getAirInventory,saveAirInventoryRow,
   getAircraftRecord,saveAircraft,archiveAircraft,saveAircraftChild,archiveAircraftChild,
   smartSyncAircraft,getCabinNormalizationPreview,getInventoryAudit,getInventoryQuality,
+  searchInventoryProvider,getInventoryProviderResource,importInventoryProviderResource,refreshInventoryProviderResource,
+  listInventoryNegotiatedRates,getInventoryNegotiatedRate,createInventoryNegotiatedRate,updateInventoryNegotiatedRate,deleteInventoryNegotiatedRate,
   listAssetLibrary,checkAssetLibraryDuplicate,prepareAssetLibraryUpload,finalizeAssetLibraryUpload,
   getAssetLibraryAccessUrl,registerAssetLibraryUsage,archiveAssetLibraryItem
 } from "backend/SKANDI_CORE/inventoryControl.web";
@@ -15,7 +17,7 @@ import {
 const EMBED_IDS=["#inventoryControlEmbed","#alteaInventoryControlEmbed","#masterInventoryEmbed"];
 const CHILD_SOURCE="SKANDI_INVENTORY_EMBED";
 const PARENT_SOURCE="SKANDI_INVENTORY_PARENT";
-const VERSION="R-003.6";
+const VERSION="R-003.8";
 
 function findEmbed(){
   for(const id of EMBED_IDS){
@@ -46,7 +48,15 @@ function errorPayload(error){
     ASSET_WRITE_ACCESS_DENIED:"Your role does not allow Asset Library uploads.",
     ASSET_MIME_NOT_ALLOWED:"That file type is not allowed in this Asset Library.",
     ASSET_FILE_TOO_LARGE:"That file exceeds the Asset Library size limit.",
-    ASSET_FOLDER_REQUIRED:"Choose an Asset Library root and folder before uploading."
+    ASSET_FOLDER_REQUIRED:"Choose an Asset Library root and folder before uploading.",
+    INVENTORY_PROVIDER_TYPE_UNSUPPORTED:"That Duffel reference type is not supported by Inventory Control.",
+    INVENTORY_PROVIDER_IMPORT_TYPE_UNSUPPORTED:"That Duffel reference can be searched but is not importable into the current Inventory model.",
+    INVENTORY_PROVIDER_CANONICAL_MATCH:"A matching SKANDI record already exists. Link Duffel to the existing record instead of creating a duplicate.",
+    INVENTORY_NON_IATA_AIRLINE_SCHEMA_REQUIRED:"This airline has no IATA code. It can be used as Duffel reference data, but the current SKANDI airline store needs a separate internal-code field before it can be imported safely.",
+    INVENTORY_DUFFEL_SOURCE_REQUIRED:"This record is not linked to a Duffel source resource and cannot be refreshed from Duffel.",
+    REFERENCE_QUERY_REQUIRED:"Enter a search term.",
+    NEGOTIATED_RATE_SCOPE_REQUIRED:"Choose a hotel chain or at least one accommodation for the negotiated rate.",
+    NEGOTIATED_RATE_SCOPE_INVALID:"Choose either a hotel chain or specific accommodations, not both."
   };
   return{code,message:friendly[code]||String(error?.publicMessage||error?.message||"Inventory request failed.").slice(0,700)};
 }
@@ -70,6 +80,15 @@ const ACTIONS={
   INVENTORY_V9_ARCHIVE_AIRCRAFT_CHILD:{response:"INVENTORY_V9_AIRCRAFT_CHILD_ARCHIVED",run:archiveAircraftChild},
   INVENTORY_V9_SMART_SYNC_AIRCRAFT:{response:"INVENTORY_V9_SMART_SYNC_RESULT",run:smartSyncAircraft},
   INVENTORY_V9_CABIN_NORMALIZATION_PREVIEW:{response:"INVENTORY_V9_CABIN_NORMALIZATION_RESULT",run:getCabinNormalizationPreview},
+  INVENTORY_PROVIDER_SEARCH:{response:"INVENTORY_PROVIDER_SEARCH_RESULT",run:searchInventoryProvider},
+  INVENTORY_PROVIDER_GET_RESOURCE:{response:"INVENTORY_PROVIDER_RESOURCE",run:getInventoryProviderResource},
+  INVENTORY_PROVIDER_IMPORT:{response:"INVENTORY_PROVIDER_IMPORTED",run:importInventoryProviderResource},
+  INVENTORY_PROVIDER_REFRESH:{response:"INVENTORY_PROVIDER_REFRESHED",run:refreshInventoryProviderResource},
+  INVENTORY_NEGOTIATED_RATES_LIST:{response:"INVENTORY_NEGOTIATED_RATES_RESULT",run:listInventoryNegotiatedRates},
+  INVENTORY_NEGOTIATED_RATE_GET:{response:"INVENTORY_NEGOTIATED_RATE_RESULT",run:getInventoryNegotiatedRate},
+  INVENTORY_NEGOTIATED_RATE_CREATE:{response:"INVENTORY_NEGOTIATED_RATE_SAVED",run:createInventoryNegotiatedRate},
+  INVENTORY_NEGOTIATED_RATE_UPDATE:{response:"INVENTORY_NEGOTIATED_RATE_SAVED",run:updateInventoryNegotiatedRate},
+  INVENTORY_NEGOTIATED_RATE_DELETE:{response:"INVENTORY_NEGOTIATED_RATE_DELETED",run:deleteInventoryNegotiatedRate},
   INVENTORY_ASSET_LIST:{response:"INVENTORY_ASSET_LIST_RESULT",run:listAssetLibrary},
   INVENTORY_ASSET_CHECK_DUPLICATE:{response:"INVENTORY_ASSET_DUPLICATE_RESULT",run:checkAssetLibraryDuplicate},
   INVENTORY_ASSET_PREPARE_UPLOAD:{response:"INVENTORY_ASSET_UPLOAD_PREPARED",run:prepareAssetLibraryUpload},
@@ -104,7 +123,8 @@ $w.onReady(()=>{
         "INVENTORY_V9_SAVE_BUNDLE","INVENTORY_V9_ARCHIVE_RECORD","INVENTORY_V9_SAVE_DATED",
         "INVENTORY_V9_DELETE_DATED","INVENTORY_V9_SAVE_AIR_ROW","INVENTORY_V9_SAVE_AIRCRAFT",
         "INVENTORY_V9_ARCHIVE_AIRCRAFT","INVENTORY_V9_SAVE_AIRCRAFT_CHILD",
-        "INVENTORY_V9_ARCHIVE_AIRCRAFT_CHILD","INVENTORY_V9_SMART_SYNC_AIRCRAFT"
+        "INVENTORY_V9_ARCHIVE_AIRCRAFT_CHILD","INVENTORY_V9_SMART_SYNC_AIRCRAFT",
+        "INVENTORY_PROVIDER_IMPORT","INVENTORY_PROVIDER_REFRESH"
       ].includes(message.type)){
         post(embed,"INVENTORY_V9_BOOTSTRAP",await getInventoryBootstrap(),requestId);
       }
