@@ -1,6 +1,6 @@
 // /src/backend/SKANDI_CORE/inventoryControl.web.js
 // SKANDI Inventory Control — canonical web boundary.
-// R-003.7
+// R-003.8
 //
 // This file intentionally contains no Inventory business logic. The single
 // Inventory page boundary delegates to SKANDI_CORE and exposes the central
@@ -27,7 +27,16 @@ import {
   smartSyncAircraftCore,
   getCabinNormalizationPreviewCore,
   getInventoryAuditCore,
-  getInventoryQualityCore
+  getInventoryQualityCore,
+  searchInventoryProviderCore,
+  getInventoryProviderResourceCore,
+  importInventoryProviderResourceCore,
+  refreshInventoryProviderResourceCore,
+  listInventoryNegotiatedRatesCore,
+  getInventoryNegotiatedRateCore,
+  createInventoryNegotiatedRateCore,
+  updateInventoryNegotiatedRateCore,
+  deleteInventoryNegotiatedRateCore
 } from "./inventory.js";
 import {
   listAssetsCore,
@@ -64,6 +73,17 @@ export const getCabinNormalizationPreview = webMethod(MEMBER, getCabinNormalizat
 
 export const getInventoryAudit = webMethod(MEMBER, getInventoryAuditCore);
 export const getInventoryQuality = webMethod(MEMBER, getInventoryQualityCore);
+
+export const searchInventoryProvider = webMethod(MEMBER, searchInventoryProviderCore);
+export const getInventoryProviderResource = webMethod(MEMBER, getInventoryProviderResourceCore);
+export const importInventoryProviderResource = webMethod(MEMBER, importInventoryProviderResourceCore);
+export const refreshInventoryProviderResource = webMethod(MEMBER, refreshInventoryProviderResourceCore);
+
+export const listInventoryNegotiatedRates = webMethod(MEMBER, listInventoryNegotiatedRatesCore);
+export const getInventoryNegotiatedRate = webMethod(MEMBER, getInventoryNegotiatedRateCore);
+export const createInventoryNegotiatedRate = webMethod(MEMBER, createInventoryNegotiatedRateCore);
+export const updateInventoryNegotiatedRate = webMethod(MEMBER, updateInventoryNegotiatedRateCore);
+export const deleteInventoryNegotiatedRate = webMethod(MEMBER, deleteInventoryNegotiatedRateCore);
 
 export const listAssetLibrary = webMethod(MEMBER, listAssetsCore);
 export const checkAssetLibraryDuplicate = webMethod(MEMBER, checkAssetDuplicateCore);

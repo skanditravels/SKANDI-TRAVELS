@@ -1,13 +1,29 @@
 // /src/backend/SKANDI_CORE/inventory.js
 // SKANDI Inventory Control — canonical business logic.
-// Recovery R-003 source of truth.
+// Recovery R-003.8 source of truth.
 // No webMethod wrappers, no routes, no UI code.
 
 import { randomUUID } from "crypto";
 import { restRequest } from "./supabaseServer.js";
 import { getStaffPortalSessionCore } from "./staffAuth.js";
+import {
+  listDuffelAirlinesCore,
+  getDuffelAirlineCore,
+  listDuffelAircraftCore,
+  getDuffelAircraftCore,
+  getDuffelAirportCore,
+  getDuffelCityCore,
+  searchDuffelPlacesCore,
+  searchDuffelAccommodationSuggestionsCore,
+  getDuffelAccommodationCore,
+  listDuffelNegotiatedRatesCore,
+  getDuffelNegotiatedRateCore,
+  createDuffelNegotiatedRateCore,
+  updateDuffelNegotiatedRateCore,
+  deleteDuffelNegotiatedRateCore
+} from "./travelReference.js";
 
-export const INVENTORY_CORE_VERSION = "R-003.6";
+export const INVENTORY_CORE_VERSION = "R-003.8";
 
 const MASTER_TYPES = new Set([
   "COUNTRY","DESTINATION","AREA","SUPPLIER","HOTEL","GUIDED_TOUR","ACTIVITY",
@@ -1069,6 +1085,314 @@ export async function saveInventoryBundleCore(input={}){
       `Inventory save was rolled back: ${clean(error?.message||error,500)}`,{type});
     throw error;
   }
+}
+
+
+const PROVIDER_SEARCH_TYPES = new Set(["HOTEL","AIRLINE","AIRPORT","DESTINATION","AIRCRAFT"]);
+const PROVIDER_IMPORT_TYPES = new Set(["HOTEL","AIRLINE","AIRPORT","DESTINATION"]);
+
+function providerCodeSuffix(id=""){
+  const token=upper(id,180).replace(/[^A-Z0-9]/g,"");
+  return token.slice(-10)||"RESOURCE";
+}
+function providerExistingSummary(type,row={}){
+  if(type==="AIRLINE") return{
+    id:clean(row.ID,100),entityType:"AIRLINE",code:upper(row.iataCode,8),name:clean(row.Title||row.shortName,300),
+    status:upper(row.status||"PUBLISHED",40),source:upper(row.source,120),sourceReference:clean(row.source_reference,800)
+  };
+  if(type==="AIRPORT") return{
+    id:clean(row.ID,100),entityType:"AIRPORT",code:upper(row.iata,8),name:clean(row.title,300),
+    status:upper(row.status||"PUBLISHED",40),source:upper(row.source,120),sourceReference:clean(row.source_reference,800)
+  };
+  return{
+    id:clean(row.id,100),entityType:upper(row.entity_type,40),code:upper(row.code,180),name:clean(row.name,300),
+    status:upper(row.status,40),source:upper(row.source,120),sourceReference:clean(row.source_reference,800)
+  };
+}
+async function providerExistingIndex(type){
+  let rows=[];
+  if(type==="AIRLINE") rows=await select("travel_info_airlines",{select:"ID,iataCode,Title,shortName,status,source,source_reference",limit:"3000"});
+  else if(type==="AIRPORT") rows=await select("travel_info_airports",{select:"ID,iata,title,status,source,source_reference",limit:"5000"});
+  else if(type==="HOTEL"||type==="DESTINATION") rows=await select("inventory_master_entities",{select:"id,entity_type,code,name,status,source,source_reference",entity_type:qeq(type),limit:"5000"});
+  const normalized=rows.map(row=>providerExistingSummary(type,row));
+  const byProvider=new Map();
+  const byCode=new Map();
+  for(const row of normalized){
+    if(row.sourceReference)byProvider.set(row.sourceReference,row);
+    if(row.code)byCode.set(row.code,row);
+  }
+  return{rows:normalized,byProvider,byCode};
+}
+function providerSearchItem(type,item,index){
+  if(type==="HOTEL")return{
+    provider:"DUFFEL",providerResourceType:"ACCOMMODATION",providerId:clean(item.id||item.accommodationId,180),
+    entityType:"HOTEL",name:clean(item.name,300),code:"",
+    secondary:[item.location?.address?.cityName,item.location?.address?.countryCode].filter(Boolean).join(", "),
+    preview:item,index
+  };
+  if(type==="AIRLINE")return{
+    provider:"DUFFEL",providerResourceType:"AIRLINE",providerId:clean(item.id,180),entityType:"AIRLINE",
+    name:clean(item.name,300),code:upper(item.iataCode,8),secondary:item.conditionsOfCarriageUrl||"",preview:item,index,
+    importSupported:Boolean(item.iataCode),importBlocker:item.iataCode?null:"NON_IATA_AIRLINE_REQUIRES_SCHEMA_EXTENSION"
+  };
+  if(type==="AIRPORT")return{
+    provider:"DUFFEL",providerResourceType:"AIRPORT",providerId:clean(item.id,180),entityType:"AIRPORT",
+    name:clean(item.name,300),code:upper(item.iataCode,8),secondary:[item.cityName,item.iataCountryCode].filter(Boolean).join(", "),preview:item,index
+  };
+  if(type==="DESTINATION")return{
+    provider:"DUFFEL",providerResourceType:"CITY",providerId:clean(item.id,180),entityType:"DESTINATION",
+    name:clean(item.name||item.cityName,300),code:upper(item.iataCode||item.iataCityCode,8),secondary:upper(item.iataCountryCode,8),preview:item,index
+  };
+  return{
+    provider:"DUFFEL",providerResourceType:"AIRCRAFT",providerId:clean(item.id,180),entityType:"AIRCRAFT",
+    name:clean(item.name,300),code:upper(item.iataCode,8),secondary:"Reference only",preview:item,index,
+    importSupported:false,importBlocker:"AIRCRAFT_REFERENCE_REQUIRES_AIRLINE_CONFIGURATION"
+  };
+}
+function attachExistingProviderMatch(item,index){
+  const providerMatch=index.byProvider.get(item.providerId)||null;
+  const codeMatch=!providerMatch&&item.code?index.byCode.get(item.code)||null:null;
+  const existing=providerMatch||codeMatch;
+  return{
+    ...item,
+    alreadyInSkandiCollection:Boolean(providerMatch),
+    canonicalMatch:Boolean(codeMatch),
+    matchKind:providerMatch?"PROVIDER_ID":(codeMatch?"CANONICAL_CODE":null),
+    existingRecord:existing
+  };
+}
+async function providerResource(type,providerId,{includeRaw=true}={}){
+  if(type==="HOTEL")return getDuffelAccommodationCore({id:providerId,includeRaw});
+  if(type==="AIRLINE")return getDuffelAirlineCore({id:providerId,includeRaw});
+  if(type==="AIRPORT")return getDuffelAirportCore({id:providerId,includeRaw});
+  if(type==="DESTINATION")return getDuffelCityCore({id:providerId,includeRaw});
+  if(type==="AIRCRAFT")return getDuffelAircraftCore({id:providerId,includeRaw});
+  throw new Error("INVENTORY_PROVIDER_TYPE_UNSUPPORTED");
+}
+function providerSnapshot(type,resource,raw){
+  return{
+    provider:"DUFFEL",resourceType:type,resourceId:clean(resource?.id,180),fetchedAt:now(),
+    normalized:resource||null,raw:raw||null
+  };
+}
+function providerDetails(type,resource,current={}){
+  const existing={...object(current)};
+  if(type==="HOTEL"){
+    const location=object(resource.location),address=object(location.address);
+    return{
+      ...existing,
+      address:{...address,...object(existing.address)},
+      latitude:existing.latitude??location.latitude,
+      longitude:existing.longitude??location.longitude,
+      rating:existing.rating??resource.rating,
+      reviewScore:existing.reviewScore??resource.reviewScore,
+      reviewCount:existing.reviewCount??resource.reviewCount,
+      brand:existing.brand??resource.brand,
+      chain:existing.chain??resource.chain,
+      supportedLoyaltyProgramme:existing.supportedLoyaltyProgramme??resource.supportedLoyaltyProgramme,
+      duffel:resource
+    };
+  }
+  if(type==="AIRLINE")return{
+    ...existing,
+    shortName:existing.shortName||resource.name,
+    conditionsOfCarriageUrl:existing.conditionsOfCarriageUrl||resource.conditionsOfCarriageUrl,
+    logoLockupUrl:existing.logoLockupUrl||resource.logoLockupUrl,
+    logoSymbolUrl:existing.logoSymbolUrl||resource.logoSymbolUrl,
+    duffel:resource
+  };
+  if(type==="AIRPORT")return{
+    ...existing,
+    icaoCode:existing.icaoCode||resource.icaoCode,
+    country:existing.country||resource.iataCountryCode,
+    countryCode:existing.countryCode||resource.iataCountryCode,
+    city:existing.city||resource.cityName,
+    iataCityCode:existing.iataCityCode||resource.iataCityCode,
+    timezone:existing.timezone||resource.timeZone,
+    latitude:existing.latitude??resource.latitude,
+    longitude:existing.longitude??resource.longitude,
+    cityResource:existing.cityResource||resource.city,
+    duffel:resource
+  };
+  if(type==="DESTINATION")return{
+    ...existing,
+    level:"DESTINATION",
+    iataCode:existing.iataCode||resource.iataCode,
+    countryCode:existing.countryCode||resource.iataCountryCode,
+    airports:Array.isArray(existing.airports)&&existing.airports.length?existing.airports:array(resource.airports),
+    duffel:resource
+  };
+  return{...existing,duffel:resource};
+}
+function providerPayload(currentPayload,type,resource,raw){
+  return{...object(currentPayload),duffel:providerSnapshot(type,resource,raw)};
+}
+function defaultProviderCatalog(existing=null){
+  return existing||{
+    catalogType:"SKANDI_COLLECTION",searchable:false,featured:false,homepageFeatured:false,
+    searchPriority:100,searchKeywords:[],marketCodes:[],salesChannels:[],active:true
+  };
+}
+function newProviderBundle(type,resource,raw,input={}){
+  const providerId=clean(resource.id,180);
+  if(!providerId)throw new Error("INVENTORY_PROVIDER_RESOURCE_INVALID");
+  const base={
+    id:"",entityType:type,name:clean(input.name||resource.name,300),slug:"",status:"DRAFT",active:true,
+    customerVisible:false,staffVisible:true,alteaVisible:true,featured:false,homepageFeatured:false,sortPriority:100,
+    parentEntityId:isUuid(input.parentEntityId)?clean(input.parentEntityId,80):"",
+    supplierEntityId:isUuid(input.supplierEntityId)?clean(input.supplierEntityId,80):"",
+    source:"DUFFEL",sourceReference:providerId,details:{},commercial:{},operations:{},seo:{},publication:{},payload:{}
+  };
+  if(type==="HOTEL"){
+    base.code=upper(input.code,180)||`DUF-HOT-${providerCodeSuffix(providerId)}`;
+    base.details={
+      ...(isUuid(input.destinationId)?{destinationId:clean(input.destinationId,80)}:{}),
+      ...(isUuid(input.areaId)?{areaId:clean(input.areaId,80)}:{}),
+      ...providerDetails(type,resource,{})
+    };
+  }else if(type==="DESTINATION"){
+    base.code=upper(input.code||resource.iataCode,180);
+    base.details=providerDetails(type,resource,{});
+  }else if(type==="AIRPORT"){
+    base.code=upper(input.code||resource.iataCode,8);
+    base.details=providerDetails(type,resource,{});
+  }else if(type==="AIRLINE"){
+    if(!resource.iataCode)throw new Error("INVENTORY_NON_IATA_AIRLINE_SCHEMA_REQUIRED");
+    base.code=upper(input.code||resource.iataCode,8);
+    base.details=providerDetails(type,resource,{});
+  }
+  base.payload=providerPayload({},type,resource,raw);
+  return{record:base,localizedContent:[],media:[],relations:[],catalog:defaultProviderCatalog()};
+}
+function mergeProviderIntoExisting(bundle,type,resource,raw){
+  const record={...object(bundle.record)};
+  record.source="DUFFEL";
+  record.sourceReference=clean(resource.id,180);
+  record.details=providerDetails(type,resource,record.details);
+  record.payload=providerPayload(record.payload,type,resource,raw);
+  return{
+    record,
+    localizedContent:array(bundle.localizedContent),
+    media:array(bundle.media),
+    relations:array(bundle.relations),
+    catalog:defaultProviderCatalog(bundle.catalog||null)
+  };
+}
+function providerSuggestedFields(type,resource){
+  if(type==="HOTEL")return{name:resource.name,location:resource.location,rating:resource.rating,reviewScore:resource.reviewScore,brand:resource.brand,chain:resource.chain};
+  if(type==="AIRLINE")return{name:resource.name,iataCode:resource.iataCode,conditionsOfCarriageUrl:resource.conditionsOfCarriageUrl,logoLockupUrl:resource.logoLockupUrl,logoSymbolUrl:resource.logoSymbolUrl};
+  if(type==="AIRPORT")return{name:resource.name,iataCode:resource.iataCode,icaoCode:resource.icaoCode,cityName:resource.cityName,iataCountryCode:resource.iataCountryCode,latitude:resource.latitude,longitude:resource.longitude,timeZone:resource.timeZone};
+  if(type==="DESTINATION")return{name:resource.name,iataCode:resource.iataCode,iataCountryCode:resource.iataCountryCode,airports:resource.airports};
+  return resource;
+}
+
+export async function searchInventoryProviderCore(input={}){
+  await requireInventoryAccess();
+  const type=upper(input.entityType||input.resourceType,40);
+  if(!PROVIDER_SEARCH_TYPES.has(type))throw new Error("INVENTORY_PROVIDER_TYPE_UNSUPPORTED");
+  let rawItems=[];
+  if(type==="HOTEL") rawItems=(await searchDuffelAccommodationSuggestionsCore(input)).items;
+  else if(type==="AIRLINE") rawItems=(await listDuffelAirlinesCore({query:input.query,limit:input.limit||50})).items;
+  else if(type==="AIRPORT") rawItems=(await searchDuffelPlacesCore({query:input.query,placeType:"airport",limit:input.limit||50})).items;
+  else if(type==="DESTINATION") rawItems=(await searchDuffelPlacesCore({query:input.query,placeType:"city",limit:input.limit||50})).items;
+  else if(type==="AIRCRAFT") rawItems=(await listDuffelAircraftCore({query:input.query,limit:input.limit||50})).items;
+  const index=PROVIDER_IMPORT_TYPES.has(type)?await providerExistingIndex(type):{byProvider:new Map(),byCode:new Map()};
+  const items=rawItems.map((item,i)=>attachExistingProviderMatch(providerSearchItem(type,item,i),index));
+  return{ok:true,provider:"DUFFEL",entityType:type,query:clean(input.query,160),items};
+}
+
+export async function getInventoryProviderResourceCore(input={}){
+  await requireInventoryAccess();
+  const type=upper(input.entityType||input.resourceType,40);
+  if(!PROVIDER_SEARCH_TYPES.has(type))throw new Error("INVENTORY_PROVIDER_TYPE_UNSUPPORTED");
+  const providerId=clean(input.providerId||input.id,180);
+  const result=await providerResource(type,providerId,{includeRaw:true});
+  const item=providerSearchItem(type,result.item,0);
+  const index=PROVIDER_IMPORT_TYPES.has(type)?await providerExistingIndex(type):{byProvider:new Map(),byCode:new Map()};
+  return{
+    ok:true,provider:"DUFFEL",entityType:type,
+    item:attachExistingProviderMatch(item,index),resource:result.item,
+    importSupported:PROVIDER_IMPORT_TYPES.has(type)&&item.importSupported!==false
+  };
+}
+
+export async function importInventoryProviderResourceCore(input={}){
+  const session=await requireInventoryAccess({write:true});
+  const type=upper(input.entityType||input.resourceType,40);
+  if(!PROVIDER_IMPORT_TYPES.has(type))throw new Error("INVENTORY_PROVIDER_IMPORT_TYPE_UNSUPPORTED");
+  const providerId=clean(input.providerId||input.id,180);
+  const result=await providerResource(type,providerId,{includeRaw:true});
+  const resource=result.item;
+  const index=await providerExistingIndex(type);
+  const code=type==="HOTEL"?"":upper(resource.iataCode,180);
+  const providerMatch=index.byProvider.get(providerId)||null;
+  if(providerMatch){
+    return{ok:true,alreadyExists:true,linked:false,provider:"DUFFEL",entityType:type,existingRecord:providerMatch,bundle:await getInventoryRecordCore({id:providerMatch.id,entityType:type})};
+  }
+  const codeMatch=code?index.byCode.get(code)||null:null;
+  if(codeMatch&&input.linkExisting!==true){
+    return{ok:false,conflict:true,code:"INVENTORY_PROVIDER_CANONICAL_MATCH",provider:"DUFFEL",entityType:type,existingRecord:codeMatch,providerResource:resource};
+  }
+  let saveBundle;
+  let linked=false;
+  if(codeMatch&&input.linkExisting===true){
+    const existing=await getInventoryRecordCore({id:codeMatch.id,entityType:type});
+    saveBundle=mergeProviderIntoExisting(existing,type,resource,result.raw);
+    linked=true;
+  }else{
+    saveBundle=newProviderBundle(type,resource,result.raw,input);
+  }
+  const saved=await saveInventoryBundleCore({bundle:saveBundle});
+  await audit(session,linked?"INVENTORY_DUFFEL_LINKED":"INVENTORY_DUFFEL_IMPORTED",saved.bundle?.record?.sourceTable||type,saved.bundle?.record?.id||null,
+    `${type} linked/imported from Duffel.`,{providerId,linked});
+  return{...saved,provider:"DUFFEL",providerId,linked,alreadyExists:false};
+}
+
+export async function refreshInventoryProviderResourceCore(input={}){
+  const session=await requireInventoryAccess({write:true});
+  const type=upper(input.entityType||input.resourceType,40);
+  if(!PROVIDER_IMPORT_TYPES.has(type))throw new Error("INVENTORY_PROVIDER_IMPORT_TYPE_UNSUPPORTED");
+  const id=clean(input.id||input.entityId,100);
+  if(!id)throw new Error("INVENTORY_ID_REQUIRED");
+  const existing=await getInventoryRecordCore({id,entityType:type});
+  const record=object(existing.record);
+  if(upper(record.source,120)!=="DUFFEL"||!record.sourceReference)throw new Error("INVENTORY_DUFFEL_SOURCE_REQUIRED");
+  const result=await providerResource(type,record.sourceReference,{includeRaw:true});
+  const merged=mergeProviderIntoExisting(existing,type,result.item,result.raw);
+  const saved=await saveInventoryBundleCore({bundle:merged});
+  await audit(session,"INVENTORY_DUFFEL_REFRESHED",saved.bundle?.record?.sourceTable||type,id,`${type} Duffel source snapshot refreshed.`,{providerId:record.sourceReference});
+  return{
+    ...saved,provider:"DUFFEL",providerId:record.sourceReference,
+    providerSuggested:providerSuggestedFields(type,result.item),
+    overwritePolicy:"PROVIDER_NAMESPACE_ONLY"
+  };
+}
+
+export async function listInventoryNegotiatedRatesCore(input={}){
+  await requireInventoryAccess();
+  return{ok:true,provider:"DUFFEL",...(await listDuffelNegotiatedRatesCore(input))};
+}
+export async function getInventoryNegotiatedRateCore(input={}){
+  await requireInventoryAccess();
+  return{ok:true,provider:"DUFFEL",...(await getDuffelNegotiatedRateCore(input))};
+}
+export async function createInventoryNegotiatedRateCore(input={}){
+  const session=await requireInventoryAccess({write:true});
+  const result=await createDuffelNegotiatedRateCore(input);
+  await audit(session,"INVENTORY_DUFFEL_NEGOTIATED_RATE_CREATED","DUFFEL_NEGOTIATED_RATE",result.item?.id||null,"Duffel negotiated hotel rate created.",{displayName:result.item?.displayName||null});
+  return{ok:true,provider:"DUFFEL",...result};
+}
+export async function updateInventoryNegotiatedRateCore(input={}){
+  const session=await requireInventoryAccess({write:true});
+  const result=await updateDuffelNegotiatedRateCore(input);
+  await audit(session,"INVENTORY_DUFFEL_NEGOTIATED_RATE_UPDATED","DUFFEL_NEGOTIATED_RATE",result.item?.id||null,"Duffel negotiated hotel rate updated.",{displayName:result.item?.displayName||null});
+  return{ok:true,provider:"DUFFEL",...result};
+}
+export async function deleteInventoryNegotiatedRateCore(input={}){
+  const session=await requireInventoryAccess({write:true});
+  const result=await deleteDuffelNegotiatedRateCore(input);
+  await audit(session,"INVENTORY_DUFFEL_NEGOTIATED_RATE_DELETED","DUFFEL_NEGOTIATED_RATE",result.id||null,"Duffel negotiated hotel rate deleted.",{});
+  return{ok:true,provider:"DUFFEL",...result};
 }
 
 export async function archiveInventoryRecordCore(input={}){
