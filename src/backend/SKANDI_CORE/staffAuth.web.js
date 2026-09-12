@@ -1,13 +1,14 @@
 // /src/backend/SKANDI_CORE/staffAuth.web.js
-// Canonical public web-method facade for SKANDI staff authentication.
-// All business logic lives in ./staffAuth.js.
+// SKANDI Staff Authentication — canonical Wix web-method facade.
+// R-003.9.4
+// Business/authorization logic lives only in backend/SKANDI_CORE/staffAuth.js.
 
-import { webMethod, Permissions } from "wix-web-module";
+import { Permissions, webMethod } from "@wix/web-methods";
 import {
   loginStaffWithSkIdCore,
   getStaffPortalSessionCore,
   getPortalAppsCore
-} from "./staffAuth.js";
+} from "backend/SKANDI_CORE/staffAuth.js";
 
 export const loginStaffWithSkId = webMethod(
   Permissions.Anyone,
