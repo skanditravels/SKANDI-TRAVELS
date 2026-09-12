@@ -83,6 +83,7 @@ const MASTER_CONFIG = Object.freeze({
     staffLogin: "/riaintra",
     successFactors: "/riaintra/success-factors",
     alteaLaunchpad: "/riaintra/success-factors/altea",
+    inventoryControl: "/riaintra/success-factors/altea/inventory-control",
     alteaReservations: "/riaintra/success-factors/altea/reservations",
     alteaTicketing: "/riaintra/success-factors/altea/ticketing",
     alteaTimatic: "/riaintra/success-factors/altea/timatic",
@@ -95,14 +96,13 @@ const MASTER_CONFIG = Object.freeze({
   customer: Object.freeze({
     header: Object.freeze({
       primaryNav: Object.freeze([
-        { id:"flights", label:"Flights", path:"/flights" },
+        { id:"home", label:"Book", path:"/" },
         { id:"hotels", label:"Hotels", path:"/hotels" },
-        { id:"packages", label:"Packages", path:"/packages" },
         { id:"tours", label:"Tours & Activities", path:"/tours" },
-        { id:"transfers", label:"Transfers", path:"/transfers" }
+        { id:"transfers", label:"Transfer", path:"/transfers" },
+        { id:"destinations", label:"Destinations", path:"/destinations" },
       ]),
       secondaryNav: Object.freeze([
-        { id:"destinations", label:"Destinations", path:"/destinations" },
         { id:"signature", label:"SKANDI Collection", path:"/skandi-collection" },
         { id:"voy", label:"VOY Magazine", path:"/voy-magazine" },
         { id:"newsroom", label:"Newsroom", path:"/about/news-room" }
@@ -166,8 +166,8 @@ const MASTER_CONFIG = Object.freeze({
 
   internal: Object.freeze({
     header: Object.freeze({
-      productName:"SKANDI TRAVELS",
-      productContext:"RIAINTRA Enterprise Workforce Suite",
+      productName:"RIAINTRA",
+      productContext:"Enterprise Workforce Suite",
       primaryNav:Object.freeze([
         { id:"success-factors", label:"SAP RIAINTRA Dashboard", path:"/riaintra/success-factors" },
         { id:"my-roster", label:"MyRoster", path:"/riaintra/success-factors/my-roster" },
