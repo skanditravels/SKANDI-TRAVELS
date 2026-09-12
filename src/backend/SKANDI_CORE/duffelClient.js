@@ -1,5 +1,5 @@
 // /src/backend/SKANDI_CORE/duffelClient.js
-// SKANDI Backend Base 1.0 — B-005R1 canonical Duffel-only transport.
+// SKANDI Backend Base 1.0 — B-005R2 canonical Duffel-only transport.
 // Server-only. Owns Duffel HTTP, credentials, bounded read retries and diagnostics.
 // It does NOT own Stripe, booking orchestration, ALTEA/Supabase persistence or Wix page methods.
 
@@ -103,7 +103,10 @@ function withTimeout(promise, timeoutMs, errorFactory) {
 }
 
 async function readPayload(response, path, requestCorrelationId) {
-  const raw = clean(await response.text(), 2_000_000).replace(/^\uFEFF/, "").trim();
+  // Duffel flight-search responses can legitimately exceed 2 MB. Never truncate a
+  // successful provider body before JSON parsing; truncation turns valid JSON into
+  // a false NON_JSON_RESPONSE. Keep logging bounded, not the response itself.
+  const raw = String(await response.text() ?? "").replace(/^\uFEFF/, "").trim();
   if (!raw) {
     if ([202, 204].includes(Number(response?.status))) return { payload: null, validJson: true, raw: "" };
     return { payload: null, validJson: false, raw: "" };
