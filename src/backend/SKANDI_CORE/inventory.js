@@ -1,11 +1,11 @@
 // /src/backend/SKANDI_CORE/inventory.js
 // SKANDI Inventory Control — canonical business logic.
-// Recovery R-003.8 source of truth.
+// Recovery R-003.9.1 source of truth.
 // No webMethod wrappers, no routes, no UI code.
 
 import { randomUUID } from "crypto";
-import { restRequest } from "./supabaseServer.js";
-import { getStaffPortalSessionCore } from "./staffAuth.js";
+import { restRequest } from "backend/SKANDI_CORE/supabaseServer.js";
+import { getStaffPortalSessionCore } from "backend/SKANDI_CORE/staffAuth.js";
 import {
   listDuffelAirlinesCore,
   getDuffelAirlineCore,
@@ -21,9 +21,9 @@ import {
   createDuffelNegotiatedRateCore,
   updateDuffelNegotiatedRateCore,
   deleteDuffelNegotiatedRateCore
-} from "./travelReference.js";
+} from "backend/SKANDI_CORE/travelReference.js";
 
-export const INVENTORY_CORE_VERSION = "R-003.8";
+export const INVENTORY_CORE_VERSION = "R-003.9.1";
 
 const MASTER_TYPES = new Set([
   "COUNTRY","DESTINATION","AREA","SUPPLIER","HOTEL","GUIDED_TOUR","ACTIVITY",
