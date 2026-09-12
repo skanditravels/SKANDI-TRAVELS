@@ -1,5 +1,5 @@
 // /src/backend/SKANDI_CORE/customerBooking.js
-// SKANDI Backend Base 1.0 — B-006 canonical customer booking orchestration.
+// SKANDI Backend Base 1.0 — B-007 canonical customer booking orchestration.
 // Owns customer cart/checkout state and customer-payment capture timing.
 // Does NOT write ALTEA. booking_carts status=Confirmed remains the single customer->ALTEA handoff.
 
@@ -22,7 +22,10 @@ import {
   getDuffelStayBookingCore,
   searchDuffelCarsCore,
   quoteDuffelCarCore,
-  getDuffelCarQuoteCore
+  getDuffelCarQuoteCore,
+  createDuffelCarBookingCore,
+  getDuffelCarBookingCore,
+  createDuffelComponentClientKeyCore
 } from "backend/SKANDI_CORE/duffelGround.js";
 import {
   createStripePaymentIntent,
@@ -542,6 +545,10 @@ export async function loadBookingConfirmationCore(context, input = {}) {
     const stay = await getDuffelStayBookingCore({ bookingId: row.payload.stayBooking.id });
     row = await updateOwnedCart(context, row.cart_id, { payload: { ...(row.payload || {}), stayBooking: stay.booking } });
   }
+  if (row.payload?.carBooking?.id) {
+    const car = await getDuffelCarBookingCore({ bookingId: row.payload.carBooking.id });
+    row = await updateOwnedCart(context, row.cart_id, { payload: { ...(row.payload || {}), carBooking: enrichCarBookingForTrigger(car.booking) } });
+  }
   return confirmationFromRow(row);
 }
 
@@ -582,24 +589,38 @@ function flattenSegments(slices) {
 function confirmedResult(row) {
   const air = row?.payload?.airOrder || {};
   const stay = row?.payload?.stayBooking || {};
-  return { cartId: row?.cart_id || "", bookingReference: row?.payload?.bookingReference || air.bookingReference || stay.reference || "", orderId: air.id || stay.id || "", status: row?.status || "Confirmed" };
+  const car = row?.payload?.carBooking || {};
+  return {
+    cartId: row?.cart_id || "",
+    bookingReference: row?.payload?.bookingReference || air.bookingReference || stay.reference || car.reference || "",
+    orderId: air.id || stay.id || car.id || "",
+    status: row?.status || "Confirmed"
+  };
 }
 function confirmationFromRow(row) {
   const air = row.payload?.airOrder || {};
   const stay = row.payload?.stayBooking || {};
+  const car = row.payload?.carBooking || {};
   const selectedOffer = row.payload?.selectedOffer || {};
+  const productType = row.payload?.productType || "SKANDI booking";
+  const title = productType === "HOTEL_ONLY"
+    ? "Your hotel is confirmed"
+    : productType === "CAR_RENTAL_ONLY"
+      ? "Your car rental is confirmed"
+      : "Your trip is confirmed";
   return {
     cartId: row.cart_id,
-    title: row.payload?.productType === "HOTEL_ONLY" ? "Your hotel is confirmed" : "Your trip is confirmed",
-    summary: selectedOffer.summary || stay.accommodation?.name || "Your SKANDI booking is confirmed.",
-    bookingReference: row.payload?.bookingReference || air.bookingReference || stay.reference || row.cart_id,
-    pnrLocator: air.bookingReference || stay.reference || "",
-    orderId: air.id || stay.id || "",
-    confirmationType: row.payload?.productType || "SKANDI booking",
+    title,
+    summary: selectedOffer.summary || stay.accommodation?.name || car.car?.name || "Your SKANDI booking is confirmed.",
+    bookingReference: row.payload?.bookingReference || air.bookingReference || stay.reference || car.reference || row.cart_id,
+    pnrLocator: air.bookingReference || stay.reference || car.reference || "",
+    orderId: air.id || stay.id || car.id || "",
+    confirmationType: productType,
     status: row.status,
     seatSummary: Object.values(record(row.payload?.seatSelections)).map(s => s?.designator).filter(Boolean).join(", ") || "Not selected",
     segments: flattenSegments(air.slices),
-    stayBooking: stay.id ? stay : null
+    stayBooking: stay.id ? stay : null,
+    carBooking: car.id ? car : null
   };
 }
 
@@ -797,10 +818,254 @@ export async function searchLiveCarsCore(input = {}) {
 }
 export async function quoteCarCore(input = {}) { return quoteDuffelCarCore(input); }
 export async function getCarQuoteCore(input = {}) { return getDuffelCarQuoteCore(input); }
-export async function createCustomerCarBookingCore() {
-  throw bookingError(
-    "CUSTOMER_CAR_COMMIT_REQUIRES_B007",
-    "Car search and pricing are live, but customer car booking is intentionally not activated until the canonical ALTEA handoff stores the confirmed car component.",
-    409
-  );
+
+function carPaymentStatus(paymentType) {
+  const mode = lower(paymentType, 30);
+  if (mode === "prepaid") return "paid_supplier_card";
+  if (mode === "guarantee") return "guaranteed_supplier_card";
+  return "pay_at_supplier";
+}
+function carRequiresCard(paymentType) {
+  return ["prepaid", "guarantee"].includes(lower(paymentType, 30));
+}
+function enrichCarBookingForTrigger(booking = {}) {
+  return {
+    ...booking,
+    carName: text(booking?.car?.name, 200) || null,
+    supplierName: text(booking?.supplier?.name, 200) || null
+  };
+}
+function validateCarDriver(input = {}) {
+  const driver = record(input.driver || input);
+  const givenName = text(driver.givenName || driver.firstName, 80);
+  const familyName = text(driver.familyName || driver.lastName, 80);
+  const email = lower(driver.email, 254);
+  const phoneNumber = text(driver.phoneNumber || driver.phone, 20);
+  const dateOfBirth = text(driver.dateOfBirth || driver.bornOn, 10);
+  if (!givenName || !familyName) throw bookingError("DRIVER_NAME_REQUIRED", "Enter the main driver's full name.");
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateOfBirth)) throw bookingError("DRIVER_DATE_OF_BIRTH_REQUIRED", "Enter the main driver's date of birth.");
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw bookingError("INVALID_EMAIL", "Enter a valid driver email address.");
+  if (!/^\+[1-9]\d{7,14}$/.test(phoneNumber)) throw bookingError("INVALID_PHONE", "Enter an international driver phone number.");
+  return { givenName, familyName, email, phoneNumber, dateOfBirth };
+}
+
+export async function createCarCartCore(context, input = {}) {
+  requireMemberContext(context);
+  const quoteResult = await getDuffelCarQuoteCore({ quoteId: input.quoteId });
+  const quote = quoteResult.quote;
+  if (!quote?.id) throw bookingError("CAR_QUOTE_REQUIRED", "The car quote could not be found.");
+  const payload = {
+    version: 4,
+    provider: "Duffel",
+    productType: "CAR_RENTAL_ONLY",
+    carQuote: quote,
+    carBooking: null,
+    travelers: [],
+    secureTravelers: null,
+    paymentStatus: carPaymentStatus(quote.paymentType),
+    search: {
+      origin: upper(input.pickupIata || quote.pickupLocation?.iataCode, 3) || null,
+      destination: upper(input.dropoffIata || quote.dropoffLocation?.iataCode, 3) || null,
+      departureDate: quote.pickupDate || input.pickupDate || null,
+      returnDate: quote.dropoffDate || input.dropoffDate || null
+    },
+    carCheckout: {
+      paymentType: lower(quote.paymentType, 30),
+      requiresSupplierCard: carRequiresCard(quote.paymentType),
+      privacyPolicyCount: arr(quote.privacyPolicies).length
+    },
+    flow: { currentStep: "driver", createdAt: nowIso() }
+  };
+  const row = await createOwnedCart(context, {
+    email: context.email,
+    status: "TravelersPending",
+    currency: quote.totalCurrency,
+    subtotal: decimal(quote.totalAmount),
+    taxes: "0.00",
+    total: decimal(quote.totalAmount),
+    payload,
+    source: "customer"
+  });
+  await addCartItem(row.cart_id, {
+    itemType: "car_rental",
+    itemId: quote.id,
+    title: [quote.car?.name, quote.supplier?.name].filter(Boolean).join(" · ") || "Car Rental",
+    quantity: 1,
+    unitPrice: quote.totalAmount,
+    total: quote.totalAmount,
+    payload: { provider: "Duffel", quoteId: quote.id, paymentType: quote.paymentType, car: quote.car, supplier: quote.supplier }
+  });
+  return { cartId: row.cart_id, step: "driver", quote };
+}
+
+export async function saveCarDriverCore(context, input = {}) {
+  const row = await requireOwnedCart(context, input.cartId);
+  assertEditable(row);
+  if (row.payload?.productType !== "CAR_RENTAL_ONLY") throw bookingError("INVALID_PRODUCT_TYPE", "This is not a car-rental checkout.");
+  const driver = validateCarDriver(input.driver || input);
+  const secureTravelers = await encryptBookingData({ driver });
+  const travelers = [{
+    givenName: driver.givenName,
+    familyName: driver.familyName,
+    dateOfBirth: driver.dateOfBirth,
+    nationality: upper(input.nationality || input.nationalityCode, 2) || null,
+    gender: lower(input.gender, 5) || null,
+    paxType: "ADT"
+  }];
+  const payload = {
+    ...(row.payload || {}),
+    secureTravelers,
+    travelers,
+    travelerCount: 1,
+    flow: { ...(row.payload?.flow || {}), currentStep: "payment" }
+  };
+  const updated = await updateOwnedCart(context, row.cart_id, { email: driver.email, status: "PaymentReady", payload });
+  return { cart: toPublicCart(updated) };
+}
+
+export async function prepareCarCheckoutCore(context, input = {}) {
+  const row = await requireOwnedCart(context, input.cartId);
+  if (row.payload?.productType !== "CAR_RENTAL_ONLY") throw bookingError("INVALID_PRODUCT_TYPE", "This is not a car-rental checkout.");
+  if (!row.payload?.secureTravelers) throw bookingError("DRIVER_REQUIRED", "Save the main driver before checkout.");
+  const quoteResult = await getDuffelCarQuoteCore({ quoteId: row.payload?.carQuote?.id });
+  const quote = quoteResult.quote;
+  if (!quote?.id) throw bookingError("CAR_QUOTE_REQUIRED", "The car quote is no longer available.");
+  const requiresCard = carRequiresCard(quote.paymentType);
+  const component = requiresCard ? await createDuffelComponentClientKeyCore({}) : null;
+  const payload = {
+    ...(row.payload || {}),
+    carQuote: quote,
+    paymentStatus: carPaymentStatus(quote.paymentType),
+    carCheckout: {
+      ...(row.payload?.carCheckout || {}),
+      paymentType: lower(quote.paymentType, 30),
+      requiresSupplierCard: requiresCard,
+      preparedAt: nowIso()
+    },
+    flow: { ...(row.payload?.flow || {}), currentStep: "payment" }
+  };
+  const updated = await updateOwnedCart(context, row.cart_id, {
+    status: "PaymentReady",
+    currency: quote.totalCurrency,
+    subtotal: decimal(quote.totalAmount),
+    taxes: "0.00",
+    total: decimal(quote.totalAmount),
+    payload
+  });
+  return {
+    cart: toPublicCart(updated),
+    quote,
+    payment: {
+      paymentType: lower(quote.paymentType, 30),
+      mode: requiresCard ? "DUFFEL_CUSTOMER_CARD" : "PAY_AT_COUNTER",
+      requiresSupplierCard: requiresCard,
+      requiresThreeDSecure: requiresCard,
+      componentClientKey: component?.componentClientKey || null,
+      stripeUsed: false
+    }
+  };
+}
+
+export async function commitCarBookingCore(context, input = {}) {
+  if (input.termsAccepted !== true) throw bookingError("TERMS_REQUIRED", "Accept the rental terms before continuing.");
+  if (input.privacyPoliciesAccepted !== true) throw bookingError("PRIVACY_POLICIES_REQUIRED", "Accept the rental supplier privacy disclosures before continuing.");
+  let row = await requireOwnedCart(context, input.cartId);
+  if (row.status === "Confirmed") return confirmedResult(row);
+  if (row.status === "ReconciliationRequired") throw bookingError("BOOKING_RECONCILIATION_REQUIRED", "This car booking is being reconciled. Do not book again.", 409);
+  if (row.payload?.productType !== "CAR_RENTAL_ONLY") throw bookingError("INVALID_PRODUCT_TYPE", "This is not a car-rental checkout.");
+  if (!row.payload?.secureTravelers) throw bookingError("DRIVER_REQUIRED", "Save the main driver before booking.");
+
+  const quoted = await getDuffelCarQuoteCore({ quoteId: row.payload?.carQuote?.id });
+  const quote = quoted.quote;
+  if (!quote?.id) throw bookingError("CAR_QUOTE_REQUIRED", "The car quote is no longer available.");
+  const requiresCard = carRequiresCard(quote.paymentType);
+  const threeDSecureSessionId = text(input.threeDSecureSessionId, 180);
+  if (requiresCard && !/^3ds_[A-Za-z0-9_]+$/.test(threeDSecureSessionId)) {
+    throw bookingError("CAR_3DS_REQUIRED", "Complete the supplier card verification before booking this rental.");
+  }
+
+  if (row.status === "PaymentReady") {
+    const claimed = await transitionOwnedCart(context, row.cart_id, "PaymentReady", "Committing");
+    row = await requireOwnedCart(context, row.cart_id);
+    if (!claimed && row.status !== "Committing") throw bookingError("BOOKING_COMMIT_CONFLICT", "This car booking is already being processed.", 409);
+  } else if (row.status !== "Committing") {
+    throw bookingError("CAR_CHECKOUT_NOT_READY", "Prepare the car checkout before booking.", 409);
+  }
+
+  const secure = await decryptBookingData(row.payload.secureTravelers);
+  const driver = validateCarDriver(secure?.driver || {});
+  let provider;
+  try {
+    provider = await createDuffelCarBookingCore({
+      quoteId: quote.id,
+      driver,
+      threeDSecureSessionId: requiresCard ? threeDSecureSessionId : undefined,
+      inboundFlightNumber: input.inboundFlightNumber,
+      supplierLoyaltyProgrammeAccountNumber: input.supplierLoyaltyProgrammeAccountNumber,
+      internalReference: row.cart_id,
+      integration: "skandi_customer",
+      deviceIp: input.deviceIp,
+      deviceUserAgent: input.deviceUserAgent
+    });
+  } catch (error) {
+    if (["DUFFEL_TIMEOUT", "DUFFEL_HTTP_500", "DUFFEL_HTTP_502", "DUFFEL_HTTP_503", "DUFFEL_HTTP_504"].includes(String(error?.code || ""))) {
+      const updated = await markBookingReconciliationRequired(context, row, {
+        kind: "CAR_BOOKING_OUTCOME_UNKNOWN",
+        code: safeCode(error.code),
+        providerRequestId: error.providerRequestId,
+        correlationId: error.correlationId,
+        paymentType: quote.paymentType
+      });
+      throw bookingError("BOOKING_RECONCILIATION_REQUIRED", `The car booking outcome is being reconciled. Do not retry. Cart: ${updated.cart_id}`, 409);
+    }
+    await updateOwnedCart(context, row.cart_id, {
+      status: "PaymentReady",
+      payload: { ...(row.payload || {}), reconciliation: null }
+    });
+    throw error;
+  }
+
+  if (provider.reconciliationRequired || !provider.booking?.id) {
+    const updated = await markBookingReconciliationRequired(context, row, {
+      kind: "CAR_BOOKING_PENDING",
+      code: "DUFFEL_CAR_PENDING",
+      providerRequestId: provider.requestId,
+      correlationId: provider.correlationId,
+      providerStatus: provider.providerStatus,
+      paymentType: quote.paymentType
+    });
+    return { cartId: updated.cart_id, status: updated.status, reconciliationRequired: true };
+  }
+
+  const booking = enrichCarBookingForTrigger(provider.booking);
+  const payload = {
+    ...(row.payload || {}),
+    carQuote: quote,
+    carBooking: booking,
+    bookingReference: booking.reference || row.cart_id,
+    paymentStatus: carPaymentStatus(booking.paymentType || quote.paymentType),
+    carCheckout: {
+      ...(row.payload?.carCheckout || {}),
+      paymentType: lower(booking.paymentType || quote.paymentType, 30),
+      requiresSupplierCard: requiresCard,
+      threeDSCompleted: requiresCard,
+      bookedAt: nowIso()
+    },
+    reconciliation: null,
+    flow: { ...(row.payload?.flow || {}), currentStep: "confirmation", confirmedAt: nowIso() }
+  };
+  const updated = await updateOwnedCart(context, row.cart_id, {
+    status: "Confirmed",
+    currency: booking.totalCurrency || quote.totalCurrency,
+    subtotal: decimal(booking.totalAmount || quote.totalAmount),
+    taxes: "0.00",
+    total: decimal(booking.totalAmount || quote.totalAmount),
+    payload
+  });
+  return confirmedResult(updated);
+}
+
+// Compatibility alias for the B-006 public method name.
+export async function createCustomerCarBookingCore(context, input = {}) {
+  return commitCarBookingCore(context, input);
 }

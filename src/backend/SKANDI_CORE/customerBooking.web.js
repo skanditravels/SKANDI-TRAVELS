@@ -1,5 +1,5 @@
 // /src/backend/SKANDI_CORE/customerBooking.web.js
-// SKANDI Backend Base 1.0 — B-006 customer booking web-method boundary.
+// SKANDI Backend Base 1.0 — B-007 customer booking web-method boundary.
 
 import { Permissions, webMethod } from "@wix/web-methods";
 import { currentMember } from "wix-members-backend";
@@ -31,6 +31,10 @@ import {
   searchLiveCarsCore,
   quoteCarCore,
   getCarQuoteCore,
+  createCarCartCore,
+  saveCarDriverCore,
+  prepareCarCheckoutCore,
+  commitCarBookingCore,
   createCustomerCarBookingCore
 } from "backend/SKANDI_CORE/customerBooking.js";
 
@@ -96,4 +100,8 @@ export const createHotelCart = member(createHotelCartCore);
 export const saveHotelGuests = member(saveHotelGuestsCore);
 export const prepareHotelPayment = member(prepareHotelPaymentCore);
 export const commitHotelBooking = member(commitHotelBookingCore);
+export const createCarCart = member(createCarCartCore);
+export const saveCarDriver = member(saveCarDriverCore);
+export const prepareCarCheckout = member(prepareCarCheckoutCore);
+export const commitCarBooking = member(commitCarBookingCore);
 export const createCustomerCarBooking = member(createCustomerCarBookingCore);
