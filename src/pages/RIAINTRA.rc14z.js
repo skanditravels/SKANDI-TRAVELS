@@ -1,16 +1,16 @@
 // /src/pages/RIAINTRA Login.js
 // Route: /riaintra
 // HTML Embed ID: #staffLoginEmbed
-// R-003.8 — canonical Wix Members + Supabase staff identity bridge.
+// Backend Base 1.0 / B-002 — canonical Wix Members + Supabase staff identity bridge.
 
 import wixLocationFrontend from "wix-location-frontend";
 import { authentication } from "wix-members-frontend";
 import {
   loginStaffWithSkId,
   getStaffPortalSession
-} from "backend/RIA/staffPortalAuth.web";
+} from "backend/SKANDI_CORE/staffAuth.web";
 
-const EMBED_ID = "#riaintra";
+const EMBED_ID = "#staffLoginEmbed";
 const CHILD_SOURCE = "SKANDI_STAFF_LOGIN";
 const PARENT_SOURCE = "SKANDI_WIX_PARENT";
 const STAFF_DASHBOARD_PATH = "/riaintra/success-factors";
