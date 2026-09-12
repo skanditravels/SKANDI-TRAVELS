@@ -10,7 +10,7 @@ import {
   getStaffPortalSession
 } from "backend/RIA/staffPortalAuth.web";
 
-const EMBED_ID = "#staffLoginEmbed";
+const EMBED_ID = "#riaintra";
 const CHILD_SOURCE = "SKANDI_STAFF_LOGIN";
 const PARENT_SOURCE = "SKANDI_WIX_PARENT";
 const STAFF_DASHBOARD_PATH = "/riaintra/success-factors";
