@@ -1,14 +1,14 @@
 // masterPage.js
-// SKANDI GLOBAL CHROME CONTROL — V9 FINAL / R-003.9.4
+// SKANDI GLOBAL CHROME CONTROL — Backend Base 1.0 / B-002
 // Single source of truth for public/internal chrome, routes, assets and safe navigation.
 
 import wixLocationFrontend from "wix-location-frontend";
 import wixSiteFrontend from "wix-site-frontend";
 import { currentMember, authentication } from "wix-members-frontend";
-import { getCustomerHeaderSession, subscribeCustomerNewsletter } from "backend/customerHeader.web";
+import { getCustomerHeaderSession, subscribeCustomerNewsletter } from "backend/SKANDI_CORE/customerSession.web";
 import { getStaffPortalSession } from "backend/SKANDI_CORE/staffAuth.web";
 
-const MASTER_VERSION = "2026.09.12.10";
+const MASTER_VERSION = "BACKEND-BASE-1.0-B002";
 const PARENT_SOURCE = "SKANDI_WIX_PARENT";
 const CUSTOMER_HEADER_SOURCE = "SKANDI_CUSTOMER_HEADER_EXPANDBAR";
 const CUSTOMER_FOOTER_SOURCE = "SKANDI_CUSTOMER_FOOTER";
@@ -83,7 +83,6 @@ const MASTER_CONFIG = Object.freeze({
     staffLogin: "/riaintra",
     successFactors: "/riaintra/success-factors",
     alteaLaunchpad: "/riaintra/success-factors/altea",
-    inventoryControl: "/riaintra/success-factors/altea/inventory-control",
     alteaReservations: "/riaintra/success-factors/altea/reservations",
     alteaTicketing: "/riaintra/success-factors/altea/ticketing",
     alteaTimatic: "/riaintra/success-factors/altea/timatic",
@@ -96,13 +95,14 @@ const MASTER_CONFIG = Object.freeze({
   customer: Object.freeze({
     header: Object.freeze({
       primaryNav: Object.freeze([
-        { id:"home", label:"Book", path:"/" },
+        { id:"flights", label:"Flights", path:"/flights" },
         { id:"hotels", label:"Hotels", path:"/hotels" },
+        { id:"packages", label:"Packages", path:"/packages" },
         { id:"tours", label:"Tours & Activities", path:"/tours" },
-        { id:"transfers", label:"Transfer", path:"/transfers" },
-        { id:"destinations", label:"Destinations", path:"/destinations" },
+        { id:"transfers", label:"Transfers", path:"/transfers" }
       ]),
       secondaryNav: Object.freeze([
+        { id:"destinations", label:"Destinations", path:"/destinations" },
         { id:"signature", label:"SKANDI Collection", path:"/skandi-collection" },
         { id:"voy", label:"VOY Magazine", path:"/voy-magazine" },
         { id:"newsroom", label:"Newsroom", path:"/about/news-room" }
@@ -166,8 +166,8 @@ const MASTER_CONFIG = Object.freeze({
 
   internal: Object.freeze({
     header: Object.freeze({
-      productName:"RIAINTRA",
-      productContext:"Enterprise Workforce Suite",
+      productName:"SKANDI TRAVELS",
+      productContext:"RIAINTRA Enterprise Workforce Suite",
       primaryNav:Object.freeze([
         { id:"success-factors", label:"SAP RIAINTRA Dashboard", path:"/riaintra/success-factors" },
         { id:"my-roster", label:"MyRoster", path:"/riaintra/success-factors/my-roster" },
