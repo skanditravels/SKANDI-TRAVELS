@@ -1,5 +1,5 @@
 // /src/pages/Inventory Control.jsdik.js
-// SKANDI Inventory Control — R-003.9.1 canonical page bridge.
+// SKANDI Inventory Control — R-003.9.2 canonical page bridge.
 // Preferred HTML component: #inventoryControlEmbed
 
 import {
@@ -17,7 +17,7 @@ import {
 const EMBED_IDS=["#inventoryControlEmbed","#alteaInventoryControlEmbed","#masterInventoryEmbed"];
 const CHILD_SOURCE="SKANDI_INVENTORY_EMBED";
 const PARENT_SOURCE="SKANDI_INVENTORY_PARENT";
-const VERSION="R-003.9.1";
+const VERSION="R-003.9.2";
 
 function findEmbed(){
   for(const id of EMBED_IDS){
@@ -35,6 +35,32 @@ function parse(value){
 function post(embed,type,payload={},requestId=""){
   embed.postMessage({source:PARENT_SOURCE,type,payload,requestId,timestamp:new Date().toISOString()});
 }
+let bootstrapPromise=null;
+let bootstrapSnapshot=null;
+let bootstrapSnapshotAt=0;
+const BOOTSTRAP_REUSE_MS=15000;
+
+async function loadInventoryBootstrap({force=false}={}){
+  if(!force && bootstrapSnapshot && Date.now()-bootstrapSnapshotAt<BOOTSTRAP_REUSE_MS){
+    return bootstrapSnapshot;
+  }
+  if(bootstrapPromise)return bootstrapPromise;
+  bootstrapPromise=Promise.resolve()
+    .then(()=>getInventoryBootstrap())
+    .then((value)=>{
+      bootstrapSnapshot=value;
+      bootstrapSnapshotAt=Date.now();
+      return value;
+    })
+    .finally(()=>{bootstrapPromise=null});
+  return bootstrapPromise;
+}
+
+function invalidateBootstrap(){
+  bootstrapSnapshot=null;
+  bootstrapSnapshotAt=0;
+}
+
 function errorPayload(error){
   const code=String(error?.code||error?.message||"INVENTORY_ERROR").slice(0,120);
   const friendly={
@@ -62,7 +88,7 @@ function errorPayload(error){
 }
 
 const ACTIONS={
-  INVENTORY_V9_REFRESH:{response:"INVENTORY_V9_BOOTSTRAP",run:getInventoryBootstrap},
+  INVENTORY_V9_REFRESH:{response:"INVENTORY_V9_BOOTSTRAP",run:()=>loadInventoryBootstrap({force:true})},
   INVENTORY_V9_GET_RECORD:{response:"INVENTORY_V9_RECORD",run:getInventoryRecord},
   INVENTORY_V9_SAVE_BUNDLE:{response:"INVENTORY_V9_SAVED",run:saveInventoryBundle},
   INVENTORY_V9_ARCHIVE_RECORD:{response:"INVENTORY_V9_ARCHIVED",run:archiveInventoryRecord},
@@ -111,7 +137,7 @@ $w.onReady(()=>{
 
     try{
       if(message.type==="INVENTORY_V9_READY"){
-        post(embed,"INVENTORY_V9_BOOTSTRAP",await getInventoryBootstrap(),requestId);
+        post(embed,"INVENTORY_V9_BOOTSTRAP",await loadInventoryBootstrap(),requestId);
         return;
       }
       const action=ACTIONS[message.type];
@@ -126,7 +152,8 @@ $w.onReady(()=>{
         "INVENTORY_V9_ARCHIVE_AIRCRAFT_CHILD","INVENTORY_V9_SMART_SYNC_AIRCRAFT",
         "INVENTORY_PROVIDER_IMPORT","INVENTORY_PROVIDER_REFRESH"
       ].includes(message.type)){
-        post(embed,"INVENTORY_V9_BOOTSTRAP",await getInventoryBootstrap(),requestId);
+        invalidateBootstrap();
+        post(embed,"INVENTORY_V9_BOOTSTRAP",await loadInventoryBootstrap({force:true}),requestId);
       }
     }catch(error){
       post(embed,"INVENTORY_ERROR",errorPayload(error),requestId);
