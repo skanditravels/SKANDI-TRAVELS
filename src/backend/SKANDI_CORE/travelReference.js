@@ -1,13 +1,13 @@
 // /src/backend/SKANDI_CORE/travelReference.js
 // SKANDI shared Duffel reference-data core.
-// R-003.8
+// R-003.9.1
 //
 // Server-only provider layer. No webMethod wrappers, no Inventory writes, no UI.
 // All Duffel HTTP traffic is delegated to the canonical duffelClient.js transport.
 
-import { duffelRequest } from "./duffelClient.js";
+import { duffelRequest } from "backend/SKANDI_CORE/duffelClient.js";
 
-export const TRAVEL_REFERENCE_CORE_VERSION = "R-003.8";
+export const TRAVEL_REFERENCE_CORE_VERSION = "R-003.9.1";
 export const TRAVEL_REFERENCE_PROVIDER = "DUFFEL";
 
 const CACHE = new Map();
