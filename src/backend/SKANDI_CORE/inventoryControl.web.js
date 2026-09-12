@@ -1,13 +1,11 @@
 // /src/backend/SKANDI_CORE/inventoryControl.web.js
 // SKANDI Inventory Control — canonical web boundary.
-// R-003.9.1
+// R-003.9.3
 //
-// This file intentionally contains no Inventory business logic. The single
-// Inventory page boundary delegates to SKANDI_CORE and exposes the central
-// Asset Library through the same facade so the Wix page keeps one backend
-// dependency.
+// One frontend-callable Inventory facade. No Inventory business logic lives
+// here. All domain logic remains in SKANDI_CORE cores.
 
-import { webMethod, Permissions } from "wix-web-module";
+import { Permissions, webMethod } from "@wix/web-methods";
 import {
   getInventoryBootstrapCore,
   getInventoryRecordCore,
@@ -49,46 +47,48 @@ import {
 } from "backend/SKANDI_CORE/assets.js";
 
 const MEMBER = Permissions.SiteMember;
+const asInput = value => value && typeof value === "object" ? value : {};
+const memberMethod = handler => webMethod(MEMBER, input => handler(asInput(input)));
 
-export const getInventoryBootstrap = webMethod(MEMBER, getInventoryBootstrapCore);
-export const getInventoryRecord = webMethod(MEMBER, getInventoryRecordCore);
-export const saveInventoryBundle = webMethod(MEMBER, saveInventoryBundleCore);
-export const archiveInventoryRecord = webMethod(MEMBER, archiveInventoryRecordCore);
+export const getInventoryBootstrap = memberMethod(getInventoryBootstrapCore);
+export const getInventoryRecord = memberMethod(getInventoryRecordCore);
+export const saveInventoryBundle = memberMethod(saveInventoryBundleCore);
+export const archiveInventoryRecord = memberMethod(archiveInventoryRecordCore);
 
-export const getDatedInventory = webMethod(MEMBER, getDatedInventoryCore);
-export const saveDatedInventory = webMethod(MEMBER, saveDatedInventoryCore);
-export const deleteDatedInventory = webMethod(MEMBER, deleteDatedInventoryCore);
+export const getDatedInventory = memberMethod(getDatedInventoryCore);
+export const saveDatedInventory = memberMethod(saveDatedInventoryCore);
+export const deleteDatedInventory = memberMethod(deleteDatedInventoryCore);
 
-export const getAirInventory = webMethod(MEMBER, getAirInventoryCore);
-export const saveAirInventoryRow = webMethod(MEMBER, saveAirInventoryRowCore);
+export const getAirInventory = memberMethod(getAirInventoryCore);
+export const saveAirInventoryRow = memberMethod(saveAirInventoryRowCore);
 
-export const getAircraftBootstrap = webMethod(MEMBER, getAircraftBootstrapCore);
-export const getAircraftRecord = webMethod(MEMBER, getAircraftRecordCore);
-export const saveAircraft = webMethod(MEMBER, saveAircraftCore);
-export const archiveAircraft = webMethod(MEMBER, archiveAircraftCore);
-export const saveAircraftChild = webMethod(MEMBER, saveAircraftChildCore);
-export const archiveAircraftChild = webMethod(MEMBER, archiveAircraftChildCore);
-export const smartSyncAircraft = webMethod(MEMBER, smartSyncAircraftCore);
-export const getCabinNormalizationPreview = webMethod(MEMBER, getCabinNormalizationPreviewCore);
+export const getAircraftBootstrap = memberMethod(getAircraftBootstrapCore);
+export const getAircraftRecord = memberMethod(getAircraftRecordCore);
+export const saveAircraft = memberMethod(saveAircraftCore);
+export const archiveAircraft = memberMethod(archiveAircraftCore);
+export const saveAircraftChild = memberMethod(saveAircraftChildCore);
+export const archiveAircraftChild = memberMethod(archiveAircraftChildCore);
+export const smartSyncAircraft = memberMethod(smartSyncAircraftCore);
+export const getCabinNormalizationPreview = memberMethod(getCabinNormalizationPreviewCore);
 
-export const getInventoryAudit = webMethod(MEMBER, getInventoryAuditCore);
-export const getInventoryQuality = webMethod(MEMBER, getInventoryQualityCore);
+export const getInventoryAudit = memberMethod(getInventoryAuditCore);
+export const getInventoryQuality = memberMethod(getInventoryQualityCore);
 
-export const searchInventoryProvider = webMethod(MEMBER, searchInventoryProviderCore);
-export const getInventoryProviderResource = webMethod(MEMBER, getInventoryProviderResourceCore);
-export const importInventoryProviderResource = webMethod(MEMBER, importInventoryProviderResourceCore);
-export const refreshInventoryProviderResource = webMethod(MEMBER, refreshInventoryProviderResourceCore);
+export const searchInventoryProvider = memberMethod(searchInventoryProviderCore);
+export const getInventoryProviderResource = memberMethod(getInventoryProviderResourceCore);
+export const importInventoryProviderResource = memberMethod(importInventoryProviderResourceCore);
+export const refreshInventoryProviderResource = memberMethod(refreshInventoryProviderResourceCore);
 
-export const listInventoryNegotiatedRates = webMethod(MEMBER, listInventoryNegotiatedRatesCore);
-export const getInventoryNegotiatedRate = webMethod(MEMBER, getInventoryNegotiatedRateCore);
-export const createInventoryNegotiatedRate = webMethod(MEMBER, createInventoryNegotiatedRateCore);
-export const updateInventoryNegotiatedRate = webMethod(MEMBER, updateInventoryNegotiatedRateCore);
-export const deleteInventoryNegotiatedRate = webMethod(MEMBER, deleteInventoryNegotiatedRateCore);
+export const listInventoryNegotiatedRates = memberMethod(listInventoryNegotiatedRatesCore);
+export const getInventoryNegotiatedRate = memberMethod(getInventoryNegotiatedRateCore);
+export const createInventoryNegotiatedRate = memberMethod(createInventoryNegotiatedRateCore);
+export const updateInventoryNegotiatedRate = memberMethod(updateInventoryNegotiatedRateCore);
+export const deleteInventoryNegotiatedRate = memberMethod(deleteInventoryNegotiatedRateCore);
 
-export const listAssetLibrary = webMethod(MEMBER, listAssetsCore);
-export const checkAssetLibraryDuplicate = webMethod(MEMBER, checkAssetDuplicateCore);
-export const prepareAssetLibraryUpload = webMethod(MEMBER, prepareAssetUploadCore);
-export const finalizeAssetLibraryUpload = webMethod(MEMBER, finalizeAssetUploadCore);
-export const getAssetLibraryAccessUrl = webMethod(MEMBER, getAssetAccessUrlCore);
-export const registerAssetLibraryUsage = webMethod(MEMBER, registerAssetUsageCore);
-export const archiveAssetLibraryItem = webMethod(MEMBER, archiveAssetCore);
+export const listAssetLibrary = memberMethod(listAssetsCore);
+export const checkAssetLibraryDuplicate = memberMethod(checkAssetDuplicateCore);
+export const prepareAssetLibraryUpload = memberMethod(prepareAssetUploadCore);
+export const finalizeAssetLibraryUpload = memberMethod(finalizeAssetUploadCore);
+export const getAssetLibraryAccessUrl = memberMethod(getAssetAccessUrlCore);
+export const registerAssetLibraryUsage = memberMethod(registerAssetUsageCore);
+export const archiveAssetLibraryItem = memberMethod(archiveAssetCore);
