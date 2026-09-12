@@ -1,6 +1,6 @@
 // /src/backend/SKANDI_CORE/inventoryControl.web.js
 // SKANDI Inventory Control — canonical web boundary.
-// R-003.8
+// R-003.9.1
 //
 // This file intentionally contains no Inventory business logic. The single
 // Inventory page boundary delegates to SKANDI_CORE and exposes the central
@@ -37,7 +37,7 @@ import {
   createInventoryNegotiatedRateCore,
   updateInventoryNegotiatedRateCore,
   deleteInventoryNegotiatedRateCore
-} from "./inventory.js";
+} from "backend/SKANDI_CORE/inventory.js";
 import {
   listAssetsCore,
   checkAssetDuplicateCore,
@@ -46,7 +46,7 @@ import {
   getAssetAccessUrlCore,
   registerAssetUsageCore,
   archiveAssetCore
-} from "./assets.js";
+} from "backend/SKANDI_CORE/assets.js";
 
 const MEMBER = Permissions.SiteMember;
 
