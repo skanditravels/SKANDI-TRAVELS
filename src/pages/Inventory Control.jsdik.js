@@ -1,5 +1,5 @@
 // /src/pages/Inventory Control.jsdik.js
-// SKANDI Inventory Control — R-003.8 canonical page bridge.
+// SKANDI Inventory Control — R-003.9.1 canonical page bridge.
 // Preferred HTML component: #inventoryControlEmbed
 
 import {
@@ -17,7 +17,7 @@ import {
 const EMBED_IDS=["#inventoryControlEmbed","#alteaInventoryControlEmbed","#masterInventoryEmbed"];
 const CHILD_SOURCE="SKANDI_INVENTORY_EMBED";
 const PARENT_SOURCE="SKANDI_INVENTORY_PARENT";
-const VERSION="R-003.8";
+const VERSION="R-003.9.1";
 
 function findEmbed(){
   for(const id of EMBED_IDS){
