@@ -1,6 +1,6 @@
 // /src/backend/SKANDI_CORE/supabaseServer.js
 // SKANDI Backend Base 1.0 — canonical server-only Supabase transport.
-// B-001
+// B-001 + B-006 allowlist convergence
 //
 // This file owns credentials, allowlists and raw REST/RPC/Storage transport only.
 // It must never contain domain authorization, Inventory logic, ALTEA logic, or UI state.
@@ -60,7 +60,7 @@ const REST_OBJECTS = new Set([
   // Customer / loyalty / booking carts
   "customer_profiles", "customer_profiles_booking_links", "club_profiles", "club_tiers", "skandi_points_ledger",
   "customer_favorites", "customer_travelers", "customer_travel_documents",
-  "booking_carts", "booking_cart_items",
+  "booking_carts", "booking_cart_items", "payment_events",
 
   // ALTEA operational ledger
   "altea_bookings", "altea_booking_components", "altea_booking_documents", "altea_documents",
