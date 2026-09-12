@@ -1,23 +1,13 @@
 // /src/pages/Inventory Control.jsdik.js
-// SKANDI Inventory Control — R-003.9.2 canonical page bridge.
+// SKANDI Inventory Control — R-003.9.3 canonical page bridge.
 // Preferred HTML component: #inventoryControlEmbed
 
-import {
-  getInventoryBootstrap,getInventoryRecord,saveInventoryBundle,archiveInventoryRecord,
-  getDatedInventory,saveDatedInventory,deleteDatedInventory,
-  getAirInventory,saveAirInventoryRow,
-  getAircraftRecord,saveAircraft,archiveAircraft,saveAircraftChild,archiveAircraftChild,
-  smartSyncAircraft,getCabinNormalizationPreview,getInventoryAudit,getInventoryQuality,
-  searchInventoryProvider,getInventoryProviderResource,importInventoryProviderResource,refreshInventoryProviderResource,
-  listInventoryNegotiatedRates,getInventoryNegotiatedRate,createInventoryNegotiatedRate,updateInventoryNegotiatedRate,deleteInventoryNegotiatedRate,
-  listAssetLibrary,checkAssetLibraryDuplicate,prepareAssetLibraryUpload,finalizeAssetLibraryUpload,
-  getAssetLibraryAccessUrl,registerAssetLibraryUsage,archiveAssetLibraryItem
-} from "backend/SKANDI_CORE/inventoryControl.web";
+import * as inventoryControl from "backend/SKANDI_CORE/inventoryControl.web";
 
 const EMBED_IDS=["#inventoryControlEmbed","#alteaInventoryControlEmbed","#masterInventoryEmbed"];
 const CHILD_SOURCE="SKANDI_INVENTORY_EMBED";
 const PARENT_SOURCE="SKANDI_INVENTORY_PARENT";
-const VERSION="R-003.9.2";
+const VERSION="R-003.9.3";
 
 function findEmbed(){
   for(const id of EMBED_IDS){
@@ -40,13 +30,28 @@ let bootstrapSnapshot=null;
 let bootstrapSnapshotAt=0;
 const BOOTSTRAP_REUSE_MS=15000;
 
+function requireBackendMethod(name){
+  const fn=inventoryControl?.[name];
+  if(typeof fn!=="function"){
+    const error=new Error("INVENTORY_WEB_FACADE_MISMATCH");
+    error.code="INVENTORY_WEB_FACADE_MISMATCH";
+    error.publicMessage=`Inventory Control backend contract is out of sync. Missing web method: ${name}. Publish /src/backend/SKANDI_CORE/inventoryControl.web.js together with this page.`;
+    throw error;
+  }
+  return fn;
+}
+
+function callBackend(name,payload={}){
+  return requireBackendMethod(name)(payload);
+}
+
 async function loadInventoryBootstrap({force=false}={}){
   if(!force && bootstrapSnapshot && Date.now()-bootstrapSnapshotAt<BOOTSTRAP_REUSE_MS){
     return bootstrapSnapshot;
   }
   if(bootstrapPromise)return bootstrapPromise;
   bootstrapPromise=Promise.resolve()
-    .then(()=>getInventoryBootstrap())
+    .then(()=>callBackend("getInventoryBootstrap"))
     .then((value)=>{
       bootstrapSnapshot=value;
       bootstrapSnapshotAt=Date.now();
@@ -80,6 +85,7 @@ function errorPayload(error){
     INVENTORY_PROVIDER_CANONICAL_MATCH:"A matching SKANDI record already exists. Link Duffel to the existing record instead of creating a duplicate.",
     INVENTORY_NON_IATA_AIRLINE_SCHEMA_REQUIRED:"This airline has no IATA code. It can be used as Duffel reference data, but the current SKANDI airline store needs a separate internal-code field before it can be imported safely.",
     INVENTORY_DUFFEL_SOURCE_REQUIRED:"This record is not linked to a Duffel source resource and cannot be refreshed from Duffel.",
+    INVENTORY_WEB_FACADE_MISMATCH:"Inventory Control page and backend facade are out of sync. Publish the canonical inventoryControl.web.js together with this page.",
     REFERENCE_QUERY_REQUIRED:"Enter a search term.",
     NEGOTIATED_RATE_SCOPE_REQUIRED:"Choose a hotel chain or at least one accommodation for the negotiated rate.",
     NEGOTIATED_RATE_SCOPE_INVALID:"Choose either a hotel chain or specific accommodations, not both."
@@ -89,39 +95,39 @@ function errorPayload(error){
 
 const ACTIONS={
   INVENTORY_V9_REFRESH:{response:"INVENTORY_V9_BOOTSTRAP",run:()=>loadInventoryBootstrap({force:true})},
-  INVENTORY_V9_GET_RECORD:{response:"INVENTORY_V9_RECORD",run:getInventoryRecord},
-  INVENTORY_V9_SAVE_BUNDLE:{response:"INVENTORY_V9_SAVED",run:saveInventoryBundle},
-  INVENTORY_V9_ARCHIVE_RECORD:{response:"INVENTORY_V9_ARCHIVED",run:archiveInventoryRecord},
-  INVENTORY_V9_GET_DATED:{response:"INVENTORY_V9_DATED",run:getDatedInventory},
-  INVENTORY_V9_SAVE_DATED:{response:"INVENTORY_V9_DATED_SAVED",run:saveDatedInventory},
-  INVENTORY_V9_DELETE_DATED:{response:"INVENTORY_V9_DATED_DELETED",run:deleteDatedInventory},
-  INVENTORY_V9_GET_AIR:{response:"INVENTORY_V9_AIR",run:getAirInventory},
-  INVENTORY_V9_SAVE_AIR_ROW:{response:"INVENTORY_V9_AIR_SAVED",run:saveAirInventoryRow},
-  INVENTORY_V9_GET_AUDIT:{response:"INVENTORY_V9_AUDIT",run:getInventoryAudit},
-  INVENTORY_V9_QUALITY:{response:"INVENTORY_V9_QUALITY_RESULT",run:getInventoryQuality},
-  INVENTORY_V9_GET_AIRCRAFT:{response:"INVENTORY_V9_AIRCRAFT_RECORD",run:getAircraftRecord},
-  INVENTORY_V9_SAVE_AIRCRAFT:{response:"INVENTORY_V9_AIRCRAFT_SAVED",run:saveAircraft},
-  INVENTORY_V9_ARCHIVE_AIRCRAFT:{response:"INVENTORY_V9_AIRCRAFT_ARCHIVED",run:archiveAircraft},
-  INVENTORY_V9_SAVE_AIRCRAFT_CHILD:{response:"INVENTORY_V9_AIRCRAFT_CHILD_SAVED",run:saveAircraftChild},
-  INVENTORY_V9_ARCHIVE_AIRCRAFT_CHILD:{response:"INVENTORY_V9_AIRCRAFT_CHILD_ARCHIVED",run:archiveAircraftChild},
-  INVENTORY_V9_SMART_SYNC_AIRCRAFT:{response:"INVENTORY_V9_SMART_SYNC_RESULT",run:smartSyncAircraft},
-  INVENTORY_V9_CABIN_NORMALIZATION_PREVIEW:{response:"INVENTORY_V9_CABIN_NORMALIZATION_RESULT",run:getCabinNormalizationPreview},
-  INVENTORY_PROVIDER_SEARCH:{response:"INVENTORY_PROVIDER_SEARCH_RESULT",run:searchInventoryProvider},
-  INVENTORY_PROVIDER_GET_RESOURCE:{response:"INVENTORY_PROVIDER_RESOURCE",run:getInventoryProviderResource},
-  INVENTORY_PROVIDER_IMPORT:{response:"INVENTORY_PROVIDER_IMPORTED",run:importInventoryProviderResource},
-  INVENTORY_PROVIDER_REFRESH:{response:"INVENTORY_PROVIDER_REFRESHED",run:refreshInventoryProviderResource},
-  INVENTORY_NEGOTIATED_RATES_LIST:{response:"INVENTORY_NEGOTIATED_RATES_RESULT",run:listInventoryNegotiatedRates},
-  INVENTORY_NEGOTIATED_RATE_GET:{response:"INVENTORY_NEGOTIATED_RATE_RESULT",run:getInventoryNegotiatedRate},
-  INVENTORY_NEGOTIATED_RATE_CREATE:{response:"INVENTORY_NEGOTIATED_RATE_SAVED",run:createInventoryNegotiatedRate},
-  INVENTORY_NEGOTIATED_RATE_UPDATE:{response:"INVENTORY_NEGOTIATED_RATE_SAVED",run:updateInventoryNegotiatedRate},
-  INVENTORY_NEGOTIATED_RATE_DELETE:{response:"INVENTORY_NEGOTIATED_RATE_DELETED",run:deleteInventoryNegotiatedRate},
-  INVENTORY_ASSET_LIST:{response:"INVENTORY_ASSET_LIST_RESULT",run:listAssetLibrary},
-  INVENTORY_ASSET_CHECK_DUPLICATE:{response:"INVENTORY_ASSET_DUPLICATE_RESULT",run:checkAssetLibraryDuplicate},
-  INVENTORY_ASSET_PREPARE_UPLOAD:{response:"INVENTORY_ASSET_UPLOAD_PREPARED",run:prepareAssetLibraryUpload},
-  INVENTORY_ASSET_FINALIZE_UPLOAD:{response:"INVENTORY_ASSET_UPLOAD_FINALIZED",run:finalizeAssetLibraryUpload},
-  INVENTORY_ASSET_ACCESS_URL:{response:"INVENTORY_ASSET_ACCESS_URL_RESULT",run:getAssetLibraryAccessUrl},
-  INVENTORY_ASSET_REGISTER_USAGE:{response:"INVENTORY_ASSET_USAGE_REGISTERED",run:registerAssetLibraryUsage},
-  INVENTORY_ASSET_ARCHIVE:{response:"INVENTORY_ASSET_ARCHIVED",run:archiveAssetLibraryItem}
+  INVENTORY_V9_GET_RECORD:{response:"INVENTORY_V9_RECORD",run:payload=>callBackend("getInventoryRecord",payload)},
+  INVENTORY_V9_SAVE_BUNDLE:{response:"INVENTORY_V9_SAVED",run:payload=>callBackend("saveInventoryBundle",payload)},
+  INVENTORY_V9_ARCHIVE_RECORD:{response:"INVENTORY_V9_ARCHIVED",run:payload=>callBackend("archiveInventoryRecord",payload)},
+  INVENTORY_V9_GET_DATED:{response:"INVENTORY_V9_DATED",run:payload=>callBackend("getDatedInventory",payload)},
+  INVENTORY_V9_SAVE_DATED:{response:"INVENTORY_V9_DATED_SAVED",run:payload=>callBackend("saveDatedInventory",payload)},
+  INVENTORY_V9_DELETE_DATED:{response:"INVENTORY_V9_DATED_DELETED",run:payload=>callBackend("deleteDatedInventory",payload)},
+  INVENTORY_V9_GET_AIR:{response:"INVENTORY_V9_AIR",run:payload=>callBackend("getAirInventory",payload)},
+  INVENTORY_V9_SAVE_AIR_ROW:{response:"INVENTORY_V9_AIR_SAVED",run:payload=>callBackend("saveAirInventoryRow",payload)},
+  INVENTORY_V9_GET_AUDIT:{response:"INVENTORY_V9_AUDIT",run:payload=>callBackend("getInventoryAudit",payload)},
+  INVENTORY_V9_QUALITY:{response:"INVENTORY_V9_QUALITY_RESULT",run:payload=>callBackend("getInventoryQuality",payload)},
+  INVENTORY_V9_GET_AIRCRAFT:{response:"INVENTORY_V9_AIRCRAFT_RECORD",run:payload=>callBackend("getAircraftRecord",payload)},
+  INVENTORY_V9_SAVE_AIRCRAFT:{response:"INVENTORY_V9_AIRCRAFT_SAVED",run:payload=>callBackend("saveAircraft",payload)},
+  INVENTORY_V9_ARCHIVE_AIRCRAFT:{response:"INVENTORY_V9_AIRCRAFT_ARCHIVED",run:payload=>callBackend("archiveAircraft",payload)},
+  INVENTORY_V9_SAVE_AIRCRAFT_CHILD:{response:"INVENTORY_V9_AIRCRAFT_CHILD_SAVED",run:payload=>callBackend("saveAircraftChild",payload)},
+  INVENTORY_V9_ARCHIVE_AIRCRAFT_CHILD:{response:"INVENTORY_V9_AIRCRAFT_CHILD_ARCHIVED",run:payload=>callBackend("archiveAircraftChild",payload)},
+  INVENTORY_V9_SMART_SYNC_AIRCRAFT:{response:"INVENTORY_V9_SMART_SYNC_RESULT",run:payload=>callBackend("smartSyncAircraft",payload)},
+  INVENTORY_V9_CABIN_NORMALIZATION_PREVIEW:{response:"INVENTORY_V9_CABIN_NORMALIZATION_RESULT",run:payload=>callBackend("getCabinNormalizationPreview",payload)},
+  INVENTORY_PROVIDER_SEARCH:{response:"INVENTORY_PROVIDER_SEARCH_RESULT",run:payload=>callBackend("searchInventoryProvider",payload)},
+  INVENTORY_PROVIDER_GET_RESOURCE:{response:"INVENTORY_PROVIDER_RESOURCE",run:payload=>callBackend("getInventoryProviderResource",payload)},
+  INVENTORY_PROVIDER_IMPORT:{response:"INVENTORY_PROVIDER_IMPORTED",run:payload=>callBackend("importInventoryProviderResource",payload)},
+  INVENTORY_PROVIDER_REFRESH:{response:"INVENTORY_PROVIDER_REFRESHED",run:payload=>callBackend("refreshInventoryProviderResource",payload)},
+  INVENTORY_NEGOTIATED_RATES_LIST:{response:"INVENTORY_NEGOTIATED_RATES_RESULT",run:payload=>callBackend("listInventoryNegotiatedRates",payload)},
+  INVENTORY_NEGOTIATED_RATE_GET:{response:"INVENTORY_NEGOTIATED_RATE_RESULT",run:payload=>callBackend("getInventoryNegotiatedRate",payload)},
+  INVENTORY_NEGOTIATED_RATE_CREATE:{response:"INVENTORY_NEGOTIATED_RATE_SAVED",run:payload=>callBackend("createInventoryNegotiatedRate",payload)},
+  INVENTORY_NEGOTIATED_RATE_UPDATE:{response:"INVENTORY_NEGOTIATED_RATE_SAVED",run:payload=>callBackend("updateInventoryNegotiatedRate",payload)},
+  INVENTORY_NEGOTIATED_RATE_DELETE:{response:"INVENTORY_NEGOTIATED_RATE_DELETED",run:payload=>callBackend("deleteInventoryNegotiatedRate",payload)},
+  INVENTORY_ASSET_LIST:{response:"INVENTORY_ASSET_LIST_RESULT",run:payload=>callBackend("listAssetLibrary",payload)},
+  INVENTORY_ASSET_CHECK_DUPLICATE:{response:"INVENTORY_ASSET_DUPLICATE_RESULT",run:payload=>callBackend("checkAssetLibraryDuplicate",payload)},
+  INVENTORY_ASSET_PREPARE_UPLOAD:{response:"INVENTORY_ASSET_UPLOAD_PREPARED",run:payload=>callBackend("prepareAssetLibraryUpload",payload)},
+  INVENTORY_ASSET_FINALIZE_UPLOAD:{response:"INVENTORY_ASSET_UPLOAD_FINALIZED",run:payload=>callBackend("finalizeAssetLibraryUpload",payload)},
+  INVENTORY_ASSET_ACCESS_URL:{response:"INVENTORY_ASSET_ACCESS_URL_RESULT",run:payload=>callBackend("getAssetLibraryAccessUrl",payload)},
+  INVENTORY_ASSET_REGISTER_USAGE:{response:"INVENTORY_ASSET_USAGE_REGISTERED",run:payload=>callBackend("registerAssetLibraryUsage",payload)},
+  INVENTORY_ASSET_ARCHIVE:{response:"INVENTORY_ASSET_ARCHIVED",run:payload=>callBackend("archiveAssetLibraryItem",payload)}
 };
 
 $w.onReady(()=>{
