@@ -21,7 +21,7 @@ import { renderBagTag } from "backend/SKANDI_CORE/bagTag.js";
 import { renderInvoice } from "backend/SKANDI_CORE/invoice.js";
 
 
-export const RESERVATIONS_CORE_VERSION = "BACKEND-BASE-1.0-B007";
+export const RESERVATIONS_CORE_VERSION = "BACKEND-BASE-1.0-B007.4";
 
 
 const clean=(v,n=12000)=>String(v??"").trim().slice(0,n);
@@ -120,7 +120,10 @@ function bookingView(r={}){
     ticketingStatus:r.ticketing_status||"pending",assignedAgentUserId:r.assigned_agent_user_id||"",
     dcsAuthority:p.dcsAuthority||"",operatingControl:p.operatingControl||"",
     isCharter:p.isCharter===true,tripTitle:p.tripTitle||"",transferControl:p.transferControl||"",
-    packageStatus:p.packageStatus||"",notes:p.notes||"",payload:p,
+    packageStatus:p.packageStatus||"",tourOperatorCode:p.tourOperatorCode||"",
+    destinationResortZone:p.destinationResortZone||"",durationNights:Number(p.durationNights||0)||0,
+    mealBoard:p.mealBoard||"",roomTypeCode:p.roomTypeCode||"",passengerAges:arr(p.passengerAges),
+    notes:p.notes||"",payload:p,
     createdAt:r.created_at||"",updatedAt:r.updated_at||""
   };
 }
@@ -327,7 +330,7 @@ function bookingPatch(input={}){
   if(p.currency!==undefined)db.currency=upper(p.currency,3);
   if(p.totalAmount!==undefined)db.total_amount=Math.max(0,Number(p.totalAmount||0));
   if(p.assignedAgentUserId!==undefined)db.assigned_agent_user_id=isUuid(p.assignedAgentUserId)?p.assignedAgentUserId:null;
-  for(const key of ["tripTitle","transferControl","packageStatus","dcsAuthority","operatingControl","isCharter","notes"]){
+  for(const key of ["tripTitle","transferControl","packageStatus","dcsAuthority","operatingControl","isCharter","notes","tourOperatorCode","destinationResortZone","durationNights","mealBoard","roomTypeCode","passengerAges"]){
     if(p[key]!==undefined)payload[key]=p[key];
   }
   return{db,payload};
@@ -643,45 +646,203 @@ export async function getReservationInventoryStatusCore(input={}){
   return{ok:true,booking:booking?bookingView(booking):null,components:components.map(componentView)};
 }
 
+export async function resolveReservationDestinationCore(input={}){
+  await requireReservationsAccessCore();
+  const raw=clean(input.query||input.destination||input.locationText||input.iata,200);
+  const lat=Number(input.latitude),lon=Number(input.longitude);
+  if(Number.isFinite(lat)&&Number.isFinite(lon)&&Math.abs(lat)<=90&&Math.abs(lon)<=180&&(lat!==0||lon!==0)){
+    return{ok:true,location:{latitude:lat,longitude:lon,label:raw||"Location",iata:upper(input.iata,3)}};
+  }
+  if(!raw)throw new Error("DESTINATION_REQUIRED");
+  const q=lower(raw,200),iata=upper(raw,3);
+  const rows=await select("inventory_master_entities",{select:"id,entity_type,code,name,slug,details,active,status",active:"eq.true",limit:"2000"});
+  const allowed=new Set(["COUNTRY","DESTINATION","AREA","HOTEL"]);
+  const candidates=rows.filter(r=>allowed.has(upper(r.entity_type,40)));
+  const exact=candidates.find(r=>[r.code,r.slug,r.name,obj(r.details).searchAirportIata,obj(r.details).nearestAirportIata].some(v=>lower(v,200)===q||upper(v,3)===iata));
+  const fuzzy=exact||candidates.find(r=>[r.code,r.slug,r.name,obj(r.details).countryName,obj(r.details).region].map(v=>lower(v,300)).join(" ").includes(q));
+  if(!fuzzy)throw new Error("DESTINATION_NOT_MAPPED");
+  const d=obj(fuzzy.details),latitude=Number(d.latitude),longitude=Number(d.longitude);
+  if(!Number.isFinite(latitude)||!Number.isFinite(longitude)||(latitude===0&&longitude===0))throw new Error("DESTINATION_COORDINATES_REQUIRED");
+  return{ok:true,location:{latitude,longitude,label:fuzzy.name||raw,iata:upper(d.searchAirportIata||d.nearestAirportIata,3)},entity:{id:fuzzy.id,entityType:fuzzy.entity_type,code:fuzzy.code,name:fuzzy.name}};
+}
 
-function clubView(r={}){
-  const p=obj(r.payload);
-  return{id:r.id,memberId:r.member_id,memberNumber:clean(p.memberNumber||p.member_number||r.club_id||r.member_id,100),
-    clubId:r.club_id,name:clean(p.name||p.displayName||p.customerName||p.fullName||r.member_id,300),
-    email:clean(p.email||p.customerEmail,400),tier:upper(p.tier||p.tierName||"MEMBER",80),
-    pointsBalance:Number(p.pointsBalance??p.points??0)||0,status:r.status||"Active",
-    dateOfBirth:r.date_of_birth||null,nationalityId:r.nationality_id||null,
-    homeAirportId:r.home_airport_id||null,payload:p};
+
+function customerProfileView(r={},tier=null,pointsBalance=0){
+  const p=obj(r.payload),isClub=r.is_loyalty_member===true;
+  return{
+    id:r.id,customerProfileId:r.id,memberId:r.member_id||"",
+    firstName:r.first_name||"",lastName:r.last_name||"",
+    name:r.display_name||[r.first_name,r.last_name].filter(Boolean).join(" ")||r.email||r.member_id||"Customer",
+    email:r.email||"",phone:r.phone||"",customerType:r.customer_type||"CUSTOMER",
+    preferredCurrency:r.preferred_currency||"",status:r.status||"ACTIVE",
+    isLoyaltyMember:isClub,memberNumber:isClub?String(r.club_number||""):"",
+    tier:isClub?(tier?.tier_name||tier?.tier_key||"MEMBER"):"SKANDI MEMBER",
+    pointsBalance:Number(pointsBalance||0)||0,
+    accessibilityNeeds:r.accessibility_needs_general||"",
+    marketingConsent:r.marketing_consent===true,
+    payload:p,
+    preferences:{
+      seat:p.seatPreference||p.seat_preference||"",
+      dietary:p.dietaryPrefs||p.dietary_prefs||"",
+      meals:arr(p.mealPreferences||p.meal_preferences),
+      frequentFlyer:arr(p.frequentFlyerPrograms||p.frequent_flyer_programs),
+      hotelLoyalty:arr(p.hotelLoyaltyPrograms||p.hotel_loyalty_programs),
+      carLoyalty:arr(p.carRentalLoyaltyPrograms||p.car_rental_loyalty_programs)
+    },
+    emergencyContacts:arr(p.emergencyContacts||p.emergency_contacts),
+    billingAddress:obj(p.billingAddress||p.billing_address),
+    storedPaymentMethods:arr(p.paymentMethods||p.payment_methods).map(x=>({
+      id:clean(x?.id,120),brand:clean(x?.brand||x?.network,40),last4:clean(x?.last4,4),
+      expMonth:Number(x?.expMonth||x?.exp_month||0)||null,expYear:Number(x?.expYear||x?.exp_year||0)||null,
+      label:clean(x?.label||x?.displayName,120)
+    }))
+  };
+}
+async function customerPoints(memberId=""){
+  if(!memberId)return 0;
+  const rows=await select("skandi_points_ledger",{select:"amount,status",member_id:qeq(memberId),limit:"5000"});
+  return rows.filter(x=>!['VOID','CANCELLED','REVERSED'].includes(upper(x.status,40))).reduce((sum,x)=>sum+(Number(x.amount)||0),0);
+}
+async function customerProfileById(id){
+  if(!isUuid(id))return null;
+  const row=(await select("customer_profiles",{select:"*",id:qeq(id),limit:"1"}))[0]||null;
+  if(!row)return null;
+  const tiers=await select("club_tiers",{select:"*",active:"eq.true",limit:"100"});
+  const tier=tiers.find(t=>t.id===row.club_tier_id)||null;
+  return customerProfileView(row,tier,await customerPoints(row.member_id));
 }
 export async function searchSkandiClubMembersCore(input={}){
   await requireReservationsAccessCore();
-  const q=lower(input.query,200);
-  const rows=await select("club_profiles",{select:"*",limit:"500",order:"updated_at.desc"});
-  return{ok:true,members:rows.map(clubView).filter(x=>!q||`${x.memberNumber} ${x.memberId} ${x.name} ${x.email}`.toLowerCase().includes(q)).slice(0,100)};
+  const q=lower(input.query,200),searchType=lower(input.searchType||"all",30),membership=lower(input.membershipFilter||"all",30);
+  const [rows,tiers]=await Promise.all([
+    select("customer_profiles",{select:"*",limit:"500",order:"updated_at.desc"}),
+    select("club_tiers",{select:"*",active:"eq.true",limit:"100"})
+  ]);
+  const tierMap=new Map(tiers.map(t=>[t.id,t]));
+  let matched=rows;
+  if(membership==="members")matched=matched.filter(r=>r.is_loyalty_member===true);
+  if(membership==="not_enrolled")matched=matched.filter(r=>r.is_loyalty_member!==true);
+  if(q){
+    matched=matched.filter(r=>{
+      const values={
+        name:`${r.display_name||""} ${r.first_name||""} ${r.last_name||""}`,
+        email:r.email||"",
+        member:`${r.member_id||""} ${r.club_number||""}`,
+        all:`${r.display_name||""} ${r.first_name||""} ${r.last_name||""} ${r.email||""} ${r.member_id||""} ${r.club_number||""} ${r.customer_type||""}`
+      };
+      return lower(values[searchType]??values.all,1000).includes(q);
+    });
+  }
+  const members=[];
+  for(const row of matched.slice(0,100)){
+    members.push(customerProfileView(row,tierMap.get(row.club_tier_id)||null,await customerPoints(row.member_id)));
+  }
+  return{ok:true,members,source:"customer_profiles"};
+}
+export async function getCustomerProfileCore(input={}){
+  await requireReservationsAccessCore();
+  const profile=await customerProfileById(input.customerProfileId||input.memberId);
+  if(!profile)throw new Error("CUSTOMER_PROFILE_NOT_FOUND");
+  const [travelers,documents]=await Promise.all([
+    select("customer_travelers",{select:"*",member_id:qeq(profile.memberId),active:"eq.true",order:"is_primary.desc,created_at.asc",limit:"100"}),
+    select("customer_travel_documents",{select:"*",member_id:qeq(profile.memberId),order:"created_at.desc",limit:"200"})
+  ]);
+  return{ok:true,profile:{...profile,
+    travelers:travelers.map(t=>({
+      id:t.id,travelerType:t.traveler_type||"TRAVELER",firstName:t.first_name||"",middleName:t.middle_name||"",lastName:t.last_name||"",
+      name:t.display_name||[t.first_name,t.middle_name,t.last_name].filter(Boolean).join(" "),dateOfBirth:t.date_of_birth||null,
+      gender:t.gender||"",email:t.email||"",phone:t.phone||"",passportLast4:t.passport_last4||"",passportExpiry:t.passport_expiry||null,
+      dietaryPrefs:t.dietary_prefs||"",accessibilityNeeds:t.accessibility_needs||"",isPrimary:t.is_primary===true,payload:obj(t.payload)
+    })),
+    documents:documents.map(d=>({
+      id:d.id,travelerId:d.traveler_id||null,documentType:d.document_type||"",title:d.document_title||"",
+      last4:d.document_number_last4||"",issueDate:d.issue_date||null,expiryDate:d.expiry_date||null,status:d.status||"",payload:obj(d.payload)
+    }))
+  }};
 }
 export async function linkSkandiClubMemberCore(input={}){
   const session=await requireReservationsAccessCore({write:true});
-  if(!isUuid(input.passengerId)||!isUuid(input.memberId))throw new Error("CLUB_LINK_INPUT_INVALID");
-  const [p,members]=await Promise.all([passengerRow(input.passengerId),select("club_profiles",{select:"*",id:qeq(input.memberId),limit:"1"})]);
-  const member=members[0];if(!p||!member)throw new Error("CLUB_MEMBER_OR_PASSENGER_NOT_FOUND");
-  const view=clubView(member),payload={...obj(p.payload),clubProfile:view,clubProfileId:member.id};
-  await patch("altea_passengers",{id:qeq(p.id)},{payload,updated_at:now()});
-  if(isUuid(input.bookingId))await patch("altea_bookings",{id:qeq(input.bookingId)},{customer_member_id:member.member_id,updated_at:now()});
-  await history(input.bookingId||p.booking_id,"SKANDI_CLUB_LINKED",{passengerId:p.id,memberId:member.id,memberNumber:view.memberNumber},session);
-  return{ok:true,passengerId:p.id,member:view,message:"SKANDI Club member linked to passenger."};
+  const passengerId=clean(input.passengerId,80),profileId=clean(input.customerProfileId||input.memberId,80);
+  if(!isUuid(passengerId)||!isUuid(profileId))throw new Error("CUSTOMER_LINK_INPUT_INVALID");
+  const [passenger,profile]=await Promise.all([passengerRow(passengerId),customerProfileById(profileId)]);
+  if(!passenger||!profile)throw new Error("CUSTOMER_PROFILE_OR_PASSENGER_NOT_FOUND");
+
+  const travelerRows=await select("customer_travelers",{
+    select:"*",member_id:qeq(profile.memberId),active:"eq.true",order:"is_primary.desc,created_at.asc",limit:"100"
+  });
+  const requestedTravelerId=clean(input.travelerId,80);
+  const sourceTraveler=(isUuid(requestedTravelerId)?travelerRows.find(x=>x.id===requestedTravelerId):null)||travelerRows.find(x=>x.is_primary===true)||travelerRows[0]||null;
+  const docs=sourceTraveler?await select("customer_travel_documents",{
+    select:"id,traveler_id,document_type,document_title,document_number_last4,issue_date,expiry_date,status,payload",
+    member_id:qeq(profile.memberId),traveler_id:qeq(sourceTraveler.id),order:"created_at.desc",limit:"50"
+  }):[];
+
+  const payload={
+    ...obj(passenger.payload),
+    customerProfile:profile,customerProfileId:profile.id,
+    sourceCustomerTravelerId:sourceTraveler?.id||null,
+    sourceTravelDocumentRefs:docs.map(d=>({
+      id:d.id,documentType:d.document_type||"",title:d.document_title||"",last4:d.document_number_last4||"",
+      issueDate:d.issue_date||null,expiryDate:d.expiry_date||null,status:d.status||""
+    })),
+    contact:{email:sourceTraveler?.email||profile.email||"",phone:sourceTraveler?.phone||profile.phone||""},
+    travelPreferences:{
+      seat:obj(sourceTraveler?.payload).seatPreference||profile.preferences?.seat||"",
+      dietary:sourceTraveler?.dietary_prefs||profile.preferences?.dietary||"",
+      meals:profile.preferences?.meals||[],
+      accessibility:sourceTraveler?.accessibility_needs||profile.accessibilityNeeds||"",
+      frequentFlyer:profile.preferences?.frequentFlyer||[],hotelLoyalty:profile.preferences?.hotelLoyalty||[],carLoyalty:profile.preferences?.carLoyalty||[]
+    },
+    ...(profile.isLoyaltyMember?{clubProfile:profile}:{})
+  };
+  const passengerBody={payload,updated_at:now()};
+  if(sourceTraveler){
+    passengerBody.first_name=clean(sourceTraveler.first_name,160)||passenger.first_name||null;
+    passengerBody.last_name=clean(sourceTraveler.last_name,160)||passenger.last_name||null;
+    passengerBody.display_name=clean(sourceTraveler.display_name,300)||[sourceTraveler.first_name,sourceTraveler.middle_name,sourceTraveler.last_name].filter(Boolean).join(" ")||passenger.display_name||null;
+    passengerBody.date_of_birth=clean(sourceTraveler.date_of_birth,20)||passenger.date_of_birth||null;
+    passengerBody.gender=upper(sourceTraveler.gender,20)||passenger.gender||null;
+  }
+  await patch("altea_passengers",{id:qeq(passenger.id)},passengerBody);
+
+  let booking=null;
+  if(isUuid(input.bookingId)){
+    booking=await bookingRow(input.bookingId);
+    await patch("altea_bookings",{id:qeq(input.bookingId)},{customer_member_id:profile.memberId,customer_email:profile.email||booking?.customer_email||null,customer_name:profile.name||booking?.customer_name||null,updated_at:now()});
+    const existing=await select("customer_profiles_booking_links",{select:"id",booking_id:qeq(input.bookingId),member_id:qeq(profile.memberId),limit:"1"});
+    if(!existing.length){
+      await insert("customer_profiles_booking_links",{
+        member_id:profile.memberId,booking_id:input.bookingId,booking_reference:booking?.booking_reference||null,
+        last_name:profile.lastName||null,status:"ACTIVE",linked_at:now(),link_source:"ALTEA",verified_at:now(),
+        payload:{customerProfileId:profile.id,passengerId:passenger.id,travelerId:sourceTraveler?.id||null,linkedByAgentUserId:actor(session)}
+      });
+    }
+  }
+  await history(input.bookingId||passenger.booking_id,"CUSTOMER_PROFILE_LINKED",{
+    passengerId:passenger.id,customerProfileId:profile.id,memberId:profile.memberId,clubNumber:profile.memberNumber||null,
+    travelerId:sourceTraveler?.id||null,transferredFields:sourceTraveler?["name","dateOfBirth","gender","contact","preferences","secureDocumentRefs"]:["customerProfile","contact","preferences"]
+  },session);
+  const refreshed=await customerProfileById(profile.id);
+  return{ok:true,passengerId:passenger.id,customerProfile:refreshed||profile,member:refreshed||profile,
+    message:profile.isLoyaltyMember?"SKANDI Club customer profile transferred to passenger.":"SKANDI Member customer profile transferred to passenger."};
 }
 export async function adjustSkandiClubPointsCore(input={}){
   const session=await requireReservationsAccessCore({write:true});
-  if(!isUuid(input.memberId))throw new Error("CLUB_MEMBER_REQUIRED");
-  const row=(await select("club_profiles",{select:"*",id:qeq(input.memberId),limit:"1"}))[0];
-  if(!row)throw new Error("CLUB_MEMBER_NOT_FOUND");
+  const profile=await customerProfileById(input.customerProfileId||input.memberId);
+  if(!profile||!profile.isLoyaltyMember)throw new Error("SKANDI_CLUB_MEMBER_REQUIRED");
   const delta=Math.trunc(Number(input.delta||0)),reason=clean(input.reason,1000);
   if(!delta)throw new Error("POINTS_DELTA_REQUIRED");if(!reason)throw new Error("POINTS_REASON_REQUIRED");
-  const p=obj(row.payload),next=Math.max(0,(Number(p.pointsBalance??p.points??0)||0)+delta);
-  p.pointsBalance=next;p.points=next;p.lastPointsAdjustment={delta,reason,at:now(),actorId:actor(session)};
-  const updated=(await patch("club_profiles",{id:qeq(row.id)},{payload:p,updated_at:now()}))[0]||{...row,payload:p};
-  await history(input.bookingId,"SKANDI_CLUB_POINTS_ADJUSTED",{memberId:row.id,passengerId:input.passengerId||null,delta,reason,balance:next},session);
-  return{ok:true,passengerId:input.passengerId||"",member:clubView(updated),message:`SKANDI Club points updated by ${delta}.`};
+  const booking=isUuid(input.bookingId)?await bookingRow(input.bookingId):null;
+  await insert("skandi_points_ledger",{
+    transaction_id:`ALTEA-${Date.now()}-${Math.random().toString(36).slice(2,8).toUpperCase()}`,
+    member_id:profile.memberId,booking_id:booking?.id||null,booking_reference:booking?.booking_reference||null,
+    transaction_date:now(),type:delta>0?"MANUAL_CREDIT":"MANUAL_DEBIT",amount:delta,description:reason,
+    status:"POSTED",is_manual_adjustment:true,admin_id:actor(session)||null,
+    payload:{source:"ALTEA",passengerId:input.passengerId||null,customerProfileId:profile.id}
+  });
+  const updated={...profile,pointsBalance:await customerPoints(profile.memberId)};
+  await history(input.bookingId,"SKANDI_CLUB_POINTS_ADJUSTED",{customerProfileId:profile.id,memberId:profile.memberId,passengerId:input.passengerId||null,delta,reason,balance:updated.pointsBalance},session);
+  return{ok:true,passengerId:input.passengerId||"",customerProfile:updated,member:updated,message:`SKANDI Club points updated by ${delta}.`};
 }
 
 
@@ -780,10 +941,11 @@ function baggageLicensePlate(input={},booking={},passenger={},segments=[]){
   return candidate;
 }
 async function generatedDocumentContext(bookingId,input={}){
-  const [passengers,components,segments]=await Promise.all([
+  const [passengers,components,segments,documents]=await Promise.all([
     select("altea_passengers",{select:"*",booking_id:qeq(bookingId),order:"created_at.asc",limit:"500"}),
     select("altea_booking_components",{select:"*",booking_id:qeq(bookingId),order:"created_at.asc",limit:"1000"}),
-    select("altea_segments",{select:"*",booking_id:qeq(bookingId),order:"created_at.asc",limit:"1000"})
+    select("altea_segments",{select:"*",booking_id:qeq(bookingId),order:"created_at.asc",limit:"1000"}),
+    select("altea_documents",{select:"*",booking_id:qeq(bookingId),order:"created_at.desc",limit:"500"})
   ]);
   const passenger=isUuid(input.passengerId)?passengers.find(x=>x.id===input.passengerId)||null:passengers[0]||null;
   const requestedComponentId=clean(input.componentId||input.departureId,80);
@@ -791,7 +953,7 @@ async function generatedDocumentContext(bookingId,input={}){
   const requestedSegmentId=clean(input.segmentId,80);
   const segment=isUuid(requestedSegmentId)?segments.find(x=>x.id===requestedSegmentId)||null:
     segments.find(x=>upper(x.segment_type,80).includes("FLIGHT"))||segments[0]||null;
-  return{passengers,components,segments,passenger,component,segment};
+  return{passengers,components,segments,documents,passenger,component,segment};
 }
 function controlledFallbackHtml(variant,b,p=null,authority="SKANDI_BOOKING"){
   const ref=clean(b?.booking_reference||b?.pnr_locator||b?.id,120);
@@ -807,7 +969,8 @@ function renderGeneratedDocument({spec,booking,context,documentNumber,authority,
   if(spec.variant==="BOOKING_CONFIRMATION"){
     return renderBookingConfirmation({
       booking,passengers:context.passengers,segments:context.segments,
-      components:context.components,documentNumber,generatedAt:now()
+      components:context.components,documents:context.documents,
+      documentNumber,generatedAt:now(),preview:false
     });
   }
   if(spec.variant==="BAGGAGE_TAG"){
@@ -859,6 +1022,16 @@ async function prepareGeneratedHtmlAsset({html,booking,documentId,documentNumber
     content:html,mimeType:"text/html",documentId,manifestId
   };
 }
+export async function previewAlteaBookingConfirmationCore(input={}){
+  await requireReservationsAccessCore();
+  const id=clean(input.bookingId,80);if(!isUuid(id))throw new Error("BOOKING_REQUIRED");
+  const booking=await bookingRow(id);if(!booking)throw new Error("BOOKING_NOT_FOUND");
+  const context=await generatedDocumentContext(id,input);
+  return{ok:true,bookingId:id,bookingReference:booking.booking_reference||booking.pnr_locator||id,
+    html:renderBookingConfirmation({booking,passengers:context.passengers,segments:context.segments,
+      components:context.components,documents:context.documents,documentNumber:"PREVIEW",generatedAt:now(),preview:true})};
+}
+
 export async function generateAlteaBookingDocumentCore(input={}){
   const session=await requireReservationsAccessCore({write:true});
   const id=clean(input.bookingId,80);if(!isUuid(id))throw new Error("BOOKING_REQUIRED");
