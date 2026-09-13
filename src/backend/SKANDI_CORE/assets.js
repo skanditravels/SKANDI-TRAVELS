@@ -1,5 +1,6 @@
 // /src/backend/SKANDI_CORE/assets.js
-// SKANDI Backend Base 1.0 — B-003 canonical Asset Library business logic.
+// SKANDI Platform Asset Library — canonical asset business logic.
+// Recovery R-003.3 business logic; R-003.13 canonical import-path convergence.
 //
 // One physical file = one platform_assets row.
 // Many systems/records may reference the same physical asset through platform_asset_usages.
@@ -13,9 +14,9 @@ import {
   storageGetObjectInfo,
   storageGetPublicUrl
 } from "backend/SKANDI_CORE/supabaseServer.js";
-import { requireStaffPortalSessionCore } from "backend/SKANDI_CORE/staffAuth.js";
+import { getStaffPortalSessionCore } from "backend/SKANDI_CORE/staffAuth.js";
 
-export const ASSET_CORE_VERSION = "BACKEND-BASE-1.0/B-003";
+export const ASSET_CORE_VERSION = "R-003.3";
 
 const PUBLIC_BUCKET = "skandi-public-assets";
 const PRIVATE_BUCKET = "skandi-private-assets";
@@ -108,7 +109,10 @@ function normalizeAsset(row={}){
 function actorId(session){return isUuid(session?.profile?.id)?session.profile.id:null}
 
 async function requireAssetAccess({write=false}={}){
-  const session=await requireStaffPortalSessionCore();
+  const session=await getStaffPortalSessionCore();
+  if(!session?.loggedIn||!session?.authorized){
+    const e=new Error("ASSET_AUTH_REQUIRED");e.code="ASSET_AUTH_REQUIRED";throw e;
+  }
   if(!write)return session;
 
   const profile=obj(session.profile);
