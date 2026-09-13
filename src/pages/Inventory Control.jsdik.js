@@ -1,5 +1,5 @@
 // /src/pages/Inventory Control.jsdik.js
-// SKANDI Inventory Control — R-003.12 matched page bridge.
+// SKANDI Inventory Control — R-003.13 runtime recovery page bridge.
 // Preferred HTML component: #inventoryControlEmbed
 
 import * as inventoryApi from "backend/SKANDI_CORE/inventoryControl.web";
@@ -7,7 +7,7 @@ import * as inventoryApi from "backend/SKANDI_CORE/inventoryControl.web";
 const EMBED_IDS=["#inventoryControlEmbed","#alteaInventoryControlEmbed","#masterInventoryEmbed"];
 const CHILD_SOURCE="SKANDI_INVENTORY_EMBED";
 const PARENT_SOURCE="SKANDI_INVENTORY_PARENT";
-const VERSION="R-003.12";
+const VERSION="R-003.13";
 
 function findEmbed(){
   for(const id of EMBED_IDS){
