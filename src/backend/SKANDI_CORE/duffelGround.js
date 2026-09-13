@@ -62,10 +62,14 @@ function ratesFromSearchResult(result = {}) {
       if (!rate?.id) continue;
       out.push({
         id: rate.id, rateId: rate.id, roomName: room.name || "Room", roomDescription: room.description || "",
-        roomPhotos: arr(room.photos).map(p => p?.url).filter(Boolean),
+        roomPhotos: arr(room.photos).map(p => p?.url).filter(Boolean), roomBeds: arr(room.beds),
+        maxOccupancy: Number(room.max_occupancy || room.maximum_occupancy || room.capacity || 0) || null,
         totalAmount: money(rate.total_amount), totalCurrency: upper(rate.total_currency || "USD", 3),
         baseAmount: money(rate.base_amount), taxAmount: money(rate.tax_amount), feeAmount: money(rate.fee_amount),
+        rateCode: clean(rate.code || rate.rate_code, 80),
         cancellationTimeline: arr(rate.cancellation_timeline), boardType: rate.board_type || rate.board_name || "",
+        benefits: arr(rate.benefits), dealTypes: arr(rate.deal_types),
+        supportedLoyaltyProgramme: rate.supported_loyalty_programme || null,
         expiresAt: rate.expires_at || null, paymentType: rate.payment_type || null,
         availablePaymentMethods: arr(rate.available_payment_methods), conditions: arr(rate.conditions),
         dueAtAccommodationAmount: money(rate.due_at_accommodation_amount),
@@ -86,6 +90,8 @@ function normalizeStayQuote(q = {}) {
     checkInDate: q.check_in_date || null, checkOutDate: q.check_out_date || null,
     accommodation: q.accommodation ? normalizeAccommodation(q.accommodation) : null,
     rooms: arr(q.rooms), guests: arr(q.guests), paymentType: selected.payment_type || "",
+    rateCode: clean(selected.code || selected.rate_code, 80), boardType: selected.board_type || "",
+    benefits: arr(selected.benefits), dealTypes: arr(selected.deal_types),
     availablePaymentMethods: arr(selected.available_payment_methods),
     dueAtAccommodationAmount: money(selected.due_at_accommodation_amount || q.due_at_accommodation_amount),
     dueAtAccommodationCurrency: upper(selected.due_at_accommodation_currency || q.due_at_accommodation_currency || q.total_currency || "USD", 3),
@@ -101,6 +107,8 @@ function normalizeStayBooking(b = {}) {
     checkInDate: b.check_in_date || null, checkOutDate: b.check_out_date || null, rooms: Number(b.rooms || 0),
     totalAmount: money(b.total_amount || bookedRate.total_amount), totalCurrency: upper(b.total_currency || bookedRate.total_currency || "USD", 3),
     paymentType: bookedRate.payment_type || b.payment_type || "",
+    rateCode: clean(bookedRate.code || bookedRate.rate_code, 80), boardType: bookedRate.board_type || "",
+    benefits: arr(bookedRate.benefits), cancellationTimeline: arr(bookedRate.cancellation_timeline),
     accommodation: b.accommodation ? normalizeAccommodation(b.accommodation) : null,
     guests: arr(b.guests).map(g => ({ givenName: g.given_name || "", familyName: g.family_name || "" })),
     cancelledAt: b.cancelled_at || null, confirmedAt: b.confirmed_at || null
