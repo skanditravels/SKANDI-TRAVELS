@@ -1,5 +1,5 @@
 // /src/backend/SKANDI_CORE/duffelAir.js
-// SKANDI Backend Base 1.0 — B-005R1 canonical Duffel Air provider core.
+// SKANDI Backend Base 1.0 — B-007.4 compatible Duffel Air provider core.
 // Pure provider-domain logic: no Wix page methods, no staff/customer auth, no Supabase/ALTEA writes.
 // Customer money is authorized through stripeClient and captured only by the higher booking/orchestration layer.
 
@@ -179,27 +179,89 @@ function normalizeOffer(offer = {}) {
   };
 }
 
-function normalizeSeatMap(seatMap = {}) {
-  const seats = [];
-  for (const cabin of arr(seatMap.cabins)) {
-    for (const row of arr(cabin.rows)) {
-      for (const section of arr(row.sections)) {
-        for (const element of arr(section.elements)) {
-          if (element?.type !== "seat") continue;
-          seats.push({
-            designator: element.designator || null,
-            cabinName: cabin.cabin_class_marketing_name || cabin.cabin_class || null,
-            disclosures: arr(element.disclosures),
-            availableServices: arr(element.available_services).map(s => ({
-              ...normalizeService({ ...s, type: "seat", segment_id: seatMap.segment_id || s.segment_id }),
-              label: `Seat ${element.designator || ""}`.trim()
-            }))
-          });
-        }
-      }
-    }
+function normalizeSeatElement(element = {}, context = {}) {
+  const type = lower(element.type || "empty", 40);
+  const base = {
+    type,
+    designator: element.designator || null,
+    name: element.name || null,
+    disclosures: arr(element.disclosures),
+    coordinates: element.coordinates || null,
+    metadata: element.metadata || null,
+    features: [...arr(element.features), ...(context.overwing ? ["overwing"] : [])],
+    availableServices: []
+  };
+  if (type === "seat") {
+    base.availableServices = arr(element.available_services).map(s => ({
+      ...normalizeService({ ...s, type: "seat", segment_id: context.segmentId || s.segment_id }),
+      label: `Seat ${element.designator || ""}`.trim()
+    }));
   }
-  return { id: seatMap.id || null, sliceId: seatMap.slice_id || null, segmentId: seatMap.segment_id || null, seats };
+  return base;
+}
+
+function normalizeSeatMap(seatMap = {}) {
+  const segmentId = seatMap.segment_id || null;
+  const seats = [];
+  const cabins = arr(seatMap.cabins).map((cabin, cabinIndex) => {
+    const cabinName = cabin.cabin_class_marketing_name || cabin.cabin_class || null;
+    const wingFirst = Number.isInteger(cabin.wings?.first_row_index) ? cabin.wings.first_row_index : null;
+    const wingLast = Number.isInteger(cabin.wings?.last_row_index) ? cabin.wings.last_row_index : null;
+    const rows = arr(cabin.rows).map((row, rowIndex) => {
+      const sections = arr(row.sections).map((section, sectionIndex) => {
+        const elements = arr(section.elements).map(element => {
+          const normalized = normalizeSeatElement(element, {
+            segmentId,
+            overwing: wingFirst !== null && wingLast !== null && rowIndex >= wingFirst && rowIndex <= wingLast
+          });
+          if (normalized.type === "seat") {
+            seats.push({
+              ...normalized,
+              cabinName,
+              cabinIndex,
+              rowIndex,
+              sectionIndex
+            });
+          }
+          return normalized;
+        });
+        return {
+          id: section.id || null,
+          type: section.type || null,
+          elements
+        };
+      });
+      const inferredNumber = clean(
+        row.row_number ?? row.number ??
+        sections.flatMap(s => s.elements).find(e => e.designator)?.designator?.match(/^\d+/)?.[0] ?? "",
+        10
+      );
+      return {
+        id: row.id || null,
+        rowNumber: inferredNumber || null,
+        sections
+      };
+    });
+    return {
+      id: cabin.id || null,
+      cabinClass: cabin.cabin_class || null,
+      cabinName,
+      deck: cabin.deck ?? cabin.deck_name ?? cabin.deck_number ?? null,
+      aisles: Number.isFinite(Number(cabin.aisles)) ? Number(cabin.aisles) : null,
+      wings: cabin.wings ? {
+        firstRowIndex: Number.isInteger(cabin.wings.first_row_index) ? cabin.wings.first_row_index : null,
+        lastRowIndex: Number.isInteger(cabin.wings.last_row_index) ? cabin.wings.last_row_index : null
+      } : null,
+      rows
+    };
+  });
+  return {
+    id: seatMap.id || null,
+    sliceId: seatMap.slice_id || null,
+    segmentId,
+    cabins,
+    seats
+  };
 }
 
 function normalizeOrder(order = {}) {
@@ -297,7 +359,7 @@ async function priceRawOffer(offerId, services = []) {
   return response.data;
 }
 
-function toOrderPassenger(p = {}) {
+function toOrderPassenger(p = {}, supportedDocumentTypes = []) {
   const id = resourceId(p.id, "pas_", "traveler");
   const out = {
     id,
@@ -307,12 +369,29 @@ function toOrderPassenger(p = {}) {
     email: lower(p.email, 254), phone_number: clean(p.phoneNumber || p.phone_number, 30)
   };
   if (!out.given_name || !out.family_name || !/^\d{4}-\d{2}-\d{2}$/.test(out.born_on)) throw error("INVALID_PASSENGER", "Traveler details are incomplete.");
-  const docs = arr(p.identityDocuments || p.identity_documents).map(d => ({
-    type: lower(d.type || "passport", 40),
-    unique_identifier: upper(d.uniqueIdentifier || d.unique_identifier || d.number, 50),
-    issuing_country_code: upper(d.issuingCountryCode || d.issuing_country_code, 2),
-    expires_on: clean(d.expiresOn || d.expires_on, 10)
-  }));
+
+  const infantPassengerId = clean(p.infantPassengerId || p.infant_passenger_id, 220);
+  if (infantPassengerId) out.infant_passenger_id = resourceId(infantPassengerId, "pas_", "infant traveler");
+
+  const supported = new Set(arr(supportedDocumentTypes).map(x => lower(x, 50)));
+  const docs = [];
+  for (const d of arr(p.identityDocuments || p.identity_documents)) {
+    const type = lower(d.type || "passport", 50);
+    if (!["passport", "known_traveler_number", "passenger_redress_number"].includes(type)) continue;
+    if (supported.size && !supported.has(type)) continue;
+    const unique = upper(d.uniqueIdentifier || d.unique_identifier || d.number, 50);
+    if (!unique) continue;
+    if (type === "passport") {
+      const issuing = upper(d.issuingCountryCode || d.issuing_country_code, 2);
+      const expires = clean(d.expiresOn || d.expires_on, 10);
+      if (!/^[A-Z]{2}$/.test(issuing) || !/^\d{4}-\d{2}-\d{2}$/.test(expires)) {
+        throw error("INVALID_IDENTITY_DOCUMENT", "Passport issuing country and expiry are required.");
+      }
+      docs.push({ type, unique_identifier: unique, issuing_country_code: issuing, expires_on: expires });
+    } else {
+      docs.push({ type, unique_identifier: unique });
+    }
+  }
   if (docs.length) out.identity_documents = docs;
   return out;
 }
@@ -438,7 +517,7 @@ export async function createDuffelOrderCore(input = {}) {
   const data = {
     type: orderType,
     selected_offers: [offerId],
-    passengers: arr(input.passengers).map(toOrderPassenger),
+    passengers: arr(input.passengers).map(p => toOrderPassenger(p, offer.supportedIdentityDocumentTypes)),
     metadata: {
       integration: "skandi_duffel",
       confirmation_delivery_policy: upper(input.confirmationDeliveryPolicy || "SKANDI", 20),
