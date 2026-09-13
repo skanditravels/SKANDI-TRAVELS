@@ -85,7 +85,7 @@ import {
   createDuffelComponentClientKeyCore
 } from "backend/SKANDI_CORE/duffelGround.js";
 
-const VERSION = RESERVATIONS_CORE_VERSION;
+const VERSION = "BACKEND-BASE-1.0-B007.5";
 
 
 function clean(value, max = 500) {
@@ -506,41 +506,65 @@ const ACTIONS = Object.freeze({
 });
 
 
+function errorCode(error) {
+  const raw = upper(error?.code || error?.message || "ALTEA_ACTION_FAILED", 120);
+  return raw.match(/[A-Z][A-Z0-9_]{2,80}/)?.[0] || "ALTEA_ACTION_FAILED";
+}
+
+function safeErrorMessage(error, code) {
+  const explicit = clean(error?.publicMessage || "", 500);
+  if (explicit) return explicit;
+  const known = {
+    AUTH_REQUIRED: "Your ALTEA staff session has expired. Sign in again.",
+    BOOKING_REQUIRED: "Open a booking before running this action.",
+    BOOKING_NOT_FOUND: "The booking could not be found.",
+    PASSENGER_REQUIRED: "Select a passenger before generating this document.",
+    SKANDI_TRANSFER_AUTHORITY_REQUIRED: "A live SKANDI transfer component is required before a transfer document can be generated.",
+    SKANDI_DCS_AUTHORITY_REQUIRED: "This document requires SKANDI DCS authority.",
+    BAGGAGE_LICENSE_PLATE_10_DIGITS_REQUIRED: "A valid 10-digit baggage license plate is required.",
+    ALTEA_ACTION_NOT_SUPPORTED: "This ALTEA action is not supported by the current backend generation."
+  };
+  return known[code] || `ALTEA action failed (${code}).`;
+}
+
 async function dispatch(input = {}) {
-  await requireReservationsAccessCore();
-
-
   const type = upper(input.type, 100);
-  const payload =
-    input.payload && typeof input.payload === "object"
-      ? input.payload
-      : {};
+  const payload = input.payload && typeof input.payload === "object" ? input.payload : {};
 
+  try {
+    await requireReservationsAccessCore();
 
-  if (type === "ALTEA_ENTERPRISE_MODULE_READY") {
+    if (type === "ALTEA_ENTERPRISE_MODULE_READY") {
+      return {
+        responseType: "ALTEA_ENTERPRISE_MODULE_ACK",
+        payload: {version: VERSION, capabilities: Object.keys(ACTIONS)}
+      };
+    }
+
+    const action = ACTIONS[type];
+    if (!action) {
+      const error = new Error("ALTEA_ACTION_NOT_SUPPORTED");
+      error.code = "ALTEA_ACTION_NOT_SUPPORTED";
+      throw error;
+    }
+
+    const result = await action[1](payload);
+    return {responseType: action[0], payload: result || {}};
+  } catch (error) {
+    const code = errorCode(error);
+    console.error("[ALTEA B-007.5 ACTION]", JSON.stringify({
+      type, code, message: clean(error?.message, 500)
+    }));
     return {
-      responseType: "ALTEA_ENTERPRISE_MODULE_ACK",
+      responseType: type.startsWith("DUFFEL_") ? "DUFFEL_ERROR" : "ALTEA_ERROR",
       payload: {
-        version: VERSION,
-        capabilities: Object.keys(ACTIONS)
+        ok: false,
+        action: type,
+        code,
+        message: safeErrorMessage(error, code)
       }
     };
   }
-
-
-  const action = ACTIONS[type];
-  if (!action) {
-    const error = new Error("ALTEA_ACTION_NOT_SUPPORTED");
-    error.code = "ALTEA_ACTION_NOT_SUPPORTED";
-    throw error;
-  }
-
-
-  const result = await action[1](payload);
-  return {
-    responseType: action[0],
-    payload: result || {}
-  };
 }
 
 
