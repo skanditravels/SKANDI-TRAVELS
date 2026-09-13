@@ -29,11 +29,14 @@ import {
   addReservationInventoryComponentCore,
   releaseReservationInventoryComponentCore,
   getReservationInventoryStatusCore,
+  resolveReservationDestinationCore,
   searchSkandiClubMembersCore,
+  getCustomerProfileCore,
   linkSkandiClubMemberCore,
   adjustSkandiClubPointsCore,
   checkAlteaTravelRequirementsCore,
   generateAlteaBookingDocumentCore,
+  previewAlteaBookingConfirmationCore,
   getAlteaDocumentCore,
   finalizeGeneratedReservationsAssetCore,
   requestAlteaDocumentDeliveryCore,
@@ -311,6 +314,14 @@ async function cancelCarAndSync(input={}){
   return syncGroundResult(input,await cancelDuffelCarBookingCore(input),"CAR_RENTAL","DUFFEL_CAR_BOOKING_CANCELLED");
 }
 
+async function searchResolvedStays(input={}){
+  if(input?.location?.latitude!==undefined||input?.latitude!==undefined||input?.accommodationId||Array.isArray(input?.accommodationIds)){
+    return searchDuffelStaysCore(input);
+  }
+  const resolved=await resolveReservationDestinationCore(input);
+  return searchDuffelStaysCore({...input,location:resolved.location});
+}
+
 const ACTIONS = Object.freeze({
   DUFFEL_APP_READY: ["DUFFEL_BOOTSTRAP_RESULT", getDuffelWorkspaceBootstrapCore],
   DUFFEL_SEARCH_OFFERS: ["DUFFEL_OFFERS_RESULT", searchDuffelOffersCore],
@@ -329,7 +340,7 @@ const ACTIONS = Object.freeze({
   DUFFEL_PREPARE_CHANGE_PAYMENT: ["DUFFEL_CHANGE_PAYMENT_RESULT", prepareDuffelOrderChangePaymentCore],
   DUFFEL_CONFIRM_ORDER_CHANGE: ["DUFFEL_ORDER_CHANGE_CONFIRMED", confirmChangeAndSyncOrder],
 
-  DUFFEL_SEARCH_STAYS: ["DUFFEL_STAYS_RESULT", searchDuffelStaysCore],
+  DUFFEL_SEARCH_STAYS: ["DUFFEL_STAYS_RESULT", searchResolvedStays],
   DUFFEL_FETCH_STAY_RATES: ["DUFFEL_STAY_RATES_RESULT", fetchDuffelStayRatesCore],
   DUFFEL_QUOTE_STAY: ["DUFFEL_STAY_QUOTE_RESULT", quoteDuffelStayCore],
   DUFFEL_CREATE_STAY_BOOKING: ["DUFFEL_STAY_BOOKING_RESULT", createStayAndSync],
@@ -420,6 +431,10 @@ const ACTIONS = Object.freeze({
     "ALTEA_CLUB_SEARCH_RESULT",
     searchSkandiClubMembersCore
   ],
+  ALTEA_CUSTOMER_PROFILE_GET: [
+    "ALTEA_CUSTOMER_PROFILE_RESULT",
+    getCustomerProfileCore
+  ],
   ALTEA_CLUB_LINK_MEMBER: [
     "ALTEA_CLUB_MEMBER_LINKED",
     linkClubAndRefresh
@@ -437,6 +452,10 @@ const ACTIONS = Object.freeze({
   ALTEA_GENERATE_DOCUMENT: [
     "ALTEA_DOCUMENT_GENERATED",
     documentAndRefresh
+  ],
+  ALTEA_PREVIEW_BOOKING_CONFIRMATION: [
+    "ALTEA_BOOKING_CONFIRMATION_PREVIEW",
+    previewAlteaBookingConfirmationCore
   ],
   ALTEA_GET_DOCUMENT: [
     "ALTEA_DOCUMENT_RESULT",
