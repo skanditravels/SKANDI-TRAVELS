@@ -21,7 +21,7 @@ import { renderBagTag } from "backend/SKANDI_CORE/bagTag.js";
 import { renderInvoice } from "backend/SKANDI_CORE/invoice.js";
 
 
-export const RESERVATIONS_CORE_VERSION = "BACKEND-BASE-1.0-B007.4";
+export const RESERVATIONS_CORE_VERSION = "BACKEND-BASE-1.0-B007.5";
 
 
 const clean=(v,n=12000)=>String(v??"").trim().slice(0,n);
@@ -1069,26 +1069,46 @@ export async function generateAlteaBookingDocumentCore(input={}){
       segmentId:input.segmentId||context.segment?.id||null,assetStatus:"PENDING"}
   });
   const d=rows[0];if(!d?.id)throw new Error("DOCUMENT_CREATE_FAILED");
-  await insert("altea_booking_documents",{
-    booking_id:id,passenger_id:context.passenger?.id||null,provider:"SKANDI",provider_document_id:d.id,
-    document_type:spec.storageType,document_number:number,status:"DRAFT",
-    payload:{alteaDocumentId:d.id,authority,renderVariant:spec.variant,
-      componentId:input.componentId||input.departureId||null,
-      segmentId:input.segmentId||context.segment?.id||null,assetStatus:"PENDING"}
-  });
-  let assetUpload=await prepareGeneratedHtmlAsset({html,booking:b,documentId:d.id,documentNumber:number,documentType:spec.variant});
-  if(assetUpload.duplicate&&assetUpload.asset){
-    await linkGeneratedAsset({documentId:d.id,asset:assetUpload.asset,session});
-    assetUpload=null;
+  const warnings=[];
+  try{
+    await insert("altea_booking_documents",{
+      booking_id:id,passenger_id:context.passenger?.id||null,provider:"SKANDI",provider_document_id:d.id,
+      document_type:spec.storageType,document_number:number,status:"DRAFT",
+      payload:{alteaDocumentId:d.id,authority,renderVariant:spec.variant,
+        componentId:input.componentId||input.departureId||null,
+        segmentId:input.segmentId||context.segment?.id||null,assetStatus:"PENDING"}
+    });
+  }catch(error){
+    warnings.push({code:"BOOKING_DOCUMENT_LINK_WRITE_FAILED",message:clean(error?.message,240)});
   }
+
+  let assetUpload=null;
+  try{
+    assetUpload=await prepareGeneratedHtmlAsset({html,booking:b,documentId:d.id,documentNumber:number,documentType:spec.variant});
+    if(assetUpload.duplicate&&assetUpload.asset){
+      await linkGeneratedAsset({documentId:d.id,asset:assetUpload.asset,session});
+      assetUpload=null;
+    }
+  }catch(error){
+    const assetCode=upper(error?.code||error?.message||"ASSET_PREPARE_FAILED",80).replace(/[^A-Z0-9_]/g,"_").slice(0,80)||"ASSET_PREPARE_FAILED";
+    warnings.push({code:assetCode,message:"Document generated, but Asset Library upload preparation failed."});
+    try{
+      await patch("altea_documents",{id:qeq(d.id)},{
+        payload:{...obj(d.payload),assetStatus:"PREPARE_FAILED",assetErrorCode:assetCode},updated_at:now()
+      });
+    }catch(_){}
+  }
+
   await history(id,"DOCUMENT_GENERATED",{
     documentId:d.id,documentType:spec.storageType,renderVariant:spec.variant,
-    documentNumber:number,authority,assetUploadRequired:!!assetUpload
+    documentNumber:number,authority,assetUploadRequired:!!assetUpload,warnings:warnings.map(x=>x.code)
   },session);
   const current=(await select("altea_documents",{select:"*",id:qeq(d.id),limit:"1"}))[0]||d;
   return{
-    ok:true,document:documentView(current),assetUpload,
-    message:`SKANDI ${spec.variant.replaceAll("_"," ").toLowerCase()} generated. File persistence is handled by the Platform Asset Library.`
+    ok:true,document:documentView(current),assetUpload,warnings,
+    message:warnings.length
+      ?`SKANDI ${spec.variant.replaceAll("_"," ").toLowerCase()} generated. ${warnings.length} persistence warning(s) require review.`
+      :`SKANDI ${spec.variant.replaceAll("_"," ").toLowerCase()} generated. File persistence is handled by the Platform Asset Library.`
   };
 }
 
