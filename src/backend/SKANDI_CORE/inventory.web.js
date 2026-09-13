@@ -1,12 +1,11 @@
 // /src/backend/SKANDI_CORE/inventory.web.js
 // SKANDI Inventory Control — canonical page-callable facade.
-// R-003.11 — Runtime facade convergence.
+// R-003.11.1 — Wix web-method runtime correction.
 //
-// This file intentionally contains NO Inventory, Asset Library, Supabase, or
-// Duffel business logic. It keeps the proven Wix web-module runtime boundary
-// while exposing the complete canonical SKANDI_CORE Inventory surface.
+// One frontend-callable Inventory facade. No Inventory, Supabase, Asset Library,
+// or Duffel business logic lives here. All domain logic remains in SKANDI_CORE.
 
-import { webMethod, Permissions } from "wix-web-module";
+import { Permissions, webMethod } from "@wix/web-methods";
 
 import {
   getInventoryBootstrapCore,
@@ -50,55 +49,56 @@ import {
 } from "backend/SKANDI_CORE/assets.js";
 
 const MEMBER = Permissions.SiteMember;
+const asInput = value => value && typeof value === "object" ? value : {};
+const memberMethod = handler => webMethod(MEMBER, input => handler(asInput(input)));
 
 // Inventory master/reference records.
-export const getInventoryBootstrap = webMethod(MEMBER, getInventoryBootstrapCore);
-export const getInventoryRecord = webMethod(MEMBER, getInventoryRecordCore);
-export const saveInventoryBundle = webMethod(MEMBER, saveInventoryBundleCore);
-export const archiveInventoryRecord = webMethod(MEMBER, archiveInventoryRecordCore);
+export const getInventoryBootstrap = memberMethod(getInventoryBootstrapCore);
+export const getInventoryRecord = memberMethod(getInventoryRecordCore);
+export const saveInventoryBundle = memberMethod(saveInventoryBundleCore);
+export const archiveInventoryRecord = memberMethod(archiveInventoryRecordCore);
 
 // Dated capacity and pricing.
-export const getDatedInventory = webMethod(MEMBER, getDatedInventoryCore);
-export const saveDatedInventory = webMethod(MEMBER, saveDatedInventoryCore);
-export const deleteDatedInventory = webMethod(MEMBER, deleteDatedInventoryCore);
+export const getDatedInventory = memberMethod(getDatedInventoryCore);
+export const saveDatedInventory = memberMethod(saveDatedInventoryCore);
+export const deleteDatedInventory = memberMethod(deleteDatedInventoryCore);
 
 // Air inventory / revenue control.
-export const getAirInventory = webMethod(MEMBER, getAirInventoryCore);
-export const saveAirInventoryRow = webMethod(MEMBER, saveAirInventoryRowCore);
+export const getAirInventory = memberMethod(getAirInventoryCore);
+export const saveAirInventoryRow = memberMethod(saveAirInventoryRowCore);
 
 // Aircraft & Cabin Studio.
-export const getAircraftBootstrap = webMethod(MEMBER, getAircraftBootstrapCore);
-export const getAircraftRecord = webMethod(MEMBER, getAircraftRecordCore);
-export const saveAircraft = webMethod(MEMBER, saveAircraftCore);
-export const archiveAircraft = webMethod(MEMBER, archiveAircraftCore);
-export const saveAircraftChild = webMethod(MEMBER, saveAircraftChildCore);
-export const archiveAircraftChild = webMethod(MEMBER, archiveAircraftChildCore);
-export const smartSyncAircraft = webMethod(MEMBER, smartSyncAircraftCore);
-export const getCabinNormalizationPreview = webMethod(MEMBER, getCabinNormalizationPreviewCore);
+export const getAircraftBootstrap = memberMethod(getAircraftBootstrapCore);
+export const getAircraftRecord = memberMethod(getAircraftRecordCore);
+export const saveAircraft = memberMethod(saveAircraftCore);
+export const archiveAircraft = memberMethod(archiveAircraftCore);
+export const saveAircraftChild = memberMethod(saveAircraftChildCore);
+export const archiveAircraftChild = memberMethod(archiveAircraftChildCore);
+export const smartSyncAircraft = memberMethod(smartSyncAircraftCore);
+export const getCabinNormalizationPreview = memberMethod(getCabinNormalizationPreviewCore);
 
 // Audit / QA.
-export const getInventoryAudit = webMethod(MEMBER, getInventoryAuditCore);
-export const getInventoryQuality = webMethod(MEMBER, getInventoryQualityCore);
+export const getInventoryAudit = memberMethod(getInventoryAuditCore);
+export const getInventoryQuality = memberMethod(getInventoryQualityCore);
 
 // Duffel reference / SKANDI Collection orchestration.
-export const searchInventoryProvider = webMethod(MEMBER, searchInventoryProviderCore);
-export const getInventoryProviderResource = webMethod(MEMBER, getInventoryProviderResourceCore);
-export const importInventoryProviderResource = webMethod(MEMBER, importInventoryProviderResourceCore);
-export const refreshInventoryProviderResource = webMethod(MEMBER, refreshInventoryProviderResourceCore);
+export const searchInventoryProvider = memberMethod(searchInventoryProviderCore);
+export const getInventoryProviderResource = memberMethod(getInventoryProviderResourceCore);
+export const importInventoryProviderResource = memberMethod(importInventoryProviderResourceCore);
+export const refreshInventoryProviderResource = memberMethod(refreshInventoryProviderResourceCore);
 
 // Duffel negotiated Stays rates.
-export const listInventoryNegotiatedRates = webMethod(MEMBER, listInventoryNegotiatedRatesCore);
-export const getInventoryNegotiatedRate = webMethod(MEMBER, getInventoryNegotiatedRateCore);
-export const createInventoryNegotiatedRate = webMethod(MEMBER, createInventoryNegotiatedRateCore);
-export const updateInventoryNegotiatedRate = webMethod(MEMBER, updateInventoryNegotiatedRateCore);
-export const deleteInventoryNegotiatedRate = webMethod(MEMBER, deleteInventoryNegotiatedRateCore);
+export const listInventoryNegotiatedRates = memberMethod(listInventoryNegotiatedRatesCore);
+export const getInventoryNegotiatedRate = memberMethod(getInventoryNegotiatedRateCore);
+export const createInventoryNegotiatedRate = memberMethod(createInventoryNegotiatedRateCore);
+export const updateInventoryNegotiatedRate = memberMethod(updateInventoryNegotiatedRateCore);
+export const deleteInventoryNegotiatedRate = memberMethod(deleteInventoryNegotiatedRateCore);
 
-// Platform Asset Library exposed through the same Inventory facade so the Wix
-// page retains exactly one backend dependency.
-export const listAssetLibrary = webMethod(MEMBER, listAssetsCore);
-export const checkAssetLibraryDuplicate = webMethod(MEMBER, checkAssetDuplicateCore);
-export const prepareAssetLibraryUpload = webMethod(MEMBER, prepareAssetUploadCore);
-export const finalizeAssetLibraryUpload = webMethod(MEMBER, finalizeAssetUploadCore);
-export const getAssetLibraryAccessUrl = webMethod(MEMBER, getAssetAccessUrlCore);
-export const registerAssetLibraryUsage = webMethod(MEMBER, registerAssetUsageCore);
-export const archiveAssetLibraryItem = webMethod(MEMBER, archiveAssetCore);
+// Platform Asset Library through the same Inventory facade.
+export const listAssetLibrary = memberMethod(listAssetsCore);
+export const checkAssetLibraryDuplicate = memberMethod(checkAssetDuplicateCore);
+export const prepareAssetLibraryUpload = memberMethod(prepareAssetUploadCore);
+export const finalizeAssetLibraryUpload = memberMethod(finalizeAssetUploadCore);
+export const getAssetLibraryAccessUrl = memberMethod(getAssetAccessUrlCore);
+export const registerAssetLibraryUsage = memberMethod(registerAssetUsageCore);
+export const archiveAssetLibraryItem = memberMethod(archiveAssetCore);
