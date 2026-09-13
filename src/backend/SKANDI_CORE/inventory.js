@@ -1,10 +1,12 @@
 // /src/backend/SKANDI_CORE/inventory.js
-// SKANDI Backend Base 1.0 — B-003/B-004 canonical Inventory business logic.
+// SKANDI Inventory Control — canonical business logic.
+// R-003.13 runtime compatibility convergence.
+// Preserves the complete Inventory/provider surface while using the proven R-003.9.2 staff-session contract.
 // No webMethod wrappers, no routes, no UI code.
 
 import { randomUUID } from "crypto";
 import { restRequest } from "backend/SKANDI_CORE/supabaseServer.js";
-import { requireStaffPortalSessionCore } from "backend/SKANDI_CORE/staffAuth.js";
+import { getStaffPortalSessionCore } from "backend/SKANDI_CORE/staffAuth.js";
 import {
   listDuffelAirlinesCore,
   getDuffelAirlineCore,
@@ -22,7 +24,7 @@ import {
   deleteDuffelNegotiatedRateCore
 } from "backend/SKANDI_CORE/travelReference.js";
 
-export const INVENTORY_CORE_VERSION = "BACKEND-BASE-1.0/B-003+B-004";
+export const INVENTORY_CORE_VERSION = "R-003.13";
 
 const MASTER_TYPES = new Set([
   "COUNTRY","DESTINATION","AREA","SUPPLIER","HOTEL","GUIDED_TOUR","ACTIVITY",
@@ -140,7 +142,10 @@ async function select(table,query={}){
 }
 
 async function requireInventoryAccess({write=false}={}){
-  const session=await requireStaffPortalSessionCore();
+  const session=await getStaffPortalSessionCore();
+  if(!session?.loggedIn || !session?.authorized){
+    const e=new Error("INVENTORY_AUTH_REQUIRED"); e.code="INVENTORY_AUTH_REQUIRED"; throw e;
+  }
   const p=object(session.profile);
   const permissions=new Set([
     ...array(session.permissionKeys),...array(session.permissions),
