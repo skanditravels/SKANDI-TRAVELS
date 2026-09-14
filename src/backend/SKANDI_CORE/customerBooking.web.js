@@ -1,10 +1,13 @@
 // /src/backend/SKANDI_CORE/customerBooking.web.js
-// SKANDI Backend Base 1.0 — B-007 customer booking web-method boundary.
+// SKANDI Backend Base 1.0 — B-010 single customer booking web-method boundary.
+
 
 import { Permissions, webMethod } from "@wix/web-methods";
 import { currentMember } from "wix-members-backend";
 import {
   searchLiveFlightOffersCore,
+  searchUnifiedOffersCore,
+  createBookingCartFromOfferCore,
   createFlightCartCore,
   loadBookingCartCore,
   listCustomerBookingCartsCore,
@@ -35,8 +38,14 @@ import {
   saveCarDriverCore,
   prepareCarCheckoutCore,
   commitCarBookingCore,
-  createCustomerCarBookingCore
+  createCustomerCarBookingCore,
+  loadBookingRequirementsCore,
+  refreshBookingRequirementsCore,
+  createCarComponentClientKeyCore,
+  loadCustomerCarBookingCore,
+  cancelCustomerCarBookingCore
 } from "backend/SKANDI_CORE/customerBooking.js";
+
 
 async function memberContext() {
   const member = await currentMember.getMember();
@@ -50,6 +59,18 @@ async function memberContext() {
     memberId: member._id,
     email: String(member.loginEmail || member.contactDetails?.emails?.[0] || "").toLowerCase()
   };
+}
+async function optionalMemberContext() {
+  try {
+    const member = await currentMember.getMember();
+    if (!member?._id) return null;
+    return {
+      memberId: member._id,
+      email: String(member.loginEmail || member.contactDetails?.emails?.[0] || "").toLowerCase()
+    };
+  } catch (_) {
+    return null;
+  }
 }
 function publicMessage(error) {
   const out = new Error(String(error?.publicMessage || error?.message || "The booking request could not be completed.").slice(0, 500));
@@ -71,7 +92,13 @@ function member(handler) {
   });
 }
 
+
 export const searchLiveFlightOffers = any(input => searchLiveFlightOffersCore(input));
+export const searchUnifiedOffers = any(input => searchUnifiedOffersCore(input));
+export const createBookingCartFromOffer = webMethod(Permissions.Anyone, async (input = {}) => {
+  try { return await createBookingCartFromOfferCore(await optionalMemberContext(), input || {}); }
+  catch (error) { throw publicMessage(error); }
+});
 export const searchLiveStays = any(input => searchLiveStaysCore(input));
 export const fetchStayRates = any(input => fetchStayRatesCore(input));
 export const quoteStay = any(input => quoteStayCore(input));
@@ -79,8 +106,12 @@ export const searchLiveCars = any(input => searchLiveCarsCore(input));
 export const quoteCar = any(input => quoteCarCore(input));
 export const getCarQuote = any(input => getCarQuoteCore(input));
 
+
 export const createFlightCart = member(createFlightCartCore);
-export const loadBookingCart = member((context, input) => loadBookingCartCore(context, input));
+export const loadBookingCart = member(async (context, input) => {
+  const loaded = await loadBookingCartCore(context, input, { includeTravelers: input.view === "apis" });
+  return loaded.cart;
+});
 export const listCustomerBookingCarts = member(listCustomerBookingCartsCore);
 export const acceptBookingOffer = member(acceptBookingOfferCore);
 export const loadBookingExtras = member(loadBookingExtrasCore);
@@ -96,13 +127,22 @@ export const reconcileBooking = member(reconcileBookingCore);
 export const loadBookingConfirmation = member(loadBookingConfirmationCore);
 export const loadBookingDocuments = member(loadBookingDocumentsCore);
 
+
 export const createHotelCart = member(createHotelCartCore);
 export const saveHotelGuests = member(saveHotelGuestsCore);
 export const prepareHotelPayment = member(prepareHotelPaymentCore);
 export const commitHotelBooking = member(commitHotelBookingCore);
+
 
 export const createCarCart = member(createCarCartCore);
 export const saveCarDriver = member(saveCarDriverCore);
 export const prepareCarCheckout = member(prepareCarCheckoutCore);
 export const commitCarBooking = member(commitCarBookingCore);
 export const createCustomerCarBooking = member(createCustomerCarBookingCore);
+
+
+export const loadBookingRequirements = member(loadBookingRequirementsCore);
+export const refreshBookingRequirements = member(refreshBookingRequirementsCore);
+export const createCarComponentClientKey = member(() => createCarComponentClientKeyCore());
+export const loadCustomerCarBooking = member(loadCustomerCarBookingCore);
+export const cancelCustomerCarBooking = member(cancelCustomerCarBookingCore);
