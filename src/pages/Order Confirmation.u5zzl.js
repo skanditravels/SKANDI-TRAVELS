@@ -1,15 +1,20 @@
 import wixLocationFrontend from "wix-location-frontend";
 
+
 const EMBED_ID =
   "#storeOrderConfirmationEmbed";
+
 
 const SOURCE =
   "SKANDI_STORE_CONFIRMATION";
 
+
 const PARENT_SOURCE =
   "SKANDI_WIX_PARENT";
 
+
 let embed = null;
+
 
 function send(type, payload = {}) {
   embed?.postMessage({
@@ -22,10 +27,12 @@ function send(type, payload = {}) {
   });
 }
 
+
 function queryData() {
   const query =
     wixLocationFrontend.query ||
     {};
+
 
   return {
     orderId:
@@ -33,6 +40,7 @@ function queryData() {
         query.orderId ||
         ""
       ),
+
 
     paymentStatus:
       String(
@@ -42,11 +50,13 @@ function queryData() {
   };
 }
 
+
 $w.onReady(function () {
   embed =
     $w(
       EMBED_ID
     );
+
 
   embed.onMessage(
     (event) => {
@@ -54,12 +64,14 @@ $w.onReady(function () {
         event?.data ||
         {};
 
+
       if (
         message.source !==
           SOURCE
       ) {
         return;
       }
+
 
       if (
         message.type ===
@@ -71,6 +83,7 @@ $w.onReady(function () {
         );
         return;
       }
+
 
       if (
         message.type ===
@@ -85,6 +98,7 @@ $w.onReady(function () {
       }
     }
   );
+
 
   send(
     "STORE_CONFIRMATION_DATA",
