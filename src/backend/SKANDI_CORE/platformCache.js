@@ -1,5 +1,5 @@
 // /src/backend/SKANDI_CORE/platformCache.js
-// SKANDI Backend Base 1.0 — bounded in-memory TTL cache for read-only metadata.
+// SKANDI Backend Base 1.0 — bounded in-memory TTL cache for read-only metadata. 
 
 export class TtlCache {
   constructor({ ttlMs = 300000, maxEntries = 100 } = {}) {
