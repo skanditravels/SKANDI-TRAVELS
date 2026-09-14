@@ -1,4 +1,4 @@
-// /src/pages/ALTEA Reservations.ly2n8.js
+// /src/pages/Reservations.ly2n8.js
 // SKANDI Backend Base 1.0 — B-007.1 ALTEA Reservations page convergence.
 //
 // Wix page boundary only.
@@ -7,14 +7,17 @@
 //
 // HTML Embed: #alteaReservationsEmbed
 
+
 import wixLocation from "wix-location-frontend";
 import { handleReservationsAction } from "backend/SKANDI_CORE/reservations.web";
+
 
 const EMBED_ID = "#alteaReservationsEmbed";
 const STAFF_LOGIN_PATH = "/riaintra";
 const CHILD_SOURCE = "SKANDI_DUFFEL_RESERVATIONS";
 const PARENT_SOURCE = "SKANDI_WIX_PARENT";
 const VERSION = "BACKEND-BASE-1.0-B007.1";
+
 
 function parse(value) {
   if (typeof value === "string") {
@@ -27,15 +30,18 @@ function parse(value) {
   return value && typeof value === "object" ? value : null;
 }
 
+
 function cleanRequestId(value) {
   const requestId = String(value || "");
   return /^[A-Za-z0-9_-]{1,100}$/.test(requestId) ? requestId : "";
 }
 
+
 function cleanActionType(value) {
   const type = String(value || "").trim().toUpperCase();
   return /^[A-Z0-9_]{3,100}$/.test(type) ? type : "";
 }
+
 
 function postToEmbed(embed, type, payload = {}, requestId = "") {
   embed.postMessage({
@@ -47,6 +53,7 @@ function postToEmbed(embed, type, payload = {}, requestId = "") {
   });
 }
 
+
 function errorCode(error) {
   const raw = String(
     error?.code ||
@@ -55,8 +62,10 @@ function errorCode(error) {
     "ALTEA_ACTION_FAILED"
   ).toUpperCase();
 
+
   return raw.match(/[A-Z][A-Z0-9_]{2,80}/)?.[0] || "ALTEA_ACTION_FAILED";
 }
+
 
 function publicMessage(error, fallback = "The reservation action could not be completed.") {
   const raw =
@@ -66,13 +75,16 @@ function publicMessage(error, fallback = "The reservation action could not be co
     error?.message ||
     fallback;
 
+
   const text = String(raw).trim();
   if (!text || /unable to handle the request/i.test(text)) {
     return fallback;
   }
 
+
   return text.slice(0, 600);
 }
+
 
 function progressFor(type) {
   const messages = {
@@ -107,18 +119,22 @@ function progressFor(type) {
     ALTEA_SEND_MANIFEST: "Generating operations manifest…"
   };
 
+
   return messages[type] || "";
 }
+
 
 function isProviderAction(type) {
   return type.startsWith("DUFFEL_");
 }
+
 
 async function dispatchAction(type, payload = {}) {
   const result = await handleReservationsAction({
     type,
     payload
   });
+
 
   return {
     responseType: String(result?.responseType || ""),
@@ -129,16 +145,20 @@ async function dispatchAction(type, payload = {}) {
   };
 }
 
+
 $w.onReady(() => {
   const embed = $w(EMBED_ID);
+
 
   // Listener must be registered before the parent-ready handshake.
   embed.onMessage(async (event) => {
     const input = parse(event?.data);
 
+
     if (!input || input.source !== CHILD_SOURCE) {
       return;
     }
+
 
     const type = cleanActionType(input.type);
     const payload =
@@ -147,9 +167,11 @@ $w.onReady(() => {
         : {};
     const requestId = cleanRequestId(input.requestId);
 
+
     if (!type) {
       return;
     }
+
 
     if (type === "MASTER_NAVIGATE") {
       const path = String(payload?.path || input?.path || "").trim();
@@ -158,6 +180,7 @@ $w.onReady(() => {
       }
       return;
     }
+
 
     const progress = progressFor(type);
     if (progress) {
@@ -169,8 +192,10 @@ $w.onReady(() => {
       );
     }
 
+
     try {
       const result = await dispatchAction(type, payload);
+
 
       if (!result.responseType) {
         throw Object.assign(
@@ -182,6 +207,7 @@ $w.onReady(() => {
         );
       }
 
+
       postToEmbed(
         embed,
         result.responseType,
@@ -192,11 +218,13 @@ $w.onReady(() => {
       const code = errorCode(error);
       const providerAction = isProviderAction(type);
 
+
       console.error("[ALTEA B-007.1]", {
         type,
         code,
         message: String(error?.message || "")
       });
+
 
       postToEmbed(
         embed,
@@ -214,11 +242,13 @@ $w.onReady(() => {
         requestId
       );
 
+
       if (code === "AUTH_REQUIRED") {
         wixLocation.to(STAFF_LOGIN_PATH);
       }
     }
   });
+
 
   // Parent handshake only after the listener exists.
   postToEmbed(embed, "DUFFEL_PARENT_READY", {
