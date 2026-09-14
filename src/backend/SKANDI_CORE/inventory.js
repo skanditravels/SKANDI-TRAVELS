@@ -1,6 +1,6 @@
 // /src/backend/SKANDI_CORE/inventory.js
 // SKANDI Inventory Control — canonical business logic.
-// R-003.13 runtime compatibility convergence.
+// R-003.13 runtime compatibility convergence. 
 // Preserves the complete Inventory/provider surface while using the proven R-003.9.2 staff-session contract.
 // No webMethod wrappers, no routes, no UI code.
 
