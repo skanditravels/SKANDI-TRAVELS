@@ -1,6 +1,6 @@
 // /src/backend/SKANDI_CORE/travelReference.web.js
 // SKANDI Backend Base 1.0 — B-004 public-safe travel-reference web boundary.
-// No raw Duffel credentials, commercial mutations, or Inventory writes are exposed here.
+// No raw Duffel credentials, commercial mutations, or Inventory writes are exposed here. 
 
 import { Permissions, webMethod } from "@wix/web-methods";
 import {
