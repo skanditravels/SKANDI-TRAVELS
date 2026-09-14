@@ -1,5 +1,5 @@
 // /src/backend/SKANDI_CORE/staffAuth.web.js
-// SKANDI Backend Base 1.0 — only frontend-callable staff-auth boundary.
+// SKANDI Backend Base 1.0 — only frontend-callable staff-auth boundary. 
 
 import { Permissions, webMethod } from "@wix/web-methods";
 import {
