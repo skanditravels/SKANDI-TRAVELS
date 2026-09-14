@@ -2,18 +2,23 @@
 // Popup name: Language & Currency
 // HTML Component ID: #languageCurrencyPopupHtml
 
+
 import wixWindowFrontend from "wix-window-frontend";
 import { local } from "wix-storage-frontend";
+
 
 const HTML_ID = "#languageCurrencyPopupHtml";
 const CHILD_SOURCE = "SKANDI_LANGUAGE_CURRENCY_POPUP";
 const PARENT_SOURCE = "SKANDI_WIX_POPUP";
 
+
 const STORAGE_KEY = "skandi_user_settings";
 const LANGUAGES = new Set(["EN","SV","NO","DA"]);
 const CURRENCIES = new Set(["USD","SEK","NOK","DKK","EUR"]);
 
+
 let html = null;
+
 
 function normalize(value = {}, requireValid = false) {
   const source =
@@ -21,21 +26,26 @@ function normalize(value = {}, requireValid = false) {
       ? value.settings
       : value;
 
+
   const language =
     String(source?.language || "")
       .trim()
       .toUpperCase();
+
 
   const currency =
     String(source?.currency || "")
       .trim()
       .toUpperCase();
 
+
   const languageValid =
     LANGUAGES.has(language);
 
+
   const currencyValid =
     CURRENCIES.has(currency);
+
 
   if (
     requireValid &&
@@ -47,11 +57,13 @@ function normalize(value = {}, requireValid = false) {
     return null;
   }
 
+
   return {
     language:
       languageValid
         ? language
         : "EN",
+
 
     currency:
       currencyValid
@@ -60,17 +72,21 @@ function normalize(value = {}, requireValid = false) {
   };
 }
 
+
 function readStored() {
   try {
     const raw =
       local.getItem(STORAGE_KEY);
 
+
     if (!raw) {
       return null;
     }
 
+
     const parsed =
       JSON.parse(raw);
+
 
     if (
       !parsed ||
@@ -78,6 +94,7 @@ function readStored() {
     ) {
       return null;
     }
+
 
     return normalize(
       parsed,
@@ -88,6 +105,7 @@ function readStored() {
   }
 }
 
+
 function writeStored(settings) {
   const value =
     normalize(
@@ -95,11 +113,13 @@ function writeStored(settings) {
       true
     );
 
+
   if (!value) {
     throw new Error(
       "INVALID_CUSTOMER_SETTINGS"
     );
   }
+
 
   local.setItem(
     STORAGE_KEY,
@@ -112,14 +132,17 @@ function writeStored(settings) {
     })
   );
 
+
   return value;
 }
+
 
 function popupContext() {
   try {
     const context =
       wixWindowFrontend.lightbox
         .getContext() || {};
+
 
     return (
       context &&
@@ -132,6 +155,7 @@ function popupContext() {
   }
 }
 
+
 function post(type, payload = {}) {
   if (
     !html ||
@@ -139,6 +163,7 @@ function post(type, payload = {}) {
   ) {
     return;
   }
+
 
   html.postMessage({
     source:PARENT_SOURCE,
@@ -148,9 +173,11 @@ function post(type, payload = {}) {
   });
 }
 
+
 function sendBootstrap() {
   const context =
     popupContext();
+
 
   const value =
     normalize(
@@ -160,22 +187,27 @@ function sendBootstrap() {
       {}
     );
 
+
   post(
     "SETTINGS_POPUP_BOOTSTRAP",
     value
   );
 }
 
+
 $w.onReady(function () {
   const context =
     popupContext();
 
+
   const stored =
     readStored();
+
 
   const openedByMaster =
     context?.source ===
     "SKANDI_MASTERPAGE";
+
 
   // If Wix is still configured to auto-display this popup, do not
   // show it again after a confirmed preference already exists.
@@ -189,8 +221,10 @@ $w.onReady(function () {
       ...stored
     });
 
+
     return;
   }
+
 
   try {
     html =
@@ -203,9 +237,11 @@ $w.onReady(function () {
     return;
   }
 
+
   html.onMessage(async event => {
     const message =
       event?.data || {};
+
 
     if (
       message.source !==
@@ -214,11 +250,13 @@ $w.onReady(function () {
       return;
     }
 
+
     try {
       switch (message.type) {
         case "SETTINGS_POPUP_READY":
           sendBootstrap();
           return;
+
 
         case "SETTINGS_POPUP_SAVE": {
           const settings =
@@ -226,13 +264,16 @@ $w.onReady(function () {
               message.payload || {}
             );
 
+
           wixWindowFrontend.lightbox.close({
             ok:true,
             ...settings
           });
 
+
           return;
         }
+
 
         default:
           return;
@@ -243,6 +284,7 @@ $w.onReady(function () {
         error
       );
 
+
       post(
         "SETTINGS_POPUP_ERROR",
         {
@@ -252,6 +294,7 @@ $w.onReady(function () {
       );
     }
   });
+
 
   setTimeout(
     sendBootstrap,
