@@ -1,3 +1,4 @@
+import { SITE_MAP } from "public/siteMap.js";
 // /src/backend/SKANDI_CORE/staffAuth.js
 // SKANDI Backend Base 1.0 — canonical staff identity + authorization core.
 // B-002
@@ -10,6 +11,7 @@
 //   org_permission_presets -> permissions/apps/groups/management flags
 //
 // Job titles and departments NEVER grant system permissions by themselves.
+
 
 import { authentication, currentMember } from "wix-members-backend";
 import { restRequest } from "backend/SKANDI_CORE/supabaseServer.js";
@@ -28,29 +30,33 @@ import {
 } from "backend/SKANDI_CORE/platformValidation.js";
 import { tryWriteStaffLoginAudit } from "backend/SKANDI_CORE/platformAudit.js";
 
+
 const AGENT_TABLE = "agent_users";
 const ASSIGNMENT_TABLE = "org_employee_assignments";
 const ACCESS_ROLE_TABLE = "org_access_roles";
 const PRESET_TABLE = "org_permission_presets";
 
+
 const BLOCKED_EMPLOYMENT = new Set(["TERMINATED", "SUSPENDED", "FURLOUGHED", "INACTIVE"]);
 const PRIVILEGED_ACCESS_ROLES = new Set(["SUPER_ADMIN", "OWNER", "COMPANY_OWNER"]);
 const controlCache = new TtlCache({ ttlMs: 5 * 60 * 1000, maxEntries: 50 });
 
+
 const APP_CATALOG = Object.freeze({
-  altea: Object.freeze({ id:"altea", title:"ALTEA Operations", subtitle:"Reservations, DCS and destination operations", path:"/riaintra/success-factors/altea", group:"Operations", icon:"A" }),
-  mail: Object.freeze({ id:"mail", title:"H-Mail", subtitle:"Internal messages and station notices", path:"/riaintra/success-factors/mail", group:"Communication", icon:"M" }),
+  altea: Object.freeze({ id:"altea", title:"ALTEA Operations", subtitle:"Reservations, DCS and destination operations", path:SITE_MAP.alteaLaunchpad, group:"Operations", icon:"A" }),
+  mail: Object.freeze({ id:"mail", title:"H-Mail", subtitle:"Internal messages and station notices", path:SITE_MAP.mail, group:"Communication", icon:"M" }),
   grouptalk: Object.freeze({ id:"grouptalk", title:"GroupTalk", subtitle:"Operational communication and team channels", path:"/riaintra/success-factors/altea/grouptalk", group:"Communication", icon:"G" }),
   uniform: Object.freeze({ id:"uniform", title:"Uniform Center", subtitle:"Uniform orders and staff issue", path:"/riaintra/uniform", group:"MyProfile", icon:"U" }),
   myroster: Object.freeze({ id:"myroster", title:"MyRoster", subtitle:"Shifts, duties and assignments", path:"/riaintra/success-factors/my-roster", group:"MyProfile", icon:"R" }),
-  payroll: Object.freeze({ id:"payroll", title:"Pay & Time", subtitle:"Payroll and staff pay information", path:"/riaintra/success-factors/my-payroll", group:"MyProfile", icon:"P" }),
+  payroll: Object.freeze({ id:"payroll", title:"Pay & Time", subtitle:"Payroll and staff pay information", path:SITE_MAP.payroll, group:"MyProfile", icon:"P" }),
   "inventory-control": Object.freeze({ id:"inventory-control", title:"Inventory Control", subtitle:"Product, capacity and aircraft inventory", path:"/riaintra/success-factors/altea/inventory-control", group:"Administration", icon:"I" }),
-  hr: Object.freeze({ id:"hr", title:"SuccessFactors", subtitle:"Staff and organization management", path:"/riaintra/success-factors", group:"Administration", icon:"H" }),
+  hr: Object.freeze({ id:"hr", title:"SuccessFactors", subtitle:"Staff and organization management", path:SITE_MAP.successFactors, group:"Administration", icon:"H" }),
   policies: Object.freeze({ id:"policies", title:"Policy Control", subtitle:"Internal policies and controlled documents", path:"/riaintra/success-factors/legal", group:"Administration", icon:"P" })
 });
 
+
 const ALTEA_APPS = Object.freeze([
-  Object.freeze({ id:"ardw", title:"Amadeus Altéa Reservation Desktop Web (ARDW)", description:"Create and service passenger name records, air segments, ancillary services, and customer itineraries.", icon:"plane", code:"RESERVATIONS", accent:"#005eb8", path:"/riaintra/success-factors/altea/reservations", groups:Object.freeze(["sales","operations","occ","destination","system-admin"]) }),
+  Object.freeze({ id:"ardw", title:"Amadeus Altéa Reservation Desktop Web (ARDW)", description:"Create and service passenger name records, air segments, ancillary services, and customer itineraries.", icon:"plane", code:"RESERVATIONS", accent:"#005eb8", path:SITE_MAP.alteaReservations, groups:Object.freeze(["sales","operations","occ","destination","system-admin"]) }),
   Object.freeze({ id:"inventory", title:"Amadeus Altéa Inventory", description:"Manage SKANDI flight, product, capacity, aircraft and inventory controls.", icon:"inventory", code:"INVENTORY", accent:"#006f8f", path:"/riaintra/success-factors/altea/inventory-control", requiredApp:"inventory-control", groups:Object.freeze(["inventory","system-admin"]) }),
   Object.freeze({ id:"ticketing", title:"Amadeus Ticketing Platform", description:"Issue, revalidate, exchange, refund and audit electronic tickets and EMD transactions.", icon:"barcode", code:"TICKETING", accent:"#3155a6", path:"/riaintra/success-factors/altea/ticketing", groups:Object.freeze(["sales","operations","occ","system-admin"]) }),
   Object.freeze({ id:"pss-dcs", title:"Amadeus Altéa Passenger Service System (PSS / DCS)", description:"Run check-in, seating, baggage, boarding and departure-control workflows.", icon:"passenger", code:"PSS / DCS", accent:"#007a64", path:"/riaintra/success-factors/altea/departure-control", groups:Object.freeze(["airport","operations","occ","system-admin"]) }),
@@ -59,9 +65,11 @@ const ALTEA_APPS = Object.freeze([
   Object.freeze({ id:"occ", title:"OCC (Operations Control Center)", description:"Coordinate flights, disruptions, operational recovery and network control.", icon:"arrow", code:"OPERATIONS CONTROL", accent:"#6650a4", path:"/riaintra/success-factors/altea/occ", groups:Object.freeze(["operations","occ","system-admin"]) })
 ]);
 
+
 function memberId(member = {}) {
   return text(member?._id || member?.id, 160);
 }
+
 
 function memberEmail(member = {}) {
   const emails = member?.contactDetails?.emails;
@@ -74,6 +82,7 @@ function memberEmail(member = {}) {
     member?.email
   );
 }
+
 
 function agentSelect() {
   return [
@@ -88,15 +97,18 @@ function agentSelect() {
   ].join(",");
 }
 
+
 function safeOrValue(value) {
   const clean = text(value, 320);
   return /[(),]/.test(clean) ? "" : clean;
 }
 
+
 function isTransientReadError(error) {
   const status = Number(error?.status || 0);
   return isTransientHttpStatus(status) || /SUPABASE_(NETWORK_ERROR|HTTP_(429|502|503|504))/.test(errorCode(error));
 }
+
 
 async function select(table, query = {}) {
   const started = Date.now();
@@ -113,6 +125,7 @@ async function select(table, query = {}) {
   }
 }
 
+
 async function currentWixMember() {
   try {
     return await currentMember.getMember({ fieldsets:["FULL"] }) || null;
@@ -120,6 +133,7 @@ async function currentWixMember() {
     return null;
   }
 }
+
 
 async function findAgentBySkId(skId) {
   const value = normalizeSkId(skId);
@@ -131,6 +145,7 @@ async function findAgentBySkId(skId) {
   }));
 }
 
+
 async function findAgentByMember(member = {}) {
   const wixId = safeOrValue(memberId(member));
   const wixEmail = safeOrValue(memberEmail(member));
@@ -139,12 +154,14 @@ async function findAgentByMember(member = {}) {
   if (wixEmail) filters.push(`corporate_email_address.ilike.${wixEmail}`, `email.ilike.${wixEmail}`);
   if (!filters.length) return null;
 
+
   // Deliberately ONE identity request. Do not reintroduce serial probes.
   const rows = await select(AGENT_TABLE, {
     select: agentSelect(),
     or: `(${filters.join(",")})`,
     limit: 8
   });
+
 
   if (wixId) {
     const direct = rows.find((row) => text(row?.wix_member_id, 160) === wixId) ||
@@ -158,6 +175,7 @@ async function findAgentByMember(member = {}) {
   return null;
 }
 
+
 function assertIdentity(agent) {
   if (!agent) throw new SkandiError("STAFF_PROFILE_NOT_FOUND");
   if (agent.active !== true) throw new SkandiError("STAFF_PROFILE_INACTIVE");
@@ -167,15 +185,18 @@ function assertIdentity(agent) {
   if (BLOCKED_EMPLOYMENT.has(status)) throw new SkandiError(`STAFF_EMPLOYMENT_${status}`);
 }
 
+
 async function syncMemberLink(agent, member) {
   const wixId = memberId(member);
   if (!agent?.id || !wixId) return agent;
+
 
   const existingWix = text(agent.wix_member_id, 160);
   const existingMember = text(agent.member_id, 160);
   if ((existingWix && existingWix !== wixId) || (existingMember && existingMember !== wixId)) {
     throw new SkandiError("WIX_MEMBER_LINK_MISMATCH");
   }
+
 
   const now = new Date();
   const lastLogin = Date.parse(text(agent.last_login_at, 80));
@@ -188,6 +209,7 @@ async function syncMemberLink(agent, member) {
   if (!Object.keys(patch).length) return agent;
   patch.updated_at = now.toISOString();
 
+
   const rows = await restRequest({
     table: AGENT_TABLE,
     method: "PATCH",
@@ -196,6 +218,7 @@ async function syncMemberLink(agent, member) {
   });
   return firstRow(rows) || { ...agent, ...patch };
 }
+
 
 async function loadAssignment(agentId) {
   const id = text(agentId, 80);
@@ -213,6 +236,7 @@ async function loadAssignment(agentId) {
   return rows.find((row) => row?.active === true) || null;
 }
 
+
 async function loadAccessRole(code) {
   const key = upper(code, 80);
   if (!key) return null;
@@ -222,6 +246,7 @@ async function loadAccessRole(code) {
     limit: 1
   })));
 }
+
 
 async function loadPreset(id) {
   const key = text(id, 100);
@@ -233,14 +258,17 @@ async function loadPreset(id) {
   })));
 }
 
+
 async function resolveAuthorization(agent) {
   assertIdentity(agent);
   const assignment = await loadAssignment(agent.id);
   const accessRoleCode = upper(assignment?.access_role || agent.access_role || agent.role, 80);
   if (!accessRoleCode) throw new SkandiError("STAFF_ACCESS_ROLE_MISSING");
 
+
   const accessRole = await loadAccessRole(accessRoleCode);
   if (!accessRole || accessRole.active !== true) throw new SkandiError("STAFF_ACCESS_ROLE_INVALID");
+
 
   const presetId = text(
     assignment?.permission_preset_id || accessRole.preset_id || agent.permission_preset,
@@ -248,8 +276,10 @@ async function resolveAuthorization(agent) {
   );
   if (!presetId) throw new SkandiError("STAFF_PERMISSION_PRESET_MISSING");
 
+
   const preset = await loadPreset(presetId);
   if (!preset || preset.active !== true) throw new SkandiError("STAFF_PERMISSION_PRESET_INVALID");
+
 
   return {
     assignment,
@@ -270,6 +300,7 @@ async function resolveAuthorization(agent) {
   };
 }
 
+
 function displayName(agent = {}) {
   return text(
     agent.preferred_name ||
@@ -279,6 +310,7 @@ function displayName(agent = {}) {
     180
   );
 }
+
 
 function publicProfile(agent, auth) {
   const assignment = auth.assignment || {};
@@ -325,10 +357,12 @@ function publicProfile(agent, auth) {
   };
 }
 
+
 function isWildcardAllowed(values = []) {
   const set = new Set(stringArray(values).map((value) => lower(value, 100)));
   return set.has("*") || set.has("all");
 }
+
 
 function portalApps(auth) {
   const allowed = new Set(auth.allowedApps.map((value) => lower(value, 100)));
@@ -338,12 +372,14 @@ function portalApps(auth) {
     .map((app) => ({ ...app }));
 }
 
+
 function alteaApps(session) {
   const allowedApps = new Set(stringArray(session.allowedApps).map((value) => lower(value, 100)));
   const keys = new Set(stringArray(session.permissionKeys).map((value) => lower(value, 100)));
   const groups = new Set(stringArray(session.permissionGroups).map((value) => lower(value, 100)));
   const privileged = PRIVILEGED_ACCESS_ROLES.has(upper(session.accessRole, 80)) || session.isSystemAdmin === true || groups.has("system-admin") || isWildcardAllowed(session.allowedApps);
   const alteaAllowed = privileged || allowedApps.has("altea") || keys.has("altea");
+
 
   return ALTEA_APPS.filter((app) => {
     if (privileged) return true;
@@ -365,6 +401,7 @@ function alteaApps(session) {
     path: app.path
   }));
 }
+
 
 function unauthorized({ loggedIn = false, reason = "STAFF_AUTH_REQUIRED" } = {}) {
   return {
@@ -389,6 +426,7 @@ function unauthorized({ loggedIn = false, reason = "STAFF_AUTH_REQUIRED" } = {})
     isSystemAdmin: false
   };
 }
+
 
 function authorized(agent, auth) {
   const profile = publicProfile(agent, auth);
@@ -422,10 +460,12 @@ function authorized(agent, auth) {
   };
 }
 
+
 function loginToken(result) {
   if (typeof result === "string") return text(result, 8000);
   return text(result?.sessionToken || result?.session_token || result?.token, 8000);
 }
+
 
 function publicLoginMessage(code) {
   const map = {
@@ -441,6 +481,7 @@ function publicLoginMessage(code) {
   return map[code] || "The SK-ID or password could not be verified.";
 }
 
+
 export async function loginStaffWithSkIdCore({ skId, password } = {}) {
   const cleanSkId = normalizeSkId(skId);
   const cleanPassword = typeof password === "string" ? password : "";
@@ -449,6 +490,7 @@ export async function loginStaffWithSkIdCore({ skId, password } = {}) {
   }
   if (!cleanPassword.trim()) throw new SkandiError("STAFF_PASSWORD_REQUIRED", "Password is required.", { publicMessage:"Enter your password." });
   if (cleanPassword.length > 256) throw new SkandiError("STAFF_PASSWORD_TOO_LONG", "Password is too long.");
+
 
   let agent = null;
   let loginEmail = "";
@@ -459,8 +501,10 @@ export async function loginStaffWithSkIdCore({ skId, password } = {}) {
     loginEmail = email(agent.corporate_email_address || agent.email);
     if (!loginEmail) throw new SkandiError("STAFF_LOGIN_EMAIL_MISSING");
 
+
     const token = loginToken(await authentication.login(loginEmail, cleanPassword));
     if (!token) throw new SkandiError("WIX_SESSION_TOKEN_MISSING");
+
 
     await tryWriteStaffLoginAudit({
       agentUserId: agent.id,
@@ -469,6 +513,7 @@ export async function loginStaffWithSkIdCore({ skId, password } = {}) {
       eventType: "STAFF_LOGIN_OK",
       success: true
     });
+
 
     const session = authorized(agent, auth);
     return {
@@ -500,9 +545,11 @@ export async function loginStaffWithSkIdCore({ skId, password } = {}) {
   }
 }
 
+
 export async function getStaffPortalSessionCore() {
   const member = await currentWixMember();
   if (!member) return unauthorized({ loggedIn:false, reason:"STAFF_AUTH_REQUIRED" });
+
 
   try {
     let agent = await findAgentByMember(member);
@@ -518,12 +565,14 @@ export async function getStaffPortalSessionCore() {
   }
 }
 
+
 export async function requireStaffPortalSessionCore() {
   const session = await getStaffPortalSessionCore();
   if (!session.loggedIn) throw new SkandiError("STAFF_AUTH_REQUIRED");
   if (!session.authorized) throw new SkandiError(session.reason || "STAFF_ACCESS_DENIED");
   return session;
 }
+
 
 export async function getPortalAppsCore() {
   const session = await requireStaffPortalSessionCore();
@@ -539,6 +588,7 @@ export async function getPortalAppsCore() {
     canManage:session.canManage
   };
 }
+
 
 export async function getAlteaLaunchpadAppsCore() {
   const session = await requireStaffPortalSessionCore();
