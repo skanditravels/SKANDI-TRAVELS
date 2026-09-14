@@ -21,6 +21,7 @@ export async function markBookingReconciliationRequired(context, row, details = 
   const payload = {
     ...(row.payload || {}),
     ...(details.airOrder ? { airOrder: details.airOrder } : {}),
+    ...(details.stayBooking ? { stayBooking: details.stayBooking } : {}),
     payment: {
       ...(row.payload?.payment || {}),
       status: details.paymentStatus || row.payload?.payment?.status || "authorization_held"
@@ -56,8 +57,9 @@ export async function voidUnusedAuthorization(row) {
 }
 
 export async function reconcileFlightCart(context, row) {
-  if (!row?.selected_offer_id) throw bookingError("BOOKING_RECONCILIATION_UNAVAILABLE", "This cart has no airline offer to reconcile.", 409);
-  const result = await getDuffelOrderByOfferCore({ offerId: row.selected_offer_id });
+  const offerId = row?.payload?.flightOfferId || row?.payload?.selectedOffer?.id || row?.payload?.selectedOffer?.offerId || row?.selected_offer_id;
+  if (!offerId || !String(offerId).startsWith("off_")) throw bookingError("BOOKING_RECONCILIATION_UNAVAILABLE", "This cart has no airline offer to reconcile.", 409);
+  const result = await getDuffelOrderByOfferCore({ offerId });
   if (!result.order?.id) {
     return { resolved: false, cart: row, message: "No Duffel order is visible for this offer yet." };
   }
