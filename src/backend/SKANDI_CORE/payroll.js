@@ -1,7 +1,7 @@
 // /src/backend/SKANDI_CORE/payroll.js
 // SKANDI Backend Base 1.0 — B-008
 // Canonical Payroll business core.
-//
+// 
 // Payroll is the only owner of payroll setup, rates, periods, runs, line amounts,
 // adjustments and provider-export state. SuccessFactors may synchronize only the
 // derived employee/jurisdiction mirror needed to place an employee in Payroll.
