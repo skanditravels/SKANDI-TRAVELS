@@ -5,14 +5,18 @@
 // This file owns credentials, allowlists and raw REST/RPC/Storage transport only.
 // It must never contain domain authorization, Inventory logic, ALTEA logic, or UI state.
 
+
+import { Buffer } from "buffer";
 import { secrets } from "wix-secrets-backend.v2";
 import { elevate } from "wix-auth";
 import { fetch } from "wix-fetch";
 import { SkandiError, isTransientHttpStatus } from "backend/SKANDI_CORE/platformErrors.js";
 import { text } from "backend/SKANDI_CORE/platformValidation.js";
 
+
 const getSecretValue = elevate(secrets.getSecretValue);
 const HTTP_METHODS = new Set(["GET", "POST", "PATCH", "PUT", "DELETE", "HEAD"]);
+
 
 const REST_OBJECTS = new Set([
   // Identity / organization / HR
@@ -21,20 +25,24 @@ const REST_OBJECTS = new Set([
   "org_employee_assignments", "org_job_roles", "org_permission_presets",
   "org_role_base_rules", "hr_base_jurisdictions", "hr_country_rules", "hr_role_requirements",
 
+
   // Payroll
   "staff_payroll_adjustments", "staff_payroll_periods", "staff_payroll_profiles",
   "staff_payroll_provider_exports", "staff_payroll_run_lines", "staff_payroll_runs",
   "staff_payroll_settings",
+
 
   // GroupTalk
   "grouptalk_audit", "grouptalk_group_members", "grouptalk_groups", "grouptalk_history",
   "grouptalk_locations", "grouptalk_phonebook", "grouptalk_realtime_sessions",
   "grouptalk_ticket_categories", "grouptalk_ticket_replies", "grouptalk_tickets",
 
+
   // Uniform
   "uniform_allowance_rules", "uniform_audit", "uniform_catalog_items", "uniform_categories",
   "uniform_order_items", "uniform_orders", "uniform_policies", "uniform_policy_acknowledgements",
   "uniform_storage_assets", "uniform_wallet_ledger", "uniform_wallets",
+
 
   // Inventory
   "inventory_master_entities", "inventory_localized_content", "inventory_media_assets",
@@ -46,8 +54,10 @@ const REST_OBJECTS = new Set([
   "partner_ticket_inventory", "travel_products", "travel_product_components",
   "travel_product_price_cache", "master_inventory_audit",
 
+
   // Platform assets
   "platform_assets", "platform_asset_usages", "platform_asset_upload_sessions",
+
 
   // Travel Info / reference
   "travel_info_airlines", "travel_info_airports", "travel_info_articles", "travel_info_faq",
@@ -57,10 +67,12 @@ const REST_OBJECTS = new Set([
   "travel_info_aircraft_hotspots", "travel_info_aircraft_walk_scenes",
   "travel_info_aircraft_scene_hotspots",
 
+
   // Customer / loyalty / booking carts
   "customer_profiles", "customer_profiles_booking_links", "club_profiles", "club_tiers", "skandi_points_ledger",
   "customer_favorites", "customer_travelers", "customer_travel_documents",
   "booking_carts", "booking_cart_items", "payment_events",
+
 
   // ALTEA operational ledger
   "altea_bookings", "altea_booking_components", "altea_booking_documents", "altea_documents",
@@ -68,9 +80,11 @@ const REST_OBJECTS = new Set([
   "altea_pnr_history", "altea_queue_items", "altea_search_logs", "altea_segments",
   "altea_sync_events", "operational_manifests", "travel_requirements",
 
+
   // Internal mail
   "internal_mail_accounts", "internal_mail_threads", "internal_mail_messages",
   "internal_mail_recipients", "internal_mail_entries", "internal_mail_attachments", "internal_mail_events",
+
 
   // Transitional data objects that remain real database objects until their domain rebuild
   "amadeus_offer_cache", "career_applicant_accounts", "career_applicant_access_codes",
@@ -79,14 +93,19 @@ const REST_OBJECTS = new Set([
   "docunet_audit_events", "docunet_categories", "docunet_distributions", "docunet_documents",
   "docunet_receipts", "docunet_revisions", "docunet_upload_sessions",
 
+
   // Shared language/country reference objects used by customer profile and content services
-  "countries_list", "languages"
+  "countries_list", "languages", "storefront_promotions"
 ]);
+
 
 const RPC_FUNCTIONS = new Set([
   "inventory_altea_add_component_v9",
-  "inventory_altea_release_component_v9"
+  "inventory_altea_release_component_v9",
+  "get_public_about_payload",
+  "get_public_network_map_payload"
 ]);
+
 
 const STORAGE_BUCKETS = Object.freeze({
   "skandi-public-assets": Object.freeze({ public: true, write: true }),
@@ -98,13 +117,16 @@ const STORAGE_BUCKETS = Object.freeze({
   "internal-mail-attachments": Object.freeze({ public: false, write: false })
 });
 
+
 let serverConfigPromise = null;
 let browserConfigPromise = null;
+
 
 function secretValue(result) {
   if (typeof result === "string") return result.trim();
   return text(result?.value ?? result?.secretValue ?? result?.secret?.value ?? "", 10000);
 }
+
 
 async function readSecret(name, { optional = false } = {}) {
   try {
@@ -117,6 +139,7 @@ async function readSecret(name, { optional = false } = {}) {
   }
 }
 
+
 function normalizeBaseUrl(value) {
   const baseUrl = text(value, 1000).replace(/\/+$/, "");
   if (!/^https:\/\/[^/]+\.supabase\.co$/i.test(baseUrl)) {
@@ -125,12 +148,14 @@ function normalizeBaseUrl(value) {
   return baseUrl;
 }
 
+
 function keyType(key) {
   if (key.startsWith("sb_secret_")) return "modern-secret";
   if (key.startsWith("sb_publishable_")) return "modern-publishable";
   if (key.split(".").length === 3) return "legacy-jwt";
   return "api-key";
 }
+
 
 async function serverConfig() {
   if (serverConfigPromise) return serverConfigPromise;
@@ -151,6 +176,7 @@ async function serverConfig() {
     throw error;
   }
 }
+
 
 async function browserConfig() {
   if (browserConfigPromise) return browserConfigPromise;
@@ -173,6 +199,7 @@ async function browserConfig() {
   }
 }
 
+
 function queryString(query = {}) {
   const parts = [];
   for (const [key, raw] of Object.entries(query || {})) {
@@ -182,6 +209,7 @@ function queryString(query = {}) {
   }
   return parts.length ? `?${parts.join("&")}` : "";
 }
+
 
 function requestHeaders({ apiKey, type, prefer = "", extra = {} }) {
   const headers = {
@@ -197,6 +225,7 @@ function requestHeaders({ apiKey, type, prefer = "", extra = {} }) {
   return headers;
 }
 
+
 function safeProviderError(payload) {
   return {
     code: text(payload?.code, 120),
@@ -206,9 +235,11 @@ function safeProviderError(payload) {
   };
 }
 
-async function jsonRequest({ path, method = "GET", body, prefer = "return=representation", extraHeaders = {} }) {
+
+async function jsonRequest({ path, method = "GET", body, rawBody = false, prefer = "return=representation", extraHeaders = {} }) {
   const normalizedMethod = text(method, 12).toUpperCase();
   if (!HTTP_METHODS.has(normalizedMethod)) throw new SkandiError("SUPABASE_METHOD_NOT_ALLOWED");
+
 
   const { baseUrl, apiKey, type } = await serverConfig();
   let response;
@@ -216,7 +247,7 @@ async function jsonRequest({ path, method = "GET", body, prefer = "return=repres
     response = await fetch(`${baseUrl}${path}`, {
       method: normalizedMethod,
       headers: requestHeaders({ apiKey, type, prefer, extra: extraHeaders }),
-      body: body === undefined ? undefined : JSON.stringify(body)
+      body: body === undefined ? undefined : rawBody ? body : JSON.stringify(body)
     });
   } catch (error) {
     throw new SkandiError("SUPABASE_NETWORK_ERROR", "Supabase could not be reached.", {
@@ -224,6 +255,7 @@ async function jsonRequest({ path, method = "GET", body, prefer = "return=repres
       details: { cause: text(error?.message || error, 300) }
     });
   }
+
 
   if (normalizedMethod === "HEAD" || response.status === 204) {
     if (!response.ok) {
@@ -234,6 +266,7 @@ async function jsonRequest({ path, method = "GET", body, prefer = "return=repres
     }
     return null;
   }
+
 
   const raw = await response.text();
   let payload = null;
@@ -248,6 +281,7 @@ async function jsonRequest({ path, method = "GET", body, prefer = "return=repres
     }
   }
 
+
   if (!response.ok) {
     const safe = safeProviderError(payload);
     console.error("[SKANDI Supabase]", JSON.stringify({
@@ -255,6 +289,7 @@ async function jsonRequest({ path, method = "GET", body, prefer = "return=repres
       path: text(path, 320),
       ...safe
     }));
+
 
     const error = new SkandiError(`SUPABASE_HTTP_${response.status}`, safe.message || "Supabase request failed.", {
       status: response.status,
@@ -265,8 +300,10 @@ async function jsonRequest({ path, method = "GET", body, prefer = "return=repres
     throw error;
   }
 
+
   return payload;
 }
+
 
 function restObject(name) {
   const value = text(name, 120);
@@ -274,11 +311,13 @@ function restObject(name) {
   return value;
 }
 
+
 function rpcName(name) {
   const value = text(name, 120);
   if (!RPC_FUNCTIONS.has(value)) throw new SkandiError("SUPABASE_RPC_NOT_ALLOWED");
   return value;
 }
+
 
 export async function restRequest({
   table,
@@ -296,6 +335,7 @@ export async function restRequest({
   });
 }
 
+
 export async function rpcRequest({ functionName, body = {}, prefer = "return=representation" } = {}) {
   const name = rpcName(functionName);
   return jsonRequest({
@@ -306,6 +346,7 @@ export async function rpcRequest({ functionName, body = {}, prefer = "return=rep
   });
 }
 
+
 function storageBucket(bucket, { write = false } = {}) {
   const name = text(bucket, 120);
   const config = STORAGE_BUCKETS[name];
@@ -314,15 +355,19 @@ function storageBucket(bucket, { write = false } = {}) {
   return { name, ...config };
 }
 
+
 function storagePath(path) {
   const normalized = text(path, 3000).replace(/^\/+|\/+$/g, "");
   if (!normalized) throw new SkandiError("SUPABASE_STORAGE_PATH_REQUIRED");
+  if (normalized.split("/").some(part => part === "." || part === "..")) throw new SkandiError("SUPABASE_STORAGE_PATH_INVALID");
   return normalized.split("/").filter(Boolean).map(encodeURIComponent).join("/");
 }
+
 
 async function storageJson({ path, method = "GET", body, extraHeaders = {} }) {
   return jsonRequest({ path: `/storage/v1${path}`, method, body, prefer: "", extraHeaders });
 }
+
 
 export async function storageCreateSignedUploadUrl({ bucket, path, upsert = false } = {}) {
   const config = storageBucket(bucket, { write: true });
@@ -344,6 +389,7 @@ export async function storageCreateSignedUploadUrl({ bucket, path, upsert = fals
   if (!token) throw new SkandiError("SUPABASE_STORAGE_SIGNED_UPLOAD_TOKEN_MISSING");
   return { bucket: config.name, path: text(path, 3000).replace(/^\/+/, ""), signedUrl, token, public: config.public === true };
 }
+
 
 export async function storageCreateSignedReadUrl({ bucket, path, expiresIn = 600, download = false } = {}) {
   const config = storageBucket(bucket);
@@ -367,6 +413,7 @@ export async function storageCreateSignedReadUrl({ bucket, path, expiresIn = 600
   return { bucket: config.name, path, signedUrl, expiresIn: seconds, public: false };
 }
 
+
 export async function storageGetObjectInfo({ bucket, path } = {}) {
   const config = storageBucket(bucket);
   return storageJson({
@@ -374,6 +421,7 @@ export async function storageGetObjectInfo({ bucket, path } = {}) {
     method: "GET"
   });
 }
+
 
 export async function storageListObjects({ bucket, prefix = "", limit = 100, offset = 0, search = "" } = {}) {
   const config = storageBucket(bucket);
@@ -390,6 +438,7 @@ export async function storageListObjects({ bucket, prefix = "", limit = 100, off
   });
 }
 
+
 export async function storageGetPublicUrl({ bucket, path, download = false } = {}) {
   const config = storageBucket(bucket);
   if (!config.public) throw new SkandiError("SUPABASE_STORAGE_BUCKET_NOT_PUBLIC");
@@ -399,10 +448,12 @@ export async function storageGetPublicUrl({ bucket, path, download = false } = {
   return { publicUrl };
 }
 
+
 export async function getSupabaseRealtimeBrowserConfig() {
   const config = await browserConfig();
   return { url: config.baseUrl, publishableKey: config.publishableKey };
 }
+
 
 export async function getSupabaseServerDiagnostics() {
   const server = await serverConfig();
@@ -415,4 +466,53 @@ export async function getSupabaseServerDiagnostics() {
     allowedRpcFunctions: RPC_FUNCTIONS.size,
     storageBuckets: Object.keys(STORAGE_BUCKETS)
   };
+}
+
+
+// Server-only Supabase Realtime broadcast transport. Domain modules provide only a topic/event/payload;
+// credentials stay inside this shared transport and are never returned to page/frontend code.
+export async function realtimeBroadcast({ topic, event = "broadcast", payload = {} } = {}) {
+  const safeTopic = text(topic, 240);
+  const safeEvent = text(event, 120);
+  if (!safeTopic) throw new SkandiError("SUPABASE_REALTIME_TOPIC_REQUIRED");
+  if (!safeEvent) throw new SkandiError("SUPABASE_REALTIME_EVENT_REQUIRED");
+  const { baseUrl, apiKey, type } = await serverConfig();
+  const headers = { apikey: apiKey, "Content-Type": "application/json" };
+  if (type === "legacy-jwt") headers.Authorization = `Bearer ${apiKey}`;
+  const response = await fetch(`${baseUrl}/realtime/v1/api/broadcast`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({ messages: [{ topic: safeTopic, event: safeEvent, payload }] })
+  });
+  const raw = await response.text().catch(() => "");
+  if (!response.ok) {
+    throw new SkandiError(`SUPABASE_REALTIME_HTTP_${response.status}`, {
+      status: response.status,
+      details: raw.slice(0, 500)
+    });
+  }
+  return { ok: true, topic: safeTopic, event: safeEvent };
+}
+
+
+export async function storageUploadBase64Object({
+  bucket, path, dataBase64, mimeType = "application/octet-stream",
+  maxBytes = 10 * 1024 * 1024, upsert = false
+} = {}) {
+  const config = storageBucket(bucket, { write: true });
+  const cleanPath = text(path, 3000).replace(/^\/+/, "");
+  const encodedPath = storagePath(cleanPath);
+  const raw = String(dataBase64 || "");
+  const payload = (raw.includes(",") ? raw.slice(raw.lastIndexOf(",") + 1) : raw).replace(/\s/g, "");
+  if (!payload || !/^[A-Za-z0-9+/]*={0,2}$/.test(payload) || payload.length % 4 !== 0) throw new SkandiError("SUPABASE_STORAGE_BASE64_INVALID");
+  const bytes = Buffer.from(payload, "base64");
+  const limit = Math.min(25 * 1024 * 1024, Math.max(1, Number(maxBytes) || 1));
+  if (!bytes.length || bytes.length > limit) throw new SkandiError("SUPABASE_STORAGE_OBJECT_SIZE_INVALID");
+  const type = text(mimeType, 150) || "application/octet-stream";
+  const result = await jsonRequest({
+    path: `/storage/v1/object/${encodeURIComponent(config.name)}/${encodedPath}`,
+    method: "POST", rawBody: true, body: bytes, prefer: "",
+    extraHeaders: { "Content-Type": type, "x-upsert": upsert ? "true" : "false" }
+  });
+  return { ok: true, bucket: config.name, path: cleanPath, sizeBytes: bytes.length, mimeType: type, result };
 }
