@@ -1,7 +1,7 @@
 // /src/backend/SKANDI_CORE/orgStructure.js
 // SKANDI Backend Base 1.0 — B-008
 // Canonical SuccessFactors / Employee Central organization core.
-//
+// 
 // Authority boundary:
 // - Organization/job/base/access catalog: org_* + hr_* tables.
 // - Staff identity projection: agent_users.
