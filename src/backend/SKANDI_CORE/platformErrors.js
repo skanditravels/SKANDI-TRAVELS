@@ -1,4 +1,4 @@
-// /src/backend/SKANDI_CORE/platformErrors.js
+// /src/backend/SKANDI_CORE/platformErrors.js 
 // SKANDI Backend Base 1.0 — coded error contract.
 
 import { text } from "backend/SKANDI_CORE/platformValidation.js";
