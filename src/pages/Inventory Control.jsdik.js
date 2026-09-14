@@ -2,12 +2,15 @@
 // SKANDI Inventory Control — R-003.13 runtime recovery page bridge.
 // Preferred HTML component: #inventoryControlEmbed
 
+
 import * as inventoryApi from "backend/SKANDI_CORE/inventoryControl.web";
+
 
 const EMBED_IDS=["#inventoryControlEmbed","#alteaInventoryControlEmbed","#masterInventoryEmbed"];
 const CHILD_SOURCE="SKANDI_INVENTORY_EMBED";
 const PARENT_SOURCE="SKANDI_INVENTORY_PARENT";
 const VERSION="R-003.13";
+
 
 function findEmbed(){
   for(const id of EMBED_IDS){
@@ -30,6 +33,7 @@ let bootstrapSnapshot=null;
 let bootstrapSnapshotAt=0;
 const BOOTSTRAP_REUSE_MS=15000;
 
+
 function requireBackendMethod(name){
   const fn=inventoryApi?.[name];
   if(typeof fn!=="function"){
@@ -41,9 +45,11 @@ function requireBackendMethod(name){
   return fn;
 }
 
+
 function callBackend(name,payload={}){
   return requireBackendMethod(name)(payload);
 }
+
 
 async function loadInventoryBootstrap({force=false}={}){
   if(!force && bootstrapSnapshot && Date.now()-bootstrapSnapshotAt<BOOTSTRAP_REUSE_MS){
@@ -61,10 +67,12 @@ async function loadInventoryBootstrap({force=false}={}){
   return bootstrapPromise;
 }
 
+
 function invalidateBootstrap(){
   bootstrapSnapshot=null;
   bootstrapSnapshotAt=0;
 }
+
 
 function errorPayload(error){
   const code=String(error?.code||error?.message||"INVENTORY_ERROR").slice(0,120);
@@ -97,6 +105,7 @@ function errorPayload(error){
   };
   return{code,message:friendly[code]||String(error?.publicMessage||error?.message||"Inventory request failed.").slice(0,700)};
 }
+
 
 const ACTIONS={
   INVENTORY_V9_REFRESH:{response:"INVENTORY_V9_BOOTSTRAP",run:()=>loadInventoryBootstrap({force:true})},
@@ -135,9 +144,11 @@ const ACTIONS={
   INVENTORY_ASSET_ARCHIVE:{response:"INVENTORY_ASSET_ARCHIVED",run:payload=>callBackend("archiveAssetLibraryItem",payload)}
 };
 
+
 $w.onReady(()=>{
   const embed=findEmbed();
   if(!embed){console.error("[SKANDI Inventory] #inventoryControlEmbed not found.");return}
+
 
   // Listener first: prevents the historical offline race.
   embed.onMessage(async(event)=>{
@@ -145,6 +156,7 @@ $w.onReady(()=>{
     if(!message||message.source!==CHILD_SOURCE)return;
     const payload=message.payload&&typeof message.payload==="object"?message.payload:{};
     const requestId=message.requestId||"";
+
 
     try{
       if(message.type==="INVENTORY_V9_READY"){
@@ -170,6 +182,7 @@ $w.onReady(()=>{
       post(embed,"INVENTORY_ERROR",errorPayload(error),requestId);
     }
   });
+
 
   post(embed,"INVENTORY_V9_HOST_READY",{version:VERSION,embedId:embed.id||"",readyAt:new Date().toISOString()});
 });
