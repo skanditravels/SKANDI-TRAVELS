@@ -1,7 +1,8 @@
 // /src/backend/SKANDI_CORE/customerBooking.js
-// SKANDI Backend Base 1.0 — B-007 canonical customer booking orchestration.
-// Owns customer Air/Hotel checkout plus Duffel-native Cars checkout state.
+// SKANDI Backend Base 1.0 — B-010 canonical customer booking orchestration.
+// Owns the single customer-facing search/cart boundary plus Air/Hotel/Cars checkout state.
 // Does NOT write ALTEA. booking_carts status=Confirmed remains the single customer->ALTEA handoff.
+
 
 import {
   searchDuffelOffersCore,
@@ -25,7 +26,8 @@ import {
   getDuffelCarQuoteCore,
   createDuffelComponentClientKeyCore,
   createDuffelCarBookingCore,
-  getDuffelCarBookingCore
+  getDuffelCarBookingCore,
+  cancelDuffelCarBookingCore
 } from "backend/SKANDI_CORE/duffelGround.js";
 import {
   createStripePaymentIntent,
@@ -67,9 +69,11 @@ import {
 } from "backend/SKANDI_CORE/bookingReconciliation.js";
 import { text, upper, lower, record } from "backend/SKANDI_CORE/platformValidation.js";
 
-const LOCKED_STATUSES = new Set(["Confirmed", "Committing", "ReconciliationRequired"]);
+
+const LOCKED_STATUSES = new Set(["Confirmed", "Committing", "CarCancellationPending", "ReconciliationRequired"]);
 const AIRPORTS = "travel_info_airports";
 const DESTINATIONS = "inventory_master_entities";
+
 
 function arr(value) { return Array.isArray(value) ? value : []; }
 function eq(value) { return `eq.${String(value ?? "")}`; }
@@ -78,6 +82,163 @@ function decimal(value) {
   const n = Number(value ?? 0);
   if (!Number.isFinite(n) || n < 0) throw bookingError("INVALID_PRICE", "The provider returned an invalid price.");
   return n.toFixed(2);
+}
+function numberValue(value) {
+  const n = Number(value ?? 0);
+  return Number.isFinite(n) ? n : 0;
+}
+function publicFlightItems(result = {}, search = {}) {
+  return arr(result.items).map(item => ({
+    ...item,
+    source: "duffel",
+    sourceLabel: "Live flight",
+    itemType: "flight",
+    tripType: text(search.tripType || "flightOnly", 40),
+    price: {
+      amount: numberValue(item.totalAmount ?? item.price?.amount ?? item.total),
+      currency: upper(item.totalCurrency || item.price?.currency || search.currency || "USD", 3)
+    },
+    searchContext: item.searchContext || search
+  }));
+}
+function publicStayItems(result = {}, search = {}) {
+  return arr(result.items).map(item => ({
+    ...item,
+    source: "duffel",
+    sourceLabel: "Live hotel",
+    itemType: "hotel",
+    tripType: text(search.tripType || "hotelOnly", 40),
+    title: item.title || item.name || item.accommodation?.name || "Hotel",
+    price: {
+      amount: numberValue(item.total ?? item.cheapestRateTotalAmount),
+      currency: upper(item.currency || item.cheapestRateTotalCurrency || search.currency || "USD", 3)
+    },
+    searchContext: item.searchContext || search
+  }));
+}
+
+
+function roundMoney(value) {
+  return Math.round((numberValue(value) + Number.EPSILON) * 100) / 100;
+}
+function expiryMin(values = [], fallbackMinutes = 25) {
+  const valid = arr(values)
+    .map(value => Date.parse(String(value || "")))
+    .filter(value => Number.isFinite(value) && value > Date.now());
+  const fallback = Date.now() + fallbackMinutes * 60 * 1000;
+  return new Date(valid.length ? Math.min(...valid, fallback) : fallback).toISOString();
+}
+function packageSearchItems(flights = [], stays = [], search = {}) {
+  const output = [];
+  const sortedFlights = arr(flights).slice().sort((a, b) => numberValue(a.price?.amount) - numberValue(b.price?.amount)).slice(0, 10);
+  const sortedStays = arr(stays).slice().sort((a, b) => numberValue(a.price?.amount) - numberValue(b.price?.amount)).slice(0, 12);
+  for (const stay of sortedStays) {
+    const stayCurrency = upper(stay.price?.currency || search.currency || "USD", 3);
+    const flight = sortedFlights.find(candidate => upper(candidate.price?.currency || search.currency || "USD", 3) === stayCurrency);
+    if (!flight) continue;
+    const flightOfferId = text(flight.id || flight.offerId, 180);
+    const staySearchResultId = text(stay.staySearchResultId || stay.id, 180);
+    if (!flightOfferId || !staySearchResultId) continue;
+    const total = roundMoney(numberValue(flight.price?.amount) + numberValue(stay.price?.amount));
+    const departure = Date.parse(`${text(search.departureDate, 10)}T00:00:00Z`);
+    const returning = Date.parse(`${text(search.returnDate, 10)}T00:00:00Z`);
+    const nights = Number.isFinite(departure) && Number.isFinite(returning) && returning > departure
+      ? Math.max(1, Math.round((returning - departure) / 86400000))
+      : Math.max(1, Number(search.nights) || 7);
+    output.push({
+      id: `PKG-${flightOfferId}-${staySearchResultId}`,
+      offerId: `PKG-${flightOfferId}-${staySearchResultId}`,
+      itemType: "PACKAGE",
+      productType: "PACKAGE",
+      provider: "SKANDI",
+      source: "SKANDI_PACKAGE",
+      sourceLabel: "SKANDI Flight + Hotel",
+      title: `${flight.routeSummary || flight.title || "Flight"} · ${stay.title || "Hotel"}`,
+      summary: [`${nights} nights`, stay.title || "Hotel", flight.sourceLabel || "Live flight"].filter(Boolean).join(" · "),
+      price: { amount: total, total, currency: stayCurrency },
+      total,
+      currency: stayCurrency,
+      tripType: search.tripType === "signaturePackage" ? "signaturePackage" : "Flight + Hotel",
+      flightOfferId,
+      staySearchResultId,
+      accommodationId: stay.accommodationId || null,
+      imageUrl: stay.imageUrl || "",
+      badges: ["Flight + Hotel", "Live pricing"],
+      flight,
+      stay,
+      searchContext: search
+    });
+    if (output.length >= 20) break;
+  }
+  return output;
+}
+function isPackageCart(row = {}) {
+  return upper(row?.payload?.productType, 40) === "PACKAGE" || upper(row?.payload?.productType, 40) === "MIXED_PACKAGE";
+}
+function airOfferIdForCart(row = {}) {
+  const payload = record(row?.payload);
+  return text(payload.flightOfferId || payload.selectedOffer?.id || payload.selectedOffer?.offerId || row?.selected_offer_id, 180);
+}
+function packageSelectionId(flightOfferId, staySearchResultId) {
+  const flight = text(flightOfferId, 80);
+  const stay = text(staySearchResultId, 80);
+  return `PKG-${flight}-${stay}`.slice(0, 180);
+}
+async function quoteStaySearchResult(searchResultId, preferredRateId = "") {
+  const ratesResult = await fetchDuffelStayRatesCore({ searchResultId });
+  const rates = arr(ratesResult.rates).slice().sort((a, b) => numberValue(a.totalAmount) - numberValue(b.totalAmount));
+  const rate = rates.find(item => text(item.rateId || item.id, 180) === text(preferredRateId, 180)) || rates[0];
+  if (!rate?.id && !rate?.rateId) throw bookingError("STAY_RATE_REQUIRED", "No hotel room is currently available for this package.");
+  const quoteResult = await quoteDuffelStayCore({ rateId: rate.rateId || rate.id });
+  if (!quoteResult?.quote?.id) throw bookingError("STAY_QUOTE_REQUIRED", "The hotel quote could not be created.");
+  return { quote: quoteResult.quote, rate, accommodation: ratesResult.accommodation || null };
+}
+async function priceAirAndPackageCart(row, services = []) {
+  const offerId = airOfferIdForCart(row);
+  if (!/^off_[A-Za-z0-9_]+$/.test(offerId)) throw bookingError("INVALID_OFFER_ID", "The selected flight offer is invalid.");
+  const air = await priceDuffelOfferCore({ offerId, services });
+  let currency = upper(air.offer.totalCurrency, 3);
+  let subtotal = numberValue(air.offer.totalAmount);
+  let taxes = numberValue(air.offer.taxAmount);
+  const expiries = [air.offer.expiresAt];
+  let stay = null;
+  if (isPackageCart(row)) {
+    const searchResultId = text(row.payload?.staySearchResultId, 180);
+    if (!searchResultId) throw bookingError("STAY_SEARCH_RESULT_REQUIRED", "The hotel portion of this package is missing.");
+    stay = await quoteStaySearchResult(searchResultId, row.payload?.stayRateId);
+    const stayCurrency = upper(stay.quote.totalCurrency, 3);
+    if (stayCurrency !== currency) throw bookingError("PACKAGE_CURRENCY_MISMATCH", "The flight and hotel are no longer available in the same currency.");
+    subtotal += numberValue(stay.quote.totalAmount);
+    taxes += numberValue(stay.quote.taxAmount);
+    expiries.push(stay.quote.expiresAt);
+  }
+  return {
+    offer: air.offer,
+    stay,
+    currency,
+    subtotal: roundMoney(subtotal),
+    taxes: roundMoney(taxes),
+    total: roundMoney(subtotal),
+    expiresAt: expiryMin(expiries)
+  };
+}
+function packagePricingPayload(row, pricing) {
+  const payload = {
+    ...(row.payload || {}),
+    flightOfferId: airOfferIdForCart(row),
+    selectedOffer: mapOfferForCart(pricing.offer)
+  };
+  if (pricing.stay) {
+    payload.stayRateId = pricing.stay.rate?.rateId || pricing.stay.rate?.id || payload.stayRateId || null;
+    payload.stayQuote = pricing.stay.quote;
+  }
+  return payload;
+}
+function stayGuestsFromPassengers(passengers = []) {
+  return arr(passengers).map(passenger => ({
+    givenName: text(passenger.givenName, 80),
+    familyName: text(passenger.familyName, 80)
+  })).filter(guest => guest.givenName && guest.familyName);
 }
 function safeCode(value) { const code = upper(value || "", 80); return /^[A-Z0-9_]+$/.test(code) ? code : "BOOKING_COMMIT_FAILED"; }
 function requireMemberContext(context = {}) {
@@ -107,6 +268,7 @@ function resumeStepForStatus(status) {
   })[String(status || "")] || "offer";
 }
 
+
 export async function searchLiveFlightOffersCore(input = {}) {
   const normalized = toDuffelOfferSearch(input.search || input);
   const result = await searchDuffelOffersCore(normalized.coreRequest);
@@ -128,6 +290,221 @@ export async function searchLiveFlightOffersCore(input = {}) {
     }
   };
 }
+
+
+function unifiedTripType(search = {}) {
+  const explicit = text(search.tripType, 40);
+  if (["flightOnly", "hotelOnly", "package", "signaturePackage", "localOnly", "carOnly"].includes(explicit)) return explicit;
+  const product = lower(search.productType || search.product || search.mode, 60);
+  const accommodation = lower(search.accommodationType, 60);
+  if (product.includes("signature")) return "signaturePackage";
+  if ((product.includes("flight") && product.includes("hotel")) || product.includes("holiday") || product.includes("package")) return "package";
+  if (product.includes("flight")) return "flightOnly";
+  if (product.includes("hotel") || accommodation === "hotel") return "hotelOnly";
+  if (product.includes("car")) return "carOnly";
+  return "package";
+}
+
+
+export async function searchUnifiedOffersCore(input = {}) {
+  const search = record(input.search || input);
+  const tripType = unifiedTripType(search);
+  search.tripType = tripType;
+  const errors = [];
+
+
+  if (["package", "signaturePackage"].includes(tripType)) {
+    let flights = [];
+    let stays = [];
+    const [flightResult, stayResult] = await Promise.allSettled([
+      searchLiveFlightOffersCore({ search }),
+      searchLiveStaysCore({
+        ...search,
+        checkInDate: search.checkInDate || search.departureDate,
+        checkOutDate: search.checkOutDate || search.returnDate,
+        location: search.location || {
+          iata: search.destinationIata || search.destination,
+          destination: search.destinationCode || search.destinationRegion || search.destination,
+          locationText: search.destinationLabel || search.destination
+        }
+      })
+    ]);
+    if (flightResult.status === "fulfilled") flights = publicFlightItems(flightResult.value, search);
+    else errors.push({ source: "flight", code: safeCode(flightResult.reason?.code || "FLIGHT_SEARCH_FAILED"), message: text(flightResult.reason?.publicMessage || flightResult.reason?.message || "Live flight search is unavailable.", 300) });
+    if (stayResult.status === "fulfilled") stays = publicStayItems(stayResult.value, search);
+    else errors.push({ source: "hotel", code: safeCode(stayResult.reason?.code || "STAY_SEARCH_FAILED"), message: text(stayResult.reason?.publicMessage || stayResult.reason?.message || "Live hotel search is unavailable.", 300) });
+    const items = packageSearchItems(flights, stays, search);
+    return {
+      items,
+      errors,
+      provider: "Duffel",
+      generatedAt: nowIso(),
+      tripType,
+      meta: { flightCount: flights.length, hotelCount: stays.length, packageCount: items.length }
+    };
+  }
+
+
+  const items = [];
+  if (tripType === "flightOnly") {
+    try { items.push(...publicFlightItems(await searchLiveFlightOffersCore({ search }), search)); }
+    catch (error) { errors.push({ source: "flight", code: safeCode(error?.code || "FLIGHT_SEARCH_FAILED"), message: text(error?.publicMessage || error?.message || "Live flight search is unavailable.", 300) }); }
+  } else if (tripType === "hotelOnly") {
+    try {
+      items.push(...publicStayItems(await searchLiveStaysCore({
+        ...search,
+        checkInDate: search.checkInDate || search.departureDate,
+        checkOutDate: search.checkOutDate || search.returnDate,
+        location: search.location || { iata: search.destinationIata || search.destination, destination: search.destinationCode || search.destinationRegion || search.destination, locationText: search.destinationLabel || search.destination }
+      }), search));
+    } catch (error) { errors.push({ source: "hotel", code: safeCode(error?.code || "STAY_SEARCH_FAILED"), message: text(error?.publicMessage || error?.message || "Live hotel search is unavailable.", 300) }); }
+  } else if (["localOnly", "carOnly"].includes(tripType)) {
+    try {
+      const cars = await searchLiveCarsCore(search);
+      items.push(...arr(cars.items).map(item => ({
+        ...item,
+        source: "duffel",
+        sourceLabel: "Live car rental",
+        itemType: "car",
+        tripType: "carOnly",
+        price: { amount: numberValue(item.totalAmount), currency: upper(item.totalCurrency || search.currency || "USD", 3) },
+        searchContext: search
+      })));
+    } catch (error) { errors.push({ source: "car", code: safeCode(error?.code || "CAR_SEARCH_FAILED"), message: text(error?.publicMessage || error?.message || "Live car search is unavailable.", 300) }); }
+  }
+
+
+  return { items, errors, provider: "Duffel", generatedAt: nowIso(), tripType };
+}
+
+
+export async function createBookingCartFromOfferCore(context = null, input = {}) {
+  if (!text(context?.memberId, 180)) return { requiresLogin: true, message: "Sign in to continue with this offer." };
+
+
+  const offer = record(input.offer);
+  const search = record(input.search || offer.searchContext);
+  const type = upper(offer.itemType || offer.productType || offer.type || offer.tripType, 40);
+  const offerId = text(offer.id, 180);
+
+
+  if (type === "PACKAGE" || (offer.flightOfferId && offer.staySearchResultId)) {
+    return createPackageCartCore(context, { offer, search });
+  }
+  if (type.includes("FLIGHT") || /^off_[A-Za-z0-9_]+$/.test(offerId)) {
+    return createFlightCartCore(context, { offer, offerId, search });
+  }
+  if (type.includes("HOTEL") || offer.accommodationId || offer.staySearchResultId) {
+    let quoteId = text(offer.quoteId, 180);
+    if (!quoteId) {
+      let rateId = text(offer.rateId, 180);
+      if (!rateId && offer.staySearchResultId) {
+        const rates = await fetchStayRatesCore({ searchResultId: offer.staySearchResultId });
+        const sorted = arr(rates.rates).slice().sort((a, b) => numberValue(a.totalAmount) - numberValue(b.totalAmount));
+        rateId = text(sorted[0]?.rateId || sorted[0]?.id, 180);
+      }
+      if (!rateId) throw bookingError("STAY_RATE_REQUIRED", "Select an available hotel room before continuing.");
+      const quoted = await quoteStayCore({ rateId });
+      quoteId = text(quoted?.quote?.quoteId || quoted?.quote?.id, 180);
+    }
+    if (!quoteId) throw bookingError("STAY_QUOTE_REQUIRED", "The hotel quote could not be created.");
+    return createHotelCartCore(context, { quoteId, ...search });
+  }
+  if (type.includes("CAR") || text(offer.rateId, 180).startsWith("rae_")) {
+    let quoteId = text(offer.quoteId, 180);
+    if (!quoteId) {
+      const quoted = await quoteCarCore({ rateId: offer.rateId || offer.id });
+      quoteId = text(quoted?.quote?.quoteId || quoted?.quote?.id, 180);
+    }
+    if (!quoteId) throw bookingError("CAR_QUOTE_REQUIRED", "The car quote could not be created.");
+    return createCarCartCore(context, { quoteId, ...search });
+  }
+  throw bookingError("BOOKING_PRODUCT_NOT_SUPPORTED", "This offer type is not supported by the canonical customer checkout.");
+}
+
+
+export async function createPackageCartCore(context, input = {}) {
+  requireMemberContext(context);
+  const offer = record(input.offer);
+  const search = record(input.search || offer.searchContext);
+  const flightOfferId = text(offer.flightOfferId || offer.flight?.id || offer.flight?.offerId, 180);
+  const staySearchResultId = text(offer.staySearchResultId || offer.stay?.staySearchResultId || offer.stay?.id, 180);
+  if (!/^off_[A-Za-z0-9_]+$/.test(flightOfferId)) throw bookingError("INVALID_OFFER_ID", "The package flight offer is invalid.");
+  if (!/^srr_[A-Za-z0-9_]+$/.test(staySearchResultId)) throw bookingError("STAY_SEARCH_RESULT_REQUIRED", "The package hotel result is invalid.");
+  const selectionId = packageSelectionId(flightOfferId, staySearchResultId);
+  const existing = await getOwnedCartByOffer(context, selectionId);
+  if (existing?.cart_id && existing.status !== "Confirmed") {
+    return { cartId: existing.cart_id, step: resumeStepForStatus(existing.status), recoveredExistingCart: true };
+  }
+
+
+  const normalized = toDuffelOfferSearch(search);
+  const [airResult, stay] = await Promise.all([
+    refreshDuffelOfferCore({ offerId: flightOfferId }),
+    quoteStaySearchResult(staySearchResultId, offer.stayRateId || offer.stay?.rateId)
+  ]);
+  assertOfferMatchesSearch(airResult.offer, normalized.searchContext);
+  const selectedOffer = mapOfferForCart(airResult.offer);
+  const airCurrency = upper(airResult.offer.totalCurrency, 3);
+  const stayCurrency = upper(stay.quote.totalCurrency, 3);
+  if (airCurrency !== stayCurrency) throw bookingError("PACKAGE_CURRENCY_MISMATCH", "The selected flight and hotel are no longer available in the same currency.");
+  const subtotal = roundMoney(numberValue(airResult.offer.totalAmount) + numberValue(stay.quote.totalAmount));
+  const taxes = roundMoney(numberValue(airResult.offer.taxAmount) + numberValue(stay.quote.taxAmount));
+  const expiresAt = expiryMin([airResult.offer.expiresAt, stay.quote.expiresAt]);
+  const payload = {
+    version: 3,
+    provider: "Duffel",
+    productType: "PACKAGE",
+    search: normalized.searchContext,
+    searchContext: normalized.searchContext,
+    selectedOffer,
+    flightOfferId,
+    staySearchResultId,
+    stayRateId: stay.rate?.rateId || stay.rate?.id || null,
+    stayQuote: stay.quote,
+    extras: [],
+    transfer: null,
+    seatSelections: {},
+    secureTravelers: null,
+    travelers: [],
+    airOrder: null,
+    stayBooking: null,
+    reconciliation: null,
+    flow: { currentStep: "offer", createdAt: nowIso() }
+  };
+  const row = await createOwnedCart(context, {
+    email: context.email,
+    status: "Open",
+    currency: airCurrency,
+    subtotal: decimal(subtotal),
+    taxes: decimal(taxes),
+    total: decimal(subtotal),
+    selectedOfferId: selectionId,
+    expiresAt,
+    payload,
+    source: "customer"
+  });
+  await addCartItem(row.cart_id, {
+    itemType: "flight",
+    itemId: flightOfferId,
+    title: selectedOffer.routeSummary || offer.flight?.title || "Flight",
+    quantity: 1,
+    unitPrice: airResult.offer.totalAmount,
+    total: airResult.offer.totalAmount,
+    payload: { provider: "Duffel", owner: airResult.offer.owner, expiresAt: airResult.offer.expiresAt }
+  });
+  await addCartItem(row.cart_id, {
+    itemType: "hotel",
+    itemId: stay.quote.id,
+    title: stay.quote.accommodation?.name || offer.stay?.title || "Hotel",
+    quantity: 1,
+    unitPrice: stay.quote.totalAmount,
+    total: stay.quote.totalAmount,
+    payload: { provider: "Duffel", searchResultId: staySearchResultId, rateId: payload.stayRateId, quoteId: stay.quote.id, accommodation: stay.quote.accommodation }
+  });
+  return { cartId: row.cart_id, step: "offer", recoveredExistingCart: false };
+}
+
 
 export async function createFlightCartCore(context, input = {}) {
   requireMemberContext(context);
@@ -182,6 +559,7 @@ export async function createFlightCartCore(context, input = {}) {
   return { cartId: row.cart_id, step: "offer", recoveredExistingCart: false };
 }
 
+
 export async function loadBookingCartCore(context, input = {}, options = {}) {
   const row = await requireOwnedCart(context, input.cartId);
   let sensitive = null;
@@ -189,25 +567,29 @@ export async function loadBookingCartCore(context, input = {}, options = {}) {
   return { row, sensitive, cart: toPublicCart(row, sensitive) };
 }
 
+
 export async function listCustomerBookingCartsCore(context, input = {}) {
   requireMemberContext(context);
   const rows = await listOwnedCarts(context, { limit: input.limit || 20, status: input.status || "" });
   return { carts: rows.map(row => toPublicCart(row)) };
 }
 
+
 async function refreshAndPersistOffer(context, row) {
-  const refreshed = await refreshDuffelOfferCore({ offerId: row.selected_offer_id });
-  assertOfferMatchesSearch(refreshed.offer, row.payload?.searchContext || row.payload?.search || {});
-  const payload = { ...(row.payload || {}), selectedOffer: mapOfferForCart(refreshed.offer) };
+  const services = combineServiceSelections(row.payload || {});
+  const pricing = await priceAirAndPackageCart(row, services);
+  assertOfferMatchesSearch(pricing.offer, row.payload?.searchContext || row.payload?.search || {});
+  const payload = packagePricingPayload(row, pricing);
   return updateOwnedCart(context, row.cart_id, {
-    currency: refreshed.offer.totalCurrency,
-    subtotal: decimal(refreshed.offer.totalAmount),
-    taxes: decimal(refreshed.offer.taxAmount),
-    total: decimal(refreshed.offer.totalAmount),
-    expiresAt: refreshed.offer.expiresAt,
+    currency: pricing.currency,
+    subtotal: decimal(pricing.subtotal),
+    taxes: decimal(pricing.taxes),
+    total: decimal(pricing.total),
+    expiresAt: pricing.expiresAt,
     payload
   });
 }
+
 
 export async function acceptBookingOfferCore(context, input = {}) {
   if (input.termsAccepted !== true) throw bookingError("TERMS_REQUIRED", "Accept the booking conditions before continuing.");
@@ -221,6 +603,7 @@ export async function acceptBookingOfferCore(context, input = {}) {
   };
   return toPublicCart(await updateOwnedCart(context, refreshed.cart_id, { status: "OfferAccepted", payload }));
 }
+
 
 export async function loadBookingExtrasCore(context, input = {}) {
   const row = await requireOwnedCart(context, input.cartId);
@@ -238,6 +621,7 @@ export async function loadBookingExtrasCore(context, input = {}) {
     }));
   return { cart: toPublicCart(refreshed), items, selectedExtras: arr(refreshed.payload?.extras) };
 }
+
 
 export async function storeBookingExtrasCore(context, input = {}) {
   const row = await requireOwnedCart(context, input.cartId);
@@ -260,10 +644,12 @@ export async function storeBookingExtrasCore(context, input = {}) {
   return { saved: true, requiresSignatureTransfer: false };
 }
 
+
 export async function loadSignatureTransfersCore(context, input = {}) {
   await requireOwnedCart(context, input.cartId);
   return { options: [], meta: { message: "No live Signature transfer is attached to this flight cart." } };
 }
+
 
 export async function storeSignatureTransferCore(context, input = {}) {
   if (input.transfer) throw bookingError("TRANSFER_UNAVAILABLE", "That transfer is not available for this booking.");
@@ -274,16 +660,19 @@ export async function storeSignatureTransferCore(context, input = {}) {
   return { saved: true };
 }
 
+
 export async function saveBookingTravelersCore(context, input = {}) {
   const row = await requireOwnedCart(context, input.cartId);
   assertEditable(row);
-  const mapped = buildDuffelPassengers(input.travelers, input.contact, row.payload?.selectedOffer || {});
+  const offerId = airOfferIdForCart(row);
+  const refreshed = await refreshDuffelOfferCore({ offerId });
+  const currentOffer = mapOfferForCart(refreshed.offer);
+  const mapped = buildDuffelPassengers(input.travelers, input.contact, currentOffer);
   const encrypted = await encryptBookingData(mapped);
   const services = combineServiceSelections(row.payload || {});
-  const priced = await priceDuffelOfferCore({ offerId: row.selected_offer_id, services });
+  const pricing = await priceAirAndPackageCart(row, services);
   const payload = {
-    ...(row.payload || {}),
-    selectedOffer: mapOfferForCart(priced.offer),
+    ...packagePricingPayload(row, pricing),
     secureTravelers: encrypted,
     travelers: travelerTriggerProjection(mapped.passengers),
     travelerCount: mapped.passengers.length,
@@ -292,15 +681,16 @@ export async function saveBookingTravelersCore(context, input = {}) {
   const updated = await updateOwnedCart(context, row.cart_id, {
     email: mapped.contact.email,
     status: "TravelersSaved",
-    currency: priced.offer.totalCurrency,
-    subtotal: decimal(priced.offer.totalAmount),
-    taxes: decimal(priced.offer.taxAmount),
-    total: decimal(priced.offer.totalAmount),
-    expiresAt: priced.offer.expiresAt,
+    currency: pricing.currency,
+    subtotal: decimal(pricing.subtotal),
+    taxes: decimal(pricing.taxes),
+    total: decimal(pricing.total),
+    expiresAt: pricing.expiresAt,
     payload
   });
   return { cart: toPublicCart(updated), repriced: true };
 }
+
 
 function availableSeatServices(seatMaps) {
   const result = new Map();
@@ -325,10 +715,11 @@ function availableSeatServices(seatMaps) {
   return result;
 }
 
+
 export async function loadSeatMapsCore(context, input = {}) {
   const loaded = await loadBookingCartCore(context, input, { includeTravelers: true });
   if (!loaded.sensitive?.passengers?.length) throw bookingError("TRAVELERS_REQUIRED", "Save traveler details before selecting seats.");
-  const result = await getDuffelSeatMapsCore({ offerId: loaded.row.selected_offer_id });
+  const result = await getDuffelSeatMapsCore({ offerId: airOfferIdForCart(loaded.row) });
   const seatMaps = arr(result.seatMaps);
   const count = seatMaps.reduce((total, map) => total + arr(map.seats).filter(seat => arr(seat.availableServices).length).length, 0);
   return {
@@ -341,12 +732,13 @@ export async function loadSeatMapsCore(context, input = {}) {
   };
 }
 
+
 export async function storeSeatSelectionsCore(context, input = {}) {
   const row = await requireOwnedCart(context, input.cartId);
   assertEditable(row);
   let seatSelections = {};
   if (input.skipped !== true) {
-    const mapResult = await getDuffelSeatMapsCore({ offerId: row.selected_offer_id });
+    const mapResult = await getDuffelSeatMapsCore({ offerId: airOfferIdForCart(row) });
     const available = availableSeatServices(mapResult.seatMaps);
     const travelerIds = new Set(arr(row.payload?.selectedOffer?.passengers).map(p => p?.id).filter(Boolean));
     const usedPassengerSegments = new Set();
@@ -365,41 +757,96 @@ export async function storeSeatSelectionsCore(context, input = {}) {
       seatSelections[key] = { ...candidate, travelerId };
     }
   }
-  const payload = { ...(row.payload || {}), seatSelections, seatsSkipped: input.skipped === true, flow: { ...(row.payload?.flow || {}), currentStep: "payment" } };
+  let payload = { ...(row.payload || {}), seatSelections, seatsSkipped: input.skipped === true, flow: { ...(row.payload?.flow || {}), currentStep: "payment" } };
   const services = combineServiceSelections(payload);
-  const priced = await priceDuffelOfferCore({ offerId: row.selected_offer_id, services });
-  payload.selectedOffer = mapOfferForCart(priced.offer);
+  const pricing = await priceAirAndPackageCart({ ...row, payload }, services);
+  payload = { ...packagePricingPayload({ ...row, payload }, pricing), seatSelections, seatsSkipped: input.skipped === true, flow: payload.flow };
   const updated = await updateOwnedCart(context, row.cart_id, {
     status: "PaymentReady",
-    currency: priced.offer.totalCurrency,
-    subtotal: decimal(priced.offer.totalAmount),
-    taxes: decimal(priced.offer.taxAmount),
-    total: decimal(priced.offer.totalAmount),
-    expiresAt: priced.offer.expiresAt,
+    currency: pricing.currency,
+    subtotal: decimal(pricing.subtotal),
+    taxes: decimal(pricing.taxes),
+    total: decimal(pricing.total),
+    expiresAt: pricing.expiresAt,
     payload
   });
   return { cart: toPublicCart(updated) };
 }
+
 
 export async function prepareBookingPaymentCore(context, input = {}) {
   const row = await requireOwnedCart(context, input.cartId);
   if (!row.payload?.secureTravelers) throw bookingError("TRAVELERS_REQUIRED", "Save traveler details before payment.");
   if (LOCKED_STATUSES.has(row.status)) throw bookingError("BOOKING_RECONCILIATION_REQUIRED", "This booking is already confirmed, committing, or being reconciled. Do not submit another payment.", 409);
   const services = combineServiceSelections(row.payload || {});
-  const result = await prepareDuffelPaymentCore({ offerId: row.selected_offer_id, services, idempotencyContext: row.cart_id, manualCapture: true });
+
+
+  if (isPackageCart(row)) {
+    const pricing = await priceAirAndPackageCart(row, services);
+    const amountMinor = duffelAmountToMinor(pricing.total, pricing.currency);
+    const selectionSignature = services.map(service => `${service.id}:${service.quantity}`).sort().join("|");
+    const intent = await createStripePaymentIntent({
+      amount: amountMinor,
+      currency: pricing.currency,
+      captureMethod: "manual",
+      idempotencyContext: row.cart_id,
+      idempotencyKey: `skandi_package_${row.cart_id}_${amountMinor}_${lower(pricing.currency, 3)}`.slice(0, 255),
+      description: `SKANDI Flight + Hotel ${row.cart_id}`,
+      metadata: {
+        integration: "skandi_package",
+        cart_id: row.cart_id,
+        idempotency_context: row.cart_id,
+        air_offer_id: pricing.offer.id,
+        stay_quote_id: pricing.stay?.quote?.id || "",
+        selection_signature: selectionSignature
+      }
+    });
+    const publishableKey = await getStripePublishableKey();
+    let payload = packagePricingPayload(row, pricing);
+    payload = {
+      ...payload,
+      payment: {
+        paymentIntentId: intent.id,
+        amount: pricing.total,
+        amountMinor,
+        currency: pricing.currency,
+        status: intent.status,
+        captureMethod: "manual",
+        preparedAt: nowIso()
+      },
+      paymentIntentId: intent.id,
+      flow: { ...(payload.flow || {}), currentStep: "payment" }
+    };
+    const updated = await updateOwnedCart(context, row.cart_id, {
+      status: "PaymentPending",
+      currency: pricing.currency,
+      subtotal: decimal(pricing.subtotal),
+      taxes: decimal(pricing.taxes),
+      total: decimal(pricing.total),
+      expiresAt: pricing.expiresAt,
+      payload
+    });
+    return {
+      cart: toPublicCart(updated),
+      payment: {
+        paymentIntentId: intent.id,
+        clientSecret: intent.client_secret,
+        publishableKey,
+        amount: pricing.total,
+        currency: pricing.currency,
+        status: intent.status,
+        captureMethod: intent.capture_method || "manual"
+      }
+    };
+  }
+
+
+  const result = await prepareDuffelPaymentCore({ offerId: airOfferIdForCart(row), services, idempotencyContext: row.cart_id, manualCapture: true });
   const amountMinor = duffelAmountToMinor(result.offer.totalAmount, result.offer.totalCurrency);
   const payload = {
     ...(row.payload || {}),
     selectedOffer: mapOfferForCart(result.offer),
-    payment: {
-      paymentIntentId: result.payment.paymentIntentId,
-      amount: result.payment.amount,
-      amountMinor,
-      currency: result.payment.currency,
-      status: result.payment.status,
-      captureMethod: "manual",
-      preparedAt: nowIso()
-    },
+    payment: { paymentIntentId: result.payment.paymentIntentId, amount: result.payment.amount, amountMinor, currency: result.payment.currency, status: result.payment.status, captureMethod: "manual", preparedAt: nowIso() },
     paymentIntentId: result.payment.paymentIntentId,
     flow: { ...(row.payload?.flow || {}), currentStep: "payment" }
   };
@@ -415,14 +862,169 @@ export async function prepareBookingPaymentCore(context, input = {}) {
   return { cart: toPublicCart(updated), payment: result.payment };
 }
 
+
+async function commitPackageBookingCore(context, input = {}) {
+  if (input.termsAccepted !== true) throw bookingError("TERMS_REQUIRED", "Accept the booking and payment terms before continuing.");
+  let loaded = await loadBookingCartCore(context, input, { includeTravelers: true });
+  if (loaded.row.status === "Confirmed") return confirmedResult(loaded.row);
+  if (loaded.row.status === "ReconciliationRequired") throw bookingError("BOOKING_RECONCILIATION_REQUIRED", "This package is already being reconciled. Do not pay or book again.", 409);
+  const payment = loaded.row.payload?.payment || {};
+  const paymentIntentId = text(input.paymentIntentId, 180);
+  if (!payment.paymentIntentId || payment.paymentIntentId !== paymentIntentId) throw bookingError("PAYMENT_REFERENCE_MISMATCH", "The completed payment authorization does not match this package.", 409);
+  if (loaded.row.status === "PaymentPending") {
+    const claimed = await transitionOwnedCart(context, loaded.row.cart_id, "PaymentPending", "Committing");
+    loaded = await loadBookingCartCore(context, input, { includeTravelers: true });
+    if (!claimed && loaded.row.status !== "Committing") throw bookingError("BOOKING_COMMIT_CONFLICT", "This package is already being processed.", 409);
+  }
+  if (loaded.row.status !== "Committing") throw bookingError("BOOKING_NOT_READY", "This package is not ready to be committed.", 409);
+  if (!loaded.sensitive?.passengers?.length) throw bookingError("TRAVELERS_REQUIRED", "Traveler details are missing from this package.");
+
+
+  const intent = await retrieveStripePaymentIntent(paymentIntentId);
+  assertStripeAuthorization(intent, {
+    amount: payment.amountMinor,
+    currency: payment.currency,
+    metadata: { cart_id: loaded.row.cart_id, idempotency_context: loaded.row.cart_id },
+    allowCaptured: true
+  });
+
+
+  const contact = loaded.sensitive.contact || {};
+  const guests = stayGuestsFromPassengers(loaded.sensitive.passengers);
+  let row = loaded.row;
+  let stayBooking = row.payload?.stayBooking || null;
+  let airOrder = row.payload?.airOrder || null;
+
+
+  if (!stayBooking?.id) {
+    let stayProvider;
+    try {
+      stayProvider = await createDuffelStayBookingCore({
+        quoteId: row.payload?.stayQuote?.id,
+        guests,
+        email: contact.email,
+        phoneNumber: contact.phoneNumber,
+        specialRequests: input.specialRequests,
+        loyaltyProgrammeAccountNumber: input.loyaltyProgrammeAccountNumber,
+        internalReference: row.cart_id,
+        integration: "skandi_customer_package"
+      });
+    } catch (error) {
+      if (["DUFFEL_TIMEOUT", "DUFFEL_HTTP_500", "DUFFEL_HTTP_502", "DUFFEL_HTTP_503", "DUFFEL_HTTP_504"].includes(String(error?.code || ""))) {
+        const updated = await markBookingReconciliationRequired(context, row, { kind: "PACKAGE_STAY_OUTCOME_UNKNOWN", code: safeCode(error.code), providerRequestId: error.providerRequestId, correlationId: error.correlationId });
+        throw bookingError("BOOKING_RECONCILIATION_REQUIRED", `The hotel portion of this package is being reconciled. Do not retry. Cart: ${updated.cart_id}`, 409);
+      }
+      await voidUnusedAuthorization(row);
+      await updateOwnedCart(context, row.cart_id, { status: "PaymentReady", payload: { ...(row.payload || {}), payment: { ...payment, status: "authorization_released" } } });
+      throw error;
+    }
+    if (stayProvider.reconciliationRequired || !stayProvider.booking?.id) {
+      const updated = await markBookingReconciliationRequired(context, row, { kind: "PACKAGE_STAY_PENDING", code: "DUFFEL_STAY_PENDING", providerRequestId: stayProvider.requestId, correlationId: stayProvider.correlationId, providerStatus: stayProvider.providerStatus });
+      return { cartId: updated.cart_id, status: updated.status, reconciliationRequired: true };
+    }
+    stayBooking = stayProvider.booking;
+    row = await updateOwnedCart(context, row.cart_id, {
+      payload: {
+        ...(row.payload || {}),
+        stayBooking,
+        providerProgress: { ...(row.payload?.providerProgress || {}), stayBookingId: stayBooking.id, stayReference: stayBooking.reference || null, stayConfirmedAt: nowIso() }
+      }
+    });
+  }
+
+
+  if (!airOrder?.id) {
+    const services = combineServiceSelections(row.payload || {});
+    let airProvider;
+    try {
+      airProvider = await createDuffelOrderCore({
+        offerId: airOfferIdForCart(row),
+        orderType: "instant",
+        services,
+        paymentIntentId,
+        customerAuthorizationAmountMinor: payment.amountMinor,
+        passengers: toDuffelOrderPassengers(loaded.sensitive.passengers),
+        internalReference: row.cart_id,
+        confirmationDeliveryPolicy: "SKANDI"
+      });
+    } catch (error) {
+      const updated = await markBookingReconciliationRequired(context, row, {
+        kind: ["DUFFEL_TIMEOUT", "DUFFEL_HTTP_500", "DUFFEL_HTTP_502", "DUFFEL_HTTP_503", "DUFFEL_HTTP_504"].includes(String(error?.code || "")) ? "PACKAGE_AIR_ORDER_OUTCOME_UNKNOWN" : "PACKAGE_AIR_ORDER_FAILED_AFTER_STAY",
+        code: safeCode(error?.code || error?.message),
+        providerRequestId: error.providerRequestId,
+        correlationId: error.correlationId,
+        stayBooking,
+        customerPaymentCaptureRequired: false
+      });
+      throw bookingError("BOOKING_RECONCILIATION_REQUIRED", `The hotel is confirmed but the airline portion requires reconciliation. Do not retry or pay again. Cart: ${updated.cart_id}`, 409);
+    }
+    if (airProvider.reconciliationRequired || !airProvider.order?.id) {
+      const updated = await markBookingReconciliationRequired(context, row, { kind: "PACKAGE_AIR_ORDER_PENDING", code: "DUFFEL_ORDER_PENDING", providerRequestId: airProvider.requestId, correlationId: airProvider.correlationId, providerStatus: airProvider.providerStatus, stayBooking });
+      return { cartId: updated.cart_id, status: updated.status, reconciliationRequired: true };
+    }
+    airOrder = airProvider.order;
+    row = await updateOwnedCart(context, row.cart_id, {
+      payload: {
+        ...(row.payload || {}),
+        airOrder,
+        order: airOrder,
+        providerProgress: { ...(row.payload?.providerProgress || {}), stayBookingId: stayBooking.id, airOrderId: airOrder.id, airBookingReference: airOrder.bookingReference || null, airConfirmedAt: nowIso() }
+      }
+    });
+  }
+
+
+  let capture;
+  try { capture = intent.status === "succeeded" ? intent : await captureStripePaymentIntent(paymentIntentId, `skandi_package_capture_${row.cart_id}`.slice(0, 255)); }
+  catch (error) {
+    const updated = await markBookingReconciliationRequired(context, row, { kind: "PACKAGE_PAYMENT_CAPTURE_REQUIRED", code: safeCode(error?.code), airOrder, stayBooking, supplierOrderId: airOrder.id, customerPaymentCaptureRequired: true, paymentStatus: "capture_required" });
+    throw bookingError("BOOKING_RECONCILIATION_REQUIRED", `The package suppliers are confirmed but payment capture requires reconciliation. Do not pay again. Cart: ${updated.cart_id}`, 409);
+  }
+  if (capture.status !== "succeeded") {
+    const updated = await markBookingReconciliationRequired(context, row, { kind: "PACKAGE_PAYMENT_CAPTURE_REQUIRED", code: "PAYMENT_CAPTURE_NOT_COMPLETE", airOrder, stayBooking, customerPaymentCaptureRequired: true, paymentStatus: capture.status || "capture_pending" });
+    throw bookingError("BOOKING_RECONCILIATION_REQUIRED", `The package suppliers are confirmed but payment capture is incomplete. Do not pay again. Cart: ${updated.cart_id}`, 409);
+  }
+
+
+  const bookingReference = airOrder.bookingReference || stayBooking.reference || row.cart_id;
+  const payload = {
+    ...(row.payload || {}),
+    productType: "PACKAGE",
+    airOrder,
+    order: airOrder,
+    stayBooking,
+    bookingReference,
+    paymentIntentId,
+    payment: { ...payment, status: "succeeded", capturedAt: nowIso() },
+    reconciliation: null,
+    flow: { ...(row.payload?.flow || {}), currentStep: "confirmation", confirmedAt: nowIso() }
+  };
+  const updated = await updateOwnedCart(context, row.cart_id, { status: "Confirmed", payload });
+  recordPaymentEventOnce({
+    eventId: paymentIntentId,
+    provider: "Stripe",
+    memberId: context.memberId,
+    bookingId: row.cart_id,
+    amount: updated.total,
+    currency: updated.currency,
+    status: "succeeded",
+    payload: { duffelOrderId: airOrder.id, duffelStayBookingId: stayBooking.id, bookingReference }
+  }).catch(() => {});
+  return confirmedResult(updated);
+}
+
+
 export async function commitBookingCore(context, input = {}) {
   if (input.termsAccepted !== true) throw bookingError("TERMS_REQUIRED", "Accept the booking and payment terms before continuing.");
+  const initial = await requireOwnedCart(context, input.cartId);
+  if (isPackageCart(initial)) return commitPackageBookingCore(context, input);
   let loaded = await loadBookingCartCore(context, input, { includeTravelers: true });
   if (loaded.row.status === "Confirmed") return confirmedResult(loaded.row);
   if (loaded.row.status === "ReconciliationRequired") throw bookingError("BOOKING_RECONCILIATION_REQUIRED", "This booking is already being reconciled. Do not pay or book again.", 409);
   const payment = loaded.row.payload?.payment || {};
   const submittedPaymentId = text(input.paymentIntentId, 180);
   if (!payment.paymentIntentId || payment.paymentIntentId !== submittedPaymentId) throw bookingError("PAYMENT_REFERENCE_MISMATCH", "The completed payment authorization does not match this booking.", 409);
+
 
   if (loaded.row.status === "PaymentPending") {
     const claimed = await transitionOwnedCart(context, loaded.row.cart_id, "PaymentPending", "Committing");
@@ -432,11 +1034,12 @@ export async function commitBookingCore(context, input = {}) {
   if (loaded.row.status !== "Committing") throw bookingError("BOOKING_NOT_READY", "This booking is not ready to be committed.", 409);
   if (!loaded.sensitive?.passengers?.length) throw bookingError("TRAVELERS_REQUIRED", "Traveler details are missing from this booking.");
 
+
   const services = combineServiceSelections(loaded.row.payload || {});
   let providerResult;
   try {
     providerResult = await createDuffelOrderCore({
-      offerId: loaded.row.selected_offer_id,
+      offerId: airOfferIdForCart(loaded.row),
       orderType: "instant",
       services,
       paymentIntentId: submittedPaymentId,
@@ -464,6 +1067,7 @@ export async function commitBookingCore(context, input = {}) {
     throw error;
   }
 
+
   if (providerResult.reconciliationRequired || !providerResult.order?.id) {
     const updated = await markBookingReconciliationRequired(context, loaded.row, {
       kind: "AIR_ORDER_PENDING",
@@ -475,6 +1079,7 @@ export async function commitBookingCore(context, input = {}) {
     });
     return { cartId: updated.cart_id, status: updated.status, reconciliationRequired: true, providerRequestId: providerResult.requestId || null };
   }
+
 
   const order = providerResult.order;
   let capture;
@@ -502,6 +1107,7 @@ export async function commitBookingCore(context, input = {}) {
     throw bookingError("BOOKING_RECONCILIATION_REQUIRED", `The airline booking exists but payment capture is incomplete. Do not pay again. Cart: ${updated.cart_id}`, 409);
   }
 
+
   const payload = {
     ...(loaded.row.payload || {}),
     airOrder: order,
@@ -526,16 +1132,18 @@ export async function commitBookingCore(context, input = {}) {
   return { ...confirmedResult(updated), recoveredExistingOrder: providerResult.recoveredExistingOrder === true };
 }
 
+
 export async function reconcileBookingCore(context, input = {}) {
   const row = await requireOwnedCart(context, input.cartId);
   if (row.status === "Confirmed") return { resolved: true, cart: toPublicCart(row) };
   if (row.status !== "ReconciliationRequired") throw bookingError("RECONCILIATION_NOT_REQUIRED", "This booking is not awaiting reconciliation.", 409);
-  if (upper(row.payload?.productType, 40).includes("FLIGHT")) {
+  if (upper(row.payload?.productType, 40).includes("FLIGHT") || isPackageCart(row)) {
     const result = await reconcileFlightCart(context, row);
     return { ...result, cart: toPublicCart(result.cart) };
   }
   return { resolved: false, cart: toPublicCart(row), message: "This supplier booking is awaiting provider/webhook reconciliation." };
 }
+
 
 export async function loadBookingConfirmationCore(context, input = {}) {
   let row = await requireOwnedCart(context, input.cartId);
@@ -551,6 +1159,7 @@ export async function loadBookingConfirmationCore(context, input = {}) {
   }
   return confirmationFromRow(row);
 }
+
 
 export async function loadBookingDocumentsCore(context, input = {}) {
   const confirmation = await loadBookingConfirmationCore(context, input);
@@ -570,6 +1179,7 @@ export async function loadBookingDocumentsCore(context, input = {}) {
     }
   };
 }
+
 
 function flattenSegments(slices) {
   return arr(slices).flatMap(slice => arr(slice.segments).map(segment => ({
@@ -620,6 +1230,7 @@ function confirmationFromRow(row) {
   };
 }
 
+
 // -------- Ground discovery + hotel customer booking --------
 async function resolveGroundLocation(input = {}) {
   const explicitLat = Number(input.latitude);
@@ -647,6 +1258,7 @@ async function resolveGroundLocation(input = {}) {
   throw bookingError("LOCATION_NOT_FOUND", "That location is not yet mapped to coordinates in SKANDI Inventory/Travel Info.");
 }
 
+
 export async function searchLiveStaysCore(input = {}) {
   const location = arr(input.accommodationIds).length || input.accommodationId ? null : await resolveGroundLocation(input.location || input);
   const result = await searchDuffelStaysCore({ ...input, ...(location ? { location } : {}) });
@@ -654,6 +1266,7 @@ export async function searchLiveStaysCore(input = {}) {
 }
 export async function fetchStayRatesCore(input = {}) { return fetchDuffelStayRatesCore(input); }
 export async function quoteStayCore(input = {}) { return quoteDuffelStayCore(input); }
+
 
 export async function createHotelCartCore(context, input = {}) {
   requireMemberContext(context);
@@ -690,6 +1303,7 @@ export async function createHotelCartCore(context, input = {}) {
   return { cartId: row.cart_id, step: "apis" };
 }
 
+
 export async function saveHotelGuestsCore(context, input = {}) {
   const row = await requireOwnedCart(context, input.cartId);
   assertEditable(row);
@@ -712,6 +1326,7 @@ export async function saveHotelGuestsCore(context, input = {}) {
   const updated = await updateOwnedCart(context, row.cart_id, { email: contact.email, status: "PaymentReady", payload });
   return { cart: toPublicCart(updated) };
 }
+
 
 export async function prepareHotelPaymentCore(context, input = {}) {
   const row = await requireOwnedCart(context, input.cartId);
@@ -739,6 +1354,7 @@ export async function prepareHotelPaymentCore(context, input = {}) {
   const updated = await updateOwnedCart(context, row.cart_id, { status: "PaymentPending", currency: quote.totalCurrency, subtotal: decimal(quote.totalAmount), taxes: decimal(quote.taxAmount), total: decimal(quote.totalAmount), payload });
   return { cart: toPublicCart(updated), payment: { paymentIntentId: intent.id, clientSecret: intent.client_secret, publishableKey, amount: quote.totalAmount, currency: quote.totalCurrency, status: intent.status, captureMethod: "manual" } };
 }
+
 
 export async function commitHotelBookingCore(context, input = {}) {
   if (input.termsAccepted !== true) throw bookingError("TERMS_REQUIRED", "Accept the booking and payment terms before continuing.");
@@ -807,6 +1423,7 @@ export async function commitHotelBookingCore(context, input = {}) {
   return confirmedResult(updated);
 }
 
+
 export async function searchLiveCarsCore(input = {}) {
   const pickup = await resolveGroundLocation(input.pickupLocation || { iata: input.pickupIata, locationText: input.pickupLocationText });
   const dropoff = input.sameLocation === false ? await resolveGroundLocation(input.dropoffLocation || { iata: input.dropoffIata, locationText: input.dropoffLocationText }) : pickup;
@@ -814,6 +1431,7 @@ export async function searchLiveCarsCore(input = {}) {
 }
 export async function quoteCarCore(input = {}) { return quoteDuffelCarCore(input); }
 export async function getCarQuoteCore(input = {}) { return getDuffelCarQuoteCore(input); }
+
 
 function carQuoteFromResult(result = {}) { return result?.quote || result || {}; }
 function carBookingFromResult(result = {}) { return result?.booking || (result?.id ? result : null); }
@@ -860,6 +1478,7 @@ function acceptedCarPrivacy(quote = {}, input = {}, existing = null) {
   return { accepted: true, acceptedAt: nowIso(), policies: acceptedPolicies };
 }
 
+
 export async function createCarCartCore(context, input = {}) {
   requireMemberContext(context);
   const quote = carQuoteFromResult(await getDuffelCarQuoteCore({ quoteId: input.quoteId }));
@@ -905,6 +1524,7 @@ export async function createCarCartCore(context, input = {}) {
   return { cartId: row.cart_id, step: "driver", paymentType };
 }
 
+
 export async function saveCarDriverCore(context, input = {}) {
   const row = await requireOwnedCart(context, input.cartId);
   assertEditable(row);
@@ -936,6 +1556,7 @@ export async function saveCarDriverCore(context, input = {}) {
   const updated = await updateOwnedCart(context, row.cart_id, { email: driver.email, status: "PaymentReady", currency: quote.totalCurrency, subtotal: decimal(quote.totalAmount), taxes: "0.00", total: decimal(quote.totalAmount), payload });
   return { cart: toPublicCart(updated), paymentType: carPaymentType(quote.paymentType) };
 }
+
 
 export async function prepareCarCheckoutCore(context, input = {}) {
   const row = await requireOwnedCart(context, input.cartId);
@@ -975,6 +1596,7 @@ export async function prepareCarCheckoutCore(context, input = {}) {
     }
   };
 }
+
 
 export async function commitCarBookingCore(context, input = {}) {
   if (input.termsAccepted !== true) throw bookingError("TERMS_REQUIRED", "Accept the booking and rental terms before continuing.");
@@ -1054,7 +1676,129 @@ export async function commitCarBookingCore(context, input = {}) {
   return confirmedResult(updated);
 }
 
+
 // Compatibility alias retained for consumers that used the B-006 name.
 export async function createCustomerCarBookingCore(context, input = {}) {
   return commitCarBookingCore(context, input);
+}
+
+
+// Recovered APIS form contract; cart access remains with this orchestrator.
+function bookingIdentityRules(cart = {}) {
+  const destination = text(
+    cart?.search?.destination ||
+    cart?.flight?.offer?.slices?.[0]?.destination?.iataCode ||
+    "",
+    100
+  );
+  return {
+    status: "READY",
+    summary: destination
+      ? `Traveler identity and document details are required for travel to ${destination}. Entry and transit requirements should be checked before departure.`
+      : "Traveler identity and document details are required before the reservation can be issued.",
+    destination,
+    fields: [],
+    notices: [],
+    providerStatus: "Traveler identity form validation"
+  };
+}
+
+
+
+
+export async function loadBookingRequirementsCore(context, input = {}) {
+  const loaded = await loadBookingCartCore(context, input);
+  return bookingIdentityRules({ ...loaded.cart, search: loaded.row.payload?.search || {} });
+}
+
+
+export async function refreshBookingRequirementsCore(context, input = {}) {
+  const loaded = await loadBookingCartCore(context, input);
+  const cart = { ...loaded.cart, search: loaded.row.payload?.search || {} };
+  const travelers = Array.isArray(input.travelers) ? input.travelers : [];
+    const rules = bookingIdentityRules(cart);
+    const notices = [];
+
+
+    for (const [index, traveler] of (Array.isArray(travelers) ? travelers : []).entries()) {
+      const nationality = text(traveler?.nationality, 2).toUpperCase();
+      const document = Array.isArray(traveler?.documents) ? traveler.documents[0] || {} : {};
+      const documentNumber = text(
+        traveler?.documentNumber || document?.number || "",
+        50
+      );
+      const expiry = text(
+        traveler?.documentExpiry || document?.expiryDate || "",
+        10
+      );
+
+
+      if (!/^[A-Z]{2}$/.test(nationality)) {
+        notices.push(`Traveler ${index + 1}: enter nationality as a two-letter country code.`);
+      }
+      if (!documentNumber) {
+        notices.push(`Traveler ${index + 1}: travel document number is required.`);
+      }
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(expiry)) {
+        notices.push(`Traveler ${index + 1}: enter a valid document expiry date.`);
+      }
+    }
+
+
+    return {
+      ...rules,
+      status: notices.length ? "REVIEW" : "READY",
+      notices
+    };
+}
+
+
+export async function createCarComponentClientKeyCore() {
+  return createDuffelComponentClientKeyCore();
+}
+
+
+export async function loadCustomerCarBookingCore(context, input = {}) {
+  const row = await requireOwnedCart(context, input.cartId);
+  if (row.payload?.productType !== "CAR_RENTAL_ONLY") throw bookingError("INVALID_PRODUCT_TYPE", "This is not a car-rental booking.");
+  const bookingId = text(row.payload?.carBooking?.id, 180);
+  if (!bookingId) throw bookingError("CAR_BOOKING_NOT_FOUND", "This cart has no confirmed rental booking.");
+  if (input.bookingId && text(input.bookingId, 180) !== bookingId) throw bookingError("CAR_BOOKING_REFERENCE_MISMATCH", "The supplier reference does not match this rental.");
+  return getDuffelCarBookingCore({ bookingId });
+}
+
+
+export async function cancelCustomerCarBookingCore(context, input = {}) {
+  const row = await requireOwnedCart(context, input.cartId);
+  if (row.payload?.productType !== "CAR_RENTAL_ONLY") throw bookingError("INVALID_PRODUCT_TYPE", "This is not a car-rental booking.");
+  const bookingId = text(row.payload?.carBooking?.id, 180);
+  if (!bookingId || (input.bookingId && text(input.bookingId, 180) !== bookingId)) throw bookingError("CAR_BOOKING_REFERENCE_MISMATCH", "The supplier reference does not match this rental.");
+  if (row.payload?.carCancellation?.status === "canceled") return { canceled: true, bookingId, requiresReconciliation: true };
+  if (row.status !== "Confirmed") throw bookingError("BOOKING_RECONCILIATION_REQUIRED", "This rental is already being changed or reconciled. Do not submit another cancellation.", 409);
+  const startedAt = nowIso();
+  const claimed = await transitionOwnedCart(context, row.cart_id, "Confirmed", "CarCancellationPending", {
+    payload: { ...(row.payload || {}), carCancellation: { bookingId, status: "pending", startedAt } }
+  });
+  if (!claimed) throw bookingError("BOOKING_COMMIT_CONFLICT", "This rental is already being processed.", 409);
+  try {
+    const result = await cancelDuffelCarBookingCore({ bookingId });
+    const supplierBooking = result?.booking || {};
+    const cancellationResolved = result?.reconciliationRequired !== true &&
+      supplierBooking.id === bookingId &&
+      (/^(canceled|cancelled)$/i.test(String(supplierBooking.status || "")) || Boolean(supplierBooking.cancelledAt));
+    await updateOwnedCart(context, row.cart_id, {
+      status: "ReconciliationRequired",
+      payload: {
+        ...(claimed.payload || row.payload || {}),
+        carCancellation: { bookingId, status: cancellationResolved ? "canceled" : "outcome_unknown", startedAt, completedAt: nowIso(), result },
+        reconciliation: { reason: cancellationResolved ? "CAR_CANCELLATION_ALTEA_SYNC_REQUIRED" : "CAR_CANCELLATION_OUTCOME_REVIEW", supplierMutationResolved: cancellationResolved, bookingId, createdAt: nowIso() }
+      }
+    });
+    return { ...result, canceled: cancellationResolved, bookingId, requiresReconciliation: true };
+  } catch (error) {
+    await markBookingReconciliationRequired(context, claimed, {
+      kind: "CAR_CANCELLATION_OUTCOME_REVIEW", code: text(error?.code || "CAR_CANCELLATION_FAILED", 100), supplierOrderId: bookingId
+    });
+    throw bookingError("BOOKING_RECONCILIATION_REQUIRED", "The rental cancellation needs review before any further action. Do not submit it again.", 409);
+  }
 }
