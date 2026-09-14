@@ -1,3 +1,5 @@
+// /WIX popup page
+import { APP_ROUTES } from "public/siteMap.js";
 /**
  * SKANDI Club auth modal controller — FIXED / defensive version
  *
@@ -16,23 +18,29 @@
  *    A native Wix Menu item does not work as #skandiClubMenuButton.
  */
 
-import wixLocation from "wix-location";
+
+import wixLocation from "wix-location-frontend";
 import { authentication, currentMember } from "wix-members-frontend";
+
 
 const CLUB_MODAL_ID = "#skandiClubAuthModal";
 const CLUB_MENU_BUTTON_ID = "#skandiClubMenuButton";
 
-const ACCOUNT_PATH = "/account/my-account";
-const MY_TRIPS_PATH = "/my-trips";
+
+const ACCOUNT_PATH = APP_ROUTES.myProfile;
+const MY_TRIPS_PATH = APP_ROUTES.myTrips;
+
 
 $w.onReady(async function () {
   const modal = getEl(CLUB_MODAL_ID);
   const trigger = getEl(CLUB_MENU_BUTTON_ID);
 
+
   if (!modal) {
     console.error(`[SKANDI Club] Missing HTML embed ${CLUB_MODAL_ID}. Add an HTML Embed element and set its ID to skandiClubAuthModal.`);
     return;
   }
+
 
   if (!isHtmlComponent(modal)) {
     console.error(
@@ -43,8 +51,10 @@ $w.onReady(async function () {
     modal.onMessage(handleModalMessage);
   }
 
+
   await setModalVisible(false);
   await sendToModal("CLOSE", {});
+
 
   if (trigger && typeof trigger.onClick === "function") {
     trigger.onClick(openClubModal);
@@ -58,6 +68,7 @@ $w.onReady(async function () {
     console.warn(`[SKANDI Club] Optional trigger ${CLUB_MENU_BUTTON_ID} not found. You can still open by calling openClubModalFromCode().`);
   }
 
+
   // Optional: if you link a normal Wix menu item to /skandi-club-sign-up?openClub=1
   // this opens the modal automatically on that page.
   if (String(wixLocation.query?.openClub || "") === "1") {
@@ -65,46 +76,56 @@ $w.onReady(async function () {
   }
 });
 
+
 async function handleModalMessage(event) {
   const data = event.data || {};
   if (data.source !== "SKANDI_CLUB_AUTH_MODAL") return;
+
 
   switch (data.type) {
     case "READY":
       await postStatus();
       break;
 
+
     case "CLOSE":
       await closeClubModal();
       break;
+
 
     case "LOGIN":
       await closeClubModal();
       await openNativeAuth("login");
       break;
 
+
     case "SIGNUP":
       await closeClubModal();
       await openNativeAuth("signup");
       break;
+
 
     case "FORGOT_PASSWORD":
       await closeClubModal();
       await openForgotPassword();
       break;
 
+
     case "ACCOUNT":
       wixLocation.to(ACCOUNT_PATH);
       break;
+
 
     case "MY_TRIPS":
       wixLocation.to(MY_TRIPS_PATH);
       break;
 
+
     default:
       console.warn("[SKANDI Club] Unknown modal message:", data);
   }
 }
+
 
 function getEl(selector) {
   try {
@@ -114,6 +135,7 @@ function getEl(selector) {
   }
 }
 
+
 function isHtmlComponent(el) {
   return Boolean(
     el &&
@@ -122,9 +144,11 @@ function isHtmlComponent(el) {
   );
 }
 
+
 async function setModalVisible(visible) {
   const modal = getEl(CLUB_MODAL_ID);
   if (!modal) return;
+
 
   try {
     if (visible) {
@@ -139,10 +163,13 @@ async function setModalVisible(visible) {
   }
 }
 
+
 async function sendToModal(type, payload = {}) {
   const modal = getEl(CLUB_MODAL_ID);
 
+
   if (!modal) return false;
+
 
   if (typeof modal.postMessage !== "function") {
     console.error(
@@ -151,6 +178,7 @@ async function sendToModal(type, payload = {}) {
     );
     return false;
   }
+
 
   try {
     modal.postMessage({
@@ -166,13 +194,16 @@ async function sendToModal(type, payload = {}) {
   }
 }
 
+
 export async function openClubModalFromCode() {
   await openClubModal();
 }
 
+
 async function openClubModal() {
   await setModalVisible(true);
   const status = await getMemberStatus();
+
 
   // Let the iframe finish rendering after expand/show.
   setTimeout(() => {
@@ -180,20 +211,24 @@ async function openClubModal() {
   }, 120);
 }
 
+
 async function closeClubModal() {
   await sendToModal("CLOSE", {});
   await setModalVisible(false);
 }
+
 
 async function postStatus() {
   const status = await getMemberStatus();
   await sendToModal("STATUS", { status });
 }
 
+
 async function openNativeAuth(mode) {
   try {
     await authentication.promptLogin({ mode });
     const status = await getMemberStatus();
+
 
     await setModalVisible(true);
     setTimeout(() => {
@@ -205,6 +240,7 @@ async function openNativeAuth(mode) {
   }
 }
 
+
 async function openForgotPassword() {
   try {
     await authentication.promptForgotPassword();
@@ -213,17 +249,21 @@ async function openForgotPassword() {
   }
 }
 
+
 async function getMemberStatus() {
   try {
     const member = await currentMember.getMember();
+
 
     if (!member) {
       return { loggedIn: false };
     }
 
+
     const firstName = member.contactDetails?.firstName || "";
     const lastName = member.contactDetails?.lastName || "";
     const fullName = `${firstName} ${lastName}`.trim();
+
 
     return {
       loggedIn: true,
