@@ -1,4 +1,4 @@
-// /src/backend/SKANDI_CORE/reservations.js
+// /src/backend/SKANDI_CORE/reservations.js 
 // SKANDI ALTEA Reservations — canonical SKANDI-owned booking/operations logic.
 // SKANDI Backend Base 1.0 — B-007 Reservations core.
 // Preserves the accepted R-006.9 booking, Inventory, Club, document and DCS behavior.
