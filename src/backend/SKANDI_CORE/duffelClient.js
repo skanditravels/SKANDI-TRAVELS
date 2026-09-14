@@ -1,16 +1,19 @@
 // /src/backend/SKANDI_CORE/duffelClient.js
-// SKANDI Backend Base 1.0 — B-005R2 canonical Duffel-only transport.
+// SKANDI Backend Base 1.0 — B-005R1 canonical Duffel-only transport.
 // Server-only. Owns Duffel HTTP, credentials, bounded read retries and diagnostics.
 // It does NOT own Stripe, booking orchestration, ALTEA/Supabase persistence or Wix page methods.
+
 
 import { fetch } from "wix-fetch";
 import { elevate } from "wix-auth";
 import { secrets } from "wix-secrets-backend.v2";
 
+
 const DUFFEL_BASE_URL = "https://api.duffel.com";
 const DUFFEL_VERSION = "v2";
 const elevatedGetSecretValue = elevate(secrets.getSecretValue);
 const secretCache = new Map();
+
 
 export class ProviderError extends Error {
   constructor(message, options = {}) {
@@ -29,19 +32,23 @@ export class ProviderError extends Error {
   }
 }
 
+
 function clean(value, max = 500) {
   return String(value ?? "").trim().slice(0, max);
 }
 
+
 function safeHeader(response, name) {
   try { return clean(response?.headers?.get?.(name), 240); } catch (_) { return ""; }
 }
+
 
 function correlationId(value = "") {
   const supplied = clean(value, 120);
   if (/^[A-Za-z0-9._:-]{1,120}$/.test(supplied)) return supplied;
   return `skandi-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`;
 }
+
 
 function buildUrl(path, query = {}) {
   const normalized = String(path || "").startsWith("/") ? String(path) : `/${path}`;
@@ -54,6 +61,7 @@ function buildUrl(path, query = {}) {
   return `${DUFFEL_BASE_URL}${normalized}${parts.length ? `?${parts.join("&")}` : ""}`;
 }
 
+
 function isBookingMutation(method, path) {
   if (String(method).toUpperCase() !== "POST") return false;
   const p = String(path || "").split("?")[0];
@@ -64,11 +72,13 @@ function isBookingMutation(method, path) {
     /^\/air\/order_cancellations\/[^/]+\/actions\/confirm$/.test(p);
 }
 
+
 function retryableStatus(status) {
   // Duffel guidance: 500/502 can represent ambiguous outcomes and must not be blindly retried.
   // 429/503/504 may be retried only when the caller has declared the request retry-safe.
   return status === 429 || status === 503 || status === 504;
 }
+
 
 function defaultTimeout(method, path, explicit) {
   const n = Number(explicit);
@@ -77,6 +87,7 @@ function defaultTimeout(method, path, explicit) {
   if (String(path || "").startsWith("/air/offer_requests")) return 70000;
   return 45000;
 }
+
 
 function retryDelayMs(response, attempt) {
   const retryAfter = Number(safeHeader(response, "retry-after"));
@@ -90,9 +101,11 @@ function retryDelayMs(response, attempt) {
   return Math.min(2500, 250 * (2 ** Math.max(0, attempt - 1)));
 }
 
+
 function delay(ms) {
   return new Promise(resolve => setTimeout(resolve, Math.max(0, Number(ms) || 0)));
 }
+
 
 function withTimeout(promise, timeoutMs, errorFactory) {
   let timer;
@@ -102,11 +115,9 @@ function withTimeout(promise, timeoutMs, errorFactory) {
   return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
 }
 
+
 async function readPayload(response, path, requestCorrelationId) {
-  // Duffel flight-search responses can legitimately exceed 2 MB. Never truncate a
-  // successful provider body before JSON parsing; truncation turns valid JSON into
-  // a false NON_JSON_RESPONSE. Keep logging bounded, not the response itself.
-  const raw = String(await response.text() ?? "").replace(/^\uFEFF/, "").trim();
+  const raw = String((await response.text()) ?? "").replace(/^\uFEFF/, "").trim();
   if (!raw) {
     if ([202, 204].includes(Number(response?.status))) return { payload: null, validJson: true, raw: "" };
     return { payload: null, validJson: false, raw: "" };
@@ -125,6 +136,7 @@ async function readPayload(response, path, requestCorrelationId) {
   }
 }
 
+
 function diagnostics(response, fallbackCorrelationId) {
   const limit = safeHeader(response, "ratelimit-limit");
   const remaining = safeHeader(response, "ratelimit-remaining");
@@ -136,6 +148,7 @@ function diagnostics(response, fallbackCorrelationId) {
     rateLimit: (limit || remaining || reset) ? { limit, remaining, reset } : null
   };
 }
+
 
 function publicMessage(status, diag = {}, outcomeUnknown = false) {
   const ref = diag.requestId ? ` Provider reference: ${diag.requestId}.` : "";
@@ -149,6 +162,7 @@ function publicMessage(status, diag = {}, outcomeUnknown = false) {
   if (status === 422) return "Duffel rejected the booking request. Review the supplied details before trying again.";
   return `The live travel request could not be completed.${ref}`;
 }
+
 
 function providerErrorFromResponse(status, payload, diag, options = {}) {
   const first = Array.isArray(payload?.errors) ? payload.errors[0] : null;
@@ -169,6 +183,7 @@ function providerErrorFromResponse(status, payload, diag, options = {}) {
   );
 }
 
+
 export async function duffelRequest(path, options = {}) {
   const token = await requiredSecret("DUFFEL_ACCESS_TOKEN");
   const method = clean(options.method || "GET", 12).toUpperCase();
@@ -178,6 +193,7 @@ export async function duffelRequest(path, options = {}) {
   const maxAttempts = retrySafe ? Math.max(1, Math.min(3, Number(options.maxAttempts || 2))) : 1;
   const timeoutMs = defaultTimeout(method, path, options.timeoutMs);
   const url = buildUrl(path, options.query);
+
 
   for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
     const headers = {
@@ -190,11 +206,13 @@ export async function duffelRequest(path, options = {}) {
     delete headers["Accept-Encoding"];
     delete headers["accept-encoding"];
 
+
     const request = { method, headers };
     if (options.body !== undefined) {
       headers["Content-Type"] = "application/json";
       request.body = JSON.stringify(options.body);
     }
+
 
     let response;
     try {
@@ -229,8 +247,10 @@ export async function duffelRequest(path, options = {}) {
       throw normalized;
     }
 
+
     const diag = diagnostics(response, requestCorrelationId);
     const { payload, validJson } = await readPayload(response, path, requestCorrelationId);
+
 
     if (!response.ok) {
       const error = providerErrorFromResponse(Number(response.status || 500), payload, diag, {
@@ -240,6 +260,7 @@ export async function duffelRequest(path, options = {}) {
       if (attempt < maxAttempts && error.retryable) { await delay(retryDelayMs(response, attempt)); continue; }
       throw error;
     }
+
 
     if (!validJson) {
       throw new ProviderError("Duffel returned an invalid response.", {
@@ -256,6 +277,7 @@ export async function duffelRequest(path, options = {}) {
       });
     }
 
+
     return {
       data: payload?.data ?? null,
       meta: payload?.meta ?? null,
@@ -267,17 +289,21 @@ export async function duffelRequest(path, options = {}) {
     };
   }
 
+
   throw new ProviderError("Duffel request failed.", { code: "DUFFEL_REQUEST_FAILED" });
 }
+
 
 export async function getDuffelEnvironment() {
   const token = await requiredSecret("DUFFEL_ACCESS_TOKEN");
   return /(^duffel_test_|_test_)/i.test(token) ? "test" : "live";
 }
 
+
 export async function getDuffelServerConfig() {
   return { provider: "Duffel", apiVersion: DUFFEL_VERSION, environment: await getDuffelEnvironment() };
 }
+
 
 async function requiredSecret(name) {
   if (!secretCache.has(name)) {
@@ -285,6 +311,7 @@ async function requiredSecret(name) {
   }
   return secretCache.get(name);
 }
+
 
 async function loadSecret(name) {
   try {
