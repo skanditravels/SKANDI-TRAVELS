@@ -1,6 +1,6 @@
 // /src/backend/SKANDI_CORE/atbTicket.js
 // SKANDI R-006.6 — one ATB-size renderer for:
-//   BOARDING_CARD, TRANSFER_TICKET, TOUR_TICKET
+//   BOARDING_CARD, TRANSFER_TICKET, TOUR_TICKET 
 // Visual source of truth: boarding_card_atb_pdf417_airline_operated_by.html
 // Physical stock remains 203.20 × 82.55 mm.
 
