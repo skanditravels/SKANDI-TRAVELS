@@ -1,5 +1,5 @@
 // /src/backend/SKANDI_CORE/platformAudit.js
-// SKANDI Backend Base 1.0 — audit persistence helpers.
+// SKANDI Backend Base 1.0 — audit persistence helpers. 
 // Audit persistence must never become an authorization bypass or single point of failure.
 
 import { restRequest } from "backend/SKANDI_CORE/supabaseServer.js";
