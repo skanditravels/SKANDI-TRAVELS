@@ -1,12 +1,14 @@
+import { SITE_MAP, isSafeInternalRoute } from "public/siteMap.js";
 // /src/pages/Mail.js
-// Route: /riaintra/mail
+// Route: /riaintra/success-factors/mail
 // Embed: #mailEmbed
 // R-003.9 canonical RIA Mail page bridge.
 
-import wixLocation from "wix-location";
+
+import wixLocation from "wix-location-frontend";
 import { authentication } from "wix-members-frontend";
-import { getStaffPortalSession } from "backend/RIA/staffPortalAuth.web";
-import { runInternalGlobalSearch } from "backend/internalChrome.web";
+import { getStaffPortalSession } from "backend/SKANDI_CORE/staffAuth.web";
+import { runInternalGlobalSearch } from "backend/SKANDI_CORE/internalSearch.web";
 import {
   getMailBootstrap,
   listMailMessages,
@@ -16,21 +18,25 @@ import {
   updateMailUserState,
   getMailDirectory,
   getMailDiagnostics
-} from "backend/RIA/mail.web";
+} from "backend/SKANDI_CORE/mail.web";
+
 
 const EMBED = "#mailEmbed";
 const EMBED_SOURCE = "SKANDI_MAIL_EMBED";
 const PARENT_SOURCE = "SKANDI_WIX_PARENT";
 const CHROME_SOURCE = "SKANDI_INTERNAL_CHROME";
-const LOGIN_PATH = "/riaintra";
-const HOME_PATH = "/";
-const PROFILE_PATH = "/riaintra/success-factors";
+const LOGIN_PATH = SITE_MAP.staffLogin;
+const HOME_PATH = SITE_MAP.home;
+const PROFILE_PATH = SITE_MAP.successFactors;
+
 
 let bootstrapPromise = null;
+
 
 function currentPath() {
   return "/" + wixLocation.path.join("/");
 }
+
 
 function send(html, type, payload = {}) {
   html.postMessage({
@@ -41,15 +47,18 @@ function send(html, type, payload = {}) {
   });
 }
 
+
 function allowedPath(path) {
   const p = String(path || "").trim();
-  return p === "/" || p === LOGIN_PATH || p.startsWith("/riaintra/");
+  return isSafeInternalRoute(p) && (p === HOME_PATH || p === LOGIN_PATH || p.startsWith(`${LOGIN_PATH}/`));
 }
+
 
 async function logout() {
   try { await authentication.logout(); } catch (_) {}
   wixLocation.to(HOME_PATH);
 }
+
 
 async function ensureSession() {
   const session = await getStaffPortalSession().catch(() => null);
@@ -60,12 +69,15 @@ async function ensureSession() {
   return session;
 }
 
+
 async function bootstrap(html, { force = false } = {}) {
   if (bootstrapPromise && !force) return bootstrapPromise;
+
 
   bootstrapPromise = (async () => {
     const session = await ensureSession();
     if (!session) return null;
+
 
     const data = await getMailBootstrap();
     send(html, "MAIL_BOOTSTRAP", data);
@@ -80,6 +92,7 @@ async function bootstrap(html, { force = false } = {}) {
     return data;
   })();
 
+
   try {
     return await bootstrapPromise;
   } finally {
@@ -87,14 +100,17 @@ async function bootstrap(html, { force = false } = {}) {
   }
 }
 
+
 $w.onReady(function () {
   const html = $w(EMBED);
+
 
   html.onMessage(async (event) => {
     const msg = event.data || {};
     const source = String(msg.source || "");
     const type = String(msg.type || msg.event || "");
     const payload = msg.payload || {};
+
 
     try {
       if (source === CHROME_SOURCE) {
@@ -123,20 +139,25 @@ $w.onReady(function () {
         return;
       }
 
+
       if (source !== EMBED_SOURCE) return;
+
 
       switch (type) {
         case "MAIL_READY":
           await bootstrap(html);
           return;
 
+
         case "MAIL_LIST_REQUEST":
           send(html, "MAIL_LIST_RESPONSE", await listMailMessages(payload));
           return;
 
+
         case "MAIL_GET_REQUEST":
           send(html, "MAIL_GET_RESPONSE", await getMailMessage(payload));
           return;
+
 
         case "MAIL_SEND_REQUEST": {
           const result = await sendMailMessage(payload);
@@ -145,9 +166,11 @@ $w.onReady(function () {
           return;
         }
 
+
         case "MAIL_DRAFT_SAVE_REQUEST":
           send(html, "MAIL_DRAFT_SAVE_RESPONSE", await saveMailDraft(payload));
           return;
+
 
         case "MAIL_STATE_REQUEST": {
           const result = await updateMailUserState(payload);
@@ -160,17 +183,21 @@ $w.onReady(function () {
           return;
         }
 
+
         case "MAIL_DIRECTORY_REQUEST":
           send(html, "MAIL_DIRECTORY_RESPONSE", await getMailDirectory());
           return;
+
 
         case "MAIL_DIAGNOSTICS_REQUEST":
           send(html, "MAIL_DIAGNOSTICS_RESPONSE", await getMailDiagnostics());
           return;
 
+
         case "MAIL_NAVIGATE":
           if (allowedPath(payload.path)) wixLocation.to(payload.path);
           return;
+
 
         default:
           send(html, "MAIL_ERROR", { action: type, message: "Unsupported Mail action." });
