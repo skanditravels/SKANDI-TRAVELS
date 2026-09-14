@@ -1,7 +1,7 @@
 // /src/backend/SKANDI_CORE/duffelGround.js
 // SKANDI Backend Base 1.0 — B-005R1 canonical Duffel Stays/Cars provider core.
 // Pure provider layer: no Wix member/staff auth, no Supabase/ALTEA persistence and no Stripe.
-// Booking ownership and synchronization stay in customerBooking/reservations.
+// Booking ownership and synchronization stay in customerBooking/reservations. 
 
 import { duffelRequest } from "backend/SKANDI_CORE/duffelClient.js";
 
