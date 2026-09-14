@@ -1,18 +1,24 @@
 // masterPage.js
-// SKANDI GLOBAL CHROME CONTROL — Backend Base 1.0 / B-002
+// SKANDI GLOBAL CHROME CONTROL — Backend Base 1.0 / B-011 canonical route convergence
 // Single source of truth for public/internal chrome, routes, assets and safe navigation.
+
 
 import wixLocationFrontend from "wix-location-frontend";
 import wixSiteFrontend from "wix-site-frontend";
 import { currentMember, authentication } from "wix-members-frontend";
 import { getCustomerHeaderSession, subscribeCustomerNewsletter } from "backend/SKANDI_CORE/customerSession.web";
 import { getStaffPortalSession } from "backend/SKANDI_CORE/staffAuth.web";
+import { SITE_MAP, APP_ROUTES, isSafeInternalRoute } from "public/siteMap.js";
 
-const MASTER_VERSION = "BACKEND-BASE-1.0-B002";
+
+
+
+const MASTER_VERSION = "BACKEND-BASE-1.0-B011";
 const PARENT_SOURCE = "SKANDI_WIX_PARENT";
 const CUSTOMER_HEADER_SOURCE = "SKANDI_CUSTOMER_HEADER_EXPANDBAR";
 const CUSTOMER_FOOTER_SOURCE = "SKANDI_CUSTOMER_FOOTER";
 const ALTEA_HEADER_SOURCE = "SKANDI_ALTEA_HEADER";
+
 
 const MASTER_CONFIG = Object.freeze({
   brand: Object.freeze({
@@ -21,7 +27,7 @@ const MASTER_CONFIG = Object.freeze({
     internalName: "RIAINTRA",
     alteaName: "ALTEA",
     slogans: Object.freeze({
-      en: "Unforgettable Moments.",
+      en: "Signature Travels, Unforgettable Moments.",
       sv: "När du längtar bort",
       no: "Når du lengter bort",
       da: "Når du længes væk",
@@ -53,62 +59,31 @@ const MASTER_CONFIG = Object.freeze({
     })
   }),
 
+
   routes: Object.freeze({
-    home: "/",
-    search: "/search",
-    flights: "/flights",
-    carRental: "/car-rental",
-    hotels: "/hotels",
-    packages: "/packages",
-    tours: "/tours",
-    activities: "/activities",
-    transfers: "/transfers",
-    destinations: "/destinations",
-    offers: "/offers",
-    travelInfo: "/travel-info",
-    skandiCollection: "/skandi-collection",
-    voy: "/voy-magazine",
-    myTrip: "/my-profile?tab=trips",
-    club: "/skandi-club",
-    about: "/about",
-    support: "/about/support",
-    newsroom: "/about/news-room",
-    theStore: "/the-store",
-    storeCheckout: "/the-store/store-checkout",
-    storeConfirmation: "/the-store/store-checkout/order-confirmation",
-    ourNetwork: "/about/our-network",
-    legal: "/about/legal",
-    policies: "/about/legal/policies",
-    riaintra: "/riaintra",
-    staffLogin: "/riaintra",
-    successFactors: "/riaintra/success-factors",
-    alteaLaunchpad: "/riaintra/success-factors/altea",
-    alteaReservations: "/riaintra/success-factors/altea/reservations",
-    alteaTimatic: "/riaintra/success-factors/altea/timatic",
-    mail: "/riaintra/success-factors/mail",
-    docunet: "/riaintra/success-factors/docunet",
-    serviceDesk: "/riaintra/success-factors/helpdesk",
-    magazineManager: "/riaintra/success-factors/media-control"
+    ...SITE_MAP,
+    ...APP_ROUTES
   }),
+
 
   customer: Object.freeze({
     header: Object.freeze({
       primaryNav: Object.freeze([
-        { id:"flights", label:"Flights", path:"/flights" },
-        { id:"hotels", label:"Hotels", path:"/hotels" },
-        { id:"packages", label:"Packages", path:"/packages" },
-        { id:"tours", label:"Tours & Activities", path:"/tours" },
-        { id:"transfers", label:"Transfers", path:"/transfers" }
+        { id:"flights", label:"Flights", path:SITE_MAP.flights },
+        { id:"hotels", label:"Hotels", path:SITE_MAP.hotels },
+        { id:"packages", label:"Packages", path:SITE_MAP.packages },
+        { id:"tours", label:"Tours & Activities", path:SITE_MAP.tours },
+        { id:"transfers", label:"Transfers", path:SITE_MAP.transfers }
       ]),
       secondaryNav: Object.freeze([
-        { id:"destinations", label:"Destinations", path:"/destinations" },
-        { id:"signature", label:"SKANDI Collection", path:"/skandi-collection" },
-        { id:"voy", label:"VOY Magazine", path:"/voy-magazine" },
-        { id:"newsroom", label:"Newsroom", path:"/about/news-room" }
+        { id:"destinations", label:"Destinations", path:SITE_MAP.destinations },
+        { id:"signature", label:"SKANDI Collection", path:SITE_MAP.skandiCollection },
+        { id:"voy", label:"VOY Magazine", path:SITE_MAP.voy },
+        { id:"newsroom", label:"Newsroom", path:SITE_MAP.newsroom }
       ]),
       accountNav: Object.freeze([
         { id:"myTrip", label:"My Trips", path:"/my-profile?tab=trips" },
-        { id:"club", label:"SKANDI Club", path:"/skandi-club" }
+        { id:"club", label:"SKANDI Club", path:SITE_MAP.club }
       ])
     }),
     footer: Object.freeze({
@@ -116,78 +91,81 @@ const MASTER_CONFIG = Object.freeze({
         {
           title:"BOOK & TRAVEL",
           links:Object.freeze([
-            { label:"Book a trip", path:"/" },
+            { label:"Book a trip", path:SITE_MAP.home },
             { label:"Manage your booking", path:"/my-profile?tab=trips" },
-            { label:"Our Destinations", path:"/destinations" },
-            { label:"Flights", path:"/flights" },
-            { label:"Hotels", path:"/hotels" },
-            { label:"Tours & Activities", path:"/tours" },
-            { label:"Car Rental", path:"/car-rental" },
-            { label:"Airport Transfer", path:"/transfers" },
-            { label:"Last Chance", path:"/offers" }
+            { label:"Our Destinations", path:SITE_MAP.destinations },
+            { label:"Flights", path:SITE_MAP.flights },
+            { label:"Hotels", path:SITE_MAP.hotels },
+            { label:"Tours & Activities", path:SITE_MAP.tours },
+            { label:"Car Rental", path:SITE_MAP.carRental },
+            { label:"Airport Transfer", path:SITE_MAP.transfers },
+            { label:"Last Chance", path:SITE_MAP.offers }
           ])
         },
         {
           title:"HELP & TRAVEL INFO",
           links:Object.freeze([
-            { label:"Before you travel", path:"/travel-info" },
+            { label:"Before you travel", path:SITE_MAP.travelInfo },
             { label:"Passport & Visa", path:"/travel-info/passport-visa" },
             { label:"Baggage Allowence", path:"/travel-info/baggage-allowence" },
             { label:"Travel Insurance", path:"/travel-info/insurance" },
             { label:"Special Assistance", path:"/travel-info/special-assistance" },
             { label:"Flight Status", path:"/travel-info/flight-status" },
-            { label:"Help Center", path:"/about/support" }
+            { label:"Help Center", path:SITE_MAP.support }
           ])
         },
         {
           title:"SKANDI",
           links:Object.freeze([
-            { label:"Join SKANDI Club", path:"/skandi-club" },
+            { label:"Join SKANDI Club", path:SITE_MAP.club },
             { label:"Log In to My Club", path:"/my-profile" },
-            { label:"SKANDI Collection", path:"/skandi-collection" },
-            { label:"THE STORE", path:"/the-store" },
-            { label:"VOY Magazine", path:"/voy-magazine" }
+            { label:"SKANDI Collection", path:SITE_MAP.skandiCollection },
+            { label:"THE STORE", path:SITE_MAP.theStore },
+            { label:"VOY Magazine", path:SITE_MAP.voy }
           ])
         },
         {
           title:"ABOUT SKANDI",
           links:Object.freeze([
-            { label:"About SKANDI", path:"/about" },
+            { label:"About SKANDI", path:SITE_MAP.about },
             { label:"Careers", path:"/about/careers" },
-            { label:"Newsroom", path:"/about/news-room" },
-            { label:"Our Network", path:"/about/our-network" }
+            { label:"Newsroom", path:SITE_MAP.newsroom },
+            { label:"Our Network", path:SITE_MAP.ourNetwork }
           ])
         }
       ]),
-      staffLogin: Object.freeze({ label:"Staff Login", path:"/riaintra" })
+      staffLogin: Object.freeze({ label:"Staff Login", path:SITE_MAP.riaintra })
     })
   }),
+
 
   internal: Object.freeze({
     header: Object.freeze({
       productName:"SKANDI TRAVELS",
       productContext:"RIAINTRA Enterprise Workforce Suite",
       primaryNav:Object.freeze([
-        { id:"success-factors", label:"SAP RIAINTRA Dashboard", path:"/riaintra/success-factors" },
+        { id:"success-factors", label:"SAP RIAINTRA Dashboard", path:SITE_MAP.successFactors },
         { id:"my-roster", label:"MyRoster", path:"/riaintra/success-factors/my-roster" },
-        { id:"alteaLaunchpad", label:"ALTEA", path:"/riaintra/success-factors/altea" },
-        { id:"mail", label:"Mail", path:"/riaintra/success-factors/mail" },
-        { id:"docunet", label:"DocuNet", path:"/riaintra/success-factors/docunet" },
-        { id:"service-desk", label:"ServiceDesk", path:"/riaintra/success-factors/helpdesk" }
+        { id:"alteaLaunchpad", label:"ALTEA", path:SITE_MAP.alteaLaunchpad },
+        { id:"mail", label:"Mail", path:SITE_MAP.mail },
+        { id:"docunet", label:"DocuNet", path:SITE_MAP.docunet },
+        { id:"helpdesk", label:"HelpDesk", path:SITE_MAP.serviceDesk }
       ]),
       managementNav:Object.freeze([
-        { id:"magazine-manager", label:"Media Manager", path:"/riaintra/success-factors/media-control" }
+        { id:"magazine-manager", label:"Media Manager", path:SITE_MAP.magazineManager },
+        { id:"payroll", label:"Payroll", path:SITE_MAP.payroll }
       ])
     }),
     footer:Object.freeze({
       links:Object.freeze([
-        { label:"RIAINTRA", path:"/riaintra" },
-        { label:"DocuNet", path:"/riaintra/success-factors/docunet" },
-        { label:"ServiceDesk", path:"/riaintra/success-factors/helpdesk" }
+        { label:"RIAINTRA", path:SITE_MAP.riaintra },
+        { label:"DocuNet", path:SITE_MAP.docunet },
+        { label:"HelpDesk", path:SITE_MAP.serviceDesk }
       ])
     })
   })
 });
+
 
 const IDS = Object.freeze({
   customerHeaders:["#skandiHeaderEmbed", "#skandiCustomerHeaderEmbed"],
@@ -197,13 +175,16 @@ const IDS = Object.freeze({
   alteaHeaders:["#alteaHeaderEmbed", "#alteaHeader"]
 });
 
+
 const INTERNAL_PREFIXES = ["/riaintra", "/altea", "/_functions"];
 const GROUPTALK_CHROME_FREE_PATHS = Object.freeze([
   "/riaintra/success-factors/altea/grouptalk"
 ]);
 
+
 let alteaRuntimeContext = {};
 const wiredEmbeds = new Set();
+
 
 function safeEl(id) {
   try { return $w(id); } catch (_) { return null; }
@@ -231,6 +212,7 @@ function internalHeaderEl() { return firstHtml(IDS.internalHeaders); }
 function internalFooterEl() { return firstHtml(IDS.internalFooters); }
 function alteaHeaderEl() { return firstHtml(IDS.alteaHeaders); }
 
+
 function allHtmlComponents() {
   try {
     const result = $w("HtmlComponent");
@@ -244,6 +226,7 @@ function allHtmlComponents() {
     return [];
   }
 }
+
 
 function currentWixPageInfo() {
   try {
@@ -277,9 +260,9 @@ function isChromeFreeInternalPath(path = currentPathString()) {
   return GROUPTALK_CHROME_FREE_PATHS.some(p => value === p || value.startsWith(p + "/"));
 }
 function isSafeRoute(path) {
-  const value = String(path || "").trim();
-  return Boolean(value && value.startsWith("/") && !value.startsWith("//") && !/^(javascript|data|vbscript):/i.test(value));
+  return isSafeInternalRoute(path);
 }
+
 
 function postToEmbed(embed, type, payload = {}) {
   if (!isHtmlEmbed(embed)) return false;
@@ -291,6 +274,7 @@ function postToEmbed(embed, type, payload = {}) {
     return false;
   }
 }
+
 
 function masterPayload(extra = {}) {
   const page = currentWixPageInfo();
@@ -337,6 +321,7 @@ function navigate(path) {
   closeCustomerHeaderPanels();
   wixLocationFrontend.to(value);
 }
+
 
 async function getCustomerState() {
   try {
@@ -385,16 +370,19 @@ async function pushStaffHeaderState(embed = internalHeaderEl()) {
   });
 }
 
+
 async function handleMasterMessage(embed, message = {}) {
   const type = String(message?.type || "");
   const source = String(message?.source || "");
   const payload = message?.payload && typeof message.payload === "object" ? message.payload : {};
+
 
   if (type === "MASTER_CONFIG_REQUEST" || type === "SKANDI_MASTER_CONFIG_REQUEST") {
     const extra = isInternalPath()
       ? { staff:await getStaffState() }
       : { customerSession:await getCustomerState() };
     pushMasterConfig(embed, extra);
+
 
     if (source === ALTEA_HEADER_SOURCE && isAlteaPath()) {
       const page = currentWixPageInfo();
@@ -410,6 +398,7 @@ async function handleMasterMessage(embed, message = {}) {
     return true;
   }
 
+
   if (type === "MASTER_ASSETS_REQUEST") {
     postToEmbed(embed, "SKANDI_MASTER_ASSETS", MASTER_CONFIG.brand.assets);
     return true;
@@ -422,6 +411,7 @@ async function handleMasterMessage(embed, message = {}) {
     navigate(message.path || payload.path || "");
     return true;
   }
+
 
   if (type === "ALTEA_SYSTEM_CONTEXT" && isInternalPath()) {
     const next = {
@@ -438,12 +428,14 @@ async function handleMasterMessage(embed, message = {}) {
     return true;
   }
 
+
   if (source === CUSTOMER_HEADER_SOURCE && type === "SKANDI_EMBED_RESIZE") {
     const requested = Number(payload.height);
     const height = Number.isFinite(requested) ? Math.max(118, Math.min(1200, Math.round(requested))) : 118;
     try { if ("height" in embed) embed.height = height; } catch (_) {}
     return true;
   }
+
 
   if (source === CUSTOMER_HEADER_SOURCE) {
     switch (type) {
@@ -483,6 +475,7 @@ async function handleMasterMessage(embed, message = {}) {
         break;
     }
   }
+
 
   if (source === CUSTOMER_FOOTER_SOURCE) {
     switch (type) {
@@ -524,6 +517,7 @@ async function handleMasterMessage(embed, message = {}) {
     }
   }
 
+
   if (type === "RIAINTRA_HEADER_READY" || type === "INTERNAL_HEADER_READY") {
     await pushStaffHeaderState(embed);
     return true;
@@ -538,8 +532,10 @@ async function handleMasterMessage(embed, message = {}) {
     return true;
   }
 
+
   return false;
 }
+
 
 function wireHtmlComponent(embed) {
   if (!isHtmlEmbed(embed)) return;
@@ -553,6 +549,7 @@ function wireHtmlComponent(embed) {
   // Initial push is useful for components that are already loaded; components also request it when ready.
   pushMasterConfig(embed);
 }
+
 
 function wireAllHtmlComponents() {
   const found = new Map();
@@ -571,6 +568,7 @@ function wireAllHtmlComponents() {
   for (const el of found.values()) wireHtmlComponent(el);
 }
 
+
 async function setElementVisible(element, visible) {
   if (!element) return;
   try {
@@ -584,11 +582,13 @@ async function setElementVisible(element, visible) {
   } catch (_) {}
 }
 
+
 async function applyChromeVisibility() {
   const path = currentPathString();
   const internal = isInternalPath(path);
   const altea = isAlteaPath(path);
   const chromeFree = isChromeFreeInternalPath(path);
+
 
   await Promise.all([
     setElementVisible(firstExisting(IDS.customerHeaders), !internal),
@@ -599,18 +599,22 @@ async function applyChromeVisibility() {
   ]);
 }
 
+
 function pushConfigToAll() {
   for (const embed of allHtmlComponents()) pushMasterConfig(embed);
 }
+
 
 $w.onReady(async function () {
   wireAllHtmlComponents();
   await applyChromeVisibility();
 
+
   const header = customerHeaderEl();
   const footer = customerFooterEl();
   const internalHeader = internalHeaderEl();
   const alteaHeader = alteaHeaderEl();
+
 
   if (!isInternalPath()) {
     if (header) await pushCustomerHeaderState(header);
@@ -622,12 +626,14 @@ $w.onReady(async function () {
     }
   }
 
+
   try {
     authentication.onLogin(() => {
       const currentHeader = customerHeaderEl();
       if (currentHeader) pushCustomerHeaderState(currentHeader);
     });
   } catch (_) {}
+
 
   // Re-enumerate after Wix has mounted page-level HTML Components.
   setTimeout(() => { wireAllHtmlComponents(); pushConfigToAll(); }, 250);
