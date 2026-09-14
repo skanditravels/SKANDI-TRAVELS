@@ -1,7 +1,7 @@
 // /src/backend/SKANDI_CORE/stripeClient.js
 // SKANDI Backend Base 1.0 — B-005R1 canonical Stripe-only transport.
 // Server-only. Owns PaymentIntent transport and authorization assertions.
-// It never owns Duffel, ALTEA/Supabase persistence, booking state, or Wix page methods.
+// It never owns Duffel, ALTEA/Supabase persistence, booking state, or Wix page methods. 
 
 import { fetch } from "wix-fetch";
 import { elevate } from "wix-auth";
