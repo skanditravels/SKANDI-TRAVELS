@@ -1,5 +1,5 @@
 // /src/backend/SKANDI_CORE/invoice.js
-// SKANDI R-006.6 — canonical SKANDI Customer Invoice renderer.
+// SKANDI R-006.6 — canonical SKANDI Customer Invoice renderer. 
 // Visual source of truth: user-approved skandi_invoice_pdf_sample.html.
 // This renderer is presentation-only: it consumes canonical booking/finance data,
 // never creates a second financial ledger, and stores generated HTML through the
