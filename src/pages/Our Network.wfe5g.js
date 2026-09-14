@@ -1,15 +1,19 @@
-import { getPublicNetworkMapData } from "backend/networkMapService.web";
+import { getPublicNetworkMapData } from "backend/SKANDI_CORE/networkMap.web";
+
 
 const HTML_ID = "#htmlSkandiMap";
 const HTML_SOURCE = "SKANDI_PUBLIC_NETWORK_MAP";
 const PARENT_SOURCE = "SKANDI_WIX_PARENT";
 
+
 $w.onReady(function () {
   const mapHtml = $w(HTML_ID);
+
 
   async function sendMapData() {
     try {
       const mapData = await getPublicNetworkMapData();
+
 
       mapHtml.postMessage({
         source: PARENT_SOURCE,
@@ -26,17 +30,21 @@ $w.onReady(function () {
     }
   }
 
+
   mapHtml.onMessage(async (event) => {
     const msg = event.data || {};
     const type = typeof msg === "string" ? msg : msg.type;
     const source = msg.source || "";
 
+
     if (source && source !== HTML_SOURCE) return;
+
 
     if (type === "SKANDI_MAP_READY" || type === "SKANDI_MAP_REFRESH") {
       await sendMapData();
     }
   });
+
 
   sendMapData();
 });
