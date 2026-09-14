@@ -1,36 +1,59 @@
-import wixLocation from "wix-location";
+import wixLocation from "wix-location-frontend";
 import { session } from "wix-storage";
-
+import { SITE_MAP, APP_ROUTES, isSafeInternalRoute } from "public/siteMap.js";
 import {
-  getBookingCart,
-  saveOfferDecision,
-  getBookingExtras,
-  saveBookingExtras,
-  getSignatureTransferOptions,
-  saveSignatureTransfer,
-  savePassengerApisAndReprice,
-  bookingHasFlight,
-  prepareBookingPayment,
-  authorizePaymentAndCommitBooking
-} from "backend/bookingOrchestrator.web";
+  loadBookingCart,
+  acceptBookingOffer as saveOfferDecision,
+  loadBookingExtras as getBookingExtras,
+  storeBookingExtras as saveBookingExtras,
+  loadSignatureTransfers as getSignatureTransferOptions,
+  storeSignatureTransfer as saveSignatureTransfer,
+  saveBookingTravelers,
+  saveHotelGuests,
+  prepareBookingPayment as prepareFlightPayment,
+  prepareHotelPayment,
+  commitBooking as commitFlightBooking,
+  commitHotelBooking,
+  loadBookingRequirements as getApisRulesForCart,
+  refreshBookingRequirements as refreshTravelRequirements,
+  loadSeatMaps as getSeatmapForCart,
+  storeSeatSelections as saveSeatSelections,
+  loadBookingConfirmation as getSourceAwareBookingConfirmation,
+  loadBookingDocuments as getTravelDocumentsForCart
+} from "backend/SKANDI_CORE/customerBooking.web";
 
-import {
-  getApisRulesForCart,
-  refreshTravelRequirements
-} from "backend/bookingApisRules.web";
 
-import {
-  getSeatmapForCart,
-  saveSeatSelections
-} from "backend/bookingSeats.web";
+let activeProductType = "FLIGHT";
+async function getBookingCart(input = {}) {
+  const cart = await loadBookingCart(input);
+  activeProductType = String(cart.productType || "FLIGHT").toUpperCase();
+  return cart;
+}
+function isHotelCart() { return activeProductType === "HOTEL_ONLY"; }
+async function bookingHasFlight(input) {
+  const cart = await getBookingCart(input);
+  return Boolean(cart.selectedOffer?.id && !["HOTEL_ONLY", "CAR_RENTAL_ONLY"].includes(activeProductType));
+}
+async function savePassengerApisAndReprice(input) {
+  await getBookingCart(input);
+  if (isHotelCart()) {
+    return saveHotelGuests({ ...input, guests: input.travelers, email: input.contact?.email, phoneNumber: input.contact?.phoneNumber || input.contact?.phone });
+  }
+  return saveBookingTravelers(input);
+}
+async function prepareBookingPayment(input) {
+  await getBookingCart(input);
+  return isHotelCart() ? prepareHotelPayment(input) : prepareFlightPayment(input);
+}
+async function authorizePaymentAndCommitBooking(input) {
+  await getBookingCart(input);
+  return isHotelCart() ? commitHotelBooking(input) : commitFlightBooking(input);
+}
 
-import {
-  getSourceAwareBookingConfirmation,
-  getTravelDocumentsForCart
-} from "backend/bookingDocuments.web";
 
 const STATEBOX_ID = "#bookingFlowStates";
 const PARENT_SOURCE = "SKANDI_WIX_PARENT";
+
 
 const STEPS = {
   offer: { state: "stateOffer", embed: "#bookingOfferEmbed", source: "SKANDI_BOOKING_OFFER" },
@@ -43,10 +66,12 @@ const STEPS = {
   documents: { state: "stateDocuments", embed: "#bookingDocumentsEmbed", source: "SKANDI_BOOKING_DOCUMENTS" }
 };
 
+
 const SOURCE_TO_STEP = Object.keys(STEPS).reduce((acc, step) => {
   acc[STEPS[step].source] = step;
   return acc;
 }, {});
+
 
 const READY_TYPES = {
   offer: "BOOKING_OFFER_READY",
@@ -59,6 +84,7 @@ const READY_TYPES = {
   documents: "BOOKING_DOCUMENTS_READY"
 };
 
+
 const MUTATING_MESSAGE_TYPES = new Set([
   "BOOKING_OFFER_ACCEPTED",
   "BOOKING_EXTRAS_SAVE",
@@ -70,6 +96,7 @@ const MUTATING_MESSAGE_TYPES = new Set([
   "PAYMENT_COMMIT"
 ]);
 
+
 let embeds = {};
 let currentStep = "offer";
 let cartId = "";
@@ -80,6 +107,7 @@ const initializedSteps = new Set();
 const initializationPromises = new Map();
 const actionsInFlight = new Set();
 
+
 $w.onReady(function () {
   cartId = wixLocation.query.cartId || session.getItem("SKANDI_BOOKING_CART_ID") || "";
   cartToken = wixLocation.query.cartToken || session.getItem("SKANDI_BOOKING_CART_TOKEN") || "";
@@ -87,20 +115,31 @@ $w.onReady(function () {
   if (cartToken) setCartToken(cartToken);
   currentStep = normalizeStep(wixLocation.query.step || "offer");
 
+
   if (String(wixLocation.query.step || "").toLowerCase() === "home") {
-    wixLocation.to("/home");
+    wixLocation.to(SITE_MAP.home);
     return;
   }
 
+
   bindEmbeds();
   if (currentStep === "extras" && !embeds.extras) currentStep = "transfer";
-  goStep(currentStep, { silentUrl: true, reason: "initial-load" });
+  getBookingCart({ cartId }).then(cart => {
+    if (cart.productType === "CAR_RENTAL_ONLY") {
+      wixLocation.to(`${SITE_MAP.carRental}?cartId=${encodeURIComponent(cartId)}`);
+      return;
+    }
+    if (isHotelCart() && !["payment", "confirmation", "documents"].includes(currentStep)) currentStep = "apis";
+    goStep(currentStep, { silentUrl: true, reason: "initial-load" });
+  }).catch(error => postError(currentStep, publicBookingError(error)));
 });
+
 
 function getElement(selector) {
   try { return $w(selector); }
   catch (_) { return null; }
 }
+
 
 function bindEmbeds() {
   Object.keys(STEPS).forEach((step) => {
@@ -114,10 +153,12 @@ function bindEmbeds() {
   });
 }
 
+
 function normalizeStep(step) {
   const value = String(step || "").toLowerCase();
   return STEPS[value] ? value : "offer";
 }
+
 
 function setCartId(value) {
   if (!value) return;
@@ -125,11 +166,13 @@ function setCartId(value) {
   session.setItem("SKANDI_BOOKING_CART_ID", cartId);
 }
 
+
 function setCartToken(value) {
   if (!value) return;
   cartToken = String(value);
   session.setItem("SKANDI_BOOKING_CART_TOKEN", cartToken);
 }
+
 
 function getCartId(msg = {}) {
   const value = msg.cartId || msg.payload?.cartId || wixLocation.query.cartId || cartId || session.getItem("SKANDI_BOOKING_CART_ID");
@@ -140,18 +183,18 @@ function getCartId(msg = {}) {
   return String(value);
 }
 
+
 function getCartToken(msg = {}) {
   const value = msg.cartToken || msg.payload?.cartToken || wixLocation.query.cartToken || cartToken || session.getItem("SKANDI_BOOKING_CART_TOKEN");
   if (value) setCartToken(value);
-  if (!value) {
-    throw new Error("This booking link is missing its secure cart token. Return to Home and select the offer again.");
-  }
-  return String(value);
+  return value ? String(value) : "";
 }
+
 
 function bookingAccess(msg = {}) {
   return { cartId: getCartId(msg), cartToken: getCartToken(msg) };
 }
+
 
 function postToStep(step, type, payload = {}, extra = {}) {
   const html = embeds[step];
@@ -165,6 +208,7 @@ function postToStep(step, type, payload = {}, extra = {}) {
   });
 }
 
+
 function postError(step, message, extra = {}) {
   postToStep(step, "BOOKING_ERROR", {}, {
     message: message || "Booking step failed.",
@@ -172,12 +216,14 @@ function postError(step, message, extra = {}) {
   });
 }
 
+
 function publicBookingError(error) {
   const raw = String(
     error?.publicMessage ||
     error?.message ||
     "The booking request could not be completed."
   ).trim();
+
 
   const messages = {
     BOOKING_CART_ACCESS_DENIED: "This secure booking session has expired. Return to Home and select the offer again.",
@@ -194,7 +240,9 @@ function publicBookingError(error) {
     BOOKING_CONTACT_EMAIL_INVALID: "Enter a valid contact email address."
   };
 
+
   if (messages[raw]) return messages[raw];
+
 
   if (/network request failed|could not be reached/i.test(raw)) {
     return "The live travel provider could not be reached. Please try again.";
@@ -207,6 +255,7 @@ function publicBookingError(error) {
     "The booking request could not be completed."
   );
 }
+
 
 function changeStatebox(step) {
   const box = getElement(STATEBOX_ID);
@@ -221,10 +270,12 @@ function changeStatebox(step) {
   }
 }
 
+
 function updateBookingUrl(step, extraQuery = {}) {
   const query = { step, ...extraQuery };
   if (cartId) query.cartId = cartId;
   if (cartToken) query.cartToken = cartToken;
+
 
   if (wixLocation.queryParams && wixLocation.queryParams.add) {
     try {
@@ -233,12 +284,14 @@ function updateBookingUrl(step, extraQuery = {}) {
     } catch (_) {}
   }
 
+
   const qs = Object.keys(query)
     .filter((key) => query[key] !== undefined && query[key] !== null && String(query[key]) !== "")
     .map((key) => `${encodeURIComponent(key)}=${encodeURIComponent(query[key])}`)
     .join("&");
-  wixLocation.to(`/booking${qs ? `?${qs}` : ""}`);
+  wixLocation.to(`${APP_ROUTES.bookingFlow}${qs ? `?${qs}` : ""}`);
 }
+
 
 function goStep(step, options = {}) {
   const next = normalizeStep(step);
@@ -246,7 +299,9 @@ function goStep(step, options = {}) {
   initializedSteps.delete(next);
   const stateChange = changeStatebox(next);
 
+
   if (!options.silentUrl) updateBookingUrl(next, options.query || {});
+
 
   Promise.resolve(stateChange).then(() => {
     if (!readyEmbeds.has(next)) return;
@@ -255,6 +310,7 @@ function goStep(step, options = {}) {
     });
   });
 }
+
 
 function stepFromPath(path) {
   const p = String(path || "").toLowerCase();
@@ -270,6 +326,7 @@ function stepFromPath(path) {
   return "";
 }
 
+
 async function handleBookingMessage(event, expectedStep) {
   const msg = event.data || {};
   const step = SOURCE_TO_STEP[msg.source];
@@ -278,10 +335,12 @@ async function handleBookingMessage(event, expectedStep) {
     return;
   }
 
+
   const actionKey = `${step}:${msg.type || ""}`;
   const isMutatingAction = MUTATING_MESSAGE_TYPES.has(msg.type);
   if (isMutatingAction && actionsInFlight.has(actionKey)) return;
   if (isMutatingAction) actionsInFlight.add(actionKey);
+
 
   try {
     if (msg.type === READY_TYPES[step]) {
@@ -289,6 +348,7 @@ async function handleBookingMessage(event, expectedStep) {
       if (step === currentStep) await initializeStep(step);
       return;
     }
+
 
     if (step === "offer") await handleOffer(msg);
     else if (step === "extras") await handleExtras(msg);
@@ -299,6 +359,7 @@ async function handleBookingMessage(event, expectedStep) {
     else if (step === "confirmation") await handleConfirmation(msg);
     else if (step === "documents") await handleDocuments(msg);
 
+
     handleGenericNavigate(msg);
   } catch (error) {
     console.error(`[Booking] ${step}:${msg.type || "unknown"} failed`, error);
@@ -308,9 +369,11 @@ async function handleBookingMessage(event, expectedStep) {
   }
 }
 
+
 async function initializeStep(step) {
   if (initializedSteps.has(step)) return;
   if (initializationPromises.has(step)) return initializationPromises.get(step);
+
 
   const message = { source: STEPS[step].source, type: READY_TYPES[step] };
   const promise = (async () => {
@@ -325,19 +388,23 @@ async function initializeStep(step) {
     initializedSteps.add(step);
   })();
 
+
   initializationPromises.set(step, promise);
   try { await promise; }
   finally { initializationPromises.delete(step); }
 }
 
+
 async function handleOffer(msg) {
   const access = bookingAccess(msg);
+
 
   if (msg.type === "BOOKING_OFFER_READY") {
     const cart = await getBookingCart(access);
     postToStep("offer", "BOOKING_CART_LOADED", { cart });
     return;
   }
+
 
   if (msg.type === "BOOKING_OFFER_ACCEPTED") {
     await saveOfferDecision({ ...access, termsAccepted: msg.termsAccepted === true });
@@ -350,14 +417,17 @@ async function handleOffer(msg) {
   }
 }
 
+
 async function handleExtras(msg) {
   const access = bookingAccess(msg);
+
 
   if (msg.type === "BOOKING_EXTRAS_READY") {
     const payload = await getBookingExtras(access);
     postToStep("extras", "BOOKING_EXTRAS_LOADED", payload);
     return;
   }
+
 
   if (msg.type === "BOOKING_EXTRAS_SAVE") {
     const result = await saveBookingExtras({
@@ -370,8 +440,10 @@ async function handleExtras(msg) {
   }
 }
 
+
 async function handleTransfer(msg) {
   const access = bookingAccess(msg);
+
 
   if (msg.type === "SIGNATURE_TRANSFER_READY") {
     const payload = await getSignatureTransferOptions(access);
@@ -379,11 +451,13 @@ async function handleTransfer(msg) {
     return;
   }
 
+
   if (msg.type === "SIGNATURE_TRANSFER_SELECT") {
     await saveSignatureTransfer({ ...access, transfer: msg.transfer || null });
     goStep("apis", { reason: "transfer-selected" });
     return;
   }
+
 
   if (msg.type === "SIGNATURE_TRANSFER_SKIP") {
     await saveSignatureTransfer({ ...access, transfer: null });
@@ -391,8 +465,10 @@ async function handleTransfer(msg) {
   }
 }
 
+
 async function handleApis(msg) {
   const access = bookingAccess(msg);
+
 
   if (msg.type === "APIS_HTML_READY") {
     const [cart, rules] = await Promise.all([
@@ -403,6 +479,7 @@ async function handleApis(msg) {
     return;
   }
 
+
   if (msg.type === "APIS_RULES_REFRESH") {
     const rules = await refreshTravelRequirements({
       ...access,
@@ -411,6 +488,7 @@ async function handleApis(msg) {
     postToStep("apis", "APIS_REQUIREMENTS_RESULT", { rules });
     return;
   }
+
 
   if (msg.type === "APIS_SAVE_AND_CONTINUE") {
     await savePassengerApisAndReprice({
@@ -423,14 +501,17 @@ async function handleApis(msg) {
   }
 }
 
+
 async function handleSeats(msg) {
   const access = bookingAccess(msg);
+
 
   if (msg.type === "SEATMAP_READY") {
     const payload = await getSeatmapForCart(access);
     postToStep("seats", "SEATMAP_LOADED", payload);
     return;
   }
+
 
   if (msg.type === "SEATMAP_SAVE") {
     await saveSeatSelections({
@@ -440,6 +521,7 @@ async function handleSeats(msg) {
     goStep("payment", { reason: "seats-saved" });
     return;
   }
+
 
   if (msg.type === "SEATMAP_SKIP") {
     await saveSeatSelections({
@@ -451,8 +533,10 @@ async function handleSeats(msg) {
   }
 }
 
+
 async function handlePayment(msg) {
   const access = bookingAccess(msg);
+
 
   if (msg.type === "PAYMENT_READY") {
     const result = await prepareBookingPayment(access);
@@ -460,12 +544,14 @@ async function handlePayment(msg) {
     return;
   }
 
+
   if (msg.type === "PAYMENT_COMMIT") {
     if (paymentCommitInFlight) return;
     paymentCommitInFlight = true;
     postToStep("payment", "PAYMENT_PROGRESS", {}, {
       message: "Verifying payment and creating your reservation..."
     });
+
 
     try {
       const result = await authorizePaymentAndCommitBooking({
@@ -485,8 +571,10 @@ async function handlePayment(msg) {
   }
 }
 
+
 async function handleConfirmation(msg) {
   const access = bookingAccess(msg);
+
 
   if (msg.type === "CONFIRMATION_READY") {
     const confirmation = await getSourceAwareBookingConfirmation(access);
@@ -494,10 +582,11 @@ async function handleConfirmation(msg) {
     return;
   }
 
+
   if (msg.type === "CONFIRMATION_NAVIGATE" && msg.path) {
     const step = stepFromPath(msg.path);
     if (step === "home") {
-      wixLocation.to("/home");
+      wixLocation.to(SITE_MAP.home);
       return;
     }
     if (step) {
@@ -508,6 +597,7 @@ async function handleConfirmation(msg) {
   }
 }
 
+
 async function handleDocuments(msg) {
   const access = bookingAccess(msg);
   if (msg.type === "BOOKING_DOCUMENTS_READY") {
@@ -516,11 +606,12 @@ async function handleDocuments(msg) {
   }
 }
 
+
 function handleGenericNavigate(msg) {
   if (msg.type !== "BOOKING_NAVIGATE" || !msg.path) return;
   const step = stepFromPath(msg.path);
   if (step === "home") {
-    wixLocation.to("/home");
+    wixLocation.to(SITE_MAP.home);
     return;
   }
   if (step) {
@@ -530,19 +621,21 @@ function handleGenericNavigate(msg) {
   navigateInternal(msg.path);
 }
 
+
 function navigateInternal(rawPath) {
   const path = String(rawPath || "").trim();
-  if (!path.startsWith("/") || path.startsWith("//")) {
+  if (!isSafeInternalRoute(path)) {
     throw new Error("Invalid booking navigation destination.");
   }
 
+
   const allowedPrefixes = [
-    "/home",
-    "/booking",
-    "/my-profile",
-    "/travel-info",
-    "/help",
-    "/contact"
+    SITE_MAP.home,
+    APP_ROUTES.bookingFlow,
+    APP_ROUTES.myProfile,
+    SITE_MAP.travelInfo,
+    SITE_MAP.support,
+    SITE_MAP.search
   ];
   const allowed = allowedPrefixes.some(
     (prefix) =>
