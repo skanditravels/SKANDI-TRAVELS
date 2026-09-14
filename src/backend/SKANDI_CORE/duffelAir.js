@@ -532,8 +532,11 @@ export async function createDuffelOrderCore(input = {}) {
     const paymentIntentId = resourceId(input.paymentIntentId, "pi_", "payment");
     const intent = await retrieveStripePaymentIntent(paymentIntentId);
     const internalReference = clean(input.internalReference || "", 120);
+    const customerAuthorizationAmountMinor = Number.isFinite(Number(input.customerAuthorizationAmountMinor))
+      ? Number(input.customerAuthorizationAmountMinor)
+      : duffelAmountToMinor(offer.totalAmount, offer.totalCurrency);
     assertStripeAuthorization(intent, {
-      amount: duffelAmountToMinor(offer.totalAmount, offer.totalCurrency),
+      amount: customerAuthorizationAmountMinor,
       currency: offer.totalCurrency,
       ...(internalReference ? { metadata: { idempotency_context: internalReference } } : {}),
       allowCaptured: false
