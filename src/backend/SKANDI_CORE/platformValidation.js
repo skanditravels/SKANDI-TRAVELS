@@ -1,4 +1,4 @@
-// /src/backend/SKANDI_CORE/platformValidation.js
+// /src/backend/SKANDI_CORE/platformValidation.js 
 // SKANDI Backend Base 1.0 — shared input normalization only.
 // No database, auth, routing, or domain business rules belong here.
 
