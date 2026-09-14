@@ -1,27 +1,31 @@
-// Home page code — SKANDI Home V9 FINAL
+// Home page code — SKANDI Home V9 FINAL / B-010 canonical backend convergence.
 // Bind listener first; child HOME_READY drives bootstrap.
+
 
 import wixLocationFrontend from "wix-location-frontend";
 import { authentication } from "wix-members-frontend";
 import {
   searchUnifiedOffers,
   createBookingCartFromOffer
-} from "backend/bookingOrchestrator.web";
-import { getHomeContent, getHomeSearchLocations } from "backend/homeContent.web";
-import { searchDuffelStays } from "backend/RIA/duffelGroundProducts.web";
+} from "backend/SKANDI_CORE/customerBooking.web";
+import { getHomeContent, getHomeSearchLocations } from "backend/SKANDI_CORE/homeContent.web";
+import { searchLiveStays } from "backend/SKANDI_CORE/customerBooking.web";
+import { APP_ROUTES } from "public/siteMap.js";
+
 
 const HOME_EMBED_IDS = ["#htmlHome", "#htmlhome", "#home"];
-const HOME_SOURCE = "SKANDI_HOME";
 const HOME_SOURCES = new Set(["SKANDI_HOME", "SKANDI_HOME_LONG_DISCOVERY_V2", "SKANDI_HOME_OLD_STYLE"]);
 const PARENT_SOURCE = "SKANDI_WIX_PARENT";
-const PROTOCOL_VERSION = "2026.09.09.9";
+const PROTOCOL_VERSION = "2026.09.13.B010";
 const SUPPORTED_LANGUAGES = ["EN","SV","NO","DA","ES","FI","FR-FR","FR-CA","DE","TH"];
 const SUPPORTED_CURRENCIES = ["USD","SEK","NOK","DKK","EUR"];
+
 
 let bootstrapPromise = null;
 let locationPromise = null;
 let homePriceSearch = null;
 let currentSettings = { language:"EN", currency:"USD" };
+
 
 function clean(v, max = 1000) { return String(v ?? "").trim().slice(0, max); }
 function arr(v) { return Array.isArray(v) ? v : []; }
@@ -59,6 +63,7 @@ function normalizePriceSearch(value = {}) {
   };
 }
 
+
 function firstHomeEmbed() {
   for (const id of HOME_EMBED_IDS) {
     try {
@@ -72,6 +77,7 @@ function firstHomeEmbed() {
   console.error(`[Home] No HTML Component found. Checked: ${HOME_EMBED_IDS.join(", ")}`);
   return null;
 }
+
 
 function parseMessage(data) {
   if (typeof data === "string") {
@@ -95,6 +101,7 @@ function navigateTo(rawPath) {
   wixLocationFrontend.to(path);
 }
 
+
 async function mapWithConcurrency(items, limit, fn) {
   const rows = arr(items);
   const output = new Array(rows.length);
@@ -116,7 +123,7 @@ function lowestStay(items = []) {
 }
 async function priceDestination(card, priceSearch) {
   const lookup = obj(card.priceLookup);
-  const result = await searchDuffelStays({
+  const result = await searchLiveStays({
     checkInDate:priceSearch.checkInDate,
     checkOutDate:priceSearch.checkOutDate,
     adults:priceSearch.adults,
@@ -124,11 +131,13 @@ async function priceDestination(card, priceSearch) {
     childAges:priceSearch.childAges,
     rooms:priceSearch.rooms,
     radiusKm:25,
-    latitude:lookup.latitude,
-    longitude:lookup.longitude,
-    iata:lookup.iata,
-    destination:lookup.destination,
-    label:lookup.label,
+    location: {
+      latitude:lookup.latitude,
+      longitude:lookup.longitude,
+      iata:lookup.iata,
+      destination:lookup.destination,
+      label:lookup.label
+    },
     fetchRates:false
   });
   const cheapest = lowestStay(result?.items);
@@ -147,7 +156,7 @@ async function priceHotel(card, priceSearch) {
   const lookup = obj(card.priceLookup);
   let result;
   if (card.duffelAccommodationId) {
-    result = await searchDuffelStays({
+    result = await searchLiveStays({
       accommodationId:card.duffelAccommodationId,
       checkInDate:priceSearch.checkInDate,
       checkOutDate:priceSearch.checkOutDate,
@@ -158,7 +167,7 @@ async function priceHotel(card, priceSearch) {
       fetchRates:true
     });
   } else {
-    result = await searchDuffelStays({
+    result = await searchLiveStays({
       checkInDate:priceSearch.checkInDate,
       checkOutDate:priceSearch.checkOutDate,
       adults:priceSearch.adults,
@@ -166,11 +175,13 @@ async function priceHotel(card, priceSearch) {
       childAges:priceSearch.childAges,
       rooms:priceSearch.rooms,
       radiusKm:4,
-      latitude:lookup.latitude,
-      longitude:lookup.longitude,
-      iata:lookup.iata,
-      destination:lookup.destination,
-      label:lookup.label,
+      location: {
+        latitude:lookup.latitude,
+        longitude:lookup.longitude,
+        iata:lookup.iata,
+        destination:lookup.destination,
+        label:lookup.label
+      },
       fetchRates:false
     });
   }
@@ -202,12 +213,11 @@ async function hydrateLiveHomePrices(content = {}, priceSearch) {
 }
 
 
-
 async function sendHomeLocations(html, force = false) {
   if (locationPromise && !force) return locationPromise;
   locationPromise = (async () => {
     try {
-      const locations = await getHomeSearchLocations();
+      const locations = await getHomeSearchLocations({ language: currentSettings.language });
       const payload = locations || { airports:[], destinations:[], searchDestinations:[] };
       postToHtml(html, "HOME_LOCATION_DATA", payload);
       return payload;
@@ -226,21 +236,23 @@ async function sendHomeLocations(html, force = false) {
   return locationPromise;
 }
 
+
 async function sendHomeBootstrap(html, forceRefresh = false) {
   if (bootstrapPromise && !forceRefresh) return bootstrapPromise;
   bootstrapPromise = (async () => {
     try {
-      // 1) Canonical Supabase content is sent immediately. Autocomplete does not wait for Duffel.
-      let content = await getHomeContent();
+      let content = await getHomeContent({ language: currentSettings.language, force: forceRefresh });
       content = content || { airports:[], searchDestinations:[], destinations:[], hotels:[], offers:[], inspiration:[] };
+
 
       postToHtml(html, "HOME_LOCATION_DATA", {
         airports: arr(content.airports),
         destinations: arr(content.searchDestinations),
         searchDestinations: arr(content.searchDestinations),
-        source: content.source || "SUPABASE_HOME_DIRECT_REST",
+        source: content.source || "SUPABASE_PUBLIC_INVENTORY",
         sync: content.sync || null
       });
+
 
       postToHtml(html, "HOME_BOOTSTRAP_RESULT", {
         content,
@@ -248,12 +260,12 @@ async function sendHomeBootstrap(html, forceRefresh = false) {
         sync: content.sync || null
       });
 
-      // If the full content call suffered a partial location failure, retry through the small location-only method.
+
       if (!arr(content.searchDestinations).length || !arr(content.airports).length) {
         await sendHomeLocations(html, true);
       }
 
-      // 2) Price cards afterward. A Duffel problem never blocks database content/search.
+
       try {
         const priced = await hydrateLiveHomePrices(content, homePriceSearch);
         postToHtml(html, "HOME_BOOTSTRAP_RESULT", {
@@ -275,6 +287,7 @@ async function sendHomeBootstrap(html, forceRefresh = false) {
   return bootstrapPromise;
 }
 
+
 async function handleHomeMessage(html, message) {
   const payload = obj(message.payload);
   switch (message.type) {
@@ -283,16 +296,13 @@ async function handleHomeMessage(html, message) {
       homePriceSearch = normalizePriceSearch(message.priceSearch || payload.priceSearch || homePriceSearch || {});
       await sendHomeBootstrap(html, false);
       return;
-
     case "HOME_LOCATIONS_REQUEST":
       await sendHomeLocations(html, true);
       return;
-
     case "HOME_REFRESH":
       if (message.priceSearch || payload.priceSearch) homePriceSearch = normalizePriceSearch(message.priceSearch || payload.priceSearch);
       await sendHomeBootstrap(html, true);
       return;
-
     case "HOME_SEARCH": {
       const rawSearch = obj(message.search || payload.search);
       const search = {
@@ -305,7 +315,6 @@ async function handleHomeMessage(html, message) {
       postToHtml(html, "HOME_SEARCH_RESULT", { ...(result || {}), items:arr(result?.items) });
       return;
     }
-
     case "HOME_SELECT_OFFER": {
       const offer = obj(message.offer || payload.offer);
       const search = obj(message.search || payload.search || offer.searchContext);
@@ -321,24 +330,23 @@ async function handleHomeMessage(html, message) {
       const allowed = ["offer","extras","transfer","apis","seats","payment","confirmation"];
       const step = allowed.includes(result?.step) ? result.step : "offer";
       const token = clean(result?.cartToken || result?.token, 300);
-      navigateTo(`/booking?step=${encodeURIComponent(step)}&cartId=${encodeURIComponent(result.cartId)}${token ? `&cartToken=${encodeURIComponent(token)}` : ""}`);
+      navigateTo(`${APP_ROUTES.bookingFlow}?step=${encodeURIComponent(step)}&cartId=${encodeURIComponent(result.cartId)}${token ? `&cartToken=${encodeURIComponent(token)}` : ""}`);
       return;
     }
-
     case "HOME_NAVIGATE":
       navigateTo(message.path || payload.path);
       return;
-
     default:
       return;
   }
 }
 
+
 $w.onReady(function () {
   const html = firstHomeEmbed();
   if (!html) return;
 
-  // Listener FIRST. If the child's early HOME_READY was missed, HOME_HOST_READY makes it resend.
+
   html.onMessage(async event => {
     const message = parseMessage(event?.data);
     if (!message?.type || !HOME_SOURCES.has(String(message.source || ""))) return;
@@ -349,6 +357,7 @@ $w.onReady(function () {
       postHomeError(html, error);
     }
   });
+
 
   postToHtml(html, "HOME_HOST_READY", {
     protocolVersion: PROTOCOL_VERSION,
