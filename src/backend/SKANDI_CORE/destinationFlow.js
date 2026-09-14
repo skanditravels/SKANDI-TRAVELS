@@ -5,7 +5,7 @@
 // - Read the published/public Inventory projection used by the customer Destination Flow.
 // - Return only the public-safe DTO contract already consumed by the V9.2 page controller.
 // - Reuse the canonical SKANDI Supabase transport.
-//
+// 
 // This file must NOT own booking/cart/payment logic, Wix page routing, HTML state,
 // Duffel transport, Inventory authoring, or a second Supabase client.
 
