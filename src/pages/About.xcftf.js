@@ -1,4 +1,4 @@
-// /src/pages/Aboutxcftf.web.js
+// /src/pages/About.xcftf.web.js
 // B-011.1 install candidate for the Wix /about page code.
 // This page owns only the About embed bridge. Global header/footer/session behavior stays in masterPage.js.
 
