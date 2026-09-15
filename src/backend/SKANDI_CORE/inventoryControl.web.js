@@ -1,7 +1,7 @@
-// /src/backend/SKANDI_CORE/inventoryControl.web.js
+// /src/backend/SKANDI_CORE/inventory.web.js
 // SKANDI Inventory Control — canonical page-callable facade.
-// R-003.13 — runtime recovery facade; R-003.9.3 @wix/web-methods contract preserved.
-// 
+// B-011 Inventory runtime convergence — proven Wix web-method namespace restored; R-003.13 contract preserved.
+//
 // One frontend-callable Inventory facade. No Inventory, Supabase, Asset Library,
 // or Duffel business logic lives here. All domain logic remains in SKANDI_CORE.
 
