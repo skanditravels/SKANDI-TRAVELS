@@ -7,8 +7,9 @@
 // mutation, provider secrets, supplier costs or operational fields live here.
 
 import { rpcRequest, restRequest } from "backend/SKANDI_CORE/supabaseServer.js";
+import { checkExternalTravelRequirements } from "backend/SKANDI_CORE/travelRequirements.js";
 
-export const PUBLIC_CONTENT_VERSION = "BACKEND-BASE-1.0-B011.1";
+export const PUBLIC_CONTENT_VERSION = "BACKEND-BASE-1.0-B011.2";
 
 const READ_RPCS = new Set(["get_public_about_payload", "get_public_network_map_payload"]);
 const COLLECTION_TYPES = "in.(SKANDI_COLLECTION,SKANDI_PARTNER)";
@@ -204,8 +205,31 @@ function genericTravelRow(row = {}) {
   };
 }
 
+function publicBaggagePayload(value) {
+  const parsed = jsonValue(value, null);
+  if (Array.isArray(parsed)) {
+    const cabins = parsed.slice(0, 20).map(cabin => ({
+      cabinType: clean(first(cabin?.cabin_type, cabin?.cabinType, cabin?.travel_class, cabin?.travelClass), 250),
+      travelClass: clean(first(cabin?.travel_class, cabin?.travelClass, cabin?.cabin_type, cabin?.cabinType), 250),
+      fares: arr(cabin?.fares).slice(0, 30).map(fare => {
+        const allowance = obj(first(fare?.baggage_allowance, fare?.baggageAllowance));
+        return {
+          name: clean(fare?.name, 250),
+          description: clean(fare?.description, 2500),
+          underSeatBag: clean(first(allowance.under_seat_bag, allowance.underSeatBag), 1200),
+          overheadCarryOn: clean(first(allowance.overhead_carry_on, allowance.overheadCarryOn), 1200),
+          checkedBag: clean(first(allowance.checked_bag, allowance.checkedBag), 1200)
+        };
+      }).filter(fare => fare.name || fare.underSeatBag || fare.overheadCarryOn || fare.checkedBag)
+    })).filter(cabin => cabin.cabinType || cabin.fares.length);
+    if (cabins.length) return { mode: "structured", cabins };
+  }
+  const text = clean(value, 16000);
+  return text ? { mode: "narrative", text } : { mode: "none" };
+}
+
 function publicAirline(row = {}) {
-  const baggageText = clean(row.baggageAllowence, 12000);
+  const baggage = publicBaggagePayload(row.baggageAllowence);
   const cabins = jsonValue(row.cabinsJson, []);
   const sections = jsonValue(row.sectionsJson, {});
   const fleet = jsonValue(row.fleetSummaryJson, []);
@@ -232,8 +256,8 @@ function publicAirline(row = {}) {
     cabins,
     sections,
     fleetSummary: fleet,
-    baggage: baggageText ? { mode: "narrative", text: baggageText } : { mode: "none" },
-    baggageAllowance: baggageText,
+    baggage,
+    baggageAllowance: baggage.mode === "narrative" ? baggage.text : "",
     mealInfo: jsonValue(row.foodDrinksJson, {}),
     wifiInfo: jsonValue(row.wifiOnboardJson, {}),
     childrenInfants: jsonValue(row.childrenInfantsJson, {}),
@@ -365,8 +389,11 @@ export async function getPublicBaggagePayloadCore(input = {}) {
   const payload = await getPublicTravelInfoPayloadCore(input);
   return {
     ok: true,
+    source: "SUPABASE_TRAVEL_INFO_AIRLINES",
     version: PUBLIC_CONTENT_VERSION,
-    airlines: payload.airlines.map(({ id, name, title, shortName, iataCode, icaoCode, logo, baggage, baggageAllowance }) => ({ id, name, title, shortName, iataCode, icaoCode, logo, baggage, baggageAllowance })),
+    airlines: payload.airlines.map(({ id, name, title, shortName, iataCode, icaoCode, logo, website, contactUrl, baggage, baggageAllowance }) => ({
+      id, name, title, shortName, iataCode, icaoCode, logo, website, contactUrl, baggage, baggageAllowance
+    })),
     guidance: payload.articles.filter(item => /baggage|bagage/i.test(`${item.category} ${item.title} ${item.tags?.join?.(" ") || ""}`)),
     generatedAt: payload.generatedAt
   };
@@ -396,13 +423,154 @@ export async function getPublicPassportVisaPayloadCore(input = {}) {
   };
 }
 
-export async function getPublicInsurancePayloadCore(input = {}) {
-  const travel = await getPublicTravelInfoPayloadCore(input);
-  const guidance = travel.articles.filter(item => /insurance|försäkring|forsikring/i.test(`${item.category} ${item.title} ${item.tags?.join?.(" ") || ""}`));
+function publicRequirementRow(row = {}) {
+  return {
+    id: clean(row.id, 160),
+    title: clean(row.title || "Travel requirement", 500),
+    slug: clean(row.slug, 300),
+    category: clean(row.category || "GUIDANCE", 160),
+    body: clean(row.body, 12000),
+    image: clean(row.image_url, 2000),
+    payload: obj(row.payload),
+    sortOrder: num(row.sort_order, 100)
+  };
+}
+
+function publicProviderField(field = {}) {
+  return {
+    key: clean(first(field.key, field.code, field.name, field.label), 160),
+    label: clean(first(field.label, field.title, field.name, field.key), 500),
+    value: clean(first(field.value, field.summary, field.text, field.status), 5000),
+    status: clean(field.status, 120),
+    category: clean(field.category, 160),
+    required: field.required === true
+  };
+}
+
+export async function searchPublicTravelRequirementsCore(input = {}) {
+  const nationality = upper(input.nationality, 3);
+  const residenceCountry = upper(input.residenceCountry, 3);
+  const origin = upper(input.origin, 12);
+  const destination = upper(input.destination, 12);
+  const departureDate = clean(input.departureDate, 20);
+  const returnDate = clean(input.returnDate, 20);
+  const documentType = upper(input.documentType || "PASSPORT", 40);
+
+  if (!nationality || !destination) {
+    return {
+      ok: false,
+      source: "ALTEA_SHARED_TRAVEL_REQUIREMENTS",
+      version: PUBLIC_CONTENT_VERSION,
+      status: "INPUT_REQUIRED",
+      provider: "NONE",
+      summary: "Nationality and destination are required to check travel requirements.",
+      fields: [],
+      notices: ["Enter your nationality and destination to continue."],
+      guidance: []
+    };
+  }
+
+  const localRows = (await select("travel_requirements", {
+    select: "id,title,slug,category,body,image_url,payload,active,sort_order",
+    active: ACTIVE,
+    order: "sort_order.asc",
+    limit: "300"
+  })).map(publicRequirementRow);
+
+  const needles = [nationality, residenceCountry, origin, destination]
+    .filter(Boolean)
+    .map(value => value.toLowerCase());
+  const guidance = localRows.filter(row => {
+    const haystack = `${row.title} ${row.category} ${row.body} ${JSON.stringify(row.payload)}`.toLowerCase();
+    return !needles.length || needles.some(needle => haystack.includes(needle));
+  }).slice(0, 30);
+
+  let external = { connected: false, status: "NEEDS_PROVIDER", provider: "NONE", fields: [], notices: [] };
+  try {
+    external = await checkExternalTravelRequirements({
+      cart: { searchContext: { origin, destination, departureDate, returnDate } },
+      travelers: [{ id: "PUBLIC_LOOKUP", nationality, residenceCountry, documentType }]
+    });
+  } catch (_) {
+    external = { connected: false, status: "PROVIDER_UNAVAILABLE", provider: "NONE", fields: [], notices: [] };
+  }
+
+  if (external.connected) {
+    return {
+      ok: true,
+      source: "ALTEA_SHARED_TRAVEL_REQUIREMENTS",
+      version: PUBLIC_CONTENT_VERSION,
+      connected: true,
+      provider: clean(external.provider || "CONFIGURED", 120),
+      status: clean(external.status || "PROVIDER_RESULT", 120),
+      summary: clean(external.summary || "Travel requirements checked.", 5000),
+      fields: arr(external.fields).slice(0, 60).map(publicProviderField),
+      notices: arr(external.notices).slice(0, 30).map(item => clean(item, 2500)).filter(Boolean),
+      guidance,
+      officialSourcesRequired: true,
+      generatedAt: new Date().toISOString()
+    };
+  }
+
   return {
     ok: true,
+    source: "ALTEA_SHARED_TRAVEL_REQUIREMENTS",
     version: PUBLIC_CONTENT_VERSION,
-    configured: guidance.length > 0,
+    connected: false,
+    provider: "SKANDI_GUIDANCE",
+    status: guidance.length ? "SKANDI_GUIDANCE_MATCHED" : "GUIDANCE_ONLY",
+    summary: guidance.length
+      ? "SKANDI guidance matched this nationality or route. This is not a live Timatic/IATA boarding decision."
+      : "No route-specific SKANDI requirement record matched. Confirm official entry requirements before travel.",
+    fields: [],
+    notices: ["No live Timatic/IATA decision is represented unless the approved external provider is connected."],
+    guidance,
+    officialSourcesRequired: true,
+    generatedAt: new Date().toISOString()
+  };
+}
+
+function publicInsuranceProduct(row = {}, language = "EN") {
+  const details = obj(row.details);
+  const localized = localizedRecord(row, language);
+  return {
+    id: clean(row.id, 160),
+    code: clean(row.code, 100),
+    slug: clean(row.slug, 300),
+    title: clean(first(localized.pageTitle, localized.title, row.name, row.code), 500),
+    summary: clean(first(localized.shortDescription, localized.short_description, localized.fullDescription, localized.description, details.summary), 3000),
+    imageUrl: publicImage(row),
+    provider: clean(first(details.insurer, details.provider, details.supplierName, details.supplier), 500),
+    market: clean(first(details.market, details.marketCode, details.country), 160),
+    markets: arr(first(details.markets, details.marketCodes, details.countries)).map(item => clean(item, 100)).filter(Boolean),
+    destinations: arr(first(details.destinations, details.destinationCodes)).map(item => clean(item, 160)).filter(Boolean),
+    priceLabel: clean(first(details.priceLabel, details.displayPrice), 300),
+    termsUrl: clean(first(details.termsUrl, details.policyTermsUrl), 2000),
+    ipidUrl: clean(first(details.ipidUrl, details.productInformationDocumentUrl), 2000)
+  };
+}
+
+export async function getPublicInsurancePayloadCore(input = {}) {
+  const language = upper(input.language || "EN", 5) || "EN";
+  const [travel, ancillaryRows] = await Promise.all([
+    getPublicTravelInfoPayloadCore(input),
+    select("inventory_public_entities_v", {
+      select: "id,entity_type,code,name,slug,details,localized,media,sort_priority",
+      entity_type: "eq.ANCILLARY",
+      order: "sort_priority.asc,name.asc",
+      limit: "500"
+    })
+  ]);
+  const guidance = travel.articles.filter(item => /insurance|försäkring|forsikring|travel protection|cancellation protection/i.test(`${item.category} ${item.title} ${item.tags?.join?.(" ") || ""} ${item.body || ""}`));
+  const products = ancillaryRows
+    .map(row => publicInsuranceProduct(row, language))
+    .filter(item => /insurance|försäkring|forsikring|travel protection|cancellation protection/i.test(`${item.title} ${item.summary} ${item.code} ${item.provider}`));
+  return {
+    ok: true,
+    source: "SUPABASE_PUBLIC_INSURANCE_CONTENT",
+    version: PUBLIC_CONTENT_VERSION,
+    configured: guidance.length > 0 || products.length > 0,
+    products,
     guidance,
     disclaimer: "Insurance availability, insurer, eligibility, price, coverage, exclusions and terms vary by booking and market. Only the terms shown for the specific offered product at checkout are authoritative.",
     generatedAt: travel.generatedAt
