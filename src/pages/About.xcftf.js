@@ -9,7 +9,7 @@ import { SITE_MAP, isSafeInternalRoute } from "public/siteMap.js";
 const SOURCE = "SKANDI_ABOUT_PAGE";
 const PARENT = "SKANDI_WIX_PARENT";
 const VERSION = "BACKEND-BASE-1.0-B011.1";
-const EMBED_IDS = ["#aboutEmbed", "#aboutHtml"];
+const EMBED_IDS = ["#aboutEmbed", "#aboutHtml", "#html1"];
 
 function getHtml() {
   for (const id of EMBED_IDS) {
