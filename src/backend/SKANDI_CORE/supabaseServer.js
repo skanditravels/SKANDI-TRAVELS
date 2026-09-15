@@ -88,7 +88,7 @@ const REST_OBJECTS = new Set([
 
 
   // Transitional data objects that remain real database objects until their domain rebuild
-  "amadeus_offer_cache", "career_applicant_accounts", "career_applicant_access_codes",
+  "career_applicant_accounts", "career_applicant_access_codes",
   "career_applicant_sessions", "career_application_files", "career_positions",
   "career_audit_log", "career_candidate_history", "career_document_packets",
   "career_documents", "career_history_gaps", "career_integration_snapshots",
