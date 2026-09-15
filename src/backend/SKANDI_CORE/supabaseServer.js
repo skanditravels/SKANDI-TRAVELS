@@ -68,9 +68,10 @@ const REST_OBJECTS = new Set([
   "travel_info_aircraft_scene_hotspots",
 
 
-  // Customer / loyalty / booking carts
+  // Customer / loyalty / support / booking carts
   "customer_profiles", "customer_profiles_booking_links", "club_profiles", "club_tiers", "skandi_points_ledger",
   "customer_favorites", "customer_travelers", "customer_travel_documents",
+  "customer_support_cases", "customer_support_messages", "alexandra_chat_sessions",
   "booking_carts", "booking_cart_items", "payment_events",
 
 
