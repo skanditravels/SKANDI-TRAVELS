@@ -94,6 +94,22 @@ function normalizeCarrier(carrier = {}) {
   };
 }
 
+function normalizeSegmentPassenger(passenger = {}) {
+  return {
+    id: passenger.passenger_id || passenger.id || null,
+    passengerId: passenger.passenger_id || passenger.id || null,
+    fareBasisCode: passenger.fare_basis_code || null,
+    cabinClass: passenger.cabin_class || null,
+    cabinClassMarketingName: passenger.cabin_class_marketing_name || null,
+    baggages: arr(passenger.baggages).map(baggage => ({
+      type: baggage?.type || null,
+      quantity: Number.isFinite(Number(baggage?.quantity)) ? Number(baggage.quantity) : null,
+      weight: Number.isFinite(Number(baggage?.weight)) ? Number(baggage.weight) : null,
+      weightUnit: baggage?.weight_unit || null
+    }))
+  };
+}
+
 function normalizeSegment(segment = {}) {
   return {
     id: segment.id || null,
@@ -112,7 +128,8 @@ function normalizeSegment(segment = {}) {
       id: segment.aircraft.id || null,
       iataCode: segment.aircraft.iata_code || null,
       name: segment.aircraft.name || null
-    } : null
+    } : null,
+    passengers: arr(segment.passengers).map(normalizeSegmentPassenger)
   };
 }
 
@@ -159,6 +176,8 @@ function normalizeOffer(offer = {}) {
     createdAt: offer.created_at || null,
     expiresAt: offer.expires_at || null,
     isExpired: !offer.expires_at || Date.parse(offer.expires_at) <= Date.now(),
+    baseAmount: offer.base_amount ?? null,
+    baseCurrency: offer.base_currency ?? offer.total_currency ?? null,
     totalAmount: offer.total_amount ?? null,
     totalCurrency: offer.total_currency ?? null,
     taxAmount: offer.tax_amount ?? null,
@@ -279,8 +298,13 @@ function normalizeOrder(order = {}) {
     syncedAt: order.synced_at || null,
     paymentRequiredBy: order.payment_required_by || null,
     priceGuaranteedExpiresAt: order.price_guaranteed_expires_at || null,
+    baseAmount: order.base_amount ?? null,
+    baseCurrency: order.base_currency ?? order.total_currency ?? null,
     totalAmount: order.total_amount ?? null,
     totalCurrency: order.total_currency ?? null,
+    taxAmount: order.tax_amount ?? null,
+    taxCurrency: order.tax_currency ?? order.total_currency ?? null,
+    conditions: order.conditions || {},
     passengerCount: arr(order.passengers).length,
     availableActions: arr(order.available_actions),
     slices,
@@ -519,7 +543,7 @@ export async function createDuffelOrderCore(input = {}) {
   const offer = normalizeOffer(rawOffer);
 
   const existing = await getDuffelOrderByOfferCore({ offerId });
-  if (existing.order?.id) return { order: existing.order, recoveredExistingOrder: true };
+  if (existing.order?.id) return { order: existing.order, offer, recoveredExistingOrder: true };
 
   const data = {
     type: orderType,
@@ -564,6 +588,7 @@ export async function createDuffelOrderCore(input = {}) {
   if (response.status === 202 || !response.data?.id) {
     return {
       order: response.data?.id ? normalizeOrder(response.data) : null,
+      offer,
       recoveredExistingOrder: false,
       reconciliationRequired: true,
       providerStatus: response.status,
@@ -578,6 +603,7 @@ export async function createDuffelOrderCore(input = {}) {
   }
   return {
     order: normalizeOrder(response.data),
+    offer,
     recoveredExistingOrder: false,
     reconciliationRequired: false,
     requestId: response.requestId || null,
