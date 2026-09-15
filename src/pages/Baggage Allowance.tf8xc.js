@@ -1,5 +1,5 @@
 // /src/pages/Baggage Allowance.js
-// B-011.1 install candidate for /travel-info/baggage-allowqnce.
+// B-011.1 install candidate for /travel-info/baggage-allowance.
 
 import wixLocationFrontend from "wix-location-frontend";
 import { getPublicBaggagePayload } from "backend/SKANDI_CORE/publicContent.web";
@@ -8,7 +8,7 @@ import { APP_ROUTES, isSafeInternalRoute } from "public/siteMap.js";
 const SOURCE = "SKANDI_BAGGAGE_PAGE";
 const PARENT = "SKANDI_WIX_PARENT";
 const VERSION = "BACKEND-BASE-1.0-B011.1";
-const EMBED_IDS = ["#baggageInfoEmbed", "#baggageHtml", "#html1"];
+const EMBED_IDS = ["#baggageInfoEmbed", "#baggageHtml"];
 
 function html() { for (const id of EMBED_IDS) { try { const e = $w(id); if (e && typeof e.onMessage === "function" && typeof e.postMessage === "function") return { id, e }; } catch (_) {} } return null; }
 function parse(v) { if (typeof v === "string") { try { return JSON.parse(v); } catch (_) { return null; } } return v && typeof v === "object" ? v : null; }
