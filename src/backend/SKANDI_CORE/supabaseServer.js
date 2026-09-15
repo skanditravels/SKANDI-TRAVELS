@@ -61,6 +61,7 @@ const REST_OBJECTS = new Set([
 
   // Travel Info / reference
   "travel_info_airlines", "travel_info_airports", "travel_info_articles", "travel_info_faq",
+  "baggage_allowance",
   "travel_info_faq_groups", "travel_info_support_requests", "travel_info_hotels",
   "travel_info_transfers", "travel_info_tours", "travel_info_activities", "travel_info_tickets",
   "travel_info_aircraft", "travel_info_aircraft_cabins", "travel_info_aircraft_views",
