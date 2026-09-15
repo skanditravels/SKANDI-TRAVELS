@@ -1,599 +1,118 @@
-// /src/backend/SKANDI_CORE/duffelAir.js
-// SKANDI Backend Base 1.0 — B-007.4 compatible Duffel Air provider core.
-// Pure provider-domain logic: no Wix page methods, no staff/customer auth, no Supabase/ALTEA writes.
-// Customer money is authorized through stripeClient and captured only by the higher booking/orchestration layer.
+// /src/backend/SKANDI_CORE/bagTag.js
+// SKANDI R-006.6 — ZPL Industrial Baggage Tag Renderer.
 
-import { duffelRequest, getDuffelEnvironment, ProviderError } from "backend/SKANDI_CORE/duffelClient.js";
-import {
-  createStripePaymentIntent,
-  retrieveStripePaymentIntent,
-  getStripePublishableKey,
-  assertStripeAuthorization,
-  updateStripePaymentIntentMetadata
-} from "backend/SKANDI_CORE/stripeClient.js";
+const TEMPLATE = `^XA
+^MMP
+^PW432
+^LL3456
+^LS0
+^FX --- INVERTED TOP Passenger STUB --
+^FO0,160^GB20,250,20^FS
+^FO316,160^GB20,250,20^FS
+^FO29,165^GB280,2,2^FS
+^FX --- BELOW --- SEGMENT - 3 (Final Destination) ---
+^FO170,185^A@I,20,23,E:DIN.FNT^FB140,1,0,L^FD{{seg3_destination}}^FS
+^FO30,185^A@I,20,23,E:DIN.FNT^FB90,1,0,R^FD{{seg3_date}}^FS
+^FO130,185^A@I,20,23,E:DIN.FNT^FB40,1,0,L^FD{{seg3_flightNum}}/^FS
+^FO185,185^A@I,20,23,E:DIN.FNT^FB40,1,0,L^FD{{seg3_carrier}}^FS
+^FO130,205^A@I,20,23,E:DIN.FNT^FB140,1,0,L^FD{{seg3_cityName}}^FS
+^FO170,205^A@I,20,23,E:DIN.FNT^FB140,1,0,L^FD{{seg3_via}}^FS
+^FX --- BELOW --- SEGMENT - 2 (Connection) ---
+^FO30,230^A@I,20,23,E:DIN.FNT^FB90,1,0,R^FD{{seg2_date}}^FS
+^FO130,230^A@I,20,23,E:DIN.FNT^FB40,1,0,L^FD{{seg2_flightNum}}/^FS
+^FO185,230^A@I,20,23,E:DIN.FNT^FB40,1,0,L^FD{{seg2_carrier}}^FS
+^FO170,230^A@I,20,23,E:DIN.FNT^FB140,1,0,L^FD{{seg2_destination}}^FS
+^FO130,255^A@I,20,23,E:DIN.FNT^FB140,1,0,L^FD{{seg2_cityName}}^FS 
+^FO170,255^A@I,20,23,E:DIN.FNT^FB140,1,0,L^FD{{seg2_via}}^FS
+^FX --- BELOW --- SEGMENT - 1 (First Flight) ---
+^FO30,280^A@I,20,23,E:DIN.FNT^FB90,1,0,R^FD{{seg1_date}}^FS
+^FO130,280^A@I,20,23,E:DIN.FNT^FB40,1,0,L^FD{{seg1_flightNum}}/^FS
+^FO185,280^A@I,20,23,E:DIN.FNT^FB40,1,0,L^FD{{seg1_carrier}}^FS
+^FO170,305^A@I,20,23,E:DIN.FNT^FB140,1,0,L^FD{{seg1_to}}^FS
+^FO170,280^A@I,20,23,E:DIN.FNT^FB140,1,0,L^FD{{seg1_destination}}^FS
+^FO130,305^A@I,20,23,E:DIN.FNT^FB140,1,0,L^FD{{seg1_cityName}}^FS
+^FX --- LOWER DIVIDER LINE ---
+^FO29,330^GB280,2,2^FS
+^FO100,335^A@I,20,23,E:DIN.FNT^FB60,1,0,L^FD{{bnNumber}}^FS
+^FO220,335^A@I,20,23,E:DIN.FNT^FB40,1,0,L^FD{{baggageWeight}}^FS
+^FO140,335^A@I,23,23,E:DIN.FNT^FB140,1,0,L^FD{{bag_divider}}^FS
+^FO170,335^A@I,20,23,E:DIN.FNT^FB140,1,0,L^FD{{baggageCount}}^FS
+^FO30,365^A@I,20,23,E:DIN.FNT^FD{{pnrLocator}}^FS
+^FO170,365^A@I,20,23,E:DIN.FNT^FB140,1,0,L^FD{{lastName}}^FS 
+^FO170,390^A@I,20,23,E:DIN.FNT^FB140,1,0,L^FD{{shortDate}}^FS
+^FO140,390^A@I,23,23,E:DIN.FNT^FDSKANDI^FS
+^FO30,390^A@I,20,23,E:DIN.FNT^FDALTEA^FS
+^FO30,420^A@I,20,20,E:DIN.FNT^FD{{airlineName}}^FS
+^FO12,500^A@I,20,21,E:DIN.FNT^FD BAGGAGAGE IDENTIFICATION TAG^FS
+^XZ`;
 
-const CABINS = new Set(["economy", "premium_economy", "business", "first"]);
-const ZERO_DECIMAL_CURRENCIES = new Set([
-  "BIF","CLP","DJF","GNF","JPY","KMF","KRW","MGA","PYG","RWF","UGX","VND","VUV","XAF","XOF","XPF"
-]);
+const obj = (v) => v && typeof v === "object" && !Array.isArray(v) ? v : {};
+const arr = (v) => Array.isArray(v) ? v : [];
+const text = (v, n = 100) => String(v ?? "").trim().slice(0, n).toUpperCase();
 
-function arr(v) { return Array.isArray(v) ? v : []; }
-function clean(v, max = 500) { return String(v ?? "").trim().slice(0, max); }
-function upper(v, max = 500) { return clean(v, max).toUpperCase(); }
-function lower(v, max = 500) { return clean(v, max).toLowerCase(); }
-function integer(v, min, max, fallback) {
-  const n = Number(v);
-  return Number.isInteger(n) && n >= min && n <= max ? n : fallback;
+function dateDisplay(value) {
+  const s = text(value, 40);
+  const m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (!m) return s ? s : "";
+  const months = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
+  return `${m[3]}${months[Math.max(0, Math.min(11, Number(m[2]) - 1))]}`;
 }
-function error(code, message, status = 400) {
-  const e = new Error(message);
-  e.name = "DuffelAirError";
-  e.code = code;
-  e.status = status;
-  e.publicMessage = message;
-  return e;
-}
-function resourceId(value, prefix, label) {
-  const id = clean(value, 220);
-  if (!new RegExp(`^${prefix}[A-Za-z0-9_]+$`).test(id)) throw error("INVALID_RESOURCE_ID", `The ${label} reference is invalid.`);
-  return id;
-}
-function genericId(value, label) {
-  const id = clean(value, 220);
-  if (!/^[A-Za-z0-9_:-]{5,220}$/.test(id)) throw error("INVALID_RESOURCE_ID", `The ${label} reference is invalid.`);
-  return id;
-}
-function isoFutureDate(value, label) {
-  const d = clean(value, 10);
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) throw error("INVALID_DATE", `The ${label} is invalid.`);
-  const parsed = new Date(`${d}T00:00:00Z`);
-  if (Number.isNaN(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== d || d < new Date().toISOString().slice(0, 10)) {
-    throw error("INVALID_DATE", `The ${label} must be today or later.`);
+
+export function renderBagTag({ booking = {}, passenger = {}, segments = [], documentNumber = "", airlineName = "" } = {}) {
+  const flights = arr(segments);
+  const bp = obj(booking.payload);
+
+  // Set default / bottom variables
+  const values = {
+    bnNumber: text(passenger.bnNumber || passenger.sequenceNumber),
+    baggageWeight: passenger.baggageWeight ? passenger.baggageWeight + "KG" : "",
+    baggageCount: passenger.baggageCount ? passenger.baggageCount : "",
+    bag_divider: passenger.baggageCount ? "/" : "",
+    pnrLocator: text(booking.bookingReference || booking.pnrLocator || documentNumber),
+    lastName: text(passenger.lastName || passenger.familyName || passenger.last_name || "PASSENGER"),
+    shortDate: dateDisplay(booking.departureDate || new Date().toISOString()),
+    airlineName: text(airlineName || booking.supplier || "SKANDI")
+  };
+
+  // Initialize segment variables to empty strings (in case passenger has less than 3 flights)
+  for (let i = 1; i <= 3; i++) {
+    values[`seg${i}_destination`] = "";
+    values[`seg${i}_date`] = "";
+    values[`seg${i}_flightNum`] = "";
+    values[`seg${i}_carrier`] = "";
+    values[`seg${i}_cityName`] = "";
+    values[`seg${i}_via`] = "";
   }
-  return d;
-}
+  values[`seg1_to`] = "";
 
-export function duffelAmountToMinor(amount, currency) {
-  const code = upper(currency, 3);
-  const raw = clean(amount, 40);
-  if (!/^[A-Z]{3}$/.test(code) || !/^\d+(?:\.\d+)?$/.test(raw)) throw error("INVALID_AMOUNT", "The provider amount is invalid.");
-  if (ZERO_DECIMAL_CURRENCIES.has(code)) {
-    const rounded = Math.round(Number(raw));
-    if (!Number.isSafeInteger(rounded)) throw error("INVALID_AMOUNT", "The provider amount is too large.");
-    return rounded;
-  }
-  const [whole, fraction = ""] = raw.split(".");
-  const minor = Number(whole) * 100 + Number(`${fraction}00`.slice(0, 2));
-  if (!Number.isSafeInteger(minor)) throw error("INVALID_AMOUNT", "The provider amount is too large.");
-  return minor;
-}
+  // Populate actual segments dynamically (Max 3)
+  flights.slice(0, 3).forEach((seg, index) => {
+     const segId = `seg${index + 1}`;
+     values[`${segId}_destination`] = text(seg.destination?.iataCode || seg.destination);
+     values[`${segId}_date`] = dateDisplay(seg.departingAt || seg.departureDate);
+     values[`${segId}_flightNum`] = text(seg.marketingFlightNumber || seg.flightNumber);
+     values[`${segId}_carrier`] = text(seg.marketingCarrier?.iataCode || seg.carrier);
+     values[`${segId}_cityName`] = text(seg.destination?.cityName || seg.destination?.iataCode || seg.destination);
 
-function normalizeLocation(place = {}) {
-  return {
-    id: place?.id || null,
-    type: place?.type || null,
-    iataCode: place?.iata_code || null,
-    icaoCode: place?.icao_code || null,
-    name: place?.name || null,
-    cityName: place?.city_name || null,
-    countryCode: place?.iata_country_code || place?.country_code || null,
-    timeZone: place?.time_zone || null,
-    latitude: Number.isFinite(Number(place?.latitude)) ? Number(place.latitude) : null,
-    longitude: Number.isFinite(Number(place?.longitude)) ? Number(place.longitude) : null
-  };
-}
-
-function normalizeCarrier(carrier = {}) {
-  return {
-    id: carrier?.id || null,
-    name: carrier?.name || null,
-    iataCode: carrier?.iata_code || null,
-    icaoCode: carrier?.icao_code || null,
-    logoSymbolUrl: carrier?.logo_symbol_url || null,
-    logoLockupUrl: carrier?.logo_lockup_url || null
-  };
-}
-
-function normalizeSegment(segment = {}) {
-  return {
-    id: segment.id || null,
-    duration: segment.duration || null,
-    departingAt: segment.departing_at || null,
-    arrivingAt: segment.arriving_at || null,
-    origin: normalizeLocation(segment.origin),
-    destination: normalizeLocation(segment.destination),
-    originTerminal: segment.origin_terminal || null,
-    destinationTerminal: segment.destination_terminal || null,
-    marketingCarrier: normalizeCarrier(segment.marketing_carrier),
-    marketingFlightNumber: segment.marketing_carrier_flight_number || null,
-    operatingCarrier: normalizeCarrier(segment.operating_carrier),
-    operatingFlightNumber: segment.operating_carrier_flight_number || null,
-    aircraft: segment.aircraft ? {
-      id: segment.aircraft.id || null,
-      iataCode: segment.aircraft.iata_code || null,
-      name: segment.aircraft.name || null
-    } : null
-  };
-}
-
-function normalizeSlice(slice = {}) {
-  return {
-    id: slice.id || null,
-    duration: slice.duration || null,
-    origin: normalizeLocation(slice.origin),
-    destination: normalizeLocation(slice.destination),
-    fareBrandName: slice.fare_brand_name || null,
-    segments: arr(slice.segments).map(normalizeSegment)
-  };
-}
-
-function serviceLabel(service = {}) {
-  if (service.type === "baggage") return service.metadata?.type || "Baggage";
-  if (service.type === "seat") return service.metadata?.designator ? `Seat ${service.metadata.designator}` : "Seat";
-  return service.type ? String(service.type).replace(/_/g, " ") : "Service";
-}
-
-function normalizeService(service = {}, labels = {}) {
-  return {
-    id: service.id || null,
-    type: service.type || null,
-    label: service.label || serviceLabel(service),
-    totalAmount: service.total_amount ?? null,
-    totalCurrency: service.total_currency ?? null,
-    maximumQuantity: Number(service.maximum_quantity || 1),
-    passengerId: service.passenger_id || service.passenger_ids?.[0] || null,
-    passengerIds: arr(service.passenger_ids).length ? arr(service.passenger_ids) : (service.passenger_id ? [service.passenger_id] : []),
-    passengerName: labels.passengerLabel || null,
-    segmentId: service.segment_id || service.segment_ids?.[0] || null,
-    segmentIds: arr(service.segment_ids).length ? arr(service.segment_ids) : (service.segment_id ? [service.segment_id] : []),
-    segmentLabel: labels.segmentLabel || null
-  };
-}
-
-function normalizeOffer(offer = {}) {
-  const passengers = arr(offer.passengers).map(p => ({ id: p.id || null, type: p.type || null, age: Number.isInteger(p.age) ? p.age : null }));
-  const passengerLabels = new Map(passengers.map((p, i) => [p.id, `Traveler ${i + 1}`]));
-  return {
-    id: offer.id || null,
-    liveMode: offer.live_mode === true,
-    createdAt: offer.created_at || null,
-    expiresAt: offer.expires_at || null,
-    isExpired: !offer.expires_at || Date.parse(offer.expires_at) <= Date.now(),
-    totalAmount: offer.total_amount ?? null,
-    totalCurrency: offer.total_currency ?? null,
-    taxAmount: offer.tax_amount ?? null,
-    taxCurrency: offer.tax_currency ?? null,
-    owner: normalizeCarrier(offer.owner),
-    passengers,
-    requiresInstantPayment: offer.payment_requirements?.requires_instant_payment === true,
-    paymentRequiredBy: offer.payment_requirements?.payment_required_by || null,
-    priceGuaranteeExpiresAt: offer.payment_requirements?.price_guarantee_expires_at || null,
-    identityDocumentRequired: offer.passenger_identity_documents_required === true,
-    supportedIdentityDocumentTypes: arr(offer.supported_passenger_identity_document_types),
-    conditions: offer.conditions || {},
-    slices: arr(offer.slices).map(normalizeSlice),
-    availableServices: arr(offer.available_services).map(s => normalizeService(s, {
-      passengerLabel: arr(s.passenger_ids).map(id => passengerLabels.get(id) || id).join(", "),
-      segmentLabel: arr(s.segment_ids).join(", ")
-    }))
-  };
-}
-
-function normalizeSeatElement(element = {}, context = {}) {
-  const type = lower(element.type || "empty", 40);
-  const base = {
-    type,
-    designator: element.designator || null,
-    name: element.name || null,
-    disclosures: arr(element.disclosures),
-    coordinates: element.coordinates || null,
-    metadata: element.metadata || null,
-    features: [...arr(element.features), ...(context.overwing ? ["overwing"] : [])],
-    availableServices: []
-  };
-  if (type === "seat") {
-    base.availableServices = arr(element.available_services).map(s => ({
-      ...normalizeService({ ...s, type: "seat", segment_id: context.segmentId || s.segment_id }),
-      label: `Seat ${element.designator || ""}`.trim()
-    }));
-  }
-  return base;
-}
-
-function normalizeSeatMap(seatMap = {}) {
-  const segmentId = seatMap.segment_id || null;
-  const seats = [];
-  const cabins = arr(seatMap.cabins).map((cabin, cabinIndex) => {
-    const cabinName = cabin.cabin_class_marketing_name || cabin.cabin_class || null;
-    const wingFirst = Number.isInteger(cabin.wings?.first_row_index) ? cabin.wings.first_row_index : null;
-    const wingLast = Number.isInteger(cabin.wings?.last_row_index) ? cabin.wings.last_row_index : null;
-    const rows = arr(cabin.rows).map((row, rowIndex) => {
-      const sections = arr(row.sections).map((section, sectionIndex) => {
-        const elements = arr(section.elements).map(element => {
-          const normalized = normalizeSeatElement(element, {
-            segmentId,
-            overwing: wingFirst !== null && wingLast !== null && rowIndex >= wingFirst && rowIndex <= wingLast
-          });
-          if (normalized.type === "seat") {
-            seats.push({
-              ...normalized,
-              cabinName,
-              cabinIndex,
-              rowIndex,
-              sectionIndex
-            });
-          }
-          return normalized;
-        });
-        return {
-          id: section.id || null,
-          type: section.type || null,
-          elements
-        };
-      });
-      const inferredNumber = clean(
-        row.row_number ?? row.number ??
-        sections.flatMap(s => s.elements).find(e => e.designator)?.designator?.match(/^\d+/)?.[0] ?? "",
-        10
-      );
-      return {
-        id: row.id || null,
-        rowNumber: inferredNumber || null,
-        sections
-      };
-    });
-    return {
-      id: cabin.id || null,
-      cabinClass: cabin.cabin_class || null,
-      cabinName,
-      deck: cabin.deck ?? cabin.deck_name ?? cabin.deck_number ?? null,
-      aisles: Number.isFinite(Number(cabin.aisles)) ? Number(cabin.aisles) : null,
-      wings: cabin.wings ? {
-        firstRowIndex: Number.isInteger(cabin.wings.first_row_index) ? cabin.wings.first_row_index : null,
-        lastRowIndex: Number.isInteger(cabin.wings.last_row_index) ? cabin.wings.last_row_index : null
-      } : null,
-      rows
-    };
+     // Only add the "TO" and "VIA" markers if the segment actually exists
+     if (index === 0) values[`seg1_to`] = "TO";
+     if (index > 0) values[`${segId}_via`] = "VIA";
   });
-  return {
-    id: seatMap.id || null,
-    sliceId: seatMap.slice_id || null,
-    segmentId,
-    cabins,
-    seats
-  };
-}
 
-function normalizeOrder(order = {}) {
-  const slices = arr(order.slices).map(normalizeSlice);
-  return {
-    id: order.id || null,
-    bookingReference: order.booking_reference || null,
-    bookingReferences: arr(order.booking_references),
-    offerId: order.offer_id || null,
-    type: order.type || null,
-    status: order.cancelled_at ? "cancelled" : (order.type === "hold" && order.payment_status?.awaiting_payment ? "held" : "confirmed"),
-    route: slices.map(s => `${s.origin?.iataCode || "—"}–${s.destination?.iataCode || "—"}`).join(" / "),
-    createdAt: order.created_at || null,
-    cancelledAt: order.cancelled_at || null,
-    syncedAt: order.synced_at || null,
-    paymentRequiredBy: order.payment_required_by || null,
-    priceGuaranteedExpiresAt: order.price_guaranteed_expires_at || null,
-    totalAmount: order.total_amount ?? null,
-    totalCurrency: order.total_currency ?? null,
-    passengerCount: arr(order.passengers).length,
-    availableActions: arr(order.available_actions),
-    slices,
-    passengers: arr(order.passengers).map(p => ({
-      id: p.id || null, givenName: p.given_name || null, familyName: p.family_name || null,
-      bornOn: p.born_on || null, gender: p.gender || null, title: p.title || null
-    })),
-    documents: arr(order.documents).map(d => ({ id: d.id || null, type: d.type || null, uniqueIdentifier: d.unique_identifier || null, passengerIds: arr(d.passenger_ids) })),
-    confirmationDeliveryPolicy: upper(order.metadata?.confirmation_delivery_policy || "SKANDI", 20)
-  };
-}
-
-function normalizeCancellation(c = {}) {
-  return {
-    id: c.id || null, orderId: c.order_id || null, confirmedAt: c.confirmed_at || null,
-    expiresAt: c.expires_at || null, refundAmount: c.refund_amount ?? null, refundCurrency: c.refund_currency ?? null
-  };
-}
-
-function validateSearch(input = {}) {
-  const slices = arr(input.slices);
-  const passengers = arr(input.passengers);
-  if (slices.length < 1 || slices.length > 2) throw error("INVALID_SLICES", "Use one or two flight slices.");
-  if (passengers.length < 1 || passengers.length > 9) throw error("INVALID_PASSENGERS", "Use between one and nine travelers.");
-  const normalizedSlices = slices.map(s => {
-    const origin = upper(s.origin, 3), destination = upper(s.destination, 3);
-    if (!/^[A-Z0-9]{3}$/.test(origin) || !/^[A-Z0-9]{3}$/.test(destination) || origin === destination) throw error("INVALID_ROUTE", "The flight route is invalid.");
-    return { origin, destination, departure_date: isoFutureDate(s.departureDate || s.departure_date, "departure date") };
-  });
-  if (normalizedSlices[1] && normalizedSlices[1].departure_date < normalizedSlices[0].departure_date) throw error("INVALID_RETURN_DATE", "Return must be on or after departure.");
-  const normalizedPassengers = passengers.map(p => p?.type ? { type: lower(p.type, 30) } : { age: integer(p?.age, 0, 17, null) });
-  if (normalizedPassengers.some(p => p.type ? p.type !== "adult" : p.age === null)) throw error("INVALID_PASSENGER", "The passenger request is invalid.");
-  const adults = normalizedPassengers.filter(p => p.type === "adult").length;
-  const infants = normalizedPassengers.filter(p => Number.isInteger(p.age) && p.age < 2).length;
-  if (adults < 1 || infants > adults) throw error("INVALID_PASSENGER_MIX", "At least one adult is required and each infant needs a separate adult.");
-  const cabin = lower(input.cabinClass || input.cabin_class || "economy", 30);
-  if (!CABINS.has(cabin)) throw error("INVALID_CABIN_CLASS", "Choose a supported cabin class.");
-  return {
-    slices: normalizedSlices,
-    passengers: normalizedPassengers,
-    cabin_class: cabin,
-    max_connections: integer(input.maxConnections ?? input.max_connections, 0, 2, 1),
-    supplierTimeout: integer(input.supplierTimeout ?? input.supplier_timeout, 2000, 60000, 15000)
-  };
-}
-
-function validateServices(value) {
-  if (value == null) return [];
-  if (!Array.isArray(value) || value.length > 36) throw error("INVALID_SERVICES", "The selected services are invalid.");
-  const seen = new Set();
-  return value.map(s => {
-    const id = resourceId(s?.id, "ase_", "service");
-    if (seen.has(id)) throw error("DUPLICATE_SERVICE", "The same service cannot be selected twice.");
-    seen.add(id);
-    return { id, quantity: integer(s?.quantity, 1, 9, 1) };
-  });
-}
-
-async function getRawOffer(offerId, { services = false } = {}) {
-  const id = resourceId(offerId, "off_", "offer");
-  const response = await duffelRequest(`/air/offers/${encodeURIComponent(id)}`, {
-    query: services ? { return_available_services: true } : {}, retrySafe: true
-  });
-  if (!response.data?.id) throw error("OFFER_NOT_FOUND", "The airline offer could not be retrieved.", 404);
-  return response.data;
-}
-
-async function priceRawOffer(offerId, services = []) {
-  const id = resourceId(offerId, "off_", "offer");
-  const intended = validateServices(services);
-  const response = await duffelRequest(`/air/offers/${encodeURIComponent(id)}/actions/price`, {
-    method: "POST", retrySafe: false,
-    body: { data: { intended_services: intended } }
-  });
-  if (!response.data?.id) throw error("OFFER_PRICE_FAILED", "The airline could not refresh the selected price.");
-  return response.data;
-}
-
-function toOrderPassenger(p = {}, supportedDocumentTypes = []) {
-  const id = resourceId(p.id, "pas_", "traveler");
-  const out = {
-    id,
-    title: lower(p.title, 10), gender: lower(p.gender, 5),
-    given_name: clean(p.givenName || p.given_name, 80), family_name: clean(p.familyName || p.family_name, 80),
-    born_on: clean(p.bornOn || p.born_on, 10),
-    email: lower(p.email, 254), phone_number: clean(p.phoneNumber || p.phone_number, 30)
-  };
-  if (!out.given_name || !out.family_name || !/^\d{4}-\d{2}-\d{2}$/.test(out.born_on)) throw error("INVALID_PASSENGER", "Traveler details are incomplete.");
-
-  const infantPassengerId = clean(p.infantPassengerId || p.infant_passenger_id, 220);
-  if (infantPassengerId) out.infant_passenger_id = resourceId(infantPassengerId, "pas_", "infant traveler");
-
-  const supported = new Set(arr(supportedDocumentTypes).map(x => lower(x, 50)));
-  const docs = [];
-  for (const d of arr(p.identityDocuments || p.identity_documents)) {
-    const type = lower(d.type || "passport", 50);
-    if (!["passport", "known_traveler_number", "passenger_redress_number"].includes(type)) continue;
-    if (supported.size && !supported.has(type)) continue;
-    const unique = upper(d.uniqueIdentifier || d.unique_identifier || d.number, 50);
-    if (!unique) continue;
-    if (type === "passport") {
-      const issuing = upper(d.issuingCountryCode || d.issuing_country_code, 2);
-      const expires = clean(d.expiresOn || d.expires_on, 10);
-      if (!/^[A-Z]{2}$/.test(issuing) || !/^\d{4}-\d{2}-\d{2}$/.test(expires)) {
-        throw error("INVALID_IDENTITY_DOCUMENT", "Passport issuing country and expiry are required.");
-      }
-      docs.push({ type, unique_identifier: unique, issuing_country_code: issuing, expires_on: expires });
-    } else {
-      docs.push({ type, unique_identifier: unique });
-    }
-  }
-  if (docs.length) out.identity_documents = docs;
-  return out;
-}
-
-export async function getDuffelWorkspaceBootstrapCore() {
-  const [environment, orders] = await Promise.all([
-    getDuffelEnvironment(),
-    listDuffelOrdersCore({ limit: 50 }).catch(() => ({ orders: [] }))
-  ]);
-  return { environment, defaultCurrency: "USD", orders: orders.orders || [] };
-}
-
-export async function searchDuffelOffersCore(input = {}) {
-  const q = validateSearch(input);
-  const response = await duffelRequest("/air/offer_requests", {
-    method: "POST",
-    query: { return_offers: true, view: "offers", supplier_timeout: q.supplierTimeout },
-    body: { data: { slices: q.slices, passengers: q.passengers, cabin_class: q.cabin_class, max_connections: q.max_connections } },
-    timeoutMs: Math.max(30000, q.supplierTimeout + 12000),
-    retrySafe: false
-  });
-  const data = response.data || {};
-  return {
-    offerRequestId: data.id || null,
-    offers: arr(data.offers).filter(o => !o.partial).map(normalizeOffer),
-    requestId: response.requestId || null,
-    providerRequestId: response.requestId || null,
-    correlationId: response.correlationId || null,
-    rateLimit: response.rateLimit || null
-  };
-}
-
-export async function refreshDuffelOfferCore({ offerId } = {}) {
-  return { offer: normalizeOffer(await getRawOffer(offerId, { services: true })) };
-}
-
-export async function priceDuffelOfferCore({ offerId, services = [] } = {}) {
-  return { offer: normalizeOffer(await priceRawOffer(offerId, services)) };
-}
-
-export async function getDuffelSeatMapsCore({ offerId } = {}) {
-  const id = resourceId(offerId, "off_", "offer");
-  const response = await duffelRequest("/air/seat_maps", { query: { offer_id: id }, retrySafe: true });
-  return { seatMaps: arr(response.data).map(normalizeSeatMap) };
-}
-
-export async function prepareDuffelPaymentCore(input = {}) {
-  const services = validateServices(input.services);
-  const raw = await priceRawOffer(input.offerId, services);
-  const offer = normalizeOffer(raw);
-  const amount = duffelAmountToMinor(offer.totalAmount, offer.totalCurrency);
-  const idempotencyContext = clean(input.idempotencyContext || offer.id, 120);
-  const intent = await createStripePaymentIntent({
-    amount,
-    currency: offer.totalCurrency,
-    captureMethod: "manual",
-    idempotencyContext,
-    idempotencyKey: `skandi_auth_${idempotencyContext}_${amount}_${lower(offer.totalCurrency, 3)}`.slice(0, 255),
-    metadata: {
-      integration: "skandi_duffel_air",
-      offer_id: offer.id,
-      idempotency_context: idempotencyContext,
-      selection_signature: services.map(s => `${s.id}:${s.quantity}`).sort().join("|")
-    }
-  });
-  const publishableKey = await getStripePublishableKey();
-  return {
-    payment: {
-      paymentIntentId: intent.id,
-      clientSecret: intent.client_secret,
-      publishableKey,
-      amount: offer.totalAmount,
-      currency: offer.totalCurrency,
-      status: intent.status,
-      captureMethod: intent.capture_method || "manual"
-    },
-    offer
-  };
-}
-
-export async function listDuffelOrdersCore(input = {}) {
-  const response = await duffelRequest("/air/orders", {
-    query: { limit: integer(input.limit, 1, 200, 50), sort: "-created_at", ...(input.offerId ? { offer_id: resourceId(input.offerId, "off_", "offer") } : {}) },
-    retrySafe: true
-  });
-  return { orders: arr(response.data).map(normalizeOrder), page: response.meta || null };
-}
-
-export async function getDuffelOrderCore(input = {}) {
-  const ref = clean(input.orderIdOrReference || input.orderId || input.bookingReference, 100);
-  if (!ref) throw error("ORDER_REFERENCE_REQUIRED", "Enter a Duffel order ID or booking reference.");
-  if (ref.startsWith("ord_")) {
-    const response = await duffelRequest(`/air/orders/${encodeURIComponent(resourceId(ref, "ord_", "order"))}`, { retrySafe: true });
-    if (!response.data?.id) throw error("ORDER_NOT_FOUND", "No Duffel order matches that reference.", 404);
-    return { order: normalizeOrder(response.data) };
-  }
-  const bookingReference = upper(ref, 20);
-  if (!/^[A-Z0-9-]{2,20}$/.test(bookingReference)) throw error("INVALID_BOOKING_REFERENCE", "The booking reference format is invalid.");
-  const response = await duffelRequest("/air/orders", { query: { limit: 20, booking_reference: bookingReference, sort: "-created_at" }, retrySafe: true });
-  const order = arr(response.data).find(o => upper(o.booking_reference, 20) === bookingReference);
-  if (!order) throw error("ORDER_NOT_FOUND", "No Duffel order matches that booking reference.", 404);
-  return { order: normalizeOrder(order) };
-}
-
-export async function getDuffelOrderByOfferCore({ offerId } = {}) {
-  const id = resourceId(offerId, "off_", "offer");
-  const response = await duffelRequest("/air/orders", { query: { limit: 5, offer_id: id, sort: "-created_at" }, retrySafe: true });
-  const order = arr(response.data)[0] || null;
-  return { order: order ? normalizeOrder(order) : null };
-}
-
-export async function createDuffelOrderCore(input = {}) {
-  const offerId = resourceId(input.offerId, "off_", "offer");
-  const orderType = lower(input.orderType || "instant", 20);
-  if (!new Set(["instant", "hold"]).has(orderType)) throw error("INVALID_ORDER_TYPE", "Choose instant purchase or hold.");
-  const services = validateServices(input.services);
-  const rawOffer = await priceRawOffer(offerId, services);
-  const offer = normalizeOffer(rawOffer);
-
-  const existing = await getDuffelOrderByOfferCore({ offerId });
-  if (existing.order?.id) return { order: existing.order, recoveredExistingOrder: true };
-
-  const data = {
-    type: orderType,
-    selected_offers: [offerId],
-    passengers: arr(input.passengers).map(p => toOrderPassenger(p, offer.supportedIdentityDocumentTypes)),
-    metadata: {
-      integration: "skandi_duffel",
-      confirmation_delivery_policy: upper(input.confirmationDeliveryPolicy || "SKANDI", 20),
-      ...(clean(input.internalReference, 100) ? { internal_reference: clean(input.internalReference, 100) } : {})
-    }
-  };
-
-  if (orderType === "hold") {
-    if (offer.requiresInstantPayment) throw error("HOLD_NOT_AVAILABLE", "The airline requires immediate payment for this offer.");
-    if (services.length) throw error("HOLD_SERVICES_NOT_AVAILABLE", "Paid seats and baggage cannot be added while creating a hold order.");
-  } else {
-    const paymentIntentId = resourceId(input.paymentIntentId, "pi_", "payment");
-    const intent = await retrieveStripePaymentIntent(paymentIntentId);
-    const internalReference = clean(input.internalReference || "", 120);
-    const customerAuthorizationAmountMinor = Number.isFinite(Number(input.customerAuthorizationAmountMinor))
-      ? Number(input.customerAuthorizationAmountMinor)
-      : duffelAmountToMinor(offer.totalAmount, offer.totalCurrency);
-    assertStripeAuthorization(intent, {
-      amount: customerAuthorizationAmountMinor,
-      currency: offer.totalCurrency,
-      ...(internalReference ? { metadata: { idempotency_context: internalReference } } : {}),
-      allowCaptured: false
-    });
-    data.services = services;
-    data.payments = [{ type: "balance", amount: offer.totalAmount, currency: offer.totalCurrency }];
-    data.metadata.payment_intent_id = paymentIntentId;
+  // Fallback for Manual Charter Bookings (Where `segments` array is empty)
+  if (flights.length === 0 && booking.destination) {
+     values.seg1_destination = text(booking.destination);
+     values.seg1_date = dateDisplay(booking.departureDate);
+     const fNum = text(booking.flightNumber);
+     values.seg1_carrier = fNum.replace(/[0-9]+$/, ''); // Extracts "SK" from "SK903"
+     values.seg1_flightNum = fNum.replace(/^[A-Z]+/, ''); // Extracts "903" from "SK903"
+     values.seg1_to = "TO";
   }
 
-  let response;
-  try {
-    response = await duffelRequest("/air/orders", { method: "POST", body: { data }, timeoutMs: 130000, retrySafe: false });
-  } catch (err) {
-    if (err instanceof ProviderError && err.outcomeUnknown) throw err;
-    throw err;
+  // Inject values into the ZPL template
+  let zpl = TEMPLATE;
+  for (const [key, val] of Object.entries(values)) {
+     zpl = zpl.split(`{{${key}}}`).join(val);
   }
-
-  if (response.status === 202 || !response.data?.id) {
-    return {
-      order: response.data?.id ? normalizeOrder(response.data) : null,
-      recoveredExistingOrder: false,
-      reconciliationRequired: true,
-      providerStatus: response.status,
-      requestId: response.requestId || null,
-      providerRequestId: response.requestId || null,
-      correlationId: response.correlationId || null
-    };
-  }
-
-  if (input.paymentIntentId) {
-    updateStripePaymentIntentMetadata(input.paymentIntentId, { duffel_order_id: response.data.id }, `skandi_duffel_order_${response.data.id}`).catch(() => {});
-  }
-  return {
-    order: normalizeOrder(response.data),
-    recoveredExistingOrder: false,
-    reconciliationRequired: false,
-    requestId: response.requestId || null,
-    providerRequestId: response.requestId || null,
-    correlationId: response.correlationId || null
-  };
-}
-
-export async function createDuffelOrderCancellationCore({ orderId } = {}) {
-  const id = resourceId(orderId, "ord_", "order");
-  const current = await getDuffelOrderCore({ orderIdOrReference: id });
-  if (!arr(current.order?.availableActions).includes("cancel")) throw error("CANCELLATION_NOT_AVAILABLE", "The airline does not currently allow API cancellation for this order.");
-  const response = await duffelRequest("/air/order_cancellations", { method: "POST", body: { data: { order_id: id } }, retrySafe: false });
-  return { cancellation: normalizeCancellation(response.data || {}) };
-}
-
-export async function confirmDuffelOrderCancellationCore({ cancellationId } = {}) {
-  const id = genericId(cancellationId, "cancellation");
-  const response = await duffelRequest(`/air/order_cancellations/${encodeURIComponent(id)}/actions/confirm`, { method: "POST", retrySafe: false });
-  if (response.status === 202 || !response.data) {
-    return { cancellation: response.data ? normalizeCancellation(response.data) : null, order: null, reconciliationRequired: true, requestId: response.requestId || null, correlationId: response.correlationId || null };
-  }
-  const cancellation = normalizeCancellation(response.data);
-  const order = cancellation.orderId ? (await getDuffelOrderCore({ orderIdOrReference: cancellation.orderId })).order : null;
-  return { cancellation, order, customerRefundRequired: Number(cancellation.refundAmount || 0) > 0 };
+  return zpl;
 }
