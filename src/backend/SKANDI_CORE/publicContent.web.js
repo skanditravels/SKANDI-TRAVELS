@@ -9,6 +9,7 @@ import {
   getPublicTravelInfoAircraftCore,
   getPublicBaggagePayloadCore,
   getPublicPassportVisaPayloadCore,
+  searchPublicTravelRequirementsCore,
   getPublicInsurancePayloadCore
 } from "backend/SKANDI_CORE/publicContent.js";
 
@@ -20,4 +21,5 @@ export const getPublicTravelInfoPayload = anyone(getPublicTravelInfoPayloadCore)
 export const getPublicTravelInfoAircraft = anyone(getPublicTravelInfoAircraftCore);
 export const getPublicBaggagePayload = anyone(getPublicBaggagePayloadCore);
 export const getPublicPassportVisaPayload = anyone(getPublicPassportVisaPayloadCore);
+export const searchPublicTravelRequirements = anyone(searchPublicTravelRequirementsCore);
 export const getPublicInsurancePayload = anyone(getPublicInsurancePayloadCore);
