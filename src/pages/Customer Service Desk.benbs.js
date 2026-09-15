@@ -1,6 +1,7 @@
 // /src/pages/Customer Service Desk.benbs.js
 // Route: /riaintra/customer-service
-// R-007.3 preserves the existing Customer Service Center bridge and uses one canonical Support facade.
+// R-007.4 canonical Customer Service Center bridge with parent-owned Supabase synchronization.
+// Supabase remains the persistent Support source of truth through customerSupport.web.js.
 
 
 import {
@@ -19,7 +20,15 @@ const LEGACY_HTML_ID = "#customerServiceAgentEmbed";
 const CHILD_SOURCE = "SKANDI_SUPPORT_AGENT";
 const PARENT_SOURCE = "SKANDI_WIX_PARENT";
 const MAX_REPLY_LENGTH = 20000;
+const SYNC_INTERVAL_MS = 12000;
 const ALLOWED_CASE_FIELDS = new Set(["status", "priority", "type", "group", "assigneeId", "assigneeName", "followers", "ccs", "tags", "queue"]);
+
+
+let activeCaseId = "";
+let currentFilters = {};
+let syncTimer = null;
+let syncInFlight = false;
+let agentReady = false;
 
 
 function objectOf(value) { return value && typeof value === "object" && !Array.isArray(value) ? value : {}; }
@@ -63,7 +72,60 @@ function filtersOf(payload) {
   if (payload.query) filters.query = String(payload.query);
   return filters;
 }
+function updateFilters(payload) {
+  const next = filtersOf(payload);
+  if (Object.prototype.hasOwnProperty.call(next, "queue")) delete currentFilters.view;
+  if (Object.prototype.hasOwnProperty.call(next, "view") && !Object.prototype.hasOwnProperty.call(next, "queue")) delete currentFilters.queue;
+  currentFilters = { ...currentFilters, ...next };
+  return currentFilters;
+}
 function errorText(error) { return String(error?.publicMessage || error?.message || "Customer service action failed.").slice(0, 300); }
+
+
+async function refreshAgentState(html, { includeDetail = true, requestId = "", silent = true } = {}) {
+  if (!agentReady || syncInFlight) return;
+  syncInFlight = true;
+  try {
+    const list = await listAgentSupportCases({ ...currentFilters, silentSync: true });
+    post(html, "AGENT_CASE_LIST", list, requestId);
+    if (includeDetail && activeCaseId) {
+      const detail = await getAgentSupportCase({ caseId: activeCaseId, includeLiveKit: false, silentSync: true });
+      post(html, "AGENT_CASE_DETAIL", detail, requestId);
+    }
+    post(html, "AGENT_SYNC_STATUS", { ok: true, syncedAt: new Date().toISOString() }, requestId);
+  } catch (error) {
+    console.error("[Customer Service Center] Background synchronization failed.", error);
+    if (!silent) post(html, "AGENT_ERROR", { action: "AGENT_SYNC", message: errorText(error) }, requestId);
+  } finally {
+    syncInFlight = false;
+  }
+}
+
+
+function startSync(html) {
+  if (syncTimer) return;
+  syncTimer = setInterval(() => {
+    refreshAgentState(html, { includeDetail: Boolean(activeCaseId), silent: true }).catch(() => {});
+  }, SYNC_INTERVAL_MS);
+}
+
+
+async function bootstrap(html, payload, requestId) {
+  updateFilters(payload);
+  const [base, list] = await Promise.all([
+    getAgentSupportBootstrap({}),
+    listAgentSupportCases(currentFilters)
+  ]);
+  agentReady = true;
+  post(html, "AGENT_BOOTSTRAP", { ...objectOf(base), ...objectOf(list), sync: { intervalMs: SYNC_INTERVAL_MS, sourceOfTruth: "Supabase" } }, requestId);
+  startSync(html);
+}
+
+
+async function refreshListAfterMutation(html, requestId = "") {
+  const list = await listAgentSupportCases({ ...currentFilters, silentSync: true });
+  post(html, "AGENT_CASE_LIST", list, requestId);
+}
 
 
 $w.onReady(function () {
@@ -81,20 +143,23 @@ $w.onReady(function () {
     try {
       switch (message.type) {
         case "AGENT_READY":
-        case "AGENT_REQUEST_BOOTSTRAP": {
-          const [base, list] = await Promise.all([getAgentSupportBootstrap({}), listAgentSupportCases(filtersOf(payload))]);
-          post(html, "AGENT_BOOTSTRAP", { ...objectOf(base), ...objectOf(list) }, requestId);
+        case "AGENT_REQUEST_BOOTSTRAP":
+          await bootstrap(html, payload, requestId);
           return;
-        }
+
+
         case "AGENT_LIST_CASES":
         case "AGENT_REFRESH_CASES":
-          post(html, "AGENT_CASE_LIST", await listAgentSupportCases(filtersOf(payload)), requestId);
+          updateFilters(payload);
+          post(html, "AGENT_CASE_LIST", await listAgentSupportCases(currentFilters), requestId);
           return;
 
 
         case "AGENT_OPEN_CASE":
         case "AGENT_CALL_START": {
-          const result = await getAgentSupportCase({ caseId: caseIdOf(payload) });
+          const caseId = caseIdOf(payload);
+          activeCaseId = caseId;
+          const result = await getAgentSupportCase({ caseId });
           post(html, message.type === "AGENT_CALL_START" ? "AGENT_LIVEKIT_SESSION" : "AGENT_CASE_DETAIL", result, requestId);
           return;
         }
@@ -102,6 +167,7 @@ $w.onReady(function () {
 
         case "AGENT_REPLY": {
           const caseId = caseIdOf(payload);
+          activeCaseId = caseId;
           const result = await replyAgentSupportCase({
             caseId,
             content: replyOf(payload),
@@ -109,17 +175,20 @@ $w.onReady(function () {
           });
           const updates = updatesOf(payload);
           if (Object.keys(updates).length) await updateAgentSupportCase({ caseId, updates });
-          const detail = await getAgentSupportCase({ caseId });
+          const detail = await getAgentSupportCase({ caseId, includeLiveKit: false, silentSync: true });
           post(html, "AGENT_REPLY_SENT", { ...objectOf(detail), sentMessage: result.sentMessage, privateNote: result.privateNote, livekitSession: result.livekitSession }, requestId);
+          await refreshListAfterMutation(html, requestId);
           return;
         }
 
 
         case "AGENT_UPDATE_CASE": {
           const caseId = caseIdOf(payload);
+          activeCaseId = caseId || activeCaseId;
           const result = await updateAgentSupportCase({ caseId, updates: updatesOf(payload) });
-          const detail = await getAgentSupportCase({ caseId });
+          const detail = await getAgentSupportCase({ caseId, includeLiveKit: false, silentSync: true });
           post(html, "AGENT_CASE_UPDATED", { ...objectOf(detail), result }, requestId);
+          await refreshListAfterMutation(html, requestId);
           return;
         }
 
@@ -134,23 +203,45 @@ $w.onReady(function () {
             results.push(await updateAgentSupportCase({ caseId: caseIdOf(casePayload), updates }));
           }
           post(html, "AGENT_CASE_UPDATED", { results }, requestId);
+          await refreshListAfterMutation(html, requestId);
+          if (activeCaseId) {
+            const detail = await getAgentSupportCase({ caseId: activeCaseId, includeLiveKit: false, silentSync: true }).catch(() => null);
+            if (detail) post(html, "AGENT_CASE_DETAIL", detail, requestId);
+          }
           return;
         }
 
 
-        case "AGENT_CREATE_CASE":
-          post(html, "AGENT_CASE_CREATED", await createAgentSupportCase({ case: payload.case || payload }), requestId);
+        case "AGENT_CREATE_CASE": {
+          const result = await createAgentSupportCase({ case: payload.case || payload });
+          const createdId = caseIdOf(result?.case || result);
+          if (createdId) activeCaseId = createdId;
+          post(html, "AGENT_CASE_CREATED", result, requestId);
+          await refreshListAfterMutation(html, requestId);
           return;
+        }
 
 
-        case "AGENT_DELETE_CASE":
-          post(html, "AGENT_CASE_UPDATED", await deleteAgentSupportCase({ caseId: caseIdOf(payload) }), requestId);
+        case "AGENT_DELETE_CASE": {
+          const caseId = caseIdOf(payload);
+          const result = await deleteAgentSupportCase({ caseId });
+          if (caseId && caseId === activeCaseId) activeCaseId = "";
+          post(html, "AGENT_CASE_UPDATED", result, requestId);
+          await refreshListAfterMutation(html, requestId);
           return;
+        }
+
+
+        case "AGENT_CLOSE_TAB": {
+          const caseId = caseIdOf(payload);
+          if (!caseId || caseId === activeCaseId) activeCaseId = "";
+          post(html, "AGENT_ACTION_ACK", { action: message.type }, requestId);
+          return;
+        }
 
 
         case "AGENT_CALL_END":
         case "AGENT_SET_PRESENCE":
-        case "AGENT_CLOSE_TAB":
         case "AGENT_NAVIGATE":
         case "AGENT_EXPORT_VIEW":
         case "AGENT_OPEN_ARTICLE":
