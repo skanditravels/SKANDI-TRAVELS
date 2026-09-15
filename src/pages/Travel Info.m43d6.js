@@ -6,14 +6,15 @@
 import wixLocationFrontend from "wix-location-frontend";
 import {
   getPublicTravelInfoPayload,
-  getPublicTravelInfoAircraft
+  getPublicTravelInfoAircraft,
+  searchPublicTravelRequirements
 } from "backend/SKANDI_CORE/publicContent.web";
 import { createPublicSupportCase } from "backend/SKANDI_CORE/customerSupport.web";
 import { SITE_MAP, APP_ROUTES, isSafeInternalRoute } from "public/siteMap.js";
 
 const SOURCE = "SKANDI_PUBLIC_TRAVEL_INFO";
 const PARENT = "SKANDI_WIX_PARENT";
-const VERSION = "BACKEND-BASE-1.0-B011.1";
+const VERSION = "BACKEND-BASE-1.0-B011.2";
 const EMBED_IDS = ["#travelInfoHtml", "#travelInfoEmbed", "#html1"];
 let loadPromise = null;
 
@@ -107,6 +108,24 @@ $w.onReady(() => {
           return;
         case "TRAVEL_INFO_REQUEST_AIRCRAFT":
           post(html, "TRAVEL_INFO_AIRCRAFT_DATA", await getPublicTravelInfoAircraft(payload));
+          return;
+        case "TRAVEL_INFO_REQUIREMENTS_SEARCH":
+          post(html, "TRAVEL_INFO_REQUIREMENTS_SEARCHING", { message: "Checking current travel requirements…" });
+          try {
+            post(html, "TRAVEL_INFO_REQUIREMENTS_RESULT", await searchPublicTravelRequirements({
+              language: clean(payload.language || "EN", 10),
+              nationality: clean(payload.nationality, 120),
+              residenceCountry: clean(payload.residenceCountry, 120),
+              origin: clean(payload.origin, 120),
+              transit: clean(payload.transit, 120),
+              destination: clean(payload.destination, 120),
+              departureDate: clean(payload.departureDate, 40),
+              returnDate: clean(payload.returnDate, 40),
+              documentType: clean(payload.documentType || "PASSPORT", 40)
+            }));
+          } catch (error) {
+            post(html, "TRAVEL_INFO_REQUIREMENTS_ERROR", { message: clean(error?.publicMessage || error?.message || "Travel requirements are temporarily unavailable.", 500) });
+          }
           return;
         case "TRAVEL_SUPPORT_REQUEST":
           await createSupport(html, payload);
