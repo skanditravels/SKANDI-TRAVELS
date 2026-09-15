@@ -1,7 +1,7 @@
 // /src/backend/SKANDI_CORE/duffelGround.js
 // SKANDI Backend Base 1.0 — B-005R1 canonical Duffel Stays/Cars provider core.
 // Pure provider layer: no Wix member/staff auth, no Supabase/ALTEA persistence and no Stripe.
-// Booking ownership and synchronization stay in customerBooking/reservations. 
+// Booking ownership and synchronization stay in customerBooking/reservations.
 
 import { duffelRequest } from "backend/SKANDI_CORE/duffelClient.js";
 
@@ -23,6 +23,11 @@ function futureDate(value, label) {
   const x = calendarDate(value, label);
   if (x < new Date().toISOString().slice(0, 10)) throw fail("INVALID_DATE", `The ${label} must be today or later.`);
   return x;
+}
+function dateDaysBetween(fromDate, toDate) {
+  const from = new Date(`${calendarDate(fromDate, "start date")}T00:00:00Z`);
+  const to = new Date(`${calendarDate(toDate, "end date")}T00:00:00Z`);
+  return Math.round((to.getTime() - from.getTime()) / 86400000);
 }
 function time(value, label) { const x = clean(value, 5); if (!/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(x)) throw fail("INVALID_TIME", `The ${label} time is invalid.`); return x; }
 function email(value) { const x = lower(value, 254); if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(x)) throw fail("INVALID_EMAIL", "Enter a valid email address."); return x; }
@@ -149,12 +154,21 @@ function stayGuests(input = {}, rooms = 1) {
 export async function searchDuffelStaysCore(input = {}) {
   const checkInDate = futureDate(input.checkInDate || input.departureDate, "check-in date");
   const checkOutDate = futureDate(input.checkOutDate || input.returnDate, "check-out date");
-  if (checkOutDate <= checkInDate) throw fail("INVALID_STAY_DATES", "Check-out must be after check-in.");
+  const today = new Date().toISOString().slice(0, 10);
+  const daysUntilCheckIn = dateDaysBetween(today, checkInDate);
+  const nights = dateDaysBetween(checkInDate, checkOutDate);
+  if (nights <= 0) throw fail("INVALID_STAY_DATES", "Check-out must be after check-in.");
+  if (daysUntilCheckIn > 330) throw fail("STAY_CHECK_IN_TOO_FAR", "Check-in cannot be more than 330 days in the future.");
+  if (nights > 99) throw fail("STAY_TOO_LONG", "A stay cannot be longer than 99 nights.");
   const rooms = Math.max(1, Math.min(9, Number(input.rooms || 1)));
-  const accommodationIds = (arr(input.accommodationIds).length ? arr(input.accommodationIds) : (input.accommodationId ? [input.accommodationId] : [])).map(x => id(x, "acc_", "accommodation")).slice(0, 100);
-  const data = { rooms, mobile: input.mobile === true, guests: stayGuests(input, rooms), free_cancellation_only: input.freeCancellationOnly === true, check_in_date: checkInDate, check_out_date: checkOutDate };
+  const guests = stayGuests(input, rooms);
+  if (guests.filter(guest => guest.type === "adult").length < rooms) throw fail("STAY_ADULTS_REQUIRED", "Each room requires at least one adult guest.");
+  const fetchRates = input.fetchRates !== false;
+  const accommodationIdLimit = fetchRates ? 10 : 200;
+  const accommodationIds = (arr(input.accommodationIds).length ? arr(input.accommodationIds) : (input.accommodationId ? [input.accommodationId] : [])).map(x => id(x, "acc_", "accommodation")).slice(0, accommodationIdLimit);
+  const data = { rooms, mobile: input.mobile === true, guests, free_cancellation_only: input.freeCancellationOnly === true, check_in_date: checkInDate, check_out_date: checkOutDate };
   let location = null;
-  if (accommodationIds.length) data.accommodation = { ids: accommodationIds, fetch_rates: input.fetchRates !== false };
+  if (accommodationIds.length) data.accommodation = { ids: accommodationIds, fetch_rates: fetchRates };
   else {
     location = input.location || input;
     data.location = groundLocation(location, Number(input.radiusKm || 25));
@@ -167,7 +181,7 @@ export async function searchDuffelStaysCore(input = {}) {
 
 export async function fetchDuffelStayRatesCore({ searchResultId = "" } = {}) {
   const searchId = id(searchResultId, "srr_", "stay search result");
-  const response = await duffelRequest(`/stays/search_results/${encodeURIComponent(searchId)}/actions/fetch_all_rates`, { method: "POST", body: { data: {} }, retrySafe: false });
+  const response = await duffelRequest(`/stays/search_results/${encodeURIComponent(searchId)}/actions/fetch_all_rates`, { method: "POST", retrySafe: false });
   return { searchResultId: searchId, accommodation: normalizeStaySearchResult(response.data || {}), rates: ratesFromSearchResult(response.data || {}) };
 }
 
@@ -199,7 +213,7 @@ export async function createDuffelStayBookingCore(input = {}) {
   };
   if (input.specialRequests) data.accommodation_special_requests = clean(input.specialRequests, 500);
   if (input.loyaltyProgrammeAccountNumber) data.loyalty_programme_account_number = clean(input.loyaltyProgrammeAccountNumber, 80);
-  if (input.threeDSecureSessionId) data.payment = { method: "card", three_d_secure_session_id: id(input.threeDSecureSessionId, "3ds_", "3-D Secure session") };
+  if (input.threeDSecureSessionId) data.payment = { three_d_secure_session_id: id(input.threeDSecureSessionId, "3ds_", "3-D Secure session") };
   const response = await duffelRequest("/stays/bookings", { method: "POST", body: { data }, timeoutMs: 130000, retrySafe: false });
   if (response.status === 202 || !response.data?.id) return { booking: response.data?.id ? normalizeStayBooking(response.data) : null, reconciliationRequired: true, providerStatus: response.status, requestId: response.requestId || null, providerRequestId: response.requestId || null, correlationId: response.correlationId || null };
   return { booking: normalizeStayBooking(response.data), reconciliationRequired: false, requestId: response.requestId || null, correlationId: response.correlationId || null };
