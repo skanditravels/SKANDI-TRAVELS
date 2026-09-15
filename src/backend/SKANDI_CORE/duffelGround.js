@@ -1,5 +1,5 @@
 // /src/backend/SKANDI_CORE/duffelGround.js
-// SKANDI Backend Base 1.0 — B-005R1 canonical Duffel Stays/Cars provider core.
+// SKANDI Backend Base 1.0 — B-005R2 canonical Duffel Stays/Cars provider core.
 // Pure provider layer: no Wix member/staff auth, no Supabase/ALTEA persistence and no Stripe.
 // Booking ownership and synchronization stay in customerBooking/reservations.
 
@@ -163,10 +163,15 @@ export async function searchDuffelStaysCore(input = {}) {
   const rooms = Math.max(1, Math.min(9, Number(input.rooms || 1)));
   const guests = stayGuests(input, rooms);
   if (guests.filter(guest => guest.type === "adult").length < rooms) throw fail("STAY_ADULTS_REQUIRED", "Each room requires at least one adult guest.");
-  const fetchRates = input.fetchRates !== false;
-  const accommodationIdLimit = fetchRates ? 10 : 200;
-  const accommodationIds = (arr(input.accommodationIds).length ? arr(input.accommodationIds) : (input.accommodationId ? [input.accommodationId] : [])).map(x => id(x, "acc_", "accommodation")).slice(0, accommodationIdLimit);
-  const data = { rooms, mobile: input.mobile === true, guests, free_cancellation_only: input.freeCancellationOnly === true, check_in_date: checkInDate, check_out_date: checkOutDate };
+  const fetchRates = input.fetchRates === true;
+  const accommodationIds = (arr(input.accommodationIds).length ? arr(input.accommodationIds) : (input.accommodationId ? [input.accommodationId] : []))
+    .map(x => id(x, "acc_", "accommodation"));
+  if (!fetchRates && accommodationIds.length > 200) throw fail("TOO_MANY_ACCOMMODATIONS", "Duffel Stays accepts up to 200 accommodation IDs when fetch_rates is false.");
+
+  const data = { rooms, guests, check_in_date: checkInDate, check_out_date: checkOutDate };
+  if (input.mobile === true || input.mobile === false) data.mobile = input.mobile;
+  if (input.freeCancellationOnly === true || input.freeCancellationOnly === false) data.free_cancellation_only = input.freeCancellationOnly;
+
   let location = null;
   if (accommodationIds.length) data.accommodation = { ids: accommodationIds, fetch_rates: fetchRates };
   else {
@@ -174,9 +179,10 @@ export async function searchDuffelStaysCore(input = {}) {
     data.location = groundLocation(location, Number(input.radiusKm || 25));
   }
   if (input.instantPayment === true || input.instantPayment === false) data.instant_payment = input.instantPayment;
-  if (arr(input.negotiatedRateIds).length) data.negotiated_rate_ids = arr(input.negotiatedRateIds).map(x => clean(x, 180)).filter(Boolean).slice(0, 50);
+  if (arr(input.negotiatedRateIds).length) data.negotiated_rate_ids = arr(input.negotiatedRateIds).map(x => id(x, "nre_", "negotiated rate"));
+
   const response = await duffelRequest("/stays/search", { method: "POST", body: { data }, retrySafe: false });
-  return { location, searchId: response.data?.id || "", items: arr(response.data?.results).map(normalizeStaySearchResult).filter(i => i.id), requestId: response.requestId || null, correlationId: response.correlationId || null };
+  return { location, items: arr(response.data?.results).map(normalizeStaySearchResult).filter(i => i.id), requestId: response.requestId || null, correlationId: response.correlationId || null };
 }
 
 export async function fetchDuffelStayRatesCore({ searchResultId = "" } = {}) {
