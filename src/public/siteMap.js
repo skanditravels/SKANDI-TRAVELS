@@ -33,6 +33,7 @@ export const SITE_MAP = Object.freeze({
   successFactors: "/riaintra/success-factors",
   alteaLaunchpad: "/riaintra/success-factors/altea",
   alteaReservations: "/riaintra/success-factors/altea/reservations",
+  inventoryControl: "/riaintra/altea/inventory-control",
   alteaTimatic: "/riaintra/success-factors/altea/timatic",
   mail: "/riaintra/success-factors/mail",
   docunet: "/riaintra/success-factors/docunet",
