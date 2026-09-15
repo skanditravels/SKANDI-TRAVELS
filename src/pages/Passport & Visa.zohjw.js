@@ -1,5 +1,5 @@
-// /src/pages/Passport & Visa.zohjw.js
-// B-011.1 install candidate for /travel-info/passport-visa.
+// /src/pages/Passport & Visa.js
+// B-011.1 install candidate for /travel-info/passport-visa.zohjw.js
 // Destination-specific SKANDI guidance is a planning aid; it does not replace official border/visa authority decisions.
 
 import wixLocationFrontend from "wix-location-frontend";
@@ -9,7 +9,7 @@ import { APP_ROUTES, isSafeInternalRoute } from "public/siteMap.js";
 const SOURCE = "SKANDI_PASSPORT_VISA_PAGE";
 const PARENT = "SKANDI_WIX_PARENT";
 const VERSION = "BACKEND-BASE-1.0-B011.1";
-const EMBED_IDS = ["#passportVisaEmbed", "#passportVisaHtml"];
+const EMBED_IDS = ["#passportVisaEmbed", "#passportVisaHtml", "#html1"];
 
 function html() { for (const id of EMBED_IDS) { try { const e = $w(id); if (e && typeof e.onMessage === "function" && typeof e.postMessage === "function") return { id, e }; } catch (_) {} } return null; }
 function parse(v) { if (typeof v === "string") { try { return JSON.parse(v); } catch (_) { return null; } } return v && typeof v === "object" ? v : null; }
