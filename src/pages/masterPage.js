@@ -13,7 +13,7 @@ import { SITE_MAP, APP_ROUTES, isSafeInternalRoute } from "public/siteMap.js";
 
 
 
-const MASTER_VERSION = "BACKEND-BASE-1.0-B011";
+const MASTER_VERSION = "BACKEND-BASE-1.0-B011.1";
 const PARENT_SOURCE = "SKANDI_WIX_PARENT";
 const CUSTOMER_HEADER_SOURCE = "SKANDI_CUSTOMER_HEADER_EXPANDBAR";
 const CUSTOMER_FOOTER_SOURCE = "SKANDI_CUSTOMER_FOOTER";
@@ -27,7 +27,7 @@ const MASTER_CONFIG = Object.freeze({
     internalName: "RIAINTRA",
     alteaName: "ALTEA",
     slogans: Object.freeze({
-      en: "Signature Travels, Unforgettable Moments.",
+      en: "Unforgettable Moments.",
       sv: "När du längtar bort",
       no: "Når du lengter bort",
       da: "Når du længes væk",
@@ -106,11 +106,11 @@ const MASTER_CONFIG = Object.freeze({
           title:"HELP & TRAVEL INFO",
           links:Object.freeze([
             { label:"Before you travel", path:SITE_MAP.travelInfo },
-            { label:"Passport & Visa", path:"/travel-info/passport-visa" },
-            { label:"Baggage Allowence", path:"/travel-info/baggage-allowence" },
-            { label:"Travel Insurance", path:"/travel-info/insurance" },
-            { label:"Special Assistance", path:"/travel-info/special-assistance" },
-            { label:"Flight Status", path:"/travel-info/flight-status" },
+            { label:"Passport & Visa", path:APP_ROUTES.passportVisa },
+            { label:"Baggage Allowence", path:APP_ROUTES.baggageAllowance },
+            { label:"Travel Insurance", path:APP_ROUTES.travelInsurance },
+            { label:"Special Assistance", path:APP_ROUTES.specialAssistance },
+            { label:"Flight Status", path:APP_ROUTES.flightStatus },
             { label:"Help Center", path:SITE_MAP.support }
           ])
         },
