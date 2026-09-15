@@ -48,7 +48,8 @@ import {
   updateTransferDcsPassengerCore,
   updateTransferDcsDepartureCore,
   recordTransferDcsDocumentCore,
-  sendAlteaManifestCore
+  sendAlteaManifestCore,
+  enrichDuffelFlightPayloadCore
 } from "backend/SKANDI_CORE/reservations.js";
 
 import {
@@ -265,17 +266,18 @@ async function syncSupplierOrder(order, bookingInput = {}, eventType = "DUFFEL_O
 }
 
 async function createAndSyncOrder(input = {}) {
-  const result = await createDuffelOrderCore(input);
+  const providerResult = await createDuffelOrderCore(input);
+  const result = await enrichDuffelFlightPayloadCore(providerResult);
   const alteaWorkspace = await syncSupplierOrder(
     result?.order,
-    input,
+    { ...input, offer: result?.offer || null },
     result?.recoveredExistingOrder ? "DUFFEL_ORDER_RECOVERED" : "DUFFEL_ORDER_CREATED"
   );
   return { ...result, alteaWorkspace };
 }
 
 async function retrieveAndSyncOrder(input = {}) {
-  const result = await getDuffelOrderCore(input);
+  const result = await enrichDuffelFlightPayloadCore(await getDuffelOrderCore(input));
   let alteaWorkspace = null;
   try {
     alteaWorkspace = await syncSupplierOrder(result?.order, {}, "DUFFEL_ORDER_RETRIEVED");
@@ -390,6 +392,14 @@ async function cancelCarAndSync(input = {}) {
   );
 }
 
+async function searchOffersWithReference(input = {}) {
+  return enrichDuffelFlightPayloadCore(await searchDuffelOffersCore(input));
+}
+
+async function refreshOfferWithReference(input = {}) {
+  return enrichDuffelFlightPayloadCore(await refreshDuffelOfferCore(input));
+}
+
 async function searchResolvedStays(input = {}) {
   if (
     input?.location?.latitude !== undefined ||
@@ -406,8 +416,8 @@ async function searchResolvedStays(input = {}) {
 
 const ACTIONS = Object.freeze({
   DUFFEL_APP_READY: ["DUFFEL_BOOTSTRAP_RESULT", getDuffelWorkspaceBootstrapCore],
-  DUFFEL_SEARCH_OFFERS: ["DUFFEL_OFFERS_RESULT", searchDuffelOffersCore],
-  DUFFEL_REFRESH_OFFER: ["DUFFEL_OFFER_RESULT", refreshDuffelOfferCore],
+  DUFFEL_SEARCH_OFFERS: ["DUFFEL_OFFERS_RESULT", searchOffersWithReference],
+  DUFFEL_REFRESH_OFFER: ["DUFFEL_OFFER_RESULT", refreshOfferWithReference],
   DUFFEL_GET_SEAT_MAPS: ["DUFFEL_SEAT_MAPS_RESULT", getDuffelSeatMapsCore],
   DUFFEL_PREPARE_PAYMENT: ["DUFFEL_PAYMENT_RESULT", prepareDuffelPaymentCore],
   DUFFEL_LIST_ORDERS: ["DUFFEL_ORDERS_RESULT", listDuffelOrdersCore],
