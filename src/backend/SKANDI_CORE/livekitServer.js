@@ -1,7 +1,8 @@
 // /src/backend/SKANDI_CORE/livekitServer.js
-// SKANDI R-007.3 — shared backend-only LiveKit service.
-// Owns LiveKit credentials, participant token minting and Alexandra explicit dispatch only.
-// Customer Support and GroupTalk remain separate domain sources of truth.
+// SKANDI B-011 — shared backend-only LiveKit service.
+// Owns LiveKit credentials, participant token minting and Alexandra explicit dispatch.
+// LiveKit Agents owns Alexandra runtime; Supabase customer_support_* owns durable Support cases/messages.
+// GroupTalk remains a separate operational domain.
 
 
 import { AccessToken, LiveKitAPI } from "livekit-server-sdk";
@@ -106,6 +107,8 @@ export async function issueLiveKitRoomTokenCore({
       system: "skandi-support",
       role: role === "agent" ? "agent" : "customer",
       contextId: `ctx_${opaquePart(`support-context:${clean(caseId, 160)}`, 24)}`,
+      realtimeProvider: "livekit",
+      caseStore: "supabase",
       ...participantMetadata
     })
   });
@@ -150,7 +153,8 @@ export async function issueSupportLiveKitSessionCore({
     caseId: cleanCaseId,
     canPublish: true,
     canSubscribe: true,
-    textTopic: SUPPORT_TEXT_TOPIC
+    textTopic: SUPPORT_TEXT_TOPIC,
+    participantMetadata: { supportMode: "human", supportCaseStore: "customer_support_cases" }
   });
 }
 
@@ -177,7 +181,11 @@ export async function issueAlexandraLiveKitSessionCore({
     page_path: clean(pagePath, 300) || "/about/support",
     authenticated: authenticated === true,
     context_id: contextId,
-    session_id: sessionId
+    session_id: sessionId,
+    agent_runtime: "livekit-agents",
+    support_case_store: "supabase",
+    support_case_table: "customer_support_cases",
+    support_message_table: "customer_support_messages"
   };
 
 
@@ -215,6 +223,9 @@ export async function issueAlexandraLiveKitSessionCore({
     sessionId,
     contextId,
     agentName: ALEXANDRA_AGENT_NAME,
+    agentRuntime: "LiveKit Agents",
+    provider: "LiveKit",
+    caseStore: "Supabase",
     dispatchId: clean(dispatch?.id, 200),
     textTopic: ALEXANDRA_TEXT_TOPIC,
     transcriptionTopic: "lk.transcription",
