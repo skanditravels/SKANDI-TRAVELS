@@ -1,4 +1,4 @@
-// /src/backend/SKANDI_CORE/reservations.js 
+// /src/backend/SKANDI_CORE/reservations.js
 // SKANDI ALTEA Reservations — canonical SKANDI-owned booking/operations logic.
 // SKANDI Backend Base 1.0 — B-007 Reservations core.
 // Preserves the accepted R-006.9 booking, Inventory, Club, document and DCS behavior.
@@ -101,6 +101,253 @@ async function patch(table,query,body){return arr(await restRequest({table,metho
 async function remove(table,query){return restRequest({table,method:"DELETE",query,prefer:"return=minimal"})}
 
 
+const BAGGAGE_RULE_CACHE_TTL_MS=10*60*1000;
+let baggageRuleCache={expiresAt:0,rows:[]};
+
+function referenceKey(value){return upper(value,240).replace(/[^A-Z0-9]+/g,"")}
+function cabinFamily(value){
+  const v=upper(value,160);
+  if(!v)return"";
+  if(v.includes("FIRST"))return"FIRST";
+  if(v.includes("BUSINESS")||v.includes("DELTA ONE")||v.includes("CLUB WORLD"))return"BUSINESS";
+  if(v.includes("PREMIUM"))return"PREMIUM_ECONOMY";
+  if(v.includes("ECONOMY")||v.includes("MAIN CABIN")||v.includes("WORLD TRAVELLER"))return"ECONOMY";
+  return referenceKey(v);
+}
+function carrierAliases(value){
+  return upper(value,120).split(/[\/,;|]+/).map(x=>x.trim()).filter(Boolean);
+}
+function routeAliases(origin,destination){
+  const a=upper(origin,8),b=upper(destination,8);
+  if(!a||!b)return new Set();
+  return new Set([`${a}${b}`,`${a}-${b}`,`${a}_${b}`,`${a}/${b}`,`${a}>${b}`].map(referenceKey));
+}
+function baggageTextFromDuffel(items=[]){
+  const parts=arr(items).map(item=>{
+    const quantity=Number.isFinite(Number(item?.quantity))?Number(item.quantity):null;
+    const type=clean(item?.type||"baggage",80).replaceAll("_"," ");
+    const weight=Number.isFinite(Number(item?.weight))?Number(item.weight):null;
+    const unit=upper(item?.weightUnit||item?.weight_unit||"",10);
+    const qty=quantity===null?"":`${quantity} × `;
+    const wt=weight===null?"":` (${weight}${unit?` ${unit}`:""})`;
+    return `${qty}${type}${wt}`.trim();
+  }).filter(Boolean);
+  return parts.join(" · ");
+}
+function baggageTextFromRule(rule={}){
+  const payload=obj(rule.payload),allowance=obj(obj(payload.fare).baggage_allowance);
+  const checked=clean(allowance.checked_bag||payload.checked_bag,300);
+  const overhead=clean(allowance.overhead_carry_on||payload.overhead_carry_on,300);
+  const underSeat=clean(allowance.under_seat_bag||payload.under_seat_bag,300);
+  const detailed=[checked&&`Checked: ${checked}`,overhead&&`Cabin: ${overhead}`,underSeat&&`Personal item: ${underSeat}`].filter(Boolean);
+  if(detailed.length)return detailed.join(" · ");
+  const pieces=Number(rule.checkedBagsIncluded);
+  const kg=Number(rule.checkedBagWeightKg);
+  if(Number.isFinite(pieces)){
+    if(pieces<=0)return"Checked baggage not included";
+    return `${pieces} checked bag${pieces===1?"":"s"} included${Number.isFinite(kg)?` · ${kg} kg each`:""}`;
+  }
+  return clean(rule.body||rule.title,600);
+}
+async function loadBaggageRules(){
+  if(baggageRuleCache.expiresAt>Date.now())return baggageRuleCache.rows;
+  const rows=await select("baggage_allowance",{
+    select:"id,ruleId,airlineCode,routeId,fareBrand,cabinClass,checkedBagsIncluded,checkedBagWeightKg,cabinBagsIncluded,cabinBagWeightKg,sportsEquipmentPolicy,infantPolicy,effectiveFrom,effectiveTo,sourceUrl,title,body,payload,active,sort_order",
+    active:"eq.true",
+    limit:"2000"
+  });
+  baggageRuleCache={expiresAt:Date.now()+BAGGAGE_RULE_CACHE_TTL_MS,rows};
+  return rows;
+}
+function ruleIsEffective(rule,travelDate){
+  const date=clean(travelDate,10).slice(0,10);
+  if(!date)return true;
+  const from=clean(rule.effectiveFrom,10),to=clean(rule.effectiveTo,10);
+  if(from&&date<from)return false;
+  if(to&&date>to)return false;
+  return true;
+}
+function resolveBaggageRule({rules=[],carrierCodes=[],origin="",destination="",fareBrand="",cabinClass="",travelDate=""}={}){
+  const codeRanks=new Map();
+  carrierCodes.map(x=>upper(x,12)).filter(Boolean).forEach((code,index)=>{
+    if(!codeRanks.has(code))codeRanks.set(code,Math.max(1,4-index));
+  });
+  if(!codeRanks.size)return null;
+  const routeKeys=routeAliases(origin,destination);
+  const fareKey=referenceKey(fareBrand);
+  const cabinKey=cabinFamily(cabinClass);
+  let best=null;
+  for(const rule of rules){
+    if(rule.active===false||!ruleIsEffective(rule,travelDate))continue;
+    const aliases=carrierAliases(rule.airlineCode);
+    const carrierRank=Math.max(0,...aliases.map(code=>codeRanks.get(code)||0));
+    if(!carrierRank)continue;
+    const ruleRoute=referenceKey(rule.routeId);
+    if(ruleRoute&&routeKeys.size&&!routeKeys.has(ruleRoute))continue;
+    const ruleFare=referenceKey(rule.fareBrand);
+    const ruleCabin=cabinFamily(rule.cabinClass);
+    let score=carrierRank*100;
+    const matchedBy=["AIRLINE"];
+    if(ruleRoute&&routeKeys.has(ruleRoute)){score+=90;matchedBy.push("ROUTE");}
+    else if(!ruleRoute)score+=10;
+    if(fareKey&&ruleFare){
+      if(fareKey===ruleFare){score+=80;matchedBy.push("FARE_BRAND");}
+      else if(fareKey.includes(ruleFare)||ruleFare.includes(fareKey)){score+=55;matchedBy.push("FARE_BRAND");}
+    }
+    if(cabinKey&&ruleCabin&&cabinKey===ruleCabin){score+=40;matchedBy.push("CABIN");}
+    if(!fareKey&&!cabinKey&&rules.filter(x=>carrierAliases(x.airlineCode).some(code=>codeRanks.has(code))).length>1)continue;
+    const sort=Number.isFinite(Number(rule.sort_order))?Number(rule.sort_order):999999;
+    if(!best||score>best.score||(score===best.score&&sort<best.sort))best={rule,score,sort,matchedBy};
+  }
+  if(!best)return null;
+  const r=best.rule;
+  return{
+    source:"SKANDI_BAGGAGE_ALLOWANCE",sourceRank:2,fallback:true,
+    matchedBy:best.matchedBy,matchScore:best.score,
+    confidence:best.matchedBy.includes("FARE_BRAND")||best.matchedBy.includes("ROUTE")?"HIGH":best.matchedBy.includes("CABIN")?"MEDIUM":"LOW",
+    ruleId:r.ruleId||r.id||"",airlineCode:r.airlineCode||"",routeId:r.routeId||"",
+    fareBrand:r.fareBrand||"",cabinClass:r.cabinClass||"",
+    checkedBagsIncluded:r.checkedBagsIncluded??null,
+    checkedBagWeightKg:r.checkedBagWeightKg==null?null:Number(r.checkedBagWeightKg),
+    cabinBagsIncluded:r.cabinBagsIncluded??null,
+    cabinBagWeightKg:r.cabinBagWeightKg==null?null:Number(r.cabinBagWeightKg),
+    sportsEquipmentPolicy:r.sportsEquipmentPolicy||"",infantPolicy:r.infantPolicy||"",
+    sourceUrl:r.sourceUrl||"",title:r.title||"",description:r.body||"",
+    display:baggageTextFromRule(r)
+  };
+}
+function duffelBaggageAllowance(passenger={}){
+  const baggages=arr(passenger.baggages);
+  if(!baggages.length)return null;
+  return{
+    source:"DUFFEL",sourceRank:1,fallback:false,matchedBy:["DUFFEL_SEGMENT_PASSENGER"],
+    confidence:"AUTHORITATIVE",baggages,
+    display:baggageTextFromDuffel(baggages)||"Duffel baggage allowance returned"
+  };
+}
+async function enrichFlightEntityWithBaggage(entity={},rules=[]){
+  const ownerCode=upper(entity.owner?.iataCode||entity.owner?.iata_code,12);
+  let fallbackUsed=false;
+  const slices=arr(entity.slices).map(slice=>{
+    const fareBrand=clean(slice.fareBrandName||slice.fare_brand_name,160);
+    const segments=arr(slice.segments).map(segment=>{
+      const origin=upper(segment.origin?.iataCode||segment.origin?.iata_code||segment.origin,8);
+      const destination=upper(segment.destination?.iataCode||segment.destination?.iata_code||segment.destination,8);
+      const carrierCodes=[
+        ownerCode,
+        upper(segment.marketingCarrier?.iataCode||segment.marketing_carrier?.iata_code,12),
+        upper(segment.operatingCarrier?.iataCode||segment.operating_carrier?.iata_code,12)
+      ].filter(Boolean);
+      const travelDate=clean(segment.departingAt||segment.departing_at,30).slice(0,10);
+      const passengers=arr(segment.passengers).map(passenger=>{
+        const primary=duffelBaggageAllowance(passenger);
+        if(primary)return{...passenger,baggageAllowance:primary};
+        const fallback=resolveBaggageRule({
+          rules,carrierCodes,origin,destination,fareBrand,
+          cabinClass:passenger.cabinClass||passenger.cabin_class||passenger.cabinClassMarketingName||passenger.cabin_class_marketing_name,
+          travelDate
+        });
+        if(fallback)fallbackUsed=true;
+        return{...passenger,baggageAllowance:fallback};
+      });
+      let segmentAllowance=null;
+      if(!passengers.length||passengers.every(p=>!p.baggageAllowance)){
+        segmentAllowance=resolveBaggageRule({rules,carrierCodes,origin,destination,fareBrand,cabinClass:"",travelDate});
+        if(segmentAllowance)fallbackUsed=true;
+      }
+      return{...segment,passengers,baggageAllowance:segmentAllowance};
+    });
+    return{...slice,segments};
+  });
+  return{
+    ...entity,slices,
+    flightDataSources:["DUFFEL","SKANDI_BAGGAGE_ALLOWANCE"],
+    baggageFallbackUsed:fallbackUsed
+  };
+}
+export async function enrichDuffelFlightPayloadCore(payload={}){
+  const rules=await loadBaggageRules();
+  const out={...obj(payload)};
+  if(Array.isArray(payload.offers)){
+    out.offers=await Promise.all(payload.offers.map(offer=>enrichFlightEntityWithBaggage(offer,rules)));
+  }
+  if(payload.offer)out.offer=await enrichFlightEntityWithBaggage(payload.offer,rules);
+  if(payload.order)out.order=await enrichFlightEntityWithBaggage(payload.order,rules);
+  out.flightDataSources=["DUFFEL","SKANDI_BAGGAGE_ALLOWANCE"];
+  return out;
+}
+function buildFlightDetails(source={}){
+  const slices=arr(source.slices);
+  const flattened=[];
+  slices.forEach((slice,sliceIndex)=>{
+    arr(slice.segments).forEach((segment,segmentIndex)=>{
+      const marketingCode=upper(segment.marketingCarrier?.iataCode||segment.marketing_carrier?.iata_code,12);
+      const operatingCode=upper(segment.operatingCarrier?.iataCode||segment.operating_carrier?.iata_code,12);
+      flattened.push({
+        segId:`${sliceIndex+1}.${segmentIndex+1}`,
+        id:segment.id||"",
+        flightNumber:`${marketingCode}${clean(segment.marketingFlightNumber||segment.marketing_carrier_flight_number,20)}`,
+        marketingCarrierCode:marketingCode,
+        operatingCarrierCode:operatingCode,
+        operatingCarrier:segment.operatingCarrier?.name||segment.operating_carrier?.name||"",
+        origin:segment.origin?.iataCode||segment.origin?.iata_code||segment.origin||"",
+        originTerminal:segment.originTerminal||segment.origin_terminal||"",
+        destination:segment.destination?.iataCode||segment.destination?.iata_code||segment.destination||"",
+        destinationTerminal:segment.destinationTerminal||segment.destination_terminal||"",
+        departingAt:segment.departingAt||segment.departing_at||null,
+        arrivingAt:segment.arrivingAt||segment.arriving_at||null,
+        aircraft:segment.aircraft?.name||segment.aircraft?.iataCode||segment.aircraft?.iata_code||"",
+        aircraftCode:segment.aircraft?.iataCode||segment.aircraft?.iata_code||"",
+        duration:segment.duration||slice.duration||"",
+        rbd:"—",
+        fareBrand:slice.fareBrandName||slice.fare_brand_name||"",
+        passengers:arr(segment.passengers).map(p=>({
+          passengerId:p.passengerId||p.passenger_id||p.id||"",
+          fareBasisCode:p.fareBasisCode||p.fare_basis_code||"",
+          cabinClass:p.cabinClass||p.cabin_class||"",
+          cabinClassMarketingName:p.cabinClassMarketingName||p.cabin_class_marketing_name||"",
+          cabinBrand:slice.fareBrandName||slice.fare_brand_name||p.cabinClassMarketingName||p.cabin_class_marketing_name||p.cabinClass||p.cabin_class||"",
+          baggage:p.baggageAllowance?.display||"",
+          baggageSource:p.baggageAllowance?.source||"",
+          baggageSourceRank:p.baggageAllowance?.sourceRank||null,
+          baggageAllowance:p.baggageAllowance||null
+        })),
+        baggageAllowance:segment.baggageAllowance||null
+      });
+    });
+  });
+  const conditions=obj(source.conditions);
+  const refund=obj(conditions.refund_before_departure||conditions.refundBeforeDeparture);
+  const change=obj(conditions.change_before_departure||conditions.changeBeforeDeparture);
+  const total=Number(source.totalAmount??source.total_amount??0);
+  const tax=Number(source.taxAmount??source.tax_amount??0);
+  const baseRaw=source.baseAmount??source.base_amount;
+  const base=baseRaw==null?Math.max(0,total-(Number.isFinite(tax)?tax:0)):Number(baseRaw);
+  return{
+    provider:"DUFFEL",
+    sourcePriority:["DUFFEL","SKANDI_BAGGAGE_ALLOWANCE"],
+    baggageFallbackUsed:flattened.some(seg=>seg.baggageAllowance?.sourceRank===2||seg.passengers.some(p=>p.baggageSourceRank===2)),
+    slicesCount:slices.length,
+    segments:flattened,
+    pricingRecord:{
+      baseAmount:Number.isFinite(base)?base:0,
+      taxAmount:Number.isFinite(tax)?tax:0,
+      totalAmount:Number.isFinite(total)?total:0,
+      currency:upper(source.totalCurrency||source.total_currency||source.baseCurrency||source.base_currency||"USD",3),
+      fareBrand:slices[0]?.fareBrandName||slices[0]?.fare_brand_name||"",
+      validatingCarrier:source.owner?.iataCode||source.owner?.iata_code||flattened[0]?.marketingCarrierCode||"",
+      paymentDeadline:source.paymentRequiredBy||source.payment_required_by||source.expiresAt||source.expires_at||null
+    },
+    miniRules:{
+      refundable:refund.allowed===true,
+      refundPenalty:refund.penalty_amount??refund.penaltyAmount??null,
+      changeable:change.allowed===true,
+      changePenalty:change.penalty_amount??change.penaltyAmount??null
+    }
+  };
+}
+
+
 function bookingView(r={}){
   const p=obj(r.payload);
   return{
@@ -123,7 +370,7 @@ function bookingView(r={}){
     packageStatus:p.packageStatus||"",tourOperatorCode:p.tourOperatorCode||"",
     destinationResortZone:p.destinationResortZone||"",durationNights:Number(p.durationNights||0)||0,
     mealBoard:p.mealBoard||"",roomTypeCode:p.roomTypeCode||"",passengerAges:arr(p.passengerAges),
-    notes:p.notes||"",payload:p,
+    notes:p.notes||"",flightDetails:p.flightDetails||null,payload:p,
     createdAt:r.created_at||"",updatedAt:r.updated_at||""
   };
 }
@@ -163,6 +410,7 @@ function documentView(r={}){
     documentNumber:r.document_number||"",status:uiDocumentStatus(r.status),
     storageStatus:lower(r.status,40),pdfUrl:r.pdf_url||"",htmlSnapshot:r.html_snapshot||"",
     assetId:p.assetId||"",assetCode:p.assetCode||"",assetStatus:p.assetStatus||"",
+    contentType:p.contentType||"text/html",renderFormat:p.renderFormat||"HTML",
     provider:p.provider||"SKANDI",authority:p.authority||"",payload:p,
     issuedAt:r.issued_at||"",createdAt:r.created_at||"",updatedAt:r.updated_at||""
   };
@@ -471,8 +719,13 @@ function orderPassengers(order={}){
 }
 export async function syncDuffelOrderToAlteaCore(input={}){
   const session=await requireReservationsAccessCore({write:true});
-  const order=obj(input.order);if(!clean(order.id,160))throw new Error("DUFFEL_ORDER_REQUIRED");
+  const rawOrder=obj(input.order);if(!clean(rawOrder.id,160))throw new Error("DUFFEL_ORDER_REQUIRED");
   const bookingInput=obj(input.bookingInput);
+  const enriched=await enrichDuffelFlightPayloadCore({order:rawOrder,offer:obj(bookingInput.offer)});
+  const order=obj(enriched.order);
+  const referenceOffer=obj(enriched.offer);
+  const flightSource=arr(referenceOffer.slices).length?referenceOffer:order;
+  const flightDetails=buildFlightDetails(flightSource);
   const ref=orderReference(order,bookingInput);
   let existing=(await select("altea_bookings",{select:"*",booking_reference:qeq(ref),limit:"1"}))[0]||null;
   if(!existing){
@@ -499,7 +752,8 @@ export async function syncDuffelOrderToAlteaCore(input={}){
     supplier_booking_reference:clean(order.bookingReference||order.booking_reference,160)||null,
     supplier_offer_id:clean(bookingInput.offerId||order.offerId,160)||null,
     ticketing_status:lower(order.ticketingStatus||existing?.ticketing_status||"pending",80),
-    payload:{...obj(existing?.payload),duffelOrder:order,lastSupplierSyncAt:now()}
+    payload:{...obj(existing?.payload),duffelOrder:order,flightDetails,
+      flightDataSources:["DUFFEL","SKANDI_BAGGAGE_ALLOWANCE"],lastSupplierSyncAt:now()}
   };
   let saved;
   if(existing?.id)saved=(await patch("altea_bookings",{id:qeq(existing.id)},body))[0]||existing;
@@ -965,6 +1219,19 @@ function controlledFallbackHtml(variant,b,p=null,authority="SKANDI_BOOKING"){
       :"SKANDI-controlled booking document.";
   return`<!doctype html><html><head><meta charset="utf-8"><title>SKANDI ${clean(variant,120)}</title></head><body style="font-family:Arial,sans-serif;padding:32px;color:#17212b"><h1 style="color:#005eb8">SKANDI TRAVELS</h1><h2>${clean(variant,120).replaceAll("_"," ")}</h2><p><b>Booking reference:</b> ${ref}</p><p><b>Passenger/Customer:</b> ${name}</p><p>${notice}</p></body></html>`;
 }
+function bagTagSegmentsFromFlightDetails(booking,context){
+  if(arr(context?.segments).length)return context.segments;
+  return arr(obj(obj(booking?.payload).flightDetails).segments).map(segment=>({
+    id:segment.id||"",
+    destination:segment.destination||"",
+    departingAt:segment.departingAt||null,
+    departureDate:clean(segment.departingAt,30).slice(0,10),
+    marketingFlightNumber:clean(segment.flightNumber,30).replace(/^[A-Z0-9]{2,3}/,""),
+    marketingCarrier:{iataCode:segment.marketingCarrierCode||clean(segment.flightNumber,3).replace(/[^A-Z0-9]/g,"")},
+    carrier:segment.marketingCarrierCode||"",
+    aircraft:segment.aircraftCode?{iataCode:segment.aircraftCode,name:segment.aircraft||""}:null
+  }));
+}
 function renderGeneratedDocument({spec,booking,context,documentNumber,authority,input}){
   if(spec.variant==="BOOKING_CONFIRMATION"){
     return renderBookingConfirmation({
@@ -974,14 +1241,23 @@ function renderGeneratedDocument({spec,booking,context,documentNumber,authority,
     });
   }
   if(spec.variant==="BAGGAGE_TAG"){
+    const pp=obj(context.passenger?.payload);
+    const segments=bagTagSegmentsFromFlightDetails(booking,context);
+    const passenger={
+      ...obj(context.passenger),
+      bnNumber:input.bnNumber||context.passenger?.sequence_number||context.passenger?.sequenceNumber||"",
+      baggageWeight:input.weightKg??pp.baggageWeight??0,
+      baggageCount:input.pieceCount||pp.baggageCount||1,
+      bagIndex:input.pieceNumber||pp.bagIndex||1,
+      cabinClass:input.cabinClass||pp.cabinClass||"",
+      firstName:context.passenger?.first_name||context.passenger?.firstName||"",
+      lastName:context.passenger?.last_name||context.passenger?.lastName||"",
+      title:pp.title||""
+    };
     return renderBagTag({
-      booking,passenger:context.passenger||{},segments:context.segments,
-      documentNumber,licensePlate:baggageLicensePlate(input,booking,context.passenger,context.segments),
-      weightKg:input.weightKg??context.passenger?.payload?.baggageWeight,
-      pieceNumber:input.pieceNumber||1,
-      pieceCount:input.pieceCount||context.passenger?.payload?.baggageCount||1,
-      journeyStatus:input.journeyStatus||context.passenger?.payload?.baggageStatus,
-      issuedAt:now()
+      booking,passenger,segments,
+      documentNumber,licensePlate:baggageLicensePlate(input,booking,context.passenger,segments),
+      airlineName:input.airlineName||obj(booking.payload).flightDetails?.pricingRecord?.validatingCarrier||booking.supplier||"SKANDI"
     });
   }
   if(["BOARDING_CARD","TRANSFER_TICKET","TOUR_TICKET"].includes(spec.variant)){
@@ -1001,12 +1277,15 @@ function renderGeneratedDocument({spec,booking,context,documentNumber,authority,
   return controlledFallbackHtml(spec.variant,booking,context.passenger,authority);
 }
 async function prepareGeneratedHtmlAsset({html,booking,documentId,documentNumber,documentType,manifestId=""}){
+  const isZpl=upper(documentType,80)==="BAGGAGE_TAG";
+  const mimeType=isZpl?"text/plain":"text/html";
+  const extension=isZpl?"zpl":"html";
   const bytes=new TextEncoder().encode(html);
   const sha256=createHash("sha256").update(html,"utf8").digest("hex");
   const ref=clean(booking.booking_reference||booking.pnr_locator||booking.id,120);
-  const fileName=`${ref}-${documentNumber||documentType}.html`.replace(/[^A-Za-z0-9._-]+/g,"-");
+  const fileName=`${ref}-${documentNumber||documentType}.${extension}`.replace(/[^A-Za-z0-9._-]+/g,"-");
   const prepared=await prepareAssetUploadCore({
-    file:{name:fileName,type:"text/html",size:bytes.byteLength},
+    file:{name:fileName,type:mimeType,size:bytes.byteLength},
     sha256,visibility:"PRIVATE",assetType:"DOCUMENT",
     libraryRoot:"SKANDI",libraryFolder:"ALTEA Reservations",
     librarySubfolder:`Bookings / ${ref}`,category:manifestId?"Manifests":"Documents",
@@ -1019,7 +1298,7 @@ async function prepareGeneratedHtmlAsset({html,booking,documentId,documentNumber
   }
   return{
     duplicate:false,requestId:prepared.requestId,upload:prepared.upload,
-    content:html,mimeType:"text/html",documentId,manifestId
+    content:html,mimeType,documentId,manifestId
   };
 }
 export async function previewAlteaBookingConfirmationCore(input={}){
@@ -1065,7 +1344,10 @@ export async function generateAlteaBookingDocumentCore(input={}){
     booking_id:id,passenger_id:context.passenger?.id||null,document_type:spec.storageType,document_number:number,
     status:"draft",pdf_url:null,html_snapshot:html,issued_at:null,issued_by_agent_user_id:actor(session),
     payload:{source:"SKANDI_CORE_RESERVATIONS",bookingReference:b.booking_reference,provider:"SKANDI",
-      authority,renderVariant:spec.variant,componentId:input.componentId||input.departureId||null,
+      authority,renderVariant:spec.variant,
+      contentType:spec.variant==="BAGGAGE_TAG"?"text/plain":"text/html",
+      renderFormat:spec.variant==="BAGGAGE_TAG"?"ZPL":"HTML",
+      componentId:input.componentId||input.departureId||null,
       segmentId:input.segmentId||context.segment?.id||null,assetStatus:"PENDING"}
   });
   const d=rows[0];if(!d?.id)throw new Error("DOCUMENT_CREATE_FAILED");
@@ -1075,6 +1357,8 @@ export async function generateAlteaBookingDocumentCore(input={}){
       booking_id:id,passenger_id:context.passenger?.id||null,provider:"SKANDI",provider_document_id:d.id,
       document_type:spec.storageType,document_number:number,status:"DRAFT",
       payload:{alteaDocumentId:d.id,authority,renderVariant:spec.variant,
+        contentType:spec.variant==="BAGGAGE_TAG"?"text/plain":"text/html",
+        renderFormat:spec.variant==="BAGGAGE_TAG"?"ZPL":"HTML",
         componentId:input.componentId||input.departureId||null,
         segmentId:input.segmentId||context.segment?.id||null,assetStatus:"PENDING"}
     });
