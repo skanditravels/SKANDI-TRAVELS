@@ -188,6 +188,25 @@ function makeMessageId() { return `msg_${randomUUID().replaceAll("-", "")}`; }
 function normalizePriority(value) { const v = lower(value, 20); return ["low", "normal", "high", "urgent"].includes(v) ? v : "normal"; }
 function normalizeStatus(value) { const v = lower(value, 30).replace(/_/g, "-"); return ["new", "open", "pending", "on-hold", "solved", "resolved", "closed"].includes(v) ? (v === "resolved" ? "solved" : v) : "open"; }
 function initials(name) { return clean(name, 120).split(/\s+/).filter(Boolean).map(x => x[0]).join("").slice(0, 2).toUpperCase(); }
+function normalizeSupportTags(value) {
+  return [...new Set(arr(value).map(item => clean(item, 80)).filter(Boolean))].slice(0, 100);
+}
+
+function normalizeSupportPeople(value) {
+  return arr(value).slice(0, 100).map(item => {
+    if (typeof item === "string") {
+      const raw = clean(item, 254);
+      if (!raw) return null;
+      return { id: null, name: validEmail(raw) ? raw.split("@")[0] : raw, email: validEmail(raw) ? lower(raw, 254) : "" };
+    }
+    const row = obj(item);
+    const id = clean(row.id || row.memberId || row.member_id || row.agentId || row.agent_id || row.skId || row.sk_id, 200);
+    const emailValue = lower(row.email || row.corporateEmailAddress || row.corporate_email_address, 254);
+    const name = clean(row.name || row.displayName || row.display_name || row.preferredName || row.preferred_name || emailValue || id, 200);
+    if (!id && !emailValue && !name) return null;
+    return { id: id || null, name: name || emailValue || id, email: emailValue };
+  }).filter(Boolean);
+}
 function firstRow(value) { return Array.isArray(value) ? (value[0] || null) : value && typeof value === "object" ? value : null; }
 function isUuid(value) { return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(clean(value, 80)); }
 
@@ -498,6 +517,10 @@ function normalizeCase(row = {}) {
   const assigneeName = clean(row.assigned_agent_name, 200);
   const assignee = assigneeId || assigneeName ? { id: assigneeId || null, name: assigneeName || "Support Agent", email: "" } : null;
   const channelLabel = requesterType === "STAFF" ? "Internal HelpDesk" : sourceChannel.includes("ALEXANDRA") ? "Alexandra handoff" : liveHandoff ? "Live chat / Support" : "Support";
+  const labels = normalizeSupportTags(p.labels);
+  const tags = normalizeSupportTags([...labels, ...arr(p.tags)]);
+  const followers = normalizeSupportPeople(p.followers);
+  const ccs = normalizeSupportPeople(p.ccs);
   return {
     id: caseId,
     externalId: caseId,
@@ -527,7 +550,10 @@ function normalizeCase(row = {}) {
     channel,
     channelLabel,
     type: clean(p.type || "question", 80),
-    tags: arr(p.labels || p.tags),
+    labels,
+    tags,
+    followers,
+    ccs,
     tier: clean(p.clubTier, 80),
     createdAt: row.created_at || "",
     updatedAt: row.updated_at || row.created_at || "",
@@ -537,6 +563,7 @@ function normalizeCase(row = {}) {
     raw: { id: clean(row.id, 160) }
   };
 }
+
 
 async function casesForProfile(profile) {
   const merged = new Map();
@@ -782,7 +809,7 @@ async function allSupportCases(limit = 500) {
   return sbRows(DB.cases, { select: "*", order: "updated_at.desc", limit });
 }
 
-export async function listAgentSupportCasesCore({ queue = "open", query = "", view = "" } = {}) {
+export async function listAgentSupportCasesCore({ queue = "open", query = "", view = "", silentSync = false } = {}) {
   const agent = await requireSupportAgentCore();
   const qName = lower(queue || view || "open", 80);
   const q = lower(query, 300);
@@ -792,11 +819,11 @@ export async function listAgentSupportCasesCore({ queue = "open", query = "", vi
   else if (qName === "mine") cases = cases.filter(item => (clean(item.assigneeId, 200) && [agent.id, agent.skId, agent.email].filter(Boolean).map(String).includes(String(item.assigneeId))) || lower(item.assignee?.name, 200) === lower(agent.name, 200));
   else if (qName !== "all") cases = cases.filter(item => !["solved", "closed"].includes(item.status));
   if (q) cases = cases.filter(item => lower([item.caseRef, item.subject, item.email, item.customerName, item.bookingRef, item.pnr, item.category, item.sourceChannel].join(" "), 5000).includes(q));
-  await audit("AGENT_CASE_LISTED", { queue: qName, count: cases.length }, agent);
+  if (silentSync !== true) await audit("AGENT_CASE_LISTED", { queue: qName, count: cases.length }, agent);
   return { cases };
 }
 
-export async function getAgentSupportCaseCore({ caseId } = {}) {
+export async function getAgentSupportCaseCore({ caseId, includeLiveKit = true, silentSync = false } = {}) {
   const agent = await requireSupportAgentCore();
   const id = clean(caseId, 160);
   if (!id) throw new Error("SUPPORT_CASE_ID_REQUIRED");
@@ -806,8 +833,10 @@ export async function getAgentSupportCaseCore({ caseId } = {}) {
   const history = await messagesByCaseId(supportCase.caseId);
   supportCase.history = history;
   supportCase.conversationHistory = history;
-  const livekitSession = await issueSupportLiveKitSessionCore({ caseId: supportCase.caseId, role: "agent", subjectId: agent.skId || agent.id || agent.email, participantName: agent.name }).catch(() => null);
-  await audit("AGENT_CASE_OPENED", { caseId: supportCase.caseId, provider: "LiveKit" }, agent);
+  const livekitSession = includeLiveKit === false
+    ? null
+    : await issueSupportLiveKitSessionCore({ caseId: supportCase.caseId, role: "agent", subjectId: agent.skId || agent.id || agent.email, participantName: agent.name }).catch(() => null);
+  if (silentSync !== true) await audit("AGENT_CASE_OPENED", { caseId: supportCase.caseId, provider: "LiveKit", includeLiveKit: includeLiveKit !== false }, agent);
   return { case: supportCase, messages: history, livekitSession };
 }
 
@@ -838,18 +867,33 @@ export async function updateAgentSupportCaseCore({ caseId, status, priority, lab
     await insertSupportMessage(row, { content: `Call disposition\nOutcome: ${clean(call.outcome, 200)}\nDuration: ${Number(call.duration || 0)} seconds\n${clean(call.message?.body || call.notes, 5000)}`, senderType: "agent", senderName: agent.name, memberId: agent.memberId || agent.id, wixMemberId: agent.memberId, channel: "internal", privateNote: true, source: "agent-call-disposition" });
   }
   const payload = casePayload(row);
-  const labels = [...new Set([...arr(payload.labels), clean(requested.label, 80)].filter(Boolean))];
   const fields = {};
+  const payloadPatch = {};
   if (requested.status) fields.status = normalizeStatus(requested.status);
   if (requested.priority) fields.priority = normalizePriority(requested.priority);
   if (requested.assigneeId !== undefined || requested.assigneeName !== undefined) {
     fields.assigned_agent_id = clean(requested.assigneeId, 200) || null;
     fields.assigned_agent_name = clean(requested.assigneeName, 200) || null;
   }
-  await updateCaseRecord(row, fields, { labels, queueKey: clean(requested.queue || requested.group || payload.queueKey, 120) || payload.queueKey });
-  await audit("AGENT_CASE_UPDATED", { caseId: caseIdOf(row), status: requested.status, priority: requested.priority, label: requested.label, action: requested.action }, agent);
+  if (requested.label !== undefined) payloadPatch.labels = normalizeSupportTags([...arr(payload.labels), requested.label]);
+  if (requested.type !== undefined) payloadPatch.type = clean(requested.type || "question", 80);
+  if (requested.tags !== undefined) payloadPatch.tags = normalizeSupportTags(requested.tags);
+  if (requested.followers !== undefined) payloadPatch.followers = normalizeSupportPeople(requested.followers);
+  if (requested.ccs !== undefined) payloadPatch.ccs = normalizeSupportPeople(requested.ccs);
+  if (requested.queue !== undefined || requested.group !== undefined) payloadPatch.queueKey = clean(requested.queue || requested.group, 120) || clean(payload.queueKey, 120) || "support";
+  await updateCaseRecord(row, fields, payloadPatch);
+  await audit("AGENT_CASE_UPDATED", {
+    caseId: caseIdOf(row),
+    status: requested.status,
+    priority: requested.priority,
+    label: requested.label,
+    type: requested.type,
+    queue: requested.queue || requested.group,
+    action: requested.action
+  }, agent);
   return { ok: true, caseId: caseIdOf(row), status: fields.status || normalizeStatus(row.status), priority: fields.priority || normalizePriority(row.priority) };
 }
+
 
 export async function createAgentSupportCaseCore({ case: rawCase = {}, input = {} } = {}) {
   const agent = await requireSupportAgentCore();
@@ -869,10 +913,25 @@ export async function createAgentSupportCaseCore({ case: rawCase = {}, input = {
     sourcePage: "/riaintra/customer-service"
   }, { allowGenericCategory: true });
   const createdRow = await findCaseRecord(created.caseId);
-  if (createdRow) await updateCaseRecord(createdRow, { assigned_agent_id: clean(agent.id || agent.skId || agent.email, 200) || null, assigned_agent_name: agent.name });
+  if (createdRow) {
+    const fields = {
+      assigned_agent_id: clean(raw.assigneeId || agent.id || agent.skId || agent.email, 200) || null,
+      assigned_agent_name: clean(raw.assigneeName || agent.name, 200) || null
+    };
+    if (raw.status) fields.status = normalizeStatus(raw.status);
+    if (raw.priority) fields.priority = normalizePriority(raw.priority);
+    const payloadPatch = {};
+    if (raw.type !== undefined) payloadPatch.type = clean(raw.type || "question", 80);
+    if (raw.tags !== undefined) payloadPatch.tags = normalizeSupportTags(raw.tags);
+    if (raw.followers !== undefined) payloadPatch.followers = normalizeSupportPeople(raw.followers);
+    if (raw.ccs !== undefined) payloadPatch.ccs = normalizeSupportPeople(raw.ccs);
+    if (raw.queue !== undefined || raw.group !== undefined) payloadPatch.queueKey = clean(raw.queue || raw.group, 120) || "support";
+    await updateCaseRecord(createdRow, fields, payloadPatch);
+  }
   await audit("AGENT_CASE_CREATED", { caseId: created.caseId, caseRef: created.caseRef }, agent);
   return getAgentSupportCaseCore({ caseId: created.caseId });
 }
+
 
 async function addHumanHandoffNote(caseId, details = {}) {
   const row = await findCaseRecord(caseId);
