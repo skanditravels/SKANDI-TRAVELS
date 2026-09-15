@@ -40,7 +40,7 @@ const TEMPLATE = `^XA
 ^FO30,365^A@I,20,23,E:DIN.FNT^FD{{pnrLocator}}^FS
 ^FO170,365^A@I,20,23,E:DIN.FNT^FB140,1,0,L^FD{{lastName}}^FS 
 ^FO170,390^A@I,20,23,E:DIN.FNT^FB140,1,0,L^FD{{shortDate}}^FS
-^FO140,390^A@I,20,23,E:DIN.FNT^FDSKANDI^FS
+^FO140,390^A@I,23,23,E:DIN.FNT^FDSKANDI^FS
 ^FO30,390^A@I,20,23,E:DIN.FNT^FDALTEA^FS
 ^FO30,420^A@I,20,20,E:DIN.FNT^FD{{airlineName}}^FS
 ^FO12,500^A@I,20,21,E:DIN.FNT^FD BAGGAGAGE IDENTIFICATION TAG^FS
@@ -61,7 +61,7 @@ function dateDisplay(value) {
 export function renderBagTag({ booking = {}, passenger = {}, segments = [], documentNumber = "", airlineName = "" } = {}) {
   const flights = arr(segments);
   const bp = obj(booking.payload);
-  
+
   // Set default / bottom variables
   const values = {
     bnNumber: text(passenger.bnNumber || passenger.sequenceNumber),
@@ -93,7 +93,7 @@ export function renderBagTag({ booking = {}, passenger = {}, segments = [], docu
      values[`${segId}_flightNum`] = text(seg.marketingFlightNumber || seg.flightNumber);
      values[`${segId}_carrier`] = text(seg.marketingCarrier?.iataCode || seg.carrier);
      values[`${segId}_cityName`] = text(seg.destination?.cityName || seg.destination?.iataCode || seg.destination);
-     
+
      // Only add the "TO" and "VIA" markers if the segment actually exists
      if (index === 0) values[`seg1_to`] = "TO";
      if (index > 0) values[`${segId}_via`] = "VIA";
