@@ -1,5 +1,5 @@
 // /src/pages/Success Factors.sh6tw.js
-// B-011.6 — SuccessFactors V9 parent bridge.
+// B-011.24 — SuccessFactors V9 synchronized parent bridge.
 // UI source: supplied SAP/Fiori SuccessFactors V9 generation.
 // SuccessFactors owns Employee/HR, Organization, Recruiting, Performance/Learning, Badge and Access diagnostics.
 // Payroll and MyRoster/scheduling remain separate applications and are never mutated from this page.
@@ -49,6 +49,8 @@ const EMBED_ID = "#staffHrEmbed";
 const CHILD_SOURCES = new Set(["SKANDI_HR_STAFF", "SKANDI_SUCCESSFACTORS"]);
 const PARENT_SOURCE = "SKANDI_WIX_PARENT";
 let portalBootstrapCache = null;
+let portalBootstrapInFlight = null;
+let hrBootstrapInFlight = null;
 
 function send(type, payload = {}) {
   $w(EMBED_ID).postMessage({
@@ -112,8 +114,19 @@ function orgCatalogPayload(bootstrap = {}) {
 }
 
 async function ensurePortalBootstrap({ refresh = false } = {}) {
-  if (!portalBootstrapCache || refresh) portalBootstrapCache = await getSuccessFactorsPortalBootstrap({});
-  return portalBootstrapCache;
+  if (!refresh && portalBootstrapCache) return portalBootstrapCache;
+  if (portalBootstrapInFlight) return portalBootstrapInFlight;
+
+  portalBootstrapInFlight = getSuccessFactorsPortalBootstrap({})
+    .then((data) => {
+      portalBootstrapCache = data;
+      return data;
+    })
+    .finally(() => {
+      portalBootstrapInFlight = null;
+    });
+
+  return portalBootstrapInFlight;
 }
 
 async function sendPortalBootstrap({ refresh = false } = {}) {
@@ -122,26 +135,39 @@ async function sendPortalBootstrap({ refresh = false } = {}) {
   return data;
 }
 
-async function sendHrBootstrap() {
-  const portal = await ensurePortalBootstrap();
-  if (portal?.hrAccess?.read !== true) return false;
-  const data = await getOrgStructureBootstrap({});
-  const staff = Array.isArray(data.staff) ? data.staff : [];
-  const active = staff.filter((item) => item?.active !== false && !/inactive|terminated|archived|former|offboard/i.test(String(item?.employmentStatus || item?.status || "")));
-  const archive = staff.filter((item) => !active.includes(item));
-  send("HR_SESSION", { authorized: true, canManage: data?.session?.canManageHr === true });
-  send("HR_BOOTSTRAP", {
-    authorized: true,
-    staff: active,
-    archive,
-    organization: data.assignments || [],
-    selectedId: "",
-    reports: { goals: [], qualifications: [], expiries: [], training: [], compliance: [] },
-    access: { roles: data.catalog?.accessRoles || [], permissionCatalog: data.catalog?.permissionPresets || [], portalResults: [] },
-    lastUpdatedAt: new Date().toISOString()
+async function sendHrBootstrap({ refreshPortal = false } = {}) {
+  if (hrBootstrapInFlight) return hrBootstrapInFlight;
+
+  hrBootstrapInFlight = (async () => {
+    const portal = await ensurePortalBootstrap({ refresh: refreshPortal });
+    if (portal?.hrAccess?.read !== true) {
+      send("HR_SESSION", { authorized: false, canManage: false });
+      return false;
+    }
+
+    const data = await getOrgStructureBootstrap({});
+    const staff = Array.isArray(data.staff) ? data.staff : [];
+    const active = staff.filter((item) => item?.active !== false && !/inactive|terminated|archived|former|offboard/i.test(String(item?.employmentStatus || item?.status || "")));
+    const archive = staff.filter((item) => !active.includes(item));
+
+    send("HR_SESSION", { authorized: true, canManage: data?.session?.canManageHr === true });
+    send("HR_BOOTSTRAP", {
+      authorized: true,
+      staff: active,
+      archive,
+      organization: data.assignments || [],
+      selectedId: "",
+      reports: { goals: [], qualifications: [], expiries: [], training: [], compliance: [] },
+      access: { roles: data.catalog?.accessRoles || [], permissionCatalog: data.catalog?.permissionPresets || [], portalResults: [] },
+      lastUpdatedAt: new Date().toISOString()
+    });
+    send("HR_ORG_CATALOG", orgCatalogPayload(data));
+    return true;
+  })().finally(() => {
+    hrBootstrapInFlight = null;
   });
-  send("HR_ORG_CATALOG", orgCatalogPayload(data));
-  return true;
+
+  return hrBootstrapInFlight;
 }
 
 async function sendRecruitingBootstrap(type = "CAREERS_DATA") {
@@ -200,6 +226,8 @@ async function saveEmployeeFromV9(payload = {}) {
     }
   }
 
+  portalBootstrapCache = null;
+  await sendPortalBootstrap({ refresh: true });
   await sendHrBootstrap();
 }
 
@@ -247,6 +275,7 @@ async function handleMessage(type, payload) {
       return;
     case "HR_REFRESH":
     case "HR_ORG_REFRESH":
+      await sendPortalBootstrap({ refresh: true });
       await sendHrBootstrap();
       return;
     case "HR_GET_EMPLOYEE":
@@ -257,7 +286,9 @@ async function handleMessage(type, payload) {
       return;
     case "HR_PROVISION_ORGANIZATION": {
       const result = await provisionStaffOrganization(payload);
+      portalBootstrapCache = null;
       send("HR_ORGANIZATION_SAVED", result);
+      await sendPortalBootstrap({ refresh: true });
       await sendHrBootstrap();
       return;
     }
@@ -269,7 +300,9 @@ async function handleMessage(type, payload) {
       return;
     case "HR_STAFF_ARCHIVE": {
       const result = await setEmployeeActive({ agentUserId: payload.id, active: false });
+      portalBootstrapCache = null;
       send("HR_STAFF_SAVED", { ok: true, item: result.employee, message: "Employee archived." });
+      await sendPortalBootstrap({ refresh: true });
       await sendHrBootstrap();
       return;
     }
@@ -284,13 +317,17 @@ async function handleMessage(type, payload) {
         photoUrl: badge.photoUrl || badge.badgePhotoUrl || "",
         markPrinted: true
       });
+      portalBootstrapCache = null;
       send("HR_BADGE_PRINTED", { ok: true, item: result.employee, badge: result.badge, message: "Badge print recorded." });
+      await sendPortalBootstrap({ refresh: true });
       await sendHrBootstrap();
       return;
     }
     case "HR_PROVISION_WIX_MEMBER": {
       const result = await provisionEmployeeWixMember(payload);
+      portalBootstrapCache = null;
       send("HR_WIX_RESULT", result);
+      await sendPortalBootstrap({ refresh: true });
       await sendHrBootstrap();
       return;
     }
@@ -298,7 +335,9 @@ async function handleMessage(type, payload) {
       send("HR_BADGE_CONTROL_DATA", await getBadgeControl(payload));
       return;
     case "HR_BADGE_CONTROL_SAVE":
+      portalBootstrapCache = null;
       send("HR_BADGE_CONTROL_SAVED", await saveBadgeControl(payload));
+      await sendPortalBootstrap({ refresh: true });
       await sendHrBootstrap();
       return;
 
@@ -401,8 +440,12 @@ $w.onReady(function () {
     }
   });
 
+  // SuccessFactors is event-driven. A full organization catalog can be large, so do not
+  // refetch and retransmit it on a timer. The embed requests HR_REFRESH / HR_ORG_REFRESH
+  // explicitly and every successful HR mutation refreshes the relevant state.
+
   send("SUCCESSFACTORS_HOST_READY", {
-    version: "B-011.6-SUCCESSFACTORS-V9",
+    version: "B-011.24-SUCCESSFACTORS-V9",
     embedId: EMBED_ID,
     payrollOwner: SITE_MAP.payroll,
     rosterOwner: APP_ROUTES.myRoster
