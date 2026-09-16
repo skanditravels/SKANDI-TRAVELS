@@ -1,4 +1,4 @@
-// /src/pages/SKANDI Club Support.yk7x3.js
+// /src/pages/Signature Club Support.yk7x3.js
 // Route: /my-profile/support
 // HTML Components: #skandiMySupportEmbed + #skandiSupportChatEmbed
 // R-007.3 preserves the current customer Support Center contract and adds the shared Human Support chat shell.
@@ -6,6 +6,7 @@
 
 import wixLocationFrontend from "wix-location-frontend";
 import { authentication } from "wix-members-frontend";
+import { openCustomerLogin } from "public/customerAuthUi.js";
 import {
   getCustomerSupportBootstrap,
   createCustomerSupportCase,
@@ -187,7 +188,7 @@ $w.onReady(function () {
       const text = messageOf(error);
       if (text.includes("SIGN_IN") || text.includes("Sign in")) {
         try {
-          await authentication.promptLogin({ mode: "login" });
+          await openCustomerLogin({ sourcePage: "MY_SUPPORT", reason: "AUTH_REQUIRED" });
           bootstrapState = null;
           await bootstrap(requestId);
           return;
