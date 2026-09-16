@@ -1,11 +1,12 @@
 // /src/pages/Success Factors.sh6tw.js
-// B-011.24 — SuccessFactors V9 synchronized parent bridge.
+// B-011.26 — SuccessFactors V9 web-module compatibility recovery.
 // UI source: supplied SAP/Fiori SuccessFactors V9 generation.
 // SuccessFactors owns Employee/HR, Organization, Recruiting, Performance/Learning, Badge and Access diagnostics.
 // Payroll and MyRoster/scheduling remain separate applications and are never mutated from this page.
 
 import wixLocation from "wix-location";
 import { APP_ROUTES, SITE_MAP, isSafeInternalRoute } from "public/siteMap.js";
+import * as orgStructureWeb from "backend/SKANDI_CORE/orgStructure.web";
 import {
   createEmployee,
   createRecruitingDocumentPacket,
@@ -19,7 +20,6 @@ import {
   getOrgStructureBootstrap,
   getRecruitingBootstrap,
   getSuccessFactorsDirectory,
-  getSuccessFactorsPortalBootstrap,
   provisionEmployeeWixMember,
   provisionStaffOrganization,
   publishRecruitingPosition,
@@ -51,6 +51,7 @@ const PARENT_SOURCE = "SKANDI_WIX_PARENT";
 let portalBootstrapCache = null;
 let portalBootstrapInFlight = null;
 let hrBootstrapInFlight = null;
+let compatibilityHrBootstrapCache = null;
 
 function send(type, payload = {}) {
   $w(EMBED_ID).postMessage({
@@ -113,11 +114,45 @@ function orgCatalogPayload(bootstrap = {}) {
   };
 }
 
+function normalizePortalBootstrapFromHr(data = {}) {
+  const session = data?.session || {};
+  const profile = session?.profile || null;
+  const hasHr = session?.isHr === true || session?.isSystemAdmin === true || session?.canManageHr === true;
+  return {
+    ok: data?.ok !== false,
+    version: String(data?.version || "BACKEND-BASE-1.0-B011.26-SUCCESSFACTORS"),
+    profile,
+    apps: [],
+    news: [],
+    tasks: [],
+    quickActions: [],
+    notifications: [],
+    favoriteApps: [],
+    stats: {},
+    hrAccess: { read: hasHr, manage: session?.canManageHr === true || session?.isSystemAdmin === true, recruiting: hasHr },
+    compatibilityMode: true
+  };
+}
+
+async function callPortalBootstrap() {
+  const direct = orgStructureWeb?.getSuccessFactorsPortalBootstrap;
+  if (typeof direct === "function") {
+    compatibilityHrBootstrapCache = null;
+    return direct({});
+  }
+
+  // Compatibility recovery for a published Wix web module that still exposes
+  // getOrgStructureBootstrap but not the newer portal bootstrap export.
+  const hr = await getOrgStructureBootstrap({});
+  compatibilityHrBootstrapCache = hr;
+  return normalizePortalBootstrapFromHr(hr);
+}
+
 async function ensurePortalBootstrap({ refresh = false } = {}) {
   if (!refresh && portalBootstrapCache) return portalBootstrapCache;
   if (portalBootstrapInFlight) return portalBootstrapInFlight;
 
-  portalBootstrapInFlight = getSuccessFactorsPortalBootstrap({})
+  portalBootstrapInFlight = callPortalBootstrap()
     .then((data) => {
       portalBootstrapCache = data;
       return data;
@@ -145,7 +180,8 @@ async function sendHrBootstrap({ refreshPortal = false } = {}) {
       return false;
     }
 
-    const data = await getOrgStructureBootstrap({});
+    const data = compatibilityHrBootstrapCache || await getOrgStructureBootstrap({});
+    compatibilityHrBootstrapCache = null;
     const staff = Array.isArray(data.staff) ? data.staff : [];
     const active = staff.filter((item) => item?.active !== false && !/inactive|terminated|archived|former|offboard/i.test(String(item?.employmentStatus || item?.status || "")));
     const archive = staff.filter((item) => !active.includes(item));
