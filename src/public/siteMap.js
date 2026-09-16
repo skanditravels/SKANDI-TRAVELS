@@ -1,6 +1,6 @@
 // src/public/siteMap.js
-// SKANDI canonical route registry — B-011
-// This is the single source of truth for public/global route names used by Wix page code.
+// SKANDI canonical route + global chrome registry — B-011.18
+// Single source of truth for public/internal routes and global header/footer embeds.
 
 
 export const SITE_MAP = Object.freeze({
@@ -61,6 +61,58 @@ export const APP_ROUTES = Object.freeze({
 });
 
 
+// B-011 global-chrome file registry. These paths identify the canonical source
+// files in the Drive workspace. Wix element IDs are kept here so masterPage.js
+// does not maintain a second header/footer map.
+export const GLOBAL_CHROME = Object.freeze({
+  customerHeader: Object.freeze({
+    system: "SKANDI",
+    role: "HEADER",
+    file: "/embed/SKANDI-Global-Header.html",
+    source: "SKANDI_CUSTOMER_HEADER_EXPANDBAR",
+    elementIds: Object.freeze(["#skandiHeaderEmbed", "#skandiCustomerHeaderEmbed"]),
+    collapsedHeight: 118,
+    maxHeight: 1200
+  }),
+  customerFooter: Object.freeze({
+    system: "SKANDI",
+    role: "FOOTER",
+    file: "/embed/SKANDI-Global-Footer.html",
+    source: "SKANDI_CUSTOMER_FOOTER",
+    elementIds: Object.freeze(["#skandiFooterEmbed", "#skandiCustomerFooterEmbed"]),
+    collapsedHeight: 0,
+    maxHeight: 2400
+  }),
+  riaintraHeader: Object.freeze({
+    system: "RIAINTRA",
+    role: "HEADER",
+    file: "/embed/RIAINTRA-Global-Header.html",
+    source: "SKANDI_RIAINTRA_HEADER",
+    elementIds: Object.freeze(["#riaintraHeaderEmbed", "#riaintraHeader", "#staffInternalChromeEmbed"]),
+    collapsedHeight: 52,
+    maxHeight: 700
+  }),
+  alteaHeader: Object.freeze({
+    system: "ALTEA",
+    role: "HEADER",
+    file: "/embed/ALTEA-Global-Header.html",
+    source: "SKANDI_ALTEA_HEADER",
+    elementIds: Object.freeze(["#alteaHeaderEmbed", "#alteaHeader"]),
+    collapsedHeight: 48,
+    maxHeight: 300
+  }),
+  alteaFooter: Object.freeze({
+    system: "ALTEA",
+    role: "FOOTER",
+    file: "/embed/ALTEA-Global-Footer.html",
+    source: "SKANDI_ALTEA_FOOTER",
+    elementIds: Object.freeze(["#alteaFooterEmbed", "#alteaFooter"]),
+    collapsedHeight: 30,
+    maxHeight: 120
+  })
+});
+
+
 export const ROUTE_META = Object.freeze({
   alteaTimatic: Object.freeze({ deprecated: true, removal: "planned", note: "Keep route until the Timatic page is formally retired." })
 });
@@ -69,6 +121,11 @@ export const ROUTE_META = Object.freeze({
 export function getSiteRoute(key) {
   if (Object.prototype.hasOwnProperty.call(SITE_MAP, key)) return SITE_MAP[key];
   return Object.prototype.hasOwnProperty.call(APP_ROUTES, key) ? APP_ROUTES[key] : "";
+}
+
+
+export function getGlobalChrome(key) {
+  return Object.prototype.hasOwnProperty.call(GLOBAL_CHROME, key) ? GLOBAL_CHROME[key] : null;
 }
 
 
