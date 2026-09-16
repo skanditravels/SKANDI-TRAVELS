@@ -100,6 +100,11 @@ const REST_OBJECTS = new Set([
   "docunet_receipts", "docunet_revisions", "docunet_upload_sessions",
 
 
+  // Editorial / VOY / Newsroom
+  "newsroom_articles", "newsroom_categories", "newsroom_media_assets", "newsroom_press_contacts",
+  "organizations", "voy_issues", "voy_pages", "voy_entities",
+  "voy_publications", "voy_interactions", "voy_saved_issues",
+
   // Shared language/country reference objects used by customer profile and content services
   "countries_list", "languages", "storefront_promotions"
 ]);
@@ -109,7 +114,8 @@ const RPC_FUNCTIONS = new Set([
   "inventory_altea_add_component_v9",
   "inventory_altea_release_component_v9",
   "get_public_about_payload",
-  "get_public_network_map_payload"
+  "get_public_network_map_payload",
+  "publish_voy_issue"
 ]);
 
 
@@ -311,6 +317,22 @@ async function jsonRequest({ path, method = "GET", body, rawBody = false, prefer
 }
 
 
+const REST_SCHEMAS = new Set(["public", "magazine_manager"]);
+
+function restSchema(name = "public") {
+  const value = text(name || "public", 120) || "public";
+  if (!REST_SCHEMAS.has(value)) throw new SkandiError("SUPABASE_SCHEMA_NOT_ALLOWED");
+  return value;
+}
+
+function schemaHeaders(schema, method = "GET") {
+  if (!schema || schema === "public") return {};
+  const normalized = text(method, 12).toUpperCase();
+  return (normalized === "GET" || normalized === "HEAD")
+    ? { "Accept-Profile": schema }
+    : { "Accept-Profile": schema, "Content-Profile": schema };
+}
+
 function restObject(name) {
   const value = text(name, 120);
   if (!REST_OBJECTS.has(value)) throw new SkandiError("SUPABASE_OBJECT_NOT_ALLOWED");
@@ -327,28 +349,38 @@ function rpcName(name) {
 
 export async function restRequest({
   table,
+  schema = "public",
   method = "GET",
   query = {},
   body,
   prefer = "return=representation"
 } = {}) {
   const object = restObject(table);
+  const profile = restSchema(schema);
   return jsonRequest({
     path: `/rest/v1/${encodeURIComponent(object)}${queryString(query)}`,
     method,
     body,
-    prefer
+    prefer,
+    extraHeaders: schemaHeaders(profile, method)
   });
 }
 
 
-export async function rpcRequest({ functionName, body = {}, prefer = "return=representation" } = {}) {
+export async function rpcRequest({
+  functionName,
+  schema = "public",
+  body = {},
+  prefer = "return=representation"
+} = {}) {
   const name = rpcName(functionName);
+  const profile = restSchema(schema);
   return jsonRequest({
     path: `/rest/v1/rpc/${encodeURIComponent(name)}`,
     method: "POST",
     body,
-    prefer
+    prefer,
+    extraHeaders: schemaHeaders(profile, "POST")
   });
 }
 
