@@ -3,7 +3,6 @@
 
 
 import wixLocationFrontend from "wix-location-frontend";
-import { authentication } from "wix-members-frontend";
 import {
   searchUnifiedOffers,
   createBookingCartFromOffer
@@ -11,6 +10,7 @@ import {
 import { getHomeContent, getHomeSearchLocations } from "backend/SKANDI_CORE/homeContent.web";
 import { searchLiveStays } from "backend/SKANDI_CORE/customerBooking.web";
 import { APP_ROUTES } from "public/siteMap.js";
+import { openCustomerLogin } from "public/customerAuthUi.js";
 
 
 const HOME_EMBED_IDS = ["#htmlHome", "#htmlhome", "#home"];
@@ -320,8 +320,12 @@ async function handleHomeMessage(html, message) {
       const search = obj(message.search || payload.search || offer.searchContext);
       let result = await createBookingCartFromOffer({ offer, search });
       if (result?.requiresLogin) {
-        try { await authentication.promptLogin(); }
-        catch (_) { postHomeError(html, { message:"Sign in was cancelled. The offer was not saved." }); return; }
+        try {
+          await openCustomerLogin({ sourcePage: "HOME", reason: "BOOKING_CART_AUTH" });
+        } catch (_) {
+          postHomeError(html, { message:"Sign in was cancelled. The offer was not saved." });
+          return;
+        }
         result = await createBookingCartFromOffer({ offer, search });
       }
       if (result?.requiresLogin) throw new Error(result?.message || "Sign in to continue with this offer.");
