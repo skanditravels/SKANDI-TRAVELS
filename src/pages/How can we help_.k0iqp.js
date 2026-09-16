@@ -5,6 +5,7 @@
 
 
 import wixLocationFrontend from "wix-location-frontend";
+import { openCustomerLogin } from "public/customerAuthUi.js";
 import {
   getCustomerSupportBootstrap,
   createCustomerSupportCase,
@@ -57,6 +58,21 @@ $w.onReady(function () {
   }
 
 
+  async function pushHelpBootstrap(requestId = "") {
+    const data = await ensureBootstrap();
+    const query = obj(wixLocationFrontend.query);
+    post(help, "PUBLIC_SUPPORT_BOOTSTRAP", {
+      ...obj(data),
+      prefill: {
+        category: clean(query.category, 80),
+        subCategory: clean(query.topic || query.subCategory, 160),
+        caseId: clean(query.caseId, 160)
+      }
+    }, requestId);
+    return data;
+  }
+
+
   async function pushChatBootstrap(requestId = "") {
     const data = await ensureBootstrap();
     post(chat, "SUPPORT_CHAT_BOOTSTRAP", {
@@ -104,19 +120,14 @@ $w.onReady(function () {
     try {
       switch (message.type) {
         case "PUBLIC_SUPPORT_READY":
-        case "PUBLIC_SUPPORT_REQUEST_BOOTSTRAP": {
-          const data = await ensureBootstrap();
-          const query = obj(wixLocationFrontend.query);
-          post(help, "PUBLIC_SUPPORT_BOOTSTRAP", {
-            ...obj(data),
-            prefill: {
-              category: clean(query.category, 80),
-              subCategory: clean(query.topic || query.subCategory, 160),
-              caseId: clean(query.caseId, 160)
-            }
-          }, requestId);
+        case "PUBLIC_SUPPORT_REQUEST_BOOTSTRAP":
+          await pushHelpBootstrap(requestId);
           return;
-        }
+        case "PUBLIC_SUPPORT_LOGIN":
+          await openCustomerLogin({ sourcePage: "HELP_CENTER", reason: clean(payload.reason || "SKANDI_CLUB_LOGIN", 120), returnTo: "/about/support" });
+          bootstrap = null;
+          await pushHelpBootstrap(requestId);
+          return;
         case "PUBLIC_SUPPORT_CREATE_CASE": {
           const result = await createCustomerSupportCase({ input: payload });
           post(help, "PUBLIC_SUPPORT_CASE_CREATED", result, requestId);
