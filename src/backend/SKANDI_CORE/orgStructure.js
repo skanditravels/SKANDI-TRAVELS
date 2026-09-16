@@ -1,5 +1,5 @@
 // /src/backend/SKANDI_CORE/orgStructure.js
-// SKANDI Backend Base 1.0 — B-011.6
+// SKANDI Backend Base 1.0 — B-011.21
 // Canonical SuccessFactors / Human Experience Management core.
 //
 // Authority boundary:
@@ -34,6 +34,9 @@ const DEFAULT_PERMISSION_PRESET = "read-only";
 const CORPORATE_EMAIL_MAX = 320;
 
 const elevatedCreateMember = auth.elevate(members.createMember);
+const elevatedListMembers = auth.elevate(members.listMembers);
+const elevatedUpdateMember = auth.elevate(members.updateMember);
+const elevatedDeleteMember = auth.elevate(members.deleteMember);
 const elevatedSendSetPasswordEmail = auth.elevate(memberAuthentication.sendSetPasswordEmail);
 
 function rows(value) {
@@ -769,19 +772,26 @@ function memberSummary(result) {
 
 async function findWixMemberByCorporateEmail(email) {
   const cleanEmail = normalizeCorporateEmail(email);
-  try {
-    const result = await members
-      .queryMembers({
-        fieldsets: ["FULL"],
-        search: { expression: cleanEmail, fields: ["loginEmail"] }
-      })
-      .find();
-    const items = rows(result?.items || result?._items || result?.members);
-    return items.find((item) => text(item?.loginEmail, 320).toLowerCase() === cleanEmail) || null;
-  } catch (error) {
-    console.warn("[SuccessFactors] Wix member lookup failed", { code: errorCode(error) });
-    return null;
+  const pageSize = 100;
+  let offset = 0;
+
+  // This lookup MUST be elevated. SuccessFactors creates PRIVATE members, and
+  // ordinary SiteMember identity cannot reliably enumerate private members.
+  for (let page = 0; page < 100; page += 1) {
+    const result = await elevatedListMembers({
+      fieldsets: ["FULL"],
+      paging: { limit: pageSize, offset }
+    });
+    const items = rows(result?.members || result?.items || result?._items);
+    const match = items.find((item) => text(item?.loginEmail, 320).toLowerCase() === cleanEmail);
+    if (match) return match;
+
+    const total = Number(result?.metadata?.total);
+    offset += items.length;
+    if (!items.length || items.length < pageSize || (Number.isFinite(total) && offset >= total)) break;
   }
+
+  return null;
 }
 
 async function patchAgentMemberLink(agentUserId, member) {
@@ -806,8 +816,9 @@ async function provisionWixMemberForAgent(agent, { sendPasswordEmail = true } = 
   const email = normalizeCorporateEmail(agent.corporate_email_address || agent.email);
   let member = await findWixMemberByCorporateEmail(email);
   let created = false;
+  let memberRecord = memberItem(member);
 
-  if (!member) {
+  if (!memberRecord) {
     try {
       member = await elevatedCreateMember({
         member: {
@@ -826,25 +837,52 @@ async function provisionWixMemberForAgent(agent, { sendPasswordEmail = true } = 
         }
       });
       created = true;
+      memberRecord = memberItem(member);
     } catch (error) {
-      // A member may already exist even when search permissions/visibility did not return it.
+      // If Wix reports a duplicate, resolve it again using the elevated member list.
       const retry = await findWixMemberByCorporateEmail(email);
-      if (!retry) {
-        return { ok: false, created: false, linked: false, passwordEmailSent: false, code: errorCode(error), message: "Employee saved, but the Wix Member could not be created or linked." };
-      }
-      member = retry;
+      if (!retry) throw error;
+      memberRecord = retry;
     }
   }
 
-  const memberRecord = memberItem(member);
-  const linked = await patchAgentMemberLink(agent.id, memberRecord);
+  const snapshot = memberSummary(memberRecord);
+  if (!snapshot?.id) {
+    throw new SkandiError("HR_WIX_MEMBER_ID_MISSING", "Wix Member creation did not return a member ID.", {
+      publicMessage: "The Wix Member account could not be verified."
+    });
+  }
+  if (snapshot.loginEmail && snapshot.loginEmail !== email) {
+    throw new SkandiError("HR_WIX_MEMBER_EMAIL_MISMATCH", "Wix Member login email does not match the employee corporate email.", {
+      publicMessage: "The Wix Member login email does not match the employee corporate email."
+    });
+  }
+
+  let linked;
+  try {
+    linked = await patchAgentMemberLink(agent.id, memberRecord);
+  } catch (error) {
+    // Keep employee/member creation atomic. If we created the Wix Member in
+    // this attempt and linking failed, remove that newly-created member.
+    if (created && snapshot.id) {
+      try {
+        await elevatedDeleteMember(snapshot.id);
+      } catch (cleanupError) {
+        console.warn("[SuccessFactors] Wix member rollback failed", { code: errorCode(cleanupError), memberId: snapshot.id });
+      }
+    }
+    throw error;
+  }
+
   let passwordEmailSent = false;
+  let passwordEmailError = "";
   if (sendPasswordEmail) {
     try {
       const response = await elevatedSendSetPasswordEmail(email, { hideIgnoreMessage: false });
       passwordEmailSent = response?.accepted !== false;
     } catch (error) {
-      console.warn("[SuccessFactors] Wix password email failed", { code: errorCode(error) });
+      passwordEmailError = errorCode(error);
+      console.warn("[SuccessFactors] Wix password email failed", { code: passwordEmailError });
     }
   }
 
@@ -853,7 +891,8 @@ async function provisionWixMemberForAgent(agent, { sendPasswordEmail = true } = 
     created,
     linked: true,
     passwordEmailSent,
-    member: memberSummary(memberRecord),
+    passwordEmailError,
+    member: snapshot,
     employee: safeAgent(linked || agent)
   };
 }
@@ -943,11 +982,31 @@ export async function createEmployeeCore(input = {}) {
   }));
   if (!inserted?.id) throw new SkandiError("HR_EMPLOYEE_CREATE_FAILED", "Employee row was not created.");
 
-  let wixMember = { ok: false, created: false, linked: false, passwordEmailSent: false, message: "Wix Member provisioning did not run." };
+  let wixMember;
   try {
     wixMember = await provisionWixMemberForAgent(inserted, { sendPasswordEmail: input.sendPasswordEmail !== false });
+    if (wixMember?.ok !== true || wixMember?.linked !== true || !wixMember?.member?.id) {
+      throw new SkandiError("HR_WIX_MEMBER_PROVISION_INCOMPLETE", "Wix Member provisioning did not complete.");
+    }
   } catch (error) {
-    wixMember = { ok: false, created: false, linked: false, passwordEmailSent: false, code: errorCode(error), message: "Employee saved, but Wix Member provisioning needs retry." };
+    // SuccessFactors may not retain an employee that has no usable Wix Member
+    // identity. Roll the employee projection back and surface one clear error.
+    try {
+      await restRequest({
+        table: "agent_users",
+        method: "DELETE",
+        query: { id: `eq.${inserted.id}` },
+        prefer: ""
+      });
+    } catch (cleanupError) {
+      console.error("[SuccessFactors] Employee rollback failed after Wix Member provisioning error", {
+        employeeId: inserted.id,
+        code: errorCode(cleanupError)
+      });
+    }
+    throw new SkandiError("HR_WIX_MEMBER_PROVISION_FAILED", "Employee creation was rolled back because Wix Member provisioning failed.", {
+      publicMessage: "The employee was not created because the Wix Member account could not be created or linked."
+    });
   }
 
   try {
@@ -959,7 +1018,7 @@ export async function createEmployeeCore(input = {}) {
         actor_agent_user_id: actorId,
         action: "EMPLOYEE_CREATED",
         old_assignment: {},
-        new_assignment: { sk_id: skId, corporate_email_address: email, wix_member_id: wixMember?.member?.id || null },
+        new_assignment: { sk_id: skId, corporate_email_address: email, wix_member_id: wixMember.member.id },
         reason: "SuccessFactors employee creation"
       }
     });
@@ -980,6 +1039,15 @@ export async function updateEmployeeCore(input = {}) {
   if (input.badgePhotoUrl !== undefined || input.photoUrl !== undefined) body.badge_photo_url = text(input.badgePhotoUrl || input.photoUrl, 1500) || null;
   if (input.corporateEmail !== undefined || input.corporateEmailAddress !== undefined || input.workEmail !== undefined || input.companyEmail !== undefined || input.email !== undefined) {
     const email = normalizeCorporateEmail(input.corporateEmail || input.corporateEmailAddress || input.workEmail || input.companyEmail || input.email);
+    const linkedMemberId = text(target.wix_member_id || target.member_id, 120);
+    if (linkedMemberId) {
+      const currentEmail = normalizeCorporateEmail(target.corporate_email_address || target.email);
+      if (email !== currentEmail) {
+        throw new SkandiError("HR_WIX_LOGIN_EMAIL_IMMUTABLE", "A linked Wix Member login email cannot be changed.", {
+          publicMessage: "Corporate email cannot be changed after the Wix Member account has been linked."
+        });
+      }
+    }
     const duplicate = firstRow(await select("agent_users", { select: "id", or: `(corporate_email_address.ilike.${email},email.ilike.${email})`, limit: 2 }));
     if (duplicate && text(duplicate.id, 80) !== text(target.id, 80)) throw new SkandiError("HR_EMPLOYEE_EMAIL_EXISTS", "Corporate email already exists.");
     body.corporate_email_address = email;
@@ -992,7 +1060,30 @@ export async function updateEmployeeCore(input = {}) {
   const profilePatch = hrProfilePatch(input);
   if (Object.keys(profilePatch).length) body.payload = mergedSuccessFactorsPayload(target, profilePatch);
   const saved = firstRow(await restRequest({ table: "agent_users", method: "PATCH", query: { id: `eq.${target.id}` }, body }));
-  return { ok: true, employee: safeAgent(saved || { ...target, ...body }) };
+  const effective = saved || { ...target, ...body };
+
+  const linkedMemberId = text(effective.wix_member_id || effective.member_id, 120);
+  let wixMemberSync = null;
+  if (linkedMemberId) {
+    try {
+      const updatedMember = await elevatedUpdateMember(linkedMemberId, {
+        contact: {
+          firstName: text(effective.first_name, 120),
+          lastName: text(effective.last_name, 120),
+          company: "SKANDI",
+          jobTitle: text(effective.job_title || effective.position, 100)
+        },
+        profile: {
+          nickname: text(effective.preferred_name || effective.display_name || [effective.first_name, effective.last_name].filter(Boolean).join(" "), 180)
+        }
+      });
+      wixMemberSync = { ok: true, member: memberSummary(updatedMember) };
+    } catch (error) {
+      wixMemberSync = { ok: false, code: errorCode(error), message: "Employee updated, but Wix Member profile synchronization needs retry." };
+    }
+  }
+
+  return { ok: true, employee: safeAgent(effective), wixMemberSync };
 }
 
 export async function setEmployeeActiveCore({ agentUserId = "", active = true } = {}) {
