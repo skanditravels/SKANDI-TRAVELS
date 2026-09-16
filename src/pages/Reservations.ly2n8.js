@@ -1,5 +1,5 @@
-// /src/pages/Reservations.ly2n8.js
-// SKANDI Backend Base 1.0 — B-007.1 ALTEA Reservations page convergence.
+// /src/pages/ALTEA Reservations.ly2n8.js
+// SKANDI Backend Base 1.0 — B-011.27 ALTEA Reservations runtime convergence.
 //
 // Wix page boundary only.
 // All ALTEA, Inventory and Duffel provider actions are routed through the
@@ -16,7 +16,7 @@ const EMBED_ID = "#alteaReservationsEmbed";
 const STAFF_LOGIN_PATH = "/riaintra";
 const CHILD_SOURCE = "SKANDI_DUFFEL_RESERVATIONS";
 const PARENT_SOURCE = "SKANDI_WIX_PARENT";
-const VERSION = "BACKEND-BASE-1.0-B007.1";
+const VERSION = "B-011.27-ALTEA-RESERVATIONS";
 
 
 function parse(value) {
@@ -219,7 +219,7 @@ $w.onReady(() => {
       const providerAction = isProviderAction(type);
 
 
-      console.error("[ALTEA B-007.1]", {
+      console.error("[ALTEA B-011.27]", {
         type,
         code,
         message: String(error?.message || "")
@@ -259,6 +259,7 @@ $w.onReady(() => {
     oneBackendDependency: true,
     providerWebMethodsPageBound: false,
     providerInternalized: true,
+    inventoryDispatcherImported: false,
     inventoryControl: true,
     enterprise: true,
     transferDcs: true,
