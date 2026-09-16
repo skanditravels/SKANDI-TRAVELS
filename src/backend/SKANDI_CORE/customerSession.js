@@ -1,13 +1,13 @@
 // /src/backend/SKANDI_CORE/customerSession.js
-// SKANDI Backend Base 1.0 — B-011.7 customer header/footer session core.
-// Wix Members remains customer authentication owner. Wix Loyalty remains the
-// current header points/tier provider. NewsletterSubscribers remains the single
-// existing newsletter store until its own domain is intentionally migrated.
+// SKANDI Backend Base 1.0 — B-011.27 customer session runtime convergence.
+// Wix Members remains customer authentication owner. SKANDI Club loyalty data is
+// optional to the global customer session and must never make the auth/session
+// web module unloadable. NewsletterSubscribers remains the existing newsletter
+// store until its own domain is intentionally migrated.
 
 import { currentMember } from "wix-members-backend";
 import wixData from "wix-data";
-import { accounts, tiers } from "@wix/loyalty";
-import { email, safeNumber, text } from "backend/SKANDI_CORE/platformValidation.js";
+import { email, text } from "backend/SKANDI_CORE/platformValidation.js";
 import { SkandiError } from "backend/SKANDI_CORE/platformErrors.js";
 
 const NEWSLETTER_COLLECTION = "NewsletterSubscribers";
@@ -34,47 +34,24 @@ function displayName(member = {}) {
   );
 }
 
-async function resolveTierName(account = {}) {
-  const tierId = text(account?.tier?._id, 160);
-
-  if (tierId) {
-    const tier = await tiers.getTier(tierId).catch(() => null);
-    const name = text(tier?.tierDefinition?.name, 120);
-    if (name) return name;
-  }
-
-  // Wix omits an ID for the base tier. Resolve the zero-point tier when the
-  // caller has Loyalty Tiers read permission; otherwise leave the label blank.
-  const response = await tiers.listTiers().catch(() => null);
-  const baseTier = Array.isArray(response?.tiers)
-    ? response.tiers.find((item) => safeNumber(item?.requiredPoints, -1) === 0)
-    : null;
-
-  return text(baseTier?.tierDefinition?.name, 120);
-}
-
-async function loyaltyState() {
-  try {
-    // Current Wix SDK contract: GetCurrentMemberAccountResponse = { account }.
-    const response = await accounts.getCurrentMemberAccount();
-    const account = response?.account || null;
-    if (!account) return { points: 0, tierName: "", loyaltyAccountId: "" };
-
-    return {
-      points: safeNumber(account?.points?.balance, 0),
-      tierName: await resolveTierName(account),
-      loyaltyAccountId: text(account?._id, 160)
-    };
-  } catch (_) {
-    return { points: 0, tierName: "", loyaltyAccountId: "" };
-  }
+function loyaltyState() {
+  // Runtime-safe default. The live site currently has no Wix Loyalty Program app
+  // installed, and a missing/incorrect @wix/loyalty dependency must not prevent
+  // customerSession.web.js from loading. A dedicated loyalty provider can be
+  // reintroduced once the app/dependency is intentionally installed and tested.
+  return {
+    points: 0,
+    tierName: "",
+    loyaltyAccountId: "",
+    loyaltyAvailable: false
+  };
 }
 
 export async function getCustomerHeaderSessionCore() {
   const member = await currentMember.getMember({ fieldsets: ["FULL"] }).catch(() => null);
   if (!member) return { loggedIn: false, menu: [] };
 
-  const loyalty = await loyaltyState();
+  const loyalty = loyaltyState();
   return {
     loggedIn: true,
     displayName: displayName(member),
@@ -83,6 +60,7 @@ export async function getCustomerHeaderSessionCore() {
     points: loyalty.points,
     tierName: loyalty.tierName,
     loyaltyAccountId: loyalty.loyaltyAccountId,
+    loyaltyAvailable: loyalty.loyaltyAvailable === true,
     menu: ACCOUNT_MENU.map((item) => ({ ...item }))
   };
 }
