@@ -1,5 +1,5 @@
 // src/public/siteMap.js
-// SKANDI canonical route + global chrome/auth-popup registry — B-011.23
+// SKANDI canonical route + global chrome/auth-popup registry — B-011.28
 // Single source of truth for public/internal routes and global header/footer embeds.
 
 
@@ -34,6 +34,9 @@ export const SITE_MAP = Object.freeze({
   alteaLaunchpad: "/riaintra/success-factors/altea",
   alteaReservations: "/riaintra/success-factors/altea/reservations",
   inventoryControl: "/riaintra/altea/inventory-control",
+  uniformCenter: "/riaintra/uniform",
+  uniformControl: "/riaintra/altea/uniform-control",
+  uniformRegulations: "/riaintra/uniform-regulations",
   alteaTimatic: "/riaintra/success-factors/altea/timatic",
   mail: "/riaintra/success-factors/mail",
   docunet: "/riaintra/success-factors/docunet",
