@@ -1,6 +1,6 @@
 import { SITE_MAP, APP_ROUTES, isSafeInternalRoute } from "public/siteMap.js";
 // /src/pages/Our Destinations.ctnh1.js
-// SKANDI Destination Flow V9.2 — B-010 canonical backend convergence.
+// SKANDI Destination Flow V9.2 — B-011.20 catalog synchronization recovery.
 // Preserves the installed V9.2 HTML/message contract while eliminating legacy RIA/FINAL/orchestrator imports.
 
 
@@ -24,11 +24,13 @@ const AREA_SOURCE = "SKANDI_DYNAMIC_DESTINATION_AREA";
 const HOTEL_SEARCH_SOURCES = new Set(["SKANDI_AREA_HOTEL_SEARCH", "SKANDI_HOTEL_SEARCH"]);
 const HOTEL_DETAIL_SOURCE = "SKANDI_HOTEL_DETAIL";
 const PARENT_SOURCE = "SKANDI_WIX_PARENT";
-const PROTOCOL_VERSION = "2026.09.13.destination-b010";
+const PROTOCOL_VERSION = "2026.09.16.destination-b01120";
+const CLIENT_CATALOG_TTL_MS = 15_000;
 
 
 let catalog = [];
 let catalogPromise = null;
+let catalogLoadedAt = 0;
 let flowState = { level:"index", countrySlug:"", destinationSlug:"", areaSlug:"", hotelSlug:"", hotelId:"" };
 
 
@@ -82,20 +84,47 @@ function firstDestinationEmbed() {
 }
 
 
-async function ensureCatalog() {
-  if (catalog.length) return catalog;
+function catalogCounts() {
+  return catalog.reduce((acc, record) => {
+    const type = clean(record?.entityType, 60).toUpperCase() || "UNKNOWN";
+    acc[type] = (acc[type] || 0) + 1;
+    return acc;
+  }, {});
+}
+function catalogFingerprint(recordsValue = catalog) {
+  return arr(recordsValue)
+    .map(record => `${clean(record?.id,160)}:${clean(record?.updatedAt,80)}`)
+    .sort()
+    .join("|");
+}
+async function ensureCatalog({ force = false } = {}) {
+  const isFresh = catalog.length && (Date.now() - catalogLoadedAt) < CLIENT_CATALOG_TTL_MS;
+  if (!force && isFresh) return catalog;
   if (!catalogPromise) {
-    catalogPromise = getDestinationFlowCatalog({}).then(result => {
+    catalogPromise = getDestinationFlowCatalog({ force: force === true }).then(result => {
       if (!result?.ok) {
         const error = new Error(clean(result?.publicMessage || "Destination inventory is unavailable.", 500));
         error.code = clean(result?.code || "DESTINATION_BACKEND_REQUEST_FAILED", 160);
         throw error;
       }
       catalog = arr(result.records);
+      catalogLoadedAt = Date.now();
       return catalog;
     }).finally(() => { catalogPromise = null; });
   }
   return catalogPromise;
+}
+function hostReadyPayload(html, initialState = flowState, extra = {}) {
+  return {
+    protocolVersion: PROTOCOL_VERSION,
+    embedId: clean(html?.id, 80),
+    initialState: { ...initialState },
+    source: "SUPABASE_PUBLIC_INVENTORY",
+    counts: catalogCounts(),
+    catalogLoadedAt: catalogLoadedAt ? new Date(catalogLoadedAt).toISOString() : null,
+    ...extra,
+    readyAt: new Date().toISOString()
+  };
 }
 function records(type) { const target = clean(type, 60).toUpperCase(); return catalog.filter(r => clean(r.entityType, 60).toUpperCase() === target); }
 function byId(id) {
@@ -366,13 +395,31 @@ $w.onReady(function(){
     const message=event.data||{},source=clean(message.source,120),type=clean(message.type,160),payload=obj(message.payload);
     try{
       if(source===FLOW_SOURCE){
-        if(type==="DESTINATION_FLOW_READY"){flowState={...flowState,...payload};await ensureCatalog();return}
+        if(type==="DESTINATION_FLOW_READY"){
+          flowState={...flowState,...payload};
+          await ensureCatalog({force:true});
+          post(html,"DESTINATION_FLOW_HOST_READY",hostReadyPayload(html,flowState,{resync:true}));
+          post(html,"DESTINATION_FLOW_CATALOG_SYNCED",{source:"SUPABASE_PUBLIC_INVENTORY",counts:catalogCounts(),catalogLoadedAt:new Date(catalogLoadedAt).toISOString()});
+          return
+        }
+        if(type==="DESTINATION_FLOW_REFRESH"){
+          const before=catalogFingerprint();
+          await ensureCatalog({force:true});
+          const changed=before!==catalogFingerprint();
+          post(html,"DESTINATION_FLOW_CATALOG_SYNCED",{source:"SUPABASE_PUBLIC_INVENTORY",counts:catalogCounts(),changed,catalogLoadedAt:new Date(catalogLoadedAt).toISOString()});
+          post(html,"DESTINATION_FLOW_SET_STATE",{state:{...flowState},refreshToken:Date.now()});
+          return
+        }
         if(type==="DESTINATION_FLOW_STATE_CHANGED"){flowState={...flowState,...payload};syncWixFlowQuery(flowState);return}
         if(type==="DESTINATION_FLOW_RESIZE"){const requested=Number(payload.height),height=Number.isFinite(requested)?Math.max(680,Math.min(30000,Math.round(requested))):1200;try{if("height" in html)html.height=height}catch(_){}return}
         if(type==="DESTINATION_FLOW_NAVIGATE_EXTERNAL"){const path=safeExternalPath(payload.path);if(path)wixLocation.to(path);return}
       }
       if(source===INDEX_SOURCE&&type==="DESTINATIONS_INDEX_READY"){
-        await ensureCatalog();const language=normalizeLanguage(payload.language),countries=records("COUNTRY").map(country=>{const children=directChildren(country,["DESTINATION","AREA"]);return{id:country.id,code:clean(country.code,20),slug:slug(country.slug||country.name),name:clean(country.name,500),image:cardImageOf(country),heroImage:imageOf(country),cardImage:cardImageOf(country),intro:summaryOf(country,language),description:summaryOf(country,language),areaCount:children.length,hotelCount:hotelsForScope(country).length,areas:children.slice(0,6).map(child=>{const isArea=child.entityType==="AREA";return{name:clean(child.name,500),slug:slug(child.slug||child.name),destinationSlug:isArea?"":slug(child.slug||child.name),areaSlug:isArea?slug(child.slug||child.name):"",path:isArea?customPath("area",{countrySlug:slug(country.slug||country.name),areaSlug:slug(child.slug||child.name)}):customPath("destination",{countrySlug:slug(country.slug||country.name),destinationSlug:slug(child.slug||child.name)})}})}});post(html,"DESTINATIONS_INDEX_DATA",{countries});return
+        post(html,"DESTINATIONS_INDEX_LOADING",{});
+        await ensureCatalog();
+        const language=normalizeLanguage(payload.language),countries=records("COUNTRY").map(country=>{const children=directChildren(country,["DESTINATION","AREA"]);return{id:country.id,code:clean(country.code,20),slug:slug(country.slug||country.name),name:clean(country.name,500),image:cardImageOf(country),heroImage:imageOf(country),cardImage:cardImageOf(country),intro:summaryOf(country,language),description:summaryOf(country,language),areaCount:children.length,hotelCount:hotelsForScope(country).length,areas:children.slice(0,6).map(child=>{const isArea=child.entityType==="AREA";return{name:clean(child.name,500),slug:slug(child.slug||child.name),destinationSlug:isArea?"":slug(child.slug||child.name),areaSlug:isArea?slug(child.slug||child.name):"",path:isArea?customPath("area",{countrySlug:slug(country.slug||country.name),areaSlug:slug(child.slug||child.name)}):customPath("destination",{countrySlug:slug(country.slug||country.name),destinationSlug:slug(child.slug||child.name)})}})}});
+        if(!countries.length)throw new Error("No published destinations are currently available.");
+        post(html,"DESTINATIONS_INDEX_DATA",{countries,source:"SUPABASE_PUBLIC_INVENTORY",counts:catalogCounts(),catalogLoadedAt:new Date(catalogLoadedAt).toISOString()});return
       }
       if(source===COUNTRY_SOURCE){
         if(type==="COUNTRY_READY"){await ensureCatalog();const record=byTypeSlug("COUNTRY",first(payload.slug,flowState.countrySlug));if(!record)throw new Error("Country not found.");post(html,"COUNTRY_PAGE_RESULT",{page:countryPage(record,normalizeLanguage(payload.settings?.language))});return}
@@ -418,5 +465,10 @@ $w.onReady(function(){
     }
   });
   try{if(typeof wixLocation.onChange==="function")wixLocation.onChange(()=>{const next=wixInitialFlowState();if(!sameFlowState(next,flowState)){flowState={...flowState,...next};post(html,"DESTINATION_FLOW_SET_STATE",{state:next})}})}catch(error){console.warn("[Destination Flow B-010] Wix location change listener unavailable.",error?.message||error)}
-  const initialState=wixInitialFlowState();flowState={...flowState,...initialState};post(html,"DESTINATION_FLOW_HOST_READY",{protocolVersion:PROTOCOL_VERSION,embedId:clean(html.id,80),initialState,readyAt:new Date().toISOString()});
+  const initialState=wixInitialFlowState();
+  flowState={...flowState,...initialState};
+  post(html,"DESTINATION_FLOW_HOST_READY",hostReadyPayload(html,initialState));
+  void ensureCatalog({force:true})
+    .then(()=>post(html,"DESTINATION_FLOW_CATALOG_SYNCED",{source:"SUPABASE_PUBLIC_INVENTORY",counts:catalogCounts(),catalogLoadedAt:new Date(catalogLoadedAt).toISOString()}))
+    .catch(error=>post(html,"DESTINATION_FLOW_ERROR",{code:clean(error?.code||"DESTINATION_BACKEND_REQUEST_FAILED",160),message:error?.publicMessage||error?.message||"Destination information is temporarily unavailable."}));
 });
