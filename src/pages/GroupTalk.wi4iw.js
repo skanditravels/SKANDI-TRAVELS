@@ -1,5 +1,5 @@
 // /src/pages/GroupTalk.wi4iw.js
-// Canonical GroupTalk page bridge. No GroupTalk business logic and no legacy backend dependencies.
+// B-011.25 canonical GroupTalk page bridge. Single-flight bootstrap + Supabase Realtime + LiveKit; no Pusher or legacy backend dependencies.
 import wixLocation from "wix-location";
 import { authentication } from "wix-members-frontend";
 import { getStaffPortalSession } from "backend/SKANDI_CORE/staffAuth.web";
@@ -17,13 +17,26 @@ function currentPath(){return "/"+wixLocation.path.join("/")}
 function post(html,type,payload={}){html.postMessage({source:PARENT,type,payload,timestamp:new Date().toISOString()})}
 function allowed(path){const p=String(path||"");return p==="/"||p===LOGIN_PATH||p.startsWith("/riaintra")||p.startsWith("/altea")}
 async function logout(){try{await authentication.logout()}catch{} wixLocation.to(HOME_PATH)}
-async function bootstrap(html){const session=await getStaffPortalSession().catch(()=>null);if(!session?.authorized){wixLocation.to(LOGIN_PATH);return}const gt=await getGroupTalkBootstrap();post(html,"GT_BOOTSTRAP",gt);post(html,"INTERNAL_CHROME_BOOTSTRAP",{pageName:"GroupTalk",pagePath:currentPath(),pageSubtitle:"Employee-to-Ops requests, voice, radio, calls and live map",profile:gt.profile,apps:gt.apps||[],isAltea:true})}
+let bootstrapInFlight=null;
+async function bootstrap(html){
+  if(bootstrapInFlight)return bootstrapInFlight;
+  bootstrapInFlight=(async()=>{
+    const session=await getStaffPortalSession().catch(()=>null);
+    if(!session?.authorized){wixLocation.to(LOGIN_PATH);return null}
+    const gt=await getGroupTalkBootstrap();
+    post(html,"GT_BOOTSTRAP",gt);
+    post(html,"INTERNAL_CHROME_BOOTSTRAP",{pageName:"GroupTalk",pagePath:currentPath(),pageSubtitle:"Employee-to-Ops requests, voice, radio, calls and live map",profile:gt.profile,apps:gt.apps||[],isAltea:true});
+    return gt
+  })().finally(()=>{bootstrapInFlight=null});
+  return bootstrapInFlight
+}
 $w.onReady(()=>{const html=$w(EMBED);html.onMessage(async event=>{const msg=event.data||{},source=msg.source||"",type=msg.type||msg.event||msg.action||"",payload=msg.payload||{};try{
   if(source===CHROME){if(type==="INTERNAL_CHROME_READY"){await bootstrap(html);return}if(type==="INTERNAL_LOGOUT"){await logout();return}if(type==="INTERNAL_NAVIGATE"){const path=payload.path||msg.path;if(allowed(path))wixLocation.to(path);return}}
   if(source!==SOURCE)return;
   const send=async(outType,fn)=>post(html,outType,{requestId:payload.requestId,...await fn(payload)});
   switch(type){
     case "GT_READY": await bootstrap(html); break;
+    case "GT_REFRESH": await bootstrap(html); break;
     case "REALTIME_CONFIG_REQUEST": await send("REALTIME_CONFIG_RESPONSE",getGroupTalkRealtimeConfig); break;
     case "PRESENCE_UPDATE": await send("PRESENCE_UPDATE_RESPONSE",updateGroupTalkPresence); break;
     case "PRESENCE_REQUEST": await send("PRESENCE_RESPONSE",getGroupTalkPresence); break;
@@ -40,7 +53,7 @@ $w.onReady(()=>{const html=$w(EMBED);html.onMessage(async event=>{const msg=even
     case "TICKET_CATEGORY_SAVE": await send("TICKET_CATEGORY_SAVE_RESPONSE",saveTicketCategory); break;
     case "TICKET_CATEGORY_DELETE": await send("TICKET_CATEGORY_DELETE_RESPONSE",deleteTicketCategory); break;
     case "ADMIN_SAVE_GROUP": await send("ADMIN_SAVE_GROUP_RESPONSE",adminSaveGroup); await bootstrap(html); break;
-    case "ADMIN_SET_MEMBERSHIP": await send("ADMIN_SET_MEMBERSHIP_RESPONSE",adminSetMembership); break;
+    case "ADMIN_SET_MEMBERSHIP": await send("ADMIN_SET_MEMBERSHIP_RESPONSE",adminSetMembership); await bootstrap(html); break;
     case "GT_NAVIGATE": if(allowed(payload.path))wixLocation.to(payload.path); break;
     default: console.info("[GroupTalk] Unhandled message",type);
   }
