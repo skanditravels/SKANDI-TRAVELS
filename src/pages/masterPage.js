@@ -6,18 +6,23 @@
 import wixLocationFrontend from "wix-location-frontend";
 import wixSiteFrontend from "wix-site-frontend";
 import { currentMember, authentication } from "wix-members-frontend";
+import { local } from "wix-storage-frontend";
 import { getCustomerHeaderSession, subscribeCustomerNewsletter } from "backend/SKANDI_CORE/customerSession.web";
 import { getStaffPortalSession } from "backend/SKANDI_CORE/staffAuth.web";
-import { SITE_MAP, APP_ROUTES, isSafeInternalRoute } from "public/siteMap.js";
+import { SITE_MAP, APP_ROUTES, GLOBAL_CHROME, isSafeInternalRoute } from "public/siteMap.js";
 
 
 
 
-const MASTER_VERSION = "BACKEND-BASE-1.0-B011.1";
+const MASTER_VERSION = "BACKEND-BASE-1.0-B011.18-GLOBAL-CHROME";
+const MASTER_ENV = "PRD";
+const SETTINGS_STORAGE_KEY = "skandi_customer_settings_v1";
 const PARENT_SOURCE = "SKANDI_WIX_PARENT";
-const CUSTOMER_HEADER_SOURCE = "SKANDI_CUSTOMER_HEADER_EXPANDBAR";
-const CUSTOMER_FOOTER_SOURCE = "SKANDI_CUSTOMER_FOOTER";
-const ALTEA_HEADER_SOURCE = "SKANDI_ALTEA_HEADER";
+const CUSTOMER_HEADER_SOURCE = GLOBAL_CHROME.customerHeader.source;
+const CUSTOMER_FOOTER_SOURCE = GLOBAL_CHROME.customerFooter.source;
+const RIAINTRA_HEADER_SOURCE = GLOBAL_CHROME.riaintraHeader.source;
+const ALTEA_HEADER_SOURCE = GLOBAL_CHROME.alteaHeader.source;
+const ALTEA_FOOTER_SOURCE = GLOBAL_CHROME.alteaFooter.source;
 
 
 const MASTER_CONFIG = Object.freeze({
@@ -134,6 +139,26 @@ const MASTER_CONFIG = Object.freeze({
           ])
         }
       ]),
+      newsletter:Object.freeze({
+        title:"Get SKANDI offers and travel inspiration",
+        description:"Receive destination guides, SKANDI Collections updates and member offers.",
+        buttonLabel:"Sign up",
+        placeholder:"Email address"
+      }),
+      socialLinks:Object.freeze([
+        Object.freeze({ label:"Instagram", url:"https://www.instagram.com/skanditravels", iconUrl:"https://static.wixstatic.com/media/394052_3140fd0b593e44bd993a64412b94011e~mv2.png" }),
+        Object.freeze({ label:"Facebook", url:"https://www.facebook.com/skanditravels", iconUrl:"https://static.wixstatic.com/media/394052_80ea7848b9a142ef9f5c3c0beb8a3230~mv2.png" }),
+        Object.freeze({ label:"TikTok", url:"https://www.tiktok.com/@skanditravels", iconUrl:"https://static.wixstatic.com/media/394052_74976eb394d14952af79f14988bb17b3~mv2.png" }),
+        Object.freeze({ label:"YouTube", url:"https://www.youtube.com/skanditravels", iconUrl:"https://static.wixstatic.com/media/394052_6e9d971d747649afa5bd544e00870cbf~mv2.png" }),
+        Object.freeze({ label:"Snapchat", url:"https://www.snapchat.com/@skanditravels", iconUrl:"https://static.wixstatic.com/media/394052_1c961ca84c314ebc966444cb5449c618~mv2.png" }),
+        Object.freeze({ label:"LinkedIn", url:"https://www.linkedin.com/en/skanditravels", iconUrl:"https://static.wixstatic.com/media/394052_a7bf9a6382bc4b8785c1e4ebae385cda~mv2.png" })
+      ]),
+      bottomLinks:Object.freeze([
+        Object.freeze({ label:"Legal", path:SITE_MAP.legal }),
+        Object.freeze({ label:"Policies", path:SITE_MAP.policies }),
+        Object.freeze({ label:"Staff Login", path:SITE_MAP.riaintra })
+      ]),
+      termsText:"Payment methods, supplier terms and package travel conditions may vary by product.",
       staffLogin: Object.freeze({ label:"Staff Login", path:SITE_MAP.riaintra })
     })
   }),
@@ -141,8 +166,8 @@ const MASTER_CONFIG = Object.freeze({
 
   internal: Object.freeze({
     header: Object.freeze({
-      productName:"SKANDI TRAVELS",
-      productContext:"RIAINTRA Enterprise Workforce Suite",
+      productName:"RIAINTRA",
+      productContext:"Enterprise Workforce Suite",
       primaryNav:Object.freeze([
         { id:"success-factors", label:"SAP RIAINTRA Dashboard", path:SITE_MAP.successFactors },
         { id:"my-roster", label:"MyRoster", path:"/riaintra/success-factors/my-roster" },
@@ -163,16 +188,32 @@ const MASTER_CONFIG = Object.freeze({
         { label:"HelpDesk", path:SITE_MAP.serviceDesk }
       ])
     })
+  }),
+
+
+  altea:Object.freeze({
+    header:Object.freeze({
+      productName:"ALTEA",
+      productContext:"SKANDI SYSTEMS",
+      primaryNav:Object.freeze([
+        Object.freeze({ id:"altea-home", label:"Home", path:SITE_MAP.alteaLaunchpad }),
+        Object.freeze({ id:"reservations", label:"Reservations", path:SITE_MAP.alteaReservations }),
+        Object.freeze({ id:"inventory", label:"Inventory", path:SITE_MAP.inventoryControl }),
+        Object.freeze({ id:"grouptalk", label:"GroupTalk", path:APP_ROUTES.groupTalk }),
+        Object.freeze({ id:"helpdesk", label:"HelpDesk", path:SITE_MAP.serviceDesk })
+      ])
+    })
   })
 });
 
 
 const IDS = Object.freeze({
-  customerHeaders:["#skandiHeaderEmbed", "#skandiCustomerHeaderEmbed"],
-  customerFooters:["#skandiFooterEmbed", "#skandiCustomerFooterEmbed"],
-  internalHeaders:["#riaintraHeaderEmbed", "#riaintraHeader", "#staffInternalChromeEmbed"],
+  customerHeaders:[...GLOBAL_CHROME.customerHeader.elementIds],
+  customerFooters:[...GLOBAL_CHROME.customerFooter.elementIds],
+  internalHeaders:[...GLOBAL_CHROME.riaintraHeader.elementIds],
   internalFooters:["#riaintraFooterEmbed", "#riaintraFooter"],
-  alteaHeaders:["#alteaHeaderEmbed", "#alteaHeader"]
+  alteaHeaders:[...GLOBAL_CHROME.alteaHeader.elementIds],
+  alteaFooters:[...GLOBAL_CHROME.alteaFooter.elementIds]
 });
 
 
@@ -182,8 +223,36 @@ const GROUPTALK_CHROME_FREE_PATHS = Object.freeze([
 ]);
 
 
-let alteaRuntimeContext = {};
+let alteaRuntimeContext = { workArea:"A", crypticActive:false, officeId:"", lmcMode:false };
+let customerSettings = readCustomerSettings();
 const wiredEmbeds = new Set();
+
+const CHROME_BY_SOURCE = Object.freeze(Object.fromEntries(
+  Object.values(GLOBAL_CHROME).map(definition => [definition.source, definition])
+));
+
+function normalizeCustomerSettings(value = {}) {
+  const language = String(value?.language || "").trim().toUpperCase();
+  const currency = String(value?.currency || "").trim().toUpperCase();
+  return {
+    language:MASTER_CONFIG.brand.languages.includes(language) ? language : "EN",
+    currency:MASTER_CONFIG.brand.currencies.includes(currency) ? currency : "USD"
+  };
+}
+function readCustomerSettings() {
+  try {
+    const raw = local.getItem(SETTINGS_STORAGE_KEY);
+    if (!raw) return { language:"EN", currency:"USD" };
+    return normalizeCustomerSettings(JSON.parse(raw));
+  } catch (_) {
+    return { language:"EN", currency:"USD" };
+  }
+}
+function persistCustomerSettings(value = {}) {
+  customerSettings = normalizeCustomerSettings(value);
+  try { local.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(customerSettings)); } catch (_) {}
+  return { ...customerSettings };
+}
 
 
 function safeEl(id) {
@@ -211,6 +280,7 @@ function customerFooterEl() { return firstHtml(IDS.customerFooters); }
 function internalHeaderEl() { return firstHtml(IDS.internalHeaders); }
 function internalFooterEl() { return firstHtml(IDS.internalFooters); }
 function alteaHeaderEl() { return firstHtml(IDS.alteaHeaders); }
+function alteaFooterEl() { return firstHtml(IDS.alteaFooters); }
 
 
 function allHtmlComponents() {
@@ -282,6 +352,8 @@ function masterPayload(extra = {}) {
   const altea = isAlteaPath(path);
   return {
     version:MASTER_VERSION,
+    env:MASTER_ENV,
+    settings:{ ...customerSettings },
     mode:isInternalPath(path) ? "internal" : "customer",
     isInternal:isInternalPath(path),
     isAltea:altea,
@@ -292,6 +364,8 @@ function masterPayload(extra = {}) {
     customer:MASTER_CONFIG.customer,
     internal:MASTER_CONFIG.internal,
     altea:{
+      ...MASTER_CONFIG.altea,
+      env:MASTER_ENV,
       ...(altea ? { systemName:page.name || "", pageName:page.name || "", pageUrl:page.url || "" } : {}),
       ...alteaRuntimeContext
     },
@@ -305,6 +379,7 @@ function pushNavigation(embed) {
   postToEmbed(embed, "SKANDI_MASTER_NAVIGATION", {
     customer:MASTER_CONFIG.customer,
     internal:MASTER_CONFIG.internal,
+    altea:MASTER_CONFIG.altea,
     routes:MASTER_CONFIG.routes,
     currentPath:currentPathString()
   });
@@ -331,6 +406,7 @@ async function getCustomerState() {
     return {
       loggedIn:true,
       displayName:session?.displayName || member?.profile?.nickname || member?.loginEmail || "",
+      email:session?.email || member?.loginEmail || "",
       points:Number(session?.points || session?.clubPoints || 0),
       tierName:session?.tierName || session?.tier || "",
       menu:Array.isArray(session?.menu) ? session.menu : []
@@ -370,6 +446,59 @@ async function pushStaffHeaderState(embed = internalHeaderEl()) {
   });
 }
 
+function pushCustomerSettingsState(embed = customerHeaderEl(), type = "CUSTOMER_SETTINGS_STATE") {
+  if (!embed) return;
+  postToEmbed(embed, type, { ...customerSettings });
+}
+
+function alteaChromeState(staff = { authorized:false, profile:{} }) {
+  const page = currentWixPageInfo();
+  const profile = staff?.profile || {};
+  const fallbackBase = String(profile.base || profile.baseCode || "ARN").trim().toUpperCase().slice(0,3) || "ARN";
+  const context = String(
+    alteaRuntimeContext.systemContext ||
+    alteaRuntimeContext.context ||
+    page.name ||
+    "ALTEA DASHBOARD"
+  ).trim();
+  return {
+    env:MASTER_ENV,
+    connected:alteaRuntimeContext.connected !== undefined ? Boolean(alteaRuntimeContext.connected) : Boolean(staff?.authorized),
+    context,
+    systemName:String(alteaRuntimeContext.systemName || page.name || "ALTEA").trim(),
+    pageName:page.name || "",
+    pageUrl:page.url || "",
+    station:String(alteaRuntimeContext.station || profile.station || profile.stationCode || "").trim().toUpperCase(),
+    timeZone:String(alteaRuntimeContext.timeZone || profile.timeZone || "").trim(),
+    workArea:String(alteaRuntimeContext.workArea || "A").trim().toUpperCase().slice(0,1) || "A",
+    crypticActive:Boolean(alteaRuntimeContext.crypticActive),
+    officeId:String(alteaRuntimeContext.officeId || profile.officeId || `${fallbackBase}1A0900`).trim().toUpperCase(),
+    lmcMode:Boolean(alteaRuntimeContext.lmcMode),
+    systemMessage:alteaRuntimeContext.systemMessage || {
+      text:staff?.authorized ? "READY" : "SESSION REQUIRED",
+      type:staff?.authorized ? "success" : "error"
+    },
+    profile
+  };
+}
+
+async function pushAlteaChromeState() {
+  if (!isAlteaPath()) return;
+  const staff = await getStaffState();
+  const state = alteaChromeState(staff);
+  const header = alteaHeaderEl();
+  const footer = alteaFooterEl();
+  if (header) {
+    pushMasterConfig(header, { staff });
+    postToEmbed(header, "ALTEA_HEADER_STATE", state);
+    postToEmbed(header, "ALTEA_HEADER_CONTEXT", state);
+  }
+  if (footer) {
+    pushMasterConfig(footer, { staff });
+    postToEmbed(footer, "ALTEA_FOOTER_STATE", state);
+  }
+}
+
 
 async function handleMasterMessage(embed, message = {}) {
   const type = String(message?.type || "");
@@ -384,16 +513,10 @@ async function handleMasterMessage(embed, message = {}) {
     pushMasterConfig(embed, extra);
 
 
-    if (source === ALTEA_HEADER_SOURCE && isAlteaPath()) {
-      const page = currentWixPageInfo();
-      const staff = extra.staff || {};
-      postToEmbed(embed, "ALTEA_HEADER_CONTEXT", {
-        systemName:page.name || "ALTEA",
-        pageName:page.name || "",
-        pageUrl:page.url || "",
-        station:alteaRuntimeContext.station || staff?.profile?.station || staff?.profile?.stationCode || "",
-        timeZone:alteaRuntimeContext.timeZone || staff?.profile?.timeZone || ""
-      });
+    if ((source === ALTEA_HEADER_SOURCE || source === ALTEA_FOOTER_SOURCE) && isAlteaPath()) {
+      const state = alteaChromeState(extra.staff || {});
+      if (source === ALTEA_HEADER_SOURCE) postToEmbed(embed, "ALTEA_HEADER_CONTEXT", state);
+      if (source === ALTEA_FOOTER_SOURCE) postToEmbed(embed, "ALTEA_FOOTER_STATE", state);
     }
     return true;
   }
@@ -418,20 +541,30 @@ async function handleMasterMessage(embed, message = {}) {
       systemName:String(payload.systemName || "").trim().slice(0,80),
       systemContext:String(payload.systemContext || "").trim().slice(0,120),
       station:String(payload.station || "").trim().toUpperCase().slice(0,12),
-      timeZone:String(payload.timeZone || "").trim().slice(0,80)
+      timeZone:String(payload.timeZone || "").trim().slice(0,80),
+      context:String(payload.context || "").trim().slice(0,120),
+      officeId:String(payload.officeId || "").trim().toUpperCase().slice(0,20),
+      workArea:String(payload.workArea || "").trim().toUpperCase().slice(0,1),
+      connected:typeof payload.connected === "boolean" ? payload.connected : undefined,
+      lmcMode:typeof payload.lmcMode === "boolean" ? payload.lmcMode : undefined,
+      systemMessage:payload.systemMessage && typeof payload.systemMessage === "object" ? payload.systemMessage : undefined
     };
     alteaRuntimeContext = {
       ...alteaRuntimeContext,
       ...Object.fromEntries(Object.entries(next).filter(([, value]) => Boolean(value)))
     };
-    postToEmbed(alteaHeaderEl(), "ALTEA_HEADER_CONTEXT", alteaRuntimeContext);
+    await pushAlteaChromeState();
     return true;
   }
 
 
-  if (source === CUSTOMER_HEADER_SOURCE && type === "SKANDI_EMBED_RESIZE") {
+  if (type === "SKANDI_EMBED_RESIZE" && CHROME_BY_SOURCE[source]) {
+    const definition = CHROME_BY_SOURCE[source];
     const requested = Number(payload.height);
-    const height = Number.isFinite(requested) ? Math.max(118, Math.min(1200, Math.round(requested))) : 118;
+    const minimum = Math.max(0, Number(definition.collapsedHeight || 0));
+    const maximum = Math.max(minimum || 1, Number(definition.maxHeight || 1200));
+    const fallback = minimum || 30;
+    const height = Number.isFinite(requested) ? Math.max(minimum, Math.min(maximum, Math.round(requested))) : fallback;
     try { if ("height" in embed) embed.height = height; } catch (_) {}
     return true;
   }
@@ -471,6 +604,17 @@ async function handleMasterMessage(embed, message = {}) {
         try { await authentication.logout(); } catch (_) {}
         wixLocationFrontend.to(MASTER_CONFIG.routes.home);
         return true;
+      case "CUSTOMER_SETTINGS_REQUEST":
+      case "SKANDI_SETTINGS_REQUEST":
+        pushCustomerSettingsState(embed);
+        return true;
+      case "UPDATE_SETTINGS": {
+        const state = persistCustomerSettings(payload?.settings || payload || message);
+        postToEmbed(embed, "CUSTOMER_SETTINGS_SAVED", { ok:true, state });
+        pushCustomerSettingsState(embed);
+        pushMasterConfig(embed, { settings:state });
+        return true;
+      }
       default:
         break;
     }
@@ -518,6 +662,31 @@ async function handleMasterMessage(embed, message = {}) {
   }
 
 
+  if (source === ALTEA_HEADER_SOURCE || source === ALTEA_FOOTER_SOURCE) {
+    if (type === "ALTEA_HEADER_READY" || type === "ALTEA_FOOTER_READY") {
+      await pushAlteaChromeState();
+      return true;
+    }
+    if (type === "ALTEA_WORK_AREA_CHANGE") {
+      const area = String(payload.area || "").trim().toUpperCase();
+      if (["A","B","C","D","E","F"].includes(area)) alteaRuntimeContext.workArea = area;
+      await pushAlteaChromeState();
+      return true;
+    }
+    if (type === "ALTEA_TOGGLE_CRYPTIC") {
+      alteaRuntimeContext.crypticActive = Boolean(payload.active);
+      await pushAlteaChromeState();
+      return true;
+    }
+    if (type === "ALTEA_OFFICE_CHANGE") {
+      const officeId = String(payload.officeId || "").trim().toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0,20);
+      if (officeId) alteaRuntimeContext.officeId = officeId;
+      await pushAlteaChromeState();
+      return true;
+    }
+  }
+
+
   if (type === "RIAINTRA_HEADER_READY" || type === "INTERNAL_HEADER_READY") {
     await pushStaffHeaderState(embed);
     return true;
@@ -558,7 +727,8 @@ function wireAllHtmlComponents() {
     ...IDS.customerFooters,
     ...IDS.internalHeaders,
     ...IDS.internalFooters,
-    ...IDS.alteaHeaders
+    ...IDS.alteaHeaders,
+    ...IDS.alteaFooters
   ];
   for (const id of idGroups) {
     const el = safeEl(id);
@@ -595,7 +765,8 @@ async function applyChromeVisibility() {
     setElementVisible(firstExisting(IDS.customerFooters), !internal),
     setElementVisible(firstExisting(IDS.internalHeaders), internal && !chromeFree),
     setElementVisible(firstExisting(IDS.internalFooters), internal && !chromeFree),
-    setElementVisible(firstExisting(IDS.alteaHeaders), internal && altea && !chromeFree)
+    setElementVisible(firstExisting(IDS.alteaHeaders), internal && altea && !chromeFree),
+    setElementVisible(firstExisting(IDS.alteaFooters), internal && altea && !chromeFree)
   ]);
 }
 
@@ -614,6 +785,7 @@ $w.onReady(async function () {
   const footer = customerFooterEl();
   const internalHeader = internalHeaderEl();
   const alteaHeader = alteaHeaderEl();
+  const alteaFooter = alteaFooterEl();
 
 
   if (!isInternalPath()) {
@@ -621,8 +793,8 @@ $w.onReady(async function () {
     if (footer) pushMasterConfig(footer);
   } else {
     if (internalHeader) await pushStaffHeaderState(internalHeader);
-    if (alteaHeader && isAlteaPath()) {
-      pushMasterConfig(alteaHeader, { staff:await getStaffState() });
+    if (isAlteaPath() && (alteaHeader || alteaFooter)) {
+      await pushAlteaChromeState();
     }
   }
 
