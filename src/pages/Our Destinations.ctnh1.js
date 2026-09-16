@@ -1,11 +1,11 @@
 import { SITE_MAP, APP_ROUTES, isSafeInternalRoute } from "public/siteMap.js";
+import { openCustomerLogin } from "public/customerAuthUi.js";
 // /src/pages/Our Destinations.ctnh1.js
 // SKANDI Destination Flow V9.2 — B-011.20 catalog synchronization recovery.
 // Preserves the installed V9.2 HTML/message contract while eliminating legacy RIA/FINAL/orchestrator imports.
 
 
 import wixLocation from "wix-location-frontend";
-import { authentication } from "wix-members-frontend";
 import { session } from "wix-storage";
 import {
   searchUnifiedOffers,
@@ -373,7 +373,7 @@ function liveHotel(item,language="EN"){
 async function makeCart(offer, search) {
   let cart = await createBookingCartFromOffer({ offer, search });
   if (cart?.requiresLogin) {
-    try { await authentication.promptLogin(); } catch (_) {}
+    try { await openCustomerLogin({ sourcePage: "DESTINATIONS", reason: "BOOKING_CART_AUTH" }); } catch (_) {}
     cart = await createBookingCartFromOffer({ offer, search });
   }
   if (!cart?.cartId) throw new Error(cart?.message || "The booking cart could not be created.");
