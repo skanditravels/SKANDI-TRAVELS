@@ -1,5 +1,5 @@
 // src/public/siteMap.js
-// SKANDI canonical route + global chrome registry — B-011.18
+// SKANDI canonical route + global chrome/auth-popup registry — B-011.23
 // Single source of truth for public/internal routes and global header/footer embeds.
 
 
@@ -58,6 +58,21 @@ export const APP_ROUTES = Object.freeze({
   travelInsurance: "/travel-info/insurance",
   specialAssistance: "/travel-info/special-assistance",
   flightStatus: "/travel-info/flight-status"
+});
+
+
+// Canonical customer-auth popup registry for PAGE-LEVEL customer actions.
+// The global SKANDI header remains owned by masterPage.js and is intentionally
+// not routed through these page-level popups. Wix opens popups by popup name.
+export const CUSTOMER_AUTH_POPUPS = Object.freeze({
+  login: Object.freeze({
+    name: "Log In Form (Popup)",
+    codeFile: "Log In Form (Popup).bytg4.js"
+  }),
+  resetPassword: Object.freeze({
+    name: "Reset Password (Popup)",
+    codeFile: "Reset Password (Popup).rygmm.js"
+  })
 });
 
 
@@ -126,6 +141,11 @@ export function getSiteRoute(key) {
 
 export function getGlobalChrome(key) {
   return Object.prototype.hasOwnProperty.call(GLOBAL_CHROME, key) ? GLOBAL_CHROME[key] : null;
+}
+
+
+export function getCustomerAuthPopup(key) {
+  return Object.prototype.hasOwnProperty.call(CUSTOMER_AUTH_POPUPS, key) ? CUSTOMER_AUTH_POPUPS[key] : null;
 }
 
 
