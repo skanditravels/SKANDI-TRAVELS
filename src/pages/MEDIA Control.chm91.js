@@ -1,585 +1,113 @@
-// Wix page code
-// Magazine Manager / VOY Control
-// HTML Component ID: #newsroomAdminEmbed
+// /src/pages/MEDIA Control.chm91.js
+// B-011.16 — supplied Media Control / VOY embed bridged to the canonical Supabase Asset Library.
 
 import wixLocation from "wix-location";
-import { authentication } from "wix-members-frontend";
-import { getStaffPortalSession } from "src/backend/RIA/staffPortalAuth.web";
-import { runInternalGlobalSearch } from "src/backend/FINAL/internalChrome.web";
 import {
-  getNewsroomAdminBootstrap,
-  listNewsroomAdminData,
-  saveNewsroomCategory,
-  saveNewsroomPost,
-  publishNewsroomPost,
-  archiveNewsroomPost,
-  saveNewsroomMediaAsset,
-  saveNewsroomPressContact
-} from "src/backend/FINAL/newsService.web";
-import {
-  getVoyAdminBootstrap,
-  saveVoyIssue,
-  saveVoyIssuePackage,
-  saveVoyPage,
-  saveVoyPages,
-  reorderVoyPages,
-  deleteVoyPage,
-  deleteVoyIssue,
-  publishVoyIssue,
-  archiveVoyIssue,
-  saveVoyEntity,
-  deleteVoyEntity
-} from "src/backend/FINAL/voyMagazineService.web";
-import {
-  listMediaAssets,
-  createMediaUpload,
-  finalizeMediaUpload,
-  refreshMediaAssetUrl
-} from "src/backend/FINAL/mediaControl.web";
+  listAssets,
+  checkAssetDuplicate,
+  prepareAssetUpload,
+  finalizeAssetUpload,
+  getAssetAccessUrl,
+  registerAssetUsage,
+  archiveAsset
+} from "backend/SKANDI_CORE/assets.web";
+import { SITE_MAP, isSafeInternalRoute } from "public/siteMap.js";
 
-const EMBED_ID = "#newsroomAdminEmbed";
-const EMBED_SOURCE = "SKANDI_NEWSROOM_CONTROL";
+const EMBED_ID = "#mediaControlEmbed";
+const CHILD_SOURCES = new Set(["SKANDI_MEDIA_CONTROL", "SKANDI_NEWSROOM_CONTROL"]);
 const PARENT_SOURCE = "SKANDI_WIX_PARENT";
-const CHROME_SOURCE = "SKANDI_INTERNAL_CHROME";
-const LOGIN_PATH = "/riaintra";
-const HOME_PATH = "/";
-const PUBLIC_VOY_PATH = "/voy-magazine";
-const MEDIA_CONTROL_PATH = "/media-control";
-
-let embed = null;
-let bootstrapPromise = null;
-
-function currentPath() {
-  return "/" + wixLocation.path.join("/");
-}
 
 function send(type, payload = {}) {
-  if (!embed) return;
-  embed.postMessage({
-    source: PARENT_SOURCE,
-    type,
-    payload,
-    timestamp: new Date().toISOString()
+  $w(EMBED_ID).postMessage({ source: PARENT_SOURCE, type, payload, timestamp: new Date().toISOString() });
+}
+function safeError(error) {
+  const message = String(error?.message || error?.details?.applicationError?.description || "").trim();
+  return { code: String(error?.code || "MEDIA_CONTROL_ACTION_FAILED"), message: message && message.length <= 420 ? message : "Media Control action failed." };
+}
+async function sendLibrary(payload = {}, responseType = "MEDIA_CONTROL_LIBRARY") {
+  const result = await listAssets({
+    visibility: payload.visibility || "",
+    assetType: payload.assetType || "",
+    libraryRoot: payload.libraryRoot || "",
+    libraryFolder: payload.libraryFolder || "",
+    category: payload.category || "",
+    search: payload.query || payload.search || ""
   });
-}
-
-function allowedInternalPath(path) {
-  const value = String(path || "");
-  return (
-    value === "/" ||
-    value === LOGIN_PATH ||
-    value === MEDIA_CONTROL_PATH ||
-    value.startsWith("/riaintra") ||
-    value.startsWith("/altea")
-  );
-}
-
-async function logout() {
-  try {
-    await authentication.logout();
-  } catch (error) {
-    console.warn("[Magazine Manager] Wix logout returned an error.", error);
-  }
-  wixLocation.to(HOME_PATH);
-}
-
-async function bootstrap(force = false) {
-  if (bootstrapPromise && !force) return bootstrapPromise;
-
-  bootstrapPromise = (async () => {
-    const portalSession = await getStaffPortalSession().catch(() => null);
-    if (
-      !portalSession ||
-      portalSession.authorized === false ||
-      portalSession.ok === false
-    ) {
-      wixLocation.to(LOGIN_PATH);
-      return null;
-    }
-
-    const [newsroomResult, voyResult] = await Promise.allSettled([
-      getNewsroomAdminBootstrap(),
-      getVoyAdminBootstrap()
-    ]);
-
-    const newsroomData =
-      newsroomResult.status === "fulfilled" ? newsroomResult.value : {};
-    const voyData = voyResult.status === "fulfilled" ? voyResult.value : {};
-    const profile =
-      voyData.profile ||
-      newsroomData.profile ||
-      portalSession.profile ||
-      {};
-
-    send("INTERNAL_CHROME_BOOTSTRAP", {
-      pageName: "Magazine Manager",
-      pagePath: currentPath(),
-      pageSubtitle: "VOY magazine, public newsroom and press publishing",
-      profile,
-      apps: newsroomData.apps || voyData.apps || [],
-      isAltea: false
-    });
-
-    if (newsroomResult.status === "fulfilled") {
-      send("NEWSROOM_ADMIN_BOOTSTRAP", newsroomData);
-    } else {
-      send("NEWSROOM_ADMIN_ERROR", {
-        message: userMessage(newsroomResult.reason, "Newsroom data could not be loaded."),
-        action: "NEWSROOM_BOOTSTRAP"
-      });
-    }
-
-    if (voyResult.status === "fulfilled") {
-      send("VOY_ADMIN_BOOTSTRAP_RESULT", voyData);
-    } else {
-      send("VOY_ADMIN_ERROR", {
-        message: userMessage(voyResult.reason, "VOY magazine data could not be loaded."),
-        action: "VOY_BOOTSTRAP"
-      });
-    }
-
-    return { portalSession, newsroomData, voyData };
-  })();
-
-  try {
-    return await bootstrapPromise;
-  } finally {
-    bootstrapPromise = null;
-  }
-}
-
-async function refreshVoy() {
-  const result = await getVoyAdminBootstrap();
-  send("VOY_ADMIN_BOOTSTRAP_RESULT", result);
-  return result;
-}
-
-async function refreshNewsroom(filters = {}) {
-  const result = await listNewsroomAdminData(filters);
-  send("NEWSROOM_ADMIN_DATA", result);
-  return result;
-}
-
-async function runVoyMutation(action, operation, successType = "VOY_ADMIN_SAVED") {
-  const result = await operation();
-  if (!result || result.ok === false) {
-    throw new Error(result?.error || `${action} failed.`);
-  }
-  send(successType, result);
-  return result;
-}
-
-function entityId(type, item = {}) {
-  const keys = {
-    article: ["articleId", "article_id", "_id"],
-    campaign: ["campaignId", "campaign_id", "_id"],
-    category: ["categoryId", "category_id", "_id"],
-    banner: ["bannerId", "banner_id", "_id"],
-    travel_card: ["cardId", "card_id", "_id"],
-    asset: ["assetId", "asset_id", "_id", "id"],
-    brand_kit: ["brandKitId", "brand_kit_id", "name"],
-    distribution_kit: ["kitId", "kit_id", "_id"]
-  };
-  for (const key of keys[type] || []) {
-    if (item[key]) return item[key];
-  }
-  return `${type}-${Date.now()}`;
-}
-
-async function saveEntity(type, item) {
-  return runVoyMutation(`SAVE_${type.toUpperCase()}`, () =>
-    saveVoyEntity({
-      entityType: type,
-      entityId: entityId(type, item),
-      issueId: item?.issueId || "",
-      item
-    })
-  );
-}
-
-function unsupportedConnector(type) {
-  send("VOY_ADMIN_ERROR", {
-    message:
-      "This connector needs its provider credentials and backend adapter before it can run. The magazine publishing, page editing, Supabase media library and public delivery functions are connected.",
-    action: type
-  });
-}
-
-async function sendMediaLibrary(payload = {}) {
-  const result = await listMediaAssets({
-    bucket: payload.bucket || "",
-    query: payload.query || payload.search || "",
-    imagesOnly: payload.imagesOnly === true,
-    limit: payload.limit || 5000
-  });
-  send("VOY_MEDIA_LIBRARY_RESULT", result);
+  send(responseType, result);
   return result;
 }
 
 $w.onReady(function () {
-  try {
-    embed = $w(EMBED_ID);
-  } catch (error) {
-    console.error(`[Magazine Manager] Missing HTML Component ${EMBED_ID}.`, error);
-    return;
-  }
-
-  embed.onMessage(async (event) => {
+  const embed = $w(EMBED_ID);
+  embed.onMessage(async event => {
     const msg = event?.data || {};
-    const source = msg.source || "";
-    const type = msg.type || "";
-    const payload = msg.payload || {};
-
+    const source = String(msg.source || "");
+    if (source && !CHILD_SOURCES.has(source)) return;
+    const type = String(msg.type || "");
+    const payload = msg.payload && typeof msg.payload === "object" ? msg.payload : {};
     try {
-      if (source === CHROME_SOURCE) {
-        if (type === "INTERNAL_CHROME_READY") {
-          await bootstrap();
+      switch (type) {
+        case "MEDIA_CONTROL_READY":
+        case "MEDIA_CONTROL_LIST":
+          await sendLibrary(payload);
+          return;
+        case "MEDIA_CONTROL_DUPLICATE_CHECK":
+          send("MEDIA_CONTROL_DUPLICATE_RESULT", await checkAssetDuplicate(payload));
+          return;
+        case "MEDIA_CONTROL_UPLOAD_PREPARE":
+          send("MEDIA_CONTROL_UPLOAD_READY", await prepareAssetUpload(payload));
+          return;
+        case "MEDIA_CONTROL_UPLOAD_FINALIZE":
+          send("MEDIA_CONTROL_UPLOAD_COMPLETE", await finalizeAssetUpload(payload));
+          return;
+        case "MEDIA_CONTROL_ACCESS_URL": {
+          const result = await getAssetAccessUrl(payload);
+          send("MEDIA_CONTROL_ACCESS_URL_RESULT", { ...result, assetId: payload.assetId || "", purpose: payload.purpose || "open" });
           return;
         }
-        if (type === "INTERNAL_LOGOUT") {
-          await logout();
+        case "MEDIA_CONTROL_REGISTER_USAGE":
+          send("MEDIA_CONTROL_USAGE_REGISTERED", await registerAssetUsage(payload));
+          return;
+        case "MEDIA_CONTROL_ARCHIVE":
+          send("MEDIA_CONTROL_ARCHIVED", await archiveAsset(payload));
+          return;
+
+        // Shared VOY media contract. It resolves to the same SKANDI_CORE asset service.
+        case "VOY_MEDIA_LIBRARY_REQUEST":
+        case "VOY_ASSET_UPLOAD_OPEN_REQUEST":
+          await sendLibrary(payload, "VOY_MEDIA_LIBRARY_RESULT");
+          return;
+        case "VOY_MEDIA_UPLOAD_CREATE": {
+          const result = await prepareAssetUpload(payload);
+          send("VOY_MEDIA_UPLOAD_READY", { ...result, clientRequestId: payload.clientRequestId || "" });
           return;
         }
-        if (type === "INTERNAL_NAVIGATE") {
-          const path = payload.path || msg.path || "";
-          if (allowedInternalPath(path)) wixLocation.to(path);
+        case "VOY_MEDIA_UPLOAD_FINALIZE":
+          send("VOY_MEDIA_UPLOAD_COMPLETE", await finalizeAssetUpload(payload));
+          return;
+        case "VOY_MEDIA_REFRESH_URL": {
+          const result = await getAssetAccessUrl(payload);
+          send("VOY_MEDIA_REFRESH_URL_RESULT", {
+            ...result,
+            assetId: payload.assetId || "",
+            purpose: payload.purpose || "preview"
+          });
           return;
         }
-        if (type === "INTERNAL_GLOBAL_SEARCH") {
-          send(
-            "INTERNAL_SEARCH_RESULTS",
-            await runInternalGlobalSearch(payload.query || "")
-          );
+        case "VOY_OPEN_MEDIA_CONTROL":
+          wixLocation.to(SITE_MAP.mediaControl || SITE_MAP.magazineManager);
           return;
-        }
-      }
-
-      if (source && source !== EMBED_SOURCE) return;
-
-      if (
-        type === "NEWSROOM_ADMIN_READY" ||
-        type === "VOY_ADMIN_BOOTSTRAP"
-      ) {
-        await bootstrap(type === "VOY_ADMIN_BOOTSTRAP" && payload.reason === "manual");
-        return;
-      }
-
-      if (type === "NEWSROOM_ADMIN_REFRESH") {
-        await refreshNewsroom(payload);
-        return;
-      }
-
-      if (type === "NEWSROOM_SAVE_CATEGORY") {
-        const result = await saveNewsroomCategory(payload.item || {});
-        if (!result.ok) throw new Error(result.error || "Category save failed.");
-        send("NEWSROOM_ADMIN_SAVED", result);
-        await refreshNewsroom({});
-        return;
-      }
-
-      if (type === "NEWSROOM_SAVE_POST") {
-        const result = await saveNewsroomPost(payload.item || {});
-        if (!result.ok) throw new Error(result.error || "Post save failed.");
-        send("NEWSROOM_ADMIN_SAVED", result);
-        await refreshNewsroom({});
-        return;
-      }
-
-      if (type === "NEWSROOM_PUBLISH_POST") {
-        if (payload.item) {
-          const saved = await saveNewsroomPost(payload.item);
-          if (!saved.ok) throw new Error(saved.error || "Post save failed.");
-        }
-        const result = await publishNewsroomPost(payload);
-        if (!result.ok) throw new Error(result.error || "Post publish failed.");
-        send("NEWSROOM_ADMIN_SAVED", result);
-        await refreshNewsroom({});
-        return;
-      }
-
-      if (type === "NEWSROOM_ARCHIVE_POST") {
-        const result = await archiveNewsroomPost(payload);
-        if (!result.ok) throw new Error(result.error || "Post archive failed.");
-        send("NEWSROOM_ADMIN_SAVED", result);
-        await refreshNewsroom({});
-        return;
-      }
-
-      if (type === "NEWSROOM_SAVE_MEDIA") {
-        const result = await saveNewsroomMediaAsset(payload.item || {});
-        if (!result.ok) throw new Error(result.error || "Media save failed.");
-        send("NEWSROOM_ADMIN_SAVED", result);
-        await refreshNewsroom({});
-        return;
-      }
-
-      if (type === "NEWSROOM_SAVE_CONTACT") {
-        const result = await saveNewsroomPressContact(payload.item || {});
-        if (!result.ok) throw new Error(result.error || "Contact save failed.");
-        send("NEWSROOM_ADMIN_SAVED", result);
-        await refreshNewsroom({});
-        return;
-      }
-
-      // ---------- Shared Supabase Media Control ----------
-      if (
-        type === "VOY_MEDIA_LIBRARY_REQUEST" ||
-        type === "VOY_ASSET_UPLOAD_OPEN_REQUEST"
-      ) {
-        await sendMediaLibrary({ ...payload, imagesOnly: payload.imagesOnly !== false });
-        return;
-      }
-
-      if (type === "VOY_MEDIA_UPLOAD_CREATE") {
-        send("VOY_MEDIA_UPLOAD_READY", await createMediaUpload(payload));
-        return;
-      }
-
-      if (type === "VOY_MEDIA_UPLOAD_FINALIZE") {
-        send("VOY_MEDIA_UPLOAD_COMPLETE", await finalizeMediaUpload(payload));
-        return;
-      }
-
-      if (type === "VOY_MEDIA_REFRESH_URL") {
-        send("VOY_MEDIA_REFRESH_URL_RESULT", await refreshMediaAssetUrl(payload));
-        return;
-      }
-
-      if (type === "VOY_OPEN_MEDIA_CONTROL") {
-        wixLocation.to(MEDIA_CONTROL_PATH);
-        return;
-      }
-
-      if (type === "VOY_ADMIN_SAVE_ISSUE_METADATA") {
-        await runVoyMutation(type, () => saveVoyIssue({ issue: payload.issue }));
-        await refreshVoy();
-        return;
-      }
-
-      if (type === "VOY_ADMIN_SAVE_ISSUE_WITH_UPLOAD") {
-        await runVoyMutation(type, () => saveVoyIssue({ issue: payload.issue }));
-        send("VOY_ADMIN_ERROR", {
-          message:
-            "Issue metadata was saved. Use Media Control for image assets; structured HTML pages publish without a PDF.",
-          action: type
-        });
-        await refreshVoy();
-        return;
-      }
-
-      if (type === "VOY_ADMIN_SAVE_ISSUE_PACKAGE") {
-        await runVoyMutation(type, () =>
-          saveVoyIssuePackage({ issue: payload.issue, pages: payload.pages })
-        );
-        await refreshVoy();
-        return;
-      }
-
-      if (type === "VOY_ADMIN_SAVE_PAGE") {
-        await runVoyMutation(type, () => saveVoyPage({ page: payload.page }));
-        await refreshVoy();
-        return;
-      }
-
-      if (type === "VOY_ADMIN_SAVE_PAGES") {
-        await runVoyMutation(type, () =>
-          saveVoyPages({ issueId: payload.issueId, pages: payload.pages })
-        );
-        await refreshVoy();
-        return;
-      }
-
-      if (type === "VOY_ADMIN_REORDER_PAGES") {
-        await runVoyMutation(type, () => reorderVoyPages(payload));
-        await refreshVoy();
-        return;
-      }
-
-      if (type === "VOY_ADMIN_DELETE_PAGE") {
-        await runVoyMutation(type, () => deleteVoyPage(payload));
-        await refreshVoy();
-        return;
-      }
-
-      if (type === "VOY_ADMIN_DELETE_ISSUE") {
-        await runVoyMutation(type, () => deleteVoyIssue(payload));
-        await refreshVoy();
-        return;
-      }
-
-      if (type === "VOY_ADMIN_PUBLISH_ISSUE") {
-        await runVoyMutation(
-          type,
-          () => publishVoyIssue(payload),
-          "VOY_ADMIN_PUBLISHED"
-        );
-        await refreshVoy();
-        return;
-      }
-
-      if (type === "VOY_ADMIN_ARCHIVE_ISSUE") {
-        await runVoyMutation(
-          type,
-          () => archiveVoyIssue(payload),
-          "VOY_ADMIN_ARCHIVED"
-        );
-        await refreshVoy();
-        return;
-      }
-
-      if (type === "VOY_ADMIN_SAVE_ARTICLE") {
-        await saveEntity("article", payload.article || {});
-        await refreshVoy();
-        return;
-      }
-      if (type === "VOY_ADMIN_SAVE_CAMPAIGN") {
-        await saveEntity("campaign", payload.campaign || {});
-        await refreshVoy();
-        return;
-      }
-      if (type === "VOY_ADMIN_SAVE_CATEGORY") {
-        await saveEntity("category", payload.category || {});
-        await refreshVoy();
-        return;
-      }
-      if (type === "VOY_ADMIN_SAVE_BANNER") {
-        await saveEntity("banner", payload.banner || {});
-        await refreshVoy();
-        return;
-      }
-      if (type === "VOY_ADMIN_SAVE_TRAVEL_CARD") {
-        await saveEntity("travel_card", payload.card || {});
-        await refreshVoy();
-        return;
-      }
-      if (type === "VOY_BRAND_KIT_SAVE") {
-        await saveEntity("brand_kit", {
-          brandKitId: "default-brand-kit",
-          ...(payload.brandKit || {})
-        });
-        await refreshVoy();
-        return;
-      }
-      if (type === "VOY_DISTRIBUTION_KIT_SAVE") {
-        await saveEntity("distribution_kit", payload.kit || {});
-        await refreshVoy();
-        return;
-      }
-      if (type === "VOY_ASSET_IMPORT_REQUEST") {
-        await saveEntity("asset", payload.asset || {});
-        await refreshVoy();
-        return;
-      }
-
-      const deleteMap = {
-        VOY_ADMIN_DELETE_ARTICLE: ["article", payload.articleId],
-        VOY_ADMIN_DELETE_CATEGORY: ["category", payload.categoryId],
-        VOY_ADMIN_DELETE_BANNER: ["banner", payload.bannerId],
-        VOY_ADMIN_DELETE_TRAVEL_CARD: ["travel_card", payload.cardId]
-      };
-      if (deleteMap[type]) {
-        const [entityType, entityIdValue] = deleteMap[type];
-        await runVoyMutation(type, () =>
-          deleteVoyEntity({ entityType, entityId: entityIdValue })
-        );
-        await refreshVoy();
-        return;
-      }
-
-      if (type === "VOY_QUALITY_LAB_REQUEST") {
-        const readiness = payload.readiness || {};
-        send("VOY_QUALITY_LAB_RESULT", {
-          result: {
-            readinessScore: readiness.score || 0,
-            pageWarnings: payload.localChecks?.pageWarnings || 0,
-            assetWarnings: payload.localChecks?.assetWarnings || 0,
-            articleDrafts: payload.localChecks?.articleDrafts || 0,
-            checks: payload.localChecks || {},
-            pages: payload.pages || []
-          }
-        });
-        return;
-      }
-
-      if (type === "VOY_PRINT_QA_REQUEST") {
-        send("VOY_PRINT_QA_RESULT", { result: payload.qa || {} });
-        return;
-      }
-
-      if (type === "VOY_BRAND_GUARD_REQUEST") {
-        send("VOY_BRAND_GUARD_RESULT", {
-          result: {
-            score: 100,
-            status: "LOCAL_RULES_CHECKED",
-            notes:
-              "The local brand rules were checked. Configure a copy-analysis adapter for semantic brand review."
-          }
-        });
-        return;
-      }
-
-      if (type === "VOY_DISTRIBUTION_KIT_REQUEST") {
-        send("VOY_DISTRIBUTION_KIT_RESULT", {
-          result: {
-            ...(payload.kit || {}),
-            summary:
-              "Distribution kit prepared from the active issue, page plan and campaign settings."
-          }
-        });
-        return;
-      }
-
-      if (type === "VOY_PUBLIC_PREVIEW_REQUEST") {
-        const issue = (await getVoyAdminBootstrap()).issues?.find(
-          (item) => String(item.issueId) === String(payload.issueId)
-        );
-        const query = issue?.slug ? `?issue=${encodeURIComponent(issue.slug)}` : "";
-        wixLocation.to(`${PUBLIC_VOY_PATH}${query}`);
-        return;
-      }
-
-      if (type === "NEWSROOM_ADMIN_NAVIGATE") {
-        if (allowedInternalPath(payload.path)) wixLocation.to(payload.path);
-        return;
-      }
-
-      if (type.startsWith("VOY_") && !type.endsWith("PANEL_CHANGED")) {
-        unsupportedConnector(type);
+        case "MEDIA_CONTROL_NAVIGATE":
+          if (isSafeInternalRoute(payload.path)) wixLocation.to(payload.path);
+          return;
+        default:
+          return;
       }
     } catch (error) {
-      const target = type.startsWith("NEWSROOM_")
-        ? "NEWSROOM_ADMIN_ERROR"
-        : "VOY_ADMIN_ERROR";
-      send(target, {
-        message: userMessage(error, "Magazine Manager action failed."),
-        action: type,
-        requestId: payload.requestId || ""
-      });
+      const safe = safeError(error);
+      send(type.startsWith("VOY_") ? "VOY_ADMIN_ERROR" : "MEDIA_CONTROL_ERROR", { action: type, ...safe });
     }
   });
 
-  void bootstrap();
+  send("MEDIA_CONTROL_HOST_READY", { version: "B-011.16", route: SITE_MAP.mediaControl || SITE_MAP.magazineManager });
 });
-
-function userMessage(error, fallback) {
-  const message = error instanceof Error ? error.message : String(error || "");
-  const map = {
-    VOY_EDITOR_ACCESS_DENIED:
-      "Your Wix account does not have Magazine Manager editor access.",
-    VOY_NOT_AUTHENTICATED: "Sign in to RIAINTRA and try again.",
-    VOY_PUBLIC_ORGANIZATION_NOT_CONFIGURED:
-      "Add VOY_PUBLIC_ORGANIZATION_ID to Wix Secrets Manager.",
-    VOY_ARCHIVE_BEFORE_DELETE:
-      "Archive a published issue before deleting it.",
-    VOY_ISSUE_HAS_NO_PAGES: "Add at least one page before publishing.",
-    VOY_SERVICE_UNAVAILABLE:
-      "The VOY publishing service is temporarily unavailable.",
-    MEDIA_NOT_AUTHENTICATED: "Sign in to RIAINTRA and try again.",
-    MEDIA_ACCESS_DENIED: "Your staff account does not have Media Control access.",
-    MEDIA_BUCKET_NOT_FOUND: "The selected Supabase Storage bucket no longer exists.",
-    MEDIA_FILE_TOO_LARGE: "The selected file is larger than the bucket limit.",
-    MEDIA_FILE_TYPE_NOT_ALLOWED: "That file type is not allowed in the selected bucket."
-  };
-  const code = Object.keys(map).find((key) => message.includes(key));
-  return code ? map[code] : message || fallback;
-}
