@@ -1,277 +1,109 @@
-// /WIX popup page
-import { APP_ROUTES } from "public/siteMap.js";
-/**
- * SKANDI Club auth modal controller — FIXED / defensive version
- *
- * Fixes:
- * - TypeError: modal.postMessage is not a function
- * - TypeError: trigger.onClick is not a function
- *
- * Required Wix elements:
- * 1) HTML Embed / HTML Component:
- *    ID: skandiClubAuthModal
- *    Must be the Wix "Embed HTML" / "HTML iframe" element, not a Box, Strip, Lightbox container, or regular iframe/site embed.
- *
- * 2) Menu trigger:
- *    ID: skandiClubMenuButton
- *    Must be a real Wix Button / Text / Image element that supports onClick().
- *    A native Wix Menu item does not work as #skandiClubMenuButton.
- */
-
+// /src/pages/SKANDI Club Log in.noml8.js
+// SKANDI Club page-level auth launcher — B-011.23.
+// Canonical Wix popups:
+// - Log In Form (Popup) / Log In Form (Popup).bytg4.js
+// - Reset Password (Popup) / Reset Password (Popup).rygmm.js
+// The global header is intentionally excluded from this page-level contract.
 
 import wixLocation from "wix-location-frontend";
-import { authentication, currentMember } from "wix-members-frontend";
+import { currentMember } from "wix-members-frontend";
+import { APP_ROUTES } from "public/siteMap.js";
+import { openCustomerLogin, openCustomerResetPassword } from "public/customerAuthUi.js";
 
-
-const CLUB_MODAL_ID = "#skandiClubAuthModal";
 const CLUB_MENU_BUTTON_ID = "#skandiClubMenuButton";
-
-
+const LEGACY_MODAL_ID = "#skandiClubAuthModal";
 const ACCOUNT_PATH = APP_ROUTES.myProfile;
 const MY_TRIPS_PATH = APP_ROUTES.myTrips;
 
+function getEl(selector) {
+  try { return $w(selector); } catch (_) { return null; }
+}
+
+function isHtmlComponent(element) {
+  return Boolean(element && typeof element.onMessage === "function" && typeof element.postMessage === "function");
+}
+
+function popupContext(extra = {}) {
+  return { sourcePage: "SKANDI_CLUB", returnTo: wixLocation.path?.length ? `/${wixLocation.path.join("/")}` : "/skandi-club", ...extra };
+}
 
 $w.onReady(async function () {
-  const modal = getEl(CLUB_MODAL_ID);
   const trigger = getEl(CLUB_MENU_BUTTON_ID);
+  if (trigger && typeof trigger.onClick === "function") {
+    trigger.onClick(() => openClubLoginFromCode({ trigger: "PAGE_BUTTON" }));
+  }
 
+  // Backward-compatible bridge only. The legacy custom HTML auth modal is no
+  // longer required; if it still exists in Wix, its actions are redirected to
+  // the canonical Wix popups and the element is kept hidden/collapsed.
+  const legacyModal = getEl(LEGACY_MODAL_ID);
+  if (isHtmlComponent(legacyModal)) {
+    legacyModal.onMessage(handleLegacyModalMessage);
+    try { if (typeof legacyModal.hide === "function") await legacyModal.hide(); } catch (_) {}
+    try { if (typeof legacyModal.collapse === "function") await legacyModal.collapse(); } catch (_) {}
+  }
 
-  if (!modal) {
-    console.error(`[SKANDI Club] Missing HTML embed ${CLUB_MODAL_ID}. Add an HTML Embed element and set its ID to skandiClubAuthModal.`);
+  const query = wixLocation.query || {};
+  if (String(query.forgotPassword || query.resetPassword || "") === "1") {
+    await openClubResetPasswordFromCode({ trigger: "QUERY" });
     return;
   }
-
-
-  if (!isHtmlComponent(modal)) {
-    console.error(
-      `[SKANDI Club] ${CLUB_MODAL_ID} exists, but it is not a Wix HTML Component. ` +
-      `It must be an "Embed HTML" element because only HTML Components support postMessage() and onMessage().`
-    );
-  } else {
-    modal.onMessage(handleModalMessage);
-  }
-
-
-  await setModalVisible(false);
-  await sendToModal("CLOSE", {});
-
-
-  if (trigger && typeof trigger.onClick === "function") {
-    trigger.onClick(openClubModal);
-  } else if (trigger) {
-    console.error(
-      `[SKANDI Club] ${CLUB_MENU_BUTTON_ID} exists, but it does not support onClick(). ` +
-      `This usually means it is a native Wix Menu element/menu item. ` +
-      `Use a real Wix Button/Text/Image element with ID skandiClubMenuButton, or use the page-load option in the README.`
-    );
-  } else {
-    console.warn(`[SKANDI Club] Optional trigger ${CLUB_MENU_BUTTON_ID} not found. You can still open by calling openClubModalFromCode().`);
-  }
-
-
-  // Optional: if you link a normal Wix menu item to /skandi-club-sign-up?openClub=1
-  // this opens the modal automatically on that page.
-  if (String(wixLocation.query?.openClub || "") === "1") {
-    await openClubModal();
+  if (String(query.openClub || query.login || "") === "1") {
+    await openClubLoginFromCode({ trigger: "QUERY" });
   }
 });
 
-
-async function handleModalMessage(event) {
-  const data = event.data || {};
+async function handleLegacyModalMessage(event) {
+  const data = event?.data || {};
   if (data.source !== "SKANDI_CLUB_AUTH_MODAL") return;
 
-
   switch (data.type) {
-    case "READY":
-      await postStatus();
-      break;
-
-
-    case "CLOSE":
-      await closeClubModal();
-      break;
-
-
     case "LOGIN":
-      await closeClubModal();
-      await openNativeAuth("login");
-      break;
-
-
+      await openClubLoginFromCode({ trigger: "LEGACY_MODAL", intent: "login" });
+      return;
     case "SIGNUP":
-      await closeClubModal();
-      await openNativeAuth("signup");
-      break;
-
-
+      await openClubLoginFromCode({ trigger: "LEGACY_MODAL", intent: "signup" });
+      return;
     case "FORGOT_PASSWORD":
-      await closeClubModal();
-      await openForgotPassword();
-      break;
-
-
+      await openClubResetPasswordFromCode({ trigger: "LEGACY_MODAL" });
+      return;
     case "ACCOUNT":
       wixLocation.to(ACCOUNT_PATH);
-      break;
-
-
+      return;
     case "MY_TRIPS":
       wixLocation.to(MY_TRIPS_PATH);
-      break;
-
-
+      return;
     default:
-      console.warn("[SKANDI Club] Unknown modal message:", data);
+      return;
   }
 }
 
-
-function getEl(selector) {
-  try {
-    return $w(selector);
-  } catch (error) {
-    return null;
-  }
+export function openClubModalFromCode(context = {}) {
+  return openClubLoginFromCode({ trigger: "COMPATIBILITY_EXPORT", ...context });
 }
 
-
-function isHtmlComponent(el) {
-  return Boolean(
-    el &&
-    typeof el.postMessage === "function" &&
-    typeof el.onMessage === "function"
-  );
+export function openClubLoginFromCode(context = {}) {
+  return openCustomerLogin(popupContext(context));
 }
 
-
-async function setModalVisible(visible) {
-  const modal = getEl(CLUB_MODAL_ID);
-  if (!modal) return;
-
-
-  try {
-    if (visible) {
-      if (typeof modal.expand === "function") await modal.expand();
-      if (typeof modal.show === "function") await modal.show();
-    } else {
-      if (typeof modal.hide === "function") await modal.hide();
-      if (typeof modal.collapse === "function") await modal.collapse();
-    }
-  } catch (error) {
-    console.warn("[SKANDI Club] Could not change modal visibility:", error);
-  }
+export function openClubResetPasswordFromCode(context = {}) {
+  return openCustomerResetPassword(popupContext(context));
 }
 
-
-async function sendToModal(type, payload = {}) {
-  const modal = getEl(CLUB_MODAL_ID);
-
-
-  if (!modal) return false;
-
-
-  if (typeof modal.postMessage !== "function") {
-    console.error(
-      `[SKANDI Club] Cannot send ${type}. ${CLUB_MODAL_ID} does not support postMessage(). ` +
-      `Replace it with a Wix HTML Embed / HTML Component and set the ID to skandiClubAuthModal.`
-    );
-    return false;
-  }
-
-
-  try {
-    modal.postMessage({
-      source: "SKANDI_WIX_PARENT",
-      type,
-      payload,
-      timestamp: new Date().toISOString(),
-    });
-    return true;
-  } catch (error) {
-    console.error(`[SKANDI Club] postMessage failed for ${type}:`, error);
-    return false;
-  }
-}
-
-
-export async function openClubModalFromCode() {
-  await openClubModal();
-}
-
-
-async function openClubModal() {
-  await setModalVisible(true);
-  const status = await getMemberStatus();
-
-
-  // Let the iframe finish rendering after expand/show.
-  setTimeout(() => {
-    sendToModal("OPEN", { status });
-  }, 120);
-}
-
-
-async function closeClubModal() {
-  await sendToModal("CLOSE", {});
-  await setModalVisible(false);
-}
-
-
-async function postStatus() {
-  const status = await getMemberStatus();
-  await sendToModal("STATUS", { status });
-}
-
-
-async function openNativeAuth(mode) {
-  try {
-    await authentication.promptLogin({ mode });
-    const status = await getMemberStatus();
-
-
-    await setModalVisible(true);
-    setTimeout(() => {
-      sendToModal("OPEN", { status });
-    }, 120);
-  } catch (error) {
-    // User may simply close the Wix login/signup modal.
-    console.warn(`[SKANDI Club] ${mode} cancelled or failed:`, error);
-  }
-}
-
-
-async function openForgotPassword() {
-  try {
-    await authentication.promptForgotPassword();
-  } catch (error) {
-    console.warn("[SKANDI Club] Password reset cancelled or failed:", error);
-  }
-}
-
-
-async function getMemberStatus() {
+export async function getClubMemberStatus() {
   try {
     const member = await currentMember.getMember();
-
-
-    if (!member) {
-      return { loggedIn: false };
-    }
-
-
+    if (!member) return { loggedIn: false };
     const firstName = member.contactDetails?.firstName || "";
     const lastName = member.contactDetails?.lastName || "";
     const fullName = `${firstName} ${lastName}`.trim();
-
-
     return {
       loggedIn: true,
       memberId: member._id,
       email: member.loginEmail || "",
-      name: fullName || member.profile?.nickname || member.loginEmail || "SKANDI Club member",
+      name: fullName || member.profile?.nickname || member.loginEmail || "SKANDI Club member"
     };
-  } catch (error) {
+  } catch (_) {
     return { loggedIn: false };
   }
 }
