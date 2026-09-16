@@ -50,6 +50,8 @@ const APP_CATALOG = Object.freeze({
   myroster: Object.freeze({ id:"myroster", title:"MyRoster", subtitle:"Shifts, duties and assignments", path:"/riaintra/success-factors/my-roster", group:"MyProfile", icon:"R" }),
   payroll: Object.freeze({ id:"payroll", title:"Pay & Time", subtitle:"Payroll and staff pay information", path:SITE_MAP.payroll, group:"MyProfile", icon:"P" }),
   "inventory-control": Object.freeze({ id:"inventory-control", title:"Inventory Control", subtitle:"Product, capacity and aircraft inventory", path:SITE_MAP.inventoryControl, group:"Administration", icon:"I" }),
+  "media-control": Object.freeze({ id:"media-control", title:"Media Control", subtitle:"Supabase asset library and controlled media uploads", path:SITE_MAP.mediaControl, group:"Administration", icon:"D" }),
+  "store-control": Object.freeze({ id:"store-control", title:"Store Control", subtitle:"The Store catalog, inventory and order operations", path:SITE_MAP.storeControl, group:"Administration", icon:"S" }),
   hr: Object.freeze({ id:"hr", title:"SuccessFactors", subtitle:"Staff and organization management", path:SITE_MAP.successFactors, group:"Administration", icon:"H" }),
   policies: Object.freeze({ id:"policies", title:"Policy Control", subtitle:"Internal policies and controlled documents", path:"/riaintra/success-factors/legal", group:"Administration", icon:"P" })
 });
