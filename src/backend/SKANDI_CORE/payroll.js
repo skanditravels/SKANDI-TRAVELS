@@ -1,7 +1,7 @@
 // /src/backend/SKANDI_CORE/payroll.js
-// SKANDI Backend Base 1.0 — B-008
+// SKANDI Backend Base 1.0 — B-011.22
 // Canonical Payroll business core.
-// 
+//
 // Payroll is the only owner of payroll setup, rates, periods, runs, line amounts,
 // adjustments and provider-export state. SuccessFactors may synchronize only the
 // derived employee/jurisdiction mirror needed to place an employee in Payroll.
@@ -69,6 +69,8 @@ function payrollProfileDto(row = {}, { includeCompensation = false } = {}) {
   const dto = {
     id: text(row.id, 80),
     staffKey: text(row.staff_key, 160),
+    agentId: normalizeSkId(row.agent_id || row.sk_id || row.staff_key),
+    agentUserUuid: text(row.agent_user_id, 80),
     agentUserId: text(row.agent_user_id, 80),
     skId: normalizeSkId(row.sk_id),
     displayName: text(row.display_name, 180),
@@ -129,6 +131,8 @@ function lineDto(row = {}, { includeRates = false } = {}) {
     id: text(row.id, 80),
     payrollRunId: text(row.payroll_run_id, 80),
     staffKey: text(row.staff_key, 160),
+    agentId: normalizeSkId(row.agent_id || row.sk_id || row.staff_key),
+    agentUserUuid: text(row.agent_user_id, 80),
     agentUserId: text(row.agent_user_id, 80),
     skId: normalizeSkId(row.sk_id),
     displayName: text(row.display_name, 180),
@@ -156,6 +160,8 @@ function adjustmentDto(row = {}) {
     payrollRunId: text(row.payroll_run_id, 80),
     payrollPeriodId: text(row.payroll_period_id, 80),
     staffKey: text(row.staff_key, 160),
+    agentId: normalizeSkId(row.agent_id || row.sk_id || row.staff_key),
+    agentUserUuid: text(row.agent_user_id, 80),
     agentUserId: text(row.agent_user_id, 80),
     skId: normalizeSkId(row.sk_id),
     adjustmentType: text(row.adjustment_type, 80),
@@ -270,21 +276,21 @@ export async function getPayrollWorkspaceCore() {
   };
 }
 
-async function resolveProfileTarget({ id = "", agentUserId = "", skId = "" } = {}) {
+async function resolveProfileTarget({ id = "", agentId = "", agentUserUuid = "", agentUserId = "", skId = "" } = {}) {
   const profileId = text(id, 80);
   if (profileId) return firstRow(await select("staff_payroll_profiles", { select: "*", id: `eq.${profileId}`, limit: 1 }));
-  const agentId = text(agentUserId, 80);
-  if (agentId) return firstRow(await select("staff_payroll_profiles", { select: "*", agent_user_id: `eq.${agentId}`, limit: 1 }));
-  const cleanSkId = normalizeSkId(skId);
-  if (cleanSkId) return firstRow(await select("staff_payroll_profiles", { select: "*", sk_id: `eq.${cleanSkId}`, limit: 1 }));
+  const canonicalAgentId = normalizeSkId(agentId || skId);
+  if (canonicalAgentId) return firstRow(await select("staff_payroll_profiles", { select: "*", agent_id: `eq.${canonicalAgentId}`, limit: 1 }));
+  const uuid = text(agentUserUuid || agentUserId, 80);
+  if (uuid) return firstRow(await select("staff_payroll_profiles", { select: "*", agent_user_id: `eq.${uuid}`, limit: 1 }));
   return null;
 }
 
 async function agentForProfile(input = {}, existing = null) {
-  const agentUserId = text(input.agentUserId || existing?.agent_user_id, 80);
-  if (agentUserId) return firstRow(await select("agent_users", { select: "*", id: `eq.${agentUserId}`, limit: 1 }));
-  const skId = normalizeSkId(input.skId || existing?.sk_id);
-  if (skId) return firstRow(await select("agent_users", { select: "*", sk_id: `eq.${skId}`, limit: 1 }));
+  const canonicalAgentId = normalizeSkId(input.agentId || input.skId || existing?.agent_id || existing?.sk_id);
+  if (canonicalAgentId) return firstRow(await select("agent_users", { select: "*", sk_id: `eq.${canonicalAgentId}`, limit: 1 }));
+  const uuid = text(input.agentUserUuid || input.agentUserId || existing?.agent_user_id, 80);
+  if (uuid) return firstRow(await select("agent_users", { select: "*", id: `eq.${uuid}`, limit: 1 }));
   return null;
 }
 
@@ -313,9 +319,10 @@ export async function savePayrollEmployeeProfileCore(input = {}) {
   }
 
   const body = {
-    staff_key: text(existing?.staff_key || input.staffKey || agent.sk_id || agent.id, 160),
+    staff_key: normalizeSkId(agent.sk_id),
+    agent_id: normalizeSkId(agent.sk_id),
     agent_user_id: agent.id,
-    sk_id: normalizeSkId(agent.sk_id) || null,
+    sk_id: normalizeSkId(agent.sk_id),
     display_name: text(agent.preferred_name || agent.display_name || [agent.first_name, agent.last_name].filter(Boolean).join(" ") || agent.sk_id, 180),
     email: text(agent.corporate_email_address || agent.email, 320) || null,
     employment_type: employmentType,
@@ -418,9 +425,10 @@ export async function createPayrollRunFromPeriodCore({ periodId = "" } = {}) {
       method: "POST",
       body: {
         payroll_run_id: run.id,
-        staff_key: profile.staff_key,
+        staff_key: profile.agent_id || profile.sk_id || profile.staff_key,
+        agent_id: profile.agent_id || profile.sk_id || profile.staff_key,
         agent_user_id: profile.agent_user_id,
-        sk_id: profile.sk_id,
+        sk_id: profile.agent_id || profile.sk_id || profile.staff_key,
         display_name: profile.display_name,
         currency: period.currency,
         base_salary: safeNumber(profile.base_salary, 0),
@@ -472,13 +480,17 @@ export async function savePayrollRunLineCore(input = {}) {
 export async function savePayrollAdjustmentCore(input = {}) {
   const session = await requirePayroll({ admin: true });
   const id = text(input.id, 80);
+  const agent = await agentForProfile(input, null);
+  if (!agent) throw new SkandiError("PAYROLL_ADJUSTMENT_EMPLOYEE_REQUIRED", "Employee is required.");
+  const canonicalAgentId = normalizeSkId(agent.sk_id);
   const body = {
     adjustment_key: text(input.adjustmentKey, 160) || `ADJ-${Date.now()}`,
     payroll_run_id: text(input.payrollRunId, 80) || null,
     payroll_period_id: text(input.payrollPeriodId, 80) || null,
-    staff_key: text(input.staffKey, 160) || null,
-    agent_user_id: text(input.agentUserId, 80) || null,
-    sk_id: normalizeSkId(input.skId) || null,
+    staff_key: canonicalAgentId,
+    agent_id: canonicalAgentId,
+    agent_user_id: agent.id,
+    sk_id: canonicalAgentId,
     adjustment_type: upper(input.adjustmentType || "OTHER", 80),
     amount: safeNumber(input.amount, 0),
     taxable: safeBoolean(input.taxable, true),
@@ -486,7 +498,6 @@ export async function savePayrollAdjustmentCore(input = {}) {
     status: upper(input.status || "DRAFT", 40),
     updated_at: new Date().toISOString()
   };
-  if (!body.staff_key && !body.agent_user_id && !body.sk_id) throw new SkandiError("PAYROLL_ADJUSTMENT_EMPLOYEE_REQUIRED", "Employee is required.");
   if (id) {
     await restRequest({ table: "staff_payroll_adjustments", method: "PATCH", query: { id: `eq.${id}` }, body });
   } else {
