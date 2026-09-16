@@ -1,5 +1,5 @@
 // /src/backend/SKANDI_CORE/orgStructure.js
-// SKANDI Backend Base 1.0 — B-011.21
+// SKANDI Backend Base 1.0 — B-011.22
 // Canonical SuccessFactors / Human Experience Management core.
 //
 // Authority boundary:
@@ -201,11 +201,15 @@ function safeBadge(row = {}) {
 
 function safeAgent(row = {}) {
   const stored = storedHrProfile(row);
+  const agentUserUuid = text(row.id, 80);
+  const agentId = normalizeSkId(row.agent_id || row.sk_id);
   return {
     ...stored,
-    id: text(row.id, 80),
-    agentUserId: text(row.id, 80),
-    skId: normalizeSkId(row.sk_id),
+    id: agentUserUuid,
+    agentId,
+    skId: agentId,
+    agentUserUuid,
+    agentUserId: agentUserUuid,
     firstName: text(row.first_name, 120),
     lastName: text(row.last_name, 120),
     preferredName: text(row.preferred_name, 120),
@@ -236,6 +240,8 @@ function safeAgent(row = {}) {
     assignedBase: text(row.base || row.station, 180),
     station: text(row.station || row.base, 180),
     countryCode: upper(row.country_code, 8),
+    managerAgentId: normalizeSkId(row.manager_agent_id),
+    managerAgentUserUuid: text(row.manager_agent_user_id, 80),
     managerAgentUserId: text(row.manager_agent_user_id, 80),
     managerRoleId: text(row.manager_role_id, 80),
     managerSkId: normalizeSkId(row.manager_sk_id),
@@ -254,12 +260,16 @@ function safeAssignment(row = {}) {
   if (!row || !row.id) return null;
   return {
     id: text(row.id, 80),
+    agentId: normalizeSkId(row.agent_id),
+    agentUserUuid: text(row.agent_user_id, 80),
     agentUserId: text(row.agent_user_id, 80),
     companyCode: text(row.company_code, 20),
     roleId: text(row.role_id, 80),
     jobCode: text(row.job_code, 80),
     departmentId: text(row.department_id, 80),
     baseCode: upper(row.base_code, 80),
+    managerAgentId: normalizeSkId(row.manager_agent_id),
+    managerAgentUserUuid: text(row.manager_agent_user_id, 80),
     managerAgentUserId: text(row.manager_agent_user_id, 80),
     managerRoleId: text(row.manager_role_id, 80),
     accessRole: upper(row.access_role, 80),
@@ -272,14 +282,16 @@ function safeAssignment(row = {}) {
   };
 }
 
-async function findAgent({ agentUserId = "", skId = "" } = {}) {
-  const byId = text(agentUserId, 80);
-  if (byId) {
-    return firstRow(await select("agent_users", { select: "*", id: `eq.${byId}`, limit: 1 }));
+async function findAgent({ agentId = "", agentUserUuid = "", agentUserId = "", skId = "" } = {}) {
+  const legacy = text(agentUserId, 80);
+  const legacyAsAgentId = /^[A-Z]{2}\d{4}$/.test(normalizeSkId(legacy)) ? normalizeSkId(legacy) : "";
+  const byAgentId = normalizeSkId(agentId || skId || legacyAsAgentId);
+  if (byAgentId) {
+    return firstRow(await select("agent_users", { select: "*", sk_id: `eq.${byAgentId}`, limit: 1 }));
   }
-  const bySkId = normalizeSkId(skId);
-  if (bySkId) {
-    return firstRow(await select("agent_users", { select: "*", sk_id: `eq.${bySkId}`, limit: 1 }));
+  const byUuid = text(agentUserUuid || (!legacyAsAgentId ? legacy : ""), 80);
+  if (byUuid) {
+    return firstRow(await select("agent_users", { select: "*", id: `eq.${byUuid}`, limit: 1 }));
   }
   return null;
 }
@@ -456,9 +468,9 @@ export async function getOrgStructureBootstrapCore() {
   };
 }
 
-export async function getEmployeeWorkspaceCore({ agentUserId = "", skId = "" } = {}) {
+export async function getEmployeeWorkspaceCore({ agentId = "", agentUserUuid = "", agentUserId = "", skId = "" } = {}) {
   const session = await requireStaffPortalSessionCore();
-  const target = await findAgent({ agentUserId, skId });
+  const target = await findAgent({ agentId, agentUserUuid, agentUserId, skId });
   if (!target) throw new SkandiError("HR_EMPLOYEE_NOT_FOUND", "Employee not found.", { publicMessage: "Employee not found." });
 
   const self = text(session.profile?.agentUserId || session.profile?.id, 80) === text(target.id, 80);
@@ -479,7 +491,7 @@ export async function getEmployeeWorkspaceCore({ agentUserId = "", skId = "" } =
 }
 
 async function validateAssignmentInput(input = {}) {
-  const target = await findAgent({ agentUserId: input.agentUserId, skId: input.skId });
+  const target = await findAgent({ agentId: input.agentId, agentUserUuid: input.agentUserUuid, agentUserId: input.agentUserId, skId: input.skId });
   if (!target) throw new SkandiError("HR_EMPLOYEE_NOT_FOUND", "Employee not found.");
   if (target.active !== true || ACTIVE_EMPLOYMENT_BLOCK.has(upper(target.employment_status || target.status, 80))) {
     throw new SkandiError("HR_EMPLOYEE_NOT_ACTIVE", "Employee is not active.", { publicMessage: "Organization assignment can only be changed for an active employee." });
@@ -543,10 +555,10 @@ async function validateAssignmentInput(input = {}) {
 
   let manager = null;
   const expectedManagerRoleId = text(role.reports_to_role_id, 80);
-  const requestedManagerId = text(input.managerAgentUserId, 80);
+  const requestedManagerId = text(input.managerAgentId || input.managerAgentUserId, 80);
 
   if (requestedManagerId) {
-    manager = await findAgent({ agentUserId: requestedManagerId });
+    manager = await findAgent({ agentId: input.managerAgentId, agentUserId: input.managerAgentUserId });
     if (!manager || manager.active !== true) throw new SkandiError("HR_MANAGER_INVALID", "Manager is not active.");
     const managerAssignment = await currentAssignment(manager.id);
     if (!managerAssignment || (expectedManagerRoleId && managerAssignment.role_id !== expectedManagerRoleId)) {
@@ -673,12 +685,14 @@ export async function provisionStaffOrganizationCore(input = {}) {
       table: "org_employee_assignments",
       method: "POST",
       body: {
+        agent_id: plan.target.sk_id,
         agent_user_id: plan.target.id,
         company_code: "SK01",
         role_id: plan.role.role_id,
         job_code: plan.role.job_code,
         department_id: plan.role.department_id,
         base_code: plan.base.code,
+        manager_agent_id: plan.manager?.sk_id || null,
         manager_agent_user_id: plan.manager?.id || null,
         manager_role_id: plan.role.reports_to_role_id || null,
         access_role: plan.accessRoleCode,
@@ -715,6 +729,7 @@ export async function provisionStaffOrganizationCore(input = {}) {
       table: "org_assignment_audit",
       method: "POST",
       body: {
+        agent_id: plan.target.sk_id,
         agent_user_id: plan.target.id,
         actor_agent_user_id: actorId,
         action: "ASSIGNMENT_CHANGED",
@@ -724,7 +739,7 @@ export async function provisionStaffOrganizationCore(input = {}) {
       }
     });
 
-    return getEmployeeWorkspaceCore({ agentUserId: plan.target.id });
+    return getEmployeeWorkspaceCore({ agentId: plan.target.sk_id });
   } catch (error) {
     const failures = await tryCompensate({
       newAssignmentId: text(newAssignment?.id, 80),
@@ -1014,6 +1029,7 @@ export async function createEmployeeCore(input = {}) {
       table: "org_assignment_audit",
       method: "POST",
       body: {
+        agent_id: skId,
         agent_user_id: inserted.id,
         actor_agent_user_id: actorId,
         action: "EMPLOYEE_CREATED",
@@ -1030,7 +1046,7 @@ export async function createEmployeeCore(input = {}) {
 
 export async function updateEmployeeCore(input = {}) {
   await requireHr({ manage: true });
-  const target = await findAgent({ agentUserId: input.agentUserId, skId: input.skId });
+  const target = await findAgent({ agentId: input.agentId, agentUserUuid: input.agentUserUuid, agentUserId: input.agentUserId, skId: input.skId });
   if (!target) throw new SkandiError("HR_EMPLOYEE_NOT_FOUND", "Employee not found.");
   const body = { updated_at: new Date().toISOString() };
   if (input.firstName !== undefined) body.first_name = text(input.firstName, 120);
@@ -1086,9 +1102,9 @@ export async function updateEmployeeCore(input = {}) {
   return { ok: true, employee: safeAgent(effective), wixMemberSync };
 }
 
-export async function setEmployeeActiveCore({ agentUserId = "", active = true } = {}) {
+export async function setEmployeeActiveCore({ agentId = "", agentUserUuid = "", agentUserId = "", skId = "", active = true } = {}) {
   const session = await requireHr({ manage: true });
-  const target = await findAgent({ agentUserId });
+  const target = await findAgent({ agentId, agentUserUuid, agentUserId, skId });
   if (!target) throw new SkandiError("HR_EMPLOYEE_NOT_FOUND", "Employee not found.");
   const selfId = text(session.profile?.agentUserId || session.profile?.id, 80);
   if (!active && selfId === text(target.id, 80)) throw new SkandiError("HR_SELF_DEACTIVATE_FORBIDDEN", "You cannot deactivate your own HR account.");
@@ -1104,9 +1120,9 @@ export async function setEmployeeActiveCore({ agentUserId = "", active = true } 
   return { ok: true, employee: safeAgent(saved || { ...target, ...body }) };
 }
 
-export async function provisionEmployeeWixMemberCore({ agentUserId = "", sendPasswordEmail = true } = {}) {
+export async function provisionEmployeeWixMemberCore({ agentId = "", agentUserUuid = "", agentUserId = "", skId = "", sendPasswordEmail = true } = {}) {
   await requireHr({ manage: true });
-  const target = await findAgent({ agentUserId });
+  const target = await findAgent({ agentId, agentUserUuid, agentUserId, skId });
   if (!target) throw new SkandiError("HR_EMPLOYEE_NOT_FOUND", "Employee not found.");
   return provisionWixMemberForAgent(target, { sendPasswordEmail });
 }
@@ -1121,7 +1137,7 @@ export async function getBadgeControlCore({ query = "" } = {}) {
 
 export async function saveBadgeControlCore(input = {}) {
   const session = await requireHr({ manage: true });
-  const target = await findAgent({ agentUserId: input.agentUserId });
+  const target = await findAgent({ agentId: input.agentId, agentUserUuid: input.agentUserUuid, agentUserId: input.agentUserId, skId: input.skId });
   if (!target) throw new SkandiError("HR_EMPLOYEE_NOT_FOUND", "Employee not found.");
   const payload = target.payload && typeof target.payload === "object" ? { ...target.payload } : {};
   const sf = payload.successFactors && typeof payload.successFactors === "object" ? { ...payload.successFactors } : {};
