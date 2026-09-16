@@ -1,7 +1,7 @@
 import { SITE_MAP } from "public/siteMap.js";
 // /src/backend/SKANDI_CORE/staffAuth.js
 // SKANDI Backend Base 1.0 — canonical staff identity + authorization core.
-// B-002
+// B-011.22 — canonical agentId contract (SK-ID = cross-system identity; UUID = internal only).
 //
 // Authority chain:
 //   Wix Members -> authenticated browser/member session
@@ -316,11 +316,16 @@ function displayName(agent = {}) {
 
 function publicProfile(agent, auth) {
   const assignment = auth.assignment || {};
+  const canonicalAgentId = normalizeSkId(agent.agent_id || agent.sk_id);
+  const agentUserUuid = text(agent.id, 80);
   return {
-    id: text(agent.id, 80),
-    agentUserId: text(agent.id, 80),
-    agentId: text(agent.agent_id, 120),
-    skId: normalizeSkId(agent.sk_id),
+    id: agentUserUuid,
+    // Canonical cross-system identity. Use agentId/SK-ID in page/module contracts.
+    agentId: canonicalAgentId,
+    skId: canonicalAgentId,
+    // Internal database surrogate retained only for UUID foreign-key writes and legacy compatibility.
+    agentUserUuid,
+    agentUserId: agentUserUuid,
     firstName: text(agent.first_name, 100),
     lastName: text(agent.last_name, 100),
     preferredName: text(agent.preferred_name, 100),
