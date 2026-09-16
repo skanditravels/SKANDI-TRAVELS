@@ -1,5 +1,5 @@
 // /src/pages/Inventory Control.jsdik.js
-// SKANDI Inventory Control — B-011.14 single-dispatch runtime bridge.
+// SKANDI Inventory Control — B-011.27 runtime convergence / dispatcher guard.
 // Preferred HTML component: #inventoryControlEmbed.
 //
 // The page imports exactly one Wix web method. All action routing lives in
@@ -15,7 +15,7 @@ const EMBED_IDS = [
 
 const CHILD_SOURCE = "SKANDI_INVENTORY_EMBED";
 const PARENT_SOURCE = "SKANDI_INVENTORY_PARENT";
-const VERSION = "B-011.14-INVENTORY-SINGLE-DISPATCH";
+const VERSION = "B-011.27-INVENTORY-SINGLE-DISPATCH";
 const BOOTSTRAP_REUSE_MS = 15000;
 
 let bootstrapPromise = null;
@@ -95,8 +95,21 @@ function validateDispatchResult(value, expectedType = "") {
   };
 }
 
+function requireInventoryDispatcher() {
+  if (typeof handleInventoryAction !== "function") {
+    const error = new Error("INVENTORY_WEB_FACADE_MISMATCH");
+    error.code = "INVENTORY_WEB_FACADE_MISMATCH";
+    error.publicMessage =
+      "Inventory Control page and backend are on different published versions. Publish Inventory Control.jsdik.js and backend/SKANDI_CORE/inventory.web.js together.";
+    throw error;
+  }
+
+  return handleInventoryAction;
+}
+
 async function dispatch(type, payload = {}) {
-  const response = await handleInventoryAction({
+  const dispatcher = requireInventoryDispatcher();
+  const response = await dispatcher({
     type,
     payload: object(payload)
   });
@@ -200,6 +213,8 @@ function errorPayload(error) {
       "This record is not linked to a Duffel source resource and cannot be refreshed from Duffel.",
     INVENTORY_ACTION_NOT_SUPPORTED:
       "Inventory Control page and backend action contract are out of sync. Publish both replacement files together.",
+    INVENTORY_WEB_FACADE_MISMATCH:
+      "Inventory Control page and backend are on different published versions. Publish both replacement files together.",
     INVENTORY_DISPATCH_RESPONSE_INVALID:
       "Inventory Control received an invalid response from its backend dispatcher.",
     INVENTORY_DISPATCH_RESPONSE_MISMATCH:
