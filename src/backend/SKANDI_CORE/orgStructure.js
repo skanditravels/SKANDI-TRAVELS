@@ -1,5 +1,5 @@
 // /src/backend/SKANDI_CORE/orgStructure.js
-// SKANDI Backend Base 1.0 — B-011.22
+// SKANDI Backend Base 1.0 — B-011.24
 // Canonical SuccessFactors / Human Experience Management core.
 //
 // Authority boundary:
@@ -45,6 +45,34 @@ function rows(value) {
 
 async function select(table, query = {}) {
   return rows(await restRequest({ table, method: "GET", query, prefer: "" }));
+}
+
+const SELECT_PAGE_SIZE = 500;
+
+async function selectAllPaged(table, query = {}, { pageSize = SELECT_PAGE_SIZE, maxRows = 20000 } = {}) {
+  const limit = Math.max(1, Math.min(Number(pageSize) || SELECT_PAGE_SIZE, 1000));
+  const result = [];
+  let offset = 0;
+
+  while (result.length < maxRows) {
+    const page = await select(table, {
+      ...query,
+      limit,
+      offset
+    });
+
+    result.push(...page);
+    if (page.length < limit) break;
+    offset += page.length;
+  }
+
+  if (result.length >= maxRows) {
+    throw new SkandiError("HR_CATALOG_TOO_LARGE", `SuccessFactors catalog exceeded ${maxRows} rows for ${table}.`, {
+      publicMessage: "The SuccessFactors organization catalog is too large to load safely."
+    });
+  }
+
+  return result;
 }
 
 function hasToken(values, candidates) {
@@ -312,15 +340,15 @@ async function currentAssignment(agentUserId) {
 
 async function loadCatalog() {
   const [departments, roles, bases, roleBaseRules, accessRoles, permissionPresets, countryRules, baseJurisdictions, roleRequirements] = await Promise.all([
-    select("org_departments", { select: "*", active: "eq.true", order: "sort_order.asc,name.asc" }),
-    select("org_job_roles", { select: "*", active: "eq.true", order: "sort_order.asc,title.asc" }),
-    select("org_bases", { select: "*", active: "eq.true", order: "sort_order.asc,name.asc" }),
-    select("org_role_base_rules", { select: "role_id,base_code,priority,active", active: "eq.true", order: "priority.asc" }),
-    select("org_access_roles", { select: "access_role_code,purpose,preset_id,provisioning_rule,restricted,active", active: "eq.true", order: "access_role_code.asc" }),
-    select("org_permission_presets", { select: "preset_id,name,description,permission_keys,allowed_apps,permission_groups,can_manage,can_access_payroll,is_hr,is_payroll_admin,is_system_admin,active", active: "eq.true", order: "preset_id.asc" }),
-    select("hr_country_rules", { select: "country_code,country_name,currency_code,employment_enabled,bank_scheme,employment_type_options,required_hr_fields,required_payroll_fields,field_rules,bank_fields,compliance_checks,notes,active", active: "eq.true", order: "country_name.asc" }),
-    select("hr_base_jurisdictions", { select: "base_code,country_code,region_code,payroll_region,legal_work_location,active", active: "eq.true", order: "base_code.asc" }),
-    select("hr_role_requirements", { select: "role_id,required_hr_fields,required_payroll_fields,required_documents,field_rules,active", active: "eq.true", order: "role_id.asc" })
+    selectAllPaged("org_departments", { select: "*", active: "eq.true", order: "sort_order.asc,name.asc" }),
+    selectAllPaged("org_job_roles", { select: "*", active: "eq.true", order: "sort_order.asc,title.asc" }),
+    selectAllPaged("org_bases", { select: "*", active: "eq.true", order: "sort_order.asc,name.asc" }),
+    selectAllPaged("org_role_base_rules", { select: "role_id,base_code,priority,active", active: "eq.true", order: "priority.asc,role_id.asc,base_code.asc" }),
+    selectAllPaged("org_access_roles", { select: "access_role_code,purpose,preset_id,provisioning_rule,restricted,active", active: "eq.true", order: "access_role_code.asc" }),
+    selectAllPaged("org_permission_presets", { select: "preset_id,name,description,permission_keys,allowed_apps,permission_groups,can_manage,can_access_payroll,can_access_grouptalk,is_hr,is_payroll_admin,is_system_admin,active", active: "eq.true", order: "preset_id.asc" }),
+    selectAllPaged("hr_country_rules", { select: "country_code,country_name,currency_code,employment_enabled,bank_scheme,employment_type_options,required_hr_fields,required_payroll_fields,field_rules,bank_fields,compliance_checks,notes,active", active: "eq.true", order: "country_name.asc" }),
+    selectAllPaged("hr_base_jurisdictions", { select: "base_code,country_code,region_code,payroll_region,legal_work_location,active", active: "eq.true", order: "base_code.asc" }),
+    selectAllPaged("hr_role_requirements", { select: "role_id,required_hr_fields,required_payroll_fields,required_documents,field_rules,active", active: "eq.true", order: "role_id.asc" })
   ]);
 
   return {
@@ -337,19 +365,17 @@ async function loadCatalog() {
 }
 
 async function loadStaffSummary() {
-  const list = await select("agent_users", {
-    select: "id,sk_id,first_name,last_name,preferred_name,display_name,corporate_email_address,email,wix_member_id,member_id,contact_id,badge_photo_url,employment_status,status,active,authorized,portal_access,company_code,role_id,job_code,job_title,position,department_id,department_code,department,base_code,base,station,country_code,manager_agent_user_id,manager_role_id,manager_sk_id,access_role,permission_preset,permission_keys,allowed_apps,permission_groups,payload",
-    order: "last_name.asc,first_name.asc",
-    limit: 1000
+  const list = await selectAllPaged("agent_users", {
+    select: "id,agent_id,sk_id,first_name,last_name,preferred_name,display_name,corporate_email_address,email,wix_member_id,member_id,contact_id,badge_photo_url,employment_status,status,active,authorized,portal_access,company_code,role_id,job_code,job_title,position,department_id,department_code,department,base_code,base,station,country_code,manager_agent_user_id,manager_agent_id,manager_role_id,manager_sk_id,access_role,permission_preset,permission_keys,allowed_apps,permission_groups,payload",
+    order: "last_name.asc,first_name.asc,sk_id.asc"
   });
   return list.map(safeAgent);
 }
 
 async function loadAssignmentsSummary() {
-  const list = await select("org_employee_assignments", {
+  const list = await selectAllPaged("org_employee_assignments", {
     select: "*",
-    order: "updated_at.desc",
-    limit: 1000
+    order: "updated_at.desc,id.asc"
   });
   return list.map(safeAssignment).filter(Boolean);
 }
@@ -444,7 +470,7 @@ export async function getOrgStructureBootstrapCore() {
 
   return {
     ok: true,
-    version: "BACKEND-BASE-1.0-B011.5-SUCCESSFACTORS",
+    version: "BACKEND-BASE-1.0-B011.24-SUCCESSFACTORS",
     session: safeSession(session),
     catalog,
     staff,
