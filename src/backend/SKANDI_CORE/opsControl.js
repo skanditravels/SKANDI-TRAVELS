@@ -1,5 +1,5 @@
 // /src/backend/SKANDI_CORE/opsControl.js
-// B-011.29 — OPS Control backend controller over the canonical workforce/roster domain.
+// B-011.31 — OPS Control backend controller over the canonical workforce/roster domain.
 // No duplicate workforce store: reads/writes existing staff, roster, time-off and assignment tables only.
 
 import { requireStaffPortalSessionCore } from "backend/SKANDI_CORE/staffAuth.js";
@@ -23,7 +23,7 @@ const TABLES = Object.freeze({
 
 const ASSIGNMENT_TABLES = new Set([TABLES.shifts, TABLES.crew, TABLES.drivers, TABLES.tours, TABLES.airport, TABLES.vehicles]);
 const OPS_GROUPS = new Set(["operations", "occ", "managers", "system-admin"]);
-const PROTOCOL_VERSION = "B-011.29-OPS-CONTROL";
+const PROTOCOL_VERSION = "B-011.31-OPS-CONTROL";
 
 const JURISDICTION_DEFAULTS = Object.freeze({
   "US-NY": Object.freeze({ name:"New York (NY Labor)", maxDuty7:60, maxFlight28:200, maxFlight365:2000, minRest:10, annualVacation:21 }),
@@ -164,9 +164,12 @@ function mapRequest(row={}){
   return { id, sourceId:clean(row.id,100), employeeId:upper(row.employee_id,80), status:status(row.status||"PENDING REVIEW"), payload:p, type };
 }
 
-async function loadBootstrap(session,{jurisdiction="US-NY"}={}){
-  const nowMs=Date.now(), start=new Date(nowMs-24*3600000), end=new Date(nowMs+8*24*3600000);
-  start.setUTCHours(0,0,0,0); end.setUTCHours(23,59,59,999);
+async function loadBootstrap(session,{jurisdiction="US-NY",windowStart=""}={}){
+  const requestedStart=new Date(windowStart);
+  const start=Number.isFinite(requestedStart.getTime()) ? requestedStart : new Date(Date.now()-24*3600000);
+  start.setUTCHours(0,0,0,0);
+  const end=new Date(start.getTime()+8*24*3600000);
+  end.setUTCHours(23,59,59,999);
   const [agents,shifts,clock,ledger,requests,balances,leave,crew,drivers,tours,airport,vehicles,jurisdictionRows]=await Promise.all([
     getRows(TABLES.agents,{active:"eq.true",authorized:"eq.true",portal_access:"eq.true",order:"display_name.asc"}),
     getRows(TABLES.shifts,{order:"start_time.asc"}), getRows(TABLES.clock,{order:"event_time.desc"}), getRows(TABLES.ledger,{order:"work_date.desc"}),
@@ -204,6 +207,7 @@ async function loadBootstrap(session,{jurisdiction="US-NY"}={}){
       assigned: current?.label || "OFF",
       badge: current?.type==="flight"?"purple":current?.type==="duty"?"green":current?.type==="sby"?"orange":"gray",
       role: operationalRole(a),
+      base: clean(a.base_code||a.station||a.base||a.country_code||"—",80),
       seeuor: clean(a.base_code||a.station||a.base||a.country_code||"—",80),
       alert,
       checkin,
@@ -229,6 +233,7 @@ async function loadBootstrap(session,{jurisdiction="US-NY"}={}){
   const jurisdictions=buildJurisdictions(jurisdictionRows);
   return {
     ok:true, protocolVersion:PROTOCOL_VERSION, generatedAt:now(), profile:profile(session), canManage:session.canManage===true || session.isSystemAdmin===true || hasGroup(session,"occ"),
+    windowStart,
     window:{startAt:windowStart,endAt:end.toISOString(),dayLabels:Array.from({length:8},(_,i)=>{const d=new Date(start.getTime()+i*86400000);return d.toLocaleDateString("en-US",{weekday:"short",day:"2-digit",timeZone:"UTC"})})},
     jurisdiction:jurisdictions[jurisdiction]?jurisdiction:Object.keys(jurisdictions)[0], jurisdictions,
     crewData, vacations:[...vacationMap.values()], trades, bids, openTime, balances, counts:{staff:crewData.length,assignments:assignmentRows.length,openTime:openTime.length,requests:requests.length}
