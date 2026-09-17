@@ -1,7 +1,7 @@
-# Booking Extra
+# Booking Extras
 
 STATUS: NEEDS REVIEW
-SLUG: /booking.extra
+SLUG: /booking.extras
 WIX PAGE: Booking.e8twe
 AREA: SKANDI
 LIVE HTML: YES
