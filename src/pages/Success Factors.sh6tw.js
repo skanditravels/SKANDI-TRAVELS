@@ -1,12 +1,11 @@
 // /src/pages/Success Factors.sh6tw.js
-// B-011.26 — SuccessFactors V9 web-module compatibility recovery.
+// B-011.30 — SuccessFactors V9 canonical single-bootstrap convergence.
 // UI source: supplied SAP/Fiori SuccessFactors V9 generation.
 // SuccessFactors owns Employee/HR, Organization, Recruiting, Performance/Learning, Badge and Access diagnostics.
 // Payroll and MyRoster/scheduling remain separate applications and are never mutated from this page.
 
 import wixLocation from "wix-location";
 import { APP_ROUTES, SITE_MAP, isSafeInternalRoute } from "public/siteMap.js";
-import * as orgStructureWeb from "backend/SKANDI_CORE/orgStructure.web";
 import {
   createEmployee,
   createRecruitingDocumentPacket,
@@ -51,7 +50,8 @@ const PARENT_SOURCE = "SKANDI_WIX_PARENT";
 let portalBootstrapCache = null;
 let portalBootstrapInFlight = null;
 let hrBootstrapInFlight = null;
-let compatibilityHrBootstrapCache = null;
+let orgBootstrapCache = null;
+let orgBootstrapInFlight = null;
 
 function send(type, payload = {}) {
   $w(EMBED_ID).postMessage({
@@ -110,17 +110,31 @@ function orgCatalogPayload(bootstrap = {}) {
     baseJurisdictions: catalog.baseJurisdictions || [],
     roleRequirements: catalog.roleRequirements || [],
     audit: bootstrap.assignments || [],
-    smartLogicVersion: "B-011.6-V9"
+    smartLogicVersion: "B-011.30-V9"
   };
 }
 
 function normalizePortalBootstrapFromHr(data = {}) {
   const session = data?.session || {};
-  const profile = session?.profile || null;
-  const hasHr = session?.isHr === true || session?.isSystemAdmin === true || session?.canManageHr === true;
+  const hasHr = session?.canReadHr === true || session?.isHr === true || session?.isSystemAdmin === true || session?.canManageHr === true;
+  const hasRecruiting = session?.canReadRecruiting === true || hasHr;
+  const rawProfile = session?.profile || null;
+  const profile = rawProfile ? {
+    ...rawProfile,
+    successFactorsAccess: {
+      fullHr: hasHr,
+      workforce: hasHr,
+      employee: hasHr,
+      organization: hasHr,
+      recruiting: hasRecruiting,
+      performance: hasHr,
+      badge: session?.canManageHr === true || session?.isSystemAdmin === true,
+      access: hasHr
+    }
+  } : null;
   return {
     ok: data?.ok !== false,
-    version: String(data?.version || "BACKEND-BASE-1.0-B011.26-SUCCESSFACTORS"),
+    version: String(data?.version || "BACKEND-BASE-1.0-B011.30-SUCCESSFACTORS"),
     profile,
     apps: [],
     news: [],
@@ -129,33 +143,36 @@ function normalizePortalBootstrapFromHr(data = {}) {
     notifications: [],
     favoriteApps: [],
     stats: {},
-    hrAccess: { read: hasHr, manage: session?.canManageHr === true || session?.isSystemAdmin === true, recruiting: hasHr },
+    hrAccess: { read: hasHr, manage: session?.canManageHr === true || session?.isSystemAdmin === true, recruiting: hasRecruiting },
     compatibilityMode: true
   };
 }
 
-async function callPortalBootstrap() {
-  const direct = orgStructureWeb?.getSuccessFactorsPortalBootstrap;
-  if (typeof direct === "function") {
-    compatibilityHrBootstrapCache = null;
-    return direct({});
-  }
+async function ensureOrgBootstrap({ refresh = false } = {}) {
+  if (!refresh && orgBootstrapCache) return orgBootstrapCache;
+  if (orgBootstrapInFlight) return orgBootstrapInFlight;
 
-  // Compatibility recovery for a published Wix web module that still exposes
-  // getOrgStructureBootstrap but not the newer portal bootstrap export.
-  const hr = await getOrgStructureBootstrap({});
-  compatibilityHrBootstrapCache = hr;
-  return normalizePortalBootstrapFromHr(hr);
+  orgBootstrapInFlight = getOrgStructureBootstrap({})
+    .then((data) => {
+      orgBootstrapCache = data;
+      return data;
+    })
+    .finally(() => {
+      orgBootstrapInFlight = null;
+    });
+
+  return orgBootstrapInFlight;
 }
 
 async function ensurePortalBootstrap({ refresh = false } = {}) {
   if (!refresh && portalBootstrapCache) return portalBootstrapCache;
   if (portalBootstrapInFlight) return portalBootstrapInFlight;
 
-  portalBootstrapInFlight = callPortalBootstrap()
+  portalBootstrapInFlight = ensureOrgBootstrap({ refresh })
     .then((data) => {
-      portalBootstrapCache = data;
-      return data;
+      const portal = normalizePortalBootstrapFromHr(data);
+      portalBootstrapCache = portal;
+      return portal;
     })
     .finally(() => {
       portalBootstrapInFlight = null;
@@ -174,14 +191,13 @@ async function sendHrBootstrap({ refreshPortal = false } = {}) {
   if (hrBootstrapInFlight) return hrBootstrapInFlight;
 
   hrBootstrapInFlight = (async () => {
-    const portal = await ensurePortalBootstrap({ refresh: refreshPortal });
+    const data = await ensureOrgBootstrap({ refresh: refreshPortal });
+    const portal = normalizePortalBootstrapFromHr(data);
+    portalBootstrapCache = portal;
     if (portal?.hrAccess?.read !== true) {
       send("HR_SESSION", { authorized: false, canManage: false });
       return false;
     }
-
-    const data = compatibilityHrBootstrapCache || await getOrgStructureBootstrap({});
-    compatibilityHrBootstrapCache = null;
     const staff = Array.isArray(data.staff) ? data.staff : [];
     const active = staff.filter((item) => item?.active !== false && !/inactive|terminated|archived|former|offboard/i.test(String(item?.employmentStatus || item?.status || "")));
     const archive = staff.filter((item) => !active.includes(item));
@@ -263,6 +279,7 @@ async function saveEmployeeFromV9(payload = {}) {
   }
 
   portalBootstrapCache = null;
+  orgBootstrapCache = null;
   await sendPortalBootstrap({ refresh: true });
   await sendHrBootstrap();
 }
@@ -323,6 +340,7 @@ async function handleMessage(type, payload) {
     case "HR_PROVISION_ORGANIZATION": {
       const result = await provisionStaffOrganization(payload);
       portalBootstrapCache = null;
+      orgBootstrapCache = null;
       send("HR_ORGANIZATION_SAVED", result);
       await sendPortalBootstrap({ refresh: true });
       await sendHrBootstrap();
@@ -337,6 +355,7 @@ async function handleMessage(type, payload) {
     case "HR_STAFF_ARCHIVE": {
       const result = await setEmployeeActive({ agentUserId: payload.id, active: false });
       portalBootstrapCache = null;
+      orgBootstrapCache = null;
       send("HR_STAFF_SAVED", { ok: true, item: result.employee, message: "Employee archived." });
       await sendPortalBootstrap({ refresh: true });
       await sendHrBootstrap();
@@ -354,6 +373,7 @@ async function handleMessage(type, payload) {
         markPrinted: true
       });
       portalBootstrapCache = null;
+      orgBootstrapCache = null;
       send("HR_BADGE_PRINTED", { ok: true, item: result.employee, badge: result.badge, message: "Badge print recorded." });
       await sendPortalBootstrap({ refresh: true });
       await sendHrBootstrap();
@@ -362,6 +382,7 @@ async function handleMessage(type, payload) {
     case "HR_PROVISION_WIX_MEMBER": {
       const result = await provisionEmployeeWixMember(payload);
       portalBootstrapCache = null;
+      orgBootstrapCache = null;
       send("HR_WIX_RESULT", result);
       await sendPortalBootstrap({ refresh: true });
       await sendHrBootstrap();
@@ -372,6 +393,7 @@ async function handleMessage(type, payload) {
       return;
     case "HR_BADGE_CONTROL_SAVE":
       portalBootstrapCache = null;
+      orgBootstrapCache = null;
       send("HR_BADGE_CONTROL_SAVED", await saveBadgeControl(payload));
       await sendPortalBootstrap({ refresh: true });
       await sendHrBootstrap();
@@ -481,7 +503,7 @@ $w.onReady(function () {
   // explicitly and every successful HR mutation refreshes the relevant state.
 
   send("SUCCESSFACTORS_HOST_READY", {
-    version: "B-011.24-SUCCESSFACTORS-V9",
+    version: "B-011.30-SUCCESSFACTORS-V9",
     embedId: EMBED_ID,
     payrollOwner: SITE_MAP.payroll,
     rosterOwner: APP_ROUTES.myRoster
