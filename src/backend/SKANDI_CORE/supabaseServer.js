@@ -44,6 +44,12 @@ const REST_OBJECTS = new Set([
   "uniform_storage_assets", "uniform_wallet_ledger", "uniform_wallets",
 
 
+  // Workforce / OPS Control
+  "roster_shifts", "roster_clock_events", "roster_time_ledger", "schedule_change_requests",
+  "time_off_balances", "vacation_sick_leave_ledger", "crew_assignments", "driver_assignments",
+  "tour_assignments", "airport_duty_assignments", "vehicle_assignments",
+
+
   // Inventory
   "inventory_master_entities", "inventory_localized_content", "inventory_media_assets",
   "inventory_entity_relations", "inventory_catalog_entries", "inventory_dated_inventory",
