@@ -1,10 +1,7 @@
-import {
-  getStaffPortalSession
-} from "backend/RIA/staffPortalAuth.web";
+// pages/Transport Compliance Control.js
+// MISSING "backend/SKANDI_CORE/documentControl.js), must be re-generated.
 
-import {
-  getTransportComplianceBootstrap
-} from "backend/FINAL/documentControl.web";
+import { getStaffPortalSession } from "backend/SKANDI_CORE/staffAuth.web";
 
 const HTML_ID = "#transportComplianceHtml";
 const CHILD_SOURCE = "SKANDI_TRANSPORT_COMPLIANCE_CONTROL";
