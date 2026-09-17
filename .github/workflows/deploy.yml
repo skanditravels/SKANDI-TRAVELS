@@ -1,0 +1,27 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ] # Runs every time you push code to the main branch
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install
+
+      # This step pulls your Supabase URI from GitHub Secrets and runs your migrations
+      - name: Run Database Migrations
+        env:
+          DATABASE_URL: ${{ secrets.YOUR_SECRET_NAME }} # Replace with the exact name you used in GitHub
+        run: npm run migrate 
