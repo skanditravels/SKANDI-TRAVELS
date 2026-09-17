@@ -1,7 +1,7 @@
 import { SITE_MAP } from "public/siteMap.js";
 // /src/backend/SKANDI_CORE/staffAuth.js
 // SKANDI Backend Base 1.0 — canonical staff identity + authorization core.
-// B-011.28 — canonical agentId contract + Uniform Center / Uniform Control routes.
+// B-011.29 — canonical agentId contract + Uniform + OPS Control routes.
 //
 // Authority chain:
 //   Wix Members -> authenticated browser/member session
@@ -65,7 +65,7 @@ const ALTEA_APPS = Object.freeze([
   Object.freeze({ id:"pss-dcs", title:"Amadeus Altéa Passenger Service System (PSS / DCS)", description:"Run check-in, seating, baggage, boarding and departure-control workflows.", icon:"passenger", code:"PSS / DCS", accent:"#007a64", path:"/riaintra/success-factors/altea/departure-control", groups:Object.freeze(["airport","operations","occ","system-admin"]) }),
   Object.freeze({ id:"timatic", title:"IATA Timatic (Regulatory & Document Check)", description:"Validate passport, visa, health and destination entry requirements before passenger acceptance.", icon:"passport", code:"DOCUMENT CHECK", accent:"#6650a4", path:"/riaintra/success-factors/altea/timatic", groups:Object.freeze(["sales","airport","destination","operations","occ","system-admin"]) }),
   Object.freeze({ id:"grouptalk", title:"GroupTalk", description:"Operational team communication, voice, field coordination and support channels.", icon:"communication", code:"GROUPTALK", accent:"#005eb8", path:"/riaintra/success-factors/altea/grouptalk", requiredApp:"grouptalk", requiresGroupTalk:true, groups:Object.freeze(["airport","sales","destination","operations","occ","managers","system-admin"]) }),
-  Object.freeze({ id:"occ", title:"OCC (Operations Control Center)", description:"Coordinate flights, disruptions, operational recovery and network control.", icon:"arrow", code:"OPERATIONS CONTROL", accent:"#6650a4", path:"/riaintra/success-factors/altea/occ", groups:Object.freeze(["operations","occ","system-admin"]) })
+  Object.freeze({ id:"occ", title:"OPS Control", description:"Coordinate workforce duties, transfers, tours, standby, disruption recovery, vacation, TripTrade and bidding control.", icon:"arrow", code:"OPERATIONS CONTROL", accent:"#6650a4", path:SITE_MAP.opsControl, groups:Object.freeze(["operations","occ","system-admin"]) })
 ]);
 
 
