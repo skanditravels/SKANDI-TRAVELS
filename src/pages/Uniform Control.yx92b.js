@@ -11,8 +11,7 @@
 import wixLocation from "wix-location";
 import { authentication } from "wix-members-frontend";
 import { getStaffPortalSession } from "backend/RIA/staffPortalAuth.web";
-import { runInternalGlobalSearch } from "backend/FINAL/internalChrome.web";
-
+import { APP_ROUTES, SITE_MAP, isSafeInternalRoute } from "public/siteMap.js";
 import {
   getUniformAdminBootstrap,
   adminSaveUniformCatalogItem,
@@ -22,7 +21,7 @@ import {
   adminUniformOrderAction,
   adminAdjustUniformWallet,
   adminDeleteUniformItem
-} from "backend/uniformCenterCms.web";
+} from "backend/uniformCenter.web";
 
 const HTML_ID = "#uniformControlEmbed";
 const CHILD_SOURCE = "SKANDI_UNIFORM_ADMIN";
