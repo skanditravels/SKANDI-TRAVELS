@@ -5,7 +5,7 @@ SLUG: /booking.offer
 WIX PAGE: Booking.e8twe
 AREA: SKANDI
 LIVE HTML: YES
-ELEMENT: [MULTISTATE]
+ELEMENT: bookingOfferEmbed
 LAST SYNCED: 2026-09-16
 
 ## HOW TO USE
@@ -14,7 +14,7 @@ STATUS (AGENT): "TODO", "IN PROGRESS", "REVISIONS NEEDED", "READY".
 END
 
 ### COMMENT SECTION (START ON A NEW ROW, LOG IF A CHANGE IS MADE THAT REQUIRES ATTENTION) 
-1. 9/17 12:09PM "Review, functions, flow, payload needs reviewed"
+1. 9/17 12:40PM "Review, functions, flow, payload needs reviewed"
 2.
 3.
 ...
