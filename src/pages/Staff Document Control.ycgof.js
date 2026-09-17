@@ -1,12 +1,10 @@
-import {
-  getStaffPortalSession
-} from "backend/RIA/staffPortalAuth.web";
+import { getStaffPortalSession } from "backend/SKANDI_CORE/staffAuth.web";
 
 import {
   getDocumentControlBootstrap,
   listDocumentControlData,
   issueControlledDocument
-} from "backend/FINAL/documentControl.web";
+} from "backend/SKANDI_CORE/documentControl.web";
 
 const HTML_ID = "#documentControlHtml";
 const CHILD_SOURCE = "SKANDI_DOCUMENT_CONTROL";
