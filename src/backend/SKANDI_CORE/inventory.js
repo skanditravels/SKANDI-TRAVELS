@@ -167,11 +167,17 @@ async function requireInventoryAccess({write=false}={}){
   const p=object(session.profile);
   const permissions=new Set([
     ...array(session.permissionKeys),...array(session.permissions),
-    ...array(session.allowedApps),...array(session.permissionGroups),
+    ...array(session.allowedApps),...array(session.permissionGroups),...array(session.apps),
     ...array(p.permissionKeys),...array(p.allowedApps),...array(p.permissionGroups)
   ].map(x=>lower(typeof x==="string"?x:(x?.id||x?.key||x?.permission),160)).filter(Boolean));
 
-  const all=lower(session.permissionPreset||p.permissionPreset,80)==="all" || permissions.has("system-admin");
+  // The canonical staff session already resolves privileged roles into effective apps.
+  // Inventory must honor that projection as well as the explicit system-admin flag so
+  // the page gate and the backend gate cannot disagree about the same staff session.
+  const all=
+    session.isSystemAdmin===true || p.isSystemAdmin===true ||
+    lower(session.permissionPreset||p.permissionPreset,80)==="all" ||
+    permissions.has("system-admin");
   const inventory=permissions.has("inventory-control") || permissions.has("inventory");
   if(!all&&!inventory){
     const e=new Error("INVENTORY_ACCESS_DENIED"); e.code="INVENTORY_ACCESS_DENIED"; throw e;
@@ -443,19 +449,42 @@ function catalogForRecord(entries,record){
 
 export async function getInventoryBootstrapCore(input={}){
   const session=await requireInventoryAccess();
+
+  // B-011 bootstrap rule: the initial iframe payload is a summary projection only.
+  // Large JSON/editor fields are loaded on demand by GET_RECORD / GET_AIRCRAFT.
+  // This prevents Wix serialization and the Supabase gateway from having to move
+  // multi-megabyte canonical rows before Inventory Control can render anything.
+  const canonicalBootstrapSelect=[
+    "id","public_id","entity_type","code","name","slug","status","active",
+    "customer_visible","staff_visible","altea_visible","featured","homepage_featured",
+    "searchable","collection_type","partner_tier","search_priority","search_keywords",
+    "sort_priority","parent_entity_id","supplier_entity_id","source","source_reference",
+    "source_table","source_id","created_at","updated_at"
+  ].join(",");
+  const airlineBootstrapSelect=[
+    "ID","iataCode","Title","shortName","status","active","sort_order",
+    "aircraftConfigurationsJson","source","source_reference"
+  ].join(",");
+  const aircraftBootstrapSelect=[
+    "id","airline_id","airline_code","aircraft_code","aircraft_name","manufacturer",
+    "family","variant","total_seats","hero_image_url","seatmap_image_url","status",
+    "customer_visible","staff_visible","active","sort_order","source","source_reference",
+    "created_at","updated_at"
+  ].join(",");
+
   const [canonical,sources,catalog,airlinesRaw,aircraftRaw,dated,flight,classes,schedule,nesting,languages]=await Promise.all([
     selectAllPaged("inventory_canonical_entities_v",{
-      select:"*",
+      select:canonicalBootstrapSelect,
       order:"entity_type.asc,sort_priority.asc",limit:"3000"
     }),
     selectAllPaged("inventory_source_registry",{select:"*",active:"eq.true",order:"id.asc",limit:"250"}),
     catalogRows(),
     selectAllPaged("travel_info_airlines",{
-      select:"*",
+      select:airlineBootstrapSelect,
       active:"eq.true",order:"sort_order.asc",limit:"250"
     }),
     selectAllPaged("travel_info_aircraft",{
-      select:"*",
+      select:aircraftBootstrapSelect,
       order:"airline_code.asc,sort_order.asc",limit:"1200"
     }),
     selectAllPaged("inventory_dated_inventory",{select:"*",order:"service_date.desc,id.asc",limit:"1200"}),
