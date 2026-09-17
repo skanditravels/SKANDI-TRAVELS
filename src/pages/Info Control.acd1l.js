@@ -1,8 +1,5 @@
-/*
- * Wix page code
- * Route: /riaintra/altea/help-data-controller
- * HTML component: #helpCenterAdminHtml
- */
+// Route: /riaintra/success-factors/altea/info-control
+// HTML component: #infoControlHtml
 
 import wixLocationFrontend from "wix-location-frontend";
 import {
@@ -13,7 +10,7 @@ import {
   archiveTravelInfoRecord
 } from "backend/FINAL/travelInfoControl.web";
 
-const HTML_ID = "#helpCenterAdminHtml";
+const HTML_ID = "#infoControlHtml";
 const CHILD_SOURCE = "SKANDI_HELP_DATA_CONTROLLER";
 const PARENT_SOURCE = "SKANDI_WIX_PARENT";
 
