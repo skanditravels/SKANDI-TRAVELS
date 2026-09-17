@@ -1,5 +1,5 @@
 // /src/pages/Inventory Control.jsdik.js
-// SKANDI Inventory Control — B-011.27 runtime convergence / dispatcher guard.
+// SKANDI Inventory Control — B-011.30 runtime and Supabase pagination convergence.
 // Preferred HTML component: #inventoryControlEmbed.
 //
 // The page imports exactly one Wix web method. All action routing lives in
@@ -15,7 +15,7 @@ const EMBED_IDS = [
 
 const CHILD_SOURCE = "SKANDI_INVENTORY_EMBED";
 const PARENT_SOURCE = "SKANDI_INVENTORY_PARENT";
-const VERSION = "B-011.27-INVENTORY-SINGLE-DISPATCH";
+const VERSION = "B-011.30-INVENTORY-SINGLE-DISPATCH";
 const BOOTSTRAP_REUSE_MS = 15000;
 
 let bootstrapPromise = null;
