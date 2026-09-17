@@ -1,5 +1,5 @@
 // /src/backend/SKANDI_CORE/orgStructure.js
-// SKANDI Backend Base 1.0 — B-011.24
+// SKANDI Backend Base 1.0 — B-011.30
 // Canonical SuccessFactors / Human Experience Management core.
 //
 // Authority boundary:
@@ -144,7 +144,10 @@ function safeSession(session = {}) {
     permissionPreset: text(session.permissionPreset, 100),
     isHr: session.isHr === true,
     isSystemAdmin: session.isSystemAdmin === true,
-    canManageHr: canManageHr(session)
+    canReadHr: canReadHr(session),
+    canManageHr: canManageHr(session),
+    canReadRecruiting: canReadRecruiting(session),
+    canManageRecruiting: canManageRecruiting(session)
   };
 }
 
@@ -404,7 +407,7 @@ export async function getSuccessFactorsPortalBootstrapCore() {
   };
   return {
     ok: true,
-    version: "BACKEND-BASE-1.0-B011.6-SUCCESSFACTORS-V9",
+    version: "BACKEND-BASE-1.0-B011.30-SUCCESSFACTORS-V9",
     profile,
     apps: rows(session.apps),
     news: [],
@@ -461,16 +464,27 @@ export async function saveSuccessFactorsSelfProfileCore(input = {}) {
 }
 
 export async function getOrgStructureBootstrapCore() {
-  const session = await requireHr({ manage: false });
+  const session = await requireStaffPortalSessionCore();
+  if (session?.authorized !== true || !session?.profile) {
+    throw new SkandiError("STAFF_AUTH_REQUIRED", "Authenticated staff session required.", {
+      publicMessage: "Sign in to RIAINTRA to open SuccessFactors."
+    });
+  }
+  const hrRead = canReadHr(session);
+  const hrManage = canManageHr(session);
+  const emptyCatalog = {
+    departments: [], roles: [], bases: [], roleBaseRules: [], accessRoles: [],
+    permissionPresets: [], countryRules: [], baseJurisdictions: [], roleRequirements: []
+  };
   const [catalog, staff, assignments] = await Promise.all([
-    loadCatalog(),
-    canManageHr(session) ? loadStaffSummary() : Promise.resolve([]),
-    canManageHr(session) ? loadAssignmentsSummary() : Promise.resolve([])
+    hrRead ? loadCatalog() : Promise.resolve(emptyCatalog),
+    hrManage ? loadStaffSummary() : Promise.resolve([]),
+    hrManage ? loadAssignmentsSummary() : Promise.resolve([])
   ]);
 
   return {
     ok: true,
-    version: "BACKEND-BASE-1.0-B011.24-SUCCESSFACTORS",
+    version: "BACKEND-BASE-1.0-B011.30-SUCCESSFACTORS",
     session: safeSession(session),
     catalog,
     staff,
