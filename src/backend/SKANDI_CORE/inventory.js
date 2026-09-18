@@ -141,7 +141,7 @@ async function select(table,query={}){
   return array(result);
 }
 
-const SELECT_PAGE_SIZE=500;
+const SELECT_PAGE_SIZE=3000;
 async function selectAllPaged(table,query={},maxRows=20000){
   const requested=Number(query.limit);
   const cap=Number.isFinite(requested)&&requested>0?Math.min(requested,maxRows):maxRows;
@@ -472,37 +472,34 @@ export async function getInventoryBootstrapCore(input={}){
     "created_at","updated_at"
   ].join(",");
 
-  const [canonical,sources,catalog,airlinesRaw,aircraftRaw,dated,flight,classes,schedule,nesting,languages]=await Promise.all([
-    selectAllPaged("inventory_canonical_entities_v",{
-      select:canonicalBootstrapSelect,
-      order:"entity_type.asc,sort_priority.asc",limit:"3000"
-    }),
-    selectAllPaged("inventory_source_registry",{select:"*",active:"eq.true",order:"id.asc",limit:"250"}),
+  const [
+    canonical, sources, catalog, airlinesRaw, aircraftRaw, 
+    dated, flight, classes, schedule, nesting, languages, cabinRows 
+  ] = await Promise.all([
+    selectAllPaged("inventory_canonical_entities_v", { select: canonicalBootstrapSelect, order: "entity_type.asc,sort_priority.asc", limit: "3000" }),
+    selectAllPaged("inventory_source_registry", { select: "*", active: "eq.true", order: "id.asc", limit: "250" }),
     catalogRows(),
-    selectAllPaged("travel_info_airlines",{
-      select:airlineBootstrapSelect,
-      active:"eq.true",order:"sort_order.asc",limit:"250"
-    }),
-    selectAllPaged("travel_info_aircraft",{
-      select:aircraftBootstrapSelect,
-      order:"airline_code.asc,sort_order.asc",limit:"1200"
-    }),
-    selectAllPaged("inventory_dated_inventory",{select:"*",order:"service_date.desc,id.asc",limit:"1200"}),
-    selectAllPaged("inventory_flight_legs",{select:"*",order:"departure_date.desc,flight_number.asc,id.asc",limit:"800"}),
-    selectAllPaged("inventory_flight_classes",{select:"*",order:"departure_date.desc,flight_number.asc,class_code.asc,id.asc",limit:"1600"}),
-    selectAllPaged("inventory_schedule_lines",{select:"*",order:"effective_date.desc,flight_number.asc,id.asc",limit:"800"}),
-    selectAllPaged("inventory_nesting_controls",{select:"*",order:"departure_date.desc,flight_number.asc,class_code.asc,id.asc",limit:"1600"}),
-    supportedLanguages()
+    selectAllPaged("travel_info_airlines", { select: airlineBootstrapSelect, active: "eq.true", order: "sort_order.asc", limit: "250" }),
+    selectAllPaged("travel_info_aircraft", { select: aircraftBootstrapSelect, order: "airline_code.asc,sort_order.asc", limit: "1200" }),
+    selectAllPaged("inventory_dated_inventory", { select: "*", order: "service_date.desc,id.asc", limit: "1200" }),
+    selectAllPaged("inventory_flight_legs", { select: "*", order: "departure_date.desc,flight_number.asc,id.asc", limit: "800" }),
+    selectAllPaged("inventory_flight_classes", { select: "*", order: "departure_date.desc,flight_number.asc,class_code.asc,id.asc", limit: "1600" }),
+    selectAllPaged("inventory_schedule_lines", { select: "*", order: "effective_date.desc,flight_number.asc,id.asc", limit: "800" }),
+    selectAllPaged("inventory_nesting_controls", { select: "*", order: "departure_date.desc,flight_number.asc,class_code.asc,id.asc", limit: "1600" }),
+    supportedLanguages(),
+    selectAllPaged("travel_info_aircraft_cabins", { select: "id,aircraft_id,cabin_code,cabin_name,seat_count,active", active: "eq.true", order: "aircraft_id.asc,id.asc", limit: "3000" })
   ]);
-  const records=canonical.map(normalizeCanonical);
-  const byType={};
-  for(const r of records) byType[r.entityType]=(byType[r.entityType]||0)+1;
 
-  const cabinRows=await selectAllPaged("travel_info_aircraft_cabins",{select:"id,aircraft_id,cabin_code,cabin_name,seat_count,active",active:"eq.true",order:"aircraft_id.asc,id.asc",limit:"3000"});
-  const sums=new Map();
-  for(const c of cabinRows) sums.set(clean(c.aircraft_id,80),(sums.get(clean(c.aircraft_id,80))||0)+(nullableNumber(c.seat_count,{integer:true})||0));
-  const mismatches=aircraftRaw.filter(a=>a.active!==false && (nullableNumber(a.total_seats,{integer:true})||0)!==(sums.get(clean(a.id,80))||0)).length;
+  const records = canonical.map(normalizeCanonical);
+  const byType = {};
+  for (const r of records) byType[r.entityType] = (byType[r.entityType] || 0) + 1;
 
+  // Notice how the old 'const cabinRows = await...' is completely gone from here!
+  
+  const sums = new Map();
+for (const c of cabinRows) sums.set(clean(c.aircraft_id, 80), (sums.get(clean(c.aircraft_id, 80)) || 0) + (nullableNumber(c.seat_count, { integer: true }) || 0));
+const mismatches=aircraftRaw.filter(a=>a.active!==false && (nullableNumber(a.total_seats,{integer:true})||0)!==(sums.get(clean(a.id,80))||0)).length;
+  
   return{
     ok:true,source:"SKANDI_INVENTORY_CORE",version:INVENTORY_CORE_VERSION,
     session:{
