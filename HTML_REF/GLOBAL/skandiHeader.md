@@ -1,15 +1,19 @@
 # **GLOBAL** SKANDI TRAVELS HEADER
 
+STATUS: NEEDS REVIEW
+SLUG: ***GLOBAL SECTION***
+WIX PAGE: `masterPage.js`
+AREA: SKANDI 
+LIVE HTML: YES
+ELEMENT: #skandiHeaderEmbed
+VERSION: B-011.18.4
+LAST SYNCED: 2026-09-18
+
+## HOW TO USE
+***STATUS (OWNER): "TODO", "IN PROGRESS", "NEEDS REVIEW", "REVISIONS NEEDED", "READY", "LIVE", "ARCHIVED"
+STATUS (AGENT): "TODO", "IN PROGRESS", "REVISIONS NEEDED", "READY".***
+
 ## INFO
-- **Display/page name:** Global Customer Header
-- **System area:** SKANDI
-- **Wix page filename:** `masterPage.js`
-- **Wix route/slug:** Global customer chrome on public SKANDI routes
-- **Wix HTML element ID:** `#skandiHeaderEmbed` / `#skandiCustomerHeaderEmbed`
-- **Current status:** ACTIVE / CANONICAL INTENDED SOURCE
-- **Source-of-truth status:** HTML_REF canonical readable mirror of `/embed/SKANDI-Global-Header.html`
-- **Current generation:** B-011.18.4
-- **Package:** PKG-BBASE-045
 - **Linked page controller:** `/src/pages/masterPage.js`
 - **Canonical backend facades:** `backend/SKANDI_CORE/customerSession.web.js`; `backend/SKANDI_CORE/staffAuth.web.js` indirectly through global master state where applicable
 - **Canonical backend core:** `backend/SKANDI_CORE/customerSession.js`; `backend/SKANDI_CORE/staffAuth.js`
@@ -29,10 +33,6 @@
 - **2026-09-18 — B-011.18.3:** Premium interaction refinement. Added pointer-reactive glass illumination, active-nav dot/underline motion, hover-only accent sweeps, richer search/settings focus depth, contained Club-panel reveal and mobile-drawer reveal effects. All effects are interaction-triggered, reduced-motion aware and remain entirely inside the fixed 118px envelope.
 - **2026-09-18 — B-011.18.4:** SKANDI Club login convergence. Reworked the fixed-height authentication surface to match the dark premium My Profile visual language: compact member-card introduction, ink/navy atlas background, champagne/aqua detailing, ivory floating-label credential controls, premium sign-in action, secure-access status treatment and mobile parity. Existing IDs, login/forgot-password/join intents, parent messaging and the 118px geometry invariant remain unchanged.
 - **2026-09-18 — B-011.18.4 packaging sync:** Normalized the install set to the same flat manifest format used by My Profile. Included only the current header HTML, complete HTML_REF mirror, `masterPage.js` and `siteMap.js`; customer-session backend files are intentionally omitted because this generation does not change their contract.
-
----
-
----
 
 ## COMPLETE INTENDED LIVE HTML SOURCE
 
