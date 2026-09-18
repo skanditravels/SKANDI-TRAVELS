@@ -2,7 +2,7 @@ import {
   requestApplicantPortalCode,
   verifyApplicantPortalCode,
   getApplicantPortalData
-} from "backend/careersService.web";
+} from "backend/careersService.web.js";
 
 import wixLocation from "wix-location-frontend";
 
