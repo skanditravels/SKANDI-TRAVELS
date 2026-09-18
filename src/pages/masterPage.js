@@ -7,8 +7,8 @@ import wixLocationFrontend from "wix-location-frontend";
 import wixSiteFrontend from "wix-site-frontend";
 import { currentMember, authentication } from "wix-members-frontend";
 import { local } from "wix-storage-frontend";
-import { getCustomerHeaderSession, subscribeCustomerNewsletter } from "backend/SKANDI_CORE/customerSession.web";
-import { getStaffPortalSession } from "backend/SKANDI_CORE/staffAuth.web";
+import { getCustomerHeaderSession, subscribeCustomerNewsletter } from "backend/SKANDI_CORE/customerSession.web.ja";
+import { getStaffPortalSession } from "backend/SKANDI_CORE/staffAuth.web.js";
 import { SITE_MAP, APP_ROUTES, GLOBAL_CHROME, isSafeInternalRoute } from "public/siteMap.js";
 
 
@@ -78,7 +78,8 @@ const MASTER_CONFIG = Object.freeze({
         { id:"hotels", label:"Hotels", path:SITE_MAP.hotels },
         { id:"packages", label:"Packages", path:SITE_MAP.packages },
         { id:"tours", label:"Tours & Activities", path:SITE_MAP.tours },
-        { id:"transfers", label:"Transfers", path:SITE_MAP.transfers }
+        { id:"transfers", label:"Transfers", path:SITE_MAP.transfers },
+        { id:"travelInfo", label:"Travel Info", path:SITE_MAP.travelInfo }
       ]),
       secondaryNav: Object.freeze([
         { id:"destinations", label:"Destinations", path:SITE_MAP.destinations },
@@ -196,7 +197,7 @@ const MASTER_CONFIG = Object.freeze({
       productName:"ALTEA",
       productContext:"SKANDI SYSTEMS",
       primaryNav:Object.freeze([
-        Object.freeze({ id:"altea-home", label:"Home", path:SITE_MAP.alteaLaunchpad }),
+        Object.freeze({ id:"altea-home", label:"Start", path:SITE_MAP.alteaLaunchpad }),
         Object.freeze({ id:"reservations", label:"Reservations", path:SITE_MAP.alteaReservations }),
         Object.freeze({ id:"inventory", label:"Inventory", path:SITE_MAP.inventoryControl }),
         Object.freeze({ id:"grouptalk", label:"GroupTalk", path:APP_ROUTES.groupTalk }),
