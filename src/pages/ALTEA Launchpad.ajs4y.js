@@ -8,7 +8,7 @@ import wixLocationFrontend from "wix-location-frontend";
 import {
   getStaffPortalSession,
   getAlteaLaunchpadApps
-} from "backend/SKANDI_CORE/staffAuth.web";
+} from "backend/SKANDI_CORE/staffAuth.web.js";
 
 
 const EMBED_IDS = ["#alteaOpsEmbed", "#alteaLaunchpadEmbed", "#alteaMasterEmbed"];
