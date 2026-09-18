@@ -1,13 +1,9 @@
 import wixLocationFrontend from "wix-location-frontend";
 import { currentMember, authentication } from "wix-members-frontend";
 import {
-  getCustomerHeaderSession,
-  subscribeCustomerNewsletter
-} from "backend/customerHeader.web";
-import {
   getCountryPage,
   searchCountryOffers
-} from "backend/FINAL/countryInventoryPage.web";
+} from "backend/SKANDI_CORE/destinationFlow.web.js";
 
 const EMBED_ID = "#countryDestinationHtml";
 const COUNTRY_SOURCE = "SKANDI_DYNAMIC_COUNTRY_PAGE";
