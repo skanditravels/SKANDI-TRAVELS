@@ -1,18 +1,16 @@
-import { SITE_MAP, APP_ROUTES, isSafeInternalRoute } from "public/siteMap.js";
-import { openCustomerLogin } from "public/customerAuthUi.js";
 // /src/pages/Our Destinations.ctnh1.js
 // SKANDI Destination Flow V9.2 — B-011.20 catalog synchronization recovery.
 // Preserves the installed V9.2 HTML/message contract while eliminating legacy RIA/FINAL/orchestrator imports.
-
-
+import { SITE_MAP, APP_ROUTES, isSafeInternalRoute } from "public/siteMap.js";
+import { openCustomerLogin } from "public/customerAuthUi.js";
 import wixLocation from "wix-location-frontend";
 import { session } from "wix-storage";
 import {
   searchUnifiedOffers,
   createBookingCartFromOffer,
   searchLiveStays
-} from "backend/SKANDI_CORE/customerBooking.web";
-import { getDestinationFlowCatalog } from "backend/SKANDI_CORE/destinationFlow.web";
+} from "backend/SKANDI_CORE/customerBooking.web.js";
+import { getDestinationFlowCatalog } from "backend/SKANDI_CORE/destinationFlow.web.js";
 
 
 const DESTINATION_EMBED_IDS = ["#htmlDestinations", "#destinationFlowEmbed", "#htmlDestination", "#destinationsEmbed"];
