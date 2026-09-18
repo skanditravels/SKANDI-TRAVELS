@@ -10,7 +10,7 @@
 
 import wixLocation from "wix-location";
 import { authentication } from "wix-members-frontend";
-import { getStaffPortalSession } from "backend/SKANDI_CORE/staffAuth.web";
+import { getStaffPortalSession } from "backend/SKANDI_CORE/staffAuth.web.js";
 import { APP_ROUTES, SITE_MAP, isSafeInternalRoute } from "public/siteMap.js";
 import {
   getUniformAdminBootstrap,
