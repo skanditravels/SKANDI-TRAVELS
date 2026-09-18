@@ -4,12 +4,12 @@ import wixEcomFrontend from "wix-ecom-frontend";
 import {
   listStorefrontProducts,
   resolveStoreVariant
-} from "backend/skandiStorefront.web";
+} from "backend/SKANDI_CORE/skandiStorefront.web";
 
 import {
   getStorefrontCartV2,
   addProductToCurrentCartV2
-} from "backend/storeCartV2.web";
+} from "backend/SKANDI_CORE/storeCartV2.web";
 
 const EMBED_ID =
   "#skandiStoreEmbed";
