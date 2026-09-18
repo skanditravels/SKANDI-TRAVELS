@@ -42,7 +42,7 @@ import {
   updateRecruitingCandidateStage,
   verifyRecruitingDocument,
   verifyRecruitingHistory
-} from "backend/SKANDI_CORE/orgStructure.web";
+} from "backend/SKANDI_CORE/orgStructure.web.js";
 
 const EMBED_ID = "#staffHrEmbed";
 const CHILD_SOURCES = new Set(["SKANDI_HR_STAFF", "SKANDI_SUCCESSFACTORS"]);
