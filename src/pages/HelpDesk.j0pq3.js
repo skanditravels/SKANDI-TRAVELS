@@ -11,13 +11,13 @@ import {
   listStaffHelpDeskSupportCases,
   getStaffHelpDeskSupportCase,
   addStaffHelpDeskSupportMessage
-} from "backend/SKANDI_CORE/customerSupport.web";
+} from "backend/SKANDI_CORE/customerSupport.web.js";
 import {
   getGroupTalkBootstrap,
   getGroupTalkTickets,
   createGroupTalkTicket,
   replyToGroupTalkTicket
-} from "backend/SKANDI_CORE/groupTalk.web";
+} from "backend/SKANDI_CORE/groupTalk.web.js";
 
 
 const EMBED_ID = "#helpDeskEmbed";
