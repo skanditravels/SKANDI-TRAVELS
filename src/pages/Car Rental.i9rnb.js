@@ -12,7 +12,7 @@ import {
   commitCarBooking,
   loadCustomerCarBooking as getCustomerDuffelCarBooking,
   cancelCustomerCarBooking as cancelCustomerDuffelCarBooking
-} from "backend/SKANDI_CORE/customerBooking.web";
+} from "backend/SKANDI_CORE/customerBooking.web.js";
 
 
 let currentCartId = "";
