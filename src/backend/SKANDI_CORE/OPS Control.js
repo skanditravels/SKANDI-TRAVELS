@@ -2,8 +2,8 @@
 // B-011.29 — Wix page bridge for #opsControlEmbed. Visual/UI ownership remains in the supplied Jeppesen HTML.
 import wixLocation from "wix-location";
 import { authentication } from "wix-members-frontend";
-import { getStaffPortalSession } from "backend/SKANDI_CORE/staffAuth.web";
-import { getOpsControlBootstrap, handleOpsControlAction } from "backend/SKANDI_CORE/opsControl.web";
+import { getStaffPortalSession } from "backend/SKANDI_CORE/staffAuth.web.js";
+import { getOpsControlBootstrap, handleOpsControlAction } from "backend/SKANDI_CORE/opsControl.web.js";
 
 const EMBED_IDS=["#opsControlEmbed","#occEmbed","#htmlOpsControl"];
 const SOURCE="SKANDI_OPS_CONTROL";
