@@ -2,13 +2,13 @@
 // B-011.25 canonical GroupTalk page bridge. Single-flight bootstrap + Supabase Realtime + LiveKit; no Pusher or legacy backend dependencies.
 import wixLocation from "wix-location";
 import { authentication } from "wix-members-frontend";
-import { getStaffPortalSession } from "backend/SKANDI_CORE/staffAuth.web";
+import { getStaffPortalSession } from "backend/SKANDI_CORE/staffAuth.web.js";
 import {
   getGroupTalkBootstrap, getGroupTalkRealtimeConfig, updateGroupTalkPresence, getGroupTalkPresence,
   createLiveKitToken, triggerGroupTalkEvent, getPhoneBook, sendLocationPing, getLiveLocations,
   createGroupTalkTicket, getGroupTalkTickets, replyToGroupTalkTicket, searchGroupTalkHistory,
   adminSaveGroup, adminSetMembership, getTicketCategories, saveTicketCategory, deleteTicketCategory
-} from "backend/SKANDI_CORE/groupTalk.web";
+} from "backend/SKANDI_CORE/groupTalk.web.js";
 
 
 const EMBED="#htmlGroupTalk", SOURCE="GROUPTALK_HTML", PARENT="SKANDI_WIX_PARENT", CHROME="SKANDI_INTERNAL_CHROME";
