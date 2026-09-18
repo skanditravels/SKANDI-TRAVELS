@@ -20,7 +20,7 @@ import {
   storeSeatSelections as saveSeatSelections,
   loadBookingConfirmation as getSourceAwareBookingConfirmation,
   loadBookingDocuments as getTravelDocumentsForCart
-} from "backend/SKANDI_CORE/customerBooking.web";
+} from "backend/SKANDI_CORE/customerBooking.web.js";
 
 
 let activeProductType = "FLIGHT";
