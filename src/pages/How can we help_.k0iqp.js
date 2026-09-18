@@ -12,7 +12,7 @@ import {
   startAlexandraSupportSession,
   requestCustomerHumanHandoff,
   addCustomerLiveSupportMessage
-} from "backend/SKANDI_CORE/customerSupport.web";
+} from "backend/SKANDI_CORE/customerSupport.web.js";
 
 
 const HELP_EMBED_ID = "#skandiHelpCenterEmbed";
@@ -24,7 +24,7 @@ const PARENT_SOURCE = "SKANDI_WIX_PARENT";
 
 // Replace with the PUBLIC Asset Library URL for asset key `alexandra-support-avatar` after upload.
 // The chat HTML handles an empty value with the "A" fallback avatar.
-const ALEXANDRA_AVATAR_MP4_URL = "";
+const ALEXANDRA_AVATAR_MP4_URL = "https://video.wixstatic.com/video/394052_b44198f20fc44baa90b3fc03d87602ea/1080p/mp4/file.mp4";
 
 
 function obj(value) { return value && typeof value === "object" && !Array.isArray(value) ? value : {}; }
