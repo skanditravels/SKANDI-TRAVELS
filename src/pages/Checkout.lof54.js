@@ -10,7 +10,7 @@ import {
   updateStoreCartLineItem,
   removeStoreCartLineItem,
   prepareStorePayment
-} from "backend/storeCheckout.web";
+} from "backend/storeCheckout.web.js";
 
 const EMBED_ID =
   "#storeCheckoutEmbed";
