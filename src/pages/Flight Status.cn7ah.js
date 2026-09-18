@@ -2,7 +2,7 @@
 // HTML Embed ID: #flightStatusEmbed
 /* global $w */
 
-import { searchFlightStatus } from "backend/FINAL/flightStatusService.web";
+import { searchFlightStatus } from "backend/SKANDI_CORE/flightStatusService.web.js";
 
 const EMBED_ID = "#flightStatusEmbed";
 const HTML_SOURCE = "SKANDI_FLIGHT_STATUS";
