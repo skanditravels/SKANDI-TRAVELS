@@ -1,4 +1,4 @@
-# SKANDI Club My Profile
+# MY CLUB PROFILE
 
 STATUS: NEEDS REVIEW
 SLUG: `/my-profile`
