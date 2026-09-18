@@ -7,7 +7,7 @@ import {
   searchUnifiedOffers,
   createBookingCartFromOffer
 } from "backend/SKANDI_CORE/customerBooking.web";
-import { getHomeContent, getHomeSearchLocations } from "backend/SKANDI_CORE/homeContent.web";
+import { getHomeContent, getHomeSearchLocations } from "backend/SKANDI_CORE/homeContent.web.js";
 import { searchLiveStays } from "backend/SKANDI_CORE/customerBooking.web";
 import { APP_ROUTES } from "public/siteMap.js";
 import { openCustomerLogin } from "public/customerAuthUi.js";
