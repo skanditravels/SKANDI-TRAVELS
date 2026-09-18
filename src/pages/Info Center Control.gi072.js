@@ -1,6 +1,6 @@
 import wixLocation from "wix-location";
 import { authentication } from "wix-members-frontend";
-import { getStaffPortalSession } from "backend/RIA/staffPortalAuth.web";
+import { getStaffPortalSession } from "backend/SKANDI_CORE/staffAuth.web.js";
 import { runInternalGlobalSearch } from "backend/FINAL/internalChrome.web";
 import {
   getHelpCenterAdminData,
