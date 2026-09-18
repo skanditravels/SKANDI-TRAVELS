@@ -1,7 +1,7 @@
 import wixLocation from "wix-location";
 import { authentication } from "wix-members-frontend";
-import { getStaffPortalSession } from "backend/RIA/staffPortalAuth.web";
-import { runInternalGlobalSearch } from "backend/FINAL/internalChrome.web";
+import { getStaffPortalSession } from "backend/SKANDI_CORE/staffAuth.web.js";
+import { runInternalGlobalSearch } from "backend/FINAL/internalChrome.web.js";
 import {
   getMyRosterBootstrap,
   getMyRosterBoard,
@@ -13,7 +13,7 @@ import {
   createTripTradeDrop,
   requestTripTradePickup,
   createPayrollRosterExport
-} from "backend/ROSTER/myRoster.web";
+} from "backend/SKANDI_CORE/myRoster.web.js";
 
 const EMBED = "#myRosterEmbed";
 const EMBED_SOURCE = "SKANDI_MYROSTER_EMBED";
