@@ -165,27 +165,45 @@ function mapRequest(row={}){
 }
 
 async function loadBootstrap(session,{jurisdiction="US-NY",windowStart=""}={}){
-  const requestedStart=new Date(windowStart);
-  const start=Number.isFinite(requestedStart.getTime()) ? requestedStart : new Date(Date.now()-24*3600000);
-  start.setUTCHours(0,0,0,0);
-  const end=new Date(start.getTime()+8*24*3600000);
-  end.setUTCHours(23,59,59,999);
-  const [agents,shifts,clock,ledger,requests,balances,leave,crew,drivers,tours,airport,vehicles,jurisdictionRows]=await Promise.all([
-    getRows(TABLES.agents,{active:"eq.true",authorized:"eq.true",portal_access:"eq.true",order:"display_name.asc"}),
-    getRows(TABLES.shifts,{order:"start_time.asc"}), getRows(TABLES.clock,{order:"event_time.desc"}), getRows(TABLES.ledger,{order:"work_date.desc"}),
-    getRows(TABLES.requests,{order:"updated_at.desc"}), getRows(TABLES.balances,{order:"updated_at.desc"}), getRows(TABLES.leave,{order:"created_at.desc"}),
-    getRows(TABLES.crew,{order:"start_time.asc"}), getRows(TABLES.drivers,{order:"start_time.asc"}), getRows(TABLES.tours,{order:"start_time.asc"}),
-    getRows(TABLES.airport,{order:"start_time.asc"}), getRows(TABLES.vehicles,{order:"start_time.asc"}), getRows(TABLES.jurisdictions,{active:"eq.true",order:"base_code.asc"})
+  function yourFunctionName({ windowStart = "" } = {}) {
+  const requestedStart = new Date(windowStart);
+  const start = Number.isFinite(requestedStart.getTime()) ? requestedStart : new Date(Date.now() - 24 * 3600000);
+  start.setUTCHours(0, 0, 0, 0);
+  
+  const end = new Date(start.getTime() + 8 * 24 * 3600000);
+  end.setUTCHours(23, 59, 59, 999);
+  
+  const [agents, shifts, clock, ledger, requests, balances, leave, crew, drivers, tours, airport, vehicles, jurisdictionRows] = await Promise.all([
+    getRows(TABLES.agents, { active: "eq.true", authorized: "eq.true", portal_access: "eq.true", order: "display_name.asc" }),
+    getRows(TABLES.shifts, { order: "start_time.asc" }), 
+    getRows(TABLES.clock, { order: "event_time.desc" }), 
+    getRows(TABLES.ledger, { order: "work_date.desc" }),
+    getRows(TABLES.requests, { order: "updated_at.desc" }), 
+    getRows(TABLES.balances, { order: "updated_at.desc" }), 
+    getRows(TABLES.leave, { order: "created_at.desc" }),
+    getRows(TABLES.crew, { order: "start_time.asc" }), 
+    getRows(TABLES.drivers, { order: "start_time.asc" }), 
+    getRows(TABLES.tours, { order: "start_time.asc" }),
+    getRows(TABLES.airport, { order: "start_time.asc" }), 
+    getRows(TABLES.vehicles, { order: "start_time.asc" }), 
+    getRows(TABLES.jurisdictions, { active: "eq.true", order: "base_code.asc" })
   ]);
-  const startMs=start.getTime(), endMs=end.getTime(), windowStart=start.toISOString();
-  const assignmentRows=[
-    ...shifts.filter(r=>shiftWithin(r,startMs,endMs)).map(r=>({row:r,table:TABLES.shifts})),
-    ...crew.filter(r=>shiftWithin(r,startMs,endMs)).map(r=>({row:r,table:TABLES.crew})),
-    ...drivers.filter(r=>shiftWithin(r,startMs,endMs)).map(r=>({row:r,table:TABLES.drivers})),
-    ...tours.filter(r=>shiftWithin(r,startMs,endMs)).map(r=>({row:r,table:TABLES.tours})),
-    ...airport.filter(r=>shiftWithin(r,startMs,endMs)).map(r=>({row:r,table:TABLES.airport})),
-    ...vehicles.filter(r=>shiftWithin(r,startMs,endMs)).map(r=>({row:r,table:TABLES.vehicles}))
-  ];
+  
+  const startMs = start.getTime();
+  const endMs = end.getTime();
+  
+  // FIX: Removed 'const' definition from this line so it reassigns rather than redeclares
+  windowStart = start.toISOString(); 
+  
+  const assignmentRows = [
+    ...shifts.filter(r => shiftWithin(r, startMs, endMs)).map(r => ({ row: r, table: TABLES.shifts })),
+    ...crew.filter(r => shiftWithin(r, startMs, endMs)).map(r => ({ row: r, table: TABLES.crew })),
+    ...drivers.filter(r => shiftWithin(r, startMs, endMs)).map(r => ({ row: r, table: TABLES.drivers })),
+    ...tours.filter(r => shiftWithin(r, startMs, endMs)).map(r => ({ row: r, table: TABLES.tours })),
+    ...airport.filter(r => shiftWithin(r, startMs, endMs)).map(r => ({ row: r, table: TABLES.airport })),
+    ...vehicles.filter(r => shiftWithin(r, startMs, endMs)).map(r => ({ row: r, table: TABLES.vehicles }))
+  ]; // Remember to close your arrays and functions properly down here!
+}
   const assignedByEmployee=new Map(); const openTime=[]; const seen=new Set();
   for(const item of assignmentRows){
     const dedupe=`${item.table}:${item.row.id}`; if(seen.has(dedupe)) continue; seen.add(dedupe);
