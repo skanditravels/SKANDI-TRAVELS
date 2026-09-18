@@ -2,7 +2,7 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ main ] # Runs every time you push code to the main branch
+    branches: [ main ]
 
 jobs:
   build-and-test:
@@ -15,13 +15,15 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22' # Prevents Node 20 deprecation warning
 
+      # Fix: Disable interactive prompt behaviors during dependency installations
       - name: Install dependencies
-        run: npm install
+        env:
+          CI: true
+        run: npm ci --foreground-scripts=false
 
-      # This step pulls your Supabase URI from GitHub Secrets and runs your migrations
       - name: Run Database Migrations
         env:
-          DATABASE_URL: ${{ secrets.YOUR_SECRET_NAME }} # Replace with the exact name you used in GitHub
-        run: npm run migrate 
+          DATABASE_URL: ${{ secrets.SUPABASE_DATABASE_URL }}
+        run: npm run migrate
