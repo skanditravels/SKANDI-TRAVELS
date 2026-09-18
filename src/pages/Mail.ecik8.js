@@ -7,8 +7,8 @@ import { SITE_MAP, isSafeInternalRoute } from "public/siteMap.js";
 
 import wixLocation from "wix-location-frontend";
 import { authentication } from "wix-members-frontend";
-import { getStaffPortalSession } from "backend/SKANDI_CORE/staffAuth.web";
-import { runInternalGlobalSearch } from "backend/SKANDI_CORE/internalSearch.web";
+import { getStaffPortalSession } from "backend/SKANDI_CORE/staffAuth.web.js";
+import { runInternalGlobalSearch } from "backend/SKANDI_CORE/internalSearch.web.js";
 import {
   getMailBootstrap,
   listMailMessages,
@@ -18,7 +18,7 @@ import {
   updateMailUserState,
   getMailDirectory,
   getMailDiagnostics
-} from "backend/SKANDI_CORE/mail.web";
+} from "backend/SKANDI_CORE/mail.web.js";
 
 
 const EMBED = "#mailEmbed";
