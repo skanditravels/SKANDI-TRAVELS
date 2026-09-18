@@ -27,7 +27,7 @@ STATUS (AGENT): "TODO", "IN PROGRESS", "REVISIONS NEEDED", "READY".***
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-<meta name="theme-color" content="#061a30" />
+<meta name="theme-color" content="#eef3f4" />
 <title>Our Network | SKANDI Travels</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -39,19 +39,31 @@ STATUS (AGENT): "TODO", "IN PROGRESS", "REVISIONS NEEDED", "READY".***
    TOKENS
    ========================================================= */
 :root{
-  --sk-navy:#022e64;
-  --sk-navy-deep:#061a30;
-  --sk-navy-black:#03111f;
-  --sk-blue:#0b3a7a;
-  --sk-blue-soft:#1f6ba3;
-  --sk-aqua:#5fc7cf;
-  --sk-aqua-soft:#9de0e5;
-  --sk-ivory:#fbfaf6;
-  --sk-porcelain:#f5f1ea;
-  --sk-champagne:#d1bc98;
-  --sk-limestone:#d8d2c8;
-  --sk-graphite:#1a1a1a;
-  --sk-muted:#66758a;
+  /* SKANDI canonical visual language */
+  --sk-navy:#022E64;
+  --sk-navy-deep:#061A30;
+  --sk-navy-black:#03111F;
+  --sk-deep-teal:#173747;
+  --sk-blue:#0B3A7A;
+  --sk-blue-soft:#1F6BA3;
+  --sk-aqua:#5FC7CF;
+  --sk-aqua-soft:#9DE0E5;
+  --sk-ivory:#FBFAF6;
+  --sk-porcelain:#F5F1EA;
+  --sk-champagne:#D1BC98;
+  --sk-limestone:#D8D2C8;
+  --sk-graphite:#1A1A1A;
+  --sk-muted:#66758A;
+
+  /* Atlas tones derived from the SKANDI palette, not neutral gray UI colors */
+  --atlas-water:#F7F8F5;
+  --atlas-land:#D4DEDC;
+  --atlas-park:#C3D2CF;
+  --atlas-border:rgba(2,46,100,.25);
+  --atlas-city:#536D79;
+  --atlas-smoke:#D8E4E2;
+  --atlas-smoke-teal:#9DB8B7;
+
   --sk-line:rgba(255,255,255,.14);
   --sk-line-dark:rgba(2,46,100,.14);
   --sk-shadow:0 26px 80px rgba(1,13,28,.30);
@@ -64,6 +76,7 @@ STATUS (AGENT): "TODO", "IN PROGRESS", "REVISIONS NEEDED", "READY".***
   --map-height:clamp(620px,calc(100dvh - 118px),920px);
   --z-map:1;
   --z-atmosphere:2;
+  --z-transition:4;
   --z-overlay:10;
   --z-tooltip:20;
   --z-panel:30;
@@ -71,12 +84,12 @@ STATUS (AGENT): "TODO", "IN PROGRESS", "REVISIONS NEEDED", "READY".***
   --z-sheet:50;
 }
 *{box-sizing:border-box}
-html{scroll-behavior:smooth;background:var(--sk-ivory)}
+html{scroll-behavior:smooth;background:#03111f}
 body{
   margin:0;
   min-width:320px;
-  background:var(--sk-ivory);
-  color:var(--sk-graphite);
+  background:#03111f;
+  color:var(--sk-ivory);
   font-family:"Montserrat",system-ui,-apple-system,"Segoe UI",sans-serif;
   -webkit-font-smoothing:antialiased;
   text-rendering:optimizeLegibility;
@@ -98,37 +111,113 @@ a{color:inherit}
 /* =========================================================
    MAP HERO SHELL
    ========================================================= */
-.network-app{position:relative;background:var(--sk-navy-deep)}
+.network-app{
+  position:relative;
+  background:var(--atlas-water);
+  isolation:isolate;
+}
+.network-app::before,
+.network-app::after{
+  content:"";
+  position:absolute;
+  left:0;
+  right:0;
+  pointer-events:none;
+}
+/* Brand transition begins inside the map, then continues below it. */
+.network-app::before{
+  z-index:var(--z-transition);
+  bottom:-185px;
+  height:420px;
+  opacity:.78;
+  background:
+    radial-gradient(ellipse at 12% 44%,rgba(251,250,246,.55) 0 8%,rgba(216,228,226,.28) 24%,transparent 56%),
+    radial-gradient(ellipse at 72% 58%,rgba(157,184,183,.18) 0 10%,rgba(245,241,234,.35) 28%,transparent 62%);
+  filter:blur(24px);
+}
+.network-app::after{
+  z-index:var(--z-transition);
+  bottom:-260px;
+  height:520px;
+  background:linear-gradient(
+    180deg,
+    rgba(23,55,71,0) 0%,
+    rgba(23,55,71,.05) 24%,
+    rgba(23,55,71,.16) 44%,
+    rgba(23,55,71,.42) 66%,
+    rgba(23,55,71,.78) 84%,
+    var(--sk-deep-teal) 100%
+  );
+}
 .network-hero{
   position:relative;
   min-height:var(--map-height);
   overflow:hidden;
   isolation:isolate;
-  background:
-    radial-gradient(circle at 18% 18%,rgba(95,199,207,.12),transparent 28%),
-    radial-gradient(circle at 78% 22%,rgba(31,107,163,.18),transparent 34%),
-    linear-gradient(145deg,#071c32 0%,#06172b 52%,#03101d 100%);
+  background:var(--atlas-water);
 }
-#networkMap{position:absolute;inset:0;z-index:var(--z-map);background:#06172b}
-#networkMap canvas{filter:saturate(.82) contrast(1.04)}
+#networkMap{
+  position:absolute;
+  inset:0;
+  z-index:var(--z-map);
+  background:var(--atlas-water);
+}
+#networkMap canvas{
+  filter:saturate(.92) contrast(1.08) brightness(.99);
+}
+/* Smoke is now restrained and directional. It frames the atlas instead of whitening it. */
 .map-atmosphere{
   position:absolute;
   inset:0;
   z-index:var(--z-atmosphere);
   pointer-events:none;
+  overflow:hidden;
+  opacity:1;
   background:
-    linear-gradient(180deg,rgba(1,12,25,.22) 0%,transparent 24%,transparent 62%,rgba(1,12,25,.38) 100%),
-    radial-gradient(ellipse at center,transparent 48%,rgba(1,12,25,.34) 100%);
+    radial-gradient(ellipse at 4% 18%,rgba(95,199,207,.07),transparent 28%),
+    radial-gradient(ellipse at 94% 14%,rgba(2,46,100,.045),transparent 30%),
+    linear-gradient(180deg,transparent 0 58%,rgba(23,55,71,.025) 74%,rgba(23,55,71,.075) 100%);
 }
+.map-atmosphere::before,
 .map-atmosphere::after{
   content:"";
   position:absolute;
-  inset:0;
-  opacity:.18;
-  mix-blend-mode:soft-light;
-  background-image:radial-gradient(rgba(255,255,255,.22) .55px,transparent .65px);
-  background-size:18px 18px;
-  mask-image:linear-gradient(180deg,#000,transparent 70%);
+  pointer-events:none;
+  will-change:transform,opacity;
+}
+.map-atmosphere::before{
+  left:-18%;
+  right:-18%;
+  bottom:-12%;
+  height:47%;
+  opacity:.46;
+  filter:blur(34px);
+  background:
+    radial-gradient(ellipse at 10% 62%,rgba(251,250,246,.68) 0 8%,rgba(216,228,226,.30) 24%,transparent 58%),
+    radial-gradient(ellipse at 43% 78%,rgba(157,184,183,.22) 0 9%,rgba(245,241,234,.34) 27%,transparent 60%),
+    radial-gradient(ellipse at 82% 64%,rgba(251,250,246,.58) 0 8%,rgba(95,199,207,.11) 28%,transparent 58%);
+  animation:skSmokeDriftA 24s ease-in-out infinite alternate;
+}
+.map-atmosphere::after{
+  width:48%;
+  height:34%;
+  top:7%;
+  right:-11%;
+  opacity:.22;
+  filter:blur(42px);
+  background:
+    radial-gradient(ellipse at 50% 50%,rgba(251,250,246,.58) 0 10%,rgba(216,228,226,.28) 34%,transparent 68%);
+  animation:skSmokeDriftB 31s ease-in-out infinite alternate;
+}
+@keyframes skSmokeDriftA{
+  0%{transform:translate3d(-3%,1%,0) scale(1.02);opacity:.34}
+  50%{transform:translate3d(1.5%,-1%,0) scale(1.06);opacity:.48}
+  100%{transform:translate3d(4%,1%,0) scale(1.04);opacity:.38}
+}
+@keyframes skSmokeDriftB{
+  0%{transform:translate3d(5%,0,0) scale(1.03);opacity:.16}
+  50%{transform:translate3d(-1%,2%,0) scale(1.08);opacity:.24}
+  100%{transform:translate3d(-6%,0,0) scale(1.04);opacity:.18}
 }
 .map-loading{
   position:absolute;
@@ -136,9 +225,9 @@ a{color:inherit}
   z-index:8;
   pointer-events:none;
   background:
-    radial-gradient(circle at 26% 45%,rgba(95,199,207,.13),transparent 24%),
-    radial-gradient(circle at 66% 30%,rgba(209,188,152,.08),transparent 22%),
-    linear-gradient(110deg,#06182d 0%,#0a213b 42%,#06182d 70%);
+    radial-gradient(circle at 26% 45%,rgba(95,199,207,.16),transparent 24%),
+    radial-gradient(circle at 66% 30%,rgba(209,188,152,.18),transparent 22%),
+    linear-gradient(110deg,#f5f1ea 0%,#dfe9e8 42%,#eef3f4 70%);
   background-size:140% 100%;
   animation:atlasResolve 1.8s ease-in-out infinite alternate;
   transition:opacity .55s ease,visibility .55s ease;
@@ -152,17 +241,17 @@ a{color:inherit}
   top:clamp(26px,4.5vw,64px);
   left:clamp(20px,5vw,76px);
   width:min(560px,calc(100% - 40px));
-  color:#fff;
+  color:var(--sk-navy);
   pointer-events:none;
-  text-shadow:0 8px 28px rgba(1,10,22,.42);
+  text-shadow:0 1px 0 rgba(255,255,255,.72),0 14px 34px rgba(38,72,83,.10);
 }
 .hero-eyebrow{
   display:flex;align-items:center;gap:12px;
   margin-bottom:12px;
-  color:var(--sk-aqua-soft);
+  color:#1f7883;
   font-size:11px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;
 }
-.hero-eyebrow::before{content:"";width:34px;height:1px;background:var(--sk-aqua)}
+.hero-eyebrow::before{content:"";width:34px;height:1px;background:#1f8794}
 .hero-copy h1{
   margin:0;
   font-size:clamp(38px,5vw,68px);
@@ -173,7 +262,7 @@ a{color:inherit}
 .hero-copy p{
   margin:16px 0 0;
   max-width:520px;
-  color:rgba(255,255,255,.78);
+  color:#52697a;
   font-size:clamp(13px,1.25vw,16px);
   line-height:1.68;
   font-weight:500;
@@ -181,10 +270,10 @@ a{color:inherit}
 .network-meta{
   display:flex;align-items:center;flex-wrap:wrap;gap:8px 14px;
   margin-top:18px;
-  color:rgba(255,255,255,.7);
+  color:#607482;
   font-size:10px;font-weight:700;letter-spacing:.02em;
 }
-.network-meta span+span::before{content:"·";margin-right:14px;color:rgba(255,255,255,.34)}
+.network-meta span+span::before{content:"·";margin-right:14px;color:rgba(2,46,100,.26)}
 .network-hero.map-ready .hero-copy{animation:heroSettle .8s var(--ease) both}
 @keyframes heroSettle{from{opacity:.25;transform:translateY(16px)}to{opacity:1;transform:none}}
 
@@ -203,16 +292,16 @@ a{color:inherit}
 .mode-rail{
   display:flex;align-items:center;gap:4px;
   padding:5px;
-  border:1px solid rgba(255,255,255,.16);
+  border:1px solid rgba(2,46,100,.12);
   border-radius:999px;
-  background:rgba(4,21,39,.72);
-  backdrop-filter:blur(18px) saturate(1.2);
-  box-shadow:0 16px 44px rgba(0,0,0,.22);
+  background:rgba(251,250,246,.78);
+  backdrop-filter:blur(18px) saturate(1.12);
+  box-shadow:0 16px 44px rgba(38,72,83,.14);
 }
 .mode-btn,.icon-btn,.region-btn{
   appearance:none;
   border:0;
-  color:rgba(255,255,255,.72);
+  color:rgba(2,46,100,.72);
   background:transparent;
   transition:background var(--fast) ease,color var(--fast) ease,transform var(--fast) ease;
 }
@@ -222,18 +311,18 @@ a{color:inherit}
   border-radius:999px;
   font-size:10px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;
 }
-.mode-btn:hover{color:#fff;background:rgba(255,255,255,.08)}
-.mode-btn.active{color:#07192c;background:var(--sk-ivory);box-shadow:0 6px 18px rgba(0,0,0,.18)}
+.mode-btn:hover{color:var(--sk-navy);background:rgba(2,46,100,.07)}
+.mode-btn.active{color:#fff;background:var(--sk-navy);box-shadow:0 7px 20px rgba(2,46,100,.18)}
 .icon-btn{
   width:46px;height:46px;border-radius:50%;
   display:grid;place-items:center;
-  border:1px solid rgba(255,255,255,.16);
-  background:rgba(4,21,39,.72);
+  border:1px solid rgba(2,46,100,.12);
+  background:rgba(251,250,246,.80);
   backdrop-filter:blur(18px);
-  color:#fff;
-  box-shadow:0 12px 30px rgba(0,0,0,.18);
+  color:var(--sk-navy);
+  box-shadow:0 12px 30px rgba(38,72,83,.14);
 }
-.icon-btn:hover{background:rgba(8,46,78,.86);transform:translateY(-1px)}
+.icon-btn:hover{background:rgba(255,255,255,.94);transform:translateY(-1px)}
 .icon-btn svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .region-strip{
   position:absolute;
@@ -252,13 +341,13 @@ a{color:inherit}
   min-height:32px;
   padding:0 11px;
   border-radius:999px;
-  border:1px solid rgba(255,255,255,.13);
-  background:rgba(4,21,39,.54);
+  border:1px solid rgba(2,46,100,.11);
+  background:rgba(251,250,246,.68);
   backdrop-filter:blur(12px);
-  color:rgba(255,255,255,.64);
+  color:rgba(2,46,100,.64);
   font-size:9px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;
 }
-.region-btn:hover,.region-btn.active{color:#fff;border-color:rgba(95,199,207,.5);background:rgba(15,65,96,.64)}
+.region-btn:hover,.region-btn.active{color:#fff;border-color:rgba(31,135,148,.45);background:rgba(2,46,100,.88)}
 .map-utilities{
   position:absolute;
   z-index:var(--z-overlay);
@@ -266,10 +355,10 @@ a{color:inherit}
   bottom:clamp(26px,4vw,42px);
   display:flex;flex-direction:column;gap:8px;
 }
-.utility-stack{display:flex;flex-direction:column;overflow:hidden;border-radius:16px;border:1px solid rgba(255,255,255,.16);background:rgba(4,21,39,.7);backdrop-filter:blur(16px)}
-.utility-stack button{width:44px;height:42px;border:0;background:transparent;color:#fff;font-size:20px}
-.utility-stack button+button{border-top:1px solid rgba(255,255,255,.1)}
-.utility-stack button:hover{background:rgba(255,255,255,.08)}
+.utility-stack{display:flex;flex-direction:column;overflow:hidden;border-radius:16px;border:1px solid rgba(2,46,100,.12);background:rgba(251,250,246,.78);backdrop-filter:blur(16px);box-shadow:0 12px 30px rgba(38,72,83,.12)}
+.utility-stack button{width:44px;height:42px;border:0;background:transparent;color:var(--sk-navy);font-size:20px}
+.utility-stack button+button{border-top:1px solid rgba(2,46,100,.09)}
+.utility-stack button:hover{background:rgba(255,255,255,.76)}
 
 /* =========================================================
    SEARCH
@@ -402,14 +491,14 @@ a{color:inherit}
 .map-status{
   position:absolute;z-index:var(--z-overlay);left:50%;bottom:30px;transform:translateX(-50%);
   min-width:min(430px,calc(100% - 40px));
-  padding:12px 14px;border:1px solid rgba(255,255,255,.16);border-radius:16px;
-  background:rgba(4,21,39,.86);backdrop-filter:blur(14px);color:#fff;
-  box-shadow:0 16px 40px rgba(0,0,0,.24);
+  padding:12px 14px;border:1px solid rgba(2,46,100,.12);border-radius:16px;
+  background:rgba(251,250,246,.88);backdrop-filter:blur(14px);color:var(--sk-navy);
+  box-shadow:0 16px 40px rgba(38,72,83,.16);
   display:flex;align-items:center;justify-content:space-between;gap:14px;
   font-size:11px;line-height:1.4;
 }
-.map-status button{border:0;border-radius:999px;background:#fff;color:var(--sk-navy);padding:8px 11px;font-size:9px;font-weight:850;text-transform:uppercase;letter-spacing:.06em}
-.map-status[data-tone="info"]{background:rgba(4,21,39,.78)}
+.map-status button{border:0;border-radius:999px;background:var(--sk-navy);color:#fff;padding:8px 11px;font-size:9px;font-weight:850;text-transform:uppercase;letter-spacing:.06em}
+.map-status[data-tone="info"]{background:rgba(251,250,246,.86)}
 .map-status[data-tone="error"]{background:rgba(58,22,27,.88)}
 
 /* =========================================================
@@ -420,62 +509,119 @@ a{color:inherit}
 .sheet-snap{position:absolute;right:16px;top:11px;border:0;border-radius:999px;background:#edf0f2;color:var(--sk-navy);padding:7px 10px;font-size:9px;font-weight:800;text-transform:uppercase}
 
 /* =========================================================
-   EDITORIAL CHAPTERS
+   EDITORIAL CHAPTERS — SKANDI LIGHT ATLAS TO DARK BRAND WORLD
    ========================================================= */
 .editorial{
   position:relative;
   z-index:2;
-  margin-top:-1px;
-  background:var(--sk-ivory);
-  color:var(--sk-graphite);
+  margin-top:-2px;
+  overflow:visible;
+  color:var(--sk-ivory);
+  background:
+    radial-gradient(ellipse at 14% 0%,rgba(95,199,207,.10),transparent 32%),
+    radial-gradient(ellipse at 86% 7%,rgba(209,188,152,.08),transparent 28%),
+    linear-gradient(180deg,
+      var(--sk-deep-teal) 0%,
+      #123344 18%,
+      #0D2C42 36%,
+      #0B2840 55%,
+      var(--sk-navy-deep) 76%,
+      var(--sk-navy-black) 100%
+    );
 }
 .editorial::before{
   content:"";
-  position:absolute;left:0;right:0;top:-120px;height:122px;
+  position:absolute;
+  z-index:0;
+  left:-8%;
+  right:-8%;
+  top:-185px;
+  height:360px;
   pointer-events:none;
-  background:linear-gradient(180deg,rgba(6,26,48,0),var(--sk-ivory));
+  opacity:.36;
+  filter:blur(28px);
+  background:
+    radial-gradient(ellipse at 15% 45%,rgba(251,250,246,.60) 0 8%,rgba(216,228,226,.28) 26%,transparent 60%),
+    radial-gradient(ellipse at 52% 36%,rgba(95,199,207,.12) 0 9%,rgba(245,241,234,.24) 30%,transparent 62%),
+    radial-gradient(ellipse at 88% 50%,rgba(209,188,152,.08) 0 8%,rgba(216,228,226,.20) 28%,transparent 60%);
+  animation:skTransitionSmoke 27s ease-in-out infinite alternate;
 }
-.chapter{max-width:1320px;margin:0 auto;padding:clamp(70px,9vw,118px) clamp(20px,5vw,68px)}
+.editorial::after{
+  content:"";
+  position:absolute;
+  z-index:0;
+  left:0;
+  right:0;
+  top:0;
+  height:540px;
+  pointer-events:none;
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.018),transparent 45%),
+    radial-gradient(ellipse at 50% 4%,rgba(95,199,207,.055),transparent 52%);
+}
+@keyframes skTransitionSmoke{
+  0%{transform:translate3d(-2%,0,0) scale(1.02);opacity:.28}
+  50%{transform:translate3d(1.5%,1%,0) scale(1.05);opacity:.39}
+  100%{transform:translate3d(3%,-1%,0) scale(1.03);opacity:.31}
+}
+.chapter{position:relative;z-index:1;max-width:1320px;margin:0 auto;padding:clamp(70px,9vw,118px) clamp(20px,5vw,68px)}
 .chapter-head{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(280px,.8fr);gap:40px;align-items:end;margin-bottom:36px}
-.chapter-kicker{color:#7f735f;font-size:10px;font-weight:850;letter-spacing:.16em;text-transform:uppercase}
-.chapter h2{margin:8px 0 0;color:var(--sk-navy);font-size:clamp(34px,4vw,58px);line-height:.98;letter-spacing:-.05em;font-weight:600}
-.chapter-intro{color:#5e6b7a;font-size:13px;line-height:1.75}
+.chapter-kicker{color:var(--sk-aqua-soft);font-size:10px;font-weight:850;letter-spacing:.16em;text-transform:uppercase}
+.chapter h2{margin:8px 0 0;color:var(--sk-ivory);font-size:clamp(34px,4vw,58px);line-height:.98;letter-spacing:-.05em;font-weight:600}
+.chapter-intro{color:rgba(229,237,241,.72);font-size:13px;line-height:1.75}
+.editorial>.chapter:first-child .chapter-kicker{color:var(--sk-aqua-soft)}
+.editorial>.chapter:first-child h2{color:var(--sk-ivory)}
+.editorial>.chapter:first-child .chapter-intro{color:rgba(229,237,241,.72)}
 .feature-grid{display:grid;grid-template-columns:1.35fr .65fr;grid-template-rows:repeat(2,minmax(220px,1fr));gap:14px}
 .feature-card{
-  position:relative;overflow:hidden;min-height:220px;border:0;border-radius:22px;background:#0d2a47;color:#fff;text-align:left;padding:0;
-  box-shadow:0 18px 44px rgba(2,46,100,.12);
+  position:relative;overflow:hidden;min-height:220px;border:1px solid rgba(255,255,255,.14);border-radius:22px;background:#0d2a47;color:#fff;text-align:left;padding:0;
+  box-shadow:0 22px 58px rgba(1,13,28,.22);
 }
 .feature-card:first-child{grid-row:1/3;min-height:460px}
 .feature-card img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform .75s var(--ease),opacity .35s ease}
 .feature-card:hover img{transform:scale(1.035)}
-.feature-card::after{content:"";position:absolute;inset:22% 0 0;background:linear-gradient(180deg,transparent,rgba(3,14,26,.86))}
+.feature-card::after{content:"";position:absolute;inset:18% 0 0;background:linear-gradient(180deg,transparent,rgba(3,14,26,.90))}
 .feature-card-copy{position:absolute;z-index:2;left:24px;right:24px;bottom:22px}
 .feature-card small{color:var(--sk-aqua-soft);font-size:9px;font-weight:850;letter-spacing:.13em;text-transform:uppercase}
 .feature-card strong{display:block;margin-top:6px;font-size:clamp(22px,2vw,34px);line-height:1.05;letter-spacing:-.035em}
-.feature-card span{display:block;margin-top:7px;color:rgba(255,255,255,.68);font-size:11px;line-height:1.5}
-.collection-rail{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(290px,34%);gap:14px;overflow-x:auto;padding:4px 0 16px;scroll-snap-type:x proximity;scrollbar-width:thin}
-.collection-card{scroll-snap-align:start;border:0;border-radius:22px;background:#fff;overflow:hidden;text-align:left;box-shadow:0 14px 36px rgba(2,46,100,.10)}
-.collection-card-media{position:relative;height:260px;background:linear-gradient(140deg,#12314c,#0b2137)}
+.feature-card span{display:block;margin-top:7px;color:rgba(255,255,255,.70);font-size:11px;line-height:1.5}
+.collection-rail{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(290px,34%);gap:14px;overflow-x:auto;padding:4px 0 16px;scroll-snap-type:x proximity;scrollbar-width:thin;scrollbar-color:rgba(157,224,229,.28) transparent}
+.collection-card{scroll-snap-align:start;border:1px solid rgba(255,255,255,.11);border-radius:22px;background:rgba(9,35,56,.76);overflow:hidden;text-align:left;color:var(--sk-ivory);box-shadow:0 18px 48px rgba(0,0,0,.20);backdrop-filter:blur(14px)}
+.collection-card-media{position:relative;height:260px;background:linear-gradient(140deg,#173747,#0b2137)}
 .collection-card-media img{width:100%;height:100%;object-fit:cover}
 .collection-badge{position:absolute;left:14px;top:14px;padding:8px 10px;border-radius:999px;background:rgba(245,241,234,.92);color:#6f5937;font-size:8px;font-weight:850;letter-spacing:.08em;text-transform:uppercase;backdrop-filter:blur(10px)}
-.collection-copy{padding:16px 17px 18px}.collection-copy small{color:#8a8278;font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:.12em}.collection-copy strong{display:block;margin-top:5px;color:var(--sk-navy);font-size:17px;line-height:1.2}.collection-copy p{margin:8px 0 0;color:#6b7682;font-size:11px;line-height:1.55}
+.collection-copy{padding:16px 17px 18px}
+.collection-copy small{color:var(--sk-champagne);font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:.12em}
+.collection-copy strong{display:block;margin-top:5px;color:var(--sk-ivory);font-size:17px;line-height:1.2}
+.collection-copy p{margin:8px 0 0;color:rgba(224,234,239,.66);font-size:11px;line-height:1.55}
 .airline-rail{display:flex;flex-wrap:wrap;gap:9px}
-.airline-chip{min-height:52px;border:1px solid rgba(2,46,100,.12);border-radius:15px;background:#fff;padding:8px 13px;display:flex;align-items:center;gap:10px;color:var(--sk-navy);box-shadow:0 8px 22px rgba(2,46,100,.06)}
-.airline-chip img{width:38px;height:26px;object-fit:contain}.airline-chip strong{font-size:11px}.airline-chip small{display:block;margin-top:2px;color:#8a95a1;font-size:8px}
-.plan-band{margin-top:22px;border-radius:26px;padding:clamp(30px,5vw,64px);background:linear-gradient(135deg,var(--sk-navy) 0%,#0b4165 100%);color:#fff;display:grid;grid-template-columns:1fr auto;align-items:center;gap:30px;overflow:hidden;position:relative}
+.airline-chip{min-height:52px;border:1px solid rgba(255,255,255,.11);border-radius:15px;background:rgba(10,38,60,.74);padding:8px 13px;display:flex;align-items:center;gap:10px;color:var(--sk-ivory);box-shadow:0 10px 28px rgba(0,0,0,.14);backdrop-filter:blur(12px)}
+.airline-chip:hover{background:rgba(17,53,78,.92);border-color:rgba(114,213,220,.28)}
+.airline-chip img{width:38px;height:26px;object-fit:contain;filter:drop-shadow(0 2px 8px rgba(0,0,0,.16))}
+.airline-chip strong{font-size:11px}.airline-chip small{display:block;margin-top:2px;color:rgba(209,223,230,.60);font-size:8px}
+.plan-band{margin-top:22px;border:1px solid rgba(255,255,255,.11);border-radius:26px;padding:clamp(30px,5vw,64px);background:linear-gradient(135deg,#061a30 0%,#0b3047 52%,#0d3d51 100%);color:#fff;display:grid;grid-template-columns:1fr auto;align-items:center;gap:30px;overflow:hidden;position:relative;box-shadow:0 24px 70px rgba(0,0,0,.22)}
+.plan-band::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 72% 14%,rgba(95,199,207,.12),transparent 28%);pointer-events:none}
 .plan-band::after{content:"";position:absolute;width:360px;height:360px;border-radius:50%;right:-130px;top:-190px;border:1px solid rgba(95,199,207,.35);box-shadow:0 0 0 42px rgba(95,199,207,.035),0 0 0 86px rgba(95,199,207,.025)}
-.plan-band h3{position:relative;z-index:1;margin:0;font-size:clamp(26px,3vw,42px);line-height:1.05;letter-spacing:-.04em;font-weight:600}.plan-band p{position:relative;z-index:1;margin:10px 0 0;color:rgba(255,255,255,.68);font-size:12px;line-height:1.6;max-width:650px}.plan-band button{position:relative;z-index:1;min-height:46px;border:0;border-radius:999px;background:#fff;color:var(--sk-navy);padding:0 18px;font-size:9px;font-weight:850;letter-spacing:.07em;text-transform:uppercase}
+.plan-band h3{position:relative;z-index:1;margin:0;font-size:clamp(26px,3vw,42px);line-height:1.05;letter-spacing:-.04em;font-weight:600}
+.plan-band p{position:relative;z-index:1;margin:10px 0 0;color:rgba(255,255,255,.68);font-size:12px;line-height:1.6;max-width:650px}
+.plan-band button{position:relative;z-index:1;min-height:46px;border:1px solid rgba(255,255,255,.18);border-radius:999px;background:var(--sk-ivory);color:var(--sk-navy);padding:0 18px;font-size:9px;font-weight:850;letter-spacing:.07em;text-transform:uppercase}
 
 /* =========================================================
    ACCESSIBLE DIRECTORY
    ========================================================= */
-.directory{border-top:1px solid rgba(2,46,100,.09);background:#f0eee9}
+.directory{border-top:1px solid rgba(255,255,255,.09);background:#03111f;color:var(--sk-ivory)}
 .directory-inner{max-width:1320px;margin:0 auto;padding:48px clamp(20px,5vw,68px) 70px}
-.directory-head{display:flex;justify-content:space-between;gap:24px;align-items:end;margin-bottom:24px}.directory-head h2{margin:0;color:var(--sk-navy);font-size:25px;letter-spacing:-.035em}.directory-head p{margin:0;color:#75808c;font-size:11px}
-.directory-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:26px}.directory-group h3{margin:0 0 11px;color:#817766;font-size:9px;font-weight:850;letter-spacing:.13em;text-transform:uppercase}.directory-list{display:grid;gap:3px}.directory-link{border:0;background:transparent;padding:6px 0;text-align:left;color:#435266;font-size:10px;line-height:1.4}.directory-link:hover{color:var(--sk-navy);text-decoration:underline;text-underline-offset:3px}
+.directory-head{display:flex;justify-content:space-between;gap:24px;align-items:end;margin-bottom:24px}
+.directory-head h2{margin:0;color:var(--sk-ivory);font-size:25px;letter-spacing:-.035em}
+.directory-head p{margin:0;color:rgba(210,224,231,.58);font-size:11px}
+.directory-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:26px}
+.directory-group h3{margin:0 0 11px;color:var(--sk-champagne);font-size:9px;font-weight:850;letter-spacing:.13em;text-transform:uppercase}
+.directory-list{display:grid;gap:3px}
+.directory-link{border:0;background:transparent;padding:6px 0;text-align:left;color:rgba(219,230,235,.68);font-size:10px;line-height:1.4}
+.directory-link:hover{color:var(--sk-aqua-soft);text-decoration:underline;text-underline-offset:3px}
 
 /* MapLibre control styling */
-.maplibregl-ctrl-bottom-right{right:12px!important;bottom:10px!important}.maplibregl-ctrl-attrib{background:rgba(4,21,39,.56)!important;color:rgba(255,255,255,.52)!important;border-radius:10px!important;backdrop-filter:blur(8px);font-size:9px!important}.maplibregl-ctrl-attrib a{color:rgba(255,255,255,.68)!important}.maplibregl-ctrl-logo{opacity:.5;transform:scale(.72);transform-origin:bottom left}
+.maplibregl-ctrl-bottom-right{right:12px!important;bottom:10px!important}.maplibregl-ctrl-attrib{background:rgba(251,250,246,.72)!important;color:rgba(2,46,100,.52)!important;border:1px solid rgba(2,46,100,.08)!important;border-radius:10px!important;backdrop-filter:blur(8px);font-size:9px!important}.maplibregl-ctrl-attrib a{color:rgba(2,46,100,.72)!important}.maplibregl-ctrl-logo{opacity:.42;transform:scale(.72);transform-origin:bottom left}
 
 /* =========================================================
    RESPONSIVE
@@ -517,7 +663,7 @@ a{color:inherit}
   .maplibregl-ctrl-attrib{max-width:180px!important;font-size:8px!important}
 }
 @media (prefers-reduced-motion:reduce){
-  html{scroll-behavior:auto}.map-loading{animation:none}.network-hero.map-ready .hero-copy{animation:none}.feature-card img,.panel-media img,.detail-panel,.mobile-sheet,.search-panel{transition-duration:.01ms!important}.map-atmosphere::after{display:none}
+  html{scroll-behavior:auto}.map-loading{animation:none}.network-hero.map-ready .hero-copy{animation:none}.feature-card img,.panel-media img,.detail-panel,.mobile-sheet,.search-panel{transition-duration:.01ms!important}.map-atmosphere::before,.map-atmosphere::after,.editorial::before{animation:none!important;transform:none!important}
 }
 </style>
 </head>
@@ -1017,7 +1163,7 @@ function initMap(){
       attributionControl:false,
       logoPosition:"bottom-left",
       renderWorldCopies:false,
-      cooperativeGestures:false,
+      cooperativeGestures:true,
       dragRotate:false,
       pitchWithRotate:false,
       maxPitch:48,
@@ -1043,54 +1189,312 @@ function onMapLoad(){
   logger("map_ready");
 }
 function rethemeBaseMap(){
-  const map=state.map;if(!map)return;
-  const layers=map.getStyle()?.layers||[];
-  layers.forEach(layer=>{
-    const id=layer.id.toLowerCase();
+  const map = state.map;
+  if(!map) return;
+
+  const layers = map.getStyle()?.layers || [];
+
+  layers.forEach(layer => {
+    const id = String(layer.id || "").toLowerCase();
+
     try{
-      if(id.includes("poi")||id.includes("transit")||id.includes("road")||id.includes("building")||id.includes("housenumber")){map.setLayoutProperty(layer.id,"visibility","none");return}
-      if(layer.type==="background")map.setPaintProperty(layer.id,"background-color","#06172b");
-      if(layer.type==="fill"){
-        if(id.includes("water")){map.setPaintProperty(layer.id,"fill-color","#04111f");map.setPaintProperty(layer.id,"fill-opacity",1)}
-        else if(id.includes("land")||id.includes("landcover")||id.includes("park")||id.includes("earth")){map.setPaintProperty(layer.id,"fill-color",id.includes("park")?"#0b2636":"#0b2238");map.setPaintProperty(layer.id,"fill-opacity",.94)}
+      /* -----------------------------------------------------
+         REMOVE VISUAL NOISE
+         ----------------------------------------------------- */
+      if(
+        id.includes("poi") ||
+        id.includes("transit") ||
+        id.includes("road") ||
+        id.includes("motorway") ||
+        id.includes("highway") ||
+        id.includes("street") ||
+        id.includes("building") ||
+        id.includes("housenumber") ||
+        id.includes("aeroway")
+      ){
+        map.setLayoutProperty(layer.id, "visibility", "none");
+        return;
       }
-      if(layer.type==="line"){
-        if(id.includes("boundary")||id.includes("admin")){map.setPaintProperty(layer.id,"line-color","rgba(158,197,213,.22)");map.setPaintProperty(layer.id,"line-width",.55)}
-        else if(id.includes("water")){map.setPaintProperty(layer.id,"line-color","rgba(95,199,207,.12)")}
+
+      /* -----------------------------------------------------
+         LAND / WORLD CANVAS
+
+         OpenFreeMap Dark primarily uses the background layer
+         as the visible land/world base.
+         ----------------------------------------------------- */
+      if(layer.type === "background"){
+        map.setPaintProperty(
+          layer.id,
+          "background-color",
+          "#D4DEDC"
+        );
+        return;
       }
-      if(layer.type==="symbol"){
-        if(id.includes("country")||id.includes("place")||id.includes("city")||id.includes("settlement")){
-          map.setPaintProperty(layer.id,"text-color",id.includes("country")?"rgba(212,224,231,.46)":"rgba(208,220,228,.36)");
-          map.setPaintProperty(layer.id,"text-halo-color","rgba(6,23,43,.92)");map.setPaintProperty(layer.id,"text-halo-width",1.2);
-        }else map.setLayoutProperty(layer.id,"visibility","none");
+
+      /* -----------------------------------------------------
+         FILLS
+         ----------------------------------------------------- */
+      if(layer.type === "fill"){
+
+        /* Ocean, lakes and rivers */
+        if(
+          id.includes("water") ||
+          id.includes("ocean") ||
+          id.includes("lake") ||
+          id.includes("river")
+        ){
+          map.setPaintProperty(
+            layer.id,
+            "fill-color",
+            "#F7F8F5"
+          );
+
+          map.setPaintProperty(
+            layer.id,
+            "fill-opacity",
+            1
+          );
+
+          return;
+        }
+
+        /* Parks / forests / nature */
+        if(
+          id.includes("park") ||
+          id.includes("wood") ||
+          id.includes("forest") ||
+          id.includes("grass") ||
+          id.includes("vegetation")
+        ){
+          map.setPaintProperty(
+            layer.id,
+            "fill-color",
+            "#C3D2CF"
+          );
+
+          map.setPaintProperty(
+            layer.id,
+            "fill-opacity",
+            0.78
+          );
+
+          return;
+        }
+
+        /* Ice / glaciers */
+        if(
+          id.includes("glacier") ||
+          id.includes("ice") ||
+          id.includes("snow")
+        ){
+          map.setPaintProperty(
+            layer.id,
+            "fill-color",
+            "#F7FAFA"
+          );
+
+          map.setPaintProperty(
+            layer.id,
+            "fill-opacity",
+            0.92
+          );
+
+          return;
+        }
+
+        /* Remaining terrain / land cover */
+        if(
+          id.includes("land") ||
+          id.includes("landcover") ||
+          id.includes("earth") ||
+          id.includes("natural")
+        ){
+          map.setPaintProperty(
+            layer.id,
+            "fill-color",
+            "#D4DEDC"
+          );
+
+          map.setPaintProperty(
+            layer.id,
+            "fill-opacity",
+            0.9
+          );
+
+          return;
+        }
       }
-    }catch{}
+
+      /* -----------------------------------------------------
+         BORDERS / COASTLINES
+         ----------------------------------------------------- */
+      if(layer.type === "line"){
+
+        if(
+          id.includes("boundary") ||
+          id.includes("admin") ||
+          id.includes("border")
+        ){
+          map.setPaintProperty(
+            layer.id,
+            "line-color",
+            "rgba(2,46,100,.25)"
+          );
+
+          map.setPaintProperty(
+            layer.id,
+            "line-width",
+            [
+              "interpolate",
+              ["linear"],
+              ["zoom"],
+              1, 0.45,
+              5, 0.75,
+              9, 1
+            ]
+          );
+
+          map.setPaintProperty(
+            layer.id,
+            "line-opacity",
+            0.8
+          );
+
+          return;
+        }
+
+        if(
+          id.includes("water") ||
+          id.includes("river")
+        ){
+          map.setPaintProperty(
+            layer.id,
+            "line-color",
+            "rgba(31,107,163,.22)"
+          );
+
+          map.setPaintProperty(
+            layer.id,
+            "line-opacity",
+            0.72
+          );
+
+          return;
+        }
+      }
+
+      /* -----------------------------------------------------
+         LABELS
+         ----------------------------------------------------- */
+      if(layer.type === "symbol"){
+
+        /* Countries */
+        if(
+          id.includes("country") ||
+          id.includes("state")
+        ){
+          map.setPaintProperty(
+            layer.id,
+            "text-color",
+            "rgba(2,46,100,.80)"
+          );
+
+          map.setPaintProperty(
+            layer.id,
+            "text-halo-color",
+            "rgba(251,250,246,.92)"
+          );
+
+          map.setPaintProperty(
+            layer.id,
+            "text-halo-width",
+            1.35
+          );
+
+          return;
+        }
+
+        /* Cities / settlements */
+        if(
+          id.includes("city") ||
+          id.includes("place") ||
+          id.includes("settlement") ||
+          id.includes("town") ||
+          id.includes("village")
+        ){
+          map.setPaintProperty(
+            layer.id,
+            "text-color",
+            "rgba(83,109,121,.82)"
+          );
+
+          map.setPaintProperty(
+            layer.id,
+            "text-halo-color",
+            "rgba(251,250,246,.90)"
+          );
+
+          map.setPaintProperty(
+            layer.id,
+            "text-halo-width",
+            1.25
+          );
+
+          return;
+        }
+
+        /* Hide unrelated labels */
+        map.setLayoutProperty(
+          layer.id,
+          "visibility",
+          "none"
+        );
+      }
+    }catch(error){
+      logger("map_retheme_layer_skip",{
+        layer:layer.id,
+        message:error?.message || "unsupported paint property"
+      });
+    }
   });
-  try{map.setFog?.({color:"rgba(6,23,43,.92)","high-color":"#0b3550","space-color":"#020b14","horizon-blend":.16,"star-intensity":0})}catch{}
+
+  /* -------------------------------------------------------
+     LIGHT NORDIC ATMOSPHERE
+
+     This replaces the current dark globe fog with a
+     porcelain / smoke atmosphere.
+     ------------------------------------------------------- */
+  try{
+    map.setFog?.({color:"rgba(245,241,234,.08)","high-color":"rgba(95,199,207,.06)","space-color":"#D4DEDC","horizon-blend":.05,"star-intensity":0});
+  }catch(error){
+    logger("map_fog_retheme_skip",{
+      message:error?.message || "fog unavailable"
+    });
+  }
 }
 function addGeoSource(id,options={}){if(!state.map.getSource(id))state.map.addSource(id,{type:"geojson",data:emptyFC(),...options})}
 function installNetworkSourcesAndLayers(){
   const map=state.map;
   addGeoSource("sk-destinations");
   addGeoSource("sk-airports");
-  addGeoSource("sk-hotels",{cluster:true,clusterMaxZoom:9,clusterRadius:48});
+  addGeoSource("sk-hotels",{cluster:true,clusterMaxZoom:9,clusterRadius:48}); 
   addGeoSource("sk-routes",{lineMetrics:true});
   addGeoSource("sk-route-pulse");
 
-  map.addLayer({id:"sk-routes-base",type:"line",source:"sk-routes",paint:{"line-color":"#5fc7cf","line-width":["interpolate",["linear"],["zoom"],1,1,6,1.8],"line-opacity":["case",["boolean",["feature-state","dimmed"],false],.06,["boolean",["feature-state","selected"],false],.92,["boolean",["feature-state","hover"],false],.68,.22]}});
+  map.addLayer({id:"sk-routes-base",type:"line",source:"sk-routes",paint:{"line-color":["case",["boolean",["feature-state","selected"],false],"#022E64",["boolean",["feature-state","hover"],false],"#022E64","#1F6BA3"],"line-width":["interpolate",["linear"],["zoom"],1,1.15,6,2],"line-opacity":["case",["boolean",["feature-state","dimmed"],false],.06,["boolean",["feature-state","selected"],false],.95,["boolean",["feature-state","hover"],false],.72,.28]}});
   map.addLayer({id:"sk-routes-hit",type:"line",source:"sk-routes",paint:{"line-color":"rgba(0,0,0,0)","line-width":16,"line-opacity":0}});
-  map.addLayer({id:"sk-route-pulse",type:"circle",source:"sk-route-pulse",paint:{"circle-radius":4.5,"circle-color":"#f6fbff","circle-opacity":.9,"circle-blur":.45}});
+  map.addLayer({id:"sk-route-pulse",type:"circle",source:"sk-route-pulse",paint:{"circle-radius":4.5,"circle-color":"#022E64","circle-stroke-color":"rgba(255,255,255,.82)","circle-stroke-width":1.2,"circle-opacity":.92,"circle-blur":.32}});
 
-  map.addLayer({id:"sk-hotel-clusters",type:"circle",source:"sk-hotels",filter:["has","point_count"],paint:{"circle-color":"#d1bc98","circle-radius":["step",["get","point_count"],18,5,21,12,25],"circle-stroke-color":"rgba(251,250,246,.85)","circle-stroke-width":1.4,"circle-opacity":.94}});
-  map.addLayer({id:"sk-hotel-cluster-count",type:"symbol",source:"sk-hotels",filter:["has","point_count"],layout:{"text-field":"{point_count_abbreviated}","text-size":10,"text-font":["Noto Sans Bold"]},paint:{"text-color":"#3b301f"}});
-  map.addLayer({id:"sk-hotels",type:"symbol",source:"sk-hotels",filter:["!",["has","point_count"]],layout:{"icon-image":"","icon-size":1,"text-field":"◆","text-size":["interpolate",["linear"],["zoom"],2,8,8,14],"text-allow-overlap":true},paint:{"text-color":"#d1bc98","text-halo-color":"rgba(4,17,31,.85)","text-halo-width":1.2,"text-opacity":["case",["boolean",["feature-state","dimmed"],false],.13,["boolean",["feature-state","selected"],false],1,.88]}});
+  map.addLayer({id:"sk-hotel-clusters",type:"circle",source:"sk-hotels",filter:["has","point_count"],paint:{"circle-color":"#B99A68","circle-radius":["step",["get","point_count"],18,5,21,12,25],"circle-stroke-color":"rgba(255,255,255,.88)","circle-stroke-width":1.5,"circle-opacity":.96}});
+  map.addLayer({id:"sk-hotel-cluster-count",type:"symbol",source:"sk-hotels",filter:["has","point_count"],layout:{"text-field":"{point_count_abbreviated}","text-size":10,"text-font":["Noto Sans Bold"]},paint:{"text-color":"#FBFAF6"}});
+  map.addLayer({id:"sk-hotels",type:"symbol",source:"sk-hotels",filter:["!",["has","point_count"]],layout:{"icon-image":"","icon-size":1,"text-field":"◆","text-size":["interpolate",["linear"],["zoom"],2,8,8,14],"text-allow-overlap":true},paint:{"text-color":"#B99A68","text-halo-color":"rgba(251,250,246,.92)","text-halo-width":1.35,"text-opacity":["case",["boolean",["feature-state","dimmed"],false],.13,["boolean",["feature-state","selected"],false],1,.92]}});
 
-  map.addLayer({id:"sk-airports",type:"circle",source:"sk-airports",paint:{"circle-radius":["interpolate",["linear"],["zoom"],2,2.6,8,5.6],"circle-color":"#06172b","circle-stroke-color":"#dce8ee","circle-stroke-width":1.15,"circle-opacity":["case",["boolean",["feature-state","dimmed"],false],.13,["boolean",["feature-state","selected"],false],1,.72]}});
-  map.addLayer({id:"sk-airport-labels",type:"symbol",source:"sk-airports",minzoom:3.3,layout:{"text-field":["get","iata"],"text-size":9,"text-offset":[0,-1.5],"text-allow-overlap":false},paint:{"text-color":"rgba(225,236,241,.78)","text-halo-color":"rgba(4,17,31,.92)","text-halo-width":1.1}});
+  map.addLayer({id:"sk-airports",type:"circle",source:"sk-airports",paint:{"circle-radius":["interpolate",["linear"],["zoom"],2,2.6,8,5.6],"circle-color":"#F7F8F5","circle-stroke-color":"#173747","circle-stroke-width":1.25,"circle-opacity":["case",["boolean",["feature-state","dimmed"],false],.13,["boolean",["feature-state","selected"],false],1,.82]}});
+  map.addLayer({id:"sk-airport-labels",type:"symbol",source:"sk-airports",minzoom:3.3,layout:{"text-field":["get","iata"],"text-size":9,"text-offset":[0,-1.5],"text-allow-overlap":false},paint:{"text-color":"rgba(2,46,100,.94)","text-halo-color":"rgba(245,241,234,.94)","text-halo-width":1.25}});
 
-  map.addLayer({id:"sk-destination-halo",type:"circle",source:"sk-destinations",paint:{"circle-radius":["case",["boolean",["feature-state","selected"],false],18,["boolean",["feature-state","hover"],false],13,9],"circle-color":"rgba(95,199,207,0)","circle-stroke-color":"rgba(95,199,207,.46)","circle-stroke-width":["case",["boolean",["feature-state","selected"],false],2,1],"circle-opacity":["case",["boolean",["feature-state","dimmed"],false],.08,.72]}});
-  map.addLayer({id:"sk-destinations",type:"circle",source:"sk-destinations",paint:{"circle-radius":["case",["boolean",["feature-state","selected"],false],6,["boolean",["feature-state","hover"],false],5,4],"circle-color":"#fbfaf6","circle-stroke-color":"#5fc7cf","circle-stroke-width":1.6,"circle-opacity":["case",["boolean",["feature-state","dimmed"],false],.22,1]}});
-  map.addLayer({id:"sk-destination-labels",type:"symbol",source:"sk-destinations",layout:{"text-field":["get","name"],"text-size":["interpolate",["linear"],["zoom"],2,9,5,11,9,12],"text-offset":[0,-1.55],"text-anchor":"bottom","text-optional":true,"text-max-width":12},paint:{"text-color":"rgba(244,248,250,.88)","text-halo-color":"rgba(4,17,31,.94)","text-halo-width":1.35,"text-opacity":["case",["boolean",["feature-state","dimmed"],false],.17,1]}});
+  map.addLayer({id:"sk-destination-halo",type:"circle",source:"sk-destinations",paint:{"circle-radius":["case",["boolean",["feature-state","selected"],false],18,["boolean",["feature-state","hover"],false],13,9],"circle-color":"rgba(95,199,207,0)","circle-stroke-color":"rgba(95,199,207,.62)","circle-stroke-width":["case",["boolean",["feature-state","selected"],false],2.2,1.1],"circle-opacity":["case",["boolean",["feature-state","dimmed"],false],.08,.78]}});
+  map.addLayer({id:"sk-destinations",type:"circle",source:"sk-destinations",paint:{"circle-radius":["case",["boolean",["feature-state","selected"],false],6,["boolean",["feature-state","hover"],false],5,4],"circle-color":"#022E64","circle-stroke-color":"#72D5DC","circle-stroke-width":1.7,"circle-opacity":["case",["boolean",["feature-state","dimmed"],false],.22,1]}});
+  map.addLayer({id:"sk-destination-labels",type:"symbol",source:"sk-destinations",layout:{"text-field":["get","name"],"text-size":["interpolate",["linear"],["zoom"],2,9,5,11,9,12],"text-offset":[0,-1.55],"text-anchor":"bottom","text-optional":true,"text-max-width":12},paint:{"text-color":"rgba(23,55,71,.92)","text-halo-color":"rgba(245,241,234,.96)","text-halo-width":1.4,"text-opacity":["case",["boolean",["feature-state","dimmed"],false],.17,1]}});
 }
 
 /* =========================================================
