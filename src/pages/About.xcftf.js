@@ -3,7 +3,7 @@
 // This page owns only the About embed bridge. Global header/footer/session behavior stays in masterPage.js.
 
 import wixLocationFrontend from "wix-location-frontend";
-import { getPublicAboutPayload } from "backend/SKANDI_CORE/publicContent.web";
+import { getPublicAboutPayload } from "backend/SKANDI_CORE/publicContent.web.js";
 import { SITE_MAP, isSafeInternalRoute } from "public/siteMap.js";
 
 const SOURCE = "SKANDI_ABOUT_PAGE";
