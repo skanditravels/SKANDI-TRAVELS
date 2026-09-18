@@ -14,7 +14,7 @@ import {
   savePayrollAdjustment,
   savePayrollEmployeeProfile,
   savePayrollRunLine
-} from "backend/SKANDI_CORE/payroll.web";
+} from "backend/SKANDI_CORE/payroll.web.js";
 
 
 const EMBED_ID = "#payrollStaffEmbed";
