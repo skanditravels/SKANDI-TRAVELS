@@ -10,7 +10,7 @@ import {
   getAssetAccessUrl,
   registerAssetUsage,
   archiveAsset
-} from "backend/SKANDI_CORE/assets.web";
+} from "backend/SKANDI_CORE/assets.web.js";
 import { SITE_MAP, isSafeInternalRoute } from "public/siteMap.js";
 
 const EMBED_ID = "#mediaControlEmbed";
