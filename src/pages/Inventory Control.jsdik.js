@@ -15,8 +15,8 @@ const EMBED_IDS = [
 
 const CHILD_SOURCE = "SKANDI_INVENTORY_EMBED";
 const PARENT_SOURCE = "SKANDI_INVENTORY_PARENT";
-const VERSION = "B-011.30-INVENTORY-SINGLE-DISPATCH";
-const BOOTSTRAP_REUSE_MS = 15000;
+const VERSION = "B-011.30";
+const BOOTSTRAP_REUSE_MS = 18000;
 
 let bootstrapPromise = null;
 let bootstrapSnapshot = null;
