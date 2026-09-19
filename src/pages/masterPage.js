@@ -7,7 +7,7 @@ import wixLocationFrontend from "wix-location-frontend";
 import wixSiteFrontend from "wix-site-frontend";
 import { currentMember, authentication } from "wix-members-frontend";
 import { local } from "wix-storage-frontend";
-import { getCustomerHeaderSession, subscribeCustomerNewsletter } from "backend/SKANDI_CORE/customerSession.web.ja";
+import { getCustomerHeaderSession, subscribeCustomerNewsletter } from "backend/SKANDI_CORE/customerSession.web.js";
 import { getStaffPortalSession } from "backend/SKANDI_CORE/staffAuth.web.js";
 import { SITE_MAP, APP_ROUTES, GLOBAL_CHROME, isSafeInternalRoute } from "public/siteMap.js";
 
