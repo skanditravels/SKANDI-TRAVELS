@@ -48,7 +48,7 @@ import {
 } from "backend/SKANDI_CORE/assets.js";
 
 const MEMBER = Permissions.SiteMember;
-const VERSION = "B-011.30-INVENTORY-SINGLE-DISPATCH";
+const VERSION = "B-011.30";
 
 const object = value =>
   value && typeof value === "object" && !Array.isArray(value) ? value : {};
