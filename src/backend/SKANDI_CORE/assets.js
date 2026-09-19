@@ -16,7 +16,7 @@ import {
 } from "backend/SKANDI_CORE/supabaseServer.js";
 import { getStaffPortalSessionCore } from "backend/SKANDI_CORE/staffAuth.js";
 
-export const ASSET_CORE_VERSION = "R-003.3";
+export const ASSET_CORE_VERSION = "B-011.30";
 
 const PUBLIC_BUCKET = "skandi-public-assets";
 const PRIVATE_BUCKET = "skandi-private-assets";
