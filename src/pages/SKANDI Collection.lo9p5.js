@@ -24,6 +24,23 @@ function getHtml() {
   }
   return null;
 }
+$w.onReady(function () {
+    // Replace "#html1" with the actual ID of your iframe component in Wix Studio
+    $w("#skandiCollectionEmbed").onMessage((event) => {
+        let message = event.data;
+        
+        // Check if the iframe is asking for the config
+        if (message.type === "MASTER_CONFIG_REQUEST") {
+            
+            // Send the config back to the iframe
+            $w("#skandiCollectionEmbed").postMessage({
+                source: "SKANDI_WIX_PARENT",
+                type: "SKANDI_MASTER_CONFIG",
+                payload: MASTER_CONFIG
+            });
+        }
+    });
+});
 
 function parseMessage(value) {
   if (typeof value === "string") {
