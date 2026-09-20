@@ -1,8 +1,11 @@
 // /src/backend/SKANDI_CORE/flightStatus.web.js
-// SKANDI Flight Status B-011.38 — public-safe Wix web-method facade.
+// SKANDI Flight Status B-011.39 — public-safe native Wix web-module facade.
 // Provider transport remains private in backend/SKANDI_CORE/flightStatus.js.
 
-import { Permissions, webMethod } from "@wix/web-methods";
+import {
+  Permissions,
+  webMethod
+} from "wix-web-module";
 import {
   searchFlightStatusCore,
   getFlightStatusAirportDirectoryCore,
