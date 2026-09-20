@@ -1,21 +1,17 @@
 // /src/pages/Flight Status.cn7ah.js
-// SKANDI Flight Status B-011.39 — AirLabs provider convergence + complete HTML bridge.
+// SKANDI Flight Status B-011.40 — AirLabs strict API-contract repair.
 // Page URL: /travel-info/flight-status
 // HTML Embed ID: #flightStatusEmbed
 /* global $w */
 
 import wixLocationFrontend from "wix-location-frontend";
 import { SITE_MAP } from "public/siteMap.js";
-import {
-  searchFlightStatus,
-  getFlightStatusAirportDirectory,
-  getFlightStatusAirportContext
-} from "backend/SKANDI_CORE/flightStatus.web";
+import { handleFlightStatusAction } from "backend/SKANDI_CORE/flightStatus.web";
 
 const EMBED_ID = "#flightStatusEmbed";
 const HTML_SOURCE = "SKANDI_FLIGHT_STATUS";
 const PARENT_SOURCE = "SKANDI_WIX_PARENT";
-const VERSION = "B-011.39-AIRLABS";
+const VERSION = "B-011.40-AIRLABS-STRICT";
 
 let latestSearch = 0;
 let latestDirectory = 0;
@@ -26,7 +22,10 @@ function object(value) {
 }
 
 function clean(value, max = 500) {
-  return String(value ?? "").replace(/[\r\n\t]+/g, " ").trim().slice(0, max);
+  return String(value ?? "")
+    .replace(/[\r\n\t]+/g, " ")
+    .trim()
+    .slice(0, max);
 }
 
 function cleanError(error, fallback = "Flight status request failed.") {
@@ -50,10 +49,12 @@ function send(embed, type, payload = {}) {
 
 function routeWithQuery(base, params = {}) {
   const query = new URLSearchParams();
+
   for (const [key, value] of Object.entries(params)) {
     const next = clean(value, 240);
     if (next) query.set(key, next);
   }
+
   const suffix = query.toString();
   return suffix ? `${base}?${suffix}` : base;
 }
@@ -66,35 +67,65 @@ function handleAirportAction(payload = {}) {
   const destinationSlug = clean(item.destinationSlug, 240);
 
   if (kind === "TRANSFER") {
-    wixLocationFrontend.to(routeWithQuery(SITE_MAP.transfers, { airport: payload.airportIata }));
+    wixLocationFrontend.to(
+      routeWithQuery(SITE_MAP.transfers, { airport: payload.airportIata })
+    );
     return;
   }
 
   if (kind === "HOTEL") {
-    wixLocationFrontend.to(routeWithQuery(SITE_MAP.hotels, {
-      hotel: slug,
-      destination: destinationSlug,
-      airport: payload.airportIata
-    }));
+    wixLocationFrontend.to(
+      routeWithQuery(SITE_MAP.hotels, {
+        hotel: slug,
+        destination: destinationSlug,
+        airport: payload.airportIata
+      })
+    );
     return;
   }
 
   if (kind === "EXPERIENCE") {
-    const route = entityType === "ACTIVITY" ? SITE_MAP.activities : SITE_MAP.tours;
-    wixLocationFrontend.to(routeWithQuery(route, {
-      item: slug,
-      destination: destinationSlug,
-      airport: payload.airportIata
-    }));
+    const route =
+      entityType === "ACTIVITY"
+        ? SITE_MAP.activities
+        : SITE_MAP.tours;
+
+    wixLocationFrontend.to(
+      routeWithQuery(route, {
+        item: slug,
+        destination: destinationSlug,
+        airport: payload.airportIata
+      })
+    );
     return;
   }
 
   if (kind === "DESTINATION") {
-    wixLocationFrontend.to(routeWithQuery(SITE_MAP.destinations, {
-      destination: destinationSlug || slug,
-      airport: payload.airportIata
-    }));
+    wixLocationFrontend.to(
+      routeWithQuery(SITE_MAP.destinations, {
+        destination: destinationSlug || slug,
+        airport: payload.airportIata
+      })
+    );
   }
+}
+
+async function callBackend(action, payload = {}) {
+  const result = await handleFlightStatusAction({
+    action,
+    payload: object(payload)
+  });
+
+  if (!result || result.ok === false) {
+    const error = new Error(
+      clean(result?.error || result?.message, 500) ||
+      "Flight status request failed."
+    );
+    error.publicMessage = clean(result?.publicMessage, 500);
+    throw error;
+  }
+
+  return result;
 }
 
 $w.onReady(function () {
@@ -116,17 +147,23 @@ $w.onReady(function () {
 
     if (message.type === "FLIGHT_STATUS_AIRPORTS_REQUEST") {
       const requestNumber = ++latestDirectory;
+
       try {
-        const result = await getFlightStatusAirportDirectory();
+        const result = await callBackend("AIRPORT_DIRECTORY");
         if (requestNumber !== latestDirectory) return;
+
         send(embed, "FLIGHT_STATUS_AIRPORTS_RESULTS", {
-          items: Array.isArray(result?.items) ? result.items : [],
-          meta: object(result?.meta)
+          items: Array.isArray(result.items) ? result.items : [],
+          meta: object(result.meta)
         });
       } catch (error) {
         if (requestNumber !== latestDirectory) return;
+
         send(embed, "FLIGHT_STATUS_AIRPORTS_ERROR", {
-          message: cleanError(error, "Airport search is temporarily unavailable.")
+          message: cleanError(
+            error,
+            "Airport search is temporarily unavailable."
+          )
         });
       }
       return;
@@ -135,18 +172,32 @@ $w.onReady(function () {
     if (message.type === "FLIGHT_STATUS_AIRPORT_CONTEXT_REQUEST") {
       const requestNumber = ++latestContext;
       const payload = object(message.payload);
+
       try {
-        const result = await getFlightStatusAirportContext(payload);
+        const result = await callBackend("AIRPORT_CONTEXT", payload);
         if (requestNumber !== latestContext) return;
+
         send(embed, "FLIGHT_STATUS_AIRPORT_CONTEXT_RESULTS", {
           ...object(result),
-          requestSerial: Number(result?.requestSerial || payload.requestSerial || 0),
-          contextKey: clean(result?.contextKey || payload.contextKey, 300)
+          requestSerial: Number(
+            result?.requestSerial ||
+            payload.requestSerial ||
+            0
+          ),
+          contextKey: clean(
+            result?.contextKey ||
+            payload.contextKey,
+            300
+          )
         });
       } catch (error) {
         if (requestNumber !== latestContext) return;
+
         send(embed, "FLIGHT_STATUS_AIRPORT_CONTEXT_ERROR", {
-          message: cleanError(error, "This airport guide is temporarily unavailable."),
+          message: cleanError(
+            error,
+            "This airport guide is temporarily unavailable."
+          ),
           requestSerial: Number(payload.requestSerial || 0),
           contextKey: clean(payload.contextKey, 300)
         });
@@ -159,15 +210,12 @@ $w.onReady(function () {
     const searchNumber = ++latestSearch;
 
     try {
-      const result = await searchFlightStatus(message.payload || {});
-      if (searchNumber !== latestSearch) return;
+      const result = await callBackend(
+        "SEARCH",
+        message.payload || {}
+      );
 
-      if (!result || result.ok === false) {
-        send(embed, "FLIGHT_STATUS_ERROR", {
-          message: cleanError(result, "Flight status lookup failed.")
-        });
-        return;
-      }
+      if (searchNumber !== latestSearch) return;
 
       send(embed, "FLIGHT_STATUS_RESULTS", {
         items: Array.isArray(result.items) ? result.items : [],
@@ -177,10 +225,15 @@ $w.onReady(function () {
       if (searchNumber !== latestSearch) return;
 
       send(embed, "FLIGHT_STATUS_ERROR", {
-        message: cleanError(error, "Flight status lookup failed.")
+        message: cleanError(
+          error,
+          "Flight status lookup failed."
+        )
       });
     }
   });
 
-  send(embed, "FLIGHT_STATUS_HOST_READY", { version: VERSION });
+  send(embed, "FLIGHT_STATUS_HOST_READY", {
+    version: VERSION
+  });
 });
