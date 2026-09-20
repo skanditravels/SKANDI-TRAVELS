@@ -1,5 +1,5 @@
 // /src/backend/SKANDI_CORE/flightStatus.js
-// SKANDI Flight Status B-011.38 — canonical public flight-status + airport-context core.
+// SKANDI Flight Status B-011.39 — canonical public flight-status + airport-context core.
 // Owns AirLabs transport/normalization and public-safe airport-context assembly.
 // No page routing or direct frontend database access belongs here.
 
@@ -10,7 +10,7 @@ import { restRequest } from "backend/SKANDI_CORE/supabaseServer.js";
 import { SkandiError } from "backend/SKANDI_CORE/platformErrors.js";
 import { text, upper, lower, record, safeNumber } from "backend/SKANDI_CORE/platformValidation.js";
 
-const FLIGHT_STATUS_CORE_VERSION = "B-011.38";
+const FLIGHT_STATUS_CORE_VERSION = "B-011.39";
 const AIRLABS_BASE = "https://airlabs.co/api/v9";
 const AIRLABS_SECRET_NAMES = Object.freeze([
   "AIRLABS_API_KEY",
