@@ -1,5 +1,5 @@
 // /src/pages/Flight Status.cn7ah.js
-// SKANDI Flight Status B-011.38 — AirLabs provider convergence + complete HTML bridge.
+// SKANDI Flight Status B-011.39 — AirLabs provider convergence + complete HTML bridge.
 // Page URL: /travel-info/flight-status
 // HTML Embed ID: #flightStatusEmbed
 /* global $w */
@@ -15,7 +15,7 @@ import {
 const EMBED_ID = "#flightStatusEmbed";
 const HTML_SOURCE = "SKANDI_FLIGHT_STATUS";
 const PARENT_SOURCE = "SKANDI_WIX_PARENT";
-const VERSION = "B-011.38-AIRLABS";
+const VERSION = "B-011.39-AIRLABS";
 
 let latestSearch = 0;
 let latestDirectory = 0;
