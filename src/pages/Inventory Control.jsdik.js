@@ -5,14 +5,9 @@
 // The page imports exactly one Wix web method. All action routing lives in
 // backend/SKANDI_CORE/inventory.web.js so the page and backend cannot drift.
 
-import { handleInventoryAction } from "backend/SKANDI_CORE/inventory.web";
+import { handleInventoryAction } from "backend/SKANDI_CORE/inventory.web.js";
 
-const EMBED_IDS = [
-  "#inventoryControlEmbed",
-  "#alteaInventoryControlEmbed",
-  "#masterInventoryEmbed"
-];
-
+const EMBED_IDS = "#inventoryControlEmbed";
 const CHILD_SOURCE = "SKANDI_INVENTORY_EMBED";
 const PARENT_SOURCE = "SKANDI_INVENTORY_PARENT";
 const VERSION = "B-011.35-INVENTORY-SINGLE-DISPATCH";
@@ -324,4 +319,3 @@ $w.onReady(() => {
     }
   );
 });
-Displaying Inventory Control.jsdik.js.
