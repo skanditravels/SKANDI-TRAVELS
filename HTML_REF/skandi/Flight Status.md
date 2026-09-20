@@ -1,84 +1,153 @@
-# Flight Status
+# SKANDI Flight Status
 
-## INFO
+**STATUS:** NEEDS REVIEW  
+**SLUG:** `/about/flight-status`  
+**WIX PAGE:** /src/pages/Flight Status.cn7ah.js  
+**AREA:** SKANDI  
+**LIVE HTML:** YES  
+**ELEMENT:** `#flightStatusEmbed`  
+**LAST SYNCED:** 2026-09-18
 
-- STATUS: ** **IN PROGRESS** **
-- LIVE HTML: YES
-- WIX PAGE: `Flight Status.cn7ah`
-- SLUG: `/travel-info/flight-status`
-- ELEMENT: `#flightStatusEmbed`
-- AREA: **SKANDI**
-- VERSION: `B-011.37`
-- LAST SYNCED: 2026-09-16
-- RUNIME CHAIN: `/HTML_REF/skandi/Flight Status.md` → `/src/pages/Flight Status.cn7ah.js` → `backend/SKANDI_CORE/flightStatus.web.js` → `backend/SKANDI_CORE/flightStatus.js` → Aviationstack + canonical Supabase public data.
-- The HTML embed owns presentation and postMessage interaction only. It must not access Supabase or provider credentials directly.
-- Flight data is normalized by the canonical Flight Status backend.
-- Airport context is read from published/customer-visible airport and inventory sources only.
-- Global SKANDI header/footer remain site-level and are not duplicated inside the embed.
+### HOW TO USE
 
-## HOW TO USE
-***STATUS (OWNER): "TODO", "IN PROGRESS", "NEEDS REVIEW", "REVISIONS NEEDED", "READY", "LIVE", "ARCHIVED"
-STATUS (AGENT): "TODO", "IN PROGRESS", "REVISIONS NEEDED", "READY".***
-## CONTRACT
+***STATUS (OWNER): "TODO", "IN PROGRESS", "NEEDS REVIEW", "REVISIONS NEEDED", "READY", "LIVE", "ARCHIVED" STATUS (AGENT): "TODO", "IN PROGRESS", "REVISIONS NEEDED", "READY".***
 
-Child source: `SKANDI_FLIGHT_STATUS`  
-Parent source: `SKANDI_WIX_PARENT`
+## COMMENT SECTION
+(START ON A NEW ROW, LOG IF A CHANGE IS MADE THAT REQUIRES ATTENTION)
 
-Messages:
-- `FLIGHT_STATUS_READY`
-- `FLIGHT_STATUS_HOST_READY`
-- `FLIGHT_STATUS_AIRPORTS_REQUEST`
-- `FLIGHT_STATUS_AIRPORTS_RESULTS`
-- `FLIGHT_STATUS_AIRPORTS_ERROR`
-- `FLIGHT_STATUS_SEARCH`
-- `FLIGHT_STATUS_RESULTS`
-- `FLIGHT_STATUS_ERROR`
-- `FLIGHT_STATUS_AIRPORT_CONTEXT_REQUEST`
-- `FLIGHT_STATUS_AIRPORT_CONTEXT_RESULTS`
-- `FLIGHT_STATUS_AIRPORT_CONTEXT_ERROR`
-- `FLIGHT_STATUS_AIRPORT_ACTION`
+... END
 
-## DATA OWNERSHIP
+---
 
-Flight-status provider:
-- Aviationstack, server-side through `backend/SKANDI_CORE/flightStatus.js`.
+## TECHNICAL INFO / LOG
 
-Airport passenger information:
-- `public.travel_info_airports`, filtered to active, published and customer-visible records.
+> **Canonical reference path:** `/HTML_REF/skandi/flight-status.md`  
+> **Generated locally:** 2026-09-18  
+> **Verification level:** STATICALLY VERIFIED FROM UPLOADED SOURCE SET / REQUIRES LIVE TEST FOR RUNTIME DEPENDENCIES
 
-Related customer products:
-- `public.inventory_public_entities_v`, whose verified view definition limits results to `status = 'PUBLISHED'`, `active = true`, and `customer_visible = true`.
-- Supported related entity types: TRANSFER, HOTEL, DESTINATION, GUIDED_TOUR, ACTIVITY.
+### Source Identity
 
-No production sample/fallback records are permitted.
+- **Source file identity:** `/HTML_REF/skandi/flight-status.md`
+- **Primary uploaded source:** `SKANDI_B01139_Flight_Status_Airlabs_WebModule_Hotfix_2026-09-20/WIX_HTML/Flight Status.html`
+- **Display / page name:** SKANDI Flight Status
+- **System area:** `SKANDI`
+- **Wix page filename:** `/src/pages/Flight Status.cn7ah.js`
+- **Wix route / slug:** `/about/flight-status`
+- **Wix HTML element ID:** `#flightStatusEmbed`
+- **Current status:** NEEDS REVIEW
+- **Live HTML:** YES
+- **Source-of-truth status:** GENERATED HTML_REF CANDIDATE. The executable payload is sourced from the selected uploaded file; live deployment parity still requires verification.
+- **Last synced:** 2026-09-18
 
-## CHANGE LOG
+### Ownership and Dependency Chain
 
-### B-011.37 · 2026-09-18
+`/HTML_REF/skandi/flight-status.md`
+→ live Wix HTML / `#flightStatusEmbed`
+→ `SKANDI_B01139_Flight_Status_Airlabs_WebModule_Hotfix_2026-09-20/src/pages/Flight Status.cn7ah.js`
+→ `backend/SKANDI_CORE/flightStatus.web.js` + `backend/SKANDI_CORE/flightStatus.web`
+→ `backend/SKANDI_CORE/flightStatus.js`
+→ Supabase / Wix
 
-- Final full-chain review after B-011.36.
-- Preserves Airport Board, Flight Number and Route lookup modes.
-- Keeps the FIDS time-led, high-contrast and airport-display focused.
-- Selecting an airport transitions the page into that airport's guide and customer-visible SKANDI continuation products.
-- Airport autocomplete is supplied by published airport records.
-- Airport guide content supports terminal, transport, lounge, dining, airport hotel, quick facts, official airport links and destination context when present in the database.
-- Related transfer, hotel, destination and experience cards come only from the canonical public inventory view.
-- Added strict mode-specific search payloads so hidden/stale values cannot leak between Airport, Flight Number and Route searches.
-- Fixed blank route fields so they cannot resolve to the first airport in the directory.
-- Date-change auto-refresh now respects the active lookup mode.
-- Frontend date limits now use the same UTC day window as the canonical backend, preventing client/backend disagreement around midnight.
-- Added bounded UI request timeouts: flight-status searches cannot remain in an infinite loading state, and airport-context loading can fail independently without blocking the FIDS.
-- Added stale context protection and request invalidation on clear/mode changes.
-- Parent-message handling now validates both the SKANDI parent source contract and the actual parent window.
-- Unknown airlines use a neutral carrier fallback instead of an unrelated airline/brand logo.
-- Empty airport modules remain hidden rather than fabricating restaurant, lounge, hotel or product content.
-- All public commerce actions route through the Wix page controller and canonical site-map routes.
-- No direct Supabase, Aviationstack, Duffel or credential access exists in the HTML.
-- Static verification: HTML parse PASS, JavaScript syntax PASS, zero duplicate IDs.
-- Browser smoke verification: mode-specific payloads PASS, ARN airport context PASS, SKANDI Transfer rendering PASS, FIDS local schedule rendering PASS, desktop horizontal overflow PASS, no page JavaScript errors in the tested state.
-- Live deployment/runtime still depends on the Wix page being updated with the B-011.37 controller/backend files and a configured Aviationstack commercial plan/secret appropriate for the requested data features.
+### Linked Wix Page Controller
 
-## COMPLETE INTENDED LIVE HTML
+- `SKANDI_B01139_Flight_Status_Airlabs_WebModule_Hotfix_2026-09-20/src/pages/Flight Status.cn7ah.js`
+
+### Canonical Backend Facade(s)
+
+- `backend/SKANDI_CORE/flightStatus.web.js`
+- `backend/SKANDI_CORE/flightStatus.web`
+
+### Canonical Backend Core Implementation(s)
+
+- `backend/SKANDI_CORE/flightStatus.js`
+
+### Canonical Backend Import Presence Check
+
+- `SKANDI_B01139_Flight_Status_Airlabs_WebModule_Hotfix_2026-09-20/src/backend/SKANDI_CORE/flightStatus.js` → `backend/SKANDI_CORE/supabaseServer.js`: **NOT PRESENT IN UPLOADED SOURCE SET**
+- `SKANDI_B01139_Flight_Status_Airlabs_WebModule_Hotfix_2026-09-20/src/backend/SKANDI_CORE/flightStatus.js` → `backend/SKANDI_CORE/platformErrors.js`: **NOT PRESENT IN UPLOADED SOURCE SET**
+- `SKANDI_B01139_Flight_Status_Airlabs_WebModule_Hotfix_2026-09-20/src/backend/SKANDI_CORE/flightStatus.js` → `backend/SKANDI_CORE/platformValidation.js`: **NOT PRESENT IN UPLOADED SOURCE SET**
+- `SKANDI_B01139_Flight_Status_Airlabs_WebModule_Hotfix_2026-09-20/src/backend/SKANDI_CORE/flightStatus.web.js` → `backend/SKANDI_CORE/flightStatus.js`: **PRESENT IN UPLOADED SOURCE SET**
+- `SKANDI_B01139_Flight_Status_Airlabs_WebModule_Hotfix_2026-09-20/src/pages/Flight Status.cn7ah.js` → `backend/SKANDI_CORE/flightStatus.web`: **PRESENT IN UPLOADED SOURCE SET**
+
+### Relevant Supabase Resources
+
+NOT VERIFIED FROM UPLOADED SOURCE SET
+
+### External API / Provider Dependencies
+
+- **Supabase:** detected in `SKANDI_B01139_Flight_Status_Airlabs_WebModule_Hotfix_2026-09-20/HTML_REF/skandi/Flight Status.md`, `SKANDI_B01139_Flight_Status_Airlabs_WebModule_Hotfix_2026-09-20/README.md`
+- **Wix:** detected in `SKANDI_B01139_Flight_Status_Airlabs_WebModule_Hotfix_2026-09-20/HTML_REF/skandi/Flight Status.md`, `SKANDI_B01139_Flight_Status_Airlabs_WebModule_Hotfix_2026-09-20/README.md`, `SKANDI_B01139_Flight_Status_Airlabs_WebModule_Hotfix_2026-09-20/src/backend/SKANDI_CORE/flightStatus.js`, `SKANDI_B01139_Flight_Status_Airlabs_WebModule_Hotfix_2026-09-20/src/backend/SKANDI_CORE/flightStatus.web.js`, `SKANDI_B01139_Flight_Status_Airlabs_WebModule_Hotfix_2026-09-20/src/pages/Flight Status.cn7ah.js`
+
+### Authentication / Authorization Boundary
+
+- Role / permission checks detected in `SKANDI_B01139_Flight_Status_Airlabs_WebModule_Hotfix_2026-09-20/HTML_REF/skandi/Flight Status.md`, `SKANDI_B01139_Flight_Status_Airlabs_WebModule_Hotfix_2026-09-20/src/backend/SKANDI_CORE/flightStatus.js`, `SKANDI_B01139_Flight_Status_Airlabs_WebModule_Hotfix_2026-09-20/src/backend/SKANDI_CORE/flightStatus.web.js`, `SKANDI_B01139_Flight_Status_Airlabs_WebModule_Hotfix_2026-09-20/WIX_HTML/Flight Status.html`
+
+### Important Cross-Layer Message Contracts
+
+| Contract | Emitters | Receivers | Static result |
+|---|---|---|---|
+| `FLIGHT_STATUS_AIRPORT_ACTION` | None detected | `SKANDI_B01139_Flight_Status_Airlabs_WebModule_Hotfix_2026-09-20/src/pages/Flight Status.cn7ah.js` | Incomplete within uploaded source set |
+| `FLIGHT_STATUS_AIRPORT_CONTEXT_ERROR` | None detected | `SKANDI_B01139_Flight_Status_Airlabs_WebModule_Hotfix_2026-09-20/HTML_REF/skandi/Flight Status.md`<br>`SKANDI_B01139_Flight_Status_Airlabs_WebModule_Hotfix_2026-09-20/WIX_HTML/Flight Status.html` | Incomplete within uploaded source set |
+| `FLIGHT_STATUS_AIRPORT_CONTEXT_REQUEST` | None detected | `SKANDI_B01139_Flight_Status_Airlabs_WebModule_Hotfix_2026-09-20/src/pages/Flight Status.cn7ah.js` | Incomplete within uploaded source set |
+| `FLIGHT_STATUS_AIRPORT_CONTEXT_RESULTS` | None detected | `SKANDI_B01139_Flight_Status_Airlabs_WebModule_Hotfix_2026-09-20/HTML_REF/skandi/Flight Status.md`<br>`SKANDI_B01139_Flight_Status_Airlabs_WebModule_Hotfix_2026-09-20/WIX_HTML/Flight Status.html` | Incomplete within uploaded source set |
+| `FLIGHT_STATUS_AIRPORTS_ERROR` | None detected | `SKANDI_B01139_Flight_Status_Airlabs_WebModule_Hotfix_2026-09-20/HTML_REF/skandi/Flight Status.md`<br>`SKANDI_B01139_Flight_Status_Airlabs_WebModule_Hotfix_2026-09-20/WIX_HTML/Flight Status.html` | Incomplete within uploaded source set |
+| `FLIGHT_STATUS_AIRPORTS_REQUEST` | None detected | `SKANDI_B01139_Flight_Status_Airlabs_WebModule_Hotfix_2026-09-20/src/pages/Flight Status.cn7ah.js` | Incomplete within uploaded source set |
+| `FLIGHT_STATUS_AIRPORTS_RESULTS` | None detected | `SKANDI_B01139_Flight_Status_Airlabs_WebModule_Hotfix_2026-09-20/HTML_REF/skandi/Flight Status.md`<br>`SKANDI_B01139_Flight_Status_Airlabs_WebModule_Hotfix_2026-09-20/WIX_HTML/Flight Status.html` | Incomplete within uploaded source set |
+| `FLIGHT_STATUS_ERROR` | None detected | `SKANDI_B01139_Flight_Status_Airlabs_WebModule_Hotfix_2026-09-20/HTML_REF/skandi/Flight Status.md`<br>`SKANDI_B01139_Flight_Status_Airlabs_WebModule_Hotfix_2026-09-20/WIX_HTML/Flight Status.html` | Incomplete within uploaded source set |
+| `FLIGHT_STATUS_HOST_READY` | None detected | `SKANDI_B01139_Flight_Status_Airlabs_WebModule_Hotfix_2026-09-20/HTML_REF/skandi/Flight Status.md`<br>`SKANDI_B01139_Flight_Status_Airlabs_WebModule_Hotfix_2026-09-20/WIX_HTML/Flight Status.html` | Incomplete within uploaded source set |
+| `FLIGHT_STATUS_READY` | None detected | `SKANDI_B01139_Flight_Status_Airlabs_WebModule_Hotfix_2026-09-20/src/pages/Flight Status.cn7ah.js` | Incomplete within uploaded source set |
+| `FLIGHT_STATUS_RESULTS` | None detected | `SKANDI_B01139_Flight_Status_Airlabs_WebModule_Hotfix_2026-09-20/HTML_REF/skandi/Flight Status.md`<br>`SKANDI_B01139_Flight_Status_Airlabs_WebModule_Hotfix_2026-09-20/WIX_HTML/Flight Status.html` | Incomplete within uploaded source set |
+
+### Current Architectural Notes
+
+- This document was generated from the uploaded source set only. Missing details are explicitly marked as not verified rather than inferred beyond available evidence.
+- The complete executable/source payload below is preserved from the selected primary source after browser text decoding; it is not shortened or summarized.
+- HTML_REF is a reference artifact and must not be imported by runtime application code.
+- Canonical Wix backend ownership remains under `backend/SKANDI_CORE/...`; any detected legacy namespace is listed under Open Issues.
+- Static analysis can identify references and contracts but cannot prove production deployment parity, authentication behavior, Supabase schema/RLS correctness, provider success, or secret configuration.
+
+### Open Issues / Required Verification / Migration Items
+
+- Message contract `FLIGHT_STATUS_AIRPORT_ACTION` has a receiver but no emitter detected in the uploaded source set.
+- Message contract `FLIGHT_STATUS_AIRPORT_CONTEXT_ERROR` has a receiver but no emitter detected in the uploaded source set.
+- Message contract `FLIGHT_STATUS_AIRPORT_CONTEXT_REQUEST` has a receiver but no emitter detected in the uploaded source set.
+- Message contract `FLIGHT_STATUS_AIRPORT_CONTEXT_RESULTS` has a receiver but no emitter detected in the uploaded source set.
+- Message contract `FLIGHT_STATUS_AIRPORTS_ERROR` has a receiver but no emitter detected in the uploaded source set.
+- Message contract `FLIGHT_STATUS_AIRPORTS_REQUEST` has a receiver but no emitter detected in the uploaded source set.
+- Message contract `FLIGHT_STATUS_AIRPORTS_RESULTS` has a receiver but no emitter detected in the uploaded source set.
+- Message contract `FLIGHT_STATUS_ERROR` has a receiver but no emitter detected in the uploaded source set.
+- Message contract `FLIGHT_STATUS_HOST_READY` has a receiver but no emitter detected in the uploaded source set.
+- Message contract `FLIGHT_STATUS_READY` has a receiver but no emitter detected in the uploaded source set.
+- Message contract `FLIGHT_STATUS_RESULTS` has a receiver but no emitter detected in the uploaded source set.
+- Canonical backend import `backend/SKANDI_CORE/supabaseServer.js` referenced by `SKANDI_B01139_Flight_Status_Airlabs_WebModule_Hotfix_2026-09-20/src/backend/SKANDI_CORE/flightStatus.js` was not present in the uploaded source set.
+- Canonical backend import `backend/SKANDI_CORE/platformErrors.js` referenced by `SKANDI_B01139_Flight_Status_Airlabs_WebModule_Hotfix_2026-09-20/src/backend/SKANDI_CORE/flightStatus.js` was not present in the uploaded source set.
+- Canonical backend import `backend/SKANDI_CORE/platformValidation.js` referenced by `SKANDI_B01139_Flight_Status_Airlabs_WebModule_Hotfix_2026-09-20/src/backend/SKANDI_CORE/flightStatus.js` was not present in the uploaded source set.
+- Supabase is referenced, but no table/view/RPC resource could be statically identified from the uploaded source set.
+- Live Wix deployment parity, runtime authentication, provider behavior, secrets, database schema validity, RLS, and production data were not executed by this static browser tool.
+
+### Uploaded Source Set
+
+| Source file | Classified role | Size |
+|---|---|---:|
+| `SKANDI_B01139_Flight_Status_Airlabs_WebModule_Hotfix_2026-09-20/HTML_REF/skandi/Flight Status.md` | EXISTING HTML_REF | 112.7 KB |
+| `SKANDI_B01139_Flight_Status_Airlabs_WebModule_Hotfix_2026-09-20/README.md` | MARKDOWN | 3.87 KB |
+| `SKANDI_B01139_Flight_Status_Airlabs_WebModule_Hotfix_2026-09-20/SHA256SUMS.txt` | TEXT | 664 B |
+| `SKANDI_B01139_Flight_Status_Airlabs_WebModule_Hotfix_2026-09-20/src/backend/SKANDI_CORE/flightStatus.js` | BACKEND CORE | 23.5 KB |
+| `SKANDI_B01139_Flight_Status_Airlabs_WebModule_Hotfix_2026-09-20/src/backend/SKANDI_CORE/flightStatus.web.js` | BACKEND FACADE | 920 B |
+| `SKANDI_B01139_Flight_Status_Airlabs_WebModule_Hotfix_2026-09-20/src/pages/Flight Status.cn7ah.js` | WIX PAGE CONTROLLER | 5.52 KB |
+| `SKANDI_B01139_Flight_Status_Airlabs_WebModule_Hotfix_2026-09-20/WIX_HTML/Flight Status.html` | HTML SOURCE | 110.6 KB |
+
+### Change Log
+
+- 2026-09-18 — HTML_REF candidate generated from the uploaded source set. Architecture metadata and cross-layer contracts were statically derived; live Wix/runtime/database/provider verification was not performed by this browser-only tool.
+
+---
+
+## COMPLETE LIVE HTML / SOURCE IMPLEMENTATION
+
+**Primary payload source:** `SKANDI_B01139_Flight_Status_Airlabs_WebModule_Hotfix_2026-09-20/WIX_HTML/Flight Status.html`
+
+The following payload is complete and is not intentionally shortened, summarized, reconstructed, or replaced with placeholders.
 
 ```html
 <!DOCTYPE html>
@@ -87,7 +156,7 @@ No production sample/fallback records are permitted.
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#f6faff">
-<title>Flight Status | SKANDI Travels · B-011.37</title>
+<title>Flight Status | SKANDI Travels · B-011.39</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Roboto+Mono:wght@500;600;700&display=swap" rel="stylesheet">
@@ -132,51 +201,104 @@ button,input,select{font:inherit}button{cursor:pointer}a{color:inherit}
 [hidden]{display:none!important}
 .page{position:relative;overflow:hidden;background:#fff}
 .wrap{width:min(var(--content),calc(100% - 56px));margin-inline:auto}
+.sr-only{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
 
 /* =========================================================
-   LIGHT SKANDI HERO — same family as Our Network
+   HERO SECTION
    ========================================================= */
 .hero{
   position:relative;isolation:isolate;overflow:hidden;
-  min-height:620px;
-  background:
-    radial-gradient(circle at var(--mx) var(--my),rgba(95,199,207,.18),transparent 21%),
-    radial-gradient(circle at 12% 28%,rgba(40,92,168,.10),transparent 22%),
-    linear-gradient(180deg,#f8fbff 0%,#edf5ff 55%,#f3f6f8 100%);
+  min-height:585px;
+  background: radial-gradient(circle at var(--mx) var(--my),rgba(95,199,207,.17),transparent 20%),
+              radial-gradient(circle at 84% 12%,rgba(40,92,168,.08),transparent 19%),
+              linear-gradient(180deg,#f8fbff 0%,#edf5ff 58%,#f3f6f8 100%);
 }
 .hero::before{
-  content:"";position:absolute;inset:0;z-index:-2;pointer-events:none;opacity:.23;
+  content:"";position:absolute;inset:0;z-index:-2;pointer-events:none;opacity:.30;
   background-image:
-    linear-gradient(rgba(11,58,122,.055) 1px,transparent 1px),
-    linear-gradient(90deg,rgba(11,58,122,.055) 1px,transparent 1px);
-  background-size:38px 38px;
+    linear-gradient(rgba(11,58,122,.052) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(11,58,122,.052) 1px,transparent 1px),
+    linear-gradient(115deg,transparent 0 48%,rgba(2,46,100,.045) 49%,transparent 50%);
+  background-size:42px 42px, 42px 42px, 260px 260px;
   mask-image:linear-gradient(180deg,#000,rgba(0,0,0,.38) 68%,transparent);
   animation:gridDrift 28s linear infinite;
 }
-.hero::after{
-  content:"";position:absolute;left:-12%;right:-12%;bottom:-170px;height:340px;z-index:1;pointer-events:none;
-  background:
-    radial-gradient(ellipse at 18% 42%,rgba(255,255,255,.90),transparent 43%),
-    radial-gradient(ellipse at 68% 42%,rgba(217,241,241,.62),transparent 46%),
-    linear-gradient(180deg,transparent,#f3f6f8 86%);
-  filter:blur(18px);
-}
 @keyframes gridDrift{to{background-position:76px 38px,38px 76px}}
-.hero-route-art{position:absolute;inset:0;z-index:-1;pointer-events:none;opacity:.55;filter:drop-shadow(0 0 10px rgba(95,199,207,.12))}
-.hero-route-art path{fill:none;stroke:url(#heroRoute);stroke-width:1.15;stroke-dasharray:4 10;animation:routeFlow 18s linear infinite}
-.hero-route-art circle{fill:var(--sk-aqua);filter:drop-shadow(0 0 8px rgba(95,199,207,.75));animation:nodePulse 2.8s ease-in-out infinite}
-@keyframes routeFlow{to{stroke-dashoffset:-180}}@keyframes nodePulse{50%{opacity:.42;transform:scale(.85)}}
-.hero-inner{position:relative;z-index:3;padding:72px 0 168px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:42px;align-items:start}
-.hero-copy{max-width:790px}
+
+/* Seamless faded hero image */
+.hero-image-fade {
+  position: absolute;
+  inset: 0;
+  z-index: -3;
+  pointer-events: none;
+  background-image: 
+    linear-gradient(180deg, rgba(248, 251, 255, 0.65) 0%, rgba(237, 245, 255, 0.85) 55%, #f3f6f8 100%),
+    url('https://static.wixstatic.com/media/394052_54b5f789d38c4b0f87678a2f4852c85e~mv2.png');
+  background-size: cover;
+  background-position: center 30%; 
+  -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 55%, transparent 95%);
+  mask-image: linear-gradient(180deg, #000 0%, #000 55%, transparent 95%);
+}
+
+.terminal-architecture{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:0}
+.terminal-glass-lines{
+  position:absolute;right:-3%;top:0;width:58%;height:100%;opacity:.48;
+  background:
+    linear-gradient(90deg,transparent 0 8%,rgba(2,46,100,.08) 8% 8.3%,transparent 8.3% 23%,rgba(2,46,100,.06) 23% 23.3%,transparent 23.3% 40%,rgba(2,46,100,.07) 40% 40.3%,transparent 40.3% 58%,rgba(2,46,100,.055) 58% 58.3%,transparent 58.3%),
+    linear-gradient(180deg,rgba(255,255,255,.16),rgba(95,199,207,.05));
+  transform:skewX(-8deg);
+  mask-image:linear-gradient(90deg,transparent,#000 24%,#000);
+}
+.terminal-ceiling-lines{
+  position:absolute;left:45%;right:-15%;top:-20%;height:60%;opacity:.30;
+  transform:perspective(700px) rotateX(62deg) rotateZ(-4deg);
+  transform-origin:center top;
+  background:
+    repeating-linear-gradient(90deg,rgba(2,46,100,.09) 0 1px,transparent 1px 44px),
+    repeating-linear-gradient(180deg,rgba(2,46,100,.075) 0 1px,transparent 1px 38px);
+  mask-image:linear-gradient(180deg,#000,transparent);
+}
+.terminal-apron-light{
+  position:absolute;width:9px;height:9px;border-radius:50%;opacity:.75;
+  animation:apronGlow 3.6s ease-in-out infinite alternate;
+}
+.terminal-apron-light.l1{right:11%;top:23%;background:#4a90e2;box-shadow:0 0 8px 4px rgba(74, 144, 226, 0.4)}
+.terminal-apron-light.l2{right:25%;top:36%;background:#e74c3c;box-shadow:0 0 12px 6px rgba(231, 76, 60, 0.3);animation:strobeRed 2s infinite;animation-delay:-1.2s}
+.terminal-apron-light.l3{right:7%;top:58%;background:#fdf5e6;box-shadow:0 0 15px 8px rgba(253, 245, 230, 0.2);animation-delay:-2.1s}
+.terminal-apron-light.l4{right:39%;top:18%;background:#fdf5e6;box-shadow:0 0 15px 8px rgba(253, 245, 230, 0.2);animation-delay:-.7s}
+@keyframes strobeRed {0%, 10%, 100%{opacity:0.2;transform:scale(0.8)} 5%{opacity:1;transform:scale(1.1)}}
+@keyframes apronGlow{to{opacity:.30;transform:scale(.72)}}
+
+.hero-inner{position:relative;z-index:3;padding:58px 0 118px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:42px}
+.hero-copy{max-width:790px;position:relative;padding:26px 0}
+.hero-copy::before{
+  content:"";position:absolute;left:-42px;top:10%;bottom:10%;width:4px;border-radius:4px;
+  background:linear-gradient(180deg,#5fc7cf,#022e64 60%,transparent);opacity:.50
+}
 .eyebrow{display:flex;align-items:center;gap:11px;color:var(--sk-blue);font-size:10px;font-weight:800;letter-spacing:.18em;text-transform:uppercase}
 .eyebrow::before{content:"";width:38px;height:1px;background:linear-gradient(90deg,var(--sk-aqua),transparent)}
-.hero h1{margin:16px 0 18px;color:var(--sk-navy);font-size:clamp(52px,6.8vw,94px);font-weight:550;line-height:.91;letter-spacing:-.072em;text-wrap:balance}
+.hero h1{margin:16px 0 18px;color:var(--sk-navy);font-size:clamp(48px,6.2vw,84px);font-weight:550;line-height:.91;letter-spacing:-.072em;text-wrap:balance}
 .hero h1 span{display:block;color:#0b5c85;font-weight:400}
 .hero-lede{max-width:720px;color:#5d6d7e;font-size:clamp(14px,1.25vw,18px);line-height:1.75}
-.hero-status{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:min(420px,34vw)}
+
+.hero-wayfinding{display:flex;gap:8px;flex-wrap:wrap;margin-top:24px}
+.hero-wayfinding span{min-height:36px;display:inline-flex;align-items:center;gap:9px;padding:0 13px;border-radius:9px;background:#022e64;color:#fff;font-size:8px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;box-shadow:0 9px 22px rgba(2,46,100,.11)}
+.hero-wayfinding span:nth-child(2){background:#d9f1f1;color:#022e64}
+.hero-wayfinding span:nth-child(3){background:#e9eef8;color:#022e64}
+.hero-wayfinding b{font-size:14px;font-weight:600}
+.terminal-location-line{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-top:13px;color:#738497;font-size:8px;font-weight:800;letter-spacing:.10em;text-transform:uppercase}
+.terminal-location-line i{width:4px;height:4px;border-radius:50%;background:#5fc7cf}
+.terminal-location-icon{display:inline-grid;place-items:center;height:24px;padding:0 8px;border-radius:5px;background:#022e64;color:#fff;font-family:"Roboto Mono",monospace;font-size:7px;letter-spacing:.10em}
+
+.hero-status{position:relative;overflow:hidden;display:grid;grid-template-columns:1fr 1fr;gap:10px;width:min(400px,33vw)}
+.hero-status::after{
+  content:"";position:absolute;inset:0;pointer-events:none;border-radius:inherit;
+  background:linear-gradient(115deg,transparent 0 40%,rgba(255,255,255,.36) 50%,transparent 60%);
+  background-size:240% 100%;animation:heroPanelSweep 9s ease-in-out infinite
+}
+@keyframes heroPanelSweep{0%,32%{background-position:-140% 0}72%,100%{background-position:170% 0}}
 .hero-stat{position:relative;overflow:hidden;min-height:116px;padding:18px;border:1px solid rgba(2,46,100,.08);border-radius:22px;background:rgba(255,255,255,.82);backdrop-filter:blur(16px);box-shadow:0 14px 36px rgba(2,46,100,.09)}
 .hero-stat:nth-child(2){background:linear-gradient(135deg,#022e64,#0b5c85);color:#fff}
-.hero-stat::after{content:"";position:absolute;width:100px;height:100px;border-radius:50%;right:-52px;top:-56px;border:1px solid rgba(95,199,207,.22)}
 .hero-stat label{display:block;color:#6d7d8d;font-size:8px;font-weight:800;letter-spacing:.14em;text-transform:uppercase}
 .hero-stat:nth-child(2) label{color:#9fc3d4}
 .hero-stat strong{display:block;margin-top:14px;color:var(--sk-navy);font-size:22px;line-height:1.06;letter-spacing:-.04em}
@@ -187,841 +309,64 @@ button,input,select{font:inherit}button{cursor:pointer}a{color:inherit}
 @keyframes pulse{50%{opacity:.45;transform:scale(.78)}}
 
 /* =========================================================
-   SEARCH / GLASS PANEL
+   BOARD & SEARCH SECTION
    ========================================================= */
-
-.search-shell{position:relative;z-index:16;margin-top:-178px}
-.search-card{
-  position:relative;overflow:hidden;padding:18px 18px 16px;border:1px solid rgba(255,255,255,.72);border-radius:28px;
-  background:
-    linear-gradient(180deg,rgba(255,255,255,.88),rgba(255,255,255,.82)),
-    linear-gradient(135deg,rgba(217,241,241,.50),rgba(233,238,248,.42));
-  backdrop-filter:blur(24px) saturate(1.08);
-  box-shadow:0 28px 70px rgba(2,46,100,.15), inset 0 1px rgba(255,255,255,.55);
-}
-.search-card::before{
-  content:"";position:absolute;inset:0;pointer-events:none;opacity:.75;
-  background:
-    radial-gradient(circle at 8% 20%,rgba(95,199,207,.18),transparent 18%),
-    radial-gradient(circle at 88% 16%,rgba(40,92,168,.12),transparent 18%),
-    linear-gradient(120deg,transparent 0 34%,rgba(255,255,255,.44) 48%,transparent 62%);
-  background-size:auto,auto,220% 100%;animation:searchSheen 9s ease-in-out infinite;
-}
-@keyframes searchSheen{0%,28%{background-position:center,center,-130% 0}74%,100%{background-position:center,center,170% 0}}
-.search-head{position:relative;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px;align-items:center;margin-bottom:12px}
-.search-title strong{display:block;color:var(--sk-navy);font-size:17px;letter-spacing:-.04em}.search-title span{display:block;margin-top:2px;color:#738396;font-size:10px;line-height:1.45}
-.mode-tabs{display:flex;gap:7px;flex-wrap:wrap}
-.tab{min-height:34px;padding:0 13px;border:1px solid rgba(2,46,100,.08);border-radius:999px;background:rgba(255,255,255,.76);color:#5f7285;font-size:8px;font-weight:800;letter-spacing:.10em;text-transform:uppercase;transition:transform .18s ease,background .18s ease,color .18s ease,border-color .18s ease,box-shadow .18s ease}
-.tab:hover{transform:translateY(-1px);border-color:rgba(95,199,207,.7)}
-.tab.active{background:linear-gradient(135deg,#022e64,#0b5c85);border-color:#022e64;color:#fff;box-shadow:0 10px 22px rgba(2,46,100,.16)}
-.notice{position:relative;display:none;margin-bottom:12px;padding:11px 13px;border-radius:14px;background:rgba(255,210,122,.14);border:1px solid rgba(255,210,122,.34);color:#7a6128;font-size:10px;line-height:1.5}.notice.is-visible{display:block}
-.form-grid{position:relative;display:grid;grid-template-columns:repeat(12,1fr);gap:10px;align-items:end}
-.field{display:flex;flex-direction:column;gap:6px}.field label{color:#7a8692;font-size:8px;font-weight:800;letter-spacing:.13em;text-transform:uppercase}
-.field input,.field select{width:100%;min-height:44px;padding:9px 12px;border:1px solid rgba(2,46,100,.10);border-radius:14px;background:rgba(255,255,255,.85);color:var(--sk-graphite);outline:none;transition:border-color .2s ease,box-shadow .2s ease,transform .2s ease}
-.field input:focus,.field select:focus{border-color:var(--sk-aqua);box-shadow:0 0 0 4px rgba(95,199,207,.12),0 10px 24px rgba(2,46,100,.06);transform:translateY(-1px)}
-.col-2{grid-column:span 2}.col-3{grid-column:span 3}.col-4{grid-column:span 4}.col-5{grid-column:span 5}.col-6{grid-column:span 6}.col-12{grid-column:span 12}
-.btn{min-height:44px;padding:0 16px;border:1px solid transparent;border-radius:14px;background:linear-gradient(135deg,#022e64,#0b5c85);color:#fff;font-size:9px;font-weight:800;letter-spacing:.11em;text-transform:uppercase;transition:transform .2s var(--ease),box-shadow .2s ease,filter .2s ease}
-.btn:hover{transform:translateY(-2px);box-shadow:0 12px 26px rgba(2,46,100,.16)}.btn.secondary{background:rgba(255,255,255,.72);border-color:rgba(2,46,100,.08);color:var(--sk-navy)}
-.search-foot{position:relative;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;margin-top:12px;padding-top:12px;border-top:1px solid rgba(2,46,100,.07)}
-.hint{color:#6c7d90;font-size:9px;line-height:1.5}.search-meta{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}.search-chip{display:inline-flex;align-items:center;min-height:28px;padding:0 11px;border-radius:999px;background:rgba(255,255,255,.74);border:1px solid rgba(2,46,100,.06);color:#66798d;font-size:8px;font-weight:800;letter-spacing:.09em;text-transform:uppercase}
-
-.board-section{position:relative;padding:34px 0 92px;background:#f3f6f8;isolation:isolate}
+.board-section{position:relative;padding:14px 0 86px;background:#f3f6f8;isolation:isolate}
 .board-section::before{content:"";position:absolute;inset:0;z-index:-2;pointer-events:none;background:
   radial-gradient(circle at 14% 12%,rgba(95,199,207,.10),transparent 18%),
   radial-gradient(circle at 85% 32%,rgba(40,92,168,.08),transparent 22%),
   linear-gradient(rgba(2,46,100,.022) 1px,transparent 1px),
   linear-gradient(90deg,rgba(2,46,100,.022) 1px,transparent 1px);
   background-size:auto,auto,56px 56px,56px 56px;mask-image:linear-gradient(180deg,#000,rgba(0,0,0,.48),transparent 95%)}
-.board-section::after{content:"";position:absolute;left:0;right:0;top:-52px;height:120px;pointer-events:none;background:linear-gradient(180deg,rgba(243,246,248,0),#f3f6f8 74%)}
-.board-heading{display:grid;grid-template-columns:minmax(0,1fr) minmax(300px,.5fr);gap:26px;align-items:end;margin-bottom:18px}.board-heading h2{margin-top:8px;color:var(--sk-navy);font-size:clamp(30px,4vw,54px);font-weight:560;line-height:.98;letter-spacing:-.056em}.board-heading p{color:#677687;font-size:12px;line-height:1.72}
-.flight-board-shell{
-  position:relative;overflow:hidden;border:1px solid rgba(2,46,100,.10);border-radius:36px;padding:18px;
-  background:
-    radial-gradient(circle at var(--mx) var(--my),rgba(95,199,207,.10),transparent 24%),
-    linear-gradient(145deg,rgba(255,255,255,.97),rgba(233,238,248,.92));
-  box-shadow:0 34px 88px rgba(2,46,100,.16);
-}
-.flight-board-shell::before{
-  content:"";position:absolute;inset:0;pointer-events:none;
-  background:
-    radial-gradient(ellipse at 50% -4%,rgba(95,199,207,.15),transparent 32%),
-    radial-gradient(ellipse at 20% 0,rgba(255,255,255,.60),transparent 32%),
-    linear-gradient(120deg,transparent 0 36%,rgba(255,255,255,.46) 48%,transparent 60%);
-  background-size:auto,auto,220% 100%;animation:boardSheen 11s ease-in-out infinite
-}
-.flight-board-shell::after{content:"";position:absolute;inset:10px;border:1px solid rgba(255,255,255,.78);border-radius:28px;pointer-events:none}
-@keyframes boardSheen{0%,30%{background-position:center,center,-120% 0}74%,100%{background-position:center,center,170% 0}}
-.flight-board-shell .airport-ambient{display:none}
-.board-top{
-  position:relative;z-index:2;display:grid;grid-template-columns:minmax(0,1.15fr) minmax(330px,.85fr) auto;gap:12px;align-items:center;margin-bottom:12px;padding:18px 18px 17px;border-radius:24px;
-  background:
-    radial-gradient(circle at 12% 0,rgba(95,199,207,.18),transparent 24%),
-    linear-gradient(135deg,#04254a,#0b477e 68%,#126d78);
-  color:#fff;box-shadow:0 18px 38px rgba(2,46,100,.22)
-}
-.board-brand{display:flex;align-items:center;gap:14px}.board-monogram{width:52px;height:52px;border-radius:17px;display:grid;place-items:center;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.16);color:#d9f1f1;font-size:11px;font-weight:800;letter-spacing:.16em;box-shadow:inset 0 1px rgba(255,255,255,.12),0 10px 20px rgba(0,0,0,.12)}
-.board-brand strong{display:block;font-size:28px;font-weight:600;letter-spacing:-.045em;line-height:.96}.board-brand span{display:block;margin-top:4px;color:#afd0df;font-size:8px;font-weight:780;letter-spacing:.13em;text-transform:uppercase}
-.board-query{min-width:0;padding:12px 14px;border-radius:15px;background:rgba(3,17,31,.22);border:1px solid rgba(255,255,255,.11);backdrop-filter:blur(12px)}
-.board-query label{display:block;color:#8eb2c4;font-size:7px;font-weight:800;letter-spacing:.13em;text-transform:uppercase}.board-query strong{display:block;margin-top:5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#eefaf9;font-size:10px;letter-spacing:.05em}
-.board-live{display:flex;align-items:center;gap:8px;padding:11px 13px;border-radius:15px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);white-space:nowrap}.board-live span{color:#c8dce6;font-size:8px;font-weight:750;letter-spacing:.10em;text-transform:uppercase}.board-live strong{color:#fff;font-size:9px}.board-live .live-dot{width:7px;height:7px}
-.board-screen{
-  position:relative;z-index:2;overflow:hidden;border-radius:26px;
-  background:
-    radial-gradient(circle at 20% 0,rgba(95,199,207,.10),transparent 26%),
-    linear-gradient(145deg,#061728,#03111f 46%,#08243a 100%);
-  border:1px solid rgba(255,255,255,.06);
-  box-shadow:inset 0 18px 40px rgba(0,0,0,.36),0 16px 32px rgba(2,46,100,.12)
-}
-.board-screen::before{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;opacity:.24;background:
-  radial-gradient(circle at 50% 0,rgba(95,199,207,.12),transparent 28%),
-  linear-gradient(rgba(95,199,207,.045) 1px,transparent 1px),
-  linear-gradient(90deg,rgba(95,199,207,.045) 1px,transparent 1px);
-  background-size:auto,32px 32px,32px 32px;mask-image:linear-gradient(180deg,#000,rgba(0,0,0,.26))}
-.board-screen::after{content:"";position:absolute;z-index:6;top:-18%;left:-30%;width:34%;height:150%;pointer-events:none;background:linear-gradient(105deg,transparent,rgba(255,255,255,.05),rgba(95,199,207,.08),transparent);transform:skewX(-16deg);animation:glassSweep 10s ease-in-out infinite}
-@keyframes glassSweep{0%,35%{left:-34%}76%,100%{left:122%}}
-.fids-layout{min-width:1460px;display:grid;grid-template-columns:98px 120px 104px minmax(245px,1.25fr) 104px minmax(245px,1.25fr) 174px 210px 90px}
-.board-columns{position:relative;z-index:2;min-height:42px;border-bottom:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.03)}.board-columns>div{display:flex;align-items:center;padding:0 10px;border-right:1px solid rgba(255,255,255,.035);color:#7aa0b5;font-size:7px;font-weight:800;letter-spacing:.15em;text-transform:uppercase}.board-columns>div:last-child{border-right:0}
-.board-scroll{position:relative;z-index:2;overflow-x:auto;padding:8px 8px 10px;min-height:398px;scrollbar-width:thin;scrollbar-color:#23415a transparent}
-.flip-body{min-width:1460px;display:grid;gap:8px}
-.fids-row{position:relative;min-height:68px;border-radius:16px;background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.024));border:1px solid rgba(255,255,255,.058);box-shadow:0 10px 24px rgba(0,0,0,.13);animation:rowEnter .52s var(--ease) both;animation-delay:calc(var(--row,0)*55ms);transition:transform .2s ease,background .2s ease,border-color .2s ease}.fids-row::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;border-radius:16px 0 0 16px;background:linear-gradient(180deg,rgba(95,199,207,.75),rgba(2,46,100,.0));opacity:.65}.fids-row:hover{transform:translateY(-2px);background:rgba(255,255,255,.06);border-color:rgba(95,199,207,.18)}
-@keyframes rowEnter{from{opacity:0;transform:translateY(9px) scale(.994)}to{opacity:1;transform:none}}
-.fids-cell{min-width:0;padding:10px 8px 10px 10px;display:flex;align-items:center;border-right:1px solid rgba(255,255,255,.035);overflow:hidden}.fids-cell:last-child{border-right:0}.place-bank{display:flex;align-items:center;min-width:0}.route-slash{display:inline-block;margin:0 4px;color:#5fc7cf;font-weight:800;opacity:.55}
-.flap-container{position:relative;display:inline-flex;gap:2px;padding:3px;border-radius:10px;background:rgba(2,10,18,.76);border:1px solid rgba(255,255,255,.06);box-shadow:inset 0 1px rgba(255,255,255,.05),inset 0 -2px 8px rgba(0,0,0,.54)}.flap-container::before{content:"";position:absolute;inset:1px;border-radius:8px;border:1px solid rgba(95,199,207,.03);pointer-events:none}.flap-letters{display:inline-flex;gap:2px}.tv-text{display:none}
-.split-flap{--tile-h:36px;position:relative;width:20px;height:36px;border-radius:4px;overflow:hidden;background:linear-gradient(180deg,#18314c,#0e2137);border:1px solid rgba(255,255,255,.05);color:#f5fbff;font-family:"Roboto Mono",monospace;font-size:14px;font-weight:700;line-height:36px;text-align:center;text-shadow:0 1px 1px rgba(0,0,0,.55),0 0 7px rgba(143,211,255,.08);box-shadow:inset 0 1px rgba(255,255,255,.10),inset 0 -3px 6px rgba(0,0,0,.45),0 1px 1px rgba(0,0,0,.36)}
-.split-flap::after{content:"";position:absolute;left:0;right:0;top:50%;height:2px;transform:translateY(-50%);background:#081521;box-shadow:0 1px rgba(255,255,255,.08);z-index:14}
-.split-flap::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.10),transparent 28%,transparent 58%,rgba(0,0,0,.18));pointer-events:none;z-index:1}.flap-half{position:absolute;left:0;width:100%;height:50%;overflow:hidden;background:linear-gradient(180deg,#28496b,#10253d);backface-visibility:hidden}.flap-top{top:0}.flap-bottom{bottom:0;background:linear-gradient(180deg,#17314f,#0b1e33)}.flap-half span{position:absolute;left:0;width:100%;height:36px;display:grid;place-items:center}.flap-top span{top:0}.flap-bottom span{bottom:0}.flap-drop{position:absolute;z-index:10;left:0;top:0;width:100%;height:50%;overflow:hidden;transform-origin:50% 100%;background:linear-gradient(180deg,#356692,#14324f);box-shadow:inset 0 1px rgba(255,255,255,.12);animation:splitFlip .60s cubic-bezier(.2,.72,.3,1) both;animation-delay:var(--delay,0ms)}.flap-drop span{position:absolute;inset:0 0 auto;height:36px;display:grid;place-items:center}
-@keyframes splitFlip{0%{transform:rotateX(0);filter:brightness(1)}44%{transform:rotateX(-94deg);filter:brightness(.52)}100%{transform:rotateX(-94deg);filter:brightness(.52)}}
-.flap-ok .split-flap{color:#ddfff0;text-shadow:0 0 8px rgba(103,252,169,.14)}.flap-warn .split-flap{color:#ffd27a;text-shadow:0 0 8px rgba(255,210,122,.16)}.flap-bad .split-flap{color:#ff8e8e;text-shadow:0 0 8px rgba(255,122,122,.18)}
-.logo-bay{position:relative;display:inline-flex;align-items:center;justify-content:center;width:150px;min-height:40px;overflow:hidden;border-radius:10px;background:rgba(2,10,18,.72);border:1px solid rgba(255,255,255,.06);box-shadow:inset 0 1px rgba(255,255,255,.05),inset 0 -2px 8px rgba(0,0,0,.52)}.logo-bay::before{content:"";position:absolute;inset:1px;border-radius:8px;border:1px solid rgba(95,199,207,.03);pointer-events:none}.logo-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:6px 12px}.logo-overlay img{max-width:114px;max-height:18px;object-fit:contain;opacity:.74;filter:brightness(0) invert(1) drop-shadow(0 0 8px rgba(255,255,255,.05))}
-.board-message{min-height:360px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;border-radius:18px;background:linear-gradient(180deg,rgba(255,255,255,.02),rgba(255,255,255,.01));border:1px solid rgba(255,255,255,.04);color:#6f90a4;font-size:9px;font-weight:800;letter-spacing:.14em;text-transform:uppercase}.board-message-note{color:#5f7a8f;font-size:8px;letter-spacing:.10em}
-.board-footer{position:relative;z-index:2;display:grid;grid-template-columns:1fr auto auto;gap:18px;align-items:center;margin-top:12px;padding:14px 15px;border-radius:18px;background:#e9eef8;color:#587085;font-size:8px;font-weight:750;letter-spacing:.08em;text-transform:uppercase}.board-footer strong{color:#022e64}.status-lamp{width:7px;height:7px;border-radius:50%;background:var(--sk-aqua);box-shadow:0 0 0 5px rgba(95,199,207,.12);display:inline-block;margin-right:7px;vertical-align:middle}
+.board-section::after{content:"";position:absolute;left:0;right:0;top:-70px;height:110px;pointer-events:none;background:linear-gradient(180deg,rgba(243,246,248,0),#f3f6f8 80%)}
 
-@media(max-width:1100px){
-  .search-shell{margin-top:-132px}
-  .search-head,.board-heading{grid-template-columns:1fr}
-  .search-foot{grid-template-columns:1fr}
-  .search-meta{justify-content:flex-start}
-  .board-top{grid-template-columns:1fr}
-}
-@media(max-width:760px){
-  .search-shell{margin-top:-92px}
-  .search-card{padding:16px}
-  .search-title strong{font-size:18px}
-  .form-grid{grid-template-columns:1fr 1fr}.col-2,.col-3,.col-4,.col-5,.col-6{grid-column:span 1}.field[data-field="flight"],.field[data-field="airport"],.field[data-field="from"],.field[data-field="to"]{grid-column:1/-1}
-  .search-foot{gap:10px}.search-meta{gap:6px}.search-chip{min-height:26px}
-  .board-section{padding-top:26px}
-  .board-heading h2{font-size:40px}
-  .flight-board-shell{padding:12px;border-radius:26px}
-  .board-top{padding:16px;border-radius:18px}
-  .board-brand strong{font-size:24px}
-  .board-query,.board-live{padding:10px 12px}
-  .board-columns{display:none}
-  .board-scroll{min-height:0;padding:6px}
-  .flip-body{min-width:0}
-  .fids-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0;min-height:0;border-radius:16px}
-  .fids-cell{min-height:48px;padding:10px 11px;border-right:0;border-bottom:1px solid rgba(255,255,255,.045);justify-content:space-between;gap:10px}
-  .fids-cell::before{content:attr(data-label);flex:0 0 auto;color:#7aa0b5;font-family:"Roboto Mono",monospace;font-size:7px;font-weight:700;letter-spacing:.10em;text-transform:uppercase}.fids-cell:nth-child(4),.fids-cell:nth-child(6),.fids-cell:nth-child(7){grid-column:1/-1}.fids-cell:nth-last-child(-n+2){border-bottom:0}
-  .board-message{min-height:160px}.board-message .flap-container{display:none}.board-message::before{content:"Passenger flight information";color:#7ba2b8;font-size:8px;letter-spacing:.12em}
-  .flap-letters{display:none!important}.flap-container{display:block!important;padding:0!important;border:0!important;background:transparent!important;box-shadow:none!important}.flap-container::before{display:none}.tv-text{display:inline!important;color:#f1f5f9!important;font-family:"Montserrat",sans-serif!important;font-size:11px!important;font-weight:650!important;letter-spacing:-.01em}.flap-warn .tv-text{color:#ffca68!important}.flap-bad .tv-text{color:#ff7474!important}.flap-ok .tv-text{color:#d9f1f1!important}.place-bank{justify-content:flex-end}
-  .logo-bay{width:88px;min-height:28px;background:#fff;border-radius:6px}.logo-bay>.flap-container{display:none!important}.desktop-logo-img{display:none!important}.mobile-logo-img{display:block!important;width:76px!important;height:17px!important;object-fit:contain;filter:none!important;opacity:1!important;animation:none!important}.logo-overlay{position:relative;padding:4px 7px}
-}
-@media(max-width:430px){.fids-row{grid-template-columns:1fr}.fids-cell:nth-child(n){grid-column:1/-1}}
+.board-heading{display:grid;grid-template-columns:minmax(0,1fr) minmax(290px,.48fr);gap:28px;align-items:end;width:min(1180px,100%);margin:0 auto 16px}
+.board-heading h2{margin-top:8px;color:var(--sk-navy);font-size:clamp(30px,3.8vw,50px);font-weight:560;line-height:.98;letter-spacing:-.056em}
+.board-heading p{color:#677687;font-size:12px;line-height:1.72}
 
+/* Lookup Modes & Controls */
+.lookup-mode-tabs{width:min(1160px,calc(100% - 24px));margin:0 auto 9px;padding:5px;display:flex;gap:5px;border-radius:13px;background:#e9eef8;border:1px solid rgba(2,46,100,.06);box-shadow:0 8px 22px rgba(2,46,100,.05)}
+.lookup-mode{min-height:38px;padding:0 13px;border:0;border-radius:9px;background:transparent;color:#64788d;display:inline-flex;align-items:center;gap:8px;font-size:8px;font-weight:800;letter-spacing:.10em;text-transform:uppercase;transition:background .18s ease,color .18s ease,transform .18s ease}
+.lookup-mode span{font-family:"Roboto Mono",monospace;font-size:7px;letter-spacing:.06em;opacity:.72}
+.lookup-mode:hover{background:rgba(255,255,255,.72);color:#022e64}
+.lookup-mode.active{background:#fff;color:#022e64;box-shadow:0 6px 16px rgba(2,46,100,.10)}
 
-/* =========================================================
-   EDITORIAL CONTENT — same Home / Our Network family
-   ========================================================= */
-.editorial{position:relative;padding:86px 0 0;background:linear-gradient(180deg,#fff 0%,#f6faff 12%,#d7e6ff 36%,#7eaad7 57%,#285ca8 73%,#0b477e 86%,#022e64 100%);overflow:hidden}.editorial::before{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at 12% 12%,rgba(255,255,255,.72),transparent 20%),radial-gradient(circle at 88% 36%,rgba(95,199,207,.18),transparent 22%),linear-gradient(rgba(255,255,255,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.045) 1px,transparent 1px);background-size:auto,auto,54px 54px,54px 54px;mask-image:linear-gradient(180deg,rgba(0,0,0,.12),#000 42%,rgba(0,0,0,.5))}
-.section{position:relative;padding:64px 0}.section-head{display:grid;grid-template-columns:minmax(0,1fr) minmax(280px,.52fr);gap:38px;align-items:end;margin-bottom:26px}.section-head h2{margin-top:8px;color:#022e64;font-size:clamp(34px,4.6vw,58px);font-weight:550;line-height:.96;letter-spacing:-.058em}.section-head p{color:#5d6f82;font-size:12px;line-height:1.75}.section.dark .section-head h2{color:#fff}.section.dark .section-head p{color:#c7d8e8}.section.dark .eyebrow{color:#d9f1f1}
-.guide-grid,.travel-grid,.time-grid{display:grid;gap:14px}.guide-grid{grid-template-columns:repeat(3,1fr)}.travel-grid{grid-template-columns:repeat(3,1fr)}.time-grid{grid-template-columns:repeat(4,1fr)}
-.info-card{position:relative;overflow:hidden;min-height:250px;padding:25px;border-radius:25px;border:1px solid rgba(2,46,100,.08);box-shadow:0 14px 34px rgba(2,46,100,.08);display:flex;flex-direction:column;justify-content:space-between;transition:transform .3s var(--ease),box-shadow .3s ease}.info-card:hover{transform:translateY(-6px);box-shadow:0 24px 48px rgba(2,46,100,.15)}.info-card:nth-child(1){background:linear-gradient(135deg,#022e64,#0b5c85);color:#fff}.info-card:nth-child(2){background:#fff;color:#022e64}.info-card:nth-child(3){background:#d9f1f1;color:#022e64}.card-no{font-size:9px;font-weight:800;letter-spacing:.14em;opacity:.55}.info-card h3{font-size:25px;letter-spacing:-.045em;margin:70px 0 8px}.info-card p{font-size:10.5px;line-height:1.7;opacity:.72}
-.status-panel{display:grid;grid-template-columns:.8fr 1.2fr;gap:40px;padding:38px;border-radius:28px;background:linear-gradient(135deg,#04254a,#0b477e);color:#fff;box-shadow:0 24px 58px rgba(2,46,100,.20)}.status-copy h3{margin:10px 0 12px;font-size:36px;line-height:1;letter-spacing:-.05em}.status-copy p{color:#bfd0df;font-size:11px;line-height:1.72}.status-list{display:grid;gap:8px}.status-row{display:grid;grid-template-columns:26px 1fr;gap:12px;align-items:center;padding:14px;border:1px solid rgba(255,255,255,.08);border-radius:15px;background:rgba(255,255,255,.055)}.status-dot{width:11px;height:11px;border-radius:50%}.status-dot.normal{background:#5fc7cf;box-shadow:0 0 14px rgba(95,199,207,.62)}.status-dot.attention{background:#d59a36;box-shadow:0 0 14px rgba(213,154,54,.48)}.status-dot.disrupted{background:#d85f66;box-shadow:0 0 14px rgba(216,95,102,.46)}.status-row strong{display:block;font-size:11px}.status-row span{display:block;margin-top:3px;color:#9fb5c6;font-size:9px;line-height:1.5}
-.travel-card{min-height:238px;padding:24px;border-radius:24px;display:flex;flex-direction:column;justify-content:flex-end;box-shadow:0 15px 36px rgba(2,46,100,.10)}.travel-card:nth-child(1){background:#e9eef8;color:#022e64}.travel-card:nth-child(2){background:#f2e9dc;color:#3c2f20}.travel-card:nth-child(3){background:linear-gradient(135deg,#022e64,#0b5c85);color:#fff}.travel-card span{margin-bottom:auto;font-size:8px;font-weight:800;letter-spacing:.13em;text-transform:uppercase;opacity:.56}.travel-card h3{font-size:24px;line-height:1.05;letter-spacing:-.045em;margin-bottom:8px}.travel-card p{font-size:10.5px;line-height:1.68;opacity:.70}
-.time-card{min-height:190px;padding:22px;border-radius:22px;display:flex;flex-direction:column;justify-content:flex-end;box-shadow:0 12px 28px rgba(2,46,100,.09)}.time-card:nth-child(1){background:#fff;color:#022e64}.time-card:nth-child(2){background:#d9f1f1;color:#022e64}.time-card:nth-child(3){background:#f2e9dc;color:#3c2f20}.time-card:nth-child(4){background:#e9eef8;color:#022e64}.time-card span{margin-bottom:auto;font-size:8px;font-weight:800;letter-spacing:.13em;text-transform:uppercase;opacity:.56}.time-card strong{font-size:18px;line-height:1.08;letter-spacing:-.035em}.time-card p{margin-top:7px;font-size:9.5px;line-height:1.58;opacity:.69}
-.closing{margin-top:40px;padding:78px 0 90px;color:#fff}.closing-grid{display:grid;grid-template-columns:.55fr 1fr;gap:44px;align-items:center}.closing-mark{font-size:clamp(46px,8vw,108px);font-weight:750;letter-spacing:-.08em;color:rgba(255,255,255,.12);writing-mode:vertical-rl;transform:rotate(180deg)}.closing h2{max-width:830px;margin:9px 0 14px;font-size:clamp(38px,5.2vw,70px);line-height:.94;letter-spacing:-.06em}.closing p{max-width:720px;color:#c1d4e3;font-size:12px;line-height:1.75}
-.reveal{opacity:0;transform:translateY(22px) scale(.99)}.reveal.is-visible{opacity:1;transform:none;transition:opacity .72s var(--ease),transform .72s var(--ease)}
+.airport-controls{position:relative;z-index:3;width:min(1180px,100%);margin:0 auto 24px;display:grid;grid-template-columns:180px 180px minmax(260px,1fr) auto auto;gap:8px;align-items:stretch;padding:9px;border-radius:18px;background:rgba(255,255,255,.84);border:1px solid rgba(2,46,100,.08);backdrop-filter:blur(18px);box-shadow:0 12px 28px rgba(2,46,100,.07)}
+.airport-controls.mode-airport{grid-template-columns:minmax(240px,1.15fr) 180px minmax(260px,1fr) auto auto}
+.airport-controls.mode-flight{grid-template-columns:minmax(260px,1fr) 180px auto auto}
+.airport-controls.mode-route{grid-template-columns:minmax(210px,1fr) minmax(210px,1fr) 180px auto auto}
+.airport-controls.mode-flight #airportBoardToggle,.airport-controls.mode-route #airportBoardToggle{display:none}
+.airport-controls.mode-flight .lookup-date-control,.airport-controls.mode-route .lookup-date-control{min-width:180px}
 
-@media(max-width:1100px){.wrap{width:min(var(--content),calc(100% - 36px))}.hero-inner{grid-template-columns:1fr}.hero-status{width:min(560px,100%)}.form-grid{grid-template-columns:repeat(6,1fr)}.col-2,.col-3{grid-column:span 3}.board-top{grid-template-columns:1fr 1fr}.board-live{grid-column:1/-1;width:max-content}.board-heading,.section-head{grid-template-columns:1fr;gap:13px}.guide-grid,.travel-grid{grid-template-columns:1fr 1fr}.guide-grid .info-card:last-child,.travel-grid .travel-card:last-child{grid-column:1/-1}.time-grid{grid-template-columns:1fr 1fr}.status-panel{grid-template-columns:1fr}.closing-grid{grid-template-columns:1fr}.closing-mark{display:none}}
-@media(max-width:760px){.wrap{width:calc(100% - 24px)}.hero{min-height:690px}.hero-inner{padding:48px 0 150px}.hero h1{font-size:clamp(48px,15vw,72px)}.hero-status{grid-template-columns:1fr 1fr}.search-shell{margin-top:-72px}.search-card{padding:18px;border-radius:22px}.search-head{display:block}.mode-tabs{margin-top:13px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}.mode-tabs::-webkit-scrollbar{display:none}.tab{white-space:nowrap}.form-grid{grid-template-columns:1fr 1fr}.col-2,.col-3,.col-4,.col-5,.col-6,.col-12{grid-column:auto}.field.col-3,.field.col-6{grid-column:1/-1}.search-foot{display:block}.search-meta{margin-top:10px}.board-section{padding:54px 0 64px}.flight-board-shell{padding:10px;border-radius:22px}.board-top{grid-template-columns:1fr;padding:16px;border-radius:16px}.board-query{grid-row:auto}.board-live{grid-column:auto;width:100%}.board-columns{display:none}.board-scroll{overflow:visible;padding:7px}.flip-body{min-width:0}.fids-row{min-width:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));border-radius:12px}.fids-cell{min-height:48px;justify-content:space-between;border-right:0;border-bottom:1px solid rgba(255,255,255,.045);overflow:visible}.fids-cell::before{content:attr(data-label);flex:0 0 auto;color:#64869e;font-size:7px;font-weight:800;letter-spacing:.10em;text-transform:uppercase}.fids-cell:nth-child(4),.fids-cell:nth-child(6),.fids-cell:nth-child(7){grid-column:1/-1}.fids-cell:nth-last-child(-n+2){border-bottom:0}.flap-letters{display:none!important}.flap-container{display:block!important;padding:0!important;border:0!important;background:transparent!important;box-shadow:none!important}.tv-text{display:inline!important;color:#f5f8fb!important;font-size:11px!important;font-weight:650!important}.flap-warn .tv-text{color:#ffe0a1!important}.flap-bad .tv-text{color:#ffd4d7!important}.logo-bay{width:86px;min-height:28px;background:#fff}.desktop-logo-img{display:none!important}.mobile-logo-img{display:block!important;width:76px!important;height:18px!important;object-fit:contain}.logo-overlay{padding:4px 7px}.board-message{min-height:150px}.board-message .flap-container{display:none!important}.board-message::before{content:"FLIGHT INFORMATION";color:#6e8da3;font-size:8px;font-weight:800;letter-spacing:.13em}.board-footer{grid-template-columns:1fr 1fr}.board-footer>span:nth-child(2){display:none}.editorial{padding-top:60px}.guide-grid,.travel-grid,.time-grid{grid-template-columns:1fr}.guide-grid .info-card:last-child,.travel-grid .travel-card:last-child{grid-column:auto}.section{padding:48px 0}.status-panel{padding:24px 18px}.closing{padding:60px 0 72px}}
-@media(max-width:480px){.hero-status{grid-template-columns:1fr}.form-grid{grid-template-columns:1fr}.field.col-3,.field.col-6{grid-column:auto}.fids-row{grid-template-columns:1fr}.fids-cell:nth-child(n){grid-column:1/-1}.board-brand strong{font-size:22px}.board-footer{grid-template-columns:1fr}.board-footer>span:nth-child(3){display:none}}
-@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important}.reveal{opacity:1!important;transform:none!important}.hero-route-art{display:none}}
+.airport-control{display:grid;grid-template-columns:auto minmax(0,1fr);gap:9px;align-items:center;min-height:54px;padding:7px 10px;border-radius:10px;background:#fff;border:1px solid rgba(2,46,100,.06)}
+.control-sign{min-width:34px;height:34px;padding:0 7px;display:grid;place-items:center;border-radius:6px;background:linear-gradient(145deg,#04254a,#0b477e);color:#fff;font-family:"Roboto Mono",monospace;font-size:7px;font-weight:800;letter-spacing:.08em}
+.airport-control label{display:block;color:#788697;font-size:7px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;margin-bottom:2px}
+.airport-control input{width:100%;min-width:0;border:0;background:transparent;outline:none;padding:0;color:#022e64;font-family:"Roboto Mono",monospace;font-size:13px;font-weight:700;text-transform:none}
+.airport-control input[type="date"]{font-size:11px}
+#flightNumber{text-transform:uppercase;font-family:"Roboto Mono",monospace;font-weight:800;letter-spacing:.04em}
+#airport,#from,#to{font-family:"Roboto Mono",monospace;font-weight:700}
 
-/* =========================================================
-   B-011.32 — AIRPORT-FIRST FIDS
-   Compact TV board + readable digital flippers + terminal UI.
-   ========================================================= */
-.sr-only{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
-.hero{min-height:540px;background:radial-gradient(circle at var(--mx) var(--my),rgba(95,199,207,.17),transparent 20%),radial-gradient(circle at 84% 12%,rgba(40,92,168,.08),transparent 19%),linear-gradient(180deg,#f8fbff 0%,#edf5ff 58%,#f3f6f8 100%)}
-.hero::before{opacity:.30;background-image:linear-gradient(rgba(11,58,122,.052) 1px,transparent 1px),linear-gradient(90deg,rgba(11,58,122,.052) 1px,transparent 1px),linear-gradient(115deg,transparent 0 48%,rgba(2,46,100,.045) 49%,transparent 50%);background-size:42px 42px,42px 42px,260px 260px}
-.hero-inner{padding:58px 0 118px;align-items:center}.hero h1{max-width:930px;font-size:clamp(48px,6.2vw,84px)}.hero-status{width:min(400px,33vw)}
-.hero-wayfinding{display:flex;gap:8px;flex-wrap:wrap;margin-top:24px}.hero-wayfinding span{min-height:36px;display:inline-flex;align-items:center;gap:9px;padding:0 13px;border-radius:9px;background:#022e64;color:#fff;font-size:8px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;box-shadow:0 9px 22px rgba(2,46,100,.11)}.hero-wayfinding span:nth-child(2){background:#d9f1f1;color:#022e64}.hero-wayfinding span:nth-child(3){background:#e9eef8;color:#022e64}.hero-wayfinding b{font-size:14px;font-weight:600}
-.board-section{position:relative;padding:14px 0 86px;background:#f3f6f8}.board-section::after{content:"";position:absolute;left:0;right:0;top:-70px;height:110px;background:linear-gradient(180deg,rgba(243,246,248,0),#f3f6f8 80%);pointer-events:none}
-.board-heading{width:min(1180px,100%);margin:0 auto 16px;grid-template-columns:minmax(0,1fr) minmax(290px,.48fr);gap:28px}.board-heading h2{font-size:clamp(30px,3.8vw,50px)}
-.airport-controls{position:relative;z-index:3;width:min(1180px,100%);margin:0 auto 14px;display:grid;grid-template-columns:180px 180px minmax(260px,1fr) auto auto;gap:8px;align-items:stretch;padding:9px;border-radius:18px;background:rgba(255,255,255,.84);border:1px solid rgba(2,46,100,.08);backdrop-filter:blur(18px);box-shadow:0 14px 34px rgba(2,46,100,.08)}
-.airport-control{display:grid;grid-template-columns:auto minmax(0,1fr);gap:9px;align-items:center;min-height:54px;padding:7px 10px;border-radius:12px;background:#f3f6f8;border:1px solid rgba(2,46,100,.06)}.control-sign{min-width:34px;height:34px;padding:0 7px;display:grid;place-items:center;border-radius:8px;background:#022e64;color:#fff;font-family:"Roboto Mono",monospace;font-size:7px;font-weight:800;letter-spacing:.08em}.airport-control label{display:block;color:#788697;font-size:7px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;margin-bottom:2px}.airport-control input{width:100%;min-width:0;border:0;background:transparent;outline:none;padding:0;color:#022e64;font-family:"Roboto Mono",monospace;font-size:13px;font-weight:700;text-transform:uppercase}.airport-control input[type="date"]{font-size:11px}
-.airport-board-toggle{display:grid;grid-template-columns:1fr 1fr;gap:5px;padding:5px;border-radius:12px;background:#e9eef8}.airport-toggle{min-height:44px;padding:0 14px;border:0;border-radius:9px;background:transparent;color:#687a8d;font-size:8px;font-weight:800;letter-spacing:.10em;text-transform:uppercase;transition:.18s ease}.airport-toggle span{font-size:13px;margin-right:5px}.airport-toggle:hover{background:rgba(255,255,255,.65);color:#022e64}.airport-toggle.active{background:#022e64;color:#fff;box-shadow:0 8px 18px rgba(2,46,100,.16)}
-.airport-update,.airport-reset{border:0;border-radius:12px;min-height:54px;padding:0 15px;font-size:8px;font-weight:800;letter-spacing:.10em;text-transform:uppercase}.airport-update{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:linear-gradient(135deg,#022e64,#0b5c85);color:#fff;box-shadow:0 10px 22px rgba(2,46,100,.15);transition:transform .18s ease,box-shadow .18s ease}.airport-update:hover{transform:translateY(-1px);box-shadow:0 14px 27px rgba(2,46,100,.20)}.airport-update-led{width:6px;height:6px;border-radius:50%;background:#67fca9;box-shadow:0 0 9px rgba(103,252,169,.62)}.airport-reset{background:#fff;color:#647588;border:1px solid rgba(2,46,100,.08)}.airport-reset:hover{color:#022e64;border-color:rgba(95,199,207,.58)}.airport-notice{grid-column:1/-1;margin:0!important;display:none}.airport-control-note{grid-column:1/-1;padding:0 5px;color:#738396;font-size:8px;line-height:1.4}
-.flight-board-shell{width:min(1180px,100%);margin-inline:auto;padding:14px;border-radius:28px;box-shadow:0 28px 72px rgba(2,46,100,.15)}.flight-board-shell::after{inset:7px;border-radius:22px}.board-top{grid-template-columns:minmax(0,1.1fr) minmax(280px,.72fr) auto;margin-bottom:9px;padding:15px 17px;border-radius:19px}.board-monogram{width:44px;height:44px;border-radius:13px}.board-brand strong{font-size:24px}.board-query{padding:10px 12px;border-radius:12px}.board-live{padding:9px 11px;border-radius:12px}
-.board-screen{border-radius:20px}.board-airport-bar{position:relative;z-index:2;display:grid;grid-template-columns:1fr 1fr auto;gap:1px;min-height:58px;background:rgba(255,255,255,.035);border-bottom:1px solid rgba(255,255,255,.06)}.board-airport-bar>div{display:flex;align-items:center;gap:12px;padding:11px 15px;border-right:1px solid rgba(255,255,255,.045)}.board-airport-bar>div:last-child{border-right:0}.board-airport-bar small{color:#66889e;font-size:7px;font-weight:800;letter-spacing:.15em;text-transform:uppercase}.board-airport-bar strong{color:#fff;font-family:"Roboto Mono",monospace;font-size:18px;font-weight:700;letter-spacing:.06em}
-.fids-layout{min-width:0;grid-template-columns:118px 126px minmax(260px,1fr) 170px 214px 90px}.board-columns{min-height:38px}.board-scroll{min-height:338px;overflow:visible;padding:8px}.flip-body{min-width:0;display:grid;gap:7px}.fids-row{min-height:62px}.fids-cell{padding:8px 8px 8px 10px}
-.flap-container.digital-flip{--flip-width:max(78px,calc(var(--flip-chars,5) * .72em + 28px));position:relative;display:inline-flex;align-items:center;justify-content:flex-start;width:auto;min-width:var(--flip-width);max-width:100%;height:38px;padding:0 12px!important;overflow:hidden;border-radius:9px!important;background:linear-gradient(180deg,rgba(255,255,255,.07),transparent 26%),linear-gradient(180deg,#1c3a59,#102841)!important;border:1px solid rgba(255,255,255,.07);box-shadow:inset 0 1px rgba(255,255,255,.08),inset 0 -2px 8px rgba(0,0,0,.36),0 5px 12px rgba(0,0,0,.16)!important;color:#f7fbff;font-family:"Roboto Mono",monospace;font-size:13px;font-weight:700;letter-spacing:.035em;white-space:nowrap;perspective:900px}.digital-flip::after{content:"";position:absolute;left:0;right:0;top:50%;height:1px;background:rgba(3,17,31,.88);box-shadow:0 1px rgba(255,255,255,.07);z-index:8}.digital-flip .flip-value{position:relative;z-index:5}.digital-flip .flip-fold{position:absolute;z-index:7;left:0;right:0;top:0;height:50%;display:flex;align-items:flex-start;padding:10px 12px 0;overflow:hidden;background:linear-gradient(180deg,#315b82,#183854);color:inherit;transform-origin:50% 100%;animation:digitalFold .56s cubic-bezier(.2,.72,.3,1) both;animation-delay:var(--flip-delay,0ms)}@keyframes digitalFold{0%{transform:rotateX(0deg);filter:brightness(1.12)}48%{transform:rotateX(-92deg);filter:brightness(.52)}100%{transform:rotateX(-92deg);filter:brightness(.52)}}.flap-ok.digital-flip{color:#e2fff1;background:linear-gradient(180deg,#17465a,#103247)!important}.flap-warn.digital-flip{color:#ffd987;background:linear-gradient(180deg,#5b4826,#3a2f1c)!important}.flap-bad.digital-flip{color:#ff9a9a;background:linear-gradient(180deg,#5b2930,#381c24)!important}.tv-text,.flap-letters,.split-flap,.flap-half,.flap-drop{display:none!important}.place-bank{gap:7px}.route-slash{display:none}
-.logo-bay{width:148px;min-height:40px;border-radius:9px;background:rgba(255,255,255,.96);border:1px solid rgba(255,255,255,.10);box-shadow:0 5px 12px rgba(0,0,0,.12)}.logo-bay>.flap-container{display:none!important}.logo-overlay{position:relative;padding:5px 10px}.logo-overlay img.desktop-logo-img{display:block;max-width:118px;max-height:20px;opacity:1;filter:none}.mobile-logo-img{display:none}
-.board-message{min-height:292px;border-radius:15px;background:rgba(255,255,255,.015)}.board-message .digital-flip{min-width:220px;justify-content:center}.board-footer{margin-top:9px;padding:11px 13px;border-radius:13px}
-.airport-guide-grid .airport-card{min-height:240px;border-radius:20px;border-top:5px solid #022e64}.airport-guide-grid .airport-card:nth-child(2){border-top-color:#5fc7cf}.airport-guide-grid .airport-card:nth-child(3){border-top-color:#d1bc98}.airport-card-sign{display:inline-flex;align-items:center;gap:8px;align-self:flex-start;min-height:30px;padding:0 10px;border-radius:6px;background:#022e64;color:#fff;font-size:8px;font-weight:800;letter-spacing:.12em;text-transform:uppercase}.airport-guide-grid .airport-card:nth-child(2) .airport-card-sign{background:#d9f1f1;color:#022e64}.airport-guide-grid .airport-card:nth-child(3) .airport-card-sign{background:#f2e9dc;color:#3c2f20}.airport-card-sign b{font-size:13px}.status-panel{border-radius:24px;background:radial-gradient(circle at 90% 10%,rgba(95,199,207,.16),transparent 28%),linear-gradient(135deg,#04254a,#0b477e 68%,#126d78)}.status-row{border-radius:12px!important;border-left:4px solid rgba(95,199,207,.32)!important}.travel-card,.time-card{position:relative;overflow:hidden;border-radius:20px!important}.travel-card::after,.time-card::after{content:"";position:absolute;right:16px;top:15px;width:20px;height:20px;border-top:2px solid currentColor;border-right:2px solid currentColor;opacity:.16}.travel-card span,.time-card span{display:inline-flex;align-items:center;gap:8px;font-size:8px!important;letter-spacing:.13em!important;text-transform:uppercase}.travel-card span::before,.time-card span::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--sk-aqua)}
-@media(max-width:1100px){.airport-controls{grid-template-columns:1fr 1fr}.airport-board-toggle{grid-column:1/-1}.airport-update,.airport-reset{min-height:48px}.board-top{grid-template-columns:1fr}.flight-board-shell{width:min(100%,900px)}.board-heading{width:min(100%,900px);grid-template-columns:1fr}}
-@media(max-width:760px){.hero{min-height:500px}.hero-inner{padding:46px 0 92px}.hero-status{display:none}.hero-wayfinding{gap:6px}.hero-wayfinding span{min-height:32px;padding:0 10px}.board-section{padding-top:8px}.airport-controls{grid-template-columns:1fr;padding:8px}.airport-board-toggle{grid-column:auto}.airport-control-note{grid-column:auto}.flight-board-shell{padding:9px;border-radius:22px}.board-top{padding:14px;border-radius:16px}.board-airport-bar{grid-template-columns:1fr 1fr}.airport-clock-display{display:none!important}.board-airport-bar>div{padding:10px 12px}.board-airport-bar strong{font-size:15px}.board-columns{display:none}.board-scroll{min-height:0;overflow:visible;padding:6px}.flip-body{min-width:0}.fids-row{display:grid;grid-template-columns:1fr 1fr;gap:0;min-height:0;border-radius:14px}.fids-cell{min-height:49px;padding:10px 11px;border-right:0;border-bottom:1px solid rgba(255,255,255,.045);justify-content:space-between;gap:10px}.fids-cell::before{content:attr(data-label);flex:0 0 auto;color:#7aa0b5;font-family:"Roboto Mono",monospace;font-size:7px;font-weight:700;letter-spacing:.10em;text-transform:uppercase}.fids-cell:nth-child(3),.fids-cell:nth-child(4),.fids-cell:nth-child(5){grid-column:1/-1}.fids-cell:nth-last-child(-n+2){border-bottom:0}.digital-flip{min-width:auto!important;height:34px!important;font-size:11px!important}.digital-flip .flip-fold{padding-top:8px}.logo-bay{width:86px;min-height:28px}.desktop-logo-img{display:none!important}.mobile-logo-img{display:block!important;width:74px!important;height:17px!important;object-fit:contain!important;opacity:1!important;filter:none!important}.board-message{min-height:150px}.board-message .digital-flip{min-width:180px!important}}
-@media(max-width:430px){.fids-row{grid-template-columns:1fr}.fids-cell:nth-child(n){grid-column:1/-1}}
+.airport-board-toggle{display:grid;grid-template-columns:1fr 1fr;gap:5px;padding:5px;border-radius:10px;background:#f0f4f8}
+.airport-toggle{min-height:44px;padding:0 14px;border:0;border-radius:7px;background:transparent;color:#687a8d;font-size:8px;font-weight:800;letter-spacing:.10em;text-transform:uppercase;transition:.18s ease}
+.airport-toggle span{font-size:13px;margin-right:5px}
+.airport-toggle:hover{background:rgba(255,255,255,.65);color:#022e64}
+.airport-toggle.active{background:#022e64;color:#fff;box-shadow:0 8px 18px rgba(2,46,100,.16)}
 
-
-/* =========================================================
-   B-011.33 — AIRPORT CONCOURSE + MODERN FIDS DEVELOPMENT
-   ========================================================= */
-.hero{
-  min-height:585px;
-  isolation:isolate;
-  overflow:hidden;
-}
-.terminal-architecture{
-  position:absolute;
-  inset:0;
-  pointer-events:none;
-  overflow:hidden;
-  z-index:0;
-}
-.terminal-glass-lines{
-  position:absolute;
-  right:-3%;
-  top:0;
-  width:58%;
-  height:100%;
-  opacity:.48;
-  background:
-    linear-gradient(90deg,transparent 0 8%,rgba(2,46,100,.08) 8% 8.3%,transparent 8.3% 23%,rgba(2,46,100,.06) 23% 23.3%,transparent 23.3% 40%,rgba(2,46,100,.07) 40% 40.3%,transparent 40.3% 58%,rgba(2,46,100,.055) 58% 58.3%,transparent 58.3%),
-    linear-gradient(180deg,rgba(255,255,255,.16),rgba(95,199,207,.05));
-  transform:skewX(-8deg);
-  mask-image:linear-gradient(90deg,transparent,#000 24%,#000);
-}
-.terminal-ceiling-lines{
-  position:absolute;
-  left:45%;
-  right:-15%;
-  top:-20%;
-  height:60%;
-  opacity:.30;
-  transform:perspective(700px) rotateX(62deg) rotateZ(-4deg);
-  transform-origin:center top;
-  background:
-    repeating-linear-gradient(90deg,rgba(2,46,100,.09) 0 1px,transparent 1px 44px),
-    repeating-linear-gradient(180deg,rgba(2,46,100,.075) 0 1px,transparent 1px 38px);
-  mask-image:linear-gradient(180deg,#000,transparent);
-}
-.terminal-apron-light{
-  position:absolute;width:9px;height:9px;border-radius:50%;
-  background:#fff;
-  box-shadow:0 0 0 5px rgba(255,255,255,.52),0 0 28px 11px rgba(95,199,207,.26);
-  opacity:.75;
-  animation:apronGlow 3.6s ease-in-out infinite alternate;
-}
-.terminal-apron-light.l1{right:11%;top:23%}
-.terminal-apron-light.l2{right:25%;top:36%;animation-delay:-1.2s}
-.terminal-apron-light.l3{right:7%;top:58%;animation-delay:-2.1s}
-.terminal-apron-light.l4{right:39%;top:18%;animation-delay:-.7s}
-@keyframes apronGlow{to{opacity:.30;transform:scale(.72)}}
-.hero-inner{position:relative;z-index:2}
-.hero-copy{position:relative;padding:26px 0}
-.hero-copy::before{
-  content:"";position:absolute;left:-42px;top:10%;bottom:10%;width:4px;border-radius:4px;
-  background:linear-gradient(180deg,#5fc7cf,#022e64 60%,transparent);opacity:.50
-}
-.terminal-location-line{
-  display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-top:13px;
-  color:#738497;font-size:8px;font-weight:800;letter-spacing:.10em;text-transform:uppercase
-}
-.terminal-location-line i{width:4px;height:4px;border-radius:50%;background:#5fc7cf}
-.terminal-location-icon{
-  display:inline-grid;place-items:center;height:24px;padding:0 8px;border-radius:5px;
-  background:#022e64;color:#fff;font-family:"Roboto Mono",monospace;font-size:7px;letter-spacing:.10em
-}
-.hero-status{position:relative;overflow:hidden}
-.hero-status::after{
-  content:"";position:absolute;inset:0;pointer-events:none;border-radius:inherit;
-  background:linear-gradient(115deg,transparent 0 40%,rgba(255,255,255,.36) 50%,transparent 60%);
-  background-size:240% 100%;animation:heroPanelSweep 9s ease-in-out infinite
-}
-@keyframes heroPanelSweep{0%,32%{background-position:-140% 0}72%,100%{background-position:170% 0}}
-
-.terminal-bay{
-  width:min(1240px,100%);margin-inline:auto;position:relative;padding:58px 34px 44px;border-radius:34px;
-  background:linear-gradient(180deg,rgba(255,255,255,.88),rgba(238,244,249,.94)),#f3f6f8;
-  border:1px solid rgba(2,46,100,.07);
-  box-shadow:inset 0 1px rgba(255,255,255,.92),0 30px 80px rgba(2,46,100,.12)
-}
-.terminal-bay::before{
-  content:"";position:absolute;left:24px;right:24px;top:25px;height:2px;
-  background:linear-gradient(90deg,transparent,rgba(2,46,100,.08),rgba(95,199,207,.26),rgba(2,46,100,.08),transparent)
-}
-.terminal-bay::after{
-  content:"";position:absolute;inset:0;border-radius:34px;pointer-events:none;opacity:.42;
-  background:linear-gradient(90deg,rgba(2,46,100,.035) 1px,transparent 1px),linear-gradient(rgba(2,46,100,.026) 1px,transparent 1px);
-  background-size:70px 70px;mask-image:linear-gradient(180deg,#000 0 22%,transparent 60%)
-}
-.terminal-overhead-signs{
-  position:absolute;z-index:4;top:0;left:34px;right:34px;display:flex;align-items:flex-start;gap:7px;transform:translateY(-18px)
-}
-.overhead-sign{
-  min-height:40px;display:inline-flex;align-items:center;gap:10px;padding:0 14px;border-radius:8px;
-  font-size:8px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;box-shadow:0 12px 24px rgba(2,46,100,.14)
-}
-.overhead-sign b{font-size:14px;font-weight:600}
-.sign-dark{background:#022e64;color:#fff}
-.sign-aqua{background:#d9f1f1;color:#022e64}
-.sign-light{background:#fff;color:#022e64;border:1px solid rgba(2,46,100,.08)}
-.overhead-zone{margin-left:auto;padding-top:13px;color:#8291a0;font-size:7px;font-weight:800;letter-spacing:.16em;text-transform:uppercase}
-.terminal-floor-reflection{
-  position:absolute;left:8%;right:8%;bottom:-24px;height:38px;
-  background:radial-gradient(ellipse at center,rgba(2,46,100,.14),transparent 68%);filter:blur(12px);pointer-events:none
-}
-
-.airport-controls{
-  width:min(1160px,calc(100% - 24px));margin:0 auto 24px;border-radius:16px;
-  box-shadow:0 12px 28px rgba(2,46,100,.07)
-}
-.airport-control{background:#fff;border-radius:10px}
-.control-sign{border-radius:6px;background:linear-gradient(145deg,#04254a,#0b477e)}
-.airport-board-toggle{border-radius:10px;background:#f0f4f8}
-.airport-toggle{border-radius:7px}
-.airport-update,.airport-reset{border-radius:9px}
-.airport-update{background:linear-gradient(145deg,#04254a,#0b477e)}
+.airport-update,.airport-reset{border:0;border-radius:9px;min-height:54px;padding:0 15px;font-size:8px;font-weight:800;letter-spacing:.10em;text-transform:uppercase}
+.airport-update{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:linear-gradient(145deg,#04254a,#0b477e);color:#fff;box-shadow:0 10px 22px rgba(2,46,100,.15);transition:transform .18s ease,box-shadow .18s ease}
+.airport-update:hover{transform:translateY(-1px);box-shadow:0 14px 27px rgba(2,46,100,.20)}
+.airport-update-led{width:6px;height:6px;border-radius:50%;background:#67fca9;box-shadow:0 0 9px rgba(103,252,169,.62)}
+.airport-reset{background:#fff;color:#647588;border:1px solid rgba(2,46,100,.08)}
+.airport-reset:hover{color:#022e64;border-color:rgba(95,199,207,.58)}
 .airport-clear-btn::before{content:"×";margin-right:6px;font-size:12px;font-weight:500}
 
-.flight-board-shell{
-  width:min(1100px,100%);margin-inline:auto;padding:10px;border-radius:24px;
-  background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(233,238,248,.96));
-  box-shadow:0 25px 58px rgba(2,46,100,.15),0 2px 0 rgba(255,255,255,.9) inset
-}
-.flight-board-shell::after{inset:5px;border-radius:19px}
-.board-top{min-height:78px;margin-bottom:7px;padding:12px 14px;border-radius:16px}
-.board-brand{gap:11px}.board-monogram{width:40px;height:40px;border-radius:11px}
-.board-brand strong{font-size:22px}.board-brand span{font-size:7px}
-.board-query{padding:9px 11px;border-radius:10px}.board-live{padding:8px 10px;border-radius:10px}
-.board-screen{
-  border-radius:16px;
-  box-shadow:inset 0 14px 34px rgba(0,0,0,.30),0 12px 28px rgba(2,46,100,.10)
-}
-.board-airport-bar{min-height:54px}.board-airport-bar>div{padding:10px 13px}.board-airport-bar strong{font-size:16px}
-.board-columns{min-height:34px}.board-scroll{min-height:300px;padding:6px}.flip-body{gap:6px}
-.fids-row{min-height:57px;border-radius:11px}.fids-cell{padding:7px 7px 7px 9px}
-.flap-container.digital-flip{height:34px;border-radius:7px!important;font-size:12px}
-.digital-flip .flip-fold{padding:8px 12px 0}.logo-bay{min-height:35px;border-radius:7px}
-.board-message{min-height:265px}.board-footer{margin-top:7px;padding:9px 11px;border-radius:11px}
+.airport-notice{grid-column:1/-1;margin:0!important;display:none}
+.airport-control-note{grid-column:1/-1;padding:0 5px;color:#738396;font-size:8px;line-height:1.4}
+.notice{position:relative;display:none;margin-bottom:12px;padding:11px 13px;border-radius:14px;background:rgba(255,210,122,.14);border:1px solid rgba(255,210,122,.34);color:#7a6128;font-size:10px;line-height:1.5}
+.notice.error{background:rgba(216,95,102,.1);border-color:rgba(216,95,102,.3);color:#d85f66}
+.notice.is-visible{display:block}
 
-#hardwareCasing.is-searching .board-screen::before{opacity:.55;animation:fidsPulse 1.6s ease-in-out infinite alternate}
-#hardwareCasing.is-searching .airport-update-led{animation:livePulse .72s ease-in-out infinite}
-@keyframes fidsPulse{to{filter:brightness(1.25)}}
-
-.airport-priority-strip{
-  width:min(1100px,100%);margin:20px auto 0;display:grid;grid-template-columns:repeat(3,1fr);gap:1px;
-  border:1px solid rgba(2,46,100,.07);border-radius:16px;overflow:hidden;background:rgba(2,46,100,.07);
-  box-shadow:0 14px 32px rgba(2,46,100,.06)
-}
-.airport-priority-strip>div{min-height:90px;padding:15px 17px;background:rgba(255,255,255,.94)}
-.priority-symbol{
-  display:inline-grid;place-items:center;min-width:26px;height:22px;padding:0 6px;border-radius:5px;background:#e9eef8;color:#022e64;
-  font-family:"Roboto Mono",monospace;font-size:7px;font-weight:800
-}
-.airport-priority-strip strong{display:block;margin-top:10px;color:#022e64;font-size:12px;letter-spacing:-.02em}
-.airport-priority-strip small{display:block;margin-top:4px;color:#748496;font-size:9px;line-height:1.5}
-
-.airport-atmosphere-section{position:relative}
-.airport-moments-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
-.airport-moment{
-  min-height:285px;padding:24px;border-radius:22px;display:flex;flex-direction:column;justify-content:space-between;
-  border:1px solid rgba(2,46,100,.07);box-shadow:0 14px 32px rgba(2,46,100,.07);
-  transition:transform .28s var(--ease),box-shadow .28s ease
-}
-.airport-moment:hover{transform:translateY(-6px);box-shadow:0 24px 48px rgba(2,46,100,.12)}
-.moment-blue{background:linear-gradient(145deg,#04254a,#0b477e);color:#fff}
-.moment-aqua{background:#d9f1f1;color:#022e64}
-.moment-sand{background:#f2e9dc;color:#3c2f20}
-.moment-ice{background:#e9eef8;color:#022e64}
-.moment-sign{
-  display:inline-flex;align-items:center;gap:8px;align-self:flex-start;min-height:30px;padding:0 9px;border-radius:6px;
-  border:1px solid currentColor;opacity:.72;font-size:8px;font-weight:800;letter-spacing:.11em;text-transform:uppercase
-}
-.moment-sign span{font-size:13px}
-.airport-moment h3{font-size:24px;line-height:1;letter-spacing:-.045em;margin-bottom:9px}
-.airport-moment p{font-size:10.5px;line-height:1.68;opacity:.73}
-
-.info-card,.travel-card,.time-card{position:relative}
-.info-card::before,.travel-card::before,.time-card::before{
-  content:"";position:absolute;left:16px;top:14px;width:14px;height:14px;border-left:1px solid currentColor;border-top:1px solid currentColor;opacity:.12
-}
-
-@media(max-width:1100px){
-  .terminal-bay{padding:56px 20px 36px}
-  .airport-moments-grid{grid-template-columns:1fr 1fr}
-  .overhead-zone{display:none}
-}
-@media(max-width:760px){
-  .hero{min-height:520px}
-  .terminal-glass-lines{width:74%;opacity:.30}
-  .hero-copy::before{display:none}
-  .terminal-location-line{font-size:7px}
-  .terminal-bay{padding:46px 7px 24px;border-radius:22px}
-  .terminal-overhead-signs{left:14px;right:14px;gap:5px;transform:translateY(-13px)}
-  .overhead-sign{min-height:32px;padding:0 9px;border-radius:6px;font-size:7px}
-  .overhead-sign b{font-size:11px}
-  .flight-board-shell{padding:7px;border-radius:18px}
-  .board-top{padding:11px;border-radius:13px}
-  .board-brand strong{font-size:20px}
-  .board-query{display:none}
-  .board-live{justify-self:start}
-  .board-airport-bar{min-height:48px}
-  .board-scroll{min-height:0}
-  .airport-priority-strip{grid-template-columns:1fr;margin-top:14px}
-  .airport-priority-strip>div{min-height:78px}
-  .airport-moments-grid{grid-template-columns:1fr}
-  .airport-moment{min-height:230px}
-}
-@media(prefers-reduced-motion:reduce){
-  .terminal-apron-light,.hero-status::after{animation:none!important}
-}
-
-
-/* =========================================================
-   B-011.37 — RESEARCH-DRIVEN FIDS + AIRPORT CONTEXT
-   ========================================================= */
-.hidden{display:none!important}
-
-/* FIDS screen: flatter, continuous, high-distance readability */
-.flight-board-shell{
-  width:min(1120px,100%);
-  border-radius:22px;
-  padding:9px;
-}
-.board-top{
-  min-height:72px;
-  border-radius:14px;
-  background:
-    radial-gradient(circle at 8% 0,rgba(95,199,207,.18),transparent 25%),
-    linear-gradient(135deg,#04254a,#0b477e 68%,#126d78);
-}
-.board-brand strong{font-size:24px;letter-spacing:-.035em}
-.board-brand span{letter-spacing:.13em}
-.board-screen{
-  border-radius:13px;
-  background:
-    radial-gradient(circle at 16% 0,rgba(95,199,207,.075),transparent 22%),
-    linear-gradient(180deg,#061525,#04111e 48%,#03101c);
-}
-.board-airport-bar{
-  min-height:54px;
-  background:rgba(255,255,255,.026);
-}
-.board-airport-bar strong{
-  font-size:17px;
-  letter-spacing:.05em;
-}
-.board-columns{
-  min-height:37px;
-  background:rgba(255,255,255,.035);
-  border-top:1px solid rgba(255,255,255,.035);
-  border-bottom:1px solid rgba(255,255,255,.075);
-}
-.board-columns>div{
-  color:#82a6bb;
-  font-size:7.5px;
-  letter-spacing:.16em;
-}
-.fids-layout{
-  min-width:0;
-  grid-template-columns:126px 130px minmax(290px,1fr) 180px 205px 92px;
-}
-.board-scroll{
-  min-height:360px;
-  max-height:480px;
-  overflow-y:auto;
-  overflow-x:hidden;
-  padding:0 8px 8px;
-}
-.board-scroll::-webkit-scrollbar{width:5px}
-.board-scroll::-webkit-scrollbar-thumb{background:#214560;border-radius:999px}
-.flip-body{min-width:0;gap:0}
-.fids-row{
-  min-height:64px;
-  margin:0!important;
-  border:0!important;
-  border-bottom:1px solid rgba(255,255,255,.075)!important;
-  border-radius:0!important;
-  background:transparent!important;
-  box-shadow:none!important;
-}
-.fids-row::before{
-  left:0;top:8px;bottom:8px;width:2px;border-radius:2px;
-  background:#5fc7cf;opacity:.0;transition:opacity .2s ease;
-}
-.fids-row:hover{
-  transform:none!important;
-  background:rgba(255,255,255,.035)!important;
-}
-.fids-row:hover::before{opacity:.78}
-.fids-cell{
-  min-height:64px;
-  padding:8px 10px!important;
-  border-right:1px solid rgba(255,255,255,.045)!important;
-}
-.fids-cell:last-child{border-right:0!important}
-.fids-time{
-  display:flex;flex-direction:column;align-items:flex-start;gap:3px;
-}
-.fids-time-main{
-  color:#fff;
-  font-family:"Roboto Mono",monospace;
-  font-size:21px;
-  font-weight:700;
-  letter-spacing:.02em;
-}
-.fids-time small{
-  color:#6f91a5;
-  font-family:"Roboto Mono",monospace;
-  font-size:7px;
-  font-weight:700;
-  letter-spacing:.08em;
-  text-transform:uppercase;
-}
-.fids-destination{
-  min-width:0;
-}
-.fids-destination strong{
-  display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-  color:#f3f8fc;font-size:16px;font-weight:650;letter-spacing:-.025em;
-}
-.fids-destination small{
-  display:block;margin-top:4px;color:#6e93a8;
-  font-family:"Roboto Mono",monospace;font-size:8px;font-weight:700;letter-spacing:.08em;
-}
-.fids-flight{
-  display:flex;align-items:center;gap:8px;
-}
-.fids-flight strong{
-  color:#f4f8fb;font-family:"Roboto Mono",monospace;font-size:13px;font-weight:700;letter-spacing:.04em;
-}
-.fids-tail{
-  width:42px;height:36px;flex:0 0 auto;border-radius:6px;
-  display:grid;place-items:center;overflow:hidden;
-  background:#fff;
-  box-shadow:0 5px 14px rgba(0,0,0,.14);
-}
-.fids-tail img{max-width:34px;max-height:24px;object-fit:contain}
-.fids-carrier-name{
-  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-  color:#90adbd;font-size:8px;font-weight:700;letter-spacing:.03em;
-}
-.fids-status{
-  display:inline-flex;align-items:center;min-height:28px;
-  color:#d9f1f1;font-family:"Roboto Mono",monospace;font-size:10px;font-weight:700;
-  letter-spacing:.03em;
-}
-.fids-status::before{
-  content:"";width:6px;height:6px;border-radius:50%;margin-right:8px;
-  background:#67fca9;box-shadow:0 0 9px rgba(103,252,169,.40);
-}
-.fids-status.flap-warn{color:#ffd27a}
-.fids-status.flap-warn::before{background:#ffd27a;box-shadow:0 0 9px rgba(255,210,122,.35)}
-.fids-status.flap-bad{color:#ff9292}
-.fids-status.flap-bad::before{background:#ff7a7a;box-shadow:0 0 9px rgba(255,122,122,.40)}
-.fids-gate{
-  min-width:54px;height:40px;display:grid;place-items:center;
-  border-radius:7px;background:#d9f1f1;color:#022e64;
-  font-family:"Roboto Mono",monospace;font-size:15px;font-weight:800;letter-spacing:.04em;
-}
-.fids-gate.is-changing,.fids-time-main.is-changing,.fids-flight strong.is-changing{
-  animation:fidsFieldFlip .58s cubic-bezier(.2,.72,.3,1);
-}
-@keyframes fidsFieldFlip{
-  0%{transform:perspective(600px) rotateX(0);filter:brightness(1)}
-  42%{transform:perspective(600px) rotateX(-86deg);filter:brightness(.55)}
-  62%{transform:perspective(600px) rotateX(16deg);filter:brightness(1.28)}
-  100%{transform:perspective(600px) rotateX(0);filter:brightness(1)}
-}
-.logo-bay{display:none!important}
-.flap-container.digital-flip{display:none!important}
-
-/* Airport context transition */
-.airport-context{
-  position:relative;
-  background:#fff;
-}
-.context-transition{
-  height:130px;
-  margin-top:-1px;
-  background:linear-gradient(180deg,#f3f6f8 0%,#fff 100%);
-}
-.context-welcome{padding:72px 0 100px}
-.context-preview-grid{
-  display:grid;grid-template-columns:repeat(3,1fr);gap:12px;
-}
-.context-preview{
-  min-height:260px;padding:25px;border-radius:24px;
-  display:flex;flex-direction:column;justify-content:flex-end;
-  box-shadow:0 16px 38px rgba(2,46,100,.08);
-  transition:transform .3s var(--ease),box-shadow .3s ease;
-}
-.context-preview:hover{transform:translateY(-6px);box-shadow:0 26px 52px rgba(2,46,100,.13)}
-.context-preview span{
-  margin-bottom:auto;font-family:"Roboto Mono",monospace;font-size:8px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;opacity:.65
-}
-.context-preview h3{font-size:27px;letter-spacing:-.045em;line-height:1;margin-bottom:9px}
-.context-preview p{font-size:10.5px;line-height:1.65;opacity:.72}
-.preview-navy{background:linear-gradient(145deg,#04254a,#0b477e);color:#fff}
-.preview-aqua{background:#d9f1f1;color:#022e64}
-.preview-sand{background:#f2e9dc;color:#3c2f20}
-
-.context-loading{padding:76px 0 110px}
-.context-loading-screen{
-  min-height:280px;border-radius:28px;padding:34px;
-  display:grid;grid-template-columns:auto 1fr;gap:30px;align-items:center;
-  background:linear-gradient(145deg,#04254a,#0b477e 62%,#126d78);
-  color:#fff;box-shadow:0 28px 68px rgba(2,46,100,.18)
-}
-.loading-airport-code{
-  font-size:clamp(60px,10vw,130px);font-weight:700;line-height:.8;letter-spacing:-.08em;color:#d9f1f1
-}
-.loading-copy span{
-  display:block;color:#8fd3ff;font-size:8px;font-weight:800;letter-spacing:.16em;text-transform:uppercase
-}
-.loading-copy strong{display:block;margin-top:10px;font-size:28px;line-height:1.05;letter-spacing:-.045em;font-weight:550}
-.loading-track{
-  grid-column:1/-1;height:3px;border-radius:99px;background:rgba(255,255,255,.10);overflow:hidden
-}
-.loading-track i{
-  display:block;width:34%;height:100%;background:linear-gradient(90deg,transparent,#5fc7cf,#d1bc98,transparent);
-  animation:contextLoad 1.45s ease-in-out infinite
-}
-@keyframes contextLoad{from{transform:translateX(-120%)}to{transform:translateX(390%)}}
-
-/* Selected airport identity */
-.context-content{
-  animation:contextReveal .72s var(--ease) both;
-}
-@keyframes contextReveal{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
-.airport-profile{
-  --airport-primary:#022e64;
-  --airport-accent:#5fc7cf;
-  position:relative;isolation:isolate;overflow:hidden;min-height:560px;color:#fff;
-  background:linear-gradient(145deg,var(--airport-primary),#0b477e 62%,#126d78)
-}
-.airport-profile-media{
-  position:absolute;inset:0;z-index:-3;background-position:center;background-size:cover;
-  transform:scale(1.025);transition:transform 1.4s var(--ease)
-}
-.airport-profile:hover .airport-profile-media{transform:scale(1.055)}
-.airport-profile-overlay{
-  position:absolute;inset:0;z-index:-2;
-  background:
-    linear-gradient(90deg,rgba(2,17,37,.94),rgba(2,46,100,.72) 52%,rgba(2,46,100,.28)),
-    linear-gradient(180deg,rgba(3,17,31,.06),rgba(3,17,31,.74))
-}
-.airport-profile::after{
-  content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;opacity:.28;
-  background:
-    linear-gradient(rgba(255,255,255,.07) 1px,transparent 1px),
-    linear-gradient(90deg,rgba(255,255,255,.07) 1px,transparent 1px);
-  background-size:54px 54px;mask-image:linear-gradient(90deg,#000,transparent 80%)
-}
-.airport-profile-inner{
-  min-height:560px;padding:76px 0 64px;
-  display:grid;grid-template-columns:minmax(0,1.2fr) minmax(300px,.58fr);gap:58px;align-items:end
-}
-.airport-profile-code{
-  color:rgba(255,255,255,.18);font-size:clamp(82px,13vw,170px);font-weight:700;line-height:.70;letter-spacing:-.10em
-}
-.airport-profile-copy h2{
-  max-width:820px;margin:12px 0 17px;font-size:clamp(42px,6vw,76px);font-weight:500;line-height:.94;letter-spacing:-.062em
-}
-.airport-profile-copy p{
-  max-width:690px;color:#d2e1ec;font-size:13px;line-height:1.76
-}
-.airport-profile-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:24px}
-.context-action{
-  min-height:42px;padding:0 14px;border:1px solid rgba(255,255,255,.18);border-radius:999px;
-  display:inline-flex;align-items:center;justify-content:center;gap:7px;
-  background:rgba(255,255,255,.08);color:#fff;text-decoration:none;
-  font-size:8px;font-weight:800;letter-spacing:.10em;text-transform:uppercase;
-  backdrop-filter:blur(12px);transition:transform .2s ease,background .2s ease
-}
-.context-action:hover{transform:translateY(-2px);background:rgba(255,255,255,.14)}
-.context-action.primary{background:#d9f1f1;color:#022e64;border-color:#d9f1f1}
-.airport-profile-facts{
-  align-self:end;display:grid;grid-template-columns:1fr 1fr;gap:1px;
-  overflow:hidden;border:1px solid rgba(255,255,255,.14);border-radius:20px;background:rgba(255,255,255,.10);backdrop-filter:blur(16px)
-}
-.profile-fact{min-height:88px;padding:15px;background:rgba(3,17,31,.28)}
-.profile-fact small{display:block;color:#85a7bb;font-size:7px;font-weight:800;letter-spacing:.13em;text-transform:uppercase}
-.profile-fact strong{display:block;margin-top:7px;color:#fff;font-size:14px;line-height:1.2;font-weight:600}
-
-/* Airport-specific module grid */
-.airport-context-grid{
-  padding:80px 0 30px;
-  display:grid;grid-template-columns:repeat(12,1fr);gap:12px
-}
-.context-module{
-  grid-column:span 4;min-height:320px;padding:24px;border-radius:24px;
-  background:#fff;border:1px solid rgba(2,46,100,.08);box-shadow:0 14px 36px rgba(2,46,100,.07);
-  display:flex;flex-direction:column;transition:transform .28s var(--ease),box-shadow .28s ease
-}
-.context-module:hover{transform:translateY(-5px);box-shadow:0 24px 50px rgba(2,46,100,.12)}
-.module-terminal{background:#e9eef8}
-.module-transport{background:#d9f1f1}
-.module-dining{background:#fff}
-.module-lounges{background:linear-gradient(145deg,#142d4f,#496b8f);color:#fff}
-.module-hotel{background:#f2e9dc;color:#3c2f20}
-.module-transfer{
-  position:relative;overflow:hidden;grid-column:span 8;
-  background:linear-gradient(145deg,#04254a,#0b477e 60%,#126d78);color:#fff
-}
-.module-transfer::after{
-  content:"";position:absolute;width:360px;height:360px;border-radius:50%;right:-180px;top:-190px;border:1px solid rgba(95,199,207,.22)
-}
-.transfer-ribbon{
-  position:absolute;right:20px;top:18px;color:#d9f1f1;font-size:8px;font-weight:800;letter-spacing:.16em
-}
-.module-head{display:flex;align-items:center;gap:12px;margin-bottom:22px}
-.module-sign{
-  width:38px;height:38px;display:grid;place-items:center;border-radius:10px;
-  background:#022e64;color:#fff;font-family:"Roboto Mono",monospace;font-size:10px;font-weight:800
-}
-.module-lounges .module-sign,.module-transfer .module-sign{background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.13)}
-.module-hotel .module-sign{background:#3c2f20}
-.module-head small{display:block;color:#758599;font-size:7px;font-weight:800;letter-spacing:.12em;text-transform:uppercase}
-.module-lounges .module-head small,.module-transfer .module-head small{color:#91b1c4}
-.module-hotel .module-head small{color:#8d7557}
-.module-head h3{margin-top:2px;font-size:23px;font-weight:600;letter-spacing:-.045em}
-.module-body{display:grid;gap:9px;margin-top:auto}
-.context-list-item{
-  padding:12px 13px;border-radius:13px;background:rgba(255,255,255,.62);border:1px solid rgba(2,46,100,.06)
-}
-.module-lounges .context-list-item,.module-transfer .context-list-item{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.08)}
-.module-hotel .context-list-item{background:rgba(255,255,255,.32)}
-.context-list-item strong{display:block;font-size:11px;line-height:1.3}
-.context-list-item span{display:block;margin-top:4px;color:#728194;font-size:9px;line-height:1.55}
-.module-lounges .context-list-item span,.module-transfer .context-list-item span{color:#adc2d2}
-.module-hotel .context-list-item span{color:#756958}
-.context-empty{
-  color:#7a8998;font-size:10px;line-height:1.65
-}
-.module-lounges .context-empty,.module-transfer .context-empty{color:#9eb6c7}
-.transfer-price{
-  font-size:35px;font-weight:700;letter-spacing:-.06em;color:#fff
-}
-.transfer-price small{font-size:10px;font-weight:600;letter-spacing:0;color:#9eb7c8}
-.transfer-cta{
-  margin-top:8px;min-height:43px;border:0;border-radius:999px;padding:0 16px;background:#d9f1f1;color:#022e64;
-  font-size:8px;font-weight:800;letter-spacing:.10em;text-transform:uppercase
-}
-
-/* Selling / destination contextual rail */
-.airport-commerce{
-  padding:72px 0 82px;background:#f3f6f8
-}
-.commerce-grid{
-  display:grid;grid-template-columns:repeat(12,1fr);gap:12px
-}
-.commerce-card{
-  grid-column:span 4;position:relative;overflow:hidden;min-height:330px;border-radius:24px;padding:24px;
-  display:flex;flex-direction:column;justify-content:flex-end;border:1px solid rgba(2,46,100,.07);
-  background:#fff;box-shadow:0 14px 34px rgba(2,46,100,.08);transition:transform .3s var(--ease),box-shadow .3s ease
-}
-.commerce-card:hover{transform:translateY(-6px);box-shadow:0 25px 52px rgba(2,46,100,.14)}
-.commerce-card-media{position:absolute;inset:0;background-position:center;background-size:cover;transition:transform .7s var(--ease)}
-.commerce-card:hover .commerce-card-media{transform:scale(1.045)}
-.commerce-card::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(2,46,100,.02),rgba(2,27,54,.88))}
-.commerce-card-copy{position:relative;z-index:2;color:#fff}
-.commerce-card-copy small{font-size:7px;font-weight:800;letter-spacing:.13em;text-transform:uppercase;color:#b8dce0}
-.commerce-card-copy h3{font-size:25px;line-height:1.02;letter-spacing:-.045em;margin:8px 0}
-.commerce-card-copy p{font-size:9.5px;line-height:1.58;color:#cad9e5}
-.commerce-card-copy button{
-  margin-top:14px;min-height:38px;padding:0 13px;border:1px solid rgba(255,255,255,.20);border-radius:999px;
-  background:rgba(255,255,255,.10);color:#fff;font-size:8px;font-weight:800;letter-spacing:.09em;text-transform:uppercase
-}
-
-.airport-destination-edit{padding:80px 0;background:#fff}
-.destination-edit-head>div{display:flex;align-items:flex-end;gap:24px}
-.destination-edit-code{
-  color:#e9eef8;font-size:clamp(74px,12vw,145px);font-weight:700;line-height:.72;letter-spacing:-.10em
-}
-.destination-edit-head h2{
-  margin-top:8px;color:#022e64;font-size:clamp(34px,4.8vw,58px);font-weight:550;letter-spacing:-.055em;line-height:.96
-}
-.destination-edit-grid{
-  margin-top:30px;display:grid;grid-template-columns:repeat(12,1fr);gap:12px
-}
-.destination-card{
-  grid-column:span 4;min-height:270px;border-radius:22px;padding:23px;border:1px solid rgba(2,46,100,.07);
-  background:#e9eef8;color:#022e64;display:flex;flex-direction:column;justify-content:flex-end
-}
-.destination-card:nth-child(3n+2){background:#d9f1f1}
-.destination-card:nth-child(3n+3){background:#f2e9dc;color:#3c2f20}
-.destination-card small{margin-bottom:auto;font-size:7px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;opacity:.62}
-.destination-card h3{font-size:23px;letter-spacing:-.04em;line-height:1.03}
-.destination-card p{margin-top:8px;font-size:9.5px;line-height:1.6;opacity:.70}
-.destination-card button{
-  align-self:flex-start;margin-top:14px;border:0;background:transparent;color:inherit;padding:0;
-  font-size:8px;font-weight:800;letter-spacing:.08em;text-transform:uppercase
-}
-
-/* Practical airport data */
-.airport-practical{padding:72px 0 90px;background:linear-gradient(180deg,#fff,#f3f6f8)}
-.practical-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-.practical-card{
-  min-height:205px;padding:22px;border-radius:20px;background:#fff;border:1px solid rgba(2,46,100,.07);
-  box-shadow:0 12px 28px rgba(2,46,100,.06)
-}
-.practical-card span{font-size:7px;font-weight:800;letter-spacing:.13em;text-transform:uppercase;color:#74869a}
-.practical-card h3{margin-top:10px;color:#022e64;font-size:20px;letter-spacing:-.04em}
-.practical-card p{margin-top:8px;color:#66788b;font-size:9.5px;line-height:1.62}
-
-@media(max-width:1080px){
-  .airport-profile-inner{grid-template-columns:1fr}
-  .airport-profile-facts{max-width:650px}
-  .context-module{grid-column:span 6}
-  .module-transfer{grid-column:span 12}
-  .commerce-card,.destination-card{grid-column:span 6}
-  .context-preview-grid,.practical-grid{grid-template-columns:1fr 1fr}
-}
-@media(max-width:760px){
-  .fids-layout{grid-template-columns:1fr!important}
-  .board-columns{display:none}
-  .board-scroll{max-height:none;overflow:visible}
-  .fids-row{display:grid;grid-template-columns:1fr 1fr!important;border:1px solid rgba(255,255,255,.06)!important;border-radius:12px!important;margin-bottom:7px!important}
-  .fids-cell{border-right:0!important;border-bottom:1px solid rgba(255,255,255,.045)!important;justify-content:space-between}
-  .fids-cell::before{content:attr(data-label);color:#7194a9;font-size:7px;font-weight:800;letter-spacing:.11em;text-transform:uppercase}
-  .fids-cell:nth-child(3),.fids-cell:nth-child(4),.fids-cell:nth-child(5){grid-column:1/-1}
-  .fids-destination{text-align:right}
-  .fids-time{align-items:flex-end}
-  .context-welcome{padding:52px 0 70px}
-  .context-preview-grid,.practical-grid{grid-template-columns:1fr}
-  .context-loading-screen{grid-template-columns:1fr}
-  .airport-profile{min-height:650px}
-  .airport-profile-inner{min-height:650px;padding:62px 0 42px}
-  .airport-profile-code{font-size:96px}
-  .airport-profile-copy h2{font-size:42px}
-  .airport-profile-facts{grid-template-columns:1fr 1fr}
-  .airport-context-grid{grid-template-columns:1fr;padding-top:50px}
-  .context-module,.module-transfer{grid-column:auto;min-height:260px}
-  .commerce-grid,.destination-edit-grid{grid-template-columns:1fr}
-  .commerce-card,.destination-card{grid-column:auto}
-  .destination-edit-head>div{display:block}
-  .destination-edit-code{font-size:92px}
-}
-@media(max-width:430px){
-  .fids-row{grid-template-columns:1fr!important}
-  .fids-cell:nth-child(n){grid-column:1/-1}
-  .airport-profile-facts{grid-template-columns:1fr}
-}
-
-
-/* B-011.37 final review: airport selector, true local-time FIDS and clean public empty states */
+/* Search Dropdowns */
 .airport-code-control{position:relative;z-index:12}
 .airport-code-control>div{min-width:0;position:relative}
 .airport-code-control input{min-width:250px;width:min(34vw,390px)}
@@ -1040,71 +385,423 @@ button,input,select{font:inherit}button{cursor:pointer}a{color:inherit}
 .airport-suggestion-copy{min-width:0}
 .airport-suggestion-copy strong{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px}
 .airport-suggestion-copy small{display:block;margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#718094;font-size:8px}
+
+/* =========================================================
+   FIDS HARDWARE SHELL
+   ========================================================= */
+.terminal-bay{
+  width:min(1240px,100%);margin-inline:auto;position:relative;padding:58px 34px 44px;border-radius:34px;
+  background:linear-gradient(180deg,rgba(255,255,255,.88),rgba(238,244,249,.94)),#f3f6f8;
+  border:1px solid rgba(2,46,100,.07);
+  box-shadow:inset 0 1px rgba(255,255,255,.92),0 30px 80px rgba(2,46,100,.12)
+}
+.terminal-bay::before{
+  content:"";position:absolute;left:24px;right:24px;top:25px;height:2px;
+  background:linear-gradient(90deg,transparent,rgba(2,46,100,.08),rgba(95,199,207,.26),rgba(2,46,100,.08),transparent)
+}
+.terminal-bay::after{
+  content:"";position:absolute;inset:0;border-radius:34px;pointer-events:none;opacity:.42;
+  background:linear-gradient(90deg,rgba(2,46,100,.035) 1px,transparent 1px),linear-gradient(rgba(2,46,100,.026) 1px,transparent 1px);
+  background-size:70px 70px;mask-image:linear-gradient(180deg,#000 0 22%,transparent 60%)
+}
+
+.terminal-overhead-signs{position:absolute;z-index:4;top:0;left:34px;right:34px;display:flex;align-items:flex-start;gap:7px;transform:translateY(-18px)}
+.overhead-sign{min-height:40px;display:inline-flex;align-items:center;gap:10px;padding:0 14px;border-radius:8px;font-size:8px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;box-shadow:0 12px 24px rgba(2,46,100,.14)}
+.overhead-sign b{font-size:14px;font-weight:600}
+.sign-dark{background:#022e64;color:#fff}
+.sign-aqua{background:#d9f1f1;color:#022e64}
+.sign-light{background:#fff;color:#022e64;border:1px solid rgba(2,46,100,.08)}
+.overhead-zone{margin-left:auto;padding-top:13px;color:#8291a0;font-size:7px;font-weight:800;letter-spacing:.16em;text-transform:uppercase}
+.terminal-floor-reflection{position:absolute;left:8%;right:8%;bottom:-24px;height:38px;background:radial-gradient(ellipse at center,rgba(2,46,100,.14),transparent 68%);filter:blur(12px);pointer-events:none}
+
+.flight-board-shell{
+  width:min(1120px,100%);margin-inline:auto;padding:14px;border-radius:24px;
+  background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(233,238,248,.96));
+  box-shadow: 0 30px 60px rgba(2, 46, 100, 0.25), 0 40px 100px rgba(0, 0, 0, 0.3), inset 0 3px 0 #fff, inset 0 -2px 10px rgba(2, 46, 100, 0.1);
+  border-top: 2px solid #fff;
+}
+.flight-board-shell::after{content:"";position:absolute;inset:7px;border-radius:19px;border:1px solid rgba(255,255,255,.78);pointer-events:none}
+
+.board-top{
+  position:relative;z-index:2;display:grid;grid-template-columns:minmax(0,1.1fr) minmax(280px,.72fr) auto;gap:12px;align-items:center;
+  margin-bottom:9px;padding:15px 17px;border-radius:16px;
+  background: radial-gradient(circle at 8% 0,rgba(95,199,207,.18),transparent 25%), linear-gradient(135deg,#04254a,#0b477e 68%,#126d78);
+  color:#fff;box-shadow:0 18px 38px rgba(2,46,100,.22)
+}
+.board-brand{display:flex;align-items:center;gap:11px}
+.board-monogram{width:40px;height:40px;border-radius:11px;display:grid;place-items:center;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.16);color:#d9f1f1;font-size:11px;font-weight:800;letter-spacing:.16em;box-shadow:inset 0 1px rgba(255,255,255,.12),0 10px 20px rgba(0,0,0,.12)}
+.board-brand strong{display:block;font-size:24px;font-weight:600;letter-spacing:-.035em;line-height:.96}
+.board-brand span{display:block;margin-top:4px;color:#afd0df;font-size:7px;font-weight:780;letter-spacing:.13em;text-transform:uppercase}
+.board-query{min-width:0;padding:9px 11px;border-radius:10px;background:rgba(3,17,31,.22);border:1px solid rgba(255,255,255,.11);backdrop-filter:blur(12px)}
+.board-query label{display:block;color:#8eb2c4;font-size:7px;font-weight:800;letter-spacing:.13em;text-transform:uppercase}
+.board-query strong{display:block;margin-top:5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#eefaf9;font-size:10px;letter-spacing:.05em}
+.board-live{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:10px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);white-space:nowrap}
+.board-live span{color:#c8dce6;font-size:8px;font-weight:750;letter-spacing:.10em;text-transform:uppercase}
+.board-live strong{color:#fff;font-size:9px}
+
+.board-screen{
+  position:relative;z-index:2;overflow:hidden;border-radius:13px;
+  background: radial-gradient(circle at 16% 0,rgba(95,199,207,.075),transparent 22%), linear-gradient(180deg,#061525,#04111e 48%,#03101c);
+  border:1px solid rgba(255,255,255,.06);
+  box-shadow: inset 0 12px 24px rgba(0,0,0,0.6), inset 0 2px 4px rgba(0,0,0,0.8), 0 1px 1px rgba(255,255,255,0.6);
+}
+.board-screen::after{
+  content:"";position:absolute;z-index:10;pointer-events:none;
+  top:-18%;left:-30%;width:34%;height:150%;
+  background:linear-gradient(105deg,transparent,rgba(255,255,255,0.03) 25%,rgba(255,255,255,0.08) 45%,transparent 50%);
+  mask-image:linear-gradient(to bottom,#000 30%,transparent 100%);
+  -webkit-mask-image:linear-gradient(to bottom,#000 30%,transparent 100%);
+  transform:skewX(-16deg);animation:glassSweep 10s ease-in-out infinite;
+}
+@keyframes glassSweep{0%,35%{left:-34%}76%,100%{left:122%}}
+#hardwareCasing.is-searching .board-screen::before{opacity:.55;animation:fidsPulse 1.6s ease-in-out infinite alternate}
+#hardwareCasing.is-searching .airport-update-led{animation:livePulse .72s ease-in-out infinite}
+@keyframes fidsPulse{to{filter:brightness(1.25)}}
+
+.board-airport-bar{position:relative;z-index:2;display:grid;grid-template-columns:1fr 1fr auto;gap:1px;min-height:54px;background:rgba(255,255,255,.026);border-bottom:1px solid rgba(255,255,255,.06)}
+.board-airport-bar>div{display:flex;align-items:center;gap:12px;padding:10px 13px;border-right:1px solid rgba(255,255,255,.045)}
+.board-airport-bar>div:last-child{border-right:0}
+.board-airport-bar small{color:#66889e;font-size:7px;font-weight:800;letter-spacing:.15em;text-transform:uppercase}
+.board-airport-bar strong{color:#fff;font-family:"Roboto Mono",monospace;font-size:17px;font-weight:700;letter-spacing:.05em}
+
+.fids-layout{min-width:0;display:grid;grid-template-columns:126px 130px minmax(290px,1fr) 180px 205px 92px}
+.board-columns{position:relative;z-index:2;min-height:37px;border-top:1px solid rgba(255,255,255,.035);border-bottom:1px solid rgba(255,255,255,.075);background:rgba(255,255,255,.035)}
+.board-columns>div{display:flex;align-items:center;padding:0 10px;border-right:1px solid rgba(255,255,255,.035);color:#82a6bb;font-size:7.5px;font-weight:800;letter-spacing:.16em;text-transform:uppercase}
+.board-columns>div:last-child{border-right:0}
+
+.board-scroll{position:relative;z-index:2;overflow-x:hidden;overflow-y:auto;padding:0 8px 8px;min-height:360px;max-height:480px;scrollbar-width:thin;scrollbar-color:#214560 transparent}
+.board-scroll::-webkit-scrollbar{width:5px}
+.board-scroll::-webkit-scrollbar-thumb{background:#214560;border-radius:999px}
+.flip-body{min-width:0;display:grid;gap:0}
+.board-screen[aria-busy="true"]{cursor:progress}
+
+/* FIDS FLIGHT ROWS — Physical Hardware Setup */
+.fids-row{
+  position:relative;
+  min-height:64px;
+  margin-bottom:4px;
+  border-radius:8px;
+  background:rgba(3, 16, 28, 0.4);
+  border:1px solid rgba(255, 255, 255, 0.03);
+  border-bottom:1px solid rgba(255, 255, 255, 0.08);
+  box-shadow:inset 0 2px 4px rgba(0,0,0,0.2);
+  animation:rowEnter .52s var(--ease) both;
+  animation-delay:calc(var(--row,0)*55ms);
+  transition:transform .2s ease,background .2s ease,border-color .2s ease;
+}
+.fids-row::before{
+  content:"";
+  position:absolute;
+  left:0;top:8px;bottom:8px;width:3px;border-radius:2px;
+  background:#5fc7cf;opacity:0;transition:opacity .2s ease;
+}
+.fids-row:hover{
+  transform:translateY(-2px);
+  background:rgba(255, 255, 255, 0.05);
+  border-color:rgba(95, 199, 207, 0.3);
+}
+.fids-row:hover::before{opacity:0.78}
+@keyframes rowEnter{from{opacity:0;transform:translateY(9px) scale(.994)}to{opacity:1;transform:none}}
+
+.fids-cell{min-height:64px;padding:8px 10px;display:flex;align-items:center;border-right:1px solid rgba(255,255,255,.045);overflow:hidden}
+.fids-cell:last-child{border-right:0}
+.fids-time{display:flex;flex-direction:column;align-items:flex-start;gap:3px}
+.fids-time-main{color:#fff;font-family:"Roboto Mono",monospace;font-size:21px;font-weight:700;letter-spacing:.02em}
+.fids-time small{color:#6f91a5;font-family:"Roboto Mono",monospace;font-size:7px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.fids-destination{min-width:0}
+.fids-destination strong{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#f3f8fc;font-size:16px;font-weight:650;letter-spacing:-.025em}
+.fids-destination small{display:block;margin-top:4px;color:#6e93a8;font-family:"Roboto Mono",monospace;font-size:8px;font-weight:700;letter-spacing:.08em}
+.fids-flight{display:flex;align-items:center;gap:8px}
+.fids-flight strong{color:#f4f8fb;font-family:"Roboto Mono",monospace;font-size:13px;font-weight:700;letter-spacing:.04em}
+.fids-tail{width:42px;height:36px;flex:0 0 auto;border-radius:6px;display:grid;place-items:center;overflow:hidden;background:#fff;box-shadow:0 5px 14px rgba(0,0,0,.14)}
+.fids-tail img{max-width:34px;max-height:24px;object-fit:contain}
 .fids-tail.fallback{background:linear-gradient(145deg,#d9f1f1,#e9eef8);color:#022e64;font-family:"Roboto Mono",monospace;font-weight:900;font-size:10px}
+.fids-carrier-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#90adbd;font-size:8px;font-weight:700;letter-spacing:.03em}
+.fids-status{display:inline-flex;align-items:center;min-height:28px;color:#d9f1f1;font-family:"Roboto Mono",monospace;font-size:10px;font-weight:700;letter-spacing:.03em}
+.fids-status::before{content:"";width:6px;height:6px;border-radius:50%;margin-right:8px;background:#67fca9;box-shadow:0 0 9px rgba(103,252,169,.40)}
+.fids-status.flap-warn{color:#ffd27a}
+.fids-status.flap-warn::before{background:#ffd27a;box-shadow:0 0 9px rgba(255,210,122,.35)}
+.fids-status.flap-bad{color:#ff9292}
+.fids-status.flap-bad::before{background:#ff7a7a;box-shadow:0 0 9px rgba(255,122,122,.40)}
+.fids-gate{min-width:54px;height:40px;display:grid;place-items:center;border-radius:7px;background:#d9f1f1;color:#022e64;font-family:"Roboto Mono",monospace;font-size:15px;font-weight:800;letter-spacing:.04em}
+.fids-gate.is-changing,.fids-time-main.is-changing,.fids-flight strong.is-changing{animation:fidsFieldFlip .58s cubic-bezier(.2,.72,.3,1)}
+@keyframes fidsFieldFlip{
+  0%{transform:perspective(600px) rotateX(0);filter:brightness(1)}
+  42%{transform:perspective(600px) rotateX(-86deg);filter:brightness(.55)}
+  62%{transform:perspective(600px) rotateX(16deg);filter:brightness(1.28)}
+  100%{transform:perspective(600px) rotateX(0);filter:brightness(1)}
+}
+
+.board-message{min-height:265px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;border-radius:15px;background:rgba(255,255,255,.015);border:1px solid rgba(255,255,255,.04);color:#6f90a4;font-size:9px;font-weight:800;letter-spacing:.14em;text-transform:uppercase}
+.board-message-title{font-family:"Roboto Mono",monospace;letter-spacing:.04em}
+.board-message-note{color:#5f7a8f;font-size:8px;letter-spacing:.10em}
+.board-footer{position:relative;z-index:2;display:grid;grid-template-columns:1fr auto auto;gap:18px;align-items:center;margin-top:7px;padding:9px 11px;border-radius:11px;background:#e9eef8;color:#587085;font-size:8px;font-weight:750;letter-spacing:.08em;text-transform:uppercase}
+.board-footer strong{color:#022e64}
+.status-lamp{width:7px;height:7px;border-radius:50%;background:var(--sk-aqua);box-shadow:0 0 0 5px rgba(95,199,207,.12);display:inline-block;margin-right:7px;vertical-align:middle}
+
+.airport-priority-strip{width:min(1100px,100%);margin:20px auto 0;display:grid;grid-template-columns:repeat(3,1fr);gap:1px;border:1px solid rgba(2,46,100,.07);border-radius:16px;overflow:hidden;background:rgba(2,46,100,.07);box-shadow:0 14px 32px rgba(2,46,100,.06)}
+.airport-priority-strip>div{min-height:90px;padding:15px 17px;background:rgba(255,255,255,.94)}
+.priority-symbol{display:inline-grid;place-items:center;min-width:26px;height:22px;padding:0 6px;border-radius:5px;background:#e9eef8;color:#022e64;font-family:"Roboto Mono",monospace;font-size:7px;font-weight:800}
+.airport-priority-strip strong{display:block;margin-top:10px;color:#022e64;font-size:12px;letter-spacing:-.02em}
+.airport-priority-strip small{display:block;margin-top:4px;color:#748496;font-size:9px;line-height:1.5}
+
+/* =========================================================
+   AIRPORT CONTEXT UI
+   ========================================================= */
+.airport-context{position:relative;background:#fff}
+.context-transition{height:130px;margin-top:-1px;background:linear-gradient(180deg,#f3f6f8 0%,#fff 100%)}
+.context-welcome{padding:72px 0 100px}
+.context-preview-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.context-preview{min-height:260px;padding:25px;border-radius:24px;display:flex;flex-direction:column;justify-content:flex-end;box-shadow:0 16px 38px rgba(2,46,100,.08);transition:transform .3s var(--ease),box-shadow .3s ease}
+.context-preview:hover{transform:translateY(-6px);box-shadow:0 26px 52px rgba(2,46,100,.13)}
+.context-preview span{margin-bottom:auto;font-family:"Roboto Mono",monospace;font-size:8px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;opacity:.65}
+.context-preview h3{font-size:27px;letter-spacing:-.045em;line-height:1;margin-bottom:9px}
+.context-preview p{font-size:10.5px;line-height:1.65;opacity:.72}
+.preview-navy{background:linear-gradient(145deg,#04254a,#0b477e);color:#fff}
+.preview-aqua{background:#d9f1f1;color:#022e64}
+.preview-sand{background:#f2e9dc;color:#3c2f20}
+
+.context-loading{padding:76px 0 110px}
+.context-loading-screen{min-height:280px;border-radius:28px;padding:34px;display:grid;grid-template-columns:auto 1fr;gap:30px;align-items:center;background:linear-gradient(145deg,#04254a,#0b477e 62%,#126d78);color:#fff;box-shadow:0 28px 68px rgba(2,46,100,.18)}
+.loading-airport-code{font-size:clamp(60px,10vw,130px);font-weight:700;line-height:.8;letter-spacing:-.08em;color:#d9f1f1}
+.loading-copy span{display:block;color:#8fd3ff;font-size:8px;font-weight:800;letter-spacing:.16em;text-transform:uppercase}
+.loading-copy strong{display:block;margin-top:10px;font-size:28px;line-height:1.05;letter-spacing:-.045em;font-weight:550}
+.loading-track{grid-column:1/-1;height:3px;border-radius:99px;background:rgba(255,255,255,.10);overflow:hidden}
+.loading-track i{display:block;width:34%;height:100%;background:linear-gradient(90deg,transparent,#5fc7cf,#d1bc98,transparent);animation:contextLoad 1.45s ease-in-out infinite}
+@keyframes contextLoad{from{transform:translateX(-120%)}to{transform:translateX(390%)}}
+
+.context-content{animation:contextReveal .72s var(--ease) both}
+@keyframes contextReveal{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.airport-profile{--airport-primary:#022e64;--airport-accent:#5fc7cf;position:relative;isolation:isolate;overflow:hidden;min-height:560px;color:#fff;background:linear-gradient(145deg,var(--airport-primary),#0b477e 62%,#126d78)}
+.airport-profile-media{position:absolute;inset:0;z-index:-3;background-position:center;background-size:cover;transform:scale(1.025);transition:transform 1.4s var(--ease)}
+.airport-profile:hover .airport-profile-media{transform:scale(1.055)}
+.airport-profile-overlay{position:absolute;inset:0;z-index:-2;background:linear-gradient(90deg,rgba(2,17,37,.94),rgba(2,46,100,.72) 52%,rgba(2,46,100,.28)),linear-gradient(180deg,rgba(3,17,31,.06),rgba(3,17,31,.74))}
+.airport-profile::after{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;opacity:.28;background:linear-gradient(rgba(255,255,255,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.07) 1px,transparent 1px);background-size:54px 54px;mask-image:linear-gradient(90deg,#000,transparent 80%)}
+.airport-profile-inner{min-height:560px;padding:76px 0 64px;display:grid;grid-template-columns:minmax(0,1.2fr) minmax(300px,.58fr);gap:58px;align-items:end}
+.airport-profile-code{color:rgba(255,255,255,.18);font-size:clamp(82px,13vw,170px);font-weight:700;line-height:.70;letter-spacing:-.10em}
+.airport-profile-copy h2{max-width:820px;margin:12px 0 17px;font-size:clamp(42px,6vw,76px);font-weight:500;line-height:.94;letter-spacing:-.062em}
+.airport-profile-copy p{max-width:690px;color:#d2e1ec;font-size:13px;line-height:1.76}
+.airport-profile-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:24px}
+.context-action{min-height:42px;padding:0 14px;border:1px solid rgba(255,255,255,.18);border-radius:999px;display:inline-flex;align-items:center;justify-content:center;gap:7px;background:rgba(255,255,255,.08);color:#fff;text-decoration:none;font-size:8px;font-weight:800;letter-spacing:.10em;text-transform:uppercase;backdrop-filter:blur(12px);transition:transform .2s ease,background .2s ease}
+.context-action:hover{transform:translateY(-2px);background:rgba(255,255,255,.14)}
+.context-action.primary{background:#d9f1f1;color:#022e64;border-color:#d9f1f1}
+.airport-profile-facts{align-self:end;display:grid;grid-template-columns:1fr 1fr;gap:1px;overflow:hidden;border:1px solid rgba(255,255,255,.14);border-radius:20px;background:rgba(255,255,255,.10);backdrop-filter:blur(16px)}
+.profile-fact{min-height:88px;padding:15px;background:rgba(3,17,31,.28)}
+.profile-fact small{display:block;color:#85a7bb;font-size:7px;font-weight:800;letter-spacing:.13em;text-transform:uppercase}
+.profile-fact strong{display:block;margin-top:7px;color:#fff;font-size:14px;line-height:1.2;font-weight:600}
+
+.airport-context-grid{padding:80px 0 30px;display:grid;grid-template-columns:repeat(12,1fr);gap:12px}
+.context-module{grid-column:span 4;min-height:320px;padding:24px;border-radius:24px;background:#fff;border:1px solid rgba(2,46,100,.08);box-shadow:0 14px 36px rgba(2,46,100,.07);display:flex;flex-direction:column;transition:transform .28s var(--ease),box-shadow .28s ease}
+.context-module:hover{transform:translateY(-5px);box-shadow:0 24px 50px rgba(2,46,100,.12)}
+.module-terminal{background:#e9eef8}
+.module-transport{background:#d9f1f1}
+.module-dining{background:#fff}
+.module-lounges{background:linear-gradient(145deg,#142d4f,#496b8f);color:#fff}
+.module-hotel{background:#f2e9dc;color:#3c2f20}
+.module-transfer{position:relative;overflow:hidden;grid-column:span 8;background:linear-gradient(145deg,#04254a,#0b477e 60%,#126d78);color:#fff}
+.module-transfer::after{content:"";position:absolute;width:360px;height:360px;border-radius:50%;right:-180px;top:-190px;border:1px solid rgba(95,199,207,.22)}
+.transfer-ribbon{position:absolute;right:20px;top:18px;color:#d9f1f1;font-size:8px;font-weight:800;letter-spacing:.16em}
+.module-head{display:flex;align-items:center;gap:12px;margin-bottom:22px}
+.module-sign{width:38px;height:38px;display:grid;place-items:center;border-radius:10px;background:#022e64;color:#fff;font-family:"Roboto Mono",monospace;font-size:10px;font-weight:800}
+.module-lounges .module-sign,.module-transfer .module-sign{background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.13)}
+.module-hotel .module-sign{background:#3c2f20}
+.module-head small{display:block;color:#758599;font-size:7px;font-weight:800;letter-spacing:.12em;text-transform:uppercase}
+.module-lounges .module-head small,.module-transfer .module-head small{color:#91b1c4}
+.module-hotel .module-head small{color:#8d7557}
+.module-head h3{margin-top:2px;font-size:23px;font-weight:600;letter-spacing:-.045em}
+.module-body{display:grid;gap:9px;margin-top:auto}
+.context-list-item{padding:12px 13px;border-radius:13px;background:rgba(255,255,255,.62);border:1px solid rgba(2,46,100,.06)}
+.module-lounges .context-list-item,.module-transfer .context-list-item{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.08)}
+.module-hotel .context-list-item{background:rgba(255,255,255,.32)}
+.context-list-item strong{display:block;font-size:11px;line-height:1.3}
+.context-list-item span{display:block;margin-top:4px;color:#728194;font-size:9px;line-height:1.55}
+.module-lounges .context-list-item span,.module-transfer .context-list-item span{color:#adc2d2}
+.module-hotel .context-list-item span{color:#756958}
+.context-empty{color:#7a8998;font-size:10px;line-height:1.65}
+.module-lounges .context-empty,.module-transfer .context-empty{color:#9eb6c7}
+.transfer-price{font-size:35px;font-weight:700;letter-spacing:-.06em;color:#fff}
+.transfer-price small{font-size:10px;font-weight:600;letter-spacing:0;color:#9eb7c8}
+.transfer-cta{margin-top:8px;min-height:43px;border:0;border-radius:999px;padding:0 16px;background:#d9f1f1;color:#022e64;font-size:8px;font-weight:800;letter-spacing:.10em;text-transform:uppercase}
+
+.airport-commerce{padding:72px 0 82px;background:#f3f6f8}
+.commerce-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:12px}
+.commerce-card{grid-column:span 4;position:relative;overflow:hidden;min-height:330px;border-radius:24px;padding:24px;display:flex;flex-direction:column;justify-content:flex-end;border:1px solid rgba(2,46,100,.07);background:#fff;box-shadow:0 14px 34px rgba(2,46,100,.08);transition:transform .3s var(--ease),box-shadow .3s ease}
+.commerce-card:hover{transform:translateY(-6px);box-shadow:0 25px 52px rgba(2,46,100,.14)}
 .commerce-card.no-media{background:linear-gradient(145deg,#04254a,#0b477e 62%,#126d78)}
+.commerce-card-media{position:absolute;inset:0;background-position:center;background-size:cover;transition:transform .7s var(--ease)}
+.commerce-card:hover .commerce-card-media{transform:scale(1.045)}
+.commerce-card::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(2,46,100,.02),rgba(2,27,54,.88))}
+.commerce-card-copy{position:relative;z-index:2;color:#fff}
+.commerce-card-copy small{font-size:7px;font-weight:800;letter-spacing:.13em;text-transform:uppercase;color:#b8dce0}
+.commerce-card-copy h3{font-size:25px;line-height:1.02;letter-spacing:-.045em;margin:8px 0}
+.commerce-card-copy p{font-size:9.5px;line-height:1.58;color:#cad9e5}
+.commerce-card-copy button{margin-top:14px;min-height:38px;padding:0 13px;border:1px solid rgba(255,255,255,.20);border-radius:999px;background:rgba(255,255,255,.10);color:#fff;font-size:8px;font-weight:800;letter-spacing:.09em;text-transform:uppercase}
+
+.airport-destination-edit{padding:80px 0;background:#fff}
+.destination-edit-head>div{display:flex;align-items:flex-end;gap:24px}
+.destination-edit-code{color:#e9eef8;font-size:clamp(74px,12vw,145px);font-weight:700;line-height:.72;letter-spacing:-.10em}
+.destination-edit-head h2{margin-top:8px;color:#022e64;font-size:clamp(34px,4.8vw,58px);font-weight:550;letter-spacing:-.055em;line-height:.96}
+.destination-edit-grid{margin-top:30px;display:grid;grid-template-columns:repeat(12,1fr);gap:12px}
+.destination-card{grid-column:span 4;min-height:270px;border-radius:22px;padding:23px;border:1px solid rgba(2,46,100,.07);background:#e9eef8;color:#022e64;display:flex;flex-direction:column;justify-content:flex-end}
+.destination-card:nth-child(3n+2){background:#d9f1f1}
+.destination-card:nth-child(3n+3){background:#f2e9dc;color:#3c2f20}
+.destination-card small{margin-bottom:auto;font-size:7px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;opacity:.62}
+.destination-card h3{font-size:23px;letter-spacing:-.04em;line-height:1.03}
+.destination-card p{margin-top:8px;font-size:9.5px;line-height:1.6;opacity:.70}
+.destination-card button{align-self:flex-start;margin-top:14px;border:0;background:transparent;color:inherit;padding:0;font-size:8px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+
+.airport-practical{padding:72px 0 90px;background:linear-gradient(180deg,#fff,#f3f6f8)}
+.practical-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.practical-card{min-height:205px;padding:22px;border-radius:20px;background:#fff;border:1px solid rgba(2,46,100,.07);box-shadow:0 12px 28px rgba(2,46,100,.06)}
+.practical-card span{font-size:7px;font-weight:800;letter-spacing:.13em;text-transform:uppercase;color:#74869a}
+.practical-card h3{margin-top:10px;color:#022e64;font-size:20px;letter-spacing:-.04em}
+.practical-card p{margin-top:8px;color:#66788b;font-size:9.5px;line-height:1.62}
 .context-module.hidden,.airport-practical.hidden{display:none!important}
-@media(max-width:760px){
+
+/* =========================================================
+   ANIMATIONS & UTILS
+   ========================================================= */
+.reveal{opacity:0;transform:translateY(22px) scale(.99)}
+.reveal.is-visible{opacity:1;transform:none;transition:opacity .72s var(--ease),transform .72s var(--ease)}
+.hidden{display:none!important}
+
+/* =========================================================
+   RESPONSIVE BREAKPOINTS (CONSOLIDATED)
+   ========================================================= */
+@media(max-width:1100px) {
+  .wrap{width:min(var(--content),calc(100% - 36px))}
+  .hero-inner{grid-template-columns:1fr; padding: 46px 0 92px;}
+  .hero-status{width:min(560px,100%)}
+  .airport-controls.mode-airport, .airport-controls.mode-flight, .airport-controls.mode-route{grid-template-columns:1fr 1fr}
+  .airport-controls.mode-airport #airportBoardToggle{grid-column:1/-1}
+  .airport-controls .airport-update, .airport-controls .airport-reset{min-height:48px}
+  .board-top{grid-template-columns:1fr}
+  .flight-board-shell{width:min(100%,900px)}
+  .board-heading{width:min(100%,900px);grid-template-columns:1fr}
+  .terminal-bay{padding:56px 20px 36px}
+  .overhead-zone{display:none}
+  .airport-profile-inner{grid-template-columns:1fr}
+  .airport-profile-facts{max-width:650px}
+  .context-module{grid-column:span 6}
+  .module-transfer{grid-column:span 12}
+  .commerce-card, .destination-card{grid-column:span 6}
+  .context-preview-grid, .practical-grid{grid-template-columns:1fr 1fr}
+}
+
+@media(max-width:760px) {
+  .wrap{width:calc(100% - 24px)}
+  .hero{min-height:500px}
+  .hero h1{font-size:clamp(48px,15vw,72px)}
+  .hero-status{display:none}
+  .hero-wayfinding{gap:6px}
+  .hero-wayfinding span{min-height:32px;padding:0 10px}
+  .terminal-glass-lines{width:74%;opacity:.30}
+  .hero-copy::before{display:none}
+  .terminal-location-line{font-size:7px}
+  
+  .lookup-mode-tabs{width:100%;overflow-x:auto;scrollbar-width:none;border-radius:11px}
+  .lookup-mode-tabs::-webkit-scrollbar{display:none}
+  .lookup-mode{white-space:nowrap;flex:0 0 auto}
+  .airport-controls.mode-airport, .airport-controls.mode-flight, .airport-controls.mode-route{grid-template-columns:1fr;width:100%} 
+  .airport-controls.mode-airport #airportBoardToggle{grid-column:auto}
+  .airport-control-note{grid-column:auto!important}
+  
   .airport-code-control input{min-width:0;width:100%}
   .airport-suggestions{position:fixed;left:12px;right:12px;top:auto;bottom:max(12px,env(safe-area-inset-bottom));max-height:min(62vh,520px);border-radius:22px;padding:8px}
   .airport-suggestion{min-height:58px}
+  
+  .board-section{padding-top:8px}
+  .board-heading h2{font-size:40px}
+  .terminal-bay{padding:46px 7px 24px;border-radius:22px}
+  .terminal-overhead-signs{left:14px;right:14px;gap:5px;transform:translateY(-13px)}
+  .overhead-sign{min-height:32px;padding:0 9px;border-radius:6px;font-size:7px}
+  .overhead-sign b{font-size:11px}
+  
+  .flight-board-shell{padding:7px;border-radius:18px}
+  .board-top{grid-template-columns:1fr;padding:14px;border-radius:16px}
+  .board-brand strong{font-size:20px}
+  .board-query{display:none}
+  .board-live{justify-self:start;width:100%}
+  
+  .board-airport-bar{grid-template-columns:1fr 1fr;min-height:48px}
+  .board-airport-bar>div{padding:10px 12px}
+  .board-airport-bar strong{font-size:15px}
+  .airport-clock-display{display:none!important}
+  
+  .fids-layout{grid-template-columns:1fr!important}
+  .board-columns{display:none}
+  .board-scroll{min-height:0;max-height:none;overflow:visible;padding:6px}
+  
+  .fids-row{display:grid;grid-template-columns:1fr 1fr!important;gap:0;border:1px solid rgba(255,255,255,.06)!important;border-radius:12px!important;margin-bottom:7px!important}
+  .fids-cell{min-height:49px;padding:10px 11px!important;border-right:0!important;border-bottom:1px solid rgba(255,255,255,.045)!important;justify-content:space-between;gap:10px}
+  .fids-cell::before{content:attr(data-label);flex:0 0 auto;color:#7194a9;font-family:"Roboto Mono",monospace;font-size:7px;font-weight:800;letter-spacing:.11em;text-transform:uppercase}
+  .fids-cell:nth-child(3), .fids-cell:nth-child(4), .fids-cell:nth-child(5){grid-column:1/-1}
+  .fids-cell:nth-last-child(-n+2){border-bottom:0!important}
+  .fids-destination{text-align:right}
+  .fids-time{align-items:flex-end}
+  
+  .board-message{min-height:150px}
+  .board-footer{grid-template-columns:1fr 1fr}
+  .board-footer>span:nth-child(2){display:none}
+  
+  .airport-priority-strip{grid-template-columns:1fr;margin-top:14px}
+  .airport-priority-strip>div{min-height:78px}
+  
+  .context-welcome{padding:52px 0 70px}
+  .context-preview-grid, .practical-grid{grid-template-columns:1fr}
+  .context-loading-screen{grid-template-columns:1fr}
+  
+  .airport-profile{min-height:650px}
+  .airport-profile-inner{min-height:650px;padding:62px 0 42px}
+  .airport-profile-code{font-size:96px}
+  .airport-profile-copy h2{font-size:42px}
+  .airport-profile-facts{grid-template-columns:1fr 1fr}
+  
+  .airport-context-grid{grid-template-columns:1fr;padding-top:50px}
+  .context-module, .module-transfer{grid-column:auto;min-height:260px}
+  
+  .commerce-grid, .destination-edit-grid{grid-template-columns:1fr}
+  .commerce-card, .destination-card{grid-column:auto}
+  .destination-edit-head>div{display:block}
+  .destination-edit-code{font-size:92px}
 }
 
-
-/* =========================================================
-   B-011.37 — FINAL FUNCTIONAL REVIEW
-   Restores all original lookup modes without compromising the airport-first FIDS.
-   ========================================================= */
-.lookup-mode-tabs{
-  width:min(1160px,calc(100% - 24px));margin:0 auto 9px;padding:5px;display:flex;gap:5px;
-  border-radius:13px;background:#e9eef8;border:1px solid rgba(2,46,100,.06);box-shadow:0 8px 22px rgba(2,46,100,.05)
-}
-.lookup-mode{
-  min-height:38px;padding:0 13px;border:0;border-radius:9px;background:transparent;color:#64788d;
-  display:inline-flex;align-items:center;gap:8px;font-size:8px;font-weight:800;letter-spacing:.10em;text-transform:uppercase;
-  transition:background .18s ease,color .18s ease,transform .18s ease
-}
-.lookup-mode span{font-family:"Roboto Mono",monospace;font-size:7px;letter-spacing:.06em;opacity:.72}
-.lookup-mode:hover{background:rgba(255,255,255,.72);color:#022e64}
-.lookup-mode.active{background:#fff;color:#022e64;box-shadow:0 6px 16px rgba(2,46,100,.10)}
-.lookup-field.hidden{display:none!important}
-.airport-controls.mode-airport{grid-template-columns:minmax(240px,1.15fr) 180px minmax(260px,1fr) auto auto}
-.airport-controls.mode-flight{grid-template-columns:minmax(260px,1fr) 180px auto auto}
-.airport-controls.mode-route{grid-template-columns:minmax(210px,1fr) minmax(210px,1fr) 180px auto auto}
-.airport-controls.mode-flight #airportBoardToggle,.airport-controls.mode-route #airportBoardToggle{display:none}
-.airport-controls.mode-flight .lookup-date-control,.airport-controls.mode-route .lookup-date-control{min-width:180px}
-.airport-control input{text-transform:none}
-#flightNumber{text-transform:uppercase;font-family:"Roboto Mono",monospace;font-weight:800;letter-spacing:.04em}
-#airport,#from,#to{font-family:"Roboto Mono",monospace;font-weight:700}
-.board-screen[aria-busy="true"]{cursor:progress}
-.board-message-title{font-family:"Roboto Mono",monospace;letter-spacing:.04em}
-@media(max-width:1080px){
-  .airport-controls.mode-airport,.airport-controls.mode-flight,.airport-controls.mode-route{grid-template-columns:1fr 1fr}
-  .airport-controls.mode-airport #airportBoardToggle{grid-column:1/-1}
-  .airport-controls .airport-update,.airport-controls .airport-reset{min-height:48px}
-}
-@media(max-width:760px){
-  .lookup-mode-tabs{width:100%;overflow-x:auto;scrollbar-width:none;border-radius:11px}
-  .lookup-mode-tabs::-webkit-scrollbar{display:none}.lookup-mode{white-space:nowrap;flex:0 0 auto}
-  .airport-controls.mode-airport,.airport-controls.mode-flight,.airport-controls.mode-route{grid-template-columns:1fr;width:100%}
-  .airport-controls.mode-airport #airportBoardToggle{grid-column:auto}
-  .airport-control-note{grid-column:auto!important}
+@media(max-width:480px) {
+  .board-brand strong{font-size:22px}
+  .board-footer{grid-template-columns:1fr}
+  .board-footer>span:nth-child(3){display:none}
 }
 
+@media(max-width:430px) {
+  .fids-row{grid-template-columns:1fr!important}
+  .fids-cell:nth-child(n){grid-column:1/-1}
+  .airport-profile-facts{grid-template-columns:1fr}
+}
+
+@media(prefers-reduced-motion:reduce) {
+  *, *::before, *::after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important}
+  .reveal{opacity:1!important;transform:none!important}
+  .terminal-apron-light, .hero-status::after{animation:none!important}
+}
 </style>
 </head>
 <body>
 
 <div class="page">
   <section class="hero" id="hero">
-    <div class="terminal-architecture" aria-hidden="true">
-      <div class="terminal-glass-lines"></div>
-      <div class="terminal-ceiling-lines"></div>
-      <div class="terminal-apron-light l1"></div>
-      <div class="terminal-apron-light l2"></div>
-      <div class="terminal-apron-light l3"></div>
-      <div class="terminal-apron-light l4"></div>
-    </div>
-<div class="wrap hero-inner">
+  <!-- NEW LAYER: Seamless faded hero image -->
+  <div class="hero-image-fade"></div>
+  
+  <div class="terminal-architecture" aria-hidden="true">
+    <div class="terminal-glass-lines"></div>
+    <div class="terminal-ceiling-lines"></div>
+    <div class="terminal-apron-light l1"></div>
+    <div class="terminal-apron-light l2"></div>
+    <div class="terminal-apron-light l3"></div>
+    <div class="terminal-apron-light l4"></div>
+  </div>
+  
+  <div class="wrap hero-inner">
       <div class="hero-copy">
         <div class="eyebrow">Airport flight information</div>
         <h1>Your airport board, <span>clear before you reach the gate.</span></h1>
@@ -1139,8 +836,7 @@ button,input,select{font:inherit}button{cursor:pointer}a{color:inherit}
     <div class="wrap">
       <div class="board-heading reveal">
         <div>
-          <div class="eyebrow">Flight Information Display</div>
-          <h2>Built to read like a real airport FIDS.</h2>
+          <div class="eyebrow">Flight Information</div>
         </div>
         <p>Time-led, high-contrast and deliberately simple. Use an airport board, track one flight, or check a route. Selecting an airport also turns the rest of the page into that airport’s passenger information experience.</p>
       </div>
@@ -1214,13 +910,6 @@ button,input,select{font:inherit}button{cursor:pointer}a{color:inherit}
         <span id="dateWindow" class="sr-only">Loading dates…</span>
       </div>
 
-      <div class="terminal-bay reveal">
-        <div class="terminal-overhead-signs" aria-hidden="true">
-          <span class="overhead-sign sign-dark"><b>↑</b> DEPARTURES</span>
-          <span class="overhead-sign sign-aqua"><b>→</b> GATES</span>
-          <span class="overhead-sign sign-light"><b>←</b> ARRIVALS</span>
-          <span class="overhead-zone">PASSENGER INFORMATION DISPLAY</span>
-        </div>
       <div class="flight-board-shell" id="hardwareCasing">
         <div class="board-top">
           <div class="board-brand">
@@ -1278,7 +967,6 @@ button,input,select{font:inherit}button{cursor:pointer}a{color:inherit}
         <div><span class="priority-symbol">02</span><strong>Watch the gate</strong><small>Gate information can change before boarding.</small></div>
         <div><span class="priority-symbol">03</span><strong>Follow airport signs</strong><small>Terminal displays and airline announcements remain final.</small></div>
       </div>
-    </div>
   </section>
 
   
@@ -1518,20 +1206,17 @@ button,input,select{font:inherit}button{cursor:pointer}a{color:inherit}
   }
 
   function setDateLimits(){
-    const today = new Date();
-    const todayUtc = today.toISOString().slice(0,10);
-    const base = new Date(`${todayUtc}T12:00:00Z`);
-    const min = new Date(base);
-    min.setUTCDate(base.getUTCDate() - 1);
-    const max = new Date(base);
-    max.setUTCDate(base.getUTCDate() + 3);
+    const todayUtc = new Date().toISOString().slice(0,10);
 
-    el("date").min = min.toISOString().slice(0,10);
-    el("date").max = max.toISOString().slice(0,10);
-    if(!el("date").value) el("date").value = todayUtc;
+    // AirLabs /schedules is a live operational feed, not an arbitrary future-date timetable.
+    // Keep the customer control aligned with the provider contract instead of offering dates
+    // the backend cannot truthfully return as live Flight Status.
+    el("date").min = todayUtc;
+    el("date").max = todayUtc;
+    el("date").value = todayUtc;
 
-    el("dateHint").textContent = `Available dates: ${el("date").min} – ${el("date").max}`;
-    if(el("dateWindow")) el("dateWindow").textContent = `${el("date").min} → ${el("date").max}`;
+    el("dateHint").textContent = `Live AirLabs status date: ${todayUtc}`;
+    if(el("dateWindow")) el("dateWindow").textContent = todayUtc;
   }
 
   function setMode(mode="airport"){
@@ -2472,7 +2157,7 @@ button,input,select{font:inherit}button{cursor:pointer}a{color:inherit}
     window.clearInterval(clockTimer);
     clearRequestTimeouts();
   },{once:true});
-  post("FLIGHT_STATUS_READY", { version:"B-011.37" });
+  post("FLIGHT_STATUS_READY", { version:"B-011.39" });
 })();
 
 </script>
