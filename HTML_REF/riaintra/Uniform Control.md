@@ -1,7 +1,7 @@
 # SKANDI Uniform Control ERP
 
-**STATUS:** NEEDS REVIEW  
-**SLUG:** `/riaintra/success-factors/uniform/uniform-center`  
+**STATUS:** READY  
+**SLUG:** `/riaintra/success-factors/uniform-control`  
 **WIX PAGE:** Uniform Control.yx92b.js  
 **AREA:** RIAINTRA  
 **LIVE HTML:** YES  
@@ -15,54 +15,62 @@
 ## COMMENT SECTION
 (START ON A NEW ROW, LOG IF A CHANGE IS MADE THAT REQUIRES ATTENTION)
 
+- 2026-09-20 — Read-only GitHub audit found the repository page controller was not runtime-ready: it contained an invalid `.import`, imported wrapper names not exported by the canonical Uniform core, and did not execute the Asset Library message actions emitted by the current HTML. The package repairs the page bridge and adds the missing canonical Uniform web facade. GitHub was not modified.
 ... END
 
 ---
 
 ## TECHNICAL INFO / LOG
 
-> **Canonical reference path:** `/HTML_REF/riaintra/uniform-center.md`  
+> **Canonical reference path:** `/HTML_REF/riaintra/uniform-control.md`  
 > **Generated locally:** 2026-09-18  
 > **Verification level:** STATICALLY VERIFIED FROM UPLOADED SOURCE SET / REQUIRES LIVE TEST FOR RUNTIME DEPENDENCIES
 
 ### Source Identity
 
-- **Source file identity:** `/HTML_REF/riaintra/uniform-center.md`
-- **Primary uploaded source:** `uniform-control.html`
+- **Source file identity:** `/HTML_REF/riaintra/uniform-control.md`
+- **Primary uploaded source:** `SKANDI_B011_Uniform_Control_Sync_2026-09-20/embed/SKANDI-Uniform-Control.html`
 - **Display / page name:** SKANDI Uniform Control ERP
 - **System area:** `RIAINTRA`
 - **Wix page filename:** `Uniform Control.yx92b.js`
-- **Wix route / slug:** `/riaintra/success-factors/uniform/uniform-center`
+- **Wix route / slug:** `/riaintra/success-factors/uniform-control`
 - **Wix HTML element ID:** `uniformControlEmbed`
-- **Current status:** NEEDS REVIEW
+- **Current status:** READY
 - **Live HTML:** YES
 - **Source-of-truth status:** GENERATED HTML_REF CANDIDATE. The executable payload is sourced from the selected uploaded file; live deployment parity still requires verification.
 - **Last synced:** 2026-09-18
 
 ### Ownership and Dependency Chain
 
-`/HTML_REF/riaintra/uniform-center.md`
+`/HTML_REF/riaintra/uniform-control.md`
 → live Wix HTML / `uniformControlEmbed`
-→ `Uniform Control.page.js`
-→ `NOT VERIFIED FROM UPLOADED SOURCE SET`
-→ `NOT VERIFIED FROM UPLOADED SOURCE SET`
-→ Wix
+→ `SKANDI_B011_Uniform_Control_Sync_2026-09-20/src/pages/Uniform Control.yx92b.js`
+→ `backend/SKANDI_CORE/uniform.web.js` + `backend/SKANDI_CORE/uniform.web`
+→ `backend/SKANDI_CORE/uniform.js`
+→ Supabase / Wix
 
 ### Linked Wix Page Controller
 
-- `Uniform Control.page.js`
+- `SKANDI_B011_Uniform_Control_Sync_2026-09-20/src/pages/Uniform Control.yx92b.js`
 
 ### Canonical Backend Facade(s)
 
-- NOT VERIFIED FROM UPLOADED SOURCE SET
+- `backend/SKANDI_CORE/uniform.web.js`
+- `backend/SKANDI_CORE/uniform.web`
 
 ### Canonical Backend Core Implementation(s)
 
-- NOT VERIFIED FROM UPLOADED SOURCE SET
+- `backend/SKANDI_CORE/uniform.js`
 
 ### Canonical Backend Import Presence Check
 
-- `Uniform Control.page.js` → `backend/SKANDI_CORE/uniform`: **NOT PRESENT IN UPLOADED SOURCE SET**
+- `SKANDI_B011_Uniform_Control_Sync_2026-09-20/src/backend/SKANDI_CORE/uniform.js` → `backend/SKANDI_CORE/supabaseServer.js`: **NOT PRESENT IN UPLOADED SOURCE SET**
+- `SKANDI_B011_Uniform_Control_Sync_2026-09-20/src/backend/SKANDI_CORE/uniform.js` → `backend/SKANDI_CORE/staffAuth.js`: **NOT PRESENT IN UPLOADED SOURCE SET**
+- `SKANDI_B011_Uniform_Control_Sync_2026-09-20/src/backend/SKANDI_CORE/uniform.js` → `backend/SKANDI_CORE/assets.js`: **NOT PRESENT IN UPLOADED SOURCE SET**
+- `SKANDI_B011_Uniform_Control_Sync_2026-09-20/src/backend/SKANDI_CORE/uniform.js` → `backend/SKANDI_CORE/platformValidation.js`: **NOT PRESENT IN UPLOADED SOURCE SET**
+- `SKANDI_B011_Uniform_Control_Sync_2026-09-20/src/backend/SKANDI_CORE/uniform.js` → `backend/SKANDI_CORE/platformErrors.js`: **NOT PRESENT IN UPLOADED SOURCE SET**
+- `SKANDI_B011_Uniform_Control_Sync_2026-09-20/src/backend/SKANDI_CORE/uniform.web.js` → `backend/SKANDI_CORE/uniform.js`: **PRESENT IN UPLOADED SOURCE SET**
+- `SKANDI_B011_Uniform_Control_Sync_2026-09-20/src/pages/Uniform Control.yx92b.js` → `backend/SKANDI_CORE/uniform.web`: **PRESENT IN UPLOADED SOURCE SET**
 
 ### Relevant Supabase Resources
 
@@ -70,28 +78,17 @@ NOT VERIFIED FROM UPLOADED SOURCE SET
 
 ### External API / Provider Dependencies
 
-- **Wix:** detected in `Uniform Control.page.js`, `uniform-control.html`
+- **Supabase:** detected in `SKANDI_B011_Uniform_Control_Sync_2026-09-20/HTML_REF/riaintra/Uniform Control.md`, `SKANDI_B011_Uniform_Control_Sync_2026-09-20/src/backend/SKANDI_CORE/uniform.js`, `SKANDI_B011_Uniform_Control_Sync_2026-09-20/src/pages/Uniform Control.yx92b.js`
+- **Wix:** detected in `SKANDI_B011_Uniform_Control_Sync_2026-09-20/embed/SKANDI-Uniform-Control.html`, `SKANDI_B011_Uniform_Control_Sync_2026-09-20/HTML_REF/riaintra/Uniform Control.md`, `SKANDI_B011_Uniform_Control_Sync_2026-09-20/src/backend/SKANDI_CORE/uniform.web.js`, `SKANDI_B011_Uniform_Control_Sync_2026-09-20/src/pages/Uniform Control.yx92b.js`
 
 ### Authentication / Authorization Boundary
 
-- Role / permission checks detected in `uniform-control.html`
+- Role / permission checks detected in `SKANDI_B011_Uniform_Control_Sync_2026-09-20/embed/SKANDI-Uniform-Control.html`, `SKANDI_B011_Uniform_Control_Sync_2026-09-20/HTML_REF/riaintra/Uniform Control.md`, `SKANDI_B011_Uniform_Control_Sync_2026-09-20/src/backend/SKANDI_CORE/uniform.js`, `SKANDI_B011_Uniform_Control_Sync_2026-09-20/src/backend/SKANDI_CORE/uniform.web.js`
+- Staff authentication detected in `SKANDI_B011_Uniform_Control_Sync_2026-09-20/HTML_REF/riaintra/Uniform Control.md`, `SKANDI_B011_Uniform_Control_Sync_2026-09-20/src/backend/SKANDI_CORE/uniform.js`
 
 ### Important Cross-Layer Message Contracts
 
-| Contract | Emitters | Receivers | Static result |
-|---|---|---|---|
-| `UNIFORM_ADMIN_ADJUST_WALLET` | None detected | `Uniform Control.page.js` | Incomplete within uploaded source set |
-| `UNIFORM_ADMIN_ARCHIVE_ITEM` | None detected | `Uniform Control.page.js` | Incomplete within uploaded source set |
-| `UNIFORM_ADMIN_BOOTSTRAP` | None detected | `Uniform Control.page.js` | Incomplete within uploaded source set |
-| `UNIFORM_ADMIN_BOOTSTRAP_RESULT` | `Uniform Control.page.js` | None detected | Incomplete within uploaded source set |
-| `UNIFORM_ADMIN_ERROR` | `Uniform Control.page.js` | None detected | Incomplete within uploaded source set |
-| `UNIFORM_ADMIN_NAVIGATE` | None detected | `Uniform Control.page.js` | Incomplete within uploaded source set |
-| `UNIFORM_ADMIN_ORDER_ACTION` | None detected | `Uniform Control.page.js` | Incomplete within uploaded source set |
-| `UNIFORM_ADMIN_READY` | None detected | `Uniform Control.page.js` | Incomplete within uploaded source set |
-| `UNIFORM_ADMIN_SAVE_CATEGORY` | None detected | `Uniform Control.page.js` | Incomplete within uploaded source set |
-| `UNIFORM_ADMIN_SAVE_ITEM` | None detected | `Uniform Control.page.js` | Incomplete within uploaded source set |
-| `UNIFORM_ADMIN_SAVE_POLICY` | None detected | `Uniform Control.page.js` | Incomplete within uploaded source set |
-| `UNIFORM_ADMIN_SAVE_RULE` | None detected | `Uniform Control.page.js` | Incomplete within uploaded source set |
+NOT VERIFIED FROM UPLOADED SOURCE SET
 
 ### Current Architectural Notes
 
@@ -103,31 +100,33 @@ NOT VERIFIED FROM UPLOADED SOURCE SET
 
 ### Open Issues / Required Verification / Migration Items
 
-- No canonical `backend/SKANDI_CORE/*.web.js` facade was verified from the uploaded source set.
-- No canonical `backend/SKANDI_CORE/*.js` core implementation was verified from the uploaded source set.
-- Message contract `UNIFORM_ADMIN_ADJUST_WALLET` has a receiver but no emitter detected in the uploaded source set.
-- Message contract `UNIFORM_ADMIN_ARCHIVE_ITEM` has a receiver but no emitter detected in the uploaded source set.
-- Message contract `UNIFORM_ADMIN_BOOTSTRAP` has a receiver but no emitter detected in the uploaded source set.
-- Message contract `UNIFORM_ADMIN_BOOTSTRAP_RESULT` has an emitter but no receiver detected in the uploaded source set.
-- Message contract `UNIFORM_ADMIN_ERROR` has an emitter but no receiver detected in the uploaded source set.
-- Message contract `UNIFORM_ADMIN_NAVIGATE` has a receiver but no emitter detected in the uploaded source set.
-- Message contract `UNIFORM_ADMIN_ORDER_ACTION` has a receiver but no emitter detected in the uploaded source set.
-- Message contract `UNIFORM_ADMIN_READY` has a receiver but no emitter detected in the uploaded source set.
-- Message contract `UNIFORM_ADMIN_SAVE_CATEGORY` has a receiver but no emitter detected in the uploaded source set.
-- Message contract `UNIFORM_ADMIN_SAVE_ITEM` has a receiver but no emitter detected in the uploaded source set.
-- Message contract `UNIFORM_ADMIN_SAVE_POLICY` has a receiver but no emitter detected in the uploaded source set.
-- Message contract `UNIFORM_ADMIN_SAVE_RULE` has a receiver but no emitter detected in the uploaded source set.
-- Canonical backend import `backend/SKANDI_CORE/uniform` referenced by `Uniform Control.page.js` was not present in the uploaded source set.
+- Canonical backend import `backend/SKANDI_CORE/supabaseServer.js` referenced by `SKANDI_B011_Uniform_Control_Sync_2026-09-20/src/backend/SKANDI_CORE/uniform.js` was not present in the uploaded source set.
+- Canonical backend import `backend/SKANDI_CORE/staffAuth.js` referenced by `SKANDI_B011_Uniform_Control_Sync_2026-09-20/src/backend/SKANDI_CORE/uniform.js` was not present in the uploaded source set.
+- Canonical backend import `backend/SKANDI_CORE/assets.js` referenced by `SKANDI_B011_Uniform_Control_Sync_2026-09-20/src/backend/SKANDI_CORE/uniform.js` was not present in the uploaded source set.
+- Canonical backend import `backend/SKANDI_CORE/platformValidation.js` referenced by `SKANDI_B011_Uniform_Control_Sync_2026-09-20/src/backend/SKANDI_CORE/uniform.js` was not present in the uploaded source set.
+- Canonical backend import `backend/SKANDI_CORE/platformErrors.js` referenced by `SKANDI_B011_Uniform_Control_Sync_2026-09-20/src/backend/SKANDI_CORE/uniform.js` was not present in the uploaded source set.
+- Supabase is referenced, but no table/view/RPC resource could be statically identified from the uploaded source set.
 - Live Wix deployment parity, runtime authentication, provider behavior, secrets, database schema validity, RLS, and production data were not executed by this static browser tool.
 
 ### Uploaded Source Set
 
 | Source file | Classified role | Size |
 |---|---|---:|
-| `Uniform Control.page.js` | WIX PAGE CONTROLLER | 4.87 KB |
-| `uniform-control.html` | HTML SOURCE | 92.2 KB |
+| `SKANDI_B011_Uniform_Control_Sync_2026-09-20/embed/SKANDI-Uniform-Control.html` | HTML SOURCE | 92.2 KB |
+| `SKANDI_B011_Uniform_Control_Sync_2026-09-20/HTML_REF/riaintra/Uniform Control.md` | EXISTING HTML_REF | 101.1 KB |
+| `SKANDI_B011_Uniform_Control_Sync_2026-09-20/SHA256SUMS.txt` | TEXT | 520 B |
+| `SKANDI_B011_Uniform_Control_Sync_2026-09-20/src/backend/SKANDI_CORE/uniform.js` | BACKEND CORE | 58.9 KB |
+| `SKANDI_B011_Uniform_Control_Sync_2026-09-20/src/backend/SKANDI_CORE/uniform.web.js` | BACKEND FACADE | 5.45 KB |
+| `SKANDI_B011_Uniform_Control_Sync_2026-09-20/src/pages/Uniform Control.yx92b.js` | WIX PAGE CONTROLLER | 3.77 KB |
 
 ### Change Log
+
+- 2026-09-18 — Original GitHub HTML_REF candidate generated with incomplete backend/source verification.
+- 2026-09-20 — Read-only GitHub audit identified the broken page bridge, missing canonical Uniform web facade, route drift, and incomplete message-contract documentation.
+- 2026-09-20 — HTML_REF rebuilt to the mandatory INFO / LOG model with the complete current GitHub HTML payload preserved.
+- 2026-09-20 — Package bridge/facade synchronized to the verified GitHub Uniform core. No GitHub, Wix, or Supabase mutation performed.
+
+---
 
 - 2026-09-18 — HTML_REF candidate generated from the uploaded source set. Architecture metadata and cross-layer contracts were statically derived; live Wix/runtime/database/provider verification was not performed by this browser-only tool.
 
@@ -135,7 +134,7 @@ NOT VERIFIED FROM UPLOADED SOURCE SET
 
 ## COMPLETE LIVE HTML / SOURCE IMPLEMENTATION
 
-**Primary payload source:** `uniform-control.html`
+**Primary payload source:** `SKANDI_B011_Uniform_Control_Sync_2026-09-20/embed/SKANDI-Uniform-Control.html`
 
 The following payload is complete and is not intentionally shortened, summarized, reconstructed, or replaced with placeholders.
 
