@@ -191,4 +191,3 @@ async function dispatch(input = {}) {
 }
 
 export const handleInventoryAction = webMethod(MEMBER, dispatch);
-Displaying inventory.web.js.
