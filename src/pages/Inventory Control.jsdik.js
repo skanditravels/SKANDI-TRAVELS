@@ -1,11 +1,11 @@
 // /src/pages/Inventory Control.jsdik.js
-// SKANDI Inventory Control — B-011.30 runtime and Supabase pagination convergence.
+// SKANDI Inventory Control — B-011.35 bootstrap and refresh delivery recovery.
 // Preferred HTML component: #inventoryControlEmbed.
 //
 // The page imports exactly one Wix web method. All action routing lives in
 // backend/SKANDI_CORE/inventory.web.js so the page and backend cannot drift.
 
-import { handleInventoryAction } from "backend/SKANDI_CORE/inventory.web.js";
+import { handleInventoryAction } from "backend/SKANDI_CORE/inventory.web";
 
 const EMBED_IDS = [
   "#inventoryControlEmbed",
@@ -15,12 +15,14 @@ const EMBED_IDS = [
 
 const CHILD_SOURCE = "SKANDI_INVENTORY_EMBED";
 const PARENT_SOURCE = "SKANDI_INVENTORY_PARENT";
-const VERSION = "B-011.30";
-const BOOTSTRAP_REUSE_MS = 18000;
+const VERSION = "B-011.35-INVENTORY-SINGLE-DISPATCH";
+const BOOTSTRAP_REUSE_MS = 15000;
 
 let bootstrapPromise = null;
 let bootstrapSnapshot = null;
 let bootstrapSnapshotAt = 0;
+let bootstrapGeneration = 0;
+let readyDeliveryPending = false;
 
 function findEmbed() {
   for (const id of EMBED_IDS) {
@@ -64,6 +66,7 @@ function post(embed, type, payload = {}, requestId = "") {
 }
 
 function invalidateBootstrap() {
+  bootstrapGeneration += 1;
   bootstrapSnapshot = null;
   bootstrapSnapshotAt = 0;
 }
@@ -117,48 +120,43 @@ async function dispatch(type, payload = {}) {
 }
 
 async function loadInventoryBootstrap({ force = false } = {}) {
-  if (
-    !force &&
-    bootstrapSnapshot &&
-    Date.now() - bootstrapSnapshotAt < BOOTSTRAP_REUSE_MS
-  ) {
+  if (force) invalidateBootstrap();
+  if (bootstrapSnapshot && Date.now() - bootstrapSnapshotAt < BOOTSTRAP_REUSE_MS) {
     return bootstrapSnapshot;
   }
 
-  if (bootstrapPromise) return bootstrapPromise;
+  if (!bootstrapPromise) {
+    const generation = bootstrapGeneration;
+    bootstrapPromise = dispatch("INVENTORY_V9_REFRESH", {})
+      .then(result => {
+        if (result.responseType === "INVENTORY_ERROR") {
+          const failure = new Error(result.payload.message || "Inventory bootstrap failed.");
+          failure.code = result.payload.code || "INVENTORY_ERROR";
+          failure.publicMessage = result.payload.message || "Inventory bootstrap failed.";
+          throw failure;
+        }
+        const checked = validateDispatchResult(result, "INVENTORY_V9_BOOTSTRAP");
+        if (checked.payload.ok !== true || !Array.isArray(checked.payload.records)) {
+          const failure = new Error("INVENTORY_DISPATCH_RESPONSE_INVALID");
+          failure.code = "INVENTORY_DISPATCH_RESPONSE_INVALID";
+          throw failure;
+        }
+        // A save or explicit refresh can invalidate a read already in flight.
+        // Only the current generation may populate or deliver the shared snapshot.
+        if (generation !== bootstrapGeneration) return null;
+        bootstrapSnapshot = checked.payload;
+        bootstrapSnapshotAt = Date.now();
+        return bootstrapSnapshot;
+      })
+      .catch(error => {
+        if (generation !== bootstrapGeneration) return null;
+        throw error;
+      })
+      .finally(() => { bootstrapPromise = null; });
+  }
 
-  bootstrapPromise = dispatch("INVENTORY_V9_REFRESH", {})
-    .then(result => {
-      if (result.responseType === "INVENTORY_ERROR") {
-        const failure = new Error(
-          String(result.payload?.message || "Inventory bootstrap failed.")
-        );
-        failure.code = String(
-          result.payload?.code || "INVENTORY_ERROR"
-        );
-        failure.publicMessage = String(
-          result.payload?.message || "Inventory bootstrap failed."
-        );
-        throw failure;
-      }
-
-      const checked = validateDispatchResult(
-        {
-          responseType: result.responseType,
-          payload: result.payload,
-          refreshBootstrap: result.refreshBootstrap
-        },
-        "INVENTORY_V9_BOOTSTRAP"
-      );
-      bootstrapSnapshot = checked.payload;
-      bootstrapSnapshotAt = Date.now();
-      return bootstrapSnapshot;
-    })
-    .finally(() => {
-      bootstrapPromise = null;
-    });
-
-  return bootstrapPromise;
+  const snapshot = await bootstrapPromise;
+  return snapshot || loadInventoryBootstrap();
 }
 
 function errorPayload(error) {
@@ -254,9 +252,12 @@ $w.onReady(() => {
 
     const payload = object(message.payload);
     const requestId = String(message.requestId || "");
+    const isReady = message.type === "INVENTORY_V9_READY";
+    if (isReady && readyDeliveryPending) return;
+    if (isReady) readyDeliveryPending = true;
 
     try {
-      if (message.type === "INVENTORY_V9_READY") {
+      if (isReady) {
         post(
           embed,
           "INVENTORY_V9_BOOTSTRAP",
@@ -273,7 +274,18 @@ $w.onReady(() => {
         requestId
       );
 
+      if (message.type === "INVENTORY_V9_REFRESH") {
+        post(embed, "INVENTORY_V9_BOOTSTRAP", await loadInventoryBootstrap({ force: true }), requestId);
+        return;
+      }
+
       const result = await dispatch(message.type, payload);
+      if (result.responseType === "INVENTORY_ERROR") {
+        const failure = new Error(result.payload.message || "Inventory request failed.");
+        failure.code = result.payload.code || "INVENTORY_ERROR";
+        failure.publicMessage = result.payload.message || "Inventory request failed.";
+        throw failure;
+      }
 
       post(
         embed,
@@ -283,7 +295,6 @@ $w.onReady(() => {
       );
 
       if (result.refreshBootstrap) {
-        invalidateBootstrap();
         post(
           embed,
           "INVENTORY_V9_BOOTSTRAP",
@@ -298,6 +309,8 @@ $w.onReady(() => {
         errorPayload(error),
         requestId
       );
+    } finally {
+      if (isReady) readyDeliveryPending = false;
     }
   });
 
@@ -311,3 +324,4 @@ $w.onReady(() => {
     }
   );
 });
+Displaying Inventory Control.jsdik.js.
