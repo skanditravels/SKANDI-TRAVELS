@@ -2,7 +2,7 @@
 
 **STATUS:** NEEDS REVIEW  
 **SLUG:** `/riaintra/success-factors/uniform/uniform-center`  
-**WIX PAGE:** Uniform Control.yx45b.js  
+**WIX PAGE:** Uniform Control.yx92b.js  
 **AREA:** RIAINTRA  
 **LIVE HTML:** YES  
 **ELEMENT:** `uniformControlEmbed`  
@@ -31,7 +31,7 @@
 - **Primary uploaded source:** `uniform-control.html`
 - **Display / page name:** SKANDI Uniform Control ERP
 - **System area:** `RIAINTRA`
-- **Wix page filename:** `Uniform Control.yx45b.js`
+- **Wix page filename:** `Uniform Control.yx92b.js`
 - **Wix route / slug:** `/riaintra/success-factors/uniform/uniform-center`
 - **Wix HTML element ID:** `uniformControlEmbed`
 - **Current status:** NEEDS REVIEW
