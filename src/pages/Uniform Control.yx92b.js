@@ -1,257 +1,135 @@
-// SKANDI Uniform Control — FULL REPLACEMENT PAGE CODE v3
-// Replace the entire Wix page code for the Uniform Control page.
-//
-// IMPORTANT:
-// - Keeps the locked existing backend export contract.
-// - Echoes requestId on every request/response.
-// - Handles UNIFORM_ADMIN_READY and UNIFORM_ADMIN_BOOTSTRAP.
-// - Product images are resolved automatically from uniform-assets by SKU.
-// - No image upload event is used by this page.
+// SKANDI Uniform Control 
+// Page: /riaintra/success-factors/uniform/uniform-control
 
-import wixLocation from "wix-location";
-import { authentication } from "wix-members-frontend";
-import { getStaffPortalSession } from "backend/SKANDI_CORE/staffAuth.web.js";
-import { APP_ROUTES, SITE_MAP, isSafeInternalRoute } from "public/siteMap.js";
-import {
-  getUniformAdminBootstrap,
-  adminSaveUniformCatalogItem,
-  adminSaveUniformCategory,
-  adminSaveUniformAllowanceRule,
-  adminSaveUniformPolicy,
-  adminUniformOrderAction,
-  adminAdjustUniformWallet,
-  adminDeleteUniformItem
-} from "backend/uniformCenter.web.js";
+.import { 
+    getUniformBootstrap, 
+    saveUniformItem, 
+    archiveUniformItem, 
+    saveUniformCategory, 
+    saveUniformRule, 
+    saveUniformPolicy, 
+    adjustUniformWallet, 
+    orderAction 
+    // Add your specific asset functions here if needed
+} from 'backend/SKANDI_CORE/uniform';
+import wixLocation from 'wix-location';
 
-const HTML_ID = "#uniformControlEmbed";
-const CHILD_SOURCE = "SKANDI_UNIFORM_ADMIN";
-const CHROME_SOURCE = "SKANDI_INTERNAL_CHROME";
-const PARENT_SOURCE = "SKANDI_WIX_PARENT";
-const LOGIN_PATH = "/riaintra";
-const HOME_PATH = "/";
-
-function currentPath() {
-  return "/" + wixLocation.path.join("/");
-}
-
-function post(html, type, payload = {}) {
-  html.postMessage({
-    source: PARENT_SOURCE,
-    type,
-    payload: payload || {},
-    timestamp: new Date().toISOString()
-  });
-}
-
-function reply(html, type, requestId = "", payload = {}) {
-  html.postMessage({
-    source: PARENT_SOURCE,
-    type,
-    requestId: requestId || "",
-    payload: payload || {},
-    timestamp: new Date().toISOString()
-  });
-}
-
-function replyError(html, requestId = "", error) {
-  html.postMessage({
-    source: PARENT_SOURCE,
-    type: "UNIFORM_ADMIN_ERROR",
-    requestId: requestId || "",
-    message: error?.message || "Uniform Control action failed.",
-    payload: {
-      message: error?.message || "Uniform Control action failed."
-    },
-    timestamp: new Date().toISOString()
-  });
-}
-
-function allowedInternalPath(path) {
-  const p = String(path || "");
-  return (
-    p === "/" ||
-    p === LOGIN_PATH ||
-    p.startsWith("/riaintra") ||
-    p.startsWith("/altea")
-  );
-}
-
-async function logout() {
-  try {
-    await authentication.logout();
-  } catch (err) {
-    console.warn("Logout warning:", err);
-  }
-
-  wixLocation.to(HOME_PATH);
-}
-
-async function sendChromeBootstrap(html, adminPayload = {}) {
-  post(html, "INTERNAL_CHROME_BOOTSTRAP", {
-    pageName: "Uniform Control",
-    pagePath: currentPath(),
-    pageSubtitle: "Enterprise uniform catalog, eligibility, regulations, SKU asset mapping, wallets and order control",
-    profile: adminPayload.profile || adminPayload.session || {},
-    apps: adminPayload.apps || [],
-    isAltea: true
-  });
-}
-
-async function requirePortalSession() {
-  const session = await getStaffPortalSession().catch(() => null);
-
-  if (!session || session.authorized === false || session.ok === false) {
-    wixLocation.to(LOGIN_PATH);
-    return null;
-  }
-
-  return session;
-}
-
-async function bootstrap(html, query = "") {
-  const portalSession = await requirePortalSession();
-
-  if (!portalSession) {
-    return;
-  }
-
-  const payload = await getUniformAdminBootstrap({ query });
-  reply(html, "UNIFORM_ADMIN_BOOTSTRAP_RESULT", "", payload);
-  await sendChromeBootstrap(html, payload);
-}
+const SOURCE = "SKANDI_WIX_PARENT";
 
 $w.onReady(function () {
-  const html = $w(HTML_ID);
+    const iframe = $w("#uniformControlEmbed");
 
-  html.onMessage(async (event) => {
-    const msg = event.data || {};
-    const source = msg.source || "";
-    const type = msg.type || "";
-    const payload = msg.payload || {};
-    const requestId = msg.requestId || payload.requestId || "";
+    iframe.onMessage(async (event) => {
+        const data = event.data || {};
+        
+        // Ignore messages not from our specific React app
+        if (data.source !== "SKANDI_UNIFORM_ADMIN") return;
 
-    try {
-      if (source === CHROME_SOURCE) {
-        if (type === "INTERNAL_CHROME_READY") {
-          await bootstrap(html);
-          return;
+        const { type, payload, requestId } = data;
+
+        try {
+            switch (type) {
+                // 1. Initial Load & Refresh
+                case "UNIFORM_ADMIN_READY":
+                case "UNIFORM_ADMIN_BOOTSTRAP": {
+                    const query = payload?.query || "";
+                    
+                    // Fetch master data payload from backend
+                    const bootstrapData = await getUniformBootstrap(query);
+                    
+                    iframe.postMessage({
+                        source: SOURCE,
+                        type: "UNIFORM_ADMIN_BOOTSTRAP_RESULT",
+                        payload: bootstrapData 
+                    });
+                    break;
+                }
+
+                // 2. Catalog Mutations
+                case "UNIFORM_ADMIN_SAVE_ITEM": {
+                    const result = await saveUniformItem(payload.item);
+                    sendSuccess(iframe, type, result, requestId);
+                    break;
+                }
+                case "UNIFORM_ADMIN_ARCHIVE_ITEM": {
+                    const result = await archiveUniformItem(payload.itemId, payload.reason);
+                    sendSuccess(iframe, type, result, requestId);
+                    break;
+                }
+
+                // 3. Settings & Policies
+                case "UNIFORM_ADMIN_SAVE_CATEGORY": {
+                    const result = await saveUniformCategory(payload.category);
+                    sendSuccess(iframe, type, result, requestId);
+                    break;
+                }
+                case "UNIFORM_ADMIN_SAVE_RULE": {
+                    const result = await saveUniformRule(payload.rule);
+                    sendSuccess(iframe, type, result, requestId);
+                    break;
+                }
+                case "UNIFORM_ADMIN_SAVE_POLICY": {
+                    const result = await saveUniformPolicy(payload.policy);
+                    sendSuccess(iframe, type, result, requestId);
+                    break;
+                }
+
+                // 4. Operations & Fulfillment
+                case "UNIFORM_ADMIN_ADJUST_WALLET": {
+                    const result = await adjustUniformWallet(payload);
+                    sendSuccess(iframe, type, result, requestId);
+                    break;
+                }
+                case "UNIFORM_ADMIN_ORDER_ACTION": {
+                    const result = await orderAction(payload.orderId, payload.action, payload.note);
+                    sendSuccess(iframe, type, result, requestId);
+                    break;
+                }
+
+                // 5. Navigation overrides
+                case "UNIFORM_ADMIN_NAVIGATE": {
+                    if (payload.path) wixLocation.to(payload.path);
+                    break;
+                }
+
+                default:
+                    console.warn(`[Uniform ERP] Unhandled event type: ${type}`);
+            }
+        } catch (err) {
+            console.error(`[Uniform ERP] Action failed: ${type}`, err);
+            sendError(iframe, err.message, requestId);
         }
-
-        if (type === "INTERNAL_LOGOUT") {
-          await logout();
-          return;
-        }
-
-        if (type === "INTERNAL_NAVIGATE") {
-          const path = payload.path || msg.path || "";
-          if (allowedInternalPath(path)) wixLocation.to(path);
-          return;
-        }
-
-        if (type === "INTERNAL_GLOBAL_SEARCH") {
-          const query = payload.query || msg.query || "";
-          const result = await runInternalGlobalSearch(query);
-
-          post(html, "INTERNAL_SEARCH_RESULTS", {
-            requestId,
-            query,
-            results: result.results || result.items || []
-          });
-          return;
-        }
-      }
-
-      if (source !== CHILD_SOURCE) {
-        return;
-      }
-
-      // The HTML sends READY on startup. Treat it as a bootstrap handshake.
-      if (type === "UNIFORM_ADMIN_READY") {
-        await bootstrap(html, "");
-        return;
-      }
-
-      if (type === "UNIFORM_ADMIN_BOOTSTRAP") {
-        await bootstrap(html, payload.query || msg.query || "");
-        return;
-      }
-
-      if (type === "UNIFORM_ADMIN_SAVE_ITEM") {
-        const result = await adminSaveUniformCatalogItem({
-          item: payload.item || msg.item || {}
-        });
-
-        reply(html, "UNIFORM_ADMIN_SAVED", requestId, result);
-        return;
-      }
-
-      if (type === "UNIFORM_ADMIN_SAVE_CATEGORY") {
-        const result = await adminSaveUniformCategory({
-          category: payload.category || msg.category || {}
-        });
-
-        reply(html, "UNIFORM_ADMIN_SAVED", requestId, result);
-        return;
-      }
-
-      if (type === "UNIFORM_ADMIN_SAVE_RULE") {
-        const result = await adminSaveUniformAllowanceRule({
-          rule: payload.rule || msg.rule || {}
-        });
-
-        reply(html, "UNIFORM_ADMIN_SAVED", requestId, result);
-        return;
-      }
-
-      if (type === "UNIFORM_ADMIN_SAVE_POLICY") {
-        const result = await adminSaveUniformPolicy({
-          policy: payload.policy || msg.policy || {}
-        });
-
-        reply(html, "UNIFORM_ADMIN_SAVED", requestId, result);
-        return;
-      }
-
-      if (type === "UNIFORM_ADMIN_ORDER_ACTION") {
-        const result = await adminUniformOrderAction({
-          orderId: payload.orderId || msg.orderId,
-          action: payload.action || msg.action,
-          note: payload.note || msg.note || ""
-        });
-
-        reply(html, "UNIFORM_ADMIN_SAVED", requestId, result);
-        return;
-      }
-
-      if (type === "UNIFORM_ADMIN_ADJUST_WALLET") {
-        const result = await adminAdjustUniformWallet({
-          skId: payload.skId || msg.skId || "",
-          email: payload.email || msg.email || "",
-          points: payload.points ?? msg.points,
-          reason: payload.reason || msg.reason || ""
-        });
-
-        reply(html, "UNIFORM_ADMIN_SAVED", requestId, result);
-        return;
-      }
-
-      if (type === "UNIFORM_ADMIN_DELETE") {
-        const result = await adminDeleteUniformItem({
-          collectionId: payload.collectionId || msg.collectionId || "",
-          itemId: payload.itemId || msg.itemId || ""
-        });
-
-        reply(html, "UNIFORM_ADMIN_SAVED", requestId, result);
-        return;
-      }
-
-      if (type === "UNIFORM_ADMIN_NAVIGATE") {
-        const path = payload.path || msg.path || "";
-        if (allowedInternalPath(path)) wixLocation.to(path);
-        return;
-      }
-    } catch (error) {
-      replyError(html, requestId, error);
-    }
-  });
+    });
 });
+
+/**
+ * Maps the React incoming request type to the specific success type it listens for.
+ * By default, mutations await "UNIFORM_ADMIN_SAVED".
+ */
+function sendSuccess(iframe, originalType, resultPayload, requestId) {
+    let successType = 'UNIFORM_ADMIN_SAVED';
+    
+    // Override for specific asset requests if implementing media uploads
+    if (originalType === 'UNIFORM_ADMIN_ASSET_PREPARE_UPLOAD') successType = 'UNIFORM_ADMIN_ASSET_UPLOAD_PREPARED';
+    if (originalType === 'UNIFORM_ADMIN_ASSET_FINALIZE_UPLOAD') successType = 'UNIFORM_ADMIN_ASSET_UPLOAD_FINALIZED';
+    if (originalType === 'UNIFORM_ADMIN_ASSET_LIST') successType = 'UNIFORM_ADMIN_ASSET_LIST_RESULT';
+
+    iframe.postMessage({
+        source: SOURCE,
+        type: successType,
+        payload: resultPayload || {},
+        requestId: requestId
+    });
+}
+
+/**
+ * Catches backend errors and releases the React loading spinner with an error banner.
+ */
+function sendError(iframe, message, requestId) {
+    iframe.postMessage({
+        source: SOURCE,
+        type: "UNIFORM_ADMIN_ERROR",
+        message: message || "An unknown error occurred on the Wix backend.",
+        requestId: requestId
+    });
+}
