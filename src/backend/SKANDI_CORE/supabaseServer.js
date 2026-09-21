@@ -11,7 +11,7 @@ import { secrets } from "wix-secrets-backend.v2";
 import { elevate } from "wix-auth";
 import { fetch } from "wix-fetch";
 import { SkandiError, isTransientHttpStatus } from "backend/SKANDI_CORE/platformErrors";
-import { text } from "backend/SKANDI_CORE/platformValidation;
+import { text } from "backend/SKANDI_CORE/platformValidation";
 
 
 const getSecretValue = elevate(secrets.getSecretValue);
@@ -70,7 +70,6 @@ const REST_OBJECTS = new Set([
   "baggage_allowance",
   "travel_info_faq_groups", "travel_info_support_requests", "travel_info_hotels",
   "travel_info_transfers", "travel_info_tours", "travel_info_activities", "travel_info_tickets",
-  "travel_info_cruises", "travel_info_cruise_sailings", "travel_info_cruise_sync_runs",
   "travel_info_aircraft", "travel_info_aircraft_cabins", "travel_info_aircraft_views",
   "travel_info_aircraft_hotspots", "travel_info_aircraft_walk_scenes",
   "travel_info_aircraft_scene_hotspots",
