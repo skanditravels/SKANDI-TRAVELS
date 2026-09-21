@@ -3,9 +3,9 @@
 // Owns customer-scoped profile/loyalty aggregation and booking servicing orchestration.
 // Wix authentication stays in customerProfile.web.js. Supabase/Duffel transport stays in canonical shared cores.
 
-import { restRequest } from "backend/SKANDI_CORE/supabaseServer.js";
-import { listCustomerBookingCartsCore } from "backend/SKANDI_CORE/customerBooking.js";
-import { getDuffelOrderCore, createDuffelOrderCancellationCore, confirmDuffelOrderCancellationCore } from "backend/SKANDI_CORE/duffelAir.js";
+import { restRequest } from "backend/SKANDI_CORE/supabaseServer";
+import { listCustomerBookingCartsCore } from "backend/SKANDI_CORE/customerBooking";
+import { getDuffelOrderCore, createDuffelOrderCancellationCore, confirmDuffelOrderCancellationCore } from "backend/SKANDI_CORE/duffelAir";
 import {
   searchDuffelOrderChangesCore,
   createDuffelPendingOrderChangeCore,
@@ -16,9 +16,9 @@ import {
   confirmDuffelPostBookingServicesCore,
   listDuffelAirlineInitiatedChangesCore,
   acceptDuffelAirlineInitiatedChangeCore
-} from "backend/SKANDI_CORE/duffelServicing.js";
-import { getDuffelStayBookingCore, cancelDuffelStayBookingCore, getDuffelCarBookingCore, cancelDuffelCarBookingCore } from "backend/SKANDI_CORE/duffelGround.js";
-import { ensureDuffelCustomerUserCore } from "backend/SKANDI_CORE/duffelIdentity.js";
+} from "backend/SKANDI_CORE/duffelServicing";
+import { getDuffelStayBookingCore, cancelDuffelStayBookingCore, getDuffelCarBookingCore, cancelDuffelCarBookingCore } from "backend/SKANDI_CORE/duffelGround";
+import { ensureDuffelCustomerUserCore } from "backend/SKANDI_CORE/duffelIdentity";
 
 const VERSION = "B-011.31";
 const ACTIVE_POINT_EXCLUSIONS = new Set(["VOID", "CANCELLED", "REVERSED"]);
