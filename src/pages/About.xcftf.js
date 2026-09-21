@@ -1,4 +1,4 @@
-// /src/pages/About.xcftf.js
+// /src/pages/About.js
 // B-011.1 install candidate for the Wix /about page code.
 // This page owns only the About embed bridge. Global header/footer/session behavior stays in masterPage.js.
 
@@ -8,7 +8,7 @@ import { SITE_MAP, isSafeInternalRoute } from "public/siteMap";
 
 const SOURCE = "SKANDI_ABOUT_PAGE";
 const PARENT = "SKANDI_WIX_PARENT";
-const VERSION = "BACKEND-BASE-1.0-B011.1";
+const VERSION = "BACKEND-BASE-1.0-B011.2";
 const EMBED_IDS = ["#aboutEmbed", "#aboutHtml", "#html1"];
 
 function getHtml() {
