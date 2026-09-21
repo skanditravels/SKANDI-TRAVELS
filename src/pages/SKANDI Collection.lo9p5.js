@@ -10,13 +10,7 @@ import { SITE_MAP, isSafeInternalRoute } from "public/siteMap";
 const SOURCE = "SKANDI_SIGNATURE_COLLECTION";
 const PARENT = "SKANDI_WIX_PARENT";
 const VERSION = "BACKEND-BASE-1.0-B011.2";
-const EMBED_IDS = [
-  "#skandiCollectionEmbed",
-  "#signatureCollectionEmbed",
-  "#skandiCollectionHtml",
-  "#signatureCollectionHtml",
-  "#html1"
-];
+const EMBED_IDS = "#skandiCollectionEmbed";
 
 const text = value => String(value ?? "").trim();
 const number = (value, fallback = 0) => Number.isFinite(Number(value)) ? Number(value) : fallback;
