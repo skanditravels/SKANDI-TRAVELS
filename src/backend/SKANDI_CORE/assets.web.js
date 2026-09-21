@@ -11,7 +11,7 @@ import {
   getAssetAccessUrlCore,
   registerAssetUsageCore,
   archiveAssetCore
-} from "backend/SKANDI_CORE/assets.js";
+} from "backend/SKANDI_CORE/assets";
 
 const MEMBER = Permissions.SiteMember;
 const asInput = value => value && typeof value === "object" ? value : {};
