@@ -7,18 +7,18 @@
 
 
 import { createHash } from "crypto";
-import { restRequest, rpcRequest } from "backend/SKANDI_CORE/supabaseServer.js";
-import { getStaffPortalSessionCore } from "backend/SKANDI_CORE/staffAuth.js";
+import { restRequest, rpcRequest } from "backend/SKANDI_CORE/supabaseServer";
+import { getStaffPortalSessionCore } from "backend/SKANDI_CORE/staffAuth";
 import {
   prepareAssetUploadCore,
   finalizeAssetUploadCore,
   registerAssetUsageCore
 } from "backend/SKANDI_CORE/assets.js";
-import { checkExternalTravelRequirements } from "backend/SKANDI_CORE/travelRequirements.js";
-import { renderBookingConfirmation } from "backend/SKANDI_CORE/bookingConfirmation.js";
-import { renderAtbTicket } from "backend/SKANDI_CORE/atbTicket.js";
-import { renderBagTag } from "backend/SKANDI_CORE/bagTag.js";
-import { renderInvoice } from "backend/SKANDI_CORE/invoice.js";
+import { checkExternalTravelRequirements } from "backend/SKANDI_CORE/travelRequirements";
+import { renderBookingConfirmation } from "backend/SKANDI_CORE/bookingConfirmation";
+import { renderAtbTicket } from "backend/SKANDI_CORE/atbTicket";
+import { renderBagTag } from "backend/SKANDI_CORE/bagTag";
+import { renderInvoice } from "backend/SKANDI_CORE/invoice";
 
 
 export const RESERVATIONS_CORE_VERSION = "BACKEND-BASE-1.0-B007.5";
