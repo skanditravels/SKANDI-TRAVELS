@@ -1,7 +1,7 @@
 // /src/backend/SKANDI_CORE/platformErrors.js 
 // SKANDI Backend Base 1.0 — coded error contract.
 
-import { text } from "backend/SKANDI_CORE/platformValidation.js";
+import { text } from "backend/SKANDI_CORE/platformValidation";
 
 export class SkandiError extends Error {
   constructor(code, message = "", options = {}) {
