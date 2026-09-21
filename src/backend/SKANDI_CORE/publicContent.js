@@ -7,9 +7,9 @@
 // mutation, provider secrets, supplier costs or operational fields live here.
 
 import { currentMember } from "wix-members-backend";
-import { rpcRequest, restRequest } from "backend/SKANDI_CORE/supabaseServer.js";
-import { requireStaffPortalSessionCore } from "backend/SKANDI_CORE/staffAuth.js";
-import { checkExternalTravelRequirements } from "backend/SKANDI_CORE/travelRequirements.js";
+import { rpcRequest, restRequest } from "backend/SKANDI_CORE/supabaseServer";
+import { requireStaffPortalSessionCore } from "backend/SKANDI_CORE/staffAuth";
+import { checkExternalTravelRequirements } from "backend/SKANDI_CORE/travelRequirements";
 
 export const PUBLIC_CONTENT_VERSION = "BACKEND-BASE-1.0-B011.2";
 
