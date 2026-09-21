@@ -3,7 +3,7 @@
 // Supabase customer_support_* tables are the persistent Support case/message source of truth.
 // LiveKit Agents runs Alexandra and LiveKit rooms provide realtime human handoff. External helpdesk-provider runtime dependencies are removed.
 
-import { SITE_MAP } from "public/siteMap.js";
+import { SITE_MAP } from "public/siteMap";
 import wixData from "wix-data";
 import { currentMember } from "wix-members-backend";
 import { secrets } from "wix-secrets-backend.v2";
@@ -11,7 +11,7 @@ import { elevate } from "wix-auth";
 import { createHash, randomUUID } from "crypto";
 import { getStaffPortalSessionCore } from "backend/SKANDI_CORE/staffAuth";
 import { issueSupportLiveKitSessionCore, issueAlexandraLiveKitSessionCore } from "backend/SKANDI_CORE/livekitServer";
-import { restRequest } from "backend/SKANDI_CORE/supabaseServer.js";
+import { restRequest } from "backend/SKANDI_CORE/supabaseServer";
 
 const elevatedGetSecretValue = elevate(secrets.getSecretValue);
 const OPTS = { suppressAuth: true, suppressHooks: false };
