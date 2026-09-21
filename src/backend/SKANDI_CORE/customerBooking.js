@@ -59,7 +59,7 @@ import {
   travelerTriggerProjection,
   combineServiceSelections,
   toPublicCart
-} from "backend/SKANDI_CORE/bookingMapper.js";
+} from "backend/SKANDI_CORE/bookingMapper";
 import { encryptBookingData, decryptBookingData } from "backend/SKANDI_CORE/bookingSecurity";
 import {
   markBookingReconciliationRequired,
