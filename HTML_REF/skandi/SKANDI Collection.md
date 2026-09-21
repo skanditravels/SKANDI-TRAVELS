@@ -1,25 +1,178 @@
 # SKANDI Collection
 
-STATUS: IN PROGRESS
-SLUG: /skandi-collection
-WIX PAGE: SKANDI Collection.lo9p5
-AREA: SKANDI
-LIVE HTML: YES
-ELEMENT: #skandiCollectionEmbed
-LAST SYNCED: 2026-09-16
+**STATUS:** NEEDS REVIEW  
+**SLUG:** `/skandi-collection`  
+**WIX PAGE:** SKANDI Collection.lo9p5  
+**AREA:** SKANDI  
+**LIVE HTML:** YES  
+**ELEMENT:** `#skandiCollectionEmbed`  
+**LAST SYNCED:** 2026-09-21
 
-## HOW TO USE
-***STATUS (OWNER): "TODO", "IN PROGRESS", "NEEDS REVIEW", "REVISIONS NEEDED", "READY", "LIVE", "ARCHIVED"
-STATUS (AGENT): "TODO", "IN PROGRESS", "REVISIONS NEEDED", "READY".***
+### HOW TO USE
 
-###  COMMENT SECTION (START ON A NEW ROW, LOG IF A CHANGE IS MADE THAT REQUIRES ATTENTION) 
-1. 9/17 1:13PM "Page is almost styled from my end, page not syncing correctly yet" /Samuel
-2. 9/18 3:10AM "Page is designed. Needs to be synced" /Samuel
-3.
-...
-***END*** 
+***STATUS (OWNER): "TODO", "IN PROGRESS", "NEEDS REVIEW", "REVISIONS NEEDED", "READY", "LIVE", "ARCHIVED" STATUS (AGENT): "TODO", "IN PROGRESS", "REVISIONS NEEDED", "READY".***
 
-#### LIVE HTML
+## COMMENT SECTION
+(START ON A NEW ROW, LOG IF A CHANGE IS MADE THAT REQUIRES ATTENTION)
+
+... END
+
+---
+
+## TECHNICAL INFO / LOG
+
+> **Canonical reference path:** `/HTML_REF/skandi/skandi-collection.md`  
+> **Generated locally:** 2026-09-21  
+> **Verification level:** STATICALLY VERIFIED FROM UPLOADED SOURCE SET / REQUIRES LIVE TEST FOR RUNTIME DEPENDENCIES
+
+### Source Identity
+
+- **Source file identity:** `/HTML_REF/skandi/skandi-collection.md`
+- **Primary uploaded source:** `SKANDI-Collection-B011.2/embed/SKANDI-Collection.html`
+- **Display / page name:** SKANDI Collection
+- **System area:** `SKANDI`
+- **Wix page filename:** `SKANDI Collection.lo9p5`
+- **Wix route / slug:** `/skandi-collection`
+- **Wix HTML element ID:** `#skandiCollectionEmbed`
+- **Current status:** NEEDS REVIEW
+- **Live HTML:** YES
+- **Source-of-truth status:** GENERATED HTML_REF CANDIDATE. The executable payload is sourced from the selected uploaded file; live deployment parity still requires verification.
+- **Last synced:** 2026-09-21
+
+### Ownership and Dependency Chain
+
+`/HTML_REF/skandi/skandi-collection.md`
+→ live Wix HTML / `#skandiCollectionEmbed`
+→ `SKANDI-Collection-B011.2/src/pages/SKANDI Collection.lo9p5.js`
+→ `backend/SKANDI_CORE/publicContent.web.js` + `backend/SKANDI_CORE/publicContent.web` + `backend/SKANDI_CORE/customerBooking.web`
+→ `backend/SKANDI_CORE/publicContent.js`
+→ Supabase / Wix
+
+### Linked Wix Page Controller
+
+- `SKANDI-Collection-B011.2/src/pages/SKANDI Collection.lo9p5.js`
+
+### Canonical Backend Facade(s)
+
+- `backend/SKANDI_CORE/publicContent.web.js`
+- `backend/SKANDI_CORE/publicContent.web`
+- `backend/SKANDI_CORE/customerBooking.web`
+
+### Canonical Backend Core Implementation(s)
+
+- `backend/SKANDI_CORE/publicContent.js`
+
+### Canonical Backend Import Presence Check
+
+- `SKANDI-Collection-B011.2/src/backend/SKANDI_CORE/publicContent.js` → `backend/SKANDI_CORE/supabaseServer.js`: **NOT PRESENT IN UPLOADED SOURCE SET**
+- `SKANDI-Collection-B011.2/src/backend/SKANDI_CORE/publicContent.js` → `backend/SKANDI_CORE/staffAuth.js`: **NOT PRESENT IN UPLOADED SOURCE SET**
+- `SKANDI-Collection-B011.2/src/backend/SKANDI_CORE/publicContent.js` → `backend/SKANDI_CORE/travelRequirements.js`: **NOT PRESENT IN UPLOADED SOURCE SET**
+- `SKANDI-Collection-B011.2/src/backend/SKANDI_CORE/publicContent.web.js` → `backend/SKANDI_CORE/publicContent.js`: **PRESENT IN UPLOADED SOURCE SET**
+- `SKANDI-Collection-B011.2/src/pages/SKANDI Collection.lo9p5.js` → `backend/SKANDI_CORE/publicContent.web`: **PRESENT IN UPLOADED SOURCE SET**
+- `SKANDI-Collection-B011.2/src/pages/SKANDI Collection.lo9p5.js` → `backend/SKANDI_CORE/customerBooking.web`: **NOT PRESENT IN UPLOADED SOURCE SET**
+
+### Relevant Supabase Resources
+
+NOT VERIFIED FROM UPLOADED SOURCE SET
+
+### External API / Provider Dependencies
+
+- **Supabase:** detected in `SKANDI-Collection-B011.2/HTML_REF/skandi/Collection.md`, `SKANDI-Collection-B011.2/INSTALL.txt`, `SKANDI-Collection-B011.2/QA_REPORT.md`, `SKANDI-Collection-B011.2/SHA256SUMS.txt`, `SKANDI-Collection-B011.2/src/backend/SKANDI_CORE/publicContent.js`
+- **Wix:** detected in `SKANDI-Collection-B011.2/HTML_REF/skandi/Collection.md`, `SKANDI-Collection-B011.2/INSTALL.txt`, `SKANDI-Collection-B011.2/QA_REPORT.md`, `SKANDI-Collection-B011.2/src/backend/SKANDI_CORE/publicContent.js`, `SKANDI-Collection-B011.2/src/backend/SKANDI_CORE/publicContent.web.js`, `SKANDI-Collection-B011.2/src/pages/SKANDI Collection.lo9p5.js`
+
+### Authentication / Authorization Boundary
+
+- Wix Members / identity detected in `SKANDI-Collection-B011.2/src/backend/SKANDI_CORE/publicContent.js`
+- Role / permission checks detected in `SKANDI-Collection-B011.2/HTML_REF/skandi/Collection.md`, `SKANDI-Collection-B011.2/src/backend/SKANDI_CORE/publicContent.js`, `SKANDI-Collection-B011.2/src/backend/SKANDI_CORE/publicContent.web.js`
+- Staff authentication detected in `SKANDI-Collection-B011.2/src/backend/SKANDI_CORE/publicContent.js`
+- Backend webMethod permissions detected in `SKANDI-Collection-B011.2/src/backend/SKANDI_CORE/publicContent.web.js`
+
+### Important Cross-Layer Message Contracts
+
+| Contract | Emitters | Receivers | Static result |
+|---|---|---|---|
+| `ACTIVITY` | None detected | `SKANDI-Collection-B011.2/src/backend/SKANDI_CORE/publicContent.js` | Incomplete within uploaded source set |
+| `AIRLINE` | None detected | `SKANDI-Collection-B011.2/src/backend/SKANDI_CORE/publicContent.js` | Incomplete within uploaded source set |
+| `AIRPORT` | None detected | `SKANDI-Collection-B011.2/src/backend/SKANDI_CORE/publicContent.js` | Incomplete within uploaded source set |
+| `AREA` | None detected | `SKANDI-Collection-B011.2/src/backend/SKANDI_CORE/publicContent.js` | Incomplete within uploaded source set |
+| `CAR_RENTAL` | None detected | `SKANDI-Collection-B011.2/src/backend/SKANDI_CORE/publicContent.js` | Incomplete within uploaded source set |
+| `COLLECTION_NAVIGATE` | None detected | `SKANDI-Collection-B011.2/src/pages/SKANDI Collection.lo9p5.js` | Incomplete within uploaded source set |
+| `COUNTRY` | None detected | `SKANDI-Collection-B011.2/src/backend/SKANDI_CORE/publicContent.js` | Incomplete within uploaded source set |
+| `DESTINATION` | None detected | `SKANDI-Collection-B011.2/src/backend/SKANDI_CORE/publicContent.js` | Incomplete within uploaded source set |
+| `GUIDED_TOUR` | None detected | `SKANDI-Collection-B011.2/src/backend/SKANDI_CORE/publicContent.js` | Incomplete within uploaded source set |
+| `HOTEL` | None detected | `SKANDI-Collection-B011.2/src/backend/SKANDI_CORE/publicContent.js` | Incomplete within uploaded source set |
+| `PACKAGE` | None detected | `SKANDI-Collection-B011.2/src/backend/SKANDI_CORE/publicContent.js` | Incomplete within uploaded source set |
+| `PARTNER_TICKET` | None detected | `SKANDI-Collection-B011.2/src/backend/SKANDI_CORE/publicContent.js` | Incomplete within uploaded source set |
+| `SIGNATURE_COLLECTION_READY` | None detected | `SKANDI-Collection-B011.2/src/pages/SKANDI Collection.lo9p5.js` | Incomplete within uploaded source set |
+| `SIGNATURE_COLLECTION_REFRESH` | None detected | `SKANDI-Collection-B011.2/src/pages/SKANDI Collection.lo9p5.js` | Incomplete within uploaded source set |
+| `SIGNATURE_PACKAGE_SEARCH` | None detected | `SKANDI-Collection-B011.2/src/pages/SKANDI Collection.lo9p5.js` | Incomplete within uploaded source set |
+| `SKANDI_COLLECTION_READY` | None detected | `SKANDI-Collection-B011.2/src/pages/SKANDI Collection.lo9p5.js` | Incomplete within uploaded source set |
+| `TOUR` | None detected | `SKANDI-Collection-B011.2/src/backend/SKANDI_CORE/publicContent.js` | Incomplete within uploaded source set |
+| `TRANSFER` | None detected | `SKANDI-Collection-B011.2/src/backend/SKANDI_CORE/publicContent.js` | Incomplete within uploaded source set |
+
+### Current Architectural Notes
+
+- This document was generated from the uploaded source set only. Missing details are explicitly marked as not verified rather than inferred beyond available evidence.
+- The complete executable/source payload below is preserved from the selected primary source after browser text decoding; it is not shortened or summarized.
+- HTML_REF is a reference artifact and must not be imported by runtime application code.
+- Canonical Wix backend ownership remains under `backend/SKANDI_CORE/...`; any detected legacy namespace is listed under Open Issues.
+- Static analysis can identify references and contracts but cannot prove production deployment parity, authentication behavior, Supabase schema/RLS correctness, provider success, or secret configuration.
+
+### Open Issues / Required Verification / Migration Items
+
+- Message contract `ACTIVITY` has a receiver but no emitter detected in the uploaded source set.
+- Message contract `AIRLINE` has a receiver but no emitter detected in the uploaded source set.
+- Message contract `AIRPORT` has a receiver but no emitter detected in the uploaded source set.
+- Message contract `AREA` has a receiver but no emitter detected in the uploaded source set.
+- Message contract `CAR_RENTAL` has a receiver but no emitter detected in the uploaded source set.
+- Message contract `COLLECTION_NAVIGATE` has a receiver but no emitter detected in the uploaded source set.
+- Message contract `COUNTRY` has a receiver but no emitter detected in the uploaded source set.
+- Message contract `DESTINATION` has a receiver but no emitter detected in the uploaded source set.
+- Message contract `GUIDED_TOUR` has a receiver but no emitter detected in the uploaded source set.
+- Message contract `HOTEL` has a receiver but no emitter detected in the uploaded source set.
+- Message contract `PACKAGE` has a receiver but no emitter detected in the uploaded source set.
+- Message contract `PARTNER_TICKET` has a receiver but no emitter detected in the uploaded source set.
+- Message contract `SIGNATURE_COLLECTION_READY` has a receiver but no emitter detected in the uploaded source set.
+- Message contract `SIGNATURE_COLLECTION_REFRESH` has a receiver but no emitter detected in the uploaded source set.
+- Message contract `SIGNATURE_PACKAGE_SEARCH` has a receiver but no emitter detected in the uploaded source set.
+- Message contract `SKANDI_COLLECTION_READY` has a receiver but no emitter detected in the uploaded source set.
+- Message contract `TOUR` has a receiver but no emitter detected in the uploaded source set.
+- Message contract `TRANSFER` has a receiver but no emitter detected in the uploaded source set.
+- Canonical backend import `backend/SKANDI_CORE/supabaseServer.js` referenced by `SKANDI-Collection-B011.2/src/backend/SKANDI_CORE/publicContent.js` was not present in the uploaded source set.
+- Canonical backend import `backend/SKANDI_CORE/staffAuth.js` referenced by `SKANDI-Collection-B011.2/src/backend/SKANDI_CORE/publicContent.js` was not present in the uploaded source set.
+- Canonical backend import `backend/SKANDI_CORE/travelRequirements.js` referenced by `SKANDI-Collection-B011.2/src/backend/SKANDI_CORE/publicContent.js` was not present in the uploaded source set.
+- Canonical backend import `backend/SKANDI_CORE/customerBooking.web` referenced by `SKANDI-Collection-B011.2/src/pages/SKANDI Collection.lo9p5.js` was not present in the uploaded source set.
+- Supabase is referenced, but no table/view/RPC resource could be statically identified from the uploaded source set.
+- Live Wix deployment parity, runtime authentication, provider behavior, secrets, database schema validity, RLS, and production data were not executed by this static browser tool.
+
+### Uploaded Source Set
+
+| Source file | Classified role | Size |
+|---|---|---:|
+| `SKANDI-Collection-B011.2/embed/SKANDI-Collection.html` | HTML SOURCE | 86.6 KB |
+| `SKANDI-Collection-B011.2/HTML_REF/skandi/Collection.md` | EXISTING HTML_REF | 90.7 KB |
+| `SKANDI-Collection-B011.2/INSTALL.txt` | TEXT | 2.71 KB |
+| `SKANDI-Collection-B011.2/QA_REPORT.md` | MARKDOWN | 2.64 KB |
+| `SKANDI-Collection-B011.2/SHA256SUMS.txt` | TEXT | 809 B |
+| `SKANDI-Collection-B011.2/src/backend/SKANDI_CORE/publicContent.js` | BACKEND CORE | 64.5 KB |
+| `SKANDI-Collection-B011.2/src/backend/SKANDI_CORE/publicContent.web.js` | BACKEND FACADE | 3.20 KB |
+| `SKANDI-Collection-B011.2/src/pages/SKANDI Collection.lo9p5.js` | WIX PAGE CONTROLLER | 6.81 KB |
+
+### Change Log
+
+- **2026-09-21 — B-011.2:** Rebased the supplied updated Collection UI onto the existing B-011.1 bridge; retained all Collection message contracts; moved autocomplete from hardcoded sample airports to live `travel_info_airports`; added optional page-presentation reads from existing Inventory localized content; corrected one-adult search value and local-date rendering; retained canonical customer booking and master-page asset/config ownership.
+
+---
+
+- 2026-09-21 — HTML_REF candidate generated from the uploaded source set. Architecture metadata and cross-layer contracts were statically derived; live Wix/runtime/database/provider verification was not performed by this browser-only tool.
+
+---
+
+## COMPLETE LIVE HTML / SOURCE IMPLEMENTATION
+
+**Primary payload source:** `SKANDI-Collection-B011.2/embed/SKANDI-Collection.html`
+
+The following payload is complete and is not intentionally shortened, summarized, reconstructed, or replaced with placeholders.
 
 ```html
 <!DOCTYPE html>
@@ -55,6 +208,7 @@ STATUS (AGENT): "TODO", "IN PROGRESS", "REVISIONS NEEDED", "READY".***
   --sk-shadow-strong:0 30px 70px rgba(2,46,100,.17);
   --ease:cubic-bezier(.16,1,.3,1);
   --content:1240px;
+  --hero-bg-img: url('YOUR-IMAGE-URL.jpg'); 
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth;background:var(--sk-navy)}
@@ -73,6 +227,23 @@ button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{ou
   display:inline-flex;align-items:center;justify-content:center;gap:9px;background:var(--sk-navy);color:#fff;text-decoration:none;
   font-size:10px;font-weight:800;letter-spacing:.13em;text-transform:uppercase;
   transition:transform .22s var(--ease),background .22s ease,border-color .22s ease,box-shadow .22s ease
+}
+.logo{
+  flex:0 0 auto;
+  width:clamp(134px,13vw,184px);
+  height:48px;
+  display:flex;
+  align-items:center;
+  border:0;
+  background:transparent;
+  padding:0;
+}
+.logo img{
+  width:100%;
+  max-width:184px;
+  max-height:45px;
+  object-fit:contain;
+  object-position:left center;
 }
 .btn:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 12px 26px rgba(2,46,100,.18)}
 .btn.secondary{background:#fff;color:var(--sk-navy);border-color:rgba(2,46,100,.13)}
@@ -423,21 +594,55 @@ button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{ou
   background:linear-gradient(180deg,var(--sk-champagne),transparent);
 }
 
-/* SEARCH */
-.search{position:relative;z-index:8;margin-top:-72px}
-.search-card{position:relative;overflow:hidden;background:rgba(255,255,255,.96);border:1px solid rgba(219,227,239,.94);border-radius:30px;padding:28px;box-shadow:0 30px 78px rgba(2,46,100,.16);backdrop-filter:blur(18px)}
-.search-card::before{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(115deg,transparent 0 38%,rgba(95,199,207,.08) 50%,transparent 62%);background-size:220% 100%;animation:searchSweep 9s ease-in-out infinite}
-@keyframes searchSweep{0%,30%{background-position:-140% 0}70%,100%{background-position:180% 0}}
-.search-head{position:relative;display:flex;align-items:flex-end;justify-content:space-between;gap:28px;margin-bottom:22px}
-.search-head h2{font-size:clamp(28px,3.4vw,42px);line-height:1;letter-spacing:-.052em;color:var(--sk-navy);font-weight:600;margin-top:7px}
-.search-head p{max-width:520px;font-size:11px;line-height:1.7;color:var(--sk-muted)}
-.grid{position:relative;display:grid;grid-template-columns:repeat(12,1fr);gap:12px}
-.field{display:flex;flex-direction:column;gap:7px}.field label{font-size:8px;text-transform:uppercase;letter-spacing:.13em;font-weight:800;color:var(--sk-muted)}
-.field input,.field select{width:100%;min-height:48px;border:1px solid var(--sk-line);border-radius:13px;background:#fff;padding:10px 12px;color:var(--sk-graphite);outline:none;transition:border-color .2s ease,box-shadow .2s ease,transform .2s ease}
-.field input:focus,.field select:focus{border-color:var(--sk-aqua);box-shadow:0 0 0 4px rgba(95,199,207,.12),0 10px 24px rgba(2,46,100,.06);transform:translateY(-1px)}
-.col2{grid-column:span 2}.col3{grid-column:span 3}.col4{grid-column:span 4}.col6{grid-column:span 6}.col12{grid-column:span 12}
-.hint{position:relative;font-size:10px;color:var(--sk-muted);line-height:1.65;margin-top:14px}.hint strong{color:var(--sk-navy)}
+/* COMPACT SEARCH BAR */
+.search{position:relative;z-index:20;margin-top:-60px;}
+.search-card{position:relative;overflow:visible;background:rgba(255,255,255,.98);border:1px solid rgba(219,227,239,.94);border-radius:28px;padding:22px 28px;box-shadow:0 24px 58px rgba(2,46,100,.14);backdrop-filter:blur(18px);}
+.search-head{position:relative;display:flex;align-items:flex-end;justify-content:space-between;gap:28px;margin-bottom:20px}
+.search-head h2{font-size:clamp(22px,2.8vw,32px);line-height:1;letter-spacing:-.04em;color:var(--sk-navy);font-weight:600;margin-top:4px}
+.search-head p{max-width:520px;font-size:11px;line-height:1.6;color:var(--sk-muted)}
+.search-bar{display:flex;align-items:center;background:#fff;border:1px solid var(--sk-line);border-radius:999px;padding:6px 6px 6px 20px;box-shadow:0 8px 24px rgba(2,46,100,.04);position:relative;}
+.search-field{position:relative;flex:1;display:flex;flex-direction:column;cursor:pointer;padding:6px 12px;border-radius:16px;transition:background 0.2s;}
+.search-field:hover{background:var(--sk-section);}
+.search-field label{font-size:8px;text-transform:uppercase;letter-spacing:.13em;font-weight:800;color:var(--sk-muted);margin-bottom:3px;cursor:pointer;}
+.search-field input, .search-field select{border:none;outline:none;font-weight:600;font-size:13px;color:var(--sk-navy);padding:0;background:transparent;width:100%;font-family:inherit;cursor:pointer;}
+.search-field input::placeholder {color: #a4b3c4; font-weight: 500;}
+.date-display{font-weight:600;font-size:13px;color:var(--sk-navy);white-space:nowrap;}
+.search-divider{width:1px;height:32px;background:var(--sk-line);margin:0 4px;}
+.search-submit{border-radius:999px;height:48px;padding:0 32px;flex:0 0 auto;margin-left:8px;}
+
+/* DROPDOWNS */
+.sk-dropdown{position:absolute;top:calc(100% + 14px);left:0;width:340px;background:#fff;border-radius:20px;box-shadow:var(--sk-shadow-strong);border:1px solid var(--sk-line);display:none;z-index:100;overflow:hidden;flex-direction:column;}
+.sk-dropdown.active{display:flex; animation: dropdownFade 0.2s ease;}
+@keyframes dropdownFade{from{opacity:0;transform:translateY(-10px);}to{opacity:1;transform:translateY(0);}}
+.sk-dropdown-list{max-height:280px;overflow-y:auto;padding:8px;}
+.sk-dropdown-item{padding:12px 16px;border-radius:12px;cursor:pointer;display:flex;align-items:center;gap:12px;transition:background 0.2s;}
+.sk-dropdown-item:hover{background:var(--sk-section);}
+.sk-dropdown-icon{width:32px;height:32px;border-radius:50%;background:var(--sk-ice);color:var(--sk-blue);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;}
+.sk-dropdown-text strong{display:block;font-size:12px;color:var(--sk-navy);margin-bottom:2px;}
+.sk-dropdown-text span{display:block;font-size:10px;color:var(--sk-muted);}
+
+/* CALENDAR POPUP */
+.sk-calendar-popup{position:absolute;top:calc(100% + 14px);left:-50%;width:640px;background:#fff;border-radius:24px;box-shadow:var(--sk-shadow-strong);border:1px solid var(--sk-line);display:none;z-index:100;padding:24px;}
+.sk-calendar-popup.active{display:flex; gap:24px; animation: dropdownFade 0.2s ease;}
+.sk-month{flex:1;}
+.sk-month-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;font-weight:600;color:var(--sk-navy);font-size:14px;}
+.sk-month-btn{background:transparent;border:none;color:var(--sk-muted);cursor:pointer;font-size:16px;padding:4px 8px;border-radius:8px;}
+.sk-month-btn:hover{background:var(--sk-section);color:var(--sk-navy);}
+.sk-days-header{display:grid;grid-template-columns:repeat(7,1fr);text-align:center;font-size:9px;font-weight:700;color:var(--sk-muted);margin-bottom:8px;}
+.sk-days-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;}
+.sk-day{aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--sk-graphite);border-radius:50%;cursor:pointer;transition:background 0.2s, color 0.2s;}
+.sk-day:hover:not(.empty){background:var(--sk-section);}
+.sk-day.selected{background:var(--sk-navy);color:#fff;}
+.sk-day.in-range{background:var(--sk-ice);border-radius:0;}
+.sk-day.selected.start{border-radius:50% 0 0 50%;}
+.sk-day.selected.end{border-radius:0 50% 50% 0;}
+.sk-day.empty{pointer-events:none;}
+
 .package-status{position:relative;margin-top:15px;border-radius:16px;padding:13px 15px;background:var(--sk-section);border:1px solid var(--sk-line-soft);color:#526274;font-size:10px;line-height:1.55}
+.filters-bar{display:flex;align-items:center;justify-content:space-between;margin-top:16px;padding-top:16px;border-top:1px solid var(--sk-line-soft);}
+.filters-bar .field{flex-direction:row;align-items:center;gap:12px;width:auto;flex:none;}
+.filters-bar .field label{margin:0;}
+.filters-bar select{min-height:36px;padding:4px 12px;border-radius:12px;font-size:11px;}
 
 /* PAGE */
 main{position:relative;z-index:1;background:radial-gradient(circle at 8% 10%,rgba(95,199,207,.07),transparent 18%),radial-gradient(circle at 94% 42%,rgba(40,92,168,.06),transparent 18%),#fff}
@@ -541,13 +746,19 @@ main::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none
   .hero-inner{grid-template-columns:1fr;gap:34px;padding-bottom:175px}.hero-aside{max-width:650px}
   .section-head{grid-template-columns:1fr;gap:14px}.philosophy-grid{grid-template-columns:1fr 1fr}.philosophy-card:last-child{grid-column:1/-1}
   .card{grid-column:span 6}.card:nth-child(6n+1){grid-column:span 6}.card:nth-child(6n+1) .thumb{height:280px}
+  .sk-calendar-popup{left:-200%; width: 500px; flex-direction:column; gap:16px;}
 }
 @media(max-width:760px){
   .wrap{width:calc(100% - 24px)}
   .hero{min-height:760px}.hero-inner{padding:58px 0 170px;align-items:start}.hero h1{font-size:clamp(50px,15vw,76px)}
   .hero-aside{padding:21px;border-radius:23px}.hero-scroll{bottom:54px}
-  .search{margin-top:-54px}.search-card{padding:19px;border-radius:23px}.search-head{display:block}.search-head p{margin-top:10px}
-  .grid{grid-template-columns:1fr 1fr}.col2,.col3,.col4,.col6,.col12{grid-column:auto}.field.col3,.field.col6{grid-column:1/-1}
+  .search{margin-top:-44px}.search-card{padding:19px;border-radius:23px}.search-head{display:block}.search-head p{margin-top:10px}
+  .search-bar{flex-direction:column; border-radius: 20px; padding: 12px; align-items:stretch;}
+  .search-divider{width:100%; height:1px; margin: 4px 0;}
+  .search-submit{width:100%; margin:12px 0 0 0;}
+  .sk-dropdown{width:100%; top:calc(100% + 4px);}
+  .sk-calendar-popup{width:100%; left:0; top:calc(100% + 4px);}
+  
   .section{padding:64px 0}.section-head h2{font-size:42px}
   .philosophy-grid{grid-template-columns:1fr}.philosophy-card:last-child{grid-column:auto}
   .spotlight-grid{grid-template-columns:1fr;grid-template-rows:auto}.spotlight-card,.spotlight-card:first-child{grid-row:auto;min-height:390px}
@@ -557,7 +768,7 @@ main::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none
   .offer{grid-template-columns:1fr}.price{text-align:left;margin-top:3px}
   .promise-grid{grid-template-columns:1fr}.promise-card{min-height:280px}.promise-card h3{margin-top:70px}
 }
-@media(max-width:480px){.grid{grid-template-columns:1fr}.field.col3,.field.col6{grid-column:auto}.hero-metrics{grid-template-columns:1fr 1fr}.collection-brand{margin-bottom:24px}}
+@media(max-width:480px){.hero-metrics{grid-template-columns:1fr 1fr}.collection-brand{margin-bottom:24px}}
 
 
 /* =========================================================
@@ -625,6 +836,34 @@ main::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none
 .value-card:nth-child(4) h3{color:#fff}
 .value-card p{font-size:10.5px;line-height:1.75;color:#647386}
 .value-card:nth-child(4) p{color:#c5d7e5}
+
+/* DYNAMIC IMAGE SUPPORT FOR CARDS */
+.value-card.has-image, .experience-item.has-image {
+  background-size: cover;
+  background-position: center;
+  color: #fff !important; 
+  border: none;
+}
+.value-card.has-image::before, .experience-item.has-image::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.78) 100%);
+  z-index: 0;
+  border-radius: inherit;
+}
+.value-card.has-image > *, .experience-item.has-image > * {
+  position: relative;
+  z-index: 1;
+}
+.value-card.has-image h3, .experience-item.has-image h4 { color: #fff !important; }
+.value-card.has-image p, .experience-item.has-image p { color: rgba(255,255,255,0.9) !important; }
+.value-card.has-image .value-index { color: rgba(255,255,255,0.8) !important; }
+.experience-item.has-image .experience-icon {
+  background: rgba(0,0,0,0.3);
+  color: #fff !important;
+  border-color: rgba(255,255,255,0.3) !important;
+}
 
 .collection-quote{
   position:relative;overflow:hidden;padding:84px 0;background:linear-gradient(110deg,#173747,#022e64 62%,#0b5c85);color:#fff
@@ -697,52 +936,6 @@ main::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none
 .closing-signature p{max-width:640px;margin-top:16px;color:#c5d5e4;font-size:11px;line-height:1.75}
 .closing-signature .btn{min-width:220px;background:#d9f1f1;color:#022e64}
 
-
-@media(max-width:1080px){
-  .hero-inner{grid-template-columns:1fr;align-items:center;padding-bottom:185px}
-  .hero-aside{max-width:650px;min-height:auto}
-  .hero-scroll{display:none}
-  .hero-metrics{width:calc(100% - 40px)}
-}
-@media(max-width:760px){
-  .hero{min-height:860px}
-  .hero-inner{padding:52px 0 210px;gap:30px}
-  .collection-brand{min-height:60px;margin-bottom:24px}
-  .collection-brand img{max-height:62px}
-  .hero h1{font-size:clamp(52px,15vw,76px)}
-  .hero-lede{font-size:14px;line-height:1.7}
-  .hero-aside{padding:22px;border-radius:22px}
-  .hero-aside-label{margin-bottom:24px}
-  .hero-aside h2{font-size:28px}
-  .hero-metrics{
-    bottom:30px;
-    width:calc(100% - 24px);
-    grid-template-columns:repeat(2,1fr);
-  }
-  .hero-metric:nth-child(2){border-right:0}
-  .hero-metric:nth-child(-n+2){border-bottom:1px solid rgba(255,255,255,.12)}
-  .hero-metric{min-height:64px;padding:12px 14px}
-  .hero-metric strong{font-size:19px}
-}
-@media(prefers-reduced-motion:reduce){
-  .hero-media,.hero-aside::after{animation:none!important}
-}
-
-@media(max-width:1080px){
-  .manifesto-grid,.experience-shell{grid-template-columns:1fr}.manifesto-grid{gap:38px}.manifesto-note{max-width:680px}
-  .value-grid{grid-template-columns:1fr 1fr}.story-rail{grid-auto-columns:minmax(310px,52vw)}
-  .closing-signature-inner{grid-template-columns:1fr;align-items:start}
-}
-@media(max-width:760px){
-  .manifesto-section{padding:82px 0 72px}.manifesto-copy h2{font-size:48px}.manifesto-grid{gap:30px}
-  .value-grid{grid-template-columns:1fr}.value-card{min-height:270px}
-  .quote-inner{grid-template-columns:1fr;gap:20px}.quote-copy{font-size:42px}
-  .story-rail{grid-auto-columns:86vw}.story-card{min-height:470px}.story-nav{justify-content:flex-start}
-  .experience-list{grid-template-columns:1fr}.experience-intro{min-height:420px}.experience-item{min-height:220px}
-  .journey-grid{grid-template-columns:1fr}.journey-step{min-height:250px}.journey-step h3{margin-top:44px}
-  .closing-signature{padding:28px 22px}.closing-signature .btn{width:100%}
-}
-
 @media(prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
   .hero-route{display:none}.reveal{opacity:1!important;transform:none!important}
@@ -806,18 +999,65 @@ main::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none
         <div><div class="eyebrow">Collection concierge</div><h2>Make it your journey.</h2></div>
         <p>Start with your route and dates. We will search the live SKANDI booking service for Collection journey options.</p>
       </div>
-      <div class="grid">
-        <div class="field col2"><label for="origin">From</label><input id="origin" maxlength="3" placeholder="CPH" autocomplete="off"/></div>
-        <div class="field col2"><label for="destination">To</label><input id="destination" maxlength="3" placeholder="PMI" autocomplete="off"/></div>
-        <div class="field col2"><label for="departureDate">Depart</label><input id="departureDate" type="date"/></div>
-        <div class="field col2"><label for="returnDate">Return</label><input id="returnDate" type="date"/></div>
-        <div class="field col2"><label for="adults">Adults</label><select id="adults"><option>1</option><option selected>2</option><option>3</option><option>4</option><option>5</option><option>6</option></select></div>
-        <div class="field col2"><label for="currency">Currency</label><select id="currency"><option>USD</option><option>EUR</option><option>SEK</option><option>NOK</option><option>DKK</option><option>GBP</option></select></div>
-        <div class="field col3"><label>&nbsp;</label><button class="btn dark" id="searchBtn" type="button">Find Collection journeys</button></div>
-        <div class="field col3"><label>&nbsp;</label><button class="btn secondary" id="clearBtn" type="button">Clear results</button></div>
-        <div class="field col6"><label for="collectionFilter">Browse by</label><select id="collectionFilter"><option value="all">All Collection items</option><option value="destinations">Destinations</option><option value="hotels">Hotels</option><option value="tours">Tours &amp; Activities</option><option value="airlines">Airlines</option><option value="airports">Airports</option><option value="partners">SKANDI Partners</option></select></div>
+      
+      <div class="search-bar">
+        <div class="search-field" id="originField">
+          <label for="originInput">From</label>
+          <input type="text" id="originInput" placeholder="City or airport code" autocomplete="off" />
+          <input type="hidden" id="originCode" />
+          <div class="sk-dropdown" id="originDropdown">
+            <div class="sk-dropdown-list" id="originList"></div>
+          </div>
+        </div>
+        <div class="search-divider"></div>
+        <div class="search-field" id="destinationField">
+          <label for="destInput">To</label>
+          <input type="text" id="destInput" placeholder="Where to?" autocomplete="off" />
+          <input type="hidden" id="destCode" />
+          <div class="sk-dropdown" id="destDropdown">
+            <div class="sk-dropdown-list" id="destList"></div>
+          </div>
+        </div>
+        <div class="search-divider"></div>
+        <div class="search-field" id="datesField">
+          <label>Depart – Return</label>
+          <div class="date-display"><span id="displayStart">Add dates</span> – <span id="displayEnd"></span></div>
+          <input type="hidden" id="departureDate" />
+          <input type="hidden" id="returnDate" />
+          
+          <div class="sk-calendar-popup" id="calendarPopup">
+            <!-- Calendar UI injected via JS -->
+          </div>
+        </div>
+        <div class="search-divider"></div>
+        <div class="search-field">
+          <label for="adults">Guests</label>
+          <select id="adults">
+            <option value="1">1 Adult</option>
+            <option selected value="2">2 Adults</option>
+            <option value="3">3 Adults</option>
+            <option value="4">4 Adults</option>
+            <option value="5">5 Adults</option>
+          </select>
+        </div>
+        <button class="btn dark search-submit" id="searchBtn" type="button">Search</button>
       </div>
-      <div class="hint"><strong>Collection journeys.</strong> Search uses the existing SKANDI booking flow. Availability and prices are checked live when you search.</div>
+
+      <div class="filters-bar">
+        <div class="field">
+           <label for="collectionFilter">Browse by</label>
+           <select id="collectionFilter">
+             <option value="all">All Collection items</option>
+             <option value="destinations">Destinations</option>
+             <option value="hotels">Hotels</option>
+             <option value="tours">Tours &amp; Activities</option>
+             <option value="airlines">Airlines</option>
+             <option value="airports">Airports</option>
+             <option value="partners">SKANDI Partners</option>
+           </select>
+        </div>
+      </div>
+      
       <div class="package-status" id="searchStatus">Enter route and dates when you are ready to plan a Collection journey.</div>
       <div class="results" id="offers"></div>
     </div>
@@ -853,12 +1093,8 @@ main::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none
         <div><div class="eyebrow">A better kind of choice</div><h2>What makes a Collection journey feel different.</h2></div>
         <p class="copy">Collection is not a separate trip type. It is SKANDI's curated layer across the travel experience, designed to help the most distinctive choices stand out.</p>
       </div>
-      <div class="value-grid">
-        <article class="value-card fx-card reveal"><div><div class="value-index">01 / Curated</div><div class="value-symbol">◇</div></div><div><h3>Chosen, not crowded.</h3><p>A focused selection helps you spend less time sorting through sameness and more time discovering places with genuine character.</p></div></article>
-        <article class="value-card fx-card reveal"><div><div class="value-index">02 / Place</div><div class="value-symbol">⌖</div></div><div><h3>A stronger sense of place.</h3><p>The best stays do more than give you a room. They can shape how a city, coast or destination feels from the moment you arrive.</p></div></article>
-        <article class="value-card fx-card reveal"><div><div class="value-index">03 / Character</div><div class="value-symbol">✦</div></div><div><h3>Worth remembering.</h3><p>Design, atmosphere, setting and personality matter. Collection is where those qualities are given room to lead the journey.</p></div></article>
-        <article class="value-card fx-card reveal"><div><div class="value-index">04 / Journey</div><div class="value-symbol">→</div></div><div><h3>Part of the whole trip.</h3><p>Hotels, destinations and experiences can sit together in one curated view, making it easier to imagine the journey as a complete story.</p></div></article>
-      </div>
+      <!-- DYNAMIC VALUE CARDS CONTAINER -->
+      <div class="value-grid" id="valueGrid"></div>
     </div>
   </section>
 
@@ -921,12 +1157,8 @@ main::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none
           <div class="eyebrow gold">A more considered escape</div>
           <div><h3>Choose it when you want the stay to feel like part of the destination.</h3><p>Whether the trip is short or long, Collection helps bring distinctive choices forward so the experience can begin before you arrive.</p></div>
         </article>
-        <div class="experience-list">
-          <article class="experience-item fx-card reveal"><div class="experience-icon">01</div><div><h4>When atmosphere matters.</h4><p>For journeys where design, setting and mood are part of what you are traveling for.</p></div></article>
-          <article class="experience-item fx-card reveal"><div class="experience-icon">02</div><div><h4>When the hotel is part of the plan.</h4><p>For stays you want to enjoy, return to and remember, rather than simply use as a base.</p></div></article>
-          <article class="experience-item fx-card reveal"><div class="experience-icon">03</div><div><h4>When you want a clearer edit.</h4><p>For moments when a strong shortlist feels better than scrolling through an endless catalogue.</p></div></article>
-          <article class="experience-item fx-card reveal"><div class="experience-icon">04</div><div><h4>When the trip should feel special.</h4><p>For the journeys you want to look forward to, talk about and remember long after you return.</p></div></article>
-        </div>
+        <!-- DYNAMIC EXPERIENCE CARDS CONTAINER -->
+        <div class="experience-list" id="experienceList"></div>
       </div>
     </div>
   </section>
@@ -1004,6 +1236,24 @@ main::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none
   let activeTier="all";
   let activeType="all";
   let MASTER={brand:{},assets:{},routes:{}};
+  
+  // Live airport autocomplete is supplied by B-011 publicContent from travel_info_airports.
+  let DESTINATIONS = [];
+
+  /* DEFAULT CONTENT FOR DYNAMIC GRIDS */
+  const DEFAULT_VALUES = [
+    { index: "01 / Curated", symbol: "◇", title: "Chosen, not crowded.", text: "A focused selection helps you spend less time sorting through sameness and more time discovering places with genuine character." },
+    { index: "02 / Place", symbol: "⌖", title: "A stronger sense of place.", text: "The best stays do more than give you a room. They can shape how a city, coast or destination feels from the moment you arrive." },
+    { index: "03 / Character", symbol: "✦", title: "Worth remembering.", text: "Design, atmosphere, setting and personality matter. Collection is where those qualities are given room to lead the journey." },
+    { index: "04 / Journey", symbol: "→", title: "Part of the whole trip.", text: "Hotels, destinations and experiences can sit together in one curated view, making it easier to imagine the journey as a complete story." }
+  ];
+
+  const DEFAULT_EXPERIENCES = [
+    { index: "01", title: "When atmosphere matters.", text: "For journeys where design, setting and mood are part of what you are traveling for." },
+    { index: "02", title: "When the hotel is part of the plan.", text: "For stays you want to enjoy, return to and remember, rather than simply use as a base." },
+    { index: "03", title: "When you want a clearer edit.", text: "For moments when a strong shortlist feels better than scrolling through an endless catalogue." },
+    { index: "04", title: "When the trip should feel special.", text: "For the journeys you want to look forward to, talk about and remember long after you return." }
+  ];
 
   function post(type,payload={}){
     window.parent.postMessage({source:SOURCE,type,payload,timestamp:new Date().toISOString()},"*");
@@ -1022,13 +1272,230 @@ main::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none
     d.setDate(d.getDate()+days);
     return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10);
   }
-  function cleanIata(v){
-    return String(v||"").trim().toUpperCase().replace(/[^A-Z]/g,"").slice(0,3);
-  }
-  function currentLanguage(){ return "EN"; }
   function safeAssetUrl(value){
     try{const u=new URL(String(value||"").trim());return u.protocol==="https:"?u.href:""}catch(_){return""}
   }
+
+  /* --- SEARCH BAR UI LOGIC --- */
+  
+  function setupAutocomplete(inputId, codeId, dropdownId, listId) {
+    const input = $(inputId);
+    const code = $(codeId);
+    const dropdown = $(dropdownId);
+    const list = $(listId);
+    
+    input.addEventListener('input', (e) => {
+      code.value = "";
+      const val = String(e.target.value || "").toLowerCase();
+      if (!val) { dropdown.classList.remove('active'); return; }
+      
+      const filtered = DESTINATIONS.filter(d => {
+        const name=String(d?.name||"").toLowerCase();
+        const airportName=String(d?.airportName||"").toLowerCase();
+        const airportCode=String(d?.code||"").toLowerCase();
+        const country=String(d?.country||"").toLowerCase();
+        return name.includes(val) || airportName.includes(val) || airportCode.includes(val) || country.includes(val);
+      });
+      
+      if (filtered.length) {
+        list.innerHTML = filtered.map(d => {
+          const airportCode=String(d?.code||"").toUpperCase();
+          const name=String(d?.name||d?.airportName||airportCode);
+          const country=String(d?.country||"");
+          return `
+          <div class="sk-dropdown-item" data-code="${esc(airportCode)}" data-name="${esc(name)}">
+            <div class="sk-dropdown-icon">${esc(airportCode.substring(0,1))}</div>
+            <div class="sk-dropdown-text">
+              <strong>${esc(name)} (${esc(airportCode)})</strong>
+              <span>${esc(country)}</span>
+            </div>
+          </div>`;
+        }).join("");
+        dropdown.classList.add('active');
+      } else {
+        dropdown.classList.remove('active');
+      }
+    });
+
+    list.addEventListener('click', (e) => {
+      const item = e.target.closest('.sk-dropdown-item');
+      if (item) {
+        input.value = item.dataset.name + " (" + item.dataset.code + ")";
+        code.value = item.dataset.code;
+        dropdown.classList.remove('active');
+      }
+    });
+    
+    document.addEventListener('click', (e) => {
+      if (!input.contains(e.target) && !dropdown.contains(e.target)) {
+        dropdown.classList.remove('active');
+      }
+    });
+  }
+  setupAutocomplete('originInput', 'originCode', 'originDropdown', 'originList');
+  setupAutocomplete('destInput', 'destCode', 'destDropdown', 'destList');
+
+  // Custom Date Range Picker Logic
+  let selStart = todayPlus(30);
+  let selEnd = todayPlus(37);
+  let viewingDate = new Date(selStart);
+  let pickingStart = true;
+  
+  function dateKey(date) {
+    const y=date.getFullYear();
+    const m=String(date.getMonth()+1).padStart(2,"0");
+    const d=String(date.getDate()).padStart(2,"0");
+    return `${y}-${m}-${d}`;
+  }
+
+  function formatDisplayDate(dateStr) {
+    if (!dateStr) return "";
+    const parts=String(dateStr).split("-").map(Number);
+    if(parts.length!==3||parts.some(v=>!Number.isFinite(v))) return "";
+    return new Date(parts[0],parts[1]-1,parts[2]).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  }
+
+  function renderCalendar() {
+    const popup = $('calendarPopup');
+    const startM = new Date(viewingDate.getFullYear(), viewingDate.getMonth(), 1);
+    const endM = new Date(viewingDate.getFullYear(), viewingDate.getMonth() + 1, 1);
+    
+    let html = '';
+    [startM, endM].forEach((d, i) => {
+      const monthName = d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+      const daysInMonth = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+      const firstDay = d.getDay();
+      
+      let grid = `<div class="sk-month"><div class="sk-month-header">
+        ${i===0 ? `<button class="sk-month-btn" id="calPrev">&larr;</button>` : `<div></div>`}
+        <span>${monthName}</span>
+        ${i===1 ? `<button class="sk-month-btn" id="calNext">&rarr;</button>` : `<div></div>`}
+      </div>
+      <div class="sk-days-header"><span>SU</span><span>MO</span><span>TU</span><span>WE</span><span>TH</span><span>FR</span><span>SA</span></div>
+      <div class="sk-days-grid">`;
+      
+      for(let j=0; j<firstDay; j++) grid += `<div class="sk-day empty"></div>`;
+      
+      for(let j=1; j<=daysInMonth; j++) {
+        const currentStr = dateKey(new Date(d.getFullYear(), d.getMonth(), j));
+        let classes = "sk-day";
+        if (currentStr === selStart) classes += " selected start";
+        if (currentStr === selEnd) classes += " selected end";
+        if (selStart && selEnd && currentStr > selStart && currentStr < selEnd) classes += " in-range";
+        
+        grid += `<div class="${classes}" data-date="${currentStr}">${j}</div>`;
+      }
+      grid += `</div></div>`;
+      html += grid;
+    });
+    
+    popup.innerHTML = html;
+    
+    $('displayStart').innerText = formatDisplayDate(selStart);
+    $('displayEnd').innerText = formatDisplayDate(selEnd);$('departureDate').value = selStart;
+    $('returnDate').value = selEnd;
+    
+    $('calPrev')?.addEventListener('click', (e) => { e.stopPropagation(); viewingDate.setMonth(viewingDate.getMonth()-1); renderCalendar(); });$('calNext')?.addEventListener('click', (e) => { e.stopPropagation(); viewingDate.setMonth(viewingDate.getMonth()+1); renderCalendar(); });
+    
+    popup.querySelectorAll('.sk-day:not(.empty)').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const clicked = btn.dataset.date;
+        if (pickingStart || clicked < selStart) {
+          selStart = clicked;
+          selEnd = "";
+          pickingStart = false;
+        } else {
+          selEnd = clicked;
+          pickingStart = true;
+          $('calendarPopup').classList.remove('active');
+        }
+        renderCalendar();
+      });
+    });
+  }
+
+  $('datesField').addEventListener('click', (e) => {
+    if (!$('calendarPopup').contains(e.target)) {$('calendarPopup').classList.toggle('active');
+       renderCalendar();
+    }
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!$('datesField').contains(e.target)) {$('calendarPopup').classList.remove('active');
+    }
+  });
+
+  /* --- DYNAMIC GRID RENDERING LOGIC --- */
+  
+  function renderValueCards() {
+    const host = $("valueGrid");
+    if (!host) return;
+    
+    // Fallback to default design if no payload provides valueCards
+    const cards = DATA.valueCards && DATA.valueCards.length ? DATA.valueCards : DEFAULT_VALUES;
+    
+    host.innerHTML = cards.map((c, i) => {
+      const bgImg = safeAssetUrl(c.imageUrl) ? `url('${esc(c.imageUrl)}')` : '';
+      const bgColor = c.bgColor ? esc(c.bgColor) : '';
+      const textColor = c.textColor ? esc(c.textColor) : '';
+      
+      let styleStr = '';
+      if(bgImg) styleStr += `background-image: ${bgImg}; `;
+      if(bgColor) {
+        styleStr += `background-color: ${bgColor}; `;
+        styleStr += `background-image: none; `; // Overrides default CSS gradient for specific cards
+      }
+      if(textColor) styleStr += `color: ${textColor}; `;
+      
+      const hasImageClass = bgImg ? 'has-image' : '';
+      
+      return `<article class="value-card fx-card reveal ${hasImageClass}" style="${styleStr}">
+        <div><div class="value-index" style="${textColor ? `color:${textColor}; opacity:0.8;` : ''}">${esc(c.index || `0${i+1} / Value`)}</div>
+        <div class="value-symbol" style="${textColor ? `color:${textColor}; opacity:0.9;` : ''}">${esc(c.symbol || '✦')}</div></div>
+        <div><h3 style="${textColor ? `color:${textColor};` : ''}">${esc(c.title)}</h3>
+        <p style="${textColor ? `color:${textColor}; opacity:0.9;` : ''}">${esc(c.text)}</p></div>
+      </article>`;
+    }).join('');
+    
+    enhanceDynamic(host);
+  }
+
+  function renderExperienceCards() {
+    const host = $("experienceList");
+    if (!host) return;
+    
+    // Fallback to default design if no payload provides experienceCards
+    const cards = DATA.experienceCards && DATA.experienceCards.length ? DATA.experienceCards : DEFAULT_EXPERIENCES;
+    
+    host.innerHTML = cards.map((c, i) => {
+      const bgImg = safeAssetUrl(c.imageUrl) ? `url('${esc(c.imageUrl)}')` : '';
+      const bgColor = c.bgColor ? esc(c.bgColor) : '';
+      const textColor = c.textColor ? esc(c.textColor) : '';
+      
+      let styleStr = '';
+      if(bgImg) styleStr += `background-image: ${bgImg}; `;
+      if(bgColor) {
+        styleStr += `background-color: ${bgColor}; `;
+        styleStr += `background-image: none; `; 
+      }
+      if(textColor) styleStr += `color: ${textColor}; `;
+      
+      const hasImageClass = bgImg ? 'has-image' : '';
+      
+      return `<article class="experience-item fx-card reveal ${hasImageClass}" style="${styleStr}">
+        <div class="experience-icon" style="${textColor ? `color:${textColor}; border-color:currentColor;` : ''}">${esc(c.index || `0${i+1}`)}</div>
+        <div><h4 style="${textColor ? `color:${textColor};` : ''}">${esc(c.title)}</h4>
+        <p style="${textColor ? `color:${textColor}; opacity:0.9;` : ''}">${esc(c.text)}</p></div>
+      </article>`;
+    }).join('');
+    
+    enhanceDynamic(host);
+  }
+
+
+  /* --- EXISTING RENDERING LOGIC --- */
+  
   function applyCollectionLogo(value){
     const logo=$("collectionLogo"),fallback=$("collectionLogoFallback"),url=safeAssetUrl(value);
     if(!logo||!fallback)return;
@@ -1041,6 +1508,11 @@ main::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none
     MASTER={...MASTER,...payload,brand:payload.brand||MASTER.brand||{},routes:{...(MASTER.routes||{}),...(payload.routes||{})}};
     const logos=payload?.brand?.assets?.logos||payload?.assets?.logos||{};
     applyCollectionLogo(logos.signatureCollection);
+    
+    // Accept injected Destinations from Master Payload if available
+    if(payload.destinations && Array.isArray(payload.destinations)) {
+      DESTINATIONS = payload.destinations;
+    }
   }
   function bindPathActions(root=document){
     root.querySelectorAll?.("[data-path]").forEach(btn=>{
@@ -1205,11 +1677,16 @@ main::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none
     enhanceDynamic($("cards"));
   }
   function render(){
-    if(DATA.settings?.heroImageUrl){
-      $("hero").style.setProperty("--hero-image",`url("${DATA.settings.heroImageUrl}")`);
+    const heroImage=safeAssetUrl(DATA.settings?.heroImageUrl);
+    if(heroImage){
+      $("hero").style.setProperty("--hero-image",`url("${heroImage}")`);
+    }else{
+      $("hero").style.removeProperty("--hero-image");
     }
     renderTierTabs();
     renderTypeTabs();
+    renderValueCards();
+    renderExperienceCards();
     renderCards();
     renderHeroMetrics();
     renderSpotlight();
@@ -1218,12 +1695,11 @@ main::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none
   }
   function values(){
     return{
-      origin:cleanIata($("origin").value),
-      destination:cleanIata($("destination").value),
+      origin:$("originCode").value,
+      destination:$("destCode").value,
       departureDate:$("departureDate").value,
       returnDate:$("returnDate").value,
-      adults:Number($("adults").value||2),
-      currency:$("currency").value
+      adults:Number($("adults").value||2)
     };
   }
   function validate(v){
@@ -1345,10 +1821,6 @@ let activeCard=null;
   $("storyPrev").onclick=()=>$("storyRail").scrollBy({left:-Math.max(320,$("storyRail").clientWidth*.72),behavior:MOTION_REDUCED?"auto":"smooth"});
   $("storyNext").onclick=()=>$("storyRail").scrollBy({left:Math.max(320,$("storyRail").clientWidth*.72),behavior:MOTION_REDUCED?"auto":"smooth"});
   $("searchBtn").onclick=search;
-  $("clearBtn").onclick=()=>{
-    $("offers").innerHTML="";
-    $("searchStatus").textContent="Enter route and dates when you are ready to plan a Collection journey.";
-  };
 
   window.addEventListener("message",e=>{
     let m=e.data;
@@ -1371,6 +1843,7 @@ let activeCard=null;
     }
     if(m.type==="SIGNATURE_COLLECTION_DATA"){
       DATA={...DATA,...p,items:Array.isArray(p.items)?p.items:[]};
+      DESTINATIONS=Array.isArray(p.destinations)?p.destinations.filter(item=>item&&item.code&&item.name):[];
       loaded=true;
       render();
       return;
@@ -1392,15 +1865,15 @@ let activeCard=null;
   });
 
   activeTier=initialTier();
-  $("departureDate").value=todayPlus(30);
-  $("returnDate").value=todayPlus(37);
+  renderCalendar(); 
   render();
   syncFilterControls();
   post("MASTER_CONFIG_REQUEST",{context:"skandi-collection"});
   post("MASTER_ASSETS_REQUEST",{context:"skandi-collection"});
-  post("SIGNATURE_COLLECTION_READY",{language:currentLanguage()});
+  post("SIGNATURE_COLLECTION_READY",{language:"EN"});
   window.addEventListener("pagehide",()=>{dynamicObserver.disconnect();revealObserver?.disconnect?.();window.removeEventListener("scroll",updateLuxuryProgress);window.removeEventListener("resize",updateLuxuryProgress)},{once:true});
 })();
 </script>
 </body>
 </html>
+```
