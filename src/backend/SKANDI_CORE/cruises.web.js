@@ -1,8 +1,10 @@
 // /src/backend/SKANDI_CORE/cruises.web.js
-// SKANDI Cruises — B-011.42 public web-method facade.
+// SKANDI Cruises — B-011.44 public facade.
+// Public methods read the canonical Travel Info cruise catalogue only.
+// Provider synchronization remains internal to cruises.js and is not exposed to anonymous callers.
 
 import { Permissions, webMethod } from "@wix/web-methods";
-import { getCruisesBootstrapCore, refreshCruisesCore } from "backend/SKANDI_CORE/cruises";
+import { getCruisesBootstrapCore, refreshCruisesCore } from "backend/SKANDI_CORE/cruises.js";
 
 function safeError(error) {
   return {
