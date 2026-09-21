@@ -49,13 +49,13 @@ const MASTER_CONFIG = Object.freeze({
         skandiWhite: "https://static.wixstatic.com/media/394052_504704bd94f44f01a95f304bd19640e5~mv2.png",
         skandiTravels: "https://static.wixstatic.com/media/394052_504704bd94f44f01a95f304bd19640e5~mv2.png",
         skandiWave: "",
-        skandiGroup: "https://static.wixstatic.com/media/394052_02ed0c030fea4f14b5e5677fdaeae197~mv2.png",
+        skandiGroup: "",
         riaintra: "https://static.wixstatic.com/media/394052_1024542c47664bff8f4e145d1adf472d~mv2.png",
         altea: "https://static.wixstatic.com/media/394052_46045c41aebf421d98314b31ef83c677~mv2.png",
         voy: "https://static.wixstatic.com/media/394052_30b8bebbf5ee493da7d47329d04de494~mv2.png",
         voyWhite: "https://static.wixstatic.com/media/394052_3770b6753c474d73a77c674b20eab305~mv2.png",
         skandiClub: "",
-        signatureCollection: "https://static.wixstatic.com/media/394052_8e09fa73724c443aa305ebedb11d094d~mv2.png"
+        signatureCollection: ""
       }),
       icons: Object.freeze({
         home: "", bookings: "", favorites: "", documents: "", travelers: "",
@@ -78,8 +78,7 @@ const MASTER_CONFIG = Object.freeze({
         { id:"hotels", label:"Hotels", path:SITE_MAP.hotels },
         { id:"packages", label:"Packages", path:SITE_MAP.packages },
         { id:"tours", label:"Tours & Activities", path:SITE_MAP.tours },
-        { id:"transfers", label:"Transfers", path:SITE_MAP.transfers },
-        { id:"travelInfo", label:"Travel Info", path:SITE_MAP.travelInfo }
+        { id:"transfers", label:"Transfers", path:SITE_MAP.transfers }
       ]),
       secondaryNav: Object.freeze([
         { id:"destinations", label:"Destinations", path:SITE_MAP.destinations },
@@ -88,7 +87,7 @@ const MASTER_CONFIG = Object.freeze({
         { id:"newsroom", label:"Newsroom", path:SITE_MAP.newsroom }
       ]),
       accountNav: Object.freeze([
-        { id:"myTrip", label:"My Trips", path:SITE_MAP.myProfile },
+        { id:"myTrip", label:"My Trips", path:"/my-profile?tab=trips" },
         { id:"club", label:"SKANDI Club", path:SITE_MAP.club }
       ])
     }),
@@ -98,7 +97,7 @@ const MASTER_CONFIG = Object.freeze({
           title:"BOOK & TRAVEL",
           links:Object.freeze([
             { label:"Book a trip", path:SITE_MAP.home },
-            { label:"Manage your booking", path:SITE_MAP.myProfile },
+            { label:"Manage your booking", path:"/my-profile?tab=trips" },
             { label:"Our Destinations", path:SITE_MAP.destinations },
             { label:"Flights", path:SITE_MAP.flights },
             { label:"Hotels", path:SITE_MAP.hotels },
@@ -124,7 +123,7 @@ const MASTER_CONFIG = Object.freeze({
           title:"SKANDI",
           links:Object.freeze([
             { label:"Join SKANDI Club", path:SITE_MAP.club },
-            { label:"Log In to My Club", path:SITE_MAP.myProfile },
+            { label:"Log In to My Club", path:"/my-profile" },
             { label:"SKANDI Collection", path:SITE_MAP.skandiCollection },
             { label:"THE STORE", path:SITE_MAP.theStore },
             { label:"VOY Magazine", path:SITE_MAP.voy }
@@ -134,7 +133,7 @@ const MASTER_CONFIG = Object.freeze({
           title:"ABOUT SKANDI",
           links:Object.freeze([
             { label:"About SKANDI", path:SITE_MAP.about },
-            { label:"Careers", path:SITE_MAP.careers },
+            { label:"Careers", path:"/about/careers" },
             { label:"Newsroom", path:SITE_MAP.newsroom },
             { label:"Our Network", path:SITE_MAP.ourNetwork }
           ])
@@ -159,7 +158,7 @@ const MASTER_CONFIG = Object.freeze({
         Object.freeze({ label:"Policies", path:SITE_MAP.policies }),
         Object.freeze({ label:"Staff Login", path:SITE_MAP.riaintra })
       ]),
-      termsText:"Payment methods, supplier terms and package travel conditions may vary by product.   © SKANDI GROUP Inc. & SKANDI GROUP AB. All rights reserved. SKANDI TRAVELS™ is a trademark of the SKANDI GROUP. ",
+      termsText:"Payment methods, supplier terms and package travel conditions may vary by product.",
       staffLogin: Object.freeze({ label:"Staff Login", path:SITE_MAP.riaintra })
     })
   }),
@@ -197,7 +196,7 @@ const MASTER_CONFIG = Object.freeze({
       productName:"ALTEA",
       productContext:"SKANDI SYSTEMS",
       primaryNav:Object.freeze([
-        Object.freeze({ id:"altea-home", label:"Start", path:SITE_MAP.alteaLaunchpad }),
+        Object.freeze({ id:"altea-home", label:"Home", path:SITE_MAP.alteaLaunchpad }),
         Object.freeze({ id:"reservations", label:"Reservations", path:SITE_MAP.alteaReservations }),
         Object.freeze({ id:"inventory", label:"Inventory", path:SITE_MAP.inventoryControl }),
         Object.freeze({ id:"grouptalk", label:"GroupTalk", path:APP_ROUTES.groupTalk }),
