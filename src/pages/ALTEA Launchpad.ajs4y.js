@@ -1,4 +1,4 @@
-// /src/pages/ALTEA Launchpad.ajs4y.js
+// /src/pages/ALTEA Launchpad.<WIX_PAGE_ID>.js
 // Canonical Backend Base 1.0 / B-002 ALTEA launchpad bridge.
 // HTML candidates: #alteaOpsEmbed (historical/current ALTEA page),
 // #alteaLaunchpadEmbed, #alteaMasterEmbed.
