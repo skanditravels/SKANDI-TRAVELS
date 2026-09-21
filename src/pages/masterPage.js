@@ -7,9 +7,9 @@ import wixLocationFrontend from "wix-location-frontend";
 import wixSiteFrontend from "wix-site-frontend";
 import { currentMember, authentication } from "wix-members-frontend";
 import { local } from "wix-storage-frontend";
-import { getCustomerHeaderSession, subscribeCustomerNewsletter } from "backend/SKANDI_CORE/customerSession.web.js";
-import { getStaffPortalSession } from "backend/SKANDI_CORE/staffAuth.web.js";
-import { SITE_MAP, APP_ROUTES, GLOBAL_CHROME, isSafeInternalRoute } from "public/siteMap.js";
+import { getCustomerHeaderSession, subscribeCustomerNewsletter } from "backend/SKANDI_CORE/customerSession.web";
+import { getStaffPortalSession } from "backend/SKANDI_CORE/staffAuth.web";
+import { SITE_MAP, APP_ROUTES, GLOBAL_CHROME, isSafeInternalRoute } from "public/siteMap";
 
 
 
@@ -76,6 +76,7 @@ const MASTER_CONFIG = Object.freeze({
       primaryNav: Object.freeze([
         { id:"flights", label:"Flights", path:SITE_MAP.flights },
         { id:"hotels", label:"Hotels", path:SITE_MAP.hotels },
+        { ie:"cruises", label:"Cruises", path:SITE_MAP.cruises},
         { id:"packages", label:"Packages", path:SITE_MAP.packages },
         { id:"tours", label:"Tours & Activities", path:SITE_MAP.tours },
         { id:"transfers", label:"Transfers", path:SITE_MAP.transfers },
@@ -88,7 +89,7 @@ const MASTER_CONFIG = Object.freeze({
         { id:"newsroom", label:"Newsroom", path:SITE_MAP.newsroom }
       ]),
       accountNav: Object.freeze([
-        { id:"myTrip", label:"My Trips", path:"/my-profile?tab=trips" },
+        { id:"myTrip", label:"My Trips", path:SITE_MAP.myProfile },
         { id:"club", label:"SKANDI Club", path:SITE_MAP.club }
       ])
     }),
@@ -98,10 +99,11 @@ const MASTER_CONFIG = Object.freeze({
           title:"BOOK & TRAVEL",
           links:Object.freeze([
             { label:"Book a trip", path:SITE_MAP.home },
-            { label:"Manage your booking", path:"/my-profile?tab=trips" },
+            { label:"Manage your booking", path:SITE_MAP.myProfile },
             { label:"Our Destinations", path:SITE_MAP.destinations },
             { label:"Flights", path:SITE_MAP.flights },
             { label:"Hotels", path:SITE_MAP.hotels },
+            { label:"Cruises", path:SITE_MAP.cruises },
             { label:"Tours & Activities", path:SITE_MAP.tours },
             { label:"Car Rental", path:SITE_MAP.carRental },
             { label:"Airport Transfer", path:SITE_MAP.transfers },
@@ -124,7 +126,7 @@ const MASTER_CONFIG = Object.freeze({
           title:"SKANDI",
           links:Object.freeze([
             { label:"Join SKANDI Club", path:SITE_MAP.club },
-            { label:"Log In to My Club", path:"/my-profile" },
+            { label:"Log In to My Club", path:SITE_MAP.myProfile },
             { label:"SKANDI Collection", path:SITE_MAP.skandiCollection },
             { label:"THE STORE", path:SITE_MAP.theStore },
             { label:"VOY Magazine", path:SITE_MAP.voy }
@@ -134,7 +136,7 @@ const MASTER_CONFIG = Object.freeze({
           title:"ABOUT SKANDI",
           links:Object.freeze([
             { label:"About SKANDI", path:SITE_MAP.about },
-            { label:"Careers", path:"/about/careers" },
+            { label:"Careers", path:SITE_MAP.careers },
             { label:"Newsroom", path:SITE_MAP.newsroom },
             { label:"Our Network", path:SITE_MAP.ourNetwork }
           ])
@@ -159,7 +161,7 @@ const MASTER_CONFIG = Object.freeze({
         Object.freeze({ label:"Policies", path:SITE_MAP.policies }),
         Object.freeze({ label:"Staff Login", path:SITE_MAP.riaintra })
       ]),
-      termsText:"Payment methods, supplier terms and package travel conditions may vary by product.",
+      termsText:"Payment methods, supplier terms and package travel conditions may vary by product.   © SKANDI GROUP Inc. & SKANDI GROUP AB. All rights reserved. SKANDI TRAVELS™ is a trademark of the SKANDI GROUP. ",
       staffLogin: Object.freeze({ label:"Staff Login", path:SITE_MAP.riaintra })
     })
   }),
