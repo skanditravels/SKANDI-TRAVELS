@@ -1,5 +1,5 @@
 // /src/pages/Inventory Control.jsdik.js
-// SKANDI Inventory Control — B-011.35 bootstrap and refresh delivery recovery.
+// SKANDI Inventory Control — B-011-Repair bootstrap and refresh delivery recovery.
 // Preferred HTML component: #inventoryControlEmbed.
 //
 // The page imports exactly one Wix web method. All action routing lives in
@@ -10,7 +10,7 @@ import { handleInventoryAction } from "backend/SKANDI_CORE/inventory.web";
 const EMBED_IDS = ["#inventoryControlEmbed"];
 const CHILD_SOURCE = "SKANDI_INVENTORY_EMBED";
 const PARENT_SOURCE = "SKANDI_INVENTORY_PARENT";
-const VERSION = "B-011.35-INVENTORY-SINGLE-DISPATCH";
+const VERSION = "B-011-RepairH";
 const BOOTSTRAP_REUSE_MS = 15000;
 
 let bootstrapPromise = null;
