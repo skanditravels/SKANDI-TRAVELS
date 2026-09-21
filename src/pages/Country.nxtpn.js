@@ -3,7 +3,7 @@ import { currentMember, authentication } from "wix-members-frontend";
 import {
   getCountryPage,
   searchCountryOffers
-} from "backend/SKANDI_CORE/destinationFlow.web.js";
+} from "backend/SKANDI_CORE/destinationFlow.web";
 
 const EMBED_ID = "#countryDestinationHtml";
 const COUNTRY_SOURCE = "SKANDI_DYNAMIC_COUNTRY_PAGE";
