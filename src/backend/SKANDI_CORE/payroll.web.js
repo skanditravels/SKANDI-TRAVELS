@@ -1,5 +1,5 @@
 // /src/backend/SKANDI_CORE/payroll.web.js
-// B-008 — only frontend-callable Payroll backend boundary. 
+// B-008 — only frontend-callable Payroll backend boundary.
 
 import { Permissions, webMethod } from "@wix/web-methods";
 import {
