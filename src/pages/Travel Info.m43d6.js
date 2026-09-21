@@ -10,7 +10,7 @@ import {
   searchPublicTravelRequirements
 } from "backend/SKANDI_CORE/publicContent.web";
 import { createPublicSupportCase } from "backend/SKANDI_CORE/customerSupport.web";
-import { SITE_MAP, APP_ROUTES, isSafeInternalRoute } from "public/siteMap.js";
+import { SITE_MAP, APP_ROUTES, isSafeInternalRoute } from "public/siteMap";
 
 const SOURCE = "SKANDI_PUBLIC_TRAVEL_INFO";
 const PARENT = "SKANDI_WIX_PARENT";
