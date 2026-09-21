@@ -10,12 +10,12 @@
 // - Matrix/Wix CMS Mail* collections are retired from this path.
 
 
-import { requireStaffPortalSessionCore } from "backend/SKANDI_CORE/staffAuth.js";
+import { requireStaffPortalSessionCore } from "backend/SKANDI_CORE/staffAuth;
 import {
   restRequest,
   storageUploadBase64Object,
   storageCreateSignedReadUrl
-} from "backend/SKANDI_CORE/supabaseServer.js";
+} from "backend/SKANDI_CORE/supabaseServer";
 
 
 const TABLES = Object.freeze({
