@@ -11,7 +11,7 @@ import {
   updateSupportCaseTrustedCore,
   getHumanSupportAvailabilityCore,
   requestHumanHandoffTrustedCore
-} from "backend/SKANDI_CORE/customerSupport.js";
+} from "backend/SKANDI_CORE/customerSupport";
 
 
 function header(request, name) {
