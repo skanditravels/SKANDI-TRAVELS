@@ -13,7 +13,7 @@ import {
   prepareAssetUploadCore,
   finalizeAssetUploadCore,
   registerAssetUsageCore
-} from "backend/SKANDI_CORE/assets.js";
+} from "backend/SKANDI_CORE/assets";
 import { checkExternalTravelRequirements } from "backend/SKANDI_CORE/travelRequirements";
 import { renderBookingConfirmation } from "backend/SKANDI_CORE/bookingConfirmation";
 import { renderAtbTicket } from "backend/SKANDI_CORE/atbTicket";
