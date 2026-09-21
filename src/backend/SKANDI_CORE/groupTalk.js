@@ -1,12 +1,12 @@
 // /src/backend/SKANDI_CORE/groupTalk.js
-// SKANDI GroupTalk canonical business core — B-011.22 canonical agentId + Supabase PostgreSQL + Supabase Realtime + LiveKit.
+// SKANDI GroupTalk canonical business core — B-011.25 mobile/runtime sync recovery + canonical agentId + Supabase PostgreSQL + Supabase Realtime + LiveKit.
 // Pusher is retired. Staff identity comes only from staffAuth; Supabase credentials come only from supabaseServer.
 
 import { secrets } from "wix-secrets-backend.v2";
 import { elevate } from "wix-auth";
 import { AccessToken } from "livekit-server-sdk";
-import { restRequest, getSupabaseRealtimeBrowserConfig, realtimeBroadcast } from "backend/SKANDI_CORE/supabaseServer.js";
-import { requireStaffPortalSessionCore } from "backend/SKANDI_CORE/staffAuth.js";
+import { restRequest, getSupabaseRealtimeBrowserConfig, realtimeBroadcast } from "backend/SKANDI_CORE/supabaseServer";
+import { requireStaffPortalSessionCore } from "backend/SKANDI_CORE/staffAuth";
 
 const getSecretValue = elevate(secrets.getSecretValue);
 const T = Object.freeze({
@@ -42,7 +42,44 @@ async function history(eventType,s,{group=null,ticketNo=null,message=null,payloa
 function publicCategory(r){return {categoryId:r.category_key,id:r.category_key,title:r.label,name:r.label,label:r.label,description:r.description||"",active:r.is_active!==false,sort:Number(r.sort_order||100),priorityDefault:r.priority_default||"normal",slaMinutes:Number(r.sla_minutes||1440)}}
 async function categoryRows(all=false){const q={select:"*",order:"sort_order.asc",limit:500};if(!all)q.is_active="eq.true";return arr(await restRequest({table:T.categories,query:q}))}
 async function ensureCategories(s){let rows=await categoryRows(true);if(rows.length)return rows;const p=profile(s);await restRequest({table:T.categories,method:"POST",query:{on_conflict:"category_key"},body:DEFAULT_CATEGORIES.map(([category_key,label],i)=>({category_key,label,priority_default:"normal",sla_minutes:1440,is_active:true,sort_order:(i+1)*10,payload:{},created_by_agent_user_id:p.agentUserId,created_at:now(),updated_at:now()})),prefer:"resolution=ignore-duplicates,return=minimal"});return categoryRows(true)}
-async function phonebook(){const rows=arr(await restRequest({table:T.phonebook,query:{select:"*",is_visible:"eq.true",order:"display_name.asc",limit:1000}}));return rows.map(r=>({name:r.display_name,skId:r.sk_id||"",role:r.position||r.department||"",base:r.base||r.station||"",phone:r.phone||r.extension||"",email:r.email||"",status:r.presence_status||r.availability_status||"offline",avatarUrl:r.avatar_url||""}))}
+async function phonebook(){
+  const cutoff=new Date(Date.now()-70000).toISOString();
+  const [agents,overrides,sessions]=await Promise.all([
+    restRequest({table:"agent_users",query:{select:"id,sk_id,display_name,preferred_name,first_name,last_name,job_title,position,department,base,base_code,station,corporate_email_address,email,badge_photo_url,payload,active,authorized,portal_access,status,employment_status",active:"eq.true",authorized:"eq.true",portal_access:"eq.true",order:"display_name.asc",limit:1000}}),
+    restRequest({table:T.phonebook,query:{select:"*",order:"display_name.asc",limit:1000}}),
+    restRequest({table:T.sessions,query:{select:"agent_user_id,sk_id,status,updated_at",status:"eq.online",updated_at:`gte.${cutoff}`,order:"updated_at.desc",limit:1000}})
+  ]);
+  const bookRows=arr(overrides), onlineRows=arr(sessions);
+  const byUuid=new Map(),bySk=new Map();
+  for(const r of bookRows){if(r.agent_user_id)byUuid.set(String(r.agent_user_id),r);if(r.sk_id)bySk.set(upper(r.sk_id),r)}
+  const onlineUuid=new Set(),onlineSk=new Set();
+  for(const r of onlineRows){if(r.agent_user_id)onlineUuid.add(String(r.agent_user_id));if(r.sk_id)onlineSk.add(upper(r.sk_id))}
+  const seen=new Set();
+  const contacts=arr(agents).filter(r=>!['inactive','removed','revoked','disabled','terminated'].includes(lower(r.status||r.employment_status))).map(r=>{
+    const sk=upper(r.sk_id), override=byUuid.get(String(r.id))||bySk.get(sk)||{}, rp=obj(r.payload);
+    seen.add(String(override.id||''));
+    if(override.is_visible===false)return null;
+    const name=clean(override.display_name||r.display_name||r.preferred_name||[r.first_name,r.last_name].filter(Boolean).join(' ')||sk,240);
+    const isOnline=onlineUuid.has(String(r.id))||onlineSk.has(sk);
+    return {
+      agentId:sk,skId:sk,agentUserUuid:r.id||null,agentUserId:r.id||null,name,
+      role:clean(override.position||r.job_title||r.position||override.department||r.department,180),
+      base:clean(override.base||override.station||r.base||r.base_code||r.station,120),
+      phone:clean(override.phone||override.extension||rp.phone||rp.workPhone||rp.mobile,80),
+      email:clean(override.email||r.corporate_email_address||r.email,320),
+      status:isOnline?'online':clean(override.availability_status||override.presence_status||'offline',80),
+      avatarUrl:clean(override.avatar_url||r.badge_photo_url,1000)
+    }
+  }).filter(Boolean);
+  // Keep deliberately configured non-employee contacts, but never let stale employee rows override agent_users.
+  for(const r of bookRows){
+    if(r.is_visible===false||seen.has(String(r.id||'')))continue;
+    const sk=upper(r.sk_id);
+    if(r.agent_user_id||sk)continue;
+    contacts.push({agentId:'',skId:'',agentUserUuid:null,agentUserId:null,name:r.display_name||'Contact',role:r.position||r.department||'',base:r.base||r.station||'',phone:r.phone||r.extension||'',email:r.email||'',status:r.availability_status||r.presence_status||'offline',avatarUrl:r.avatar_url||''})
+  }
+  return contacts.sort((a,b)=>String(a.name||'').localeCompare(String(b.name||'')));
+}
 function publicTicket(r){const p=obj(r.payload);return {ticketId:r.id,id:r.id,ticketNumber:r.ticket_number,category:r.category_key,groupId:r.group_id,groupKey:r.group_key,subject:r.title,title:r.title,message:r.description||"",status:upper(r.status||"open"),priority:r.priority||"normal",requesterAgentId:r.requester_sk_id||"",requesterAgentUserUuid:r.requester_agent_user_id||null,requesterSkId:r.requester_sk_id||"",requesterName:r.requester_name||"",requesterEmail:r.requester_email||"",routeRef:p.routeRef||"",caseMode:p.caseMode===true,targetSkIds:arr(p.targetSkIds),employees:arr(p.employees),locationLabel:r.location_label||"",latitude:r.latitude,longitude:r.longitude,createdAt:r.created_at,updatedAt:r.updated_at,closedAt:r.closed_at}}
 function publicReply(r){return {id:r.id,ticketId:r.ticket_id,ticketNumber:r.ticket_number,body:r.body,senderRole:r.reply_type||"STAFF",senderSkId:r.author_sk_id||"",senderName:r.author_name||"",isInternal:r.is_internal!==false,createdAt:r.created_at,payload:obj(r.payload)}}
 
