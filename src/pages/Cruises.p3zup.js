@@ -1,5 +1,5 @@
-// /src/pages/Cruises.p3zup.js
-// SKANDI Cruises — B-011.42
+// /src/pages/Cruises.js
+// SKANDI Cruises — B-011.44 Travel Info
 // Listener-first Wix bridge for #cruisesEmbed.
 
 import wixLocation from "wix-location-frontend";
@@ -51,11 +51,11 @@ function safeError(error) {
     message: clean(error?.publicMessage || error?.message || "Cruise information could not be loaded.", 700)
   };
 }
-async function loadBootstrap(html, force = false) {
+async function loadBootstrap(html, refresh = false) {
   if (bootstrapInFlight) return bootstrapInFlight;
-  post(html, "CRUISES_LOADING", { refresh: force === true });
+  post(html, "CRUISES_LOADING", { refresh: refresh === true });
   bootstrapInFlight = (async () => {
-    const result = force ? await refreshCruises(queryPayload()) : await getCruisesBootstrap(queryPayload());
+    const result = refresh ? await refreshCruises(queryPayload()) : await getCruisesBootstrap(queryPayload());
     if (!result?.ok) {
       post(html, "CRUISES_ERROR", result?.error || { code: "CRUISES_ERROR", message: "Cruise information could not be loaded." });
       return;
@@ -91,6 +91,8 @@ $w.onReady(() => {
     const payload = message.payload || {};
     try {
       if (message.type === "CRUISES_READY") {
+        const settings = queryPayload();
+        post(html, "CRUISES_SETTINGS_STATE", { language: settings.language, currency: settings.currency });
         await loadBootstrap(html, false);
         return;
       }
