@@ -2,8 +2,8 @@
 // B-011.1 install candidate for /travel-info/baggage-allowance.
 
 import wixLocationFrontend from "wix-location-frontend";
-import { getPublicBaggagePayload } from "backend/SKANDI_CORE/publicContent.web.js";
-import { APP_ROUTES, isSafeInternalRoute } from "public/siteMap.js";
+import { getPublicBaggagePayload } from "backend/SKANDI_CORE/publicContent.web";
+import { APP_ROUTES, isSafeInternalRoute } from "public/siteMap";
 
 const SOURCE = "SKANDI_BAGGAGE_PAGE";
 const PARENT = "SKANDI_WIX_PARENT";
