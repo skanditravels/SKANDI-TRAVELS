@@ -6,15 +6,15 @@
 import { fetch } from "wix-fetch";
 import { elevate } from "wix-auth";
 import { secrets } from "wix-secrets-backend.v2";
-import { restRequest } from "backend/SKANDI_CORE/supabaseServer.js";
-import { SkandiError } from "backend/SKANDI_CORE/platformErrors.js";
+import { restRequest } from "backend/SKANDI_CORE/supabaseServer";
+import { SkandiError } from "backend/SKANDI_CORE/platformErrors";
 import {
   text,
   upper,
   lower,
   record,
   safeNumber
-} from "backend/SKANDI_CORE/platformValidation.js";
+} from "backend/SKANDI_CORE/platformValidation";
 
 const FLIGHT_STATUS_CORE_VERSION = "B-011.40";
 const AIRLABS_BASE = "https://airlabs.co/api/v9";
