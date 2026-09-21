@@ -31,7 +31,7 @@ import {
   archiveNewsroomPostCore,
   saveNewsroomMediaAssetCore,
   saveNewsroomPressContactCore
-} from "backend/SKANDI_CORE/publicContent.js";
+} from "backend/SKANDI_CORE/publicContent";
 
 const normalizeInput = input => input && typeof input === "object" ? input : {};
 const anyone = handler => webMethod(Permissions.Anyone, input => handler(normalizeInput(input)));
