@@ -2,7 +2,7 @@ import wixLocationFrontend from "wix-location-frontend";
 
 import {
   getStaffPortalSession
-} from "backend/RIA/staffPortalAuth.web";
+} from "backend/SKANDI_CORE/staffAuth.web";
 
 import {
   getStoreControlBootstrap,
