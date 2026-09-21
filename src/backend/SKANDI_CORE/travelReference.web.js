@@ -22,7 +22,7 @@ import {
   listDuffelStayLoyaltyProgrammesCore,
   searchDuffelAccommodationSuggestionsCore,
   getDuffelAccommodationCore
-} from "backend/SKANDI_CORE/travelReference.js";
+} from "backend/SKANDI_CORE/travelReference";
 
 const ANYONE = Permissions.Anyone;
 const input = value => ({ ...(value && typeof value === "object" ? value : {}), includeRaw: false });
