@@ -2,8 +2,8 @@
 // SKANDI Backend Base 1.0 — audit persistence helpers. 
 // Audit persistence must never become an authorization bypass or single point of failure.
 
-import { restRequest } from "backend/SKANDI_CORE/supabaseServer.js";
-import { email, normalizeSkId, text } from "backend/SKANDI_CORE/platformValidation.js";
+import { restRequest } from "backend/SKANDI_CORE/supabaseServer";
+import { email, normalizeSkId, text } from "backend/SKANDI_CORE/platformValidation";
 
 function auditId(prefix = "AUD") {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 12)}`;
