@@ -5,7 +5,7 @@
 import wixStoresBackend from "wix-stores-backend";
 import { currentCart, checkout, orders, orderFulfillments } from "wix-ecom-backend";
 import { elevate } from "wix-auth";
-import { getStaffPortalSessionCore } from "backend/SKANDI_CORE/staffAuth.js";
+import { getStaffPortalSessionCore } from "backend/SKANDI_CORE/staffAuth";
 
 export const STOREFRONT_CORE_VERSION = "B-011.13";
 export const WIX_STORES_APP_ID = "215238eb-22a5-4c36-9e7b-e7c08025e04e";
