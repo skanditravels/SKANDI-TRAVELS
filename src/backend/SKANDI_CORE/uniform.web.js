@@ -23,7 +23,7 @@ import {
   finalizeUniformAssetUploadCore,
   getUniformAssetAccessUrlCore,
   getUniformSystemStatusCore
-} from "backend/SKANDI_CORE/uniform.js";
+} from "backend/SKANDI_CORE/uniform";
 
 const MEMBER = Permissions.SiteMember;
 const object = value => value && typeof value === "object" && !Array.isArray(value) ? value : {};
