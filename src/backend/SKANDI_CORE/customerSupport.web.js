@@ -31,7 +31,7 @@ import {
   listStaffHelpDeskSupportCasesCore,
   getStaffHelpDeskSupportCaseCore,
   addStaffHelpDeskSupportMessageCore
-} from "backend/SKANDI_CORE/customerSupport.js";
+} from "backend/SKANDI_CORE/customerSupport";
 
 
 export const getCustomerSupportBootstrap = webMethod(Permissions.Anyone, () => getCustomerSupportBootstrapCore());
