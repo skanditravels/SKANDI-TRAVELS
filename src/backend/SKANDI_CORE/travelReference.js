@@ -4,7 +4,7 @@
 // Server-only provider layer. No webMethod wrappers, no Inventory writes, no UI.
 // All Duffel HTTP traffic is delegated to the canonical duffelClient.js transport.
 
-import { duffelRequest } from "backend/SKANDI_CORE/duffelClient.js";
+import { duffelRequest } from "backend/SKANDI_CORE/duffelClient";
 
 export const TRAVEL_REFERENCE_CORE_VERSION = "BACKEND-BASE-1.0/B-004";
 export const TRAVEL_REFERENCE_PROVIDER = "DUFFEL";
