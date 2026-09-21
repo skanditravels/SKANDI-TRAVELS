@@ -2,7 +2,7 @@
 // SKANDI Backend Base 1.0 — B-006 booking validation and public mapping.
 
 
-import { text, lower, upper, record } from "backend/SKANDI_CORE/platformValidation.js";
+import { text, lower, upper, record } from "backend/SKANDI_CORE/platformValidation.;
 
 
 const CABINS = new Set(["economy", "premium_economy", "business", "first"]);
