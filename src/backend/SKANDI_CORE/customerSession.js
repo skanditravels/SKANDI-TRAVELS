@@ -7,8 +7,8 @@
 
 import { currentMember } from "wix-members-backend";
 import wixData from "wix-data";
-import { email, text } from "backend/SKANDI_CORE/platformValidation.js";
-import { SkandiError } from "backend/SKANDI_CORE/platformErrors.js";
+import { email, text } from "backend/SKANDI_CORE/platformValidation";
+import { SkandiError } from "backend/SKANDI_CORE/platformErrors";
 
 const NEWSLETTER_COLLECTION = "NewsletterSubscribers";
 const WIX_DATA_OPTIONS = Object.freeze({ suppressAuth: true, suppressHooks: false });
