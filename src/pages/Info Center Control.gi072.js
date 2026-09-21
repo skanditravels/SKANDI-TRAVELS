@@ -1,14 +1,7 @@
 import wixLocation from "wix-location";
 import { authentication } from "wix-members-frontend";
-import { getStaffPortalSession } from "backend/SKANDI_CORE/staffAuth.web.js";
-import { runInternalGlobalSearch } from "backend/FINAL/internalChrome.web";
-import {
-  getHelpCenterAdminData,
-  saveHelpCenterGroup,
-  saveHelpCenterTopic,
-  archiveHelpCenterGroup,
-  archiveHelpCenterTopic
-} from "backend/AMADEUS/helpCenterAdminService";
+import { getStaffPortalSession } from "backend/SKANDI_CORE/staffAuth.web";
+import { runInternalGlobalSearch } from "backend/SKANDI_CORE/publicContent.web";
 
 const HTML_ID = "#helpCenterAdminHtml";
 const EMBED_SOURCE = "SKANDI_HELP_DATA_CONTROLLER";
