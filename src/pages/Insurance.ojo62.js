@@ -4,7 +4,7 @@
 
 import wixLocationFrontend from "wix-location-frontend";
 import { getPublicInsurancePayload } from "backend/SKANDI_CORE/publicContent.web";
-import { SITE_MAP, APP_ROUTES, isSafeInternalRoute } from "public/siteMap.js";
+import { SITE_MAP, APP_ROUTES, isSafeInternalRoute } from "public/siteMap";
 
 const SOURCE = "SKANDI_INSURANCE_PAGE";
 const PARENT = "SKANDI_WIX_PARENT";
