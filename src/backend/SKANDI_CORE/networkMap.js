@@ -1,4 +1,4 @@
-import { callPublicContentRpc } from "backend/SKANDI_CORE/publicContent.js";
+import { callPublicContentRpc } from "backend/SKANDI_CORE/publicContent";
 
 
 export async function getPublicNetworkMapDataCore() {
