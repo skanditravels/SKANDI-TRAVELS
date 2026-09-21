@@ -4,8 +4,8 @@
 // No Duffel, Stripe, ALTEA, page or traveler-mapping logic belongs here.
 
 import { randomUUID } from "crypto";
-import { restRequest } from "backend/SKANDI_CORE/supabaseServer.js";
-import { text, lower, record } from "backend/SKANDI_CORE/platformValidation.js";
+import { restRequest } from "backend/SKANDI_CORE/supabaseServer";
+import { text, lower, record } from "backend/SKANDI_CORE/platformValidation";
 
 const CARTS = "booking_carts";
 const ITEMS = "booking_cart_items";
