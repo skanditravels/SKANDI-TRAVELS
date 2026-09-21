@@ -44,7 +44,7 @@ import {
   createCarComponentClientKeyCore,
   loadCustomerCarBookingCore,
   cancelCustomerCarBookingCore
-} from "backend/SKANDI_CORE/customerBooking.js";
+} from "backend/SKANDI_CORE/customerBooking";
 
 
 async function memberContext() {
