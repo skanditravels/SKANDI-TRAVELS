@@ -1,6 +1,6 @@
 // /src/backend/SKANDI_CORE/groupTalk.web.js
 import { webMethod, Permissions } from "@wix/web-methods";
-import * as core from "backend/SKANDI_CORE/groupTalk.js";
+import * as core from "backend/SKANDI_CORE/groupTalk";
 const member = (fn) => webMethod(Permissions.Anyone, async (input = {}) => fn(input));
 export const getGroupTalkBootstrap = member(core.getGroupTalkBootstrapCore);
 export const getGroupTalkRealtimeConfig = member(core.getGroupTalkRealtimeConfigCore);
