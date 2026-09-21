@@ -12,7 +12,7 @@ import {
   savePayrollAdjustmentCore,
   savePayrollEmployeeProfileCore,
   savePayrollRunLineCore
-} from "backend/SKANDI_CORE/payroll.js";
+} from "backend/SKANDI_CORE/payroll";
 
 export const getPayrollWorkspace = webMethod(Permissions.SiteMember, getPayrollWorkspaceCore);
 export const savePayrollEmployeeProfile = webMethod(Permissions.SiteMember, savePayrollEmployeeProfileCore);
