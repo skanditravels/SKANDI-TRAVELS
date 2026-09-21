@@ -9,7 +9,7 @@
 // This file must NOT own booking/cart/payment logic, Wix page routing, HTML state,
 // Duffel transport, Inventory authoring, or a second Supabase client.
 
-import { restRequest } from "backend/SKANDI_CORE/supabaseServer.js";
+import { restRequest } from "backend/SKANDI_CORE/supabaseServer";
 
 const PUBLIC_VIEW = "inventory_public_entities_v";
 const MAX_ROWS = 5000;
