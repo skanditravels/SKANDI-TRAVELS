@@ -6,9 +6,9 @@
 // adjustments and provider-export state. SuccessFactors may synchronize only the
 // derived employee/jurisdiction mirror needed to place an employee in Payroll.
 
-import { restRequest } from "backend/SKANDI_CORE/supabaseServer.js";
-import { requireStaffPortalSessionCore } from "backend/SKANDI_CORE/staffAuth.js";
-import { SkandiError } from "backend/SKANDI_CORE/platformErrors.js";
+import { restRequest } from "backend/SKANDI_CORE/supabaseServer";
+import { requireStaffPortalSessionCore } from "backend/SKANDI_CORE/staffAuth";
+import { SkandiError } from "backend/SKANDI_CORE/platformErrors";
 import {
   firstRow,
   isoDateOnly,
@@ -18,7 +18,7 @@ import {
   stringArray,
   text,
   upper
-} from "backend/SKANDI_CORE/platformValidation.js";
+} from "backend/SKANDI_CORE/platformValidation";
 
 const PRIVILEGED_ACCESS_ROLES = new Set(["SUPER_ADMIN", "OWNER", "COMPANY_OWNER"]);
 
