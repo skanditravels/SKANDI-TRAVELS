@@ -5,7 +5,7 @@
 // The page imports exactly one Wix web method. All action routing lives in
 // backend/SKANDI_CORE/inventory.web.js so the page and backend cannot drift.
 
-import { handleInventoryAction } from "backend/SKANDI_CORE/inventory.web.js";
+import { handleInventoryAction } from "backend/SKANDI_CORE/inventory.web";
 
 const EMBED_IDS = "#inventoryControlEmbed";
 const CHILD_SOURCE = "SKANDI_INVENTORY_EMBED";
@@ -98,7 +98,7 @@ function requireInventoryDispatcher() {
     const error = new Error("INVENTORY_WEB_FACADE_MISMATCH");
     error.code = "INVENTORY_WEB_FACADE_MISMATCH";
     error.publicMessage =
-      "Inventory Control page and backend are on different published versions. Publish Inventory Control.jsdik.js and backend/SKANDI_CORE/inventory.web.js together.";
+      "Inventory Control page and backend are on different published versions. Publish Inventory Controldik and backend/SKANDI_CORE/inventory.web together.";
     throw error;
   }
 
