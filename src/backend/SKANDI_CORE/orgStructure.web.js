@@ -1,5 +1,5 @@
 // /src/backend/SKANDI_CORE/orgStructure.web.js
-// B-011.26 — explicit SuccessFactors V9 Wix web-method boundary and bootstrap export recovery.
+// B-011.30 — canonical SuccessFactors V9 Wix web-method boundary.
 // Payroll and MyRoster/scheduling remain separate application boundaries.
 
 import { Permissions, webMethod } from "@wix/web-methods";
@@ -40,14 +40,14 @@ import {
   updateRecruitingCandidateStageCore,
   verifyRecruitingDocumentCore,
   verifyRecruitingHistoryCore
-} from "backend/SKANDI_CORE/orgStructure.js";
+} from "backend/SKANDI_CORE/orgStructure";
 
 const MEMBER = Permissions.SiteMember;
 const input = (value) => value && typeof value === "object" ? value : {};
 const method = (handler) => webMethod(MEMBER, async (value) => handler(input(value)));
 
-// Keep this export explicit. Success Factors.sh6tw.js depends on this exact
-// named web-method contract in Wix.
+// Retain the portal-only export for older published page generations. The
+// canonical B-011.30 page bootstraps from getOrgStructureBootstrap once.
 export const getSuccessFactorsPortalBootstrap = webMethod(
   MEMBER,
   async () => getSuccessFactorsPortalBootstrapCore()
