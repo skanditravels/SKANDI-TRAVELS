@@ -7,7 +7,7 @@ import {
   getStaffPortalSessionCore,
   getPortalAppsCore,
   getAlteaLaunchpadAppsCore
-} from "backend/SKANDI_CORE/staffAuth.js";
+} from "backend/SKANDI_CORE/staffAuth";
 
 export const loginStaffWithSkId = webMethod(
   Permissions.Anyone,
