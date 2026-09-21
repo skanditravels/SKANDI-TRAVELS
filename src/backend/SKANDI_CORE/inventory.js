@@ -24,7 +24,7 @@ import {
   deleteDuffelNegotiatedRateCore
 } from "backend/SKANDI_CORE/travelReference";
 
-export const INVENTORY_CORE_VERSION = "B-011.35";
+export const INVENTORY_CORE_VERSION = "B-011.35-INVENTORY-SINGLE-DISPATCH";
 
 const MASTER_TYPES = new Set([
   "COUNTRY","DESTINATION","AREA","SUPPLIER","HOTEL","GUIDED_TOUR","ACTIVITY",
