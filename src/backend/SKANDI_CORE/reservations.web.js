@@ -50,7 +50,7 @@ import {
   recordTransferDcsDocumentCore,
   sendAlteaManifestCore,
   enrichDuffelFlightPayloadCore
-} from "backend/SKANDI_CORE/reservations.js";
+} from "backend/SKANDI_CORE/reservations";
 
 import {
   getDuffelWorkspaceBootstrapCore,
@@ -63,7 +63,7 @@ import {
   createDuffelOrderCore,
   createDuffelOrderCancellationCore,
   confirmDuffelOrderCancellationCore
-} from "backend/SKANDI_CORE/duffelAir.js";
+} from "backend/SKANDI_CORE/duffelAir";
 
 import {
   searchDuffelOrderChangesCore,
@@ -71,7 +71,7 @@ import {
   getDuffelPendingOrderChangeCore,
   prepareDuffelOrderChangePaymentCore,
   confirmDuffelOrderChangeCore
-} from "backend/SKANDI_CORE/duffelServicing.js";
+} from "backend/SKANDI_CORE/duffelServicing";
 
 import {
   searchDuffelStaysCore,
@@ -86,7 +86,7 @@ import {
   getDuffelCarBookingCore,
   cancelDuffelCarBookingCore,
   createDuffelComponentClientKeyCore
-} from "backend/SKANDI_CORE/duffelGround.js";
+} from "backend/SKANDI_CORE/duffelGround";
 
 const VERSION = "BACKEND-BASE-1.0-B007.6";
 const ACTION_CONTRACT_VERSION = "2";
