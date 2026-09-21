@@ -1,5 +1,5 @@
-import { requireStaffPortalSessionCore } from "backend/SKANDI_CORE/staffAuth.js";
-import { text, lower } from "backend/SKANDI_CORE/platformValidation.js";
+import { requireStaffPortalSessionCore } from "backend/SKANDI_CORE/staffAuth";
+import { text, lower } from "backend/SKANDI_CORE/platformValidation";
 
 
 export async function runInternalGlobalSearchCore(input = {}) {
