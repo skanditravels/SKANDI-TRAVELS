@@ -5,7 +5,7 @@ import { Permissions, webMethod } from "@wix/web-methods";
 import {
   getCustomerHeaderSessionCore,
   subscribeCustomerNewsletterCore
-} from "backend/SKANDI_CORE/customerSession.js";
+} from "backend/SKANDI_CORE/customerSession";
 
 export const getCustomerHeaderSession = webMethod(
   Permissions.SiteMember,
