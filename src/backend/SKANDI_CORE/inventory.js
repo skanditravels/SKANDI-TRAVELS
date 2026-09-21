@@ -5,8 +5,8 @@
 // No webMethod wrappers, no routes, no UI code.
 
 import { randomUUID } from "crypto";
-import { restRequest } from "backend/SKANDI_CORE/supabaseServer.js";
-import { getStaffPortalSessionCore } from "backend/SKANDI_CORE/staffAuth.js";
+import { restRequest } from "backend/SKANDI_CORE/supabaseServer";
+import { getStaffPortalSessionCore } from "backend/SKANDI_CORE/staffAuth";
 import {
   listDuffelAirlinesCore,
   getDuffelAirlineCore,
@@ -22,7 +22,7 @@ import {
   createDuffelNegotiatedRateCore,
   updateDuffelNegotiatedRateCore,
   deleteDuffelNegotiatedRateCore
-} from "backend/SKANDI_CORE/travelReference.js";
+} from "backend/SKANDI_CORE/travelReference";
 
 export const INVENTORY_CORE_VERSION = "B-011.35";
 
