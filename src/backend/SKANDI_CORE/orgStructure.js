@@ -271,7 +271,7 @@ function safeAgent(row = {}) {
     assignedBase: text(row.base || row.station, 180),
     station: text(row.station || row.base, 180),
     countryCode: upper(row.country_code, 8),
-    managerAgentId: normalizeSkId(row.manager_agent_id),
+    managerAgentId: normalizeSkId(row.manager_agent_id || row.manager_sk_id),
     managerAgentUserUuid: text(row.manager_agent_user_id, 80),
     managerAgentUserId: text(row.manager_agent_user_id, 80),
     managerRoleId: text(row.manager_role_id, 80),
@@ -369,7 +369,7 @@ async function loadCatalog() {
 
 async function loadStaffSummary() {
   const list = await selectAllPaged("agent_users", {
-    select: "id,agent_id,sk_id,first_name,last_name,preferred_name,display_name,corporate_email_address,email,wix_member_id,member_id,contact_id,badge_photo_url,employment_status,status,active,authorized,portal_access,company_code,role_id,job_code,job_title,position,department_id,department_code,department,base_code,base,station,country_code,manager_agent_user_id,manager_agent_id,manager_role_id,manager_sk_id,access_role,permission_preset,permission_keys,allowed_apps,permission_groups,payload",
+    select: "id,agent_id,sk_id,first_name,last_name,preferred_name,display_name,corporate_email_address,email,wix_member_id,member_id,contact_id,badge_photo_url,employment_status,status,active,authorized,portal_access,company_code,role_id,job_code,job_title,position,department_id,department_code,department,base_code,base,station,country_code,manager_agent_user_id,manager_role_id,manager_sk_id,access_role,permission_preset,permission_keys,allowed_apps,permission_groups,payload",
     order: "last_name.asc,first_name.asc,sk_id.asc"
   });
   return list.map(safeAgent);
