@@ -35,7 +35,7 @@ import {
   createInventoryNegotiatedRateCore,
   updateInventoryNegotiatedRateCore,
   deleteInventoryNegotiatedRateCore
-} from "backend/SKANDI_CORE/inventory.js";
+} from "backend/SKANDI_CORE/inventory";
 
 import {
   listAssetsCore,
@@ -45,7 +45,7 @@ import {
   getAssetAccessUrlCore,
   registerAssetUsageCore,
   archiveAssetCore
-} from "backend/SKANDI_CORE/assets.js";
+} from "backend/SKANDI_CORE/assets";
 
 const MEMBER = Permissions.SiteMember;
 const VERSION = "B-011.35-INVENTORY-SINGLE-DISPATCH";
