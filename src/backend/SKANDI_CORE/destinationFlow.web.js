@@ -4,7 +4,7 @@
 import { Permissions, webMethod } from "@wix/web-methods";
 import {
   getDestinationFlowCatalogCore
-} from "backend/SKANDI_CORE/destinationFlow.js";
+} from "backend/SKANDI_CORE/destinationFlow";
 
 export const getDestinationFlowCatalog = webMethod(
   Permissions.Anyone,
