@@ -7,11 +7,11 @@
 // Existing Uniform tables and JSON payloads are preserved; no third data model is created.
 
 import { randomUUID } from "crypto";
-import { restRequest } from "backend/SKANDI_CORE/supabaseServer.js";
+import { restRequest } from "backend/SKANDI_CORE/supabaseServer";
 import {
   getStaffPortalSessionCore,
   requireStaffPortalSessionCore
-} from "backend/SKANDI_CORE/staffAuth.js";
+} from "backend/SKANDI_CORE/staffAuth";
 import {
   listAssetsCore,
   checkAssetDuplicateCore,
@@ -19,7 +19,7 @@ import {
   finalizeAssetUploadCore,
   getAssetAccessUrlCore,
   registerAssetUsageCore
-} from "backend/SKANDI_CORE/assets.js";
+} from "backend/SKANDI_CORE/assets";
 import {
   text,
   lower,
@@ -28,8 +28,8 @@ import {
   record,
   safeNumber,
   safeBoolean
-} from "backend/SKANDI_CORE/platformValidation.js";
-import { SkandiError } from "backend/SKANDI_CORE/platformErrors.js";
+} from "backend/SKANDI_CORE/platformValidation";
+import { SkandiError } from "backend/SKANDI_CORE/platformErrors";
 
 export const UNIFORM_CORE_VERSION = "B-011.29-UNIFORM-SKU-FAMILY";
 
