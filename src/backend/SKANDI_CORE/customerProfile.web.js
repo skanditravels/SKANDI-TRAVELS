@@ -26,7 +26,7 @@ import {
   cancelCustomerStayCore,
   cancelCustomerCarCore,
   getCustomerDocumentCore
-} from "backend/SKANDI_CORE/customerProfile.js";
+} from "backend/SKANDI_CORE/customerProfile";
 
 async function memberContext() {
   const member = await currentMember.getMember();
