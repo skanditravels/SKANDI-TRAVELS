@@ -10,8 +10,8 @@ import { Buffer } from "buffer";
 import { secrets } from "wix-secrets-backend.v2";
 import { elevate } from "wix-auth";
 import { fetch } from "wix-fetch";
-import { SkandiError, isTransientHttpStatus } from "backend/SKANDI_CORE/platformErrors.js";
-import { text } from "backend/SKANDI_CORE/platformValidation.js";
+import { SkandiError, isTransientHttpStatus } from "backend/SKANDI_CORE/platformErrors";
+import { text } from "backend/SKANDI_CORE/platformValidation";
 
 
 const getSecretValue = elevate(secrets.getSecretValue);
