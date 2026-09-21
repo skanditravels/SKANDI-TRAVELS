@@ -11,13 +11,15 @@ import { rpcRequest, restRequest } from "backend/SKANDI_CORE/supabaseServer";
 import { requireStaffPortalSessionCore } from "backend/SKANDI_CORE/staffAuth";
 import { checkExternalTravelRequirements } from "backend/SKANDI_CORE/travelRequirements";
 
-export const PUBLIC_CONTENT_VERSION = "BACKEND-BASE-1.0-B011.2";
+export const PUBLIC_CONTENT_VERSION = "BACKEND-BASE-1.0-B011.3";
 
 const READ_RPCS = new Set(["get_public_about_payload", "get_public_network_map_payload"]);
 const COLLECTION_TYPES = "in.(SKANDI_COLLECTION,SKANDI_PARTNER)";
 const PUBLISHED = "eq.PUBLISHED";
 const ACTIVE = "eq.true";
 const MAX_PUBLIC_ROWS = "1000";
+const COLLECTION_PAGE_ENTITY_TYPE = "PAGE_CONTENT";
+const COLLECTION_PAGE_CODE = "SKANDI_COLLECTION_PAGE";
 
 const clean = (value, max = 6000) => String(value ?? "").trim().slice(0, max);
 const upper = (value, max = 120) => clean(value, max).toUpperCase();
@@ -132,18 +134,115 @@ function collectionItem(row = {}, language = "EN") {
   };
 }
 
-export async function getPublicSkandiCollectionCore(input = {}) {
-  const language = upper(input.language || "EN", 5) || "EN";
-  const rows = await select("inventory_searchable_catalog_v", {
-    select: "id,public_id,entity_type,code,name,slug,status,active,customer_visible,searchable,collection_type,partner_tier,search_priority,featured,details,payload,localized,media",
+function safeCollectionColor(value) {
+  const color = clean(value, 80);
+  if (!color) return "";
+  if (/^#[0-9a-f]{3,8}$/i.test(color)) return color;
+  if (/^(?:rgb|rgba|hsl|hsla)\([0-9.% ,+-]+\)$/i.test(color)) return color;
+  if (/^(?:transparent|white|black)$/i.test(color)) return color.toLowerCase();
+  return "";
+}
+
+function collectionPageCard(raw = {}, index = 0, experience = false) {
+  const row = obj(raw);
+  return {
+    index: clean(first(row.index, experience ? String(index + 1).padStart(2, "0") : `0${index + 1} / Value`), 80),
+    symbol: experience ? "" : clean(first(row.symbol, "✦"), 16),
+    title: clean(row.title, 500),
+    text: clean(first(row.text, row.description), 2500),
+    imageUrl: clean(first(row.imageUrl, row.image_url), 2000),
+    bgColor: safeCollectionColor(first(row.bgColor, row.backgroundColor)),
+    textColor: safeCollectionColor(row.textColor)
+  };
+}
+
+async function loadCollectionPageContent(language = "EN") {
+  const pages = await select("inventory_master_entities", {
+    select: "id,details,payload",
+    entity_type: `eq.${COLLECTION_PAGE_ENTITY_TYPE}`,
+    code: `eq.${COLLECTION_PAGE_CODE}`,
     status: PUBLISHED,
     active: ACTIVE,
     customer_visible: ACTIVE,
-    searchable: ACTIVE,
-    collection_type: COLLECTION_TYPES,
-    order: "search_priority.asc,name.asc",
-    limit: MAX_PUBLIC_ROWS
+    limit: "1"
   });
+
+  const page = pages[0];
+  if (!page?.id) {
+    return { configured: false, settings: {}, valueCards: [], experienceCards: [] };
+  }
+
+  const localizedRows = await select("inventory_localized_content", {
+    select: "language,title,eyebrow,short_description,full_description,content",
+    entity_id: `eq.${clean(page.id, 160)}`,
+    order: "language.asc",
+    limit: "20"
+  });
+
+  const wanted = upper(language, 5) || "EN";
+  const localized = localizedRows.find(row => upper(row.language, 5) === wanted)
+    || localizedRows.find(row => upper(row.language, 5) === "EN")
+    || localizedRows[0]
+    || {};
+  const content = obj(localized.content);
+  const details = obj(page.details);
+  const payload = obj(page.payload);
+  const settings = obj(content.settings);
+
+  return {
+    configured: true,
+    settings: {
+      heroImageUrl: clean(first(settings.heroImageUrl, settings.hero_image_url, details.heroImageUrl, payload.heroImageUrl), 2000)
+    },
+    valueCards: arr(content.valueCards).slice(0, 8).map((card, index) => collectionPageCard(card, index, false)).filter(card => card.title),
+    experienceCards: arr(content.experienceCards).slice(0, 8).map((card, index) => collectionPageCard(card, index, true)).filter(card => card.title)
+  };
+}
+
+async function loadCollectionDestinations() {
+  const rows = await select("travel_info_airports", {
+    select: "ID,title,iata,country,locationCity,active,status,customer_visible,sort_order",
+    active: ACTIVE,
+    status: PUBLISHED,
+    customer_visible: ACTIVE,
+    order: "sort_order.asc,iata.asc",
+    limit: "500"
+  });
+
+  const seen = new Set();
+  return rows.map(row => {
+    const code = upper(row.iata, 8);
+    const city = clean(row.locationCity, 250);
+    const airportName = clean(first(row.title, code), 500);
+    return {
+      code,
+      name: clean(first(city, airportName, code), 500),
+      airportName,
+      country: clean(row.country, 250)
+    };
+  }).filter(row => {
+    if (!row.code || seen.has(row.code)) return false;
+    seen.add(row.code);
+    return true;
+  });
+}
+
+export async function getPublicSkandiCollectionCore(input = {}) {
+  const language = upper(input.language || "EN", 5) || "EN";
+  const [rows, pageContent, destinations] = await Promise.all([
+    select("inventory_searchable_catalog_v", {
+      select: "id,public_id,entity_type,code,name,slug,status,active,customer_visible,searchable,collection_type,partner_tier,search_priority,featured,details,payload,localized,media",
+      status: PUBLISHED,
+      active: ACTIVE,
+      customer_visible: ACTIVE,
+      searchable: ACTIVE,
+      collection_type: COLLECTION_TYPES,
+      order: "search_priority.asc,name.asc",
+      limit: MAX_PUBLIC_ROWS
+    }),
+    loadCollectionPageContent(language),
+    loadCollectionDestinations()
+  ]);
 
   const items = rows.map(row => collectionItem(row, language)).filter(item => item.title);
   const tiers = items.reduce((memo, item) => {
@@ -166,7 +265,11 @@ export async function getPublicSkandiCollectionCore(input = {}) {
     partners: items.filter(item => item.catalogType === "SKANDI_PARTNER"),
     tiers,
     counts,
-    settings: {},
+    settings: pageContent.settings,
+    valueCards: pageContent.valueCards,
+    experienceCards: pageContent.experienceCards,
+    contentConfigured: pageContent.configured,
+    destinations,
     generatedAt: new Date().toISOString()
   };
 }
@@ -582,7 +685,7 @@ export async function getPublicInsurancePayloadCore(input = {}) {
 
 // -----------------------------------------------------------------------------
 // B-011.17 Editorial / VOY + Newsroom admin core
-// Existing publicContent.js remains the single content authority. This section
+// Existing publicContent remains the single content authority. This section
 // restores the full Magazine Manager feature contract against the live
 // magazine_manager + newsroom tables without reintroducing FINAL/RIA services.
 // -----------------------------------------------------------------------------
