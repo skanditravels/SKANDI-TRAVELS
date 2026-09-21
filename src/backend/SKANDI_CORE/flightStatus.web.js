@@ -13,7 +13,7 @@ import {
   searchFlightStatusCore,
   getFlightStatusAirportDirectoryCore,
   getFlightStatusAirportContextCore
-} from "backend/SKANDI_CORE/flightStatus.js";
+} from "backend/SKANDI_CORE/flightStatus";
 
 const ANYONE = Permissions.Anyone;
 
