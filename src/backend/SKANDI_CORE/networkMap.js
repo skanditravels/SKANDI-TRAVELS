@@ -1,37 +1,23 @@
-return {
-  type: "SKANDI_MAP_DATA",
-  source: "SKANDI_WIX_PARENT",
-  generatedAt: payload.generatedAt || new Date().toISOString(),
+import { callPublicContentRpc } from "backend/SKANDI_CORE/publicContent";
 
-  destinations: Array.isArray(payload.destinations)
-    ? payload.destinations
-    : [],
 
-  routes: Array.isArray(payload.routes)
-    ? payload.routes
-    : [],
+export async function getPublicNetworkMapDataCore() {
+  const payload = await callPublicContentRpc("get_public_network_map_payload");
 
-  hotels: Array.isArray(payload.hotels)
-    ? payload.hotels
-    : [],
 
-  airports: Array.isArray(payload.airports)
-    ? payload.airports
-    : [],
+  if (!payload || typeof payload !== "object") {
+    throw new Error("NETWORK_PAYLOAD_INVALID");
+  }
 
-  airlines: Array.isArray(payload.airlines)
-    ? payload.airlines
-    : [],
 
-  stats: payload.stats || {
-    destinations: 0,
-    airports: 0,
-    routes: 0,
-    hotels: 0,
-    airlines: 0
-  },
-
-  publicNote:
-    payload.publicNote ||
-    "Only published, customer-visible network records are shown."
-};
+  return {
+    type: "SKANDI_MAP_DATA",
+    source: "SKANDI_WIX_PARENT",
+    generatedAt: payload.generatedAt || new Date().toISOString(),
+    destinations: Array.isArray(payload.destinations) ? payload.destinations : [],
+    routes: Array.isArray(payload.routes) ? payload.routes : [],
+    hotels: Array.isArray(payload.hotels) ? payload.hotels : [],
+    stats: payload.stats || { destinations: 0, routes: 0, hotels: 0 },
+    publicNote: payload.publicNote || "Only published, customer-visible network records are shown."
+  };
+}
