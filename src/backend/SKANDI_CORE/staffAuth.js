@@ -1,4 +1,4 @@
-import { SITE_MAP } from "public/siteMap.js";
+import { SITE_MAP } from "public/siteMap";
 // /src/backend/SKANDI_CORE/staffAuth.js
 // SKANDI Backend Base 1.0 — canonical staff identity + authorization core.
 // B-011.29 — canonical agentId contract + Uniform + OPS Control routes.
@@ -14,9 +14,9 @@ import { SITE_MAP } from "public/siteMap.js";
 
 
 import { authentication, currentMember } from "wix-members-backend";
-import { restRequest } from "backend/SKANDI_CORE/supabaseServer.js";
-import { TtlCache } from "backend/SKANDI_CORE/platformCache.js";
-import { SkandiError, errorCode, isTransientHttpStatus } from "backend/SKANDI_CORE/platformErrors.js";
+import { restRequest } from "backend/SKANDI_CORE/supabaseServer";
+import { TtlCache } from "backend/SKANDI_CORE/platformCache";
+import { SkandiError, errorCode, isTransientHttpStatus } from "backend/SKANDI_CORE/platformErrors";
 import {
   email,
   firstRow,
@@ -27,8 +27,8 @@ import {
   stringArray,
   text,
   upper
-} from "backend/SKANDI_CORE/platformValidation.js";
-import { tryWriteStaffLoginAudit } from "backend/SKANDI_CORE/platformAudit.js";
+} from "backend/SKANDI_CORE/platformValidation";
+import { tryWriteStaffLoginAudit } from "backend/SKANDI_CORE/platformAudit";
 
 
 const AGENT_TABLE = "agent_users";
