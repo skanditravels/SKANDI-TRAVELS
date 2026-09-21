@@ -5,14 +5,14 @@
 
 
 import wixLocationFrontend from "wix-location-frontend";
-import { openCustomerLogin } from "public/customerAuthUi.js";
+import { openCustomerLogin } from "public/customerAuthUi";
 import {
   getCustomerSupportBootstrap,
   createCustomerSupportCase,
   startAlexandraSupportSession,
   requestCustomerHumanHandoff,
   addCustomerLiveSupportMessage
-} from "backend/SKANDI_CORE/customerSupport.web.js";
+} from "backend/SKANDI_CORE/customerSupport.web";
 
 
 const HELP_EMBED_ID = "#skandiHelpCenterEmbed";
