@@ -9,8 +9,8 @@ import { currentMember } from "wix-members-backend";
 import { secrets } from "wix-secrets-backend.v2";
 import { elevate } from "wix-auth";
 import { createHash, randomUUID } from "crypto";
-import { getStaffPortalSessionCore } from "backend/SKANDI_CORE/staffAuth.js";
-import { issueSupportLiveKitSessionCore, issueAlexandraLiveKitSessionCore } from "backend/SKANDI_CORE/livekitServer.js";
+import { getStaffPortalSessionCore } from "backend/SKANDI_CORE/staffAuth";
+import { issueSupportLiveKitSessionCore, issueAlexandraLiveKitSessionCore } from "backend/SKANDI_CORE/livekitServer";
 import { restRequest } from "backend/SKANDI_CORE/supabaseServer.js";
 
 const elevatedGetSecretValue = elevate(secrets.getSecretValue);
