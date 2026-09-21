@@ -13,7 +13,7 @@ import {
   updateMailUserStateCore,
   getMailDirectoryCore,
   getMailDiagnosticsCore
-} from "backend/SKANDI_CORE/internalMail.js";
+} from "backend/SKANDI_CORE/internalMail";
 
 
 export const getMailBootstrap = webMethod(Permissions.SiteMember, async () => getMailBootstrapCore());
