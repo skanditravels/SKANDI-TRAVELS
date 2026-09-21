@@ -1,10 +1,10 @@
-// /src/pages/About.xcftf.web.js
+// /src/pages/About.xcftf.js
 // B-011.1 install candidate for the Wix /about page code.
 // This page owns only the About embed bridge. Global header/footer/session behavior stays in masterPage.js.
 
 import wixLocationFrontend from "wix-location-frontend";
-import { getPublicAboutPayload } from "backend/SKANDI_CORE/publicContent.web.js";
-import { SITE_MAP, isSafeInternalRoute } from "public/siteMap.js";
+import { getPublicAboutPayload } from "backend/SKANDI_CORE/publicContent.web";
+import { SITE_MAP, isSafeInternalRoute } from "public/siteMap";
 
 const SOURCE = "SKANDI_ABOUT_PAGE";
 const PARENT = "SKANDI_WIX_PARENT";
