@@ -5,7 +5,7 @@
 import { createCipheriv, createDecipheriv, createHash, randomBytes } from "crypto";
 import { elevate } from "wix-auth";
 import { secrets } from "wix-secrets-backend.v2";
-import { text } from "backend/SKANDI_CORE/platformValidation.js";
+import { text } from "backend/SKANDI_CORE/platformValidation";
 
 const getSecretValue = elevate(secrets.getSecretValue);
 let keyPromise = null;
