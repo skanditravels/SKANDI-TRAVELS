@@ -68,9 +68,13 @@ export const APP_ROUTES = Object.freeze({
 // The global SKANDI header remains owned by masterPage.js and is intentionally
 // not routed through these page-level popups. Wix opens popups by popup name.
 export const CUSTOMER_AUTH_POPUPS = Object.freeze({
-  login: Object.freeze({
-    name: "Log In Form (Popup)",
-    codeFile: "Log In Form (Popup).bytg4.js"
+  signUp: Object.freeze({
+    name: "Become SKANDI Club Member",
+    codeFile: "Become SKANDI Club Member.o4qut.js"
+  }),
+  logIn: Object.freeze({
+    name: "SKANDI Club Log In",
+    codeFile: "SKANDI Club Log In.bytg4.js"
   }),
   resetPassword: Object.freeze({
     name: "Reset Password (Popup)",
