@@ -1,4 +1,4 @@
-// /src/backend/SKANDI_CORE/assets
+// /src/backend/SKANDI_CORE/assets.js
 // SKANDI Platform Asset Library — canonical asset business logic.
 // Recovery R-003.3 business logic; R-003.13 canonical import-path convergence.
 //
@@ -16,7 +16,7 @@ import {
 } from "backend/SKANDI_CORE/supabaseServer";
 import { getStaffPortalSessionCore } from "backend/SKANDI_CORE/staffAuth";
 
-export const ASSET_CORE_VERSION = "B-011.30";
+export const ASSET_CORE_VERSION = "R-003.3";
 
 const PUBLIC_BUCKET = "skandi-public-assets";
 const PRIVATE_BUCKET = "skandi-private-assets";
