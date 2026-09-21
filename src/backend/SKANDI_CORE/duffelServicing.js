@@ -4,7 +4,7 @@
 // For positive changes: manual customer authorization -> Duffel confirmation -> Stripe capture.
 // For negative changes: reports the customer refund requirement; no automatic customer refund is issued here.
 
-import { duffelRequest, ProviderError } from "backend/SKANDI_CORE/duffelClient.js";
+import { duffelRequest, ProviderError } from "backend/SKANDI_CORE/duffelClient";
 import {
   createStripePaymentIntent,
   retrieveStripePaymentIntent,
@@ -12,7 +12,7 @@ import {
   cancelStripePaymentIntent,
   getStripePublishableKey,
   assertStripeAuthorization
-} from "backend/SKANDI_CORE/stripeClient.js";
+} from "backend/SKANDI_CORE/stripeClient";
 
 const CABIN_CLASSES = new Set(["economy", "premium_economy", "business", "first"]);
 const ZERO_DECIMAL_CURRENCIES = new Set(["BIF","CLP","DJF","GNF","JPY","KMF","KRW","MGA","PYG","RWF","UGX","VND","VUV","XAF","XOF","XPF"]);
