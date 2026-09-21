@@ -1,6 +1,6 @@
 // /src/backend/SKANDI_CORE/inventory.js
 // SKANDI Inventory Control — canonical business logic.
-// B-011-Repair
+// B-011.35 bootstrap delivery recovery; preserves B-011.33/34 schema and staff-session fixes.
 // Preserves the complete Inventory/provider surface while using the proven R-003.9.2 staff-session contract.
 // No webMethod wrappers, no routes, no UI code.
 
@@ -24,7 +24,7 @@ import {
   deleteDuffelNegotiatedRateCore
 } from "backend/SKANDI_CORE/travelReference";
 
-export const INVENTORY_CORE_VERSION = "B-011-Repair";
+export const INVENTORY_CORE_VERSION = "B-011.35";
 
 const MASTER_TYPES = new Set([
   "COUNTRY","DESTINATION","AREA","SUPPLIER","HOTEL","GUIDED_TOUR","ACTIVITY",
@@ -1940,4 +1940,3 @@ export async function getInventoryQualityCore(){
     }
   };
 }
-Displaying inventory.js.
