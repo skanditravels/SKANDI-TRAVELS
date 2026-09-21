@@ -13,7 +13,7 @@ import {
   createDuffelOrderCore,
   getDuffelOrderCore,
   duffelAmountToMinor
-} from "backend/SKANDI_CORE/duffelAir.js";
+} from "backend/SKANDI_CORE/duffelAir";
 import {
   searchDuffelStaysCore,
   fetchDuffelStayRatesCore,
@@ -28,7 +28,7 @@ import {
   createDuffelCarBookingCore,
   getDuffelCarBookingCore,
   cancelDuffelCarBookingCore
-} from "backend/SKANDI_CORE/duffelGround.js";
+} from "backend/SKANDI_CORE/duffelGround";
 import {
   createStripePaymentIntent,
   retrieveStripePaymentIntent,
@@ -36,8 +36,8 @@ import {
   cancelStripePaymentIntent,
   getStripePublishableKey,
   assertStripeAuthorization
-} from "backend/SKANDI_CORE/stripeClient.js";
-import { restRequest } from "backend/SKANDI_CORE/supabaseServer.js";
+} from "backend/SKANDI_CORE/stripeClient";
+import { restRequest } from "backend/SKANDI_CORE/supabaseServer";
 import {
   createOwnedCart,
   getOwnedCart,
@@ -47,7 +47,7 @@ import {
   transitionOwnedCart,
   addCartItem,
   recordPaymentEventOnce
-} from "backend/SKANDI_CORE/bookingCart.js";
+} from "backend/SKANDI_CORE/bookingCart";
 import {
   bookingError,
   toDuffelOfferSearch,
@@ -60,14 +60,14 @@ import {
   combineServiceSelections,
   toPublicCart
 } from "backend/SKANDI_CORE/bookingMapper.js";
-import { encryptBookingData, decryptBookingData } from "backend/SKANDI_CORE/bookingSecurity.js";
+import { encryptBookingData, decryptBookingData } from "backend/SKANDI_CORE/bookingSecurity";
 import {
   markBookingReconciliationRequired,
   voidUnusedAuthorization,
   reconcileFlightCart,
   refreshConfirmedAirOrder
-} from "backend/SKANDI_CORE/bookingReconciliation.js";
-import { text, upper, lower, record } from "backend/SKANDI_CORE/platformValidation.js";
+} from "backend/SKANDI_CORE/bookingReconciliation";
+import { text, upper, lower, record } from "backend/SKANDI_CORE/platformValidation";
 
 
 const LOCKED_STATUSES = new Set(["Confirmed", "Committing", "CarCancellationPending", "ReconciliationRequired"]);
