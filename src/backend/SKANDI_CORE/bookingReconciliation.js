@@ -5,15 +5,15 @@
 import {
   getDuffelOrderByOfferCore,
   getDuffelOrderCore
-} from "backend/SKANDI_CORE/duffelAir.js";
+} from "backend/SKANDI_CORE/duffelAir";
 import {
   retrieveStripePaymentIntent,
   captureStripePaymentIntent,
   cancelStripePaymentIntent,
   assertStripeAuthorization
-} from "backend/SKANDI_CORE/stripeClient.js";
-import { updateOwnedCart, recordPaymentEventOnce } from "backend/SKANDI_CORE/bookingCart.js";
-import { bookingError } from "backend/SKANDI_CORE/bookingMapper.js";
+} from "backend/SKANDI_CORE/stripeClient";
+import { updateOwnedCart, recordPaymentEventOnce } from "backend/SKANDI_CORE/bookingCart";
+import { bookingError } from "backend/SKANDI_CORE/bookingMapper";
 
 function nowIso() { return new Date().toISOString(); }
 
