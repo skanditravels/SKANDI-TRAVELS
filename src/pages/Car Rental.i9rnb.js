@@ -1,6 +1,6 @@
 import wixLocation from "wix-location-frontend";
 import { session } from "wix-storage";
-import { SITE_MAP, isSafeInternalRoute } from "public/siteMap.js";
+import { SITE_MAP, isSafeInternalRoute } from "public/siteMap";
 import {
   searchLiveCars as searchDuffelCars,
   quoteCar as quoteDuffelCar,
@@ -12,7 +12,7 @@ import {
   commitCarBooking,
   loadCustomerCarBooking as getCustomerDuffelCarBooking,
   cancelCustomerCarBooking as cancelCustomerDuffelCarBooking
-} from "backend/SKANDI_CORE/customerBooking.web.js";
+} from "backend/SKANDI_CORE/customerBooking.web";
 
 
 let currentCartId = "";
