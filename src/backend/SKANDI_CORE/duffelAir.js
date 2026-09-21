@@ -3,14 +3,14 @@
 // Pure provider-domain logic: no Wix page methods, no staff/customer auth, no Supabase/ALTEA writes.
 // Customer money is authorized through stripeClient and captured only by the higher booking/orchestration layer.
 
-import { duffelRequest, getDuffelEnvironment, ProviderError } from "backend/SKANDI_CORE/duffelClient.js";
+import { duffelRequest, getDuffelEnvironment, ProviderError } from "backend/SKANDI_CORE/duffelClient";
 import {
   createStripePaymentIntent,
   retrieveStripePaymentIntent,
   getStripePublishableKey,
   assertStripeAuthorization,
   updateStripePaymentIntentMetadata
-} from "backend/SKANDI_CORE/stripeClient.js";
+} from "backend/SKANDI_CORE/stripeClient";
 
 const CABINS = new Set(["economy", "premium_economy", "business", "first"]);
 const ZERO_DECIMAL_CURRENCIES = new Set([
