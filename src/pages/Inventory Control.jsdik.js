@@ -3,11 +3,11 @@
 // Preferred HTML component: #inventoryControlEmbed.
 //
 // The page imports exactly one Wix web method. All action routing lives in
-// backend/SKANDI_CORE/inventory.web.js so the page and backend cannot drift.
+// backend/SKANDI_CORE/inventory.web so the page and backend cannot drift.
 
 import { handleInventoryAction } from "backend/SKANDI_CORE/inventory.web";
 
-const EMBED_IDS = "#inventoryControlEmbed";
+const EMBED_IDS = ["#inventoryControlEmbed"];
 const CHILD_SOURCE = "SKANDI_INVENTORY_EMBED";
 const PARENT_SOURCE = "SKANDI_INVENTORY_PARENT";
 const VERSION = "B-011.35-INVENTORY-SINGLE-DISPATCH";
@@ -136,8 +136,6 @@ async function loadInventoryBootstrap({ force = false } = {}) {
           failure.code = "INVENTORY_DISPATCH_RESPONSE_INVALID";
           throw failure;
         }
-        // A save or explicit refresh can invalidate a read already in flight.
-        // Only the current generation may populate or deliver the shared snapshot.
         if (generation !== bootstrapGeneration) return null;
         bootstrapSnapshot = checked.payload;
         bootstrapSnapshotAt = Date.now();
@@ -240,7 +238,6 @@ $w.onReady(() => {
     return;
   }
 
-  // Listener is registered before HOST_READY to avoid the historical bridge race.
   embed.onMessage(async event => {
     const message = parse(event?.data);
     if (!message || message.source !== CHILD_SOURCE) return;
