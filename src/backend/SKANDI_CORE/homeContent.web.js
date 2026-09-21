@@ -6,7 +6,7 @@ import {
   getHomeContentCore,
   getHomeSearchLocationsCore,
   getOldStyleHomeContentCore
-} from "backend/SKANDI_CORE/homeContent.js";
+} from "backend/SKANDI_CORE/homeContent";
 
 function publicCall(handler) {
   return webMethod(Permissions.Anyone, async (input = {}) => handler(input || {}));
