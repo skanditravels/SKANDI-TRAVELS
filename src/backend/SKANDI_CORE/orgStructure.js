@@ -11,11 +11,11 @@
 // - Recruiting, performance/learning profile data, badge control and employee/member onboarding are HR-owned here.
 // - This core does not read or write staff_payroll_profiles. Payroll owns all payroll state.
 
-import { restRequest } from "backend/SKANDI_CORE/supabaseServer.js";
-import { requireStaffPortalSessionCore } from "backend/SKANDI_CORE/staffAuth.js";
+import { restRequest } from "backend/SKANDI_CORE/supabaseServer";
+import { requireStaffPortalSessionCore } from "backend/SKANDI_CORE/staffAuth";
 import { members, authentication as memberAuthentication } from "@wix/members";
 import { auth } from "@wix/essentials";
-import { SkandiError, errorCode } from "backend/SKANDI_CORE/platformErrors.js";
+import { SkandiError, errorCode } from "backend/SKANDI_CORE/platformErrors";
 import {
   firstRow,
   isoDateOnly,
@@ -24,7 +24,7 @@ import {
   stringArray,
   text,
   upper
-} from "backend/SKANDI_CORE/platformValidation.js";
+} from "backend/SKANDI_CORE/platformValidation";
 
 const RESTRICTED_ACCESS_ROLES = new Set(["SUPER_ADMIN", "OWNER", "COMPANY_OWNER"]);
 const PRIVILEGED_ACCESS_ROLES = new Set(["SUPER_ADMIN", "OWNER", "COMPANY_OWNER"]);
