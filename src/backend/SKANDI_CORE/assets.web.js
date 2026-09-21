@@ -1,5 +1,5 @@
 // /src/backend/SKANDI_CORE/assets.web.js
-// SKANDI Backend Base 1.0 — B-003 global Asset Library web boundary.
+// SKANDI Backend Base 1.0 — B-003 global Asset Library web boundary. 
 // Inventory intentionally reuses the same core through inventory.web.js so its page has one backend dependency.
 
 import { Permissions, webMethod } from "@wix/web-methods";
