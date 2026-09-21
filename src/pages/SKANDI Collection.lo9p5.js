@@ -1,16 +1,22 @@
 // /src/pages/SKANDI Collection.lo9p5.js
-// B-011.1 canonical SKANDI Collection page bridge.
+// B-011.2 canonical SKANDI Collection page bridge.
 // Inventory comes from SKANDI_CORE/publicContent; live search stays on the single customer booking facade.
 
 import wixLocationFrontend from "wix-location-frontend";
 import { getPublicSkandiCollection } from "backend/SKANDI_CORE/publicContent.web";
 import { searchUnifiedOffers } from "backend/SKANDI_CORE/customerBooking.web";
-import { SITE_MAP, isSafeInternalRoute } from "public/siteMap.js";
+import { SITE_MAP, isSafeInternalRoute } from "public/siteMap";
 
 const SOURCE = "SKANDI_SIGNATURE_COLLECTION";
 const PARENT = "SKANDI_WIX_PARENT";
-const VERSION = "BACKEND-BASE-1.0-B011.1";
-const EMBED_IDS = [ "#skandiCollectionEmbed", "#skandiCollectionHtml"];
+const VERSION = "BACKEND-BASE-1.0-B011.2";
+const EMBED_IDS = [
+  "#skandiCollectionEmbed",
+  "#signatureCollectionEmbed",
+  "#skandiCollectionHtml",
+  "#signatureCollectionHtml",
+  "#html1"
+];
 
 const text = value => String(value ?? "").trim();
 const number = (value, fallback = 0) => Number.isFinite(Number(value)) ? Number(value) : fallback;
@@ -24,23 +30,6 @@ function getHtml() {
   }
   return null;
 }
-$w.onReady(function () {
-    // Replace "#html1" with the actual ID of your iframe component in Wix Studio
-    $w("#skandiCollectionEmbed").onMessage((event) => {
-        let message = event.data;
-        
-        // Check if the iframe is asking for the config
-        if (message.type === "MASTER_CONFIG_REQUEST") {
-            
-            // Send the config back to the iframe
-            $w("#skandiCollectionEmbed").postMessage({
-                source: "SKANDI_WIX_PARENT",
-                type: "SKANDI_MASTER_CONFIG",
-                payload: MASTER_CONFIG
-            });
-        }
-    });
-});
 
 function parseMessage(value) {
   if (typeof value === "string") {
@@ -125,7 +114,7 @@ async function loadCollection(html, payload = {}) {
     const result = await getPublicSkandiCollection({ language: language(payload.language || payload.locale) });
     send(html, "SIGNATURE_COLLECTION_DATA", normalizeCollectionPayload(result || {}));
   } catch (error) {
-    console.error("[SKANDI Collection B-011.1] Inventory load failed.", error);
+    console.error("[SKANDI Collection B-011.2] Inventory load failed.", error);
     send(html, "SIGNATURE_COLLECTION_ERROR", { message: error?.publicMessage || error?.message || "SKANDI Collection inventory could not be loaded." });
   }
 }
@@ -145,7 +134,7 @@ async function searchPackages(html, payload = {}) {
       }
     });
   } catch (error) {
-    console.error("[SKANDI Collection B-011.1] Search failed.", error);
+    console.error("[SKANDI Collection B-011.2] Search failed.", error);
     send(html, "SIGNATURE_PACKAGE_RESULTS", { items: [], meta: { message: error?.publicMessage || error?.message || "Live package search is unavailable." } });
   }
 }
@@ -159,7 +148,7 @@ function navigate(path) {
 $w.onReady(() => {
   const resolved = getHtml();
   if (!resolved) {
-    console.error(`[SKANDI Collection B-011.1] No HTML component found. Tried ${EMBED_IDS.join(", ")}`);
+    console.error(`[SKANDI Collection B-011.2] No HTML component found. Tried ${EMBED_IDS.join(", ")}`);
     return;
   }
   const html = resolved.element;
