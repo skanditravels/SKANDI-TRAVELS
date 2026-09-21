@@ -1,6 +1,7 @@
 // /src/backend/SKANDI_CORE/inventory.web.js
 // SKANDI Inventory Control — canonical single-dispatch Wix web-method facade.
-// B-011-Repair
+// B-011.35 — Inventory runtime convergence. handleInventoryAction is the canonical single dispatcher.
+//
 // This file owns ONLY the frontend-callable action contract.
 // Inventory, Asset Library, Supabase and Duffel business logic remain in SKANDI_CORE cores.
 
@@ -47,7 +48,7 @@ import {
 } from "backend/SKANDI_CORE/assets";
 
 const MEMBER = Permissions.SiteMember;
-const VERSION = "B-011-Repair";
+const VERSION = "B-011.35-INVENTORY-SINGLE-DISPATCH";
 
 const object = value =>
   value && typeof value === "object" && !Array.isArray(value) ? value : {};
