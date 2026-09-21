@@ -1,4 +1,4 @@
-// /src/pages/Insurance.ojo62js
+// /src/pages/Travel Insurance.js
 // B-011.1 install candidate for /travel-info/insurance.
 // No insurer, premium, coverage, eligibility or regulatory claim is invented client-side.
 
@@ -8,8 +8,8 @@ import { SITE_MAP, APP_ROUTES, isSafeInternalRoute } from "public/siteMap";
 
 const SOURCE = "SKANDI_INSURANCE_PAGE";
 const PARENT = "SKANDI_WIX_PARENT";
-const VERSION = "BACKEND-BASE-1.0-B011.1";
-const EMBED_IDS = ["#travelInsuranceEmbed", "#insuranceHtml"];
+const VERSION = "BACKEND-BASE-1.0-B011.2";
+const EMBED_IDS = ["#travelInsuranceEmbed", "#insuranceHtml", "#html1"];
 
 function html() { for (const id of EMBED_IDS) { try { const e = $w(id); if (e && typeof e.onMessage === "function" && typeof e.postMessage === "function") return { id, e }; } catch (_) {} } return null; }
 function parse(v) { if (typeof v === "string") { try { return JSON.parse(v); } catch (_) { return null; } } return v && typeof v === "object" ? v : null; }
