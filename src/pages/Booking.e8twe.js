@@ -1,6 +1,6 @@
 import wixLocation from "wix-location-frontend";
 import { session } from "wix-storage";
-import { SITE_MAP, APP_ROUTES, isSafeInternalRoute } from "public/siteMap.js";
+import { SITE_MAP, APP_ROUTES, isSafeInternalRoute } from "public/siteMap";
 import {
   loadBookingCart,
   acceptBookingOffer as saveOfferDecision,
@@ -20,7 +20,7 @@ import {
   storeSeatSelections as saveSeatSelections,
   loadBookingConfirmation as getSourceAwareBookingConfirmation,
   loadBookingDocuments as getTravelDocumentsForCart
-} from "backend/SKANDI_CORE/customerBooking.web.js";
+} from "backend/SKANDI_CORE/customerBooking.web";
 
 
 let activeProductType = "FLIGHT";
