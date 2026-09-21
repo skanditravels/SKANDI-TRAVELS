@@ -5,8 +5,8 @@
 /* global $w */
 
 import wixLocationFrontend from "wix-location-frontend";
-import { SITE_MAP } from "public/siteMap.js";
-import { handleFlightStatusAction } from "backend/SKANDI_CORE/flightStatus.web.js";
+import { SITE_MAP } from "public/siteMap";
+import { handleFlightStatusAction } from "backend/SKANDI_CORE/flightStatus.web";
 
 const EMBED_ID = "#flightStatusEmbed";
 const HTML_SOURCE = "SKANDI_FLIGHT_STATUS";
