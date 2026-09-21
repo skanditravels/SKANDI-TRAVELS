@@ -3,7 +3,7 @@
 // Public Home content is projected from the same canonical public Inventory view used by Destination Flow.
 // No Wix page state, provider HTTP, secrets, or booking mutation belongs here.
 
-import { restRequest } from "backend/SKANDI_CORE/supabaseServer.js";
+import { restRequest } from "backend/SKANDI_CORE/supabaseServer";
 
 const PUBLIC_VIEW = "inventory_public_entities_v";
 const CACHE_TTL_MS = 60_000;
