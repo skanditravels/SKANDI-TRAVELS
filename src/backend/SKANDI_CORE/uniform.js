@@ -31,7 +31,7 @@ import {
 } from "backend/SKANDI_CORE/platformValidation";
 import { SkandiError } from "backend/SKANDI_CORE/platformErrors";
 
-export const UNIFORM_CORE_VERSION = "B-011.29-UNIFORM-SKU-FAMILY";
+export const UNIFORM_CORE_VERSION = "B-011.28-UNIFORM-CONVERGED";
 
 const TABLE = Object.freeze({
   catalog: "uniform_catalog_items",
@@ -524,117 +524,11 @@ function eligibleForProfile(item = {}, profile = {}) {
     dimensionAllows(item.available_bases || item.availableBases, baseCandidates(profile));
 }
 
+function styleKey(item = {}) {
+  return upper(item.styleGroup || item.style_group || item.itemCode || item.item_code || item.id, 120);
+}
 function itemCode(item = {}) {
   return upper(item.itemCode || item.item_code, 80);
-}
-
-function skuParts(value) {
-  return upper(value, 240).split(/[^A-Z0-9]+/).filter(Boolean);
-}
-
-function itemErp(item = {}) {
-  const payload = record(item.payload);
-  return record(item.erp || payload.erp);
-}
-
-function productIdentityKey(item = {}) {
-  const erp = itemErp(item);
-  const variantTokens = new Set([
-    ...skuParts(item.colorName || item.color_name),
-    ...cleanList(item.sizes, { maxItems: 200, itemMax: 80 }).flatMap(skuParts),
-    ...cleanList(item.fitOptions || item.fit_options, { maxItems: 40, itemMax: 80 }).flatMap(skuParts),
-    ...skuParts(erp.supplierColor),
-    ...skuParts(erp.supplierSize)
-  ]);
-  const baseTitle = skuParts(item.title).filter(part => !variantTokens.has(part)).join("-");
-  return [
-    baseTitle,
-    upper(item.category || item.categoryKey || item.category_key, 180),
-    upper(item.subCategory || item.sub_category, 180),
-    upper(erp.genderFit, 120),
-    upper(erp.program, 120),
-    upper(erp.collection, 120)
-  ].join("|");
-}
-
-function meaningfulSkuPrefix(parts = []) {
-  if (parts.length >= 2) return true;
-  return parts.length === 1 && String(parts[0] || "").length >= 5;
-}
-
-function inferredShopGroupKey(item = {}, catalog = []) {
-  const sku = itemCode(item);
-  const style = upper(item.styleGroup || item.style_group, 120);
-
-  // A deliberately assigned style_group remains authoritative.
-  if (style && style !== sku) return `STYLE:${style}`;
-
-  const erp = itemErp(item);
-  const supplierStyle = upper(erp.supplierStyle || erp.style, 120);
-  if (supplierStyle && supplierStyle !== sku) return `SUPPLIER:${supplierStyle}`;
-
-  if (!sku) return `ITEM:${upper(item.itemId || item._id || item.id, 80)}`;
-
-  const parts = skuParts(sku);
-  const identity = productIdentityKey(item);
-  const peers = arr(catalog).filter(peer =>
-    peer !== item &&
-    itemCode(peer) &&
-    productIdentityKey(peer) === identity
-  );
-
-  // First preference: a common delimited SKU stem, e.g. SK-2201-WHT-34 / SK-2201-NVY-36 -> SK-2201.
-  if (parts.length >= 2) {
-    let family = parts;
-    const maxTrim = Math.min(3, parts.length - 1);
-    for (let trim = 1; trim <= maxTrim; trim += 1) {
-      const prefix = parts.slice(0, parts.length - trim);
-      if (!meaningfulSkuPrefix(prefix)) continue;
-
-      const hasSibling = peers.some(peer => {
-        const peerParts = skuParts(itemCode(peer));
-        return peerParts.length > prefix.length &&
-          prefix.every((part, index) => peerParts[index] === part);
-      });
-
-      if (hasSibling) family = prefix;
-    }
-    if (family.length < parts.length) return `SKU:${family.join("-")}`;
-  }
-
-  // Second preference: a meaningful repeated SKU token anywhere in the code,
-  // e.g. RED-XYZ123-34 / BLUE-XYZ123-36 -> XYZ123.
-  const generic = new Set(["SK", "SKU", "UNIFORM", "ITEM", "PRODUCT", "STYLE"]);
-  const sharedTokens = parts
-    .filter(part => !generic.has(part) && (part.length >= 4 || /\d/.test(part)))
-    .filter(part => peers.some(peer => skuParts(itemCode(peer)).includes(part)))
-    .sort((a, b) => b.length - a.length || a.localeCompare(b));
-  if (sharedTokens.length) return `SKU-TOKEN:${sharedTokens[0]}`;
-
-  // Final automatic fallback: support compact/non-delimited SKU families.
-  const compactSku = sku.replace(/[^A-Z0-9]/g, "");
-  let bestPrefix = "";
-  peers.forEach(peer => {
-    const peerSku = itemCode(peer).replace(/[^A-Z0-9]/g, "");
-    let i = 0;
-    while (i < compactSku.length && i < peerSku.length && compactSku[i] === peerSku[i]) i += 1;
-    const prefix = compactSku.slice(0, i).replace(/[-_.]+$/g, "");
-    if (prefix.length >= 5 && prefix.length > bestPrefix.length) bestPrefix = prefix;
-  });
-  if (bestPrefix) return `SKU-PREFIX:${bestPrefix}`;
-
-  return `SKU:${sku}`;
-}
-
-function withShopGroupKeys(catalog = []) {
-  return arr(catalog).map(item => ({
-    ...item,
-    shopGroupKey: inferredShopGroupKey(item, catalog)
-  }));
-}
-
-function styleKey(item = {}) {
-  return upper(item.shopGroupKey || item.styleGroup || item.style_group || item.itemCode || item.item_code || item.id, 180);
 }
 function addMonthsIso(value, months) {
   const date = new Date(value);
@@ -777,11 +671,10 @@ async function loadCatalog({ includeInactive = false, search = "" } = {}) {
   const query = { select: "*", order: "title.asc,item_code.asc", limit: "1500" };
   if (!includeInactive) query.active = "eq.true";
   const [rows, assets] = await Promise.all([select(TABLE.catalog, query), uniformAssets()]);
-  const completeCatalog = withShopGroupKeys(rows.map(row => mapCatalogItem(row, assets)));
-  let mapped = completeCatalog;
+  let mapped = rows.map(row => mapCatalogItem(row, assets));
   const needle = lower(search, 160);
   if (needle) {
-    mapped = mapped.filter(item => [item.title, item.itemCode, item.category, item.subCategory, item.styleGroup, item.shopGroupKey, item.colorName]
+    mapped = mapped.filter(item => [item.title, item.itemCode, item.category, item.subCategory, item.styleGroup, item.colorName]
       .join(" ").toLowerCase().includes(needle));
   }
   return mapped;
