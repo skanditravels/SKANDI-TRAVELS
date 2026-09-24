@@ -1,16 +1,19 @@
 // /src/pages/Policies.sgcey.js
-// SKANDI Public Policy Document — B-011.2 canonical bridge.
+// SKANDI Public Policy Document — B-011.3 canonical bridge.
 // Route: /about/legal/policies
 // HTML Component: #legalPolicyEmbed
 
 import wixLocationFrontend from "wix-location-frontend";
-import { getPublicLegalDocument } from "backend/SKANDI_CORE/legalPolicy.web";
+import {
+  getPublicLegalDocument,
+  submitPublicLegalAcknowledgement
+} from "backend/SKANDI_CORE/legalPolicy.web";
 import { SITE_MAP, isSafeInternalRoute } from "public/siteMap";
 
 const EMBED_ID = "#legalPolicyEmbed";
 const HTML_SOURCE = "SKANDI_LEGAL_DOCUMENT";
 const PARENT_SOURCE = "SKANDI_WIX_PARENT";
-const VERSION = "B-011.2";
+const VERSION = "B-011.3";
 
 let embed = null;
 let cachedKey = "";
@@ -71,6 +74,15 @@ function publicError(error) {
   if (code === "LEGAL_DOCUMENT_NOT_FOUND") {
     return "The requested legal document is not available.";
   }
+  if (code === "LEGAL_ACK_NOT_REQUIRED") {
+    return "Acknowledgement is not required for this policy.";
+  }
+  if (code === "LEGAL_ACK_POLICY_VERSION_CHANGED") {
+    return "This policy was updated while you were reviewing it. Reload the page before acknowledging.";
+  }
+  if (/^LEGAL_ACK_/.test(code)) {
+    return "The acknowledgement could not be submitted. Check the required fields and try again.";
+  }
   return "This legal document is temporarily unavailable.";
 }
 
@@ -113,7 +125,7 @@ async function load(force = false) {
     post("LEGAL_DOCUMENT_DATA", result);
     return result;
   } catch (error) {
-    console.error("[Legal Policy B-011.2] load failed", error);
+    console.error("[Legal Policy B-011.3] load failed", error);
     post("LEGAL_DOCUMENT_ERROR", {
       message: publicError(error)
     });
@@ -132,12 +144,12 @@ $w.onReady(() => {
   try {
     embed = $w(EMBED_ID);
   } catch (error) {
-    console.error(`[Legal Policy B-011.2] Missing ${EMBED_ID}.`, error);
+    console.error(`[Legal Policy B-011.3] Missing ${EMBED_ID}.`, error);
     return;
   }
 
   if (!embed || typeof embed.onMessage !== "function" || typeof embed.postMessage !== "function") {
-    console.error(`[Legal Policy B-011.2] ${EMBED_ID} is not a compatible HTML Component.`);
+    console.error(`[Legal Policy B-011.3] ${EMBED_ID} is not a compatible HTML Component.`);
     return;
   }
 
@@ -170,6 +182,22 @@ $w.onReady(() => {
 
     if (message.type === "LEGAL_DOCUMENT_HEIGHT") {
       setEmbedHeight(payload.height);
+      return;
+    }
+
+    if (message.type === "LEGAL_ACK_SUBMIT") {
+      try {
+        const result = await submitPublicLegalAcknowledgement({
+          ...payload,
+          ...contextPayload()
+        });
+        post("LEGAL_ACK_RESULT", result);
+      } catch (error) {
+        console.error("[Legal Policy B-011.3] acknowledgement failed", error);
+        post("LEGAL_ACK_ERROR", {
+          message: publicError(error)
+        });
+      }
       return;
     }
 
