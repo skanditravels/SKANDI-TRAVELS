@@ -1,5 +1,5 @@
 // /src/backend/SKANDI_CORE/publicContent.js
-// SKANDI Backend Base 1.0 — B-011.1 public experience read core.
+// SKANDI Backend Base 1.0 — B-011.3 public experience + editorial read core.
 //
 // One public-content authority for About, SKANDI Collection and Travel Info.
 // Reads only existing public-safe Inventory/Travel Info projections through the
@@ -11,7 +11,7 @@ import { rpcRequest, restRequest } from "backend/SKANDI_CORE/supabaseServer";
 import { requireStaffPortalSessionCore } from "backend/SKANDI_CORE/staffAuth";
 import { checkExternalTravelRequirements } from "backend/SKANDI_CORE/travelRequirements";
 
-export const PUBLIC_CONTENT_VERSION = "BACKEND-BASE-1.0-B011.2";
+export const PUBLIC_CONTENT_VERSION = "BACKEND-BASE-1.0-B011.3";
 
 const READ_RPCS = new Set(["get_public_about_payload", "get_public_network_map_payload"]);
 const COLLECTION_TYPES = "in.(SKANDI_COLLECTION,SKANDI_PARTNER)";
@@ -1082,6 +1082,97 @@ function mapNewsroomMedia(row = {}) {
 function mapNewsroomContact(row = {}) {
   return { ...editorialObject(row.payload), id: row.id || "", contactId: row.contact_id || row.id || "", name: row.name || "", email: row.email || "", phone: row.phone || "", active: row.active !== false, payload: row.payload || {} };
 }
+function newsroomPublicPayload(row = {}) {
+  return editorialObject(row?.payload);
+}
+
+function newsroomPublicMedia(row = {}) {
+  const mapped = mapNewsroomMedia(row);
+  const payload = newsroomPublicPayload(row);
+  const url = safeNewsroomUrl(mapped.url || payload.fileUrl || payload.imageUrl || payload.previewImage);
+  const mimeType = editorialText(mapped.mimeType || payload.mimeType || payload.mime_type, 120);
+  const isImage = /^image\//i.test(mimeType);
+
+  return {
+    ...mapped,
+    fileUrl: safeNewsroomUrl(payload.fileUrl) || url,
+    previewImage: safeNewsroomUrl(payload.previewImage || payload.imageUrl) || (isImage ? url : ""),
+    description: editorialText(payload.description, 3000),
+    licenseType: editorialText(payload.licenseType, 160) || "Press Use",
+    creditLine: editorialText(payload.creditLine, 500) || "© SKANDI Group",
+    usageRights: editorialText(payload.usageRights, 3000) || "Use only according to the listed rights.",
+    downloadName: editorialText(payload.downloadName, 240),
+    publicVisible: payload.publicVisible !== false && payload.active !== false && payload.archived !== true
+  };
+}
+
+function newsroomPublicPost(row = {}) {
+  const mapped = mapNewsroomPost(row);
+  const payload = newsroomPublicPayload(row);
+  return {
+    ...mapped,
+    kicker: editorialText(payload.kicker, 240),
+    contentType: editorialText(payload.contentType || payload.type, 120),
+    location: editorialText(payload.location, 240),
+    tags: editorialArray(payload.tags).map(v => editorialText(v, 120)).filter(Boolean),
+    featured: payload.featured === true,
+    heroVideoUrl: safeNewsroomUrl(payload.heroVideoUrl || payload.videoUrl),
+    thumbnailImage: safeNewsroomUrl(payload.thumbnailImage) || mapped.heroImage || mapped.imageUrl || "",
+    bodyPlainText: editorialText(payload.bodyPlainText || mapped.body, 50000)
+  };
+}
+
+export async function getPublicNewsroomDataCore() {
+  const [categoryRows, postRows, mediaRows, contactRows] = await Promise.all([
+    editorialRows(
+      "newsroom_categories",
+      { select: "*", active: "eq.true", order: "title.asc", limit: "500" },
+      "public"
+    ),
+    editorialRows(
+      "newsroom_articles",
+      { select: "*", status: "eq.PUBLISHED", order: "published_at.desc", limit: "1000" },
+      "public"
+    ),
+    editorialRows(
+      "newsroom_media_assets",
+      { select: "*", order: "updated_at.desc", limit: "1000" },
+      "public"
+    ),
+    editorialRows(
+      "newsroom_press_contacts",
+      { select: "*", active: "eq.true", order: "name.asc", limit: "500" },
+      "public"
+    )
+  ]);
+
+  const categories = categoryRows
+    .map(mapNewsroomCategory)
+    .filter(item => item.active === true);
+
+  const posts = postRows
+    .map(newsroomPublicPost)
+    .filter(item => String(item.status || "").toUpperCase() === "PUBLISHED");
+
+  const mediaAssets = mediaRows
+    .map(newsroomPublicMedia)
+    .filter(item => item.publicVisible !== false && Boolean(item.fileUrl || item.url));
+
+  const pressContacts = contactRows
+    .map(mapNewsroomContact)
+    .filter(item => item.active !== false);
+
+  return {
+    ok: true,
+    source: "MEDIA_CONTROL",
+    categories,
+    posts,
+    mediaAssets,
+    pressContacts,
+    settings: {}
+  };
+}
+
 async function requireNewsroomEditor() { return ensureEditorialContext(); }
 async function newsroomOne(table, id, namedColumn) {
   const value = editorialText(id, 180);
