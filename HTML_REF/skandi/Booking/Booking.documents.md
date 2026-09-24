@@ -1,278 +1,444 @@
 # Booking.documents
 
-STATUS: NEEDS REVIEW
-SLUG: /booking/documents
-WIX PAGE: Booking.e8twe
-AREA: SKANDI
-LIVE HTML: YES
-ELEMENT: #bookingDocumentsEmbed
-LAST SYNCED: 2026-09-16
+## INFO / LOG
 
-## HOW TO USE
-***STATUS (OWNER): "TODO", "IN PROGRESS", "NEEDS REVIEW", "REVISIONS NEEDED", "READY", "LIVE", "ARCHIVED"
-STATUS (AGENT): "TODO", "IN PROGRESS", "REVISIONS NEEDED", "READY".***
+- **Status:** `B-011.1 — STATICALLY VERIFIED / LIVE WIX TEST REQUIRED`
+- **System:** SKANDI customer booking flow
+- **Route:** `/booking`
+- **Wix page:** `Booking.e8twe`
+- **State:** `stateDocuments`
+- **HTML component:** `#bookingDocumentsEmbed`
+- **HTML source:** `SKANDI_BOOKING_DOCUMENTS`
+- **Parent source:** `SKANDI_WIX_PARENT`
+- **Page controller:** `/src/pages/Booking.e8twe.js`
+- **Canonical facade:** `/src/backend/SKANDI_CORE/customerBooking.web.js`
+- **Canonical core:** `/src/backend/SKANDI_CORE/customerBooking.js`
+- **Shared booking mapper:** `/src/backend/SKANDI_CORE/bookingMapper.js`
+- **Providers:** Duffel + Stripe, with confirmed `booking_carts` as the customer → ALTEA handoff
+- **Version:** `B-011.1`
+- **Last verified:** `2026-09-24`
 
-###  COMMENT SECTION (START ON A NEW ROW, LOG IF A CHANGE IS MADE THAT REQUIRES ATTENTION) 
-1. 9/17 1:02PM "Page is ready styled from my end, page not syncing correctly yet /Samuel"
-2.
-3.
-...
-***END*** 
+### B-011.1 convergence
 
-#### LIVE HTML
+This state is part of one Wix multi-state booking application, not a standalone route implementation.
+
+Canonical chain:
+
+`#bookingDocumentsEmbed`
+→ `postMessage`
+→ `/src/pages/Booking.e8twe.js`
+→ `backend/SKANDI_CORE/customerBooking.web`
+→ `backend/SKANDI_CORE/customerBooking`
+→ booking repositories / Duffel / Stripe
+→ confirmed `booking_carts`
+→ existing ALTEA sync handoff.
+
+### Visual system
+
+- Shared customer palette: `#022e64`, `#0b3a7a`, `#285ca8`, `#5FC7CF`, `#d7e6ff`, `#f6faff`, `#f7faff`, `#dbe3ef`.
+- Shared seven-step progress treatment: Offer → Extras → Transfer → Travelers → Seats → Payment → Done.
+- Global customer header/footer remain owned by `masterPage.js`.
+- This embed contains no duplicate global chrome.
+
+### State-specific correction
+
+**Travel documents / Done**
+
+B-011.1 preserves the existing message source and state/component IDs while aligning the implementation to the canonical customerBooking payloads.
+
+---
+
+## COMPLETE INTENDED LIVE HTML SOURCE
 
 ```html
 <!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Booking Documents</title>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#022e64">
+<title>Travel documents · SKANDI Booking B-011.1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
 <style>
+
 :root{
-  --sk-blue:#022e64;--sk-blue-soft:#285ca8;--sk-light:#d7e6ff;--sk-pale:#f6faff;
-  --sk-bg:#f7faff;--sk-border:#dbe3ef;--sk-text:#111;--sk-muted:#667085;
-  --sk-cyan:#5FC7CF;--sk-ok:#087443;--sk-danger:#b42318;
-  --sk-shadow:0 8px 26px rgba(0,0,0,.08);--sk-shadow-strong:0 14px 34px rgba(0,0,0,.12);
+  --sk-blue:#022e64;
+  --sk-blue2:#0b3a7a;
+  --sk-blue-soft:#285ca8;
+  --sk-cyan:#5FC7CF;
+  --sk-light:#d7e6ff;
+  --sk-pale:#f6faff;
+  --sk-bg:#f7faff;
+  --sk-border:#dbe3ef;
+  --sk-border-soft:#eef2f7;
+  --sk-text:#111827;
+  --sk-body:#475467;
+  --sk-muted:#667085;
+  --sk-ok:#087443;
+  --sk-warn:#a15c00;
+  --sk-danger:#b42318;
+  --sk-ink:#03111f;
+  --sk-shadow:0 8px 26px rgba(2,46,100,.08);
+  --sk-shadow-strong:0 18px 48px rgba(2,46,100,.14);
+  --sk-radius:18px;
+  --sk-max:1180px;
 }
 *{box-sizing:border-box}
-body{font-family:"Montserrat",system-ui,sans-serif;margin:0;background:#fff;color:var(--sk-text);overflow-x:hidden;}
-
-@keyframes fadeUp{0%{opacity:0;transform:translateY(20px)}100%{opacity:1;transform:translateY(0)}}
-.wrap{max-width:1180px;margin:0 auto;padding:40px 24px 80px;animation:fadeUp 0.6s cubic-bezier(0.16,1,0.3,1) forwards}
-
-/* --- PREMIUM BOOKING FLOW METER --- */
-.sk-stepper-container { position: relative; display: flex; justify-content: space-between; margin-bottom: 48px; padding: 0 10px; animation:fadeUp 0.6s cubic-bezier(0.16,1,0.3,1) forwards; }
-.sk-stepper-track { position: absolute; top: 14px; left: 30px; right: 30px; height: 2px; background: var(--sk-border); z-index: 1; }
-.sk-stepper-progress { position: absolute; top: 14px; left: 30px; height: 2px; background: var(--sk-cyan); z-index: 2; transition: width 0.8s cubic-bezier(0.16, 1, 0.3, 1); width: 100%; }
-.sk-step { position: relative; z-index: 3; display: flex; flex-direction: column; align-items: center; gap: 8px; }
-.sk-step-circle { width: 30px; height: 30px; border-radius: 50%; background: #fff; border: 2px solid var(--sk-border); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; color: var(--sk-muted); transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
-.sk-step-label { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: var(--sk-muted); transition: color 0.3s ease; }
-.sk-step.completed .sk-step-circle { background: var(--sk-blue); border-color: var(--sk-blue); color: #fff; }
-.sk-step.completed .sk-step-label { color: var(--sk-blue); }
-.sk-step-circle svg { width: 14px; height: 14px; stroke: currentColor; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; fill: none; }
-
-.hero{background:linear-gradient(135deg,var(--sk-light),var(--sk-pale));border:1px solid var(--sk-border);border-radius:24px;padding:40px;box-shadow:var(--sk-shadow);margin-bottom:32px; animation:fadeUp 0.6s cubic-bezier(0.16,1,0.3,1) 0.1s forwards; opacity:0;}
-h1,h2,h3{color:var(--sk-blue);letter-spacing:-.04em;margin-top:0}
-h1{font-size:clamp(32px,5vw,46px);font-weight:800;margin-bottom:12px;line-height:1}
-.hero p{color:#475467;margin:0;font-size:14px;font-weight:500;line-height:1.6}
-
-.status{display:none;border-radius:16px;padding:18px;background:var(--sk-bg);border:1px solid var(--sk-border);margin:14px 0 24px;color:var(--sk-muted);white-space:pre-line;font-size:13px;font-weight:700; animation:fadeUp 0.4s ease forwards;}
-.status.show{display:block;}
-.ok{background:#ecfdf3;color:var(--sk-ok);border-color:#abefc6}
-.err{background:#fff1f0;color:var(--sk-danger);border-color:#ffd5d2}
-
-.grid{display:grid;gap:24px}
-.doc{background:#fff;border:1px solid var(--sk-border);border-radius:20px;box-shadow:var(--sk-shadow);overflow:hidden;transition:transform 0.3s cubic-bezier(0.16,1,0.3,1),box-shadow 0.3s ease; animation:fadeUp 0.6s cubic-bezier(0.16,1,0.3,1) 0.2s forwards; opacity:0;}
-.doc:hover{transform:translateY(-4px);box-shadow:var(--sk-shadow-strong);border-color:var(--sk-cyan)}
-.doc-head{display:grid;grid-template-columns:1fr auto;gap:20px;padding:26px 30px;background:linear-gradient(135deg,var(--sk-light),var(--sk-pale));border-bottom:1px solid var(--sk-border)}
-.brand{font-size:18px;font-weight:900;color:var(--sk-blue);letter-spacing:.12em}
-.pill{display:inline-flex;background:var(--sk-cyan);color:var(--sk-blue);border-radius:999px;padding:8px 14px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.05em}
-.doc-body{padding:30px}
-
-.meta{width:100%;border-collapse:collapse}
-.meta td{padding:8px 0;font-size:14px;vertical-align:top}
-.meta td:first-child{width:42%;color:#475467;font-weight:500;}
-.meta td:last-child{font-weight:800;color:var(--sk-blue)}
-.pnr{color:var(--sk-blue);font-size:20px!important;letter-spacing:.08em;font-weight:900!important}
-
-.segment{display:grid;grid-template-columns:140px 1fr auto;gap:20px;padding:20px 24px;border:1px solid var(--sk-border);border-radius:16px;align-items:start;margin-bottom:12px;background:var(--sk-bg);transition:border-color 0.2s ease;}
-.segment:hover{border-color:var(--sk-cyan);}
-.segment:last-child{margin-bottom:0}
-.route{font-size:20px;font-weight:900;color:var(--sk-blue);margin-bottom:6px}
-.muted{color:var(--sk-muted);font-size:13px;line-height:1.55;font-weight:500}
-
-.voucher{display:grid;grid-template-columns:1fr 1fr;gap:30px}
-.issued{display:grid;gap:12px}
-.issued-item{display:flex;justify-content:space-between;align-items:center;gap:12px;border:1px solid var(--sk-border);border-radius:12px;padding:16px 20px;font-size:14px;background:var(--sk-bg);transition:border-color 0.2s ease;}
-.issued-item:hover{border-color:var(--sk-cyan);}
-.issued-item strong{color:var(--sk-blue)}
-.empty{padding:48px;text-align:center;color:var(--sk-muted); font-size:14px;}
-
-@media(max-width:760px){
-  .doc-head,.voucher,.segment{grid-template-columns:1fr}
-  .wrap{padding:24px 16px 60px}
-  .hero{padding:30px}
-  .segment{gap:12px}
-  .sk-step-label{display:none;}
-  .sk-stepper-container{margin-bottom:32px;}
+html{background:#fff;scroll-behavior:smooth}
+body{
+  margin:0;
+  background:#fff;
+  color:var(--sk-text);
+  font-family:Montserrat,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
 }
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,a:focus-visible{
+  outline:3px solid rgba(95,199,207,.42);
+  outline-offset:2px;
+}
+.flow-shell{max-width:var(--sk-max);margin:0 auto;padding:28px 24px 72px}
+.flow-stepper{
+  position:relative;
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  gap:4px;
+  margin:0 0 30px;
+  padding:0 8px;
+}
+.flow-stepper::before{
+  content:"";
+  position:absolute;
+  top:15px;
+  left:7%;
+  right:7%;
+  height:2px;
+  background:var(--sk-border);
+}
+.flow-step{position:relative;z-index:1;text-align:center}
+.flow-dot{
+  width:30px;height:30px;margin:0 auto 7px;
+  display:grid;place-items:center;
+  border:2px solid var(--sk-border);
+  border-radius:50%;
+  background:#fff;
+  color:var(--sk-muted);
+  font-size:10px;font-weight:900;
+}
+.flow-step.done .flow-dot{border-color:var(--sk-blue);background:var(--sk-blue);color:#fff}
+.flow-step.active .flow-dot{
+  border-color:var(--sk-cyan);
+  background:var(--sk-blue);
+  color:#fff;
+  box-shadow:0 0 0 5px rgba(95,199,207,.16);
+}
+.flow-label{
+  color:var(--sk-muted);
+  font-size:9px;
+  font-weight:800;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+}
+.flow-step.done .flow-label,.flow-step.active .flow-label{color:var(--sk-blue)}
+.page-hero{
+  position:relative;
+  overflow:hidden;
+  margin-bottom:22px;
+  padding:34px 36px;
+  border:1px solid var(--sk-border);
+  border-radius:22px;
+  background:
+    radial-gradient(circle at 92% 0%,rgba(95,199,207,.16),transparent 28%),
+    linear-gradient(135deg,#fff 0%,var(--sk-pale) 64%,#edf7f9 100%);
+  box-shadow:var(--sk-shadow);
+}
+.page-hero::after{
+  content:"";
+  position:absolute;left:36px;right:36px;bottom:0;height:2px;
+  background:linear-gradient(90deg,var(--sk-cyan),rgba(209,188,152,.75),transparent);
+}
+.eyebrow{
+  display:flex;align-items:center;gap:10px;
+  color:var(--sk-blue);
+  font-size:10px;font-weight:900;letter-spacing:.16em;text-transform:uppercase;
+}
+.eyebrow::before{content:"";width:30px;height:2px;border-radius:99px;background:var(--sk-cyan)}
+.page-hero h1{
+  margin:9px 0 10px;
+  color:var(--sk-blue);
+  font-size:clamp(31px,4.6vw,48px);
+  line-height:1;
+  letter-spacing:-.045em;
+}
+.page-hero p{max-width:760px;margin:0;color:var(--sk-body);font-size:13px;line-height:1.7}
+.status{
+  display:none;
+  margin:0 0 18px;
+  padding:13px 15px;
+  border:1px solid var(--sk-border);
+  border-radius:12px;
+  background:var(--sk-bg);
+  color:var(--sk-muted);
+  font-size:11px;
+  line-height:1.55;
+  white-space:pre-line;
+}
+.status.show{display:block}
+.status.ok{background:#ecfdf3;border-color:#abefc6;color:var(--sk-ok)}
+.status.warn{background:#fffaeb;border-color:#fedf89;color:var(--sk-warn)}
+.status.error{background:#fff1f0;border-color:#ffd5d2;color:var(--sk-danger)}
+.panel{
+  border:1px solid var(--sk-border);
+  border-radius:18px;
+  background:#fff;
+  box-shadow:var(--sk-shadow);
+}
+.panel-head{
+  padding:21px 22px 18px;
+  border-bottom:1px solid var(--sk-border-soft);
+}
+.panel-head h2,.panel h2,.panel h3{margin:0;color:var(--sk-blue);letter-spacing:-.025em}
+.panel-head h2{font-size:20px}
+.panel-head p{margin:7px 0 0;color:var(--sk-body);font-size:11px;line-height:1.6}
+.panel-body{padding:22px}
+.grid-2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.grid-3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.summary-card{
+  padding:18px;
+  border:1px solid var(--sk-border-soft);
+  border-radius:14px;
+  background:linear-gradient(180deg,#fff,var(--sk-bg));
+}
+.summary-card h3{font-size:14px}
+.summary-card p{margin:7px 0 0;color:var(--sk-body);font-size:10px;line-height:1.55}
+.kicker{
+  margin-bottom:6px;
+  color:var(--sk-cyan);
+  font-size:8px;font-weight:900;letter-spacing:.13em;text-transform:uppercase;
+}
+.price{
+  color:var(--sk-blue);
+  font-size:26px;font-weight:800;letter-spacing:-.045em;
+}
+.meta-list{display:grid;gap:7px;margin-top:12px}
+.meta-row{display:flex;justify-content:space-between;gap:16px;color:var(--sk-body);font-size:10px}
+.meta-row strong{color:var(--sk-blue);text-align:right}
+.actions{
+  display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;
+  margin-top:20px;padding-top:18px;border-top:1px solid var(--sk-border-soft);
+}
+.actions-right{display:flex;gap:8px;flex-wrap:wrap;margin-left:auto}
+.btn{
+  min-height:43px;
+  padding:0 16px;
+  border:1px solid var(--sk-blue);
+  border-radius:10px;
+  background:var(--sk-blue);
+  color:#fff;
+  font-size:10px;font-weight:850;
+}
+.btn:hover{background:var(--sk-blue2)}
+.btn.secondary{
+  border-color:var(--sk-border);
+  background:#fff;
+  color:var(--sk-blue);
+}
+.btn.secondary:hover{border-color:rgba(95,199,207,.65);background:var(--sk-pale)}
+.btn:disabled{opacity:.55;cursor:not-allowed}
+.field{min-width:0}
+.field label{
+  display:block;margin:0 0 6px;color:var(--sk-muted);
+  font-size:8px;font-weight:850;letter-spacing:.08em;text-transform:uppercase;
+}
+.field input,.field select,.field textarea{
+  width:100%;min-height:42px;padding:9px 11px;
+  border:1px solid var(--sk-border);
+  border-radius:9px;
+  background:#fff;color:var(--sk-text);
+  font-size:10px;
+}
+.field textarea{min-height:88px;resize:vertical}
+.field input:focus,.field select:focus,.field textarea:focus{
+  border-color:var(--sk-cyan);
+  box-shadow:0 0 0 3px rgba(95,199,207,.11);
+  outline:0;
+}
+.checkline{
+  display:flex;align-items:flex-start;gap:10px;
+  margin-top:17px;padding:14px;
+  border:1px solid var(--sk-border-soft);
+  border-radius:11px;background:var(--sk-pale);
+  color:var(--sk-body);font-size:10px;line-height:1.55;
+}
+.checkline input{width:17px;height:17px;flex:0 0 17px;margin-top:1px;accent-color:var(--sk-blue)}
+.option-card{
+  display:grid;
+  grid-template-columns:auto minmax(0,1fr) auto;
+  gap:15px;
+  align-items:center;
+  padding:18px;
+  border:1px solid var(--sk-border);
+  border-radius:15px;
+  background:#fff;
+  transition:.18s ease;
+}
+.option-card:hover{transform:translateY(-1px);box-shadow:var(--sk-shadow)}
+.option-card.selected{border-color:var(--sk-cyan);background:var(--sk-pale)}
+.option-card input[type=checkbox],.option-card input[type=radio]{width:18px;height:18px;accent-color:var(--sk-blue)}
+.option-card h3{font-size:14px}
+.option-card p{margin:5px 0 0;color:var(--sk-body);font-size:10px;line-height:1.5}
+.option-price{color:var(--sk-blue);font-size:14px;font-weight:800;white-space:nowrap}
+.empty{
+  padding:34px;
+  border:1px dashed var(--sk-border);
+  border-radius:14px;
+  background:var(--sk-bg);
+  color:var(--sk-muted);
+  text-align:center;
+  font-size:11px;line-height:1.6;
+}
+.route-list{display:grid;gap:10px}
+.route-item{
+  display:grid;grid-template-columns:96px minmax(0,1fr) auto;gap:14px;align-items:center;
+  padding:14px;border:1px solid var(--sk-border-soft);border-radius:12px;background:var(--sk-bg)
+}
+.route-code{color:var(--sk-blue);font-size:16px;font-weight:850}
+.route-main{color:var(--sk-text);font-size:10px;line-height:1.5}
+.route-side{color:var(--sk-muted);font-size:9px;text-align:right}
+.badge{
+  display:inline-flex;align-items:center;min-height:25px;padding:0 9px;
+  border:1px solid rgba(95,199,207,.45);border-radius:999px;
+  background:var(--sk-pale);color:var(--sk-blue);
+  font-size:8px;font-weight:850;letter-spacing:.04em;text-transform:uppercase;
+}
+.loader{
+  position:fixed;inset:0;z-index:100;display:none;place-items:center;
+  background:rgba(255,255,255,.78);backdrop-filter:blur(5px);
+}
+.loader.active{display:grid}
+.loader-card{
+  min-width:230px;padding:22px;border:1px solid var(--sk-border);border-radius:16px;
+  background:#fff;box-shadow:var(--sk-shadow-strong);text-align:center;color:var(--sk-blue);
+  font-size:10px;font-weight:800
+}
+.spinner{
+  width:28px;height:28px;margin:0 auto 12px;border:3px solid var(--sk-border);
+  border-top-color:var(--sk-cyan);border-radius:50%;animation:spin .8s linear infinite
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media(max-width:820px){
+  .grid-2,.grid-3{grid-template-columns:1fr}
+  .route-item{grid-template-columns:1fr}
+  .route-side{text-align:left}
+}
+@media(max-width:680px){
+  .flow-shell{padding:18px 14px 54px}
+  .flow-label{display:none}
+  .flow-stepper{margin-bottom:18px}
+  .page-hero{padding:27px 20px}
+  .page-hero::after{left:20px;right:20px}
+  .panel-body{padding:17px}
+  .actions{display:grid;grid-template-columns:1fr}
+  .actions-right{display:grid;grid-template-columns:1fr;margin-left:0}
+  .btn{width:100%}
+}
+@media(prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{animation:none!important;transition-duration:.01ms!important}
+}
+
+
+.doc-stack{display:grid;gap:14px}
+.doc-card{border:1px solid var(--sk-border);border-radius:17px;background:#fff;box-shadow:var(--sk-shadow);overflow:hidden}
+.doc-card header{display:flex;justify-content:space-between;gap:14px;padding:18px 20px;border-bottom:1px solid var(--sk-border-soft);background:linear-gradient(180deg,#fff,var(--sk-pale))}
+.doc-card header strong{color:var(--sk-blue);font-size:14px}
+.doc-body{padding:20px}
+.ticket{
+  display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;padding:13px 14px;
+  border:1px solid var(--sk-border-soft);border-radius:11px;background:var(--sk-bg);margin-top:8px
+}
+.ticket strong{color:var(--sk-blue);font-size:10px}
+.ticket span{color:var(--sk-muted);font-size:9px}
+@media print{
+  .flow-stepper,.page-hero,.status,.actions,#printBtn{display:none!important}
+  .flow-shell{max-width:none;padding:0}
+  .doc-card{box-shadow:none;break-inside:avoid}
+}
+
 </style>
 </head>
 <body>
-<div class="wrap">
-  
-  <div class="sk-stepper-container">
-    <div class="sk-stepper-track"></div>
-    <div class="sk-stepper-progress" style="width: 100%;"></div>
-    
-    <div class="sk-step completed">
-      <div class="sk-step-circle"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-      <div class="sk-step-label">Offer</div>
-    </div>
-    <div class="sk-step completed">
-      <div class="sk-step-circle"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-      <div class="sk-step-label">Extras</div>
-    </div>
-    <div class="sk-step completed">
-      <div class="sk-step-circle"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-      <div class="sk-step-label">Transfer</div>
-    </div>
-    <div class="sk-step completed">
-      <div class="sk-step-circle"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-      <div class="sk-step-label">Travelers</div>
-    </div>
-    <div class="sk-step completed">
-      <div class="sk-step-circle"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-      <div class="sk-step-label">Seats</div>
-    </div>
-    <div class="sk-step completed">
-      <div class="sk-step-circle"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-      <div class="sk-step-label">Payment</div>
-    </div>
-    <div class="sk-step completed">
-      <div class="sk-step-circle"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-      <div class="sk-step-label">Done</div>
-    </div>
-  </div>
-
-  <section class="hero">
-    <h1>Travel documents</h1>
-    <p>Confirmed itinerary, reservation references and issued travel documents for your SKANDI booking.</p>
-  </section>
-  
-  <div id="status" class="status show">Loading documents...</div>
-  <main id="root" class="grid"></main>
-
+<div class="loader" id="pageLoader"><div class="loader-card"><div class="spinner"></div><div id="loaderText">Updating your booking…</div></div></div>
+<div class="flow-shell">
+<div class="flow-stepper" aria-label="Booking progress"><div class="flow-step done"><div class="flow-dot">✓</div><div class="flow-label">Offer</div></div><div class="flow-step done"><div class="flow-dot">✓</div><div class="flow-label">Extras</div></div><div class="flow-step done"><div class="flow-dot">✓</div><div class="flow-label">Transfer</div></div><div class="flow-step done"><div class="flow-dot">✓</div><div class="flow-label">Travelers</div></div><div class="flow-step done"><div class="flow-dot">✓</div><div class="flow-label">Seats</div></div><div class="flow-step done"><div class="flow-dot">✓</div><div class="flow-label">Payment</div></div><div class="flow-step done"><div class="flow-dot">✓</div><div class="flow-label">Done</div></div></div>
+<section class="page-hero">
+  <div class="eyebrow">BOOKING · DONE</div>
+  <h1>Travel documents</h1>
+  <p>Your confirmed SKANDI itinerary, booking references and supplier-issued documents.</p>
+</section>
+<div id="status" class="status show">Loading…</div>
+<main id="root"></main>
 </div>
 <script>
+
+(()=>{
+"use strict";
 const SOURCE="SKANDI_BOOKING_DOCUMENTS",PARENT="SKANDI_WIX_PARENT";
 const $=id=>document.getElementById(id);
 function post(type,payload={}){window.parent.postMessage({source:SOURCE,type,...payload},"*")}
-function esc(v=""){return String(v??"").replace(/[&<>"']/g,s=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[s]))}
+function esc(v=""){return String(v??"").replace(/[&<>"']/g,s=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[s]))}
 function status(m,c=""){const e=$("status");e.textContent=m;e.className="status show "+c}
-
-function renderConfirmation(d={}){
-  return `<article class="doc">
-    <header class="doc-head">
-      <div>
-        <div class="brand">SKANDI TRAVELS</div>
-        <p class="muted" style="margin:6px 0 0">Booking confirmation / travel itinerary</p>
-      </div>
-      <span class="pill">${esc(d.status||"Confirmed")}</span>
-    </header>
-    <div class="doc-body">
-      <h2 style="font-size:24px; margin-bottom: 20px;">${esc(d.title||"Booking Confirmation")}</h2>
-      <table class="meta">
-        <tr><td>SKANDI reference:</td><td class="pnr">${esc(d.bookingReference||"")}</td></tr>
-        ${d.pnrLocator?`<tr><td>Airline reference:</td><td>${esc(d.pnrLocator)}</td></tr>`:""}
-        ${d.hotelReference?`<tr><td>Hotel reference:</td><td>${esc(d.hotelReference)}</td></tr>`:""}
-        <tr><td>Booking type:</td><td>${esc(d.confirmationType||"")}</td></tr>
-        <tr><td>Status:</td><td>${esc(d.status||"")}</td></tr>
-      </table>
-      <p class="muted" style="margin-top:20px">${esc(d.summary||"Your SKANDI booking is confirmed.")}</p>
-    </div>
-  </article>`
+function when(v){if(!v)return"";const d=new Date(v);return Number.isNaN(d.getTime())?String(v):d.toLocaleString([], {dateStyle:"medium",timeStyle:"short"})}
+function itinerary(d={}){
+  const slices=Array.isArray(d.slices)?d.slices:[];
+  if(!slices.length)return`<div class="empty">No flight itinerary is attached to this booking.</div>`;
+  const segments=slices.flatMap(s=>Array.isArray(s.segments)?s.segments:[]);
+  return `<div class="route-list">${segments.map(s=>{
+    const o=s.origin?.iataCode||s.origin||"—",dest=s.destination?.iataCode||s.destination||"—";
+    const carrier=s.operatingCarrierDisplayName||s.marketingCarrier?.name||s.operatingCarrier?.name||s.marketingCarrier?.iataCode||"";
+    const flight=s.marketingFlightNumber||s.flightNumber||"";
+    return `<div class="route-item"><div class="route-code">${esc(o)} → ${esc(dest)}</div><div class="route-main"><strong>${esc(carrier||"Flight")}</strong>${flight?` · ${esc(flight)}`:""}<br>${esc(when(s.departingAt||s.departureAt))}</div><div class="route-side">${esc(s.cabinClass||s.fareBrandName||"")}</div></div>`
+  }).join("")}</div>`;
 }
-
-function renderFlight(d={}){
-  const items=d.segments||[];
-  return `<article class="doc">
-    <header class="doc-head">
-      <div>
-        <div class="brand">FLIGHT ITINERARY</div>
-        <p class="muted" style="margin:6px 0 0">Your confirmed flight routing and airline booking reference.</p>
-      </div>
-      ${d.pnrLocator?`<span class="pill">${esc(d.pnrLocator)}</span>`:""}
-    </header>
-    <div class="doc-body">
-      ${items.length?items.map(s=>`
-        <div class="segment">
-          <div>
-            <div class="route">${esc(s.origin||"---")} → ${esc(s.destination||"---")}</div>
-            <div class="muted" style="color:var(--sk-cyan);font-weight:800">${esc(s.date||"")}</div>
-          </div>
-          <div>
-            <strong style="color:var(--sk-blue);font-size:15px">${esc([s.carrier,s.flightNumber].filter(Boolean).join(" ")||"Flight")}</strong>
-            ${s.departureAt?`<div class="muted" style="margin-top:4px">Departure: ${esc(new Date(s.departureAt).toLocaleString())}</div>`:""}
-            ${s.arrivalAt?`<div class="muted">Arrival: ${esc(new Date(s.arrivalAt).toLocaleString())}</div>`:""}
-          </div>
-          <div class="muted">${esc(s.route||"")}</div>
-        </div>
-      `).join(""):`<div class="empty">No flight segments were returned.</div>`}
-    </div>
-  </article>`
+function confirmation(c={}){
+  const stay=c.stayBooking||{};
+  return `<article class="doc-card"><header><strong>Booking confirmation</strong><span class="badge">${esc(c.status||"Confirmed")}</span></header><div class="doc-body"><div class="grid-2"><div><div class="kicker">SKANDI reference</div><div class="price" style="font-size:21px">${esc(c.bookingReference||c.cartId||"—")}</div><p style="color:var(--sk-body);font-size:10px;line-height:1.6">${esc(c.summary||"Your SKANDI booking is confirmed.")}</p></div><div class="meta-list"><div class="meta-row"><span>Type</span><strong>${esc(c.confirmationType||"Travel booking")}</strong></div>${c.pnrLocator?`<div class="meta-row"><span>Supplier reference</span><strong>${esc(c.pnrLocator)}</strong></div>`:""}${stay.reference?`<div class="meta-row"><span>Hotel reference</span><strong>${esc(stay.reference)}</strong></div>`:""}</div></div></div></article>`;
 }
-
-function renderHotel(d={}){
-  return `<article class="doc">
-    <header class="doc-head">
-      <div>
-        <div class="brand">HOTEL RESERVATION</div>
-        <p class="muted" style="margin:6px 0 0">Accommodation reservation summary.</p>
-      </div>
-      ${d.hotelReference?`<span class="pill">${esc(d.hotelReference)}</span>`:""}
-    </header>
-    <div class="doc-body">
-      <h2 style="font-size:24px; margin-bottom:20px;">${esc(d.hotelName||"Hotel reservation")}</h2>
-      <div class="voucher">
-        <table class="meta">
-          <tr><td>Check-in:</td><td>${esc(d.checkInDate||"")}</td></tr>
-          <tr><td>Check-out:</td><td>${esc(d.checkOutDate||"")}</td></tr>
-          <tr><td>Room:</td><td>${esc(d.roomName||"See reservation")}</td></tr>
-          <tr><td>Board:</td><td>${esc(d.boardType||"See reservation")}</td></tr>
-        </table>
-        <table class="meta">
-          <tr><td>SKANDI reference:</td><td>${esc(d.bookingReference||"")}</td></tr>
-          <tr><td>Hotel reference:</td><td>${esc(d.hotelReference||"")}</td></tr>
-          <tr><td>Guests:</td><td>${esc((d.guests||[]).map(g=>g.fullName).filter(Boolean).join(", "))}</td></tr>
-        </table>
-      </div>
-    </div>
-  </article>`
+function tickets(e={}){
+  const docs=Array.isArray(e.documents)?e.documents:[];
+  return `<article class="doc-card"><header><strong>${esc(e.title||"Airline ticket documents")}</strong><span class="badge">${docs.length} issued</span></header><div class="doc-body">${docs.length?docs.map(d=>`<div class="ticket"><div><strong>${esc(d.type||"Travel document")}</strong><span style="display:block;margin-top:4px">${esc((d.passengerIds||[]).join(", "))}</span></div><strong>${esc(d.ticketNumber||d.id||"")}</strong></div>`).join(""):`<div class="empty">${esc(e.note||"No supplier-issued ticket document is available yet.")}</div>`}</div></article>`;
 }
-
-function renderIssued(d={}){
-  const items=d.items||[];
-  return `<article class="doc">
-    <header class="doc-head">
-      <div>
-        <div class="brand">ISSUED DOCUMENTS</div>
-        <p class="muted" style="margin:6px 0 0">Documents issued by the operating supplier.</p>
-      </div>
-    </header>
-    <div class="doc-body">
-      <div class="issued">
-        ${items.length?items.map(i=>`
-          <div class="issued-item">
-            <strong>${esc(i.type||"Travel document")}</strong>
-            <span style="font-weight:700;color:var(--sk-muted)">${esc(i.uniqueIdentifier||i.id||"")}</span>
-          </div>
-        `).join(""):`<div class="empty">No supplier-issued documents are available yet.</div>`}
-      </div>
-    </div>
-  </article>`
-}
-
 function render(payload={}){
   const docs=payload.documents||{};
-  status("Documents ready.","ok");
-  let html="";
-  if(docs.confirmation)html+=renderConfirmation(docs.confirmation);
-  if(docs.flightItinerary)html+=renderFlight(docs.flightItinerary);
-  if(docs.hotelVoucher)html+=renderHotel(docs.hotelVoucher);
-  if(docs.issuedDocuments)html+=renderIssued(docs.issuedDocuments);
-  $("root").innerHTML=html||`<article class="doc"><div class="empty"><h2>No documents available</h2><p>Documents will appear here after the booking is confirmed and issued.</p></div></article>`;
+  $("root").innerHTML=`<div class="doc-stack">
+    ${docs.confirmation?confirmation(docs.confirmation):""}
+    <article class="doc-card"><header><strong>${esc(docs.itinerary?.title||"SKANDI itinerary")}</strong><span class="badge">Itinerary</span></header><div class="doc-body">${itinerary(docs.itinerary||{})}</div></article>
+    ${tickets(docs.eTickets||{})}
+  </div>
+  <div class="actions">
+    <button class="btn secondary" id="homeBtn" type="button">Home</button>
+    <div class="actions-right"><button class="btn secondary" id="profileBtn" type="button">My Profile</button><button class="btn" id="printBtn" type="button">Print / Save PDF</button></div>
+  </div>`;
+  $("homeBtn").onclick=()=>post("BOOKING_NAVIGATE",{path:"/home"});
+  $("profileBtn").onclick=()=>post("BOOKING_NAVIGATE",{path:"/my-profile"});
+  $("printBtn").onclick=()=>window.print();
+  status("Travel documents ready.","ok");
 }
-
 window.addEventListener("message",e=>{
-  const m=e.data||{};
-  if(m.source!==PARENT)return;
+  const m=e.data||{};if(m.source!==PARENT)return;
   if(m.type==="BOOKING_DOCUMENTS_LOADED")render(m.payload||{});
-  if(m.type==="BOOKING_ERROR")status(m.message||"Could not load documents.","err")
+  if(m.type==="BOOKING_ERROR")status(m.message||"Could not load travel documents.","error");
 });
 post("BOOKING_DOCUMENTS_READY");
+})();
+
 </script>
 </body>
 </html>
+```
