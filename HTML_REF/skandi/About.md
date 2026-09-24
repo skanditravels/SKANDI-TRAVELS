@@ -1,25 +1,57 @@
 # About
 
-STATUS: NEEDS REVIEW
-SLUG: /about
-WIX PAGE: About.xcftf
-AREA: SKANDI
-LIVE HTML: YES
-ELEMENT: #aboutEmbed
-LAST SYNCED: 2026-09-16
+## INFO / LOG
 
-## HOW TO USE
-***STATUS (OWNER): "TODO", "IN PROGRESS", "NEEDS REVIEW", "REVISIONS NEEDED", "READY", "LIVE", "ARCHIVED"
-STATUS (AGENT): "TODO", "IN PROGRESS", "REVISIONS NEEDED", "READY".***
+- **Status:** READY
+- **System:** SKANDI
+- **Route:** `/about`
+- **Wix page:** `About.xcftf`
+- **HTML component:** `#aboutEmbed`
+- **HTML source:** `/HTML_REF/skandi/About.md`
+- **Page source:** `SKANDI_ABOUT_PAGE`
+- **Parent source:** `SKANDI_WIX_PARENT`
+- **Public data facade:** `backend/SKANDI_CORE/publicContent.web`
+- **Public data method:** `getPublicAboutPayload`
+- **Public data core:** `backend/SKANDI_CORE/publicContent`
+- **Global chrome/settings/routes:** `masterPage.js`
+- **Version:** `B-011.4`
+- **Last verified:** `2026-09-24`
 
-###  COMMENT SECTION (START ON A NEW ROW, LOG IF A CHANGE IS MADE THAT REQUIRES ATTENTION) 
-1. 9/17 12:07PM "Page is ready styled from my end, page not syncing correctly yet /Samuel"
-2.
-3.
-...
-***END*** 
+### Architecture
 
-#### LIVE HTML
+`About HTML`
+→ `postMessage`
+→ `/src/pages/About.xcftf.js`
+→ `backend/SKANDI_CORE/publicContent.web`
+→ `backend/SKANDI_CORE/publicContent`
+→ canonical Supabase public-content / Inventory projections
+
+Global customer header/footer, customer settings, shared routes and session behavior remain owned by `masterPage.js`.
+
+### B-011.4 visual convergence
+
+B-011.4 is a presentation-only refinement of the already-converged B-011.3 About architecture.
+
+The page now intentionally matches the current Home design language while retaining its own About-specific layout:
+
+- Home-aligned navy `#022e64`, cyan `#5FC7CF`, white and pale-blue surfaces.
+- Compact light editorial hero instead of the former dark animated cinematic hero.
+- Navy H1/H2 typography with restrained cyan accents.
+- Reduced radii and shadow intensity to match Home.
+- Removed high-tech/glow/radar/scan visual effects from the story timeline.
+- Converted Our Story to a lighter editorial timeline.
+- Converted Collection to a pale Home-style content rail.
+- Kept Who We Are as image-led cards, but with restrained gradients and motion.
+- Helpful Links remains a different 2×2 editorial mosaic so About does not simply copy Home's layout.
+- Final CTA is the one intentional dark navy feature block.
+- Existing content, translations, live Inventory collection/partner data and B-011 message contracts are unchanged.
+- Existing Presentation Registry hooks are preserved.
+- No masterPage, backend, database, RPC or provider change is required.
+
+---
+
+## COMPLETE INTENDED LIVE HTML SOURCE
+
 ```html
 <!doctype html>
 <html lang="en">
@@ -27,615 +59,1177 @@ STATUS (AGENT): "TODO", "IN PROGRESS", "REVISIONS NEEDED", "READY".***
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
 <meta name="theme-color" content="#022e64"/>
-<title>About SKANDI</title>
+<title>About SKANDI · B-011.4</title>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
 
 <style>
-/* ==========================================================================
-   GLOBAL DESIGN SYSTEM & VARIABLES
-   ========================================================================== */
-:root {
-  --sk-blue: #022e64;
-  --sk-blue2: #0b3a7a;
-  --sk-blue-soft: #1F6BA3;
+:root{
+  --sk-blue:#022e64;
+  --sk-blue-soft:#285ca8;
+  --sk-blue2:#0b3a7a;
   --sk-light:#d7e6ff;
-  --sk-cyan: #5FC7CF;
-  --sk-bg: #ffffff;
-  --sk-bg-alt: #f6f8fb;
-  --sk-text: #111827;
-  --sk-body: #4d5f74;
-  --sk-muted: #66758a;
-  --sk-line: #dfe5ef;
-  --sk-border-soft: #eef2f7;
-  --sk-shadow: 0 16px 45px rgba(2, 46, 100, 0.08);
-  --sk-shadow-hover: 0 24px 60px rgba(2, 46, 100, 0.15);
-  --sk-radius: 24px;
-  
-  --header-h: 74px;
-  --bar-height: 44px;
-  --header-total: 118px;
+  --sk-pale:#f6faff;
+  --sk-bg:#f7faff;
+  --sk-border:#dbe3ef;
+  --sk-border-soft:#eef2f7;
+  --sk-text:#111;
+  --sk-body:#555f70;
+  --sk-muted:#667085;
+  --sk-cyan:#5FC7CF;
+  --sk-ok:#087443;
+  --sk-danger:#8a1f1f;
+  --sk-shadow:0 8px 26px rgba(0,0,0,.08);
+  --sk-shadow-strong:0 14px 34px rgba(0,0,0,.12);
+  --sk-radius:18px;
+  --sk-max:1180px;
 }
 
-* { box-sizing: border-box; margin: 0; padding: 0; }
+*{box-sizing:border-box;margin:0;padding:0}
 
-html, body {
-  font-family: 'Montserrat', system-ui, -apple-system, "Segoe UI", sans-serif;
-  background: var(--sk-bg);
-  color: var(--sk-text);
-  overflow-x: hidden;
-  line-height: 1.6;
+html,body{
+  width:100%;
+  min-height:100%;
+  font-family:"Montserrat",system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  background:#fff;
+  color:var(--sk-text);
+  overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
 }
 
-button, input, select { font: inherit; }
-a { color: inherit; text-decoration: none; }
-img { max-width: 100%; display: block; }
+button,input,select{font-family:inherit}
+button{cursor:pointer}
+a{color:inherit;text-decoration:none}
+img{display:block;max-width:100%}
 
-/* Accessibility Skip Link */
-.skip-link {
-  position: absolute; left: -999px; top: auto; width: 1px; height: 1px; overflow: hidden;
+.skip-link{
+  position:absolute;
+  left:-999px;
+  top:auto;
+  width:1px;
+  height:1px;
+  overflow:hidden;
 }
-.skip-link:focus {
-  left: 16px; top: 16px; width: auto; height: auto; background: #fff; color: var(--sk-blue);
-  padding: 10px 14px; z-index: 9999; border-radius: 8px; font-weight: 700;
-}
-
-/* Premium Buttons */
-.btn {
-  position: relative;
-  appearance: none;
-  border: 1px solid transparent;
-  background: var(--sk-blue);
-  color: #fff;
-  border-radius: 999px;
-  padding: 14px 28px;
-  font-size: 13px;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  min-height: 48px;
-  overflow: hidden;
-  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.3s ease, background 0.3s ease;
+.skip-link:focus{
+  left:16px;
+  top:16px;
+  width:auto;
+  height:auto;
+  z-index:9999;
+  padding:10px 14px;
+  border-radius:10px;
+  background:#fff;
+  color:var(--sk-blue);
+  box-shadow:var(--sk-shadow);
+  font-weight:800;
 }
 
-.btn::before {
-  content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-  transform: skewX(-25deg); transition: left 0.6s ease;
-}
-.btn:hover::before { left: 150%; }
-.btn-secondary { background: #fff; color: var(--sk-blue); border-color: var(--sk-line); }
-.btn-secondary::before { background: linear-gradient(90deg, transparent, rgba(2, 46, 100, 0.05), transparent); }
-.btn-light { background: rgba(255, 255, 255, 0.1); color: #fff; border-color: rgba(255, 255, 255, 0.3); backdrop-filter: blur(8px); }
-.btn:hover { transform: translateY(-3px); box-shadow: 0 12px 28px rgba(2, 46, 100, 0.2); }
-.btn-secondary:hover { border-color: var(--sk-blue); }
-.btn-light:hover { background: #fff; color: var(--sk-blue); border-color: #fff; }
-
-/* ==========================================================================
-   HEADER & FOOTER (INTEGRATED)
-   ========================================================================== */
-#skandi-site-header, #skandi-site-footer { width: 100%; display: block; }
-#skandi-site-header .header-shell { position: relative; z-index: 100; height: var(--header-total); background: #fff; box-shadow: 0 4px 24px rgba(15,23,42,.08); }
-#skandi-site-header .mainline { height: var(--header-h); background: #fff; border-bottom: 1px solid var(--sk-line); }
-#skandi-site-header .inner { max-width: 1440px; margin: 0 auto; height: 100%; padding: 0 18px; display: flex; align-items: center; gap: 18px; }
-#skandi-site-header .logo { border: 0; background: transparent; padding: 0; display: flex; align-items: center; flex: 0 0 auto; flex-shrink: 0; cursor:pointer;}
-#skandi-site-header .logo img { height: 50px; width: auto; object-fit: contain; }
-#skandi-site-header .nav { flex: 1; display: flex; align-items: center; gap: 4px; min-width: 0; }
-#skandi-site-header .nav-btn { border: 0; background: transparent; color: var(--sk-blue); border-radius: 999px; padding: 10px 14px; font-size: 13px; font-weight: 800; white-space: nowrap; position: relative; overflow: visible; transition: color 0.3s; }
-#skandi-site-header .nav-btn:hover { color: var(--sk-cyan); }
-#skandi-site-header .nav-btn::after { content: ""; position: absolute; bottom: 0; left: 50%; width: 0; height: 3px; background-color: var(--sk-cyan); border-radius: 999px; transition: width 0.3s ease, left 0.3s ease; }
-#skandi-site-header .nav-btn:hover::after, #skandi-site-header .nav-btn.active::after { width: 80%; left: 10%; }
-#skandi-site-header .actions { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; flex-shrink: 0; }
-#skandi-site-header .action-btn, #skandi-site-header .mobile-btn { border: 0; background: #fff; color: var(--sk-blue); border-radius: 999px; min-height: 40px; padding: 0 16px; font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; cursor:pointer; transition: all 0.3s;}
-#skandi-site-header .action-btn:hover { background: var(--sk-bg-alt); }
-#skandi-site-header .action-btn.primary { background: var(--sk-blue); color: #fff; }
-#skandi-site-header .action-btn.primary:hover { background: var(--sk-blue2); box-shadow: 0 8px 16px rgba(2,46,100,0.2); transform: translateY(-1px);}
-#skandi-site-header .mobile-btn { display: none; width: auto; height: 40px; gap: 8px; white-space: nowrap; flex-shrink: 0; }
-#skandi-site-header .expandbar { height: var(--bar-height); background: linear-gradient(90deg, var(--sk-blue), var(--sk-blue2)); color: #fff; position: relative; overflow: hidden; z-index: 80; }
-#skandi-site-header .expand-inner { max-width: 1240px; margin: 0 auto; height: 100%; padding: 0 18px; position: relative; }
-#skandi-site-header .default-bar { height: 100%; display: flex; align-items: center; justify-content: space-between; gap: 14px; color: rgba(255,255,255,.88); font-size: 11px; font-weight: 700; letter-spacing: .09em; font-style: italic; text-transform: uppercase; }
-#skandi-site-header .default-bar span { font-weight: 900; font-style: normal; color: var(--sk-cyan); }
-#skandi-site-header .expandbar-img { 
-  height: clamp(38px, 4vw, 36px); 
-  width: auto; 
-  max-width: 100%;
-  object-fit: contain; 
-  display: block; 
+/* =========================================================
+   SHARED B-011 TYPOGRAPHY / BUTTONS
+   Mirrors Home's lighter travel-site language.
+   ========================================================= */
+.eyebrow,
+.hero-eyebrow{
+  display:flex;
+  align-items:center;
+  gap:9px;
+  color:var(--sk-cyan);
+  font-size:10px;
+  line-height:1.2;
+  font-weight:900;
+  letter-spacing:.16em;
+  text-transform:uppercase;
 }
 
-/* Favorite Button Animation */
-@keyframes favPop { 0% { transform: scale(1); } 40% { transform: scale(1.35); color: var(--sk-cyan); } 100% { transform: scale(1); } }
-#favBtn { transition: color 0.2s ease, transform 0.2s; transform-origin: center; cursor: pointer; }
-#favBtn.saved { animation: favPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
-
-/* Globe / Settings Dropdown */
-.settings-wrap { position: relative; display: inline-block; }
-#settingsBtn { padding: 0 10px; cursor: pointer; }
-#settingsBtn svg { width: 22px; height: 22px; fill: currentColor; transition: transform 0.3s; }
-#settingsBtn:hover svg { transform: rotate(15deg); }
-.settings-menu { position: absolute; top: calc(100% + 14px); right: 0; background: rgba(255,255,255,0.95); backdrop-filter: blur(12px); border: 1px solid var(--sk-line); border-radius: 20px; box-shadow: 0 20px 50px rgba(2, 46, 100, 0.15); padding: 24px; width: 260px; z-index: 200; opacity: 0; visibility: hidden; transform: translateY(-10px) scale(0.95); transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1); transform-origin: top right; }
-.settings-menu.open { opacity: 1; visibility: visible; transform: translateY(0) scale(1); }
-.settings-group { margin-bottom: 16px; text-align: left; }
-.settings-group label { display: block; font-size: 11px; font-weight: 800; color: var(--sk-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
-.settings-group select { width: 100%; padding: 14px 16px; border: 1px solid var(--sk-border-soft); border-radius: 12px; font-size: 13px; color: var(--sk-blue); font-weight: 600; outline: none; background: #f9fafb; cursor: pointer; transition: all 0.2s; }
-.settings-group select:focus, .settings-group select:hover { border-color: var(--sk-cyan); background: #fff; box-shadow: 0 4px 12px rgba(95,199,207,0.1); }
-.mobile-settings-bar { display: flex; gap: 10px; padding: 16px; border-bottom: 1px solid var(--sk-border-soft); background: var(--sk-bg-alt); }
-.mobile-settings-bar select { flex: 1; padding: 12px; border-radius: 10px; border: 1px solid var(--sk-line); font-size: 13px; font-weight: 600; color: var(--sk-blue); background: #fff; }
-
-/* WELCOME SETTINGS MODAL */
-.welcome-modal-layer { position: fixed; inset: 0; z-index: 99999; display: flex; align-items: center; justify-content: center; visibility: hidden; pointer-events: none; }
-.welcome-modal-layer.active { visibility: visible; pointer-events: auto; }
-.welcome-backdrop { position: absolute; inset: 0; background: rgba(2,18,39,0.7); backdrop-filter: blur(8px); opacity: 0; transition: opacity 0.4s ease; }
-.welcome-modal-layer.active .welcome-backdrop { opacity: 1; }
-.welcome-card { position: relative; background: #fff; width: min(440px, 90vw); border-radius: 32px; box-shadow: 0 32px 80px rgba(2,46,100,0.25); padding: 48px 40px; text-align: center; transform: translateY(20px) scale(0.95); opacity: 0; transition: all 0.5s cubic-bezier(0.22, 1, 0.36, 1); }
-.welcome-modal-layer.active .welcome-card { transform: translateY(0) scale(1); opacity: 1; }
-.welcome-card .globe-icon { color: var(--sk-cyan); margin-bottom: 20px; }
-.welcome-card .globe-icon svg { width: 56px; height: 56px; fill: currentColor; margin: 0 auto; animation: pulseGlow 3s infinite alternate; }
-.welcome-card h2 { color: var(--sk-blue); font-size: 28px; font-weight: 800; margin-bottom: 12px; letter-spacing:-0.03em;}
-.welcome-card p { color: var(--sk-body); font-size: 15px; margin-bottom: 32px; line-height:1.6;}
-@keyframes pulseGlow { 0% { filter: drop-shadow(0 0 4px rgba(95,199,207,0.3)); } 100% { filter: drop-shadow(0 0 16px rgba(95,199,207,0.8)); } }
-
-/* Slide-out Panels & Mobile Menu */
-#skandi-site-header .club-backdrop { position: fixed; inset: 0; background: rgba(2,18,39,0.5); backdrop-filter: blur(6px); z-index: 9998; opacity: 0; visibility: hidden; transition: all 0.4s ease; }
-#skandi-site-header .club-backdrop.open { opacity: 1; visibility: visible; }
-#skandi-site-header .club-panel { position: fixed; top: 0; right: 0; height: 100dvh; width: min(440px, 100vw); background: #fff; box-shadow: -20px 0 60px rgba(2,46,100,0.15); z-index: 9999; border-top-left-radius: 32px; border-bottom-left-radius: 32px; transform: translateX(100%); opacity: 0; pointer-events: none; transition: transform 0.55s cubic-bezier(0.22,1,0.36,1), opacity 0.55s ease; display: flex; flex-direction: column; }
-#skandi-site-header .club-panel.open { transform: translateX(0); opacity: 1; pointer-events: auto; }
-#skandi-site-header .club-head { height: 90px; background: linear-gradient(135deg, var(--sk-blue), var(--sk-blue2)); color: #fff; display: flex; align-items: center; justify-content: space-between; padding: 0 32px; }
-#skandi-site-header .club-head strong { font-size: 18px; font-weight: 800; letter-spacing: -0.02em; }
-#skandi-site-header .club-close { border: 1px solid rgba(255,255,255,0.28); background: rgba(255,255,255,0.12); color: #fff; width: 40px; height: 40px; border-radius: 999px; font-size: 24px; font-weight: 700; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.3s ease;}
-#skandi-site-header .club-close:hover { background: rgba(255,255,255,0.25); transform: rotate(90deg); }
-#skandi-site-header .club-body { padding: 40px 32px; flex: 1; overflow-y: auto; }
-#skandi-site-header .login-form { display: flex; flex-direction: column; gap: 16px; }
-#skandi-site-header .login-form input { padding: 18px 20px; border: 1px solid var(--sk-border-soft); border-radius: 14px; font-size: 15px; background: #f9fafb; transition: all 0.3s ease; }
-#skandi-site-header .login-form input:focus { outline: none; border-color: var(--sk-cyan); background: #fff; box-shadow: 0 0 0 4px rgba(95,199,207,0.1); }
-
-/* Custom Favorites Slide-out State */
-@keyframes heartFloat { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-8px) scale(1.05); } }
-@keyframes favPopIn { from { opacity: 0; transform: scale(0.5) translateY(30px); } to { opacity: 1; transform: scale(1) translateY(0); } }
-.fav-hero-icon { display: block; font-size: 64px; color: var(--sk-cyan); text-align: center; margin-bottom: 16px; text-shadow: 0 16px 32px rgba(95, 199, 207, 0.4); animation: favPopIn 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards, heartFloat 3.5s ease-in-out infinite 0.7s; }
-.fav-hero-title { display: block; font-size: 28px; font-weight: 800; color: var(--sk-blue); text-align: center; margin-bottom: 12px; letter-spacing: -0.03em; }
-.fav-hero-text { display: block; font-size: 15px; color: var(--sk-body); text-align: center; line-height: 1.7; }
-
-/* Mobile Navigation */
-html.mobile-menu-open, body.mobile-menu-open { overflow: hidden; }
-.mobile-menu-layer { position: fixed; inset: 0; z-index: 2000; visibility: hidden; pointer-events: none; transition: visibility 0s linear 0.3s; }
-.mobile-menu-layer.open { visibility: visible; pointer-events: auto; transition-delay: 0s; }
-.mobile-menu-backdrop { position: absolute; inset: 0; background: rgba(2,18,39,0.6); backdrop-filter: blur(6px); opacity: 0; border: 0; transition: opacity 0.4s ease; width: 100%; cursor: default; }
-.mobile-menu-layer.open .mobile-menu-backdrop { opacity: 1; }
-.mobile-drawer { position: absolute; top: 0; right: 0; width: min(86vw, 380px); height: 100dvh; background: #fff; transform: translateX(105%); transition: transform 0.4s cubic-bezier(0.22,0.8,0.2,1); display: flex; flex-direction: column; border-top-left-radius: 24px; border-bottom-left-radius: 24px; overflow: hidden;}
-.mobile-menu-layer.open .mobile-drawer { transform: translateX(0); }
-.mobile-drawer-head { padding: 20px 24px; background: linear-gradient(135deg, var(--sk-blue), var(--sk-blue2)); color: #fff; display: flex; align-items: center; justify-content: space-between; }
-.mobile-drawer-head strong { font-size: 20px; font-weight: 800; line-height: 1.2; letter-spacing:-0.02em;}
-.mobile-drawer-head span { display: block; font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.8); margin-top: 4px; }
-#mobileMenuClose { width: 40px; height: 40px; border: 1px solid rgba(255,255,255,.32); border-radius: 999px; background: rgba(255,255,255,.12); color: #fff; font-size: 26px; cursor: pointer; transition: all 0.3s;}
-#mobileMenuClose:hover { background: rgba(255,255,255,0.25); transform: rotate(90deg); }
-.mobile-drawer-body { flex: 1; overflow-y: auto; padding: 0; }
-.mobile-menu-link { width: 100%; min-height: 60px; border: 0; border-bottom: 1px solid var(--sk-border-soft); background: #fff; color: var(--sk-blue); padding: 16px 24px; text-align: left; font-size: 15px; font-weight: 700; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: background 0.2s;}
-.mobile-menu-link:hover { background: var(--sk-pale); }
-.mobile-menu-link::after { content: "›"; color: var(--sk-cyan); font-size: 28px; font-weight: 500; transition: transform 0.2s; }
-.mobile-menu-link:hover::after { transform: translateX(4px); }
-.mobile-drawer-actions { padding: 20px 24px; border-top: 1px solid var(--sk-line); display: grid; grid-template-columns: 1fr 1fr; gap: 12px; background: #fff;}
-.mobile-drawer-action { min-height: 48px; border: 1px solid var(--sk-line); border-radius: 999px; background: #fff; color: var(--sk-blue); font-size: 13px; font-weight: 800; cursor: pointer; transition: all 0.3s;}
-.mobile-drawer-action.primary { background: var(--sk-blue); color: #fff; border-color: var(--sk-blue); }
-.mobile-drawer-action:hover { transform: translateY(-2px); box-shadow: 0 8px 16px rgba(2,46,100,0.1); }
-
-@media(max-width: 900px){
-  #skandi-site-header .nav, #skandi-site-header .desktop-only { display: none; }
-  #skandi-site-header .inner { justify-content: space-between; gap: 12px; }
-  #skandi-site-header .actions { flex-shrink: 0; }
-  #skandi-site-header .mobile-btn { display: inline-flex; white-space: nowrap; flex-shrink: 0; }
+.eyebrow::before,
+.hero-eyebrow::before{
+  content:"";
+  width:26px;
+  height:2px;
+  flex:0 0 26px;
+  border-radius:999px;
+  background:var(--sk-cyan);
 }
 
-/* BULLETPROOF LOGO LOCKS */
-#skandi-site-header button.logo { flex: 0 1 auto !important; min-width: 0 !important; height: auto !important; padding: 0 !important; background: transparent !important; border: none !important; }
-#skandi-site-header button.logo img { height: clamp(34px, 10vw, 50px) !important; width: auto !important; max-width: 100% !important; object-fit: contain !important; object-position: left center !important; display: block !important; }
-#skandi-site-footer .brand img.logo { width: 190px !important; max-width: 100% !important; height: auto !important; margin-bottom: 16px !important; object-fit: contain !important; display: block !important; }
-
-/* ==========================================================================
-   ABOUT PAGE CONTENT SECTIONS
-   ========================================================================== */
-.section { max-width: 1240px; margin: 0 auto; padding: 100px 24px 0; }
-.section-head { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: end; margin-bottom: 56px; }
-.section-head h2 { font-size: clamp(36px, 5vw, 52px); line-height: 1.05; color: var(--sk-blue); letter-spacing: -0.03em; }
-
-.gradient-text { background: linear-gradient(135deg, var(--sk-blue), var(--sk-cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; display: inline-block; }
-.section-head .copy { font-size: 18px; color: var(--sk-body); max-width: 600px; line-height: 1.7; font-weight: 400; }
-.eyebrow { display: inline-flex; align-items: center; gap: 12px; color: var(--sk-blue); text-transform: uppercase; letter-spacing: 0.2em; font-size: 12px; font-weight: 800; margin-bottom: 16px; }
-.eyebrow:before { content: ""; width: 48px; height: 2px; background: var(--sk-cyan); border-radius: 2px; }
-.eyebrow.light { color: #fff; }
-.copy { line-height: 1.8; color: var(--sk-body); font-size: 16px; font-weight: 400;}
-
-/* Elevated Hero Section */
-@keyframes gradientMove { 
-  /* Animerar bara det rörliga färgskimret, den statiska glowen ligger still */
-  0% { background-position: center, 0% 50%; } 
-  50% { background-position: center, 100% 50%; } 
-  100% { background-position: center, 0% 50%; } 
+.eyebrow.light{
+  color:#d8fbfb;
+}
+.eyebrow.light::before{
+  background:#d8fbfb;
 }
 
-/* 1. Själva bilden läggs på huvudcontainern (helt stilla) */
-.hero { 
-  position: relative; 
-  min-height: 600px; 
-  background: var(--hero-image, url('https://static.wixstatic.com/media/394052_c28e933557934c498c287c32cd5110b1~mv2.png')) center/cover no-repeat;
-  display: flex; 
-  align-items: center; 
-  padding: 120px 24px; 
-  overflow: hidden; 
-}
-.hero::before { 
-  content: ''; 
-  position: absolute; 
-  inset: 0; 
-  background: 
-    /* Den turkosa runda "glowen" uppe i högra hörnet (stilla) */
-    radial-gradient(circle at 85% 15%, rgba(95, 199, 207, 0.3) 0%, transparent 60%),
-    /* Det mörkblå skimret med transparens som åker fram och tillbaka (rörligt) */
-    linear-gradient(-45deg, rgba(2, 46, 100, 0.75), rgba(11, 58, 122, 0.85), rgba(31, 107, 163, 0.75), rgba(2, 46, 100, 0.85)); 
-  
-  background-size: 100% 100%, 400% 400%; 
-  animation: gradientMove 15s ease infinite; 
-  z-index: 0; 
-  pointer-events: none; 
-}
-.hero::after { 
-  content: ""; 
-  position: absolute; 
-  inset: auto 0 0; 
-  height: 160px; 
-  background: linear-gradient(0deg, #fff, transparent); 
-  z-index: 1; 
-}
-.hero-inner { position: relative; z-index: 2; max-width: 1180px; margin: 0 auto; width: 100%; }
-.hero-eyebrow { display: inline-flex; align-items: center; gap: 12px; color: rgba(255,255,255,0.9); text-transform: uppercase; letter-spacing: 0.25em; font-size: 12px; font-weight: 800; margin-bottom: 24px; }
-.hero-eyebrow:before { content: ""; width: 48px; height: 2px; background: var(--sk-cyan); border-radius: 2px; }
-.hero h1 { font-size: clamp(48px, 7vw, 84px); font-weight: 300; line-height: 1.05; color: #fff; max-width: 1000px; margin-bottom: 24px; letter-spacing: -0.03em; }
-.hero h1 strong { font-weight: 800; }
-.hero p { font-size: 20px; line-height: 1.6; max-width: 720px; color: rgba(255,255,255,0.85); margin-bottom: 40px; font-weight: 400;}
-.hero-actions { display: flex; gap: 16px; flex-wrap: wrap; }
-
-/* Elevated Tech Link Cards Grid */
-.tech-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; }
-.tech-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; }
-.tech-link-card { position: relative; display: flex; flex-direction: column; justify-content: flex-end; min-height: 280px; background-image: var(--bg-img); background-size: cover; background-position: center; border: 1px solid rgba(2, 46, 100, 0.08); border-radius: var(--sk-radius); padding: 32px; overflow: hidden; box-shadow: 0 12px 32px rgba(2, 46, 100, 0.06); transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.5s ease, border-color 0.5s ease; }
-.tech-card-overlay { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(2, 46, 100, 0.05) 0%, rgba(2, 46, 100, 0.9) 100%); z-index: 1; transition: opacity 0.4s ease; }
-.tech-card-glow { position: absolute; inset: 0; background: radial-gradient(circle at 50% 100%, rgba(95, 199, 207, 0.3) 0%, transparent 70%); z-index: 2; opacity: 0; transition: opacity 0.5s ease; }
-.tech-card-body { position: relative; z-index: 3; width: 100%; transform: translateY(20px); transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1); }
-.tech-card-body .eyebrow { margin-bottom: 12px; }
-.tech-card-body strong { display: block; color: #fff; font-size: 22px; font-weight: 800; margin-bottom: 10px; line-height: 1.2; letter-spacing: -0.01em;}
-.tech-card-body span.desc { display: block; color: rgba(255,255,255,0.85); font-size: 14px; line-height: 1.6; margin-bottom: 20px; font-weight: 400;}
-.tech-action { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: var(--sk-cyan); opacity: 0; transform: translateY(10px); transition: all 0.4s ease; }
-.tech-link-card:hover { transform: translateY(-8px); box-shadow: var(--sk-shadow-hover); border-color: rgba(95, 199, 207, 0.5); }
-.tech-link-card:hover .tech-card-overlay { opacity: 0.95; }
-.tech-link-card:hover .tech-card-glow { opacity: 1; }
-.tech-link-card:hover .tech-card-body { transform: translateY(0); }
-.tech-link-card:hover .tech-action { opacity: 1; transform: translateY(0); }
-.tech-link-card:hover .tech-action .arrow { transform: translateX(6px); }
-
-/* ==========================================================================
-   HIGH-TECH TIMELINE 
-   ========================================================================== */
-.story-wrapper { background: linear-gradient(135deg, var(--sk-blue), var(--sk-blue2)); border-radius: 40px; padding: 64px; display: grid; grid-template-columns: 1fr 380px; gap: 64px; color: #fff; margin-top: 40px; box-shadow: var(--sk-shadow-hover); overflow: hidden; position: relative;}
-.story-wrapper::before { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(95,199,207,0.05) 0%, transparent 60%); pointer-events: none;}
-.story-content { position: relative; z-index: 2;}
-.story-content h2 { font-size: clamp(32px, 4vw, 48px); color: #fff; margin-bottom: 24px; line-height: 1.1; letter-spacing: -0.02em;}
-.story-content p { color: rgba(255,255,255,0.85); font-size: 16px; margin-bottom: 20px; line-height: 1.8; font-weight: 400;}
-
-.timeline { position: relative; display: flex; flex-direction: column; gap: 40px; margin-top: 48px; padding-left: 40px; }
-
-/* Solid Data Cable */
-.timeline::before { content: ''; position: absolute; top: 32px; bottom: 80px; left: 6px; width: 2px; background: linear-gradient(to bottom, var(--sk-cyan) 80%, transparent 100%); z-index: 1; }
-
-/* Moving Energy Pulse */
-.timeline::after { content: ''; position: absolute; top: 32px; left: 5px; width: 4px; height: 60px; background: linear-gradient(to bottom, transparent, var(--sk-cyan), #fff); border-radius: 4px; z-index: 2; animation: dataFlow 3s cubic-bezier(0.4, 0, 0.2, 1) infinite; box-shadow: 0 0 15px var(--sk-cyan); }
-@keyframes dataFlow { 0% { top: 20px; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { top: calc(100% - 80px); opacity: 0; } }
-
-/* Milestone Panels */
-.milestone { position: relative; display: flex; flex-direction: column; background: linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02)); border: 1px solid rgba(95, 199, 207, 0.2); border-left: 3px solid var(--sk-cyan); border-radius: 12px; padding: 32px; transition: all 0.4s ease; backdrop-filter: blur(16px); box-shadow: inset 0 0 20px rgba(0,0,0,0.1), 0 8px 32px rgba(0,0,0,0.2); overflow: hidden; }
-.milestone:hover { background: linear-gradient(135deg, rgba(95, 199, 207, 0.15), rgba(255,255,255,0.02)); border-color: var(--sk-cyan); box-shadow: inset 0 0 30px rgba(95, 199, 207, 0.1), 0 12px 40px rgba(0,0,0,0.3); transform: translateX(8px); }
-
-/* Scanning Laser inside card */
-.milestone::after { content: ''; position: absolute; top: 0; left: -100%; width: 30%; height: 100%; background: linear-gradient(90deg, transparent, rgba(95, 199, 207, 0.2), transparent); transform: skewX(-25deg); animation: cardScan 4s infinite; pointer-events: none; }
-@keyframes cardScan { 0%, 50% { left: -100%; } 100% { left: 200%; } }
-
-/* The High-Tech Node Complex */
-.milestone-node { position: absolute; top: 40px; left: -40px; width: 14px; height: 14px; z-index: 3; }
-.milestone-node::before { content: ''; position: absolute; top: 6px; left: 14px; width: 26px; height: 2px; background: var(--sk-cyan); box-shadow: 0 0 8px var(--sk-cyan); }
-.milestone-node .core { position: absolute; inset: 0; background: #fff; border-radius: 50%; box-shadow: 0 0 12px var(--sk-cyan), 0 0 24px var(--sk-cyan); z-index: 4; animation: corePulse 2s infinite alternate; }
-.milestone-node .radar { position: absolute; top: -12px; left: -12px; width: 38px; height: 38px; border-radius: 50%; border: 1px dashed rgba(95, 199, 207, 0.8); border-top-color: transparent; border-bottom-color: transparent; animation: radarSpin 4s linear infinite; }
-
-@keyframes corePulse { 0% { transform: scale(0.8); box-shadow: 0 0 8px var(--sk-cyan); } 100% { transform: scale(1.2); box-shadow: 0 0 20px var(--sk-cyan), 0 0 30px #fff; } }
-@keyframes radarSpin { 0% { transform: rotate(0deg) scale(1); } 50% { transform: rotate(180deg) scale(1.1); } 100% { transform: rotate(360deg) scale(1); } }
-
-/* Tech Typography */
-.milestone .year { display: inline-block; background: rgba(95, 199, 207, 0.15); color: var(--sk-cyan); font-weight: 800; font-size: 11px; text-transform: uppercase; letter-spacing: 0.2em; padding: 6px 14px; border-radius: 999px; border: 1px solid rgba(95, 199, 207, 0.3); margin-bottom: 20px; box-shadow: inset 0 0 10px rgba(95, 199, 207, 0.1); }
-.milestone h3 { font-size: 20px; color: #fff; margin-bottom: 12px; font-weight: 800; letter-spacing: 0.02em; text-transform: uppercase; text-shadow: 0 0 10px rgba(255,255,255,0.2);}
-.milestone p { font-size: 15px; color: rgba(255,255,255,0.75); line-height: 1.7; margin: 0; font-weight: 400;}
-
-/* Fact Stack */
-.fact-stack { display: flex; flex-direction: column; gap: 20px; position: relative; z-index: 2;}
-.fact { background: #fff; border: 1px solid var(--sk-border-soft); border-radius: 24px; padding: 32px; box-shadow: 0 12px 30px rgba(0,0,0,0.1); transition: transform 0.3s ease;}
-.fact:hover { transform: translateY(-4px); box-shadow: 0 16px 40px rgba(0,0,0,0.15); }
-.fact small { display: block; color: var(--sk-cyan); text-transform: uppercase; letter-spacing: 0.2em; font-size: 11px; font-weight: 800; margin-bottom: 12px; }
-.fact strong { font-size: 32px; color: var(--sk-blue); display: block; margin-bottom: 12px; line-height: 1.1; font-weight: 900; letter-spacing: -0.02em; }
-.fact p { font-size: 14px; color: var(--sk-body); line-height: 1.6; font-weight: 500;}
-
-/* Collection Grid Elevated */
-.collection-section { background: var(--sk-bg-alt); padding: 100px 40px; border-radius: 40px; margin-top: 80px; box-shadow: inset 0 4px 20px rgba(0,0,0,0.02); }
-.collection-tabs { display: flex; gap: 40px; border-bottom: 2px solid var(--sk-border-soft); margin-bottom: 48px; overflow-x: auto; padding-bottom: 2px;}
-.collection-tab { background: transparent; border: none; padding: 0 0 16px 0; font-size: 16px; font-weight: 700; color: var(--sk-muted); cursor: pointer; transition: all 0.3s; white-space: nowrap; margin-bottom: -2px; border-bottom: 3px solid transparent; }
-.collection-tab.active { color: var(--sk-blue); border-bottom: 3px solid var(--sk-cyan); }
-.collection-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; }
-.collection-card { background: #fff; border: 1px solid var(--sk-border-soft); border-radius: var(--sk-radius); overflow: hidden; display: flex; flex-direction: column; transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.4s ease; box-shadow: 0 12px 32px rgba(2,46,100,0.05); }
-.collection-card:hover { transform: translateY(-8px); box-shadow: var(--sk-shadow-hover); border-color: rgba(95,199,207,0.3); }
-.collection-img-wrap { position: relative; height: 240px; width: 100%; background: transparent; overflow: hidden; }
-.collection-main-img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.8s ease;}
-.collection-card:hover .collection-main-img { transform: scale(1.05); }
-.collection-img-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(2,46,100,0.4), transparent); z-index: 1;}
-.collection-ribbon { position: absolute; top: 0; left: 0; height: 100%; width: auto; filter: drop-shadow(0 8px 24px rgba(0,0,0,0.4)); z-index: 2; }
-.collection-content { padding: 40px 32px 32px; display: flex; flex-direction: column; flex: 1; background: #fff; z-index: 3;}
-.collection-title { font-size: 24px; font-weight: 800; color: var(--sk-blue); margin-bottom: 16px; letter-spacing: -0.01em;}
-.collection-desc { font-size: 15px; color: var(--sk-body); line-height: 1.7; margin-bottom: 32px; flex: 1; font-weight: 400;}
-.collection-desc strong { color: var(--sk-blue); display: block; margin: 24px 0 12px; font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: 0.1em;}
-.eyebrow-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 16px; }
-.eyebrow-list li { display: flex; align-items: flex-start; gap: 16px; font-size: 13px; font-weight: 600; color: var(--sk-text); line-height: 1.6; }
-.eyebrow-list li:before { content: ""; width: 20px; height: 2px; background: var(--sk-cyan); margin-top: 10px; flex-shrink: 0; border-radius: 2px; }
-
-/* Partners Grid */
-.partners { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; }
-.partner { border: 1px solid var(--sk-border-soft); border-radius: 20px; padding: 24px; background: #fff; text-align: center; transition: all 0.3s ease; box-shadow: 0 4px 12px rgba(0,0,0,0.02);}
-.partner:hover { transform: translateY(-4px); box-shadow: 0 12px 24px rgba(2,46,100,0.08); border-color: var(--sk-cyan);}
-.partner b { display: block; color: var(--sk-blue); font-size: 15px; font-weight: 800; }
-.partner span { display: block; color: var(--sk-muted); font-size: 11px; margin-top: 8px; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700; }
-.notice { background: var(--sk-bg-alt); border-left: 4px solid var(--sk-cyan); border-radius: 16px; padding: 20px 24px; color: var(--sk-body); font-size: 15px; line-height: 1.7; font-weight: 500;}
-
-/* Elevated Final CTA */
-.cta { margin: 100px 24px; position: relative; background: linear-gradient(135deg, var(--sk-blue), var(--sk-blue2)); border-radius: 40px; box-shadow: var(--sk-shadow-hover); padding: 80px 40px; text-align: center; color: #fff; overflow: hidden;}
-.cta::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: url('https://static.wixstatic.com/media/394052_6b4a3a60a3a9482d8a57e3f898cbb1f6~mv2.png') center/cover; opacity: 0.1; mix-blend-mode: overlay; pointer-events: none;}
-.cta h2 { position: relative; color: #fff; font-size: clamp(36px, 5vw, 56px); margin-bottom: 24px; font-weight: 800; letter-spacing: -0.02em; z-index: 2;}
-.cta p { position: relative; max-width: 640px; margin: 0 auto 40px; color: rgba(255,255,255,0.85); font-size: 18px; line-height: 1.7; font-weight: 400; z-index: 2;}
-.cta .hero-actions { position: relative; justify-content: center; z-index: 2;}
-
-/* Responsive Adjustments */
-@media(max-width: 1080px){ 
-  .story-wrapper { grid-template-columns: 1fr; padding: 48px; gap: 48px; } 
-  .collection-grid { grid-template-columns: repeat(2, 1fr); } 
-  .tech-grid-3, .tech-grid-4 { grid-template-columns: repeat(2, 1fr); } 
-}
-@media(max-width: 768px){ 
-  .section { padding-top: 80px; } 
-  .collection-grid { grid-template-columns: 1fr; } 
-  .tech-grid-3, .tech-grid-4 { grid-template-columns: 1fr; } 
-  .hero { min-height: 450px; padding: 100px 20px;} 
-  .cta { margin: 80px 16px; padding: 60px 24px; } 
-  .story-wrapper { padding: 32px; border-radius: 28px; } 
-  .collection-section { padding: 48px 24px; border-radius: 28px; margin-top: 48px; } 
+.gradient-text{
+  background:none;
+  -webkit-background-clip:initial;
+  -webkit-text-fill-color:initial;
+  color:var(--sk-blue);
 }
 
-/* Footer specific overrides */
-#skandi-site-footer .footer { background: var(--sk-blue); color: #fff; }
-#skandi-site-footer .newsletter { background: linear-gradient(135deg, #d7e6ff, #f6faff); color: var(--sk-blue); padding: 40px 32px; border-top: 1px solid var(--sk-line); }
-#skandi-site-footer .news-inner { max-width: 1240px; margin: 0 auto; display: grid; grid-template-columns: 1.2fr 1fr; gap: 32px; align-items: center; }
-#skandi-site-footer .newsletter h2 { font-size: 28px; letter-spacing: -0.03em; margin-bottom: 8px; font-weight: 800;}
-#skandi-site-footer .news-form { display: grid; grid-template-columns: 1fr auto; gap: 12px; }
-#skandi-site-footer .news-form input { border: 1px solid var(--sk-border-soft); border-radius: 999px; padding: 16px 20px; font-size: 15px; outline: none; transition: border-color 0.3s;}
-#skandi-site-footer .news-form input:focus { border-color: var(--sk-cyan); }
-#skandi-site-footer .news-form button { background: var(--sk-blue); color: #fff; border: 0; border-radius: 999px; padding: 0 24px; font-weight: 800; cursor: pointer; transition: background 0.3s; text-transform: uppercase; letter-spacing: 0.05em; font-size: 13px;}
-#skandi-site-footer .news-form button:hover { background: var(--sk-blue2); }
-#skandi-site-footer .footer-main { max-width: 1240px; margin: 0 auto; padding: 64px 32px; display: grid; grid-template-columns: repeat(6, 1fr); gap: 32px; }
-#skandi-site-footer .brand { grid-column: span 2; }
-#skandi-site-footer .social-links { display: flex; gap: 12px; margin-top: 20px; }
-#skandi-site-footer .social-btn { width: 44px; height: 44px; border: 1px solid rgba(255,255,255,0.2); border-radius: 50%; padding: 10px; display: flex; align-items: center; justify-content: center; background: transparent; transition: all 0.3s ease; cursor: pointer; }
-#skandi-site-footer .social-btn img { width: 100%; height: 100%; object-fit: contain; display: block; }
-#skandi-site-footer .social-btn:hover { transform: translateY(-3px); border-color: var(--sk-cyan); background: rgba(95,199,207,0.1);}
-#skandi-site-footer .col h3 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 800; color: #fff; margin-bottom: 20px; }
-#skandi-site-footer .col button { display: block; background: transparent; border: 0; color: rgba(255,255,255,0.7); font-size: 14px; font-weight: 500; padding: 0; margin-bottom: 12px; cursor: pointer; text-align: left; transition: color 0.2s;}
-#skandi-site-footer .col button:hover { color: #fff; text-decoration: none; }
-#skandi-site-footer .footer-bottom { border-top: 1px solid rgba(255,255,255,0.1); padding: 24px 32px; }
-#skandi-site-footer .bottom-inner { max-width: 1240px; margin: 0 auto; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 20px; font-size: 13px; color: rgba(255,255,255,0.6); }
-#skandi-site-footer .bottom-links { display: flex; gap: 20px; flex-wrap: wrap; }
-#skandi-site-footer .bottom-links button { background: transparent; border: 0; color: rgba(255,255,255,0.8); font-weight: 600; cursor: pointer; padding: 0; transition: color 0.2s;}
-#skandi-site-footer .bottom-links button:hover { color: #fff; }
-@media (max-width: 980px){ #skandi-site-footer .footer-main { grid-template-columns: repeat(3, 1fr); } #skandi-site-footer .brand { grid-column: span 3; } #skandi-site-footer .news-inner { grid-template-columns: 1fr; } }
-@media (max-width: 600px){ #skandi-site-footer .footer-main { grid-template-columns: 1fr; } #skandi-site-footer .brand { grid-column: span 1; } }
+.copy{
+  color:var(--sk-body);
+  font-size:14px;
+  line-height:1.75;
+}
 
-/* LIVE INVENTORY-DRIVEN SKANDI COLLECTION */
-.collection-live-state{margin-bottom:8px}
-.collection-live-state.hidden{display:none}
-.collection-card .live-count{display:inline-flex;align-items:center;gap:8px;color:var(--sk-blue);font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px}
-.collection-card .live-count:before{content:"";width:8px;height:8px;border-radius:50%;background:var(--sk-cyan);box-shadow:0 0 0 4px rgba(95,199,207,.15)}
-.collection-card .live-examples{list-style:none;padding:0;margin:18px 0 24px;display:flex;flex-direction:column;gap:9px}
-.collection-card .live-examples li{font-size:13px;color:var(--sk-text);font-weight:650;display:flex;gap:10px;align-items:flex-start}
-.collection-card .live-examples li:before{content:"";width:14px;height:2px;background:var(--sk-cyan);margin-top:9px;flex:0 0 auto}
-.collection-card .collection-img-placeholder{height:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--sk-blue),var(--sk-blue2));color:#fff;font-size:13px;font-weight:800;letter-spacing:.15em;text-transform:uppercase}
-.collection-card .collection-source{font-size:11px;color:var(--sk-muted);font-weight:700;margin-top:14px}
-.collection-empty{grid-column:1/-1}
+.btn{
+  min-height:44px;
+  padding:0 19px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  border:1px solid transparent;
+  border-radius:10px;
+  background:linear-gradient(135deg,var(--sk-blue),var(--sk-blue-soft));
+  color:#fff;
+  box-shadow:0 6px 20px rgba(2,46,100,.18);
+  font-size:11px;
+  font-weight:800;
+  letter-spacing:.03em;
+  transition:
+    transform .2s cubic-bezier(.16,1,.3,1),
+    box-shadow .2s ease,
+    border-color .2s ease,
+    background .2s ease;
+}
+.btn::before{display:none}
+.btn:hover{
+  transform:translateY(-1px);
+  box-shadow:0 10px 26px rgba(2,46,100,.26);
+}
+.btn-secondary{
+  background:#fff;
+  color:var(--sk-blue);
+  border-color:var(--sk-border);
+  box-shadow:0 4px 14px rgba(2,46,100,.06);
+}
+.btn-secondary:hover{
+  border-color:var(--sk-cyan);
+  background:var(--sk-pale);
+}
+.btn:focus-visible,
+.collection-tab:focus-visible,
+.tech-link-card:focus-visible{
+  outline:3px solid rgba(95,199,207,.45);
+  outline-offset:3px;
+}
 
+/* =========================================================
+   HERO — LIGHT, EDITORIAL, HOME-ALIGNED
+   ========================================================= */
+.hero{
+  position:relative;
+  width:100%;
+  min-height:500px;
+  display:flex;
+  align-items:center;
+  overflow:hidden;
+  padding:68px 24px;
+  background:
+    linear-gradient(90deg,
+      rgba(255,255,255,.98) 0%,
+      rgba(255,255,255,.96) 34%,
+      rgba(255,255,255,.80) 53%,
+      rgba(255,255,255,.14) 78%,
+      rgba(255,255,255,0) 100%),
+    var(--hero-image,url('https://static.wixstatic.com/media/394052_c28e933557934c498c287c32cd5110b1~mv2.png'))
+    center/cover no-repeat;
+  border-radius:0 0 28px 28px;
+}
+
+.hero::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background:
+    radial-gradient(circle at 15% 12%,rgba(95,199,207,.12),transparent 28%),
+    linear-gradient(180deg,rgba(2,46,100,0),rgba(2,46,100,.025));
+}
+
+.hero::after{
+  content:"";
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:0;
+  height:1px;
+  background:linear-gradient(90deg,transparent,rgba(95,199,207,.55),transparent);
+}
+
+.hero-inner{
+  position:relative;
+  z-index:2;
+  width:min(100%,var(--sk-max));
+  margin:0 auto;
+}
+
+.hero-eyebrow{
+  margin-bottom:8px;
+}
+
+.hero h1{
+  max-width:650px;
+  margin:0;
+  color:var(--sk-blue);
+  font-size:clamp(38px,5vw,58px);
+  line-height:.98;
+  letter-spacing:-.045em;
+  font-weight:700;
+}
+
+.hero h1 strong{
+  color:var(--sk-blue);
+  font-weight:800;
+}
+
+.hero p{
+  max-width:610px;
+  margin-top:16px;
+  color:#475467;
+  font-size:14px;
+  line-height:1.72;
+}
+
+/* =========================================================
+   SECTIONS / HEADINGS
+   ========================================================= */
+.section{
+  width:min(100%,var(--sk-max));
+  margin:0 auto;
+  padding:72px 24px 0;
+}
+
+.section-head{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(320px,.82fr);
+  gap:42px;
+  align-items:end;
+  margin-bottom:30px;
+}
+
+.section-head h2,
+.collection-section > h2{
+  margin:5px 0 0;
+  color:var(--sk-blue);
+  font-size:clamp(28px,3.8vw,42px);
+  line-height:1.06;
+  letter-spacing:-.04em;
+  font-weight:750;
+}
+
+.section-head .copy{
+  max-width:580px;
+}
+
+/* =========================================================
+   WHO WE ARE — IMAGE CARDS, RESTRAINED
+   ========================================================= */
+.tech-grid-3{
+  display:grid;
+  grid-template-columns:1.15fr .9fr .95fr;
+  gap:14px;
+}
+.tech-grid-4{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:14px;
+}
+
+.tech-link-card{
+  position:relative;
+  min-height:300px;
+  display:flex;
+  flex-direction:column;
+  justify-content:flex-end;
+  overflow:hidden;
+  border:1px solid var(--sk-border);
+  border-radius:18px;
+  padding:24px;
+  background-image:var(--bg-img);
+  background-size:cover;
+  background-position:center;
+  box-shadow:0 8px 24px rgba(2,46,100,.07);
+  transition:
+    transform .25s cubic-bezier(.16,1,.3,1),
+    box-shadow .25s ease,
+    border-color .2s ease;
+}
+
+.tech-grid-3 .tech-link-card:first-child{
+  min-height:342px;
+}
+
+.tech-link-card:hover{
+  transform:translateY(-4px);
+  box-shadow:0 16px 34px rgba(2,46,100,.12);
+  border-color:rgba(95,199,207,.55);
+}
+
+.tech-card-overlay{
+  position:absolute;
+  inset:0;
+  background:
+    linear-gradient(180deg,
+      rgba(2,46,100,.02) 16%,
+      rgba(2,46,100,.18) 48%,
+      rgba(2,46,100,.88) 100%);
+}
+.tech-card-glow{display:none}
+
+.tech-card-body{
+  position:relative;
+  z-index:2;
+  max-width:440px;
+  transform:none;
+}
+
+.tech-card-body .eyebrow{
+  margin-bottom:7px;
+}
+
+.tech-card-body .eyebrow strong{
+  color:#fff;
+  font-size:15px;
+  line-height:1.25;
+  letter-spacing:0;
+  text-transform:none;
+}
+
+.tech-card-body .desc{
+  display:block;
+  max-width:390px;
+  color:rgba(255,255,255,.82);
+  font-size:11px;
+  line-height:1.6;
+}
+
+.tech-action{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  margin-top:12px;
+  color:#fff;
+  opacity:.86;
+  transform:none;
+  font-size:9px;
+  font-weight:850;
+  letter-spacing:.05em;
+  text-transform:uppercase;
+}
+
+.tech-action .arrow{
+  transition:transform .2s ease;
+}
+.tech-link-card:hover .tech-action .arrow{
+  transform:translateX(3px);
+}
+
+/* =========================================================
+   STORY — LIGHT EDITORIAL TIMELINE
+   ========================================================= */
+.story-wrapper{
+  position:relative;
+  display:grid;
+  grid-template-columns:minmax(0,1.35fr) minmax(250px,.65fr);
+  gap:28px;
+  margin-top:2px;
+  padding:30px;
+  overflow:hidden;
+  border:1px solid var(--sk-border);
+  border-radius:22px;
+  background:
+    radial-gradient(circle at 96% 4%,rgba(95,199,207,.10),transparent 26%),
+    linear-gradient(180deg,#fff,var(--sk-pale));
+  color:var(--sk-text);
+  box-shadow:0 10px 30px rgba(2,46,100,.06);
+}
+
+.story-wrapper::before{display:none}
+
+.story-content{
+  min-width:0;
+}
+
+.story-content > .eyebrow{
+  color:var(--sk-cyan);
+}
+.story-content > .eyebrow::before{
+  background:var(--sk-cyan);
+}
+
+.story-content h2{
+  margin:7px 0 12px;
+  color:var(--sk-blue);
+  font-size:clamp(28px,3.6vw,40px);
+  line-height:1.06;
+  letter-spacing:-.04em;
+}
+
+.story-content > p{
+  max-width:760px;
+  margin:0;
+  color:var(--sk-body);
+  font-size:13px;
+  line-height:1.72;
+}
+
+.timeline{
+  position:relative;
+  display:grid;
+  gap:11px;
+  margin-top:24px;
+  padding-left:22px;
+}
+
+.timeline::before{
+  content:"";
+  position:absolute;
+  left:5px;
+  top:12px;
+  bottom:12px;
+  width:2px;
+  border-radius:999px;
+  background:linear-gradient(var(--sk-cyan),rgba(95,199,207,.16));
+}
+.timeline::after{display:none}
+
+.milestone{
+  position:relative;
+  overflow:visible;
+  padding:15px 17px;
+  border:1px solid var(--sk-border-soft);
+  border-radius:13px;
+  background:#fff;
+  box-shadow:0 4px 14px rgba(2,46,100,.04);
+  transition:
+    transform .2s ease,
+    box-shadow .2s ease,
+    border-color .2s ease;
+}
+.milestone::after{display:none}
+.milestone:hover{
+  transform:translateY(-2px);
+  border-color:rgba(95,199,207,.46);
+  box-shadow:0 9px 22px rgba(2,46,100,.08);
+}
+
+.milestone-node{
+  position:absolute;
+  left:-22px;
+  top:21px;
+  width:10px;
+  height:10px;
+}
+.milestone-node::before{display:none}
+.milestone-node .core{
+  position:absolute;
+  inset:0;
+  border:2px solid #fff;
+  border-radius:50%;
+  background:var(--sk-cyan);
+  box-shadow:0 0 0 3px rgba(95,199,207,.16);
+  animation:none;
+}
+.milestone-node .radar{display:none}
+
+.milestone .year{
+  display:inline-block;
+  margin:0 0 5px;
+  padding:0;
+  border:0;
+  border-radius:0;
+  background:transparent;
+  box-shadow:none;
+  color:var(--sk-cyan);
+  font-size:9px;
+  font-weight:900;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+}
+
+.milestone h3{
+  margin:0 0 4px;
+  color:var(--sk-blue);
+  font-size:13px;
+  line-height:1.3;
+  font-weight:800;
+  letter-spacing:0;
+  text-transform:none;
+  text-shadow:none;
+}
+.milestone p{
+  margin:0;
+  color:var(--sk-body);
+  font-size:10px;
+  line-height:1.55;
+}
+
+.fact-stack{
+  display:grid;
+  align-content:start;
+  gap:10px;
+}
+
+.fact{
+  padding:18px;
+  border:1px solid var(--sk-border-soft);
+  border-radius:14px;
+  background:#fff;
+  box-shadow:0 5px 16px rgba(2,46,100,.04);
+  transition:transform .2s ease,box-shadow .2s ease;
+}
+.fact:hover{
+  transform:translateY(-2px);
+  box-shadow:0 10px 24px rgba(2,46,100,.07);
+}
+.fact small{
+  display:block;
+  margin-bottom:6px;
+  color:var(--sk-cyan);
+  font-size:8px;
+  font-weight:900;
+  letter-spacing:.13em;
+  text-transform:uppercase;
+}
+.fact strong{
+  display:block;
+  margin-bottom:5px;
+  color:var(--sk-blue);
+  font-size:22px;
+  line-height:1.1;
+  font-weight:800;
+  letter-spacing:-.03em;
+}
+.fact p{
+  color:var(--sk-body);
+  font-size:10px;
+  line-height:1.55;
+}
+
+/* =========================================================
+   COLLECTION — PALE HOME-STYLE CONTENT RAIL
+   ========================================================= */
+.collection-section{
+  margin-top:72px;
+  padding:32px 30px 34px;
+  border:1px solid var(--sk-border);
+  border-radius:22px;
+  background:var(--sk-pale);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.85);
+}
+
+.collection-section > .eyebrow{
+  margin-bottom:2px;
+}
+
+.collection-section > h2.section-head{
+  display:block;
+  margin:6px 0 18px!important;
+  padding:0;
+}
+
+.collection-tabs{
+  display:flex;
+  gap:5px;
+  margin:0 0 16px;
+  padding:4px;
+  overflow-x:auto;
+  border:1px solid var(--sk-border-soft);
+  border-radius:12px;
+  background:rgba(2,46,100,.045);
+}
+
+.collection-tab{
+  flex:0 0 auto;
+  min-height:34px;
+  padding:0 13px;
+  border:0;
+  border-radius:8px;
+  background:transparent;
+  color:#667482;
+  font-size:10px;
+  font-weight:800;
+  white-space:nowrap;
+  transition:background .18s ease,color .18s ease,box-shadow .18s ease;
+}
+.collection-tab.active{
+  background:#fff;
+  color:var(--sk-blue);
+  box-shadow:0 2px 8px rgba(0,0,0,.07);
+}
+
+.collection-grid{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:13px;
+}
+
+.collection-card{
+  min-width:0;
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+  border:1px solid var(--sk-border-soft);
+  border-radius:17px;
+  background:#fff;
+  box-shadow:0 5px 18px rgba(2,46,100,.05);
+  transition:
+    transform .24s cubic-bezier(.16,1,.3,1),
+    box-shadow .24s ease,
+    border-color .2s ease;
+}
+.collection-card:hover{
+  transform:translateY(-3px);
+  border-color:rgba(95,199,207,.42);
+  box-shadow:0 14px 28px rgba(2,46,100,.10);
+}
+
+.collection-img-wrap{
+  position:relative;
+  height:190px;
+  overflow:hidden;
+  background:#edf3f8;
+}
+.collection-main-img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  transition:transform .35s ease;
+}
+.collection-card:hover .collection-main-img{
+  transform:scale(1.025);
+}
+.collection-img-overlay{
+  position:absolute;
+  inset:0;
+  z-index:1;
+  background:linear-gradient(to top,rgba(2,46,100,.20),transparent 62%);
+}
+.collection-ribbon{
+  position:absolute;
+  top:0;
+  left:0;
+  z-index:2;
+  height:100%;
+  width:auto;
+  filter:drop-shadow(0 6px 14px rgba(0,0,0,.14));
+}
+.collection-img-placeholder{
+  width:100%;
+  height:100%;
+  display:grid;
+  place-items:center;
+  color:var(--sk-blue);
+  font-size:12px;
+  font-weight:850;
+}
+
+.collection-content{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  padding:17px;
+  background:#fff;
+}
+
+.live-count{
+  color:var(--sk-cyan);
+  font-size:8px;
+  font-weight:900;
+  letter-spacing:.10em;
+  text-transform:uppercase;
+}
+.collection-title{
+  margin:5px 0 7px;
+  color:var(--sk-blue);
+  font-size:17px;
+  line-height:1.2;
+  font-weight:800;
+  letter-spacing:-.025em;
+}
+.collection-desc{
+  flex:1;
+  margin:0 0 10px;
+  color:var(--sk-body);
+  font-size:10px;
+  line-height:1.55;
+}
+.collection-source{
+  margin-bottom:8px;
+  color:var(--sk-muted);
+  font-size:8px;
+  font-weight:700;
+}
+.live-examples{
+  display:grid;
+  gap:4px;
+  margin:0 0 12px;
+  padding:0;
+  list-style:none;
+}
+.live-examples li{
+  position:relative;
+  padding-left:12px;
+  color:var(--sk-blue);
+  font-size:9px;
+  line-height:1.45;
+  font-weight:650;
+}
+.live-examples li::before{
+  content:"";
+  position:absolute;
+  left:0;
+  top:.55em;
+  width:5px;
+  height:2px;
+  border-radius:999px;
+  background:var(--sk-cyan);
+}
+
+.notice{
+  padding:13px 14px;
+  border:1px solid #e2e8f0;
+  border-left:3px solid var(--sk-cyan);
+  border-radius:11px;
+  background:#fff;
+  color:var(--sk-body);
+  font-size:10px;
+  line-height:1.55;
+}
+.collection-live-state{
+  margin-bottom:13px;
+}
+.collection-live-state.hidden{
+  display:none;
+}
+
+/* =========================================================
+   SELECTED FOCUS
+   ========================================================= */
+.partners{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:10px;
+}
+.partner{
+  min-width:0;
+  padding:16px;
+  border:1px solid var(--sk-border-soft);
+  border-radius:13px;
+  background:#fff;
+  box-shadow:0 4px 13px rgba(2,46,100,.035);
+  text-align:left;
+  transition:transform .2s ease,border-color .2s ease,box-shadow .2s ease;
+}
+.partner:hover{
+  transform:translateY(-2px);
+  border-color:rgba(95,199,207,.45);
+  box-shadow:0 9px 22px rgba(2,46,100,.07);
+}
+.partner b{
+  display:block;
+  color:var(--sk-blue);
+  font-size:11px;
+  line-height:1.35;
+  font-weight:800;
+}
+.partner span{
+  display:block;
+  margin-top:5px;
+  color:var(--sk-muted);
+  font-size:8px;
+  line-height:1.4;
+  font-weight:750;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+}
+
+/* =========================================================
+   HELPFUL LINKS — DISTINCT 2x2 EDITORIAL MOSAIC
+   ========================================================= */
+[data-section-id="about-links"] .tech-grid-4{
+  grid-template-columns:1.15fr .85fr;
+}
+[data-section-id="about-links"] .tech-link-card{
+  min-height:220px;
+}
+[data-section-id="about-links"] .tech-link-card:nth-child(1),
+[data-section-id="about-links"] .tech-link-card:nth-child(4){
+  min-height:260px;
+}
+
+/* =========================================================
+   FINAL CTA — ONE RESTRAINED DARK FEATURE
+   ========================================================= */
+.cta{
+  position:relative;
+  width:min(calc(100% - 48px),var(--sk-max));
+  margin:72px auto 80px;
+  overflow:hidden;
+  padding:44px 32px;
+  border-radius:20px;
+  background:
+    radial-gradient(circle at 88% 16%,rgba(95,199,207,.16),transparent 30%),
+    linear-gradient(135deg,var(--sk-blue),var(--sk-blue2));
+  box-shadow:0 12px 30px rgba(2,46,100,.16);
+  text-align:center;
+  color:#fff;
+}
+.cta::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  opacity:.06;
+  background:
+    linear-gradient(90deg,rgba(255,255,255,.4) 1px,transparent 1px),
+    linear-gradient(rgba(255,255,255,.4) 1px,transparent 1px);
+  background-size:34px 34px;
+}
+.cta h2,
+.cta p,
+.cta .hero-actions{
+  position:relative;
+  z-index:2;
+}
+.cta h2{
+  max-width:760px;
+  margin:0 auto;
+  color:#fff;
+  font-size:clamp(28px,4vw,42px);
+  line-height:1.05;
+  letter-spacing:-.04em;
+  font-weight:750;
+}
+.cta p{
+  max-width:650px;
+  margin:12px auto 22px;
+  color:rgba(255,255,255,.78);
+  font-size:12px;
+  line-height:1.65;
+}
+.hero-actions{
+  display:flex;
+  justify-content:center;
+  gap:9px;
+  flex-wrap:wrap;
+}
+
+/* =========================================================
+   SMALL STATUS / ACCESSIBILITY
+   ========================================================= */
+.page-status{
+  width:min(100%,var(--sk-max));
+  margin:18px auto 0;
+  padding:0 24px;
+}
+.page-status .notice{margin:0}
+
+#toast{
+  position:fixed;
+  right:16px;
+  bottom:16px;
+  z-index:1000;
+  display:none;
+  max-width:360px;
+  padding:12px 14px;
+  border-radius:10px;
+  background:var(--sk-blue);
+  color:#fff;
+  box-shadow:var(--sk-shadow-strong);
+  font-size:10px;
+}
+#toast.show{display:block}
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+@media(max-width:980px){
+  .hero{
+    min-height:470px;
+    background:
+      linear-gradient(90deg,
+        rgba(255,255,255,.98) 0%,
+        rgba(255,255,255,.94) 52%,
+        rgba(255,255,255,.44) 78%,
+        rgba(255,255,255,.12) 100%),
+      var(--hero-image,url('https://static.wixstatic.com/media/394052_c28e933557934c498c287c32cd5110b1~mv2.png'))
+      center/cover no-repeat;
+  }
+  .section-head{
+    grid-template-columns:1fr;
+    gap:14px;
+  }
+  .tech-grid-3{
+    grid-template-columns:1fr 1fr;
+  }
+  .tech-grid-3 .tech-link-card:first-child{
+    grid-column:1/-1;
+    min-height:300px;
+  }
+  .story-wrapper{
+    grid-template-columns:1fr;
+  }
+  .fact-stack{
+    grid-template-columns:repeat(3,minmax(0,1fr));
+  }
+  .collection-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+  .partners{
+    grid-template-columns:repeat(3,minmax(0,1fr));
+  }
+}
+
+@media(max-width:680px){
+  .hero{
+    min-height:480px;
+    align-items:flex-end;
+    padding:52px 20px 46px;
+    background:
+      linear-gradient(180deg,
+        rgba(255,255,255,.24) 0%,
+        rgba(255,255,255,.64) 36%,
+        rgba(255,255,255,.95) 68%,
+        #fff 100%),
+      var(--hero-image,url('https://static.wixstatic.com/media/394052_c28e933557934c498c287c32cd5110b1~mv2.png'))
+      center top/cover no-repeat;
+    border-radius:0 0 20px 20px;
+  }
+  .hero h1{
+    font-size:40px;
+  }
+  .hero p{
+    font-size:12px;
+  }
+  .section{
+    padding:54px 16px 0;
+  }
+  .section-head h2,
+  .collection-section > h2{
+    font-size:30px;
+  }
+  .tech-grid-3,
+  .tech-grid-4,
+  [data-section-id="about-links"] .tech-grid-4{
+    grid-template-columns:1fr;
+  }
+  .tech-grid-3 .tech-link-card:first-child{
+    grid-column:auto;
+  }
+  .tech-link-card,
+  .tech-grid-3 .tech-link-card:first-child,
+  [data-section-id="about-links"] .tech-link-card,
+  [data-section-id="about-links"] .tech-link-card:nth-child(1),
+  [data-section-id="about-links"] .tech-link-card:nth-child(4){
+    min-height:230px;
+  }
+  .story-wrapper{
+    padding:20px;
+    border-radius:17px;
+  }
+  .fact-stack{
+    grid-template-columns:1fr;
+  }
+  .collection-section{
+    margin-top:54px;
+    padding:24px 16px 26px;
+    border-radius:17px;
+  }
+  .collection-grid{
+    grid-template-columns:1fr;
+  }
+  .collection-img-wrap{
+    height:180px;
+  }
+  .partners{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+  .cta{
+    width:calc(100% - 32px);
+    margin:54px auto 64px;
+    padding:34px 20px;
+    border-radius:17px;
+  }
+  .cta .btn{
+    width:100%;
+  }
+}
+
+@media(max-width:430px){
+  .partners{
+    grid-template-columns:1fr;
+  }
+}
+
+@media(prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{
+    animation:none!important;
+    transition-duration:.01ms!important;
+  }
+}
 </style>
-</head>
-
 <body>
 <a class="skip-link" href="#main">Skip to main content</a>
 
 <main id="main">
-  <header class="hero" id="hero">
+  <header class="hero" id="hero" data-section-id="about-hero" data-media-id="about-hero-media">
     <div class="hero-inner">
-      <div class="hero-eyebrow" data-i18n="hero.kicker">About SKANDI TRAVELS</div>
-      <h1 data-i18n="hero.title">Scandinavian care,<br> <strong>designed for the world.</strong></h1>
-      <p id="heroCopy" data-i18n="hero.copy">SKANDI Travels is built for travelers who want a more personal, structured and carefully selected way to plan and book travel.</p>
+      <div class="hero-eyebrow" data-i18n="hero.kicker" data-content-id="about-hero-eyebrow">About SKANDI TRAVELS</div>
+      <h1 data-i18n="hero.title" data-content-id="about-hero-h1">Scandinavian care,<br> <strong>designed for the world.</strong></h1>
+      <p id="heroCopy" data-i18n="hero.copy" data-content-id="about-hero-copy">SKANDI Travels is built for travelers who want a more personal, structured and carefully selected way to plan and book travel.</p>
     </div>
   </header>
 
-  <section class="section">
+  <section class="section" data-section-id="about-who">
     <div class="section-head">
       <div>
-        <div class="eyebrow" data-i18n="sec1.kicker">Who we are</div>
-        <h2 class="gradient-text" data-i18n="sec1.title">Bringing the Scandinavian way of travel to the world</h2>
+        <div class="eyebrow" data-i18n="sec1.kicker" data-content-id="about-who-eyebrow">Who we are</div>
+        <h2 class="gradient-text" data-i18n="sec1.title" data-content-id="about-who-h2">Bringing the Scandinavian way of travel to the world</h2>
       </div>
-      <p class="copy" data-i18n="sec1.copy">SKANDI brings the convenience, guidance and culture of European charter travel into a new premium experience. We help Americans explore Europe and Asia the SKANDI way — and help Scandinavians and Europeans discover the United States with the same confidence, care and ease.</p>
+      <p class="copy" data-i18n="sec1.copy" data-content-id="about-who-copy">SKANDI brings the convenience, guidance and culture of European charter travel into a new premium experience. We help Americans explore Europe and Asia the SKANDI way — and help Scandinavians and Europeans discover the United States with the same confidence, care and ease.</p>
     </div>
     
     <div class="tech-grid-3">
-      <article class="tech-link-card" style="--bg-img: url('https://static.wixstatic.com/media/394052_54174b4e1cbd4812842427a79b9e224d~mv2.png')">
+      <article class="tech-link-card" data-media-id="about-who-charter-media" style="--bg-img: url('https://static.wixstatic.com/media/394052_54174b4e1cbd4812842427a79b9e224d~mv2.png')">
         <div class="tech-card-overlay"></div>
         <div class="tech-card-glow"></div>
         <div class="tech-card-body">
-          <div class="eyebrow light"><strong data-i18n="sec1.card1.title">Charter Culture</strong></div>
-          <span class="desc" data-i18n="sec1.card1.desc">Inspired by the Scandinavian way of traveling: selected, guided and cared for.</span>
-          <span class="tech-action"><span data-i18n="sec1.card1.btn">Learn Personal Care</span> <span class="arrow">→</span></span>
+          <div class="eyebrow light"><strong data-i18n="sec1.card1.title" data-content-id="about-who-charter-title">Charter Culture</strong></div>
+          <span class="desc" data-i18n="sec1.card1.desc" data-content-id="about-who-charter-copy">Inspired by the Scandinavian way of traveling: selected, guided and cared for.</span>
+          <span class="tech-action"><span data-i18n="sec1.card1.btn" data-content-id="about-who-charter-action">Learn Personal Care</span> <span class="arrow">→</span></span>
         </div>
       </article>
 
-      <article class="tech-link-card" style="--bg-img: url('https://static.wixstatic.com/media/394052_e53bee7ea3ca462ea35408185193bc95~mv2.png')">
+      <article class="tech-link-card" data-media-id="about-who-elevated-media" style="--bg-img: url('https://static.wixstatic.com/media/394052_e53bee7ea3ca462ea35408185193bc95~mv2.png')">
         <div class="tech-card-overlay"></div>
         <div class="tech-card-glow"></div>
         <div class="tech-card-body">
-          <div class="eyebrow light"><strong data-i18n="sec1.card2.title">Elevated</strong></div>
-          <span class="desc" data-i18n="sec1.card2.desc">A premium, modern version of charter travel with stronger service, design and digital tools.</span>
-          <span class="tech-action"><span data-i18n="sec1.card2.btn">Two-Way Travel</span> <span class="arrow">→</span></span>
+          <div class="eyebrow light"><strong data-i18n="sec1.card2.title" data-content-id="about-who-elevated-title">Elevated</strong></div>
+          <span class="desc" data-i18n="sec1.card2.desc" data-content-id="about-who-elevated-copy">A premium, modern version of charter travel with stronger service, design and digital tools.</span>
+          <span class="tech-action"><span data-i18n="sec1.card2.btn" data-content-id="about-who-elevated-action">Two-Way Travel</span> <span class="arrow">→</span></span>
         </div>
       </article>
 
-      <article class="tech-link-card" style="--bg-img: url('https://static.wixstatic.com/media/394052_f42e27397fed462db4cc3abaab03215e~mv2.png')">
+      <article class="tech-link-card" data-media-id="about-who-global-media" style="--bg-img: url('https://static.wixstatic.com/media/394052_f42e27397fed462db4cc3abaab03215e~mv2.png')">
         <div class="tech-card-overlay"></div>
         <div class="tech-card-glow"></div>
         <div class="tech-card-body">
-          <div class="eyebrow light"><strong data-i18n="sec1.card3.title">Global Connection</strong></div>
-          <span class="desc" data-i18n="sec1.card3.desc">Helping Americans explore Europe — and Europeans explore the United States — the SKANDI way.</span>
-          <span class="tech-action"><span data-i18n="sec1.card3.btn">Learn Personal Care</span> <span class="arrow">→</span></span>
+          <div class="eyebrow light"><strong data-i18n="sec1.card3.title" data-content-id="about-who-global-title">Global Connection</strong></div>
+          <span class="desc" data-i18n="sec1.card3.desc" data-content-id="about-who-global-copy">Helping Americans explore Europe — and Europeans explore the United States — the SKANDI way.</span>
+          <span class="tech-action"><span data-i18n="sec1.card3.btn" data-content-id="about-who-global-action">Learn Personal Care</span> <span class="arrow">→</span></span>
         </div>
       </article>
     </div>
   </section>
 
-  <section class="section">
+  <section class="section" data-section-id="about-story">
     <div class="story-wrapper">
       <div class="story-content">
-        <div class="eyebrow light" data-i18n="sec2.kicker">Our Story</div>
-        <h2 data-i18n="sec2.title">How SKANDI started.</h2>
-        <p id="storyText" data-i18n="sec2.copy">SKANDI started from a simple belief: travel should feel exciting, easy to understand and cared for.<br><br>For many Scandinavians, charter travel is more than a package trip. It is a culture. It is the way many of us first discovered the world — with selected hotels, airport transfers, destination staff, guided experiences and the confidence of knowing that someone was there to help.<br><br>That way of traveling is in our blood.<br><br>SKANDI was created to bring that feeling into a new era: more premium, more connected and more thoughtfully designed.</p>
+        <div class="eyebrow light" data-i18n="sec2.kicker" data-content-id="about-story-eyebrow">Our Story</div>
+        <h2 data-i18n="sec2.title" data-content-id="about-story-h2">How SKANDI started.</h2>
+        <p id="storyText" data-i18n="sec2.copy" data-content-id="about-story-copy">SKANDI started from a simple belief: travel should feel exciting, easy to understand and cared for.<br><br>For many Scandinavians, charter travel is more than a package trip. It is a culture. It is the way many of us first discovered the world — with selected hotels, airport transfers, destination staff, guided experiences and the confidence of knowing that someone was there to help.<br><br>That way of traveling is in our blood.<br><br>SKANDI was created to bring that feeling into a new era: more premium, more connected and more thoughtfully designed.</p>
         <div id="timeline" class="timeline"></div>
       </div>
       <aside class="fact-stack" id="facts"></aside>
     </div>
   </section>
 
-  <section class="section collection-section" id="liveCollectionSection">
-    <div class="eyebrow" data-i18n="coll.kicker">SKANDI COLLECTION</div>
-    <h2 class="section-head gradient-text" style="margin-bottom: 20px;" data-i18n="coll.title">Our selected way to travel.</h2>
+  <section class="section collection-section" id="liveCollectionSection" data-section-id="about-collection">
+    <div class="eyebrow" data-i18n="coll.kicker" data-content-id="about-collection-eyebrow">SKANDI COLLECTION</div>
+    <h2 class="section-head gradient-text" style="margin-bottom: 20px;" data-i18n="coll.title" data-content-id="about-collection-h2">Our selected way to travel.</h2>
 
     <div class="collection-tabs" id="collectionTypeTabs"></div>
     <div class="collection-live-state notice" id="collectionLiveState">Loading live SKANDI Collection inventory…</div>
     <div class="collection-grid" id="collectionGrid" style="margin-top:24px"></div>
   </section>
 
-  <section class="section">
+  <section class="section" data-section-id="about-focus">
     <div class="section-head">
       <div>
-        <div class="eyebrow" data-i18n="focus.kicker">Selected focus</div>
-        <h2 class="gradient-text" data-i18n="focus.title">Partners and places we are building around.</h2>
+        <div class="eyebrow" data-i18n="focus.kicker" data-content-id="about-focus-eyebrow">Selected focus</div>
+        <h2 class="gradient-text" data-i18n="focus.title" data-content-id="about-focus-h2">Partners and places we are building around.</h2>
       </div>
-      <p class="copy" data-i18n="focus.copy">Handpicked and .</p>
+      <p class="copy" data-i18n="focus.copy" data-content-id="about-focus-copy">These are public-safe selected records from the SKANDI content library.</p>
     </div>
     <div class="partners" id="partners"></div>
   </section>
 
-  <section class="section">
+  <section class="section" data-section-id="about-links">
     <div class="section-head">
       <div>
-        <div class="eyebrow" data-i18n="links.kicker">Helpful links</div>
-        <h2 class="gradient-text" data-i18n="links.title">Find what you need quickly.</h2>
+        <div class="eyebrow" data-i18n="links.kicker" data-content-id="about-links-eyebrow">Helpful links</div>
+        <h2 class="gradient-text" data-i18n="links.title" data-content-id="about-links-h2">Find what you need quickly.</h2>
       </div>
-      <p class="copy" data-i18n="links.copy">Careers, press, legal policies and travel information are easy to access from one place.</p>
+      <p class="copy" data-i18n="links.copy" data-content-id="about-links-copy">Careers, press, legal policies and travel information are easy to access from one place.</p>
     </div>
     
     <div class="tech-grid-4">
-      <a class="tech-link-card" href="/about/careers" target="_top" style="--bg-img: url('https://static.wixstatic.com/media/394052_74e4b78c6aa0448c81f738b393406079~mv2.png')">
+      <a class="tech-link-card" href="/about/careers" data-route-key="careers" data-fallback-path="/about/careers" style="--bg-img: url('https://static.wixstatic.com/media/394052_74e4b78c6aa0448c81f738b393406079~mv2.png')">
         <div class="tech-card-overlay"></div>
         <div class="tech-card-glow"></div>
         <div class="tech-card-body">
-          <div class="eyebrow light"><strong data-i18n="links.c1.title">Careers</strong></div>
-          <span class="desc" data-i18n="links.c1.desc">Join SKANDI and help build a modern travel company.</span>
-          <span class="tech-action"><span data-i18n="links.c1.btn">View Openings</span> <span class="arrow">→</span></span>
+          <div class="eyebrow light"><strong data-i18n="links.c1.title" data-content-id="about-links-careers-title">Careers</strong></div>
+          <span class="desc" data-i18n="links.c1.desc" data-content-id="about-links-careers-copy">Join SKANDI and help build a modern travel company.</span>
+          <span class="tech-action"><span data-i18n="links.c1.btn" data-content-id="about-links-careers-action">View Openings</span> <span class="arrow">→</span></span>
         </div>
       </a>
 
-      <a class="tech-link-card" href="/about/news-room" target="_top" style="--bg-img: url('https://static.wixstatic.com/media/394052_490f53a1a68e4b1a89c4860c5cb9eb32~mv2.png')">
+      <a class="tech-link-card" href="/about/news-room" data-route-key="newsroom" data-fallback-path="/about/news-room" style="--bg-img: url('https://static.wixstatic.com/media/394052_490f53a1a68e4b1a89c4860c5cb9eb32~mv2.png')">
         <div class="tech-card-overlay"></div>
         <div class="tech-card-glow"></div>
         <div class="tech-card-body">
-          <div class="eyebrow light"><strong data-i18n="links.c2.title">Press room</strong></div>
-          <span class="desc" data-i18n="links.c2.desc">News, media assets and public announcements.</span>
-          <span class="tech-action"><span data-i18n="links.c2.btn">Read News</span> <span class="arrow">→</span></span>
+          <div class="eyebrow light"><strong data-i18n="links.c2.title" data-content-id="about-links-newsroom-title">Press room</strong></div>
+          <span class="desc" data-i18n="links.c2.desc" data-content-id="about-links-newsroom-copy">News, media assets and public announcements.</span>
+          <span class="tech-action"><span data-i18n="links.c2.btn" data-content-id="about-links-newsroom-action">Read News</span> <span class="arrow">→</span></span>
         </div>
       </a>
 
-      <a class="tech-link-card" href="/about/legal" target="_top" style="--bg-img: url('https://static.wixstatic.com/media/394052_ecdb8871f3af497b8abf8497d0221daf~mv2.png')">
+      <a class="tech-link-card" href="/about/legal" data-route-key="legal" data-fallback-path="/about/legal" style="--bg-img: url('https://static.wixstatic.com/media/394052_ecdb8871f3af497b8abf8497d0221daf~mv2.png')">
         <div class="tech-card-overlay"></div>
         <div class="tech-card-glow"></div>
         <div class="tech-card-body">
-          <div class="eyebrow light"><strong data-i18n="links.c3.title">Legal policies</strong></div>
-          <span class="desc" data-i18n="links.c3.desc">Privacy, cookies, accessibility, booking terms and notices.</span>
-          <span class="tech-action"><span data-i18n="links.c3.btn">Read Terms</span> <span class="arrow">→</span></span>
+          <div class="eyebrow light"><strong data-i18n="links.c3.title" data-content-id="about-links-legal-title">Legal policies</strong></div>
+          <span class="desc" data-i18n="links.c3.desc" data-content-id="about-links-legal-copy">Privacy, cookies, accessibility, booking terms and notices.</span>
+          <span class="tech-action"><span data-i18n="links.c3.btn" data-content-id="about-links-legal-action">Read Terms</span> <span class="arrow">→</span></span>
         </div>
       </a>
 
-      <a class="tech-link-card" href="/travel-info" target="_top" style="--bg-img: url('https://static.wixstatic.com/media/394052_82c7486635f343c0bff18322b745afdc~mv2.png')">
+      <a class="tech-link-card" href="/travel-info" data-route-key="travelInfo" data-fallback-path="/travel-info" style="--bg-img: url('https://static.wixstatic.com/media/394052_82c7486635f343c0bff18322b745afdc~mv2.png')">
         <div class="tech-card-overlay"></div>
         <div class="tech-card-glow"></div>
         <div class="tech-card-body">
-          <div class="eyebrow light"><strong data-i18n="links.c4.title">Travel info</strong></div>
-          <span class="desc" data-i18n="links.c4.desc">Practical travel help, flight status and guidance.</span>
-          <span class="tech-action"><span data-i18n="links.c4.btn">Explore Guides</span> <span class="arrow">→</span></span>
+          <div class="eyebrow light"><strong data-i18n="links.c4.title" data-content-id="about-links-travel-info-title">Travel info</strong></div>
+          <span class="desc" data-i18n="links.c4.desc" data-content-id="about-links-travel-info-copy">Practical travel help, flight status and guidance.</span>
+          <span class="tech-action"><span data-i18n="links.c4.btn" data-content-id="about-links-travel-info-action">Explore Guides</span> <span class="arrow">→</span></span>
         </div>
       </a>
     </div>
   </section>
 
   <!-- Final CTA -->
-  <section class="cta">
-    <h2 data-i18n="cta.title">Explore travel the SKANDI way.</h2>
-    <p data-i18n="cta.copy">Join SKANDI Club, browse the Signature Collection, or learn more about our policies, careers and press information.</p>
+  <section class="cta" data-section-id="about-cta" data-media-id="about-cta-media">
+    <h2 data-i18n="cta.title" data-content-id="about-cta-h2">Explore travel the SKANDI way.</h2>
+    <p data-i18n="cta.copy" data-content-id="about-cta-copy">Join SKANDI Club, browse the SKANDI Collection, or learn more about our policies, careers and press information.</p>
     <div class="hero-actions">
-      <a class="btn" href="/skandi-collection" target="_top" data-i18n="cta.btn1">SKANDI Collection</a>
-      <a class="btn btn-secondary" href="/skandi-club" target="_top" data-i18n="cta.btn2">SKANDI Club</a>
+      <a class="btn" href="/skandi-collection" data-route-key="skandiCollection" data-fallback-path="/skandi-collection" data-i18n="cta.btn1" data-content-id="about-cta-collection-button">SKANDI Collection</a>
+      <a class="btn btn-secondary" href="/skandi-club" data-route-key="club" data-fallback-path="/skandi-club" data-i18n="cta.btn2" data-content-id="about-cta-club-button">SKANDI Club</a>
     </div>
   </section>
 </main>
 
 <div id="toast" class="toast"></div>
 <script>
-// ==========================================================================
-// TRANSLATION DICTIONARY
-// ==========================================================================
 const I18N = {
   EN: {
-    "nav.packages": "Packages",
-    "nav.destinations": "Destinations",
-    "nav.club": "Signature Club",
-    "nav.info": "Travel Info",
-    "nav.search": "Search",
-    "nav.clubBtn": "SKANDI Club",
-    "nav.menu": "MENU",
-    "nav.signIn": "Sign in",
-    "brand.sloganImg": "https://static.wixstatic.com/media/394052_6d5f53cf8c2d4abdac6578b12fe2758c~mv2.png",
-    "settings.language": "Language",
-    "settings.currency": "Currency",
-    "settings.apply": "Apply Settings",
-    "welcome.title": "Welcome to SKANDI",
-    "welcome.copy": "Please confirm your preferred language and currency before continuing.",
-    "welcome.btn": "Continue to Site",
     
     // Page Content
     "hero.kicker": "About SKANDI TRAVELS",
     "hero.title": "Scandinavian care, <strong>designed for the world.</strong>",
     "hero.copy": "SKANDI Travels is built for travelers who want a more personal, structured and carefully selected way to plan and book travel.",
     "hero.btnClub": "Join SKANDI Club",
-    "hero.btnSig": "Explore Signature Collection",
+    "hero.btnSig": "Explore SKANDI Collection",
     
     "sec1.kicker": "Who we are",
     "sec1.title": "Bringing the Scandinavian way of travel to the world",
@@ -705,74 +1299,20 @@ const I18N = {
     "links.c4.btn": "Explore Guides",
 
     "cta.title": "Explore travel the SKANDI way.",
-    "cta.copy": "Join SKANDI Club, browse the Signature Collection, or learn more about our policies, careers and press information.",
-    "cta.btn1": "Signature Collection",
+    "cta.copy": "Join SKANDI Club, browse the SKANDI Collection, or learn more about our policies, careers and press information.",
+    "cta.btn1": "SKANDI Collection",
     "cta.btn2": "SKANDI Club",
 
     // Footer
-    "footer.news.title": "Get SKANDI offers and travel inspiration",
-    "footer.news.desc": "Receive destination guides, Signature Collection updates and member offers.",
-    "footer.news.btn": "Sign up",
-    "footer.col1.title": "Book & Travel",
-    "footer.col1.l1": "Manage your booking",
-    "footer.col1.l2": "Book a trip",
-    "footer.col1.l3": "Signature Collection",
-    "footer.col1.l4": "Destinations",
-    "footer.col1.l5": "Hotels",
-    "footer.col1.l6": "Flights",
-    "footer.col1.l7": "Tours & Activities",
-    "footer.col1.l8": "Car Rental",
-    "footer.col1.l9": "Offers",
-    "footer.col2.title": "Help & Travel Info",
-    "footer.col2.l1": "Before you travel",
-    "footer.col2.l2": "Passport & visa",
-    "footer.col2.l3": "Baggage",
-    "footer.col2.l4": "Insurance",
-    "footer.col2.l5": "Help Center",
-    "footer.col2.l6": "Contact us",
-    "footer.col2.l7": "Special assistance",
-    "footer.col3.title": "SKANDI Club",
-    "footer.col3.l1": "Join SKANDI Club",
-    "footer.col3.l2": "Member benefits",
-    "footer.col3.l3": "My Club Status",
-    "footer.col3.l4": "Travel Wallet & Vouchers",
-    "footer.col4.title": "About",
-    "footer.col4.l1": "About SKANDI Travels",
-    "footer.col4.l2": "Newsroom",
-    "footer.col4.l3": "Careers",
-    "footer.col4.l4": "Our Network",
-    "footer.bottom.terms": "Payment methods, supplier terms and package travel conditions may vary by product.",
-    "footer.bottom.l1": "Legal",
-    "footer.bottom.l2": "Accessibility",
-    "footer.bottom.l3": "Website disclaimer",
-    "footer.bottom.l4": "Privacy",
-    "footer.bottom.l5": "Cookies",
-    "footer.bottom.l6": "Booking terms",
-    "footer.bottom.l7": "Staff login"
   },
   SV: {
-    "nav.packages": "Paketresor",
-    "nav.destinations": "Destinationer",
-    "nav.club": "SKANDI Club",
-    "nav.info": "Reseinformation",
-    "nav.search": "Sök",
-    "nav.clubBtn": "SKANDI Club",
-    "nav.menu": "MENY",
-    "nav.signIn": "Logga in",
-    "brand.sloganImg": "https://static.wixstatic.com/media/394052_370c093c663e45cb999378aaf642b7ef~mv2.png",
-    "settings.language": "Språk",
-    "settings.currency": "Valuta",
-    "settings.apply": "Spara Inställningar",
-    "welcome.title": "Välkommen till SKANDI",
-    "welcome.copy": "Vänligen bekräfta ditt språk och valuta innan du fortsätter.",
-    "welcome.btn": "Fortsätt",
     
     // Page Content
     "hero.kicker": "Om SKANDI",
     "hero.title": "Handplockade Upplevelser - <br> <strong>Resor med Skandinavisk omtanke.</strong>",
     "hero.copy": "SKANDI är skapat för dig som vill ha ett tryggt, bekvämt och noga utvalt sätt att upptäcka världen – med extra guldkant.",    
     "hero.btnClub": "Bli medlem",
-    "hero.btnSig": "Utforska Signature Collection",
+    "hero.btnSig": "Utforska SKANDI Collection",
     
     "sec1.kicker": "Vilka vi är",
     "sec1.title": "Nästa generations charterresor",
@@ -841,489 +1381,307 @@ const I18N = {
     "links.c4.btn": "Se mer",
 
     "cta.title": "Upptäck världen på SKANDI-sättet.",
-    "cta.copy": "Gå med i SKANDI Club, bläddra i Signature Collection eller lär dig mer om våra policyer, karriärer och pressinformation.",
-    "cta.btn1": "Signature Collection",
+    "cta.copy": "Gå med i SKANDI Club, bläddra i SKANDI Collection eller lär dig mer om våra policyer, karriärer och pressinformation.",
+    "cta.btn1": "SKANDI Collection",
     "cta.btn2": "SKANDI Club",
 
     // Footer
-    "footer.news.title": "Få SKANDI-erbjudanden och reseinspiration",
-    "footer.news.desc": "Få destinationsguider, uppdateringar om Signature Collection och medlemserbjudanden.",
-    "footer.news.btn": "Prenumerera",
-    "footer.col1.title": "Boka & Res",
-    "footer.col1.l1": "Hantera din bokning",
-    "footer.col1.l2": "Boka en resa",
-    "footer.col1.l3": "Signature Collection",
-    "footer.col1.l4": "Destinationer",
-    "footer.col1.l5": "Hotell",
-    "footer.col1.l6": "Flyg",
-    "footer.col1.l7": "Utflykter & Aktiviteter",
-    "footer.col1.l8": "Hyrbil",
-    "footer.col1.l9": "Erbjudanden",
-    "footer.col2.title": "Hjälp & Reseinfo",
-    "footer.col2.l1": "Innan du reser",
-    "footer.col2.l2": "Pass & visum",
-    "footer.col2.l3": "Bagage",
-    "footer.col2.l4": "Försäkring",
-    "footer.col2.l5": "Hjälpcenter",
-    "footer.col2.l6": "Kontakta oss",
-    "footer.col2.l7": "Särskild assistans",
-    "footer.col3.title": "SKANDI Club",
-    "footer.col3.l1": "Gå med i SKANDI Club",
-    "footer.col3.l2": "Medlemsförmåner",
-    "footer.col3.l3": "MyClub-status",
-    "footer.col3.l4": "Resekassa & Värdebevis",
-    "footer.col4.title": "Om oss",
-    "footer.col4.l1": "Om SKANDI Travels",
-    "footer.col4.l2": "Nyhetsrum",
-    "footer.col4.l3": "Karriär",
-    "footer.col4.l4": "Vårt Nätverk",
-    "footer.bottom.terms": "Betalningsmetoder, leverantörsvillkor och paketresevillkor kan variera per produkt.",
-    "footer.bottom.l1": "Juridiskt",
-    "footer.bottom.l2": "Tillgänglighet",
-    "footer.bottom.l3": "Ansvarsfriskrivning",
-    "footer.bottom.l4": "Integritetspolicy",
-    "footer.bottom.l5": "Cookies",
-    "footer.bottom.l6": "Bokningsvillkor",
-    "footer.bottom.l7": "SKANDI STAFF"
   }
 };
 
+
 // ==========================================================================
-// SHARED UTILITIES & NAVIGATION
+// B-011.3 ABOUT PAGE RUNTIME
+// Global chrome/settings/routes are owned by masterPage.js.
 // ==========================================================================
-const PARENT_ORIGIN = (() => { try { return document.referrer ? new URL(document.referrer).origin : "*"; } catch (_) { return "*"; } })();
-function postToParent(message) { window.parent.postMessage(message, PARENT_ORIGIN); }
-function navigateParent(path) {
-  const target = String(path || "").trim();
-  if (!target) return;
-  if (window.parent === window) { window.location.assign(target); return; }
-  postToParent({ source: "SKANDI_ABOUT_PAGE", type: "HOME_NAVIGATE", path: target });
+const SOURCE = "SKANDI_ABOUT_PAGE";
+const PARENT = "SKANDI_WIX_PARENT";
+const PARENT_ORIGIN = (() => {
+  try { return document.referrer ? new URL(document.referrer).origin : "*"; }
+  catch (_) { return "*"; }
+})();
+
+let MASTER = { settings:{ language:"EN", currency:"USD" }, routes:{} };
+let DATA = { settings:{}, facts:[], timeline:[], partners:[], collection:{items:[],tiers:{},counts:{}} };
+let collectionTypeFilter = "all";
+let lastRequestedLanguage = "";
+
+const $ = id => document.getElementById(id);
+const esc = value => String(value ?? "").replace(/[&<>'"]/g, c => ({
+  "&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"
+}[c]));
+
+function post(type, payload = {}) {
+  window.parent.postMessage({
+    source: SOURCE,
+    type,
+    payload,
+    timestamp: new Date().toISOString()
+  }, PARENT_ORIGIN);
 }
 
-// ==========================================================================
-// PAGE DATA LOGIC & APP INITIALIZATION
-// ==========================================================================
-(function(){
-  const SOURCE = "SKANDI_ABOUT_PAGE", PARENT = "SKANDI_WIX_PARENT";
-  const CONFIG = {
-    nav: [
-      { label:"Packages", i18n: "nav.packages", path:"/skandi-collection" },
-      { label:"Destinations", i18n: "nav.destinations", path:"/destinations" },
-      { label:"SKANDI Club", i18n: "nav.club", path:"/skandi-club" },
-      { label:"Travel Info", i18n: "nav.info", path:"/travel-info" }
-    ],
-    desktopMember: [{ label:"My Profile", path:"/my-profile" }],
-    mobileExtra: [{ label:"Help Center", path:"/help" }],
-    mobileMember: [{ label:"My Profile", path:"/my-profile" }]
-  };
+function currentLang() {
+  const lang = String(MASTER?.settings?.language || "EN").trim().toUpperCase();
+  return ["EN","SV","NO","DA"].includes(lang) ? lang : "EN";
+}
 
-  let session = { loggedIn:false, displayName:"", points:0 };
-  let userSettings = null; 
-  let mobileMenuOpen = false;
-  let DATA = {settings:{}, facts:[], timeline:[], partners:[], collection:{items:[],tiers:{},counts:{}}};
-  let collectionTypeFilter = "all";
-  const $ = id => document.getElementById(id);
-  
-  function esc(v){ return String(v??"").replace(/[&<>'"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;","\"":"&quot;"}[c])) }
+function tr(key, fallback = "") {
+  const dict = I18N[currentLang()] || I18N.EN || {};
+  return dict[key] ?? I18N.EN?.[key] ?? fallback;
+}
 
-  function currentLang(){
-    return userSettings?.language || "EN";
+function masterRoute(key, fallback = "/") {
+  const value = String(MASTER?.routes?.[key] || "").trim();
+  return value.startsWith("/") ? value : fallback;
+}
+
+function navTo(path) {
+  const target = String(path || "").trim();
+  if (!target) return;
+  post("ABOUT_NAVIGATE", { path: target });
+}
+
+function requestAbout(force = false) {
+  const language = currentLang();
+  if (!force && language === lastRequestedLanguage) return;
+  lastRequestedLanguage = language;
+  post("ABOUT_PAGE_REFRESH", { language });
+}
+
+const COLLECTION_META = {
+  SELECT: {
+    titleKey:"coll.c1.title",
+    descKey:"coll.c1.desc1",
+    ribbon:"https://static.wixstatic.com/media/394052_fcc4eff0abf64dd88cdead7a4ceae0bc~mv2.png",
+    buttonKey:"coll.c1.btn"
+  },
+  SIGNATURE: {
+    titleKey:"coll.c2.title",
+    descKey:"coll.c2.desc1",
+    ribbon:"https://static.wixstatic.com/media/394052_f6c11efe799b4b02b8e6d9a0efa623a1~mv2.png",
+    buttonKey:"coll.c2.btn"
+  },
+  EXCELSIOR: {
+    titleKey:"coll.c3.title",
+    descKey:"coll.c3.desc2",
+    ribbon:"https://static.wixstatic.com/media/394052_d74d296ebed8436e9f08ff9c0bc2c2a3~mv2.png",
+    buttonKey:"coll.c3.btn"
   }
+};
 
-  function tr(key, fallback=""){
-    const dict = I18N[currentLang()] || I18N.EN;
-    return dict[key] || fallback;
-  }
+function typeLabel(type) {
+  return ({
+    destinations:"Destinations",
+    hotels:"Hotels",
+    tours:"Tours & Activities",
+    airlines:"Airlines",
+    airports:"Airports",
+    packages:"Packages",
+    transfers:"Transfers",
+    "car-rental":"Car Rental"
+  })[type] || type || "Selected";
+}
 
-  const COLLECTION_META = {
-    SELECT: {
-      titleKey:"coll.c1.title",
-      descKey:"coll.c1.desc1",
-      ribbon:"https://static.wixstatic.com/media/394052_fcc4eff0abf64dd88cdead7a4ceae0bc~mv2.png",
-      buttonKey:"coll.c1.btn"
-    },
-    SIGNATURE: {
-      titleKey:"coll.c2.title",
-      descKey:"coll.c2.desc1",
-      ribbon:"https://static.wixstatic.com/media/394052_f6c11efe799b4b02b8e6d9a0efa623a1~mv2.png",
-      buttonKey:"coll.c2.btn"
-    },
-    EXCELSIOR: {
-      titleKey:"coll.c3.title",
-      descKey:"coll.c3.desc2",
-      ribbon:"https://static.wixstatic.com/media/394052_d74d296ebed8436e9f08ff9c0bc2c2a3~mv2.png",
-      buttonKey:"coll.c3.btn"
-    }
-  };
+function applyTranslations() {
+  const dict = I18N[currentLang()] || I18N.EN || {};
+  document.documentElement.lang = currentLang().toLowerCase();
+  document.querySelectorAll("[data-i18n]").forEach(el => {
+    const key = el.getAttribute("data-i18n");
+    const value = dict[key] ?? I18N.EN?.[key];
+    if (value !== undefined) el.innerHTML = value;
+  });
+}
 
-  function typeLabel(type){
-    return ({
-      destinations:"Destinations",
-      hotels:"Hotels",
-      tours:"Tours & Activities",
-      airlines:"Airlines",
-      airports:"Airports",
-      packages:"Packages",
-      transfers:"Transfers",
-      "car-rental":"Car Rental"
-    })[type] || type || "Selected";
-  }
+function renderCollection() {
+  const liveState = $("collectionLiveState");
+  const grid = $("collectionGrid");
+  const tabs = $("collectionTypeTabs");
+  if (!liveState || !grid || !tabs) return;
 
-  function renderCollection(){
-    const liveState = $("collectionLiveState");
-    const grid = $("collectionGrid");
-    const tabs = $("collectionTypeTabs");
-    if(!liveState || !grid || !tabs) return;
+  const items = Array.isArray(DATA.collection?.items) ? DATA.collection.items : [];
+  const availableTypes = [...new Set(items.map(x => x.type).filter(Boolean))];
+  const tabDefs = [
+    {key:"all",label:"All"},
+    ...availableTypes.map(key => ({key,label:typeLabel(key)}))
+  ];
 
-    const items = Array.isArray(DATA.collection?.items) ? DATA.collection.items : [];
-    const availableTypes = [...new Set(items.map(x=>x.type).filter(Boolean))];
+  tabs.innerHTML = tabDefs.map(t => `
+    <button class="collection-tab ${collectionTypeFilter===t.key?"active":""}"
+      type="button" data-collection-type="${esc(t.key)}">${esc(t.label)}</button>
+  `).join("");
 
-    const tabDefs = [
-      {key:"all",label:"All"},
-      ...availableTypes.map(key=>({key,label:typeLabel(key)}))
-    ];
-
-    tabs.innerHTML = tabDefs.map(t=>`
-      <button class="collection-tab ${collectionTypeFilter===t.key?"active":""}" type="button" data-collection-type="${esc(t.key)}">${esc(t.label)}</button>
-    `).join("");
-
-    tabs.querySelectorAll("[data-collection-type]").forEach(btn=>{
-      btn.addEventListener("click",()=>{
-        collectionTypeFilter = btn.dataset.collectionType || "all";
-        renderCollection();
-      });
+  tabs.querySelectorAll("[data-collection-type]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      collectionTypeFilter = btn.dataset.collectionType || "all";
+      renderCollection();
     });
+  });
 
-    const visible = collectionTypeFilter==="all"
-      ? items
-      : items.filter(x=>x.type===collectionTypeFilter);
+  const visible = collectionTypeFilter === "all"
+    ? items
+    : items.filter(x => x.type === collectionTypeFilter);
 
-    if(!visible.length){
-      liveState.classList.remove("hidden");
-      liveState.textContent = items.length
-        ? `No ${typeLabel(collectionTypeFilter).toLowerCase()} are currently assigned to Select, Signature or Excelsior in Inventory Control.`
-        : "No published customer-visible Select, Signature or Excelsior records are currently assigned in Inventory Control.";
-      grid.innerHTML = "";
-      return;
-    }
+  if (!visible.length) {
+    liveState.classList.remove("hidden");
+    liveState.textContent = items.length
+      ? `No ${typeLabel(collectionTypeFilter).toLowerCase()} are currently assigned to Select, Signature or Excelsior in Inventory Control.`
+      : "No published customer-visible Select, Signature or Excelsior records are currently assigned in Inventory Control.";
+    grid.innerHTML = "";
+    return;
+  }
 
-    liveState.classList.add("hidden");
-    const tierOrder = ["SELECT","SIGNATURE","EXCELSIOR"];
+  liveState.classList.add("hidden");
+  const tierOrder = ["SELECT","SIGNATURE","EXCELSIOR"];
 
-    const cards = tierOrder.map(tier=>{
-      const tierItems = visible.filter(x=>x.tier===tier);
-      if(!tierItems.length) return "";
-      const meta = COLLECTION_META[tier];
-      const image = tierItems.find(x=>x.imageUrl)?.imageUrl || "";
-      const typeSummary = [...new Set(tierItems.map(x=>typeLabel(x.type)))].join(" · ");
-      const examples = tierItems.slice(0,4).map(x=>`<li>${esc(x.title)}</li>`).join("");
+  grid.innerHTML = tierOrder.map(tier => {
+    const tierItems = visible.filter(x => x.tier === tier);
+    if (!tierItems.length) return "";
+    const meta = COLLECTION_META[tier];
+    const image = tierItems.find(x => x.imageUrl)?.imageUrl || "";
+    const typeSummary = [...new Set(tierItems.map(x => typeLabel(x.type)))].join(" · ");
+    const examples = tierItems.slice(0,4).map(x => `<li>${esc(x.title)}</li>`).join("");
+    return `<article class="collection-card" data-live-tier="${tier}">
+      <div class="collection-img-wrap" data-media-id="about-collection-${tier.toLowerCase()}-media">
+        ${image
+          ? `<img class="collection-main-img" src="${esc(image)}" alt="${esc(tierItems[0]?.title || tier)}">`
+          : `<div class="collection-img-placeholder">${esc(tier)}</div>`}
+        <div class="collection-img-overlay"></div>
+        <img class="collection-ribbon" src="${esc(meta.ribbon)}" alt="${esc(tier)}">
+      </div>
+      <div class="collection-content">
+        <div class="live-count">${tierItems.length} live ${tierItems.length===1?"selection":"selections"}</div>
+        <h3 class="collection-title">${tr(meta.titleKey, tier)}</h3>
+        <div class="collection-desc">${tr(meta.descKey, "")}</div>
+        <div class="collection-source">${esc(typeSummary)}</div>
+        <ul class="live-examples">${examples}</ul>
+        <button class="btn btn-secondary" style="width:100%;" type="button"
+          data-tier-link="${tier.toLowerCase()}">${tr(meta.buttonKey, `Explore ${tier}`)}</button>
+      </div>
+    </article>`;
+  }).join("") || `<div class="notice collection-empty">No tiered SKANDI Collection inventory is available for this filter.</div>`;
 
-      return `<article class="collection-card" data-live-tier="${tier}">
-        <div class="collection-img-wrap">
-          ${image
-            ? `<img class="collection-main-img" src="${esc(image)}" alt="${esc(tierItems[0]?.title || tier)}">`
-            : `<div class="collection-img-placeholder">${esc(tier)}</div>`}
-          <div class="collection-img-overlay"></div>
-          <img class="collection-ribbon" src="${esc(meta.ribbon)}" alt="${esc(tier)}">
-        </div>
-        <div class="collection-content">
-          <div class="live-count">${tierItems.length} live ${tierItems.length===1?"selection":"selections"}</div>
-          <h3 class="collection-title">${tr(meta.titleKey, tier)}</h3>
-          <div class="collection-desc">${tr(meta.descKey, "")}</div>
-          <div class="collection-source">${esc(typeSummary)}</div>
-          <ul class="live-examples">${examples}</ul>
-          <button class="btn btn-secondary" style="width:100%;" type="button" data-tier-link="${tier.toLowerCase()}">${tr(meta.buttonKey, `Explore ${tier}`)}</button>
-        </div>
-      </article>`;
-    }).join("");
-
-    grid.innerHTML = cards || `<div class="notice collection-empty">No tiered SKANDI Collection inventory is available for this filter.</div>`;
-
-    grid.querySelectorAll("[data-tier-link]").forEach(btn=>{
-      btn.addEventListener("click",()=>navTo(`/skandi-collection?tier=${encodeURIComponent(btn.dataset.tierLink || "")}`));
+  grid.querySelectorAll("[data-tier-link]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const base = masterRoute("skandiCollection", "/skandi-collection");
+      navTo(`${base}?tier=${encodeURIComponent(btn.dataset.tierLink || "")}`);
     });
+  });
+}
+
+function renderData() {
+  const s = DATA.settings || {};
+  if (s.heroImageUrl && $("hero")) {
+    $("hero").style.setProperty("--hero-image", `url("${String(s.heroImageUrl).replace(/"/g,"%22")}")`);
   }
 
-  // 1. TRANSLATION ENGINE
-  function applyTranslations() {
-    const lang = userSettings ? userSettings.language : 'EN';
-    const dict = I18N[lang] || I18N['EN'];
-    
-    // Update text elements
-    document.querySelectorAll('[data-i18n]').forEach(el => {
-      const key = el.getAttribute('data-i18n');
-      if(dict[key]) { el.innerHTML = dict[key]; }
-    });
-
-    // Update slogan image dynamically
-    const sloganImg = document.getElementById("sloganImg");
-    if (sloganImg && dict["brand.sloganImg"]) {
-      sloganImg.src = dict["brand.sloganImg"];
-    }
+  const facts = DATA.facts?.length ? DATA.facts : [
+    {label:"Founded with", value:"Care", description:"Every trip is designed with human oversight."},
+    {label:"Focus", value:"Selected travel", description:"Quality over quantity in our offerings."},
+    {label:"Portal", value:"Connected", description:"Seamless transition from booking to traveling."}
+  ];
+  if ($("facts")) {
+    $("facts").innerHTML = facts.map((f,index) => `
+      <div class="fact" data-content-id="about-story-fact-${index+1}">
+        <small>${esc(f.label)}</small><strong>${esc(f.value)}</strong><p>${esc(f.description||"")}</p>
+      </div>`).join("");
   }
 
-  // 2. SETTINGS INITIALIZATION
-  function initSettings() {
-    try {
-      const stored = localStorage.getItem('skandi_user_settings');
-      if (stored) {
-        userSettings = JSON.parse(stored);
-        updateSettingsUI();
-        applyTranslations();
-      } else {
-        userSettings = { language: 'EN', currency: 'USD' }; 
-        if ($("welcomeSettingsModal")) $("welcomeSettingsModal").classList.add("active");
-        applyTranslations();
-      }
-    } catch(e) {
-      userSettings = { language: 'EN', currency: 'USD' };
-      applyTranslations();
-    }
-  }
-
-  function saveSettings(lang, curr) {
-    userSettings = { language: lang, currency: curr };
-    try { localStorage.setItem('skandi_user_settings', JSON.stringify(userSettings)); } catch(e){}
-    updateSettingsUI();
-    applyTranslations();
-    postToParent({ source: SOURCE, type: "UPDATE_SETTINGS", payload: userSettings });
-  }
-
-  function updateSettingsUI() {
-    if ($("langSelect")) $("langSelect").value = userSettings.language;
-    if ($("currSelect")) $("currSelect").value = userSettings.currency;
-    if ($("mobileLangSelect")) $("mobileLangSelect").value = userSettings.language;
-    if ($("mobileCurrSelect")) $("mobileCurrSelect").value = userSettings.currency;
-  }
-
-  // 3. DYNAMIC CONTENT RENDERING (From Wix Database) & SCROLL OBSERVER
-  function renderData(){
-    const s = DATA.settings || {};
-    if(s.heroImageUrl){ $("hero").style.setProperty("--hero-image",`url("${s.heroImageUrl}")`); }
-    
-    const facts = DATA.facts?.length ? DATA.facts : [
-      {label:"Founded with", value:"Care", description: "Every trip is designed with human oversight."},
-      {label:"Focus", value:"Selected travel", description: "Quality over quantity in our offerings."},
-      {label:"Portal", value:"Connected", description: "Seamless transition from booking to traveling."}
-    ];
-    $("facts").innerHTML = facts.map(f=>`<div class="fact"><small>${esc(f.label)}</small><strong>${esc(f.value)}</strong><p>${esc(f.description||"")}</p></div>`).join("");
-    
-    const timeline = DATA.timeline?.length ? DATA.timeline : [
-      {year:"Start", title:"A more personal travel idea", body:"SKANDI was created to make travel easier to understand and more carefully selected."},
-      {year:"Now", title:"Connected customer and operations tools", body:"Public pages, customer profiles and internal travel operations are being connected into one SKANDI platform."}
-    ];
-    
-    $("timeline").innerHTML = timeline.map(x=>`
-      <article class="milestone">
-        <div class="milestone-node">
-          <div class="core"></div>
-          <div class="radar"></div>
-        </div>
+  const timeline = DATA.timeline?.length ? DATA.timeline : [
+    {year:"Start", title:"A more personal travel idea", body:"SKANDI was created to make travel easier to understand and more carefully selected."},
+    {year:"Now", title:"Connected customer and operations tools", body:"Public pages, customer profiles and internal travel operations are being connected into one SKANDI platform."}
+  ];
+  if ($("timeline")) {
+    $("timeline").innerHTML = timeline.map((x,index) => `
+      <article class="milestone" data-content-id="about-story-milestone-${index+1}">
+        <div class="milestone-node"><div class="core"></div><div class="radar"></div></div>
         <div class="year">${esc(x.year)}</div>
-        <div class="ms-content">
-          <h3>${esc(x.title)}</h3>
-          <p>${esc(x.body)}</p>
-        </div>
-      </article>
-    `).join("");
-    
-    const partners = DATA.partners?.length ? DATA.partners : [];
+        <div class="ms-content"><h3>${esc(x.title)}</h3><p>${esc(x.body)}</p></div>
+      </article>`).join("");
+  }
+
+  const partners = DATA.partners?.length ? DATA.partners : [];
+  if ($("partners")) {
     $("partners").innerHTML = partners.length
-      ? partners.slice(0,12).map(p=>`<div class="partner"><b>${esc(p.title||p.name)}</b><span>${esc(p.tier ? `${p.tier} · ${p.typeLabel||p.type||"Selected"}` : p.collectionLabel||p.typeLabel||p.type||"Selected")}</span></div>`).join("")
+      ? partners.slice(0,12).map((p,index) => `
+          <div class="partner" data-content-id="about-focus-partner-${index+1}">
+            <b>${esc(p.title||p.name)}</b>
+            <span>${esc(p.tier ? `${p.tier} · ${p.typeLabel||p.type||"Selected"}` : p.collectionLabel||p.typeLabel||p.type||"Selected")}</span>
+          </div>`).join("")
       : `<div class="notice">Published SKANDI Collection / SKANDI Partner records marked in Inventory Control will appear here.</div>`;
-
-    renderCollection();
   }
 
-  // 4. HEADER & NAV RENDERING
-  function renderDesktopNav() {
-    const nav = $("nav");
-    if (!nav) return;
-    let items = session.loggedIn ? [...CONFIG.nav, ...CONFIG.desktopMember] : [...CONFIG.nav];
-    nav.innerHTML = items.map(item => (`<button class="nav-btn" type="button" data-path="${esc(item.path)}" ${item.i18n ? `data-i18n="${item.i18n}"` : ''}>${esc(item.label)}</button>`)).join("");
-    nav.querySelectorAll("[data-path]").forEach(btn => btn.addEventListener("click", () => navTo(btn.dataset.path)));
-    applyTranslations(); 
-  }
+  renderCollection();
+}
 
-  function renderMobileNav() {
-    const list = $("mobileList");
-    if (!list) return;
-    let items = session.loggedIn ? CONFIG.mobileMember : [...CONFIG.nav, ...CONFIG.mobileExtra];
-    list.innerHTML = items.map(item => (`<button class="mobile-menu-link" type="button" data-path="${esc(item.path)}" ${item.i18n ? `data-i18n="${item.i18n}"` : ''}>${esc(item.label)}</button>`)).join("");
-    list.querySelectorAll("[data-path]").forEach(btn => btn.addEventListener("click", () => navTo(btn.dataset.path)));
+function bindNavigation() {
+  document.querySelectorAll("a[data-route-key]").forEach(link => {
+    link.addEventListener("click", event => {
+      event.preventDefault();
+      const key = link.dataset.routeKey || "";
+      const fallback = link.dataset.fallbackPath || link.getAttribute("href") || "/";
+      navTo(masterRoute(key, fallback));
+    });
+  });
+}
+
+window.addEventListener("message", event => {
+  let msg = event.data;
+  if (typeof msg === "string") {
+    try { msg = JSON.parse(msg); } catch (_) { return; }
+  }
+  if (!msg || typeof msg !== "object") return;
+  if (msg.source && msg.source !== PARENT) return;
+
+  if (msg.type === "SKANDI_MASTER_CONFIG") {
+    const previous = currentLang();
+    MASTER = {
+      ...MASTER,
+      ...(msg.payload || {}),
+      settings:{ ...(MASTER.settings||{}), ...(msg.payload?.settings||{}) },
+      routes:{ ...(MASTER.routes||{}), ...(msg.payload?.routes||{}) }
+    };
     applyTranslations();
+    bindNavigation();
+    if (currentLang() !== previous || !lastRequestedLanguage) requestAbout(true);
+    return;
   }
 
-  function navTo(path) { if (!path) return; closeMobile(); closeClub(); navigateParent(path); }
-  function openClub(context) { closeMobile(); renderClub(context); requestAnimationFrame(() => { if ($("clubPanel")) $("clubPanel").classList.add("open"); if ($("clubBackdrop")) $("clubBackdrop").classList.add("open"); }); document.documentElement.style.overflow = "hidden"; }
-  function closeClub() { if ($("clubPanel")) $("clubPanel").classList.remove("open"); if ($("clubBackdrop")) $("clubBackdrop").classList.remove("open"); document.documentElement.style.overflow = ""; }
-  function openMobile() { closeClub(); mobileMenuOpen = true; $("mobileMenuLayer").classList.add("open"); $("mobileMenuLayer").setAttribute("aria-hidden", "false"); $("mobileBtn").setAttribute("aria-expanded", "true"); document.documentElement.classList.add("mobile-menu-open"); }
-  function closeMobile() { mobileMenuOpen = false; if($("mobileMenuLayer")) { $("mobileMenuLayer").classList.remove("open"); $("mobileMenuLayer").setAttribute("aria-hidden", "true"); } if($("mobileBtn")) $("mobileBtn").setAttribute("aria-expanded", "false"); document.documentElement.classList.remove("mobile-menu-open"); }
-
-  function renderClub(context) {
-    const loggedIn = Boolean(session.loggedIn);
-    const clubBody = document.querySelector(".club-body");
-    if (!clubBody || !$("clubActions")) return;
-    if($("clubTitle")) $("clubTitle").textContent = loggedIn ? "Your SKANDI Club" : "Join SKANDI Club";
-    
-    if (loggedIn) {
-      if($("clubName")) $("clubName").innerHTML = `Hi, ${session.displayName || "there"}`;
-      if($("clubMeta")) $("clubMeta").innerHTML = `${Number(session.points || 0).toLocaleString()} points`;
-      clubBody.style.gridTemplateColumns = "1fr auto";
-      $("clubActions").style.gridColumn = "auto";
-      $("clubActions").innerHTML = [{ label: "Logout", action: "logout" }].map(action => (`<button class="btn btn-secondary" style="width:100%; margin-bottom:12px;" data-action="${esc(action.action)}">${esc(action.label)}</button>`)).join("");
-    } else {
-      if (context === 'favorites') {
-        if($("clubName")) $("clubName").innerHTML = `<span class="fav-hero-icon">♥</span><span class="fav-hero-title">Save your favourites</span>`;
-        if($("clubMeta")) $("clubMeta").innerHTML = `<span class="fav-hero-text">To save your favourited destinations and pages requires you to be logged in.</span>`;
-      } else {
-        if($("clubName")) $("clubName").innerHTML = `Welcome Back`;
-        if($("clubMeta")) $("clubMeta").innerHTML = `Sign in to access your trips and points.`;
-      }
-      clubBody.style.gridTemplateColumns = "1fr";
-      $("clubActions").style.gridColumn = "1 / -1";
-      $("clubActions").innerHTML = `
-        <form id="inlineLoginForm" class="login-form">
-          <input type="email" id="loginEmail" placeholder="Email address" required />
-          <input type="password" id="loginPassword" placeholder="Password" required />
-          <button type="submit" class="btn" style="width:100%;">Log In</button>
-        </form>
-      `;
+  if (msg.type === "ABOUT_PAGE_LOADING") {
+    const state = $("collectionLiveState");
+    if (state) {
+      state.classList.remove("hidden");
+      state.textContent = "Loading live SKANDI Collection inventory…";
     }
+    return;
   }
-document.addEventListener("submit", (event) => {
-  if (event.target?.id !== "inlineLoginForm") return;
 
-  event.preventDefault();
-  closeClub();
+  if (msg.type === "ABOUT_PAGE_DATA") {
+    DATA = {
+      ...DATA,
+      ...(msg.payload || {}),
+      collection:{ ...(DATA.collection||{}), ...(msg.payload?.collection||{}) }
+    };
+    renderData();
+    return;
+  }
 
-  postToParent({
-    source: SOURCE,
-    type: "HEADER_LOGIN",
-    payload: {}
-  });
-});
-
-document.addEventListener("click", (event) => {
-  const actionButton = event.target.closest("[data-action]");
-
-  if (!actionButton) return;
-
-  if (actionButton.dataset.action === "logout") {
-    closeClub();
-
-    postToParent({
-      source: SOURCE,
-      type: "HEADER_LOGOUT",
-      payload: {}
-    });
+  if (msg.type === "ABOUT_PAGE_ERROR") {
+    const state = $("collectionLiveState");
+    if (state) {
+      state.classList.remove("hidden");
+      state.textContent = msg.payload?.message || "SKANDI Collection inventory is currently unavailable.";
+    }
+    if ($("collectionGrid")) $("collectionGrid").innerHTML = "";
   }
 });
-  // 5. EVENT BINDING
-  function bind() {
-    if($("logoBtn")) $("logoBtn").onclick = () => navTo("/home");
-    if($("favBtn")) $("favBtn").onclick = () => { session.loggedIn ? navTo("/my-profile?tab=favourites") : openClub('favorites'); };
-    if($("clubBtn")) $("clubBtn").onclick = () => openClub();
-    if($("clubClose")) $("clubClose").onclick = closeClub;
-    if($("clubBackdrop")) $("clubBackdrop").onclick = closeClub;    
-    if($("mobileBtn")) $("mobileBtn").onclick = () => mobileMenuOpen ? closeMobile() : openMobile();
-    if($("mobileMenuBackdrop")) $("mobileMenuBackdrop").onclick = () => closeMobile();
-    if($("mobileMenuClose")) $("mobileMenuClose").onclick = () => closeMobile();
-    if($("searchBtn")) $("searchBtn").onclick = () => postToParent({ source: SOURCE, type: "HEADER_SEARCH" });
-    if($("mobileSearchBtn")) $("mobileSearchBtn").onclick = () => { closeMobile(); postToParent({ source: SOURCE, type: "HEADER_SEARCH" }); };
-    if($("mobileAccountBtn")) $("mobileAccountBtn").onclick = () => { closeMobile(); session.loggedIn ? navTo("/my-profile") : postToParent({ source: SOURCE, type: "HEADER_LOGIN" }); };
-    
-    if ($("welcomeSaveBtn")) {
-      $("welcomeSaveBtn").onclick = () => {
-        saveSettings($("welcomeLang").value, $("welcomeCurr").value);
-        $("welcomeSettingsModal").classList.remove("active");
-      };
-    }
 
-    if ($("settingsBtn")) {
-      $("settingsBtn").onclick = (e) => {
-        e.stopPropagation();
-        $("settingsMenu").classList.toggle("open");
-      };
-    }
-    document.addEventListener("click", (e) => {
-      if ($("settingsMenu") && !$("settingsMenu").contains(e.target) && e.target !== $("settingsBtn")) {
-        $("settingsMenu").classList.remove("open");
-      }
-    });
+applyTranslations();
+renderData();
+bindNavigation();
+post("MASTER_CONFIG_REQUEST", {});
+post("ABOUT_PAGE_READY", { language: currentLang() });
 
-    if ($("saveSettingsBtn")) {
-      $("saveSettingsBtn").onclick = () => {
-        saveSettings($("langSelect").value, $("currSelect").value);
-        $("settingsMenu").classList.remove("open");
-      };
-    }
-
-    if ($("mobileLangSelect")) $("mobileLangSelect").onchange = (e) => saveSettings(e.target.value, userSettings.currency);
-    if ($("mobileCurrSelect")) $("mobileCurrSelect").onchange = (e) => saveSettings(userSettings.language, e.target.value);
-
-    window.addEventListener("resize", () => { if (window.innerWidth > 900) closeMobile(); });
-  }
-
-  // 6. MESSAGE LISTENER (Wix Communication)
-  window.addEventListener("message", (event) => {
-    let msg = event.data;
-    if (typeof msg === "string") { try { msg = JSON.parse(msg); } catch(e){ return; } }
-    if (!msg || typeof msg !== "object") return;
-    
-    if (msg.type === "CUSTOMER_HEADER_STATE") {
-      session = { loggedIn:Boolean(msg.payload?.loggedIn), displayName:msg.payload?.displayName || "", points:Number(msg.payload?.points || 0), tierName:msg.payload?.tierName || "" };
-      renderDesktopNav(); renderMobileNav(); renderClub();
-    }
-    if (msg.type === "CLOSE_CUSTOMER_HEADER_PANELS") { closeMobile(); closeClub(); }
-    if (msg.type === "ABOUT_PAGE_LOADING"){
-      const state=$("collectionLiveState");
-      if(state){ state.classList.remove("hidden"); state.textContent="Loading live SKANDI Collection inventory…"; }
-    }
-    if (msg.type === "ABOUT_PAGE_DATA"){
-      DATA = { ...DATA, ...(msg.payload||{}), collection:{ ...(DATA.collection||{}), ...(msg.payload?.collection||{}) } };
-      renderData();
-    }
-    if (msg.type === "ABOUT_PAGE_ERROR"){
-      const state=$("collectionLiveState");
-      if(state){ state.classList.remove("hidden"); state.textContent=msg.payload?.message || "SKANDI Collection inventory is currently unavailable."; }
-      if($("collectionGrid")) $("collectionGrid").innerHTML="";
-    }
-  });
-
-  // 7. BOOTSTRAP
-  initSettings();
-  renderData();
-  renderDesktopNav(); 
-  renderMobileNav(); 
-  bind(); 
-  renderClub(); 
-  updateSettingsUI();
-  
-  postToParent({ source: SOURCE, type: "HEADER_READY" });
-  postToParent({ source: SOURCE, type: "ABOUT_PAGE_READY", payload: { language: currentLang() } });
-})();
-
-// ==========================================================================
-// FOOTER INITIALIZATION
-// ==========================================================================
-(function(){
-  const SOURCE = "SKANDI_CUSTOMER_FOOTER";
-  const footerRoot = document.getElementById("skandi-site-footer");
-  if (!footerRoot) return;
-  if (footerRoot.querySelector("#year")) footerRoot.querySelector("#year").textContent = new Date().getFullYear();
-
-  footerRoot.querySelectorAll("[data-path]").forEach(el => el.addEventListener("click", () => navigateParent(el.getAttribute("data-path"))));
-  footerRoot.querySelectorAll(".social-btn[data-url]").forEach(btn => btn.addEventListener("click", () => { const url = btn.getAttribute("data-url"); if (url) window.open(url, "_blank", "noopener,noreferrer"); }));
-
-  const newsletterBtn = footerRoot.querySelector("#newsletterBtn");
-  const newsletterEmail = footerRoot.querySelector("#newsletterEmail");
-  
-  if (newsletterBtn) newsletterBtn.addEventListener("click", () => { postToParent({ source: SOURCE, type: "FOOTER_NEWSLETTER_SIGNUP", payload: { email: newsletterEmail.value.trim(), source: "Footer" } }); });
-  if (newsletterEmail) newsletterEmail.addEventListener("keydown", (e) => { if (e.key === "Enter") postToParent({ source: SOURCE, type: "FOOTER_NEWSLETTER_SIGNUP", payload: { email: e.target.value.trim(), source: "Footer" } }); });
-
-  postToParent({ source: SOURCE, type: "FOOTER_READY" });
-})();
 </script>
 </body>
 </html>
+```
