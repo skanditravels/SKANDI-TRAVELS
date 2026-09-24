@@ -1,5 +1,5 @@
 // /src/backend/SKANDI_CORE/legalPolicy.js
-// SKANDI Legal — B-011.1 canonical public legal-content core.
+// SKANDI Legal — B-011.2 canonical public legal-content core.
 //
 // Public Legal reads only published, active, external policies from the
 // canonical Supabase legal_policies table. Policy Control is the editorial
@@ -10,7 +10,7 @@
 import { restRequest } from "backend/SKANDI_CORE/supabaseServer";
 import { SITE_MAP } from "public/siteMap";
 
-export const LEGAL_POLICY_VERSION = "B-011.1";
+export const LEGAL_POLICY_VERSION = "B-011.2";
 
 const clean = (value, max = 6000) => String(value ?? "").trim().slice(0, max);
 const lower = (value, max = 200) => clean(value, max).toLowerCase();
@@ -58,6 +58,43 @@ function publicPolicy(row = {}) {
   };
 }
 
+function publicSection(section = {}) {
+  const children = Array.isArray(section?.children)
+    ? section.children.map(publicSection)
+    : [];
+
+  return {
+    id: clean(section?.id, 180),
+    title: clean(section?.title, 1000),
+    bodyHtml: clean(section?.bodyHtml ?? section?.body_html, 250000),
+    children
+  };
+}
+
+function publicDocument(row = {}) {
+  return {
+    ...publicPolicy(row),
+    introductionHtml: clean(row.introduction_html, 250000),
+    sections: Array.isArray(row.sections) ? row.sections.map(publicSection) : [],
+    bodyHtml: clean(row.body_html, 500000),
+    bodyPlainText: clean(row.body_plain_text, 500000),
+    reviewDate: row.review_date || null,
+    owner: clean(row.owner, 240) || "Legal / Compliance",
+    approvedByName: clean(row.approved_by_name, 240),
+    acknowledgementRequired: bool(row.acknowledgement_required)
+  };
+}
+
+const PUBLIC_META_SELECT =
+  "policy_id,document_id,title,slug,scope,brand,public_type,status,category,summary," +
+  "effective_date,version,pdf_file_url,pdf_file_name,featured,active,sort_order," +
+  "published_at,updated_at,deleted_at";
+
+const PUBLIC_DOCUMENT_SELECT =
+  PUBLIC_META_SELECT +
+  ",introduction_html,sections,body_html,body_plain_text,review_date,owner," +
+  "approved_by_name,acknowledgement_required";
+
 const DIRECT_TYPE_ORDER = Object.freeze([
   "privacy",
   "cookies",
@@ -73,16 +110,63 @@ function directRank(policy = {}) {
   return policy.featured ? DIRECT_TYPE_ORDER.length : DIRECT_TYPE_ORDER.length + 100;
 }
 
+function publicBaseQuery(select) {
+  return {
+    select,
+    scope: "eq.external",
+    status: "eq.Published",
+    active: "eq.true",
+    deleted_at: "is.null"
+  };
+}
+
+function identifierFilter(input = {}) {
+  const slug = clean(input.slug, 240);
+  const policyId = clean(input.policyId ?? input.policy_id, 180);
+  const documentId = clean(input.documentId ?? input.document_id, 180);
+  const type = clean(input.type ?? input.publicType, 120);
+
+  if (slug) return { slug: `eq.${slug}` };
+  if (policyId) return { policy_id: `eq.${policyId}` };
+  if (documentId) return { document_id: `eq.${documentId}` };
+  if (type) return { public_type: `ilike.${type}` };
+
+  throw new Error("LEGAL_DOCUMENT_IDENTIFIER_REQUIRED");
+}
+
+function suggestedRank(candidate = {}, current = {}) {
+  let score = 0;
+
+  if (
+    candidate.category &&
+    current.category &&
+    lower(candidate.category, 240) === lower(current.category, 240)
+  ) score += 80;
+
+  if (
+    candidate.publicType &&
+    current.publicType &&
+    lower(candidate.publicType, 120) === lower(current.publicType, 120)
+  ) score += 25;
+
+  if (candidate.featured) score += 15;
+
+  const directIndex = DIRECT_TYPE_ORDER.indexOf(
+    lower(candidate.publicType, 120).replace(/[^a-z0-9]/g, "")
+  );
+  if (directIndex >= 0) score += Math.max(0, 10 - directIndex);
+
+  score += Math.max(0, 5 - Math.min(5, Math.floor(num(candidate.sortOrder) / 250)));
+
+  return score;
+}
+
 export async function getPublicLegalHubCore() {
   const rows = await restRequest({
     table: "legal_policies",
     method: "GET",
     query: {
-      select: "policy_id,document_id,title,slug,scope,brand,public_type,status,category,summary,effective_date,version,pdf_file_url,pdf_file_name,featured,active,sort_order,published_at,updated_at,deleted_at",
-      scope: "eq.external",
-      status: "eq.Published",
-      active: "eq.true",
-      deleted_at: "is.null",
+      ...publicBaseQuery(PUBLIC_META_SELECT),
       order: "sort_order.asc,title.asc",
       limit: "500"
     },
@@ -111,6 +195,67 @@ export async function getPublicLegalHubCore() {
     directPages,
     policies,
     settings: {},
+    generatedAt: new Date().toISOString()
+  };
+}
+
+export async function getPublicLegalDocumentCore(input = {}) {
+  const filter = identifierFilter(input);
+
+  const [documentRows, suggestionRows] = await Promise.all([
+    restRequest({
+      table: "legal_policies",
+      method: "GET",
+      query: {
+        ...publicBaseQuery(PUBLIC_DOCUMENT_SELECT),
+        ...filter,
+        limit: "1"
+      },
+      prefer: ""
+    }),
+    restRequest({
+      table: "legal_policies",
+      method: "GET",
+      query: {
+        ...publicBaseQuery(PUBLIC_META_SELECT),
+        order: "sort_order.asc,title.asc",
+        limit: "500"
+      },
+      prefer: ""
+    })
+  ]);
+
+  const row = Array.isArray(documentRows) ? documentRows[0] : null;
+  if (!row) throw new Error("LEGAL_DOCUMENT_NOT_FOUND");
+
+  const document = publicDocument(row);
+
+  const suggestedDocuments = (Array.isArray(suggestionRows) ? suggestionRows : [])
+    .map(publicPolicy)
+    .filter(item =>
+      item.active &&
+      item.scope === "external" &&
+      lower(item.status, 80) === "published" &&
+      item.policyId !== document.policyId
+    )
+    .sort((a, b) => {
+      const score = suggestedRank(b, document) - suggestedRank(a, document);
+      if (score) return score;
+      const sort = a.sortOrder - b.sortOrder;
+      if (sort) return sort;
+      return a.title.localeCompare(b.title);
+    })
+    .slice(0, 4);
+
+  return {
+    ok: true,
+    source: "SUPABASE_LEGAL_POLICIES",
+    version: LEGAL_POLICY_VERSION,
+    viewerContext: "public",
+    backPath: SITE_MAP.legal,
+    policyPath: SITE_MAP.policies,
+    document,
+    suggestedDocuments,
     generatedAt: new Date().toISOString()
   };
 }
