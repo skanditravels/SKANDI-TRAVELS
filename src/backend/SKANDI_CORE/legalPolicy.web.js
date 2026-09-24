@@ -1,10 +1,11 @@
 // /src/backend/SKANDI_CORE/legalPolicy.web.js
-// SKANDI Legal — B-011.2 public frontend boundary.
+// SKANDI Legal — B-011.3 public frontend boundary.
 
 import { Permissions, webMethod } from "@wix/web-methods";
 import {
   getPublicLegalHubCore,
-  getPublicLegalDocumentCore
+  getPublicLegalDocumentCore,
+  submitPublicLegalAcknowledgementCore
 } from "backend/SKANDI_CORE/legalPolicy";
 
 export const getPublicLegalHub = webMethod(
@@ -15,4 +16,9 @@ export const getPublicLegalHub = webMethod(
 export const getPublicLegalDocument = webMethod(
   Permissions.Anyone,
   (input = {}) => getPublicLegalDocumentCore(input)
+);
+
+export const submitPublicLegalAcknowledgement = webMethod(
+  Permissions.Anyone,
+  (input = {}) => submitPublicLegalAcknowledgementCore(input)
 );
