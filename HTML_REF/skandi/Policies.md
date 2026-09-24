@@ -2,7 +2,7 @@
 
 ## INFO / LOG
 
-- **Current status:** `B-011.2 — STATICALLY VERIFIED / LIVE WIX TEST REQUIRED`
+- **Current status:** `B-011.3 — STATICALLY VERIFIED / LIVE WIX TEST REQUIRED`
 - **System:** SKANDI customer website
 - **Route:** `/about/legal/policies`
 - **Wix page:** `Policies.sgcey`
@@ -13,24 +13,15 @@
 - **Canonical public facade:** `/src/backend/SKANDI_CORE/legalPolicy.web.js`
 - **Canonical backend core:** `/src/backend/SKANDI_CORE/legalPolicy.js`
 - **Canonical Supabase transport:** `/src/backend/SKANDI_CORE/supabaseServer.js`
-- **Canonical database source:** Supabase `public.legal_policies`
+- **Canonical policy source:** Supabase `public.legal_policies`
+- **Acknowledgement evidence store:** Supabase `public.document_acknowledgements`
 - **Legal hub route:** `/about/legal`
 - **Global customer header/footer:** `masterPage.js`; this embed does not own global chrome.
 - **Last verified:** `2026-09-24`
 
-### Pre-B-011 mismatch
+### Canonical B-011.3 chain
 
-The supplied Policy HTML used a direct browser request to:
-
-`https://www.skanditravels.com/_functions/legalDocument`
-
-while the current `/src/pages/Policies.sgcey.js` only sent the query context into the HTML embed.
-
-That disagreed with the required B-011 chain and duplicated Legal data access outside `backend/SKANDI_CORE`.
-
-The legacy `/src/pages/Policy Documents.bd8ok.js` is separately classified as compatibility-only and is not used by this package.
-
-### Canonical B-011.2 chain
+Policy read:
 
 `#legalPolicyEmbed`
 → `postMessage`
@@ -38,63 +29,106 @@ The legacy `/src/pages/Policy Documents.bd8ok.js` is separately classified as co
 → `backend/SKANDI_CORE/legalPolicy.web`
 → `backend/SKANDI_CORE/legalPolicy`
 → `backend/SKANDI_CORE/supabaseServer`
-→ Supabase `public.legal_policies`
+→ `public.legal_policies`
 
-### Public-document security boundary
+Acknowledgement submit, only when required:
 
-A document is returned only when all of the following are true:
+`Policy document acknowledgement form`
+→ `LEGAL_ACK_SUBMIT`
+→ `/src/pages/Policies.sgcey.js`
+→ `submitPublicLegalAcknowledgement`
+→ `submitPublicLegalAcknowledgementCore`
+→ re-check current `legal_policies.acknowledgement_required = true`
+→ validate the current published policy version
+→ insert evidence into `public.document_acknowledgements`.
+
+### Acknowledgement visibility rule
+
+The acknowledgement UI is rendered **only** when the live public policy payload contains:
+
+`acknowledgement_required = true`
+
+The flag is read from the current Supabase policy record. The HTML does not maintain a second acknowledgement registry or hard-coded list.
+
+At verification time, all seven currently published external `legal_policies` records had `acknowledgement_required = false`; therefore the new acknowledgement panel will remain hidden until Policy Control/Supabase marks an applicable policy as requiring acknowledgement.
+
+### Acknowledgement fields incorporated
+
+The integrated acknowledgement uses the supplied Policy Acknowledgement implementation as the functional basis and keeps its meaningful evidence fields:
+
+- relationship
+- legal first name
+- legal last name
+- email
+- phone
+- acknowledge / do not acknowledge decision
+- required comment when not acknowledging
+- electronic consent
+- typed legal signature
+- timestamp
+- drawn signature.
+
+The separate access-code loader and duplicate document viewer from the standalone acknowledgement page are intentionally not duplicated inside the Policy page because the current policy is already securely resolved by the canonical Policy document route.
+
+### Server-side enforcement
+
+Client visibility is not treated as authorization.
+
+Every acknowledgement submission re-reads the current policy and requires:
 
 - `scope = external`
 - `status = Published`
 - `active = true`
 - `deleted_at IS NULL`
+- `acknowledgement_required = true`.
 
-The customer payload contains published legal content and public document metadata only.
+The submitted policy version must also still equal the current published version. If the policy changes while it is being reviewed, submission is rejected and the customer must reload before acknowledging.
 
-It does **not** expose:
+### Evidence persistence
 
-- `approved_by_sk_id`
-- revision history/snapshots
-- internal review workflow state
-- deleted records
-- unpublished/internal documents.
+Each accepted acknowledgement writes one record to `public.document_acknowledgements` containing:
 
-### B-011.2 page upgrade
+- `entity_id = legal_policies.policy_id`
+- acknowledgement status
+- comment
+- public source metadata
+- policy ID/document ID/slug/title/version
+- customer relationship and contact identity
+- electronic-consent evidence
+- typed signature
+- server timestamp
+- drawn signature PNG data
+- client-generated submission ID for retry idempotency.
 
-- Converted the document page to the exact shared Home/customer B-011 palette.
-- Added a sticky left navigation rail on desktop.
-- Added **Back to Legal** using `LEGAL_DOCUMENT_NAVIGATE` and the canonical `SITE_MAP.legal` route.
-- Moved the generated **Table of contents** into the side rail.
-- Added TOC active-section highlighting using `IntersectionObserver`.
-- Added **Suggested documents** from the same canonical `legal_policies` public projection.
-- Suggested documents prefer related category/public type and exclude the current policy.
-- Added published PDF access when `pdf_file_url` exists.
-- Preserved structured legal sections, nested subsections, introduction HTML, document control, tables, blockquotes and print behavior.
-- Internal links embedded inside published policy content now navigate through the Wix page bridge rather than escaping the iframe.
-- External links remain safe external links.
-- Removed browser-side `/_functions/legalDocument` access.
-- Added stable Presentation Registry hooks to the static side-rail headings/document header only; policy body content remains Policy Control-owned.
-- On tablet/mobile, the side rail becomes normal flow above the policy document while retaining Back, TOC and suggested documents.
+A repeated submission with the same submission ID returns the existing acknowledgement instead of creating a duplicate row.
 
-### Shared legal backend
+### B-011.3 page behavior
 
-This package is cumulative over Legal Hub B-011.1.
+Preserved from B-011.2:
 
-`legalPolicy.js` / `legalPolicy.web.js` continue to export:
+- Back to Legal
+- sticky desktop Table of contents
+- active TOC section tracking
+- Suggested documents
+- published PDF access
+- parent-owned internal navigation
+- B-011 Home/customer palette
+- responsive stacking
+- print-only document output.
 
-- `getPublicLegalHub`
+Added:
 
-and now also export:
+- `Acknowledgement` entry in the side TOC only when required
+- side-rail `ACTION REQUIRED` card only when required
+- integrated B-011 acknowledgement form after the policy content only when required
+- server-side acknowledgement persistence
+- success/error handling in the existing Policy page bridge.
 
-- `getPublicLegalDocument`
+### Legacy acknowledgement page
 
-The previously delivered Legal Hub therefore remains on the same canonical domain backend.
+The repository's standalone `Policy Acknowledgement.yfm21.js` remains compatibility-only and imports the legacy/missing `backend/LEGAL/legalPolicyService.web`.
 
-### Live-data verification
-
-The canonical `legal_policies` table currently contains published external documents with structured `sections` arrays. Published PDF URLs are also present for the current public documents.
-
-No Supabase schema or data mutation is performed by this package.
+This B-011.3 package does not depend on that page or legacy backend. The public Policy route now owns acknowledgement for policies whose Supabase flag requires it.
 
 ### Message contracts
 
@@ -103,11 +137,14 @@ HTML → page:
 - `LEGAL_DOCUMENT_REFRESH`
 - `LEGAL_DOCUMENT_HEIGHT`
 - `LEGAL_DOCUMENT_NAVIGATE`
+- `LEGAL_ACK_SUBMIT`
 
 Page → HTML:
-- `LEGAL_DOCUMENT_CONTEXT` — preserved from the pre-B-011 page contract
+- `LEGAL_DOCUMENT_CONTEXT`
 - `LEGAL_DOCUMENT_DATA`
 - `LEGAL_DOCUMENT_ERROR`
+- `LEGAL_ACK_RESULT`
+- `LEGAL_ACK_ERROR`
 
 ---
 
@@ -121,7 +158,7 @@ Page → HTML:
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="color-scheme" content="light">
 <meta name="theme-color" content="#022e64">
-<title>SKANDI Legal Document · B-011.2</title>
+<title>SKANDI Legal Document · B-011.3</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -613,6 +650,264 @@ button:focus-visible,a:focus-visible{
   font-weight:650;
 }
 
+
+/* =========================================================
+   POLICY ACKNOWLEDGEMENT
+   Rendered only when legal_policies.acknowledgement_required = true.
+   ========================================================= */
+.acknowledgement{
+  margin-top:42px;
+  padding-top:28px;
+  border-top:1px solid var(--sk-border);
+}
+.ack-shell{
+  position:relative;
+  overflow:hidden;
+  padding:24px;
+  border:1px solid var(--sk-border);
+  border-radius:17px;
+  background:
+    radial-gradient(circle at 96% 0%,rgba(95,199,207,.10),transparent 28%),
+    linear-gradient(180deg,#fff,var(--sk-pale));
+}
+.ack-shell::after{
+  content:"";
+  position:absolute;
+  left:24px;
+  right:24px;
+  bottom:0;
+  height:2px;
+  background:linear-gradient(90deg,var(--sk-cyan),var(--sk-champagne),transparent);
+  opacity:.7;
+}
+.ack-intro{
+  margin-bottom:20px;
+  padding-bottom:18px;
+  border-bottom:1px solid var(--sk-border-soft);
+}
+.ack-intro h2{
+  margin:7px 0 8px;
+  color:var(--sk-blue);
+  font-size:22px;
+  line-height:1.12;
+  letter-spacing:-.03em;
+}
+.ack-intro p{
+  max-width:720px;
+  margin:0;
+  color:var(--sk-body);
+  font-size:9px;
+  line-height:1.65;
+}
+.ack-status{
+  display:none;
+  margin:0 0 16px;
+  padding:11px 12px;
+  border:1px solid var(--sk-border);
+  border-radius:10px;
+  background:#fff;
+  color:var(--sk-body);
+  font-size:9px;
+  line-height:1.55;
+}
+.ack-status.show{display:block}
+.ack-status.ok{
+  border-color:#abefc6;
+  background:#ecfdf3;
+  color:var(--sk-ok);
+}
+.ack-status.bad{
+  border-color:#ffd5d2;
+  background:#fff1f0;
+  color:#b42318;
+}
+.ack-section{
+  margin-top:20px;
+  padding-top:20px;
+  border-top:1px solid var(--sk-border-soft);
+}
+.ack-section:first-of-type{
+  margin-top:0;
+  padding-top:0;
+  border-top:0;
+}
+.ack-section h3{
+  margin:0 0 12px;
+  color:var(--sk-blue);
+  font-size:13px;
+  line-height:1.25;
+}
+.ack-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:12px;
+}
+.ack-field{
+  min-width:0;
+  margin-bottom:12px;
+}
+.ack-field label,
+.ack-label{
+  display:block;
+  margin-bottom:6px;
+  color:var(--sk-muted);
+  font-size:7px;
+  line-height:1.3;
+  font-weight:850;
+  letter-spacing:.10em;
+  text-transform:uppercase;
+}
+.ack-input,
+.ack-select,
+.ack-textarea{
+  width:100%;
+  min-height:42px;
+  border:1px solid var(--sk-border);
+  border-radius:9px;
+  padding:10px 11px;
+  background:#fff;
+  color:var(--sk-text);
+  font-size:9px;
+}
+.ack-textarea{
+  min-height:90px;
+  resize:vertical;
+  line-height:1.55;
+}
+.ack-input:focus,
+.ack-select:focus,
+.ack-textarea:focus{
+  border-color:var(--sk-cyan);
+  box-shadow:0 0 0 3px rgba(95,199,207,.11);
+  outline:0;
+}
+.ack-choices{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:9px;
+}
+.ack-choice{
+  position:relative;
+}
+.ack-choice input{
+  position:absolute;
+  opacity:0;
+  pointer-events:none;
+}
+.ack-choice span{
+  min-height:46px;
+  display:grid;
+  place-items:center;
+  padding:9px 12px;
+  border:1px solid var(--sk-border);
+  border-radius:10px;
+  background:#fff;
+  color:var(--sk-blue);
+  font-size:8px;
+  font-weight:850;
+  letter-spacing:.04em;
+  cursor:pointer;
+}
+.ack-choice input:checked + span{
+  border-color:var(--sk-cyan);
+  background:var(--sk-pale);
+  box-shadow:0 0 0 2px rgba(95,199,207,.10);
+}
+.ack-consent{
+  display:flex;
+  align-items:flex-start;
+  gap:9px;
+  margin-top:12px;
+  color:var(--sk-body);
+  font-size:8px;
+  line-height:1.55;
+}
+.ack-consent input{
+  width:16px;
+  height:16px;
+  flex:0 0 16px;
+  margin-top:1px;
+  accent-color:var(--sk-blue);
+}
+.sig-pad{
+  width:100%;
+  height:150px;
+  border:1px solid var(--sk-border);
+  border-radius:11px;
+  background:
+    repeating-linear-gradient(0deg,#fff 0 31px,var(--sk-bg) 31px 32px);
+  touch-action:none;
+  cursor:crosshair;
+}
+.sig-pad.invalid{
+  border-color:var(--sk-danger);
+  background:#fff1f0;
+}
+.ack-actions{
+  display:flex;
+  justify-content:flex-end;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-top:16px;
+}
+.ack-submit{
+  min-height:42px;
+  padding:0 16px;
+  border:0;
+  border-radius:10px;
+  background:linear-gradient(135deg,var(--sk-blue),var(--sk-blue-soft));
+  color:#fff;
+  font-size:8px;
+  font-weight:900;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+}
+.ack-submit:disabled{
+  opacity:.55;
+  cursor:not-allowed;
+}
+.ack-clear{
+  min-height:42px;
+  padding:0 14px;
+  border:1px solid var(--sk-border);
+  border-radius:10px;
+  background:#fff;
+  color:var(--sk-blue);
+  font-size:8px;
+  font-weight:850;
+}
+.ack-required-marker{
+  margin-top:8px;
+  padding:10px 11px;
+  border:1px solid rgba(95,199,207,.32);
+  border-radius:10px;
+  background:var(--sk-pale);
+  color:var(--sk-blue);
+  font-size:8px;
+  line-height:1.5;
+  font-weight:750;
+}
+.ack-jump{
+  width:100%;
+  min-height:40px;
+  margin-top:8px;
+  padding:8px 10px;
+  border:1px solid rgba(95,199,207,.42);
+  border-radius:9px;
+  background:var(--sk-pale);
+  color:var(--sk-blue);
+  text-align:left;
+  font-size:8px;
+  font-weight:850;
+}
+@media(max-width:650px){
+  .ack-shell{padding:18px}
+  .ack-grid,.ack-choices{grid-template-columns:1fr}
+  .ack-actions{display:grid;grid-template-columns:1fr}
+  .ack-actions button{width:100%}
+}
+
+
 /* =========================================================
    STATES
    ========================================================= */
@@ -739,6 +1034,13 @@ button:focus-visible,a:focus-visible{
           <div class="toc-empty">Loading suggestions…</div>
         </div>
       </section>
+
+      <section class="rail-card rail-section hidden" id="ackRailCard" data-section-id="policy-acknowledgement-nav">
+        <div class="rail-eyebrow">ACTION REQUIRED</div>
+        <h2>Policy acknowledgement</h2>
+        <div class="ack-required-marker">This published policy requires an acknowledgement.</div>
+        <button class="ack-jump" id="ackJumpBtn" type="button">Go to acknowledgement ↓</button>
+      </section>
     </aside>
 
     <main id="documentHost" aria-live="polite">
@@ -767,6 +1069,9 @@ let policyPath="/about/legal/policies";
 let requestContext=null;
 let tocObserver=null;
 let heightTimer=0;
+let ackHasSignature=false;
+let ackSubmitting=false;
+let ackSubmissionId="";
 
 function post(type,payload={}){
   window.parent.postMessage({
@@ -910,7 +1215,10 @@ function normalizeDocument(payload={}){
     version:value.version||"1.0",
     updatedAt:value.updatedAt||value.updated_at||value.publishedAt||value.published_at||"",
     pdfUrl:safeUrl(value.pdfUrl||value.pdf_file_url||""),
-    pdfFileName:value.pdfFileName||value.pdf_file_name||""
+    pdfFileName:value.pdfFileName||value.pdf_file_name||"",
+    acknowledgementRequired:
+      value.acknowledgementRequired===true ||
+      value.acknowledgement_required===true
   };
 }
 
@@ -953,7 +1261,15 @@ function renderToc(flat){
           <span>${esc(item.title||"Untitled Section")}</span>
         </a>
       </li>
-    `).join("")
+    `).join("") +
+    (current?.acknowledgementRequired
+      ?`<li class="toc-item">
+          <a class="toc-link" data-toc-anchor="policyAcknowledgement" href="#policyAcknowledgement">
+            <span class="toc-number">✓</span>
+            <span>Acknowledgement</span>
+          </a>
+        </li>`
+      :"")
   }</ol>`;
 }
 
@@ -982,7 +1298,12 @@ function setupTocObserver(flat){
   }
 
   const links=[...document.querySelectorAll("[data-toc-anchor]")];
-  const sections=flat.map(item=>document.getElementById(item.anchor)).filter(Boolean);
+  const sections=[
+    ...flat.map(item=>document.getElementById(item.anchor)).filter(Boolean),
+    ...(current?.acknowledgementRequired&&$("policyAcknowledgement")
+      ?[$("policyAcknowledgement")]
+      :[])
+  ];
   if(!links.length||!sections.length||!("IntersectionObserver"in window))return;
 
   const setActive=anchor=>{
@@ -1005,6 +1326,272 @@ function setupTocObserver(flat){
 
   sections.forEach(section=>tocObserver.observe(section));
   if(sections[0])setActive(sections[0].id);
+}
+
+function newSubmissionId(){
+  if(window.crypto?.randomUUID)return `legal-ack:${window.crypto.randomUUID()}`;
+  return `legal-ack:${Date.now()}:${Math.random().toString(36).slice(2,12)}`;
+}
+
+function ackStatus(message,mode=""){
+  const node=$("ackStatus");
+  if(!node)return;
+  node.textContent=message||"";
+  node.className=message?`ack-status show ${mode}`:"ack-status";
+  requestHeight();
+}
+
+function selectedAckDecision(){
+  return document.querySelector("input[name='ackDecision']:checked")?.value||"approved";
+}
+
+function acknowledgementMarkup(){
+  if(!current?.acknowledgementRequired)return"";
+
+  return `<section class="acknowledgement" id="policyAcknowledgement" data-section-id="policy-acknowledgement">
+    <div class="ack-shell">
+      <div class="ack-intro">
+        <div class="eyebrow" data-content-id="policy-acknowledgement-eyebrow">ACKNOWLEDGEMENT REQUIRED</div>
+        <h2 data-content-id="policy-acknowledgement-h2">Policy acknowledgement</h2>
+        <p data-content-id="policy-acknowledgement-copy">
+          Review the full policy above, then record your decision and electronic signature.
+          Your response is stored as evidence of the acknowledgement for this published policy version.
+        </p>
+      </div>
+
+      <div id="ackStatus" class="ack-status" role="status" aria-live="polite"></div>
+
+      <form id="ackForm">
+        <section class="ack-section">
+          <h3>Your details</h3>
+          <div class="ack-grid">
+            <div class="ack-field">
+              <label for="ackRelationship">Relationship</label>
+              <select id="ackRelationship" class="ack-select">
+                <option>Customer</option>
+                <option>Applicant</option>
+                <option>New Hire</option>
+                <option>Employee</option>
+                <option>Contractor</option>
+                <option>Partner</option>
+                <option>Other</option>
+              </select>
+            </div>
+            <div class="ack-field">
+              <label for="ackEmail">Email <span aria-hidden="true">*</span></label>
+              <input id="ackEmail" class="ack-input" type="email" autocomplete="email" required>
+            </div>
+            <div class="ack-field">
+              <label for="ackFirstName">Legal first name <span aria-hidden="true">*</span></label>
+              <input id="ackFirstName" class="ack-input" autocomplete="given-name" required>
+            </div>
+            <div class="ack-field">
+              <label for="ackLastName">Legal last name <span aria-hidden="true">*</span></label>
+              <input id="ackLastName" class="ack-input" autocomplete="family-name" required>
+            </div>
+            <div class="ack-field">
+              <label for="ackPhone">Phone</label>
+              <input id="ackPhone" class="ack-input" type="tel" autocomplete="tel">
+            </div>
+            <div class="ack-field">
+              <label>Policy version</label>
+              <input class="ack-input" value="${esc(current.version)}" readonly aria-readonly="true">
+            </div>
+          </div>
+        </section>
+
+        <section class="ack-section">
+          <h3>Acknowledgement decision</h3>
+          <div class="ack-choices">
+            <label class="ack-choice">
+              <input id="ackDecisionApprove" type="radio" name="ackDecision" value="approved" checked>
+              <span>I acknowledge</span>
+            </label>
+            <label class="ack-choice">
+              <input id="ackDecisionReject" type="radio" name="ackDecision" value="notApproved">
+              <span>I do not acknowledge</span>
+            </label>
+          </div>
+          <div class="ack-field" style="margin-top:12px">
+            <label for="ackComment">Comment if not acknowledging</label>
+            <textarea id="ackComment" class="ack-textarea"></textarea>
+          </div>
+        </section>
+
+        <section class="ack-section">
+          <h3>Electronic consent and signature</h3>
+          <label class="ack-consent">
+            <input id="ackConsent" type="checkbox" required>
+            <span>
+              I confirm that I reviewed this policy and consent to my typed legal name,
+              timestamp, electronic consent and drawn signature being recorded as evidence
+              of my acknowledgement decision.
+            </span>
+          </label>
+
+          <div class="ack-grid" style="margin-top:14px">
+            <div class="ack-field">
+              <label for="ackSignatureName">Typed legal signature <span aria-hidden="true">*</span></label>
+              <input id="ackSignatureName" class="ack-input" autocomplete="name" required>
+            </div>
+            <div class="ack-field">
+              <label for="ackTimestamp">Timestamp</label>
+              <input id="ackTimestamp" class="ack-input" readonly aria-readonly="true">
+            </div>
+          </div>
+
+          <div class="ack-field">
+            <span class="ack-label">Draw signature <span aria-hidden="true">*</span></span>
+            <canvas id="ackSignaturePad" class="sig-pad" width="1000" height="320"></canvas>
+          </div>
+
+          <div class="ack-actions">
+            <button class="ack-clear" id="ackClearSig" type="button">Clear signature</button>
+            <button class="ack-submit" id="ackSubmitBtn" type="submit">Submit acknowledgement</button>
+          </div>
+        </section>
+      </form>
+    </div>
+  </section>`;
+}
+
+function collectAcknowledgement(){
+  return{
+    submissionId:ackSubmissionId,
+    policyId:current?.policyId||"",
+    documentId:current?.documentId||"",
+    slug:current?.slug||"",
+    policyVersion:current?.version||"",
+    relationship:$("ackRelationship")?.value||"Customer",
+    firstName:($("ackFirstName")?.value||"").trim(),
+    lastName:($("ackLastName")?.value||"").trim(),
+    emailAddress:($("ackEmail")?.value||"").trim(),
+    phoneNumber:($("ackPhone")?.value||"").trim(),
+    decision:selectedAckDecision(),
+    comment:($("ackComment")?.value||"").trim(),
+    electronicConsent:$("ackConsent")?.checked===true,
+    signatureName:($("ackSignatureName")?.value||"").trim(),
+    signatureImageData:ackHasSignature
+      ?$("ackSignaturePad").toDataURL("image/png")
+      :""
+  };
+}
+
+function validateAcknowledgement(){
+  if(!current?.acknowledgementRequired)return"Acknowledgement is not required for this policy.";
+  const form=$("ackForm");
+  if(!form)return"Acknowledgement form is unavailable.";
+
+  if(!form.checkValidity()){
+    form.reportValidity();
+    return"Complete the required acknowledgement fields.";
+  }
+
+  if(selectedAckDecision()==="notApproved"&&!($("ackComment")?.value||"").trim()){
+    return"Add a comment explaining why you do not acknowledge the policy.";
+  }
+
+  if(!ackHasSignature){
+    $("ackSignaturePad")?.classList.add("invalid");
+    return"Drawn signature is required.";
+  }
+
+  return"";
+}
+
+function setupAcknowledgement(){
+  const required=current?.acknowledgementRequired===true;
+  $("ackRailCard")?.classList.toggle("hidden",!required);
+  if(!required)return;
+
+  ackHasSignature=false;
+  ackSubmitting=false;
+  ackSubmissionId=newSubmissionId();
+
+  const timestamp=$("ackTimestamp");
+  if(timestamp)timestamp.value=new Date().toLocaleString();
+
+  const jump=$("ackJumpBtn");
+  if(jump){
+    jump.onclick=()=>{
+      $("policyAcknowledgement")?.scrollIntoView({behavior:"smooth",block:"start"});
+    };
+  }
+
+  const canvas=$("ackSignaturePad");
+  if(canvas){
+    const context=canvas.getContext("2d");
+    context.lineWidth=3;
+    context.lineCap="round";
+    context.strokeStyle="#022e64";
+
+    let drawing=false;
+
+    const point=event=>{
+      const rect=canvas.getBoundingClientRect();
+      const source=event.touches?event.touches[0]:event;
+      return{
+        x:(source.clientX-rect.left)*(canvas.width/rect.width),
+        y:(source.clientY-rect.top)*(canvas.height/rect.height)
+      };
+    };
+
+    const start=event=>{
+      event.preventDefault();
+      drawing=true;
+      const p=point(event);
+      context.beginPath();
+      context.moveTo(p.x,p.y);
+    };
+
+    const move=event=>{
+      if(!drawing)return;
+      event.preventDefault();
+      const p=point(event);
+      context.lineTo(p.x,p.y);
+      context.stroke();
+      ackHasSignature=true;
+      canvas.classList.remove("invalid");
+    };
+
+    const end=()=>{
+      drawing=false;
+    };
+
+    ["mousedown","touchstart"].forEach(type=>
+      canvas.addEventListener(type,start,{passive:false})
+    );
+    ["mousemove","touchmove"].forEach(type=>
+      canvas.addEventListener(type,move,{passive:false})
+    );
+    ["mouseup","mouseleave","touchend","touchcancel"].forEach(type=>
+      canvas.addEventListener(type,end)
+    );
+
+    $("ackClearSig")?.addEventListener("click",()=>{
+      context.clearRect(0,0,canvas.width,canvas.height);
+      ackHasSignature=false;
+      canvas.classList.remove("invalid");
+    });
+  }
+
+  $("ackForm")?.addEventListener("submit",event=>{
+    event.preventDefault();
+    if(ackSubmitting)return;
+
+    const error=validateAcknowledgement();
+    if(error){
+      ackStatus(error,"bad");
+      return;
+    }
+
+    ackSubmitting=true;
+    const button=$("ackSubmitBtn");
+    if(button)button.disabled=true;
+
+    ackStatus("Submitting acknowledgement…","");
+    post("LEGAL_ACK_SUBMIT",collectAcknowledgement());
+  });
 }
 
 function render(){
@@ -1051,6 +1638,8 @@ function render(){
           ${body}
         </div>
 
+        ${acknowledgementMarkup()}
+
         <section class="document-control" data-section-id="policy-document-control">
           <h2>Document Control</h2>
           <table class="control-table">
@@ -1069,12 +1658,14 @@ function render(){
   renderToc(flat);
   renderSuggestions();
   setupTocObserver(flat);
+  setupAcknowledgement();
 
   document.title=`${current.title} | ${current.brand}`;
   requestHeight();
 }
 
 function showError(message){
+  $("ackRailCard")?.classList.add("hidden");
   $("documentHost").innerHTML=`
     <div class="error">
       <strong>Document unavailable</strong><br>
@@ -1146,6 +1737,41 @@ window.addEventListener("message",event=>{
     backPath=safeInternalPath(payload.backPath)||backPath;
     policyPath=safeInternalPath(payload.policyPath)||policyPath;
     render();
+    return;
+  }
+
+  if(message.type==="LEGAL_ACK_RESULT"){
+    ackSubmitting=false;
+    const button=$("ackSubmitBtn");
+    if(button)button.disabled=false;
+
+    ackStatus(
+      payload.message||"Your policy acknowledgement has been recorded.",
+      payload.ok===false?"bad":"ok"
+    );
+
+    if(payload.ok!==false){
+      const form=$("ackForm");
+      if(form){
+        [...form.elements].forEach(element=>{
+          if(element instanceof HTMLButtonElement){
+            if(element.id!=="ackClearSig")element.disabled=true;
+          }else{
+            element.disabled=true;
+          }
+        });
+      }
+      if($("ackClearSig"))$("ackClearSig").disabled=true;
+    }
+
+    return;
+  }
+
+  if(message.type==="LEGAL_ACK_ERROR"){
+    ackSubmitting=false;
+    const button=$("ackSubmitBtn");
+    if(button)button.disabled=false;
+    ackStatus(payload.message||"The acknowledgement could not be submitted.","bad");
     return;
   }
 
