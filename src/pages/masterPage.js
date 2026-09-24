@@ -45,6 +45,8 @@ const MASTER_CONFIG = Object.freeze({
       logos: Object.freeze({
         customerHeader: "https://static.wixstatic.com/media/394052_504704bd94f44f01a95f304bd19640e5~mv2.png",
         customerFooter: "https://static.wixstatic.com/media/394052_504704bd94f44f01a95f304bd19640e5~mv2.png",
+        storeHeader: "https://static.wixstatic.com/media/394052_eaf2188b7f7e48468fa25d61f8881b10~mv2.png",
+        storeFooter: "https://static.wixstatic.com/media/394052_cd31153a91694b14a27c5f756f8089bd~mv2.png",
         skandiPrimary: "https://static.wixstatic.com/media/394052_504704bd94f44f01a95f304bd19640e5~mv2.png",
         skandiWhite: "https://static.wixstatic.com/media/394052_504704bd94f44f01a95f304bd19640e5~mv2.png",
         skandiTravels: "https://static.wixstatic.com/media/394052_504704bd94f44f01a95f304bd19640e5~mv2.png",
@@ -613,6 +615,7 @@ async function handleMasterMessage(embed, message = {}) {
         postToEmbed(embed, "CUSTOMER_SETTINGS_SAVED", { ok:true, state });
         pushCustomerSettingsState(embed);
         pushMasterConfig(embed, { settings:state });
+        pushConfigToAll();
         return true;
       }
       default:
