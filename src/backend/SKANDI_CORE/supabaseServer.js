@@ -106,6 +106,9 @@ const REST_OBJECTS = new Set([
   "docunet_receipts", "docunet_revisions", "docunet_upload_sessions",
 
 
+  // Legal / Policy Control
+  "legal_policies", "legal_policy_revisions",
+
   // Editorial / VOY / Newsroom
   "newsroom_articles", "newsroom_categories", "newsroom_media_assets", "newsroom_press_contacts",
   "organizations", "voy_issues", "voy_pages", "voy_entities",
