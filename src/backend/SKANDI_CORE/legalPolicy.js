@@ -10,7 +10,7 @@
 import { restRequest } from "backend/SKANDI_CORE/supabaseServer";
 import { SITE_MAP } from "public/siteMap";
 
-export const LEGAL_POLICY_VERSION = "B-011.2";
+export const LEGAL_POLICY_VERSION = "B-011.3";
 
 const clean = (value, max = 6000) => String(value ?? "").trim().slice(0, max);
 const lower = (value, max = 200) => clean(value, max).toLowerCase();
@@ -161,6 +161,117 @@ function suggestedRank(candidate = {}, current = {}) {
   return score;
 }
 
+function emailValue(value) {
+  const email = lower(value, 320);
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    throw new Error("LEGAL_ACK_EMAIL_INVALID");
+  }
+  return email;
+}
+
+function acknowledgementDecision(value) {
+  const decision = clean(value, 40);
+  if (!["approved", "notApproved"].includes(decision)) {
+    throw new Error("LEGAL_ACK_DECISION_INVALID");
+  }
+  return decision;
+}
+
+function signatureImage(value) {
+  const raw = clean(value, 700000);
+  if (!raw || !/^data:image\/png;base64,[A-Za-z0-9+/=\s]+$/i.test(raw)) {
+    throw new Error("LEGAL_ACK_SIGNATURE_REQUIRED");
+  }
+  return raw;
+}
+
+function acknowledgementSubmissionId(value) {
+  const id = clean(value, 180);
+  if (!id || !/^[A-Za-z0-9._:-]{12,180}$/.test(id)) {
+    throw new Error("LEGAL_ACK_SUBMISSION_ID_INVALID");
+  }
+  return id;
+}
+
+function acknowledgementPayload(input = {}, document = {}) {
+  const firstName = clean(input.firstName, 160);
+  const lastName = clean(input.lastName, 160);
+  const emailAddress = emailValue(input.emailAddress ?? input.email);
+  const phoneNumber = clean(input.phoneNumber ?? input.phone, 120);
+  const relationship = clean(input.relationship, 120) || "Customer";
+  const decision = acknowledgementDecision(input.decision);
+  const comment = clean(input.comment, 5000);
+  const electronicConsent = input.electronicConsent === true;
+  const signatureName = clean(input.signatureName, 320);
+  const signatureImageData = signatureImage(input.signatureImageData);
+  const submissionId = acknowledgementSubmissionId(input.submissionId);
+  const submittedVersion = clean(input.policyVersion, 80);
+
+  if (!firstName || !lastName) throw new Error("LEGAL_ACK_NAME_REQUIRED");
+  if (!electronicConsent) throw new Error("LEGAL_ACK_CONSENT_REQUIRED");
+  if (!signatureName) throw new Error("LEGAL_ACK_TYPED_SIGNATURE_REQUIRED");
+  if (decision === "notApproved" && !comment) throw new Error("LEGAL_ACK_COMMENT_REQUIRED");
+  if (submittedVersion && submittedVersion !== document.version) {
+    throw new Error("LEGAL_ACK_POLICY_VERSION_CHANGED");
+  }
+
+  return {
+    submissionId,
+    source: "PUBLIC_LEGAL_POLICY",
+    sourcePage: SITE_MAP.policies,
+    policyId: document.policyId,
+    documentId: document.documentId,
+    policyTitle: document.title,
+    policySlug: document.slug,
+    policyVersion: document.version,
+    policyCategory: document.category,
+    decision,
+    relationship,
+    firstName,
+    lastName,
+    fullName: `${firstName} ${lastName}`.trim(),
+    emailAddress,
+    phoneNumber,
+    comment,
+    electronicConsent: true,
+    signatureName,
+    signatureImageData,
+    signatureTimestamp: new Date().toISOString(),
+    acknowledgementRequired: true
+  };
+}
+
+async function getAcknowledgementPolicy(input = {}) {
+  const filter = identifierFilter(input);
+
+  const rows = await restRequest({
+    table: "legal_policies",
+    method: "GET",
+    query: {
+      ...publicBaseQuery(
+        "policy_id,document_id,title,slug,scope,brand,public_type,status,category," +
+        "summary,effective_date,version,featured,active,sort_order,published_at,updated_at," +
+        "deleted_at,acknowledgement_required"
+      ),
+      ...filter,
+      acknowledgement_required: "eq.true",
+      limit: "1"
+    },
+    prefer: ""
+  });
+
+  const row = Array.isArray(rows) ? rows[0] : null;
+  if (!row) throw new Error("LEGAL_ACK_NOT_REQUIRED");
+
+  const document = {
+    ...publicPolicy(row),
+    acknowledgementRequired: row.acknowledgement_required === true
+  };
+
+  if (!document.acknowledgementRequired) throw new Error("LEGAL_ACK_NOT_REQUIRED");
+  return document;
+}
+
 export async function getPublicLegalHubCore() {
   const rows = await restRequest({
     table: "legal_policies",
@@ -257,5 +368,68 @@ export async function getPublicLegalDocumentCore(input = {}) {
     document,
     suggestedDocuments,
     generatedAt: new Date().toISOString()
+  };
+}
+
+export async function submitPublicLegalAcknowledgementCore(input = {}) {
+  const document = await getAcknowledgementPolicy(input);
+  const payload = acknowledgementPayload(input, document);
+
+  const existing = await restRequest({
+    table: "document_acknowledgements",
+    method: "GET",
+    query: {
+      select: "id,status,created_at,entity_id",
+      entity_id: `eq.${document.policyId}`,
+      "payload->>submissionId": `eq.${payload.submissionId}`,
+      limit: "1"
+    },
+    prefer: ""
+  });
+
+  const prior = Array.isArray(existing) ? existing[0] : null;
+  if (prior?.id) {
+    return {
+      ok: true,
+      idempotent: true,
+      acknowledgementId: prior.id,
+      status: prior.status || "",
+      submittedAt: prior.created_at || null,
+      message: "This acknowledgement has already been recorded."
+    };
+  }
+
+  const status = payload.decision === "approved"
+    ? "ACKNOWLEDGED"
+    : "NOT_ACKNOWLEDGED";
+
+  const created = await restRequest({
+    table: "document_acknowledgements",
+    method: "POST",
+    body: {
+      title: `${document.title} — ${status === "ACKNOWLEDGED" ? "Acknowledged" : "Not acknowledged"}`,
+      entity_id: document.policyId,
+      member_id: null,
+      status,
+      body: payload.comment || "",
+      file_url: null,
+      active: true,
+      payload
+    },
+    prefer: "return=representation"
+  });
+
+  const row = Array.isArray(created) ? created[0] : created;
+
+  return {
+    ok: true,
+    idempotent: false,
+    acknowledgementId: row?.id || "",
+    status,
+    submittedAt: row?.created_at || payload.signatureTimestamp,
+    message:
+      status === "ACKNOWLEDGED"
+        ? "Your policy acknowledgement has been recorded."
+        : "Your response has been recorded as not acknowledged."
   };
 }
