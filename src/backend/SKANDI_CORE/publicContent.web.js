@@ -11,6 +11,7 @@ import {
   getPublicPassportVisaPayloadCore,
   searchPublicTravelRequirementsCore,
   getPublicInsurancePayloadCore,
+  getPublicNewsroomDataCore,
   getVoyAdminBootstrapCore,
   saveVoyIssueCore,
   saveVoyIssuePackageCore,
@@ -45,6 +46,7 @@ export const getPublicBaggagePayload = anyone(getPublicBaggagePayloadCore);
 export const getPublicPassportVisaPayload = anyone(getPublicPassportVisaPayloadCore);
 export const searchPublicTravelRequirements = anyone(searchPublicTravelRequirementsCore);
 export const getPublicInsurancePayload = anyone(getPublicInsurancePayloadCore);
+export const getPublicNewsroomData = anyone(getPublicNewsroomDataCore);
 
 
 // Magazine Manager / Media Control protected editorial surface.
