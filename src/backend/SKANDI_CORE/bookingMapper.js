@@ -1,14 +1,11 @@
 // /src/backend/SKANDI_CORE/bookingMapper.js
-// SKANDI Backend Base 1.0 — B-006 booking validation and public mapping.
+// SKANDI Backend Base 1.0 — B-011.1 booking validation and public mapping.
 
-
-import { text, lower, upper, record } from "backend/SKANDI_CORE/platformValidation.;
-
+import { text, lower, upper, record } from "backend/SKANDI_CORE/platformValidation";
 
 const CABINS = new Set(["economy", "premium_economy", "business", "first"]);
 const TITLES = new Set(["mr", "ms", "mrs", "miss", "dr"]);
 const GENDERS = new Set(["m", "f"]);
-
 
 export function bookingError(code, message, status = 400, details = null) {
   const error = new Error(message);
@@ -52,7 +49,6 @@ function personName(value, label) {
   return v;
 }
 
-
 export function toDuffelOfferSearch(input = {}) {
   const source = record(input);
   const slices = arr(source.slices).length ? source.slices : [{
@@ -73,7 +69,6 @@ export function toDuffelOfferSearch(input = {}) {
   if (normalizedSlices.some(s => s.origin === s.destination)) throw bookingError("INVALID_ROUTE", "Origin and destination must be different.");
   if (normalizedSlices[1] && normalizedSlices[1].departureDate < normalizedSlices[0].departureDate) throw bookingError("INVALID_RETURN_DATE", "Return must be on or after departure.");
 
-
   let passengers = arr(source.passengers);
   if (!passengers.length) {
     const adults = Math.max(1, Math.min(9, Number(source.adults || 1)));
@@ -92,7 +87,6 @@ export function toDuffelOfferSearch(input = {}) {
   const infants = normalizedPassengers.filter(p => Number.isInteger(p.age) && p.age < 2).length;
   if (adults < 1) throw bookingError("ADULT_REQUIRED", "At least one adult traveler is required.");
   if (infants > adults) throw bookingError("INFANT_ASSIGNMENT_INVALID", "Each infant requires a separate adult traveler.");
-
 
   const cabinClass = lower(source.cabinClass || source.cabin_class || "economy", 30);
   if (!CABINS.has(cabinClass)) throw bookingError("INVALID_CABIN_CLASS", "Choose a supported cabin class.");
@@ -117,7 +111,6 @@ export function toDuffelOfferSearch(input = {}) {
   };
 }
 
-
 export function mapOfferForHome(offer = {}, searchContext = {}) {
   const slices = arr(offer.slices);
   const first = slices[0] || {};
@@ -137,7 +130,6 @@ export function mapOfferForHome(offer = {}, searchContext = {}) {
     searchContext
   };
 }
-
 
 export function mapOfferForCart(offer = {}) {
   const slices = arr(offer.slices);
@@ -163,7 +155,6 @@ export function mapOfferForCart(offer = {}) {
   };
 }
 
-
 export function assertOfferMatchesSearch(offer = {}, searchContext = {}) {
   const slices = arr(offer.slices);
   const expected = arr(searchContext.slices);
@@ -180,7 +171,6 @@ export function assertOfferMatchesSearch(offer = {}, searchContext = {}) {
   return true;
 }
 
-
 function identityDocuments(value) {
   return arr(value).slice(0, 4).map(doc => {
     const type = lower(doc.type || "passport", 40);
@@ -192,7 +182,6 @@ function identityDocuments(value) {
     return { type, uniqueIdentifier, issuingCountryCode, expiresOn };
   });
 }
-
 
 export function buildDuffelPassengers(travelers, contact, offer = {}) {
   const expected = arr(offer.passengers);
@@ -230,7 +219,6 @@ export function buildDuffelPassengers(travelers, contact, offer = {}) {
   return { passengers, contact: normalizedContact };
 }
 
-
 export function toDuffelOrderPassengers(value = []) {
   return arr(value).map(p => ({
     id: p.id,
@@ -245,7 +233,6 @@ export function toDuffelOrderPassengers(value = []) {
   }));
 }
 
-
 export function travelerTriggerProjection(value = []) {
   return arr(value).map(p => ({
     id: p.id,
@@ -259,7 +246,6 @@ export function travelerTriggerProjection(value = []) {
     nationality: p.nationality || null
   }));
 }
-
 
 export function combineServiceSelections(payload = {}) {
   const result = [];
@@ -278,7 +264,6 @@ export function combineServiceSelections(payload = {}) {
   }
   return result;
 }
-
 
 export function toPublicCart(row = {}, sensitive = null) {
   const payload = record(row.payload);
