@@ -1,11 +1,7 @@
 import wixLocation from "wix-location";
 import { getStaffPortalSession } from "backend/SKANDI_CORE/staffAuth.web";
 
-import {
-  getUniformEmployeeBootstrap,
-  submitUniformEmployeeOrder,
-  acknowledgeUniformPolicy
-} from "backend/SKANDI_CORE/uniform.web";
+import { handleUniformAction } from "backend/SKANDI_CORE/uniform.web";
 
 const HTML_ID = "#uniformCenterEmbed";
 const CHILD_SOURCE = "SKANDI_UNIFORM_EMPLOYEE";
@@ -46,13 +42,8 @@ async function bootstrap(html) {
       return;
     }
 
-    const payload = await getUniformEmployeeBootstrap();
-
-    postFlat(
-      html,
-      "UNIFORM_EMPLOYEE_BOOTSTRAP_RESULT",
-      { payload }
-    );
+    const result = await handleUniformAction({ type: "UNIFORM_EMPLOYEE_BOOTSTRAP" });
+    postFlat(html, result.responseType, result.ok ? { payload: result.payload } : result.payload);
   })();
 
   try {
@@ -85,41 +76,35 @@ $w.onReady(function () {
       }
 
       if (type === "UNIFORM_EMPLOYEE_SUBMIT_ORDER") {
-        const result = await submitUniformEmployeeOrder({
-          items:
-            msg.items ||
-            payload.items ||
-            [],
-          note:
-            msg.note ||
-            payload.note ||
-            ""
+        const result = await handleUniformAction({
+          type: "UNIFORM_EMPLOYEE_SUBMIT_ORDER",
+          payload: {
+            items: msg.items || payload.items || [],
+            note: msg.note || payload.note || ""
+          }
         });
 
         postFlat(
           html,
-          "UNIFORM_EMPLOYEE_ORDER_SUBMITTED",
-          { payload: result }
+          result.responseType,
+          result.ok ? { payload: result.payload } : result.payload
         );
         return;
       }
 
       if (type === "UNIFORM_EMPLOYEE_ACK_POLICY") {
-        const result = await acknowledgeUniformPolicy({
-          policyId:
-            msg.policyId ||
-            payload.policyId ||
-            "",
-          policyVersion:
-            msg.policyVersion ||
-            payload.policyVersion ||
-            ""
+        const result = await handleUniformAction({
+          type: "UNIFORM_EMPLOYEE_ACK_POLICY",
+          payload: {
+            policyId: msg.policyId || payload.policyId || "",
+            policyVersion: msg.policyVersion || payload.policyVersion || ""
+          }
         });
 
         postFlat(
           html,
-          "UNIFORM_EMPLOYEE_ACK_OK",
-          { payload: result }
+          result.responseType,
+          result.ok ? { payload: result.payload } : result.payload
         );
         return;
       }
@@ -165,3 +150,4 @@ $w.onReady(function () {
     );
   });
 });
+Displaying Uniform Center.lukfc.js.
