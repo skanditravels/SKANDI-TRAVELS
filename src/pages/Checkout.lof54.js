@@ -22,7 +22,7 @@ const PARENT_SOURCE =
   "SKANDI_WIX_PARENT";
 
 const CONFIRMATION_PATH =
-  "/the-store/order-confirmation";
+  "/the-store/store-checkout/order-confirmation";
 
 let embed = null;
 
