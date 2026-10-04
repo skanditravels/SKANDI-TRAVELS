@@ -14,7 +14,7 @@ import {
 const EMBED_ID = "#alteaDasboardEmbed";
 const CHILD_SOURCE = "SKANDI_ALTEA_LAUNCHPAD";
 const PARENT_SOURCE = "SKANDI_WIX_PARENT";
-const LOGIN_PATH = "/riaintra";
+const LOGIN_PATH = "/riaintra/success-factors";
 
 
 let html = null;
