@@ -56,8 +56,8 @@ const MASTER_CONFIG = Object.freeze({
         altea: "https://static.wixstatic.com/media/394052_46045c41aebf421d98314b31ef83c677~mv2.png",
         voy: "https://static.wixstatic.com/media/394052_30b8bebbf5ee493da7d47329d04de494~mv2.png",
         voyWhite: "https://static.wixstatic.com/media/394052_3770b6753c474d73a77c674b20eab305~mv2.png",
-        skandiClub: "",
-        signatureCollection: ""
+        skandiClub: "https://static.wixstatic.com/media/394052_a951f7d81eb04993981da0a51f26465e~mv2.png",
+        signatureCollection: "https://static.wixstatic.com/media/394052_fa7c76ccb96049f5ae4242d425b6791c~mv2.png"
       }),
       icons: Object.freeze({
         home: "", bookings: "", favorites: "", documents: "", travelers: "",
