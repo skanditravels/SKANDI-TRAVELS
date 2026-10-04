@@ -14,7 +14,7 @@ import {
   deleteStoreControlProduct,
   setStoreControlCategories,
   bulkUpdateStoreControlPrices
-} from "backend/storeControlV3.web";
+} from "backend/SKANDI_CORE/storeCartV3.web";
 
 const EMBED_ID = "#storeControlEmbed";
 const CHILD_SOURCE = "SKANDI_STORE_CONTROL_V3";
