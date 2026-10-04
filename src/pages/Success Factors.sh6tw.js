@@ -5,7 +5,7 @@
 // Payroll and MyRoster/scheduling remain separate applications and are never mutated from this page.
 
 import wixLocation from "wix-location";
-import { APP_ROUTES, SITE_MAP, isSafeInternalRoute } from "public/siteMap.js";
+import { APP_ROUTES, SITE_MAP, isSafeInternalRoute } from "public/siteMap";
 import {
   createEmployee,
   createRecruitingDocumentPacket,
@@ -42,7 +42,7 @@ import {
   updateRecruitingCandidateStage,
   verifyRecruitingDocument,
   verifyRecruitingHistory
-} from "backend/SKANDI_CORE/orgStructure.web.js";
+} from "backend/SKANDI_CORE/orgStructure.web";
 
 const EMBED_ID = "#staffHrEmbed";
 const CHILD_SOURCES = new Set(["SKANDI_HR_STAFF", "SKANDI_SUCCESSFACTORS"]);
