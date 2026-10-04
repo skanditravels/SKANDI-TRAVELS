@@ -1,5 +1,5 @@
 import wixLocation from "wix-location-frontend";
-import { getInternalLegalHub } from "backend/LEGAL/legalPolicyService.web";
+import { getInternalLegalHub } from "backend/SKANDI_SOURCE/policyControl.web";
 
 const EMBED_ID = "#internalLegalHubEmbed";
 const HTML_SOURCE = "SKANDI_INTERNAL_LEGAL_HUB";
