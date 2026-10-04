@@ -6,7 +6,43 @@
 
 import wixLocation from "wix-location";
 import { APP_ROUTES, SITE_MAP, isSafeInternalRoute } from "public/siteMap";
-
+import {
+  createEmployee,
+  createRecruitingDocumentPacket,
+  detectRecruitingHistoryGaps,
+  duplicateRecruitingPosition,
+  exportRecruitingAudit,
+  generateEmployeeSkId,
+  getBadgeControl,
+  getEmployeeWorkspace,
+  getManagerCandidates,
+  getOrgStructureBootstrap,
+  getRecruitingBootstrap,
+  getSuccessFactorsDirectory,
+  provisionEmployeeWixMember,
+  provisionStaffOrganization,
+  publishRecruitingPosition,
+  requestRecruitingDocument,
+  resendRecruitingDocumentPacket,
+  resolveRecruitingGap,
+  saveBadgeControl,
+  saveRecruitingCandidate,
+  saveRecruitingHistory,
+  saveRecruitingInterview,
+  saveRecruitingOnboardingTask,
+  saveRecruitingPosition,
+  saveRecruitingSettings,
+  saveRecruitingTraining,
+  saveRecruitingVetting,
+  saveSuccessFactorsSelfProfile,
+  scheduleRecruitingMaintenance,
+  setEmployeeActive,
+  testRecruitingIntegrations,
+  updateEmployee,
+  updateRecruitingCandidateStage,
+  verifyRecruitingDocument,
+  verifyRecruitingHistory
+} from "backend/SKANDI_CORE/orgStructure.web";
 
 const EMBED_ID = "#staffHrEmbed";
 const CHILD_SOURCES = new Set(["SKANDI_HR_STAFF", "SKANDI_SUCCESSFACTORS"]);
