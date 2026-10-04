@@ -3,7 +3,7 @@
 // Pure provider layer: no Wix member/staff auth, no Supabase/ALTEA persistence and no Stripe.
 // Booking ownership and synchronization stay in customerBooking/reservations.
 
-import { duffelRequest } from "backend/SKANDI_CORE/duffelClient.js";
+import { duffelRequest } from "backend/SKANDI_CORE/duffelClient";
 
 function arr(v) { return Array.isArray(v) ? v : []; }
 function clean(v, max = 500) { return String(v ?? "").trim().slice(0, max); }
