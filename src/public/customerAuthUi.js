@@ -70,11 +70,11 @@ export const APP_ROUTES = Object.freeze({
 export const CUSTOMER_AUTH_POPUPS = Object.freeze({
   login: Object.freeze({
     name: "Log In Form (Popup)",
-    codeFile: "Log In Form (Popup).bytg4.js"
+    codeFile: "Log In Form (Popup).bytg4"
   }),
   resetPassword: Object.freeze({
     name: "Reset Password (Popup)",
-    codeFile: "Reset Password (Popup).rygmm.js"
+    codeFile: "Reset Password (Popup).rygmm"
   })
 });
 
