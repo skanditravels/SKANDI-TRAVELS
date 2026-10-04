@@ -10,7 +10,7 @@ import {
   updateStoreCartLineItem,
   removeStoreCartLineItem,
   prepareStorePayment
-} from "backend/storeCheckout.web";
+} from "backend/SKANDI_CORE/storeCheckout.web";
 
 const EMBED_ID =
   "#storeCheckoutEmbed";
