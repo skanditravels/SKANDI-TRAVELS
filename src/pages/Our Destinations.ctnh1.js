@@ -1,13 +1,13 @@
 import wixData from "wix-data";
 import wixLocation from "wix-location";
-import { getDestinationFlightSuggestions } from "backend/destinationFlightOffers.web";
+import { getDestinationFlightSuggestions } from "backend/SKANDI_CORE/destinationFlow.web";
 
 const HTML_ID = "#htmlDestinations";
 const HTML_SOURCE = "SKANDI_DESTINATION_FINDER";
 const PARENT_SOURCE = "SKANDI_WIX_PARENT";
 
-const DEFAULT_ORIGIN_IATA = "ARN"; // Change later if you want JFK, EWR, CPH, etc.
-const DEFAULT_CURRENCY = "SEK";
+const DEFAULT_ORIGIN_IATA = "JFK"; // Change later if you want JFK, EWR, CPH, etc.
+const DEFAULT_CURRENCY = "USD";
 
 const FALLBACK_IMAGE =
   "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1400&q=85";
@@ -108,7 +108,7 @@ async function handleDestinationFinderMessage(event) {
         ok: false,
         offers: [],
         priceSummary: null,
-        message: "Live offers are temporarily unavailable."
+        message: "ERROR"
       }
     });
   }
@@ -170,7 +170,7 @@ async function handleLiveOfferRequest(payload = {}) {
         offers: [],
         priceSummary: null,
         request,
-        message: "Choose dates and a destination airport to see live flight suggestions."
+        message: "Choose dates and a destination airport to see suggested flights."
       }
     });
     return;
