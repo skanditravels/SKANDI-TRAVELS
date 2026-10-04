@@ -11,7 +11,7 @@ import {
 } from "backend/SKANDI_CORE/staffAuth.web";
 
 
-const EMBED_IDS = "#alteaDasboardEmbed";
+const EMBED_ID = "#alteaDasboardEmbed";
 const CHILD_SOURCE = "SKANDI_ALTEA_LAUNCHPAD";
 const PARENT_SOURCE = "SKANDI_WIX_PARENT";
 const LOGIN_PATH = "/riaintra";
@@ -155,7 +155,7 @@ async function handleNavigate(payload, requestId) {
 
 
 function resolveHtmlEmbed() {
-  for (const id of EMBED_IDS) {
+  for (const id of EMBED_ID) {
     try {
       const candidate = $w(id);
       if (candidate && typeof candidate.onMessage === "function" && typeof candidate.postMessage === "function") {
