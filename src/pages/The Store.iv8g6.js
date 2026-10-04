@@ -4,7 +4,7 @@ import wixEcomFrontend from "wix-ecom-frontend";
 import {
   listStorefrontProducts,
   resolveStoreVariant
-} from "backend/SKANDI_CORE/skandiStorefront.web";
+} from "backend/SKANDI_CORE/storefront.web";
 
 import {
   getStorefrontCartV2,
