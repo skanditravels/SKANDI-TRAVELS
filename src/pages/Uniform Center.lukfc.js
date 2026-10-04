@@ -1,11 +1,11 @@
 import wixLocation from "wix-location";
-import { getStaffPortalSession } from "backend/SKANDI_CORE/lLuth.web.js";
+import { getStaffPortalSession } from "backend/SKANDI_CORE/staffAuth.web";
 
 import {
   getUniformEmployeeBootstrap,
   submitUniformEmployeeOrder,
   acknowledgeUniformPolicy
-} from "backend/uniformCenterCms.web.js";
+} from "backend/SKANDI_CORE/uniform.web";
 
 const HTML_ID = "#uniformCenterEmbed";
 const CHILD_SOURCE = "SKANDI_UNIFORM_EMPLOYEE";
