@@ -1,7 +1,7 @@
 import { getPublicNetworkMapData } from "backend/SKANDI_CORE/networkMap.web";
 
 
-const HTML_ID = "#htmlSkandiMap";
+const HTML_ID = "#htmlDestinations";
 const HTML_SOURCE = "SKANDI_PUBLIC_NETWORK_MAP";
 const PARENT_SOURCE = "SKANDI_WIX_PARENT";
 
