@@ -44,15 +44,14 @@ import {
 
 const MEMBER = Permissions.SiteMember;
 const input = (value) => value && typeof value === "object" ? value : {};
-const method = (handler) => webMethod(MEMBER, async (value) => handler(input(value)));
 
-// Retain the portal-only export for older published page generations. The
-// canonical B-011.30 page bootstraps from getOrgStructureBootstrap once.
-export const getSuccessFactorsPortalBootstrap = webMethod(
-  MEMBER,
-  async () => getSuccessFactorsPortalBootstrapCore()
-);
-export const getSuccessFactorsDirectory = method(getSuccessFactorsDirectoryCore);
+export const getOrgStructureBootstrap = webMethod(MEMBER, async (payload) => {
+  return getOrgStructureBootstrapCore(input(payload));
+});
+
+export const getEmployeeWorkspace = webMethod(MEMBER, async (payload) => {
+  return getEmployeeWorkspaceCore(input(payload));
+});
 export const saveSuccessFactorsSelfProfile = method(saveSuccessFactorsSelfProfileCore);
 
 export const getOrgStructureBootstrap = method(getOrgStructureBootstrapCore);
