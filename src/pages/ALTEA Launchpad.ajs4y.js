@@ -11,7 +11,7 @@ import {
 } from "backend/SKANDI_CORE/staffAuth.web";
 
 
-const EMBED_IDS = ["#alteaOpsEmbed", "#alteaLaunchpadEmbed", "#alteaMasterEmbed"];
+const EMBED_IDS = "#alteaDasboardEmbed";
 const CHILD_SOURCE = "SKANDI_ALTEA_LAUNCHPAD";
 const PARENT_SOURCE = "SKANDI_WIX_PARENT";
 const LOGIN_PATH = "/riaintra";
