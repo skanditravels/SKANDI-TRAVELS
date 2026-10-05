@@ -3,7 +3,6 @@
 
 import wixLocationFrontend from "wix-location-frontend";
 import {
-  getTravelInfoControlBootstrap,
   listTravelInfoRecords,
   getTravelInfoRecord,
   saveTravelInfoRecord,
