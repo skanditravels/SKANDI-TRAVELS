@@ -94,7 +94,7 @@ export const GLOBAL_CHROME = Object.freeze({
     source: "SKANDI_CUSTOMER_HEADER_EXPANDBAR",
     elementIds: Object.freeze(["#skandiHeaderEmbed", "#skandiCustomerHeaderEmbed"]),
     collapsedHeight: 118,
-    maxHeight: 1200
+    maxHeight: 118
   }),
   customerFooter: Object.freeze({
     system: "SKANDI",
@@ -165,3 +165,4 @@ export function isSafeInternalRoute(value) {
     return decoded.startsWith("/") && !decoded.startsWith("//") && !invalid(decoded);
   } catch (_) { return false; }
 }
+
