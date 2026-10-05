@@ -53,7 +53,6 @@ async function handle(html, message) {
       case "TIC_REFRESH":
       case "HC_ADMIN_READY":
       case "HC_ADMIN_REFRESH":
-        await bootstrap(html, requestId);
         return;
 
       case "TIC_LIST_REQUEST": {
@@ -114,6 +113,4 @@ $w.onReady(async function () {
     await handle(html, message);
   });
 
-  // Proactive boot so a fast iframe READY event can never be lost.
-  await bootstrap(html);
 });
