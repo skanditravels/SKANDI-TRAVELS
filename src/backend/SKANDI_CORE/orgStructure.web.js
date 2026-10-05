@@ -1,5 +1,5 @@
 // /src/backend/SKANDI_CORE/orgStructure.web.js
-// B-011.30 — canonical SuccessFactors V9 Wix web-method boundary.
+// SKANDI SuccessFactors v12 — canonical Wix web-method boundary.
 // Payroll and MyRoster/scheduling remain separate application boundaries.
 
 import { Permissions, webMethod } from "@wix/web-methods";
@@ -33,6 +33,7 @@ import {
   saveRecruitingTrainingCore,
   saveRecruitingVettingCore,
   saveSuccessFactorsSelfProfileCore,
+  saveSuccessFactorsPortalStateCore,
   scheduleRecruitingMaintenanceCore,
   setEmployeeActiveCore,
   testRecruitingIntegrationsCore,
@@ -187,4 +188,8 @@ export const scheduleRecruitingMaintenance = webMethod(MEMBER, async (payload) =
 
 export const exportRecruitingAudit = webMethod(MEMBER, async (payload) => {
   return exportRecruitingAuditCore(input(payload));
+});
+
+export const saveSuccessFactorsPortalState = webMethod(MEMBER, async (payload) => {
+  return saveSuccessFactorsPortalStateCore(input(payload));
 });
