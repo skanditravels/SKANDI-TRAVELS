@@ -31,7 +31,7 @@ import {
 } from "backend/SKANDI_CORE/platformValidation";
 import { SkandiError } from "backend/SKANDI_CORE/platformErrors";
 
-export const UNIFORM_CORE_VERSION = "B-011.28-UNIFORM-CONVERGED";
+export const UNIFORM_CORE_VERSION = "B-011.28";
 
 const TABLE = Object.freeze({
   catalog: "uniform_catalog_items",
