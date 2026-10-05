@@ -8,7 +8,7 @@ import {
   getTravelInfoRecord,
   saveTravelInfoRecord,
   archiveTravelInfoRecord
-} from "backend/SKANDI_CORE/publicContent.web.js";
+} from "backend/SKANDI_CORE/publicContent.web";
 
 const HTML_ID = "#infoControlHtml";
 const CHILD_SOURCE = "SKANDI_HELP_DATA_CONTROLLER";
