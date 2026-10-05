@@ -1,5 +1,5 @@
 // /src/backend/SKANDI_CORE/orgStructure.js
-// SKANDI Backend Base 1.0 — B-011.30
+// SKANDI SuccessFactors v12 — 2026-10-05; preserves the B-011.30 service contracts.
 // Canonical SuccessFactors / Human Experience Management core.
 //
 // Authority boundary:
@@ -287,6 +287,12 @@ function safeAgent(row = {}) {
   };
 }
 
+function safeStaffDirectoryRecord(row = {}) {
+  const item = safeAgent({ ...row, payload: {} });
+  const keys = ["id", "agentId", "skId", "agentUserUuid", "agentUserId", "firstName", "lastName", "preferredName", "displayName", "fullName", "corporateEmail", "corporateEmailAddress", "jobTitle", "roleId", "jobCode", "departmentId", "departmentCode", "department", "assignedDepartment", "baseCode", "base", "assignedBase", "station", "countryCode", "companyCode", "managerAgentId", "managerAgentUserId", "managerRoleId", "managerSkId", "active"];
+  return Object.fromEntries(keys.map((key) => [key, item[key]]));
+}
+
 function safeAssignment(row = {}) {
   if (!row || !row.id) return null;
   return {
@@ -367,57 +373,253 @@ async function loadCatalog() {
   };
 }
 
-async function loadStaffSummary() {
+async function loadStaffSummary({ includePrivate = true } = {}) {
   const list = await selectAllPaged("agent_users", {
     select: "id,agent_id,sk_id,first_name,last_name,preferred_name,display_name,corporate_email_address,email,wix_member_id,member_id,contact_id,badge_photo_url,employment_status,status,active,authorized,portal_access,company_code,role_id,job_code,job_title,position,department_id,department_code,department,base_code,base,station,country_code,manager_agent_user_id,manager_role_id,manager_sk_id,access_role,permission_preset,permission_keys,allowed_apps,permission_groups,payload",
+    ...(!includePrivate ? { active: "eq.true" } : {}),
     order: "last_name.asc,first_name.asc,sk_id.asc"
   });
-  return list.map(safeAgent);
+  return list.map(includePrivate ? safeAgent : safeStaffDirectoryRecord);
 }
 
-async function loadAssignmentsSummary() {
+async function loadAssignmentsSummary({ includePrivate = true } = {}) {
   const list = await selectAllPaged("org_employee_assignments", {
     select: "*",
+    ...(!includePrivate ? { active: "eq.true", effective_from: `lte.${isoDateOnly()}`, or: `(effective_to.is.null,effective_to.gte.${isoDateOnly()})` } : {}),
     order: "updated_at.desc,id.asc"
   });
-  return list.map(safeAssignment).filter(Boolean);
+  return list.map(safeAssignment).filter(Boolean).map((item) => {
+    if (includePrivate) return item;
+    const { accessRole, permissionPresetId, source, updatedAt, ...directoryAssignment } = item;
+    return directoryAssignment;
+  });
 }
 
-export async function getSuccessFactorsPortalBootstrapCore() {
-  const session = await requireStaffPortalSessionCore();
-  if (session?.authorized !== true || !session?.profile) {
-    throw new SkandiError("STAFF_AUTH_REQUIRED", "Authenticated staff session required.", { publicMessage: "Sign in to RIAINTRA to open SuccessFactors." });
+function portalObject(value) {
+  return value && typeof value === "object" && !Array.isArray(value) ? value : {};
+}
+
+function portalStateFor(agent) {
+  return portalObject(portalObject(portalObject(agent.payload).successFactors).portal);
+}
+
+function portalIds(value) {
+  return [...new Set(rows(value).map((id) => text(id, 120)).filter(Boolean))];
+}
+
+// Every writer of the shared employee JSON uses the verified updated_at trigger
+// as its compare-and-swap version. Retry against the latest payload, never a
+// cached copy, so dashboard preferences cannot replace HR/profile/badge data.
+async function patchAgentVersioned(target, makeBody) {
+  let current = target;
+  for (let attempt = 0; attempt < 4; attempt += 1) {
+    if (!current?.id) throw new SkandiError("HR_EMPLOYEE_NOT_FOUND", "Employee not found.");
+    const body = await makeBody(current);
+    const saved = firstRow(await restRequest({
+      table: "agent_users",
+      method: "PATCH",
+      query: { id: `eq.${current.id}`, updated_at: current.updated_at ? `eq.${current.updated_at}` : "is.null" },
+      body: { ...body, updated_at: new Date().toISOString() }
+    }));
+    if (saved) return saved;
+    current = await findAgent({ agentUserId: current.id });
   }
-  const profile = {
-    ...session.profile,
-    permissions: [...stringArray(session.permissionKeys)],
-    permissionKeys: [...stringArray(session.permissionKeys)],
-    allowedApps: [...stringArray(session.allowedApps)],
-    permissionGroups: [...stringArray(session.permissionGroups)],
-    successFactorsAccess: {
-      fullHr: canReadHr(session),
-      workforce: canReadHr(session),
-      employee: canReadHr(session),
-      organization: canReadHr(session),
-      recruiting: canReadRecruiting(session),
-      performance: canReadHr(session),
-      badge: canManageHr(session),
-      access: canReadHr(session)
+  throw new SkandiError("HR_CONCURRENT_UPDATE", "Another update is in progress. Refresh and try again.");
+}
+
+function portalPersona(session) {
+  const profile = session.profile || {};
+  if (profile.isHr || profile.isHR || profile.isAdmin || profile.isPayrollAdmin) return "HR Admin";
+  if (profile.canManage || profile.isManager || profile.manager === true) return "Manager";
+  const role = text(profile.role || profile.systemRole || profile.position || profile.jobTitle, 180).toLowerCase().replace(/_/g, " ");
+  if (role === "manager" || role.includes("operations manager") || role.includes("supervisor")) return "Manager";
+  if (["hr admin", "hr manager", "payroll admin"].includes(role) || role.includes("human resources") || role.includes("hr administrator")) return "HR Admin";
+  return "Driver";
+}
+
+// Match the existing embed's audience fields at the server boundary. Unknown
+// nonempty audience formats are withheld rather than treated as public.
+function portalAudienceAllows(item, session) {
+  const profile = session.profile || {};
+  const raw = item.audience ?? item.scope ?? item.targeting ?? {};
+  if (Array.isArray(raw) ? raw.length > 0 : (raw !== null && typeof raw !== "object")) return false;
+  const scope = portalObject(raw);
+  const audienceKeys = new Set(["allowedRoleIds", "roleIds", "jobRoleIds", "rolesCanonical", "allowedDepartmentIds", "departmentIds", "departments", "allowedDepartmentCodes", "departmentCodes", "allowedBaseCodes", "baseCodes", "bases", "markets", "allowedDestinationCodes", "destinationCodes", "destinations", "allowedAccessRoles", "accessRoles", "alteaAccessRoles", "allowedCountries", "countryCodes", "countries", "permissionAny", "permissionsAny", "anyPermissions", "permissionAll", "permissionsAll", "allPermissions"]);
+  if (Object.keys(scope).some((key) => !audienceKeys.has(key))) return false;
+  const list = (value) => Array.isArray(value) ? value.map(String) : value && typeof value === "object"
+    ? Object.keys(value).filter((key) => [true, "true", 1].includes(value[key]))
+    : String(value || "").split(/[;,|]/).map((part) => part.trim()).filter(Boolean);
+  const pick = (...keys) => {
+    for (const key of keys) {
+      if (scope[key] !== undefined) return list(scope[key]);
+      if (item[key] !== undefined) return list(item[key]);
     }
+    return [];
   };
+  const matches = (required, actual) => !required.length || required.some((value) => actual.some((entry) => String(entry || "").toLowerCase() === String(value).toLowerCase()));
+  const personas = list(item.allowedRoles || item.roles || item.allowedRole || item.roleKeys);
+  if (!matches(personas, [portalPersona(session)])) return false;
+  const checks = [
+    [pick("allowedRoleIds", "roleIds", "jobRoleIds", "rolesCanonical"), [profile.roleId]],
+    [pick("allowedDepartmentIds", "departmentIds", "departments"), [profile.departmentId]],
+    [pick("allowedDepartmentCodes", "departmentCodes"), [profile.departmentCode]],
+    [pick("allowedBaseCodes", "baseCodes", "bases", "markets"), [profile.baseCode, profile.base, profile.station]],
+    [pick("allowedDestinationCodes", "destinationCodes", "destinations"), [profile.destinationCode]],
+    [pick("allowedCountries", "countryCodes", "countries"), [profile.countryCode]],
+    [pick("allowedAccessRoles", "accessRoles", "alteaAccessRoles"), [session.accessRole]]
+  ];
+  if (!checks.every(([required, actual]) => matches(required, actual))) return false;
+  const permissions = stringArray(session.permissionKeys).map((value) => value.toLowerCase());
+  const any = pick("permissionAny", "permissionsAny", "anyPermissions");
+  const all = pick("permissionAll", "permissionsAll", "allPermissions");
+  return matches(any, permissions) && all.every((value) => permissions.includes(String(value).toLowerCase()));
+}
+
+async function loadPortalNews(session) {
+  const list = await selectAllPaged("intranet_news", {
+    select: "id,title,body,image_url,audience,published_at,created_at,payload",
+    active: "eq.true",
+    status: "ilike.PUBLISHED",
+    or: `(published_at.is.null,published_at.lte.${new Date().toISOString()})`,
+    order: "published_at.desc.nullslast,id.asc"
+  });
+  return list.filter((row) => portalAudienceAllows(portalObject(row.payload), session) && portalAudienceAllows({ audience: row.audience ?? {} }, session)).map((row) => {
+    const content = portalObject(row.payload);
+    return {
+      id: row.id, title: text(row.title, 500), body: text(row.body, 50000),
+      summary: text(content.summary || content.description || content.excerpt, 3000),
+      details: text(content.details || row.body, 50000),
+      imageUrl: text(row.image_url, 2000), publishDate: row.published_at || row.created_at,
+      eyebrow: text(content.eyebrow, 160), category: text(content.category, 160),
+      icon: text(content.icon, 80) || "megaphone", cta: text(content.cta, 80) || "Read",
+      audience: row.audience ?? content.audience ?? {},
+      allowedRoles: content.allowedRoles || content.roles || []
+    };
+  }).filter((item) => item.title && portalAudienceAllows(item, session));
+}
+
+async function loadPortalTasks(agentUserId) {
+  return selectAllPaged("career_onboarding_tasks", {
+    select: "id,task_id,task_name,status,due_at,completed_at,owner_agent_user_id,payload",
+    owner_agent_user_id: `eq.${agentUserId}`,
+    order: "due_at.asc.nullslast,id.asc"
+  });
+}
+
+function portalTaskView(row) {
+  const content = portalObject(row.payload);
   return {
-    ok: true,
-    version: "BACKEND-BASE-1.0-B011.30-SUCCESSFACTORS-V9",
-    profile,
-    apps: rows(session.apps),
-    news: [],
-    tasks: [],
-    quickActions: [],
-    notifications: [],
-    favoriteApps: [],
+    id: row.id, title: text(row.task_name, 500), description: text(content.description, 3000),
+    dueDate: row.due_at, status: row.status, reference: row.task_id || row.id,
+    priority: ["high", "medium", "normal"].includes(content.priority) ? content.priority : "normal",
+    category: "Onboarding", icon: "task", action: "Open"
+  };
+}
+
+function portalNotificationViews(agent, session) {
+  return rows(portalStateFor(agent).notifications)
+    .filter((item) => item && text(item.id, 120) && text(item.title, 500) && item.active !== false && portalAudienceAllows(item, session))
+    .map((item) => ({ id: text(item.id, 120), title: text(item.title, 500), body: text(item.body || item.description, 3000), createdAt: text(item.createdAt, 80), time: text(item.time, 100), icon: text(item.icon, 80) || "bell" }));
+}
+
+function portalSelectionState(agent, session, taskRows) {
+  const state = portalStateFor(agent);
+  const apps = new Set(rows(session.apps).map((app) => String(app.id)));
+  const notifications = new Set(portalNotificationViews(agent, session).map((item) => item.id));
+  const tasks = new Set(taskRows.map((item) => String(item.id)));
+  return {
+    favoriteApps: portalIds(state.favoriteApps).filter((id) => apps.has(id)),
+    readNotificationIds: portalIds(state.readNotificationIds).filter((id) => notifications.has(id)),
+    dismissedTaskIds: portalIds(state.dismissedTaskIds).filter((id) => tasks.has(id)),
+    completedTaskIds: taskRows.filter((item) => ["COMPLETED", "DONE"].includes(upper(item.status, 40))).map((item) => String(item.id))
+  };
+}
+
+async function buildSuccessFactorsPortal(session) {
+  const id = text(session.profile?.agentUserId || session.profile?.id, 80);
+  if (!id || session.authorized !== true) throw new SkandiError("STAFF_AUTH_REQUIRED", "Sign in to RIAINTRA to open SuccessFactors.");
+  const [agent, news, taskRows] = await Promise.all([findAgent({ agentUserId: id }), loadPortalNews(session), loadPortalTasks(id)]);
+  if (!agent) throw new SkandiError("HR_EMPLOYEE_NOT_FOUND", "Employee not found.");
+  const apps = rows(session.apps);
+  return {
+    ok: true, version: "SKANDI-SUCCESSFACTORS-v12",
+    profile: {
+      ...storedHrProfile(agent), ...session.profile,
+      permissions: stringArray(session.permissionKeys), permissionKeys: stringArray(session.permissionKeys),
+      allowedApps: stringArray(session.allowedApps), permissionGroups: stringArray(session.permissionGroups),
+      successFactorsAccess: {
+        fullHr: canReadHr(session), workforce: canReadHr(session), employee: canReadHr(session),
+        organization: canReadHr(session), recruiting: canReadRecruiting(session),
+        performance: canReadHr(session), badge: canManageHr(session), access: canManageHr(session),
+        manage: canManageHr(session), manageRecruiting: canManageRecruiting(session)
+      }
+    },
+    apps, news, tasks: taskRows.map(portalTaskView),
+    quickActions: apps.filter((app) => app.path).slice(0, 6).map((app) => ({ id: app.id, target: app.id, title: app.title, subtitle: app.description || "", icon: app.icon || "apps", path: app.path })),
+    notifications: portalNotificationViews(agent, session),
+    ...portalSelectionState(agent, session, taskRows),
     stats: {},
     hrAccess: { read: canReadHr(session), manage: canManageHr(session), recruiting: canReadRecruiting(session) }
   };
+}
+
+export async function saveSuccessFactorsPortalStateCore(input = {}) {
+  const session = await requireStaffPortalSessionCore();
+  const agentUserId = text(session.profile?.agentUserId || session.profile?.id, 80);
+  const action = text(input.action, 100);
+  if (!new Set(["INTRANET_TASK_COMPLETE", "INTRANET_TASK_DISMISS", "INTRANET_FAVORITES_UPDATE", "INTRANET_NOTIFICATIONS_READ"]).has(action)) {
+    throw new SkandiError("INTRANET_ACTION_INVALID", "The dashboard action is not supported.");
+  }
+  const [target, taskRows] = await Promise.all([findAgent({ agentUserId }), loadPortalTasks(agentUserId)]);
+  if (!target) throw new SkandiError("HR_EMPLOYEE_NOT_FOUND", "Employee not found.");
+  const task = taskRows.find((row) => String(row.id) === String(input.id || ""));
+  if (action.startsWith("INTRANET_TASK_") && !task) throw new SkandiError("INTRANET_TASK_NOT_FOUND", "This task is not assigned to you.");
+  if (action === "INTRANET_TASK_COMPLETE") {
+    if (["CANCELLED", "CANCELED", "ARCHIVED"].includes(upper(task.status, 40))) throw new SkandiError("INTRANET_TASK_CLOSED", "This task is closed and cannot be completed.");
+    if (!["COMPLETED", "DONE"].includes(upper(task.status, 40))) {
+      const saved = firstRow(await restRequest({
+        table: "career_onboarding_tasks", method: "PATCH",
+        query: { id: `eq.${task.id}`, owner_agent_user_id: `eq.${agentUserId}`, status: task.status === null ? "is.null" : `eq.${task.status}` },
+        body: { status: "COMPLETED", completed_at: new Date().toISOString(), updated_at: new Date().toISOString() }
+      }));
+      if (!saved) throw new SkandiError("INTRANET_TASK_CHANGED", "The task changed. Refresh before trying again.");
+      Object.assign(task, saved);
+      await recruitingAudit(agentUserId, "ONBOARDING_TASK_COMPLETED", "ONBOARDING_TASK", task.id);
+    }
+    return { ok: true, ...portalSelectionState(target, session, taskRows) };
+  }
+  if (action.endsWith("UPDATE") || action.endsWith("READ")) {
+    if (!Array.isArray(input.ids) || input.ids.length > 2000 || input.ids.some((id) => typeof id !== "string" || !id.trim() || id.length > 120)) {
+      throw new SkandiError("INTRANET_IDS_INVALID", "The dashboard selection is invalid. Refresh and try again.");
+    }
+  }
+  const saved = await patchAgentVersioned(target, (current) => {
+    const payload = { ...portalObject(current.payload) };
+    const sf = { ...portalObject(payload.successFactors) };
+    const state = { ...portalObject(sf.portal) };
+    const ids = portalIds(input.ids);
+    if (action === "INTRANET_FAVORITES_UPDATE") {
+      const allowed = new Set(rows(session.apps).map((app) => String(app.id)));
+      if (ids.some((id) => !allowed.has(id))) throw new SkandiError("INTRANET_APP_ACCESS_DENIED", "An application is no longer available to your account.");
+      state.favoriteApps = [...new Set([...portalIds(state.favoriteApps).filter((id) => !allowed.has(id)), ...ids])];
+    } else if (action === "INTRANET_NOTIFICATIONS_READ") {
+      const allowed = new Set(portalNotificationViews(current, session).map((item) => item.id));
+      const previous = portalIds(state.readNotificationIds);
+      if (ids.some((id) => !allowed.has(id) && !previous.includes(id))) throw new SkandiError("INTRANET_NOTIFICATION_NOT_FOUND", "A notification is no longer available to your account.");
+      state.readNotificationIds = [...new Set([...previous, ...ids])];
+    } else {
+      state.dismissedTaskIds = [...new Set([...portalIds(state.dismissedTaskIds), String(task.id)])];
+    }
+    state.updatedAt = new Date().toISOString();
+    sf.portal = state;
+    payload.successFactors = sf;
+    return { payload };
+  });
+  return { ok: true, ...portalSelectionState(saved, session, taskRows) };
+}
+
+export async function getSuccessFactorsPortalBootstrapCore() {
+  return buildSuccessFactorsPortal(await requireStaffPortalSessionCore());
 }
 
 export async function getSuccessFactorsDirectoryCore({ query = "" } = {}) {
@@ -454,13 +656,15 @@ export async function saveSuccessFactorsSelfProfileCore(input = {}) {
     const clean = primitiveProfileValue(input[key]);
     if (clean !== undefined) patch[key] = clean;
   }
-  const body = { payload: mergedSuccessFactorsPayload(target, patch), updated_at: new Date().toISOString() };
-  if (Object.prototype.hasOwnProperty.call(input, "preferredName")) {
-    body.preferred_name = text(input.preferredName, 120) || null;
-    body.display_name = body.preferred_name || [target.first_name,target.last_name].filter(Boolean).join(" ");
-  }
-  const saved = firstRow(await restRequest({ table: "agent_users", method: "PATCH", query: { id: `eq.${target.id}` }, body }));
-  return { ok: true, profile: safeAgent(saved || { ...target, ...body }) };
+  const saved = await patchAgentVersioned(target, (current) => {
+    const body = { payload: mergedSuccessFactorsPayload(current, patch) };
+    if (Object.prototype.hasOwnProperty.call(input, "preferredName")) {
+      body.preferred_name = text(input.preferredName, 120) || null;
+      body.display_name = body.preferred_name || [current.first_name,current.last_name].filter(Boolean).join(" ");
+    }
+    return body;
+  });
+  return { ok: true, profile: safeAgent(saved) };
 }
 
 export async function getOrgStructureBootstrapCore() {
@@ -476,15 +680,17 @@ export async function getOrgStructureBootstrapCore() {
     departments: [], roles: [], bases: [], roleBaseRules: [], accessRoles: [],
     permissionPresets: [], countryRules: [], baseJurisdictions: [], roleRequirements: []
   };
-  const [catalog, staff, assignments] = await Promise.all([
+  const [catalog, staff, assignments, portal] = await Promise.all([
     hrRead ? loadCatalog() : Promise.resolve(emptyCatalog),
-    hrManage ? loadStaffSummary() : Promise.resolve([]),
-    hrManage ? loadAssignmentsSummary() : Promise.resolve([])
+    hrRead ? loadStaffSummary({ includePrivate: hrManage }) : Promise.resolve([]),
+    hrRead ? loadAssignmentsSummary({ includePrivate: hrManage }) : Promise.resolve([]),
+    buildSuccessFactorsPortal(session)
   ]);
 
   return {
     ok: true,
-    version: "BACKEND-BASE-1.0-B011.30-SUCCESSFACTORS",
+    version: "SKANDI-SUCCESSFACTORS-v12",
+    portal,
     session: safeSession(session),
     catalog,
     staff,
@@ -522,8 +728,8 @@ export async function getEmployeeWorkspaceCore({ agentId = "", agentUserUuid = "
 
   return {
     ok: true,
-    employee: safeAgent(target),
-    assignment: safeAssignment(assignment),
+    employee: self || canManageHr(session) ? safeAgent(target) : safeStaffDirectoryRecord(target),
+    assignment: self || canManageHr(session) ? safeAssignment(assignment) : null,
     permissions: {
       canManageEmployee: canManageHr(session)
     }
@@ -1114,9 +1320,11 @@ export async function updateEmployeeCore(input = {}) {
   const preferred = body.preferred_name ?? target.preferred_name;
   body.display_name = preferred || [first, last].filter(Boolean).join(" ");
   const profilePatch = hrProfilePatch(input);
-  if (Object.keys(profilePatch).length) body.payload = mergedSuccessFactorsPayload(target, profilePatch);
-  const saved = firstRow(await restRequest({ table: "agent_users", method: "PATCH", query: { id: `eq.${target.id}` }, body }));
-  const effective = saved || { ...target, ...body };
+  const effective = await patchAgentVersioned(target, (current) => ({
+    ...body,
+    display_name: (body.preferred_name !== undefined ? body.preferred_name : current.preferred_name) || [body.first_name ?? current.first_name, body.last_name ?? current.last_name].filter(Boolean).join(" "),
+    ...(Object.keys(profilePatch).length ? { payload: mergedSuccessFactorsPayload(current, profilePatch) } : {})
+  }));
 
   const linkedMemberId = text(effective.wix_member_id || effective.member_id, 120);
   let wixMemberSync = null;
@@ -1179,15 +1387,16 @@ export async function saveBadgeControlCore(input = {}) {
   const session = await requireHr({ manage: true });
   const target = await findAgent({ agentId: input.agentId, agentUserUuid: input.agentUserUuid, agentUserId: input.agentUserId, skId: input.skId });
   if (!target) throw new SkandiError("HR_EMPLOYEE_NOT_FOUND", "Employee not found.");
-  const payload = target.payload && typeof target.payload === "object" ? { ...target.payload } : {};
+  const saved = await patchAgentVersioned(target, (current) => {
+  const payload = current.payload && typeof current.payload === "object" ? { ...current.payload } : {};
   const sf = payload.successFactors && typeof payload.successFactors === "object" ? { ...payload.successFactors } : {};
   sf.badge = {
     ...(sf.badge && typeof sf.badge === "object" ? sf.badge : {}),
-    staffId: text(input.staffId || target.sk_id, 80),
+    staffId: text(input.staffId || current.sk_id, 80),
     template: text(input.template || "SKANDI_STANDARD", 80),
     status: upper(input.status || "REQUESTED", 60),
     expiryDate: text(input.expiryDate, 32) || null,
-    photoUrl: text(input.photoUrl || target.badge_photo_url, 1500) || "",
+    photoUrl: text(input.photoUrl || current.badge_photo_url, 1500) || "",
     lastPrintedAt: input.markPrinted === true ? new Date().toISOString() : text(sf.badge?.lastPrintedAt, 80) || null,
     updatedAt: new Date().toISOString(),
     updatedByAgentUserId: text(session.profile?.agentUserId || session.profile?.id, 80) || null
@@ -1195,11 +1404,12 @@ export async function saveBadgeControlCore(input = {}) {
   payload.successFactors = sf;
   const body = {
     payload,
-    badge_photo_url: text(input.photoUrl || target.badge_photo_url, 1500) || null,
+    badge_photo_url: text(input.photoUrl || current.badge_photo_url, 1500) || null,
     updated_at: new Date().toISOString()
   };
-  const saved = firstRow(await restRequest({ table: "agent_users", method: "PATCH", query: { id: `eq.${target.id}` }, body }));
-  return { ok: true, employee: safeAgent(saved || { ...target, ...body }), badge: sf.badge };
+  return body;
+  });
+  return { ok: true, employee: safeAgent(saved), badge: safeBadge(saved) };
 }
 
 async function recruitingAudit(actorId, action, entityType, entityId, details = {}) {
