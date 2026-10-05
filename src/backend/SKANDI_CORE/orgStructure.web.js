@@ -43,153 +43,153 @@ import {
   verifyRecruitingHistoryCore
 } from "backend/SKANDI_CORE/orgStructure";
 
-const MEMBER = Permissions.SiteMember;
 const input = (value) => value && typeof value === "object" ? value : {};
 
-export const getSuccessFactorsPortalBootstrap = webMethod(MEMBER, async () => {
+export const getSuccessFactorsPortalBootstrap = webMethod(Permissions.SiteMember, async () => {
   return getSuccessFactorsPortalBootstrapCore();
 });
 
-export const getSuccessFactorsDirectory = webMethod(MEMBER, async (payload) => {
+export const getSuccessFactorsDirectory = webMethod(Permissions.SiteMember, async (payload) => {
   return getSuccessFactorsDirectoryCore(input(payload));
 });
 
-export const saveSuccessFactorsSelfProfile = webMethod(MEMBER, async (payload) => {
+export const saveSuccessFactorsSelfProfile = webMethod(Permissions.SiteMember, async (payload) => {
   return saveSuccessFactorsSelfProfileCore(input(payload));
 });
 
-export const getOrgStructureBootstrap = webMethod(MEMBER, async (payload) => {
+export const getOrgStructureBootstrap = webMethod(Permissions.SiteMember, async (payload) => {
   return getOrgStructureBootstrapCore(input(payload));
 });
 
-export const getEmployeeWorkspace = webMethod(MEMBER, async (payload) => {
+export const getEmployeeWorkspace = webMethod(Permissions.SiteMember, async (payload) => {
   return getEmployeeWorkspaceCore(input(payload));
 });
 
-export const getManagerCandidates = webMethod(MEMBER, async (payload) => {
+export const getManagerCandidates = webMethod(Permissions.SiteMember, async (payload) => {
   return getManagerCandidatesCore(input(payload));
 });
 
-export const provisionStaffOrganization = webMethod(MEMBER, async (payload) => {
+export const provisionStaffOrganization = webMethod(Permissions.SiteMember, async (payload) => {
   return provisionStaffOrganizationCore(input(payload));
 });
 
-export const generateEmployeeSkId = webMethod(MEMBER, async (payload) => {
+export const generateEmployeeSkId = webMethod(Permissions.SiteMember, async (payload) => {
   return generateEmployeeSkIdCore(input(payload));
 });
 
-export const createEmployee = webMethod(MEMBER, async (payload) => {
+export const createEmployee = webMethod(Permissions.SiteMember, async (payload) => {
   return createEmployeeCore(input(payload));
 });
 
-export const updateEmployee = webMethod(MEMBER, async (payload) => {
+export const updateEmployee = webMethod(Permissions.SiteMember, async (payload) => {
   return updateEmployeeCore(input(payload));
 });
 
-export const setEmployeeActive = webMethod(MEMBER, async (payload) => {
+export const setEmployeeActive = webMethod(Permissions.SiteMember, async (payload) => {
   return setEmployeeActiveCore(input(payload));
 });
 
-export const provisionEmployeeWixMember = webMethod(MEMBER, async (payload) => {
+export const provisionEmployeeWixMember = webMethod(Permissions.SiteMember, async (payload) => {
   return provisionEmployeeWixMemberCore(input(payload));
 });
 
-export const getBadgeControl = webMethod(MEMBER, async (payload) => {
+export const getBadgeControl = webMethod(Permissions.SiteMember, async (payload) => {
   return getBadgeControlCore(input(payload));
 });
 
-export const saveBadgeControl = webMethod(MEMBER, async (payload) => {
+export const saveBadgeControl = webMethod(Permissions.SiteMember, async (payload) => {
   return saveBadgeControlCore(input(payload));
 });
 
-export const getRecruitingBootstrap = webMethod(MEMBER, async (payload) => {
+export const getRecruitingBootstrap = webMethod(Permissions.SiteMember, async (payload) => {
   return getRecruitingBootstrapCore(input(payload));
 });
 
-export const saveRecruitingCandidate = webMethod(MEMBER, async (payload) => {
+export const saveRecruitingCandidate = webMethod(Permissions.SiteMember, async (payload) => {
   return saveRecruitingCandidateCore(input(payload));
 });
 
-export const updateRecruitingCandidateStage = webMethod(MEMBER, async (payload) => {
+export const updateRecruitingCandidateStage = webMethod(Permissions.SiteMember, async (payload) => {
   return updateRecruitingCandidateStageCore(input(payload));
 });
 
-export const saveRecruitingPosition = webMethod(MEMBER, async (payload) => {
+export const saveRecruitingPosition = webMethod(Permissions.SiteMember, async (payload) => {
   return saveRecruitingPositionCore(input(payload));
 });
 
-export const publishRecruitingPosition = webMethod(MEMBER, async (payload) => {
+export const publishRecruitingPosition = webMethod(Permissions.SiteMember, async (payload) => {
   return publishRecruitingPositionCore(input(payload));
 });
 
-export const duplicateRecruitingPosition = webMethod(MEMBER, async (payload) => {
+export const duplicateRecruitingPosition = webMethod(Permissions.SiteMember, async (payload) => {
   return duplicateRecruitingPositionCore(input(payload));
 });
 
-export const saveRecruitingInterview = webMethod(MEMBER, async (payload) => {
+export const saveRecruitingInterview = webMethod(Permissions.SiteMember, async (payload) => {
   return saveRecruitingInterviewCore(input(payload));
 });
 
-export const saveRecruitingVetting = webMethod(MEMBER, async (payload) => {
+export const saveRecruitingVetting = webMethod(Permissions.SiteMember, async (payload) => {
   return saveRecruitingVettingCore(input(payload));
 });
 
-export const saveRecruitingOnboardingTask = webMethod(MEMBER, async (payload) => {
+export const saveRecruitingOnboardingTask = webMethod(Permissions.SiteMember, async (payload) => {
   return saveRecruitingOnboardingTaskCore(input(payload));
 });
 
-export const saveRecruitingTraining = webMethod(MEMBER, async (payload) => {
+export const saveRecruitingTraining = webMethod(Permissions.SiteMember, async (payload) => {
   return saveRecruitingTrainingCore(input(payload));
 });
 
-export const saveRecruitingHistory = webMethod(MEMBER, async (payload) => {
+export const saveRecruitingHistory = webMethod(Permissions.SiteMember, async (payload) => {
   return saveRecruitingHistoryCore(input(payload));
 });
 
-export const verifyRecruitingHistory = webMethod(MEMBER, async (payload) => {
+export const verifyRecruitingHistory = webMethod(Permissions.SiteMember, async (payload) => {
   return verifyRecruitingHistoryCore(input(payload));
 });
 
-export const detectRecruitingHistoryGaps = webMethod(MEMBER, async (payload) => {
+export const detectRecruitingHistoryGaps = webMethod(Permissions.SiteMember, async (payload) => {
   return detectRecruitingHistoryGapsCore(input(payload));
 });
 
-export const resolveRecruitingGap = webMethod(MEMBER, async (payload) => {
+export const resolveRecruitingGap = webMethod(Permissions.SiteMember, async (payload) => {
   return resolveRecruitingGapCore(input(payload));
 });
 
-export const requestRecruitingDocument = webMethod(MEMBER, async (payload) => {
+export const requestRecruitingDocument = webMethod(Permissions.SiteMember, async (payload) => {
   return requestRecruitingDocumentCore(input(payload));
 });
 
-export const verifyRecruitingDocument = webMethod(MEMBER, async (payload) => {
+export const verifyRecruitingDocument = webMethod(Permissions.SiteMember, async (payload) => {
   return verifyRecruitingDocumentCore(input(payload));
 });
 
-export const createRecruitingDocumentPacket = webMethod(MEMBER, async (payload) => {
+export const createRecruitingDocumentPacket = webMethod(Permissions.SiteMember, async (payload) => {
   return createRecruitingDocumentPacketCore(input(payload));
 });
 
-export const resendRecruitingDocumentPacket = webMethod(MEMBER, async (payload) => {
+export const resendRecruitingDocumentPacket = webMethod(Permissions.SiteMember, async (payload) => {
   return resendRecruitingDocumentPacketCore(input(payload));
 });
 
-export const saveRecruitingSettings = webMethod(MEMBER, async (payload) => {
+export const saveRecruitingSettings = webMethod(Permissions.SiteMember, async (payload) => {
   return saveRecruitingSettingsCore(input(payload));
 });
 
-export const testRecruitingIntegrations = webMethod(MEMBER, async (payload) => {
+export const testRecruitingIntegrations = webMethod(Permissions.SiteMember, async (payload) => {
   return testRecruitingIntegrationsCore(input(payload));
 });
 
-export const scheduleRecruitingMaintenance = webMethod(MEMBER, async (payload) => {
+export const scheduleRecruitingMaintenance = webMethod(Permissions.SiteMember, async (payload) => {
   return scheduleRecruitingMaintenanceCore(input(payload));
 });
 
-export const exportRecruitingAudit = webMethod(MEMBER, async (payload) => {
+export const exportRecruitingAudit = webMethod(Permissions.SiteMember, async (payload) => {
   return exportRecruitingAuditCore(input(payload));
 });
 
-export const saveSuccessFactorsPortalState = webMethod(MEMBER, async (payload) => {
+export const saveSuccessFactorsPortalState = webMethod(Permissions.SiteMember, async (payload) => {
   return saveSuccessFactorsPortalStateCore(input(payload));
 });
+
