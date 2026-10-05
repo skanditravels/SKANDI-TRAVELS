@@ -20,7 +20,7 @@ const HTTP_METHODS = new Set(["GET", "POST", "PATCH", "PUT", "DELETE", "HEAD"]);
 
 const REST_OBJECTS = new Set([
   // Identity / organization / HR
-  "agent_users", "staff_login_audit", "admin_audit_logs",
+  "agent_users", "staff_login_audit", "admin_audit_logs", "intranet_news",
   "org_access_roles", "org_assignment_audit", "org_bases", "org_departments",
   "org_employee_assignments", "org_job_roles", "org_permission_presets",
   "org_role_base_rules", "hr_base_jurisdictions", "hr_country_rules", "hr_role_requirements",
@@ -78,6 +78,7 @@ const REST_OBJECTS = new Set([
   // Customer / loyalty / support / booking carts
   "customer_profiles", "customer_profiles_booking_links", "club_profiles", "club_tiers", "skandi_points_ledger",
   "customer_favorites", "customer_travelers", "customer_travel_documents",
+  "customer_notifications", "customer_payment_methods", "customer_wallet_items",
   "customer_support_cases", "customer_support_messages", "alexandra_chat_sessions",
   "booking_carts", "booking_cart_items", "payment_events",
 
@@ -563,3 +564,4 @@ export async function storageUploadBase64Object({
   });
   return { ok: true, bucket: config.name, path: cleanPath, sizeBytes: bytes.length, mimeType: type, result };
 }
+
