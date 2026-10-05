@@ -44,18 +44,6 @@ function errorPayload(error) {
   return { message, code: error?.code || "TRAVEL_INFO_CONTROL_ERROR" };
 }
 
-async function bootstrap(html, requestId = "") {
-  try {
-    const result = await getTravelInfoControlBootstrap();
-    post(html, "TIC_BOOTSTRAP", result, requestId);
-    const list = await listTravelInfoRecords({ kind: result?.defaultKind || "airlines" });
-    post(html, "TIC_LIST", list, requestId);
-  } catch (error) {
-    console.error("[Travel Info Control] bootstrap failed", error);
-    post(html, "TIC_ERROR", errorPayload(error), requestId);
-  }
-}
-
 async function handle(html, message) {
   const payload = message.payload || {};
   const requestId = message.requestId || "";
