@@ -52,3 +52,4 @@ export function publicError(error, fallbackMessage = "The request could not be c
     retryable: isTransientHttpStatus(status)
   };
 }
+
