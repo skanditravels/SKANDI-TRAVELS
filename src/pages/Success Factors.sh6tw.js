@@ -1,10 +1,11 @@
 // /src/pages/Success Factors.sh6tw.js
-// B-011.30 — SuccessFactors V9 canonical single-bootstrap convergence.
+// SKANDI SuccessFactors v12 — canonical single-bootstrap and persisted dashboard actions.
 // UI source: supplied SAP/Fiori SuccessFactors V9 generation.
 // SuccessFactors owns Employee/HR, Organization, Recruiting, Performance/Learning, Badge and Access diagnostics.
 // Payroll and MyRoster/scheduling remain separate applications and are never mutated from this page.
 
 import wixLocation from "wix-location";
+import { authentication } from "wix-members-frontend";
 import { APP_ROUTES, SITE_MAP, isSafeInternalRoute } from "public/siteMap";
 import {
   createEmployee,
@@ -35,6 +36,7 @@ import {
   saveRecruitingTraining,
   saveRecruitingVetting,
   saveSuccessFactorsSelfProfile,
+  saveSuccessFactorsPortalState,
   scheduleRecruitingMaintenance,
   setEmployeeActive,
   testRecruitingIntegrations,
@@ -52,8 +54,11 @@ let portalBootstrapInFlight = null;
 let hrBootstrapInFlight = null;
 let orgBootstrapCache = null;
 let orgBootstrapInFlight = null;
+let signingOut = false;
+let portalMutationChain = Promise.resolve();
 
 function send(type, payload = {}) {
+  if (signingOut && type !== "INTRANET_SIGNED_OUT" && type !== "INTRANET_ERROR") return;
   $w(EMBED_ID).postMessage({
     source: PARENT_SOURCE,
     type,
@@ -115,37 +120,10 @@ function orgCatalogPayload(bootstrap = {}) {
 }
 
 function normalizePortalBootstrapFromHr(data = {}) {
-  const session = data?.session || {};
-  const hasHr = session?.canReadHr === true || session?.isHr === true || session?.isSystemAdmin === true || session?.canManageHr === true;
-  const hasRecruiting = session?.canReadRecruiting === true || hasHr;
-  const rawProfile = session?.profile || null;
-  const profile = rawProfile ? {
-    ...rawProfile,
-    successFactorsAccess: {
-      fullHr: hasHr,
-      workforce: hasHr,
-      employee: hasHr,
-      organization: hasHr,
-      recruiting: hasRecruiting,
-      performance: hasHr,
-      badge: session?.canManageHr === true || session?.isSystemAdmin === true,
-      access: hasHr
-    }
-  } : null;
-  return {
-    ok: data?.ok !== false,
-    version: String(data?.version || "BACKEND-BASE-1.0-B011.30-SUCCESSFACTORS"),
-    profile,
-    apps: [],
-    news: [],
-    tasks: [],
-    quickActions: [],
-    notifications: [],
-    favoriteApps: [],
-    stats: {},
-    hrAccess: { read: hasHr, manage: session?.canManageHr === true || session?.isSystemAdmin === true, recruiting: hasRecruiting },
-    compatibilityMode: true
-  };
+  if (!data.portal || data.portal.ok !== true || !data.portal.profile) {
+    throw new Error("The Success Factors page and backend must both be updated to v12.");
+  }
+  return data.portal;
 }
 
 async function ensureOrgBootstrap({ refresh = false } = {}) {
@@ -182,6 +160,7 @@ async function ensurePortalBootstrap({ refresh = false } = {}) {
 }
 
 async function sendPortalBootstrap({ refresh = false } = {}) {
+  await portalMutationChain;
   const data = await ensurePortalBootstrap({ refresh });
   send("INTRANET_BOOTSTRAP", data);
   return data;
@@ -205,6 +184,7 @@ async function sendHrBootstrap({ refreshPortal = false } = {}) {
     send("HR_SESSION", { authorized: true, canManage: data?.session?.canManageHr === true });
     send("HR_BOOTSTRAP", {
       authorized: true,
+      canManage: data?.session?.canManageHr === true,
       staff: active,
       archive,
       organization: data.assignments || [],
@@ -287,7 +267,7 @@ async function saveEmployeeFromV9(payload = {}) {
 async function handleMessage(type, payload) {
   switch (type) {
     case "SKANDI_MASTER_CONFIG_REQUEST":
-      send("SKANDI_MASTER_CONFIG", { routes: SITE_MAP, internal: APP_ROUTES, brand: { product: "SuccessFactors", version: "V9" } });
+      send("SKANDI_MASTER_CONFIG", { routes: SITE_MAP, internal: APP_ROUTES, brand: { product: "SuccessFactors", version: "v12" } });
       return;
     case "MASTER_NAVIGATION_REQUEST":
       send("SKANDI_MASTER_NAVIGATION", { routes: SITE_MAP, internal: APP_ROUTES });
@@ -315,13 +295,33 @@ async function handleMessage(type, payload) {
       return;
     }
     case "INTRANET_SIGN_OUT":
-      wixLocation.to(SITE_MAP.staffLogin || SITE_MAP.riaintra);
+      if (signingOut) return;
+      signingOut = true;
+      try {
+        // logout() may return void. Navigation happens only in onLogout below.
+        await authentication.logout();
+      } catch (error) {
+        signingOut = false;
+        throw error;
+      }
       return;
     case "INTRANET_TASK_COMPLETE":
     case "INTRANET_TASK_DISMISS":
     case "INTRANET_FAVORITES_UPDATE":
-    case "INTRANET_NOTIFICATIONS_READ":
+    case "INTRANET_NOTIFICATIONS_READ": {
+      const operation = portalMutationChain.then(async () => {
+        const result = await saveSuccessFactorsPortalState({ ...payload, action: type });
+        if (result?.ok !== true) throw new Error("The dashboard update was not confirmed.");
+        // Discard any older bootstrap result before invalidating its caches.
+        await Promise.allSettled([portalBootstrapInFlight, orgBootstrapInFlight].filter(Boolean));
+        portalBootstrapCache = null;
+        orgBootstrapCache = null;
+        send("INTRANET_BOOTSTRAP", { ...result, partial: true, action: type, requestId: payload.requestId });
+      });
+      portalMutationChain = operation.catch(() => {});
+      await operation;
       return;
+    }
 
     case "HR_READY":
       await sendHrBootstrap();
@@ -484,17 +484,27 @@ async function handleMessage(type, payload) {
 $w.onReady(function () {
   const embed = $w(EMBED_ID);
 
+  authentication.onLogout(() => {
+    signingOut = true;
+    portalBootstrapCache = null;
+    orgBootstrapCache = null;
+    const redirectPath = SITE_MAP.staffLogin || SITE_MAP.riaintra;
+    send("INTRANET_SIGNED_OUT", { redirectPath });
+    wixLocation.to(redirectPath);
+  });
+
   embed.onMessage(async (event) => {
     const message = event.data || {};
-    if (message.source && !CHILD_SOURCES.has(message.source)) return;
+    if (!CHILD_SOURCES.has(message.source)) return;
     const type = String(message.type || "");
+    if (signingOut && type !== "INTRANET_SIGN_OUT") return;
     const payload = message.payload && typeof message.payload === "object" ? message.payload : {};
     try {
       await handleMessage(type, payload);
     } catch (error) {
       const safe = cleanError(error);
       const responseType = type.startsWith("CAREERS_") ? "CAREERS_ERROR" : type.startsWith("INTRANET_") ? "INTRANET_ERROR" : "HR_ERROR";
-      send(responseType, { action: type, ...safe });
+      send(responseType, { action: type, requestId: payload.requestId, ...safe });
     }
   });
 
@@ -503,7 +513,7 @@ $w.onReady(function () {
   // explicitly and every successful HR mutation refreshes the relevant state.
 
   send("SUCCESSFACTORS_HOST_READY", {
-    version: "B-011.30-SUCCESSFACTORS-V9",
+    version: "SKANDI-SUCCESSFACTORS-v12",
     embedId: EMBED_ID,
     payrollOwner: SITE_MAP.payroll,
     rosterOwner: APP_ROUTES.myRoster
