@@ -18,6 +18,7 @@
 | Accepted child sources | `SKANDI_HR_STAFF`, `SKANDI_SUCCESSFACTORS` |
 | Dashboard actions | `INTRANET_TASK_COMPLETE`, `INTRANET_TASK_DISMISS`, `INTRANET_FAVORITES_UPDATE`, `INTRANET_NOTIFICATIONS_READ` |
 | Responses | Existing `INTRANET_BOOTSTRAP`, with additive `partial`, `action` and `requestId` for saves; existing `INTRANET_ERROR` carries correlated failures. Other existing HR and navigation contracts are retained. |
+| Latest web-method source inspection | Git `102e6077d900eb9ef7ac29b13caa8b622cbcf6bd`; published revision 1158 has an empty HR proxy. Intended repair: direct `Permissions.SiteMember` on all 37 methods; live rebuild pending. |
 | Verification | 31 controlled checks passed on 2026-10-05. Live Wix, database-write and browser verification remain required. |
 
 # LOG
@@ -25,6 +26,10 @@
 1. Inherited baseline: canonical B-011.30 HR service contracts and the user's complete B-011.32 embed. Earlier release dates are not asserted here.
 2. 2026-10-05 — v12 connection repair: canonical dashboard bootstrap, persisted actions, acknowledged/rollback-safe UI, confirmed Wix sign-out and directory-safe HR read access. Preserved the supplied CSS and existing functions/exports. Preserved prior release-01 shared transport allowlist and internal-chrome height repairs.
 3. 2026-10-05 — source and controlled integration verification: 19 backend/page/source checks plus 12 full-embed-script checks passed. Read-only schema inspection completed. No production deployment, live database writes or real-browser validation performed.
+
+4. 2026-10-05 — v12 staff-auth cache repair: inspected Git commit `8a3e5dd90d455e9ca6039e492272bf2dbf3d619e` stores the audit module in `src/backend/SKANDI_CORE/platformCache.js`, omitting `TtlCache` and preventing `staffAuth.web.js` from loading. Restore the existing cache implementation from Git blob `38e8b712cecdae09ed16e347d2a3e4f0e750d826` at commit `907c2a9e1fc17852844d7e6e0cd292997d3bcdc1`. Only this runtime file changes; the HTML and authentication contracts stay intact. Eight controlled checks pass, including reproducing the failure and loading the repaired dependency chain with Wix services stubbed. REQUIRES LIVE TEST for Wix deployment and authenticated sessions. No deployed or database changes were performed.
+
+5. 2026-10-05 — v12 Success Factors web-method repair: published revision 1158 bundles the `orgStructure.web` import as an empty module; the actual published page reproduces `getOrgStructureBootstrap is not a function` before any backend request. Current Git commit `102e6077d900eb9ef7ac29b13caa8b622cbcf6bd` already declares the 37 methods and includes the previous cache fix. Replace the local `MEMBER` permission alias with direct `Permissions.SiteMember` arguments on all 37 exports, following Wix’s documented shape and the working staff-auth facade. All existing names, core mappings, permissions and HTML are retained. Eight checks pass, including published-bundle failure reproduction and controlled delegation tests. The alias is a suspected compiler-recognition trigger; its causality and the repaired proxy require a live Wix rebuild. No deployment or database change performed.
 
 # COMPLETE HTML
 
@@ -8569,3 +8574,4 @@ This reference is documentation, not a runtime import. Install the HTML below in
 </body>
 </html>
 ```
+
