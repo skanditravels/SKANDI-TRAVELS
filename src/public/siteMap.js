@@ -50,6 +50,7 @@ export const SITE_MAP = Object.freeze({
 
 // Valid application routes that are not top-level site-map destinations.
 export const APP_ROUTES = Object.freeze({
+  country: "/destinations/country",
   bookingFlow: "/booking",
   myProfile: "/my-profile",
   myTrips: "/my-profile?tab=trips",
