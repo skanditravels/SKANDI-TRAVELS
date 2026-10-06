@@ -17,7 +17,7 @@ LAST SOURCE UPGRADE: 2026-10-06
 - WIX PAGE FILE: `/src/pages/Travel Info.m43d6.js`
 - WIX ROUTE / SLUG: `/travel-info`
 - WIX HTML ELEMENT: `#travelInfoHtml`
-- CURRENT STATUS: REVISIONS NEEDED — V12 authority upgrade prepared across Travel Info page, public-content facade/core, shared support facade, route registry and executable HTML; live Wix verification pending
+- CURRENT STATUS: REVISIONS NEEDED — V12 page-controller embed resolver repaired after Wix revision 1193 runtime failure; live Wix verification pending
 - SOURCE-OF-TRUTH STATUS: AUTHORITATIVE V12 intended Travel Info implementation
 - CANONICAL WEB FACADE: `/src/backend/SKANDI_CORE/publicContent.web.js`
 - CANONICAL CORE: `/src/backend/SKANDI_CORE/publicContent.js`
@@ -29,7 +29,7 @@ LAST SOURCE UPGRADE: 2026-10-06
 - AUTHORIZATION: public Travel Info reads are exposed through `Permissions.Anyone`; privileged database credentials remain server-side
 - MESSAGE CONTRACT: child source `SKANDI_PUBLIC_TRAVEL_INFO`; parent source `SKANDI_WIX_PARENT`; existing `TRAVEL_INFO_*` messages preserved
 - BOOTSTRAP CONTRACT: V12 child READY/parent HOST_READY handshake; page backend load is bounded; child watchdog terminates loading if the Wix bridge never reaches DATA or ERROR
-- OPEN / RUNTIME REQUIREMENT: install all V12 runtime replacements listed by the package README, synchronize the complete LIVE HTML payload from this record to `#travelInfoHtml`, then rebuild/publish Wix and verify DATA, ERROR, timeout/retry, aircraft, requirements, support and navigation flows. Do not mark LIVE until the runtime export is confirmed.
+- OPEN / RUNTIME REQUIREMENT: replace `/src/pages/Travel Info.m43d6.js` with the V12 resolver repair, rebuild/publish Wix, and verify that the canonical `#travelInfoHtml` component is resolved and the READY/HOST_READY bootstrap proceeds to DATA or ERROR. The LIVE HTML payload below is unchanged by this repair and does not require replacement.
 - LAST STATIC VERIFICATION: 2026-10-06
 
 ### CHANGE LOG
@@ -38,6 +38,7 @@ LAST SOURCE UPGRADE: 2026-10-06
 - 2026-10-06 — V12 runtime facade restoration: live Wix reported `(0,r.getPublicTravelInfoPayload) is not a function`, proving the page bundle resolved the `publicContent.web` module without the required runtime export. Current v12 source and Git `main` already define `getPublicTravelInfoPayload` against `getPublicTravelInfoPayloadCore`; therefore the canonical facade is supplied as a required runtime restoration at its existing path. No alternate facade, namespace, core, database model, HTML payload, design, or message contract was introduced. REQUIRES LIVE TEST after Wix rebuild/publish.
 - 2026-10-06 — V12 project-source convergence: project audit found the Drive/project controller and HTML_REF behind the current approved Git source while Wix still exposed a stale/missing `getPublicTravelInfoPayload` runtime binding. Convergence package now carries the bounded controller, canonical facade restoration, and complete authoritative HTML_REF with bootstrap watchdog. Source Registry/test rows remain historical/pending until live acceptance. STATICALLY VERIFIED; REQUIRES LIVE TEST.
 - 2026-10-06 — V12 authority upgrade: active Travel Info runtime identifiers, page/controller protocol version, public-content facade/core metadata, route registry metadata, and executable HTML version labels were promoted from legacy pre-V12 identifiers to V12. Existing routes, message names, element IDs, data ownership, UI behavior and permissions are preserved. STATICALLY VERIFIED; REQUIRES LIVE TEST after Wix publication.
+- 2026-10-06 — V12 Wix revision 1193 embed-resolver repair: runtime raised `TypeError: m.join is not a function` from `pages/Travel Info.m43d6.js` while executing the no-compatible-component diagnostic path. Removed the array-based embed-ID resolver/`.join()` diagnostic dependency and now resolves `#travelInfoHtml` explicitly first, followed by the two existing compatibility IDs. No route, element ID, message contract, backend call, UI, data model, or permission changed. STATICALLY VERIFIED; REQUIRES LIVE TEST.
 
 ## HOW TO USE
 ***STATUS (OWNER): "TODO", "IN PROGRESS", "NEEDS REVIEW", "REVISIONS NEEDED", "READY", "LIVE", "ARCHIVED"
@@ -50,6 +51,7 @@ STATUS (AGENT): "TODO", "IN PROGRESS", "REVISIONS NEEDED", "READY".***
 4. 10/06 Runtime error: `getPublicTravelInfoPayload` resolved undefined in Wix. Canonical `publicContent.web.js` restoration/publish required; live HTML payload unchanged / ChatGPT
 5. 10/06 V12 authority upgrade prepared: active Travel Info code and executable version metadata promoted to V12; install/publish/live acceptance required / ChatGPT
 6. 10/06 Project-source convergence package prepared: controller + facade + complete HTML_REF aligned; Wix publish/runtime verification still required / ChatGPT
+7. 10/06 Wix revision 1193: repaired Travel Info v12 embed resolver after `m.join is not a function`; LIVE HTML unchanged; publish/runtime verification required / ChatGPT
 ...
 ***END*** 
 
