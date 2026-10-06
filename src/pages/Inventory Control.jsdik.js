@@ -1,5 +1,5 @@
 // /src/pages/Inventory Control.jsdik.js
-// SKANDI Inventory Control — v12 bridge ownership repair.
+// SKANDI Inventory Control — v12 bridge and published facade repair.
 // Preferred HTML component: #inventoryControlEmbed.
 //
 // The page imports exactly one Wix web method. All action routing lives in
@@ -10,7 +10,7 @@ import { handleInventoryAction } from "backend/SKANDI_CORE/inventory.web";
 const EMBED_IDS = ["#inventoryControlEmbed"];
 const CHILD_SOURCE = "SKANDI_INVENTORY_EMBED";
 const PARENT_SOURCE = "SKANDI_INVENTORY_PARENT";
-const VERSION = "V12-INVENTORY-2026.10.05";
+const VERSION = "V12-INVENTORY-FACADE-2026.10.06";
 const BOOTSTRAP_REUSE_MS = 15000;
 
 let bootstrapPromise = null;
@@ -98,7 +98,7 @@ function requireInventoryDispatcher() {
     const error = new Error("INVENTORY_WEB_FACADE_MISMATCH");
     error.code = "INVENTORY_WEB_FACADE_MISMATCH";
     error.publicMessage =
-      "Inventory Control page and backend are on different published versions. Publish Inventory Control.jsdik.js and backend/SKANDI_CORE/inventory.web together.";
+      "The published backend/SKANDI_CORE/inventory.web module does not expose handleInventoryAction. Replace inventory.web.js and publish it together with Inventory Control.jsdik.js.";
     throw error;
   }
 
@@ -205,7 +205,7 @@ function errorPayload(error) {
     INVENTORY_ACTION_NOT_SUPPORTED:
       "Inventory Control page and backend action contract are out of sync. Publish both replacement files together.",
     INVENTORY_WEB_FACADE_MISMATCH:
-      "Inventory Control page and backend are on different published versions. Publish both replacement files together.",
+      "The published backend/SKANDI_CORE/inventory.web module does not expose handleInventoryAction. Replace inventory.web.js and publish it together with Inventory Control.jsdik.js.",
     INVENTORY_DISPATCH_RESPONSE_INVALID:
       "Inventory Control received an invalid response from its backend dispatcher.",
     INVENTORY_DISPATCH_RESPONSE_MISMATCH:
