@@ -1,9 +1,10 @@
 // /src/backend/SKANDI_CORE/homeContent.js
-// SKANDI Backend Base 1.0 — B-010 Home content core.
+// SKANDI V12 — canonical Home content and card-price orchestration.
 // Public Home content is projected from the same canonical public Inventory view used by Destination Flow.
-// No Wix page state, provider HTTP, secrets, or booking mutation belongs here.
+// Provider access reuses customerBooking; no provider HTTP, secrets or booking mutation here.
 
 import { restRequest } from "backend/SKANDI_CORE/supabaseServer";
+import { searchLiveStaysCore } from "backend/SKANDI_CORE/customerBooking";
 
 const PUBLIC_VIEW = "inventory_public_entities_v";
 const CACHE_TTL_MS = 60_000;
@@ -17,6 +18,11 @@ function clean(value, max = 5000) { return String(value ?? "").trim().slice(0, m
 function arr(value) { return Array.isArray(value) ? value : []; }
 function obj(value) { return value && typeof value === "object" && !Array.isArray(value) ? value : {}; }
 function num(value, fallback = 0) { const n = Number(value); return Number.isFinite(n) ? n : fallback; }
+function coordinate(value, min, max) {
+  if (value === null || value === undefined || clean(value) === "") return undefined;
+  const n = Number(value);
+  return Number.isFinite(n) && n >= min && n <= max ? n : undefined;
+}
 function upper(value, max = 80) { return clean(value, max).toUpperCase(); }
 function slugify(value) {
   return clean(value, 240).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
@@ -115,10 +121,14 @@ function parentOf(records, record) {
   return relationTarget(records, record, ["PARENT"], []);
 }
 
-function airportFor(records, record) {
+function airportFor(records, record, visited = new Set()) {
   if (!record) return null;
+  if (visited.has(record.id)) return null;
+  visited.add(record.id);
   if (record.entityType === "AIRPORT") return record;
   const details = obj(record.details);
+  const direct = records.find(row => row.entityType === "AIRPORT" && row.id === details.nearestAirportId);
+  if (direct) return direct;
   const iata = upper(details.searchAirportIata || details.destinationIata || details.nearestAirportIata || details.arrivalAirportIata || details.iata, 3);
   if (iata) {
     const byCode = records.find(row => row.entityType === "AIRPORT" && upper(obj(row.details).iata || row.code, 3) === iata);
@@ -127,14 +137,14 @@ function airportFor(records, record) {
   const relation = relationTarget(records, record, ["NEAREST_AIRPORT", "ARRIVAL_AIRPORT", "AIRPORT"], ["AIRPORT"]);
   if (relation) return relation;
   const parent = parentOf(records, record);
-  return parent && parent.id !== record.id ? airportFor(records, parent) : null;
+  return parent && parent.id !== record.id ? airportFor(records, parent, visited) : null;
 }
 
 function customerPath(record) {
   const details = obj(record.details);
   const commercial = obj(record.commercial);
   const explicit = clean(details.customerPath || details.customer_path || details.url || commercial.customerPath || commercial.customer_path, 1200);
-  if (explicit?.startsWith("/")) return explicit;
+  if (/^\/(?!\/)/.test(explicit) && !/[\\\u0000-\u0020]/.test(explicit)) return explicit;
   const slug = slugify(record.slug || record.name || record.code);
   if (record.entityType === "HOTEL") return `/hotel-detail?hotel=${encodeURIComponent(slug || record.id)}`;
   if (["COUNTRY", "DESTINATION", "AREA"].includes(record.entityType)) return `/destinations?${record.entityType.toLowerCase()}=${encodeURIComponent(slug)}`;
@@ -147,8 +157,8 @@ function card(records, record, language = "EN") {
   const commercial = obj(record.commercial);
   const airport = airportFor(records, record);
   const airportDetails = obj(airport?.details);
-  const latitude = num(details.latitude ?? details.lat, NaN);
-  const longitude = num(details.longitude ?? details.lng ?? details.lon, NaN);
+  const latitude = coordinate(details.latitude ?? details.lat, -90, 90);
+  const longitude = coordinate(details.longitude ?? details.lng ?? details.lon, -180, 180);
   const price = num(commercial.fromPrice ?? commercial.from_price ?? details.fromPrice ?? details.from_price, 0);
   const currency = upper(commercial.currency || details.currency, 3);
   return {
@@ -157,8 +167,8 @@ function card(records, record, language = "EN") {
     entityType: record.entityType,
     code: record.code,
     slug: record.slug || slugify(record.name),
-    name: clean(loc.pageTitle || loc.page_title || record.name, 500),
-    title: clean(loc.pageTitle || loc.page_title || record.name, 500),
+    name: record.name,
+    title: clean(loc.title || loc.pageTitle || loc.page_title || record.name, 500),
     eyebrow: clean(loc.eyebrow, 300),
     description: clean(loc.shortDescription || loc.short_description || loc.description || details.shortDescription || details.short_description, 1500),
     image: mediaUrl(record),
@@ -166,7 +176,7 @@ function card(records, record, language = "EN") {
     fromPrice: price > 0 ? price : null,
     currency: currency || "",
     badges: arr(details.tags || commercial.tags).map(value => clean(value, 80)).filter(Boolean).slice(0, 8),
-    duffelAccommodationId: clean(details.duffelAccommodationId || details.duffel_accommodation_id || commercial.duffelAccommodationId, 180),
+    duffelAccommodationId: clean(details.providerAccommodationId || details.duffelAccommodationId || details.duffel_accommodation_id || commercial.duffelAccommodationId, 180),
     priceLookup: {
       latitude: Number.isFinite(latitude) ? latitude : undefined,
       longitude: Number.isFinite(longitude) ? longitude : undefined,
@@ -205,13 +215,13 @@ async function readAirportFallback() {
         limit: 500
       }
     });
-    return arr(rows).map(row => {
+    return arr(rows).filter(row => row.active === true && row.customer_visible === true && row.status === "PUBLISHED").map(row => {
       const iata = upper(row.iata || row.code, 3);
       const title = clean(row.title || row.name || row.airport_name || row.airportName, 500);
       const city = clean(row.locationCity || row.location_city || row.city, 300);
       const country = clean(row.country || row.countryCode || row.country_code, 200);
       return {
-        id: clean(row.id || row._id || iata, 120),
+        id: clean(row.ID || row.id || row._id || iata, 120),
         type: "AIRPORT",
         iata,
         icao: upper(row.icao, 4),
@@ -224,8 +234,7 @@ async function readAirportFallback() {
       };
     }).filter(row => row.iata);
   } catch (error) {
-    console.warn("[homeContent] Airport fallback unavailable.", error?.message || error);
-    return [];
+    throw new Error("Home airport catalogue is unavailable.");
   }
 }
 
@@ -260,7 +269,7 @@ export async function getHomeContentCore(input = {}) {
   const inspiration = featured.filter(row => ["DESTINATION", "AREA", "COUNTRY", "GUIDED_TOUR", "ACTIVITY"].includes(row.entityType)).slice(0, 12).map(row => card(visible, row, language));
   return {
     source: "SUPABASE_PUBLIC_INVENTORY",
-    protocolVersion: "BACKEND-BASE-1.0-B010",
+    protocolVersion: "V12-HOME",
     airports,
     searchDestinations,
     destinations,
@@ -288,4 +297,92 @@ export async function getHomeSearchLocationsCore(input = {}) {
 
 export async function getOldStyleHomeContentCore(input = {}) {
   return getHomeContentCore(input);
+}
+
+function priceSearch(input = {}) {
+  const validDate = value => {
+    const raw = clean(value, 10);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(raw)) return "";
+    const date = new Date(raw + "T00:00:00Z");
+    return Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === raw ? raw : "";
+  };
+  const plus = (date, days) => {
+    const value = new Date(date + "T00:00:00Z");
+    value.setUTCDate(value.getUTCDate() + days);
+    return value.toISOString().slice(0, 10);
+  };
+  const today = new Date().toISOString().slice(0, 10);
+  const requestedIn = validDate(input.checkInDate || input.departureDate);
+  const checkInDate = requestedIn && requestedIn >= today ? requestedIn : plus(today, 60);
+  const requestedOut = validDate(input.checkOutDate || input.returnDate);
+  const checkOutDate = requestedOut > checkInDate ? requestedOut : plus(checkInDate, 7);
+  const bounded = (value, fallback, min, max) => Math.max(min, Math.min(max, Math.trunc(num(value, fallback))));
+  const adults = bounded(input.adults ?? 2, 2, 1, 9);
+  const children = bounded(input.children ?? 0, 0, 0, 8);
+  const infants = bounded(input.infants ?? 0, 0, 0, adults);
+  if (adults + children + infants > 9 || arr(input.childAges).length !== children || arr(input.infantAges).length !== infants) {
+    throw new Error("Invalid Home price guest counts.");
+  }
+  const childAges = [...arr(input.childAges), ...arr(input.infantAges)];
+  if (childAges.some(age => !Number.isInteger(Number(age)) || Number(age) < 0 || Number(age) > 17)) {
+    throw new Error("Invalid Home price guest ages.");
+  }
+  return { checkInDate, checkOutDate, adults, children:childAges.length, childAges:childAges.map(Number), rooms:bounded(input.rooms ?? 1, 1, 1, adults) };
+}
+function noLivePrice(card, status = "UNAVAILABLE") {
+  return { ...card, fromPrice:null, currency:"", livePriceFound:false, livePriceStatus:status };
+}
+function validStayPrice(item) {
+  const amount = Number(item?.total ?? item?.cheapestRateTotalAmount);
+  return Number.isFinite(amount) && amount > 0 && /^[A-Z]{3}$/.test(upper(item?.currency || item?.cheapestRateTotalCurrency, 3));
+}
+function nameKey(value) {
+  return clean(value, 500).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^\p{L}\p{N}]/gu, "");
+}
+
+// Resolve the record on the server; callers cannot supply a fabricated card or
+// hotel/provider mapping. This is a read-only live quote, never a booking action.
+export async function getHomeLivePricesCore(input = {}) {
+  const content = await getHomeContentCore({ language:input.language });
+  const id = clean(input.recordId, 120);
+  const card = [...content.destinations, ...content.hotels].find(row => row.id === id);
+  if (!card) throw new Error("That Home record is not available.");
+  const search = priceSearch(obj(input.priceSearch));
+  try {
+    const exactId = clean(card.duffelAccommodationId, 180);
+    const isHotel = card.entityType === "HOTEL";
+    const result = await searchLiveStaysCore({
+      ...search,
+      ...(isHotel && exactId
+        ? { accommodationId:exactId, fetchRates:true }
+        : { location:card.priceLookup, radiusKm:isHotel ? 4 : 25, fetchRates:false })
+    });
+    let candidates = arr(result?.items).filter(validStayPrice);
+    if (isHotel) {
+      candidates = candidates.filter(row => exactId
+        ? clean(row.accommodationId, 180) === exactId
+        : nameKey(row.name || row.title) === nameKey(card.name));
+    }
+    // Never compare numeric amounts in different currencies without an FX quote.
+    if (new Set(candidates.map(row => upper(row.currency || row.cheapestRateTotalCurrency, 3))).size > 1) {
+      return { card:noLivePrice(card, "CURRENCY_REVIEW") };
+    }
+    const match = candidates.sort((a,b) => Number(a.total ?? a.cheapestRateTotalAmount) - Number(b.total ?? b.cheapestRateTotalAmount))[0];
+    if (!match) return { card:noLivePrice(card, "NO_AVAILABILITY") };
+    return { card:{
+      ...card,
+      fromPrice:Number(match.total ?? match.cheapestRateTotalAmount),
+      currency:upper(match.currency || match.cheapestRateTotalCurrency, 3),
+      livePriceFound:true,
+      livePriceStatus:"AVAILABLE",
+      livePriceType:isHotel ? "DUFFEL_EXACT_HOTEL" : "DUFFEL_DESTINATION_STAY",
+      resolvedDuffelAccommodationId:clean(match.accommodationId, 180),
+      liveAccommodationName:clean(match.title || match.name, 500),
+      pricePeriod:{ checkInDate:search.checkInDate, checkOutDate:search.checkOutDate, adults:search.adults, children:search.children, rooms:search.rooms },
+      priceCheckedAt:new Date().toISOString(),
+      priceExpiresAt:match.expiresAt || null
+    }};
+  } catch (_) {
+    return { card:noLivePrice(card) };
+  }
 }
