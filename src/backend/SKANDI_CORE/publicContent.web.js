@@ -1,5 +1,7 @@
 // /src/backend/SKANDI_CORE/publicContent.web.js
-// Public frontend boundary for SKANDI public-content reads.
+// SKANDI Public Content v12 — canonical frontend-callable facade for public content and protected editorial actions.
+// Travel Info, About, Collection, baggage, passport/visa, insurance and newsroom reads remain delegated to publicContent.js.
+// This facade owns web-method permissions only; provider secrets, database ownership and business logic remain in canonical backend cores.
 
 import { Permissions, webMethod } from "@wix/web-methods";
 import {
