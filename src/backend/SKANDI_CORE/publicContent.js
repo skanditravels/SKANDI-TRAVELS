@@ -1,5 +1,5 @@
 // /src/backend/SKANDI_CORE/publicContent.js
-// SKANDI Backend Base 1.0 — B-011.3 public experience + editorial read core.
+// SKANDI Public Content v12 — canonical public-experience and editorial read core.
 //
 // One public-content authority for About, SKANDI Collection and Travel Info.
 // Reads only existing public-safe Inventory/Travel Info projections through the
@@ -11,7 +11,7 @@ import { rpcRequest, restRequest } from "backend/SKANDI_CORE/supabaseServer";
 import { requireStaffPortalSessionCore } from "backend/SKANDI_CORE/staffAuth";
 import { checkExternalTravelRequirements } from "backend/SKANDI_CORE/travelRequirements";
 
-export const PUBLIC_CONTENT_VERSION = "BACKEND-BASE-1.0-B011.3";
+export const PUBLIC_CONTENT_VERSION = "SKANDI-PUBLIC-CONTENT-V12";
 
 const READ_RPCS = new Set(["get_public_about_payload", "get_public_network_map_payload"]);
 const COLLECTION_TYPES = "in.(SKANDI_COLLECTION,SKANDI_PARTNER)";
@@ -581,7 +581,7 @@ export async function getPublicInsurancePayloadCore(input = {}) {
 
 
 // -----------------------------------------------------------------------------
-// B-011.17 Editorial / VOY + Newsroom admin core
+// SKANDI v12 Editorial / VOY + Newsroom admin core
 // Existing publicContent.js remains the single content authority. This section
 // restores the full Magazine Manager feature contract against the live
 // magazine_manager + newsroom tables without reintroducing FINAL/RIA services.
