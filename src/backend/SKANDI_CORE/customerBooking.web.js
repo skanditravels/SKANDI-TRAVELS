@@ -1,5 +1,5 @@
 // /src/backend/SKANDI_CORE/customerBooking.web.js
-// SKANDI Backend Base 1.0 — B-010 single customer booking web-method boundary.
+// SKANDI V12 — canonical customer booking web-method boundary.
 
 
 import { Permissions, webMethod } from "@wix/web-methods";
@@ -73,76 +73,72 @@ async function optionalMemberContext() {
   }
 }
 function publicMessage(error) {
-  const out = new Error(String(error?.publicMessage || error?.message || "The booking request could not be completed.").slice(0, 500));
+  const out = new Error(String(error?.publicMessage || "The booking request could not be completed.").slice(0, 500));
   out.name = "BookingError";
   out.code = /^[A-Z0-9_]{2,80}$/.test(String(error?.code || "").toUpperCase()) ? String(error.code).toUpperCase() : "BOOKING_REQUEST_FAILED";
   out.publicMessage = out.message;
   return out;
 }
-function any(handler) {
-  return webMethod(Permissions.Anyone, async (input = {}) => {
-    try { return await handler(input || {}); }
-    catch (error) { throw publicMessage(error); }
-  });
+async function publicCall(handler, input = {}) {
+  try { return await handler(input || {}); }
+  catch (error) { throw publicMessage(error); }
 }
-function member(handler) {
-  return webMethod(Permissions.SiteMember, async (input = {}) => {
-    try { return await handler(await memberContext(), input || {}); }
-    catch (error) { throw publicMessage(error); }
-  });
+async function memberCall(handler, input = {}) {
+  try { return await handler(await memberContext(), input || {}); }
+  catch (error) { throw publicMessage(error); }
 }
 
 
-export const searchLiveFlightOffers = any(input => searchLiveFlightOffersCore(input));
-export const searchUnifiedOffers = any(input => searchUnifiedOffersCore(input));
+export const searchLiveFlightOffers = webMethod(Permissions.Anyone, (input = {}) => publicCall(searchLiveFlightOffersCore, input));
+export const searchUnifiedOffers = webMethod(Permissions.Anyone, (input = {}) => publicCall(searchUnifiedOffersCore, input));
 export const createBookingCartFromOffer = webMethod(Permissions.Anyone, async (input = {}) => {
   try { return await createBookingCartFromOfferCore(await optionalMemberContext(), input || {}); }
   catch (error) { throw publicMessage(error); }
 });
-export const searchLiveStays = any(input => searchLiveStaysCore(input));
-export const fetchStayRates = any(input => fetchStayRatesCore(input));
-export const quoteStay = any(input => quoteStayCore(input));
-export const searchLiveCars = any(input => searchLiveCarsCore(input));
-export const quoteCar = any(input => quoteCarCore(input));
-export const getCarQuote = any(input => getCarQuoteCore(input));
+export const searchLiveStays = webMethod(Permissions.Anyone, (input = {}) => publicCall(searchLiveStaysCore, input));
+export const fetchStayRates = webMethod(Permissions.Anyone, (input = {}) => publicCall(fetchStayRatesCore, input));
+export const quoteStay = webMethod(Permissions.Anyone, (input = {}) => publicCall(quoteStayCore, input));
+export const searchLiveCars = webMethod(Permissions.Anyone, (input = {}) => publicCall(searchLiveCarsCore, input));
+export const quoteCar = webMethod(Permissions.Anyone, (input = {}) => publicCall(quoteCarCore, input));
+export const getCarQuote = webMethod(Permissions.Anyone, (input = {}) => publicCall(getCarQuoteCore, input));
 
 
-export const createFlightCart = member(createFlightCartCore);
-export const loadBookingCart = member(async (context, input) => {
+export const createFlightCart = webMethod(Permissions.SiteMember, (input = {}) => memberCall(createFlightCartCore, input));
+export const loadBookingCart = webMethod(Permissions.SiteMember, (input = {}) => memberCall(async (context, input) => {
   const loaded = await loadBookingCartCore(context, input, { includeTravelers: input.view === "apis" });
   return loaded.cart;
-});
-export const listCustomerBookingCarts = member(listCustomerBookingCartsCore);
-export const acceptBookingOffer = member(acceptBookingOfferCore);
-export const loadBookingExtras = member(loadBookingExtrasCore);
-export const storeBookingExtras = member(storeBookingExtrasCore);
-export const loadSignatureTransfers = member(loadSignatureTransfersCore);
-export const storeSignatureTransfer = member(storeSignatureTransferCore);
-export const saveBookingTravelers = member(saveBookingTravelersCore);
-export const loadSeatMaps = member(loadSeatMapsCore);
-export const storeSeatSelections = member(storeSeatSelectionsCore);
-export const prepareBookingPayment = member(prepareBookingPaymentCore);
-export const commitBooking = member(commitBookingCore);
-export const reconcileBooking = member(reconcileBookingCore);
-export const loadBookingConfirmation = member(loadBookingConfirmationCore);
-export const loadBookingDocuments = member(loadBookingDocumentsCore);
+}, input));
+export const listCustomerBookingCarts = webMethod(Permissions.SiteMember, (input = {}) => memberCall(listCustomerBookingCartsCore, input));
+export const acceptBookingOffer = webMethod(Permissions.SiteMember, (input = {}) => memberCall(acceptBookingOfferCore, input));
+export const loadBookingExtras = webMethod(Permissions.SiteMember, (input = {}) => memberCall(loadBookingExtrasCore, input));
+export const storeBookingExtras = webMethod(Permissions.SiteMember, (input = {}) => memberCall(storeBookingExtrasCore, input));
+export const loadSignatureTransfers = webMethod(Permissions.SiteMember, (input = {}) => memberCall(loadSignatureTransfersCore, input));
+export const storeSignatureTransfer = webMethod(Permissions.SiteMember, (input = {}) => memberCall(storeSignatureTransferCore, input));
+export const saveBookingTravelers = webMethod(Permissions.SiteMember, (input = {}) => memberCall(saveBookingTravelersCore, input));
+export const loadSeatMaps = webMethod(Permissions.SiteMember, (input = {}) => memberCall(loadSeatMapsCore, input));
+export const storeSeatSelections = webMethod(Permissions.SiteMember, (input = {}) => memberCall(storeSeatSelectionsCore, input));
+export const prepareBookingPayment = webMethod(Permissions.SiteMember, (input = {}) => memberCall(prepareBookingPaymentCore, input));
+export const commitBooking = webMethod(Permissions.SiteMember, (input = {}) => memberCall(commitBookingCore, input));
+export const reconcileBooking = webMethod(Permissions.SiteMember, (input = {}) => memberCall(reconcileBookingCore, input));
+export const loadBookingConfirmation = webMethod(Permissions.SiteMember, (input = {}) => memberCall(loadBookingConfirmationCore, input));
+export const loadBookingDocuments = webMethod(Permissions.SiteMember, (input = {}) => memberCall(loadBookingDocumentsCore, input));
 
 
-export const createHotelCart = member(createHotelCartCore);
-export const saveHotelGuests = member(saveHotelGuestsCore);
-export const prepareHotelPayment = member(prepareHotelPaymentCore);
-export const commitHotelBooking = member(commitHotelBookingCore);
+export const createHotelCart = webMethod(Permissions.SiteMember, (input = {}) => memberCall(createHotelCartCore, input));
+export const saveHotelGuests = webMethod(Permissions.SiteMember, (input = {}) => memberCall(saveHotelGuestsCore, input));
+export const prepareHotelPayment = webMethod(Permissions.SiteMember, (input = {}) => memberCall(prepareHotelPaymentCore, input));
+export const commitHotelBooking = webMethod(Permissions.SiteMember, (input = {}) => memberCall(commitHotelBookingCore, input));
 
 
-export const createCarCart = member(createCarCartCore);
-export const saveCarDriver = member(saveCarDriverCore);
-export const prepareCarCheckout = member(prepareCarCheckoutCore);
-export const commitCarBooking = member(commitCarBookingCore);
-export const createCustomerCarBooking = member(createCustomerCarBookingCore);
+export const createCarCart = webMethod(Permissions.SiteMember, (input = {}) => memberCall(createCarCartCore, input));
+export const saveCarDriver = webMethod(Permissions.SiteMember, (input = {}) => memberCall(saveCarDriverCore, input));
+export const prepareCarCheckout = webMethod(Permissions.SiteMember, (input = {}) => memberCall(prepareCarCheckoutCore, input));
+export const commitCarBooking = webMethod(Permissions.SiteMember, (input = {}) => memberCall(commitCarBookingCore, input));
+export const createCustomerCarBooking = webMethod(Permissions.SiteMember, (input = {}) => memberCall(createCustomerCarBookingCore, input));
 
 
-export const loadBookingRequirements = member(loadBookingRequirementsCore);
-export const refreshBookingRequirements = member(refreshBookingRequirementsCore);
-export const createCarComponentClientKey = member(() => createCarComponentClientKeyCore());
-export const loadCustomerCarBooking = member(loadCustomerCarBookingCore);
-export const cancelCustomerCarBooking = member(cancelCustomerCarBookingCore);
+export const loadBookingRequirements = webMethod(Permissions.SiteMember, (input = {}) => memberCall(loadBookingRequirementsCore, input));
+export const refreshBookingRequirements = webMethod(Permissions.SiteMember, (input = {}) => memberCall(refreshBookingRequirementsCore, input));
+export const createCarComponentClientKey = webMethod(Permissions.SiteMember, (input = {}) => memberCall(() => createCarComponentClientKeyCore(), input));
+export const loadCustomerCarBooking = webMethod(Permissions.SiteMember, (input = {}) => memberCall(loadCustomerCarBookingCore, input));
+export const cancelCustomerCarBooking = webMethod(Permissions.SiteMember, (input = {}) => memberCall(cancelCustomerCarBookingCore, input));
