@@ -1,6 +1,6 @@
 // /src/backend/SKANDI_CORE/inventory.js
 // SKANDI Inventory Control — canonical business logic.
-// B-011.35 bootstrap delivery recovery; preserves B-011.33/34 schema and staff-session fixes.
+// v12 Inventory repair; preserves B-011.35 dispatch, schema and staff-session contracts.
 // Preserves the complete Inventory/provider surface while using the proven R-003.9.2 staff-session contract.
 // No webMethod wrappers, no routes, no UI code.
 
@@ -24,7 +24,7 @@ import {
   deleteDuffelNegotiatedRateCore
 } from "backend/SKANDI_CORE/travelReference";
 
-export const INVENTORY_CORE_VERSION = "B-011.35";
+export const INVENTORY_CORE_VERSION = "V12-INVENTORY-2026.10.05";
 
 const MASTER_TYPES = new Set([
   "COUNTRY","DESTINATION","AREA","SUPPLIER","HOTEL","GUIDED_TOUR","ACTIVITY",
@@ -1620,6 +1620,8 @@ export async function saveDatedInventoryCore(input={}){
   const over=numberOrZero(r.overbookingLimit??r.overbooking_limit,{integer:true,min:0});
   const available=Math.max(cap+over-held-sold,0);
   let status=upper(r.status||"OPEN",40);
+  // These statuses are derived from the current controls, not sticky overrides.
+  if(["BLACKOUT","STOP_SALE","SOLD_OUT"].includes(status))status="OPEN";
   if(bool(r.blackout,false))status="BLACKOUT";
   else if(bool(r.stopSale??r.stop_sale,false))status="STOP_SALE";
   else if(available===0&&cap>0)status="SOLD_OUT";
@@ -1780,7 +1782,7 @@ function aircraftChildBody(kind,item={}){
     aircraft_id:item.aircraft_id??item.aircraftId,cabin_id:item.cabin_id??item.cabinId,
     view_id:item.view_id??item.viewId,scene_id:item.scene_id??item.sceneId,
     cabin_code:upper(item.cabin_code??item.cabinCode,80),cabin_name:clean(item.cabin_name??item.cabinName,240),
-    rank:nullableNumber(item.rank,{integer:true,min:0}),seat_count:nullableNumber(item.seat_count??item.seatCount,{integer:true,min:0}),
+    rank:nullableNumber(item.rank,{integer:true,min:0})??100,seat_count:nullableNumber(item.seat_count??item.seatCount,{integer:true,min:0}),
     summary:clean(item.summary,6000)||null,description:clean(item.description,12000)||null,
     meal_title:clean(item.meal_title??item.mealTitle,300)||null,meal_description:clean(item.meal_description??item.mealDescription,8000)||null,
     amenities:item.amenities!==undefined?item.amenities:[],display_settings:object(item.display_settings??item.displaySettings),
