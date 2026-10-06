@@ -1,6 +1,6 @@
 // /src/pages/ALTEA Launchpad.ajs4y.js
-// V12 — correlated Launchpad bridge; staffAuth owns identity and app access.
-// Component ID is taken from the published ajs4y controller; preserve its spelling.
+// V12.1 — discover the existing HTML component by its Launchpad handshake.
+// staffAuth still owns identity and app access; no element rename is required.
 
 import wixLocationFrontend from "wix-location-frontend";
 import { SITE_MAP, isSafeInternalRoute } from "public/siteMap";
@@ -9,8 +9,9 @@ import {
   getAlteaLaunchpadApps
 } from "backend/SKANDI_CORE/staffAuth.web";
 
-const VERSION = "V12-ALTEA-LAUNCHPAD-2026.10.06";
-const EMBED_IDS = ["#alteaDasboardEmbed"];
+const VERSION = "V12.1-ALTEA-LAUNCHPAD-2026.10.06";
+const DISCOVERY_INTERVAL_MS = 500;
+const DISCOVERY_ATTEMPTS = 40;
 const CHILD_SOURCE = "SKANDI_ALTEA_LAUNCHPAD";
 const PARENT_SOURCE = "SKANDI_WIX_PARENT";
 const SERVICE_TIMEOUT_MS = 20000;
@@ -19,6 +20,9 @@ const REQUEST_TYPES = new Set([
 ]);
 
 let html = null;
+const boundEmbeds = new Set();
+let discoveryTimer = null;
+let discoveryAttempts = 0;
 let bootstrapPromise = null;
 let bootstrapGeneration = 0;
 let activeBootstrapId = "";
@@ -28,21 +32,23 @@ let navigatingRequestId = "";
 let completedNavigationId = "";
 
 $w.onReady(() => {
-  html = resolveHtmlEmbed();
-  if (!html) {
-    console.error("[ALTEA Launchpad] No supported HTML embed was found.");
-    return;
-  }
-  html.onMessage(handleEmbedMessage);
-  // HTML repeats its read-only READY request until a correlated response arrives.
-  postToEmbed("ALTEA_LAUNCHPAD_HOST_READY", { version: VERSION, embedId: html.id || "" });
+  discoverHtmlEmbeds();
 });
 
-async function handleEmbedMessage(event) {
+async function handleEmbedMessage(event, embed) {
   const msg = parseMessage(event?.data);
   if (!msg || msg.source !== CHILD_SOURCE || !REQUEST_TYPES.has(msg.type)) return;
   const requestId = cleanText(msg.requestId, 120);
   if (!requestId) return;
+  if (html && html !== embed) return;
+  if (!html) {
+    // An unrelated header/footer or a NAVIGATE message cannot select the bridge.
+    if (msg.type === "ALTEA_LAUNCHPAD_NAVIGATE") return;
+    html = embed;
+    clearTimeout(discoveryTimer);
+    discoveryTimer = null;
+    console.info("[ALTEA Launchpad] Bridge attached to #" + cleanText(embed.id, 120) + ".");
+  }
 
   try {
     if (msg.type === "ALTEA_LAUNCHPAD_NAVIGATE") {
@@ -200,14 +206,60 @@ function withTimeout(promise, milliseconds) {
   return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
 }
 
-function resolveHtmlEmbed() {
-  for (const id of EMBED_IDS) {
-    try {
-      const candidate = $w(id);
-      if (candidate && typeof candidate.onMessage === "function" && typeof candidate.postMessage === "function") return candidate;
-    } catch (_) {}
+function allHtmlComponents() {
+  // Same supported type selector used by this project's masterPage bridge.
+  try {
+    const result = $w("HtmlComponent");
+    if (!result) return [];
+    if (Array.isArray(result)) return result.filter(isHtmlEmbed);
+    if (typeof result[Symbol.iterator] === "function" || typeof result.length === "number") {
+      return Array.from(result).filter(isHtmlEmbed);
+    }
+    return isHtmlEmbed(result) ? [result] : [];
+  } catch (_) {
+    return [];
   }
-  return null;
+}
+
+function isHtmlEmbed(element) {
+  return Boolean(element && typeof element.onMessage === "function" && typeof element.postMessage === "function");
+}
+
+function discoverHtmlEmbeds() {
+  discoveryTimer = null;
+  if (html) return;
+  discoveryAttempts++;
+  for (const candidate of allHtmlComponents()) {
+    const key = cleanText(candidate.id, 120) || candidate;
+    if (boundEmbeds.has(key)) continue;
+    try {
+      candidate.onMessage(event => handleEmbedMessage(event, candidate));
+    } catch (_) {
+      continue;
+    }
+    boundEmbeds.add(key);
+    try {
+      // Only a non-sensitive readiness notice is sent during discovery.
+      // Apps/profile/errors are sent exclusively to the responding Launchpad.
+      candidate.postMessage({
+        source: PARENT_SOURCE,
+        type: "ALTEA_LAUNCHPAD_HOST_READY",
+        payload: { version: VERSION, embedId: cleanText(candidate.id, 120) },
+        requestId: "",
+        timestamp: new Date().toISOString()
+      });
+    } catch (_) {
+      // The HTML's existing READY retry can still reach the registered handler.
+    }
+    if (html) return;
+  }
+  if (discoveryAttempts < DISCOVERY_ATTEMPTS) {
+    discoveryTimer = setTimeout(discoverHtmlEmbeds, DISCOVERY_INTERVAL_MS);
+  } else {
+    console.error(boundEmbeds.size
+      ? "[ALTEA Launchpad] HTML components were found, but none sent the Launchpad READY/REFRESH handshake. Check that the V12 Launchpad HTML is in a published HTML component."
+      : "[ALTEA Launchpad] No HTML component could be bound. Check that the page contains a published HTML component with the V12 Launchpad HTML.");
+  }
 }
 
 function postToEmbed(type, payload = {}, requestId = "") {
