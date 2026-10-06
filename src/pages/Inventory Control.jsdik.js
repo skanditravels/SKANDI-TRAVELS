@@ -1,5 +1,5 @@
 // /src/pages/Inventory Control.jsdik.js
-// SKANDI Inventory Control — B-011-Repair bootstrap and refresh delivery recovery.
+// SKANDI Inventory Control — v12 bridge ownership repair.
 // Preferred HTML component: #inventoryControlEmbed.
 //
 // The page imports exactly one Wix web method. All action routing lives in
@@ -10,7 +10,7 @@ import { handleInventoryAction } from "backend/SKANDI_CORE/inventory.web";
 const EMBED_IDS = ["#inventoryControlEmbed"];
 const CHILD_SOURCE = "SKANDI_INVENTORY_EMBED";
 const PARENT_SOURCE = "SKANDI_INVENTORY_PARENT";
-const VERSION = "B-011-RepairH";
+const VERSION = "V12-INVENTORY-2026.10.05";
 const BOOTSTRAP_REUSE_MS = 15000;
 
 let bootstrapPromise = null;
@@ -98,7 +98,7 @@ function requireInventoryDispatcher() {
     const error = new Error("INVENTORY_WEB_FACADE_MISMATCH");
     error.code = "INVENTORY_WEB_FACADE_MISMATCH";
     error.publicMessage =
-      "Inventory Control page and backend are on different published versions. Publish Inventory Controldik and backend/SKANDI_CORE/inventory.web together.";
+      "Inventory Control page and backend are on different published versions. Publish Inventory Control.jsdik.js and backend/SKANDI_CORE/inventory.web together.";
     throw error;
   }
 
@@ -241,6 +241,9 @@ $w.onReady(() => {
   embed.onMessage(async event => {
     const message = parse(event?.data);
     if (!message || message.source !== CHILD_SOURCE) return;
+    // masterPage owns SKANDI_MASTER_CONFIG_REQUEST and other global messages.
+    // Both listeners receive this embed's messages; only route Inventory here.
+    if (!String(message.type || "").startsWith("INVENTORY_")) return;
 
     const payload = object(message.payload);
     const requestId = String(message.requestId || "");
