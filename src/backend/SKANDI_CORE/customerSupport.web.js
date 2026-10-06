@@ -1,5 +1,7 @@
 // /src/backend/SKANDI_CORE/customerSupport.web.js
-// R-007.3 canonical frontend-callable Customer Support + HelpDesk facade.
+// SKANDI Customer Support v12 — canonical frontend-callable Customer Support, Alexandra and HelpDesk facade.
+// Public Travel Info support requests use createPublicSupportCase through this shared boundary.
+// Business rules, persistence and realtime-provider ownership remain in the canonical customer support core.
 
 
 import { webMethod, Permissions } from "@wix/web-methods";
