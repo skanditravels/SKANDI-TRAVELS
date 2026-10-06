@@ -1,6 +1,6 @@
 // /src/backend/SKANDI_CORE/inventory.web.js
 // SKANDI Inventory Control — canonical single-dispatch Wix web-method facade.
-// B-011.35 — Inventory runtime convergence. handleInventoryAction is the canonical single dispatcher.
+// v12 facade repair. handleInventoryAction remains the canonical single dispatcher.
 //
 // This file owns ONLY the frontend-callable action contract.
 // Inventory, Asset Library, Supabase and Duffel business logic remain in SKANDI_CORE cores.
@@ -47,8 +47,7 @@ import {
   archiveAssetCore
 } from "backend/SKANDI_CORE/assets";
 
-const MEMBER = Permissions.SiteMember;
-const VERSION = "B-011.35-INVENTORY-SINGLE-DISPATCH";
+const VERSION = "V12-INVENTORY-FACADE-2026.10.06";
 
 const object = value =>
   value && typeof value === "object" && !Array.isArray(value) ? value : {};
@@ -190,4 +189,9 @@ async function dispatch(input = {}) {
   }
 }
 
-export const handleInventoryAction = webMethod(MEMBER, dispatch);
+// Keep the permission and callback explicit at the exported web-method boundary.
+// Business logic and action routing remain in dispatch and the canonical cores.
+export const handleInventoryAction = webMethod(
+  Permissions.SiteMember,
+  async (input = {}) => dispatch(input)
+);
