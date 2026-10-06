@@ -37,38 +37,150 @@ import {
 } from "backend/SKANDI_CORE/publicContent";
 
 const normalizeInput = input => input && typeof input === "object" ? input : {};
-const anyone = handler => webMethod(Permissions.Anyone, input => handler(normalizeInput(input)));
-const member = handler => webMethod(Permissions.SiteMember, input => handler(normalizeInput(input)));
 
-export const getPublicAboutPayload = anyone(getPublicAboutPayloadCore);
-export const getPublicSkandiCollection = anyone(getPublicSkandiCollectionCore);
-export const getPublicTravelInfoPayload = anyone(getPublicTravelInfoPayloadCore);
-export const getPublicTravelInfoAircraft = anyone(getPublicTravelInfoAircraftCore);
-export const getPublicBaggagePayload = anyone(getPublicBaggagePayloadCore);
-export const getPublicPassportVisaPayload = anyone(getPublicPassportVisaPayloadCore);
-export const searchPublicTravelRequirements = anyone(searchPublicTravelRequirementsCore);
-export const getPublicInsurancePayload = anyone(getPublicInsurancePayloadCore);
-export const getPublicNewsroomData = anyone(getPublicNewsroomDataCore);
+// Public V12 web methods are declared directly so Wix generates stable frontend proxies.
+export const getPublicAboutPayload = webMethod(
+  Permissions.Anyone,
+  input => getPublicAboutPayloadCore(normalizeInput(input))
+);
 
+export const getPublicSkandiCollection = webMethod(
+  Permissions.Anyone,
+  input => getPublicSkandiCollectionCore(normalizeInput(input))
+);
+
+export const getPublicTravelInfoPayload = webMethod(
+  Permissions.Anyone,
+  input => getPublicTravelInfoPayloadCore(normalizeInput(input))
+);
+
+export const getPublicTravelInfoAircraft = webMethod(
+  Permissions.Anyone,
+  input => getPublicTravelInfoAircraftCore(normalizeInput(input))
+);
+
+export const getPublicBaggagePayload = webMethod(
+  Permissions.Anyone,
+  input => getPublicBaggagePayloadCore(normalizeInput(input))
+);
+
+export const getPublicPassportVisaPayload = webMethod(
+  Permissions.Anyone,
+  input => getPublicPassportVisaPayloadCore(normalizeInput(input))
+);
+
+export const searchPublicTravelRequirements = webMethod(
+  Permissions.Anyone,
+  input => searchPublicTravelRequirementsCore(normalizeInput(input))
+);
+
+export const getPublicInsurancePayload = webMethod(
+  Permissions.Anyone,
+  input => getPublicInsurancePayloadCore(normalizeInput(input))
+);
+
+export const getPublicNewsroomData = webMethod(
+  Permissions.Anyone,
+  input => getPublicNewsroomDataCore(normalizeInput(input))
+);
 
 // Magazine Manager / Media Control protected editorial surface.
-export const getVoyAdminBootstrap = member(getVoyAdminBootstrapCore);
-export const saveVoyIssue = member(saveVoyIssueCore);
-export const saveVoyIssuePackage = member(saveVoyIssuePackageCore);
-export const saveVoyPage = member(saveVoyPageCore);
-export const saveVoyPages = member(saveVoyPagesCore);
-export const reorderVoyPages = member(reorderVoyPagesCore);
-export const deleteVoyPage = member(deleteVoyPageCore);
-export const deleteVoyIssue = member(deleteVoyIssueCore);
-export const publishVoyIssue = member(publishVoyIssueCore);
-export const archiveVoyIssue = member(archiveVoyIssueCore);
-export const saveVoyEntity = member(saveVoyEntityCore);
-export const deleteVoyEntity = member(deleteVoyEntityCore);
-export const listNewsroomAdminData = member(listNewsroomAdminDataCore);
-export const getNewsroomAdminBootstrap = member(getNewsroomAdminBootstrapCore);
-export const saveNewsroomCategory = member(saveNewsroomCategoryCore);
-export const saveNewsroomPost = member(saveNewsroomPostCore);
-export const publishNewsroomPost = member(publishNewsroomPostCore);
-export const archiveNewsroomPost = member(archiveNewsroomPostCore);
-export const saveNewsroomMediaAsset = member(saveNewsroomMediaAssetCore);
-export const saveNewsroomPressContact = member(saveNewsroomPressContactCore);
+export const getVoyAdminBootstrap = webMethod(
+  Permissions.SiteMember,
+  input => getVoyAdminBootstrapCore(normalizeInput(input))
+);
+
+export const saveVoyIssue = webMethod(
+  Permissions.SiteMember,
+  input => saveVoyIssueCore(normalizeInput(input))
+);
+
+export const saveVoyIssuePackage = webMethod(
+  Permissions.SiteMember,
+  input => saveVoyIssuePackageCore(normalizeInput(input))
+);
+
+export const saveVoyPage = webMethod(
+  Permissions.SiteMember,
+  input => saveVoyPageCore(normalizeInput(input))
+);
+
+export const saveVoyPages = webMethod(
+  Permissions.SiteMember,
+  input => saveVoyPagesCore(normalizeInput(input))
+);
+
+export const reorderVoyPages = webMethod(
+  Permissions.SiteMember,
+  input => reorderVoyPagesCore(normalizeInput(input))
+);
+
+export const deleteVoyPage = webMethod(
+  Permissions.SiteMember,
+  input => deleteVoyPageCore(normalizeInput(input))
+);
+
+export const deleteVoyIssue = webMethod(
+  Permissions.SiteMember,
+  input => deleteVoyIssueCore(normalizeInput(input))
+);
+
+export const publishVoyIssue = webMethod(
+  Permissions.SiteMember,
+  input => publishVoyIssueCore(normalizeInput(input))
+);
+
+export const archiveVoyIssue = webMethod(
+  Permissions.SiteMember,
+  input => archiveVoyIssueCore(normalizeInput(input))
+);
+
+export const saveVoyEntity = webMethod(
+  Permissions.SiteMember,
+  input => saveVoyEntityCore(normalizeInput(input))
+);
+
+export const deleteVoyEntity = webMethod(
+  Permissions.SiteMember,
+  input => deleteVoyEntityCore(normalizeInput(input))
+);
+
+export const listNewsroomAdminData = webMethod(
+  Permissions.SiteMember,
+  input => listNewsroomAdminDataCore(normalizeInput(input))
+);
+
+export const getNewsroomAdminBootstrap = webMethod(
+  Permissions.SiteMember,
+  input => getNewsroomAdminBootstrapCore(normalizeInput(input))
+);
+
+export const saveNewsroomCategory = webMethod(
+  Permissions.SiteMember,
+  input => saveNewsroomCategoryCore(normalizeInput(input))
+);
+
+export const saveNewsroomPost = webMethod(
+  Permissions.SiteMember,
+  input => saveNewsroomPostCore(normalizeInput(input))
+);
+
+export const publishNewsroomPost = webMethod(
+  Permissions.SiteMember,
+  input => publishNewsroomPostCore(normalizeInput(input))
+);
+
+export const archiveNewsroomPost = webMethod(
+  Permissions.SiteMember,
+  input => archiveNewsroomPostCore(normalizeInput(input))
+);
+
+export const saveNewsroomMediaAsset = webMethod(
+  Permissions.SiteMember,
+  input => saveNewsroomMediaAssetCore(normalizeInput(input))
+);
+
+export const saveNewsroomPressContact = webMethod(
+  Permissions.SiteMember,
+  input => saveNewsroomPressContactCore(normalizeInput(input))
+);
