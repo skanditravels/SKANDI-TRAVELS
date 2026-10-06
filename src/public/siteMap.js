@@ -34,7 +34,7 @@ export const SITE_MAP = Object.freeze({
   successFactors: "/riaintra/success-factors",
   alteaLaunchpad: "/riaintra/success-factors/altea",
   alteaReservations: "/riaintra/success-factors/altea/reservations",
-  opsControl: "/riaintra/success-factors/altea/occ",
+  opsControl: "/riaintra/success-factors/altea/ops",
   inventoryControl: "/riaintra/success-factors/altea/inventory-control",
   uniformCenter: "/riaintra/success-factors/uniform",
   uniformControl: "/riaintra/success-factors/uniform/admin-control",
@@ -165,4 +165,3 @@ export function isSafeInternalRoute(value) {
     return decoded.startsWith("/") && !decoded.startsWith("//") && !invalid(decoded);
   } catch (_) { return false; }
 }
-
