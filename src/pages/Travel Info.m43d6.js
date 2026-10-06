@@ -16,7 +16,9 @@ const SOURCE = "SKANDI_PUBLIC_TRAVEL_INFO";
 const PARENT = "SKANDI_WIX_PARENT";
 const VERSION = "BACKEND-BASE-1.0-B011.2";
 const EMBED_IDS = ["#travelInfoHtml", "#travelInfoEmbed", "#html1"];
+const BOOTSTRAP_TIMEOUT_MS = 15000;
 let loadPromise = null;
+let loadGeneration = 0;
 
 const clean = (value, max = 4000) => String(value ?? "").trim().slice(0, max);
 
@@ -46,22 +48,43 @@ function postError(html, error) {
   post(html, "TRAVEL_INFO_ERROR", { message: clean(error?.publicMessage || error?.message || "Travel information is temporarily unavailable.", 500) });
 }
 
+function withTimeout(promise, timeoutMs, message) {
+  let timer;
+  const timeout = new Promise((_, reject) => {
+    timer = setTimeout(() => {
+      const error = new Error(message);
+      error.code = "TRAVEL_INFO_BOOTSTRAP_TIMEOUT";
+      error.publicMessage = message;
+      reject(error);
+    }, timeoutMs);
+  });
+  return Promise.race([Promise.resolve(promise), timeout]).finally(() => clearTimeout(timer));
+}
+
 async function loadData(html, force = false, settings = {}) {
   if (loadPromise && !force) return loadPromise;
-  loadPromise = (async () => {
+  const generation = ++loadGeneration;
+  let currentLoad;
+  currentLoad = (async () => {
     try {
       post(html, "TRAVEL_INFO_PROGRESS", { message: "Loading SKANDI Travel Info…" });
-      const payload = await getPublicTravelInfoPayload({ language: settings.language || "EN" });
+      const payload = await withTimeout(
+        getPublicTravelInfoPayload({ language: settings.language || "EN" }),
+        BOOTSTRAP_TIMEOUT_MS,
+        "Travel information is taking longer than expected. Please try again."
+      );
+      if (generation !== loadGeneration) return null;
       post(html, "TRAVEL_INFO_DATA", payload || {});
       return payload;
     } catch (error) {
-      postError(html, error);
+      if (generation === loadGeneration) postError(html, error);
       return null;
     } finally {
-      loadPromise = null;
+      if (loadPromise === currentLoad) loadPromise = null;
     }
   })();
-  return loadPromise;
+  loadPromise = currentLoad;
+  return currentLoad;
 }
 
 async function createSupport(html, payload = {}) {
