@@ -17,7 +17,7 @@ LAST SOURCE UPGRADE: 2026-10-06
 - WIX PAGE FILE: `/src/pages/Travel Info.m43d6.js`
 - WIX ROUTE / SLUG: `/travel-info`
 - WIX HTML ELEMENT: `#travelInfoHtml`
-- CURRENT STATUS: REVISIONS NEEDED — V12 live HTML replacement and direct top-level web-method facade repair prepared; live Wix acceptance pending
+- CURRENT STATUS: REVISIONS NEEDED — V12 structured-content, airline-tab and detail-navigation refinement prepared; live Wix acceptance pending
 - SOURCE-OF-TRUTH STATUS: AUTHORITATIVE V12 intended Travel Info implementation
 - CANONICAL WEB FACADE: `/src/backend/SKANDI_CORE/publicContent.web.js`
 - CANONICAL CORE: `/src/backend/SKANDI_CORE/publicContent.js`
@@ -30,7 +30,7 @@ LAST SOURCE UPGRADE: 2026-10-06
 - MESSAGE CONTRACT: child source `SKANDI_PUBLIC_TRAVEL_INFO`; parent source `SKANDI_WIX_PARENT`; existing `TRAVEL_INFO_*` messages preserved
 - BOOTSTRAP CONTRACT: V12 child READY/parent HOST_READY handshake; page backend load is bounded; child watchdog terminates loading if the Wix bridge never reaches DATA or ERROR
 - V12 WEB-METHOD CONTRACT: frontend-callable exports in `publicContent.web.js` are declared directly as top-level `webMethod(...)` exports so Wix can generate the callable frontend proxies without helper indirection
-- OPEN / RUNTIME REQUIREMENT: replace the live `#travelInfoHtml` payload with the V12 HTML below, replace `/src/backend/SKANDI_CORE/publicContent.web.js`, rebuild/publish Wix, then verify `getPublicTravelInfoPayload`, aircraft and travel-requirements calls from `/travel-info`
+- OPEN / RUNTIME REQUIREMENT: replace only the live `#travelInfoHtml` payload with the V12 HTML below and publish Wix. The canonical backend already reads `travel_info_airlines`, `travel_info_airports`, `travel_info_aircraft` and the related `travel_info_aircraft_*` tables; no database-table rename or backend replacement is required for this refinement.
 - LAST STATIC VERIFICATION: 2026-10-06
 
 ### CHANGE LOG
@@ -41,6 +41,7 @@ LAST SOURCE UPGRADE: 2026-10-06
 - 2026-10-06 — V12 authority upgrade: active Travel Info runtime identifiers, page/controller protocol version, public-content facade/core metadata, route registry metadata, and executable HTML version labels were promoted from legacy pre-V12 identifiers to V12. Existing routes, message names, element IDs, data ownership, UI behavior and permissions were preserved. STATICALLY VERIFIED; REQUIRES LIVE TEST after Wix publication.
 - 2026-10-06 — V12 Wix revision 1193 embed-resolver repair: runtime raised `TypeError: m.join is not a function` from `pages/Travel Info.m43d6.js` while executing the no-compatible-component diagnostic path. Removed the array-based embed-ID resolver/`.join()` diagnostic dependency and now resolves `#travelInfoHtml` explicitly first, followed by the two existing compatibility IDs. STATICALLY VERIFIED; REQUIRES LIVE TEST.
 - 2026-10-06 — V12 live-HTML and facade export repair: the live HTML supplied from Wix still contained active `BACKEND-BASE-1.0-B011.2`, `B-011.21` and `B-011.22` identifiers and lacked the approved V12 bootstrap watchdog. The live payload below is promoted to V12 and includes the watchdog. The repeated Wix runtime error `(0,r.getPublicTravelInfoPayload) is not a function` persisted while source already contained the named export; `publicContent.web.js` therefore now declares its frontend-callable methods directly with top-level `webMethod(...)` exports, matching the current V12 web-module pattern and Wix documented form. No alternate facade, namespace, core, data model, route, element ID, message contract or permission boundary was introduced. STATICALLY VERIFIED; REQUIRES LIVE TEST.
+- 2026-10-06 — V12 Travel Info detail refinement after live acceptance: structured JSON/JSON-string values are now recursively normalized and rendered as readable cards/lists instead of raw JSON in airline Boarding and airport Terminals/Transport (and other structured detail fields); airline information is grouped into accessible tabs (Overview, Airport & boarding, Baggage, On board, Aircraft, Assistance) so only the selected topic group is visible; aircraft data is lazy-loaded when the Aircraft tab opens; Back to Travel Info now performs deterministic state cleanup and scroll restoration without depending on a view-transition callback. Backend verification confirmed Travel Info already reads the canonical `travel_info_airlines`, `travel_info_airports`, `travel_info_aircraft` and related `travel_info_aircraft_*` tables, so no backend query change was required. STATICALLY VERIFIED; REQUIRES LIVE TEST.
 
 ## HOW TO USE
 ***STATUS (OWNER): "TODO", "IN PROGRESS", "NEEDS REVIEW", "REVISIONS NEEDED", "READY", "LIVE", "ARCHIVED"
@@ -55,6 +56,7 @@ STATUS (AGENT): "TODO", "IN PROGRESS", "REVISIONS NEEDED", "READY".***
 6. 10/06 Project-source convergence package prepared: controller + facade + complete HTML_REF aligned; Wix runtime verification still required / ChatGPT
 7. 10/06 Wix revision 1193: repaired Travel Info v12 embed resolver after `m.join is not a function` / ChatGPT
 8. 10/06 Live HTML found stale pre-V12 and facade still resolved undefined in Wix; V12 HTML replacement + direct top-level webMethod facade repair prepared / ChatGPT
+9. 10/06 Live Travel Info accepted; refined structured field rendering, airline topic tabs, lazy aircraft loading, and deterministic Back to Travel Info behavior. Canonical `travel_info_*` database tables already confirmed / ChatGPT
 ...
 ***END***
 
@@ -376,6 +378,24 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .ti-story-eyebrow{font-size:9px;color:var(--ti-blue-soft);font-weight:800;letter-spacing:.14em;text-transform:uppercase;margin-bottom:9px}
 .ti-story-section h2{margin:0 0 14px;color:var(--ti-navy);font-size:clamp(25px,3vw,38px);font-weight:600;letter-spacing:-.05em;line-height:1.03}
 .ti-story-section p,.ti-rich-text{margin:0;color:var(--ti-body);font-size:12px;line-height:1.78;white-space:pre-line}
+
+.ti-section-nav[data-mode="airline-tabs"]{gap:8px;padding:11px 0}
+.ti-section-nav[data-mode="airline-tabs"] .ti-section-link{font-size:9.5px;padding:11px 14px;border:1px solid transparent;background:rgba(255,255,255,.55)}
+.ti-section-nav[data-mode="airline-tabs"] .ti-section-link:hover{border-color:rgba(95,199,207,.34)}
+.ti-section-nav[data-mode="airline-tabs"] .ti-section-link[aria-selected="true"]{background:var(--ti-navy);border-color:var(--ti-navy);color:#fff;box-shadow:0 8px 20px rgba(2,46,100,.14)}
+.ti-tab-panel[hidden]{display:none!important}
+.ti-tab-panel{display:grid;gap:16px;min-width:0}
+.ti-structured-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-top:4px}
+.ti-structured-list{display:grid;gap:8px;margin:0;padding:0;list-style:none}
+.ti-structured-list li{position:relative;padding:10px 12px 10px 28px;border:1px solid var(--ti-line-soft);border-radius:14px;background:rgba(255,255,255,.68);color:var(--story-muted,var(--ti-body));font-size:11px;line-height:1.62}
+.ti-structured-list li:before{content:"";position:absolute;left:12px;top:16px;width:6px;height:6px;border-radius:50%;background:var(--ti-aqua)}
+.ti-structured-item{border:1px solid rgba(2,46,100,.08);border-radius:16px;background:rgba(255,255,255,.72);padding:15px;min-width:0}
+.ti-structured-item h3{margin:0 0 7px;color:var(--story-title,var(--ti-navy));font-size:12px;line-height:1.35;letter-spacing:-.015em}
+.ti-structured-item p{margin:0!important;color:var(--story-muted,var(--ti-body))!important;font-size:10.5px!important;line-height:1.65!important;white-space:normal!important}
+.ti-structured-facts{display:grid;gap:0;margin-top:9px}
+.ti-structured-fact{display:grid;grid-template-columns:minmax(88px,.4fr) minmax(0,1fr);gap:10px;padding:7px 0;border-top:1px solid rgba(2,46,100,.07);font-size:9.5px;line-height:1.5}
+.ti-structured-fact b{color:var(--ti-muted);font-weight:750}.ti-structured-fact span{color:var(--story-muted,var(--ti-text));overflow-wrap:anywhere}
+.ti-structured-block{margin-top:10px}.ti-structured-block:first-child{margin-top:0}
 .ti-bullet-list{display:grid;gap:8px;margin-top:14px;padding:0;list-style:none}
 .ti-bullet-list li{position:relative;padding-left:18px;color:var(--ti-body);font-size:11px;line-height:1.65}
 .ti-bullet-list li:before{content:"";position:absolute;left:0;top:.7em;width:6px;height:6px;border-radius:50%;background:var(--ti-aqua)}
@@ -1269,6 +1289,7 @@ const STATE={
   activeLibrary:"all",
   activeJourneyGroup:"",
   activeDetail:null,
+  activeAirlineTab:"overview",
   searchIndex:[],
   searchOpen:false,
   searchQuery:"",
@@ -1508,30 +1529,96 @@ function activateSearchResult(entry){
 
 function saveHomeContext(){STATE.homeScrollY=window.scrollY}
 function openDetail(x){
-  if(!x)return;saveHomeContext();STATE.activeDetail=x;transition(()=>{$("tiHome").style.display="none";$("tiDetail").dataset.active="true";renderDetail(x)});window.scrollTo({top:0,behavior:movement()});announce(`${itemTitle(x)} opened`)
+  if(!x)return;
+  saveHomeContext();
+  STATE.activeDetail=x;
+  STATE.activeAirlineTab=x._library==="airlines"?"overview":"";
+  transition(()=>{$("tiHome").style.display="none";$("tiDetail").dataset.active="true";renderDetail(x)});
+  window.scrollTo({top:0,behavior:movement()});
+  announce(`${itemTitle(x)} opened`)
 }
 function closeDetail(){
-  transition(()=>{$("tiDetail").dataset.active="false";$("tiHome").style.display="block";$("tiDetailMount").innerHTML="";STATE.activeDetail=null});requestAnimationFrame(()=>window.scrollTo({top:STATE.homeScrollY,behavior:"auto"}))
+  const detail=$("tiDetail"),home=$("tiHome"),mount=$("tiDetailMount");
+  if(!detail||!home||!mount)return;
+  const restoreY=Number.isFinite(Number(STATE.homeScrollY))?Number(STATE.homeScrollY):0;
+  STATE.searchOpen=false;
+  STATE.overlayMode="";
+  STATE.activeDetail=null;
+  STATE.activeAirlineTab="overview";
+  $("tiSearchLayer")?.setAttribute("data-open","false");
+  $("tiSearchLayer")?.setAttribute("aria-hidden","true");
+  $("tiOverlay")?.setAttribute("data-open","false");
+  $("tiOverlay")?.setAttribute("aria-hidden","true");
+  document.documentElement.classList.remove("ti-lock");
+  detail.dataset.active="false";
+  home.style.display="block";
+  mount.replaceChildren();
+  announce("Back to Travel Info");
+  requestAnimationFrame(()=>requestAnimationFrame(()=>window.scrollTo({top:restoreY,behavior:"auto"})))
 }
 function detailFacts(x){
-  const rows=[];const add=(k,v)=>{if(text(v))rows.push([k,text(v)])};add("IATA",x.iataCode||x.iata);add("ICAO",x.icaoCode||x.icao);add("City",x.city);add("Country",x.country);add("Timezone",x.timezone);if(x.distanceToCityCenterKm!==null&&x.distanceToCityCenterKm!==undefined&&x.distanceToCityCenterKm!=="")add("City centre",`${x.distanceToCityCenterKm} km`);add("Loyalty",x.loyaltyProgram);add("Check-in",x.checkInDeadline);add("Duration",x.durationText);add("Meeting point",x.meetingPoint);add("From",x.fromLocation);add("To",x.toLocation);if(x.starRating)add("Rating",`${x.starRating} stars`);return rows
+  const rows=[];const add=(k,v)=>{const value=formatTextValue(v);if(value)rows.push([k,value])};
+  add("IATA",x.iataCode||x.iata);add("ICAO",x.icaoCode||x.icao);add("City",x.city);add("Country",x.country);add("Timezone",x.timezone);
+  if(x.distanceToCityCenterKm!==null&&x.distanceToCityCenterKm!==undefined&&x.distanceToCityCenterKm!=="")add("City centre",`${x.distanceToCityCenterKm} km`);
+  add("Loyalty",x.loyaltyProgram);add("Check-in",x.checkInDeadline);add("Duration",x.durationText);add("Meeting point",x.meetingPoint);add("From",x.fromLocation);add("To",x.toLocation);if(x.starRating)add("Rating",`${x.starRating} stars`);return rows
 }
-function sectionData(title,body,bullets=[],id=""){return text(body)||arr(bullets).length?{title,body:text(body),bullets:arr(bullets).map(v=>text(typeof v==="string"?v:(v?.label||v?.title||v?.body||v?.description||""))).filter(Boolean),id:id||lower(title).replace(/[^a-z0-9]+/g,"-")}:null}
+function parseStructuredValue(value,depth=0){
+  if(depth>6||value===null||value===undefined)return value;
+  if(typeof value==="string"){
+    const raw=text(value);if(!raw)return"";
+    const looksJson=(raw.startsWith("{")&&raw.endsWith("}"))||(raw.startsWith("[")&&raw.endsWith("]"));
+    if(looksJson){try{return parseStructuredValue(JSON.parse(raw),depth+1)}catch(_){return raw}}
+    return raw
+  }
+  if(Array.isArray(value))return value.map(item=>parseStructuredValue(item,depth+1)).filter(item=>item!==""&&item!==null&&item!==undefined);
+  if(typeof value==="object"){
+    const out={};Object.entries(value).forEach(([key,item])=>{const parsed=parseStructuredValue(item,depth+1);if(parsed!==""&&parsed!==null&&parsed!==undefined)out[key]=parsed});return out
+  }
+  return value
+}
+function formatTextValue(value){
+  const v=parseStructuredValue(value);
+  if(v===null||v===undefined||v==="")return"";
+  if(typeof v==="string"||typeof v==="number")return text(v);
+  if(typeof v==="boolean")return v?"Yes":"No";
+  if(Array.isArray(v))return v.map(item=>formatTextValue(item)).filter(Boolean).join("\n");
+  if(typeof v==="object"){
+    const preferred=v.description??v.summary??v.body??v.text??v.notes??v.information??v.value;
+    if(preferred!==undefined){const main=formatTextValue(preferred);if(main)return main}
+    return Object.entries(v).flatMap(([key,item])=>{
+      const formatted=formatTextValue(item);if(!formatted)return[];return[`${human(key)}: ${formatted.replace(/\n+/g," · ")}`]
+    }).join("\n")
+  }
+  return""
+}
+function normalizeBullets(values){
+  return arr(values).flatMap(value=>{
+    const parsed=parseStructuredValue(value);
+    if(typeof parsed==="string"||typeof parsed==="number"||typeof parsed==="boolean")return[formatTextValue(parsed)];
+    const preferred=parsed&&typeof parsed==="object"?(parsed.label||parsed.title||parsed.body||parsed.description||parsed.notes||parsed.text):"";
+    return preferred?[formatTextValue(preferred)]:[]
+  }).filter(Boolean)
+}
+function sectionData(title,body,bullets=[],id=""){
+  const raw=parseStructuredValue(body),bodyText=formatTextValue(raw),cleanBullets=normalizeBullets(bullets);
+  return bodyText||cleanBullets.length?{title,body:bodyText,raw,bullets:cleanBullets,id:id||lower(title).replace(/[^a-z0-9]+/g,"-")}:null
+}
 function airlineSections(x){
   const s=obj(x.sections),b=x.baggage||{};const result=[];
-  result.push(sectionData("Overview",formatTextValue(x.description||x.information||x.body||x.summary),[],"overview"));
-  result.push(sectionData(s.checkin?.title||"Check-in",formatTextValue(s.checkin?.body||x.checkInDeadline),arr(s.checkin?.bullets),"check-in"));
-  result.push({title:s.baggage?.title||"Baggage",body:formatTextValue(s.baggage?.body||(b.mode==="narrative"?b.text:"")),bullets:arr(s.baggage?.bullets),id:"baggage",baggage:b});
-  result.push(sectionData(s.boarding?.title||"Boarding",formatTextValue(s.boarding?.body||x.boarding),arr(s.boarding?.bullets),"boarding"));
-  result.push(sectionData(s.cabins?.title||"Cabins & onboard",formatTextValue(s.cabins?.body||x.cabins),arr(s.cabins?.bullets),"cabins"));
-  result.push(sectionData("Lounges",formatTextValue(x.lounges),[],"lounges"));
-  result.push(sectionData(s.food?.title||"Food & drink",formatTextValue(s.food?.body||x.mealInfo),arr(s.food?.bullets),"food"));
-  result.push(sectionData(s.wifi?.title||"Wi-Fi & connectivity",formatTextValue(s.wifi?.body||x.wifiInfo),arr(s.wifi?.bullets),"wifi"));
-  result.push(sectionData("Children & infants",formatTextValue(x.childrenInfants),[],"children"));
-  result.push(sectionData("Ticket information",formatTextValue(x.ticketTypes),[],"tickets"));
-  result.push(sectionData("Hubs",formatTextValue(x.hubs),[],"hubs"));
-  result.push(sectionData("Fleet summary",formatTextValue(x.fleetSummary),[],"fleet"));
-  result.push(sectionData(s.assistance?.title||"Special assistance",formatTextValue(s.assistance?.body||x.specialAssistance),arr(s.assistance?.bullets),"assistance"));
+  result.push(sectionData("Overview",x.description||x.information||x.body||x.summary,[],"overview"));
+  result.push(sectionData(s.checkin?.title||"Check-in",s.checkin?.body||x.checkInDeadline,s.checkin?.bullets,"check-in"));
+  const baggageBody=s.baggage?.body||(b.mode==="narrative"?b.text:"");
+  result.push({title:s.baggage?.title||"Baggage",body:formatTextValue(baggageBody),raw:parseStructuredValue(baggageBody),bullets:normalizeBullets(s.baggage?.bullets),id:"baggage",baggage:b});
+  result.push(sectionData(s.boarding?.title||"Boarding",s.boarding?.body||x.boarding,s.boarding?.bullets,"boarding"));
+  result.push(sectionData(s.cabins?.title||"Cabins & onboard",s.cabins?.body||x.cabins,s.cabins?.bullets,"cabins"));
+  result.push(sectionData("Lounges",x.lounges,[],"lounges"));
+  result.push(sectionData(s.food?.title||"Food & drink",s.food?.body||x.mealInfo,s.food?.bullets,"food"));
+  result.push(sectionData(s.wifi?.title||"Wi-Fi & connectivity",s.wifi?.body||x.wifiInfo,s.wifi?.bullets,"wifi"));
+  result.push(sectionData("Children & infants",x.childrenInfants,[],"children"));
+  result.push(sectionData("Ticket information",x.ticketTypes,[],"tickets"));
+  result.push(sectionData("Hubs",x.hubs,[],"hubs"));
+  result.push(sectionData("Fleet summary",x.fleetSummary,[],"fleet"));
+  result.push(sectionData(s.assistance?.title||"Special assistance",s.assistance?.body||x.specialAssistance,s.assistance?.bullets,"assistance"));
   return result.filter(sec=>sec&&(sec.id==="baggage"?(text(sec.body)||arr(sec.bullets).length||b.mode==="structured"):true))
 }
 function airportSections(x){
@@ -1542,24 +1629,47 @@ function airportSections(x){
     ["Transfer",s.transfer?.body||x.transfer,s.transfer?.bullets,"transfer"],["Terminals",x.terminals,[],"terminals"],["Transport",x.transport,[],"transport"],
     ["Lounges",x.lounges,[],"lounges"],["Food & drink",x.foodDrinks,[],"food"],["Airport hotels",x.airportHotels,[],"hotels"],["Destinations served",x.destinationsServing,[],"destinations"],["Lost & found",x.lostFound,[],"lost-found"],
     ["Wi-Fi",s.wifi?.body||x.wifi,s.wifi?.bullets,"wifi"],["Accessibility",s.accessibility?.body||x.accessibility,s.accessibility?.bullets,"accessibility"]
-  ];candidates.forEach(([t,b,bul,id])=>result.push(sectionData(t,formatTextValue(b),arr(bul),id)));return result.filter(Boolean)
+  ];candidates.forEach(([title,body,bullets,id])=>result.push(sectionData(title,body,bullets,id)));return result.filter(Boolean)
 }
-function genericSections(x){const s=obj(x.sections),out=[sectionData("Overview",formatTextValue(x.description||x.information||x.body||x.summary),arr(x.bullets),"overview")];Object.entries(s).forEach(([k,v])=>{const o=obj(v);const sec=sectionData(o.title||human(k),formatTextValue(o.body||o.description||v),arr(o.bullets),lower(k));if(sec)out.push(sec)});return out.filter(Boolean)}
-function formatTextValue(v){
-  if(v===null||v===undefined||v==="")return"";
-  if(typeof v==="string"||typeof v==="number")return text(v);
-  if(typeof v==="boolean")return v?"Yes":"No";
-  if(Array.isArray(v))return v.map(item=>formatTextValue(item)).filter(Boolean).join("\n");
-  if(typeof v==="object"){
-    const preferred=text(v.description||v.summary||v.body||v.text||v.label||v.name||v.title||v.value);if(preferred)return preferred;
-    return Object.entries(v).flatMap(([k,value])=>{
-      if(value===null||value===undefined||value===""||value===false)return[];
-      if(typeof value==="string"||typeof value==="number"||typeof value==="boolean")return[`${human(k)}: ${value===true?"Yes":value}`];
-      if(Array.isArray(value)&&value.every(item=>["string","number","boolean"].includes(typeof item)))return[`${human(k)}: ${value.join(", ")}`];
-      return[]
-    }).join("\n")
+function genericSections(x){const s=obj(x.sections),out=[sectionData("Overview",x.description||x.information||x.body||x.summary,x.bullets,"overview")];Object.entries(s).forEach(([key,value])=>{const o=obj(value);const sec=sectionData(o.title||human(key),o.body||o.description||value,o.bullets,lower(key));if(sec)out.push(sec)});return out.filter(Boolean)}
+function structuredTitle(item){
+  const o=obj(item);
+  if(text(o.terminal))return `Terminal ${text(o.terminal)}`;
+  return text(o.mode||o.name||o.title||o.label||o.category||o.type||o.cabinType||o.cabin||o.travelClass||o.code)
+}
+function structuredItemHtml(item){
+  const value=parseStructuredValue(item);
+  if(value===null||value===undefined||value==="")return"";
+  if(typeof value!=="object")return `<li>${esc(formatTextValue(value))}</li>`;
+  const o=obj(value),title=structuredTitle(o),body=formatTextValue(o.notes??o.description??o.summary??o.body??o.text??o.information??"");
+  const consumed=new Set(["terminal","mode","name","title","label","category","type","cabinType","cabin","travelClass","code","notes","description","summary","body","text","information"]);
+  const facts=Object.entries(o).flatMap(([key,nested])=>{
+    if(consumed.has(key)||nested===null||nested===undefined||nested===""||nested===false)return[];
+    const rendered=formatTextValue(nested);if(!rendered)return[];return[[human(key),rendered.replace(/\n+/g," · ")]]
+  });
+  return `<article class="ti-structured-item">${title?`<h3>${esc(title)}</h3>`:""}${body?`<p>${esc(body)}</p>`:""}${facts.length?`<div class="ti-structured-facts">${facts.map(([key,val])=>`<div class="ti-structured-fact"><b>${esc(key)}</b><span>${esc(val)}</span></div>`).join("")}</div>`:""}</article>`
+}
+function structuredBodyHtml(raw,bodyText=""){
+  const value=parseStructuredValue(raw);
+  if(value===null||value===undefined||value==="")return bodyText?`<p class="ti-rich-text">${esc(bodyText)}</p>`:"";
+  if(Array.isArray(value)){
+    if(!value.length)return"";
+    const complex=value.some(item=>item&&typeof item==="object");
+    return complex?`<div class="ti-structured-grid">${value.map(item=>item&&typeof item==="object"?structuredItemHtml(item):`<article class="ti-structured-item"><p>${esc(formatTextValue(item))}</p></article>`).join("")}</div>`:`<ul class="ti-structured-list">${value.map(item=>`<li>${esc(formatTextValue(item))}</li>`).join("")}</ul>`
   }
-  return""
+  if(typeof value==="object")return `<div class="ti-structured-grid">${structuredItemHtml(value)}</div>`;
+  return `<p class="ti-rich-text">${esc(formatTextValue(value)||bodyText)}</p>`
+}
+function airlineTabDefinitions(sections){
+  const available=new Set(sections.map(section=>section.id));
+  return[
+    {id:"overview",label:"Overview",sectionIds:["overview","tickets","hubs"]},
+    {id:"airport",label:"Airport & boarding",sectionIds:["check-in","boarding","lounges"]},
+    {id:"baggage",label:"Baggage",sectionIds:["baggage"]},
+    {id:"onboard",label:"On board",sectionIds:["cabins","food","wifi","children"]},
+    {id:"aircraft",label:"Aircraft",sectionIds:["fleet","aircraft"],always:true},
+    {id:"assistance",label:"Assistance",sectionIds:["assistance"]}
+  ].filter(tab=>tab.always||tab.sectionIds.some(id=>available.has(id)))
 }
 function baggageStructuredHtml(bag){
   const data=obj(bag.data);const cabins=arr(bag.cabins).length?arr(bag.cabins):arr(data.cabins);if(!cabins.length)return"";
@@ -1567,13 +1677,33 @@ function baggageStructuredHtml(bag){
 }
 function storySectionHtml(sec){
   const bag=sec.baggage&&sec.baggage.mode==="structured"?baggageStructuredHtml(sec.baggage):"";
-  return `<section id="tiSec-${esc(sec.id)}" class="ti-story-section" data-detail-section="${esc(sec.id)}"><div class="ti-story-eyebrow">Travel information</div><h2>${esc(sec.title)}</h2>${sec.body?`<p class="ti-rich-text">${esc(sec.body)}</p>`:""}${sec.bullets?.length?`<ul class="ti-bullet-list">${sec.bullets.map(b=>`<li>${esc(b)}</li>`).join("")}</ul>`:""}${bag}</section>`
+  const body=structuredBodyHtml(sec.raw,sec.body);
+  return `<section id="tiSec-${esc(sec.id)}" class="ti-story-section" data-detail-section="${esc(sec.id)}"><div class="ti-story-eyebrow">Travel information</div><h2>${esc(sec.title)}</h2>${body}${sec.bullets?.length?`<ul class="ti-bullet-list">${sec.bullets.map(b=>`<li>${esc(b)}</li>`).join("")}</ul>`:""}${bag}</section>`
+}
+function airlinePanelsHtml(tabs,sections,aircraftSlot,activeTab){
+  const byId=new Map(sections.map(section=>[section.id,section]));
+  return tabs.map(tab=>{
+    const content=tab.sectionIds.map(id=>id==="aircraft"?aircraftSlot:(byId.has(id)?storySectionHtml(byId.get(id)):"")).join("");
+    return `<div id="tiAirlinePanel-${esc(tab.id)}" class="ti-tab-panel" data-airline-panel="${esc(tab.id)}" role="tabpanel" aria-labelledby="tiAirlineTab-${esc(tab.id)}"${tab.id===activeTab?"":" hidden"}>${content}</div>`
+  }).join("")
+}
+function activateAirlineTab(id,x,scroll=true){
+  const root=$("tiDetailMount");if(!root)return;
+  const button=root.querySelector(`[data-airline-tab="${CSS.escape(id)}"]`);if(!button)return;
+  STATE.activeAirlineTab=id;
+  root.querySelectorAll("[data-airline-tab]").forEach(tab=>{const active=tab===button;tab.setAttribute("aria-selected",active?"true":"false");tab.setAttribute("tabindex",active?"0":"-1")});
+  root.querySelectorAll("[data-airline-panel]").forEach(panel=>{panel.hidden=panel.dataset.airlinePanel!==id});
+  if(id==="aircraft"&&x)requestAircraft(x);
+  if(scroll)root.querySelector(".ti-section-nav-wrap")?.scrollIntoView({behavior:movement(),block:"start"})
 }
 function renderDetail(x){
   const kind=x._library||"",isAirline=kind==="airlines",isAirport=kind==="airports",sections=isAirline?airlineSections(x):isAirport?airportSections(x):genericSections(x);
   const image=displayImageUrl(x),logo=isAirline?safeExternal(text(x.logo||x.logoIcon||"")):"",code=itemCode(x),facts=detailFacts(x),website=safeExternal(x.website),contactUrl=safeExternal(x.contactUrl),loyaltyUrl=safeExternal(x.loyaltyProgramUrl),internalPath=[x.path,x.actionTarget,x.pageUrl].map(text).find(safeInternal)||"",meta=[x.city,x.country,x.alliance,x.loyaltyProgram].filter(Boolean);
   const aircraftSlot=isAirline?`<section id="tiSec-aircraft" class="ti-story-section" data-detail-section="aircraft"><div class="ti-story-eyebrow">Onboard experience</div><h2>Aircraft & cabin explorer</h2><p>Explore the published aircraft, cabin views and walkthroughs available for this airline. Live seat availability is shown when you book.</p><div id="onboardReactRoot" class="ti-aircraft-host"><div class="ti-aircraft-skeleton"><div class="ti-skeleton-lines"><i></i><i></i><i></i></div></div></div></section>`:"";
-  const nav=[...sections.map(s=>({id:s.id,label:s.title})),...(isAirline?[{id:"aircraft",label:"Aircraft & cabins"}]:[])];
+  const airlineTabs=isAirline?airlineTabDefinitions(sections):[];
+  const activeAirlineTab=isAirline&&(airlineTabs.some(tab=>tab.id===STATE.activeAirlineTab)?STATE.activeAirlineTab:airlineTabs[0]?.id||"overview");
+  if(isAirline)STATE.activeAirlineTab=activeAirlineTab;
+  const nav=isAirline?airlineTabs:sections.map(section=>({id:section.id,label:section.title}));
   $("tiDetailMount").innerHTML=`
     <article class="ti-profile-hero">
       <div class="ti-profile-copy">
@@ -1586,20 +1716,27 @@ function renderDetail(x){
       </div>
       <div class="ti-profile-image">${image?`<img src="${esc(image)}" alt="${esc(itemTitle(x))}" referrerpolicy="no-referrer">`:`<div class="ti-profile-fallback"><strong>${esc((code||itemTitle(x).slice(0,3)).toUpperCase())}</strong></div>`}</div>
     </article>
-    ${nav.length?`<div class="ti-section-nav-wrap"><nav class="ti-section-nav" aria-label="${esc(itemTitle(x))} sections">${nav.map((n,i)=>`<button class="ti-section-link" type="button" data-section-link="${esc(n.id)}" aria-current="${i===0?"true":"false"}">${esc(n.label)}</button>`).join("")}</nav></div>`:""}
+    ${nav.length?isAirline?`<div class="ti-section-nav-wrap"><nav class="ti-section-nav" data-mode="airline-tabs" role="tablist" aria-label="${esc(itemTitle(x))} information categories">${nav.map(tab=>`<button id="tiAirlineTab-${esc(tab.id)}" class="ti-section-link" type="button" role="tab" data-airline-tab="${esc(tab.id)}" aria-controls="tiAirlinePanel-${esc(tab.id)}" aria-selected="${tab.id===activeAirlineTab?"true":"false"}" tabindex="${tab.id===activeAirlineTab?"0":"-1"}">${esc(tab.label)}</button>`).join("")}</nav></div>`:`<div class="ti-section-nav-wrap"><nav class="ti-section-nav" aria-label="${esc(itemTitle(x))} sections">${nav.map((item,index)=>`<button class="ti-section-link" type="button" data-section-link="${esc(item.id)}" aria-current="${index===0?"true":"false"}">${esc(item.label)}</button>`).join("")}</nav></div>`:""}
     <div class="ti-detail-body">
-      <div class="ti-story-stack">${sections.map(storySectionHtml).join("")}${aircraftSlot}</div>
+      <div class="ti-story-stack">${isAirline?airlinePanelsHtml(airlineTabs,sections,aircraftSlot,activeAirlineTab):sections.map(storySectionHtml).join("")}</div>
       <aside class="ti-detail-aside">
-        ${facts.length?`<section class="ti-aside-card"><h3>At a glance</h3><div class="ti-key-list">${facts.map(([k,v])=>`<div class="ti-key-row"><b>${esc(k)}</b><span>${esc(v)}</span></div>`).join("")}</div>${isAirport?`<div id="tiWeatherInline" class="ti-weather-inline"><strong id="tiWeatherValue"></strong><span id="tiWeatherDescription"></span></div>`:""}</section>`:""}
+        ${facts.length?`<section class="ti-aside-card"><h3>At a glance</h3><div class="ti-key-list">${facts.map(([key,value])=>`<div class="ti-key-row"><b>${esc(key)}</b><span>${esc(value)}</span></div>`).join("")}</div>${isAirport?`<div id="tiWeatherInline" class="ti-weather-inline"><strong id="tiWeatherValue"></strong><span id="tiWeatherDescription"></span></div>`:""}</section>`:""}
         <section class="ti-aside-card"><h3>Continue your journey</h3><p>Use the published guide here, then move into the relevant SKANDI service when you are ready.</p><div class="ti-aside-actions">${internalPath?`<button class="ti-btn ti-btn-light" type="button" data-detail-path="${esc(internalPath)}">Open full guide ${icon("arrow")}</button>`:""}${website?`<a class="ti-btn ti-btn-light" href="${esc(website)}" target="_blank" rel="noopener noreferrer">Official website ${icon("external")}</a>`:""}${contactUrl&&contactUrl!==website?`<a class="ti-btn ti-btn-light" href="${esc(contactUrl)}" target="_blank" rel="noopener noreferrer">Contact information ${icon("external")}</a>`:""}${loyaltyUrl?`<a class="ti-btn ti-btn-light" href="${esc(loyaltyUrl)}" target="_blank" rel="noopener noreferrer">Loyalty program ${icon("external")}</a>`:""}${isAirport?`<button class="ti-btn ti-btn-light" type="button" data-detail-action="baggage">Baggage information ${icon("bag")}</button>`:""}<button class="ti-btn ti-btn-light" type="button" data-detail-action="alexandra">Ask Alexandra ${icon("spark")}</button><button class="ti-btn ti-btn-primary" type="button" data-detail-action="support">Contact support ${icon("message")}</button></div></section>
       </aside>
     </div>`;
-  bindDetailInteractions(x,nav);if(isAirline)requestAircraft(x);if((isAirport||kind==="hotels")&&num(x.latitude)!==null&&num(x.longitude)!==null)requestWeather(x)
+  bindDetailInteractions(x,nav);
+  if(isAirline)activateAirlineTab(activeAirlineTab,x,false);
+  if((isAirport||kind==="hotels")&&num(x.latitude)!==null&&num(x.longitude)!==null)requestWeather(x)
 }
 function bindDetailInteractions(x,nav){
-  $("tiDetailMount").querySelectorAll("[data-section-link]").forEach(btn=>btn.addEventListener("click",()=>{$("tiDetailMount").querySelector(`#tiSec-${CSS.escape(btn.dataset.sectionLink)}`)?.scrollIntoView({behavior:movement(),block:"start"});$("tiDetailMount").querySelectorAll("[data-section-link]").forEach(b=>b.setAttribute("aria-current",b===btn?"true":"false"))}));
-  $("tiDetailMount").querySelectorAll("[data-detail-action]").forEach(btn=>btn.addEventListener("click",()=>{const action=btn.dataset.detailAction;if(action==="alexandra")post("TRAVEL_INFO_OPEN_ALEXANDRA",{context:{title:itemTitle(x),library:x._library||""}});else openAction(action)}));
-  $("tiDetailMount").querySelectorAll("[data-detail-path]").forEach(btn=>btn.addEventListener("click",()=>{if(safeInternal(btn.dataset.detailPath))post("TRAVEL_INFO_NAVIGATE",{path:btn.dataset.detailPath})}))
+  const root=$("tiDetailMount");if(!root)return;
+  root.querySelectorAll("[data-airline-tab]").forEach(btn=>{
+    btn.addEventListener("click",()=>activateAirlineTab(btn.dataset.airlineTab,x,true));
+    btn.addEventListener("keydown",event=>{if(event.key!=="ArrowRight"&&event.key!=="ArrowLeft"&&event.key!=="Home"&&event.key!=="End")return;const tabs=[...root.querySelectorAll("[data-airline-tab]")];if(!tabs.length)return;event.preventDefault();const index=tabs.indexOf(btn);const next=event.key==="Home"?0:event.key==="End"?tabs.length-1:(index+(event.key==="ArrowRight"?1:-1)+tabs.length)%tabs.length;tabs[next].focus();activateAirlineTab(tabs[next].dataset.airlineTab,x,false)})
+  });
+  root.querySelectorAll("[data-section-link]").forEach(btn=>btn.addEventListener("click",()=>{root.querySelector(`#tiSec-${CSS.escape(btn.dataset.sectionLink)}`)?.scrollIntoView({behavior:movement(),block:"start"});root.querySelectorAll("[data-section-link]").forEach(item=>item.setAttribute("aria-current",item===btn?"true":"false"))}));
+  root.querySelectorAll("[data-detail-action]").forEach(btn=>btn.addEventListener("click",()=>{const action=btn.dataset.detailAction;if(action==="alexandra")post("TRAVEL_INFO_OPEN_ALEXANDRA",{context:{title:itemTitle(x),library:x._library||""}});else openAction(action)}));
+  root.querySelectorAll("[data-detail-path]").forEach(btn=>btn.addEventListener("click",()=>{if(safeInternal(btn.dataset.detailPath))post("TRAVEL_INFO_NAVIGATE",{path:btn.dataset.detailPath})}))
 }
 
 function openOverlay(mode,title,subtitle,bodyHtml,focusSelector=""){STATE.overlayMode=mode;STATE.overlayReturnFocus=document.activeElement;$("tiSheetKicker").textContent="Travel Info";$("tiSheetTitle").textContent=title;$("tiSheetSubtitle").textContent=subtitle||"";$("tiSheetBody").innerHTML=bodyHtml;hydrateStaticIcons($("tiSheetBody"));$("tiOverlay").dataset.open="true";$("tiOverlay").setAttribute("aria-hidden","false");document.documentElement.classList.add("ti-lock");bindOverlay(mode);requestAnimationFrame(()=>{const target=focusSelector?$("tiSheetBody").querySelector(focusSelector):$("tiSheetBody").querySelector("input,select,textarea,button");target?.focus()})}
@@ -1716,7 +1853,7 @@ $("tiHeroSearch").addEventListener("click",()=>openSearch($("tiHeroSearch").valu
 $("tiSearchInput").addEventListener("input",e=>{STATE.searchQuery=e.target.value;STATE.searchCursor=0;renderSearchResults()});
 document.querySelectorAll("[data-close-search]").forEach(b=>b.addEventListener("click",closeSearch));
 document.querySelectorAll("[data-close-overlay]").forEach(b=>b.addEventListener("click",closeOverlay));
-$("tiBack").addEventListener("click",closeDetail);
+$("tiBack").addEventListener("click",event=>{event.preventDefault();event.stopPropagation();closeDetail()});
 $("tiLoadMore").addEventListener("click",()=>{STATE.visibleCount+=PAGE_SIZE;renderDirectory()});
 document.addEventListener("click",e=>{const action=e.target.closest("[data-action]");if(action)openAction(action.dataset.action)});
 $("tiAlexandraLauncher").addEventListener("click",()=>openAction("alexandra"));
