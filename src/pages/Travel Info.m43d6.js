@@ -15,21 +15,29 @@ import { SITE_MAP, APP_ROUTES, isSafeInternalRoute } from "public/siteMap";
 const SOURCE = "SKANDI_PUBLIC_TRAVEL_INFO";
 const PARENT = "SKANDI_WIX_PARENT";
 const VERSION = "SKANDI-TRAVEL-INFO-V12";
-const EMBED_IDS = "#travelInfoHtml";
 const BOOTSTRAP_TIMEOUT_MS = 15000;
 let loadPromise = null;
 let loadGeneration = 0;
 
 const clean = (value, max = 4000) => String(value ?? "").trim().slice(0, max);
 
-function getHtml() {
-  for (const id of EMBED_IDS) {
-    try {
-      const element = $w(id);
-      if (element && typeof element.onMessage === "function" && typeof element.postMessage === "function") return { id, element };
-    } catch (_) {}
+function resolveHtmlComponent(id) {
+  try {
+    const element = $w(id);
+    if (!element) return null;
+    if (typeof element.onMessage !== "function" || typeof element.postMessage !== "function") return null;
+    return { id, element };
+  } catch (_) {
+    return null;
   }
-  return null;
+}
+
+function getHtml() {
+  return (
+    resolveHtmlComponent("#travelInfoHtml") ||
+    resolveHtmlComponent("#travelInfoEmbed") ||
+    resolveHtmlComponent("#html1")
+  );
 }
 
 function parse(value) {
@@ -111,7 +119,7 @@ function navigate(path) {
 $w.onReady(() => {
   const resolved = getHtml();
   if (!resolved) {
-    console.error(`[SKANDI Travel Info v12] No compatible HTML component found. Tried ${EMBED_IDS.join(", ")}`);
+    console.error("[SKANDI Travel Info v12] No compatible HTML component found. Tried #travelInfoHtml, #travelInfoEmbed, #html1.");
     return;
   }
   const html = resolved.element;
