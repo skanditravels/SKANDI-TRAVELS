@@ -1,4 +1,4 @@
-// /src/backend/SKANDI_CORE/storefront.js
+// /src/backend/SKANDI_CORE/storefront.web.js
 // B-011.13 — SKANDI The Store canonical Wix Stores/eCommerce service.
 // One source of truth for public catalog/cart and internal Store Control.
 
