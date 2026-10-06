@@ -1,3 +1,25 @@
+# SKANDI INFO / LOG — Home V12
+
+- Source of truth: /HTML_REF/skandi/Home.md; complete supplied HTML below.
+- Page / area: Home / SKANDI; /src/pages/Home.n73w8.js; routes / and /skandi.
+- HTML element: #htmlHome (existing controller also supports #htmlhome and #home).
+- Status: READY — source package prepared; REQUIRES LIVE TEST after installation.
+- Ownership: embed → postMessage → Home controller → canonical SKANDI_CORE facades → cores → Supabase / Duffel.
+- Facades: homeContent.web.js and customerBooking.web.js. Core owners: homeContent.js, customerBooking.js, duffelGround.js, duffelAir.js, bookingMapper.js, bookingCart.js, supabaseServer.js.
+- Home pricing runs in homeContent.js through existing customerBooking.searchLiveStaysCore; provider requests, secrets, ownership and cart mutations remain in their established cores.
+- Data: inventory_public_entities_v and travel_info_airports; existing query text unchanged. Airport reference rows must be active, customer-visible and PUBLISHED. Booking uses existing owned-cart/provider contracts.
+- Authorization: Home content/search are public; cart creation resolves the server member; existing SiteMember gates remain intact. Frontend prices/roles are not booking authority.
+- Global routes/settings: public/siteMap.js and masterPage.js; login uses public/customerAuthUi.js / canonical logIn popup.
+- Protocol: V12-HOME. Existing HOME_* types retained; requestId correlates bootstrap, locations, search and selection. Bootstrap has content/complete phases. RESIZE_IFRAME is handled by Home.
+- New canonical method: getHomeLivePrices({recordId,language,priceSearch}) resolves the featured public record server-side and returns {card}; no parallel provider client or catalogue.
+- Failure behavior: bounded reads, late-response suppression, retryable bootstrap, visible errors and one selection lock across login/cart creation. Pending carts are never replayed after a timeout.
+- Routes: flights/hotels/packages open existing Home tabs; offers opens featured offers. The absent standalone transfers route opens Collection search with checkout guidance. Cards use backend href. No shared route aliases added.
+- Verification: public Home bundle and route map inspected 2026-10-06; the old bundle generated only createBookingCartFromOffer. All 27 local regression checks passed; validation-results.json records the results and fixture-based scope. Supplied styles and translations match the upload; full HTML boots without DOM errors.
+- Open dependencies: Wix compilation, popup/session handoff, real provider searches and current Supabase availability require live checks. Supabase connector returned Unauthorized on 2026-10-06. Saved schema matches unchanged Home query columns, but is not fresh verification.
+- Last reviewed: 2026-10-06 UTC. No deployed Wix, GitHub or database writes performed.
+
+## Preserved history (superseded status/architecture)
+
 # Home
 
 STATUS: NEEDS REVIEW
@@ -21,12 +43,28 @@ STATUS (AGENT): "TODO", "IN PROGRESS", "REVISIONS NEEDED", "READY".***
 
 #### LIVE HTML
 
+
+## APPROVED REPAIR LOG — 2026-10-03 UTC
+
+Restored original public/customerAuthUi.js from commit 36fbf139f3ef70440b8d5a1f250180c33792492b. openCustomerLogin again resolves through the existing sitemap popup registry. No Home HTML or controller behavior changed. Wix login lightbox/runtime requires live verification. Status: source changes prepared; not deployed.
+
+
+- Recovery contract correction: the current popup registry key is logIn (historical key login was superseded). openCustomerLogin now uses the existing logIn entry; popup names and registry remain unchanged. Native Wix popup installation still requires live verification.
+
+## Change log — appended 2026-10-06 UTC
+
+V12: retained the uploaded title/600px hero, styles, editorial sections and translations. Removed duplicate builders reading deleted currency controls. Added canonical cabinClass/guest payloads, fixed the Holiday swap target, honored card href/provider currencies, corrected local CTA actions and connected global settings. Added correlated loading/error recovery and duplicate-selection protection; isolated result-button handlers from autocomplete. Made facade exports explicit webMethod calls with unchanged permissions. Moved card pricing behind the Home backend with exact hotel matching, date labels and no stored-price-as-live fallback. Added cycle protection and canonical title/provider-ID mapping. Database queries, schemas and policies unchanged.
+
+Validation follow-up: restored the missing results panel and its six required DOM controls, which previously stopped startup before HOME_READY. Added matching result styles without altering the supplied style block. Excluded private/inactive/unpublished airport reference rows, preserved canonical airport IDs, rejected empty/out-of-range coordinates and suppressed expired quotes in secondary card labels. All 27 local checks passed, including actual @wix/web-methods permission parity and the real booking core/mapper with provider, authentication and storage fixtures. These are source-level checks, not a Wix build or a live provider/database test.
+
+## Complete Home HTML
+
 ```html
 <!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title data-i18n="page.title">Home • SKANDI TRAVELS</title>
+<title data-i18n="page.title">SKANDI • Home Booking Search</title>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -220,7 +258,7 @@ button{cursor:pointer}
   content: "";
   position: absolute;
   top: 0; left: 0; right: 0;
-  height: 420px;
+  height: 600px;
   background: url("https://static.wixstatic.com/media/394052_9a01a12b7bbf4524a3b4ae7c2652477e~mv2.png") center/cover;
   z-index: -1;
   border-radius: 0 0 28px 28px;
@@ -1078,6 +1116,26 @@ img,video,svg{max-width:100%}
   .recent-card{flex-basis:88vw}
 }
 </style>
+<style>
+/* V12: restore the result surface referenced by the existing search flow. */
+.results-head,.flight-card-head{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;flex-wrap:wrap}
+#flight-results-list{display:grid;gap:16px;margin-top:18px}
+.flight-card{background:#fff;border:1px solid #dfe6ec;border-radius:18px;padding:22px;box-shadow:var(--sk-shadow)}
+.flight-airline,.selector-kicker{font-size:11px;font-weight:800;letter-spacing:.08em;color:var(--sk-blue)}
+.flight-route{font-size:22px;font-weight:800;color:var(--sk-blue);margin:8px 0}
+.flight-price{font-size:24px;font-weight:800;color:var(--sk-blue);white-space:nowrap}
+.flight-meta{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:16px 0}
+.meta-box{background:#f3f6fa;border-radius:10px;padding:12px;min-width:0;overflow-wrap:anywhere}
+.meta-box small{display:block;color:#657489;margin-bottom:5px}
+.badge-row{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}
+.badge{padding:5px 8px;border-radius:99px;background:#eef4ff;color:var(--sk-blue);font-size:11px}
+.select-flight-btn,#editSearchButton{border:0;border-radius:99px;padding:12px 20px;background:var(--sk-blue);color:white;font-weight:800;cursor:pointer}
+.select-flight-btn:disabled{opacity:.55;cursor:wait}
+.status-card{padding:14px 18px;border-radius:12px;background:#eef7fb;color:var(--sk-blue);line-height:1.5;margin-top:14px}
+.status-card.error{background:#fff0f1;color:#94283a}.status-card.ok{background:#edf8f1;color:#166d43}
+#selectorSummary{color:#657489;margin:9px 0}
+@media(max-width:600px){.flight-meta{grid-template-columns:1fr}.flight-card{padding:16px}.flight-price{font-size:21px}}
+</style>
 </head>
 <body>
 <!-- Global Loading Veil -->
@@ -1087,6 +1145,7 @@ img,video,svg{max-width:100%}
     <span data-i18n="home.loader.message">Loading your journey...</span>
   </div>
 </div>
+<div id="homeConnectionStatus" role="status" aria-live="polite" hidden style="margin:12px 32px"></div>
 <section id="hero-wrap">
   <div class="hero-kicker" data-i18n="home.hero.kicker">SKANDI TRAVELS</div>
   <div id="hero-title" data-i18n="home.hero.title">Discover Your Next Journey</div>
@@ -1264,6 +1323,19 @@ img,video,svg{max-width:100%}
   </div>
 </section>
 
+<section id="flight-selector" class="content-section" aria-labelledby="selectorTitle">
+  <div class="results-head">
+    <div>
+      <div class="selector-kicker" data-i18n="home.results.kicker">Search Results</div>
+      <h2 id="selectorTitle" class="section-title" data-i18n="home.results.title">Available Trips</h2>
+      <p id="selectorSummary" data-i18n="home.results.copy">Results will appear here.</p>
+    </div>
+    <button type="button" id="editSearchButton" data-i18n="home.results.edit">Edit Search</button>
+  </div>
+  <div id="flight-status" role="status" aria-live="polite"></div>
+  <div id="flight-results-list"></div>
+</section>
+
 <section id="trust-strip">
   <div class="trust-grid" id="trustGrid"></div>
 </section>
@@ -1436,21 +1508,15 @@ img,video,svg{max-width:100%}
 
 <script>
 const SOURCE = "SKANDI_HOME";
-const HOME_PROTOCOL_VERSION = "2026.09.09.9";
+const HOME_PROTOCOL_VERSION = "V12-HOME";
 const PARENT = "SKANDI_WIX_PARENT";
 
-const ROUTE_DEFAULTS = Object.freeze({
-  home:"/", search:"/search", flights:"/flights", carRental:"/car-rental", hotels:"/hotels", packages:"/packages",
-  tours:"/tours", activities:"/activities", transfers:"/transfers", destinations:"/destinations", offers:"/offers", travelInfo:"/travel-info",
-  skandiCollection:"/skandi-collection", voy:"/voy-magazine", myTrip:"/my-profile?tab=trips", club:"/skandi-club",
-  about:"/about", support:"/about/support", newsroom:"/about/news-room", theStore:"/the-store", ourNetwork:"/about/our-network",
-  legal:"/about/legal", policies:"/about/legal/policies"
-});
-let MASTER_CONTEXT = { routes:{...ROUTE_DEFAULTS}, customer:{} };
-
+// Routes are supplied by the canonical Wix siteMap through the parent.
+let MASTER_CONTEXT = { routes:{}, customer:{} };
 function masterRoute(key, fallback="") {
-  return String(MASTER_CONTEXT?.routes?.[key] || fallback || ROUTE_DEFAULTS[key] || "/");
+  return safeRouteValue(MASTER_CONTEXT?.routes?.[key], fallback);
 }
+
 function flattenMasterLinks() {
   const customer = MASTER_CONTEXT?.customer || {};
   const out = [];
@@ -1464,13 +1530,9 @@ function masterLinkByLabels(labels, fallback) {
   const hit = flattenMasterLinks().find(row => wanted.some(label => String(row?.label||"").toLowerCase().includes(label)));
   return String(hit?.path || fallback || "/");
 }
-function offersRoute() { return masterRoute("offers", masterLinkByLabels(["last chance","offer"], "/offers")); }
-function travelInfoRoute() { return masterRoute("travelInfo", masterLinkByLabels(["before you travel","travel info"], "/travel-info")); }
-function destinationsRoute() {
-  // Generic destination navigation follows masterPage.js. Detail cards may carry
-  // their own database-generated public detail URL.
-  return masterRoute("destinations", "/destinations");
-}
+function offersRoute() { return masterRoute("offers"); }
+function travelInfoRoute() { return masterRoute("travelInfo"); }
+function destinationsRoute() { return masterRoute("destinations"); }
 function routeByKey(key) {
   if (key === "offers") return offersRoute();
   if (key === "travelInfo") return travelInfoRoute();
@@ -1483,11 +1545,10 @@ function defaultContentPath(kind) {
   if (kind === "inspiration") return masterRoute("voy");
   return destinationsRoute();
 }
-function safeRouteValue(path, fallback="/") {
+function safeRouteValue(path, fallback="") {
   const value = String(path || "").trim();
-  return value.startsWith("/") && !value.startsWith("//") ? value : fallback;
+  return /^\/(?!\/)/.test(value) && !/[\\\u0000-\u0020]/.test(value) && !/%5c|%0[0-9a-f]|%1[0-9a-f]/i.test(value) ? value : fallback;
 }
-
 function postToParent(message) {
   // Wix HTML Components can be hosted on a different origin than the surrounding Wix page.
   // Use the standard cross-origin bridge and validate application messages by source/type.
@@ -1503,27 +1564,34 @@ function showPageLoader(show = true) {
 }
 
 function navigateParent(path) {
-  const target = String(path || "").trim();
-  if (!target) return;
-  
-  // Show spinner immediately so the user knows the click registered
+  const target = safeRouteValue(path);
+  if (!target) return showBridgeStatus("This link is not available yet.", true);
+  const localKey = ["flights","hotels","packages","offers","transfers"].find(key => target === MASTER_CONTEXT.routes?.[key]);
+  if (localKey) return navigateRoute(localKey);
   showPageLoader(true);
-
-  if (window.parent === window) {
-    window.location.assign(target);
+  postToParent({source:SOURCE,type:"HOME_NAVIGATE",payload:{path:target}});
+  setTimeout(() => { if (!pending.search && !pending.selection) showPageLoader(false); }, 2500);
+}
+function focusSearchTab(tab) {
+  document.body.classList.remove("search-mode");
+  document.querySelector('.tab-btn[data-tab="'+tab+'"]')?.click();
+  $("hero-wrap")?.scrollIntoView({behavior:"smooth",block:"start"});
+}
+function navigateRoute(key) {
+  const tabs = {flights:"flights",packages:"holidays",hotels:"hotels",transfers:"signature"};
+  if (tabs[key]) {
+    focusSearchTab(tabs[key]);
+    if (key==="transfers") showInlineStatus("Choose a package first. Available transfers are selected during checkout.");
     return;
   }
-
-  postToParent({
-    source: SOURCE,
-    type: "HOME_NAVIGATE",
-    path: target
-  });
-  
-  // Safety timeout in case parent responds slowly
-  setTimeout(() => showPageLoader(false), 2500);
+  if (key==="offers") {
+    const section=$("offers-section");
+    if(section&&!section.hidden)section.scrollIntoView({behavior:"smooth",block:"start"});
+    else showBridgeStatus("There are no featured offers available right now.");
+    return;
+  }
+  navigateParent(routeByKey(key));
 }
-
 
 /* ==========================================================================
    LOCKED CUSTOMER LANGUAGE / CURRENCY STANDARD
@@ -3885,6 +3953,7 @@ function updateSettingsControls() {
 }
 
 function saveSkandiSettings(language, currency, notifyParent = true) {
+  const previous = JSON.stringify(SKANDI_USER_SETTINGS);
   SKANDI_USER_SETTINGS = {
     language: SKANDI_LANGUAGES.includes(language) ? language : "EN",
     currency: SKANDI_CURRENCIES.includes(currency) ? currency : "USD"
@@ -3897,7 +3966,7 @@ function saveSkandiSettings(language, currency, notifyParent = true) {
   updateSettingsControls();
   applyTranslations();
 
-  window.dispatchEvent(new CustomEvent("skandi:settings-changed", {
+  if(previous!==JSON.stringify(SKANDI_USER_SETTINGS))window.dispatchEvent(new CustomEvent("skandi:settings-changed", {
     detail: { ...SKANDI_USER_SETTINGS }
   }));
 
@@ -3974,11 +4043,81 @@ const state = {
   calendarMonth: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
   lastSearch: null,
   lastResults: [],
+  locationsLoaded: false,
+  bootstrapId: "",
+  hasBootstrapped: false,
   usingFallback: { destinations:true, offers:true, tripTypes:true, why:true, trust:true }
 };
 
 function $(id){ return document.getElementById(id); }
-function send(type,payload={}){ postToParent({ source:SOURCE, type, payload, timestamp:new Date().toISOString() }); }
+const pending = {bootstrap:null,locations:null,search:null,selection:null};
+let requestSerial=0, readyTimer=null, locationRetryAt=0;
+function showBridgeStatus(message, error=false, retry=false) {
+  const box=$("homeConnectionStatus");
+  box.hidden=!message;box.className="status-card"+(error?" error":"");
+  box.innerHTML=message?esc(message):"";
+  if(retry){
+    const button=document.createElement("button");
+    button.type="button";button.textContent="Retry";button.style.marginLeft="12px";
+    button.onclick=()=>requestBootstrap(true);box.appendChild(button);
+  }
+}
+function releaseRequest(key, requestId) {
+  const item=pending[key];
+  if(!item||item.requestId!==requestId)return false;
+  clearTimeout(item.timer);pending[key]=null;return true;
+}
+function send(type,payload={}) {
+  if(type==="HOME_NAVIGATE")return navigateParent(payload.path);
+  const key={HOME_READY:"bootstrap",HOME_REFRESH:"bootstrap",HOME_LOCATIONS_REQUEST:"locations",HOME_SEARCH:"search",HOME_SELECT_OFFER:"selection"}[type];
+  if(!key)return postToParent({source:SOURCE,type,payload,timestamp:new Date().toISOString()});
+  if(pending[key]&&type!=="HOME_REFRESH"){
+    if(type==="HOME_READY")postToParent(pending[key].message);
+    return pending[key].requestId;
+  }
+  if(key==="locations"&&Date.now()<locationRetryAt)return "";
+  if(pending[key])clearTimeout(pending[key].timer);
+  const requestId="HOME-"+Date.now()+"-"+(++requestSerial);
+  const message={source:SOURCE,type,payload,requestId,timestamp:new Date().toISOString()};
+  if(key==="bootstrap")state.bootstrapId=requestId;
+  const ms=key==="search"?90000:key==="selection"?90000:35000;
+  const timer=setTimeout(()=>{
+    if(pending[key]?.requestId!==requestId)return;
+    if(key==="selection"){
+      pending[key].timer=null;showPageLoader(false);
+      showStatus("Your offer is still being processed. Please wait for confirmation before selecting another offer.");
+      return; // Never replay a cart mutation after a timeout.
+    }
+    pending[key]=null;
+    if(key==="bootstrap"){
+      clearInterval(readyTimer);readyTimer=null;
+      showBridgeStatus("Home could not finish loading. Please retry.",true,true);
+    } else if(key==="locations"){
+      locationRetryAt=Date.now()+3000;
+      showBridgeStatus("Locations could not be loaded. Please retry.",true,true);
+    } else handleError("Search took too long. Please try again.");
+  },ms);
+  pending[key]={requestId,message,timer};
+  postToParent(message);return requestId;
+}
+function requestBootstrap(refresh=false) {
+  send(refresh?"HOME_REFRESH":"HOME_READY",{
+    settings:{...SKANDI_USER_SETTINGS},
+    priceSearch:{checkInDate:state.dateRanges.holidays.from,checkOutDate:state.dateRanges.holidays.to,
+      adults:state.adults,children:state.children,infants:state.infants,
+      childAges:[...state.childAges],infantAges:[...state.infantAges],rooms:1}
+  });
+}
+function stayGuestsForHome() {
+  return [...Array.from({length:state.adults},()=>({type:"adult"})),
+    ...[...state.childAges,...state.infantAges].map(age=>({type:"child",age}))];
+}
+function selectHomeOffer(index) {
+  if(pending.search||pending.selection)return;
+  const offer=state.lastResults[index];if(!offer)return;
+  document.querySelectorAll("#flight-results-list .select-flight-btn").forEach(button=>button.disabled=true);
+  send("HOME_SELECT_OFFER",{offer,search:state.lastSearch});
+}
 function esc(v=""){ return String(v ?? "").replace(/[&<>"']/g, s => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[s])); }
 function escAttr(v=""){ return esc(v).replaceAll("`","&#096;"); }
 function normalize(v=""){ return String(v || "").trim().toLowerCase(); }
@@ -4007,11 +4146,11 @@ function formatCurrencyAmount(amount, currency = SKANDI_USER_SETTINGS.currency) 
   }
 }
 function money(price={}) {
-  if (!price) return "";
-  if (typeof price === "string") return price;
-  const amount = price.amount || price.total || price.grandTotal || price.fromPrice || "";
-  const currency = price.currency || price.currencyCode || SKANDI_USER_SETTINGS.currency || "";
-  return amount === "" ? "" : formatCurrencyAmount(amount, currency);
+  if(price===null||price===undefined)return "";
+  if(typeof price==="number")return formatCurrencyAmount(price);
+  if(typeof price==="string")return price;
+  const amount=price.amount??price.total??price.grandTotal??price.fromPrice??"";
+  return amount===""?"":formatCurrencyAmount(amount,price.currency||price.currencyCode||SKANDI_USER_SETTINGS.currency);
 }
 function localizedRecordValue(record, field, fallback = "") {
   const language = SKANDI_USER_SETTINGS.language;
@@ -4028,6 +4167,7 @@ function localizedRecordList(record, field) {
   return Array.isArray(value) ? value : [];
 }
 function recordPrice(record) {
+  if(record?.livePriceFound===false || (record?.priceExpiresAt&&Date.parse(record.priceExpiresAt)<=Date.now()))return "";
   const currency = SKANDI_USER_SETTINGS.currency;
   const prices = record?.prices || record?.priceByCurrency || record?.fromPrices || {};
   const amount = prices?.[currency] ?? (
@@ -4141,14 +4281,14 @@ function buildLocationOptions(kind="destination"){
     const country=localizedRecordValue(d,"country",d.country||"");
     const canonicalValue=isDestinationField ? destinationCode : (iata||destinationCode);
     return {
-      type:String(d.entityType||"DESTINATION").toUpperCase()==="AREA"?"AREA":"DESTINATION",
+      type:String(d.entityType||d.type||"DESTINATION").toUpperCase()==="AREA"?"AREA":"DESTINATION",
       value:canonicalValue,canonicalValue:destinationCode,iata,icao:String(d.icao||"").toUpperCase(),
       title,city:d.airportCity||title||"",airportName:d.airportName||"",country,
       label:`${title}${country?` — ${country}`:""}`,
       subtitle:[destinationCode?`Code ${destinationCode}`:"",iata?`Airport ${iata}`:"",d.airportName||""].filter(Boolean).join(" • "),
       terms:[title,d.name,destinationCode,iata,d.icao,d.airportName,d.airportCity,country,...(Array.isArray(d.searchTerms)?d.searchTerms:[])].filter(Boolean)
     };
-  }).filter(x=>x.value);
+  }).filter(x=>x.value && (isDestinationField || /^[A-Z]{3}$/.test(x.iata)));
 
   const seen=new Set();
   return [...destinations,...airports].filter(item=>{
@@ -4203,12 +4343,12 @@ function setupLocationSearch({inputId,valueId,boxId,kind="destination",iataId=""
     if(exact){choose(exact);return true;}return false;
   };
   input.addEventListener("focus",()=>{
-    if(!(state.searchDestinations||[]).length || !(state.airports||[]).length) send("HOME_LOCATIONS_REQUEST",{});
+    if(!state.locationsLoaded)send("HOME_LOCATIONS_REQUEST",{});
     render();
   });
   input.addEventListener("input",()=>{
     hidden.value="";if(iata)iata.value="";if(type)type.value="";
-    if(!(state.searchDestinations||[]).length || !(state.airports||[]).length) send("HOME_LOCATIONS_REQUEST",{});
+    if(!state.locationsLoaded)send("HOME_LOCATIONS_REQUEST",{});
     render();
   });
   input.addEventListener("keydown",e=>{
@@ -4224,6 +4364,7 @@ function setupLocationSearch({inputId,valueId,boxId,kind="destination",iataId=""
   box.addEventListener("click",e=>{const opt=e.target.closest(".airport-option");if(opt)choose(matches[Number(opt.dataset.index||0)]);});
   input.addEventListener("blur",()=>setTimeout(()=>{resolveExact();close();},120));
   input.__resolveLocationSelection=resolveExact;
+  input.__refreshLocationSuggestions=render;
 }
 function ensureLocationSelection(inputId){
   const input=$(inputId);
@@ -4386,30 +4527,26 @@ function renderLocationData(payload={}){
   const destinations=Array.isArray(payload.searchDestinations) && payload.searchDestinations.length
     ? payload.searchDestinations
     : (Array.isArray(payload.destinations)?payload.destinations:[]);
-  if(airports.length) state.airports=airports;
-  if(destinations.length) state.searchDestinations=destinations;
+  state.airports=airports;
+  state.searchDestinations=destinations;
+  state.locationsLoaded=true;
   state.locationSync=payload.sync||null;
   if(state.locationSync?.errors?.length) console.warn("[SKANDI Home] Location sync diagnostics:",state.locationSync.errors);
   renderSelectOptions();
   // Re-render an open suggestion list immediately after async data arrives.
-  ["from","to","hol-destination-search","sig-destination-search","hol-from-search","sig-from-search"].forEach(id=>{
-    const input=$(id); if(input===document.activeElement) input.dispatchEvent(new Event("input",{bubbles:true}));
+  ["from","to","hol-destination-search","hotel-destination-search","sig-destination-search","hol-from-search","sig-from-search"].forEach(id=>{
+    const input=$(id); if(input===document.activeElement) input.__refreshLocationSuggestions?.();
   });
 }
 
 function renderBootstrap(payload={}){
   const content=payload.content||{};
 
-  // Product/editorial blocks are canonical Supabase content only.
-  // Prices for homepage destinations and exact hotels are hydrated live by the Wix page through Duffel Stays.
-  if (Array.isArray(content.airports) && content.airports.length) state.airports = content.airports;
-  state.destinations = Array.isArray(content.destinations) ? content.destinations : state.destinations;
-  // Never let a secondary/late bootstrap erase a successfully received location catalogue.
-  if (Array.isArray(content.searchDestinations) && content.searchDestinations.length) {
-    state.searchDestinations = content.searchDestinations;
-  } else if (!state.searchDestinations.length && state.destinations.length) {
-    state.searchDestinations = state.destinations;
+  // The backend owns publication filtering, localization and live prices.
+  if(Array.isArray(content.airports)&&Array.isArray(content.searchDestinations)){
+    renderLocationData({airports:content.airports,searchDestinations:content.searchDestinations,sync:content.sync});
   }
+  state.destinations=Array.isArray(content.destinations)?content.destinations:state.destinations;
   state.hotels = Array.isArray(content.hotels) ? content.hotels : [];
   state.offers = Array.isArray(content.offers) ? content.offers : [];
   state.inspiration = Array.isArray(content.inspiration) ? content.inspiration : [];
@@ -4482,16 +4619,10 @@ function mixedItemLabel(kind){
   if(kind==="club") return "SKANDI CLUB";
   return skandiTranslate("home.card.destination","Destination");
 }
-function mixedItemPrice(item,kind){
-  if(kind==="destination" || kind==="hotel") {
-    const value=money(item.fromPrice||item.price||0);
-    return value ? `${skandiTranslate("home.card.from","From")} ${value}` : "";
-  }
-  if(kind==="offer") {
-    const value=money(item.fromPrice||item.price||item.amount||0);
-    return value ? `${skandiTranslate("home.card.from","From")} ${value}` : "";
-  }
-  return "";
+function mixedItemPrice(item,kind) {
+  if(!["destination","hotel","offer"].includes(kind))return "";
+  const price=recordPrice(item)||money(item.price||{});
+  return price?skandiTranslate("home.card.from","From")+" "+price:"";
 }
 function renderMixedFeed(){
   const grid=$("mixed-feed");
@@ -4531,7 +4662,7 @@ function renderMixedFeed(){
     const copy=localizedRecordValue(item,"description",localizedRecordValue(item,"summary",""));
     const kicker=item.kicker||item.badge||item.category||mixedItemLabel(kind);
     const price=mixedItemPrice(item,kind);
-    const path=safeRouteValue(item.path, defaultContentPath(kind));
+    const path=safeRouteValue(item.href||item.path, defaultContentPath(kind));
     const search=kind==="offer" ? JSON.stringify(item.search||{}) : "{}";
     return `<article class="mixed-card ${layouts[index]||"third"} ${escAttr(kind)}" data-kind="${escAttr(kind)}" data-path="${escAttr(path)}" data-search='${escAttr(search)}' style="${escAttr(imageStyle(item.imageUrl||item.image))}">
       <div class="mixed-card-copy">
@@ -4558,12 +4689,15 @@ function renderMixedFeed(){
 function renderTrust(){
   $("trustGrid").innerHTML=state.trust.map(t=>`<div class="trust-box"><strong>${esc(localizedRecordValue(t,"title",""))}</strong><span>${esc(localizedRecordValue(t,"text",""))}</span></div>`).join("");
 }
-function livePriceMarkup(item){
-  const price=recordPrice(item);
-  const period=item.pricePeriod||state.priceSearch||{};
-  if(!price) return `<div class="live-price-row"><div><small>${esc(skandiTranslate("home.card.sevenNights","7-night stay"))}</small><strong>${esc(skandiTranslate("home.card.checkLive","Check live price"))}</strong></div><span class="duffel-chip">DUFFEL STAYS</span></div>`;
-  const dateCopy=period.checkInDate&&period.checkOutDate?`${formatDate(period.checkInDate)} – ${formatDate(period.checkOutDate)}`:"";
-  return `<div class="live-price-row"><div><small>${esc(skandiTranslate("home.card.sevenNights","7-night stay"))}${dateCopy?` · ${esc(dateCopy)}`:""}</small><strong>${esc(skandiTranslate("home.card.from"))} ${esc(price)}</strong></div><span class="duffel-chip">${esc(skandiTranslate("home.card.liveStay","Live Duffel price"))}</span></div>`;
+function livePriceMarkup(item) {
+  const expired=item.priceExpiresAt&&Date.parse(item.priceExpiresAt)<=Date.now();
+  const price=item.livePriceFound===true&&!expired?recordPrice(item):"";
+  const period=item.pricePeriod||{};
+  const dates=period.checkInDate&&period.checkOutDate?formatDate(period.checkInDate)+" – "+formatDate(period.checkOutDate):"";
+  const nights=nightsBetween(period.checkInDate,period.checkOutDate);
+  const caption=dates?dates+" · "+nights+" "+skandiTranslate("home.summary.nights","nights"):"";
+  if(!price)return '<div class="live-price-row"><div><strong>'+esc(item.livePriceStatus==="PENDING"?skandiTranslate("home.status.searchingShort","Searching…"):skandiTranslate("home.card.checkLive","Check live price"))+'</strong></div></div>';
+  return '<div class="live-price-row"><div><small>'+esc(caption)+'</small><strong>'+esc(skandiTranslate("home.card.from")+" "+price)+'</strong></div><span class="duffel-chip">'+esc(skandiTranslate("home.card.liveStay","Live Duffel price"))+'</span></div>';
 }
 function renderDestinations(){
   const grid=$("destinations-grid"); if(!grid)return;
@@ -4573,7 +4707,7 @@ function renderDestinations(){
   grid.innerHTML=rows.map(d=>{
     const tags=(d.tags||d.badges||[]).slice(0,4);
     return `
-    <article class="dest-card" data-path="${escAttr(safeRouteValue(d.path||d.url,destinationsRoute()))}">
+    <article class="dest-card" data-path="${escAttr(safeRouteValue(d.href||d.path||d.url,destinationsRoute()))}">
       <div class="card-img" style="${escAttr(imageStyle(d.imageUrl||d.image))}"><div class="card-code">${esc(d.destinationCode||d.iata||d.badge||"SKANDI")}</div></div>
       <div class="card-body">
         <h3>${esc(localizedRecordValue(d,"title",d.name||skandiTranslate("home.card.destination")))}</h3>
@@ -4593,7 +4727,7 @@ function renderHotels(){
   grid.innerHTML=rows.map(h=>{
     const stars=h.rating?`${"★".repeat(Math.max(1,Math.min(5,Math.round(Number(h.rating)))))} · `:"";
     const tags=(h.tags||[]).slice(0,3);
-    return `<article class="hotel-card" data-path="${escAttr(safeRouteValue(h.path,masterRoute("hotels")))}">
+    return `<article class="hotel-card" data-path="${escAttr(safeRouteValue(h.href||h.path,masterRoute("hotels")))}">
       <div class="hotel-img" style="${escAttr(imageStyle(h.imageUrl||h.image))}"><div class="hotel-badge">${esc(stars+String(h.city||h.country||"SKANDI HOTEL"))}</div></div>
       <div class="hotel-body">
         <div class="hotel-location">${esc([h.city,h.country].filter(Boolean).join(" · "))}</div>
@@ -4612,10 +4746,10 @@ function renderOffers(){
   const section=$("offers-section");
   if(section) section.hidden=rows.length===0;
   grid.innerHTML=rows.map(o=>{
-    const price=money(o.fromPrice||o.price||o.amount||0);
+    const price=recordPrice(o)||money(o.price||{});
     const tags=(o.tags||[]).slice(0,3);
     return `
-    <article class="offer-card" data-search='${escAttr(JSON.stringify(o.search||{}))}' data-path="${escAttr(safeRouteValue(o.path,offersRoute()))}">
+    <article class="offer-card" data-search='${escAttr(JSON.stringify(o.search||{}))}' data-path="${escAttr(safeRouteValue(o.href||o.path,offersRoute()))}">
       <div class="offer-img" style="${escAttr(imageStyle(o.imageUrl||o.image))}"><div class="card-code">${esc(o.badge||o.destinationCode||skandiTranslate("home.card.offer"))}</div></div>
       <div class="offer-body">
         <h4>${esc(localizedRecordValue(o,"title","SKANDI Offer"))}</h4>
@@ -4635,7 +4769,7 @@ function renderInspiration(){
   const section=$("inspiration-section");
   if(section) section.hidden=rows.length===0;
   grid.innerHTML=rows.map((item,index)=>`
-    <article class="inspo-card ${index===0?"featured":""}" data-path="${escAttr(safeRouteValue(item.path,masterRoute("voy")))}" style="${escAttr(imageStyle(item.imageUrl||item.image))}">
+    <article class="inspo-card ${index===0?"featured":""}" data-path="${escAttr(safeRouteValue(item.href||item.path,masterRoute("voy")))}" style="${escAttr(imageStyle(item.imageUrl||item.image))}">
       <div class="inspo-copy">
         <div class="inspo-kicker">${esc(item.kicker||item.category||skandiTranslate("home.sections.inspiration.title","Travel inspiration"))}</div>
         <h3>${esc(localizedRecordValue(item,"title","Travel inspiration"))}</h3>
@@ -4657,13 +4791,13 @@ function renderTripTypes(){
   `).join("");
   
   document.querySelectorAll(".type-card").forEach(card => card.onclick = () => {
-    if(card.dataset.routeKey) return send("HOME_NAVIGATE", {path: routeByKey(card.dataset.routeKey)});
-    if(card.dataset.path) return send("HOME_NAVIGATE", {path: safeRouteValue(card.dataset.path, destinationsRoute())});
     if(card.dataset.action){
       const tab = card.dataset.action;
       const btn = document.querySelector(`.tab-btn[data-tab="${tab}"]`);
-      if(btn){ btn.click(); document.getElementById("hero-wrap").scrollIntoView({behavior:"smooth"}); }
+      if(btn){focusSearchTab(tab);return;}
     }
+    if(card.dataset.routeKey)return navigateRoute(card.dataset.routeKey);
+    if(card.dataset.path)return navigateParent(card.dataset.path);
   });
 }
 function renderWhy(){
@@ -4730,8 +4864,7 @@ function renderBudgetStrip(){
   el.innerHTML=cards.map(([title,text,key])=>`<article class="budget-card" data-route-key="${escAttr(key)}"><div><div class="budget-eyebrow">${esc(longCopy('browse'))}</div><strong>${esc(longCopy(title))}</strong><p>${esc(longCopy(text))}</p></div><span>${esc(longCopy('browse'))} →</span></article>`).join("");
   el.querySelectorAll('.budget-card').forEach(card=>card.onclick=()=>{
     const key=card.dataset.routeKey||"destinations";
-    const path=routeByKey(key);
-    send("HOME_NAVIGATE",{path});
+    navigateRoute(key);
   });
 }
 function renderSignaturePush(){
@@ -4749,7 +4882,7 @@ function renderRouteIdeas(){
   const section=$("route-ideas-section"),grid=$("route-ideas-grid"); if(!section||!grid)return;
   const rows=state.destinations.slice(0,3); section.hidden=rows.length===0;
   if(!rows.length){grid.innerHTML='';return;}
-  const card=(d,index,cls)=>{const [kicker,text]=routeIdeaDescriptor(d,index);const path=safeRouteValue(d.path,destinationsRoute());return `<article class="${cls}" data-path="${escAttr(path)}" style="${escAttr(imageStyle(d.imageUrl||d.image))}"><div class="route-copy"><small>${esc(kicker)}</small><h3>${esc(localizedRecordValue(d,'title',d.name||'Destination'))}</h3><p>${esc(localizedRecordValue(d,'summary',localizedRecordValue(d,'description',text)))}</p>${recordPrice(d)?`<span class="route-price">${esc(skandiTranslate('home.card.from'))} ${esc(recordPrice(d))}</span>`:''}</div></article>`};
+  const card=(d,index,cls)=>{const [kicker,text]=routeIdeaDescriptor(d,index);const path=safeRouteValue(d.href||d.path,destinationsRoute());return `<article class="${cls}" data-path="${escAttr(path)}" style="${escAttr(imageStyle(d.imageUrl||d.image))}"><div class="route-copy"><small>${esc(kicker)}</small><h3>${esc(localizedRecordValue(d,'title',d.name||'Destination'))}</h3><p>${esc(localizedRecordValue(d,'summary',localizedRecordValue(d,'description',text)))}</p>${recordPrice(d)?`<span class="route-price">${esc(skandiTranslate('home.card.from'))} ${esc(recordPrice(d))}</span>`:''}</div></article>`};
   const first=card(rows[0],0,'route-feature');
   const side=rows.slice(1).map((d,i)=>card(d,i+1,'route-stack-card')).join('');
   grid.innerHTML=`${first}<div class="route-side">${side||card(rows[0],1,'route-stack-card')+card(rows[0],2,'route-stack-card')}</div>`;
@@ -4764,7 +4897,7 @@ function findRecentHotels(){
       const out=[];
       raw.forEach(x=>{
         if(typeof x==='string'){
-          const match=state.hotels.find(h=>h.id===x||h.path===x||h.slug===x||h.name===x); if(match)out.push(match);
+          const match=state.hotels.find(h=>h.id===x||h.href===x||h.path===x||h.slug===x||h.name===x); if(match)out.push(match);
         }else if(x&&typeof x==='object')out.push(x);
       });
       if(out.length)return out.slice(0,8);
@@ -4775,7 +4908,7 @@ function findRecentHotels(){
 function renderRecentlyViewed(){
   const section=$("recently-section"),rail=$("recently-rail"); if(!section||!rail)return;
   const rows=findRecentHotels(); section.hidden=rows.length===0;
-  rail.innerHTML=rows.map(h=>`<article class="recent-card" data-path="${escAttr(safeRouteValue(h.path,masterRoute('hotels')))}"><div class="recent-img" style="${escAttr(imageStyle(h.imageUrl||h.image))}"></div><div class="recent-body"><small>${esc([h.city,h.country].filter(Boolean).join(' · ')||'SKANDI HOTEL')}</small><h3>${esc(localizedRecordValue(h,'title',h.name||'Hotel'))}</h3><p>${esc(recordPrice(h)?`${skandiTranslate('home.card.from')} ${recordPrice(h)}`:skandiTranslate('home.card.checkLive','Check live price'))}</p></div></article>`).join('');
+  rail.innerHTML=rows.map(h=>`<article class="recent-card" data-path="${escAttr(safeRouteValue(h.href||h.path,masterRoute('hotels')))}"><div class="recent-img" style="${escAttr(imageStyle(h.imageUrl||h.image))}"></div><div class="recent-body"><small>${esc([h.city,h.country].filter(Boolean).join(' · ')||'SKANDI HOTEL')}</small><h3>${esc(localizedRecordValue(h,'title',h.name||'Hotel'))}</h3><p>${esc(recordPrice(h)?`${skandiTranslate('home.card.from')} ${recordPrice(h)}`:skandiTranslate('home.card.checkLive','Check live price'))}</p></div></article>`).join('');
   rail.querySelectorAll('.recent-card').forEach(c=>c.onclick=()=>send('HOME_NAVIGATE',{path:safeRouteValue(c.dataset.path,masterRoute('hotels'))}));
 }
 function renderServiceShop(){
@@ -4794,7 +4927,7 @@ function renderServiceShop(){
     ['<svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>','info','infoText','travelInfo'],
     
     // 5. My Booking (Luggage/Suitcase)
-    ['<svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>','booking','bookingText','myTrip']
+    ['<svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>','booking','bookingText','myTrips']
   ];
   
   el.innerHTML=cards.map(([icon,title,text,key],i)=>`
@@ -4807,19 +4940,19 @@ function renderServiceShop(){
     </article>
   `).join('');
   
-  el.querySelectorAll('.service-push').forEach(c=>c.onclick=()=>send('HOME_NAVIGATE',{path:routeByKey(c.dataset.routeKey)}));
+  el.querySelectorAll('.service-push').forEach(c=>c.onclick=()=>navigateRoute(c.dataset.routeKey));
 }
 function renderSeasonalRail(){
   const el=$("seasonal-rail");if(!el)return; const imgs=editorialImages();
   const cards=[['winter','winterText','destinations'],['city','cityText','destinations'],['family','familyText','destinations'],['shoulder','shoulderText','offers']];
   el.innerHTML=cards.map(([title,text,key],i)=>`<article class="season-card" data-route-key="${escAttr(key)}" style="${escAttr(imageStyle(imgs[i%Math.max(1,imgs.length)]||''))}"><div class="season-copy"><small>SKANDI TRAVEL IDEA</small><h3>${esc(longCopy(title))}</h3><p>${esc(longCopy(text))}</p></div></article>`).join('');
-  el.querySelectorAll('.season-card').forEach(c=>c.onclick=()=>send('HOME_NAVIGATE',{path:routeByKey(c.dataset.routeKey)}));
+  el.querySelectorAll('.season-card').forEach(c=>c.onclick=()=>navigateRoute(c.dataset.routeKey));
 }
 function renderGuidePush(){
   const el=$("guide-grid");if(!el)return;
   const rows=[['01','guides','guidesText','destinations'],['02','airports','airportsText','travelInfo'],['03','before','beforeText','travelInfo']];
   el.innerHTML=rows.map(([n,title,text,key])=>`<article class="guide-card" data-route-key="${escAttr(key)}"><div class="guide-num">${esc(n)} / SKANDI GUIDE</div><h3>${esc(longCopy(title))}</h3><p>${esc(longCopy(text))}</p><span>${esc(longCopy('open'))} →</span></article>`).join('');
-  el.querySelectorAll('.guide-card').forEach(c=>c.onclick=()=>send('HOME_NAVIGATE',{path:routeByKey(c.dataset.routeKey)}));
+  el.querySelectorAll('.guide-card').forEach(c=>c.onclick=()=>navigateRoute(c.dataset.routeKey));
 }
 function renderLongHomeModules(){
   renderBudgetStrip();
@@ -4910,10 +5043,11 @@ function mapCabin(value){
   return "ECONOMY";
 }
 function getFlightSearch(){
+  ensureLocationSelection("from");ensureLocationSelection("to");
   return {
     tripType:"flightOnly",
-    origin:$("fromIata").value || extractIata($("from").value),
-    destination:$("toIata").value || extractIata($("to").value),
+    origin:$("fromIata").value,
+    destination:$("toIata").value,
     departureDate:$("depart").value,
     returnDate:$("return").value,
     adults:state.adults,
@@ -4922,6 +5056,7 @@ function getFlightSearch(){
     childAges:[...state.childAges],
     infantAges:[...state.infantAges],
     travelClass:mapCabin($("travelClass").value),
+    cabinClass:mapCabin($("travelClass").value).toLowerCase(),
     nonStop:false,
     currency: SKANDI_USER_SETTINGS.currency || "USD"
   };
@@ -4946,6 +5081,7 @@ function getHolidaySearch(){
     departureDate:dep,returnDate:ret,nights,
     adults:state.adults,children:state.children,infants:state.infants,
     childAges:[...state.childAges],infantAges:[...state.infantAges],
+    guests:stayGuestsForHome(),
     currency: SKANDI_USER_SETTINGS.currency || "USD"
   };
 }
@@ -4968,6 +5104,7 @@ function getHotelSearch(){
     adults:state.adults,
     children:state.children,
     childAges:[...state.childAges],
+    guests:stayGuestsForHome(),
     currency: SKANDI_USER_SETTINGS.currency || "USD"
   };
 }
@@ -4991,74 +5128,8 @@ function getSignatureSearch(){
     departureDate:dep,returnDate:ret,nights,
     adults:state.adults,children:state.children,infants:state.infants,
     childAges:[...state.childAges],infantAges:[...state.infantAges],
+    guests:stayGuestsForHome(),
     currency: SKANDI_USER_SETTINGS.currency || "USD"
-  };
-}
-function extractIata(label){
-  const m=String(label||"").match(/\(([A-Z]{3})\)/);
-  return m ? m[1] : String(label||"").trim().toUpperCase().slice(0,3);
-}
-function getHolidaySearch(){
-  ensureLocationSelection("hol-from-search");
-  ensureLocationSelection("hol-destination-search");
-  const dep=$("hol-departure-date").value, ret=$("hol-return-date").value;
-  const nights=nightsBetween(dep,ret);
-  const destinationCode=$("hol-destination").value;
-  const destinationIata=$("hol-destination-iata").value;
-  return {
-    tripType:"package",
-    origin:$("hol-from-iata").value,
-    destination:destinationIata||destinationCode,
-    destinationCode,
-    destinationRegion:destinationCode,
-    destinationIata,
-    destinationType:$("hol-destination-type").value,
-    destinationLabel:$("hol-destination-search").value.trim(),departureLabel:$("hol-from-search").value.trim(),
-    departureDate:dep,returnDate:ret,nights,
-    adults:state.adults,children:state.children,infants:state.infants,
-    childAges:[...state.childAges],infantAges:[...state.infantAges],currency:$("currencyHolidays").value
-  };
-}
-function getHotelSearch(){
-  ensureLocationSelection("hotel-destination-search");
-  const destinationCode=$("hotel-destination").value;
-  const destinationIata=$("hotel-destination-iata").value;
-  return {
-    tripType:"hotelOnly",
-    destination:destinationIata||destinationCode,
-    destinationCode,
-    destinationRegion:destinationCode,
-    destinationIata,
-    destinationType:$("hotel-destination-type").value,
-    destinationLabel:$("hotel-destination-search").value.trim(),
-    departureDate:$("hotel-in").value,
-    returnDate:$("hotel-out").value,
-    rooms:Number($("hotel-rooms").value||1),
-    adults:state.adults,
-    children:state.children,
-    childAges:[...state.childAges],
-    currency:$("currencyHotels").value
-  };
-}
-function getSignatureSearch(){
-  ensureLocationSelection("sig-from-search");
-  ensureLocationSelection("sig-destination-search");
-  const dep=$("sig-departure-date").value, ret=$("sig-return-date").value;
-  const nights=nightsBetween(dep,ret);
-  const destinationCode=$("sig-destination").value;
-  const destinationIata=$("sig-destination-iata").value;
-  return {
-    tripType:"signaturePackage",
-    origin:$("sig-from-iata").value,
-    destination:destinationIata||destinationCode,
-    destinationCode,
-    destinationRegion:destinationCode,
-    destinationIata,
-    destinationType:$("sig-destination-type").value,
-    destinationLabel:$("sig-destination-search").value.trim(),departureLabel:$("sig-from-search").value.trim(),
-    departureDate:dep,returnDate:ret,nights,
-    adults:state.adults,children:state.children,infants:state.infants,
-    childAges:[...state.childAges],infantAges:[...state.infantAges],currency:$("currencySignature").value
   };
 }
 function validateSearch(search){
@@ -5068,14 +5139,19 @@ function validateSearch(search){
   if(!search.departureDate) return skandiTranslate("home.status.selectDepartureDate");
   if(!search.returnDate) return skandiTranslate("home.status.selectReturnDate","Select a To date.");
   if(search.returnDate<=search.departureDate) return skandiTranslate("home.status.invalidDateRange","To date must be after From date.");
+  if(search.departureDate<todayPlus(0))return "Choose a departure date today or later.";
+  if(search.tripType!=="hotelOnly"&&search.origin===search.destination)return "Choose different departure and destination airports.";
+  if(search.tripType==="hotelOnly"&&Number(search.rooms)>Number(search.adults))return "Each room needs at least one adult.";
   return "";
 }
 function runSearch(mode, overrideSearch=null){
+  if(pending.search||pending.selection)return;
   const search = overrideSearch || (mode==="flights"?getFlightSearch():mode==="holidays"?getHolidaySearch():mode==="hotels"?getHotelSearch():mode==="signature"?getSignatureSearch():getHolidaySearch());
   const warning=validateSearch(search);
   if(warning){ showInlineStatus(warning,true); return; }
   
   state.lastSearch=search;
+  state.lastResults=[];
   
   // Activate button loading state
   const btn = document.querySelector(`[data-search="${mode}"]`);
@@ -5125,10 +5201,10 @@ function showInlineStatus(msg,isError=false){
   inline.innerHTML=`<div class="status-card ${isError?"error":""}">${esc(msg)}</div>`;
 }
 function renderResults(items=[]){
-  showPageLoader(false);
+  if(!pending.search&&!pending.selection)showPageLoader(false);
   document.querySelectorAll(".search-submit").forEach(b => b.classList.remove("loading"));
   state.lastResults=items;
-  setLoading(false);
+  setLoading(Boolean(pending.search));
   if(!items.length){
     $("flight-results-list").innerHTML="";
     showStatus(skandiTranslate("home.status.noResults"),true);
@@ -5160,12 +5236,16 @@ function renderResults(items=[]){
       <button type="button" class="select-flight-btn" data-index="${idx}">${esc(skandiTranslate("home.result.select"))}</button>
     </article>
   `).join("");
-  document.querySelectorAll("[data-index]").forEach(btn=>btn.onclick=()=>send("HOME_SELECT_OFFER",{offer:state.lastResults[Number(btn.dataset.index)],search:state.lastSearch}));
+  document.querySelectorAll("#flight-results-list .select-flight-btn[data-index]").forEach(btn=>{
+    btn.disabled=Boolean(pending.selection);
+    btn.onclick=()=>selectHomeOffer(Number(btn.dataset.index));
+  });
 }
 function handleError(message){
   showPageLoader(false);
   document.querySelectorAll(".search-submit").forEach(b => b.classList.remove("loading"));
   setLoading(false);
+  document.querySelectorAll("#flight-results-list .select-flight-btn").forEach(btn=>btn.disabled=Boolean(pending.selection));
   showStatus(message||skandiTranslate("home.status.searchFailed"),true);
 }
 function boot(){
@@ -5182,28 +5262,22 @@ function boot(){
   setupDatePicker();
   setInitialDates();
   renderPax();
-  // Add inside your boot() function
-document.getElementById('swapAirports')?.addEventListener('click', () => {
-  const fromInput = document.getElementById('from');
-  const toInput = document.getElementById('to');
-  const fromIata = document.getElementById('fromIata');
-  const toIata = document.getElementById('toIata');
-  
-  // Swap values
-  const tempVal = fromInput.value;
-  fromInput.value = toInput.value;
-  toInput.value = tempVal;
-  
-  const tempIata = fromIata.value;
-  fromIata.value = toIata.value;
-  toIata.value = tempIata;
-});
+  // The swap control belongs to Flight + Hotel.
+  $("swapAirports")?.addEventListener("click",()=>{
+    ensureLocationSelection("hol-from-search");ensureLocationSelection("hol-destination-search");
+    const origin=$("hol-from-iata").value,destination=$("hol-destination-iata").value;
+    if(!origin||!destination)return showInlineStatus(skandiTranslate("home.status.selectPackageRoute"),true);
+    const oldOriginLabel=$("hol-from-search").value,oldDestinationLabel=$("hol-destination-search").value;
+    $("hol-from-iata").value=destination;$("hol-from-search").value=oldDestinationLabel;
+    $("hol-destination").value=origin;$("hol-destination-iata").value=origin;
+    $("hol-destination-type").value="AIRPORT";$("hol-destination-search").value=oldOriginLabel;
+  });
   document.querySelectorAll("[data-counter]").forEach(btn=>btn.onclick=()=>clampPax(btn.dataset.counter, state[btn.dataset.counter]+Number(btn.dataset.step||0)));
   document.querySelectorAll("[data-search]").forEach(btn=>btn.onclick=()=>runSearch(btn.dataset.search));
   document.querySelectorAll("[data-nav]").forEach(btn=>btn.onclick=()=>navigateParent(btn.dataset.nav));
   document.querySelectorAll("button[data-route-key]").forEach(btn=>btn.onclick=()=>{
     const key=btn.dataset.routeKey;
-    send("HOME_NAVIGATE",{path:routeByKey(key)});
+    navigateRoute(key);
   });
   $("editSearchButton").onclick=()=>{ document.body.classList.remove("search-mode"); window.scrollTo({top:0,behavior:"smooth"}); };
   $("flight-results-list").addEventListener("click",()=>{});
@@ -5211,39 +5285,54 @@ document.getElementById('swapAirports')?.addEventListener('click', () => {
   applyTranslations();
   send("MASTER_CONFIG_REQUEST",{context:"home"});
   send("MASTER_NAVIGATION_REQUEST",{context:"home"});
-  send("HOME_READY",{settings:{...SKANDI_USER_SETTINGS},priceSearch:{checkInDate:state.dateRanges.holidays.from,checkOutDate:state.dateRanges.holidays.to,adults:state.adults,children:state.children,childAges:[...state.childAges],rooms:1}});
-  send("HOME_LOCATIONS_REQUEST",{});
+  window.addEventListener("skandi:settings-changed",()=>requestBootstrap(true));
+  requestBootstrap();
+  readyTimer=setInterval(()=>{if(pending.bootstrap?.message.type==="HOME_READY")postToParent(pending.bootstrap.message);},1500);
   document.addEventListener("visibilitychange",()=>{
-    if(!document.hidden&&state.lastBootstrapAt&&Date.now()-state.lastBootstrapAt>300000){
-      send("HOME_REFRESH",{priceSearch:{checkInDate:state.dateRanges.holidays.from,checkOutDate:state.dateRanges.holidays.to,adults:state.adults,children:state.children,childAges:[...state.childAges],rooms:Number($("hotel-rooms")?.value||1)}});
-    }
+    if(!document.hidden&&state.lastBootstrapAt&&Date.now()-state.lastBootstrapAt>300000&&!pending.bootstrap)requestBootstrap(true);
   });
 }
 window.addEventListener("message",event=>{
-  const msg=event.data||{};
-  if(msg.source!==PARENT)return;
+  if(event.source!==window.parent)return;
+  let msg=event.data||{};
+  if(typeof msg==="string"){try{msg=JSON.parse(msg);}catch(_){return;}}
+  if(!msg||msg.source!==PARENT)return;
   if(msg.type==="SKANDI_MASTER_CONFIG" || msg.type==="SKANDI_MASTER_NAVIGATION"){
     const payload=msg.payload||{};
     MASTER_CONTEXT={
       ...MASTER_CONTEXT,
       ...payload,
-      routes:{...ROUTE_DEFAULTS,...(MASTER_CONTEXT.routes||{}),...(payload.routes||{})},
+      routes:{...(MASTER_CONTEXT.routes||{}),...(payload.routes||{})},
       customer:payload.customer||MASTER_CONTEXT.customer||{}
     };
-    // Content rendered before masterPage.js answers is re-rendered so every CTA uses the live route contract.
+    if(payload.settings)saveSkandiSettings(payload.settings.language,payload.settings.currency,false);
+    // Re-render CTAs after the canonical route contract arrives.
     renderLongHomeModules();
     renderTripTypes();
   }
+  if(msg.type==="CUSTOMER_SETTINGS_STATE")saveSkandiSettings(msg.payload?.language,msg.payload?.currency,false);
   if(msg.type==="HOME_HOST_READY"){
     state.hostReady=msg.payload||{};
-    console.info("[SKANDI Home] Wix bridge ready",state.hostReady);
-    // Re-send the child handshake after the host explicitly confirms binding.
-    send("HOME_READY",{settings:{...SKANDI_USER_SETTINGS},priceSearch:{checkInDate:state.dateRanges.holidays.from,checkOutDate:state.dateRanges.holidays.to,adults:state.adults,children:state.children,childAges:[...state.childAges],rooms:1}});
+    MASTER_CONTEXT.routes={...MASTER_CONTEXT.routes,...(msg.payload?.routes||{})};
+    if(!state.hasBootstrapped)requestBootstrap();
   }
-  if(msg.type==="HOME_LOCATION_DATA")renderLocationData(msg.payload||{});
-  if(msg.type==="HOME_BOOTSTRAP_RESULT")renderBootstrap(msg.payload||{});
-  if(msg.type==="HOME_SEARCH_RESULT")renderResults(msg.payload?.items||[]);
-  if(msg.type==="HOME_NAVIGATE_TO_OFFER")showStatus(skandiTranslate("home.status.offerSaved"),false,true);
+  if(msg.type==="HOME_LOCATION_DATA"&&releaseRequest("locations",msg.requestId))renderLocationData(msg.payload||{});
+  if(msg.type==="HOME_BOOTSTRAP_RESULT"&&msg.requestId===state.bootstrapId){
+    releaseRequest("bootstrap",msg.requestId);
+    clearInterval(readyTimer);readyTimer=null;state.hasBootstrapped=true;
+    MASTER_CONTEXT.routes={...MASTER_CONTEXT.routes,...(msg.payload?.routes||{})};
+    showBridgeStatus("");renderBootstrap(msg.payload||{});
+  }
+  if(msg.type==="HOME_SEARCH_RESULT"&&releaseRequest("search",msg.requestId)){
+    renderResults(Array.isArray(msg.payload?.items)?msg.payload.items:[]);
+    if(msg.payload?.errors?.length)showStatus(state.lastResults.length
+      ? "Some travel results are unavailable. The available results are shown below."
+      : "The travel provider could not complete this search. Please try again.",true);
+  }
+  if(msg.type==="HOME_NAVIGATE_TO_OFFER"&&pending.selection?.requestId===msg.requestId){
+    clearTimeout(pending.selection.timer);pending.selection.timer=null;
+    showStatus(skandiTranslate("home.status.offerSaved"),false,true);
+  }
   if(msg.type==="HOME_FOCUS_SEARCH"){
     document.body.classList.remove("search-mode");
     document.getElementById("hero-wrap")?.scrollIntoView({behavior:"smooth",block:"start"});
@@ -5269,7 +5358,15 @@ window.addEventListener("message",event=>{
       window.setTimeout(()=>toast.classList.remove("show"),3200);
     }
   }
-  if(msg.type==="HOME_ERROR")handleError(msg.message || msg.payload?.message);
+  if(msg.type==="HOME_ERROR"){
+    const key=Object.keys(pending).find(key=>pending[key]?.requestId===msg.requestId);
+    if(!key)return;
+    releaseRequest(key,msg.requestId);
+    if(key==="bootstrap"||key==="locations"){
+      clearInterval(readyTimer);readyTimer=null;
+      showBridgeStatus(msg.payload?.message||"Home is temporarily unavailable.",true,true);
+    } else handleError(msg.payload?.message||"This request could not be completed.");
+  }
 });
 /* Typewriter Effect for Destination Inputs */
 const destinations = ["Palma de Mallorca...", "Phuket, Thailand...", "New York (JFK)...", "a sunny beach...", "a city weekend..."];
@@ -5280,6 +5377,7 @@ const destInput = document.getElementById("hol-destination-search");
 
 function typeWriter() {
   if (!destInput) return;
+  if(SKANDI_USER_SETTINGS.language!=="EN"||destInput===document.activeElement){setTimeout(typeWriter,1000);return;}
   const currentWord = destinations[destIndex];
   
   if (isDeleting) {
@@ -5302,12 +5400,15 @@ function typeWriter() {
   }
   setTimeout(typeWriter, typeSpeed);
 }
-// Automatically report height changes to the Wix parent
-const resizeObserver = new ResizeObserver(() => {
-  // Adding a 40px buffer prevents scrollbar flickering
-  send("RESIZE_IFRAME", { height: document.documentElement.scrollHeight + 40 });
-});
-resizeObserver.observe(document.body);
+// Report meaningful height changes; avoid a resize feedback loop.
+let lastReportedHeight=0;
+if(typeof ResizeObserver==="function"){
+  const resizeObserver=new ResizeObserver(()=>{
+    const height=Math.ceil(document.body.getBoundingClientRect().height)+40;
+    if(Math.abs(height-lastReportedHeight)>4){lastReportedHeight=height;send("RESIZE_IFRAME",{height});}
+  });
+  resizeObserver.observe(document.body);
+}
 // Start it
 setTimeout(typeWriter, 1000);
 boot();
@@ -5316,3 +5417,4 @@ boot();
 </script>
 </body>
 </html>
+```
