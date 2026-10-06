@@ -15,7 +15,7 @@ LAST SYNCED: 2026-09-16
 - WIX PAGE FILE: `/src/pages/Travel Info.m43d6.js`
 - WIX ROUTE / SLUG: `/travel-info`
 - WIX HTML ELEMENT: `#travelInfoHtml`
-- CURRENT STATUS: REVISIONS NEEDED — bootstrap timeout repair prepared; live Wix verification pending
+- CURRENT STATUS: REVISIONS NEEDED — runtime facade export restoration required; live Wix verification pending
 - SOURCE-OF-TRUTH STATUS: AUTHORITATIVE intended Travel Info embed source
 - CANONICAL WEB FACADE: `/src/backend/SKANDI_CORE/publicContent.web.js`
 - CANONICAL CORE: `/src/backend/SKANDI_CORE/publicContent.js`
@@ -27,12 +27,13 @@ LAST SYNCED: 2026-09-16
 - AUTHORIZATION: public Travel Info reads are exposed through `Permissions.Anyone`; privileged database credentials remain server-side
 - MESSAGE CONTRACT: child source `SKANDI_PUBLIC_TRAVEL_INFO`; parent source `SKANDI_WIX_PARENT`; existing `TRAVEL_INFO_*` messages preserved
 - BOOTSTRAP CONTRACT: child READY/parent HOST_READY handshake preserved; page backend load is bounded; child watchdog terminates loading if the Wix bridge never reaches DATA or ERROR
-- OPEN / RUNTIME REQUIREMENT: publish the page controller and synchronize the complete executable HTML payload to `#travelInfoHtml`, then verify DATA, ERROR, timeout, retry, aircraft, requirements and support flows in Wix
+- OPEN / RUNTIME REQUIREMENT: restore/publish `/src/backend/SKANDI_CORE/publicContent.web.js` in Wix so `getPublicTravelInfoPayload` is exposed at runtime, then rebuild/publish and verify Travel Info. The live `#travelInfoHtml` payload is unchanged by this repair and does not require replacement.
 - LAST STATIC VERIFICATION: 2026-10-06
 
 ### CHANGE LOG
 - 2026-09-17 — Existing owner notes record that page styling was ready but synchronization required review.
 - 2026-10-06 — V12 bootstrap timeout repair: bounded the Wix page bootstrap call at 15 seconds; added generation control so forced refresh cannot let an older request overwrite a newer one; added a client-side bootstrap watchdog so a missing/stalled Wix bridge cannot leave Travel Info loading indefinitely. No data model, backend ownership, design, element ID, route, or existing message type was changed. REQUIRES LIVE TEST.
+- 2026-10-06 — V12 runtime facade restoration: live Wix reported `(0,r.getPublicTravelInfoPayload) is not a function`, proving the page bundle resolved the `publicContent.web` module without the required runtime export. Current v12 source and Git `main` already define `getPublicTravelInfoPayload` against `getPublicTravelInfoPayloadCore`; therefore the canonical facade is supplied as a required runtime restoration at its existing path. No alternate facade, namespace, core, database model, HTML payload, design, or message contract was introduced. REQUIRES LIVE TEST after Wix rebuild/publish.
 
 ## HOW TO USE
 ***STATUS (OWNER): "TODO", "IN PROGRESS", "NEEDS REVIEW", "REVISIONS NEEDED", "READY", "LIVE", "ARCHIVED"
@@ -42,6 +43,7 @@ STATUS (AGENT): "TODO", "IN PROGRESS", "REVISIONS NEEDED", "READY".***
 1. 9/17 12:07PM "Page is ready styled from my end, page not syncing correctly yet /Samuel"
 2. 9/17 5:00PM new design, must review sync / Samuel
 3. 10/06 V12 bootstrap timeout repair prepared: page call bounded and embed watchdog added; REQUIRES LIVE TEST / ChatGPT
+4. 10/06 Runtime error: `getPublicTravelInfoPayload` resolved undefined in Wix. Canonical `publicContent.web.js` restoration/publish required; live HTML payload unchanged / ChatGPT
 ...
 ***END*** 
 
