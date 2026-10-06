@@ -1,12 +1,14 @@
 # Travel Info
 
 STATUS: REVISIONS NEEDED
+ACTIVE VERSION: V12
 SLUG: /travel-info
 WIX PAGE: Travel Info.m43d6
 AREA: SKANDI
 LIVE HTML: YES
 ELEMENT: #travelInfoHtml
 LAST SYNCED: 2026-09-16
+LAST SOURCE UPGRADE: 2026-10-06
 
 ## INFO / LOG — V12
 - SOURCE FILE: `/HTML_REF/skandi/Travel Info.md`
@@ -15,8 +17,8 @@ LAST SYNCED: 2026-09-16
 - WIX PAGE FILE: `/src/pages/Travel Info.m43d6.js`
 - WIX ROUTE / SLUG: `/travel-info`
 - WIX HTML ELEMENT: `#travelInfoHtml`
-- CURRENT STATUS: REVISIONS NEEDED — runtime facade export restoration required; live Wix verification pending
-- SOURCE-OF-TRUTH STATUS: AUTHORITATIVE intended Travel Info embed source
+- CURRENT STATUS: REVISIONS NEEDED — V12 authority upgrade prepared across Travel Info page, public-content facade/core, shared support facade, route registry and executable HTML; live Wix verification pending
+- SOURCE-OF-TRUTH STATUS: AUTHORITATIVE V12 intended Travel Info implementation
 - CANONICAL WEB FACADE: `/src/backend/SKANDI_CORE/publicContent.web.js`
 - CANONICAL CORE: `/src/backend/SKANDI_CORE/publicContent.js`
 - SHARED TRANSPORT: `/src/backend/SKANDI_CORE/supabaseServer.js`
@@ -26,14 +28,16 @@ LAST SYNCED: 2026-09-16
 - RELEVANT SUPABASE RESOURCES: `travel_info_airlines`, `travel_info_airports`, `travel_info_hotels`, `travel_info_transfers`, `travel_info_tours`, `travel_info_activities`, `travel_info_tickets`, `travel_info_articles`, `travel_info_faq_groups`, `travel_info_faq`, `travel_requirements`, aircraft/cabin/view/hotspot tables
 - AUTHORIZATION: public Travel Info reads are exposed through `Permissions.Anyone`; privileged database credentials remain server-side
 - MESSAGE CONTRACT: child source `SKANDI_PUBLIC_TRAVEL_INFO`; parent source `SKANDI_WIX_PARENT`; existing `TRAVEL_INFO_*` messages preserved
-- BOOTSTRAP CONTRACT: child READY/parent HOST_READY handshake preserved; page backend load is bounded; child watchdog terminates loading if the Wix bridge never reaches DATA or ERROR
-- OPEN / RUNTIME REQUIREMENT: restore/publish `/src/backend/SKANDI_CORE/publicContent.web.js` in Wix so `getPublicTravelInfoPayload` is exposed at runtime, then rebuild/publish and verify Travel Info. The live `#travelInfoHtml` payload is unchanged by this repair and does not require replacement.
+- BOOTSTRAP CONTRACT: V12 child READY/parent HOST_READY handshake; page backend load is bounded; child watchdog terminates loading if the Wix bridge never reaches DATA or ERROR
+- OPEN / RUNTIME REQUIREMENT: install all V12 runtime replacements listed by the package README, synchronize the complete LIVE HTML payload from this record to `#travelInfoHtml`, then rebuild/publish Wix and verify DATA, ERROR, timeout/retry, aircraft, requirements, support and navigation flows. Do not mark LIVE until the runtime export is confirmed.
 - LAST STATIC VERIFICATION: 2026-10-06
 
 ### CHANGE LOG
 - 2026-09-17 — Existing owner notes record that page styling was ready but synchronization required review.
 - 2026-10-06 — V12 bootstrap timeout repair: bounded the Wix page bootstrap call at 15 seconds; added generation control so forced refresh cannot let an older request overwrite a newer one; added a client-side bootstrap watchdog so a missing/stalled Wix bridge cannot leave Travel Info loading indefinitely. No data model, backend ownership, design, element ID, route, or existing message type was changed. REQUIRES LIVE TEST.
 - 2026-10-06 — V12 runtime facade restoration: live Wix reported `(0,r.getPublicTravelInfoPayload) is not a function`, proving the page bundle resolved the `publicContent.web` module without the required runtime export. Current v12 source and Git `main` already define `getPublicTravelInfoPayload` against `getPublicTravelInfoPayloadCore`; therefore the canonical facade is supplied as a required runtime restoration at its existing path. No alternate facade, namespace, core, database model, HTML payload, design, or message contract was introduced. REQUIRES LIVE TEST after Wix rebuild/publish.
+- 2026-10-06 — V12 project-source convergence: project audit found the Drive/project controller and HTML_REF behind the current approved Git source while Wix still exposed a stale/missing `getPublicTravelInfoPayload` runtime binding. Convergence package now carries the bounded controller, canonical facade restoration, and complete authoritative HTML_REF with bootstrap watchdog. Source Registry/test rows remain historical/pending until live acceptance. STATICALLY VERIFIED; REQUIRES LIVE TEST.
+- 2026-10-06 — V12 authority upgrade: active Travel Info runtime identifiers, page/controller protocol version, public-content facade/core metadata, route registry metadata, and executable HTML version labels were promoted from legacy pre-V12 identifiers to V12. Existing routes, message names, element IDs, data ownership, UI behavior and permissions are preserved. STATICALLY VERIFIED; REQUIRES LIVE TEST after Wix publication.
 
 ## HOW TO USE
 ***STATUS (OWNER): "TODO", "IN PROGRESS", "NEEDS REVIEW", "REVISIONS NEEDED", "READY", "LIVE", "ARCHIVED"
@@ -44,12 +48,16 @@ STATUS (AGENT): "TODO", "IN PROGRESS", "REVISIONS NEEDED", "READY".***
 2. 9/17 5:00PM new design, must review sync / Samuel
 3. 10/06 V12 bootstrap timeout repair prepared: page call bounded and embed watchdog added; REQUIRES LIVE TEST / ChatGPT
 4. 10/06 Runtime error: `getPublicTravelInfoPayload` resolved undefined in Wix. Canonical `publicContent.web.js` restoration/publish required; live HTML payload unchanged / ChatGPT
+5. 10/06 V12 authority upgrade prepared: active Travel Info code and executable version metadata promoted to V12; install/publish/live acceptance required / ChatGPT
+6. 10/06 Project-source convergence package prepared: controller + facade + complete HTML_REF aligned; Wix publish/runtime verification still required / ChatGPT
 ...
 ***END*** 
 
 #### LIVE HTML
 ```html
 <!doctype html>
+<!-- SKANDI Travel Info v12 — canonical customer-facing Travel Info embed. -->
+<!-- Data remains owned by the V12 Wix page bridge and backend/SKANDI_CORE boundaries. -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -489,7 +497,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 }
 
 /* =========================================================
-   B-011.22 VISUAL UPGRADE
+   SKANDI TRAVEL INFO V12 VISUAL SYSTEM
    Exact Home service-card palette + richer SKANDI motion.
    Presentation only. Existing Travel Info contracts remain unchanged.
    ========================================================= */
@@ -1238,7 +1246,7 @@ body{
 /* CONTRACT */
 const SOURCE="SKANDI_PUBLIC_TRAVEL_INFO";
 const PARENT="SKANDI_WIX_PARENT";
-const VERSION="BACKEND-BASE-1.0-B011.2";
+const VERSION="SKANDI-TRAVEL-INFO-V12";
 const PAGE_SIZE=24;
 const BOOTSTRAP_WATCHDOG_MS=20000;
 const INITIAL_BRIDGE_WATCHDOG_MS=30000;
@@ -1716,7 +1724,7 @@ window.SKANDITravelInfo={
   refresh:retryData,
   navigate:path=>{if(safeInternal(path))post("TRAVEL_INFO_NAVIGATE",{path})},
   openInsurance:()=>post("TRAVEL_INFO_OPEN_INSURANCE",{}),
-  version:"B-011.21"
+  version:"V12"
 };
 })();
 </script>
@@ -1897,7 +1905,7 @@ const css=`
 @media(max-width:560px){.cab-shell{border-radius:22px}.cab-top{padding:22px 18px 18px}.cab-body{padding:10px}.cab-media,.cab-media img,.cab-media-fallback{height:300px;min-height:300px}.cab-pad{padding:16px}.cab-aircraft-visual,.cab-aircraft-visual img{min-height:260px;height:260px}.cab-footer{display:block}.cab-footer button{margin-top:8px;width:100%}.cab-aircraft-strip,.cab-mode-strip,.cab-cabin-strip,.cab-view-strip{padding-left:10px;padding-right:10px}.cab-seat{width:28px;height:31px}.cab-aisle{width:10px}}
 @media(prefers-reduced-motion:reduce){.cab-root *{transition:none!important;animation:none!important}}
 
-/* B-011.22 cabin visual alignment */
+/* SKANDI Travel Info v12 cabin visual alignment */
 .cab-root{
   --cab-home-primary:linear-gradient(135deg,#022e64,#0b5c85);
   --cab-home-white:#fff;
@@ -2042,7 +2050,7 @@ function App({bundle,airline}){
   useMobile();const aircrafts=useMemo(()=>A(bundle?.aircraft).map(normalizeAircraft),[bundle]);const[aircraftId,setAircraftId]=useState(aircrafts[0]?._id||"");const aircraft=aircrafts.find(a=>a._id===aircraftId)||aircrafts[0];const cabins=useMemo(()=>aircraft?normalizeCabins(bundle,aircraft._id):[],[bundle,aircraft?._id]);const[cabinId,setCabinId]=useState(cabins[0]?._id||"");useEffect(()=>setCabinId(cabins[0]?._id||""),[aircraft?._id]);const cabin=cabins.find(c=>c._id===cabinId)||cabins[0];const[mode,setMode]=useState("overview");const legacy=legacyData(airline),legacyClass=legacyClassFor(legacy,cabin);if(!aircraft)return html`<div className="cab-root"><style>${css}</style><div className="cab-shell"><div className="cab-empty" style=${{margin:"18px"}}><strong>No aircraft information is currently published.</strong><span>The airline guide remains available above.</span></div></div></div>`;const modes=[["overview","Overview"],["cabin","Cabin Explorer"],["seat","Seat Experience"],["walk","Walkthrough"],["map","Aircraft Map"]];return html`<div className="cab-root"><style>${css}</style><section className="cab-shell"><header className="cab-top"><div className="cab-kicker">SKANDI · Aircraft & Cabin Explorer</div><h3>${T(airline?.name||airline?.title||aircraft.airline_code||"Airline")} · ${aircraft._name}</h3><p>Explore the published aircraft and cabin experience. Aircraft substitutions can occur, and live seat availability is shown during booking.</p></header><div className="cab-selectors"><div className="cab-aircraft-strip">${aircrafts.map(a=>html`<button className="cab-pill" data-active=${a._id===aircraft._id?"true":"false"} onClick=${()=>transition(()=>setAircraftId(a._id))}>${a._code||"Aircraft"} · ${a._name}</button>`)}</div><div className="cab-mode-strip">${modes.map(([id,label])=>html`<button className="cab-pill" data-active=${mode===id?"true":"false"} onClick=${()=>transition(()=>setMode(id))}>${label}</button>`)}</div>${cabins.length?html`<div className="cab-cabin-strip">${cabins.map(c=>html`<button className="cab-pill cab-cabin" data-active=${c._id===cabin?._id?"true":"false"} onClick=${()=>transition(()=>setCabinId(c._id))}>${c._name}${c._code?` · ${c._code}`:""}</button>`)}</div>`:null}</div><div className="cab-body">${mode==="overview"?html`<${Overview} aircraft=${aircraft} cabins=${cabins} cabinId=${cabinId} setCabin=${setCabinId}/>`:mode==="cabin"?html`<${CabinExplorer} bundle=${bundle} aircraft=${aircraft} cabin=${cabin} legacyClass=${legacyClass}/>`:mode==="seat"?html`<${SeatExperience} aircraft=${aircraft} cabin=${cabin} legacyClass=${legacyClass}/>`:mode==="walk"?html`<${Walkthrough} bundle=${bundle} aircraft=${aircraft}/>`:html`<${AircraftMap} aircraft=${aircraft} cabins=${cabins} cabinId=${cabinId} setCabin=${setCabinId}/>`}</div><footer className="cab-footer"><span>Aircraft and cabin information is provided for travel planning. The operating airline may change aircraft or configuration.</span><button type="button" onClick=${()=>navigate("/flights")}>Explore flights</button></footer></section></div>`
 }
 function mount(element,bundle,airline){if(!element)return;let root=roots.get(element);if(!root){root=createRoot(element);roots.set(element,root)}root.render(html`<${App} bundle=${bundle||{}} airline=${airline||{}}/>`)}
-window.SKANDIOnboardReact={mount,version:"React 19.3 / SKANDI B-011.21"};
+window.SKANDIOnboardReact={mount,version:"React 19.3 / SKANDI v12"};
 window.dispatchEvent(new Event("SKANDI_ONBOARD_REACT_READY"));
 const pending=window.__SKANDI_ONBOARD_PENDING__;if(pending){const el=document.getElementById(pending.elementId||"onboardReactRoot");if(el)mount(el,pending.bundle,pending.airline)}
 </script>
