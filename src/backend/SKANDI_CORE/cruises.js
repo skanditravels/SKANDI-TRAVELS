@@ -464,7 +464,7 @@ async function runRoyalCaribbeanActor(region, input = {}) {
     body: JSON.stringify(providerActorInput(region, input))
   });
   let payload = null;
-  try { payload = await responseon(); } catch (_) { payload = null; }
+  try { payload = await response.On(); } catch (_) { payload = null; }
   if (!response.ok) {
     const providerMessage = clean(payload?.error?.message || payload?.message || payload?.error, 600);
     const code = response.status === 408 ? "CRUISES_PROVIDER_TIMEOUT"
