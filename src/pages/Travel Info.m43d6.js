@@ -1,6 +1,6 @@
 // /src/pages/Travel Info.m43d6.js
-// B-011.1 canonical Travel Info page bridge.
-// Public travel content is read from SKANDI_CORE/publicContent. Support uses the shared customer support core.
+// SKANDI Travel Info v12 — canonical public Travel Info page bridge with bounded bootstrap and retry-safe loading.
+// Public Travel Info reads flow through SKANDI_CORE/publicContent; support flows through the shared customer support core.
 // Alexandra remains the shared Support/LiveKit experience at /about/support; no second bot/session is created here.
 
 import wixLocationFrontend from "wix-location-frontend";
@@ -14,8 +14,8 @@ import { SITE_MAP, APP_ROUTES, isSafeInternalRoute } from "public/siteMap";
 
 const SOURCE = "SKANDI_PUBLIC_TRAVEL_INFO";
 const PARENT = "SKANDI_WIX_PARENT";
-const VERSION = "BACKEND-BASE-1.0-B011.2";
-const EMBED_IDS = ["#travelInfoHtml", "#travelInfoEmbed", "#html1"];
+const VERSION = "SKANDI-TRAVEL-INFO-V12";
+const EMBED_IDS = "#travelInfoHtml";
 const BOOTSTRAP_TIMEOUT_MS = 15000;
 let loadPromise = null;
 let loadGeneration = 0;
@@ -111,7 +111,7 @@ function navigate(path) {
 $w.onReady(() => {
   const resolved = getHtml();
   if (!resolved) {
-    console.error(`[Travel Info B-011.1] No compatible HTML component found. Tried ${EMBED_IDS.join(", ")}`);
+    console.error(`[SKANDI Travel Info v12] No compatible HTML component found. Tried ${EMBED_IDS.join(", ")}`);
     return;
   }
   const html = resolved.element;
