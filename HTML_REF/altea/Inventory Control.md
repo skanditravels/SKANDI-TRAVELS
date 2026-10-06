@@ -1,4 +1,36 @@
-# SKANDI Inventory Control
+# INFO / LOG — INVENTORY CONTROL
+
+- Source file: /HTML_REF/altea/Inventory Control.md; complete intended v12 HTML payload below. This is the canonical editable source; the delivery HTML is extracted verbatim from its fenced payload.
+- Current controller: /src/pages/Inventory Control.jsdik.js; current component #inventoryControlEmbed; route /riaintra/success-factors/altea/inventory-control.
+- Canonical facade/core: backend/SKANDI_CORE/inventory.web and inventory; shared assets and existing supabaseServer/staffAuth remain the owners.
+- Selection: retain current main controller, which constrains selection to the canonical component ID. Archive B-011.35 adds two historical candidate IDs; the dispatcher and rest of bridge behavior match current code. Do not widen IDs without actual live Wix evidence.
+- Current state: v12 repair candidate, locally regression-tested. STATICALLY VERIFIED for source syntax, imports/exports and message routing; VERIFIED by read-only Supabase metadata queries for the affected columns/defaults. REQUIRES LIVE TEST for Wix publishing, staff sessions, production writes, provider operations and deployed source parity.
+- Last evaluated: 2026-10-05 UTC.
+- Change log: 2026-10-03 — Recovered existing complete HTML_REF; retained current single-dispatch backend/controller and canonical component selection. No code, schema, data, provider or deployed changes.
+- Change log: 2026-10-05 — v12 repair: global master configuration messages remain with masterPage instead of being sent to the Inventory dispatcher; multiline/comma list editors preserve typed separators and immediately update parsed state; blank selects show an explicit empty option; normalized cabin fields and sort order populate the editor; missing cabin rank uses the verified database default 100; dated BLACKOUT/STOP_SALE/SOLD_OUT states are recalculated from current controls. The bridge-error notice uses the existing error styling. Existing design, features, IDs and INVENTORY_V9 action names are preserved. No schema, production-data, provider-configuration or deployment changes were made.
+
+## Current v12 ownership and verification
+
+`/HTML_REF/altea/Inventory Control.md` → `#inventoryControlEmbed` → `/src/pages/Inventory Control.jsdik.js` → `backend/SKANDI_CORE/inventory.web` → `inventory.js` / `assets.js` → canonical `supabaseServer.js` / `staffAuth.js` / `travelReference.js` / `duffelClient.js`.
+
+- System area: ALTEA. Route: `/riaintra/success-factors/altea/inventory-control`.
+- Authentication: the facade retains `Permissions.SiteMember`; Inventory and Asset cores retain their existing staff-session and permission checks. No browser-supplied role becomes authoritative.
+- Dependencies: recursive import/export checks pass across the 13 local files in the Inventory chain. Shared dependencies and the unchanged `inventory.web.js` are not duplicated in the change-only delivery.
+- Message contract: all 29 distinct actions called by `request(...)` in the embed map to existing entries in the 34-action facade. READY/HOST_READY/BOOTSTRAP, PROGRESS, request IDs, errors and post-mutation refresh behavior remain intact. `SKANDI_MASTER_CONFIG_REQUEST` is handled by the existing `masterPage.js` global handler. `DETAIL` is a hotspot action value, not a missing postMessage contract.
+- Supabase resources: `inventory_canonical_entities_v`, `inventory_master_entities`, `inventory_catalog_entries`, `inventory_dated_inventory`, `inventory_entity_relations`, `inventory_localized_content`, `inventory_media_assets`, `inventory_source_registry`, `inventory_flight_legs`, `inventory_flight_classes`, `inventory_schedule_lines`, `inventory_nesting_controls`, `master_inventory_audit`, `platform_assets`, `platform_asset_upload_sessions`, `platform_asset_usages`, `travel_info_aircraft`, `travel_info_aircraft_cabins`, `travel_info_aircraft_views`, `travel_info_aircraft_hotspots`, `travel_info_aircraft_walk_scenes`, `travel_info_aircraft_scene_hotspots`, `travel_info_airlines`, `travel_info_airports`.
+- Read-only schema checks: cabin `rank` is NOT NULL integer with default 100; `seat_count` remains nullable; `sort_order` defaults to 100. Dated capacity, status and sale-control columns were verified. Airport `ID` is UUID with `gen_random_uuid()` default, so airport ID generation was deliberately left unchanged. No SQL migration is needed for these fixes.
+- External providers: Duffel discovery/import/refresh and negotiated rates continue through the existing travelReference/Duffel client. Their request payloads and authentication were not changed. Signed asset uploads retain the existing managed Asset Library path.
+- Local regression tests: 13/13 pass using React 19.3.0, HTM 3.1.1 and a simulated DOM, with Wix/backend/provider writes mocked. Tests cover global-message routing, ready/refresh/mutation correlation, App refresh-promise resolution, newline/JSON list input, comma entry and immediate save, external/language changes, negotiated-rate scope entry, blank dropdowns, cabin field/save mapping, rank default/zero preservation, derived dated states and unauthenticated-write rejection. Seven of the initial ten tests failed against the previous source and pass against this repair.
+- Delivery: full changed page controller, full changed Inventory core, this complete HTML_REF, and one extracted runtime HTML. Existing shared dependencies stay in the current v12 project. Historical assessment below is retained as history and is superseded wherever it conflicts with this section.
+
+### Remaining live verification
+
+- Publish the changed page/core and replace the content of `#inventoryControlEmbed` with the extracted HTML; confirm all three report `V12-INVENTORY-2026.10.05` where version is exposed.
+- Verify staff-session bootstrap, Refresh, an existing cabin edit, a new cabin save, and dated sale-control transitions in Wix. A local simulated DOM is not a Wix runtime test.
+- Verify existing Asset Library and Duffel actions with real permissions/secrets. Live write operations and provider commercial changes were intentionally not executed.
+- The earlier speculative refresh-timeout diagnosis was disproved by listener execution; the bootstrap handler already resolves pending refresh requests. The confirmed bridge fix is global-message ownership, not a protocol rewrite. The previous generic bridge failure may still have additional deployment/session causes; no claim of live resolution is made.
+
+## Historical source assessment — superseded by the current v12 section above
 
 **STATUS:** NEEDS REVIEW  
 **SLUG:** `/riaintra/success-factors/altea/inventory-control`  
@@ -278,7 +310,7 @@ const html=htm.bind(React.createElement);
 const SOURCE="SKANDI_INVENTORY_EMBED";
 const PARENT="SKANDI_INVENTORY_PARENT";
 const MASTER_PARENT="SKANDI_WIX_PARENT";
-const VERSION="B-011.35-INVENTORY-SINGLE-DISPATCH";
+const VERSION="V12-INVENTORY-2026.10.05";
 const TYPES=["COUNTRY","DESTINATION","AREA","AIRPORT","AIRLINE","SUPPLIER","HOTEL","GUIDED_TOUR","ACTIVITY","PARTNER_TICKET","TRANSFER","CAR_RENTAL","PACKAGE","ANCILLARY"];
 const SELLABLE=new Set(["HOTEL","GUIDED_TOUR","ACTIVITY","PARTNER_TICKET","TRANSFER","CAR_RENTAL","PACKAGE","ANCILLARY"]);
 const LABEL={COUNTRY:"Countries",DESTINATION:"Destinations",AREA:"Areas / Resorts",AIRPORT:"Airports",AIRLINE:"Airlines",SUPPLIER:"Suppliers",HOTEL:"Hotels",GUIDED_TOUR:"Guided Tours",ACTIVITY:"Activities",PARTNER_TICKET:"Partner Tickets",TRANSFER:"Transfers",CAR_RENTAL:"Car Rental",PACKAGE:"Packages",ANCILLARY:"Ancillaries"};
@@ -326,17 +358,37 @@ function normalizeRelation(row={}){
 }
 
 
-function Field({label,value,onChange,type="text",options=[],help,disabled=false,full=false}){
+function Field({label,value,onChange,type="text",options=[],help,disabled=false,full=false,placeholder=""}){
   return html`<div className=${`field ${full?"full":""}`}><label>${label}</label>
     ${type==="textarea"
-      ?html`<textarea className="textarea" value=${value??""} disabled=${disabled} onInput=${e=>onChange(e.target.value)} />`
+      ?html`<textarea className="textarea" value=${value??""} placeholder=${placeholder} disabled=${disabled} onInput=${e=>onChange(e.target.value)} />`
       :type==="select"
         ?html`<select className="select" value=${value??""} disabled=${disabled} onChange=${e=>onChange(e.target.value)}>
+            ${!options.some(o=>(typeof o==="string"?o:o.value)==="")?html`<option value="">Choose…</option>`:null}
             ${options.map(o=>html`<option value=${typeof o==="string"?o:o.value}>${typeof o==="string"?o:o.label}</option>`)}
           </select>`
-        :html`<input className="input" type=${type} value=${value??""} disabled=${disabled} onInput=${e=>onChange(type==="number"?numOrNull(e.target.value):e.target.value)} />`}
+        :html`<input className="input" type=${type} value=${value??""} placeholder=${placeholder} disabled=${disabled} onInput=${e=>onChange(type==="number"?numOrNull(e.target.value):e.target.value)} />`}
     ${help?html`<small>${help}</small>`:null}
   </div>`
+}
+function ListField({label,value,onChange,separator="\n",splitPattern,parseItem,help,full=false,placeholder=""}){
+  const values=Array.isArray(value)?value:[];
+  const signature=JSON.stringify(values);
+  const formatted=values.map(v=>typeof v==="string"?v:JSON.stringify(v)).join(separator);
+  const [draft,setDraft]=useState(formatted);
+  const emittedSignature=useRef(signature);
+  useEffect(()=>{
+    if(signature!==emittedSignature.current){emittedSignature.current=signature;setDraft(formatted)}
+  },[signature,formatted]);
+  function change(raw){
+    const next=raw.split(splitPattern||(separator==="\n"?/\r?\n/:/,/))
+      .map(parseItem||(v=>v.trim())).filter(v=>v!==null&&v!=="");
+    emittedSignature.current=JSON.stringify(next);
+    // Keep the typed delimiter/blank line visible while storing parsed values.
+    // Save therefore always sees current data without depending on a blur event.
+    setDraft(raw);onChange(next);
+  }
+  return html`<${Field} label=${label} type=${separator==="\n"?"textarea":"text"} value=${draft} onChange=${change} help=${help} full=${full} placeholder=${placeholder}/>`;
 }
 function Toggle({label,value,onChange}){
   return html`<div className="field"><label>${label}</label><select className="select" value=${value?"YES":"NO"} onChange=${e=>onChange(e.target.value==="YES")}><option>YES</option><option>NO</option></select></div>`
@@ -495,7 +547,7 @@ function parseSchemaListLine(value){
 }
 function SchemaScalar({field,value,onChange,records}){
   if(field.type==="boolean")return html`<${Toggle} label=${field.label} value=${value===true} onChange=${onChange}/>`;
-  if(field.type==="list")return html`<${Field} label=${field.label+" — one per line"} type="textarea" value=${(Array.isArray(value)?value:[]).map(x=>typeof x==="string"?x:JSON.stringify(x)).join("\\n")} onChange=${v=>onChange(v.split("\\n").map(parseSchemaListLine).filter(x=>x!==null))} help=${field.help}/>`;
+  if(field.type==="list")return html`<${ListField} label=${field.label+" — one per line"} value=${value} onChange=${onChange} parseItem=${parseSchemaListLine} help=${field.help}/>`;
   if(field.type==="reference")return html`<${Field} label=${field.label} type="select" options=${referenceList(records,field.refTypes,value)} value=${value||""} onChange=${onChange} help=${field.help}/>`;
   if(field.type==="select")return html`<${Field} label=${field.label} type="select" options=${optionList(field.options,value)} value=${value??""} onChange=${onChange} help=${field.help}/>`;
   return html`<${Field} label=${field.label} type=${field.type||"text"} value=${value??""} onChange=${onChange} help=${field.help} full=${field.type==="textarea"}/>`;
@@ -541,7 +593,7 @@ function SmartValueEditor({label,path,value,onChange,full=false}){
   if(Array.isArray(value)){
     const objects=value.some(v=>v&&typeof v==="object"&&!Array.isArray(v));
     if(!objects){
-      return html`<${Field} label=${label+" — one per line"} type="textarea" value=${value.map(v=>text(v)).join("\\n")} onChange=${v=>onChange(v.split("\\n").map(x=>x.trim()).filter(Boolean))} full=${full}/>`
+      return html`<${ListField} label=${label+" — one per line"} value=${value} onChange=${onChange} full=${full}/>`
     }
     return html`<div className="smartgroup"><div className="smarttitle">${label}</div>
       ${value.length?value.map((item,i)=>html`<div className="smartobject"><div className="paneltitle"><span>Item ${i+1}</span><button className="btn small danger" onClick=${()=>onChange(value.filter((_,x)=>x!==i))}>Remove</button></div><${SmartObjectEditor} value=${item||{}} onChange=${next=>onChange(value.map((x,idx)=>idx===i?next:x))}/></div>`):html`<div className="smartempty">No list items.</div>`}
@@ -800,7 +852,7 @@ function RecordEditor({bundle,languages,records,onClose,onSaved,setBusy,setToast
         <${Field} label="Eyebrow" value=${currentLang.eyebrow} onChange=${v=>updateLang("eyebrow",v)}/>
         <${Field} label="Short Description" type="textarea" value=${currentLang.shortDescription} onChange=${v=>updateLang("shortDescription",v)} full=${true}/>
         <${Field} label="Full Description" type="textarea" value=${currentLang.fullDescription} onChange=${v=>updateLang("fullDescription",v)} full=${true}/>
-        <${Field} label="Highlights — one per line" type="textarea" value=${currentLang.highlights.join("\n")} onChange=${v=>updateLang("highlights",v.split("\n").map(x=>x.trim()).filter(Boolean))}/>
+        <${ListField} key=${lang} label="Highlights — one per line" value=${currentLang.highlights} onChange=${v=>updateLang("highlights",v)}/>
         <${Field} label="Important Information" type="textarea" value=${currentLang.importantInformation} onChange=${v=>updateLang("importantInformation",v)}/>
         <${Field} label="SEO Title" value=${currentLang.seoTitle} onChange=${v=>updateLang("seoTitle",v)}/>
         <${Field} label="SEO Description" type="textarea" value=${currentLang.seoDescription} onChange=${v=>updateLang("seoDescription",v)}/>
@@ -836,9 +888,9 @@ function RecordEditor({bundle,languages,records,onClose,onSaved,setBusy,setToast
       <${Toggle} label="Homepage Featured" value=${catalog.homepageFeatured===true} onChange=${v=>setCatalog("homepageFeatured",v)}/>
       <${Field} label="Public Label" value=${catalog.publicLabel||""} onChange=${v=>setCatalog("publicLabel",v)}/>
       <${Field} label="Badge" value=${catalog.badge||""} onChange=${v=>setCatalog("badge",v)}/>
-      <${Field} label="Search Keywords — comma separated" value=${(catalog.searchKeywords||[]).join(", ")} onChange=${v=>setCatalog("searchKeywords",v.split(",").map(x=>x.trim()).filter(Boolean))} full=${true}/>
-      <${Field} label="Market Codes — comma separated" value=${(catalog.marketCodes||[]).join(", ")} onChange=${v=>setCatalog("marketCodes",v.split(",").map(x=>x.trim()).filter(Boolean))}/>
-      <${Field} label="Sales Channels — comma separated" value=${(catalog.salesChannels||[]).join(", ")} onChange=${v=>setCatalog("salesChannels",v.split(",").map(x=>x.trim()).filter(Boolean))}/>
+      <${ListField} label="Search Keywords — comma separated" value=${catalog.searchKeywords} separator=", " onChange=${v=>setCatalog("searchKeywords",v)} full=${true}/>
+      <${ListField} label="Market Codes — comma separated" value=${catalog.marketCodes} separator=", " onChange=${v=>setCatalog("marketCodes",v)}/>
+      <${ListField} label="Sales Channels — comma separated" value=${catalog.salesChannels} separator=", " onChange=${v=>setCatalog("salesChannels",v)}/>
       <${Toggle} label="Active Placement" value=${catalog.active!==false} onChange=${v=>setCatalog("active",v)}/>
     </div>`:null}
     ${tab==="publishing"?html`<div>
@@ -847,7 +899,7 @@ function RecordEditor({bundle,languages,records,onClose,onSaved,setBusy,setToast
         <${Field} label="Canonical URL" type="url" value=${rec.seo?.canonicalUrl||""} onChange=${v=>update("seo.canonicalUrl",v)}/>
         <${Toggle} label="Exclude from Search Engines" value=${rec.seo?.noIndex===true} onChange=${v=>update("seo.noIndex",v)}/>
         <${Field} label="SEO Description" type="textarea" value=${rec.seo?.description||rec.seo?.seoDescription||""} onChange=${v=>update("seo.description",v)} full=${true}/>
-        <${Field} label="SEO Keywords — one per line" type="textarea" value=${Array.isArray(rec.seo?.keywords)?rec.seo.keywords.join("\\n"):""} onChange=${v=>update("seo.keywords",v.split("\\n").map(x=>x.trim()).filter(Boolean))}/>
+        <${ListField} label="SEO Keywords — one per line" value=${rec.seo?.keywords} onChange=${v=>update("seo.keywords",v)}/>
         <${Field} label="Review Status" type="select" options=${SMART_ENUMS.reviewstatus} value=${rec.publication?.reviewStatus||"NOT_REVIEWED"} onChange=${v=>update("publication.reviewStatus",v)}/>
         <${Field} label="Publish Date" type="date" value=${rec.publication?.publishAt||""} onChange=${v=>update("publication.publishAt",v)}/>
         <${Field} label="Unpublish Date" type="date" value=${rec.publication?.unpublishAt||""} onChange=${v=>update("publication.unpublishAt",v)}/>
@@ -1018,7 +1070,7 @@ function ProviderWorkspace({boot,setBusy,setToast}){
 
     ${rateEdit?html`<${Modal} title=${rateEdit.id?"Edit Negotiated Hotel Rate":"Create Negotiated Hotel Rate"} onClose=${()=>{setRateEdit(null);setRateLookupResults([])}} actions=${html`<button className="btn" onClick=${()=>{setRateEdit(null);setRateLookupResults([])}}>Cancel</button><button className="btn primary" onClick=${saveRate}>${rateEdit.id?"Save Changes":"Create Rate"}</button>`}><div className="formgrid three"><${Field} label="Display name" value=${rateEdit.displayName} onChange=${v=>setRateEdit(x=>({...x,displayName:v}))}/><${Field} label="Rate access code (RAC)" value=${rateEdit.rateAccessCode} disabled=${Boolean(rateEdit.id)} onChange=${v=>setRateEdit(x=>({...x,rateAccessCode:v.toUpperCase()}))} help=${rateEdit.id?"Duffel does not allow changing the RAC after creation.":"Provided by the hotel/chain."}/><${Field} label="Scope" type="select" value=${rateEdit.scope} options=${[{value:"accommodations",label:"Specific accommodations"},{value:"chain",label:"Hotel chain"}]} onChange=${v=>setRateEdit(x=>({...x,scope:v,chainId:v==="chain"?x.chainId:"",accommodationIds:v==="accommodations"?x.accommodationIds:[]}))}/></div>
       <div className="scopebox" style=${{marginTop:"12px"}}><div className="sectiontitle">Find the Duffel hotel / chain</div><div className="filters"><div className="field grow"><label>Hotel search</label><input className="input" value=${rateLookup} onInput=${e=>setRateLookup(e.target.value)} placeholder="Search a hotel to retrieve its Duffel accommodation and chain IDs"/></div><button className="btn" onClick=${searchRateHotels}>Search hotels</button></div>${rateLookupResults.length?html`<div className="tablewrap" style=${{marginTop:"10px"}}><table className="table"><thead><tr><th>Hotel</th><th>Duffel ID</th><th></th></tr></thead><tbody>${rateLookupResults.map(item=>html`<tr><td><b>${item.name}</b><div className="sub">${item.secondary}</div></td><td>${item.providerId}</td><td><div className="provideractions"><button className="btn small" onClick=${()=>chooseRateHotel(item,"accommodations")}>Add Hotel</button><button className="btn small" onClick=${()=>chooseRateHotel(item,"chain")}>Use Its Chain</button></div></td></tr>`)}</tbody></table></div>`:null}</div>
-      ${rateEdit.scope==="chain"?html`<div className="field" style=${{marginTop:"12px"}}><label>Duffel chain ID</label><input className="input" value=${rateEdit.chainId||""} onInput=${e=>setRateEdit(x=>({...x,chainId:e.target.value}))} placeholder="chn_…"/><small>Use “Use Its Chain” above to populate this from a Duffel accommodation.</small></div>`:html`<div style=${{marginTop:"12px"}}><div className="field"><label>Duffel accommodation IDs</label><textarea className="textarea" value=${(rateEdit.accommodationIds||[]).join("\n")} onInput=${e=>setRateEdit(x=>({...x,accommodationIds:e.target.value.split(/[\n,]+/).map(v=>v.trim()).filter(Boolean)}))} placeholder="acc_… one per line"/></div><div className="selectedlist">${(rateEdit.accommodationIds||[]).map(id=>html`<span className="selectedchip">${id}<button onClick=${()=>removeAccommodation(id)}>×</button></span>`)}</div></div>`}
+      ${rateEdit.scope==="chain"?html`<div className="field" style=${{marginTop:"12px"}}><label>Duffel chain ID</label><input className="input" value=${rateEdit.chainId||""} onInput=${e=>setRateEdit(x=>({...x,chainId:e.target.value}))} placeholder="chn_…"/><small>Use “Use Its Chain” above to populate this from a Duffel accommodation.</small></div>`:html`<div style=${{marginTop:"12px"}}><${ListField} label="Duffel accommodation IDs" value=${rateEdit.accommodationIds} splitPattern=${/[\r\n,]+/} onChange=${v=>setRateEdit(x=>({...x,accommodationIds:v}))} placeholder="acc_… one per line"/><div className="selectedlist">${(rateEdit.accommodationIds||[]).map(id=>html`<span className="selectedchip">${id}<button onClick=${()=>removeAccommodation(id)}>×</button></span>`)}</div></div>`}
       <div className="notice" style=${{marginTop:"12px"}}>Create requires a display name, RAC, and exactly one scope: either one chain or one or more accommodations. Duffel determines whether the rate is test or live mode.</div></${Modal}>`:null}
   </div>`
 }
@@ -1253,7 +1305,18 @@ function AircraftStudio({boot,setBusy,setToast}){
     startChild("hotspot",{view_id:activeView.id,hotspot_code:`HOT_${currentHotspots.length+1}`,label:"New hotspot",title:"",description:"",x:point.x,y:point.y,action:"DETAIL",active:true,sort_order:(currentHotspots.length+1)*10});
   }
   function startChild(kind,item={}){
-    const base={...item,active:item.active!==false,sort_order:item.sort_order??100};
+    const base={...item,active:item.active!==false,sort_order:item.sort_order??item.sortOrder??100};
+    if(kind==="cabin"){
+      // Cabin reads are camelCase; the editor and write contract use snake_case.
+      base.aircraft_id=item.aircraft_id??item.aircraftId??a.id;
+      base.cabin_code=item.cabin_code??item.cabinCode??"";
+      base.cabin_name=item.cabin_name??item.cabinName??"";
+      base.seat_count=item.seat_count??item.seatCount??null;
+      base.meal_title=item.meal_title??item.mealTitle??"";
+      base.meal_description=item.meal_description??item.mealDescription??"";
+      base.display_settings=item.display_settings??item.displaySettings??{};
+      base.rank=item.rank??100;
+    }
     if(kind==="cabin"&&!base.aircraft_id)base.aircraft_id=a.id;
     if(kind==="view"&&!base.aircraft_id)base.aircraft_id=a.id;
     if(kind==="scene"&&!base.aircraft_id)base.aircraft_id=a.id;
@@ -1389,7 +1452,7 @@ function App(){
   const nav=[["overview","Overview"],["provider","Duffel & Collection"],["master","Master Records"],["assets","Asset Library"],["dated","Dated Inventory"],["air","Air Inventory"],["aircraft","Aircraft & Cabin Studio"],["quality","Publishing & QA"],["audit","Audit"]];
   return html`<div className="shell"><aside className="sidebar"><div className="brand"><b>SKANDI</b><small>Inventory Control · ${VERSION}</small></div><div className="group">Inventory Control</div>${nav.map(([k,l])=>html`<button className=${`navbtn ${view===k?"active":""}`} onClick=${()=>setView(k)}>${l}</button>`)}</aside>
     <main className="main"><div className="top"><div><div className="eyebrow">RIAINTRA · ALTEA OPERATIONS</div><h1>${nav.find(x=>x[0]===view)?.[1]||"Inventory Control"}</h1><div className="sub">One synchronized control center for Duffel resource discovery, the curated SKANDI Collection, owned inventory, merchandising, capacity and aircraft operations.</div></div><div className="toolbar"><button className="btn" onClick=${refresh}>Refresh</button></div></div>
-      ${!boot?html`<div className="card panel"><div className=${`notice ${connectionError?"error":""}`}><b>${connectionError?"Inventory bridge unavailable":"Waiting for secure system bridge…"}</b>${connectionError?html`<div style=${{marginTop:"8px"}}>${connectionError}</div>`:null}</div></div>`:
+      ${!boot?html`<div className="card panel"><div className=${`notice ${connectionError?"bad":""}`}><b>${connectionError?"Inventory bridge unavailable":"Waiting for secure system bridge…"}</b>${connectionError?html`<div style=${{marginTop:"8px"}}>${connectionError}</div>`:null}</div></div>`:
         view==="overview"?html`<${Overview} boot=${boot} setView=${setView}/>`:
         view==="provider"?html`<${ProviderWorkspace} boot=${boot} setBusy=${setBusy} setToast=${setToast}/>`:
         view==="master"?html`<${MasterRecords} boot=${boot} setBoot=${setBoot} setBusy=${setBusy} setToast=${setToast}/>`:
