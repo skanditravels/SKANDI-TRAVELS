@@ -1,12 +1,38 @@
 # Travel Info
 
-STATUS: NEEDS REVIEW
+STATUS: REVISIONS NEEDED
 SLUG: /travel-info
 WIX PAGE: Travel Info.m43d6
 AREA: SKANDI
 LIVE HTML: YES
 ELEMENT: #travelInfoHtml
 LAST SYNCED: 2026-09-16
+
+## INFO / LOG — V12
+- SOURCE FILE: `/HTML_REF/skandi/Travel Info.md`
+- DISPLAY / PAGE NAME: Travel Info
+- SYSTEM AREA: SKANDI
+- WIX PAGE FILE: `/src/pages/Travel Info.m43d6.js`
+- WIX ROUTE / SLUG: `/travel-info`
+- WIX HTML ELEMENT: `#travelInfoHtml`
+- CURRENT STATUS: REVISIONS NEEDED — bootstrap timeout repair prepared; live Wix verification pending
+- SOURCE-OF-TRUTH STATUS: AUTHORITATIVE intended Travel Info embed source
+- CANONICAL WEB FACADE: `/src/backend/SKANDI_CORE/publicContent.web.js`
+- CANONICAL CORE: `/src/backend/SKANDI_CORE/publicContent.js`
+- SHARED TRANSPORT: `/src/backend/SKANDI_CORE/supabaseServer.js`
+- SUPPORT BOUNDARY: `/src/backend/SKANDI_CORE/customerSupport.web.js` → canonical customer support core
+- REQUIREMENTS BOUNDARY: `/src/backend/SKANDI_CORE/publicContent.web.js` → canonical Travel Requirements core
+- EXTERNAL API / PROVIDER: none for initial Travel Info bootstrap; travel-requirements searches may use the configured checker behind the canonical Travel Requirements core; live weather remains explicitly unconfigured
+- RELEVANT SUPABASE RESOURCES: `travel_info_airlines`, `travel_info_airports`, `travel_info_hotels`, `travel_info_transfers`, `travel_info_tours`, `travel_info_activities`, `travel_info_tickets`, `travel_info_articles`, `travel_info_faq_groups`, `travel_info_faq`, `travel_requirements`, aircraft/cabin/view/hotspot tables
+- AUTHORIZATION: public Travel Info reads are exposed through `Permissions.Anyone`; privileged database credentials remain server-side
+- MESSAGE CONTRACT: child source `SKANDI_PUBLIC_TRAVEL_INFO`; parent source `SKANDI_WIX_PARENT`; existing `TRAVEL_INFO_*` messages preserved
+- BOOTSTRAP CONTRACT: child READY/parent HOST_READY handshake preserved; page backend load is bounded; child watchdog terminates loading if the Wix bridge never reaches DATA or ERROR
+- OPEN / RUNTIME REQUIREMENT: publish the page controller and synchronize the complete executable HTML payload to `#travelInfoHtml`, then verify DATA, ERROR, timeout, retry, aircraft, requirements and support flows in Wix
+- LAST STATIC VERIFICATION: 2026-10-06
+
+### CHANGE LOG
+- 2026-09-17 — Existing owner notes record that page styling was ready but synchronization required review.
+- 2026-10-06 — V12 bootstrap timeout repair: bounded the Wix page bootstrap call at 15 seconds; added generation control so forced refresh cannot let an older request overwrite a newer one; added a client-side bootstrap watchdog so a missing/stalled Wix bridge cannot leave Travel Info loading indefinitely. No data model, backend ownership, design, element ID, route, or existing message type was changed. REQUIRES LIVE TEST.
 
 ## HOW TO USE
 ***STATUS (OWNER): "TODO", "IN PROGRESS", "NEEDS REVIEW", "REVISIONS NEEDED", "READY", "LIVE", "ARCHIVED"
@@ -15,7 +41,7 @@ STATUS (AGENT): "TODO", "IN PROGRESS", "REVISIONS NEEDED", "READY".***
 ###  COMMENT SECTION (START ON A NEW ROW, LOG IF A CHANGE IS MADE THAT REQUIRES ATTENTION) 
 1. 9/17 12:07PM "Page is ready styled from my end, page not syncing correctly yet /Samuel"
 2. 9/17 5:00PM new design, must review sync / Samuel
-3.
+3. 10/06 V12 bootstrap timeout repair prepared: page call bounded and embed watchdog added; REQUIRES LIVE TEST / ChatGPT
 ...
 ***END*** 
 
@@ -1212,6 +1238,8 @@ const SOURCE="SKANDI_PUBLIC_TRAVEL_INFO";
 const PARENT="SKANDI_WIX_PARENT";
 const VERSION="BACKEND-BASE-1.0-B011.2";
 const PAGE_SIZE=24;
+const BOOTSTRAP_WATCHDOG_MS=20000;
+const INITIAL_BRIDGE_WATCHDOG_MS=30000;
 const REDUCED=window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches===true;
 
 /* SERVER STATE */
@@ -1289,6 +1317,18 @@ function setStatus(message,retry=false){
   const el=$("tiStatus");el.replaceChildren();const msg=text(message);el.hidden=!msg;if(!msg)return;
   const span=document.createElement("span");span.textContent=msg;el.append(span);
   if(retry){const button=document.createElement("button");button.type="button";button.className="ti-action-chip";button.style.marginLeft="10px";button.innerHTML=`${icon("refresh")} Try again`;button.addEventListener("click",retryData,{once:true});el.append(button)}
+}
+let bootstrapWatchdog=0;
+function clearBootstrapWatchdog(){if(bootstrapWatchdog){clearTimeout(bootstrapWatchdog);bootstrapWatchdog=0}}
+function armBootstrapWatchdog(delay=BOOTSTRAP_WATCHDOG_MS){
+  clearBootstrapWatchdog();
+  bootstrapWatchdog=setTimeout(()=>{
+    bootstrapWatchdog=0;
+    if(STATE.dataState!=="loading")return;
+    STATE.dataState="error";
+    const message="Travel information is taking longer than expected. Please try again.";
+    setStatus(message,true);announce(message);
+  },delay);
 }
 function transition(fn){if(!REDUCED&&document.startViewTransition){try{return document.startViewTransition(fn)}catch(_){}}return fn()}
 
@@ -1619,16 +1659,16 @@ function findUpdatedDetail(current){
   if(!current)return null;const lib=current._library;if(lib==="faq")return arr(DATA.helpCenter?.topics).map(x=>normalizeContentItem(x,"faq")).find(x=>text(x.id||x.topicId)===text(current.id||current.topicId))||null;if(lib==="articles")return arr(DATA.articles).map(x=>normalizeContentItem(x,"articles")).find(x=>text(x.id||x.slug)===text(current.id||current.slug))||null;return arr(DATA[lib]).map(x=>normalizeContentItem(x,lib)).find(x=>text(x.id||x.code||x.iataCode)===text(current.id||current.code||current.iataCode))||null
 }
 function loadData(payload){
-  DATA={...DATA,...obj(payload),helpCenter:{...DATA.helpCenter,...obj(payload?.helpCenter)}};STATE.dataState="ready";setStatus("");renderAll();
+  clearBootstrapWatchdog();DATA={...DATA,...obj(payload),helpCenter:{...DATA.helpCenter,...obj(payload?.helpCenter)}};STATE.dataState="ready";setStatus("");renderAll();
   if(STATE.activeDetail){const updated=findUpdatedDetail(STATE.activeDetail);if(updated){STATE.activeDetail=updated;renderDetail(updated)}else closeDetail()}
 }
-function retryData(){STATE.dataState="loading";setStatus("Refreshing Travel Info…");post("TRAVEL_INFO_REFRESH",{settings:{language:"EN"}})}
+function retryData(){STATE.dataState="loading";setStatus("Refreshing Travel Info…");armBootstrapWatchdog();post("TRAVEL_INFO_REFRESH",{settings:{language:"EN"}})}
 
 function parseMessage(value){if(typeof value==="string"){try{return JSON.parse(value)}catch(_){return null}}return value&&typeof value==="object"?value:null}
 window.addEventListener("message",event=>{
   const m=parseMessage(event.data);if(!m||m.source!==PARENT)return;const p=obj(m.payload);
   switch(m.type){
-    case "TRAVEL_INFO_HOST_READY":post("TRAVEL_INFO_READY",{settings:{language:"EN"},protocolVersion:VERSION});break;
+    case "TRAVEL_INFO_HOST_READY":STATE.dataState="loading";armBootstrapWatchdog();post("TRAVEL_INFO_READY",{settings:{language:"EN"},protocolVersion:VERSION});break;
     case "TRAVEL_INFO_PROGRESS":STATE.dataState="loading";setStatus(p.message||"Loading SKANDI Travel Info…");break;
     case "TRAVEL_INFO_DATA":loadData(p);break;
     case "TRAVEL_INFO_AIRCRAFT_DATA":{
@@ -1643,7 +1683,7 @@ window.addEventListener("message",event=>{
       const locations=arr(p.locations);locations.forEach(w=>{const key=text(w.id||w.locationId||w.title);if(key){STATE.weatherPending.delete(key);STATE.weatherCache.set(key,w)}});
       if(STATE.activeDetail){const key=weatherKey(STATE.activeDetail);if(!locations.length)STATE.weatherPending.delete(key);renderWeatherForDetail(STATE.weatherCache.get(key)||locations[0]||null)}break
     }
-    case "TRAVEL_INFO_ERROR":STATE.dataState="error";STATE.requirementsPending=false;STATE.supportPending=false;STATE.aircraftPending.clear();if($("tiRequirementSubmit"))$("tiRequirementSubmit").disabled=false;if($("tiSupportSend"))$("tiSupportSend").disabled=false;setStatus(p.message||"Travel information is temporarily unavailable.",true);{const target=STATE.overlayMode==="support"?$("tiSupportResult"):STATE.overlayMode==="requirements"?$("tiRequirementResult"):null;if(target){target.hidden=false;target.dataset.tone="error";target.textContent=p.message||"This service is temporarily unavailable. Please try again."}}break;
+    case "TRAVEL_INFO_ERROR":clearBootstrapWatchdog();STATE.dataState="error";STATE.requirementsPending=false;STATE.supportPending=false;STATE.aircraftPending.clear();if($("tiRequirementSubmit"))$("tiRequirementSubmit").disabled=false;if($("tiSupportSend"))$("tiSupportSend").disabled=false;setStatus(p.message||"Travel information is temporarily unavailable.",true);{const target=STATE.overlayMode==="support"?$("tiSupportResult"):STATE.overlayMode==="requirements"?$("tiRequirementResult"):null;if(target){target.hidden=false;target.dataset.tone="error";target.textContent=p.message||"This service is temporarily unavailable. Please try again."}}break;
   }
 });
 
@@ -1667,6 +1707,7 @@ document.addEventListener("click",e=>{const action=e.target.closest("[data-actio
 $("tiAlexandraLauncher").addEventListener("click",()=>openAction("alexandra"));
 
 hydrateStaticIcons();STATE.dataState="loading";renderAll();setStatus("Loading SKANDI Travel Info…");
+armBootstrapWatchdog(INITIAL_BRIDGE_WATCHDOG_MS);
 post("TRAVEL_INFO_READY",{settings:{language:"EN"},protocolVersion:VERSION});
 
 window.SKANDITravelInfo={
@@ -2005,3 +2046,4 @@ const pending=window.__SKANDI_ONBOARD_PENDING__;if(pending){const el=document.ge
 </script>
 </body>
 </html>
+```
