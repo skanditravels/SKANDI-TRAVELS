@@ -164,20 +164,13 @@ function mapRequest(row={}){
   return { id, sourceId:clean(row.id,100), employeeId:upper(row.employee_id,80), status:status(row.status||"PENDING REVIEW"), payload:p, type };
 }
 
-async function loadBootstrap(session,{jurisdiction="US-NY",windowStart=""}={}){
-  const requestedStart=new Date(windowStart);
-  const start=Number.isFinite(requestedStart.getTime()) ? requestedStart : new Date(Date.now()-24*3600000);
-  start.setUTCHours(0,0,0,0);
-  const end=new Date(start.getTime()+8*24*3600000);
-  end.setUTCHours(23,59,59,999);
-  const [agents,shifts,clock,ledger,requests,balances,leave,crew,drivers,tours,airport,vehicles,jurisdictionRows]=await Promise.all([
-    getRows(TABLES.agents,{active:"eq.true",authorized:"eq.true",portal_access:"eq.true",order:"display_name.asc"}),
-    getRows(TABLES.shifts,{order:"start_time.asc"}), getRows(TABLES.clock,{order:"event_time.desc"}), getRows(TABLES.ledger,{order:"work_date.desc"}),
-    getRows(TABLES.requests,{order:"updated_at.desc"}), getRows(TABLES.balances,{order:"updated_at.desc"}), getRows(TABLES.leave,{order:"created_at.desc"}),
-    getRows(TABLES.crew,{order:"start_time.asc"}), getRows(TABLES.drivers,{order:"start_time.asc"}), getRows(TABLES.tours,{order:"start_time.asc"}),
-    getRows(TABLES.airport,{order:"start_time.asc"}), getRows(TABLES.vehicles,{order:"start_time.asc"}), getRows(TABLES.jurisdictions,{active:"eq.true",order:"base_code.asc"})
-  ]);
-  const startMs=start.getTime(), endMs=end.getTime(), windowStart=start.toISOString();
+async function loadBootstrap(session, { jurisdiction = "US-NY", windowStart: windowStartParam = "" } = {}) {
+  const requestedStart = new Date(windowStartParam);
+  const start = Number.isFinite(requestedStart.getTime()) ? requestedStart : new Date(Date.now() - 24 * 3600000);
+  start.setUTCHours(0, 0, 0, 0);
+  const end = new Date(start.getTime() + 8 * 24 * 3600000);
+  end.setUTCHours(23, 59, 59, 999);
+  const startMs = start.getTime(), endMs = end.getTime(), windowStart = start.toISOString();
   const assignmentRows=[
     ...shifts.filter(r=>shiftWithin(r,startMs,endMs)).map(r=>({row:r,table:TABLES.shifts})),
     ...crew.filter(r=>shiftWithin(r,startMs,endMs)).map(r=>({row:r,table:TABLES.crew})),
