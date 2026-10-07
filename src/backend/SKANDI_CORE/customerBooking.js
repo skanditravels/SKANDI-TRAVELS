@@ -1,5 +1,5 @@
 // /src/backend/SKANDI_CORE/customerBooking.js
-// SKANDI Backend Base 1.0 — B-010 canonical customer booking orchestration.
+// SKANDI Backend Base V12 canonical customer booking orchestration.
 // Owns the single customer-facing search/cart boundary plus Air/Hotel/Cars checkout state.
 // Does NOT write ALTEA. booking_carts status=Confirmed remains the single customer->ALTEA handoff.
 
@@ -408,7 +408,7 @@ export async function createBookingCartFromOfferCore(context = null, input = {})
       quoteId = text(quoted?.quote?.quoteId || quoted?.quote?.id, 180);
     }
     if (!quoteId) throw bookingError("STAY_QUOTE_REQUIRED", "The hotel quote could not be created.");
-    return createHotelCartCore(context, { quoteId, ...search });
+    return createHotelCartCore(context, { ...search, quoteId });
   }
   if (type.includes("CAR") || text(offer.rateId, 180).startsWith("rae_")) {
     let quoteId = text(offer.quoteId, 180);
@@ -576,6 +576,11 @@ export async function listCustomerBookingCartsCore(context, input = {}) {
 
 
 async function refreshAndPersistOffer(context, row) {
+  if(row.payload?.productType==="HOTEL_ONLY") {
+    const quoted=await getDuffelStayQuoteCore({quoteId:row.payload?.stayQuote?.id}),quote=quoted.quote;
+    if(!quote?.id||!quote.totalCurrency||!Number.isFinite(Number(quote.totalAmount)))throw bookingError("STAY_QUOTE_REQUIRED","This hotel quote is no longer available. Search again.");
+    return updateOwnedCart(context,row.cart_id,{currency:quote.totalCurrency,subtotal:decimal(quote.totalAmount),taxes:decimal(quote.taxAmount),total:decimal(quote.totalAmount),payload:{...row.payload,stayQuote:quote}});
+  }
   const services = combineServiceSelections(row.payload || {});
   const pricing = await priceAirAndPackageCart(row, services);
   assertOfferMatchesSearch(pricing.offer, row.payload?.searchContext || row.payload?.search || {});
@@ -647,7 +652,7 @@ export async function storeBookingExtrasCore(context, input = {}) {
 
 export async function loadSignatureTransfersCore(context, input = {}) {
   await requireOwnedCart(context, input.cartId);
-  return { options: [], meta: { message: "No live Signature transfer is attached to this flight cart." } };
+  return { options: [], meta: { message: "No live transfer is currently available for this booking." } };
 }
 
 
@@ -718,6 +723,10 @@ function availableSeatServices(seatMaps) {
 
 export async function loadSeatMapsCore(context, input = {}) {
   const loaded = await loadBookingCartCore(context, input, { includeTravelers: true });
+  if(loaded.row.payload?.productType==="HOTEL_ONLY") {
+    if(!loaded.sensitive?.guests?.length)throw bookingError("GUEST_REQUIRED","Save guest details before continuing.");
+    return {unavailable:true,reason:"This hotel-only booking has no flights or seat selections.",seatMaps:[],travelers:[],existingSelections:{}};
+  }
   if (!loaded.sensitive?.passengers?.length) throw bookingError("TRAVELERS_REQUIRED", "Save traveler details before selecting seats.");
   const result = await getDuffelSeatMapsCore({ offerId: airOfferIdForCart(loaded.row) });
   const seatMaps = arr(result.seatMaps);
@@ -736,6 +745,12 @@ export async function loadSeatMapsCore(context, input = {}) {
 export async function storeSeatSelectionsCore(context, input = {}) {
   const row = await requireOwnedCart(context, input.cartId);
   assertEditable(row);
+  if(row.payload?.productType==="HOTEL_ONLY") {
+    if(input.skipped!==true||Object.keys(record(input.selections)).length)throw bookingError("SEAT_UNAVAILABLE","This hotel booking has no flight seats.");
+    if(!row.payload?.secureTravelers)throw bookingError("GUEST_REQUIRED","Save hotel guest details first.");
+    const payload={...row.payload,seatSelections:{},seatsSkipped:true,flow:{...(row.payload.flow||{}),currentStep:"payment"}};
+    return {cart:toPublicCart(await updateOwnedCart(context,row.cart_id,{status:"PaymentReady",payload}))};
+  }
   let seatSelections = {};
   if (input.skipped !== true) {
     const mapResult = await getDuffelSeatMapsCore({ offerId: airOfferIdForCart(row) });
@@ -774,10 +789,22 @@ export async function storeSeatSelectionsCore(context, input = {}) {
 }
 
 
+// Reopening checkout retrieves its existing authorization; it never authorizes or books again.
+async function existingPaymentSession(row) {
+  const payment=row.payload?.payment;
+  if(row.status!=="PaymentPending"||!payment?.paymentIntentId)return null;
+  const intent=await retrieveStripePaymentIntent(payment.paymentIntentId);
+  const owner=intent.metadata?.cart_id||intent.metadata?.idempotency_context;
+  if(intent.id!==payment.paymentIntentId||String(owner)!==String(row.cart_id)||Number(intent.amount)!==Number(payment.amountMinor)||lower(intent.currency,3)!==lower(payment.currency,3))throw bookingError("PAYMENT_REFERENCE_MISMATCH","The existing payment could not be verified. Contact SKANDI before paying again.",409);
+  if(intent.status==="canceled")throw bookingError("PAYMENT_CANCELED","This payment authorization was canceled. Return to Home to select a current offer.",409);
+  return {cart:toPublicCart(row),payment:{paymentIntentId:intent.id,clientSecret:intent.client_secret,publishableKey:await getStripePublishableKey(),amount:payment.amount,currency:payment.currency,status:intent.status,captureMethod:intent.capture_method||"manual"}};
+}
+
 export async function prepareBookingPaymentCore(context, input = {}) {
   const row = await requireOwnedCart(context, input.cartId);
   if (!row.payload?.secureTravelers) throw bookingError("TRAVELERS_REQUIRED", "Save traveler details before payment.");
   if (LOCKED_STATUSES.has(row.status)) throw bookingError("BOOKING_RECONCILIATION_REQUIRED", "This booking is already confirmed, committing, or being reconciled. Do not submit another payment.", 409);
+  const existing=await existingPaymentSession(row);if(existing)return existing;
   const services = combineServiceSelections(row.payload || {});
 
 
@@ -1280,18 +1307,21 @@ export async function createHotelCartCore(context, input = {}) {
     stayQuote: quote,
     stayBooking: null,
     travelers: [],
+    travelerCount: arr(quote.guests).length || Math.max(1,Number(input.adults)||1)+Math.max(0,Number(input.children)||0)+Math.max(0,Number(input.infants)||0),
     secureTravelers: null,
+    searchContext: {...record(input)},
     search: {
+      adults:Math.max(1,Number(input.adults)||1),children:Math.max(0,Number(input.children)||0),infants:Math.max(0,Number(input.infants)||0),
       origin: upper(input.origin || input.destinationIata, 3) || null,
       destination: upper(input.destination || input.destinationIata, 3) || null,
       departureDate: quote.checkInDate || input.checkInDate || null,
       returnDate: quote.checkOutDate || input.checkOutDate || null
     },
-    flow: { currentStep: "apis", createdAt: nowIso() }
+    flow: { currentStep: "offer", createdAt: nowIso() }
   };
   const row = await createOwnedCart(context, {
     email: context.email,
-    status: "TravelersPending",
+    status: "Open",
     currency: quote.totalCurrency,
     subtotal: decimal(quote.totalAmount),
     taxes: decimal(quote.taxAmount),
@@ -1300,12 +1330,13 @@ export async function createHotelCartCore(context, input = {}) {
     source: "customer"
   });
   await addCartItem(row.cart_id, { itemType: "hotel", itemId: quote.id, title: quote.accommodation?.name || "Hotel", quantity: 1, unitPrice: quote.totalAmount, total: quote.totalAmount, payload: { provider: "Duffel", quoteId: quote.id, accommodation: quote.accommodation } });
-  return { cartId: row.cart_id, step: "apis" };
+  return { cartId: row.cart_id, step: "offer" };
 }
 
 
 export async function saveHotelGuestsCore(context, input = {}) {
   const row = await requireOwnedCart(context, input.cartId);
+  if(row.payload?.productType!=="HOTEL_ONLY")throw bookingError("INVALID_PRODUCT_TYPE","This is not a hotel checkout.");
   assertEditable(row);
   const guests = arr(input.guests).map((g, i) => ({
     id: text(g.id || `HOTEL_GUEST_${i + 1}`, 80),
@@ -1316,14 +1347,16 @@ export async function saveHotelGuestsCore(context, input = {}) {
     gender: lower(g.gender, 5) || null,
     identityDocuments: arr(g.identityDocuments)
   })).filter(g => g.givenName && g.familyName);
+  const expected=Number(row.payload?.travelerCount)||guests.length;
+  if(guests.length!==expected)throw bookingError("GUEST_REQUIRED","Enter every guest included in the hotel search.");
   if (!guests.length) throw bookingError("GUEST_REQUIRED", "Add at least one hotel guest.");
   const contact = { email: lower(input.email || context.email, 254), phoneNumber: text(input.phoneNumber || input.phone, 20) };
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact.email)) throw bookingError("INVALID_EMAIL", "Enter a valid email address.");
   if (!/^\+[1-9]\d{7,14}$/.test(contact.phoneNumber)) throw bookingError("INVALID_PHONE", "Enter an international phone number.");
   const secure = await encryptBookingData({ guests, contact });
   const triggerTravelers = guests.map(g => ({ givenName: g.givenName, familyName: g.familyName, dateOfBirth: g.bornOn, nationality: g.nationality, gender: g.gender, paxType: "ADT" }));
-  const payload = { ...(row.payload || {}), secureTravelers: secure, travelers: triggerTravelers, travelerCount: guests.length, flow: { ...(row.payload?.flow || {}), currentStep: "payment" } };
-  const updated = await updateOwnedCart(context, row.cart_id, { email: contact.email, status: "PaymentReady", payload });
+  const payload = { ...(row.payload || {}), secureTravelers: secure, travelers: triggerTravelers, travelerCount: guests.length, flow: { ...(row.payload?.flow || {}), currentStep: "seats" } };
+  const updated = await updateOwnedCart(context, row.cart_id, { email: contact.email, status: "TravelersSaved", payload });
   return { cart: toPublicCart(updated) };
 }
 
@@ -1331,7 +1364,9 @@ export async function saveHotelGuestsCore(context, input = {}) {
 export async function prepareHotelPaymentCore(context, input = {}) {
   const row = await requireOwnedCart(context, input.cartId);
   if (row.payload?.productType !== "HOTEL_ONLY") throw bookingError("INVALID_PRODUCT_TYPE", "This is not a hotel checkout.");
+  if(LOCKED_STATUSES.has(row.status))throw bookingError("BOOKING_RECONCILIATION_REQUIRED","This booking is already confirmed, committing, or being reconciled. Do not submit another payment.",409);
   if (!row.payload?.secureTravelers) throw bookingError("GUEST_REQUIRED", "Save hotel guest details before payment.");
+  const existing=await existingPaymentSession(row);if(existing)return existing;
   const quoteResult = await getDuffelStayQuoteCore({ quoteId: row.payload?.stayQuote?.id });
   const quote = quoteResult.quote;
   const amountMinor = duffelAmountToMinor(quote.totalAmount, quote.totalCurrency);
