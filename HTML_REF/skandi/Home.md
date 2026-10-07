@@ -1,3 +1,19 @@
+# SKANDI INFO / LOG — V12 journey integration
+
+- Source identity: `/HTML_REF/skandi/Home.md`. System: SKANDI. Complete intended source; HTML_REF is never imported at runtime.
+- Page: Home; `/src/pages/Home.n73w8.js`; routes `/` and `/skandi`; observed HTML `#htmlHome`.
+- Runtime replacement: `embed/Home.html` is pasted into `#htmlHome`. Approved layout, translations, content cards, prices, airport selection and settings behavior are retained.
+- Home facade: unchanged `homeContent.web.js` → `homeContent.js`; data uses existing `inventory_public_entities_v` / `travel_info_airports`. Search results and cart creation now belong to Booking's `customerBooking.web.js` → `customerBooking.js`.
+- Existing HOME_READY / HOME_BOOTSTRAP_RESULT / HOME_LOCATIONS_REQUEST / RESIZE_IFRAME contracts remain. HOME_SEARCH now stores sanitized criteria using `public/bookingSearch.js`, responds with correlated HOME_NAVIGATE_TO_OFFER and navigates immediately to `/booking?step=offer&searchId=...`. Home no longer renders live search results.
+- Public browsing/search do not require login. Booking prompts for the existing account popup when an offer is selected; customer/price authority remains on the backend.
+- REQUIRES LIVE TEST: Wix session storage across page navigation, deferred iframe attachment, actual search results and login. The currently published Home proxy already exposes searchUnifiedOffers; this repair is a routing/ownership correction, not a claimed missing-export repair.
+- Status: **VERIFIED locally** with Node.js + jsdom and simulated Wix/provider adapters; **STATICALLY VERIFIED** import/export and message contracts; **REQUIRES LIVE TEST** in Wix after installation. This source package has not been deployed.
+- Source authority: `skanditravels/SKANDI-TRAVELS`, `main`, commit `e8dd84a3af35797062be60f021cba83a4fc21bf6`, compared with the supplied complete HTML and approved Home/Country V12 repairs. Existing approved source history is preserved below.
+- Last inspected: 2026-10-07 UTC. Published route/component configuration, Home/Country proxy exports, and Supabase public catalog/schema were inspected read-only. No GitHub, Wix or database writes were performed.
+- Ownership: HTML → postMessage → Wix page controller → `backend/SKANDI_CORE/*.web.js` → canonical core/client → Supabase / existing providers. The site master retains global header/footer, account and settings ownership.
+
+## Preserved history — earlier architecture/status is superseded above
+
 # SKANDI INFO / LOG — Home V12
 
 - Source of truth: /HTML_REF/skandi/Home.md; complete supplied HTML below.
@@ -58,6 +74,13 @@ V12: retained the uploaded title/600px hero, styles, editorial sections and tran
 Validation follow-up: restored the missing results panel and its six required DOM controls, which previously stopped startup before HOME_READY. Added matching result styles without altering the supplied style block. Excluded private/inactive/unpublished airport reference rows, preserved canonical airport IDs, rejected empty/out-of-range coordinates and suppressed expired quotes in secondary card labels. All 27 local checks passed, including actual @wix/web-methods permission parity and the real booking core/mapper with provider, authentication and storage fixtures. These are source-level checks, not a Wix build or a live provider/database test.
 
 ## Complete Home HTML
+
+
+## CHANGE LOG — 2026-10-07 UTC
+
+Moved search/results ownership to the requested stateOffer, preserving Home content and prior V12 fixes. Navigation acknowledgement clears both search/selection timers and says “Opening your travel results” without falsely claiming a cart was saved. The previous in-Home result/selection architecture is superseded.
+
+## COMPLETE INTENDED HTML
 
 ```html
 <!doctype html>
@@ -5329,9 +5352,9 @@ window.addEventListener("message",event=>{
       ? "Some travel results are unavailable. The available results are shown below."
       : "The travel provider could not complete this search. Please try again.",true);
   }
-  if(msg.type==="HOME_NAVIGATE_TO_OFFER"&&pending.selection?.requestId===msg.requestId){
-    clearTimeout(pending.selection.timer);pending.selection.timer=null;
-    showStatus(skandiTranslate("home.status.offerSaved"),false,true);
+  if(msg.type==="HOME_NAVIGATE_TO_OFFER"&&(pending.selection?.requestId===msg.requestId||pending.search?.requestId===msg.requestId)){
+    if(pending.selection){clearTimeout(pending.selection.timer);pending.selection.timer=null;} if(pending.search){clearTimeout(pending.search.timer);pending.search.timer=null;}
+    showStatus("Opening your travel results…",false,true);
   }
   if(msg.type==="HOME_FOCUS_SEARCH"){
     document.body.classList.remove("search-mode");
