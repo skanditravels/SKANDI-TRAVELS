@@ -2,10 +2,9 @@
 // SKANDI Home V12 — correlated embed bridge; canonical backend owns data and prices.
 
 import wixLocationFrontend from "wix-location-frontend";
-import { searchUnifiedOffers, createBookingCartFromOffer } from "backend/SKANDI_CORE/customerBooking.web";
+import { startBookingSearch } from "public/bookingSearch";
 import { getHomeContent, getHomeSearchLocations, getHomeLivePrices } from "backend/SKANDI_CORE/homeContent.web";
 import { SITE_MAP, APP_ROUTES } from "public/siteMap";
-import { openCustomerLogin } from "public/customerAuthUi";
 
 const HOME_EMBED_IDS = ["#htmlHome", "#htmlhome", "#home"];
 const HOME_SOURCES = new Set(["SKANDI_HOME", "SKANDI_HOME_LONG_DISCOVERY_V2", "SKANDI_HOME_OLD_STYLE"]);
@@ -180,60 +179,15 @@ function safeSearchErrors(errors) {
   }));
 }
 async function searchHome(html, message, payload) {
-  if (selectionJob) throw failure("HOME_SELECTION_PENDING", "Please finish the current offer selection first.");
-  const requestId = clean(message.requestId, 160);
-  if (requestId && searchJob?.requestId === requestId) return searchJob.promise;
   const raw = obj(message.search || payload.search);
-  const search = { ...raw, language:raw.language || currentSettings.language, locale:raw.locale || currentSettings.language, currency:raw.currency || currentSettings.currency };
-  const job = { requestId, search, items:[], promise:null };
-  searchJob = job;
-  job.promise = (async () => {
-    try {
-      const result = await boundedRead(searchUnifiedOffers({ search }), SEARCH_TIMEOUT_MS);
-      if (searchJob !== job) return;
-      if (!result || !Array.isArray(result.items)) throw failure("HOME_INVALID_SEARCH", "Search is temporarily unavailable.");
-      job.items = result.items;
-      postToHtml(html, "HOME_SEARCH_RESULT", { items:job.items, errors:safeSearchErrors(result.errors) }, requestId);
-    } catch (error) {
-      if (searchJob === job) postHomeError(html, error, message);
-    }
-  })();
-  return job.promise;
+  const search = {...raw,language:raw.language||currentSettings.language,locale:raw.locale||currentSettings.language,currency:raw.currency||currentSettings.currency};
+  const path = startBookingSearch(search, "HOME");
+  postToHtml(html, "HOME_NAVIGATE_TO_OFFER", {path,step:"offer"}, clean(message.requestId,160));
+  navigateTo(path);
 }
 async function selectOffer(html, message, payload) {
-  // Keep the lock across both the login popup and cart creation. A timed-out UI
-  // never replays this mutation; only an explicit resolved login continues it.
-  if (selectionJob) return selectionJob.promise;
-  const requested = obj(message.offer || payload.offer);
-  const offer = searchJob?.items.find(item => item.id && item.id === requested.id);
-  if (!offer) throw failure("HOME_OFFER_EXPIRED", "Search again before selecting this offer.");
-  const search = searchJob.search;
-  const job = { promise:null, navigated:false };
-  selectionJob = job;
-  job.promise = (async () => {
-    try {
-      let result = await createBookingCartFromOffer({ offer, search });
-      if (result?.requiresLogin) {
-        try { await openCustomerLogin({ sourcePage:"HOME", reason:"BOOKING_CART_AUTH" }); }
-        catch (_) { throw failure("LOGIN_CANCELLED", "Sign in was cancelled. The offer was not saved."); }
-        result = await createBookingCartFromOffer({ offer, search });
-      }
-      if (result?.requiresLogin) throw failure("LOGIN_REQUIRED", "Sign in to continue with this offer.");
-      if (!result?.cartId) throw failure("HOME_CART_UNCONFIRMED", "The booking cart could not be confirmed. Please check My Booking.");
-      const allowed = ["offer","extras","transfer","apis","seats","payment","confirmation"];
-      const step = allowed.includes(result.step) ? result.step : "offer";
-      const token = clean(result.cartToken || result.token, 300);
-      const path = APP_ROUTES.bookingFlow + "?step=" + encodeURIComponent(step) + "&cartId=" + encodeURIComponent(result.cartId) + (token ? "&cartToken=" + encodeURIComponent(token) : "");
-      postToHtml(html, "HOME_NAVIGATE_TO_OFFER", { cartId:result.cartId, step }, clean(message.requestId, 160));
-      navigateTo(path);
-      job.navigated = true;
-    } catch (error) {
-      postHomeError(html, error, message);
-    } finally {
-      if (!job.navigated && selectionJob === job) selectionJob = null;
-    }
-  })();
-  return job.promise;
+  // Search and offer selection are owned by /booking stateOffer.
+  return searchHome(html, message, {search:message.search||payload.search||searchJob?.search||{}});
 }
 async function handleHomeMessage(html, message) {
   const payload = obj(message.payload);
