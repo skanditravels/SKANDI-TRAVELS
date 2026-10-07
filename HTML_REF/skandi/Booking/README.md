@@ -1,3 +1,46 @@
+# SKANDI INFO / LOG — Booking V12
+
+- Runtime: `/src/pages/Booking.e8twe.js`, state box `#bookingFlowStates`; shared search handoff `public/bookingSearch.js`; authentication popup `public/customerAuthUi.js` remains canonical.
+- Facade: unchanged `backend/SKANDI_CORE/customerBooking.web.js`; implementation: changed `customerBooking.js`, existing `bookingMapper.js`, `bookingCart.js`, `bookingSecurity.js`, `bookingReconciliation.js`, `duffelAir.js`, `duffelGround.js`, `stripeClient.js`, `supabaseServer.js`.
+- Database: existing owned `booking_carts`, cart-item/payment repositories and confirmed-cart ALTEA handoff; no SQL/schema/RLS changes. Database transport, ownership checks and traveler encryption remain canonical.
+- Authorization: public search; cart creation requires a resolved server member; cart reads and booking mutations retain SiteMember and owned-cart checks. Client-supplied IDs, amounts, step names and payment messages are never payment authority.
+- Sequence: `stateOffer → stateExtras → stateTransfer → stateApis → stateSeatMap → statePayment → stateConfirmation`. Optional `stateDocuments` remains reachable after confirmation. The duplicate confirmation in the request is represented by one existing confirmation state.
+- Required editor migration: the published seat state is currently named `seatMapEmbed`. Rename that **state** to `stateSeatMap`; keep HTML component `#seatmapEmbed`. The prior controller's `stateSeats` does not exist on the published page. Missing states now produce an explicit installation error.
+- Lifecycle: existing state READY/LOADED contracts remain; `BOOKING_HOST_READY`, `BOOKING_STEP_ACTIVE`, `BOOKING_STEP_INACTIVE`, `BOOKING_RETRY`, and request IDs provide reconnect/recovery. READY retries are read-only; hidden-state mutations, duplicate in-flight actions and forward URL jumps are blocked. Uncertain writes are checked before resubmission.
+- Search contract: `BOOKING_SEARCH_LOADING`, `BOOKING_SEARCH_RESULTS`, `BOOKING_SEARCH_SELECT`, `BOOKING_SEARCH_REFRESH`, `BOOKING_BACK_TO_RESULTS`; stateOffer displays results and then the selected cart. Selection resolves only an ID from the controller's current server results.
+- Hotel-only carts now begin at Offer, show real empty extras/transfer states, collect the provider-quoted guest count, and show a seats-not-applicable state before Payment. The core never requests airline seats for hotel-only carts.
+- Payment recovery retrieves the existing owned PaymentIntent through the canonical Stripe client. The iframe accepts an already authorized intent only for server-side completion; it does not reauthorize it. Processing/reconciliation remains in Payment; only server `Confirmed` status can open Confirmation. Stripe return URL includes the cart ID.
+- Transfer limitation: the existing canonical transfer service currently returns no options; users see Transfer and explicitly continue without a transfer. No fictitious transfer service was added.
+- Status: **VERIFIED locally** with Node.js + jsdom and simulated Wix/provider adapters; **STATICALLY VERIFIED** import/export and message contracts; **REQUIRES LIVE TEST** in Wix after installation. This source package has not been deployed.
+- Source authority: `skanditravels/SKANDI-TRAVELS`, `main`, commit `e8dd84a3af35797062be60f021cba83a4fc21bf6`, compared with the supplied complete HTML and approved Home/Country V12 repairs. Existing approved source history is preserved below.
+- Last inspected: 2026-10-07 UTC. Published route/component configuration, Home/Country proxy exports, and Supabase public catalog/schema were inspected read-only. No GitHub, Wix or database writes were performed.
+- Ownership: HTML → postMessage → Wix page controller → `backend/SKANDI_CORE/*.web.js` → canonical core/client → Supabase / existing providers. The site master retains global header/footer, account and settings ownership.
+
+## Current state map
+
+| Step | State | HTML component | Complete source |
+| --- | --- | --- | --- |
+| offer | `stateOffer` | `#bookingOfferEmbed` | `embed/Booking/offer.html` |
+| extras | `stateExtras` | `#bookingExtrasEmbed` | `embed/Booking/extras.html` |
+| transfer | `stateTransfer` | `#signatureTransferEmbed` | `embed/Booking/transfer.html` |
+| apis | `stateApis` | `#apisHtml` | `embed/Booking/apis.html` |
+| seats | `stateSeatMap` | `#seatmapEmbed` | `embed/Booking/seats.html` |
+| payment | `statePayment` | `#paymentEmbed` | `embed/Booking/payment.html` |
+| confirmation | `stateConfirmation` | `#confirmationEmbed` | `embed/Booking/confirmation.html` |
+| Documents (optional) | `stateDocuments` | `#bookingDocumentsEmbed` | Existing unchanged source |
+
+## Verification — 2026-10-07 UTC
+
+**VERIFIED locally: 47 checks passed.** Syntax/import/export checks cover all changed modules, all inline scripts and all six merged templates. jsdom checks cover Country catalog rendering, scoped hotel navigation, iframe handshake, Home handoff, result selection, both required checkout sequences, missing states, ownership in the real hotel core with simulated repositories, duplicate actions, errors, seat skip, payment resume and false-confirmation rejection. Published page configuration and catalog were inspected read-only.
+
+**REQUIRES LIVE TEST:** Wix build/publication, real iframe origin and sizing, mobile/desktop visual layout, Wix login/session handoff, live Duffel search/quotes, Stripe test authorization/3DS, supplier confirmation and downstream confirmed-cart processing. No paid booking or production mutation was performed. Local simulated adapters do not prove live integration.
+
+## CHANGE LOG — 2026-10-07 UTC
+
+Search results now reside in stateOffer; all seven requested states are mandatory for supported flight/package/hotel checkout. Hotel-specific paths and existing payment recovery are extended in the canonical core. The old direct hotel-to-payment and automatic transfer skip behavior below is superseded.
+
+## Preserved history — superseded architecture/status
+
 # SKANDI Booking Flow — B-011.1
 
 ## INFO / LOG
