@@ -79,14 +79,13 @@ const MASTER_CONFIG = Object.freeze({
   customer: Object.freeze({
     header: Object.freeze({
       primaryNav: Object.freeze([
-        { id:"flights", label:"Flights", path:SITE_MAP.flights },
-        { id:"hotels", label:"Hotels", path:SITE_MAP.hotels },
+        { id:"home", label:"Book", path:SITE_MAP.home },
+        { id:"destinations", label:"Destinations", path:SITE_MAP.destinations },
         { id:"packages", label:"Packages", path:SITE_MAP.packages },
         { id:"tours", label:"Tours & Activities", path:SITE_MAP.tours },
-        { id:"transfers", label:"Transfers", path:SITE_MAP.transfers }
+        { id:"travelInfo", label:"Travel Info", path:SITE_MAP.travelInfo }
       ]),
       secondaryNav: Object.freeze([
-        { id:"destinations", label:"Destinations", path:SITE_MAP.destinations },
         { id:"signature", label:"SKANDI Collection", path:SITE_MAP.skandiCollection },
         { id:"voy", label:"VOY Magazine", path:SITE_MAP.voy },
         { id:"newsroom", label:"Newsroom", path:SITE_MAP.newsroom }
@@ -103,12 +102,11 @@ const MASTER_CONFIG = Object.freeze({
           links:Object.freeze([
             { label:"Book a trip", path:SITE_MAP.home },
             { label:"Manage your booking", path:"/my-profile?tab=trips" },
+            { label:"Airport Transfer", path:SITE_MAP.transfers },
             { label:"Our Destinations", path:SITE_MAP.destinations },
-            { label:"Flights", path:SITE_MAP.flights },
             { label:"Hotels", path:SITE_MAP.hotels },
             { label:"Tours & Activities", path:SITE_MAP.tours },
             { label:"Car Rental", path:SITE_MAP.carRental },
-            { label:"Airport Transfer", path:SITE_MAP.transfers },
             { label:"Last Chance", path:SITE_MAP.offers }
           ])
         },
@@ -154,7 +152,6 @@ const MASTER_CONFIG = Object.freeze({
         Object.freeze({ label:"Instagram", url:"https://www.instagram.com/skanditravels", iconUrl:"https://static.wixstatic.com/media/394052_3140fd0b593e44bd993a64412b94011e~mv2.png" }),
         Object.freeze({ label:"Facebook", url:"https://www.facebook.com/skanditravels", iconUrl:"https://static.wixstatic.com/media/394052_80ea7848b9a142ef9f5c3c0beb8a3230~mv2.png" }),
         Object.freeze({ label:"TikTok", url:"https://www.tiktok.com/@skanditravels", iconUrl:"https://static.wixstatic.com/media/394052_74976eb394d14952af79f14988bb17b3~mv2.png" }),
-        Object.freeze({ label:"YouTube", url:"https://www.youtube.com/skanditravels", iconUrl:"https://static.wixstatic.com/media/394052_6e9d971d747649afa5bd544e00870cbf~mv2.png" }),
         Object.freeze({ label:"Snapchat", url:"https://www.snapchat.com/@skanditravels", iconUrl:"https://static.wixstatic.com/media/394052_1c961ca84c314ebc966444cb5449c618~mv2.png" }),
         Object.freeze({ label:"LinkedIn", url:"https://www.linkedin.com/en/skanditravels", iconUrl:"https://static.wixstatic.com/media/394052_a7bf9a6382bc4b8785c1e4ebae385cda~mv2.png" })
       ]),
