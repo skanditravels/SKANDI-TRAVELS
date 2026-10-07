@@ -72,16 +72,16 @@ function validateDispatchResult(value, expectedType = "") {
 
   if (!responseType) {
     const error = new Error("INVENTORY_DISPATCH_RESPONSE_INVALID");
-    error.code = "INVENTORY_DISPATCH_RESPONSE_INVALID";
-    error.publicMessage =
+    error["code"] = "INVENTORY_DISPATCH_RESPONSE_INVALID";
+    error["publicMessage"] =
       "Inventory Control received an invalid response from its backend dispatcher.";
     throw error;
   }
 
   if (expectedType && responseType !== expectedType) {
     const error = new Error("INVENTORY_DISPATCH_RESPONSE_MISMATCH");
-    error.code = "INVENTORY_DISPATCH_RESPONSE_MISMATCH";
-    error.publicMessage =
+    error["code"] = "INVENTORY_DISPATCH_RESPONSE_MISMATCH";
+    error["publicMessage"] =
       `Inventory Control expected ${expectedType} but received ${responseType}.`;
     throw error;
   }
@@ -96,8 +96,8 @@ function validateDispatchResult(value, expectedType = "") {
 function requireInventoryDispatcher() {
   if (typeof handleInventoryAction !== "function") {
     const error = new Error("INVENTORY_WEB_FACADE_MISMATCH");
-    error.code = "INVENTORY_WEB_FACADE_MISMATCH";
-    error.publicMessage =
+    error["code"] = "INVENTORY_WEB_FACADE_MISMATCH";
+    error["publicMessage"] =
       "The published backend/SKANDI_CORE/inventory.web module does not expose handleInventoryAction. Replace inventory.web.js and publish it together with Inventory Control.jsdik.js.";
     throw error;
   }
