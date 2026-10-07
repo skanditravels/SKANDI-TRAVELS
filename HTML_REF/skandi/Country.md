@@ -1,3 +1,21 @@
+# SKANDI INFO / LOG — V12 journey integration
+
+- Source identity: `/HTML_REF/skandi/Country.md`. System: SKANDI. Complete intended source; HTML_REF is never imported at runtime.
+- Page: Country; `/src/pages/Country.nxtpn.js`; observed route `/destinations/country`; observed component `#countryDestinationHtml`.
+- Entry without a country displays the published country chooser; `?country=<slug>` loads that country. The same complete template is included in the merged Our Destinations shell.
+- Data owner: unchanged `backend/SKANDI_CORE/destinationFlow.web.js` → `destinationFlow.js` → existing `inventory_public_entities_v`. Current read-only catalog: 6 countries, 4 destinations, 2 areas and 2 hotels; no synthetic country, hotel, price or location is substituted.
+- Shared UI modules: `public/destinationFlowBridge.js`, existing `public/destinationContent.js`, `public/bookingSearch.js` and unchanged `public/siteMap.js`. Public catalog reads remain unauthenticated; booking ownership is enforced by the existing SiteMember facade/core.
+- Booking handoff: searches go to `/booking?step=offer&searchId=...`. Only sanitized criteria are kept in Wix browser-session storage for up to two hours; provider offers, prices, login and owned cart creation are resolved in the Booking controller/core. A search URL is tied to its browser session and is not a shareable itinerary.
+- Open data dependency: both current hotels (Scandic Continental and Scandic Luleå) lack a verified `details.providerAccommodationId` / `details.duffelAccommodationId`. Property-specific availability stops with an explicit error until Inventory contains the correct provider mapping. Location-based hotel searches remain available. This package does not guess IDs or modify Inventory.
+- Contract: `COUNTRY_READY`, `COUNTRY_HOST_READY`, `COUNTRY_PAGE_RESULT`, `UPDATE_SETTINGS`, `COUNTRY_SELECT_COUNTRY`, `COUNTRY_NAVIGATE`, `COUNTRY_SEARCH_OFFERS`, legacy `COUNTRY_SELECT_OFFER`, `RESIZE_IFRAME`, `COUNTRY_ERROR`. `BOOKING_SEARCH_NAVIGATING` acknowledges handoff. Messages require the actual parent window and expected source; referrer-derived target origins are not used.
+- Runtime finding: the supplied/published Country embed matches the previous repaired source; its published facade proxy exists. Catalog data is present. The exact original live browser failure was not reproduced in a browser. This replacement removes the inferred-origin dependency, binds the observed ID and retains explicit loading, retry, directory and error states.
+- Status: **VERIFIED locally** with Node.js + jsdom and simulated Wix/provider adapters; **STATICALLY VERIFIED** import/export and message contracts; **REQUIRES LIVE TEST** in Wix after installation. This source package has not been deployed.
+- Source authority: `skanditravels/SKANDI-TRAVELS`, `main`, commit `e8dd84a3af35797062be60f021cba83a4fc21bf6`, compared with the supplied complete HTML and approved Home/Country V12 repairs. Existing approved source history is preserved below.
+- Last inspected: 2026-10-07 UTC. Published route/component configuration, Home/Country proxy exports, and Supabase public catalog/schema were inspected read-only. No GitHub, Wix or database writes were performed.
+- Ownership: HTML → postMessage → Wix page controller → `backend/SKANDI_CORE/*.web.js` → canonical core/client → Supabase / existing providers. The site master retains global header/footer, account and settings ownership.
+
+## Preserved history — earlier architecture/status is superseded above
+
 # INFO / LOG — COUNTRY
 
 - Source file identity: `/HTML_REF/skandi/Country.md`
@@ -25,6 +43,13 @@
 - 2026-10-06 UTC — V12 repairs startup and the source handshake, routes the published Country page correctly, reuses canonical public-catalog projections, adds a country-scoped arrival-airport selector, and connects real package offers to the canonical booking cart. The old missing-method contract is superseded by getDestinationFlowCatalog + shared presentation and customerBooking. Our Destinations now imports the extracted shared functions; its complete HTML bytes remain unchanged.
 
 ## COMPLETE HTML
+
+
+## CHANGE LOG — 2026-10-07 UTC
+
+Unified the Country controller with the existing destination catalog projections. Preserved the supplied design and translations, displayed all six real country choices in local execution, included published destinations below area parents, and routed searches to Booking stateOffer. The global site settings dialog remains master-owned; the embed does not open a second welcome dialog.
+
+## COMPLETE INTENDED HTML
 
 ```html
 <!DOCTYPE html>
@@ -535,7 +560,7 @@ function closeGallery() {
   const COUNTRY_SOURCE="SKANDI_DYNAMIC_COUNTRY_PAGE", HEADER_SOURCE="SKANDI_CUSTOMER_HEADER_EXPANDBAR", PARENT_SOURCE="SKANDI_WIX_PARENT";
   const SETTINGS_KEY="skandi_user_settings", CURRENCIES=["USD","SEK","NOK","DKK","EUR"];
   const $=id=>document.getElementById(id), $$=s=>Array.from(document.querySelectorAll(s));
-  const PARENT_ORIGIN=(()=>{try{return document.referrer?new URL(document.referrer).origin:"*";}catch(_){return "*";}})();
+  const PARENT_ORIGIN="*";
   let settings={language:"EN",currency:"USD"},page=null,directory=[],offers=[],routes={},masterSettingsReceived=false;
   let readyTimer=null,settingsTimer=null,resizeTimer=null;
   const pending={page:null,search:null,selection:null};
@@ -561,7 +586,7 @@ function closeGallery() {
   }
   function imageUrl(value) {const s=String(value||"");return /^https?:\/\//i.test(s)?s:"";}
   function emit(source,type,payload={},requestId="") {
-    window.parent.postMessage({source,type,payload,requestId,timestamp:new Date().toISOString()},PARENT_ORIGIN);
+    window.parent.postMessage({flowEpoch:window.__SKANDI_FLOW_EPOCH||"",source,type,payload,requestId,timestamp:new Date().toISOString()},PARENT_ORIGIN);
   }
   function newId(){return "COUNTRY-"+Date.now()+"-"+Math.random().toString(36).slice(2,9);}
   function post(type,payload={},requestId) {
@@ -613,7 +638,7 @@ function closeGallery() {
     if(pending.search)release("search",pending.search.id);
     offers=[];renderOffers([]);
     $("countryPage").setAttribute("aria-busy","true");state("Loading country information…");
-    const query=new URLSearchParams(location.search).get("country");
+    const query=new URLSearchParams(window.__SKANDI_FLOW_QUERY||location.search).get("country");
     const job=request("page",type,{slug:query||page?.slug||"",settings:{...settings},force},30000);
     if(pending.page===job) readyTimer=setInterval(()=>{if(pending.page===job)post(job.type,job.payload,job.id);},1500);
   }
@@ -708,7 +733,7 @@ function closeGallery() {
     saveSettings({language:$("welcomeLang").value,currency:$("welcomeCurr").value},{notify:true});
   };
   window.addEventListener("message",event=>{
-    if(event.source!==window.parent||(PARENT_ORIGIN!=="*"&&event.origin!==PARENT_ORIGIN))return;
+    if(event.source!==window.parent)return;
     let message=event.data;if(typeof message==="string"){try{message=JSON.parse(message);}catch(_){return;}}
     if(!message||message.source!==PARENT_SOURCE)return;const p=message.payload||{};
     if(["SKANDI_MASTER_CONFIG","CUSTOMER_SETTINGS_STATE","CUSTOMER_SETTINGS_SAVED"].includes(message.type)){
@@ -716,7 +741,8 @@ function closeGallery() {
       const incoming=message.type==="SKANDI_MASTER_CONFIG"?p.settings:message.type==="CUSTOMER_SETTINGS_SAVED"?p.state:p;
       if(incoming){masterSettingsReceived=true;clearTimeout(settingsTimer);$("welcomeSettingsModal").classList.remove("active");saveSettings(incoming);}return;
     }
-    if(message.type==="COUNTRY_HOST_READY"){
+    if(message.type==="BOOKING_SEARCH_NAVIGATING"){setSearchState("Opening your travel results…");return;}
+    if(message.type==="COUNTRY_HOST_READY"||message.type==="DESTINATION_BRIDGE_READY"){
       if(pending.page)post(pending.page.type,pending.page.payload,pending.page.id);
       emit(COUNTRY_SOURCE,"MASTER_CONFIG_REQUEST",{context:"country"});return;
     }
@@ -751,7 +777,7 @@ function closeGallery() {
   let firstVisit=true;
   try{const raw=localStorage.getItem(SETTINGS_KEY);firstVisit=!raw;settings=normalizeSettings(JSON.parse(raw||"{}"));}catch(_){}
   applyI18n();controls();$("depart").min=new Date().toISOString().slice(0,10);$("depart").onchange=()=>{$("return").min=$("depart").value;};
-  settingsTimer=setTimeout(()=>{if(firstVisit&&!masterSettingsReceived)$("welcomeSettingsModal").classList.add("active");},1500);
+  
   requestPage();emit(COUNTRY_SOURCE,"MASTER_CONFIG_REQUEST",{context:"country"});
 
 })();
