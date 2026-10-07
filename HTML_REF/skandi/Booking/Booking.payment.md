@@ -1,3 +1,25 @@
+# SKANDI INFO / LOG — V12 journey integration
+
+- Source identity: `/HTML_REF/skandi/Booking/Booking.payment.md`. System: SKANDI. Complete intended source; HTML_REF is never imported at runtime.
+- Page: Booking; route `/booking`; state `statePayment`; observed HTML `#paymentEmbed`. Paste `embed/Booking/payment.html` into this existing component.
+- Runtime: `/src/pages/Booking.e8twe.js`, state box `#bookingFlowStates`; shared search handoff `public/bookingSearch.js`; authentication popup `public/customerAuthUi.js` remains canonical.
+- Facade: unchanged `backend/SKANDI_CORE/customerBooking.web.js`; implementation: changed `customerBooking.js`, existing `bookingMapper.js`, `bookingCart.js`, `bookingSecurity.js`, `bookingReconciliation.js`, `duffelAir.js`, `duffelGround.js`, `stripeClient.js`, `supabaseServer.js`.
+- Database: existing owned `booking_carts`, cart-item/payment repositories and confirmed-cart ALTEA handoff; no SQL/schema/RLS changes. Database transport, ownership checks and traveler encryption remain canonical.
+- Authorization: public search; cart creation requires a resolved server member; cart reads and booking mutations retain SiteMember and owned-cart checks. Client-supplied IDs, amounts, step names and payment messages are never payment authority.
+- Sequence: `stateOffer → stateExtras → stateTransfer → stateApis → stateSeatMap → statePayment → stateConfirmation`. Optional `stateDocuments` remains reachable after confirmation. The duplicate confirmation in the request is represented by one existing confirmation state.
+- Required editor migration: the published seat state is currently named `seatMapEmbed`. Rename that **state** to `stateSeatMap`; keep HTML component `#seatmapEmbed`. The prior controller's `stateSeats` does not exist on the published page. Missing states now produce an explicit installation error.
+- Lifecycle: existing state READY/LOADED contracts remain; `BOOKING_HOST_READY`, `BOOKING_STEP_ACTIVE`, `BOOKING_STEP_INACTIVE`, `BOOKING_RETRY`, and request IDs provide reconnect/recovery. READY retries are read-only; hidden-state mutations, duplicate in-flight actions and forward URL jumps are blocked. Uncertain writes are checked before resubmission.
+- Search contract: `BOOKING_SEARCH_LOADING`, `BOOKING_SEARCH_RESULTS`, `BOOKING_SEARCH_SELECT`, `BOOKING_SEARCH_REFRESH`, `BOOKING_BACK_TO_RESULTS`; stateOffer displays results and then the selected cart. Selection resolves only an ID from the controller's current server results.
+- Hotel-only carts now begin at Offer, show real empty extras/transfer states, collect the provider-quoted guest count, and show a seats-not-applicable state before Payment. The core never requests airline seats for hotel-only carts.
+- Payment recovery retrieves the existing owned PaymentIntent through the canonical Stripe client. The iframe accepts an already authorized intent only for server-side completion; it does not reauthorize it. Processing/reconciliation remains in Payment; only server `Confirmed` status can open Confirmation. Stripe return URL includes the cart ID.
+- Transfer limitation: the existing canonical transfer service currently returns no options; users see Transfer and explicitly continue without a transfer. No fictitious transfer service was added.
+- Status: **VERIFIED locally** with Node.js + jsdom and simulated Wix/provider adapters; **STATICALLY VERIFIED** import/export and message contracts; **REQUIRES LIVE TEST** in Wix after installation. This source package has not been deployed.
+- Source authority: `skanditravels/SKANDI-TRAVELS`, `main`, commit `e8dd84a3af35797062be60f021cba83a4fc21bf6`, compared with the supplied complete HTML and approved Home/Country V12 repairs. Existing approved source history is preserved below.
+- Last inspected: 2026-10-07 UTC. Published route/component configuration, Home/Country proxy exports, and Supabase public catalog/schema were inspected read-only. No GitHub, Wix or database writes were performed.
+- Ownership: HTML → postMessage → Wix page controller → `backend/SKANDI_CORE/*.web.js` → canonical core/client → Supabase / existing providers. The site master retains global header/footer, account and settings ownership.
+
+## Preserved history — earlier architecture/status is superseded above
+
 # Booking.payment
 
 ## INFO / LOG
@@ -49,6 +71,13 @@ B-011.1 preserves the existing message source and state/component IDs while alig
 ---
 
 ## COMPLETE INTENDED LIVE HTML SOURCE
+
+
+## CHANGE LOG — 2026-10-07 UTC
+
+Retains Stripe Elements and canonical server commit. Return navigation retains cartId; existing authorized intents are completed without another confirmPayment. Uncertain/processing/reconciliation responses provide a status check and do not claim confirmation or invite another charge. All seven changed states use parent-window verification, request IDs, bounded connection feedback and explicit read-only recovery. Existing design and message sources are preserved.
+
+## COMPLETE INTENDED HTML
 
 ```html
 <!doctype html>
@@ -365,6 +394,9 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 @media(max-width:820px){.payment-grid{grid-template-columns:1fr}}
 
 </style>
+<style id="booking-v12-style">
+#status{white-space:pre-line}.status[hidden]{display:none!important}.status button{margin:8px 8px 0 0}.results-toolbar{display:flex;gap:16px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin:0 0 20px}.results-toolbar label{display:flex;gap:8px;align-items:center;font-size:13px}.results-toolbar input,.results-toolbar select{font:inherit;min-height:44px;border:1px solid var(--sk-line,#e6e9ee);border-radius:12px;padding:9px 12px;max-width:100%}.result-list{display:grid;gap:18px}.result-card{display:grid;grid-template-columns:minmax(0,1fr) 210px;border:1px solid #e6e9ee;border-radius:20px;overflow:hidden;background:#fff;box-shadow:0 8px 30px rgba(2,46,100,.05)}.result-main{padding:24px}.result-main h3{font-family:'Playfair Display',Georgia,serif;font-size:25px;line-height:1.25;margin:12px 0}.result-main p{font-size:13px;line-height:1.7;color:#50627a}.result-side{padding:24px;background:#f6faff;display:flex;flex-direction:column;justify-content:center;gap:12px;align-items:stretch}.result-side .price{font-size:27px}.result-image{float:left;width:132px;height:110px;object-fit:cover;border-radius:12px;margin:0 20px 12px 0}.result-meta{font-size:12px;color:#50627a;line-height:1.7}.results-count{font-weight:700;color:#022e64}.btn:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #5fc7cf;outline-offset:3px}@media(max-width:680px){.result-card{grid-template-columns:1fr}.result-side{border-top:1px solid #e6e9ee}.result-main,.result-side{padding:18px}.result-image{float:none;width:100%;height:160px;margin:0 0 12px}.results-toolbar{align-items:stretch}.results-toolbar label{flex:1 1 100%;justify-content:space-between}}@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+</style>
 </head>
 <body>
 <div class="loader" id="pageLoader"><div class="loader-card"><div class="spinner"></div><div id="loaderText">Updating your booking…</div></div></div>
@@ -385,7 +417,8 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 const SOURCE="SKANDI_BOOKING_PAYMENT",PARENT="SKANDI_WIX_PARENT";
 let CART=null,PAYMENT=null,stripe=null,elements=null,paymentElement=null,busy=false,commitPosted=false;
 const $=id=>document.getElementById(id);
-function post(type,payload={}){window.parent.postMessage({source:SOURCE,type,...payload},"*")}
+let wire=null;
+function post(type,payload={}){if(wire&&!wire.before(type))return;window.parent.postMessage({source:SOURCE,type,requestId:wire?.id||"",...payload},"*")}
 function esc(v=""){return String(v??"").replace(/[&<>"']/g,s=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[s]))}
 function status(m,c=""){const e=$("status");e.textContent=m;e.className="status show "+c}
 function loading(show,text="Processing payment…"){const l=$("pageLoader");$("loaderText").textContent=text;l.classList.toggle("active",show)}
@@ -395,7 +428,7 @@ function render(session={}){
   CART=session.cart||{};PAYMENT=session.payment||{};
   if(!window.Stripe||!PAYMENT.publishableKey||!PAYMENT.clientSecret||!PAYMENT.paymentIntentId){status("Secure payment could not be initialized.","error");return}
   destroy();commitPosted=false;
-  const flight=String(CART.productType||"").toUpperCase()!=="HOTEL_ONLY";
+  const authorized=["requires_capture","succeeded"].includes(PAYMENT.status);
   $("root").innerHTML=`
     <div class="payment-grid">
       <section class="panel">
@@ -411,7 +444,7 @@ function render(session={}){
         </div>
       </section>
       <aside class="panel">
-        <div class="panel-head"><h2>Booking summary</h2><p>Current server-authoritative amount.</p></div>
+        <div class="panel-head"><h2>Booking summary</h2><p>Your current trip total.</p></div>
         <div class="panel-body">
           <div class="price">${esc(money(CART.total??PAYMENT.amount,CART.currency||PAYMENT.currency))}</div>
           <div class="meta-list">
@@ -419,11 +452,14 @@ function render(session={}){
             <div class="meta-row"><span>Status</span><strong>${esc(CART.status||"Payment pending")}</strong></div>
             <div class="meta-row"><span>Booking cart</span><strong>${esc(CART.cartId||"")}</strong></div>
           </div>
-          <div class="secure-note"><span class="secure-dot"></span><span>If supplier completion becomes uncertain, SKANDI places the booking into reconciliation rather than asking you to pay again.</span></div>
+          <div class="secure-note"><span class="secure-dot"></span><span>If the booking needs review, check its status or contact SKANDI before making another payment.</span></div>
         </div>
       </aside>
     </div>`;
-  $("backBtn").onclick=()=>post("BOOKING_NAVIGATE",{path:flight?"/booking/seats":"/booking/apis"});
+  $("backBtn").onclick=()=>post("BOOKING_NAVIGATE",{path:"/booking/seats"});
+  $("payBtn").onclick=submit;
+  if(authorized){$("payment-element").textContent="Payment is authorized. Complete your reservation below.";$("payBtn").textContent="Complete reservation";$("payBtn").disabled=false;status("Payment authorized. Your reservation still needs to be completed.","ok");return;}
+  if(PAYMENT.status==="processing"){status("Your payment is processing. Check booking status before trying again.","warn");showPaymentStatusCheck();return;}
   try{
     stripe=Stripe(PAYMENT.publishableKey);
     elements=stripe.elements({
@@ -446,19 +482,20 @@ function render(session={}){
 async function submit(){
   if(busy||commitPosted)return;
   if(!$("terms")?.checked)return status("Accept the booking and payment terms before continuing.","warn");
+  if(["requires_capture","succeeded"].includes(PAYMENT?.status)){busy=true;commitPosted=true;$("payBtn").disabled=true;loading(true,"Completing your reservation…");post("PAYMENT_COMMIT",{termsAccepted:true,paymentIntentId:PAYMENT.paymentIntentId});return;}
   if(!stripe||!elements||!PAYMENT?.paymentIntentId)return status("Secure payment is not ready yet.","warn");
   busy=true;$("payBtn").disabled=true;loading(true,"Authorizing payment…");status("Authorizing payment…","");
   try{
     const result=await stripe.confirmPayment({
       elements,
       redirect:"if_required",
-      confirmParams:{return_url:"https://www.skanditravels.com/booking"}
+      confirmParams:{return_url:"https://www.skanditravels.com/booking?step=payment&cartId="+encodeURIComponent(CART.cartId)}
     });
     if(result.error){busy=false;loading(false);$("payBtn").disabled=false;status(result.error.message||"Payment authorization failed.","error");return}
     const pi=result.paymentIntent;
-    if(!pi){busy=false;loading(false);$("payBtn").disabled=false;status("Payment authorization could not be verified.","error");return}
+    if(!pi){loading(false);status("Payment status could not be verified. Check booking status before trying again.","error");showPaymentStatusCheck();return}
     if(!["requires_capture","succeeded"].includes(String(pi.status||""))){
-      busy=false;loading(false);$("payBtn").disabled=false;
+      loading(false);showPaymentStatusCheck();
       status(pi.status==="processing"?"Payment is still processing. Wait before trying again.":`Payment is ${pi.status||"not authorized"}.`,"warn");
       return;
     }
@@ -467,17 +504,49 @@ async function submit(){
     status("Payment authorized. Creating your reservation…","");
     post("PAYMENT_COMMIT",{termsAccepted:true,paymentIntentId:pi.id});
   }catch(_){
-    busy=false;loading(false);$("payBtn").disabled=false;
+    loading(false);showPaymentStatusCheck();
     status("Payment could not be completed. Check the payment status before trying again.","error");
   }
 }
+function showPaymentStatusCheck(){busy=true;if($("payBtn"))$("payBtn").disabled=true;let b=$("paymentStatusCheck");if(!b){b=document.createElement("button");b.id="paymentStatusCheck";b.className="btn secondary";b.textContent="Check booking status";$("root").append(b);}b.onclick=()=>post("BOOKING_RETRY");}
 window.addEventListener("message",e=>{
-  const m=e.data||{};if(m.source!==PARENT)return;
+  const m=e.data||{};if(e.source!==window.parent||m.source!==PARENT||m.requestId&&m.requestId!==wire?.id)return;
   if(m.type==="PAYMENT_SESSION_LOADED"){busy=false;loading(false);render(m.payload||{})}
   if(m.type==="PAYMENT_PROGRESS"){loading(true,m.message||"Creating your reservation…");status(m.message||"Processing…","")}
-  if(m.type==="BOOKING_ERROR"){busy=false;commitPosted=false;loading(false);if($("payBtn"))$("payBtn").disabled=false;status(m.message||"Payment could not be completed.","error")}
+  if(m.type==="BOOKING_ERROR"){loading(false);showPaymentStatusCheck();status(m.message||"Payment could not be completed.","error")}
 });
-post("PAYMENT_READY");
+
+function startBookingBridge(readyType, resultTypes) {
+  const id="booking-"+Date.now().toString(36)+"-"+Math.random().toString(36).slice(2),mutations=new Set(["BOOKING_SEARCH_SELECT","BOOKING_OFFER_ACCEPTED","BOOKING_EXTRAS_SAVE","SIGNATURE_TRANSFER_SELECT","SIGNATURE_TRANSFER_SKIP","APIS_SAVE_AND_CONTINUE","SEATMAP_SAVE","SEATMAP_SKIP","PAYMENT_COMMIT"]);
+  let active=true,settled=false,pending=false,uncertain=false,timer=null,deadline=null;
+  const recovery=document.createElement("div");recovery.className="status show";recovery.hidden=true;recovery.setAttribute("role","status");$("status").after(recovery);
+  const hideLoader=()=>{const l=$("pageLoader");if(l)l.classList.remove("active");};
+  const clear=()=>{clearInterval(timer);clearTimeout(deadline);};
+  const lock=()=>document.querySelectorAll("#root button,#root input,#root select").forEach(e=>e.disabled=true);
+  function retryPanel(message,check=false){hideLoader();recovery.hidden=false;recovery.textContent=message+" ";const b=document.createElement("button");b.className="btn secondary";b.type="button";b.textContent=check?"Check booking status":"Retry";b.onclick=()=>{if(pending)return;uncertain=false;settled=false;recovery.hidden=true;post("BOOKING_RETRY");waitForResult(90000);};recovery.append(b);const home=document.createElement("button");home.type="button";home.className="btn secondary";home.textContent="Home";home.onclick=()=>post("BOOKING_NAVIGATE",{path:"/home"});recovery.append(home);}
+  function waitForResult(ms=90000){clear();deadline=setTimeout(()=>{if(!active)return;settled=true;retryPanel("This step took too long to load.");},ms);}
+  function connect(){clear();settled=false;recovery.hidden=true;post(readyType);timer=setInterval(()=>{if(active&&!settled&&!pending)post(readyType);},1500);deadline=setTimeout(()=>{if(!active||settled)return;clear();settled=true;retryPanel("This step could not connect. Please retry.");},90000);}
+  wire={id,before(type){
+    if(mutations.has(type)){if(!active||pending||uncertain)return false;pending=true;clear();recovery.hidden=true;deadline=setTimeout(()=>{if(!pending)return;pending=false;uncertain=true;hideLoader();lock();retryPanel("The request is still unconfirmed. Check its status before submitting again.",true);},90000);}
+    return true;
+  }};
+  window.addEventListener("message",e=>{
+    if(e.source!==window.parent)return;const m=e.data||{};if(m.source!==PARENT||m.requestId&&m.requestId!==id)return;
+    if(m.type==="BOOKING_STEP_INACTIVE"){active=false;pending=false;uncertain=false;clear();hideLoader();recovery.hidden=true;return;}
+    if(m.type==="BOOKING_STEP_ACTIVE"){active=true;pending=false;uncertain=false;connect();return;}
+    if(m.type==="BOOKING_HOST_READY"&&active&&!settled&&!pending){post(readyType);return;}
+    if(resultTypes.includes(m.type)){settled=true;pending=false;uncertain=false;clear();recovery.hidden=true;hideLoader();return;}
+    if(m.type==="BOOKING_SEARCH_LOADING"){settled=false;waitForResult();return;}
+    if(m.type==="BOOKING_ERROR"){
+      clear();pending=false;settled=true;
+      if(m.retryable===false){uncertain=true;e.stopImmediatePropagation();hideLoader();lock();status(m.message||"Check booking status before continuing.","error");retryPanel("Check the current booking before submitting again.",true);}
+      else{uncertain=false;retryPanel("You can retry this step.");}
+    }
+  },true);
+  window.addEventListener("pagehide",clear);connect();
+}
+
+startBookingBridge("PAYMENT_READY",["PAYMENT_SESSION_LOADED"]);
 })();
 
 </script>
