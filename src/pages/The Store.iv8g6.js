@@ -1,5 +1,7 @@
+import { isSafeInternalRoute } from "public/siteMap";
 import wixLocationFrontend from "wix-location-frontend";
 import wixEcomFrontend from "wix-ecom-frontend";
+import { createPublicSupportCase } from "backend/SKANDI_CORE/customerSupport.web";
 
 import {
   listStorefrontProducts,
@@ -32,6 +34,7 @@ const ORDERS_PATH =
 let embed = null;
 let loadingPromise = null;
 let cachedCatalog = null;
+let catalogLoadedAt=0, adding=false;
 
 function parseMessage(value) {
   if (typeof value === "string") {
@@ -213,7 +216,7 @@ function normalizeCartV2(raw = {}) {
 }
 
 async function loadCatalog(force = false) {
-  if (cachedCatalog && !force) {
+  if (cachedCatalog && !force && Date.now()-catalogLoadedAt<60000) {
     send(
       "STOREFRONT_PRODUCTS",
       cachedCatalog
@@ -239,6 +242,7 @@ async function loadCatalog(force = false) {
         );
       }
 
+      catalogLoadedAt=Date.now();
       cachedCatalog = {
         ...result,
 
@@ -291,16 +295,7 @@ async function sendCart() {
       error
     );
 
-    send(
-      "STOREFRONT_CART",
-      {
-        cart: {
-          id: "",
-          lineItems: [],
-          totalLabel: ""
-        }
-      }
-    );
+    send("STOREFRONT_ERROR", { stage: "cart", message: "Your shopping bag could not be loaded. Please try again." });
   }
 }
 
@@ -454,14 +449,6 @@ async function handleMessage(message) {
 
   switch (message.type) {
     case "STOREFRONT_READY":
-      if (cachedCatalog) {
-        send(
-          "STOREFRONT_PRODUCTS",
-          cachedCatalog
-        );
-        void sendCart();
-        return;
-      }
       await loadCatalog();
       return;
 
@@ -482,7 +469,9 @@ async function handleMessage(message) {
             "Adding to bag…"
         }
       );
-      await addProduct(payload);
+      if(adding)return;
+      adding=true;
+      try { await addProduct(payload); } finally { adding=false; }
       return;
 
     /*
@@ -502,7 +491,7 @@ async function handleMessage(message) {
       return;
 
     case "STOREFRONT_NAVIGATE":
-      if (payload.path) {
+      if (isSafeInternalRoute(payload.path)) {
         wixLocationFrontend.to(
           payload.path
         );
@@ -529,16 +518,20 @@ $w.onReady(function () {
 
       if (
         !message ||
-        message.source !==
-          STOREFRONT_SOURCE
+        ![STOREFRONT_SOURCE, "SKANDI_SUPPORT_PUBLIC"].includes(message.source)
       ) {
         return;
       }
 
       try {
-        await handleMessage(
-          message
-        );
+        if (message.source === "SKANDI_SUPPORT_PUBLIC") {
+          if (message.type !== "PUBLIC_SUPPORT_CREATE_CASE") return;
+          const result = await createPublicSupportCase({ input: { ...(message.payload || {}), sourcePage: "/the-store", source: "store-customer-service" } });
+          if (!result || result.ok === false) throw new Error(result?.message || "Support request failed.");
+          send("PUBLIC_SUPPORT_CASE_CREATED", { ...result, caseNumber: result.caseRef || result.caseId });
+          return;
+        }
+        await handleMessage(message);
       } catch (error) {
         console.error(
           `[Store Page] ${message.type} failed.`,
@@ -546,7 +539,7 @@ $w.onReady(function () {
         );
 
         send(
-          "STOREFRONT_ERROR",
+          message.source === "SKANDI_SUPPORT_PUBLIC" ? "PUBLIC_SUPPORT_ERROR" : "STOREFRONT_ERROR",
           {
             stage:
               message.type,
@@ -579,10 +572,9 @@ $w.onReady(function () {
 
   void loadCatalog()
     .catch(
-      (error) =>
-        console.error(
-          "[Store Page] Initial load failed.",
-          error
-        )
+      (error) => {
+        console.error("[Store Page] Initial load failed.", error);
+        send("STOREFRONT_ERROR", { stage: "catalog", message: "The store catalog could not be loaded. Please try again." });
+      }
     );
 });
