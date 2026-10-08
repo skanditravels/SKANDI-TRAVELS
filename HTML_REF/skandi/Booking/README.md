@@ -1,7 +1,7 @@
 # SKANDI INFO / LOG — Booking V12
 
 - Runtime: `/src/pages/Booking.e8twe.js`, state box `#bookingFlowStates`; shared search handoff `public/bookingSearch.js`; authentication popup `public/customerAuthUi.js` remains canonical.
-- Facade: unchanged `backend/SKANDI_CORE/customerBooking.web.js`; implementation: changed `customerBooking.js`, existing `bookingMapper.js`, `bookingCart.js`, `bookingSecurity.js`, `bookingReconciliation.js`, `duffelAir.js`, `duffelGround.js`, `stripeClient.js`, `supabaseServer.js`.
+- Facade: unchanged `backend/SKANDI_CORE/customerBooking.web.js`; implementation: `customerBooking.js`, `bookingMapper.js`, `bookingCart.js`, `bookingSecurity.js`, `bookingReconciliation.js`, corrected `duffelAir.js`, corrected `duffelGround.js`, existing `stripeClient.js`, `supabaseServer.js`.
 - Database: existing owned `booking_carts`, cart-item/payment repositories and confirmed-cart ALTEA handoff; no SQL/schema/RLS changes. Database transport, ownership checks and traveler encryption remain canonical.
 - Authorization: public search; cart creation requires a resolved server member; cart reads and booking mutations retain SiteMember and owned-cart checks. Client-supplied IDs, amounts, step names and payment messages are never payment authority.
 - Sequence: `stateOffer → stateExtras → stateTransfer → stateApis → stateSeatMap → statePayment → stateConfirmation`. Optional `stateDocuments` remains reachable after confirmation. The duplicate confirmation in the request is represented by one existing confirmation state.
@@ -11,10 +11,19 @@
 - Hotel-only carts now begin at Offer, show real empty extras/transfer states, collect the provider-quoted guest count, and show a seats-not-applicable state before Payment. The core never requests airline seats for hotel-only carts.
 - Payment recovery retrieves the existing owned PaymentIntent through the canonical Stripe client. The iframe accepts an already authorized intent only for server-side completion; it does not reauthorize it. Processing/reconciliation remains in Payment; only server `Confirmed` status can open Confirmation. Stripe return URL includes the cart ID.
 - Transfer limitation: the existing canonical transfer service currently returns no options; users see Transfer and explicitly continue without a transfer. No fictitious transfer service was added.
-- Status: **VERIFIED locally** with Node.js + jsdom and simulated Wix/provider adapters; **STATICALLY VERIFIED** import/export and message contracts; **REQUIRES LIVE TEST** in Wix after installation. This source package has not been deployed.
-- Source authority: `skanditravels/SKANDI-TRAVELS`, `main`, commit `e8dd84a3af35797062be60f021cba83a4fc21bf6`, compared with the supplied complete HTML and approved Home/Country V12 repairs. Existing approved source history is preserved below.
-- Last inspected: 2026-10-07 UTC. Published route/component configuration, Home/Country proxy exports, and Supabase public catalog/schema were inspected read-only. No GitHub, Wix or database writes were performed.
+- Duffel contract status: 2026-10-08 repair keeps the existing provider/client/booking ownership boundaries while preserving current Duffel v2 data that was previously discarded. Air order services are now retained and booked baggage services are combined with included segment baggage for the effective order-level baggage view while the original included allowance is preserved separately. Stays quote `rooms` is normalized as an integer per the current Duffel v2 quote schema. Additional documented Air, Stays and Cars fields are retained without adding parallel database tables.
+- Status: **STATICALLY VERIFIED** against the current repository source and current Duffel API documentation; JavaScript syntax and export compatibility checked locally. **REQUIRES LIVE TEST** in Wix/Duffel test mode after installation. This source package has not been deployed.
+- Source authority: `skanditravels/SKANDI-TRAVELS`, `main`, commit `a57c32b2631ac083fddefe0c5058ad8dd6bda56b` inspected on 2026-10-08. Existing approved source history is preserved below.
+- Last inspected: 2026-10-08 UTC. Supabase booking/inventory schema and current Duffel Air/Stays/Cars contracts were inspected read-only. No GitHub, Wix, Duffel booking or database writes were performed.
 - Ownership: HTML → postMessage → Wix page controller → `backend/SKANDI_CORE/*.web.js` → canonical core/client → Supabase / existing providers. The site master retains global header/footer, account and settings ownership.
+
+## CHANGE LOG — 2026-10-08 UTC — Duffel v2 field-preservation repair
+
+- `backend/SKANDI_CORE/duffelAir.js` preserves documented offer emissions, tax breakdown, loyalty support, private fares, payment/service intent data, slice conditions/comparison keys, segment stops, cabin amenities, service metadata and richer order servicing state without changing the existing exports or request endpoints.
+- Duffel order `services` are preserved. For order responses, purchased baggage services are joined to their passenger/segment and exposed in the effective `baggages` collection used by the existing SKANDI reservation baggage consumer. The original segment allowance remains available as `includedBaggages`, and the purchased service objects remain available as `bookedBaggageServices` and top-level `services`.
+- `backend/SKANDI_CORE/duffelGround.js` corrects Stays v2 quote `rooms` from an array assumption to an integer and retains documented monetary currencies, deposits, commissions, negotiated/public rate data and current Cars quote/booking identifiers and state.
+- Existing Supabase first-class booking fields remain unchanged. Provider detail continues to persist through the existing canonical payload/component paths; no new table, duplicate provider store, RLS change or schema migration is required for this repair.
+- Existing page message names, state IDs, facade exports, Stripe authorization flow, reconciliation behavior and provider mutation retry rules are unchanged.
 
 ## Current state map
 
