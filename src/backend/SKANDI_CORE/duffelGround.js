@@ -10,6 +10,7 @@ function clean(v, max = 500) { return String(v ?? "").trim().slice(0, max); }
 function upper(v, max = 500) { return clean(v, max).toUpperCase(); }
 function lower(v, max = 500) { return clean(v, max).toLowerCase(); }
 function money(v) { const n = Number(v); return Number.isFinite(n) ? n.toFixed(2) : "0.00"; }
+function nullableMoney(v) { const n = Number(v); return v === null || v === undefined || v === "" || !Number.isFinite(n) ? null : n.toFixed(2); }
 function fail(code, message, status = 400) { const e = new Error(message); e.name = "DuffelGroundError"; e.code = code; e.status = status; e.publicMessage = message; return e; }
 function id(value, prefix, label) { const x = clean(value, 220); if (!new RegExp(`^${prefix}[A-Za-z0-9_]+$`).test(x)) throw fail("INVALID_RESOURCE_ID", `The ${label} reference is invalid.`); return x; }
 function calendarDate(value, label) {
@@ -38,23 +39,35 @@ function normalizeAccommodation(a = {}) {
   const address = a.location?.address || a.address || {};
   return {
     id: a.id || "", name: a.name || "Accommodation", description: a.description || "",
-    rating: Number(a.rating || a.star_rating || 0), reviewScore: Number(a.review_score || 0), reviewCount: Number(a.review_count || 0),
+    rating: Number(a.rating || a.star_rating || 0), ratings: arr(a.ratings), reviewScore: Number(a.review_score || 0), reviewCount: Number(a.review_count || 0),
     photos: arr(a.photos).map(p => p?.url).filter(Boolean), phoneNumber: a.phone_number || "", email: a.email || "",
     address: { lineOne: address.line_one || "", city: address.city_name || address.city || "", region: address.region || "", postalCode: address.postal_code || "", countryCode: address.country_code || "" },
     coordinates: a.location?.geographic_coordinates ? { latitude: Number(a.location.geographic_coordinates.latitude), longitude: Number(a.location.geographic_coordinates.longitude) } : null,
-    checkInInformation: a.check_in_information || null, amenities: arr(a.amenities), brand: a.brand || null, chain: a.chain || null
+    checkInInformation: a.check_in_information || null, keyCollection: a.key_collection || null,
+    amenities: arr(a.amenities), brand: a.brand || null, chain: a.chain || null,
+    supportedLoyaltyProgramme: a.supported_loyalty_programme || null,
+    paymentInstructionSupported: a.payment_instruction_supported === true
   };
 }
 
 function normalizeStaySearchResult(result = {}) {
   const a = normalizeAccommodation(result.accommodation || {});
+  const totalCurrency = upper(result.cheapest_rate_total_currency || result.cheapest_rate_currency || "USD", 3);
   return {
     id: result.id || "", staySearchResultId: result.id || "", accommodationId: a.id,
     title: a.name, name: a.name, description: a.description, rating: a.rating,
     imageUrl: a.photos[0] || "", address: a.address,
     cheapestRateTotalAmount: money(result.cheapest_rate_total_amount),
-    cheapestRateTotalCurrency: upper(result.cheapest_rate_total_currency || result.cheapest_rate_currency || "USD", 3),
-    total: money(result.cheapest_rate_total_amount), currency: upper(result.cheapest_rate_total_currency || result.cheapest_rate_currency || "USD", 3),
+    cheapestRateTotalCurrency: totalCurrency,
+    cheapestRateBaseAmount: nullableMoney(result.cheapest_rate_base_amount),
+    cheapestRateBaseCurrency: upper(result.cheapest_rate_base_currency, 3) || null,
+    cheapestRatePublicAmount: nullableMoney(result.cheapest_rate_public_amount),
+    cheapestRatePublicCurrency: upper(result.cheapest_rate_public_currency, 3) || null,
+    cheapestRateDueAtAccommodationAmount: nullableMoney(result.cheapest_rate_due_at_accommodation_amount),
+    cheapestRateDueAtAccommodationCurrency: upper(result.cheapest_rate_due_at_accommodation_currency, 3) || null,
+    supportedNegotiatedRates: arr(result.supported_negotiated_rates),
+    checkInDate: result.check_in_date || null, checkOutDate: result.check_out_date || null,
+    total: money(result.cheapest_rate_total_amount), currency: totalCurrency,
     expiresAt: result.expires_at || null, rooms: Number(result.rooms || 0), guests: arr(result.guests),
     accommodation: a, supplier: "DUFFEL", source: "DUFFEL_STAYS"
   };
@@ -66,19 +79,29 @@ function ratesFromSearchResult(result = {}) {
     for (const rate of arr(room?.rates)) {
       if (!rate?.id) continue;
       out.push({
-        id: rate.id, rateId: rate.id, roomName: room.name || "Room", roomDescription: room.description || "",
+        id: rate.id, rateId: rate.id,
+        name: rate.name || "", description: rate.description || "",
+        roomName: room.name || "Room", roomDescription: room.description || "",
         roomPhotos: arr(room.photos).map(p => p?.url).filter(Boolean), roomBeds: arr(room.beds),
         maxOccupancy: Number(room.max_occupancy || room.maximum_occupancy || room.capacity || 0) || null,
         totalAmount: money(rate.total_amount), totalCurrency: upper(rate.total_currency || "USD", 3),
-        baseAmount: money(rate.base_amount), taxAmount: money(rate.tax_amount), feeAmount: money(rate.fee_amount),
+        baseAmount: nullableMoney(rate.base_amount), baseCurrency: upper(rate.base_currency, 3) || null,
+        taxAmount: nullableMoney(rate.tax_amount), taxCurrency: upper(rate.tax_currency, 3) || null,
+        feeAmount: nullableMoney(rate.fee_amount), feeCurrency: upper(rate.fee_currency, 3) || null,
+        publicAmount: nullableMoney(rate.public_amount), publicCurrency: upper(rate.public_currency, 3) || null,
+        dueAtAccommodationAmount: nullableMoney(rate.due_at_accommodation_amount),
+        dueAtAccommodationCurrency: upper(rate.due_at_accommodation_currency, 3) || null,
+        estimatedCommissionAmount: nullableMoney(rate.estimated_commission_amount),
+        estimatedCommissionCurrency: upper(rate.estimated_commission_currency, 3) || null,
+        quantityAvailable: Number.isFinite(Number(rate.quantity_available)) ? Number(rate.quantity_available) : null,
         rateCode: clean(rate.code || rate.rate_code, 80),
+        negotiatedRateId: rate.negotiated_rate_id || null,
         cancellationTimeline: arr(rate.cancellation_timeline), boardType: rate.board_type || rate.board_name || "",
         benefits: arr(rate.benefits), dealTypes: arr(rate.deal_types),
         supportedLoyaltyProgramme: rate.supported_loyalty_programme || null,
+        loyaltyProgrammeRequired: rate.loyalty_programme_required === true,
         expiresAt: rate.expires_at || null, paymentType: rate.payment_type || null,
-        availablePaymentMethods: arr(rate.available_payment_methods), conditions: arr(rate.conditions),
-        dueAtAccommodationAmount: money(rate.due_at_accommodation_amount),
-        dueAtAccommodationCurrency: upper(rate.due_at_accommodation_currency || rate.total_currency || "USD", 3)
+        availablePaymentMethods: arr(rate.available_payment_methods), conditions: arr(rate.conditions)
       });
     }
   }
@@ -86,22 +109,25 @@ function ratesFromSearchResult(result = {}) {
 }
 
 function normalizeStayQuote(q = {}) {
-  const rates = arr(q.rooms).flatMap(room => arr(room?.rates));
-  const selected = rates[0] || {};
   return {
-    id: q.id || "", quoteId: q.id || "", totalAmount: money(q.total_amount), totalCurrency: upper(q.total_currency || "USD", 3),
-    taxAmount: money(q.tax_amount), taxCurrency: upper(q.tax_currency || q.total_currency || "USD", 3),
-    feeAmount: money(q.fee_amount), baseAmount: money(q.base_amount), expiresAt: q.expires_at || null,
+    id: q.id || "", quoteId: q.id || "",
+    totalAmount: money(q.total_amount), totalCurrency: upper(q.total_currency || "USD", 3),
+    baseAmount: nullableMoney(q.base_amount), baseCurrency: upper(q.base_currency, 3) || null,
+    taxAmount: nullableMoney(q.tax_amount), taxCurrency: upper(q.tax_currency, 3) || null,
+    feeAmount: nullableMoney(q.fee_amount), feeCurrency: upper(q.fee_currency, 3) || null,
+    depositAmount: nullableMoney(q.deposit_amount), depositCurrency: upper(q.deposit_currency, 3) || null,
+    dueAtAccommodationAmount: nullableMoney(q.due_at_accommodation_amount),
+    dueAtAccommodationCurrency: upper(q.due_at_accommodation_currency, 3) || null,
+    expiresAt: q.expires_at || null,
     checkInDate: q.check_in_date || null, checkOutDate: q.check_out_date || null,
     accommodation: q.accommodation ? normalizeAccommodation(q.accommodation) : null,
-    rooms: arr(q.rooms), guests: arr(q.guests), paymentType: selected.payment_type || "",
-    rateCode: clean(selected.code || selected.rate_code, 80), boardType: selected.board_type || "",
-    benefits: arr(selected.benefits), dealTypes: arr(selected.deal_types),
-    availablePaymentMethods: arr(selected.available_payment_methods),
-    dueAtAccommodationAmount: money(selected.due_at_accommodation_amount || q.due_at_accommodation_amount),
-    dueAtAccommodationCurrency: upper(selected.due_at_accommodation_currency || q.due_at_accommodation_currency || q.total_currency || "USD", 3),
-    cancellationTimeline: arr(selected.cancellation_timeline), conditions: arr(selected.conditions),
-    supportedLoyaltyProgramme: q.supported_loyalty_programme || null
+    rooms: Number(q.rooms || 0), guests: arr(q.guests),
+    supportedLoyaltyProgramme: q.supported_loyalty_programme || null,
+    paymentType: q.payment_type || "",
+    rateCode: clean(q.code || q.rate_code, 80), boardType: q.board_type || "",
+    benefits: arr(q.benefits), dealTypes: arr(q.deal_types),
+    availablePaymentMethods: arr(q.available_payment_methods),
+    cancellationTimeline: arr(q.cancellation_timeline), conditions: arr(q.conditions)
   };
 }
 
@@ -109,13 +135,28 @@ function normalizeStayBooking(b = {}) {
   const bookedRate = arr(b?.accommodation?.rooms).flatMap(room => arr(room?.rates))[0] || {};
   return {
     id: b.id || "", reference: b.reference || "", status: b.status || "", quoteId: b.quote_id || b?.metadata?.quote_id || "",
+    liveMode: b.live_mode === true,
     checkInDate: b.check_in_date || null, checkOutDate: b.check_out_date || null, rooms: Number(b.rooms || 0),
     totalAmount: money(b.total_amount || bookedRate.total_amount), totalCurrency: upper(b.total_currency || bookedRate.total_currency || "USD", 3),
+    baseAmount: nullableMoney(b.base_amount ?? bookedRate.base_amount), baseCurrency: upper(b.base_currency || bookedRate.base_currency, 3) || null,
+    taxAmount: nullableMoney(b.tax_amount ?? bookedRate.tax_amount), taxCurrency: upper(b.tax_currency || bookedRate.tax_currency, 3) || null,
+    feeAmount: nullableMoney(b.fee_amount ?? bookedRate.fee_amount), feeCurrency: upper(b.fee_currency || bookedRate.fee_currency, 3) || null,
+    depositAmount: nullableMoney(b.deposit_amount), depositCurrency: upper(b.deposit_currency, 3) || null,
+    dueAtAccommodationAmount: nullableMoney(b.due_at_accommodation_amount ?? bookedRate.due_at_accommodation_amount),
+    dueAtAccommodationCurrency: upper(b.due_at_accommodation_currency || bookedRate.due_at_accommodation_currency, 3) || null,
+    estimatedCommissionAmount: nullableMoney(b.estimated_commission_amount ?? bookedRate.estimated_commission_amount),
+    estimatedCommissionCurrency: upper(b.estimated_commission_currency || bookedRate.estimated_commission_currency, 3) || null,
     paymentType: bookedRate.payment_type || b.payment_type || "",
     rateCode: clean(bookedRate.code || bookedRate.rate_code, 80), boardType: bookedRate.board_type || "",
     benefits: arr(bookedRate.benefits), cancellationTimeline: arr(bookedRate.cancellation_timeline),
     accommodation: b.accommodation ? normalizeAccommodation(b.accommodation) : null,
-    guests: arr(b.guests).map(g => ({ givenName: g.given_name || "", familyName: g.family_name || "" })),
+    email: b.email || null, phoneNumber: b.phone_number || null,
+    guestTypes: arr(b.guest_types),
+    guests: arr(b.guests).map(g => ({ givenName: g.given_name || "", familyName: g.family_name || "", bornOn: g.born_on || null, type: g.type || null })),
+    supportedLoyaltyProgramme: b.supported_loyalty_programme || bookedRate.supported_loyalty_programme || null,
+    loyaltyProgrammeAccountNumber: b.loyalty_programme_account_number || null,
+    accommodationSpecialRequests: b.accommodation_special_requests || null,
+    metadata: b.metadata || null, users: arr(b.users),
     cancelledAt: b.cancelled_at || null, confirmedAt: b.confirmed_at || null
   };
 }
@@ -129,9 +170,9 @@ function normalizeCarLocation(loc = {}) {
   };
 }
 function normalizeCar(car = {}) { return { name: car.name || "Vehicle", code: car.code || "", category: car.category || "", type: car.type || "", transmission: car.transmission || "", fuel: car.fuel || "", maxPassengers: Number(car.max_passengers || 0), airConditioning: car.air_conditioning === true, baggage: car.baggage || null, images: arr(car.images).map(i => i?.url).filter(Boolean) }; }
-function normalizeCarRate(rate = {}) { return { id: rate.id || "", rateId: rate.id || "", totalAmount: money(rate.total_amount), totalCurrency: upper(rate.total_currency || "USD", 3), baseAmount: money(rate.base_amount), baseCurrency: upper(rate.base_currency || rate.total_currency || "USD", 3), paymentType: rate.payment_type || "", supplier: rate.supplier ? { name: rate.supplier.name || "", logoUrl: rate.supplier.logo_url || "" } : null, pickupLocation: normalizeCarLocation(rate.pickup_location), dropoffLocation: normalizeCarLocation(rate.dropoff_location), car: normalizeCar(rate.car), conditions: arr(rate.conditions), charges: arr(rate.charges), mileage: rate.mileage || null, source: "DUFFEL_CARS" }; }
-function normalizeCarQuote(q = {}) { return { id: q.id || "", quoteId: q.id || "", totalAmount: money(q.total_amount), totalCurrency: upper(q.total_currency || "USD", 3), baseAmount: money(q.base_amount), baseCurrency: upper(q.base_currency || q.total_currency || "USD", 3), paymentType: q.payment_type || "", supplier: q.supplier ? { name: q.supplier.name || "", logoUrl: q.supplier.logo_url || "" } : null, pickupDate: q.pickup_date || null, pickupTime: q.pickup_time || "", dropoffDate: q.dropoff_date || null, dropoffTime: q.dropoff_time || "", pickupLocation: normalizeCarLocation(q.pickup_location), dropoffLocation: normalizeCarLocation(q.dropoff_location), car: normalizeCar(q.car), conditions: arr(q.conditions), charges: arr(q.charges), privacyPolicies: arr(q.privacy_policies), mileage: q.mileage || null, source: "DUFFEL_CARS" }; }
-function normalizeCarBooking(b = {}) { return { id: b.id || "", reference: b.reference || "", status: b.status || "", quoteId: b.quote_id || "", paymentType: b.payment_type || "", totalAmount: money(b.total_amount), totalCurrency: upper(b.total_currency || "USD", 3), confirmedAt: b.confirmed_at || null, cancelledAt: b.cancelled_at || null, pickupDate: b.pickup_date || null, pickupTime: b.pickup_time || "", dropoffDate: b.dropoff_date || null, dropoffTime: b.dropoff_time || "", pickupLocation: normalizeCarLocation(b.pickup_location), dropoffLocation: normalizeCarLocation(b.dropoff_location), car: normalizeCar(b.car), supplier: b.supplier ? { name: b.supplier.name || "", logoUrl: b.supplier.logo_url || "" } : null, driver: b.driver ? { givenName: b.driver.given_name || "", familyName: b.driver.family_name || "", email: b.driver.email || "", phoneNumber: b.driver.phone_number || "", dateOfBirth: b.driver.date_of_birth || null } : null, conditions: arr(b.conditions), charges: arr(b.charges), privacyPolicies: arr(b.privacy_policies) }; }
+function normalizeCarRate(rate = {}) { return { id: rate.id || "", rateId: rate.id || "", totalAmount: money(rate.total_amount), totalCurrency: upper(rate.total_currency || "USD", 3), baseAmount: nullableMoney(rate.base_amount), baseCurrency: upper(rate.base_currency || rate.total_currency || "USD", 3), paymentType: rate.payment_type || "", supplier: rate.supplier ? { name: rate.supplier.name || "", logoUrl: rate.supplier.logo_url || "" } : null, pickupLocation: normalizeCarLocation(rate.pickup_location), dropoffLocation: normalizeCarLocation(rate.dropoff_location), car: normalizeCar(rate.car), conditions: arr(rate.conditions), charges: arr(rate.charges), mileage: rate.mileage || null, source: "DUFFEL_CARS" }; }
+function normalizeCarQuote(q = {}) { return { id: q.id || "", quoteId: q.id || "", liveMode: q.live_mode === true, rateId: q.rate_id || "", searchId: q.search_id || "", totalAmount: money(q.total_amount), totalCurrency: upper(q.total_currency || "USD", 3), baseAmount: nullableMoney(q.base_amount), baseCurrency: upper(q.base_currency || q.total_currency || "USD", 3), paymentType: q.payment_type || "", supplier: q.supplier ? { name: q.supplier.name || "", logoUrl: q.supplier.logo_url || "" } : null, pickupDate: q.pickup_date || null, pickupTime: q.pickup_time || "", dropoffDate: q.dropoff_date || null, dropoffTime: q.dropoff_time || "", pickupLocation: normalizeCarLocation(q.pickup_location), dropoffLocation: normalizeCarLocation(q.dropoff_location), car: normalizeCar(q.car), conditions: arr(q.conditions), charges: arr(q.charges), privacyPolicies: arr(q.privacy_policies), mileage: q.mileage || null, source: "DUFFEL_CARS" }; }
+function normalizeCarBooking(b = {}) { return { id: b.id || "", reference: b.reference || "", status: b.status || "", quoteId: b.quote_id || "", liveMode: b.live_mode === true, paymentType: b.payment_type || "", totalAmount: money(b.total_amount), totalCurrency: upper(b.total_currency || "USD", 3), baseAmount: nullableMoney(b.base_amount), baseCurrency: upper(b.base_currency || b.total_currency || "USD", 3), confirmedAt: b.confirmed_at || null, cancelledAt: b.cancelled_at || null, pickupDate: b.pickup_date || null, pickupTime: b.pickup_time || "", dropoffDate: b.dropoff_date || null, dropoffTime: b.dropoff_time || "", pickupLocation: normalizeCarLocation(b.pickup_location), dropoffLocation: normalizeCarLocation(b.dropoff_location), car: normalizeCar(b.car), supplier: b.supplier ? { name: b.supplier.name || "", logoUrl: b.supplier.logo_url || "" } : null, driver: b.driver ? { givenName: b.driver.given_name || "", familyName: b.driver.family_name || "", email: b.driver.email || "", phoneNumber: b.driver.phone_number || "", dateOfBirth: b.driver.date_of_birth || null } : null, conditions: arr(b.conditions), charges: arr(b.charges), privacyPolicies: arr(b.privacy_policies), mileage: b.mileage || null, metadata: b.metadata || null, users: arr(b.users), supplierLoyaltyProgrammeAccountNumber: b.supplier_loyalty_programme_account_number || null }; }
 
 function groundLocation(value = {}, fallbackRadius = 10) {
   const source = value.geographicCoordinates || value.geographic_coordinates || value;
@@ -234,7 +275,7 @@ export async function getDuffelStayBookingCore({ bookingId = "" } = {}) {
 export async function cancelDuffelStayBookingCore({ bookingId = "" } = {}) {
   const booking = id(bookingId, "bok_", "stay booking");
   const response = await duffelRequest(`/stays/bookings/${encodeURIComponent(booking)}/actions/cancel`, { method: "POST", timeoutMs: 130000, retrySafe: false });
-  if (response.status === 202 || !response.data?.id) return { booking: response.data?.id ? normalizeStayBooking(response.data) : null, reconciliationRequired: true, providerStatus: response.status, requestId: response.requestId || null, correlationId: response.correlationId || null };
+  if (response.status === 202 || !response.data?.id) return { booking: response.data?.id ? normalizeStayBooking(response.data) : null, reconciliationRequired: true, providerStatus: response.status, requestId: response.requestId || null, providerRequestId: response.requestId || null, correlationId: response.correlationId || null };
   return { booking: normalizeStayBooking(response.data) };
 }
 
