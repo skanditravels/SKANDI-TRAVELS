@@ -42,6 +42,9 @@ function normalizeCatalogItem(item = {}) {
     );
   }
 
+  const quantity = Number(item.quantity ?? 1);
+  if (!Number.isInteger(quantity) || quantity < 1 || quantity > 99) throw new Error("A positive whole-number quantity is required.");
+
   return {
     catalogReference: {
       appId:
@@ -55,11 +58,7 @@ function normalizeCatalogItem(item = {}) {
       }
     },
 
-    quantity:
-      Math.max(
-        1,
-        Number(item.quantity || 1)
-      )
+    quantity
   };
 }
 
@@ -81,15 +80,9 @@ export const getStorefrontCartV2 =
             null
         };
       } catch (error) {
-        console.warn(
-          "[SKANDI Cart V2] No current cart.",
-          error
-        );
-
-        return {
-          ok: true,
-          cart: null
-        };
+        const status = Number(error?.httpStatus || error?.status || error?.response?.status);
+        if (status === 404) return { ok: true, cart: null };
+        throw error;
       }
     }
   );
