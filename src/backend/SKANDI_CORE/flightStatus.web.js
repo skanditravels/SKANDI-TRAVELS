@@ -1,5 +1,6 @@
 // /src/backend/SKANDI_CORE/flightStatus.web.js
 // SKANDI Flight Status B-011.40 — native Wix public web-module facade.
+// Keep Permissions.Anyone directly in each top-level webMethod declaration for Wix export discovery.
 // One dispatcher is the canonical page boundary. Compatibility exports remain
 // available for older callers during convergence.
 
@@ -15,7 +16,6 @@ import {
   getFlightStatusAirportContextCore
 } from "backend/SKANDI_CORE/flightStatus";
 
-const ANYONE = Permissions.Anyone;
 async function publicResult(action) {
   try { return await action(); }
   catch (error) { return { ok: false, error: "FLIGHT_STATUS_UNAVAILABLE", publicMessage: error?.publicMessage || "Flight information is temporarily unavailable. Please try again." }; }
@@ -27,22 +27,22 @@ const input = value =>
     : {};
 
 export const handleFlightStatusAction = webMethod(
-  ANYONE,
+  Permissions.Anyone,
   payload => publicResult(() => handleFlightStatusActionCore(input(payload)))
 );
 
 // Compatibility exports. The B-011.40 page itself uses the dispatcher above.
 export const searchFlightStatus = webMethod(
-  ANYONE,
+  Permissions.Anyone,
   payload => publicResult(() => searchFlightStatusCore(input(payload)))
 );
 
 export const getFlightStatusAirportDirectory = webMethod(
-  ANYONE,
+  Permissions.Anyone,
   () => publicResult(() => getFlightStatusAirportDirectoryCore())
 );
 
 export const getFlightStatusAirportContext = webMethod(
-  ANYONE,
+  Permissions.Anyone,
   payload => publicResult(() => getFlightStatusAirportContextCore(input(payload)))
 );
