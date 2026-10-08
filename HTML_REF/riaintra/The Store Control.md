@@ -5,11 +5,11 @@
 - Wix page/controller: `/src/pages/The Store Control.y10le.js`
 - Customer/internal route: `/riaintra/success-factors/store-control`
 - Installed HTML element: `#storeControlEmbed`
-- Complete replacement embed supplied as: `/embed/Store-Control.html` (paste into that Wix HTML component).
+- Live HTML unchanged in this follow-up; complete source is preserved below. No Store Control embed replacement is included or required.
 - Canonical backend chain: `backend/SKANDI_CORE/storeCartV3.web.js → storefront.js → Wix Stores V3 / eCommerce / native wix-marketing.v2 coupons`.
 - Authority: SiteMember facade plus canonical requireStaffPortalSessionCore / Store administrator authorization before all merchant APIs.
 - Status: V12 repair candidate; VERIFIED local tests / STATICALLY VERIFIED source contracts / REQUIRES LIVE TEST.
-- Last source verification: 2026-10-07. Prepared against `skanditravels/SKANDI-TRAVELS`, `main`, commit `b7909cc5edbd87899bd9468577fc8e36eeb5d3fa`, retaining the approved V12 repairs.
+- Last source verification: 2026-10-08. Prepared against `skanditravels/SKANDI-TRAVELS`, `main`, commit `d239421165cc208790755b2d2a32cc3c369a9ca5`, retaining the approved V12 repairs.
 - Intended source only: this package has not changed published Wix, GitHub or Supabase.
 - Dependencies and live gates: existing masterPage/siteMap/staff/provider dependencies; rebuild and publish matching page, facade, core and embed together. See README for exact installation and live checks.
 
@@ -26,6 +26,18 @@ Migrates the disconnected supplied SKANDI_STOREFRONT_ADMIN / flat-payload embed 
 Local verification covers syntax, imports/exports, embed boot, provider contracts with mocks, stale replies, cart failure propagation, same-instance order submission deduplication, order ownership boundaries, administrator authorization and inventory revision conflicts. These tests do not prove a live provider request, payment, data write or production build. No database migration is required.
 
 Store Control uses one source (`SKANDI_STORE_CONTROL_V3`) and parent `SKANDI_WIX_PARENT`, with payload objects. Added requests: STORE_CONTROL_UPDATE_INVENTORY, STORE_CONTROL_UPDATE_ORDER, STORE_CONTROL_SAVE_COLLECTION, STORE_CONTROL_SAVE_PROMOTION. Existing product/variant/category/bulk request handlers are retained. Replies include STORE_CONTROL_BOOTSTRAP, PRODUCT, MUTATION_OK, BULK_RESULT, PROGRESS, IDLE and ERROR. Orders are limited to the latest 100; coupon listing is the first page returned by Wix. Cancel does not refund/restock; archive does not change payment; fulfillment can trigger the site’s configured notification. Coupon drafts are inactive until activated in Wix. Collection creation and product assignments are separate operations; individual failures are reported.
+
+## 2026-10-08 — V12 Store Control bootstrap repair
+
+Inspected the current main source together with the published y10le bundle, which exposes `getStoreControlBootstrap` from the correct `backend/SKANDI_CORE/storeCartV3.web.js` path. The catalog query fields and sorting are supported by the current Wix contract. The corresponding live read-only REST requests succeeded, returning 30 products and 8 categories; there is no evidence for changing those queries to guessed fields or empty fallbacks.
+
+Source-confirmed access mismatch: canonical staffAuth grants portal app access to server-resolved SUPER_ADMIN, OWNER, COMPANY_OWNER and allowedApps `*`/`all`. Store Control previously ignored those grants unless a separate flag or token happened to match. The existing Store Control gate now recognizes those exact canonical grants, preserving existing Store-specific grants. Every merchant operation still calls requireStaffPortalSessionCore first. Job titles, client-supplied roles and client-supplied permission flags never grant access. The facade remains Permissions.SiteMember.
+
+Bootstrap failures now use the existing SkandiError/publicError contract and return an explicit `{ ok:false, error, stage, requestId }` from the existing facade. Successful payloads and exported method names are unchanged. The page emits STORE_CONTROL_BOOTSTRAP only for `ok:true`; failures use STORE_CONTROL_ERROR with a readable message and reference. Expired sessions redirect to /riaintra. Server logs retain a matching reference, phase, status and safe code without staff/provider payloads. Invalid catalog response envelopes produce an error rather than an empty success.
+
+The exact signed-in production error remains unconfirmed without the affected staff session and matching monitoring entry. Local tests reproduce the access mismatch and verify its correction, denial of unprivileged users, all merchant-operation gates, product/category failure propagation, retry and session expiry. A connector-authorized REST call does not prove the same call succeeds in the published elevated Velo context. REQUIRES LIVE TEST: publish the three supplied core/facade/page replacements and revisit Store Control as the affected authorized staff member. If it still fails, the displayed reference identifies the corresponding Store Control V12 monitoring entry.
+
+The complete Store Control HTML below is unchanged byte-for-byte. This package updates its reference documentation only; no Store Control HTML replacement is required. Shared image normalization also repairs the thumbnail/media values it receives. No database, role assignment, provider credential or external deployment changed.
 
 ## Complete intended HTML
 
@@ -1608,3 +1620,4 @@ seedData();render();load();
 </body>
 </html>
 ```
+
