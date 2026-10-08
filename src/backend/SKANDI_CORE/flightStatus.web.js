@@ -16,6 +16,10 @@ import {
 } from "backend/SKANDI_CORE/flightStatus";
 
 const ANYONE = Permissions.Anyone;
+async function publicResult(action) {
+  try { return await action(); }
+  catch (error) { return { ok: false, error: "FLIGHT_STATUS_UNAVAILABLE", publicMessage: error?.publicMessage || "Flight information is temporarily unavailable. Please try again." }; }
+}
 
 const input = value =>
   value && typeof value === "object" && !Array.isArray(value)
@@ -24,21 +28,21 @@ const input = value =>
 
 export const handleFlightStatusAction = webMethod(
   ANYONE,
-  payload => handleFlightStatusActionCore(input(payload))
+  payload => publicResult(() => handleFlightStatusActionCore(input(payload)))
 );
 
 // Compatibility exports. The B-011.40 page itself uses the dispatcher above.
 export const searchFlightStatus = webMethod(
   ANYONE,
-  payload => searchFlightStatusCore(input(payload))
+  payload => publicResult(() => searchFlightStatusCore(input(payload)))
 );
 
 export const getFlightStatusAirportDirectory = webMethod(
   ANYONE,
-  () => getFlightStatusAirportDirectoryCore()
+  () => publicResult(() => getFlightStatusAirportDirectoryCore())
 );
 
 export const getFlightStatusAirportContext = webMethod(
   ANYONE,
-  payload => getFlightStatusAirportContextCore(input(payload))
+  payload => publicResult(() => getFlightStatusAirportContextCore(input(payload)))
 );
