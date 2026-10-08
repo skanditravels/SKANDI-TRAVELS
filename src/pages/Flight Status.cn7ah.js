@@ -11,7 +11,7 @@ import { handleFlightStatusAction } from "backend/SKANDI_CORE/flightStatus.web";
 const EMBED_ID = "#flightStatusEmbed";
 const HTML_SOURCE = "SKANDI_FLIGHT_STATUS";
 const PARENT_SOURCE = "SKANDI_WIX_PARENT";
-const VERSION = "B-011.40-AIRLABS-STRICT";
+const VERSION = "V12-AIRLABS";
 
 let latestSearch = 0;
 let latestDirectory = 0;
@@ -102,7 +102,7 @@ function handleAirportAction(payload = {}) {
 
   if (kind === "DESTINATION") {
     wixLocationFrontend.to(
-      routeWithQuery(SITE_MAP.destinations, {
+      routeWithQuery("/destinations/country/destination", {
         destination: destinationSlug || slug,
         airport: payload.airportIata
       })
@@ -219,7 +219,8 @@ $w.onReady(function () {
 
       send(embed, "FLIGHT_STATUS_RESULTS", {
         items: Array.isArray(result.items) ? result.items : [],
-        meta: object(result.meta)
+        meta: object(result.meta),
+        requestId: clean(message.payload?.requestId, 100)
       });
     } catch (error) {
       if (searchNumber !== latestSearch) return;
@@ -228,7 +229,8 @@ $w.onReady(function () {
         message: cleanError(
           error,
           "Flight status lookup failed."
-        )
+        ),
+        requestId: clean(message.payload?.requestId, 100)
       });
     }
   });
