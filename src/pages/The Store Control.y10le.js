@@ -1,3 +1,4 @@
+import { isSafeInternalRoute } from "public/siteMap";
 import wixLocationFrontend from "wix-location-frontend";
 
 import {
@@ -13,7 +14,7 @@ import {
   setStoreControlVisibility,
   deleteStoreControlProduct,
   setStoreControlCategories,
-  bulkUpdateStoreControlPrices
+  bulkUpdateStoreControlPrices, updateStoreControlInventory, updateStoreControlOrder, saveStoreControlCollection, saveStoreControlPromotion
 } from "backend/SKANDI_CORE/storeCartV3.web";
 
 const EMBED_ID = "#storeControlEmbed";
@@ -23,6 +24,7 @@ const LOGIN_PATH = "/riaintra";
 
 let embed = null;
 let bootstrapPromise = null;
+let mutating=false;
 
 function send(type, payload = {}) {
   if (!embed) return;
@@ -139,6 +141,7 @@ async function handleMessage(message) {
       send("STORE_CONTROL_PROGRESS", { message: "Saving variants, prices and stock…" });
       const result = await saveStoreControlVariants({
         productId: payload.productId,
+        revision: payload.revision,
         variants: Array.isArray(payload.variants) ? payload.variants : []
       });
       send("STORE_CONTROL_MUTATION_OK", { action: "variants", ...result });
@@ -192,8 +195,18 @@ async function handleMessage(message) {
       return;
     }
 
+    case "STORE_CONTROL_UPDATE_INVENTORY":
+    case "STORE_CONTROL_UPDATE_ORDER":
+    case "STORE_CONTROL_SAVE_COLLECTION":
+    case "STORE_CONTROL_SAVE_PROMOTION": {
+      const handlers={STORE_CONTROL_UPDATE_INVENTORY:updateStoreControlInventory,STORE_CONTROL_UPDATE_ORDER:updateStoreControlOrder,STORE_CONTROL_SAVE_COLLECTION:saveStoreControlCollection,STORE_CONTROL_SAVE_PROMOTION:saveStoreControlPromotion};
+      const result=await handlers[message.type](payload);
+      if(!result?.ok)throw new Error(result?.message||"The action was not confirmed.");
+      send("STORE_CONTROL_MUTATION_OK",{action:message.type,...result});
+      await bootstrap(true);return;
+    }
     case "STORE_CONTROL_NAVIGATE":
-      if (String(payload.path || "").startsWith("/")) {
+      if (isSafeInternalRoute(payload.path)) {
         wixLocationFrontend.to(payload.path);
       }
       return;
@@ -210,6 +223,9 @@ $w.onReady(function () {
     const message = parseMessage(event.data);
     if (!message || message.source !== CHILD_SOURCE) return;
 
+    const mutation=/^STORE_CONTROL_(CREATE_|SAVE_|SET_|BULK_|DELETE_|UPDATE_)/.test(message.type);
+    if(mutating && mutation)return;
+    if(mutation){mutating=true;send("STORE_CONTROL_PROGRESS",{message:"Saving to Wix…"})}
     try {
       await handleMessage(message);
     } catch (error) {
@@ -222,7 +238,7 @@ $w.onReady(function () {
       if (String(error?.message || "") === "STORE_CONTROL_AUTH_REQUIRED") {
         wixLocationFrontend.to(LOGIN_PATH);
       }
-    }
+    } finally { if(mutation){mutating=false;send("STORE_CONTROL_IDLE",{})} }
   });
 
   send("STORE_CONTROL_PARENT_READY", {
@@ -235,3 +251,4 @@ $w.onReady(function () {
     send("STORE_CONTROL_ERROR", { message: cleanError(error) });
   });
 });
+
