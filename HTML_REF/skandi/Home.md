@@ -1,89 +1,33 @@
-# SKANDI INFO / LOG — V12 journey integration
+# INFO / LOG — Home
 
-- Source identity: `/HTML_REF/skandi/Home.md`. System: SKANDI. Complete intended source; HTML_REF is never imported at runtime.
-- Page: Home; `/src/pages/Home.n73w8.js`; routes `/` and `/skandi`; observed HTML `#htmlHome`.
-- Runtime replacement: `embed/Home.html` is pasted into `#htmlHome`. Approved layout, translations, content cards, prices, airport selection and settings behavior are retained.
-- Home facade: unchanged `homeContent.web.js` → `homeContent.js`; data uses existing `inventory_public_entities_v` / `travel_info_airports`. Search results and cart creation now belong to Booking's `customerBooking.web.js` → `customerBooking.js`.
-- Existing HOME_READY / HOME_BOOTSTRAP_RESULT / HOME_LOCATIONS_REQUEST / RESIZE_IFRAME contracts remain. HOME_SEARCH now stores sanitized criteria using `public/bookingSearch.js`, responds with correlated HOME_NAVIGATE_TO_OFFER and navigates immediately to `/booking?step=offer&searchId=...`. Home no longer renders live search results.
-- Public browsing/search do not require login. Booking prompts for the existing account popup when an offer is selected; customer/price authority remains on the backend.
-- REQUIRES LIVE TEST: Wix session storage across page navigation, deferred iframe attachment, actual search results and login. The currently published Home proxy already exposes searchUnifiedOffers; this repair is a routing/ownership correction, not a claimed missing-export repair.
-- Status: **VERIFIED locally** with Node.js + jsdom and simulated Wix/provider adapters; **STATICALLY VERIFIED** import/export and message contracts; **REQUIRES LIVE TEST** in Wix after installation. This source package has not been deployed.
-- Source authority: `skanditravels/SKANDI-TRAVELS`, `main`, commit `e8dd84a3af35797062be60f021cba83a4fc21bf6`, compared with the supplied complete HTML and approved Home/Country V12 repairs. Existing approved source history is preserved below.
-- Last inspected: 2026-10-07 UTC. Published route/component configuration, Home/Country proxy exports, and Supabase public catalog/schema were inspected read-only. No GitHub, Wix or database writes were performed.
-- Ownership: HTML → postMessage → Wix page controller → `backend/SKANDI_CORE/*.web.js` → canonical core/client → Supabase / existing providers. The site master retains global header/footer, account and settings ownership.
+- SOURCE FILE: `/HTML_REF/skandi/Home.md`
+- DISPLAY / PAGE NAME: Home
+- SYSTEM AREA: SKANDI
+- WIX PAGE FILE: `/src/pages/Home.n73w8.js`
+- WIX ROUTE / SLUG: `/`
+- WIX HTML ELEMENT: `#htmlHome`
+- CURRENT STATUS: V12 ONE-TRUE-SOURCE REPAIR PREPARED — REQUIRES LIVE TEST
+- SOURCE-OF-TRUTH STATUS: AUTHORITATIVE intended V12 embed payload supplied for this repair.
+- CANONICAL WEB FACADE: `/src/backend/SKANDI_CORE/homeContent.web.js`
+- CANONICAL CORE: `/src/backend/SKANDI_CORE/homeContent.js`
+- SHARED DATABASE TRANSPORT: `/src/backend/SKANDI_CORE/supabaseServer.js`
+- DATA AUTHORITY: Duffel provider facts -> Inventory Control / Supabase canonical record -> downstream page/core consumers. No embed is permitted to maintain an independent editable copy of shared airline, airport, hotel or destination reference facts.
+- CANONICAL DETAIL STORAGE: `travel_info_airlines.inventory_details`, `travel_info_airports.inventory_details`, and `inventory_master_entities.details`; identity/lifecycle/query fields remain normal table columns. Legacy Travel Info columns are compatibility projections only after the supplied migration.
+- CANONICAL MASTER LIBRARIES: HOTEL, TRANSFER, GUIDED_TOUR, ACTIVITY and PARTNER_TICKET downstream Travel Info content is projected from `inventory_public_entities_v`; legacy `travel_info_hotels/transfers/tours/activities/tickets` are not downstream authorities after this repair.
+- PROVIDER SNAPSHOT: the provider evidence remains under `payload.duffel` (`normalized` + `raw`). The migration promotes the normalized provider-owned subset into the canonical Inventory detail object and retains a read-only `inventory_details.duffel` / `details.duffel` copy for audit/context; SKANDI enrichment remains editable only in Inventory Control.
+- AUTHORIZATION: unchanged from current V12 page/facade/core boundaries. No frontend role or provider secret becomes authoritative.
+- MESSAGE CONTRACTS / ELEMENT IDS: unchanged.
+- LAST VERIFIED: 2026-10-08 — current repo `skanditravels/SKANDI-TRAVELS`, branch `main`, commit `86deedb4705fae292851256726cd81e13669aa98`; live Supabase schema/data inspected read-only.
 
-## Preserved history — earlier architecture/status is superseded above
-
-# SKANDI INFO / LOG — Home V12
-
-- Source of truth: /HTML_REF/skandi/Home.md; complete supplied HTML below.
-- Page / area: Home / SKANDI; /src/pages/Home.n73w8.js; routes / and /skandi.
-- HTML element: #htmlHome (existing controller also supports #htmlhome and #home).
-- Status: READY — source package prepared; REQUIRES LIVE TEST after installation.
-- Ownership: embed → postMessage → Home controller → canonical SKANDI_CORE facades → cores → Supabase / Duffel.
-- Facades: homeContent.web.js and customerBooking.web.js. Core owners: homeContent.js, customerBooking.js, duffelGround.js, duffelAir.js, bookingMapper.js, bookingCart.js, supabaseServer.js.
-- Home pricing runs in homeContent.js through existing customerBooking.searchLiveStaysCore; provider requests, secrets, ownership and cart mutations remain in their established cores.
-- Data: inventory_public_entities_v and travel_info_airports; existing query text unchanged. Airport reference rows must be active, customer-visible and PUBLISHED. Booking uses existing owned-cart/provider contracts.
-- Authorization: Home content/search are public; cart creation resolves the server member; existing SiteMember gates remain intact. Frontend prices/roles are not booking authority.
-- Global routes/settings: public/siteMap.js and masterPage.js; login uses public/customerAuthUi.js / canonical logIn popup.
-- Protocol: V12-HOME. Existing HOME_* types retained; requestId correlates bootstrap, locations, search and selection. Bootstrap has content/complete phases. RESIZE_IFRAME is handled by Home.
-- New canonical method: getHomeLivePrices({recordId,language,priceSearch}) resolves the featured public record server-side and returns {card}; no parallel provider client or catalogue.
-- Failure behavior: bounded reads, late-response suppression, retryable bootstrap, visible errors and one selection lock across login/cart creation. Pending carts are never replayed after a timeout.
-- Routes: flights/hotels/packages open existing Home tabs; offers opens featured offers. The absent standalone transfers route opens Collection search with checkout guidance. Cards use backend href. No shared route aliases added.
-- Verification: public Home bundle and route map inspected 2026-10-06; the old bundle generated only createBookingCartFromOffer. All 27 local regression checks passed; validation-results.json records the results and fixture-based scope. Supplied styles and translations match the upload; full HTML boots without DOM errors.
-- Open dependencies: Wix compilation, popup/session handoff, real provider searches and current Supabase availability require live checks. Supabase connector returned Unauthorized on 2026-10-06. Saved schema matches unchanged Home query columns, but is not fresh verification.
-- Last reviewed: 2026-10-06 UTC. No deployed Wix, GitHub or database writes performed.
-
-## Preserved history (superseded status/architecture)
-
-# Home
-
-STATUS: NEEDS REVIEW
-SLUG: /
-WIX PAGE: Home.n73w8
-AREA: SKANDI
-LIVE HTML: YES
-ELEMENT: #htmlHome
-LAST SYNCED: 2026-09-16
-
-## HOW TO USE
-***STATUS (OWNER): "TODO", "IN PROGRESS", "NEEDS REVIEW", "REVISIONS NEEDED", "READY", "LIVE", "ARCHIVED"
-STATUS (AGENT): "TODO", "IN PROGRESS", "REVISIONS NEEDED", "READY".***
-
-###  COMMENT SECTION (START ON A NEW ROW, LOG IF A CHANGE IS MADE THAT REQUIRES ATTENTION) 
-1. 9/17 12:07PM "Page is ready styled from my end, page not syncing correctly yet /Samuel"
-2.
-3.
-...
-***END*** 
-
-#### LIVE HTML
-
-
-## APPROVED REPAIR LOG — 2026-10-03 UTC
-
-Restored original public/customerAuthUi.js from commit 36fbf139f3ef70440b8d5a1f250180c33792492b. openCustomerLogin again resolves through the existing sitemap popup registry. No Home HTML or controller behavior changed. Wix login lightbox/runtime requires live verification. Status: source changes prepared; not deployed.
-
-
-- Recovery contract correction: the current popup registry key is logIn (historical key login was superseded). openCustomerLogin now uses the existing logIn entry; popup names and registry remain unchanged. Native Wix popup installation still requires live verification.
-
-## Change log — appended 2026-10-06 UTC
-
-V12: retained the uploaded title/600px hero, styles, editorial sections and translations. Removed duplicate builders reading deleted currency controls. Added canonical cabinClass/guest payloads, fixed the Holiday swap target, honored card href/provider currencies, corrected local CTA actions and connected global settings. Added correlated loading/error recovery and duplicate-selection protection; isolated result-button handlers from autocomplete. Made facade exports explicit webMethod calls with unchanged permissions. Moved card pricing behind the Home backend with exact hotel matching, date labels and no stored-price-as-live fallback. Added cycle protection and canonical title/provider-ID mapping. Database queries, schemas and policies unchanged.
-
-Validation follow-up: restored the missing results panel and its six required DOM controls, which previously stopped startup before HOME_READY. Added matching result styles without altering the supplied style block. Excluded private/inactive/unpublished airport reference rows, preserved canonical airport IDs, rejected empty/out-of-range coordinates and suppressed expired quotes in secondary card labels. All 27 local checks passed, including actual @wix/web-methods permission parity and the real booking core/mapper with provider, authentication and storage fixtures. These are source-level checks, not a Wix build or a live provider/database test.
-
-## Complete Home HTML
-
-
-## CHANGE LOG — 2026-10-07 UTC
-
-Moved search/results ownership to the requested stateOffer, preserving Home content and prior V12 fixes. Navigation acknowledgement clears both search/selection timers and says “Opening your travel results” without falsely claiming a cart was saved. The previous in-Home result/selection architecture is superseded.
+## CHANGE LOG
+- 2026-10-08 — One-true-source enforcement finalized: Duffel-linked provider identity/facts are read-only in Inventory Control and refresh through the provider workspace; provider technical snapshots are hidden from generic editable fields; compatibility columns are database-derived. Current GitHub `main` at `86deedb4705fae292851256726cd81e13669aa98` was inspected and preserved.
+- 2026-10-08 — V12 one-true-source convergence prepared. Shared reference/master facts now have one editable Inventory/Supabase authority after provider import. Legacy Travel Info fields are derived compatibility projections, provider-key uniqueness is database-enforced, and current Duffel snapshots refresh provider-owned canonical facts without creating alternate data stores. The HTML design, IDs, message names, routes and permission boundaries are unchanged. STATICALLY VERIFIED; REQUIRES LIVE TEST after SQL/Wix publication.
 
 ## COMPLETE INTENDED HTML
 
 ```html
 <!doctype html>
+<!-- V12 DATA AUTHORITY: Home consumes canonical Inventory/Supabase projections. It does not own or independently edit airline/airport/hotel reference data. -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
