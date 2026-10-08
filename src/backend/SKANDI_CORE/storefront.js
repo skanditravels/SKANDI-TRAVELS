@@ -7,6 +7,7 @@ import { coupons } from "wix-marketing.v2";
 import { elevate } from "wix-auth";
 import { categories } from "@wix/categories";
 import { auth } from "@wix/essentials";
+import { SkandiError, errorCode, errorStatus } from "backend/SKANDI_CORE/platformErrors";
 import { requireStaffPortalSessionCore } from "backend/SKANDI_CORE/staffAuth";
 
 const WIX_STORES_APP_ID = "215238eb-22a5-4c36-9e7b-e7c08025e04e";
@@ -83,7 +84,13 @@ async function requireStoreAdmin() {
   const session = await requireStaffPortalSessionCore();
   const profile = normalizedProfile(session);
   const tokens = tokensFrom([session.permissionKeys, session.permissionGroups, session.allowedApps]);
-  const allowed = session.isSystemAdmin === true || tokens.some(token =>
+  // These are server-resolved access roles and app grants from staffAuth,
+  // the same authority used by portalApps; profile/job titles never grant access.
+  const accessRole = cleanText(session.accessRole, 80).toUpperCase();
+  const appGrants = tokensFrom(session.allowedApps);
+  const portalAdministrator = ["SUPER_ADMIN", "OWNER", "COMPANY_OWNER"].includes(accessRole);
+  const allowed = session.isSystemAdmin === true || portalAdministrator ||
+    appGrants.some(token => token === "*" || token === "all") || tokens.some(token =>
     STORE_ADMIN_TOKENS.has(token) || ["store-control", "store", "retail", "ecommerce", "commerce", "system-admin"].includes(token)
   );
   if (!allowed) throw new Error("STORE_CONTROL_PERMISSION_REQUIRED");
@@ -106,18 +113,42 @@ function moneyInfo(money = {}, currency = "USD") {
     currency
   };
 }
-function mediaUrlsFrom(product = {}) {
-  const output = [];
-  const main = product?.media?.main?.url;
-  if (main) output.push(main);
-  const items = product?.media?.itemsInfo?.items;
-  if (Array.isArray(items)) {
-    items.forEach((item) => {
-      const url = item?.url;
-      if (url && !output.includes(url)) output.push(url);
-    });
+// Catalog V3 SDK image fields are wix:image strings; REST images are objects.
+function storeImageUrl(value, depth = 0) {
+  if (!value || depth > 5) return "";
+  if (typeof value === "object") {
+    const candidates = value.mediaType === "VIDEO" ? [value.thumbnail] :
+      [value.image, value.url, value.src, value.imageUrl, value.thumbnail, value._id, value.id];
+    for (const candidate of candidates) {
+      const url = storeImageUrl(candidate, depth + 1);
+      if (url) return url;
+    }
+    return "";
   }
-  return output;
+  if (typeof value !== "string") return "";
+  const raw = value.trim();
+  if (/^https?:\/\//i.test(raw)) return raw;
+  if (raw.startsWith("//")) return `https:${raw}`;
+  if (raw.startsWith("wix:image://v1/")) {
+    let id;
+    try { id = decodeURIComponent(raw.slice(15).split(/[\/#]/)[0]); }
+    catch (_) { return ""; }
+    return /^[A-Za-z0-9_.~-]+$/.test(id) ? `https://static.wixstatic.com/media/${id}` : "";
+  }
+  if (raw.startsWith("/media/")) return `https://static.wixstatic.com${raw}`;
+  if (/^[A-Za-z0-9_-]+_[A-Za-z0-9_~.-]+\.(?:png|jpe?g|webp|gif|avif)$/i.test(raw)) {
+    return `https://static.wixstatic.com/media/${raw}`;
+  }
+  return "";
+}
+function mediaUrlsFrom(product = {}) {
+  const items = product.media?.itemsInfo?.items;
+  return [...new Set([
+    product.media?.main,
+    ...(Array.isArray(items) ? items : []),
+    product.media?.main?.thumbnail,
+    product.thumbnail
+  ].map(item => storeImageUrl(item)).filter(Boolean))];
 }
 function categoryIdsFrom(product = {}) {
   const rows = product?.directCategoriesInfo?.categories;
@@ -145,7 +176,8 @@ async function queryAllProducts() {
     }, {
       fields: ["URL","CURRENCY","THUMBNAIL","MEDIA_ITEMS_INFO","DIRECT_CATEGORIES_INFO"]
     });
-    const rows = Array.isArray(response?.products) ? response.products : [];
+    if (!Array.isArray(response?.products)) throw new Error("STORE_CONTROL_INVALID_PRODUCTS_RESPONSE");
+    const rows = response.products;
     products.push(...rows);
     const next = response?.pagingMetadata?.cursors?.next || "";
     if (!response?.pagingMetadata?.hasNext || !next) break;
@@ -158,7 +190,8 @@ async function queryAllCategories() {
     { cursorPaging: { limit: 1000 } },
     { treeReference: STORE_TREE, returnNonVisibleCategories: true, fields: ["BREADCRUMBS_INFO","DESCRIPTION"] }
   );
-  return Array.isArray(response?.categories) ? response.categories : [];
+  if (!Array.isArray(response?.categories)) throw new Error("STORE_CONTROL_INVALID_CATEGORIES_RESPONSE");
+  return response.categories;
 }
 async function queryAllInventoryItems() {
   const inventory = [];
@@ -195,7 +228,7 @@ function normalizeProductListItem(product = {}) {
     minPrice: min.amount,
     maxPrice: max.amount,
     priceLabel: min.amount === max.amount ? min.formatted : `${min.formatted} – ${max.formatted}`,
-    thumbnail: product?.media?.main?.url || product?.thumbnail?.url || product?.thumbnail || "",
+    thumbnail: mediaUrlsFrom(product)[0] || "",
     categoryIds: categoryIdsFrom(product),
     updatedDate: product._updatedDate || product.updatedDate || ""
   };
@@ -264,6 +297,7 @@ function normalizeCategory(category = {}) {
     slug: cleanText(category.slug, 300),
     visible: category.visible !== false,
     parentCategoryId: category?.parentCategory?._id || category?.parentCategory?.id || "",
+    imageUrl: storeImageUrl(category.image),
     itemCounter: Number(category.itemCounter || 0)
   };
 }
@@ -343,37 +377,83 @@ async function syncProductCategories(productId, desiredIds = []) {
 }
 
 export async function getStoreControlBootstrapCore({ query = "" } = {}) {
-  const { profile } = await requireStoreAdmin();
-  const [rawProducts, rawCategories] = await Promise.all([queryAllProducts(), queryAllCategories()]);
-  const services=await Promise.allSettled([queryAllInventoryItems(), readRecentOrders(), readCoupons()]);
-  const serviceErrors={};
-  ["inventory","orders","promotions"].forEach((name,i)=>{if(services[i].status==="rejected")serviceErrors[name]=`${name} could not be loaded. Refresh to retry.`});
-  const inventory=services[0].status==="fulfilled"?services[0].value.map(normalizeInventoryItem):[];
-  const orderRows=services[1].status==="fulfilled"?services[1].value:[];
-  const promotions=services[2].status==="fulfilled"?services[2].value:[];
-  const needle = cleanText(query, 200).toLowerCase();
-  const products = rawProducts.map(normalizeProductListItem).filter((product) =>
-    !needle || product.name.toLowerCase().includes(needle) || product.slug.toLowerCase().includes(needle) || product.id.toLowerCase().includes(needle)
-  );
-  const categoriesList = rawCategories.map(normalizeCategory);
-  return {
-    ok: true,
-    profile: { name: profile.name || "", skId: profile.skId || "", role: profile.role || "" },
-    catalogVersion: "V3",
-    inventory, orders:orderRows, promotions, serviceErrors,
-    scope:"Orders show the latest 100 records; promotions show the first page returned by Wix (up to 100). Activity log is local to this page session.",
-    currency: rawProducts[0]?.currency || "USD",
-    stats: {
-      products: rawProducts.length,
-      visible: rawProducts.filter((item) => item.visible !== false).length,
-      hidden: rawProducts.filter((item) => item.visible === false).length,
-      categories: categoriesList.length,
-      openOrders:serviceErrors.orders?null:orderRows.filter(o=>o.status!=="CANCELED"&&o.fulfillmentStatus!=="FULFILLED").length,
-      lowStock:serviceErrors.inventory?null:inventory.filter(i=>i.trackQuantity&&i.quantity<=5).length
-    },
-    products,
-    categories: categoriesList
-  };
+  let stage = "authorization";
+  try {
+    const { profile } = await requireStoreAdmin();
+    stage = "catalog";
+    const readCatalog = async (name, read) => {
+      try { return await read(); }
+      catch (error) {
+        throw new SkandiError("STORE_CONTROL_CATALOG_READ_FAILED", "Catalog read failed.", {
+          status: errorStatus(error),
+          details: { stage: name, providerCode: error?.details?.applicationError?.code || errorCode(error) }
+        });
+      }
+    };
+    const [rawProducts, rawCategories] = await Promise.all([
+      readCatalog("products", queryAllProducts), readCatalog("categories", queryAllCategories)
+    ]);
+    stage = "services";
+    const services=await Promise.allSettled([queryAllInventoryItems(), readRecentOrders(), readCoupons()]);
+    const serviceErrors={};
+    ["inventory","orders","promotions"].forEach((name,i)=>{if(services[i].status==="rejected")serviceErrors[name]=`${name} could not be loaded. Refresh to retry.`});
+    const inventory=services[0].status==="fulfilled"?services[0].value.map(normalizeInventoryItem):[];
+    const orderRows=services[1].status==="fulfilled"?services[1].value:[];
+    const promotions=services[2].status==="fulfilled"?services[2].value:[];
+    stage = "catalog-data";
+    const needle = cleanText(query, 200).toLowerCase();
+    const products = rawProducts.map(normalizeProductListItem).filter((product) =>
+      !needle || product.name.toLowerCase().includes(needle) || product.slug.toLowerCase().includes(needle) || product.id.toLowerCase().includes(needle)
+    );
+    const categoriesList = rawCategories.map(normalizeCategory);
+    return {
+      ok: true,
+      profile: { name: profile.name || "", skId: profile.skId || "", role: profile.role || "" },
+      catalogVersion: "V3",
+      inventory, orders:orderRows, promotions, serviceErrors,
+      scope:"Orders show the latest 100 records; promotions show the first page returned by Wix (up to 100). Activity log is local to this page session.",
+      currency: rawProducts[0]?.currency || "USD",
+      stats: {
+        products: rawProducts.length,
+        visible: rawProducts.filter((item) => item.visible !== false).length,
+        hidden: rawProducts.filter((item) => item.visible === false).length,
+        categories: categoriesList.length,
+        openOrders:serviceErrors.orders?null:orderRows.filter(o=>o.status!=="CANCELED"&&o.fulfillmentStatus!=="FULFILLED").length,
+        lowStock:serviceErrors.inventory?null:inventory.filter(i=>i.trackQuantity&&i.quantity<=5).length
+      },
+      products,
+      categories: categoriesList
+    };
+  } catch (error) {
+    stage = error?.details?.stage || stage;
+    const sourceCode = errorCode(error, "STORE_CONTROL_BOOTSTRAP_FAILED");
+    const authRequired = ["STAFF_AUTH_REQUIRED", "STORE_CONTROL_AUTH_REQUIRED"].includes(sourceCode);
+    const denied = sourceCode === "STORE_CONTROL_PERMISSION_REQUIRED";
+    const code = authRequired ? "STORE_CONTROL_AUTH_REQUIRED" : denied ? sourceCode :
+      stage === "authorization" ? "STORE_CONTROL_ACCESS_FAILED" :
+      stage === "products" ? "STORE_CONTROL_PRODUCTS_FAILED" :
+      stage === "categories" ? "STORE_CONTROL_CATEGORIES_FAILED" : "STORE_CONTROL_BOOTSTRAP_FAILED";
+    const messages = {
+      STORE_CONTROL_AUTH_REQUIRED: "Your staff session has expired. Sign in again.",
+      STORE_CONTROL_PERMISSION_REQUIRED: "Your staff account does not have Store Control access. Ask a portal administrator to review its access role and app permissions.",
+      STORE_CONTROL_ACCESS_FAILED: "Your staff access could not be verified. Sign in again; if this continues, ask a portal administrator to check your account.",
+      STORE_CONTROL_PRODUCTS_FAILED: "Wix products could not be loaded. Refresh to retry.",
+      STORE_CONTROL_CATEGORIES_FAILED: "Wix categories could not be loaded. Refresh to retry.",
+      STORE_CONTROL_BOOTSTRAP_FAILED: "Store Control could not load its data. Refresh to retry."
+    };
+    const requestId = `SC-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+    const providerCode = error?.details?.providerCode || error?.details?.applicationError?.code || sourceCode;
+    // Codes and status only: never log a staff record, token, or provider payload.
+    console.error("[Store Control V12] Bootstrap failed", {
+      requestId, stage, code, status: errorStatus(error) || null,
+      providerCode: /^[A-Za-z0-9_.:-]{1,120}$/.test(providerCode) ? providerCode : "UNCLASSIFIED"
+    });
+    throw new SkandiError(code, messages[code], {
+      status: authRequired ? 401 : denied ? 403 : errorStatus(error),
+      retryable: stage !== "authorization",
+      details: { requestId, stage }
+    });
+  }
 }
 
 export async function getStoreControlProductCore({ productId } = {}) {
@@ -542,7 +622,7 @@ export async function bulkUpdateStoreControlPricesCore({
 }
 
 // Public reads run in the visitor's Wix context and never request merchant data.
-const PUBLIC_PRODUCT_FIELDS = ["CURRENCY", "MEDIA_ITEMS_INFO", "DESCRIPTION", "DIRECT_CATEGORIES_INFO"];
+const PUBLIC_PRODUCT_FIELDS = ["CURRENCY", "THUMBNAIL", "MEDIA_ITEMS_INFO", "DESCRIPTION", "DIRECT_CATEGORIES_INFO"];
 function publicOptions(product = {}) {
   return (Array.isArray(product.options) ? product.options : []).map(option => ({
     id: cleanText(option._id, 80),
@@ -563,7 +643,7 @@ function publicProduct(product = {}, categoriesById = new Map()) {
     id: product._id || product.id,
     name: cleanText(product.name, 300), slug: cleanText(product.slug, 300),
     description: cleanText(product.plainDescription, 50000),
-    imageUrl: urls[0] || product.thumbnail?.url || "", imageCandidates: urls,
+    imageUrl: urls[0] || "", imageCandidates: urls,
     mediaUrls: urls, price, comparePrice: compare ? moneyInfo(compare, currency) : null,
     currency, visible: product.visible !== false, inStock,
     canAddToCart: product.visible !== false && inStock,
@@ -719,3 +799,4 @@ export async function saveStoreControlPromotionCore({name,code,type,value,starts
   if(!(coupon?._id||coupon?.id))throw new Error("Promotion save was not confirmed. Refresh before retrying.");
   return {ok:true,couponId:coupon._id||coupon.id,message:"Promotion saved to Wix as an inactive draft."};
 }
+
