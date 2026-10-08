@@ -1,79 +1,34 @@
-# Travel Info
+# INFO / LOG — Travel Info
 
-STATUS: REVISIONS NEEDED
-ACTIVE VERSION: V12
-SLUG: /travel-info
-WIX PAGE: Travel Info.m43d6
-AREA: SKANDI
-LIVE HTML: YES
-ELEMENT: #travelInfoHtml
-LAST SYNCED: 2026-09-16
-LAST SOURCE UPGRADE: 2026-10-08
-
-## INFO / LOG — V12
 - SOURCE FILE: `/HTML_REF/skandi/Travel Info.md`
 - DISPLAY / PAGE NAME: Travel Info
 - SYSTEM AREA: SKANDI
 - WIX PAGE FILE: `/src/pages/Travel Info.m43d6.js`
 - WIX ROUTE / SLUG: `/travel-info`
 - WIX HTML ELEMENT: `#travelInfoHtml`
-- CURRENT STATUS: REVISIONS NEEDED — V12 loading and interaction repair prepared; VERIFIED local regression checks / STATICALLY VERIFIED source contracts / REQUIRES LIVE TEST after Wix publication
-- SOURCE-OF-TRUTH STATUS: AUTHORITATIVE V12 intended Travel Info implementation
+- CURRENT STATUS: V12 ONE-TRUE-SOURCE REPAIR PREPARED — REQUIRES LIVE TEST
+- SOURCE-OF-TRUTH STATUS: AUTHORITATIVE intended V12 embed payload supplied for this repair.
 - CANONICAL WEB FACADE: `/src/backend/SKANDI_CORE/publicContent.web.js`
 - CANONICAL CORE: `/src/backend/SKANDI_CORE/publicContent.js`
-- SHARED TRANSPORT: `/src/backend/SKANDI_CORE/supabaseServer.js`
-- SUPPORT BOUNDARY: `/src/backend/SKANDI_CORE/customerSupport.web.js` → canonical customer support core
-- REQUIREMENTS BOUNDARY: `/src/backend/SKANDI_CORE/publicContent.web.js` → canonical Travel Requirements core
-- EXTERNAL API / PROVIDER: none for initial Travel Info bootstrap; travel-requirements searches may use the configured checker behind the canonical Travel Requirements core; live weather remains explicitly unconfigured
-- RELEVANT SUPABASE RESOURCES: `travel_info_airlines`, `travel_info_airports`, `travel_info_hotels`, `travel_info_transfers`, `travel_info_tours`, `travel_info_activities`, `travel_info_tickets`, `travel_info_articles`, `travel_info_faq_groups`, `travel_info_faq`, `travel_requirements`, aircraft/cabin/view/hotspot tables
-- AUTHORIZATION: public Travel Info reads are exposed through `Permissions.Anyone`; privileged database credentials remain server-side
-- MESSAGE CONTRACT: child source `SKANDI_PUBLIC_TRAVEL_INFO`; parent source `SKANDI_WIX_PARENT`; existing `TRAVEL_INFO_*` messages preserved
-- BOOTSTRAP CONTRACT: V12 child READY/parent HOST_READY handshake; page backend load is bounded; child watchdog terminates loading if the Wix bridge never reaches DATA or ERROR
-- V12 WEB-METHOD CONTRACT: frontend-callable exports in `publicContent.web.js` are declared directly as top-level `webMethod(...)` exports so Wix can generate the callable frontend proxies without helper indirection
-- OPEN / RUNTIME REQUIREMENT: replace `/src/pages/Travel Info.m43d6.js` and the complete `#travelInfoHtml` payload together, then publish Wix. `WIX_HTML/Travel Info.html` is an exact extracted copy of the HTML below. The canonical public-content facade/core and database schema do not require replacement for this repair.
-- LAST STATIC VERIFICATION: 2026-10-08
-- SOURCE BASELINE: `skanditravels/SKANDI-TRAVELS`, `main`, commit `03f050c4a48d8d554ae07c3ece2e1996df622121`; published Wix revision 1228 was read on 2026-10-08. Its Travel Info HTML component `comp-mqte5an5` contains a newer V11/V12 hybrid visual layer, customer wording and hidden weather treatment than Git HTML_REF. Those deployed changes are retained in this intended payload; earlier metadata is historical where it conflicts.
-- LOADING / AIRCRAFT CONTRACT: repeated HOST_READY does not reset an already ready embed; the page replays its last successful bootstrap for repeat READY and retains explicit refresh/generation protection. Aircraft requests and replies carry `airlineKey` and `requestId`; aircraft errors use the existing `TRAVEL_INFO_ERROR` with `scope: "aircraft"`. Only the matching pending request can update that airline's cache or current view. Page reads are bounded at 15 seconds; the aircraft embed has a 20-second watchdog and explicit retry. No provider/database access is added to the frontend.
-- INTERACTION CONTRACT: content remains visible without IntersectionObserver callbacks; scroll motion is progressive enhancement and resumes on pageshow. Detail/tab changes run synchronously so a deferred document transition cannot reopen a closed guide. React mounts belong to the original live host and are released when leaving/rebuilding a detail; walkthrough hooks execute consistently for aircraft with or without scenes.
-- FORM FAILURE CONTRACT: requirements and support calls are bounded at 15 seconds; errors release the relevant button. A support timeout reports an unknown submission outcome and is never automatically retried or described as successful.
-- READ-ONLY LIVE EVIDENCE: published Travel Info backend proxies are present. The active Supabase project contains the required content tables; the existing publication predicates return 21 airlines, 44 airports and 132 aircraft. Activities, tickets and articles currently have zero matching public records. No production records, permissions or schema were changed.
-- VERIFICATION LIMIT: local tests use jsdom, React 19.3.0 and mocked Wix calls. Real embedded-browser behavior, support submission, travel-requirements provider responses and post-publication Wix execution still REQUIRE LIVE TEST. This package does not publish anything.
+- CANONICAL INVENTORY PROJECTION: `/src/backend/SKANDI_CORE/publicContentInventoryProjection.js` — overlays public airline/airport output from canonical `inventory_details` / `media_assets`; no second content store.
+- SHARED DATABASE TRANSPORT: `/src/backend/SKANDI_CORE/supabaseServer.js`
+- DATA AUTHORITY: Duffel provider facts -> Inventory Control / Supabase canonical record -> downstream page/core consumers. No embed is permitted to maintain an independent editable copy of shared airline, airport, hotel or destination reference facts.
+- CANONICAL DETAIL STORAGE: `travel_info_airlines.inventory_details`, `travel_info_airports.inventory_details`, and `inventory_master_entities.details`; identity/lifecycle/query fields remain normal table columns. Legacy Travel Info columns are compatibility projections only after the supplied migration.
+- CANONICAL MASTER LIBRARIES: HOTEL, TRANSFER, GUIDED_TOUR, ACTIVITY and PARTNER_TICKET downstream Travel Info content is projected from `inventory_public_entities_v`; legacy `travel_info_hotels/transfers/tours/activities/tickets` are not downstream authorities after this repair.
+- PROVIDER SNAPSHOT: the provider evidence remains under `payload.duffel` (`normalized` + `raw`). The migration promotes the normalized provider-owned subset into the canonical Inventory detail object and retains a read-only `inventory_details.duffel` / `details.duffel` copy for audit/context; SKANDI enrichment remains editable only in Inventory Control.
+- AUTHORIZATION: unchanged from current V12 page/facade/core boundaries. No frontend role or provider secret becomes authoritative.
+- MESSAGE CONTRACTS / ELEMENT IDS: unchanged.
+- LAST VERIFIED: 2026-10-08 — current repo `skanditravels/SKANDI-TRAVELS`, branch `main`, commit `86deedb4705fae292851256726cd81e13669aa98`; live Supabase schema/data inspected read-only.
 
-### CHANGE LOG
-- 2026-09-17 — Existing owner notes record that page styling was ready but synchronization required review.
-- 2026-10-06 — V12 bootstrap timeout repair: bounded the Wix page bootstrap call at 15 seconds; added generation control so forced refresh cannot let an older request overwrite a newer one; added a client-side bootstrap watchdog so a missing/stalled Wix bridge cannot leave Travel Info loading indefinitely. No data model, backend ownership, design, element ID, route, or existing message type was changed. REQUIRES LIVE TEST.
-- 2026-10-06 — V12 runtime facade restoration: live Wix reported `(0,r.getPublicTravelInfoPayload) is not a function`, proving the page bundle resolved the `publicContent.web` module without the required runtime export. Current V12 source defined the binding against `getPublicTravelInfoPayloadCore`; canonical facade restoration remained required. REQUIRES LIVE TEST.
-- 2026-10-06 — V12 project-source convergence: project audit found the Drive/project controller and HTML_REF behind the current approved Git source while Wix still exposed a stale/missing `getPublicTravelInfoPayload` runtime binding. Convergence package carried the bounded controller, canonical facade restoration, and complete authoritative HTML_REF with bootstrap watchdog. STATICALLY VERIFIED; REQUIRES LIVE TEST.
-- 2026-10-06 — V12 authority upgrade: active Travel Info runtime identifiers, page/controller protocol version, public-content facade/core metadata, route registry metadata, and executable HTML version labels were promoted from legacy pre-V12 identifiers to V12. Existing routes, message names, element IDs, data ownership, UI behavior and permissions were preserved. STATICALLY VERIFIED; REQUIRES LIVE TEST after Wix publication.
-- 2026-10-06 — V12 Wix revision 1193 embed-resolver repair: runtime raised `TypeError: m.join is not a function` from `pages/Travel Info.m43d6.js` while executing the no-compatible-component diagnostic path. Removed the array-based embed-ID resolver/`.join()` diagnostic dependency and now resolves `#travelInfoHtml` explicitly first, followed by the two existing compatibility IDs. STATICALLY VERIFIED; REQUIRES LIVE TEST.
-- 2026-10-06 — V12 live-HTML and facade export repair: the live HTML supplied from Wix still contained active `BACKEND-BASE-1.0-B011.2`, `B-011.21` and `B-011.22` identifiers and lacked the approved V12 bootstrap watchdog. The live payload below is promoted to V12 and includes the watchdog. The repeated Wix runtime error `(0,r.getPublicTravelInfoPayload) is not a function` persisted while source already contained the named export; `publicContent.web.js` therefore now declares its frontend-callable methods directly with top-level `webMethod(...)` exports, matching the current V12 web-module pattern and Wix documented form. No alternate facade, namespace, core, data model, route, element ID, message contract or permission boundary was introduced. STATICALLY VERIFIED; REQUIRES LIVE TEST.
-- 2026-10-06 — V12 Travel Info detail refinement after live acceptance: structured JSON/JSON-string values are now recursively normalized and rendered as readable cards/lists instead of raw JSON in airline Boarding and airport Terminals/Transport (and other structured detail fields); airline information is grouped into accessible tabs (Overview, Airport & boarding, Baggage, On board, Aircraft, Assistance) so only the selected topic group is visible; aircraft data is lazy-loaded when the Aircraft tab opens; Back to Travel Info now performs deterministic state cleanup and scroll restoration without depending on a view-transition callback. Backend verification confirmed Travel Info already reads the canonical `travel_info_airlines`, `travel_info_airports`, `travel_info_aircraft` and related `travel_info_aircraft_*` tables, so no backend query change was required. STATICALLY VERIFIED; REQUIRES LIVE TEST.
+## CHANGE LOG
+- 2026-10-08 — One-true-source enforcement finalized: Duffel-linked provider identity/facts are read-only in Inventory Control and refresh through the provider workspace; provider technical snapshots are hidden from generic editable fields; compatibility columns are database-derived. Current GitHub `main` at `86deedb4705fae292851256726cd81e13669aa98` was inspected and preserved.
+- 2026-10-08 — V12 one-true-source convergence prepared. Shared reference/master facts now have one editable Inventory/Supabase authority after provider import. Legacy Travel Info fields are derived compatibility projections, provider-key uniqueness is database-enforced, and current Duffel snapshots refresh provider-owned canonical facts without creating alternate data stores. The HTML design, IDs, message names, routes and permission boundaries are unchanged. STATICALLY VERIFIED; REQUIRES LIVE TEST after SQL/Wix publication.
 
-- 2026-10-08 — V12 intermittent loading/interaction repair: reconciled the complete intended HTML with the published revision-1228 hybrid design instead of reverting to older Git visuals. Reproduced invisible observer targets, delayed open-after-Back navigation, cross-airline response/cache contamination, a stale lazy React mount, and a React walkthrough hook-order crash locally; repaired each path. Added request-scoped aircraft errors, bounded loading/retry, idempotent readiness and bounded form errors. Existing message names, IDs, routes, core ownership, data sources and permissions are retained. VERIFIED local regression checks; STATICALLY VERIFIED source contracts; REQUIRES LIVE TEST after replacing controller and embed together. No external system was modified.
+## COMPLETE INTENDED HTML
 
-## HOW TO USE
-***STATUS (OWNER): "TODO", "IN PROGRESS", "NEEDS REVIEW", "REVISIONS NEEDED", "READY", "LIVE", "ARCHIVED"
-STATUS (AGENT): "TODO", "IN PROGRESS", "REVISIONS NEEDED", "READY".***
-
-### COMMENT SECTION (START ON A NEW ROW, LOG IF A CHANGE IS MADE THAT REQUIRES ATTENTION)
-1. 9/17 12:07PM "Page is ready styled from my end, page not syncing correctly yet /Samuel"
-2. 9/17 5:00PM new design, must review sync / Samuel
-3. 10/06 V12 bootstrap timeout repair prepared: page call bounded and embed watchdog added; REQUIRES LIVE TEST / ChatGPT
-4. 10/06 Runtime error: `getPublicTravelInfoPayload` resolved undefined in Wix. Canonical `publicContent.web.js` restoration/publish required / ChatGPT
-5. 10/06 V12 authority upgrade prepared: active Travel Info code and executable version metadata promoted to V12 / ChatGPT
-6. 10/06 Project-source convergence package prepared: controller + facade + complete HTML_REF aligned; Wix runtime verification still required / ChatGPT
-7. 10/06 Wix revision 1193: repaired Travel Info v12 embed resolver after `m.join is not a function` / ChatGPT
-8. 10/06 Live HTML found stale pre-V12 and facade still resolved undefined in Wix; V12 HTML replacement + direct top-level webMethod facade repair prepared / ChatGPT
-9. 10/06 Live Travel Info accepted; refined structured field rendering, airline topic tabs, lazy aircraft loading, and deterministic Back to Travel Info behavior. Canonical `travel_info_*` database tables already confirmed / ChatGPT
-10. 10/08 Prepared V12 intermittent-loading and controls repair, preserving the deployed hybrid design; replace page + embed together and publish. Local regression tests pass; live Wix verification pending / ChatGPT
-...
-***END***
-
-#### LIVE HTML
 ```html
 <!doctype html>
-<!-- SKANDI Travel Info v12 — V11/V12 hybrid customer-facing Travel Info embed. -->
-<!-- Data remains owned by the V12 Wix page bridge and backend/SKANDI_CORE boundaries. -->
+<!-- V12 DATA AUTHORITY: Duffel provider facts are curated/persisted through Inventory Control + Supabase before this public consumer receives them. This embed owns no duplicate reference data. -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -1102,17 +1057,15 @@ body{
 
 /* Scroll reveal + pointer-reactive surfaces */
 .ti-motion-reveal{
-  opacity:1;
-  transform:none;
+  opacity:0;
+  transform:translateY(24px) scale(.988);
 }
 .ti-motion-reveal.ti-motion-visible{
   opacity:1;
   transform:none;
-  animation:ti-content-reveal .72s cubic-bezier(.16,1,.3,1);
-}
-@keyframes ti-content-reveal{
-  from{opacity:.65;transform:translateY(14px)}
-  to{opacity:1;transform:none}
+  transition:
+    opacity .72s cubic-bezier(.16,1,.3,1),
+    transform .72s cubic-bezier(.16,1,.3,1);
 }
 .ti-reactive-card{
   --fx-x:50%;
@@ -1132,7 +1085,7 @@ body{
   .ti-atlas:before,.ti-orbit,.ti-route-art circle,.ti-featured-main:before,.ti-support-chapter:after,.ti-alexandra-launcher::before{
     animation:none!important;
   }
-  .ti-motion-reveal{opacity:1!important;transform:none!important;animation:none!important}
+  .ti-motion-reveal{opacity:1!important;transform:none!important}
 }
 
 </style>
@@ -1316,7 +1269,7 @@ body{background:#fff;color:var(--hybrid-text)}
 .cab-layout-note,.cab-map-note{display:none!important}
 
 /* Keep V12 interaction, soften V12 motion */
-.ti-motion-reveal{transform:none;opacity:1}
+.ti-motion-reveal{transform:translateY(14px);opacity:0}
 .ti-motion-reveal.ti-motion-visible{transform:none;opacity:1}
 .ti-reactive-card{will-change:transform}
 
@@ -1523,7 +1476,7 @@ const STATE={
   requirementsPending:false,
   supportPending:false,
   aircraftBundles:new Map(),
-  aircraftPending:new Map(),
+  aircraftPending:new Set(),
   weatherCache:new Map(),
   weatherPending:new Set()
 };
@@ -1587,8 +1540,7 @@ function armBootstrapWatchdog(delay=BOOTSTRAP_WATCHDOG_MS){
     setStatus(message,true);announce(message);
   },delay);
 }
-// Apply navigation now; CSS motion must not delay or intercept controls.
-function transition(fn){return fn()}
+function transition(fn){if(!REDUCED&&document.startViewTransition){try{return document.startViewTransition(fn)}catch(_){}}return fn()}
 
 function libraryDefs(){return[
   {key:"airlines",title:"Airline Information",short:"Airlines",icon:"aircraft",className:"ti-gateway-a",sub:"Baggage, check-in, onboard service and aircraft cabins."},
@@ -1765,7 +1717,6 @@ function closeDetail(){
   const restoreY=Number.isFinite(Number(STATE.homeScrollY))?Number(STATE.homeScrollY):0;
   STATE.searchOpen=false;
   STATE.overlayMode="";
-  releaseAircraftMount();
   STATE.activeDetail=null;
   STATE.activeAirlineTab="overview";
   $("tiSearchLayer")?.setAttribute("data-open","false");
@@ -1920,7 +1871,6 @@ function activateAirlineTab(id,x,scroll=true){
   if(scroll)root.querySelector(".ti-section-nav-wrap")?.scrollIntoView({behavior:movement(),block:"start"})
 }
 function renderDetail(x){
-  releaseAircraftMount();
   const kind=x._library||"",isAirline=kind==="airlines",isAirport=kind==="airports",sections=isAirline?airlineSections(x):isAirport?airportSections(x):genericSections(x);
   const image=displayImageUrl(x),logo=isAirline?safeExternal(text(x.logo||x.logoIcon||"")):"",code=itemCode(x),facts=detailFacts(x),website=safeExternal(x.website),contactUrl=safeExternal(x.contactUrl),loyaltyUrl=safeExternal(x.loyaltyProgramUrl),internalPath=[x.path,x.actionTarget,x.pageUrl].map(text).find(safeInternal)||"",meta=[x.city,x.country,x.alliance,x.loyaltyProgram].filter(Boolean);
   const aircraftSlot=isAirline?`<section id="tiSec-aircraft" class="ti-story-section" data-detail-section="aircraft"><div class="ti-story-eyebrow">Onboard experience</div><h2>Aircraft & cabin explorer</h2><p>Explore the published aircraft, cabin views and walkthroughs available for this airline. Live seat availability is shown when you book.</p><div id="onboardReactRoot" class="ti-aircraft-host"><div class="ti-aircraft-skeleton"><div class="ti-skeleton-lines"><i></i><i></i><i></i></div></div></div></section>`:"";
@@ -2008,51 +1958,20 @@ function submitSupport(){
   STATE.supportPending=true;btn.disabled=true;out.dataset.tone="";out.textContent="Sending your request…";post("TRAVEL_SUPPORT_REQUEST",{name,email,bookingReference:text($("tiSupportRef")?.value),category:text($("tiSupportCategory")?.value),message})
 }
 
-let aircraftSequence=0;
-const airlineKey=x=>text(x?.id||x?.iataCode||x?.code);
-function releaseAircraftMount(){
-  const host=$("onboardReactRoot");
-  if(host)window.SKANDIOnboardReact?.unmount?.(host);
-  window.__SKANDI_ONBOARD_PENDING__=null;
-}
-function aircraftError(message){
-  releaseAircraftMount();const host=$("onboardReactRoot");if(!host)return;
-  host.innerHTML=`<div class="ti-fleet-fallback" role="status"><h3>Aircraft information</h3><p>${esc(message||"Aircraft information is temporarily unavailable.")}</p><button type="button" class="ti-action-chip" data-aircraft-retry>Try again</button></div>`;
-  host.querySelector("[data-aircraft-retry]").addEventListener("click",()=>{if(STATE.activeDetail)requestAircraft(STATE.activeDetail)})
-}
-function receiveAircraft(p,failed=false){
-  const first=arr(p.aircraft)[0];
-  const key=text(p.airlineKey)||[...STATE.aircraftPending.keys()].find(k=>(text(first?.airlineId)&&k===text(first.airlineId))||(text(first?.airlineCode)&&STATE.aircraftPending.get(k).airlineCode===text(first.airlineCode)))||"";
-  const pending=STATE.aircraftPending.get(key);
-  if(!pending||(p.requestId&&p.requestId!==pending.requestId))return;
-  clearTimeout(pending.timer);STATE.aircraftPending.delete(key);
-  if(failed||p.ok===false){if(airlineKey(STATE.activeDetail)===key)aircraftError(p.message);return}
-  STATE.aircraftBundles.set(key,p);
-  if(airlineKey(STATE.activeDetail)===key)renderFleet(p)
-}
 function requestAircraft(x){
-  const key=airlineKey(x);if(!key)return;
-  if(STATE.aircraftBundles.has(key)){renderFleet(STATE.aircraftBundles.get(key));return}
-  if(STATE.aircraftPending.has(key))return;
-  const requestId=`aircraft-${Date.now()}-${++aircraftSequence}`;
-  const timer=setTimeout(()=>receiveAircraft({airlineKey:key,requestId,message:"Aircraft information is taking longer than expected. Please try again."},true),20000);
-  STATE.aircraftPending.set(key,{requestId,timer,airlineCode:text(x.iataCode||x.code)});
-  const host=$("onboardReactRoot");if(host)host.innerHTML=`<div class="ti-aircraft-skeleton" role="status" aria-label="Loading aircraft information"><div class="ti-skeleton-lines"><i></i><i></i><i></i></div></div>`;
-  post("TRAVEL_INFO_REQUEST_AIRCRAFT",{airlineId:x.id,airlineCode:x.iataCode,airlineKey:key,requestId})
+  const key=text(x.id||x.iataCode||x.code);if(STATE.aircraftBundles.has(key)){renderFleet(STATE.aircraftBundles.get(key));return}if(STATE.aircraftPending.has(key))return;STATE.aircraftPending.add(key);STATE.lastAircraftRequestKey=key;post("TRAVEL_INFO_REQUEST_AIRCRAFT",{airlineId:x.id,airlineCode:x.iataCode})
 }
 function renderFleetFallback(bundle,host){
   const aircraft=arr(bundle.aircraft),cabins=arr(bundle.cabins);if(!aircraft.length){host.innerHTML=`<div class="ti-fleet-fallback"><h3>Aircraft information</h3><p>No published aircraft information is currently available for this airline.</p></div>`;return}
   host.innerHTML=`<div class="ti-fleet-fallback"><h3>Aircraft & cabin information</h3><p>The interactive cabin explorer is temporarily unavailable, but the published aircraft information is still available below.</p><div class="ti-fallback-aircraft-list">${aircraft.map(a=>{const id=text(a.id),cs=cabins.filter(c=>text(c.aircraft_id||c.aircraftId)===id);return`<article class="ti-fallback-aircraft"><strong>${esc(a.display_title||a.displayTitle||a.aircraft_name||a.aircraftName||a.aircraft_code||a.aircraftCode||"Aircraft")}</strong><span>${esc([a.aircraft_code||a.aircraftCode,a.manufacturer,a.family,a.total_seats||a.totalSeats?`${a.total_seats||a.totalSeats} seats`:""].filter(Boolean).join(" · "))}</span>${cs.length?`<div class="ti-fallback-cabins">${cs.map(c=>`<i>${esc(c.cabin_name||c.cabinName||c.cabin_code||c.cabinCode||"Cabin")}</i>`).join("")}</div>`:""}</article>`}).join("")}</div></div>`
 }
 function renderFleet(bundle){
-  const host=$("onboardReactRoot");if(!host)return;
-  const pending={element:host,elementId:host.id,bundle:bundle||{},airline:STATE.activeDetail||{}};
-  window.__SKANDI_ONBOARD_PENDING__=pending;
+  const host=$("onboardReactRoot");if(!host)return;window.__SKANDI_ONBOARD_PENDING__={elementId:host.id,bundle:bundle||{},airline:STATE.activeDetail||{}};
   if(window.SKANDIOnboardReact?.mount){window.SKANDIOnboardReact.mount(host,bundle||{},STATE.activeDetail||{});return}
   host.innerHTML=`<div class="ti-aircraft-skeleton"><div class="ti-skeleton-lines"><i></i><i></i><i></i></div></div>`;
-  setTimeout(()=>{if(host.isConnected&&window.__SKANDI_ONBOARD_PENDING__===pending&&!window.SKANDIOnboardReact?.mount)renderFleetFallback(bundle||{},host)},5000)
+  setTimeout(()=>{if(host.isConnected&&!window.SKANDIOnboardReact?.mount)renderFleetFallback(bundle||{},host)},5000)
 }
-window.addEventListener("SKANDI_ONBOARD_REACT_READY",()=>{const p=window.__SKANDI_ONBOARD_PENDING__;if(!p)return;const host=$(p.elementId||"onboardReactRoot");if(host&&host===p.element&&host.isConnected&&airlineKey(p.airline)===airlineKey(STATE.activeDetail)&&window.SKANDIOnboardReact?.mount)window.SKANDIOnboardReact.mount(host,p.bundle,p.airline)});
+window.addEventListener("SKANDI_ONBOARD_REACT_READY",()=>{const p=window.__SKANDI_ONBOARD_PENDING__;if(!p)return;const host=$(p.elementId||"onboardReactRoot");if(host&&window.SKANDIOnboardReact?.mount)window.SKANDIOnboardReact.mount(host,p.bundle,p.airline)});
 
 function weatherKey(x){return text(x.id||x.code||x.iata||itemTitle(x))}
 function requestWeather(x){const key=weatherKey(x);if(STATE.weatherCache.has(key)){renderWeatherForDetail(STATE.weatherCache.get(key));return}if(STATE.weatherPending.has(key))return;STATE.weatherPending.add(key);post("TRAVEL_INFO_WEATHER_REQUEST",{locations:[{id:x.id||x.code||x.iata,title:itemTitle(x),latitude:Number(x.latitude),longitude:Number(x.longitude)}]})}
@@ -2074,10 +1993,12 @@ function parseMessage(value){if(typeof value==="string"){try{return JSON.parse(v
 window.addEventListener("message",event=>{
   const m=parseMessage(event.data);if(!m||m.source!==PARENT)return;const p=obj(m.payload);
   switch(m.type){
-    case "TRAVEL_INFO_HOST_READY":if(STATE.dataState==="ready")break;STATE.dataState="loading";armBootstrapWatchdog();post("TRAVEL_INFO_READY",{settings:{language:"EN"},protocolVersion:VERSION});break;
+    case "TRAVEL_INFO_HOST_READY":STATE.dataState="loading";armBootstrapWatchdog();post("TRAVEL_INFO_READY",{settings:{language:"EN"},protocolVersion:VERSION});break;
     case "TRAVEL_INFO_PROGRESS":STATE.dataState="loading";setStatus(p.message||"Loading SKANDI Travel Info…");break;
     case "TRAVEL_INFO_DATA":loadData(p);break;
-    case "TRAVEL_INFO_AIRCRAFT_DATA":receiveAircraft(p);break;
+    case "TRAVEL_INFO_AIRCRAFT_DATA":{
+      const first=arr(p.aircraft)[0];const responseKeys=[text(first?.airlineId),text(first?.airlineCode),text(STATE.lastAircraftRequestKey)].filter(Boolean);responseKeys.forEach(key=>{STATE.aircraftPending.delete(key);STATE.aircraftBundles.set(key,p)});const currentKey=STATE.activeDetail?text(STATE.activeDetail.id||STATE.activeDetail.iataCode||STATE.activeDetail.code):"";if(!responseKeys.length||responseKeys.includes(currentKey)||currentKey===text(STATE.lastAircraftRequestKey))renderFleet(p);break
+    }
     case "TRAVEL_INFO_REQUIREMENTS_SEARCHING":{const h=$("tiRequirementResult");if(h)h.textContent=p.message||"Checking current travel requirements…";break}
     case "TRAVEL_INFO_REQUIREMENTS_RESULT":STATE.requirementsPending=false;if($("tiRequirementSubmit"))$("tiRequirementSubmit").disabled=false;renderRequirementResult(p);break;
     case "TRAVEL_INFO_REQUIREMENTS_ERROR":STATE.requirementsPending=false;if($("tiRequirementSubmit"))$("tiRequirementSubmit").disabled=false;{const h=$("tiRequirementResult");if(h){h.dataset.tone="error";h.textContent=p.message||"Travel requirements are temporarily unavailable. Please verify with official authorities before departure."}}break;
@@ -2087,7 +2008,7 @@ window.addEventListener("message",event=>{
       const locations=arr(p.locations);locations.forEach(w=>{const key=text(w.id||w.locationId||w.title);if(key){STATE.weatherPending.delete(key);STATE.weatherCache.set(key,w)}});
       if(STATE.activeDetail){const key=weatherKey(STATE.activeDetail);if(!locations.length)STATE.weatherPending.delete(key);renderWeatherForDetail(STATE.weatherCache.get(key)||locations[0]||null)}break
     }
-    case "TRAVEL_INFO_ERROR":if(p.scope==="aircraft"){receiveAircraft(p,true);break}clearBootstrapWatchdog();STATE.dataState="error";STATE.requirementsPending=false;STATE.supportPending=false;if($("tiRequirementSubmit"))$("tiRequirementSubmit").disabled=false;if($("tiSupportSend"))$("tiSupportSend").disabled=false;setStatus(p.message||"Travel information is temporarily unavailable.",true);{const target=STATE.overlayMode==="support"?$("tiSupportResult"):STATE.overlayMode==="requirements"?$("tiRequirementResult"):null;if(target){target.hidden=false;target.dataset.tone="error";target.textContent=p.message||"This service is temporarily unavailable. Please try again."}}break;
+    case "TRAVEL_INFO_ERROR":clearBootstrapWatchdog();STATE.dataState="error";STATE.requirementsPending=false;STATE.supportPending=false;STATE.aircraftPending.clear();if($("tiRequirementSubmit"))$("tiRequirementSubmit").disabled=false;if($("tiSupportSend"))$("tiSupportSend").disabled=false;setStatus(p.message||"Travel information is temporarily unavailable.",true);{const target=STATE.overlayMode==="support"?$("tiSupportResult"):STATE.overlayMode==="requirements"?$("tiRequirementResult"):null;if(target){target.hidden=false;target.dataset.tone="error";target.textContent=p.message||"This service is temporarily unavailable. Please try again."}}break;
   }
 });
 
@@ -2157,7 +2078,7 @@ if(!REDUCED&&"IntersectionObserver" in window){
       entry.target.classList.add("ti-motion-visible");
       observer.unobserve(entry.target);
     }
-  },{threshold:0,rootMargin:"0px 0px -6% 0px"});
+  },{threshold:.10,rootMargin:"0px 0px -6% 0px"});
 }
 
 function enhanceNode(root=document){
@@ -2235,12 +2156,7 @@ if(!REDUCED&&FINE){
 window.addEventListener("pagehide",()=>{
   mutationObserver.disconnect();
   observer?.disconnect();
-});
-window.addEventListener("pageshow",()=>{
-  enhanceNode(document);
-  if(observer)document.querySelectorAll(".ti-motion-reveal:not(.ti-motion-visible)").forEach(node=>observer.observe(node));
-  mutationObserver.observe(document.body,{childList:true,subtree:true});
-});
+},{once:true});
 })();
 </script>
 
@@ -2262,7 +2178,7 @@ const rank=c=>({F:4,J:3,W:2,Y:1})[c]||0;
 const cabinLabel=c=>({F:"First",J:"Business",W:"Premium",Y:"Economy"})[c]||c;
 const emit=(type,payload={})=>window.parent.postMessage({source:"SKANDI_PUBLIC_TRAVEL_INFO",type,payload,timestamp:new Date().toISOString()},"*");
 const navigate=path=>emit("MASTER_NAVIGATE",{path});
-function transition(fn){return fn()}
+function transition(fn){if(!matchMedia("(prefers-reduced-motion: reduce)").matches&&document.startViewTransition){try{return document.startViewTransition(fn)}catch(_){}}return fn()}
 function normalizeAircraft(a){return{...a,_id:T(raw(a,"id")),_code:T(raw(a,"aircraft_code","aircraftCode")),_name:T(raw(a,"display_title","displayTitle","aircraft_name","aircraftName"))||T(raw(a,"aircraft_code","aircraftCode"))||"Aircraft",_aircraftName:T(raw(a,"aircraft_name","aircraftName")),_manufacturer:T(raw(a,"manufacturer")),_family:T(raw(a,"family")),_variant:T(raw(a,"variant")),_seats:N(raw(a,"total_seats","totalSeats")),_hero:T(raw(a,"hero_image_url","heroImageUrl","exterior_image_url","exteriorImageUrl")),_seatmap:T(raw(a,"seatmap_image_url","seatmapImageUrl")),_configuration:O(raw(a,"configuration"))}}
 function normalizeCabins(bundle,aircraftId){
   const source=A(bundle?.cabins).filter(c=>T(raw(c,"aircraft_id","aircraftId"))===T(aircraftId)&&raw(c,"active")!==false);const map=new Map();
@@ -2464,15 +2380,15 @@ function CabinExplorer({bundle,aircraft,cabin,legacyClass}){
 function SeatExperience({aircraft,cabin,legacyClass}){const layout=configuredSeatLayout(cabin);const amenities=amenityItems(cabin,legacyClass);const[selected,setSelected]=useState("");if(!layout.length)return html`<div className="cab-grid"><div className="cab-card cab-pad"><div className="cab-empty"><strong>Cabin layout preview is not available.</strong><span>Seat positions, pitch, width and recline are not inferred. Seat availability is shown during booking.</span></div></div><aside className="cab-card cab-pad"><h4 className="cab-title">${cabin?._name||"Seat experience"}</h4><p className="cab-copy">${T(raw(cabin,"description","summary"))||"Published cabin information appears here when available."}</p>${amenities.length?html`<div className="cab-amenities">${amenities.map(a=>html`<span className="cab-amenity"><b>${a.label}</b>${a.value?` · ${a.value}`:""}</span>`)}</div>`:null}</aside></div>`;
   const rows=[1,2,3];return html`<div className="cab-grid"><div className="cab-card cab-layout"><div className="cab-layout-note"><strong>Cabin layout preview.</strong> This is an informational representation based on the published cabin layout setting, not a live seat map.</div><div className="cab-seatrows">${rows.map(r=>html`<div className="cab-row"><span className="cab-rowno">${r}</span>${layout.map((group,gi)=>html`<${React.Fragment} key=${gi}><span className="cab-seatgroup">${group.map(letter=>{const id=`${r}${letter}`;return html`<button className="cab-seat" data-active=${selected===id?"true":"false"} onClick=${()=>setSelected(id)}>${id}</button>`})}</span>${gi<layout.length-1?html`<span className="cab-aisle"></span>`:null}</${React.Fragment}>`)}</div>`)}</div><div className="cab-seatinfo"><strong>${selected||"Select a representative seat"}</strong><span>${selected?`${cabin?._name||"Cabin"} · availability, restrictions and pricing are shown during booking.`:"Choose a seat in the preview to see its cabin context."}</span></div></div><aside className="cab-card cab-pad"><h4 className="cab-title">Seat & cabin features</h4>${amenities.length?html`<div className="cab-amenities">${amenities.map(a=>html`<span className="cab-amenity"><b>${a.label}</b>${a.value?` · ${a.value}`:""}</span>`)}</div>`:html`<div className="cab-empty"><strong>Seat features are not available.</strong><span>Only configured cabin information is shown.</span></div>`}</aside></div>`
 }
-function Walkthrough({bundle,aircraft}){const scenes=useMemo(()=>scenesFor(bundle,aircraft),[bundle,aircraft._id]);const start=T(raw(aircraft,"walkthrough_start_scene_code","walkthroughStartSceneCode"));const[code,setCode]=useState(start||scenes[0]?._code||"");useEffect(()=>setCode(start||scenes[0]?._code||""),[aircraft._id]);const scene=scenes.find(s=>s._code===code)||scenes[0];const hotspots=sceneHotspotsFor(bundle,scene);const[hot,setHot]=useState(hotspots[0]?._id||"");useEffect(()=>setHot(hotspots[0]?._id||""),[scene?._code]);if(!scenes.length)return html`<div className="cab-empty"><strong>No walkthrough is available for this aircraft.</strong><span>Use Cabin Explorer for any available cabin views.</span></div>`;const next=T(raw(scene,"forward_scene_code","forwardSceneCode")),back=T(raw(scene,"back_scene_code","backSceneCode"));return html`<div className="cab-scenes"><div className="cab-scene-list">${scenes.map(s=>html`<button className="cab-scene-btn" data-active=${s._code===scene._code?"true":"false"} onClick=${()=>transition(()=>setCode(s._code))}><strong>${T(s.short_title||s.shortTitle||s.title)||s._code}</strong><span>${s._code}</span></button>`)}</div><div><${MediaStage} image=${T(raw(scene,"image_url","imageUrl","mobile_image_url","mobileImageUrl"))} alt=${T(scene.title)||"Cabin walkthrough scene"} hotspots=${hotspots} active=${hot} setActive=${setHot} fallbackTitle=${T(scene.title)||"Walkthrough scene"} fallbackCopy=${T(scene.summary)||"This walkthrough scene does not currently include an image."}/><div className="cab-scene-nav"><button className="cab-action" disabled=${!back} onClick=${()=>back&&transition(()=>setCode(back))}>${T(scene.back_label||scene.backLabel)||"Previous"}</button><button className="cab-action cab-action-primary" disabled=${!next} onClick=${()=>next&&transition(()=>setCode(next))}>${T(scene.forward_label||scene.forwardLabel)||"Next"}</button></div></div></div>`}
+function Walkthrough({bundle,aircraft}){const scenes=useMemo(()=>scenesFor(bundle,aircraft),[bundle,aircraft._id]);const start=T(raw(aircraft,"walkthrough_start_scene_code","walkthroughStartSceneCode"));const[code,setCode]=useState(start||scenes[0]?._code||"");useEffect(()=>setCode(start||scenes[0]?._code||""),[aircraft._id]);if(!scenes.length)return html`<div className="cab-empty"><strong>No walkthrough is available for this aircraft.</strong><span>Use Cabin Explorer for any available cabin views.</span></div>`;const scene=scenes.find(s=>s._code===code)||scenes[0];const hotspots=sceneHotspotsFor(bundle,scene);const[hot,setHot]=useState(hotspots[0]?._id||"");useEffect(()=>setHot(hotspots[0]?._id||""),[scene?._code]);const next=T(raw(scene,"forward_scene_code","forwardSceneCode")),back=T(raw(scene,"back_scene_code","backSceneCode"));return html`<div className="cab-scenes"><div className="cab-scene-list">${scenes.map(s=>html`<button className="cab-scene-btn" data-active=${s._code===scene._code?"true":"false"} onClick=${()=>transition(()=>setCode(s._code))}><strong>${T(s.short_title||s.shortTitle||s.title)||s._code}</strong><span>${s._code}</span></button>`)}</div><div><${MediaStage} image=${T(raw(scene,"image_url","imageUrl","mobile_image_url","mobileImageUrl"))} alt=${T(scene.title)||"Cabin walkthrough scene"} hotspots=${hotspots} active=${hot} setActive=${setHot} fallbackTitle=${T(scene.title)||"Walkthrough scene"} fallbackCopy=${T(scene.summary)||"This walkthrough scene does not currently include an image."}/><div className="cab-scene-nav"><button className="cab-action" disabled=${!back} onClick=${()=>back&&transition(()=>setCode(back))}>${T(scene.back_label||scene.backLabel)||"Previous"}</button><button className="cab-action cab-action-primary" disabled=${!next} onClick=${()=>next&&transition(()=>setCode(next))}>${T(scene.forward_label||scene.forwardLabel)||"Next"}</button></div></div></div>`}
 function AircraftMap({aircraft,cabins,cabinId,setCabin}){const total=Math.max(1,cabins.reduce((n,c)=>n+Math.max(1,c._seats),0));let y=95;const zones=cabins.map(c=>{const h=Math.max(38,(Math.max(1,c._seats)/total)*245);const z={c,y,h};y+=h;return z});return html`<div className="cab-grid"><div className="cab-card cab-map-card"><h4 className="cab-title">Cabin layout overview</h4><p className="cab-copy">Illustrative nose-to-tail orientation generated from the configured cabin records. It is not an engineering diagram.</p><svg className="cab-map-svg" viewBox="0 0 360 470" role="img" aria-label="Illustrative aircraft cabin orientation"><path d="M180 18c-31 0-53 56-58 126l-7 183c-2 58 26 112 65 125 39-13 67-67 65-125l-7-183C233 74 211 18 180 18Z" fill="#e7eef2" stroke="#9db4c5" stroke-width="2"/><path d="M121 218 30 282l8 22 84-28M239 218l91 64-8 22-84-28" fill="#d9e5eb" stroke="#9db4c5" stroke-width="2"/>${zones.map(({c,y,h})=>html`<g className="cab-zone" data-active=${c._id===cabinId?"true":"false"} onClick=${()=>setCabin(c._id)} onKeyDown=${e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();setCabin(c._id)}}} role="button" tabIndex="0" aria-label=${`Select ${c._name}`}><rect x="137" y=${y} width="86" height=${h-3} rx="14" fill=${c._id===cabinId?"#9de0e5":"#f9fbfc"} stroke=${c._id===cabinId?"#5fc7cf":"#bfd0dc"}/><text className="cab-zone-label" x="180" y=${y+h/2}>${c._name}</text></g>`)}</svg><div className="cab-map-note">Cabin-zone length is proportional to configured seat counts. Door, galley, lavatory and wing relationships appear only when configured.</div></div><aside className="cab-card cab-pad"><h4 className="cab-title">Cabins</h4><div className="cab-cabin-list">${cabins.map(c=>html`<button className="cab-cabin-card" data-active=${c._id===cabinId?"true":"false"} onClick=${()=>setCabin(c._id)}><strong>${c._name}</strong><span>${[c._code,c._seats?`${c._seats} seats`:""].filter(Boolean).join(" · ")}</span></button>`)}</div></aside></div>`}
 function App({bundle,airline}){
   useMobile();const aircrafts=useMemo(()=>A(bundle?.aircraft).map(normalizeAircraft),[bundle]);const[aircraftId,setAircraftId]=useState(aircrafts[0]?._id||"");const aircraft=aircrafts.find(a=>a._id===aircraftId)||aircrafts[0];const cabins=useMemo(()=>aircraft?normalizeCabins(bundle,aircraft._id):[],[bundle,aircraft?._id]);const[cabinId,setCabinId]=useState(cabins[0]?._id||"");useEffect(()=>setCabinId(cabins[0]?._id||""),[aircraft?._id]);const cabin=cabins.find(c=>c._id===cabinId)||cabins[0];const[mode,setMode]=useState("overview");const legacy=legacyData(airline),legacyClass=legacyClassFor(legacy,cabin);if(!aircraft)return html`<div className="cab-root"><style>${css}</style><div className="cab-shell"><div className="cab-empty" style=${{margin:"18px"}}><strong>Aircraft information is not currently available.</strong><span>The airline guide remains available above.</span></div></div></div>`;const modes=[["overview","Overview"],["cabin","Cabin Explorer"],["seat","Seat Experience"],["walk","Walkthrough"],["map","Aircraft Map"]];return html`<div className="cab-root"><style>${css}</style><section className="cab-shell"><header className="cab-top"><div className="cab-kicker">SKANDI · Aircraft & Cabin Explorer</div><h3>${T(airline?.name||airline?.title||aircraft.airline_code||"Airline")} · ${aircraft._name}</h3><p>Explore the aircraft and cabin experience. Aircraft substitutions can occur, and seat availability is shown during booking.</p></header><div className="cab-selectors"><div className="cab-aircraft-strip">${aircrafts.map(a=>html`<button className="cab-pill" data-active=${a._id===aircraft._id?"true":"false"} onClick=${()=>transition(()=>setAircraftId(a._id))}>${a._code||"Aircraft"} · ${a._name}</button>`)}</div><div className="cab-mode-strip">${modes.map(([id,label])=>html`<button className="cab-pill" data-active=${mode===id?"true":"false"} onClick=${()=>transition(()=>setMode(id))}>${label}</button>`)}</div>${cabins.length?html`<div className="cab-cabin-strip">${cabins.map(c=>html`<button className="cab-pill cab-cabin" data-active=${c._id===cabin?._id?"true":"false"} onClick=${()=>transition(()=>setCabinId(c._id))}>${c._name}${c._code?` · ${c._code}`:""}</button>`)}</div>`:null}</div><div className="cab-body">${mode==="overview"?html`<${Overview} aircraft=${aircraft} cabins=${cabins} cabinId=${cabinId} setCabin=${setCabinId}/>`:mode==="cabin"?html`<${CabinExplorer} bundle=${bundle} aircraft=${aircraft} cabin=${cabin} legacyClass=${legacyClass}/>`:mode==="seat"?html`<${SeatExperience} aircraft=${aircraft} cabin=${cabin} legacyClass=${legacyClass}/>`:mode==="walk"?html`<${Walkthrough} bundle=${bundle} aircraft=${aircraft}/>`:html`<${AircraftMap} aircraft=${aircraft} cabins=${cabins} cabinId=${cabinId} setCabin=${setCabinId}/>`}</div><footer className="cab-footer"><span>Aircraft and cabin information is provided for travel planning. The operating airline may change aircraft or configuration.</span><button type="button" onClick=${()=>navigate("/flights")}>Explore flights</button></footer></section></div>`
 }
 function mount(element,bundle,airline){if(!element)return;let root=roots.get(element);if(!root){root=createRoot(element);roots.set(element,root)}root.render(html`<${App} bundle=${bundle||{}} airline=${airline||{}}/>`)}
-function unmount(element){const root=roots.get(element);if(root){root.unmount();roots.delete(element)}}
-window.SKANDIOnboardReact={mount,unmount,version:"React 19.3 / SKANDI V12"};
+window.SKANDIOnboardReact={mount,version:"React 19.3 / SKANDI V12"};
 window.dispatchEvent(new Event("SKANDI_ONBOARD_REACT_READY"));
+const pending=window.__SKANDI_ONBOARD_PENDING__;if(pending){const el=document.getElementById(pending.elementId||"onboardReactRoot");if(el)mount(el,pending.bundle,pending.airline)}
 </script>
 </body>
 </html>
