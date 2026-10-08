@@ -245,3 +245,8 @@ Validate that payment methods and services match between pricing and payment req
 Monitor for currency changes when pricing with different payment methods
 
 invalid_intended_card error code 422 error response can be returned if the card record used as the intended payment method has expired. This error can also be returned from the GET /air/offers/:id, GET /air/seat_maps and PATCH /air/offers/:offer_id/passengers endpoints as those endpoints will price the offer from the last intended payment methods.
+
+Card Management
+Create card resources as close to payment time as possible to minimize expiry issues
+
+Implement retry logic for card expiry scenarios
