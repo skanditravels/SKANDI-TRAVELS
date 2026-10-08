@@ -9,7 +9,7 @@
 - Canonical backend chain: `backend/SKANDI_CORE/storefront.web.js → storefront.js; storeCartV2.web.js → Wix Current Cart V2; customerSupport.web.js → customerSupport.js`.
 - Authority: Public catalog; Wix visitor/member owns the current cart. Existing support boundary retained.
 - Status: V12 repair candidate; VERIFIED local tests / STATICALLY VERIFIED source contracts / REQUIRES LIVE TEST.
-- Last source verification: 2026-10-07. Prepared against `skanditravels/SKANDI-TRAVELS`, `main`, commit `b7909cc5edbd87899bd9468577fc8e36eeb5d3fa`, retaining the approved V12 repairs.
+- Last source verification: 2026-10-08. Prepared against `skanditravels/SKANDI-TRAVELS`, `main`, commit `d239421165cc208790755b2d2a32cc3c369a9ca5`, retaining the approved V12 repairs.
 - Intended source only: this package has not changed published Wix, GitHub or Supabase.
 - Dependencies and live gates: existing masterPage/siteMap/staff/provider dependencies; rebuild and publish matching page, facade, core and embed together. See README for exact installation and live checks.
 
@@ -76,6 +76,16 @@ Recovered the existing B-011.32 storefront.web facade and controller matching th
 Uses the published #skandiStoreEmbed ID, preserves the approved V12 public catalog and support bridge, prevents repeat add clicks, acknowledges cart updates, refreshes catalog cache, validates internal navigation, and adds restrained card/focus styling.
 
 Local verification covers syntax, imports/exports, embed boot, provider contracts with mocks, stale replies, cart failure propagation, same-instance order submission deduplication, order ownership boundaries, administrator authorization and inventory revision conflicts. These tests do not prove a live provider request, payment, data write or production build. No database migration is required.
+
+## 2026-10-08 — V12 Store image repair
+
+Confirmed against the current main source and live Wix Catalog V3 read-only responses: all 30 products have main media, with 24 visible products. REST returns `media.main.image.url`; the SDK returns `media.main.image` as a `wix:image://v1/...` string. The existing core read only `media.main.url` / item `url`, so it discarded these images before sending the catalog to the embed. Category images were also omitted by normalization.
+
+The shared storefront core now normalizes SDK image strings and REST image objects into browser URLs for public product cards, detail media, category images and Store Control thumbnails. Requests include the documented THUMBNAIL field as an additional fallback. Malformed image identifiers are skipped safely; video entries use their thumbnail. Public visibility filtering and the visitor-context API boundary remain intact.
+
+The Store HTML now retains explicit image candidates and accepts SDK strings. One error handler retries the remaining candidates before removing an exhausted image; previously a second handler immediately removed images being retried by the first. CSS background URLs are escaped for their enclosing HTML attribute. Existing layout, routes, cart and support contracts remain intact. Replace the complete HTML in `#skandiStoreEmbed` using `/embed/The-Store.html`. The Store page controller and public facade do not need replacement.
+
+VERIFIED: live read-only products/categories queries returned HTTP 200; representative original and thumbnail image URLs returned HTTP 200 image/jpeg. Local regression tests reproduced the original empty image response, then passed with real REST data and SDK-shaped fixtures, full embed rendering, fallback exhaustion and category CSS URLs. STATICALLY VERIFIED: source syntax/imports/exports/contracts. REQUIRES LIVE TEST: rebuild/publish the supplied files and confirm images in the published Store. Local DOM tests do not prove a published Wix SDK execution. No external code or data was changed.
 
 ## Complete intended HTML
 
@@ -1124,22 +1134,30 @@ function money(price){
 }
 function textOf(p){return [p.name,p.brand,p.description,p.summary,p.sku,(p.categoryNames||[]).join(" "),p.ribbon,p.badge,p.recommendation].join(" ").toLowerCase()}
 function browserImageUrl(value){
-  const raw=String(value||"").trim();if(!raw)return"";
+  if(typeof value!=="string")return"";
+  const raw=value.trim();if(!raw)return"";
   if(/^https?:\/\//i.test(raw))return raw;
   if(raw.startsWith("//"))return`https:${raw}`;
   if(raw.startsWith("wix:image://v1/")){
     const path=raw.slice("wix:image://v1/".length).split("#")[0];
-    const mediaId=decodeURIComponent(path.split("/")[0]||"");
-    return mediaId?`https://static.wixstatic.com/media/${mediaId}`:"";
+    let mediaId;
+    try{mediaId=decodeURIComponent(path.split("/")[0]||"")}catch(_){return""}
+    return /^[A-Za-z0-9_.~-]+$/.test(mediaId)?`https://static.wixstatic.com/media/${mediaId}`:"";
   }
   if(raw.startsWith("/media/"))return`https://static.wixstatic.com${raw}`;
   if(/^[A-Za-z0-9_-]+_[A-Za-z0-9_-]+~mv2(?:\.[A-Za-z0-9]+)?$/i.test(raw))return`https://static.wixstatic.com/media/${raw}`;
   return raw;
 }
-function imageUrlOf(value){
-  if(!value)return"";
+function imageUrlOf(value,depth=0){
+  if(!value||depth>5)return"";
   if(typeof value==="string")return browserImageUrl(value);
-  return browserImageUrl(value.url||value.src||value.imageUrl||value.image?.url||value.image?.src||value.imageInfo?.url||value.main?.image?.url||value.mainMedia?.image?.url||value.id||value.image?.id||"");
+  if(typeof value!=="object")return"";
+  const candidates=value.mediaType==="VIDEO"?[value.thumbnail]:[
+    value.image,value.url,value.src,value.imageUrl,value.imageInfo,
+    value.main,value.mainMedia,value.thumbnail,value._id,value.id
+  ];
+  for(const candidate of candidates){const url=imageUrlOf(candidate,depth+1);if(url)return url}
+  return"";
 }
 function productImageCandidates(product={}){
   const items=
@@ -1154,17 +1172,18 @@ function productImageCandidates(product={}){
   const list=[
     product.imageUrl,
     product.thumbnailUrl,
+    product.thumbnail,
+    ...(Array.isArray(product.imageCandidates)?product.imageCandidates:[]),
     product.variantImageUrl,
     ...(Array.isArray(product.mediaUrls)?product.mediaUrls:[]),
     product.image,
     product.mainImage,
-    product.media?.main?.image?.url,
-    product.media?.main?.url,
+    product.media?.main,
     product.media?.mainMedia,
     product.mainMedia,
     ...(Array.isArray(items)?items:[])
   ]
-    .map(imageUrlOf)
+    .map(value=>imageUrlOf(value))
     .filter(Boolean);
 
   return [...new Set(list)];
@@ -1181,7 +1200,7 @@ function normalizeProductImage(product={}){
 
 function imageStyle(url){
   const src=imageUrlOf(url);
-  return src?`background-image:url(${JSON.stringify(src)})`:"";
+  return src?esc(`background-image:url(${JSON.stringify(src)})`):"";
 }
 
 function imageTagForProduct(product={},alt="",className=""){
@@ -1208,28 +1227,25 @@ function imageTag(url,alt="",className=""){
   return src?`<img${className?` class="${esc(className)}"`:""} src="${esc(src)}" alt="${esc(alt)}" decoding="async" loading="eager">`:"";
 }
 
+// One handler owns both fallback retries and the final placeholder.
 document.addEventListener("error",(event)=>{
   const img=event.target;
   if(!(img instanceof HTMLImageElement))return;
-
-  const raw=img.getAttribute("data-image-fallbacks");
-  if(!raw)return;
-
   let fallbacks=[];
-  try{fallbacks=JSON.parse(raw)}catch(_){fallbacks=[]}
-
-  const next=fallbacks.shift();
-  if(!next){
-    img.removeAttribute("data-image-fallbacks");
+  try{const parsed=JSON.parse(img.getAttribute("data-image-fallbacks")||"[]");if(Array.isArray(parsed))fallbacks=parsed}catch(_){}
+  const candidates=[...new Set(fallbacks.map(value=>imageUrlOf(value)).filter(Boolean))]
+    .filter(url=>url!==img.getAttribute("src"));
+  const next=candidates.shift();
+  if(next){
+    img.setAttribute("data-image-fallbacks",JSON.stringify(candidates));
+    img.src=next;
     return;
   }
-
-  img.setAttribute(
-    "data-image-fallbacks",
-    JSON.stringify(fallbacks)
-  );
-
-  img.src=next;
+  const parent=img.parentElement;
+  img.remove();
+  if(parent?.classList.contains("product-media")&&!parent.querySelector(".product-placeholder")){
+    parent.insertAdjacentHTML("afterbegin",'<span class="product-placeholder">SKANDI</span>');
+  }
 },true);
 function productBrand(p){return p.brand||p.brandName||(p.categoryNames||[])[0]||"SKANDI"}
 function categoryValue(category,...keys){for(const key of keys){const value=category?.[key];if(value!==undefined&&value!==null&&value!=="")return value}return""}
@@ -1741,16 +1757,6 @@ $("supportFileDrop")?.addEventListener("drop",event=>{const transfer=new DataTra
 toggleSupportOrderFields();updateSupportCategory();renderSupportFiles();
 
 
-document.addEventListener("error",event=>{
-  const image=event.target;
-  if(!(image instanceof HTMLImageElement))return;
-  const parent=image.parentElement;
-  image.remove();
-  if(parent?.classList.contains("product-media")&&!parent.querySelector(".product-placeholder")){
-    parent.insertAdjacentHTML("afterbegin",'<span class="product-placeholder">SKANDI</span>');
-  }
-},true);
-
 window.addEventListener("message",event=>{
   if(event.source!==window.parent)return;
   const message=event.data||{};if(message.source!==PARENT_SOURCE)return;
@@ -1844,3 +1850,4 @@ requestStorefront("initial");
 </body>
 </html>
 ```
+
