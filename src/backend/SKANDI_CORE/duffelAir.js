@@ -25,6 +25,14 @@ function integer(v, min, max, fallback) {
   const n = Number(v);
   return Number.isInteger(n) && n >= min && n <= max ? n : fallback;
 }
+function finite(v) {
+  if (v === null || v === undefined || v === "") return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+}
+function object(v) {
+  return v && typeof v === "object" && !Array.isArray(v) ? v : {};
+}
 function error(code, message, status = 400) {
   const e = new Error(message);
   e.name = "DuffelAirError";
@@ -69,17 +77,25 @@ export function duffelAmountToMinor(amount, currency) {
 }
 
 function normalizeLocation(place = {}) {
+  const city = object(place?.city);
   return {
     id: place?.id || null,
     type: place?.type || null,
     iataCode: place?.iata_code || null,
+    iataCityCode: place?.iata_city_code || null,
     icaoCode: place?.icao_code || null,
     name: place?.name || null,
-    cityName: place?.city_name || null,
+    cityName: place?.city_name || city.name || null,
     countryCode: place?.iata_country_code || place?.country_code || null,
     timeZone: place?.time_zone || null,
-    latitude: Number.isFinite(Number(place?.latitude)) ? Number(place.latitude) : null,
-    longitude: Number.isFinite(Number(place?.longitude)) ? Number(place.longitude) : null
+    latitude: finite(place?.latitude),
+    longitude: finite(place?.longitude),
+    city: Object.keys(city).length ? {
+      id: city.id || null,
+      name: city.name || null,
+      iataCode: city.iata_code || null,
+      countryCode: city.iata_country_code || city.country_code || null
+    } : null
   };
 }
 
@@ -94,19 +110,37 @@ function normalizeCarrier(carrier = {}) {
   };
 }
 
+function normalizeBaggage(baggage = {}) {
+  return {
+    type: baggage?.type || null,
+    quantity: finite(baggage?.quantity),
+    weight: finite(baggage?.weight),
+    weightUnit: baggage?.weight_unit || null
+  };
+}
+
 function normalizeSegmentPassenger(passenger = {}) {
+  const baggages = arr(passenger.baggages).map(normalizeBaggage);
   return {
     id: passenger.passenger_id || passenger.id || null,
     passengerId: passenger.passenger_id || passenger.id || null,
     fareBasisCode: passenger.fare_basis_code || null,
     cabinClass: passenger.cabin_class || null,
     cabinClassMarketingName: passenger.cabin_class_marketing_name || null,
-    baggages: arr(passenger.baggages).map(baggage => ({
-      type: baggage?.type || null,
-      quantity: Number.isFinite(Number(baggage?.quantity)) ? Number(baggage.quantity) : null,
-      weight: Number.isFinite(Number(baggage?.weight)) ? Number(baggage.weight) : null,
-      weightUnit: baggage?.weight_unit || null
-    }))
+    cabin: passenger.cabin || null,
+    cabinAmenities: passenger.cabin?.amenities || null,
+    seat: passenger.seat || null,
+    baggages
+  };
+}
+
+function normalizeStop(stop = {}) {
+  return {
+    id: stop.id || null,
+    duration: stop.duration || null,
+    departingAt: stop.departing_at || null,
+    arrivingAt: stop.arriving_at || null,
+    airport: normalizeLocation(stop.airport)
   };
 }
 
@@ -114,6 +148,7 @@ function normalizeSegment(segment = {}) {
   return {
     id: segment.id || null,
     duration: segment.duration || null,
+    distance: segment.distance || null,
     departingAt: segment.departing_at || null,
     arrivingAt: segment.arriving_at || null,
     origin: normalizeLocation(segment.origin),
@@ -129,6 +164,7 @@ function normalizeSegment(segment = {}) {
       iataCode: segment.aircraft.iata_code || null,
       name: segment.aircraft.name || null
     } : null,
+    stops: arr(segment.stops).map(normalizeStop),
     passengers: arr(segment.passengers).map(normalizeSegmentPassenger)
   };
 }
@@ -140,6 +176,9 @@ function normalizeSlice(slice = {}) {
     origin: normalizeLocation(slice.origin),
     destination: normalizeLocation(slice.destination),
     fareBrandName: slice.fare_brand_name || null,
+    ngsShelf: Number.isFinite(Number(slice.ngs_shelf)) ? Number(slice.ngs_shelf) : null,
+    conditions: slice.conditions || {},
+    comparisonKey: slice.comparison_key || null,
     segments: arr(slice.segments).map(normalizeSegment)
   };
 }
@@ -151,13 +190,17 @@ function serviceLabel(service = {}) {
 }
 
 function normalizeService(service = {}, labels = {}) {
+  const hasMaximum = service.maximum_quantity !== undefined && service.maximum_quantity !== null;
+  const hasQuantity = service.quantity !== undefined && service.quantity !== null;
   return {
     id: service.id || null,
     type: service.type || null,
     label: service.label || serviceLabel(service),
     totalAmount: service.total_amount ?? null,
     totalCurrency: service.total_currency ?? null,
-    maximumQuantity: Number(service.maximum_quantity || 1),
+    maximumQuantity: hasMaximum ? finite(service.maximum_quantity) : (hasQuantity ? null : 1),
+    quantity: hasQuantity ? finite(service.quantity) : null,
+    metadata: service.metadata || null,
     passengerId: service.passenger_id || service.passenger_ids?.[0] || null,
     passengerIds: arr(service.passenger_ids).length ? arr(service.passenger_ids) : (service.passenger_id ? [service.passenger_id] : []),
     passengerName: labels.passengerLabel || null,
@@ -167,13 +210,27 @@ function normalizeService(service = {}, labels = {}) {
   };
 }
 
+function normalizeOfferPassenger(p = {}) {
+  return {
+    id: p.id || null,
+    type: p.type || null,
+    age: Number.isInteger(p.age) ? p.age : null,
+    givenName: p.given_name || null,
+    familyName: p.family_name || null,
+    fareType: p.fare_type || null,
+    loyaltyProgrammeAccounts: arr(p.loyalty_programme_accounts)
+  };
+}
+
 function normalizeOffer(offer = {}) {
-  const passengers = arr(offer.passengers).map(p => ({ id: p.id || null, type: p.type || null, age: Number.isInteger(p.age) ? p.age : null }));
-  const passengerLabels = new Map(passengers.map((p, i) => [p.id, `Traveler ${i + 1}`]));
+  const passengers = arr(offer.passengers).map(normalizeOfferPassenger);
+  const passengerLabels = new Map(passengers.map((p, i) => [p.id, [p.givenName, p.familyName].filter(Boolean).join(" ") || `Traveler ${i + 1}`]));
   return {
     id: offer.id || null,
     liveMode: offer.live_mode === true,
+    partial: offer.partial === true,
     createdAt: offer.created_at || null,
+    updatedAt: offer.updated_at || null,
     expiresAt: offer.expires_at || null,
     isExpired: !offer.expires_at || Date.parse(offer.expires_at) <= Date.now(),
     baseAmount: offer.base_amount ?? null,
@@ -182,6 +239,8 @@ function normalizeOffer(offer = {}) {
     totalCurrency: offer.total_currency ?? null,
     taxAmount: offer.tax_amount ?? null,
     taxCurrency: offer.tax_currency ?? null,
+    taxBreakdown: arr(offer.tax_breakdown),
+    totalEmissionsKg: offer.total_emissions_kg ?? null,
     owner: normalizeCarrier(offer.owner),
     passengers,
     requiresInstantPayment: offer.payment_requirements?.requires_instant_payment === true,
@@ -189,6 +248,11 @@ function normalizeOffer(offer = {}) {
     priceGuaranteeExpiresAt: offer.payment_requirements?.price_guarantee_expires_at || null,
     identityDocumentRequired: offer.passenger_identity_documents_required === true,
     supportedIdentityDocumentTypes: arr(offer.supported_passenger_identity_document_types),
+    supportedLoyaltyProgrammes: arr(offer.supported_loyalty_programmes),
+    privateFares: arr(offer.private_fares),
+    intendedPaymentMethods: arr(offer.intended_payment_methods),
+    intendedServices: arr(offer.intended_services),
+    availableAirlineCreditIds: arr(offer.available_airline_credit_ids),
     conditions: offer.conditions || {},
     slices: arr(offer.slices).map(normalizeSlice),
     availableServices: arr(offer.available_services).map(s => normalizeService(s, {
@@ -266,7 +330,7 @@ function normalizeSeatMap(seatMap = {}) {
       cabinClass: cabin.cabin_class || null,
       cabinName,
       deck: cabin.deck ?? cabin.deck_name ?? cabin.deck_number ?? null,
-      aisles: Number.isFinite(Number(cabin.aisles)) ? Number(cabin.aisles) : null,
+      aisles: finite(cabin.aisles),
       wings: cabin.wings ? {
         firstRowIndex: Number.isInteger(cabin.wings.first_row_index) ? cabin.wings.first_row_index : null,
         lastRowIndex: Number.isInteger(cabin.wings.last_row_index) ? cabin.wings.last_row_index : null
@@ -283,44 +347,125 @@ function normalizeSeatMap(seatMap = {}) {
   };
 }
 
+function serviceBaggage(service = {}) {
+  if (lower(service.type, 40) !== "baggage") return null;
+  const quantity = finite(service.quantity);
+  if (!quantity || quantity < 1) return null;
+  const metadata = object(service.metadata);
+  const weight = finite(metadata.weight ?? metadata.maximum_weight ?? metadata.max_weight);
+  return {
+    type: clean(metadata.type || metadata.baggage_type || "additional_baggage", 80) || "additional_baggage",
+    quantity,
+    weight,
+    weightUnit: clean(metadata.weight_unit || metadata.unit, 40) || null,
+    source: "DUFFEL_SERVICE",
+    serviceId: service.id || null,
+    metadata: service.metadata || null
+  };
+}
+
+function attachBookedBaggageServices(slices = [], services = []) {
+  const baggageServices = arr(services).filter(service => lower(service.type, 40) === "baggage" && finite(service.quantity));
+  if (!baggageServices.length) return slices;
+  return arr(slices).map(slice => ({
+    ...slice,
+    segments: arr(slice.segments).map(segment => ({
+      ...segment,
+      passengers: arr(segment.passengers).map(passenger => {
+        const matching = baggageServices.filter(service => {
+          const passengerMatch = service.passengerIds.length > 0 && service.passengerIds.includes(passenger.id);
+          const segmentMatch = service.segmentIds.length > 0 && service.segmentIds.includes(segment.id);
+          return passengerMatch && segmentMatch;
+        });
+        const purchased = matching.map(serviceBaggage).filter(Boolean);
+        if (!purchased.length) return passenger;
+        const included = arr(passenger.baggages);
+        return {
+          ...passenger,
+          includedBaggages: included,
+          bookedBaggageServices: matching,
+          effectiveBaggages: [...included, ...purchased],
+          baggages: [...included, ...purchased]
+        };
+      })
+    }))
+  }));
+}
+
+function normalizeOrderPassenger(p = {}) {
+  return {
+    id: p.id || null,
+    givenName: p.given_name || null,
+    familyName: p.family_name || null,
+    bornOn: p.born_on || null,
+    gender: p.gender || null,
+    title: p.title || null,
+    email: p.email || null,
+    phoneNumber: p.phone_number || null,
+    infantPassengerId: p.infant_passenger_id || null,
+    loyaltyProgrammeAccounts: arr(p.loyalty_programme_accounts)
+  };
+}
+
 function normalizeOrder(order = {}) {
-  const slices = arr(order.slices).map(normalizeSlice);
+  const services = arr(order.services).map(normalizeService);
+  const slices = attachBookedBaggageServices(arr(order.slices).map(normalizeSlice), services);
   return {
     id: order.id || null,
     bookingReference: order.booking_reference || null,
     bookingReferences: arr(order.booking_references),
     offerId: order.offer_id || null,
     type: order.type || null,
+    liveMode: order.live_mode === true,
+    content: order.content || null,
     status: order.cancelled_at ? "cancelled" : (order.type === "hold" && order.payment_status?.awaiting_payment ? "held" : "confirmed"),
     route: slices.map(s => `${s.origin?.iataCode || "—"}–${s.destination?.iataCode || "—"}`).join(" / "),
     createdAt: order.created_at || null,
+    updatedAt: order.updated_at || null,
     cancelledAt: order.cancelled_at || null,
     syncedAt: order.synced_at || null,
     paymentRequiredBy: order.payment_required_by || null,
     priceGuaranteedExpiresAt: order.price_guaranteed_expires_at || null,
+    voidWindowEndsAt: order.void_window_ends_at || null,
     baseAmount: order.base_amount ?? null,
     baseCurrency: order.base_currency ?? order.total_currency ?? null,
     totalAmount: order.total_amount ?? null,
     totalCurrency: order.total_currency ?? null,
     taxAmount: order.tax_amount ?? null,
     taxCurrency: order.tax_currency ?? order.total_currency ?? null,
+    taxBreakdown: arr(order.tax_breakdown),
     conditions: order.conditions || {},
     passengerCount: arr(order.passengers).length,
     availableActions: arr(order.available_actions),
+    airlineInitiatedChanges: arr(order.airline_initiated_changes),
+    changes: arr(order.changes),
+    owner: normalizeCarrier(order.owner),
+    paymentStatus: order.payment_status || null,
+    intendedPaymentMethods: arr(order.intended_payment_methods),
+    services,
+    metadata: order.metadata || {},
+    users: arr(order.users),
+    cancellation: order.cancellation || null,
     slices,
-    passengers: arr(order.passengers).map(p => ({
-      id: p.id || null, givenName: p.given_name || null, familyName: p.family_name || null,
-      bornOn: p.born_on || null, gender: p.gender || null, title: p.title || null
+    passengers: arr(order.passengers).map(normalizeOrderPassenger),
+    documents: arr(order.documents).map(d => ({
+      id: d.id || null,
+      type: d.type || null,
+      uniqueIdentifier: d.unique_identifier || null,
+      passengerIds: arr(d.passenger_ids)
     })),
-    documents: arr(order.documents).map(d => ({ id: d.id || null, type: d.type || null, uniqueIdentifier: d.unique_identifier || null, passengerIds: arr(d.passenger_ids) })),
     confirmationDeliveryPolicy: upper(order.metadata?.confirmation_delivery_policy || "SKANDI", 20)
   };
 }
 
 function normalizeCancellation(c = {}) {
   return {
-    id: c.id || null, orderId: c.order_id || null, confirmedAt: c.confirmed_at || null,
-    expiresAt: c.expires_at || null, refundAmount: c.refund_amount ?? null, refundCurrency: c.refund_currency ?? null
+    id: c.id || null,
+    orderId: c.order_id || null,
+    confirmedAt: c.confirmed_at || null,
+    expiresAt: c.expires_at || null,
+    refundAmount: c.refund_amount ?? null,
+    refundCurrency: c.refund_currency ?? null
   };
 }
 
