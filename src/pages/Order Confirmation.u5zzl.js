@@ -1,50 +1,30 @@
-// /src/pages/Order Confirmation.u5zzl.js
-// B-011.17 — SKANDI The Store order confirmation page bridge.
-
+// V12 Store confirmation. The URL identifies the order; Wix verifies ownership and status.
 import wixLocationFrontend from "wix-location-frontend";
 import { isSafeInternalRoute } from "public/siteMap";
-
-const EMBED_ID = "#storeOrderConfirmationEmbed";
+import { getStoreOrderConfirmation } from "backend/SKANDI_CORE/storeCheckout.web";
 const SOURCE = "SKANDI_STORE_CONFIRMATION";
-const PARENT_SOURCE = "SKANDI_WIX_PARENT";
-
-let embed = null;
-
-function send(type, payload = {}) {
-  embed?.postMessage({
-    source: PARENT_SOURCE,
-    type,
-    payload,
-    timestamp: new Date().toISOString()
-  });
+let embed, loading = null;
+function send(type, payload = {}) { embed.postMessage({ source: "SKANDI_WIX_PARENT", type, payload, timestamp: new Date().toISOString() }); }
+async function load() {
+  if (loading) return loading;
+  loading = (async () => {
+    send("STORE_CONFIRMATION_LOADING");
+    try {
+      const order = await getStoreOrderConfirmation({ orderId: String(wixLocationFrontend.query?.orderId || "") });
+      if (!order?.ok || !order.verified) throw new Error("Order status is unavailable.");
+      send("STORE_CONFIRMATION_DATA", order);
+    } catch (_) { send("STORE_CONFIRMATION_ERROR", { message: "We could not verify this order in your current session. Retry, or open My Orders after signing in." }); }
+  })().finally(() => { loading = null; });
+  return loading;
 }
-
-function queryData() {
-  const query = wixLocationFrontend.query || {};
-  return {
-    orderId: String(query.orderId || ""),
-    paymentStatus: String(query.paymentStatus || "Submitted"),
-    generatedAt: new Date().toISOString()
-  };
-}
-
-$w.onReady(function () {
-  embed = $w(EMBED_ID);
-
-  embed.onMessage((event) => {
-    const message = event?.data || {};
-    if (message.source !== SOURCE) return;
-
-    if (message.type === "CONFIRMATION_READY") {
-      send("STORE_CONFIRMATION_DATA", queryData());
-      return;
-    }
-
-    if (message.type === "CONFIRMATION_NAVIGATE" && message?.payload?.path) {
-      const path = String(message.payload.path || "").trim();
-      if (isSafeInternalRoute(path)) wixLocationFrontend.to(path);
-    }
+$w.onReady(() => {
+  embed = $w("#storeOrderConfirmationEmbed");
+  embed.onMessage(event => {
+    let message = event?.data;
+    if (typeof message === "string") { try { message = JSON.parse(message); } catch (_) { return; } }
+    if (message?.source !== SOURCE) return;
+    if (["CONFIRMATION_READY", "CONFIRMATION_REFRESH"].includes(message.type)) { void load(); return; }
+    if (message.type === "CONFIRMATION_NAVIGATE" && isSafeInternalRoute(message.payload?.path)) wixLocationFrontend.to(message.payload.path);
   });
-
-  send("STORE_CONFIRMATION_DATA", queryData());
+  send("STORE_CONFIRMATION_PARENT_READY", { version: "V12" });
 });
