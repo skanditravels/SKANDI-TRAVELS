@@ -720,6 +720,8 @@ async function readRecentOrders(){
 }
 async function readCoupons(){
   const result=await adminQueryCoupons({});
+  // Wix omits the coupons array for a confirmed zero-result response.
+  if(result?.coupons===undefined && result?.totalResults===0)return [];
   if(!Array.isArray(result?.coupons))throw new Error("Promotion response was invalid.");
   return result.coupons.map(c=>{const p=c.specification||c;return {id:c._id||c.id,name:p.name,code:p.code,type:p.percentOffRate!=null?"PERCENT":p.moneyOffAmount!=null?"AMOUNT":"FREE_SHIPPING",value:p.percentOffRate??p.moneyOffAmount??"",status:p.active===true?"Active":"Draft"}});
 }
