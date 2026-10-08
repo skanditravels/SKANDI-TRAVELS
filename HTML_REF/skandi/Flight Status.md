@@ -5,13 +5,16 @@
 - Wix page/controller: `/src/pages/Flight Status.cn7ah.js`
 - Customer/internal route: `/travel-info/flight-status`
 - Installed HTML element: `#flightStatusEmbed`
-- Complete replacement embed supplied as: `/embed/Flight-Status.html` (paste into that Wix HTML component).
+- Embed replacement: none in this repair. The complete HTML payload below is preserved byte-for-byte and matches the published revision-1228 embed.
 - Canonical backend chain: `backend/SKANDI_CORE/flightStatus.web.js → flightStatus.js`.
 - Authority: Public read only; AIRLABS_API_KEY stays in Wix Secrets Manager.
 - Status: V12 repair candidate; VERIFIED local tests / STATICALLY VERIFIED source contracts / REQUIRES LIVE TEST.
-- Last source verification: 2026-10-07. Prepared against `skanditravels/SKANDI-TRAVELS`, `main`, commit `b7909cc5edbd87899bd9468577fc8e36eeb5d3fa`, retaining the approved V12 repairs.
+- Last source verification: 2026-10-08. Prepared against `skanditravels/SKANDI-TRAVELS`, `main`, commit `03f050c4a48d8d554ae07c3ece2e1996df622121`, retaining the approved V12 AirLabs repairs.
 - Intended source only: this package has not changed published Wix, GitHub or Supabase.
-- Dependencies and live gates: existing masterPage/siteMap/staff/provider dependencies; rebuild and publish matching page, facade, core and embed together. See README for exact installation and live checks.
+- Runtime replacement: `/src/backend/SKANDI_CORE/flightStatus.web.js` only. Each existing top-level export now calls `webMethod(Permissions.Anyone, ...)` directly; the native `wix-web-module` import, four exported names, dispatcher/core mapping and public error behavior are retained.
+- VERIFIED published evidence: Wix revision 1228 calls `handleFlightStatusAction` through an empty imported webpack module (module 135), with no Flight Status web-method proxy generated. This fails before the core or AirLabs request. The function exists in Git; its presence there does not prove publication.
+- Repair rationale / uncertainty: replacing the permission alias with the documented direct declaration removes indirection from Wix export discovery and matches the working public-facade declaration pattern. The missing published export is confirmed; an alias-specific compiler defect is not established. A clean Wix rebuild/publication must confirm that the generated proxy is restored.
+- Dependencies and live gates: existing page, core, provider, secret and shared dependencies remain in place. Publish after replacing the facade so Wix rebuilds the importing page. Confirm the generated import is callable, then exercise flight search, airport directory and airport context. The AirLabs core and AIRLABS_API_KEY were not changed or read. Source/mocked dispatch checks do not prove Wix compilation or a live AirLabs response.
 
 ## Historical INFO / LOG (preserved)
 
@@ -177,6 +180,12 @@ Local verification covers syntax, imports/exports, embed boot, provider contract
 AirLabs contract references: https://airlabs.co/docs/flights ; https://airlabs.co/docs/flight ; https://airlabs.co/docs/schedules . /flights has no documented date/limit parameters; /schedules is a current window of up to 10 hours, not historical/day-complete coverage. Cache 60 seconds; schedule pagination 50 rows per request, capped at 1,000 with a visible truncation notice. API quota and enabled endpoints require a live check. Forty of the 43 currently published airport guide rows have no timezone; clocks explicitly use UTC when missing.
 
 ## Complete intended HTML
+
+## 2026-10-08 — V12 missing published Flight Status export
+
+The live revision-1228 page imports an empty backend proxy module while the canonical source exports `handleFlightStatusAction`. This accounts for the reported undefined-function error before any provider call. The four existing native public web-method declarations now specify `Permissions.Anyone` directly instead of using the local `ANYONE` alias. Export names, permissions, input normalization, core dispatch and safe error replies remain intact; no compatibility module or alternate provider client was added. Only the facade requires runtime replacement. This HTML_REF change is documentation-only and preserves the full Flight Status HTML payload.
+
+VERIFIED: published artifact inspection and local facade dispatch/error tests with mocked cores. STATICALLY VERIFIED: syntax, imports, exports and page-to-facade/core mapping. REQUIRES LIVE TEST: Wix export generation after rebuild/publication and live AirLabs responses. No publishing or external mutation was performed.
 
 ```html
 <!DOCTYPE html>
