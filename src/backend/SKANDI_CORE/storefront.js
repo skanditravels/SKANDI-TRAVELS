@@ -172,7 +172,7 @@ async function queryAllProducts() {
   for (let page = 0; page < 100; page += 1) {
     const response = await elevatedQueryProducts({
       cursorPaging: { limit: 100, ...(cursor ? { cursor } : {}) },
-      sort: [{ fieldName: "_updatedDate", order: "DESC" }]
+      sort: [{ fieldName: "updatedDate", order: "DESC" }]
     }, {
       fields: ["URL","CURRENCY","THUMBNAIL","MEDIA_ITEMS_INFO","DIRECT_CATEGORIES_INFO"]
     });
@@ -799,4 +799,5 @@ export async function saveStoreControlPromotionCore({name,code,type,value,starts
   if(!(coupon?._id||coupon?.id))throw new Error("Promotion save was not confirmed. Refresh before retrying.");
   return {ok:true,couponId:coupon._id||coupon.id,message:"Promotion saved to Wix as an inactive draft."};
 }
+
 
