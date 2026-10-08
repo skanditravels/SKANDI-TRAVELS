@@ -1,7 +1,8 @@
 // /src/backend/SKANDI_CORE/publicContent.web.js
 // SKANDI Public Content v12 — canonical frontend-callable facade for public content and protected editorial actions.
 // Travel Info, About, Collection, baggage, passport/visa, insurance and newsroom reads remain delegated to publicContent.js.
-// This facade owns web-method permissions only; provider secrets, database ownership and business logic remain in canonical backend cores.
+// V12 one-true-source repair: Travel Info is overlaid from canonical Inventory/Supabase detail fields before leaving the backend.
+// This facade owns web-method permissions only; provider secrets and mutations remain in canonical backend cores.
 
 import { Permissions, webMethod } from "@wix/web-methods";
 import {
@@ -35,6 +36,7 @@ import {
   saveNewsroomMediaAssetCore,
   saveNewsroomPressContactCore
 } from "backend/SKANDI_CORE/publicContent";
+import { applyInventoryAuthorityToTravelInfoCore } from "backend/SKANDI_CORE/publicContentInventoryProjection";
 
 const normalizeInput = input => input && typeof input === "object" ? input : {};
 
@@ -51,7 +53,9 @@ export const getPublicSkandiCollection = webMethod(
 
 export const getPublicTravelInfoPayload = webMethod(
   Permissions.Anyone,
-  input => getPublicTravelInfoPayloadCore(normalizeInput(input))
+  async input => applyInventoryAuthorityToTravelInfoCore(
+    await getPublicTravelInfoPayloadCore(normalizeInput(input))
+  )
 );
 
 export const getPublicTravelInfoAircraft = webMethod(
