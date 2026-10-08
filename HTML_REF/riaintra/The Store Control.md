@@ -8,10 +8,10 @@
 - Live HTML unchanged in this follow-up; complete source is preserved below. No Store Control embed replacement is included or required.
 - Canonical backend chain: `backend/SKANDI_CORE/storeCartV3.web.js → storefront.js → Wix Stores V3 / eCommerce / native wix-marketing.v2 coupons`.
 - Authority: SiteMember facade plus canonical requireStaffPortalSessionCore / Store administrator authorization before all merchant APIs.
-- Status: V12 repair candidate; VERIFIED local tests / STATICALLY VERIFIED source contracts / REQUIRES LIVE TEST.
-- Last source verification: 2026-10-08. Prepared against `skanditravels/SKANDI-TRAVELS`, `main`, commit `d239421165cc208790755b2d2a32cc3c369a9ca5`, retaining the approved V12 repairs.
+- Status: V12 repair candidate; VERIFIED pinned-SDK serialization and live read-only catalog query / STATICALLY VERIFIED source chain / REQUIRES LIVE TEST after publication.
+- Last source verification: 2026-10-08. Prepared against `skanditravels/SKANDI-TRAVELS`, `main`, commit `e9ca97a01e2ed7a326925198bb11256e777587da`, retaining the approved V12 repairs.
 - Intended source only: this package has not changed published Wix, GitHub or Supabase.
-- Dependencies and live gates: existing masterPage/siteMap/staff/provider dependencies; rebuild and publish matching page, facade, core and embed together. See README for exact installation and live checks.
+- Dependencies and live gates: existing masterPage/siteMap/staff/provider dependencies. This repair replaces only `src/backend/SKANDI_CORE/storefront.js`; rebuild and publish after replacement. Retain the installed page, facade and embed. See README for the post-publication check.
 
 ## Historical INFO / LOG (preserved)
 
@@ -38,6 +38,22 @@ Bootstrap failures now use the existing SkandiError/publicError contract and ret
 The exact signed-in production error remains unconfirmed without the affected staff session and matching monitoring entry. Local tests reproduce the access mismatch and verify its correction, denial of unprivileged users, all merchant-operation gates, product/category failure propagation, retry and session expiry. A connector-authorized REST call does not prove the same call succeeds in the published elevated Velo context. REQUIRES LIVE TEST: publish the three supplied core/facade/page replacements and revisit Store Control as the affected authorized staff member. If it still fails, the displayed reference identifies the corresponding Store Control V12 monitoring entry.
 
 The complete Store Control HTML below is unchanged byte-for-byte. This package updates its reference documentation only; no Store Control HTML replacement is required. Shared image normalization also repairs the thumbnail/media values it receives. No database, role assignment, provider credential or external deployment changed.
+
+## 2026-10-08 — V12 Store Control product-query correction
+
+Follow-up report: "Wix products could not be loaded" with reference `SC-muyzftxv-bv0ed8`. The deployed page bundle contains the prior bootstrap/error repair, and the current main source retains the approved image and staff-access fixes. This message identifies the products phase after authorization; the matching private monitoring entry was not accessed.
+
+Confirmed query defect: the site's locked dependencies are `@wix/stores` 1.0.823, `@wix/auto_sdk_stores_products-v-3` 1.0.193 and `@wix/sdk-runtime` 1.0.17. Executing that official Products V3 SDK with the locked runtime shows that the existing typed query sends the sort string `_updatedDate` unchanged. Wix's Query Products contract permits `updatedDate`, not `_updatedDate`, as the sort field. Later SDK runtimes can translate this string, so testing against an unpinned newer runtime would miss the defect.
+
+The complete canonical `storefront.js` now uses `updatedDate` in `queryAllProducts`. This is the only runtime change. Cursor paging, requested image/media fields, image normalization, product response date handling, elevated SDK calls, staff authorization, exports and error propagation are preserved. No dependency upgrade or HTML/page/facade replacement is required.
+
+Correction to the preceding bootstrap entry: its statement that the catalog sorting was supported did not verify serialization through the site's locked SDK. That conclusion is superseded by the captured request from the exact installed versions. The previously successful REST request alone was insufficient evidence for the SDK call.
+
+VERIFIED locally: four focused checks cover the original unsupported serialized field; corrected real-SDK serialization with cursor paging and retained images; failure/malformed-response propagation; and the complete file's single query-field difference with preserved bootstrap imports/exports/messages. HTTP responses in the SDK tests are fixtures, not live Velo execution.
+
+VERIFIED on the live site through a read-only connector query: the corrected request returned HTTP 200 with all 30 products, `hasNext:false`, and descending update dates. Official contract: https://dev.wix.com/docs/api-reference/business-solutions/stores/catalog-v3/products-v3/query-products . STATICALLY VERIFIED: embed → page → SiteMember facade → canonical core mappings. REQUIRES LIVE TEST: after replacing the one backend file and publishing, open `/riaintra/success-factors/store-control` as the affected authorized staff member and confirm product loading/refresh. A connector catalog read does not prove the published staff-session/elevation path.
+
+The complete HTML payload below is preserved byte-for-byte. This file changes reference documentation only. No external source, deployment, database, credential or role assignment was changed.
 
 ## Complete intended HTML
 
@@ -1620,4 +1636,5 @@ seedData();render();load();
 </body>
 </html>
 ```
+
 
