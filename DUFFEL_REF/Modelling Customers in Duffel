@@ -1,0 +1,361 @@
+# Modelling Customers in Duffel
+Introduction
+When building a travel application with the Duffel API, you'll often need to represent your end users within our system. This is where Customer Users and Customer User Groups come in.
+These flexible constructs allow you to:
+Associate your users with bookings and orders
+
+Enable access to the Travel Support Assistant
+
+Organise users into meaningful groups
+
+Maintain consistent user information across the Duffel API
+
+Allow Duffel to send confirmation and support emails if desired
+
+This guide will walk you through creating and managing Customer Users and Customer User Groups, and show you how to use them when creating orders and bookings.
+Understanding Customer Users
+A Customer User represents one of your application's end users within the Duffel API.
+JSON
+
+
+{
+  "data": {
+    "id": "icu_0000AgZitpOnQtd3NQxjwO",
+    "email": "tony@stark.com",
+    "phone_number": "+14155550123",
+    "given_name": "Tony",
+    "family_name": "Stark",
+    "created_at": "2023-06-01T12:00:00Z",
+    "group": null
+  }
+}
+
+When you create a Customer User, the information is persisted within the Duffel API and can be referenced in future API calls.
+Understanding Customer User Groups
+A Customer User Group allows you to organise your Customer Users into logical collections.
+JSON
+
+
+{
+  "data": {
+    "id": "usg_0000AgZitpOnQtd3NQxjwO",
+    "name": "Stark Industries",
+    "created_at": "2023-06-01T12:00:00Z"
+  }
+}
+
+Groups can represent any meaningful segmentation in your application, such as organisations or companies.
+Creating a Customer User
+Let's start by creating a simple Customer User without assigning them to a group:
+Shell
+
+
+curl
+
+curl -X POST https://api.duffel.com/identity/customer/users \
+  -H "Accept-Encoding: gzip" \
+  -H "Accept: application/json" \
+  -H "Content-Type: application/json" \
+  -H "Duffel-Version: v2" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -d '{
+    "email": "tony@stark.com",
+    "phone_number": "+14155550123",
+    "given_name": "Tony",
+    "family_name": "Stark",
+    "preferred_language": "fr"
+  }'
+The response will include a Customer User ID that you can reference in future API calls:
+JSON
+
+
+{
+  "data": {
+    "id": "icu_0000AgZitpOnQtd3NQxjwO",
+    "email": "tony@stark.com",
+    "phone_number": "+14155550123",
+    "given_name": "Tony",
+    "family_name": "Stark",
+    "created_at": "2023-06-01T12:00:00Z",
+    "live_mode": false,
+    "group": null,
+    "preferred_language": "fr"
+  }
+}
+
+Required and Optional Fields
+When creating a Customer User, remember:
+email is required and must be unique within a group (or among users without groups)
+
+given_name and family_name are required
+
+phone_number is optional
+
+A Customer User's email must be unique within their group. This means:
+- Two Customer Users in the same group cannot have the same email
+- Two Customer Users with no group cannot have the same email
+- Two Customer Users in different groups can have the same email
+Creating a Customer User Group
+Now, let's create a Customer User Group:
+Shell
+
+
+curl
+
+curl -X POST https://api.duffel.com/identity/customer/user_groups \
+  -H "Accept-Encoding: gzip" \
+  -H "Accept: application/json" \
+  -H "Content-Type: application/json" \
+  -H "Duffel-Version: v2" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -d '{
+    "name": "Stark Industries"
+  }'
+The response will include the new group's ID:
+JSON
+
+
+{
+  "data": {
+    "id": "usg_0000AgZitpOnQtd3NQxjwO",
+    "name": "Stark Industries",
+    "created_at": "2023-06-01T12:00:00Z"
+  }
+}
+
+Creating a Customer User within a Group
+To create a Customer User directly within a group, include the group ID:
+Shell
+
+
+curl
+
+curl -X POST https://api.duffel.com/identity/customer/users \
+  -H "Accept-Encoding: gzip" \
+  -H "Accept: application/json" \
+  -H "Content-Type: application/json" \
+  -H "Duffel-Version: v2" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -d '{
+    "email": "pepper@stark.com",
+    "phone_number": "+14155550124",
+    "given_name": "Pepper",
+    "family_name": "Potts",
+    "group_id": "usg_0000AgZitpOnQtd3NQxjwO"
+  }'
+Response:
+JSON
+
+
+{
+  "data": {
+    "id": "icu_0000AgZpQrZjNcR4Mqklwx",
+    "email": "pepper@stark.com",
+    "phone_number": "+14155550124",
+    "live_mode": false,
+    "given_name": "Pepper",
+    "family_name": "Potts",
+    "created_at": "2023-06-01T12:15:00Z",
+    "group": {
+      "id": "usg_0000AgZitpOnQtd3NQxjwO",
+      "name": "Stark Industries"
+    }
+  }
+}
+
+Using Customer Users when Creating Orders
+When creating an order, you can associate Customer Users with it:
+Shell
+
+
+curl
+
+curl -X POST https://api.duffel.com/air/orders \
+  -H "Accept-Encoding: gzip" \
+  -H "Accept: application/json" \
+  -H "Content-Type: application/json" \
+  -H "Duffel-Version: v2" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -d '{
+    "data": {
+      "users": [
+        "icu_0000AgZitpOnQtd3NQxjwO"
+      ],
+      "type": "instant",
+      "selected_offers": [
+        "off_0000AgZitpOnQtd3NQxjwO"
+      ],
+      "payments": [
+        {
+          "type": "balance",
+          "currency": "GBP",
+          "amount": "430.00"
+        }
+      ],
+      "passengers": [
+        {
+          "user_id": "icu_0000AgZitpOnQtd3NQxjwO",
+          "title": "mr",
+          "phone_number": "+14155550123",
+          "id": "pas_0000AgZpQrZjNcR4Mqklwx",
+          "identity_documents": [
+            {
+              "unique_identifier": "75209451",
+              "type": "passport",
+              "issuing_country_code": "US",
+              "expires_on": "2030-06-25"
+            }
+          ],
+          "given_name": "Tony",
+          "gender": "m",
+          "family_name": "Stark",
+          "email": "tony@stark.com",
+          "born_on": "1970-05-29"
+        }
+      ],
+      "metadata": {
+        "internal_order_id": "avengers-123",
+        "mission": "conference"
+      }
+    }
+  }'
+
+
+View full sample
+
+By including the Customer User in your order creation request (both in the users array and as the user_id in the passenger object), you:
+Associate the order with a specific user in your system
+
+Enable that user to access this order through the Travel Support Assistant
+
+Make it easier to track and manage orders for specific users
+
+Using Customer Users when Creating Bookings
+Similarly, you can associate Customer Users with bookings:
+Shell
+
+
+curl
+
+curl -X POST https://api.duffel.com/stays/bookings \
+  -H "Accept-Encoding: gzip" \
+  -H "Accept: application/json" \
+  -H "Content-Type: application/json" \
+  -H "Duffel-Version: v2" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -d '{
+    "data": {
+      "users": [
+        "icu_0000AgZitpOnQtd3NQxjwO"
+      ],
+      "quote_id": "quo_0000AS0NZdKjjnnHZmSUbI",
+      "phone_number": "+14155550123",
+      "payment": {
+        "three_d_secure_session_id": "3ds_0000AWr2Xs1Vp34gh5"
+      },
+      "metadata": {
+        "customer_reference_number": "STARK001"
+      },
+      "loyalty_programme_account_number": "201154908",
+      "guests": [
+        {
+          "user_id": "icu_0000AgZitpOnQtd3NQxjwO",
+          "given_name": "Tony",
+          "family_name": "Stark"
+        }
+      ],
+      "email": "tony@stark.com",
+      "accommodation_special_requests": "Need large workbench space for technical projects"
+    }
+  }'
+
+
+View full sample
+
+As with orders, including the Customer User ID in both the users array and as the user_id in the guest object provides the same benefits of user association and support access.
+Using Additional Customer Users
+You can also specify additional Customer Users who should have access to an order, even if they're not the primary customer, by adding multiple IDs to the users array:
+Shell
+
+
+curl
+
+curl -X POST https://api.duffel.com/air/orders \
+  -H "Accept-Encoding: gzip" \
+  -H "Accept: application/json" \
+  -H "Content-Type: application/json" \
+  -H "Duffel-Version: v2" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -d '{
+    "data": {
+      "users": [
+        "icu_0000AgZitpOnQtd3NQxjwO",
+        "icu_0000AgZpQrZjNcR4Mqklwx"
+      ],
+      "type": "instant",
+      "selected_offers": [
+        "off_0000AgZitpOnQtd3NQxjwO"
+      ],
+      "payments": [
+        {
+          "type": "balance",
+          "three_d_secure_session_id": "3ds_0000AWr2Xs1Vp34gh5",
+          "currency": "GBP",
+          "amount": "430.00"
+        }
+      ],
+      "passengers": [
+        {
+          "user_id": "icu_0000AgZitpOnQtd3NQxjwO",
+          "title": "mr",
+          "phone_number": "+14155550123",
+          "id": "pas_0000AgZpQrZjNcR4Mqklwx",
+          "identity_documents": [
+            {
+              "unique_identifier": "75209451",
+              "type": "passport",
+              "issuing_country_code": "US",
+              "expires_on": "2030-06-25"
+            }
+          ],
+          "given_name": "Tony",
+          "gender": "m",
+          "family_name": "Stark",
+          "email": "tony@stark.com",
+          "born_on": "1970-05-29"
+        }
+      ],
+      "metadata": {
+        "internal_order_id": "avengers-123",
+        "mission": "conference"
+      }
+    }
+  }'
+
+
+View full sample
+
+This is useful when:
+A personal assistant is booking on behalf of an executive
+
+A team leader needs access to team members' bookings
+
+Family members need to access each other's travel information
+
+Additional Management Options
+There are additional endpoints available for managing your Customer Users and Groups, including retrieving, listing, and updating them. For complete details, refer to the API references for Customer Users and Customer User Groups.
+Best Practices
+Here are some recommendations for implementing Customer Users and Groups effectively:
+Create Customer Users early: Create them when users register in your application, not just at booking time
+
+Use meaningful group names: Choose names that reflect your business structure or customer segmentation, this is especially important if accessing the Travel Support Assistant
+
+Associate all orders and bookings: Even if you don't immediately need the Travel Support Assistant, associating users with their orders creates a better foundation for the future
+
+Keep user information updated: When your users update their contact information, be sure to update their Customer User records in Duffel too
+
+Set the preferred language: When creating a Customer User, you can set their preferred language. The user's preference will be shared with our travel support agents so we can provide support in their chosen language when available. If you'd like support in specific languages, please reach out to Sales
+
+Conclusion
+Customer Users and Customer User Groups provide a flexible way to represent your users within the Duffel API. By properly implementing them, you can create a more integrated experience for your users and unlock powerful support features like the Travel Support Assistant.
+For more information, refer to the API references for Customer Users and Customer User Groups.
