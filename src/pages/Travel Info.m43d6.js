@@ -18,6 +18,7 @@ const VERSION = "SKANDI-TRAVEL-INFO-V12";
 const BOOTSTRAP_TIMEOUT_MS = 15000;
 let loadPromise = null;
 let loadGeneration = 0;
+let lastPayload = null;
 
 const clean = (value, max = 4000) => String(value ?? "").trim().slice(0, max);
 
@@ -71,6 +72,10 @@ function withTimeout(promise, timeoutMs, message) {
 
 async function loadData(html, force = false, settings = {}) {
   if (loadPromise && !force) return loadPromise;
+  if (lastPayload && !force) {
+    post(html, "TRAVEL_INFO_DATA", lastPayload);
+    return lastPayload;
+  }
   const generation = ++loadGeneration;
   let currentLoad;
   currentLoad = (async () => {
@@ -82,7 +87,11 @@ async function loadData(html, force = false, settings = {}) {
         "Travel information is taking longer than expected. Please try again."
       );
       if (generation !== loadGeneration) return null;
-      post(html, "TRAVEL_INFO_DATA", payload || {});
+      if (!payload || typeof payload !== "object" || Array.isArray(payload) || payload.ok === false) {
+        throw new Error("Travel information could not be loaded. Please try again.");
+      }
+      lastPayload = payload;
+      post(html, "TRAVEL_INFO_DATA", payload);
       return payload;
     } catch (error) {
       if (generation === loadGeneration) postError(html, error);
@@ -96,7 +105,7 @@ async function loadData(html, force = false, settings = {}) {
 }
 
 async function createSupport(html, payload = {}) {
-  const result = await createPublicSupportCase({
+  const result = await withTimeout(createPublicSupportCase({
     input: {
       fullName: clean(payload.name || payload.fullName, 160),
       email: clean(payload.email, 320),
@@ -106,8 +115,9 @@ async function createSupport(html, payload = {}) {
       sourcePage: SITE_MAP.travelInfo,
       source: "travel-info"
     }
-  });
-  post(html, "TRAVEL_SUPPORT_RESULT", result || { ok: true });
+  }), BOOTSTRAP_TIMEOUT_MS,
+  "We could not confirm whether your request was sent. Please check for confirmation before sending again.");
+  post(html, "TRAVEL_SUPPORT_RESULT", result || { ok: false, message: "We could not confirm whether your request was sent. Please check for confirmation before sending again." });
 }
 
 function navigate(path) {
@@ -137,13 +147,28 @@ $w.onReady(() => {
         case "TRAVEL_INFO_REFRESH":
           await loadData(html, true, payload.settings || payload);
           return;
-        case "TRAVEL_INFO_REQUEST_AIRCRAFT":
-          post(html, "TRAVEL_INFO_AIRCRAFT_DATA", await getPublicTravelInfoAircraft(payload));
+        case "TRAVEL_INFO_REQUEST_AIRCRAFT": {
+          const context = {
+            scope: "aircraft",
+            airlineKey: clean(payload.airlineKey || payload.airlineId || payload.airlineCode, 160),
+            requestId: clean(payload.requestId, 160)
+          };
+          try {
+            const result = await withTimeout(getPublicTravelInfoAircraft(payload), BOOTSTRAP_TIMEOUT_MS,
+              "Aircraft information is taking longer than expected. Please try again.");
+            if (!result || typeof result !== "object" || !Array.isArray(result.aircraft) || result.ok === false) {
+              throw new Error("Aircraft information could not be loaded. Please try again.");
+            }
+            post(html, "TRAVEL_INFO_AIRCRAFT_DATA", { ...result, ...context });
+          } catch (error) {
+            post(html, "TRAVEL_INFO_ERROR", { ...context, message: clean(error?.publicMessage || "Aircraft information is temporarily unavailable. Please try again.", 500) });
+          }
           return;
+        }
         case "TRAVEL_INFO_REQUIREMENTS_SEARCH":
           post(html, "TRAVEL_INFO_REQUIREMENTS_SEARCHING", { message: "Checking current travel requirements…" });
           try {
-            post(html, "TRAVEL_INFO_REQUIREMENTS_RESULT", await searchPublicTravelRequirements({
+            post(html, "TRAVEL_INFO_REQUIREMENTS_RESULT", await withTimeout(searchPublicTravelRequirements({
               language: clean(payload.language || "EN", 10),
               nationality: clean(payload.nationality, 120),
               residenceCountry: clean(payload.residenceCountry, 120),
@@ -153,13 +178,17 @@ $w.onReady(() => {
               departureDate: clean(payload.departureDate, 40),
               returnDate: clean(payload.returnDate, 40),
               documentType: clean(payload.documentType || "PASSPORT", 40)
-            }));
+            }), BOOTSTRAP_TIMEOUT_MS, "Travel requirements are taking longer than expected. Please try again."));
           } catch (error) {
             post(html, "TRAVEL_INFO_REQUIREMENTS_ERROR", { message: clean(error?.publicMessage || error?.message || "Travel requirements are temporarily unavailable.", 500) });
           }
           return;
         case "TRAVEL_SUPPORT_REQUEST":
-          await createSupport(html, payload);
+          try {
+            await createSupport(html, payload);
+          } catch (error) {
+            post(html, "TRAVEL_SUPPORT_RESULT", { ok: false, message: clean(error?.publicMessage || "Your support request could not be confirmed. Please check for confirmation before sending again.", 500) });
+          }
           return;
         case "TRAVEL_INFO_WEATHER_REQUEST":
           post(html, "TRAVEL_INFO_WEATHER", {
