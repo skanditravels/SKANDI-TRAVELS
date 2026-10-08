@@ -5,16 +5,20 @@
 - Wix page/controller: `/src/pages/Flight Status.cn7ah.js`
 - Customer/internal route: `/travel-info/flight-status`
 - Installed HTML element: `#flightStatusEmbed`
-- Embed replacement: none in this repair. The complete HTML payload below is preserved byte-for-byte and matches the published revision-1228 embed.
+- Embed replacement: `/embed/Flight-Status.html` — paste the entire file into the existing `#flightStatusEmbed`. Its complete source is also preserved below.
 - Canonical backend chain: `backend/SKANDI_CORE/flightStatus.web.js → flightStatus.js`.
 - Authority: Public read only; AIRLABS_API_KEY stays in Wix Secrets Manager.
-- Status: V12 repair candidate; VERIFIED local tests / STATICALLY VERIFIED source contracts / REQUIRES LIVE TEST.
-- Last source verification: 2026-10-08. Prepared against `skanditravels/SKANDI-TRAVELS`, `main`, commit `03f050c4a48d8d554ae07c3ece2e1996df622121`, retaining the approved V12 AirLabs repairs.
+- Status: V12 airport-board design prepared; VERIFIED local browser/layout and message-contract checks / STATICALLY VERIFIED source integration / REQUIRES LIVE TEST after publication.
+- Last source verification: 2026-10-08. Prepared against `skanditravels/SKANDI-TRAVELS`, `main`, commit `7678c56fad111c32caf9f0c5f266c58be0fe0d44`, retaining the approved V12 AirLabs and facade repairs. The published revision-1230 Flight Status HTML matched this task’s starting HTML_REF payload.
 - Intended source only: this package has not changed published Wix, GitHub or Supabase.
-- Runtime replacement: `/src/backend/SKANDI_CORE/flightStatus.web.js` only. Each existing top-level export now calls `webMethod(Permissions.Anyone, ...)` directly; the native `wix-web-module` import, four exported names, dispatcher/core mapping and public error behavior are retained.
-- VERIFIED published evidence: Wix revision 1228 calls `handleFlightStatusAction` through an empty imported webpack module (module 135), with no Flight Status web-method proxy generated. This fails before the core or AirLabs request. The function exists in Git; its presence there does not prove publication.
-- Repair rationale / uncertainty: replacing the permission alias with the documented direct declaration removes indirection from Wix export discovery and matches the working public-facade declaration pattern. The missing published export is confirmed; an alias-specific compiler defect is not established. A clean Wix rebuild/publication must confirm that the generated proxy is restored.
-- Dependencies and live gates: existing page, core, provider, secret and shared dependencies remain in place. Publish after replacing the facade so Wix rebuilds the importing page. Confirm the generated import is callable, then exercise flight search, airport directory and airport context. The AirLabs core and AIRLABS_API_KEY were not changed or read. Source/mocked dispatch checks do not prove Wix compilation or a live AirLabs response.
+- Runtime replacement for this design update: the Flight Status embed only. The existing V12 controller, facade and AirLabs core remain unchanged. The earlier direct `webMethod(Permissions.Anyone, ...)` declarations are already in the inspected repository and are not resent.
+- DISPLAY CONTRACT: Airline logo → Flight No. → Departure time / Arrival time → To / From → Terminal → Gate → Remarks. Departures read departure time/terminal/gate and arrival airport; arrivals read arrival time/terminal/gate and departure airport. Flight-number and route modes show departure time with an additional arrival time beneath. Existing actual/estimated/scheduled local-time precedence is preserved.
+- AIRPORT / AIRLINE DISPLAY: existing supplied airline logos and configured Wix SVG mappings render in larger contained tiles (108 × 44 CSS pixels on wide screens), with airline text/code fallback when absent or unavailable. Destination labels combine supplied flight information and the existing public airport directory as CITY / AIRPORT (IATA); missing names are not invented. A directory response arriving after a flight result enriches visible destination labels without issuing another search. Numeric terminals are displayed as T5, already-prefixed codes are retained, and unavailable terminal/gate/time fields show an em dash.
+- VISUAL / RESPONSIVE CONTRACT: the tall marketing hero is replaced by a compact page heading, followed immediately by search controls and a full-width navy/charcoal board with amber wayfinding, headers and gates. All seven fields remain present on mobile in compact flight cards. Board controls are visible without waiting for reveal-observer callbacks; existing airport guides and onward-travel modules remain below the board.
+- Prior export-repair evidence (historical): Wix revision 1228 calls `handleFlightStatusAction` through an empty imported webpack module (module 135), with no Flight Status web-method proxy generated. This fails before the core or AirLabs request. The function exists in Git; its presence there does not prove publication.
+- Prior export-repair rationale / uncertainty: replacing the permission alias with the documented direct declaration removes indirection from Wix export discovery and matches the working public-facade declaration pattern. The missing published export is confirmed; an alias-specific compiler defect is not established. A clean Wix rebuild/publication must confirm that the generated proxy is restored.
+- Dependencies and live gates: existing page, core, provider, secret and shared dependencies remain in place. Publish after replacing the embed, then verify a real departure and arrival board. The AirLabs core, API requests, database schema and AIRLABS_API_KEY were not changed. Local fixture tests do not prove production provider data or secret configuration.
+- Latest verification: seven focused Node/jsdom checks passed for boot, retained IDs/contracts, all seven fields, arrival-side mapping, late directory names, missing-data/logo fallbacks, search/refresh/error/stale-response behavior, escaping and complete HTML_REF parity. Chromium 153 layout checks passed at 1440, 1024, 390 and 320 CSS pixels, with no tested board/control overflow; desktop and mobile screenshots were inspected. Test flights are fixtures only and are not included in the executable payload.
 
 ## Historical INFO / LOG (preserved)
 
@@ -186,6 +190,12 @@ AirLabs contract references: https://airlabs.co/docs/flights ; https://airlabs.c
 The live revision-1228 page imports an empty backend proxy module while the canonical source exports `handleFlightStatusAction`. This accounts for the reported undefined-function error before any provider call. The four existing native public web-method declarations now specify `Permissions.Anyone` directly instead of using the local `ANYONE` alias. Export names, permissions, input normalization, core dispatch and safe error replies remain intact; no compatibility module or alternate provider client was added. Only the facade requires runtime replacement. This HTML_REF change is documentation-only and preserves the full Flight Status HTML payload.
 
 VERIFIED: published artifact inspection and local facade dispatch/error tests with mocked cores. STATICALLY VERIFIED: syntax, imports, exports and page-to-facade/core mapping. REQUIRES LIVE TEST: Wix export generation after rebuild/publication and live AirLabs responses. No publishing or external mutation was performed.
+
+## 2026-10-08 — V12 airport-board layout and passenger columns
+
+Implemented the requested airport-style FIDS: replaced the oversized hero with a compact header, moved the full-width board directly beneath its controls, enlarged airline marks, and aligned Airline / Flight No. / Time / To or From / Terminal / Gate / Remarks. Added terminal presentation from the existing normalized provider field and destination naming from the existing public airport directory; both request directions retain their own local time, terminal and gate. Flight-number and route views also show arrival time. Unknown data remains explicit, broken images use a code fallback, and all prior V12 search, response correlation, automatic refresh, airport context and navigation features remain. The page, facade and core do not require replacement for this change.
+
+VERIFIED locally: seven behavioral/source checks plus Chromium desktop/mobile layout checks at four widths. STATICALLY VERIFIED: existing core fields and message boundaries. REQUIRES LIVE TEST: published Wix board, real AirLabs responses and externally hosted logo availability. No Wix, GitHub or database publication/mutation was performed.
 
 ```html
 <!DOCTYPE html>
@@ -821,64 +831,176 @@ button,input,select{font:inherit}button{cursor:pointer}a{color:inherit}
   .reveal{opacity:1!important;transform:none!important}
   .terminal-apron-light, .hero-status::after{animation:none!important}
 }
+
+/* V12 airport board: compact wayfinding, large airline marks and seven aligned columns. */
+.hero{min-height:0;background:#f3f5f8;border-bottom:1px solid #dbe3ec}
+.hero::before,.hero-copy::before,.hero-status::after{display:none}
+.hero-inner{padding:25px 0 21px;gap:24px;flex-wrap:nowrap;align-items:center}
+.hero-copy{padding:0;max-width:850px}
+.hero .eyebrow{font-size:9px;letter-spacing:.18em}
+.hero h1{margin:8px 0 7px;font-size:36px;line-height:1.05;letter-spacing:-.035em;font-weight:700}
+.hero-lede{margin:0;font-size:11px;line-height:1.55;max-width:760px}
+.hero-status{width:auto;display:flex;flex-shrink:0;gap:0;overflow:visible}
+.hero-stat,.hero-stat:nth-child(2){min-height:0;padding:0 20px;background:none;color:#022e64;border:0;border-left:1px solid #cdd8e4;border-radius:0;box-shadow:none;backdrop-filter:none}
+.hero-stat:nth-child(2) label{color:#6d7d8d}
+.hero-stat strong,.hero-stat:nth-child(2) strong{margin:7px 0;color:#022e64;font-family:"Roboto Mono",monospace;font-size:17px;white-space:nowrap}
+.hero-stat .live-pill,.hero-stat:nth-child(2) .live-pill{font-size:8px;color:#536b7d}
+.board-section{padding:18px 0 32px;background:#f3f5f8}
+.board-section::before,.board-section::after,.terminal-floor-reflection{display:none}
+.board-section .reveal{opacity:1;transform:none}
+.lookup-mode-tabs{width:100%;margin:0 0 10px;gap:6px;justify-content:flex-start}
+.lookup-mode{border-radius:5px;padding:9px 14px;font-size:10px;min-height:36px}
+.airport-controls,.airport-controls.mode-airport{width:100%;margin:0 0 16px;grid-template-columns:minmax(220px,1fr) 175px minmax(235px,.7fr) auto auto;gap:7px;padding:8px;border-radius:6px;background:#fff;box-shadow:none;backdrop-filter:none;border-color:#d6dee8}
+.airport-controls.mode-flight{grid-template-columns:minmax(220px,1fr) 175px auto auto}
+.airport-controls.mode-route{grid-template-columns:minmax(170px,1fr) minmax(170px,1fr) 175px auto auto}
+.airport-control{min-height:52px;border-radius:4px;background:#f5f7fa;border-color:#e0e6ee}
+.airport-controls .lookup-date-control{min-width:0}
+.airport-code-control input{min-width:0;width:100%;font-size:12px}
+.airport-control label{font-size:9px;letter-spacing:.09em}
+.airport-board-toggle,.airport-toggle,.airport-update,.airport-reset{border-radius:4px}
+.airport-toggle,.airport-update,.airport-reset{font-size:9px;letter-spacing:.06em}
+.airport-update,.airport-reset{min-height:52px;box-shadow:none}
+.airport-update{background:#022e64}
+.airport-control-note{font-size:9px;padding:1px 3px}
+.flight-board-shell{position:relative;width:100%;padding:0;border:1px solid #1c3349;border-top:4px solid #f4ca58;border-radius:7px;overflow:hidden;background:#0a1520;box-shadow:0 14px 32px rgba(2,25,49,.12)}
+.flight-board-shell::after{display:none}
+.board-top{margin:0;padding:20px 23px;grid-template-columns:minmax(220px,1fr) minmax(220px,.85fr) auto;gap:20px;border-radius:0;background:#022e64;box-shadow:none}
+.board-brand{gap:14px}
+.board-monogram{width:46px;height:46px;border:0;border-radius:3px;background:#f4ca58;color:#09213d;font-size:34px;font-weight:700;box-shadow:none}
+.board-brand strong{font-size:28px;letter-spacing:.035em;font-weight:700;line-height:1.05}
+.board-brand span{font-size:8px;letter-spacing:.12em;color:#bad0e2}
+.board-query{padding:0 0 0 20px;border:0;border-left:1px solid #426589;border-radius:0;background:none;backdrop-filter:none}
+.board-query label{font-size:8px;color:#bed0e1}
+.board-query strong{font-size:12px;line-height:1.4}
+.board-live{padding:10px;border-radius:3px;background:#052749;border:1px solid #34516d}
+.board-screen{border:0;border-radius:0;background:#0c1621;box-shadow:none}
+.board-screen::before,.board-screen::after{display:none}
+.board-airport-bar{grid-template-columns:1fr 1fr auto;min-height:43px;background:#152435;border-bottom:1px solid #2b3b4b}
+.board-airport-bar>div{padding:9px 18px;gap:12px}
+.board-airport-bar small{font-size:9px;letter-spacing:.12em;color:#a4bacb}
+.board-airport-bar strong{font-size:16px}
+.fids-layout{grid-template-columns:140px 116px 150px minmax(220px,1fr) 84px 80px 172px}
+.board-columns{min-height:42px;background:#1a2a3a;border:0;border-bottom:1px solid #445364}
+.board-columns>div{padding:10px 14px;font-size:9px;letter-spacing:.09em;color:#f4ca58;border:0}
+.board-scroll{padding:0;min-height:290px;max-height:600px;overflow-x:hidden;overflow-y:auto;background:#0c1621;scrollbar-color:#506579 #152435}
+.fids-row{min-height:76px;margin:0;border:0;border-bottom:1px solid #293747;border-radius:0;background:#0c1621;box-shadow:none;animation:none}
+.fids-row:nth-child(even){background:#111f2d}
+.fids-row:hover{transform:none;background:#1c3043;border-color:#395169}
+.fids-row::before{display:none}
+.fids-cell{min-height:76px;padding:10px 14px;border-right:0;overflow:hidden}
+.fids-carrier{display:flex;flex-direction:column;align-items:flex-start;gap:4px;min-width:0;width:100%}
+.fids-tail{width:108px;height:44px;border-radius:3px;background:#fff;box-shadow:none;padding:5px;position:relative}
+.fids-tail.logo-dark:not(.fallback){background:#022e64;border:1px solid #416186}
+.fids-tail img{display:block;max-width:98px;max-height:34px;width:100%;height:100%;object-fit:contain}
+.fids-tail.fallback{font-size:20px;background:#dce8ef;color:#022e64}
+.fids-carrier-name{display:block;max-width:110px;font-size:8px;color:#b3c6d5;line-height:1.2}
+.fids-flight strong{font-size:18px;color:#f4ca58;letter-spacing:.015em}
+.fids-time-main{font-size:25px;color:#fff;letter-spacing:0}
+.fids-time small{font-size:9px;color:#bac8d3;letter-spacing:0}
+.fids-destination strong{overflow:visible;white-space:normal;font-size:18px;font-weight:650;line-height:1.35;letter-spacing:.012em;overflow-wrap:anywhere;color:#f5f8fa}
+.fids-destination strong span{color:#a7c3d6;font-size:13px;white-space:nowrap}
+.fids-terminal{font-family:"Roboto Mono",monospace;font-size:18px;color:#fff;font-weight:700;overflow-wrap:anywhere}
+.fids-gate{min-width:48px;width:auto;max-width:100%;height:auto;min-height:36px;padding:5px;border-radius:2px;background:#f4ca58;color:#102336;font-size:18px;overflow-wrap:anywhere}
+.fids-status{font-size:11px;font-weight:700;line-height:1.5;letter-spacing:.015em;overflow-wrap:anywhere}
+.fids-status::before{width:5px;height:5px;min-width:5px;margin-right:7px;box-shadow:none}
+.fids-status.flap-warn{color:#f4ca58}.fids-status.flap-bad{color:#ff9b9b}
+.fids-status.is-changing,.fids-terminal.is-changing{animation:fidsFieldFlip .58s ease}
+.board-message{min-height:275px;margin:0;border:0;border-radius:0;padding:30px;text-align:center;background:transparent;gap:12px}
+.board-message-title{font-size:17px;color:#f4ca58;line-height:1.4}
+.board-message-note{font-size:11px;color:#a7bacb;line-height:1.7;letter-spacing:.03em;max-width:540px}
+.board-footer{margin:0;padding:12px 18px;border-radius:0;background:#172a3b;color:#b5c6d4;font-size:9px;letter-spacing:.025em;gap:15px;border-top:1px solid #354758}
+.board-footer strong{color:#f3f7fa}
+.airport-priority-strip{width:min(var(--content),calc(100% - 56px));margin:18px auto 0;gap:10px}
+.airport-priority-strip>div{padding:12px;border-radius:4px;box-shadow:none}
+.airport-priority-strip strong{font-size:10px}.airport-priority-strip small{font-size:9px;line-height:1.5}
+@media(max-width:1100px){
+  .hero-inner{padding:20px 0}.hero h1{font-size:31px}.hero-stat:nth-child(2){display:none}
+  .fids-layout{grid-template-columns:122px 92px 128px minmax(170px,1fr) 72px 72px 136px}
+  .fids-cell,.board-columns>div{padding-left:10px;padding-right:10px}
+  .fids-tail{width:100px;height:42px}.fids-tail img{max-width:90px;max-height:32px}
+  .fids-destination strong{font-size:16px}.fids-flight strong{font-size:16px}.fids-time-main{font-size:23px}
+  .airport-controls.mode-airport{grid-template-columns:minmax(230px,1fr) 170px auto auto}
+  .airport-controls.mode-airport #airportBoardToggle{grid-column:1/3;grid-row:2}
+  .airport-controls.mode-airport .airport-update{grid-column:3;grid-row:2}
+  .airport-controls.mode-airport .airport-reset{grid-column:4;grid-row:2}
+  .airport-controls.mode-airport .lookup-date-control{grid-column:3/5}
+  .airport-controls.mode-airport .airport-code-control{grid-column:1/3}
+  .airport-control-note{grid-column:1/-1}
+  .board-top{grid-template-columns:1fr auto}.board-query{display:none}
+}
+@media(max-width:900px){
+  .wrap{width:calc(100% - 24px)}.hero-inner{gap:12px}.hero h1{font-size:28px}
+  .hero-stat{padding:0 0 0 12px}.hero-stat strong{font-size:14px}.hero-status{display:flex}
+  .hero-lede{font-size:10px}.hero .eyebrow{font-size:8px}
+  .board-section{padding-top:12px}.lookup-mode-tabs{width:100%;display:flex;gap:5px}.lookup-mode{padding:8px 10px;font-size:9px}
+  .airport-controls.mode-airport{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 74px 58px}
+  .airport-controls.mode-flight{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 74px 58px}
+  .airport-controls.mode-flight .lookup-field{grid-column:1/3}.airport-controls.mode-flight .lookup-date-control{grid-column:3/5}
+  .airport-controls.mode-flight .airport-update{grid-column:1/4}.airport-controls.mode-flight .airport-reset{grid-column:4}
+  .airport-controls.mode-route{grid-template-columns:1fr 1fr}
+  .airport-controls.mode-route .lookup-date-control{grid-column:1/-1}
+  .airport-controls.mode-route .airport-update,.airport-controls.mode-route .airport-reset{grid-column:auto}
+  .airport-notice,.airport-control-note{grid-column:1/-1!important}
+  .airport-control,.airport-update,.airport-reset{min-height:46px}.airport-toggle{min-height:40px;padding:0 8px;font-size:9px}
+  .airport-control{padding:7px}.control-sign{display:none}.airport-control{grid-template-columns:minmax(0,1fr)}
+  .airport-control input[type="date"]{font-size:10px}.airport-controls .airport-update,.airport-controls .airport-reset{padding:0 8px;font-size:8px}
+  .board-top{padding:15px;gap:10px;grid-template-columns:1fr auto}.board-brand strong{font-size:23px}
+  .board-monogram{width:38px;height:38px;font-size:29px}.board-brand span{font-size:7px}
+  .board-live{width:auto;justify-self:end;padding:8px;gap:5px}.board-live span{font-size:7px}.board-live strong{font-size:8px}
+  .board-airport-bar{grid-template-columns:1fr 1fr}.airport-clock-display{display:none!important}
+  .board-airport-bar>div{padding:10px 13px}.board-airport-bar small{font-size:8px}.board-airport-bar strong{font-size:13px}
+  .board-columns{display:none}.board-scroll{max-height:none;min-height:220px;overflow:visible;padding:0}
+  .fids-row{display:grid;grid-template-columns:112px minmax(70px,1fr) minmax(115px,1.35fr)!important;grid-template-areas:"airline flight time" "place place place" "terminal gate remarks";gap:0;margin:0!important;border:0!important;border-bottom:2px solid #405363!important;border-radius:0!important}
+  .fids-row .fids-cell{grid-column:auto;min-height:60px;padding:10px 12px!important;border:0!important;justify-content:flex-start;align-items:flex-start;flex-direction:column;gap:5px}
+  .fids-cell::before{display:block;font-size:8px;color:#9cb6c9;letter-spacing:.065em;content:attr(data-label)}
+  .fids-row .cell-airline{grid-area:airline}.fids-row .cell-flight{grid-area:flight}.fids-row .cell-time{grid-area:time;align-items:flex-end}
+  .fids-row .cell-place{grid-area:place;border-top:1px solid #293747!important;border-bottom:1px solid #293747!important;min-height:58px}
+  .fids-row .cell-terminal{grid-area:terminal}.fids-row .cell-gate{grid-area:gate}.fids-row .cell-remarks{grid-area:remarks}
+  .fids-tail{width:90px;height:40px}.fids-tail img{max-width:80px;max-height:30px}.fids-carrier-name{max-width:90px}
+  .fids-destination{text-align:left}.fids-destination strong{font-size:18px}.fids-time{align-items:flex-end}
+  .fids-terminal,.fids-gate{font-size:17px}.fids-status{font-size:10px;min-height:30px}.fids-gate{min-height:30px}
+  .board-footer{display:grid;grid-template-columns:1fr auto;gap:8px;font-size:8px}
+  .board-footer>span:nth-child(1){grid-column:1/-1}.board-footer>span:nth-child(2),.board-footer>span:nth-child(3){display:block}
+  .airport-priority-strip{width:calc(100% - 24px);grid-template-columns:1fr;margin-top:14px}
+}
+@media(max-width:480px){
+  .hero-inner{align-items:flex-start;padding:18px 0}.hero h1{font-size:25px}.hero-copy{min-width:0}
+  .hero-lede{max-width:220px}.hero-stat label{font-size:7px}.hero-stat strong{font-size:11px}.hero-stat .live-pill{font-size:7px}
+  .lookup-mode{padding:7px 8px;font-size:8px;flex:1}.lookup-mode span{display:none}
+  .board-brand strong{font-size:20px}.board-brand span{font-size:6px}.board-monogram{width:32px;height:34px;font-size:26px}.board-brand{gap:9px}
+  .board-live>span:not(.live-dot){display:none}.board-top{padding:13px 10px}
+  .fids-row{grid-template-columns:102px minmax(60px,1fr) minmax(105px,1.3fr)!important}
+  .fids-row .fids-cell{padding:9px 9px!important}.fids-cell::before{font-size:7px}
+  .fids-tail{width:82px;height:38px}.fids-tail img{max-width:72px;max-height:28px}.fids-carrier-name{max-width:82px}
+  .fids-flight strong{font-size:15px}.fids-time-main{font-size:21px}.fids-destination strong{font-size:16px}.fids-status{font-size:9px}
+}
+
 </style>
 </head>
 <body>
 
 <div class="page">
-  <section class="hero" id="hero">
-  <!-- NEW LAYER: Seamless faded hero image -->
-  <div class="hero-image-fade"></div>
-  
-  <div class="terminal-architecture" aria-hidden="true">
-    <div class="terminal-glass-lines"></div>
-    <div class="terminal-ceiling-lines"></div>
-    <div class="terminal-apron-light l1"></div>
-    <div class="terminal-apron-light l2"></div>
-    <div class="terminal-apron-light l3"></div>
-    <div class="terminal-apron-light l4"></div>
-  </div>
-  
-  <div class="wrap hero-inner">
+  <section class="hero" id="hero" aria-label="Flight information">
+    <div class="wrap hero-inner">
       <div class="hero-copy">
-        <div class="eyebrow">Airport flight information</div>
-        <h1>Your airport board, <span>clear before you reach the gate.</span></h1>
-        <p class="hero-lede" id="boardMeta">A modern SKANDI flight information display inspired by the screens, signs and rhythm of the terminal.</p>
-        <div class="hero-wayfinding" aria-label="Airport wayfinding motif">
-          <span><b>↑</b> Departures</span>
-          <span><b>→</b> Gates</span>
-          <span><b>←</b> Arrivals</span>
-        </div>
-        <div class="terminal-location-line">
-          <span class="terminal-location-icon">FIDS</span>
-          <span>Passenger flight information</span>
-          <i></i>
-          <span>Departures &amp; arrivals</span>
-        </div>
+        <div class="eyebrow">SKANDI TRAVELS · TRAVEL INFO</div>
+        <h1>Flight information</h1>
+        <p class="hero-lede" id="boardMeta">Departures, arrivals and flight tracking.</p>
       </div>
       <div class="hero-status">
         <div class="hero-stat">
-          <label>Airport time</label>
-          <strong id="utcClock">--:--:-- UTC</strong>
-          <div class="live-pill"><span class="live-dot"></span><span id="updatedAtHero">Live Sync</span></div>
+          <label>Airport time</label><strong id="utcClock">--:--:-- UTC</strong>
+          <div class="live-pill"><span id="updatedAtHero">Ready</span></div>
         </div>
         <div class="hero-stat">
-          <label>Current board</label>
-          <strong id="boardSubMode">Departures</strong>
-          <div class="live-pill"><span class="live-dot"></span><span id="resultCountHero">Ready</span></div>
+          <label>Current board</label><strong id="boardSubMode">Departures</strong>
+          <div class="live-pill"><span id="resultCountHero">Ready</span></div>
         </div>
       </div>
     </div>
   </section>
 <section class="board-section">
     <div class="wrap">
-      <div class="board-heading reveal">
-        <div>
-          <div class="eyebrow">Flight Information</div>
-        </div>
-        <p>Time-led, high-contrast and deliberately simple. Use an airport board, track one flight, or check a route. Selecting an airport also turns the rest of the page into that airport’s passenger information experience.</p>
-      </div>
-
       <div class="lookup-mode-tabs reveal" role="tablist" aria-label="Flight status search type">
         <button class="lookup-mode active" type="button" role="tab" aria-selected="true" data-lookup-mode="airport"><span>APT</span> Airport board</button>
         <button class="lookup-mode" type="button" role="tab" aria-selected="false" data-lookup-mode="flight"><span>FLT</span> Flight number</button>
@@ -951,7 +1073,7 @@ button,input,select{font:inherit}button{cursor:pointer}a{color:inherit}
       <div class="flight-board-shell" id="hardwareCasing">
         <div class="board-top">
           <div class="board-brand">
-            <div class="board-monogram">SK</div>
+            <div class="board-monogram" id="boardDirectionIcon" aria-hidden="true">↗</div>
             <div>
               <strong id="railTitle">DEPARTURES</strong>
               <span>Passenger Flight Information Display</span>
@@ -976,12 +1098,13 @@ button,input,select{font:inherit}button{cursor:pointer}a{color:inherit}
           </div>
 
           <div class="board-columns fids-layout" role="row">
-            <div role="columnheader" id="timeHeader">Time</div>
-            <div role="columnheader">Flight</div>
-            <div role="columnheader" id="placeHeader">Destination</div>
-            <div role="columnheader">Carrier</div>
-            <div role="columnheader">Status</div>
+            <div role="columnheader">Airline</div>
+            <div role="columnheader">Flight No.</div>
+            <div role="columnheader" id="timeHeader">Departure time</div>
+            <div role="columnheader" id="placeHeader">To</div>
+            <div role="columnheader">Terminal</div>
             <div role="columnheader">Gate</div>
+            <div role="columnheader">Remarks</div>
           </div>
 
           <div class="board-scroll">
@@ -992,7 +1115,7 @@ button,input,select{font:inherit}button{cursor:pointer}a{color:inherit}
         </div>
 
         <div class="board-footer">
-          <span><i class="status-lamp"></i><strong>Connected</strong> passenger display</span>
+          <span>Passenger flight information</span>
           <span><strong id="updatedAt">Live Sync</strong></span>
           <span><span id="resultScopeLabel">Airport view</span> <strong id="resultCount">Ready</strong></span>
         </div>
@@ -1254,7 +1377,7 @@ button,input,select{font:inherit}button{cursor:pointer}a{color:inherit}
     el("date").value = todayLive;
     el("date").disabled = true;
 
-    el("dateHint").textContent = `Live AirLabs schedule · ${todayLive}`;
+    el("dateHint").textContent = `Current schedule · ${todayLive} · Refreshes every 60 seconds`;
     if(el("dateWindow")) el("dateWindow").textContent = todayLive;
   }
 
@@ -1617,21 +1740,36 @@ button,input,select{font:inherit}button{cursor:pointer}a{color:inherit}
     const latest=side?.actualLocal||side?.estimatedLocal||fmtTime(side?.actual||side?.estimated)||scheduled;
     const changed=cacheChanged(`${key}:time`,latest);
     const moved=scheduled&&latest&&scheduled!==latest;
-    return `<div class="fids-time"><strong class="fids-time-main ${changed?"is-changing":""}">${escapeHtml(latest)}</strong>${moved?`<small>Sched ${escapeHtml(scheduled)}</small>`:""}</div>`;
+    const arrival=item?.arrival;
+    const arrivalTime=arrival?.actualLocal||arrival?.estimatedLocal||arrival?.scheduledLocal||fmtTime(arrival?.actual||arrival?.estimated||arrival?.scheduled)||"—";
+    return `<div class="fids-time"><strong class="fids-time-main ${changed?"is-changing":""}">${escapeHtml(latest)}</strong>${moved?`<small>Sched ${escapeHtml(scheduled)}</small>`:""}${currentMode!=="airport"?`<small>Arr ${escapeHtml(arrivalTime)}</small>`:""}</div>`;
   }
 
   function createFlightDisplay(item,key){
-    const value=String(item?.flightIata||"—").toUpperCase();
+    const value=String(item?.flightIata||item?.flightIcao||"—").replace(/\s+/g,"").toUpperCase();
     const changed=cacheChanged(`${key}:flight`,value);
     return `<div class="fids-flight"><strong class="${changed?"is-changing":""}">${escapeHtml(value)}</strong></div>`;
   }
 
-  function createDestinationDisplay(city,iata){
-    return `<div class="fids-destination"><strong>${escapeHtml(city||"—")}</strong>${iata?`<small>${escapeHtml(iata)}</small>`:""}</div>`;
+  function destinationLabel(side){
+    const code=String(side?.iata||side?.icao||"").trim().toUpperCase();
+    const directory=airportDirectory.find(a=>(code&&a.iata===code)||(side?.icao&&a.icao===side.icao));
+    const city=String(side?.city||directory?.city||"").trim();
+    const supplied=String(side?.airport||"").trim();
+    const fullName=(supplied&&supplied.toUpperCase()!==code?supplied:String(directory?.title||"")).trim();
+    let name=fullName.replace(/\s*\([A-Z0-9]{3,4}\)\s*$/i,"").replace(/\bInternational\b|\bAirport\b/gi,"").replace(/\s+/g," ").trim();
+    if(city&&name.toLowerCase().startsWith(city.toLowerCase()))name=name.slice(city.length).replace(/^[\s/–—-]+/,"");
+    const place=[city,name].filter(Boolean).join(" / ").toUpperCase();
+    return {place:place||code||"—",code:place?code:"",title:[city,fullName,code].filter(Boolean).join(" · ")};
+  }
+
+  function createDestinationDisplay(side){
+    const label=destinationLabel(side);
+    return `<div class="fids-destination" title="${escapeHtml(label.title)}"><strong>${escapeHtml(label.place)}${label.code?` <span>(${escapeHtml(label.code)})</span>`:""}</strong></div>`;
   }
 
   function createStatusDisplay(status,key){
-    const value=String(status||"Scheduled").trim();
+    const value=String(status||"Unknown").trim().replace(/[_-]+/g," ").toUpperCase();
     const cls=statusColorClass(value);
     const changed=cacheChanged(`${key}:status`,value);
     return `<span class="fids-status ${cls} ${changed?"is-changing":""}">${escapeHtml(value)}</span>`;
@@ -1643,11 +1781,21 @@ button,input,select{font:inherit}button{cursor:pointer}a{color:inherit}
     return `<span class="fids-gate ${changed?"is-changing":""}">${escapeHtml(value)}</span>`;
   }
 
+  function createTerminalDisplay(terminal,key){
+    const raw=String(terminal??"").trim().toUpperCase();
+    const short=raw.replace(/^TERMINAL\s*/i,"");
+    const value=/^[0-9]+[A-Z]?$/.test(short)||/^[A-SU-Z]$/.test(short)?`T${short}`:(short||"—");
+    const changed=cacheChanged(`${key}:terminal`,value);
+    return `<span class="fids-terminal ${changed?"is-changing":""}">${escapeHtml(value)}</span>`;
+  }
+
   function createLogoFlaps(item){
     const airlineName=String(item?.airlineName||airlineCode(item)||"Airline");
     const src=airlineLogo(item);
+    // These existing Wix assets contain white marks and need a dark display tile.
+    const darkLogo=src===KNOWN_AIRLINE_LOGOS[airlineCode(item)]&&["AS","DL","F9","B6","LH","DY","D8","SK","LX","UA"].includes(airlineCode(item));
     const fallback=(airlineCode(item)||airlineName.replace(/[^A-Za-z0-9]/g,"").slice(0,2).toUpperCase()||"--");
-    return `<div class="fids-carrier"><span class="fids-tail ${src?"":"fallback"}">${src?`<img src="${escapeHtml(src)}" alt="">`:escapeHtml(fallback)}</span><span class="fids-carrier-name">${escapeHtml(airlineName)}</span></div>`;
+    return `<div class="fids-carrier" title="${escapeHtml(airlineName)}"><span class="fids-tail ${src?"":"fallback"} ${darkLogo?"logo-dark":""}"><span class="fids-logo-fallback" ${src?"hidden":""}>${escapeHtml(fallback)}</span>${src?`<img src="${escapeHtml(src)}" alt="${escapeHtml(airlineName)}" decoding="async">`:""}</span><span class="fids-carrier-name">${escapeHtml(airlineName)}</span></div>`;
   }
 
   function describeQuery(v){
@@ -1667,7 +1815,7 @@ button,input,select{font:inherit}button{cursor:pointer}a{color:inherit}
   }
 
   function renderIdleBoard(){
-    setBoardMessage("BOARD READY", "Choose an airport and update the FIDS.", "flap-ok");
+    setBoardMessage("BOARD READY", "Choose an airport and select Show board.", "flap-ok");
     if(el("boardStatusEcho")) el("boardStatusEcho").textContent="READY";
   }
 
@@ -1700,22 +1848,27 @@ button,input,select{font:inherit}button{cursor:pointer}a{color:inherit}
 
     rows.innerHTML=sorted.map((item,rowIndex)=>{
       const key=flightKey(item);
-      const placeCity=arrivals?(item?.departure?.city||item?.departure?.airport||"---"):(item?.arrival?.city||item?.arrival?.airport||"---");
-      const placeIata=arrivals?item?.departure?.iata:item?.arrival?.iata;
-      const gate=arrivals?item?.arrival?.gate:item?.departure?.gate;
-      const status=item?.status||"Scheduled";
+      const side=arrivals?item?.arrival:item?.departure;
+      const destination=arrivals?item?.departure:item?.arrival;
+      const placeCity=destinationLabel(destination).place;
+      const gate=side?.gate;
+      const status=item?.status||"Unknown";
       const aria=[item?.flightIata,arrivals?"from":"to",placeCity,status].filter(Boolean).join(" ");
 
-      return `<div class="fids-row fids-layout" role="row" style="--row:${rowIndex}" aria-label="${escapeHtml(aria)}">
-        <div class="fids-cell" data-label="Time" role="cell">${createTimeDisplay(item,arrivals,key)}</div>
-        <div class="fids-cell" data-label="Flight" role="cell">${createFlightDisplay(item,key)}</div>
-        <div class="fids-cell" data-label="${arrivals?"Origin":"Destination"}" role="cell">${createDestinationDisplay(placeCity,placeIata)}</div>
-        <div class="fids-cell" data-label="Carrier" role="cell">${createLogoFlaps(item)}</div>
-        <div class="fids-cell" data-label="Status" role="cell">${createStatusDisplay(status,key)}</div>
-        <div class="fids-cell" data-label="Gate" role="cell">${createGateDisplay(gate,key)}</div>
+      return `<div class="fids-row fids-layout" role="row" style="--row:${rowIndex}" data-flight-key="${escapeHtml(key)}" aria-label="${escapeHtml(aria)}">
+        <div class="fids-cell cell-airline" data-label="Airline" role="cell">${createLogoFlaps(item)}</div>
+        <div class="fids-cell cell-flight" data-label="Flight No." role="cell">${createFlightDisplay(item,key)}</div>
+        <div class="fids-cell cell-time" data-label="${currentMode!=="airport"?"Departure / Arrival":arrivals?"Arrival time":"Departure time"}" role="cell">${createTimeDisplay(item,arrivals,key)}</div>
+        <div class="fids-cell cell-place" data-label="${arrivals?"From":"To"}" role="cell">${createDestinationDisplay(destination)}</div>
+        <div class="fids-cell cell-terminal" data-label="Terminal" role="cell">${createTerminalDisplay(side?.terminal,key)}</div>
+        <div class="fids-cell cell-gate" data-label="Gate" role="cell">${createGateDisplay(gate,key)}</div>
+        <div class="fids-cell cell-remarks" data-label="Remarks" role="cell">${createStatusDisplay(status,key)}</div>
       </div>`;
     }).join("");
 
+    rows.querySelectorAll(".fids-tail img").forEach(img=>img.addEventListener("error",()=>{
+      img.hidden=true;img.parentElement.classList.add("fallback");img.parentElement.querySelector(".fids-logo-fallback").hidden=false;
+    },{once:true}));
     el("boardMeta").textContent=meta?.message||`Displaying ${sorted.length} flights`;
     const now=new Intl.DateTimeFormat("en-GB",{timeZone:airportTimezone||"UTC",hour:"2-digit",minute:"2-digit",hour12:false}).format(new Date(meta?.searchedAt||Date.now()));
     setStatusLabels(`Updated ${now}`,`${sorted.length} ${sorted.length===1?"Flight":"Flights"}`);
@@ -1996,6 +2149,13 @@ button,input,select{font:inherit}button{cursor:pointer}a{color:inherit}
       airportDirectory=normalizeList(payload.items).map(item=>({
         iata:cleanIata(item?.iata),icao:textValue(item?.icao),title:textValue(item?.title),city:textValue(item?.city),country:textValue(item?.country),timezone:textValue(item?.timezone),logoUrl:safeUrl(item?.logoUrl)
       })).filter(item=>item.iata);
+      if(!pendingSearch&&lastFlightItems.length&&el("rows").querySelector(".fids-row")){
+        const arrivals=currentMode==="airport"&&el("boardType").value==="arrivals";
+        el("rows").querySelectorAll(".fids-row").forEach(row=>{
+          const item=lastFlightItems.find(item=>flightKey(item)===row.dataset.flightKey);
+          if(item)row.querySelector(".cell-place").innerHTML=createDestinationDisplay(arrivals?item.departure:item.arrival);
+        });
+      }
       const focused=document.activeElement?.id;
       if(["airport","from","to"].includes(focused)){suggestionIndex[focused]=0;renderAirportSuggestions(el(focused).value,focused);}
       return;
@@ -2056,8 +2216,10 @@ button,input,select{font:inherit}button{cursor:pointer}a{color:inherit}
     else if(currentMode==="route")label="Route status";
     if(el("boardSubMode"))el("boardSubMode").textContent=label;
     if(el("railTitle"))el("railTitle").textContent=label.toUpperCase();
-    if(el("timeHeader"))el("timeHeader").textContent="Time";
-    if(el("placeHeader"))el("placeHeader").textContent=currentMode==="airport"&&type==="arrivals"?"Origin":"Destination";
+    const arrivals=currentMode==="airport"&&type==="arrivals";
+    if(el("timeHeader"))el("timeHeader").textContent=currentMode!=="airport"?"Departure / Arrival":arrivals?"Arrival time":"Departure time";
+    if(el("placeHeader"))el("placeHeader").textContent=arrivals?"From":"To";
+    if(el("boardDirectionIcon"))el("boardDirectionIcon").textContent=arrivals?"↘":"↗";
     document.querySelectorAll("[data-board-view]").forEach(btn=>btn.classList.toggle("active",currentMode==="airport"&&btn.dataset.boardView===type));
     if(el("commerceHeading"))el("commerceHeading").textContent=type==="arrivals"?"From arrivals into the next part of the trip.":"Make the time before departure work harder.";
     document.body.classList.toggle("context-arrivals",currentMode==="airport"&&type==="arrivals");
@@ -2112,7 +2274,7 @@ button,input,select{font:inherit}button{cursor:pointer}a{color:inherit}
       setBoardBusy(false);
       el("hardwareCasing")?.classList.remove("is-searching");
       el("rows")?.closest(".board-screen")?.setAttribute("aria-busy","false");
-      setBoardMessage("BOARD READY",currentMode==="airport"?"Choose an airport and update the FIDS.":currentMode==="flight"?"Enter a flight number and date.":"Enter a route and date.","flap-ok");
+      setBoardMessage("BOARD READY",currentMode==="airport"?"Choose an airport and select Show board.":currentMode==="flight"?"Enter a flight number and date.":"Enter a route and date.","flap-ok");
       setStatusLabels("Live Sync","Ready");
       el("screenAirport").textContent="---";
       activeAirportContext=null;pendingContext=null;airportTimezone="UTC";
@@ -2142,7 +2304,7 @@ button,input,select{font:inherit}button{cursor:pointer}a{color:inherit}
     setBoardBusy(false);
     el("hardwareCasing")?.classList.remove("is-searching");
     el("rows")?.closest(".board-screen")?.setAttribute("aria-busy","false");
-    setBoardMessage("BOARD READY",currentMode==="airport"?"Choose an airport and update the FIDS.":currentMode==="flight"?"Enter a flight number and date.":"Enter a route and date.","flap-ok");
+    setBoardMessage("BOARD READY",currentMode==="airport"?"Choose an airport and select Show board.":currentMode==="flight"?"Enter a flight number and date.":"Enter a route and date.","flap-ok");
     setNotice("");
     setStatusLabels("Live Sync","Ready");
     el("querySummary").textContent=currentMode==="airport"?"Select an airport to load the board":currentMode==="flight"?"Enter a flight number":"Enter a route";
@@ -2199,7 +2361,7 @@ button,input,select{font:inherit}button{cursor:pointer}a{color:inherit}
   clockTimer=window.setInterval(updateClock,1000);
   installPointerLight();
   installReveal();
-  setBoardMessage("BOARD READY", "Choose an airport and update the FIDS.", "flap-ok");
+  setBoardMessage("BOARD READY", "Choose an airport and select Show board.", "flap-ok");
   window.addEventListener("pagehide",()=>{
     window.clearInterval(clockTimer); window.clearInterval(refreshTimer);
     clearRequestTimeouts();
