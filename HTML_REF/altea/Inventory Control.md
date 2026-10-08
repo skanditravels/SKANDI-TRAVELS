@@ -1,174 +1,33 @@
-# INFO / LOG — INVENTORY CONTROL
+# INFO / LOG — Inventory Control
 
-- Source file: /HTML_REF/altea/Inventory Control.md; complete intended v12 HTML payload below. This is the canonical editable source; the delivery HTML is extracted verbatim from its fenced payload.
-- Current controller: /src/pages/Inventory Control.jsdik.js; current component #inventoryControlEmbed; route /riaintra/success-factors/altea/inventory-control.
-- Canonical facade/core: backend/SKANDI_CORE/inventory.web and inventory; shared assets and existing supabaseServer/staffAuth remain the owners.
-- Selection: retain current main controller, which constrains selection to the canonical component ID. Archive B-011.35 adds two historical candidate IDs; the dispatcher and rest of bridge behavior match current code. Do not widen IDs without actual live Wix evidence.
-- Current state: v12 repair candidate, locally regression-tested. STATICALLY VERIFIED for source syntax, imports/exports and message routing; VERIFIED by read-only Supabase metadata queries for the affected columns/defaults. REQUIRES LIVE TEST for Wix publishing, staff sessions, production writes, provider operations and deployed source parity.
-- Last evaluated: 2026-10-06 UTC.
-- Change log: 2026-10-03 — Recovered existing complete HTML_REF; retained current single-dispatch backend/controller and canonical component selection. No code, schema, data, provider or deployed changes.
-- Change log: 2026-10-05 — v12 repair: global master configuration messages remain with masterPage instead of being sent to the Inventory dispatcher; multiline/comma list editors preserve typed separators and immediately update parsed state; blank selects show an explicit empty option; normalized cabin fields and sort order populate the editor; missing cabin rank uses the verified database default 100; dated BLACKOUT/STOP_SALE/SOLD_OUT states are recalculated from current controls. The bridge-error notice uses the existing error styling. Existing design, features, IDs and INVENTORY_V9 action names are preserved. No schema, production-data, provider-configuration or deployment changes were made.
-- Change log: 2026-10-06 — User screenshot shows INVENTORY_WEB_FACADE_MISMATCH on the v12 embed. The publicly served jsdik page bundle was retrieved read-only and its actual module was executed locally with a simulated Wix component: the imported backend module contains no exports, and READY deterministically produces the same error before any backend invocation. The 2026-10-05 delivery omitted inventory.web.js, so it did not replace that boundary. The facade now declares handleInventoryAction with explicit Permissions.SiteMember and an inline async callback, following Wix's documented SDK pattern; the SDK import, action table and canonical cores are preserved. The page diagnostic now describes the missing published export instead of asserting a version mismatch. A supplemental full-file delivery includes the facade and controller together. HTML/core from 2026-10-05 remain unchanged. Deployment and live authenticated success remain unverified.
+- SOURCE FILE: `/HTML_REF/altea/Inventory Control.md`
+- DISPLAY / PAGE NAME: Inventory Control
+- SYSTEM AREA: ALTEA
+- WIX PAGE FILE: `/src/pages/Inventory Control.jsdik.js`
+- WIX ROUTE / SLUG: `/riaintra/success-factors/altea/inventory-control`
+- WIX HTML ELEMENT: `#inventoryControlEmbed`
+- CURRENT STATUS: V12 ONE-TRUE-SOURCE REPAIR PREPARED — REQUIRES LIVE TEST
+- SOURCE-OF-TRUTH STATUS: AUTHORITATIVE intended V12 embed payload supplied for this repair.
+- CANONICAL WEB FACADE: `/src/backend/SKANDI_CORE/inventory.web.js`
+- CANONICAL CORE: `/src/backend/SKANDI_CORE/inventory.js`
+- SHARED DATABASE TRANSPORT: `/src/backend/SKANDI_CORE/supabaseServer.js`
+- DATA AUTHORITY: Duffel provider facts -> Inventory Control / Supabase canonical record -> downstream page/core consumers. No embed is permitted to maintain an independent editable copy of shared airline, airport, hotel or destination reference facts.
+- CANONICAL DETAIL STORAGE: `travel_info_airlines.inventory_details`, `travel_info_airports.inventory_details`, and `inventory_master_entities.details`; identity/lifecycle/query fields remain normal table columns. Legacy Travel Info columns are compatibility projections only after the supplied migration.
+- CANONICAL MASTER LIBRARIES: HOTEL, TRANSFER, GUIDED_TOUR, ACTIVITY and PARTNER_TICKET downstream Travel Info content is projected from `inventory_public_entities_v`; legacy `travel_info_hotels/transfers/tours/activities/tickets` are not downstream authorities after this repair.
+- PROVIDER SNAPSHOT: the provider evidence remains under `payload.duffel` (`normalized` + `raw`). The migration promotes the normalized provider-owned subset into the canonical Inventory detail object and retains a read-only `inventory_details.duffel` / `details.duffel` copy for audit/context; SKANDI enrichment remains editable only in Inventory Control.
+- AUTHORIZATION: unchanged from current V12 page/facade/core boundaries. No frontend role or provider secret becomes authoritative.
+- MESSAGE CONTRACTS / ELEMENT IDS: unchanged.
+- LAST VERIFIED: 2026-10-08 — current repo `skanditravels/SKANDI-TRAVELS`, branch `main`, commit `86deedb4705fae292851256726cd81e13669aa98`; live Supabase schema/data inspected read-only.
 
-## Current v12 ownership and verification
+## CHANGE LOG
+- 2026-10-08 — One-true-source enforcement finalized: Duffel-linked provider identity/facts are read-only in Inventory Control and refresh through the provider workspace; provider technical snapshots are hidden from generic editable fields; compatibility columns are database-derived. Current GitHub `main` at `86deedb4705fae292851256726cd81e13669aa98` was inspected and preserved.
+- 2026-10-08 — V12 one-true-source convergence prepared. Shared reference/master facts now have one editable Inventory/Supabase authority after provider import. Legacy Travel Info fields are derived compatibility projections, provider-key uniqueness is database-enforced, and current Duffel snapshots refresh provider-owned canonical facts without creating alternate data stores. The HTML design, IDs, message names, routes and permission boundaries are unchanged. STATICALLY VERIFIED; REQUIRES LIVE TEST after SQL/Wix publication.
 
-`/HTML_REF/altea/Inventory Control.md` → `#inventoryControlEmbed` → `/src/pages/Inventory Control.jsdik.js` → `backend/SKANDI_CORE/inventory.web` → `inventory.js` / `assets.js` → canonical `supabaseServer.js` / `staffAuth.js` / `travelReference.js` / `duffelClient.js`.
-
-- System area: ALTEA. Route: `/riaintra/success-factors/altea/inventory-control`.
-- Authentication: the facade retains `Permissions.SiteMember`; Inventory and Asset cores retain their existing staff-session and permission checks. No browser-supplied role becomes authoritative.
-- Dependencies: recursive import/export checks pass across the 13 local files in the Inventory chain. The 2026-10-06 supplemental delivery includes the required `inventory.web.js` and controller. Shared cores and the 2026-10-05 HTML remain in the existing v12 project.
-- Message contract: all 29 distinct actions called by `request(...)` in the embed map to existing entries in the 34-action facade. READY/HOST_READY/BOOTSTRAP, PROGRESS, request IDs, errors and post-mutation refresh behavior remain intact. `SKANDI_MASTER_CONFIG_REQUEST` is handled by the existing `masterPage.js` global handler. `DETAIL` is a hotspot action value, not a missing postMessage contract.
-- Supabase resources: `inventory_canonical_entities_v`, `inventory_master_entities`, `inventory_catalog_entries`, `inventory_dated_inventory`, `inventory_entity_relations`, `inventory_localized_content`, `inventory_media_assets`, `inventory_source_registry`, `inventory_flight_legs`, `inventory_flight_classes`, `inventory_schedule_lines`, `inventory_nesting_controls`, `master_inventory_audit`, `platform_assets`, `platform_asset_upload_sessions`, `platform_asset_usages`, `travel_info_aircraft`, `travel_info_aircraft_cabins`, `travel_info_aircraft_views`, `travel_info_aircraft_hotspots`, `travel_info_aircraft_walk_scenes`, `travel_info_aircraft_scene_hotspots`, `travel_info_airlines`, `travel_info_airports`.
-- Read-only schema checks: cabin `rank` is NOT NULL integer with default 100; `seat_count` remains nullable; `sort_order` defaults to 100. Dated capacity, status and sale-control columns were verified. Airport `ID` is UUID with `gen_random_uuid()` default, so airport ID generation was deliberately left unchanged. No SQL migration is needed for these fixes.
-- External providers: Duffel discovery/import/refresh and negotiated rates continue through the existing travelReference/Duffel client. Their request payloads and authentication were not changed. Signed asset uploads retain the existing managed Asset Library path.
-- Local regression tests: 13/13 pass using React 19.3.0, HTM 3.1.1 and a simulated DOM, with Wix/backend/provider writes mocked. Tests cover global-message routing, ready/refresh/mutation correlation, App refresh-promise resolution, newline/JSON list input, comma entry and immediate save, external/language changes, negotiated-rate scope entry, blank dropdowns, cabin field/save mapping, rank default/zero preservation, derived dated states and unauthenticated-write rejection. Seven of the initial ten tests failed against the previous source and pass against this repair.
-- Delivery history: the 2026-10-05 package contains the page controller, Inventory core, complete HTML_REF and extracted runtime HTML. The 2026-10-06 supplement contains the corrected facade, page controller and this updated complete HTML_REF. Existing shared dependencies stay in the current v12 project. Historical assessment below is retained as history and is superseded wherever it conflicts with this section.
-- Facade verification: the actual pinned `@wix/web-methods@1.0.12` package returns a callable export with SiteMember permission metadata. All 34 dispatcher actions are tested with stubbed core handlers, plus unsupported-action and backend-error propagation. This does not emulate Wix's server-side permission enforcement or certify its unpublished generated proxy.
-- Wix reference: https://dev.wix.com/docs/develop-websites-sdk/code-your-site/build-a-custom-backend/web-modules/call-backend-code-from-the-frontend and https://dev.wix.com/docs/sdk/core-modules/web-methods/web-method (read 2026-10-06). The SDK is supported for `.web.js` site modules; no legacy import or alternative backend was introduced.
-
-### Remaining live verification
-
-- Keep the 2026-10-05 HTML/core, and publish `/src/backend/SKANDI_CORE/inventory.web.js` together with `/src/pages/Inventory Control.jsdik.js` from the 2026-10-06 supplement. Facade/controller report `V12-INVENTORY-FACADE-2026.10.06`; the unchanged embed/core still report `V12-INVENTORY-2026.10.05`. These identifiers are informational, not an equality gate. Confirm the generated frontend backend proxy now exports `handleInventoryAction`.
-- Verify staff-session bootstrap, Refresh, an existing cabin edit, a new cabin save, and dated sale-control transitions in Wix. A local simulated DOM is not a Wix runtime test.
-- Verify existing Asset Library and Duffel actions with real permissions/secrets. Live write operations and provider commercial changes were intentionally not executed.
-- The earlier speculative refresh-timeout diagnosis was disproved by listener execution; the bootstrap handler already resolves pending refresh requests. The confirmed bridge fix is global-message ownership, not a protocol rewrite. The previous generic bridge failure may still have additional deployment/session causes; no claim of live resolution is made.
-- The 2026-10-06 empty published proxy is verified. Whether its cause was stale deployed facade content or Wix export discovery cannot be distinguished from public bundle evidence alone. The direct declaration and synchronized facade/controller delivery address that boundary; successful Wix publication must still be checked.
-
-## Historical source assessment — superseded by the current v12 section above
-
-**STATUS:** NEEDS REVIEW  
-**SLUG:** `/riaintra/success-factors/altea/inventory-control`  
-**WIX PAGE:** Inventory Control.jsdik.js  
-**AREA:** ALTEA  
-**LIVE HTML:** YES  
-**ELEMENT:** `inventoryControlEmbed`  
-**LAST SYNCED:** 2026-09-18
-
-### HOW TO USE
-
-***STATUS (OWNER): "TODO", "IN PROGRESS", "NEEDS REVIEW", "REVISIONS NEEDED", "READY", "LIVE", "ARCHIVED" STATUS (AGENT): "TODO", "IN PROGRESS", "REVISIONS NEEDED", "READY".***
-
-## COMMENT SECTION
-(START ON A NEW ROW, LOG IF A CHANGE IS MADE THAT REQUIRES ATTENTION)
-
-... END
-
----
-
-## TECHNICAL INFO / LOG
-
-> **Canonical reference path:** `/HTML_REF/altea/inventory-control.md`  
-> **Generated locally:** 2026-09-18  
-> **Verification level:** STATICALLY VERIFIED FROM UPLOADED SOURCE SET / REQUIRES LIVE TEST FOR RUNTIME DEPENDENCIES
-
-### Source Identity
-
-- **Source file identity:** `/HTML_REF/altea/inventory-control.md`
-- **Primary uploaded source:** `SKANDI_B01135_Inventory_Control_Convergence_2026-09-20/embed/Inventory Control.html`
-- **Display / page name:** SKANDI Inventory Control
-- **System area:** `ALTEA`
-- **Wix page filename:** `Inventory Control.jsdik.js`
-- **Wix route / slug:** `/riaintra/success-factors/altea/inventory-control`
-- **Wix HTML element ID:** `inventoryControlEmbed`
-- **Current status:** NEEDS REVIEW
-- **Live HTML:** YES
-- **Source-of-truth status:** GENERATED HTML_REF CANDIDATE. The executable payload is sourced from the selected uploaded file; live deployment parity still requires verification.
-- **Last synced:** 2026-09-18
-
-### Ownership and Dependency Chain
-
-`/HTML_REF/altea/inventory-control.md`
-→ live Wix HTML / `inventoryControlEmbed`
-→ `SKANDI_B01135_Inventory_Control_Convergence_2026-09-20/src/pages/Inventory Control.jsdik.js`
-→ `backend/SKANDI_CORE/inventory.web.js` + `backend/SKANDI_CORE/inventory.web`
-→ `NOT VERIFIED FROM UPLOADED SOURCE SET`
-→ Supabase / Duffel / Wix
-
-### Linked Wix Page Controller
-
-- `SKANDI_B01135_Inventory_Control_Convergence_2026-09-20/src/pages/Inventory Control.jsdik.js`
-
-### Canonical Backend Facade(s)
-
-- `backend/SKANDI_CORE/inventory.web.js`
-- `backend/SKANDI_CORE/inventory.web`
-
-### Canonical Backend Core Implementation(s)
-
-- NOT VERIFIED FROM UPLOADED SOURCE SET
-
-### Canonical Backend Import Presence Check
-
-- `SKANDI_B01135_Inventory_Control_Convergence_2026-09-20/src/backend/SKANDI_CORE/inventory.web.js` → `backend/SKANDI_CORE/inventory.js`: **NOT PRESENT IN UPLOADED SOURCE SET**
-- `SKANDI_B01135_Inventory_Control_Convergence_2026-09-20/src/backend/SKANDI_CORE/inventory.web.js` → `backend/SKANDI_CORE/assets.js`: **NOT PRESENT IN UPLOADED SOURCE SET**
-- `SKANDI_B01135_Inventory_Control_Convergence_2026-09-20/src/pages/Inventory Control.jsdik.js` → `backend/SKANDI_CORE/inventory.web`: **PRESENT IN UPLOADED SOURCE SET**
-
-### Relevant Supabase Resources
-
-NOT VERIFIED FROM UPLOADED SOURCE SET
-
-### External API / Provider Dependencies
-
-- **Supabase:** detected in `SKANDI_B01135_Inventory_Control_Convergence_2026-09-20/embed/Inventory Control.html`, `SKANDI_B01135_Inventory_Control_Convergence_2026-09-20/README.md`, `SKANDI_B01135_Inventory_Control_Convergence_2026-09-20/src/backend/SKANDI_CORE/inventory.web.js`
-- **Duffel:** detected in `SKANDI_B01135_Inventory_Control_Convergence_2026-09-20/embed/Inventory Control.html`, `SKANDI_B01135_Inventory_Control_Convergence_2026-09-20/src/backend/SKANDI_CORE/inventory.web.js`, `SKANDI_B01135_Inventory_Control_Convergence_2026-09-20/src/pages/Inventory Control.jsdik.js`
-- **Wix:** detected in `SKANDI_B01135_Inventory_Control_Convergence_2026-09-20/embed/Inventory Control.html`, `SKANDI_B01135_Inventory_Control_Convergence_2026-09-20/README.md`, `SKANDI_B01135_Inventory_Control_Convergence_2026-09-20/src/backend/SKANDI_CORE/inventory.web.js`, `SKANDI_B01135_Inventory_Control_Convergence_2026-09-20/src/pages/Inventory Control.jsdik.js`
-
-### Authentication / Authorization Boundary
-
-- Role / permission checks detected in `SKANDI_B01135_Inventory_Control_Convergence_2026-09-20/embed/Inventory Control.html`, `SKANDI_B01135_Inventory_Control_Convergence_2026-09-20/src/backend/SKANDI_CORE/inventory.web.js`, `SKANDI_B01135_Inventory_Control_Convergence_2026-09-20/src/pages/Inventory Control.jsdik.js`
-
-### Important Cross-Layer Message Contracts
-
-| Contract | Emitters | Receivers | Static result |
-|---|---|---|---|
-| `DETAIL` | `SKANDI_B01135_Inventory_Control_Convergence_2026-09-20/embed/Inventory Control.html` | None detected | Incomplete within uploaded source set |
-| `INVENTORY_V9_READY` | `SKANDI_B01135_Inventory_Control_Convergence_2026-09-20/embed/Inventory Control.html` | `SKANDI_B01135_Inventory_Control_Convergence_2026-09-20/src/pages/Inventory Control.jsdik.js` | Emitter + receiver detected |
-| `INVENTORY_V9_REFRESH` | None detected | `SKANDI_B01135_Inventory_Control_Convergence_2026-09-20/src/pages/Inventory Control.jsdik.js` | Incomplete within uploaded source set |
-| `SKANDI_MASTER_CONFIG_REQUEST` | `SKANDI_B01135_Inventory_Control_Convergence_2026-09-20/embed/Inventory Control.html` | None detected | Incomplete within uploaded source set |
-
-### Current Architectural Notes
-
-- This document was generated from the uploaded source set only. Missing details are explicitly marked as not verified rather than inferred beyond available evidence.
-- The complete executable/source payload below is preserved from the selected primary source after browser text decoding; it is not shortened or summarized.
-- HTML_REF is a reference artifact and must not be imported by runtime application code.
-- Canonical Wix backend ownership remains under `backend/SKANDI_CORE/...`; any detected legacy namespace is listed under Open Issues.
-- Static analysis can identify references and contracts but cannot prove production deployment parity, authentication behavior, Supabase schema/RLS correctness, provider success, or secret configuration.
-
-### Open Issues / Required Verification / Migration Items
-
-- No canonical `backend/SKANDI_CORE/*.js` core implementation was verified from the uploaded source set.
-- Message contract `DETAIL` has an emitter but no receiver detected in the uploaded source set.
-- Message contract `INVENTORY_V9_REFRESH` has a receiver but no emitter detected in the uploaded source set.
-- Message contract `SKANDI_MASTER_CONFIG_REQUEST` has an emitter but no receiver detected in the uploaded source set.
-- Canonical backend import `backend/SKANDI_CORE/inventory.js` referenced by `SKANDI_B01135_Inventory_Control_Convergence_2026-09-20/src/backend/SKANDI_CORE/inventory.web.js` was not present in the uploaded source set.
-- Canonical backend import `backend/SKANDI_CORE/assets.js` referenced by `SKANDI_B01135_Inventory_Control_Convergence_2026-09-20/src/backend/SKANDI_CORE/inventory.web.js` was not present in the uploaded source set.
-- Supabase is referenced, but no table/view/RPC resource could be statically identified from the uploaded source set.
-- Live Wix deployment parity, runtime authentication, provider behavior, secrets, database schema validity, RLS, and production data were not executed by this static browser tool.
-
-### Uploaded Source Set
-
-| Source file | Classified role | Size |
-|---|---|---:|
-| `SKANDI_B01135_Inventory_Control_Convergence_2026-09-20/embed/Inventory Control.html` | HTML SOURCE | 154.8 KB |
-| `SKANDI_B01135_Inventory_Control_Convergence_2026-09-20/README.md` | MARKDOWN | 2.75 KB |
-| `SKANDI_B01135_Inventory_Control_Convergence_2026-09-20/SHA256SUMS.txt` | TEXT | 575 B |
-| `SKANDI_B01135_Inventory_Control_Convergence_2026-09-20/src/backend/SKANDI_CORE/inventory.web.js` | BACKEND FACADE | 6.90 KB |
-| `SKANDI_B01135_Inventory_Control_Convergence_2026-09-20/src/pages/Inventory Control.jsdik.js` | WIX PAGE CONTROLLER | 10.5 KB |
-
-### Change Log
-
-- 2026-09-18 — HTML_REF candidate generated from the uploaded source set. Architecture metadata and cross-layer contracts were statically derived; live Wix/runtime/database/provider verification was not performed by this browser-only tool.
-
----
-
-## COMPLETE LIVE HTML / SOURCE IMPLEMENTATION
-
-**Primary payload source:** `SKANDI_B01135_Inventory_Control_Convergence_2026-09-20/embed/Inventory Control.html`
-
-The following payload is complete and is not intentionally shortened, summarized, reconstructed, or replaced with placeholders.
+## COMPLETE INTENDED HTML
 
 ```html
 <!doctype html>
+<!-- V12 DATA AUTHORITY: Duffel -> Inventory Control/Supabase canonical record -> downstream consumers. Provider-owned facts refresh here; SKANDI enrichment is edited here. -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -394,6 +253,48 @@ function ListField({label,value,onChange,separator="\n",splitPattern,parseItem,h
   }
   return html`<${Field} label=${label} type=${separator==="\n"?"textarea":"text"} value=${draft} onChange=${change} help=${help} full=${full} placeholder=${placeholder}/>`;
 }
+function JsonField({label,value,onChange,help,full=false}){
+  const normalized=(value===undefined||value===null||value==="")?{}:value;
+  const signature=JSON.stringify(normalized);
+  const formatted=JSON.stringify(normalized,null,2);
+  const [draft,setDraft]=useState(formatted);
+  const [invalid,setInvalid]=useState(false);
+  const emittedSignature=useRef(signature);
+  useEffect(()=>{
+    if(signature!==emittedSignature.current){emittedSignature.current=signature;setDraft(formatted);setInvalid(false)}
+  },[signature,formatted]);
+  function change(raw){
+    setDraft(raw);
+    const text=String(raw??"").trim();
+    if(!text){emittedSignature.current=JSON.stringify({});setInvalid(false);onChange({});return}
+    try{
+      const parsed=JSON.parse(text);
+      emittedSignature.current=JSON.stringify(parsed);
+      setInvalid(false);onChange(parsed);
+    }catch(_){setInvalid(true)}
+  }
+  return html`<div className=${`field ${full?"full":""}`}><label>${label}</label><textarea className="textarea" value=${draft} onInput=${e=>change(e.target.value)} spellCheck="false" />${invalid?html`<small style=${{color:"var(--red)"}}>Valid JSON is required before this value can be saved.</small>`:help?html`<small>${help}</small>`:null}</div>`;
+}
+function JsonOrTextField({label,value,onChange,help,full=false}){
+  const normalized=(value===undefined||value===null)?"":value;
+  const signature=JSON.stringify(normalized);
+  const formatted=(typeof normalized==="object"&&normalized!==null)?JSON.stringify(normalized,null,2):String(normalized??"");
+  const [draft,setDraft]=useState(formatted);
+  const [invalid,setInvalid]=useState(false);
+  const emittedSignature=useRef(signature);
+  useEffect(()=>{
+    if(signature!==emittedSignature.current){emittedSignature.current=signature;setDraft(formatted);setInvalid(false)}
+  },[signature,formatted]);
+  function change(raw){
+    setDraft(raw);
+    const text=String(raw??"").trim();
+    if(!text){emittedSignature.current=JSON.stringify("");setInvalid(false);onChange("");return}
+    const structured=(text.startsWith("{")&&text.endsWith("}"))||(text.startsWith("[")&&text.endsWith("]"));
+    if(!structured){emittedSignature.current=JSON.stringify(raw);setInvalid(false);onChange(raw);return}
+    try{const parsed=JSON.parse(text);emittedSignature.current=JSON.stringify(parsed);setInvalid(false);onChange(parsed)}catch(_){setInvalid(true)}
+  }
+  return html`<div className=${`field ${full?"full":""}`}><label>${label}</label><textarea className="textarea" value=${draft} onInput=${e=>change(e.target.value)} spellCheck="false" />${invalid?html`<small style=${{color:"var(--red)"}}>Complete valid JSON before saving this structured value.</small>`:help?html`<small>${help}</small>`:null}</div>`;
+}
 function Toggle({label,value,onChange}){
   return html`<div className="field"><label>${label}</label><select className="select" value=${value?"YES":"NO"} onChange=${e=>onChange(e.target.value==="YES")}><option>YES</option><option>NO</option></select></div>`
 }
@@ -450,6 +351,8 @@ const ENUM={
 };
 const SF=(label,path,type="text",options=[],help="",refTypes=[])=>({label,path,type,options,help,refTypes});
 const SL=(label,path,help="")=>({label,path,type:"list",help});
+const SJ=(label,path,help="")=>({label,path,type:"json",help});
+const SX=(label,path,help="")=>({label,path,type:"json_or_text",help});
 const SR=(label,path,fields,help="")=>({label,path,type:"repeat",fields,help});
 const ENTITY_SCHEMAS={
   COUNTRY:{details:[
@@ -472,7 +375,7 @@ const ENTITY_SCHEMAS={
   ]},
   HOTEL:{details:[
     SF("Brand","details.brand"),SF("Property Type","details.propertyType","select",ENUM.propertyType),SF("Destination","details.destinationId","reference",[],"",["DESTINATION"]),SF("Area / Resort","details.areaId","reference",[],"",["AREA"]),SF("Nearest Airport","details.nearestAirportId","reference",[],"",["AIRPORT"]),
-    SF("Provider Accommodation ID","details.providerAccommodationId"),SF("Address","details.address"),SF("City","details.city"),SF("Postal Code","details.postalCode"),SF("Latitude","details.latitude","number"),SF("Longitude","details.longitude","number"),
+    SF("Provider Accommodation ID","details.providerAccommodationId"),SF("Address","details.address"),SF("City","details.city"),SF("Postal Code","details.postalCode"),SF("Country Code","details.countryCode"),SF("Latitude","details.latitude","number"),SF("Longitude","details.longitude","number"),
     SF("Official Star Rating","details.officialStarRating","number"),SF("SKANDI Rating","details.skandiRating","number"),SF("Guest Rating","details.guestRating","number"),SF("Review Count","details.reviewCount","number"),
     SF("Check-in Time","details.checkinTime","time"),SF("Check-out Time","details.checkoutTime","time"),SF("Minimum Check-in Age","details.minimumCheckinAge","number"),SF("Pets Allowed","details.petsAllowed","boolean"),SF("Smoking Policy","details.smokingPolicy","select",ENUM.smokingPolicy),
     SF("Distance to Beach km","details.distanceToBeach","number"),SF("Distance to Center km","details.distanceToCenter","number"),SF("Distance to Airport km","details.distanceToAirport","number"),SF("Transfer Time Minutes","details.transferTimeMinutes","number"),
@@ -513,12 +416,22 @@ const ENTITY_SCHEMAS={
     SF("Extra Type","details.extraType","select",ENUM.ancillaryType),SF("Minimum Age","details.minimumAge","number"),SF("Maximum Age","details.maximumAge","number"),SF("Max Quantity","details.maxQuantity","number"),SF("Refundable","details.refundable","boolean"),SF("Changeable","details.changeable","boolean"),SF("Description","details.description","textarea")
   ],commercial:[SF("Currency","commercial.currency","select",ENUM.currency),SF("Price Basis","commercial.priceBasis","select",ENUM.priceBasis),SF("Supplier Cost","commercial.supplierCost","number"),SF("Public Price","commercial.publicPrice","number")],operations:[SF("Booking Cutoff Hours","operations.bookingCutoffHours","number"),SF("Cancellation Rule","operations.cancellationRule","textarea"),SF("Internal Operational Notes","operations.internalNotes","textarea")]},
   AIRPORT:{details:[
-    SF("ICAO Code","details.icaoCode"),SF("Country","details.country"),SF("City","details.city"),SF("Timezone","details.timezone"),SF("Latitude","details.latitude","number"),SF("Longitude","details.longitude","number"),SF("Distance to City Center km","details.distanceToCityCenterKm","number"),SF("Website","details.website","url"),SF("Contact URL","details.contactUrl","url"),SF("Summary","details.summary","textarea"),SF("Information","details.information","textarea"),SF("Arrivals Information","details.arrivalInfo","textarea"),SF("Departures Information","details.departureInfo","textarea"),SF("Transfer Information","details.transferInfo","textarea"),SF("Check-in Information","details.checkinInfo","textarea"),SF("Security Information","details.securityInfo","textarea"),SF("Transport Information","details.transportInfo","textarea"),SF("Parking Information","details.parkingInfo","textarea"),SF("Lounges","details.lounges","textarea"),SF("Airport Hotels","details.airportHotels","textarea"),SF("Destinations Served","details.destinationsServing","textarea"),SL("Quick Facts","details.quickFactsJson"),SL("Terminals","details.terminalsJson"),SL("Runways","details.runwaysJson"),SL("Transport","details.transportJson"),SL("Food & Drinks","details.foodDrinksJson"),SL("Lost & Found","details.lostFoundJson"),SL("Source URLs","details.sourceUrlsJson")
+    SF("ICAO Code","details.icaoCode"),SF("Country","details.country"),SF("City","details.city"),SF("Timezone","details.timezone"),SF("Latitude","details.latitude","number"),SF("Longitude","details.longitude","number"),SF("Distance to City Center km","details.distanceToCityCenterKm","number"),SF("Website","details.website","url"),SF("Contact URL","details.contactUrl","url"),SF("Primary Color","details.primaryColor","color"),SF("Accent Color","details.accentColor","color"),SF("Summary","details.summary","textarea"),SF("Information","details.information","textarea"),SF("Arrivals Information","details.arrivalInfo","textarea"),SF("Departures Information","details.departureInfo","textarea"),SF("Transfer Information","details.transferInfo","textarea"),SF("Check-in Information","details.checkinInfo","textarea"),SF("Security Information","details.securityInfo","textarea"),SF("Transport Information","details.transportInfo","textarea"),SF("Parking Information","details.parkingInfo","textarea"),SF("Lounges","details.lounges","textarea"),SF("Airport Hotels","details.airportHotels","textarea"),SF("Destinations Served","details.destinationsServing","textarea"),SL("Quick Facts","details.quickFactsJson"),SL("Terminals","details.terminalsJson"),SL("Runways","details.runwaysJson"),SL("Transport","details.transportJson"),SL("Food & Drinks","details.foodDrinksJson"),SL("Lost & Found","details.lostFoundJson"),SL("Source URLs","details.sourceUrlsJson")
   ]},
   AIRLINE:{details:[
-    SF("ICAO Code","details.icaoCode"),SF("Short Name","details.shortName"),SF("Alliance","details.alliance"),SF("Brand Group","details.brandGroup"),SF("Country","details.country"),SF("City / Base","details.city"),SF("Website","details.website","url"),SF("Contact URL","details.contactUrl","url"),SF("Summary","details.summary","textarea"),SF("Baggage Allowance","details.baggageAllowance","textarea"),SF("Check-in","details.checkIn","textarea"),SF("Boarding","details.boarding","textarea"),SF("Food & Drinks","details.foodDrinksJson","textarea"),SF("Wi-Fi / Connectivity","details.wifiOnboardJson","textarea"),SF("Lounges","details.lounges","textarea"),SF("Ticket Types","details.ticketTypesJson","textarea"),SF("Children / Infants","details.childrenInfantsJson","textarea"),SF("Delays / Cancellations","details.delaysCancellationsJson","textarea"),SF("Damaged Baggage","details.damagedBaggageJson","textarea"),SF("Lost & Found","details.lostFoundJson","textarea"),SF("Loyalty Program","details.loyaltyProgram","textarea"),SL("Quick Facts","details.quickFactsJson"),SL("Cabins","details.cabinsJson"),SL("Hubs","details.hubsJson"),SL("Fleet Summary","details.fleetSummaryJson"),SL("Source URLs","details.sourceUrlsJson")
+    SF("ICAO Code","details.icaoCode"),SF("Short Name","details.shortName"),SF("Alliance","details.alliance"),SF("Brand Group","details.brandGroup"),SF("Country","details.country"),SF("City / Base","details.city"),SF("Website","details.website","url"),SF("Contact URL","details.contactUrl","url"),SF("Primary Color","details.primaryColor","color"),SF("Accent Color","details.accentColor","color"),SF("Summary","details.summary","textarea"),SX("Baggage Allowance","details.baggageAllowance"),SF("Check-in","details.checkIn","textarea"),SF("Boarding","details.boarding","textarea"),SJ("Food & Drinks","details.foodDrinksJson"),SJ("Wi-Fi / Connectivity","details.wifiOnboardJson"),SF("Lounges","details.lounges","textarea"),SJ("Ticket Types","details.ticketTypesJson"),SJ("Children / Infants","details.childrenInfantsJson"),SJ("Delays / Cancellations","details.delaysCancellationsJson"),SJ("Damaged Baggage","details.damagedBaggageJson"),SJ("Lost & Found","details.lostFoundJson"),SF("Loyalty Program","details.loyaltyProgram","textarea"),SL("Quick Facts","details.quickFactsJson"),SL("Cabins","details.cabinsJson"),SL("Hubs","details.hubsJson"),SJ("Fleet Summary","details.fleetSummaryJson"),SL("Source URLs","details.sourceUrlsJson")
   ]}
 };
+const PROVIDER_OWNED_PATHS={
+  AIRLINE:new Set(["details.shortName"]),
+  AIRPORT:new Set(["details.icaoCode","details.country","details.city","details.timezone","details.latitude","details.longitude"]),
+  HOTEL:new Set(["details.providerAccommodationId","details.address","details.city","details.postalCode","details.countryCode","details.latitude","details.longitude","details.officialStarRating","details.guestRating","details.reviewCount","details.brand"]),
+  DESTINATION:new Set([])
+};
+const PROVIDER_TECHNICAL_DETAIL_KEYS=["duffel","providerAddress","providerBrand","providerChain","cityResource","ratings","keyCollection","supportedLoyaltyProgramme","paymentInstructionSupported"];
+function providerLinked(record){return String(record?.source||"").trim().toUpperCase()==="DUFFEL"&&Boolean(String(record?.sourceReference||"").trim())}
+function providerOwnsPath(record,path){return providerLinked(record)&&Boolean(PROVIDER_OWNED_PATHS[record?.entityType]?.has(path))}
+
 const DEFAULT_COMMERCIAL=[SF("Currency","commercial.currency","select",ENUM.currency),SF("Price Basis","commercial.priceBasis","select",ENUM.priceBasis),SF("Supplier Cost","commercial.supplierCost","number"),SF("Public Price","commercial.publicPrice","number")];
 const DEFAULT_OPERATIONS=[SF("Booking Cutoff Hours","operations.bookingCutoffHours","number"),SF("Operational Notes","operations.notes","textarea")];
 function schemaFields(type,section){
@@ -549,8 +462,14 @@ function parseSchemaListLine(value){
   }
   return line
 }
-function SchemaScalar({field,value,onChange,records}){
+function SchemaScalar({field,value,onChange,records,disabled=false}){
+  if(disabled){
+    const display=(value&&typeof value==="object")?JSON.stringify(value,null,2):(value??"");
+    return html`<${Field} label=${field.label+" · Duffel managed"} type=${typeof display==="string"&&display.length>120?"textarea":"text"} value=${display} disabled=${true} help="Provider-owned value. Refresh it from Duffel in the Provider workspace; downstream pages read the saved Inventory/Supabase record." full=${true}/>`;
+  }
   if(field.type==="boolean")return html`<${Toggle} label=${field.label} value=${value===true} onChange=${onChange}/>`;
+  if(field.type==="json")return html`<${JsonField} label=${field.label+" — JSON"} value=${value} onChange=${onChange} help=${field.help}/>`;
+  if(field.type==="json_or_text")return html`<${JsonOrTextField} label=${field.label+" — text or JSON"} value=${value} onChange=${onChange} help=${field.help}/>`;
   if(field.type==="list")return html`<${ListField} label=${field.label+" — one per line"} value=${value} onChange=${onChange} parseItem=${parseSchemaListLine} help=${field.help}/>`;
   if(field.type==="reference")return html`<${Field} label=${field.label} type="select" options=${referenceList(records,field.refTypes,value)} value=${value||""} onChange=${onChange} help=${field.help}/>`;
   if(field.type==="select")return html`<${Field} label=${field.label} type="select" options=${optionList(field.options,value)} value=${value??""} onChange=${onChange} help=${field.help}/>`;
@@ -566,7 +485,7 @@ function RepeatSchemaEditor({field,record,update,records}){
 function ExplicitSchemaEditor({type,section,record,update,records}){
   const fields=schemaFields(type,section);
   if(!fields.length)return html`<div className="smartempty">No fixed ${section} schema is required for this record family.</div>`;
-  return html`<div className="formgrid three">${fields.map(field=>field.type==="repeat"?html`<${RepeatSchemaEditor} field=${field} record=${record} update=${update} records=${records}/>`:html`<${SchemaScalar} field=${field} records=${records} value=${getPath(record,field.path)} onChange=${v=>update(field.path,v)}/>` )}</div>`;
+  return html`<div className="formgrid three">${fields.map(field=>field.type==="repeat"?html`<${RepeatSchemaEditor} field=${field} record=${record} update=${update} records=${records}/>`:html`<${SchemaScalar} field=${field} records=${records} value=${getPath(record,field.path)} onChange=${v=>update(field.path,v)} disabled=${providerOwnsPath(record,field.path)}/>` )}</div>`;
 }
 function knownSectionKeys(type,section){return schemaFields(type,section).map(f=>f.path.split(".")[1]).filter(Boolean)}
 
@@ -782,7 +701,7 @@ function RecordEditor({bundle,languages,records,onClose,onSaved,setBusy,setToast
   const supplierOptions=[{value:"",label:"None"},...refs.filter(x=>x.entityType==="SUPPLIER").map(x=>({value:x.id,label:x.name}))];
 
 
-  const detailKnown=knownSectionKeys(rec.entityType,"details");
+  const detailKnown=[...knownSectionKeys(rec.entityType,"details"),...PROVIDER_TECHNICAL_DETAIL_KEYS];
   const commercialKnown=knownSectionKeys(rec.entityType,"commercial");
   const operationsKnown=knownSectionKeys(rec.entityType,"operations");
   const setSection=(key,next)=>setDraft(d=>({...d,record:{...d.record,[key]:next}}));
@@ -820,8 +739,8 @@ function RecordEditor({bundle,languages,records,onClose,onSaved,setBusy,setToast
     <div className="tabs">${tabs.map(t=>html`<button className=${`tab ${tab===t?"active":""}`} onClick=${()=>setTab(t)}>${t[0].toUpperCase()+t.slice(1)}</button>`)}</div>
     ${tab==="identity"?html`<div className="formgrid three">
       <${Field} label="Record Type" value=${rec.entityType} disabled=${true}/>
-      <${Field} label=${rec.entityType==="AIRPORT"?"IATA Code":rec.entityType==="AIRLINE"?"IATA Code":"System Code"} value=${rec.code} onChange=${v=>update("code",v)}/>
-      <${Field} label="Master Name / Title" value=${rec.name} onChange=${v=>update("name",v)}/>
+      <${Field} label=${rec.entityType==="AIRPORT"?"IATA Code":rec.entityType==="AIRLINE"?"IATA Code":"System Code"} value=${rec.code} onChange=${v=>update("code",v)} disabled=${providerLinked(rec)&&["AIRLINE","AIRPORT","DESTINATION"].includes(rec.entityType)} help=${providerLinked(rec)&&["AIRLINE","AIRPORT","DESTINATION"].includes(rec.entityType)?"Duffel-managed identity. Refresh from the Provider workspace.":""}/>
+      <${Field} label="Master Name / Title" value=${rec.name} onChange=${v=>update("name",v)} disabled=${providerLinked(rec)} help=${providerLinked(rec)?"Duffel-managed name. Refresh from the Provider workspace.":""}/>
       <${Field} label="URL Slug" value=${rec.slug} onChange=${v=>update("slug",v)} help="Leave blank to generate from the title."/>
       <${Field} label="Public ID" value=${rec.publicId} onChange=${()=>{}} disabled=${true} help=${rec.id?"Canonical ID generated by Supabase.":"Generated by Supabase when the record is first saved."}/>
       <${Field} label="Status" type="select" options=${STATUS} value=${rec.status||"DRAFT"} onChange=${v=>update("status",v)}/>
@@ -834,7 +753,7 @@ function RecordEditor({bundle,languages,records,onClose,onSaved,setBusy,setToast
       <${Toggle} label="ALTEA Visible" value=${rec.alteaVisible!==false} onChange=${v=>update("alteaVisible",v)}/>
     </div>`:null}
     ${tab==="details"?html`<div>
-      <div className="notice">Inventory Control uses an explicit schema contract. Empty categorical and relationship fields remain real dropdowns/selectors, repeatable structures can create their first row, and unknown legacy keys remain preserved below.</div>
+      <div className="notice">Inventory Control uses an explicit schema contract. Empty categorical and relationship fields remain real dropdowns/selectors, repeatable structures can create their first row, and unknown legacy keys remain preserved below. ${providerLinked(rec)?"Fields marked Duffel managed are read-only here and are refreshed from Duffel into this same canonical Supabase record.":""}</div>
       <div style=${{marginTop:"12px"}}><${ExplicitSchemaEditor} type=${rec.entityType} section="details" record=${rec} update=${update} records=${refs}/></div>
       <div className="hr"></div><div className="sectiontitle">Additional Stored Fields</div>
       <${SmartObjectEditor} value=${rec.details||{}} exclude=${detailKnown} onChange=${v=>setSection("details",v)}/>
@@ -1047,7 +966,7 @@ function ProviderWorkspace({boot,setBusy,setToast}){
 
   const detailItem=detail?.item||null, detailResource=detail?.resource||null;
   return html`<div>
-    <div className="providerhero"><div><h2>Duffel + SKANDI Collection</h2><p>Search the live Duffel resource catalogue, review the provider record, then deliberately add only selected resources to the SKANDI Collection. Supabase remains the curated SKANDI layer, not a copy of Duffel.</p></div><span className="sourcebadge">LIVE PROVIDER SOURCE</span></div>
+    <div className="providerhero"><div><h2>Duffel + SKANDI Collection</h2><p>Search the live Duffel resource catalogue, then import or refresh it into Inventory Control. Inventory Control in Supabase is the single editable source for linked SKANDI data: Duffel-owned facts refresh here, SKANDI enrichment is maintained here, and downstream pages consume this canonical record instead of keeping independent copies.</p></div><span className="sourcebadge">LIVE PROVIDER SOURCE</span></div>
     <div className="tabs">${[["collection","Collection Import"],["rates","Negotiated Hotel Rates"]].map(([k,l])=>html`<button className=${`tab ${mode===k?"active":""}`} onClick=${()=>setMode(k)}>${l}</button>`)}</div>
 
 
@@ -1232,7 +1151,7 @@ function AirInventory({boot,setBusy,setToast}){
   </div>`
 }
 
-{% raw %}
+
 function DraggableHotspot({item,index,onMove,onSelect}){
   const [drag,setDrag]=useState(false);
   function move(e){
@@ -1242,10 +1161,8 @@ function DraggableHotspot({item,index,onMove,onSelect}){
     const y=Math.max(0,Math.min(100,((e.clientY-rect.top)/rect.height)*100));
     onMove(x,y);
   }
-
   return html`<div className=${`hotspot ${drag?"dragging":""}`} style=${{left:`${item.x??50}%`,top:`${item.y??50}%`}} onPointerDown=${e=>{e.currentTarget.setPointerCapture(e.pointerId);setDrag(true)}} onPointerMove=${move} onPointerUp=${()=>setDrag(false)} onClick=${e=>{e.stopPropagation();onSelect?.()}}>${index+1}<div className="hotlabel">${item.label||item.title||`Hotspot ${index+1}`}</div></div>`
 }
-{% endraw %}
 
 
 function AircraftStudio({boot,setBusy,setToast}){
