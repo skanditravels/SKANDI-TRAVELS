@@ -1,3 +1,22 @@
+# INFO / LOG — Checkout
+
+- Canonical source identity: `/HTML_REF/skandi/The Store Checkout.md`
+- System area: `SKANDI`
+- Wix page/controller: `/src/pages/Checkout.qofcb.js`
+- Customer/internal route: `/the-store/store-checkout`
+- Installed HTML element: `#storeCheckoutEmbed`
+- Complete replacement embed supplied as: `/embed/Checkout.html` (paste into that Wix HTML component).
+- Canonical backend chain: `backend/SKANDI_CORE/storeCheckout.web.js → storeCheckout.js`.
+- Authority: Visitor/member current cart; customer order reads are not elevated. Delivery configuration reads are elevated on the backend only.
+- Status: V12 repair candidate; VERIFIED local tests / STATICALLY VERIFIED source contracts / REQUIRES LIVE TEST.
+- Last source verification: 2026-10-07. Prepared against `skanditravels/SKANDI-TRAVELS`, `main`, commit `b7909cc5edbd87899bd9468577fc8e36eeb5d3fa`, retaining the approved V12 repairs.
+- Intended source only: this package has not changed published Wix, GitHub or Supabase.
+- Dependencies and live gates: existing masterPage/siteMap/staff/provider dependencies; rebuild and publish matching page, facade, core and embed together. See README for exact installation and live checks.
+
+## Historical INFO / LOG (preserved)
+
+Earlier route, component, controller and status claims below are historical; the current INFO above and latest repair entry supersede conflicting metadata.
+
 <!--
 INFO
 Canonical path: /HTML_REF/skandi/The Store Checkout.md
@@ -48,6 +67,21 @@ LOG
 - Preserved the complete existing checkout state and commerce message contract.
 - Added responsive checkout-specific header/footer shell only; no backend/payment logic changed.
 -->
+
+
+## APPROVED REPAIR LOG — 2026-10-03 UTC
+
+Checkout.lof54.js now imports the existing canonical SKANDI_CORE/storeCheckout.web facade. Confirmation routing reads SITE_MAP.storeConfirmation. Checkout HTML, payment/cart logic and message names remain unchanged. REQUIRES LIVE TEST for customer cart/payment and installed route parity. Source changes prepared; not deployed.
+
+## 2026-10-07 — V12 complete-chain repair
+
+Restores the missing controller on published page qofcb. Checkout.lof54.js belongs to the separate native /checkout route and now forwards to the established custom checkout. Moves the existing checkout implementation into its sole core, maps Cart V2 streetAddress correctly, retains form drafts, exposes cart/calculation/delivery failures, verifies the reviewed total token, guards duplicate submission, and persists same-order payment retry in the page session.
+
+Local verification covers syntax, imports/exports, embed boot, provider contracts with mocks, stale replies, cart failure propagation, same-instance order submission deduplication, order ownership boundaries, administrator authorization and inventory revision conflicts. These tests do not prove a live provider request, payment, data write or production build. No database migration is required.
+
+Payment retry is persisted in Wix session storage and verified against customer order access on reload. In-memory placement deduplication is per running backend instance; this is not a distributed transaction guarantee. Wix cart orderPlaced and priceVerificationToken remain authoritative. Existing shipping configuration table extraction is retained; dynamic carrier quoting/region coverage must be tested with the site’s actual cart and address. No paid status is inferred from startPayment or the URL.
+
+## Complete intended HTML
 
 ```html
 <!doctype html>
@@ -409,6 +443,8 @@ let STATE=null;
 let BUSY=false;
 let selectedDeliveryKey="";
 let MASTER_CONFIG_STATE=null;
+let DRAFT=null, TERMS=false;
+function captureDraft(){if($("firstName")){DRAFT=formPayload();TERMS=Boolean($("terms")?.checked)}}
 
 const $=(id)=>document.getElementById(id);
 const esc=(v)=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -542,6 +578,7 @@ function violationsHtml(){
 }
 
 function renderDelivery(){
+  if(STATE?.deliveryError)return `<div class="notice error">${esc(STATE.deliveryError)}</div>`;
   const methods=STATE?.deliveryMethods||[];
   const selected=STATE?.cart?.selectedDeliveryMethod||null;
 
@@ -607,7 +644,7 @@ function totalsHtml(){
       <div class="total-row"><span>Delivery</span><strong>${esc(money(s.delivery))}</strong></div>
       ${fees?`<div class="total-row"><span>Fees</span><strong>${esc(money(s.additionalFees))}</strong></div>`:""}
       <div class="total-row"><span>Tax</span><strong>${esc(money(s.tax))}</strong></div>
-      <div class="total-row grand"><span>Total</span><span>${esc(money(s.total||STATE?.cart?.subtotal))}</span></div>
+      <div class="total-row grand"><span>Total</span><span>${esc(money(s.total))}</span></div>
     </div>`;
 }
 
@@ -628,8 +665,8 @@ function couponHtml(){
 }
 
 function formHtml(){
-  const c=STATE?.cart?.customer||{};
-  const a=STATE?.cart?.address||{};
+  const c=DRAFT?.customer||STATE?.cart?.customer||{};
+  const a=DRAFT?.address||STATE?.cart?.address||{};
   return `
     <section class="card">
       <div class="card-head">
@@ -659,7 +696,7 @@ function formHtml(){
           <div class="field"><label>City</label><input id="city" autocomplete="address-level2" value="${esc(a.city||"")}"></div>
           <div class="field"><label>State / province</label><input id="subdivision" autocomplete="address-level1" placeholder="NY" value="${esc((a.subdivision||"").replace(/^US-/,""))}"></div>
           <div class="field"><label>ZIP / postal code</label><input id="postalCode" autocomplete="postal-code" value="${esc(a.postalCode||"")}"></div>
-          <div class="field full"><label>Order note (optional)</label><textarea id="note" maxlength="1000" placeholder="Special instructions">${esc(STATE?.cart?.note||"")}</textarea></div>
+          <div class="field full"><label>Order note (optional)</label><textarea id="note" maxlength="1000" placeholder="Special instructions">${esc(DRAFT?.note??STATE?.cart?.note??"")}</textarea></div>
         </div>
         <div class="actions">
           <button id="saveDetails" class="btn btn-secondary">Update delivery options</button>
@@ -699,7 +736,7 @@ function orderHtml(){
         ${couponHtml()}
         ${totalsHtml()}
         <label class="terms">
-          <input id="terms" type="checkbox">
+          <input id="terms" type="checkbox" ${TERMS?"checked":""}>
           <span>I agree to SKANDI's store terms, privacy policy and applicable delivery conditions.</span>
         </label>
         <button id="payBtn" class="pay-btn">Complete purchase</button>
@@ -763,6 +800,7 @@ function bind(){
   $("payBtn")?.addEventListener("click",()=>{
     if(BUSY)return;
     if(!validateForm())return;
+    if(STATE?.deliveryError){status(STATE.deliveryError,0);return}
     if(!$("terms")?.checked){status("Please accept the terms before continuing.");return}
 
     const methods=STATE?.deliveryMethods||[];
@@ -786,14 +824,17 @@ function bind(){
 }
 
 function setBusy(value,message=""){
+  captureDraft();
   BUSY=Boolean(value);
   document.querySelectorAll("button").forEach(btn=>{
-    if(!btn.dataset.permanentDisabled)btn.disabled=BUSY;
+    if(btn.dataset.busyDisabled===undefined)btn.dataset.busyDisabled=String(btn.disabled);
+    btn.disabled=BUSY||btn.dataset.busyDisabled==="true";
   });
   if(message)status(message,0);
 }
 
 function render(){
+  captureDraft();
   const app=$("app");
   if(!app)return;
 
@@ -803,6 +844,12 @@ function render(){
     return;
   }
 
+  if(STATE.pendingPayment){
+    app.className="";app.innerHTML=`<section class="empty"><div class="eyebrow">SECURE PAYMENT</div><h2>Complete payment for your order</h2><p>Your order has been created. Retry payment for this same order or check its latest status in My Orders.</p><button class="btn btn-primary" id="retryPayment">Retry secure payment</button><button class="btn" id="viewOrder">My Orders</button></section>`;
+    $("retryPayment").onclick=()=>{if(BUSY)return;setBusy(true,"Opening secure payment…");post("CHECKOUT_SUBMIT",{})};
+    $("viewOrder").onclick=()=>post("CHECKOUT_NAVIGATE",{path:"/my-orders"});
+    setBusy(BUSY);return;
+  }
   if(STATE.empty){
     app.className="";
     app.innerHTML=`
@@ -812,7 +859,7 @@ function render(){
         <p>Add something from the store before continuing to checkout.</p>
         <button class="btn btn-primary" id="backStore">Continue shopping</button>
       </section>`;
-    $("backStore")?.addEventListener("click",()=>post("CHECKOUT_NAVIGATE",{path:"/store"}));
+    $("backStore")?.addEventListener("click",()=>post("CHECKOUT_NAVIGATE",{path:"/the-store"}));
     return;
   }
 
@@ -825,11 +872,13 @@ function render(){
     </div>`;
 
   bind();
+  setBusy(BUSY);
 }
 
 window.addEventListener("message",event=>{
+  if(event.source!==window.parent)return;
   const message=event.data||{};
-  if(message.source&&message.source!==PARENT)return;
+  if(message.source!==PARENT)return;
   const payload=message.payload||{};
 
   if(message.type==="SKANDI_MASTER_CONFIG"){
@@ -844,8 +893,8 @@ window.addEventListener("message",event=>{
   }
 
   if(message.type==="CHECKOUT_STATE"){
-    STATE=payload;
-    BUSY=false;
+    captureDraft();STATE=payload;
+    BUSY=Boolean(payload.busy);
     $("statusbar")?.classList.remove("show");
     render();
     return;
@@ -857,6 +906,7 @@ window.addEventListener("message",event=>{
   }
 
   if(message.type==="CHECKOUT_PAYMENT_STATUS"){
+    if(STATE)STATE.pendingPayment=Boolean(payload.pendingPayment);
     BUSY=false;
     render();
     status(payload.status||"Payment not completed.",5000);
@@ -877,5 +927,4 @@ post("CHECKOUT_READY",{});
 </script>
 </body>
 </html>
-
 ```

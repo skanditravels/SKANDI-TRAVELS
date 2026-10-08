@@ -1,15 +1,34 @@
+# INFO / LOG — The Store
+
+- Canonical source identity: `/HTML_REF/skandi/The Store.md`
+- System area: `SKANDI`
+- Wix page/controller: `/src/pages/The Store.iv8g6.js`
+- Customer/internal route: `/the-store`
+- Installed HTML element: `#skandiStoreEmbed`
+- Complete replacement embed supplied as: `/embed/The-Store.html` (paste into that Wix HTML component).
+- Canonical backend chain: `backend/SKANDI_CORE/storefront.web.js → storefront.js; storeCartV2.web.js → Wix Current Cart V2; customerSupport.web.js → customerSupport.js`.
+- Authority: Public catalog; Wix visitor/member owns the current cart. Existing support boundary retained.
+- Status: V12 repair candidate; VERIFIED local tests / STATICALLY VERIFIED source contracts / REQUIRES LIVE TEST.
+- Last source verification: 2026-10-07. Prepared against `skanditravels/SKANDI-TRAVELS`, `main`, commit `b7909cc5edbd87899bd9468577fc8e36eeb5d3fa`, retaining the approved V12 repairs.
+- Intended source only: this package has not changed published Wix, GitHub or Supabase.
+- Dependencies and live gates: existing masterPage/siteMap/staff/provider dependencies; rebuild and publish matching page, facade, core and embed together. See README for exact installation and live checks.
+
+## Historical INFO / LOG (preserved)
+
+Earlier route, component, controller and status claims below are historical; the current INFO above and latest repair entry supersede conflicting metadata.
+
 # INFO / LOG — THE STORE
 
 - **Source file identity:** `/HTML_REF/skandi/The Store.md`
 - **Display/page name:** The Store
 - **System area:** `SKANDI`
-- **Wix page filename:** `/src/pages/The Store.js`
+- **Wix page filename:** `/src/pages/The Store.iv8g6.js`
 - **Wix route/slug:** `/the-store`
 - **Wix HTML element ID:** `#storefrontEmbed`
-- **Current status:** `B-011.15 — STATICALLY VERIFIED / LIVE WIX TEST REQUIRED`
+- **Current status:** `v.12 release candidate — Store contract checks passed; REQUIRES LIVE TEST`
 - **Source-of-truth status:** Intended canonical Store HTML source for this release. A prior canonical Store HTML_REF record was not present in the inspected B011 workspace, so this package creates the required record from the exact B-011.13 Store source plus the approved B-011.14 hero correction and this B-011.15 master-brand asset integration.
-- **Linked page controller:** `/src/pages/The Store.js`
-- **Canonical backend facade(s):** `/src/backend/SKANDI_CORE/storefront.web.js`; `/src/backend/SKANDI_CORE/customerSupport.web.js`
+- **Linked page controller:** `/src/pages/The Store.iv8g6.js`
+- **Canonical backend facade(s):** `/src/backend/SKANDI_CORE/storefront.web.js`; `/src/backend/SKANDI_CORE/storeCartV2.web.js`; `/src/backend/SKANDI_CORE/storeCheckout.web.js`; `/src/backend/SKANDI_CORE/customerSupport.web.js`. Store Control uses `/src/backend/SKANDI_CORE/storeCartV3.web.js` and the same storefront core.
 - **Canonical backend core implementation(s):** `/src/backend/SKANDI_CORE/storefront.js`; `/src/backend/SKANDI_CORE/customerSupport.js`
 - **Operational data authority:** Wix Stores / Wix eCommerce for Store catalog/cart/checkout/order behavior.
 - **Global presentation authority:** `/src/pages/masterPage.js` for shared routes, Store logo asset URLs and localized SKANDI slogan.
@@ -18,7 +37,7 @@
 - **Important message contracts:** `STOREFRONT_READY`, `STOREFRONT_PARENT_READY`, `STOREFRONT_PRODUCTS`, `STOREFRONT_CART`, `STOREFRONT_CART_REQUEST`, `STOREFRONT_ADD_TO_CART`, `STOREFRONT_CHECKOUT`, `STOREFRONT_ORDERS`, `STOREFRONT_NAVIGATE`, `PUBLIC_SUPPORT_CREATE_CASE`, `PUBLIC_SUPPORT_CASE_CREATED`, `PUBLIC_SUPPORT_ERROR`, `MASTER_CONFIG_REQUEST`, `SKANDI_MASTER_CONFIG`.
 - **Current architectural notes:** `storeHeader` and `storeFooter` are now read from `MASTER_CONFIG.brand.assets.logos`. The bottom-left Store slogan is read from `MASTER_CONFIG.brand.slogans` using the active customer language, with English fallback. Current Store logo URLs remain in HTML only as resilience fallbacks until master config arrives; masterPage is the runtime authority.
 - **Open issues / required migrations:** Live Wix runtime must be tested after installing both the Store embed and updated masterPage together.
-- **Last verified:** 2026-09-21
+- **Last verified:** 2026-10-04 — source and controlled tests only; no live deployment.
 
 ## CHANGE LOG
 
@@ -29,6 +48,36 @@
 ---
 
 ## COMPLETE INTENDED LIVE HTML SOURCE
+
+
+## APPROVED REPAIR LOG — 2026-10-03 UTC
+
+Recovered the existing B-011.32 storefront.web facade and controller matching this HTML_REF commerce/support contract. Controller path is The Store.iv8g6.js; intended component is #storefrontEmbed. Preserved current B-011.15 HTML bytes and existing storefront.js core. Actual installed Wix element, source bytes, commerce context and provider responses require live verification. Source changes prepared; not deployed.
+
+## SOURCE SELECTION REVIEW — 2026-10-03 UTC
+
+- The previous B-011.32 controller/facade restoration is superseded as an installation candidate: catalog/cart/support mock checks did not verify product option/variant preservation.
+- Preserve complete current B-011.15 HTML and master-brand behavior. Preserve current V3-oriented controller source pending a correct canonical implementation; it currently imports missing skandiStorefront.web and uses #skandiStoreEmbed, which disagrees with this record's intended #storefrontEmbed. This chain remains BLOCKED.
+- Canonical storefront.js normalizes products without options, although this HTML renders p.options. Its add-to-cart accepts a variantId only when supplied inside choices; this HTML currently sends selected choices. Therefore the recovered short bridge does not establish a feature-complete V3 cart flow.
+- Recovered August V3 MAIN-IMAGE-FIX source exports listStorefrontProducts but does not export resolveStoreVariant and sets options to an empty array. It is not an adequate replacement and is not installed as a parallel backend.
+- Preserve existing variant resolution, cart refresh/update signaling and the custom checkout route during canonical convergence. Neither existing candidate is certified for release. The earlier restored candidate is retained only under pending-store-review in the delivery package.
+- No store data, products, variants, cart state, orders or deployed configuration have been modified.
+
+## v.12 CONVERGENCE — 2026-10-04 UTC
+
+- Supersedes the blocked source-selection status above. The complete current Store controller now imports the real canonical storefront facade and targets `#storefrontEmbed`.
+- Existing active Store Control V3 implementations moved without feature reduction into the existing storefront core. Store Control keeps all nine export names and its staff boundary; the facade is now a thin boundary. The unused older V1 catalog implementation is superseded, not installed alongside V3.
+- Public catalog reads use the installed Wix Stores V3 SDK without elevation or merchant-data fields. Product options are returned to the existing HTML; selection resolves the actual matching visible variant before Cart V2 mutation. All required options must be selected.
+- Cart refresh, selected options, custom `/the-store/store-checkout` routing and support messages remain intact. Support is handled by the existing customerSupport owner. Provider failures produce existing error messages, not a fabricated empty cart.
+- All executable HTML, CSS, assets, labels and layout in this record are unchanged. Eight controlled Store checks pass. Live Wix element assignment, installed dependency parity, catalog/inventory permissions, payment checkout and rendering still require live tests. No products, orders, customer records or live Wix code were modified.
+
+## 2026-10-07 — V12 complete-chain repair
+
+Uses the published #skandiStoreEmbed ID, preserves the approved V12 public catalog and support bridge, prevents repeat add clicks, acknowledges cart updates, refreshes catalog cache, validates internal navigation, and adds restrained card/focus styling.
+
+Local verification covers syntax, imports/exports, embed boot, provider contracts with mocks, stale replies, cart failure propagation, same-instance order submission deduplication, order ownership boundaries, administrator authorization and inventory revision conflicts. These tests do not prove a live provider request, payment, data write or production build. No database migration is required.
+
+## Complete intended HTML
 
 ```html
 <!doctype html>
@@ -545,7 +594,13 @@ body.page-product .search-dock{display:none}
 @media(max-width:560px){.support-sidebar{grid-template-columns:1fr}.support-grid-2{grid-template-columns:1fr;gap:0}.support-form-card{padding:22px 16px}.support-hero{padding:34px 16px}.support-hero h1{font-size:29px}.support-search{grid-template-columns:1fr}.support-search button{height:42px}.support-channel{padding:20px}}
 
 </style>
-</head>
+<style id="store-v12-polish">
+.product-card{border:1px solid rgba(2,46,100,.12);box-shadow:0 5px 20px rgba(2,46,100,.045);transition:transform .2s,box-shadow .2s}
+.product-card:hover{transform:translateY(-3px);box-shadow:0 12px 28px rgba(2,46,100,.10)}
+.product-media{background:linear-gradient(145deg,#f6f9fc,#edf3f8)}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #5fc7cf;outline-offset:3px}
+@media(prefers-reduced-motion:reduce){.product-card{transition:none}.product-card:hover{transform:none}}
+</style></head>
 <body>
 <a class="sr" href="#productGrid">Skip to products</a>
 
@@ -1475,9 +1530,13 @@ function renderHeaderCounts(){
   $("savedCount").textContent=String(SAVED.size);
   $("bagCount").textContent=String(bagCount());
 }
+let ADDING=false;
 function addToCart(id,qty=1,choices={}){
+  if(ADDING)return;
   const p=PRODUCTS.find(x=>String(x.id)===String(id));if(!p)return;
   if(p.canAddToCart===false||p.inStock===false){toast(p.accessMessage||"This product is currently unavailable.");return}
+  if((p.options||[]).some(o=>!choices[o.name])){navigate("product",{id});toast("Choose your product options first.");return}
+  ADDING=true;
   toast("Adding to bag…");
   post("STOREFRONT_ADD_TO_CART",{productId:id,quantity:Number(qty||1),choices});
 }
@@ -1693,7 +1752,8 @@ document.addEventListener("error",event=>{
 },true);
 
 window.addEventListener("message",event=>{
-  const message=event.data||{};if(message.source&&message.source!==PARENT_SOURCE)return;
+  if(event.source!==window.parent)return;
+  const message=event.data||{};if(message.source!==PARENT_SOURCE)return;
   const payload=message.payload||{};
 
   if(message.type==="SKANDI_MASTER_CONFIG"){
@@ -1742,6 +1802,10 @@ window.addEventListener("message",event=>{
     );
     return;
   }
+  if(message.type==="STOREFRONT_CART_UPDATED"){
+    ADDING=false;CART=payload.cart||CART;renderHeaderCounts();toast("Added to your bag");
+    if(parseRoute().page==="bag")renderBagPage();return;
+  }
   if(message.type==="STOREFRONT_CART"){
     CART=payload.cart||{};renderHeaderCounts();
     if(parseRoute().page==="bag")renderBagPage();
@@ -1761,6 +1825,7 @@ window.addEventListener("message",event=>{
   }
   if(message.type==="STOREFRONT_PROGRESS"){status(payload.message||"Working…");toast(payload.message||"Working…");return}
   if(message.type==="STOREFRONT_ERROR"){
+    ADDING=false;
     console.error("[SKANDI Storefront] Parent error:",payload);
     status(payload.message||"Store action failed.","error");
     toast(payload.message||"Store action failed.");

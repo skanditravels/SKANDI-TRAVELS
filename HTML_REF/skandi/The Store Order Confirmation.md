@@ -1,3 +1,22 @@
+# INFO / LOG — Order Confirmation
+
+- Canonical source identity: `/HTML_REF/skandi/The Store Order Confirmation.md`
+- System area: `SKANDI`
+- Wix page/controller: `/src/pages/Order Confirmation.u5zzl.js`
+- Customer/internal route: `/the-store/store-checkout/order-confirmation`
+- Installed HTML element: `#storeOrderConfirmationEmbed`
+- Complete replacement embed supplied as: `/embed/Order-Confirmation.html` (paste into that Wix HTML component).
+- Canonical backend chain: `backend/SKANDI_CORE/storeCheckout.web.js → storeCheckout.js → Wix Orders`.
+- Authority: orders.getOrder runs without elevation in the customer context; query parameters are not payment authority.
+- Status: V12 repair candidate; VERIFIED local tests / STATICALLY VERIFIED source contracts / REQUIRES LIVE TEST.
+- Last source verification: 2026-10-07. Prepared against `skanditravels/SKANDI-TRAVELS`, `main`, commit `b7909cc5edbd87899bd9468577fc8e36eeb5d3fa`, retaining the approved V12 repairs.
+- Intended source only: this package has not changed published Wix, GitHub or Supabase.
+- Dependencies and live gates: existing masterPage/siteMap/staff/provider dependencies; rebuild and publish matching page, facade, core and embed together. See README for exact installation and live checks.
+
+## Historical INFO / LOG (preserved)
+
+Earlier route, component, controller and status claims below are historical; the current INFO above and latest repair entry supersede conflicting metadata.
+
 # The Store Order Confirmation
 
 STATUS: IN PROGRESS  
@@ -43,6 +62,14 @@ The current GitHub `Checkout.lof54.js` still hardcodes `/the-store/order-confirm
 ---
 
 ## COMPLETE INTENDED LIVE HTML SOURCE
+
+## 2026-10-07 — V12 complete-chain repair
+
+Loads actual payment/order status by order ID and ownership. Adds loading/error handling and bounded pending-status refresh. Enables PDF only after a verified order response; distinguishes unpaid, paid and canceled orders.
+
+Local verification covers syntax, imports/exports, embed boot, provider contracts with mocks, stale replies, cart failure propagation, same-instance order submission deduplication, order ownership boundaries, administrator authorization and inventory revision conflicts. These tests do not prove a live provider request, payment, data write or production build. No database migration is required.
+
+## Complete intended HTML
 
 ```html
 <!doctype html>
@@ -164,8 +191,8 @@ p{color:var(--muted);font-size:13px;line-height:1.7;margin:0 auto;max-width:600p
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m5 12 4 4L19 6"/></svg>
     </div>
     <div class="eyebrow" data-content-id="store-confirmation-eyebrow">SKANDI STORE</div>
-    <h1 data-content-id="store-confirmation-h1">Thank you.</h1>
-    <p data-content-id="store-confirmation-copy">Your SKANDI order has been created. You can review the order and its latest payment and fulfillment status in My Orders.</p>
+    <h1 data-content-id="store-confirmation-h1">Checking your order</h1>
+    <p data-content-id="store-confirmation-copy">We are checking your order reference and payment status.</p>
     <div class="meta">
       <div class="row"><span>Order reference</span><strong id="orderId">Available in My Orders</strong></div>
       <div class="row"><span>Payment status</span><strong id="paymentStatus">Submitted</strong></div>
@@ -173,7 +200,7 @@ p{color:var(--muted);font-size:13px;line-height:1.7;margin:0 auto;max-width:600p
     </div>
     <div class="actions">
       <button id="orders" class="action primary">View My Orders</button>
-      <button id="download" class="action download">
+      <button id="download" disabled class="action download">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 19h14"/></svg>
         Download Confirmation
       </button>
@@ -206,7 +233,8 @@ p{color:var(--muted);font-size:13px;line-height:1.7;margin:0 auto;max-width:600p
 const SOURCE="SKANDI_STORE_CONFIRMATION";
 const PARENT="SKANDI_WIX_PARENT";
 let MASTER_CONFIG_STATE=null;
-let CONFIRMATION={orderId:"",paymentStatus:"Submitted",generatedAt:new Date().toISOString()};
+let CONFIRMATION={orderId:"",paymentStatus:"Checking",verified:false};
+let refreshCount=0,refreshTimer=0;
 const $=id=>document.getElementById(id);
 const post=(type,payload={})=>window.parent.postMessage({source:SOURCE,type,payload,timestamp:new Date().toISOString()},"*");
 
@@ -254,7 +282,7 @@ function fallbackPdfBlob(){
   const lines=[
     ["SKANDI THE STORE",18,true],
     ["Order Confirmation",24,true],
-    ["Thank you. Your SKANDI order has been created.",11,false],
+    [`Order status: ${CONFIRMATION.status||"Unknown"}`,11,false],
     ["",8,false],
     [`Order reference: ${order}`,11,true],
     [`Payment status: ${status}`,11,false],
@@ -321,11 +349,11 @@ async function downloadRichPdf(){
   doc.setFont("helvetica","bold");doc.setFontSize(22);doc.setTextColor(2,46,100);doc.text("Order Confirmation",w-46,55,{align:"right"});
   doc.setFont("helvetica","normal");doc.setFontSize(9);doc.setTextColor(102,112,133);doc.text("SKANDI The Store",w-46,72,{align:"right"});
   doc.setDrawColor(2,46,100);doc.setLineWidth(2);doc.line(46,130,w-46,130);
-  doc.setFont("helvetica","bold");doc.setFontSize(12);doc.setTextColor(2,46,100);doc.text("ORDER CREATED",46,153);
+  doc.setFont("helvetica","bold");doc.setFontSize(12);doc.setTextColor(2,46,100);doc.text("ORDER STATUS",46,153);
   doc.setFillColor(2,46,100);doc.roundedRect(w-129,140,83,22,11,11,"F");
-  doc.setTextColor(255,255,255);doc.setFontSize(8);doc.text("CONFIRMED",w-87.5,154.5,{align:"center"});
+  doc.setTextColor(255,255,255);doc.setFontSize(8);doc.text("VERIFIED",w-87.5,154.5,{align:"center"});
   doc.setFont("helvetica","normal");doc.setFontSize(10);doc.setTextColor(51,65,85);
-  const intro=doc.splitTextToSize("Your SKANDI order has been created. Keep this confirmation for your records and review the latest payment and fulfillment status in My Orders.",w-92);
+  const intro=doc.splitTextToSize(`Order status: ${CONFIRMATION.status||"Unknown"}. Keep this record and review the latest payment and fulfillment status in My Orders.`,w-92);
   doc.text(intro,46,181,{lineHeightFactor:1.5});
   const boxY=225;
   doc.setFillColor(246,248,251);doc.setDrawColor(229,231,235);doc.roundedRect(46,boxY,w-92,112,10,10,"FD");
@@ -352,14 +380,20 @@ async function downloadRichPdf(){
   doc.save(`SKANDI-Store-Order-${cleanFilePart(CONFIRMATION.orderId)}.pdf`);
 }
 function renderConfirmation(payload={}){
-  CONFIRMATION={
-    orderId:String(payload.orderId||""),
-    paymentStatus:String(payload.paymentStatus||"Submitted"),
-    generatedAt:String(payload.generatedAt||new Date().toISOString())
-  };
-  if(CONFIRMATION.orderId)$("orderId").textContent=CONFIRMATION.orderId;
-  $("paymentStatus").textContent=CONFIRMATION.paymentStatus||"Submitted";
-  $("generatedAt").textContent=friendlyDate(CONFIRMATION.generatedAt);
+  CONFIRMATION={...payload,verified:payload.verified===true,orderId:String(payload.orderId||""),paymentStatus:String(payload.paymentStatus||"Checking"),generatedAt:String(payload.generatedAt||new Date().toISOString())};
+  const verified=CONFIRMATION.verified;
+  document.querySelector(".check").style.visibility=verified&&CONFIRMATION.paymentStatus==="PAID"?"visible":"hidden";
+  $("download").disabled=!verified;
+  $("orderId").textContent=verified?CONFIRMATION.orderId:"—";
+  $("paymentStatus").textContent=verified?CONFIRMATION.paymentStatus:"Checking";
+  $("generatedAt").textContent=verified?friendlyDate(CONFIRMATION.generatedAt):"—";
+  const heading=document.querySelector("h1");
+  if(heading)heading.textContent=!verified?"Checking your order":CONFIRMATION.paymentStatus==="PAID"?"Thank you for your order":["CANCELED","REJECTED"].includes(CONFIRMATION.status)?"Order "+CONFIRMATION.status.toLowerCase():"Your order status";
+  const lead=document.querySelector('[data-content-id="store-confirmation-copy"]');
+  if(lead)lead.textContent=verified?"The payment status below was retrieved from your Wix order.":"We are checking your order reference and payment status.";
+  if(verified){setStatus(CONFIRMATION.paymentStatus==="PAID"?"Payment confirmed.":"Payment status: "+CONFIRMATION.paymentStatus,CONFIRMATION.paymentStatus==="PAID"?"ok":"");}
+  clearTimeout(refreshTimer);
+  if(verified && !["PAID","FULLY_REFUNDED"].includes(CONFIRMATION.paymentStatus) && !["CANCELED","REJECTED"].includes(CONFIRMATION.status) && refreshCount++<6){refreshTimer=setTimeout(()=>post("CONFIRMATION_REFRESH",{}),10000)}
 }
 
 document.addEventListener("click",event=>{
@@ -370,18 +404,24 @@ document.addEventListener("click",event=>{
   post("CONFIRMATION_NAVIGATE",{path:masterRoute(key,fallback)});
 });
 window.addEventListener("message",event=>{
-  const m=event.data||{};if(m.source&&m.source!==PARENT)return;const p=m.payload||{};
+  if(event.source!==window.parent)return;
+  const m=event.data||{};if(m.source!==PARENT)return;const p=m.payload||{};
   if(m.type==="SKANDI_MASTER_CONFIG"){MASTER_CONFIG_STATE=p;renderMasterBranding();return}
+  if(m.type==="STORE_CONFIRMATION_PARENT_READY"){post("CONFIRMATION_READY",{});return}
+  if(m.type==="STORE_CONFIRMATION_LOADING"){setStatus("Checking your order…");return}
+  if(m.type==="STORE_CONFIRMATION_ERROR"){renderConfirmation({});setStatus(p.message||"We could not verify this order. Open My Orders or try again.","error");const h=document.querySelector("h1");if(h)h.textContent="Order could not be verified";return}
   if(m.type==="STORE_CONFIRMATION_DATA"){renderConfirmation(p);return}
 });
-$("orders").addEventListener("click",()=>post("CONFIRMATION_NAVIGATE",{path:"/my-profile?tab=orders"}));
+$("orders").addEventListener("click",()=>post("CONFIRMATION_NAVIGATE",{path:"/my-orders"}));
 $("store").addEventListener("click",()=>post("CONFIRMATION_NAVIGATE",{path:masterRoute("theStore","/the-store")}));
 $("download").addEventListener("click",async()=>{
+  if(!CONFIRMATION.verified)return;
   const btn=$("download");btn.disabled=true;setStatus("Preparing your PDF confirmation…");
   try{await downloadRichPdf();setStatus("Confirmation downloaded.","ok")}
   catch(error){console.error("[SKANDI Store Confirmation] PDF download failed.",error);setStatus("The PDF could not be created. Please try again.","error")}
   finally{btn.disabled=false}
 });
+window.addEventListener("pagehide",()=>clearTimeout(refreshTimer));
 renderMasterBranding();renderConfirmation(CONFIRMATION);
 post("SKANDI_MASTER_CONFIG_REQUEST",{});
 post("CONFIRMATION_READY",{});

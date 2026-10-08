@@ -1,3 +1,22 @@
+# INFO / LOG — Flight Status
+
+- Canonical source identity: `/HTML_REF/skandi/Flight Status.md`
+- System area: `SKANDI`
+- Wix page/controller: `/src/pages/Flight Status.cn7ah.js`
+- Customer/internal route: `/travel-info/flight-status`
+- Installed HTML element: `#flightStatusEmbed`
+- Complete replacement embed supplied as: `/embed/Flight-Status.html` (paste into that Wix HTML component).
+- Canonical backend chain: `backend/SKANDI_CORE/flightStatus.web.js → flightStatus.js`.
+- Authority: Public read only; AIRLABS_API_KEY stays in Wix Secrets Manager.
+- Status: V12 repair candidate; VERIFIED local tests / STATICALLY VERIFIED source contracts / REQUIRES LIVE TEST.
+- Last source verification: 2026-10-07. Prepared against `skanditravels/SKANDI-TRAVELS`, `main`, commit `b7909cc5edbd87899bd9468577fc8e36eeb5d3fa`, retaining the approved V12 repairs.
+- Intended source only: this package has not changed published Wix, GitHub or Supabase.
+- Dependencies and live gates: existing masterPage/siteMap/staff/provider dependencies; rebuild and publish matching page, facade, core and embed together. See README for exact installation and live checks.
+
+## Historical INFO / LOG (preserved)
+
+Earlier route, component, controller and status claims below are historical; the current INFO above and latest repair entry supersede conflicting metadata.
+
 # SKANDI Flight Status
 
 **STATUS:** NEEDS REVIEW  
@@ -149,6 +168,16 @@ NOT VERIFIED FROM UPLOADED SOURCE SET
 
 The following payload is complete and is not intentionally shortened, summarized, reconstructed, or replaced with placeholders.
 
+## 2026-10-07 — V12 complete-chain repair
+
+Adds documented /flights live tracking alongside /flight and /schedules. Correlates searches, discards obsolete responses, refreshes visible unchanged searches every 60 seconds, uses airport-local provider times, and exposes partial-provider failures. Airport guides still use the existing Supabase travel_info_airports and inventory_public_entities_v resources.
+
+Local verification covers syntax, imports/exports, embed boot, provider contracts with mocks, stale replies, cart failure propagation, same-instance order submission deduplication, order ownership boundaries, administrator authorization and inventory revision conflicts. These tests do not prove a live provider request, payment, data write or production build. No database migration is required.
+
+AirLabs contract references: https://airlabs.co/docs/flights ; https://airlabs.co/docs/flight ; https://airlabs.co/docs/schedules . /flights has no documented date/limit parameters; /schedules is a current window of up to 10 hours, not historical/day-complete coverage. Cache 60 seconds; schedule pagination 50 rows per request, capped at 1,000 with a visible truncation notice. API quota and enabled endpoints require a live check. Forty of the 43 currently published airport guide rows have no timezone; clocks explicitly use UTC when missing.
+
+## Complete intended HTML
+
 ```html
 <!DOCTYPE html>
 <html lang="en">
@@ -156,7 +185,7 @@ The following payload is complete and is not intentionally shortened, summarized
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#f6faff">
-<title>Flight Status | SKANDI Travels · B-011.39</title>
+<title>Flight Status | SKANDI Travels · B-011.40</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Roboto+Mono:wght@500;600;700&display=swap" rel="stylesheet">
@@ -1111,6 +1140,7 @@ button,input,select{font:inherit}button{cursor:pointer}a{color:inherit}
   let currentMode = "airport";
   let clockTimer = 0;
   let searchTimer = 0;
+  let searchSerial=0, pendingSearch="", lastQuery="", refreshTimer=0;
   let contextTimer = 0;
   const SEARCH_TIMEOUT_MS = 25000;
   const CONTEXT_TIMEOUT_MS = 15000;
@@ -1206,17 +1236,17 @@ button,input,select{font:inherit}button{cursor:pointer}a{color:inherit}
   }
 
   function setDateLimits(){
-    const todayUtc = new Date().toISOString().slice(0,10);
+    const todayLive = isoDate(new Date());
 
-    // AirLabs /schedules is a live operational feed, not an arbitrary future-date timetable.
-    // Keep the customer control aligned with the provider contract instead of offering dates
-    // the backend cannot truthfully return as live Flight Status.
-    el("date").min = todayUtc;
-    el("date").max = todayUtc;
-    el("date").value = todayUtc;
+    // AirLabs /schedules owns the current live schedule window and does not
+    // accept a date query parameter. Keep one current display date only.
+    el("date").min = todayLive;
+    el("date").max = todayLive;
+    el("date").value = todayLive;
+    el("date").disabled = true;
 
-    el("dateHint").textContent = `Live AirLabs status date: ${todayUtc}`;
-    if(el("dateWindow")) el("dateWindow").textContent = todayUtc;
+    el("dateHint").textContent = `Live AirLabs schedule · ${todayLive}`;
+    if(el("dateWindow")) el("dateWindow").textContent = todayLive;
   }
 
   function setMode(mode="airport"){
@@ -1413,6 +1443,7 @@ button,input,select{font:inherit}button{cursor:pointer}a{color:inherit}
   }
 
   function clearRequestTimeouts(){
+    pendingSearch=""; lastQuery=""; searchSerial++;
     clearSearchTimeout();
     clearContextTimeout();
   }
@@ -1427,7 +1458,7 @@ button,input,select{font:inherit}button{cursor:pointer}a{color:inherit}
   function armSearchTimeout(){
     clearSearchTimeout();
     searchTimer=window.setTimeout(()=>{
-      searchTimer=0;
+      searchTimer=0; pendingSearch="";
       setBoardBusy(false);
       el("hardwareCasing")?.classList.remove("is-searching");
       el("rows")?.closest(".board-screen")?.setAttribute("aria-busy","false");
@@ -1452,6 +1483,7 @@ button,input,select{font:inherit}button{cursor:pointer}a{color:inherit}
 
   function search(){
     clearSearchTimeout();
+    setDateLimits();
     const v=values();
     const error=validate(v);
     if(error){setNotice(error,true);return;}
@@ -1483,7 +1515,8 @@ button,input,select{font:inherit}button{cursor:pointer}a{color:inherit}
     if(el("boardStatusEcho"))el("boardStatusEcho").textContent="SEARCHING";
     setBoardMessage("UPDATING FIDS","Loading the latest available flight information","flap-warn",true);
     armSearchTimeout();
-    post("FLIGHT_STATUS_SEARCH",v);
+    pendingSearch=String(++searchSerial); lastQuery=JSON.stringify(v);
+    post("FLIGHT_STATUS_SEARCH",{...v,requestId:pendingSearch});
   }
 
   function fmtDate(value){
@@ -1502,7 +1535,7 @@ button,input,select{font:inherit}button{cursor:pointer}a{color:inherit}
     if(localIso)return localIso[1];
     const d=new Date(raw);
     if(Number.isNaN(d.getTime()))return raw.slice(0,5);
-    try{return new Intl.DateTimeFormat("en-GB",{timeZone:airportTimezone||"UTC",hour:"2-digit",minute:"2-digit",hour12:false}).format(d)}
+    try{return new Intl.DateTimeFormat("en-GB",{timeZone:"UTC",hour:"2-digit",minute:"2-digit",hour12:false}).format(d)}
     catch(_){return new Intl.DateTimeFormat("en-GB",{timeZone:"UTC",hour:"2-digit",minute:"2-digit",hour12:false}).format(d)}
   }
 
@@ -1570,10 +1603,9 @@ button,input,select{font:inherit}button{cursor:pointer}a{color:inherit}
   }
 
   function createTimeDisplay(item,arrivals,key){
-    const scheduledRaw=arrivals?item?.arrival?.scheduled:item?.departure?.scheduled;
-    const latestRaw=arrivals?(item?.arrival?.estimated||scheduledRaw):(item?.departure?.estimated||scheduledRaw);
-    const scheduled=fmtTime(scheduledRaw)||"—";
-    const latest=fmtTime(latestRaw)||scheduled;
+    const side=arrivals?item?.arrival:item?.departure;
+    const scheduled=side?.scheduledLocal||fmtTime(side?.scheduled)||"—";
+    const latest=side?.actualLocal||side?.estimatedLocal||fmtTime(side?.actual||side?.estimated)||scheduled;
     const changed=cacheChanged(`${key}:time`,latest);
     const moved=scheduled&&latest&&scheduled!==latest;
     return `<div class="fids-time"><strong class="fids-time-main ${changed?"is-changing":""}">${escapeHtml(latest)}</strong>${moved?`<small>Sched ${escapeHtml(scheduled)}</small>`:""}</div>`;
@@ -1643,7 +1675,8 @@ button,input,select{font:inherit}button{cursor:pointer}a{color:inherit}
     if(!items||!items.length){
       setBoardMessage("NO FLIGHTS FOUND",currentMode==="airport"?"No flights were returned for this airport board.":currentMode==="flight"?"No matching flight was returned for this date.":"No flights were returned for this route and date.","flap-warn");
       el("boardMeta").textContent=meta?.message||"No flights matched the selected airport board.";
-      setStatusLabels("Updated","0 Flights");
+      setStatusLabels(meta?.partial?"Partial update":"Updated","0 Flights");
+      setNotice(meta?.note||"",false);
       if(el("boardStatusEcho"))el("boardStatusEcho").textContent="NO MATCH";
       return;
     }
@@ -1660,7 +1693,7 @@ button,input,select{font:inherit}button{cursor:pointer}a{color:inherit}
       const key=flightKey(item);
       const placeCity=arrivals?(item?.departure?.city||item?.departure?.airport||"---"):(item?.arrival?.city||item?.arrival?.airport||"---");
       const placeIata=arrivals?item?.departure?.iata:item?.arrival?.iata;
-      const gate=arrivals?(item?.arrival?.gate||item?.departure?.gate):item?.departure?.gate;
+      const gate=arrivals?item?.arrival?.gate:item?.departure?.gate;
       const status=item?.status||"Scheduled";
       const aria=[item?.flightIata,arrivals?"from":"to",placeCity,status].filter(Boolean).join(" ");
 
@@ -1675,9 +1708,9 @@ button,input,select{font:inherit}button{cursor:pointer}a{color:inherit}
     }).join("");
 
     el("boardMeta").textContent=meta?.message||`Displaying ${sorted.length} flights`;
-    const now=new Intl.DateTimeFormat("en-GB",{timeZone:airportTimezone||"UTC",hour:"2-digit",minute:"2-digit",hour12:false}).format(new Date());
+    const now=new Intl.DateTimeFormat("en-GB",{timeZone:airportTimezone||"UTC",hour:"2-digit",minute:"2-digit",hour12:false}).format(new Date(meta?.searchedAt||Date.now()));
     setStatusLabels(`Updated ${now}`,`${sorted.length} ${sorted.length===1?"Flight":"Flights"}`);
-    if(el("boardStatusEcho"))el("boardStatusEcho").textContent="LIVE";
+    if(el("boardStatusEcho"))el("boardStatusEcho").textContent=meta?.partial?"PARTIAL":"UPDATED";
     setNotice(meta?.note||"",false);
   }
 
@@ -1700,7 +1733,7 @@ button,input,select{font:inherit}button{cursor:pointer}a{color:inherit}
     if(!code)return;
     const key=contextKey(code,searchValues);
     const cached=airportContextCache.get(key);
-    if(cached){
+    if(cached && Date.now()-cached._cachedAt<120000){
       clearContextTimeout();
       contextRequestSerial++;
       pendingContext=null;
@@ -1829,7 +1862,8 @@ button,input,select{font:inherit}button{cursor:pointer}a{color:inherit}
     if(!airport.iata)return;
     activeAirportContext=context;
     const key=payload?.contextKey||contextKey(airport.iata,payload?.meta||{});
-    airportContextCache.set(key,payload);
+    airportContextCache.set(key,{...payload,_cachedAt:Date.now()});
+    if(airportContextCache.size>30)airportContextCache.delete(airportContextCache.keys().next().value);
     airportTimezone=airport.timezone||"UTC";
     selectedAirportIata=airport.iata;
     el("airport").dataset.selectedIata=airport.iata;
@@ -1940,8 +1974,9 @@ button,input,select{font:inherit}button{cursor:pointer}a{color:inherit}
     if(data.source !== PARENT_SOURCE) return;
 
     if(data.type === "FLIGHT_STATUS_RESULTS"){
-      clearSearchTimeout();
       const payload = data.payload || {};
+      if(!pendingSearch || String(payload.requestId)!==pendingSearch)return;
+      pendingSearch=""; clearSearchTimeout();
       if(payload.airportContext) renderAirportContext(payload.airportContext);
       render(payload.items || [], payload.meta || {});
       return;
@@ -1958,6 +1993,7 @@ button,input,select{font:inherit}button{cursor:pointer}a{color:inherit}
     }
 
     if(data.type === "FLIGHT_STATUS_AIRPORTS_ERROR"){
+      setNotice("Airport suggestions are unavailable. Enter a 3-letter IATA or 4-letter ICAO code to search.",true);
       return;
     }
 
@@ -1965,8 +2001,8 @@ button,input,select{font:inherit}button{cursor:pointer}a{color:inherit}
       const payload=data.payload||{};
       const serial=Number(payload.requestSerial||0);
       const key=textValue(payload.contextKey);
-      if(pendingContext&&serial&&serial!==pendingContext.serial)return;
-      if(pendingContext&&key&&key!==pendingContext.key)return;
+      if(!pendingContext||serial!==pendingContext.serial)return;
+      if(key!==pendingContext.key||currentMode!=="airport")return;
       clearContextTimeout();
       pendingContext=null;
       renderAirportContext(payload);
@@ -1976,7 +2012,7 @@ button,input,select{font:inherit}button{cursor:pointer}a{color:inherit}
     if(data.type === "FLIGHT_STATUS_AIRPORT_CONTEXT_ERROR"){
       const payload=data.payload||{};
       const serial=Number(payload.requestSerial||0);
-      if(pendingContext&&serial&&serial!==pendingContext.serial)return;
+      if(!pendingContext||serial!==pendingContext.serial)return;
       clearContextTimeout();
       pendingContext=null;
       if(!activeAirportContext)setContextState("welcome");
@@ -1985,12 +2021,14 @@ button,input,select{font:inherit}button{cursor:pointer}a{color:inherit}
     }
 
     if(data.type === "FLIGHT_STATUS_HOST_READY"){
+      post("FLIGHT_STATUS_AIRPORTS_REQUEST",{});
       return;
     }
 
     if(data.type === "FLIGHT_STATUS_ERROR"){
-      clearSearchTimeout();
       const payload = data.payload || {};
+      if(!pendingSearch||String(payload.requestId)!==pendingSearch)return;
+      pendingSearch=""; clearSearchTimeout();
       setBoardBusy(false);
       el("hardwareCasing")?.classList.remove("is-searching");
       el("rows")?.closest(".board-screen")?.setAttribute("aria-busy","false");
@@ -2154,10 +2192,15 @@ button,input,select{font:inherit}button{cursor:pointer}a{color:inherit}
   installReveal();
   setBoardMessage("BOARD READY", "Choose an airport and update the FIDS.", "flap-ok");
   window.addEventListener("pagehide",()=>{
-    window.clearInterval(clockTimer);
+    window.clearInterval(clockTimer); window.clearInterval(refreshTimer);
     clearRequestTimeouts();
   },{once:true});
-  post("FLIGHT_STATUS_READY", { version:"B-011.39" });
+  post("FLIGHT_STATUS_READY", { version:"V12" });
+  post("FLIGHT_STATUS_AIRPORTS_REQUEST",{});
+  refreshTimer=window.setInterval(()=>{
+    if(document.visibilityState==="hidden"||pendingSearch||!lastQuery)return;
+    if(JSON.stringify(values())===lastQuery)search();
+  },60000);
 })();
 
 </script>
