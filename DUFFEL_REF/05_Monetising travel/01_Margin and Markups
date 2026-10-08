@@ -1,0 +1,67 @@
+# Margin and Markups
+In business - and especially in travel - markup is a common method for making money. But how do margin and markup differ, what options are available, and how can you manage it with Duffel?
+Markup is generally known as the amount a business adds to the cost of a product to make up the final selling price so they can make money.
+Margin is generally known as the profit generated after accounting for costs.
+Markup is shown as a percentage of costs while margin is shown as a percentage of revenue. These two terms usually get confused as they both have similar inputs: what the product sold for and the cost of the product.
+Let's take an example to help clarify:
+A flight sells for £100 and it costs the airline £70 - so the difference is £30.
+Markup would be calculated as £30/£70 = 42.9%
+
+Margin would be calculated as £30/£100 = 30%
+
+Can I charge my customers a markup?
+Yes, you can add a markup. You can choose to add a markup to flights and/or ancillaries such as seat selection and additional baggage.
+It's a common pricing strategy to add a markup to cover your operating costs and make a profit.
+You can learn more ways to make money selling flights by reading our blog post: How NDC helps travel sellers make money in 2022 .
+How much can I mark up?
+Adding a markup is completely in your control.
+If you're using Duffel Payments, you can choose any amount as long as it covers the offer and services total amount, foreign exchange rate (if applicable), and Duffel Payments fee.
+If you're using Duffel Balance, you have greater flexibility on the markup, as long as your balance has enough funds to cover the cost of the flight.
+If the entire cost of the flight is greater than £5,000 you'll get a validation error. Read the Payment Intents documentation to learn more. To have this limit increased, please reach out to us.
+You have the flexibility to choose markup based on your own pricing strategy. For example, you could add 3% on flights from Europe if that's your most popular region or 5% on ancillaries from easyJet if most of your passengers add extras to easyJet flights. You still pass the field amountto us that includes your own markup and covers the cost of the flight.
+How do I add markup?
+Can my customer see the markup? How do I add markup so the customer only sees one price?
+If you're integrating Duffel into your own app or website, you have control over exactly what the customer sees, so you can choose to show them whatever price you want. That could be the price that Duffel is charging you, more, or less.
+Remember, some customers are more price sensitive than others and will go directly to the airline's website or use a price comparison tool when researching flights. Also note, if the customer books their flight with you but goes to the airline website to confirm their flight details with their booking reference number, they will see the price excluding markup.
+When you build your integration, you also need to build tools to control what markups are applied and when for example setting rules to determine when markup is applied or forecasting prices based on different scenarios to optimise your markup. We don't offer tools for this today.
+Adding markup in the test order environment
+Check out our Paying with customer cards guide that walks through collecting customer payments including adding a markup:
+Partial screenshot of the Duffel documentation showing the "collecting customer card payments" guide
+Partial screenshot of the Duffel documentation showing the "collecting customer card payments" guide
+
+Once you're ready, you can move this over to the live environment.
+Adding a markup in the Dashboard
+Currently, we do not provide the ability for agents to markup fares in our Dashboard. You must integrate with the API to add markup.
+How do I calculate the amount to charge my customer to account for Duffel Payment fees and currency conversion?
+To calculate the amount you need to charge your customer to cover the price of an offer plus any markup, you can use this calculation:
+((offer and services total_amount + markup) × foreign exchange rate) / (1 - Duffel Payments fee)
+Offer and services total amount: this is the total cost of the flight plus any extra services without Duffel fees. We always present the offer and service(s) total_amount in your settlement currency.
+Markup: This is the amount on top of the flight cost that you might charge your customer to cover operational costs and any profits you want to make on the sale of the flight.
+Foreign exchange rate: The foreign exchange rate would be the mid-market exchange for the day you charge your customer.
+You should use an external source to get this rate (for example, https://fixer.io/).
+If using Duffel Payments:
+Duffel applies a 2% interchange fee on transactions through Duffel Payments. You should include this in the amount you charge your customer.
+
+To determine the correct rate you should add a 2% markup on top of your foreign exchange rate in order to cover Duffel Payments FX fee (fx rate x 1.02).
+
+We recommend that you add slightly more than 2% to account for the fact the FX you use might be slightly different from the one used by Duffel.
+
+Duffel Payment fee: fee is determined based on the card country. It varies if the card is considered domestic or international, an example would be 2.9% or 0.029.
+When rounding is required you should round half away from zero.
+Example:
+Your balance currency is Euros (EUR), and your customer wants to pay for a flight in Great British Pounds (GBP), the foreign exchange rate between these two currencies is 0.85, they want to book a flight that costs €120.00 in total, you want to charge them €1.00 for your booking service, and the Duffel Payments fee is 2.9%. The amount would be calculated as follows ((€120.00 + €1.00) x 0.85) / (1 - 0.029) ~= £105.92.
+Diagram illustrating the flow of money from the customer into the Duffel platform and your organisation balance
+Diagram illustrating the flow of money from the customer into the Duffel platform and your organisation balance
+
+On average how much do travel sellers mark up flights?
+Unfortunately, there isn't a one-size-fits-all when it comes to markup as it varies based on a multitude of factors. Here are a few examples:
+Domestic/international flights
+
+Time of year
+
+How far away the flight is from booking
+
+Competitors' prices
+
+If you bundle other offerings such as accommodation, experiences, land transport, travel insurance, etc., you'll have more room to play around with the markup on flights as well as your other products.
+Although we can't advise a specific percentage that works for everyone, you could expect on average a range between 2-6%. As you explore your integration further with Duffel, we'd be happy to have more conversations around markup.
