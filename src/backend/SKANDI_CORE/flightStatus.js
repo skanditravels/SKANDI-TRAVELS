@@ -1,5 +1,5 @@
 // /src/backend/SKANDI_CORE/flightStatus.js
-// SKANDI Flight Status B-011.40 — AirLabs v9 strict provider contract.
+// SKANDI Flight Status — V12 AirLabs v9 provider integration.
 // API request parameters are endpoint-specific and limited to AirLabs-documented
 // fields. Public airport context remains on canonical Supabase resources.
 
@@ -16,14 +16,9 @@ import {
   safeNumber
 } from "backend/SKANDI_CORE/platformValidation";
 
-const FLIGHT_STATUS_CORE_VERSION = "B-011.40";
+const FLIGHT_STATUS_CORE_VERSION = "V12-AIRLABS";
 const AIRLABS_BASE = "https://airlabs.co/api/v9";
-const AIRLABS_SECRET_NAMES = Object.freeze([
-  "AIRLABS_API_KEY",
-  "AIRLABS_KEY",
-  "airlabs",
-  "AIRLABS"
-]);
+const AIRLABS_SECRET_NAMES = Object.freeze(["AIRLABS_API_KEY"]);
 
 const getSecretValue = elevate(secrets.getSecretValue);
 
@@ -41,6 +36,9 @@ const CONTEXT_TTL_MS = 2 * 60 * 1000;
 let airlabsKeyPromise = null;
 let directoryCache = null;
 const contextCache = new Map();
+const flightCache = new Map();
+const flightRequests = new Map();
+const FLIGHT_TTL_MS = 60000;
 
 function arr(value) {
   return Array.isArray(value) ? value : [];
@@ -276,7 +274,9 @@ async function callAirlabs(endpoint, params = {}) {
     );
   }
 
-  const raw = await response.text();
+  let raw;
+  try { raw = await response.text(); }
+  catch (_) { throw new SkandiError("AIRLABS_READ_FAILED", "Flight feed response could not be read.", { publicMessage: "The flight feed could not be read. Please try again." }); }
   let payload = {};
 
   if (raw) {
@@ -341,7 +341,7 @@ async function callAirlabs(endpoint, params = {}) {
 
     throw new SkandiError(
       "AIRLABS_REQUEST_FAILED",
-      `${code || "provider_error"}: ${providerMessage}`,
+      `AirLabs rejected the request (${code || "provider_error"}).`,
       {
         status: response.status,
         retryable,
@@ -350,6 +350,9 @@ async function callAirlabs(endpoint, params = {}) {
     );
   }
 
+  if (!raw || !payload || typeof payload !== "object") {
+    throw new SkandiError("AIRLABS_INVALID_RESPONSE", "Flight feed response is empty.", { publicMessage: "The flight feed returned an invalid response. Please try again." });
+  }
   return payload;
 }
 
@@ -407,7 +410,12 @@ function normalizedStatus(value) {
     return "en-route";
   }
 
-  return status || "scheduled";
+  return status || "unknown";
+}
+
+function providerLocalTime(value) {
+  const match = text(value, 50).match(/^\d{4}-\d{2}-\d{2}[ T](\d{2}:\d{2})/);
+  return match ? match[1] : "";
 }
 
 function normalizeScheduleFlight(item = {}) {
@@ -473,6 +481,9 @@ function normalizeScheduleFlight(item = {}) {
       gate:
         text(item.dep_gate, 40),
       timezone: "",
+      scheduledLocal: providerLocalTime(item.dep_time),
+      estimatedLocal: providerLocalTime(item.dep_estimated),
+      actualLocal: providerLocalTime(item.dep_actual),
       scheduled:
         utcTimestamp(
           item.dep_time_utc,
@@ -509,6 +520,9 @@ function normalizeScheduleFlight(item = {}) {
       baggage:
         text(item.arr_baggage, 40),
       timezone: "",
+      scheduledLocal: providerLocalTime(item.arr_time),
+      estimatedLocal: providerLocalTime(item.arr_estimated),
+      actualLocal: providerLocalTime(item.arr_actual),
       scheduled:
         utcTimestamp(
           item.arr_time_utc,
@@ -562,18 +576,19 @@ function normalizeDetailedFlight(item = {}) {
     },
 
     live: (
-      Number.isFinite(Number(item.lat)) &&
-      Number.isFinite(Number(item.lng))
+      item.lat != null && item.lng != null && item.lat !== "" && item.lng !== "" &&
+      Number.isFinite(Number(item.lat)) && Math.abs(Number(item.lat)) <= 90 &&
+      Number.isFinite(Number(item.lng)) && Math.abs(Number(item.lng)) <= 180
     )
       ? {
           updated:
-            text(item.updated, 80),
+            (Number.isFinite(Number(item.updated)) && Number(item.updated)>0 && Number(item.updated)<8640000000000 ? new Date(Number(item.updated)*1000).toISOString() : ""),
           latitude:
             Number(item.lat),
           longitude:
             Number(item.lng),
           altitude:
-            Number.isFinite(Number(item.alt))
+            item.alt != null && item.alt !== "" && Number.isFinite(Number(item.alt))
               ? Number(item.alt)
               : null
         }
@@ -663,6 +678,12 @@ function validateSearch(payload = {}) {
     );
   }
 
+  for (const value of [out.airport, out.from, out.to].filter(Boolean)) {
+    if (!/^[A-Z]{3,4}$/.test(value)) throw new SkandiError("FLIGHT_STATUS_AIRPORT_INVALID", "Invalid airport code.", { publicMessage: "Enter a three-letter IATA or four-letter ICAO airport code." });
+  }
+  if (mode === "flight" && !/^(?:[A-Z0-9]{2}|[A-Z]{3})\d{1,4}[A-Z]?$/.test(out.flightNumber)) {
+    throw new SkandiError("FLIGHT_STATUS_FLIGHT_INVALID", "Invalid flight number.", { publicMessage: "Enter an airline code and flight number, for example SK904." });
+  }
   return out;
 }
 
@@ -684,131 +705,88 @@ function flightIdentifierParams(value) {
   };
 }
 
-export async function searchFlightStatusCore(
-  payload = {}
-) {
+function airportFilter(side, code) {
+  return code ? { [`${side}_${code.length === 4 ? "icao" : "iata"}`]: code } : {};
+}
+function providerRows(result) {
+  const rows = airlabsResponse(result);
+  if (rows === null) return [];
+  if (Array.isArray(rows)) return rows;
+  if (rows && typeof rows === "object" && (rows.flight_iata || rows.flight_icao)) return [rows];
+  throw new SkandiError("AIRLABS_INVALID_RESPONSE", "Flight data shape is invalid.", { publicMessage: "The flight feed returned an invalid response. Please try again." });
+}
+async function readSchedules(params) {
+  const rows = [];
+  let hasMore = false;
+  for (let page = 0; page < 20; page++) {
+    const result = await callAirlabs("schedules", { ...params, limit: 50, offset: rows.length });
+    const batch = providerRows(result);
+    rows.push(...batch);
+    hasMore = result?.request?.has_more === true;
+    if (!hasMore || !batch.length) break;
+  }
+  return { rows, hasMore };
+}
+function sameFlight(a, b) {
+  const names = [a.flight_iata, a.flight_icao, a.cs_flight_iata].filter(Boolean);
+  return [b.flight_iata, b.flight_icao, b.cs_flight_iata].some(x => x && names.includes(x)) &&
+    (!a.dep_iata || !b.dep_iata || a.dep_iata === b.dep_iata) &&
+    (!a.arr_iata || !b.arr_iata || a.arr_iata === b.arr_iata);
+}
+async function loadFlightSearch(p) {
+  const filters = p.mode === "flight" ? flightIdentifierParams(p.flightNumber) :
+    p.mode === "route" ? { ...airportFilter("dep", p.from), ...airportFilter("arr", p.to) } :
+    airportFilter(p.boardType === "arrivals" ? "arr" : "dep", p.airport);
+  // /flights supplies live signals; /flight and /schedules supply airport-local
+  // timetable fields. Never send unsupported date/limit parameters to /flights.
+  const responses = await Promise.allSettled([
+    callAirlabs("flights", filters).then(providerRows),
+    p.mode === "flight"
+      ? callAirlabs("flight", filters).then(result => ({ rows: providerRows(result), hasMore: false }))
+      : readSchedules(filters)
+  ]);
+  if (responses.every(result => result.status === "rejected")) throw responses[0].reason;
+  const live = responses[0].status === "fulfilled" ? responses[0].value : [];
+  const scheduled = responses[1].status === "fulfilled" ? responses[1].value.rows : [];
+  const rows = scheduled.map(item => ({ ...item }));
+  for (const signal of live) {
+    const candidates = rows.map((item, index) => ({ item, index })).filter(x => sameFlight(x.item, signal));
+    // Repeated daily flight numbers: update only the nearest scheduled instance.
+    candidates.sort((a, b) => Math.abs(Number(a.item.dep_time_ts || 0) - Date.now()/1000) - Math.abs(Number(b.item.dep_time_ts || 0) - Date.now()/1000));
+    if (candidates.length) {
+      const index = candidates[0].index;
+      const valid = Object.fromEntries(Object.entries(signal).filter(([,value]) => value !== null && value !== undefined && value !== ""));
+      const identity=Object.fromEntries(["flight_iata","flight_icao","flight_number","airline_iata","airline_icao","cs_flight_iata","cs_airline_iata"].filter(key=>rows[index][key]).map(key=>[key,rows[index][key]]));
+      rows[index] = { ...rows[index], ...valid, ...identity };
+    } else rows.push(signal);
+  }
+  const warnings = [];
+  if (responses[0].status === "rejected") warnings.push("Live tracking is unavailable; showing timetable data.");
+  if (responses[1].status === "rejected") warnings.push("Timetable information is unavailable; showing live tracking only. Times and gates may be missing.");
+  if (responses[1].value?.hasMore) warnings.push("This board contains the first 1,000 schedule entries. Narrow the route to see more.");
+  const items = rows.map(normalizeDetailedFlight).filter(item => item.flightIata || item.flightIcao);
+  return { ok: true, items, meta: {
+    mode: p.mode, date: p.date, boardType: p.boardType, airport: p.airport,
+    provider: "airlabs", providerApi: "v9", endpoint: p.mode === "flight" ? "flights + flight" : "flights + schedules",
+    providerScope: p.mode === "flight" ? "closest-live-scheduled-or-landed-flight" : "live-tracking-and-current-schedule-window",
+    searchedAt: new Date().toISOString(), refreshAfterMs: FLIGHT_TTL_MS,
+    partial: warnings.length > 0, note: warnings.join(" "),
+    message: "Airport-local times when supplied; UTC otherwise. Schedule coverage is up to 10 hours ahead."
+  }};
+}
+export async function searchFlightStatusCore(payload = {}) {
   const p = validateSearch(payload);
-
-  if (p.mode === "flight") {
-    // AirLabs /flight documented request contract:
-    // api_key + one of flight_iata / flight_icao.
-    const result =
-      await callAirlabs(
-        "flight",
-        flightIdentifierParams(
-          p.flightNumber
-        )
-      );
-
-    const response =
-      airlabsResponse(result);
-
-    const rows =
-      response &&
-      typeof response === "object" &&
-      !Array.isArray(response)
-        ? [
-            normalizeDetailedFlight(
-              response
-            )
-          ]
-        : arr(response)
-            .map(
-              normalizeDetailedFlight
-            );
-
-    return {
-      ok: true,
-      items:
-        rows.filter(
-          item =>
-            item.flightIata ||
-            item.flightIcao ||
-            item.departure.iata ||
-            item.arrival.iata
-        ),
-      meta: {
-        mode: p.mode,
-        date: p.date,
-        boardType: p.boardType,
-        provider: "airlabs",
-        providerApi: "v9",
-        endpoint: "flight",
-        providerScope:
-          "closest-live-scheduled-or-landed-flight",
-        searchedAt:
-          new Date().toISOString()
-      }
-    };
-  }
-
-  // AirLabs /schedules documented request contract:
-  // api_key plus one or more supported flight/airport/airline filters.
-  const params = {};
-
-  if (p.mode === "route") {
-    if (p.from) {
-      params.dep_iata = p.from;
-    }
-
-    if (p.to) {
-      params.arr_iata = p.to;
-    }
-  }
-
-  if (p.mode === "airport") {
-    if (p.boardType === "arrivals") {
-      params.arr_iata = p.airport;
-    } else {
-      params.dep_iata = p.airport;
-    }
-  }
-
-  const result =
-    await callAirlabs(
-      "schedules",
-      params
-    );
-
-  const response =
-    airlabsResponse(result);
-
-  const rawRows =
-    Array.isArray(response)
-      ? response
-      : response &&
-        typeof response === "object"
-        ? [response]
-        : [];
-
-  // Do not post-filter by calendar date. AirLabs controls the live schedule
-  // window and explicitly documents that /schedules returns up to ~10h ahead.
-  const rows =
-    rawRows.map(
-      normalizeScheduleFlight
-    );
-
-  return {
-    ok: true,
-    items: rows,
-    meta: {
-      mode: p.mode,
-      date: p.date,
-      boardType: p.boardType,
-      airport: p.airport,
-      provider: "airlabs",
-      providerApi: "v9",
-      endpoint: "schedules",
-      providerScope:
-        "current-live-schedule-window",
-      searchedAt:
-        new Date().toISOString(),
-      note:
-        rows.length
-          ? ""
-          : "AirLabs returned no flights in the current live schedule window."
-    }
-  };
+  const key = JSON.stringify({ ...p, date: "" });
+  const cached = flightCache.get(key);
+  if (cached && cached.expiresAt > Date.now()) return cached.value;
+  if (flightRequests.has(key)) return flightRequests.get(key);
+  const pending = loadFlightSearch(p).then(value => {
+    flightCache.set(key, { value, expiresAt: Date.now() + FLIGHT_TTL_MS });
+    if (flightCache.size > 100) flightCache.delete(flightCache.keys().next().value);
+    return value;
+  }).finally(() => flightRequests.delete(key));
+  flightRequests.set(key, pending);
+  return pending;
 }
 
 function publicAirport(row = {}) {
