@@ -1242,8 +1242,10 @@ function DraggableHotspot({item,index,onMove,onSelect}){
     const y=Math.max(0,Math.min(100,((e.clientY-rect.top)/rect.height)*100));
     onMove(x,y);
   }
+{% raw %}
   return html`<div className=${`hotspot ${drag?"dragging":""}`} style=${{left:`${item.x??50}%`,top:`${item.y??50}%`}} onPointerDown=${e=>{e.currentTarget.setPointerCapture(e.pointerId);setDrag(true)}} onPointerMove=${move} onPointerUp=${()=>setDrag(false)} onClick=${e=>{e.stopPropagation();onSelect?.()}}>${index+1}<div className="hotlabel">${item.label||item.title||`Hotspot ${index+1}`}</div></div>`
 }
+{% endraw %}
 
 
 function AircraftStudio({boot,setBusy,setToast}){
