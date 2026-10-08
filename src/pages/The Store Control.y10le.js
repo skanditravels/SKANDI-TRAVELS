@@ -59,6 +59,19 @@ function cleanError(error) {
   return map[raw] || raw || "Store Control could not complete the action.";
 }
 
+function reportError(error, action = "bootstrap") {
+  const reference = error?.requestId ? ` Reference: ${error.requestId}.` : "";
+  send("STORE_CONTROL_ERROR", {
+    stage: error?.stage || action,
+    code: error?.code || "STORE_CONTROL_REQUEST_FAILED",
+    requestId: error?.requestId || "",
+    message: cleanError(error) + reference
+  });
+  if (["STORE_CONTROL_AUTH_REQUIRED", "STAFF_AUTH_REQUIRED"].includes(error?.code || error?.message)) {
+    wixLocationFrontend.to(LOGIN_PATH);
+  }
+}
+
 async function requireSession() {
   const session = await getStaffPortalSession().catch(() => null);
   if (!session || session.ok === false || session.authorized === false) {
@@ -76,6 +89,13 @@ async function bootstrap(force = false, query = "") {
     if (!session) return null;
 
     const result = await getStoreControlBootstrap({ query });
+    if (!result || result.ok !== true) {
+      const failure = new Error(result?.error?.message || "Store Control returned no confirmed catalog. Refresh to retry.");
+      failure.code = result?.error?.code || "STORE_CONTROL_BOOTSTRAP_FAILED";
+      failure.stage = result?.stage || "bootstrap";
+      failure.requestId = result?.requestId || "";
+      throw failure;
+    }
     send("STORE_CONTROL_BOOTSTRAP", result);
     return result;
   })();
@@ -230,14 +250,7 @@ $w.onReady(function () {
       await handleMessage(message);
     } catch (error) {
       console.error(`[Store Control V3] ${message.type} failed.`, error);
-      const cleaned = cleanError(error);
-      send("STORE_CONTROL_ERROR", {
-        stage: message.type,
-        message: cleaned
-      });
-      if (String(error?.message || "") === "STORE_CONTROL_AUTH_REQUIRED") {
-        wixLocationFrontend.to(LOGIN_PATH);
-      }
+      reportError(error, message.type);
     } finally { if(mutation){mutating=false;send("STORE_CONTROL_IDLE",{})} }
   });
 
@@ -248,7 +261,6 @@ $w.onReady(function () {
   });
 
   void bootstrap(false).catch((error) => {
-    send("STORE_CONTROL_ERROR", { message: cleanError(error) });
+    reportError(error);
   });
 });
-
