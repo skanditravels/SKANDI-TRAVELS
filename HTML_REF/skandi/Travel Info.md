@@ -18,9 +18,10 @@
 - PROVIDER SNAPSHOT: the provider evidence remains under `payload.duffel` (`normalized` + `raw`). The migration promotes the normalized provider-owned subset into the canonical Inventory detail object and retains a read-only `inventory_details.duffel` / `details.duffel` copy for audit/context; SKANDI enrichment remains editable only in Inventory Control.
 - AUTHORIZATION: unchanged from current V12 page/facade/core boundaries. No frontend role or provider secret becomes authoritative.
 - MESSAGE CONTRACTS / ELEMENT IDS: existing contracts preserved; Travel Info adds `TRAVEL_INFO_AIRPORT_CONTEXT_REQUEST/RESULT/ERROR`, `TRAVEL_INFO_AIRPORT_FLIGHTS_REQUEST/RESULT/ERROR`, and `TRAVEL_INFO_AIRPORT_ACTION` between the existing embed and page controller.
-- LAST VERIFIED: 2026-10-09 — current repo `skanditravels/SKANDI-TRAVELS`, branch `main`, commit `28c4227874d199913d234d314a4dfa9c125e74a8`; current Travel Info/Flight Status page-to-facade/core chain inspected. The previously prepared Duffel Logo Lockup backend repair is preserved cumulatively. No external mutation performed.
+- LAST VERIFIED: 2026-10-09 — current repo `skanditravels/SKANDI-TRAVELS`, branch `main`, commit `20bd2ba89f8a45b5ee7b3fdd186b3d2900139b70`; current Travel Info/Flight Status page-to-facade/core chain inspected. The approved Duffel Logo Lockup and current-time FIDS repairs are preserved cumulatively. No external mutation performed.
 
 ## CHANGE LOG
+- 2026-10-09 — Eight-column passenger FIDS: Flight Info now renders LOGO / FLIGHT NO / CODESHARE / TIME / TO-FROM / TERMINAL / GATE-BELT / REMARKS in a contemporary digital airport layout. Codeshare rows are consolidated into the physical operating flight and marketing flight numbers rotate in the isolated Codeshare column every 3.5 seconds. The stable operating carrier uses its Duffel-derived Logo Lockup URL from canonical Inventory/Supabase while the scheduled TOD/TOA remains fixed in Time. Departures use gate wayfinding; arrivals use `arr_baggage` as Belt with an arrivals-green accent. Completed flights remain hidden behind See earlier flights, and operational remarks retain completion time, boarding/final-call, delay, cancellation and en-route states. STATICALLY VERIFIED; REQUIRES LIVE TEST after Wix publication.
 - 2026-10-09 — Modern current-time FIDS: the Travel Info Flight Info board now uses a flat contemporary digital-airport display, keeps the scheduled departure/arrival time fixed in the time column, moves actual completion time into status text (`DEPARTED HH:MM` / `LANDED HH:MM`), hides completed flights from the default current board, and exposes them through a rectangular `See earlier flights` control. Delayed/non-completed flights remain on the current board even when scheduled time has passed. The board displays the selected airport local clock, re-renders/refreshes while Flight Info is open, retains Departures/Arrivals only, and adds responsive mobile labels. No LIVE/READY/SYNC decorative state pills are introduced. STATICALLY VERIFIED; REQUIRES LIVE TEST after Wix publication.
 - 2026-10-09 — FIDS airline branding: Flight Info now receives `airlineLogoUrl` from the canonical Supabase `travel_info_airlines.inventory_details.logoLockupUrl` field populated from Duffel, keyed by `iataCode`. The existing FIDS renderer already prefers `item.airlineLogoUrl`, so no embed/layout/message-contract change is required. Branding lookup is cached for five minutes and fails open to the existing logo fallback without interrupting AirLabs flight data. STATICALLY VERIFIED; REQUIRES LIVE TEST after Wix publication.
 - 2026-10-09 — Airport-information convergence: the Flight Status airport profile/header and its airport-context modules move into each Travel Info airport detail. Airport details are true tabs and include a new `Flight Info` tab containing the selected airport FIDS with Departures/Arrivals only—no airport search and no date selector inside the tab. Travel Info reuses the canonical Flight Status facade/core rather than creating a second provider client. Decorative system-state pills such as LIVE/READY/SYNC are prohibited on this surface. STATICALLY VERIFIED; REQUIRES LIVE TEST after Wix publication.
@@ -2981,6 +2982,248 @@ body{background:#fff;color:var(--hybrid-text)}
 }
 </style>
 
+
+<style id="tiEightColumnPassengerFids">
+/* Eight-column contemporary passenger FIDS. Functional gate/belt badges are wayfinding, not decorative state pills. */
+.ti-airport-flight-panel{
+  --fids-accent:#f2c94c;
+  --fids-accent-muted:#8e7a34;
+  --fids-ok:#71d5b7;
+  --fids-warn:#f2c94c;
+  --fids-bad:#ff7d86;
+}
+.ti-airport-flight-panel.is-arrivals{
+  --fids-accent:#72d7b6;
+  --fids-accent-muted:#477f70;
+}
+.ti-airport-flight-panel .flight-board-shell{
+  border-color:#26343d;
+  border-radius:6px;
+  background:#05090c;
+  box-shadow:0 14px 38px rgba(2,18,32,.16);
+}
+.ti-airport-flight-panel .board-airport-bar{
+  min-height:66px;
+  grid-template-columns:minmax(150px,.78fr) minmax(180px,1fr) minmax(180px,.82fr);
+  border-bottom-color:#34434d;
+  background:#0a1218;
+}
+.ti-airport-flight-panel .board-airport-bar>div{border-right-color:#27343d}
+.ti-airport-flight-panel .board-airport-bar small{color:#768894}
+.ti-airport-flight-panel .board-airport-bar strong{
+  color:#f7fafc;
+  font-size:23px;
+}
+.ti-airport-flight-panel .board-airport-bar>div:nth-child(2) strong,
+.ti-airport-flight-panel .board-clock strong{color:var(--fids-accent)}
+.ti-airport-flight-panel .board-columns{
+  min-height:42px;
+  border-bottom-color:#3b4b56;
+  background:#111c23;
+}
+.ti-airport-flight-panel .board-columns>div{
+  padding:13px 10px;
+  color:#9aaab5;
+  font-family:"Roboto Mono",monospace;
+  font-size:9px;
+  font-weight:700;
+  letter-spacing:.105em;
+  text-transform:uppercase;
+  border-right-color:#2c3a43;
+  white-space:nowrap;
+}
+.ti-airport-flight-panel .fids-layout{
+  grid-template-columns:150px 100px 110px 100px minmax(200px,1fr) 80px 85px minmax(180px,220px);
+}
+.ti-airport-flight-panel .fids-row{
+  min-height:66px;
+  background:#071018;
+  border-bottom-color:#25333c;
+}
+.ti-airport-flight-panel .fids-row:nth-of-type(even){background:#09131b}
+.ti-airport-flight-panel .fids-row:hover{background:#0d1a22}
+.ti-airport-flight-panel .fids-cell{
+  min-height:66px;
+  padding:8px 10px;
+  border-right-color:#202e37;
+  overflow:hidden;
+}
+.ti-airport-flight-panel .cell-airline{padding-left:12px;padding-right:12px}
+.ti-airport-flight-panel .fids-carrier{
+  width:100%;
+  height:100%;
+  display:flex;
+  align-items:center;
+  justify-content:flex-start;
+}
+.ti-airport-flight-panel .fids-tail{
+  width:118px;
+  height:42px;
+  padding:5px 8px;
+  border-radius:3px;
+  background:#fff;
+  border:1px solid rgba(255,255,255,.75);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.ti-airport-flight-panel .fids-tail img{
+  width:100%;
+  height:100%;
+  max-width:102px;
+  max-height:30px;
+  object-fit:contain;
+}
+.ti-airport-flight-panel .fids-tail.fallback{
+  width:118px;
+  height:42px;
+  color:#0b2d4f;
+  background:#eaf0f4;
+  font-family:"Roboto Mono",monospace;
+  font-size:18px;
+  font-weight:800;
+}
+.ti-airport-flight-panel .fids-carrier-name{display:none!important}
+.ti-airport-flight-panel .fids-flight strong{
+  color:#f2c94c;
+  font-family:"Roboto Mono",monospace;
+  font-size:18px;
+  font-weight:650;
+  letter-spacing:.018em;
+  white-space:nowrap;
+}
+.ti-airport-flight-panel .fids-codeshare{
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+  max-width:100%;
+  color:#a2adb5;
+  font-family:"Roboto Mono",monospace;
+  font-size:14px;
+  font-weight:500;
+  letter-spacing:.015em;
+  white-space:nowrap;
+  transition:opacity .16s ease,transform .16s ease;
+}
+.ti-airport-flight-panel .fids-codeshare.is-changing{
+  opacity:.18;
+  transform:translateY(-3px);
+}
+.ti-airport-flight-panel .fids-codeshare-rotate{
+  color:#657986;
+  font-size:13px;
+  line-height:1;
+}
+.ti-airport-flight-panel .fids-time-main{
+  color:#f7fafc;
+  font-family:"Roboto Mono",monospace;
+  font-size:25px;
+  font-weight:650;
+  letter-spacing:.01em;
+  white-space:nowrap;
+}
+.ti-airport-flight-panel .fids-destination strong{
+  color:#f7fafc;
+  font-family:"Roboto Mono",monospace;
+  font-size:18px;
+  font-weight:650;
+  letter-spacing:.005em;
+  line-height:1.14;
+  white-space:nowrap;
+}
+.ti-airport-flight-panel .fids-destination strong span{color:#9aacb7}
+.ti-airport-flight-panel .fids-terminal{
+  color:#dce5ea;
+  font-family:"Roboto Mono",monospace;
+  font-size:18px;
+  font-weight:400;
+  white-space:nowrap;
+}
+.ti-airport-flight-panel .fids-gate{
+  min-width:54px;
+  min-height:30px;
+  padding:5px 8px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  border:1px solid #55656f;
+  border-radius:4px;
+  background:#26323a;
+  color:#f7fafc;
+  font-family:"Roboto Mono",monospace;
+  font-size:16px;
+  font-weight:800;
+  letter-spacing:.02em;
+  white-space:nowrap;
+}
+.ti-airport-flight-panel .fids-gate.is-belt{
+  border-color:#3e806b;
+  background:#17392f;
+  color:#9ce5ca;
+}
+.ti-airport-flight-panel .fids-status{
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+  color:var(--fids-ok);
+  font-family:"Roboto Mono",monospace;
+  font-size:12px;
+  font-weight:800;
+  letter-spacing:.025em;
+  line-height:1.25;
+  white-space:normal;
+}
+.ti-airport-flight-panel .fids-status::before{
+  content:"";
+  width:7px;
+  height:7px;
+  flex:0 0 7px;
+  display:block;
+  border-radius:50%;
+  background:currentColor;
+  box-shadow:0 0 8px color-mix(in srgb,currentColor 45%,transparent);
+}
+.ti-airport-flight-panel .fids-status.flap-warn{color:var(--fids-warn)}
+.ti-airport-flight-panel .fids-status.flap-bad{color:var(--fids-bad)}
+.ti-airport-flight-panel.is-arrivals .board-columns,
+.ti-airport-flight-panel.is-arrivals .board-airport-bar{
+  border-color:#2d4b42;
+}
+.ti-airport-flight-panel.is-arrivals .board-airport-bar>div,
+.ti-airport-flight-panel.is-arrivals .board-columns>div,
+.ti-airport-flight-panel.is-arrivals .fids-cell{
+  border-color:#203c34;
+}
+.ti-airport-flight-panel .fids-group-divider{grid-column:1/-1}
+@media(max-width:1180px) and (min-width:981px){
+  .ti-airport-flight-panel .fids-layout{
+    grid-template-columns:124px 92px 100px 88px minmax(170px,1fr) 72px 78px minmax(150px,190px);
+  }
+  .ti-airport-flight-panel .fids-tail{width:100px}
+  .ti-airport-flight-panel .fids-tail img{max-width:88px}
+  .ti-airport-flight-panel .fids-destination strong{font-size:16px}
+  .ti-airport-flight-panel .fids-flight strong{font-size:17px}
+  .ti-airport-flight-panel .fids-time-main{font-size:22px}
+}
+@media(max-width:980px){
+  .ti-airport-flight-panel .fids-layout{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+  .ti-airport-flight-panel .cell-airline,
+  .ti-airport-flight-panel .cell-place,
+  .ti-airport-flight-panel .cell-remarks{grid-column:span 2}
+  .ti-airport-flight-panel .cell-codeshare{grid-column:span 1}
+  .ti-airport-flight-panel .fids-tail{width:112px}
+  .ti-airport-flight-panel .fids-destination strong{white-space:normal}
+}
+@media(max-width:620px){
+  .ti-airport-flight-panel .fids-layout{grid-template-columns:1fr 1fr}
+  .ti-airport-flight-panel .cell-airline,
+  .ti-airport-flight-panel .cell-place,
+  .ti-airport-flight-panel .cell-remarks{grid-column:span 2}
+}
+</style>
+
 </head>
 <body>
 <div id="tiLive" class="ti-visually-hidden" aria-live="polite"></div>
@@ -3649,7 +3892,104 @@ function tiUpdateAirportClock(x){
   if(time)time.textContent=clock.time;
   if(date)date.textContent=clock.date
 }
-function tiAirportDirectoryLabel(side){const code=text(side?.iata||side?.icao).toUpperCase();const d=arr(DATA.airports).find(a=>text(a.iataCode||a.iata).toUpperCase()===code||text(a.icaoCode||a.icao).toUpperCase()===code);const city=text(side?.city||d?.city),name=text(side?.airport||d?.title||d?.name).replace(/\s*\([A-Z0-9]{3,4}\)\s*$/i,"").replace(/\bInternational\b|\bAirport\b/gi,"").replace(/\s+/g," ").trim();let n=name;if(city&&n.toLowerCase().startsWith(city.toLowerCase()))n=n.slice(city.length).replace(/^[\s/–—-]+/,"");const place=[city,n].filter(Boolean).join(" / ").toUpperCase();return {place:place||code||"—",code:place?code:""}}
+function tiAirportDirectoryLabel(side){
+  const code=text(side?.iata||side?.icao).toUpperCase();
+  const directory=arr(DATA.airports);
+  const d=directory.find(a=>text(a.iataCode||a.iata).toUpperCase()===code||text(a.icaoCode||a.icao).toUpperCase()===code);
+  const city=text(side?.city||d?.city).replace(/\s+/g," ").trim();
+  const name=text(side?.airport||d?.title||d?.name)
+    .replace(/\s*\([A-Z0-9]{3,4}\)\s*$/i,"")
+    .replace(/\bInternational\b|\bAirport\b/gi,"")
+    .replace(/\s+/g," ")
+    .trim();
+  const cityKey=city.toLowerCase();
+  const metroCount=cityKey?directory.filter(a=>text(a?.city).toLowerCase()===cityKey).length:0;
+  let place="";
+  if(city){
+    place=metroCount>1&&code?`${city}/${code}`:city;
+  }else if(name){
+    place=code?`${name}/${code}`:name;
+  }else{
+    place=code||"—";
+  }
+  return {place:place.toUpperCase(),code:""}
+}
+function tiFlightDisplay(value){
+  const raw=text(value).toUpperCase().replace(/\s+/g,"");
+  const m=
+    raw.match(/^([A-Z0-9]{2})(\d{1,4}[A-Z]?)$/)||
+    raw.match(/^([A-Z]{3})(\d{1,4}[A-Z]?)$/);
+  return m?`${m[1]} ${m[2]}`:(raw||"—")
+}
+function tiFlightToken(value){
+  return text(value).toUpperCase().replace(/[^A-Z0-9]/g,"")
+}
+function tiFidsServiceDate(item){
+  const side=obj(item?.departure);
+  const raw=text(side.scheduled||side.estimated||side.actual);
+  if(/^\d{4}-\d{2}-\d{2}/.test(raw))return raw.slice(0,10);
+  return ""
+}
+function tiFidsGroupKey(item){
+  const physical=tiFlightToken(item?.operatingFlightIata||item?.flightIata||item?.flightIcao);
+  const dep=text(item?.departure?.iata||item?.departure?.airport).toUpperCase();
+  const arrv=text(item?.arrival?.iata||item?.arrival?.airport).toUpperCase();
+  return [physical,dep,arrv,tiFidsServiceDate(item)].join("|")
+}
+function tiFidsRichness(item){
+  const dep=obj(item?.departure),arrv=obj(item?.arrival);
+  return [
+    dep.actual,dep.actualLocal,dep.estimated,dep.estimatedLocal,dep.gate,dep.terminal,
+    arrv.actual,arrv.actualLocal,arrv.estimated,arrv.estimatedLocal,arrv.gate,arrv.baggage,arrv.terminal,
+    item?.operatingAirlineLogoUrl,item?.airlineLogoUrl,item?.live
+  ].reduce((score,value)=>score+(value!==undefined&&value!==null&&value!==""?1:0),0)
+}
+function tiFidsGroupFlights(items){
+  const groups=new Map();
+  arr(items).forEach(item=>{
+    const key=tiFidsGroupKey(item);
+    if(!key.replace(/\|/g,""))return;
+    if(!groups.has(key))groups.set(key,[]);
+    groups.get(key).push(item)
+  });
+  return [...groups.values()].map(rows=>{
+    const physical=tiFlightToken(rows[0]?.operatingFlightIata||rows[0]?.flightIata||rows[0]?.flightIcao);
+    const native=rows.find(row=>tiFlightToken(row?.flightIata)===physical&&!tiFlightToken(row?.operatingFlightIata));
+    const representative=native||rows.slice().sort((a,b)=>tiFidsRichness(b)-tiFidsRichness(a))[0]||{};
+    const operatingAirlineIata=text(
+      rows.map(row=>row?.operatingAirlineIata).find(Boolean)||
+      native?.airlineIata||
+      representative?.operatingAirlineIata||
+      representative?.airlineIata
+    ).toUpperCase();
+    const operatingLogo=
+      rows.map(row=>safeExternal(row?.operatingAirlineLogoUrl)).find(Boolean)||
+      safeExternal(rows.find(row=>text(row?.airlineIata).toUpperCase()===operatingAirlineIata)?.airlineLogoUrl)||
+      safeExternal(representative?.airlineLogoUrl)||
+      "";
+    const operatingName=text(
+      rows.find(row=>text(row?.airlineIata).toUpperCase()===operatingAirlineIata)?.airlineName||
+      (text(representative?.airlineIata).toUpperCase()===operatingAirlineIata?representative?.airlineName:"")||
+      operatingAirlineIata
+    );
+    const codeshareFlightIatas=[...new Set(rows.map(row=>{
+      const marketing=tiFlightToken(row?.flightIata);
+      return marketing&&marketing!==physical?marketing:""
+    }).filter(Boolean))];
+    return {
+      ...representative,
+      displayFlightIata:physical||tiFlightToken(representative?.flightIata||representative?.flightIcao),
+      displayAirlineIata:operatingAirlineIata||text(representative?.airlineIata).toUpperCase(),
+      displayAirlineLogoUrl:operatingLogo,
+      displayAirlineName:operatingName,
+      codeshareFlightIatas
+    }
+  })
+}
+function tiBelt(value){
+  const raw=text(value).toUpperCase().replace(/^BELT\s*/i,"").trim();
+  return raw?`BELT ${raw}`:"—"
+}
 function tiAirportCompleted(item,arrivals){
   const raw=lower(item?.status),side=arrivals?obj(item?.arrival):obj(item?.departure);
   if(raw.includes("cancel")||raw.includes("divert"))return false;
@@ -3659,9 +3999,12 @@ function tiAirportCompleted(item,arrivals){
   return Boolean(side.actual||side.actualLocal||raw.includes("depart")||raw==="en-route"||raw==="active")
 }
 function tiAirportFlightIsEarlier(item,arrivals){
-  if(!tiAirportCompleted(item,arrivals))return false;
-  const side=arrivals?obj(item?.arrival):obj(item?.departure),now=Date.now();
+  const side=arrivals?obj(item?.arrival):obj(item?.departure),now=Date.now(),raw=lower(item?.status);
   const actual=tiSideEpoch(side,"actual"),scheduled=tiSideEpoch(side,"scheduled");
+  if(raw.includes("cancel")||raw.includes("divert")){
+    return Number.isFinite(scheduled)?scheduled<now:false
+  }
+  if(!tiAirportCompleted(item,arrivals))return false;
   if(Number.isFinite(actual))return actual<=now;
   if(Number.isFinite(scheduled))return scheduled<now;
   return true
@@ -3679,12 +4022,24 @@ function tiAirportStatus(item,arrivals,meta){
     return[at==="—:—"?"DEPARTED":`DEPARTED ${at}`,"flap-ok"]
   }
   const delay=Number(side?.delay||0);
-  if(delay>0)return[`DELAYED ${Math.round(delay)} MIN`,"flap-warn"];
+  const estimated=tiProviderClock(side?.estimatedLocal,side?.estimated);
+  const scheduled=tiScheduledFlightTime(side);
+  if(delay>0||(
+    estimated!=="—:—"&&
+    scheduled!=="—:—"&&
+    estimated!==scheduled&&
+    !raw.includes("cancel")
+  )){
+    return[
+      estimated!=="—:—"?`DELAYED ${estimated}`:`DELAYED ${Math.max(1,Math.round(delay))} MIN`,
+      "flap-warn"
+    ]
+  }
   const operationalTs=tiSideEpoch(side,"estimated");
   const scheduledTs=tiSideEpoch(side,"scheduled");
   const ts=Number.isFinite(operationalTs)?operationalTs:scheduledTs;
   if(!arrivals&&Number.isFinite(ts)){
-    const airline=text(item?.airlineIata).toUpperCase();
+    const airline=text(item?.displayAirlineIata||item?.operatingAirlineIata||item?.airlineIata).toUpperCase();
     const rule=obj(obj(meta?.boardingRules)[airline]||obj(meta?.boardingRules).DEFAULT);
     const minutes=(ts-now)/60000;
     if(minutes<=Number(rule.final_call_window||15)&&minutes>-5)return["FINAL CALL","flap-warn"];
@@ -3692,28 +4047,78 @@ function tiAirportStatus(item,arrivals,meta){
   }
   return[raw&&raw!=="unknown"?human(raw).toUpperCase():"ON TIME","flap-ok"]
 }
-function tiTerminal(v){const raw=text(v).toUpperCase().replace(/^TERMINAL\s*/i,"");return /^[0-9]+[A-Z]?$/.test(raw)||/^[A-SU-Z]$/.test(raw)?`T${raw}`:(raw||"—")}
+function tiTerminal(v){
+  const raw=text(v).toUpperCase().replace(/^TERMINAL\s*/i,"").replace(/^T(?=\d)/,"").trim();
+  return raw||"—"
+}
 function tiFidsRowHtml(item,index,arrivals,entry,extraClass=""){
-  const side=arrivals?obj(item.arrival):obj(item.departure),place=arrivals?obj(item.departure):obj(item.arrival),airline=text(item.airlineIata).toUpperCase(),logo=safeExternal(item.airlineLogoUrl)||TI_AIRLINE_LOGOS[airline]||"",carrier=text(obj(entry.meta?.boardingRules)[airline]?.name||item.airlineName||airline||"Airline"),dest=tiAirportDirectoryLabel(place),status=tiAirportStatus(item,arrivals,entry.meta),facility=arrivals?text(item.arrival?.baggage||side?.gate||"—"):text(side?.gate||"—");
-  return `<div class="fids-row fids-layout ${esc(extraClass)}" role="row" style="--row:${index}"><div class="fids-cell cell-airline" data-label="Airline" role="cell"><div class="fids-carrier" title="${esc(carrier)}"><span class="fids-tail ${logo?"":"fallback"}" data-code="${esc(airline||"--")}">${logo?`<img src="${esc(logo)}" alt="${esc(carrier)}" decoding="async">`:`<span class="fids-logo-fallback">${esc(airline||"--")}</span>`}</span><span class="fids-carrier-name">${esc(carrier)}</span></div></div><div class="fids-cell cell-flight" data-label="Flight" role="cell"><div class="fids-flight"><strong>${esc(text(item.flightIata||item.flightIcao)||"—")}</strong></div></div><div class="fids-cell cell-time" data-label="${arrivals?"Scheduled arrival":"Scheduled departure"}" role="cell"><div class="fids-time"><strong class="fids-time-main">${esc(tiScheduledFlightTime(side))}</strong></div></div><div class="fids-cell cell-place" data-label="${arrivals?"From":"To"}" role="cell"><div class="fids-destination"><strong>${esc(dest.place)}${dest.code?` <span>(${esc(dest.code)})</span>`:""}</strong></div></div><div class="fids-cell cell-terminal" data-label="Terminal" role="cell"><span class="fids-terminal">${esc(tiTerminal(side.terminal))}</span></div><div class="fids-cell cell-gate" data-label="${arrivals?"Belt / Gate":"Gate"}" role="cell"><span class="fids-gate">${esc(facility)}</span></div><div class="fids-cell cell-remarks" data-label="Status" role="cell"><span class="fids-status ${status[1]}">${esc(status[0])}</span></div></div>`
+  const side=arrivals?obj(item.arrival):obj(item.departure);
+  const place=arrivals?obj(item.departure):obj(item.arrival);
+  const airline=text(item.displayAirlineIata||item.operatingAirlineIata||item.airlineIata).toUpperCase();
+  const logo=
+    safeExternal(item.displayAirlineLogoUrl)||
+    safeExternal(item.operatingAirlineLogoUrl)||
+    safeExternal(item.airlineLogoUrl)||
+    TI_AIRLINE_LOGOS[airline]||
+    "";
+  const carrier=text(obj(entry.meta?.boardingRules)[airline]?.name||item.displayAirlineName||item.airlineName||airline||"Airline");
+  const flight=tiFlightDisplay(item.displayFlightIata||item.operatingFlightIata||item.flightIata||item.flightIcao);
+  const codeshares=arr(item.codeshareFlightIatas).map(tiFlightToken).filter(Boolean);
+  const codeshareFirst=codeshares[0]?tiFlightDisplay(codeshares[0]):"—";
+  const codeshareData=codeshares.join("|");
+  const dest=tiAirportDirectoryLabel(place);
+  const status=tiAirportStatus(item,arrivals,entry.meta);
+  const facility=arrivals?tiBelt(item.arrival?.baggage):(text(side?.gate).toUpperCase()||"—");
+  return `<div class="fids-row fids-layout ${esc(extraClass)}" role="row" style="--row:${index}">
+    <div class="fids-cell cell-airline" data-label="Logo" role="cell"><div class="fids-carrier" title="${esc(carrier)}"><span class="fids-tail ${logo?"":"fallback"}" data-code="${esc(airline||"--")}">${logo?`<img src="${esc(logo)}" alt="${esc(carrier)}" decoding="async">`:`<span class="fids-logo-fallback">${esc(airline||"--")}</span>`}</span><span class="fids-carrier-name">${esc(carrier)}</span></div></div>
+    <div class="fids-cell cell-flight" data-label="Flight No" role="cell"><div class="fids-flight"><strong>${esc(flight)}</strong></div></div>
+    <div class="fids-cell cell-codeshare" data-label="Codeshare" role="cell"><span class="fids-codeshare" data-ti-codeshare data-codeshares="${esc(codeshareData)}" data-codeshare-index="0" aria-label="${esc(codeshares.length?`Codeshares ${codeshares.map(tiFlightDisplay).join(", ")}`:"No codeshare")}"><span data-ti-codeshare-value>${esc(codeshareFirst)}</span>${codeshares.length>1?`<span class="fids-codeshare-rotate" aria-hidden="true">↻</span>`:""}</span></div>
+    <div class="fids-cell cell-time" data-label="Time" role="cell"><div class="fids-time"><strong class="fids-time-main">${esc(tiScheduledFlightTime(side))}</strong></div></div>
+    <div class="fids-cell cell-place" data-label="${arrivals?"From":"To"}" role="cell"><div class="fids-destination"><strong>${esc(dest.place)}</strong></div></div>
+    <div class="fids-cell cell-terminal" data-label="Terminal" role="cell"><span class="fids-terminal">${esc(tiTerminal(side.terminal))}</span></div>
+    <div class="fids-cell cell-gate" data-label="${arrivals?"Belt":"Gate"}" role="cell"><span class="fids-gate ${arrivals?"is-belt":""}">${esc(facility)}</span></div>
+    <div class="fids-cell cell-remarks" data-label="Remarks" role="cell"><span class="fids-status ${status[1]}">${esc(status[0])}</span></div>
+  </div>`
+}
+function tiAdvanceCodeshareTicker(){
+  document.querySelectorAll("#tiAirportFlightRows [data-ti-codeshare]").forEach(node=>{
+    const list=text(node.dataset.codeshares).split("|").map(tiFlightToken).filter(Boolean);
+    const value=node.querySelector("[data-ti-codeshare-value]");
+    if(!value||list.length<2)return;
+    const current=Number(node.dataset.codeshareIndex||0);
+    const next=(current+1)%list.length;
+    node.dataset.codeshareIndex=String(next);
+    node.classList.add("is-changing");
+    window.setTimeout(()=>{
+      value.textContent=tiFlightDisplay(list[next]);
+      node.classList.remove("is-changing")
+    },160)
+  })
 }
 function tiRenderAirportFlights(){
   const x=STATE.activeDetail;if(!x||x._library!=="airports")return;
   const iata=tiAirportIata(x),type=STATE.activeAirportBoardType||"departures",key=tiAirportCacheKey(iata,type),entry=STATE.airportFlights.get(key),host=$("tiAirportFlightRows");
   if(!host)return;
-  $("tiAirportScreenCode")&&( $("tiAirportScreenCode").textContent=iata );
-  $("tiAirportPlaceHeader")&&( $("tiAirportPlaceHeader").textContent=type==="arrivals"?"From":"To" );
-  $("tiAirportTimeHeader")&&( $("tiAirportTimeHeader").textContent=type==="arrivals"?"Scheduled arrival":"Scheduled departure" );
-  tiUpdateAirportClock(x);
-  if(!entry){host.innerHTML=`<div class="board-message"><span class="board-message-title">FLIGHT INFORMATION</span><span class="board-message-note">Open this tab to load ${esc(type)} for ${esc(iata)}.</span></div>`;return}
-  if(entry.error){host.innerHTML=`<div class="board-message"><span class="board-message-title">BOARD UNAVAILABLE</span><span class="board-message-note">${esc(entry.error)}</span><button class="ti-airport-board-retry" type="button">Try again</button></div>`;host.querySelector("button")?.addEventListener("click",()=>tiAirportRequestFlights(x,type,true));return}
   const arrivals=type==="arrivals";
-  const allItems=arr(entry.items).slice().sort((a,b)=>{
+  $("tiAirportScreenCode")&&( $("tiAirportScreenCode").textContent=iata );
+  $("tiAirportPlaceHeader")&&( $("tiAirportPlaceHeader").textContent=arrivals?"From":"To" );
+  $("tiAirportFacilityHeader")&&( $("tiAirportFacilityHeader").textContent=arrivals?"Belt":"Gate" );
+  tiUpdateAirportClock(x);
+  if(!entry){
+    host.innerHTML=`<div class="board-message"><span class="board-message-title">FLIGHT INFORMATION</span><span class="board-message-note">Open this tab to load ${esc(type)} for ${esc(iata)}.</span></div>`;
+    return
+  }
+  if(entry.error){
+    host.innerHTML=`<div class="board-message"><span class="board-message-title">BOARD UNAVAILABLE</span><span class="board-message-note">${esc(entry.error)}</span><button class="ti-airport-board-retry" type="button">Try again</button></div>`;
+    host.querySelector("button")?.addEventListener("click",()=>tiAirportRequestFlights(x,type,true));
+    return
+  }
+  const allItems=tiFidsGroupFlights(arr(entry.items)).slice().sort((a,b)=>{
     const sa=tiSideEpoch(arrivals?a?.arrival:a?.departure,"scheduled"),sb=tiSideEpoch(arrivals?b?.arrival:b?.departure,"scheduled");
     if(Number.isFinite(sa)&&Number.isFinite(sb))return sa-sb;
     if(Number.isFinite(sa))return-1;
     if(Number.isFinite(sb))return 1;
-    return text(a?.flightIata||a?.flightIcao).localeCompare(text(b?.flightIata||b?.flightIcao))
+    return text(a?.displayFlightIata||a?.flightIata||a?.flightIcao).localeCompare(text(b?.displayFlightIata||b?.flightIata||b?.flightIcao))
   });
   const earlier=allItems.filter(item=>tiAirportFlightIsEarlier(item,arrivals));
   const current=allItems.filter(item=>!tiAirportFlightIsEarlier(item,arrivals));
@@ -3740,16 +4145,20 @@ function tiRenderAirportFlights(){
     }
     host.innerHTML=markup
   }
-  host.querySelectorAll(".fids-tail img").forEach(img=>img.addEventListener("error",()=>{const tile=img.parentElement;if(!tile)return;tile.classList.add("fallback");tile.innerHTML=`<span class="fids-logo-fallback">${esc(tile.dataset.code||"--")}</span>`},{once:true}));
+  host.querySelectorAll(".fids-tail img").forEach(img=>img.addEventListener("error",()=>{
+    const tile=img.parentElement;if(!tile)return;
+    tile.classList.add("fallback");
+    tile.innerHTML=`<span class="fids-logo-fallback">${esc(tile.dataset.code||"--")}</span>`
+  },{once:true}));
   const meta=$("tiAirportBoardMeta");
   if(meta){
     const count=current.length;
-    meta.textContent=entry.meta?.note||`${count} current ${type}${earlier.length?` · ${earlier.length} earlier`:""}. Scheduled times remain fixed in the time column.`
+    meta.textContent=entry.meta?.note||`${count} current ${type}${earlier.length?` · ${earlier.length} earlier`:""}. Time shows the scheduled ${arrivals?"arrival":"departure"}; completion time appears in Remarks.`
   }
 }
 function tiAirportFlightPanelHtml(x){
-  const iata=tiAirportIata(x),type=STATE.activeAirportBoardType||"departures",clock=tiAirportLocalClock(x);
-  return `<section class="ti-airport-flight-panel"><div class="ti-airport-flight-heading"><div><div class="eyebrow">Flight information</div><h2>${esc(iata)} ${type==="arrivals"?"arrivals":"departures"}</h2><p>Current and upcoming flights from the airport clock. Completed flights are available under See earlier flights.</p></div><div class="airport-board-toggle" role="group" aria-label="Arrivals or departures"><button type="button" class="airport-toggle ${type==="departures"?"active":""}" data-ti-board-type="departures">Departures</button><button type="button" class="airport-toggle ${type==="arrivals"?"active":""}" data-ti-board-type="arrivals">Arrivals</button></div></div><div class="terminal-bay"><div class="flight-board-shell"><div class="board-screen" role="table" aria-label="${esc(iata)} flight information display"><div class="board-airport-bar"><div><small>AIRPORT</small><strong id="tiAirportScreenCode">${esc(iata)}</strong></div><div><small>BOARD</small><strong>${type==="arrivals"?"ARRIVALS":"DEPARTURES"}</strong></div><div class="board-clock"><small id="tiAirportLocalDate">${esc(clock.date)}</small><strong id="tiAirportLocalTime">${esc(clock.time)}</strong></div></div><div class="board-columns fids-layout" role="row"><div role="columnheader">Airline</div><div role="columnheader">Flight</div><div role="columnheader" id="tiAirportTimeHeader">${type==="arrivals"?"Scheduled arrival":"Scheduled departure"}</div><div role="columnheader" id="tiAirportPlaceHeader">${type==="arrivals"?"From":"To"}</div><div role="columnheader">Terminal</div><div role="columnheader">${type==="arrivals"?"Belt / Gate":"Gate"}</div><div role="columnheader">Status</div></div><div class="board-scroll"><div class="flip-body" id="tiAirportFlightRows" role="rowgroup"><div class="board-message"><span class="board-message-title">FLIGHT INFORMATION</span><span class="board-message-note">Loading ${esc(type)} for ${esc(iata)}.</span></div></div></div></div><div class="board-footer"><span>Passenger flight information</span><button type="button" class="fids-earlier-control" id="tiAirportEarlierFlights" data-ti-earlier-flights hidden>See earlier flights</button><span id="tiAirportBoardMeta">Airport and airline operational displays remain final.</span></div></div></div></section>`
+  const iata=tiAirportIata(x),type=STATE.activeAirportBoardType||"departures",arrivals=type==="arrivals",clock=tiAirportLocalClock(x);
+  return `<section class="ti-airport-flight-panel ${arrivals?"is-arrivals":"is-departures"}"><div class="ti-airport-flight-heading"><div><div class="eyebrow">Flight information</div><h2>${esc(iata)} ${arrivals?"arrivals":"departures"}</h2><p>Current and upcoming flights from the airport clock. Completed flights are available under See earlier flights.</p></div><div class="airport-board-toggle" role="group" aria-label="Arrivals or departures"><button type="button" class="airport-toggle ${!arrivals?"active":""}" data-ti-board-type="departures">Departures</button><button type="button" class="airport-toggle ${arrivals?"active":""}" data-ti-board-type="arrivals">Arrivals</button></div></div><div class="terminal-bay"><div class="flight-board-shell"><div class="board-screen" role="table" aria-label="${esc(iata)} passenger flight information display"><div class="board-airport-bar"><div><small>AIRPORT</small><strong id="tiAirportScreenCode">${esc(iata)}</strong></div><div><small>PASSENGER FLIGHT INFORMATION</small><strong>${arrivals?"ARRIVALS":"DEPARTURES"}</strong></div><div class="board-clock"><small id="tiAirportLocalDate">${esc(clock.date)}</small><strong id="tiAirportLocalTime">${esc(clock.time)}</strong></div></div><div class="board-columns fids-layout" role="row"><div role="columnheader">Logo</div><div role="columnheader">Flight No</div><div role="columnheader">Codeshare</div><div role="columnheader">Time</div><div role="columnheader" id="tiAirportPlaceHeader">${arrivals?"From":"To"}</div><div role="columnheader">Terminal</div><div role="columnheader" id="tiAirportFacilityHeader">${arrivals?"Belt":"Gate"}</div><div role="columnheader">Remarks</div></div><div class="board-scroll"><div class="flip-body" id="tiAirportFlightRows" role="rowgroup"><div class="board-message"><span class="board-message-title">FLIGHT INFORMATION</span><span class="board-message-note">Loading ${esc(type)} for ${esc(iata)}.</span></div></div></div></div><div class="board-footer"><span>Passenger flight information</span><button type="button" class="fids-earlier-control" id="tiAirportEarlierFlights" data-ti-earlier-flights hidden>See earlier flights</button><span id="tiAirportBoardMeta">Scheduled times remain fixed; operational times appear in Remarks.</span></div></div></div></section>`
 }
 function tiActivateAirportTab(id,x,scroll=true){
   const root=$("tiDetailMount"),button=root?.querySelector(`[data-airport-tab="${CSS.escape(id)}"]`);if(!root||!button)return;STATE.activeAirportTab=id;
@@ -3946,6 +4355,12 @@ $("tiAlexandraLauncher").addEventListener("click",()=>openAction("alexandra"));
 hydrateStaticIcons();STATE.dataState="loading";renderAll();setStatus("Loading SKANDI Travel Info…");
 armBootstrapWatchdog(INITIAL_BRIDGE_WATCHDOG_MS);
 post("TRAVEL_INFO_READY",{settings:{language:"EN"},protocolVersion:VERSION});
+
+setInterval(()=>{
+  const x=STATE.activeDetail;
+  if(!x||x._library!=="airports"||STATE.activeAirportTab!=="flight-info")return;
+  tiAdvanceCodeshareTicker()
+},3500);
 
 setInterval(()=>{
   const x=STATE.activeDetail;
