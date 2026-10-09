@@ -491,21 +491,18 @@ You'll need to replace `ORDER_ID` with the ID of the order you want to change.
 > | We can see the order has two slices: one for the outbound flight, and one for the inbound flight. The order's available_actions includes change, indicating it can be changed through the API. |
 > | Notice each slice has a unique ID, we will be using them next to make changes to the order. |
 > | The order change process happens in 4 steps: |
-> | - You create an order change request (1)
-> | - You review the available order change offers (2)
-> | - You create a pending order change (3)
-> | - You confirm the order change (4)
-> | ----- |
+> | - You create an order change request (1) | 
+> | - You review the available order change offers (2) |
+> | - You create a pending order change (3) |
+> | - You confirm the order change (4) |
 
-| ----- |
 | 1. Create an order change request | 
 | ----- |
 | To request changes for an order, you need to provide a list of slices to remove, plus a list of search criteria for slices you want to add. |
 | In our example, we want to remove the current inbound flight, so we will be adding its slice.id to the remove list. We also want to find new flights on the updated date 24th June, we can do that by adding the relevant search criteria to the add list: | 
-| ----- |
-| > JavaScript |
-| > Node.JS | 
-| ----- |
+
+> JavaScript
+> Node.JS
 ```
 duffel.orderChangeRequests.create({
     order_id: ORDER_ID,
