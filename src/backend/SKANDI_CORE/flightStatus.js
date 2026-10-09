@@ -304,9 +304,20 @@ async function applyAirlineBranding(items = []) {
   if (!directory.size) return items;
 
   return items.map(item => {
-    const iata = cleanCode(item?.airlineIata || item?.operatingAirlineIata, 4);
-    const airlineLogoUrl = directory.get(iata) || text(item?.airlineLogoUrl, 3000);
-    return airlineLogoUrl ? { ...item, airlineLogoUrl } : item;
+    const marketingIata = cleanCode(item?.airlineIata, 4);
+    const operatingIata = cleanCode(item?.operatingAirlineIata, 4);
+    const airlineLogoUrl =
+      directory.get(marketingIata) ||
+      text(item?.airlineLogoUrl, 3000);
+    const operatingAirlineLogoUrl =
+      directory.get(operatingIata) ||
+      text(item?.operatingAirlineLogoUrl, 3000);
+
+    return {
+      ...item,
+      ...(airlineLogoUrl ? { airlineLogoUrl } : {}),
+      ...(operatingAirlineLogoUrl ? { operatingAirlineLogoUrl } : {})
+    };
   });
 }
 const BOARDING_RULES = Object.freeze({
