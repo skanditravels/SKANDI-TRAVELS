@@ -6,12 +6,11 @@ In this guide, we'll build on the example used on the quick start guide.
 
 ## Overview
 
-| ----- |
 | **Everything starts with an existing order:** |
 | ----- |
 | Tony, Pepper, and their daughter Morgan have booked flights from New York City to Atlanta, leaving on 11th June and returning a week later on 18th June. They want to delay their return date by a week, coming back on 24th June instead. |
 | ----- |
-We can start by using the "Get a single order" API to check the current details for their order: 
+| We can start by using the "Get a single order" API to check the current details for their order: | 
 
 > JavaScript
 > Node.JS
