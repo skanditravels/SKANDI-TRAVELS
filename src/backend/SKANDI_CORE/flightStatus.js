@@ -16,11 +16,13 @@ const AIRLABS_SECRET_NAMES = Object.freeze(["AIRLABS_API_KEY"]);
 const getSecretValue = elevate(secrets.getSecretValue);
 const PUBLIC_ENTITY_TYPES = new Set(["TRANSFER", "HOTEL", "DESTINATION", "GUIDED_TOUR", "ACTIVITY"]);
 const DIRECTORY_TTL_MS = 5 * 60 * 1000;
+const AIRLINE_BRAND_TTL_MS = 5 * 60 * 1000;
 const CONTEXT_TTL_MS = 2 * 60 * 1000;
 const FLIGHT_TTL_MS = 60 * 1000;
 
 let airlabsKeyPromise = null;
 let directoryCache = null;
+let airlineBrandCache = null;
 const contextCache = new Map();
 const flightCache = new Map();
 const flightRequests = new Map();
@@ -265,6 +267,48 @@ function sameFlight(a, b) {
   const names = [a.flight_iata, a.flight_icao, a.cs_flight_iata].filter(Boolean);
   return [b.flight_iata, b.flight_icao, b.cs_flight_iata].some(x => x && names.includes(x)) && (!a.dep_iata || !b.dep_iata || a.dep_iata === b.dep_iata) && (!a.arr_iata || !b.arr_iata || a.arr_iata === b.arr_iata);
 }
+async function airlineBrandDirectory() {
+  const now = Date.now();
+  if (airlineBrandCache && airlineBrandCache.expiresAt > now) return airlineBrandCache.value;
+
+  try {
+    const rows = arr(await restRequest({
+      table: "travel_info_airlines",
+      query: {
+        select: "iataCode,inventory_details",
+        active: "eq.true",
+        customer_visible: "eq.true",
+        status: "eq.PUBLISHED",
+        limit: "500"
+      }
+    }));
+
+    const value = new Map();
+    for (const row of rows) {
+      const iata = cleanCode(row?.iataCode, 4);
+      if (!iata) continue;
+      const details = normalizeLooseObject(row?.inventory_details);
+      const logoLockupUrl = text(details?.logoLockupUrl, 3000);
+      if (logoLockupUrl) value.set(iata, logoLockupUrl);
+    }
+
+    airlineBrandCache = { expiresAt: now + AIRLINE_BRAND_TTL_MS, value };
+    return value;
+  } catch (error) {
+    console.warn("[SKANDI Flight Status] Airline logo lookup unavailable", error);
+    return new Map();
+  }
+}
+async function applyAirlineBranding(items = []) {
+  const directory = await airlineBrandDirectory();
+  if (!directory.size) return items;
+
+  return items.map(item => {
+    const iata = cleanCode(item?.airlineIata || item?.operatingAirlineIata, 4);
+    const airlineLogoUrl = directory.get(iata) || text(item?.airlineLogoUrl, 3000);
+    return airlineLogoUrl ? { ...item, airlineLogoUrl } : item;
+  });
+}
 const BOARDING_RULES = Object.freeze({
   DL: { boarding_window: 45, final_call_window: 15, name: "Delta Air Lines" },
   AA: { boarding_window: 40, final_call_window: 15, name: "American Airlines" },
@@ -301,7 +345,8 @@ async function loadFlightSearch(p) {
   if (responses[0].status === "rejected") warnings.push("Live tracking is unavailable; showing timetable data.");
   if (responses[1].status === "rejected") warnings.push("Timetable information is unavailable; showing live tracking only. Times and gates may be missing.");
   if (responses[1].status === "fulfilled" && responses[1].value?.hasMore) warnings.push("This board contains the first 1,000 schedule entries. Narrow the route to see more.");
-  const items = rows.map(normalizeDetailedFlight).filter(item => item.flightIata || item.flightIcao);
+  const normalizedItems = rows.map(normalizeDetailedFlight).filter(item => item.flightIata || item.flightIcao);
+  const items = await applyAirlineBranding(normalizedItems);
   return {
     ok: true,
     items,
