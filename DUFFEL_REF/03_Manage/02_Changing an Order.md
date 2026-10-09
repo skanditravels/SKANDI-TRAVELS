@@ -556,19 +556,15 @@ duffel.orderChangeRequests.create({
   }
 }
 ```
-| ----- |
 | 2. Review available order change offers |
 | Now that you have requested an order change, you should review the available offers. You can do this with the "Get a single order change request" endpoint: |
-| ----- |
 > JavaScript
 > Node.JS
 ```
 duffel.orderChangeRequests.get(ORDER_CHANGE_REQUEST_ID)
 ```
-| ----- |
 | The response will include a list of order_change_offers, each including details for the slices that would be added and removed from the order. They also include the difference in price change_total_amount, as well as the penalty imposed by the airline penalty_total_amount. The price of new flights could be more expensive or cheaper than the original. |
 | If you'd like to get a complete look at the change offer schema, check out our API reference. |
-| ----- |
 > JSON
 ```
 {
