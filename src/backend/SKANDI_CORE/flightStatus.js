@@ -765,16 +765,27 @@ async function loadFlightSearch(p) {
   if (responses[1].status === "rejected") warnings.push("Timetable information is unavailable; showing live tracking only. Times and gates may be missing.");
   if (responses[1].value?.hasMore) warnings.push("This board contains the first 1,000 schedule entries. Narrow the route to see more.");
   const items = rows.map(normalizeDetailedFlight).filter(item => item.flightIata || item.flightIcao);
-  return { ok: true, items, meta: {
+   return { ok: true, items, meta: {
     mode: p.mode, date: p.date, boardType: p.boardType, airport: p.airport,
     provider: "airlabs", providerApi: "v9", endpoint: p.mode === "flight" ? "flights + flight" : "flights + schedules",
     providerScope: p.mode === "flight" ? "closest-live-scheduled-or-landed-flight" : "live-tracking-and-current-schedule-window",
     searchedAt: new Date().toISOString(), refreshAfterMs: FLIGHT_TTL_MS,
     partial: warnings.length > 0, note: warnings.join(" "),
-    message: "Airport-local times when supplied; UTC otherwise. Schedule coverage is up to 10 hours ahead."
+    message: "Airport-local times when supplied; UTC otherwise.",
+    
+    // Injecting your custom database reference map straight into payload meta metadata
+    boardingRules: {
+      "DL": { "boarding_window": 45, "final_call_window": 15, "name": "Delta Air Lines" },
+      "AA": { "boarding_window": 40, "final_call_window": 15, "name": "American Airlines" },
+      "UA": { "boarding_window": 40, "final_call_window": 15, "name": "United Airlines" },
+      "B6": { "boarding_window": 35, "final_call_window": 12, "name": "JetBlue" },
+      "SK": { "boarding_window": 40, "final_call_window": 15, "name": "SAS" },
+      "LH": { "boarding_window": 45, "final_call_window": 15, "name": "Lufthansa" },
+      "FR": { "boarding_window": 30, "final_call_window": 10, "name": "Ryanair" },
+      "DEFAULT": { "boarding_window": 40, "final_call_window": 15, "name": "" }
+    }
   }};
-}
-export async function searchFlightStatusCore(payload = {}) {
+  export async function searchFlightStatusCore(payload = {}) {
   const p = validateSearch(payload);
   const key = JSON.stringify({ ...p, date: "" });
   const cached = flightCache.get(key);
