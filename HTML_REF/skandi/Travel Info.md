@@ -8,8 +8,8 @@
 - WIX HTML ELEMENT: `#travelInfoHtml`
 - CURRENT STATUS: V12 ONE-TRUE-SOURCE REPAIR PREPARED — REQUIRES LIVE TEST
 - SOURCE-OF-TRUTH STATUS: AUTHORITATIVE intended V12 embed payload supplied for this repair.
-- CANONICAL WEB FACADE: `/src/backend/SKANDI_CORE/publicContent.web.js`
-- CANONICAL CORE: `/src/backend/SKANDI_CORE/publicContent.js`
+- CANONICAL WEB FACADE: `/src/backend/SKANDI_CORE/publicContent.web.js` + `/src/backend/SKANDI_CORE/flightStatus.web.js` for airport context/FIDS only
+- CANONICAL CORE: `/src/backend/SKANDI_CORE/publicContent.js` + `/src/backend/SKANDI_CORE/flightStatus.js` for AirLabs airport-board data and airport context projection
 - CANONICAL INVENTORY PROJECTION: `/src/backend/SKANDI_CORE/publicContentInventoryProjection.js` — overlays public airline/airport output from canonical `inventory_details` / `media_assets`; no second content store.
 - SHARED DATABASE TRANSPORT: `/src/backend/SKANDI_CORE/supabaseServer.js`
 - DATA AUTHORITY: Duffel provider facts -> Inventory Control / Supabase canonical record -> downstream page/core consumers. No embed is permitted to maintain an independent editable copy of shared airline, airport, hotel or destination reference facts.
@@ -17,10 +17,11 @@
 - CANONICAL MASTER LIBRARIES: HOTEL, TRANSFER, GUIDED_TOUR, ACTIVITY and PARTNER_TICKET downstream Travel Info content is projected from `inventory_public_entities_v`; legacy `travel_info_hotels/transfers/tours/activities/tickets` are not downstream authorities after this repair.
 - PROVIDER SNAPSHOT: the provider evidence remains under `payload.duffel` (`normalized` + `raw`). The migration promotes the normalized provider-owned subset into the canonical Inventory detail object and retains a read-only `inventory_details.duffel` / `details.duffel` copy for audit/context; SKANDI enrichment remains editable only in Inventory Control.
 - AUTHORIZATION: unchanged from current V12 page/facade/core boundaries. No frontend role or provider secret becomes authoritative.
-- MESSAGE CONTRACTS / ELEMENT IDS: unchanged.
-- LAST VERIFIED: 2026-10-08 — current repo `skanditravels/SKANDI-TRAVELS`, branch `main`, commit `86deedb4705fae292851256726cd81e13669aa98`; live Supabase schema/data inspected read-only.
+- MESSAGE CONTRACTS / ELEMENT IDS: existing contracts preserved; Travel Info adds `TRAVEL_INFO_AIRPORT_CONTEXT_REQUEST/RESULT/ERROR`, `TRAVEL_INFO_AIRPORT_FLIGHTS_REQUEST/RESULT/ERROR`, and `TRAVEL_INFO_AIRPORT_ACTION` between the existing embed and page controller.
+- LAST VERIFIED: 2026-10-09 — current repo `skanditravels/SKANDI-TRAVELS`, branch `main`, commit `ee2b03edf398f1c6270ad1586e56bc24e86f0d73`; current Travel Info/Flight Status page-to-facade/core chain inspected. No external mutation performed.
 
 ## CHANGE LOG
+- 2026-10-09 — Airport-information convergence: the Flight Status airport profile/header and its airport-context modules move into each Travel Info airport detail. Airport details are true tabs and include a new `Flight Info` tab containing the selected airport FIDS with Departures/Arrivals only—no airport search and no date selector inside the tab. Travel Info reuses the canonical Flight Status facade/core rather than creating a second provider client. Decorative system-state pills such as LIVE/READY/SYNC are prohibited on this surface. STATICALLY VERIFIED; REQUIRES LIVE TEST after Wix publication.
 - 2026-10-08 — One-true-source enforcement finalized: Duffel-linked provider identity/facts are read-only in Inventory Control and refresh through the provider workspace; provider technical snapshots are hidden from generic editable fields; compatibility columns are database-derived. Current GitHub `main` at `86deedb4705fae292851256726cd81e13669aa98` was inspected and preserved.
 - 2026-10-08 — V12 one-true-source convergence prepared. Shared reference/master facts now have one editable Inventory/Supabase authority after provider import. Legacy Travel Info fields are derived compatibility projections, provider-key uniqueness is database-enforced, and current Duffel snapshots refresh provider-owned canonical facts without creating alternate data stores. The HTML design, IDs, message names, routes and permission boundaries are unchanged. STATICALLY VERIFIED; REQUIRES LIVE TEST after SQL/Wix publication.
 
@@ -323,7 +324,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .ti-profile-copy h1{margin:7px 0 13px;font-size:clamp(38px,5vw,70px);font-weight:550;line-height:.95;letter-spacing:-.062em}
 .ti-profile-copy p{max-width:720px;margin:0;color:#c7d7e7;font-size:13px;line-height:1.75}
 .ti-profile-meta{display:flex;gap:7px;flex-wrap:wrap;margin-top:19px}
-.ti-profile-meta span{padding:7px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.07);font-size:9px;font-weight:750;color:#e6f2ff}
+.ti-profile-meta span{padding:7px 10px;border-radius:10px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.07);font-size:9px;font-weight:750;color:#e6f2ff}
 .ti-profile-image{position:relative;min-height:470px;background:linear-gradient(145deg,#0c315a,#124b78);overflow:hidden}
 .ti-profile-image img{width:100%;height:100%;object-fit:cover}
 .ti-profile-image:after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(6,26,48,.72),transparent 55%)}
@@ -1299,6 +1300,1355 @@ body{background:#fff;color:var(--hybrid-text)}
 }
 
 </style>
+
+<style id="tiAirportFlightInfoStyles">
+#tiDetail{--sk-navy:#022e64;--sk-navy-deep:#0b3a7a;--sk-navy-black:#04254a;--sk-blue:#285ca8;--sk-blue-2:#0b5c85;--sk-aqua:#5fc7cf;--sk-aqua-soft:#d9f1f1;--sk-aqua-pale:#eef9fa;--sk-ice:#e9eef8;--sk-sand:#f2e9dc;--sk-porcelain:#f6faff;--sk-section:#f3f6f8;--sk-white:#fff;--sk-graphite:#111827;--sk-muted:#667085;--sk-body:#526274;--sk-border:#dbe3ef;--sk-champagne:#d1bc98;--sk-danger:#d85f66;--sk-warning:#d59a36;--sk-success:#2f9170;--ease:cubic-bezier(.16,1,.3,1);--content:1180px}
+      }
+        /* =========================================================
+   FIDS HARDWARE SHELL
+   ========================================================= */
+        .terminal-bay {
+            width: min(1240px, 100%);
+            margin-inline: auto;
+            position: relative;
+            padding: 58px 34px 44px;
+            border-radius: 34px;
+            background: linear-gradient(180deg, rgba(255, 255, 255, .88), rgba(238, 244, 249, .94)), #f3f6f8;
+            border: 1px solid rgba(2, 46, 100, .07);
+            box-shadow: inset 0 1px rgba(255, 255, 255, .92), 0 30px 80px rgba(2, 46, 100, .12)
+        }
+        .terminal-bay::before {
+            content: "";
+            position: absolute;
+            left: 24px;
+            right: 24px;
+            top: 25px;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(2, 46, 100, .08), rgba(95, 199, 207, .26), rgba(2, 46, 100, .08), transparent)
+        }
+        .terminal-bay::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: 34px;
+            pointer-events: none;
+            opacity: .42;
+            background: linear-gradient(90deg, rgba(2, 46, 100, .035) 1px, transparent 1px), linear-gradient(rgba(2, 46, 100, .026) 1px, transparent 1px);
+            background-size: 70px 70px;
+            mask-image: linear-gradient(180deg, #000 0 22%, transparent 60%)
+        }
+        .terminal-overhead-signs {
+            position: absolute;
+            z-index: 4;
+            top: 0;
+            left: 34px;
+            right: 34px;
+            display: flex;
+            align-items: flex-start;
+            gap: 7px;
+            transform: translateY(-18px)
+        }
+        .overhead-sign {
+            min-height: 40px;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 0 14px;
+            border-radius: 8px;
+            font-size: 8px;
+            font-weight: 800;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+            box-shadow: 0 12px 24px rgba(2, 46, 100, .14)
+        }
+        .overhead-sign b {
+            font-size: 14px;
+            font-weight: 600
+        }
+        .sign-dark {
+            background: #022e64;
+            color: #fff
+        }
+        .sign-aqua {
+            background: #d9f1f1;
+            color: #022e64
+        }
+        .sign-light {
+            background: #fff;
+            color: #022e64;
+            border: 1px solid rgba(2, 46, 100, .08)
+        }
+        .overhead-zone {
+            margin-left: auto;
+            padding-top: 13px;
+            color: #8291a0;
+            font-size: 7px;
+            font-weight: 800;
+            letter-spacing: .16em;
+            text-transform: uppercase
+        }
+        .terminal-floor-reflection {
+            position: absolute;
+            left: 8%;
+            right: 8%;
+            bottom: -24px;
+            height: 38px;
+            background: radial-gradient(ellipse at center, rgba(2, 46, 100, .14), transparent 68%);
+            filter: blur(12px);
+            pointer-events: none
+        }
+        .flight-board-shell {
+            width: min(1120px, 100%);
+            margin-inline: auto;
+            padding: 14px;
+            border-radius: 24px;
+            background: linear-gradient(180deg, rgba(255, 255, 255, .98), rgba(233, 238, 248, .96));
+            box-shadow: 0 30px 60px rgba(2, 46, 100, 0.25), 0 40px 100px rgba(0, 0, 0, 0.3), inset 0 3px 0 #fff, inset 0 -2px 10px rgba(2, 46, 100, 0.1);
+            border-top: 2px solid #fff;
+        }
+        .flight-board-shell::after {
+            content: "";
+            position: absolute;
+            inset: 7px;
+            border-radius: 19px;
+            border: 1px solid rgba(255, 255, 255, .78);
+            pointer-events: none
+        }
+        .board-top {
+            position: relative;
+            z-index: 2;
+            display: grid;
+            grid-template-columns: minmax(0, 1.1fr) minmax(280px, .72fr) auto;
+            gap: 12px;
+            align-items: center;
+            margin-bottom: 9px;
+            padding: 15px 17px;
+            border-radius: 16px;
+            background: radial-gradient(circle at 8% 0, rgba(95, 199, 207, .18), transparent 25%), linear-gradient(135deg, #04254a, #0b477e 68%, #126d78);
+            color: #fff;
+            box-shadow: 0 18px 38px rgba(2, 46, 100, .22)
+        }
+        .board-brand {
+            display: flex;
+            align-items: center;
+            gap: 11px
+        }
+        .board-monogram {
+            width: 40px;
+            height: 40px;
+            border-radius: 11px;
+            display: grid;
+            place-items: center;
+            background: rgba(255, 255, 255, .10);
+            border: 1px solid rgba(255, 255, 255, .16);
+            color: #d9f1f1;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: .16em;
+            box-shadow: inset 0 1px rgba(255, 255, 255, .12), 0 10px 20px rgba(0, 0, 0, .12)
+        }
+        .board-brand strong {
+            display: block;
+            font-size: 24px;
+            font-weight: 600;
+            letter-spacing: -.035em;
+            line-height: .96
+        }
+        .board-brand span {
+            display: block;
+            margin-top: 4px;
+            color: #afd0df;
+            font-size: 7px;
+            font-weight: 780;
+            letter-spacing: .13em;
+            text-transform: uppercase
+        }
+        .board-query {
+            min-width: 0;
+            padding: 9px 11px;
+            border-radius: 10px;
+            background: rgba(3, 17, 31, .22);
+            border: 1px solid rgba(255, 255, 255, .11);
+            backdrop-filter: blur(12px)
+        }
+        .board-query label {
+            display: block;
+            color: #8eb2c4;
+            font-size: 7px;
+            font-weight: 800;
+            letter-spacing: .13em;
+            text-transform: uppercase
+        }
+        .board-query strong {
+            display: block;
+            margin-top: 5px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            color: #eefaf9;
+            font-size: 10px;
+            letter-spacing: .05em
+        }
+        .board-live {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 10px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, .08);
+            border: 1px solid rgba(255, 255, 255, .12);
+            white-space: nowrap
+        }
+        .board-live span {
+            color: #c8dce6;
+            font-size: 8px;
+            font-weight: 750;
+            letter-spacing: .10em;
+            text-transform: uppercase
+        }
+        .board-live strong {
+            color: #fff;
+            font-size: 9px
+        }
+        .board-screen {
+            position: relative;
+            z-index: 2;
+            overflow: hidden;
+            border-radius: 13px;
+            background: radial-gradient(circle at 16% 0, rgba(95, 199, 207, .075), transparent 22%), linear-gradient(180deg, #061525, #04111e 48%, #03101c);
+            border: 1px solid rgba(255, 255, 255, .06);
+            box-shadow: inset 0 12px 24px rgba(0, 0, 0, 0.6), inset 0 2px 4px rgba(0, 0, 0, 0.8), 0 1px 1px rgba(255, 255, 255, 0.6);
+        }
+        .board-screen::after {
+            content: "";
+            position: absolute;
+            z-index: 10;
+            pointer-events: none;
+            top: -18%;
+            left: -30%;
+            width: 34%;
+            height: 150%;
+            background: linear-gradient(105deg, transparent, rgba(255, 255, 255, 0.03) 25%, rgba(255, 255, 255, 0.08) 45%, transparent 50%);
+            mask-image: linear-gradient(to bottom, #000 30%, transparent 100%);
+            -webkit-mask-image: linear-gradient(to bottom, #000 30%, transparent 100%);
+            transform: skewX(-16deg);
+            animation: glassSweep 10s ease-in-out infinite;
+        }
+        @keyframes glassSweep {
+
+            0%,
+            35% {
+                left: -34%
+            }
+
+            76%,
+            100% {
+                left: 122%
+            }
+        }
+        #hardwareCasing.is-searching .board-screen::before {
+            opacity: .55;
+            animation: fidsPulse 1.6s ease-in-out infinite alternate
+        }
+        #hardwareCasing.is-searching .airport-update-led {
+            animation: livePulse .72s ease-in-out infinite
+        }
+        @keyframes fidsPulse {
+            to {
+                filter: brightness(1.25)
+            }
+        }
+        .board-airport-bar {
+            position: relative;
+            z-index: 2;
+            display: grid;
+            grid-template-columns: 1fr 1fr auto;
+            gap: 1px;
+            min-height: 54px;
+            background: rgba(255, 255, 255, .026);
+            border-bottom: 1px solid rgba(255, 255, 255, .06)
+        }
+        .board-airport-bar>div {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 13px;
+            border-right: 1px solid rgba(255, 255, 255, .045)
+        }
+        .board-airport-bar>div:last-child {
+            border-right: 0
+        }
+        .board-airport-bar small {
+            color: #66889e;
+            font-size: 7px;
+            font-weight: 800;
+            letter-spacing: .15em;
+            text-transform: uppercase
+        }
+        .board-airport-bar strong {
+            color: #fff;
+            font-family: "Roboto Mono", monospace;
+            font-size: 17px;
+            font-weight: 700;
+            letter-spacing: .05em
+        }
+        .board-columns {
+            position: relative;
+            z-index: 2;
+            min-height: 37px;
+            border-top: 1px solid rgba(255, 255, 255, .035);
+            border-bottom: 1px solid rgba(255, 255, 255, .075);
+            background: rgba(255, 255, 255, .035)
+        }
+        .board-columns > div {
+  padding: 12px 14px;
+  font-size: 11px; /* Even header typography sizing */
+  font-weight: 700;
+  letter-spacing: .08em;
+  color: #f4ca58;
+  text-transform: uppercase;
+}
+        .board-columns>div:last-child {
+            border-right: 0
+        }
+        .board-scroll {
+            position: relative;
+            z-index: 2;
+            overflow-x: hidden;
+            overflow-y: auto;
+            padding: 0 8px 8px;
+            min-height: 360px;
+            max-height: 480px;
+            scrollbar-width: thin;
+            scrollbar-color: #214560 transparent
+        }
+        .board-scroll::-webkit-scrollbar {
+            width: 5px
+        }
+        .board-scroll::-webkit-scrollbar-thumb {
+            background: #214560;
+            border-radius: 999px
+        }
+        .flip-body {
+            min-width: 0;
+            display: grid;
+            gap: 0
+        }
+        .board-screen[aria-busy="true"] {
+            cursor: progress
+        }
+        /* FIDS FLIGHT ROWS — Physical Hardware Setup */
+        .fids-row {
+            position: relative;
+            min-height: 64px;
+            margin-bottom: 4px;
+            border-radius: 8px;
+            background: rgba(3, 16, 28, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: rowEnter .52s var(--ease) both;
+            animation-delay: calc(var(--row, 0)*55ms);
+            transition: transform .2s ease, background .2s ease, border-color .2s ease;
+        }
+        .fids-row::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 8px;
+            bottom: 8px;
+            width: 3px;
+            border-radius: 2px;
+            background: #5fc7cf;
+            opacity: 0;
+            transition: opacity .2s ease;
+        }
+        .fids-row:hover {
+            transform: translateY(-2px);
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(95, 199, 207, 0.3);
+        }
+        .fids-row:hover::before {
+            opacity: 0.78
+        }
+        @keyframes rowEnter {
+            from {
+                opacity: 0;
+                transform: translateY(9px) scale(.994)
+            }
+
+            to {
+                opacity: 1;
+                transform: none
+            }
+        }
+        .fids-cell {
+            min-height: 64px;
+            padding: 8px 10px;
+            display: flex;
+            align-items: center;
+            border-right: 1px solid rgba(255, 255, 255, .045);
+            overflow: hidden
+        }
+        .fids-cell::before {
+  content: attr(data-label);
+  flex: 0 0 auto;
+  color: #7194a9;
+  font-family: "Roboto Mono", monospace;
+  font-size: 7px;
+  font-weight: 800;
+  letter-spacing: .11em;
+  text-transform: uppercase;
+}
+        .fids-cell:last-child {
+            border-right: 0
+        }
+        .fids-time {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 3px
+        }
+        .fids-time-main {
+            color: #fff;
+            font-family: "Roboto Mono", monospace;
+            font-size: 21px;
+            font-weight: 700;
+            letter-spacing: .02em
+        }
+        .fids-time small {
+            color: #6f91a5;
+            font-family: "Roboto Mono", monospace;
+            font-size: 7px;
+            font-weight: 700;
+            letter-spacing: .08em;
+            text-transform: uppercase
+        }
+        .fids-destination {
+            min-width: 0
+        }
+        .fids-layout {
+  display: grid;
+  grid-template-columns: 140px 110px 120px minmax(240px, 1fr) 90px 90px 160px;
+  align-items: center;
+}
+        .fids-destination strong {
+            display: block;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            color: #f3f8fc;
+            font-size: 16px;
+            font-weight: 650;
+            letter-spacing: -.025em
+        }
+        .fids-destination small {
+            display: block;
+            margin-top: 4px;
+            color: #6e93a8;
+            font-family: "Roboto Mono", monospace;
+            font-size: 8px;
+            font-weight: 700;
+            letter-spacing: .08em
+        }
+        .fids-flight {
+            display: flex;
+            align-items: center;
+            gap: 8px
+        }
+        .fids-flight strong {
+            color: #f4f8fb;
+            font-family: "Roboto Mono", monospace;
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: .04em
+        }
+        .fids-tail {
+            width: 42px;
+            height: 36px;
+            flex: 0 0 auto;
+            border-radius: 6px;
+            display: grid;
+            place-items: center;
+            overflow: hidden;
+            background: #fff;
+            box-shadow: 0 5px 14px rgba(0, 0, 0, .14)
+        }
+        .fids-tail img {
+            max-width: 34px;
+            max-height: 24px;
+            object-fit: contain
+        }
+        .fids-tail.fallback {
+            background: linear-gradient(145deg, #d9f1f1, #e9eef8);
+            color: #022e64;
+            font-family: "Roboto Mono", monospace;
+            font-weight: 900;
+            font-size: 10px
+        }
+        .fids-carrier-name {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            color: #90adbd;
+            font-size: 8px;
+            font-weight: 700;
+            letter-spacing: .03em
+        }
+        .fids-status {
+            display: inline-flex;
+            align-items: center;
+            min-height: 28px;
+            color: #d9f1f1;
+            font-family: "Roboto Mono", monospace;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: .03em
+        }
+        .fids-status::before {
+            content: "";
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            margin-right: 8px;
+            background: #67fca9;
+            box-shadow: 0 0 9px rgba(103, 252, 169, .40)
+        }
+        .fids-status.flap-warn {
+            color: #ffd27a
+        }
+        .fids-status.flap-warn::before {
+            background: #ffd27a;
+            box-shadow: 0 0 9px rgba(255, 210, 122, .35)
+        }
+        .fids-status.flap-bad {
+            color: #ff9292
+        }
+        .fids-status.flap-bad::before {
+            background: #ff7a7a;
+            box-shadow: 0 0 9px rgba(255, 122, 122, .40)
+        }
+        /* =========================================================
+          FIDS SPLIT-FLAP TRANSITION SYSTEM
+         ========================================================= */
+        .fids-layout .is-changing {
+  animation: fidsSplitFlapTile 0.48s cubic-bezier(0.23, 1, 0.32, 1) both;
+  backface-visibility: hidden;
+  transform-style: preserve-3d;
+  display: inline-block;
+}
+        @keyframes fidsSplitFlapTile {
+  0% {
+    transform: perspective(400px) rotateX(-90deg);
+    filter: brightness(0.3);
+    opacity: 0.5;
+  }
+  50% {
+    filter: brightness(0.7);
+    opacity: 0.9;
+  }
+  100% {
+    transform: perspective(400px) rotateX(0deg);
+    filter: brightness(1);
+    opacity: 1;
+  }
+}
+        .fids-gate {
+            min-width: 54px;
+            height: 40px;
+            display: grid;
+            place-items: center;
+            border-radius: 7px;
+            background: #d9f1f1;
+            color: #022e64;
+            font-family: "Roboto Mono", monospace;
+            font-size: 15px;
+            font-weight: 800;
+            letter-spacing: .04em
+        }
+        .fids-gate.is-changing, .fids-time-main.is-changing, .fids-flight strong.is-changing {
+            animation: fidsFieldFlip .58s cubic-bezier(.2, .72, .3, 1)
+        }
+        @keyframes fidsFieldFlip {
+            0% {
+                transform: perspective(600px) rotateX(0);
+                filter: brightness(1)
+            }
+
+            42% {
+                transform: perspective(600px) rotateX(-86deg);
+                filter: brightness(.55)
+            }
+
+            62% {
+                transform: perspective(600px) rotateX(16deg);
+                filter: brightness(1.28)
+            }
+
+            100% {
+                transform: perspective(600px) rotateX(0);
+                filter: brightness(1)
+            }
+        }
+        .board-message {
+            min-height: 265px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 14px;
+            border-radius: 15px;
+            background: rgba(255, 255, 255, .015);
+            border: 1px solid rgba(255, 255, 255, .04);
+            color: #6f90a4;
+            font-size: 9px;
+            font-weight: 800;
+            letter-spacing: .14em;
+            text-transform: uppercase
+        }
+        .board-message-title {
+            font-family: "Roboto Mono", monospace;
+            letter-spacing: .04em
+        }
+        .board-message-note {
+            color: #5f7a8f;
+            font-size: 8px;
+            letter-spacing: .10em
+        }
+        .board-footer {
+            position: relative;
+            z-index: 2;
+            display: grid;
+            grid-template-columns: 1fr auto auto;
+            gap: 18px;
+            align-items: center;
+            margin-top: 7px;
+            padding: 9px 11px;
+            border-radius: 11px;
+            background: #e9eef8;
+            color: #587085;
+            font-size: 8px;
+            font-weight: 750;
+            letter-spacing: .08em;
+            text-transform: uppercase
+        }
+        .board-footer strong {
+            color: #022e64
+        }
+        .status-lamp {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--sk-aqua);
+            box-shadow: 0 0 0 5px rgba(95, 199, 207, .12);
+            display: inline-block;
+            margin-right: 7px;
+            vertical-align: middle
+        }
+        .airport-priority-strip {
+            width: min(1100px, 100%);
+            margin: 20px auto 0;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1px;
+            border: 1px solid rgba(2, 46, 100, .07);
+            border-radius: 16px;
+            overflow: hidden;
+            background: rgba(2, 46, 100, .07);
+            box-shadow: 0 14px 32px rgba(2, 46, 100, .06)
+        }
+        .airport-priority-strip>div {
+            min-height: 90px;
+            padding: 15px 17px;
+            background: rgba(255, 255, 255, .94)
+        }
+        .priority-symbol {
+            display: inline-grid;
+            place-items: center;
+            min-width: 26px;
+            height: 22px;
+            padding: 0 6px;
+            border-radius: 5px;
+            background: #e9eef8;
+            color: #022e64;
+            font-family: "Roboto Mono", monospace;
+            font-size: 7px;
+            font-weight: 800
+        }
+        .airport-priority-strip strong {
+            display: block;
+            margin-top: 10px;
+            color: #022e64;
+            font-size: 12px;
+            letter-spacing: -.02em
+        }
+        .airport-priority-strip small {
+            display: block;
+            margin-top: 4px;
+            color: #748496;
+            font-size: 9px;
+            line-height: 1.5
+        }
+        /* =========================================================
+   AIRPORT CONTEXT UI
+   ========================================================= */
+        .airport-context {
+            position: relative;
+            background: #fff
+        }
+        .context-transition {
+            height: 130px;
+            margin-top: -1px;
+            background: linear-gradient(180deg, #f3f6f8 0%, #fff 100%)
+        }
+        .context-welcome {
+            padding: 72px 0 100px
+        }
+        .context-preview-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px
+        }
+        .context-preview {
+            min-height: 260px;
+            padding: 25px;
+            border-radius: 24px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            box-shadow: 0 16px 38px rgba(2, 46, 100, .08);
+            transition: transform .3s var(--ease), box-shadow .3s ease
+        }
+        .context-preview:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 26px 52px rgba(2, 46, 100, .13)
+        }
+        .context-preview span {
+            margin-bottom: auto;
+            font-family: "Roboto Mono", monospace;
+            font-size: 8px;
+            font-weight: 700;
+            letter-spacing: .14em;
+            text-transform: uppercase;
+            opacity: .65
+        }
+        .context-preview h3 {
+            font-size: 27px;
+            letter-spacing: -.045em;
+            line-height: 1;
+            margin-bottom: 9px
+        }
+        .context-preview p {
+            font-size: 10.5px;
+            line-height: 1.65;
+            opacity: .72
+        }
+        .preview-navy {
+            background: linear-gradient(145deg, #04254a, #0b477e);
+            color: #fff
+        }
+        .preview-aqua {
+            background: #d9f1f1;
+            color: #022e64
+        }
+        .preview-sand {
+            background: #f2e9dc;
+            color: #3c2f20
+        }
+        .context-loading {
+            padding: 76px 0 110px
+        }
+        .context-loading-screen {
+            min-height: 280px;
+            border-radius: 28px;
+            padding: 34px;
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 30px;
+            align-items: center;
+            background: linear-gradient(145deg, #04254a, #0b477e 62%, #126d78);
+            color: #fff;
+            box-shadow: 0 28px 68px rgba(2, 46, 100, .18)
+        }
+        .loading-airport-code {
+            font-size: clamp(60px, 10vw, 130px);
+            font-weight: 700;
+            line-height: .8;
+            letter-spacing: -.08em;
+            color: #d9f1f1
+        }
+        .loading-copy span {
+            display: block;
+            color: #8fd3ff;
+            font-size: 8px;
+            font-weight: 800;
+            letter-spacing: .16em;
+            text-transform: uppercase
+        }
+        .loading-copy strong {
+            display: block;
+            margin-top: 10px;
+            font-size: 28px;
+            line-height: 1.05;
+            letter-spacing: -.045em;
+            font-weight: 550
+        }
+        .loading-track {
+            grid-column: 1/-1;
+            height: 3px;
+            border-radius: 99px;
+            background: rgba(255, 255, 255, .10);
+            overflow: hidden
+        }
+        .loading-track i {
+            display: block;
+            width: 34%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, #5fc7cf, #d1bc98, transparent);
+            animation: contextLoad 1.45s ease-in-out infinite
+        }
+        @keyframes contextLoad {
+            from {
+                transform: translateX(-120%)
+            }
+
+            to {
+                transform: translateX(390%)
+            }
+        }
+        .context-content {
+            animation: contextReveal .72s var(--ease) both
+        }
+        @keyframes contextReveal {
+            from {
+                opacity: 0;
+                transform: translateY(14px)
+            }
+
+            to {
+                opacity: 1;
+                transform: none
+            }
+        }
+        .airport-profile {
+            --airport-primary: #022e64;
+            --airport-accent: #5fc7cf;
+            position: relative;
+            isolation: isolate;
+            overflow: hidden;
+            min-height: 560px;
+            color: #fff;
+            background: linear-gradient(145deg, var(--airport-primary), #0b477e 62%, #126d78)
+        }
+        .airport-profile-media {
+            position: absolute;
+            inset: 0;
+            z-index: -3;
+            background-position: center;
+            background-size: cover;
+            transform: scale(1.025);
+            transition: transform 1.4s var(--ease)
+        }
+        .airport-profile:hover .airport-profile-media {
+            transform: scale(1.055)
+        }
+        .airport-profile-overlay {
+            position: absolute;
+            inset: 0;
+            z-index: -2;
+            background: linear-gradient(90deg, rgba(2, 17, 37, .94), rgba(2, 46, 100, .72) 52%, rgba(2, 46, 100, .28)), linear-gradient(180deg, rgba(3, 17, 31, .06), rgba(3, 17, 31, .74))
+        }
+        .airport-profile::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            z-index: -1;
+            pointer-events: none;
+            opacity: .28;
+            background: linear-gradient(rgba(255, 255, 255, .07) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, .07) 1px, transparent 1px);
+            background-size: 54px 54px;
+            mask-image: linear-gradient(90deg, #000, transparent 80%)
+        }
+        .airport-profile-inner {
+            min-height: 560px;
+            padding: 76px 0 64px;
+            display: grid;
+            grid-template-columns: minmax(0, 1.2fr) minmax(300px, .58fr);
+            gap: 58px;
+            align-items: end
+        }
+        .airport-profile-code {
+            color: rgba(255, 255, 255, .18);
+            font-size: clamp(82px, 13vw, 170px);
+            font-weight: 700;
+            line-height: .70;
+            letter-spacing: -.10em
+        }
+        .airport-profile-copy h2 {
+            max-width: 820px;
+            margin: 12px 0 17px;
+            font-size: clamp(42px, 6vw, 76px);
+            font-weight: 500;
+            line-height: .94;
+            letter-spacing: -.062em
+        }
+        .airport-profile-copy p {
+            max-width: 690px;
+            color: #d2e1ec;
+            font-size: 13px;
+            line-height: 1.76
+        }
+        .airport-profile-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 24px
+        }
+        .context-action {
+            min-height: 42px;
+            padding: 0 14px;
+            border: 1px solid rgba(255, 255, 255, .18);
+            border-radius: 999px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            background: rgba(255, 255, 255, .08);
+            color: #fff;
+            text-decoration: none;
+            font-size: 8px;
+            font-weight: 800;
+            letter-spacing: .10em;
+            text-transform: uppercase;
+            backdrop-filter: blur(12px);
+            transition: transform .2s ease, background .2s ease
+        }
+        .context-action:hover {
+            transform: translateY(-2px);
+            background: rgba(255, 255, 255, .14)
+        }
+        .context-action.primary {
+            background: #d9f1f1;
+            color: #022e64;
+            border-color: #d9f1f1
+        }
+        .airport-profile-facts {
+            align-self: end;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, .14);
+            border-radius: 20px;
+            background: rgba(255, 255, 255, .10);
+            backdrop-filter: blur(16px)
+        }
+        .profile-fact {
+            min-height: 88px;
+            padding: 15px;
+            background: rgba(3, 17, 31, .28)
+        }
+        .profile-fact small {
+            display: block;
+            color: #85a7bb;
+            font-size: 7px;
+            font-weight: 800;
+            letter-spacing: .13em;
+            text-transform: uppercase
+        }
+        .profile-fact strong {
+            display: block;
+            margin-top: 7px;
+            color: #fff;
+            font-size: 14px;
+            line-height: 1.2;
+            font-weight: 600
+        }
+        .airport-context-grid {
+            padding: 80px 0 30px;
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 12px
+        }
+        .context-module {
+            grid-column: span 4;
+            min-height: 320px;
+            padding: 24px;
+            border-radius: 24px;
+            background: #fff;
+            border: 1px solid rgba(2, 46, 100, .08);
+            box-shadow: 0 14px 36px rgba(2, 46, 100, .07);
+            display: flex;
+            flex-direction: column;
+            transition: transform .28s var(--ease), box-shadow .28s ease
+        }
+        .context-module:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 24px 50px rgba(2, 46, 100, .12)
+        }
+        .module-terminal {
+            background: #e9eef8
+        }
+        .module-transport {
+            background: #d9f1f1
+        }
+        .module-dining {
+            background: #fff
+        }
+        .module-lounges {
+            background: linear-gradient(145deg, #142d4f, #496b8f);
+            color: #fff
+        }
+        .module-hotel {
+            background: #f2e9dc;
+            color: #3c2f20
+        }
+        .module-transfer {
+            position: relative;
+            overflow: hidden;
+            grid-column: span 8;
+            background: linear-gradient(145deg, #04254a, #0b477e 60%, #126d78);
+            color: #fff
+        }
+        .module-transfer::after {
+            content: "";
+            position: absolute;
+            width: 360px;
+            height: 360px;
+            border-radius: 50%;
+            right: -180px;
+            top: -190px;
+            border: 1px solid rgba(95, 199, 207, .22)
+        }
+        .transfer-ribbon {
+            position: absolute;
+            right: 20px;
+            top: 18px;
+            color: #d9f1f1;
+            font-size: 8px;
+            font-weight: 800;
+            letter-spacing: .16em
+        }
+        .module-head {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 22px
+        }
+        .module-sign {
+            width: 38px;
+            height: 38px;
+            display: grid;
+            place-items: center;
+            border-radius: 10px;
+            background: #022e64;
+            color: #fff;
+            font-family: "Roboto Mono", monospace;
+            font-size: 10px;
+            font-weight: 800
+        }
+        .module-lounges .module-sign, .module-transfer .module-sign {
+            background: rgba(255, 255, 255, .10);
+            border: 1px solid rgba(255, 255, 255, .13)
+        }
+        .module-hotel .module-sign {
+            background: #3c2f20
+        }
+        .module-head small {
+            display: block;
+            color: #758599;
+            font-size: 7px;
+            font-weight: 800;
+            letter-spacing: .12em;
+            text-transform: uppercase
+        }
+        .module-lounges .module-head small, .module-transfer .module-head small {
+            color: #91b1c4
+        }
+        .module-hotel .module-head small {
+            color: #8d7557
+        }
+        .module-head h3 {
+            margin-top: 2px;
+            font-size: 23px;
+            font-weight: 600;
+            letter-spacing: -.045em
+        }
+        .module-body {
+            display: grid;
+            gap: 9px;
+            margin-top: auto
+        }
+        .context-list-item {
+            padding: 12px 13px;
+            border-radius: 13px;
+            background: rgba(255, 255, 255, .62);
+            border: 1px solid rgba(2, 46, 100, .06)
+        }
+        .module-lounges .context-list-item, .module-transfer .context-list-item {
+            background: rgba(255, 255, 255, .07);
+            border-color: rgba(255, 255, 255, .08)
+        }
+        .module-hotel .context-list-item {
+            background: rgba(255, 255, 255, .32)
+        }
+        .context-list-item strong {
+            display: block;
+            font-size: 11px;
+            line-height: 1.3
+        }
+        .context-list-item span {
+            display: block;
+            margin-top: 4px;
+            color: #728194;
+            font-size: 9px;
+            line-height: 1.55
+        }
+        .module-lounges .context-list-item span, .module-transfer .context-list-item span {
+            color: #adc2d2
+        }
+        .module-hotel .context-list-item span {
+            color: #756958
+        }
+        .context-empty {
+            color: #7a8998;
+            font-size: 10px;
+            line-height: 1.65
+        }
+        .module-lounges .context-empty, .module-transfer .context-empty {
+            color: #9eb6c7
+        }
+        .transfer-price {
+            font-size: 35px;
+            font-weight: 700;
+            letter-spacing: -.06em;
+            color: #fff
+        }
+        .transfer-price small {
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 0;
+            color: #9eb7c8
+        }
+        .transfer-cta {
+            margin-top: 8px;
+            min-height: 43px;
+            border: 0;
+            border-radius: 999px;
+            padding: 0 16px;
+            background: #d9f1f1;
+            color: #022e64;
+            font-size: 8px;
+            font-weight: 800;
+            letter-spacing: .10em;
+            text-transform: uppercase
+        }
+        .airport-commerce {
+            padding: 72px 0 82px;
+            background: #f3f6f8
+        }
+        .commerce-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 12px
+        }
+        .commerce-card {
+            grid-column: span 4;
+            position: relative;
+            overflow: hidden;
+            min-height: 330px;
+            border-radius: 24px;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            border: 1px solid rgba(2, 46, 100, .07);
+            background: #fff;
+            box-shadow: 0 14px 34px rgba(2, 46, 100, .08);
+            transition: transform .3s var(--ease), box-shadow .3s ease
+        }
+        .commerce-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 25px 52px rgba(2, 46, 100, .14)
+        }
+        .commerce-card.no-media {
+            background: linear-gradient(145deg, #04254a, #0b477e 62%, #126d78)
+        }
+        .commerce-card-media {
+            position: absolute;
+            inset: 0;
+            background-position: center;
+            background-size: cover;
+            transition: transform .7s var(--ease)
+        }
+        .commerce-card:hover .commerce-card-media {
+            transform: scale(1.045)
+        }
+        .commerce-card::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(2, 46, 100, .02), rgba(2, 27, 54, .88))
+        }
+        .commerce-card-copy {
+            position: relative;
+            z-index: 2;
+            color: #fff
+        }
+        .commerce-card-copy small {
+            font-size: 7px;
+            font-weight: 800;
+            letter-spacing: .13em;
+            text-transform: uppercase;
+            color: #b8dce0
+        }
+        .commerce-card-copy h3 {
+            font-size: 25px;
+            line-height: 1.02;
+            letter-spacing: -.045em;
+            margin: 8px 0
+        }
+        .commerce-card-copy p {
+            font-size: 9.5px;
+            line-height: 1.58;
+            color: #cad9e5
+        }
+        .commerce-card-copy button {
+            margin-top: 14px;
+            min-height: 38px;
+            padding: 0 13px;
+            border: 1px solid rgba(255, 255, 255, .20);
+            border-radius: 999px;
+            background: rgba(255, 255, 255, .10);
+            color: #fff;
+            font-size: 8px;
+            font-weight: 800;
+            letter-spacing: .09em;
+            text-transform: uppercase
+        }
+        .airport-destination-edit {
+            padding: 80px 0;
+            background: #fff
+        }
+        .destination-edit-head>div {
+            display: flex;
+            align-items: flex-end;
+            gap: 24px
+        }
+        .destination-edit-code {
+            color: #e9eef8;
+            font-size: clamp(74px, 12vw, 145px);
+            font-weight: 700;
+            line-height: .72;
+            letter-spacing: -.10em
+        }
+        .destination-edit-head h2 {
+            margin-top: 8px;
+            color: #022e64;
+            font-size: clamp(34px, 4.8vw, 58px);
+            font-weight: 550;
+            letter-spacing: -.055em;
+            line-height: .96
+        }
+        .destination-edit-grid {
+            margin-top: 30px;
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 12px
+        }
+        .destination-card {
+            grid-column: span 4;
+            min-height: 270px;
+            border-radius: 22px;
+            padding: 23px;
+            border: 1px solid rgba(2, 46, 100, .07);
+            background: #e9eef8;
+            color: #022e64;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end
+        }
+        .destination-card:nth-child(3n+2) {
+            background: #d9f1f1
+        }
+        .destination-card:nth-child(3n+3) {
+            background: #f2e9dc;
+            color: #3c2f20
+        }
+        .destination-card small {
+            margin-bottom: auto;
+            font-size: 7px;
+            font-weight: 800;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+            opacity: .62
+        }
+        .destination-card h3 {
+            font-size: 23px;
+            letter-spacing: -.04em;
+            line-height: 1.03
+        }
+        .destination-card p {
+            margin-top: 8px;
+            font-size: 9.5px;
+            line-height: 1.6;
+            opacity: .70
+        }
+        .destination-card button {
+            align-self: flex-start;
+            margin-top: 14px;
+            border: 0;
+            background: transparent;
+            color: inherit;
+            padding: 0;
+            font-size: 8px;
+            font-weight: 800;
+            letter-spacing: .08em;
+            text-transform: uppercase
+        }
+        .airport-practical {
+            padding: 72px 0 90px;
+            background: linear-gradient(180deg, #fff, #f3f6f8)
+        }
+        .practical-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px
+        }
+        .practical-card {
+            min-height: 205px;
+            padding: 22px;
+            border-radius: 20px;
+            background: #fff;
+            border: 1px solid rgba(2, 46, 100, .07);
+            box-shadow: 0 12px 28px rgba(2, 46, 100, .06)
+        }
+        .practical-card span {
+            font-size: 7px;
+            font-weight: 800;
+            letter-spacing: .13em;
+            text-transform: uppercase;
+            color: #74869a
+        }
+        .practical-card h3 {
+            margin-top: 10px;
+            color: #022e64;
+            font-size: 20px;
+            letter-spacing: -.04em
+        }
+        .practical-card p {
+            margin-top: 8px;
+            color: #66788b;
+            font-size: 9.5px;
+            line-height: 1.62
+        }
+        .context-module.hidden, .airport-practical.hidden {
+            display: none !important
+        }
+        
+.ti-airport-experience{width:100%;padding-bottom:76px;background:#fff}.ti-airport-experience .wrap{width:min(1180px,calc(100% - 56px));margin-inline:auto}.ti-airport-experience .eyebrow{display:flex;align-items:center;gap:11px;color:var(--sk-blue);font-size:10px;font-weight:800;letter-spacing:.18em;text-transform:uppercase}.ti-airport-experience .eyebrow:before{content:"";width:38px;height:1px;background:linear-gradient(90deg,var(--sk-aqua),transparent)}.ti-airport-experience .eyebrow.light{color:#c8e3e8}.ti-airport-experience .ti-section-nav-wrap{width:min(1180px,calc(100% - 56px));margin:18px auto 0}.ti-section-nav[data-mode="airport-tabs"]{gap:7px;padding:8px 0}.ti-section-nav[data-mode="airport-tabs"] .ti-section-link{border:0;background:transparent;font-size:9.5px}.ti-section-nav[data-mode="airport-tabs"] .ti-section-link[aria-selected="true"]{background:var(--ti-navy);color:#fff;box-shadow:none}.ti-airport-tab-panels{width:min(1180px,calc(100% - 56px));margin:22px auto 0}.ti-airport-tab-panels>.ti-tab-panel{gap:18px}.ti-airport-tab-panels .airport-context-grid{width:100%;margin:0}.ti-airport-tab-panels .airport-commerce,.ti-airport-tab-panels .airport-destination-edit,.ti-airport-tab-panels .airport-practical{margin-top:24px;border-radius:24px;overflow:hidden}.ti-airport-tab-panels .airport-commerce>.section-head,.ti-airport-tab-panels .airport-practical>.section-head{padding-left:0;padding-right:0}.ti-airport-tab-panels .commerce-grid,.ti-airport-tab-panels .destination-edit-grid,.ti-airport-tab-panels .practical-grid{width:100%}.ti-airport-flight-panel{display:grid;gap:20px}.ti-airport-flight-heading{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:24px;align-items:end}.ti-airport-flight-heading h2{margin:8px 0;color:#022e64;font-size:clamp(28px,3.8vw,44px);font-weight:600;letter-spacing:-.05em}.ti-airport-flight-heading p{margin:0;color:#667085;font-size:11px;line-height:1.65}.ti-airport-flight-panel .airport-board-toggle{min-width:250px}.ti-airport-flight-panel .terminal-bay{width:100%;margin-top:4px}.ti-airport-flight-panel .flight-board-shell{width:100%}.ti-airport-flight-panel .board-footer{grid-template-columns:1fr auto}.ti-airport-board-retry{border:1px solid rgba(95,199,207,.4);background:transparent;color:#d9f1f1;padding:9px 13px;border-radius:8px;font-size:9px;font-weight:800}.ti-airport-experience .airport-profile{margin-top:8px}.ti-airport-experience .context-action{border-radius:10px}.ti-airport-experience .transfer-ribbon{border-radius:0 0 0 10px}.ti-airport-experience .commerce-card button,.ti-airport-experience .transfer-cta{border-radius:8px}.ti-airport-experience .airport-priority-strip{width:100%;margin-top:0}.ti-airport-experience .live-pill,.ti-airport-experience .board-live,.ti-airport-experience [data-system-state-pill]{display:none!important}
+@media(max-width:760px){.ti-airport-experience .wrap,.ti-airport-experience .ti-section-nav-wrap,.ti-airport-tab-panels{width:calc(100% - 24px)}.ti-airport-flight-heading{grid-template-columns:1fr}.ti-airport-flight-panel .airport-board-toggle{min-width:0}.ti-airport-experience .airport-profile-inner{width:calc(100% - 24px)}.ti-airport-experience .terminal-bay{padding-left:8px;padding-right:8px}.ti-airport-experience .airport-priority-strip{grid-template-columns:1fr}}
+</style>
 </head>
 <body>
 <div id="tiLive" class="ti-visually-hidden" aria-live="polite"></div>
@@ -1464,6 +2814,16 @@ const STATE={
   activeJourneyGroup:"",
   activeDetail:null,
   activeAirlineTab:"overview",
+  activeAirportTab:"overview",
+  activeAirportBoardType:"departures",
+  airportContexts:new Map(),
+  airportContextPending:new Set(),
+  airportContextRequest:null,
+  airportFlights:new Map(),
+  airportFlightPending:new Set(),
+  airportFlightRequest:null,
+  airportRequestSerial:0,
+  airportFlightRequestSerial:0,
   searchIndex:[],
   searchOpen:false,
   searchQuery:"",
@@ -1707,6 +3067,8 @@ function openDetail(x){
   saveHomeContext();
   STATE.activeDetail=x;
   STATE.activeAirlineTab=x._library==="airlines"?"overview":"";
+  STATE.activeAirportTab=x._library==="airports"?"overview":"";
+  STATE.activeAirportBoardType="departures";
   transition(()=>{$("tiHome").style.display="none";$("tiDetail").dataset.active="true";renderDetail(x)});
   window.scrollTo({top:0,behavior:movement()});
   announce(`${itemTitle(x)} opened`)
@@ -1719,6 +3081,8 @@ function closeDetail(){
   STATE.overlayMode="";
   STATE.activeDetail=null;
   STATE.activeAirlineTab="overview";
+  STATE.activeAirportTab="overview";
+  STATE.activeAirportBoardType="departures";
   $("tiSearchLayer")?.setAttribute("data-open","false");
   $("tiSearchLayer")?.setAttribute("aria-hidden","true");
   $("tiOverlay")?.setAttribute("data-open","false");
@@ -1870,7 +3234,82 @@ function activateAirlineTab(id,x,scroll=true){
   if(id==="aircraft"&&x)requestAircraft(x);
   if(scroll)root.querySelector(".ti-section-nav-wrap")?.scrollIntoView({behavior:movement(),block:"start"})
 }
+function tiAirportIata(x){return text(x?.iataCode||x?.iata||x?.code).toUpperCase().replace(/[^A-Z0-9]/g,"").slice(0,4)}
+function tiAirportCacheKey(iata,boardType="departures"){return `${iata}|${boardType}`}
+function tiAirportRequestContext(x){
+  const iata=tiAirportIata(x);if(!iata)return;
+  const key=iata;if(STATE.airportContextPending.has(key)||STATE.airportContexts.has(key))return;
+  STATE.airportContextPending.add(key);const requestId=`airport-context-${++STATE.airportRequestSerial}-${Date.now()}`;STATE.airportContextRequest={requestId,iata};
+  post("TRAVEL_INFO_AIRPORT_CONTEXT_REQUEST",{iata,boardType:"departures",requestId});
+}
+function tiAirportRequestFlights(x,boardType="departures",force=false){
+  const iata=tiAirportIata(x);if(!iata)return;const type=boardType==="arrivals"?"arrivals":"departures";const key=tiAirportCacheKey(iata,type);
+  if(!force&&STATE.airportFlights.has(key))return tiRenderAirportFlights();
+  if(STATE.airportFlightPending.has(key))return;
+  STATE.airportFlightPending.add(key);const requestId=`airport-flights-${++STATE.airportFlightRequestSerial}-${Date.now()}`;STATE.airportFlightRequest={requestId,iata,boardType:type,key};
+  const host=$("tiAirportFlightRows");if(host)host.innerHTML=`<div class="board-message"><span class="board-message-title">LOADING FLIGHTS</span><span class="board-message-note">Retrieving ${esc(type)} for ${esc(iata)}</span></div>`;
+  post("TRAVEL_INFO_AIRPORT_FLIGHTS_REQUEST",{iata,boardType:type,requestId});
+}
+function tiAirportList(value){const v=parseStructuredValue(value);return Array.isArray(v)?v:(v&&typeof v==="object"?[v]:[])}
+function tiAirportContext(x){return STATE.airportContexts.get(tiAirportIata(x))||null}
+function tiAirportResolved(x){const ctx=tiAirportContext(x);return {...x,...obj(ctx?.airport)}}
+function tiAirportListRows(items,titleKeys=["name","title","terminal","mode"],detailKeys=["description","notes","location","access"]){
+  const rows=tiAirportList(items).slice(0,6);if(!rows.length)return `<p class="context-empty">No published information for this section.</p>`;
+  return rows.map(item=>{if(typeof item!=="object")return `<div class="context-list-item"><strong>${esc(item)}</strong></div>`;const title=titleKeys.map(k=>text(item?.[k])).find(Boolean)||"Information";const detail=detailKeys.map(k=>formatTextValue(item?.[k])).find(Boolean)||"";return `<div class="context-list-item"><strong>${esc(title)}</strong>${detail?`<span>${esc(detail)}</span>`:""}</div>`}).join("")
+}
+function tiAirportHeaderHtml(x){
+  const a=tiAirportResolved(x),iata=tiAirportIata(a),image=safeExternal(text(a.heroImageUrl||a.image_url||displayImageUrl(a))),summary=text(a.summary||a.information||a.description||itemSummary(a)||`Passenger guide for ${iata}.`);
+  const facts=[["IATA",iata],["City",a.city],["Country",a.country],["City center",a.distanceToCityCenterKm!==null&&a.distanceToCityCenterKm!==undefined&&a.distanceToCityCenterKm!==""?`${a.distanceToCityCenterKm} km`:""]].filter(([,v])=>text(v));
+  tiAirportList(a.quickFacts).forEach(q=>{if(facts.length>=6)return;const o=obj(q);const label=text(o.label||o.name),value=formatTextValue(o.value||o.description||o.text);if(label&&value)facts.push([label,value])});
+  const actions=[];const website=safeExternal(a.website),contact=safeExternal(a.contactUrl);if(website)actions.push(`<a class="context-action primary" href="${esc(website)}" target="_blank" rel="noopener noreferrer">Official airport site ↗</a>`);if(contact&&contact!==website)actions.push(`<a class="context-action" href="${esc(contact)}" target="_blank" rel="noopener noreferrer">Airport contact ↗</a>`);
+  return `<section class="airport-profile" id="tiAirportProfile" style="${a.primaryColor?`--airport-primary:${esc(a.primaryColor)};`:""}${a.accentColor?`--airport-accent:${esc(a.accentColor)};`:""}"><div class="airport-profile-media" ${image?`style="background-image:url('${esc(image)}')"`:""}></div><div class="airport-profile-overlay"></div><div class="wrap airport-profile-inner"><div class="airport-profile-copy"><div class="airport-profile-code">${esc(iata||"---")}</div><div class="eyebrow light">${esc([a.city,a.country].filter(Boolean).join(" · ")||"Airport guide")}</div><h2>${esc(itemTitle(a)||iata)}</h2><p>${esc(summary)}</p><div class="airport-profile-actions">${actions.join("")}</div></div><div class="airport-profile-facts">${facts.map(([label,value])=>`<div class="profile-fact"><small>${esc(label)}</small><strong>${esc(value)}</strong></div>`).join("")}</div></div></section>`
+}
+function tiAirportCommerceCard(item,kind){const image=safeExternal(text(item?.imageUrl||item?.heroImageUrl||item?.image)),title=text(item?.title||item?.name||kind),summary=text(item?.summary||item?.description),id=text(item?.publicId||item?.id||item?.slug||title);return `<article class="commerce-card ${image?"has-media":"no-media"}">${image?`<div class="commerce-card-media" style="background-image:url('${esc(image)}')"></div>`:""}<div class="commerce-card-copy"><small>${esc(kind)}</small><h3>${esc(title)}</h3>${summary?`<p>${esc(summary)}</p>`:""}<button type="button" data-ti-airport-kind="${esc(kind.toUpperCase())}" data-ti-airport-id="${esc(id)}">Explore →</button></div></article>`}
+function tiAirportOverviewHtml(x,overviewSection){
+  const ctx=tiAirportContext(x),a=tiAirportResolved(x),commerce=obj(ctx?.commerce),iata=tiAirportIata(a);
+  const terminals=tiAirportList(a.terminals),transport=tiAirportList(a.transport),food=tiAirportList(a.foodDrinks),lounges=tiAirportList(a.lounges),hotel=obj(a.airportHotel||a.airportHotels);
+  const transfer=arr(commerce.transferOffers)[0];
+  const cards=[...arr(commerce.hotels).map(item=>({item,kind:"HOTEL"})),...arr(commerce.tours).map(item=>({item,kind:"EXPERIENCE"}))].slice(0,6);
+  const destinations=[...tiAirportList(a.destinationAds).map(item=>({item,kind:"DESTINATION"})),...arr(commerce.destinations).map(item=>({item,kind:"DESTINATION"}))].slice(0,6);
+  const practical=[];if(a.distanceToCityCenterKm!==null&&a.distanceToCityCenterKm!==undefined&&a.distanceToCityCenterKm!=="")practical.push(["City center",`${a.distanceToCityCenterKm} km from the airport.`]);if(terminals.length)practical.push(["Terminal planning",`${terminals.length} published terminal ${terminals.length===1?"section":"sections"}.`]);if(transport.length)practical.push(["Ground transport",`${transport.length} documented way${transport.length===1?"":"s"} to continue from the airport.`]);if(lounges.length)practical.push(["Lounges",`${lounges.length} published lounge ${lounges.length===1?"option":"options"}.`]);if(food.length)practical.push(["Food & drink",`${food.length} published dining ${food.length===1?"entry":"entries"}.`]);
+  return `<div class="airport-context-grid"><section class="context-module module-terminal"><div class="module-head"><span class="module-sign">T</span><div><small>Airport guide</small><h3>Terminals</h3></div></div><div class="module-body">${tiAirportListRows(terminals,["terminal","name","title"],["notes","description"])}</div></section><section class="context-module module-transport"><div class="module-head"><span class="module-sign">↗</span><div><small>Ground transport</small><h3>From the airport</h3></div></div><div class="module-body">${tiAirportListRows(transport,["mode","name","title"],["notes","description"])}</div></section>${transfer?`<section class="context-module module-transfer"><div class="transfer-ribbon">SKANDI TRANSFER</div><div class="module-head"><span class="module-sign">S</span><div><small>Available with SKANDI</small><h3>${esc(text(transfer.title||transfer.name||"Your transfer"))}</h3></div></div><div class="module-body"><p>${esc(text(transfer.summary||transfer.description||transfer.destination||transfer.meetingPoint||"Continue from arrivals with a SKANDI transfer linked to this airport."))}</p><button class="transfer-cta" type="button" data-ti-airport-kind="TRANSFER" data-ti-airport-id="${esc(text(transfer.publicId||transfer.id||transfer.slug||transfer.title))}">View SKANDI Transfer →</button></div></section>`:""}<section class="context-module module-dining"><div class="module-head"><span class="module-sign">⌁</span><div><small>Before the gate</small><h3>Eat &amp; drink</h3></div></div><div class="module-body">${tiAirportListRows(food,["name","title","venue"],["location","notes","description"])}</div></section><section class="context-module module-lounges"><div class="module-head"><span class="module-sign">L</span><div><small>Wait differently</small><h3>Lounges</h3></div></div><div class="module-body">${tiAirportListRows(lounges,["name","title"],["location","access","description"])}</div></section>${Object.keys(hotel).length?`<section class="context-module module-hotel"><div class="module-head"><span class="module-sign">H</span><div><small>Close to the terminal</small><h3>Airport stay</h3></div></div><div class="module-body">${tiAirportListRows([hotel],["hotel","name","title"],["location","description"])}</div></section>`:""}</div>${overviewSection?storySectionHtml(overviewSection):""}${cards.length?`<section class="airport-commerce"><div class="section-head"><div><div class="eyebrow">Continue with SKANDI</div><h2>Turn arrival into the next part of the trip.</h2></div><p>Customer-visible products connected to ${esc(iata)}.</p></div><div class="commerce-grid">${cards.map(({item,kind})=>tiAirportCommerceCard(item,kind)).join("")}</div></section>`:""}${destinations.length?`<section class="airport-destination-edit"><div class="destination-edit-head"><div><span class="destination-edit-code">${esc(iata)}</span><div><div class="eyebrow">From the runway to the destination</div><h2>${esc(a.city?`Continue into ${a.city}.`:`Continue beyond ${iata}.`)}</h2></div></div></div><div class="destination-edit-grid">${destinations.map(({item})=>tiAirportCommerceCard(item,"DESTINATION")).join("")}</div></section>`:""}${practical.length?`<section class="airport-practical"><div class="section-head"><div><div class="eyebrow">Passenger essentials</div><h2>Useful at ${esc(iata)}.</h2></div></div><div class="practical-grid">${practical.map(([title,copy])=>`<article class="practical-card"><span>${esc(iata)}</span><h3>${esc(title)}</h3><p>${esc(copy)}</p></article>`).join("")}</div></section>`:""}`
+}
+const TI_AIRLINE_LOGOS=Object.freeze({AS:"https://static.wixstatic.com/shapes/394052_6535b791dd404055903a12f5350d61c3.svg",AA:"https://static.wixstatic.com/shapes/394052_47809f4547c04f6eb7e098c5602ff57c.svg",PG:"https://static.wixstatic.com/shapes/394052_3627db92f99544d8bc42c98e684ce5d4.svg",BA:"https://static.wixstatic.com/shapes/394052_85c56f21c63c42d2b5fba0273ee3b0a6.svg",DL:"https://static.wixstatic.com/shapes/394052_4f692ba92b43482292d87d1c6b7df036.svg",AY:"https://static.wixstatic.com/shapes/394052_97cf9b3a9a884781b3186ededecd7b45.svg",F9:"https://static.wixstatic.com/shapes/394052_cca48f82a42043d79743561a784e92c8.svg",IB:"https://static.wixstatic.com/shapes/394052_3726a2f12dcd44ab8dea7085713902b9.svg",FI:"https://static.wixstatic.com/shapes/394052_e09b3c2f6dfd4ca3a87497e34f538c53.svg",B6:"https://static.wixstatic.com/shapes/394052_d0e052d862be40cba0231eae50b4b5dd.svg",KL:"https://static.wixstatic.com/shapes/394052_0c2eaf7331a147648b444fdb12329073.svg",LH:"https://static.wixstatic.com/shapes/394052_76a1dce4673a429d86b4d816faf88b6d.svg",DY:"https://static.wixstatic.com/shapes/394052_05f76b5094374d11951f14a93fa1ea88.svg",D8:"https://static.wixstatic.com/shapes/394052_05f76b5094374d11951f14a93fa1ea88.svg",SK:"https://static.wixstatic.com/shapes/394052_bfbc7fc4f8b74360bf5398ac8d12a280.svg",LX:"https://static.wixstatic.com/shapes/394052_69b2702a5c434d03a9aa0182c430979e.svg",TG:"https://static.wixstatic.com/shapes/394052_c370132e76c64a29befdfd67496234fe.svg",UA:"https://static.wixstatic.com/shapes/394052_6002f849a3574cd4827d4ba1c3d339ef.svg"});
+function tiFlightTime(side){return text(side?.actualLocal||side?.estimatedLocal||side?.scheduledLocal)||(()=>{const raw=text(side?.actual||side?.estimated||side?.scheduled);if(!raw)return"—:—";const d=new Date(raw);return Number.isNaN(d.getTime())?raw.slice(0,5):new Intl.DateTimeFormat("en-GB",{hour:"2-digit",minute:"2-digit",hour12:false,timeZone:"UTC"}).format(d)})()}
+function tiAirportDirectoryLabel(side){const code=text(side?.iata||side?.icao).toUpperCase();const d=arr(DATA.airports).find(a=>text(a.iataCode||a.iata).toUpperCase()===code||text(a.icaoCode||a.icao).toUpperCase()===code);const city=text(side?.city||d?.city),name=text(side?.airport||d?.title||d?.name).replace(/\s*\([A-Z0-9]{3,4}\)\s*$/i,"").replace(/\bInternational\b|\bAirport\b/gi,"").replace(/\s+/g," ").trim();let n=name;if(city&&n.toLowerCase().startsWith(city.toLowerCase()))n=n.slice(city.length).replace(/^[\s/–—-]+/,"");const place=[city,n].filter(Boolean).join(" / ").toUpperCase();return {place:place||code||"—",code:place?code:""}}
+function tiAirportStatus(item,arrivals,meta){const raw=lower(item?.status);const side=arrivals?item?.arrival:item?.departure;const now=Date.now();const ts=new Date(side?.actual||side?.estimated||side?.scheduled).getTime();if(raw.includes("cancel"))return["CANCELLED","flap-bad"];if(raw.includes("divert"))return["DIVERTED","flap-bad"];if(arrivals&&(raw.includes("land")||raw.includes("arriv")))return[`ARRIVED ${tiFlightTime(side)}`,"flap-ok"];if(!arrivals&&(raw.includes("depart")||raw==="en-route"||raw==="active"))return[`DEPARTED ${tiFlightTime(side)}`,"flap-ok"];const delay=Number(side?.delay||0);if(delay>0)return[`DELAYED ${Math.round(delay)} M`,"flap-warn"];if(!arrivals&&Number.isFinite(ts)){const airline=text(item?.airlineIata).toUpperCase();const rule=obj(obj(meta?.boardingRules)[airline]||obj(meta?.boardingRules).DEFAULT);const minutes=(ts-now)/60000;if(minutes<=Number(rule.final_call_window||15)&&minutes>-5)return["FINAL CALL","flap-warn"];if(minutes<=Number(rule.boarding_window||40)&&minutes>Number(rule.final_call_window||15))return["BOARDING","flap-warn"]}return[raw&&raw!=="unknown"?human(raw).toUpperCase():"ON TIME","flap-ok"]}
+function tiTerminal(v){const raw=text(v).toUpperCase().replace(/^TERMINAL\s*/i,"");return /^[0-9]+[A-Z]?$/.test(raw)||/^[A-SU-Z]$/.test(raw)?`T${raw}`:(raw||"—")}
+function tiRenderAirportFlights(){
+  const x=STATE.activeDetail;if(!x||x._library!=="airports")return;const iata=tiAirportIata(x),type=STATE.activeAirportBoardType||"departures",key=tiAirportCacheKey(iata,type),entry=STATE.airportFlights.get(key),host=$("tiAirportFlightRows");if(!host)return;
+  $("tiAirportScreenCode")&&( $("tiAirportScreenCode").textContent=iata );$("tiAirportPlaceHeader")&&( $("tiAirportPlaceHeader").textContent=type==="arrivals"?"From":"To" );$("tiAirportTimeHeader")&&( $("tiAirportTimeHeader").textContent=type==="arrivals"?"Arrival time":"Departure time" );
+  if(!entry){host.innerHTML=`<div class="board-message"><span class="board-message-title">FLIGHT INFORMATION</span><span class="board-message-note">Open this tab to load ${esc(type)} for ${esc(iata)}.</span></div>`;return}
+  if(entry.error){host.innerHTML=`<div class="board-message"><span class="board-message-title">BOARD UNAVAILABLE</span><span class="board-message-note">${esc(entry.error)}</span><button class="ti-airport-board-retry" type="button">Try again</button></div>`;host.querySelector("button")?.addEventListener("click",()=>tiAirportRequestFlights(x,type,true));return}
+  const arrivals=type==="arrivals",items=arr(entry.items).slice().sort((a,b)=>new Date((arrivals?a?.arrival:a?.departure)?.scheduled||0)-new Date((arrivals?b?.arrival:b?.departure)?.scheduled||0));
+  if(!items.length){host.innerHTML=`<div class="board-message"><span class="board-message-title">NO FLIGHTS FOUND</span><span class="board-message-note">No ${esc(type)} were returned for ${esc(iata)}.</span></div>`;return}
+  host.innerHTML=items.map((item,index)=>{const side=arrivals?obj(item.arrival):obj(item.departure),place=arrivals?obj(item.departure):obj(item.arrival),airline=text(item.airlineIata).toUpperCase(),logo=safeExternal(item.airlineLogoUrl)||TI_AIRLINE_LOGOS[airline]||"",carrier=text(obj(entry.meta?.boardingRules)[airline]?.name||item.airlineName||airline||"Airline"),dest=tiAirportDirectoryLabel(place),status=tiAirportStatus(item,arrivals,entry.meta),facility=arrivals?text(item.arrival?.baggage||side?.gate||"—"):text(side?.gate||"—");return `<div class="fids-row fids-layout" role="row" style="--row:${index}"><div class="fids-cell cell-airline" role="cell"><div class="fids-carrier" title="${esc(carrier)}"><span class="fids-tail ${logo?"":"fallback"}" data-code="${esc(airline||"--")}">${logo?`<img src="${esc(logo)}" alt="${esc(carrier)}" decoding="async">`:`<span class="fids-logo-fallback">${esc(airline||"--")}</span>`}</span><span class="fids-carrier-name">${esc(carrier)}</span></div></div><div class="fids-cell cell-flight" role="cell"><div class="fids-flight"><strong>${esc(text(item.flightIata||item.flightIcao)||"—")}</strong></div></div><div class="fids-cell cell-time" role="cell"><div class="fids-time"><strong class="fids-time-main">${esc(tiFlightTime(side))}</strong></div></div><div class="fids-cell cell-place" role="cell"><div class="fids-destination"><strong>${esc(dest.place)}${dest.code?` <span>(${esc(dest.code)})</span>`:""}</strong></div></div><div class="fids-cell cell-terminal" role="cell"><span class="fids-terminal">${esc(tiTerminal(side.terminal))}</span></div><div class="fids-cell cell-gate" role="cell"><span class="fids-gate">${esc(facility)}</span></div><div class="fids-cell cell-remarks" role="cell"><span class="fids-status ${status[1]}">${esc(status[0])}</span></div></div>`}).join("");
+  host.querySelectorAll(".fids-tail img").forEach(img=>img.addEventListener("error",()=>{const tile=img.parentElement;if(!tile)return;tile.classList.add("fallback");tile.innerHTML=`<span class="fids-logo-fallback">${esc(tile.dataset.code||"--")}</span>`},{once:true}));
+  const meta=$("tiAirportBoardMeta");if(meta)meta.textContent=entry.meta?.note||`${items.length} ${type} shown. Airport and airline operational displays remain final.`
+}
+function tiAirportFlightPanelHtml(x){const iata=tiAirportIata(x),type=STATE.activeAirportBoardType||"departures";return `<section class="ti-airport-flight-panel"><div class="ti-airport-flight-heading"><div><div class="eyebrow">Flight information</div><h2>${esc(iata)} airport board</h2><p>Current ${esc(type)} for this airport. No additional search or date selection is required.</p></div><div class="airport-board-toggle" role="group" aria-label="Arrivals or departures"><button type="button" class="airport-toggle ${type==="departures"?"active":""}" data-ti-board-type="departures">Departures</button><button type="button" class="airport-toggle ${type==="arrivals"?"active":""}" data-ti-board-type="arrivals">Arrivals</button></div></div><div class="terminal-bay"><div class="flight-board-shell"><div class="board-screen" role="table" aria-label="${esc(iata)} flight information display"><div class="board-airport-bar"><div><small>AIRPORT</small><strong id="tiAirportScreenCode">${esc(iata)}</strong></div><div><small>BOARD</small><strong>${type==="arrivals"?"ARRIVALS":"DEPARTURES"}</strong></div><div><small>LOCAL INFORMATION</small><strong>FIDS</strong></div></div><div class="board-columns fids-layout" role="row"><div role="columnheader">Airline</div><div role="columnheader">Flight No.</div><div role="columnheader" id="tiAirportTimeHeader">${type==="arrivals"?"Arrival time":"Departure time"}</div><div role="columnheader" id="tiAirportPlaceHeader">${type==="arrivals"?"From":"To"}</div><div role="columnheader">Terminal</div><div role="columnheader">${type==="arrivals"?"Belt / Gate":"Gate"}</div><div role="columnheader">Remarks</div></div><div class="board-scroll"><div class="flip-body" id="tiAirportFlightRows" role="rowgroup"><div class="board-message"><span class="board-message-title">FLIGHT INFORMATION</span><span class="board-message-note">Loading ${esc(type)} for ${esc(iata)}.</span></div></div></div></div><div class="board-footer"><span>Passenger flight information</span><span id="tiAirportBoardMeta">Airport and airline operational displays remain final.</span></div></div><div class="terminal-floor-reflection" aria-hidden="true"></div></div><div class="airport-priority-strip" aria-label="Airport information reminders"><div><span class="priority-symbol">01</span><strong>Check the board</strong><small>Use the latest returned time, status and gate.</small></div><div><span class="priority-symbol">02</span><strong>Watch the gate</strong><small>Gate information can change before boarding.</small></div><div><span class="priority-symbol">03</span><strong>Follow airport signs</strong><small>Terminal displays and airline announcements remain final.</small></div></div></section>`}
+function tiActivateAirportTab(id,x,scroll=true){
+  const root=$("tiDetailMount"),button=root?.querySelector(`[data-airport-tab="${CSS.escape(id)}"]`);if(!root||!button)return;STATE.activeAirportTab=id;
+  root.querySelectorAll("[data-airport-tab]").forEach(tab=>{const active=tab===button;tab.setAttribute("aria-selected",active?"true":"false");tab.setAttribute("tabindex",active?"0":"-1")});root.querySelectorAll("[data-airport-panel]").forEach(panel=>panel.hidden=panel.dataset.airportPanel!==id);
+  if(id==="flight-info"){tiAirportRequestFlights(x,STATE.activeAirportBoardType||"departures");requestAnimationFrame(tiRenderAirportFlights)}if(scroll)root.querySelector(".ti-section-nav-wrap")?.scrollIntoView({behavior:movement(),block:"start"})
+}
+function tiBindAirportDetail(x){
+  const root=$("tiDetailMount");if(!root)return;root.querySelectorAll("[data-airport-tab]").forEach(btn=>btn.addEventListener("click",()=>tiActivateAirportTab(btn.dataset.airportTab,x,true)));
+  root.querySelectorAll("[data-ti-board-type]").forEach(btn=>btn.addEventListener("click",()=>{STATE.activeAirportBoardType=btn.dataset.tiBoardType==="arrivals"?"arrivals":"departures";renderAirportDetail(x);tiActivateAirportTab("flight-info",x,false)}));
+  root.querySelectorAll("[data-ti-airport-kind]").forEach(btn=>btn.addEventListener("click",()=>{const kind=btn.dataset.tiAirportKind,id=btn.dataset.tiAirportId,ctx=tiAirportContext(x),all=[...arr(ctx?.commerce?.transferOffers),...arr(ctx?.commerce?.hotels),...arr(ctx?.commerce?.tours),...arr(ctx?.commerce?.destinations),...tiAirportList(ctx?.airport?.destinationAds)];const item=all.find(i=>text(i?.publicId||i?.id||i?.slug||i?.title||i?.name)===id)||{};post("TRAVEL_INFO_AIRPORT_ACTION",{kind,item,airportIata:tiAirportIata(x)})}));
+}
+function renderAirportDetail(x){
+  tiAirportRequestContext(x);const sections=airportSections(x),overview=sections.find(s=>s.id==="overview"),other=sections.filter(s=>s.id!=="overview");const tabs=[{id:"overview",label:"Overview"},...other.map(s=>({id:s.id,label:s.title})),{id:"flight-info",label:"Flight Info"}];if(!tabs.some(t=>t.id===STATE.activeAirportTab))STATE.activeAirportTab="overview";
+  $("tiDetailMount").innerHTML=`<div class="ti-airport-experience">${tiAirportHeaderHtml(x)}<div class="ti-section-nav-wrap"><nav class="ti-section-nav" data-mode="airport-tabs" role="tablist" aria-label="${esc(itemTitle(x))} airport information">${tabs.map(tab=>`<button id="tiAirportTab-${esc(tab.id)}" class="ti-section-link" type="button" role="tab" data-airport-tab="${esc(tab.id)}" aria-selected="${tab.id===STATE.activeAirportTab?"true":"false"}" tabindex="${tab.id===STATE.activeAirportTab?"0":"-1"}">${esc(tab.label)}</button>`).join("")}</nav></div><div class="ti-airport-tab-panels"><div class="ti-tab-panel" data-airport-panel="overview" role="tabpanel" ${STATE.activeAirportTab==="overview"?"":"hidden"}>${tiAirportOverviewHtml(x,overview)}</div>${other.map(sec=>`<div class="ti-tab-panel" data-airport-panel="${esc(sec.id)}" role="tabpanel" ${STATE.activeAirportTab===sec.id?"":"hidden"}>${storySectionHtml(sec)}</div>`).join("")}<div class="ti-tab-panel" data-airport-panel="flight-info" role="tabpanel" ${STATE.activeAirportTab==="flight-info"?"":"hidden"}>${tiAirportFlightPanelHtml(x)}</div></div></div>`;
+  tiBindAirportDetail(x);if(STATE.activeAirportTab==="flight-info"){tiAirportRequestFlights(x,STATE.activeAirportBoardType||"departures");requestAnimationFrame(tiRenderAirportFlights)}
+}
+
+
 function renderDetail(x){
+  if((x?._library||"")==="airports"){renderAirportDetail(x);return;}
   const kind=x._library||"",isAirline=kind==="airlines",isAirport=kind==="airports",sections=isAirline?airlineSections(x):isAirport?airportSections(x):genericSections(x);
   const image=displayImageUrl(x),logo=isAirline?safeExternal(text(x.logo||x.logoIcon||"")):"",code=itemCode(x),facts=detailFacts(x),website=safeExternal(x.website),contactUrl=safeExternal(x.contactUrl),loyaltyUrl=safeExternal(x.loyaltyProgramUrl),internalPath=[x.path,x.actionTarget,x.pageUrl].map(text).find(safeInternal)||"",meta=[x.city,x.country,x.alliance,x.loyaltyProgram].filter(Boolean);
   const aircraftSlot=isAirline?`<section id="tiSec-aircraft" class="ti-story-section" data-detail-section="aircraft"><div class="ti-story-eyebrow">Onboard experience</div><h2>Aircraft & cabin explorer</h2><p>Explore the published aircraft, cabin views and walkthroughs available for this airline. Live seat availability is shown when you book.</p><div id="onboardReactRoot" class="ti-aircraft-host"><div class="ti-aircraft-skeleton"><div class="ti-skeleton-lines"><i></i><i></i><i></i></div></div></div></section>`:"";
@@ -1998,6 +3437,18 @@ window.addEventListener("message",event=>{
     case "TRAVEL_INFO_DATA":loadData(p);break;
     case "TRAVEL_INFO_AIRCRAFT_DATA":{
       const first=arr(p.aircraft)[0];const responseKeys=[text(first?.airlineId),text(first?.airlineCode),text(STATE.lastAircraftRequestKey)].filter(Boolean);responseKeys.forEach(key=>{STATE.aircraftPending.delete(key);STATE.aircraftBundles.set(key,p)});const currentKey=STATE.activeDetail?text(STATE.activeDetail.id||STATE.activeDetail.iataCode||STATE.activeDetail.code):"";if(!responseKeys.length||responseKeys.includes(currentKey)||currentKey===text(STATE.lastAircraftRequestKey))renderFleet(p);break
+    }
+    case "TRAVEL_INFO_AIRPORT_CONTEXT_RESULT":{
+      const req=STATE.airportContextRequest;if(req&&p.requestId&&p.requestId!==req.requestId)break;const airport=obj(p.airport);const iata=tiAirportIata(airport)||req?.iata||"";if(iata){STATE.airportContextPending.delete(iata);STATE.airportContexts.set(iata,p);if(STATE.activeDetail&&tiAirportIata(STATE.activeDetail)===iata)renderAirportDetail(STATE.activeDetail)}break
+    }
+    case "TRAVEL_INFO_AIRPORT_CONTEXT_ERROR":{
+      const req=STATE.airportContextRequest;if(req){STATE.airportContextPending.delete(req.iata);STATE.airportContexts.set(req.iata,{airport:{...STATE.activeDetail,iata:req.iata},commerce:{},error:p.message||"Airport information is temporarily unavailable."});if(STATE.activeDetail&&tiAirportIata(STATE.activeDetail)===req.iata)renderAirportDetail(STATE.activeDetail)}break
+    }
+    case "TRAVEL_INFO_AIRPORT_FLIGHTS_RESULT":{
+      const req=STATE.airportFlightRequest;if(req&&p.requestId&&p.requestId!==req.requestId)break;if(req){STATE.airportFlightPending.delete(req.key);STATE.airportFlights.set(req.key,{items:arr(p.items),meta:obj(p.meta)});if(STATE.activeDetail&&tiAirportIata(STATE.activeDetail)===req.iata)tiRenderAirportFlights()}break
+    }
+    case "TRAVEL_INFO_AIRPORT_FLIGHTS_ERROR":{
+      const req=STATE.airportFlightRequest;if(req){STATE.airportFlightPending.delete(req.key);STATE.airportFlights.set(req.key,{items:[],meta:{},error:p.message||"Flight information is temporarily unavailable."});if(STATE.activeDetail&&tiAirportIata(STATE.activeDetail)===req.iata)tiRenderAirportFlights()}break
     }
     case "TRAVEL_INFO_REQUIREMENTS_SEARCHING":{const h=$("tiRequirementResult");if(h)h.textContent=p.message||"Checking current travel requirements…";break}
     case "TRAVEL_INFO_REQUIREMENTS_RESULT":STATE.requirementsPending=false;if($("tiRequirementSubmit"))$("tiRequirementSubmit").disabled=false;renderRequirementResult(p);break;
