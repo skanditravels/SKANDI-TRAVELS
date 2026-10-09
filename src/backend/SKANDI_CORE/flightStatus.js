@@ -765,7 +765,9 @@ async function loadFlightSearch(p) {
   if (responses[1].status === "rejected") warnings.push("Timetable information is unavailable; showing live tracking only. Times and gates may be missing.");
   if (responses[1].value?.hasMore) warnings.push("This board contains the first 1,000 schedule entries. Narrow the route to see more.");
   const items = rows.map(normalizeDetailedFlight).filter(item => item.flightIata || item.flightIcao);
-   return { ok: true, items, meta: {
+  
+  // FIXED: Properly structured and closed the response payload object configuration map
+  return { ok: true, items, meta: {
     mode: p.mode, date: p.date, boardType: p.boardType, airport: p.airport,
     provider: "airlabs", providerApi: "v9", endpoint: p.mode === "flight" ? "flights + flight" : "flights + schedules",
     providerScope: p.mode === "flight" ? "closest-live-scheduled-or-landed-flight" : "live-tracking-and-current-schedule-window",
@@ -773,7 +775,6 @@ async function loadFlightSearch(p) {
     partial: warnings.length > 0, note: warnings.join(" "),
     message: "Airport-local times when supplied; UTC otherwise.",
     
-    // Injecting your custom database reference map straight into payload meta metadata
     boardingRules: {
       "DL": { "boarding_window": 45, "final_call_window": 15, "name": "Delta Air Lines" },
       "AA": { "boarding_window": 40, "final_call_window": 15, "name": "American Airlines" },
@@ -785,7 +786,9 @@ async function loadFlightSearch(p) {
       "DEFAULT": { "boarding_window": 40, "final_call_window": 15, "name": "" }
     }
   }};
-  export async function searchFlightStatusCore(payload = {}) {
+} // FIXED: Added missing closing brace to properly shut the loadFlightSearch scope block
+
+export async function searchFlightStatusCore(payload = {}) {
   const p = validateSearch(payload);
   const key = JSON.stringify({ ...p, date: "" });
   const cached = flightCache.get(key);
@@ -1020,170 +1023,147 @@ function publicEntity(row = {}) {
     officialStarRating: Number.isFinite(Number(details.officialStarRating))
       ? Number(details.officialStarRating)
       : null,
-    publicPrice: price > 0 ? price : null,
-    currency: text(commercial.currency, 12),
-    priceBasis: text(commercial.priceBasis, 80),
-    featured: row.featured === true,
-    sortPriority: Number.isFinite(Number(row.sort_priority))
-      ? Number(row.sort_priority)
-      : 9999
-  };
+    publicPrice: price > 0 ? price : null, currency: text(commercial.currency, 12),
+priceBasis: text(commercial.priceBasis, 80),
+featured: row.featured === true,
+sortPriority: Number.isFinite(Number(row.sort_priority))
+? Number(row.sort_priority)
+: 9999
+};
 }
-
 function entitySort(a, b) {
-  return (
-    Number(b?.featured === true) -
-      Number(a?.featured === true) ||
-    Number(a?.sortPriority || 9999) -
-      Number(b?.sortPriority || 9999) ||
-    text(a?.title).localeCompare(text(b?.title))
-  );
+return (
+Number(b?.featured === true) -
+Number(a?.featured === true) ||
+Number(a?.sortPriority || 9999) -
+Number(b?.sortPriority || 9999) ||
+text(a?.title).localeCompare(text(b?.title))
+);
 }
-
 export async function getFlightStatusAirportContextCore(payload = {}) {
-  const iata = cleanIata(payload.iata || payload.airport);
-
-  if (!/^[A-Z0-9]{3,4}$/.test(iata)) {
-    throw new SkandiError(
-      "FLIGHT_STATUS_AIRPORT_REQUIRED",
-      "Airport IATA is required.",
-      { publicMessage: "Select a valid airport." }
-    );
-  }
-
-  const boardType =
-    lower(payload.boardType || "departures", 20) === "arrivals"
-      ? "arrivals"
-      : "departures";
-
-  const today = currentDateWindow().today;
-  const date = /^\d{4}-\d{2}-\d{2}$/.test(text(payload.date, 10))
-    ? text(payload.date, 10)
-    : today;
-
-  const contextKey = `${iata}|${date}|${boardType}`;
-  const cached = contextCache.get(contextKey);
-
-  if (cached && cached.expiresAt > Date.now()) {
-    return {
-      ...cached.value,
-      requestSerial: Number(payload.requestSerial || 0),
-      contextKey
-    };
-  }
-
-  const [airportRow, entityRows] = await Promise.all([
-    readAirport(iata),
-    readPublicEntitiesForAirport(iata)
-  ]);
-
-  if (!airportRow) {
-    throw new SkandiError(
-      "FLIGHT_STATUS_AIRPORT_NOT_PUBLISHED",
-      `Published airport record not found for ${iata}.`,
-      { publicMessage: "This airport guide is not currently available." }
-    );
-  }
-
-  const entities = entityRows
-    .map(publicEntity)
-    .filter(Boolean)
-    .sort(entitySort);
-
-  const value = {
-    ok: true,
-    airport: publicAirport(airportRow),
-    commerce: {
-      transferOffers: entities
-        .filter(item => item.entityType === "TRANSFER")
-        .slice(0, 4),
-      hotels: entities
-        .filter(item => item.entityType === "HOTEL")
-        .slice(0, 6),
-      destinations: entities
-        .filter(item => item.entityType === "DESTINATION")
-        .slice(0, 6),
-      tours: entities
-        .filter(item =>
-          item.entityType === "GUIDED_TOUR" ||
-          item.entityType === "ACTIVITY"
-        )
-        .slice(0, 6)
-    },
-    meta: {
-      version: FLIGHT_STATUS_CORE_VERSION,
-      iata,
-      date,
-      boardType,
-      loadedAt: new Date().toISOString()
-    },
-    contextKey
-  };
-
-  contextCache.set(contextKey, {
-    expiresAt: Date.now() + CONTEXT_TTL_MS,
-    value
-  });
-
-  if (contextCache.size > 80) {
-    for (const [key, entry] of contextCache) {
-      if (entry.expiresAt <= Date.now()) contextCache.delete(key);
-    }
-  }
-
-  return {
-    ...value,
-    requestSerial: Number(payload.requestSerial || 0)
-  };
+const iata = cleanIata(payload.iata || payload.airport);
+if (!/^[A-Z0-9]{3,4}$/.test(iata)) {
+throw new SkandiError(
+"FLIGHT_STATUS_AIRPORT_REQUIRED",
+"Airport IATA is required.",
+{ publicMessage: "Select a valid airport." }
+);
 }
-
+const boardType =
+lower(payload.boardType || "departures", 20) === "arrivals"
+? "arrivals"
+: "departures";
+const today = currentDateWindow().today;
+const date = /^\d{4}-\d{2}-\d{2}$/.test(text(payload.date, 10))
+? text(payload.date, 10)
+: today;
+const contextKey = ${iata}|${date}|${boardType};
+const cached = contextCache.get(contextKey);
+if (cached && cached.expiresAt > Date.now()) {
+return {
+...cached.value,
+requestSerial: Number(payload.requestSerial || 0),
+contextKey
+};
+}
+const [airportRow, entityRows] = await Promise.all([
+readAirport(iata),
+readPublicEntitiesForAirport(iata)
+]);
+if (!airportRow) {
+throw new SkandiError(
+"FLIGHT_STATUS_AIRPORT_NOT_PUBLISHED",
+Published airport record not found for ${iata}.,
+{ publicMessage: "This airport guide is not currently available." }
+);
+}
+const entities = entityRows
+.map(publicEntity)
+.filter(Boolean)
+.sort(entitySort);
+const value = {
+ok: true,
+airport: publicAirport(airportRow),
+commerce: {
+transferOffers: entities
+.filter(item => item.entityType === "TRANSFER")
+.slice(0, 4),
+hotels: entities
+.filter(item => item.entityType === "HOTEL")
+.slice(0, 6),
+destinations: entities
+.filter(item => item.entityType === "DESTINATION")
+.slice(0, 6),
+tours: entities
+.filter(item =>
+item.entityType === "GUIDED_TOUR" ||
+item.entityType === "ACTIVITY"
+)
+.slice(0, 6)
+},
+meta: {
+version: FLIGHT_STATUS_CORE_VERSION,
+iata,
+date,
+boardType,
+loadedAt: new Date().toISOString()
+},
+contextKey
+};
+contextCache.set(contextKey, {
+expiresAt: Date.now() + CONTEXT_TTL_MS,
+value
+});
+if (contextCache.size > 80) {
+for (const [key, entry] of contextCache) {
+if (entry.expiresAt <= Date.now()) contextCache.delete(key);
+}
+}
+return {
+...value,
+requestSerial: Number(payload.requestSerial || 0)
+};
+}
 export async function handleFlightStatusActionCore(
-  input = {}
+input = {}
 ) {
-  const request =
-    record(input);
-
-  const action =
-    upper(
-      request.action,
-      60
-    );
-
-  const payload =
-    record(
-      request.payload
-    );
-
-  if (action === "SEARCH") {
-    return searchFlightStatusCore(
-      payload
-    );
-  }
-
-  if (
-    action === "AIRPORT_DIRECTORY"
-  ) {
-    return getFlightStatusAirportDirectoryCore();
-  }
-
-  if (
-    action === "AIRPORT_CONTEXT"
-  ) {
-    return getFlightStatusAirportContextCore(
-      payload
-    );
-  }
-
-  throw new SkandiError(
-    "FLIGHT_STATUS_ACTION_UNSUPPORTED",
-    `Unsupported Flight Status action: ${action || "EMPTY"}`,
-    {
-      publicMessage:
-        "Flight Status request is not supported."
-    }
-  );
+const request =
+record(input);
+const action =
+upper(
+request.action,
+60
+);
+const payload =
+record(
+request.payload
+);
+if (action === "SEARCH") {
+return searchFlightStatusCore(
+payload
+);
 }
-
+if (
+action === "AIRPORT_DIRECTORY"
+) {
+return getFlightStatusAirportDirectoryCore();
+}
+if (
+action === "AIRPORT_CONTEXT"
+) {
+return getFlightStatusAirportContextCore(
+payload
+);
+}
+throw new SkandiError(
+"FLIGHT_STATUS_ACTION_UNSUPPORTED",
+Unsupported Flight Status action: ${action || "EMPTY"},
+{
+publicMessage:
+"Flight Status request is not supported."
+}
+);
+}
 export {
-  FLIGHT_STATUS_CORE_VERSION
+FLIGHT_STATUS_CORE_VERSION
 };
