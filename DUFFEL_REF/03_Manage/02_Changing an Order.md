@@ -3,25 +3,23 @@ What do you need to start?
 All you need to get started with order changes is the id of the order you'd like to change.
 Note that changes are not available for all orders. You can check if an order can be changed by looking for change in its available_actions property.
 In this guide, we'll build on the example used on the quick start guide.
-Tip
 
-We've put together a Postman Collection that contains all of the requests you'll need to follow along with this guide.
-Overview
-Everything starts with an existing order:
+## Overview
 
-Tony, Pepper, and their daughter Morgan have booked flights from New York City to Atlanta, leaving on 11th June and returning a week later on 18th June. They want to delay their return date by a week, coming back on 24th June instead.
+| ----- |
+| **Everything starts with an existing order:** |
+| ----- |
+| Tony, Pepper, and their daughter Morgan have booked flights from New York City to Atlanta, leaving on 11th June and returning a week later on 18th June. They want to delay their return date by a week, coming back on 24th June instead. |
+| ----- |
+We can start by using the "Get a single order" API to check the current details for their order: 
 
-We can start by using the "Get a single order" API to check the current details for their order:
-JavaScript
+> JavaScript
+> Node.JS
+`duffel.orders.get(ORDER_ID)`
 
-
-Node.JS
-
-duffel.orders.get(ORDER_ID)
-You'll need to replace ORDER_ID with the ID of the order you want to change.
-JSON
-
-
+You'll need to replace `ORDER_ID` with the ID of the order you want to change.
+> JSON
+```
 {
   "data": {
     "total_currency": "GBP",
@@ -490,30 +488,27 @@ JSON
     "base_amount": "6336.44"
   }
 }
+```
 
+> | We can see the order has two slices: one for the outbound flight, and one for the inbound flight. The order's available_actions includes change, indicating it can be changed through the API. |
+> | Notice each slice has a unique ID, we will be using them next to make changes to the order. |
+> | The order change process happens in 4 steps: |
+> | - You create an order change request (1)
+> | - You review the available order change offers (2)
+> | - You create a pending order change (3)
+> | - You confirm the order change (4)
+> | ----- |
 
-
-Hide full sample
-
-We can see the order has two slices: one for the outbound flight, and one for the inbound flight. The order's available_actions includes change, indicating it can be changed through the API.
-Notice each slice has a unique ID, we will be using them next to make changes to the order.
-The order change process happens in 4 steps:
-You create an order change request
-
-You review the available order change offers
-
-You create a pending order change
-
-You confirm the order change
-
-Create an order change request
-To request changes for an order, you need to provide a list of slices to remove, plus a list of search criteria for slices you want to add.
-In our example, we want to remove the current inbound flight, so we will be adding its slice.id to the remove list. We also want to find new flights on the updated date 24th June, we can do that by adding the relevant search criteria to the add list:
-JavaScript
-
-
-Node.JS
-
+| ----- |
+| 1. Create an order change request | 
+| ----- |
+| To request changes for an order, you need to provide a list of slices to remove, plus a list of search criteria for slices you want to add. |
+| In our example, we want to remove the current inbound flight, so we will be adding its slice.id to the remove list. We also want to find new flights on the updated date 24th June, we can do that by adding the relevant search criteria to the add list: | 
+| ----- |
+| > JavaScript |
+| > Node.JS | 
+| ----- |
+```
 duffel.orderChangeRequests.create({
     order_id: ORDER_ID,
     slices: {
@@ -530,12 +525,14 @@ duffel.orderChangeRequests.create({
       ]
     }
   })
-You'll need to replace ORDER_ID with the ID of the order you want to change, and SLICE_TO_REMOVE_ID with the ID of the slice you want to replace.
-We'll return an order change request, echoing back the remove and add criteria.
-The response will also include an unique ID for the change request, we'll be using it on the next step to review the available change offers.
-JSON
-
-
+```
+| ----- |
+| You'll need to replace `ORDER_ID` with the ID of the order you want to change, and `SLICE_TO_REMOVE_ID` with the ID of the slice you want to replace. |
+| We'll return an order change request, echoing back the remove and add criteria. | 
+| The response will also include an unique ID for the change request, we'll be using it on the next step to review the available change offers. |
+| ----- |
+> JSON
+```
 {
   "meta": null,
   "data": {
@@ -560,20 +557,22 @@ JSON
     "created_at": "2021-06-16T10:41:31.954687Z"
   }
 }
-
-Review available order change offers
-Now that you have requested an order change, you should review the available offers. You can do this with the "Get a single order change request" endpoint:
-JavaScript
-
-
-Node.JS
-
+```
+| ----- |
+| 2. Review available order change offers |
+| Now that you have requested an order change, you should review the available offers. You can do this with the "Get a single order change request" endpoint: |
+| ----- |
+> JavaScript
+> Node.JS
+```
 duffel.orderChangeRequests.get(ORDER_CHANGE_REQUEST_ID)
-The response will include a list of order_change_offers, each including details for the slices that would be added and removed from the order. They also include the difference in price change_total_amount, as well as the penalty imposed by the airline penalty_total_amount. The price of new flights could be more expensive or cheaper than the original.
-If you'd like to get a complete look at the change offer schema, check out our API reference.
-JSON
-
-
+```
+| ----- |
+| The response will include a list of order_change_offers, each including details for the slices that would be added and removed from the order. They also include the difference in price change_total_amount, as well as the penalty imposed by the airline penalty_total_amount. The price of new flights could be more expensive or cheaper than the original. |
+| If you'd like to get a complete look at the change offer schema, check out our API reference. |
+| ----- |
+> JSON
+```
 {
   "meta": null,
   "data": {
@@ -1491,33 +1490,31 @@ JSON
     "created_at": "2021-06-16T10:41:31.954687Z"
   }
 }
-
-
-
-View full sample
-
-Create a pending order change
-After reviewing the available change offers, Tony's family has chosen a new return flight.
-We can now create a pending order change using the change offer's unique ID and the Create a pending order change endpoint:
-JavaScript
-
-
-Node.JS
-
+```
+| 3. Create a pending order change |
+| ----- |
+| After reviewing the available change offers, Tony's family has chosen a new return flight. |
+| We can now create a pending order change using the change offer's unique ID and the Create a pending order change endpoint: |
+| ----- |
+> JavaScript
+> Node.JS
+```
 duffel.orderChanges.create({selected_order_change_offer: ORDER_CHANGE_OFFER_ID})
-We will return an order change. You can see the value of confirmed_at is null, indicating that the change has not been confirmed yet.
-If you'd like to get a complete look at the order change schema, check out our API reference.
-The price of a pending change order can change over time. You should let your customers review the final price before confirming the order. You can use Get a single order change endpoint to obtain the latest price using the pending order change's id.
-JavaScript
-
-
-Node.JS
-
+```
+| ----- |
+| We will return an order change. You can see the value of confirmed_at is null, indicating that the change has not been confirmed yet. |
+| The price of a pending change order can change over time. You should let your customers review the final price before confirming the order. You can use Get a single order change endpoint to obtain the latest price using the pending order change's id. | 
+| ----- |
+> JavaScript
+> Node.JS
+```
 duffel.orderChanges.get(ORDER_CHANGE_ID)
-There are also some important legal notices that you must display to make sure that the customer understands how their data will be used and the rules that apply to their booking.
-JSON
-
-
+```
+| ----- |
+| There are also some important legal notices that you must display to make sure that the customer understands how their data will be used and the rules that apply to their booking. |
+| ----- |
+> JSON
+```
 {
   "meta": null,
   "data": {
@@ -1819,23 +1816,19 @@ JSON
     "change_total_amount": "50.00"
   }
 }
-
-
-
-Hide full sample
-
-Confirm an order change
-We are finally ready to confirm the order changes for Tony and his family. You'll only need two things at this point:
-The ID of the order change you'd like to confirm
-
-Payment method and details to confirm the change
-
-To confirm an order, use the Confirm an order change endpoint:
-JavaScript
-
-
-Node.JS
-
+```
+| 4. Confirm an order change |
+| ----- |
+| We are finally ready to confirm the order changes for Tony and his family. You'll only need two things at this point: |
+| The ID of the order change you'd like to confirm |
+| ----- |
+| Payment method and details to confirm the change |
+| ----- |
+| To confirm an order, use the Confirm an order change endpoint: |
+| ----- |
+> JavaScript
+> Node.JS
+```
 duffel.orderChanges.confirm({
     ORDER_CHANGE_ID,
     "payment": {
@@ -1844,10 +1837,12 @@ duffel.orderChanges.confirm({
       "amount": "50.00"
     }
   })
-We will return an order change. This time you will see the updated confirmed_at value, indicating the order change has now been confirmed.
-JSON
-
-
+```
+| ----- |
+| We will return an order change. This time you will see the updated confirmed_at value, indicating the order change has now been confirmed. |
+| ----- |
+> JSON
+```
 {
   "meta": null,
   "data": {
@@ -2149,3 +2144,4 @@ JSON
     "change_total_amount": "50.00"
   }
 }
+```
