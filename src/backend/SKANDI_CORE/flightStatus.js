@@ -423,9 +423,7 @@ function normalizeScheduleFlight(item = {}) {
     item.flight_iata ||
     `${item.airline_iata || ""}${
       item.flight_number || ""
-    }`,
-    24
-  );
+    }`, 24 );
 
   return {
     id: text(
@@ -443,12 +441,10 @@ function normalizeScheduleFlight(item = {}) {
       240
     ),
 
-    flightIata,
-    flightIcao:
+    flightIata, flightIcao:
       text(item.flight_icao, 24),
     flightNumber:
       text(item.flight_number, 16),
-
     airlineName:
       text(item.airline_iata, 180),
     airlineIata:
@@ -456,18 +452,14 @@ function normalizeScheduleFlight(item = {}) {
     airlineIcao:
       cleanCode(item.airline_icao, 6),
     airlineLogoUrl: "",
-
     operatingAirlineIata:
       cleanCode(
-        item.cs_airline_iata,
-        4
+        item.cs_airline_iata, 4
       ),
     operatingFlightIata:
       text(item.cs_flight_iata, 24),
-
     status:
       normalizedStatus(item.status),
-
     departure: {
       airport:
         cleanIata(item.dep_iata),
@@ -504,7 +496,6 @@ function normalizeScheduleFlight(item = {}) {
         item.delayed ??
         ""
     },
-
     arrival: {
       airport:
         cleanIata(item.arr_iata),
@@ -1024,18 +1015,18 @@ function publicEntity(row = {}) {
       ? Number(details.officialStarRating)
       : null,
     publicPrice: price > 0 ? price : null, currency: text(commercial.currency, 12),
-priceBasis: text(commercial.priceBasis, 80),
-featured: row.featured === true,
-sortPriority: Number.isFinite(Number(row.sort_priority))
-? Number(row.sort_priority)
-: 9999
-};
+    priceBasis: text(commercial.priceBasis, 80),
+    featured: row.featured === true,
+    sortPriority: Number.isFinite(Number(row.sort_priority))
+      ? Number(row.sort_priority)
+      : 9999
+  };
 }
 function entitySort(a, b) {
-return (
-Number(b?.featured === true) -
-Number(a?.featured === true) ||
-Number(a?.sortPriority || 9999) -
+  return (
+    Number(b?.featured === true) -
+    Number(a?.featured === true) ||
+    Number(a?.sortPriority || 9999) -
 Number(b?.sortPriority || 9999) ||
 text(a?.title).localeCompare(text(b?.title))
 );
