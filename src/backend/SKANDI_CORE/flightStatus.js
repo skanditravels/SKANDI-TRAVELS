@@ -275,7 +275,7 @@ async function airlineBrandDirectory() {
     const rows = arr(await restRequest({
       table: "travel_info_airlines",
       query: {
-        select: "iataCode,inventory_details",
+        select: "iataCode,media_assets",
         active: "eq.true",
         customer_visible: "eq.true",
         status: "eq.PUBLISHED",
@@ -287,9 +287,13 @@ async function airlineBrandDirectory() {
     for (const row of rows) {
       const iata = cleanCode(row?.iataCode, 4);
       if (!iata) continue;
-      const details = normalizeLooseObject(row?.inventory_details);
-      const logoLockupUrl = text(details?.logoLockupUrl, 3000);
-      if (logoLockupUrl) value.set(iata, logoLockupUrl);
+      const media = normalizeLooseList(row?.media_assets);
+      const preferred =
+        media.find(asset => upper(asset?.role, 40) === "LOGO" && asset?.active !== false) ||
+        media.find(asset => upper(asset?.role, 40) === "THUMBNAIL" && asset?.active !== false) ||
+        media.find(asset => asset?.active !== false && text(asset?.url, 3000));
+      const logoUrl = text(preferred?.url, 3000);
+      if (logoUrl) value.set(iata, logoUrl);
     }
 
     airlineBrandCache = { expiresAt: now + AIRLINE_BRAND_TTL_MS, value };
