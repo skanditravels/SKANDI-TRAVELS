@@ -20,6 +20,8 @@
 - LAST VERIFIED: 2026-10-08 — current repo `skanditravels/SKANDI-TRAVELS`, branch `main`, commit `86deedb4705fae292851256726cd81e13669aa98`; live Supabase schema/data inspected read-only.
 
 ## CHANGE LOG
+- 2026-10-09 — Canonical Assets + Structured Fields repair: AIRLINE/AIRPORT media is edited only in Assets; URL assets can be added directly with immediate preview; Duffel logo lockup/symbol values are provider-owned and converge into media_assets on sync; duplicate logo/image keys are removed from inventory_details. Raw JSON editors for known AIRLINE/AIRPORT content are replaced by repeatable typed inputs while preserving JSONB storage. Prepared against GitHub main ea5188ebe7f9bd5b5f7175c4d4caf81a64673bd2 and live Supabase schema/data read-only. STATICALLY VERIFIED; REQUIRES LIVE TEST after migration + Wix publication.
+
 - 2026-10-08 — One-true-source enforcement finalized: Duffel-linked provider identity/facts are read-only in Inventory Control and refresh through the provider workspace; provider technical snapshots are hidden from generic editable fields; compatibility columns are database-derived. Current GitHub `main` at `86deedb4705fae292851256726cd81e13669aa98` was inspected and preserved.
 - 2026-10-08 — V12 one-true-source convergence prepared. Shared reference/master facts now have one editable Inventory/Supabase authority after provider import. Legacy Travel Info fields are derived compatibility projections, provider-key uniqueness is database-enforced, and current Duffel snapshots refresh provider-owned canonical facts without creating alternate data stores. The HTML design, IDs, message names, routes and permission boundaries are unchanged. STATICALLY VERIFIED; REQUIRES LIVE TEST after SQL/Wix publication.
 
@@ -27,7 +29,6 @@
 
 ```html
 <!doctype html>
-<!-- V12 DATA AUTHORITY: Duffel -> Inventory Control/Supabase canonical record -> downstream consumers. Provider-owned facts refresh here; SKANDI enrichment is edited here. -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -86,7 +87,8 @@ h1{margin:3px 0 5px;font-size:28px;line-height:1.12;color:var(--navy2)}
 .langtabs{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px}.lang{border:1px solid var(--line);background:#fff;border-radius:8px;padding:6px 9px;font-weight:800}.lang.active{background:var(--cyan);border-color:var(--cyan)}
 .mediaitem,.relitem,.childitem{border:1px solid var(--line);border-radius:12px;padding:10px;margin-bottom:8px;background:#fbfdff}
 .preview{width:100%;aspect-ratio:16/8;background:#edf2f6;border-radius:12px;overflow:hidden;display:grid;place-items:center;color:var(--muted)}
-.preview img{width:100%;height:100%;object-fit:cover;display:block}
+.preview img{width:100%;height:100%;object-fit:contain;display:block;background:#fff}
+.asseturladd{display:grid;grid-template-columns:minmax(220px,1fr) 180px minmax(180px,.7fr) auto;gap:8px;align-items:end;padding:12px;border:1px solid var(--line);border-radius:12px;background:#f8fbfd;margin:10px 0 14px}.providersource{font-size:10px;color:var(--muted);font-weight:700}.mediaitem.providerowned{border-color:#9ed7dc;background:#f4fcfc}@media(max-width:780px){.asseturladd{grid-template-columns:1fr}}
 .aircraftlayout{display:grid;grid-template-columns:330px minmax(0,1fr);gap:12px}.airlist{max-height:720px;overflow:auto}.airrow{padding:10px;border:1px solid var(--line);border-radius:11px;margin:6px 0;background:#fff;cursor:pointer}.airrow.active{border-color:var(--blue);box-shadow:0 0 0 2px rgba(23,119,210,.1)}.airrow b{display:block}.airrow small{color:var(--muted)}
 .cabinmap{display:flex;align-items:stretch;border:1px solid #91a8bd;border-radius:70px 18px 18px 70px;overflow:hidden;min-height:92px;background:#e9f2f8;padding:6px}
 .cabinzone{min-width:54px;display:grid;place-items:center;text-align:center;border-right:1px solid rgba(2,46,100,.14);padding:7px;background:rgba(255,255,255,.82)}.cabinzone:first-child{border-radius:60px 0 0 60px}.cabinzone:last-child{border-right:0;border-radius:0 11px 11px 0}.cabinzone b{color:var(--navy);font-size:12px}.cabinzone small{color:var(--muted);font-size:10px}
@@ -173,7 +175,7 @@ const html=htm.bind(React.createElement);
 const SOURCE="SKANDI_INVENTORY_EMBED";
 const PARENT="SKANDI_INVENTORY_PARENT";
 const MASTER_PARENT="SKANDI_WIX_PARENT";
-const VERSION="V12-INVENTORY-2026.10.05";
+const VERSION="V12-INVENTORY-2026.10.09-ASSETS";
 const TYPES=["COUNTRY","DESTINATION","AREA","AIRPORT","AIRLINE","SUPPLIER","HOTEL","GUIDED_TOUR","ACTIVITY","PARTNER_TICKET","TRANSFER","CAR_RENTAL","PACKAGE","ANCILLARY"];
 const SELLABLE=new Set(["HOTEL","GUIDED_TOUR","ACTIVITY","PARTNER_TICKET","TRANSFER","CAR_RENTAL","PACKAGE","ANCILLARY"]);
 const LABEL={COUNTRY:"Countries",DESTINATION:"Destinations",AREA:"Areas / Resorts",AIRPORT:"Airports",AIRLINE:"Airlines",SUPPLIER:"Suppliers",HOTEL:"Hotels",GUIDED_TOUR:"Guided Tours",ACTIVITY:"Activities",PARTNER_TICKET:"Partner Tickets",TRANSFER:"Transfers",CAR_RENTAL:"Car Rental",PACKAGE:"Packages",ANCILLARY:"Ancillaries"};
@@ -253,48 +255,6 @@ function ListField({label,value,onChange,separator="\n",splitPattern,parseItem,h
   }
   return html`<${Field} label=${label} type=${separator==="\n"?"textarea":"text"} value=${draft} onChange=${change} help=${help} full=${full} placeholder=${placeholder}/>`;
 }
-function JsonField({label,value,onChange,help,full=false}){
-  const normalized=(value===undefined||value===null||value==="")?{}:value;
-  const signature=JSON.stringify(normalized);
-  const formatted=JSON.stringify(normalized,null,2);
-  const [draft,setDraft]=useState(formatted);
-  const [invalid,setInvalid]=useState(false);
-  const emittedSignature=useRef(signature);
-  useEffect(()=>{
-    if(signature!==emittedSignature.current){emittedSignature.current=signature;setDraft(formatted);setInvalid(false)}
-  },[signature,formatted]);
-  function change(raw){
-    setDraft(raw);
-    const text=String(raw??"").trim();
-    if(!text){emittedSignature.current=JSON.stringify({});setInvalid(false);onChange({});return}
-    try{
-      const parsed=JSON.parse(text);
-      emittedSignature.current=JSON.stringify(parsed);
-      setInvalid(false);onChange(parsed);
-    }catch(_){setInvalid(true)}
-  }
-  return html`<div className=${`field ${full?"full":""}`}><label>${label}</label><textarea className="textarea" value=${draft} onInput=${e=>change(e.target.value)} spellCheck="false" />${invalid?html`<small style=${{color:"var(--red)"}}>Valid JSON is required before this value can be saved.</small>`:help?html`<small>${help}</small>`:null}</div>`;
-}
-function JsonOrTextField({label,value,onChange,help,full=false}){
-  const normalized=(value===undefined||value===null)?"":value;
-  const signature=JSON.stringify(normalized);
-  const formatted=(typeof normalized==="object"&&normalized!==null)?JSON.stringify(normalized,null,2):String(normalized??"");
-  const [draft,setDraft]=useState(formatted);
-  const [invalid,setInvalid]=useState(false);
-  const emittedSignature=useRef(signature);
-  useEffect(()=>{
-    if(signature!==emittedSignature.current){emittedSignature.current=signature;setDraft(formatted);setInvalid(false)}
-  },[signature,formatted]);
-  function change(raw){
-    setDraft(raw);
-    const text=String(raw??"").trim();
-    if(!text){emittedSignature.current=JSON.stringify("");setInvalid(false);onChange("");return}
-    const structured=(text.startsWith("{")&&text.endsWith("}"))||(text.startsWith("[")&&text.endsWith("]"));
-    if(!structured){emittedSignature.current=JSON.stringify(raw);setInvalid(false);onChange(raw);return}
-    try{const parsed=JSON.parse(text);emittedSignature.current=JSON.stringify(parsed);setInvalid(false);onChange(parsed)}catch(_){setInvalid(true)}
-  }
-  return html`<div className=${`field ${full?"full":""}`}><label>${label}</label><textarea className="textarea" value=${draft} onInput=${e=>change(e.target.value)} spellCheck="false" />${invalid?html`<small style=${{color:"var(--red)"}}>Complete valid JSON before saving this structured value.</small>`:help?html`<small>${help}</small>`:null}</div>`;
-}
 function Toggle({label,value,onChange}){
   return html`<div className="field"><label>${label}</label><select className="select" value=${value?"YES":"NO"} onChange=${e=>onChange(e.target.value==="YES")}><option>YES</option><option>NO</option></select></div>`
 }
@@ -351,8 +311,6 @@ const ENUM={
 };
 const SF=(label,path,type="text",options=[],help="",refTypes=[])=>({label,path,type,options,help,refTypes});
 const SL=(label,path,help="")=>({label,path,type:"list",help});
-const SJ=(label,path,help="")=>({label,path,type:"json",help});
-const SX=(label,path,help="")=>({label,path,type:"json_or_text",help});
 const SR=(label,path,fields,help="")=>({label,path,type:"repeat",fields,help});
 const ENTITY_SCHEMAS={
   COUNTRY:{details:[
@@ -375,7 +333,7 @@ const ENTITY_SCHEMAS={
   ]},
   HOTEL:{details:[
     SF("Brand","details.brand"),SF("Property Type","details.propertyType","select",ENUM.propertyType),SF("Destination","details.destinationId","reference",[],"",["DESTINATION"]),SF("Area / Resort","details.areaId","reference",[],"",["AREA"]),SF("Nearest Airport","details.nearestAirportId","reference",[],"",["AIRPORT"]),
-    SF("Provider Accommodation ID","details.providerAccommodationId"),SF("Address","details.address"),SF("City","details.city"),SF("Postal Code","details.postalCode"),SF("Country Code","details.countryCode"),SF("Latitude","details.latitude","number"),SF("Longitude","details.longitude","number"),
+    SF("Provider Accommodation ID","details.providerAccommodationId"),SF("Address","details.address"),SF("City","details.city"),SF("Postal Code","details.postalCode"),SF("Latitude","details.latitude","number"),SF("Longitude","details.longitude","number"),
     SF("Official Star Rating","details.officialStarRating","number"),SF("SKANDI Rating","details.skandiRating","number"),SF("Guest Rating","details.guestRating","number"),SF("Review Count","details.reviewCount","number"),
     SF("Check-in Time","details.checkinTime","time"),SF("Check-out Time","details.checkoutTime","time"),SF("Minimum Check-in Age","details.minimumCheckinAge","number"),SF("Pets Allowed","details.petsAllowed","boolean"),SF("Smoking Policy","details.smokingPolicy","select",ENUM.smokingPolicy),
     SF("Distance to Beach km","details.distanceToBeach","number"),SF("Distance to Center km","details.distanceToCenter","number"),SF("Distance to Airport km","details.distanceToAirport","number"),SF("Transfer Time Minutes","details.transferTimeMinutes","number"),
@@ -416,22 +374,33 @@ const ENTITY_SCHEMAS={
     SF("Extra Type","details.extraType","select",ENUM.ancillaryType),SF("Minimum Age","details.minimumAge","number"),SF("Maximum Age","details.maximumAge","number"),SF("Max Quantity","details.maxQuantity","number"),SF("Refundable","details.refundable","boolean"),SF("Changeable","details.changeable","boolean"),SF("Description","details.description","textarea")
   ],commercial:[SF("Currency","commercial.currency","select",ENUM.currency),SF("Price Basis","commercial.priceBasis","select",ENUM.priceBasis),SF("Supplier Cost","commercial.supplierCost","number"),SF("Public Price","commercial.publicPrice","number")],operations:[SF("Booking Cutoff Hours","operations.bookingCutoffHours","number"),SF("Cancellation Rule","operations.cancellationRule","textarea"),SF("Internal Operational Notes","operations.internalNotes","textarea")]},
   AIRPORT:{details:[
-    SF("ICAO Code","details.icaoCode"),SF("Country","details.country"),SF("City","details.city"),SF("Timezone","details.timezone"),SF("Latitude","details.latitude","number"),SF("Longitude","details.longitude","number"),SF("Distance to City Center km","details.distanceToCityCenterKm","number"),SF("Website","details.website","url"),SF("Contact URL","details.contactUrl","url"),SF("Primary Color","details.primaryColor","color"),SF("Accent Color","details.accentColor","color"),SF("Summary","details.summary","textarea"),SF("Information","details.information","textarea"),SF("Arrivals Information","details.arrivalInfo","textarea"),SF("Departures Information","details.departureInfo","textarea"),SF("Transfer Information","details.transferInfo","textarea"),SF("Check-in Information","details.checkinInfo","textarea"),SF("Security Information","details.securityInfo","textarea"),SF("Transport Information","details.transportInfo","textarea"),SF("Parking Information","details.parkingInfo","textarea"),SF("Lounges","details.lounges","textarea"),SF("Airport Hotels","details.airportHotels","textarea"),SF("Destinations Served","details.destinationsServing","textarea"),SL("Quick Facts","details.quickFactsJson"),SL("Terminals","details.terminalsJson"),SL("Runways","details.runwaysJson"),SL("Transport","details.transportJson"),SL("Food & Drinks","details.foodDrinksJson"),SL("Lost & Found","details.lostFoundJson"),SL("Source URLs","details.sourceUrlsJson")
+    SF("ICAO Code","details.icaoCode"),SF("Country","details.country"),SF("City","details.city"),SF("Timezone","details.timezone"),SF("Latitude","details.latitude","number"),SF("Longitude","details.longitude","number"),SF("Distance to City Center km","details.distanceToCityCenterKm","number"),SF("Website","details.website","url"),SF("Contact URL","details.contactUrl","url"),SF("Summary","details.summary","textarea"),SF("Information","details.information","textarea"),SF("Arrivals Information","details.arrivalInfo","textarea"),SF("Departures Information","details.departureInfo","textarea"),SF("Transfer Information","details.transferInfo","textarea"),SF("Check-in Information","details.checkinInfo","textarea"),SF("Security Information","details.securityInfo","textarea"),SF("Transport Information","details.transportInfo","textarea"),SF("Parking Information","details.parkingInfo","textarea"),SF("Lounges","details.lounges","textarea"),SF("Airport Hotels","details.airportHotels","textarea"),SF("Destinations Served","details.destinationsServing","textarea"),
+    SR("Quick Facts","details.quickFactsJson",[SF("Label","label"),SF("Value","value")]),
+    SR("Terminals","details.terminalsJson",[SF("Terminal","terminal"),SF("Name","name"),SF("Description","description","textarea")]),
+    SR("Runways","details.runwaysJson",[SF("Runway","runway"),SF("Length","length"),SF("Surface","surface"),SF("Notes","notes","textarea")]),
+    SR("Transport Options","details.transportJson",[SF("Type","type"),SF("Name","name"),SF("Description","description","textarea"),SF("URL","url","url")]),
+    SR("Food & Drinks","details.foodDrinksJson",[SF("Name","name"),SF("Category","category"),SF("Terminal / Location","location"),SF("Notes","description","textarea")]),
+    SR("Lost & Found","details.lostFoundJson",[SF("Name / Office","name"),SF("Location","location"),SF("Phone / Contact","contact"),SF("URL","url","url")]),
+    SR("Source URLs","details.sourceUrlsJson",[SF("Label","label"),SF("URL","url","url")])
   ]},
   AIRLINE:{details:[
-    SF("ICAO Code","details.icaoCode"),SF("Short Name","details.shortName"),SF("Alliance","details.alliance"),SF("Brand Group","details.brandGroup"),SF("Country","details.country"),SF("City / Base","details.city"),SF("Website","details.website","url"),SF("Contact URL","details.contactUrl","url"),SF("Primary Color","details.primaryColor","color"),SF("Accent Color","details.accentColor","color"),SF("Summary","details.summary","textarea"),SX("Baggage Allowance","details.baggageAllowance"),SF("Check-in","details.checkIn","textarea"),SF("Boarding","details.boarding","textarea"),SJ("Food & Drinks","details.foodDrinksJson"),SJ("Wi-Fi / Connectivity","details.wifiOnboardJson"),SF("Lounges","details.lounges","textarea"),SJ("Ticket Types","details.ticketTypesJson"),SJ("Children / Infants","details.childrenInfantsJson"),SJ("Delays / Cancellations","details.delaysCancellationsJson"),SJ("Damaged Baggage","details.damagedBaggageJson"),SJ("Lost & Found","details.lostFoundJson"),SF("Loyalty Program","details.loyaltyProgram","textarea"),SL("Quick Facts","details.quickFactsJson"),SL("Cabins","details.cabinsJson"),SL("Hubs","details.hubsJson"),SJ("Fleet Summary","details.fleetSummaryJson"),SL("Source URLs","details.sourceUrlsJson")
+    SF("ICAO Code","details.icaoCode"),SF("Short Name","details.shortName"),SF("Alliance","details.alliance"),SF("Brand Group","details.brandGroup"),SF("Country","details.country"),SF("City / Base","details.city"),SF("Website","details.website","url"),SF("Contact URL","details.contactUrl","url"),SF("Summary","details.summary","textarea"),SF("Check-in","details.checkIn","textarea"),SF("Boarding","details.boarding","textarea"),SF("Lounges","details.lounges","textarea"),SF("Loyalty Program","details.loyaltyProgram","textarea"),
+    SR("Baggage Allowance","details.baggageAllowance",[SF("Cabin / Fare","name"),SF("Under-seat Bag","underSeatBag"),SF("Carry-on","overheadCarryOn"),SF("Checked Bag","checkedBag"),SF("Notes","description","textarea")]),
+    SR("Food & Drinks","details.foodDrinksJson",[SF("Cabin / Fare","name"),SF("Service","service"),SF("Description","description","textarea")]),
+    SR("Wi-Fi / Connectivity","details.wifiOnboardJson",[SF("Product / Provider","name"),SF("Availability","availability"),SF("Price","price"),SF("Notes","description","textarea")]),
+    SR("Ticket Types","details.ticketTypesJson",[SF("Name","name"),SF("Description","description","textarea")]),
+    SR("Children / Infants","details.childrenInfantsJson",[SF("Passenger Type","passengerType"),SF("Rule / Allowance","rule"),SF("Description","description","textarea")]),
+    SR("Delays / Cancellations","details.delaysCancellationsJson",[SF("Topic","title"),SF("Rule / Policy","description","textarea"),SF("URL","url","url")]),
+    SR("Damaged Baggage","details.damagedBaggageJson",[SF("Topic","title"),SF("Procedure","description","textarea"),SF("URL","url","url")]),
+    SR("Lost & Found","details.lostFoundJson",[SF("Topic","title"),SF("Procedure","description","textarea"),SF("URL","url","url")]),
+    SR("Quick Facts","details.quickFactsJson",[SF("Label","label"),SF("Value","value")]),
+    SR("Cabins","details.cabinsJson",[SF("Cabin","name"),SF("Code","code"),SF("Description","description","textarea")]),
+    SR("Hubs","details.hubsJson",[SF("Airport Code","code"),SF("Airport / City","name")]),
+    SR("Fleet Summary","details.fleetSummaryJson",[SF("Aircraft","aircraft"),SF("Count","count","number"),SF("Notes","notes","textarea")]),
+    SR("Source URLs","details.sourceUrlsJson",[SF("Label","label"),SF("URL","url","url")])
   ]}
 };
-const PROVIDER_OWNED_PATHS={
-  AIRLINE:new Set(["details.shortName"]),
-  AIRPORT:new Set(["details.icaoCode","details.country","details.city","details.timezone","details.latitude","details.longitude"]),
-  HOTEL:new Set(["details.providerAccommodationId","details.address","details.city","details.postalCode","details.countryCode","details.latitude","details.longitude","details.officialStarRating","details.guestRating","details.reviewCount","details.brand"]),
-  DESTINATION:new Set([])
 };
-const PROVIDER_TECHNICAL_DETAIL_KEYS=["duffel","providerAddress","providerBrand","providerChain","cityResource","ratings","keyCollection","supportedLoyaltyProgramme","paymentInstructionSupported"];
-function providerLinked(record){return String(record?.source||"").trim().toUpperCase()==="DUFFEL"&&Boolean(String(record?.sourceReference||"").trim())}
-function providerOwnsPath(record,path){return providerLinked(record)&&Boolean(PROVIDER_OWNED_PATHS[record?.entityType]?.has(path))}
-
 const DEFAULT_COMMERCIAL=[SF("Currency","commercial.currency","select",ENUM.currency),SF("Price Basis","commercial.priceBasis","select",ENUM.priceBasis),SF("Supplier Cost","commercial.supplierCost","number"),SF("Public Price","commercial.publicPrice","number")];
 const DEFAULT_OPERATIONS=[SF("Booking Cutoff Hours","operations.bookingCutoffHours","number"),SF("Operational Notes","operations.notes","textarea")];
 function schemaFields(type,section){
@@ -462,21 +431,26 @@ function parseSchemaListLine(value){
   }
   return line
 }
-function SchemaScalar({field,value,onChange,records,disabled=false}){
-  if(disabled){
-    const display=(value&&typeof value==="object")?JSON.stringify(value,null,2):(value??"");
-    return html`<${Field} label=${field.label+" · Duffel managed"} type=${typeof display==="string"&&display.length>120?"textarea":"text"} value=${display} disabled=${true} help="Provider-owned value. Refresh it from Duffel in the Provider workspace; downstream pages read the saved Inventory/Supabase record." full=${true}/>`;
-  }
+function SchemaScalar({field,value,onChange,records}){
   if(field.type==="boolean")return html`<${Toggle} label=${field.label} value=${value===true} onChange=${onChange}/>`;
-  if(field.type==="json")return html`<${JsonField} label=${field.label+" — JSON"} value=${value} onChange=${onChange} help=${field.help}/>`;
-  if(field.type==="json_or_text")return html`<${JsonOrTextField} label=${field.label+" — text or JSON"} value=${value} onChange=${onChange} help=${field.help}/>`;
   if(field.type==="list")return html`<${ListField} label=${field.label+" — one per line"} value=${value} onChange=${onChange} parseItem=${parseSchemaListLine} help=${field.help}/>`;
   if(field.type==="reference")return html`<${Field} label=${field.label} type="select" options=${referenceList(records,field.refTypes,value)} value=${value||""} onChange=${onChange} help=${field.help}/>`;
   if(field.type==="select")return html`<${Field} label=${field.label} type="select" options=${optionList(field.options,value)} value=${value??""} onChange=${onChange} help=${field.help}/>`;
   return html`<${Field} label=${field.label} type=${field.type||"text"} value=${value??""} onChange=${onChange} help=${field.help} full=${field.type==="textarea"}/>`;
 }
+function normalizeStructuredRows(value,fields=[]){
+  const first=fields[0]?.path||"value", second=fields[1]?.path||"description";
+  let parsed=value;
+  if(typeof parsed==="string"){const raw=parsed.trim();if(!raw)return[];try{parsed=JSON.parse(raw)}catch(_){return[{[first]:raw}]}}
+  if(Array.isArray(parsed))return parsed.filter(v=>v!==null&&v!==undefined&&v!=="").map(v=>v&&typeof v==="object"&&!Array.isArray(v)?v:{[first]:String(v)});
+  if(parsed&&typeof parsed==="object"){
+    if(fields.some(f=>Object.prototype.hasOwnProperty.call(parsed,f.path)))return[parsed];
+    return Object.entries(parsed).map(([k,v])=>({[first]:k,[second]:v&&typeof v==="object"?JSON.stringify(v):String(v??"")}));
+  }
+  return parsed===null||parsed===undefined?[]:[{[first]:String(parsed)}];
+}
 function RepeatSchemaEditor({field,record,update,records}){
-  const rows=Array.isArray(getPath(record,field.path))?getPath(record,field.path):[];
+  const raw=getPath(record,field.path);const rows=normalizeStructuredRows(raw,field.fields);
   const add=()=>{const item={};for(const f of field.fields)item[f.path]=f.type==="boolean"?false:f.type==="number"?0:"";update(field.path,[...rows,item])};
   return html`<div className="smartgroup full"><div className="paneltitle"><span>${field.label}</span><button className="btn small" onClick=${add}>+ Add</button></div>${field.help?html`<div className="sub">${field.help}</div>`:null}
     ${rows.length?rows.map((row,i)=>html`<div className="smartobject"><div className="paneltitle"><span>${field.label} ${i+1}</span><button className="btn small danger" onClick=${()=>update(field.path,rows.filter((_,x)=>x!==i))}>Remove</button></div><div className="formgrid three">${field.fields.map(f=>html`<${SchemaScalar} field=${f} records=${records} value=${row?.[f.path]} onChange=${v=>update(field.path,rows.map((x,idx)=>idx===i?{...x,[f.path]:v}:x))}/>` )}</div></div>`):html`<div className="smartempty">No ${field.label.toLowerCase()} yet. Add the first one here.</div>`}
@@ -485,7 +459,7 @@ function RepeatSchemaEditor({field,record,update,records}){
 function ExplicitSchemaEditor({type,section,record,update,records}){
   const fields=schemaFields(type,section);
   if(!fields.length)return html`<div className="smartempty">No fixed ${section} schema is required for this record family.</div>`;
-  return html`<div className="formgrid three">${fields.map(field=>field.type==="repeat"?html`<${RepeatSchemaEditor} field=${field} record=${record} update=${update} records=${records}/>`:html`<${SchemaScalar} field=${field} records=${records} value=${getPath(record,field.path)} onChange=${v=>update(field.path,v)} disabled=${providerOwnsPath(record,field.path)}/>` )}</div>`;
+  return html`<div className="formgrid three">${fields.map(field=>field.type==="repeat"?html`<${RepeatSchemaEditor} field=${field} record=${record} update=${update} records=${records}/>`:html`<${SchemaScalar} field=${field} records=${records} value=${getPath(record,field.path)} onChange=${v=>update(field.path,v)}/>` )}</div>`;
 }
 function knownSectionKeys(type,section){return schemaFields(type,section).map(f=>f.path.split(".")[1]).filter(Boolean)}
 
@@ -687,6 +661,7 @@ function RecordEditor({bundle,languages,records,onClose,onSaved,setBusy,setToast
   const [tab,setTab]=useState("identity");
   const [lang,setLang]=useState(languages?.[0]||"EN");
   const [assetPicker,setAssetPicker]=useState(null);
+  const [assetUrl,setAssetUrl]=useState("");const [assetRole,setAssetRole]=useState("GALLERY");const [assetAlt,setAssetAlt]=useState("");
   const rec=draft.record;
   const refs=records||[];
   const update=(path,value)=>setDraft(d=>{const n=clone(d);setPath(n.record,path,value);return n});
@@ -701,10 +676,16 @@ function RecordEditor({bundle,languages,records,onClose,onSaved,setBusy,setToast
   const supplierOptions=[{value:"",label:"None"},...refs.filter(x=>x.entityType==="SUPPLIER").map(x=>({value:x.id,label:x.name}))];
 
 
-  const detailKnown=[...knownSectionKeys(rec.entityType,"details"),...PROVIDER_TECHNICAL_DETAIL_KEYS];
+  const detailKnown=[...knownSectionKeys(rec.entityType,"details"),"logoLockupUrl","logoSymbolUrl","logoUrl","logoIconUrl","heroImageUrl","imageUrl","mediaAssets","media_assets","duffel"];
   const commercialKnown=knownSectionKeys(rec.entityType,"commercial");
   const operationsKnown=knownSectionKeys(rec.entityType,"operations");
   const setSection=(key,next)=>setDraft(d=>({...d,record:{...d.record,[key]:next}}));
+  function addUrlAsset(){
+    const url=text(assetUrl).trim();
+    if(!/^https?:\/\//i.test(url)){setToast("Enter a valid https:// or http:// asset URL.",true);return}
+    const next=normalizeMedia({role:assetRole||"GALLERY",url,altText:text(assetAlt).trim(),sourceKind:"URL",active:true,sortOrder:(media.length+1)*10,payload:{source:"MANUAL_URL"}});
+    setDraft(d=>({...d,media:[...(d.media||[]),next]}));setAssetUrl("");setAssetAlt("");setToast("Asset URL added. Save the record to persist it.");
+  }
   function useRecordAsset(index,asset,isNew=false){
     setDraft(d=>{
       const rows=(d.media||[]).map(normalizeMedia);
@@ -720,6 +701,8 @@ function RecordEditor({bundle,languages,records,onClose,onSaved,setBusy,setToast
       setBusy("Saving complete record bundle…");
       const payload=clone(draft);
       payload.record.status=status;
+      payload.record.details={...(payload.record.details||{})};
+      for(const key of ["logoLockupUrl","logoSymbolUrl","logoUrl","logoIconUrl","heroImageUrl","imageUrl","mediaAssets","media_assets"])delete payload.record.details[key];
       payload.localizedContent=localized;
       payload.media=media;
       payload.relations=relations;
@@ -739,8 +722,8 @@ function RecordEditor({bundle,languages,records,onClose,onSaved,setBusy,setToast
     <div className="tabs">${tabs.map(t=>html`<button className=${`tab ${tab===t?"active":""}`} onClick=${()=>setTab(t)}>${t[0].toUpperCase()+t.slice(1)}</button>`)}</div>
     ${tab==="identity"?html`<div className="formgrid three">
       <${Field} label="Record Type" value=${rec.entityType} disabled=${true}/>
-      <${Field} label=${rec.entityType==="AIRPORT"?"IATA Code":rec.entityType==="AIRLINE"?"IATA Code":"System Code"} value=${rec.code} onChange=${v=>update("code",v)} disabled=${providerLinked(rec)&&["AIRLINE","AIRPORT","DESTINATION"].includes(rec.entityType)} help=${providerLinked(rec)&&["AIRLINE","AIRPORT","DESTINATION"].includes(rec.entityType)?"Duffel-managed identity. Refresh from the Provider workspace.":""}/>
-      <${Field} label="Master Name / Title" value=${rec.name} onChange=${v=>update("name",v)} disabled=${providerLinked(rec)} help=${providerLinked(rec)?"Duffel-managed name. Refresh from the Provider workspace.":""}/>
+      <${Field} label=${rec.entityType==="AIRPORT"?"IATA Code":rec.entityType==="AIRLINE"?"IATA Code":"System Code"} value=${rec.code} onChange=${v=>update("code",v)}/>
+      <${Field} label="Master Name / Title" value=${rec.name} onChange=${v=>update("name",v)}/>
       <${Field} label="URL Slug" value=${rec.slug} onChange=${v=>update("slug",v)} help="Leave blank to generate from the title."/>
       <${Field} label="Public ID" value=${rec.publicId} onChange=${()=>{}} disabled=${true} help=${rec.id?"Canonical ID generated by Supabase.":"Generated by Supabase when the record is first saved."}/>
       <${Field} label="Status" type="select" options=${STATUS} value=${rec.status||"DRAFT"} onChange=${v=>update("status",v)}/>
@@ -753,7 +736,7 @@ function RecordEditor({bundle,languages,records,onClose,onSaved,setBusy,setToast
       <${Toggle} label="ALTEA Visible" value=${rec.alteaVisible!==false} onChange=${v=>update("alteaVisible",v)}/>
     </div>`:null}
     ${tab==="details"?html`<div>
-      <div className="notice">Inventory Control uses an explicit schema contract. Empty categorical and relationship fields remain real dropdowns/selectors, repeatable structures can create their first row, and unknown legacy keys remain preserved below. ${providerLinked(rec)?"Fields marked Duffel managed are read-only here and are refreshed from Duffel into this same canonical Supabase record.":""}</div>
+      <div className="notice">Inventory Control uses an explicit schema contract. Empty categorical and relationship fields remain real dropdowns/selectors, repeatable structures can create their first row, and unknown legacy keys remain preserved below.</div>
       <div style=${{marginTop:"12px"}}><${ExplicitSchemaEditor} type=${rec.entityType} section="details" record=${rec} update=${update} records=${refs}/></div>
       <div className="hr"></div><div className="sectiontitle">Additional Stored Fields</div>
       <${SmartObjectEditor} value=${rec.details||{}} exclude=${detailKnown} onChange=${v=>setSection("details",v)}/>
@@ -782,16 +765,17 @@ function RecordEditor({bundle,languages,records,onClose,onSaved,setBusy,setToast
       </div>
     </div>`:null}
     ${tab==="media"?html`<div>
-      <div className="paneltitle"><span>Media Assets</span><button className="btn small" onClick=${()=>setAssetPicker({index:-1,isNew:true,context:assetContextForRecord(rec,"GALLERY")})}>+ Browse / Upload Image</button></div>
-      <div className="notice">Images come from the central SKANDI Asset Library. Existing assets are always shown first and exact duplicates are blocked.</div>
-      ${media.length?media.map((m,i)=>html`<div className="mediaitem"><div className="formgrid three">
-        <${Field} label="Role" type="select" options=${["PRIMARY","HERO","CARD","MOBILE","GALLERY","OG","LOGO","MAP","ROOM","THUMBNAIL"]} value=${m.role} onChange=${v=>setDraft(d=>{const x=[...(d.media||[])];x[i]={...x[i],role:v};return{...d,media:x}})}/>
+      <div className="paneltitle"><span>Assets</span><button className="btn small" onClick=${()=>setAssetPicker({index:-1,isNew:true,context:assetContextForRecord(rec,"GALLERY")})}>+ Browse / Upload Asset</button></div>
+      <div className="notice">This is the only image/logo source for this record. Add an existing Asset Library file or paste a URL. Duffel-supplied airline logos are provider-owned and replace the matching logo assets whenever Duffel is refreshed.</div>
+      <div className="asseturladd"><${Field} label="Asset URL" type="url" value=${assetUrl} onChange=${setAssetUrl}/><${Field} label="Role" type="select" options=${["PRIMARY","HERO","CARD","MOBILE","GALLERY","OG","LOGO","MAP","ROOM","THUMBNAIL"]} value=${assetRole} onChange=${setAssetRole}/><${Field} label="Alt Text" value=${assetAlt} onChange=${setAssetAlt}/><button className="btn primary" onClick=${addUrlAsset}>Add URL Asset</button></div>
+      ${media.length?media.map((m,i)=>{const providerOwned=(m.payload?.provider||m.source)==="DUFFEL";return html`<div className=${`mediaitem ${providerOwned?"providerowned":""}`}><div className="formgrid three">
+        <${Field} label="Role" type="select" options=${["PRIMARY","HERO","CARD","MOBILE","GALLERY","OG","LOGO","MAP","ROOM","THUMBNAIL"]} value=${m.role} disabled=${providerOwned} onChange=${v=>setDraft(d=>{const x=[...(d.media||[])];x[i]={...x[i],role:v};return{...d,media:x}})}/>
         <${Field} label="Alt Text" value=${m.altText} onChange=${v=>setDraft(d=>{const x=[...(d.media||[])];x[i]={...x[i],altText:v};return{...d,media:x}})}/>
         <${Field} label="Caption" value=${m.caption||""} onChange=${v=>setDraft(d=>{const x=[...(d.media||[])];x[i]={...x[i],caption:v};return{...d,media:x}})}/>
         <${Field} label="Credit" value=${m.credit||""} onChange=${v=>setDraft(d=>{const x=[...(d.media||[])];x[i]={...x[i],credit:v};return{...d,media:x}})}/>
         <${Field} label="Focal X %" type="number" value=${m.focalX??""} onChange=${v=>setDraft(d=>{const x=[...(d.media||[])];x[i]={...x[i],focalX:v};return{...d,media:x}})}/>
         <${Field} label="Focal Y %" type="number" value=${m.focalY??""} onChange=${v=>setDraft(d=>{const x=[...(d.media||[])];x[i]={...x[i],focalY:v};return{...d,media:x}})}/>
-      </div><div className="assetcurrent" style=${{marginTop:"8px"}}>${m.url?html`<div className="preview"><img src=${m.url} alt=${m.altText||""}/></div>`:html`<div className="preview">No asset selected</div>`}<div className="toolbar"><button className="btn small" onClick=${()=>setAssetPicker({index:i,isNew:false,context:assetContextForRecord(rec,m.role||"GALLERY")})}>Replace / Browse Asset Library</button><span className="sub">${m.assetId||m.sourceKind==="ASSET_LIBRARY"?"Managed Asset Library file":"Legacy linked image"}</span><button className="btn small danger" onClick=${()=>setDraft(d=>({...d,media:(d.media||[]).filter((_,x)=>x!==i)}))}>Remove from record</button></div></div></div>`):html`<div className="empty">No media attached. Browse the Asset Library before uploading a new image.</div>`}
+      </div><div className="assetcurrent" style=${{marginTop:"8px"}}>${m.url?html`<div className="preview"><img src=${m.url} alt=${m.altText||""}/></div>`:html`<div className="preview">No asset selected</div>`}<div className="toolbar">${providerOwned?html`<span className="providersource">Managed by Duffel · refresh in Provider workspace</span>`:html`<button className="btn small" onClick=${()=>setAssetPicker({index:i,isNew:false,context:assetContextForRecord(rec,m.role||"GALLERY")})}>Replace / Browse Asset Library</button>`}<span className="sub">${m.assetId||m.sourceKind==="ASSET_LIBRARY"?"Managed Asset Library file":m.sourceKind==="URL"?"URL asset":"Linked image"}</span>${providerOwned?null:html`<button className="btn small danger" onClick=${()=>setDraft(d=>({...d,media:(d.media||[]).filter((_,x)=>x!==i)}))}>Remove from record</button>`}</div></div></div>`}):html`<div className="empty">No assets attached. Add a URL or browse the Asset Library.</div>`}
       ${assetPicker?html`<${AssetLibraryModal} context=${{...assetPicker.context,lockedContext:true}} onClose=${()=>setAssetPicker(null)} onSelect=${asset=>useRecordAsset(assetPicker.index,asset,assetPicker.isNew)} setBusy=${setBusy} setToast=${setToast}/>`:null}
     </div>`:null}
     ${tab==="relations"?html`<div>
@@ -966,7 +950,7 @@ function ProviderWorkspace({boot,setBusy,setToast}){
 
   const detailItem=detail?.item||null, detailResource=detail?.resource||null;
   return html`<div>
-    <div className="providerhero"><div><h2>Duffel + SKANDI Collection</h2><p>Search the live Duffel resource catalogue, then import or refresh it into Inventory Control. Inventory Control in Supabase is the single editable source for linked SKANDI data: Duffel-owned facts refresh here, SKANDI enrichment is maintained here, and downstream pages consume this canonical record instead of keeping independent copies.</p></div><span className="sourcebadge">LIVE PROVIDER SOURCE</span></div>
+    <div className="providerhero"><div><h2>Duffel + SKANDI Collection</h2><p>Search the live Duffel resource catalogue, review the provider record, then deliberately add only selected resources to the SKANDI Collection. Supabase remains the curated SKANDI layer, not a copy of Duffel.</p></div><span className="sourcebadge">LIVE PROVIDER SOURCE</span></div>
     <div className="tabs">${[["collection","Collection Import"],["rates","Negotiated Hotel Rates"]].map(([k,l])=>html`<button className=${`tab ${mode===k?"active":""}`} onClick=${()=>setMode(k)}>${l}</button>`)}</div>
 
 
