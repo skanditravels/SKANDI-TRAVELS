@@ -10,6 +10,7 @@ import { currentMember, authentication } from "wix-members-frontend";
 import { local } from "wix-storage-frontend";
 import { getCustomerHeaderSession, subscribeCustomerNewsletter } from "backend/SKANDI_CORE/customerSession.web";
 import { getStaffPortalSession } from "backend/SKANDI_CORE/staffAuth.web";
+import { getPublicTravelInfoPayload } from "backend/SKANDI_CORE/publicContent.web";
 import { SITE_MAP, APP_ROUTES, GLOBAL_CHROME, isSafeInternalRoute } from "public/siteMap";
 
 
@@ -24,6 +25,7 @@ const CUSTOMER_FOOTER_SOURCE = GLOBAL_CHROME.customerFooter.source;
 const RIAINTRA_HEADER_SOURCE = GLOBAL_CHROME.riaintraHeader.source;
 const ALTEA_HEADER_SOURCE = GLOBAL_CHROME.alteaHeader.source;
 const ALTEA_FOOTER_SOURCE = GLOBAL_CHROME.alteaFooter.source;
+const SPECIAL_ASSISTANCE_SOURCE = "SKANDI_ASSISTANCE_PAGE";
 const SCROLL_TOP_MESSAGE_TYPES = new Set(["MASTER_SCROLL_TOP", "SKANDI_SCROLL_TOP", "SKANDI_VIEW_OPENED", "SKANDI_PAGE_OPENED"]);
 
 
@@ -569,6 +571,31 @@ async function handleMasterMessage(embed, message = {}) {
   if (type === "MASTER_NAVIGATE") {
     navigate(message.path || payload.path || "");
     return true;
+  }
+
+
+  if (source === SPECIAL_ASSISTANCE_SOURCE) {
+    if (type === "SPECIAL_ASSISTANCE_READY" || type === "SPECIAL_ASSISTANCE_REFRESH") {
+      const requestedLanguage = String(payload.language || customerSettings.language || "EN").trim().toUpperCase();
+      try {
+        const result = await getPublicTravelInfoPayload({ language:requestedLanguage });
+        postToEmbed(embed, "SPECIAL_ASSISTANCE_DATA", result || { ok:true });
+      } catch (error) {
+        console.error("[MasterPage] Special Assistance data load failed.", error);
+        postToEmbed(embed, "SPECIAL_ASSISTANCE_ERROR", { message:"Special assistance information is temporarily unavailable. Please try again." });
+      }
+      return true;
+    }
+    if (type === "SPECIAL_ASSISTANCE_NAVIGATE") {
+      navigate(message.path || payload.path || "");
+      return true;
+    }
+    if (type === "SKANDI_CONTENT_RESIZE") {
+      const requested = Number(payload.height);
+      const height = Number.isFinite(requested) ? Math.max(680, Math.min(30000, Math.round(requested))) : 680;
+      try { if ("height" in embed) embed.height = height; } catch (_) {}
+      return true;
+    }
   }
 
 
