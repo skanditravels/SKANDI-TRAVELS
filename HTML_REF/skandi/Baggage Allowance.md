@@ -2,764 +2,131 @@
 
 ## INFO / LOG
 
-- **Status:** READY — B-011.3 design/style convergence
+- **Status:** V12 Baggage Allowance page + packing-list repair prepared — REQUIRES LIVE TEST
 - **System:** SKANDI customer website
-- **Route:** `/travel-info/baggage-allowence`
+- **Route:** `/travel-info/baggage-allowance`
 - **Wix page:** `Baggage Allowance.tf8xc`
 - **HTML component:** `#baggageInfoEmbed`
 - **HTML child source:** `SKANDI_BAGGAGE_PAGE`
-- **Page controller:** `/src/pages/Baggage Allowance.tf8xc.js`
-- **Backend/data owner:** `backend/SKANDI_CORE/publicContent.web → publicContent`
-- **Global header/footer:** `masterPage.js`
-- **Version:** `B-011.3`
-- **Last verified:** `2026-09-25`
+- **Page controller:** /src/pages/Baggage Allowance.tf8xc.js
+- **Backend/data owner:** `backend/SKANDI_CORE/publicContent.web.js` → `getPublicBaggagePayload` → `publicContent.js` / canonical Travel Info airline projection
+- **Global header/footer and CONTENT_AUTO resize owner:** `/src/pages/masterPage.js`
+- **Version:** `V12-BAGGAGE-2026.10.11`
+- **Last verified:** 2026-10-11
+- **Source baseline:** `skanditravels/SKANDI-TRAVELS`, branch `main`, HEAD `04f8206e857c329f5f55d75085a4a8080171ff2e`
 
-### B-011.3 changes
-
-- Kept this as a **separate Travel Info page**. No merged topic-switching page is used.
-- Applied the shared B-011 customer palette used by Home and global chrome.
-- Added a restrained Travel Info return rail rather than an internal four-topic switcher.
-- Restyled the photographic hero into the common Travel Info B-011 treatment.
-- Standardized section widths to 1180px, typography scale, card radii, borders, shadows, search panels, CTAs, FAQs and responsive behavior.
-- Preserved the supplied page content and functional IDs.
-- Preserved existing data/message contracts where this page already has a Wix page bridge.
-- Added stable section/content hooks to the hero for the later Presentation Registry pass.
-- Did not add page-owned global header/footer.
-- Did not add a new database table, RPC, backend service or provider.
-
-### Live data chain
+### Architecture
 
 `#baggageInfoEmbed`
-→ `Baggage Allowance.tf8xc.js`
-→ `getPublicBaggagePayload`
-→ `backend/SKANDI_CORE/publicContent`
-→ `travel_info_airlines` and published Travel Info guidance.
+→ `SKANDI_BAGGAGE_PAGE`
+→ /src/pages/Baggage Allowance.tf8xc.js
+→ `backend/SKANDI_CORE/publicContent.web.js` → `getPublicBaggagePayload` → `publicContent.js` / canonical Travel Info airline projection
+→ existing canonical providers / Supabase where applicable.
 
-No backend change is included in B-011.3.
+The page remains a customer CONTENT_AUTO route. Wix/browser owns vertical scrolling. The child HTML measures its real content height and posts `SKANDI_CONTENT_RESIZE`; `masterPage.js` is the parent-side allowlisted height owner and clamps 680–30000 px. Page and hidden-view opens continue to use the approved global `SKANDI_SCROLL_TOP` contract.
 
----
+### Change log
+
+- **2026-09-25 — B-011.3:** Separate Travel Info page retained; shared B-011 styling, Travel Info return-rail styling, airline baggage search, existing IDs and current page/backend contracts preserved.
+- **2026-10-11 — V12 full correctness audit repair:** Restored the actual Travel Info return rail referenced by B-011.3 documentation; added CONTENT_AUTO document-height reporting and `SKANDI_SCROLL_TOP` handling; synchronized public-data language requests with global master settings; and restricted dynamically rendered airline logo/website URLs to HTTPS. At that time the canonical route still used the historical misspelling `/travel-info/baggage-allowence`.
+- **2026-10-11 — V12 dedicated Baggage Allowance repair:** Corrected the canonical public route to `/travel-info/baggage-allowance`; redesigned the page to the current Travel Info V12 visual language; retained the canonical `getPublicBaggagePayload` airline-data chain; expanded airline selection into a full database-backed baggage detail surface; added overall baggage/special-item guidance; and added a local dynamic packing-list builder driven by destination label, departure date + selected hemisphere season, trip length, traveler ages, trip style, laundry access and expected conditions. The packing tool does not create a new database, provider, weather claim or editable reference-data authority. Travel Info now redirects all baggage actions to this page rather than rendering duplicate inline guidance.
+
+### Verification
+
+STATICALLY VERIFIED:
+- complete supplied HTML source inspected
+- inline JavaScript syntax checked
+- IDs and message contracts checked against the current page/controller architecture
+- corrected canonical route checked against the supplied `siteMap.js` replacement
+- CONTENT_AUTO sizing and global scroll-to-top contracts checked
+- no new database table, backend namespace, provider client or permission boundary introduced
+
+REQUIRES LIVE TEST:
+- published Wix HTML-component resizing and section growth
+- new `/travel-info/baggage-allowance` Wix route publication/redirect behavior
+- live backend/provider/Supabase responses where applicable
+- final browser behavior across Wix Studio breakpoints
+- global customer language and navigation behavior after publication
 
 ## COMPLETE INTENDED LIVE HTML SOURCE
 
 ```html
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><title>SKANDI • Baggage Information · B-011.3</title><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"><style>
-*{box-sizing:border-box;margin:0;padding:0}
+<!-- V12 DATA AUTHORITY: airline baggage facts are read from the canonical Travel Info / Inventory projection. This embed owns only presentation and the local packing-list planning tool. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#061a30">
+<title>Baggage Allowance | SKANDI Travels</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
 :root{
-  --sk-blue:#022e64;
-  --sk-blue-soft:#285ca8;
-  --sk-blue2:#0b3a7a;
-  --sk-light:#d7e6ff;
-  --sk-pale:#f6faff;
-  --sk-bg:#f7faff;
-  --sk-border:#dbe3ef;
-  --sk-border-soft:#eef2f7;
-  --sk-text:#111;
-  --sk-body:#555;
-  --sk-muted:#667085;
-  --sk-cyan:#5FC7CF;
-  --sk-ok:#087443;
-  --sk-danger:#8a1f1f;
-  --sk-shadow:0 8px 26px rgba(0,0,0,.08);
-  --sk-shadow-strong:0 14px 34px rgba(0,0,0,.12);
+  --ti-navy:#022e64;--ti-navy-deep:#061a30;--ti-navy-black:#03111f;--ti-blue:#0b3a7a;--ti-blue-soft:#1f6ba3;
+  --ti-aqua:#5fc7cf;--ti-aqua-soft:#9de0e5;--ti-ivory:#fbfaf6;--ti-porcelain:#f5f1ea;--ti-champagne:#d1bc98;
+  --ti-text:#102033;--ti-body:#4d5f74;--ti-muted:#66758a;--ti-line-dark:rgba(2,46,100,.14);--ti-line-soft:rgba(2,46,100,.08);
+  --ti-danger:#9f2f2f;--ti-success:#0a7051;--ti-soft-shadow:0 16px 46px rgba(2,46,100,.10);--ti-ease:cubic-bezier(.22,1,.36,1);
+  --ti-content:1320px
 }
-html,body{
-  width:100%;
-  min-height:100%;
-  font-family:"Montserrat",system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-  background:#fff;
-  color:var(--sk-text);
-  overflow-x:hidden;
-}
-
-/* HERO SECTION */
-#hero-wrap{
-  transition: all 0.3s ease;    
-  width:100%;
-  min-height:420px;
-  background: linear-gradient(rgba(2, 46, 100, 0.5), rgba(2, 46, 100, 0.8)), url("https://images.unsplash.com/photo-1551201584-1772cdb93706?auto=format&fit=crop&w=1920&q=80") center/cover;
-  padding:76px 32px 54px;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  text-align:center;
-}
-.hero-kicker{
-  font-size:12px;
-  font-weight:800;
-  color:var(--sk-cyan);
-  text-transform:uppercase;
-  letter-spacing:.14em;
-  margin-bottom:10px;
-}
-#hero-title{
-  font-size:clamp(36px,4vw,56px);
-  line-height:1.1;
-  letter-spacing:-.04em;
-  font-weight:700;
-  color:#fff;
-  margin-bottom:16px;
-}
-#hero-sub{
-  font-size:16px;
-  color:rgba(255,255,255,0.9);
-  line-height:1.65;
-  max-width:720px;
-}
-
-/* CONTENT LAYOUT */
-.content-section{
-  padding:58px 32px;
-  max-width:1180px;
-  margin:0 auto;
-}
-.section-title{
-  font-size:30px;
-  font-weight:700;
-  color:var(--sk-blue);
-  margin-bottom:12px;
-  letter-spacing:-.04em;
-  text-align:center;
-}
-.section-subtitle{
-  color:#555;
-  font-size:15px;
-  line-height:1.6;
-  margin-bottom:32px;
-  max-width:780px;
-  text-align:center;
-  margin-inline:auto;
-}
-
-/* BAGGAGE CARDS (Standard Allowance) */
-.bag-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 24px;
-  margin-bottom: 40px;
-}
-.bag-card {
-  background: #fff;
-  border: 1px solid var(--sk-border);
-  border-radius: 16px;
-  padding: 32px;
-  box-shadow: var(--sk-shadow);
-  display: flex;
-  flex-direction: column;
-}
-.bag-header {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  margin-bottom: 20px;
-  padding-bottom: 20px;
-  border-bottom: 1px solid var(--sk-border-soft);
-}
-.bag-icon {
-  width: 56px;
-  height: 56px;
-  background: var(--sk-pale);
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 28px;
-  color: var(--sk-blue);
-}
-.bag-header h3 {
-  font-size: 22px;
-  color: var(--sk-blue);
-}
-.bag-specs {
-  display: flex;
-  gap: 20px;
-  margin-bottom: 24px;
-}
-.spec-box {
-  flex: 1;
-  background: var(--sk-bg);
-  padding: 16px;
-  border-radius: 12px;
-  text-align: center;
-}
-.spec-box span {
-  display: block;
-  font-size: 11px;
-  color: var(--sk-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: 4px;
-}
-.spec-box strong {
-  font-size: 18px;
-  color: var(--sk-blue);
-  font-weight: 800;
-}
-.bag-card p {
-  color: var(--sk-body);
-  font-size: 14px;
-  line-height: 1.6;
-  flex-grow: 1;
-}
-
-/* ADD-ON BANNER */
-.addon-banner {
-  background: linear-gradient(135deg, var(--sk-blue), var(--sk-blue2));
-  color: #fff;
-  border-radius: 16px;
-  padding: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 24px;
-  box-shadow: var(--sk-shadow);
-}
-.addon-banner h4 {
-  font-size: 20px;
-  margin-bottom: 8px;
-}
-.addon-banner p {
-  font-size: 14px;
-  color: rgba(255,255,255,0.85);
-  line-height: 1.5;
-}
-.btn-secondary {
-  background: #fff;
-  color: var(--sk-blue);
-  padding: 14px 24px;
-  border-radius: 999px;
-  border: none;
-  font-weight: 800;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: transform 0.2s ease;
-}
-.btn-secondary:hover {
-  transform: scale(1.03);
-}
-
-/* SPECIAL BAGGAGE / RULES GRID */
-.rules-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 20px;
-}
-.rule-card {
-  border: 1px solid var(--sk-border);
-  border-radius: 12px;
-  padding: 24px;
-  background: #fff;
-}
-.rule-card h4 {
-  font-size: 16px;
-  color: var(--sk-blue);
-  margin-bottom: 12px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.rule-card p {
-  font-size: 13px;
-  color: var(--sk-body);
-  line-height: 1.6;
-}
-
-/* FAQ / ACCORDION */
-.faq-grid {
-  max-width: 800px;
-  margin: 0 auto;
-}
-details {
-  background: #fff;
-  border: 1px solid var(--sk-border);
-  border-radius: 12px;
-  margin-bottom: 12px;
-  overflow: hidden;
-}
-summary {
-  padding: 20px;
-  font-weight: 700;
-  color: var(--sk-blue);
-  cursor: pointer;
-  list-style: none;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-summary::-webkit-details-marker {
-  display: none;
-}
-summary::after {
-  content: "+";
-  font-size: 20px;
-  color: var(--sk-cyan);
-}
-details[open] summary::after {
-  content: "−";
-}
-.faq-content {
-  padding: 0 20px 20px;
-  color: var(--sk-body);
-  font-size: 14px;
-  line-height: 1.6;
-}
-
-/* RESPONSIVE */
-@media(max-width:860px){
-  #hero-wrap { padding: 54px 14px 38px; min-height: 320px; }
-  #hero-title { font-size: 32px; }
-  .content-section { padding: 42px 14px; }
-  .addon-banner { flex-direction: column; text-align: center; }
-  .btn-secondary { width: 100%; }
-}
-
-/* LIVE AIRLINE SEARCH */
-.airline-search-shell{background:#fff;border:1px solid var(--sk-border);border-radius:18px;padding:28px;box-shadow:var(--sk-shadow);margin-bottom:28px}
-.search-row{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:end}.search-field label{display:block;font-size:11px;font-weight:800;color:var(--sk-muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px}.search-field input{width:100%;min-height:50px;border:1px solid var(--sk-border);border-radius:14px;padding:0 16px;font:600 14px Montserrat;color:var(--sk-blue);outline:none}.search-field input:focus{border-color:var(--sk-cyan);box-shadow:0 0 0 4px rgba(95,199,207,.12)}
-.search-button{min-height:50px;border:0;border-radius:999px;background:var(--sk-blue);color:#fff;padding:0 24px;font-weight:800;cursor:pointer}.search-button:hover{background:var(--sk-blue2)}
-.airline-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin-top:18px}.airline-option{border:1px solid var(--sk-border-soft);border-radius:12px;background:#fff;padding:12px 14px;text-align:left;color:var(--sk-blue);font-weight:700;cursor:pointer}.airline-option:hover,.airline-option.active{border-color:var(--sk-cyan);background:var(--sk-pale)}
-.live-card{margin-top:24px;background:#fff;border:1px solid var(--sk-border);border-radius:18px;padding:28px;box-shadow:var(--sk-shadow)}.live-head{display:flex;gap:16px;align-items:center;margin-bottom:20px}.live-logo{width:72px;height:48px;object-fit:contain}.live-head h3{font-size:24px;color:var(--sk-blue);margin:0}.live-meta{font-size:12px;color:var(--sk-muted);font-weight:700;text-transform:uppercase;letter-spacing:.08em}.live-copy{white-space:pre-wrap;color:var(--sk-body);font-size:14px;line-height:1.75}
-.cabin-block{border-top:1px solid var(--sk-border-soft);padding-top:18px;margin-top:18px}.cabin-block h4{font-size:18px;color:var(--sk-blue);margin-bottom:12px}.fare-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}.fare-card{border:1px solid var(--sk-border-soft);border-radius:12px;padding:16px;background:var(--sk-bg)}.fare-card h5{font-size:14px;color:var(--sk-blue);margin-bottom:10px}.allowance-line{display:grid;grid-template-columns:120px 1fr;gap:10px;font-size:12px;line-height:1.5;margin-top:8px}.allowance-line strong{color:var(--sk-blue)}
-.live-notice{background:var(--sk-pale);border-left:4px solid var(--sk-cyan);border-radius:12px;padding:16px;color:var(--sk-body);font-size:13px;line-height:1.6;margin-bottom:18px}.source-note{font-size:11px;color:var(--sk-muted);margin-top:16px;line-height:1.5}.hidden{display:none!important}.guide-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin-top:20px}
-@media(max-width:860px){.search-row{grid-template-columns:1fr}.search-button{width:100%}.allowance-line{grid-template-columns:1fr}}
+*{box-sizing:border-box}html{scroll-behavior:smooth;background:var(--ti-ivory)}body{margin:0;min-width:0;min-height:100%;overflow-x:hidden;background:var(--ti-ivory);color:var(--ti-text);font-family:"Montserrat",Inter,system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+button,input,select,textarea{font:inherit}button{cursor:pointer}button:disabled{cursor:not-allowed;opacity:.55}a{color:inherit}img{display:block;max-width:100%}button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{outline:3px solid rgba(95,199,207,.42);outline-offset:3px}.hidden{display:none!important}.wrap{width:min(var(--ti-content),calc(100% - 64px));margin-inline:auto}
+.icon{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;display:block}.icon-sm{width:16px;height:16px}
+.btn{min-height:46px;border:0;border-radius:999px;padding:0 18px;display:inline-flex;align-items:center;justify-content:center;gap:9px;font-size:12px;font-weight:800;letter-spacing:.01em;transition:transform 180ms var(--ti-ease),background 180ms,border-color 180ms,box-shadow 180ms}.btn:hover:not(:disabled){transform:translateY(-1px)}.btn-primary{background:var(--ti-navy);color:#fff;box-shadow:0 12px 28px rgba(2,46,100,.18)}.btn-primary:hover{background:#093d78}.btn-light{background:#fff;color:var(--ti-navy);border:1px solid rgba(2,46,100,.12)}.btn-aqua{background:var(--ti-aqua);color:#04233f}
+.kicker{display:inline-flex;align-items:center;gap:10px;color:var(--ti-aqua-soft);font-size:11px;font-weight:800;letter-spacing:.18em;text-transform:uppercase}.kicker:before{content:"";width:34px;height:1px;background:currentColor;opacity:.8}.kicker-dark{color:var(--ti-blue-soft)}
+.travel-info-rail{position:sticky;top:0;z-index:40;border-bottom:1px solid var(--ti-line-dark);background:rgba(251,250,246,.96);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}.rail-inner{width:min(var(--ti-content),calc(100% - 64px));min-height:60px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:18px}.rail-back{min-height:38px;padding:0 14px;border:1px solid var(--ti-line-dark);border-radius:999px;background:#fff;color:var(--ti-navy);display:inline-flex;align-items:center;gap:8px;font-size:10px;font-weight:800}.rail-context{color:var(--ti-muted);font-size:9px;font-weight:800;letter-spacing:.14em;text-transform:uppercase}
+.hero{position:relative;isolation:isolate;overflow:hidden;color:#fff;background:radial-gradient(circle at 82% 18%,rgba(95,199,207,.20),transparent 28%),radial-gradient(circle at 12% 88%,rgba(31,107,163,.30),transparent 28%),linear-gradient(145deg,var(--ti-navy-black),var(--ti-navy-deep) 46%,#08294d);min-height:570px}.hero:before{content:"";position:absolute;inset:-12%;z-index:-2;opacity:.4;background-image:radial-gradient(circle at 26% 35%,rgba(255,255,255,.16) 0 1px,transparent 1.5px),radial-gradient(circle at 70% 58%,rgba(95,199,207,.22) 0 1px,transparent 1.5px);background-size:78px 78px,112px 112px}.hero:after{content:"";position:absolute;inset:auto 0 0;height:150px;background:linear-gradient(to bottom,transparent,var(--ti-ivory));pointer-events:none}.hero-inner{position:relative;z-index:2;min-height:570px;padding:88px 0 120px;display:grid;grid-template-columns:minmax(0,1.15fr) minmax(300px,.55fr);gap:64px;align-items:center}.hero h1{margin:17px 0 20px;max-width:860px;font-size:clamp(52px,8vw,104px);font-weight:500;line-height:.89;letter-spacing:-.072em}.hero p{max-width:720px;margin:0;color:#c8d8ea;font-size:clamp(15px,1.45vw,19px);line-height:1.75;font-weight:500}.hero-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:30px}.hero-card{border:1px solid rgba(255,255,255,.16);border-radius:28px;padding:28px;background:rgba(255,255,255,.08);backdrop-filter:blur(18px);box-shadow:0 24px 70px rgba(0,0,0,.2)}.hero-card h2{margin:10px 0 12px;font-size:26px;line-height:1.05;letter-spacing:-.04em}.hero-card p{font-size:11px;line-height:1.7}.hero-list{display:grid;gap:12px;margin-top:22px}.hero-list div{display:grid;grid-template-columns:26px 1fr;gap:10px;padding-top:12px;border-top:1px solid rgba(255,255,255,.12);color:#d8e6f4;font-size:11px;line-height:1.55}.hero-list strong{color:var(--ti-champagne);font-size:9px;letter-spacing:.08em}
+.section{padding:76px 0}.section-white{background:#fff}.section-tint{background:linear-gradient(180deg,#fff 0%,#f7f5ef 100%)}.heading{display:grid;grid-template-columns:minmax(0,1fr) minmax(300px,.55fr);gap:44px;align-items:end;margin-bottom:30px}.heading h2{margin:8px 0 0;color:var(--ti-navy);font-size:clamp(32px,4.5vw,58px);line-height:.98;letter-spacing:-.058em;font-weight:600}.heading p{margin:0;color:var(--ti-body);font-size:12px;line-height:1.75}
+.info-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.info-card{min-height:230px;padding:24px;border:1px solid var(--ti-line-soft);border-radius:24px;background:#fff;box-shadow:0 10px 30px rgba(2,46,100,.055)}.info-card:nth-child(2){background:#d9f1f1}.info-card:nth-child(3){background:#f2e9dc}.info-card:nth-child(4){background:#e9eef8}.info-card .num{font-size:9px;color:var(--ti-blue-soft);font-weight:800;letter-spacing:.12em}.info-card h3{margin:46px 0 10px;color:var(--ti-navy);font-size:20px;line-height:1.12;letter-spacing:-.035em}.info-card p{margin:0;color:var(--ti-body);font-size:10.5px;line-height:1.72}
+.tool-shell{display:grid;grid-template-columns:minmax(340px,.72fr) minmax(0,1.28fr);border:1px solid var(--ti-line-dark);border-radius:30px;overflow:hidden;background:#fff;box-shadow:var(--ti-soft-shadow)}.tool-form{padding:30px;background:linear-gradient(145deg,#061a30,#0a315c);color:#fff}.tool-form h3{margin:10px 0 10px;font-size:30px;letter-spacing:-.05em}.tool-form>p{margin:0 0 24px;color:#c5d8eb;font-size:11px;line-height:1.7}.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.field{display:grid;gap:7px}.field.full{grid-column:1/-1}.field label{font-size:9px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#bfd1e3}.field input,.field select{min-height:46px;width:100%;border:1px solid rgba(255,255,255,.16);border-radius:12px;background:rgba(255,255,255,.08);color:#fff;padding:0 13px;outline:0;font-size:11px}.field select option{color:#111;background:#fff}.field input::placeholder{color:#a8bdd2}.tool-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}.tool-form .btn-light{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.18);color:#fff}.tool-result{padding:30px;min-width:0}.tool-empty{min-height:100%;display:grid;place-items:center;text-align:center;border:1px dashed var(--ti-line-dark);border-radius:22px;color:var(--ti-muted);padding:36px;font-size:12px;line-height:1.7}.packing-head{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;padding-bottom:20px;border-bottom:1px solid var(--ti-line-dark)}.packing-head h3{margin:7px 0 5px;color:var(--ti-navy);font-size:28px;letter-spacing:-.045em}.packing-meta{color:var(--ti-muted);font-size:10px;line-height:1.6}.packing-actions{display:flex;gap:7px;flex-wrap:wrap}.packing-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:18px}.packing-category{border:1px solid var(--ti-line-soft);border-radius:18px;padding:18px;background:#fff}.packing-category h4{margin:0 0 12px;color:var(--ti-navy);font-size:13px}.check-item{display:grid;grid-template-columns:18px 1fr;gap:9px;align-items:start;padding:8px 0;border-top:1px solid rgba(2,46,100,.06);font-size:10.5px;line-height:1.55;color:var(--ti-body)}.check-item:first-of-type{border-top:0}.check-item input{margin-top:2px;accent-color:var(--ti-navy)}.planning-note{margin-top:16px;padding:14px 16px;border-radius:14px;background:#f3f6f8;color:var(--ti-body);font-size:9.5px;line-height:1.65}
+.airline-shell{display:grid;grid-template-columns:minmax(270px,.42fr) minmax(0,1fr);gap:16px}.airline-browser{border:1px solid var(--ti-line-dark);border-radius:24px;background:#fff;overflow:hidden}.airline-search{padding:18px;border-bottom:1px solid var(--ti-line-dark)}.airline-search label{display:block;margin-bottom:7px;color:var(--ti-muted);font-size:9px;font-weight:800;letter-spacing:.09em;text-transform:uppercase}.airline-search input{width:100%;min-height:44px;border:1px solid var(--ti-line-dark);border-radius:12px;padding:0 13px;color:var(--ti-navy);outline:0;font-size:11px}.airline-list{max-height:620px;overflow:auto;padding:8px}.airline-option{width:100%;min-height:52px;border:0;border-bottom:1px solid rgba(2,46,100,.06);background:#fff;color:var(--ti-navy);text-align:left;padding:10px 12px;display:flex;justify-content:space-between;gap:10px;align-items:center;font-size:10.5px;font-weight:700}.airline-option:hover,.airline-option.active{background:#f3f6f8}.airline-option span{color:var(--ti-muted);font-size:9px}.airline-detail{min-height:500px;border:1px solid var(--ti-line-dark);border-radius:24px;background:#fff;padding:28px}.airline-detail.empty{display:grid;place-items:center;text-align:center;color:var(--ti-muted);font-size:12px;line-height:1.7}.airline-head{display:flex;align-items:center;gap:18px;padding-bottom:22px;border-bottom:1px solid var(--ti-line-dark)}.airline-logo{width:126px;height:64px;object-fit:contain;object-position:left center}.airline-head h3{margin:4px 0 4px;color:var(--ti-navy);font-size:30px;letter-spacing:-.045em}.airline-code{color:var(--ti-muted);font-size:9px;font-weight:800;letter-spacing:.09em;text-transform:uppercase}.airline-source{margin-top:17px;color:var(--ti-muted);font-size:9px;line-height:1.65}.cabin-block{margin-top:20px;padding-top:20px;border-top:1px solid var(--ti-line-dark)}.cabin-block h4{margin:0 0 12px;color:var(--ti-navy);font-size:18px}.fare-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px}.fare-card{border:1px solid var(--ti-line-soft);border-radius:16px;padding:16px;background:#f8fafc}.fare-card h5{margin:0 0 10px;color:var(--ti-navy);font-size:12px}.fare-card p{margin:0 0 10px;color:var(--ti-body);font-size:9.5px;line-height:1.6}.allowance-line{display:grid;grid-template-columns:105px 1fr;gap:8px;padding:7px 0;border-top:1px solid rgba(2,46,100,.06);font-size:9.5px;line-height:1.5}.allowance-line strong{color:var(--ti-navy)}.narrative{white-space:pre-wrap;color:var(--ti-body);font-size:11px;line-height:1.78;margin-top:20px}.notice{padding:16px;border-radius:14px;background:#f3f6f8;color:var(--ti-body);font-size:10px;line-height:1.65}.guidance-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:18px}.guidance-card{border:1px solid var(--ti-line-soft);border-radius:18px;padding:18px;background:#fff}.guidance-card h3{margin:0 0 9px;color:var(--ti-navy);font-size:13px}.guidance-card p{margin:0;color:var(--ti-body);font-size:10px;line-height:1.7}
+.faq{display:grid;gap:8px;max-width:920px}.faq details{border:1px solid var(--ti-line-dark);border-radius:14px;background:#fff;overflow:hidden}.faq summary{min-height:54px;padding:15px 17px;display:flex;align-items:center;justify-content:space-between;gap:12px;color:var(--ti-navy);font-size:11px;font-weight:800;cursor:pointer;list-style:none}.faq summary::-webkit-details-marker{display:none}.faq summary:after{content:"+";color:var(--ti-aqua);font-size:20px}.faq details[open] summary:after{content:"−"}.faq-body{padding:0 17px 17px;color:var(--ti-body);font-size:10px;line-height:1.72}
+@media(max-width:1050px){.hero-inner{grid-template-columns:1fr}.hero-card{max-width:640px}.info-grid{grid-template-columns:repeat(2,1fr)}.tool-shell,.airline-shell{grid-template-columns:1fr}.airline-list{max-height:340px}.guidance-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:700px){.wrap,.rail-inner{width:min(100% - 28px,var(--ti-content))}.rail-context{display:none}.hero{min-height:auto}.hero-inner{min-height:auto;padding:66px 0 106px;gap:32px}.hero h1{font-size:52px}.section{padding:54px 0}.heading{grid-template-columns:1fr;gap:12px}.info-grid,.packing-grid,.guidance-grid,.form-grid{grid-template-columns:1fr}.field.full{grid-column:auto}.tool-form,.tool-result,.airline-detail{padding:20px}.packing-head{display:grid}.airline-head{align-items:flex-start;flex-direction:column}.airline-logo{width:110px}.allowance-line{grid-template-columns:1fr}.hero-actions .btn{width:100%}}
+@media print{.travel-info-rail,.hero,.tool-form,.heading,.info-grid,.airline-shell,.guidance-grid,.faq,.packing-actions{display:none!important}.section{padding:0}.tool-shell{display:block;border:0;box-shadow:none}.tool-result{padding:0}.packing-category{break-inside:avoid}}
 </style>
-<style id="skandi-b011-separate-page-style">
-:root{
-  --sk-blue:#022e64;
-  --sk-blue-soft:#285ca8;
-  --sk-blue2:#0b3a7a;
-  --sk-light:#d7e6ff;
-  --sk-pale:#f6faff;
-  --sk-bg:#f7faff;
-  --sk-border:#dbe3ef;
-  --sk-border-soft:#eef2f7;
-  --sk-text:#111;
-  --sk-body:#555;
-  --sk-muted:#667085;
-  --sk-cyan:#5FC7CF;
-  --sk-ok:#087443;
-  --sk-danger:#8a1f1f;
-  --sk-ivory:#fbfaf6;
-  --sk-porcelain:#f5f1ea;
-  --sk-champagne:#d1bc98;
-  --sk-ink:#03111f;
-  --sk-ink-soft:#061a30;
-  --sk-shadow:0 8px 26px rgba(0,0,0,.08);
-  --sk-shadow-strong:0 14px 34px rgba(0,0,0,.12);
-  --sk-max:1180px;
-}
-
-html,body{
-  background:#fff;
-  color:var(--sk-text);
-  -webkit-font-smoothing:antialiased;
-  text-rendering:optimizeLegibility;
-}
-
-.travel-info-rail{
-  position:sticky;
-  top:0;
-  z-index:30;
-  border-bottom:1px solid var(--sk-border);
-  background:rgba(255,255,255,.95);
-  backdrop-filter:blur(18px);
-  -webkit-backdrop-filter:blur(18px);
-}
-.travel-info-rail-inner{
-  width:min(var(--sk-max),calc(100% - 48px));
-  min-height:62px;
-  margin:0 auto;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:18px;
-}
-.travel-info-back{
-  min-height:38px;
-  padding:0 13px;
-  display:inline-flex;
-  align-items:center;
-  gap:8px;
-  border:1px solid var(--sk-border);
-  border-radius:999px;
-  background:#fff;
-  color:var(--sk-blue);
-  text-decoration:none;
-  font-size:9px;
-  line-height:1;
-  font-weight:800;
-  cursor:pointer;
-}
-.travel-info-back:hover{
-  border-color:rgba(95,199,207,.55);
-  background:var(--sk-pale);
-}
-.travel-info-context{
-  color:var(--sk-muted);
-  font-size:8px;
-  font-weight:800;
-  letter-spacing:.12em;
-  text-transform:uppercase;
-}
-
-/* B-011 Travel Info hero */
-#hero-wrap{
-  position:relative;
-  isolation:isolate;
-  min-height:390px!important;
-  padding:72px 24px 46px!important;
-  align-items:center!important;
-  justify-content:flex-end!important;
-  text-align:left!important;
-  overflow:hidden;
-  box-shadow:inset 0 -1px rgba(255,255,255,.08);
-}
-#hero-wrap::after{
-  content:"";
-  position:absolute;
-  inset:0;
-  z-index:-1;
-  pointer-events:none;
-  background:
-    radial-gradient(circle at 84% 9%,rgba(95,199,207,.13),transparent 26%),
-    linear-gradient(90deg,rgba(2,46,100,.27),transparent 58%);
-}
-#hero-wrap>.hero-kicker,
-#hero-wrap>#hero-title,
-#hero-wrap>#hero-sub{
-  width:min(var(--sk-max),calc(100% - 0px));
-  margin-left:auto;
-  margin-right:auto;
-  text-align:left;
-}
-.hero-kicker{
-  margin-bottom:9px!important;
-  color:var(--sk-cyan)!important;
-  font-size:9px!important;
-  font-weight:850!important;
-  letter-spacing:.17em!important;
-}
-#hero-title{
-  margin-bottom:12px!important;
-  color:#fff!important;
-  font-size:clamp(38px,5vw,58px)!important;
-  line-height:.99!important;
-  letter-spacing:-.05em!important;
-  font-weight:700!important;
-}
-#hero-sub{
-  max-width:var(--sk-max)!important;
-  padding-right:min(360px,25vw);
-  color:rgba(255,255,255,.86)!important;
-  font-size:13px!important;
-  line-height:1.72!important;
-}
-
-/* B-011 content rhythm */
-.content-section{
-  max-width:var(--sk-max)!important;
-  padding:54px 24px!important;
-  margin:0 auto!important;
-}
-.content-section[style*="background"]{
-  max-width:none!important;
-  padding-left:max(24px,calc((100vw - var(--sk-max))/2 + 24px))!important;
-  padding-right:max(24px,calc((100vw - var(--sk-max))/2 + 24px))!important;
-}
-.section-title{
-  margin:0 0 8px!important;
-  color:var(--sk-blue)!important;
-  font-size:clamp(26px,3.3vw,36px)!important;
-  line-height:1.08!important;
-  letter-spacing:-.04em!important;
-  text-align:left!important;
-}
-.section-subtitle{
-  max-width:780px!important;
-  margin:0 0 26px!important;
-  color:var(--sk-body)!important;
-  font-size:10.5px!important;
-  line-height:1.68!important;
-  text-align:left!important;
-}
-
-/* Cards */
-.info-grid,.bag-grid,.card-grid,.rules-grid,.guide-grid{
-  gap:14px!important;
-}
-.info-card,.bag-card,.ins-card,.rule-card,.result-card,.live-product{
-  border:1px solid var(--sk-border-soft)!important;
-  border-radius:17px!important;
-  background:#fff!important;
-  box-shadow:0 5px 18px rgba(2,46,100,.05)!important;
-}
-.info-card,.bag-card,.ins-card{
-  padding:24px!important;
-}
-.rule-card,.result-card,.live-product{
-  padding:18px!important;
-}
-.info-card:hover,.bag-card:hover,.ins-card:hover,.rule-card:hover,.live-product:hover{
-  border-color:rgba(95,199,207,.46)!important;
-  box-shadow:0 13px 28px rgba(2,46,100,.09)!important;
-}
-.info-header,.bag-header{
-  gap:13px!important;
-  margin-bottom:16px!important;
-  padding-bottom:15px!important;
-}
-.info-icon,.bag-icon,.ins-icon{
-  width:46px!important;
-  height:46px!important;
-  flex:0 0 46px!important;
-  border:1px solid rgba(95,199,207,.26)!important;
-  border-radius:12px!important;
-  background:var(--sk-pale)!important;
-  color:var(--sk-blue)!important;
-  font-size:21px!important;
-}
-.info-header h3,.bag-header h3,.ins-card h3{
-  color:var(--sk-blue)!important;
-  font-size:16px!important;
-  line-height:1.3!important;
-  letter-spacing:-.02em!important;
-}
-.info-card p,.bag-card p,.ins-card p,.rule-card p{
-  color:var(--sk-body)!important;
-  font-size:10px!important;
-  line-height:1.7!important;
-}
-
-/* Search / live data surfaces */
-.airline-search-shell,.requirements-search,.ins-search{
-  padding:22px!important;
-  border:1px solid var(--sk-border)!important;
-  border-radius:17px!important;
-  background:#fff!important;
-  box-shadow:var(--sk-shadow)!important;
-}
-.search-field input,.field input,.field select,.ins-search input{
-  min-height:44px!important;
-  border:1px solid var(--sk-border)!important;
-  border-radius:10px!important;
-  background:#fff!important;
-  color:var(--sk-blue)!important;
-  font-size:10px!important;
-}
-.search-button,.btn-primary,.btn-secondary{
-  min-height:42px!important;
-  padding:0 16px!important;
-  border-radius:10px!important;
-  font-size:9px!important;
-  font-weight:850!important;
-  letter-spacing:.02em!important;
-}
-.search-button,.btn-primary{
-  border:0!important;
-  background:linear-gradient(135deg,var(--sk-blue),var(--sk-blue2))!important;
-  color:#fff!important;
-}
-.btn-secondary{
-  border:1px solid var(--sk-border)!important;
-  background:#fff!important;
-  color:var(--sk-blue)!important;
-}
-.live-card,.lookup-result,.live-results{
-  border-radius:15px!important;
-  box-shadow:none!important;
-}
-.live-notice,.lookup-status,.live-status{
-  border-radius:10px!important;
-  font-size:9px!important;
-  line-height:1.6!important;
-}
-
-/* Alerts and CTA */
-.alert-box{
-  padding:18px!important;
-  gap:13px!important;
-  border-radius:13px!important;
-  box-shadow:none!important;
-}
-.alert-icon{font-size:23px!important}
-.alert-content h4{
-  font-size:12px!important;
-  line-height:1.35!important;
-}
-.alert-content p{
-  font-size:9.5px!important;
-  line-height:1.65!important;
-}
-.action-banner,.visa-banner{
-  padding:28px!important;
-  border-radius:18px!important;
-  background:
-    radial-gradient(circle at 94% 0%,rgba(95,199,207,.12),transparent 28%),
-    linear-gradient(135deg,var(--sk-blue),var(--sk-ink-soft))!important;
-  box-shadow:0 12px 30px rgba(2,46,100,.14)!important;
-}
-.action-banner h3,.visa-banner h3{
-  font-size:21px!important;
-  letter-spacing:-.025em!important;
-}
-.action-banner p,.visa-banner p{
-  font-size:10px!important;
-  line-height:1.65!important;
-}
-
-/* FAQ */
-.faq-grid{
-  max-width:900px!important;
-  margin:0!important;
-}
-details{
-  margin-bottom:8px!important;
-  border:1px solid var(--sk-border)!important;
-  border-radius:12px!important;
-  box-shadow:none!important;
-}
-summary{
-  min-height:50px!important;
-  padding:14px 16px!important;
-  color:var(--sk-blue)!important;
-  font-size:10px!important;
-}
-.faq-content{
-  padding:0 16px 16px!important;
-  color:var(--sk-body)!important;
-  font-size:9.5px!important;
-  line-height:1.7!important;
-}
-
-/* Legal/regulatory */
-.legal-section{
-  max-width:none!important;
-  border-top:1px solid var(--sk-border)!important;
-  background:var(--sk-pale)!important;
-  padding-left:max(24px,calc((100vw - var(--sk-max))/2 + 24px))!important;
-  padding-right:max(24px,calc((100vw - var(--sk-max))/2 + 24px))!important;
-}
-.legal-grid{gap:10px!important}
-.legal-box,.legal-mini{
-  border:1px solid var(--sk-border-soft)!important;
-  border-radius:12px!important;
-  background:#fff!important;
-  color:var(--sk-muted)!important;
-  font-size:9px!important;
-  line-height:1.6!important;
-}
-.legal-box{padding:17px!important}
-
-/* Comparison tables and supporting content */
-.table-wrapper{
-  border:1px solid var(--sk-border)!important;
-  border-radius:14px!important;
-  box-shadow:none!important;
-}
-table{font-size:9px!important}
-th{background:var(--sk-pale)!important;color:var(--sk-blue)!important}
-th,td{padding:12px!important;border-color:var(--sk-border-soft)!important}
-
-@media(max-width:860px){
-  .travel-info-rail-inner{width:min(var(--sk-max),calc(100% - 28px));min-height:56px}
-  .travel-info-context{display:none}
-  #hero-wrap{min-height:330px!important;padding:58px 14px 36px!important}
-  #hero-wrap>.hero-kicker,
-  #hero-wrap>#hero-title,
-  #hero-wrap>#hero-sub{width:min(var(--sk-max),calc(100% - 0px))}
-  #hero-title{font-size:38px!important}
-  #hero-sub{padding-right:0!important;font-size:12px!important}
-  .content-section{padding:44px 14px!important}
-  .content-section[style*="background"],.legal-section{
-    padding-left:14px!important;
-    padding-right:14px!important;
-  }
-}
-</style>
-
-</head><body>
-<section id="hero-wrap" data-section-id="baggage-hero">
-  <div class="hero-kicker" data-content-id="baggage-hero-kicker">SKANDI BAGGAGE</div>
-  <div id="hero-title" data-content-id="baggage-hero-title">Everything You Need to Pack</div>
-  <div id="hero-sub" data-content-id="baggage-hero-copy">Baggage rules vary by airline, route, fare and passenger. Search your operating airline below for the published SKANDI guidance linked to that airline.</div>
-</section>
-
-<section class="content-section">
-  <div class="section-title">Find your airline's baggage allowance</div>
-  <div class="section-subtitle">Search by airline name or IATA code. The final allowance shown in your booking and by the operating airline remains authoritative.</div>
-  <div id="status" class="live-notice">Loading published airline baggage information…</div>
-  <div class="airline-search-shell">
-    <div class="search-row">
-      <div class="search-field"><label for="airlineSearch">Airline</label><input id="airlineSearch" type="search" autocomplete="off" placeholder="Search SAS, Finnair, Norwegian, BA…"></div>
-      <button id="airlineSearchButton" class="search-button" type="button">Search airline</button>
-    </div>
-    <div id="airlineList" class="airline-list"></div>
-    <div id="airlineResult" class="live-card hidden"></div>
-  </div>
-
-  <div class="section-title">Understanding baggage types</div>
-  <div class="section-subtitle">The size, weight and number of pieces depend on the airline and fare you booked.</div>
-  <div class="bag-grid">
-    <article class="bag-card"><div class="bag-header"><div class="bag-icon">🎒</div><h3>Hand Luggage</h3></div><div class="bag-specs"><div class="spec-box"><span>Weight</span><strong>Varies</strong></div><div class="spec-box"><span>Dimensions</span><strong>Varies</strong></div></div><p>Some fares include only a small under-seat item, while others include an overhead cabin bag. Search your airline above and check the baggage line on your booking.</p></article>
-    <article class="bag-card"><div class="bag-header"><div class="bag-icon">🧳</div><h3>Checked Baggage</h3></div><div class="bag-specs"><div class="spec-box"><span>Pieces</span><strong>Fare based</strong></div><div class="spec-box"><span>Weight</span><strong>Fare based</strong></div></div><p>Checked baggage can be included, optional or restricted by route and fare family. Pre-booking additional baggage is often simpler than paying at the airport, when the airline allows it.</p></article>
-  </div>
-  <div class="addon-banner"><div><h4>Need to bring more?</h4><p>Open your booking to see the baggage options attached to your actual itinerary and fare. Availability and prices are supplier specific.</p></div><button id="manageBooking" class="btn-secondary" type="button">Manage Booking</button></div>
-</section>
-
-<section class="content-section" style="background:var(--sk-bg)">
-  <div class="section-title">Special Baggage & Security</div>
-  <div class="section-subtitle">These are planning reminders. Your operating airline and departure airport can apply more specific rules.</div>
-  <div class="rules-grid">
-    <div class="rule-card"><h4>👶 Strollers & Child Equipment</h4><p>Many airlines have special allowances for strollers, car seats and child equipment. Whether they are free, checked at the counter or delivered at the aircraft door depends on the carrier and airport.</p></div>
-    <div class="rule-card"><h4>⛳ Sports Equipment</h4><p>Golf bags, skis, bicycles and other oversized equipment often require advance booking because aircraft hold space and handling rules are limited.</p></div>
-    <div class="rule-card"><h4>🔋 Batteries & Powerbanks</h4><p>Portable lithium batteries and powerbanks are normally subject to cabin-baggage restrictions and capacity limits. Confirm the airline's dangerous-goods rules before packing.</p></div>
-    <div class="rule-card"><h4>💧 Liquids at Security</h4><p>Liquid screening rules can vary by airport and security technology. Many airports still apply the familiar 100 ml container rule, but check your departure and transfer airports before travel.</p></div>
-  </div>
-  <div id="guidance" class="guide-grid"></div>
-</section>
-
-<section class="content-section">
-  <div class="section-title">Frequently Asked Questions</div>
-  <div class="faq-grid">
-    <details><summary>Can travelers on the same booking pool baggage weight?</summary><div class="faq-content">Some airlines allow pooling and others do not. Individual-bag safety limits may still apply. Search the operating airline above and review your fare conditions.</div></details>
-    <details><summary>Is baggage included for infants?</summary><div class="faq-content">Infant baggage allowances vary significantly by airline, route and ticket type. Strollers or child seats may have separate rules.</div></details>
-    <details><summary>What if my cabin bag is too large or heavy?</summary><div class="faq-content">The airline may require the bag to be checked and may charge an airport or gate fee. The exact handling depends on the operating carrier and fare.</div></details>
-  </div>
-</section>
+</head>
+<body>
+<nav class="travel-info-rail" aria-label="Travel Info"><div class="rail-inner"><button id="backToTravelInfo" class="rail-back" type="button" aria-label="Back to Travel Info">← Travel Info</button><div class="rail-context">Travel Info · Baggage Allowance</div></div></nav>
+<header class="hero"><div class="wrap hero-inner"><div><div class="kicker">SKANDI TRAVEL INFO</div><h1>Baggage, without the guesswork.</h1><p>Start with the basics, build a packing list for your trip, then select your operating airline to read the baggage allowance currently published in the SKANDI database.</p><div class="hero-actions"><button class="btn btn-aqua" type="button" data-scroll="packing">Build a packing list</button><button class="btn btn-light" type="button" data-scroll="airline">Check an airline</button><button id="manageBooking" class="btn btn-light" type="button">Manage booking</button></div></div><aside class="hero-card"><div class="kicker">Before you pack</div><h2>Your booking is the final authority.</h2><p>Allowance can change by airline, route, fare, cabin, traveler and operating carrier. The airline guide below is planning information; your booking and the operating airline remain authoritative.</p><div class="hero-list"><div><strong>01</strong><span>Separate personal items, cabin baggage and checked baggage.</span></div><div><strong>02</strong><span>Check special, oversized and battery restrictions before travel.</span></div><div><strong>03</strong><span>Recheck allowance after any itinerary or fare change.</span></div></div></aside></div></header>
+<main>
+<section class="section"><div class="wrap"><div class="heading"><div><div class="kicker kicker-dark">BAGGAGE BASICS</div><h2>Know what you are packing into.</h2></div><p>These are general planning principles, not a universal allowance. Exact piece counts, dimensions and weights come from the operating airline and your booked fare.</p></div><div class="info-grid"><article class="info-card"><div class="num">01 / Personal item</div><h3>Under-seat item</h3><p>Some fares include only a small personal item. It normally needs to fit beneath the seat and can have a different size limit from an overhead cabin bag.</p></article><article class="info-card"><div class="num">02 / Cabin baggage</div><h3>Overhead bag</h3><p>Cabin-bag inclusion, dimensions and weight vary by carrier and fare. A compliant bag can still be gate-checked when aircraft or operational conditions require it.</p></article><article class="info-card"><div class="num">03 / Checked baggage</div><h3>Hold luggage</h3><p>Checked allowance can be included, optional or unavailable. Piece and weight concepts differ between airlines, routes and ticket products.</p></article><article class="info-card"><div class="num">04 / Special baggage</div><h3>Plan it early</h3><p>Sports equipment, musical instruments, mobility equipment, child equipment and other special items can require advance notification or separate handling.</p></article></div></div></section>
+<section id="packing" class="section section-white"><div class="wrap"><div class="heading"><div><div class="kicker kicker-dark">PACKING LIST BUILDER</div><h2>A practical list for this trip.</h2></div><p>The builder uses trip length, traveler ages, trip style, laundry access and the date/hemisphere season. It does not claim to know live weather—check the forecast before departure.</p></div><div class="tool-shell"><form id="packingForm" class="tool-form"><div class="kicker">TRIP DETAILS</div><h3>Build my list</h3><p>Use the destination for your list heading, then choose the destination hemisphere so the travel date can be converted into a season without inventing weather data.</p><div class="form-grid"><div class="field full"><label for="packDestination">Destination</label><input id="packDestination" required autocomplete="off" placeholder="e.g. Stockholm, Sweden"></div><div class="field"><label for="packDate">Departure date</label><input id="packDate" required type="date"></div><div class="field"><label for="packDays">Length of stay</label><input id="packDays" required type="number" min="1" max="90" value="7"></div><div class="field full"><label for="packAges">Traveler ages</label><input id="packAges" required inputmode="numeric" placeholder="e.g. 33, 31, 7, 1"></div><div class="field"><label for="packHemisphere">Destination hemisphere</label><select id="packHemisphere"><option value="north">Northern</option><option value="south">Southern</option><option value="equatorial">Equatorial / tropical</option></select></div><div class="field"><label for="packTrip">Trip style</label><select id="packTrip"><option value="general">General leisure</option><option value="city">City break</option><option value="beach">Beach / resort</option><option value="business">Business</option><option value="outdoor">Outdoor / active</option><option value="winter">Winter / snow</option></select></div><div class="field"><label for="packLaundry">Laundry access</label><select id="packLaundry"><option value="no">No / unsure</option><option value="yes">Yes</option></select></div><div class="field"><label for="packClimate">Expected conditions</label><select id="packClimate"><option value="season">Use season estimate</option><option value="warm">Mostly warm</option><option value="mixed">Mixed / changeable</option><option value="cold">Mostly cold</option><option value="wet">Wet / tropical</option></select></div></div><div class="tool-actions"><button class="btn btn-aqua" type="submit">Generate packing list</button><button id="resetPacking" class="btn btn-light" type="button">Reset</button></div></form><div id="packingResult" class="tool-result"><div class="tool-empty">Enter your trip details to generate a checkable packing list with quantities and age-specific additions.</div></div></div></div></section>
+<section id="airline" class="section section-tint"><div class="wrap"><div class="heading"><div><div class="kicker kicker-dark">AIRLINE BAGGAGE DIRECTORY</div><h2>Allowance from the SKANDI database.</h2></div><p>Select the operating airline. The detail panel displays the structured or narrative baggage information currently published through the canonical Travel Info / Inventory data chain.</p></div><div class="airline-shell"><div class="airline-browser"><div class="airline-search"><label for="airlineSearch">Airline name or code</label><input id="airlineSearch" type="search" autocomplete="off" placeholder="Search SAS, Finnair, Norwegian…"></div><div id="airlineList" class="airline-list" aria-label="Published airlines"></div></div><div id="airlineResult" class="airline-detail empty" aria-live="polite">Loading published airline baggage information…</div></div><div id="guidance" class="guidance-grid"></div></div></section>
+<section class="section section-white"><div class="wrap"><div class="heading"><div><div class="kicker kicker-dark">SPECIAL ITEMS & SECURITY</div><h2>Items that need a second check.</h2></div><p>Rules below are planning reminders. The operating airline, airport security authority and local regulations can impose more specific requirements.</p></div><div class="info-grid"><article class="info-card"><div class="num">CHILD EQUIPMENT</div><h3>Strollers & car seats</h3><p>Allowance and aircraft-door delivery differ by carrier and airport. Check whether equipment must be tagged or checked at a counter.</p></article><article class="info-card"><div class="num">SPORTS / OVERSIZE</div><h3>Reserve space</h3><p>Bicycles, skis, golf bags and other oversized items can require advance booking because hold space and handling are limited.</p></article><article class="info-card"><div class="num">BATTERIES</div><h3>Powerbanks & lithium</h3><p>Portable lithium batteries are commonly subject to cabin-baggage restrictions and capacity limits. Check the airline's dangerous-goods rules.</p></article><article class="info-card"><div class="num">SECURITY</div><h3>Liquids & screening</h3><p>Airport screening technology and liquid rules vary. Check departure and transfer airports instead of assuming one rule applies throughout the journey.</p></article></div></div></section>
+<section class="section"><div class="wrap"><div class="heading"><div><div class="kicker kicker-dark">COMMON QUESTIONS</div><h2>Before you close the suitcase.</h2></div></div><div class="faq"><details><summary>Can travelers on the same booking pool baggage weight?</summary><div class="faq-body">Some airlines allow pooling and others do not. Individual-bag safety limits can still apply. Check the operating airline and fare conditions.</div></details><details><summary>Is baggage included for infants?</summary><div class="faq-body">Infant allowances vary by airline, route and ticket type. Strollers, car seats and other child equipment can have separate rules.</div></details><details><summary>What if my cabin bag is too large or heavy?</summary><div class="faq-body">The airline may require the bag to be checked and may charge an airport or gate fee. Handling depends on the carrier, route, fare and airport.</div></details><details><summary>Should I rely on the packing list for weather?</summary><div class="faq-body">No. The packing tool estimates a season from date and hemisphere and applies your selected expected conditions. Check the destination forecast close to departure.</div></details></div></div></section>
+</main>
 <script>
 (()=>{"use strict";
-const SOURCE="SKANDI_BAGGAGE_PAGE",PARENT="SKANDI_WIX_PARENT",VERSION="BACKEND-BASE-1.0-B011.3";
+const SOURCE="SKANDI_BAGGAGE_PAGE",PARENT="SKANDI_WIX_PARENT",VERSION="V12-BAGGAGE-2026.10.11";
 const $=id=>document.getElementById(id),esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 let DATA={airlines:[],guidance:[]},selectedId="";
+function safeUrl(value){try{const u=new URL(String(value||"").trim());return u.protocol==="https:"?u.href:""}catch(_){return""}}
 function post(type,payload={}){window.parent.postMessage({source:SOURCE,type,payload,timestamp:new Date().toISOString()},"*")}
-function airlineLabel(x){return `${x.name||x.title||x.shortName||x.iataCode||"Airline"}${x.iataCode?` (${x.iataCode})`:""}`}
-function filteredAirlines(){const q=String($("airlineSearch").value||"").trim().toLowerCase();const rows=DATA.airlines||[];if(!q)return rows.slice(0,12);return rows.filter(x=>`${x.name||""} ${x.title||""} ${x.shortName||""} ${x.iataCode||""} ${x.icaoCode||""}`.toLowerCase().includes(q)).slice(0,20)}
-function renderAirlineList(){const rows=filteredAirlines();$("airlineList").innerHTML=rows.length?rows.map(x=>`<button type="button" class="airline-option ${selectedId===x.id?"active":""}" data-airline-id="${esc(x.id)}">${esc(airlineLabel(x))}</button>`).join(""):`<div class="live-notice">No matching airline is published in SKANDI Travel Info.</div>`;$("airlineList").querySelectorAll("[data-airline-id]").forEach(btn=>btn.onclick=()=>selectAirline(btn.dataset.airlineId))}
-function renderStructured(baggage){return (baggage.cabins||[]).map(cabin=>`<section class="cabin-block"><h4>${esc(cabin.cabinType||cabin.travelClass||"Cabin")}</h4><div class="fare-grid">${(cabin.fares||[]).map(fare=>`<article class="fare-card"><h5>${esc(fare.name||"Fare")}</h5>${fare.description?`<div class="live-copy" style="font-size:12px;margin-bottom:10px">${esc(fare.description)}</div>`:""}${fare.underSeatBag?`<div class="allowance-line"><strong>Under-seat</strong><span>${esc(fare.underSeatBag)}</span></div>`:""}${fare.overheadCarryOn?`<div class="allowance-line"><strong>Cabin bag</strong><span>${esc(fare.overheadCarryOn)}</span></div>`:""}${fare.checkedBag?`<div class="allowance-line"><strong>Checked bag</strong><span>${esc(fare.checkedBag)}</span></div>`:""}</article>`).join("")}</div></section>`).join("")}
-function selectAirline(id){const x=(DATA.airlines||[]).find(item=>item.id===id);if(!x)return;selectedId=id;$("airlineSearch").value=x.name||x.title||x.iataCode||"";renderAirlineList();const bag=x.baggage||{mode:"none"};let body="";if(bag.mode==="structured")body=renderStructured(bag);else if(bag.mode==="narrative")body=`<div class="live-copy">${esc(bag.text||"")}</div>`;else body=`<div class="live-notice">No baggage allowance is currently published for this airline in SKANDI Travel Info. Check your booking and the airline's official information.</div>`;$("airlineResult").classList.remove("hidden");$("airlineResult").innerHTML=`<div class="live-head">${x.logo?`<img class="live-logo" src="${esc(x.logo)}" alt="">`:""}<div><div class="live-meta">Published airline guidance</div><h3>${esc(x.name||x.title||x.iataCode||"Airline")}</h3>${x.iataCode?`<div class="live-meta">IATA ${esc(x.iataCode)}${x.icaoCode?` · ICAO ${esc(x.icaoCode)}`:""}</div>`:""}</div></div>${body}${x.website?`<div class="source-note">Official airline website: <a href="${esc(x.website)}" target="_blank" rel="noopener">${esc(x.website)}</a></div>`:""}<div class="source-note">Always use the operating carrier and your booked fare as the final baggage authority.</div>`}
-function runSearch(){const rows=filteredAirlines();renderAirlineList();if(rows.length===1)selectAirline(rows[0].id)}
-function renderGuidance(){const rows=DATA.guidance||[];$("guidance").innerHTML=rows.length?rows.map(x=>`<article class="rule-card"><h4>${esc(x.title||"Baggage guidance")}</h4><p>${esc(x.excerpt||x.summary||x.body||"")}</p></article>`).join(""):""}
-function render(){renderAirlineList();renderGuidance();const count=(DATA.airlines||[]).length;$("status").textContent=count?`${count} published airlines loaded from SKANDI Travel Info. Search by airline name or code.`:"No published airline baggage data is currently available. Confirm baggage directly with the operating airline."}
-$("airlineSearch").addEventListener("input",renderAirlineList);$("airlineSearch").addEventListener("keydown",e=>{if(e.key==="Enter")runSearch()});$("airlineSearchButton").onclick=runSearch;$("manageBooking").onclick=()=>post("BAGGAGE_NAVIGATE",{path:"/my-profile"});
-window.addEventListener("message",e=>{let m=e.data;if(typeof m==="string"){try{m=JSON.parse(m)}catch(_){return}}if(!m||m.source!==PARENT)return;if(m.type==="BAGGAGE_HOST_READY")post("BAGGAGE_READY",{language:"EN",version:VERSION});else if(m.type==="BAGGAGE_LOADING")$("status").textContent="Loading published airline baggage information…";else if(m.type==="BAGGAGE_DATA"){DATA=m.payload||DATA;render()}else if(m.type==="BAGGAGE_ERROR")$("status").textContent=m.payload?.message||"Baggage guidance is unavailable."});
-post("BAGGAGE_READY",{language:"EN",version:VERSION});
+function icon(name){const paths={copy:'<path d="M9 9h10v10H9z"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>',print:'<path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v8H6z"/>'};return `<svg class="icon icon-sm" viewBox="0 0 24 24" aria-hidden="true">${paths[name]||""}</svg>`}
+function airlineLabel(x){return x.name||x.title||x.shortName||x.iataCode||"Airline"}
+function filteredAirlines(){const q=String($("airlineSearch").value||"").trim().toLowerCase();const rows=Array.isArray(DATA.airlines)?DATA.airlines:[];return (q?rows.filter(x=>`${x.name||""} ${x.title||""} ${x.shortName||""} ${x.iataCode||""} ${x.icaoCode||""}`.toLowerCase().includes(q)):rows).slice(0,100)}
+function renderAirlineList(){const rows=filteredAirlines();$("airlineList").innerHTML=rows.length?rows.map(x=>`<button type="button" class="airline-option ${selectedId===String(x.id)?"active":""}" data-airline-id="${esc(x.id)}"><strong>${esc(airlineLabel(x))}</strong><span>${esc(x.iataCode||x.icaoCode||"")}</span></button>`).join(""):`<div class="notice">No matching published airline was found.</div>`;$("airlineList").querySelectorAll("[data-airline-id]").forEach(btn=>btn.onclick=()=>selectAirline(btn.dataset.airlineId))}
+function renderStructured(baggage){return (baggage.cabins||[]).map(c=>`<section class="cabin-block"><h4>${esc(c.cabinType||c.travelClass||"Cabin")}</h4><div class="fare-grid">${(c.fares||[]).map(f=>`<article class="fare-card"><h5>${esc(f.name||"Fare")}</h5>${f.description?`<p>${esc(f.description)}</p>`:""}${f.underSeatBag?`<div class="allowance-line"><strong>Under-seat</strong><span>${esc(f.underSeatBag)}</span></div>`:""}${f.overheadCarryOn?`<div class="allowance-line"><strong>Cabin bag</strong><span>${esc(f.overheadCarryOn)}</span></div>`:""}${f.checkedBag?`<div class="allowance-line"><strong>Checked bag</strong><span>${esc(f.checkedBag)}</span></div>`:""}</article>`).join("")}</div></section>`).join("")}
+function selectAirline(id){const x=(DATA.airlines||[]).find(item=>String(item.id)===String(id));if(!x)return;selectedId=String(id);renderAirlineList();const bag=x.baggage||{mode:"none"};let body="";if(bag.mode==="structured")body=renderStructured(bag);else if(bag.mode==="narrative"&&bag.text)body=`<div class="narrative">${esc(bag.text)}</div>`;else body=`<div class="notice" style="margin-top:20px">No baggage allowance is currently published for this airline in SKANDI Travel Info. Check your booking and the operating airline's official information.</div>`;const logo=safeUrl(x.logo),website=safeUrl(x.website);$("airlineResult").classList.remove("empty");$("airlineResult").innerHTML=`<div class="airline-head">${logo?`<img class="airline-logo" src="${esc(logo)}" alt="${esc(airlineLabel(x))} logo">`:""}<div><div class="airline-code">Published airline baggage guidance</div><h3>${esc(airlineLabel(x))}</h3><div class="airline-code">${x.iataCode?`IATA ${esc(x.iataCode)}`:""}${x.iataCode&&x.icaoCode?" · ":""}${x.icaoCode?`ICAO ${esc(x.icaoCode)}`:""}</div></div></div>${body}${website?`<div class="airline-source"><a href="${esc(website)}" target="_blank" rel="noopener noreferrer">Open the airline's official website ↗</a></div>`:""}<div class="airline-source">Always use the operating carrier and the baggage line on your booked fare as the final authority.</div>`;queueResize()}
+function renderGuidance(){const rows=Array.isArray(DATA.guidance)?DATA.guidance:[];$("guidance").innerHTML=rows.slice(0,9).map(x=>`<article class="guidance-card"><h3>${esc(x.title||"Baggage guidance")}</h3><p>${esc(x.excerpt||x.summary||x.body||"")}</p></article>`).join("")}
+function renderData(){renderAirlineList();renderGuidance();if((DATA.airlines||[]).length){const first=(DATA.airlines||[])[0];if(!selectedId&&first?.id)selectAirline(first.id)}else{$("airlineResult").textContent="No published airline baggage data is currently available. Confirm allowance directly with the operating airline."}queueResize()}
+function seasonFor(dateValue,hemisphere){const d=new Date(`${dateValue}T12:00:00`);if(Number.isNaN(d.getTime()))return"Season not set";if(hemisphere==="equatorial")return"Tropical / year-round";const m=d.getMonth()+1;let north=m===12||m<=2?"Winter":m<=5?"Spring":m<=8?"Summer":"Autumn";if(hemisphere==="south")north={Winter:"Summer",Spring:"Autumn",Summer:"Winter",Autumn:"Spring"}[north];return north}
+function qty(days,laundry,perDay=1,min=1,max=14){const effective=laundry&&days>5?Math.ceil(days/2)+1:days;return Math.max(min,Math.min(max,Math.ceil(effective*perDay)))}
+function parseAges(value){return String(value||"").split(/[,;\s]+/).map(v=>Number(v)).filter(v=>Number.isFinite(v)&&v>=0&&v<=120)}
+function packingData(){const destination=$("packDestination").value.trim(),date=$("packDate").value,days=Math.max(1,Math.min(90,Number($("packDays").value)||1)),ages=parseAges($("packAges").value),hemisphere=$("packHemisphere").value,trip=$("packTrip").value,laundry=$("packLaundry").value==="yes",climate=$("packClimate").value,season=seasonFor(date,hemisphere),travelers=Math.max(1,ages.length),infants=ages.filter(a=>a<2).length,children=ages.filter(a=>a>=2&&a<12).length,seniors=ages.filter(a=>a>=65).length;return{destination,date,days,ages,hemisphere,trip,laundry,climate,season,travelers,infants,children,seniors}}
+function buildPacking(p){const warm=p.climate==="warm"||p.climate==="wet"||(p.climate==="season"&&p.season==="Summer")||p.hemisphere==="equatorial",cold=p.climate==="cold"||p.trip==="winter"||(p.climate==="season"&&p.season==="Winter"),mixed=p.climate==="mixed"||["Spring","Autumn"].includes(p.season);const clothes=[`${qty(p.days,p.laundry)} tops per traveler`,`${qty(p.days,p.laundry,1,2,10)} underwear per traveler`,`${qty(p.days,p.laundry,1,2,10)} pairs of socks per traveler`,`${Math.max(1,Math.min(5,Math.ceil(p.days/3)))} bottoms per traveler`,`${Math.max(1,Math.min(3,Math.ceil(p.days/4)))} sleepwear set${p.days>4?"s":""} per traveler`,`Comfortable walking shoes`,`Travel-day outfit`];if(warm)clothes.push("Light layers / breathable clothing","Sun hat","Swimwear if relevant");if(cold)clothes.push("Warm outer layer","Hat, gloves and scarf","Thermal/base layers","Weather-appropriate footwear");if(mixed)clothes.push("Light jacket or mid-layer","Compact rain layer");if(p.trip==="business")clothes.push("Business outfits","Dress shoes","Work bag / laptop sleeve");if(p.trip==="beach")clothes.push("Swimwear","Beach cover-up","Sandals / water shoes");if(p.trip==="outdoor")clothes.push("Activity footwear","Technical layers","Reusable water bottle / daypack");if(p.trip==="winter")clothes.push("Snow/winter footwear","Insulated outerwear");const docs=["Passport / ID and any required travel documents","Booking confirmations and itinerary","Payment cards and a backup payment method","Travel insurance details if applicable","Emergency contacts and important addresses"];const personal=["Toothbrush and toothpaste","Deodorant and personal toiletries","Personal prescriptions in original packaging","Glasses / contact-lens supplies if needed","Sunscreen / lip protection as conditions require","Small first-aid essentials you normally use"];const tech=["Phone and charging cable","Travel adapter if required","Power bank packed according to airline rules","Headphones","Laptop / tablet and charger if needed"];const cabin=["Travel documents and valuables","Medication needed during the journey","One spare essential outfit","Chargers / approved batteries","Reusable empty water bottle","Small comfort items / snacks as permitted"];const special=[];if(p.infants)special.push(`${p.infants} infant traveler${p.infants>1?"s":""}: diapers/nappies, wipes and changing supplies`,`Infant feeding supplies as needed`,`Extra infant clothing`,`Stroller/carrier and approved child equipment as needed`,`Sleep/comfort items`);if(p.children)special.push(`${p.children} child traveler${p.children>1?"s":""}: extra change of clothes`,`Age-appropriate entertainment / comfort item`,`Snacks and refillable bottle as permitted`);if(p.seniors)special.push("Medication list and enough prescription supply for senior travelers","Mobility or accessibility equipment and charging accessories if applicable");const destination=[`Check the forecast for ${p.destination}`,`Confirm entry requirements for the destination and any transit points`,`Check local plug/voltage requirements`,`Check destination-specific health, cultural and activity needs`];return[{title:"Clothing",items:clothes},{title:"Documents & money",items:docs},{title:"Personal care & health",items:personal},{title:"Technology",items:tech},{title:"Keep in cabin baggage",items:cabin},...(special.length?[{title:"Age-specific items",items:special}]:[]),{title:"Destination checks",items:destination}]}
+function renderPacking(p){const groups=buildPacking(p);const dateLabel=p.date?new Intl.DateTimeFormat("en",{month:"short",day:"numeric",year:"numeric"}).format(new Date(`${p.date}T12:00:00`)):"";$("packingResult").innerHTML=`<div class="packing-head"><div><div class="kicker kicker-dark">YOUR PACKING LIST</div><h3>${esc(p.destination)}</h3><div class="packing-meta">${esc(dateLabel)} · ${p.days} day${p.days===1?"":"s"} · ${p.travelers} traveler${p.travelers===1?"":"s"} · ${esc(p.season)}${p.laundry?" · Laundry available":""}</div></div><div class="packing-actions"><button id="copyPacking" class="btn btn-light" type="button">${icon("copy")} Copy</button><button id="printPacking" class="btn btn-light" type="button">${icon("print")} Print</button></div></div><div class="packing-grid">${groups.map(g=>`<section class="packing-category"><h4>${esc(g.title)}</h4>${g.items.map(item=>`<label class="check-item"><input type="checkbox"><span>${esc(item)}</span></label>`).join("")}</section>`).join("")}</div><div class="planning-note">Planning estimate: the season is derived from the departure date plus the selected hemisphere. This is not live weather, airline baggage approval, customs advice or destination-entry advice. Check the forecast, your booking and official requirements before travel.</div>`;$("copyPacking").onclick=()=>copyPacking(groups,p);$("printPacking").onclick=()=>window.print();queueResize()}
+async function copyPacking(groups,p){const text=[`Packing list — ${p.destination}`,`${p.days} days · ${p.season}`,"",...groups.flatMap(g=>[g.title,...g.items.map(i=>`- ${i}`),""])].join("\n");try{await navigator.clipboard.writeText(text);$("copyPacking").textContent="Copied"}catch(_){const ta=document.createElement("textarea");ta.value=text;document.body.appendChild(ta);ta.select();document.execCommand("copy");ta.remove();$("copyPacking").textContent="Copied"}setTimeout(()=>{$("copyPacking")&&($("copyPacking").innerHTML=`${icon("copy")} Copy`)},1500)}
+$("packingForm").addEventListener("submit",e=>{e.preventDefault();const p=packingData();if(!p.destination||!p.date||!p.ages.length){$("packingResult").innerHTML='<div class="tool-empty">Add a destination, departure date and at least one traveler age to build the list.</div>';return}renderPacking(p)});$("resetPacking").onclick=()=>{$("packingForm").reset();$("packDays").value="7";$("packingResult").innerHTML='<div class="tool-empty">Enter your trip details to generate a checkable packing list with quantities and age-specific additions.</div>';queueResize()};
+$("airlineSearch").addEventListener("input",renderAirlineList);$("backToTravelInfo").onclick=()=>post("BAGGAGE_NAVIGATE",{path:"/travel-info"});$("manageBooking").onclick=()=>post("BAGGAGE_NAVIGATE",{path:"/my-profile?tab=trips"});document.querySelectorAll("[data-scroll]").forEach(btn=>btn.onclick=()=>document.getElementById(btn.dataset.scroll)?.scrollIntoView({behavior:"smooth",block:"start"}));
+let resizeTimer=0,lastHeight=0;function reportResize(){const height=Math.ceil(Math.max(document.documentElement.scrollHeight,document.body.scrollHeight));if(!height||Math.abs(height-lastHeight)<1)return;lastHeight=height;post("SKANDI_CONTENT_RESIZE",{height})}function queueResize(){clearTimeout(resizeTimer);resizeTimer=setTimeout(reportResize,40)}const ro="ResizeObserver" in window?new ResizeObserver(queueResize):null;ro?.observe(document.documentElement);ro?.observe(document.body);window.addEventListener("load",reportResize,{once:true});
+window.addEventListener("message",e=>{let m=e.data;if(typeof m==="string"){try{m=JSON.parse(m)}catch(_){return}}if(!m||m.source!==PARENT)return;if(m.type==="BAGGAGE_HOST_READY")post("BAGGAGE_READY",{language:window.SKANDI_PAGE_LANGUAGE||"EN",version:VERSION});else if(m.type==="BAGGAGE_DATA"){DATA=m.payload||DATA;renderData()}else if(m.type==="BAGGAGE_ERROR"){$("airlineResult").className="airline-detail empty";$("airlineResult").textContent=m.payload?.message||"Baggage guidance is unavailable."}else if(m.type==="SKANDI_SCROLL_TOP")window.scrollTo({top:0,left:0,behavior:"auto"});else if(m.type==="SKANDI_MASTER_CONFIG"){const lang=String(m.payload?.settings?.language||"EN").toUpperCase();if(["EN","SV","NO","DA"].includes(lang)&&lang!==window.SKANDI_PAGE_LANGUAGE){window.SKANDI_PAGE_LANGUAGE=lang;post("BAGGAGE_REFRESH",{language:lang})}}});
+window.SKANDI_PAGE_LANGUAGE="EN";post("MASTER_CONFIG_REQUEST",{context:"baggage-allowance"});post("BAGGAGE_READY",{language:"EN",version:VERSION});[0,80,250,800,1600].forEach(d=>setTimeout(reportResize,d));window.addEventListener("pagehide",()=>ro?.disconnect?.(),{once:true});
 })();
 </script>
-<script id="skandi-b011-back-bridge">
-(()=>{
-  const back=document.getElementById("backToTravelInfo");
-  if(!back)return;
-  back.addEventListener("click",()=>{
-    window.parent.postMessage({
-      source:"SKANDI_BAGGAGE_PAGE",
-      type:"BAGGAGE_NAVIGATE",
-      payload:{path:"/travel-info"},
-      timestamp:new Date().toISOString()
-    },"*");
-  });
-})();
-</script>
+</body>
+</html>
 
-</body></html>
 ```
