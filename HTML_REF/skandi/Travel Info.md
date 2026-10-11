@@ -6,7 +6,7 @@
 - WIX PAGE FILE: `/src/pages/Travel Info.m43d6.js`
 - WIX ROUTE / SLUG: `/travel-info`
 - WIX HTML ELEMENT: `#travelInfoHtml`
-- CURRENT STATUS: V12 CUSTOMER MEDIA + STRUCTURED FIELD RENDERING REPAIR PREPARED — REQUIRES LIVE TEST
+- CURRENT STATUS: V12 BAGGAGE SEPARATION + GLOBAL SCROLL-TOP + CUSTOMER MEDIA / STRUCTURED FIELD REPAIRS PREPARED — REQUIRES LIVE TEST
 - SOURCE-OF-TRUTH STATUS: AUTHORITATIVE intended V12 embed payload supplied for this repair.
 - CANONICAL WEB FACADE: `/src/backend/SKANDI_CORE/publicContent.web.js` + `/src/backend/SKANDI_CORE/flightStatus.web.js` for airport context/FIDS only
 - CANONICAL CORE: `/src/backend/SKANDI_CORE/publicContent.js` + `/src/backend/SKANDI_CORE/flightStatus.js` for AirLabs airport-board data and airport context projection
@@ -17,10 +17,12 @@
 - CANONICAL MASTER LIBRARIES: HOTEL, TRANSFER, GUIDED_TOUR, ACTIVITY and PARTNER_TICKET downstream Travel Info content is projected from `inventory_public_entities_v`; legacy `travel_info_hotels/transfers/tours/activities/tickets` are not downstream authorities after this repair.
 - PROVIDER SNAPSHOT: the provider evidence remains under `payload.duffel` (`normalized` + `raw`). The migration promotes the normalized provider-owned subset into the canonical Inventory detail object and retains a read-only `inventory_details.duffel` / `details.duffel` copy for audit/context; SKANDI enrichment remains editable only in Inventory Control.
 - AUTHORIZATION: unchanged from current V12 page/facade/core boundaries. No frontend role or provider secret becomes authoritative.
-- MESSAGE CONTRACTS / ELEMENT IDS: existing contracts preserved; Travel Info adds `TRAVEL_INFO_AIRPORT_CONTEXT_REQUEST/RESULT/ERROR`, `TRAVEL_INFO_AIRPORT_FLIGHTS_REQUEST/RESULT/ERROR`, and `TRAVEL_INFO_AIRPORT_ACTION` between the existing embed and page controller.
-- LAST VERIFIED: 2026-10-11 — current repo `skanditravels/SKANDI-TRAVELS`, branch `main`, HEAD `b97394abbab7c71d378f36958c9c356a362459c3`; exact Travel Info blob `311da8dea073c7f75369c760cb7af09bd3fcec48` and canonical Inventory projection blob `bc7d678fe6bb4504da9b867577170febfa969882` inspected for this repair. Wix live runtime was not executed in this session.
+- MESSAGE CONTRACTS / ELEMENT IDS: existing contracts preserved; all Baggage Allowance actions now emit the existing `TRAVEL_INFO_OPEN_BAGGAGE` contract instead of rendering duplicate inline baggage guidance. Travel Info uses the global `MASTER_SCROLL_TOP` contract when an embedded detail page opens, and retains `TRAVEL_INFO_AIRPORT_CONTEXT_REQUEST/RESULT/ERROR`, `TRAVEL_INFO_AIRPORT_FLIGHTS_REQUEST/RESULT/ERROR`, and `TRAVEL_INFO_AIRPORT_ACTION` between the existing embed and page controller.
+- LAST VERIFIED: 2026-10-11 — current repo `skanditravels/SKANDI-TRAVELS`, branch `main`, HEAD `04f8206e857c329f5f55d75085a4a8080171ff2e`; current pre-repair Travel Info blob `f9d0ee2a9d9270b56f482880a331798b8471406f` and global master-page blob `e5cd15412dd1942b92a5a6c387074ebdab488860` inspected. Wix live runtime was not executed in this session.
 
 ## CHANGE LOG
+- 2026-10-11 — Baggage Allowance separation: removed Travel Info’s inline/generic baggage overlay and the baggage tab from airline detail. Baggage actions in the home utility/search surface, airport detail and airline detail now use the existing `TRAVEL_INFO_OPEN_BAGGAGE` message so the Wix page controller redirects through `APP_ROUTES.baggageAllowance`; this repair corrects that canonical route target to `/travel-info/baggage-allowance`. Airport FIDS, global scroll-top, customer media/structured-field rendering, other Travel Info tabs and data authority remain unchanged. STATICALLY VERIFIED; REQUIRES LIVE TEST after replacing the Travel Info embed, route registry and publishing Wix.
+- 2026-10-11 — Global scroll-top contract: opening a Travel Info embedded detail now emits `MASTER_SCROLL_TOP` to the Wix master controller before the existing local iframe scroll. This makes the outer Wix viewport return to the top as well as the embedded document, while preserving the existing home-scroll restoration behavior when the detail closes. No route, data, FIDS, authorization, element ID or Inventory/Supabase behavior changed. Prepared against GitHub `main` HEAD `04f8206e857c329f5f55d75085a4a8080171ff2e`. STATICALLY VERIFIED; REQUIRES LIVE TEST after replacing the Travel Info embed and global master page and publishing Wix.
 - 2026-10-11 — Customer media + structured-field rendering repair: airline and airport logo surfaces now identify canonical logo media independently from hero photography and render logos with constrained `object-fit: contain` sizing so the entire source logo remains visible instead of being cropped or stretched. Airport detail headers show the full canonical airport logo without using it as a full-bleed hero fallback. Customer-facing summaries, help copy, airport commerce/transfer copy, travel-requirement copy, baggage descriptions, weather/profile text and canonical Travel Info projection values now parse structured JSON strings, arrays and objects into readable customer text rather than exposing JSON syntax, comma-array output or `[object Object]`. Structured section values remain structured for the existing rich renderer instead of being flattened prematurely. Existing routes, messages, element IDs, Inventory/Supabase authority, FIDS behavior, authorization and data writes are unchanged. Prepared against GitHub `main` HEAD `b97394abbab7c71d378f36958c9c356a362459c3`. STATICALLY VERIFIED; REQUIRES LIVE TEST after replacing the Travel Info embed and canonical projection and publishing Wix.
 - 2026-10-09 — Eight-column passenger FIDS: Flight Info now renders LOGO / FLIGHT NO / CODESHARE / TIME / TO-FROM / TERMINAL / GATE-BELT / REMARKS in a contemporary digital airport layout. Codeshare rows are consolidated into the physical operating flight and marketing flight numbers rotate in the isolated Codeshare column every 3.5 seconds. The stable operating carrier uses its Duffel-derived Logo Lockup URL from canonical Inventory/Supabase while the scheduled TOD/TOA remains fixed in Time. Departures use gate wayfinding; arrivals use `arr_baggage` as Belt with an arrivals-green accent. Completed flights remain hidden behind See earlier flights, and operational remarks retain completion time, boarding/final-call, delay, cancellation and en-route states. STATICALLY VERIFIED; REQUIRES LIVE TEST after Wix publication.
 - 2026-10-09 — Modern current-time FIDS: the Travel Info Flight Info board now uses a flat contemporary digital-airport display, keeps the scheduled departure/arrival time fixed in the time column, moves actual completion time into status text (`DEPARTED HH:MM` / `LANDED HH:MM`), hides completed flights from the default current board, and exposes them through a rectangular `See earlier flights` control. Delayed/non-completed flights remain on the current board even when scheduled time has passed. The board displays the selected airport local clock, re-renders/refreshes while Flight Info is open, retains Departures/Arrivals only, and adds responsive mobile labels. No LIVE/READY/SYNC decorative state pills are introduced. STATICALLY VERIFIED; REQUIRES LIVE TEST after Wix publication.
@@ -3671,6 +3673,7 @@ function openDetail(x){
   STATE.activeAirportBoardType="departures";
   STATE.airportShowEarlier=false;
   transition(()=>{$("tiHome").style.display="none";$("tiDetail").dataset.active="true";renderDetail(x)});
+  emit("MASTER_SCROLL_TOP",{reason:"travel-info-detail-open"});
   window.scrollTo({top:0,behavior:movement()});
   announce(`${itemTitle(x)} opened`)
 }
@@ -3744,11 +3747,9 @@ function sectionData(title,body,bullets=[],id=""){
   return bodyText||cleanBullets.length?{title:displayTitle,body:bodyText,raw,bullets:cleanBullets,id:id||lower(displayTitle).replace(/[^a-z0-9]+/g,"-")}:null
 }
 function airlineSections(x){
-  const s=obj(x.sections),b=x.baggage||{};const result=[];
+  const s=obj(x.sections),result=[];
   result.push(sectionData("Overview",x.description||x.information||x.body||x.summary,[],"overview"));
   result.push(sectionData(s.checkin?.title||"Check-in",s.checkin?.body||x.checkInDeadline,s.checkin?.bullets,"check-in"));
-  const baggageBody=s.baggage?.body||(b.mode==="narrative"?b.text:"");
-  result.push({title:formatTextValue(s.baggage?.title)||"Baggage",body:formatTextValue(baggageBody),raw:parseStructuredValue(baggageBody),bullets:normalizeBullets(s.baggage?.bullets),id:"baggage",baggage:b});
   result.push(sectionData(s.boarding?.title||"Boarding",s.boarding?.body||x.boarding,s.boarding?.bullets,"boarding"));
   result.push(sectionData(s.cabins?.title||"Cabins & onboard",s.cabins?.body||x.cabins,s.cabins?.bullets,"cabins"));
   result.push(sectionData("Lounges",x.lounges,[],"lounges"));
@@ -3759,7 +3760,7 @@ function airlineSections(x){
   result.push(sectionData("Hubs",x.hubs,[],"hubs"));
   result.push(sectionData("Fleet summary",x.fleetSummary,[],"fleet"));
   result.push(sectionData(s.assistance?.title||"Special assistance",s.assistance?.body||x.specialAssistance,s.assistance?.bullets,"assistance"));
-  return result.filter(sec=>sec&&(sec.id==="baggage"?(text(sec.body)||arr(sec.bullets).length||b.mode==="structured"):true))
+  return result.filter(Boolean)
 }
 function airportSections(x){
   const s=obj(x.sections),result=[];result.push(sectionData("Overview",x.description||x.information||x.body||x.summary,[],"overview"));
@@ -3805,20 +3806,14 @@ function airlineTabDefinitions(sections){
   return[
     {id:"overview",label:"Overview",sectionIds:["overview","tickets","hubs"]},
     {id:"airport",label:"Airport & boarding",sectionIds:["check-in","boarding","lounges"]},
-    {id:"baggage",label:"Baggage",sectionIds:["baggage"]},
     {id:"onboard",label:"On board",sectionIds:["cabins","food","wifi","children"]},
     {id:"aircraft",label:"Aircraft",sectionIds:["fleet","aircraft"],always:true},
     {id:"assistance",label:"Assistance",sectionIds:["assistance"]}
   ].filter(tab=>tab.always||tab.sectionIds.some(id=>available.has(id)))
 }
-function baggageStructuredHtml(bag){
-  const data=obj(bag.data);const cabins=arr(bag.cabins).length?arr(bag.cabins):arr(data.cabins);if(!cabins.length)return"";
-  return `<div class="ti-baggage-cabins">${cabins.map(c=>{const fares=arr(c.fares);return`<div class="ti-baggage-block"><div class="ti-baggage-head"><strong>${esc(c.cabinType||c.cabin||c.name||"Cabin")}</strong><span>${esc(c.travelClass||c.class||"")}</span></div>${fares.length?`<div class="ti-fare-grid">${fares.map(f=>`<div class="ti-fare"><h4>${esc(f.name||"Fare")}</h4>${formatTextValue(f.description)?`<p>${esc(formatTextValue(f.description))}</p>`:""}${[["Under-seat bag",f.underSeatBag],["Cabin bag",f.overheadCarryOn],["Checked bag",f.checkedBag]].filter(([,v])=>text(v)).map(([k,v])=>`<div class="ti-bag-fact"><b>${esc(k)}</b><span>${esc(formatTextValue(v)||text(v))}</span></div>`).join("")}</div>`).join("")}</div>`:""}</div>`}).join("")}</div>`
-}
 function storySectionHtml(sec){
-  const bag=sec.baggage&&sec.baggage.mode==="structured"?baggageStructuredHtml(sec.baggage):"";
   const body=structuredBodyHtml(sec.raw,sec.body);
-  return `<section id="tiSec-${esc(sec.id)}" class="ti-story-section" data-detail-section="${esc(sec.id)}"><div class="ti-story-eyebrow">Travel information</div><h2>${esc(sec.title)}</h2>${body}${sec.bullets?.length?`<ul class="ti-bullet-list">${sec.bullets.map(b=>`<li>${esc(b)}</li>`).join("")}</ul>`:""}${bag}</section>`
+  return `<section id="tiSec-${esc(sec.id)}" class="ti-story-section" data-detail-section="${esc(sec.id)}"><div class="ti-story-eyebrow">Travel information</div><h2>${esc(sec.title)}</h2>${body}${sec.bullets?.length?`<ul class="ti-bullet-list">${sec.bullets.map(b=>`<li>${esc(b)}</li>`).join("")}</ul>`:""}</section>`
 }
 function airlinePanelsHtml(tabs,sections,aircraftSlot,activeTab){
   const byId=new Map(sections.map(section=>[section.id,section]));
@@ -4228,7 +4223,7 @@ function renderDetail(x){
       <div class="ti-story-stack">${isAirline?airlinePanelsHtml(airlineTabs,sections,aircraftSlot,activeAirlineTab):sections.map(storySectionHtml).join("")}</div>
       <aside class="ti-detail-aside">
         ${facts.length?`<section class="ti-aside-card"><h3>At a glance</h3><div class="ti-key-list">${facts.map(([key,value])=>`<div class="ti-key-row"><b>${esc(key)}</b><span>${esc(value)}</span></div>`).join("")}</div>${isAirport?`<div id="tiWeatherInline" class="ti-weather-inline"><strong id="tiWeatherValue"></strong><span id="tiWeatherDescription"></span></div>`:""}</section>`:""}
-        <section class="ti-aside-card"><h3>Continue your journey</h3><p>Use the published guide here, then move into the relevant SKANDI service when you are ready.</p><div class="ti-aside-actions">${internalPath?`<button class="ti-btn ti-btn-light" type="button" data-detail-path="${esc(internalPath)}">Open full guide ${icon("arrow")}</button>`:""}${website?`<a class="ti-btn ti-btn-light" href="${esc(website)}" target="_blank" rel="noopener noreferrer">Official website ${icon("external")}</a>`:""}${contactUrl&&contactUrl!==website?`<a class="ti-btn ti-btn-light" href="${esc(contactUrl)}" target="_blank" rel="noopener noreferrer">Contact information ${icon("external")}</a>`:""}${loyaltyUrl?`<a class="ti-btn ti-btn-light" href="${esc(loyaltyUrl)}" target="_blank" rel="noopener noreferrer">Loyalty program ${icon("external")}</a>`:""}${isAirport?`<button class="ti-btn ti-btn-light" type="button" data-detail-action="baggage">Baggage information ${icon("bag")}</button>`:""}<button class="ti-btn ti-btn-light" type="button" data-detail-action="alexandra">Ask Alexandra ${icon("spark")}</button><button class="ti-btn ti-btn-primary" type="button" data-detail-action="support">Contact support ${icon("message")}</button></div></section>
+        <section class="ti-aside-card"><h3>Continue your journey</h3><p>Use the published guide here, then move into the relevant SKANDI service when you are ready.</p><div class="ti-aside-actions">${internalPath?`<button class="ti-btn ti-btn-light" type="button" data-detail-path="${esc(internalPath)}">Open full guide ${icon("arrow")}</button>`:""}${website?`<a class="ti-btn ti-btn-light" href="${esc(website)}" target="_blank" rel="noopener noreferrer">Official website ${icon("external")}</a>`:""}${contactUrl&&contactUrl!==website?`<a class="ti-btn ti-btn-light" href="${esc(contactUrl)}" target="_blank" rel="noopener noreferrer">Contact information ${icon("external")}</a>`:""}${loyaltyUrl?`<a class="ti-btn ti-btn-light" href="${esc(loyaltyUrl)}" target="_blank" rel="noopener noreferrer">Loyalty program ${icon("external")}</a>`:""}${isAirport||isAirline?`<button class="ti-btn ti-btn-light" type="button" data-detail-action="baggage">Baggage allowance ${icon("bag")}</button>`:""}<button class="ti-btn ti-btn-light" type="button" data-detail-action="alexandra">Ask Alexandra ${icon("spark")}</button><button class="ti-btn ti-btn-primary" type="button" data-detail-action="support">Contact support ${icon("message")}</button></div></section>
       </aside>
     </div>`;
   bindDetailInteractions(x,nav);
@@ -4247,26 +4242,16 @@ function bindDetailInteractions(x,nav){
 
 function openOverlay(mode,title,subtitle,bodyHtml,focusSelector=""){STATE.overlayMode=mode;STATE.overlayReturnFocus=document.activeElement;$("tiSheetKicker").textContent="Travel Info";$("tiSheetTitle").textContent=title;$("tiSheetSubtitle").textContent=subtitle||"";$("tiSheetBody").innerHTML=bodyHtml;hydrateStaticIcons($("tiSheetBody"));$("tiOverlay").dataset.open="true";$("tiOverlay").setAttribute("aria-hidden","false");document.documentElement.classList.add("ti-lock");bindOverlay(mode);requestAnimationFrame(()=>{const target=focusSelector?$("tiSheetBody").querySelector(focusSelector):$("tiSheetBody").querySelector("input,select,textarea,button");target?.focus()})}
 function closeOverlay(){$("tiOverlay").dataset.open="false";$("tiOverlay").setAttribute("aria-hidden","true");document.documentElement.classList.remove("ti-lock");const target=STATE.overlayReturnFocus;if(target&&target.isConnected)target.focus({preventScroll:true});STATE.overlayMode=""}
-function baggagePanelHtml(){
-  const airlines=arr(DATA.airlines);return `<div class="ti-field"><label for="tiBaggageAirline">Airline</label><select id="tiBaggageAirline">${airlines.length?airlines.map(a=>`<option value="${esc(text(a.id||a.iataCode))}">${esc(itemTitle(a))}${itemCode(a)?` · ${esc(itemCode(a))}`:""}</option>`).join(""):`<option value="">No airline guides available</option>`}</select></div><div id="tiBaggageResult" class="ti-message-box" aria-live="polite"></div><div class="ti-sheet-actions"><button id="tiFullBaggageGuide" class="ti-btn ti-btn-light" type="button">Open baggage guide ${icon("arrow")}</button></div>`
-}
-function baggageHumanHtml(a){
-  if(!a)return"No airline baggage information is currently published.";const b=obj(a.baggage);
-  if(b.mode==="narrative"&&text(b.text))return`<strong>${esc(itemTitle(a))}</strong><div style="margin-top:9px;white-space:pre-line">${esc(b.text)}</div>`;
-  if(b.mode==="structured"){const rich=baggageStructuredHtml(b);return rich||`Detailed baggage information is not currently published for ${esc(itemTitle(a))}. Check with the operating airline before travel.`}
-  return`Detailed baggage information is not currently published for ${esc(itemTitle(a))}. Check with the operating airline before travel.`
-}
 function requirementsPanelHtml(){return`<div class="ti-form-grid"><div class="ti-field"><label for="tiPassportCountry">Passport nationality</label><input id="tiPassportCountry" autocomplete="country-name" placeholder="Country"></div><div class="ti-field"><label for="tiFromCountry">From</label><input id="tiFromCountry" autocomplete="off" placeholder="Country"></div><div class="ti-field"><label for="tiTransitCountry">Transit</label><input id="tiTransitCountry" autocomplete="off" placeholder="Optional"></div><div class="ti-field"><label for="tiToCountry">To</label><input id="tiToCountry" autocomplete="off" placeholder="Country"></div></div><div class="ti-sheet-actions"><button id="tiRequirementSubmit" class="ti-btn ti-btn-primary" type="button">Check requirements ${icon("arrow")}</button></div><div id="tiRequirementResult" class="ti-message-box" aria-live="polite">Enter your passport nationality and destination to check the current travel-requirements information. Always verify final entry rules with official authorities.</div><div class="ti-sheet-actions"><button id="tiPassportGuide" class="ti-btn ti-btn-light" type="button">Passport & visa guide ${icon("arrow")}</button></div>`}
 function supportPanelHtml(){return`<div class="ti-form-grid"><div class="ti-field"><label for="tiSupportName">Name</label><input id="tiSupportName" autocomplete="name"></div><div class="ti-field"><label for="tiSupportEmail">Email</label><input id="tiSupportEmail" type="email" autocomplete="email"></div><div class="ti-field"><label for="tiSupportRef">Booking reference</label><input id="tiSupportRef" autocomplete="off"></div><div class="ti-field"><label for="tiSupportCategory">Category</label><select id="tiSupportCategory"><option>General</option><option>Before travel</option><option>Baggage</option><option>Airport</option><option>Airline</option><option>Hotel</option><option>Transfer</option><option>Tour / Activity</option><option>Ticket / Voucher</option><option>Booking</option></select></div><div class="ti-field ti-full"><label for="tiSupportMessage">Message</label><textarea id="tiSupportMessage"></textarea></div></div><div class="ti-sheet-actions"><button id="tiSupportSend" class="ti-btn ti-btn-primary" type="button">Send request ${icon("message")}</button></div><div id="tiSupportResult" class="ti-message-box" hidden aria-live="polite"></div>`}
 function openAction(action){
-  if(action==="baggage")openOverlay("baggage","Baggage allowance","Select an airline to view the guidance currently published by SKANDI.",baggagePanelHtml(),"#tiBaggageAirline");
+  if(action==="baggage")post("TRAVEL_INFO_OPEN_BAGGAGE",{});
   else if(action==="requirements")openOverlay("requirements","Travel requirements","Check passport and entry guidance before departure.",requirementsPanelHtml(),"#tiPassportCountry");
   else if(action==="support")openOverlay("support","Contact Travel Support","Send an itinerary or travel-information question to SKANDI.",supportPanelHtml(),"#tiSupportName");
   else if(action==="airlines"||action==="airports")setLibrary(action,true);
   else if(action==="alexandra")post("TRAVEL_INFO_OPEN_ALEXANDRA",STATE.activeDetail?{context:{title:itemTitle(STATE.activeDetail),library:STATE.activeDetail._library||""}}:{});
 }
 function bindOverlay(mode){
-  if(mode==="baggage"){const select=$("tiBaggageAirline");const render=()=>{const a=arr(DATA.airlines).find(x=>text(x.id||x.iataCode)===select.value)||arr(DATA.airlines)[0];$("tiBaggageResult").innerHTML=baggageHumanHtml(a)};select?.addEventListener("change",render);render();$("tiFullBaggageGuide")?.addEventListener("click",()=>post("TRAVEL_INFO_OPEN_BAGGAGE",{}))}
   if(mode==="requirements"){$("tiRequirementSubmit")?.addEventListener("click",submitRequirements);$("tiPassportGuide")?.addEventListener("click",()=>post("TRAVEL_INFO_OPEN_PASSPORT_VISA",{}))}
   if(mode==="support")$("tiSupportSend")?.addEventListener("click",submitSupport)
 }
