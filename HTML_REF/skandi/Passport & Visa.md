@@ -2,19 +2,37 @@
 
 ## INFO / LOG
 
-- **Status:** READY — B-011.3 design/style convergence
+- **Status:** V12 UX / presentation upgrade prepared — REQUIRES LIVE TEST
 - **System:** SKANDI customer website
 - **Route:** `/travel-info/passport-visa`
 - **Wix page:** `Passport & Visa.zohjw`
 - **HTML component:** `#passportVisaEmbed`
 - **HTML child source:** `SKANDI_PASSPORT_VISA_PAGE`
 - **Page controller:** `/src/pages/Passport & Visa.zohjw.js`
+- **Canonical facade:** `/src/backend/SKANDI_CORE/publicContent.web.js`
+- **Canonical backend core:** `/src/backend/SKANDI_CORE/publicContent.js`
 - **Backend/data owner:** `backend/SKANDI_CORE/publicContent.web → publicContent`
+- **Supabase resources:** `travel_requirements`, `travel_info_articles`, `inventory_public_entities_v` through the existing canonical public-content core
+- **External provider boundary:** existing approved travel-requirements adapter used by `searchPublicTravelRequirementsCore`; no provider client is added in this page
+- **Authentication/authorization:** public read surface; backend web methods remain `Permissions.Anyone`
 - **Global header/footer:** `masterPage.js`
-- **Version:** `B-011.3`
-- **Last verified:** `2026-09-25`
+- **Cross-layer messages:** `PASSPORT_VISA_READY`, `PASSPORT_VISA_REFRESH`, `PASSPORT_VISA_LOADING`, `PASSPORT_VISA_DATA`, `PASSPORT_VISA_SEARCH`, `PASSPORT_VISA_SEARCHING`, `PASSPORT_VISA_SEARCH_RESULT`, `PASSPORT_VISA_SEARCH_ERROR`, `PASSPORT_VISA_ERROR`, `PASSPORT_VISA_NAVIGATE`, `PASSPORT_VISA_HOST_READY`
+- **Runtime source version:** `V12-PASSPORT-VISA-2026.10.11`
+- **Last source verification:** `2026-10-11`, repository `skanditravels/SKANDI-TRAVELS`, branch `main`, HEAD `5b88f891be2b2565e16b94b87545f8e763d98418`
 
-### B-011.3 changes
+### 2026-10-11 — V12 page upgrade
+
+- Upgraded the customer experience without forcing the page into the exact section layout used by other Travel Info pages. The page keeps its own Passport & Visa information architecture while using the established V12 colors, typography, surfaces, spacing, borders and interaction language.
+- Rebuilt the hero as a dedicated travel-document experience with a three-step pre-travel explanation rather than copying another page's hero composition.
+- Rebuilt the requirements checker with clearer required/optional fields, keyboard support, accessible live status, date validation, reset behavior and explicit provider/guidance distinction.
+- Preserved the exact existing Wix/controller/backend message contract and all canonical V12 backend ownership. No new table, provider, facade, client or duplicate data service is introduced.
+- Improved result rendering so connected-provider fields, SKANDI fallback guidance, notices and final-authority guidance are visibly separated.
+- Upgraded published destination guidance with a local filter and progressive reveal instead of rendering a large unfiltered wall of destination cards.
+- Added the previously documented Travel Info return control to the actual executable markup and kept navigation on the existing `PASSPORT_VISA_NAVIGATE` contract.
+- Preserved the page's safety language: a missing or fallback result is not represented as a live Timatic/IATA boarding decision, and final entry/transit decisions remain with official authorities and the operating carrier.
+- No `LIVE`, `READY`, `SYNC` or similar decorative status pills were added.
+
+### B-011.3 changes — preserved history
 
 - Kept this as a **separate Travel Info page**. No merged topic-switching page is used.
 - Applied the shared B-011 customer palette used by Home and global chrome.
@@ -30,12 +48,18 @@
 ### Live data chain
 
 `#passportVisaEmbed`
-→ `Passport & Visa.zohjw.js`
+→ `/src/pages/Passport & Visa.zohjw.js`
 → `getPublicPassportVisaPayload` / `searchPublicTravelRequirements`
-→ `backend/SKANDI_CORE/publicContent`
-→ Travel Info / Inventory public projections / approved travel-requirements provider adapter.
+→ `/src/backend/SKANDI_CORE/publicContent.web.js`
+→ `/src/backend/SKANDI_CORE/publicContent.js`
+→ Supabase Travel Info / Inventory public projections and the existing approved travel-requirements provider adapter.
 
-No backend change is included in B-011.3.
+### Verification state
+
+- **STATICALLY VERIFIED:** current `main` page controller still uses `#passportVisaEmbed`, `SKANDI_PASSPORT_VISA_PAGE`, `SKANDI_WIX_PARENT`, `getPublicPassportVisaPayload`, `searchPublicTravelRequirements`, `PASSPORT_VISA_*` message types and the canonical `backend/SKANDI_CORE/publicContent.web` import.
+- **STATICALLY VERIFIED:** current facade exports both frontend-callable methods used by the page controller with public-read permissions.
+- **STATICALLY VERIFIED:** this HTML's executable JavaScript parses successfully and its dynamic content is escaped before rendering.
+- **REQUIRES LIVE TEST:** Wix embed replacement, published backend proxy availability, external travel-requirements provider state, actual Supabase content returned, responsive layout inside the live Wix page, and end-to-end navigation.
 
 ---
 
@@ -43,28 +67,35 @@ No backend change is included in B-011.3.
 
 ```html
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><title>SKANDI • Passport & Visa · B-011.3</title><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"><style>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>SKANDI • Passport & Visa</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
   --sk-blue:#022e64;
-  --sk-blue-soft:#285ca8;
-  --sk-blue2:#0b3a7a;
-  --sk-light:#d7e6ff;
+  --sk-blue-2:#0b3a7a;
+  --sk-blue-3:#285ca8;
+  --sk-cyan:#5fc7cf;
+  --sk-cyan-soft:#dff5f7;
   --sk-pale:#f6faff;
-  --sk-bg:#f7faff;
+  --sk-surface:#fbfdff;
   --sk-border:#dbe3ef;
-  --sk-border-soft:#eef2f7;
-  --sk-text:#111;
-  --sk-body:#555;
-  --sk-muted:#667085;
-  --sk-cyan:#5FC7CF;
+  --sk-border-soft:#edf2f7;
+  --sk-text:#111827;
+  --sk-body:#526070;
+  --sk-muted:#7a8695;
   --sk-ok:#087443;
+  --sk-warning:#9a6412;
+  --sk-warning-bg:#fff8e8;
+  --sk-warning-border:#f1d38f;
   --sk-danger:#8a1f1f;
-  --sk-warning-bg:#fffbeb;
-  --sk-warning-border:#fde68a;
-  --sk-warning-text:#92400e;
-  --sk-shadow:0 8px 26px rgba(0,0,0,.08);
-  --sk-shadow-strong:0 14px 34px rgba(0,0,0,.12);
+  --sk-max:1180px;
+  --sk-shadow:0 18px 46px rgba(2,46,100,.09);
+  --sk-shadow-soft:0 8px 24px rgba(2,46,100,.06);
 }
 html,body{
   width:100%;
@@ -73,705 +104,822 @@ html,body{
   background:#fff;
   color:var(--sk-text);
   overflow-x:hidden;
-}
-
-/* HERO SECTION */
-#hero-wrap{
-  transition: all 0.3s ease;    
-  width:100%;
-  min-height:420px;
-  background: linear-gradient(rgba(2, 46, 100, 0.6), rgba(2, 46, 100, 0.8)), url("https://images.unsplash.com/photo-1544253303-34e8fcfd1976?auto=format&fit=crop&w=1920&q=80") center/cover;
-  padding:76px 32px 54px;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  text-align:center;
-}
-.hero-kicker{
-  font-size:12px;
-  font-weight:800;
-  color:var(--sk-cyan);
-  text-transform:uppercase;
-  letter-spacing:.14em;
-  margin-bottom:10px;
-}
-#hero-title{
-  font-size:clamp(36px,4vw,56px);
-  line-height:1.1;
-  letter-spacing:-.04em;
-  font-weight:700;
-  color:#fff;
-  margin-bottom:16px;
-}
-#hero-sub{
-  font-size:16px;
-  color:rgba(255,255,255,0.9);
-  line-height:1.65;
-  max-width:720px;
-}
-
-/* CONTENT LAYOUT */
-.content-section{
-  padding:58px 32px;
-  max-width:1180px;
-  margin:0 auto;
-}
-.section-title{
-  font-size:30px;
-  font-weight:700;
-  color:var(--sk-blue);
-  margin-bottom:12px;
-  letter-spacing:-.04em;
-  text-align:center;
-}
-.section-subtitle{
-  color:#555;
-  font-size:15px;
-  line-height:1.6;
-  margin-bottom:32px;
-  max-width:780px;
-  text-align:center;
-  margin-inline:auto;
-}
-
-/* INFO CARDS */
-.info-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 24px;
-  margin-bottom: 40px;
-}
-.info-card {
-  background: #fff;
-  border: 1px solid var(--sk-border);
-  border-radius: 16px;
-  padding: 32px;
-  box-shadow: var(--sk-shadow);
-  display: flex;
-  flex-direction: column;
-}
-.info-header {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  margin-bottom: 20px;
-  padding-bottom: 20px;
-  border-bottom: 1px solid var(--sk-border-soft);
-}
-.info-icon {
-  width: 56px;
-  height: 56px;
-  background: var(--sk-pale);
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 28px;
-  color: var(--sk-blue);
-}
-.info-header h3 {
-  font-size: 20px;
-  color: var(--sk-blue);
-  line-height: 1.3;
-}
-.info-card p {
-  color: var(--sk-body);
-  font-size: 14px;
-  line-height: 1.6;
-  flex-grow: 1;
-}
-
-/* WARNING / ALERT BOX */
-.alert-box {
-  background: var(--sk-warning-bg);
-  border: 1px solid var(--sk-warning-border);
-  border-radius: 12px;
-  padding: 24px;
-  display: flex;
-  gap: 20px;
-  margin-bottom: 40px;
-  box-shadow: var(--sk-shadow);
-}
-.alert-icon {
-  font-size: 32px;
-}
-.alert-content h4 {
-  color: var(--sk-warning-text);
-  font-size: 18px;
-  margin-bottom: 8px;
-}
-.alert-content p {
-  color: #78350f;
-  font-size: 14px;
-  line-height: 1.6;
-}
-
-/* VISA / ESTA SECTION */
-.visa-banner {
-  background: var(--sk-bg);
-  border: 1px solid var(--sk-border);
-  border-radius: 16px;
-  padding: 40px;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 32px;
-  align-items: center;
-}
-.visa-content h3 {
-  font-size: 24px;
-  color: var(--sk-blue);
-  margin-bottom: 12px;
-}
-.visa-content p {
-  font-size: 14px;
-  color: var(--sk-body);
-  line-height: 1.6;
-  margin-bottom: 20px;
-}
-.btn-primary {
-  display: inline-block;
-  background: var(--sk-blue);
-  color: #fff;
-  padding: 12px 24px;
-  border-radius: 999px;
-  text-decoration: none;
-  font-size: 13px;
-  font-weight: 800;
-  transition: background 0.2s;
-}
-.btn-primary:hover {
-  background: var(--sk-blue2);
-}
-.visa-links {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-.visa-link-card {
-  background: #fff;
-  border: 1px solid var(--sk-border);
-  padding: 16px 20px;
-  border-radius: 12px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  color: var(--sk-blue);
-  text-decoration: none;
-  font-weight: 600;
-  font-size: 14px;
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-.visa-link-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--sk-shadow);
-  border-color: var(--sk-cyan);
-}
-.visa-link-card span {
-  color: var(--sk-muted);
-  font-weight: 400;
-  font-size: 12px;
-  display: block;
-  margin-top: 4px;
-}
-
-/* FAQ / ACCORDION */
-.faq-grid {
-  max-width: 800px;
-  margin: 0 auto;
-}
-details {
-  background: #fff;
-  border: 1px solid var(--sk-border);
-  border-radius: 12px;
-  margin-bottom: 12px;
-  overflow: hidden;
-}
-summary {
-  padding: 20px;
-  font-weight: 700;
-  color: var(--sk-blue);
-  cursor: pointer;
-  list-style: none;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-summary::-webkit-details-marker {
-  display: none;
-}
-summary::after {
-  content: "+";
-  font-size: 20px;
-  color: var(--sk-cyan);
-}
-details[open] summary::after {
-  content: "−";
-}
-.faq-content {
-  padding: 0 20px 20px;
-  color: var(--sk-body);
-  font-size: 14px;
-  line-height: 1.6;
-}
-
-/* RESPONSIVE */
-@media(max-width:860px){
-  #hero-wrap { padding: 54px 14px 38px; min-height: 320px; }
-  #hero-title { font-size: 32px; }
-  .content-section { padding: 42px 14px; }
-  .visa-banner { grid-template-columns: 1fr; padding: 24px; }
-  .alert-box { flex-direction: column; gap: 12px; }
-}
-
-/* LIVE ALTEA-SHARED TRAVEL REQUIREMENTS SEARCH */
-.requirements-search{background:#fff;border:1px solid var(--sk-border);border-radius:18px;padding:30px;box-shadow:var(--sk-shadow);margin-bottom:34px}.search-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}.field label{display:block;font-size:11px;font-weight:800;color:var(--sk-muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:7px}.field input,.field select{width:100%;min-height:48px;border:1px solid var(--sk-border);border-radius:12px;padding:0 14px;background:#fff;color:var(--sk-blue);font:600 14px Montserrat;outline:none}.field input:focus,.field select:focus{border-color:var(--sk-cyan);box-shadow:0 0 0 4px rgba(95,199,207,.12)}.search-actions{display:flex;justify-content:flex-end;margin-top:16px}.search-actions .btn-primary{border:0;cursor:pointer;min-width:190px}.lookup-status{margin-top:18px;background:var(--sk-pale);border-left:4px solid var(--sk-cyan);border-radius:12px;padding:16px;color:var(--sk-body);font-size:13px;line-height:1.6}.lookup-status.warning{background:var(--sk-warning-bg);border-left-color:#d59a24;color:var(--sk-warning-text)}
-.lookup-result{margin-top:18px;display:grid;gap:12px}.result-card{border:1px solid var(--sk-border);border-radius:14px;padding:20px;background:#fff}.result-card h4{font-size:17px;color:var(--sk-blue);margin-bottom:8px}.result-card p{font-size:13px;color:var(--sk-body);line-height:1.65}.result-meta{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:var(--sk-cyan);margin-bottom:7px}.result-list{list-style:none;margin-top:10px}.result-list li{font-size:13px;color:var(--sk-body);line-height:1.55;margin-top:8px;padding-left:16px;position:relative}.result-list li:before{content:"";position:absolute;left:0;top:.65em;width:7px;height:2px;background:var(--sk-cyan)}.destination-results{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;margin-top:20px}.hidden{display:none!important}
-@media(max-width:860px){.search-grid{grid-template-columns:1fr}.search-actions .btn-primary{width:100%}}
-</style>
-<style id="skandi-b011-separate-page-style">
-:root{
-  --sk-blue:#022e64;
-  --sk-blue-soft:#285ca8;
-  --sk-blue2:#0b3a7a;
-  --sk-light:#d7e6ff;
-  --sk-pale:#f6faff;
-  --sk-bg:#f7faff;
-  --sk-border:#dbe3ef;
-  --sk-border-soft:#eef2f7;
-  --sk-text:#111;
-  --sk-body:#555;
-  --sk-muted:#667085;
-  --sk-cyan:#5FC7CF;
-  --sk-ok:#087443;
-  --sk-danger:#8a1f1f;
-  --sk-ivory:#fbfaf6;
-  --sk-porcelain:#f5f1ea;
-  --sk-champagne:#d1bc98;
-  --sk-ink:#03111f;
-  --sk-ink-soft:#061a30;
-  --sk-shadow:0 8px 26px rgba(0,0,0,.08);
-  --sk-shadow-strong:0 14px 34px rgba(0,0,0,.12);
-  --sk-max:1180px;
-}
-
-html,body{
-  background:#fff;
-  color:var(--sk-text);
   -webkit-font-smoothing:antialiased;
   text-rendering:optimizeLegibility;
 }
+button,input{font:inherit}
+button{touch-action:manipulation}
+button:focus-visible,input:focus-visible,summary:focus-visible{
+  outline:3px solid rgba(95,199,207,.38);
+  outline-offset:3px;
+}
 
-.travel-info-rail{
+.travel-rail{
   position:sticky;
   top:0;
-  z-index:30;
-  border-bottom:1px solid var(--sk-border);
+  z-index:50;
   background:rgba(255,255,255,.95);
-  backdrop-filter:blur(18px);
-  -webkit-backdrop-filter:blur(18px);
+  border-bottom:1px solid var(--sk-border-soft);
+  backdrop-filter:blur(16px);
+  -webkit-backdrop-filter:blur(16px);
 }
-.travel-info-rail-inner{
+.travel-rail-inner{
   width:min(var(--sk-max),calc(100% - 48px));
-  min-height:62px;
+  min-height:58px;
   margin:0 auto;
   display:flex;
   align-items:center;
   justify-content:space-between;
-  gap:18px;
+  gap:16px;
 }
-.travel-info-back{
-  min-height:38px;
+.travel-back{
+  min-height:36px;
+  border:1px solid var(--sk-border);
+  border-radius:10px;
+  background:#fff;
+  color:var(--sk-blue);
   padding:0 13px;
   display:inline-flex;
   align-items:center;
   gap:8px;
-  border:1px solid var(--sk-border);
-  border-radius:999px;
-  background:#fff;
-  color:var(--sk-blue);
-  text-decoration:none;
-  font-size:9px;
-  line-height:1;
+  font-size:11px;
   font-weight:800;
   cursor:pointer;
 }
-.travel-info-back:hover{
-  border-color:rgba(95,199,207,.55);
-  background:var(--sk-pale);
-}
-.travel-info-context{
+.travel-back:hover{background:var(--sk-pale);border-color:rgba(95,199,207,.6)}
+.travel-context{
   color:var(--sk-muted);
-  font-size:8px;
+  font-size:10px;
   font-weight:800;
-  letter-spacing:.12em;
+  letter-spacing:.11em;
   text-transform:uppercase;
 }
 
-/* B-011 Travel Info hero */
-#hero-wrap{
+.hero{
   position:relative;
   isolation:isolate;
-  min-height:390px!important;
-  padding:72px 24px 46px!important;
-  align-items:center!important;
-  justify-content:flex-end!important;
-  text-align:left!important;
+  min-height:480px;
   overflow:hidden;
-  box-shadow:inset 0 -1px rgba(255,255,255,.08);
+  background:
+    linear-gradient(92deg,rgba(1,27,58,.98) 0%,rgba(2,46,100,.93) 49%,rgba(2,46,100,.65) 100%),
+    url("https://images.unsplash.com/photo-1544253303-34e8fcfd1976?auto=format&fit=crop&w=1920&q=85") center/cover;
 }
-#hero-wrap::after{
+.hero::after{
   content:"";
   position:absolute;
   inset:0;
   z-index:-1;
-  pointer-events:none;
   background:
-    radial-gradient(circle at 84% 9%,rgba(95,199,207,.13),transparent 26%),
-    linear-gradient(90deg,rgba(2,46,100,.27),transparent 58%);
+    radial-gradient(circle at 82% 14%,rgba(95,199,207,.22),transparent 24%),
+    linear-gradient(180deg,transparent 65%,rgba(0,15,33,.24));
+  pointer-events:none;
 }
-#hero-wrap>.hero-kicker,
-#hero-wrap>#hero-title,
-#hero-wrap>#hero-sub{
-  width:min(var(--sk-max),calc(100% - 0px));
-  margin-left:auto;
-  margin-right:auto;
-  text-align:left;
+.hero-inner{
+  width:min(var(--sk-max),calc(100% - 48px));
+  min-height:480px;
+  margin:0 auto;
+  display:grid;
+  grid-template-columns:minmax(0,1.22fr) minmax(330px,.78fr);
+  gap:58px;
+  align-items:center;
+  padding:58px 0 52px;
 }
-.hero-kicker{
-  margin-bottom:9px!important;
-  color:var(--sk-cyan)!important;
-  font-size:9px!important;
-  font-weight:850!important;
-  letter-spacing:.17em!important;
+.hero-copy{max-width:720px}
+.eyebrow{
+  color:var(--sk-cyan);
+  font-size:11px;
+  font-weight:850;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+  margin-bottom:14px;
 }
-#hero-title{
-  margin-bottom:12px!important;
-  color:#fff!important;
-  font-size:clamp(38px,5vw,58px)!important;
-  line-height:.99!important;
-  letter-spacing:-.05em!important;
-  font-weight:700!important;
+.hero h1{
+  color:#fff;
+  font-size:clamp(42px,5.6vw,70px);
+  line-height:.96;
+  letter-spacing:-.055em;
+  font-weight:700;
+  max-width:760px;
 }
-#hero-sub{
-  max-width:var(--sk-max)!important;
-  padding-right:min(360px,25vw);
-  color:rgba(255,255,255,.86)!important;
-  font-size:13px!important;
-  line-height:1.72!important;
+.hero-lede{
+  margin-top:20px;
+  max-width:690px;
+  color:rgba(255,255,255,.84);
+  font-size:15px;
+  line-height:1.75;
 }
+.hero-note{
+  margin-top:24px;
+  display:flex;
+  align-items:flex-start;
+  gap:11px;
+  max-width:650px;
+  color:rgba(255,255,255,.72);
+  font-size:11px;
+  line-height:1.6;
+}
+.hero-note-mark{
+  width:8px;
+  height:8px;
+  margin-top:5px;
+  flex:0 0 8px;
+  border-radius:50%;
+  background:var(--sk-cyan);
+  box-shadow:0 0 0 5px rgba(95,199,207,.12);
+}
+.hero-panel{
+  border:1px solid rgba(255,255,255,.17);
+  border-radius:22px;
+  background:rgba(4,26,53,.7);
+  box-shadow:0 20px 60px rgba(0,0,0,.2);
+  backdrop-filter:blur(18px);
+  -webkit-backdrop-filter:blur(18px);
+  padding:25px;
+}
+.hero-panel h2{
+  color:#fff;
+  font-size:18px;
+  letter-spacing:-.025em;
+  margin-bottom:6px;
+}
+.hero-panel>p{
+  color:rgba(255,255,255,.7);
+  font-size:11px;
+  line-height:1.6;
+  margin-bottom:20px;
+}
+.hero-step{
+  display:grid;
+  grid-template-columns:34px 1fr;
+  gap:12px;
+  padding:14px 0;
+  border-top:1px solid rgba(255,255,255,.11);
+}
+.hero-step:first-of-type{border-top:0;padding-top:0}
+.hero-step:last-child{padding-bottom:0}
+.hero-step-no{
+  width:34px;
+  height:34px;
+  border-radius:10px;
+  display:grid;
+  place-items:center;
+  background:rgba(95,199,207,.14);
+  border:1px solid rgba(95,199,207,.25);
+  color:#d9fbff;
+  font-size:10px;
+  font-weight:900;
+}
+.hero-step strong{display:block;color:#fff;font-size:11px;margin-bottom:3px}
+.hero-step span{display:block;color:rgba(255,255,255,.66);font-size:10px;line-height:1.5}
 
-/* B-011 content rhythm */
-.content-section{
-  max-width:var(--sk-max)!important;
-  padding:54px 24px!important;
-  margin:0 auto!important;
+.section{
+  width:min(var(--sk-max),calc(100% - 48px));
+  margin:0 auto;
+  padding:64px 0;
 }
-.content-section[style*="background"]{
-  max-width:none!important;
-  padding-left:max(24px,calc((100vw - var(--sk-max))/2 + 24px))!important;
-  padding-right:max(24px,calc((100vw - var(--sk-max))/2 + 24px))!important;
+.section.compact{padding-top:0}
+.section-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-end;
+  gap:24px;
+  margin-bottom:28px;
+}
+.section-copy{max-width:760px}
+.section-kicker{
+  color:var(--sk-blue-3);
+  font-size:10px;
+  font-weight:850;
+  letter-spacing:.13em;
+  text-transform:uppercase;
+  margin-bottom:9px;
 }
 .section-title{
-  margin:0 0 8px!important;
-  color:var(--sk-blue)!important;
-  font-size:clamp(26px,3.3vw,36px)!important;
-  line-height:1.08!important;
-  letter-spacing:-.04em!important;
-  text-align:left!important;
+  color:var(--sk-blue);
+  font-size:clamp(27px,3.6vw,40px);
+  line-height:1.06;
+  letter-spacing:-.045em;
+  font-weight:700;
 }
 .section-subtitle{
-  max-width:780px!important;
-  margin:0 0 26px!important;
-  color:var(--sk-body)!important;
-  font-size:10.5px!important;
-  line-height:1.68!important;
-  text-align:left!important;
+  margin-top:10px;
+  color:var(--sk-body);
+  font-size:12px;
+  line-height:1.75;
+  max-width:780px;
 }
 
-/* Cards */
-.info-grid,.bag-grid,.card-grid,.rules-grid,.guide-grid{
-  gap:14px!important;
+.checker-wrap{
+  margin-top:-52px;
+  position:relative;
+  z-index:10;
 }
-.info-card,.bag-card,.ins-card,.rule-card,.result-card,.live-product{
-  border:1px solid var(--sk-border-soft)!important;
-  border-radius:17px!important;
-  background:#fff!important;
-  box-shadow:0 5px 18px rgba(2,46,100,.05)!important;
+.checker{
+  border:1px solid var(--sk-border);
+  border-radius:24px;
+  background:#fff;
+  box-shadow:var(--sk-shadow);
+  overflow:hidden;
 }
-.info-card,.bag-card,.ins-card{
-  padding:24px!important;
+.checker-top{
+  padding:25px 26px 21px;
+  border-bottom:1px solid var(--sk-border-soft);
+  background:linear-gradient(180deg,#fff,var(--sk-surface));
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:18px;
 }
-.rule-card,.result-card,.live-product{
-  padding:18px!important;
+.checker-top h2{
+  color:var(--sk-blue);
+  font-size:20px;
+  letter-spacing:-.03em;
+  margin-bottom:6px;
 }
-.info-card:hover,.bag-card:hover,.ins-card:hover,.rule-card:hover,.live-product:hover{
-  border-color:rgba(95,199,207,.46)!important;
-  box-shadow:0 13px 28px rgba(2,46,100,.09)!important;
+.checker-top p{color:var(--sk-body);font-size:11px;line-height:1.6;max-width:760px}
+.checker-body{padding:26px}
+.form-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:17px 18px;
 }
-.info-header,.bag-header{
-  gap:13px!important;
-  margin-bottom:16px!important;
-  padding-bottom:15px!important;
+.field label{
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:7px;
+  color:var(--sk-blue);
+  font-size:10px;
+  font-weight:800;
+  letter-spacing:.045em;
+  text-transform:uppercase;
 }
-.info-icon,.bag-icon,.ins-icon{
-  width:46px!important;
-  height:46px!important;
-  flex:0 0 46px!important;
-  border:1px solid rgba(95,199,207,.26)!important;
-  border-radius:12px!important;
-  background:var(--sk-pale)!important;
-  color:var(--sk-blue)!important;
-  font-size:21px!important;
+.field label span{
+  color:var(--sk-muted);
+  font-size:9px;
+  font-weight:650;
+  letter-spacing:0;
+  text-transform:none;
 }
-.info-header h3,.bag-header h3,.ins-card h3{
-  color:var(--sk-blue)!important;
-  font-size:16px!important;
-  line-height:1.3!important;
-  letter-spacing:-.02em!important;
+.field input{
+  width:100%;
+  min-height:48px;
+  border:1px solid var(--sk-border);
+  border-radius:12px;
+  background:#fff;
+  color:var(--sk-text);
+  padding:0 14px;
+  font-size:12px;
+  font-weight:600;
+  outline:none;
+  transition:border-color .16s,box-shadow .16s,background .16s;
 }
-.info-card p,.bag-card p,.ins-card p,.rule-card p{
-  color:var(--sk-body)!important;
-  font-size:10px!important;
-  line-height:1.7!important;
+.field input:hover{border-color:#c8d4e3}
+.field input:focus{border-color:var(--sk-cyan);box-shadow:0 0 0 4px rgba(95,199,207,.12);background:#fff}
+.field input::placeholder{color:#9ca7b5;font-weight:500}
+.form-actions{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:14px;
+  margin-top:20px;
+  padding-top:20px;
+  border-top:1px solid var(--sk-border-soft);
 }
+.form-hint{color:var(--sk-muted);font-size:10px;line-height:1.55;max-width:590px}
+.action-buttons{display:flex;gap:10px;flex:0 0 auto}
+.btn{
+  min-height:44px;
+  border-radius:11px;
+  padding:0 18px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  cursor:pointer;
+  font-size:10px;
+  font-weight:850;
+  letter-spacing:.015em;
+  transition:transform .16s,box-shadow .16s,background .16s,border-color .16s;
+}
+.btn:hover{transform:translateY(-1px)}
+.btn-primary{border:0;background:linear-gradient(135deg,var(--sk-blue),var(--sk-blue-2));color:#fff;box-shadow:0 8px 20px rgba(2,46,100,.16)}
+.btn-primary:hover{box-shadow:0 11px 25px rgba(2,46,100,.22)}
+.btn-primary:disabled{opacity:.58;cursor:wait;transform:none;box-shadow:none}
+.btn-secondary{border:1px solid var(--sk-border);background:#fff;color:var(--sk-blue)}
+.btn-secondary:hover{background:var(--sk-pale);border-color:#c9d5e3}
+.lookup-status{
+  margin-top:20px;
+  border:1px solid #dceaf2;
+  border-left:4px solid var(--sk-cyan);
+  border-radius:12px;
+  background:var(--sk-pale);
+  padding:14px 15px;
+  color:var(--sk-body);
+  font-size:11px;
+  line-height:1.6;
+}
+.lookup-status.warning{background:var(--sk-warning-bg);border-color:var(--sk-warning-border);border-left-color:#d39a2d;color:#80551a}
+.lookup-status.success{background:#effaf5;border-color:#c9eadb;border-left-color:var(--sk-ok);color:#155f45}
+.lookup-result{margin-top:15px;display:grid;gap:12px}
+.result-summary{
+  border:1px solid var(--sk-border);
+  border-radius:15px;
+  background:linear-gradient(180deg,#fff,var(--sk-surface));
+  padding:18px;
+}
+.result-summary-row{display:flex;justify-content:space-between;gap:18px;align-items:flex-start}
+.result-summary h3{font-size:15px;color:var(--sk-blue);letter-spacing:-.02em}
+.result-summary p{margin-top:6px;color:var(--sk-body);font-size:10.5px;line-height:1.65;max-width:780px}
+.result-source{text-align:right;color:var(--sk-muted);font-size:9px;line-height:1.55;max-width:240px}
+.result-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.result-card{
+  border:1px solid var(--sk-border-soft);
+  border-radius:15px;
+  background:#fff;
+  padding:18px;
+  box-shadow:var(--sk-shadow-soft);
+}
+.result-meta{color:var(--sk-blue-3);font-size:9px;font-weight:850;letter-spacing:.11em;text-transform:uppercase;margin-bottom:7px}
+.result-card h4{color:var(--sk-blue);font-size:14px;line-height:1.35;margin-bottom:7px;letter-spacing:-.02em}
+.result-card p{color:var(--sk-body);font-size:10.5px;line-height:1.7;white-space:pre-line}
+.result-list{list-style:none;margin-top:8px;display:grid;gap:7px}
+.result-list li{position:relative;padding-left:15px;color:var(--sk-body);font-size:10.5px;line-height:1.6}
+.result-list li::before{content:"";position:absolute;left:0;top:.64em;width:7px;height:2px;background:var(--sk-cyan)}
+.authority-card{border-color:#cfe8ec;background:linear-gradient(135deg,#f4fcfd,#fff)}
 
-/* Search / live data surfaces */
-.airline-search-shell,.requirements-search,.ins-search{
-  padding:22px!important;
-  border:1px solid var(--sk-border)!important;
-  border-radius:17px!important;
-  background:#fff!important;
-  box-shadow:var(--sk-shadow)!important;
+.guidance-band{background:linear-gradient(180deg,var(--sk-surface),#fff);border-top:1px solid var(--sk-border-soft);border-bottom:1px solid var(--sk-border-soft)}
+.guidance-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px}
+.guidance-card{
+  min-height:220px;
+  border:1px solid var(--sk-border-soft);
+  border-radius:18px;
+  background:#fff;
+  padding:22px;
+  box-shadow:var(--sk-shadow-soft);
 }
-.search-field input,.field input,.field select,.ins-search input{
-  min-height:44px!important;
-  border:1px solid var(--sk-border)!important;
-  border-radius:10px!important;
-  background:#fff!important;
-  color:var(--sk-blue)!important;
-  font-size:10px!important;
+.icon-box{
+  width:44px;
+  height:44px;
+  border:1px solid rgba(95,199,207,.26);
+  border-radius:12px;
+  background:var(--sk-pale);
+  display:grid;
+  place-items:center;
+  color:var(--sk-blue);
+  margin-bottom:20px;
 }
-.search-button,.btn-primary,.btn-secondary{
-  min-height:42px!important;
-  padding:0 16px!important;
-  border-radius:10px!important;
-  font-size:9px!important;
-  font-weight:850!important;
-  letter-spacing:.02em!important;
+.icon-box svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.guidance-card h3{color:var(--sk-blue);font-size:16px;letter-spacing:-.025em;margin-bottom:8px}
+.guidance-card p{color:var(--sk-body);font-size:11px;line-height:1.72}
+.warning-box{
+  margin-top:16px;
+  display:grid;
+  grid-template-columns:42px 1fr;
+  gap:14px;
+  border:1px solid var(--sk-warning-border);
+  border-radius:16px;
+  background:var(--sk-warning-bg);
+  padding:18px;
 }
-.search-button,.btn-primary{
-  border:0!important;
-  background:linear-gradient(135deg,var(--sk-blue),var(--sk-blue2))!important;
-  color:#fff!important;
+.warning-icon{
+  width:42px;height:42px;border-radius:11px;background:#fff3d2;color:var(--sk-warning);display:grid;place-items:center;font-size:18px;font-weight:900
 }
-.btn-secondary{
-  border:1px solid var(--sk-border)!important;
-  background:#fff!important;
-  color:var(--sk-blue)!important;
-}
-.live-card,.lookup-result,.live-results{
-  border-radius:15px!important;
-  box-shadow:none!important;
-}
-.live-notice,.lookup-status,.live-status{
-  border-radius:10px!important;
-  font-size:9px!important;
-  line-height:1.6!important;
-}
+.warning-box h4{color:#7e5317;font-size:13px;margin-bottom:5px}
+.warning-box p{color:#805f2e;font-size:10.5px;line-height:1.65}
 
-/* Alerts and CTA */
-.alert-box{
-  padding:18px!important;
-  gap:13px!important;
-  border-radius:13px!important;
-  box-shadow:none!important;
-}
-.alert-icon{font-size:23px!important}
-.alert-content h4{
-  font-size:12px!important;
-  line-height:1.35!important;
-}
-.alert-content p{
-  font-size:9.5px!important;
-  line-height:1.65!important;
-}
-.action-banner,.visa-banner{
-  padding:28px!important;
-  border-radius:18px!important;
+.authorization{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(330px,.82fr);
+  gap:22px;
+  border-radius:22px;
+  padding:30px;
   background:
-    radial-gradient(circle at 94% 0%,rgba(95,199,207,.12),transparent 28%),
-    linear-gradient(135deg,var(--sk-blue),var(--sk-ink-soft))!important;
-  box-shadow:0 12px 30px rgba(2,46,100,.14)!important;
+    radial-gradient(circle at 94% 0%,rgba(95,199,207,.18),transparent 30%),
+    linear-gradient(135deg,var(--sk-blue),#061a30);
+  box-shadow:0 18px 42px rgba(2,46,100,.16);
 }
-.action-banner h3,.visa-banner h3{
-  font-size:21px!important;
-  letter-spacing:-.025em!important;
-}
-.action-banner p,.visa-banner p{
-  font-size:10px!important;
-  line-height:1.65!important;
-}
+.authorization h2{color:#fff;font-size:26px;line-height:1.12;letter-spacing:-.04em;margin-bottom:11px}
+.authorization p{color:rgba(255,255,255,.74);font-size:11px;line-height:1.7;max-width:650px}
+.authorization .btn{margin-top:20px;background:#fff;color:var(--sk-blue);border:0;box-shadow:none}
+.auth-list{display:grid;gap:10px}
+.auth-row{display:grid;grid-template-columns:32px 1fr;gap:11px;align-items:flex-start;border:1px solid rgba(255,255,255,.12);border-radius:13px;background:rgba(255,255,255,.065);padding:13px}
+.auth-check{width:32px;height:32px;border-radius:9px;background:rgba(95,199,207,.15);display:grid;place-items:center;color:#d8fbff;font-weight:900;font-size:12px}
+.auth-row strong{display:block;color:#fff;font-size:10.5px;margin-bottom:3px}.auth-row span{display:block;color:rgba(255,255,255,.64);font-size:9.5px;line-height:1.5}
 
-/* FAQ */
-.faq-grid{
-  max-width:900px!important;
-  margin:0!important;
+.destination-tools{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
 }
-details{
-  margin-bottom:8px!important;
-  border:1px solid var(--sk-border)!important;
-  border-radius:12px!important;
-  box-shadow:none!important;
+.destination-search{
+  min-height:42px;
+  width:min(320px,100%);
+  border:1px solid var(--sk-border);
+  border-radius:11px;
+  padding:0 13px;
+  color:var(--sk-text);
+  background:#fff;
+  font-size:11px;
+  font-weight:600;
+  outline:none;
 }
-summary{
-  min-height:50px!important;
-  padding:14px 16px!important;
-  color:var(--sk-blue)!important;
-  font-size:10px!important;
+.destination-search:focus{border-color:var(--sk-cyan);box-shadow:0 0 0 4px rgba(95,199,207,.12)}
+.destination-count{color:var(--sk-muted);font-size:9.5px;white-space:nowrap}
+.destination-results{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.destination-card{
+  border:1px solid var(--sk-border-soft);
+  border-radius:17px;
+  background:#fff;
+  padding:20px;
+  box-shadow:var(--sk-shadow-soft);
 }
-.faq-content{
-  padding:0 16px 16px!important;
-  color:var(--sk-body)!important;
-  font-size:9.5px!important;
-  line-height:1.7!important;
-}
+.destination-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px}
+.destination-card h3{color:var(--sk-blue);font-size:15px;line-height:1.3;letter-spacing:-.02em}
+.destination-code{color:var(--sk-blue-3);font-size:9px;font-weight:850;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap}
+.destination-block{padding-top:11px;margin-top:11px;border-top:1px solid var(--sk-border-soft)}
+.destination-block:first-of-type{padding-top:0;margin-top:0;border-top:0}
+.destination-label{display:block;color:var(--sk-muted);font-size:8.5px;font-weight:850;letter-spacing:.1em;text-transform:uppercase;margin-bottom:5px}
+.destination-block p{color:var(--sk-body);font-size:10px;line-height:1.65}
+.destination-empty{grid-column:1/-1;border:1px dashed var(--sk-border);border-radius:15px;background:var(--sk-surface);padding:22px;color:var(--sk-muted);font-size:10.5px;line-height:1.6}
+.load-more-wrap{display:flex;justify-content:center;margin-top:20px}
 
-/* Legal/regulatory */
-.legal-section{
-  max-width:none!important;
-  border-top:1px solid var(--sk-border)!important;
-  background:var(--sk-pale)!important;
-  padding-left:max(24px,calc((100vw - var(--sk-max))/2 + 24px))!important;
-  padding-right:max(24px,calc((100vw - var(--sk-max))/2 + 24px))!important;
-}
-.legal-grid{gap:10px!important}
-.legal-box,.legal-mini{
-  border:1px solid var(--sk-border-soft)!important;
-  border-radius:12px!important;
-  background:#fff!important;
-  color:var(--sk-muted)!important;
-  font-size:9px!important;
-  line-height:1.6!important;
-}
-.legal-box{padding:17px!important}
+.faq-grid{display:grid;gap:9px;max-width:920px}
+details{border:1px solid var(--sk-border);border-radius:13px;background:#fff;overflow:hidden}
+summary{min-height:54px;padding:15px 17px;display:flex;justify-content:space-between;align-items:center;gap:18px;list-style:none;cursor:pointer;color:var(--sk-blue);font-size:11px;font-weight:800}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"+";color:var(--sk-cyan);font-size:20px;font-weight:500;line-height:1}
+details[open] summary::after{content:"−"}
+.faq-content{padding:0 17px 17px;color:var(--sk-body);font-size:10.5px;line-height:1.7;max-width:800px}
 
-/* Comparison tables and supporting content */
-.table-wrapper{
-  border:1px solid var(--sk-border)!important;
-  border-radius:14px!important;
-  box-shadow:none!important;
+.final-check{
+  border-top:1px solid var(--sk-border-soft);
+  background:var(--sk-pale);
 }
-table{font-size:9px!important}
-th{background:var(--sk-pale)!important;color:var(--sk-blue)!important}
-th,td{padding:12px!important;border-color:var(--sk-border-soft)!important}
+.final-grid{display:grid;grid-template-columns:1.1fr repeat(3,1fr);gap:14px;align-items:stretch}
+.final-intro{padding-right:24px}
+.final-intro h2{color:var(--sk-blue);font-size:24px;line-height:1.15;letter-spacing:-.035em;margin-bottom:9px}
+.final-intro p{color:var(--sk-body);font-size:10.5px;line-height:1.7}
+.final-item{border:1px solid #e1e9f2;border-radius:15px;background:#fff;padding:17px}.final-item strong{display:block;color:var(--sk-blue);font-size:11px;margin-bottom:6px}.final-item span{display:block;color:var(--sk-body);font-size:9.5px;line-height:1.6}
 
-@media(max-width:860px){
-  .travel-info-rail-inner{width:min(var(--sk-max),calc(100% - 28px));min-height:56px}
-  .travel-info-context{display:none}
-  #hero-wrap{min-height:330px!important;padding:58px 14px 36px!important}
-  #hero-wrap>.hero-kicker,
-  #hero-wrap>#hero-title,
-  #hero-wrap>#hero-sub{width:min(var(--sk-max),calc(100% - 0px))}
-  #hero-title{font-size:38px!important}
-  #hero-sub{padding-right:0!important;font-size:12px!important}
-  .content-section{padding:44px 14px!important}
-  .content-section[style*="background"],.legal-section{
-    padding-left:14px!important;
-    padding-right:14px!important;
-  }
+@media(max-width:980px){
+  .hero-inner{grid-template-columns:1fr;gap:28px;min-height:auto;padding:64px 0 54px}
+  .hero-panel{max-width:620px}
+  .guidance-grid,.destination-results{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .authorization{grid-template-columns:1fr}
+  .final-grid{grid-template-columns:1fr 1fr}.final-intro{grid-column:1/-1;padding-right:0}
 }
+@media(max-width:720px){
+  .travel-rail-inner,.hero-inner,.section{width:calc(100% - 28px)}
+  .travel-context{display:none}
+  .hero{min-height:auto}
+  .hero-inner{padding:52px 0 72px}
+  .hero h1{font-size:42px}
+  .hero-lede{font-size:13px}
+  .hero-panel{padding:19px}
+  .checker-wrap{margin-top:-36px}
+  .checker-top,.checker-body{padding:20px}
+  .checker-top{display:block}
+  .form-grid{grid-template-columns:1fr}
+  .form-actions{align-items:stretch;flex-direction:column}
+  .action-buttons{width:100%}.action-buttons .btn{flex:1}
+  .result-summary-row{display:block}.result-source{text-align:left;margin-top:10px;max-width:none}
+  .result-grid,.guidance-grid,.destination-results,.final-grid{grid-template-columns:1fr}
+  .section{padding:50px 0}
+  .section-head{display:block}.destination-tools{margin-top:18px}.destination-search{width:100%}
+  .authorization{padding:22px}
+  .final-intro{grid-column:auto}
+}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
 </style>
+</head>
+<body>
+<nav class="travel-rail" aria-label="Travel Info navigation">
+  <div class="travel-rail-inner">
+    <button id="backToTravelInfo" class="travel-back" type="button" aria-label="Back to Travel Info"><span aria-hidden="true">←</span> Travel Info</button>
+    <div class="travel-context">Passport &amp; Visa</div>
+  </div>
+</nav>
 
-</head><body>
-<section id="hero-wrap" data-section-id="passport-hero">
-  <div class="hero-kicker" data-content-id="passport-hero-kicker">SKANDI TRAVEL INFO</div>
-  <div id="hero-title" data-content-id="passport-hero-title">Passport & Visa Requirements</div>
-  <div id="hero-sub" data-content-id="passport-hero-copy">A smooth journey starts with the right documents. Search the same travel-requirements source used by ALTEA, then verify the final rules with the relevant official authorities.</div>
-</section>
-
-<section class="content-section">
-  <div class="section-title">Check your travel requirements</div>
-  <div class="section-subtitle">Enter your nationality and destination. This lookup uses the same approved provider adapter and SKANDI fallback records that ALTEA uses internally.</div>
-  <div class="requirements-search">
-    <div class="search-grid">
-      <div class="field"><label for="nationality">Nationality</label><input id="nationality" maxlength="3" placeholder="SE / SWE" autocomplete="off"></div>
-      <div class="field"><label for="residenceCountry">Country of residence <span style="font-weight:500;text-transform:none">(optional)</span></label><input id="residenceCountry" maxlength="3" placeholder="SE / SWE" autocomplete="off"></div>
-      <div class="field"><label for="origin">Origin <span style="font-weight:500;text-transform:none">(optional)</span></label><input id="origin" maxlength="12" placeholder="ARN / JFK" autocomplete="off"></div>
-      <div class="field"><label for="destination">Destination</label><input id="destination" list="destinationOptions" maxlength="80" placeholder="USA, JFK, Thailand…" autocomplete="off"><datalist id="destinationOptions"></datalist></div>
-      <div class="field"><label for="departureDate">Departure date <span style="font-weight:500;text-transform:none">(optional)</span></label><input id="departureDate" type="date"></div>
-      <div class="field"><label for="returnDate">Return date <span style="font-weight:500;text-transform:none">(optional)</span></label><input id="returnDate" type="date"></div>
+<header class="hero" data-section-id="passport-hero">
+  <div class="hero-inner">
+    <div class="hero-copy">
+      <div class="eyebrow" data-content-id="passport-hero-kicker">SKANDI TRAVEL INFO</div>
+      <h1 data-content-id="passport-hero-title">Travel documents, checked before you go.</h1>
+      <p class="hero-lede" data-content-id="passport-hero-copy">Search the same approved travel-requirements service used by SKANDI operations, review published destination guidance, and confirm the final rules with the relevant authorities before departure.</p>
+      <div class="hero-note"><span class="hero-note-mark" aria-hidden="true"></span><span>Entry and transit rules depend on nationality, route, document type and travel date. A general rule should never replace a trip-specific check.</span></div>
     </div>
-    <div class="search-actions"><button id="requirementsSearch" class="btn-primary" type="button">Check Requirements</button></div>
-    <div id="lookupStatus" class="lookup-status">Enter your nationality and destination to check the current connected source.</div>
-    <div id="lookupResult" class="lookup-result"></div>
+    <aside class="hero-panel" aria-label="How to use the travel document checker">
+      <h2>Before you travel</h2>
+      <p>Use the checker as your starting point, then complete the final verification before check-in.</p>
+      <div class="hero-step"><div class="hero-step-no">01</div><div><strong>Enter the route</strong><span>Add nationality and destination. Origin and dates improve the context.</span></div></div>
+      <div class="hero-step"><div class="hero-step-no">02</div><div><strong>Review the result</strong><span>Read provider fields, SKANDI guidance and any important notices returned.</span></div></div>
+      <div class="hero-step"><div class="hero-step-no">03</div><div><strong>Verify the final authority</strong><span>Recheck official government, border and visa sources close to departure.</span></div></div>
+    </aside>
   </div>
+</header>
 
-  <div class="section-title">Essential passport guidance</div>
-  <div class="section-subtitle">Rules vary by nationality, destination, transit point and document type. These general reminders do not replace a route-specific document check.</div>
-  <div class="alert-box"><div class="alert-icon">⚠️</div><div class="alert-content"><h4>Damaged or Temporary Passports</h4><p>A damaged passport can be refused by an airline or border authority. Acceptance of emergency, temporary or provisional passports varies by country, so verify the exact document type before travel.</p></div></div>
-  <div class="info-grid">
-    <article class="info-card"><div class="info-header"><div class="info-icon">📅</div><h3>Passport Validity</h3></div><p>There is no universal six-month rule. Some destinations require validity beyond the planned stay, while others use different rules. Use the search above for your route and nationality.</p></article>
-    <article class="info-card"><div class="info-header"><div class="info-icon">👶</div><h3>Children & Infants</h3></div><p>Children need travel documents accepted for their nationality and destination. Consent or custody documents can also be required when a minor travels with one parent or another adult.</p></article>
-    <article class="info-card"><div class="info-header"><div class="info-icon">🛂</div><h3>Transit Requirements</h3></div><p>A transit point can introduce separate visa or authorization requirements, even if you do not leave the airport. Include transit details whenever your itinerary requires them.</p></article>
-  </div>
-</section>
-
-<section class="content-section" style="padding-top:0">
-  <div class="visa-banner">
-    <div class="visa-content"><h3>Visas and Electronic Authorizations</h3><p>Depending on your nationality and itinerary, you may need a visa, visa waiver or electronic travel authorization before departure. SKANDI can show guidance from the connected requirements source, but the traveler remains responsible for valid entry documents.</p><button id="officialHelp" class="btn-primary" type="button" style="border:0;cursor:pointer">Travel Info Help</button></div>
-    <div class="visa-links">
-      <div class="visa-link-card"><div>Use official government sources<span>Always verify the latest entry and transit rules with the destination and transit authorities.</span></div><div>✓</div></div>
-      <div class="visa-link-card"><div>Match the booking name<span>Your booking details should match the travel document you intend to present.</span></div><div>✓</div></div>
-      <div class="visa-link-card"><div>Recheck close to departure<span>Requirements can change after booking. Review them again before check-in.</span></div><div>✓</div></div>
+<main>
+<section class="section checker-wrap" aria-labelledby="checker-title">
+  <div class="checker">
+    <div class="checker-top">
+      <div>
+        <div class="section-kicker">Trip-specific document check</div>
+        <h2 id="checker-title">Check passport &amp; visa requirements</h2>
+        <p>Nationality and destination are required. Add the remaining trip details when available so the connected requirements source receives the best possible context.</p>
+      </div>
+    </div>
+    <div class="checker-body">
+      <div class="form-grid">
+        <div class="field"><label for="nationality">Nationality <span>Required</span></label><input id="nationality" maxlength="3" placeholder="SE / SWE" autocomplete="country-code" autocapitalize="characters"></div>
+        <div class="field"><label for="residenceCountry">Country of residence <span>Optional</span></label><input id="residenceCountry" maxlength="3" placeholder="US / USA" autocomplete="country-code" autocapitalize="characters"></div>
+        <div class="field"><label for="origin">Origin <span>Optional</span></label><input id="origin" maxlength="12" placeholder="ARN / JFK" autocomplete="off" autocapitalize="characters"></div>
+        <div class="field"><label for="destination">Destination <span>Required</span></label><input id="destination" list="destinationOptions" maxlength="80" placeholder="United States, JFK, Thailand…" autocomplete="off"><datalist id="destinationOptions"></datalist></div>
+        <div class="field"><label for="departureDate">Departure date <span>Optional</span></label><input id="departureDate" type="date"></div>
+        <div class="field"><label for="returnDate">Return date <span>Optional</span></label><input id="returnDate" type="date"></div>
+      </div>
+      <div class="form-actions">
+        <div class="form-hint">The checker uses the existing SKANDI V12 travel-requirements backend. If the approved external provider is unavailable, the page clearly identifies the result as guidance rather than a live boarding decision.</div>
+        <div class="action-buttons">
+          <button id="resetSearch" class="btn btn-secondary" type="button">Reset</button>
+          <button id="requirementsSearch" class="btn btn-primary" type="button">Check requirements</button>
+        </div>
+      </div>
+      <div id="lookupStatus" class="lookup-status" role="status" aria-live="polite">Enter your nationality and destination to begin.</div>
+      <div id="lookupResult" class="lookup-result" tabindex="-1"></div>
     </div>
   </div>
 </section>
 
-<section class="content-section">
-  <div class="section-title">Published SKANDI destination guidance</div>
-  <div class="section-subtitle">Destination summaries below come from the same SKANDI content database used across Travel Info and ALTEA guidance fallback.</div>
+<div class="guidance-band">
+  <section class="section" aria-labelledby="guidance-title">
+    <div class="section-head">
+      <div class="section-copy">
+        <div class="section-kicker">Passport guidance</div>
+        <h2 class="section-title" id="guidance-title">The details that commonly change the answer</h2>
+        <p class="section-subtitle">These are planning reminders only. The exact rule comes from the destination, transit authority and operating carrier requirements for your trip.</p>
+      </div>
+    </div>
+    <div class="guidance-grid">
+      <article class="guidance-card">
+        <div class="icon-box" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2"></rect><circle cx="12" cy="10" r="3"></circle><path d="M8 17h8"></path></svg></div>
+        <h3>Passport validity</h3>
+        <p>There is no universal six-month rule. Required validity can differ by destination, nationality and travel document, including whether the passport must remain valid beyond the planned stay.</p>
+      </article>
+      <article class="guidance-card">
+        <div class="icon-box" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 17h16"></path><path d="M7 17V7l5-3 5 3v10"></path><path d="M10 10h4"></path></svg></div>
+        <h3>Transit points</h3>
+        <p>A connection can introduce separate document or visa requirements even when the final destination would otherwise be permitted. Check every country and airport in the itinerary.</p>
+      </article>
+      <article class="guidance-card">
+        <div class="icon-box" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"></circle><circle cx="16" cy="10" r="2.5"></circle><path d="M3 20c.7-4 2.7-6 6-6s5.3 2 6 6"></path><path d="M14 15c3.5 0 5.7 1.7 6.5 5"></path></svg></div>
+        <h3>Children &amp; guardians</h3>
+        <p>Children need documents accepted for their nationality and route. Some journeys can also require consent, custody or relationship documentation when a minor travels with one parent or another adult.</p>
+      </article>
+    </div>
+    <div class="warning-box">
+      <div class="warning-icon" aria-hidden="true">!</div>
+      <div><h4>Damaged, emergency or temporary passports</h4><p>Acceptance varies by country and carrier. A document that is damaged, provisional, emergency-issued or otherwise non-standard should be verified specifically rather than assumed valid.</p></div>
+    </div>
+  </section>
+</div>
+
+<section class="section" aria-labelledby="authorization-title">
+  <div class="authorization">
+    <div>
+      <div class="section-kicker" style="color:var(--sk-cyan)">Visas &amp; electronic authorization</div>
+      <h2 id="authorization-title">A passport alone may not be enough.</h2>
+      <p>Depending on nationality and itinerary, a traveler may need a visa, visa waiver, electronic travel authorization or other pre-departure approval. SKANDI can show connected guidance, but final eligibility remains with the relevant authority and operating carrier.</p>
+      <button id="officialHelp" class="btn" type="button">Return to Travel Info</button>
+    </div>
+    <div class="auth-list">
+      <div class="auth-row"><div class="auth-check">1</div><div><strong>Match the travel document</strong><span>The booking name and identity details should match the document intended for travel.</span></div></div>
+      <div class="auth-row"><div class="auth-check">2</div><div><strong>Check authorization timing</strong><span>Some approvals must be obtained before check-in and may not be issued instantly.</span></div></div>
+      <div class="auth-row"><div class="auth-check">3</div><div><strong>Recheck before departure</strong><span>Requirements can change after booking, including transit and document-validity rules.</span></div></div>
+    </div>
+  </div>
+</section>
+
+<section class="section" aria-labelledby="destination-title">
+  <div class="section-head">
+    <div class="section-copy">
+      <div class="section-kicker">Published SKANDI guidance</div>
+      <h2 class="section-title" id="destination-title">Destination document information</h2>
+      <p class="section-subtitle">These summaries come from the existing SKANDI Inventory / Travel Info content chain. They supplement the trip-specific checker above and are not a substitute for an official decision.</p>
+    </div>
+    <div class="destination-tools">
+      <input id="destinationFilter" class="destination-search" type="search" placeholder="Filter destinations" aria-label="Filter destination guidance">
+      <span id="destinationCount" class="destination-count"></span>
+    </div>
+  </div>
   <div id="destinationResults" class="destination-results"></div>
+  <div class="load-more-wrap"><button id="loadMoreDestinations" class="btn btn-secondary" type="button" hidden>Show more destinations</button></div>
 </section>
 
-<section class="content-section">
-  <div class="section-title">Frequently Asked Questions</div>
+<section class="section compact" aria-labelledby="faq-title">
+  <div class="section-head">
+    <div class="section-copy">
+      <div class="section-kicker">Common questions</div>
+      <h2 class="section-title" id="faq-title">Passport &amp; visa FAQ</h2>
+    </div>
+  </div>
   <div class="faq-grid">
-    <details><summary>Do transit countries have separate requirements?</summary><div class="faq-content">Yes, they can. Transit rules depend on nationality, airport, document type and whether you pass border control. Always check every country in the itinerary.</div></details>
-    <details><summary>I have dual citizenship. Which passport should I use?</summary><div class="faq-content">Use the passport that satisfies the route's entry requirements and make sure the booking information matches the document you will present. Some countries require their citizens to enter or leave on that country's passport.</div></details>
-    <details><summary>What if my documents do not meet the requirements?</summary><div class="faq-content">The operating airline or border authority can refuse travel. Document-related refusal and any resulting cost are governed by your booking terms and the applicable supplier or authority rules.</div></details>
+    <details><summary>Do transit countries have separate requirements?</summary><div class="faq-content">They can. Transit requirements depend on nationality, airport, document type, whether border control is crossed and the rules in force on the date of travel. Every transit country should be checked.</div></details>
+    <details><summary>I have dual citizenship. Which passport should I use?</summary><div class="faq-content">Use a passport that satisfies the route's requirements and ensure the booking details match the document presented for travel. Some countries require their citizens to enter or leave using that country's passport.</div></details>
+    <details><summary>What if the connected checker has no detailed result?</summary><div class="faq-content">Treat that as a signal to verify the trip directly with official government, border-control and visa-authority sources. A missing provider field is not confirmation that no requirement exists.</div></details>
+    <details><summary>What happens if my documents do not meet the requirements?</summary><div class="faq-content">The operating carrier or border authority can refuse travel when required documents or authorizations are missing or invalid. Any resulting cost is governed by the applicable booking, supplier and authority rules.</div></details>
   </div>
 </section>
+
+<div class="final-check">
+  <section class="section">
+    <div class="final-grid">
+      <div class="final-intro"><div class="section-kicker">Final check</div><h2>Before leaving for the airport</h2><p>Do one final review close to departure, especially if the booking was made well in advance.</p></div>
+      <div class="final-item"><strong>Document condition</strong><span>Carry the original accepted travel document in usable condition.</span></div>
+      <div class="final-item"><strong>Validity &amp; authorization</strong><span>Confirm passport validity and any required visa or electronic authorization.</span></div>
+      <div class="final-item"><strong>Every country in the route</strong><span>Recheck destination and transit requirements, not only the final stop.</span></div>
+    </div>
+  </section>
+</div>
+</main>
+
 <script>
 (()=>{"use strict";
-const SOURCE="SKANDI_PASSPORT_VISA_PAGE",PARENT="SKANDI_WIX_PARENT",VERSION="BACKEND-BASE-1.0-B011.3";
-const $=id=>document.getElementById(id),esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const SOURCE="SKANDI_PASSPORT_VISA_PAGE";
+const PARENT="SKANDI_WIX_PARENT";
+const VERSION="V12-PASSPORT-VISA-2026.10.11";
+const $=id=>document.getElementById(id);
+const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 let DATA={requirements:[],guidance:[],destinations:[]};
-function post(type,payload={}){window.parent.postMessage({source:SOURCE,type,payload,timestamp:new Date().toISOString()},"*")}
-function destinationCode(value){const raw=String(value||"").trim();if(!raw)return"";const exact=(DATA.destinations||[]).find(x=>String(x.title||"").toLowerCase()===raw.toLowerCase()||String(x.code||"").toLowerCase()===raw.toLowerCase());return String(exact?.code||raw).trim().toUpperCase().slice(0,12)}
-function renderDatalist(){const seen=new Set();$("destinationOptions").innerHTML=(DATA.destinations||[]).filter(x=>{const k=`${x.title}|${x.code}`;if(seen.has(k))return false;seen.add(k);return true}).slice(0,500).map(x=>`<option value="${esc(x.title||x.code||"")}">${x.code?esc(x.code):""}</option>`).join("")}
-function renderDestinations(){const rows=(DATA.destinations||[]).slice(0,80);$("destinationResults").innerHTML=rows.length?rows.map(x=>`<article class="info-card"><div class="result-meta">${esc(x.type||"Destination")}${x.code?` · ${esc(x.code)}`:""}</div><div class="info-header" style="margin-bottom:12px"><div class="info-icon">🌍</div><h3>${esc(x.title||x.code||"Destination")}</h3></div>${x.passportSummary?`<p><strong>Passport:</strong> ${esc(x.passportSummary)}</p>`:""}${x.visaSummary?`<p style="margin-top:10px"><strong>Visa:</strong> ${esc(x.visaSummary)}</p>`:""}${x.importantInformation?`<p style="margin-top:10px"><strong>Important:</strong> ${esc(x.importantInformation)}</p>`:""}</article>`).join(""):`<div class="lookup-status">No destination-specific passport or visa summaries are currently published in Inventory Control.</div>`}
-function search(){const nationality=String($("nationality").value||"").trim().toUpperCase();const destination=destinationCode($("destination").value);if(!nationality||!destination){$("lookupStatus").className="lookup-status warning";$("lookupStatus").textContent="Nationality and destination are required.";return}$("lookupStatus").className="lookup-status";$("lookupStatus").textContent="Checking the same travel-requirements source used by ALTEA…";$("lookupResult").innerHTML="";post("PASSPORT_VISA_SEARCH",{language:"EN",nationality,residenceCountry:String($("residenceCountry").value||"").trim().toUpperCase(),origin:String($("origin").value||"").trim().toUpperCase(),destination,departureDate:$("departureDate").value||"",returnDate:$("returnDate").value||"",documentType:"PASSPORT"})}
-function renderLookup(result={}){$("lookupStatus").className=`lookup-status${result.connected?"":" warning"}`;$("lookupStatus").textContent=result.summary||"Travel requirements checked.";const fields=(result.fields||[]).filter(x=>x.label||x.value),guidance=(result.guidance||[]),notices=(result.notices||[]);let html="";if(fields.length)html+=fields.map(x=>`<article class="result-card"><div class="result-meta">${esc(x.category||x.status||"Requirement")}</div><h4>${esc(x.label||x.key||"Requirement")}</h4><p>${esc(x.value||"")}</p></article>`).join("");if(guidance.length)html+=guidance.map(x=>`<article class="result-card"><div class="result-meta">SKANDI guidance</div><h4>${esc(x.title||"Travel requirement")}</h4><p>${esc(x.body||"")}</p></article>`).join("");if(notices.length)html+=`<article class="result-card"><div class="result-meta">Important</div><ul class="result-list">${notices.map(n=>`<li>${esc(n)}</li>`).join("")}</ul></article>`;if(result.officialSourcesRequired)html+=`<article class="result-card"><div class="result-meta">Final authority</div><p>Use official government, border-control and visa-authority sources for the final decision. The operating airline may also perform its own document validation before boarding.</p></article>`;$("lookupResult").innerHTML=html||`<article class="result-card"><p>No detailed requirement fields were returned. Verify the route with official authorities before travel.</p></article>`}
-$("requirementsSearch").onclick=search;["nationality","destination"].forEach(id=>$(id).addEventListener("keydown",e=>{if(e.key==="Enter")search()}));$("officialHelp").onclick=()=>post("PASSPORT_VISA_NAVIGATE",{path:"/travel-info"});
-window.addEventListener("message",e=>{let m=e.data;if(typeof m==="string"){try{m=JSON.parse(m)}catch(_){return}}if(!m||m.source!==PARENT)return;if(m.type==="PASSPORT_VISA_HOST_READY")post("PASSPORT_VISA_READY",{language:"EN",version:VERSION});else if(m.type==="PASSPORT_VISA_LOADING")$("lookupStatus").textContent="Loading SKANDI destination guidance…";else if(m.type==="PASSPORT_VISA_DATA"){DATA=m.payload||DATA;renderDatalist();renderDestinations();$("lookupStatus").className="lookup-status";$("lookupStatus").textContent="Enter your nationality and destination to check the current connected source."}else if(m.type==="PASSPORT_VISA_SEARCHING"){$("lookupStatus").className="lookup-status";$("lookupStatus").textContent="Checking the same travel-requirements source used by ALTEA…"}else if(m.type==="PASSPORT_VISA_SEARCH_RESULT")renderLookup(m.payload||{});else if(m.type==="PASSPORT_VISA_SEARCH_ERROR"){$("lookupStatus").className="lookup-status warning";$("lookupStatus").textContent=m.payload?.message||"Travel requirements search is unavailable."}else if(m.type==="PASSPORT_VISA_ERROR"){$("lookupStatus").className="lookup-status warning";$("lookupStatus").textContent=m.payload?.message||"Passport and visa guidance is unavailable."}});
+let destinationLimit=12;
+let lastSearch=null;
+
+function post(type,payload={}){
+  window.parent.postMessage({source:SOURCE,type,payload,timestamp:new Date().toISOString()},"*");
+}
+function text(v){return String(v??"").trim()}
+function upper(v,max=80){return text(v).toUpperCase().slice(0,max)}
+function setBusy(isBusy){
+  const button=$("requirementsSearch");
+  button.disabled=!!isBusy;
+  button.textContent=isBusy?"Checking…":"Check requirements";
+}
+function setStatus(message,tone=""){
+  const el=$("lookupStatus");
+  el.className=`lookup-status${tone?` ${tone}`:""}`;
+  el.textContent=message;
+}
+function destinationCode(value){
+  const raw=text(value);
+  if(!raw)return"";
+  const exact=(DATA.destinations||[]).find(x=>text(x.title).toLowerCase()===raw.toLowerCase()||text(x.code).toLowerCase()===raw.toLowerCase());
+  return upper(exact?.code||raw,12);
+}
+function renderDatalist(){
+  const seen=new Set();
+  const rows=(DATA.destinations||[]).filter(x=>{
+    const value=text(x.title||x.code);
+    const key=`${value.toLowerCase()}|${upper(x.code,20)}`;
+    if(!value||seen.has(key))return false;
+    seen.add(key);
+    return true;
+  }).slice(0,800);
+  $("destinationOptions").innerHTML=rows.map(x=>`<option value="${esc(x.title||x.code||"")}">${x.code?esc(x.code):""}</option>`).join("");
+}
+function destinationHaystack(x){
+  return `${x.title||""} ${x.code||""} ${x.type||""} ${x.passportSummary||""} ${x.visaSummary||""} ${x.importantInformation||""}`.toLowerCase();
+}
+function renderDestinations(){
+  const q=text($("destinationFilter").value).toLowerCase();
+  const all=(DATA.destinations||[]).filter(x=>!q||destinationHaystack(x).includes(q));
+  const rows=all.slice(0,destinationLimit);
+  $("destinationCount").textContent=all.length?`${Math.min(rows.length,all.length)} of ${all.length}`:"";
+  $("destinationResults").innerHTML=rows.length?rows.map(x=>{
+    const blocks=[];
+    if(x.passportSummary)blocks.push(`<div class="destination-block"><span class="destination-label">Passport</span><p>${esc(x.passportSummary)}</p></div>`);
+    if(x.visaSummary)blocks.push(`<div class="destination-block"><span class="destination-label">Visa / authorization</span><p>${esc(x.visaSummary)}</p></div>`);
+    if(x.importantInformation)blocks.push(`<div class="destination-block"><span class="destination-label">Important</span><p>${esc(x.importantInformation)}</p></div>`);
+    return `<article class="destination-card"><div class="destination-card-head"><h3>${esc(x.title||x.code||"Destination")}</h3><div class="destination-code">${esc(x.code||x.type||"")}</div></div>${blocks.join("")||`<div class="destination-block"><p>No additional document summary is currently published for this destination.</p></div>`}</article>`;
+  }).join(""):`<div class="destination-empty">${q?"No published destination guidance matches this filter.":"No destination-specific passport or visa summaries are currently published in Inventory Control."}</div>`;
+  const more=$("loadMoreDestinations");
+  more.hidden=rows.length>=all.length||!all.length;
+}
+function resetSearch(){
+  ["nationality","residenceCountry","origin","destination","departureDate","returnDate"].forEach(id=>{$(id).value=""});
+  lastSearch=null;
+  setBusy(false);
+  setStatus("Enter your nationality and destination to begin.");
+  $("lookupResult").innerHTML="";
+  $("nationality").focus();
+}
+function validateDates(){
+  const departure=$("departureDate").value;
+  const returning=$("returnDate").value;
+  if(departure&&returning&&returning<departure){
+    setStatus("Return date cannot be earlier than departure date.","warning");
+    return false;
+  }
+  return true;
+}
+function search(){
+  const nationality=upper($("nationality").value,3);
+  const destination=destinationCode($("destination").value);
+  if(!nationality||!destination){
+    setStatus("Nationality and destination are required.","warning");
+    (!nationality?$("nationality"):$("destination")).focus();
+    return;
+  }
+  if(!validateDates())return;
+  lastSearch={
+    language:"EN",
+    nationality,
+    residenceCountry:upper($("residenceCountry").value,3),
+    origin:upper($("origin").value,12),
+    destination,
+    departureDate:$("departureDate").value||"",
+    returnDate:$("returnDate").value||"",
+    documentType:"PASSPORT"
+  };
+  setBusy(true);
+  setStatus("Checking the connected SKANDI travel-requirements source…");
+  $("lookupResult").innerHTML="";
+  post("PASSPORT_VISA_SEARCH",lastSearch);
+}
+function renderLookup(result={}){
+  setBusy(false);
+  const connected=result.connected===true;
+  const summary=text(result.summary)||"Travel requirements checked.";
+  setStatus(summary,connected?"success":"warning");
+  const fields=(Array.isArray(result.fields)?result.fields:[]).filter(x=>x&&(x.label||x.key||x.value));
+  const guidance=Array.isArray(result.guidance)?result.guidance:[];
+  const notices=Array.isArray(result.notices)?result.notices:[];
+  const provider=text(result.provider)||"SKANDI guidance";
+  const routeParts=[lastSearch?.nationality,lastSearch?.origin,lastSearch?.destination].filter(Boolean);
+  const routeLabel=routeParts.length?routeParts.join(" · "):"Trip document check";
+  let html=`<div class="result-summary"><div class="result-summary-row"><div><div class="result-meta">${connected?"Connected requirement result":"Guidance result"}</div><h3>${esc(routeLabel)}</h3><p>${esc(summary)}</p></div><div class="result-source">Source: ${esc(provider)}${result.status?`<br>${esc(result.status)}`:""}</div></div></div>`;
+  const cards=[];
+  fields.forEach(x=>cards.push(`<article class="result-card"><div class="result-meta">${esc(x.category||x.status||"Requirement")}</div><h4>${esc(x.label||x.key||"Requirement")}</h4><p>${esc(x.value||"")}</p></article>`));
+  guidance.forEach(x=>cards.push(`<article class="result-card"><div class="result-meta">SKANDI guidance</div><h4>${esc(x.title||"Travel requirement")}</h4><p>${esc(x.body||"")}</p></article>`));
+  if(notices.length)cards.push(`<article class="result-card"><div class="result-meta">Important</div><h4>Notices</h4><ul class="result-list">${notices.map(n=>`<li>${esc(n)}</li>`).join("")}</ul></article>`);
+  if(result.officialSourcesRequired)cards.push(`<article class="result-card authority-card"><div class="result-meta">Final authority</div><h4>Verify before travel</h4><p>Confirm the final requirements with official government, border-control and visa-authority sources. The operating carrier may also perform its own document validation before boarding.</p></article>`);
+  html+=cards.length?`<div class="result-grid">${cards.join("")}</div>`:`<article class="result-card authority-card"><div class="result-meta">No detailed fields returned</div><h4>Official verification required</h4><p>No detailed requirement fields were returned for this search. Do not interpret that as confirmation that no visa, authorization or document condition applies.</p></article>`;
+  $("lookupResult").innerHTML=html;
+  $("lookupResult").focus({preventScroll:true});
+}
+
+$("requirementsSearch").addEventListener("click",search);
+$("resetSearch").addEventListener("click",resetSearch);
+["nationality","destination"].forEach(id=>$(id).addEventListener("keydown",event=>{if(event.key==="Enter")search()}));
+$("backToTravelInfo").addEventListener("click",()=>post("PASSPORT_VISA_NAVIGATE",{path:"/travel-info"}));
+$("officialHelp").addEventListener("click",()=>post("PASSPORT_VISA_NAVIGATE",{path:"/travel-info"}));
+$("destinationFilter").addEventListener("input",()=>{destinationLimit=12;renderDestinations()});
+$("loadMoreDestinations").addEventListener("click",()=>{destinationLimit+=12;renderDestinations()});
+
+window.addEventListener("message",event=>{
+  let message=event.data;
+  if(typeof message==="string"){try{message=JSON.parse(message)}catch(_){return}}
+  if(!message||message.source!==PARENT)return;
+  if(message.type==="PASSPORT_VISA_HOST_READY"){
+    post("PASSPORT_VISA_READY",{language:"EN",version:VERSION});
+    return;
+  }
+  if(message.type==="PASSPORT_VISA_LOADING"){
+    setStatus("Loading SKANDI destination guidance…");
+    return;
+  }
+  if(message.type==="PASSPORT_VISA_DATA"){
+    DATA=message.payload&&typeof message.payload==="object"?message.payload:DATA;
+    renderDatalist();
+    renderDestinations();
+    setStatus("Enter your nationality and destination to begin.");
+    return;
+  }
+  if(message.type==="PASSPORT_VISA_SEARCHING"){
+    setBusy(true);
+    setStatus("Checking the connected SKANDI travel-requirements source…");
+    return;
+  }
+  if(message.type==="PASSPORT_VISA_SEARCH_RESULT"){
+    renderLookup(message.payload||{});
+    return;
+  }
+  if(message.type==="PASSPORT_VISA_SEARCH_ERROR"){
+    setBusy(false);
+    setStatus(message.payload?.message||"Travel requirements search is unavailable.","warning");
+    return;
+  }
+  if(message.type==="PASSPORT_VISA_ERROR"){
+    setBusy(false);
+    setStatus(message.payload?.message||"Passport and visa guidance is unavailable.","warning");
+  }
+});
+
 post("PASSPORT_VISA_READY",{language:"EN",version:VERSION});
 })();
 </script>
-<script id="skandi-b011-back-bridge">
-(()=>{
-  const back=document.getElementById("backToTravelInfo");
-  if(!back)return;
-  back.addEventListener("click",()=>{
-    window.parent.postMessage({
-      source:"SKANDI_PASSPORT_VISA_PAGE",
-      type:"PASSPORT_VISA_NAVIGATE",
-      payload:{path:"/travel-info"},
-      timestamp:new Date().toISOString()
-    },"*");
-  });
-})();
-</script>
+</body>
+</html>
 
-</body></html>
 ```
