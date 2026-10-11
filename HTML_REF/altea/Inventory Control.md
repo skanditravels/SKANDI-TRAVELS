@@ -6,7 +6,7 @@
 - WIX PAGE FILE: `/src/pages/Inventory Control.jsdik.js`
 - WIX ROUTE / SLUG: `/riaintra/success-factors/altea/inventory-control`
 - WIX HTML ELEMENT: `#inventoryControlEmbed`
-- CURRENT STATUS: V12 ONE-TRUE-SOURCE REPAIR PREPARED — REQUIRES LIVE TEST
+- CURRENT STATUS: V12 AIRCRAFT CABIN DISPLAY REPAIR PREPARED — REQUIRES LIVE TEST
 - SOURCE-OF-TRUTH STATUS: AUTHORITATIVE intended V12 embed payload supplied for this repair.
 - CANONICAL WEB FACADE: `/src/backend/SKANDI_CORE/inventory.web.js`
 - CANONICAL CORE: `/src/backend/SKANDI_CORE/inventory.js`
@@ -17,9 +17,11 @@
 - PROVIDER SNAPSHOT: the provider evidence remains under `payload.duffel` (`normalized` + `raw`). The migration promotes the normalized provider-owned subset into the canonical Inventory detail object and retains a read-only `inventory_details.duffel` / `details.duffel` copy for audit/context; SKANDI enrichment remains editable only in Inventory Control.
 - AUTHORIZATION: unchanged from current V12 page/facade/core boundaries. No frontend role or provider secret becomes authoritative.
 - MESSAGE CONTRACTS / ELEMENT IDS: unchanged.
-- LAST VERIFIED: 2026-10-08 — current repo `skanditravels/SKANDI-TRAVELS`, branch `main`, commit `86deedb4705fae292851256726cd81e13669aa98`; live Supabase schema/data inspected read-only.
+- LAST VERIFIED: 2026-10-11 — current repo `skanditravels/SKANDI-TRAVELS`, branch `main`, HEAD `19d7059098c6f2e880e1a94ad8f6b11e00c9b115` inspected for this repair; Wix live runtime was not executed in this session.
 
 ## CHANGE LOG
+- 2026-10-11 — Aircraft cabin double-count repair: Aircraft & Cabin Studio now builds its displayed cabin set only from active cabin rows and collapses exact canonical/descriptive duplicates before calculating cabin count, cabin map proportions and cabin seat totals. Per-cabin seat values remain sourced from the canonical `travel_info_aircraft_cabins.seat_count` field returned by `INVENTORY_V9_GET_AIRCRAFT`; aircraft total seats remain sourced from `travel_info_aircraft.total_seats`. Existing message contracts, page controller, facade, core writes, authorization and stored records are unchanged. STATICALLY VERIFIED; REQUIRES LIVE TEST after replacing and publishing `#inventoryControlEmbed`.
+- 2026-10-10 — Gray-window boot repair: removed one duplicate top-level object closure from the current V12 Inventory embed. The extra `};` caused the module script to fail parsing before React could mount, leaving the Wix HTML component blank/gray. Message names, element IDs, page-controller imports, backend actions, authorization, data contracts and existing features remain unchanged. Prepared against GitHub `main` HEAD `19d7059098c6f2e880e1a94ad8f6b11e00c9b115`. STATICALLY VERIFIED; REQUIRES LIVE TEST after replacing and publishing `#inventoryControlEmbed`.
 - 2026-10-09 — Canonical Assets + Structured Fields repair: AIRLINE/AIRPORT media is edited only in Assets; URL assets can be added directly with immediate preview; Duffel logo lockup/symbol values are provider-owned and converge into media_assets on sync; duplicate logo/image keys are removed from inventory_details. Raw JSON editors for known AIRLINE/AIRPORT content are replaced by repeatable typed inputs while preserving JSONB storage. Prepared against GitHub main ea5188ebe7f9bd5b5f7175c4d4caf81a64673bd2 and live Supabase schema/data read-only. STATICALLY VERIFIED; REQUIRES LIVE TEST after migration + Wix publication.
 
 - 2026-10-08 — One-true-source enforcement finalized: Duffel-linked provider identity/facts are read-only in Inventory Control and refresh through the provider workspace; provider technical snapshots are hidden from generic editable fields; compatibility columns are database-derived. Current GitHub `main` at `86deedb4705fae292851256726cd81e13669aa98` was inspected and preserved.
@@ -399,7 +401,6 @@ const ENTITY_SCHEMAS={
     SR("Fleet Summary","details.fleetSummaryJson",[SF("Aircraft","aircraft"),SF("Count","count","number"),SF("Notes","notes","textarea")]),
     SR("Source URLs","details.sourceUrlsJson",[SF("Label","label"),SF("URL","url","url")])
   ]}
-};
 };
 const DEFAULT_COMMERCIAL=[SF("Currency","commercial.currency","select",ENUM.currency),SF("Price Basis","commercial.priceBasis","select",ENUM.priceBasis),SF("Supplier Cost","commercial.supplierCost","number"),SF("Public Price","commercial.publicPrice","number")];
 const DEFAULT_OPERATIONS=[SF("Booking Cutoff Hours","operations.bookingCutoffHours","number"),SF("Operational Notes","operations.notes","textarea")];
@@ -857,7 +858,6 @@ function ProviderDetailGrid({resource,type}){
   return html`<div className="detailgrid">${rows.map(r=>html`<div className="detailcell"><small>${r.label}</small><div>${r.kind==="url"&&safeUrl(r.value)?html`<a href=${r.value} target="_blank" rel="noreferrer">${r.value}</a>`:text(r.value)}</div></div>`)}</div>`
 }
 
-
 function ProviderWorkspace({boot,setBusy,setToast}){
   const [mode,setMode]=useState("collection");
   const [resourceType,setResourceType]=useState("HOTEL");
@@ -1184,8 +1184,28 @@ function AircraftStudio({boot,setBusy,setToast}){
       <div className="tablewrap"><table className="table"><thead><tr><th>Airline</th><th>Aircraft</th><th>Name</th><th>Seats</th><th>Status</th><th>Cabin Readiness</th></tr></thead><tbody>${list.map(a=>html`<tr className="clickrow" onClick=${()=>open(a)}><td><b>${a.airlineCode}</b></td><td>${a.aircraftCode}</td><td>${a.aircraftName}</td><td>${a.totalSeats??"—"}</td><td>${statusPill(a.status)}</td><td>${a.heroImageUrl||a.seatmapImageUrl?"Media linked":"Needs media"}</td></tr>`)}</tbody></table></div>
     </div>`
   }
-  const a=bundle.aircraft,cabins=bundle.cabins||[],views=bundle.views||[],hotspots=bundle.hotspots||[],scenes=bundle.scenes||[];
-  const seatTotal=cabins.reduce((s,c)=>s+(Number(c.seatCount)||0),0);
+  const a=bundle.aircraft,allCabins=bundle.cabins||[],views=bundle.views||[],hotspots=bundle.hotspots||[],scenes=bundle.scenes||[];
+  function uiCabinCode(value=""){
+    const v=String(value??"").trim().toUpperCase().replace(/[_-]+/g," ");
+    if(/FIRST|LA PREMI/.test(v))return "F";
+    if(/BUSINESS|SIGNATURE CLASS|DELTA ONE|POLARIS|CLUB WORLD|ROYAL SILK/.test(v))return "J";
+    if(/PREMIUM|PLUS|COMFORT/.test(v)&&!/BUSINESS/.test(v))return "W";
+    return "Y";
+  }
+  const cabinMap=new Map();
+  for(const c of allCabins.filter(c=>c.active!==false)){
+    const rawCode=String(c.cabinCode??c.cabin_code??"").trim().toUpperCase();
+    const canonicalCode=uiCabinCode(rawCode||c.cabinName||c.cabin_name);
+    const cabinName=String(c.cabinName??c.cabin_name??"").trim().toLowerCase();
+    const seatCount=Number(c.seatCount??c.seat_count??0)||0;
+    const key=`${canonicalCode}|${cabinName}|${seatCount}`;
+    const previous=cabinMap.get(key);
+    const isCanonical=["F","J","W","Y"].includes(rawCode);
+    const previousCode=String(previous?.cabinCode??previous?.cabin_code??"").trim().toUpperCase();
+    if(!previous||(isCanonical&&!["F","J","W","Y"].includes(previousCode)))cabinMap.set(key,c);
+  }
+  const cabins=[...cabinMap.values()];
+  const seatTotal=cabins.reduce((s,c)=>s+(Number(c.seatCount??c.seat_count)||0),0);
   const currentHotspots=activeView?hotspots.filter(h=>h.view_id===activeView.id):[];
   const setA=(k,v)=>setBundle(b=>({...b,aircraft:{...b.aircraft,[k]:v}}));
   const mapTotal=Math.max(1,seatTotal);
