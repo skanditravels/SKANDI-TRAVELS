@@ -1,5 +1,5 @@
 // /src/pages/Baggage Allowance.tf8xc.js
-// B-011.3 canonical bridge for /travel-info/baggage-allowence.
+// V12 canonical bridge for /travel-info/baggage-allowance.
 
 import wixLocationFrontend from "wix-location-frontend";
 import { getPublicBaggagePayload } from "backend/SKANDI_CORE/publicContent.web";
@@ -7,7 +7,7 @@ import { APP_ROUTES, isSafeInternalRoute } from "public/siteMap";
 
 const SOURCE = "SKANDI_BAGGAGE_PAGE";
 const PARENT = "SKANDI_WIX_PARENT";
-const VERSION = "BACKEND-BASE-1.0-B011.3";
+const VERSION = "V12-BAGGAGE-2026.10.11";
 const EMBED_ID = "#baggageInfoEmbed";
 
 function parse(v) {
@@ -49,12 +49,12 @@ $w.onReady(() => {
   try {
     embed = $w(EMBED_ID);
   } catch (error) {
-    console.error(`[Baggage B-011.3] Missing ${EMBED_ID}.`, error);
+    console.error(`[Baggage V12] Missing ${EMBED_ID}.`, error);
     return;
   }
 
   if (!embed || typeof embed.onMessage !== "function" || typeof embed.postMessage !== "function") {
-    console.error(`[Baggage B-011.3] ${EMBED_ID} is not a compatible HTML Component.`);
+    console.error(`[Baggage V12] ${EMBED_ID} is not a compatible HTML Component.`);
     return;
   }
 
