@@ -6,7 +6,7 @@
 - WIX PAGE FILE: `/src/pages/Travel Info.m43d6.js`
 - WIX ROUTE / SLUG: `/travel-info`
 - WIX HTML ELEMENT: `#travelInfoHtml`
-- CURRENT STATUS: V12 ONE-TRUE-SOURCE REPAIR PREPARED — REQUIRES LIVE TEST
+- CURRENT STATUS: V12 CUSTOMER MEDIA + STRUCTURED FIELD RENDERING REPAIR PREPARED — REQUIRES LIVE TEST
 - SOURCE-OF-TRUTH STATUS: AUTHORITATIVE intended V12 embed payload supplied for this repair.
 - CANONICAL WEB FACADE: `/src/backend/SKANDI_CORE/publicContent.web.js` + `/src/backend/SKANDI_CORE/flightStatus.web.js` for airport context/FIDS only
 - CANONICAL CORE: `/src/backend/SKANDI_CORE/publicContent.js` + `/src/backend/SKANDI_CORE/flightStatus.js` for AirLabs airport-board data and airport context projection
@@ -18,9 +18,10 @@
 - PROVIDER SNAPSHOT: the provider evidence remains under `payload.duffel` (`normalized` + `raw`). The migration promotes the normalized provider-owned subset into the canonical Inventory detail object and retains a read-only `inventory_details.duffel` / `details.duffel` copy for audit/context; SKANDI enrichment remains editable only in Inventory Control.
 - AUTHORIZATION: unchanged from current V12 page/facade/core boundaries. No frontend role or provider secret becomes authoritative.
 - MESSAGE CONTRACTS / ELEMENT IDS: existing contracts preserved; Travel Info adds `TRAVEL_INFO_AIRPORT_CONTEXT_REQUEST/RESULT/ERROR`, `TRAVEL_INFO_AIRPORT_FLIGHTS_REQUEST/RESULT/ERROR`, and `TRAVEL_INFO_AIRPORT_ACTION` between the existing embed and page controller.
-- LAST VERIFIED: 2026-10-09 — current repo `skanditravels/SKANDI-TRAVELS`, branch `main`, commit `20bd2ba89f8a45b5ee7b3fdd186b3d2900139b70`; current Travel Info/Flight Status page-to-facade/core chain inspected. The approved Duffel Logo Lockup and current-time FIDS repairs are preserved cumulatively. No external mutation performed.
+- LAST VERIFIED: 2026-10-11 — current repo `skanditravels/SKANDI-TRAVELS`, branch `main`, HEAD `b97394abbab7c71d378f36958c9c356a362459c3`; exact Travel Info blob `311da8dea073c7f75369c760cb7af09bd3fcec48` and canonical Inventory projection blob `bc7d678fe6bb4504da9b867577170febfa969882` inspected for this repair. Wix live runtime was not executed in this session.
 
 ## CHANGE LOG
+- 2026-10-11 — Customer media + structured-field rendering repair: airline and airport logo surfaces now identify canonical logo media independently from hero photography and render logos with constrained `object-fit: contain` sizing so the entire source logo remains visible instead of being cropped or stretched. Airport detail headers show the full canonical airport logo without using it as a full-bleed hero fallback. Customer-facing summaries, help copy, airport commerce/transfer copy, travel-requirement copy, baggage descriptions, weather/profile text and canonical Travel Info projection values now parse structured JSON strings, arrays and objects into readable customer text rather than exposing JSON syntax, comma-array output or `[object Object]`. Structured section values remain structured for the existing rich renderer instead of being flattened prematurely. Existing routes, messages, element IDs, Inventory/Supabase authority, FIDS behavior, authorization and data writes are unchanged. Prepared against GitHub `main` HEAD `b97394abbab7c71d378f36958c9c356a362459c3`. STATICALLY VERIFIED; REQUIRES LIVE TEST after replacing the Travel Info embed and canonical projection and publishing Wix.
 - 2026-10-09 — Eight-column passenger FIDS: Flight Info now renders LOGO / FLIGHT NO / CODESHARE / TIME / TO-FROM / TERMINAL / GATE-BELT / REMARKS in a contemporary digital airport layout. Codeshare rows are consolidated into the physical operating flight and marketing flight numbers rotate in the isolated Codeshare column every 3.5 seconds. The stable operating carrier uses its Duffel-derived Logo Lockup URL from canonical Inventory/Supabase while the scheduled TOD/TOA remains fixed in Time. Departures use gate wayfinding; arrivals use `arr_baggage` as Belt with an arrivals-green accent. Completed flights remain hidden behind See earlier flights, and operational remarks retain completion time, boarding/final-call, delay, cancellation and en-route states. STATICALLY VERIFIED; REQUIRES LIVE TEST after Wix publication.
 - 2026-10-09 — Modern current-time FIDS: the Travel Info Flight Info board now uses a flat contemporary digital-airport display, keeps the scheduled departure/arrival time fixed in the time column, moves actual completion time into status text (`DEPARTED HH:MM` / `LANDED HH:MM`), hides completed flights from the default current board, and exposes them through a rectangular `See earlier flights` control. Delayed/non-completed flights remain on the current board even when scheduled time has passed. The board displays the selected airport local clock, re-renders/refreshes while Flight Info is open, retains Departures/Arrivals only, and adds responsive mobile labels. No LIVE/READY/SYNC decorative state pills are introduced. STATICALLY VERIFIED; REQUIRES LIVE TEST after Wix publication.
 - 2026-10-09 — FIDS airline branding: Flight Info now receives `airlineLogoUrl` from the canonical Supabase `travel_info_airlines.inventory_details.logoLockupUrl` field populated from Duffel, keyed by `iataCode`. The existing FIDS renderer already prefers `item.airlineLogoUrl`, so no embed/layout/message-contract change is required. Branding lookup is cached for five minutes and fails open to the existing logo fallback without interrupting AirLabs flight data. STATICALLY VERIFIED; REQUIRES LIVE TEST after Wix publication.
@@ -289,7 +290,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .ti-entity:hover{transform:translateY(-2px);border-color:rgba(31,107,163,.32);box-shadow:var(--ti-soft-shadow)}
 .ti-entity-media{position:relative;min-height:150px;background:linear-gradient(145deg,#eaf1f7,#f9fbfc);overflow:hidden;display:grid;place-items:center;color:var(--ti-navy)}
 .ti-entity-media img{width:100%;height:100%;object-fit:cover}
-.ti-entity-media.ti-logo-media img{width:72%;height:72%;object-fit:contain;padding:18px}
+.ti-entity-media.ti-logo-media{background:#fff}.ti-entity-media.ti-logo-media img{width:auto;height:auto;max-width:calc(100% - 32px);max-height:118px;object-fit:contain;object-position:center;background:#fff}
 .ti-fallback-mark{font-size:34px;font-weight:650;letter-spacing:.06em;opacity:.55}
 .ti-entity-copy{padding:23px 24px;min-width:0;display:flex;flex-direction:column;justify-content:center}
 .ti-entity-type{font-size:9px;color:var(--ti-blue-soft);font-weight:800;letter-spacing:.13em;text-transform:uppercase}
@@ -322,7 +323,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .ti-profile-hero:before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 80% 12%,rgba(95,199,207,.18),transparent 30%),linear-gradient(90deg,rgba(3,17,31,.94) 0%,rgba(3,17,31,.76) 52%,rgba(3,17,31,.22) 100%);z-index:1;pointer-events:none}
 .ti-profile-copy{position:relative;z-index:2;padding:clamp(34px,5vw,66px);display:flex;flex-direction:column;justify-content:flex-end;min-width:0}
 .ti-profile-logo{width:86px;height:60px;border-radius:15px;background:#fff;display:grid;place-items:center;padding:10px;margin-bottom:34px;box-shadow:0 12px 30px rgba(0,0,0,.16)}
-.ti-profile-logo img{width:100%;height:100%;object-fit:contain}
+.ti-profile-logo img{width:auto;height:auto;max-width:100%;max-height:100%;object-fit:contain;object-position:center}
 .ti-profile-code{font-size:clamp(42px,7vw,86px);font-weight:500;line-height:.9;letter-spacing:-.055em;margin-bottom:10px;color:#fff}
 .ti-profile-copy h1{margin:7px 0 13px;font-size:clamp(38px,5vw,70px);font-weight:550;line-height:.95;letter-spacing:-.062em}
 .ti-profile-copy p{max-width:720px;margin:0;color:#c7d7e7;font-size:13px;line-height:1.75}
@@ -433,7 +434,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .ti-search-group{padding:8px 6px 14px}.ti-search-group-title{font-size:8.5px;color:var(--ti-muted);font-weight:800;letter-spacing:.12em;text-transform:uppercase;padding:5px 8px 7px}
 .ti-search-item{width:100%;border:0;border-radius:14px;background:transparent;display:grid;grid-template-columns:42px minmax(0,1fr) auto;gap:11px;align-items:center;padding:10px;text-align:left;color:var(--ti-text)}
 .ti-search-item:hover,.ti-search-item[data-active="true"]{background:#f4f8fb}
-.ti-search-icon{width:42px;height:42px;border-radius:13px;background:#edf6fa;color:var(--ti-navy);display:grid;place-items:center;overflow:hidden}.ti-search-icon img{width:100%;height:100%;object-fit:cover}.ti-search-icon.ti-search-logo img{object-fit:contain;padding:7px;background:#fff}
+.ti-search-icon{width:42px;height:42px;border-radius:13px;background:#edf6fa;color:var(--ti-navy);display:grid;place-items:center;overflow:hidden}.ti-search-icon img{width:100%;height:100%;object-fit:cover}.ti-search-icon.ti-search-logo{background:#fff;padding:7px}.ti-search-icon.ti-search-logo img{width:auto;height:auto;max-width:100%;max-height:100%;object-fit:contain;object-position:center;background:#fff}
 .ti-search-copy strong{display:block;color:var(--ti-navy);font-size:11px}.ti-search-copy span{display:block;color:var(--ti-muted);font-size:9px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ti-search-type{font-size:8px;color:var(--ti-blue-soft);font-weight:800;text-transform:uppercase;letter-spacing:.05em}
 .ti-search-empty{padding:42px 24px;text-align:center;color:var(--ti-muted);font-size:11px}
 
@@ -2201,6 +2202,26 @@ body{background:#fff;color:var(--hybrid-text)}
             font-size: 13px;
             line-height: 1.76
         }
+        .airport-profile-logo {
+            width: min(190px, 48vw);
+            height: 88px;
+            display: grid;
+            place-items: center;
+            margin: 0 0 18px;
+            padding: 12px 16px;
+            border-radius: 14px;
+            background: rgba(255, 255, 255, .96);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, .16);
+            overflow: hidden
+        }
+        .airport-profile-logo img {
+            width: auto;
+            height: auto;
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            object-position: center
+        }
         .airport-profile-actions {
             display: flex;
             gap: 8px;
@@ -3489,11 +3510,14 @@ function libraryDefs(){return[
 ]}
 function libraryDef(key){return libraryDefs().find(x=>x.key===key)}
 function itemsFor(key){return key==="faq"?arr(DATA.helpCenter?.topics):key==="articles"?arr(DATA.articles):arr(DATA[key])}
-function itemTitle(x){return text(x?.name||x?.title||x?.shortName||x?.code||x?.iataCode||x?.iata||"Untitled")}
-function itemSummary(x){return text(x?.summary||x?.subtitle||x?.description||x?.excerpt||x?.body||x?.information||x?.city||x?.country||"")}
-function itemImage(x){return text(x?.heroImage||x?.image||x?.logo||x?.logoIcon||x?.image_url||x?.imageUrl||"")}
+function itemTitle(x){return formatTextValue(x?.name??x?.title??x?.shortName??x?.code??x?.iataCode??x?.iata)||"Untitled"}
+function itemSummary(x){return formatTextValue(x?.summary??x?.subtitle??x?.description??x?.excerpt??x?.body??x?.information??x?.city??x?.country??"")}
+function itemLogoUrl(x){return safeExternal(text(x?.logo||x?.logoIcon||x?.logoUrl||x?.logoIconUrl||""))}
+function itemHeroUrl(x){return safeExternal(text(x?.heroImage||x?.heroImageUrl||x?.image||x?.image_url||x?.imageUrl||""))}
+function itemImage(x){return itemHeroUrl(x)||itemLogoUrl(x)}
 function itemCode(x){return text(x?.iataCode||x?.iata||x?.code||x?.icaoCode||x?.icao||"")}
-function displayImageUrl(x){return safeExternal(itemImage(x))}
+function displayImageUrl(x){return itemImage(x)}
+function isLogoMedia(x,url){const logo=itemLogoUrl(x);return Boolean(url&&logo&&url===logo)}
 function libraryLabel(key){return key==="faq"||key==="articles"?"Travel Help":libraryDef(key)?.title||"Travel Info"}
 function contentSearchText(x){
   return lower([itemTitle(x),itemCode(x),x?.icaoCode,x?.icao,x?.city,x?.country,x?.summary,x?.subtitle,x?.description,x?.excerpt,x?.body,x?.category,x?.destination,x?.aircraftFamilies,x?.loyaltyProgram,x?.baggageAllowance].flat().join(" "))
@@ -3528,7 +3552,7 @@ function renderNetworkMeta(){
 }
 function renderAtlasCodes(){
   const airports=arr(DATA.airports).filter(a=>itemCode(a)).slice(0,4);
-  $("tiAtlasCodes").innerHTML=airports.map(a=>`<div class="ti-code-chip"><strong>${esc(itemCode(a).slice(0,4))}</strong><span>${esc(text(a.city||a.country||""))}</span></div>`).join("")
+  $("tiAtlasCodes").innerHTML=airports.map(a=>`<div class="ti-code-chip"><strong>${esc(itemCode(a).slice(0,4))}</strong><span>${esc(formatTextValue(a.city??a.country))}</span></div>`).join("")
 }
 
 function fallbackJourneyGroups(){return[
@@ -3542,7 +3566,7 @@ function fallbackJourneyGroups(){return[
 function journeyGroups(){const live=arr(DATA.helpCenter?.groups).slice().sort((a,b)=>(Number(a.sortOrder)||0)-(Number(b.sortOrder)||0));return live.length?live:fallbackJourneyGroups()}
 function renderJourney(){
   const groups=journeyGroups();
-  $("tiJourneyTrack").innerHTML=groups.map((g,i)=>`<button class="ti-stage-btn" type="button" data-group="${esc(text(g.id||g.groupId||g.group_id||`stage-${i}`))}" aria-pressed="${STATE.activeJourneyGroup===text(g.id||g.groupId||g.group_id)?"true":"false"}"><span class="ti-stage-no">${String(i+1).padStart(2,"0")}</span><span class="ti-stage-arrow">${icon("arrow")}</span><h3>${esc(g.title||"Travel help")}</h3><p>${esc(g.subtitle||g.body||"Browse guidance for this part of your journey.")}</p></button>`).join("");
+  $("tiJourneyTrack").innerHTML=groups.map((g,i)=>`<button class="ti-stage-btn" type="button" data-group="${esc(text(g.id||g.groupId||g.group_id||`stage-${i}`))}" aria-pressed="${STATE.activeJourneyGroup===text(g.id||g.groupId||g.group_id)?"true":"false"}"><span class="ti-stage-no">${String(i+1).padStart(2,"0")}</span><span class="ti-stage-arrow">${icon("arrow")}</span><h3>${esc(formatTextValue(g.title)||"Travel help")}</h3><p>${esc(formatTextValue(g.subtitle??g.body)||"Browse guidance for this part of your journey.")}</p></button>`).join("");
   $("tiJourneyTrack").querySelectorAll("[data-group]").forEach(btn=>btn.addEventListener("click",()=>selectJourney(btn.dataset.group,btn.querySelector("h3")?.textContent||"Travel help")))
 }
 function selectJourney(id,title){
@@ -3559,7 +3583,7 @@ function renderFeaturedHelp(){
   const topics=featuredTopics();const host=$("tiFeaturedHelp");
   if(!topics.length){host.innerHTML=`<div class="ti-empty-state" style="grid-column:1/-1"><strong>Travel answers are being updated.</strong><span>Published help topics will appear here automatically.</span></div>`;return}
   const lead=topics[0];const rest=topics.slice(1);
-  host.innerHTML=`<article class="ti-featured-main"><div class="ti-kicker">Featured guidance</div><h3>${esc(lead.title||"Travel information")}</h3><p>${esc(text(lead.subtitle||lead.excerpt||lead.body).slice(0,260))}</p><button class="ti-btn ti-btn-aqua" type="button" data-featured-open="0">Read guidance ${icon("arrow")}</button></article><div class="ti-featured-list">${rest.map((q,i)=>`<button class="ti-question-btn" type="button" data-featured-open="${i+1}"><span class="ti-question-index">${String(i+2).padStart(2,"0")}</span><span class="ti-question-copy"><strong>${esc(q.title||"Travel question")}</strong><span>${esc(text(q.subtitle||q.excerpt||q.body).slice(0,120))}</span></span>${icon("chevron")}</button>`).join("")}</div>`;
+  host.innerHTML=`<article class="ti-featured-main"><div class="ti-kicker">Featured guidance</div><h3>${esc(formatTextValue(lead.title)||"Travel information")}</h3><p>${esc(formatTextValue(lead.subtitle??lead.excerpt??lead.body).slice(0,260))}</p><button class="ti-btn ti-btn-aqua" type="button" data-featured-open="0">Read guidance ${icon("arrow")}</button></article><div class="ti-featured-list">${rest.map((q,i)=>`<button class="ti-question-btn" type="button" data-featured-open="${i+1}"><span class="ti-question-index">${String(i+2).padStart(2,"0")}</span><span class="ti-question-copy"><strong>${esc(formatTextValue(q.title)||"Travel question")}</strong><span>${esc(formatTextValue(q.subtitle??q.excerpt??q.body).slice(0,120))}</span></span>${icon("chevron")}</button>`).join("")}</div>`;
   host.querySelectorAll("[data-featured-open]").forEach(btn=>btn.addEventListener("click",()=>openDetail(normalizeContentItem(topics[Number(btn.dataset.featuredOpen)],"faq"))))
 }
 
@@ -3591,7 +3615,7 @@ function directoryRows(){
   return rows.sort((a,b)=>(Number(a.sortOrder)||9999)-(Number(b.sortOrder)||9999)||itemTitle(a).localeCompare(itemTitle(b)))
 }
 function renderEntityMedia(x){
-  const url=displayImageUrl(x),code=itemCode(x)||itemTitle(x).slice(0,2).toUpperCase(),logo=x._library==="airlines"&&url;
+  const url=displayImageUrl(x),code=itemCode(x)||itemTitle(x).slice(0,2).toUpperCase(),logo=isLogoMedia(x,url);
   return `<div class="ti-entity-media${logo?" ti-logo-media":""}">${url?`<img src="${esc(url)}" alt="" loading="lazy" referrerpolicy="no-referrer">`:`<span class="ti-fallback-mark">${esc(code.slice(0,4))}</span>`}</div>`
 }
 function entityTags(x){const tags=[];const c=itemCode(x);if(c)tags.push(c);if(x.city)tags.push(x.city);if(x.country)tags.push(x.country);if(x.category)tags.push(x.category);return uniq(tags).slice(0,4)}
@@ -3617,7 +3641,7 @@ function buildSearchResults(q){
 }
 function searchIconMarkup(entry){
   if(entry.kind==="utility")return icon(entry.utility.icon);
-  const x=entry.item,url=displayImageUrl(x),isLogo=x._library==="airlines"&&url;
+  const x=entry.item,url=displayImageUrl(x),isLogo=isLogoMedia(x,url);
   return url?`<span class="ti-search-icon${isLogo?" ti-search-logo":""}"><img src="${esc(url)}" alt="" loading="lazy"></span>`:`<span class="ti-search-icon">${icon(x._library==="airports"?"pin":x._library==="airlines"?"aircraft":x._library==="hotels"?"hotel":"help")}</span>`
 }
 function renderSearchResults(){
@@ -3716,15 +3740,15 @@ function normalizeBullets(values){
   }).filter(Boolean)
 }
 function sectionData(title,body,bullets=[],id=""){
-  const raw=parseStructuredValue(body),bodyText=formatTextValue(raw),cleanBullets=normalizeBullets(bullets);
-  return bodyText||cleanBullets.length?{title,body:bodyText,raw,bullets:cleanBullets,id:id||lower(title).replace(/[^a-z0-9]+/g,"-")}:null
+  const raw=parseStructuredValue(body),bodyText=formatTextValue(raw),cleanBullets=normalizeBullets(bullets),displayTitle=formatTextValue(title)||"Travel information";
+  return bodyText||cleanBullets.length?{title:displayTitle,body:bodyText,raw,bullets:cleanBullets,id:id||lower(displayTitle).replace(/[^a-z0-9]+/g,"-")}:null
 }
 function airlineSections(x){
   const s=obj(x.sections),b=x.baggage||{};const result=[];
   result.push(sectionData("Overview",x.description||x.information||x.body||x.summary,[],"overview"));
   result.push(sectionData(s.checkin?.title||"Check-in",s.checkin?.body||x.checkInDeadline,s.checkin?.bullets,"check-in"));
   const baggageBody=s.baggage?.body||(b.mode==="narrative"?b.text:"");
-  result.push({title:s.baggage?.title||"Baggage",body:formatTextValue(baggageBody),raw:parseStructuredValue(baggageBody),bullets:normalizeBullets(s.baggage?.bullets),id:"baggage",baggage:b});
+  result.push({title:formatTextValue(s.baggage?.title)||"Baggage",body:formatTextValue(baggageBody),raw:parseStructuredValue(baggageBody),bullets:normalizeBullets(s.baggage?.bullets),id:"baggage",baggage:b});
   result.push(sectionData(s.boarding?.title||"Boarding",s.boarding?.body||x.boarding,s.boarding?.bullets,"boarding"));
   result.push(sectionData(s.cabins?.title||"Cabins & onboard",s.cabins?.body||x.cabins,s.cabins?.bullets,"cabins"));
   result.push(sectionData("Lounges",x.lounges,[],"lounges"));
@@ -3750,8 +3774,8 @@ function airportSections(x){
 function genericSections(x){const s=obj(x.sections),out=[sectionData("Overview",x.description||x.information||x.body||x.summary,x.bullets,"overview")];Object.entries(s).forEach(([key,value])=>{const o=obj(value);const sec=sectionData(o.title||human(key),o.body||o.description||value,o.bullets,lower(key));if(sec)out.push(sec)});return out.filter(Boolean)}
 function structuredTitle(item){
   const o=obj(item);
-  if(text(o.terminal))return `Terminal ${text(o.terminal)}`;
-  return text(o.mode||o.name||o.title||o.label||o.category||o.type||o.cabinType||o.cabin||o.travelClass||o.code)
+  if(formatTextValue(o.terminal))return `Terminal ${formatTextValue(o.terminal)}`;
+  return formatTextValue(o.mode??o.name??o.title??o.label??o.category??o.type??o.cabinType??o.cabin??o.travelClass??o.code)
 }
 function structuredItemHtml(item){
   const value=parseStructuredValue(item);
@@ -3789,7 +3813,7 @@ function airlineTabDefinitions(sections){
 }
 function baggageStructuredHtml(bag){
   const data=obj(bag.data);const cabins=arr(bag.cabins).length?arr(bag.cabins):arr(data.cabins);if(!cabins.length)return"";
-  return `<div class="ti-baggage-cabins">${cabins.map(c=>{const fares=arr(c.fares);return`<div class="ti-baggage-block"><div class="ti-baggage-head"><strong>${esc(c.cabinType||c.cabin||c.name||"Cabin")}</strong><span>${esc(c.travelClass||c.class||"")}</span></div>${fares.length?`<div class="ti-fare-grid">${fares.map(f=>`<div class="ti-fare"><h4>${esc(f.name||"Fare")}</h4>${text(f.description)?`<p>${esc(f.description)}</p>`:""}${[["Under-seat bag",f.underSeatBag],["Cabin bag",f.overheadCarryOn],["Checked bag",f.checkedBag]].filter(([,v])=>text(v)).map(([k,v])=>`<div class="ti-bag-fact"><b>${esc(k)}</b><span>${esc(formatTextValue(v)||text(v))}</span></div>`).join("")}</div>`).join("")}</div>`:""}</div>`}).join("")}</div>`
+  return `<div class="ti-baggage-cabins">${cabins.map(c=>{const fares=arr(c.fares);return`<div class="ti-baggage-block"><div class="ti-baggage-head"><strong>${esc(c.cabinType||c.cabin||c.name||"Cabin")}</strong><span>${esc(c.travelClass||c.class||"")}</span></div>${fares.length?`<div class="ti-fare-grid">${fares.map(f=>`<div class="ti-fare"><h4>${esc(f.name||"Fare")}</h4>${formatTextValue(f.description)?`<p>${esc(formatTextValue(f.description))}</p>`:""}${[["Under-seat bag",f.underSeatBag],["Cabin bag",f.overheadCarryOn],["Checked bag",f.checkedBag]].filter(([,v])=>text(v)).map(([k,v])=>`<div class="ti-bag-fact"><b>${esc(k)}</b><span>${esc(formatTextValue(v)||text(v))}</span></div>`).join("")}</div>`).join("")}</div>`:""}</div>`}).join("")}</div>`
 }
 function storySectionHtml(sec){
   const bag=sec.baggage&&sec.baggage.mode==="structured"?baggageStructuredHtml(sec.baggage):"";
@@ -3833,16 +3857,16 @@ function tiAirportContext(x){return STATE.airportContexts.get(tiAirportIata(x))|
 function tiAirportResolved(x){const ctx=tiAirportContext(x);return {...x,...obj(ctx?.airport)}}
 function tiAirportListRows(items,titleKeys=["name","title","terminal","mode"],detailKeys=["description","notes","location","access"]){
   const rows=tiAirportList(items).slice(0,6);if(!rows.length)return `<p class="context-empty">No published information for this section.</p>`;
-  return rows.map(item=>{if(typeof item!=="object")return `<div class="context-list-item"><strong>${esc(item)}</strong></div>`;const title=titleKeys.map(k=>text(item?.[k])).find(Boolean)||"Information";const detail=detailKeys.map(k=>formatTextValue(item?.[k])).find(Boolean)||"";return `<div class="context-list-item"><strong>${esc(title)}</strong>${detail?`<span>${esc(detail)}</span>`:""}</div>`}).join("")
+  return rows.map(item=>{if(typeof item!=="object")return `<div class="context-list-item"><strong>${esc(item)}</strong></div>`;const title=titleKeys.map(k=>formatTextValue(item?.[k])).find(Boolean)||"Information";const detail=detailKeys.map(k=>formatTextValue(item?.[k])).find(Boolean)||"";return `<div class="context-list-item"><strong>${esc(title)}</strong>${detail?`<span>${esc(detail)}</span>`:""}</div>`}).join("")
 }
 function tiAirportHeaderHtml(x){
-  const a=tiAirportResolved(x),iata=tiAirportIata(a),image=safeExternal(text(a.heroImageUrl||a.image_url||displayImageUrl(a))),summary=text(a.summary||a.information||a.description||itemSummary(a)||`Passenger guide for ${iata}.`);
-  const facts=[["IATA",iata],["City",a.city],["Country",a.country],["City center",a.distanceToCityCenterKm!==null&&a.distanceToCityCenterKm!==undefined&&a.distanceToCityCenterKm!==""?`${a.distanceToCityCenterKm} km`:""]].filter(([,v])=>text(v));
-  tiAirportList(a.quickFacts).forEach(q=>{if(facts.length>=6)return;const o=obj(q);const label=text(o.label||o.name),value=formatTextValue(o.value||o.description||o.text);if(label&&value)facts.push([label,value])});
+  const a=tiAirportResolved(x),iata=tiAirportIata(a),image=itemHeroUrl(a),logo=itemLogoUrl(a),summary=itemSummary(a)||`Passenger guide for ${iata}.`;
+  const facts=[["IATA",iata],["City",a.city],["Country",a.country],["City center",a.distanceToCityCenterKm!==null&&a.distanceToCityCenterKm!==undefined&&a.distanceToCityCenterKm!==""?`${a.distanceToCityCenterKm} km`:""]].filter(([,v])=>formatTextValue(v));
+  tiAirportList(a.quickFacts).forEach(q=>{if(facts.length>=6)return;const o=obj(q);const label=formatTextValue(o.label??o.name),value=formatTextValue(o.value??o.description??o.text);if(label&&value)facts.push([label,value])});
   const actions=[];const website=safeExternal(a.website),contact=safeExternal(a.contactUrl);if(website)actions.push(`<a class="context-action primary" href="${esc(website)}" target="_blank" rel="noopener noreferrer">Official airport site ↗</a>`);if(contact&&contact!==website)actions.push(`<a class="context-action" href="${esc(contact)}" target="_blank" rel="noopener noreferrer">Airport contact ↗</a>`);
-  return `<section class="airport-profile" id="tiAirportProfile" style="${a.primaryColor?`--airport-primary:${esc(a.primaryColor)};`:""}${a.accentColor?`--airport-accent:${esc(a.accentColor)};`:""}"><div class="airport-profile-media" ${image?`style="background-image:url('${esc(image)}')"`:""}></div><div class="airport-profile-overlay"></div><div class="wrap airport-profile-inner"><div class="airport-profile-copy"><div class="airport-profile-code">${esc(iata||"---")}</div><div class="eyebrow light">${esc([a.city,a.country].filter(Boolean).join(" · ")||"Airport guide")}</div><h2>${esc(itemTitle(a)||iata)}</h2><p>${esc(summary)}</p><div class="airport-profile-actions">${actions.join("")}</div></div><div class="airport-profile-facts">${facts.map(([label,value])=>`<div class="profile-fact"><small>${esc(label)}</small><strong>${esc(value)}</strong></div>`).join("")}</div></div></section>`
+  return `<section class="airport-profile" id="tiAirportProfile" style="${a.primaryColor?`--airport-primary:${esc(a.primaryColor)};`:""}${a.accentColor?`--airport-accent:${esc(a.accentColor)};`:""}"><div class="airport-profile-media" ${image?`style="background-image:url('${esc(image)}')"`:""}></div><div class="airport-profile-overlay"></div><div class="wrap airport-profile-inner"><div class="airport-profile-copy">${logo?`<div class="airport-profile-logo"><img src="${esc(logo)}" alt="${esc(itemTitle(a)||iata)} logo" loading="lazy" referrerpolicy="no-referrer"></div>`:""}<div class="airport-profile-code">${esc(iata||"---")}</div><div class="eyebrow light">${esc([formatTextValue(a.city),formatTextValue(a.country)].filter(Boolean).join(" · ")||"Airport guide")}</div><h2>${esc(itemTitle(a)||iata)}</h2><p>${esc(summary)}</p><div class="airport-profile-actions">${actions.join("")}</div></div><div class="airport-profile-facts">${facts.map(([label,value])=>`<div class="profile-fact"><small>${esc(label)}</small><strong>${esc(formatTextValue(value))}</strong></div>`).join("")}</div></div></section>`
 }
-function tiAirportCommerceCard(item,kind){const image=safeExternal(text(item?.imageUrl||item?.heroImageUrl||item?.image)),title=text(item?.title||item?.name||kind),summary=text(item?.summary||item?.description),id=text(item?.publicId||item?.id||item?.slug||title);return `<article class="commerce-card ${image?"has-media":"no-media"}">${image?`<div class="commerce-card-media" style="background-image:url('${esc(image)}')"></div>`:""}<div class="commerce-card-copy"><small>${esc(kind)}</small><h3>${esc(title)}</h3>${summary?`<p>${esc(summary)}</p>`:""}<button type="button" data-ti-airport-kind="${esc(kind.toUpperCase())}" data-ti-airport-id="${esc(id)}">Explore →</button></div></article>`}
+function tiAirportCommerceCard(item,kind){const image=safeExternal(text(item?.imageUrl||item?.heroImageUrl||item?.image)),title=formatTextValue(item?.title??item?.name??kind),summary=formatTextValue(item?.summary??item?.description),id=text(item?.publicId||item?.id||item?.slug||title);return `<article class="commerce-card ${image?"has-media":"no-media"}">${image?`<div class="commerce-card-media" style="background-image:url('${esc(image)}')"></div>`:""}<div class="commerce-card-copy"><small>${esc(kind)}</small><h3>${esc(title)}</h3>${summary?`<p>${esc(summary)}</p>`:""}<button type="button" data-ti-airport-kind="${esc(kind.toUpperCase())}" data-ti-airport-id="${esc(id)}">Explore →</button></div></article>`}
 function tiAirportOverviewHtml(x,overviewSection){
   const ctx=tiAirportContext(x),a=tiAirportResolved(x),commerce=obj(ctx?.commerce),iata=tiAirportIata(a);
   const terminals=tiAirportList(a.terminals),transport=tiAirportList(a.transport),food=tiAirportList(a.foodDrinks),lounges=tiAirportList(a.lounges),hotel=obj(a.airportHotel||a.airportHotels);
@@ -3850,7 +3874,7 @@ function tiAirportOverviewHtml(x,overviewSection){
   const cards=[...arr(commerce.hotels).map(item=>({item,kind:"HOTEL"})),...arr(commerce.tours).map(item=>({item,kind:"EXPERIENCE"}))].slice(0,6);
   const destinations=[...tiAirportList(a.destinationAds).map(item=>({item,kind:"DESTINATION"})),...arr(commerce.destinations).map(item=>({item,kind:"DESTINATION"}))].slice(0,6);
   const practical=[];if(a.distanceToCityCenterKm!==null&&a.distanceToCityCenterKm!==undefined&&a.distanceToCityCenterKm!=="")practical.push(["City center",`${a.distanceToCityCenterKm} km from the airport.`]);if(terminals.length)practical.push(["Terminal planning",`${terminals.length} published terminal ${terminals.length===1?"section":"sections"}.`]);if(transport.length)practical.push(["Ground transport",`${transport.length} documented way${transport.length===1?"":"s"} to continue from the airport.`]);if(lounges.length)practical.push(["Lounges",`${lounges.length} published lounge ${lounges.length===1?"option":"options"}.`]);if(food.length)practical.push(["Food & drink",`${food.length} published dining ${food.length===1?"entry":"entries"}.`]);
-  return `<div class="airport-context-grid"><section class="context-module module-terminal"><div class="module-head"><span class="module-sign">T</span><div><small>Airport guide</small><h3>Terminals</h3></div></div><div class="module-body">${tiAirportListRows(terminals,["terminal","name","title"],["notes","description"])}</div></section><section class="context-module module-transport"><div class="module-head"><span class="module-sign">↗</span><div><small>Ground transport</small><h3>From the airport</h3></div></div><div class="module-body">${tiAirportListRows(transport,["mode","name","title"],["notes","description"])}</div></section>${transfer?`<section class="context-module module-transfer"><div class="transfer-ribbon">SKANDI TRANSFER</div><div class="module-head"><span class="module-sign">S</span><div><small>Available with SKANDI</small><h3>${esc(text(transfer.title||transfer.name||"Your transfer"))}</h3></div></div><div class="module-body"><p>${esc(text(transfer.summary||transfer.description||transfer.destination||transfer.meetingPoint||"Continue from arrivals with a SKANDI transfer linked to this airport."))}</p><button class="transfer-cta" type="button" data-ti-airport-kind="TRANSFER" data-ti-airport-id="${esc(text(transfer.publicId||transfer.id||transfer.slug||transfer.title))}">View SKANDI Transfer →</button></div></section>`:""}<section class="context-module module-dining"><div class="module-head"><span class="module-sign">⌁</span><div><small>Before the gate</small><h3>Eat &amp; drink</h3></div></div><div class="module-body">${tiAirportListRows(food,["name","title","venue"],["location","notes","description"])}</div></section><section class="context-module module-lounges"><div class="module-head"><span class="module-sign">L</span><div><small>Wait differently</small><h3>Lounges</h3></div></div><div class="module-body">${tiAirportListRows(lounges,["name","title"],["location","access","description"])}</div></section>${Object.keys(hotel).length?`<section class="context-module module-hotel"><div class="module-head"><span class="module-sign">H</span><div><small>Close to the terminal</small><h3>Airport stay</h3></div></div><div class="module-body">${tiAirportListRows([hotel],["hotel","name","title"],["location","description"])}</div></section>`:""}</div>${overviewSection?storySectionHtml(overviewSection):""}${cards.length?`<section class="airport-commerce"><div class="section-head"><div><div class="eyebrow">Continue with SKANDI</div><h2>Turn arrival into the next part of the trip.</h2></div><p>Customer-visible products connected to ${esc(iata)}.</p></div><div class="commerce-grid">${cards.map(({item,kind})=>tiAirportCommerceCard(item,kind)).join("")}</div></section>`:""}${destinations.length?`<section class="airport-destination-edit"><div class="destination-edit-head"><div><span class="destination-edit-code">${esc(iata)}</span><div><div class="eyebrow">From the runway to the destination</div><h2>${esc(a.city?`Continue into ${a.city}.`:`Continue beyond ${iata}.`)}</h2></div></div></div><div class="destination-edit-grid">${destinations.map(({item})=>tiAirportCommerceCard(item,"DESTINATION")).join("")}</div></section>`:""}${practical.length?`<section class="airport-practical"><div class="section-head"><div><div class="eyebrow">Passenger essentials</div><h2>Useful at ${esc(iata)}.</h2></div></div><div class="practical-grid">${practical.map(([title,copy])=>`<article class="practical-card"><span>${esc(iata)}</span><h3>${esc(title)}</h3><p>${esc(copy)}</p></article>`).join("")}</div></section>`:""}`
+  return `<div class="airport-context-grid"><section class="context-module module-terminal"><div class="module-head"><span class="module-sign">T</span><div><small>Airport guide</small><h3>Terminals</h3></div></div><div class="module-body">${tiAirportListRows(terminals,["terminal","name","title"],["notes","description"])}</div></section><section class="context-module module-transport"><div class="module-head"><span class="module-sign">↗</span><div><small>Ground transport</small><h3>From the airport</h3></div></div><div class="module-body">${tiAirportListRows(transport,["mode","name","title"],["notes","description"])}</div></section>${transfer?`<section class="context-module module-transfer"><div class="transfer-ribbon">SKANDI TRANSFER</div><div class="module-head"><span class="module-sign">S</span><div><small>Available with SKANDI</small><h3>${esc(formatTextValue(transfer.title??transfer.name)||"Your transfer")}</h3></div></div><div class="module-body"><p>${esc(formatTextValue(transfer.summary??transfer.description??transfer.destination??transfer.meetingPoint)||"Continue from arrivals with a SKANDI transfer linked to this airport.")}</p><button class="transfer-cta" type="button" data-ti-airport-kind="TRANSFER" data-ti-airport-id="${esc(text(transfer.publicId||transfer.id||transfer.slug||transfer.title))}">View SKANDI Transfer →</button></div></section>`:""}<section class="context-module module-dining"><div class="module-head"><span class="module-sign">⌁</span><div><small>Before the gate</small><h3>Eat &amp; drink</h3></div></div><div class="module-body">${tiAirportListRows(food,["name","title","venue"],["location","notes","description"])}</div></section><section class="context-module module-lounges"><div class="module-head"><span class="module-sign">L</span><div><small>Wait differently</small><h3>Lounges</h3></div></div><div class="module-body">${tiAirportListRows(lounges,["name","title"],["location","access","description"])}</div></section>${Object.keys(hotel).length?`<section class="context-module module-hotel"><div class="module-head"><span class="module-sign">H</span><div><small>Close to the terminal</small><h3>Airport stay</h3></div></div><div class="module-body">${tiAirportListRows([hotel],["hotel","name","title"],["location","description"])}</div></section>`:""}</div>${overviewSection?storySectionHtml(overviewSection):""}${cards.length?`<section class="airport-commerce"><div class="section-head"><div><div class="eyebrow">Continue with SKANDI</div><h2>Turn arrival into the next part of the trip.</h2></div><p>Customer-visible products connected to ${esc(iata)}.</p></div><div class="commerce-grid">${cards.map(({item,kind})=>tiAirportCommerceCard(item,kind)).join("")}</div></section>`:""}${destinations.length?`<section class="airport-destination-edit"><div class="destination-edit-head"><div><span class="destination-edit-code">${esc(iata)}</span><div><div class="eyebrow">From the runway to the destination</div><h2>${esc(formatTextValue(a.city)?`Continue into ${formatTextValue(a.city)}.`:`Continue beyond ${iata}.`)}</h2></div></div></div><div class="destination-edit-grid">${destinations.map(({item})=>tiAirportCommerceCard(item,"DESTINATION")).join("")}</div></section>`:""}${practical.length?`<section class="airport-practical"><div class="section-head"><div><div class="eyebrow">Passenger essentials</div><h2>Useful at ${esc(iata)}.</h2></div></div><div class="practical-grid">${practical.map(([title,copy])=>`<article class="practical-card"><span>${esc(iata)}</span><h3>${esc(title)}</h3><p>${esc(copy)}</p></article>`).join("")}</div></section>`:""}`
 }
 const TI_AIRLINE_LOGOS=Object.freeze({AS:"https://static.wixstatic.com/shapes/394052_6535b791dd404055903a12f5350d61c3.svg",AA:"https://static.wixstatic.com/shapes/394052_47809f4547c04f6eb7e098c5602ff57c.svg",PG:"https://static.wixstatic.com/shapes/394052_3627db92f99544d8bc42c98e684ce5d4.svg",BA:"https://static.wixstatic.com/shapes/394052_85c56f21c63c42d2b5fba0273ee3b0a6.svg",DL:"https://static.wixstatic.com/shapes/394052_4f692ba92b43482292d87d1c6b7df036.svg",AY:"https://static.wixstatic.com/shapes/394052_97cf9b3a9a884781b3186ededecd7b45.svg",F9:"https://static.wixstatic.com/shapes/394052_cca48f82a42043d79743561a784e92c8.svg",IB:"https://static.wixstatic.com/shapes/394052_3726a2f12dcd44ab8dea7085713902b9.svg",FI:"https://static.wixstatic.com/shapes/394052_e09b3c2f6dfd4ca3a87497e34f538c53.svg",B6:"https://static.wixstatic.com/shapes/394052_d0e052d862be40cba0231eae50b4b5dd.svg",KL:"https://static.wixstatic.com/shapes/394052_0c2eaf7331a147648b444fdb12329073.svg",LH:"https://static.wixstatic.com/shapes/394052_76a1dce4673a429d86b4d816faf88b6d.svg",DY:"https://static.wixstatic.com/shapes/394052_05f76b5094374d11951f14a93fa1ea88.svg",D8:"https://static.wixstatic.com/shapes/394052_05f76b5094374d11951f14a93fa1ea88.svg",SK:"https://static.wixstatic.com/shapes/394052_bfbc7fc4f8b74360bf5398ac8d12a280.svg",LX:"https://static.wixstatic.com/shapes/394052_69b2702a5c434d03a9aa0182c430979e.svg",TG:"https://static.wixstatic.com/shapes/394052_c370132e76c64a29befdfd67496234fe.svg",UA:"https://static.wixstatic.com/shapes/394052_6002f849a3574cd4827d4ba1c3d339ef.svg"});
 function tiSideEpoch(side,key="scheduled"){
@@ -4181,7 +4205,7 @@ function renderAirportDetail(x){
 function renderDetail(x){
   if((x?._library||"")==="airports"){renderAirportDetail(x);return;}
   const kind=x._library||"",isAirline=kind==="airlines",isAirport=kind==="airports",sections=isAirline?airlineSections(x):isAirport?airportSections(x):genericSections(x);
-  const image=displayImageUrl(x),logo=isAirline?safeExternal(text(x.logo||x.logoIcon||"")):"",code=itemCode(x),facts=detailFacts(x),website=safeExternal(x.website),contactUrl=safeExternal(x.contactUrl),loyaltyUrl=safeExternal(x.loyaltyProgramUrl),internalPath=[x.path,x.actionTarget,x.pageUrl].map(text).find(safeInternal)||"",meta=[x.city,x.country,x.alliance,x.loyaltyProgram].filter(Boolean);
+  const image=displayImageUrl(x),logo=isAirline?safeExternal(text(x.logo||x.logoIcon||"")):"",code=itemCode(x),facts=detailFacts(x),website=safeExternal(x.website),contactUrl=safeExternal(x.contactUrl),loyaltyUrl=safeExternal(x.loyaltyProgramUrl),internalPath=[x.path,x.actionTarget,x.pageUrl].map(text).find(safeInternal)||"",meta=[x.city,x.country,x.alliance,x.loyaltyProgram].map(formatTextValue).filter(Boolean);
   const aircraftSlot=isAirline?`<section id="tiSec-aircraft" class="ti-story-section" data-detail-section="aircraft"><div class="ti-story-eyebrow">Onboard experience</div><h2>Aircraft & cabin explorer</h2><p>Explore the published aircraft, cabin views and walkthroughs available for this airline. Live seat availability is shown when you book.</p><div id="onboardReactRoot" class="ti-aircraft-host"><div class="ti-aircraft-skeleton"><div class="ti-skeleton-lines"><i></i><i></i><i></i></div></div></div></section>`:"";
   const airlineTabs=isAirline?airlineTabDefinitions(sections):[];
   const activeAirlineTab=isAirline&&(airlineTabs.some(tab=>tab.id===STATE.activeAirlineTab)?STATE.activeAirlineTab:airlineTabs[0]?.id||"overview");
@@ -4254,10 +4278,10 @@ function submitRequirements(){
 }
 function renderRequirementResult(payload){
   const host=$("tiRequirementResult");if(!host)return;const p=obj(payload),fields=Array.isArray(p.fields)?p.fields:Object.entries(obj(p.fields)).map(([key,value])=>({key,label:human(key),value})),guidance=arr(p.guidance),notices=arr(p.notices);const chunks=[];
-  if(text(p.summary))chunks.push(`<div class="ti-requirement-group"><h4>Travel requirements</h4><p>${esc(p.summary)}</p></div>`);
+  if(formatTextValue(p.summary))chunks.push(`<div class="ti-requirement-group"><h4>Travel requirements</h4><p>${esc(formatTextValue(p.summary))}</p></div>`);
   if(fields.length)chunks.push(`<div class="ti-requirement-group"><h4>Entry information</h4>${fields.map(f=>`<div class="ti-requirement-field"><b>${esc(f.label||human(f.key||"Requirement"))}</b><span>${esc(formatTextValue(f.value)||text(f.value))}</span></div>`).join("")}</div>`);
-  guidance.forEach(g=>chunks.push(`<div class="ti-requirement-group"><h4>${esc(g.title||g.country||g.category||"Guidance")}</h4><p>${esc(g.body||g.description||g.summary||"")}</p></div>`));
-  if(notices.length)chunks.push(`<div class="ti-requirement-group"><h4>Important information</h4>${notices.map(n=>`<p style="margin-bottom:7px">${esc(typeof n==="string"?n:(n.message||n.title||n.body||""))}</p>`).join("")}</div>`);
+  guidance.forEach(g=>chunks.push(`<div class="ti-requirement-group"><h4>${esc(formatTextValue(g.title??g.country??g.category)||"Guidance")}</h4><p>${esc(formatTextValue(g.body??g.description??g.summary))}</p></div>`));
+  if(notices.length)chunks.push(`<div class="ti-requirement-group"><h4>Important information</h4>${notices.map(n=>`<p style="margin-bottom:7px">${esc(formatTextValue(typeof n==="string"?n:(n.message??n.title??n.body)))}</p>`).join("")}</div>`);
   chunks.push(`<div class="ti-requirement-group"><h4>Before you travel</h4><p>Entry and transit rules can change. Confirm the final requirements with the relevant official authorities before departure.</p></div>`);
   host.dataset.tone="";host.innerHTML=chunks.join("")
 }
@@ -4285,7 +4309,7 @@ window.addEventListener("SKANDI_ONBOARD_REACT_READY",()=>{const p=window.__SKAND
 function weatherKey(x){return text(x.id||x.code||x.iata||itemTitle(x))}
 function requestWeather(x){const key=weatherKey(x);if(STATE.weatherCache.has(key)){renderWeatherForDetail(STATE.weatherCache.get(key));return}if(STATE.weatherPending.has(key))return;STATE.weatherPending.add(key);post("TRAVEL_INFO_WEATHER_REQUEST",{locations:[{id:x.id||x.code||x.iata,title:itemTitle(x),latitude:Number(x.latitude),longitude:Number(x.longitude)}]})}
 function renderWeatherForDetail(w){
-  const host=$("tiWeatherInline");if(!host)return;if(!w||w.ok!==true){host.dataset.visible="false";return}const temp=num(w.tempC);$("tiWeatherValue").textContent=temp!==null?`${Math.round(temp)}°C`:text(w.temperature||"Current weather");$("tiWeatherDescription").textContent=text(w.description||w.condition||"");host.dataset.visible="true"
+  const host=$("tiWeatherInline");if(!host)return;if(!w||w.ok!==true){host.dataset.visible="false";return}const temp=num(w.tempC);$("tiWeatherValue").textContent=temp!==null?`${Math.round(temp)}°C`:text(w.temperature||"Current weather");$("tiWeatherDescription").textContent=formatTextValue(w.description??w.condition);host.dataset.visible="true"
 }
 
 function renderAll(){buildSearchIndex();renderNetworkMeta();renderAtlasCodes();renderJourney();renderFeaturedHelp();renderGateways();renderFilters();renderDirectory();hydrateStaticIcons()}
