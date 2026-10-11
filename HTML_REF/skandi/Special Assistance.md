@@ -1,890 +1,127 @@
-# Special Assistance
+# INFO / LOG — Special Assistance
 
-## INFO / LOG
+- SOURCE FILE: `/HTML_REF/skandi/Special Assistance.md`
+- DISPLAY / PAGE NAME: Special Assistance
+- SYSTEM AREA: SKANDI
+- WIX ROUTE / SLUG: `/travel-info/special-assistance`
+- WIX PAGE: existing Wix Special Assistance page; no page-specific controller filename is committed in current GitHub `main`.
+- WIX HTML ELEMENT: existing Special Assistance page HTML component; canonical element ID is not present in the current repository/source registry and is intentionally not invented.
+- HTML CHILD SOURCE: `SKANDI_ASSISTANCE_PAGE`
+- CURRENT STATUS: V12 DYNAMIC SPECIAL ASSISTANCE / ACCESSIBILITY CONVERGENCE PREPARED — REQUIRES LIVE TEST
+- SOURCE-OF-TRUTH STATUS: AUTHORITATIVE intended V12 embed payload for the existing Special Assistance page.
+- BRIDGE: `/src/pages/masterPage.js` — existing global HTML-component wiring now handles only `SKANDI_ASSISTANCE_PAGE` data/navigation/CONTENT_AUTO resize messages because no page-specific Special Assistance controller exists in current `main`.
+- CANONICAL WEB FACADE: `/src/backend/SKANDI_CORE/publicContent.web.js` — existing `getPublicTravelInfoPayload` public facade; no new backend facade.
+- CANONICAL CORE: `/src/backend/SKANDI_CORE/publicContent.js` with `/src/backend/SKANDI_CORE/publicContentInventoryProjection.js`.
+- SHARED DATABASE TRANSPORT: `/src/backend/SKANDI_CORE/supabaseServer.js`.
+- SUPABASE / INVENTORY AUTHORITY: airlines from `travel_info_airlines.inventory_details`, airports from `travel_info_airports.inventory_details`, and HOTEL / TRANSFER / GUIDED_TOUR / ACTIVITY / PARTNER_TICKET records from `inventory_public_entities_v` / canonical Inventory details. The page filters only assistance-related published fields already projected by the canonical public-content chain.
+- AUTHORIZATION: unchanged. The page uses the existing `Permissions.Anyone` public-content facade and receives only the same public/customer-visible published projection already used by Travel Info. No secret, service role, RLS bypass or privileged record is exposed to the embed.
+- MESSAGE CONTRACTS: child → parent `SPECIAL_ASSISTANCE_READY`, `SPECIAL_ASSISTANCE_REFRESH`, `SPECIAL_ASSISTANCE_NAVIGATE`, `SKANDI_CONTENT_RESIZE`, `MASTER_CONFIG_REQUEST`; parent → child `SPECIAL_ASSISTANCE_DATA`, `SPECIAL_ASSISTANCE_ERROR`, `SKANDI_MASTER_CONFIG`, `SKANDI_SCROLL_TOP`.
+- ARCHITECTURAL NOTES: the embed does not query Supabase directly and does not create a second content store. Dynamic cards are generated from canonical airline, airport, hotel, transfer, tour/activity and ticket records only when assistance/accessibility-related fields are actually published. Missing fields are displayed as missing information, never as a claim that a service is unavailable.
+- OPEN ISSUE / LIVE DEPENDENCY: current repository does not identify the Special Assistance Wix HTML-component ID. The runtime replacement must therefore be pasted into the existing HTML component on the `/travel-info/special-assistance` page, and live Wix acceptance is required for master-page message wiring and CONTENT_AUTO height behavior.
+- LAST VERIFIED: 2026-10-11 — repo `skanditravels/SKANDI-TRAVELS`, branch `main`, HEAD `8ac77cf2bfa3ef90ffd0ebcb420bc101aed7aa6a`; pre-repair Special Assistance blob `eccd8f269ae62d83d709063b0bece7f9e115bec1`; current master-page blob `953d0a998c415d481272c5ee75263cb02f457a46`; public-content core/facade and Inventory projection inspected.
 
-- **Status:** READY — B-011.3 design/style convergence
-- **System:** SKANDI customer website
-- **Route:** `/travel-info/special-assistance`
-- **Wix page:** `Existing Wix Special Assistance page`
-- **HTML component:** `Existing page HTML component — canonical ID not present in current repo/source registry`
-- **HTML child source:** `SKANDI_ASSISTANCE_PAGE`
-- **Page controller:** `No page-specific controller committed in current main; static content page`
-- **Backend/data owner:** `None required for current static content`
-- **Global header/footer:** `masterPage.js`
-- **Version:** `B-011.3`
-- **Last verified:** `2026-09-25`
-
-### B-011.3 changes
-
-- Kept this as a **separate Travel Info page**. No merged topic-switching page is used.
-- Applied the shared B-011 customer palette used by Home and global chrome.
-- Added a restrained Travel Info return rail rather than an internal four-topic switcher.
-- Restyled the photographic hero into the common Travel Info B-011 treatment.
-- Standardized section widths to 1180px, typography scale, card radii, borders, shadows, search panels, CTAs, FAQs and responsive behavior.
-- Preserved the supplied page content and functional IDs.
-- Preserved existing data/message contracts where this page already has a Wix page bridge.
-- Added stable section/content hooks to the hero for the later Presentation Registry pass.
-- Did not add page-owned global header/footer.
-- Did not add a new database table, RPC, backend service or provider.
-
-### Current static page scope
-
-The supplied Special Assistance page is a static informational page with EN/SV copy and no canonical page-specific backend in current GitHub main. B-011.3 therefore changes presentation only and does not invent a new data service.
-
-The current repository/source registry does not expose a canonical Wix HTML-component ID or committed page-controller filename for this route. The package intentionally does not invent one. Install the HTML into the existing Special Assistance page's current HTML component.
-
----
+## CHANGE LOG
+- 2026-10-11 — V12 dynamic Special Assistance convergence: rebuilt the page in the current Travel Info visual language, retained overall accessibility/mobility/medical planning information, and added a database-backed Accessibility Directory. The directory reads the existing canonical public Travel Info payload and surfaces assistance-related fields from published airlines, airports, hotels, transfers, tours, activities and ticket records. Relevant published assistance articles are also surfaced. No capability is fabricated when a field is absent. Because current `main` has no page-specific Special Assistance controller or canonical component ID, the existing global `masterPage.js` HTML wiring is minimally extended for this source only to load `getPublicTravelInfoPayload`, navigate safely and honor CONTENT_AUTO resize. No database/provider schema or data mutation is included. STATICALLY VERIFIED; REQUIRES LIVE TEST after Wix replacement/publication.
+- 2026-09-25 — B-011.3 design/style convergence: kept Special Assistance as a separate Travel Info page, applied shared customer palette, return rail, Travel Info hero/card/CTA/FAQ styling, preserved EN/SV static content and did not create a database/backend implementation at that time. Superseded by the 2026-10-11 V12 dynamic convergence for presentation and data loading; retained here as implementation history.
 
 ## COMPLETE INTENDED LIVE HTML SOURCE
 
 ```html
 <!doctype html>
+<!-- V12 DATA AUTHORITY: assistance/accessibility facts are read from the canonical Travel Info / Inventory projection backed by Supabase. This embed owns presentation only. -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>SKANDI • Special Assistance · B-011.3</title>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<meta name="theme-color" content="#061a30">
+<title>Special Assistance | SKANDI Travels</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --sk-blue:#022e64;
-  --sk-blue-soft:#285ca8;
-  --sk-blue2:#0b3a7a;
-  --sk-light:#d7e6ff;
-  --sk-pale:#f6faff;
-  --sk-bg:#f7faff;
-  --sk-border:#dbe3ef;
-  --sk-border-soft:#eef2f7;
-  --sk-text:#111;
-  --sk-body:#555;
-  --sk-muted:#667085;
-  --sk-cyan:#5FC7CF;
-  --sk-ok:#087443;
-  --sk-danger:#8a1f1f;
-  --sk-warning-bg:#fffbeb;
-  --sk-warning-border:#fde68a;
-  --sk-warning-text:#92400e;
-  --sk-shadow:0 8px 26px rgba(0,0,0,.08);
-  --sk-shadow-strong:0 14px 34px rgba(0,0,0,.12);
+  --ti-navy:#022e64;--ti-navy-deep:#061a30;--ti-navy-black:#03111f;--ti-blue:#0b3a7a;--ti-blue-soft:#1f6ba3;
+  --ti-aqua:#5fc7cf;--ti-aqua-soft:#9de0e5;--ti-ivory:#fbfaf6;--ti-porcelain:#f5f1ea;--ti-champagne:#d1bc98;
+  --ti-text:#102033;--ti-body:#4d5f74;--ti-muted:#66758a;--ti-line-dark:rgba(2,46,100,.14);--ti-line-soft:rgba(2,46,100,.08);
+  --ti-danger:#9f2f2f;--ti-success:#0a7051;--ti-soft-shadow:0 16px 46px rgba(2,46,100,.10);--ti-ease:cubic-bezier(.22,1,.36,1);
+  --ti-content:1320px
 }
-html,body{
-  width:100%;
-  min-height:100%;
-  font-family:"Montserrat",system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-  background:#fff;
-  color:var(--sk-text);
-  overflow-x:hidden;
-}
-
-/* HERO SECTION */
-#hero-wrap{
-  transition: all 0.3s ease;    
-  width:100%;
-  min-height:420px;
-  background: linear-gradient(rgba(2, 46, 100, 0.6), rgba(2, 46, 100, 0.8)), url("https://images.unsplash.com/photo-1573497620053-ea5300f94f21?auto=format&fit=crop&w=1920&q=80") center/cover;
-  padding:76px 32px 54px;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  text-align:center;
-}
-.hero-kicker{
-  font-size:12px;
-  font-weight:800;
-  color:var(--sk-cyan);
-  text-transform:uppercase;
-  letter-spacing:.14em;
-  margin-bottom:10px;
-}
-#hero-title{
-  font-size:clamp(36px,4vw,56px);
-  line-height:1.1;
-  letter-spacing:-.04em;
-  font-weight:700;
-  color:#fff;
-  margin-bottom:16px;
-}
-#hero-sub{
-  font-size:16px;
-  color:rgba(255,255,255,0.9);
-  line-height:1.65;
-  max-width:720px;
-}
-
-/* CONTENT LAYOUT */
-.content-section{
-  padding:58px 32px;
-  max-width:1180px;
-  margin:0 auto;
-}
-.section-title{
-  font-size:30px;
-  font-weight:700;
-  color:var(--sk-blue);
-  margin-bottom:12px;
-  letter-spacing:-.04em;
-  text-align:center;
-}
-.section-subtitle{
-  color:#555;
-  font-size:15px;
-  line-height:1.6;
-  margin-bottom:32px;
-  max-width:780px;
-  text-align:center;
-  margin-inline:auto;
-}
-
-/* WARNING / ALERT BOX */
-.alert-box {
-  background: var(--sk-warning-bg);
-  border: 1px solid var(--sk-warning-border);
-  border-radius: 12px;
-  padding: 24px;
-  display: flex;
-  gap: 20px;
-  margin-bottom: 40px;
-  box-shadow: var(--sk-shadow);
-}
-.alert-icon {
-  font-size: 32px;
-}
-.alert-content h4 {
-  color: var(--sk-warning-text);
-  font-size: 18px;
-  margin-bottom: 8px;
-}
-.alert-content p {
-  color: #78350f;
-  font-size: 14px;
-  line-height: 1.6;
-}
-
-/* INFO CARDS */
-.info-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 24px;
-  margin-bottom: 40px;
-}
-.info-card {
-  background: #fff;
-  border: 1px solid var(--sk-border);
-  border-radius: 16px;
-  padding: 32px;
-  box-shadow: var(--sk-shadow);
-  display: flex;
-  flex-direction: column;
-}
-.info-header {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  margin-bottom: 20px;
-  padding-bottom: 20px;
-  border-bottom: 1px solid var(--sk-border-soft);
-}
-.info-icon {
-  width: 56px;
-  height: 56px;
-  background: var(--sk-pale);
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 28px;
-  color: var(--sk-blue);
-}
-.info-header h3 {
-  font-size: 20px;
-  color: var(--sk-blue);
-  line-height: 1.3;
-}
-.info-card p {
-  color: var(--sk-body);
-  font-size: 14px;
-  line-height: 1.6;
-  flex-grow: 1;
-}
-
-/* ACTION BANNER */
-.action-banner {
-  background: var(--sk-bg);
-  border: 1px solid var(--sk-border);
-  border-radius: 16px;
-  padding: 40px;
-  text-align: center;
-  margin-bottom: 40px;
-}
-.action-banner h3 {
-  font-size: 24px;
-  color: var(--sk-blue);
-  margin-bottom: 12px;
-}
-.action-banner p {
-  font-size: 15px;
-  color: var(--sk-body);
-  margin-bottom: 24px;
-  max-width: 600px;
-  margin-inline: auto;
-}
-.btn-primary {
-  display: inline-block;
-  background: var(--sk-blue);
-  color: #fff;
-  padding: 14px 28px;
-  border-radius: 999px;
-  text-decoration: none;
-  font-size: 14px;
-  font-weight: 800;
-  transition: background 0.2s;
-  cursor: pointer;
-  border: none;
-}
-.btn-primary:hover {
-  background: var(--sk-blue2);
-}
-
-/* FAQ / ACCORDION */
-.faq-grid {
-  max-width: 800px;
-  margin: 0 auto;
-}
-details {
-  background: #fff;
-  border: 1px solid var(--sk-border);
-  border-radius: 12px;
-  margin-bottom: 12px;
-  overflow: hidden;
-}
-summary {
-  padding: 20px;
-  font-weight: 700;
-  color: var(--sk-blue);
-  cursor: pointer;
-  list-style: none;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-summary::-webkit-details-marker {
-  display: none;
-}
-summary::after {
-  content: "+";
-  font-size: 20px;
-  color: var(--sk-cyan);
-}
-details[open] summary::after {
-  content: "−";
-}
-.faq-content {
-  padding: 0 20px 20px;
-  color: var(--sk-body);
-  font-size: 14px;
-  line-height: 1.6;
-}
-
-/* LEGAL DISCLAIMER SECTION */
-.legal-section {
-  border-top: 1px solid var(--sk-border);
-}
-.legal-section h4 {
-  font-size: 14px;
-  color: var(--sk-blue);
-  margin-bottom: 16px;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-.legal-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 24px;
-}
-.legal-box {
-  background: var(--sk-bg);
-  padding: 20px;
-  border-radius: 12px;
-  font-size: 12px;
-  color: var(--sk-muted);
-  line-height: 1.5;
-}
-.legal-box strong {
-  display: block;
-  color: var(--sk-text);
-  margin-bottom: 6px;
-}
-
-/* RESPONSIVE */
-@media(max-width:860px){
-  #hero-wrap { padding: 54px 14px 38px; min-height: 320px; }
-  #hero-title { font-size: 32px; }
-  .content-section { padding: 42px 14px; }
-  .alert-box { flex-direction: column; gap: 12px; }
-}
+*{box-sizing:border-box}html{scroll-behavior:smooth;background:var(--ti-ivory)}body{margin:0;min-width:0;min-height:100%;overflow-x:hidden;background:var(--ti-ivory);color:var(--ti-text);font-family:"Montserrat",Inter,system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+button,input,select{font:inherit}button{cursor:pointer}button:disabled{cursor:not-allowed;opacity:.55}a{color:inherit}img{display:block;max-width:100%}button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{outline:3px solid rgba(95,199,207,.42);outline-offset:3px}.hidden{display:none!important}.wrap{width:min(var(--ti-content),calc(100% - 64px));margin-inline:auto}.icon{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;display:block}.icon-sm{width:16px;height:16px}
+.btn{min-height:46px;border:0;border-radius:999px;padding:0 18px;display:inline-flex;align-items:center;justify-content:center;gap:9px;font-size:12px;font-weight:800;letter-spacing:.01em;transition:transform 180ms var(--ti-ease),background 180ms,border-color 180ms,box-shadow 180ms}.btn:hover:not(:disabled){transform:translateY(-1px)}.btn-primary{background:var(--ti-navy);color:#fff;box-shadow:0 12px 28px rgba(2,46,100,.18)}.btn-primary:hover{background:#093d78}.btn-light{background:#fff;color:var(--ti-navy);border:1px solid rgba(2,46,100,.12)}.btn-aqua{background:var(--ti-aqua);color:#04233f}.kicker{display:inline-flex;align-items:center;gap:10px;color:var(--ti-aqua-soft);font-size:11px;font-weight:800;letter-spacing:.18em;text-transform:uppercase}.kicker:before{content:"";width:34px;height:1px;background:currentColor;opacity:.8}.kicker-dark{color:var(--ti-blue-soft)}
+.travel-info-rail{position:sticky;top:0;z-index:40;border-bottom:1px solid var(--ti-line-dark);background:rgba(251,250,246,.96);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}.rail-inner{width:min(var(--ti-content),calc(100% - 64px));min-height:60px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:18px}.rail-back{min-height:38px;padding:0 14px;border:1px solid var(--ti-line-dark);border-radius:999px;background:#fff;color:var(--ti-navy);display:inline-flex;align-items:center;gap:8px;font-size:10px;font-weight:800}.rail-context{color:var(--ti-muted);font-size:9px;font-weight:800;letter-spacing:.14em;text-transform:uppercase}
+.hero{position:relative;isolation:isolate;overflow:hidden;color:#fff;background:radial-gradient(circle at 82% 18%,rgba(95,199,207,.20),transparent 28%),radial-gradient(circle at 12% 88%,rgba(31,107,163,.30),transparent 28%),linear-gradient(145deg,var(--ti-navy-black),var(--ti-navy-deep) 46%,#08294d);min-height:570px}.hero:before{content:"";position:absolute;inset:-12%;z-index:-2;opacity:.4;background-image:radial-gradient(circle at 26% 35%,rgba(255,255,255,.16) 0 1px,transparent 1.5px),radial-gradient(circle at 70% 58%,rgba(95,199,207,.22) 0 1px,transparent 1.5px);background-size:78px 78px,112px 112px}.hero:after{content:"";position:absolute;inset:auto 0 0;height:150px;background:linear-gradient(to bottom,transparent,var(--ti-ivory));pointer-events:none}.hero-inner{position:relative;z-index:2;min-height:570px;padding:88px 0 120px;display:grid;grid-template-columns:minmax(0,1.15fr) minmax(300px,.55fr);gap:64px;align-items:center}.hero h1{margin:17px 0 20px;max-width:900px;font-size:clamp(52px,8vw,104px);font-weight:500;line-height:.89;letter-spacing:-.072em}.hero p{max-width:760px;margin:0;color:#c8d8ea;font-size:clamp(15px,1.45vw,19px);line-height:1.75;font-weight:500}.hero-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:30px}.hero-card{border:1px solid rgba(255,255,255,.16);border-radius:28px;padding:28px;background:rgba(255,255,255,.08);backdrop-filter:blur(18px);box-shadow:0 24px 70px rgba(0,0,0,.2)}.hero-card h2{margin:10px 0 12px;font-size:26px;line-height:1.05;letter-spacing:-.04em}.hero-card p{font-size:11px;line-height:1.7}.hero-list{display:grid;gap:12px;margin-top:22px}.hero-list div{display:grid;grid-template-columns:26px 1fr;gap:10px;padding-top:12px;border-top:1px solid rgba(255,255,255,.12);color:#d8e6f4;font-size:11px;line-height:1.55}.hero-list strong{color:var(--ti-champagne);font-size:9px;letter-spacing:.08em}
+.section{padding:76px 0}.section-white{background:#fff}.section-tint{background:linear-gradient(180deg,#fff 0%,#f7f5ef 100%)}.heading{display:grid;grid-template-columns:minmax(0,1fr) minmax(300px,.55fr);gap:44px;align-items:end;margin-bottom:30px}.heading h2{margin:8px 0 0;color:var(--ti-navy);font-size:clamp(32px,4.5vw,58px);line-height:.98;letter-spacing:-.058em;font-weight:600}.heading p{margin:0;color:var(--ti-body);font-size:12px;line-height:1.75}
+.info-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.info-card{min-height:242px;padding:24px;border:1px solid var(--ti-line-soft);border-radius:24px;background:#fff;box-shadow:0 10px 30px rgba(2,46,100,.055)}.info-card:nth-child(2){background:#d9f1f1}.info-card:nth-child(3){background:#f2e9dc}.info-card:nth-child(4){background:#e9eef8}.info-card .num{font-size:9px;color:var(--ti-blue-soft);font-weight:800;letter-spacing:.12em}.info-card h3{margin:42px 0 10px;color:var(--ti-navy);font-size:20px;line-height:1.12;letter-spacing:-.035em}.info-card p{margin:0;color:var(--ti-body);font-size:10.5px;line-height:1.72}
+.alert{margin-top:20px;padding:18px 20px;border:1px solid rgba(138,102,25,.22);border-radius:18px;background:#fff9e9;color:#6d5316;display:grid;grid-template-columns:26px 1fr;gap:12px;font-size:10.5px;line-height:1.7}.alert strong{display:block;color:#5b4511;margin-bottom:3px}
+.data-shell{border:1px solid var(--ti-line-dark);border-radius:30px;background:#fff;overflow:hidden;box-shadow:var(--ti-soft-shadow)}.data-head{padding:30px;background:linear-gradient(145deg,#061a30,#0a315c);color:#fff;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:26px;align-items:end}.data-head h3{margin:10px 0 8px;font-size:32px;letter-spacing:-.05em}.data-head p{margin:0;max-width:760px;color:#c5d8eb;font-size:11px;line-height:1.7}.data-count{font-size:10px;color:#c5d8eb;text-align:right;line-height:1.6}.entity-tabs{display:flex;overflow:auto;border-bottom:1px solid var(--ti-line-dark);background:#fbfcfd;padding:0 18px}.entity-tab{flex:0 0 auto;min-height:54px;padding:0 16px;border:0;border-bottom:3px solid transparent;background:transparent;color:var(--ti-muted);font-size:10px;font-weight:800;white-space:nowrap}.entity-tab[aria-selected="true"]{color:var(--ti-navy);border-bottom-color:var(--ti-aqua)}.finder{display:grid;grid-template-columns:minmax(260px,.44fr) minmax(0,1fr);min-height:540px}.finder-list{border-right:1px solid var(--ti-line-dark);min-width:0;background:#fff}.finder-search{padding:18px;border-bottom:1px solid var(--ti-line-dark)}.finder-search label{display:block;margin-bottom:7px;color:var(--ti-muted);font-size:9px;font-weight:800;letter-spacing:.09em;text-transform:uppercase}.finder-search input{width:100%;min-height:44px;border:1px solid var(--ti-line-dark);border-radius:12px;padding:0 13px;color:var(--ti-navy);outline:0;font-size:11px}.record-list{max-height:620px;overflow:auto;padding:8px}.record-option{width:100%;min-height:62px;border:0;border-bottom:1px solid rgba(2,46,100,.06);background:#fff;color:var(--ti-navy);text-align:left;padding:10px 12px;display:grid;grid-template-columns:42px minmax(0,1fr) auto;gap:10px;align-items:center}.record-option:hover,.record-option[aria-selected="true"]{background:#f3f8fb}.record-logo{width:42px;height:42px;border:1px solid var(--ti-line-soft);border-radius:10px;background:#fff;display:grid;place-items:center;overflow:hidden}.record-logo img{width:100%;height:100%;object-fit:contain;padding:4px}.record-logo span{font-size:9px;font-weight:800;color:var(--ti-blue-soft)}.record-copy{min-width:0}.record-copy strong{display:block;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.record-copy span{display:block;margin-top:4px;color:var(--ti-muted);font-size:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.record-arrow{color:var(--ti-blue-soft);font-size:14px}.record-empty{padding:30px 20px;color:var(--ti-muted);font-size:10.5px;line-height:1.7}.detail{padding:30px;min-width:0}.detail-empty{min-height:100%;display:grid;place-items:center;border:1px dashed var(--ti-line-dark);border-radius:22px;padding:36px;color:var(--ti-muted);text-align:center;font-size:11px;line-height:1.7}.detail-head{display:grid;grid-template-columns:70px minmax(0,1fr);gap:16px;align-items:center;padding-bottom:20px;border-bottom:1px solid var(--ti-line-dark)}.detail-media{width:70px;height:70px;border:1px solid var(--ti-line-dark);border-radius:16px;background:#fff;display:grid;place-items:center;overflow:hidden}.detail-media img{width:100%;height:100%;object-fit:contain;padding:7px}.detail-media span{font-size:12px;font-weight:800;color:var(--ti-blue-soft)}.detail-head h3{margin:4px 0 5px;color:var(--ti-navy);font-size:28px;line-height:1.05;letter-spacing:-.045em}.detail-head p{margin:0;color:var(--ti-muted);font-size:10px;line-height:1.6}.fact-groups{display:grid;gap:12px;margin-top:18px}.fact-group{border:1px solid var(--ti-line-soft);border-radius:18px;padding:18px;background:#fff}.fact-group h4{margin:0 0 11px;color:var(--ti-navy);font-size:13px}.fact-row{display:grid;grid-template-columns:minmax(150px,.38fr) minmax(0,1fr);gap:14px;padding:9px 0;border-top:1px solid rgba(2,46,100,.06);font-size:10px;line-height:1.6}.fact-row:first-of-type{border-top:0}.fact-row b{color:var(--ti-blue-soft)}.fact-row span{color:var(--ti-body);white-space:pre-line}.source-note{margin-top:18px;padding:14px 16px;border-radius:14px;background:#f3f6f8;color:var(--ti-body);font-size:9.5px;line-height:1.65}
+.guidance-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.guidance-card{padding:22px;border:1px solid var(--ti-line-soft);border-radius:22px;background:#fff}.guidance-card h3{margin:6px 0 9px;color:var(--ti-navy);font-size:16px;line-height:1.2}.guidance-card p{margin:0;color:var(--ti-body);font-size:10px;line-height:1.7}.guidance-card .type{font-size:8px;font-weight:800;letter-spacing:.11em;text-transform:uppercase;color:var(--ti-blue-soft)}
+.cta{position:relative;overflow:hidden;padding:38px;border-radius:30px;background:radial-gradient(circle at 94% 0%,rgba(95,199,207,.18),transparent 30%),linear-gradient(135deg,var(--ti-navy),var(--ti-navy-deep));color:#fff;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:30px;align-items:center}.cta h2{margin:9px 0 8px;font-size:34px;line-height:1;letter-spacing:-.05em}.cta p{margin:0;max-width:700px;color:#c5d8eb;font-size:11px;line-height:1.7}.cta-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}.cta .btn-light{background:rgba(255,255,255,.1);color:#fff;border-color:rgba(255,255,255,.18)}
+.faq{display:grid;gap:8px;max-width:980px}.faq details{border:1px solid var(--ti-line-dark);border-radius:16px;background:#fff;overflow:hidden}.faq summary{cursor:pointer;list-style:none;min-height:58px;padding:0 18px;display:flex;align-items:center;justify-content:space-between;gap:20px;color:var(--ti-navy);font-size:11px;font-weight:800}.faq summary::-webkit-details-marker{display:none}.faq summary:after{content:"+";color:var(--ti-aqua);font-size:20px}.faq details[open] summary:after{content:"−"}.faq .answer{padding:0 18px 18px;color:var(--ti-body);font-size:10px;line-height:1.75}.legal{padding:24px;border-top:1px solid var(--ti-line-dark);background:#f3f6f8;color:var(--ti-muted);font-size:9px;line-height:1.7}.legal strong{color:var(--ti-navy)}
+.loading{padding:24px;color:#c5d8eb;font-size:10px}.error{color:var(--ti-danger)}
+@media(max-width:1000px){.hero-inner,.heading{grid-template-columns:1fr}.hero-inner{gap:30px}.info-grid{grid-template-columns:1fr 1fr}.finder{grid-template-columns:1fr}.finder-list{border-right:0;border-bottom:1px solid var(--ti-line-dark)}.record-list{max-height:330px}.guidance-grid{grid-template-columns:1fr 1fr}.cta{grid-template-columns:1fr}.cta-actions{justify-content:flex-start}.data-head{grid-template-columns:1fr}.data-count{text-align:left}}
+@media(max-width:680px){.wrap,.rail-inner{width:min(var(--ti-content),calc(100% - 28px))}.hero{min-height:auto}.hero-inner{min-height:auto;padding:68px 0 100px}.hero h1{font-size:clamp(48px,15vw,78px)}.hero-card{padding:22px}.section{padding:58px 0}.info-grid,.guidance-grid{grid-template-columns:1fr}.heading h2{font-size:38px}.data-head,.detail{padding:22px}.finder{min-height:0}.fact-row{grid-template-columns:1fr;gap:3px}.cta{padding:28px}.rail-context{display:none}}
+@media print{.travel-info-rail,.hero,.entity-tabs,.finder-list,.cta,.faq{display:none!important}.section{padding:0}.data-shell{border:0;box-shadow:none}.finder{display:block}.detail{padding:0}}
 </style>
-
-<style id="skandi-b011-separate-page-style">
-:root{
-  --sk-blue:#022e64;
-  --sk-blue-soft:#285ca8;
-  --sk-blue2:#0b3a7a;
-  --sk-light:#d7e6ff;
-  --sk-pale:#f6faff;
-  --sk-bg:#f7faff;
-  --sk-border:#dbe3ef;
-  --sk-border-soft:#eef2f7;
-  --sk-text:#111;
-  --sk-body:#555;
-  --sk-muted:#667085;
-  --sk-cyan:#5FC7CF;
-  --sk-ok:#087443;
-  --sk-danger:#8a1f1f;
-  --sk-ivory:#fbfaf6;
-  --sk-porcelain:#f5f1ea;
-  --sk-champagne:#d1bc98;
-  --sk-ink:#03111f;
-  --sk-ink-soft:#061a30;
-  --sk-shadow:0 8px 26px rgba(0,0,0,.08);
-  --sk-shadow-strong:0 14px 34px rgba(0,0,0,.12);
-  --sk-max:1180px;
-}
-
-html,body{
-  background:#fff;
-  color:var(--sk-text);
-  -webkit-font-smoothing:antialiased;
-  text-rendering:optimizeLegibility;
-}
-
-.travel-info-rail{
-  position:sticky;
-  top:0;
-  z-index:30;
-  border-bottom:1px solid var(--sk-border);
-  background:rgba(255,255,255,.95);
-  backdrop-filter:blur(18px);
-  -webkit-backdrop-filter:blur(18px);
-}
-.travel-info-rail-inner{
-  width:min(var(--sk-max),calc(100% - 48px));
-  min-height:62px;
-  margin:0 auto;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:18px;
-}
-.travel-info-back{
-  min-height:38px;
-  padding:0 13px;
-  display:inline-flex;
-  align-items:center;
-  gap:8px;
-  border:1px solid var(--sk-border);
-  border-radius:999px;
-  background:#fff;
-  color:var(--sk-blue);
-  text-decoration:none;
-  font-size:9px;
-  line-height:1;
-  font-weight:800;
-  cursor:pointer;
-}
-.travel-info-back:hover{
-  border-color:rgba(95,199,207,.55);
-  background:var(--sk-pale);
-}
-.travel-info-context{
-  color:var(--sk-muted);
-  font-size:8px;
-  font-weight:800;
-  letter-spacing:.12em;
-  text-transform:uppercase;
-}
-
-/* B-011 Travel Info hero */
-#hero-wrap{
-  position:relative;
-  isolation:isolate;
-  min-height:390px!important;
-  padding:72px 24px 46px!important;
-  align-items:center!important;
-  justify-content:flex-end!important;
-  text-align:left!important;
-  overflow:hidden;
-  box-shadow:inset 0 -1px rgba(255,255,255,.08);
-}
-#hero-wrap::after{
-  content:"";
-  position:absolute;
-  inset:0;
-  z-index:-1;
-  pointer-events:none;
-  background:
-    radial-gradient(circle at 84% 9%,rgba(95,199,207,.13),transparent 26%),
-    linear-gradient(90deg,rgba(2,46,100,.27),transparent 58%);
-}
-#hero-wrap>.hero-kicker,
-#hero-wrap>#hero-title,
-#hero-wrap>#hero-sub{
-  width:min(var(--sk-max),calc(100% - 0px));
-  margin-left:auto;
-  margin-right:auto;
-  text-align:left;
-}
-.hero-kicker{
-  margin-bottom:9px!important;
-  color:var(--sk-cyan)!important;
-  font-size:9px!important;
-  font-weight:850!important;
-  letter-spacing:.17em!important;
-}
-#hero-title{
-  margin-bottom:12px!important;
-  color:#fff!important;
-  font-size:clamp(38px,5vw,58px)!important;
-  line-height:.99!important;
-  letter-spacing:-.05em!important;
-  font-weight:700!important;
-}
-#hero-sub{
-  max-width:var(--sk-max)!important;
-  padding-right:min(360px,25vw);
-  color:rgba(255,255,255,.86)!important;
-  font-size:13px!important;
-  line-height:1.72!important;
-}
-
-/* B-011 content rhythm */
-.content-section{
-  max-width:var(--sk-max)!important;
-  padding:54px 24px!important;
-  margin:0 auto!important;
-}
-.content-section[style*="background"]{
-  max-width:none!important;
-  padding-left:max(24px,calc((100vw - var(--sk-max))/2 + 24px))!important;
-  padding-right:max(24px,calc((100vw - var(--sk-max))/2 + 24px))!important;
-}
-.section-title{
-  margin:0 0 8px!important;
-  color:var(--sk-blue)!important;
-  font-size:clamp(26px,3.3vw,36px)!important;
-  line-height:1.08!important;
-  letter-spacing:-.04em!important;
-  text-align:left!important;
-}
-.section-subtitle{
-  max-width:780px!important;
-  margin:0 0 26px!important;
-  color:var(--sk-body)!important;
-  font-size:10.5px!important;
-  line-height:1.68!important;
-  text-align:left!important;
-}
-
-/* Cards */
-.info-grid,.bag-grid,.card-grid,.rules-grid,.guide-grid{
-  gap:14px!important;
-}
-.info-card,.bag-card,.ins-card,.rule-card,.result-card,.live-product{
-  border:1px solid var(--sk-border-soft)!important;
-  border-radius:17px!important;
-  background:#fff!important;
-  box-shadow:0 5px 18px rgba(2,46,100,.05)!important;
-}
-.info-card,.bag-card,.ins-card{
-  padding:24px!important;
-}
-.rule-card,.result-card,.live-product{
-  padding:18px!important;
-}
-.info-card:hover,.bag-card:hover,.ins-card:hover,.rule-card:hover,.live-product:hover{
-  border-color:rgba(95,199,207,.46)!important;
-  box-shadow:0 13px 28px rgba(2,46,100,.09)!important;
-}
-.info-header,.bag-header{
-  gap:13px!important;
-  margin-bottom:16px!important;
-  padding-bottom:15px!important;
-}
-.info-icon,.bag-icon,.ins-icon{
-  width:46px!important;
-  height:46px!important;
-  flex:0 0 46px!important;
-  border:1px solid rgba(95,199,207,.26)!important;
-  border-radius:12px!important;
-  background:var(--sk-pale)!important;
-  color:var(--sk-blue)!important;
-  font-size:21px!important;
-}
-.info-header h3,.bag-header h3,.ins-card h3{
-  color:var(--sk-blue)!important;
-  font-size:16px!important;
-  line-height:1.3!important;
-  letter-spacing:-.02em!important;
-}
-.info-card p,.bag-card p,.ins-card p,.rule-card p{
-  color:var(--sk-body)!important;
-  font-size:10px!important;
-  line-height:1.7!important;
-}
-
-/* Search / live data surfaces */
-.airline-search-shell,.requirements-search,.ins-search{
-  padding:22px!important;
-  border:1px solid var(--sk-border)!important;
-  border-radius:17px!important;
-  background:#fff!important;
-  box-shadow:var(--sk-shadow)!important;
-}
-.search-field input,.field input,.field select,.ins-search input{
-  min-height:44px!important;
-  border:1px solid var(--sk-border)!important;
-  border-radius:10px!important;
-  background:#fff!important;
-  color:var(--sk-blue)!important;
-  font-size:10px!important;
-}
-.search-button,.btn-primary,.btn-secondary{
-  min-height:42px!important;
-  padding:0 16px!important;
-  border-radius:10px!important;
-  font-size:9px!important;
-  font-weight:850!important;
-  letter-spacing:.02em!important;
-}
-.search-button,.btn-primary{
-  border:0!important;
-  background:linear-gradient(135deg,var(--sk-blue),var(--sk-blue2))!important;
-  color:#fff!important;
-}
-.btn-secondary{
-  border:1px solid var(--sk-border)!important;
-  background:#fff!important;
-  color:var(--sk-blue)!important;
-}
-.live-card,.lookup-result,.live-results{
-  border-radius:15px!important;
-  box-shadow:none!important;
-}
-.live-notice,.lookup-status,.live-status{
-  border-radius:10px!important;
-  font-size:9px!important;
-  line-height:1.6!important;
-}
-
-/* Alerts and CTA */
-.alert-box{
-  padding:18px!important;
-  gap:13px!important;
-  border-radius:13px!important;
-  box-shadow:none!important;
-}
-.alert-icon{font-size:23px!important}
-.alert-content h4{
-  font-size:12px!important;
-  line-height:1.35!important;
-}
-.alert-content p{
-  font-size:9.5px!important;
-  line-height:1.65!important;
-}
-.action-banner,.visa-banner{
-  padding:28px!important;
-  border-radius:18px!important;
-  background:
-    radial-gradient(circle at 94% 0%,rgba(95,199,207,.12),transparent 28%),
-    linear-gradient(135deg,var(--sk-blue),var(--sk-ink-soft))!important;
-  box-shadow:0 12px 30px rgba(2,46,100,.14)!important;
-}
-.action-banner h3,.visa-banner h3{
-  font-size:21px!important;
-  letter-spacing:-.025em!important;
-}
-.action-banner p,.visa-banner p{
-  font-size:10px!important;
-  line-height:1.65!important;
-}
-
-/* FAQ */
-.faq-grid{
-  max-width:900px!important;
-  margin:0!important;
-}
-details{
-  margin-bottom:8px!important;
-  border:1px solid var(--sk-border)!important;
-  border-radius:12px!important;
-  box-shadow:none!important;
-}
-summary{
-  min-height:50px!important;
-  padding:14px 16px!important;
-  color:var(--sk-blue)!important;
-  font-size:10px!important;
-}
-.faq-content{
-  padding:0 16px 16px!important;
-  color:var(--sk-body)!important;
-  font-size:9.5px!important;
-  line-height:1.7!important;
-}
-
-/* Legal/regulatory */
-.legal-section{
-  max-width:none!important;
-  border-top:1px solid var(--sk-border)!important;
-  background:var(--sk-pale)!important;
-  padding-left:max(24px,calc((100vw - var(--sk-max))/2 + 24px))!important;
-  padding-right:max(24px,calc((100vw - var(--sk-max))/2 + 24px))!important;
-}
-.legal-grid{gap:10px!important}
-.legal-box,.legal-mini{
-  border:1px solid var(--sk-border-soft)!important;
-  border-radius:12px!important;
-  background:#fff!important;
-  color:var(--sk-muted)!important;
-  font-size:9px!important;
-  line-height:1.6!important;
-}
-.legal-box{padding:17px!important}
-
-/* Comparison tables and supporting content */
-.table-wrapper{
-  border:1px solid var(--sk-border)!important;
-  border-radius:14px!important;
-  box-shadow:none!important;
-}
-table{font-size:9px!important}
-th{background:var(--sk-pale)!important;color:var(--sk-blue)!important}
-th,td{padding:12px!important;border-color:var(--sk-border-soft)!important}
-
-@media(max-width:860px){
-  .travel-info-rail-inner{width:min(var(--sk-max),calc(100% - 28px));min-height:56px}
-  .travel-info-context{display:none}
-  #hero-wrap{min-height:330px!important;padding:58px 14px 36px!important}
-  #hero-wrap>.hero-kicker,
-  #hero-wrap>#hero-title,
-  #hero-wrap>#hero-sub{width:min(var(--sk-max),calc(100% - 0px))}
-  #hero-title{font-size:38px!important}
-  #hero-sub{padding-right:0!important;font-size:12px!important}
-  .content-section{padding:44px 14px!important}
-  .content-section[style*="background"],.legal-section{
-    padding-left:14px!important;
-    padding-right:14px!important;
-  }
-}
-</style>
-
-
-<style id="skandi-b011-special-link-fix">
-a.btn-primary{display:inline-flex;align-items:center;justify-content:center;text-decoration:none}
-</style>
-
 </head>
 <body>
+<nav class="travel-info-rail" aria-label="Travel Info"><div class="rail-inner"><button id="backToTravelInfo" class="rail-back" type="button">← Travel Info</button><div class="rail-context">Travel Info · Special Assistance</div></div></nav>
+<header class="hero"><div class="wrap hero-inner"><div><div class="kicker">SKANDI Accessibility</div><h1>Travel with the support you need.</h1><p>Plan assistance across your full journey. General guidance sits alongside the accessibility, mobility and medical information currently published for SKANDI airlines, airports, hotels, transfers and experiences.</p><div class="hero-actions"><button class="btn btn-aqua" type="button" data-scroll="journeyData">Check published accessibility</button><button id="manageBookingTop" class="btn btn-light" type="button">Manage my booking</button></div></div><aside class="hero-card"><div class="kicker">Before you travel</div><h2>Tell the right provider early.</h2><p>Assistance can involve more than the flight. Airport teams, operating airlines, hotels and ground-transfer providers may each have their own process or facilities.</p><div class="hero-list"><div><strong>01</strong><span>Review your operating airline and airports, not only the seller shown on the booking.</span></div><div><strong>02</strong><span>Record wheelchair, mobility, medical-equipment or other assistance needs in the booking where supported.</span></div><div><strong>03</strong><span>Check the published provider information below for your specific journey.</span></div></div></aside></div></header>
 
-<section id="hero-wrap" data-section-id="special-hero">
-  <div class="hero-kicker" data-content-id="special-hero-kicker" data-i18n="sa.hero.kicker">SKANDI ACCESSIBILITY</div>
-  <div id="hero-title" data-content-id="special-hero-title" data-i18n="sa.hero.title">Special Assistance</div>
-  <div id="hero-sub" data-content-id="special-hero-copy" data-i18n="sa.hero.copy">We are committed to making travel accessible for everyone. Whether you require mobility assistance, travel with a service animal, or carry medical equipment, we are here to support your journey.</div>
-</section>
+<section class="section section-white"><div class="wrap"><div class="heading"><div><div class="kicker kicker-dark">Overall information</div><h2>Assistance can span every handoff.</h2></div><p>Use this page as a planning hub, then confirm the exact service with the relevant operating provider. What is available can vary by airport, airline, property, vehicle and destination.</p></div><div class="info-grid"><article class="info-card"><span class="num">01 · AIRPORT</span><h3>Wheelchair & mobility</h3><p>Airport assistance may include help through the terminal, security, boarding and arrival. If you use your own wheelchair or mobility aid, confirm handling requirements and any battery restrictions with the operating airline.</p></article><article class="info-card"><span class="num">02 · FLIGHT</span><h3>Medical & onboard needs</h3><p>Medical equipment, oxygen, seating restrictions and service-animal procedures can depend on the operating carrier and route. Advance approval or documentation may be required for some services.</p></article><article class="info-card"><span class="num">03 · STAY</span><h3>Accessible accommodation</h3><p>Accessibility is property-specific. Check any stored information about step-free access, lifts, adapted rooms and accessible facilities, then confirm critical requirements directly with the hotel.</p></article><article class="info-card"><span class="num">04 · GROUND</span><h3>Transfers & experiences</h3><p>Vehicle access, wheelchair storage and accessible meeting points vary. Review the provider information available for transfers, tours and activities before departure.</p></article></div><div class="alert"><span aria-hidden="true">◷</span><div><strong>Arrange assistance as early as possible.</strong>Some aviation assistance services use advance-notice windows, commonly up to 48 hours. The exact requirement depends on the operating carrier, airport, route and requested service. Always follow the instructions attached to your booking and provider.</div></div></div></section>
 
-<section class="content-section">
-  <div class="section-title" data-i18n="sa.services.title">How We Can Help</div>
-  <div class="section-subtitle" data-i18n="sa.services.copy">Review the categories below to understand what assistance is available and how to request it for your upcoming trip.</div>
-  
-  <div class="alert-box">
-    <div class="alert-icon">⏱️</div>
-    <div class="alert-content">
-      <h4 data-i18n="sa.alert.title">The 48-Hour Notice Rule</h4>
-      <p data-i18n="sa.alert.desc">To ensure we can accommodate your needs, you <strong>must request assistance at least 48 hours before your scheduled departure</strong>. If you notify us closer to departure, we will make every reasonable effort, but the requested services cannot be guaranteed.</p>
-    </div>
-  </div>
+<section id="journeyData" class="section section-tint"><div class="wrap"><div class="heading"><div><div class="kicker kicker-dark">Published provider information</div><h2>Check accessibility across your journey.</h2></div><p>This section is built from assistance-related fields already stored in the canonical SKANDI Inventory / Travel Info data. It does not invent a capability when no provider information is stored.</p></div><div class="data-shell"><div class="data-head"><div><div class="kicker">SKANDI Travel Info</div><h3>Accessibility directory</h3><p>Choose a travel component to see its published wheelchair, accessibility, mobility, medical and other special-assistance information.</p></div><div id="dataCount" class="data-count">Loading published information…</div></div><div id="entityTabs" class="entity-tabs" role="tablist" aria-label="Travel component"></div><div class="finder"><aside class="finder-list"><div class="finder-search"><label for="entitySearch">Find a provider or place</label><input id="entitySearch" type="search" autocomplete="off" placeholder="Search published accessibility information"></div><div id="recordList" class="record-list"><div class="record-empty">Loading published information…</div></div></aside><main id="recordDetail" class="detail"><div class="detail-empty">Select an item to see the special-assistance information currently stored for it.</div></main></div></div></div></section>
 
-  <div class="info-grid">
-    <!-- Wheelchair / Mobility -->
-    <article class="info-card">
-      <div class="info-header">
-        <div class="info-icon">♿</div>
-        <h3 data-i18n="sa.card1.title">Wheelchair & Mobility</h3>
-      </div>
-      <p data-i18n="sa.card1.desc">Assistance is available for navigating the airport, boarding the aircraft, and transferring to your seat. If you are traveling with your own manual or electric wheelchair, you must provide its dimensions, weight, and battery type (lithium-ion or dry cell) during booking so we can safely store it in the hold.</p>
-    </article>
+<section class="section section-white"><div class="wrap"><div class="heading"><div><div class="kicker kicker-dark">Travel guidance</div><h2>Published assistance guidance.</h2></div><p>Relevant SKANDI Travel Info articles are shown here when they are tagged or categorized for accessibility, mobility, medical or special-assistance topics.</p></div><div id="guidanceGrid" class="guidance-grid"><div class="guidance-card"><div class="type">Travel Info</div><h3>Guidance is loading</h3><p>Published assistance content will appear automatically.</p></div></div></div></section>
 
-    <!-- Medical Equipment -->
-    <article class="info-card">
-      <div class="info-header">
-        <div class="info-icon">⚕️</div>
-        <h3 data-i18n="sa.card2.title">Medical Equipment & Oxygen</h3>
-      </div>
-      <p data-i18n="sa.card2.desc">You may bring necessary medical equipment (like CPAP machines) free of charge in addition to your hand luggage. If you require medical oxygen during the flight, you must pre-book this service. Use of personal portable oxygen concentrators (POCs) requires advance medical clearance.</p>
-    </article>
+<section class="section section-tint"><div class="wrap"><div class="cta"><div><div class="kicker">Your booking</div><h2>Need assistance added to a trip?</h2><p>Open My Trips to review your booking. If the required option is not available there, contact SKANDI Support with the booking reference and the assistance you need.</p></div><div class="cta-actions"><button id="manageBooking" class="btn btn-aqua" type="button">Manage my booking</button><button id="contactSupport" class="btn btn-light" type="button">Contact support</button></div></div></div></section>
 
-    <!-- Service Animals -->
-    <article class="info-card">
-      <div class="info-header">
-        <div class="info-icon">🦮</div>
-        <h3 data-i18n="sa.card3.title">Service Dogs (SVAN)</h3>
-      </div>
-      <p data-i18n="sa.card3.desc">Fully trained service dogs travel free of charge in the cabin. <strong>Note:</strong> In compliance with updated international regulations, Emotional Support Animals (ESAs) are not recognized as service animals and must travel as regular pets. For US flights, DOT Service Animal forms must be submitted in advance.</p>
-    </article>
+<section class="section section-white"><div class="wrap"><div class="heading"><div><div class="kicker kicker-dark">Common questions</div><h2>Before requesting assistance.</h2></div></div><div class="faq"><details><summary>When should I arrange airport or airline assistance?</summary><div class="answer">Arrange it as early as you can and follow the operating airline's instructions. Some aviation assistance services use an advance-notice window of up to 48 hours, while other requests can have different deadlines.</div></details><details><summary>Should I check both the airline and the airport?</summary><div class="answer">Yes. The operating airline and airport can each be responsible for different parts of the journey. Use the published information above for both, and confirm any critical requirement directly.</div></details><details><summary>What if no accessibility information is shown for my hotel or transfer?</summary><div class="answer">It means SKANDI does not currently have a published assistance-related field for that item in the canonical data returned to this page. Do not assume that a service is or is not accessible; contact the provider or SKANDI Support before travel.</div></details><details><summary>Can I travel with medication or medical equipment?</summary><div class="answer">Requirements vary by equipment, carrier, security rules and destination. Keep essential medication accessible during travel and confirm documentation, battery, oxygen and equipment rules with the relevant provider before departure.</div></details></div></div></section>
 
-    <!-- Hidden Disabilities -->
-    <article class="info-card">
-      <div class="info-header">
-        <div class="info-icon">🌻</div>
-        <h3 data-i18n="sa.card4.title">Hidden Disabilities</h3>
-      </div>
-      <p data-i18n="sa.card4.desc">We recognize the Sunflower Lanyard scheme. If you or someone you are traveling with has a hidden disability (such as autism, dementia, or severe anxiety), wearing the lanyard discreetly lets our airport and cabin crew know you may need more time, understanding, or assistance.</p>
-    </article>
-  </div>
-</section>
-
-<section class="content-section" style="padding-top: 0;">
-  <div class="action-banner">
-    <h3 data-i18n="sa.action.title">Ready to Request Assistance?</h3>
-    <p data-i18n="sa.action.desc">The fastest way to arrange assistance is to add it directly to your booking via My Profile, or by contacting our dedicated Special Assistance desk.</p>
-    <a class="btn-primary" data-i18n="sa.action.btn" href="https://www.skanditravels.com/my-profile?tab=trips" target="_top" rel="noopener">Manage My Booking</a>
-  </div>
-</section>
-
-<section class="content-section">
-  <div class="section-title" data-i18n="sa.faq.title">Frequently Asked Questions</div>
-  
-  <div class="faq-grid">
-    <details>
-      <summary data-i18n="sa.faq.q1">Is there a charge for booking special assistance?</summary>
-      <div class="faq-content" data-i18n="sa.faq.a1">No. All special assistance services, including wheelchair support at the airport, traveling with a recognized service dog, and transporting essential medical equipment, are provided completely free of charge.</div>
-    </details>
-    <details>
-      <summary data-i18n="sa.faq.q2">Can I sit in an emergency exit row if I request assistance?</summary>
-      <div class="faq-content" data-i18n="sa.faq.a2">For safety reasons mandated by aviation authorities (FAA/EASA), passengers with reduced mobility, visual/hearing impairments, or those traveling with service animals or infants are strictly prohibited from sitting in emergency exit rows.</div>
-    </details>
-    <details>
-      <summary data-i18n="sa.faq.q3">Can I take my medication in my hand luggage?</summary>
-      <div class="faq-content" data-i18n="sa.faq.a3">Yes, you should always pack essential medication in your hand luggage. Liquid medication over 100ml is permitted but must be accompanied by a doctor's prescription or a pharmacy label clearly showing your name.</div>
-    </details>
-  </div>
-</section>
-
-<!-- REGULATORY AND LEGAL FOOTER -->
-<section class="content-section legal-section">
-  <h4 data-i18n="sa.legal.title">Regulatory Compliance & Rights</h4>
-  <div class="legal-grid">
-    <div class="legal-box">
-      <strong data-i18n="sa.legal.euTitle">EU / EEA & UK Regulations</strong>
-      <span data-i18n="sa.legal.euCopy">In accordance with Regulation (EC) No 1107/2006, disabled persons and persons with reduced mobility have the right to travel by air without discrimination. Assistance at airports and on board aircraft must be provided free of charge, provided that the operating carrier is notified at least 48 hours before the published departure time.</span>
-    </div>
-    <div class="legal-box">
-      <strong data-i18n="sa.legal.usTitle">US Air Carrier Access Act (ACAA)</strong>
-      <span data-i18n="sa.legal.usCopy">In accordance with 14 CFR Part 382, air carriers may not discriminate against passengers on the basis of disability. SKANDI Travels is committed to these standards. For flights arriving or departing from the United States, a Complaint Resolution Official (CRO) is available at the airport to handle any disability-related concerns.</span>
-    </div>
-  </div>
-</section>
+<footer class="legal"><div class="wrap"><strong>Important:</strong> This page summarizes general planning information and provider facts published in SKANDI's canonical travel database. It does not replace medical advice, an airline's conditions of carriage, airport accessibility procedures, hotel confirmation, ground-provider requirements or official accessibility regulations. Always confirm critical assistance directly before travel.</div></footer>
 
 <script>
-const SOURCE = "SKANDI_ASSISTANCE_PAGE";
-
-const I18N = {
-  "EN": {
-    "sa.hero.kicker": "SKANDI ACCESSIBILITY",
-    "sa.hero.title": "Special Assistance",
-    "sa.hero.copy": "We are committed to making travel accessible for everyone. Whether you require mobility assistance, travel with a service animal, or carry medical equipment, we are here to support your journey.",
-    "sa.services.title": "How We Can Help",
-    "sa.services.copy": "Review the categories below to understand what assistance is available and how to request it for your upcoming trip.",
-    "sa.alert.title": "The 48-Hour Notice Rule",
-    "sa.alert.desc": "To ensure we can accommodate your needs, you must request assistance at least 48 hours before your scheduled departure. If you notify us closer to departure, we will make every reasonable effort, but the requested services cannot be guaranteed.",
-    "sa.card1.title": "Wheelchair & Mobility",
-    "sa.card1.desc": "Assistance is available for navigating the airport, boarding the aircraft, and transferring to your seat. If you are traveling with your own manual or electric wheelchair, you must provide its dimensions, weight, and battery type (lithium-ion or dry cell) during booking.",
-    "sa.card2.title": "Medical Equipment & Oxygen",
-    "sa.card2.desc": "You may bring necessary medical equipment (like CPAP machines) free of charge in addition to your hand luggage. If you require medical oxygen during the flight, you must pre-book this service. Use of personal portable oxygen concentrators (POCs) requires advance medical clearance.",
-    "sa.card3.title": "Service Dogs (SVAN)",
-    "sa.card3.desc": "Fully trained service dogs travel free of charge in the cabin. Note: In compliance with updated international regulations, Emotional Support Animals (ESAs) are not recognized as service animals and must travel as regular pets. For US flights, DOT Service Animal forms must be submitted in advance.",
-    "sa.card4.title": "Hidden Disabilities",
-    "sa.card4.desc": "We recognize the Sunflower Lanyard scheme. If you or someone you are traveling with has a hidden disability (such as autism, dementia, or severe anxiety), wearing the lanyard discreetly lets our airport and cabin crew know you may need more time, understanding, or assistance.",
-    "sa.action.title": "Ready to Request Assistance?",
-    "sa.action.desc": "The fastest way to arrange assistance is to add it directly to your booking via My Profile, or by contacting our dedicated Special Assistance desk.",
-    "sa.action.btn": "Manage My Booking",
-    "sa.faq.title": "Frequently Asked Questions",
-    "sa.faq.q1": "Is there a charge for booking special assistance?",
-    "sa.faq.a1": "No. All special assistance services, including wheelchair support at the airport, traveling with a recognized service dog, and transporting essential medical equipment, are provided completely free of charge.",
-    "sa.faq.q2": "Can I sit in an emergency exit row if I request assistance?",
-    "sa.faq.a2": "For safety reasons mandated by aviation authorities (FAA/EASA), passengers with reduced mobility, visual/hearing impairments, or those traveling with service animals or infants are strictly prohibited from sitting in emergency exit rows.",
-    "sa.faq.q3": "Can I take my medication in my hand luggage?",
-    "sa.faq.a3": "Yes, you should always pack essential medication in your hand luggage. Liquid medication over 100ml is permitted but must be accompanied by a doctor's prescription or a pharmacy label clearly showing your name.",
-    "sa.legal.title": "Regulatory Compliance & Rights",
-    "sa.legal.euTitle": "EU / EEA & UK Regulations",
-    "sa.legal.euCopy": "In accordance with Regulation (EC) No 1107/2006, disabled persons and persons with reduced mobility have the right to travel by air without discrimination. Assistance at airports and on board aircraft must be provided free of charge, provided that the operating carrier is notified at least 48 hours before the published departure time.",
-    "sa.legal.usTitle": "US Air Carrier Access Act (ACAA)",
-    "sa.legal.usCopy": "In accordance with 14 CFR Part 382, air carriers may not discriminate against passengers on the basis of disability. SKANDI Travels is committed to these standards. For flights arriving or departing from the United States, a Complaint Resolution Official (CRO) is available at the airport to handle any disability-related concerns."
-  },
-  "SV": {
-    "sa.hero.kicker": "SKANDI TILLGÄNGLIGHET",
-    "sa.hero.title": "Särskild Assistans",
-    "sa.hero.copy": "Vi är engagerade i att göra resandet tillgängligt för alla. Oavsett om du behöver mobilitetsassistans, reser med en ledarhund eller har medicinsk utrustning med dig, är vi här för att stödja din resa.",
-    "sa.services.title": "Hur vi kan hjälpa",
-    "sa.services.copy": "Läs igenom kategorierna nedan för att förstå vilken assistans som finns tillgänglig och hur du bokar den för din kommande resa.",
-    "sa.alert.title": "48-timmarsregeln",
-    "sa.alert.desc": "För att säkerställa att vi kan tillgodose dina behov måste du boka assistans senast 48 timmar före planerad avgång. Om du meddelar oss senare kommer vi att göra allt vi rimligen kan, men de begärda tjänsterna kan inte garanteras.",
-    "sa.card1.title": "Rullstol & Mobilitet",
-    "sa.card1.desc": "Assistans finns tillgänglig för att ta sig runt på flygplatsen, ombordstigning och förflyttning till din plats. Om du reser med egen manuell eller elektrisk rullstol måste du ange dess mått, vikt och batterityp (litiumjon eller torrcell) vid bokningen.",
-    "sa.card2.title": "Medicinsk Utrustning & Syrgas",
-    "sa.card2.desc": "Du får ta med nödvändig medicinsk utrustning (som CPAP) gratis utöver ditt handbagage. Behöver du medicinsk syrgas under flygningen måste detta förbokas. Användning av personlig syrgaskoncentrator (POC) kräver medicinskt förhandsgodkännande.",
-    "sa.card3.title": "Assistanshundar (SVAN)",
-    "sa.card3.desc": "Fullt utbildade assistanshundar reser gratis i kabinen. Observera: Enligt uppdaterade internationella regler erkänns inte Emotional Support Animals (ESA) som assistanshundar och måste resa som vanliga husdjur. För flyg till/från USA krävs särskilda DOT-formulär.",
-    "sa.card4.title": "Dolda Funktionsnedsättningar",
-    "sa.card4.desc": "Vi stödjer Solrosbandet (Sunflower Lanyard). Om du eller någon du reser med har en dold funktionsnedsättning (t.ex. autism, demens eller svår ångest) signalerar bandet diskret till vår personal att ni kan behöva mer tid, förståelse eller hjälp.",
-    "sa.action.title": "Redo att boka assistans?",
-    "sa.action.desc": "Det snabbaste sättet att ordna assistans är att lägga till det direkt i din bokning via Min Profil, eller genom att kontakta vår dedikerade kundtjänst för särskild assistans.",
-    "sa.action.btn": "Hantera min bokning",
-    "sa.faq.title": "Vanliga Frågor",
-    "sa.faq.q1": "Kostar det något att boka särskild assistans?",
-    "sa.faq.a1": "Nej. Alla särskilda assistanstjänster, inklusive rullstolshjälp på flygplatsen, resa med godkänd assistanshund och transport av livsviktig medicinsk utrustning, erbjuds helt utan extra kostnad.",
-    "sa.faq.q2": "Kan jag sitta vid en nödutgång om jag har bokat assistans?",
-    "sa.faq.a2": "Av säkerhetsskäl fastställda av flygmyndigheter (FAA/EASA) är passagerare med nedsatt rörlighet, syn/hörselnedsättning, eller de som reser med assistanshund eller spädbarn strängt förbjudna att sitta vid nödutgångar.",
-    "sa.faq.q3": "Får jag ta med min medicin i handbagaget?",
-    "sa.faq.a3": "Ja, du bör alltid packa livsviktig medicin i ditt handbagage. Flytande medicin över 100 ml är tillåten men måste åtföljas av ett läkarintyg eller apoteksetikett som tydligt visar ditt namn.",
-    "sa.legal.title": "Regelverk & Rättigheter",
-    "sa.legal.euTitle": "Regler inom EU / EES & UK",
-    "sa.legal.euCopy": "I enlighet med förordning (EG) nr 1107/2006 har personer med funktionshinder och nedsatt rörlighet rätt att resa med flyg utan diskriminering. Assistans på flygplatser och ombord måste tillhandahållas kostnadsfritt, förutsatt att flygbolaget meddelas minst 48 timmar före den angivna avgångstiden.",
-    "sa.legal.usTitle": "US Air Carrier Access Act (ACAA)",
-    "sa.legal.usCopy": "I enlighet med 14 CFR Part 382 får flygbolag inte diskriminera passagerare på grund av funktionshinder. SKANDI Travels åtar sig att följa dessa standarder. För flygningar till eller från USA finns ett klagomålsombud (Complaint Resolution Official, CRO) tillgängligt på flygplatsen för att hantera frågor relaterade till funktionshinder."
-  }
-};
-
-let SKANDI_USER_SETTINGS = { language: "EN" };
-
-function skandiTranslate(key, fallback="") {
-  const language = SKANDI_USER_SETTINGS?.language || "EN";
-  return I18N[language]?.[key] || I18N.EN?.[key] || fallback || key;
-}
-
-function applyTranslations() {
-  document.querySelectorAll("[data-i18n]").forEach((element) => {
-    const key = element.getAttribute("data-i18n");
-    const value = skandiTranslate(key, element.textContent || "");
-    if (value) element.innerHTML = value;
-  });
-}
-
-function initializeSettings() {
-  try {
-    const stored = JSON.parse(localStorage.getItem("skandi_user_settings"));
-    if (stored && stored.language) {
-      SKANDI_USER_SETTINGS.language = stored.language;
-    }
-  } catch (e) {}
-  
-  applyTranslations();
-}
-
-initializeSettings();
-
+(()=>{"use strict";
+const SOURCE="SKANDI_ASSISTANCE_PAGE",PARENT="SKANDI_WIX_PARENT",VERSION="V12-SPECIAL-ASSISTANCE-2026.10.11";
+const $=id=>document.getElementById(id),arr=v=>Array.isArray(v)?v:[],obj=v=>v&&typeof v==="object"&&!Array.isArray(v)?v:{},text=v=>String(v??"").trim();
+const esc=v=>text(v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const cleanKey=v=>text(v).replace(/([a-z0-9])([A-Z])/g,"$1 $2").replace(/[_\-.]+/g," ").replace(/\s+/g," ").trim();
+const human=v=>cleanKey(v).replace(/\b\w/g,c=>c.toUpperCase());
+const ASSIST_RE=/(special\s*assist|assist(ance)?|accessib|wheel\s*chair|wheelchair|mobility|reduced\s*mobility|medical|oxygen|cpap|service\s*(animal|dog)|guide\s*dog|hearing|visual|blind|deaf|disabil|step\s*free|adapted\s*room|accessible\s*room|mobility\s*scooter|sunflower|prm)/i;
+const CATEGORY_DEFS=[
+  {key:"airlines",label:"Airlines",singular:"Airline",code:x=>x.iataCode||x.code||x.icaoCode,media:x=>x.logo||x.logoIcon||x.heroImage},
+  {key:"airports",label:"Airports",singular:"Airport",code:x=>x.iata||x.iataCode||x.code,media:x=>x.logo||x.heroImage||x.image},
+  {key:"hotels",label:"Hotels",singular:"Hotel",code:x=>x.code||x.slug,media:x=>x.image||x.heroImage||x.image_url},
+  {key:"transfers",label:"Transfers",singular:"Transfer",code:x=>x.code||x.slug,media:x=>x.image||x.heroImage||x.image_url},
+  {key:"tours",label:"Tours",singular:"Tour",code:x=>x.code||x.slug,media:x=>x.image||x.heroImage||x.image_url},
+  {key:"activities",label:"Activities",singular:"Activity",code:x=>x.code||x.slug,media:x=>x.image||x.heroImage||x.image_url},
+  {key:"tickets",label:"Tickets",singular:"Ticket",code:x=>x.code||x.slug,media:x=>x.image||x.heroImage||x.image_url}
+];
+let DATA={airlines:[],airports:[],hotels:[],transfers:[],tours:[],activities:[],tickets:[],articles:[]},activeCategory="airlines",selectedId="",searchQuery="";
+function post(type,payload={}){window.parent.postMessage({source:SOURCE,type,payload,timestamp:new Date().toISOString()},"*")}
+function parseStructured(v){if(v===null||v===undefined||v==="")return v;if(typeof v!=="string")return v;const s=text(v);if((s.startsWith("{")&&s.endsWith("}"))||(s.startsWith("[")&&s.endsWith("]"))){try{return JSON.parse(s)}catch(_){return s}}return s}
+function printable(v,depth=0){if(depth>7||v===null||v===undefined||v==="")return"";v=parseStructured(v);if(typeof v==="string"||typeof v==="number")return text(v);if(typeof v==="boolean")return v?"Yes":"No";if(Array.isArray(v))return v.map(x=>printable(x,depth+1)).filter(Boolean).join(" · ");if(typeof v==="object"){const preferred=v.description??v.summary??v.body??v.text??v.notes??v.information??v.value;if(preferred!==undefined){const p=printable(preferred,depth+1);if(p)return p}return Object.entries(v).map(([k,x])=>{const p=printable(x,depth+1);return p?`${human(k)}: ${p}`:""}).filter(Boolean).join(" · ")}return""}
+function titleOf(x){return printable(x.name??x.title??x.shortName??x.displayTitle??x.code??x.iataCode??x.iata)||"Untitled"}
+function idOf(x,def){return text(x.id||x.ID||def.code(x)||titleOf(x))}
+function safeMedia(v){const u=text(v);return /^https:\/\//i.test(u)?u:""}
+function collectFacts(value,path=[],out=[],matched=false,depth=0){if(depth>7||value===null||value===undefined||value==="")return out;const parsed=parseStructured(value);if(parsed!==value)return collectFacts(parsed,path,out,matched,depth+1);if(Array.isArray(value)){value.forEach((item,i)=>collectFacts(item,[...path,String(i+1)],out,matched,depth+1));return out}if(typeof value==="object"){Object.entries(value).forEach(([key,item])=>{if(["duffel","payload","raw","sourceReference","source_reference","media_assets","media"].includes(key))return;const nextMatched=matched||ASSIST_RE.test(cleanKey(key));collectFacts(item,[...path,key],out,nextMatched,depth+1)});return out}if(!matched)return out;const rendered=printable(value);if(!rendered)return out;const label=path.map(human).filter(x=>!/^\d+$/.test(x)).filter(x=>!/^Sections?$/.test(x)).join(" · ")||"Assistance";out.push({label,value:rendered});return out}
+function factsFor(x){const facts=collectFacts(x);const seen=new Set();return facts.filter(f=>{const k=`${f.label.toLowerCase()}|${f.value.toLowerCase()}`;if(seen.has(k))return false;seen.add(k);return true}).slice(0,80)}
+function topicFor(label){const s=label.toLowerCase();if(/medical|oxygen|cpap/.test(s))return"Medical & equipment";if(/wheel|mobility|prm/.test(s))return"Wheelchair & mobility";if(/service animal|service dog|guide dog/.test(s))return"Service animals";if(/access|step free|adapted|disabil|hearing|visual|blind|deaf|sunflower/.test(s))return"Accessibility";return"Other assistance"}
+function publicRecords(def){return arr(DATA[def.key]).map(x=>({x,facts:factsFor(x)})).filter(r=>r.facts.length)}
+function allRecordCount(){return CATEGORY_DEFS.reduce((n,d)=>n+publicRecords(d).length,0)}
+function renderTabs(){const host=$("entityTabs");host.innerHTML=CATEGORY_DEFS.map(def=>{const count=publicRecords(def).length;return `<button class="entity-tab" type="button" role="tab" data-category="${def.key}" aria-selected="${activeCategory===def.key}">${esc(def.label)} · ${count}</button>`}).join("");host.querySelectorAll("[data-category]").forEach(b=>b.onclick=()=>{activeCategory=b.dataset.category;selectedId="";searchQuery="";$("entitySearch").value="";renderTabs();renderList()})}
+function filteredRecords(def){const q=searchQuery.toLowerCase();return publicRecords(def).filter(({x,facts})=>!q||`${titleOf(x)} ${def.code(x)||""} ${facts.map(f=>`${f.label} ${f.value}`).join(" ")}`.toLowerCase().includes(q))}
+function renderList(){const def=CATEGORY_DEFS.find(d=>d.key===activeCategory)||CATEGORY_DEFS[0],records=filteredRecords(def),host=$("recordList");if(!records.length){host.innerHTML=`<div class="record-empty">${searchQuery?"No matching published assistance information.":`No published assistance-related ${esc(def.label.toLowerCase())} information is currently stored.`}</div>`;$("recordDetail").innerHTML='<div class="detail-empty">Choose another travel component or check again after provider information is updated.</div>';return}if(!selectedId||!records.some(r=>idOf(r.x,def)===selectedId))selectedId=idOf(records[0].x,def);host.innerHTML=records.map(({x})=>{const id=idOf(x,def),code=text(def.code(x)),media=safeMedia(def.media(x)),initial=(code||titleOf(x).slice(0,2)).toUpperCase();return `<button class="record-option" type="button" data-id="${esc(id)}" aria-selected="${selectedId===id}"><span class="record-logo">${media?`<img src="${esc(media)}" alt="" loading="lazy">`:`<span>${esc(initial.slice(0,4))}</span>`}</span><span class="record-copy"><strong>${esc(titleOf(x))}</strong><span>${esc([code,def.singular].filter(Boolean).join(" · "))}</span></span><span class="record-arrow">›</span></button>`}).join("");host.querySelectorAll("[data-id]").forEach(b=>b.onclick=()=>{selectedId=b.dataset.id;renderList()});const selected=records.find(r=>idOf(r.x,def)===selectedId)||records[0];renderDetail(selected.x,selected.facts,def)}
+function renderDetail(x,facts,def){const groups={};facts.forEach(f=>(groups[topicFor(f.label)]??=[]).push(f));const media=safeMedia(def.media(x)),code=text(def.code(x)),initial=(code||titleOf(x).slice(0,2)).toUpperCase();$("recordDetail").innerHTML=`<div class="detail-head"><div class="detail-media">${media?`<img src="${esc(media)}" alt="">`:`<span>${esc(initial.slice(0,4))}</span>`}</div><div><div class="kicker kicker-dark">${esc(def.singular)} information</div><h3>${esc(titleOf(x))}</h3><p>${esc([code,printable(x.city),printable(x.country)].filter(Boolean).join(" · "))}</p></div></div><div class="fact-groups">${Object.entries(groups).map(([name,rows])=>`<section class="fact-group"><h4>${esc(name)}</h4>${rows.map(f=>`<div class="fact-row"><b>${esc(f.label)}</b><span>${esc(f.value)}</span></div>`).join("")}</section>`).join("")}</div><div class="source-note">Shown from the currently published SKANDI Inventory / Travel Info record. Absence of a field is not evidence that a facility or service is unavailable. Confirm critical requirements with the operating provider.</div>`;queueResize()}
+function assistanceArticle(x){const hay=`${text(x.title)} ${text(x.category)} ${text(x.slug)} ${arr(x.tags).join(" ")}`;return ASSIST_RE.test(hay)}
+function renderGuidance(){const rows=arr(DATA.articles).filter(assistanceArticle).slice(0,9),host=$("guidanceGrid");if(!rows.length){host.innerHTML='<article class="guidance-card"><div class="type">Travel Info</div><h3>No separate guidance article is published yet</h3><p>Use the provider directory above and the overall planning guidance on this page. New relevant Travel Info articles will appear here automatically when published.</p></article>';return}host.innerHTML=rows.map(x=>`<article class="guidance-card"><div class="type">${esc(printable(x.category)||"Travel Info")}</div><h3>${esc(titleOf(x))}</h3><p>${esc(printable(x.excerpt??x.body??x.summary).slice(0,420))}</p></article>`).join("")}
+function renderData(){renderTabs();renderList();renderGuidance();const total=allRecordCount();$("dataCount").textContent=total?`${total} published record${total===1?"":"s"} with assistance-related information`:"No assistance-related provider records are published yet";queueResize()}
+$("entitySearch").addEventListener("input",e=>{searchQuery=text(e.target.value);selectedId="";renderList()});
+$("backToTravelInfo").onclick=()=>post("SPECIAL_ASSISTANCE_NAVIGATE",{path:"/travel-info"});$("manageBooking").onclick=$("manageBookingTop").onclick=()=>post("SPECIAL_ASSISTANCE_NAVIGATE",{path:"/my-profile?tab=trips"});$("contactSupport").onclick=()=>post("SPECIAL_ASSISTANCE_NAVIGATE",{path:"/about/support"});document.querySelectorAll("[data-scroll]").forEach(btn=>btn.onclick=()=>document.getElementById(btn.dataset.scroll)?.scrollIntoView({behavior:"smooth",block:"start"}));
+let resizeTimer=0,lastHeight=0;function reportResize(){const height=Math.ceil(Math.max(document.documentElement.scrollHeight,document.body.scrollHeight));if(!height||Math.abs(height-lastHeight)<1)return;lastHeight=height;post("SKANDI_CONTENT_RESIZE",{height})}function queueResize(){clearTimeout(resizeTimer);resizeTimer=setTimeout(reportResize,40)}const ro="ResizeObserver" in window?new ResizeObserver(queueResize):null;ro?.observe(document.documentElement);ro?.observe(document.body);window.addEventListener("load",reportResize,{once:true});
+window.addEventListener("message",e=>{let m=e.data;if(typeof m==="string"){try{m=JSON.parse(m)}catch(_){return}}if(!m||m.source!==PARENT)return;if(m.type==="SPECIAL_ASSISTANCE_DATA"){DATA={...DATA,...obj(m.payload)};renderData()}else if(m.type==="SPECIAL_ASSISTANCE_ERROR"){$("dataCount").innerHTML=`<span class="error">${esc(m.payload?.message||"Assistance information is temporarily unavailable.")}</span>`;$("recordList").innerHTML='<div class="record-empty">The published provider information could not be loaded.</div>'}else if(m.type==="SKANDI_SCROLL_TOP")window.scrollTo({top:0,left:0,behavior:"auto"});else if(m.type==="SKANDI_MASTER_CONFIG"){const lang=String(m.payload?.settings?.language||"EN").toUpperCase();if(lang!==window.SKANDI_PAGE_LANGUAGE){window.SKANDI_PAGE_LANGUAGE=lang;post("SPECIAL_ASSISTANCE_REFRESH",{language:lang})}}});
+window.SKANDI_PAGE_LANGUAGE="EN";post("MASTER_CONFIG_REQUEST",{context:"special-assistance"});post("SPECIAL_ASSISTANCE_READY",{language:"EN",version:VERSION});[0,80,250,800,1600].forEach(d=>setTimeout(reportResize,d));window.addEventListener("pagehide",()=>ro?.disconnect?.(),{once:true});
+})();
 </script>
 </body>
 </html>
