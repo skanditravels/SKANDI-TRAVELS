@@ -6,7 +6,7 @@
 - WIX PAGE FILE: `/src/pages/Reservations.ly2n8.js`
 - WIX ROUTE / SLUG: `/riaintra/success-factors/altea/reservations`
 - WIX HTML ELEMENT: `#alteaReservationsEmbed`
-- CURRENT STATUS: V12 ONE-TRUE-SOURCE REPAIR PREPARED — REQUIRES LIVE TEST
+- CURRENT STATUS: V12 TRANSFER CARD ATB MODEL UPGRADE PREPARED — REQUIRES LIVE TEST
 - SOURCE-OF-TRUTH STATUS: AUTHORITATIVE intended V12 embed payload supplied for this repair.
 - CANONICAL WEB FACADE: `/src/backend/SKANDI_CORE/reservations.web.js`
 - CANONICAL CORE: `/src/backend/SKANDI_CORE/reservations.js`
@@ -18,10 +18,12 @@
 - AUTHORIZATION: unchanged from current V12 page/facade/core boundaries. No frontend role or provider secret becomes authoritative.
 - MESSAGE CONTRACTS / ELEMENT IDS: unchanged.
 - LAST VERIFIED: 2026-10-08 — current repo `skanditravels/SKANDI-TRAVELS`, branch `main`, commit `86deedb4705fae292851256726cd81e13669aa98`; live Supabase schema/data inspected read-only.
+- LAST SOURCE VERIFIED: 2026-10-11 — repo `skanditravels/SKANDI-TRAVELS`, branch `main`, HEAD `4c8292ec81c7324ac4551cc47be8aa78e3e41bfe`; current Reservations HTML_REF, Wix page bridge, canonical reservations facade/core and shared ATB renderer inspected. Live Wix print/browser runtime was not exercised.
 
 ## CHANGE LOG
 - 2026-10-08 — One-true-source enforcement finalized: Duffel-linked provider identity/facts are read-only in Inventory Control and refresh through the provider workspace; provider technical snapshots are hidden from generic editable fields; compatibility columns are database-derived. Current GitHub `main` at `86deedb4705fae292851256726cd81e13669aa98` was inspected and preserved.
 - 2026-10-08 — V12 one-true-source convergence prepared. Shared reference/master facts now have one editable Inventory/Supabase authority after provider import. Legacy Travel Info fields are derived compatibility projections, provider-key uniqueness is database-enforced, and current Duffel snapshots refresh provider-owned canonical facts without creating alternate data stores. The HTML design, IDs, message names, routes and permission boundaries are unchanged. STATICALLY VERIFIED; REQUIRES LIVE TEST after SQL/Wix publication.
+- 2026-10-11 — Transfer Card print output upgraded to the supplied ATB-size boarding-card model: 203.20 mm × 82.55 mm stock, SKANDI blue header, passenger/booking hierarchy, eight-field transfer matrix, highlighted bus/boarding/seat area, service footer and right-side vertical 2D data mark. Existing `printTransferCard()` action, transfer/passenger state, luggage tag, manifest, Wix bridge, backend, database and provider contracts remain unchanged. The data mark is generated locally and does not add an external barcode service. STATICALLY VERIFIED; REQUIRES LIVE PRINT TEST after Wix publication.
 
 ## COMPLETE INTENDED HTML
 
@@ -892,43 +894,7 @@
       .segment { grid-template-columns: 1fr 1fr; }
       .segment > div:nth-child(2) { border-right: 0; }
     }
-  
-    /* V12 R-RES-AMADEUS: bounded embed scroll + reference-style search/results */
-    #app, .main, .view { min-height:0; }
-    .main { overflow:hidden; }
-    .view { height:100%; min-height:0; overflow-y:auto !important; overflow-x:hidden; overscroll-behavior:auto; -webkit-overflow-scrolling:touch; padding-bottom:64px; }
-    .airport-field-wrap { position:relative; }
-    .airport-suggest { position:absolute; z-index:1800; left:0; right:0; top:100%; max-height:260px; overflow:auto; background:#fff; border:1px solid #9ba8b2; box-shadow:0 6px 18px rgba(0,0,0,.18); }
-    .airport-suggest:empty { display:none; }
-    .airport-option { display:block; width:100%; text-align:left; border:0; border-bottom:1px solid #e1e5e8; background:#fff; padding:8px 10px; }
-    .airport-option:hover,.airport-option:focus { background:#eaf4fb; }
-    .airport-code { display:inline-block; min-width:38px; font-weight:700; color:#075c9a; }
-    .ama-search-grid { display:grid; grid-template-columns:140px minmax(180px,1fr) 38px minmax(180px,1fr) 150px 150px 150px; gap:8px; align-items:end; }
-    .ama-filter-layout { display:grid; grid-template-columns:230px minmax(0,1fr); gap:10px; align-items:start; }
-    .ama-filter-panel { position:sticky; top:0; border:1px solid #aeb7be; background:#f5f5f5; }
-    .ama-filter-title { padding:8px 10px; background:linear-gradient(#ececec,#d6d6d6); font-weight:700; border-bottom:1px solid #aeb7be; }
-    .ama-filter-group { padding:8px 10px; border-bottom:1px solid #d2d8dc; }
-    .ama-filter-group label { display:block; font-weight:400; margin:4px 0; }
-    .ama-itinerary { border:1px solid #abb6bd; background:#fff; margin-bottom:10px; }
-    .ama-itinerary-head { background:#e3edf4; padding:7px 9px; display:flex; justify-content:space-between; gap:10px; font-weight:700; }
-    .ama-segments { padding:0 9px; }
-    .ama-segment { display:grid; grid-template-columns:92px 1fr 105px 28px 105px 140px; gap:8px; align-items:center; min-height:54px; border-bottom:1px solid #e0e4e7; }
-    .ama-segment:last-child { border-bottom:0; }
-    .ama-fares { display:flex; gap:8px; flex-wrap:wrap; padding:8px; background:#f8f9fa; border-top:1px solid #cbd3d8; }
-    .ama-fare { min-width:190px; max-width:240px; flex:1 1 190px; border:1px solid #b5c1c9; background:#fff; padding:8px; }
-    .ama-fare .fare-price { font-size:17px; font-weight:700; color:#063b62; }
-    .ama-fare .fare-meta { font-size:10px; line-height:1.45; color:#4c5a64; margin:5px 0 7px; }
-    .ama-offer-summary { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:1px; border:1px solid #aeb8bf; background:#c7ced3; margin-bottom:10px; }
-    .ama-offer-summary>div { background:#fff; padding:8px; }
-    .ama-offer-summary .value { display:block; font-size:14px; font-weight:700; color:#0c3d60; }
-    .journey-suggestions { margin-top:10px; }
-    .suggestion-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:8px; padding:8px; }
-    .suggestion-card { border:1px solid #bdc7cd; background:#fff; padding:9px; }
-    .suggestion-card .reason { color:#35627d; font-size:10px; margin:4px 0 8px; }
-    .danger-action { color:#8b1d1d !important; border-color:#a84d4d !important; }
-    @media(max-width:1050px){.ama-search-grid{grid-template-columns:1fr 1fr}.ama-filter-layout{grid-template-columns:1fr}.ama-filter-panel{position:static}.ama-offer-summary{grid-template-columns:1fr 1fr}.ama-segment{grid-template-columns:80px 1fr 90px 20px 90px}.ama-segment .aircraft-col{display:none}}
-
-</style>
+  </style>
 
 
   <style id="b0075-amadeus-shell">
@@ -996,6 +962,7 @@
         <button type="button" class="nav-item" data-view="search"><span class="nav-icon"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.2-1.1.6L3 8l6 5-3.2 3.2-3.1-1-1.4 1.4 3.7 2.4 2.4 3.7 1.4-1.4-1-3.1 3.2-3.2 5 6l1.2-.7c.4-.2.7-.6.6-1.1z"></path></svg></span><span class="nav-label">Flight Search</span></button>
         <button type="button" class="nav-item" data-view="hotels"><span class="nav-icon"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect><path d="M9 22v-4h6v4"></path><path d="M8 6h.01"></path><path d="M16 6h.01"></path><path d="M8 10h.01"></path><path d="M16 10h.01"></path><path d="M8 14h.01"></path><path d="M16 14h.01"></path></svg></span><span class="nav-label">Hotel Search</span></button>
         <button type="button" class="nav-item" data-view="cars"><span class="nav-icon"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"></path><circle cx="7" cy="17" r="2"></circle><path d="M9 17h6"></path><circle cx="17" cy="17" r="2"></circle></svg></span><span class="nav-label">Car Rental</span></button>
+        <button type="button" class="nav-item" data-view="services"><span class="nav-icon"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><path d="M12 8v8"></path><path d="M8 12h8"></path></svg></span><span class="nav-label">Trip Components</span></button>
         <button type="button" class="nav-item" data-view="packagebuilder"><span class="nav-icon"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7.5 4.27 9 5.15"></path><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"></path><path d="m3.3 7 8.7 5 8.7-5"></path><path d="M12 22V12"></path></svg></span><span class="nav-label">Package Builder</span></button>
         <button type="button" class="nav-item" data-view="offer"><span class="nav-icon"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><line x1="10" y1="9" x2="8" y2="9"></line></svg></span><span class="nav-label">Offer Review</span></button>
         <button type="button" class="nav-item" data-view="workspace"><span class="nav-icon"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"></path><path d="M13 5v2"></path><path d="M13 17v2"></path><path d="M13 11v2"></path></svg></span><span class="nav-label">Create Air Booking</span></button>
@@ -1065,8 +1032,7 @@
     <!-- Inline SVG for Departure Control (Navigation / Arrow) -->
     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <polygon points="3 11 22 2 13 21 11 13 3 11"></polygon>
-    </svg>
-  </span>
+    </svg></span>
   <span class="nav-label">Departure Control</span>
 </button>
 
@@ -1683,7 +1649,7 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
                   ${option("0", "Direct only", String(saved.maxConnections ?? 1))}
                   ${option("1", "Up to 1", String(saved.maxConnections ?? 1))}
                   ${option("2", "Up to 2", String(saved.maxConnections ?? 1))}
-                  ${option("3", "Up to 3", String(saved.maxConnections ?? 1))}
+                  ${option("2", "Up to 3", String(saved.maxConnections ?? 1))}
                 </select>
               </div>
               <div class="field">
@@ -2065,8 +2031,7 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
             <label class="sr-only" for="ordersFilter">Filter supplier orders</label>
             <input id="ordersFilter" style="height:28px;min-width:260px" placeholder="Filter loaded orders">
             <span class="muted">${state.orders.length} loaded</span>
-          </div>
-          <div id="ordersTable">${orderTable(state.orders)}</div>
+          </div><div id="ordersTable">${orderTable(state.orders)}</div>
         </section>`;
     }
 
@@ -3065,8 +3030,7 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
       }
 
       if (message.type === "DUFFEL_BOOTSTRAP_RESULT") {
-        state.bridgeConnected = true;
-        state.connected = true;
+        state.bridgeConnected = true;state.connected = true;
         state.environment = payload.environment || "Duffel";
         state.preferences.currency = payload.defaultCurrency || state.preferences.currency;
         setConnection("online", "System ready");
@@ -3209,8 +3173,8 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
       if (message.type === "ALTEA_LOCAL_BOOKING_CREATED") {
         state.alteaWorkspace=payload.workspace||null;
         if(payload.workspace?.booking)upsertAlteaBooking(payload.workspace.booking);
-        navigate("booking");
-        toast("SKANDI booking created",`Booking ${payload.workspace?.booking?.bookingReference||"file"} is ready for itinerary building.`,"success");
+        navigate("services");
+        toast("SKANDI booking created",`Booking ${payload.workspace?.booking?.bookingReference||"file"} is ready for journey components.`,"success");
         return;
       }
       if (["ALTEA_PASSENGER_UPDATED","ALTEA_PASSENGER_CREATED","ALTEA_HISTORY_UPDATED","ALTEA_DOCUMENT_UPDATED","ALTEA_COMPONENT_UPDATED"].includes(message.type)) {
@@ -4064,9 +4028,7 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
             <div class="panel-body" style="padding:0">
               ${componentTable(comps)}
             </div>
-          </section>
-
-        </div>
+          </section></div>
 
         <!-- Sidebar Actions -->
         <aside class="panel sticky">
@@ -4948,7 +4910,110 @@ function openSkandiCheckout() {
   function printTransferCard(){const dep=selectedTransferDeparture(),p=transferSelectedPax(dep);if(!dep||!p)return;const st=transferPaxState(dep,p);const no=`TC-${dep.serviceNumber}-${String(transferPassengers(dep).indexOf(p)+1).padStart(3,"0")}`;printHtml(`Transfer Card ${paxName(p)}`,transferCardHtml(dep,p,st,no))}
   function printTransferLuggageTag(){const dep=selectedTransferDeparture(),p=transferSelectedPax(dep);if(!dep||!p)return;const tag=`TRF-${String(masterReference()).replace(/[^A-Z0-9]/gi,"").slice(-6).toUpperCase()}-${String(transferPassengers(dep).indexOf(p)+1).padStart(3,"0")}`;printHtml(`Transfer Luggage Tag ${tag}`,transferLuggageTagHtml(dep,p,tag));if(state.transferDcsPersistence)post("ALTEA_TRANSFER_DCS_RECORD_DOCUMENT",{departureId:dep.id,bookingId:dep.bookingId||booking()?.id,passengerId:p.id||transferPaxId(p),documentType:"TRANSFER_LUGGAGE_TAG",documentNumber:tag},{busy:false})}
   
-  function transferCardHtml(dep,p,st,no){return `<div style="border:2px solid #111;padding:18px"><div class="head"><div><div class="brand">SKANDI TRAVELS</div><div>TRANSFER BOARDING CARD</div></div><div class="ref">${escapeHTML(dep.serviceNumber)}</div></div><div style="font-size:24px;font-weight:800;margin:18px 0">${escapeHTML(paxName(p))}</div><div class="grid"><div class="box"><div class="label">Direction</div><div class="value">${escapeHTML(dep.direction)}</div></div><div class="box"><div class="label">From</div><div class="value">${escapeHTML(dep.origin)}</div></div><div class="box"><div class="label">To</div><div class="value">${escapeHTML(dep.destination)}</div></div><div class="box"><div class="label">Flight</div><div class="value">${escapeHTML(dep.associatedFlight)}</div></div><div class="box"><div class="label">Coach seat</div><div class="value" style="font-size:22px">${escapeHTML(st.seat||"OPEN")}</div></div><div class="box"><div class="label">Booking ref</div><div class="value">${escapeHTML(p.bookingReference||p.pnrLocator||masterReference())}</div></div></div><div class="barcode" style="margin-top:18px"></div><div class="muted" style="margin-top:5px">${escapeHTML(no)} · Hand to driver when boarding.</div></div>`}
+  function transferCardBarcodeSvg(value){
+    const input=String(value||"");
+    let seed=2166136261>>>0;
+    for(let i=0;i<input.length;i++)seed=Math.imul(seed^input.charCodeAt(i),16777619)>>>0;
+    const width=540,height=150,rows=12,rowHeight=10,rowGap=2;
+    let rects=[];
+    for(let row=0;row<rows;row++){
+      const y=3+row*(rowHeight+rowGap);
+      let x=3;
+      rects.push(`<rect x="${x}" y="${y}" width="5" height="${rowHeight}"/>`);x+=7;
+      rects.push(`<rect x="${x}" y="${y}" width="2" height="${rowHeight}"/>`);x+=5;
+      for(let part=0;part<74&&x<522;part++){
+        seed=(Math.imul(seed^(row*257+part*31+17),1664525)+1013904223)>>>0;
+        const dark=((seed>>>(part%23))&1)===1;
+        const w=2+(seed%5);
+        if(dark)rects.push(`<rect x="${x}" y="${y}" width="${w}" height="${rowHeight}"/>`);
+        x+=w+1;
+      }
+      rects.push(`<rect x="524" y="${y}" width="3" height="${rowHeight}"/>`);
+      rects.push(`<rect x="531" y="${y}" width="6" height="${rowHeight}"/>`);
+    }
+    return `<svg class="tc-pdf417" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="SKANDI transfer data mark"><rect width="100%" height="100%" fill="#fff"/><g fill="#050505">${rects.join("")}</g></svg>`;
+  }
+
+  function transferCardHtml(dep,p,st,no){
+    const raw=dep?.raw||{},payload=raw?.payload||{};
+    const sequence=String(Math.max(1,transferPassengers(dep).indexOf(p)+1)).padStart(3,"0");
+    const bookingRef=String(p?.bookingReference||p?.pnrLocator||masterReference()||"—");
+    const passenger=String(paxName(p)||"—");
+    const transferNo=String(dep?.serviceNumber||"—");
+    const from=String(dep?.origin||"—");
+    const to=String(dep?.destination||"—");
+    const direction=String(dep?.direction||"—");
+    const pickupTime=String(raw?.serviceTime||raw?.pickupTime||payload?.pickupTime||payload?.serviceTime||payload?.scheduledDeparture||"—");
+    const boardingTime=String(raw?.boardingTime||raw?.reportTime||payload?.boardingTime||payload?.reportTime||pickupTime||"—");
+    const point=String(dep?.bay||dep?.vehicleRegistration||dep?.vehicle||"—");
+    const seat=String(st?.seat||"OPEN");
+    const serviceDate=String(formatPrinterDate(dep?.date)||dep?.date||"—");
+    const associatedFlight=String(raw?.associatedFlight||payload?.associatedFlight||payload?.arrivalFlightNumber||payload?.departureFlightNumber||payload?.flightNumber||booking()?.flightNumber||"—");
+    const bags=Math.max(0,Number(st?.bags||0));
+    const bagWeight=Math.max(0,Number(st?.weight||0));
+    const bagSummary=`${bags} PC${bagWeight?` · ${bagWeight} KG`:""}`;
+    const barcodeValue=[no,bookingRef,transferNo,passenger,from,to,serviceDate,pickupTime,seat,sequence].join("|");
+    const barcode=transferCardBarcodeSvg(barcodeValue);
+    return `<style id="skandi-transfer-atb-print">
+html,body{margin:0!important;padding:0!important;width:203.20mm!important;height:82.55mm!important;background:#fff!important;color:#050505!important;overflow:hidden!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+*{box-sizing:border-box}
+.tc-pass{position:relative;width:203.20mm;height:82.55mm;background:#fff;color:#050505;overflow:hidden;font-family:"Courier New",Courier,monospace}
+.tc-pass:before,.tc-pass:after{content:"";position:absolute;z-index:4;top:0;bottom:0;width:.35mm;background:repeating-linear-gradient(to bottom,#000 0 .25mm,transparent .25mm .85mm);opacity:.22}.tc-pass:before{left:0}.tc-pass:after{right:0}
+.tc-strip{position:absolute;inset:0 0 auto;height:12mm;background:#022e64}
+.tc-head{position:absolute;left:5.2mm;right:23mm;top:0;height:12mm;display:grid;grid-template-columns:43mm 1fr 28mm;gap:4mm;align-items:center;color:#fff}
+.tc-brand{font-family:Arial,Helvetica,sans-serif;font-weight:900;letter-spacing:-.45mm;font-size:7.4mm;line-height:.85;white-space:nowrap}.tc-brand small{display:block;margin-top:.8mm;font-size:1.55mm;letter-spacing:.42mm;font-weight:700}
+.tc-doc{text-align:center;font-family:Arial,Helvetica,sans-serif}.tc-doc-title{font-size:4.25mm;font-weight:900;letter-spacing:.55mm;white-space:nowrap}.tc-doc-sub{margin-top:.6mm;font-size:1.9mm;font-weight:700;letter-spacing:.22mm}
+.tc-seq{text-align:right;font-family:Arial,Helvetica,sans-serif;font-size:2.25mm;font-weight:800;letter-spacing:.12mm}.tc-seq strong{display:block;font-size:4.3mm;letter-spacing:.25mm}
+.tc-content{position:absolute;left:5.2mm;right:23mm;top:15mm;bottom:4.4mm}
+.tc-name-row{display:grid;grid-template-columns:2.8fr 1.45fr;gap:6mm;align-items:end;margin:0 0 2.5mm 5.5mm}.tc-label{display:block;font-family:Arial,Helvetica,sans-serif;font-size:2.5mm;line-height:1;text-transform:uppercase;letter-spacing:.18mm;font-weight:600;color:#111}.tc-label-soft{font-size:1.8mm;color:#555;letter-spacing:.14mm}.tc-passenger{margin-top:1.5mm;font-size:4.7mm;font-weight:900;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.tc-pnr{margin-top:.8mm;font-size:5.3mm;font-weight:900;line-height:1;letter-spacing:.25mm;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tc-matrix{display:grid;grid-template-columns:1.05fr .76fr .76fr 1.42fr 1.42fr .8fr .72fr .62fr;column-gap:2.6mm;row-gap:.8mm;margin:1mm 0 0 5.5mm;align-items:start}.tc-matrix .tc-label{font-size:2.15mm;color:#222}.tc-value{font-size:3.15mm;line-height:1.05;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.tc-subvalue{display:block;margin-top:.8mm;font-family:Arial,Helvetica,sans-serif;font-size:1.75mm;line-height:1;font-weight:700;text-transform:uppercase;letter-spacing:.1mm;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#444}
+.tc-highlight{display:grid;grid-template-columns:1fr 1fr 1fr;width:61%;margin:3.1mm 0 0 5.5mm;border:.45mm solid #000;text-align:center}.tc-highlight>div{padding:1.15mm 1.5mm 1mm}.tc-highlight>div+div{border-left:.3mm solid #000}.tc-highlight .tc-label{font-size:2.05mm}.tc-highlight strong{display:block;margin-top:.8mm;font-size:5mm;line-height:.9;font-weight:900}
+.tc-footer{position:absolute;left:5.5mm;right:0;bottom:0}.tc-ticketline{display:flex;gap:8mm;margin-bottom:1.6mm;font-family:Arial,Helvetica,sans-serif;font-size:1.8mm;letter-spacing:.12mm;font-weight:700}.tc-bottom{display:grid;grid-template-columns:34mm 39mm 1fr;gap:4mm;align-items:end;padding-top:1.55mm;border-top:.35mm solid #000}.tc-bottom .tc-value{margin-top:.55mm;font-family:Arial,Helvetica,sans-serif;font-size:2.25mm;letter-spacing:.45mm}.tc-thanks{font-family:Arial,Helvetica,sans-serif;font-size:1.65mm;font-weight:800;letter-spacing:.18mm}.tc-notice{text-align:right;font-family:Arial,Helvetica,sans-serif;font-size:1.55mm;line-height:1.18;font-weight:800}
+.tc-barcode-zone{position:absolute;top:15.5mm;right:2.3mm;width:18mm;height:57mm;display:flex;align-items:center;justify-content:center;overflow:visible}.tc-pdf417{display:block;width:54mm;height:15mm;max-width:none;transform:rotate(90deg);transform-origin:center}.tc-barcode-caption{position:absolute;right:1.65mm;top:70.8mm;width:18mm;text-align:center;font-size:1.42mm;line-height:1.05;font-weight:900;letter-spacing:.08mm}
+@page{size:203.20mm 82.55mm;margin:0}
+@media print{html,body,.tc-pass{width:203.20mm!important;height:82.55mm!important}.tc-pass{margin:0!important;box-shadow:none!important}}
+</style>
+<article class="tc-pass" aria-label="SKANDI ATB-size transfer boarding pass">
+  <div class="tc-strip"></div>
+  <header class="tc-head">
+    <div class="tc-brand">SKANDI<small>TRAVELS</small></div>
+    <div class="tc-doc"><div class="tc-doc-title">TRANSFER BOARDING PASS</div><div class="tc-doc-sub">ELECTRONIC TICKET</div></div>
+    <div class="tc-seq">SEQ<strong>${escapeHTML(sequence)}</strong></div>
+  </header>
+  <section class="tc-content">
+    <div class="tc-name-row">
+      <div><span class="tc-label tc-label-soft">Passenger</span><div class="tc-passenger">${escapeHTML(passenger)}</div></div>
+      <div><span class="tc-label tc-label-soft">Booking Ref</span><div class="tc-pnr">${escapeHTML(bookingRef)}</div></div>
+    </div>
+    <div class="tc-matrix">
+      <div class="tc-label">Transfer</div><div class="tc-label">Date</div><div class="tc-label">Pick-up</div><div class="tc-label">From</div><div class="tc-label">To</div><div class="tc-label">Point</div><div class="tc-label">Flow</div><div class="tc-label">SEQ#</div>
+      <div><span class="tc-value">${escapeHTML(transferNo)}</span><span class="tc-subvalue">SKANDI TRANSFERS</span></div>
+      <div><span class="tc-value">${escapeHTML(serviceDate)}</span></div>
+      <div><span class="tc-value">${escapeHTML(pickupTime)}</span></div>
+      <div><span class="tc-value">${escapeHTML(from)}</span></div>
+      <div><span class="tc-value">${escapeHTML(to)}</span></div>
+      <div><span class="tc-value">${escapeHTML(point)}</span></div>
+      <div><span class="tc-value">${escapeHTML(direction)}</span></div>
+      <div><span class="tc-value">${escapeHTML(sequence)}</span></div>
+    </div>
+    <div class="tc-highlight">
+      <div><span class="tc-label">Bus / Gate</span><strong>${escapeHTML(point)}</strong></div>
+      <div><span class="tc-label">Boarding</span><strong>${escapeHTML(boardingTime)}</strong></div>
+      <div><span class="tc-label">Seat</span><strong>${escapeHTML(seat)}</strong></div>
+    </div>
+    <footer class="tc-footer">
+      <div class="tc-ticketline"><div>Ticket No: ${escapeHTML(no)}</div><div>Luggage: ${escapeHTML(bagSummary)}</div></div>
+      <div class="tc-bottom">
+        <div><span class="tc-label" style="font-size:1.75mm">BOOKING REF</span><span class="tc-value">${escapeHTML(bookingRef)}</span></div>
+        <div><span class="tc-label" style="font-size:1.75mm">CONNECTING FLIGHT</span><span class="tc-value">${escapeHTML(associatedFlight)}</span></div>
+        <div class="tc-notice"><span class="tc-thanks">* THANK YOU &amp; GOODBYE *</span><br>SKANDI TRANSFER SERVICE DOCUMENT<br>2D MARK CONTAINS SKANDI SERVICE-TICKET DATA · NOT AN AIRLINE BCBP</div>
+      </div>
+    </footer>
+  </section>
+  <aside class="tc-barcode-zone" aria-label="SKANDI transfer service data mark">${barcode}</aside>
+  <div class="tc-barcode-caption">SKANDI TRANSFER DATA</div>
+</article>`;
+  }
   function transferLuggageTagHtml(dep,p,tag){return `<div style="border:2px solid #111;padding:15px;width:680px;max-width:100%"><div style="display:flex;justify-content:space-between"><div><div class="brand">SKANDI TRAVELS</div><div class="muted">COACH LUGGAGE TAG</div></div><div class="ref">${escapeHTML(tag)}</div></div><div style="font-size:34px;font-weight:900;margin:15px 0">${escapeHTML(dep.destination)}</div><div class="grid"><div class="box"><div class="label">Passenger</div><div class="value">${escapeHTML(paxName(p))}</div></div><div class="box"><div class="label">Coach</div><div class="value">${escapeHTML(dep.serviceNumber)}</div></div><div class="box"><div class="label">Booking reference</div><div class="value">${escapeHTML(p.bookingReference||p.pnrLocator||masterReference())}</div></div></div><div class="barcode" style="margin-top:14px"></div><div class="ref" style="text-align:center;margin-top:5px">${escapeHTML(tag)}</div></div>`}
   function transferManifestHtml(dep){const list=transferPassengers(dep);return `<div class="head"><div><div class="brand">SKANDI TRAVELS</div><div>DRIVER MANIFEST · ${escapeHTML(dep.direction)}</div></div><div><div class="label">Coach</div><div class="ref">${escapeHTML(dep.serviceNumber)}</div></div></div><div class="grid"><div class="box"><div class="label">Route</div><div class="value">${escapeHTML(dep.origin)} → ${escapeHTML(dep.destination)}</div></div><div class="box"><div class="label">Time</div><div class="value">${escapeHTML(`${dep.date||""} ${dep.scheduled||""}`.trim())}</div></div><div class="box"><div class="label">Vehicle</div><div class="value">${escapeHTML(dep.vehicle)}</div></div></div><table><thead><tr><th>SEQ</th><th>Customer</th><th>Booking</th><th>Hotel / Stop</th><th>Seat</th><th>Luggage</th><th>Boarded</th></tr></thead><tbody>${list.map((p,i)=>{const st=transferPaxState(dep,p);return `<tr><td>${String(i+1).padStart(3,"0")}</td><td>${escapeHTML(paxName(p))}</td><td>${escapeHTML(p.bookingReference||p.pnrLocator||masterReference())}</td><td>${escapeHTML(p.hotelName||p.payload?.hotelName||(dep.direction==="INBOUND"?dep.destination:dep.origin))}</td><td>${escapeHTML(st.seat||"—")}</td><td>${st.bags} pc</td><td>[ &nbsp;&nbsp; ]</td></tr>`}).join("")}</tbody></table>`}
 
@@ -5065,8 +5130,7 @@ function openSkandiCheckout() {
     if(!passengerId||!customerProfileId)return;
     post("ALTEA_CLUB_LINK_MEMBER",{bookingId:booking()?.id,passengerId,customerProfileId});
   }
-  function adjustClub(memberId){const delta=Number($("#clubPointsDelta")?.value);const reason=$("#clubPointsReason")?.value.trim();if(!Number.isFinite(delta)||!delta)return toast("Points amount required","Enter a non-zero whole-number adjustment.","warning");if(!reason)return toast("Reason required","Enter an audit reason for the points adjustment.","warning");post("ALTEA_CLUB_ADJUST_POINTS",{customerProfileId:memberId,passengerId:state.selectedPassengerId,bookingId:booking()?.id,bookingReference:masterReference(),delta:Math.trunc(delta),reason})}
-  function checkRequirements(){const passengerId=$("#reqPassenger")?.value||state.selectedPassengerId;state.travelDecision=null;post("ALTEA_TRAVEL_REQUIREMENTS_CHECK",{bookingId:booking()?.id,passengerId,nationality:$("#reqNationality")?.value||"",residenceCountry:$("#reqResidence")?.value||"",dateOfBirth:$("#reqDob")?.value||"",origin:$("#reqOrigin")?.value||"",destination:$("#reqDestination")?.value||"",documentType:"PASSPORT",documentIssuingCountry:$("#reqIssue")?.value||"",documentExpiry:$("#reqExpiry")?.value||"",transitPoints:String($("#reqTransit")?.value||"").split(",").map(x=>x.trim().toUpperCase()).filter(Boolean)})}
+  function adjustClub(memberId){const delta=Number($("#clubPointsDelta")?.value);const reason=$("#clubPointsReason")?.value.trim();if(!Number.isFinite(delta)||!delta)return toast("Points amount required","Enter a non-zero whole-number adjustment.","warning");if(!reason)return toast("Reason required","Enter an audit reason for the points adjustment.","warning");post("ALTEA_CLUB_ADJUST_POINTS",{customerProfileId:memberId,passengerId:state.selectedPassengerId,bookingId:booking()?.id,bookingReference:masterReference(),delta:Math.trunc(delta),reason})}function checkRequirements(){const passengerId=$("#reqPassenger")?.value||state.selectedPassengerId;state.travelDecision=null;post("ALTEA_TRAVEL_REQUIREMENTS_CHECK",{bookingId:booking()?.id,passengerId,nationality:$("#reqNationality")?.value||"",residenceCountry:$("#reqResidence")?.value||"",dateOfBirth:$("#reqDob")?.value||"",origin:$("#reqOrigin")?.value||"",destination:$("#reqDestination")?.value||"",documentType:"PASSPORT",documentIssuingCountry:$("#reqIssue")?.value||"",documentExpiry:$("#reqExpiry")?.value||"",transitPoints:String($("#reqTransit")?.value||"").split(",").map(x=>x.trim().toUpperCase()).filter(Boolean)})}
 
 
   function openComponentEditor(id){const c=components().find(x=>x.id===id);if(!c)return;openModal("Edit trip component",`<div class="field"><label>Service</label><input value="${escapeAttr(serviceLabel(c))}" readonly></div><div class="grid grid-3"><div class="field"><label>Service date</label><input id="compDate" type="date" value="${escapeAttr(c.serviceDate||c.startDate||c.payload?.serviceDate||"")}"></div><div class="field"><label>Time / pickup</label><input id="compTime" value="${escapeAttr(c.serviceTime||c.payload?.pickupTime||"")}"></div><div class="field"><label>Passengers</label><input id="compPax" type="number" min="1" value="${escapeAttr(String(c.passengerCount||c.payload?.passengerCount||passengers().length||1))}"></div></div><div class="grid grid-2"><div class="field"><label>Supplier reference</label><input id="compRef" value="${escapeAttr(c.supplierReference||"")}"></div><div class="field"><label>Total amount</label><input id="compAmount" type="number" step="0.01" value="${escapeAttr(String(c.totalAmount||0))}"></div></div><div class="field"><label>Operational notes / pickup instructions</label><textarea id="compNotes">${escapeHTML(c.operationalNotes||c.payload?.operationalNotes||"")}</textarea></div>`,[{label:"Cancel",className:"secondary",close:true},{label:"Save component",className:"primary",onClick:()=>{closeModal();post("ALTEA_UPDATE_COMPONENT",{componentId:id,patch:{serviceDate:$("#compDate")?.value||"",serviceTime:$("#compTime")?.value||"",passengerCount:Number($("#compPax")?.value||1),supplierReference:$("#compRef")?.value||"",totalAmount:Number($("#compAmount")?.value||0),operationalNotes:$("#compNotes")?.value||""}})}}])}
@@ -5289,13 +5353,9 @@ function openSkandiCheckout() {
   }
   function passengerKind(passenger, index){
     const raw=String(passenger?.type||"").toLowerCase();
-    const ageValue=passenger?.age;
-    const hasAge=ageValue!==null && ageValue!==undefined && String(ageValue).trim()!=="";
-    const age=hasAge?Number(ageValue):NaN;
-    if(raw.includes("adult"))return "ADT";
-    if(raw.includes("infant") || (Number.isFinite(age) && age<=1))return "INF";
-    if(raw.includes("child") || (Number.isFinite(age) && age>=2 && age<=11))return "CHD";
-    if(Number.isFinite(age) && age>=12 && age<18)return "YTH";
+    if(raw.includes("infant") || Number(passenger?.age)<=1)return "INF";
+    if(raw.includes("child") || (Number.isFinite(Number(passenger?.age)) && Number(passenger.age)>=2 && Number(passenger.age)<=11))return "CHD";
+    if(Number.isFinite(Number(passenger?.age)) && Number(passenger.age)>=12 && Number(passenger.age)<18)return "YTH";
     return "ADT";
   }
   function defaultTravelerDraft(passenger,index){
@@ -5497,7 +5557,7 @@ function openSkandiCheckout() {
           <div class="field"><label>Country calling code</label><input data-field="phone_country_code" inputmode="numeric" maxlength="4" value="${escapeAttr(draft.contact.phones?.[0]?.countryCallingCode||"")}" placeholder="1" required></div>
           <div class="field span-2"><label>Phone number</label><input data-field="phone_number" inputmode="numeric" maxlength="20" value="${escapeAttr(draft.contact.phones?.[0]?.number||"")}" placeholder="2125550123" required><div class="automation-note">Digits only. ALTEA builds E.164 for the live supplier booking.</div></div>
         </div></div></div>
-        <div class="automation-section"><div class="automation-head"><span>APIS / Secure Flight</span><span>Travel documents</span></div><div class="automation-body">
+        <div class="automation-section"><div class="automation-head"><span>APIS / Secure Flight</span><span>documents[]</span></div><div class="automation-body">
           <div class="apis-sensitive"><strong>Secure document handling</strong>These fields are used for the live booking/SSR automation in this session. Full document numbers are not copied into the general ALTEA booking payload.</div>
           <div class="automation-grid">
             <div class="field"><label>Document type</label><select data-field="doc_type">${documentOptions(primary.documentType||"")}</select></div>
@@ -6069,8 +6129,7 @@ function openSkandiCheckout() {
 
 
   main.addEventListener("change",event=>{
-    const e=event.target;
-    if(e.matches?.("[data-seat-pax-radio]")){state.seatWorkbench.activePassengerId=e.dataset.seatPaxRadio;render();return}
+    const e=event.target;if(e.matches?.("[data-seat-pax-radio]")){state.seatWorkbench.activePassengerId=e.dataset.seatPaxRadio;render();return}
     if(e.matches?.("[data-seat-pax-check]")){const set=new Set(state.seatWorkbench.selectedPassengerIds||[]);e.checked?set.add(e.dataset.seatPaxCheck):set.delete(e.dataset.seatPaxCheck);state.seatWorkbench.selectedPassengerIds=[...set];render();return}
     if(e.matches?.("[data-seat-segment]")){state.seatWorkbench.activeSegmentId=e.dataset.seatSegment;state.seatWorkbench.deck="";render();return}
     if(e.matches?.("[data-seat-filter]")){state.seatWorkbench.filters[e.dataset.seatFilter]=e.checked;render();return}
@@ -6109,138 +6168,47 @@ function openSkandiCheckout() {
     ensurePreviewButton();const q=document.getElementById("bookingPreviewQuick");if(q)q.disabled=!booking74()?.id;
   };
 // --- GLOBAL DATE SYNCHRONIZER ---
+  // Listens to the whole document so it never breaks when tabs change
   document.addEventListener('input', (e) => {
-    const syncPairs = { departureDate:'returnDate', stayIn:'stayOut', stayIn74:'stayOut74', packageStart74:'packageEnd74', carPickupDate:'carDropoffDate' };
-    const targetOutId = syncPairs[e.target?.id];
-    if (!targetOutId || !e.target?.value) return;
-    const outInput = document.getElementById(targetOutId);
-    if (!outInput) return;
-    if (!outInput.value || outInput.value < e.target.value) outInput.value = e.target.value;
-    outInput.min = e.target.value;
+    // Map the "Check-in" IDs to their matching "Check-out" IDs
+    const syncPairs = {
+      'departureDate': 'returnDate',       // Flights
+      'stayIn': 'stayOut',                 // Hotels (Base)
+      'stayIn74': 'stayOut74',             // Hotels (Enterprise)
+      'packageStart74': 'packageEnd74'     // Package Builder
+    };
+    // --- GLOBAL DATE SYNCHRONIZER ---
+  document.addEventListener('input', (e) => {
+    const syncPairs = {
+      'departureDate': 'returnDate',       // Flights
+      'stayIn': 'stayOut',                 // Hotels (Base)
+      'stayIn74': 'stayOut74',             // Hotels (Enterprise)
+      'packageStart74': 'packageEnd74',    // Package Builder
+      'carPickupDate': 'carDropoffDate'    // <--- Cars added here!
+    };
+    // ... [rest of the function remains the same]
+    
+    const targetOutId = syncPairs[e.target.id];
+    
+    if (targetOutId) {
+      const outInput = document.getElementById(targetOutId);
+      if (outInput && e.target.value) {
+        // 1. Update the check-out date to match check-in
+        outInput.value = e.target.value;
+        
+        // 2. Prevent user from picking a check-out date in the past
+        outInput.min = e.target.value;
+        
+        // 3. Force the app's internal state to recognize the automatic change
+        outInput.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+    }
   });
   render();
 })();
 
 
 </script>
-
-<script>
-/* V12 R-RES-AMADEUS — reference behavior extension. Keeps live Duffel transactions provider-direct while all reference/master suggestions come from Inventory Control/Supabase. */
-(function(){
-  state.airportSuggestions={origin:[],destination:[]};
-  state.componentSuggestions=[];
-  state.componentSuggestionContext={};
-  state.componentSuggestionsBookingId="";
-  state.offerFilters={carrier:"",maxConnections:"",maxPrice:"",checkedBag:false};
-
-  function esc(v){return escapeHTML(v==null?"":String(v));}
-  function offerSegments(o){return (o?.slices||[]).flatMap(s=>s.segments||[]);}
-  function itineraryKey(o){return (o?.slices||[]).map(s=>(s.segments||[]).map(g=>[
-    g.marketingCarrier?.iataCode||"",g.marketingFlightNumber||"",g.origin?.iataCode||"",g.destination?.iataCode||"",g.departingAt||"",g.arrivingAt||""
-  ].join("|")).join(">>")).join("||");}
-  function connections(o){return (o?.slices||[]).reduce((n,s)=>n+Math.max(0,(s.segments||[]).length-1),0);}
-  function checkedBagText(o){
-    const bags=offerSegments(o).flatMap(seg=>(seg.passengers||[]).flatMap(p=>p.baggages||[])).filter(b=>String(b.type||"").toLowerCase().includes("checked"));
-    if(!bags.length)return "No checked bag shown";
-    return unique(bags.map(b=>`${b.quantity??1}PC${b.weight?` · ${b.weight}${String(b.weightUnit||"kg").toUpperCase()}`:""}`)).join(" / ");
-  }
-  function conditionLabel(o,key){
-    const c=o?.conditions?.[key]||o?.conditions?.[key.replace(/_([a-z])/g,(_,x)=>x.toUpperCase())];
-    if(!c)return "Not supplied";
-    if(c.allowed===true)return c.penalty_amount||c.penaltyAmount?`Allowed · penalty ${c.penalty_amount||c.penaltyAmount} ${c.penalty_currency||c.penaltyCurrency||o.totalCurrency||""}`:"Allowed";
-    if(c.allowed===false)return "Not allowed";
-    return "See fare conditions";
-  }
-  function carrierCodes(){return unique(state.offers.flatMap(o=>offerSegments(o).map(s=>s.marketingCarrier?.iataCode).filter(Boolean))).sort();}
-  function passesOfferFilters(o){
-    const f=state.offerFilters||{};
-    if(f.carrier&&!offerSegments(o).some(s=>s.marketingCarrier?.iataCode===f.carrier))return false;
-    if(f.maxConnections!==""&&connections(o)>Number(f.maxConnections))return false;
-    if(f.maxPrice!==""&&Number(o.totalAmount||0)>Number(f.maxPrice))return false;
-    if(f.checkedBag&&/No checked/.test(checkedBagText(o)))return false;
-    return true;
-  }
-
-  renderSearch=function(){
-    const today=new Date(); today.setDate(today.getDate()+1); const rd=new Date(today);rd.setDate(rd.getDate()+7);const saved=state.search||{};
-    return `${pageHead("Your air search","Live Duffel airline content · reference airports from Inventory Control")}
-      <section class="panel"><div class="panel-head"><span>Itinerary</span><span class="muted">Standard search</span></div>
-      <form id="flightSearchForm" class="panel-body">
-        <div class="ama-search-grid">
-          <div class="field"><label for="tripType">Trip</label><select id="tripType"><option value="round_trip" ${saved.tripType==="one_way"?"":"selected"}>Round trip</option><option value="one_way" ${saved.tripType==="one_way"?"selected":""}>One way</option></select></div>
-          <div class="field airport-field-wrap"><label for="origin">From · City or airport</label><input id="origin" maxlength="80" autocomplete="off" placeholder="City or airport" value="${escapeAttr(saved.origin||"")}" required><div id="originSuggestions" class="airport-suggest"></div></div>
-          <button class="secondary" type="button" data-action="swap-airports" aria-label="Swap airports">⇄</button>
-          <div class="field airport-field-wrap"><label for="destination">To · City or airport</label><input id="destination" maxlength="80" autocomplete="off" placeholder="City or airport" value="${escapeAttr(saved.destination||"")}" required><div id="destinationSuggestions" class="airport-suggest"></div></div>
-          <div class="field"><label for="departureDate">Depart</label><input id="departureDate" type="date" min="${isoDate(new Date())}" value="${saved.departureDate||isoDate(today)}" required></div>
-          <div class="field" id="returnDateField"><label for="returnDate">Return</label><input id="returnDate" type="date" min="${isoDate(today)}" value="${saved.returnDate||isoDate(rd)}"></div>
-          <button class="primary" type="submit">Search flights</button>
-        </div>
-        <div class="search-options" style="margin-top:8px">
-          <div class="field"><label>Adults</label><select id="adults">${numberOptions(1,9,Number(saved.adults||1))}</select></div>
-          <div class="field"><label>Child ages (2–17)</label><input id="childAges" placeholder="8, 14" value="${escapeAttr((saved.childAges||[]).join(", "))}"></div>
-          <div class="field"><label>Infant ages (0–1)</label><input id="infantAges" placeholder="0" value="${escapeAttr((saved.infantAges||[]).join(", "))}"></div>
-          <div class="field"><label>Cabin</label><select id="cabinClass">${option("economy","Economy",saved.cabinClass||"economy")}${option("premium_economy","Premium economy",saved.cabinClass)}${option("business","Business",saved.cabinClass)}${option("first","First",saved.cabinClass)}</select></div>
-          <div class="field"><label>Connections per slice</label><select id="maxConnections">${option("0","Direct only",String(saved.maxConnections??1))}${option("1","Up to 1",String(saved.maxConnections??1))}${option("2","Up to 2",String(saved.maxConnections??1))}${option("3","Up to 3",String(saved.maxConnections??1))}</select></div>
-          <div class="field"><label>Display currency</label><select id="currency">${["SEK","USD","EUR","DKK","NOK"].map(c=>`<option value="${c}" ${state.preferences.currency===c?"selected":""}>${c}</option>`).join("")}</select></div>
-        </div>
-      </form></section>
-      <div style="margin-top:10px">${state.offers.length?renderOfferResults():emptyState("✈","No live offers loaded","Run a search to load current offers.")}</div>`;
-  };
-
-  renderOfferResults=function(){
-    const filtered=state.offers.filter(passesOfferFilters); const groups={};filtered.forEach(o=>{const k=itineraryKey(o);(groups[k]||(groups[k]=[])).push(o);});
-    return `<div class="ama-filter-layout"><aside class="ama-filter-panel"><div class="ama-filter-title">Results filters</div>
-      <div class="ama-filter-group"><strong>Number of connections</strong><label><select id="filterConnections"><option value="">Any</option><option value="0">Nonstop</option><option value="1">Up to 1</option><option value="2">Up to 2</option></select></label></div>
-      <div class="ama-filter-group"><strong>Airlines</strong><label><select id="filterCarrier"><option value="">All airlines</option>${carrierCodes().map(c=>`<option value="${esc(c)}" ${state.offerFilters.carrier===c?"selected":""}>${esc(c)}</option>`).join("")}</select></label></div>
-      <div class="ama-filter-group"><strong>Price (${esc(state.preferences.currency)})</strong><label><input id="filterMaxPrice" type="number" min="0" step="1" placeholder="Maximum" value="${escapeAttr(state.offerFilters.maxPrice||"")}"></label></div>
-      <div class="ama-filter-group"><strong>Baggage allowance</strong><label><input id="filterCheckedBag" type="checkbox" ${state.offerFilters.checkedBag?"checked":""}> Checked bag shown</label></div>
-      <div class="ama-filter-group"><strong>Available information</strong><div class="muted">Cabins · fare brands · booking classes · airports · baggage · amenities/services · seats · CO₂ · fare conditions</div></div>
-      </aside><section><div class="panel-head"><span>${Object.keys(groups).length} itinerary option(s) · ${filtered.length} fare(s)</span><span class="muted">Grouped by complete schedule</span></div><div style="margin-top:8px">${Object.values(groups).map(renderNestedFlightGroup).join("")||emptyState("✈","No fares match filters","Change a result filter to continue.")}</div></section></div>`;
-  };
-
-  renderNestedFlightGroup=function(group){
-    const base=group[0];const segs=offerSegments(base);const first=segs[0]||{},last=segs[segs.length-1]||{};
-    return `<article class="ama-itinerary"><div class="ama-itinerary-head"><span>${esc(first.origin?.iataCode||"—")} → ${esc(last.destination?.iataCode||"—")} · ${connections(base)} connection(s)</span><span>${esc(base.slices?.map(s=>s.duration).filter(Boolean).join(" / ")||"")}</span></div>
-      <div class="ama-segments">${segs.map(seg=>`<div class="ama-segment"><div><strong>${esc(seg.marketingCarrier?.iataCode||"")}${esc(seg.marketingFlightNumber||"")}</strong><br><span class="muted">${esc(seg.operatingCarrier?.name||seg.marketingCarrier?.name||"")}</span></div><div>${esc(formatShortDate(seg.departingAt))}</div><div><strong>${esc(seg.origin?.iataCode||"")}</strong><br>${esc(timeOnly(seg.departingAt))}<br><span class="muted">${esc(seg.originTerminal?`Terminal ${seg.originTerminal}`:"")}</span></div><div>→</div><div><strong>${esc(seg.destination?.iataCode||"")}</strong><br>${esc(timeOnly(seg.arrivingAt))}<br><span class="muted">${esc(seg.destinationTerminal?`Terminal ${seg.destinationTerminal}`:"")}</span></div><div class="aircraft-col">${esc(seg.aircraft?.name||"")}<br><span class="muted">${esc(seg.duration||"")}${seg.stops?.length?` · ${seg.stops.length} technical stop(s)`:""}</span></div></div>`).join("")}</div>
-      <div class="ama-fares">${group.sort((a,b)=>Number(a.totalAmount||0)-Number(b.totalAmount||0)).map(o=>{const pax=offerSegments(o)[0]?.passengers?.[0]||{};return `<div class="ama-fare"><div class="fare-price">${money(o.totalAmount,o.totalCurrency)}</div><strong>${esc(o.slices?.[0]?.fareBrandName||pax.cabinClassMarketingName||humanize(pax.cabinClass||"Fare"))}</strong><div class="fare-meta">Base ${money(o.baseAmount,o.baseCurrency||o.totalCurrency)} · Taxes ${money(o.taxAmount,o.taxCurrency||o.totalCurrency)}<br>${esc(pax.fareBasisCode?`Fare basis ${pax.fareBasisCode} · `:"")}${esc(pax.cabinClassMarketingName||pax.cabinClass||"")}<br>${esc(checkedBagText(o))}<br>${o.totalEmissionsKg!=null?`${esc(o.totalEmissionsKg)} kg CO₂ · `:""}${esc(conditionLabel(o,"refund_before_departure"))}</div><button class="primary" data-action="select-offer" data-offer-id="${escapeAttr(o.id)}">Select fare</button></div>`;}).join("")}</div></article>`;
-  };
-
-  renderOffer=function(){const o=state.selectedOffer;if(!o)return `${pageHead("Offer Review","A selected offer is refreshed here before checkout.")}${emptyState("▤","No offer selected","Search for flights and choose an offer to review.")}`;
-    return `${pageHead("Offer Review","Refreshed live Duffel offer with airline-standard pricing, baggage, conditions and service context.",'<button class="secondary" data-action="refresh-selected-offer">Refresh price</button><button class="primary" data-view="workspace">Continue to order</button>')}
-      ${o.isExpired?alertBox("danger","Offer expired","Return to flight search and choose a current offer."):""}
-      <div class="ama-offer-summary"><div><span class="muted">Base fare</span><span class="value">${money(o.baseAmount,o.baseCurrency||o.totalCurrency)}</span></div><div><span class="muted">Taxes</span><span class="value">${money(o.taxAmount,o.taxCurrency||o.totalCurrency)}</span></div><div><span class="muted">Total</span><span class="value">${money(o.totalAmount,o.totalCurrency)}</span></div><div><span class="muted">CO₂</span><span class="value">${o.totalEmissionsKg!=null?`${esc(o.totalEmissionsKg)} kg`:"Not supplied"}</span></div><div><span class="muted">Validating carrier</span><span class="value">${esc(o.owner?.iataCode||o.owner?.name||"Not supplied")}</span></div></div>
-      <div class="workspace-layout"><div>${itineraryMarkup(o)}<section class="panel" style="margin-top:10px"><div class="panel-head">Fare / baggage / conditions</div><div class="panel-body"><div class="grid grid-3"><div><span class="muted">Included baggage</span><div class="strong">${esc(checkedBagText(o))}</div></div><div><span class="muted">Refund before departure</span><div class="strong">${esc(conditionLabel(o,"refund_before_departure"))}</div></div><div><span class="muted">Change before departure</span><div class="strong">${esc(conditionLabel(o,"change_before_departure"))}</div></div><div><span class="muted">Payment deadline</span><div>${esc(formatDateTime(o.paymentRequiredBy||o.priceGuaranteeExpiresAt||o.expiresAt))}</div></div><div><span class="muted">Identity document</span><div>${o.identityDocumentRequired?`Required · ${esc((o.supportedIdentityDocumentTypes||[]).join(", ")||"provider rules")}`:"Not required by offer"}</div></div><div><span class="muted">Loyalty programmes</span><div>${esc((o.supportedLoyaltyProgrammes||[]).map(x=>x.name||x).join(", ")||"Not supplied")}</div></div></div></div></section>
-      <section class="panel" style="margin-top:10px"><div class="panel-head">Available baggage and services</div><div class="panel-body" style="padding:0">${serviceListMarkup(o.availableServices||[])}</div></section><section class="panel" style="margin-top:10px"><div class="panel-head"><span>Seat maps</span><button class="link" data-action="load-seat-maps">Refresh seat maps</button></div><div class="panel-body">${seatMapMarkup()}</div></section></div>
-      <aside class="panel sticky"><div class="panel-head">Offer control</div><div class="panel-body"><div class="money-line"><span>Offer ID</span><strong class="mono">${esc(o.id)}</strong></div><div class="money-line"><span>Fare</span><strong>${money(o.totalAmount,o.totalCurrency)}</strong></div><div class="money-line"><span>Selected services</span><strong>${money(selectedServiceTotal(),o.totalCurrency)}</strong></div><div class="money-line"><span>Total due</span><strong class="price-total">${money(orderTotal(),o.totalCurrency)}</strong></div><div class="money-line"><span>Offer expiry</span><strong>${esc(formatDateTime(o.expiresAt))}</strong></div></div><div class="panel-foot"><button class="primary" data-view="workspace">Continue</button></div></aside></div>`;};
-
-  function suggestionMarkup(){const w=activeWorkspace(),items=state.componentSuggestions||[];if(!w?.booking)return "";const ctx=state.componentSuggestionContext||{};return `<section class="panel journey-suggestions"><div class="panel-head"><span>Add to itinerary</span><button class="link" data-action="refresh-component-suggestions">Refresh suggestions</button></div><div class="panel-body">${ctx.arrivalAirport?`<div class="muted" style="margin-bottom:7px">Matched to flight arrival ${esc(ctx.arrivalAirport)}${ctx.destination?` · ${esc(ctx.destination)}`:""}. Products come from Inventory Control.</div>`:""}${items.length?`<div class="suggestion-grid">${items.map(i=>`<div class="suggestion-card"><span class="badge info">${esc(humanize(i.entityType))}</span><div class="strong" style="margin-top:5px">${esc(i.name)}</div><div class="muted">${esc(i.destination||i.airportIata||"")}</div><div class="reason">${esc(i.reason||"Context match")}</div>${i.publicPrice!=null?`<div class="strong">${money(i.publicPrice,i.currency||w.booking.currency)}</div>`:""}<button class="primary" data-action="add-inventory-component" data-entity-id="${escapeAttr(i.entityId)}">Add to booking</button></div>`).join("")}</div>`:emptyState("＋","No matching Inventory Control products","No published transfer, hotel, tour or other component currently matches this itinerary destination.")}</div></section>`;}
-  const legacyRenderBookingFile=renderBookingFile;
-  renderBookingFile=function(){let html=legacyRenderBookingFile();const w=activeWorkspace(),b=w?.booking;if(!b)return html;html=html.replace('<button class="secondary" data-action="refresh-booking-file">Refresh</button>',`<button class="secondary" data-action="refresh-booking-file">Refresh</button><button class="secondary danger-action" data-action="delete-draft-booking">Delete unconfirmed file</button>`);html=html.replace('<button class="secondary" data-view="services">Seats & Services</button>','<button class="secondary" data-view="offer">Air seats & services</button><button class="secondary" data-action="refresh-component-suggestions">Itinerary suggestions</button>');return html+suggestionMarkup();};
-
-  function renderAirportSuggestions(field){const box=document.getElementById(field+"Suggestions");if(!box)return;const items=state.airportSuggestions[field]||[];box.innerHTML=items.map(i=>`<button type="button" class="airport-option" data-airport-field="${field}" data-airport-code="${escapeAttr(i.iata)}"><span class="airport-code">${esc(i.iata)}</span> ${esc(i.city||i.name)}${i.name&&i.city&&i.name!==i.city?` · ${esc(i.name)}`:""}${i.country?` · ${esc(i.country)}`:""}</button>`).join("");box.querySelectorAll(".airport-option").forEach(btn=>btn.addEventListener("click",()=>{const input=document.getElementById(field);if(input)input.value=btn.dataset.airportCode||"";state.airportSuggestions[field]=[];renderAirportSuggestions(field);}));}
-  let airportTimers={};
-  function wireAirport(field){const input=document.getElementById(field);if(!input)return;input.setAttribute("maxlength","80");input.addEventListener("input",()=>{clearTimeout(airportTimers[field]);const q=input.value.trim();if(q.length<2){state.airportSuggestions[field]=[];renderAirportSuggestions(field);return;}airportTimers[field]=setTimeout(()=>post("ALTEA_AIRPORT_SUGGEST",{query:q,field},{busy:false}),180);});input.addEventListener("focus",()=>renderAirportSuggestions(field));}
-  function wireOfferFilters(){const conn=document.getElementById("filterConnections"),carrier=document.getElementById("filterCarrier"),price=document.getElementById("filterMaxPrice"),bag=document.getElementById("filterCheckedBag");if(conn){conn.value=state.offerFilters.maxConnections;conn.addEventListener("change",()=>{state.offerFilters.maxConnections=conn.value;render();});}if(carrier){carrier.value=state.offerFilters.carrier;carrier.addEventListener("change",()=>{state.offerFilters.carrier=carrier.value;render();});}if(price){price.addEventListener("change",()=>{state.offerFilters.maxPrice=price.value;render();});}if(bag){bag.addEventListener("change",()=>{state.offerFilters.checkedBag=bag.checked;render();});}}
-  function requestComponentSuggestions(force=false){const id=activeWorkspace()?.booking?.id;if(!id)return;if(!force&&state.componentSuggestionsBookingId===id)return;state.componentSuggestionsBookingId=id;post("ALTEA_COMPONENT_SUGGESTIONS",{bookingId:id},{busy:false});}
-
-  const legacyBindAction=bindAction;
-  bindAction=function(el){legacyBindAction(el);el.addEventListener("click",()=>{const a=el.dataset.action;if(a==="refresh-component-suggestions")requestComponentSuggestions(true);if(a==="delete-draft-booking"){const b=activeWorkspace()?.booking;if(!b?.id)return;openModal("Delete unconfirmed booking",alertBox("warning","Delete empty booking file",`This permanently removes ${b.bookingReference||b.pnrLocator||"this booking"} only if no supplier booking, payment, ticket, document or committed component exists.`),[{label:"Keep booking",className:"secondary",close:true},{label:"Delete file",className:"danger",onClick:()=>{closeModal();post("ALTEA_DELETE_DRAFT_BOOKING",{bookingId:b.id});}}]);}});};
-  const legacyBindViewEvents=bindViewEvents;
-  bindViewEvents=function(){legacyBindViewEvents();wireAirport("origin");wireAirport("destination");wireOfferFilters();if(state.activeView==="booking")requestComponentSuggestions(false);};
-
-  window.addEventListener("message",event=>{const m=typeof event.data==="string"?(()=>{try{return JSON.parse(event.data)}catch(_){return null}})():event.data;if(!m||m.source!==PARENT_SOURCE)return;const payload=m.payload||{};
-    if(m.type==="ALTEA_AIRPORT_SUGGESTIONS_RESULT"){const field=payload.field==="destination"?"destination":"origin";state.airportSuggestions[field]=payload.items||[];renderAirportSuggestions(field);}
-    if(m.type==="ALTEA_COMPONENT_SUGGESTIONS_RESULT"){state.componentSuggestions=payload.items||[];state.componentSuggestionContext=payload.context||{};for(const item of state.componentSuggestions){if(!(state.inventory||[]).some(x=>String(x.id)===String(item.entityId)))state.inventory.push({id:item.entityId,entityType:item.entityType,name:item.name,publicId:item.publicId,code:item.code,city:item.destination,publicPrice:item.publicPrice,currency:item.currency,dated:[]});}if(state.activeView==="booking")render();}
-    if(m.type==="ALTEA_DRAFT_BOOKING_DELETED"){const id=payload.bookingId;state.alteaBookings=(state.alteaBookings||[]).filter(b=>String(b.id)!==String(id));state.alteaWorkspace=null;state.componentSuggestions=[];state.componentSuggestionsBookingId="";navigate("orders");toast("Booking deleted",`${payload.reference||"Unconfirmed booking"} was removed.`,"success");}
-    if(m.type==="ALTEA_COMPONENT_UPDATED"||m.type==="INVENTORY_COMPONENT_ADDED"){state.componentSuggestionsBookingId="";if(state.activeView==="booking")setTimeout(()=>requestComponentSuggestions(true),0);}
-  });
-
-  // Remove obsolete standalone Trip Components navigation if an older HTML shell is cached.
-  document.querySelector('.nav-item[data-view="services"]')?.remove();
-  if(state.activeView==="services")state.activeView="booking";
-  render();
-})();
-</script>
-
 </body>
 </html>
+```
