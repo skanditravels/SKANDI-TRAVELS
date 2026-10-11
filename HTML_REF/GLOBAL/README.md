@@ -1,8 +1,30 @@
 # SKANDI Wix Studio — Exact Scrolling / Sizing Settings
 
-Status: CONFIGURATION SPECIFICATION — no runtime files modified.
+Status: CONFIGURATION SPECIFICATION — global scroll-top runtime contract prepared; remaining sizing guidance unchanged.
 Scope: every route currently present in the named `siteMap.js` plus its `APP_ROUTES`.
 Target: remove the current “two scrolls” experience while preserving the SKANDI v12 page/embed architecture.
+
+
+## 2026-10-11 Baggage Allowance naming / route correction
+
+- Customer footer label corrected from `Baggage Allowence` to `Baggage Allowance` in `/src/pages/masterPage.js`.
+- Canonical application route corrected from `/travel-info/baggage-allowence` to `/travel-info/baggage-allowance` in `/src/public/siteMap.js` and the currently mirrored `customerAuthUi.js` route registry.
+- Baggage Allowance remains a `CONTENT_AUTO` customer route and keeps the existing 680–30000 px sizing model.
+- No global-header embed geometry, authentication contract, scroll ownership, database/provider behavior or other route is changed by this naming correction.
+
+## Global page-open scroll invariant
+
+Every newly opened SKANDI surface must begin at the top of its visible scroll owner.
+
+- A new Wix route must scroll the outer Wix viewport to `(0, 0)` on initial page readiness and whenever the route/query identity changes.
+- Master-controlled navigation must request the top position before route navigation and re-assert it immediately after the Wix route transition settles.
+- An embedded/hidden page, detail page, app subpage, or same-route view that becomes the new primary surface must emit `MASTER_SCROLL_TOP` to the Wix master controller when it opens.
+- The Wix master controller answers by scrolling the Wix viewport to the top and broadcasting `SKANDI_SCROLL_TOP` to mounted HTML components so an embed that owns its own scroll surface can also reset itself.
+- Shared embed code should use `masterScrollTop()` / `window.SKANDIMaster.scrollTop()` from `/src/pages/master-config-bridge.js` when available rather than inventing page-specific parent-scroll contracts.
+- Returning from a detail view to a deliberately preserved prior list position is allowed only when that return behavior is intentional and already part of the page UX; opening the new detail itself still starts at the top.
+- This rule applies to customer SKANDI pages, RIAINTRA and ALTEA. It does not change which layer owns scrolling under the sizing presets below.
+
+Runtime authority: `/src/pages/masterPage.js` for the Wix viewport and `/src/pages/master-config-bridge.js` for the shared embed contract. Travel Info is synchronized in this repair as the current hidden-detail implementation using the contract. STATICALLY VERIFIED; REQUIRES LIVE TEST after Wix publication.
 
 ## Governing rule
 
@@ -200,11 +222,13 @@ STATICALLY VERIFIED:
 - current header runtime resize behavior
 - current Destinations runtime content-height resize behavior
 - current Wix Studio sizing/overflow behavior from Wix documentation
+- global `MASTER_SCROLL_TOP` / `SKANDI_SCROLL_TOP` message handling and route-change watcher syntax/contracts
 
 REQUIRES LIVE TEST:
 - final visible header/footer placement on each published route
 - any page-specific HTML that uses fixed/sticky positioning and therefore should be moved from CONTENT_AUTO to APP_VIEWPORT
 - route-aware footer suppression because current `masterPage.js` presently shows footers broadly
+- published Wix route transitions, back/forward navigation and same-route embedded-view top-reset behavior
 
 ## Wix documentation used
 
