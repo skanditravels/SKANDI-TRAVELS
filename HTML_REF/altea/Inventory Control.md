@@ -6,7 +6,7 @@
 - WIX PAGE FILE: `/src/pages/Inventory Control.jsdik.js`
 - WIX ROUTE / SLUG: `/riaintra/success-factors/altea/inventory-control`
 - WIX HTML ELEMENT: `#inventoryControlEmbed`
-- CURRENT STATUS: V12 AIRCRAFT CABIN DISPLAY REPAIR PREPARED — REQUIRES LIVE TEST
+- CURRENT STATUS: V12 INVENTORY MODAL / PAGINATION / ASSET UX REPAIR PREPARED — REQUIRES LIVE TEST
 - SOURCE-OF-TRUTH STATUS: AUTHORITATIVE intended V12 embed payload supplied for this repair.
 - CANONICAL WEB FACADE: `/src/backend/SKANDI_CORE/inventory.web.js`
 - CANONICAL CORE: `/src/backend/SKANDI_CORE/inventory.js`
@@ -17,9 +17,10 @@
 - PROVIDER SNAPSHOT: the provider evidence remains under `payload.duffel` (`normalized` + `raw`). The migration promotes the normalized provider-owned subset into the canonical Inventory detail object and retains a read-only `inventory_details.duffel` / `details.duffel` copy for audit/context; SKANDI enrichment remains editable only in Inventory Control.
 - AUTHORIZATION: unchanged from current V12 page/facade/core boundaries. No frontend role or provider secret becomes authoritative.
 - MESSAGE CONTRACTS / ELEMENT IDS: unchanged.
-- LAST VERIFIED: 2026-10-11 — current repo `skanditravels/SKANDI-TRAVELS`, branch `main`, HEAD `19d7059098c6f2e880e1a94ad8f6b11e00c9b115` inspected for this repair; Wix live runtime was not executed in this session.
+- LAST VERIFIED: 2026-10-11 — current repo `skanditravels/SKANDI-TRAVELS`, branch `main`, HEAD `878d01bef64636c7335c8b71a4093b1104a9e8dc` inspected for this repair; Wix live runtime was not executed in this session.
 
 ## CHANGE LOG
+- 2026-10-11 — Inventory UX repair: record editor and nested Asset Library dialogs now own their scroll surface and lock the background document while open; Master Records is paged at 100 rows with Previous/Next controls plus status, customer visibility, ALTEA visibility and sort dropdown filters; Asset Library browsing is paged at 100 assets and Folder/Subfolder/Category are dropdowns derived from the current indexed library and canonical category choices; Inventory/Asset Library image previews use contain scaling so the complete image remains visible instead of being cropped. Existing message contracts, page controller, facade, core writes, authorization and stored records are unchanged. STATICALLY VERIFIED; REQUIRES LIVE TEST after replacing and publishing `#inventoryControlEmbed`.
 - 2026-10-11 — Aircraft cabin double-count repair: Aircraft & Cabin Studio now builds its displayed cabin set only from active cabin rows and collapses exact canonical/descriptive duplicates before calculating cabin count, cabin map proportions and cabin seat totals. Per-cabin seat values remain sourced from the canonical `travel_info_aircraft_cabins.seat_count` field returned by `INVENTORY_V9_GET_AIRCRAFT`; aircraft total seats remain sourced from `travel_info_aircraft.total_seats`. Existing message contracts, page controller, facade, core writes, authorization and stored records are unchanged. STATICALLY VERIFIED; REQUIRES LIVE TEST after replacing and publishing `#inventoryControlEmbed`.
 - 2026-10-10 — Gray-window boot repair: removed one duplicate top-level object closure from the current V12 Inventory embed. The extra `};` caused the module script to fail parsing before React could mount, leaving the Wix HTML component blank/gray. Message names, element IDs, page-controller imports, backend actions, authorization, data contracts and existing features remain unchanged. Prepared against GitHub `main` HEAD `19d7059098c6f2e880e1a94ad8f6b11e00c9b115`. STATICALLY VERIFIED; REQUIRES LIVE TEST after replacing and publishing `#inventoryControlEmbed`.
 - 2026-10-09 — Canonical Assets + Structured Fields repair: AIRLINE/AIRPORT media is edited only in Assets; URL assets can be added directly with immediate preview; Duffel logo lockup/symbol values are provider-owned and converge into media_assets on sync; duplicate logo/image keys are removed from inventory_details. Raw JSON editors for known AIRLINE/AIRPORT content are replaced by repeatable typed inputs while preserving JSONB storage. Prepared against GitHub main ea5188ebe7f9bd5b5f7175c4d4caf81a64673bd2 and live Supabase schema/data read-only. STATICALLY VERIFIED; REQUIRES LIVE TEST after migration + Wix publication.
@@ -80,21 +81,21 @@ h1{margin:3px 0 5px;font-size:28px;line-height:1.12;color:var(--navy2)}
 .notice{padding:12px 14px;border-radius:12px;border:1px solid #bcdcea;background:#f0f9fc;color:#31566d;line-height:1.45}
 .notice.warn{background:#fff8e8;border-color:#ead39b;color:#71541c}.notice.bad{background:#fff2f3;border-color:#ebbdc2;color:#842433}
 .empty{padding:38px 18px;text-align:center;color:var(--muted)}
-.modalback{position:fixed;inset:0;background:rgba(3,18,37,.63);z-index:100;display:grid;place-items:start center;padding:10px 18px 18px;overflow:auto}
-.modal{background:#fff;border-radius:18px;width:min(1160px,100%);max-height:calc(100vh - 20px);overflow:hidden;display:grid;grid-template-rows:auto minmax(0,1fr);box-shadow:0 35px 100px rgba(0,0,0,.35)}
-.modal.wide{width:min(1450px,100%)}.modalhead{padding:13px 16px;background:var(--navy2);color:#fff;display:flex;justify-content:space-between;align-items:center;gap:12px}.modalhead h2{font-size:16px;margin:0}.modalbody{overflow:auto;padding:16px}
+.modalback{position:fixed;inset:0;background:rgba(3,18,37,.63);z-index:100;display:grid;place-items:center;padding:10px 18px;overflow:hidden;overscroll-behavior:contain}
+.modal{background:#fff;border-radius:18px;width:min(1160px,100%);height:min(900px,calc(100vh - 20px));max-height:calc(100vh - 20px);overflow:hidden;display:grid;grid-template-rows:auto minmax(0,1fr);box-shadow:0 35px 100px rgba(0,0,0,.35)}
+.modal.wide{width:min(1450px,100%)}.modalhead{padding:13px 16px;background:var(--navy2);color:#fff;display:flex;justify-content:space-between;align-items:center;gap:12px}.modalhead h2{font-size:16px;margin:0}.modalbody{min-height:0;overflow:auto;overscroll-behavior:contain;padding:16px}
 .tabs{display:flex;gap:5px;overflow:auto;border-bottom:1px solid var(--line);padding-bottom:8px;margin-bottom:14px}.tab{white-space:nowrap;border:0;border-radius:9px;padding:8px 10px;background:#edf3f7;color:#4d5f72;font-weight:750}.tab.active{background:var(--navy);color:#fff}
 .formgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}.formgrid.three{grid-template-columns:repeat(3,minmax(0,1fr))}.full{grid-column:1/-1}
 .sectiontitle{font-size:14px;font-weight:850;color:var(--navy);margin:4px 0 12px}.hr{height:1px;background:var(--line2);margin:14px 0}
 .langtabs{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px}.lang{border:1px solid var(--line);background:#fff;border-radius:8px;padding:6px 9px;font-weight:800}.lang.active{background:var(--cyan);border-color:var(--cyan)}
 .mediaitem,.relitem,.childitem{border:1px solid var(--line);border-radius:12px;padding:10px;margin-bottom:8px;background:#fbfdff}
 .preview{width:100%;aspect-ratio:16/8;background:#edf2f6;border-radius:12px;overflow:hidden;display:grid;place-items:center;color:var(--muted)}
-.preview img{width:100%;height:100%;object-fit:contain;display:block;background:#fff}
+.preview img{width:100%;height:100%;object-fit:contain;display:block;background:#fff;padding:6px}
 .asseturladd{display:grid;grid-template-columns:minmax(220px,1fr) 180px minmax(180px,.7fr) auto;gap:8px;align-items:end;padding:12px;border:1px solid var(--line);border-radius:12px;background:#f8fbfd;margin:10px 0 14px}.providersource{font-size:10px;color:var(--muted);font-weight:700}.mediaitem.providerowned{border-color:#9ed7dc;background:#f4fcfc}@media(max-width:780px){.asseturladd{grid-template-columns:1fr}}
 .aircraftlayout{display:grid;grid-template-columns:330px minmax(0,1fr);gap:12px}.airlist{max-height:720px;overflow:auto}.airrow{padding:10px;border:1px solid var(--line);border-radius:11px;margin:6px 0;background:#fff;cursor:pointer}.airrow.active{border-color:var(--blue);box-shadow:0 0 0 2px rgba(23,119,210,.1)}.airrow b{display:block}.airrow small{color:var(--muted)}
 .cabinmap{display:flex;align-items:stretch;border:1px solid #91a8bd;border-radius:70px 18px 18px 70px;overflow:hidden;min-height:92px;background:#e9f2f8;padding:6px}
 .cabinzone{min-width:54px;display:grid;place-items:center;text-align:center;border-right:1px solid rgba(2,46,100,.14);padding:7px;background:rgba(255,255,255,.82)}.cabinzone:first-child{border-radius:60px 0 0 60px}.cabinzone:last-child{border-right:0;border-radius:0 11px 11px 0}.cabinzone b{color:var(--navy);font-size:12px}.cabinzone small{color:var(--muted);font-size:10px}
-.studioimg{position:relative;aspect-ratio:16/9;border-radius:14px;overflow:hidden;background:#dce6ee}.studioimg img{width:100%;height:100%;object-fit:cover}
+.studioimg{position:relative;aspect-ratio:16/9;border-radius:14px;overflow:hidden;background:#fff}.studioimg img{width:100%;height:100%;object-fit:contain;padding:6px}
 .hotspot{position:absolute;width:26px;height:26px;border-radius:50%;border:3px solid #fff;background:var(--cyan);box-shadow:0 4px 16px rgba(0,0,0,.35);transform:translate(-50%,-50%);display:grid;place-items:center;font-size:9px;font-weight:900;color:var(--navy);cursor:grab}
 .hotspot.dragging{cursor:grabbing;transform:translate(-50%,-50%) scale(1.12)}.hotlabel{position:absolute;transform:translate(-50%,11px);background:rgba(3,24,49,.92);color:#fff;padding:3px 6px;border-radius:6px;font-size:9px;white-space:nowrap;pointer-events:none}
 .kpirow{display:flex;gap:7px;flex-wrap:wrap}.kpi{border:1px solid var(--line);background:#fff;border-radius:10px;padding:7px 9px}.kpi b{color:var(--navy)}
@@ -114,7 +115,7 @@ h1{margin:3px 0 5px;font-size:28px;line-height:1.12;color:var(--navy2)}
 
 .assetgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}
 .assetcard{border:1px solid var(--line);border-radius:13px;background:#fff;overflow:hidden;display:grid;grid-template-rows:128px 1fr}
-.assetthumb{background:#edf3f7;display:grid;place-items:center;overflow:hidden}.assetthumb img{width:100%;height:100%;object-fit:cover}
+.assetthumb{background:#fff;display:grid;place-items:center;overflow:hidden}.assetthumb img{width:100%;height:100%;object-fit:contain;padding:8px}
 .assettype{font-size:25px;color:var(--navy);font-weight:900}.assetbody{padding:9px;display:grid;gap:5px;min-width:0}
 .assetname{font-weight:850;color:var(--navy2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.assetpath{font-size:10px;color:var(--muted);line-height:1.35;min-height:28px}
 .assetbadges,.assetactions{display:flex;gap:4px;flex-wrap:wrap}.badge{display:inline-flex;padding:3px 6px;border-radius:999px;background:#edf3f7;color:#53677a;font-size:9px;font-weight:850}
@@ -124,6 +125,7 @@ h1{margin:3px 0 5px;font-size:28px;line-height:1.12;color:var(--navy2)}
 .assetfilters{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:10px}.assetsection{border-top:1px solid var(--line2);padding-top:13px;margin-top:13px}
 .dupbox{border:1px solid #e4bd7d;background:#fff8e9;border-radius:12px;padding:11px;margin:10px 0}.assetlibraryhero{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center}
 .assetfolder{font-weight:850;color:var(--navy);font-size:12px}.fileinput{display:block;width:100%;border:1px solid var(--line);border-radius:10px;background:#fff;padding:9px}
+.pager{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:10px 0}.pagerinfo{font-size:11px;color:var(--muted);font-weight:700}.pagerbuttons{display:flex;gap:6px;align-items:center}.pager .btn[disabled]{opacity:.42;cursor:default}
 
 
 /* R-003.9 Duffel / SKANDI Collection workspace */
@@ -153,7 +155,7 @@ h1{margin:3px 0 5px;font-size:28px;line-height:1.12;color:var(--navy2)}
 @media(max-width:900px){.providergrid{grid-template-columns:1fr}.providerhero{grid-template-columns:1fr}.provideractions{justify-content:flex-start}}
 
 
-@media(max-width:760px){.shell{grid-template-columns:1fr;grid-template-rows:auto 1fr}.sidebar{position:relative;height:60px;display:flex;gap:5px;overflow:auto;padding:8px}.brand,.group{display:none}.navbtn{width:auto;white-space:nowrap}.main{padding:12px}.top{display:block}.toolbar{justify-content:flex-start;margin-top:10px}.stats{grid-template-columns:repeat(2,1fr)}.formgrid,.formgrid.three{grid-template-columns:1fr}.full{grid-column:auto}.modalback{padding:0;place-items:start center}.modal{max-height:100vh;height:100vh;border-radius:0}.cabinmap{border-radius:16px;overflow:auto}.cabinzone:first-child,.cabinzone:last-child{border-radius:8px}}
+@media(max-width:760px){.shell{grid-template-columns:1fr;grid-template-rows:auto 1fr}.sidebar{position:relative;height:60px;display:flex;gap:5px;overflow:auto;padding:8px}.brand,.group{display:none}.navbtn{width:auto;white-space:nowrap}.main{padding:12px}.top{display:block}.toolbar{justify-content:flex-start;margin-top:10px}.stats{grid-template-columns:repeat(2,1fr)}.formgrid,.formgrid.three{grid-template-columns:1fr}.full{grid-column:auto}.modalback{padding:0;place-items:center}.modal{max-height:100vh;height:100vh;border-radius:0}.cabinmap{border-radius:16px;overflow:auto}.cabinzone:first-child,.cabinzone:last-child{border-radius:8px}}
 </style>
 <script type="importmap">
 {
@@ -546,13 +548,46 @@ function AmenitiesEditor({value,onChange}){
     ${list.length?html`<div className="smartlist">${list.map((item,i)=>html`<div className="smartrow"><${Field} label=${`Amenity ${i+1}`} value=${text(item)} onChange=${v=>onChange(list.map((x,idx)=>idx===i?v:x))}/><button className="btn small danger" onClick=${()=>onChange(list.filter((_,x)=>x!==i))}>Remove</button></div>`)}</div>`:html`<div className="smartempty">No amenities have been added.</div>`}
   </div>`
 }
+let modalLockDepth=0;
+let modalLockSnapshot=null;
+function lockDocumentScroll(){
+  if(modalLockDepth===0){
+    modalLockSnapshot={
+      htmlOverflow:document.documentElement.style.overflow,
+      bodyOverflow:document.body.style.overflow,
+      htmlOverscroll:document.documentElement.style.overscrollBehavior,
+      bodyOverscroll:document.body.style.overscrollBehavior
+    };
+    document.documentElement.style.overflow="hidden";
+    document.body.style.overflow="hidden";
+    document.documentElement.style.overscrollBehavior="none";
+    document.body.style.overscrollBehavior="none";
+  }
+  modalLockDepth++;
+}
+function unlockDocumentScroll(){
+  modalLockDepth=Math.max(0,modalLockDepth-1);
+  if(modalLockDepth===0&&modalLockSnapshot){
+    document.documentElement.style.overflow=modalLockSnapshot.htmlOverflow;
+    document.body.style.overflow=modalLockSnapshot.bodyOverflow;
+    document.documentElement.style.overscrollBehavior=modalLockSnapshot.htmlOverscroll;
+    document.body.style.overscrollBehavior=modalLockSnapshot.bodyOverscroll;
+    modalLockSnapshot=null;
+  }
+}
 function Modal({title,onClose,children,wide=false,actions=null}){
+  useEffect(()=>{lockDocumentScroll();return unlockDocumentScroll},[]);
   return html`<div className="modalback" onMouseDown=${e=>{if(e.target===e.currentTarget)onClose()}}>
-    <div className=${`modal ${wide?"wide":""}`}>
+    <div className=${`modal ${wide?"wide":""}`} role="dialog" aria-modal="true">
       <div className="modalhead"><h2>${title}</h2><div className="toolbar">${actions}<button className="btn small" onClick=${onClose}>Close</button></div></div>
       <div className="modalbody">${children}</div>
     </div>
   </div>`
+}
+function Pagination({page,totalPages,total,pageSize=100,onPage}){
+  if(!total)return null;
+  const start=(page-1)*pageSize+1,end=Math.min(page*pageSize,total);
+  return html`<div className="pager"><div className="pagerinfo">Showing ${start}–${end} of ${total} · Page ${page} of ${totalPages}</div><div className="pagerbuttons"><button className="btn small" disabled=${page<=1} onClick=${()=>onPage(Math.max(1,page-1))}>‹ Previous Page</button><button className="btn small" disabled=${page>=totalPages} onClick=${()=>onPage(Math.min(totalPages,page+1))}>Next Page ></button></div></div>`
 }
 
 
@@ -579,17 +614,18 @@ function AssetCard({asset,onUse,onOpen,manageOnly=false}){
       <div className="assetactions">${!manageOnly&&onUse?html`<button className="btn small primary" onClick=${()=>onUse(asset)}>Use Asset</button>`:null}${onOpen?html`<button className="btn small" onClick=${()=>onOpen(asset)}>Open</button>`:null}</div>
     </div></div>`
 }
+const ASSET_CATEGORIES=["General","PRIMARY","HERO","CARD","MOBILE","GALLERY","OG","LOGO","MAP","ROOM","THUMBNAIL","AIRCRAFT","CABIN","WALKTHROUGH","HOTSPOT","DOCUMENT","FORM"];
 function AssetLibraryModal({context,onClose,onSelect,manageOnly=false,setBusy,setToast}){
   const [assets,setAssets]=useState([]),[search,setSearch]=useState("");
-  const [root,setRoot]=useState(context?.libraryRoot||"SKANDI"),[folder,setFolder]=useState(context?.libraryFolder||"Marketing"),[subfolder,setSubfolder]=useState(context?.librarySubfolder||""),[category,setCategory]=useState(context?.category||"General");
+  const [root,setRoot]=useState(context?.libraryRoot||"SKANDI"),[folder,setFolder]=useState(context?.libraryFolder||""),[subfolder,setSubfolder]=useState(context?.librarySubfolder||""),[category,setCategory]=useState(context?.category||"");
   const [visibility,setVisibility]=useState(context?.visibility||"PUBLIC"),[assetType,setAssetType]=useState(context?.assetType||"");
-  const [file,setFile]=useState(null),[hash,setHash]=useState(""),[dup,setDup]=useState(null),[uploading,setUploading]=useState(false);
+  const [file,setFile]=useState(null),[hash,setHash]=useState(""),[dup,setDup]=useState(null),[uploading,setUploading]=useState(false),[page,setPage]=useState(1);
   const locked=!!context?.lockedContext;
   async function load(){
-    try{const r=await request("INVENTORY_ASSET_LIST",{visibility:visibility||undefined,assetType:assetType||undefined,libraryRoot:root||undefined,libraryFolder:folder||undefined,search});setAssets(r.assets||[])}
+    try{const r=await request("INVENTORY_ASSET_LIST",{visibility:visibility||undefined,assetType:assetType||undefined,libraryRoot:root||undefined,...(locked&&folder?{libraryFolder:folder}:{} )});setAssets(r.assets||[]);setPage(1)}
     catch(e){setToast(e.message,true)}
   }
-  useEffect(()=>{load()},[root,folder,visibility,assetType]);
+  useEffect(()=>{load()},[root,visibility,assetType]);
   async function chooseFile(f){
     setFile(f||null);setDup(null);setHash("");if(!f)return;
     try{setUploading(true);const digest=await sha256File(f);setHash(digest);const r=await request("INVENTORY_ASSET_CHECK_DUPLICATE",{sha256:digest,sizeBytes:f.size,mimeType:f.type,originalName:f.name});
@@ -615,18 +651,27 @@ function AssetLibraryModal({context,onClose,onSelect,manageOnly=false,setBusy,se
       if(!manageOnly&&onSelect){onSelect(done.asset);onClose()}else{setFile(null);setHash("");setDup(null)}
     }catch(e){setToast(e.message,true)}finally{setBusy("");setUploading(false)}
   }
-  const filtered=assets.filter(a=>!search||[a.displayName,a.originalName,a.folderPath,...(a.tags||[])].join(" ").toLowerCase().includes(search.toLowerCase()));
+  const folders=[...new Set(assets.map(a=>text(a.libraryFolder).trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
+  const subfolders=[...new Set(assets.filter(a=>!folder||a.libraryFolder===folder).map(a=>text(a.librarySubfolder).trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
+  const categories=[...new Set([...ASSET_CATEGORIES,...assets.filter(a=>(!folder||a.libraryFolder===folder)&&(!subfolder||a.librarySubfolder===subfolder)).map(a=>text(a.category).trim()).filter(Boolean)])].sort((a,b)=>a.localeCompare(b));
+  const folderOptions=optionList([{value:"",label:"All folders"},...folders.map(v=>({value:v,label:v}))],folder);
+  const subfolderOptions=optionList([{value:"",label:"All / no subfolder"},...subfolders.map(v=>({value:v,label:v}))],subfolder);
+  const categoryOptions=optionList([{value:"",label:"All categories"},...categories.map(v=>({value:v,label:v}))],category);
+  const filtered=assets.filter(a=>(!folder||a.libraryFolder===folder)&&(!subfolder||a.librarySubfolder===subfolder)&&(!category||a.category===category)&&(!search||[a.displayName,a.originalName,a.folderPath,a.category,...(a.tags||[])].join(" ").toLowerCase().includes(search.toLowerCase())));
+  const pageSize=100,totalPages=Math.max(1,Math.ceil(filtered.length/pageSize)),safePage=Math.min(page,totalPages),pageAssets=filtered.slice((safePage-1)*pageSize,safePage*pageSize);
   return html`<${Modal} title=${manageOnly?"SKANDI Asset Library":"Choose from SKANDI Asset Library"} onClose=${onClose} wide=${true}>
     <div className="notice">Existing assets are always shown before upload. Reuse an existing file whenever possible; exact SHA-256 duplicates are blocked.</div>
     <div className="assetfilters" style=${{marginTop:"12px"}}>
-      <${Field} label="Library Root" type="select" options=${ASSET_ROOTS} value=${root} disabled=${locked} onChange=${setRoot}/>
-      <${Field} label="Folder" value=${folder} disabled=${locked} onChange=${setFolder}/><${Field} label="Subfolder" value=${subfolder} disabled=${locked} onChange=${setSubfolder}/><${Field} label="Category" value=${category} disabled=${locked} onChange=${setCategory}/>
-      ${manageOnly?html`<${Field} label="Visibility" type="select" options=${["PUBLIC","PRIVATE"]} value=${visibility} onChange=${setVisibility}/>`:null}
-      ${manageOnly?html`<${Field} label="File Type" type="select" options=${[{value:"",label:"All"},...["IMAGE","DOCUMENT","FORM","VIDEO","AUDIO","OTHER"]]} value=${assetType} onChange=${setAssetType}/>`:null}
-      <div className="field full"><label>Search Existing Assets</label><div className="toolbar"><input className="input" value=${search} onInput=${e=>setSearch(e.target.value)} placeholder="Name, folder, tag…"/><button className="btn" onClick=${load}>Search</button></div></div>
+      <${Field} label="Library Root" type="select" options=${ASSET_ROOTS} value=${root} disabled=${locked} onChange=${v=>{setRoot(v);if(!locked){setFolder("");setSubfolder("");setCategory("")}setPage(1)}}/>
+      <${Field} label="Folder" type="select" options=${folderOptions} value=${folder} disabled=${locked} onChange=${v=>{setFolder(v);setSubfolder("");setPage(1)}}/><${Field} label="Subfolder" type="select" options=${subfolderOptions} value=${subfolder} disabled=${locked} onChange=${v=>{setSubfolder(v);setPage(1)}}/><${Field} label="Category" type="select" options=${categoryOptions} value=${category} disabled=${locked} onChange=${v=>{setCategory(v);setPage(1)}}/>
+      ${manageOnly?html`<${Field} label="Visibility" type="select" options=${["PUBLIC","PRIVATE"]} value=${visibility} onChange=${v=>{setVisibility(v);setPage(1)}}/>`:null}
+      ${manageOnly?html`<${Field} label="File Type" type="select" options=${[{value:"",label:"All"},...["IMAGE","DOCUMENT","FORM","VIDEO","AUDIO","OTHER"]]} value=${assetType} onChange=${v=>{setAssetType(v);setPage(1)}}/>`:null}
+      <div className="field full"><label>Search Existing Assets</label><div className="toolbar"><input className="input" value=${search} onInput=${e=>{setSearch(e.target.value);setPage(1)}} placeholder="Name, folder, tag…"/><button className="btn" onClick=${load}>Refresh</button></div></div>
     </div>
-    <div className="paneltitle"><span>Available Assets · ${filtered.length}</span><span className="assetfolder">${root} → ${folder}${subfolder?` → ${subfolder}`:""}</span></div>
-    ${filtered.length?html`<div className="assetgrid">${filtered.map(a=>html`<${AssetCard} asset=${a} onUse=${onSelect} onOpen=${openAsset} manageOnly=${manageOnly}/>` )}</div>`:html`<div className="empty">No existing assets match this folder/search.</div>`}
+    <div className="paneltitle"><span>Available Assets · ${filtered.length}</span><span className="assetfolder">${root}${folder?` → ${folder}`:""}${subfolder?` → ${subfolder}`:""}</span></div>
+    <${Pagination} page=${safePage} totalPages=${totalPages} total=${filtered.length} pageSize=${pageSize} onPage=${setPage}/>
+    ${pageAssets.length?html`<div className="assetgrid">${pageAssets.map(a=>html`<${AssetCard} asset=${a} onUse=${onSelect} onOpen=${openAsset} manageOnly=${manageOnly}/>` )}</div>`:html`<div className="empty">No existing assets match these filters.</div>`}
+    <${Pagination} page=${safePage} totalPages=${totalPages} total=${filtered.length} pageSize=${pageSize} onPage=${setPage}/>
     <div className="assetsection"><div className="uploadzone"><strong>Upload only if the file is not already available</strong>
       ${manageOnly&&!locked?html`<div className="notice">Choose the business folder above, e.g. AIRLINES → British Airways or SKANDI → Marketing.</div>`:null}
       <input className="fileinput" type="file" accept=${assetType==="IMAGE"?"image/*":undefined} onChange=${e=>chooseFile(e.target.files?.[0]||null)}/>
@@ -652,7 +697,7 @@ function AssetLibraryPanel({setBusy,setToast}){
   return html`<div className="card panel"><div className="assetlibraryhero"><div><div className="eyebrow">PLATFORM STANDARD</div><div className="sectiontitle">SKANDI Asset Library</div><div className="sub">One indexed library for website images, PDFs, documents, forms, video, audio and internal files. New uploads use canonical public/private buckets; existing files remain searchable and reusable.</div></div><div className="toolbar"><button className="btn" onClick=${load}>Refresh</button><button className="btn primary" onClick=${()=>setOpen(true)}>Open Library / Upload</button></div></div>
     <div className="stats" style=${{marginTop:"14px"}}><div className="stat"><span>Indexed Assets</span><strong>${assets.length}</strong></div><div className="stat"><span>Public</span><strong>${publicCount}</strong></div><div className="stat"><span>Private</span><strong>${privateCount}</strong></div><div className="stat"><span>Known Duplicate Rows</span><strong>${duplicates}</strong></div><div className="stat"><span>Folder Roots</span><strong>${snapshot?.roots?.length||0}</strong></div></div>
     <div className="notice">New files must be organized by business meaning, e.g. AIRLINES → British Airways, HOTELS → Scandic Continental, DESTINATIONS → Stockholm, or SKANDI → Marketing.</div>
-    ${open?html`<${AssetLibraryModal} context=${{libraryRoot:"SKANDI",libraryFolder:"Marketing",visibility:"PUBLIC",assetType:""}} manageOnly=${true} onClose=${()=>{setOpen(false);load()}} setBusy=${setBusy} setToast=${setToast}/>`:null}
+    ${open?html`<${AssetLibraryModal} context=${{libraryRoot:"SKANDI",libraryFolder:"",visibility:"PUBLIC",assetType:""}} manageOnly=${true} onClose=${()=>{setOpen(false);load()}} setBusy=${setBusy} setToast=${setToast}/>`:null}
   </div>`
 }
 
@@ -986,10 +1031,17 @@ function ProviderWorkspace({boot,setBusy,setToast}){
 function MasterRecords({boot,setBoot,setBusy,setToast}){
   const [type,setType]=useState("");
   const [tourSubtype,setTourSubtype]=useState("");
+  const [statusFilter,setStatusFilter]=useState("");
+  const [customerFilter,setCustomerFilter]=useState("");
+  const [alteaFilter,setAlteaFilter]=useState("");
+  const [sortBy,setSortBy]=useState("UPDATED_DESC");
   const [search,setSearch]=useState("");
+  const [page,setPage]=useState(1);
   const [editor,setEditor]=useState(null);
   const matchesType=r=>!type||(type==="TOURS_ACTIVITIES"?["GUIDED_TOUR","ACTIVITY"].includes(r.entityType)&&(!tourSubtype||r.entityType===tourSubtype):r.entityType===type);
-  const records=(boot.records||[]).filter(r=>matchesType(r)&&(!search||[r.code,r.name,r.slug,r.entityType].join(" ").toLowerCase().includes(search.toLowerCase())));
+  const filtered=(boot.records||[]).filter(r=>matchesType(r)&&(!statusFilter||r.status===statusFilter)&&(!customerFilter||(customerFilter==="YES"?r.customerVisible===true:r.customerVisible!==true))&&(!alteaFilter||(alteaFilter==="YES"?r.alteaVisible===true:r.alteaVisible!==true))&&(!search||[r.code,r.name,r.slug,r.entityType,r.status].join(" ").toLowerCase().includes(search.toLowerCase())));
+  const records=[...filtered].sort((a,b)=>sortBy==="TITLE_ASC"?text(a.name).localeCompare(text(b.name)):sortBy==="CODE_ASC"?text(a.code).localeCompare(text(b.code)):sortBy==="TYPE_ASC"?`${a.entityType}|${a.name}`.localeCompare(`${b.entityType}|${b.name}`):text(b.updatedAt).localeCompare(text(a.updatedAt)));
+  const pageSize=100,totalPages=Math.max(1,Math.ceil(records.length/pageSize)),safePage=Math.min(page,totalPages),pageRecords=records.slice((safePage-1)*pageSize,safePage*pageSize);
   async function open(r){
     try{setBusy("Loading complete record…");const x=await request("INVENTORY_V9_GET_RECORD",{id:r.id,entityType:r.entityType});setEditor(x)}catch(e){setToast(e.message,true)}finally{setBusy("")}
   }
@@ -1002,10 +1054,12 @@ function MasterRecords({boot,setBoot,setBusy,setToast}){
     :html`<button className="btn primary" onClick=${()=>{if(!type)return setToast("Choose a record family first.",true);setEditor(recordBundle(type))}}>+ New ${type?(LABEL[type]||type).replace(/s$/," ").trim():"Record"}</button>`;
   return html`<div className="card panel">
     <div className="paneltitle"><span>Master & Reference Records</span>${createButtons}</div>
-    <div className="filters"><div className="field w240"><label>Record Family</label><select className="select" value=${type} onChange=${e=>{setType(e.target.value);setTourSubtype("")}}><option value="">All</option>${MASTER_FILTERS.map(t=>html`<option value=${t}>${MASTER_FILTER_LABEL[t]}</option>`)}</select></div>${type==="TOURS_ACTIVITIES"?html`<div className="field w240"><label>Product Type</label><select className="select" value=${tourSubtype} onChange=${e=>setTourSubtype(e.target.value)}><option value="">All Tours & Activities</option><option value="GUIDED_TOUR">Guided Tour</option><option value="ACTIVITY">Activity</option></select></div>`:null}<div className="field grow"><label>Search</label><input className="input" value=${search} onInput=${e=>setSearch(e.target.value)} placeholder="Code, title, slug or type"/></div></div>
+    <div className="filters"><div className="field w240"><label>Record Family</label><select className="select" value=${type} onChange=${e=>{setType(e.target.value);setTourSubtype("");setPage(1)}}><option value="">All</option>${MASTER_FILTERS.map(t=>html`<option value=${t}>${MASTER_FILTER_LABEL[t]}</option>`)}</select></div>${type==="TOURS_ACTIVITIES"?html`<div className="field w240"><label>Product Type</label><select className="select" value=${tourSubtype} onChange=${e=>{setTourSubtype(e.target.value);setPage(1)}}><option value="">All Tours & Activities</option><option value="GUIDED_TOUR">Guided Tour</option><option value="ACTIVITY">Activity</option></select></div>`:null}<div className="field w180"><label>Status</label><select className="select" value=${statusFilter} onChange=${e=>{setStatusFilter(e.target.value);setPage(1)}}><option value="">All statuses</option>${STATUS.map(s=>html`<option value=${s}>${s}</option>`)}</select></div><div className="field w180"><label>Customer Visible</label><select className="select" value=${customerFilter} onChange=${e=>{setCustomerFilter(e.target.value);setPage(1)}}><option value="">All</option><option value="YES">Yes</option><option value="NO">No</option></select></div><div className="field w180"><label>ALTEA Visible</label><select className="select" value=${alteaFilter} onChange=${e=>{setAlteaFilter(e.target.value);setPage(1)}}><option value="">All</option><option value="YES">Yes</option><option value="NO">No</option></select></div><div className="field w240"><label>Sort</label><select className="select" value=${sortBy} onChange=${e=>{setSortBy(e.target.value);setPage(1)}}><option value="UPDATED_DESC">Recently updated</option><option value="TITLE_ASC">Title A–Z</option><option value="CODE_ASC">Code A–Z</option><option value="TYPE_ASC">Type / Title</option></select></div><div className="field grow"><label>Search</label><input className="input" value=${search} onInput=${e=>{setSearch(e.target.value);setPage(1)}} placeholder="Code, title, slug, type or status"/></div></div>
+    <${Pagination} page=${safePage} totalPages=${totalPages} total=${records.length} pageSize=${pageSize} onPage=${setPage}/>
     <div className="tablewrap"><table className="table"><thead><tr><th>Type</th><th>Code</th><th>Title</th><th>Status</th><th>Customer</th><th>ALTEA</th><th>Updated</th><th></th></tr></thead><tbody>
-      ${records.length?records.map(r=>html`<tr className="clickrow" onClick=${()=>open(r)}><td>${r.entityType==="GUIDED_TOUR"?"Guided Tour":r.entityType==="ACTIVITY"?"Activity":r.entityType}</td><td><b>${r.code}</b></td><td>${r.name}</td><td>${statusPill(r.status)}</td><td>${r.customerVisible?"Yes":"No"}</td><td>${r.alteaVisible?"Yes":"No"}</td><td>${text(r.updatedAt).slice(0,10)}</td><td><button className="btn small danger" onClick=${e=>archived(r,e)}>Archive</button></td></tr>`):html`<tr><td colSpan="8"><div className="empty">No matching records.</div></td></tr>`}
+      ${pageRecords.length?pageRecords.map(r=>html`<tr className="clickrow" onClick=${()=>open(r)}><td>${r.entityType==="GUIDED_TOUR"?"Guided Tour":r.entityType==="ACTIVITY"?"Activity":r.entityType}</td><td><b>${r.code}</b></td><td>${r.name}</td><td>${statusPill(r.status)}</td><td>${r.customerVisible?"Yes":"No"}</td><td>${r.alteaVisible?"Yes":"No"}</td><td>${text(r.updatedAt).slice(0,10)}</td><td><button className="btn small danger" onClick=${e=>archived(r,e)}>Archive</button></td></tr>`):html`<tr><td colSpan="8"><div className="empty">No matching records.</div></td></tr>`}
     </tbody></table></div>
+    <${Pagination} page=${safePage} totalPages=${totalPages} total=${records.length} pageSize=${pageSize} onPage=${setPage}/>
     ${editor?html`<${RecordEditor} bundle=${editor.bundle||editor} languages=${boot.languages||["EN"]} records=${boot.records||[]} onClose=${()=>setEditor(null)} onSaved=${()=>{}} setBusy=${setBusy} setToast=${setToast}/>`:null}
   </div>`
 }
