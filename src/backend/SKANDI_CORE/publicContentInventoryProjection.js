@@ -37,6 +37,41 @@ function structured(value, fallback) {
   catch (_) { return value; }
 }
 
+function publicText(value, max = 12000, depth = 0) {
+  if (depth > 7 || value === undefined || value === null || value === "") return "";
+  const parsed = structured(value, value);
+  if (parsed === undefined || parsed === null || parsed === "") return "";
+  if (typeof parsed === "string" || typeof parsed === "number") return clean(parsed, max);
+  if (typeof parsed === "boolean") return parsed ? "Yes" : "No";
+  if (Array.isArray(parsed)) {
+    return clean(parsed.map(item => publicText(item, max, depth + 1)).filter(Boolean).join(" · "), max);
+  }
+  if (typeof parsed === "object") {
+    const preferred = first(
+      parsed.description,
+      parsed.summary,
+      parsed.body,
+      parsed.text,
+      parsed.notes,
+      parsed.information,
+      parsed.value,
+      parsed.label,
+      parsed.title,
+      parsed.name
+    );
+    if (preferred !== "") {
+      const text = publicText(preferred, max, depth + 1);
+      if (text) return text;
+    }
+    const values = Object.entries(parsed)
+      .filter(([key]) => !["id", "uuid", "code", "source", "sourceReference", "source_reference", "payload", "duffel"].includes(key))
+      .map(([, item]) => publicText(item, max, depth + 1))
+      .filter(Boolean);
+    return clean(values.join(" · "), max);
+  }
+  return "";
+}
+
 function finite(value, fallback = null) {
   const n = Number(value);
   return Number.isFinite(n) ? n : fallback;
@@ -44,8 +79,9 @@ function finite(value, fallback = null) {
 
 function section(value, title = "") {
   if (value === undefined || value === null || value === "") return null;
-  if (value && typeof value === "object" && !Array.isArray(value)) return value;
-  return { ...(title ? { title } : {}), body: clean(value, 16000) };
+  const parsed = structured(value, value);
+  if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) return parsed;
+  return { ...(title ? { title } : {}), body: parsed };
 }
 
 function canonicalSections(details = {}) {
@@ -72,7 +108,7 @@ function canonicalSections(details = {}) {
 }
 
 function mediaUrl(row = {}, preferredRoles = []) {
-  const media = arr(row.media_assets).filter(item => item && item.active !== false && clean(item.url, 3000));
+  const media = arr(structured(row.media_assets, [])).filter(item => item && item.active !== false && clean(item.url, 3000));
   for (const role of preferredRoles) {
     const wanted = upper(role, 40);
     const hit = media.find(item => upper(item.role, 40) === wanted);
@@ -86,22 +122,22 @@ function publicBaggage(value) {
   const parsed = structured(value, null);
   if (Array.isArray(parsed)) {
     const cabins = parsed.slice(0, 20).map(cabin => ({
-      cabinType: clean(first(cabin?.cabin_type, cabin?.cabinType, cabin?.travel_class, cabin?.travelClass), 250),
-      travelClass: clean(first(cabin?.travel_class, cabin?.travelClass, cabin?.cabin_type, cabin?.cabinType), 250),
+      cabinType: publicText(first(cabin?.cabin_type, cabin?.cabinType, cabin?.travel_class, cabin?.travelClass), 250),
+      travelClass: publicText(first(cabin?.travel_class, cabin?.travelClass, cabin?.cabin_type, cabin?.cabinType), 250),
       fares: arr(cabin?.fares).slice(0, 30).map(fare => {
         const allowance = obj(first(fare?.baggage_allowance, fare?.baggageAllowance));
         return {
-          name: clean(fare?.name, 250),
-          description: clean(fare?.description, 2500),
-          underSeatBag: clean(first(allowance.under_seat_bag, allowance.underSeatBag), 1200),
-          overheadCarryOn: clean(first(allowance.overhead_carry_on, allowance.overheadCarryOn), 1200),
-          checkedBag: clean(first(allowance.checked_bag, allowance.checkedBag), 1200)
+          name: publicText(fare?.name, 250),
+          description: publicText(fare?.description, 2500),
+          underSeatBag: publicText(first(allowance.under_seat_bag, allowance.underSeatBag), 1200),
+          overheadCarryOn: publicText(first(allowance.overhead_carry_on, allowance.overheadCarryOn), 1200),
+          checkedBag: publicText(first(allowance.checked_bag, allowance.checkedBag), 1200)
         };
       }).filter(fare => fare.name || fare.underSeatBag || fare.overheadCarryOn || fare.checkedBag)
     })).filter(cabin => cabin.cabinType || cabin.fares.length);
     if (cabins.length) return { mode: "structured", cabins };
   }
-  const text = typeof parsed === "string" ? clean(parsed, 16000) : clean(value, 16000);
+  const text = publicText(parsed ?? value, 16000);
   return text ? { mode: "narrative", text } : { mode: "none" };
 }
 
@@ -179,7 +215,7 @@ function matchReference(item = {}, index, codeFields = []) {
 }
 
 function projectAirline(item = {}, row = {}) {
-  const d = obj(row.inventory_details);
+  const d = obj(structured(row.inventory_details, {}));
   const baggage = publicBaggage(canonical(d, "baggageAllowance", item.baggageAllowance));
   const hero = mediaUrl(row, ["HERO", "PRIMARY", "CARD"]);
   const logo = mediaUrl(row, ["LOGO"]);
@@ -190,21 +226,21 @@ function projectAirline(item = {}, row = {}) {
     id: clean(row.ID || item.id, 180),
     name: clean(first(row.Title, d.shortName, item.name), 500),
     title: clean(first(row.Title, d.shortName, item.title, item.name), 500),
-    shortName: clean(canonical(d, "shortName", row.shortName, item.shortName), 250),
+    shortName: publicText(canonical(d, "shortName", row.shortName, item.shortName), 250),
     iataCode: upper(first(row.iataCode, item.iataCode), 8),
     icaoCode: upper(first(d.icaoCode, row.icaoCode, item.icaoCode), 12),
     code: upper(first(row.iataCode, item.code), 8),
-    alliance: clean(canonical(d, "alliance", item.alliance), 180),
+    alliance: publicText(canonical(d, "alliance", item.alliance), 180),
     website: clean(canonical(d, "website", item.website), 2000),
     contactUrl: clean(canonical(d, "contactUrl", item.contactUrl), 2000),
-    summary: clean(canonical(d, "summary", item.summary), 5000),
+    summary: publicText(canonical(d, "summary", item.summary), 5000),
     primaryColor: clean(canonical(d, "primaryColor", item.primaryColor), 40),
     accentColor: clean(canonical(d, "accentColor", item.accentColor), 40),
     logo: clean(first(logo, item.logo), 3000),
     logoIcon: clean(first(icon, item.logoIcon, logo), 3000),
     heroImage: clean(first(hero, item.heroImage), 3000),
-    checkInDeadline: clean(canonical(d, "checkIn", d.checkInDeadline, item.checkInDeadline), 5000),
-    boarding: canonical(d, "boarding", item.boarding),
+    checkInDeadline: structured(canonical(d, "checkIn", d.checkInDeadline, item.checkInDeadline), ""),
+    boarding: structured(canonical(d, "boarding", item.boarding), ""),
     lounges: structured(canonical(d, "lounges", item.lounges), []),
     cabins: structured(canonical(d, "cabinsJson", item.cabins), []),
     sections: sections && typeof sections === "object" ? sections : {},
@@ -215,17 +251,17 @@ function projectAirline(item = {}, row = {}) {
     wifiInfo: structured(canonical(d, "wifiOnboardJson", item.wifiInfo), {}),
     childrenInfants: structured(canonical(d, "childrenInfantsJson", item.childrenInfants), {}),
     ticketTypes: structured(canonical(d, "ticketTypesJson", item.ticketTypes), {}),
-    loyaltyProgram: clean(canonical(d, "loyaltyProgram", item.loyaltyProgram), 500),
+    loyaltyProgram: publicText(canonical(d, "loyaltyProgram", item.loyaltyProgram), 500),
     loyaltyProgramUrl: clean(canonical(d, "loyaltyProgramUrl", item.loyaltyProgramUrl), 2000),
     hubs: structured(canonical(d, "hubsJson", item.hubs), []),
-    specialAssistance: canonical(d, "specialAssistance", item.specialAssistance),
+    specialAssistance: structured(canonical(d, "specialAssistance", item.specialAssistance), ""),
     sortOrder: finite(row.sort_order, item.sortOrder ?? 100),
     canonicalSource: "INVENTORY_CONTROL_SUPABASE"
   };
 }
 
 function projectAirport(item = {}, row = {}) {
-  const d = obj(row.inventory_details);
+  const d = obj(structured(row.inventory_details, {}));
   const sections = canonicalSections(d);
   const hero = mediaUrl(row, ["HERO", "PRIMARY", "CARD"]);
   const logo = mediaUrl(row, ["LOGO"]);
@@ -240,30 +276,30 @@ function projectAirport(item = {}, row = {}) {
     icao: upper(first(d.icaoCode, row.icao, item.icao), 12),
     icaoCode: upper(first(d.icaoCode, row.icao, item.icaoCode), 12),
     code: upper(first(row.iata, item.code), 8),
-    city: clean(canonical(d, "city", item.city), 250),
-    country: clean(canonical(d, "country", d.countryCode, item.country), 250),
+    city: publicText(canonical(d, "city", item.city), 250),
+    country: publicText(canonical(d, "country", d.countryCode, item.country), 250),
     latitude: finite(canonical(d, "latitude", item.latitude), null),
     longitude: finite(canonical(d, "longitude", item.longitude), null),
     distanceToCityCenterKm: finite(canonical(d, "distanceToCityCenterKm", item.distanceToCityCenterKm), null),
     website: clean(canonical(d, "website", item.website), 2000),
     contactUrl: clean(canonical(d, "contactUrl", item.contactUrl), 2000),
-    summary: clean(canonical(d, "summary", item.summary, overview), 7000),
-    body: clean(overview, 16000),
-    information: canonical(d, "information", item.information, overview),
+    summary: publicText(canonical(d, "summary", item.summary, overview), 7000),
+    body: publicText(overview, 16000),
+    information: structured(canonical(d, "information", item.information, overview), ""),
     primaryColor: clean(canonical(d, "primaryColor", item.primaryColor), 40),
     accentColor: clean(canonical(d, "accentColor", item.accentColor), 40),
     heroImage: clean(first(hero, item.heroImage), 3000),
     image: clean(first(hero, item.image), 3000),
     logo: clean(first(logo, item.logo), 3000),
     sections,
-    arrival: canonical(d, "arrivalInfo", item.arrival),
-    departure: canonical(d, "departureInfo", item.departure),
-    checkIn: canonical(d, "checkinInfo", d.checkInInfo, item.checkIn),
-    security: canonical(d, "securityInfo", item.security),
-    transfer: canonical(d, "transferInfo", item.transfer),
-    wifi: canonical(d, "wifi", item.wifi),
-    accessibility: canonical(d, "accessibility", item.accessibility),
-    parkingInfo: canonical(d, "parkingInfo", item.parkingInfo),
+    arrival: structured(canonical(d, "arrivalInfo", item.arrival), ""),
+    departure: structured(canonical(d, "departureInfo", item.departure), ""),
+    checkIn: structured(canonical(d, "checkinInfo", d.checkInInfo, item.checkIn), ""),
+    security: structured(canonical(d, "securityInfo", item.security), ""),
+    transfer: structured(canonical(d, "transferInfo", item.transfer), ""),
+    wifi: structured(canonical(d, "wifi", item.wifi), ""),
+    accessibility: structured(canonical(d, "accessibility", item.accessibility), ""),
+    parkingInfo: structured(canonical(d, "parkingInfo", item.parkingInfo), ""),
     lounges: structured(canonical(d, "lounges", item.lounges), []),
     terminals: structured(canonical(d, "terminalsJson", item.terminals), []),
     transport: structured(canonical(d, "transportJson", item.transport), []),
@@ -271,7 +307,7 @@ function projectAirport(item = {}, row = {}) {
     foodDrinks: structured(canonical(d, "foodDrinksJson", item.foodDrinks), []),
     lostFound: structured(canonical(d, "lostFoundJson", item.lostFound), {}),
     destinationsServing: structured(canonical(d, "destinationsServing", item.destinationsServing), []),
-    timezone: clean(canonical(d, "timezone", item.timezone), 160),
+    timezone: publicText(canonical(d, "timezone", item.timezone), 160),
     sortOrder: finite(row.sort_order, item.sortOrder ?? 100),
     canonicalSource: "INVENTORY_CONTROL_SUPABASE"
   };
@@ -279,7 +315,7 @@ function projectAirport(item = {}, row = {}) {
 
 function localizedMaster(row = {}, language = "EN") {
   const wanted = upper(language, 8) || "EN";
-  const localized = arr(row.localized);
+  const localized = arr(structured(row.localized, []));
   return obj(
     localized.find(item => upper(item?.language, 8) === wanted) ||
     localized.find(item => upper(item?.language, 8) === "EN") ||
@@ -288,7 +324,7 @@ function localizedMaster(row = {}, language = "EN") {
 }
 
 function masterMediaUrl(row = {}) {
-  const media = arr(row.media);
+  const media = arr(structured(row.media, []));
   const preferred = media.find(item => item?.isPrimary === true || item?.is_primary === true || upper(item?.role, 40) === "PRIMARY") ||
     media.find(item => item?.isHero === true || item?.is_hero === true || upper(item?.role, 40) === "HERO") ||
     media.find(item => item?.isCard === true || item?.is_card === true || upper(item?.role, 40) === "CARD") ||
@@ -297,11 +333,11 @@ function masterMediaUrl(row = {}) {
 }
 
 function projectMaster(row = {}, language = "EN") {
-  const d = obj(row.details);
+  const d = obj(structured(row.details, {}));
   const localized = localizedMaster(row, language);
   const image = masterMediaUrl(row);
-  const title = clean(first(localized.pageTitle, localized.title, row.name, row.code), 500);
-  const body = clean(first(
+  const title = publicText(first(localized.pageTitle, localized.title, row.name, row.code), 500);
+  const rawBody = first(
     localized.fullDescription,
     localized.full_description,
     localized.description,
@@ -310,8 +346,9 @@ function projectMaster(row = {}, language = "EN") {
     d.information,
     d.description,
     d.summary
-  ), 16000);
-  const summary = clean(first(localized.shortDescription, localized.short_description, d.summary, body), 3000);
+  );
+  const body = publicText(rawBody, 16000);
+  const summary = publicText(first(localized.shortDescription, localized.short_description, d.summary, body), 3000);
   return {
     ...d,
     id: clean(row.id, 180),
