@@ -42,7 +42,7 @@ careers,/about/careers,CONTENT_AUTO,Customer 118px base,ON,"680px min; runtime g
 myRoster,/riaintra/success-factors/my-roster,APP_VIEWPORT_RIAINTRA,RIA 52px,OFF,calc(100vh - 52px),100% W x 100% H,Embed,Hide,Hide
 groupTalk,/riaintra/success-factors/altea/grouptalk,APP_FULLSCREEN_CHROME_FREE,OFF,OFF,100vh,100% W x 100% H,Embed,Hide,Hide
 passportVisa,/travel-info/passport-visa,CONTENT_AUTO,Customer 118px base,ON,"680px min; runtime grow","100% W; 680-30000 runtime H",Wix page,Hide,Show
-baggageAllowance,/travel-info/baggage-allowence,CONTENT_AUTO,Customer 118px base,ON,"680px min; runtime grow","100% W; 680-30000 runtime H",Wix page,Hide,Show
+baggageAllowance,/travel-info/baggage-allowance,CONTENT_AUTO,Customer 118px base,ON,"680px min; runtime grow","100% W; 680-30000 runtime H",Wix page,Hide,Show
 travelInsurance,/travel-info/insurance,CONTENT_AUTO,Customer 118px base,ON,"680px min; runtime grow","100% W; 680-30000 runtime H",Wix page,Hide,Show
 specialAssistance,/travel-info/special-assistance,CONTENT_AUTO,Customer 118px base,ON,"680px min; runtime grow","100% W; 680-30000 runtime H",Wix page,Hide,Show
 flightStatus,/travel-info/flight-status,APP_VIEWPORT_PUBLIC,Customer 118px base,OFF,calc(100vh - 118px),100% W x 100% H,Embed/FIDS,Hide,Hide
