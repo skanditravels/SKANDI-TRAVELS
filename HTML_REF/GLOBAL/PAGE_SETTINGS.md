@@ -53,7 +53,7 @@ Legend:
 | myRoster | `/riaintra/success-factors/my-roster` | APP_VIEWPORT_RIAINTRA | RIA 52px | OFF | calc(100vh - 52px) | W/H 100% | Embed | Hide | Hide |
 | groupTalk | `/riaintra/success-factors/altea/grouptalk` | APP_FULLSCREEN_CHROME_FREE | OFF | OFF | 100vh | W/H 100% | Embed | Hide | Hide |
 | passportVisa | `/travel-info/passport-visa` | CONTENT_AUTO | Customer 118px base | Customer ON | 680px min, grows with embed | W 100%; H runtime 680–30000 | Wix page | Hide | Show |
-| baggageAllowance | `/travel-info/baggage-allowence` | CONTENT_AUTO | Customer 118px base | Customer ON | 680px min, grows with embed | W 100%; H runtime 680–30000 | Wix page | Hide | Show |
+| baggageAllowance | `/travel-info/baggage-allowance` | CONTENT_AUTO | Customer 118px base | Customer ON | 680px min, grows with embed | W 100%; H runtime 680–30000 | Wix page | Hide | Show |
 | travelInsurance | `/travel-info/insurance` | CONTENT_AUTO | Customer 118px base | Customer ON | 680px min, grows with embed | W 100%; H runtime 680–30000 | Wix page | Hide | Show |
 | specialAssistance | `/travel-info/special-assistance` | CONTENT_AUTO | Customer 118px base | Customer ON | 680px min, grows with embed | W 100%; H runtime 680–30000 | Wix page | Hide | Show |
 | flightStatus | `/travel-info/flight-status` | APP_VIEWPORT_PUBLIC | Customer 118px base | OFF | calc(100vh - 118px) | W/H 100% | Embed/FIDS | Hide | Hide |
