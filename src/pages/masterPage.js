@@ -5,6 +5,7 @@
 
 import wixLocationFrontend from "wix-location-frontend";
 import wixSiteFrontend from "wix-site-frontend";
+import wixWindowFrontend from "wix-window-frontend";
 import { currentMember, authentication } from "wix-members-frontend";
 import { local } from "wix-storage-frontend";
 import { getCustomerHeaderSession, subscribeCustomerNewsletter } from "backend/SKANDI_CORE/customerSession.web";
@@ -23,6 +24,7 @@ const CUSTOMER_FOOTER_SOURCE = GLOBAL_CHROME.customerFooter.source;
 const RIAINTRA_HEADER_SOURCE = GLOBAL_CHROME.riaintraHeader.source;
 const ALTEA_HEADER_SOURCE = GLOBAL_CHROME.alteaHeader.source;
 const ALTEA_FOOTER_SOURCE = GLOBAL_CHROME.alteaFooter.source;
+const SCROLL_TOP_MESSAGE_TYPES = new Set(["MASTER_SCROLL_TOP", "SKANDI_SCROLL_TOP", "SKANDI_VIEW_OPENED", "SKANDI_PAGE_OPENED"]);
 
 
 const MASTER_CONFIG = Object.freeze({
@@ -115,7 +117,7 @@ const MASTER_CONFIG = Object.freeze({
           links:Object.freeze([
             { label:"Before you travel", path:SITE_MAP.travelInfo },
             { label:"Passport & Visa", path:APP_ROUTES.passportVisa },
-            { label:"Baggage Allowence", path:APP_ROUTES.baggageAllowance },
+            { label:"Baggage Allowance", path:APP_ROUTES.baggageAllowance },
             { label:"Travel Insurance", path:APP_ROUTES.travelInsurance },
             { label:"Special Assistance", path:APP_ROUTES.specialAssistance },
             { label:"Flight Status", path:APP_ROUTES.flightStatus },
@@ -228,6 +230,7 @@ const GROUPTALK_CHROME_FREE_PATHS = Object.freeze([
 let alteaRuntimeContext = { workArea:"A", crypticActive:false, officeId:"", lmcMode:false };
 let customerSettings = readCustomerSettings();
 const wiredEmbeds = new Set();
+let locationChangeWired = false;
 
 const CHROME_BY_SOURCE = Object.freeze(Object.fromEntries(
   Object.values(GLOBAL_CHROME).map(definition => [definition.source, definition])
@@ -348,6 +351,30 @@ function postToEmbed(embed, type, payload = {}) {
 }
 
 
+function pushScrollTopToEmbeds(reason = "") {
+  for (const embed of allHtmlComponents()) postToEmbed(embed, "SKANDI_SCROLL_TOP", { reason });
+}
+function scrollViewportToTop(reason = "") {
+  try {
+    const result = wixWindowFrontend.scrollTo(0, 0);
+    if (result && typeof result.catch === "function") result.catch(() => {});
+  } catch (_) {}
+  pushScrollTopToEmbeds(reason);
+}
+function scheduleScrollViewportToTop(reason = "") {
+  scrollViewportToTop(reason);
+  setTimeout(() => scrollViewportToTop(reason), 60);
+  setTimeout(() => scrollViewportToTop(reason), 220);
+}
+function wireLocationChangeScroll() {
+  if (locationChangeWired || typeof wixLocationFrontend.onChange !== "function") return;
+  locationChangeWired = true;
+  try {
+    wixLocationFrontend.onChange(() => scheduleScrollViewportToTop("location-change"));
+  } catch (_) {}
+}
+
+
 function masterPayload(extra = {}) {
   const page = currentWixPageInfo();
   const path = currentPathString();
@@ -396,7 +423,8 @@ function navigate(path) {
     return;
   }
   closeCustomerHeaderPanels();
-  wixLocationFrontend.to(value);
+  scheduleScrollViewportToTop("navigation");
+  wixLocationFrontend.to(value, { disableScrollToTop:false });
 }
 
 
@@ -508,6 +536,12 @@ async function handleMasterMessage(embed, message = {}) {
   const payload = message?.payload && typeof message.payload === "object" ? message.payload : {};
 
 
+  if (SCROLL_TOP_MESSAGE_TYPES.has(type)) {
+    scheduleScrollViewportToTop(type.toLowerCase());
+    return true;
+  }
+
+
   if (type === "MASTER_CONFIG_REQUEST" || type === "SKANDI_MASTER_CONFIG_REQUEST") {
     const extra = isInternalPath()
       ? { staff:await getStaffState() }
@@ -604,7 +638,8 @@ async function handleMasterMessage(embed, message = {}) {
       case "HEADER_LOGOUT":
         closeCustomerHeaderPanels();
         try { await authentication.logout(); } catch (_) {}
-        wixLocationFrontend.to(MASTER_CONFIG.routes.home);
+        scheduleScrollViewportToTop("logout-navigation");
+        wixLocationFrontend.to(MASTER_CONFIG.routes.home, { disableScrollToTop:false });
         return true;
       case "CUSTOMER_SETTINGS_REQUEST":
       case "SKANDI_SETTINGS_REQUEST":
@@ -700,7 +735,8 @@ async function handleMasterMessage(embed, message = {}) {
   }
   if (type === "RIAINTRA_LOGOUT" || type === "INTERNAL_MASTER_LOGOUT") {
     try { await authentication.logout(); } catch (_) {}
-    wixLocationFrontend.to(MASTER_CONFIG.routes.home);
+    scheduleScrollViewportToTop("logout-navigation");
+    wixLocationFrontend.to(MASTER_CONFIG.routes.home, { disableScrollToTop:false });
     return true;
   }
 
@@ -780,6 +816,8 @@ function pushConfigToAll() {
 
 
 $w.onReady(async function () {
+  scheduleScrollViewportToTop("page-ready");
+  wireLocationChangeScroll();
   wireAllHtmlComponents();
   await applyChromeVisibility();
 
