@@ -57,7 +57,7 @@ export const APP_ROUTES = Object.freeze({
   myRoster: "/riaintra/success-factors/my-roster",
   groupTalk: "/riaintra/success-factors/altea/grouptalk",
   passportVisa: "/travel-info/passport-visa",
-  baggageAllowance: "/travel-info/baggage-allowence",
+  baggageAllowance: "/travel-info/baggage-allowance",
   travelInsurance: "/travel-info/insurance",
   specialAssistance: "/travel-info/special-assistance",
   flightStatus: "/travel-info/flight-status"
