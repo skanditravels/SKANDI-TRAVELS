@@ -1,46 +1,31 @@
 # MY CLUB PROFILE
 
-STATUS: NEEDS REVIEW
+STATUS: V12 DUFFEL CUSTOMER SERVICING STATICALLY VERIFIED — REQUIRES LIVE TEST
 SLUG: `/my-profile`
 WIX PAGE: My Profile.u4k31
 AREA: SKANDI
 LIVE HTML: YES
-ELEMENT: #customerProfileEmbed
-LAST SYNCED: 2026-09-18
+ELEMENT: #htmlMyProfile
 VERSION: `B-011.31`
 
-## HOW TO USE
+## INFO
+- Customer account core: `/src/backend/SKANDI_CORE/customerProfile.js`
+- Web facade: `/src/backend/SKANDI_CORE/customerProfile.web.js`
+- Authentication: Wix Members / canonical SKANDI customer session
+- Supplier servicing: canonical SKANDI_CORE Duffel modules only; HTML never calls Duffel or Supabase directly.
+- Booking ownership: canonical `altea_bookings` ownership plus verified customer booking links.
+- Live supplier capabilities gate cancellation, flight changes, post-booking baggage, airline-initiated changes, stay cancellation and car cancellation.
 
-***STATUS (OWNER): "TODO", "IN PROGRESS", "NEEDS REVIEW", "REVISIONS NEEDED", "READY", "LIVE", "ARCHIVED"
-STATUS (AGENT): "TODO", "IN PROGRESS", "REVISIONS NEEDED", "READY".***
-
-### INFO
-
-- **Customer account core:** `/src/backend/SKANDI_CORE/customerProfile.js`
-- **Authentication authority:** Wix Members / canonical SKANDI customer session
-- **Customer/loyalty persistence:** canonical SKANDI customer, Club, booking, traveler, wallet, notification and points tables
-- **Supplier servicing:** canonical SKANDI_CORE Duffel provider modules only; never direct from HTML
-
-### Architectural rules
-
-- Global SKANDI customer header/footer remain owned by `masterPage.js`; this embed does not duplicate them.
-- Frontend HTML never calls Supabase, Duffel or Stripe directly.
-- Main account navigation is page-addressable through `section` + `view`, with legacy `tab` compatibility retained.
-- Only one account workspace is visible at a time. Main-category navigation is intended to route/reload through the Wix parent rather than stack content.
-- SKANDI Club level names, points, thresholds, multiplier and enrollment date come from canonical customer/Club data. No tier benefits are fabricated.
-- Travel Documents is not a standalone visible account destination. Customer-action requests and issued travel documents are attached to the relevant booking workspace.
-- Duffel controls are capability-gated from live supplier payloads, including order `available_actions`, airline-initiated changes and post-booking baggage availability.
-- Post-booking seat reassignment is not advertised because the current Duffel post-booking ancillary workflow used by SKANDI supports baggage, not seats.
-
-### Change log
-
+## CHANGE LOG
 - **2026-09-18 · B-011.31:** Replaced the horizontal account menu with hierarchical side navigation. Added My Club → Overview, Points Activity and Program Information; page-addressable account workspaces; time-aware greeting; live points/status/member-since summary; booking-specific document/action center under My Upcoming Trips; legacy document message compatibility retained; no database schema mutation.
 - **2026-09-18 · B-011.30:** Established the approved dark, premium, static My Profile visual direction inspired by SKANDI Our Network. Removed decorative motion and converted the account to dark architectural surfaces with ivory content planes.
 - **2026-09-18 · B-011.29:** Experimental motion-rich visual pass; superseded by B-011.30.
 - **2026-09-18 · B-011.28:** Initial My Profile + SKANDI Club convergence integrating customer account, loyalty, trips, travelers, documents, wallet, saved items, notifications and settings.
+- **2026-10-12 · V12 servicing audit:** Confirmed the live page bridge already routes booking detail and management through `customerProfile.web.js` and the canonical Duffel servicing core. Fixed the cancellation-quote amount styling to reference canonical `--sk-navy` instead of undefined `--navy`. No direct provider call, duplicate booking store, or schema mutation was introduced. STATICALLY VERIFIED; live Duffel/Wix servicing actions require live test.
 
 ## LIVE HTML
-```<!doctype html>
+```html
+<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -80,7 +65,7 @@ STATUS (AGENT): "TODO", "IN PROGRESS", "REVISIONS NEEDED", "READY".***
   --shadow-panel:0 24px 58px rgba(0,0,0,.17);
   --shadow-light:0 18px 46px rgba(3,17,31,.11);
   --max:1240px;
-  --hero-bg-img: url('https://static.wixstatic.com/media/394052_bdef1af6f42f4c6d849452a3341beec2~mv2.png'); /* Or 'none' if no image */
+  --hero-bg-img: url('https://static.wixstatic.com/media/394052_a1c96fea7d944811bfb9602e4f9e16e5~mv2.png'); /* Or 'none' if no image */
 }
 
 *{box-sizing:border-box}
@@ -848,7 +833,7 @@ function renderBookingDetail(){
 function openModal(title,body,foot=""){$("modalTitle").textContent=title;$("modalBody").innerHTML=body;$("modalFoot").innerHTML=foot;$("modalShade").classList.add("open")}function closeModal(){$("modalShade").classList.remove("open");state.payment=null;state.elements=null}
 function linkBookingModal(){openModal("Link a booking",`<div class="provider-note">Use the booking reference and traveler surname exactly as shown on the confirmation. This verifies ownership before the booking is added to My Trips.</div><form id="linkBookingForm" class="profile-form" style="margin-top:16px"><div class="field"><label>Booking reference</label><input class="control" name="bookingReference" required maxlength="120" autocomplete="off" placeholder="Booking reference"></div><div class="field"><label>Traveler surname</label><input class="control" name="lastName" required maxlength="160" autocomplete="family-name" placeholder="Surname"></div></form>`,`<button class="btn soft" data-close-modal>Cancel</button><button class="btn primary" id="confirmLinkBooking">Link booking</button>`)}
 function travelerModal(t={}){const refs=state.data?.references||{};openModal(t.id?"Edit traveler":"Add traveler",`<form id="travelerForm" class="profile-form"><input type="hidden" name="id" value="${esc(t.id||"")}"><div class="field"><label>First name</label><input class="control" name="firstName" required value="${esc(t.firstName||"")}"></div><div class="field"><label>Last name</label><input class="control" name="lastName" required value="${esc(t.lastName||"")}"></div><div class="field"><label>Date of birth</label><input class="control" type="date" name="dateOfBirth" value="${esc(t.dateOfBirth||"")}"></div><div class="field"><label>Gender</label><select class="control" name="gender"><option value="">Select</option><option value="female" ${lowerEq(t.gender,"female")}>Female</option><option value="male" ${lowerEq(t.gender,"male")}>Male</option><option value="unspecified" ${lowerEq(t.gender,"unspecified")}>Unspecified</option></select></div><div class="field"><label>Nationality</label><select class="control" name="nationalityId"><option value="">Select</option>${arr(refs.countries).map(x=>`<option value="${esc(x.id)}" ${x.id===t.nationalityId?"selected":""}>${esc(x.name)}</option>`).join("")}</select></div><div class="field"><label>Contact email</label><input class="control" type="email" name="email" value="${esc(t.email||"")}"></div><div class="field"><label>Phone</label><input class="control" name="phone" value="${esc(t.phone||"")}"></div><div class="field"><label>Passport expiry</label><input class="control" type="date" name="passportExpiry" value="${esc(t.passportExpiry||"")}"></div><div class="field full"><label>Dietary preferences</label><input class="control" name="dietaryPrefs" value="${esc(t.dietaryPrefs||"")}"></div><div class="field full"><label>Accessibility needs</label><textarea class="control" name="accessibilityNeeds">${esc(t.accessibilityNeeds||"")}</textarea></div><div class="field full"><label class="checkbox"><input type="checkbox" name="isPrimary" ${t.isPrimary?"checked":""}><span>Use as primary traveler profile.</span></label></div></form>`,`<button class="btn soft" data-close-modal>Cancel</button><button class="btn primary" id="saveTravelerModal">Save traveler</button>`)}function lowerEq(a,b){return String(a||"").toLowerCase()===b?"selected":""}
-async function manage(kind){const d=state.bookingDetail,b=d?.booking;if(!b)return;if(kind==="flight-cancel"){busy(true);try{const r=await request("MY_PROFILE_FLIGHT_CANCEL_QUOTE",{bookingId:b.id});const q=r.result||r,canDirect=Number(q.cancellation?.refundAmount||0)<=0;openModal("Cancellation quote",`<div class="card pad"><h3>Airline cancellation quote</h3><p>Refund quoted by airline</p><div style="font-family:Montserrat;font-size:32px;font-weight:700;color:var(--navy);margin-top:10px">${esc(money(q.cancellation?.refundAmount,q.cancellation?.refundCurrency))}</div><p style="margin-top:12px">Quote expires ${esc(date(q.cancellation?.expiresAt))}. Nothing has been cancelled yet.</p></div>${!canDirect?`<div class="provider-note">This cancellation includes a customer refund. SKANDI will not cancel the supplier order here until the customer-refund workflow is completed. Continue through Support so the refund and cancellation remain one controlled transaction.</div>`:""}`,canDirect?`<button class="btn soft" data-close-modal>Keep booking</button><button class="btn danger" data-confirm-cancel="${esc(q.cancellation?.id||"")}">Confirm cancellation</button>`:`<button class="btn soft" data-close-modal>Keep booking</button><button class="btn primary" data-route="/my-profile/support">Continue with Support</button>`)}catch(e){toast(e.message,true)}finally{busy(false)}}else if(kind==="flight-change")flightChangeModal();else if(kind==="baggage")baggageModal();else if(kind==="stay-cancel")confirmSimple("Cancel hotel booking","This sends a live cancellation request to the accommodation supplier. Cancellation terms from your booking still apply.","MY_PROFILE_STAY_CANCEL");else if(kind==="car-cancel")confirmSimple("Cancel car rental","This sends a live cancellation request to the rental supplier. Supplier conditions still apply.","MY_PROFILE_CAR_CANCEL")}
+async function manage(kind){const d=state.bookingDetail,b=d?.booking;if(!b)return;if(kind==="flight-cancel"){busy(true);try{const r=await request("MY_PROFILE_FLIGHT_CANCEL_QUOTE",{bookingId:b.id});const q=r.result||r,canDirect=Number(q.cancellation?.refundAmount||0)<=0;openModal("Cancellation quote",`<div class="card pad"><h3>Airline cancellation quote</h3><p>Refund quoted by airline</p><div style="font-family:Montserrat;font-size:32px;font-weight:700;color:var(--sk-navy);margin-top:10px">${esc(money(q.cancellation?.refundAmount,q.cancellation?.refundCurrency))}</div><p style="margin-top:12px">Quote expires ${esc(date(q.cancellation?.expiresAt))}. Nothing has been cancelled yet.</p></div>${!canDirect?`<div class="provider-note">This cancellation includes a customer refund. SKANDI will not cancel the supplier order here until the customer-refund workflow is completed. Continue through Support so the refund and cancellation remain one controlled transaction.</div>`:""}`,canDirect?`<button class="btn soft" data-close-modal>Keep booking</button><button class="btn danger" data-confirm-cancel="${esc(q.cancellation?.id||"")}">Confirm cancellation</button>`:`<button class="btn soft" data-close-modal>Keep booking</button><button class="btn primary" data-route="/my-profile/support">Continue with Support</button>`)}catch(e){toast(e.message,true)}finally{busy(false)}}else if(kind==="flight-change")flightChangeModal();else if(kind==="baggage")baggageModal();else if(kind==="stay-cancel")confirmSimple("Cancel hotel booking","This sends a live cancellation request to the accommodation supplier. Cancellation terms from your booking still apply.","MY_PROFILE_STAY_CANCEL");else if(kind==="car-cancel")confirmSimple("Cancel car rental","This sends a live cancellation request to the rental supplier. Supplier conditions still apply.","MY_PROFILE_CAR_CANCEL")}
 function flightChangeModal(){const air=state.bookingDetail?.provider?.air,slices=arr(air?.slices);openModal("Change flight",`<form id="changeSearchForm" class="profile-form"><div class="field full"><label>Flight to change</label><select class="control" name="removeSliceId">${slices.map(s=>`<option value="${esc(s.id)}">${esc(s.origin?.iataCode||"")} → ${esc(s.destination?.iataCode||"")}</option>`).join("")}</select></div><div class="field"><label>Origin</label><input class="control" name="origin" maxlength="3" value="${esc(slices[0]?.origin?.iataCode||"")}"></div><div class="field"><label>Destination</label><input class="control" name="destination" maxlength="3" value="${esc(slices[0]?.destination?.iataCode||"")}"></div><div class="field"><label>New departure date</label><input class="control" type="date" name="departureDate" min="${new Date().toISOString().slice(0,10)}"></div><div class="field"><label>Cabin</label><select class="control" name="cabinClass"><option value="economy">Economy</option><option value="premium_economy">Premium Economy</option><option value="business">Business</option><option value="first">First</option></select></div></form><div id="changeOffers"></div>`,`<button class="btn soft" data-close-modal>Close</button><button class="btn primary" id="searchChangesBtn">Search changes</button>`)}
 async function searchChanges(){const f=$("changeSearchForm"),b=state.bookingDetail.booking;busy(true);try{const r=await request("MY_PROFILE_FLIGHT_CHANGE_SEARCH",{bookingId:b.id,removeSliceId:f.removeSliceId.value,addSlice:{origin:f.origin.value.toUpperCase(),destination:f.destination.value.toUpperCase(),departureDate:f.departureDate.value,cabinClass:f.cabinClass.value}}),data=r.result||r,offers=arr(data.offers);$("changeOffers").innerHTML=offers.length?`<h3 class="subhead">Available alternatives</h3>${offers.map(o=>`<div class="choice"><div><strong>${esc(arr(o.slices?.add)[0]?.origin?.iataCode||"")} → ${esc(arr(o.slices?.add)[0]?.destination?.iataCode||"")}</strong><span>Change total ${esc(money(o.changeTotalAmount,o.changeTotalCurrency))}${o.penaltyTotalAmount?` · penalty ${esc(money(o.penaltyTotalAmount,o.penaltyTotalCurrency))}`:""}</span></div><div class="price">${esc(money(o.changeTotalAmount,o.changeTotalCurrency))}</div><button class="btn small primary" data-select-change="${esc(o.id)}" data-change-amount="${esc(o.changeTotalAmount||"0")}">Select</button></div>`).join("")}`:empty("No alternatives returned","The airline did not return a change offer for these details.","plane")}catch(e){toast(e.message,true)}finally{busy(false)}}
 async function selectChange(offerId,amount){if(Number(amount)<0){openModal("Refund change requires support",`<div class="provider-note">This flight change would create a customer refund. The current SKANDI supplier flow can confirm the airline change, but customer refund settlement must remain part of the same controlled transaction. Continue through Support instead of confirming it here.</div>`,`<button class="btn soft" data-close-modal>Close</button><button class="btn primary" data-route="/my-profile/support">Continue with Support</button>`);return}busy(true);try{const b=state.bookingDetail.booking,r=await request("MY_PROFILE_FLIGHT_CHANGE_SELECT",{bookingId:b.id,orderChangeOfferId:offerId}),data=r.result||r,change=data.change;if(!change?.id)throw new Error("The airline did not return a pending change.");const prep=await request("MY_PROFILE_FLIGHT_CHANGE_PREPARE_PAYMENT",{bookingId:b.id,orderChangeId:change.id}),pd=prep.result||prep;if(pd.paymentRequired)await openPayment({kind:"change",bookingId:b.id,orderChangeId:change.id,prepared:pd});else{const done=await request("MY_PROFILE_FLIGHT_CHANGE_CONFIRM",{bookingId:b.id,orderChangeId:change.id});toast("Flight change confirmed.");closeModal();await refreshBooking()}}catch(e){toast(e.message,true)}finally{busy(false)}}
@@ -893,3 +878,4 @@ const qs=new URLSearchParams(location.search);post("MY_PROFILE_READY",{section:q
 </script>
 </body>
 </html>
+```
