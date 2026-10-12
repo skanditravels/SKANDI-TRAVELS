@@ -6,7 +6,7 @@
 - WIX PAGE FILE: `/src/pages/Reservations.ly2n8.js`
 - WIX ROUTE / SLUG: `/riaintra/success-factors/altea/reservations`
 - WIX HTML ELEMENT: `#alteaReservationsEmbed`
-- CURRENT STATUS: V12 TRANSFER CARD ATB MODEL UPGRADE PREPARED — REQUIRES LIVE TEST
+- CURRENT STATUS: V12 PNR WORKSPACE / PRODUCT CATEGORY / DOCUMENT SAMPLE REPAIR PREPARED — REQUIRES LIVE TEST
 - SOURCE-OF-TRUTH STATUS: AUTHORITATIVE intended V12 embed payload supplied for this repair.
 - CANONICAL WEB FACADE: `/src/backend/SKANDI_CORE/reservations.web.js`
 - CANONICAL CORE: `/src/backend/SKANDI_CORE/reservations.js`
@@ -18,12 +18,16 @@
 - AUTHORIZATION: unchanged from current V12 page/facade/core boundaries. No frontend role or provider secret becomes authoritative.
 - MESSAGE CONTRACTS / ELEMENT IDS: unchanged.
 - LAST VERIFIED: 2026-10-08 — current repo `skanditravels/SKANDI-TRAVELS`, branch `main`, commit `86deedb4705fae292851256726cd81e13669aa98`; live Supabase schema/data inspected read-only.
-- LAST SOURCE VERIFIED: 2026-10-11 — repo `skanditravels/SKANDI-TRAVELS`, branch `main`, HEAD `4c8292ec81c7324ac4551cc47be8aa78e3e41bfe`; current Reservations HTML_REF, Wix page bridge, canonical reservations facade/core and shared ATB renderer inspected. Live Wix print/browser runtime was not exercised.
+- LAST SOURCE VERIFIED: 2026-10-11 — repo `skanditravels/SKANDI-TRAVELS`, branch `main`, HEAD `87e65bfd6a43e2a86bdc6a79895eea0519520ceb`; current Reservations HTML_REF, Wix page bridge, canonical reservations facade/core and shared ATB renderer inspected. Live Wix print/browser runtime was not exercised.
 
 ## CHANGE LOG
 - 2026-10-08 — One-true-source enforcement finalized: Duffel-linked provider identity/facts are read-only in Inventory Control and refresh through the provider workspace; provider technical snapshots are hidden from generic editable fields; compatibility columns are database-derived. Current GitHub `main` at `86deedb4705fae292851256726cd81e13669aa98` was inspected and preserved.
 - 2026-10-08 — V12 one-true-source convergence prepared. Shared reference/master facts now have one editable Inventory/Supabase authority after provider import. Legacy Travel Info fields are derived compatibility projections, provider-key uniqueness is database-enforced, and current Duffel snapshots refresh provider-owned canonical facts without creating alternate data stores. The HTML design, IDs, message names, routes and permission boundaries are unchanged. STATICALLY VERIFIED; REQUIRES LIVE TEST after SQL/Wix publication.
 - 2026-10-11 — Transfer Card print output upgraded to the supplied ATB-size boarding-card model: 203.20 mm × 82.55 mm stock, SKANDI blue header, passenger/booking hierarchy, eight-field transfer matrix, highlighted bus/boarding/seat area, service footer and right-side vertical 2D data mark. Existing `printTransferCard()` action, transfer/passenger state, luggage tag, manifest, Wix bridge, backend, database and provider contracts remain unchanged. The data mark is generated locally and does not add an external barcode service. STATICALLY VERIFIED; REQUIRES LIVE PRINT TEST after Wix publication.
+
+- 2026-10-11 — Reservations PNR workspace/product-category repair: moved the full Seats & Services/seat-map catalogue out of Offer Review and into the dedicated Seats & Services workspace; removed Transfer Inventory from Seats & Services and Baggage & Boarding; promoted Transfers to a first-class Search & Sell category that adds canonical Inventory Control transfer records into the same PNR; product search now opens a dedicated PNR tab and freezes global non-PNR navigation until the agent switches tabs; Preferences now includes boarding-card, e-Ticket PDF and booking-confirmation samples; Offer Review now restores the airline logo at left. Existing Wix bridge, backend facade/core, Supabase schema, provider authority, message contracts and route remain unchanged. STATICALLY VERIFIED; REQUIRES LIVE TEST after Wix publication.
+
+- 2026-10-11 — Required syntax restoration included in the same Reservations runtime: removed an accidental nested `renderBookingFile` wrapper, closed the existing `bindEnterpriseEvents()` function correctly, and collapsed the duplicated/incomplete global date synchronizer wrapper. These source defects existed in the current Reservations payload and prevented complete JavaScript parsing; no interfaces, routes, IDs, data authority or backend contracts were renamed. STATICALLY VERIFIED.
 
 ## COMPLETE INTENDED HTML
 
@@ -3851,8 +3855,7 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
   };
 
 
-  renderBookingFile=function(){
-    renderBookingFile = function() {
+  renderBookingFile = function() {
     const w = workspace();
     if (!w?.booking) {
       return `${pageHead("Booking File", "Unified SKANDI master booking with supplier references.")}
@@ -5109,6 +5112,7 @@ html,body{margin:0!important;padding:0!important;width:203.20mm!important;height
       row.addEventListener("dblclick",()=>{const id=row.dataset.clubCustomer||"";if(id)linkClub(id);});
     });
     document.getElementById("reqPassenger")?.addEventListener("change",e=>{state.selectedPassengerId=e.target.value;state.travelDecision=null;render()});
+    }
   }
 
 
@@ -6168,16 +6172,7 @@ html,body{margin:0!important;padding:0!important;width:203.20mm!important;height
     ensurePreviewButton();const q=document.getElementById("bookingPreviewQuick");if(q)q.disabled=!booking74()?.id;
   };
 // --- GLOBAL DATE SYNCHRONIZER ---
-  // Listens to the whole document so it never breaks when tabs change
-  document.addEventListener('input', (e) => {
-    // Map the "Check-in" IDs to their matching "Check-out" IDs
-    const syncPairs = {
-      'departureDate': 'returnDate',       // Flights
-      'stayIn': 'stayOut',                 // Hotels (Base)
-      'stayIn74': 'stayOut74',             // Hotels (Enterprise)
-      'packageStart74': 'packageEnd74'     // Package Builder
-    };
-    // --- GLOBAL DATE SYNCHRONIZER ---
+  // Listens to the whole document so it never breaks when tabs change.
   document.addEventListener('input', (e) => {
     const syncPairs = {
       'departureDate': 'returnDate',       // Flights
@@ -6209,6 +6204,214 @@ html,body{margin:0!important;padding:0!important;width:203.20mm!important;height
 
 
 </script>
+
+<style id="v12-reservations-pnr-product-repair">
+  .nav-item.pnr-frozen{opacity:.42!important;cursor:not-allowed!important;filter:grayscale(.35)}
+  .nav-item.pnr-frozen:hover{background:inherit!important}
+  .offer-carrier-identity{display:flex;align-items:center;gap:12px;padding:9px 10px;border:1px solid #bcbcbc;background:linear-gradient(#fafafa,#ececec);margin-bottom:10px}
+  .offer-carrier-logo{width:78px;height:42px;object-fit:contain;object-position:left center;display:block}
+  .offer-carrier-mark{width:78px;height:42px;display:grid;place-items:center;border:1px solid #c7c7c7;background:#fff;color:#555;font-weight:800;font-size:16px}
+  .offer-carrier-name{font-size:14px;font-weight:800;color:#173f5c}.offer-carrier-meta{font-size:10px;color:#667783;margin-top:2px}
+  .transfer-search-layout{display:grid;grid-template-columns:minmax(0,1fr) 310px;gap:10px;align-items:start}.transfer-product-card{border:1px solid #bcc6cd;background:#fff;margin-bottom:8px}.transfer-product-head{display:flex;justify-content:space-between;gap:10px;padding:8px 10px;background:#edf2f5;border-bottom:1px solid #c7d0d6}.transfer-product-body{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center;padding:10px}.transfer-product-meta{font-size:10px;color:#657680;margin-top:4px}.transfer-product-price{font-size:16px;font-weight:800;color:#173f5c;white-space:nowrap}
+  .doc-sample-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}.doc-sample{border:1px solid #b9c3ca;background:#fff;min-height:210px;display:flex;flex-direction:column}.doc-sample-head{padding:7px 9px;background:linear-gradient(#ececec,#d8d8d8);border-bottom:1px solid #bcbcbc;font-weight:800}.doc-sample-body{padding:10px;flex:1;background:#fafafa}.doc-sample-foot{padding:7px 9px;border-top:1px solid #ccd3d8;background:#f0f2f4}.mini-atb{aspect-ratio:2.46/1;border:1px solid #111;background:#fff;position:relative;overflow:hidden;font-family:Arial,sans-serif}.mini-atb .blue{height:24%;background:#022e64;color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 7px;font-weight:900;font-size:9px}.mini-atb .body{padding:8px}.mini-atb .name{font:900 12px 'Courier New',monospace}.mini-atb .route{display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;margin-top:7px}.mini-atb .route b{display:block;font-size:11px}.mini-atb .seatbox{position:absolute;right:7px;bottom:7px;border:1px solid #111;padding:4px 7px;font-size:8px}.mini-ticket,.mini-confirm{border:1px solid #b7b7b7;background:white;padding:9px;font-family:Arial,sans-serif;min-height:145px}.mini-doc-brand{font-size:13px;font-weight:900;color:#022e64}.mini-doc-title{font-size:11px;font-weight:800;margin:4px 0 8px}.mini-line{height:5px;background:#d8dee3;margin:5px 0}.mini-line.short{width:55%}.mini-line.mid{width:78%}.pnr-lock-note{padding:7px 9px;border:1px solid #d1b25f;background:#fff7dd;color:#695016;margin-bottom:8px;font-size:10px}.services-shell-note{margin-bottom:8px}.transfer-filter-input{width:100%;min-height:30px;padding:0 8px;border:1px solid #aeb9c2}
+  @media(max-width:980px){.transfer-search-layout,.doc-sample-grid{grid-template-columns:1fr}}
+</style>
+
+<script id="v12-reservations-pnr-product-repair-script">
+(function(){
+  "use strict";
+
+  const PNR_PRODUCT_VIEWS = new Set(["search","hotels","cars","transfers","packagebuilder"]);
+  const PNR_BLOCKED_VIEWS = new Set(["dashboard","orders","reports","preferences"]);
+  const pnrSessions = new Set();
+  let pendingTransferEntityId = "";
+
+  VIEW_TITLES.transfers = "Transfers";
+
+  function activePnrSession(){ return pnrSessions.has(state.activeSessionId); }
+  function markPnrSession(){ if(state.activeSessionId) pnrSessions.add(state.activeSessionId); }
+
+  const originalCreateNewSessionV12 = createNewSession;
+  const originalNavigateV12 = navigate;
+  const originalOpenLocalBookingModalV12 = openLocalBookingModal;
+  const originalRenderV12 = render;
+
+  function ensureTransferNav(){
+    if(document.querySelector('.nav-item[data-view="transfers"]')) return;
+    const cars = document.querySelector('.nav-item[data-view="cars"]');
+    if(!cars) return;
+    const button=document.createElement("button");
+    button.type="button";
+    button.className="nav-item";
+    button.dataset.view="transfers";
+    button.innerHTML='<span class="nav-icon"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="10" rx="2"></rect><path d="M7 16v2M17 16v2M5 10h14M8 6V4h8v2"></path></svg></span><span class="nav-label">Transfers</span>';
+    cars.insertAdjacentElement("afterend",button);
+  }
+
+  function updatePnrLockUi(){
+    ensureTransferNav();
+    const locked=activePnrSession();
+    document.querySelectorAll('.nav-item[data-view]').forEach(btn=>{
+      const frozen=locked && PNR_BLOCKED_VIEWS.has(btn.dataset.view);
+      btn.classList.toggle("pnr-frozen",frozen);
+      btn.setAttribute("aria-disabled",frozen?"true":"false");
+      if(frozen) btn.title="Locked while this PNR workspace is active";
+      else if(btn.title==="Locked while this PNR workspace is active") btn.removeAttribute("title");
+    });
+  }
+
+  navigate=function(view){
+    if(activePnrSession() && PNR_BLOCKED_VIEWS.has(view)){
+      toast("PNR workspace locked", "Switch to a non-PNR tab to use global Dashboard, Orders, Reports or Preferences.", "warning");
+      updatePnrLockUi();
+      return;
+    }
+    if(PNR_PRODUCT_VIEWS.has(view) && !activePnrSession()){
+      originalCreateNewSessionV12();
+      markPnrSession();
+      originalNavigateV12(view);
+      updatePnrLockUi();
+      return;
+    }
+    originalNavigateV12(view);
+    updatePnrLockUi();
+    if(view==="services" && state.selectedOffer?.id && !state.seatMaps?.length){
+      setTimeout(()=>loadSeatMaps(),0);
+    }
+  };
+
+  openLocalBookingModal=function(){
+    if(!activePnrSession()){
+      originalCreateNewSessionV12();
+      markPnrSession();
+    }
+    originalOpenLocalBookingModalV12();
+    updatePnrLockUi();
+  };
+
+  function airlineLogoUrl(offer){
+    const owner=offer?.owner||{};
+    const code=owner.iataCode||owner.iata_code||offer?.slices?.[0]?.segments?.[0]?.marketingCarrier?.iataCode||"";
+    return owner.logo_symbol_url||owner.logoSymbolUrl||owner.logo_lockup_url||owner.logoLockupUrl||(code?`https://images.kiwi.com/airlines/64/${encodeURIComponent(code)}.png`:"");
+  }
+  function carrierIdentity(offer){
+    const owner=offer?.owner||{};
+    const code=owner.iataCode||owner.iata_code||offer?.slices?.[0]?.segments?.[0]?.marketingCarrier?.iataCode||"";
+    const name=owner.name||offer?.slices?.[0]?.segments?.[0]?.marketingCarrier?.name||code||"Operating airline";
+    const url=airlineLogoUrl(offer);
+    return `<div class="offer-carrier-identity">${url?`<img class="offer-carrier-logo" src="${escapeAttr(url)}" alt="${escapeAttr(name)}" onerror="this.style.display='none';this.nextElementSibling.style.display='grid'">`:""}<div class="offer-carrier-mark" style="${url?"display:none":""}">${escapeHTML(code||"AIR")}</div><div><div class="offer-carrier-name">${escapeHTML(name)}</div><div class="offer-carrier-meta">${escapeHTML(code||"—")} · live supplier offer</div></div></div>`;
+  }
+
+  renderOffer=function renderOfferV12Fixed(){
+    const offer=state.selectedOffer;
+    if(!offer)return `${pageHead("Offer Review","A selected offer is refreshed here before checkout.")}${emptyState("▤","No offer selected","Search for flights and choose an offer to review.")}`;
+    return `${pageHead("Offer Review","Refreshed live offer with agent review.",'<button class="secondary" data-action="refresh-selected-offer">Refresh price</button><button class="secondary" data-action="offer-notice">Offer Notice</button><button class="primary" data-view="workspace">Continue to order</button>')}
+      ${offer.isExpired?alertBox("danger","Offer expired","Return to flight search and choose a current offer."):""}
+      ${carrierIdentity(offer)}
+      ${pqrMarkup(offer)}
+      <div class="workspace-layout" style="margin-top:10px"><div>${itineraryMarkup(offer)}<section class="panel" style="margin-top:10px"><div class="panel-head">Available baggage and airline services</div><div class="panel-body" style="padding:0">${serviceListMarkup(offer.availableServices||[])}</div></section><div class="alert info" style="margin-top:10px"><span>ℹ</span><div><strong>Seat map moved to Seats & Services</strong>Seat selection is no longer embedded in Offer Review or reinserted after a price refresh. Continue to the PNR, then open Seats & Services.</div></div></div>
+      <aside class="panel sticky"><div class="panel-head">Offer control</div><div class="panel-body"><div class="money-line"><span>Offer ID</span><strong class="mono">${escapeHTML(offer.id||"—")}</strong></div><div class="money-line"><span>Owner / validating carrier</span><strong>${escapeHTML(offer.owner?.iataCode||offer.owner?.iata_code||offer.owner?.name||"—")}</strong></div><div class="money-line"><span>Offer</span><strong>${money(offer.totalAmount,offer.totalCurrency)}</strong></div><div class="money-line"><span>Selected services</span><strong>${money(selectedServiceTotal(),offer.totalCurrency)}</strong></div><div class="money-line"><span>Total due</span><strong class="price-total">${money(orderTotal(),offer.totalCurrency)}</strong></div><div class="money-line"><span>Price guarantee</span><strong>${formatDateTime(offer.priceGuaranteeExpiresAt||offer.expiresAt)}</strong></div></div><div class="panel-foot"><button class="primary" data-view="workspace" ${offer.isExpired?"disabled":""}>Continue</button></div></aside></div>`;
+  };
+
+  renderServices=function renderServicesV12Fixed(){
+    const offer=state.selectedOffer;
+    const w=state.alteaWorkspace;
+    return `${pageHead("Seats & Services","Airline-controlled seats, baggage and special-service requests for the active PNR.",'<button class="secondary" data-action="load-seat-maps">Refresh seat map</button>')}
+      <div class="pnr-lock-note">This workspace is scoped to the active PNR. Transfer inventory is intentionally excluded and is sold from the separate Transfers category.</div>
+      ${offer?`<section class="panel"><div class="panel-head"><span>Seats & Services Catalogue</span><span class="mono">${escapeHTML(offer.id||"")}</span></div><div class="panel-body" style="padding:0">${seatMapMarkup()}</div></section><section class="panel" style="margin-top:10px"><div class="panel-head">Live airline services</div><div class="panel-body" style="padding:0">${serviceListMarkup(offer.availableServices||[])}</div></section>`:emptyState("▦","No active airline offer","Open or create an air booking in this PNR before selecting airline seats and services.")}
+      ${w?.passengers?.length?`<section class="panel" style="margin-top:10px"><div class="panel-head">Passenger operational status</div><div class="panel-body" style="padding:0">${passengerTable(w.passengers)}</div></section>`:""}`;
+  };
+
+  renderBaggageBoarding=function renderBaggageBoardingV12Fixed(){
+    const w=state.alteaWorkspace;
+    const baggage=(state.selectedOffer?.availableServices||[]).filter(s=>String(s.type||"").toLowerCase()==="baggage");
+    return `${pageHead("Baggage & Boarding","Airline baggage services and boarding status for the active PNR.",'<button class="primary" data-view="services">Seats & Services</button>')}
+      <div class="pnr-lock-note">Transfer inventory is not part of this module. Use the separate Transfers category to add transfer services to the same PNR.</div>
+      <div class="grid grid-2"><section class="panel"><div class="panel-head">Baggage services</div><div class="panel-body" style="padding:0">${baggage.length?serviceListMarkup(baggage):'<div class="empty">No live baggage services returned for the current air offer.</div>'}</div></section><section class="panel"><div class="panel-head">Boarding / passenger status</div><div class="panel-body" style="padding:0">${w?.passengers?.length?passengerTable(w.passengers):'<div class="empty">Open a booking to display passenger boarding status.</div>'}</div></section></div>`;
+  };
+
+  function transferItems(){
+    return (state.inventory||[]).filter(i=>String(i.entityType||i.type||"").toUpperCase().replace(/[\\s-]+/g,"_")==="TRANSFER");
+  }
+  function transferCards(items){
+    if(!items.length)return emptyState("▱","No transfer inventory","No published transfer products match this search.");
+    return items.map(i=>`<article class="transfer-product-card" data-v12-transfer-card><div class="transfer-product-head"><strong>${escapeHTML(i.name||i.title||"Transfer")}</strong><span class="mono">${escapeHTML(i.publicId||i.code||"")}</span></div><div class="transfer-product-body"><div><div>${escapeHTML(i.city||i.destination||i.category||"Transfer service")}</div><div class="transfer-product-meta">${escapeHTML(i.description||i.summary||"Published SKANDI transfer inventory")}</div></div><div style="text-align:right"><div class="transfer-product-price">${i.publicPrice?money(i.publicPrice,i.currency||state.preferences.currency):"Quote"}</div><button class="primary" data-v12-transfer-entity="${escapeAttr(i.id)}">Add to PNR</button></div></div></article>`).join("");
+  }
+  function renderTransfersV12(){
+    const all=transferItems();
+    return `${pageHead("Transfers","Search and add published transfer inventory as a first-class PNR product.",'<button class="secondary" data-action="refresh-all">Refresh inventory</button>')}
+      <div class="pnr-lock-note">This product search owns the current PNR workspace tab. Flights, hotels, cars and transfers can all be added into the same PNR; global tools are frozen until you switch tabs.</div>
+      <div class="transfer-search-layout"><section><section class="panel"><div class="panel-head">Transfer search</div><div class="panel-body"><input id="v12TransferFilter" class="transfer-filter-input" placeholder="Search transfer, destination, airport, resort or code"></div></section><div id="v12TransferResults" style="margin-top:8px">${transferCards(all)}</div></section><aside class="panel sticky"><div class="panel-head">PNR basket</div><div class="panel-body"><div class="money-line"><span>Workspace</span><strong class="mono">${escapeHTML(state.alteaWorkspace?.booking?.bookingReference||state.alteaWorkspace?.booking?.pnrLocator||"NEW PNR")}</strong></div><div class="money-line"><span>Transfer products</span><strong>${all.length}</strong></div><div class="money-line"><span>Booking file</span><strong>${state.alteaWorkspace?.booking?"OPEN":"NOT YET CREATED"}</strong></div><div class="muted" style="margin-top:8px">Choose a transfer. If no booking file exists yet, Reservations creates the PNR shell first and then adds the selected transfer.</div></div></aside></div>`;
+  }
+
+  const originalPreferencesV12=renderPreferences;
+  function sampleBoardingPreview(){return `<div class="mini-atb"><div class="blue"><span>SKANDI TRAVELS</span><span>BOARDING PASS</span><span>SEQ 001</span></div><div class="body"><div class="name">ANDERSSON / ANNA</div><div class="route"><div><small>FROM</small><b>JFK</b></div><div><small>TO</small><b>ARN</b></div><div><small>FLIGHT</small><b>SK904</b></div></div><div class="seatbox">GATE 07 · SEAT 22A</div></div></div>`}
+  function sampleTicketPreview(){return `<div class="mini-ticket"><div class="mini-doc-brand">SKANDI TRAVELS</div><div class="mini-doc-title">Electronic Ticket / Receipt</div><div class="mini-line short"></div><div class="mini-line mid"></div><div class="mini-line"></div><div class="mini-line mid"></div><hr><div class="mini-line short"></div><div class="mini-line"></div></div>`}
+  function sampleConfirmationPreview(){return `<div class="mini-confirm"><div class="mini-doc-brand">SKANDI TRAVELS</div><div class="mini-doc-title">Booking Confirmation</div><div class="mini-line mid"></div><div class="mini-line short"></div><hr><div class="mini-line"></div><div class="mini-line"></div><div class="mini-line mid"></div><div class="mini-line short"></div></div>`}
+  renderPreferences=function renderPreferencesV12Docs(){
+    return `${originalPreferencesV12()}<section class="panel" style="margin-top:10px"><div class="panel-head">Document Templates · Samples</div><div class="panel-body"><div class="doc-sample-grid"><article class="doc-sample"><div class="doc-sample-head">Boarding Card · Flights & Transfers</div><div class="doc-sample-body">${sampleBoardingPreview()}</div><div class="doc-sample-foot"><button class="secondary" data-v12-doc-sample="boarding">Open sample</button></div></article><article class="doc-sample"><div class="doc-sample-head">e-Ticket PDF · Passenger Email</div><div class="doc-sample-body">${sampleTicketPreview()}</div><div class="doc-sample-foot"><button class="secondary" data-v12-doc-sample="eticket">Open sample</button></div></article><article class="doc-sample"><div class="doc-sample-head">Booking Confirmation · Completed Booking</div><div class="doc-sample-body">${sampleConfirmationPreview()}</div><div class="doc-sample-foot"><button class="secondary" data-v12-doc-sample="confirmation">Open sample</button></div></article></div></div></section>`;
+  };
+
+  function documentSampleHtml(kind){
+    const common=`<style>body{margin:0;background:#ddd;font-family:Arial,sans-serif;color:#111}.toolbar{padding:10px;background:#263746;color:white}.paper{margin:18px auto;background:white;box-shadow:0 8px 30px #777}.toolbar button{margin-right:6px}</style>`;
+    if(kind==="boarding")return `${common}<div class="toolbar"><button onclick="print()">Print / Save PDF</button>Boarding Card Sample</div><div class="paper" style="width:203.2mm;height:82.55mm;position:relative;overflow:hidden"><div style="height:12mm;background:#022e64;color:white;display:grid;grid-template-columns:1fr 1.6fr .6fr;align-items:center;padding:0 6mm;font-weight:900"><span style="font-size:7mm">SKANDI</span><span style="text-align:center;font-size:4.4mm;letter-spacing:.6mm">BOARDING PASS</span><span style="text-align:right">SEQ 001</span></div><div style="padding:6mm"><div style="font:900 5mm 'Courier New',monospace">ANDERSSON / ANNA</div><div style="display:grid;grid-template-columns:repeat(6,1fr);gap:5mm;margin-top:5mm"><div><small>FROM</small><b style="display:block;font-size:5mm">JFK</b></div><div><small>TO</small><b style="display:block;font-size:5mm">ARN</b></div><div><small>FLIGHT</small><b style="display:block">SK904</b></div><div><small>DATE</small><b style="display:block">11OCT</b></div><div><small>GATE</small><b style="display:block;font-size:5mm">07</b></div><div><small>SEAT</small><b style="display:block;font-size:5mm">22A</b></div></div><div style="position:absolute;right:8mm;bottom:7mm;font:700 3mm monospace">REF SK26AB</div></div></div>`;
+    if(kind==="eticket")return `${common}<div class="toolbar"><button onclick="print()">Print / Save PDF</button>e-Ticket PDF Sample</div><main class="paper" style="width:210mm;min-height:297mm;padding:18mm"><h1 style="color:#022e64;margin:0">SKANDI TRAVELS</h1><h2>Electronic Ticket / Receipt</h2><p><b>Passenger:</b> Anna Andersson &nbsp; <b>Booking:</b> SK26AB</p><hr><h3>Itinerary</h3><table style="width:100%;border-collapse:collapse"><tr><th align="left">Flight</th><th align="left">Route</th><th align="left">Date</th><th align="left">Cabin</th></tr><tr><td>SK904</td><td>JFK → ARN</td><td>11 Oct 2026</td><td>Economy</td></tr></table><h3 style="margin-top:28px">Ticket</h3><p>117-1234567890 · OPEN FOR USE</p><h3>Payment / Fare</h3><p>Base fare, taxes, services and total are presented from the confirmed booking record.</p><p style="margin-top:40px;color:#666">Sample template for passenger email/PDF delivery after ticket issuance.</p></main>`;
+    return `${common}<div class="toolbar"><button onclick="print()">Print / Save PDF</button>Booking Confirmation Sample</div><main class="paper" style="width:210mm;min-height:297mm;padding:18mm"><h1 style="color:#022e64;margin:0">SKANDI TRAVELS</h1><h2>Booking Confirmation</h2><p><b>Booking reference:</b> SK26AB</p><p><b>Passenger:</b> Anna Andersson</p><hr><h3>Your trip</h3><p>Flight SK904 · New York/JFK to Stockholm/ARN</p><p>Hotel · 7 nights · Stockholm</p><p>Transfer · Airport to hotel</p><h3>Payment</h3><p>Booking paid and confirmed.</p><h3>Important information</h3><p>Supplier references, baggage, transfer meeting points and service instructions are included from the confirmed PNR components.</p></main>`;
+  }
+  function openDocumentSample(kind){
+    const win=window.open("","_blank","noopener,noreferrer");
+    if(!win)return toast("Popup blocked","Allow pop-ups to open document samples.","warning");
+    win.document.open();win.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>SKANDI Document Sample</title></head><body>${documentSampleHtml(kind)}</body></html>`);win.document.close();
+  }
+
+  render=function renderV12PnrProductFixed(){
+    if(state.activeView==="transfers"){
+      main.innerHTML=`<section class="view">${renderTransfersV12()}</section>`;
+    }else{
+      originalRenderV12();
+    }
+    updatePnrLockUi();
+  };
+
+  document.addEventListener("click",event=>{
+    const sample=event.target.closest?.("[data-v12-doc-sample]");
+    if(sample){event.preventDefault();openDocumentSample(sample.dataset.v12DocSample);return}
+    const transfer=event.target.closest?.("[data-v12-transfer-entity]");
+    if(transfer){
+      event.preventDefault();
+      const entityId=transfer.dataset.v12TransferEntity||"";
+      if(!entityId)return;
+      markPnrSession();
+      const bookingId=state.alteaWorkspace?.booking?.id||"";
+      if(bookingId){post("ALTEA_ADD_INVENTORY_COMPONENT",{bookingId,entityId,quantity:1});return}
+      pendingTransferEntityId=entityId;
+      openLocalBookingModal();
+    }
+  },true);
+
+  document.addEventListener("input",event=>{
+    if(event.target?.id!=="v12TransferFilter")return;
+    const q=String(event.target.value||"").trim().toLowerCase();
+    const filtered=transferItems().filter(i=>JSON.stringify([i.name,i.title,i.publicId,i.code,i.city,i.destination,i.category,i.description]).toLowerCase().includes(q));
+    const out=document.getElementById("v12TransferResults");if(out)out.innerHTML=transferCards(filtered);
+  });
+
+  window.addEventListener("message",event=>{
+    const m=typeof event.data==="string"?(()=>{try{return JSON.parse(event.data)}catch(_){return null}})():event.data;
+    if(!m||m.source!==PARENT_SOURCE)return;
+    if(m.type==="ALTEA_LOCAL_BOOKING_CREATED"&&pendingTransferEntityId){
+      const bookingId=m.payload?.workspace?.booking?.id||"";
+      const entityId=pendingTransferEntityId;pendingTransferEntityId="";
+      if(bookingId)setTimeout(()=>post("ALTEA_ADD_INVENTORY_COMPONENT",{bookingId,entityId,quantity:1}),0);
+    }
+  });
+
+  ensureTransferNav();
+  updatePnrLockUi();
+  render();
+})();
+</script>
+
 </body>
 </html>
 ```
