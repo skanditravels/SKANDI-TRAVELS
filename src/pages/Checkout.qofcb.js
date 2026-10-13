@@ -4,7 +4,7 @@ import wixLocationFrontend from "wix-location-frontend";
 import wixPayFrontend from "wix-pay-frontend";
 import { session } from "wix-storage-frontend";
 import { SITE_MAP, isSafeInternalRoute } from "public/siteMap";
-import { getStoreCheckoutBootstrap, saveStoreCheckoutDetails, setStoreDeliveryMethod, applyStoreCoupon, removeStoreCoupon, updateStoreCartLineItem, removeStoreCartLineItem, prepareStorePayment, getStoreOrderConfirmation } from "backend/SKANDI_CORE/storeCheckout.web";
+import { getStoreCheckoutBootstrap, saveStoreCheckoutDetails, setStoreDeliveryMethod, applyStoreCoupon, removeStoreCoupon, applyStoreGiftCard, removeStoreGiftCard, updateStoreCartLineItem, removeStoreCartLineItem, prepareStorePayment, getStoreOrderConfirmation } from "backend/SKANDI_CORE/storeCheckout.web";
 const SOURCE = "SKANDI_STORE_CHECKOUT";
 const PAYMENT_KEY = "SKANDI_STORE_PENDING_PAYMENT";
 let embed, state, running = false, bootstrapPromise = null, pendingPayment = null;
@@ -74,6 +74,8 @@ async function handle(type, p) {
     case "CHECKOUT_SET_DELIVERY": await push(setStoreDeliveryMethod(p)); break;
     case "CHECKOUT_APPLY_COUPON": await push(applyStoreCoupon(p)); break;
     case "CHECKOUT_REMOVE_COUPON": await push(removeStoreCoupon(p)); break;
+    case "CHECKOUT_APPLY_GIFT_CARD": await push(applyStoreGiftCard(p)); break;
+    case "CHECKOUT_REMOVE_GIFT_CARD": await push(removeStoreGiftCard(p)); break;
     case "CHECKOUT_UPDATE_QTY": await push(updateStoreCartLineItem(p)); break;
     case "CHECKOUT_REMOVE_ITEM": await push(removeStoreCartLineItem(p)); break;
   }
