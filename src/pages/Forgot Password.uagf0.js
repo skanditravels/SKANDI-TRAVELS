@@ -1,108 +1,66 @@
 import wixLocationFrontend from "wix-location-frontend";
-import { currentMember } from "wix-members-frontend";
-import { submitUnaccompaniedMinorForm } from "backend/FINAL/unaccompaniedMinorService.web";
+import { authentication } from "wix-members-frontend";
+import { SITE_MAP } from "public/siteMap";
 
-/*
- * Wix popup / lightbox HTML Component ID:
- * #unaccompaniedMinorHtml
- */
-const HTML_ID = "#unaccompaniedMinorHtml";
-const APP_SOURCE = "SKANDI_UNACCOMPANIED_MINOR";
+const HTML_ID = "#forgotPasswordHtml";
+const CHILD_SOURCE = "SKANDI_FORGOT_PASSWORD";
 const PARENT_SOURCE = "SKANDI_WIX_PARENT";
 
-function asObject(value) {
-  return value && typeof value === "object" && !Array.isArray(value) ? value : {};
-}
-
-function parseMessage(data) {
-  if (typeof data === "string") {
-    try {
-      return JSON.parse(data);
-    } catch (error) {
-      console.warn("[UM Popup] Invalid JSON message.", error);
-      return null;
-    }
-  }
-  return asObject(data);
-}
-
-function send(html, type, payload = {}, requestId = "") {
+function send(html, type, payload = {}) {
   html.postMessage({
     source: PARENT_SOURCE,
     type,
-    requestId,
-    payload: { ...asObject(payload), requestId },
+    payload,
     timestamp: new Date().toISOString()
   });
 }
 
-async function memberSafe() {
-  try {
-    return await currentMember.getMember();
-  } catch (error) {
-    return null;
-  }
-}
-
-async function sendMemberData(html) {
-  const member = await memberSafe();
-  if (!member) return;
-  const contact = asObject(member.contactDetails);
-  send(html, "UM_MEMBER_DATA", {
-    firstName: contact.firstName || "",
-    lastName: contact.lastName || "",
-    email: member.loginEmail || contact.emails?.[0] || ""
-  });
+function isCancellation(error) {
+  const value = String(error?.message || error || "").toLowerCase();
+  return value.includes("cancel") || value.includes("closed") || value.includes("abort");
 }
 
 $w.onReady(function () {
-  let html;
-  try {
-    html = $w(HTML_ID);
-  } catch (error) {
-    console.error(`[UM Popup] Missing HTML Component ${HTML_ID}.`, error);
-    return;
-  }
+  const html = $w(HTML_ID);
 
   html.onMessage(async (event) => {
-    const message = parseMessage(event.data);
-    if (!message?.type || message.source !== APP_SOURCE) return;
+    const message = event.data || {};
+    if (message.source !== CHILD_SOURCE) return;
 
-    const payload = asObject(message.payload);
-    const requestId = String(message.requestId || payload.requestId || "");
+    if (message.type === "FORGOT_PASSWORD_READY") {
+      send(html, "FORGOT_PASSWORD_RESULT", {
+        ok: true,
+        message: "Ready to start a secure Wix Members password reset."
+      });
+      return;
+    }
 
-    try {
-      if (message.type === "UM_READY") {
-        await sendMemberData(html);
-        return;
-      }
-
-      if (message.type === "UM_SUBMIT") {
-        const member = await memberSafe();
-        const result = await submitUnaccompaniedMinorForm({
-          form: asObject(payload.form),
-          context: {
-            memberId: member?._id || member?.id || "",
-            memberEmail: member?.loginEmail || "",
-            sourcePage: wixLocationFrontend.url || "Wix popup"
-          }
+    if (message.type === "FORGOT_PASSWORD_OPEN_RESET") {
+      try {
+        await authentication.promptForgotPassword();
+        send(html, "FORGOT_PASSWORD_RESULT", {
+          ok: true,
+          message: "Password reset completed or reset instructions were requested through Wix Members."
         });
-
-        if (!result?.success || !result?.caseNumber) {
-          throw new Error(result?.message || "The form could not be stored.");
+      } catch (error) {
+        if (isCancellation(error)) {
+          send(html, "FORGOT_PASSWORD_RESULT", {
+            ok: true,
+            message: "Password reset was closed. You can reopen it whenever you are ready."
+          });
+          return;
         }
 
-        send(html, "UM_SUBMIT_SUCCESS", result, requestId);
+        send(html, "FORGOT_PASSWORD_RESULT", {
+          ok: false,
+          message: "Password reset is temporarily unavailable. Please try again."
+        });
       }
-    } catch (error) {
-      console.error(`[UM Popup] ${message.type} failed.`, error);
-      send(html, "UM_SUBMIT_ERROR", {
-        message: error?.message || "The form could not be submitted."
-      }, requestId);
+      return;
     }
-  });
 
-  sendMemberData(html).catch((error) => {
-    console.warn("[UM Popup] Member prefill unavailable.", error);
+    if (message.type === "FORGOT_PASSWORD_OPEN_LOGIN") {
+      wixLocationFrontend.to(`${SITE_MAP.club}?login=1`);
+    }
   });
 });
