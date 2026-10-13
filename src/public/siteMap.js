@@ -1,4 +1,4 @@
-// src/public/siteMap.js
+v// src/public/siteMap.js
 // SKANDI canonical route + global chrome/auth-popup registry — B-011.29
 // Single source of truth for public/internal routes and global header/footer embeds.
 
@@ -43,6 +43,7 @@ export const SITE_MAP = Object.freeze({
   docunet: "/riaintra/success-factors/docunet",
   serviceDesk: "/riaintra/success-factors/helpdesk",
   mediaControl: "/riaintra/success-factors/media-control",
+  magazineManager: "/riaintra/success-factors/media-control",
   storeControl: "/riaintra/success-factors/store-control",
   payroll: "/riaintra/success-factors/payroll"
 });
@@ -58,7 +59,7 @@ export const APP_ROUTES = Object.freeze({
   myRoster: "/riaintra/success-factors/my-roster",
   groupTalk: "/riaintra/success-factors/altea/grouptalk",
   passportVisa: "/travel-info/passport-visa",
-  baggageAllowance: "/travel-info/baggage-allowence",
+  baggageAllowance: "/travel-info/baggage-allowance",
   travelInsurance: "/travel-info/insurance",
   specialAssistance: "/travel-info/special-assistance",
   flightStatus: "/travel-info/flight-status"
