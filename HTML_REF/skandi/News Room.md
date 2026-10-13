@@ -1,90 +1,23 @@
-# News Room
+# SKANDI Newsroom
 
 ## INFO / LOG
 
-- **Status:** READY
+- **Status:** V12 repair prepared — STATICALLY VERIFIED / REQUIRES LIVE TEST
 - **System:** SKANDI
 - **Route:** `/about/news-room`
 - **Wix page:** `News Room.vn46g`
 - **HTML component:** `#newsroomEmbed`
-- **HTML source:** `/HTML_REF/skandi/News Room.md`
-- **HTML child source:** `SKANDI_PUBLIC_NEWSROOM`
-- **Parent source:** `SKANDI_WIX_PARENT`
-- **Public editorial facade:** `backend/SKANDI_CORE/publicContent.web`
-- **Public editorial method:** `getPublicNewsroomData`
-- **Public editorial core:** `backend/SKANDI_CORE/publicContent`
-- **Newsletter facade:** `backend/SKANDI_CORE/customerSession.web`
-- **Newsletter method:** `subscribeCustomerNewsletter`
-- **Internal authoring/control surface:** `/src/pages/MEDIA Control.chm91.js`
-- **Media Control editorial facade:** `backend/SKANDI_CORE/publicContent.web`
-- **Physical asset facade:** `backend/SKANDI_CORE/assets.web`
-- **Version:** `B-011.2`
-- **Last verified:** `2026-09-24`
+- **Child source:** `SKANDI_PUBLIC_NEWSROOM`
+- **Repository baseline:** `skanditravels/SKANDI-TRAVELS` main `4163618a81fed71d7114ac55d3fa003421f145b0`
+- **Prepared:** 2026-10-13
 
-### Canonical ownership
+### V12 repair
 
-Newsroom editorial data is controlled through **Media Control**.
+Upgraded to a newsroom/newswire visual hierarchy inspired by current airline press centres: lead release, chronological press grid, media resources, media contacts and subscription. Existing Newsroom data/messages are unchanged.
 
-`Media Control`
-→ `backend/SKANDI_CORE/publicContent.web`
-→ `backend/SKANDI_CORE/publicContent`
-→ `public.newsroom_categories`
-→ `public.newsroom_articles`
-→ `public.newsroom_media_assets`
-→ `public.newsroom_press_contacts`
+### Verification boundary
 
-The customer-facing Newsroom reads the same canonical records through the public-safe `getPublicNewsroomData` projection. It does not contain hard-coded posts, contacts or media-library entries.
-
-Physical media files used by Media Control remain owned by `backend/SKANDI_CORE/assets.web` / the Asset Library. The public Newsroom consumes only URLs and public editorial metadata that Media Control writes into the newsroom editorial records.
-
-Newsletter signup is not newsroom editorial content. It remains owned by the existing customer-session newsletter service (`NewsletterSubscribers`) through `subscribeCustomerNewsletter`.
-
-### Cross-layer messages
-
-HTML → page:
-- `NEWSROOM_READY`
-- `NEWSROOM_REFRESH`
-- `NEWSROOM_SUBSCRIBE`
-
-Page → HTML:
-- `NEWSROOM_HOST_READY`
-- `NEWSROOM_DATA`
-- `NEWSROOM_SUBSCRIBE_RESULT`
-- `NEWSROOM_ERROR`
-
-### B-011.2 changes
-
-- Preserved the B-011.1 Media Control ownership and public-content architecture unchanged.
-- Normalized the entire customer-facing Newsroom to the exact shared Home palette:
-  - `#022e64` primary navy
-  - `#0b3a7a` secondary navy
-  - `#285ca8` soft blue
-  - `#d7e6ff` light blue
-  - `#f6faff` pale surface
-  - `#f7faff` page background
-  - `#dbe3ef` border
-  - `#eef2f7` soft border
-  - `#111` primary text
-  - `#555` body text
-  - `#667085` muted text
-  - `#5FC7CF` cyan
-  - Home shadow values `0 8px 26px rgba(0,0,0,.08)` and `0 14px 34px rgba(0,0,0,.12)`.
-- Added the exact premium global-chrome support colors used by the customer header/footer family:
-  - `#03111f` ink
-  - `#061a30` ink-soft
-  - `#9de0e5` aqua-soft
-  - `#fbfaf6` ivory
-  - `#f5f1ea` porcelain
-  - `#d1bc98` champagne.
-- Removed close-but-noncanonical Newsroom-only color substitutes such as `#52657b`, `#dfe5ed`, `#edf1f5`, `#3d8890`, `#e8f1f8`, `#f9fbfc`, `#eaf2f8`, and `#edf3f8`.
-- Kept Newsroom's own editorial layout; this is palette convergence, not a Home layout copy.
-- Added one restrained aqua→champagne accent line to the dark subscription CTA so the page transitions cleanly into the premium global footer treatment.
-- Global header/footer remain owned by `masterPage.js`; Newsroom does not duplicate or recolor them.
-- No editorial content, Media Control contract, public-data contract, newsletter behavior, Supabase resource, or database data changed.
-
-### Current live-data note
-
-At verification time, the four existing Newsroom tables were present but contained zero records. The page therefore intentionally shows empty states until content is created/published from Media Control. No sample production data was inserted.
+Source contracts and syntax are checked locally. Wix publication, Supabase/RLS, staff/member session state and provider behavior require live testing after replacement and publication.
 
 ---
 
@@ -720,6 +653,22 @@ button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{
 @media(prefers-reduced-motion:reduce){
   *,*::before,*::after{animation:none!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
 }
+
+/* V12 NEWSROOM 2026.10.13 — airline/newswire presentation upgrade */
+:root{--nr-ink:#061a30;--nr-navy:#022e64;--nr-aqua:#5fc7cf;--nr-paper:#fff;--nr-bg:#f4f7fa;--nr-line:#dfe6ee;--nr-muted:#627286;--nr-shadow:0 18px 48px rgba(3,17,31,.08)}
+.newsroom{padding-bottom:96px;background:linear-gradient(180deg,#fff 0 520px,var(--nr-bg) 520px 100%)}
+.container{width:min(100%,1320px);padding:0 32px}
+.intro{margin:0 -32px;padding:76px 32px 56px;grid-template-columns:minmax(0,1.25fr) minmax(300px,.62fr);align-items:end;background:linear-gradient(115deg,#03111f 0%,#022e64 72%,#0b3a7a 100%);position:relative;overflow:hidden}
+.intro:after{content:"";position:absolute;width:420px;height:420px;border-radius:50%;right:-120px;top:-210px;border:1px solid rgba(95,199,207,.22);box-shadow:0 0 0 70px rgba(95,199,207,.04),0 0 0 140px rgba(95,199,207,.025)}
+.intro>*,.search-panel{position:relative;z-index:1}.intro .eyebrow{color:#9de0e5}.intro h1{color:#fff;font-size:clamp(44px,7vw,76px);font-weight:800;letter-spacing:-.058em}.intro-copy{color:rgba(255,255,255,.76);font-size:14px;max-width:430px}.search-panel{margin:-24px 0 28px;padding:10px;border-radius:8px;box-shadow:0 14px 36px rgba(3,17,31,.14);border-color:rgba(2,46,100,.10)}
+.tabs{margin:0 0 30px;padding:0;border:0;border-bottom:1px solid var(--nr-line);border-radius:0;background:transparent;gap:0}.tab{border-radius:0;min-height:44px;padding:0 18px;border-bottom:3px solid transparent}.tab.active{box-shadow:none;background:transparent;border-bottom-color:var(--nr-navy)}
+.feature{min-height:470px;margin-bottom:66px;border-radius:8px;grid-template-columns:minmax(0,1.55fr) minmax(330px,.65fr);box-shadow:var(--nr-shadow);border-color:var(--nr-line)}.feature-media,.feature-media img,.feature-media video,.feature-placeholder{min-height:470px}.feature-copy{padding:46px 40px}.feature h2{font-size:clamp(30px,3.4vw,46px);line-height:1.02}.feature p{font-size:12px;line-height:1.75}.kicker{font-size:9px;letter-spacing:.18em}.btn{border-radius:4px;min-height:40px;padding:0 16px;text-transform:uppercase;letter-spacing:.08em}
+.grid{grid-template-columns:repeat(12,1fr);gap:0;border-top:1px solid var(--nr-line)}.card{grid-column:span 4;border:0;border-radius:0;box-shadow:none;border-bottom:1px solid var(--nr-line);border-right:1px solid var(--nr-line);padding:0 18px 28px;margin-top:28px}.card:nth-child(3n){border-right:0}.card:hover{transform:none;box-shadow:none;border-color:var(--nr-line)}.card-media{height:210px;border-radius:5px}.card-body{padding:17px 0 0}.card h3{font-size:19px;line-height:1.18}.card p{font-size:10px;line-height:1.65}.meta{order:-1;margin:0 0 4px;color:#52667e;font-size:8px;text-transform:uppercase;letter-spacing:.08em}
+.section-head{margin-top:74px;border-top:1px solid var(--nr-line);padding-top:24px}.section-head h2{font-size:32px}.media-section{margin:74px -18px 0;padding:34px 18px 38px;border-radius:6px;background:#eef3f7;border-color:var(--nr-line)}.media-grid{grid-template-columns:repeat(4,minmax(0,1fr))}.media-card,.contact-card{border-radius:5px;box-shadow:none}.contact-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.subscribe{border-radius:7px;margin-top:78px;padding:38px 40px}
+.detail{max-width:980px;border-radius:7px}.detail-body{padding:40px 46px}.detail-content{font-family:Georgia,"Times New Roman",serif;font-size:16px;line-height:1.85;color:#26384c}.detail-body h2{font-family:Montserrat,sans-serif;font-size:clamp(30px,4vw,48px)}
+@media(max-width:940px){.container{padding:0 20px}.intro{margin:0 -20px;padding:60px 20px 46px}.feature{grid-template-columns:1fr}.grid{grid-template-columns:repeat(2,1fr)}.card{grid-column:auto;border-right:1px solid var(--nr-line)}.card:nth-child(even){border-right:0}.media-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:680px){.container{padding:0 14px}.intro{margin:0 -14px;padding:48px 14px 40px}.intro h1{font-size:43px}.search-panel{margin-top:-18px}.grid{display:block}.card{border-right:0;padding:0 0 24px;margin-top:24px}.card-media{height:220px}.feature{margin-bottom:44px}.feature-copy{padding:26px 20px}.media-section{margin-left:0;margin-right:0}.media-grid,.contact-grid{grid-template-columns:1fr}.subscribe{padding:28px 20px}.detail-body{padding:28px 20px}}
+
 </style>
 </head>
 <body>
@@ -744,7 +693,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{
 
     <nav class="tabs" id="tabs" aria-label="Newsroom categories"></nav>
 
-    <section class="feature" id="hero" data-section-id="newsroom-featured"></section>
+    <section class="feature" id="hero" data-section-id="newsroom-featured" data-media-slot="newsroom-featured"></section>
     <section class="grid" id="grid" data-section-id="newsroom-posts"></section>
     <article class="detail" id="detail" aria-live="polite"></article>
 
@@ -1130,6 +1079,25 @@ $("subBtn").addEventListener("click",()=>{
 post("NEWSROOM_READY",{});
 })();
 </script>
+
+<script>
+/* SKANDI V12 Presentation Runtime — Magazine Manager controlled presentation only. */
+(function(){
+  "use strict";
+  const PARENT="SKANDI_WIX_PARENT";
+  function safeUrl(v){try{const u=new URL(String(v||""),location.href);return u.protocol==="https:"?u.href:""}catch(_){return""}}
+  function apply(payload){
+    const blocks=Array.isArray(payload?.contentBlocks)?payload.contentBlocks:[];
+    const media=Array.isArray(payload?.mediaSlots)?payload.mediaSlots:[];
+    blocks.forEach(item=>{const id=String(item.contentId||"");if(!id)return;document.querySelectorAll(`[data-content-id="${CSS.escape(id)}"]`).forEach(el=>{if(item.value!==undefined)el.textContent=String(item.value??"")})});
+    media.forEach(item=>{const slot=String(item.slotId||"");if(!slot||String(item.ownership||"").toUpperCase()==="INVENTORY")return;const url=safeUrl(item.assetUrl||item.imageUrl);if(!url)return;document.querySelectorAll(`[data-media-slot="${CSS.escape(slot)}"]`).forEach(el=>{if(el.tagName==="IMG"){el.src=url;if(item.alt)el.alt=String(item.alt)}else{el.style.backgroundImage=`url("${url.replace(/"/g,"%22")}")`}})});
+  }
+  window.addEventListener("message",e=>{const m=e.data||{};if(m.source===PARENT&&m.type==="SKANDI_PRESENTATION_DATA")apply(m.payload||{})});
+  window.parent.postMessage({source:"SKANDI_PRESENTATION_RUNTIME",type:"SKANDI_PRESENTATION_READY",payload:{path:location.pathname}},"*");
+})();
+</script>
+
 </body>
 </html>
+
 ```
