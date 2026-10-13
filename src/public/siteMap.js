@@ -24,6 +24,7 @@ export const SITE_MAP = Object.freeze({
   support: "/about/support",
   newsroom: "/about/news-room",
   theStore: "/the-store",
+  giftCard: "/gift-card",
   storeCheckout: "/the-store/store-checkout",
   storeConfirmation: "/the-store/store-checkout/order-confirmation",
   ourNetwork: "/about/our-network",
@@ -43,7 +44,6 @@ export const SITE_MAP = Object.freeze({
   docunet: "/riaintra/success-factors/docunet",
   serviceDesk: "/riaintra/success-factors/helpdesk",
   mediaControl: "/riaintra/success-factors/media-control",
-  magazineManager: "/riaintra/success-factors/media-control",
   storeControl: "/riaintra/success-factors/store-control",
   payroll: "/riaintra/success-factors/payroll"
 });
@@ -167,3 +167,4 @@ export function isSafeInternalRoute(value) {
     return decoded.startsWith("/") && !decoded.startsWith("//") && !invalid(decoded);
   } catch (_) { return false; }
 }
+
