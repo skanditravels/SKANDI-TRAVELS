@@ -1,0 +1,21 @@
+import { Permissions, webMethod } from "@wix/web-methods";
+import {
+ getDocuNetAdminBootstrapCore,searchDocuNetAdminDocumentsCore,createDocuNetUploadCore,finalizeDocuNetUploadCore,
+ saveDocuNetMetadataCore,setDocuNetDocumentStatusCore,deleteDocuNetDocumentCore,saveDocuNetCategoryCore,
+ deleteDocuNetCategoryCore,searchDocuNetAuditCore,getDocuNetAdminPreviewCore,getDocuNetViewerBootstrapCore,
+ getDocuNetDocumentAccessCore,acknowledgeDocuNetDocumentCore
+} from "backend/SKANDI_CORE/docuNet";
+export const getDocuNetAdminBootstrap=webMethod(Permissions.SiteMember,getDocuNetAdminBootstrapCore);
+export const searchDocuNetAdminDocuments=webMethod(Permissions.SiteMember,searchDocuNetAdminDocumentsCore);
+export const createDocuNetUpload=webMethod(Permissions.SiteMember,createDocuNetUploadCore);
+export const finalizeDocuNetUpload=webMethod(Permissions.SiteMember,finalizeDocuNetUploadCore);
+export const saveDocuNetMetadata=webMethod(Permissions.SiteMember,saveDocuNetMetadataCore);
+export const setDocuNetDocumentStatus=webMethod(Permissions.SiteMember,setDocuNetDocumentStatusCore);
+export const deleteDocuNetDocument=webMethod(Permissions.SiteMember,deleteDocuNetDocumentCore);
+export const saveDocuNetCategory=webMethod(Permissions.SiteMember,saveDocuNetCategoryCore);
+export const deleteDocuNetCategory=webMethod(Permissions.SiteMember,deleteDocuNetCategoryCore);
+export const searchDocuNetAudit=webMethod(Permissions.SiteMember,searchDocuNetAuditCore);
+export const getDocuNetAdminPreview=webMethod(Permissions.SiteMember,getDocuNetAdminPreviewCore);
+export const getDocuNetViewerBootstrap=webMethod(Permissions.SiteMember,getDocuNetViewerBootstrapCore);
+export const getDocuNetDocumentAccess=webMethod(Permissions.SiteMember,getDocuNetDocumentAccessCore);
+export const acknowledgeDocuNetDocument=webMethod(Permissions.SiteMember,acknowledgeDocuNetDocumentCore);
