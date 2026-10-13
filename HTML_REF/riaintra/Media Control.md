@@ -1,4 +1,4 @@
-# Magazine Manager
+# Media Control
 
 ## INFO / LOG
 
@@ -13,7 +13,7 @@
 
 ### V12 repair
 
-Renames Media Control to Magazine Manager while preserving VOY and Newsroom control. Adds Website Planner, Page Copy and Hero/Card Media registries using the existing magazine_manager voy_entities persistence model. Inventory-owned facts/media are explicitly outside this editor.
+Renames Magazine Manager to Media Control while preserving VOY and Newsroom control. Adds Website Planner, Page Copy and Hero/Card Media registries using the existing magazine_manager voy_entities persistence model. Inventory-owned facts/media are explicitly outside this editor.
 
 ### Verification boundary
 
@@ -30,7 +30,7 @@ Source contracts and syntax are checked locally. Wix publication, Supabase/RLS, 
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#022e64" />
-<title>Magazine Manager · SKANDI Publishing & Website Planning</title>
+<title>Media Control</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800;900&family=Montserrat:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@600;700;800;900&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -1577,7 +1577,7 @@ textarea{min-height:74px!important;padding:7px 8px!important;line-height:1.45}
     <div class="sk-chrome-brand">
       <img class="sk-chrome-logo-left" src="https://static.wixstatic.com/media/394052_adb17db3fe834447aa80866e13966034~mv2.png" alt="SKANDI Travels" />
       <div class="sk-chrome-page">
-        <div class="sk-chrome-title" id="skChromePageName">MAGAZINE MANAGER</div>
+        <div class="sk-chrome-title" id="skChromePageName">MEDIA CONTROL</div>
         <div class="sk-chrome-subtitle" id="skChromePageSubtitle">VOY · Newsroom · Website planning · Media control</div>
       </div>
     </div>
@@ -1650,7 +1650,7 @@ textarea{min-height:74px!important;padding:7px 8px!important;line-height:1.45}
 <header class="mm-appbar" aria-label="Magazine Manager navigation">
   <div class="mm-brand">
     <div class="mm-brand-mark" aria-hidden="true">MM</div>
-    <div class="mm-brand-copy"><b>Magazine Manager</b><span>VOY Publishing Edition</span></div>
+    <div class="mm-brand-copy"><b>MEDIA MANAGER</b><span>VOY · Newsroom · Website planning · Media control</span></div>
   </div>
   <nav class="mm-modules" id="mmModules" aria-label="Primary modules"></nav>
   <div class="mm-account">
