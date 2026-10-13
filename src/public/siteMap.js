@@ -20,6 +20,7 @@ export const SITE_MAP = Object.freeze({
   skandiCollection: "/skandi-collection",
   voy: "/voy-magazine",
   club: "/skandi-club",
+  forgotPassword: "/forgot-password",
   about: "/about",
   support: "/about/support",
   newsroom: "/about/news-room",
@@ -33,6 +34,7 @@ export const SITE_MAP = Object.freeze({
   riaintra: "/riaintra",
   staffLogin: "/riaintra",
   successFactors: "/riaintra/success-factors",
+  legalInternal: "/riaintra/success-factors/legal-internal",
   alteaLaunchpad: "/riaintra/success-factors/altea",
   alteaReservations: "/riaintra/success-factors/altea/reservations",
   opsControl: "/riaintra/success-factors/altea/ops",
@@ -116,6 +118,15 @@ export const GLOBAL_CHROME = Object.freeze({
     collapsedHeight: 52,
     maxHeight: 700
   }),
+  riaintraFooter: Object.freeze({
+    system: "RIAINTRA",
+    role: "FOOTER",
+    file: "/embed/RIAINTRA-Global-Footer.html",
+    source: "SKANDI_RIAINTRA_FOOTER",
+    elementIds: Object.freeze(["#riaintraFooterEmbed", "#riaintraFooter"]),
+    collapsedHeight: 0,
+    maxHeight: 180
+  }),
   alteaHeader: Object.freeze({
     system: "ALTEA",
     role: "HEADER",
@@ -167,4 +178,3 @@ export function isSafeInternalRoute(value) {
     return decoded.startsWith("/") && !decoded.startsWith("//") && !invalid(decoded);
   } catch (_) { return false; }
 }
-
