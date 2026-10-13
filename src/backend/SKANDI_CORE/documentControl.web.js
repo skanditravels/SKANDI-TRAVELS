@@ -1,0 +1,13 @@
+import { Permissions, webMethod } from "@wix/web-methods";
+import {
+ getDocumentControlBootstrapCore,listDocumentControlDataCore,createControlledDocumentCore,issueControlledDocumentCore,
+ listMyBookingDocumentsCore,acknowledgeCustomerDocumentCore,getTransportComplianceBootstrapCore,verifyTransportComplianceCore
+} from "backend/SKANDI_CORE/documentControl";
+export const getDocumentControlBootstrap=webMethod(Permissions.SiteMember,getDocumentControlBootstrapCore);
+export const listDocumentControlData=webMethod(Permissions.SiteMember,listDocumentControlDataCore);
+export const createControlledDocument=webMethod(Permissions.SiteMember,createControlledDocumentCore);
+export const issueControlledDocument=webMethod(Permissions.SiteMember,issueControlledDocumentCore);
+export const listMyBookingDocuments=webMethod(Permissions.SiteMember,listMyBookingDocumentsCore);
+export const acknowledgeCustomerDocument=webMethod(Permissions.SiteMember,acknowledgeCustomerDocumentCore);
+export const getTransportComplianceBootstrap=webMethod(Permissions.SiteMember,getTransportComplianceBootstrapCore);
+export const verifyTransportCompliance=webMethod(Permissions.SiteMember,verifyTransportComplianceCore);
