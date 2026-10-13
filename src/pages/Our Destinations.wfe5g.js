@@ -21,7 +21,7 @@ $w.onReady(function () {
         payload: mapData
       });
     } catch (error) {
-      console.error("[Our Network] Could not load public network payload", error);
+      console.error("[Our Destinations] Could not load public network payload", error);
       mapHtml.postMessage({
         source: PARENT_SOURCE,
         type: "SKANDI_MAP_ERROR",
