@@ -398,10 +398,10 @@ Source contracts and syntax are checked locally. Wix publication, Supabase/RLS, 
         </button>
         <div class="uniform-staff"><span id="staff-name">Staff</span><span>•</span><strong id="wallet-points">0 points</strong></div>
         <nav class="uniform-utilities" aria-label="Uniform actions">
+          <button type="button" data-action="admin-login">Admin Login</button>
           <button type="button" data-action="sync-uniform">Sync</button>
           <button type="button" data-action="route-regulations">Uniform Regulations</button>
           <button type="button" data-action="route-orders">Orders (<span id="orders-count">0</span>)</button>
-          <button type="button" data-action="admin-login">Admin Login</button>
           <button type="button" data-action="route-favorites">Saved (<span data-favorites-count>0</span>)</button>
           <button type="button" data-action="route-bag">Bag (<span data-bag-count>0</span>)</button>
         </nav>
