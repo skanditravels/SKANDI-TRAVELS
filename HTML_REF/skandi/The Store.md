@@ -3,19 +3,41 @@
 - Canonical source identity: `/HTML_REF/skandi/The Store.md`
 - System area: `SKANDI`
 - Wix page/controller: `/src/pages/The Store.iv8g6.js`
-- Customer/internal route: `/the-store`
+- Customer route: `/the-store`
 - Installed HTML element: `#skandiStoreEmbed`
-- Complete replacement embed supplied as: `/embed/The-Store.html` (paste into that Wix HTML component).
-- Canonical backend chain: `backend/SKANDI_CORE/storefront.web.js → storefront.js; storeCartV2.web.js → Wix Current Cart V2; customerSupport.web.js → customerSupport.js`.
-- Authority: Public catalog; Wix visitor/member owns the current cart. Existing support boundary retained.
-- Status: V12 repair candidate; VERIFIED local tests / STATICALLY VERIFIED source contracts / REQUIRES LIVE TEST.
-- Last source verification: 2026-10-08. Prepared against `skanditravels/SKANDI-TRAVELS`, `main`, commit `d239421165cc208790755b2d2a32cc3c369a9ca5`, retaining the approved V12 repairs.
-- Intended source only: this package has not changed published Wix, GitHub or Supabase.
-- Dependencies and live gates: existing masterPage/siteMap/staff/provider dependencies; rebuild and publish matching page, facade, core and embed together. See README for exact installation and live checks.
+- Complete replacement embed: `/embed/The-Store.html`
+- Canonical backend chain: `backend/SKANDI_CORE/storefront.web.js → storefront.js`; `storeCartV2.web.js → Wix Current Cart V2`; checkout gift-card redemption remains owned by `storeCheckout.web.js → storeCheckout.js`.
+- Gift Card purchase authority: native Wix Gift Cards app/page at `/gift-card`; SKANDI does not create or maintain a parallel stored-value ledger.
+- Authority: public catalog; Wix visitor/member owns the current cart. Existing support, catalog, cart and checkout boundaries remain in place.
+- Status: STATICALLY VERIFIED / REQUIRES LIVE TEST.
+- Last source verification: 2026-10-13 against `skanditravels/SKANDI-TRAVELS`, `main`, head `77845115c0d3a839a845522f3ecbfbfd69c82153`, preserving the approved 2026-10-07 Store repair and 2026-10-08 image repair.
+- Intended source only: this package does not modify GitHub, deployed Wix code, Wix Gift Card settings or Supabase.
+
+## 2026-10-07 — V12 complete-chain repair
+
+Uses the published #skandiStoreEmbed ID, preserves the approved V12 public catalog and support bridge, prevents repeat add clicks, acknowledges cart updates, refreshes catalog cache, validates internal navigation, and adds restrained card/focus styling.
+
+Local verification covers syntax, imports/exports, embed boot, provider contracts with mocks, stale replies, cart failure propagation, same-instance order submission deduplication, order ownership boundaries, administrator authorization and inventory revision conflicts. These tests do not prove a live provider request, payment, data write or production build. No database migration is required.
+
+## 2026-10-08 — V12 Store image repair
+
+Confirmed against the current main source and live Wix Catalog V3 read-only responses: all 30 products have main media, with 24 visible products. REST returns `media.main.image.url`; the SDK returns `media.main.image` as a `wix:image://v1/...` string. The existing core read only `media.main.url` / item `url`, so it discarded these images before sending the catalog to the embed. Category images were also omitted by normalization.
+
+The shared storefront core now normalizes SDK image strings and REST image objects into browser URLs for public product cards, detail media, category images and Store Control thumbnails. Requests include the documented THUMBNAIL field as an additional fallback. Malformed image identifiers are skipped safely; video entries use their thumbnail. Public visibility filtering and the visitor-context API boundary remain intact.
+
+The Store HTML now retains explicit image candidates and accepts SDK strings. One error handler retries the remaining candidates before removing an exhausted image; previously a second handler immediately removed images being retried by the first. CSS background URLs are escaped for their enclosing HTML attribute. Existing layout, routes, cart and support contracts remain intact. Replace the complete HTML in `#skandiStoreEmbed` using `/embed/The-Store.html`. The Store page controller and public facade do not need replacement.
+
+VERIFIED: live read-only products/categories queries returned HTTP 200; representative original and thumbnail image URLs returned HTTP 200 image/jpeg. Local regression tests reproduced the original empty image response, then passed with real REST data and SDK-shaped fixtures, full embed rendering, fallback exhaustion and category CSS URLs. STATICALLY VERIFIED: source syntax/imports/exports/contracts. REQUIRES LIVE TEST: rebuild/publish the supplied files and confirm images in the published Store. Local DOM tests do not prove a published Wix SDK execution. No external code or data was changed.
+
+## 2026-10-13 — Wix Gift Cards Store integration
+
+Added a first-class `Gift Cards` Store entry in desktop navigation, quick links, footer and mobile navigation. The entry navigates to the native Wix Gift Card page at `/gift-card`, so Wix remains responsible for gift-card purchase, issuance, balance, recipient delivery and scheduled delivery. No fake denomination/product record and no SKANDI stored-value table were introduced.
+
+The custom Store checkout is extended separately to apply and remove a Wix Gift Card against the visitor/member current Cart V2. The native Wix Gift Cards app must be installed and activated, and its Gift Card page slug must be `/gift-card`, before this Store link is published.
+
+STATICALLY VERIFIED: Store navigation uses the existing `STOREFRONT_NAVIGATE` boundary and the route passes the existing internal-route validation. REQUIRES LIVE TEST: activate/configure Wix Gift Cards, publish, purchase a real test card, confirm recipient delivery, then redeem/remove it in the custom Store checkout.
 
 ## Historical INFO / LOG (preserved)
-
-Earlier route, component, controller and status claims below are historical; the current INFO above and latest repair entry supersede conflicting metadata.
 
 # INFO / LOG — THE STORE
 
@@ -70,24 +92,6 @@ Recovered the existing B-011.32 storefront.web facade and controller matching th
 - Public catalog reads use the installed Wix Stores V3 SDK without elevation or merchant-data fields. Product options are returned to the existing HTML; selection resolves the actual matching visible variant before Cart V2 mutation. All required options must be selected.
 - Cart refresh, selected options, custom `/the-store/store-checkout` routing and support messages remain intact. Support is handled by the existing customerSupport owner. Provider failures produce existing error messages, not a fabricated empty cart.
 - All executable HTML, CSS, assets, labels and layout in this record are unchanged. Eight controlled Store checks pass. Live Wix element assignment, installed dependency parity, catalog/inventory permissions, payment checkout and rendering still require live tests. No products, orders, customer records or live Wix code were modified.
-
-## 2026-10-07 — V12 complete-chain repair
-
-Uses the published #skandiStoreEmbed ID, preserves the approved V12 public catalog and support bridge, prevents repeat add clicks, acknowledges cart updates, refreshes catalog cache, validates internal navigation, and adds restrained card/focus styling.
-
-Local verification covers syntax, imports/exports, embed boot, provider contracts with mocks, stale replies, cart failure propagation, same-instance order submission deduplication, order ownership boundaries, administrator authorization and inventory revision conflicts. These tests do not prove a live provider request, payment, data write or production build. No database migration is required.
-
-## 2026-10-08 — V12 Store image repair
-
-Confirmed against the current main source and live Wix Catalog V3 read-only responses: all 30 products have main media, with 24 visible products. REST returns `media.main.image.url`; the SDK returns `media.main.image` as a `wix:image://v1/...` string. The existing core read only `media.main.url` / item `url`, so it discarded these images before sending the catalog to the embed. Category images were also omitted by normalization.
-
-The shared storefront core now normalizes SDK image strings and REST image objects into browser URLs for public product cards, detail media, category images and Store Control thumbnails. Requests include the documented THUMBNAIL field as an additional fallback. Malformed image identifiers are skipped safely; video entries use their thumbnail. Public visibility filtering and the visitor-context API boundary remain intact.
-
-The Store HTML now retains explicit image candidates and accepts SDK strings. One error handler retries the remaining candidates before removing an exhausted image; previously a second handler immediately removed images being retried by the first. CSS background URLs are escaped for their enclosing HTML attribute. Existing layout, routes, cart and support contracts remain intact. Replace the complete HTML in `#skandiStoreEmbed` using `/embed/The-Store.html`. The Store page controller and public facade do not need replacement.
-
-VERIFIED: live read-only products/categories queries returned HTTP 200; representative original and thumbnail image URLs returned HTTP 200 image/jpeg. Local regression tests reproduced the original empty image response, then passed with real REST data and SDK-shaped fixtures, full embed rendering, fallback exhaustion and category CSS URLs. STATICALLY VERIFIED: source syntax/imports/exports/contracts. REQUIRES LIVE TEST: rebuild/publish the supplied files and confirm images in the published Store. Local DOM tests do not prove a published Wix SDK execution. No external code or data was changed.
-
-## Complete intended HTML
 
 ```html
 <!doctype html>
@@ -635,6 +639,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
       <button id="categoriesBtn">Categories</button>
       <button data-category="SKANDI">SKANDI collection</button>
       <button data-category="Gift">Gifts</button>
+      <button data-open-path="/gift-card">Gift Cards</button>
       <button data-category="Sale">Offers</button>
     </nav>
     <div class="header-actions">
@@ -660,7 +665,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
       </label>
       <input id="quickSearch" class="hidden" aria-hidden="true" tabindex="-1"/>
       <div class="quick-links" id="topTabs">
-        <button data-category="Travel Essentials">For the journey</button><button data-category="Luggage">Luggage</button><button data-category="Beach">Beach</button><button data-category="Family">Family</button><button data-category="New">New arrivals</button>
+        <button data-category="Travel Essentials">For the journey</button><button data-category="Luggage">Luggage</button><button data-category="Beach">Beach</button><button data-category="Family">Family</button><button data-open-path="/gift-card">Gift Cards</button><button data-category="New">New arrivals</button>
       </div>
     </div>
   </div>
@@ -1018,7 +1023,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
       <div class="footer-brand"><img id="storeFooter" data-master-logo="storeFooter" src="https://static.wixstatic.com/media/394052_cd31153a91694b14a27c5f756f8089bd~mv2.png" alt="SKANDI The Store"><span>The Store</span></div>
       <p>Travel essentials, luggage, gifts and SKANDI products.</p>
     </div>
-    <div><h4>Shop</h4><button data-route="shop">All products</button><button id="footerCategoriesBtn">Categories</button><button data-category="SKANDI">SKANDI collection</button><button data-category="Gift">Gifts</button></div>
+    <div><h4>Shop</h4><button data-route="shop">All products</button><button id="footerCategoriesBtn">Categories</button><button data-category="SKANDI">SKANDI collection</button><button data-category="Gift">Gifts</button><button data-open-path="/gift-card">Gift Cards</button></div>
     <div><h4>Travel</h4><button data-category="Luggage">Luggage</button><button data-category="Travel Essentials">Travel essentials</button><button data-category="Beach">Beach</button><button data-category="Family">Family</button></div>
     <div><h4>Support</h4><button data-route="support">Customer service</button><button data-route="orders">My orders</button><button data-open-path="/terms">Terms</button><button data-open-path="/privacy">Privacy</button><button id="refreshStoreBtn">Refresh store</button></div>
   </div>
@@ -1029,7 +1034,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
   <div class="mobile-nav-head"><div class="brand-mark"><img data-master-logo="storeHeader" src="https://static.wixstatic.com/media/394052_eaf2188b7f7e48468fa25d61f8881b10~mv2.png" alt="SKANDI The Store"></div><div class="brand-divider"></div><button class="close-button" data-close="mobile">×</button></div>
   <div class="mobile-nav-body" id="mobileNavList">
     <div class="mobile-nav-heading">Store</div>
-    <button data-route="home">Home</button><button data-route="shop">All products</button><button id="mobileCategoriesBtn">Categories</button><button data-category="SKANDI">SKANDI collection</button><button data-category="Gift">Gifts</button><button data-category="Sale">Offers</button>
+    <button data-route="home">Home</button><button data-route="shop">All products</button><button id="mobileCategoriesBtn">Categories</button><button data-category="SKANDI">SKANDI collection</button><button data-category="Gift">Gifts</button><button data-open-path="/gift-card">Gift Cards</button><button data-category="Sale">Offers</button>
     <div class="mobile-nav-heading">My store</div>
     <button data-route="saved">Saved products</button><button data-route="bag">Shopping bag</button><button data-route="orders">My orders</button><button data-route="support">Customer service</button>
   </div>
@@ -1850,4 +1855,3 @@ requestStorefront("initial");
 </body>
 </html>
 ```
-
