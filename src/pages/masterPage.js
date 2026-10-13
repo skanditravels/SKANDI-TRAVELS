@@ -11,6 +11,7 @@ import { local } from "wix-storage-frontend";
 import { getCustomerHeaderSession, subscribeCustomerNewsletter } from "backend/SKANDI_CORE/customerSession.web";
 import { getStaffPortalSession } from "backend/SKANDI_CORE/staffAuth.web";
 import { getPublicTravelInfoPayload } from "backend/SKANDI_CORE/publicContent.web";
+import { getPublicPagePresentation } from "backend/SKANDI_CORE/presentation.web";
 import { SITE_MAP, APP_ROUTES, GLOBAL_CHROME, isSafeInternalRoute } from "public/siteMap";
 
 
@@ -27,6 +28,15 @@ const ALTEA_HEADER_SOURCE = GLOBAL_CHROME.alteaHeader.source;
 const ALTEA_FOOTER_SOURCE = GLOBAL_CHROME.alteaFooter.source;
 const SPECIAL_ASSISTANCE_SOURCE = "SKANDI_ASSISTANCE_PAGE";
 const SCROLL_TOP_MESSAGE_TYPES = new Set(["MASTER_SCROLL_TOP", "SKANDI_SCROLL_TOP", "SKANDI_VIEW_OPENED", "SKANDI_PAGE_OPENED"]);
+const CONTENT_RESIZE_SOURCES = new Set([
+  "SKANDI_INSURANCE_PAGE",
+  "SKANDI_PASSPORT_VISA_PAGE",
+  "SKANDI_ASSISTANCE_PAGE",
+  "SKANDI_BAGGAGE_PAGE",
+  "SKANDI_SIGNATURE_COLLECTION"
+]);
+const CONTENT_RESIZE_MIN = 680;
+const CONTENT_RESIZE_MAX = 30000;
 
 
 const MASTER_CONFIG = Object.freeze({
@@ -183,7 +193,7 @@ const MASTER_CONFIG = Object.freeze({
         { id:"helpdesk", label:"HelpDesk", path:SITE_MAP.serviceDesk }
       ]),
       managementNav:Object.freeze([
-        { id:"magazine-manager", label:"Media Manager", path:SITE_MAP.magazineManager },
+        { id:"magazine-manager", label:"Magazine Manager", path:SITE_MAP.mediaControl || SITE_MAP.magazineManager },
         { id:"payroll", label:"Payroll", path:SITE_MAP.payroll }
       ])
     }),
@@ -231,8 +241,9 @@ const GROUPTALK_CHROME_FREE_PATHS = Object.freeze([
 
 let alteaRuntimeContext = { workArea:"A", crypticActive:false, officeId:"", lmcMode:false };
 let customerSettings = readCustomerSettings();
-const wiredEmbeds = new Set();
+const wiredEmbeds = new WeakSet();
 let locationChangeWired = false;
+let presentationState = { path:"", value:null, promise:null };
 
 const CHROME_BY_SOURCE = Object.freeze(Object.fromEntries(
   Object.values(GLOBAL_CHROME).map(definition => [definition.source, definition])
@@ -259,6 +270,26 @@ function persistCustomerSettings(value = {}) {
   customerSettings = normalizeCustomerSettings(value);
   try { local.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(customerSettings)); } catch (_) {}
   return { ...customerSettings };
+}
+
+async function currentPagePresentation({ force = false } = {}) {
+  const path = currentPathString();
+  if (!force && presentationState.path === path && presentationState.value) return presentationState.value;
+  if (!force && presentationState.path === path && presentationState.promise) return presentationState.promise;
+
+  const promise = getPublicPagePresentation({ path })
+    .then(result => {
+      const value = result || { ok:true, path, contentBlocks:[], mediaSlots:[], pagePlans:[] };
+      presentationState = { path, value, promise:null };
+      return value;
+    })
+    .catch(error => {
+      if (presentationState.path === path) presentationState = { path, value:null, promise:null };
+      throw error;
+    });
+
+  presentationState = { path, value:null, promise };
+  return promise;
 }
 
 
@@ -560,6 +591,17 @@ async function handleMasterMessage(embed, message = {}) {
   }
 
 
+
+  if (type === "SKANDI_PRESENTATION_READY") {
+    try {
+      const result = await currentPagePresentation();
+      postToEmbed(embed, "SKANDI_PRESENTATION_DATA", result || { ok:true, contentBlocks:[], mediaSlots:[] });
+    } catch (error) {
+      console.warn("[MasterPage] Presentation projection unavailable.", error);
+    }
+    return true;
+  }
+
   if (type === "MASTER_ASSETS_REQUEST") {
     postToEmbed(embed, "SKANDI_MASTER_ASSETS", MASTER_CONFIG.brand.assets);
     return true;
@@ -572,6 +614,7 @@ async function handleMasterMessage(embed, message = {}) {
     navigate(message.path || payload.path || "");
     return true;
   }
+
 
 
   if (source === SPECIAL_ASSISTANCE_SOURCE) {
@@ -590,14 +633,7 @@ async function handleMasterMessage(embed, message = {}) {
       navigate(message.path || payload.path || "");
       return true;
     }
-    if (type === "SKANDI_CONTENT_RESIZE") {
-      const requested = Number(payload.height);
-      const height = Number.isFinite(requested) ? Math.max(680, Math.min(30000, Math.round(requested))) : 680;
-      try { if ("height" in embed) embed.height = height; } catch (_) {}
-      return true;
-    }
   }
-
 
   if (type === "ALTEA_SYSTEM_CONTEXT" && isInternalPath()) {
     const next = {
@@ -617,6 +653,15 @@ async function handleMasterMessage(embed, message = {}) {
       ...Object.fromEntries(Object.entries(next).filter(([, value]) => Boolean(value)))
     };
     await pushAlteaChromeState();
+    return true;
+  }
+
+
+  if (type === "SKANDI_CONTENT_RESIZE" && CONTENT_RESIZE_SOURCES.has(source)) {
+    const requested = Number(payload.height);
+    if (!Number.isFinite(requested)) return true;
+    const height = Math.max(CONTENT_RESIZE_MIN, Math.min(CONTENT_RESIZE_MAX, Math.round(requested)));
+    try { if ("height" in embed) embed.height = height; } catch (_) {}
     return true;
   }
 
@@ -774,15 +819,20 @@ async function handleMasterMessage(embed, message = {}) {
 
 function wireHtmlComponent(embed) {
   if (!isHtmlEmbed(embed)) return;
-  const key = embed.id || String(embed);
-  if (wiredEmbeds.has(key)) return;
-  wiredEmbeds.add(key);
+  if (wiredEmbeds.has(embed)) return;
+  wiredEmbeds.add(embed);
+  const key = embed.id || "unknown embed";
   embed.onMessage(async event => {
     try { await handleMasterMessage(embed, event?.data || {}); }
     catch (error) { console.error(`[MasterPage] Message handling failed for ${embed.id || key}.`, error); }
   });
   // Initial push is useful for components that are already loaded; components also request it when ready.
   pushMasterConfig(embed);
+  if (!isInternalPath()) {
+    currentPagePresentation()
+      .then(result => postToEmbed(embed, "SKANDI_PRESENTATION_DATA", result || { ok:true, contentBlocks:[], mediaSlots:[] }))
+      .catch(() => {});
+  }
 }
 
 
