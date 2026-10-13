@@ -1,4 +1,4 @@
-v// src/public/siteMap.js
+// src/public/siteMap.js
 // SKANDI canonical route + global chrome/auth-popup registry — B-011.29
 // Single source of truth for public/internal routes and global header/footer embeds.
 
