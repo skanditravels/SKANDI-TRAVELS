@@ -1,931 +1,1744 @@
-# SKANDI Uniform Control ERP
+# SKANDI Uniform Center
 
-**STATUS:** READY  
-**SLUG:** `/riaintra/success-factors/uniform-control`  
-**WIX PAGE:** Uniform Control.yx92b.js  
-**AREA:** RIAINTRA  
-**LIVE HTML:** YES  
-**ELEMENT:** `uniformControlEmbed`  
-**LAST SYNCED:** 2026-09-18
+## INFO / LOG
 
-### HOW TO USE
+- **Status:** V12 repair prepared — STATICALLY VERIFIED / REQUIRES LIVE TEST
+- **System:** RIAINTRA
+- **Route:** `/riaintra/success-factors/uniform`
+- **Wix page:** `Uniform Center.lukfc`
+- **HTML component:** `#uniformCenterEmbed`
+- **Child source:** `SKANDI_UNIFORM_EMPLOYEE`
+- **Repository baseline:** `skanditravels/SKANDI-TRAVELS` main `4163618a81fed71d7114ac55d3fa003421f145b0`
+- **Prepared:** 2026-10-13
 
-***STATUS (OWNER): "TODO", "IN PROGRESS", "NEEDS REVIEW", "REVISIONS NEEDED", "READY", "LIVE", "ARCHIVED" STATUS (AGENT): "TODO", "IN PROGRESS", "REVISIONS NEEDED", "READY".***
+### V12 repair
 
-## COMMENT SECTION
-(START ON A NEW ROW, LOG IF A CHANGE IS MADE THAT REQUIRES ATTENTION)
+Added server-authoritative Admin Login routing to Uniform Control, an explicit unauthorized dialog, and resilient startup synchronization. Existing employee catalog/order/policy functionality is preserved.
 
-- 2026-09-20 — Read-only GitHub audit found the repository page controller was not runtime-ready: it contained an invalid `.import`, imported wrapper names not exported by the canonical Uniform core, and did not execute the Asset Library message actions emitted by the current HTML. The package repairs the page bridge and adds the missing canonical Uniform web facade. GitHub was not modified.
-... END
+### Verification boundary
 
----
-
-## TECHNICAL INFO / LOG
-
-> **Canonical reference path:** `/HTML_REF/riaintra/uniform-control.md`  
-> **Generated locally:** 2026-09-18  
-> **Verification level:** STATICALLY VERIFIED FROM UPLOADED SOURCE SET / REQUIRES LIVE TEST FOR RUNTIME DEPENDENCIES
-
-### Source Identity
-
-- **Source file identity:** `/HTML_REF/riaintra/uniform-control.md`
-- **Primary uploaded source:** `SKANDI_B011_Uniform_Control_Sync_2026-09-20/embed/SKANDI-Uniform-Control.html`
-- **Display / page name:** SKANDI Uniform Control ERP
-- **System area:** `RIAINTRA`
-- **Wix page filename:** `Uniform Control.yx92b.js`
-- **Wix route / slug:** `/riaintra/success-factors/uniform-control`
-- **Wix HTML element ID:** `uniformControlEmbed`
-- **Current status:** READY
-- **Live HTML:** YES
-- **Source-of-truth status:** GENERATED HTML_REF CANDIDATE. The executable payload is sourced from the selected uploaded file; live deployment parity still requires verification.
-- **Last synced:** 2026-09-18
-
-### Ownership and Dependency Chain
-
-`/HTML_REF/riaintra/uniform-control.md`
-→ live Wix HTML / `uniformControlEmbed`
-→ `SKANDI_B011_Uniform_Control_Sync_2026-09-20/src/pages/Uniform Control.yx92b.js`
-→ `backend/SKANDI_CORE/uniform.web.js` + `backend/SKANDI_CORE/uniform.web`
-→ `backend/SKANDI_CORE/uniform.js`
-→ Supabase / Wix
-
-### Linked Wix Page Controller
-
-- `SKANDI_B011_Uniform_Control_Sync_2026-09-20/src/pages/Uniform Control.yx92b.js`
-
-### Canonical Backend Facade(s)
-
-- `backend/SKANDI_CORE/uniform.web.js`
-- `backend/SKANDI_CORE/uniform.web`
-
-### Canonical Backend Core Implementation(s)
-
-- `backend/SKANDI_CORE/uniform.js`
-
-### Canonical Backend Import Presence Check
-
-- `SKANDI_B011_Uniform_Control_Sync_2026-09-20/src/backend/SKANDI_CORE/uniform.js` → `backend/SKANDI_CORE/supabaseServer.js`: **NOT PRESENT IN UPLOADED SOURCE SET**
-- `SKANDI_B011_Uniform_Control_Sync_2026-09-20/src/backend/SKANDI_CORE/uniform.js` → `backend/SKANDI_CORE/staffAuth.js`: **NOT PRESENT IN UPLOADED SOURCE SET**
-- `SKANDI_B011_Uniform_Control_Sync_2026-09-20/src/backend/SKANDI_CORE/uniform.js` → `backend/SKANDI_CORE/assets.js`: **NOT PRESENT IN UPLOADED SOURCE SET**
-- `SKANDI_B011_Uniform_Control_Sync_2026-09-20/src/backend/SKANDI_CORE/uniform.js` → `backend/SKANDI_CORE/platformValidation.js`: **NOT PRESENT IN UPLOADED SOURCE SET**
-- `SKANDI_B011_Uniform_Control_Sync_2026-09-20/src/backend/SKANDI_CORE/uniform.js` → `backend/SKANDI_CORE/platformErrors.js`: **NOT PRESENT IN UPLOADED SOURCE SET**
-- `SKANDI_B011_Uniform_Control_Sync_2026-09-20/src/backend/SKANDI_CORE/uniform.web.js` → `backend/SKANDI_CORE/uniform.js`: **PRESENT IN UPLOADED SOURCE SET**
-- `SKANDI_B011_Uniform_Control_Sync_2026-09-20/src/pages/Uniform Control.yx92b.js` → `backend/SKANDI_CORE/uniform.web`: **PRESENT IN UPLOADED SOURCE SET**
-
-### Relevant Supabase Resources
-
-NOT VERIFIED FROM UPLOADED SOURCE SET
-
-### External API / Provider Dependencies
-
-- **Supabase:** detected in `SKANDI_B011_Uniform_Control_Sync_2026-09-20/HTML_REF/riaintra/Uniform Control.md`, `SKANDI_B011_Uniform_Control_Sync_2026-09-20/src/backend/SKANDI_CORE/uniform.js`, `SKANDI_B011_Uniform_Control_Sync_2026-09-20/src/pages/Uniform Control.yx92b.js`
-- **Wix:** detected in `SKANDI_B011_Uniform_Control_Sync_2026-09-20/embed/SKANDI-Uniform-Control.html`, `SKANDI_B011_Uniform_Control_Sync_2026-09-20/HTML_REF/riaintra/Uniform Control.md`, `SKANDI_B011_Uniform_Control_Sync_2026-09-20/src/backend/SKANDI_CORE/uniform.web.js`, `SKANDI_B011_Uniform_Control_Sync_2026-09-20/src/pages/Uniform Control.yx92b.js`
-
-### Authentication / Authorization Boundary
-
-- Role / permission checks detected in `SKANDI_B011_Uniform_Control_Sync_2026-09-20/embed/SKANDI-Uniform-Control.html`, `SKANDI_B011_Uniform_Control_Sync_2026-09-20/HTML_REF/riaintra/Uniform Control.md`, `SKANDI_B011_Uniform_Control_Sync_2026-09-20/src/backend/SKANDI_CORE/uniform.js`, `SKANDI_B011_Uniform_Control_Sync_2026-09-20/src/backend/SKANDI_CORE/uniform.web.js`
-- Staff authentication detected in `SKANDI_B011_Uniform_Control_Sync_2026-09-20/HTML_REF/riaintra/Uniform Control.md`, `SKANDI_B011_Uniform_Control_Sync_2026-09-20/src/backend/SKANDI_CORE/uniform.js`
-
-### Important Cross-Layer Message Contracts
-
-NOT VERIFIED FROM UPLOADED SOURCE SET
-
-### Current Architectural Notes
-
-- This document was generated from the uploaded source set only. Missing details are explicitly marked as not verified rather than inferred beyond available evidence.
-- The complete executable/source payload below is preserved from the selected primary source after browser text decoding; it is not shortened or summarized.
-- HTML_REF is a reference artifact and must not be imported by runtime application code.
-- Canonical Wix backend ownership remains under `backend/SKANDI_CORE/...`; any detected legacy namespace is listed under Open Issues.
-- Static analysis can identify references and contracts but cannot prove production deployment parity, authentication behavior, Supabase schema/RLS correctness, provider success, or secret configuration.
-
-### Open Issues / Required Verification / Migration Items
-
-- Canonical backend import `backend/SKANDI_CORE/supabaseServer.js` referenced by `SKANDI_B011_Uniform_Control_Sync_2026-09-20/src/backend/SKANDI_CORE/uniform.js` was not present in the uploaded source set.
-- Canonical backend import `backend/SKANDI_CORE/staffAuth.js` referenced by `SKANDI_B011_Uniform_Control_Sync_2026-09-20/src/backend/SKANDI_CORE/uniform.js` was not present in the uploaded source set.
-- Canonical backend import `backend/SKANDI_CORE/assets.js` referenced by `SKANDI_B011_Uniform_Control_Sync_2026-09-20/src/backend/SKANDI_CORE/uniform.js` was not present in the uploaded source set.
-- Canonical backend import `backend/SKANDI_CORE/platformValidation.js` referenced by `SKANDI_B011_Uniform_Control_Sync_2026-09-20/src/backend/SKANDI_CORE/uniform.js` was not present in the uploaded source set.
-- Canonical backend import `backend/SKANDI_CORE/platformErrors.js` referenced by `SKANDI_B011_Uniform_Control_Sync_2026-09-20/src/backend/SKANDI_CORE/uniform.js` was not present in the uploaded source set.
-- Supabase is referenced, but no table/view/RPC resource could be statically identified from the uploaded source set.
-- Live Wix deployment parity, runtime authentication, provider behavior, secrets, database schema validity, RLS, and production data were not executed by this static browser tool.
-
-### Uploaded Source Set
-
-| Source file | Classified role | Size |
-|---|---|---:|
-| `SKANDI_B011_Uniform_Control_Sync_2026-09-20/embed/SKANDI-Uniform-Control.html` | HTML SOURCE | 92.2 KB |
-| `SKANDI_B011_Uniform_Control_Sync_2026-09-20/HTML_REF/riaintra/Uniform Control.md` | EXISTING HTML_REF | 101.1 KB |
-| `SKANDI_B011_Uniform_Control_Sync_2026-09-20/SHA256SUMS.txt` | TEXT | 520 B |
-| `SKANDI_B011_Uniform_Control_Sync_2026-09-20/src/backend/SKANDI_CORE/uniform.js` | BACKEND CORE | 58.9 KB |
-| `SKANDI_B011_Uniform_Control_Sync_2026-09-20/src/backend/SKANDI_CORE/uniform.web.js` | BACKEND FACADE | 5.45 KB |
-| `SKANDI_B011_Uniform_Control_Sync_2026-09-20/src/pages/Uniform Control.yx92b.js` | WIX PAGE CONTROLLER | 3.77 KB |
-
-### Change Log
-
-- 2026-09-18 — Original GitHub HTML_REF candidate generated with incomplete backend/source verification.
-- 2026-09-20 — Read-only GitHub audit identified the broken page bridge, missing canonical Uniform web facade, route drift, and incomplete message-contract documentation.
-- 2026-09-20 — HTML_REF rebuilt to the mandatory INFO / LOG model with the complete current GitHub HTML payload preserved.
-- 2026-09-20 — Package bridge/facade synchronized to the verified GitHub Uniform core. No GitHub, Wix, or Supabase mutation performed.
+Source contracts and syntax are checked locally. Wix publication, Supabase/RLS, staff/member session state and provider behavior require live testing after replacement and publication.
 
 ---
 
-- 2026-09-18 — HTML_REF candidate generated from the uploaded source set. Architecture metadata and cross-layer contracts were statically derived; live Wix/runtime/database/provider verification was not performed by this browser-only tool.
-
----
-
-## COMPLETE LIVE HTML / SOURCE IMPLEMENTATION
-
-**Primary payload source:** `SKANDI_B011_Uniform_Control_Sync_2026-09-20/embed/SKANDI-Uniform-Control.html`
-
-The following payload is complete and is not intentionally shortened, summarized, reconstructed, or replaced with placeholders.
+## COMPLETE INTENDED LIVE HTML SOURCE
 
 ```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
-<title>SKANDI Uniform Control ERP</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SKANDI Uniform Shop</title>
+  <style>
+    :root {
+      --hm-red:#022e64;
+      --hm-black:#111827;
+      --hm-charcoal:#374151;
+      --hm-bg-primary:#ffffff;
+      --hm-bg-secondary:#f7f8fa;
+      --hm-border-muted:#e5e7eb;
+      --hm-muted-text:#667085;
+      --hm-success:#087443;
+      --hm-warning:#d8aa3d;
+      --hm-danger:#b42318;
+      --hm-shadow:0 16px 40px rgba(17,24,39,.08);
+      --hm-fast:all .25s ease-in-out;
+    }
+* { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--hm-bg-primary);
+      color: var(--hm-charcoal);
+      font-family: "Montserrat", "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-size: 15px;
+      line-height: 1.5;
+    }
 
-<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://unpkg.com/lucide@latest"></script>
+    /* =========================================
+       SKANDI UNIFORM SHOP STYLES
+       ========================================= */
+    a, button, input, select, textarea, .product-card, .swatch, .size-option, .accordion-header, .newsletter-submit {
+      transition: var(--hm-fast);
+    }
+    a { color: inherit; text-decoration: none; cursor: pointer; }
+    button { font: inherit; cursor: pointer; border: 0; background: transparent; color: inherit; }
+    
+    input, select, textarea {
+      width: 100%; border: 1px solid var(--hm-black); background: var(--hm-bg-primary);
+      color: var(--hm-charcoal); padding: 13px 14px; border-radius: 0; font: inherit; outline: none;
+    }
+    input:focus, select:focus, textarea:focus { box-shadow: 0 0 0 2px rgba(17, 24, 39, 0.12); }
+    img { display: block; max-width: 100%; }
+    .d-none { display: none !important; }
+    .serif { font-family: "Montserrat", sans-serif; letter-spacing: -0.04em; font-weight: 800; }
 
-<style>
-  :root {
-    --am-blue: #1c55a5;
-    --am-blue-hover: #154385;
-    --am-blue-light: #eef4fb;
-    --am-bg: #f4f5f7; 
-    --am-panel: #ffffff;
-    --am-border: #d3d7de;
-    --am-border-light: #e8ecf1;
-    --am-text: #333333;
-    --am-text-light: #5a6268;
-    --am-sidebar-w: 240px;
-    --am-nav-w: 50px;
-    --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  }
-  
-  * { box-sizing: border-box; }
-  html, body {
-    margin: 0; padding: 0; height: 100vh;
-    font-family: var(--font-stack);
-    font-size: 11px; 
-    color: var(--am-text);
-    background: var(--am-bg);
-    overflow: hidden;
-  }
+    .hm-shell { min-height:100vh; background:var(--hm-bg-primary); }
+    .uniform-toolbar-shell { position:sticky; top:0; z-index:100; background:rgba(255,255,255,.97); border-bottom:1px solid var(--hm-border-muted); backdrop-filter:blur(12px); }
 
-  button, input, select, textarea { font-family: inherit; font-size: inherit; }
-  button { cursor: pointer; outline: none; }
-  .mono { font-family: Consolas, monospace; }
+    .top-bar {
+      display: flex; justify-content: space-between; gap: 16px; padding: 10px 36px;
+      font-size: 12px; color: var(--hm-muted-text); background: var(--hm-bg-primary); font-weight: 600;
+    }
+    .top-bar-left, .top-bar-right { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+    .top-bar a:hover { color: var(--hm-black); text-decoration: underline; }
 
-  .app-shell { display: flex; height: 100vh; width: 100vw; overflow: hidden; }
-  
-  .global-nav {
-    width: var(--am-nav-w); background: #071522; display: flex; flex-direction: column;
-    align-items: center; padding-top: 10px; border-right: 1px solid #040c14; z-index: 100; flex-shrink: 0;
-  }
-  .nav-item {
-    width: 36px; height: 36px; margin-bottom: 8px; border-radius: 4px; display: flex;
-    align-items: center; justify-content: center; color: #8193a5; cursor: pointer; position: relative;
-    transition: all 0.2s;
-  }
-  .nav-item:hover { background: rgba(255,255,255,0.1); color: #fff; }
-  .nav-item.active { background: var(--am-blue); color: #fff; }
-  .nav-item i { width: 18px; height: 18px; }
+    .mid-header { position: relative; min-height: 76px; display: flex; align-items: center; justify-content: center; padding: 12px 36px; }
+    .hm-logo { display: flex; align-items: center; justify-content: center; height: clamp(34px, 5vw, 50px); padding: 0; }
+    .hm-logo img { max-height: 100%; width: auto; object-fit: contain; }
+    .hm-logo:hover { opacity: 0.78; }
 
-  .am-sidebar {
-    width: var(--am-sidebar-w); background: var(--am-panel); border-right: 1px solid var(--am-border);
-    display: flex; flex-direction: column; overflow-y: auto; flex-shrink: 0; box-shadow: 1px 0 5px rgba(0,0,0,0.02);
-  }
-  
-  .am-sidebar-header {
-    padding: 12px 14px; border-bottom: 1px solid var(--am-border); background: #f9fafb;
-    position: sticky; top: 0; z-index: 10; display: flex; justify-content: space-between; align-items: center;
-  }
-  .am-sidebar-title { color: var(--am-blue); font-size: 10px; font-weight: 800; letter-spacing: 0.11em; text-transform: uppercase; }
-  
-  .filter-section { border-bottom: 1px solid var(--am-border-light); }
-  .filter-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; cursor: pointer; background: #fff; transition: background 0.2s; }
-  .filter-header:hover { background: #f9fafb; }
-  .filter-title { font-weight: 700; font-size: 11px; color: #3f4e5f; }
-  .filter-body { padding: 4px 14px 12px; display: flex; flex-direction: column; gap: 6px; }
-  .filter-checkbox { display: flex; align-items: center; gap: 6px; cursor: pointer; color: #5a6268; font-size: 11px; }
-  .filter-checkbox input { margin: 0; cursor: pointer; accent-color: var(--am-blue); }
-  
-  .main-content { flex: 1; display: flex; flex-direction: column; background: var(--am-bg); min-width: 0; position: relative; }
-  .top-tabs-bar {
-    display: flex; justify-content: space-between; align-items: flex-end;
-    border-bottom: 1px solid var(--am-border); background: var(--am-panel); padding: 0 16px; overflow-x: auto;
-    height: 40px; flex-shrink: 0;
-  }
-  .tabs-container { display: flex; gap: 4px; height: 100%; }
-  .am-tab {
-    padding: 0 16px; border: 1px solid transparent; border-bottom: none; background: transparent;
-    color: #5d6b7b; cursor: pointer; font-size: 11px; font-weight: 700; white-space: nowrap;
-    display: flex; align-items: center; justify-content: center; height: 100%; transition: color 0.2s;
-  }
-  .am-tab:hover { color: var(--am-blue); }
-  .am-tab.active { background: var(--am-panel); color: var(--am-blue); border-bottom: 2px solid var(--am-blue); }
-  
-  .toolbar {
-    display: flex; gap: 10px; padding: 10px 16px; background: #fdfdfd;
-    border-bottom: 1px solid var(--am-border); align-items: center; justify-content: space-between; flex-shrink: 0;
-  }
-  .toolbar-left, .toolbar-right { display: flex; gap: 8px; align-items: center; }
-  .toolbar-title { font-weight: 800; font-size: 14px; color: #3f4e5f; }
-  
-  .btn {
-    padding: 0 12px; height: 28px; border: 1px solid var(--am-border); background: #fff;
-    border-radius: 4px; color: var(--am-text); font-size: 11px; font-weight: 700;
-    display: inline-flex; align-items: center; gap: 6px; justify-content: center; transition: all 0.2s;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.05); white-space: nowrap;
-  }
-  .btn:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
-  .btn i { width: 14px; height: 14px; }
-  .btn:hover:not(:disabled) { background: #f9fafb; border-color: #8291a3; }
-  .btn-primary { background: var(--am-blue); border-color: var(--am-blue); color: #fff; }
-  .btn-primary:hover:not(:disabled) { background: var(--am-blue-hover); border-color: var(--am-blue-hover); }
-  .btn-danger { background: #fff; border-color: #ffcdd2; color: #b42318; }
-  .btn-danger:hover:not(:disabled) { background: #fff0ee; }
+    .utility-controls {
+      position: absolute; right: 36px; top: 50%; transform: translateY(-50%);
+      display: flex; gap: 22px; align-items: center; font-size: 14px; color: var(--hm-black); font-weight: 700;
+    }
+    .utility-controls a:hover, .utility-controls button:hover { text-decoration: underline; }
 
-  .table-container { flex: 1; overflow: auto; background: var(--am-panel); padding: 16px; position: relative; }
-  .am-table-wrapper { border: 1px solid var(--am-border); border-radius: 4px; overflow: hidden; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
-  .am-table { width: 100%; border-collapse: collapse; min-width: 900px; text-align: left; }
-  .am-table th {
-    padding: 8px 12px; border-bottom: 1px solid var(--am-border); background: #eef2f6;
-    color: #506174; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;
-    font-size: 9px; position: sticky; top: 0; z-index: 10; white-space: nowrap;
-  }
-  .am-table td { padding: 8px 12px; border-bottom: 1px solid #e7ebf0; vertical-align: middle; font-size: 11px; color: var(--am-text); }
-  .am-table tbody tr:hover td { background-color: #fbfcfd; }
-  .am-table tbody tr.clickable:hover td { cursor: pointer; }
-  .am-table tbody tr.selected td { background-color: var(--am-blue-light); }
-  
-  .status-badge { padding: 2px 6px; border-radius: 99px; font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; display: inline-flex; align-items: center; justify-content: center; min-width: 65px;}
-  .status-draft { background: #f4f5f7; color: #5a6268; border: 1px solid #d3d7de; }
-  .status-active, .status-approved, .status-allocated { background: #edf8f2; color: #18794e; border: 1px solid #c8e6c9;}
-  .status-transit, .status-pending { background: #fff6e8; color: #a15c00; border: 1px solid #ffe0b2;}
-  .status-danger, .status-backorder, .status-retired { background: #fff0ee; color: #b42318; border: 1px solid #ffcdd2;}
+    .nav-rail {
+      display: flex; justify-content: center; align-items: center; gap: clamp(22px, 4vw, 60px);
+      padding: 0 24px 18px; color: var(--hm-black); font-weight: 700; text-transform: uppercase; font-size: 13px;
+    }
+    .nav-item { position: relative; padding: 6px 2px; letter-spacing: 0.05em; }
+    .nav-item::after {
+      content: ""; position: absolute; left: 0; right: 0; bottom: -2px; height: 2px;
+      background: var(--hm-black); transform: scaleX(0); transform-origin: center; transition: var(--hm-fast);
+    }
+    .nav-item:hover::after, .nav-item.is-active::after { transform: scaleX(1); }
 
-  .modal-overlay {
-    position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(7, 21, 34, 0.5);
-    backdrop-filter: blur(2px); z-index: 1000; display: flex; align-items: center; justify-content: center;
-  }
-  .modal-window {
-    background: var(--am-panel); border-radius: 6px; box-shadow: 0 10px 25px rgba(0,0,0,0.15);
-    width: 800px; max-width: 95%; display: flex; flex-direction: column; border: 1px solid var(--am-border);
-    max-height: 90vh;
-  }
-  .modal-header {
-    padding: 12px 16px; border-bottom: 1px solid var(--am-border); background: #fdfdfd;
-    display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;
-  }
-  .modal-header h3 { margin: 0; font-size: 14px; font-weight: 800; color: #3f4e5f; }
-  .modal-close { cursor: pointer; color: #888; transition: color 0.2s; }
-  .modal-close:hover { color: #333; }
-  .modal-body { padding: 16px; overflow-y: auto; background: #fff; flex: 1; }
-  .modal-footer { padding: 12px 16px; border-top: 1px solid var(--am-border); display: flex; justify-content: flex-end; gap: 8px; background: #fdfdfd; flex-shrink: 0; }
-  
-  .form-group { margin-bottom: 12px; }
-  .form-label { display: block; font-weight: 800; font-size: 9px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; color: #607083; }
-  .form-control { width: 100%; border: 1px solid var(--am-border); padding: 0 8px; height: 30px; font-size: 11px; outline: none; border-radius: 4px; background: #fff; transition: all 0.2s;}
-  .form-control:focus { border-color: var(--am-blue); box-shadow: 0 0 0 2px rgba(28, 85, 165, 0.1); }
-  .form-control:disabled { background: var(--am-bg); color: var(--am-text-light); }
-  textarea.form-control { height: auto; padding: 6px 8px; resize: vertical; min-height: 60px; }
+    .promo-ticker {
+      text-align: center; background: var(--hm-bg-secondary); color: var(--hm-charcoal);
+      padding: 10px 18px; font-size: 12px; font-weight: 700; border-top: 1px solid var(--hm-border-muted);
+    }
 
-  .matrix-input-table { width: 100%; border-collapse: collapse; margin-top: 4px; border: 1px solid var(--am-border); }
-  .matrix-input-table th, .matrix-input-table td { border: 1px solid var(--am-border); padding: 6px; text-align: center; }
-  .matrix-input-table th { background: #eef2f6; font-weight: 800; font-size: 9px; text-transform: uppercase; color: #506174; }
-  .matrix-input-cell { width: 60px; height: 26px; padding: 4px; border: 1px solid var(--am-border); text-align: right; font-size: 11px; outline: none; border-radius: 2px; }
-  .matrix-input-cell:focus { border-color: var(--am-blue); box-shadow: 0 0 0 2px rgba(28, 85, 165, 0.1); }
+    .view { min-height: 68vh; }
+    .container { width: min(1440px, calc(100% - 48px)); margin: 0 auto; }
 
-  .two-col-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-  .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 16px; }
-  .kpi-card { background: #fff; border: 1px solid var(--am-border); border-radius: 4px; padding: 16px; border-top: 3px solid var(--am-blue); box-shadow: 0 1px 2px rgba(0,0,0,0.02); }
-  .kpi-title { font-size: 9px; font-weight: 800; color: #607083; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; }
-  .kpi-val { font-size: 24px; font-weight: 700; color: var(--am-text); line-height: 1; }
-  
-  .report-bar-container { width: 100%; background: var(--am-border-light); height: 8px; border-radius: 4px; overflow: hidden; margin-top: 6px; }
-  .report-bar-fill { height: 100%; background: var(--am-blue); border-radius: 4px; }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; min-height: 48px; padding: 0 26px;
+      border: 1px solid var(--hm-black); background: var(--hm-black); color: var(--hm-bg-primary);
+      font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; text-align: center;
+    }
+    .btn:hover { background-color: #333; border-color: #333; }
+    .btn-light { background: var(--hm-bg-primary); color: var(--hm-black); }
+    .btn-light:hover { background: var(--hm-bg-secondary); border-color: var(--hm-black); }
+    .btn-full { width: 100%; }
+    .btn-small { min-height: 38px; padding: 0 16px; font-size: 12px; }
+    .btn-disabled { background: #d4d0cc; border-color: #d4d0cc; color: #77716b; cursor: not-allowed; }
 
-  /* Utilities */
-  .sync-overlay { position: absolute; top:0; left:0; right:0; bottom:0; background: rgba(255,255,255,0.8); z-index: 50; display: flex; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(2px); }
-  .spinner { border: 3px solid #f3f3f3; border-top: 3px solid var(--am-blue); border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; margin-bottom: 8px; }
-  @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    .hero-panel {
+      position: relative; height: min(780px, calc(100vh - 170px)); min-height: 520px;
+      background-image: linear-gradient(90deg, rgba(2, 46, 100, 0.45), rgba(2, 46, 100, 0.15)), url("https://static.wixstatic.com/media/394052_54b5f789d38c4b0f87678a2f4852c85e~mv2.png");
+      background-size: cover; background-position: center 26%; display: flex; align-items: flex-end;
+      justify-content: center; padding: 72px 24px; color: var(--hm-bg-primary); text-align: center;
+    }
+    .hero-content { position: relative; z-index: 1; max-width: 780px; }
+    .hero-kicker { margin: 0 0 12px; font-size: 14px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; }
+    .hero-title { margin: 0 0 26px; font-size: clamp(48px, 8vw, 100px); line-height: 0.9; text-shadow: 0 10px 34px rgba(0, 0, 0, 0.28); }
+    .hero-button { min-width: 180px; box-shadow: 0 16px 40px rgba(0, 0, 0, 0.22); }
+
+    .curated-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; padding: 42px 0 74px; }
+    .curated-card { position: relative; min-height: 480px; overflow: hidden; background: var(--hm-bg-secondary); cursor: pointer; isolation: isolate; }
+    .curated-card::before {
+      content: ""; position: absolute; inset: 0; background-size: cover; background-position: center;
+      transform: scale(1); transition: var(--hm-fast); z-index: -2;
+    }
+    .curated-card::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.42)); z-index: -1; }
+    .curated-card:hover::before { transform: scale(1.04); opacity: 0.94; }
+    .curated-men::before { background-image: url("https://static.wixstatic.com/media/394052_b172af14b4a84588a72682dec255dc39~mv2.png"); }
+    .curated-divided::before { background-image: url("https://static.wixstatic.com/media/394052_abcbcd71048744b9ac848a19412b5151~mv2.png"); }
+    .curated-content { position: absolute; left: 34px; right: 34px; bottom: 34px; color: var(--hm-bg-primary); }
+    .curated-title { margin: 0 0 18px; font-size: clamp(34px, 4vw, 54px); line-height: 0.95; }
+
+    .plp-header { padding: 46px 0 22px; display: flex; justify-content: space-between; align-items: end; gap: 20px; }
+    .plp-title { margin: 0; font-size: clamp(36px, 5vw, 64px); line-height: 1; text-transform: uppercase; }
+    .plp-count { margin: 12px 0 0; color: var(--hm-muted-text); font-weight: 600; }
+
+    .toolbar {
+      display: grid; grid-template-columns: repeat(3, minmax(180px, 1fr)); gap: 14px;
+      background: var(--hm-bg-secondary); border: 1px solid var(--hm-border-muted); padding: 18px; margin-bottom: 26px;
+    }
+    .toolbar label { display: block; font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
+    .toolbar select { font-size: 13px; font-weight: 600; }
+
+    .product-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 26px 18px; padding-bottom: 74px; }
+    .product-card { position: relative; background: var(--hm-bg-primary); cursor: pointer; }
+    .product-card:hover { transform: translateY(-3px); }
+    .product-media { position: relative; overflow: hidden; background: #eef2f7; aspect-ratio: 3 / 4; display: flex; align-items: center; justify-content: center; }
+    .product-card-image { width: 100%; height: 100%; object-fit: cover; transition: var(--hm-fast); }
+    .product-card:hover .product-card-image { transform: scale(1.02); }
+    .favorite-btn {
+      position: absolute; top: 12px; right: 12px; z-index: 3; width: 38px; height: 38px;
+      display: grid; place-items: center; background: rgba(255, 255, 255, 0.86); color: var(--hm-black);
+      border-radius: 50%; font-size: 22px; line-height: 1;
+    }
+    .favorite-btn:hover, .favorite-btn.is-favorite { background: var(--hm-black); color: var(--hm-bg-primary); }
+    .sale-tag {
+      position: absolute; left: 12px; top: 12px; z-index: 3; background: #b45309; color: var(--hm-bg-primary);
+      padding: 5px 8px; font-size: 11px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase;
+    }
+
+    .product-info { padding: 12px 2px 4px; }
+    .product-title { margin: 0 0 6px; font-size: 15px; line-height: 1.2; font-weight: 700; color: var(--hm-black); }
+    .product-price { margin: 0 0 4px; font-weight: 800; color: var(--hm-charcoal); font-size: 14px; }
+    .product-rating { margin: 0 0 10px; font-size: 12px; color: var(--hm-muted-text); font-weight: 600; }
+
+    .swatch-row { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+    .swatch { width: 14px; height: 14px; border-radius: 50%; border: 1px solid rgba(0, 0, 0, 0.18); box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.7); }
+
+    .empty-state { padding: 60px 24px; text-align: center; background: var(--hm-bg-secondary); border: 1px solid var(--hm-border-muted); }
+    .empty-state h2 { margin: 0 0 10px; font-size: 32px; font-weight: 800; }
+
+    .pdp-layout { display: grid; grid-template-columns: minmax(0, 3fr) minmax(360px, 2fr); gap: 42px; padding: 38px 0 82px; }
+    .pdp-image-stack { display: grid; gap: 18px; }
+    .pdp-image-card { background: #eef2f7; overflow: hidden; min-height: 520px; display: flex; align-items: center; justify-content: center; }
+    .pdp-image-card img { width: 100%; height: auto; min-height: 620px; object-fit: cover; }
+    
+    .pdp-panel { position: sticky; top: 110px; align-self: start; background: var(--hm-bg-primary); padding: 10px 0 0; }
+    .breadcrumb { margin-bottom: 24px; font-size: 12px; color: var(--hm-muted-text); font-weight: 700; text-transform: uppercase; }
+    .breadcrumb button:hover { text-decoration: underline; color: var(--hm-black); }
+    .pdp-title { margin: 0 0 12px; font-size: clamp(34px, 4vw, 54px); line-height: 0.95; }
+    .pdp-price { font-size: 20px; font-weight: 800; margin: 0 0 12px; }
+    .pdp-review { color: var(--hm-muted-text); font-size: 13px; font-weight: 600; margin-bottom: 26px; }
+
+    .selector-block { margin-bottom: 26px; }
+    .selector-label {
+      display: flex; justify-content: space-between; gap: 16px; align-items: center;
+      margin-bottom: 12px; font-size: 12px; font-weight: 800; letter-spacing: 0.07em; text-transform: uppercase;
+    }
+    .selected-meta { color: var(--hm-muted-text); font-weight: 600; letter-spacing: 0; text-transform: none; }
+    
+    .size-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
+    .size-option { min-height: 44px; border: 1px solid var(--hm-border-muted); background: var(--hm-bg-primary); color: var(--hm-black); font-weight: 800; font-size: 13px; }
+    .size-option:hover, .size-option.is-active { background: var(--hm-black); color: var(--hm-bg-primary); border-color: var(--hm-black); }
+    .size-guide-link { font-size: 12px; text-decoration: underline; color: var(--hm-black); font-weight: 700; }
+    .pdp-message { min-height: 22px; margin: 12px 0 0; color: #b42318; font-size: 13px; font-weight: 700; }
+
+    .accordion { margin-top: 28px; border-top: 1px solid var(--hm-border-muted); }
+    .accordion-item { border-bottom: 1px solid var(--hm-border-muted); }
+    .accordion-header { width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 18px 0; font-weight: 800; font-size: 13px; text-transform: uppercase; text-align: left; }
+    .accordion-header:hover { color: var(--hm-muted-text); }
+    .accordion-body { max-height: 0; overflow: hidden; transition: max-height 0.25s ease-in-out, padding 0.25s ease-in-out; padding: 0; color: var(--hm-charcoal); font-size: 14px; }
+    .accordion-item.is-open .accordion-body { max-height: 420px; padding: 0 0 18px; }
+
+    .bag-layout { display: grid; grid-template-columns: minmax(0, 1fr) 390px; gap: 36px; padding: 44px 0 82px; }
+    .page-heading { margin: 0 0 24px; font-size: clamp(38px, 5vw, 64px); line-height: 1; text-transform: uppercase; }
+    
+    .bag-items { display: grid; gap: 14px; }
+    .bag-line { display: grid; grid-template-columns: 100px minmax(0, 1fr); gap: 18px; padding: 18px; border: 1px solid var(--hm-border-muted); background: var(--hm-bg-primary); }
+    .bag-line img, .bag-line .fallback-img { width: 100px; height: 134px; object-fit: cover; background: #eef2f7; display:flex; align-items:center; justify-content:center; font-weight:800; color:#94a3b8; font-size:11px;}
+    .bag-line-title { margin: 0 0 8px; font-size: 18px; line-height: 1.1; font-weight: 800; color: var(--hm-black); }
+    .bag-line-meta { margin: 0 0 4px; color: var(--hm-muted-text); font-size: 13px; font-weight: 600; }
+    .bag-line-price { margin: 12px 0 16px; font-weight: 800; font-size: 15px;}
+    
+    .quantity-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .qty-btn, .trash-btn { width: 32px; height: 32px; border: 1px solid var(--hm-border-muted); display: grid; place-items: center; background: var(--hm-bg-primary); color: var(--hm-black); font-weight: 900; }
+    .qty-btn:hover, .trash-btn:hover { background: var(--hm-black); color: var(--hm-bg-primary); border-color: var(--hm-black); }
+    .qty-value { min-width: 32px; height: 32px; display: grid; place-items: center; border: 1px solid var(--hm-border-muted); background: var(--hm-bg-secondary); font-weight: 800; font-size: 13px; }
+
+    .summary-card { position: sticky; top: 110px; align-self: start; border: 1px solid var(--hm-border-muted); background: var(--hm-bg-secondary); padding: 24px; }
+    .summary-title { margin: 0 0 20px; font-size: 24px; font-weight: 800; text-transform: uppercase; }
+    .summary-row { display: flex; justify-content: space-between; gap: 18px; padding: 11px 0; border-bottom: 1px solid var(--hm-border-muted); font-weight: 600; font-size: 14px;}
+    .summary-total { font-size: 21px; font-weight: 900; border-bottom: 0; padding-top: 18px; margin-bottom: 20px; }
+    .shipping-note { margin: 0 0 20px; color: var(--hm-muted-text); font-size: 13px; font-weight: 600; line-height: 1.6; }
+
+    .checkout-layout { display: grid; grid-template-columns: minmax(0, 1fr) 390px; gap: 36px; padding: 44px 0 82px; }
+    .checkout-accordion { display: grid; gap: 14px; }
+    .checkout-step { border: 1px solid var(--hm-border-muted); background: var(--hm-bg-primary); }
+    .checkout-step.is-locked { opacity: 0.52; pointer-events: none; }
+    .checkout-step-header {
+      display: flex; justify-content: space-between; gap: 18px; align-items: center; width: 100%;
+      padding: 20px; font-weight: 900; text-align: left; background: var(--hm-bg-secondary); text-transform: uppercase; font-size: 14px;
+    }
+    .checkout-step-header:hover { background: #f2efec; }
+    .checkout-step-body { max-height: 0; overflow: hidden; padding: 0 20px; transition: max-height 0.25s ease-in-out, padding 0.25s ease-in-out; }
+    .checkout-step.is-open .checkout-step-body { max-height: 760px; padding: 20px; }
+
+    .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+    .form-field-full { grid-column: 1 / -1; }
+    .form-field label { display: block; font-size: 11px; font-weight: 800; letter-spacing: 0.07em; text-transform: uppercase; margin-bottom: 7px; color: var(--hm-muted-text);}
+    .form-error { min-height: 22px; color: #b42318; font-weight: 800; font-size: 13px; margin: 12px 0 0; }
+
+    .success-panel { text-align: center; padding: 58px 26px; border: 1px solid var(--hm-border-muted); background: var(--hm-bg-secondary); }
+    .success-icon {
+      width: 72px; height: 72px; margin: 0 auto 22px; display: grid; place-items: center;
+      border-radius: 50%; background: var(--hm-success); color: var(--hm-bg-primary); font-size: 36px; font-weight: 900;
+    }
+    .success-panel h2 { margin: 0 0 14px; font-size: clamp(38px, 5vw, 64px); line-height: 0.95; text-transform: uppercase; }
+    .success-code { display: inline-flex; padding: 10px 14px; margin: 12px 0; background: var(--hm-bg-primary); border: 1px solid var(--hm-black); font-weight: 900; letter-spacing: 0.08em; }
+
+    .modal-overlay { position: fixed; inset: 0; z-index: 200; display: grid; place-items: center; padding: 24px; background: rgba(17, 24, 39, 0.54); }
+    .modal { width: min(720px, 100%); max-height: min(760px, calc(100vh - 48px)); overflow: auto; background: var(--hm-bg-primary); box-shadow: var(--hm-shadow); padding: 32px; position: relative; }
+    .modal-close { position: absolute; right: 18px; top: 18px; width: 36px; height: 36px; border: 1px solid var(--hm-black); display: grid; place-items: center; font-weight: 900; font-size: 20px;}
+    .modal-close:hover { background: var(--hm-black); color: var(--hm-bg-primary); }
+    
+    .toast {
+      position: fixed; left: 50%; bottom: 26px; transform: translateX(-50%) translateY(24px); z-index: 250;
+      background: var(--hm-black); color: var(--hm-bg-primary); padding: 14px 22px; min-width: 260px;
+      text-align: center; opacity: 0; pointer-events: none; transition: var(--hm-fast); box-shadow: var(--hm-shadow);
+      font-weight: 700; font-size: 13px;
+    }
+    .toast.is-visible { opacity: 1; transform: translateX(-50%) translateY(0); }
+    
+    .status-banner { display: none; background: #111827; color: white; text-align: center; padding: 10px; font-size: 12px; font-weight: 700; }
+    .status-banner.show { display: block; }
+    .status-banner.error { background: #b42318; }
+    .status-banner.ok { background: #087443; }
+
+    @media (max-width: 1100px) {
+      .product-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .pdp-layout, .bag-layout, .checkout-layout { grid-template-columns: 1fr; }
+      .pdp-panel, .summary-card { position: static; }
+      .footer-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 760px) {
+      .container { width: min(100% - 28px, 1440px); }
+      .top-bar { padding: 9px 14px; }
+      .top-bar-left { display: none; }
+      .mid-header { min-height: 92px; padding: 12px 14px 42px; }
+      .utility-controls { left: 14px; right: 14px; top: auto; bottom: 10px; transform: none; justify-content: center; gap: 14px; font-size: 12px; }
+      .nav-rail { gap: 18px; overflow-x: auto; justify-content: flex-start; padding: 0 14px 14px; }
+      .hero-panel { min-height: 480px; }
+      .curated-grid, .toolbar, .footer-grid, .form-grid { grid-template-columns: 1fr; }
+      .product-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px 12px; }
+      .product-title { font-size: 14px; }
+      .plp-header { display: block; }
+      .bag-line { grid-template-columns: 80px minmax(0, 1fr); padding: 12px; }
+      .bag-line img, .bag-line .fallback-img { width: 80px; height: 106px; }
+      .bag-line-title { font-size: 15px; }
+      .pdp-image-card img { min-height: 420px; }
+    }
+    @media (max-width: 480px) {
+      .product-grid { grid-template-columns: 1fr; }
+      .size-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    }
   
-  /* Order PDF Print Preview Style */
-  .pdf-preview { background: #fff; width: 210mm; min-height: 297mm; padding: 20mm; box-shadow: 0 0 10px rgba(0,0,0,0.1); margin: 0 auto; color: #000; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; }
-  .pdf-header { display: flex; justify-content: space-between; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px; }
-  .pdf-title { font-size: 24px; font-weight: 800; letter-spacing: 0.05em; }
-  .pdf-meta { font-size: 10px; text-align: right; }
-  .pdf-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-  .pdf-table th, .pdf-table td { border: 1px solid #ccc; padding: 8px; font-size: 11px; }
-  .pdf-table th { background: #f4f5f7; font-weight: bold; text-align: left; }
+    .uniform-toolbar-main{width:min(1440px,calc(100% - 48px));margin:0 auto;min-height:64px;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:22px;}
+    .uniform-brand{display:flex;flex-direction:column;align-items:flex-start;gap:2px;color:var(--hm-black);text-align:left;padding:0;}
+    .uniform-brand strong{font-size:16px;letter-spacing:.08em;}
+    .uniform-brand span{font-size:10px;color:var(--hm-muted-text);letter-spacing:.12em;text-transform:uppercase;font-weight:800;}
+    .uniform-staff{justify-self:end;display:flex;gap:8px;align-items:center;font-size:12px;color:var(--hm-muted-text);white-space:nowrap;}
+    .uniform-staff strong{color:var(--hm-black);}
+    .uniform-utilities{display:flex;align-items:center;gap:18px;font-size:12px;font-weight:800;color:var(--hm-black);}
+    .uniform-utilities button:hover{text-decoration:underline;}
+    .uniform-toolbar-shell .nav-rail{padding:0 24px 10px;gap:clamp(16px,3vw,42px);}
+    .uniform-toolbar-shell .promo-ticker{padding:8px 18px;}
+    @media(max-width:760px){.uniform-toolbar-main{width:calc(100% - 28px);grid-template-columns:1fr auto;min-height:58px;gap:10px}.uniform-staff{display:none}.uniform-utilities{gap:10px;font-size:11px}.uniform-toolbar-shell .nav-rail{padding:0 14px 10px}.promo-ticker{font-size:11px}}
+
+    /* =========================================
+       INTEGRATED UNIFORM REGULATIONS
+       ========================================= */
+    .regulations-shell { padding: 46px 0 86px; }
+    .regulations-hero {
+      display:grid; grid-template-columns:minmax(0,1fr) auto; gap:28px; align-items:end;
+      padding:34px; background:var(--hm-bg-secondary); border:1px solid var(--hm-border-muted); margin-bottom:24px;
+    }
+    .regulations-kicker { margin:0 0 10px; font-size:12px; text-transform:uppercase; letter-spacing:.14em; font-weight:900; color:var(--hm-red); }
+    .regulations-title { margin:0; font-size:clamp(38px,5vw,68px); line-height:.95; text-transform:uppercase; color:var(--hm-black); }
+    .regulations-meta { margin:14px 0 0; display:flex; flex-wrap:wrap; gap:12px 20px; color:var(--hm-muted-text); font-size:12px; font-weight:700; }
+    .regulations-actions { display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end; }
+    .regulations-layout { display:grid; grid-template-columns:minmax(0,1fr) 320px; gap:28px; }
+    .regulations-document { border:1px solid var(--hm-border-muted); background:#fff; padding:34px; }
+    .regulations-document h2 { margin:30px 0 10px; font-size:22px; line-height:1.15; color:var(--hm-black); text-transform:uppercase; letter-spacing:.02em; }
+    .regulations-document h2:first-child { margin-top:0; }
+    .regulations-document p { margin:0 0 14px; color:var(--hm-charcoal); line-height:1.75; font-size:14px; }
+    .regulations-document ul { margin:0 0 18px; padding-left:20px; }
+    .regulations-document li { margin:0 0 8px; line-height:1.65; }
+    .regulations-side { display:grid; gap:14px; align-content:start; }
+    .reg-card { border:1px solid var(--hm-border-muted); background:var(--hm-bg-secondary); padding:20px; }
+    .reg-card h3 { margin:0 0 10px; font-size:15px; text-transform:uppercase; color:var(--hm-black); }
+    .reg-card p { margin:0; color:var(--hm-muted-text); font-size:13px; line-height:1.6; }
+    .policy-ack { margin-top:14px; display:flex; align-items:flex-start; gap:9px; font-size:12px; line-height:1.5; color:var(--hm-charcoal); }
+    .policy-ack input { width:auto; margin-top:2px; }
+    .eligibility-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin-top:10px; }
+    .eligibility-chip { background:var(--hm-bg-secondary); border:1px solid var(--hm-border-muted); padding:10px; }
+    .eligibility-chip strong { display:block; color:var(--hm-black); font-size:10px; text-transform:uppercase; letter-spacing:.08em; margin-bottom:4px; }
+    .eligibility-chip span { display:block; color:var(--hm-muted-text); font-size:12px; overflow-wrap:anywhere; }
+    .item-regulation-callout { margin:0 0 18px; padding:14px 16px; background:var(--hm-bg-secondary); border-left:3px solid var(--hm-red); font-size:13px; line-height:1.55; }
+    .item-regulation-callout strong { display:block; margin-bottom:5px; color:var(--hm-black); }
+    @media(max-width:900px){
+      .regulations-hero,.regulations-layout{grid-template-columns:1fr}
+      .regulations-actions{justify-content:flex-start}
+      .eligibility-grid{grid-template-columns:1fr}
+    }
+
+
+    .swatch{padding:0;cursor:pointer}
+    .swatch.is-active{outline:2px solid var(--hm-black);outline-offset:3px}
+    .swatch-label{font-size:11px;color:var(--hm-muted-text);font-weight:700;margin-top:7px}
+    .pdp-gallery-main{background:#eef2f7;aspect-ratio:4/5;display:flex;align-items:center;justify-content:center;overflow:hidden}
+    .pdp-gallery-main img{width:100%;height:100%;object-fit:contain}
+    .pdp-thumbnails{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:12px}
+    .pdp-thumb{border:1px solid var(--hm-border-muted);background:#eef2f7;aspect-ratio:1/1.15;padding:0;overflow:hidden}
+    .pdp-thumb img{width:100%;height:100%;object-fit:cover}
+    .pdp-thumb.is-active{border:2px solid var(--hm-black)}
+    .variant-selector{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+    .variant-color-button{width:28px;height:28px;border-radius:50%;border:1px solid rgba(0,0,0,.22);box-shadow:inset 0 0 0 3px #fff;padding:0}
+    .variant-color-button.is-active{outline:2px solid var(--hm-black);outline-offset:3px}
+    .issue-cycle-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+    .issue-cycle-card{padding:12px;border:1px solid var(--hm-border-muted);background:var(--hm-bg-secondary)}
+    .issue-cycle-card strong{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--hm-muted-text);margin-bottom:5px}
+    .issue-cycle-card span{font-weight:800;color:var(--hm-black)}
+    @media(max-width:760px){.pdp-thumbnails{grid-template-columns:repeat(3,minmax(0,1fr))}.issue-cycle-grid{grid-template-columns:1fr}}
+
 </style>
 </head>
 <body>
-<div id="root"></div>
 
-<script type="text/babel">
-const { useState, useEffect, useMemo, useRef } = React;
+  <!-- =========================================
+       SKANDI UNIFORM SHOP
+       ========================================= -->
+  <div id="hm-app" class="hm-shell">
+    <div id="status-banner" class="status-banner">Loading Uniform Center from Supabase...</div>
+    
+    <div class="uniform-toolbar-shell" aria-label="Uniform Center controls">
+      <div class="uniform-toolbar-main">
+        <button class="uniform-brand" type="button" data-action="route-home" aria-label="Uniform Center home">
+          <strong>UNIFORM CENTER</strong><span>SKANDI STAFF PORTAL</span>
+        </button>
+        <div class="uniform-staff"><span id="staff-name">Staff</span><span>•</span><strong id="wallet-points">0 points</strong></div>
+        <nav class="uniform-utilities" aria-label="Uniform actions">
+          <button type="button" data-action="sync-uniform">Sync</button>
+          <button type="button" data-action="route-regulations">Uniform Regulations</button>
+          <button type="button" data-action="route-orders">Orders (<span id="orders-count">0</span>)</button>
+          <button type="button" data-action="admin-login">Admin Login</button>
+          <button type="button" data-action="route-favorites">Saved (<span data-favorites-count>0</span>)</button>
+          <button type="button" data-action="route-bag">Bag (<span data-bag-count>0</span>)</button>
+        </nav>
+      </div>
+      <nav class="nav-rail" id="main-nav-rail" aria-label="Uniform categories"></nav>
+      <div class="promo-ticker" id="promo-ticker">Loading your Supabase uniform allowance…</div>
+    </div>
 
-const SOURCE = "SKANDI_UNIFORM_ADMIN";
-const PARENT = "SKANDI_WIX_PARENT";
-const EMPLOYEE_PATH = "/riaintra/uniform";
-const CLOSED = new Set(["COMPLETED", "REJECTED", "CANCELLED", "RETURNED"]);
-const PENDING_APPROVAL = new Set(["PENDING", "SUBMITTED", "MANAGER_REVIEW"]);
-const PRODUCT_STATUSES = ["DRAFT", "ACTIVE", "SEASONAL", "PHASE_OUT", "DISCONTINUED", "ARCHIVED", "SUSPENDED"];
-const STOCK_STATUSES = ["IN_STOCK", "LOW_STOCK", "OUT_OF_STOCK", "HIDDEN", "ARCHIVED"];
-const ORDER_NEXT = {
-  PENDING: ["MANAGER_REVIEW", "APPROVED", "REJECTED", "CANCELLED"],
-  SUBMITTED: ["MANAGER_REVIEW", "APPROVED", "REJECTED", "CANCELLED"],
-  MANAGER_REVIEW: ["APPROVED", "REJECTED", "CANCELLED"],
-  APPROVED: ["FULFILLMENT_READY", "PICKING", "PARTIAL", "CANCELLED"],
-  FULFILLMENT_READY: ["PICKING", "PICKED", "PACKING", "READY_FOR_PICKUP", "SHIPPED", "PARTIAL", "CANCELLED"],
-  PICKING: ["PICKED", "PARTIAL", "CANCELLED"],
-  PICKED: ["PACKING", "PARTIAL", "CANCELLED"],
-  PACKING: ["READY_FOR_PICKUP", "SHIPPED", "PARTIAL", "CANCELLED"],
-  READY_FOR_PICKUP: ["DELIVERED", "COMPLETED", "RETURN_REQUESTED"],
-  SHIPPED: ["DELIVERED", "PARTIAL", "RETURN_REQUESTED"],
-  DELIVERED: ["COMPLETED", "RETURN_REQUESTED"],
-  PARTIAL: ["PICKING", "PACKING", "READY_FOR_PICKUP", "SHIPPED", "DELIVERED", "COMPLETED", "CANCELLED"],
-  RETURN_REQUESTED: ["RETURNED", "COMPLETED"]
-};
-
-const emptyData = {
-  version: "", session: {}, profile: {}, stats: {}, orders: [], catalog: [], categories: [], allowanceRules: [],
-  wallets: [], walletLedger: [], audit: [], policy: null, assets: [], eligibilityOptions: { roles: [], departments: [], bases: [] },
-  capabilities: {}, lastSync: ""
-};
-
-const Icon = ({ name, size = 14, className = '', ...props }) => (
-  <i data-lucide={name} style={{ width: size, height: size }} className={className} {...props}></i>
-);
-
-const arr = v => Array.isArray(v) ? v : [];
-const obj = v => v && typeof v === 'object' && !Array.isArray(v) ? v : {};
-const csv = v => Array.isArray(v) ? v : String(v ?? '').split(',').map(x => x.trim()).filter(Boolean);
-const upper = v => String(v ?? '').trim().toUpperCase();
-const num = (v, fallback = 0) => Number.isFinite(Number(v)) ? Number(v) : fallback;
-const text = v => String(v ?? '');
-const bool = v => v === true || v === 'true';
-const money = (value, currency='USD') => {
-  try { return new Intl.NumberFormat(undefined, { style:'currency', currency: currency || 'USD' }).format(Number(value || 0)); }
-  catch (_) { return `${Number(value || 0).toFixed(2)} ${currency || 'USD'}`; }
-};
-const fmtDate = value => {
-  if (!value) return '—';
-  const d = new Date(value);
-  return Number.isNaN(d.getTime()) ? String(value) : d.toLocaleString();
-};
-const reqId = () => `UNI-${Date.now()}-${Math.random().toString(36).slice(2,8)}`;
-
-function Modal({ title, onClose, onSave, children, saveLabel="Save", saveDisabled=false, width="800px", footerExtra=null }) {
-  return (
-    <div className="modal-overlay" onMouseDown={onClose}>
-      <div className="modal-window" style={{width}} onMouseDown={e => e.stopPropagation()}>
-        <div className="modal-header">
-          <h3>{title}</h3>
-          <Icon name="x" className="modal-close" size={16} onClick={onClose} />
-        </div>
-        <div className="modal-body" style={{padding:'0'}}>{children}</div>
-        <div className="modal-footer" style={{justifyContent: footerExtra ? 'space-between' : 'flex-end'}}>
-          {footerExtra || <span />}
-          <div style={{display:'flex', gap:'8px'}}>
-            <button className="btn" onClick={onClose}>Close</button>
-            {onSave && <button className="btn btn-primary" onClick={onSave} disabled={saveDisabled}>{saveLabel}</button>}
+    <main>
+      <section id="view-home" class="view" data-view="home" aria-label="Home page">
+        <div class="hero-panel">
+          <div class="hero-content">
+            <p class="hero-kicker">Duty Required</p>
+            <h1 class="hero-title serif">Uniform Essentials</h1>
+            <button class="btn hero-button" type="button" data-action="route-category" data-category="">SHOP CATALOG</button>
           </div>
         </div>
-      </div>
-    </div>
-  );
-}
 
-function StatusBadge({ value }) {
-  const v = upper(value) || 'UNKNOWN';
-  let cls = 'status-draft';
-  if (["ACTIVE","APPROVED","ALLOCATED","DELIVERED","COMPLETED","IN_STOCK","PROCESSED","AUTHORIZED","POSTED"].includes(v)) cls = 'status-active';
-  else if (["PENDING","SUBMITTED","MANAGER_REVIEW","FULFILLMENT_READY","PICKING","PICKED","PACKING","READY_FOR_PICKUP","SHIPPED","PARTIAL","LOW_STOCK","PENDING_AUTHORIZATION"].includes(v)) cls = 'status-pending';
-  else if (["REJECTED","DECLINED","CANCELLED","RETURNED","OUT_OF_STOCK","ARCHIVED","SUSPENDED"].includes(v)) cls = 'status-danger';
-  return <span className={`status-badge ${cls}`}>{v.replaceAll('_',' ')}</span>;
-}
-
-function Gate({ title, text: body, code }) {
-  return (
-    <div style={{border:'1px solid var(--am-border)', background:'#f9fafb', borderRadius:'4px', padding:'16px', minHeight:'132px'}}>
-      <div style={{display:'flex', justifyContent:'space-between', gap:'8px', alignItems:'center'}}>
-        <strong style={{fontSize:'12px'}}>{title}</strong>
-        <StatusBadge value="Schema gated" />
-      </div>
-      <p style={{color:'var(--am-text-light)', lineHeight:'1.5', margin:'10px 0'}}>{body}</p>
-      <div className="mono" style={{color:'var(--am-blue)', fontSize:'10px'}}>{code}</div>
-    </div>
-  );
-}
-
-function Empty({ children }) {
-  return <div style={{padding:'30px', textAlign:'center', color:'var(--am-text-light)', background:'#f9fafb', border:'1px dashed var(--am-border)', borderRadius:'4px'}}>{children}</div>;
-}
-
-function Field({ label, children, hint }) {
-  return <div className="form-group"><label className="form-label">{label}</label>{children}{hint && <div style={{fontSize:'9px', color:'var(--am-text-light)', marginTop:'4px'}}>{hint}</div>}</div>;
-}
-
-function TextField({ label, value, onChange, type='text', disabled=false, placeholder='', hint='' }) {
-  return <Field label={label} hint={hint}><input className="form-control" type={type} value={value ?? ''} onChange={e=>onChange(e.target.value)} disabled={disabled} placeholder={placeholder}/></Field>;
-}
-function TextAreaField({ label, value, onChange, rows=4, hint='' }) {
-  return <Field label={label} hint={hint}><textarea className="form-control" rows={rows} value={value ?? ''} onChange={e=>onChange(e.target.value)}/></Field>;
-}
-function SelectField({ label, value, onChange, options, hint='' }) {
-  return <Field label={label} hint={hint}><select className="form-control" value={value ?? ''} onChange={e=>onChange(e.target.value)}>{options.map(o=>{const x=typeof o==='string'?{value:o,label:o}:o;return <option key={x.value} value={x.value}>{x.label}</option>})}</select></Field>;
-}
-function MultiSelectField({ label, value, onChange, options, hint='' }) {
-  const selected = new Set(arr(value));
-  return <Field label={label} hint={hint}><select className="form-control" multiple style={{height:'110px', padding:'5px'}} value={[...selected]} onChange={e=>onChange([...e.target.selectedOptions].map(o=>o.value))}>{options.map(o=><option key={o} value={o}>{o}</option>)}</select></Field>;
-}
-function UniformLogo({ url }) {
-  const [imgState, setImgState] = React.useState('pending');
-
-  React.useEffect(() => {
-    if (!url) {
-      setImgState('empty');
-    } else {
-      setImgState('loading');
-    }
-  }, [url]);
-
-  const showFallback = imgState !== 'loaded';
-
-  return (
-    <>
-      {/* Fallback Block */}
-      <div 
-        className="nav-item" 
-        id="collectionLogoFallback"
-        title="SKANDI Logo" 
-        style={{
-          background: '#fff', 
-          color: '#071522', 
-          fontWeight: '900', 
-          fontSize: '16px', 
-          fontFamily: 'serif',
-          display: showFallback ? 'flex' : 'none'
-        }}
-      >
-        S
-      </div>
-
-      {/* Image Block */}
-      <div 
-        className="nav-item" 
-        style={{
-          background: '#fff', 
-          padding: 0, 
-          overflow: 'hidden',
-          display: imgState === 'loaded' ? 'flex' : 'none'
-        }}
-      >
-        {url && (
-          <img 
-            id="collectionLogo"
-            src={url} 
-            alt="SKANDI Uniform Logo" 
-            onLoad={() => setImgState('loaded')}
-            onError={() => setImgState('error')}
-            style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-          />
-        )}
-      </div>
-    </>
-  );
-}
-const subTabsConfig = {
-  home: ['Dashboard', 'Campaigns', 'Allowance Rules', 'Regulations', 'Reports', 'Audit Trail', 'System Access'],
-  products: ['Style Catalog', 'Categories Master', 'Size Charts', 'Uniform Kits'],
-  inventory: ['Stock Matrix', 'Stock Transfers', 'Adjustments', 'Warehouses & Bins'],
-  orders: ['Order Fulfillment', 'Pending Approvals', 'Backorders', 'Returns & RMAs'],
-  purchasing: ['Purchase Orders', 'Vendors Master', 'Replenishment'],
-  employees: ['Employee Profiles', 'Sizing Events', 'Alterations', 'Point Ledgers', 'Payroll Deductions']
-};
-
-function App() {
-  const [activeMainTab, setActiveMainTab] = useState('inventory');
-  const [activeSubTabs, setActiveSubTabs] = useState({
-    home:'Dashboard', products:'Style Catalog', inventory:'Stock Matrix', orders:'Order Fulfillment', purchasing:'Purchase Orders', employees:'Employee Profiles'
-  });
-  const [data, setData] = useState(emptyData);
-  const [isSyncing, setIsSyncing] = useState(true);
-  const [error, setError] = useState('');
-  const [notice, setNotice] = useState('');
-  const [query, setQuery] = useState('');
-  const [filters, setFilters] = useState({ categories: [], status: [], season: [], supplier: [] });
-  const [selectedRows, setSelectedRows] = useState([]);
-  const [activeModal, setActiveModal] = useState(null);
-  const [modalData, setModalData] = useState(null);
-  const [searchOpen, setSearchOpen] = useState(false);
-  const [activeSavedView, setActiveSavedView] = useState('All Records');
-  const pending = useRef(new Map());
-  const bootstrapped = useRef(false);
-
-  const post = (type, payload={}, requestId='') => window.parent.postMessage({ source: SOURCE, type, payload, requestId }, '*');
-  const request = (type, payload={}, successType='UNIFORM_ADMIN_SAVED', timeout=30000) => new Promise((resolve,reject)=>{
-    const id=reqId();
-    const timer=setTimeout(()=>{pending.current.delete(id); reject(new Error('Uniform Control request timed out.'));},timeout);
-    pending.current.set(id,{resolve,reject,successType,timer});
-    post(type,payload,id);
-  });
-  const refresh = (search=query) => { setIsSyncing(true); setError(''); post('UNIFORM_ADMIN_BOOTSTRAP',{query:search || ''}); };
-  const mutate = async (type,payload,successType='UNIFORM_ADMIN_SAVED') => {
-    setIsSyncing(true); setError('');
-    try { const r=await request(type,payload,successType); setNotice('Saved'); refresh(); return r; }
-    catch(e){ setIsSyncing(false); setError(e.message || 'Uniform action failed.'); throw e; }
-  };
-
-  useEffect(()=>{
-    const onMessage = event => {
-      if (event.source !== window.parent) return;
-      const m=event.data||{};
-      if (m.source!==PARENT) return;
-      if (m.requestId && pending.current.has(m.requestId)) {
-        const p=pending.current.get(m.requestId);
-        if (m.type==='UNIFORM_ADMIN_ERROR') {
-          clearTimeout(p.timer); pending.current.delete(m.requestId); p.reject(new Error(m.message || m.payload?.message || 'Uniform Control error.')); return;
-        }
-        if (m.type===p.successType) {
-          clearTimeout(p.timer); pending.current.delete(m.requestId); p.resolve(m.payload||{}); return;
-        }
-      }
-      if (m.type==='UNIFORM_ADMIN_BOOTSTRAP_RESULT') {
-        setData({...emptyData,...obj(m.payload), eligibilityOptions:{...emptyData.eligibilityOptions,...obj(m.payload?.eligibilityOptions)}});
-        setIsSyncing(false); setError(''); bootstrapped.current=true;
-      }
-      if (m.type==='UNIFORM_ADMIN_ERROR') { setIsSyncing(false); setError(m.message || m.payload?.message || 'Uniform Control error.'); }
-    };
-    window.addEventListener('message',onMessage);
-    post('UNIFORM_ADMIN_READY',{});
-    const t1=setTimeout(()=>{if(!bootstrapped.current) refresh('');},400);
-    const t2=setTimeout(()=>{if(!bootstrapped.current){setIsSyncing(false);setError('Uniform Control is still waiting for the Wix page bridge. Verify #uniformControlEmbed and the B-011 Uniform page/backend chain.');}},8000);
-    return ()=>{window.removeEventListener('message',onMessage); clearTimeout(t1);clearTimeout(t2); pending.current.forEach(p=>clearTimeout(p.timer)); pending.current.clear();};
-  },[]);
-
-  useEffect(()=>{ if(window.lucide) lucide.createIcons(); });
-  useEffect(()=>{
-    const key=e=>{
-      if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='k'){e.preventDefault();setSearchOpen(true);}
-      if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='n'){e.preventDefault();setActiveMainTab('products');setActiveSubTabs(p=>({...p,products:'Style Catalog'}));setModalData(null);setActiveModal('EDIT_STYLE');}
-    };
-    window.addEventListener('keydown',key);return()=>window.removeEventListener('keydown',key);
-  },[]);
-
-  const catalog = arr(data.catalog);
-  const categories = arr(data.categories);
-  const orders = arr(data.orders);
-  const wallets = arr(data.wallets);
-  const ledger = arr(data.walletLedger);
-  const audit = arr(data.audit);
-  const rules = arr(data.allowanceRules);
-  const assets = arr(data.assets);
-  const eligibility = data.eligibilityOptions || emptyData.eligibilityOptions;
-  const capabilities = data.capabilities || {};
-  
-  // ADD THIS LINE:
-  const logoUrl = data.brand?.assets?.logos?.signatureCollection || data.assets?.logos?.signatureCollection;
-
-  const seasons = useMemo(()=>[...new Set(catalog.map(x=>obj(x.erp).season).filter(Boolean))].sort(),[catalog]);
-  const suppliers = useMemo(()=>[...new Set(catalog.map(x=>obj(x.erp).supplier).filter(Boolean))].sort(),[catalog]);
-  const filteredCatalog = useMemo(()=>catalog.filter(p=>{
-    const hay=[p.title,p.itemCode,p.category,p.subCategory,p.styleGroup,p.colorName,obj(p.erp).supplier,obj(p.erp).season].join(' ').toLowerCase();
-    const qok=!query.trim()||hay.includes(query.trim().toLowerCase());
-    const cok=!filters.categories.length||filters.categories.includes(p.categoryKey);
-    const sok=!filters.status.length||filters.status.includes(p.active===false?'ARCHIVED':upper(p.stockStatus));
-    const seasonOk=!filters.season.length||filters.season.includes(obj(p.erp).season);
-    const vendorOk=!filters.supplier.length||filters.supplier.includes(obj(p.erp).supplier);
-    return qok&&cok&&sok&&seasonOk&&vendorOk;
-  }),[catalog,query,filters]);
-
-  const handleMainTabChange=tab=>{setActiveMainTab(tab);setSelectedRows([]);};
-  const handleSubTabChange=sub=>{setActiveSubTabs(p=>({...p,[activeMainTab]:sub}));setSelectedRows([]);};
-  const toggleRow=id=>setSelectedRows(p=>p.includes(id)?p.filter(x=>x!==id):[...p,id]);
-  const toggleAll=ids=>setSelectedRows(p=>p.length===ids.length?[]:ids);
-  const toggleFilter=(type,val)=>setFilters(p=>({...p,[type]:p[type].includes(val)?p[type].filter(x=>x!==val):[...p[type],val]}));
-
-  const Toolbar=({title,primaryAction,secondaryAction,extraActions=[],savedViews=[]})=>(
-    <div style={{display:'flex',flexDirection:'column',flexShrink:0}}>
-      <div className="toolbar">
-        <div className="toolbar-left"><span className="toolbar-title">{title}</span>{selectedRows.length>0&&<span style={{color:'var(--am-text-light)',fontWeight:700,marginLeft:'12px'}}>{selectedRows.length} selected</span>}</div>
-        <div className="toolbar-right">
-          {extraActions.map(a=><button key={a.label} className="btn" onClick={a.onClick} disabled={a.disabled}><Icon name={a.icon||'circle'}/>{a.label}</button>)}
-          {secondaryAction&&<button className="btn" onClick={secondaryAction.onClick} disabled={secondaryAction.disabled}><Icon name={secondaryAction.icon}/>{secondaryAction.label}</button>}
-          {primaryAction&&<button className="btn btn-primary" onClick={primaryAction.onClick} disabled={primaryAction.disabled}><Icon name={primaryAction.icon}/>{primaryAction.label}</button>}
+        <div class="container">
+          <div class="curated-grid">
+            <article class="curated-card curated-men" tabindex="0" role="button" data-action="route-subcategory" data-subcategory="Men" aria-label="Shop men's uniform">
+              <div class="curated-content">
+                <h2 class="curated-title serif">Men</h2>
+                <span class="btn btn-light btn-small">Shop Men</span>
+              </div>
+            </article>
+            <article class="curated-card curated-divided" tabindex="0" role="button" data-action="route-subcategory" data-subcategory="Women" aria-label="Shop women's uniform">
+              <div class="curated-content">
+                <h2 class="curated-title serif">Women</h2>
+                <span class="btn btn-light btn-small">Shop Women</span>
+              </div>
+            </article>
+          </div>
         </div>
+      </section>
+
+      <section id="view-plp" class="view d-none" data-view="plp" aria-label="Product listing page">
+        <div class="container">
+          <div id="plp-root"></div>
+        </div>
+      </section>
+
+      <section id="view-pdp" class="view d-none" data-view="pdp" aria-label="Product detail page">
+        <div class="container">
+          <div id="pdp-root"></div>
+        </div>
+      </section>
+
+      <section id="view-bag" class="view d-none" data-view="bag" aria-label="Shopping bag page">
+        <div class="container">
+          <div id="bag-root"></div>
+        </div>
+      </section>
+
+      <section id="view-checkout" class="view d-none" data-view="checkout" aria-label="Checkout page">
+        <div class="container">
+          <div id="checkout-root"></div>
+        </div>
+      </section>
+
+      <section id="view-orders" class="view d-none" data-view="orders" aria-label="Orders page">
+        <div class="container" style="padding: 44px 0 82px;">
+          <h1 class="page-heading serif">My Uniform Orders</h1>
+          <div id="orders-root"></div>
+        </div>
+      </section>
+
+      <section id="view-regulations" class="view d-none" data-view="regulations" aria-label="Uniform Regulations">
+        <div class="container">
+          <div id="regulations-root"></div>
+        </div>
+      </section>
+
+    </main>
+
+    <div id="size-guide-modal" class="modal-overlay d-none" role="dialog" aria-modal="true" aria-labelledby="size-guide-title">
+      <div class="modal">
+        <button class="modal-close" type="button" data-action="close-size-guide" aria-label="Close size guide">×</button>
+        <h2 id="size-guide-title" class="serif" style="font-size: 34px; margin: 0 0 16px;">Size Guide</h2>
+        <p style="color: var(--hm-muted-text); font-size:13px; font-weight:600; line-height:1.6;">
+          Choose your normal uniform size. For fitted items, use the size you usually wear on duty. Uniform Control can adjust the request before fulfillment if your measurements are registered in the staff profile.
+        </p>
+        <table style="width: 100%; border-collapse: collapse; margin-top: 22px; font-size:13px; font-weight:600; text-align:center;">
+          <thead>
+            <tr>
+              <th style="border: 1px solid var(--hm-border-muted); padding: 12px; background: var(--hm-bg-secondary); color: var(--hm-black);">Size</th>
+              <th style="border: 1px solid var(--hm-border-muted); padding: 12px; background: var(--hm-bg-secondary); color: var(--hm-black);">Chest</th>
+              <th style="border: 1px solid var(--hm-border-muted); padding: 12px; background: var(--hm-bg-secondary); color: var(--hm-black);">Waist</th>
+              <th style="border: 1px solid var(--hm-border-muted); padding: 12px; background: var(--hm-bg-secondary); color: var(--hm-black);">Hip</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td style="border: 1px solid var(--hm-border-muted); padding: 12px;">XS</td><td style="border: 1px solid var(--hm-border-muted); padding: 12px;">31-33 in</td><td style="border: 1px solid var(--hm-border-muted); padding: 12px;">24-26 in</td><td style="border: 1px solid var(--hm-border-muted); padding: 12px;">34-36 in</td></tr>
+            <tr><td style="border: 1px solid var(--hm-border-muted); padding: 12px;">S</td><td style="border: 1px solid var(--hm-border-muted); padding: 12px;">34-36 in</td><td style="border: 1px solid var(--hm-border-muted); padding: 12px;">27-29 in</td><td style="border: 1px solid var(--hm-border-muted); padding: 12px;">37-39 in</td></tr>
+            <tr><td style="border: 1px solid var(--hm-border-muted); padding: 12px;">M</td><td style="border: 1px solid var(--hm-border-muted); padding: 12px;">37-39 in</td><td style="border: 1px solid var(--hm-border-muted); padding: 12px;">30-32 in</td><td style="border: 1px solid var(--hm-border-muted); padding: 12px;">40-42 in</td></tr>
+            <tr><td style="border: 1px solid var(--hm-border-muted); padding: 12px;">L</td><td style="border: 1px solid var(--hm-border-muted); padding: 12px;">40-42 in</td><td style="border: 1px solid var(--hm-border-muted); padding: 12px;">33-35 in</td><td style="border: 1px solid var(--hm-border-muted); padding: 12px;">43-45 in</td></tr>
+            <tr><td style="border: 1px solid var(--hm-border-muted); padding: 12px;">XL</td><td style="border: 1px solid var(--hm-border-muted); padding: 12px;">43-46 in</td><td style="border: 1px solid var(--hm-border-muted); padding: 12px;">36-39 in</td><td style="border: 1px solid var(--hm-border-muted); padding: 12px;">46-49 in</td></tr>
+          </tbody>
+        </table>
       </div>
-      {savedViews.length>0&&<div style={{padding:'8px 16px',background:'#f9fafb',borderBottom:'1px solid var(--am-border)',display:'flex',gap:'8px'}}>{savedViews.map(view=><button key={view} onClick={()=>setActiveSavedView(view)} style={{background:activeSavedView===view?'#fff':'transparent',border:activeSavedView===view?'1px solid var(--am-border)':'1px solid transparent',padding:'4px 10px',borderRadius:'12px',fontSize:'10px',fontWeight:'700',color:activeSavedView===view?'var(--am-blue)':'#607083'}}>{view}</button>)}</div>}
     </div>
-  );
 
-  function SidebarFilter(){
-    const [open,setOpen]=useState({category:true,season:true,vendor:true,status:true});
-    const sec=(key,title,body)=><div className="filter-section"><div className="filter-header" onClick={()=>setOpen(p=>({...p,[key]:!p[key]}))}><span className="filter-title">{title}</span><Icon name={open[key]?'chevron-up':'chevron-down'} size={14}/></div>{open[key]&&<div className="filter-body">{body}</div>}</div>;
-    const cb=(type,label,val)=><label key={`${type}-${val}`} className="filter-checkbox"><input type="checkbox" checked={filters[type].includes(val)} onChange={()=>toggleFilter(type,val)}/>{label}</label>;
-    return <aside className="am-sidebar"><div className="am-sidebar-header"><span className="am-sidebar-title">Filters</span><span style={{fontSize:'9px',color:'var(--am-blue)',cursor:'pointer'}} onClick={()=>setFilters({categories:[],status:[],season:[],supplier:[]})}>Reset</span></div>
-      {sec('category','Category',categories.filter(c=>c.active!==false).map(c=>cb('categories',c.title||c.categoryKey,c.categoryKey)))}
-      {sec('season','Season',seasons.length?seasons.map(s=>cb('season',s,s)):<span style={{color:'var(--am-text-light)'}}>No season metadata</span>)}
-      {sec('vendor','Vendor',suppliers.length?suppliers.map(s=>cb('supplier',s,s)):<span style={{color:'var(--am-text-light)'}}>No supplier metadata</span>)}
-      {sec('status','Status',[...new Set(catalog.map(p=>p.active===false?'ARCHIVED':upper(p.stockStatus)).filter(Boolean))].sort().map(s=>cb('status',s.replaceAll('_',' '),s)))}
-    </aside>;
-  }
-  
-  function AssetPicker({selected,onChange,itemId}){
-    const [uploading,setUploading]=useState(false);
-    const visible=assets.filter(a=>a.assetType==='IMAGE'&&a.publicUrl).slice(0,120);
-    const upload=async file=>{
-      if(!file)return;
-      setUploading(true);setError('');
-      try{
-        const hashBuf=await crypto.subtle.digest('SHA-256',await file.arrayBuffer());
-        const sha256=[...new Uint8Array(hashBuf)].map(b=>b.toString(16).padStart(2,'0')).join('');
-        let prepared=await request('UNIFORM_ADMIN_ASSET_PREPARE_UPLOAD',{file:{name:file.name,type:file.type,size:file.size},sha256,displayName:file.name,contextRecordId:itemId||'',tags:['uniform','product']},'UNIFORM_ADMIN_ASSET_UPLOAD_PREPARED');
-        if(prepared.duplicate&&prepared.exactDuplicates?.length){const asset=prepared.exactDuplicates[0];if(asset?.id&&!selected.includes(asset.id))onChange([...selected,asset.id].slice(0,12));setNotice('Existing identical asset selected.');return;}
-        if(prepared.needsReview&&prepared.possibleLegacyDuplicates?.length){if(!confirm('A possible duplicate asset exists. Upload anyway?'))return;prepared=await request('UNIFORM_ADMIN_ASSET_PREPARE_UPLOAD',{file:{name:file.name,type:file.type,size:file.size},sha256,displayName:file.name,contextRecordId:itemId||'',tags:['uniform','product'],allowPossibleDuplicate:true},'UNIFORM_ADMIN_ASSET_UPLOAD_PREPARED');}
-        if(!prepared.upload?.signedUrl)throw new Error('Asset upload URL was not created.');
-        const res=await fetch(prepared.upload.signedUrl,{method:prepared.upload.method||'PUT',headers:{'Content-Type':prepared.upload.contentType||file.type,'Cache-Control':prepared.upload.cacheControl||'31536000'},body:file});
-        if(!res.ok)throw new Error(`Asset upload failed (${res.status}).`);
-        const finalized=await request('UNIFORM_ADMIN_ASSET_FINALIZE_UPLOAD',{requestId:prepared.requestId},'UNIFORM_ADMIN_ASSET_UPLOAD_FINALIZED');
-        if(finalized.asset?.id&&!selected.includes(finalized.asset.id))onChange([...selected,finalized.asset.id].slice(0,12));
-        const list=await request('UNIFORM_ADMIN_ASSET_LIST',{search:'uniform'},'UNIFORM_ADMIN_ASSET_LIST_RESULT');
-        setData(d=>({...d,assets:arr(list.assets)}));setNotice('Asset uploaded and selected.');
-      }catch(e){setError(e.message||'Asset upload failed.');}finally{setUploading(false);}
+    
+    <div id="admin-auth-modal" class="modal-overlay d-none" role="dialog" aria-modal="true" aria-labelledby="admin-auth-title">
+      <div class="modal" style="max-width:520px">
+        <button class="modal-close" type="button" data-action="close-admin-auth" aria-label="Close">×</button>
+        <h2 id="admin-auth-title" class="serif" style="margin:0 0 12px;font-size:34px">Uniform Control access</h2>
+        <p id="admin-auth-copy" style="margin:0;color:var(--hm-muted-text);line-height:1.65">Checking your staff permissions…</p>
+        <div style="margin-top:22px;display:flex;justify-content:flex-end"><button class="btn btn-small" type="button" data-action="close-admin-auth">Close</button></div>
+      </div>
+    </div>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+  </div>
+
+  <script>
+    /* =========================================
+       SKANDI UNIFORM SHOP JAVASCRIPT
+       ========================================= */
+    const SOURCE = "SKANDI_UNIFORM_EMPLOYEE";
+    const PARENT = "SKANDI_WIX_PARENT";
+    const EMBEDDED_REGULATIONS_PDF_BASE64 = "JVBERi0xLjQKJZOMi54gUmVwb3J0TGFiIEdlbmVyYXRlZCBQREYgZG9jdW1lbnQgKG9wZW5zb3VyY2UpCjEgMCBvYmoKPDwKL0YxIDIgMCBSIC9GMiAzIDAgUgo+PgplbmRvYmoKMiAwIG9iago8PAovQmFzZUZvbnQgL0hlbHZldGljYSAvRW5jb2RpbmcgL1dpbkFuc2lFbmNvZGluZyAvTmFtZSAvRjEgL1N1YnR5cGUgL1R5cGUxIC9UeXBlIC9Gb250Cj4+CmVuZG9iagozIDAgb2JqCjw8Ci9CYXNlRm9udCAvSGVsdmV0aWNhLUJvbGQgL0VuY29kaW5nIC9XaW5BbnNpRW5jb2RpbmcgL05hbWUgL0YyIC9TdWJ0eXBlIC9UeXBlMSAvVHlwZSAvRm9udAo+PgplbmRvYmoKNCAwIG9iago8PAovQ29udGVudHMgMTAgMCBSIC9NZWRpYUJveCBbIDAgMCA1OTUuMjc1NiA4NDEuODg5OCBdIC9QYXJlbnQgOSAwIFIgL1Jlc291cmNlcyA8PAovRm9udCAxIDAgUiAvUHJvY1NldCBbIC9QREYgL1RleHQgL0ltYWdlQiAvSW1hZ2VDIC9JbWFnZUkgXQo+PiAvUm90YXRlIDAgL1RyYW5zIDw8Cgo+PiAKICAvVHlwZSAvUGFnZQo+PgplbmRvYmoKNSAwIG9iago8PAovQ29udGVudHMgMTEgMCBSIC9NZWRpYUJveCBbIDAgMCA1OTUuMjc1NiA4NDEuODg5OCBdIC9QYXJlbnQgOSAwIFIgL1Jlc291cmNlcyA8PAovRm9udCAxIDAgUiAvUHJvY1NldCBbIC9QREYgL1RleHQgL0ltYWdlQiAvSW1hZ2VDIC9JbWFnZUkgXQo+PiAvUm90YXRlIDAgL1RyYW5zIDw8Cgo+PiAKICAvVHlwZSAvUGFnZQo+PgplbmRvYmoKNiAwIG9iago8PAovQ29udGVudHMgMTIgMCBSIC9NZWRpYUJveCBbIDAgMCA1OTUuMjc1NiA4NDEuODg5OCBdIC9QYXJlbnQgOSAwIFIgL1Jlc291cmNlcyA8PAovRm9udCAxIDAgUiAvUHJvY1NldCBbIC9QREYgL1RleHQgL0ltYWdlQiAvSW1hZ2VDIC9JbWFnZUkgXQo+PiAvUm90YXRlIDAgL1RyYW5zIDw8Cgo+PiAKICAvVHlwZSAvUGFnZQo+PgplbmRvYmoKNyAwIG9iago8PAovUGFnZU1vZGUgL1VzZU5vbmUgL1BhZ2VzIDkgMCBSIC9UeXBlIC9DYXRhbG9nCj4+CmVuZG9iago4IDAgb2JqCjw8Ci9BdXRob3IgKFNLQU5ESSBUUkFWRUxTKSAvQ3JlYXRpb25EYXRlIChEOjIwMjYwOTA4MTIxMjMwKzAwJzAwJykgL0NyZWF0b3IgKFwodW5zcGVjaWZpZWRcKSkgL0tleXdvcmRzICgpIC9Nb2REYXRlIChEOjIwMjYwOTA4MTIxMjMwKzAwJzAwJykgL1Byb2R1Y2VyIChSZXBvcnRMYWIgUERGIExpYnJhcnkgLSBcKG9wZW5zb3VyY2VcKSkgCiAgL1N1YmplY3QgKFwodW5zcGVjaWZpZWRcKSkgL1RpdGxlIChTS0FOREkgVW5pZm9ybSBSZWd1bGF0aW9ucykgL1RyYXBwZWQgL0ZhbHNlCj4+CmVuZG9iago5IDAgb2JqCjw8Ci9Db3VudCAzIC9LaWRzIFsgNCAwIFIgNSAwIFIgNiAwIFIgXSAvVHlwZSAvUGFnZXMKPj4KZW5kb2JqCjEwIDAgb2JqCjw8Ci9GaWx0ZXIgWyAvQVNDSUk4NURlY29kZSAvRmxhdGVEZWNvZGUgXSAvTGVuZ3RoIDIyNTcKPj4Kc3RyZWFtCkdhdTBEZ04pJSwmOk86U2xzJjspTCU2XlZPKUY+cWdxKCZLOShFQmZPRyY5MjxKJVNJUj05TW81YGQwKTkyVEleVCVHNGUvcD5SNDRVXT1XIz0jQmVTWltjdFNeOSRuPyNpKXNiZkw7cjVhLVErU1F1KThfJk9oWyIudHIiNCs/MCRfXzNzLVcqRVRnR1dCcTZMQEtmMixcMTNxTmxgQkwzNWNBbksnJzZoP2tiaC1ENzhwXmVpUC1uQ2NCLy5DT0hMcGsnNmtCOUFHPWw4YStXNjdAMCdiPmVkdF9VV0xGSFZxXyk9cU85W19dbUtfR2lENGQwSUltIi5IPy9jSm1HbE1McSpMOUhnKV5YV0FGLjdRSmZvKk5LTlJHR0AtPCY1JklYUis3aV8iYig6bkRNPXBKcTdmUTJgRTdcOFkiN250Z1sqNE5DaWhoOjBzKzpjOF5NPilCQFc7ampCIThHMSJmajFCImREdUpeYUZPTWRoXnBnVlIlP1lUKSZQNyU/RC0/UCtydHBoLD9dUjpAPUJ1dDVsUi5vR3U6YS41cU07Wz0wZm5JbGgibGNMNUZrbC1jXGcsR0xAIzgsXUprVTpPZ2dXODdHNzZFNzM5TlIyWygkZSlha0FNKSs2M2VeY0JSblUvQCIpPCRGUmNYTzwtTVFJRykhOktzPyouWy5ecVonLHIoQV0ySSUkUzIqIThlSVUzc1oiY25NZyRVK0RJNVNhSEpATSw7PkJQR1xIO2k0PWQ5LylaRjAzbWcnYi1BQ3E0MkhrTjdXcms0c0VaWTdEPixCZD40TExdbCJSY1oyQ1AoJnQ3YmcudUlRPl9ZZj9BWj1oXTo1L19nMCs+bl10TWQ6aG1HUSVjSz9DUmpISDVTWUplVz5tdTJFQmE2MyVSW15OQmtsViVYUzxVaGhXPkMzaHJtPnQ7SSg6LE5RcG9ka2VAWVFJSixDIksmVyYuZ15iRyg2WVJjMSEyTTY/Xi9iKjgvbm9kYGlUZkMvTTdqYXRIUE9DS0w9cGAlNC1WIS1iSFskaW1pLkJQISg0UVxYaVVuOURnMV9XVzZnX2dNXl02MWUlY15QZSJyPFlUbyc+XzFDSlohXC5vRDkyR0MqcE5EZi9uKmNHLEdrK0Y9MyJMOW47O3RZX1FfZD5CJTBYSFZHODVIWCxHVGg2Yl4qUWRQXUE+U2chRCJIc25VQFAqJFtPLmRBcEVSME90cl4/dEMjZ2daTjlyIUk/P0QoQUhTVHFMJ3I4OUBVaSQxV0k3YjV0MjJLVXJeJE1hM2RNa1FRK2I/UmxPS1ktUG09Wmg3S0hpLldEP1EmK3MxblFcTEppSyJoKT8uJkY0KGU1XkEwLnRCcj47TFZwJzE9UiU0VTJeYS9XZDdkYnFxOCpAL0VEZ1ZVZFwhJUs6M0FANGZUW289LTIoZ1IwSTIocEpeXTZLXWBWOG5oWVdsWF5dLmpaIkJTUSd0aFdpWzxHJlRpQ0ZbMixhM2JIcWBNO1dhdS9sYTU+SS9XMz11MUBHa0tTJ1lILmQ6YDZKa3FrNkZFdUkmKFJTJnVXM0hCdEFlSWs0V09jJ2k4SHRGPjpRLVN1PW1tRylFclk9WydRUWQvI09mLShXKkVGXHNzIV1yOGowUj0kYTY4S2xWMW4nWlA0QWBnRSNedVVCakgvbFQ7Zm10UCFeTyphRD44dVE1IUZZWC9rV1FpREg0OkwpdWRTWEdhNixJb1dQLFZScU1YUkdkbis6NW0mKkkmYkdlNz5YLSxuNz01USRAP0dyLmtXUDBvcDAhTCcnNTxOS2pLaSVxK1UnIVQ5KUsrRzVkN2haVWoyKixuVF1iVSVPJHAnTkU5Yz4yTD5bOWdmRilabWotO19CXFdCZzFaXi5ZYC51Z2VHLEAjQEs3Q286YCE8MDwnPTZIWFFpREI5TThMPSsoLTNDPGA9WDtXVi49PmduZjIxOTpbQipVI2BTM0ZdL1ZyV2JlQlQiKW8sayRaMnA6SUNKYG0lQmFbImNtYTJFQkM1ZWU2UU9Sclk8WTpSZ2JOL2U4JlluYlVQdCQjLVNAMkImTDZpZG88JEZzXG8maistRUY4YkdIKUQsJDRhVCNCXUUpL3A1W21lNkZIcnBPW19EYE5RZSZfRCU/NlU7dC5VPENqXF1QblFEYjZGRyJPMz5DSXMwaW8kOilZPl1TTi9pcF1pM0wudClUV0NVNCcxKmUnTkhdK2Q7J2lOQT5aVnJqQklicyJNTzQjRzk/Ll5Nb3FNSzc8S0QuZ1JeKyxFWms1LFxwI0U4NVdZSWlZPi5RRl9EQGcjJiJYKjU8MCdcME1SUkRwN2Y8NFZzUDZUMTxAV15MS1Y8OjY2STRaNF8hRXA6QjEjMj02ISgyZ2RrQE1SZ2o1M1xAODloREoiXU9UUEcyP2NgRkhQQylpc0wlLz1PSzkuWnEwazpIT0NiPCE0ZjNyS0AndUtsTC5nImJFOCteTzxrSTM8Ik9xajlqWExnS2ZPVVVPKEYkcnE2ZS5kNmspNEQ2UUFZKmJSR3NFUDcpKUk4dDBMKTdrNzpDaTQ7RDVkMC1ARFVZaHNpQ04sW1shOldrZSQ/MCJsPldaKTNnXiU7WlFYaWchZzg4XFIwQGBnVVsmZWQsTDI8bVNdPV86c1NUSWoyPDhZaVtsLFAwaVpaZi8sNlRkQVlnP3NhRkNLM3EjTVddP2ZZLWw2ZV06J1QvVkxCT09PPUoxZSNlPylfUFwwP1RyUj8qayhvPlpJLklEMyFiSUs3cDhkXW82QyNWImVBcjUnLkNAJkBKJ1tGQTRaPTs7KD5nclpXMjclYzdrbUdEZDZyJlFtRVIzQDc2VCIldSxXck8uciwrW21MQGotbU5rL11aa2M+VGQzOlpbblVtbydDaDQ3ZmNnLiUmWWVaNHJgWGFvLmZLL29Ub2slQVNJXSlTJUQzVT9PN2Q7RWZ1NC5BKlIyOCE1KGEwX0pnT2RqPDI6aXU0PEk5X0ZNfj5lbmRzdHJlYW0KZW5kb2JqCjExIDAgb2JqCjw8Ci9GaWx0ZXIgWyAvQVNDSUk4NURlY29kZSAvRmxhdGVEZWNvZGUgXSAvTGVuZ3RoIDIzNjcKPj4Kc3RyZWFtCkdhdG08PyRGYVcmOk8jTlFvRFVIYCtxR1g0cnQoQGQnTWhEZ1RaKixDYUJcNztOVTcybStFSnExUW9OJGR0LypgNj43SEMpVnFyRm1tbiVEcF9DQC49VFMjLCJiNDdDK0dzVThKTENnOz1DJmdiRm5ZMlIjZkc9WFI2Vj4uX29YKlchNUN0ZSUqXEU9aVFMZ0glSWVXRWtvcFNyPVpWOFkxbWszOSNSbEw1Yjs1WSZeTXBQYSwpLytbWVIlLSEhcitVUEBuRUY8TiRoT0QnJFokXSwrWk5MSkZoTzEvajxOSF88VTFCVEI1X3RyIS9pWT5lVHJYbyxfZThEYS5UOVhLRmE5XEdaTTE/WFdQaWpwUj5jMGIqOlcsZnFUMihEKkFjNTNOJyg/bCNPaktIQz0uVmEyNGlvO0UvV0VmPWRvRVA2PzNgbVxxOyhsKVBMPkktT18qIVhNSThXVGVFYDNwWkZoQV5xaFlqRXNJSElaLlIkX2hsKGBJcDUrVnRhbS82K0JJKSwvY14qblleW1g7NEJlZy5dLFhKQ1EkIWtEYU9KMkEqQkZjWGRCNWdvIm1eamZiMmpVLmEpbls4ZmYrWU4pM18sRzkhXCckZWctZkYyTFVyU25YSUo7SjlXTUstKjVCNygvbCwjQE5wKFtiaSRQY2dxLSMudE88L2JtKUwkQ0syOSlUalMsSEciZ2xfZmZeIjNYYkBKTiFTNyU0PVxhbjpJKllKaEUpa29pPl8xQkJgcXM5UEw0PzYsWHQuWlEjZzAnXU4kaCwnNSJqbFswT3MqM2lIVTUmM2hBYSJXVFZfMWhJcDFZRStYUjVwaUkpUFpdZiJsNF1hOWZmVE41KFIyZFtlMytnLWIiTiVWM0pAL3FAPS0vcVxWRyZxRTtOYjYoIystOGxbWDRVJk5RPExRUT5KVG5WOGVqQmQ6U1E9J0tPNGNQXWtOYFg2O11YQU8lVD5rcmI/JydUPitaMyZvVm9HKz9gOitSPnRvUCxSP2IsLF08TC86PDI6LlJbRFA/V1hrIl4kbS5ETSZZZCo2ImowKyFGLTlXPjsvMDcsQyQvXGBGSnRUPGMiJl1ZR2ljSixwMWRVNkhRdCRQIicrUEtaQWYzJ2VHXDYpaT5WbWFQcyM6SUFFVFUpM0c8PVFnRE0lKFZsbSJNUkNDbjtHQjxsQ1tSaT1NVVpgViZncUBkLD5mVE5rXmJ1Rk50ViZXTk05UlRcNkpuJ2BmNy5DM3M6J2YzV2U1YE1nLSNRN0AlP3M/cmU4RkYxQU5hX09XNj9xWU5KSlQrPEVCL3FXX2s9aC81OFpsKFtvZ2xBJURfU1tIPFBARXVwaCROaC4uIUwobjsoJTowOyFfPmktQmJGIjtOOCNHJltZXVdfSlYwbFZWUSRlXzx1dCptPTYxUVA+ZipFNClJWEYmQlJpWWoiQzNkPjtsXyQnWTZJLCRmSWQxYU83Oz5YS2FZOywpM0RXRFRSKjpfbVEqcjA0XUo4KHVGOSEiNHVka25CPmlKZGRONlNfWEAmS0ZdIjozJyVeb1dQQypYTkA8LGg0R1VLcjNuXCkwJHA9THJRYCtNampZTUVPImBlSS1AMUFGZ0k1U2hSOFgoajwvYWY5JzlhSCFJPmVcKlpqZj0+ZDluR0xBNUlDbDFoQnJbal5RY3ROSG5vcS1eTmNfM1I3OERsVnBUTSFLYSo0cSk1Tyk2dCY2PGdkaGZBI1pSKT9LRW9hMGw5QScoT0A3WU88ZWIsYihFXm4lczswM0E6ZzcqOzlpamdOWmM5U0ZMcHE1RmdATk8mI24zNGlaamVBcW9pYG4wcDlCPi1AQDxwTUYmPSY8WWBaJlAyMW5XRUtpbzVNVmVQNDNfZCReLVc3JFl0TT9FTEhHTUYsI1VMbFNjQUtub2BBXTsjYUwwRihma0BoV1hxRVlnJCVBby9QPihGSCpOIm9WWUwuK1ptVGpjbWNUUDcwKWVdPGZOaTIqbUVFXS8zXj5LKiZVRFkpYzpMT1VbN1RcNSNDU1RoXllNLyIjQD4iZFcoV2pIYDdPR2o0R3BqIj8hLlA3JlosU2U8Z2xUXHFab0ZKNm1GXGAwTWBBR2lKIyU6ZnRCQDVFJTtMNl9QcihBZGZdJkhsSCVjQzhTRFxhZDhRTiktcSonU1dWRiIsXDVXQCltSy9FViYiXCgzSypJbEBtPmYrXGArazVGdCVeMiRRK0ltMWQvXz5HTSptZ2ZPJiZUYXQoWW1mcnNHamsrKHRNcDduNzgnZWIkNFVOZmZcZz9zaHFCWFIvZ1tlMGc0KD81bHA9aCFYdVFVOCpWRFNjJkovZkRbJCZtQ2RDNXUiNzQhO0xlYkNBMnBTW3FFOydxXHBIYmc9M2s0cEZaOT47Vmg+RDNTOnFwaWMrclstPWVpczFOMzA5UUNcNkIkTmFkQWFlP0EqUExDRyEnRXJILmcrZTMmbVBdVypJbW9cNGJLY1JdS0dMMDVvVG91Wzc4ST5pRGdlWmdsUXA6WUJnaCpKNiI9cmpGXCYyPEoncFcpbEwmRSpmK1QlK2A8b05oJycqP1NgYUMlJG9JTnNcRUlIWj9rRlRlUTZjIzFiP0JwZSNrLy5LVyxzS3BPQmVtallPTENQdE9NWV0tLmknb0lLNGlDIk5jJ0AlcCtdPihuRT1lcE1dOWhsZHFVLDknYyxaaWZOSzlQL2I3OCsmMEw2PiVfXS4nKi1AT3Jvcm45VF90VDlWYmM6aDo7MkA3YmNCQCU1XjpJU0NvNzkkMUFaYDpFQz5kUzwubltZQ2MpblU9Qm9XOzBuOFBaW2JaNGhsZDZ0OUdFcyglSD9bajZOVGIwLlFWRFBVM1BALVktLUUkUlBBSjlMREF0Xl5MMkBDJCtbQk8rJUNVJyh0JTEyWSRiZ11GJUkzJiI1JSFyZGNdYGRgIWE5OHI+aF9SSWdnKm1BKUNpNDRtPTFINXBkO0UuNClkbUVlJC9LLWYtZDlVVUNlN1hsJF9AIiJWQzBQJioqI2tdRitGPG1vcWVuKSRjRCU6cGxUS2BnTT0qaS51IUNKaT0+cGA/TT9bWVtNaHJxQidiPVtcUlJzSVY8RmJwOWBcO21NZC5BIlBJN1NMSHFLQyw0KkQmInA+RzplTypDYXJ+PmVuZHN0cmVhbQplbmRvYmoKMTIgMCBvYmoKPDwKL0ZpbHRlciBbIC9BU0NJSTg1RGVjb2RlIC9GbGF0ZURlY29kZSBdIC9MZW5ndGggMTk5Ngo+PgpzdHJlYW0KR2F1MEQ/JCJeaCdSZl9aXDhRTEc9SHUtPG5FQGVjTFQrZF1SLlBmaCg+KVQiYWZeO1A6NElaOz8lIWkjZ2VndWdjXjpxP21HPDM4XFIsaWZhJXRXQi1YMz4+JGk5KnQ1ZiZOdC5nZVRyVXI8R2wwPFcjcEgra0ByX0BfKDBgI2heL2pQYS9PYEZSUCQzRjg8UE9iYFVrVTFyWnRqKE0sXVlyQE5ENnE1VmloJV5GPSVzR1E4TCxAai5WVlxocyEzOEQmOSwpWE1FJj5TIytTT2YvMW5xc1RZK0wzU0lDdSZzQFhlNC9yUExHaThSRU5PKy5xXGZCUl4hUVFcWD43bS00Jzk3cDo7OmBCLTkwJFxSXXJUOSdrRFlvY11eTWdSJnElMSJCVSwlbmJXKGJnb10talYuY0Q4PXM6bV8kQWEyYWAnU15AQSpbXilxSWJsbEluUl1sNFRSVmFsK01DSXQ7SCludUkscDZFLyUyJUYrTChyZyVzaWMkIiI/VkklVSU8MnNLTywhRjptNz5VcCNIV1otJCtpK2cuZk1wOHEqPFE8Nj5nYC46KnNfUCcoRS5ZMUpvUWs+N3Imay8rUVhSZylPZSYlMkJnWk9NVkFIYnVYVGRZc1ZxRSxzI0NFLk9qUk0nY1ZPLWI/UHNKT1kkXVpiOGJIXmZUM19GOi5laDAxbkokV0ZJKS8tNTBZKnJjNSkhSEhxLD8hYEtzaUdRN1tPI0dHP3JsLm5WUipwbSNTTURUU19LQWE1aFpHb2s7amtRSzNqRmFTZihPUUVgaTs/YChVLlkvOSEyODdLRCMqKDs3LFpKKms+aV5iLkA+UjU+VlozKzxuMUBnLipgNyhSYl02cFQxOSRZSyl1WXBdN1xyWDZabmpiXixOYnAuKERLSSRdXGsiSTRzQ1k1Uj84bzVfRkEhP10xNlhGUipRZ1VPNW4kNi91bV9oOXQ7bVRbJCE7NjhXZyckNGVVOkVnbnVvcihDNUpJJS43KmNmWkladWRvc3AxOi4mLGFmbio1aGpOQ2xbT1NpSzpmMlcnaGYkaXJxZ2hCXGAuXmc+L21RZSRcYWVWMG1sdWw4REFxISFHWENRPFkvJChSU1B0OC9aUjQ4XHArQEVZL1FddS5IZD9ALnVFVk9xNGQmMiIzX2oqbkAvbFsxIidncmo1NkIxPkhmVzNlO2pMOCQ9KFpybShFa1FiI2NJK0pbOVVGUSYxND41c0kkTXJSbGw3VEdgWyNlTl0sKXJ0SktJaSU+OTRHcCRcbmRjMU88RWtYZzU1VldSPUhFMVI8Z0phZW9BdGQ6RElbKEJzLTg+XSpQPVlqXDplJCRmTlMoQ1lVQ05EVixZYWphS28lXllqZ1tzJDY0cFU8USUnYUpSTSROMUktSEQkUzdhQFguNCRyO2ReRi8uMzJIWW9LQ187UTRyaCpRXWxQMHQwVzBZT08pJjBVUjFhdUlaITUhWSx1aGlVK1o5VFU6NiVxKDojW1ptJmxXTiRGKjxmNFEqKFYlUT0vMSZ0aWFuVGlDQ1U+aT5kPy5KITElPyhhOyhPTStNOVkjXiRbbVVqKUdNayhvVDtXU09TRkBvPmMoLUhicUZAM04qbWhnIU9kYnByaFs1ZmItKEFNPSpcN1YnP2kiNk9NRjFmWkYyYV1HNElzL1xDIUM1Y3U7aDslcTZdRWYnMEJiWGFYVzQwXCcwViIndCIiNidZSj0/QTInTy1YW2VeMzFtVXQndD5XRGdlWSQ9NiNASG8oSlkxdEtAZz5DNSlba00iMFB0b1dFQFpPb04oXFBNcmxASFdZWHJ1Z2VmUEYxL0QzJ2JoSkdCNz1AanFiK09BU0pqYjRTJz1NPzFUPUZma2VOPzxWWzFQREtZJFRMXEI7aSVZRVtPT1hMJTlTISpEPy4wLFdKI1w+ck0uW2xLRVI1UFcoQmw2VlRLTzFIZTxAclFAWk5BKSNTO0hKT2EoNSxCOWxRTEczK2BgZmRxKXM2NS9eVChLMWkqbk82clhbSjFYXWxrcTAlWj4lMys1UyFZbzRZUDw1KklGRThmJCdcKWBvRDMxInAxaVMiXD8wI0MjNURVIytFZCo6ME5oKCNaW0ZkS2hrM19wa1swLHNSb2QvaSZMIT1GJEJUbUNbck9rOUsnKGU5cGApLkciX2JHWD9lRVlbWG5xKiE9X2tXLjNXPkklK05rcTsjMVE9XE8nZmNAUURTPFRGOixQT2dFMiFuQENoJkY+Wl0yTjZHJkEmQjsyMVArb0wwViZkQmRwP1JlVl81P2AnR0JgPE5rXT82OjUkY1xGJSxcRTtEYCpDPzBfW2BxKF1ZY0FZQ2MtRXQiP0xNZ0hrKW80XihERUF1X1MndGxKZT1fVDpibFhLc0kuPl4jUT9bX1NrKHJGVmRjX2FDQmpMPGFZYCU0IVpyUyMvXTpGYzVfWkpwSHBIcGdwbFxhSDZAIUdjTUciZlQoI0huQCo1KjFnWT8vNjkkZlVaU005O1pgVDxhcCNnNS5kWkVqJ21LJ2dnWDZwU1lqcjY4Ui9xL0VsSCZzb2c0MDlqYk5vRC5KMCFBT2lnRmllJTVeWSRNMGRtWm5jcjNGVnVSSGU7T2o4by9EVzc0L3RNUVNFWVVOJVtKdWhGUy1HM285KiZ+PmVuZHN0cmVhbQplbmRvYmoKeHJlZgowIDEzCjAwMDAwMDAwMDAgNjU1MzUgZiAKMDAwMDAwMDA2MSAwMDAwMCBuIAowMDAwMDAwMTAyIDAwMDAwIG4gCjAwMDAwMDAyMDkgMDAwMDAgbiAKMDAwMDAwMDMyMSAwMDAwMCBuIAowMDAwMDAwNTI1IDAwMDAwIG4gCjAwMDAwMDA3MjkgMDAwMDAgbiAKMDAwMDAwMDkzMyAwMDAwMCBuIAowMDAwMDAxMDAxIDAwMDAwIG4gCjAwMDAwMDEyOTUgMDAwMDAgbiAKMDAwMDAwMTM2NiAwMDAwMCBuIAowMDAwMDAzNzE1IDAwMDAwIG4gCjAwMDAwMDYxNzQgMDAwMDAgbiAKdHJhaWxlcgo8PAovSUQgCls8MDE4NjMyNDY1Mzc1YmZkNDM3NWU1ODUzMTY3OTk5OWI+PDAxODYzMjQ2NTM3NWJmZDQzNzVlNTg1MzE2Nzk5OTliPl0KJSBSZXBvcnRMYWIgZ2VuZXJhdGVkIFBERiBkb2N1bWVudCAtLSBkaWdlc3QgKG9wZW5zb3VyY2UpCgovSW5mbyA4IDAgUgovUm9vdCA3IDAgUgovU2l6ZSAxMwo+PgpzdGFydHhyZWYKODI2MgolJUVPRgo=";
+    
+    let state = {
+      profile: {},
+      wallet: {},
+      catalog: [],
+      categories: [],
+      orders: [],
+      policy: null,
+      cart: [],
+      saved: [],
+      activeCategory: "",
+      activeFilters: { subCategory: "", size: "", sort: "recommended" },
+      currentView: "home",
+      activeProduct: null,
+      activeSize: "",
+      activeFit: "",
+      activeImageIndex: 0,
+      cardVariantByGroup: {},
+      requestNote: "",
+      lastOrderCode: "",
+      lastOrderPoints: 0,
+      policyAcknowledged: false,
+      bootstrapReceived: false,
+      lastSyncAt: ""
     };
-    return <div>
-      <div style={{display:'flex',gap:'8px',alignItems:'center',marginBottom:'12px'}}><input type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/avif,image/svg+xml" onChange={e=>upload(e.target.files?.[0])} disabled={uploading}/>{uploading&&<span style={{fontWeight:700}}>Uploading…</span>}<span style={{color:'var(--am-text-light)'}}>Maximum 12 selected images.</span></div>
-      {visible.length===0?<Empty>No Uniform images found in the canonical Asset Library.</Empty>:<div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(110px,1fr))',gap:'8px'}}>{visible.map(a=>{const on=selected.includes(a.id);return <button type="button" key={a.id} onClick={()=>onChange(on?selected.filter(x=>x!==a.id):[...selected,a.id].slice(0,12))} style={{border:on?'2px solid var(--am-blue)':'1px solid var(--am-border)',background:'#fff',borderRadius:'4px',padding:0,textAlign:'left',overflow:'hidden',position:'relative'}}><img src={a.publicUrl} alt={a.altText||a.displayName||''} style={{width:'100%',aspectRatio:'1/1',objectFit:'cover',display:'block',background:'#eef2f6'}}/><div style={{padding:'6px',fontSize:'9px',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{a.displayName||a.originalName||a.assetCode}</div>{on&&<span style={{position:'absolute',right:'5px',top:'5px',width:'19px',height:'19px',borderRadius:'50%',background:'var(--am-blue)',color:'#fff',display:'grid',placeItems:'center'}}>✓</span>}</button>})}</div>}
-    </div>;
-  }
 
-  function MasterStyleEditModal(){
-    const original=modalData||{};
-    const originalPayload=obj(original.payload);
-    const originalErp=obj(original.erp||originalPayload.erp);
-    const [tab,setTab]=useState('General');
-    const [form,setForm]=useState({
-      itemId:original.itemId||original._id||'', itemCode:original.itemCode||'', title:original.title||'', categoryKey:original.categoryKey||'',
-      subCategory:original.subCategory||'', styleGroup:original.styleGroup||'', colorName:original.colorName||'', colorHex:original.colorHex||'#022E64',
-      fitOptions:arr(original.fitOptions), sizes:arr(original.sizes), initialIssueQuantity:num(original.initialIssueQuantity), replacementCycleMonths:num(original.replacementCycleMonths),
-      availableRoles:arr(original.availableRoles), availableDepartments:arr(original.availableDepartments), availableBases:arr(original.availableBases),
-      itemRegulations:original.itemRegulations||'', pointsCost:num(original.pointsCost), stockStatus:original.stockStatus||'IN_STOCK', active:original.active!==false,
-      description:original.description||'', details:original.details||'', careInstructions:original.careInstructions||'', imageAssetIds:arr(original.imageAssetIds).length?arr(original.imageAssetIds):arr(originalPayload.assetIds||originalErp.assetIds),
-      erp:{...originalErp,
-        internalName:originalErp.internalName||'', program:originalErp.program||'', genderFit:originalErp.genderFit||'', season:originalErp.season||'ALL-SEASON', collection:originalErp.collection||'', productStatus:originalErp.productStatus||(original.active===false?'ARCHIVED':'ACTIVE'),
-        sizeScale:originalErp.sizeScale||'', barcode:originalErp.barcode||'', supplierBarcode:originalErp.supplierBarcode||'', replacementStyle:originalErp.replacementStyle||'', eligiblePrograms:arr(originalErp.eligiblePrograms),
-        minFte:originalErp.minFte??'', mandatory:originalErp.mandatory===true, optional:originalErp.optional===true, seasonal:originalErp.seasonal===true, requiresApproval:originalErp.requiresApproval===true,
-        allowanceNote:originalErp.allowanceNote||'', replacementRule:originalErp.replacementRule||'', returnRequired:originalErp.returnRequired===true,
-        supplier:originalErp.supplier||'', supplierId:originalErp.supplierId||'', supplierStyle:originalErp.supplierStyle||'', supplierSku:originalErp.supplierSku||'', supplierColor:originalErp.supplierColor||'', supplierSize:originalErp.supplierSize||'', leadTimeDays:originalErp.leadTimeDays??'', moq:originalErp.moq??'',
-        currency:originalErp.currency||'USD', standardCost:originalErp.standardCost??'', lastCost:originalErp.lastCost??'', averageCost:originalErp.averageCost??'', landedCost:originalErp.landedCost??'', alterationCost:originalErp.alterationCost??'', freightCost:originalErp.freightCost??'', dutyCost:originalErp.dutyCost??'',
-        material:originalErp.material||'', composition:originalErp.composition||'', technicalSpec:originalErp.technicalSpec||'', documents:arr(originalErp.documents)
+    function post(type, payload={}) {
+      window.parent.postMessage({ source: SOURCE, type: type, payload: payload || {} }, "*");
+    }
+
+    function arr(v) {
+      return Array.isArray(v) ? v.map(x=>String(x).trim()).filter(Boolean) : String(v||"").split(",").map(x=>x.trim()).filter(Boolean);
+    }
+    
+    function itemId(x) { return x.itemId || x._id; }
+    function itemGallery(x) {
+      var raw = Array.isArray(x.imageGallery) ? x.imageGallery : (Array.isArray(x.imageUrls) ? x.imageUrls : []);
+      var urls = raw.map(function(entry) {
+        if (typeof entry === "string") return entry;
+        return entry && (entry.url || entry.imageUrl || entry.image_url);
+      }).filter(Boolean);
+      if (!urls.length && x.imageUrl) urls.push(x.imageUrl);
+      return urls;
+    }
+    function itemImage(x) { return itemGallery(x)[0] || x.imageUrl || ""; }
+    
+    function setStatus(msg, mode="") {
+      const e = document.getElementById("status-banner");
+      e.textContent = msg || "";
+      e.className = msg ? `status-banner show ${mode}` : "status-banner";
+    }
+
+    function byId(id) { return document.getElementById(id); }
+    
+    function formatPoints(value) {
+      return Number(value || 0) + " points";
+    }
+
+    function escapeHtml(value) {
+      return String(value || "").replace(/[&<>"']/g, function(character) {
+        var map = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" };
+        return map[character];
+      });
+    }
+
+    function getProductById(id) {
+      return (state.catalog || []).find(x => itemId(x) === id);
+    }
+
+    function getBagCount() {
+      return state.cart.reduce(function(total, item) { return total + (Number(item.quantity) || 1); }, 0);
+    }
+
+    function calculateTotalPoints() {
+      return state.cart.reduce(function(total, item) {
+        return total + (Number(item.pointsCost || 0) * (Number(item.quantity) || 1));
+      }, 0);
+    }
+
+    function showToast(message) {
+      var toast = byId("toast");
+      toast.textContent = message;
+      toast.classList.add("is-visible");
+      window.clearTimeout(showToast.timer);
+      showToast.timer = window.setTimeout(function() { toast.classList.remove("is-visible"); }, 2600);
+    }
+
+    function renderHeaderBadges() {
+      document.querySelectorAll("[data-bag-count]").forEach(n => n.textContent = String(getBagCount()));
+      document.querySelectorAll("[data-favorites-count]").forEach(n => n.textContent = String(state.saved.length));
+      byId("orders-count").textContent = String((state.orders || []).length);
+      
+      byId("staff-name").textContent = state.profile?.displayName || state.profile?.skId || "Staff";
+      var pts = formatPoints(state.wallet?.availablePoints || 0);
+      byId("wallet-points").textContent = pts;
+      const syncText = state.lastSyncAt
+        ? ` · Synced ${new Date(state.lastSyncAt).toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"})}`
+        : "";
+      byId("promo-ticker").textContent =
+        `You have ${pts} available for uniform requests.` +
+        (state.policy?.policyVersion ? ` · Uniform Regulations ${state.policy.policyVersion}` : "") +
+        syncText;
+
+      document.querySelectorAll(".nav-item").forEach(function(node) {
+        var cat = node.getAttribute("data-category");
+        node.classList.toggle("is-active", (state.currentView === "plp" && cat === state.activeCategory) || (cat === "" && state.currentView === "plp" && !state.activeCategory));
+      });
+    }
+
+    function renderNavFromCategories() {
+      const cats = state.categories || [];
+      const nav = byId("main-nav-rail");
+      let html = `<button class="nav-item ${!state.activeCategory ? "is-active" : ""}" type="button" data-action="route-category" data-category="">All</button>`;
+      
+      if (cats.length) {
+        cats.slice(0, 5).forEach(c => {
+          let title = c.title || c.categoryKey;
+          let active = state.activeCategory === title ? "is-active" : "";
+          html += `<button class="nav-item ${active}" type="button" data-action="route-category" data-category="${escapeHtml(title)}">${escapeHtml(title)}</button>`;
+        });
+      }
+      nav.innerHTML = html;
+    }
+
+    function navigate(view, payload) {
+      if (payload && payload.category !== undefined) {
+        state.activeCategory = payload.category;
+        state.activeFilters = { subCategory: "", size: "", sort: "recommended" };
+      }
+      if (payload && payload.productId) {
+        state.activeProduct = getProductById(payload.productId);
+        const initialSizes = availableFamilySizes(state.activeProduct);
+        state.activeSize = initialSizes[0] || "Standard";
+        const initialFits = availableFamilyFits(state.activeProduct, state.activeSize);
+        state.activeFit = initialFits[0] || "";
+        state.activeProduct = resolveFamilyVariant(state.activeProduct, {
+          size: state.activeSize,
+          fit: state.activeFit,
+          colorKey: variantColorKey(state.activeProduct)
+        }) || state.activeProduct;
+        state.activeImageIndex = 0;
+      }
+
+      state.currentView = view;
+      document.querySelectorAll("[data-view]").forEach(s => s.classList.add("d-none"));
+      
+      var activeSection = byId("view-" + view);
+      if (activeSection) activeSection.classList.remove("d-none");
+
+      renderHeaderBadges();
+      renderNavFromCategories();
+      renderView(view);
+
+      var targetHash = "#view-" + view;
+      if (window.location.hash !== targetHash) {
+        window.history.pushState({ view: view }, "", targetHash);
+      }
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function renderView(view) {
+      if (view === "plp") renderPLP();
+      if (view === "pdp") renderPDP();
+      if (view === "bag") renderBag();
+      if (view === "checkout") renderCheckout();
+      if (view === "orders") renderOrders();
+      if (view === "regulations") renderRegulations();
+    }
+
+
+    function skuParts(value) {
+      return String(value || "").trim().toUpperCase().split(/[^A-Z0-9]+/).filter(Boolean);
+    }
+
+    function erpData(p) {
+      return (p && p.erp && typeof p.erp === "object")
+        ? p.erp
+        : ((p && p.payload && p.payload.erp && typeof p.payload.erp === "object") ? p.payload.erp : {});
+    }
+
+    function productIdentityKey(p) {
+      const erp = erpData(p);
+      const variantTokens = new Set([
+        ...skuParts(p?.colorName),
+        ...arr(p?.sizes).flatMap(skuParts),
+        ...arr(p?.fitOptions).flatMap(skuParts),
+        ...skuParts(erp.supplierColor),
+        ...skuParts(erp.supplierSize)
+      ]);
+      const baseTitle = skuParts(p?.title).filter(part => !variantTokens.has(part)).join("-");
+      return [
+        baseTitle,
+        String(p?.category || p?.categoryKey || "").trim().toUpperCase(),
+        String(p?.subCategory || "").trim().toUpperCase(),
+        String(erp.genderFit || "").trim().toUpperCase(),
+        String(erp.program || "").trim().toUpperCase(),
+        String(erp.collection || "").trim().toUpperCase()
+      ].join("|");
+    }
+
+    function meaningfulSkuPrefix(parts) {
+      if(parts.length >= 2) return true;
+      return parts.length === 1 && String(parts[0] || "").length >= 5;
+    }
+
+    function inferredSkuFamilyKey(p) {
+      const sku = String(p?.itemCode || "").trim().toUpperCase();
+      const style = String(p?.styleGroup || "").trim().toUpperCase();
+
+      if(style && style !== sku) return `STYLE:${style}`;
+
+      const erp = erpData(p);
+      const supplierStyle = String(erp.supplierStyle || erp.style || "").trim().toUpperCase();
+      if(supplierStyle && supplierStyle !== sku) return `SUPPLIER:${supplierStyle}`;
+
+      if(!sku) return `ITEM:${String(itemId(p) || "").toUpperCase()}`;
+
+      const parts = skuParts(sku);
+      const identity = productIdentityKey(p);
+      const peers = (state.catalog || []).filter(peer =>
+        peer !== p &&
+        peer?.itemCode &&
+        productIdentityKey(peer) === identity
+      );
+
+      // Common delimited SKU stem.
+      if(parts.length >= 2) {
+        let family = parts;
+        const maxTrim = Math.min(3, parts.length - 1);
+        for(let trim = 1; trim <= maxTrim; trim += 1) {
+          const prefix = parts.slice(0, parts.length - trim);
+          if(!meaningfulSkuPrefix(prefix)) continue;
+
+          const hasSibling = peers.some(peer => {
+            const peerParts = skuParts(peer.itemCode);
+            return peerParts.length > prefix.length &&
+              prefix.every((part, index) => peerParts[index] === part);
+          });
+
+          if(hasSibling) family = prefix;
+        }
+        if(family.length < parts.length) return `SKU:${family.join("-")}`;
+      }
+
+      // Meaningful repeated token anywhere in the SKU.
+      const generic = new Set(["SK", "SKU", "UNIFORM", "ITEM", "PRODUCT", "STYLE"]);
+      const sharedTokens = parts
+        .filter(part => !generic.has(part) && (part.length >= 4 || /\d/.test(part)))
+        .filter(part => peers.some(peer => skuParts(peer.itemCode).includes(part)))
+        .sort((a,b) => b.length - a.length || a.localeCompare(b));
+      if(sharedTokens.length) return `SKU-TOKEN:${sharedTokens[0]}`;
+
+      // Compact/non-delimited SKU family fallback.
+      const compactSku = sku.replace(/[^A-Z0-9]/g, "");
+      let bestPrefix = "";
+      peers.forEach(peer => {
+        const peerSku = String(peer.itemCode || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+        let i = 0;
+        while(i < compactSku.length && i < peerSku.length && compactSku[i] === peerSku[i]) i += 1;
+        const prefix = compactSku.slice(0, i);
+        if(prefix.length >= 5 && prefix.length > bestPrefix.length) bestPrefix = prefix;
+      });
+      if(bestPrefix) return `SKU-PREFIX:${bestPrefix}`;
+
+      return `SKU:${sku}`;
+    }
+
+    function productGroupKey(p) {
+      return String(p?.shopGroupKey || inferredSkuFamilyKey(p) || p?.styleGroup || p?.itemCode || itemId(p) || "").toUpperCase();
+    }
+
+    function productVariants(p) {
+      const key = productGroupKey(p);
+      return (state.catalog || [])
+        .filter(x => productGroupKey(x) === key)
+        .sort((a,b) => String(a.itemCode||"").localeCompare(String(b.itemCode||"")));
+    }
+
+    function variantColorKey(v) {
+      const name = String(v?.colorName || "").trim().toLowerCase();
+      const hex = String(v?.colorHex || "").trim().toUpperCase();
+      return name || hex ? `${name}|${hex}` : "";
+    }
+
+    function sameVariantColor(a, b) {
+      const aKey = variantColorKey(a);
+      const bKey = variantColorKey(b);
+      if(!aKey && !bKey) return true;
+      return aKey === bKey;
+    }
+
+    function uniqueOptions(values) {
+      const seen = new Set();
+      return values.filter(value => {
+        const key = String(value || "").trim().toLowerCase();
+        if(!key || seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+    }
+
+    function availableFamilySizes(p, fitValue="") {
+      if(!p) return [];
+      const family = productVariants(p).filter(v => sameVariantColor(v, p));
+      const fitKey = String(fitValue || "").trim().toLowerCase();
+      const candidates = fitKey
+        ? family.filter(v => {
+            const fits = arr(v.fitOptions).map(x => x.toLowerCase());
+            return !fits.length || fits.includes(fitKey);
+          })
+        : family;
+      return uniqueOptions(candidates.flatMap(v => arr(v.sizes)));
+    }
+
+    function availableFamilyFits(p, sizeValue="") {
+      if(!p) return [];
+      const family = productVariants(p).filter(v => sameVariantColor(v, p));
+      const sizeKey = String(sizeValue || "").trim().toLowerCase();
+      const candidates = sizeKey
+        ? family.filter(v => {
+            const sizes = arr(v.sizes).map(x => x.toLowerCase());
+            return !sizes.length || sizes.includes(sizeKey);
+          })
+        : family;
+      return uniqueOptions(candidates.flatMap(v => arr(v.fitOptions)));
+    }
+
+    function resolveFamilyVariant(p, { size="", fit="", colorKey="" } = {}) {
+      if(!p) return null;
+      let candidates = productVariants(p);
+      const wantedColor = colorKey || variantColorKey(p);
+      if(wantedColor) {
+        const sameColor = candidates.filter(v => variantColorKey(v) === wantedColor);
+        if(sameColor.length) candidates = sameColor;
+      }
+
+      const sizeKey = String(size || "").trim().toLowerCase();
+      if(sizeKey && sizeKey !== "standard") {
+        const sized = candidates.filter(v => {
+          const sizes = arr(v.sizes).map(x => x.toLowerCase());
+          return !sizes.length || sizes.includes(sizeKey);
+        });
+        if(sized.length) candidates = sized;
+      }
+
+      const fitKey = String(fit || "").trim().toLowerCase();
+      if(fitKey) {
+        const fitted = candidates.filter(v => {
+          const fits = arr(v.fitOptions).map(x => x.toLowerCase());
+          return !fits.length || fits.includes(fitKey);
+        });
+        if(fitted.length) candidates = fitted;
+      }
+
+      return candidates.find(v => itemId(v) === itemId(p)) || candidates[0] || p;
+    }
+
+    function coloredVariants(p) {
+      const groups = new Map();
+      productVariants(p).forEach(v => {
+        const key = variantColorKey(v);
+        if(!key || !v.colorName || !v.colorHex) return;
+        if(!groups.has(key)) groups.set(key, []);
+        groups.get(key).push(v);
+      });
+
+      return Array.from(groups.values()).map(group => {
+        const preferred = group.find(v => {
+          const sizes = arr(v.sizes);
+          const fits = arr(v.fitOptions);
+          const sizeOk = !state.activeSize || state.activeSize === "Standard" || !sizes.length || sizes.includes(state.activeSize);
+          const fitOk = !state.activeFit || !fits.length || fits.includes(state.activeFit);
+          return sizeOk && fitOk;
+        });
+        return preferred || group[0];
+      });
+    }
+
+    function selectedProductForGroup(p, allowedGroup=[]) {
+      const key = productGroupKey(p);
+      const selectedId = state.cardVariantByGroup[key];
+      const selected = selectedId ? getProductById(selectedId) : null;
+      if(selected && (!allowedGroup.length || allowedGroup.some(item => itemId(item) === itemId(selected)))) return selected;
+      return allowedGroup[0] || p;
+    }
+
+    function getFilteredProducts() {
+      let items = (state.catalog || []).filter(x => x.active !== false && x.stockStatus !== "HIDDEN");
+      
+      if (state.activeCategory && state.activeCategory !== "Favorites") {
+        items = items.filter(x => 
+          String(x.category||"").toLowerCase().includes(state.activeCategory.toLowerCase()) || 
+          [x.title, x.itemCode, x.description, arr(x.tags).join(" ")].join(" ").toLowerCase().includes(state.activeCategory.toLowerCase())
+        );
+      } else if (state.activeCategory === "Favorites") {
+        items = items.filter(x => state.saved.includes(itemId(x)));
+      }
+
+      if (state.activeFilters.subCategory) {
+        items = items.filter(x => String(x.subCategory || "").toLowerCase() === state.activeFilters.subCategory.toLowerCase());
+      }
+
+      if (state.activeFilters.size) {
+        items = items.filter(x => arr(x.sizes).includes(state.activeFilters.size));
+      }
+
+      const grouped = new Map();
+      items.forEach(function(p){
+        const key = productGroupKey(p);
+        if(!grouped.has(key)) grouped.set(key, []);
+        grouped.get(key).push(p);
+      });
+
+      items = Array.from(grouped.values()).map(function(group){
+        const base = group[0];
+        return selectedProductForGroup(base, group);
+      });
+
+      const sort = state.activeFilters.sort;
+      if (sort === "pointsAsc") items.sort((a,b) => Number(a.pointsCost||0) - Number(b.pointsCost||0));
+      if (sort === "pointsDesc") items.sort((a,b) => Number(b.pointsCost||0) - Number(a.pointsCost||0));
+      if (sort === "newest") items.reverse();
+
+      return items;
+    }
+
+    function getCategoryTitle() {
+      if (state.activeCategory === "Favorites") return "Saved Items";
+      return state.activeCategory || "All Uniform Items";
+    }
+
+    function renderPLP() {
+      var root = byId("plp-root");
+      var products = getFilteredProducts();
+
+      root.innerHTML =
+        '<div class="plp-header">' +
+          '<div>' +
+            '<h1 class="plp-title serif">' + escapeHtml(getCategoryTitle()) + '</h1>' +
+            '<p class="plp-count">' + products.length + ' approved items available</p>' +
+          '</div>' +
+          '<button class="btn btn-light btn-small" type="button" data-action="reset-filters">Clear Filters</button>' +
+        '</div>' +
+        '<div class="toolbar" aria-label="Product filters">' +
+          '<div>' +
+            '<label for="filter-subcategory">Sub Category</label>' +
+            '<select id="filter-subcategory" data-filter="subCategory">' +
+              '<option value="">All Sub Categories</option>' +
+              [...new Set((state.catalog || []).map(x => x.subCategory).filter(Boolean))].sort().map(function(v){ return '<option value="' + escapeHtml(v) + '"' + (state.activeFilters.subCategory === v ? ' selected' : '') + '>' + escapeHtml(v) + '</option>'; }).join("") +
+            '</select>' +
+          '</div>' +
+          '<div>' +
+            '<label for="filter-size">Filter by Size</label>' +
+            '<select id="filter-size" data-filter="size">' +
+              '<option value="">All Sizes</option>' +
+              '<option value="XS"' + (state.activeFilters.size === "XS" ? " selected" : "") + '>XS</option>' +
+              '<option value="S"' + (state.activeFilters.size === "S" ? " selected" : "") + '>S</option>' +
+              '<option value="M"' + (state.activeFilters.size === "M" ? " selected" : "") + '>M</option>' +
+              '<option value="L"' + (state.activeFilters.size === "L" ? " selected" : "") + '>L</option>' +
+              '<option value="XL"' + (state.activeFilters.size === "XL" ? " selected" : "") + '>XL</option>' +
+            '</select>' +
+          '</div>' +
+          '<div>' +
+            '<label for="filter-sort">Sort By</label>' +
+            '<select id="filter-sort" data-filter="sort">' +
+              '<option value="recommended"' + (state.activeFilters.sort === "recommended" ? " selected" : "") + '>Recommended</option>' +
+              '<option value="newest"' + (state.activeFilters.sort === "newest" ? " selected" : "") + '>New Arrivals</option>' +
+              '<option value="pointsAsc"' + (state.activeFilters.sort === "pointsAsc" ? " selected" : "") + '>Points: Low to High</option>' +
+              '<option value="pointsDesc"' + (state.activeFilters.sort === "pointsDesc" ? " selected" : "") + '>Points: High to Low</option>' +
+            '</select>' +
+          '</div>' +
+        '</div>' +
+        renderProductGrid(products);
+    }
+
+    function renderProductGrid(products) {
+      if (products.length === 0) {
+        return '<div class="empty-state"><h2 class="serif">No pieces found</h2><p>Try clearing filters or checking other categories.</p></div>';
+      }
+      var html = '<div class="product-grid">';
+      products.forEach(function(p) {
+        var id = itemId(p);
+        var isFav = state.saved.includes(id);
+        var imgUrl = itemImage(p);
+        
+        var imgTag = imgUrl ? `<img class="product-card-image" src="${escapeHtml(imgUrl)}" alt="${escapeHtml(p.title)}">` : `<div class="fallback-img" style="width:100%;height:100%;background:#eef2f7;display:flex;align-items:center;justify-content:center;font-weight:900;color:#94a3b8;font-size:14px;">SKANDI</div>`;
+        var saleTag = p.stockStatus === "LOW_STOCK" ? '<span class="sale-tag" style="background:#b45309;">Low Stock</span>' : (p.stockStatus === "OUT_OF_STOCK" ? '<span class="sale-tag" style="background:#b42318;">Out of Stock</span>' : "");
+
+        html +=
+          '<article class="product-card" tabindex="0" data-action="open-product" data-product-id="' + escapeHtml(id) + '" aria-label="Open ' + escapeHtml(p.title) + '">' +
+            '<div class="product-media">' +
+              saleTag +
+              '<button class="favorite-btn' + (isFav ? " is-favorite" : "") + '" type="button" data-action="toggle-favorite" data-product-id="' + escapeHtml(id) + '">♥</button>' +
+              imgTag +
+            '</div>' +
+            '<div class="product-info">' +
+              '<h2 class="product-title">' + escapeHtml(p.title) + '</h2>' +
+              '<p class="product-price">' + formatPoints(p.pointsCost) + '</p>' +
+              '<p class="product-rating">' + escapeHtml(p.category || "Uniform") + (p.subCategory ? ` / ${escapeHtml(p.subCategory)}` : "") + (p.itemCode ? ` · ${escapeHtml(p.itemCode)}` : "") + '</p>' +
+              (function(){
+                const variants=coloredVariants(p);
+                if(variants.length<=1) return "";
+                return '<div class="swatch-row">' +
+                  variants.map(function(v){
+                    return '<button class="swatch ' + (itemId(v)===id?'is-active':'') + '" type="button" data-action="select-card-color" data-product-id="' + escapeHtml(itemId(v)) + '" title="' + escapeHtml(v.colorName) + '" aria-label="' + escapeHtml(v.colorName) + '" style="background-color:' + escapeHtml(v.colorHex) + ';"></button>';
+                  }).join("") +
+                '</div><div class="swatch-label">' + escapeHtml(p.colorName || "") + '</div>';
+              })() +
+            '</div>' +
+          '</article>';
+      });
+      html += '</div>';
+      return html;
+    }
+
+    function renderPDP() {
+      var p = state.activeProduct;
+      if (!p) { navigate("home"); return; }
+
+      var sizes = availableFamilySizes(p, state.activeFit);
+      if(!sizes.length) sizes = ["Standard"];
+      if(!state.activeSize || !sizes.includes(state.activeSize)) state.activeSize = sizes[0];
+
+      var fits = availableFamilyFits(p, state.activeSize);
+      if(fits.length && !fits.includes(state.activeFit)) state.activeFit = fits[0];
+      if(!fits.length) state.activeFit = "";
+
+      var resolvedVariant = resolveFamilyVariant(p, {
+        size: state.activeSize,
+        fit: state.activeFit,
+        colorKey: variantColorKey(p)
+      });
+      if(resolvedVariant) {
+        p = resolvedVariant;
+        state.activeProduct = resolvedVariant;
+      }
+
+      // Recalculate selectors against the resolved SKU so every option shown is available
+      // within the selected color family.
+      sizes = availableFamilySizes(p, state.activeFit);
+      if(!sizes.length) sizes = ["Standard"];
+      if(!sizes.includes(state.activeSize)) state.activeSize = sizes[0];
+      fits = availableFamilyFits(p, state.activeSize);
+      if(fits.length && !fits.includes(state.activeFit)) state.activeFit = fits[0];
+      if(!fits.length) state.activeFit = "";
+
+      var finalVariant = resolveFamilyVariant(p, {
+        size: state.activeSize,
+        fit: state.activeFit,
+        colorKey: variantColorKey(p)
+      });
+      if(finalVariant) {
+        p = finalVariant;
+        state.activeProduct = finalVariant;
+      }
+
+      var gallery = itemGallery(p);
+      if(state.activeImageIndex >= gallery.length) state.activeImageIndex = 0;
+      var activeImage = gallery[state.activeImageIndex] || "";
+
+      var galleryHtml =
+        '<div>' +
+          '<div class="pdp-gallery-main">' +
+            (activeImage
+              ? '<img src="' + escapeHtml(activeImage) + '" alt="' + escapeHtml(p.title) + '">'
+              : '<div style="font-size:24px;font-weight:900;color:#94a3b8;">SKANDI</div>') +
+          '</div>' +
+          (gallery.length > 1
+            ? '<div class="pdp-thumbnails">' +
+                gallery.map(function(imgUrl,index){
+                  return '<button class="pdp-thumb ' + (index===state.activeImageIndex?'is-active':'') + '" type="button" data-action="select-pdp-image" data-image-index="' + index + '"><img src="' + escapeHtml(imgUrl) + '" alt="' + escapeHtml(p.title) + ' image ' + (index+1) + '"></button>';
+                }).join("") +
+              '</div>'
+            : '') +
+        '</div>';
+
+      var sizeButtons = sizes.map(s =>
+        '<button class="size-option ' + (state.activeSize === s ? "is-active" : "") + '" type="button" data-action="select-pdp-size" data-size="' + escapeHtml(s) + '">' + escapeHtml(s) + '</button>'
+      ).join("");
+
+      var fitHtml = fits.length
+        ? '<div class="selector-block">' +
+            '<div class="selector-label">Fit <span class="selected-meta">' + escapeHtml(state.activeFit || "") + '</span></div>' +
+            '<div class="size-grid">' +
+              fits.map(function(f){
+                return '<button class="size-option ' + (state.activeFit===f?'is-active':'') + '" type="button" data-action="select-pdp-fit" data-fit="' + escapeHtml(f) + '">' + escapeHtml(f) + '</button>';
+              }).join("") +
+            '</div>' +
+          '</div>'
+        : "";
+
+      var variants = coloredVariants(p);
+      var colorHtml = variants.length > 1
+        ? '<div class="selector-block">' +
+            '<div class="selector-label">Color <span class="selected-meta">' + escapeHtml(p.colorName || "") + '</span></div>' +
+            '<div class="variant-selector">' +
+              variants.map(function(v){
+                return '<button class="variant-color-button ' + (variantColorKey(v)===variantColorKey(p)?'is-active':'') + '" type="button" data-action="select-pdp-color" data-product-id="' + escapeHtml(itemId(v)) + '" title="' + escapeHtml(v.colorName) + '" aria-label="' + escapeHtml(v.colorName) + '" style="background:' + escapeHtml(v.colorHex) + '"></button>';
+              }).join("") +
+            '</div>' +
+          '</div>'
+        : "";
+
+      var replacementDisabled = p.replacementEligible === false;
+      var replacementText = p.replacementPending
+        ? "REQUEST IN PROGRESS"
+        : (p.replacementNextEligibleAt
+            ? "REPLACEMENT AVAILABLE " + new Date(p.replacementNextEligibleAt).toLocaleDateString()
+            : "REPLACEMENT NOT YET AVAILABLE");
+
+      byId("pdp-root").innerHTML =
+        '<div class="pdp-layout">' +
+          '<div>' + galleryHtml + '</div>' +
+          '<aside class="pdp-panel" aria-label="Product purchase panel">' +
+            '<div class="breadcrumb">' +
+              '<button type="button" data-action="route-category" data-category="' + escapeHtml(p.category) + '">' + escapeHtml(p.category || "Catalog") + '</button>' +
+              (p.subCategory ? ' / <button type="button" data-action="route-subcategory" data-subcategory="' + escapeHtml(p.subCategory) + '">' + escapeHtml(p.subCategory) + '</button>' : '') +
+              ' / <span>' + escapeHtml(p.itemCode || "") + '</span>' +
+            '</div>' +
+            '<h1 class="pdp-title serif">' + escapeHtml(p.title) + '</h1>' +
+            '<p class="pdp-price">' + formatPoints(p.pointsCost) + '</p>' +
+            '<div class="pdp-review">' +
+              (p.colorName ? escapeHtml(p.colorName) + ' · ' : '') +
+              (p.stockStatus === "LOW_STOCK" ? '<span style="color:#b45309;font-weight:800;">Low Stock</span>' : (p.stockStatus === "OUT_OF_STOCK" ? '<span style="color:#b42318;font-weight:800;">Out of Stock</span>' : 'In Stock')) +
+            '</div>' +
+
+            colorHtml +
+
+            '<div class="selector-block">' +
+              '<div class="selector-label">Size <button class="size-guide-link" type="button" data-action="open-size-guide">Size Guide</button></div>' +
+              '<div class="size-grid">' + sizeButtons + '</div>' +
+              '<p id="pdp-message" class="pdp-message"></p>' +
+            '</div>' +
+
+            fitHtml +
+
+            (p.itemRegulations ? '<div class="item-regulation-callout"><strong>ITEM UNIFORM REGULATION</strong>' + escapeHtml(p.itemRegulations) + '</div>' : '') +
+
+            '<button class="btn btn-full' + ((p.stockStatus === "OUT_OF_STOCK" || replacementDisabled) ? ' btn-disabled' : '') + '" type="button" data-action="add-to-bag"' + ((p.stockStatus === "OUT_OF_STOCK" || replacementDisabled) ? ' disabled' : '') + '>' +
+              (p.stockStatus === "OUT_OF_STOCK" ? 'OUT OF STOCK' : (replacementDisabled ? escapeHtml(replacementText) : 'ADD TO REQUEST BAG')) +
+            '</button>' +
+
+            '<div class="accordion">' +
+              '<div class="accordion-item is-open">' +
+                '<button class="accordion-header" type="button" data-action="toggle-accordion">Description <span>+</span></button>' +
+                '<div class="accordion-body"><p>' + escapeHtml(p.description || "Approved SKANDI uniform item.") + '</p></div>' +
+              '</div>' +
+              '<div class="accordion-item">' +
+                '<button class="accordion-header" type="button" data-action="toggle-accordion">Details <span>+</span></button>' +
+                '<div class="accordion-body"><p>' + escapeHtml(p.details || "No additional product details have been added.") + '</p></div>' +
+              '</div>' +
+              '<div class="accordion-item">' +
+                '<button class="accordion-header" type="button" data-action="toggle-accordion">Care Instructions <span>+</span></button>' +
+                '<div class="accordion-body"><p>' + escapeHtml(p.careInstructions || "Follow the care label attached to the garment.") + '</p></div>' +
+              '</div>' +
+              '<div class="accordion-item">' +
+                '<button class="accordion-header" type="button" data-action="toggle-accordion">Issue & Replacement <span>+</span></button>' +
+                '<div class="accordion-body"><div class="issue-cycle-grid">' +
+                  '<div class="issue-cycle-card"><strong>Initial Issue</strong><span>' + (Number(p.initialIssueQuantity||0) ? escapeHtml(String(p.initialIssueQuantity)) + ' in starting pack' : 'Not configured') + '</span></div>' +
+                  '<div class="issue-cycle-card"><strong>Replacement Cycle</strong><span>' + (Number(p.replacementCycleMonths||0) ? escapeHtml(String(p.replacementCycleMonths)) + ' months' : 'No cycle configured') + '</span></div>' +
+                '</div>' +
+                (p.replacementMessage ? '<p style="margin-top:12px;font-weight:800;color:#b42318;">' + escapeHtml(p.replacementMessage) + '</p>' : '') +
+                '</div>' +
+              '</div>' +
+              '<div class="accordion-item">' +
+                '<button class="accordion-header" type="button" data-action="toggle-accordion">Item Uniform Regulations <span>+</span></button>' +
+                '<div class="accordion-body"><p>' + escapeHtml(p.itemRegulations || "No additional item-specific regulation. The general SKANDI Uniform Regulations apply.") + '</p></div>' +
+              '</div>' +
+              '<div class="accordion-item">' +
+                '<button class="accordion-header" type="button" data-action="toggle-accordion">Eligibility <span>+</span></button>' +
+                '<div class="accordion-body"><div class="eligibility-grid">' +
+                  '<div class="eligibility-chip"><strong>Role</strong><span>' + escapeHtml(arr(p.availableRoles).join(", ") || "ALL") + '</span></div>' +
+                  '<div class="eligibility-chip"><strong>Department</strong><span>' + escapeHtml(arr(p.availableDepartments).join(", ") || "ALL") + '</span></div>' +
+                  '<div class="eligibility-chip"><strong>Base</strong><span>' + escapeHtml(arr(p.availableBases).join(", ") || "ALL") + '</span></div>' +
+                '</div></div>' +
+              '</div>' +
+              '<div class="accordion-item">' +
+                '<button class="accordion-header" type="button" data-action="toggle-accordion">Uniform Regulations <span>+</span></button>' +
+                '<div class="accordion-body">' +
+                  '<p>' + escapeHtml(state.policy?.title || "SKANDI Uniform Regulations") + ' · Version ' + escapeHtml(state.policy?.policyVersion || "Current") + '</p>' +
+                  '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;">' +
+                    '<button class="btn btn-light btn-small" type="button" data-action="route-regulations">READ FULL REGULATIONS</button>' +
+                    '<button class="btn btn-light btn-small" type="button" data-action="download-regulations">DOWNLOAD PDF</button>' +
+                  '</div>' +
+                '</div>' +
+              '</div>' +
+            '</div>' +
+          '</aside>' +
+        '</div>';
+    }
+
+    function addToBag() {
+      var p = resolveFamilyVariant(state.activeProduct, {
+        size: state.activeSize,
+        fit: state.activeFit,
+        colorKey: variantColorKey(state.activeProduct)
+      }) || state.activeProduct;
+      state.activeProduct = p;
+      if(!p || !state.activeSize || p.stockStatus === "OUT_OF_STOCK" || p.replacementEligible === false) return;
+      if(availableFamilyFits(p, state.activeSize).length && !state.activeFit) return;
+      var id = itemId(p);
+      var existing = state.cart.find(x => x.itemId === id && x.size === state.activeSize && x.fit === state.activeFit);
+      
+      if(existing) existing.quantity += 1;
+      else {
+        state.cart.push({
+          itemId: id, title: p.title, itemCode: p.itemCode, category: p.category,
+          styleGroup: p.styleGroup || p.itemCode, colorName: p.colorName || "",
+          size: state.activeSize, fit: state.activeFit || "", quantity: 1,
+          pointsCost: Number(p.pointsCost || 0), imageUrl: itemImage(p)
+        });
+      }
+      
+      renderHeaderBadges();
+      var msg = byId("pdp-message");
+      if(msg) { msg.style.color = "var(--hm-success)"; msg.textContent = "Added to uniform request."; }
+      showToast(p.title + " added to bag");
+    }
+
+    function renderBag() {
+      var root = byId("bag-root");
+      var totalPts = calculateTotalPoints();
+      
+      if (state.cart.length === 0) {
+        root.innerHTML =
+          '<div style="padding: 44px 0 82px;">' +
+            '<h1 class="page-heading serif">Request Bag</h1>' +
+            '<div class="empty-state"><h2 class="serif">Your bag is empty</h2><p>Add approved uniform items to submit a request.</p><button class="btn" type="button" data-action="route-category" data-category="">CONTINUE SHOPPING</button></div>' +
+          '</div>';
+        return;
+      }
+
+      var itemsHtml = "";
+      state.cart.forEach(function(item, index) {
+        var imgUrl = item.imageUrl;
+        var imgHtml = imgUrl ? `<img src="${escapeHtml(imgUrl)}" alt="${escapeHtml(item.title)}">` : `<div class="fallback-img">SKANDI</div>`;
+        itemsHtml +=
+          '<article class="bag-line">' +
+            imgHtml +
+            '<div>' +
+              '<h2 class="bag-line-title serif">' + escapeHtml(item.title) + '</h2>' +
+              '<p class="bag-line-meta">Code: ' + escapeHtml(item.itemCode || "") + '</p>' +
+              (item.colorName ? '<p class="bag-line-meta">Color: ' + escapeHtml(item.colorName) + '</p>' : '') +
+              '<p class="bag-line-meta">Size: ' + escapeHtml(item.size) + '</p>' +
+              (item.fit ? '<p class="bag-line-meta">Fit: ' + escapeHtml(item.fit) + '</p>' : '') +
+              '<p class="bag-line-price">' + formatPoints(item.pointsCost) + ' each</p>' +
+              '<div class="quantity-row">' +
+                '<button class="qty-btn" type="button" data-action="decrement-cart" data-cart-index="' + index + '">−</button>' +
+                '<span class="qty-value">' + item.quantity + '</span>' +
+                '<button class="qty-btn" type="button" data-action="increment-cart" data-cart-index="' + index + '">+</button>' +
+                '<button class="trash-btn" type="button" data-action="remove-cart" data-cart-index="' + index + '">🗑</button>' +
+              '</div>' +
+            '</div>' +
+          '</article>';
+      });
+
+      root.innerHTML =
+        '<div class="bag-layout">' +
+          '<section>' +
+            '<h1 class="page-heading serif">Request Bag</h1>' +
+            '<div class="bag-items">' + itemsHtml + '</div>' +
+          '</section>' +
+          '<aside class="summary-card">' +
+            '<h2 class="summary-title serif">Request Summary</h2>' +
+            '<div class="summary-row"><span>Available Points</span><strong>' + formatPoints(state.wallet?.availablePoints || 0) + '</strong></div>' +
+            '<div class="summary-row summary-total" style="border-top:1px solid var(--hm-border-muted);"><span>Total Cost</span><strong>' + formatPoints(totalPts) + '</strong></div>' +
+            '<p class="shipping-note">Points will be held upon submission pending Uniform Control approval.</p>' +
+            '<button class="btn btn-full" type="button" data-action="route-checkout">PROCEED TO SUBMIT</button>' +
+          '</aside>' +
+        '</div>';
+    }
+
+    function renderCheckout() {
+      var root = byId("checkout-root");
+      var totalPts = calculateTotalPoints();
+
+      if (state.lastOrderCode && state.cart.length === 0) {
+        root.innerHTML =
+          '<div style="padding: 44px 0 82px;">' +
+            '<div class="success-panel">' +
+              '<div class="success-icon">✓</div>' +
+              '<h2 class="serif">Request Submitted</h2>' +
+              '<p>Your uniform request has been successfully sent to Uniform Control.</p>' +
+              '<p><strong>Total points reserved:</strong> ' + formatPoints(state.lastOrderPoints) + '</p>' +
+              '<button class="btn" type="button" data-action="route-home" style="margin-top:20px;">RETURN TO PORTAL</button>' +
+            '</div>' +
+          '</div>';
+        return;
+      }
+
+      if (state.cart.length === 0) {
+        navigate("bag"); return;
+      }
+
+      root.innerHTML =
+        '<div class="checkout-layout">' +
+          '<section>' +
+            '<h1 class="page-heading serif">Submit Request</h1>' +
+            '<div class="checkout-accordion">' +
+              '<article class="checkout-step is-open">' +
+                '<button class="checkout-step-header" type="button" style="cursor:default;">' +
+                  '<span>Step 1: Request Details</span>' +
+                '</button>' +
+                '<div class="checkout-step-body" style="max-height:760px; padding:20px;">' +
+                  '<div class="form-grid">' +
+                    '<div class="form-field form-field-full">' +
+                      '<label>Employee Name</label>' +
+                      '<input type="text" readonly disabled value="' + escapeHtml(state.profile?.displayName || state.profile?.skId || "Staff") + '">' +
+                    '</div>' +
+                    '<div class="form-field form-field-full">' +
+                      '<label for="req-note">Note for Uniform Control (Optional)</label>' +
+                      '<textarea id="req-note" rows="3" placeholder="Add any necessary sizing notes or duty details here...">' + escapeHtml(state.requestNote) + '</textarea>' +
+                    '</div>' +
+                  '</div>' +
+                  '<p id="submit-error" class="form-error"></p>' +
+                  '<button class="btn" type="button" data-action="submit-order" style="margin-top:16px;">CONFIRM & SUBMIT (' + formatPoints(totalPts) + ')</button>' +
+                '</div>' +
+              '</article>' +
+            '</div>' +
+          '</section>' +
+          '<aside class="summary-card">' +
+            '<h2 class="summary-title serif">Request Summary</h2>' +
+            '<div class="summary-row"><span>Items</span><strong>' + getBagCount() + '</strong></div>' +
+            '<div class="summary-row summary-total"><span>Total Cost</span><strong>' + formatPoints(totalPts) + '</strong></div>' +
+            '<p class="shipping-note">Review your selections carefully. Once approved by Uniform Control, items will be dispatched to your base station.</p>' +
+          '</aside>' +
+        '</div>';
+    }
+    
+    function renderPolicyBody(body) {
+      const raw = String(body || "").trim();
+      if(!raw) return '<p>No Uniform Regulations have been published yet.</p>';
+
+      const lines = raw.split(/\r?\n/);
+      let html = "";
+      let listOpen = false;
+
+      function closeList(){
+        if(listOpen){ html += "</ul>"; listOpen = false; }
+      }
+
+      lines.forEach(function(line){
+        const t = String(line || "").trim();
+        if(!t){ closeList(); return; }
+
+        if(/^[-•]\s+/.test(t)){
+          if(!listOpen){ html += "<ul>"; listOpen = true; }
+          html += "<li>" + escapeHtml(t.replace(/^[-•]\s+/, "")) + "</li>";
+          return;
+        }
+
+        closeList();
+
+        if(/^\d+(\.\d+)*[\.\s]/.test(t) || /^[A-Z][A-Z0-9 &/()'-]{5,}$/.test(t)){
+          html += "<h2>" + escapeHtml(t) + "</h2>";
+        } else {
+          html += "<p>" + escapeHtml(t) + "</p>";
+        }
+      });
+
+      closeList();
+      return html;
+    }
+
+    function downloadUniformRegulations() {
+      const policyUrl = String(state.policy?.pdfUrl || "").trim();
+
+      if(policyUrl){
+        const a = document.createElement("a");
+        a.href = policyUrl;
+        a.target = "_blank";
+        a.rel = "noopener";
+        a.download = "";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        return;
+      }
+
+      try{
+        const binary = atob(EMBEDDED_REGULATIONS_PDF_BASE64);
+        const bytes = new Uint8Array(binary.length);
+        for(let i=0;i<binary.length;i++) bytes[i] = binary.charCodeAt(i);
+        const blob = new Blob([bytes], { type:"application/pdf" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        const version = String(state.policy?.policyVersion || "current").replace(/[^A-Za-z0-9._-]/g,"-");
+        a.href = url;
+        a.download = `SKANDI_Uniform_Regulations_${version}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(()=>URL.revokeObjectURL(url), 1500);
+      }catch(err){
+        showToast("Could not prepare the Uniform Regulations PDF.");
+      }
+    }
+
+    function renderRegulations() {
+      const root = byId("regulations-root");
+      const policy = state.policy || {};
+
+      root.innerHTML =
+        '<div class="regulations-shell">' +
+          '<section class="regulations-hero">' +
+            '<div>' +
+              '<p class="regulations-kicker">SKANDI Staff Uniform</p>' +
+              '<h1 class="regulations-title serif">' + escapeHtml(policy.title || "Uniform Regulations") + '</h1>' +
+              '<div class="regulations-meta">' +
+                '<span>Version: <strong>' + escapeHtml(policy.policyVersion || "Current") + '</strong></span>' +
+                (policy.effectiveDate ? '<span>Effective: <strong>' + escapeHtml(policy.effectiveDate) + '</strong></span>' : '') +
+                (policy.documentId ? '<span>Document: <strong>' + escapeHtml(policy.documentId) + '</strong></span>' : '') +
+              '</div>' +
+            '</div>' +
+            '<div class="regulations-actions">' +
+              '<button class="btn btn-light" type="button" data-action="download-regulations">Download PDF</button>' +
+              '<button class="btn" type="button" data-action="route-category" data-category="">Back to Catalog</button>' +
+            '</div>' +
+          '</section>' +
+          '<div class="regulations-layout">' +
+            '<article class="regulations-document">' + renderPolicyBody(policy.body) + '</article>' +
+            '<aside class="regulations-side">' +
+              '<div class="reg-card">' +
+                '<h3>Applies together</h3>' +
+                '<p>General Uniform Regulations apply to every uniform item. Product-specific regulations shown on an item page apply in addition to this document.</p>' +
+              '</div>' +
+              '<div class="reg-card">' +
+                '<h3>Acknowledgement</h3>' +
+                '<p>Confirm that you have read the current Uniform Regulations. Your acknowledgement is recorded against the active policy version.</p>' +
+                '<label class="policy-ack"><input id="policy-ack-checkbox" type="checkbox" ' + (state.policyAcknowledged ? 'checked disabled' : '') + '> <span>I have read and understand the current SKANDI Uniform Regulations.</span></label>' +
+                '<button class="btn btn-full' + (state.policyAcknowledged ? ' btn-disabled' : '') + '" style="margin-top:14px;" type="button" data-action="ack-regulations" ' + (state.policyAcknowledged ? 'disabled' : '') + '>' + (state.policyAcknowledged ? 'ACKNOWLEDGED' : 'ACKNOWLEDGE REGULATIONS') + '</button>' +
+              '</div>' +
+              '<div class="reg-card">' +
+                '<h3>Product eligibility</h3>' +
+                '<p>The catalog is already filtered for your staff profile. Role, department and base requirements are shown on each product detail page.</p>' +
+              '</div>' +
+            '</aside>' +
+          '</div>' +
+        '</div>';
+    }
+
+    function renderOrders() {
+      var root = byId("orders-root");
+      if(!state.orders || !state.orders.length) {
+        root.innerHTML = '<div class="empty-state"><h2 class="serif">No Orders</h2><p>You have not submitted any uniform requests yet.</p></div>';
+        return;
+      }
+      var html = '<div style="display:grid;gap:14px;">';
+      state.orders.forEach(o => {
+        html += `<div class="bag-line" style="grid-template-columns:1fr; padding:24px;">
+          <h2 class="bag-line-title serif">Order ${escapeHtml(o.orderNumber)}</h2>
+          <p class="bag-line-meta">Status: <strong>${escapeHtml(o.status)}</strong></p>
+          <p class="bag-line-meta">${escapeHtml(o.summary||"")}</p>
+          <p class="bag-line-price" style="margin-bottom:0;">${formatPoints(o.totalPoints)}</p>
+        </div>`;
+      });
+      html += '</div>';
+      root.innerHTML = html;
+    }
+
+    function toggleFav(id) {
+      if(state.saved.includes(id)) state.saved = state.saved.filter(x=>x!==id);
+      else state.saved.push(id);
+      renderHeaderBadges();
+      if(state.currentView === "plp") renderPLP();
+    }
+
+
+    function requestUniformSync(showMessage=true) {
+      if(showMessage) setStatus("Synchronizing Uniform Center...");
+      post("UNIFORM_EMPLOYEE_BOOTSTRAP");
+    }
+
+    function installUniformSyncRecovery() {
+      // Startup retries cover the Wix iframe/Velo listener race.
+      [250, 1200, 3500, 7000].forEach(function(delay) {
+        window.setTimeout(function() {
+          if(!state.bootstrapReceived) {
+            requestUniformSync(delay > 250);
+          }
+        }, delay);
+      });
+
+      // Keep staff eligibility, balances, policy, orders and catalog current.
+      window.setInterval(function() {
+        if(document.visibilityState === "visible") {
+          requestUniformSync(false);
+        }
+      }, 60000);
+
+      document.addEventListener("visibilitychange", function() {
+        if(document.visibilityState === "visible" && state.bootstrapReceived) {
+          requestUniformSync(false);
+        }
+      });
+    }
+
+    // EVENT LISTENERS
+    document.addEventListener("click", function(e) {
+      var btn = e.target.closest("[data-action]");
+      if(!btn) return;
+      var action = btn.getAttribute("data-action");
+      if (action === "admin-login") {
+        const modal = byId("admin-auth-modal");
+        const copy = byId("admin-auth-copy");
+        if (modal) modal.classList.remove("d-none");
+        if (copy) copy.textContent = "Checking your staff permissions…";
+        post("UNIFORM_EMPLOYEE_ADMIN_LOGIN", {});
+        return;
+      }
+      if (action === "close-admin-auth") {
+        const modal = byId("admin-auth-modal");
+        if (modal) modal.classList.add("d-none");
+        return;
+      }
+      
+      if (action !== "open-product") { e.preventDefault(); e.stopPropagation(); }
+
+      if (action === "route-home") navigate("home");
+      if (action === "route-bag") navigate("bag");
+      if (action === "route-checkout") {
+        if(state.cart.length) navigate("checkout");
+        else showToast("Your bag is empty.");
+      }
+      if (action === "sync-uniform") {
+        requestUniformSync(true);
+        showToast("Synchronizing Uniform Center…");
+      }
+      if (action === "route-regulations") navigate("regulations");
+      if (action === "download-regulations") downloadUniformRegulations();
+      if (action === "ack-regulations") {
+        const box = byId("policy-ack-checkbox");
+        if(!box || !box.checked){
+          showToast("Confirm that you have read the regulations first.");
+        } else if(state.policy?.policyId || state.policy?.id) {
+          btn.textContent = "RECORDING...";
+          btn.disabled = true;
+          post("UNIFORM_EMPLOYEE_ACK_POLICY", {
+            policyId: state.policy.policyId || state.policy.id,
+            policyVersion: state.policy.policyVersion || ""
+          });
+        }
+      }
+      if (action === "route-orders") navigate("orders");
+      if (action === "route-favorites") navigate("plp", {category: "Favorites"});
+      
+      if (action === "route-category") {
+        navigate("plp", {category: btn.getAttribute("data-category") || ""});
+      }
+      if (action === "route-subcategory") {
+        state.activeCategory = "";
+        state.activeFilters = { subCategory: btn.getAttribute("data-subcategory") || "", size: "", sort: "recommended" };
+        navigate("plp");
+      }
+      if (action === "open-product") {
+        navigate("pdp", {productId: btn.getAttribute("data-product-id")});
+      }
+      if (action === "toggle-favorite") toggleFav(btn.getAttribute("data-product-id"));
+      if (action === "select-card-color") {
+        const variant=getProductById(btn.getAttribute("data-product-id"));
+        if(variant){
+          state.cardVariantByGroup[productGroupKey(variant)]=itemId(variant);
+          renderPLP();
+        }
+      }
+      if (action === "reset-filters") { state.activeFilters = {subCategory:"", size:"", sort:"recommended"}; renderPLP(); }
+      
+      if (action === "select-pdp-size") {
+        state.activeSize = btn.getAttribute("data-size");
+        state.activeProduct = resolveFamilyVariant(state.activeProduct, {
+          size: state.activeSize,
+          fit: state.activeFit,
+          colorKey: variantColorKey(state.activeProduct)
+        }) || state.activeProduct;
+        renderPDP();
+      }
+      if (action === "select-pdp-fit") {
+        state.activeFit = btn.getAttribute("data-fit");
+        state.activeProduct = resolveFamilyVariant(state.activeProduct, {
+          size: state.activeSize,
+          fit: state.activeFit,
+          colorKey: variantColorKey(state.activeProduct)
+        }) || state.activeProduct;
+        renderPDP();
+      }
+      if (action === "select-pdp-image") { state.activeImageIndex = Number(btn.getAttribute("data-image-index")||0); renderPDP(); }
+      if (action === "select-pdp-color") {
+        const variant=getProductById(btn.getAttribute("data-product-id"));
+        if(variant){
+          const nextSizes = availableFamilySizes(variant, state.activeFit);
+          if(!state.activeSize || !nextSizes.includes(state.activeSize)) state.activeSize = nextSizes[0] || "Standard";
+
+          const nextFits = availableFamilyFits(variant, state.activeSize);
+          if(nextFits.length && !nextFits.includes(state.activeFit)) state.activeFit = nextFits[0];
+          if(!nextFits.length) state.activeFit = "";
+
+          state.activeProduct = resolveFamilyVariant(variant, {
+            size: state.activeSize,
+            fit: state.activeFit,
+            colorKey: variantColorKey(variant)
+          }) || variant;
+          state.activeImageIndex=0;
+          state.cardVariantByGroup[productGroupKey(variant)]=itemId(state.activeProduct);
+          renderPDP();
+        }
+      }
+      if (action === "add-to-bag") addToBag();
+      
+      if (action === "open-size-guide") byId("size-guide-modal").classList.remove("d-none");
+      if (action === "close-size-guide") byId("size-guide-modal").classList.add("d-none");
+      
+      if (action === "toggle-accordion") {
+        var item = btn.closest(".accordion-item");
+        if(item) item.classList.toggle("is-open");
+      }
+      
+      if (action === "increment-cart") { var idx = Number(btn.getAttribute("data-cart-index")); if(state.cart[idx]) { state.cart[idx].quantity++; renderHeaderBadges(); renderBag(); } }
+      if (action === "decrement-cart") { var idx = Number(btn.getAttribute("data-cart-index")); if(state.cart[idx]) { state.cart[idx].quantity--; if(state.cart[idx].quantity<=0) state.cart.splice(idx,1); renderHeaderBadges(); renderBag(); } }
+      if (action === "remove-cart") { var idx = Number(btn.getAttribute("data-cart-index")); if(state.cart[idx]) { state.cart.splice(idx,1); renderHeaderBadges(); renderBag(); } }
+      
+      if (action === "submit-order") {
+        if(!state.cart.length) { showToast("Bag is empty"); return; }
+        state.requestNote = byId("req-note") ? byId("req-note").value : "";
+        post("UNIFORM_EMPLOYEE_SUBMIT_ORDER", { items: state.cart, note: state.requestNote });
+        // Disable button visually
+        btn.textContent = "SUBMITTING...";
+        btn.style.opacity = "0.7";
+        btn.style.pointerEvents = "none";
       }
     });
-    const set=(k,v)=>setForm(p=>({...p,[k]:v}));
-    const setErp=(k,v)=>setForm(p=>({...p,erp:{...p.erp,[k]:v}}));
-    const categoryOptions=[{value:'',label:'Uncategorized'},...categories.filter(c=>c.active!==false).map(c=>({value:c.categoryKey,label:c.title||c.categoryKey}))];
-    const save=async()=>{
-      if(!form.itemCode.trim()||!form.title.trim()){setError('Product Name and SKU / Item Code are required.');return;}
-      const categoryTitle=categories.find(c=>c.categoryKey===form.categoryKey)?.title||form.categoryKey||'';
-      const erp={...form.erp,eligiblePrograms:arr(form.erp.eligiblePrograms),documents:arr(form.erp.documents),assetIds:[...form.imageAssetIds],minFte:form.erp.minFte===''?null:num(form.erp.minFte),leadTimeDays:form.erp.leadTimeDays===''?null:num(form.erp.leadTimeDays),moq:form.erp.moq===''?null:num(form.erp.moq),standardCost:form.erp.standardCost===''?null:num(form.erp.standardCost),lastCost:form.erp.lastCost===''?null:num(form.erp.lastCost),averageCost:form.erp.averageCost===''?null:num(form.erp.averageCost),landedCost:form.erp.landedCost===''?null:num(form.erp.landedCost),alterationCost:form.erp.alterationCost===''?null:num(form.erp.alterationCost),freightCost:form.erp.freightCost===''?null:num(form.erp.freightCost),dutyCost:form.erp.dutyCost===''?null:num(form.erp.dutyCost)};
-      await mutate('UNIFORM_ADMIN_SAVE_ITEM',{item:{itemId:form.itemId,title:form.title,itemCode:form.itemCode,categoryKey:form.categoryKey,categoryTitle,subCategory:form.subCategory,styleGroup:form.styleGroup||form.itemCode,colorName:form.colorName,colorHex:form.colorHex,fitOptions:arr(form.fitOptions),initialIssueQuantity:num(form.initialIssueQuantity),replacementCycleMonths:num(form.replacementCycleMonths),availableRoles:arr(form.availableRoles),availableDepartments:arr(form.availableDepartments),availableBases:arr(form.availableBases),itemRegulations:form.itemRegulations,pointsCost:num(form.pointsCost),stockStatus:form.stockStatus,active:form.erp.productStatus!=='ARCHIVED'&&form.active,sizes:arr(form.sizes),description:form.description,details:form.details,careInstructions:form.careInstructions,imageAssetIds:[...form.imageAssetIds],payload:{...originalPayload,assetIds:[...form.imageAssetIds],erp}}});
-      setActiveModal(null);
-    };
-    const archive=async()=>{if(!form.itemId||!confirm('Archive this Uniform product? History will be retained.'))return;await mutate('UNIFORM_ADMIN_ARCHIVE_ITEM',{itemId:form.itemId,reason:'Archived from Uniform Control ERP'});setActiveModal(null);};
-    const tabs=['General','Variants','Eligibility','Allowance','Supplier & Cost','Assets','Details & Policy'];
-    return <Modal title={`${form.itemId?'Edit':'New'} Master Style${form.itemCode?`: ${form.itemCode}`:''}`} onClose={()=>setActiveModal(null)} onSave={save} saveLabel="Save Product" width="980px" footerExtra={form.itemId?<button className="btn btn-danger" onClick={archive}><Icon name="archive"/>Archive Product</button>:null}>
-      <div className="top-tabs-bar" style={{padding:'0 10px'}}><div className="tabs-container">{tabs.map(t=><button key={t} className={`am-tab ${tab===t?'active':''}`} onClick={()=>setTab(t)}>{t}</button>)}</div></div>
-      <div style={{padding:'16px'}}>
-        {tab==='General'&&<><div className="two-col-grid"><TextField label="Product Name" value={form.title} onChange={v=>set('title',v)}/><TextField label="SKU / Item Code" value={form.itemCode} onChange={v=>set('itemCode',v)}/><TextField label="Style Code / Group" value={form.styleGroup} onChange={v=>set('styleGroup',v)}/><TextField label="Internal Name" value={form.erp.internalName} onChange={v=>setErp('internalName',v)}/><SelectField label="Category" value={form.categoryKey} onChange={v=>set('categoryKey',v)} options={categoryOptions}/><TextField label="Subcategory" value={form.subCategory} onChange={v=>set('subCategory',v)}/><TextField label="Program" value={form.erp.program} onChange={v=>setErp('program',v)}/><TextField label="Gender / Program Fit" value={form.erp.genderFit} onChange={v=>setErp('genderFit',v)}/><SelectField label="Season" value={form.erp.season} onChange={v=>setErp('season',v)} options={["ALL-SEASON","SUMMER","WINTER","DESTINATION-SPECIFIC"]}/><TextField label="Collection" value={form.erp.collection} onChange={v=>setErp('collection',v)}/><SelectField label="Product Status" value={form.erp.productStatus} onChange={v=>setErp('productStatus',v)} options={PRODUCT_STATUSES}/><SelectField label="Stock Status" value={form.stockStatus} onChange={v=>set('stockStatus',v)} options={STOCK_STATUSES}/></div><TextAreaField label="Short Description" value={form.description} onChange={v=>set('description',v)} rows={4}/></>}
-        {tab==='Variants'&&<div className="two-col-grid"><TextField label="Colorway" value={form.colorName} onChange={v=>set('colorName',v)}/><TextField label="Color Hex" value={form.colorHex} onChange={v=>set('colorHex',v)}/><TextField label="Sizes" value={form.sizes.join(', ')} onChange={v=>set('sizes',csv(v))} hint="Comma-separated selectable sizes used by Uniform Center."/><TextField label="Fit Options" value={form.fitOptions.join(', ')} onChange={v=>set('fitOptions',csv(v))}/><TextField label="Size Scale" value={form.erp.sizeScale} onChange={v=>setErp('sizeScale',v)}/><TextField label="Barcode / Internal Barcode" value={form.erp.barcode} onChange={v=>setErp('barcode',v)}/><TextField label="Supplier Barcode / UPC / EAN" value={form.erp.supplierBarcode} onChange={v=>setErp('supplierBarcode',v)}/><TextField label="Replacement Style" value={form.erp.replacementStyle} onChange={v=>setErp('replacementStyle',v)}/></div>}
-        {tab==='Eligibility'&&<><div className="two-col-grid"><MultiSelectField label="Eligible Roles" value={form.availableRoles} onChange={v=>set('availableRoles',v)} options={arr(eligibility.roles)} hint="OR inside role list. Role, department and base dimensions combine with AND."/><MultiSelectField label="Eligible Departments" value={form.availableDepartments} onChange={v=>set('availableDepartments',v)} options={arr(eligibility.departments)}/><MultiSelectField label="Eligible Bases / Stations" value={form.availableBases} onChange={v=>set('availableBases',v)} options={arr(eligibility.bases)}/><TextField label="Eligible Programs" value={arr(form.erp.eligiblePrograms).join(', ')} onChange={v=>setErp('eligiblePrograms',csv(v))}/><TextField label="Minimum FTE" type="number" value={form.erp.minFte} onChange={v=>setErp('minFte',v)}/><SelectField label="Mandatory" value={String(form.erp.mandatory)} onChange={v=>setErp('mandatory',bool(v))} options={[{value:'false',label:'No'},{value:'true',label:'Yes'}]}/><SelectField label="Optional" value={String(form.erp.optional)} onChange={v=>setErp('optional',bool(v))} options={[{value:'false',label:'No'},{value:'true',label:'Yes'}]}/><SelectField label="Seasonal" value={String(form.erp.seasonal)} onChange={v=>setErp('seasonal',bool(v))} options={[{value:'false',label:'No'},{value:'true',label:'Yes'}]}/><SelectField label="Requires Approval" value={String(form.erp.requiresApproval)} onChange={v=>setErp('requiresApproval',bool(v))} options={[{value:'false',label:'No'},{value:'true',label:'Yes'}]}/></div></>}
-        {tab==='Allowance'&&<div className="two-col-grid"><TextField label="SK-Point Value" type="number" value={form.pointsCost} onChange={v=>set('pointsCost',v)}/><TextField label="Initial Issue Quantity" type="number" value={form.initialIssueQuantity} onChange={v=>set('initialIssueQuantity',v)}/><TextField label="Replacement Cycle (months)" type="number" value={form.replacementCycleMonths} onChange={v=>set('replacementCycleMonths',v)}/><TextField label="Replacement Rule" value={form.erp.replacementRule} onChange={v=>setErp('replacementRule',v)}/><SelectField label="Old Item Return Required" value={String(form.erp.returnRequired)} onChange={v=>setErp('returnRequired',bool(v))} options={[{value:'false',label:'No'},{value:'true',label:'Yes'}]}/><TextField label="Allowance Note" value={form.erp.allowanceNote} onChange={v=>setErp('allowanceNote',v)}/></div>}
-        {tab==='Supplier & Cost'&&<><div className="two-col-grid"><TextField label="Supplier" value={form.erp.supplier} onChange={v=>setErp('supplier',v)}/><TextField label="Supplier ID" value={form.erp.supplierId} onChange={v=>setErp('supplierId',v)}/><TextField label="Supplier Style" value={form.erp.supplierStyle} onChange={v=>setErp('supplierStyle',v)}/><TextField label="Supplier SKU" value={form.erp.supplierSku} onChange={v=>setErp('supplierSku',v)}/><TextField label="Supplier Color" value={form.erp.supplierColor} onChange={v=>setErp('supplierColor',v)}/><TextField label="Supplier Size" value={form.erp.supplierSize} onChange={v=>setErp('supplierSize',v)}/><TextField label="Lead Time Days" type="number" value={form.erp.leadTimeDays} onChange={v=>setErp('leadTimeDays',v)}/><TextField label="MOQ" type="number" value={form.erp.moq} onChange={v=>setErp('moq',v)}/><TextField label="Currency" value={form.erp.currency} onChange={v=>setErp('currency',v)}/><TextField label="Standard Cost" type="number" value={form.erp.standardCost} onChange={v=>setErp('standardCost',v)}/><TextField label="Last Cost" type="number" value={form.erp.lastCost} onChange={v=>setErp('lastCost',v)}/><TextField label="Average Cost" type="number" value={form.erp.averageCost} onChange={v=>setErp('averageCost',v)}/><TextField label="Landed Cost" type="number" value={form.erp.landedCost} onChange={v=>setErp('landedCost',v)}/><TextField label="Alteration Cost" type="number" value={form.erp.alterationCost} onChange={v=>setErp('alterationCost',v)}/><TextField label="Freight" type="number" value={form.erp.freightCost} onChange={v=>setErp('freightCost',v)}/><TextField label="Duty" type="number" value={form.erp.dutyCost} onChange={v=>setErp('dutyCost',v)}/></div><div style={{fontSize:'10px',color:'var(--am-text-light)'}}>Costs are internal ERP metadata and are not exposed as Uniform Center SK-Point pricing.</div></>}
-        {tab==='Assets'&&<AssetPicker selected={form.imageAssetIds} onChange={v=>set('imageAssetIds',v)} itemId={form.itemId}/>}
-        {tab==='Details & Policy'&&<><div className="two-col-grid"><TextField label="Material" value={form.erp.material} onChange={v=>setErp('material',v)}/><TextField label="Composition" value={form.erp.composition} onChange={v=>setErp('composition',v)}/><TextField label="Document / Tech Pack References" value={arr(form.erp.documents).join(', ')} onChange={v=>setErp('documents',csv(v))}/></div><TextAreaField label="Technical Specification" value={form.erp.technicalSpec} onChange={v=>setErp('technicalSpec',v)} rows={5}/><TextAreaField label="Product Details" value={form.details} onChange={v=>set('details',v)} rows={4}/><TextAreaField label="Care Instructions" value={form.careInstructions} onChange={v=>set('careInstructions',v)} rows={4}/><TextAreaField label="Item Uniform Regulations" value={form.itemRegulations} onChange={v=>set('itemRegulations',v)} rows={5}/></>}
-      </div>
-    </Modal>;
-  }
 
-  function CategoryModal(){
-    const [form,setForm]=useState({title:'',categoryKey:'',description:'',sortOrder:100,active:true});
-    const save=async()=>{if(!form.title.trim()&&!form.categoryKey.trim()){setError('Category title or key is required.');return;}await mutate('UNIFORM_ADMIN_SAVE_CATEGORY',{category:form});setActiveModal(null);};
-    return <Modal title="New Uniform Category" onClose={()=>setActiveModal(null)} onSave={save} saveLabel="Save Category"><div style={{padding:'16px'}}><div className="two-col-grid"><TextField label="Title" value={form.title} onChange={v=>setForm(p=>({...p,title:v}))}/><TextField label="Category Key" value={form.categoryKey} onChange={v=>setForm(p=>({...p,categoryKey:v}))}/><TextField label="Sort Order" type="number" value={form.sortOrder} onChange={v=>setForm(p=>({...p,sortOrder:num(v,100)}))}/><SelectField label="Active" value={String(form.active)} onChange={v=>setForm(p=>({...p,active:bool(v)}))} options={[{value:'true',label:'Yes'},{value:'false',label:'No'}]}/></div><TextAreaField label="Description" value={form.description} onChange={v=>setForm(p=>({...p,description:v}))}/></div></Modal>;
-  }
+    document.addEventListener("change", function(e) {
+      var filter = e.target.getAttribute("data-filter");
+      if (filter) {
+        state.activeFilters[filter] = e.target.value;
+        renderPLP();
+      }
+    });
 
-  function RuleModal({rule}){
-    const [form,setForm]=useState({id:rule?.id||'',ruleKey:rule?.ruleKey||'',title:rule?.title||'',roleKey:rule?.roleKey||'ALL',monthlyPoints:rule?.monthlyPoints??0,yearlyPoints:rule?.yearlyPoints??'',maxItems:rule?.maxItems??'',renewalMonths:rule?.renewalMonths??'',summary:rule?.summary||'',status:rule?.status||'ACTIVE',active:rule?.active!==false,sortOrder:rule?.sortOrder??100,payload:obj(rule?.payload)});
-    const save=async()=>{if(!form.title.trim()){setError('Rule title is required.');return;}await mutate('UNIFORM_ADMIN_SAVE_RULE',{rule:{...form,monthlyPoints:num(form.monthlyPoints),yearlyPoints:form.yearlyPoints===''?undefined:num(form.yearlyPoints),maxItems:form.maxItems===''?undefined:num(form.maxItems),renewalMonths:form.renewalMonths===''?undefined:num(form.renewalMonths)}});setActiveModal(null);};
-    return <Modal title={`${rule?'Edit':'New'} Allowance Rule`} onClose={()=>setActiveModal(null)} onSave={save} saveLabel="Save Rule"><div style={{padding:'16px'}}><div className="two-col-grid"><TextField label="Rule Key" value={form.ruleKey} onChange={v=>setForm(p=>({...p,ruleKey:v}))}/><TextField label="Title" value={form.title} onChange={v=>setForm(p=>({...p,title:v}))}/><SelectField label="Role Key" value={form.roleKey} onChange={v=>setForm(p=>({...p,roleKey:v}))} options={arr(eligibility.roles).map(x=>({value:x,label:x}))}/><TextField label="Monthly Points" type="number" value={form.monthlyPoints} onChange={v=>setForm(p=>({...p,monthlyPoints:v}))}/><TextField label="Yearly Points" type="number" value={form.yearlyPoints} onChange={v=>setForm(p=>({...p,yearlyPoints:v}))}/><TextField label="Max Items" type="number" value={form.maxItems} onChange={v=>setForm(p=>({...p,maxItems:v}))}/><TextField label="Renewal Months" type="number" value={form.renewalMonths} onChange={v=>setForm(p=>({...p,renewalMonths:v}))}/><TextField label="Sort Order" type="number" value={form.sortOrder} onChange={v=>setForm(p=>({...p,sortOrder:v}))}/><TextField label="Status" value={form.status} onChange={v=>setForm(p=>({...p,status:v}))}/><SelectField label="Active" value={String(form.active)} onChange={v=>setForm(p=>({...p,active:bool(v)}))} options={[{value:'true',label:'Yes'},{value:'false',label:'No'}]}/></div><TextAreaField label="Summary" value={form.summary} onChange={v=>setForm(p=>({...p,summary:v}))}/></div></Modal>;
-  }
+    // SKANDI BACKEND MESSAGE LISTENER
+    window.addEventListener("message", e => {
+      const m = e.data || {};
+      if(m.source !== PARENT) return;
+      
+      if(m.type === "UNIFORM_EMPLOYEE_HOST_READY") {
+        if(!state.bootstrapReceived) post("UNIFORM_EMPLOYEE_BOOTSTRAP", {});
+      }
 
-  function PolicyModal(){
-    const p=data.policy||{};const [form,setForm]=useState({policyKey:p.policyKey||'SKANDI_UNIFORM_REGULATIONS',title:p.title||'SKANDI Uniform Regulations',policyVersion:p.policyVersion||'',effectiveDate:text(p.effectiveDate).slice(0,10),documentId:p.documentId||'',pdfUrl:p.pdfUrl||'',body:p.body||'',active:p.active!==false,payload:obj(p.payload)});
-    const save=async()=>{if(!form.body.trim()){setError('Uniform Regulations text is required.');return;}await mutate('UNIFORM_ADMIN_SAVE_POLICY',{policy:{...form,policyVersion:form.policyVersion||'CURRENT'}});setActiveModal(null);};
-    return <Modal title="Uniform Regulations" onClose={()=>setActiveModal(null)} onSave={save} saveLabel="Save Regulations" width="900px"><div style={{padding:'16px'}}><div className="two-col-grid"><TextField label="Policy Key" value={form.policyKey} onChange={v=>setForm(p=>({...p,policyKey:v}))}/><TextField label="Title" value={form.title} onChange={v=>setForm(p=>({...p,title:v}))}/><TextField label="Version" value={form.policyVersion} onChange={v=>setForm(p=>({...p,policyVersion:v}))}/><TextField label="Effective Date" type="date" value={form.effectiveDate} onChange={v=>setForm(p=>({...p,effectiveDate:v}))}/><TextField label="Document ID" value={form.documentId} onChange={v=>setForm(p=>({...p,documentId:v}))}/><TextField label="Hosted PDF URL" value={form.pdfUrl} onChange={v=>setForm(p=>({...p,pdfUrl:v}))}/></div><TextAreaField label="Full Uniform Regulations" value={form.body} onChange={v=>setForm(p=>({...p,body:v}))} rows={18}/></div></Modal>;
-  }
+      if(m.type === "UNIFORM_EMPLOYEE_ADMIN_GRANTED") {
+        const copy = byId("admin-auth-copy");
+        if (copy) copy.textContent = "Access confirmed. Opening Uniform Control…";
+        showToast("Uniform Control access confirmed.");
+      }
 
-  function WalletAdjustModal(){
-    const w=modalData||{};const [form,setForm]=useState({skId:w.skId||'',email:w.email||'',points:0,reason:''});
-    const save=async()=>{if(!num(form.points)){setError('Point adjustment cannot be zero.');return;}if(!form.reason.trim()){setError('A reason is required for a wallet adjustment.');return;}await mutate('UNIFORM_ADMIN_ADJUST_WALLET',form);setActiveModal(null);};
-    return <Modal title="Adjust SK-Points Wallet" onClose={()=>setActiveModal(null)} onSave={save} saveLabel="Post Adjustment"><div style={{padding:'16px'}}><div className="two-col-grid"><TextField label="SK-ID" value={form.skId} onChange={v=>setForm(p=>({...p,skId:v}))}/><TextField label="Email" value={form.email} onChange={v=>setForm(p=>({...p,email:v}))}/><TextField label="Point Adjustment" type="number" value={form.points} onChange={v=>setForm(p=>({...p,points:v}))}/><TextField label="Reason" value={form.reason} onChange={v=>setForm(p=>({...p,reason:v}))}/></div></div></Modal>;
-  }
+      if(m.type === "UNIFORM_EMPLOYEE_ADMIN_DENIED") {
+        const modal = byId("admin-auth-modal");
+        const copy = byId("admin-auth-copy");
+        if (modal) modal.classList.remove("d-none");
+        if (copy) copy.textContent = m.payload?.message || m.message || "Your current staff role is not authorized to open Uniform Control.";
+      }
 
-  function OrderModal(){
-    const order=modalData||{};const next=ORDER_NEXT[upper(order.status)]||[];const [note,setNote]=useState('');
-    const act=async action=>{await mutate('UNIFORM_ADMIN_ORDER_ACTION',{orderId:order.orderId||order.id,action,note});setActiveModal(null);};
-    return <Modal title={`Uniform Order ${order.orderNumber||order.id||''}`} onClose={()=>setActiveModal(null)} width="920px">
-      <div style={{padding:'16px'}}>
-        <div className="kpi-grid" style={{gridTemplateColumns:'repeat(4,1fr)'}}><div className="kpi-card"><div className="kpi-title">Employee</div><div className="kpi-val" style={{fontSize:'16px'}}>{order.staffName||order.skId||'Staff'}</div></div><div className="kpi-card"><div className="kpi-title">Status</div><StatusBadge value={order.status}/></div><div className="kpi-card"><div className="kpi-title">SK-Points</div><div className="kpi-val">{order.totalPoints||0}</div></div><div className="kpi-card"><div className="kpi-title">Wallet Effect</div><div className="kpi-val" style={{fontSize:'16px'}}>{order.walletEffectStatus||'NONE'}</div></div></div>
-        <div className="am-table-wrapper"><table className="am-table"><thead><tr><th>Item</th><th>Color</th><th>Fit</th><th>Size</th><th style={{textAlign:'right'}}>Qty</th><th style={{textAlign:'right'}}>Points</th></tr></thead><tbody>{arr(order.items).map(i=><tr key={i.id||`${i.itemCode}-${i.size}`}><td><b>{i.title||i.itemCode}</b><br/><span className="mono">{i.itemCode}</span></td><td>{i.colorName||'—'}</td><td>{i.fit||'—'}</td><td>{i.size||'—'}</td><td style={{textAlign:'right'}}>{i.quantity||1}</td><td style={{textAlign:'right'}}>{i.linePoints||0}</td></tr>)}{!arr(order.items).length&&<tr><td colSpan="6"><Empty>No order lines returned by the canonical Uniform backend.</Empty></td></tr>}</tbody></table></div>
-        <div style={{marginTop:'16px'}}><TextAreaField label="Action Note" value={note} onChange={setNote} rows={3}/></div>
-        <div style={{display:'flex',gap:'8px',flexWrap:'wrap'}}>{next.map(action=><button key={action} className={`btn ${['REJECTED','CANCELLED'].includes(action)?'btn-danger':action==='APPROVED'||action==='COMPLETED'?'btn-primary':''}`} onClick={()=>act(action)}>{action.replaceAll('_',' ')}</button>)}</div>
-        <div style={{marginTop:'16px',fontSize:'10px',color:'var(--am-text-light)'}}>Payroll status: {order.payrollDeductionStatus||'NOT_REQUIRED'} · Cash deduction: {order.cashDeductionRequired?money(order.cashDeduction||order.cashTotal||0):'Not required'} · Created {fmtDate(order.createdAt)}</div>
-      </div>
-    </Modal>;
-  }
+      if(m.type === "UNIFORM_EMPLOYEE_BOOTSTRAP_RESULT") {
+        state = { ...state, ...(m.payload || {}) };
+        state.cart = state.cart || [];
+        state.bootstrapReceived = true;
+        state.lastSyncAt = m.payload?.lastSync || new Date().toISOString();
+        setStatus("");
+        renderHeaderBadges();
+        renderNavFromCategories();
+        // Just refresh current view safely
+        if(["home","plp","pdp","bag","checkout","orders","regulations"].includes(state.currentView)) {
+           renderView(state.currentView);
+        } else {
+           navigate("home");
+        }
+      }
+      
+      if(m.type === "UNIFORM_EMPLOYEE_ORDER_SUBMITTED") {
+        const result = m.payload || {};
+        state.lastOrderPoints = calculateTotalPoints();
+        state.lastOrderCode = result.order?.orderNumber || "REQ-SUBMITTED";
+        if(result.wallet) state.wallet = result.wallet;
+        state.cart = [];
+        state.requestNote = "";
+        renderHeaderBadges();
+        if(state.currentView === "checkout") renderCheckout();
+        showToast("Uniform request submitted.");
+        post("UNIFORM_EMPLOYEE_BOOTSTRAP");
+      }
+      
+      if(m.type === "UNIFORM_EMPLOYEE_ACK_OK") {
+        state.policyAcknowledged = true;
+        if(state.currentView === "regulations") renderRegulations();
+        showToast("Uniform Regulations acknowledged.");
+      }
 
-  function EmployeeProfileModal(){
-    const wallet=modalData||{};const empOrders=orders.filter(o=>o.walletId===wallet.id||o.skId===wallet.skId||o.email===wallet.email);const empLedger=ledger.filter(l=>l.walletId===wallet.id||l.skId===wallet.skId||l.email===wallet.email);
-    const [tab,setTab]=useState('profile');
-    return <Modal title={`Uniform Profile: ${wallet.displayName||wallet.skId||wallet.email||'Employee'}`} onClose={()=>setActiveModal(null)} width="900px"><div className="top-tabs-bar" style={{padding:0}}><div className="tabs-container">{[['profile','Uniform Profile'],['orders','Order History'],['ledger','Point Ledger']].map(([k,l])=><button key={k} className={`am-tab ${tab===k?'active':''}`} onClick={()=>setTab(k)}>{l}</button>)}</div><div style={{paddingRight:'12px',display:'flex',alignItems:'center'}}><button className="btn" onClick={()=>{setModalData(wallet);setActiveModal('WALLET_ADJUST')}}>Adjust Points</button></div></div>
-      <div style={{padding:'16px'}}>{tab==='profile'&&<div className="two-col-grid"><div><div className="form-label">Identity</div><table style={{width:'100%'}}><tbody><tr><td style={{padding:'6px',fontWeight:700}}>Name</td><td>{wallet.displayName||'—'}</td></tr><tr><td style={{padding:'6px',fontWeight:700}}>SK-ID</td><td className="mono">{wallet.skId||'—'}</td></tr><tr><td style={{padding:'6px',fontWeight:700}}>Email</td><td>{wallet.email||'—'}</td></tr><tr><td style={{padding:'6px',fontWeight:700}}>Status</td><td><StatusBadge value={wallet.status}/></td></tr></tbody></table></div><div><div className="form-label">Wallet</div><div className="kpi-grid" style={{gridTemplateColumns:'repeat(3,1fr)',gap:'8px'}}><div className="kpi-card"><div className="kpi-title">Available</div><div className="kpi-val">{wallet.availablePoints||0}</div></div><div className="kpi-card"><div className="kpi-title">Held</div><div className="kpi-val">{wallet.heldPoints||0}</div></div><div className="kpi-card"><div className="kpi-title">Spent</div><div className="kpi-val">{wallet.spentPoints||0}</div></div></div></div></div>}
-      {tab==='orders'&&<div className="am-table-wrapper"><table className="am-table"><thead><tr><th>Order</th><th>Date</th><th>Points</th><th>Status</th></tr></thead><tbody>{empOrders.map(o=><tr key={o.id} className="clickable" onClick={()=>{setModalData(o);setActiveModal('ORDER')}}><td className="mono">{o.orderNumber}</td><td>{fmtDate(o.createdAt)}</td><td>{o.totalPoints}</td><td><StatusBadge value={o.status}/></td></tr>)}{!empOrders.length&&<tr><td colSpan="4">No Uniform orders for this wallet.</td></tr>}</tbody></table></div>}
-      {tab==='ledger'&&<div className="am-table-wrapper"><table className="am-table"><thead><tr><th>Date</th><th>Event</th><th>Delta</th><th>Available</th><th>Reason</th></tr></thead><tbody>{empLedger.map(l=><tr key={l.id}><td>{fmtDate(l.createdAt)}</td><td>{l.eventType}</td><td style={{fontWeight:700}}>{l.pointsDelta>0?'+':''}{l.pointsDelta}</td><td>{l.availableAfter}</td><td>{l.reason||'—'}</td></tr>)}{!empLedger.length&&<tr><td colSpan="5">No Uniform wallet ledger entries.</td></tr>}</tbody></table></div>}</div></Modal>;
-  }
+      if(m.type === "UNIFORM_EMPLOYEE_ERROR") {
+        setStatus(m.message || "Uniform Center synchronization failed.", "error");
+        showToast(m.message || "An error occurred.");
+        // Reset submit button if on checkout
+        var btn = document.querySelector('[data-action="submit-order"]');
+        if(btn) { btn.textContent = "CONFIRM & SUBMIT"; btn.style.opacity="1"; btn.style.pointerEvents="auto"; }
+      }
+    });
 
-  function GlobalSearchModal(){
-    const [q,setQ]=useState('');const needle=q.toLowerCase();
-    const products=catalog.filter(x=>[x.title,x.itemCode,x.category,x.styleGroup].join(' ').toLowerCase().includes(needle)).slice(0,8);
-    const ord=orders.filter(x=>[x.orderNumber,x.staffName,x.skId,x.email].join(' ').toLowerCase().includes(needle)).slice(0,6);
-    const ws=wallets.filter(x=>[x.displayName,x.skId,x.email].join(' ').toLowerCase().includes(needle)).slice(0,6);
-    return <div className="modal-overlay" style={{alignItems:'flex-start',paddingTop:'10vh'}} onMouseDown={()=>setSearchOpen(false)}><div className="modal-window" style={{width:'650px',borderRadius:'8px',overflow:'hidden'}} onMouseDown={e=>e.stopPropagation()}><div style={{display:'flex',alignItems:'center',padding:'16px',borderBottom:'1px solid var(--am-border)'}}><Icon name="search" size={20} style={{color:'var(--am-text-light)',marginRight:'12px'}}/><input autoFocus value={q} onChange={e=>setQ(e.target.value)} placeholder="Search products, employees, or orders..." style={{flex:1,border:'none',outline:'none',fontSize:'16px',fontWeight:500}}/><span className="mono" style={{fontSize:'10px',color:'#888',background:'#f4f5f7',padding:'4px 8px',borderRadius:'4px'}}>ESC</span></div><div style={{padding:'12px',background:'#f9fafb',maxHeight:'60vh',overflow:'auto'}}>{!q&&<Empty>Type to search current Uniform data.</Empty>}{q&&<>{products.map(p=><div key={p.itemId} onClick={()=>{setSearchOpen(false);setActiveMainTab('products');setActiveSubTabs(x=>({...x,products:'Style Catalog'}));setModalData(p);setActiveModal('EDIT_STYLE')}} style={{padding:'9px',background:'#fff',border:'1px solid var(--am-border)',marginBottom:'5px',cursor:'pointer'}}><span className="mono" style={{color:'var(--am-blue)',fontWeight:700}}>{p.itemCode}</span> · {p.title}</div>)}{ord.map(o=><div key={o.id} onClick={()=>{setSearchOpen(false);setModalData(o);setActiveModal('ORDER')}} style={{padding:'9px',background:'#fff',border:'1px solid var(--am-border)',marginBottom:'5px',cursor:'pointer'}}><span className="mono" style={{color:'var(--am-blue)',fontWeight:700}}>{o.orderNumber}</span> · {o.staffName||o.skId}</div>)}{ws.map(w=><div key={w.id} onClick={()=>{setSearchOpen(false);setModalData(w);setActiveModal('EMPLOYEE_PROFILE')}} style={{padding:'9px',background:'#fff',border:'1px solid var(--am-border)',marginBottom:'5px',cursor:'pointer'}}><span className="mono" style={{color:'var(--am-blue)',fontWeight:700}}>{w.skId}</span> · {w.displayName||w.email}</div>)}{!products.length&&!ord.length&&!ws.length&&<Empty>No current Uniform records match.</Empty>}</>}</div></div></div>;
-  }
-
-
-  function SchemaActionModal(){
-    const meta=modalData||{};
-    return <Modal title={meta.title||'Uniform ERP Workflow'} onClose={()=>setActiveModal(null)} width="760px">
-      <div style={{padding:'16px'}}>
-        <Gate title={meta.title||'Workflow'} text={meta.text||'This workflow is retained in the Uniform ERP interface but the current canonical B-011 Uniform backend does not yet expose the transactional data model required to save it. No local or fabricated success state is created.'} code={meta.code||'Capability gated by backend/SKANDI_CORE/uniform.js'}/>
-        <div style={{marginTop:'12px',fontSize:'10px',color:'var(--am-text-light)'}}>The control remains visible so the full ERP workflow is preserved. It becomes writable only when the corresponding canonical backend capability is implemented.</div>
-      </div>
-    </Modal>;
-  }
-
-  function BarcodeModal(){
-    const chosen=catalog.filter(p=>selectedRows.includes(p.itemId));
-    const [copies,setCopies]=useState(10);
-    const first=chosen[0]||{};
-    return <Modal title="Print SKU Barcodes" onClose={()=>setActiveModal(null)} onSave={()=>window.print()} saveLabel="Print" width="520px">
-      <div style={{padding:'16px'}}>
-        <TextField label="Selected Style / SKU" value={first.itemCode||''} onChange={()=>{}} disabled/>
-        <TextField label="Copies per selected SKU" type="number" value={copies} onChange={setCopies}/>
-        <div style={{marginTop:'16px',padding:'16px',background:'#f4f5f7',textAlign:'center',border:'1px dashed var(--am-border)'}}>
-          <div className="mono" style={{fontSize:'24px',letterSpacing:'4px'}}>|| ||| | ||| || ||</div>
-          <div className="mono" style={{fontSize:'10px',marginTop:'4px'}}>{first.itemCode||'SELECT A STYLE'}</div>
-        </div>
-        {chosen.length>1&&<div style={{marginTop:'10px',color:'var(--am-text-light)'}}>{chosen.length} selected catalog records will be included.</div>}
-      </div>
-    </Modal>;
-  }
-
-  const renderInventory=()=>{
-    const view=activeSubTabs.inventory;
-    if(view!=='Stock Matrix'){const action=view==='Stock Transfers'?{label:'New Transfer',icon:'arrow-right-left',title:'Initiate Stock Transfer',code:'capabilities.transfers = false'}:view==='Adjustments'?{label:'Record Variance',icon:'activity',title:'Record Cycle Count Variance',code:'capabilities.physicalCounts = false'}:{label:'Add Location',icon:'map-pin',title:'Add Warehouse / Bin',code:'capabilities.warehouses = false; capabilities.bins = false'};return <div style={{display:'flex',flexDirection:'column',height:'100%'}}><Toolbar title={view} primaryAction={{label:action.label,icon:action.icon,onClick:()=>{setModalData({title:action.title,code:action.code});setActiveModal('SCHEMA_ACTION')}}}/><div className="table-container"><div style={{display:'grid',gridTemplateColumns:'repeat(3,minmax(0,1fr))',gap:'16px'}}><Gate title={view} text="This screen is preserved in the new ERP interface, but the current canonical Uniform backend does not expose transactional inventory objects for this workflow. No fake quantity or successful mutation is shown." code={action.code}/><Gate title="Current live stock authority" text="The current Uniform catalog exposes only item-level stockStatus plus size/fit metadata. Warehouse, bin and on-hand quantities require the next approved Uniform data-model expansion." code="uniform_catalog_items.stock_status"/><Gate title="Uniform Center impact" text="Uniform Center continues using eligibility, sizes, fits, points and active/stock status from the same catalog records. Physical allocation is not fabricated." code="backend/SKANDI_CORE/uniform.js"/></div></div></div>;}
-    const sizes=[...new Set(filteredCatalog.flatMap(x=>arr(x.sizes)))].sort((a,b)=>String(a).localeCompare(String(b),undefined,{numeric:true}));
-    return <div style={{display:'flex',flexDirection:'column',height:'100%'}}><Toolbar title="Global Stock Matrix (Catalog Metadata)" secondaryAction={{label:'Refresh',icon:'refresh-cw',onClick:()=>refresh()}}/><div className="table-container"><div style={{marginBottom:'10px',fontSize:'10px',color:'var(--am-text-light)'}}>Live matrix shows whether a catalog variant offers a size. It does not claim warehouse on-hand quantity.</div><div className="am-table-wrapper" style={{overflowX:'auto'}}><table className="am-table"><thead><tr><th>Style / Variant</th><th>Stock Status</th>{sizes.map(s=><th key={s} style={{textAlign:'center'}}>{s}</th>)}</tr></thead><tbody>{filteredCatalog.map(p=><tr key={p.itemId}><td><b>{p.styleGroup||p.itemCode}</b><br/><span className="mono">{p.itemCode}</span> · {p.colorName||'—'}</td><td><StatusBadge value={p.active===false?'ARCHIVED':p.stockStatus}/></td>{sizes.map(s=><td key={s} style={{textAlign:'center',fontWeight:arr(p.sizes).includes(s)?800:400,color:arr(p.sizes).includes(s)?'var(--am-blue)':'#b8c2cf'}}>{arr(p.sizes).includes(s)?'●':'·'}</td>)}</tr>)}{!filteredCatalog.length&&<tr><td colSpan={sizes.length+2}>No catalog records.</td></tr>}</tbody></table></div></div></div>;
-  };
-
-  const renderProducts=()=>{
-    const view=activeSubTabs.products;
-    if(view==='Categories Master')return <div style={{display:'flex',flexDirection:'column',height:'100%'}}><Toolbar title="Categories Master" primaryAction={{label:'New Category',icon:'plus',onClick:()=>setActiveModal('CATEGORY')}}/><div className="table-container"><div className="am-table-wrapper"><table className="am-table"><thead><tr><th>Category Key</th><th>Name</th><th>Description</th><th>Sort</th><th>Status</th></tr></thead><tbody>{categories.map(c=><tr key={c.id||c.categoryKey}><td className="mono" style={{color:'var(--am-blue)',fontWeight:700}}>{c.categoryKey}</td><td style={{fontWeight:700}}>{c.title}</td><td>{c.description||'—'}</td><td>{c.sortOrder}</td><td><StatusBadge value={c.active?'ACTIVE':'INACTIVE'}/></td></tr>)}{!categories.length&&<tr><td colSpan="5">No Uniform categories.</td></tr>}</tbody></table></div></div></div>;
-    if(view==='Size Charts')return <div style={{display:'flex',flexDirection:'column',height:'100%'}}><Toolbar title="Catalog Size & Fit Definitions" primaryAction={{label:'New Chart',icon:'ruler',onClick:()=>{setModalData({title:'Create Size Chart',code:'No canonical uniform_size_charts table'});setActiveModal('SCHEMA_ACTION')}}}/><div className="table-container"><div className="am-table-wrapper"><table className="am-table"><thead><tr><th>Item Code</th><th>Product</th><th>Size Scale</th><th>Sizes</th><th>Fit Options</th></tr></thead><tbody>{filteredCatalog.map(p=><tr key={p.itemId}><td className="mono">{p.itemCode}</td><td>{p.title}</td><td>{obj(p.erp).sizeScale||'—'}</td><td className="mono">{arr(p.sizes).join(', ')||'—'}</td><td>{arr(p.fitOptions).join(', ')||'—'}</td></tr>)}{!filteredCatalog.length&&<tr><td colSpan="5">No catalog records.</td></tr>}</tbody></table></div><div style={{marginTop:'10px',fontSize:'10px',color:'var(--am-text-light)'}}>The current canonical Uniform model stores selectable sizes and fit options on each catalog item. There is no separate authoritative size-chart master table in B-011.</div></div></div>;
-    if(view==='Uniform Kits')return <div style={{display:'flex',flexDirection:'column',height:'100%'}}><Toolbar title="Required Uniform Assortments" primaryAction={{label:'New Kit',icon:'briefcase',onClick:()=>{setModalData({title:'Create Uniform Kit',code:'No canonical uniform_kits table'});setActiveModal('SCHEMA_ACTION')}}}/><div className="table-container"><Gate title="Uniform Kits" text="The new ERP keeps this workspace, but the current canonical Uniform backend has no kit/assortment entity. Initial issue quantity and allowance rules remain live at product/rule level." code="No uniform_kits table / capability"/></div></div>;
-    const ids=filteredCatalog.map(p=>p.itemId);
-    return <div style={{display:'flex',flexDirection:'column',height:'100%'}}><Toolbar title="Master Style Catalog" extraActions={[{label:'Print Barcodes',icon:'printer',onClick:()=>setActiveModal('BARCODE'),disabled:!selectedRows.length}]} secondaryAction={{label:'Refresh',icon:'refresh-cw',onClick:()=>refresh()}} primaryAction={{label:'New Style',icon:'plus',onClick:()=>{setModalData(null);setActiveModal('EDIT_STYLE')}}}/><div className="table-container"><div className="am-table-wrapper"><table className="am-table"><thead><tr><th style={{width:'40px'}}><input type="checkbox" checked={ids.length>0&&selectedRows.length===ids.length} onChange={()=>toggleAll(ids)}/></th><th style={{width:'50px'}}>Image</th><th>Style Code</th><th>Description</th><th>Category</th><th>Sizes</th><th style={{textAlign:'right'}}>SK-Points</th><th>Status</th></tr></thead><tbody>{filteredCatalog.map(p=><tr key={p.itemId} className={`${selectedRows.includes(p.itemId)?'selected':''} clickable`} onClick={e=>{if(e.target.type==='checkbox')return;setModalData(p);setActiveModal('EDIT_STYLE')}}><td style={{textAlign:'center'}}><input type="checkbox" checked={selectedRows.includes(p.itemId)} onChange={()=>toggleRow(p.itemId)}/></td><td><div style={{width:'32px',height:'32px',background:'#e2e8f0',borderRadius:'4px',display:'flex',alignItems:'center',justifyContent:'center',overflow:'hidden'}}>{p.imageUrl?<img src={p.imageUrl} alt="" style={{width:'100%',height:'100%',objectFit:'cover'}}/>:<Icon name="image" size={14} style={{color:'#94a3b8'}}/>}</div></td><td className="mono" style={{color:'var(--am-blue)',fontWeight:700}}>{p.itemCode}</td><td><b>{p.title}</b><br/><span style={{color:'var(--am-text-light)'}}>{p.styleGroup||'—'} · {p.colorName||'—'}</span></td><td>{p.category||p.categoryKey||'—'}</td><td className="mono">{arr(p.sizes).join(' / ')||'—'}</td><td style={{textAlign:'right',fontWeight:700}}>{p.pointsCost||0}</td><td><StatusBadge value={p.active===false?'ARCHIVED':p.stockStatus}/></td></tr>)}{!filteredCatalog.length&&<tr><td colSpan="8">No styles match current filters.</td></tr>}</tbody></table></div></div></div>;
-  };
-
-  const renderPurchasing=()=>{
-    const view=activeSubTabs.purchasing;
-    const code=view==='Purchase Orders'?'capabilities.purchaseOrders = false':view==='Vendors Master'?'No canonical Uniform vendor master table':'capabilities.receiving / transactionalStock = false';
-    const action=view==='Purchase Orders'?{label:'New Matrix PO',icon:'layout-grid',title:'Create Matrix Purchase Order'}:view==='Vendors Master'?{label:'Add Vendor',icon:'plus',title:'Add Uniform Vendor'}:{label:'Create PO from Selected',icon:'file-plus',title:'Replenishment Proposal'};
-    return <div style={{display:'flex',flexDirection:'column',height:'100%'}}><Toolbar title={view} primaryAction={{label:action.label,icon:action.icon,onClick:()=>{setModalData({title:action.title,code});setActiveModal('SCHEMA_ACTION')}}}/><div className="table-container"><div style={{display:'grid',gridTemplateColumns:'repeat(3,minmax(0,1fr))',gap:'16px'}}><Gate title={view} text="This ERP surface is retained, but current B-011 Uniform persistence does not contain a canonical write model for this purchasing workflow. Supplier/cost metadata on products remains fully editable." code={code}/><Gate title="Supplier metadata" text="Supplier, supplier style/SKU/color/size, lead time, MOQ, costs and currency are preserved in each product payload and can be managed from Style Catalog." code="uniform_catalog_items.payload.erp"/><Gate title="No fake procurement" text="No sample PO, receiving variance, replenishment proposal or vendor record is created. These screens activate only after the corresponding canonical schema is approved." code="capabilities.purchaseOrders = false"/></div></div></div>;
-  };
-
-  async function batchOrderAction(action){
-    const chosen=orders.filter(o=>selectedRows.includes(o.id||o.orderId));
-    const eligibleRows=chosen.filter(o=>(ORDER_NEXT[upper(o.status)]||[]).includes(action));
-    if(!eligibleRows.length){setError(`No selected order can move to ${action}.`);return;}
-    setIsSyncing(true);setError('');
-    try{for(const o of eligibleRows)await request('UNIFORM_ADMIN_ORDER_ACTION',{orderId:o.orderId||o.id,action,note:`Batch ${action} from Uniform Control`});setSelectedRows([]);refresh();}
-    catch(e){setIsSyncing(false);setError(e.message||'Order update failed.');}
-  }
-
-  const renderOrders=()=>{
-    const view=activeSubTabs.orders;
-    if(view==='Backorders')return <div style={{display:'flex',flexDirection:'column',height:'100%'}}><Toolbar title="Active Backorders"/><div className="table-container"><Gate title="Backorders" text="The canonical B-011 Uniform order state machine does not define a BACKORDER status because transactional allocation is not yet authoritative. Do not derive shortages from catalog stock flags." code="capabilities.allocations = false"/></div></div>;
-    if(view==='Returns & RMAs')return <div style={{display:'flex',flexDirection:'column',height:'100%'}}><Toolbar title="Employee Returns & Disposition" primaryAction={{label:'Process Return',icon:'rotate-ccw',onClick:()=>{setModalData({title:'Process Return / RMA',code:'capabilities.returns = false'});setActiveModal('SCHEMA_ACTION')}}}/><div className="table-container"><Gate title="Returns & RMAs" text="Return-request order statuses exist, but physical return authorization, inspection, disposition and restock records do not yet have a normalized Uniform persistence model." code="capabilities.returns = false"/></div></div>;
-    const rows=view==='Pending Approvals'?orders.filter(o=>PENDING_APPROVAL.has(upper(o.status))):orders;
-    const ids=rows.map(o=>o.id||o.orderId);
-    return <div style={{display:'flex',flexDirection:'column',height:'100%'}}><Toolbar title={view==='Pending Approvals'?'Pending Exceptions & Approvals':'Employee Order Fulfillment'} extraActions={view==='Order Fulfillment'?[{label:'Approve',icon:'check-circle',onClick:()=>batchOrderAction('APPROVED'),disabled:!selectedRows.length},{label:'Fulfillment Ready',icon:'box',onClick:()=>batchOrderAction('FULFILLMENT_READY'),disabled:!selectedRows.length}]:[]} primaryAction={view==='Pending Approvals'?{label:'Batch Approve',icon:'check-circle',onClick:()=>batchOrderAction('APPROVED'),disabled:!selectedRows.length}:null}/><div className="table-container"><div className="am-table-wrapper"><table className="am-table"><thead><tr><th style={{width:'40px'}}><input type="checkbox" checked={ids.length>0&&selectedRows.length===ids.length} onChange={()=>toggleAll(ids)}/></th><th>Order ID</th><th>Date</th><th>Employee</th><th>SK-ID</th><th style={{textAlign:'right'}}>Points</th><th>Payroll</th><th>Status</th></tr></thead><tbody>{rows.map(o=><tr key={o.id} className={`${selectedRows.includes(o.id||o.orderId)?'selected':''} clickable`} onClick={e=>{if(e.target.type==='checkbox')return;setModalData(o);setActiveModal('ORDER')}}><td style={{textAlign:'center'}}><input type="checkbox" checked={selectedRows.includes(o.id||o.orderId)} onChange={()=>toggleRow(o.id||o.orderId)}/></td><td className="mono" style={{color:'var(--am-blue)',fontWeight:700}}>{o.orderNumber}</td><td>{fmtDate(o.createdAt)}</td><td style={{fontWeight:700}}>{o.staffName||o.email||'Staff'}</td><td className="mono">{o.skId||'—'}</td><td style={{textAlign:'right',fontWeight:700}}>{o.totalPoints||0}</td><td><StatusBadge value={o.payrollDeductionStatus||'NOT_REQUIRED'}/></td><td><StatusBadge value={o.status}/></td></tr>)}{!rows.length&&<tr><td colSpan="8">No matching Uniform orders.</td></tr>}</tbody></table></div></div></div>;
-  };
-
-  const renderEmployees=()=>{
-    const view=activeSubTabs.employees;
-    if(view==='Sizing Events')return <div style={{display:'flex',flexDirection:'column',height:'100%'}}><Toolbar title="Fitting Appointments & Size Profiles" primaryAction={{label:'New Fitting',icon:'calendar',onClick:()=>{setModalData({title:'New Fitting Event',code:'capabilities.fittings = false'});setActiveModal('SCHEMA_ACTION')}}}/><div className="table-container"><Gate title="Sizing Events" text="The new ERP keeps this workflow, but B-011 currently stores selectable product sizes only. Employee fitting history is not yet normalized." code="capabilities.fittings = false"/></div></div>;
-    if(view==='Alterations')return <div style={{display:'flex',flexDirection:'column',height:'100%'}}><Toolbar title="Garment Alterations Tracking" primaryAction={{label:'Log Alteration',icon:'scissors',onClick:()=>{setModalData({title:'Log Alteration',code:'No canonical uniform_alterations table'});setActiveModal('SCHEMA_ACTION')}}}/><div className="table-container"><Gate title="Alterations" text="Alteration workflow remains a prepared ERP surface. No alteration records are fabricated because the current canonical Uniform backend exposes no alteration entity." code="No uniform_alterations table"/></div></div>;
-    if(view==='Point Ledgers')return <div style={{display:'flex',flexDirection:'column',height:'100%'}}><Toolbar title="SK-Points Ledger" primaryAction={{label:'Adjust Wallet',icon:'plus-circle',onClick:()=>{setModalData(null);setActiveModal('WALLET_ADJUST')}}}/><div className="table-container"><div className="am-table-wrapper"><table className="am-table"><thead><tr><th>Date</th><th>Employee</th><th>Event</th><th>Reference</th><th style={{textAlign:'right'}}>Delta</th><th style={{textAlign:'right'}}>Available</th><th>Reason</th></tr></thead><tbody>{ledger.map(l=><tr key={l.id}><td>{fmtDate(l.createdAt)}</td><td>{l.skId||l.email||'—'}</td><td>{l.eventType}</td><td className="mono">{l.orderNumber||'—'}</td><td style={{textAlign:'right',fontWeight:700,color:l.pointsDelta<0?'#b42318':'#18794e'}}>{l.pointsDelta>0?'+':''}{l.pointsDelta}</td><td style={{textAlign:'right'}}>{l.availableAfter}</td><td>{l.reason||'—'}</td></tr>)}{!ledger.length&&<tr><td colSpan="7">No wallet ledger entries.</td></tr>}</tbody></table></div></div></div>;
-    if(view==='Payroll Deductions'){
-      const rows=orders.filter(o=>o.cashDeductionRequired||upper(o.payrollDeductionStatus)!=='NOT_REQUIRED');
-      return <div style={{display:'flex',flexDirection:'column',height:'100%'}}><Toolbar title="Payroll Deduction Requests"/><div className="table-container"><div style={{marginBottom:'10px',fontSize:'10px',color:'var(--am-text-light)'}}>Read-only from Uniform. Payroll remains authoritative for actual deduction processing.</div><div className="am-table-wrapper"><table className="am-table"><thead><tr><th>Order</th><th>Employee</th><th>Required</th><th style={{textAlign:'right'}}>Amount</th><th>Status</th><th>Payment Method</th></tr></thead><tbody>{rows.map(o=><tr key={o.id}><td className="mono">{o.orderNumber}</td><td>{o.staffName||o.skId}</td><td>{o.cashDeductionRequired?'YES':'NO'}</td><td style={{textAlign:'right'}}>{money(o.cashDeduction||o.cashTotal||0)}</td><td><StatusBadge value={o.payrollDeductionStatus}/></td><td>{o.paymentMethod||'—'}</td></tr>)}{!rows.length&&<tr><td colSpan="6">No Uniform orders currently carry a payroll deduction state.</td></tr>}</tbody></table></div></div></div>;
+    // INIT
+    function initUniformCenter(){
+      renderHeaderBadges();
+      renderNavFromCategories();
+      setStatus("Synchronizing Uniform Center...");
+      post("UNIFORM_EMPLOYEE_READY");
+      installUniformSyncRecovery();
     }
-    return <div style={{display:'flex',flexDirection:'column',height:'100%'}}><Toolbar title="Employee Uniform Profiles" primaryAction={{label:'Adjust Wallet',icon:'plus-circle',onClick:()=>{setModalData(null);setActiveModal('WALLET_ADJUST')}}}/><div className="table-container"><div style={{marginBottom:'10px',fontSize:'10px',color:'var(--am-text-light)'}}>Identity remains mastered by the canonical staff/SuccessFactors chain. This view shows Uniform-owned wallet/profile state only.</div><div className="am-table-wrapper"><table className="am-table"><thead><tr><th>Employee</th><th>SK-ID</th><th>Email</th><th style={{textAlign:'right'}}>Available</th><th style={{textAlign:'right'}}>Held</th><th style={{textAlign:'right'}}>Spent</th><th>Status</th></tr></thead><tbody>{wallets.map(w=><tr key={w.id} className="clickable" onClick={()=>{setModalData(w);setActiveModal('EMPLOYEE_PROFILE')}}><td style={{fontWeight:700}}>{w.displayName||'—'}</td><td className="mono" style={{color:'var(--am-blue)'}}>{w.skId||'—'}</td><td>{w.email||'—'}</td><td style={{textAlign:'right'}}>{w.availablePoints||0}</td><td style={{textAlign:'right'}}>{w.heldPoints||0}</td><td style={{textAlign:'right'}}>{w.spentPoints||0}</td><td><StatusBadge value={w.status}/></td></tr>)}{!wallets.length&&<tr><td colSpan="7">No Uniform wallets.</td></tr>}</tbody></table></div></div></div>;
-  };
-
-  const renderHome=()=>{
-    const view=activeSubTabs.home;
-    if(view==='Campaigns')return <div style={{display:'flex',flexDirection:'column',height:'100%'}}><Toolbar title="Campaigns" primaryAction={{label:'New Campaign',icon:'plus',onClick:()=>{setModalData({title:'Create Uniform Campaign',code:'Out of Uniform domain scope'});setActiveModal('SCHEMA_ACTION')}}}/><div className="table-container"><Gate title="Campaigns" text="The imported ERP navigation keeps this surface, but marketing/wholesale campaigns are not part of the canonical SKANDI Uniform domain. No parallel campaign database is created." code="Out of Uniform domain scope"/></div></div>;
-    if(view==='Allowance Rules')return <div style={{display:'flex',flexDirection:'column',height:'100%'}}><Toolbar title="Uniform Allowance Rules" primaryAction={{label:'New Rule',icon:'plus',onClick:()=>{setModalData(null);setActiveModal('RULE')}}}/><div className="table-container"><div className="am-table-wrapper"><table className="am-table"><thead><tr><th>Rule</th><th>Role</th><th style={{textAlign:'right'}}>Monthly</th><th style={{textAlign:'right'}}>Yearly</th><th style={{textAlign:'right'}}>Max Items</th><th style={{textAlign:'right'}}>Renewal</th><th>Status</th></tr></thead><tbody>{rules.map(r=><tr key={r.id} className="clickable" onClick={()=>{setModalData(r);setActiveModal('RULE')}}><td><b>{r.title}</b><br/><span className="mono">{r.ruleKey}</span></td><td>{r.roleKey}</td><td style={{textAlign:'right'}}>{r.monthlyPoints}</td><td style={{textAlign:'right'}}>{r.yearlyPoints??'—'}</td><td style={{textAlign:'right'}}>{r.maxItems??'—'}</td><td style={{textAlign:'right'}}>{r.renewalMonths??'—'}</td><td><StatusBadge value={r.active===false?'INACTIVE':r.status||'ACTIVE'}/></td></tr>)}{!rules.length&&<tr><td colSpan="7">No Uniform allowance rules.</td></tr>}</tbody></table></div></div></div>;
-    if(view==='Regulations')return <div style={{display:'flex',flexDirection:'column',height:'100%'}}><Toolbar title="Uniform Regulations" primaryAction={{label:'Edit Regulations',icon:'edit-2',onClick:()=>setActiveModal('POLICY')}}/><div className="table-container">{data.policy?<div className="am-table-wrapper"><table className="am-table"><tbody><tr><th>Policy</th><td>{data.policy.title}</td></tr><tr><th>Key</th><td className="mono">{data.policy.policyKey}</td></tr><tr><th>Version</th><td>{data.policy.policyVersion}</td></tr><tr><th>Effective</th><td>{data.policy.effectiveDate||'—'}</td></tr><tr><th>Document ID</th><td>{data.policy.documentId||'—'}</td></tr><tr><th>PDF</th><td>{data.policy.pdfUrl||'—'}</td></tr><tr><th>Body</th><td style={{whiteSpace:'pre-wrap'}}>{data.policy.body||'—'}</td></tr></tbody></table></div>:<Empty>No active Uniform Regulations record.</Empty>}</div></div>;
-    if(view==='Reports'){
-      const activeCatalog=catalog.filter(x=>x.active!==false&&upper(x.stockStatus)!=='ARCHIVED');const complete=orders.filter(o=>upper(o.status)==='COMPLETED').length;
-      return <div style={{display:'flex',flexDirection:'column',height:'100%'}}><Toolbar title="Current-data Reporting"/><div className="table-container"><div className="kpi-grid"><div className="kpi-card"><div className="kpi-title">Catalog</div><div className="kpi-val">{activeCatalog.length}</div></div><div className="kpi-card"><div className="kpi-title">Completed Orders</div><div className="kpi-val">{complete}</div></div><div className="kpi-card"><div className="kpi-title">Distinct Sizes</div><div className="kpi-val">{new Set(activeCatalog.flatMap(x=>arr(x.sizes))).size}</div></div><div className="kpi-card"><div className="kpi-title">Historical Points Spent</div><div className="kpi-val">{wallets.reduce((a,w)=>a+num(w.spentPoints),0)}</div></div></div><div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:'16px'}}><Gate title="Inventory value" text="Requires authoritative stock quantities and costing by stock position." code="transactional stock required"/><Gate title="Size demand" text="Requires normalized issued-item/order-line time series and future stock model." code="issued property + inventory"/><Gate title="Supplier performance" text="Requires PO, receipt variance and QC history." code="purchasing domain required"/></div></div></div>;
-    }
-    if(view==='Audit Trail')return <div style={{display:'flex',flexDirection:'column',height:'100%'}}><Toolbar title="Uniform Audit Trail"/><div className="table-container"><div className="am-table-wrapper"><table className="am-table"><thead><tr><th>Time</th><th>Event</th><th>Actor</th><th>Entity</th><th>Order</th><th>Message</th></tr></thead><tbody>{audit.map(a=><tr key={a.id}><td>{fmtDate(a.createdAt)}</td><td className="mono">{a.eventType}</td><td>{a.actorName||a.actorSkId||'System'}</td><td>{a.entityTable}<br/><span className="mono">{a.entityId}</span></td><td className="mono">{a.orderNumber||'—'}</td><td>{a.message||'—'}</td></tr>)}{!audit.length&&<tr><td colSpan="6">No Uniform audit events.</td></tr>}</tbody></table></div></div></div>;
-    if(view==='System Access')return <div style={{display:'flex',flexDirection:'column',height:'100%'}}><Toolbar title="System Access & Capability Boundary"/><div className="table-container"><div className="two-col-grid"><div className="am-table-wrapper"><table className="am-table"><tbody><tr><th>SK-ID</th><td>{data.session?.skId||data.profile?.skId||'—'}</td></tr><tr><th>Name</th><td>{data.session?.displayName||data.profile?.displayName||'—'}</td></tr><tr><th>Access Role</th><td>{data.session?.accessRole||'—'}</td></tr><tr><th>Permission Groups</th><td>{arr(data.session?.permissionGroups).join(', ')||'—'}</td></tr><tr><th>Permission Keys</th><td>{arr(data.session?.permissionKeys).join(', ')||'—'}</td></tr><tr><th>Backend Version</th><td className="mono">{data.version||'—'}</td></tr></tbody></table></div><div className="am-table-wrapper"><table className="am-table"><thead><tr><th>Capability</th><th>Status</th></tr></thead><tbody>{Object.entries(capabilities).map(([k,v])=><tr key={k}><td className="mono">{k}</td><td><StatusBadge value={v?'ACTIVE':'GATED'}/></td></tr>)}</tbody></table></div></div></div></div>;
-    const open=orders.filter(o=>!CLOSED.has(upper(o.status))).length;
-    return <div style={{display:'flex',flexDirection:'column',height:'100%'}}><Toolbar title="Uniform Control Dashboard" secondaryAction={{label:'Employee Center',icon:'external-link',onClick:()=>post('UNIFORM_ADMIN_NAVIGATE',{path:EMPLOYEE_PATH})}} primaryAction={{label:'Refresh',icon:'refresh-cw',onClick:()=>refresh()}}/><div className="table-container"><div className="kpi-grid"><div className="kpi-card"><div className="kpi-title">Active Catalog</div><div className="kpi-val">{data.stats?.catalog??catalog.filter(x=>x.active!==false).length}</div></div><div className="kpi-card"><div className="kpi-title">Styles</div><div className="kpi-val">{data.stats?.styles??new Set(catalog.map(x=>x.styleGroup)).size}</div></div><div className="kpi-card"><div className="kpi-title">Open Orders</div><div className="kpi-val">{data.stats?.openOrders??open}</div></div><div className="kpi-card"><div className="kpi-title">Wallets</div><div className="kpi-val">{wallets.length}</div></div></div><div className="two-col-grid"><div className="am-table-wrapper"><table className="am-table"><thead><tr><th>Recent Order</th><th>Employee</th><th>Points</th><th>Status</th></tr></thead><tbody>{orders.slice(0,8).map(o=><tr key={o.id} className="clickable" onClick={()=>{setModalData(o);setActiveModal('ORDER')}}><td className="mono">{o.orderNumber}</td><td>{o.staffName||o.skId}</td><td>{o.totalPoints}</td><td><StatusBadge value={o.status}/></td></tr>)}{!orders.length&&<tr><td colSpan="4">No Uniform orders.</td></tr>}</tbody></table></div><div style={{display:'grid',gap:'10px'}}><Gate title="Transactional Stock" text="Catalog status is live. Physical warehouse/bin quantities remain gated by the canonical backend." code={`transactionalStock = ${String(capabilities.transactionalStock===true)}`}/><Gate title="Payroll Handoff" text="Payroll deduction fields are visible on Uniform orders, but actual payroll processing remains outside Uniform authority." code={`payrollDeductionHandoff = ${String(capabilities.payrollDeductionHandoff===true)}`}/></div></div></div></div>;
-  };
-
-  return (
-    <div className="app-shell">
-      <nav className="global-nav">
-        
-        <UniformLogo url={logoUrl} />
-
-        <div style={{height:'16px'}}></div>
-        <div className={`nav-item ${activeMainTab === 'home' ? 'active' : ''}`} onClick={() => handleMainTabChange('home')}><Icon name="layout-dashboard"/></div>
-
-        <div className={`nav-item ${activeMainTab === 'products' ? 'active' : ''}`} onClick={() => handleMainTabChange('products')}><Icon name="layers"/></div>
-        <div className={`nav-item ${activeMainTab === 'inventory' ? 'active' : ''}`} onClick={() => handleMainTabChange('inventory')}><Icon name="package"/></div>
-        <div className={`nav-item ${activeMainTab === 'purchasing' ? 'active' : ''}`} onClick={() => handleMainTabChange('purchasing')}><Icon name="file-text"/></div>
-        <div className={`nav-item ${activeMainTab === 'orders' ? 'active' : ''}`} onClick={() => handleMainTabChange('orders')}><Icon name="shopping-bag"/></div>
-        <div className={`nav-item ${activeMainTab === 'employees' ? 'active' : ''}`} onClick={() => handleMainTabChange('employees')}><Icon name="users"/></div>
-      </nav>
-
-      {(activeMainTab === 'products' || activeMainTab === 'employees') && <SidebarFilter />}
-
-      <main className="main-content">
-        <div className="top-tabs-bar">
-          <div className="tabs-container">
-            {subTabsConfig[activeMainTab]?.map(subTab => (
-              <button key={subTab} className={`am-tab ${activeSubTabs[activeMainTab] === subTab ? 'active' : ''}`} onClick={() => handleSubTabChange(subTab)}>{subTab}</button>
-            ))}
-          </div>
-          <div style={{height:'100%',display:'flex',alignItems:'center',gap:'8px',paddingLeft:'12px'}}>
-            <span style={{fontSize:'9px',fontWeight:'800',color:isSyncing?'#a15c00':error?'#b42318':'#18794e'}}>{isSyncing?'SYNCING':error?'ERROR':'LIVE'}</span>
-            <span className="mono" style={{fontSize:'9px',color:'var(--am-text-light)'}}>{data.version||'B-011 UNIFORM'}</span>
-          </div>
-        </div>
-
-        {error && <div style={{padding:'9px 16px',background:'#fff0ee',borderBottom:'1px solid #ffcdd2',color:'#b42318',fontWeight:'700'}}>{error}</div>}
-        {notice && !error && <div style={{padding:'7px 16px',background:'#edf8f2',borderBottom:'1px solid #c8e6c9',color:'#18794e',fontWeight:'700'}}>{notice}</div>}
-
-        {activeMainTab === 'home' && renderHome()}
-        {activeMainTab === 'products' && renderProducts()}
-        {activeMainTab === 'inventory' && renderInventory()}
-        {activeMainTab === 'purchasing' && renderPurchasing()}
-        {activeMainTab === 'orders' && renderOrders()}
-        {activeMainTab === 'employees' && renderEmployees()}
-        {isSyncing && <div className="sync-overlay"><div className="spinner"></div><div style={{fontWeight:'800', color:'var(--am-blue)'}}>Synchronizing Uniform Control...</div></div>}
-      </main>
-
-      {activeModal === 'EDIT_STYLE' && <MasterStyleEditModal />}
-      {activeModal === 'CATEGORY' && <CategoryModal />}
-      {activeModal === 'RULE' && <RuleModal rule={modalData} />}
-      {activeModal === 'POLICY' && <PolicyModal />}
-      {activeModal === 'WALLET_ADJUST' && <WalletAdjustModal />}
-      {activeModal === 'ORDER' && <OrderModal />}
-      {activeModal === 'EMPLOYEE_PROFILE' && <EmployeeProfileModal />}
-      {activeModal === 'SCHEMA_ACTION' && <SchemaActionModal />}
-      {activeModal === 'BARCODE' && <BarcodeModal />}
-      {searchOpen && <GlobalSearchModal />}
-    </div>
-  );
-}
-
-ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
-</script>
+    if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", initUniformCenter, { once:true });
+    else initUniformCenter();
+  </script>
 </body>
 </html>
-
 ```
