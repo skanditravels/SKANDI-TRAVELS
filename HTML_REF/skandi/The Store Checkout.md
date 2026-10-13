@@ -3,19 +3,33 @@
 - Canonical source identity: `/HTML_REF/skandi/The Store Checkout.md`
 - System area: `SKANDI`
 - Wix page/controller: `/src/pages/Checkout.qofcb.js`
-- Customer/internal route: `/the-store/store-checkout`
+- Customer route: `/the-store/store-checkout`
 - Installed HTML element: `#storeCheckoutEmbed`
-- Complete replacement embed supplied as: `/embed/Checkout.html` (paste into that Wix HTML component).
-- Canonical backend chain: `backend/SKANDI_CORE/storeCheckout.web.js → storeCheckout.js`.
-- Authority: Visitor/member current cart; customer order reads are not elevated. Delivery configuration reads are elevated on the backend only.
-- Status: V12 repair candidate; VERIFIED local tests / STATICALLY VERIFIED source contracts / REQUIRES LIVE TEST.
-- Last source verification: 2026-10-07. Prepared against `skanditravels/SKANDI-TRAVELS`, `main`, commit `b7909cc5edbd87899bd9468577fc8e36eeb5d3fa`, retaining the approved V12 repairs.
-- Intended source only: this package has not changed published Wix, GitHub or Supabase.
-- Dependencies and live gates: existing masterPage/siteMap/staff/provider dependencies; rebuild and publish matching page, facade, core and embed together. See README for exact installation and live checks.
+- Complete replacement embed: `/embed/Checkout.html`
+- Canonical backend chain: `backend/SKANDI_CORE/storeCheckout.web.js → storeCheckout.js → Wix Current Cart V2 / Orders`.
+- Gift Card authority: Wix Gift Cards + Wix Cart V2. SKANDI checkout does not issue cards or maintain balances.
+- New child→parent contracts: `CHECKOUT_APPLY_GIFT_CARD`, `CHECKOUT_REMOVE_GIFT_CARD`; existing checkout contracts remain unchanged.
+- Status: STATICALLY VERIFIED / REQUIRES LIVE TEST.
+- Last source verification: 2026-10-13 against `skanditravels/SKANDI-TRAVELS`, `main`, head `77845115c0d3a839a845522f3ecbfbfd69c82153`, preserving the approved 2026-10-07 checkout repair.
+- Intended source only: this package does not modify GitHub, deployed Wix code, Wix Gift Card settings or Supabase.
+
+## 2026-10-07 — V12 complete-chain repair
+
+Restores the missing controller on published page qofcb. Checkout.lof54.js belongs to the separate native /checkout route and now forwards to the established custom checkout. Moves the existing checkout implementation into its sole core, maps Cart V2 streetAddress correctly, retains form drafts, exposes cart/calculation/delivery failures, verifies the reviewed total token, guards duplicate submission, and persists same-order payment retry in the page session.
+
+Local verification covers syntax, imports/exports, embed boot, provider contracts with mocks, stale replies, cart failure propagation, same-instance order submission deduplication, order ownership boundaries, administrator authorization and inventory revision conflicts. These tests do not prove a live provider request, payment, data write or production build. No database migration is required.
+
+Payment retry is persisted in Wix session storage and verified against customer order access on reload. In-memory placement deduplication is per running backend instance; this is not a distributed transaction guarantee. Wix cart orderPlaced and priceVerificationToken remain authoritative. Existing shipping configuration table extraction is retained; dynamic carrier quoting/region coverage must be tested with the site’s actual cart and address. No paid status is inferred from startPayment or the URL.
+
+## 2026-10-13 — Wix Gift Card redemption
+
+The custom checkout now applies and removes one Wix Gift Card through the documented Current Cart V2 methods. The checkout renders only the obfuscated code returned by Wix, recalculates the authoritative cart after every change, shows the gift-card deduction from Wix totals, and uses `totalAfterGiftCards` as the remaining amount due. `placeOrder` remains the sole order writer, so Wix performs final gift-card redemption as part of the existing order placement flow.
+
+No raw gift-card balance ledger, payment secret, full stored card code or duplicate checkout database was introduced. The existing secure Wix payment window is still used only when a balance remains.
+
+STATICALLY VERIFIED: message names, facade/core exports, Current Cart V2 method signatures, order-placement ownership and HTML syntax. REQUIRES LIVE TEST: Wix Gift Cards must be installed/activated; apply a live test code, remove it, apply it again, test partial coverage and full coverage, then verify final Wix order/gift-card balances.
 
 ## Historical INFO / LOG (preserved)
-
-Earlier route, component, controller and status claims below are historical; the current INFO above and latest repair entry supersede conflicting metadata.
 
 <!--
 INFO
@@ -72,16 +86,6 @@ LOG
 ## APPROVED REPAIR LOG — 2026-10-03 UTC
 
 Checkout.lof54.js now imports the existing canonical SKANDI_CORE/storeCheckout.web facade. Confirmation routing reads SITE_MAP.storeConfirmation. Checkout HTML, payment/cart logic and message names remain unchanged. REQUIRES LIVE TEST for customer cart/payment and installed route parity. Source changes prepared; not deployed.
-
-## 2026-10-07 — V12 complete-chain repair
-
-Restores the missing controller on published page qofcb. Checkout.lof54.js belongs to the separate native /checkout route and now forwards to the established custom checkout. Moves the existing checkout implementation into its sole core, maps Cart V2 streetAddress correctly, retains form drafts, exposes cart/calculation/delivery failures, verifies the reviewed total token, guards duplicate submission, and persists same-order payment retry in the page session.
-
-Local verification covers syntax, imports/exports, embed boot, provider contracts with mocks, stale replies, cart failure propagation, same-instance order submission deduplication, order ownership boundaries, administrator authorization and inventory revision conflicts. These tests do not prove a live provider request, payment, data write or production build. No database migration is required.
-
-Payment retry is persisted in Wix session storage and verified against customer order access on reload. In-memory placement deduplication is per running backend instance; this is not a distributed transaction guarantee. Wix cart orderPlaced and priceVerificationToken remain authoritative. Existing shipping configuration table extraction is retained; dynamic carrier quoting/region coverage must be tested with the site’s actual cart and address. No paid status is inferred from startPayment or the URL.
-
-## Complete intended HTML
 
 ```html
 <!doctype html>
@@ -171,6 +175,8 @@ button:disabled{cursor:not-allowed;opacity:.55}
 .coupon button{border:0;border-radius:11px;background:#eaf2fb;color:var(--navy);font-weight:900;padding:0 14px;font-size:11px}
 .coupon-active{display:flex;justify-content:space-between;align-items:center;margin-top:12px;padding:10px 12px;border-radius:11px;background:#ecfdf3;font-size:11px;color:var(--ok);font-weight:800}
 .coupon-active button{border:0;background:transparent;color:var(--ok);font-size:10px;text-decoration:underline}
+.gift-card-label{margin-top:14px;font-size:10px;font-weight:900;color:var(--navy);text-transform:uppercase;letter-spacing:.08em}
+.gift-card-note{margin-top:7px;color:var(--muted);font-size:9px;line-height:1.45}
 .totals{border-top:1px solid var(--line);margin-top:18px;padding-top:15px;display:grid;gap:10px}
 .total-row{display:flex;justify-content:space-between;gap:12px;font-size:11px;color:#475467}
 .total-row strong{color:var(--ink)}
@@ -637,6 +643,12 @@ function totalsHtml(){
   const s=STATE?.summary||{};
   const discount=Number(s.discount?.amount||0);
   const fees=Number(s.additionalFees?.amount||0);
+  const totalAmount=Number(s.total?.amount||0);
+  const afterAmount=Number(s.totalAfterGiftCards?.amount);
+  const hasGiftCard=Boolean(STATE?.cart?.giftCards?.length);
+  const giftCardApplied=hasGiftCard&&Number.isFinite(afterAmount)?Math.max(0,totalAmount-afterAmount):0;
+  const currency=s.total?.currency||STATE?.cart?.currency||"USD";
+  const finalTotal=hasGiftCard&&Number.isFinite(afterAmount)?s.totalAfterGiftCards:s.total;
   return `
     <div class="totals">
       <div class="total-row"><span>Subtotal</span><strong>${esc(money(s.subtotal||STATE?.cart?.subtotal))}</strong></div>
@@ -644,7 +656,8 @@ function totalsHtml(){
       <div class="total-row"><span>Delivery</span><strong>${esc(money(s.delivery))}</strong></div>
       ${fees?`<div class="total-row"><span>Fees</span><strong>${esc(money(s.additionalFees))}</strong></div>`:""}
       <div class="total-row"><span>Tax</span><strong>${esc(money(s.tax))}</strong></div>
-      <div class="total-row grand"><span>Total</span><span>${esc(money(s.total))}</span></div>
+      ${giftCardApplied>0?`<div class="total-row"><span>Gift card</span><strong>− ${esc(money({amount:giftCardApplied,currency}))}</strong></div>`:""}
+      <div class="total-row grand"><span>${hasGiftCard?"Total due":"Total"}</span><span>${esc(money(finalTotal))}</span></div>
     </div>`;
 }
 
@@ -662,6 +675,25 @@ function couponHtml(){
       <input id="couponCode" type="text" maxlength="50" placeholder="Promo code">
       <button id="applyCoupon">Apply</button>
     </div>`;
+}
+
+function giftCardHtml(){
+  const card=STATE?.cart?.giftCards?.[0];
+  if(card){
+    return `
+      <div class="gift-card-label">Gift card</div>
+      <div class="coupon-active">
+        <span>${esc(card.obfuscatedCode||"Gift card")} applied</span>
+        <button data-remove-gift-card="${esc(card.id)}">Remove</button>
+      </div>`;
+  }
+  return `
+    <div class="gift-card-label">Gift card</div>
+    <div class="coupon">
+      <input id="giftCardCode" type="text" maxlength="50" autocomplete="off" placeholder="Gift card code">
+      <button id="applyGiftCard">Apply</button>
+    </div>
+    <div class="gift-card-note">SKANDI Gift Cards are validated and redeemed by Wix against this current cart.</div>`;
 }
 
 function formHtml(){
@@ -715,7 +747,7 @@ function formHtml(){
     <section class="card">
       <div class="card-head">
         <h2>Payment</h2>
-        <p>Your payment details are collected in a secure payment window after SKANDI validates the final order total.</p>
+        <p>Gift card value is applied first. If a balance remains, your payment details are collected in a secure payment window after SKANDI validates the final order total.</p>
       </div>
       <div class="card-body">
         <div class="notice info">Card and supported wallet information is handled securely by the configured Wix payment provider. SKANDI does not store your card number in this page.</div>
@@ -734,12 +766,13 @@ function orderHtml(){
       <div class="card-body">
         <div class="order-items">${items.map(itemHtml).join("")}</div>
         ${couponHtml()}
+        ${giftCardHtml()}
         ${totalsHtml()}
         <label class="terms">
           <input id="terms" type="checkbox" ${TERMS?"checked":""}>
           <span>I agree to SKANDI's store terms, privacy policy and applicable delivery conditions.</span>
         </label>
-        <button id="payBtn" class="pay-btn">Complete purchase</button>
+        <button id="payBtn" class="pay-btn">${STATE?.summary?.requiresPayment===false?"Place order":"Complete purchase"}</button>
         <div class="payment-note">Your order total is recalculated and verified immediately before the order is placed.</div>
       </div>
     </aside>`;
@@ -773,6 +806,20 @@ function bind(){
   document.querySelector("[data-remove-coupon]")?.addEventListener("click",e=>{
     setBusy(true,"Removing promo code…");
     post("CHECKOUT_REMOVE_COUPON",{couponId:e.currentTarget.dataset.removeCoupon});
+  });
+
+  $("applyGiftCard")?.addEventListener("click",()=>{
+    const code=formValue("giftCardCode");
+    if(!code){status("Enter a gift card code.");return}
+    setBusy(true,"Applying gift card…");
+    post("CHECKOUT_APPLY_GIFT_CARD",{code});
+  });
+
+  document.querySelector("[data-remove-gift-card]")?.addEventListener("click",e=>{
+    const giftCardId=e.currentTarget.dataset.removeGiftCard;
+    if(!giftCardId)return;
+    setBusy(true,"Removing gift card…");
+    post("CHECKOUT_REMOVE_GIFT_CARD",{giftCardId});
   });
 
   document.querySelectorAll("[data-qty]").forEach(btn=>{
@@ -927,4 +974,6 @@ post("CHECKOUT_READY",{});
 </script>
 </body>
 </html>
+
 ```
+
