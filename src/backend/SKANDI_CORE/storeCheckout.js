@@ -147,7 +147,7 @@ function normalizeAddress(address = {}) {
 
     addressLine:
       cleanText(
-        address.addressLine || [address.streetAddress?.number, address.streetAddress?.name].filter(Boolean).join(" "),
+        address.addressLine,
         150
       ),
 
@@ -374,6 +374,30 @@ function normalizeCart(cart = {}) {
                 cleanText(
                   coupon.code,
                   50
+                )
+            })
+          )
+        : [],
+
+    giftCards:
+      Array.isArray(
+        cart
+          ?.paymentInfo
+          ?.giftCards
+      )
+        ? cart.paymentInfo.giftCards.map(
+            (giftCard) => ({
+              id:
+                giftCard._id ||
+                giftCard.id ||
+                "",
+
+              obfuscatedCode:
+                cleanText(
+                  giftCard.obfuscatedCode ||
+                  giftCard.maskedCode ||
+                  "Gift card",
+                  80
                 )
             })
           )
@@ -1024,7 +1048,8 @@ async function buildCheckoutState(preferredAddress = null) {
       ok: true,
       empty: true,
       cart: {
-        lineItems: []
+        lineItems: [],
+        giftCards: []
       },
       summary: null,
       deliveryMethods: [],
@@ -1214,6 +1239,67 @@ export async function removeStoreCouponCore({
         .removeCouponFromCurrentCart(
           cleanId
         );
+
+      return buildCheckoutState();
+    }
+
+
+export async function applyStoreGiftCardCore({
+      code
+    } = {}) {
+      const cleanCode =
+        cleanText(
+          code,
+          50
+        );
+
+      if (!cleanCode) {
+        throw new Error(
+          "Enter a gift card code."
+        );
+      }
+
+      try {
+        await currentCartV2
+          .addGiftCardToCurrentCart({
+            code:
+              cleanCode
+          });
+      } catch (_) {
+        throw new Error(
+          "This gift card could not be applied. Check the code and available balance, then try again."
+        );
+      }
+
+      return buildCheckoutState();
+    }
+
+
+export async function removeStoreGiftCardCore({
+      giftCardId
+    } = {}) {
+      const cleanId =
+        cleanText(
+          giftCardId,
+          100
+        );
+
+      if (!cleanId) {
+        throw new Error(
+          "Gift card ID is required."
+        );
+      }
+
+      try {
+        await currentCartV2
+          .removeGiftCardFromCurrentCart(
+            cleanId
+          );
+      } catch (_) {
+        throw new Error(
+          "This gift card could not be removed. Refresh checkout and try again."
+        );
+      }
 
       return buildCheckoutState();
     }
