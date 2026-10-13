@@ -1,55 +1,6 @@
 import {
-  getDocuNetViewerBootstrapSynced,
-  getDocuNetDocumentAccessSynced,
-  acknowledgeDocuNetDocumentSynced
-} from "backend/docuNetSync.web";
-
-const SOURCE = "SKANDI_DOCUNET_VIEWER";
-const PARENT = "SKANDI_WIX_PARENT";
-const HTML_IDS = "#docuNetViewerEmbed";
-
-function htmlElement() {
-  for (const id of HTML_IDS) {
-    try {
-      const el = $w(id);
-      if (el) return el;
-    } catch (_) {}
-  }
-  throw new Error(`DocuNet Viewer HTML component not found. Tried: ${HTML_IDS.join(", ")}`);
-}
-
-function send(html, type, payload={}, message="") {
-  html.postMessage({ source:PARENT, type, payload, ...(message ? {message} : {}) });
-}
-
-$w.onReady(() => {
-  const html = htmlElement();
-
-  html.onMessage(async event => {
-    const msg = event.data || {};
-    if (msg.source !== SOURCE) return;
-    const payload = msg.payload || {};
-
-    try {
-      if (msg.type === "DOCUNET_READY") {
-        const bootstrap = await getDocuNetViewerBootstrapSynced();
-        send(html, "DOCUNET_BOOTSTRAP_RESULT", bootstrap);
-        return;
-      }
-
-      if (msg.type === "DOCUNET_OPEN_DOCUMENT") {
-        const result = await getDocuNetDocumentAccessSynced({ documentId: payload.documentId });
-        send(html, "DOCUNET_DOCUMENT_ACCESS_RESULT", result);
-        return;
-      }
-
-      if (msg.type === "DOCUNET_ACKNOWLEDGE") {
-        const result = await acknowledgeDocuNetDocumentSynced({ documentId: payload.documentId });
-        send(html, "DOCUNET_ACKNOWLEDGE_RESULT", result);
-        return;
-      }
-    } catch (error) {
-      send(html, "DOCUNET_ERROR", {}, error?.message || "DocuNet request failed.");
-    }
-  });
-});
+  getDocuNetViewerBootstrap,getDocuNetDocumentAccess,acknowledgeDocuNetDocument
+} from "backend/SKANDI_CORE/docuNet.web";
+const HTML_ID="#docuNetViewerEmbed", SOURCE="SKANDI_DOCUNET_VIEWER", PARENT="SKANDI_WIX_PARENT";
+const send=(html,type,payload={},message="")=>html.postMessage({source:PARENT,type,payload,...(message?{message}:{}),timestamp:new Date().toISOString()});
+$w.onReady(()=>{const html=$w(HTML_ID);html.onMessage(async event=>{const m=event.data||{};if(m.source&&m.source!==SOURCE)return;try{if(m.type==="DOCUNET_READY"){send(html,"DOCUNET_BOOTSTRAP_RESULT",await getDocuNetViewerBootstrap());return}if(m.type==="DOCUNET_OPEN_DOCUMENT"){send(html,"DOCUNET_DOCUMENT_ACCESS_RESULT",await getDocuNetDocumentAccess({documentId:m.documentId||m.payload?.documentId}));return}if(m.type==="DOCUNET_ACKNOWLEDGE"){send(html,"DOCUNET_ACKNOWLEDGE_RESULT",await acknowledgeDocuNetDocument({documentId:m.documentId||m.payload?.documentId,revisionId:m.revisionId||m.payload?.revisionId}));return}}catch(error){send(html,"DOCUNET_ERROR",{},error?.message||"DocuNet action failed.")}});});
