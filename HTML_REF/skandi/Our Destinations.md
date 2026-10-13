@@ -1,25 +1,40 @@
+# SKANDI INFO / LOG — OUR NETWORK + DESTINATIONS MERGED DISCOVERY
+
+- Source identity: `/HTML_REF/skandi/Our Destinations.md`. System: SKANDI. Complete intended source; HTML_REF is never imported at runtime.
+- Page: Our Destinations; `/src/pages/Our Destinations.wfe5g.js`; route `/destinations`; Wix HTML element `#htmlSkandiMap`.
+- Current role: canonical top-level destination/network discovery surface. The existing Our Network map, layout, controls, Collection and airline content are preserved. A new `See our full Destinations list` control opens an in-code full-page directory without leaving the embed.
+- Directory behavior: countries are sorted A–Z; destinations are sorted A–Z within each country. Country names navigate to the existing Country route `/destinations/country?country=<slug>`. Destination names navigate to `/destinations/country/destination?country=<slug>&destination=<slug>`.
+- Merge boundary: `/src/pages/Our Destinations.ctnh1.js` redirects only the bare `/destinations` index to this page. Existing query-driven destination-flow states remain bound to the unchanged destination flow so Country, Destination, Area, Hotel List and Hotel Detail behavior is preserved.
+- Data owner: unchanged `backend/SKANDI_CORE/networkMap.web.js` → `networkMap.js` → `publicContent` RPC boundary → existing public Supabase content RPC. No direct browser database/provider access was added.
+- Runtime contract: child `SKANDI_PUBLIC_NETWORK_MAP`, parent `SKANDI_WIX_PARENT`; existing `SKANDI_MAP_READY`, `SKANDI_MAP_REFRESH`, `SKANDI_MAP_DATA`, `SKANDI_MAP_ERROR`, navigation/state/analytics messages remain unchanged.
+- Source authority: the user-supplied complete Our Network HTML dated 2026-10-13 is the visual/source baseline for this merge and supersedes older Git bytes where they differ. Existing map design, responsive behavior, IDs, message names and navigation contracts are preserved.
+- Verification: **STATICALLY VERIFIED** — complete HTML parsed, IDs checked for duplicates, inline JavaScript syntax checked with Node, and the unchanged Wix page-controller/backend contract was inspected. **REQUIRES LIVE TEST** — Wix embed replacement, published map payload, navigation to live Country/Destination pages and responsive browser behavior.
+- No GitHub, Wix, Google Drive or Supabase writes were performed.
+- Last inspected: 2026-10-13 UTC.
+
+## PRESERVED HISTORY
+
 # Our Network
 
-STATUS: IN_PROGRESS
-SLUG: /about/our-network
-WIX PAGE: Our Network.wfe5g
-AREA: SKANDI
-LIVE HTML: YES
-ELEMENT: #htmlSkandiMap
+STATUS: IN_PROGRESS  
+SLUG: /about/our-network  
+WIX PAGE: Our Network.wfe5g  
+AREA: SKANDI  
+LIVE HTML: YES  
+ELEMENT: #htmlSkandiMap  
 LAST SYNCED: 2026-09-16
 
-## HOW TO USE
-***STATUS (OWNER): "TODO", "IN PROGRESS", "NEEDS REVIEW", "REVISIONS NEEDED", "READY", "LIVE", "ARCHIVED"
-STATUS (AGENT): "TODO", "IN PROGRESS", "REVISIONS NEEDED", "READY".***
+### COMMENT HISTORY
 
-###  COMMENT SECTION (START ON A NEW ROW, LOG IF A CHANGE IS MADE THAT REQUIRES ATTENTION) 
-1. 9/17 3:02PM "Page might be restyled, but keeping same payloads, page not syncing correctly yet" / Samuel
-2. 9/17 4:00PM "I'm re-working it" / Samuel
-3.
-...
-***END*** 
+1. 2026-09-17 3:02 PM — “Page might be restyled, but keeping same payloads, page not syncing correctly yet” / Samuel
+2. 2026-09-17 4:00 PM — “I'm re-working it” / Samuel
 
-#### LIVE HTML
+## CHANGE LOG
+
+- 2026-10-13 UTC — Preserved the supplied Our Network design/map/layout and merged destination discovery into the page. Added `See our full Destinations list`, an in-code full-screen directory grouped by country with alphabetical country/destination ordering, Country-route navigation and Destination-route navigation. Existing map payload, map modes, booking handoff, Collection, airline, search, panels and responsive behavior remain unchanged.
+- 2026-10-13 UTC — Bare `/destinations` is intended to redirect to this merged discovery page through the updated Our Destinations Wix controller; destination detail states remain on their existing destination-flow routes.
+
+## COMPLETE INTENDED HTML
 
 ```html
 <!DOCTYPE html>
@@ -325,7 +340,7 @@ a{color:inherit}
 }
 .hero-eyebrow::before{content:"";width:34px;height:1px;background:#1f8794}
 .hero-copy h1{
-  margin:0;
+  margin-top:40px;
   font-size:clamp(38px,5vw,68px);
   line-height:.94;
   letter-spacing:-.055em;
@@ -341,7 +356,7 @@ a{color:inherit}
 }
 .network-meta{
   display:flex;align-items:center;flex-wrap:wrap;gap:8px 14px;
-  margin-top:18px;
+  margin-top:28px;
   color:#607482;
   font-size:10px;font-weight:700;letter-spacing:.02em;
 }
@@ -362,6 +377,8 @@ a{color:inherit}
   pointer-events:auto;
 }
 .mode-rail{
+  margin-top:30px;
+  margin-left:40px;
   display:flex;align-items:center;gap:4px;
   padding:5px;
   border:1px solid rgba(2,46,100,.12);
@@ -613,6 +630,9 @@ a{color:inherit}
 .sheet-handle{width:44px;height:5px;border-radius:999px;background:#c5c8cb;margin:10px auto}
 .sheet-snap{position:absolute;right:16px;top:11px;border:0;border-radius:999px;background:#edf0f2;color:var(--sk-navy);padding:7px 10px;font-size:9px;font-weight:800;text-transform:uppercase}
 
+.map-toolbar, .region-strip, .map-legend, .map-utilities { transition: transform 0.34s var(--ease); }
+
+
 /* =========================================================
    EDITORIAL CHAPTERS — SKANDI LIGHT ATLAS TO DARK BRAND WORLD
    ========================================================= */
@@ -681,7 +701,7 @@ a{color:inherit}
 .chapter-intro{color:rgba(229,237,241,.72);font-size:13px;line-height:1.75}
 .editorial>.chapter:first-child .chapter-kicker{color:#285ca8}
 .editorial>.chapter:first-child h2{color:#022e64}
-.editorial>.chapter:first-child .chapter-intro{color:#475467}
+.editorial>.chapter:first-child .chapter-intro{color: #ffffff}
 .feature-grid{display:grid;grid-template-columns:1.35fr .65fr;grid-template-rows:repeat(2,minmax(220px,1fr));gap:14px}
 .feature-card{
   position:relative;overflow:hidden;min-height:220px;border:1px solid rgba(255,255,255,.16);border-radius:22px;background:var(--sk-grad-nordic-blue);color:#fff;text-align:left;padding:0;
@@ -753,6 +773,249 @@ a{color:inherit}
 .directory-link{border:0;background:transparent;padding:6px 0;text-align:left;color:rgba(219,230,235,.68);font-size:10px;line-height:1.4}
 .directory-link:hover{color:var(--sk-aqua-soft);text-decoration:underline;text-underline-offset:3px}
 
+
+/* =========================================================
+   FULL DESTINATIONS DIRECTORY — MERGED OUR DESTINATIONS INDEX
+   ========================================================= */
+.destinations-list-trigger{
+  pointer-events:auto;
+  min-height:44px;
+  margin-top:20px;
+  padding:0 17px;
+  border:1px solid rgba(2,46,100,.16);
+  border-radius:12px;
+  background:var(--sk-navy);
+  color:#fff;
+  box-shadow:0 12px 28px rgba(2,46,100,.16);
+  font-size:10px;
+  font-weight:850;
+  letter-spacing:.055em;
+  text-transform:none;
+  transition:transform var(--fast) ease,box-shadow var(--fast) ease,background var(--fast) ease;
+}
+.destinations-list-trigger:hover{
+  transform:translateY(-1px);
+  background:var(--sk-navy-deep);
+  box-shadow:0 16px 34px rgba(2,46,100,.20);
+}
+body.destinations-directory-open{overflow:hidden}
+.destinations-list-page{
+  position:fixed;
+  inset:0;
+  z-index:120;
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  background:
+    radial-gradient(circle at 88% 4%,rgba(95,199,207,.15),transparent 27%),
+    linear-gradient(180deg,#f6faff 0,#fff 34%,#f7faff 100%);
+  color:var(--sk-graphite);
+}
+.destinations-list-page-header{
+  position:sticky;
+  top:0;
+  z-index:4;
+  border-bottom:1px solid rgba(2,46,100,.10);
+  background:rgba(246,250,255,.94);
+  backdrop-filter:blur(18px) saturate(1.1);
+  -webkit-backdrop-filter:blur(18px) saturate(1.1);
+}
+.destinations-list-page-header-inner{
+  width:min(1320px,calc(100% - 40px));
+  min-height:72px;
+  margin:0 auto;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:22px;
+}
+.destinations-list-back{
+  display:inline-flex;
+  align-items:center;
+  gap:10px;
+  min-height:42px;
+  padding:0 13px;
+  border:0;
+  border-radius:10px;
+  background:transparent;
+  color:var(--sk-navy);
+  font-size:10px;
+  font-weight:850;
+  letter-spacing:.05em;
+}
+.destinations-list-back:hover{background:rgba(2,46,100,.06)}
+.destinations-list-back svg{
+  width:18px;height:18px;
+  fill:none;stroke:currentColor;stroke-width:1.9;
+  stroke-linecap:round;stroke-linejoin:round;
+}
+.destinations-list-page-label{
+  color:#61758b;
+  font-size:9px;
+  font-weight:800;
+  letter-spacing:.11em;
+  text-transform:uppercase;
+}
+.destinations-list-hero{
+  width:min(1320px,calc(100% - 40px));
+  margin:0 auto;
+  padding:clamp(58px,8vw,104px) 0 clamp(42px,6vw,72px);
+}
+.destinations-list-kicker{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  color:#1f7883;
+  font-size:10px;
+  font-weight:850;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+}
+.destinations-list-kicker::before{
+  content:"";
+  width:32px;height:1px;
+  background:#1f8794;
+}
+.destinations-list-hero h2{
+  margin:14px 0 0;
+  max-width:820px;
+  color:var(--sk-navy);
+  font-size:clamp(40px,6vw,76px);
+  line-height:.98;
+  letter-spacing:-.055em;
+  font-weight:600;
+}
+.destinations-list-hero p{
+  max-width:700px;
+  margin:20px 0 0;
+  color:#5f7084;
+  font-size:14px;
+  line-height:1.75;
+}
+.destinations-alphabet{
+  display:flex;
+  flex-wrap:wrap;
+  gap:0 14px;
+  margin-top:30px;
+  padding:18px 0 0;
+  border-top:1px solid rgba(2,46,100,.10);
+}
+.destinations-alphabet a{
+  padding:7px 0;
+  color:#607482;
+  font-size:10px;
+  font-weight:800;
+  text-decoration:none;
+}
+.destinations-alphabet a:hover,
+.destinations-alphabet a:focus-visible{
+  color:var(--sk-navy);
+  text-decoration:underline;
+  text-underline-offset:4px;
+}
+.destinations-list-content{
+  width:min(1320px,calc(100% - 40px));
+  margin:0 auto;
+  padding:0 0 clamp(72px,9vw,120px);
+}
+.destination-country{
+  display:grid;
+  grid-template-columns:minmax(220px,.34fr) minmax(0,1fr);
+  gap:clamp(26px,5vw,72px);
+  padding:34px 0;
+  border-top:1px solid rgba(2,46,100,.12);
+  scroll-margin-top:94px;
+}
+.destination-country:first-child{border-top:0}
+.destination-country-name{
+  align-self:start;
+  width:max-content;
+  max-width:100%;
+  border:0;
+  border-bottom:1px solid transparent;
+  background:transparent;
+  padding:0 0 5px;
+  color:var(--sk-navy);
+  text-align:left;
+  font-size:clamp(24px,2.7vw,36px);
+  line-height:1.1;
+  letter-spacing:-.035em;
+  font-weight:650;
+}
+.destination-country-name:hover{
+  border-bottom-color:var(--sk-aqua);
+  color:var(--sk-blue);
+}
+.destination-country-count{
+  display:block;
+  margin-top:9px;
+  color:#8390a0;
+  font-size:9px;
+  font-weight:750;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+}
+.destination-country-list{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:0 24px;
+}
+.destination-list-link{
+  width:100%;
+  min-height:46px;
+  border:0;
+  border-bottom:1px solid rgba(2,46,100,.08);
+  background:transparent;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  padding:9px 2px;
+  color:#41546a;
+  text-align:left;
+  font-size:12px;
+  font-weight:650;
+  line-height:1.4;
+  transition:color var(--fast) ease,padding var(--fast) ease,border-color var(--fast) ease;
+}
+.destination-list-link::after{
+  content:"→";
+  color:#8b99a8;
+  font-size:13px;
+  transition:transform var(--fast) ease,color var(--fast) ease;
+}
+.destination-list-link:hover{
+  padding-left:5px;
+  color:var(--sk-navy);
+  border-bottom-color:rgba(95,199,207,.55);
+}
+.destination-list-link:hover::after{
+  transform:translateX(3px);
+  color:#1f8794;
+}
+.destinations-list-empty{
+  padding:42px 0;
+  border-top:1px solid rgba(2,46,100,.12);
+  color:#65758a;
+  font-size:13px;
+  line-height:1.7;
+}
+@media (max-width:860px){
+  .destination-country{grid-template-columns:1fr;gap:18px}
+  .destination-country-list{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:560px){
+  .destinations-list-page-header-inner,
+  .destinations-list-hero,
+  .destinations-list-content{width:calc(100% - 32px)}
+  .destinations-list-page-header-inner{min-height:64px}
+  .destinations-list-hero{padding:44px 0 34px}
+  .destinations-list-hero h2{font-size:42px}
+  .destinations-list-hero p{font-size:12px}
+  .destination-country{padding:28px 0}
+  .destination-country-list{grid-template-columns:1fr}
+  .destinations-alphabet{gap:0 12px}
+}
+
 /* MapLibre control styling */
 .maplibregl-ctrl-bottom-right{right:12px!important;bottom:10px!important}.maplibregl-ctrl-attrib{background:rgba(251,250,246,.72)!important;color:rgba(2,46,100,.52)!important;border:1px solid rgba(2,46,100,.08)!important;border-radius:10px!important;backdrop-filter:blur(8px);font-size:9px!important}.maplibregl-ctrl-attrib a{color:rgba(2,46,100,.72)!important}.maplibregl-ctrl-logo{opacity:.42;transform:scale(.72);transform-origin:bottom left}
 
@@ -778,12 +1041,19 @@ a{color:inherit}
   .legend-chip{flex:0 0 auto;white-space:nowrap;background:rgba(251,250,246,.84)}
   .map-utilities{right:14px;top:172px;bottom:auto}.utility-stack button{width:40px;height:38px}
   .detail-panel{display:none}
-  .mobile-sheet{
-    display:block;position:absolute;z-index:var(--z-sheet);left:8px;right:8px;bottom:8px;height:76%;
-    border-radius:24px 24px 18px 18px;background:rgba(251,250,246,.98);box-shadow:0 -18px 60px rgba(0,0,0,.28);overflow:hidden;
-    transform:translateY(calc(100% - 118px));transition:transform .34s var(--ease);pointer-events:none;
+  .mobile-sheet {
+    display: block; position: absolute; z-index: var(--z-sheet); left: 8px; right: 8px; bottom: 8px; height: 76%;
+    border-radius: 24px 24px 18px 18px; background: rgba(251,250,246,.98); box-shadow: 0 -18px 60px rgba(0,0,0,.28); overflow: hidden;
+    transform: translateY(120%); /* Pushes it completely off-screen when closed */
+    transition: transform .34s var(--ease); pointer-events: none;
   }
-  .mobile-sheet.open{pointer-events:auto}.mobile-sheet[data-snap="peek"]{transform:translateY(calc(100% - 118px))}.mobile-sheet[data-snap="medium"]{transform:translateY(42%)}.mobile-sheet[data-snap="full"]{transform:translateY(0)}
+  
+  .mobile-sheet.open { pointer-events: auto; }
+  
+  /* Adding .open to these rules ensures it ONLY peeks when a location is selected */
+  .mobile-sheet.open[data-snap="peek"] { transform: translateY(calc(100% - 118px)); }
+  .mobile-sheet.open[data-snap="medium"] { transform: translateY(42%); }
+  .mobile-sheet.open[data-snap="full"] { transform: translateY(0); }
   .mobile-sheet-content{height:calc(100% - 28px);overflow:auto;padding:0 17px 24px}.mobile-sheet .panel-media{height:188px;margin:0 -17px;border-radius:0}.mobile-sheet .panel-body{padding:18px 0 20px}.mobile-sheet .panel-actions{grid-template-columns:1fr}.mobile-sheet .panel-title{font-size:30px}
   .map-status{bottom:126px}
   .chapter-head{grid-template-columns:1fr;gap:16px}.feature-grid{grid-template-columns:1fr;grid-template-rows:auto}.feature-card:first-child{grid-row:auto;min-height:390px}.feature-card{min-height:260px}.collection-rail{grid-auto-columns:minmax(280px,78%)}.directory-grid{grid-template-columns:repeat(2,1fr)}
@@ -791,9 +1061,9 @@ a{color:inherit}
 @media (max-width:560px){
   :root{--map-height:calc(100svh - 76px)}
   .network-hero{min-height:max(620px,var(--map-height))}
-  .hero-eyebrow{font-size:9px;margin-bottom:8px}.hero-copy h1{font-size:35px}.hero-copy p{max-width:320px;line-height:1.55}.network-meta{max-width:330px;gap:5px 9px}.network-meta span+span::before{margin-right:9px}
+  .hero-eyebrow{font-size:9px;margin-bottom:8px}.hero-copy h1{font-size:35px;margin-top:20px}.hero-copy p{max-width:320px;line-height:1.55}.network-meta{max-width:330px;gap:5px 9px}.network-meta span+span::before{margin-right:9px}
   .mode-btn{font-size:9px;padding:0 10px}.mode-btn[data-mode="destinations"]{display:none}
-  .region-strip{bottom:70px}.map-utilities{top:150px}.map-tooltip{display:none}
+  .region-strip{bottom:70px}.map-legend{display:none}.map-utilities{top:150px}.map-tooltip{display:none}
   .search-layer{padding:10px}.search-panel{width:100%;max-height:calc(100dvh - 20px);border-radius:20px}.search-body{max-height:calc(100dvh - 96px)}
   .chapter{padding:70px 20px}.chapter h2{font-size:38px}.feature-card:first-child{min-height:360px}.feature-card{border-radius:18px}.collection-rail{grid-auto-columns:86%}.collection-card{border-radius:18px}.plan-band{grid-template-columns:1fr;padding:34px 24px;border-radius:20px}.plan-band button{justify-self:start}.directory-inner{padding:42px 20px 60px}.directory-grid{grid-template-columns:1fr 1fr;gap:24px 16px}.directory-head{align-items:start;flex-direction:column}
   .maplibregl-ctrl-attrib{max-width:180px!important;font-size:8px!important}
@@ -1139,7 +1409,6 @@ a{color:inherit}
   .fx-reveal{opacity:1!important;transform:none!important}
   .fx-surface{display:none!important}
 }
-
 </style>
 </head>
 <body>
@@ -1154,6 +1423,7 @@ a{color:inherit}
       <h1 id="networkTitle">Our Network</h1>
       <p>Where the SKANDI world comes together. Explore destinations, handpicked Collection stays and trusted airline connections.</p>
       <div class="network-meta" id="networkMeta" aria-live="polite"></div>
+      <button class="destinations-list-trigger" id="destinationsListOpen" type="button" aria-controls="destinationsListPage">See our full Destinations list</button>
     </header>
 
     <div class="map-toolbar" aria-label="Network map modes">
@@ -1277,6 +1547,25 @@ a{color:inherit}
   </div>
 </section>
 
+<section class="destinations-list-page" id="destinationsListPage" aria-labelledby="destinationsListHeading" hidden>
+  <div class="destinations-list-page-header">
+    <div class="destinations-list-page-header-inner">
+      <button class="destinations-list-back" id="destinationsListBack" type="button">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5"></path><path d="m11 18-6-6 6-6"></path></svg>
+        <span>Back to Our Network</span>
+      </button>
+      <div class="destinations-list-page-label">SKANDI Travels</div>
+    </div>
+  </div>
+  <div class="destinations-list-hero">
+    <div class="destinations-list-kicker">Explore with SKANDI</div>
+    <h2 id="destinationsListHeading">All destinations.</h2>
+    <p>Browse every published SKANDI destination by country. Countries and destinations are listed alphabetically and open the existing Country and Destination pages.</p>
+    <nav class="destinations-alphabet" id="destinationsAlphabet" aria-label="Jump to country"></nav>
+  </div>
+  <div class="destinations-list-content" id="destinationsListContent" aria-live="polite"></div>
+</section>
+
 <script>
 /* =========================================================
    CONFIG / CONTRACT
@@ -1286,6 +1575,8 @@ const PARENT_SOURCE = "SKANDI_WIX_PARENT";
 const MAP_STYLE_URL = "https://tiles.openfreemap.org/styles/dark";
 const BOOKING_ROUTE = "/booking";
 const HOTEL_SEARCH_ROUTE = "/hotels";
+const COUNTRY_ROUTE = "/destinations/country";
+const DESTINATION_ROUTE = "/destinations/country/destination";
 const SAFE_PROTOCOLS = new Set(["http:","https:"]);
 const REDUCED_MOTION = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 const SAVE_DATA = Boolean(navigator.connection && navigator.connection.saveData);
@@ -1301,6 +1592,7 @@ const state = {
   selectedAirlineId:null,
   selectedRegion:null,
   searchOpen:false,
+  destinationDirectoryOpen:false,
   panelOpen:false,
   mobileSheetState:"peek",
   mapReady:false,
@@ -1319,7 +1611,7 @@ const state = {
 
 const el = {};
 function cacheElements(){
-  ["networkHero","networkMap","networkMeta","modeRail","regionStrip","searchOpen","searchLayer","searchClose","networkSearch","searchResults","mapTooltip","detailPanel","panelClose","panelImage","panelBody","mobileSheet","mobileSheetContent","sheetSnap","zoomIn","zoomOut","resetMap","mapStatus","mapStatusText","mapRetry","selectionLive","featuredDestinations","collectionChapter","collectionRail","airlineChapter","airlineRail","planJourney","directoryGrid"].forEach(id=>{el[id]=document.getElementById(id)});
+  ["networkHero","networkMap","networkMeta","modeRail","regionStrip","searchOpen","searchLayer","searchClose","networkSearch","searchResults","mapTooltip","detailPanel","panelClose","panelImage","panelBody","mobileSheet","mobileSheetContent","sheetSnap","zoomIn","zoomOut","resetMap","mapStatus","mapStatusText","mapRetry","selectionLive","featuredDestinations","collectionChapter","collectionRail","airlineChapter","airlineRail","planJourney","directoryGrid","destinationsListOpen","destinationsListPage","destinationsListBack","destinationsAlphabet","destinationsListContent"].forEach(id=>{el[id]=document.getElementById(id)});
 }
 
 /* =========================================================
@@ -2370,6 +2662,127 @@ function renderAirlines(){
     const b=document.createElement("button");b.type="button";b.className="airline-chip";if(a.logo&&!SAVE_DATA){const img=document.createElement("img");img.alt="";img.loading="lazy";img.src=a.logo;img.onerror=()=>img.remove();b.append(img)}const copy=document.createElement("div");const strong=document.createElement("strong");strong.textContent=a.name;const small=document.createElement("small");const count=state.model.routes.filter(r=>routeHasAirline(r,a.id)).length;small.textContent=[a.iata,count?`${count} ${count===1?"connection":"connections"}`:"Partner airline"].filter(Boolean).join(" · ");copy.append(strong,small);b.append(copy);b.addEventListener("click",()=>{scrollToMap();setMode("airlines",true);selectObject("airline",a.id,{camera:true,history:true})});el.airlineRail.append(b)
   });
 }
+
+function countryRoute(countryName){
+  const slug=slugify(countryName);
+  return slug?`${COUNTRY_ROUTE}?country=${encodeURIComponent(slug)}`:"";
+}
+function destinationRoute(destination){
+  const countrySlug=slugify(destination?.country||"");
+  const destinationSlug=cleanString(destination?.slug||slugify(destination?.name||""),160);
+  if(!countrySlug||!destinationSlug)return destination?.pageUrl||"";
+  return `${DESTINATION_ROUTE}?country=${encodeURIComponent(countrySlug)}&destination=${encodeURIComponent(destinationSlug)}`;
+}
+function renderDestinationsList(){
+  if(!el.destinationsListContent||!el.destinationsAlphabet)return;
+  el.destinationsListContent.replaceChildren();
+  el.destinationsAlphabet.replaceChildren();
+
+  const grouped=new Map();
+  [...state.model.destinations]
+    .filter(destination=>destination?.name)
+    .sort((a,b)=>(a.name||"").localeCompare(b.name||"",undefined,{sensitivity:"base"}))
+    .forEach(destination=>{
+      const country=cleanString(destination.country||"Other destinations",120);
+      if(!grouped.has(country))grouped.set(country,[]);
+      grouped.get(country).push(destination);
+    });
+
+  const countries=[...grouped.entries()]
+    .sort(([a],[b])=>a.localeCompare(b,undefined,{sensitivity:"base"}));
+
+  if(!countries.length){
+    const empty=document.createElement("div");
+    empty.className="destinations-list-empty";
+    empty.textContent=state.dataState==="error"?"Destinations are unavailable right now. Return to the network and try again.":"Published destinations are loading.";
+    el.destinationsListContent.append(empty);
+    return;
+  }
+
+  const letters=new Map();
+  countries.forEach(([country])=>{
+    const letter=(country[0]||"#").toUpperCase();
+    if(!letters.has(letter))letters.set(letter,`destination-country-${slugify(country)||"other"}`);
+  });
+  [...letters.entries()].sort(([a],[b])=>a.localeCompare(b)).forEach(([letter,target])=>{
+    const link=document.createElement("a");
+    link.href=`#${target}`;
+    link.textContent=letter;
+    link.addEventListener("click",event=>{
+      event.preventDefault();
+      document.getElementById(target)?.scrollIntoView({behavior:REDUCED_MOTION?"auto":"smooth",block:"start"});
+    });
+    el.destinationsAlphabet.append(link);
+  });
+
+  countries.forEach(([country,destinations])=>{
+    const section=document.createElement("section");
+    section.className="destination-country";
+    section.id=`destination-country-${slugify(country)||"other"}`;
+
+    const countryColumn=document.createElement("div");
+    const heading=document.createElement("button");
+    heading.type="button";
+    heading.className="destination-country-name";
+    heading.textContent=country;
+
+    const countryPath=country==="Other destinations"?"":countryRoute(country);
+    if(countryPath){
+      heading.addEventListener("click",()=>navigate(countryPath,{type:"country",country:slugify(country)}));
+    }else{
+      heading.disabled=true;
+    }
+
+    const count=document.createElement("span");
+    count.className="destination-country-count";
+    count.textContent=`${destinations.length} ${destinations.length===1?"destination":"destinations"}`;
+    countryColumn.append(heading,count);
+
+    const list=document.createElement("div");
+    list.className="destination-country-list";
+    destinations
+      .sort((a,b)=>(a.name||"").localeCompare(b.name||"",undefined,{sensitivity:"base"}))
+      .forEach(destination=>{
+        const button=document.createElement("button");
+        button.type="button";
+        button.className="destination-list-link";
+        button.textContent=destination.name;
+        const path=destinationRoute(destination);
+        if(path){
+          button.addEventListener("click",()=>navigate(path,{
+            type:"destination",
+            country:slugify(destination.country||""),
+            destination:destination.slug||slugify(destination.name)
+          }));
+        }else{
+          button.disabled=true;
+        }
+        list.append(button);
+      });
+
+    section.append(countryColumn,list);
+    el.destinationsListContent.append(section);
+  });
+}
+function openDestinationsList(){
+  if(!el.destinationsListPage)return;
+  renderDestinationsList();
+  state.destinationDirectoryOpen=true;
+  el.destinationsListPage.hidden=false;
+  document.body.classList.add("destinations-directory-open");
+  requestAnimationFrame(()=>{
+    el.destinationsListPage.scrollTop=0;
+    el.destinationsListBack?.focus();
+  });
+}
+function closeDestinationsList(){
+  if(!el.destinationsListPage||!state.destinationDirectoryOpen)return;
+  state.destinationDirectoryOpen=false;
+  el.destinationsListPage.hidden=true;
+  document.body.classList.remove("destinations-directory-open");
+  el.destinationsListOpen?.focus();
+}
+
 function renderDirectory(){
   el.directoryGrid.replaceChildren();
   const groups=[
@@ -2532,7 +2945,7 @@ function requestRefresh(){try{window.parent?.postMessage({source:HTML_SOURCE,typ
 function notifyReady(){try{window.parent?.postMessage({source:HTML_SOURCE,type:"SKANDI_MAP_READY"},"*")}catch{}}
 function applyPayload(payload){
   try{
-    const previousSelection={type:state.selectionType,id:state.selectionId};state.payload=payload;state.model=normalizePayload(payload);state.dataReceived=true;state.dataState="ready";
+    const previousSelection={type:state.selectionType,id:state.selectionId};state.payload=payload;state.model=normalizePayload(payload);state.dataReceived=true;state.dataState="ready";if(state.destinationDirectoryOpen)renderDestinationsList();
     if(state.mapReady)renderModel();else state.pendingPayload=payload;
     setStatus("");
     if(previousSelection.id&&getObject(previousSelection.type,previousSelection.id))selectObject(previousSelection.type,previousSelection.id,{camera:false,history:false});else if(previousSelection.id)clearSelection({camera:false,history:false});
@@ -2562,6 +2975,8 @@ window.addEventListener("message",event=>{
 document.addEventListener("DOMContentLoaded",()=>{
   cacheElements();
   installNetworkDynamics();
+  el.destinationsListOpen.addEventListener("click",openDestinationsList);
+  el.destinationsListBack.addEventListener("click",closeDestinationsList);
   el.modeRail.addEventListener("click",e=>{const b=e.target.closest("[data-mode]");if(b)setMode(b.dataset.mode,true)});
   el.searchOpen.addEventListener("click",()=>{el.networkSearch.placeholder="Search the SKANDI network";openSearch()});
   el.searchClose.addEventListener("click",closeSearch);
@@ -2574,7 +2989,7 @@ document.addEventListener("DOMContentLoaded",()=>{
   el.zoomIn.addEventListener("click",()=>state.map?.zoomIn({duration:cameraDuration(250)}));el.zoomOut.addEventListener("click",()=>state.map?.zoomOut({duration:cameraDuration(250)}));el.resetMap.addEventListener("click",()=>{clearSelection({camera:false,history:true});state.selectedRegion=null;state.selectedAirlineId=null;state.mode="explore";syncModeButtons();renderRegions();applyMode();fitDefaultBounds(true)});
   el.mapRetry.addEventListener("click",requestRefresh);
   el.planJourney.addEventListener("click",()=>{const selected=getObject(state.selectionType,state.selectionId);if(state.selectionType==="route")bookRoute(selected);else if(state.selectionType==="destination")bookDestination(selected);else navigate(BOOKING_ROUTE,{kind:"general"})});
-  document.addEventListener("keydown",e=>{if(e.key==="Escape"){if(state.searchOpen)closeSearch();else if(state.panelOpen)clearSelection({camera:false,history:true})}if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==="k"){e.preventDefault();openSearch()}});
+  document.addEventListener("keydown",e=>{if(e.key==="Escape"){if(state.destinationDirectoryOpen)closeDestinationsList();else if(state.searchOpen)closeSearch();else if(state.panelOpen)clearSelection({camera:false,history:true})}if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==="k"){e.preventDefault();openSearch()}});
 
   initMap();
   notifyReady();
@@ -2587,3 +3002,4 @@ window.addEventListener("beforeunload",()=>{stopRouteAnimation();state.resizeObs
 </script>
 </body>
 </html>
+```
