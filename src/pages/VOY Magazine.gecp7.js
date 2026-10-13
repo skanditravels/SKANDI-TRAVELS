@@ -1,0 +1,15 @@
+// /src/pages/VOY Magazine.gecp7.js
+// V12 VOY Magazine public bridge. Canonical backend only; no FINAL/RIA dependency.
+import wixLocation from "wix-location";
+import { getVoyPublicBootstrap,trackVoyInteraction,saveVoyIssueForMember } from "backend/SKANDI_CORE/voyMagazine.web";
+const EMBED_ID="#voyMagazineEmbed",CHILD_SOURCE="SKANDI_VOY_MAGAZINE",PARENT_SOURCE="SKANDI_WIX_PARENT";
+const ALLOWED=["/destinations","/skandi-collection","/signature-collection","/hotels","/flights","/tours","/activities","/transfers","/packages","/my-profile","/voy-magazine","/about/contact","/about/support","/contact","/support"];
+let embed=null,bootstrapPromise=null;
+function send(type,payload={}){embed?.postMessage({source:PARENT_SOURCE,type,payload,timestamp:new Date().toISOString()});}
+function allowed(path){const v=String(path||"").trim();return v.startsWith("/")&&!v.startsWith("//")&&ALLOWED.some(p=>v===p||v.startsWith(`${p}/`)||v.startsWith(`${p}?`));}
+async function load(force=false){if(bootstrapPromise&&!force)return bootstrapPromise;bootstrapPromise=getVoyPublicBootstrap({requestedIssue:wixLocation.query?.issue||""});try{const r=await bootstrapPromise;if(!r||r.ok===false)throw new Error(r?.error||"VOY bootstrap failed.");send("VOY_BOOTSTRAP_RESULT",{...r,requestedIssue:wixLocation.query?.issue||""});return r;}finally{bootstrapPromise=null;}}
+async function track(eventType,p={}){if(!p.issueId)return;try{await trackVoyInteraction({issueId:p.issueId,interactionId:p.interactionId||"",eventType,page:p.page||null,metadata:{label:p.label||"",interactionType:p.type||"",path:p.path||""}});}catch(e){console.warn("[VOY] Interaction tracking failed.",e);}}
+function userMessage(error){const m=error instanceof Error?error.message:String(error||"");if(m.includes("VOY_NOT_AUTHENTICATED"))return"Sign in to your SKANDI account to save this issue.";if(m.includes("VOY_PUBLIC_ORGANIZATION_NOT_CONFIGURED"))return"VOY Magazine is not configured for public publishing yet.";if(m.includes("VOY_ISSUE_NOT_FOUND"))return"This VOY issue is no longer available.";return"VOY Magazine could not complete that action. Please try again.";}
+$w.onReady(function(){try{embed=$w(EMBED_ID)}catch(error){console.error(`[VOY] Missing HTML Component ${EMBED_ID}.`,error);return;}embed.onMessage(async event=>{const m=event?.data||{};if(m.source!==CHILD_SOURCE)return;const type=String(m.type||""),p=m.payload&&typeof m.payload==="object"?m.payload:m;try{
+ if(type==="VOY_READY"){await load();return}if(type==="VOY_REFRESH"){await load(true);return}if(type==="VOY_NAVIGATE"){if(allowed(p.path))wixLocation.to(p.path);return}if(type==="VOY_ISSUE_OPENED"){await track("ISSUE_OPENED",p);return}if(type==="VOY_INTERACTION_CLICKED"){await track("INTERACTION_CLICKED",p);return}if(type==="VOY_SAVE_ISSUE"){if(!p.issueId)throw new Error("VOY_ISSUE_ID_REQUIRED");send("VOY_ISSUE_SAVED",await saveVoyIssueForMember({issueId:p.issueId}));return}if(type==="VOY_SHARE_ISSUE"){await track("ISSUE_SHARED",p);return}if(type.startsWith("VOY_INTERACTIVE_"))await track(type,p);
+ }catch(error){console.error(`[VOY] ${type} failed.`,error);send("VOY_ERROR",{message:userMessage(error)});}});void load();});
