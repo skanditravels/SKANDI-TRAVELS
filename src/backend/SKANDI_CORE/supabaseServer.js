@@ -1,6 +1,6 @@
 // /src/backend/SKANDI_CORE/supabaseServer.js
 // SKANDI Backend Base 1.0 — canonical server-only Supabase transport.
-// B-001 + B-006 allowlist convergence
+// V12 allowlist convergence.
 //
 // This file owns credentials, allowlists and raw REST/RPC/Storage transport only.
 // It must never contain domain authorization, Inventory logic, ALTEA logic, or UI state.
@@ -70,7 +70,7 @@ const REST_OBJECTS = new Set([
   "customer_support_cases", "customer_support_messages", "alexandra_chat_sessions",
   "booking_carts", "booking_cart_items", "payment_events",
 
-  // Corporate Finance / commercial mirrors (schema-verified 2026-10-14)
+  // Corporate Finance / commercial mirrors
   "finance_ledger_entries", "invoices", "invoice_payments", "expenses", "sales_receipts",
   "storefront_orders", "employee_tax_profiles", "airport_transfers",
 
@@ -80,7 +80,7 @@ const REST_OBJECTS = new Set([
   "altea_pnr_history", "altea_queue_items", "altea_search_logs", "altea_segments",
   "altea_sync_events", "operational_manifests", "travel_requirements",
 
-  // Internal mail
+  // Internal Mail
   "internal_mail_accounts", "internal_mail_threads", "internal_mail_messages",
   "internal_mail_recipients", "internal_mail_entries", "internal_mail_attachments", "internal_mail_events",
 
@@ -128,7 +128,8 @@ const STORAGE_BUCKETS = Object.freeze({
   "aircraft-assets": Object.freeze({ public: true, write: false }),
   "uniform-assets": Object.freeze({ public: true, write: false }),
   "docunet-controlled": Object.freeze({ public: false, write: true }),
-  "internal-mail-attachments": Object.freeze({ public: false, write: false })
+  // Private server-only Mail attachment bucket. Mail validates staff access, MIME type and size before upload.
+  "internal-mail-attachments": Object.freeze({ public: false, write: true })
 });
 
 let serverConfigPromise = null;
@@ -138,7 +139,6 @@ function secretValue(result) {
   if (typeof result === "string") return result.trim();
   return text(result?.value ?? result?.secretValue ?? result?.secret?.value ?? "", 10000);
 }
-
 async function readSecret(name, { optional = false } = {}) {
   try {
     const value = secretValue(await getSecretValue(name));
@@ -149,20 +149,17 @@ async function readSecret(name, { optional = false } = {}) {
     throw error;
   }
 }
-
 function normalizeBaseUrl(value) {
   const baseUrl = text(value, 1000).replace(/\/+$/, "");
   if (!/^https:\/\/[^/]+\.supabase\.co$/i.test(baseUrl)) throw new SkandiError("SUPABASE_URL_INVALID");
   return baseUrl;
 }
-
 function keyType(key) {
   if (key.startsWith("sb_secret_")) return "modern-secret";
   if (key.startsWith("sb_publishable_")) return "modern-publishable";
   if (key.split(".").length === 3) return "legacy-jwt";
   return "api-key";
 }
-
 async function serverConfig() {
   if (serverConfigPromise) return serverConfigPromise;
   serverConfigPromise = (async () => {
@@ -178,14 +175,11 @@ async function serverConfig() {
   try { return await serverConfigPromise; }
   catch (error) { serverConfigPromise = null; throw error; }
 }
-
 async function browserConfig() {
   if (browserConfigPromise) return browserConfigPromise;
   browserConfigPromise = (async () => {
     const baseUrl = normalizeBaseUrl(await readSecret("SUPABASE_URL"));
-    const publishableKey =
-      await readSecret("SUPABASE_PUBLISHABLE_KEY", { optional: true }) ||
-      await readSecret("SUPABASE_ANON_KEY", { optional: true });
+    const publishableKey = await readSecret("SUPABASE_PUBLISHABLE_KEY", { optional: true }) || await readSecret("SUPABASE_ANON_KEY", { optional: true });
     if (!publishableKey) throw new SkandiError("SUPABASE_BROWSER_KEY_MISSING");
     if (keyType(publishableKey) === "modern-secret") throw new SkandiError("SUPABASE_BROWSER_KEY_IS_SECRET");
     return Object.freeze({ baseUrl, publishableKey });
@@ -193,7 +187,6 @@ async function browserConfig() {
   try { return await browserConfigPromise; }
   catch (error) { browserConfigPromise = null; throw error; }
 }
-
 function queryString(query = {}) {
   const parts = [];
   for (const [key, raw] of Object.entries(query || {})) {
@@ -203,26 +196,16 @@ function queryString(query = {}) {
   }
   return parts.length ? `?${parts.join("&")}` : "";
 }
-
 function requestHeaders({ apiKey, type, prefer = "", extra = {} }) {
   const headers = { apikey: apiKey, Accept: "application/json", "Content-Type": "application/json" };
   if (type === "legacy-jwt") headers.Authorization = `Bearer ${apiKey}`;
   if (prefer) headers.Prefer = prefer;
-  for (const [key, value] of Object.entries(extra || {})) {
-    if (value !== undefined && value !== null && value !== "") headers[key] = String(value);
-  }
+  for (const [key, value] of Object.entries(extra || {})) if (value !== undefined && value !== null && value !== "") headers[key] = String(value);
   return headers;
 }
-
 function safeProviderError(payload) {
-  return {
-    code: text(payload?.code, 120),
-    message: text(payload?.message, 500),
-    details: text(payload?.details, 500),
-    hint: text(payload?.hint, 500)
-  };
+  return { code: text(payload?.code, 120), message: text(payload?.message, 500), details: text(payload?.details, 500), hint: text(payload?.hint, 500) };
 }
-
 async function jsonRequest({ path, method = "GET", body, rawBody = false, prefer = "return=representation", extraHeaders = {} }) {
   const normalizedMethod = text(method, 12).toUpperCase();
   if (!HTTP_METHODS.has(normalizedMethod)) throw new SkandiError("SUPABASE_METHOD_NOT_ALLOWED");
@@ -236,35 +219,23 @@ async function jsonRequest({ path, method = "GET", body, rawBody = false, prefer
     });
   } catch (error) {
     throw new SkandiError("SUPABASE_NETWORK_ERROR", "Supabase could not be reached.", {
-      retryable: normalizedMethod === "GET" || normalizedMethod === "HEAD",
-      details: { cause: text(error?.message || error, 300) }
+      retryable: normalizedMethod === "GET" || normalizedMethod === "HEAD", details: { cause: text(error?.message || error, 300) }
     });
   }
-
   if (normalizedMethod === "HEAD" || response.status === 204) {
-    if (!response.ok) throw new SkandiError(`SUPABASE_HTTP_${response.status}`, "Supabase request failed.", {
-      status: response.status, retryable: isTransientHttpStatus(response.status)
-    });
+    if (!response.ok) throw new SkandiError(`SUPABASE_HTTP_${response.status}`, "Supabase request failed.", { status: response.status, retryable: isTransientHttpStatus(response.status) });
     return null;
   }
-
   const raw = await response.text();
   let payload = null;
   if (raw) {
     try { payload = JSON.parse(raw); }
-    catch (_) {
-      throw new SkandiError("SUPABASE_INVALID_JSON_RESPONSE", "Supabase returned an invalid response.", {
-        status: response.status, retryable: isTransientHttpStatus(response.status)
-      });
-    }
+    catch (_) { throw new SkandiError("SUPABASE_INVALID_JSON_RESPONSE", "Supabase returned an invalid response.", { status: response.status, retryable: isTransientHttpStatus(response.status) }); }
   }
-
   if (!response.ok) {
     const safe = safeProviderError(payload);
     console.error("[SKANDI Supabase]", JSON.stringify({ status: response.status, path: text(path, 320), ...safe }));
-    const error = new SkandiError(`SUPABASE_HTTP_${response.status}`, safe.message || "Supabase request failed.", {
-      status: response.status, retryable: isTransientHttpStatus(response.status), details: safe
-    });
+    const error = new SkandiError(`SUPABASE_HTTP_${response.status}`, safe.message || "Supabase request failed.", { status: response.status, retryable: isTransientHttpStatus(response.status), details: safe });
     error.supabase = safe;
     throw error;
   }
@@ -280,9 +251,7 @@ function restSchema(name = "public") {
 function schemaHeaders(schema, method = "GET") {
   if (!schema || schema === "public") return {};
   const normalized = text(method, 12).toUpperCase();
-  return (normalized === "GET" || normalized === "HEAD")
-    ? { "Accept-Profile": schema }
-    : { "Accept-Profile": schema, "Content-Profile": schema };
+  return (normalized === "GET" || normalized === "HEAD") ? { "Accept-Profile": schema } : { "Accept-Profile": schema, "Content-Profile": schema };
 }
 function restObject(name) {
   const value = text(name, 120);
@@ -296,26 +265,16 @@ function rpcName(name) {
 }
 
 export async function restRequest({ table, schema = "public", method = "GET", query = {}, body, prefer = "return=representation" } = {}) {
-  const object = restObject(table);
-  const profile = restSchema(schema);
-  return jsonRequest({
-    path: `/rest/v1/${encodeURIComponent(object)}${queryString(query)}`,
-    method, body, prefer, extraHeaders: schemaHeaders(profile, method)
-  });
+  const object = restObject(table), profile = restSchema(schema);
+  return jsonRequest({ path: `/rest/v1/${encodeURIComponent(object)}${queryString(query)}`, method, body, prefer, extraHeaders: schemaHeaders(profile, method) });
 }
-
 export async function rpcRequest({ functionName, schema = "public", body = {}, prefer = "return=representation" } = {}) {
-  const name = rpcName(functionName);
-  const profile = restSchema(schema);
-  return jsonRequest({
-    path: `/rest/v1/rpc/${encodeURIComponent(name)}`,
-    method: "POST", body, prefer, extraHeaders: schemaHeaders(profile, "POST")
-  });
+  const name = rpcName(functionName), profile = restSchema(schema);
+  return jsonRequest({ path: `/rest/v1/rpc/${encodeURIComponent(name)}`, method: "POST", body, prefer, extraHeaders: schemaHeaders(profile, "POST") });
 }
 
 function storageBucket(bucket, { write = false } = {}) {
-  const name = text(bucket, 120);
-  const config = STORAGE_BUCKETS[name];
+  const name = text(bucket, 120), config = STORAGE_BUCKETS[name];
   if (!config) throw new SkandiError("SUPABASE_STORAGE_BUCKET_NOT_ALLOWED");
   if (write && config.write !== true) throw new SkandiError("SUPABASE_STORAGE_BUCKET_READ_ONLY");
   return { name, ...config };
@@ -329,24 +288,17 @@ function storagePath(path) {
 async function storageJson({ path, method = "GET", body, extraHeaders = {} }) {
   return jsonRequest({ path: `/storage/v1${path}`, method, body, prefer: "", extraHeaders });
 }
-
 export async function storageCreateSignedUploadUrl({ bucket, path, upsert = false } = {}) {
-  const config = storageBucket(bucket, { write: true });
-  const encodedPath = storagePath(path);
-  const data = await storageJson({
-    path: `/object/upload/sign/${encodeURIComponent(config.name)}/${encodedPath}`,
-    method: "POST", body: {}, extraHeaders: { "x-upsert": upsert ? "true" : "false" }
-  });
+  const config = storageBucket(bucket, { write: true }), encodedPath = storagePath(path);
+  const data = await storageJson({ path: `/object/upload/sign/${encodeURIComponent(config.name)}/${encodedPath}`, method: "POST", body: {}, extraHeaders: { "x-upsert": upsert ? "true" : "false" } });
   const { baseUrl } = await serverConfig();
   const relative = text(data?.url || data?.signedURL || data?.signedUrl, 5000);
   if (!relative) throw new SkandiError("SUPABASE_STORAGE_SIGNED_UPLOAD_URL_MISSING");
   const signedUrl = /^https?:\/\//i.test(relative) ? relative : `${baseUrl}/storage/v1${relative.startsWith("/") ? "" : "/"}${relative}`;
-  let token = "";
-  try { token = new URL(signedUrl).searchParams.get("token") || ""; } catch (_) {}
+  let token = ""; try { token = new URL(signedUrl).searchParams.get("token") || ""; } catch (_) {}
   if (!token) throw new SkandiError("SUPABASE_STORAGE_SIGNED_UPLOAD_TOKEN_MISSING");
   return { bucket: config.name, path: text(path, 3000).replace(/^\/+/, ""), signedUrl, token, public: config.public === true };
 }
-
 export async function storageCreateSignedReadUrl({ bucket, path, expiresIn = 600, download = false } = {}) {
   const config = storageBucket(bucket);
   if (config.public) {
@@ -354,10 +306,7 @@ export async function storageCreateSignedReadUrl({ bucket, path, expiresIn = 600
     return { bucket: config.name, path, signedUrl: publicUrl, expiresIn: null, public: true };
   }
   const seconds = Math.min(3600, Math.max(30, Number(expiresIn) || 600));
-  const data = await storageJson({
-    path: `/object/sign/${encodeURIComponent(config.name)}/${storagePath(path)}`,
-    method: "POST", body: { expiresIn: seconds }
-  });
+  const data = await storageJson({ path: `/object/sign/${encodeURIComponent(config.name)}/${storagePath(path)}`, method: "POST", body: { expiresIn: seconds } });
   const { baseUrl } = await serverConfig();
   const relative = text(data?.signedURL || data?.signedUrl || data?.url, 5000);
   if (!relative) throw new SkandiError("SUPABASE_STORAGE_SIGNED_READ_URL_MISSING");
@@ -365,86 +314,53 @@ export async function storageCreateSignedReadUrl({ bucket, path, expiresIn = 600
   if (download) signedUrl += `${signedUrl.includes("?") ? "&" : "?"}download=`;
   return { bucket: config.name, path, signedUrl, expiresIn: seconds, public: false };
 }
-
 export async function storageGetObjectInfo({ bucket, path } = {}) {
   const config = storageBucket(bucket);
   return storageJson({ path: `/object/info/${encodeURIComponent(config.name)}/${storagePath(path)}`, method: "GET" });
 }
 export async function storageListObjects({ bucket, prefix = "", limit = 100, offset = 0, search = "" } = {}) {
   const config = storageBucket(bucket);
-  return storageJson({
-    path: `/object/list/${encodeURIComponent(config.name)}`, method: "POST",
-    body: {
-      prefix: text(prefix, 2000).replace(/^\/+|\/+$/g, ""),
-      limit: Math.min(1000, Math.max(1, Number(limit) || 100)),
-      offset: Math.max(0, Number(offset) || 0),
-      sortBy: { column: "name", order: "asc" }, search: text(search, 300)
-    }
-  });
+  return storageJson({ path: `/object/list/${encodeURIComponent(config.name)}`, method: "POST", body: {
+    prefix: text(prefix, 2000).replace(/^\/+|\/+$/g, ""), limit: Math.min(1000, Math.max(1, Number(limit) || 100)),
+    offset: Math.max(0, Number(offset) || 0), sortBy: { column: "name", order: "asc" }, search: text(search, 300)
+  }});
 }
 export async function storageGetPublicUrl({ bucket, path, download = false } = {}) {
   const config = storageBucket(bucket);
   if (!config.public) throw new SkandiError("SUPABASE_STORAGE_BUCKET_NOT_PUBLIC");
   const { baseUrl } = await serverConfig();
-  const publicUrl = `${baseUrl}/storage/v1/object/public/${encodeURIComponent(config.name)}/${storagePath(path)}` +
-    (download ? "?download=" : "");
+  const publicUrl = `${baseUrl}/storage/v1/object/public/${encodeURIComponent(config.name)}/${storagePath(path)}` + (download ? "?download=" : "");
   return { publicUrl };
 }
-
 export async function getSupabaseRealtimeBrowserConfig() {
   const config = await browserConfig();
   return { url: config.baseUrl, publishableKey: config.publishableKey };
 }
-
 export async function getSupabaseServerDiagnostics() {
   const server = await serverConfig();
-  return {
-    ok: true,
-    baseUrlConfigured: Boolean(server.baseUrl),
-    serverKeyConfigured: Boolean(server.apiKey),
-    serverKeyType: server.type,
-    allowedRestObjects: REST_OBJECTS.size,
-    allowedRpcFunctions: RPC_FUNCTIONS.size,
-    storageBuckets: Object.keys(STORAGE_BUCKETS)
-  };
+  return { ok: true, baseUrlConfigured: Boolean(server.baseUrl), serverKeyConfigured: Boolean(server.apiKey), serverKeyType: server.type, allowedRestObjects: REST_OBJECTS.size, allowedRpcFunctions: RPC_FUNCTIONS.size, storageBuckets: Object.keys(STORAGE_BUCKETS) };
 }
-
 export async function realtimeBroadcast({ topic, event = "broadcast", payload = {} } = {}) {
-  const safeTopic = text(topic, 240);
-  const safeEvent = text(event, 120);
+  const safeTopic = text(topic, 240), safeEvent = text(event, 120);
   if (!safeTopic) throw new SkandiError("SUPABASE_REALTIME_TOPIC_REQUIRED");
   if (!safeEvent) throw new SkandiError("SUPABASE_REALTIME_EVENT_REQUIRED");
   const { baseUrl, apiKey, type } = await serverConfig();
   const headers = { apikey: apiKey, "Content-Type": "application/json" };
   if (type === "legacy-jwt") headers.Authorization = `Bearer ${apiKey}`;
-  const response = await fetch(`${baseUrl}/realtime/v1/api/broadcast`, {
-    method: "POST", headers, body: JSON.stringify({ messages: [{ topic: safeTopic, event: safeEvent, payload }] })
-  });
+  const response = await fetch(`${baseUrl}/realtime/v1/api/broadcast`, { method: "POST", headers, body: JSON.stringify({ messages: [{ topic: safeTopic, event: safeEvent, payload }] }) });
   const raw = await response.text().catch(() => "");
-  if (!response.ok) throw new SkandiError(`SUPABASE_REALTIME_HTTP_${response.status}`, {
-    status: response.status, details: raw.slice(0, 500)
-  });
+  if (!response.ok) throw new SkandiError(`SUPABASE_REALTIME_HTTP_${response.status}`, { status: response.status, details: raw.slice(0, 500) });
   return { ok: true, topic: safeTopic, event: safeEvent };
 }
-
-export async function storageUploadBase64Object({
-  bucket, path, dataBase64, mimeType = "application/octet-stream",
-  maxBytes = 10 * 1024 * 1024, upsert = false
-} = {}) {
+export async function storageUploadBase64Object({ bucket, path, dataBase64, mimeType = "application/octet-stream", maxBytes = 10 * 1024 * 1024, upsert = false } = {}) {
   const config = storageBucket(bucket, { write: true });
-  const cleanPath = text(path, 3000).replace(/^\/+/, "");
-  const encodedPath = storagePath(cleanPath);
-  const raw = String(dataBase64 || "");
+  const cleanPath = text(path, 3000).replace(/^\/+/, ""), encodedPath = storagePath(cleanPath), raw = String(dataBase64 || "");
   const payload = (raw.includes(",") ? raw.slice(raw.lastIndexOf(",") + 1) : raw).replace(/\s/g, "");
   if (!payload || !/^[A-Za-z0-9+/]*={0,2}$/.test(payload) || payload.length % 4 !== 0) throw new SkandiError("SUPABASE_STORAGE_BASE64_INVALID");
   const bytes = Buffer.from(payload, "base64");
   const limit = Math.min(25 * 1024 * 1024, Math.max(1, Number(maxBytes) || 1));
   if (!bytes.length || bytes.length > limit) throw new SkandiError("SUPABASE_STORAGE_OBJECT_SIZE_INVALID");
   const type = text(mimeType, 150) || "application/octet-stream";
-  const result = await jsonRequest({
-    path: `/storage/v1/object/${encodeURIComponent(config.name)}/${encodedPath}`,
-    method: "POST", rawBody: true, body: bytes, prefer: "",
-    extraHeaders: { "Content-Type": type, "x-upsert": upsert ? "true" : "false" }
-  });
+  const result = await jsonRequest({ path: `/storage/v1/object/${encodeURIComponent(config.name)}/${encodedPath}`, method: "POST", rawBody: true, body: bytes, prefer: "", extraHeaders: { "Content-Type": type, "x-upsert": upsert ? "true" : "false" } });
   return { ok: true, bucket: config.name, path: cleanPath, sizeBytes: bytes.length, mimeType: type, result };
 }
