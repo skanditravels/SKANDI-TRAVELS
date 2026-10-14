@@ -1,242 +1,194 @@
 # SKANDI Wix Studio — Exact Scrolling / Sizing Settings
 
-Status: CONFIGURATION SPECIFICATION — global scroll-top runtime contract prepared; remaining sizing guidance unchanged.
-Scope: every route currently present in the named `siteMap.js` plus its `APP_ROUTES`.
-Target: remove the current “two scrolls” experience while preserving the SKANDI v12 page/embed architecture.
+Status: V12 CONFIGURATION SPECIFICATION — desktop chrome authority corrected 2026-10-13.
+Scope: route/page settings represented by the current route registry and `/HTML_REF` source references.
+Target: preserve one intentional scroll owner per surface while enforcing the current global header/footer rules.
 
+## 2026-10-13 desktop chrome authority correction
 
-## 2026-10-11 Baggage Allowance naming / route correction
+The previous settings that suppressed footers on most app routes and stacked RIAINTRA + ALTEA headers are superseded.
 
-- Customer footer label corrected from `Baggage Allowence` to `Baggage Allowance` in `/src/pages/masterPage.js`.
-- Canonical application route corrected from `/travel-info/baggage-allowence` to `/travel-info/baggage-allowance` in `/src/public/siteMap.js` and the currently mirrored `customerAuthUi.js` route registry.
-- Baggage Allowance remains a `CONTENT_AUTO` customer route and keeps the existing 680–30000 px sizing model.
-- No global-header embed geometry, authentication contract, scroll ownership, database/provider behavior or other route is changed by this naming correction.
+Desktop invariant:
+- public SKANDI route → SKANDI customer header + SKANDI customer footer
+- RIAINTRA route → RIAINTRA header + RIAINTRA footer
+- ALTEA route → ALTEA header + ALTEA footer only
+- no routed page may display two global headers at the same time
+- only the six exact routes below are chrome-free
+
+Chrome-free routes:
+- `/riaintra/success-factors/altea/grouptalk`
+- `/riaintra`
+- `/booking`
+- `/the-store/store-checkout/order-confirmation`
+- `/the-store/store-checkout`
+- `/the-store`
+
+Additional corrected authority:
+- GroupTalk opens in a new browser tab from ALTEA global navigation.
+- Store Checkout and Store Confirmation are customer-facing HTML embeds. Wix native commerce pages remain the underlying Wix integration host, not the visible customer page authority.
+- `PAGE_SETTINGS.md` and `PAGE_SETTINGS.csv` are the exact route matrix for this configuration.
+
+## Preserved 2026-10-11 Baggage Allowance correction
+
+- Customer footer label: `Baggage Allowance`.
+- Canonical application route: `/travel-info/baggage-allowance`.
+- Baggage Allowance remains a `CONTENT_AUTO` customer route.
+- No provider/database ownership is changed by this page-settings correction.
 
 ## Global page-open scroll invariant
 
-Every newly opened SKANDI surface must begin at the top of its visible scroll owner.
+Every newly opened SKANDI surface begins at the top of its visible scroll owner.
 
-- A new Wix route must scroll the outer Wix viewport to `(0, 0)` on initial page readiness and whenever the route/query identity changes.
-- Master-controlled navigation must request the top position before route navigation and re-assert it immediately after the Wix route transition settles.
-- An embedded/hidden page, detail page, app subpage, or same-route view that becomes the new primary surface must emit `MASTER_SCROLL_TOP` to the Wix master controller when it opens.
-- The Wix master controller answers by scrolling the Wix viewport to the top and broadcasting `SKANDI_SCROLL_TOP` to mounted HTML components so an embed that owns its own scroll surface can also reset itself.
-- Shared embed code should use `masterScrollTop()` / `window.SKANDIMaster.scrollTop()` from `/src/pages/master-config-bridge.js` when available rather than inventing page-specific parent-scroll contracts.
-- Returning from a detail view to a deliberately preserved prior list position is allowed only when that return behavior is intentional and already part of the page UX; opening the new detail itself still starts at the top.
-- This rule applies to customer SKANDI pages, RIAINTRA and ALTEA. It does not change which layer owns scrolling under the sizing presets below.
+- A new Wix route scrolls the outer Wix viewport to `(0, 0)` on initial page readiness and route changes.
+- Master-controlled navigation requests the top position around route navigation.
+- Embedded/detail/app subviews may emit `MASTER_SCROLL_TOP` when they become the new primary surface.
+- The master controller broadcasts `SKANDI_SCROLL_TOP` to mounted HTML components so an app-owned scroll surface can reset too.
+- Returning to an intentionally preserved list position remains allowed when that behavior is part of the page UX.
 
-Runtime authority: `/src/pages/masterPage.js` for the Wix viewport and `/src/pages/master-config-bridge.js` for the shared embed contract. Travel Info is synchronized in this repair as the current hidden-detail implementation using the contract. STATICALLY VERIFIED; REQUIRES LIVE TEST after Wix publication.
+Runtime authority remains `/src/pages/masterPage.js`; page-specific HTML contracts remain in their own HTML_REF/controller chains.
 
-## Governing rule
+## Governing sizing rule
 
-There must be exactly **one vertical scroll owner** on each page.
+A page should not accidentally create two independent vertical scroll surfaces.
 
-SKANDI already proves that runtime HTML-component resizing works:
-- `masterPage.js` accepts `SKANDI_EMBED_RESIZE` from the customer header and writes `embed.height`.
-- the Destinations flow measures content with `ResizeObserver`, posts `DESTINATION_FLOW_RESIZE`, and the Wix page controller writes the HTML component height with a 680–30000 px clamp.
-
-That existing pattern should be the standard for pages classified as **CONTENT_AUTO** below. Fixed 1800/2600/3600 px embeds are only fallbacks; they are the main reason dynamic pages either gain an inner scrollbar or leave large empty space.
-
-Pages classified as **APP_VIEWPORT** are different: they should remain an app-sized viewport because their UI can contain sticky/fixed controls, drawers, filters, operational panes, etc. Those pages should let the embed own vertical scrolling and the Wix page itself must not also have a second vertical scroll surface.
+`CONTENT_AUTO` is for document-like content whose HTML component grows with content.
+`APP_VIEWPORT_*` is for app-like surfaces with internal workspace scrolling. The matching global footer is still present on desktop and follows the app region; footer presence does not authorize stacking another global header or creating an unrelated page scrollbar inside the app region.
 
 ## Exact Wix Studio presets
 
 ### PRESET A — CONTENT_AUTO
-Use for editorial, informational and long-flow pages whose content should feel like a normal website page.
 
-**Wix page**
-- Browser/Wix page owns vertical scrolling: YES
-- Page Inspector → Layout → Overflow content: **Hide** on Desktop, Tablet and Mobile. This is primarily to eliminate accidental horizontal overflow.
-- Customer/RIA header: according to route matrix
-- Footer: according to route matrix
+Use for editorial, informational and long-flow pages.
 
-**Main content section**
-- Width: 100%
-- Left/right margins: 0
-- Top/bottom padding: 0 unless the design itself requires spacing
-- Responsive behavior: **Fixed height**
-- Initial / minimum height: **680 px**
-- Max height: none in the editor
-- Overflow content: **Show**
-- Do not use “Fit to screen”
-- Do not use `vh` for this section
+Global chrome:
+- public page: SKANDI customer header/footer
+- RIAINTRA content page: RIAINTRA header/footer if one is classified this way
+- ALTEA content page: ALTEA header/footer only if one is classified this way
 
-Wix documents Fixed Height as effectively a minimum: the section can become taller when a child pushes it. That is what we want when the HTML component's runtime height changes.
+Main content section:
+- Width 100%
+- Initial/minimum height 680 px
+- Overflow content Show
+- Do not use Fit to Screen
 
-**HTML component**
-- Width: **100%**
-- Initial height: **680 px**
-- Min height: **680 px**
-- Max height in Studio: none
-- Aspect ratio lock: OFF
-- Horizontal behavior: Relative width / Stretch to parent width (use the option Wix exposes for the element; target is always 100% width)
-- Do not use Scale Proportionally
-- Do not place the HTML component in a vertically scrolling container
+HTML component:
+- Width 100%
+- Initial height 680 px
+- Runtime content height controlled by the page's approved resize contract where implemented
+- No aspect-ratio lock
+- Do not put the component in another vertical scrolling container
 
-**HTML document**
-- `html, body`: width 100%; margin 0
-- Horizontal overflow: hidden
-- Vertical overflow: hidden
-- Content height measured from the document's real `scrollHeight`
-- Resize mechanism: `ResizeObserver` + initial delayed measurements after first render/assets
-- Message payload: measured content height
-- Parent clamp: **680 px minimum / 30000 px maximum**
-
-**Result**
-- iframe never has its own scrollbar
-- Wix page has the only scrollbar
-- header/content/footer behave like one continuous document
-- content growth/shrink is reflected by runtime HTML-component height
+Result:
+- iframe does not own the document-level scrollbar
+- Wix/browser owns document scrolling
+- matching global footer remains part of the page
 
 ### PRESET B — APP_VIEWPORT_PUBLIC
-Use for customer-facing applications where sticky/fixed controls, drawers or persistent toolbars are part of the experience.
 
-**Global chrome**
-- Customer header: ON
-- Customer header collapsed height: **118 px**
-- Customer header runtime range already established in source: **118–1200 px**
-- Customer footer: **OFF / collapsed for these routes**
+Use for customer-facing app surfaces that are not chrome-free exceptions.
 
-**Main app section**
-- Width: 100%
-- Height: **calc(100vh - 118px)**
-- Min H: 0
-- Max H: none
-- Padding: 0
-- Overflow content: **Hide**
-- Do not add any section below the app section.
+Global chrome:
+- SKANDI customer header ON, 118 px base
+- SKANDI customer footer ON
 
-**HTML component**
-- Width: 100%
-- Height: 100%
-- Fill the app section
-- Internal vertical scroll: YES
-- Internal horizontal scroll: NO
-- Scrollbar can be visually hidden only if accessibility and discoverability remain acceptable; do not disable scrolling itself.
-- Recommended CSS: `overscroll-behavior-y: contain;` to reduce scroll chaining into the Wix shell.
+Main app section:
+- Width 100%
+- Height `calc(100vh - 118px)`
+- Padding 0
+- Overflow Hide
 
-**Wix page**
-- Page overflow content: Hide
-- No customer footer on these routes
-- No spacer sections below the app
+HTML component:
+- Width/height 100%
+- app workspace may own its vertical scrolling
 
-**Important current implementation gap**
-Current `masterPage.js` shows the customer footer on every non-internal route. Therefore a public APP_VIEWPORT route cannot be made perfectly single-scroll by editor settings alone while that behavior remains. Route-aware footer collapse is required for the final architecture.
+The customer footer follows the app section. Do not collapse it merely because the app owns its workspace scroll.
 
 ### PRESET C — APP_VIEWPORT_RIAINTRA
-Use for internal RIAINTRA apps that are not ALTEA.
 
-- RIAINTRA header: ON, **52 px**
-- ALTEA header: OFF
-- RIAINTRA footer: **OFF / collapsed on app routes**
-- Main app section height: **calc(100vh - 52px)**
-- App embed: 100% W × 100% H
-- Embed owns vertical scroll
-- Wix page overflow: Hide
-- Section overflow: Hide
-- No section below app
+Use for non-ALTEA internal app routes.
 
-Current `masterPage.js` shows the internal footer on internal routes except GroupTalk. To achieve one scroll, app routes need the internal footer collapsed/hidden.
+- RIAINTRA header ON, 52 px, sole global header
+- RIAINTRA footer ON
+- customer chrome OFF
+- ALTEA chrome OFF
+- main app section `calc(100vh - 52px)`
+- app embed 100% W × 100% H
+- page/section app container overflow Hide
 
 ### PRESET D — APP_VIEWPORT_ALTEA
-Use for ALTEA operational pages.
 
-- RIAINTRA header: ON, **52 px**
-- ALTEA header: ON, **48 px**
-- Total chrome height: **100 px**
-- Internal footer: OFF / collapsed
-- Main app section height: **calc(100vh - 100px)**
-- App embed: 100% W × 100% H
-- Embed owns vertical scroll
-- Wix page overflow: Hide
-- Section overflow: Hide
-- No section below app
+Use for ALTEA operational pages except GroupTalk.
+
+- ALTEA header ON, 48 px, sole global header
+- ALTEA footer ON
+- RIAINTRA header/footer OFF on the ALTEA route
+- customer chrome OFF
+- main app section `calc(100vh - 48px)`
+- app embed 100% W × 100% H
+- page/section app container overflow Hide
+
+The historical stacked `RIAINTRA 52px + ALTEA 48px` header is invalid under the current V12 authority.
 
 ### PRESET E — APP_FULLSCREEN_CHROME_FREE
-Only for the explicitly chrome-free GroupTalk route.
 
-- Customer header/footer: OFF
-- RIAINTRA header/footer: OFF
-- ALTEA header/footer: OFF
-- Main section: **100vh**
-- HTML component: **100% W × 100% H**
-- Embed owns vertical scroll
-- Wix page must not scroll
-- Page overflow: Hide
-- Section overflow: Hide
+Only for these exact routes:
+- `/riaintra/success-factors/altea/grouptalk`
+- `/riaintra`
+- `/booking`
+- `/the-store/store-checkout/order-confirmation`
+- `/the-store/store-checkout`
+- `/the-store`
 
-This matches the current `GROUPTALK_CHROME_FREE_PATHS` rule.
+Rules:
+- all SKANDI/RIAINTRA/ALTEA global headers OFF
+- all SKANDI/RIAINTRA/ALTEA global footers OFF
+- main section 100vh
+- HTML component 100% W × 100% H
+- app/active embed owns its required scrolling
+- page/section overflow Hide
 
-### PRESET F — NATIVE_WIX
-Use where Wix owns the application surface rather than a custom HTML component.
+Booking additionally requires inactive booking-state embeds to be hidden and collapsed.
 
-- Do not create a fake fixed-height HTML section
-- Let the native Wix page determine its height
-- Page vertical scroll: Wix/native
-- Page overflow: Hide to prevent horizontal overflow
-- If the global footer creates a second scroll region inside a native checkout surface, hide/collapse the footer for that route
+Store Checkout / Confirmation remain HTML-embed customer surfaces even though Wix native commerce pages are used underneath.
 
-## Global chrome settings from current route/chrome sources
+## Global chrome settings
 
-| Global element | Width | Base height | Runtime/max | Scroll |
-|---|---:|---:|---:|---|
-| Customer header | 100% | 118 px | max 1200 px | never own-scroll |
-| Customer footer | 100% | content-driven target | registry max 2400 px | never own-scroll |
-| RIAINTRA header | 100% | 52 px | registry max 700 px | never own-scroll |
-| ALTEA header | 100% | 48 px | registry max 300 px | never own-scroll |
-| ALTEA footer | 100% | 30 px | registry max 120 px | should not be used to create a second app scroll |
+| Global element | Width | Base height | Route use |
+|---|---:|---:|---|
+| SKANDI customer header | 100% | 118 px | public non-exception routes |
+| SKANDI customer footer | 100% | content-driven | public non-exception routes |
+| RIAINTRA header | 100% | 52 px | internal non-ALTEA non-exception routes |
+| RIAINTRA footer | 100% | content-driven | internal non-ALTEA non-exception routes |
+| ALTEA header | 100% | 48 px | ALTEA non-exception routes |
+| ALTEA footer | 100% | 30 px base | ALTEA non-exception routes |
 
-The customer header already uses runtime height messages. The same principle should be used anywhere chrome height changes.
+These header families are mutually exclusive per route.
 
 ## Breakpoints
 
-Use the site's existing Wix Studio Desktop / Tablet / Mobile breakpoints. Do not create a separate breakpoint only to solve iframe height.
+Use the site's existing Wix Studio breakpoints. The desktop chrome rules above are authoritative for Desktop. Existing responsive HTML behavior is preserved; do not create duplicate global header/footer implementations inside page embeds to compensate for a breakpoint.
 
-For CONTENT_AUTO, the measured runtime height replaces breakpoint-specific fixed heights.
-For APP_VIEWPORT, keep the same viewport formula at all breakpoints; the width/layout inside the HTML remains responsive.
+## Store surfaces
 
-## Exact HTML iframe/content rule
+`/the-store`, `/the-store/store-checkout`, and `/the-store/store-checkout/order-confirmation` are explicitly chrome-free. The customer sees custom HTML embeds. Wix Stores/eCommerce native pages may remain underneath for commerce integration, but are not the customer-facing layout authority and must not be used to classify these surfaces as `NATIVE_WIX`.
 
-Wix's current Studio documentation recommends percentage sizing inside embedded iframe markup so the embedded document fills the Wix container rather than using hard-coded pixel width/height. Use 100% width/height for any nested iframe. The Wix HTML component itself is sized by the page preset above.
+## GroupTalk
 
-## Why this solves the current problem
-
-The current “two scrolls” behavior happens when both are true:
-1. Wix page is taller than the viewport and can scroll; and
-2. the HTML component is too short for its contents, so its sandboxed document also scrolls.
-
-CONTENT_AUTO removes #2 by resizing the Wix component to the document.
-APP_VIEWPORT removes #1 by making the application the single full-height scroll surface and removing the footer/extra page content below it.
-
-## Current-source conflicts handled
-
-Older setup documents contain fixed desktop/phone heights such as 1800/2600, 2300/3400 and 2500/3600. Those values are retained as historical fallbacks only. They are not suitable as the final dynamic sizing model.
-
-The route matrix in this package follows the currently named `siteMap.js` supplied in the SKANDI library. A separate B-011.18 snapshot contains additional/older route entries; those are not silently inserted into this matrix.
+`/riaintra/success-factors/altea/grouptalk` remains a 100vh chrome-free workspace. The ALTEA global header opens GroupTalk in a new browser tab, preserving the originating ALTEA page in its current tab.
 
 ## Verification status
 
-STATICALLY VERIFIED:
-- route list from current named `siteMap.js`
-- current global chrome registry values from B-011.18 route/chrome source
-- current master-page visibility behavior
-- current header runtime resize behavior
-- current Destinations runtime content-height resize behavior
-- current Wix Studio sizing/overflow behavior from Wix documentation
-- global `MASTER_SCROLL_TOP` / `SKANDI_SCROLL_TOP` message handling and route-change watcher syntax/contracts
+STATICALLY VERIFIED in the prepared replacement set:
+- exact six-route chrome-free set
+- public/RIAINTRA/ALTEA chrome families are mutually exclusive
+- ALTEA routes no longer request a stacked RIAINTRA + ALTEA global header
+- non-exception page-settings rows retain a matching footer
+- Store Checkout/Confirmation are classified as HTML-embed surfaces, not `NATIVE_WIX`
+- GroupTalk new-tab behavior is present in the ALTEA global-header HTML
+- replacement JavaScript/embedded script syntax checks pass
 
-REQUIRES LIVE TEST:
-- final visible header/footer placement on each published route
-- any page-specific HTML that uses fixed/sticky positioning and therefore should be moved from CONTENT_AUTO to APP_VIEWPORT
-- route-aware footer suppression because current `masterPage.js` presently shows footers broadly
-- published Wix route transitions, back/forward navigation and same-route embedded-view top-reset behavior
-
-## Wix documentation used
-
-- Studio Editor: Adding an HTML iFrame Element
-  https://support.wix.com/en/article/studio-editor-adding-an-html-iframe-element
-- Studio Editor: Setting the Size of Your Elements
-  https://support.wix.com/en/article/studio-editor-setting-the-size-of-your-elements
-- Studio Editor: Working with Overflow Content
-  https://support.wix.com/en/article/studio-editor-working-with-overflow-content
-- Studio Editor: Troubleshooting Gaps and Horizontal Scroll Bars
-  https://support.wix.com/en/article/studio-editor-troubleshooting-gaps-and-horizontal-scroll-bars
+REQUIRES LIVE TEST after Wix installation/publication:
+- actual Wix element show/hide/collapse behavior on every route
+- desktop header/footer placement and footer reachability
+- GroupTalk browser-tab opening under the published iframe/browser security context
+- Store Checkout/Confirmation custom HTML sizing over their native Wix underlay
