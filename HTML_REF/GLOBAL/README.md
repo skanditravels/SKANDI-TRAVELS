@@ -54,6 +54,23 @@ A page should not accidentally create two independent vertical scroll surfaces.
 `CONTENT_AUTO` is for document-like content whose HTML component grows with content.
 `APP_VIEWPORT_*` is for app-like surfaces with internal workspace scrolling. The matching global footer is still present on desktop and follows the app region; footer presence does not authorize stacking another global header or creating an unrelated page scrollbar inside the app region.
 
+
+## Mobile field focus and footer handoff invariant
+
+### Field focus
+- Mobile text-entry controls inside HTML embeds must have a computed font size of at least **16px**. This is the canonical SKANDI fix for iOS focus auto-zoom.
+- The rule applies to text/search/email/password/tel/url/number/date/time/datetime/month/week inputs, inputs without an explicit type, `select`, and `textarea`.
+- Do not use `user-scalable=no`, `maximum-scale=1`, or other viewport locks as the primary fix; user pinch zoom remains available.
+- `/src/pages/master-config-bridge.js` now installs this guard for embeds that include the shared bridge. Global SKANDI header/footer HTML contains the rule directly.
+
+### APP_VIEWPORT footer handoff on mobile
+- The iframe remains the primary vertical scroll owner.
+- The matching global footer is expanded but hidden while the outer Wix page is at `scrollY = 0`.
+- The iframe's main mobile scroller must allow normal boundary chaining (`overscroll-behavior-y:auto`/default).
+- When the iframe reaches bottom and a continued downward gesture transfers scrolling to Wix, `masterPage.js` observes non-zero outer scroll and reveals the footer without changing layout height.
+- Scrolling the outer page back to `scrollY = 0` hides the footer again; upward scrolling can then continue in the iframe.
+- CONTENT_AUTO pages do not use the gate because Wix already owns their entire document scroll.
+
 ## Exact Wix Studio presets
 
 ### PRESET A — CONTENT_AUTO
@@ -192,3 +209,18 @@ REQUIRES LIVE TEST after Wix installation/publication:
 - desktop header/footer placement and footer reachability
 - GroupTalk browser-tab opening under the published iframe/browser security context
 - Store Checkout/Confirmation custom HTML sizing over their native Wix underlay
+
+
+## 2026-10-13 mobile UX runtime correction
+
+STATICALLY VERIFIED:
+- Mobile footer gate syntax and route matrix against the current 60-row page-settings baseline.
+- Footer gate activates only on APP_VIEWPORT routes with chrome enabled; six chrome-free exceptions remain excluded.
+- RIAINTRA and ALTEA headers remain mutually exclusive.
+- Global SKANDI header/footer text-entry controls have a 16px mobile minimum.
+- Shared master-config bridge exposes `masterScrollTop()` / `window.SKANDIMaster.scrollTop()` and installs the mobile focus-size guard.
+
+REQUIRES LIVE TEST:
+- iPhone Safari focus behavior on page-specific HTML embeds that do not yet include the shared bridge and may define sub-16px controls locally.
+- Natural iframe-to-Wix scroll chaining on each APP_VIEWPORT route, especially any embed that overrides `overscroll-behavior-y` to `contain` or `none`.
+- Footer reveal/hide transition with the actual published footer heights and Wix Studio mobile layout.
