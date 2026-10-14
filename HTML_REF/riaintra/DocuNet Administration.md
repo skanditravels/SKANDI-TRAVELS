@@ -9,14 +9,17 @@
 - Child source: `SKANDI_DOCUNET_ADMIN`; parent source: `SKANDI_WIX_PARENT`.
 - Current status: **STATICALLY VERIFIED — REQUIRES LIVE TEST** after Wix installation/publication.
 - Source-of-truth status: complete intended V12 HTML payload below.
-- Canonical ownership: `backend/SKANDI_CORE/docuNet.web.js` → `docuNet.js` → DocuNet tables + private `docunet-controlled` storage.
+- Canonical ownership: `backend/SKANDI_CORE/docuNet.web.js` → `docuNet.js` → `adobePdf.js` + DocuNet tables + private `docunet-controlled` storage.
+- External provider: Adobe PDF Services API is server-only and is used during upload finalization to validate the controlled PDF and obtain authoritative PDF properties/page count. Provider credentials remain in Wix Secrets Manager.
 - Authentication/authorization: internal surfaces require canonical `staffAuth` server authorization. Client-provided roles are not authority.
-- Database verification: relevant DocuNet/document tables were inspected read-only against the active SKANDI Supabase project on 2026-10-14. No database rows, schema, policies or storage objects were changed.
+- Database verification: relevant DocuNet/document tables were inspected read-only against the active SKANDI Supabase project on 2026-10-14. No database rows, schema, policies or storage objects were changed by this repair package.
+- Storage requirement: `docunet-controlled` is intended to be private. Live storage configuration must be verified before production controlled-document ingestion.
 - Document source archive: the Dropbox folder supplied on 2026-10-14 could not be opened through an installed/connected Dropbox connector or the available public fetch path. No Dropbox document content was guessed or imported.
 - Last verified: 2026-10-14.
 - Change log:
   - 2026-10-13 — Converged this surface onto `backend/SKANDI_CORE`, removed legacy/missing backend namespace dependency, preserved supplied HTML design/behavior, and documented the complete runtime chain.
   - 2026-10-14 — Route authority confirmed as `/riaintra/success-factors/docunet/admin`; route registry and PAGE_SETTINGS updated. Re-audited controller/facade chain for Wix proxy failures: current DocuNet facade uses direct named `webMethod(...)` exports rather than wrapper-produced exports.
+  - 2026-10-14 — Added canonical server-only Adobe PDF Services validation to DocuNet upload finalization through `backend/SKANDI_CORE/adobePdf.js`; authoritative page count now comes from Adobe PDF Properties. Corrected existing admin service/market/audience filtering in `docuNet.js`. HTML message contracts and executable embed payload are unchanged.
 
 ## COMPLETE INTENDED HTML
 
@@ -1207,5 +1210,4 @@ post("ADMIN_READY",{storageProvider:"SUPABASE",htmlUploadControl:"docControlUplo
 </script>
 </body>
 </html>
-
 ```
