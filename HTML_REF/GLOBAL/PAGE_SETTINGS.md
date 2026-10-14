@@ -1,6 +1,6 @@
 # Exact route-by-route Wix settings
 
-V12 desktop chrome authority + mobile scroll handoff correction: 2026-10-13. This register uses the pages represented in `/HTML_REF` and preserves unresolved routes as unresolved instead of inventing slugs.
+V12 desktop chrome authority correction: 2026-10-13. This register uses the pages represented in `/HTML_REF` and preserves unresolved routes as unresolved instead of inventing slugs.
 
 ## Governing desktop chrome rules
 
@@ -23,18 +23,10 @@ V12 desktop chrome authority + mobile scroll handoff correction: 2026-10-13. Thi
 ## Mode legend
 
 - **CONTENT_AUTO** = Wix/browser owns document scroll; the embed resizes to content; the matching header/footer remain visible.
-- **APP_VIEWPORT_PUBLIC** = public app owns its app-region scroll; SKANDI header/footer remain enabled. Main app region uses `calc(100vh - 118px)`. On mobile, the footer stays expanded but hidden until iframe-bottom scroll chaining moves the Wix page, then it is revealed.
-- **APP_VIEWPORT_RIAINTRA** = internal app owns its app-region scroll; RIAINTRA header/footer remain enabled. Main app region uses `calc(100vh - 52px)`. On mobile, the footer is gated until the app scroll reaches its boundary and scrolling hands off to Wix.
-- **APP_VIEWPORT_ALTEA** = ALTEA app owns its app-region scroll; **ALTEA header/footer only**. Main app region uses `calc(100vh - 48px)`. On mobile, the ALTEA footer is gated until iframe-bottom scroll chaining hands off to Wix.
+- **APP_VIEWPORT_PUBLIC** = public app owns its app-region scroll; SKANDI header/footer remain enabled. Main app region uses `calc(100vh - 118px)`; footer follows the app region.
+- **APP_VIEWPORT_RIAINTRA** = internal app owns its app-region scroll; RIAINTRA header/footer remain enabled. Main app region uses `calc(100vh - 52px)`; footer follows the app region.
+- **APP_VIEWPORT_ALTEA** = ALTEA app owns its app-region scroll; **ALTEA header/footer only**. Main app region uses `calc(100vh - 48px)`; footer follows the app region.
 - **APP_FULLSCREEN_CHROME_FREE** = one of the six explicit exceptions; no global header/footer; app is 100vh and owns scroll.
-
-
-## Mobile interaction invariant
-
-- Editable text controls in HTML embeds must render at **16px minimum** on mobile (`input` text-like types, `select`, `textarea`). Do not disable pinch zoom with `user-scalable=no`.
-- CONTENT_AUTO pages keep the footer in normal Wix document flow; no footer gate is needed.
-- APP_VIEWPORT pages keep the embed as the first scroll owner. On mobile the matching global footer remains **expanded but hidden**, so it preserves the outer handoff range without appearing early. When the iframe reaches its bottom and the next downward gesture chains into the Wix page, `masterPage.js` detects non-zero outer scroll and reveals the footer. Returning the outer Wix scroll to the top hides the footer again before upward scrolling continues in the app.
-- Chrome-free exception routes remain unchanged.
 
 
 | siteMap / settings key | Route | Mode | Header | Footer | Wix main section H | HTML component | Vertical scroll owner | Page overflow | Section overflow |
@@ -79,8 +71,8 @@ V12 desktop chrome authority + mobile scroll handoff correction: 2026-10-13. Thi
 | alteaTimatic | `/riaintra/success-factors/altea/timatic` | APP_VIEWPORT_ALTEA | ALTEA 48px only | ALTEA ON | calc(100vh - 48px) | W/H 100% | Embed | Hide | Hide |
 | mail | `/riaintra/success-factors/mail` | APP_VIEWPORT_RIAINTRA | RIA 52px only | RIA ON | calc(100vh - 52px) | W/H 100% | Embed | Hide | Hide |
 | docunet | `/riaintra/success-factors/docunet` | APP_VIEWPORT_RIAINTRA | RIA 52px only | RIA ON | calc(100vh - 52px) | W/H 100% | Embed | Hide | Hide |
-| docunetAdmin | REQUIRES LIVE ROUTE VERIFICATION | APP_VIEWPORT_RIAINTRA | RIA 52px only | RIA ON | calc(100vh - 52px) | W/H 100% | Embed | Hide | Hide |
-| serviceDesk | `/riaintra/success-factors/helpdesk` | APP_VIEWPORT_RIAINTRA | RIA 52px only | RIA ON | calc(100vh - 52px) | W/H 100% | Embed | Hide | Hide |
+| docunetAdmin | /riaintra/success-factors/docunet/admin | APP_VIEWPORT_RIAINTRA | RIA 52px only | RIA ON | calc(100vh - 52px) | W/H 100% | Embed | Hide | Hide |
+| serviceDesk | `/riaintra/success-factors/service-desk` | APP_VIEWPORT_RIAINTRA | RIA 52px only | RIA ON | calc(100vh - 52px) | W/H 100% | Embed | Hide | Hide |
 | mediaControl | `/riaintra/success-factors/media-control` | APP_VIEWPORT_RIAINTRA | RIA 52px only | RIA ON | calc(100vh - 52px) | W/H 100% | Embed | Hide | Hide |
 | storeControl | `/riaintra/success-factors/store-control` | APP_VIEWPORT_RIAINTRA | RIA 52px only | RIA ON | calc(100vh - 52px) | W/H 100% | Embed | Hide | Hide |
 | payroll | `/riaintra/success-factors/payroll` | APP_VIEWPORT_RIAINTRA | RIA 52px only | RIA ON | calc(100vh - 52px) | W/H 100% | Embed | Hide | Hide |
@@ -115,7 +107,16 @@ ALTEA routes must never stack the RIAINTRA header above the ALTEA header. The AL
 `/riaintra/success-factors/altea/grouptalk` is opened from ALTEA navigation in a new browser tab. The GroupTalk page itself remains 100vh and chrome-free.
 
 ### Unresolved internal routes
-`docunetAdmin`, `staffDocumentControl`, and `transportCompliance` remain `REQUIRES LIVE ROUTE VERIFICATION` because their current HTML_REF files do not establish a route. They inherit the RIAINTRA desktop chrome rule when published; no slug is fabricated here.
+`staffDocumentControl` and `transportCompliance` remain `REQUIRES LIVE ROUTE VERIFICATION`. `docunetAdmin` is now confirmed at `/riaintra/success-factors/docunet/admin`. They inherit the RIAINTRA desktop chrome rule when published; no unconfirmed slug is fabricated.
 
 ### Destination and Travel Info content pages
 Existing content-resize behavior remains unchanged. Public content pages keep the SKANDI customer header/footer.
+
+
+## 2026-10-14 V12 ROUTE CONVERGENCE
+
+- DocuNet Administration live route confirmed by project authority: `/riaintra/success-factors/docunet/admin`.
+- Customer Service Desk live route confirmed by project authority: `/riaintra/success-factors/service-desk`.
+- VOY Editor is superseded by Media Manager and must not be restored as a separate page.
+- Careers Portal is merged into Work at SKANDI and must not be restored as a separate page.
+- `Document Viewer.hz1s8.js` page identity is retained by Wix but the product surface is now Document Filler; its route remains unasserted until Wix route evidence is available.
