@@ -1,6 +1,6 @@
 # Wix Studio click-through checklist
 
-V12 desktop chrome authority correction: 2026-10-13. Apply this after identifying the route mode in `PAGE_SETTINGS.md`.
+V12 desktop chrome authority + mobile scroll handoff correction: 2026-10-13. Apply this after identifying the route mode in `PAGE_SETTINGS.md`.
 
 ## Global desktop chrome invariant
 
@@ -45,7 +45,7 @@ V12 desktop chrome authority correction: 2026-10-13. Apply this after identifyin
 
 1. Page layer → Overflow content → Hide.
 2. SKANDI customer header stays visible.
-3. SKANDI customer footer stays enabled and follows the app section.
+3. SKANDI customer footer stays enabled. On mobile it remains expanded but hidden until iframe-bottom scroll chaining hands off to Wix; then `masterPage.js` reveals it.
 4. Main app section:
    - Width: 100%
    - Height: `calc(100vh - 118px)`
@@ -59,14 +59,15 @@ V12 desktop chrome authority correction: 2026-10-13. Apply this after identifyin
    - height: 100%
    - overflow-x: hidden
    - overflow-y: auto where the app owns its workspace scroll
-   - overscroll-behavior-y: contain where supported
+   - desktop/tablet may use existing overscroll behavior
+   - mobile APP_VIEWPORT primary scroller must allow boundary handoff (`overscroll-behavior-y: auto`, not `contain`/`none`) when a global footer is enabled
 7. Do not duplicate the SKANDI header/footer inside the page HTML.
 8. Publish and test wheel, trackpad, Page Down, Home/End, keyboard focus and iPhone touch scrolling.
 
 ## APP_VIEWPORT_RIAINTRA route
 
 1. RIAINTRA header = 52 px and is the only global header.
-2. RIAINTRA footer stays enabled and follows the app section.
+2. RIAINTRA footer stays enabled. On mobile it is expanded/hidden until the app reaches its scroll boundary and Wix begins the footer handoff.
 3. ALTEA and customer chrome must be hidden/collapsed.
 4. Main app section = `calc(100vh - 52px)`.
 5. HTML component = 100% W × 100% H.
@@ -76,7 +77,7 @@ V12 desktop chrome authority correction: 2026-10-13. Apply this after identifyin
 ## APP_VIEWPORT_ALTEA route
 
 1. ALTEA header = 48 px and is the only global header.
-2. ALTEA footer stays enabled and follows the app section.
+2. ALTEA footer stays enabled. On mobile it is expanded/hidden until the app reaches its scroll boundary and Wix begins the footer handoff.
 3. RIAINTRA header/footer and customer chrome must be hidden/collapsed on the ALTEA route.
 4. Main app section = `calc(100vh - 48px)`.
 5. HTML component = 100% W × 100% H.
@@ -110,6 +111,10 @@ GroupTalk is chrome-free at `/riaintra/success-factors/altea/grouptalk`. Navigat
 
 - Prevent horizontal page scrolling.
 - No element may exceed 100vw.
+- Every editable text control inside an HTML embed uses **16px minimum** on mobile: text/search/email/password/tel/url/number/date/time/datetime/month/week inputs, `select`, and `textarea`. Do not use `user-scalable=no` or otherwise disable pinch zoom.
+- CONTENT_AUTO: Wix remains the only page-level scroll owner and footer stays in normal document flow.
+- APP_VIEWPORT: iframe owns the primary vertical scroll; matching footer remains expanded but hidden while outer Wix `scrollY` is 0. Boundary scroll chaining from the iframe reveals the footer only after Wix begins scrolling.
+- APP_VIEWPORT mobile main scroller must not use `overscroll-behavior-y: contain`/`none` if the route has a footer; use the browser default/`auto` so the bottom boundary can hand off to Wix.
 - Use safe-area padding inside HTML for bottom controls where applicable: `env(safe-area-inset-bottom)`.
-- Test momentum scrolling on iOS Safari.
+- Test momentum scrolling on iOS Safari, including down into the footer and back up into the embed.
 - Modal/drawer content may own its own scroll only while open; once closed, the normal app/document scroll owner resumes.
