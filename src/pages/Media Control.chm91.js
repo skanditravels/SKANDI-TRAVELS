@@ -18,7 +18,7 @@ const CHILD_SOURCES = new Set(["SKANDI_MEDIA_CONTROL", "SKANDI_NEWSROOM_CONTROL"
 const PARENT_SOURCE = "SKANDI_WIX_PARENT";
 const LOGIN_PATH = SITE_MAP.riaintra || "/riaintra";
 const PUBLIC_VOY_PATH = SITE_MAP.voy || "/voy-magazine";
-const VERSION = "V12-2026.10.14-EDITORIAL-STUDIO";
+const VERSION = "V12-2026.10.14-FULL-EDITORIAL-STUDIO";
 
 let embed = null;
 let bootstrapPromise = null;
@@ -139,6 +139,13 @@ $w.onReady(function () {
       }
       if (type === "MEDIA_CONTROL_READY") { sendEditorialCatalog(); await bootstrap(); return; }
       if (type === "MEDIA_CONTROL_CATALOG_REQUEST") { sendEditorialCatalog(); return; }
+      if (type === "MEDIA_CONTROL_REFRESH_ALL") { await bootstrap(true); return; }
+      if (type === "MEDIA_CONTROL_OPEN_PUBLIC_PAGE") {
+        const target = EDITORIAL_PAGE_CATALOG.find(item => String(item.key) === String(payload.pageKey || "") || String(item.path) === String(payload.path || ""));
+        if (!target?.path || !String(target.path).startsWith("/") || String(target.path).startsWith("/riaintra")) throw new Error("MEDIA_CONTROL_PUBLIC_PAGE_INVALID");
+        wixLocation.to(target.path);
+        return;
+      }
       if (type === "MEDIA_CONTROL_LIST") { send("MEDIA_CONTROL_LIBRARY", await assetAction("LIST_ASSETS", payload)); return; }
       if (type === "MEDIA_CONTROL_DUPLICATE_CHECK") { send("MEDIA_CONTROL_DUPLICATE_RESULT", await assetAction("CHECK_DUPLICATE", payload)); return; }
       if (type === "MEDIA_CONTROL_UPLOAD_PREPARE") { send("MEDIA_CONTROL_UPLOAD_READY", await assetAction("PREPARE_UPLOAD", payload)); return; }
@@ -182,7 +189,7 @@ $w.onReady(function () {
       if (saveMap[type]) { await saveEntity(saveMap[type][0], saveMap[type][1] || {}); await refreshVoy(); return; }
       const deleteMap = {
         VOY_ADMIN_DELETE_ARTICLE:["article",payload.articleId], VOY_ADMIN_DELETE_CATEGORY:["category",payload.categoryId],
-        VOY_ADMIN_DELETE_BANNER:["banner",payload.bannerId], VOY_ADMIN_DELETE_TRAVEL_CARD:["travel_card",payload.cardId]
+        VOY_ADMIN_DELETE_CAMPAIGN:["campaign",payload.campaignId], VOY_ADMIN_DELETE_BANNER:["banner",payload.bannerId], VOY_ADMIN_DELETE_TRAVEL_CARD:["travel_card",payload.cardId]
       };
       if (deleteMap[type]) { await runVoy(type, () => deleteVoyEntity({ entityType:deleteMap[type][0], entityId:deleteMap[type][1] })); await refreshVoy(); return; }
 
