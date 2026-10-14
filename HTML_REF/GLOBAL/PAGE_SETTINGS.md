@@ -67,6 +67,7 @@ V12 desktop chrome authority correction: 2026-10-13. This register uses the page
 | policyControl | `/riaintra/success-factors/policy-control` | APP_VIEWPORT_RIAINTRA | RIA 52px only | RIA ON | calc(100vh - 52px) | W/H 100% | Embed | Hide | Hide |
 | alteaLaunchpad | `/riaintra/success-factors/altea` | APP_VIEWPORT_ALTEA | ALTEA 48px only | ALTEA ON | calc(100vh - 48px) | W/H 100% | Embed | Hide | Hide |
 | alteaReservations | `/riaintra/success-factors/altea/reservations` | APP_VIEWPORT_ALTEA | ALTEA 48px only | ALTEA ON | calc(100vh - 48px) | W/H 100% | Embed | Hide | Hide |
+| opsControl | `/riaintra/success-factors/altea/ops` | APP_VIEWPORT_ALTEA | ALTEA 48px only | ALTEA ON | calc(100vh - 48px) | W/H 100% | Embed | Hide | Hide |
 | inventoryControl | `/riaintra/success-factors/altea/inventory-control` | APP_VIEWPORT_ALTEA | ALTEA 48px only | ALTEA ON | calc(100vh - 48px) | W/H 100% | Embed | Hide | Hide |
 | alteaTimatic | `/riaintra/success-factors/altea/timatic` | APP_VIEWPORT_ALTEA | ALTEA 48px only | ALTEA ON | calc(100vh - 48px) | W/H 100% | Embed | Hide | Hide |
 | mail | `/riaintra/success-factors/mail` | APP_VIEWPORT_RIAINTRA | RIA 52px only | RIA ON | calc(100vh - 52px) | W/H 100% | Embed | Hide | Hide |
@@ -114,6 +115,9 @@ Existing content-resize behavior remains unchanged. Public content pages keep th
 
 
 ## 2026-10-14 V12 ROUTE CONVERGENCE
+
+- OPS Control live route is `/riaintra/success-factors/altea/ops` and uses `APP_VIEWPORT_ALTEA`; it is not a chrome-free route.
+- Mail remains `/riaintra/success-factors/mail` under `APP_VIEWPORT_RIAINTRA`; the canonical product name is `Mail`.
 
 - DocuNet Administration live route confirmed by project authority: `/riaintra/success-factors/docunet/admin`.
 - Customer Service Desk live route confirmed by project authority: `/riaintra/success-factors/service-desk`.
