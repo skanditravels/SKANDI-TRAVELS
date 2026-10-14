@@ -15,7 +15,9 @@
 
 ### Verification boundary
 
-Source contracts and syntax are checked locally. Wix publication, Supabase/RLS, staff/member session state and provider behavior require live testing after replacement and publication.
+STATICALLY VERIFIED against the current V12 repository baseline. Wix publication/runtime proxy generation, member/staff session state, Supabase/RLS and provider calls require live testing after replacement and publication.
+
+The existing `HTML_REF/riaintra/Media Control.md` complete intended live HTML payload remains authoritative and does not require replacement for this repair.
 
 ---
 
