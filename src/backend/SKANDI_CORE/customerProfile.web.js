@@ -1,5 +1,6 @@
 // /src/backend/SKANDI_CORE/customerProfile.web.js
 // B-011.28 customer-scoped My Profile / SKANDI Club web-method boundary.
+// V12 transport repair: every frontend-callable export is declared directly with webMethod so Wix can generate stable proxies.
 
 import { Permissions, webMethod } from "@wix/web-methods";
 import { currentMember } from "wix-members-backend";
@@ -46,39 +47,44 @@ async function memberContext() {
     displayName: String(member.profile?.nickname || [firstName, lastName].filter(Boolean).join(" ") || "").trim()
   };
 }
+
 function publicError(error) {
   const out = new Error(String(error?.publicMessage || error?.message || "The profile request could not be completed.").slice(0, 500));
   out.name = "CustomerProfileError";
-  out.code = /^[A-Z0-9_]{2,100}$/.test(String(error?.code || "").toUpperCase()) ? String(error.code).toUpperCase() : "CUSTOMER_PROFILE_REQUEST_FAILED";
+  out.code = /^[A-Z0-9_]{2,100}$/.test(String(error?.code || "").toUpperCase())
+    ? String(error.code).toUpperCase()
+    : "CUSTOMER_PROFILE_REQUEST_FAILED";
   out.publicMessage = out.message;
   return out;
 }
-function member(handler) {
-  return webMethod(Permissions.SiteMember, async (input = {}) => {
-    try { return await handler(await memberContext(), input || {}); }
-    catch (error) { throw publicError(error); }
-  });
+
+async function memberCall(handler, input = {}) {
+  try {
+    return await handler(await memberContext(), input || {});
+  } catch (error) {
+    throw publicError(error);
+  }
 }
 
-export const getCustomerProfileBootstrap = member(getCustomerProfileBootstrapCore);
-export const updateCustomerProfile = member(updateCustomerProfileCore);
-export const saveCustomerTraveler = member(saveCustomerTravelerCore);
-export const removeCustomerTraveler = member(removeCustomerTravelerCore);
-export const markCustomerNotificationRead = member(markCustomerNotificationReadCore);
-export const removeCustomerFavorite = member(removeCustomerFavoriteCore);
-export const linkCustomerBooking = member(linkCustomerBookingCore);
-export const getCustomerBookingDetail = member(getCustomerBookingDetailCore);
-export const quoteCustomerFlightCancellation = member(quoteCustomerFlightCancellationCore);
-export const confirmCustomerFlightCancellation = member(confirmCustomerFlightCancellationCore);
-export const searchCustomerFlightChanges = member(searchCustomerFlightChangesCore);
-export const createCustomerPendingFlightChange = member(createCustomerPendingFlightChangeCore);
-export const prepareCustomerFlightChangePayment = member(prepareCustomerFlightChangePaymentCore);
-export const confirmCustomerFlightChange = member(confirmCustomerFlightChangeCore);
-export const listCustomerPostBookingBaggage = member(listCustomerPostBookingBaggageCore);
-export const prepareCustomerPostBookingBaggage = member(prepareCustomerPostBookingBaggageCore);
-export const confirmCustomerPostBookingBaggage = member(confirmCustomerPostBookingBaggageCore);
-export const listCustomerAirlineInitiatedChanges = member(listCustomerAirlineInitiatedChangesCore);
-export const acceptCustomerAirlineInitiatedChange = member(acceptCustomerAirlineInitiatedChangeCore);
-export const cancelCustomerStay = member(cancelCustomerStayCore);
-export const cancelCustomerCar = member(cancelCustomerCarCore);
-export const getCustomerDocument = member(getCustomerDocumentCore);
+export const getCustomerProfileBootstrap = webMethod(Permissions.SiteMember, input => memberCall(getCustomerProfileBootstrapCore, input));
+export const updateCustomerProfile = webMethod(Permissions.SiteMember, input => memberCall(updateCustomerProfileCore, input));
+export const saveCustomerTraveler = webMethod(Permissions.SiteMember, input => memberCall(saveCustomerTravelerCore, input));
+export const removeCustomerTraveler = webMethod(Permissions.SiteMember, input => memberCall(removeCustomerTravelerCore, input));
+export const markCustomerNotificationRead = webMethod(Permissions.SiteMember, input => memberCall(markCustomerNotificationReadCore, input));
+export const removeCustomerFavorite = webMethod(Permissions.SiteMember, input => memberCall(removeCustomerFavoriteCore, input));
+export const linkCustomerBooking = webMethod(Permissions.SiteMember, input => memberCall(linkCustomerBookingCore, input));
+export const getCustomerBookingDetail = webMethod(Permissions.SiteMember, input => memberCall(getCustomerBookingDetailCore, input));
+export const quoteCustomerFlightCancellation = webMethod(Permissions.SiteMember, input => memberCall(quoteCustomerFlightCancellationCore, input));
+export const confirmCustomerFlightCancellation = webMethod(Permissions.SiteMember, input => memberCall(confirmCustomerFlightCancellationCore, input));
+export const searchCustomerFlightChanges = webMethod(Permissions.SiteMember, input => memberCall(searchCustomerFlightChangesCore, input));
+export const createCustomerPendingFlightChange = webMethod(Permissions.SiteMember, input => memberCall(createCustomerPendingFlightChangeCore, input));
+export const prepareCustomerFlightChangePayment = webMethod(Permissions.SiteMember, input => memberCall(prepareCustomerFlightChangePaymentCore, input));
+export const confirmCustomerFlightChange = webMethod(Permissions.SiteMember, input => memberCall(confirmCustomerFlightChangeCore, input));
+export const listCustomerPostBookingBaggage = webMethod(Permissions.SiteMember, input => memberCall(listCustomerPostBookingBaggageCore, input));
+export const prepareCustomerPostBookingBaggage = webMethod(Permissions.SiteMember, input => memberCall(prepareCustomerPostBookingBaggageCore, input));
+export const confirmCustomerPostBookingBaggage = webMethod(Permissions.SiteMember, input => memberCall(confirmCustomerPostBookingBaggageCore, input));
+export const listCustomerAirlineInitiatedChanges = webMethod(Permissions.SiteMember, input => memberCall(listCustomerAirlineInitiatedChangesCore, input));
+export const acceptCustomerAirlineInitiatedChange = webMethod(Permissions.SiteMember, input => memberCall(acceptCustomerAirlineInitiatedChangeCore, input));
+export const cancelCustomerStay = webMethod(Permissions.SiteMember, input => memberCall(cancelCustomerStayCore, input));
+export const cancelCustomerCar = webMethod(Permissions.SiteMember, input => memberCall(cancelCustomerCarCore, input));
+export const getCustomerDocument = webMethod(Permissions.SiteMember, input => memberCall(getCustomerDocumentCore, input));
