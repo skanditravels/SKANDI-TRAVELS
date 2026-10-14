@@ -1,15 +1,18 @@
 # INFO / LOG — Customer Service Desk / SKANDI Support Center
 
-- ROUTE: `/riaintra/customer-service`
+- ROUTE: `/riaintra/success-factors/service-desk`
+- WIX PAGE CONTROLLER: `/src/pages/Customer Service Desk.benbs.js`
 - WIX HTML: `#customerServiceCenterEmbed` (legacy `#customerServiceAgentEmbed` remains page-controller compatible)
 - CHILD SOURCE: `SKANDI_SUPPORT_AGENT`
 - CANONICAL BACKEND: `/src/backend/SKANDI_CORE/customerSupport.web.js` → `/src/backend/SKANDI_CORE/customerSupport.js`
 - PERSISTENCE: Supabase `customer_support_cases`, `customer_support_messages`, `alexandra_chat_sessions`, `agent_users`
 - REALTIME CHAT: LiveKit / LiveKit Agents
-- STATUS: V12 CUSTOMER-CARE MASTER CONVERGENCE STATICALLY VERIFIED — REQUIRES LIVE TEST
+- STATUS: **STATICALLY VERIFIED — REQUIRES LIVE TEST**
+- PROXY AUDIT: the current customer-support facade exports the agent bootstrap/read/write methods as direct named `webMethod(...)` declarations. No helper-produced bootstrap export was found in the current V12 facade.
 
 ## CHANGE LOG
-- 2026-10-12 — Member-origin cases are now detected from durable support source markers and ranked ahead of standard Help Center cases in every agent queue/list surface, without reclassifying them as emergency/urgent travel incidents. Added a dedicated Member priority queue and visible SKANDI CLUB PRIORITY flag. Stale Chatwoot wording was removed; canonical Supabase persistence remains authoritative. Local-only ticket merge and business-rule mutations were disabled so the UI can no longer report false success where the current backend has no atomic persisted contract. LiveKit text remains published only after canonical reply persistence. STATICALLY VERIFIED; REQUIRES LIVE TEST.
+- 2026-10-12 — Member-origin cases are detected from durable support source markers and ranked ahead of standard Help Center cases without reclassifying them as emergency/urgent travel incidents. Dedicated Member priority queue retained. Canonical Supabase persistence remains authoritative. Local-only merge/business-rule mutations remain disabled where no atomic persisted backend contract exists. LiveKit text is published only after canonical reply persistence.
+- 2026-10-14 — Live route corrected to `/riaintra/success-factors/service-desk` in the V12 route registry/PAGE_SETTINGS. Current page controller → `SKANDI_CORE/customerSupport.web.js` chain re-audited; no legacy backend import or wrapper-produced bootstrap export is required for the agent workspace.
 
 ## COMPLETE INTENDED HTML
 
