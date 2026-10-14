@@ -2,18 +2,16 @@
 
 ## INFO / LOG
 
-- **Status:** V12 repair prepared — STATICALLY VERIFIED / REQUIRES LIVE TEST
+- **Status:** STATICALLY VERIFIED / REQUIRES LIVE TESTT
 - **System:** RIAINTRA
 - **Route:** `/riaintra/success-factors/media-control`
 - **Wix page:** `MEDIA Control.chm91`
 - **HTML component:** `#mediaControlEmbed`
-- **Child source:** `SKANDI_NEWSROOM_CONTROL`
 - **Repository baseline:** `skanditravels/SKANDI-TRAVELS` main `4163618a81fed71d7114ac55d3fa003421f145b0`
-- **Prepared:** 2026-10-13
+- **Prepared:** 2026-10-14
 
-### V12 repair
-
-Renames Magazine Manager to Media Control while preserving VOY and Newsroom control. Adds Website Planner, Page Copy and Hero/Card Media registries using the existing magazine_manager voy_entities persistence model. Inventory-owned facts/media are explicitly outside this editor.
+2026-10-13 — **V12 repair** - Renames Magazine Manager to Media Control while preserving VOY and Newsroom control. Adds Website Planner, Page Copy and Hero/Card Media registries using the existing magazine_manager voy_entities persistence model. Inventory-owned facts/media are explicitly outside this editor.
+2026-10-14 — **Media Control backend transport repair** prepared for runtime error: `(0 , s.listAssets) is not a function`. The live HTML payload, layout, IDs, page message names and Media Control behavior are unchanged. The repair is entirely in the Wix backend web-method transport layer. The Asset Library chain remains: `Media Control page -> backend/SKANDI_CORE/assets.web.js -> backend/SKANDI_CORE/assets.js -> Supabase`. `assets.web.js` now declares each existing frontend-callable Asset Library method directly with exported `webMethod(...)` declarations so Wix can regenerate callable frontend proxies. Export names, permissions and canonical core functions are preserved. The Media Control startup dependencies were also checked: - `getStaffPortalSession` -> `staffAuth.web.js`: already direct `webMethod(...)`; no replacement required. - `getVoyAdminBootstrap` -> `publicContent.web.js`: already direct `webMethod(...)`; no replacement required. - `getNewsroomAdminBootstrap` -> `publicContent.web.js`: already direct `webMethod(...)`; no replacement required. - Asset Library methods -> `assets.web.js`: repaired in this package. Related current bootstrap facades that used the same indirect web-method-construction pattern were normalized in this package for GroupTalk, OPS Control, My Club Profile and Cruises. Existing core ownership and permissions are retained.
 
 ### Verification boundary
 
