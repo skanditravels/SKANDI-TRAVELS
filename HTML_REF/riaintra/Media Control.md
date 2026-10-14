@@ -26,6 +26,16 @@ The editor preserves the existing publishing boundaries for VOY and Newsroom and
 
 The current source audit found published Presentation Runtime consumption (`SKANDI_PRESENTATION_DATA`) in Newsroom and VOY. Other public pages already contain stable `data-section-id` / `data-content-id` hooks in their authoritative HTML_REF sources, and those hooks are registered in the Media Control catalog. A catalog registration is not falsely treated as proof that the currently published Wix embed consumes presentation records; the Quality & release view shows the runtime state separately.
 
+### 2026-10-14 — Full V12 feature-parity + governance upgrade
+
+This revision supersedes the reduced editorial-studio embed while preserving its working catalog and stable Asset Library transport. The complete full-feature Media Manager supplied for V12 is restored as the functional baseline: all existing VOY issue/page production, 18 layout templates, structured block editing, live page preview, articles, asset/media operations, destination research hooks, campaigns, Quality Lab, Brand Kit, Print QA, distribution, workflow, categories, banners, travel cards, API connectors, Press Releases, Press Contacts, Website Planner, Page Copy and Hero/Card Media remain present.
+
+Website presentation editing is upgraded without manual technical identifiers. Page, section, copy field and media-slot selection is catalog-driven from `public/siteMap.js`; page paths, `data-content-id` values and media-slot IDs are no longer free-text editor inputs. Existing records can be reopened, edited and deleted from the controlled registry. Presentation media is selected/uploaded through the shared Asset Library rather than a raw URL field.
+
+New governance tools are added without introducing a new database or alternate content store: **Presentation Matrix** (route/authority/hook/runtime coverage), **Content Audit** (duplicate IDs, missing plans, empty published copy, missing alt text, non-HTTPS media and runtime warnings), and **Release Center** (page-level DRAFT/REVIEW/READY/PUBLISHED transitions across the existing PAGE_PLAN / CONTENT_BLOCK / MEDIA_SLOT records). A JSON editorial snapshot can be exported for review/audit. Mobile editing controls retain a 16px minimum font to avoid iOS focus auto-zoom without disabling pinch zoom.
+
+The page controller adds only two Media Control actions over the existing V12 contract: controlled opening of a registered public page and deletion of an existing website page-plan campaign record. The canonical Asset Library remains `backend/SKANDI_CORE/assets.js` through the existing `mediaControl.web.js` dispatcher; VOY/Newsroom persistence remains in the existing public-content chain.
+
 ### Authority boundaries
 
 - **Media Control:** public static presentation copy, registered presentation media, VOY, Newsroom and shared non-inventory assets.
@@ -47,207 +57,3073 @@ The current source audit found published Presentation Runtime consumption (`SKAN
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#07111f">
-<title>SKANDI Media Control</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@500;600;700;800&display=swap" rel="stylesheet">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<meta name="theme-color" content="#022e64" />
+<title>Media Control</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800;900&family=Montserrat:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@600;700;800;900&display=swap" rel="stylesheet">
 <style>
-:root{--ink:#07111f;--ink2:#0c1c2f;--navy:#022e64;--blue:#285ca8;--aqua:#5fc7cf;--aqua2:#d9f1f1;--paper:#fff;--canvas:#f4f6f8;--line:#d8dee7;--line2:#b7c0ce;--text:#151c26;--muted:#657184;--good:#087443;--warn:#8a5a00;--bad:#a12622;--shadow:0 18px 50px rgba(5,20,38,.12);--font:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;--display:Montserrat,var(--font)}
-*{box-sizing:border-box}html,body{width:100%;height:100%;margin:0;background:var(--canvas);color:var(--text);font-family:var(--font);overflow:hidden}button,input,select,textarea{font:inherit}button{cursor:pointer}.hidden{display:none!important}:focus-visible{outline:3px solid rgba(95,199,207,.45);outline-offset:2px}
-.app{height:100dvh;display:grid;grid-template-rows:56px minmax(0,1fr)}
-.topbar{display:grid;grid-template-columns:280px minmax(0,1fr) auto;align-items:center;gap:16px;padding:0 16px;background:var(--ink);color:#fff;border-bottom:1px solid rgba(255,255,255,.09)}
-.brand{display:flex;align-items:center;gap:11px;min-width:0}.mark{width:30px;height:30px;display:grid;place-items:center;border:1px solid rgba(255,255,255,.26);font:800 10px var(--display);letter-spacing:.1em}.brand-copy{min-width:0}.brand-copy strong{display:block;font:700 12px var(--display);letter-spacing:.08em;text-transform:uppercase}.brand-copy span{display:block;margin-top:2px;color:#9eacbe;font-size:9px}.top-context{min-width:0;color:#b7c1ce;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.top-actions{display:flex;align-items:center;gap:7px}.top-btn{min-height:32px;border:1px solid rgba(255,255,255,.18);background:transparent;color:#fff;padding:0 11px;font-size:9px;font-weight:700}.top-btn:hover{background:rgba(255,255,255,.08)}
-.shell{min-height:0;display:grid;grid-template-columns:218px minmax(0,1fr)}
-.sidebar{min-height:0;overflow:auto;background:#0b1624;color:#d7dee8;border-right:1px solid #182639;padding:14px 9px}.nav-group{margin:0 0 16px}.nav-label{padding:0 9px 7px;color:#718197;font:700 8px var(--display);letter-spacing:.14em;text-transform:uppercase}.nav{width:100%;min-height:38px;border:0;border-left:3px solid transparent;background:transparent;color:#cbd4df;padding:0 10px;display:flex;align-items:center;justify-content:space-between;text-align:left;font-size:10px;font-weight:600}.nav:hover{background:#111f30}.nav.active{background:#13253b;border-left-color:var(--aqua);color:#fff}.nav small{color:#70849a;font-size:8px}
-.workspace{min-width:0;min-height:0;display:grid;grid-template-rows:auto minmax(0,1fr);overflow:hidden}.workspace-head{background:#fff;border-bottom:1px solid var(--line);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:16px}.workspace-head h1{margin:0;font:700 18px var(--display);color:var(--navy);letter-spacing:-.02em}.workspace-head p{margin:3px 0 0;color:var(--muted);font-size:9px}.head-actions{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}.btn{min-height:34px;border:1px solid var(--line2);background:#fff;color:var(--text);padding:0 12px;font-size:9px;font-weight:700}.btn:hover{border-color:#8794a5;background:#f9fafb}.btn.primary{background:var(--navy);border-color:var(--navy);color:#fff}.btn.aqua{background:var(--aqua);border-color:var(--aqua);color:#071b2a}.btn.danger{color:var(--bad);border-color:#dfaaa5;background:#fff}.btn:disabled{cursor:not-allowed;opacity:.45}
-.views{min-height:0;overflow:hidden;padding:12px}.view{display:none;height:100%;min-height:0;overflow:hidden}.view.active{display:block}.scroll{height:100%;overflow:auto;padding-right:3px}.grid{display:grid;gap:10px}.grid.two{grid-template-columns:minmax(0,1fr) minmax(330px,.72fr)}.grid.three{grid-template-columns:repeat(3,minmax(0,1fr))}.panel{background:#fff;border:1px solid var(--line);box-shadow:0 5px 18px rgba(5,20,38,.04);min-width:0}.panel-head{min-height:43px;border-bottom:1px solid var(--line);padding:9px 11px;display:flex;align-items:center;justify-content:space-between;gap:10px}.panel-head h2{margin:0;color:var(--navy);font:700 11px var(--display);letter-spacing:.02em}.panel-head span{color:var(--muted);font-size:8px}.panel-body{padding:11px}.panel-body.flush{padding:0}
-.metric-row{display:grid;grid-template-columns:repeat(5,minmax(100px,1fr));gap:8px;margin-bottom:10px}.metric{background:#fff;border:1px solid var(--line);padding:11px}.metric small{display:block;color:var(--muted);font-size:8px;text-transform:uppercase;letter-spacing:.08em}.metric strong{display:block;margin-top:5px;color:var(--navy);font:700 22px var(--display)}
-.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.field{min-width:0;display:flex;flex-direction:column;gap:5px}.field.full{grid-column:1/-1}.label{color:#526071;font-size:8px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}.input,select,textarea{width:100%;border:1px solid var(--line2);background:#fff;color:var(--text);border-radius:0;padding:8px 9px;font-size:10px;outline:none}.input,select{min-height:36px}textarea{min-height:90px;resize:vertical;line-height:1.5}.input:focus,select:focus,textarea:focus{border-color:var(--aqua);box-shadow:0 0 0 2px rgba(95,199,207,.12)}.help{color:var(--muted);font-size:8px;line-height:1.5}.form-actions{grid-column:1/-1;display:flex;gap:7px;align-items:center;justify-content:flex-end;padding-top:2px}
-.table{width:100%;border-collapse:collapse}.table th{position:sticky;top:0;z-index:1;background:#edf1f5;border-bottom:1px solid var(--line2);padding:8px;text-align:left;color:#536172;font-size:7px;letter-spacing:.09em;text-transform:uppercase}.table td{border-bottom:1px solid #eef1f5;padding:8px;font-size:9px;vertical-align:top}.table tr[data-edit]{cursor:pointer}.table tr[data-edit]:hover td{background:#f7fafc}.table strong{display:block;color:var(--navy);font-size:9px}.sub{display:block;margin-top:2px;color:var(--muted);font-size:8px}.code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:8px}.status-text{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.06em}.status-text.good{color:var(--good)}.status-text.warn{color:var(--warn)}.status-text.bad{color:var(--bad)}
-.notice{border-left:3px solid var(--aqua);background:#f5fbfc;padding:9px 10px;color:#465467;font-size:9px;line-height:1.55}.notice.warn{border-left-color:#c58a22;background:#fffaf0}.notice.bad{border-left-color:var(--bad);background:#fff5f4}.empty{padding:20px;text-align:center;color:var(--muted);font-size:9px}.toolbar{display:flex;gap:7px;align-items:center;flex-wrap:wrap}.toolbar .input,.toolbar select{width:auto;min-width:150px}.toolbar .grow{flex:1;min-width:190px}
-.editor-hero{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(280px,.7fr);gap:10px;margin-bottom:10px}.editor-intro{position:relative;overflow:hidden;background:linear-gradient(135deg,#071a31,#0b3b6b);color:#fff;border:1px solid #0c2f55;padding:18px}.editor-intro:after{content:"";position:absolute;width:200px;height:200px;border:1px solid rgba(95,199,207,.18);border-radius:50%;right:-70px;top:-100px}.editor-intro small{color:#9fe1e5;font:700 8px var(--display);letter-spacing:.14em;text-transform:uppercase}.editor-intro h2{margin:7px 0 5px;font:700 24px var(--display);letter-spacing:-.035em}.editor-intro p{max-width:680px;margin:0;color:#c9d4e2;font-size:9px;line-height:1.6}.editor-health{background:#fff;border:1px solid var(--line);padding:14px;display:grid;grid-template-columns:1fr 1fr;gap:8px}.health-item{border-left:2px solid var(--line2);padding:5px 8px}.health-item strong{display:block;color:var(--navy);font:700 16px var(--display)}.health-item span{display:block;margin-top:2px;color:var(--muted);font-size:7px;text-transform:uppercase;letter-spacing:.07em}
-.asset-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px}.asset{border:1px solid var(--line);background:#fff;min-width:0;cursor:pointer}.asset:hover{border-color:#9aa7b6}.asset.selected{border-color:var(--aqua);box-shadow:0 0 0 2px rgba(95,199,207,.14)}.asset-thumb{height:116px;background:#edf1f5;display:grid;place-items:center;overflow:hidden;color:#718095;font-size:9px}.asset-thumb img{width:100%;height:100%;object-fit:cover}.asset-body{padding:8px}.asset-title{font-size:9px;font-weight:700;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.asset-meta{margin-top:4px;color:var(--muted);font-size:7px;line-height:1.45}.asset-actions{display:flex;gap:5px;margin-top:7px}.asset-actions .btn{min-height:28px;padding:0 8px;font-size:7px}
-.upload-zone{border:1px dashed #9aa8b9;background:#fafcfd;padding:14px;text-align:center}.upload-zone input{max-width:100%}.progress{height:3px;background:#e7ecf1;margin-top:8px;overflow:hidden}.progress>i{display:block;height:100%;width:0;background:var(--aqua);transition:width .2s}
-.issue-list,.news-list{display:grid;gap:6px}.list-card{border:1px solid var(--line);background:#fff;padding:9px;cursor:pointer}.list-card:hover{border-color:#a3afbd}.list-card.active{border-left:3px solid var(--aqua)}.list-card strong{display:block;color:var(--navy);font-size:9px}.list-card span{display:block;margin-top:3px;color:var(--muted);font-size:8px}.split-list{display:grid;grid-template-columns:280px minmax(0,1fr);gap:10px;min-height:0;height:100%}.list-pane,.detail-pane{min-height:0;overflow:auto}
-.toast{position:fixed;right:14px;bottom:14px;z-index:9999;max-width:420px;border:1px solid #26384d;background:#07111f;color:#fff;box-shadow:var(--shadow);padding:10px 12px;font-size:9px;line-height:1.45;display:none}.toast.show{display:block}.toast.error{background:#401713;border-color:#7d2a23}.toast.ok{background:#073421;border-color:#0b6241}
-.modal-backdrop{position:fixed;inset:0;z-index:9000;background:rgba(2,10,20,.56);display:none;align-items:center;justify-content:center;padding:18px}.modal-backdrop.show{display:flex}.modal{width:min(720px,100%);max-height:90vh;overflow:auto;background:#fff;border:1px solid var(--line2);box-shadow:0 30px 90px rgba(0,0,0,.28)}.modal-head{display:flex;align-items:center;justify-content:space-between;padding:11px;border-bottom:1px solid var(--line)}.modal-head h3{margin:0;color:var(--navy);font:700 12px var(--display)}.modal-body{padding:11px}
-@media(max-width:980px){.topbar{grid-template-columns:1fr auto}.top-context{display:none}.shell{grid-template-columns:64px minmax(0,1fr)}.sidebar{padding-inline:5px}.nav{justify-content:center;padding:0;font-size:0}.nav:before{content:attr(data-short);font-size:9px}.nav small,.nav-label{display:none}.grid.two,.editor-hero{grid-template-columns:1fr}.metric-row{grid-template-columns:repeat(2,1fr)}.split-list{grid-template-columns:1fr}.list-pane{max-height:260px}.grid.three{grid-template-columns:1fr 1fr}}
-@media(max-width:640px){.app{grid-template-rows:52px minmax(0,1fr)}.topbar{padding:0 8px}.brand-copy span{display:none}.top-actions .top-btn:not(:last-child){display:none}.shell{grid-template-columns:50px minmax(0,1fr)}.views{padding:7px}.workspace-head{padding:9px}.workspace-head p{display:none}.workspace-head h1{font-size:14px}.metric-row{grid-template-columns:1fr 1fr}.form-grid{grid-template-columns:1fr}.field.full,.form-actions{grid-column:1}.grid.three{grid-template-columns:1fr}.asset-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.editor-health{grid-template-columns:1fr 1fr}}
+:root{
+  --blue:#022e64;--blue2:#0b3a7a;--cyan:#5FC7CF;--bg:#f3f5f8;--panel:#fff;--panel2:#f8fafc;
+  --line:#d1d5db;--line2:#9ca3af;--text:#111827;--muted:#6b7280;--ok:#15803d;--warn:#b45309;--bad:#b91c1c;
+  --dark:#020617;--dark2:#0b1220;--shadow:0 18px 50px rgba(15,23,42,.16);
+  --font:Tahoma,"Segoe UI",system-ui,-apple-system,BlinkMacSystemFont,sans-serif;--mag:"Montserrat",var(--font);--mono:"Consolas","Courier New",ui-monospace,monospace;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;font-family:var(--font);background:var(--bg);color:var(--text);overflow:hidden}
+button,input,select,textarea{font:inherit}button{touch-action:manipulation;cursor:pointer}.hidden{display:none!important}
+.app{height:100dvh;display:grid;grid-template-rows:auto minmax(0,1fr);background:var(--bg)}
+.header{
+  background:linear-gradient(90deg,var(--blue),var(--blue2));color:#fff;
+  padding:calc(8px + env(safe-area-inset-top)) 12px 8px;min-height:58px;
+  display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid #020617
+}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}.logo{width:36px;height:36px;display:grid;place-items:center;border-radius:6px;background:#fff;color:var(--blue);font-weight:900;letter-spacing:.06em;flex:0 0 auto}
+.title{font-weight:900;letter-spacing:.13em;text-transform:uppercase;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.subtitle{font-size:11px;opacity:.88;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.session{text-align:right;font-family:var(--mono);font-size:11px;line-height:1.35;white-space:nowrap}
+.mobile-menu-btn{display:none;border:1px solid rgba(255,255,255,.42);background:rgba(255,255,255,.12);color:#fff;border-radius:8px;min-width:42px;min-height:38px;font-size:20px}
+.shell{min-height:0;display:grid;grid-template-columns:248px minmax(0,1fr);overflow:hidden}.sidebar{min-height:0;background:#020617;color:#e5e7eb;border-right:1px solid #111827;padding:10px 8px calc(10px + env(safe-area-inset-bottom));overflow:auto}
+.nav-title{font-size:10px;color:#7f8ca5;text-transform:uppercase;letter-spacing:.16em;margin:10px 6px 4px}
+.nav-btn{width:100%;min-height:37px;border:none;background:transparent;color:#e5e7eb;padding:8px 8px 6px 10px;margin:1px 0;text-align:left;display:flex;justify-content:space-between;align-items:center;gap:8px;border-left:3px solid transparent;font-size:11px;text-transform:uppercase;letter-spacing:.03em}
+.nav-btn:hover{background:#0b1220}.nav-btn.active{background:#071122;border-left-color:var(--cyan);font-weight:900}.nav-key{font-family:var(--mono);font-size:10px;color:#94a3b8}
+.workspace{min-height:0;display:flex;flex-direction:column;gap:8px;padding:8px;background:var(--panel);overflow:hidden}
+.toolbar{flex:0 0 auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:7px;border:1px solid var(--line);background:var(--panel2)}
+.badge{border:1px solid var(--line2);background:#fff;border-radius:999px;padding:2px 8px;font-size:11px;white-space:nowrap}.badge b{font-family:var(--mono)}
+.input,select,textarea{border:1px solid var(--line);background:#fff;border-radius:4px;padding:6px 8px;min-height:32px;font-size:12px;color:var(--text)}
+textarea{resize:vertical;min-height:76px}.search{min-width:230px;flex:1}
+.btn{border:1px solid var(--line);background:#fff;border-radius:4px;padding:7px 10px;font-size:12px;min-height:32px}
+.btn:hover{filter:brightness(.97)}.btn.primary{border-color:var(--blue);background:var(--blue);color:#fff;font-weight:800}.btn.ok{border-color:var(--ok);background:#ecfdf5;color:var(--ok);font-weight:800}.btn.warn{border-color:#f59e0b;background:#fffbeb;color:#92400e;font-weight:800}.btn.bad{border-color:var(--bad);background:#fef2f2;color:var(--bad);font-weight:800}.btn.dark{border-color:#020617;background:#020617;color:#fff}
+.content{flex:1;min-height:0;overflow:hidden}.panel-view{height:100%;display:none;min-height:0;overflow:hidden;flex-direction:column;gap:8px}.panel-view.active{display:flex}
+.panel{border:1px solid var(--line);background:#fff;padding:9px;border-radius:6px;min-height:0;box-shadow:0 5px 16px rgba(15,23,42,.04)}
+.panel h3,.panel h4{margin:0 0 8px;padding-bottom:5px;border-bottom:1px solid var(--line);font-size:12px;text-transform:uppercase;letter-spacing:.1em}
+.help{font-size:11px;color:var(--muted);line-height:1.45}.row{display:flex;gap:7px;align-items:flex-end;flex-wrap:wrap}.field{display:flex;flex-direction:column;gap:3px;min-width:130px;flex:1}.field.full{min-width:100%;flex-basis:100%}
+.label{font-size:10px;text-transform:uppercase;letter-spacing:.13em;color:var(--muted)}
+.split{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(300px,.85fr);gap:8px;min-height:0;flex:1;overflow:hidden}.split.wide{grid-template-columns:minmax(280px,.8fr) minmax(460px,1.35fr) minmax(280px,.85fr)}
+.stack{display:flex;flex-direction:column;gap:8px;min-height:0}.scroll{overflow:auto;min-height:0}.grid{border:1px solid var(--line);background:#fff;display:flex;flex-direction:column;min-height:0;overflow:hidden;border-radius:4px}.grid-head,.grid-row{display:grid;align-items:center;gap:6px;padding:5px 7px;border-bottom:1px solid var(--line)}
+.grid-head{background:#e5e7eb;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;color:#334155}.grid-body{flex:1;min-height:0;overflow:auto}.grid-row{font-size:12px;cursor:pointer;min-height:32px}.grid-row:nth-child(even){background:#f8fafc}.grid-row:hover{background:#eef2ff}.grid-row.selected{background:var(--blue);color:#fff}.cell{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kv{display:grid;grid-template-columns:145px 1fr;gap:6px 10px;font-size:12px}.kv .k{font-size:10px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}.kv .v{font-weight:800;min-width:0;overflow-wrap:anywhere}
+.kpi-row{display:grid;grid-template-columns:repeat(6,minmax(110px,1fr));gap:8px}.kpi{border:1px solid var(--line);background:linear-gradient(180deg,#fff,#f8fafc);padding:10px;border-radius:8px}.kpi small{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em}.kpi b{display:block;font-size:22px;margin-top:3px;color:var(--blue)}
+.pill{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--line2);background:#fff;border-radius:999px;padding:2px 8px;font-size:10px;text-transform:uppercase}.pill.ok{border-color:var(--ok);color:var(--ok)}.pill.warn{border-color:#f59e0b;color:#92400e}.pill.bad{border-color:var(--bad);color:var(--bad)}.pill.info{border-color:#60a5fa;color:#1d4ed8}
+.empty{border:1px dashed var(--line2);border-radius:8px;padding:14px;background:#f8fafc;color:var(--muted);font-size:12px}.notice{border-left:4px solid var(--blue);background:#f8fafc;padding:9px;border-radius:8px;font-size:11px;color:#334155;line-height:1.5}.mono{font-family:var(--mono)}
+.admin-grid{display:grid;grid-template-columns:repeat(4,minmax(130px,1fr));gap:7px}.admin-grid .wide{grid-column:span 2}.admin-grid .full{grid-column:1/-1}
+.admin-table{display:flex;flex-direction:column;gap:7px;min-height:0;overflow:auto}.admin-row{border:1px solid var(--line);background:#fff;border-radius:6px;padding:8px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:start}.admin-row:hover{background:#f8fafc}.item-title{font-size:13px;color:var(--blue);font-weight:900;line-height:1.25}.item-sub{font-size:11px;color:#334155;line-height:1.42;margin-top:4px}
+.hero{border:1px solid var(--line);border-radius:12px;background:radial-gradient(circle at 86% 18%,rgba(95,199,207,.45),transparent 28%),linear-gradient(135deg,#d7e6ff,#f6faff);padding:18px 20px;display:grid;grid-template-columns:1.2fr .8fr;gap:18px;align-items:center;box-shadow:0 10px 24px rgba(15,23,42,.08)}.eyebrow{color:var(--blue);font-size:10px;font-weight:900;letter-spacing:.16em;text-transform:uppercase;margin-bottom:6px}.hero h2{margin:0 0 6px;color:var(--blue);font-size:30px;line-height:1;letter-spacing:-.04em}.hero p{margin:0;color:#334155;font-size:12px;line-height:1.55}.status-card{border:1px solid rgba(255,255,255,.9);border-radius:14px;background:rgba(255,255,255,.92);box-shadow:0 8px 22px rgba(15,23,42,.12);padding:14px}.status-pill{display:inline-flex;border-radius:999px;background:var(--blue);color:#fff;padding:5px 10px;font-size:9px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;margin-bottom:8px}.status-number{color:var(--blue);font-size:28px;font-weight:900;line-height:1}.status-sub{color:var(--muted);font-size:11px;margin-top:5px}
+.template-grid{display:grid;grid-template-columns:repeat(2,minmax(120px,1fr));gap:8px}.template-card{border:1px solid var(--line);border-radius:8px;background:#fff;padding:9px;cursor:pointer}.template-card:hover,.template-card.active{border-color:var(--blue);box-shadow:0 8px 22px rgba(15,23,42,.08)}.template-thumb{height:72px;border:1px solid #dbe2ea;border-radius:6px;background:linear-gradient(135deg,#eef6ff,#fff);margin-bottom:7px;display:grid;grid-template-columns:1fr .65fr;gap:4px;padding:6px}.template-card.cover .template-thumb{display:flex;align-items:end;background:linear-gradient(135deg,#022e64,#5FC7CF);color:#fff}.template-card.ad .template-thumb{background:linear-gradient(135deg,#fef3c7,#fff7ed)}.template-card.spread .template-thumb{grid-template-columns:1fr 1fr}.t-block{background:#cbd5e1;border-radius:3px}.t-block.dark{background:#022e64}.t-block.light{background:#fff}.template-title{font-size:12px;font-weight:900;color:var(--blue)}.template-sub{font-size:10px;color:var(--muted);line-height:1.35;margin-top:2px}
+.mag-preview-wrap{background:#e5e7eb;border:1px solid var(--line);border-radius:8px;overflow:auto;padding:18px;min-height:0;display:flex;justify-content:center}.mag-page{width:420px;min-height:594px;background:#fff;box-shadow:0 18px 44px rgba(15,23,42,.22);font-family:var(--mag);position:relative;overflow:hidden}.mag-page.bleed:before{content:"";position:absolute;inset:14px;border:1px dashed rgba(185,28,28,.45);pointer-events:none;z-index:2}.mag-cover{min-height:594px;color:#fff;background:#022e64;display:flex;flex-direction:column;justify-content:flex-end;padding:34px;background-size:cover;background-position:center;position:relative}.mag-cover:before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(2,46,100,.15),rgba(2,46,100,.92));}.mag-cover>*{position:relative}.mag-logo{font-size:18px;font-weight:900;letter-spacing:.25em}.mag-title{font-size:48px;line-height:.92;font-weight:900;letter-spacing:-.06em;margin:16px 0 8px;text-transform:uppercase}.mag-deck{font-size:13px;line-height:1.5;max-width:290px}.mag-meta{margin-top:18px;font-size:10px;text-transform:uppercase;letter-spacing:.14em}.mag-feature{display:grid;grid-template-rows:230px auto;min-height:594px}.mag-img{background:#cbd5e1;background-size:cover;background-position:center}.mag-copy{padding:24px 28px}.mag-kicker{font-size:10px;text-transform:uppercase;letter-spacing:.2em;color:#0b3a7a;font-weight:900}.mag-headline{font-size:34px;line-height:.95;font-weight:900;letter-spacing:-.05em;color:#022e64;margin:8px 0}.mag-body{font-size:11px;line-height:1.55;color:#243244;column-count:2;column-gap:16px}.mag-destination{padding:24px;min-height:594px;background:#f8fafc}.mag-dest-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}.mag-card{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:10px}.mag-ad{min-height:594px;display:grid;place-items:center;padding:34px;text-align:center;background:linear-gradient(135deg,#e0f2fe,#fff)}.mag-ad h1{font-size:46px;line-height:.92;color:#022e64;margin:0;text-transform:uppercase}.mag-ad p{color:#334155;line-height:1.55}.ad-cta{display:inline-block;margin-top:14px;border-radius:999px;background:#022e64;color:#fff;padding:8px 18px;font-size:11px;text-transform:uppercase;letter-spacing:.12em}
+.asset-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:8px}.asset-card{border:1px solid var(--line);border-radius:8px;background:#fff;overflow:hidden}.asset-img{height:98px;background:#e5e7eb;background-size:cover;background-position:center;display:grid;place-items:center;color:#64748b}.asset-body{padding:8px}.asset-title{font-size:11px;font-weight:900;color:#022e64}.asset-meta{font-size:10px;color:#64748b;margin-top:3px;line-height:1.35}
+.workflow-lane{display:grid;grid-template-columns:repeat(5,minmax(160px,1fr));gap:8px;min-width:840px}.workflow-col{border:1px solid var(--line);border-radius:8px;background:#f8fafc;min-height:280px;padding:8px}.workflow-col h4{border:0;margin:0 0 8px;padding:0}.workflow-card{border:1px solid var(--line);border-radius:8px;background:#fff;padding:8px;margin-bottom:7px}.api-card{border:1px solid var(--line);border-radius:8px;background:#fff;padding:10px}.api-card b{color:var(--blue)}.api-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(245px,1fr));gap:8px}
+.drawer-overlay{display:none;position:fixed;inset:0;background:rgba(2,6,23,.55);z-index:8500}.mobile-drawer-open .drawer-overlay{display:block}.mobile-drawer-open .sidebar{transform:translateX(0)}
+.toast{position:fixed;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));background:#020617;color:#fff;padding:10px 12px;border-radius:6px;font-size:12px;display:none;z-index:9000;box-shadow:var(--shadow)}.modalOverlay{position:fixed;inset:0;background:rgba(15,23,42,.55);display:none;align-items:center;justify-content:center;padding:16px;z-index:8800}.modal{width:min(920px,94vw);max-height:92vh;overflow:auto;background:#fff;border:1px solid var(--line);border-radius:8px;padding:12px}.modalHead{display:flex;justify-content:space-between;gap:10px;margin-bottom:10px}.modalTitle{font-size:13px;text-transform:uppercase;letter-spacing:.1em;font-weight:900;color:var(--blue)}
+@media(max-width:1120px){.split.wide{grid-template-columns:1fr}.kpi-row{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:980px){
+  html,body{overflow:hidden}.mobile-menu-btn{display:inline-grid;place-items:center}.shell{grid-template-columns:1fr}.sidebar{position:fixed;left:0;top:0;bottom:0;width:min(315px,86vw);z-index:8600;transform:translateX(-105%);transition:transform .22s ease;box-shadow:14px 0 42px rgba(0,0,0,.35);padding-top:calc(12px + env(safe-area-inset-top))}.workspace{overflow:hidden}.panel-view.active{overflow:auto;-webkit-overflow-scrolling:touch}.split,.hero{grid-template-columns:1fr;overflow:visible}.kpi-row{grid-template-columns:repeat(2,1fr)}.admin-grid{grid-template-columns:1fr 1fr}.admin-grid .wide,.admin-grid .full{grid-column:1/-1}.content{overflow:hidden}.header .session{display:none}.mag-preview-wrap{justify-content:flex-start}.mag-page{width:360px;min-height:509px}.mag-cover,.mag-feature,.mag-destination,.mag-ad{min-height:509px}.mag-title{font-size:38px}.mag-headline{font-size:28px}.mag-body{column-count:1}.toolbar{overflow:auto}.search{min-width:180px}
+}
+@media(max-width:520px){.admin-grid,.admin-row,.kpi-row{grid-template-columns:1fr}.field{min-width:100%}.brand .subtitle{display:none}.mag-page{width:310px}.template-grid{grid-template-columns:1fr}.asset-grid{grid-template-columns:repeat(2,1fr)}}
+
+/* VOY Professional Editorial Studio Skin v2
+   Premium travel-magazine production look. Functionality and postMessage contracts unchanged. */
+:root{
+  --blue:#1b1814;
+  --blue2:#2b241d;
+  --cyan:#c7a16a;
+  --bg:#f4efe7;
+  --panel:#fffdf8;
+  --panel2:#f7f0e6;
+  --line:#ddd1bf;
+  --line2:#b9aa94;
+  --text:#1d1a16;
+  --muted:#756b5f;
+  --dark:#11100e;
+  --dark2:#1a1713;
+  --shadow:0 24px 70px rgba(28,22,15,.16);
+  --editorial-ink:#14110f;
+  --editorial-black:#0f0e0c;
+  --editorial-brown:#241d17;
+  --editorial-gold:#b89662;
+  --editorial-soft-gold:#d7c2a0;
+  --editorial-paper:#fbf7ef;
+  --editorial-paper2:#f4eadc;
+  --editorial-sand:#e6d8c5;
+  --editorial-serif:"Cormorant Garamond",Georgia,serif;
+  --editorial-sans:"Inter",Tahoma,"Segoe UI",system-ui,-apple-system,sans-serif;
+  --font:var(--editorial-sans);
+  --mag:var(--editorial-serif);
+}
+html,body{
+  font-family:var(--editorial-sans);
+  background:
+    radial-gradient(circle at 12% 5%,rgba(215,194,160,.38),transparent 30%),
+    linear-gradient(135deg,#f7f0e5 0%,#ede2d2 44%,#f8f3eb 100%);
+  color:var(--text);
+}
+.app{
+  background:
+    linear-gradient(90deg,rgba(15,14,12,.045) 1px,transparent 1px),
+    linear-gradient(180deg,rgba(15,14,12,.035) 1px,transparent 1px),
+    linear-gradient(135deg,#f7f0e5,#fbf7ef 54%,#efe2d2);
+  background-size:34px 34px,34px 34px,100% 100%;
+}
+.header{
+  min-height:74px;
+  padding:calc(12px + env(safe-area-inset-top)) 18px 12px;
+  background:
+    radial-gradient(circle at 78% -20%,rgba(184,150,98,.33),transparent 32%),
+    linear-gradient(115deg,#090807 0%,#17130f 52%,#2d251d 100%);
+  border-bottom:1px solid rgba(215,194,160,.72);
+  box-shadow:0 16px 44px rgba(13,10,7,.28);
+}
+.brand{gap:14px}
+.logo{
+  width:52px;height:52px;border-radius:50%;
+  background:transparent;
+  color:#f5ead7;
+  border:1px solid rgba(215,194,160,.8);
+  box-shadow:inset 0 0 0 5px rgba(255,255,255,.035),0 12px 30px rgba(0,0,0,.28);
+  font-family:var(--editorial-serif);
+  font-size:16px;
+  font-weight:700;
+  letter-spacing:.12em;
+}
+.brand > div:not(.logo){position:relative}
+.brand > div:not(.logo):after{
+  content:"PRODUCTION ATELIER";
+  display:inline-flex;
+  margin-top:5px;
+  border:1px solid rgba(215,194,160,.46);
+  border-radius:999px;
+  padding:3px 9px 2px;
+  color:#dac6a5;
+  font-size:9px;
+  font-weight:800;
+  letter-spacing:.18em;
+}
+.title{
+  font-family:var(--editorial-serif);
+  font-size:26px;
+  line-height:.9;
+  letter-spacing:.055em;
+  color:#fff7ea;
+  font-weight:700;
+  text-transform:uppercase;
+}
+.subtitle{
+  margin-top:5px;
+  color:#d7c7b0;
+  font-size:11px;
+  opacity:1;
+  letter-spacing:.02em;
+}
+.session{
+  color:#e8d9c1;
+  border:1px solid rgba(215,194,160,.34);
+  border-radius:999px;
+  padding:8px 12px;
+  background:rgba(255,255,255,.04);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.08);
+}
+.shell{grid-template-columns:276px minmax(0,1fr)}
+.sidebar{
+  background:
+    linear-gradient(180deg,#0f0e0c,#19150f 64%,#110f0c);
+  border-right:1px solid rgba(184,150,98,.38);
+  padding:18px 12px calc(18px + env(safe-area-inset-bottom));
+  box-shadow:inset -1px 0 0 rgba(255,255,255,.04);
+}
+.nav-title{
+  color:#cdb58e;
+  margin:8px 10px 14px;
+  letter-spacing:.22em;
+  font-weight:800;
+  position:relative;
+}
+.nav-title:after{
+  content:"";
+  display:block;
+  height:1px;
+  margin-top:10px;
+  background:linear-gradient(90deg,var(--editorial-gold),transparent);
+}
+.nav-btn{
+  min-height:44px;
+  border-left:0;
+  border-radius:14px;
+  margin:4px 0;
+  padding:11px 12px;
+  color:#eee4d6;
+  font-size:11px;
+  letter-spacing:.075em;
+  background:transparent;
+  position:relative;
+  overflow:hidden;
+}
+.nav-btn:before{
+  content:"";
+  position:absolute;
+  left:0;top:9px;bottom:9px;width:2px;
+  border-radius:99px;
+  background:transparent;
+}
+.nav-btn:hover{
+  background:rgba(255,255,255,.055);
+  color:#fff8ea;
+}
+.nav-btn.active{
+  background:linear-gradient(90deg,rgba(184,150,98,.20),rgba(255,255,255,.045));
+  color:#fff7e7;
+  box-shadow:inset 0 0 0 1px rgba(184,150,98,.22),0 10px 26px rgba(0,0,0,.18);
+}
+.nav-btn.active:before{background:var(--editorial-gold)}
+.nav-key{
+  color:#c5ac83;
+  font-size:9px;
+  border:1px solid rgba(197,172,131,.32);
+  border-radius:999px;
+  padding:2px 6px;
+}
+.workspace{
+  background:linear-gradient(180deg,rgba(255,253,248,.92),rgba(247,240,230,.82));
+  padding:14px;
+  gap:12px;
+}
+.toolbar{
+  border:1px solid rgba(185,170,148,.72);
+  border-radius:22px;
+  background:rgba(255,253,248,.82);
+  box-shadow:0 18px 48px rgba(40,30,18,.09),inset 0 1px 0 rgba(255,255,255,.9);
+  padding:12px;
+  backdrop-filter:blur(14px);
+}
+.badge{
+  border-color:#d8c7ad;
+  background:#fffaf2;
+  color:#5e5346;
+  padding:5px 10px;
+  font-size:10px;
+  letter-spacing:.09em;
+  text-transform:uppercase;
+}
+.badge b{color:#18140f}
+.input,select,textarea{
+  border-color:#d6c8b6;
+  border-radius:12px;
+  background:#fffdf8;
+  color:#1e1a14;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.75);
+}
+.input:focus,select:focus,textarea:focus{
+  outline:none;
+  border-color:var(--editorial-gold);
+  box-shadow:0 0 0 3px rgba(184,150,98,.18);
+}
+.btn{
+  border-radius:999px;
+  border-color:#d1c0a5;
+  background:#fffaf2;
+  color:#2b241d;
+  font-weight:800;
+  letter-spacing:.025em;
+  box-shadow:0 8px 20px rgba(40,30,18,.06);
+}
+.btn:hover{filter:none;transform:translateY(-1px);box-shadow:0 12px 28px rgba(40,30,18,.11)}
+.btn.primary{
+  border-color:#14110f;
+  background:linear-gradient(180deg,#24201b,#0f0e0c);
+  color:#fff5e4;
+}
+.btn.dark{
+  border-color:#b89662;
+  background:linear-gradient(180deg,#d7c2a0,#b89662);
+  color:#16120d;
+}
+.btn.ok{border-color:#86a27a;background:#f0f7ec;color:#31582e}
+.btn.warn{border-color:#d5a64a;background:#fff8e6;color:#71500d}
+.btn.bad{border-color:#c76f62;background:#fff1ef;color:#8b2c22}
+.notice{
+  border-left-color:var(--editorial-gold);
+  background:#fff9f1;
+  color:#51483c;
+  border-radius:14px;
+  box-shadow:inset 0 0 0 1px rgba(184,150,98,.14);
+}
+.panel-view{gap:12px}
+.panel{
+  border-color:rgba(185,170,148,.62);
+  background:rgba(255,253,248,.96);
+  border-radius:22px;
+  padding:16px;
+  box-shadow:0 22px 60px rgba(40,30,18,.10),inset 0 1px 0 rgba(255,255,255,.9);
+}
+.panel h3,.panel h4{
+  font-family:var(--editorial-serif);
+  font-size:21px;
+  line-height:1;
+  color:#17130e;
+  letter-spacing:.075em;
+  border-bottom:1px solid #dfd0b8;
+  padding-bottom:10px;
+}
+.help,.item-sub,.asset-meta{color:#71665a}
+.label{
+  color:#81725e;
+  font-weight:800;
+}
+.grid,.admin-row,.asset-card,.workflow-col,.workflow-card,.api-card,.template-card,.kpi,.mag-card{
+  border-color:#ded0bc;
+  background:#fffdf8;
+}
+.admin-row{
+  border-radius:18px;
+  padding:13px;
+  box-shadow:0 12px 30px rgba(40,30,18,.06);
+}
+.admin-row:hover{
+  background:#fffaf2;
+  transform:translateY(-1px);
+  box-shadow:0 16px 36px rgba(40,30,18,.10);
+}
+.item-title,.template-title,.asset-title,.api-card b,.kpi b{
+  color:#17130e;
+}
+.item-title{
+  font-family:var(--editorial-serif);
+  font-size:18px;
+  letter-spacing:.025em;
+}
+.kpi-row{gap:10px}
+.kpi{
+  border-radius:18px;
+  background:linear-gradient(180deg,#fffdf8,#f7efe3);
+  position:relative;
+  overflow:hidden;
+}
+.kpi:before{
+  content:"";
+  position:absolute;
+  left:0;top:0;bottom:0;width:3px;
+  background:var(--editorial-gold);
+}
+.kpi small{color:#7f715e}
+.kpi b{
+  font-family:var(--editorial-serif);
+  font-size:30px;
+  font-weight:700;
+}
+.pill{
+  border-color:#d5c5ad;
+  background:#fff9ef;
+  color:#554939;
+  font-weight:800;
+  letter-spacing:.08em;
+}
+.pill.ok{border-color:#88a27a;color:#2f6333;background:#f3f8ef}
+.pill.warn{border-color:#d6a955;color:#73500d;background:#fff8e8}
+.pill.bad{border-color:#c76f62;color:#8b2c22;background:#fff1ef}
+.pill.info{border-color:#a9c5dc;color:#245173;background:#eef7ff}
+.hero{
+  border-color:#d8c7ad;
+  border-radius:28px;
+  background:
+    radial-gradient(circle at 82% 18%,rgba(215,194,160,.24),transparent 28%),
+    linear-gradient(125deg,#0f0e0c 0%,#211a13 54%,#5b472f 100%);
+  color:#fff4e2;
+  box-shadow:0 26px 80px rgba(28,22,15,.22);
+  padding:28px 30px;
+}
+.eyebrow{color:#d8bd92;letter-spacing:.22em}
+.hero h2{
+  font-family:var(--editorial-serif);
+  color:#fff8e9;
+  font-size:52px;
+  line-height:.88;
+  letter-spacing:.02em;
+  font-weight:600;
+}
+.hero p{color:#dacbb6;font-size:13px}
+.status-card{
+  background:rgba(255,249,239,.94);
+  border-color:rgba(215,194,160,.8);
+  border-radius:24px;
+}
+.status-pill{background:#17130e;color:#f6e7ce}
+.status-number{
+  font-family:var(--editorial-serif);
+  color:#17130e;
+  font-weight:700;
+  font-size:44px;
+}
+.template-grid{gap:10px}
+.template-card{
+  border-radius:18px;
+  padding:12px;
+  box-shadow:0 10px 24px rgba(40,30,18,.06);
+}
+.template-card:hover,.template-card.active{
+  border-color:var(--editorial-gold);
+  box-shadow:0 18px 40px rgba(40,30,18,.13);
+}
+.template-thumb{
+  border-color:#d7c7ad;
+  border-radius:14px;
+  background:linear-gradient(135deg,#f7ead8,#fffdf8);
+}
+.template-card.cover .template-thumb{
+  background:
+    linear-gradient(180deg,rgba(0,0,0,.15),rgba(0,0,0,.62)),
+    linear-gradient(135deg,#1a1611,#b89662);
+}
+.template-card.ad .template-thumb{background:linear-gradient(135deg,#f0dec0,#fff9ef)}
+.template-title{
+  font-family:var(--editorial-serif);
+  font-size:17px;
+  color:#17130e;
+}
+.mag-preview-wrap{
+  background:
+    radial-gradient(circle at 50% 0,rgba(184,150,98,.24),transparent 35%),
+    linear-gradient(180deg,#17130f,#0d0c0a);
+  border-color:#3a3025;
+  border-radius:22px;
+  padding:26px;
+}
+.mag-page{
+  border:1px solid #eadcc7;
+  box-shadow:0 40px 100px rgba(0,0,0,.44);
+}
+.mag-cover{
+  background-color:#11100e;
+}
+.mag-cover:before{
+  background:linear-gradient(180deg,rgba(15,14,12,.18),rgba(15,14,12,.86));
+}
+.mag-logo{
+  font-family:var(--editorial-sans);
+  letter-spacing:.44em;
+  font-size:13px;
+  border-top:1px solid rgba(255,255,255,.6);
+  border-bottom:1px solid rgba(255,255,255,.6);
+  padding:8px 0;
+  width:max-content;
+}
+.mag-title{
+  font-family:var(--editorial-serif);
+  font-weight:600;
+  letter-spacing:.01em;
+  text-transform:uppercase;
+}
+.mag-deck,.mag-meta{font-family:var(--editorial-sans)}
+.mag-headline{
+  font-family:var(--editorial-serif);
+  color:#17130e;
+  font-weight:600;
+  letter-spacing:.005em;
+}
+.mag-kicker{
+  color:#a17c45;
+  letter-spacing:.22em;
+}
+.mag-body{
+  font-family:Georgia,serif;
+  color:#332c23;
+}
+.mag-destination{
+  background:#fbf7ef;
+}
+.mag-ad{
+  background:linear-gradient(135deg,#17130e,#5b472f);
+  color:#fff4e2;
+}
+.mag-ad h1{
+  font-family:var(--editorial-serif);
+  color:#fff4e2;
+  font-weight:600;
+}
+.mag-ad p{color:#e6d2b2}
+.asset-grid{gap:12px}
+.asset-card{
+  border-radius:18px;
+  overflow:hidden;
+  box-shadow:0 12px 30px rgba(40,30,18,.07);
+}
+.asset-img{
+  height:128px;
+  background-color:#efe3d1;
+}
+.asset-body{padding:12px}
+.workflow-lane{gap:12px}
+.workflow-col{
+  border-radius:18px;
+  background:#f8f0e4;
+}
+.workflow-card{
+  border-radius:15px;
+  box-shadow:0 10px 22px rgba(40,30,18,.06);
+}
+.api-card{
+  border-radius:18px;
+  padding:14px;
+  box-shadow:0 12px 30px rgba(40,30,18,.06);
+}
+.grid-head{
+  background:#efe4d3;
+  color:#5b4e40;
+}
+.grid-row:nth-child(even){background:#fbf4ea}
+.grid-row:hover{background:#fff3df}
+.grid-row.selected{background:#1a1713;color:#fff4e2}
+.drawer-overlay{background:rgba(15,14,12,.62)}
+.modal{
+  border-color:#d6c4a8;
+  border-radius:24px;
+  background:#fffdf8;
+  box-shadow:0 40px 100px rgba(20,17,13,.28);
+}
+.modalTitle{
+  font-family:var(--editorial-serif);
+  font-size:24px;
+  color:#17130e;
+}
+.toast{
+  border:1px solid rgba(215,194,160,.45);
+  border-radius:18px;
+  box-shadow:0 22px 60px rgba(20,17,13,.25);
+}
+@media(max-width:980px){
+  .header{min-height:78px;padding-left:12px;padding-right:12px}
+  .mobile-menu-btn{
+    border-color:rgba(215,194,160,.46);
+    background:rgba(255,255,255,.08);
+    color:#f5ead7;
+  }
+  .sidebar{
+    width:min(330px,88vw);
+    padding-top:calc(18px + env(safe-area-inset-top));
+  }
+  .workspace{
+    padding:10px;
+  }
+  .toolbar{
+    border-radius:18px;
+  }
+  .hero h2{font-size:40px}
+}
+@media(max-width:520px){
+  .logo{width:44px;height:44px;font-size:14px}
+  .title{font-size:21px}
+  .brand > div:not(.logo):after{display:none}
+  .session{display:none}
+  .mag-preview-wrap{padding:14px;border-radius:18px}
+}
+
+
+/* SKANDI Internal Classic Chrome v1 */
+:root{
+  --sk-chrome-blue:#022e64;--sk-chrome-blue2:#0b3a7a;--sk-chrome-cyan:#5FC7CF;
+  --sk-chrome-gray:#d9d9d9;--sk-chrome-border:#9ca3af;--sk-chrome-text:#111827;
+  --sk-chrome-height:94px;--sk-safe-top:env(safe-area-inset-top,0px);
+  --sk-safe-right:env(safe-area-inset-right,0px);--sk-safe-bottom:env(safe-area-inset-bottom,0px);
+  --sk-safe-left:env(safe-area-inset-left,0px)
+}
+html.sk-has-internal-chrome,html.sk-has-internal-chrome body{overflow:hidden!important}
+body.use-global-chrome{margin:0;background:#f3f5f8;overflow:hidden!important}
+.sk-chrome{width:100%;position:relative;z-index:9000;font-family:Tahoma,"Segoe UI",system-ui,-apple-system,BlinkMacSystemFont,sans-serif;color:#fff;user-select:none}
+.sk-chrome-top{min-height:60px;background:linear-gradient(90deg,var(--sk-chrome-blue),var(--sk-chrome-blue2));border-bottom:1px solid #020617;display:grid;grid-template-columns:minmax(180px,.8fr) minmax(150px,.7fr) minmax(180px,.8fr) auto;align-items:center;gap:12px;padding:calc(8px + var(--sk-safe-top)) max(12px,var(--sk-safe-right)) 8px max(12px,var(--sk-safe-left))}
+.sk-chrome-brand{display:flex;align-items:center;gap:10px;min-width:0}.sk-chrome-logo-left{height:36px;width:auto;max-width:160px;object-fit:contain;background:rgba(255,255,255,.08);border-radius:4px}
+.sk-chrome-page{min-width:0}.sk-chrome-title{font-size:13px;font-weight:900;letter-spacing:.13em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.sk-chrome-subtitle{font-size:10px;opacity:.84;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+.sk-chrome-altea-wrap{display:none;justify-content:center;align-items:center;min-width:0}.sk-chrome.is-altea .sk-chrome-altea-wrap{display:flex}.sk-chrome-logo-altea{height:32px;width:auto;max-width:180px;object-fit:contain}
+.sk-chrome-user{justify-self:end;text-align:right;min-width:0;font-size:10px;line-height:1.25}.sk-chrome-user b{font-size:12px;letter-spacing:.03em}.sk-chrome-user-grid{display:grid;grid-template-columns:auto auto;gap:1px 8px;justify-content:end;align-items:center}.sk-chrome-user-grid span:nth-child(odd){opacity:.72;text-transform:uppercase;letter-spacing:.08em}
+.sk-chrome-clock{justify-self:end;border:1px solid rgba(255,255,255,.42);background:rgba(255,255,255,.1);color:#fff;border-radius:6px;padding:5px 8px;font-family:"Consolas","Courier New",monospace;min-width:94px;text-align:center;cursor:pointer}.sk-chrome-clock-time{font-size:15px;font-weight:900;line-height:1}.sk-chrome-clock-date{font-size:9px;opacity:.82;margin-top:3px}
+.sk-menu-bar{height:34px;background:linear-gradient(#eeeeee,#d1d5db);color:var(--sk-chrome-text);border-top:1px solid #f8fafc;border-bottom:1px solid #9ca3af;display:flex;align-items:stretch;gap:0;padding:0 max(6px,var(--sk-safe-right)) 0 max(6px,var(--sk-safe-left));overflow:visible;box-shadow:inset 0 1px 0 #fff}
+.sk-menu{position:relative;display:flex;align-items:stretch}.sk-menu-button{border:0;border-left:1px solid transparent;border-right:1px solid transparent;background:transparent;color:#111827;padding:0 13px;height:32px;font-size:11px;font-weight:900;letter-spacing:.04em;cursor:pointer}.sk-menu:hover .sk-menu-button,.sk-menu.open .sk-menu-button{background:#fff;border-left-color:#a1a1aa;border-right-color:#a1a1aa}
+.sk-menu-dropdown{position:absolute;top:32px;left:0;min-width:210px;background:#f3f4f6;border:1px solid #7f8794;box-shadow:4px 8px 20px rgba(15,23,42,.25);display:none;padding:4px;z-index:9500}.sk-menu.open .sk-menu-dropdown,.sk-menu:hover .sk-menu-dropdown{display:block}
+.sk-menu-item{width:100%;border:0;background:transparent;color:#111827;min-height:28px;padding:5px 9px;display:flex;align-items:center;justify-content:space-between;gap:14px;font-size:12px;text-align:left;cursor:pointer}.sk-menu-item:hover,.sk-menu-item:focus{background:#022e64;color:#fff;outline:none}.sk-menu-sep{height:1px;background:#a1a1aa;margin:4px 2px;border-bottom:1px solid #fff}.sk-menu-shortcut{font-family:"Consolas","Courier New",monospace;color:#6b7280;font-size:10px}.sk-menu-item:hover .sk-menu-shortcut{color:#dbeafe}
+.sk-help-menu{margin-left:auto}.sk-search-wrap{padding:6px;width:320px}.sk-search-input{width:100%;min-height:32px;border:1px solid #9ca3af;background:#fff;border-radius:3px;padding:6px 8px;font-size:12px}.sk-search-results{margin-top:5px;max-height:280px;overflow:auto;border:1px solid #d1d5db;background:#fff;display:none}.sk-search-results.visible{display:block}.sk-search-result{width:100%;border:0;border-bottom:1px solid #e5e7eb;background:#fff;color:#111827;text-align:left;padding:7px 8px;cursor:pointer}.sk-search-result:hover{background:#eff6ff}.sk-search-result-title{color:#022e64;font-weight:900;font-size:12px}.sk-search-result-meta{color:#6b7280;font-size:10px;margin-top:2px}.sk-search-empty{padding:9px;font-size:11px;color:#6b7280}
+body.use-global-chrome .app>.header{display:none!important}
+body.use-global-chrome .app{height:calc(100dvh - var(--sk-chrome-height,94px))!important;min-height:calc((var(--sk-vh,1vh) * 100) - var(--sk-chrome-height,94px))!important}
+@media(max-width:980px){
+  html.sk-has-internal-chrome,html.sk-has-internal-chrome body{overflow:hidden!important}
+  body.use-global-chrome .app{height:calc(100dvh - var(--sk-chrome-height,126px))!important;min-height:calc((var(--sk-vh,1vh) * 100) - var(--sk-chrome-height,126px))!important;overflow:hidden!important}
+  body.use-global-chrome .workspace,body.use-global-chrome .content{overflow:hidden!important}
+  body.use-global-chrome .panel-view.active{overflow:auto!important;-webkit-overflow-scrolling:touch}
+  .sk-chrome-top{grid-template-columns:1fr auto;gap:8px}.sk-chrome-altea-wrap{grid-column:1/-1;justify-content:flex-start}.sk-chrome-user{display:none}.sk-menu-bar{overflow-x:auto;overflow-y:visible;-webkit-overflow-scrolling:touch;height:38px}.sk-menu-button{min-height:36px;height:36px;padding:0 12px}.sk-menu-dropdown{top:36px;position:fixed;left:8px!important;right:8px;min-width:auto;width:auto}
+}
+@media(max-width:600px){.sk-search-input,.sk-menu-item,.sk-menu-button,.sk-chrome-clock{font-size:16px!important}.sk-menu-item,.sk-menu-button,.sk-chrome-clock{min-height:44px}.sk-menu-bar{height:46px}.sk-menu-dropdown{top:calc(var(--sk-chrome-height,136px) - 2px)}}
+@media(max-width:480px){.sk-chrome-top{min-height:82px;padding-left:max(8px,var(--sk-safe-left));padding-right:max(8px,var(--sk-safe-right))}.sk-chrome-logo-left{height:32px;max-width:130px}.sk-chrome-logo-altea{height:28px;max-width:150px}.sk-chrome-title{font-size:11px;letter-spacing:.08em}.sk-chrome-subtitle{display:none}.sk-chrome-clock{min-width:84px;padding:4px 6px}.sk-chrome-clock-time{font-size:14px}.sk-search-wrap{width:auto}}
+
+/* SKANDI HR People Platform palette restore for VOY module.
+   Editorial tools and postMessage contracts remain unchanged. */
+:root{
+  --blue:#022e64;
+  --blue2:#0b3a7a;
+  --cyan:#5FC7CF;
+  --bg:#f3f5f8;
+  --panel:#ffffff;
+  --panel2:#f8fafc;
+  --line:#d1d5db;
+  --line2:#9ca3af;
+  --text:#111827;
+  --muted:#6b7280;
+  --dark:#020617;
+  --dark2:#0b1220;
+  --shadow:0 18px 50px rgba(15,23,42,.16);
+  --editorial-ink:#111827;
+  --editorial-black:#020617;
+  --editorial-brown:#0b1220;
+  --editorial-gold:#5FC7CF;
+  --editorial-soft-gold:#bfedf1;
+  --editorial-paper:#ffffff;
+  --editorial-paper2:#f8fafc;
+  --editorial-sand:#e5e7eb;
+  --editorial-serif:"Montserrat",Tahoma,"Segoe UI",system-ui,-apple-system,sans-serif;
+  --editorial-sans:Tahoma,"Segoe UI",system-ui,-apple-system,sans-serif;
+  --font:Tahoma,"Segoe UI",system-ui,-apple-system,BlinkMacSystemFont,sans-serif;
+  --mag:"Montserrat",Tahoma,"Segoe UI",system-ui,-apple-system,sans-serif;
+}
+html,body{
+  font-family:var(--font)!important;
+  background:var(--bg)!important;
+  color:var(--text)!important;
+}
+.app{
+  background:var(--bg)!important;
+  background-size:auto!important;
+}
+.shell{grid-template-columns:238px minmax(0,1fr)!important}
+.sidebar{
+  background:#020617!important;
+  color:#e5e7eb!important;
+  border-right:1px solid #111827!important;
+  box-shadow:none!important;
+}
+.nav-title{color:#7f8ca5!important}
+.nav-btn{
+  color:#e5e7eb!important;
+  border-left:3px solid transparent!important;
+  border-bottom:0!important;
+  border-radius:0!important;
+}
+.nav-btn:hover{background:#0b1220!important;color:#fff!important}
+.nav-btn.active{background:#071122!important;border-left-color:var(--cyan)!important;color:#fff!important}
+.workspace{
+  background:#fff!important;
+  padding:8px!important;
+  gap:8px!important;
+}
+.toolbar{
+  border:1px solid var(--line)!important;
+  background:#f8fafc!important;
+  border-radius:0!important;
+  box-shadow:none!important;
+}
+.toolbar .toolbar-menu-btn{display:none}
+.badge{
+  border:1px solid #9ca3af!important;
+  background:#fff!important;
+  color:#111827!important;
+}
+.panel,.admin-row,.kpi,.template-card,.workflow-card,.api-card,.asset-card,.status-card{
+  border:1px solid var(--line)!important;
+  background:#fff!important;
+  border-radius:6px!important;
+  box-shadow:0 5px 16px rgba(15,23,42,.04)!important;
+}
+.panel h3,.panel h4{
+  color:#111827!important;
+  border-bottom:1px solid var(--line)!important;
+  font-family:var(--font)!important;
+  font-size:12px!important;
+  letter-spacing:.1em!important;
+}
+.item-title,.tool-title,.news-title,.template-title{color:var(--blue)!important;font-family:var(--font)!important}
+.btn.primary{border-color:var(--blue)!important;background:var(--blue)!important;color:#fff!important}
+.btn.dark{border-color:#020617!important;background:#020617!important;color:#fff!important}
+.input,select,textarea{
+  border-color:var(--line)!important;
+  background:#fff!important;
+  color:var(--text)!important;
+  border-radius:4px!important;
+}
+.hero{
+  border:1px solid var(--line)!important;
+  border-radius:12px!important;
+  background:radial-gradient(circle at 86% 18%,rgba(95,199,207,.35),transparent 28%),linear-gradient(135deg,#d7e6ff,#f6faff)!important;
+  color:#111827!important;
+  box-shadow:0 10px 24px rgba(15,23,42,.08)!important;
+  padding:18px 20px!important;
+}
+.hero h2{
+  font-family:var(--font)!important;
+  color:var(--blue)!important;
+  font-size:30px!important;
+  line-height:1!important;
+  letter-spacing:-.04em!important;
+  font-weight:900!important;
+}
+.hero p{color:#334155!important;font-size:12px!important}
+.eyebrow{color:var(--blue)!important;letter-spacing:.16em!important}
+.status-pill{background:var(--blue)!important;color:#fff!important}
+.status-number{font-family:var(--font)!important;color:var(--blue)!important;font-weight:900!important;font-size:28px!important}
+.template-thumb{border-color:#d1d5db!important;background:linear-gradient(135deg,#fff,#f8fafc)!important}
+.template-card:hover,.template-card.active{border-color:var(--blue)!important;box-shadow:0 10px 22px rgba(15,23,42,.08)!important}
+.mag-preview-wrap{
+  background:#020617!important;
+  border:1px solid #111827!important;
+  border-radius:8px!important;
+  padding:14px!important;
+}
+.mag-page{
+  border:1px solid #cbd5e1!important;
+  box-shadow:0 18px 50px rgba(0,0,0,.3)!important;
+}
+.mag-headline,.mag-title,.mag-ad h1{font-family:"Montserrat",var(--font)!important}
+.mag-kicker{color:var(--blue)!important;letter-spacing:.14em!important}
+.mag-body{color:#334155!important}
+.mag-ad{background:linear-gradient(135deg,var(--blue),var(--blue2))!important;color:#fff!important}
+.mag-ad h1,.mag-ad p{color:#fff!important}
+.grid-head{background:#e5e7eb!important;color:#334155!important}
+.grid-row:nth-child(even){background:#f8fafc!important}
+.grid-row:hover{background:#eef2ff!important}
+.grid-row.selected{background:var(--blue)!important;color:#fff!important}
+.pill{border:1px solid #9ca3af!important;background:#fff!important;color:#111827!important}
+.pill.ok{border-color:#15803d!important;color:#15803d!important;background:#ecfdf5!important}
+.pill.warn{border-color:#f59e0b!important;color:#92400e!important;background:#fffbeb!important}
+.pill.bad{border-color:#b91c1c!important;color:#b91c1c!important;background:#fef2f2!important}
+.pill.info{border-color:#60a5fa!important;color:#1d4ed8!important;background:#eff6ff!important}
+.drawer-overlay{background:rgba(2,6,23,.55)!important}
+.modal{
+  border:1px solid var(--line)!important;
+  border-radius:8px!important;
+  background:#fff!important;
+  box-shadow:0 18px 50px rgba(15,23,42,.24)!important;
+}
+.modalTitle{font-family:var(--font)!important;color:var(--blue)!important;font-size:13px!important}
+.toast{
+  border:0!important;
+  border-radius:6px!important;
+  background:#020617!important;
+  color:#fff!important;
+  box-shadow:var(--shadow)!important;
+}
+@media(max-width:980px){
+  .shell{grid-template-columns:1fr!important}
+  body.use-global-chrome .sidebar{
+    top:var(--sk-chrome-height,126px)!important;
+    bottom:auto!important;
+    height:calc(100dvh - var(--sk-chrome-height,126px))!important;
+    padding-top:12px!important;
+    width:min(315px,86vw)!important;
+  }
+  body.use-global-chrome .drawer-overlay{
+    top:var(--sk-chrome-height,126px)!important;
+  }
+  .toolbar .toolbar-menu-btn{
+    display:inline-flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    width:auto!important;
+    min-width:88px!important;
+    height:32px!important;
+    border-radius:4px!important;
+    font-size:12px!important;
+    color:#fff!important;
+  }
+  .toolbar{overflow:auto!important;border-radius:0!important}
+  .workspace{padding:8px!important}
+  .hero h2{font-size:28px!important}
+}
+@media(max-width:520px){
+  .title{font-size:13px!important}
+  .mag-preview-wrap{padding:8px!important;border-radius:6px!important}
+}
+
+@media print{
+  body *{visibility:hidden}.mag-page,.mag-page *{visibility:visible}.mag-preview-wrap{position:absolute;left:0;top:0;background:#fff;border:0;padding:0;overflow:visible}.mag-page{box-shadow:none;width:210mm;min-height:297mm}.mag-cover,.mag-feature,.mag-destination,.mag-ad{min-height:297mm}.mag-page.bleed:before{display:none}
+}
+
+/* SKANDI People Platform dark module style + enterprise editorial tools.
+   This override intentionally keeps the existing VOY editor functions and Wix bridge events intact. */
+:root{
+  --sk-blue:#022e64;
+  --sk-blue2:#0b3a7a;
+  --sk-cyan:#5FC7CF;
+  --sk-text:#f5f7fb;
+  --sk-muted:#a7afbd;
+  --sk-bg:#151515;
+  --sk-bg2:#1e1f21;
+  --sk-bg3:#28292b;
+  --sk-panel:#242526;
+  --sk-panel2:#2d2e31;
+  --sk-line:#3f4146;
+  --sk-line2:#555861;
+  --sk-field:#202124;
+  --sk-ok:#65c97a;
+  --sk-warn:#d6a445;
+  --sk-bad:#e56d6d;
+  --sk-selected:#29486d;
+  --sk-hover:#33383f;
+  --blue:#022e64;
+  --blue2:#0b3a7a;
+  --cyan:#5FC7CF;
+  --bg:#151515;
+  --panel:#242526;
+  --panel2:#2d2e31;
+  --line:#3f4146;
+  --line2:#555861;
+  --text:#f5f7fb;
+  --muted:#a7afbd;
+  --ok:#65c97a;
+  --warn:#d6a445;
+  --bad:#e56d6d;
+  --dark:#020617;
+  --dark2:#0b1220;
+  --shadow:0 18px 42px rgba(0,0,0,.55);
+  --editorial-paper:#ffffff;
+  --editorial-paper2:#f8fafc;
+  --editorial-ink:#111827;
+  --editorial-gold:#5FC7CF;
+}
+html,body{
+  background:#0f1012!important;
+  color:var(--sk-text)!important;
+  font-family:Tahoma,"Segoe UI",system-ui,-apple-system,BlinkMacSystemFont,sans-serif!important;
+}
+body.use-global-chrome .app{
+  background:var(--sk-bg)!important;
+  display:grid!important;
+  grid-template-rows:minmax(0,1fr)!important;
+  border-top:1px solid #070707!important;
+}
+body.use-global-chrome .app>.header{display:none!important}
+.shell{
+  min-height:0!important;
+  display:grid!important;
+  grid-template-columns:248px minmax(0,1fr)!important;
+  overflow:hidden!important;
+  background:var(--sk-bg)!important;
+}
+.sidebar{
+  min-height:0!important;
+  background:linear-gradient(180deg,#202123,#171819)!important;
+  color:#d8dde6!important;
+  border-right:1px solid #0d0d0e!important;
+  box-shadow:none!important;
+  padding:10px 10px 8px!important;
+}
+.nav-title{
+  color:#8d98a7!important;
+  font-size:10px!important;
+  text-transform:uppercase!important;
+  letter-spacing:.14em!important;
+  margin:10px 8px 4px!important;
+}
+.nav-btn{
+  min-height:34px!important;
+  border:0!important;
+  border-left:3px solid transparent!important;
+  border-radius:5px!important;
+  background:transparent!important;
+  color:#d8dde6!important;
+  text-transform:uppercase!important;
+  letter-spacing:.03em!important;
+  font-size:12px!important;
+  padding:7px 8px!important;
+}
+.nav-btn:hover{background:#2d3035!important;color:#fff!important}
+.nav-btn.active{background:#28466b!important;border-left-color:var(--sk-cyan)!important;color:#e6f1ff!important;font-weight:800!important}
+.nav-key{color:#94a3b8!important;font-size:10px!important}
+.workspace{
+  min-height:0!important;
+  display:flex!important;
+  flex-direction:column!important;
+  gap:0!important;
+  padding:0!important;
+  background:var(--sk-bg)!important;
+  overflow:hidden!important;
+}
+.workspace:before{
+  content:"VOY Magazine Studio";
+  min-height:48px;
+  border-bottom:1px solid #2a2b2d;
+  background:linear-gradient(180deg,#1c1d20,#151617);
+  display:flex;
+  align-items:center;
+  color:#e7e8eb;
+  font-size:20px;
+  font-weight:800;
+  letter-spacing:-.02em;
+  padding:8px 12px;
+}
+.toolbar{
+  border:0!important;
+  border-bottom:1px solid #2c2d30!important;
+  background:#151617!important;
+  border-radius:0!important;
+  box-shadow:none!important;
+  padding:8px 12px!important;
+  gap:8px!important;
+}
+.badge{
+  display:inline-flex!important;
+  align-items:center!important;
+  gap:5px!important;
+  border:1px solid #4a4d53!important;
+  border-radius:999px!important;
+  background:#202124!important;
+  color:#cad2df!important;
+  padding:3px 8px!important;
+  font-size:11px!important;
+}
+.badge b{color:#fff!important;font-family:Consolas,"Courier New",monospace!important}
+.btn{
+  border:1px solid #4a4d53!important;
+  background:linear-gradient(#3a3b3e,#28292c)!important;
+  color:#f4f6fa!important;
+  border-radius:6px!important;
+  padding:6px 11px!important;
+  font-size:12px!important;
+  min-height:29px!important;
+}
+.btn:hover{filter:brightness(1.08)!important}
+.btn.primary{background:linear-gradient(#4775b8,#284f83)!important;border-color:#5e84b9!important;color:#fff!important;font-weight:800!important}
+.btn.ok{background:linear-gradient(#357345,#285b35)!important;border-color:#4b9360!important;color:#eaffef!important;font-weight:800!important}
+.btn.warn{background:linear-gradient(#80602c,#60431f)!important;border-color:#b58a3d!important;color:#fff5d7!important;font-weight:800!important}
+.btn.bad{background:linear-gradient(#833c3c,#5d2929)!important;border-color:#a95858!important;color:#ffe7e7!important;font-weight:800!important}
+.btn.dark{border-color:#1a1b1e!important;background:linear-gradient(#242529,#111214)!important;color:#fff!important}
+.input,select,textarea{
+  background:#1b1c1f!important;
+  border:1px solid #474a51!important;
+  border-radius:5px!important;
+  color:#f2f4f7!important;
+  padding:6px 8px!important;
+  min-height:30px!important;
+  font-size:12px!important;
+}
+.input::placeholder,textarea::placeholder{color:#818a98!important}
+.content{
+  flex:1!important;
+  min-height:0!important;
+  overflow:hidden!important;
+  position:relative!important;
+  background:var(--sk-bg)!important;
+}
+.panel-view{
+  height:100%!important;
+  min-height:0!important;
+  overflow:hidden!important;
+  padding:10px 12px!important;
+}
+.panel-view.active{display:flex!important}
+.panel,.admin-row,.kpi,.template-card,.workflow-card,.api-card,.asset-card,.status-card,.voy-tool-card,.qa-card{
+  border:1px solid #3f4248!important;
+  background:linear-gradient(180deg,#fffff,#1f2022)!important;
+  color:#f5f7fb!important;
+  border-radius:7px!important;
+  box-shadow:none!important;
+}
+.panel{padding:9px!important}
+.panel h3,.panel h4{
+  margin:0 0 8px!important;
+  padding-bottom:5px!important;
+  border-bottom:1px solid #3f4248!important;
+  color:#f7f8fa!important;
+  font-family:Tahoma,"Segoe UI",system-ui,sans-serif!important;
+  font-size:12px!important;
+  text-transform:uppercase!important;
+  letter-spacing:.1em!important;
+}
+.help,.item-sub,.asset-meta,.status-sub,.muted{color:#aeb6c3!important}
+.item-title,.asset-title,.template-title,.news-title,.tool-title{
+  color:#f7f8fa!important;
+  font-family:Tahoma,"Segoe UI",system-ui,sans-serif!important;
+  font-weight:800!important;
+}
+.hero{
+  border:1px solid #3f4248!important;
+  border-radius:7px!important;
+  background:linear-gradient(135deg,#2c2d30,#202123)!important;
+  color:#f5f7fb!important;
+  box-shadow:none!important;
+}
+.hero h2{
+  color:#fff!important;
+  font-family:Tahoma,"Segoe UI",system-ui,sans-serif!important;
+  font-size:30px!important;
+  font-weight:800!important;
+}
+.hero p{color:#d6dde8!important}
+.eyebrow{color:#b8d9ff!important}
+.status-pill{background:#28466b!important;color:#e6f1ff!important}
+.status-number{color:#fff!important;font-family:Tahoma,"Segoe UI",system-ui,sans-serif!important}
+.kpi small{color:#a7afbd!important}
+.kpi b{color:#fff!important}
+.notice{
+  border:1px solid #3f4248!important;
+  border-left:4px solid var(--sk-cyan)!important;
+  background:#202124!important;
+  color:#d8dde6!important;
+  border-radius:6px!important;
+}
+.empty{
+  border:1px dashed #555861!important;
+  background:#202124!important;
+  color:#aeb6c3!important;
+}
+.admin-row:hover,.template-card:hover,.asset-card:hover,.api-card:hover{background:#2d3035!important}
+.template-card.active{border-color:#5FC7CF!important;background:#24364b!important}
+.template-thumb{
+  border-color:#3f4248!important;
+  background:linear-gradient(135deg,#202123,#2d2e31)!important;
+}
+.grid-head{
+  background:linear-gradient(#333438,#27282b)!important;
+  color:#f0f1f3!important;
+  border-color:#4a4c52!important;
+}
+.grid-row{border-color:#34363a!important;color:#ecf1f8!important}
+.grid-row:nth-child(odd){background:#202123!important}
+.grid-row:nth-child(even){background:#171819!important}
+.grid-row:hover{background:#2d3238!important}
+.grid-row.selected{background:#4a4c4f!important;outline:1px solid #6d7b8f!important}
+.kv .k{color:#f8f9fb!important;font-weight:800!important}
+.kv .v{color:#e4e7ed!important}
+.pill{
+  border:1px solid #4a4d53!important;
+  background:#202124!important;
+  color:#cad2df!important;
+}
+.pill.ok{border-color:#315e3e!important;background:#17281b!important;color:#87d79a!important}
+.pill.warn{border-color:#765a24!important;background:#2e2412!important;color:#e3bd6f!important}
+.pill.bad{border-color:#733d3d!important;background:#2b1717!important;color:#ff9c9c!important}
+.pill.info{border-color:#355680!important;background:#17283d!important;color:#bbd9ff!important}
+.workflow-col{
+  border:1px solid #3f4248!important;
+  background:#1b1c1f!important;
+}
+.workflow-card{background:#202123!important}
+.api-grid,.asset-grid{align-items:stretch}
+.asset-img{
+  background-color:#1b1c1f!important;
+  color:#aeb6c3!important;
+  border-bottom:1px solid #3f4248!important;
+}
+.mag-preview-wrap{
+  background:#101112!important;
+  border:1px solid #3f4248!important;
+  border-radius:8px!important;
+  padding:14px!important;
+  box-shadow:inset 0 1px rgba(255,255,255,.04)!important;
+}
+.mag-page{
+  background:#fff!important;
+  color:#111827!important;
+  border:1px solid #cbd5e1!important;
+  box-shadow:0 18px 50px rgba(0,0,0,.5)!important;
+}
+.mag-page .help,.mag-page .item-sub{color:#334155!important}
+.mag-body,.mag-page p{color:#334155!important}
+.mag-title,.mag-headline,.mag-ad h1{
+  font-family:"Montserrat",Tahoma,"Segoe UI",system-ui,sans-serif!important;
+}
+.mag-kicker{color:#022e64!important}
+.mag-ad{background:linear-gradient(135deg,#022e64,#0b3a7a)!important;color:#fff!important}
+.mag-ad h1,.mag-ad p{color:#fff!important}
+.modal{
+  background:#242526!important;
+  color:#f5f7fb!important;
+  border:1px solid #3f4248!important;
+  border-radius:8px!important;
+  box-shadow:0 18px 42px rgba(0,0,0,.65)!important;
+}
+.modalTitle{color:#f7f8fa!important}
+.drawer-overlay{background:rgba(0,0,0,.58)!important}
+.toast{
+  background:#020617!important;
+  color:#fff!important;
+  border-radius:6px!important;
+  box-shadow:0 18px 42px rgba(0,0,0,.55)!important;
+}
+.voy-tool-grid{display:grid;grid-template-columns:repeat(3,minmax(180px,1fr));gap:8px}
+.voy-tool-card{padding:10px;min-height:104px}
+.voy-tool-card b{display:block;color:#022e64;margin-bottom:4px}
+.voy-score{display:grid;grid-template-columns:repeat(4,minmax(110px,1fr));gap:8px;margin-bottom:8px}
+.voy-score .qa-card{padding:10px}
+.voy-score small{display:block;color:#a7afbd;text-transform:uppercase;letter-spacing:.1em;font-size:10px}
+.voy-score b{display:block;color:#fff;font-size:22px;margin-top:2px}
+.qa-list{display:grid;gap:7px}
+.qa-card{padding:9px}
+.qa-card b{display:block;color:#f8fafc}
+.qa-card span{display:block;color:#aeb6c3;font-size:11px;margin-top:3px;line-height:1.35}
+.brand-swatch-row{display:flex;gap:7px;flex-wrap:wrap;margin-top:6px}
+.brand-swatch{width:54px;height:34px;border-radius:6px;border:1px solid #555861;box-shadow:inset 0 1px rgba(255,255,255,.18)}
+.channel-grid{display:grid;grid-template-columns:repeat(4,minmax(140px,1fr));gap:8px}
+.channel-card{border:1px solid #3f4248;background:#202123;border-radius:7px;padding:9px}
+.channel-card b{display:block;color:#fff}.channel-card span{display:block;color:#aeb6c3;font-size:11px;margin-top:3px}
+.print-flatplan{display:grid;grid-template-columns:repeat(6,minmax(120px,1fr));gap:8px}
+.print-page-tile{border:1px solid #3f4248;background:#202123;border-radius:7px;padding:9px;min-height:92px}
+.print-page-tile b{display:block;color:#fff}.print-page-tile span{display:block;color:#aeb6c3;font-size:11px;margin-top:3px}
+@media(max-width:1180px){
+  .voy-tool-grid,.channel-grid{grid-template-columns:repeat(2,1fr)}
+  .print-flatplan{grid-template-columns:repeat(3,1fr)}
+}
+@media(max-width:980px){
+  html,body{overflow:hidden!important}
+  .shell{grid-template-columns:1fr!important}
+  .sidebar{
+    position:fixed!important;
+    top:var(--sk-chrome-height,126px)!important;
+    left:0!important;
+    bottom:0!important;
+    height:calc(100dvh - var(--sk-chrome-height,126px))!important;
+    width:min(86vw,322px)!important;
+    z-index:8600!important;
+    transform:translateX(-105%)!important;
+    transition:transform .22s ease!important;
+    box-shadow:18px 0 42px rgba(0,0,0,.55)!important;
+  }
+  .mobile-drawer-open .sidebar{transform:translateX(0)!important}
+  .drawer-overlay{
+    top:var(--sk-chrome-height,126px)!important;
+    bottom:0!important;
+    height:auto!important;
+    z-index:8500!important;
+  }
+  .workspace:before{min-height:44px;font-size:17px}
+  .toolbar .toolbar-menu-btn{
+    display:inline-flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    min-width:88px!important;
+  }
+  .toolbar{overflow:auto!important}
+  .panel-view.active{overflow:auto!important;-webkit-overflow-scrolling:touch}
+  .split,.split.wide,.hero{grid-template-columns:1fr!important;overflow:visible!important}
+  .voy-score{grid-template-columns:repeat(2,1fr)}
+  .voy-tool-grid,.channel-grid,.print-flatplan{grid-template-columns:1fr}
+}
+@media(max-width:520px){
+  .panel-view{padding:8px!important}
+  .admin-grid{grid-template-columns:1fr!important}
+  .workspace:before{font-size:15px}
+  .mag-page{width:330px!important;min-height:466px!important}
+}
+@media print{
+  .use-global-chrome,.sidebar,.toolbar,.workspace:before,.toast,.modalOverlay{display:none!important}
+  body.use-global-chrome .app,.shell,.workspace,.content,.panel-view.active{display:block!important;height:auto!important;overflow:visible!important;background:#fff!important}
+  .mag-preview-wrap{background:#fff!important;border:0!important;padding:0!important;box-shadow:none!important}
+  .mag-page{box-shadow:none!important;margin:0 auto!important}
+}
+
+/* ========================================================================== 
+   MAGAZINE MANAGER APPLICATION SKIN
+   Permanent light mode, square controls, dense data layout and 1px separators.
+   The editorial page preview keeps its own publication design inside the canvas.
+   ========================================================================== */
+:root{
+  color-scheme:only light;
+  --mm-white:#ffffff;
+  --mm-canvas:#f8fafc;
+  --mm-blue-950:#172554;
+  --mm-blue-900:#1e3a8a;
+  --mm-blue-800:#1e40af;
+  --mm-blue-700:#1d4ed8;
+  --mm-blue-600:#2563eb;
+  --mm-blue-100:#dbeafe;
+  --mm-blue-50:#eff6ff;
+  --mm-slate-950:#020617;
+  --mm-slate-900:#0f172a;
+  --mm-slate-800:#1e293b;
+  --mm-slate-700:#334155;
+  --mm-slate-600:#475569;
+  --mm-slate-500:#64748b;
+  --mm-slate-400:#94a3b8;
+  --mm-slate-300:#cbd5e1;
+  --mm-slate-200:#e2e8f0;
+  --mm-slate-100:#f1f5f9;
+  --mm-green:#047857;
+  --mm-green-bg:#ecfdf5;
+  --mm-amber:#b45309;
+  --mm-amber-bg:#fffbeb;
+  --mm-red:#b91c1c;
+  --mm-red-bg:#fef2f2;
+  --blue:var(--mm-blue-900);
+  --blue2:var(--mm-blue-800);
+  --cyan:var(--mm-blue-600);
+  --bg:var(--mm-white);
+  --panel:var(--mm-white);
+  --panel2:var(--mm-canvas);
+  --line:var(--mm-slate-200);
+  --line2:var(--mm-slate-300);
+  --text:var(--mm-slate-900);
+  --muted:var(--mm-slate-500);
+  --ok:var(--mm-green);
+  --warn:var(--mm-amber);
+  --bad:var(--mm-red);
+  --dark:var(--mm-blue-950);
+  --dark2:var(--mm-blue-900);
+  --shadow:none;
+  --font:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
+}
+html,body{
+  min-height:100%!important;
+  height:auto!important;
+  overflow-x:hidden!important;
+  overflow-y:auto!important;
+  background:var(--mm-white)!important;
+  color:var(--mm-slate-900)!important;
+  font-family:var(--font)!important;
+}
+body.use-global-chrome{padding-top:0!important}
+body *{box-shadow:none!important}
+.sk-chrome,.header{display:none!important}
+.mm-appbar{
+  position:sticky;
+  z-index:9000;
+  top:0;
+  display:flex;
+  min-height:48px;
+  overflow-x:auto;
+  border-bottom:1px solid var(--mm-slate-200);
+  background:var(--mm-white);
+  scrollbar-width:thin;
+}
+.mm-brand{
+  display:flex;
+  flex:0 0 auto;
+  align-items:center;
+  gap:9px;
+  min-width:224px;
+  padding:0 14px;
+  border-right:1px solid var(--mm-slate-200);
+  color:var(--mm-blue-900);
+}
+.mm-brand-mark{
+  display:grid;
+  width:28px;
+  height:28px;
+  place-items:center;
+  background:var(--mm-blue-900);
+  color:#fff;
+  font-size:9px;
+  font-weight:900;
+  letter-spacing:-.03em;
+}
+.mm-brand-copy b{
+  display:block;
+  white-space:nowrap;
+  font-size:11px;
+  font-weight:800;
+  letter-spacing:.09em;
+  text-transform:uppercase;
+}
+.mm-brand-copy span{display:block;margin-top:1px;color:var(--mm-slate-500);font-size:9px;white-space:nowrap}
+.mm-modules{display:flex;flex:1 0 auto;align-items:stretch}
+.mm-module{
+  position:relative;
+  min-height:47px;
+  padding:0 12px;
+  border:0;
+  border-right:1px solid var(--mm-slate-200);
+  border-radius:0!important;
+  background:var(--mm-white);
+  color:var(--mm-slate-600);
+  font-size:11px;
+  font-weight:700;
+  white-space:nowrap;
+}
+.mm-module:hover{background:var(--mm-slate-100);color:var(--mm-blue-900)}
+.mm-module.active{background:var(--mm-blue-50);color:var(--mm-blue-900)}
+.mm-module.active:after{position:absolute;right:0;bottom:0;left:0;height:2px;background:var(--mm-blue-900);content:""}
+.mm-account{
+  display:flex;
+  flex:0 0 auto;
+  align-items:center;
+  gap:8px;
+  min-width:160px;
+  padding:0 12px;
+  border-left:1px solid var(--mm-slate-200);
+  color:var(--mm-slate-500);
+  font-size:9px;
+  line-height:1.25;
+}
+.mm-account b{display:block;color:var(--mm-slate-800);font-size:10px}
+.mm-account-badge{display:grid;width:26px;height:26px;place-items:center;background:var(--mm-blue-50);color:var(--mm-blue-900);font-size:10px;font-weight:900}
+.mm-contextbar{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:18px;
+  min-height:58px;
+  padding:10px 16px;
+  border-bottom:1px solid var(--mm-slate-200);
+  background:var(--mm-white);
+}
+.mm-breadcrumb{margin:0 0 2px;color:var(--mm-slate-500);font-size:10px;font-weight:600}
+.mm-contextbar h1{margin:0;color:var(--mm-blue-900);font-size:19px;font-weight:700;line-height:1.2}
+.mm-context-actions{display:flex;align-items:stretch;border:1px solid var(--mm-slate-200)}
+.mm-context-cell{display:flex;min-height:32px;align-items:center;gap:5px;padding:0 9px;border-right:1px solid var(--mm-slate-200);color:var(--mm-slate-500);font-size:10px;white-space:nowrap}
+.mm-context-cell:last-child{border-right:0}.mm-context-cell b{color:var(--mm-slate-800)}
+.app{display:block!important;height:auto!important;min-height:calc(100vh - 107px)!important;background:var(--mm-white)!important}
+.shell{display:block!important;min-height:0!important;overflow:visible!important;background:var(--mm-white)!important}
+.sidebar{
+  position:sticky!important;
+  z-index:8500!important;
+  top:48px!important;
+  display:flex!important;
+  width:100%!important;
+  min-height:35px!important;
+  height:auto!important;
+  padding:0 12px!important;
+  overflow-x:auto!important;
+  overflow-y:hidden!important;
+  transform:none!important;
+  border:0!important;
+  border-bottom:1px solid var(--mm-slate-300)!important;
+  border-right:0!important;
+  background:var(--mm-slate-100)!important;
+  color:var(--mm-slate-800)!important;
+}
+.nav-title{display:none!important}
+.nav-btn{
+  width:auto!important;
+  min-height:34px!important;
+  margin:0!important;
+  padding:0 11px!important;
+  border:0!important;
+  border-right:1px solid var(--mm-slate-300)!important;
+  border-left:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  color:var(--mm-slate-600)!important;
+  font-size:10px!important;
+  font-weight:700!important;
+  letter-spacing:0!important;
+  text-transform:none!important;
+  white-space:nowrap;
+}
+.nav-btn:hover{background:#fff!important;color:var(--mm-blue-900)!important}
+.nav-btn.active{background:#fff!important;color:var(--mm-blue-900)!important;font-weight:800!important}
+.nav-btn.active:after{position:absolute;right:0;bottom:0;left:0;height:2px;background:var(--mm-blue-900);content:""}
+.nav-key{display:none!important}
+.workspace{
+  display:flex!important;
+  min-height:calc(100vh - 141px)!important;
+  height:auto!important;
+  overflow:visible!important;
+  gap:0!important;
+  padding:0!important;
+  background:var(--mm-white)!important;
+}
+.toolbar{
+  display:flex!important;
+  gap:0!important;
+  align-items:stretch!important;
+  padding:8px 14px!important;
+  border:0!important;
+  border-bottom:1px solid var(--mm-slate-200)!important;
+  background:var(--mm-white)!important;
+}
+.badge{
+  display:inline-flex!important;
+  align-items:center!important;
+  min-height:32px!important;
+  padding:0 9px!important;
+  border:1px solid var(--mm-slate-200)!important;
+  border-right:0!important;
+  border-radius:0!important;
+  background:#fff!important;
+  color:var(--mm-slate-500)!important;
+  font-size:10px!important;
+}
+.badge b{margin-left:4px;color:var(--mm-slate-800)!important}
+.input,select,textarea,.search,.sk-search-input{
+  border:1px solid var(--mm-slate-300)!important;
+  border-radius:0!important;
+  background:#fff!important;
+  color:var(--mm-slate-900)!important;
+  font-family:var(--font)!important;
+  font-size:11px!important;
+}
+.input,select,.search{min-height:32px!important;padding:0 8px!important}
+textarea{min-height:74px!important;padding:7px 8px!important;line-height:1.45}
+.search{margin-right:8px!important;margin-left:8px!important;min-width:220px!important}
+.btn{
+  min-height:32px!important;
+  padding:0 10px!important;
+  border:1px solid var(--mm-slate-300)!important;
+  border-radius:0!important;
+  background:#fff!important;
+  color:var(--mm-slate-800)!important;
+  font-size:10px!important;
+  font-weight:700!important;
+}
+.btn:hover{background:var(--mm-slate-100)!important;filter:none!important}
+.btn.primary,.btn.dark{border-color:var(--mm-blue-900)!important;background:var(--mm-blue-900)!important;color:#fff!important}
+.btn.primary:hover,.btn.dark:hover{background:var(--mm-blue-800)!important}
+.btn.ok{border-color:#a7f3d0!important;background:var(--mm-green-bg)!important;color:var(--mm-green)!important}
+.btn.warn{border-color:#fde68a!important;background:var(--mm-amber-bg)!important;color:var(--mm-amber)!important}
+.btn.bad{border-color:#fecaca!important;background:var(--mm-red-bg)!important;color:var(--mm-red)!important}
+.mobile-menu-btn,.toolbar-menu-btn,.drawer-overlay{display:none!important}
+#statusLine.notice{
+  margin:0!important;
+  padding:7px 14px!important;
+  border:0!important;
+  border-bottom:1px solid var(--mm-slate-200)!important;
+  border-left:3px solid var(--mm-blue-900)!important;
+  border-radius:0!important;
+  background:var(--mm-blue-50)!important;
+  color:var(--mm-slate-700)!important;
+  font-size:10px!important;
+}
+.content{height:auto!important;min-height:0!important;overflow:visible!important;background:#fff!important}
+.panel-view,.panel-view.active{height:auto!important;min-height:0!important;overflow:visible!important;padding:12px 14px!important;gap:10px!important;background:#fff!important}
+.panel-view{display:none!important}.panel-view.active{display:flex!important}
+.panel,.grid,.admin-row,.kpi,.status-card,.template-card,.asset-card,.workflow-col,.workflow-card,.api-card,.qa-card,.channel-card,.empty,.notice,.hero,.modal,.toast{
+  border-radius:0!important;
+  box-shadow:none!important;
+}
+.panel{padding:10px!important;border:1px solid var(--mm-slate-200)!important;background:#fff!important}
+.panel h3,.panel h4{
+  margin:0 0 8px!important;
+  padding:0 0 6px!important;
+  border-bottom:1px solid var(--mm-slate-200)!important;
+  color:var(--mm-blue-900)!important;
+  font-family:var(--font)!important;
+  font-size:10px!important;
+  font-weight:800!important;
+  letter-spacing:.07em!important;
+  text-transform:uppercase!important;
+}
+.split{grid-template-columns:minmax(0,1.2fr) minmax(310px,.8fr)!important;gap:10px!important;overflow:visible!important}
+.split.wide{grid-template-columns:minmax(250px,.7fr) minmax(480px,1.4fr) minmax(280px,.8fr)!important}
+.hero{
+  min-height:126px!important;
+  padding:16px!important;
+  border:1px solid var(--mm-slate-200)!important;
+  border-top:2px solid var(--mm-blue-900)!important;
+  background:#fff!important;
+  color:var(--mm-slate-900)!important;
+}
+.hero:before,.hero:after{display:none!important}
+.eyebrow{margin-bottom:5px!important;color:var(--mm-slate-500)!important;font-size:9px!important;letter-spacing:.09em!important}
+.hero h2{margin:0 0 5px!important;color:var(--mm-blue-900)!important;font-family:var(--font)!important;font-size:22px!important;font-weight:700!important;letter-spacing:-.02em!important}
+.hero p{color:var(--mm-slate-500)!important;font-size:11px!important;line-height:1.5!important}
+.status-card{padding:11px!important;border:1px solid var(--mm-slate-200)!important;background:var(--mm-canvas)!important}
+.status-pill{border-radius:0!important;background:var(--mm-blue-50)!important;color:var(--mm-blue-900)!important;font-size:8px!important}
+.status-number{margin-top:5px!important;color:var(--mm-blue-900)!important;font-family:var(--font)!important;font-size:24px!important;font-weight:700!important}
+.status-sub{color:var(--mm-slate-500)!important;font-size:10px!important}
+.kpi-row{gap:8px!important}.kpi{padding:10px!important;border:1px solid var(--mm-slate-200)!important;border-top:2px solid var(--mm-blue-900)!important;background:#fff!important}
+.kpi small{color:var(--mm-slate-500)!important;font-size:9px!important;letter-spacing:.07em!important}
+.kpi b{margin-top:5px!important;color:var(--mm-blue-900)!important;font-family:var(--font)!important;font-size:23px!important;font-weight:700!important}
+.help,.item-sub,.asset-meta{color:var(--mm-slate-500)!important;font-size:10px!important}
+.label{color:var(--mm-slate-500)!important;font-size:9px!important;font-weight:700!important;letter-spacing:.07em!important}
+.admin-grid{gap:7px!important}.admin-row{padding:7px!important;border:1px solid var(--mm-slate-200)!important;background:#fff!important}
+.admin-row:hover{background:var(--mm-slate-100)!important}.admin-row.selected{border-left:3px solid var(--mm-blue-900)!important;background:var(--mm-blue-50)!important}
+.item-title,.tool-title,.news-title,.template-title,.asset-title{color:var(--mm-blue-900)!important;font-family:var(--font)!important;font-size:11px!important;font-weight:800!important}
+.pill{padding:2px 6px!important;border:1px solid var(--mm-slate-300)!important;border-radius:0!important;background:#fff!important;color:var(--mm-slate-700)!important;font-size:8px!important;font-weight:700!important}
+.pill.ok{border-color:#a7f3d0!important;background:var(--mm-green-bg)!important;color:var(--mm-green)!important}
+.pill.warn{border-color:#fde68a!important;background:var(--mm-amber-bg)!important;color:var(--mm-amber)!important}
+.pill.bad{border-color:#fecaca!important;background:var(--mm-red-bg)!important;color:var(--mm-red)!important}
+.pill.info{border-color:#bfdbfe!important;background:var(--mm-blue-50)!important;color:var(--mm-blue-800)!important}
+.grid{border:1px solid var(--mm-slate-200)!important}.grid-head{background:var(--mm-slate-100)!important;color:var(--mm-slate-700)!important;font-size:9px!important}.grid-row{font-size:10px!important}.grid-row:nth-child(even){background:var(--mm-canvas)!important}.grid-row:hover{background:var(--mm-blue-50)!important}.grid-row.selected{background:var(--mm-blue-900)!important;color:#fff!important}
+.template-grid{grid-template-columns:repeat(3,minmax(130px,1fr))!important;gap:7px!important}
+.template-card{padding:7px!important;border:1px solid var(--mm-slate-200)!important;background:#fff!important}
+.template-card:hover,.template-card.active{border:2px solid var(--mm-blue-900)!important;background:var(--mm-blue-50)!important}
+.template-thumb{height:68px!important;border:1px solid var(--mm-slate-200)!important;border-radius:0!important}
+.mag-preview-wrap{padding:14px!important;border:1px solid var(--mm-slate-300)!important;border-radius:0!important;background:var(--mm-slate-100)!important}
+.mag-page{border:1px solid var(--mm-slate-400)!important;box-shadow:none!important}
+.asset-card{border:1px solid var(--mm-slate-200)!important}.asset-img{border-radius:0!important}
+.workflow-col,.workflow-card,.api-card,.qa-card,.channel-card{border:1px solid var(--mm-slate-200)!important;background:#fff!important}
+.workflow-col{background:var(--mm-canvas)!important}
+.toast{right:12px!important;bottom:12px!important;border:1px solid var(--mm-slate-900)!important;background:var(--mm-slate-900)!important;color:#fff!important}
+.modalOverlay{z-index:9500!important;background:rgba(15,23,42,.45)!important}.modal{border:1px solid var(--mm-slate-300)!important;background:#fff!important}.modalTitle{color:var(--mm-blue-900)!important;font-family:var(--font)!important;font-size:12px!important}
+.mm-page-style-grid{display:grid;grid-template-columns:repeat(4,minmax(125px,1fr));gap:7px;grid-column:1/-1;padding:8px;border:1px solid var(--mm-slate-200);background:var(--mm-canvas)}
+.mm-template-note{grid-column:1/-1;padding:7px 8px;border-left:3px solid var(--mm-blue-900);background:var(--mm-blue-50);color:var(--mm-slate-600);font-size:10px;line-height:1.45}
+.mm-page-actions{display:flex;gap:5px;flex-wrap:wrap;margin:0 0 8px}
+.mm-module-empty{padding:24px;border:1px solid var(--mm-slate-200);background:var(--mm-canvas);color:var(--mm-slate-500);font-size:11px}
+/* Structured VOY page renderer used by the MM editor preview. */
+.voyp{position:relative;min-height:594px;overflow:hidden;background:var(--p-bg,#fff);color:var(--p-text,#103154);font-family:var(--p-body,Inter),Arial,sans-serif;background-size:cover;background-position:center}
+.voyp h1,.voyp h2,.voyp h3{font-family:var(--p-heading,Montserrat),Georgia,serif}.voyp p{margin:0;line-height:1.5}.voyp small{display:block;color:var(--p-accent,#4dcad6);font-size:8px;font-weight:800;letter-spacing:.18em;text-transform:uppercase}.voyp h1{margin:6px 0 9px;font-size:36px;line-height:.94;letter-spacing:-.045em}.voyp h3{margin:4px 0;font-size:13px;line-height:1.1}.voyp-credit{position:absolute;right:14px;bottom:8px;z-index:5;color:rgba(255,255,255,.78);font-size:6px;text-transform:uppercase}.voyp-footer{position:absolute;right:0;bottom:0;left:0;display:flex;justify-content:space-between;padding:8px 20px;border-top:1px solid color-mix(in srgb,var(--p-text,#103154) 18%,transparent);background:var(--p-bg,#fff);color:color-mix(in srgb,var(--p-text,#103154) 65%,transparent);font-size:7px;letter-spacing:.08em;text-transform:uppercase}.voyp-heading{padding:30px 30px 12px}.voyp-heading h1{max-width:350px}.voyp-heading p{max-width:340px;color:color-mix(in srgb,var(--p-text,#103154) 74%,transparent);font-size:10px}.voyp-paper{padding-bottom:38px}
+.voyp-cover:before,.voyp-opener:before,.voyp-night:before,.voyp-back:before{position:absolute;inset:0;background:linear-gradient(180deg,rgba(2,19,43,.08),rgba(2,19,43,.88));content:""}.voyp-cover>* , .voyp-opener>* , .voyp-night>* , .voyp-back>*{position:relative}.voyp-cover-top{display:flex;align-items:flex-end;justify-content:space-between;padding:25px 28px;color:#fff}.voyp-cover-top b{font-size:50px;line-height:.8;letter-spacing:-.08em}.voyp-cover-top span{font-size:8px;font-weight:900;letter-spacing:.24em}.voyp-cover-copy{position:absolute;right:28px;bottom:31px;left:28px;color:#fff}.voyp-cover-copy small{color:var(--p-accent,#4dcad6)}.voyp-cover-copy h1{max-width:350px;font-size:43px}.voyp-cover-copy p{max-width:310px;font-size:11px}.voyp-cover-lines{display:flex;gap:7px;flex-wrap:wrap;margin:16px 0 12px}.voyp-cover-lines span{padding:4px 7px;border:1px solid rgba(255,255,255,.42);font-size:7px;text-transform:uppercase}.voyp-cover-copy em{font-size:8px;letter-spacing:.12em;text-transform:uppercase}
+.voyp-contents{display:grid;grid-template-columns:1fr 1fr;gap:1px;margin:4px 30px 18px;background:color-mix(in srgb,var(--p-text,#103154) 16%,transparent)}.voyp-contents>div{display:flex;gap:9px;min-height:54px;padding:10px;background:var(--p-bg,#fff)}.voyp-contents>div>b{color:var(--p-accent,#4dcad6);font-size:18px}.voyp-contents span{display:flex;flex-direction:column}.voyp-contents strong{font-family:var(--p-heading);font-size:12px}.voyp-contents em{margin-top:3px;color:color-mix(in srgb,var(--p-text) 58%,transparent);font-size:7px}.voyp-note{margin:0 30px;padding:14px;border-left:3px solid var(--p-accent);background:color-mix(in srgb,var(--p-accent) 10%,var(--p-bg));font-family:var(--p-heading);font-size:12px;line-height:1.45}
+.voyp-split{display:grid;grid-template-columns:.85fr 1.15fr}.voyp-split-img{background:#dbe5ef center/cover no-repeat}.voyp-split-copy{padding:42px 28px}.voyp-split-copy h1{font-size:38px}.voyp-lead{margin-bottom:14px!important;font-family:var(--p-heading);font-size:12px;font-weight:700}.voyp-columns{column-count:2;column-gap:14px;font-size:8px;line-height:1.6}.voyp-rule{display:block;width:60px;height:3px;margin-top:18px;background:var(--p-accent)}
+.voyp-card-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;padding:4px 30px}.voyp-card{min-height:115px;padding:12px;border:1px solid color-mix(in srgb,var(--p-text) 16%,transparent);background:color-mix(in srgb,var(--p-bg) 94%,#fff)}.voyp-card-img{height:66px;margin:-12px -12px 9px;background:#dbe5ef center/cover}.voyp-card p{color:color-mix(in srgb,var(--p-text) 65%,transparent);font-size:8px}.voyp-price{display:block;margin-top:10px;color:var(--p-accent);font-size:13px}.voyp-cta{display:inline-block;margin-top:7px;padding:4px 7px;background:var(--p-text);color:var(--p-bg);font-size:7px;text-transform:uppercase}.voyp-offers .voyp-card{min-height:155px}.voyp-smallprint,.voyp-wide-copy{margin:14px 30px!important;color:color-mix(in srgb,var(--p-text) 70%,transparent);font-size:8px;line-height:1.55}
+.voyp-opener{display:flex;align-items:flex-end;padding:36px;color:#fff}.voyp-opener>div{max-width:340px}.voyp-opener small{color:var(--p-accent)}.voyp-opener h1{font-size:48px}.voyp-opener p{font-size:12px}.voyp-opener span{display:inline-block;margin-top:15px;padding-top:7px;border-top:2px solid var(--p-accent);font-size:8px;text-transform:uppercase}
+.voyp-feature{display:grid;grid-template-rows:232px 1fr}.voyp-feature-img{background:#dbe5ef center/cover no-repeat}.voyp-feature article{padding:24px 30px}.voyp-feature h1{font-size:33px}.voyp-feature .voyp-columns{font-size:8px}
+.voyp-destination-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:5px 30px}.voyp-destination-grid .voyp-card{min-height:150px;background:linear-gradient(160deg,color-mix(in srgb,var(--p-accent) 12%,var(--p-bg)),var(--p-bg))}.voyp-destination-grid .voyp-card:nth-child(2),.voyp-destination-grid .voyp-card:nth-child(3){background:linear-gradient(160deg,color-mix(in srgb,var(--p-text) 8%,var(--p-bg)),var(--p-bg))}
+.voyp-night{padding:30px;color:#fff}.voyp-night-card{position:absolute;right:25px;bottom:42px;left:25px;padding:22px;border:1px solid rgba(255,255,255,.35);background:rgba(3,14,31,.76)}.voyp-night-card h1{font-size:40px}.voyp-night-card p{font-size:11px}.voyp-night-card>div{margin-top:12px;column-count:2;column-gap:16px;font-size:8px;line-height:1.55}.voyp-night .voyp-footer{background:rgba(3,14,31,.86);color:#fff;border-color:rgba(255,255,255,.25)}
+.voyp-experience-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;padding:5px 30px}.voyp-experience-grid .voyp-card{min-height:188px}.voyp-experience-grid .voyp-card:nth-child(2){margin-top:18px}
+.voyp-tips{padding-bottom:38px}.voyp-tip-list{width:56%;padding:4px 0 0 30px}.voyp-tip-list article{display:flex;gap:10px;padding:11px 0;border-bottom:1px solid color-mix(in srgb,var(--p-text) 18%,transparent)}.voyp-tip-list article>b{color:var(--p-accent);font-size:20px}.voyp-tip-list h3{margin:0 0 3px}.voyp-tip-list p{font-size:8px}.voyp-tips>aside{position:absolute;right:0;bottom:38px;width:38%;height:330px;background:#dbe5ef center/cover}
+.voyp-guide-list{margin:4px 30px;border-top:1px solid color-mix(in srgb,var(--p-text) 18%,transparent)}.voyp-guide-list article{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 0;border-bottom:1px solid color-mix(in srgb,var(--p-text) 18%,transparent)}.voyp-guide-list article p{font-size:8px}.voyp-guide-list article>span{flex:0 0 auto;padding:5px 8px;background:var(--p-accent);color:#fff;font-size:7px;text-transform:uppercase}
+.voyp-onboard{display:grid;grid-template-rows:225px 1fr;padding-bottom:38px}.voyp-onboard>article{padding:21px 30px}.voyp-onboard h1{font-size:32px}.voyp-service-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:12px}.voyp-service-grid .voyp-card{min-height:112px;padding:9px}.voyp-service-grid .voyp-card h3{font-size:10px}
+.voyp-map{padding-bottom:38px}.voyp-map-art{position:relative;height:260px;margin:0 30px;border:1px solid color-mix(in srgb,var(--p-text) 18%,transparent);background:radial-gradient(circle at 20% 35%,color-mix(in srgb,var(--p-accent) 18%,transparent),transparent 20%),linear-gradient(145deg,#eaf2f7,#f9fbfd)}.voyp-map .dot{position:absolute;z-index:3;display:grid;width:37px;height:37px;place-items:center;border:3px solid #fff;border-radius:50%;background:var(--p-text);color:#fff;font-size:7px;font-weight:900}.voyp-map .nyc{left:12%;top:38%}.voyp-map .cph{left:48%;top:18%}.voyp-map .ath{left:66%;top:50%}.voyp-map .isl{right:7%;bottom:12%;width:47px;height:47px;background:var(--p-accent)}.voyp-map .route{position:absolute;height:2px;transform-origin:left;background:var(--p-accent)}.voyp-map .r1{left:19%;top:45%;width:150px;transform:rotate(-19deg)}.voyp-map .r2{left:54%;top:28%;width:90px;transform:rotate(32deg)}.voyp-map .r3{left:71%;top:59%;width:70px;transform:rotate(19deg)}.voyp-route-list{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin:10px 30px}.voyp-route-list div{display:flex;flex-direction:column;padding:7px;border-left:2px solid var(--p-accent);background:color-mix(in srgb,var(--p-accent) 8%,var(--p-bg));font-size:7px}.voyp-route-list span{margin-top:2px;color:color-mix(in srgb,var(--p-text) 64%,transparent)}
+.voyp-signature{padding-bottom:38px}.voyp-signature-hero{height:330px;padding:28px;color:#fff;background:#173747 center/cover}.voyp-signature-hero:before{position:absolute;inset:0 0 auto;height:330px;background:linear-gradient(180deg,rgba(2,19,43,.16),rgba(2,19,43,.72));content:""}.voyp-signature-hero>*{position:relative}.voyp-signature-hero h1{max-width:330px;font-size:38px}.voyp-signature-hero p{max-width:300px;font-size:10px}.voyp-signature-cards{display:grid;grid-template-columns:1fr 1fr;gap:7px;padding:12px 30px}.voyp-signature-cards .voyp-card{min-height:120px}
+.voyp-back{display:grid;place-items:center;padding:40px;text-align:center;color:#fff}.voyp-back>div{z-index:2;max-width:330px}.voyp-back h1{font-size:45px}.voyp-back p{font-size:12px}.voyp-back-cta{display:inline-block;margin:18px 0 11px;padding:8px 15px;background:var(--p-accent);color:#07162c;font-size:8px;font-weight:900;text-transform:uppercase}.voyp-back em{display:block;font-size:8px;letter-spacing:.12em}
+@media(max-width:1100px){
+  .mm-account{display:none}.mm-brand{min-width:190px}.mm-module{padding:0 9px;font-size:10px}
+  .split.wide{grid-template-columns:260px minmax(420px,1fr)!important}.split.wide>.stack:last-child{grid-column:1/-1}
+  .template-grid{grid-template-columns:repeat(2,minmax(130px,1fr))!important}.mm-page-style-grid{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:760px){
+  .mm-appbar{position:static;display:block;overflow:visible}.mm-brand{min-height:44px;border-right:0;border-bottom:1px solid var(--mm-slate-200)}
+  .mm-modules{overflow-x:auto}.mm-module{min-height:40px}.mm-contextbar{align-items:flex-start;flex-direction:column}.mm-context-actions{width:100%;overflow-x:auto}
+  .sidebar{position:static!important;top:auto!important}.toolbar{overflow-x:auto!important;flex-wrap:nowrap!important}.badge{display:none!important}.search{min-width:210px!important;margin-left:0!important}
+  .panel-view.active{padding:8px!important}.split,.split.wide,.hero{grid-template-columns:1fr!important}.kpi-row{grid-template-columns:repeat(2,1fr)!important}.template-grid{grid-template-columns:repeat(2,minmax(120px,1fr))!important}.mm-page-style-grid{grid-template-columns:1fr 1fr}
+}
+@media(max-width:480px){.kpi-row,.template-grid,.mm-page-style-grid{grid-template-columns:1fr!important}.mm-contextbar h1{font-size:17px}.mag-page{width:300px!important}}
+@media(max-width:767px){input,select,textarea{font-size:16px!important}}
+
 </style>
+
+<style id="voy-template-studio-integration">
+/* VOY template integration: visual structured-content editor + logo-aware previews */
+.mm-block-editor{grid-column:1/-1;border:1px solid var(--mm-slate-200);background:var(--mm-canvas);padding:8px}
+.mm-block-toolbar{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:7px}
+.mm-block-toolbar strong{color:var(--mm-blue-900);font-size:10px;text-transform:uppercase;letter-spacing:.07em}
+.mm-block-list{display:grid;gap:7px}
+.mm-block-item{border:1px solid var(--mm-slate-200);background:#fff;padding:8px}
+.mm-block-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:7px;padding-bottom:6px;border-bottom:1px solid var(--mm-slate-200)}
+.mm-block-head b{color:var(--mm-blue-900);font-size:10px}.mm-block-actions{display:flex;gap:4px}
+.mm-block-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.mm-block-fields .field.full{grid-column:1/-1}.mm-block-fields textarea{min-height:62px!important}
+.mm-block-source{grid-column:1/-1;margin-top:6px}.mm-block-source summary{cursor:pointer;color:var(--mm-slate-500);font-size:9px;text-transform:uppercase;letter-spacing:.07em}
+.voyp-logo{display:block;max-width:120px;max-height:34px;width:auto;height:auto;object-fit:contain;object-position:left center;margin:0 0 6px}
+.voyp-logo-pair{display:flex;align-items:center;gap:9px;margin-bottom:7px}.voyp-logo-pair .voyp-logo{max-width:72px;max-height:27px;margin:0}
+.voyp-airline-profiles{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:4px 30px 38px}
+.voyp-airline-profile{border:1px solid color-mix(in srgb,var(--p-text) 16%,transparent);background:var(--p-bg);padding:11px;min-height:410px;display:flex;flex-direction:column}
+.voyp-airline-profile h3{font-size:14px}.voyp-airline-profile .cabins{display:flex;flex-wrap:wrap;gap:3px;margin:7px 0}.voyp-airline-profile .cabins span{padding:3px 5px;background:var(--p-text);color:var(--p-bg);font-size:6px;text-transform:uppercase}
+.voyp-factgrid{display:grid;grid-template-columns:1fr 1fr;margin-top:5px;border-top:1px solid color-mix(in srgb,var(--p-text) 15%,transparent)}
+.voyp-factgrid div{padding:6px;border-right:1px solid color-mix(in srgb,var(--p-text) 15%,transparent);border-bottom:1px solid color-mix(in srgb,var(--p-text) 15%,transparent)}
+.voyp-factgrid div:nth-child(2n){border-right:0}.voyp-factgrid b{display:block;color:var(--p-accent);font-size:6px;text-transform:uppercase;letter-spacing:.08em}.voyp-factgrid span{font-size:7px;line-height:1.35}
+.voyp-profile-tip{margin-top:auto;padding:7px;background:var(--p-text);color:var(--p-bg);font-size:7px;line-height:1.4}.voyp-profile-tip b{display:block;color:var(--p-accent);font-size:6px;text-transform:uppercase}
+.voyp-airport-row{display:grid!important;grid-template-columns:58px 1fr auto!important;align-items:center!important}.voyp-airport-logo{width:52px;height:32px;display:flex;align-items:center;justify-content:center;background:#fff;border:1px solid color-mix(in srgb,var(--p-text) 14%,transparent);padding:4px}.voyp-airport-logo img{max-width:100%;max-height:100%;object-fit:contain}
+.voyp-transfer-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:4px 30px}.voyp-transfer-grid .voyp-card{min-height:105px}.voyp-transfer-banner{margin:10px 30px;padding:10px;background:var(--p-text);color:var(--p-bg);font-size:8px;line-height:1.45}
+@media(max-width:980px){.mm-block-fields{grid-template-columns:1fr}.voyp-airline-profiles{grid-template-columns:1fr}.voyp-airline-profile{min-height:0}}
+</style>
+
 </head>
-<body>
+<body class="use-global-chrome">
+
+<!-- SKANDI Internal Classic Chrome -->
+<div id="skInternalChrome" class="sk-chrome" data-page-name="MAGAZINE MANAGER">
+  <div class="sk-chrome-top">
+    <div class="sk-chrome-brand">
+      <img class="sk-chrome-logo-left" src="https://static.wixstatic.com/media/394052_adb17db3fe834447aa80866e13966034~mv2.png" alt="SKANDI Travels" />
+      <div class="sk-chrome-page">
+        <div class="sk-chrome-title" id="skChromePageName">MEDIA CONTROL</div>
+        <div class="sk-chrome-subtitle" id="skChromePageSubtitle">VOY · Newsroom · Website planning · Media control</div>
+      </div>
+    </div>
+    <div class="sk-chrome-altea-wrap">
+      <img class="sk-chrome-logo-altea" src="https://static.wixstatic.com/media/394052_649afdc6d060471798953becda8525f5~mv2.png" alt="ALTEA" />
+    </div>
+    <div class="sk-chrome-user" id="skChromeUser">
+      <b id="skChromeUserName">Checking user…</b>
+      <div class="sk-chrome-user-grid">
+        <span>SK-ID</span><span id="skChromeSkid">—</span>
+        <span>Position</span><span id="skChromePosition">—</span>
+        <span>Base</span><span id="skChromeBase">—</span>
+      </div>
+    </div>
+    <button class="sk-chrome-clock" id="skChromeClock" title="Click to toggle local/UTC time">
+      <div class="sk-chrome-clock-time" id="skChromeClockTime">--:--:--</div>
+      <div class="sk-chrome-clock-date" id="skChromeClockDate">LOCAL</div>
+    </button>
+  </div>
+
+  <nav class="sk-menu-bar" aria-label="Internal classic menu">
+    <div class="sk-menu">
+      <button class="sk-menu-button" type="button">FILE</button>
+      <div class="sk-menu-dropdown">
+        <button class="sk-menu-item" type="button" data-action="print"><span>Print</span><span class="sk-menu-shortcut">⌘P</span></button>
+        <div class="sk-menu-sep"></div>
+        <button class="sk-menu-item" type="button" data-action="logout"><span>Logout</span><span class="sk-menu-shortcut">HOME</span></button>
+      </div>
+    </div>
+    <div class="sk-menu">
+      <button class="sk-menu-button" type="button">ALTEA</button>
+      <div class="sk-menu-dropdown">
+        <button class="sk-menu-item" type="button" data-path="/riaintra/altea"><span>ALTEA Operations</span></button>
+        <button class="sk-menu-item" type="button" data-path="/riaintra/grouptalk"><span>GroupTalk</span></button>
+      </div>
+    </div>
+    <div class="sk-menu">
+      <button class="sk-menu-button" type="button">RIAINTRA</button>
+      <div class="sk-menu-dropdown">
+        <button class="sk-menu-item" type="button" data-path="/riaintra/staff-portal"><span>Dashboard</span></button>
+        <button class="sk-menu-item" type="button" data-path="/riaintra/myroster"><span>MyRoster</span></button>
+        <button class="sk-menu-item" type="button" data-path="/riaintra/mail"><span>Mail</span></button>
+        <button class="sk-menu-item" type="button" data-path="/riaintra/uniform"><span>Uniform Center</span></button>
+        <button class="sk-menu-item" type="button" data-path="/riaintra/payroll"><span>Payroll</span></button>
+      </div>
+    </div>
+    <div class="sk-menu">
+      <button class="sk-menu-button" type="button">ADMIN</button>
+      <div class="sk-menu-dropdown">
+        <button class="sk-menu-item" type="button" data-path="/riaintra/policies"><span>Policy Control</span></button>
+        <button class="sk-menu-item" type="button" data-path="/riaintra/hr"><span>Staff HR</span></button>
+        <button class="sk-menu-item" type="button" data-path="/riaintra/hr?view=crewcontrol"><span>Crew Control</span></button>
+        <button class="sk-menu-item" type="button" data-path="/riaintra/hr?view=payrollcontrol"><span>Payroll Control</span></button>
+        <button class="sk-menu-item" type="button" data-path="/riaintra/inventory-control"><span>Inventory Control</span></button>
+        <button class="sk-menu-item" type="button" data-path="/riaintra/voy-control"><span>VOY Control</span></button>
+      </div>
+    </div>
+    <div class="sk-menu sk-help-menu">
+      <button class="sk-menu-button" type="button">HELP</button>
+      <div class="sk-menu-dropdown" style="left:auto;right:0">
+        <div class="sk-search-wrap">
+          <input id="skChromeSearchInput" class="sk-search-input" placeholder="Search RIAINTRA…" />
+          <div id="skChromeSearchResults" class="sk-search-results"></div>
+        </div>
+      </div>
+    </div>
+  </nav>
+</div>
+
+<header class="mm-appbar" aria-label="Magazine Manager navigation">
+  <div class="mm-brand">
+    <div class="mm-brand-mark" aria-hidden="true">MM</div>
+    <div class="mm-brand-copy"><b>MEDIA MANAGER</b><span>VOY · Newsroom · Website planning · Media control</span></div>
+  </div>
+  <nav class="mm-modules" id="mmModules" aria-label="Primary modules"></nav>
+  <div class="mm-account">
+    <div class="mm-account-badge" id="mmUserInitials">SK</div>
+    <div><b id="mmUserName">SKANDI Editor</b><span id="mmUserRole">Editorial access</span></div>
+  </div>
+</header>
+<section class="mm-contextbar" aria-label="Current workspace">
+  <div>
+    <p class="mm-breadcrumb" id="mmBreadcrumb">Management / Studio Overview</p>
+    <h1 id="mmPageTitle">VOY Magazine &amp; Newsroom Control</h1>
+  </div>
+  <div class="mm-context-actions">
+    <div class="mm-context-cell">Publication <b>VOY</b></div>
+    <div class="mm-context-cell">Mode <b>Live workspace</b></div>
+    <div class="mm-context-cell">Sync <b id="mmSyncState">Connecting</b></div>
+  </div>
+</section>
+
 <div class="app">
-  <header class="topbar">
-    <div class="brand"><div class="mark">SK</div><div class="brand-copy"><strong>Media Control</strong><span>Editorial & digital experience platform</span></div></div>
-    <div class="top-context" id="topContext">Website presentation, VOY, Newsroom and shared Asset Library</div>
-    <div class="top-actions"><button class="top-btn" id="refreshAll">Refresh</button><button class="top-btn" id="logoutBtn">Logout</button></div>
+  <header class="header">
+    <div class="brand">
+      <button class="mobile-menu-btn" id="moduleHeaderMobileMenuBtn" aria-label="Open menu">☰</button>
+      <div class="logo">VOY</div>
+      <div style="min-width:0">
+        <div class="title">VOY Atelier · Editorial Desk</div>
+        <div class="subtitle">Premium travel magazine editing · PR campaigns · destination catalogues · print and digital publishing</div>
+      </div>
+    </div>
+    <div class="session" id="sessionLine">EDITORIAL SYSTEM · LIVE DATA SYNC · <span id="clock">--:--</span></div>
   </header>
   <div class="shell">
-    <aside class="sidebar">
-      <div class="nav-group"><div class="nav-label">Experience</div>
-        <button class="nav active" data-view="dashboard" data-short="DB">Dashboard<small>01</small></button>
-        <button class="nav" data-view="website" data-short="WEB">Website Studio<small>02</small></button>
-        <button class="nav" data-view="assets" data-short="LIB">Asset Library<small>03</small></button>
-      </div>
-      <div class="nav-group"><div class="nav-label">Publishing</div>
-        <button class="nav" data-view="voy" data-short="VOY">VOY<small>04</small></button>
-        <button class="nav" data-view="newsroom" data-short="NEWS">Newsroom<small>05</small></button>
-      </div>
-      <div class="nav-group"><div class="nav-label">Governance</div>
-        <button class="nav" data-view="quality" data-short="QA">Quality & release<small>06</small></button>
-      </div>
-    </aside>
+    <aside class="sidebar" id="nav"></aside>
     <main class="workspace">
-      <div class="workspace-head"><div><h1 id="viewTitle">Dashboard</h1><p id="viewSubtitle">Control the customer-facing editorial layer without taking ownership away from Inventory, Policy Control or commerce.</p></div><div class="head-actions" id="headActions"></div></div>
-      <div class="views">
-        <section class="view active" id="view-dashboard"><div class="scroll" id="dashboardRoot"></div></section>
-        <section class="view" id="view-website"><div class="scroll" id="websiteRoot"></div></section>
-        <section class="view" id="view-assets"><div class="scroll" id="assetsRoot"></div></section>
-        <section class="view" id="view-voy"><div class="scroll" id="voyRoot"></div></section>
-        <section class="view" id="view-newsroom"><div class="scroll" id="newsroomRoot"></div></section>
-        <section class="view" id="view-quality"><div class="scroll" id="qualityRoot"></div></section>
+      <div class="toolbar">
+        <button class="btn dark mobile-menu-btn toolbar-menu-btn" id="mobileMenuBtn" type="button" aria-label="Open VOY menu">☰ Menu</button>
+        <span class="badge">Issues <b id="statIssues">0</b></span>
+        <span class="badge">Pages <b id="statPages">0</b></span>
+        <span class="badge">Articles <b id="statArticles">0</b></span>
+        <span class="badge">Assets <b id="statAssets">0</b></span>
+        <span class="badge">Ready <b id="statReady">0</b></span>
+        <input class="input search" id="globalQuery" placeholder="Search issue, article, destination, campaign, asset..." />
+        <button class="btn primary" data-action="save-current">Save</button>
+        <button class="btn dark" data-action="public-preview">Public preview</button>
       </div>
+      <div id="statusLine" class="notice">Loading VOY Control...</div>
+      <div class="content" id="content"></div>
     </main>
   </div>
 </div>
+<div class="drawer-overlay" id="drawerOverlay"></div>
 <div class="toast" id="toast"></div>
-<div class="modal-backdrop" id="modal"><div class="modal"><div class="modal-head"><h3 id="modalTitle">Select asset</h3><button class="btn" id="modalClose">Close</button></div><div class="modal-body" id="modalBody"></div></div></div>
-<script>
-(()=>{
-"use strict";
-const SOURCE="SKANDI_MEDIA_CONTROL",PARENT="SKANDI_WIX_PARENT";
-const $=id=>document.getElementById(id),esc=v=>String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]));
-const arr=v=>Array.isArray(v)?v:[],obj=v=>v&&typeof v==="object"&&!Array.isArray(v)?v:{};
-const state={catalog:[],voy:{},news:{},assets:[],selectedAssetId:"",selectedIssueId:"",selectedPageId:"",selectedNewsId:"",view:"dashboard",assetPicker:null,hostReady:false};
-function post(type,payload={}){window.parent.postMessage({source:SOURCE,type,payload,timestamp:new Date().toISOString()},"*")}
-let toastTimer;function toast(message,kind=""){const el=$("toast");el.textContent=String(message||"");el.className=`toast show ${kind}`;clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.className="toast",4200)}
-function normStatus(v){return String(v||"DRAFT").toUpperCase()}
-function statusClass(v){const s=normStatus(v);return /PUBLISH|ACTIVE|APPROV/.test(s)?"good":/ARCHIV|BLOCK|REJECT/.test(s)?"bad":"warn"}
-function statusOptions(value){const current=normStatus(value);return ["DRAFT","REVIEW","APPROVED","PUBLISHED","ARCHIVED"].map(v=>`<option ${v===current?"selected":""}>${v}</option>`).join("")}
-function entityList(type){const source=state.voy||{};const keys={campaign:["campaigns"],article:["articles"],banner:["banners"],issue:["issues"],page:["pages"]}[type]||[];for(const k of keys)if(Array.isArray(source[k]))return source[k];return[]}
-function websiteRecords(type,kind){return entityList(type).filter(x=>String(x.scope||x.channel||"").toUpperCase()==="WEBSITE"&&String(x.presentationKind||"").toUpperCase()===kind)}
-function catalogPage(path){return state.catalog.find(p=>p.path===path)||state.catalog[0]||null}
-function pageOptions(selected="",editorialOnly=false){return state.catalog.filter(p=>!editorialOnly||p.editorial).map(p=>`<option value="${esc(p.path)}" ${p.path===selected?"selected":""}>${esc(p.label)} — ${esc(p.path)}</option>`).join("")}
-function sectionOptions(page,selected="",mode="copy"){const sections=arr(page?.sections).filter(s=>mode==="media"?arr(s.mediaSlots).length:arr(s.fields).length);return sections.map(s=>`<option value="${esc(s.id)}" ${s.id===selected?"selected":""}>${esc(s.label)}</option>`).join("")}
-function fieldOptions(page,sectionId,selected=""){const sec=arr(page?.sections).find(s=>s.id===sectionId);return arr(sec?.fields).map(f=>`<option value="${esc(f.id)}" data-type="${esc(f.type||"TEXT")}" ${f.id===selected?"selected":""}>${esc(f.label)}</option>`).join("")}
-function slotOptions(page,sectionId,selected=""){const sec=arr(page?.sections).find(s=>s.id===sectionId);return arr(sec?.mediaSlots).map(f=>`<option value="${esc(f.id)}" ${f.id===selected?"selected":""}>${esc(f.label)}</option>`).join("")}
-function selectedAsset(){return state.assets.find(a=>String(a.id)===String(state.selectedAssetId))||null}
-function changeView(view){state.view=view;document.querySelectorAll(".nav").forEach(n=>n.classList.toggle("active",n.dataset.view===view));document.querySelectorAll(".view").forEach(v=>v.classList.toggle("active",v.id===`view-${view}`));const meta={dashboard:["Dashboard","Editorial estate health and publishing overview."],website:["Website Studio","Edit registered page copy, section presentation and editorial media without typing routes or hook IDs."],assets:["Asset Library","One shared SKANDI media library backed by the canonical Asset Library."],voy:["VOY","Issue planning, page production and publishing."],newsroom:["Newsroom","Press releases, categories, media resources and media contacts."],quality:["Quality & release","Release readiness, ownership boundaries and publishing controls."]}[view]||[view,""];$("viewTitle").textContent=meta[0];$("viewSubtitle").textContent=meta[1];render()}
-function render(){renderDashboard();renderWebsite();renderAssets();renderVoy();renderNewsroom();renderQuality()}
-function renderDashboard(){const issues=entityList("issue"),posts=arr(state.news.posts||state.news.articles),editorial=state.catalog.filter(p=>p.editorial),runtime=editorial.filter(p=>p.presentationRuntime);$("dashboardRoot").innerHTML=`
-<div class="metric-row"><div class="metric"><small>Registered pages</small><strong>${state.catalog.length}</strong></div><div class="metric"><small>Editorial pages</small><strong>${editorial.length}</strong></div><div class="metric"><small>Asset library</small><strong>${state.assets.length}</strong></div><div class="metric"><small>VOY issues</small><strong>${issues.length}</strong></div><div class="metric"><small>Newsroom posts</small><strong>${posts.length}</strong></div></div>
-<div class="editor-hero"><div class="editor-intro"><small>SKANDI editorial operating system</small><h2>One controlled publishing surface.</h2><p>Website copy, presentation media, VOY, Newsroom and shared media assets are managed here while operational facts remain with their authoritative systems.</p></div><div class="editor-health"><div class="health-item"><strong>${editorial.reduce((n,p)=>n+arr(p.sections).length,0)}</strong><span>Registered sections</span></div><div class="health-item"><strong>${editorial.reduce((n,p)=>n+arr(p.sections).reduce((x,s)=>x+arr(s.fields).length,0),0)}</strong><span>Copy targets</span></div><div class="health-item"><strong>${runtime.length}</strong><span>Runtime-enabled now</span></div><div class="health-item"><strong>${state.assets.filter(a=>String(a.status||"ACTIVE").toUpperCase()==="ACTIVE").length}</strong><span>Active assets</span></div></div></div>
-<div class="grid two"><div class="panel"><div class="panel-head"><h2>Editorial estate</h2><span>Canonical route registry</span></div><div class="panel-body flush" style="max-height:430px;overflow:auto"><table class="table"><thead><tr><th>Page</th><th>Authority</th><th>Sections</th><th>Runtime</th></tr></thead><tbody>${state.catalog.map(p=>`<tr><td><strong>${esc(p.label)}</strong><span class="sub code">${esc(p.path)}</span></td><td>${esc(p.authority)}</td><td>${arr(p.sections).length}</td><td><span class="status-text ${p.presentationRuntime?"good":"warn"}">${p.presentationRuntime?"Connected":"Registered"}</span></td></tr>`).join("")}</tbody></table></div></div><div class="panel"><div class="panel-head"><h2>Publishing guardrails</h2></div><div class="panel-body"><div class="notice">Media Control owns presentation and editorial records. It does not replace Inventory Control, Policy Control, Wix commerce, customer profiles, bookings or provider data.</div><div class="notice warn" style="margin-top:8px">Only registered page, section, content and media targets can be selected. Manual route, section and hook IDs are intentionally removed from the editor.</div><div class="notice" style="margin-top:8px">Publishing status is stored with each editorial record. Public presentation projection only serves publishable records through the existing presentation core.</div></div></div></div>`}
-function firstSection(page,mode){return arr(page?.sections).find(s=>mode==="media"?arr(s.mediaSlots).length:arr(s.fields).length)||null}
-function recordId(r){return r.articleId||r.campaignId||r.bannerId||r.cardId||r.categoryId||r.entityId||r._id||r.id||""}
-function renderWebsite(){const pages=state.catalog,editable=pages.filter(p=>p.editorial),plans=websiteRecords("campaign","PAGE_PLAN"),copy=websiteRecords("article","CONTENT_BLOCK"),media=websiteRecords("banner","MEDIA_SLOT");const defaultPage=editable[0]||pages[0];$("websiteRoot").innerHTML=`
-<div class="editor-hero"><div class="editor-intro"><small>Website Studio</small><h2>Structured editing, no route typing.</h2><p>Choose a page, section and registered content target. The catalog is derived from canonical SKANDI routes and approved presentation hooks.</p></div><div class="editor-health"><div class="health-item"><strong>${editable.length}</strong><span>Editable pages</span></div><div class="health-item"><strong>${plans.length}</strong><span>Page plans</span></div><div class="health-item"><strong>${copy.length}</strong><span>Copy records</span></div><div class="health-item"><strong>${media.length}</strong><span>Media slots</span></div></div></div>
-<div class="grid two">
-<div class="grid">
-<div class="panel"><div class="panel-head"><h2>Page Planner</h2><span>Metadata & release planning</span></div><div class="panel-body"><form id="planForm" class="form-grid"><input type="hidden" id="planId"><div class="field"><label class="label">Page</label><select id="planPage">${pageOptions(defaultPage?.path||"")}</select></div><div class="field"><label class="label">Status</label><select id="planStatus">${statusOptions("DRAFT")}</select></div><div class="field full"><label class="label">Editorial title</label><input class="input" id="planTitle" maxlength="180"></div><div class="field full"><label class="label">Editorial notes</label><textarea id="planNotes" placeholder="Release notes, campaign direction, ownership notes..."></textarea></div><div class="form-actions"><button class="btn" type="button" data-clear="plan">New</button><button class="btn primary" type="submit">Save page plan</button></div></form></div></div>
-<div class="panel"><div class="panel-head"><h2>Page Copy</h2><span>Registered content targets only</span></div><div class="panel-body"><form id="copyForm" class="form-grid"><input type="hidden" id="copyId"><div class="field"><label class="label">Page</label><select id="copyPage">${pageOptions(defaultPage?.path||"",true)}</select></div><div class="field"><label class="label">Section</label><select id="copySection"></select></div><div class="field full"><label class="label">Content field</label><select id="copyField"></select><span class="help" id="copyHookHelp"></span></div><div class="field"><label class="label">Status</label><select id="copyStatus">${statusOptions("DRAFT")}</select></div><div class="field"><label class="label">Delivery</label><input class="input" value="Published site default" readonly></div><div class="field full"><label class="label">Value</label><textarea id="copyValue" placeholder="Editorial copy"></textarea></div><div class="form-actions"><button class="btn" type="button" data-clear="copy">New</button><button class="btn primary" type="submit">Save content block</button></div></form></div></div>
-<div class="panel"><div class="panel-head"><h2>Presentation Media</h2><span>Shared Asset Library</span></div><div class="panel-body"><form id="mediaForm" class="form-grid"><input type="hidden" id="mediaId"><div class="field"><label class="label">Page</label><select id="mediaPage">${pageOptions(editable.find(p=>arr(p.sections).some(s=>arr(s.mediaSlots).length))?.path||defaultPage?.path||"",true)}</select></div><div class="field"><label class="label">Section</label><select id="mediaSection"></select></div><div class="field full"><label class="label">Media slot</label><select id="mediaSlot"></select><span class="help" id="mediaHookHelp"></span></div><div class="field full"><label class="label">Asset</label><div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:7px"><input class="input" id="mediaAssetLabel" readonly placeholder="Select from Asset Library"><button class="btn" type="button" id="chooseMediaAsset">Choose asset</button></div><input type="hidden" id="mediaAssetUrl"><input type="hidden" id="mediaAssetId"></div><div class="field"><label class="label">Alt text</label><input class="input" id="mediaAlt"></div><div class="field"><label class="label">Status</label><select id="mediaStatus">${statusOptions("DRAFT")}</select></div><div class="form-actions"><button class="btn" type="button" data-clear="media">New</button><button class="btn primary" type="submit">Save media slot</button></div></form></div></div>
-</div>
-<div class="grid">
-<div class="panel"><div class="panel-head"><h2>Saved page plans</h2><span>${plans.length}</span></div><div class="panel-body flush" style="max-height:260px;overflow:auto">${recordsTable(plans,"plan")}</div></div>
-<div class="panel"><div class="panel-head"><h2>Saved copy</h2><span>${copy.length}</span></div><div class="panel-body flush" style="max-height:360px;overflow:auto">${recordsTable(copy,"copy")}</div></div>
-<div class="panel"><div class="panel-head"><h2>Saved media</h2><span>${media.length}</span></div><div class="panel-body flush" style="max-height:300px;overflow:auto">${recordsTable(media,"media")}</div></div>
-</div></div>`;wireWebsiteForms();}
-function recordsTable(records,kind){if(!records.length)return`<div class="empty">No saved records.</div>`;return`<table class="table"><thead><tr><th>Page / target</th><th>Status</th></tr></thead><tbody>${records.map(r=>`<tr data-edit="${kind}" data-id="${esc(recordId(r))}"><td><strong>${esc(r.title||r.name||r.contentId||r.slotId||r.pagePath||"Untitled")}</strong><span class="sub code">${esc(r.pagePath||r.path||"")}${r.sectionId?` · ${esc(r.sectionId)}`:""}</span></td><td><span class="status-text ${statusClass(r.status)}">${esc(r.status||"DRAFT")}</span></td></tr>`).join("")}</tbody></table>`}
-function refreshCopySelects(keepSection="",keepField=""){const page=catalogPage($("copyPage")?.value);const sec=arr(page?.sections).find(s=>s.id===keepSection&&arr(s.fields).length)||firstSection(page,"copy");if($("copySection")){$("copySection").innerHTML=sectionOptions(page,sec?.id||"","copy");if(sec)$("copySection").value=sec.id}const sid=$("copySection")?.value||sec?.id||"";if($("copyField")){$("copyField").innerHTML=fieldOptions(page,sid,keepField);if(keepField&&[...$("copyField").options].some(o=>o.value===keepField))$("copyField").value=keepField}if($("copyHookHelp"))$("copyHookHelp").textContent=$("copyField")?.value?`Registered hook: ${$("copyField").value}`:"No registered editable fields on this section."}
-function refreshMediaSelects(keepSection="",keepSlot=""){const page=catalogPage($("mediaPage")?.value);const sec=arr(page?.sections).find(s=>s.id===keepSection&&arr(s.mediaSlots).length)||firstSection(page,"media");if($("mediaSection")){$("mediaSection").innerHTML=sectionOptions(page,sec?.id||"","media");if(sec)$("mediaSection").value=sec.id}const sid=$("mediaSection")?.value||sec?.id||"";if($("mediaSlot")){$("mediaSlot").innerHTML=slotOptions(page,sid,keepSlot);if(keepSlot&&[...$("mediaSlot").options].some(o=>o.value===keepSlot))$("mediaSlot").value=keepSlot}if($("mediaHookHelp"))$("mediaHookHelp").textContent=$("mediaSlot")?.value?`Registered media slot: ${$("mediaSlot").value}`:"This page has no registered presentation media slot. Inventory-owned images are not editable here."}
-function wireWebsiteForms(){refreshCopySelects();refreshMediaSelects();$("planPage")?.addEventListener("change",e=>{const p=catalogPage(e.target.value);if(!$("planTitle").value)$("planTitle").value=p?.label||""});$("copyPage")?.addEventListener("change",()=>refreshCopySelects());$("copySection")?.addEventListener("change",()=>refreshCopySelects($("copySection").value));$("copyField")?.addEventListener("change",()=>$("copyHookHelp").textContent=`Registered hook: ${$("copyField").value}`);$("mediaPage")?.addEventListener("change",()=>refreshMediaSelects());$("mediaSection")?.addEventListener("change",()=>refreshMediaSelects($("mediaSection").value));$("mediaSlot")?.addEventListener("change",()=>$("mediaHookHelp").textContent=`Registered media slot: ${$("mediaSlot").value}`);
-$("planForm")?.addEventListener("submit",e=>{e.preventDefault();const page=catalogPage($("planPage").value);post("VOY_ADMIN_SAVE_CAMPAIGN",{campaign:{campaignId:$("planId").value||`WEB-PLAN-${String(page?.key||"page").replace(/[^a-z0-9]+/gi,"-").toUpperCase()}`,scope:"WEBSITE",presentationKind:"PAGE_PLAN",pagePath:page?.path||"",pageKey:page?.key||"",title:$("planTitle").value||page?.label||"",notes:$("planNotes").value,status:$("planStatus").value,published:$("planStatus").value==="PUBLISHED"}});toast("Saving page plan…")});
-$("copyForm")?.addEventListener("submit",e=>{e.preventDefault();const page=catalogPage($("copyPage").value),sectionId=$("copySection").value,contentId=$("copyField").value;if(!page||!sectionId||!contentId){toast("Choose a registered page, section and content field.","error");return}post("VOY_ADMIN_SAVE_ARTICLE",{article:{articleId:$("copyId").value||`WEB-CONTENT-${String(page.key||"page").replace(/[^a-z0-9]+/gi,"-").toUpperCase()}-${String(contentId).replace(/[^a-z0-9]+/gi,"-").toUpperCase()}`,scope:"WEBSITE",presentationKind:"CONTENT_BLOCK",pagePath:page.path,pageKey:page.key,sectionId,contentId,title:`${page.label} · ${contentId}`,value:$("copyValue").value,body:$("copyValue").value,status:$("copyStatus").value,published:$("copyStatus").value==="PUBLISHED"}});toast("Saving content block…")});
-$("mediaForm")?.addEventListener("submit",e=>{e.preventDefault();const page=catalogPage($("mediaPage").value),sectionId=$("mediaSection").value,slotId=$("mediaSlot").value,url=$("mediaAssetUrl").value;if(!page||!sectionId||!slotId){toast("Choose a registered page, section and media slot.","error");return}if(!url){toast("Choose an Asset Library item first.","error");return}post("VOY_ADMIN_SAVE_BANNER",{banner:{bannerId:$("mediaId").value||`WEB-MEDIA-${String(page.key||"page").replace(/[^a-z0-9]+/gi,"-").toUpperCase()}-${String(slotId).replace(/[^a-z0-9]+/gi,"-").toUpperCase()}`,scope:"WEBSITE",presentationKind:"MEDIA_SLOT",pagePath:page.path,pageKey:page.key,sectionId,slotId,title:`${page.label} · ${slotId}`,assetId:$("mediaAssetId").value,assetUrl:url,imageUrl:url,alt:$("mediaAlt").value,ownership:"MEDIA_CONTROL",status:$("mediaStatus").value,published:$("mediaStatus").value==="PUBLISHED"}});toast("Saving presentation media…")});
-$("chooseMediaAsset")?.addEventListener("click",()=>openAssetPicker(asset=>{$("mediaAssetId").value=asset.id||"";$("mediaAssetUrl").value=asset.previewUrl||asset.publicUrl||"";$("mediaAssetLabel").value=asset.displayName||asset.originalName||asset.assetCode||asset.id;$("mediaAlt").value=asset.altText||$("mediaAlt").value}));
-document.querySelectorAll("[data-clear]").forEach(b=>b.addEventListener("click",()=>clearWebsiteForm(b.dataset.clear)));document.querySelectorAll("tr[data-edit]").forEach(r=>r.addEventListener("click",()=>editWebsiteRecord(r.dataset.edit,r.dataset.id)));}
-function clearWebsiteForm(kind){if(kind==="plan"){$("planId").value="";$("planTitle").value="";$("planNotes").value="";$("planStatus").value="DRAFT"}if(kind==="copy"){$("copyId").value="";$("copyValue").value="";$("copyStatus").value="DRAFT"}if(kind==="media"){$("mediaId").value="";$("mediaAssetId").value="";$("mediaAssetUrl").value="";$("mediaAssetLabel").value="";$("mediaAlt").value="";$("mediaStatus").value="DRAFT"}}
-function findWebsiteRecord(kind,id){const map={plan:["campaign","PAGE_PLAN"],copy:["article","CONTENT_BLOCK"],media:["banner","MEDIA_SLOT"]},[t,k]=map[kind];return websiteRecords(t,k).find(r=>String(recordId(r))===String(id))}
-function editWebsiteRecord(kind,id){const r=findWebsiteRecord(kind,id);if(!r)return;if(kind==="plan"){$("planId").value=recordId(r);$("planPage").value=r.pagePath||r.path||"";$("planTitle").value=r.title||"";$("planNotes").value=r.notes||r.description||"";$("planStatus").value=normStatus(r.status)}if(kind==="copy"){$("copyId").value=recordId(r);$("copyPage").value=r.pagePath||r.path||"";refreshCopySelects(r.sectionId,r.contentId);$("copyValue").value=r.value??r.body??r.copy??"";$("copyStatus").value=normStatus(r.status)}if(kind==="media"){$("mediaId").value=recordId(r);$("mediaPage").value=r.pagePath||r.path||"";refreshMediaSelects(r.sectionId,r.slotId);$("mediaAssetId").value=r.assetId||"";$("mediaAssetUrl").value=r.assetUrl||r.imageUrl||"";$("mediaAssetLabel").value=r.assetName||r.title||r.assetId||"Existing asset";$("mediaAlt").value=r.alt||r.altText||"";$("mediaStatus").value=normStatus(r.status)}window.scrollTo({top:0,behavior:"smooth"})}
-function renderAssets(){const roots=[...new Set(state.assets.map(a=>a.libraryRoot).filter(Boolean))].sort();$("assetsRoot").innerHTML=`<div class="panel"><div class="panel-head"><h2>Shared Asset Library</h2><span>${state.assets.length} assets</span></div><div class="panel-body"><div class="toolbar"><input class="input grow" id="assetSearch" placeholder="Search assets"><select id="assetRoot"><option value="">All libraries</option>${roots.map(r=>`<option>${esc(r)}</option>`).join("")}</select><button class="btn" id="assetRefresh">Refresh</button></div></div></div><div style="height:10px"></div><div class="grid two"><div class="panel"><div class="panel-head"><h2>Library</h2></div><div class="panel-body"><div class="asset-grid" id="assetGrid"></div></div></div><div class="panel"><div class="panel-head"><h2>Upload asset</h2><span>Canonical Supabase storage</span></div><div class="panel-body"><div class="upload-zone"><input type="file" id="assetFile"><div class="help" style="margin-top:6px">SHA-256 duplicate detection runs before upload.</div><div class="progress"><i id="uploadProgress"></i></div></div><div class="form-grid" style="margin-top:10px"><div class="field"><label class="label">Visibility</label><select id="uploadVisibility"><option>PUBLIC</option><option>PRIVATE</option></select></div><div class="field"><label class="label">Library</label><select id="uploadRoot">${["SKANDI","AIRLINES","AIRCRAFT","AIRPORTS","COUNTRIES","DESTINATIONS","AREAS","HOTELS","TRANSFERS","TOURS","ACTIVITIES","TICKETS","CAR RENTAL","SUPPLIERS","PARTNERS","EMPLOYEES","UNIFORMS","VOY"].map(v=>`<option>${v}</option>`).join("")}</select></div><div class="field"><label class="label">Folder</label><input class="input" id="uploadFolder" value="MEDIA CONTROL"></div><div class="field"><label class="label">Category</label><input class="input" id="uploadCategory" value="IMAGE"></div><div class="field full"><label class="label">Display name</label><input class="input" id="uploadName"></div><div class="form-actions"><button class="btn primary" id="uploadBtn" type="button">Check & upload</button></div></div><div class="notice" style="margin-top:10px">Inventory-owned record images remain managed through Inventory Control even when the physical file also exists in this shared library.</div></div></div></div>`;wireAssets();filterAssets()}
-function filterAssets(){const q=String($("assetSearch")?.value||"").toLowerCase(),root=$("assetRoot")?.value||"";const rows=state.assets.filter(a=>(!root||a.libraryRoot===root)&&(!q||[a.displayName,a.originalName,a.assetCode,a.libraryRoot,a.libraryFolder,a.category,...arr(a.tags)].join(" ").toLowerCase().includes(q)));const host=$("assetGrid");if(!host)return;host.innerHTML=rows.length?rows.map(a=>assetCard(a)).join(""):`<div class="empty">No matching assets.</div>`;host.querySelectorAll("[data-asset]").forEach(el=>el.addEventListener("click",()=>{state.selectedAssetId=el.dataset.asset;filterAssets()}));host.querySelectorAll("[data-copy-url]").forEach(btn=>btn.addEventListener("click",async e=>{e.stopPropagation();const a=state.assets.find(x=>String(x.id)===String(btn.dataset.copyUrl));const url=a?.previewUrl||a?.publicUrl||"";if(url){try{await navigator.clipboard.writeText(url);toast("Asset URL copied.","ok")}catch(_){toast(url)}}}));host.querySelectorAll("[data-archive-asset]").forEach(btn=>btn.addEventListener("click",e=>{e.stopPropagation();const id=btn.dataset.archiveAsset;if(confirm("Archive this asset from the active library? Existing registered usages are not fabricated or deleted."))post("MEDIA_CONTROL_ARCHIVE",{assetId:id,id})}));}
-function assetCard(a){const url=a.previewUrl||a.publicUrl||"";return`<article class="asset ${String(a.id)===String(state.selectedAssetId)?"selected":""}" data-asset="${esc(a.id)}"><div class="asset-thumb">${url&&String(a.assetType).toUpperCase()==="IMAGE"?`<img src="${esc(url)}" alt="${esc(a.altText||a.displayName||"")}">`:`${esc(a.assetType||"FILE")}`}</div><div class="asset-body"><div class="asset-title">${esc(a.displayName||a.originalName||a.assetCode||a.id)}</div><div class="asset-meta">${esc(a.libraryRoot||"")} / ${esc(a.libraryFolder||"")}<br>${esc(a.assetType||"")} · ${Math.round(Number(a.sizeBytes||0)/1024)} KB</div><div class="asset-actions"><button class="btn" type="button" data-copy-url="${esc(a.id)}">Copy URL</button><button class="btn danger" type="button" data-archive-asset="${esc(a.id)}">Archive</button></div></div></article>`}
-function wireAssets(){$("assetSearch")?.addEventListener("input",filterAssets);$("assetRoot")?.addEventListener("change",filterAssets);$("assetRefresh")?.addEventListener("click",()=>post("MEDIA_CONTROL_LIST",{}));$("assetFile")?.addEventListener("change",()=>{const f=$("assetFile").files?.[0];if(f&&!$("uploadName").value)$("uploadName").value=f.name});$("uploadBtn")?.addEventListener("click",uploadAsset)}
-async function sha256(file){const buf=await file.arrayBuffer(),hash=await crypto.subtle.digest("SHA-256",buf);return [...new Uint8Array(hash)].map(b=>b.toString(16).padStart(2,"0")).join("")}
-let pendingUpload=null;function currentUploadPayload(file,hash,allowPossibleDuplicate=false){return{file:{name:file.name,type:file.type,size:file.size},sha256:hash,visibility:$("uploadVisibility").value,libraryRoot:$("uploadRoot").value,libraryFolder:$("uploadFolder").value,category:$("uploadCategory").value,displayName:$("uploadName").value||file.name,contextSystem:"MEDIA_CONTROL",allowPossibleDuplicate}}async function uploadAsset(){const file=$("assetFile")?.files?.[0];if(!file){toast("Choose a file first.","error");return}try{$("uploadProgress").style.width="12%";const hash=await sha256(file);pendingUpload={file,hash};post("MEDIA_CONTROL_UPLOAD_PREPARE",currentUploadPayload(file,hash,false));toast("Checking duplicate and preparing upload…")}catch(e){toast(e.message,"error")}}
-async function completePreparedUpload(prep){if(!pendingUpload)return;if(prep.duplicate){pendingUpload=null;$("uploadProgress").style.width="100%";toast("This file already exists in the Asset Library.","ok");post("MEDIA_CONTROL_LIST",{});return}if(prep.needsReview){const matches=arr(prep.possibleLegacyDuplicates);const proceed=confirm(`A possible legacy duplicate was found${matches.length?` (${matches.length} match${matches.length===1?"":"es"})`:""}. Upload a new physical asset anyway?`);if(proceed&&pendingUpload){post("MEDIA_CONTROL_UPLOAD_PREPARE",currentUploadPayload(pendingUpload.file,pendingUpload.hash,true));toast("Preparing reviewed upload…");return}toast("Upload cancelled for duplicate review.");pendingUpload=null;return}if(!prep.upload?.signedUrl){toast("Upload URL was not returned.","error");pendingUpload=null;return}try{$("uploadProgress").style.width="45%";const file=pendingUpload.file;const response=await fetch(prep.upload.signedUrl,{method:"PUT",headers:{"content-type":file.type,"cache-control":`max-age=${prep.upload.cacheControl||3600}`,"x-upsert":"false"},body:file});if(!response.ok)throw new Error(`Asset upload failed (${response.status}).`);$("uploadProgress").style.width="78%";post("MEDIA_CONTROL_UPLOAD_FINALIZE",{requestId:prep.requestId});}catch(e){pendingUpload=null;toast(e.message,"error")}}
-function openAssetPicker(onSelect){state.assetPicker=onSelect;$("modalTitle").textContent="Select Asset Library item";$("modalBody").innerHTML=`<div class="toolbar"><input id="pickerSearch" class="input grow" placeholder="Search Asset Library"></div><div class="asset-grid" id="pickerGrid" style="margin-top:9px;max-height:65vh;overflow:auto"></div>`;$("modal").classList.add("show");const render=()=>{const q=String($("pickerSearch").value||"").toLowerCase(),items=state.assets.filter(a=>String(a.assetType||"").toUpperCase()==="IMAGE"&&String(a.visibility||"PUBLIC").toUpperCase()==="PUBLIC"&&(!q||[a.displayName,a.originalName,a.libraryRoot,a.libraryFolder,a.category].join(" ").toLowerCase().includes(q)));$("pickerGrid").innerHTML=items.map(a=>assetCard(a)).join("");$("pickerGrid").querySelectorAll("[data-asset]").forEach(el=>el.addEventListener("click",()=>{const a=state.assets.find(x=>String(x.id)===String(el.dataset.asset));if(a&&state.assetPicker)state.assetPicker(a);closeModal()}))};$("pickerSearch").addEventListener("input",render);render()}
-function closeModal(){$("modal").classList.remove("show");state.assetPicker=null}
-function renderVoy(){const issues=entityList("issue"),pages=entityList("page"),selected=issues.find(i=>String(i.issueId||i._id)===String(state.selectedIssueId))||issues[0]||null;if(selected)state.selectedIssueId=selected.issueId||selected._id;$("voyRoot").innerHTML=`<div class="split-list"><div class="list-pane"><div class="panel"><div class="panel-head"><h2>Issues</h2><button class="btn" id="newIssue">New issue</button></div><div class="panel-body"><div class="issue-list">${issues.length?issues.map(i=>`<div class="list-card ${String(i.issueId||i._id)===String(state.selectedIssueId)?"active":""}" data-issue="${esc(i.issueId||i._id)}"><strong>${esc(i.title||i.name||i.slug||"Untitled issue")}</strong><span>${esc(i.issueNumber||i.number||"")} · ${esc(i.status||"DRAFT")}</span></div>`).join(""):`<div class="empty">No VOY issues.</div>`}</div></div></div></div><div class="detail-pane">${voyIssueEditor(selected,pages)}</div></div>`;wireVoy()}
-function voyIssueEditor(issue,pages){
-  const i=issue||{};
-  const issuePages=pages.filter(p=>!state.selectedIssueId||String(p.issueId||p.issue_id||"")===String(state.selectedIssueId));
-  const selectedPage=issuePages.find(p=>String(p.pageId||p.page_id||p._id||p.id)===String(state.selectedPageId))||issuePages[0]||null;
-  if(selectedPage)state.selectedPageId=selectedPage.pageId||selectedPage.page_id||selectedPage._id||selectedPage.id||"";
-  const pg=selectedPage||{};
-  const issueId=i.issueId||i._id||state.selectedIssueId||"";
-  return `<div class="panel"><div class="panel-head"><h2>${issue?"Issue editor":"New VOY issue"}</h2><span>Editorial production</span></div><div class="panel-body"><form id="issueForm" class="form-grid"><input type="hidden" id="issueId" value="${esc(i.issueId||i._id||"")}"><div class="field"><label class="label">Title</label><input class="input" id="issueTitle" value="${esc(i.title||"")}"></div><div class="field"><label class="label">Issue number</label><input class="input" id="issueNumber" value="${esc(i.issueNumber||i.number||"")}"></div><div class="field"><label class="label">Slug</label><input class="input" id="issueSlug" value="${esc(i.slug||"")}"></div><div class="field"><label class="label">Status</label><select id="issueStatus">${statusOptions(i.status||"DRAFT")}</select></div><div class="field full"><label class="label">Description</label><textarea id="issueDescription">${esc(i.description||i.summary||"")}</textarea></div><div class="form-actions"><button class="btn" type="button" id="previewIssue" ${issue?"":"disabled"}>Public preview</button><button class="btn danger" type="button" id="archiveIssue" ${issue?"":"disabled"}>Archive</button><button class="btn danger" type="button" id="deleteIssue" ${issue?"":"disabled"}>Delete</button><button class="btn primary" type="submit">Save issue</button></div></form></div></div>
-  <div style="height:10px"></div>
-  <div class="grid two">
-    <div class="panel"><div class="panel-head"><h2>Page plan</h2><span>${issuePages.length} pages</span></div><div class="panel-body flush" style="max-height:420px;overflow:auto">${issuePages.length?`<table class="table"><thead><tr><th>Page</th><th>Template</th><th>Status</th></tr></thead><tbody>${issuePages.sort((a,b)=>Number(a.pageNumber||a.page_number||0)-Number(b.pageNumber||b.page_number||0)).map(p=>`<tr data-voy-page="${esc(p.pageId||p.page_id||p._id||p.id||"")}"><td><strong>${esc(p.pageNumber||p.page_number||"")}. ${esc(p.title||p.headline||"Untitled")}</strong></td><td>${esc(p.template||p.templateKey||p.template_key||"")}</td><td><span class="status-text ${statusClass(p.status)}">${esc(p.status||"DRAFT")}</span></td></tr>`).join("")}</tbody></table>`:`<div class="empty">No pages in this issue.</div>`}</div></div>
-    <div class="panel"><div class="panel-head"><h2>${selectedPage?"Page editor":"New page"}</h2><button class="btn" id="newVoyPage" type="button" ${issueId?"":"disabled"}>New page</button></div><div class="panel-body"><form id="pageForm" class="form-grid"><input type="hidden" id="pageId" value="${esc(pg.pageId||pg.page_id||pg._id||pg.id||"")}"><input type="hidden" id="pageIssueId" value="${esc(issueId)}"><div class="field"><label class="label">Page number</label><input class="input" id="pageNumber" type="number" min="1" value="${esc(pg.pageNumber||pg.page_number||issuePages.length+1)}"></div><div class="field"><label class="label">Template</label><select id="pageTemplate">${["COVER","CONTENTS","FEATURE","ARTICLE","DESTINATION","SPREAD","GUIDE","ADVERTISEMENT","CUSTOM"].map(v=>`<option ${String(pg.template||pg.templateKey||pg.template_key||"").toUpperCase()===v?"selected":""}>${v}</option>`).join("")}</select></div><div class="field full"><label class="label">Page title</label><input class="input" id="pageTitle" value="${esc(pg.title||pg.headline||"")}"></div><div class="field"><label class="label">Status</label><select id="pageStatus">${statusOptions(pg.status||"DRAFT")}</select></div><div class="field"><label class="label">Kicker</label><input class="input" id="pageKicker" value="${esc(pg.kicker||"")}"></div><div class="field full"><label class="label">Body / editorial copy</label><textarea id="pageBody" style="min-height:150px">${esc(pg.body||pg.copy||pg.description||"")}</textarea></div><div class="form-actions"><button class="btn danger" id="deleteVoyPage" type="button" ${selectedPage?"":"disabled"}>Delete page</button><button class="btn primary" type="submit" ${issueId?"":"disabled"}>Save page</button></div></form></div></div>
+<div class="modalOverlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modalHead">
+      <div><div class="modalTitle" id="modalTitle">Detail</div><div class="help" id="modalSub">—</div></div>
+      <button class="btn" data-action="close-modal">Close</button>
+    </div>
+    <div id="modalBody"></div>
   </div>
-  <div style="height:10px"></div>
-  ${voyRegisters(issueId)}`
+</div>
+<script>
+(function(){
+"use strict";
+const SOURCE="SKANDI_MEDIA_CONTROL";
+const PARENT="SKANDI_WIX_PARENT";
+const STORAGE_KEY="SKANDI_MM_VOY_MAGAZINE_STUDIO_V2";
+const $=id=>document.getElementById(id);
+const esc=v=>String(v??"").replace(/[&<>"']/g,s=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[s]));
+const arr=v=>Array.isArray(v)?v:String(v||"").split(",").map(x=>x.trim()).filter(Boolean);
+const uid=p=>`${p}-${Date.now()}-${Math.random().toString(36).slice(2,7)}`;
+function today(){return new Date().toISOString().slice(0,10)}
+function post(type,payload={}){window.parent.postMessage({source:SOURCE,type,payload,timestamp:new Date().toISOString()},"*")}
+const LIVE_REFRESH_MS=300000;
+const EXPECTED_COLLECTIONS=["VoyIssues","VoyPages","VoyArticles","VoyAssets","VoyCampaigns","VoyApprovals","VoyCategories","VoyBanners","VoyTravelCards","VoyBrandKits","VoyQualityReports","VoyDistributionKits","VoyPrintPackages","VoyApiAttributions"];
+let lastLiveRefreshAt=0;
+function requestLiveRefresh(reason="manual"){
+  lastLiveRefreshAt=Date.now();
+  post("VOY_ADMIN_BOOTSTRAP",{reason,requestedAt:new Date().toISOString(),activePanel:state?.activePanel||"",expectedCollections:EXPECTED_COLLECTIONS});
 }
-function voyRegisters(issueId){
-  const articles=entityList("article").filter(x=>String(x.scope||"").toUpperCase()!=="WEBSITE"&&(!issueId||!x.issueId||String(x.issueId)===String(issueId)));
-  const campaigns=entityList("campaign").filter(x=>String(x.scope||"").toUpperCase()!=="WEBSITE");
-  const banners=entityList("banner").filter(x=>String(x.scope||"").toUpperCase()!=="WEBSITE");
-  const cards=arr(state.voy.travelCards||state.voy.travel_cards||[]);
-  return `<div class="panel"><div class="panel-head"><h2>VOY content registers</h2><span>Articles · Campaigns · Banners · Travel cards</span></div><div class="panel-body"><div class="grid two"><div><h3 style="font:700 10px var(--display);color:var(--navy);margin:0 0 7px">Articles</h3>${articles.length?recordsTable(articles.map(x=>({...x,pagePath:x.issueId||"VOY"})),"noop"):`<div class="empty">No articles.</div>`}</div><div><h3 style="font:700 10px var(--display);color:var(--navy);margin:0 0 7px">Campaigns / Banners / Cards</h3><table class="table"><tbody><tr><td><strong>Campaigns</strong></td><td>${campaigns.length}</td></tr><tr><td><strong>Banners</strong></td><td>${banners.length}</td></tr><tr><td><strong>Travel cards</strong></td><td>${cards.length}</td></tr></tbody></table></div></div><div style="height:10px"></div><div class="grid two"><form id="voyArticleForm" class="form-grid"><div class="field full"><label class="label">New article title</label><input class="input" id="voyArticleTitle"></div><div class="field"><label class="label">Status</label><select id="voyArticleStatus">${statusOptions("DRAFT")}</select></div><div class="field full"><label class="label">Body</label><textarea id="voyArticleBody"></textarea></div><div class="form-actions"><button class="btn primary" type="submit">Save article</button></div></form><form id="voyCampaignForm" class="form-grid"><div class="field full"><label class="label">New campaign title</label><input class="input" id="voyCampaignTitle"></div><div class="field"><label class="label">Status</label><select id="voyCampaignStatus">${statusOptions("DRAFT")}</select></div><div class="field full"><label class="label">Notes</label><textarea id="voyCampaignNotes"></textarea></div><div class="form-actions"><button class="btn primary" type="submit">Save campaign</button></div></form></div></div></div>`
+function refreshAfterSave(reason="save"){
+  window.setTimeout(()=>requestLiveRefresh(reason),900);
+  window.setTimeout(()=>requestLiveRefresh(reason+"-confirm"),2600);
 }
-function wireVoy(){
-  document.querySelectorAll("[data-issue]").forEach(el=>el.addEventListener("click",()=>{state.selectedIssueId=el.dataset.issue;state.selectedPageId="";renderVoy()}));
-  document.querySelectorAll("[data-voy-page]").forEach(el=>el.addEventListener("click",()=>{state.selectedPageId=el.dataset.voyPage;renderVoy()}));
-  $("newIssue")?.addEventListener("click",()=>{state.selectedIssueId="";state.selectedPageId="";renderVoy()});
-  $("newVoyPage")?.addEventListener("click",()=>{state.selectedPageId="";renderVoy()});
-  $("issueForm")?.addEventListener("submit",e=>{e.preventDefault();post("VOY_ADMIN_SAVE_ISSUE_METADATA",{issue:{issueId:$("issueId").value||undefined,title:$("issueTitle").value,issueNumber:$("issueNumber").value,slug:$("issueSlug").value,status:$("issueStatus").value,description:$("issueDescription").value}});toast("Saving VOY issue…")});
-  $("pageForm")?.addEventListener("submit",e=>{e.preventDefault();const issueId=$("pageIssueId").value;if(!issueId){toast("Save or select an issue first.","error");return}post("VOY_ADMIN_SAVE_PAGE",{page:{pageId:$("pageId").value||undefined,issueId,pageNumber:Number($("pageNumber").value||1),template:$("pageTemplate").value,title:$("pageTitle").value,kicker:$("pageKicker").value,body:$("pageBody").value,status:$("pageStatus").value}});toast("Saving VOY page…")});
-  $("previewIssue")?.addEventListener("click",()=>post("VOY_PUBLIC_PREVIEW_REQUEST",{issueId:$("issueId").value}));
-  $("archiveIssue")?.addEventListener("click",()=>post("VOY_ADMIN_ARCHIVE_ISSUE",{issueId:$("issueId").value}));
-  $("deleteIssue")?.addEventListener("click",()=>{if(confirm("Delete this issue? Published issues must be archived first."))post("VOY_ADMIN_DELETE_ISSUE",{issueId:$("issueId").value})});
-  $("deleteVoyPage")?.addEventListener("click",()=>{if(confirm("Delete this VOY page?"))post("VOY_ADMIN_DELETE_PAGE",{pageId:$("pageId").value,issueId:$("pageIssueId").value})});
-  $("voyArticleForm")?.addEventListener("submit",e=>{e.preventDefault();const title=$("voyArticleTitle").value.trim();if(!title)return;post("VOY_ADMIN_SAVE_ARTICLE",{article:{articleId:`VOY-ARTICLE-${Date.now()}`,issueId:$("issueId")?.value||state.selectedIssueId,title,body:$("voyArticleBody").value,status:$("voyArticleStatus").value}});toast("Saving VOY article…")});
-  $("voyCampaignForm")?.addEventListener("submit",e=>{e.preventDefault();const title=$("voyCampaignTitle").value.trim();if(!title)return;post("VOY_ADMIN_SAVE_CAMPAIGN",{campaign:{campaignId:`VOY-CAMPAIGN-${Date.now()}`,title,notes:$("voyCampaignNotes").value,status:$("voyCampaignStatus").value}});toast("Saving campaign…")});
+function toast(msg,mode=""){const el=$("toast");el.textContent=msg;el.style.background=mode==="bad"?"#b91c1c":mode==="ok"?"#15803d":"#020617";el.style.display="block";clearTimeout(toast.t);toast.t=setTimeout(()=>el.style.display="none",2600)}
+function status(msg,mode=""){const el=$("statusLine");el.textContent=msg||"";el.style.display=msg?"block":"none";el.style.borderLeftColor=mode==="bad"?"#b91c1c":mode==="ok"?"#15803d":mode==="warn"?"#b45309":"#022e64"}
+function loadLocal(){try{return JSON.parse(localStorage.getItem(STORAGE_KEY)||"{}")}catch(e){return {}}}
+function saveLocal(){localStorage.setItem(STORAGE_KEY,JSON.stringify(state))}
+const baseState={
+  session:{}, activeModule:"management", activePanel:"dashboard", selectedIssueId:"", selectedPageId:"", selectedArticleId:"",
+  issues:[], pages:[], articles:[], categories:[], banners:[], travelCards:[], assets:[], assetResults:[],
+  campaigns:[], approvals:[], connectors:{}, destinationResearch:null, seoResult:null, apiStatus:[],
+  newsroomPosts:[], newsroomCategories:[], newsroomMedia:[], pressContacts:[], editingPostId:"", editingContactId:"",
+  brandKit:{name:"SKANDI VOY",tone:"Premium, warm, practical and commercially sharp",fonts:"Montserrat / Tahoma",colors:"#022e64, #0b3a7a, #5FC7CF, #ffffff",requiredWords:"SKANDI Travels, curated, destination, experience",blockedWords:"cheap, guaranteed, best in the world",defaultCta:"Explore destination"},
+  qualityResult:null, brandGuardResult:null, printQa:null, distributionKit:null, distributionKits:[],
+  catalog:[], editorialSelection:{planPageKey:"",copyPageKey:"",copySectionId:"",copyFieldId:"",mediaPageKey:"",mediaSectionId:"",mediaSlotId:"",releasePageKey:""},
+  editingCategoryId:"", editingBannerId:"", editingCardId:"", editingIssueId:"", editingWebContentId:"", editingWebMediaId:"", editingWebPlanId:""
+};
+let state={...baseState,...loadLocal()};
+const modules=[
+  {id:"website",title:"Website",panels:["siteplan","webcontent","webmedia","assets","pressreleases"]},
+  {id:"management",title:"Management",panels:["dashboard","issues","workflow"]},
+  {id:"contacts",title:"Contacts",panels:["presscontacts","articles"]},
+  {id:"reports",title:"Reports",panels:["quality","printqa","distribution"]},
+  {id:"marketing",title:"Marketing",panels:["pressreleases","campaign","banners","travelcards"]},
+  {id:"circulation",title:"Circulation",panels:["distribution","issues"]},
+  {id:"production",title:"Production",panels:["builder","articles","assets","printqa"]},
+  {id:"tools",title:"Tools",panels:["research","quality","brandkit","api"]},
+  {id:"nonadmin",title:"NonAdmin Setup",panels:["categories","brandkit"]},
+  {id:"chargebrite",title:"ChargeBrite",panels:["campaign","banners"]},
+  {id:"governance",title:"Governance",panels:["presentationmatrix","contentaudit","releasecenter","quality","brandkit"]}
+];
+const panels=[
+  ["dashboard","Studio Desk","F1"],["issues","Issues","F2"],["builder","Magazine Builder","F3"],["articles","Articles","F4"],["assets","Assets / Media","F5"],
+  ["research","Destination Research","F6"],["campaign","Campaigns","F7"],["quality","Quality Lab","QA"],["brandkit","Brand Kit","BK"],["printqa","Print QA","PQ"],["distribution","Distribution","DS"],["workflow","Workflow","F8"],["categories","Categories","F9"],["banners","Banners","F10"],["travelcards","Travel Cards","F11"],["api","API Connectors","F12"],
+  ["pressreleases","Press Releases","PR"],["presscontacts","Press Contacts","PC"],["siteplan","Website Planner","WEB"],["webcontent","Page Copy","TXT"],["webmedia","Hero / Card Media","IMG"],
+  ["presentationmatrix","Presentation Matrix","PM"],["contentaudit","Content Audit","CA"],["releasecenter","Release Center","RC"]
+];
+const templates=[
+  {id:"cover",title:"VOY Cover",sub:"Masthead, lead stories and cover image",cls:"cover"},
+  {id:"contents",title:"Contents",sub:"Issue sections, editor note and page index",cls:"spread"},
+  {id:"brand-feature",title:"SKANDI Brand Feature",sub:"Brand story and signature promise",cls:"feature"},
+  {id:"offers",title:"Offers",sub:"Four editable offer cards and pricing",cls:"spread"},
+  {id:"section-opener",title:"Section Opener",sub:"Full-bleed destination chapter opener",cls:"cover"},
+  {id:"feature",title:"Feature Story",sub:"Hero image and editorial columns",cls:"feature"},
+  {id:"destination-grid",title:"Destination Grid",sub:"Four-place visual discovery layout",cls:"spread"},
+  {id:"nightlife",title:"After Dark",sub:"Dark editorial nightlife feature",cls:"cover"},
+  {id:"experiences",title:"Curated Experiences",sub:"Experience cards and editorial notes",cls:"spread"},
+  {id:"travel-well",title:"Travel Well",sub:"Practical checklist and travel advice",cls:"feature"},
+  {id:"airline-guide",title:"Airline Directory",sub:"All partner airlines, logos and journey roles",cls:"spread"},
+  {id:"airline-profile",title:"Airline Profiles",sub:"Two detailed airline profiles per page",cls:"spread"},
+  {id:"onboard-guide",title:"Onboard Guide",sub:"Cabin, meals, baggage and service",cls:"feature"},
+  {id:"airport-guide",title:"Airport Guide",sub:"Airport logos, codes, terminals and transfers",cls:"spread"},
+  {id:"route-map",title:"Route Map",sub:"Route directory and connection map",cls:"spread"},
+  {id:"transfer-promise",title:"Transfer Promise",sub:"SKANDI transfer safety and service standards",cls:"feature"},
+  {id:"signature-collection",title:"Signature Collection",sub:"Curated hotel and partner collection",cls:"feature"},
+  {id:"back-cover",title:"Back Cover",sub:"Closing campaign and call to action",cls:"ad"}
+];
+const templateCopy={
+  cover:["The Blue Issue","Dream deeper. Travel further.","Aegean light, Nordic calm and the journeys worth taking now."],
+  contents:["Inside VOY","Your guide to this issue","Destinations, useful travel information and SKANDI recommendations."],
+  "brand-feature":["Travel, the SKANDI way","Signature travels. Unforgettable moments.","Thoughtful planning, trusted support and journeys shaped around how you want to travel."],
+  offers:["Selected for this issue","Curated journeys and seasonal offers","Prices and availability can be updated directly in each offer card."],
+  "section-opener":["Where to now?","The Greece chapter","Four islands, one capital and a different shade of blue."],
+  feature:["A Different Kind of Blue","Greece beyond the postcard","Slow mornings, clear water and stories shaped by place."],
+  "destination-grid":["Greece, Four Ways","Find your version of the Aegean","Athens, Santorini, Crete and Rhodes each bring a different rhythm."],
+  nightlife:["Golden Hour, After Dark","When the islands change pace","Sunset tables, small bars and evenings that stretch naturally."],
+  experiences:["Worth the Detour","Experiences selected by SKANDI","The places, people and moments that make a journey memorable."],
+  "travel-well":["Travel Light. Arrive Ready.","Practical details, clearly explained","A calm journey starts with the right information before departure."],
+  "airline-guide":["The Airline Guide","Choose how you fly","Compare SKANDI partner airlines, cabin products and the details worth knowing before you book."],
+  "airline-profile":["Airline Profiles","Compare before you book","Seat, baggage, meals, Wi-Fi, airport benefits and loyalty — airline by airline."],
+  "onboard-guide":["On Board, Your Way","Cabin information and service","Meals, baggage, comfort and what to expect during the journey."],
+  "airport-guide":["Airport Guide","From check-in to arrival","Terminal, transfer and airport information for the featured routes."],
+  "route-map":["Across the Atlantic, Into the Aegean","Routes featured in this issue","New York to Copenhagen and Athens, with onward island connections."],
+  "transfer-promise":["Always With SKANDI","The SKANDI Transfer Promise","Safety, comfort and care continue after the flight, whether the journey is operated by SKANDI or a contracted transfer partner."],
+  "signature-collection":["The SKANDI Signature Collection","Places we would choose ourselves","Hotels, airlines and partners selected for character, quality and care."],
+  "back-cover":["Your next story starts here.","Explore the journey with SKANDI","Signature Travels, Unforgettable Moments."]
+};
+
+const BLOCK_SCHEMAS={
+  contents:[["meta","Page","text"],["title","Title","text"],["subtitle","Description","textarea"]],
+  offers:[["meta","Badge / duration","text"],["title","Offer title","text"],["subtitle","Description","textarea"],["imageUrl","Image asset","text"],["price","Price","text"],["cta","CTA label","text"],["href","Booking URL","text"]],
+  "destination-grid":[["title","Destination","text"],["meta","Best for","text"],["imageUrl","Image asset","text"],["subtitle","Introduction","textarea"],["stay","Stay","textarea"],["do","Do","textarea"],["eat","Eat","textarea"],["gettingThere","Getting there","textarea"]],
+  nightlife:[["meta","Time / label","text"],["title","Stop title","text"],["body","Copy","textarea"]],
+  experiences:[["meta","Number / location","text"],["title","Experience","text"],["subtitle","Description","textarea"],["imageUrl","Image asset","text"]],
+  "travel-well":[["title","Heading","text"],["body","Advice","textarea"]],
+  "airline-guide":[["title","Airline","text"],["subtitle","Journey role","text"],["logoUrl","Logo asset","text"],["secondaryLogoUrl","Second logo asset","text"],["meta","Cabins / alliance","text"],["cta","Profile label","text"]],
+  "airline-profile":[["title","Airline","text"],["subtitle","Profile focus","text"],["logoUrl","Logo asset","text"],["secondaryLogoUrl","Second logo asset","text"],["meta","Cabins","text"],["body","Summary","textarea"],["seat","Seat & comfort","textarea"],["baggage","Baggage","textarea"],["food","Food & drink","textarea"],["wifi","Wi-Fi & power","textarea"],["airport","Airport benefits","textarea"],["loyalty","Loyalty","textarea"],["tip","VOY tip","textarea"],["booking","Know before you book","textarea"]],
+  "onboard-guide":[["title","Cabin / service","text"],["subtitle","Subheading","text"],["body","Description","textarea"]],
+  "airport-guide":[["code","IATA code","text"],["title","Airport name","text"],["location","Location","text"],["logoUrl","Airport logo asset","text"],["meta","Role label","text"],["role","Role","textarea"],["plan","Plan for","textarea"],["note","VOY note","textarea"]],
+  "route-map":[["title","Route","text"],["subtitle","Description","text"],["meta","Type","text"]],
+  "transfer-promise":[["title","Promise / standard","text"],["subtitle","Short label","text"],["body","Description","textarea"]],
+  "signature-collection":[["title","Partner / stay","text"],["subtitle","Location / category","text"],["imageUrl","Image asset","text"],["meta","Collection label","text"]]
+};
+function defaultBlocksForTemplate(template){
+  const d={
+    contents:[{meta:"04",title:"Offers Worth Leaving For",subtitle:"Curated journeys and seasonal offers."},{meta:"06",title:"A Different Kind of Blue",subtitle:"The Greece Issue feature."},{meta:"11",title:"The Airline Guide",subtitle:"Compare partner airlines and cabins."},{meta:"20",title:"Airport Guide",subtitle:"Gateways used in this issue."}],
+    offers:[{meta:"Featured · 7 nights",title:"Athens & the Aegean",subtitle:"A city stay followed by unhurried island days.",price:"From $2,195",imageUrl:""},{meta:"5 nights",title:"Santorini, Unhurried",subtitle:"Caldera views and an easier island escape.",price:"From $2,495",imageUrl:""},{meta:"City break",title:"Copenhagen Design Weekend",subtitle:"A central design hotel and a curated city guide.",price:"From $1,795",imageUrl:""},{meta:"8 nights",title:"Crete, Slowly",subtitle:"A longer island stay with selected seaside hotel.",price:"From $2,395",imageUrl:""}],
+    "destination-grid":[{title:"Santorini",meta:"For the romantics",subtitle:"White villages, caldera views and evenings designed for two.",imageUrl:"",stay:"",do:"",eat:"",gettingThere:""},{title:"Crete",meta:"For the explorers",subtitle:"Beaches, food, mountains, cities and history.",imageUrl:"",stay:"",do:"",eat:"",gettingThere:""},{title:"Mykonos",meta:"For the free spirits",subtitle:"Beach days, sunset and a famously social night scene.",imageUrl:"",stay:"",do:"",eat:"",gettingThere:""},{title:"Skiathos",meta:"For the beach lovers",subtitle:"Pine-covered hills and clear-water beaches.",imageUrl:"",stay:"",do:"",eat:"",gettingThere:""}],
+    nightlife:[{meta:"18:30",title:"Find the higher view",body:"Choose a terrace where the city or island remains the main event."},{meta:"20:15",title:"Let sunset move past you",body:"Stay after the last light for the softer blue hour."},{meta:"22:00",title:"Order for the table",body:"Share a few dishes at a time and leave room for the house suggestion."}],
+    experiences:[{meta:"01 · Santorini",title:"Sail the Caldera",subtitle:"See the island as it was first approached: from the water.",imageUrl:""},{meta:"02 · Athens",title:"Market to Table",subtitle:"Begin among produce stalls and turn the morning’s finds into lunch.",imageUrl:""},{meta:"03 · Crete",title:"Take the Long Road South",subtitle:"Cross the island slowly, stopping for mountain air and a swim.",imageUrl:""}],
+    "travel-well":[{title:"Before you leave",body:"Save documents offline. Keep first-night essentials in your cabin bag. Pre-book the arrival transfer."},{title:"At the airport",body:"Build in time, refill water after security and keep medication and chargers within reach."},{title:"In the air",body:"Set your watch to local time, hydrate and prioritize rest."},{title:"On arrival",body:"Keep the first afternoon open and let one local recommendation reshape the itinerary."}],
+    "airline-guide":[],
+    "airline-profile":[],
+    "onboard-guide":[{title:"Economy",subtitle:"The considered essentials",body:"A practical seat and the airline’s standard onboard service; inclusions depend on fare."},{title:"Premium",subtitle:"More room for the journey",body:"Additional space and enhanced service on selected routes and aircraft."},{title:"Business",subtitle:"Rest, privacy and time",body:"Priority services and a more complete seating and dining experience where offered."}],
+    "airport-guide":[],
+    "route-map":[{title:"JFK → ATH",subtitle:"New York to Athens · Greece gateway",meta:"Transatlantic"},{title:"EWR → CPH",subtitle:"Newark to Copenhagen · Nordic gateway",meta:"Transatlantic"},{title:"ATH → JTR",subtitle:"Athens to Santorini · Island connection",meta:"Onward"},{title:"ATH → HER",subtitle:"Athens to Heraklion · Crete connection",meta:"Onward"},{title:"ATH → RHO",subtitle:"Athens to Rhodes · Island connection",meta:"Onward"}],
+    "transfer-promise":[{title:"Seatbelts at Every Seat",subtitle:"Vehicle safety",body:"Every coach is equipped with operational passenger seatbelts."},{title:"DOT / Regulatory Compliance",subtitle:"Vehicle safety",body:"Vehicles follow applicable operating and inspection requirements."},{title:"Rest & Break Standards",subtitle:"Driver standards",body:"Driver schedules are planned around regulated rest and break requirements."},{title:"Screening & Testing",subtitle:"Driver standards",body:"Contracted operating standards include required screening and testing protocols."}],
+    "signature-collection":[{title:"Sense of place",subtitle:"01",meta:"Signature principle"},{title:"Considered comfort",subtitle:"02",meta:"Signature principle"},{title:"Local character",subtitle:"03",meta:"Signature principle"},{title:"Care throughout",subtitle:"04",meta:"Signature principle"}]
+  };
+  return JSON.parse(JSON.stringify(d[template]||[]));
+}
+const VOY_AIRLINE_PARTNERS=[
+  {title:"SAS Scandinavian Airlines",subtitle:"Scandinavian network",logoUrl:"https://static.wixstatic.com/shapes/394052_a0d0be73c163471b97280438e22247fe.svg",meta:"Economy · Premium · Business",body:"Nordic gateways, European connections and transatlantic travel.",seat:"Add route and aircraft-specific seat information.",baggage:"Show the allowance attached to the fare being compared.",food:"Show what is included by cabin, fare and flight length.",wifi:"Show availability and whether access is free or paid.",airport:"Show Fast Track, priority boarding and lounge eligibility.",loyalty:"EuroBonus · SkyTeam",tip:"Compare the cabin with the fare family.",booking:"Confirm the operating carrier and aircraft."},
+  {title:"Norwegian",subtitle:"Nordic short-haul / leisure network",logoUrl:"https://static.wixstatic.com/shapes/394052_da2259c27d5046d782e20c9b3050e694.svg",meta:"Fare-family cabin product",body:"A value-led Nordic network where the final fare depends heavily on selected extras.",seat:"Compare standard and extra-legroom seats.",baggage:"Compare cabin and checked-bag inclusions by fare.",food:"Show included versus pre-order or buy-on-board options.",wifi:"Show aircraft-specific connectivity.",airport:"Show priority services where included.",loyalty:"Add current loyalty earning and benefits.",tip:"Compare final price after bags and seat selection.",booking:"Fare inclusions matter more than headline price."},
+  {title:"Norse Atlantic Airways",subtitle:"Transatlantic partner",logoUrl:"https://static.wixstatic.com/shapes/394052_2c0b19b3399a4938a36e4dd7d8820c91.svg",meta:"Economy · Premium",body:"Long-haul value across the Atlantic with a distinct Premium cabin.",seat:"Add pitch, width and recline for each cabin.",baggage:"Show exactly which bags are included in each fare.",food:"Show meal inclusion and optional purchase rules.",wifi:"Add current connectivity availability.",airport:"Show priority benefits attached to Premium or fare type.",loyalty:"Add current program details if applicable.",tip:"Compare Premium when Economy extras narrow the price gap.",booking:"Show add-on costs before comparing total fare value."},
+  {title:"American Airlines",subtitle:"U.S. partner",logoUrl:"https://static.wixstatic.com/shapes/394052_47809f4547c04f6eb7e098c5602ff57c.svg",meta:"Economy · Premium Economy · Business",body:"A major U.S. network with several cabin and fare layers.",seat:"Add aircraft-specific seat and lie-flat information.",baggage:"Show allowance by cabin and fare.",food:"Show route-specific meal and beverage service.",wifi:"Show aircraft-specific Wi-Fi pricing or inclusion.",airport:"Show priority check-in, security, boarding and lounge eligibility.",loyalty:"AAdvantage · oneworld",tip:"Aircraft type can materially change the premium-seat experience.",booking:"Codeshare flight numbers do not guarantee an American-operated aircraft."},
+  {title:"Delta Air Lines",subtitle:"U.S. partner",logoUrl:"https://static.wixstatic.com/shapes/394052_377043bf26d7497b8c2768693bb823be.svg",meta:"Main · Comfort · Premium Select · Delta One",body:"Separate extra-legroom Economy, true Premium Economy and lie-flat products clearly.",seat:"Show the practical difference between each seat product.",baggage:"Show fare-level baggage inclusions.",food:"Show meal and beverage differences by cabin.",wifi:"Show current Wi-Fi eligibility by aircraft and membership requirements.",airport:"Show priority and lounge rules by cabin, status and fare.",loyalty:"SkyMiles · SkyTeam",tip:"Do not confuse extra-legroom Economy with Premium Economy.",booking:"Check both marketing and operating carrier."},
+  {title:"United Airlines",subtitle:"U.S. partner",logoUrl:"https://static.wixstatic.com/shapes/394052_2bcd8cefebfa4daf85cf962e23302058.svg",meta:"Economy · Economy Plus · Premium Plus · Polaris",body:"A broad U.S. network with multiple comfort steps on long-haul routes.",seat:"Add aircraft-specific seat, recline and bed information.",baggage:"Show cabin and fare baggage differences.",food:"Show meal inclusions by route and cabin.",wifi:"Show current aircraft and route availability.",airport:"Show priority and lounge eligibility.",loyalty:"MileagePlus · Star Alliance",tip:"A protected one-ticket connection can matter as much as fare.",booking:"Check whether every sector is United-operated."},
+  {title:"JetBlue",subtitle:"U.S. partner",logoUrl:"https://static.wixstatic.com/shapes/394052_b77843700bd7450ea2fdc315f34f2c7b.svg",meta:"Core · EvenMore · Mint where offered",body:"Seat choice, connectivity and aircraft matter when comparing JetBlue products.",seat:"Add pitch and premium-seat configuration by aircraft.",baggage:"Show fare-specific carry-on and checked-bag rules.",food:"Show complimentary versus premium dining service.",wifi:"Show current onboard connectivity.",airport:"Show priority and lounge benefits where applicable.",loyalty:"TrueBlue",tip:"Compare the exact aircraft when choosing a premium transatlantic seat.",booking:"Premium products may not be available on every route."},
+  {title:"Thai Airways International",subtitle:"Thailand & long-haul partner",logoUrl:"https://static.wixstatic.com/shapes/394052_c370132e76c64a29befdfd67496234fe.svg",meta:"Economy · Business · First where offered",body:"Aircraft type is particularly important when comparing long-haul cabin layouts.",seat:"Add seat and bed information by aircraft.",baggage:"Show cabin and fare baggage allowances.",food:"Show long-haul dining and special-meal options.",wifi:"Show aircraft-specific connectivity.",airport:"Show lounge, priority and transfer benefits.",loyalty:"Royal Orchid Plus · Star Alliance",tip:"Check the scheduled aircraft before choosing a premium seat.",booking:"Aircraft swaps can change the cabin product."},
+  {title:"AEGEAN Airlines",subtitle:"Greece & regional partner",logoUrl:"https://static.wixstatic.com/shapes/394052_c7e36ab1073540aa9711ecf1e783be1e.svg",meta:"Economy · Business",body:"A key Athens and Greek-island connection partner.",seat:"Explain standard seating versus European Business personal-space treatment.",baggage:"Show baggage by fare family and cabin.",food:"Show route-specific meal and beverage service.",wifi:"Show connectivity on equipped aircraft.",airport:"Show lounge and priority benefits.",loyalty:"Miles+Bonus · Star Alliance",tip:"For Athens connections, compare the whole journey rather than only the short sector.",booking:"Separate tickets can change baggage and connection protection."},
+  {title:"Icelandair",subtitle:"North Atlantic partner",logoUrl:"https://static.wixstatic.com/shapes/394052_e09b3c2f6dfd4ca3a87497e34f538c53.svg",meta:"Economy · Saga Premium",body:"Explain the premium front-cabin experience without implying a lie-flat long-haul Business product.",seat:"Add seat pitch, width and recline.",baggage:"Show fare-specific baggage.",food:"Show included and optional dining.",wifi:"Show aircraft-specific connectivity.",airport:"Show priority and lounge eligibility.",loyalty:"Saga Club",tip:"Compare actual seat specification rather than cabin names alone.",booking:"Connection and stopover structure can matter as much as cabin."},
+  {title:"Iberia",subtitle:"Spain & Europe partner",logoUrl:"https://static.wixstatic.com/shapes/394052_3726a2f12dcd44ab8dea7085713902b9.svg",meta:"Economy · Premium Economy · Business",body:"A useful Madrid gateway with a clear long-haul cabin progression.",seat:"Add aircraft-specific pitch, width and lie-flat information.",baggage:"Show fare and cabin allowances.",food:"Show onboard dining by cabin and route.",wifi:"Show aircraft-specific Wi-Fi.",airport:"Show priority and lounge eligibility.",loyalty:"Iberia Plus / Avios · oneworld",tip:"Protected Madrid connections can add value beyond the headline fare.",booking:"Check which airline operates codeshare sectors."},
+  {title:"Bangkok Airways",subtitle:"Thailand regional partner",logoUrl:"https://static.wixstatic.com/shapes/394052_a65058298c704ed089e73f5df7700ff6.svg",meta:"Regional cabin products by aircraft",body:"A regional and island connection partner where convenience and included services matter.",seat:"Add aircraft-specific seating.",baggage:"Show fare and cabin baggage.",food:"Show included service by route.",wifi:"Show current availability where applicable.",airport:"Show lounge and priority benefits available to the booked fare.",loyalty:"FlyerBonus",tip:"On short sectors, baggage and connection convenience can outweigh a small fare difference.",booking:"Check through-ticket baggage and connection handling."},
+  {title:"Alaska Airlines & Hawaiian Airlines",subtitle:"Combined SKANDI partner group",logoUrl:"https://static.wixstatic.com/shapes/394052_5bb1675bcf714b2c841e938d36962878.svg",secondaryLogoUrl:"https://static.wixstatic.com/shapes/394052_71baaaf34d4b495996bb80015b4f61e3.svg",meta:"Products depend on operating brand",body:"Keep both operating brands visible because the passenger experience differs by operator and aircraft.",seat:"Split seat information by operating airline and aircraft.",baggage:"Show rules attached to the operating airline and ticket.",food:"Separate Alaska and Hawaiian service where it differs.",wifi:"Show aircraft-specific connectivity for each brand.",airport:"Show benefits that apply to the operating brand and fare.",loyalty:"Add current group loyalty structure and benefits.",tip:"Never collapse the onboard product into one generic experience.",booking:"Display both marketing and operating carrier prominently."},
+  {title:"Finnair",subtitle:"Finland & long-haul partner",logoUrl:"https://static.wixstatic.com/shapes/394052_97cf9b3a9a884781b3186ededecd7b45.svg",meta:"Economy · Premium Economy · Business",body:"A Nordic long-haul option with distinct Premium Economy and Business products.",seat:"Add pitch, width and premium-seat / bed information.",baggage:"Show cabin and fare allowance.",food:"Show dining by cabin and flight length.",wifi:"Show aircraft and route availability.",airport:"Show priority and lounge eligibility.",loyalty:"Finnair Plus · oneworld",tip:"Compare Premium Economy and Business against flight duration and departure time.",booking:"Check aircraft and operating carrier before describing the seat."}
+];
+function currentVoyBlueprint(issueId){
+  const p=(template,pageNo,overrides={})=>({...makeTemplatePage(templates.find(t=>t.id===template)||templates[0],pageNo-1,issueId),pageNo,...overrides,blocks:overrides.blocks||defaultBlocksForTemplate(template)});
+  const profilePairs=[];for(let i=0;i<VOY_AIRLINE_PARTNERS.length;i+=2)profilePairs.push(VOY_AIRLINE_PARTNERS.slice(i,i+2));
+  return [
+    p("cover",1,{kicker:"The Greece Issue",title:"A Different Kind of Blue",deck:"Crete, Santorini and the Greek islands through the SKANDI lens.",imageUrl:"https://static.wixstatic.com/media/394052_df1cdfcfeb434cd1aa47ee47949309f3~mv2.png",blocks:[{title:"The Mediterranean’s remarkable new hotels"},{title:"New York's Lower Manhattan — restaurants not to miss"},{title:"A calmer way across the Atlantic"}]}),
+    p("contents",2,{kicker:"Issue 01 · Summer 2026",title:"In this issue.",deck:"The Greece Issue",blocks:defaultBlocksForTemplate("contents")}),
+    p("brand-feature",3,{kicker:"Travel, the SKANDI way",title:"Signature Travels. Unforgettable Moments.",deck:"Carefully selected flights, stays, transfers and experiences.",imageUrl:"https://images.unsplash.com/photo-1533104816931-20fa691ff6ca?auto=format&fit=crop&w=1800&q=90"}),
+    p("offers",4,{kicker:"Curated by SKANDI",title:"Offers worth leaving for.",deck:"Four journeys selected for VOY readers.",blocks:defaultBlocksForTemplate("offers")}),
+    p("section-opener",5,{kicker:"Journeys begin with a question",title:"Where to now?",deck:"Follow the light from Athens to the islands, choosing fewer stops, longer stays and room for the unexpected.",destination:"Crete · Santorini · Athens · Mykonos",imageUrl:"https://images.unsplash.com/photo-1533104816931-20fa691ff6ca?auto=format&fit=crop&w=1800&q=90"}),
+    p("feature",6,{kicker:"The Greece Issue",title:"A Different Kind of Blue",deck:"Fall in love in Santorini. Swim the waters of Crete. Dance until sunrise in Mykonos.",body:"Some places you visit. Greece gets under your skin.\n\nMaybe yours begins in Santorini, where whitewashed villages tumble towards the Aegean and evenings seem designed for two.\n\nHead south to Crete for beaches, mountain villages, ancient ruins, olive groves and tavernas where dinner runs long.\n\nThen there’s Mykonos: glamorous, free-spirited and famously social after dark.\n\nCome as a couple. Come with friends. Come to celebrate. Come to disappear for a while. You just have to find your shade of blue.",imageUrl:"https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&w=1800&q=90"}),
+    p("destination-grid",7,{kicker:"Four distinct moods",title:"Find your shade of Greece",deck:"Four islands. Four moods. Four very different reasons to pack your bags.",blocks:defaultBlocksForTemplate("destination-grid")}),
+    p("nightlife",8,{kicker:"An evening in three acts",title:"Golden Hour, After Dark",deck:"The Greek evening rewards a slower clock: one view, one drink and a table chosen without hurry.",imageUrl:"https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?auto=format&fit=crop&w=1400&q=90",blocks:defaultBlocksForTemplate("nightlife")}),
+    p("experiences",9,{kicker:"Three stories to bring home",title:"Worth the Detour",deck:"The experiences we remember tend to be simple: a boat, a table, a road — and the right person showing the way.",blocks:defaultBlocksForTemplate("experiences")}),
+    p("travel-well",10,{kicker:"A calmer way to go",title:"Travel Light. Arrive Ready.",deck:"A few considered choices can make the journey feel like part of the holiday.",blocks:defaultBlocksForTemplate("travel-well")}),
+    p("airline-guide",11,{kicker:"Choose how you fly",title:"The Airline Guide",deck:"Meet the airline partners behind a SKANDI journey and compare what matters before choosing a fare.",body:"Look for ‘operated by’ when comparing the onboard product. Cabin does not always equal fare: baggage, flexibility, seat selection and lounge benefits may differ within the same cabin.",blocks:VOY_AIRLINE_PARTNERS.map((a,i)=>({title:a.title,subtitle:a.subtitle,logoUrl:a.logoUrl,secondaryLogoUrl:a.secondaryLogoUrl||"",meta:a.meta,cta:`Profile ${String(i+1).padStart(2,"0")}`}))}),
+    ...profilePairs.map((pair,i)=>p("airline-profile",12+i,{kicker:"Compare before you book",title:"Airline Profiles",deck:"Look beyond the headline fare. Seat, bags, meals, Wi-Fi, lounge access and flexibility can change the real value of a ticket.",blocks:pair})),
+    p("onboard-guide",19,{kicker:"Comfort at every altitude",title:"On Board, Your Way",deck:"Understand the broad cabin choices, then confirm the exact product on your booking.",imageUrl:"https://images.unsplash.com/photo-1540339832862-474599807836?auto=format&fit=crop&w=1300&q=90",blocks:defaultBlocksForTemplate("onboard-guide")}),
+    p("airport-guide",20,{kicker:"From curb to coast",title:"Airport Guide",deck:"The main gateways used throughout this issue, with practical notes for each departure, connection and arrival.",blocks:[
+      {code:"JFK",title:"John F. Kennedy International Airport",location:"New York · United States",logoUrl:"https://static.wixstatic.com/media/394052_980f3d4579f446e0a134e36cd044ae5d~mv2.png",meta:"Departure",role:"Primary transatlantic departure gateway.",plan:"Security, terminal navigation and possible traffic delays.",note:"Confirm airline and terminal before leaving for the airport."},
+      {code:"EWR",title:"Newark Liberty International Airport",location:"Newark · United States",logoUrl:"",meta:"Departure",role:"New York-area gateway for transatlantic and Nordic journeys.",plan:"Allow time for the correct terminal and check-in area.",note:"Use the airport code, not only ‘New York’, when arranging transport."},
+      {code:"ATH",title:"Athens International Airport",location:"Athens · Greece",logoUrl:"",meta:"Gateway",role:"Main international gateway and island-connection point.",plan:"Connection time and the correct onward departure area.",note:"Keep the next boarding pass and baggage receipt easy to reach."},
+      {code:"JTR",title:"Santorini Airport",location:"Santorini · Greece",logoUrl:"",meta:"Island",role:"Compact island arrival for Santorini stays.",plan:"Pre-arranged transfer during busy periods.",note:"Keep accommodation and transfer contact available offline."},
+      {code:"HER",title:"Heraklion International Airport",location:"Crete · Greece",logoUrl:"",meta:"Island",role:"Gateway for central and eastern Crete itineraries.",plan:"Road transfer between airport and resort area.",note:"Match the arrival airport to the part of Crete where you are staying."},
+      {code:"RHO",title:"Rhodes International Airport",location:"Rhodes · Greece",logoUrl:"",meta:"Island",role:"Arrival gateway for Rhodes town and coastal stays.",plan:"The onward journey to the old town or resort area.",note:"Confirm the transfer meeting point in your SKANDI documents."}
+    ]}),
+    p("route-map",21,{kicker:"Issue 01 route guide",title:"Across the Atlantic, Into the Aegean",deck:"An illustrated view of the gateways and connections featured in this Greece issue.",blocks:defaultBlocksForTemplate("route-map")}),
+    p("transfer-promise",22,{kicker:"The SKANDI Transfer Promise",title:"Always With SKANDI.",deck:"When you step off the airplane, safety, comfort and peace of mind remain part of the journey.",body:"These standards apply to SKANDI-operated transfers and the contracted operators selected for our journeys.",blocks:defaultBlocksForTemplate("transfer-promise")}),
+    p("signature-collection",23,{kicker:"Selected with purpose",title:"The SKANDI Signature Collection",deck:"Stays, routes and local partners chosen for character, comfort and a genuine sense of place.",imageUrl:"https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&w=1800&q=90",blocks:defaultBlocksForTemplate("signature-collection")}),
+    p("back-cover",24,{kicker:"VOY · By SKANDI",title:"Your next story starts here.",deck:"Explore considered journeys, selected stays and experiences shaped around the way you want to travel.",ctaLabel:"Scan to explore",ctaPath:"https://www.skanditravels.com",backgroundColor:"#022e64",textColor:"#ffffff",accentColor:"#5fc7cf"})
+  ];
+}
+function renderBlockEditor(p={}){
+  const blocks=parseBlocks(p.blocks);const schema=BLOCK_SCHEMAS[p.template]||[["meta","Label / meta","text"],["title","Title","text"],["subtitle","Subtitle","textarea"],["body","Body","textarea"],["imageUrl","Image asset","text"],["logoUrl","Logo asset","text"],["price","Price","text"],["cta","CTA","text"]];
+  const fields=(b,i)=>schema.map(([key,label,type])=>`<div class="field ${type==="textarea"?"full":""}"><label class="label">${esc(label)}</label>${type==="textarea"?`<textarea data-block-index="${i}" data-block-field="${esc(key)}">${esc(b[key]||"")}</textarea>`:`<input class="input" data-block-index="${i}" data-block-field="${esc(key)}" value="${esc(b[key]||"")}">`}</div>`).join("");
+  return `<div class="mm-block-editor"><div class="mm-block-toolbar"><strong>Structured ${esc(templates.find(t=>t.id===p.template)?.title||"page")} content</strong><button type="button" class="btn primary" data-action="add-block">Add item</button></div><div class="mm-block-list">${blocks.length?blocks.map((b,i)=>`<article class="mm-block-item"><div class="mm-block-head"><b>Item ${i+1}</b><div class="mm-block-actions"><button type="button" class="btn" data-block-move="up" data-block-index-action="${i}">↑</button><button type="button" class="btn" data-block-move="down" data-block-index-action="${i}">↓</button><button type="button" class="btn bad" data-block-remove="${i}">Remove</button></div></div><div class="mm-block-fields">${fields(b,i)}</div></article>`).join(""):`<div class="empty">No structured items on this page. Add an item or load the template defaults.</div>`}</div></div>`;
+}
+function collectVisualBlocks(){
+  const nodes=[...document.querySelectorAll("[data-block-field]")];if(!nodes.length)return null;const blocks=[];for(const node of nodes){const i=Number(node.dataset.blockIndex);if(!blocks[i])blocks[i]={};blocks[i][node.dataset.blockField]=node.value.trim()}return blocks.filter(Boolean);
 }
 
-function renderNewsroom(){const posts=arr(state.news.posts||state.news.articles),categories=arr(state.news.categories),contacts=arr(state.news.contacts||state.news.pressContacts),selected=posts.find(p=>String(p.id||p.articleId||p.postId||p._id)===String(state.selectedNewsId))||posts[0]||null;if(selected)state.selectedNewsId=selected.id||selected.articleId||selected.postId||selected._id;$("newsroomRoot").innerHTML=`<div class="split-list"><div class="list-pane"><div class="panel"><div class="panel-head"><h2>Posts</h2><button class="btn" id="newNews">New post</button></div><div class="panel-body"><div class="news-list">${posts.length?posts.map(p=>`<div class="list-card ${String(p.id||p.articleId||p.postId||p._id)===String(state.selectedNewsId)?"active":""}" data-news="${esc(p.id||p.articleId||p.postId||p._id)}"><strong>${esc(p.title||"Untitled post")}</strong><span>${esc(p.category||p.categoryName||"")} · ${esc(p.status||"DRAFT")}</span></div>`).join(""):`<div class="empty">No newsroom posts.</div>`}</div></div></div></div><div class="detail-pane">${newsEditor(selected,categories,contacts)}</div></div>`;wireNewsroom()}
-function newsEditor(postItem,categories,contacts){
-  const p=postItem||{};
-  const media=arr(state.news.media||state.news.mediaAssets||state.news.newsroomMedia);
-  return `<div class="panel"><div class="panel-head"><h2>${postItem?"Post editor":"New press release"}</h2><span>Public Newsroom</span></div><div class="panel-body"><form id="newsForm" class="form-grid"><input type="hidden" id="newsId" value="${esc(p.id||p.articleId||p.postId||p._id||"")}"><div class="field full"><label class="label">Headline</label><input class="input" id="newsTitle" value="${esc(p.title||"")}"></div><div class="field"><label class="label">Category</label><select id="newsCategory"><option value="">Uncategorized</option>${categories.map(c=>`<option value="${esc(c.id||c.categoryId||c.slug||c.name)}" ${(c.id||c.categoryId||c.slug||c.name)===(p.categoryId||p.category||p.category_id)?"selected":""}>${esc(c.name||c.title||c.slug)}</option>`).join("")}</select></div><div class="field"><label class="label">Status</label><select id="newsStatus">${statusOptions(p.status||"DRAFT")}</select></div><div class="field full"><label class="label">Summary</label><textarea id="newsSummary">${esc(p.summary||p.excerpt||"")}</textarea></div><div class="field full"><label class="label">Body</label><textarea id="newsBody" style="min-height:220px">${esc(p.body||p.content||"")}</textarea></div><div class="form-actions"><button class="btn danger" type="button" id="archiveNews" ${postItem?"":"disabled"}>Archive</button><button class="btn aqua" type="button" id="publishNews" ${postItem?"":"disabled"}>Publish</button><button class="btn primary" type="submit">Save draft</button></div></form></div></div>
-  <div style="height:10px"></div>
-  <div class="grid three">
-    <div class="panel"><div class="panel-head"><h2>Categories</h2><span>${categories.length}</span></div><div class="panel-body">${categories.length?categories.map(c=>`<div class="list-card"><strong>${esc(c.name||c.title||c.slug)}</strong></div>`).join(""):`<div class="empty">No categories.</div>`}<form id="categoryForm" class="form-grid" style="margin-top:10px"><div class="field full"><label class="label">New category</label><input class="input" id="categoryName"></div><div class="field full"><label class="label">Slug</label><input class="input" id="categorySlug"></div><div class="form-actions"><button class="btn primary" type="submit">Save category</button></div></form></div></div>
-    <div class="panel"><div class="panel-head"><h2>Media contacts</h2><span>${contacts.length}</span></div><div class="panel-body">${contacts.length?contacts.map(c=>`<div class="list-card"><strong>${esc(c.name||c.fullName||c.title)}</strong><span>${esc(c.email||c.role||"")}</span></div>`).join(""):`<div class="empty">No media contacts.</div>`}<form id="contactForm" class="form-grid" style="margin-top:10px"><div class="field full"><label class="label">Name</label><input class="input" id="contactName"></div><div class="field"><label class="label">Role</label><input class="input" id="contactRole"></div><div class="field"><label class="label">Email</label><input class="input" id="contactEmail" type="email"></div><div class="form-actions"><button class="btn primary" type="submit">Save contact</button></div></form></div></div>
-    <div class="panel"><div class="panel-head"><h2>Press media</h2><span>${media.length}</span></div><div class="panel-body">${media.length?media.slice(0,8).map(m=>`<div class="list-card"><strong>${esc(m.title||m.name||m.displayName||"Media asset")}</strong><span>${esc(m.assetId||m.url||"")}</span></div>`).join(""):`<div class="empty">No press media.</div>`}<form id="pressMediaForm" class="form-grid" style="margin-top:10px"><div class="field full"><label class="label">Title</label><input class="input" id="pressMediaTitle"></div><div class="field full"><label class="label">Asset</label><div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px"><input class="input" id="pressMediaAssetLabel" readonly><button class="btn" type="button" id="choosePressAsset">Choose</button></div><input type="hidden" id="pressMediaAssetId"><input type="hidden" id="pressMediaUrl"></div><div class="form-actions"><button class="btn primary" type="submit">Save press media</button></div></form></div></div>
-  </div>`
+function makeTemplatePage(template,index,issueId){
+  const copy=templateCopy[template.id]||[template.title,template.sub,"Start writing here."];
+  const dark=["cover","section-opener","nightlife","back-cover"].includes(template.id);
+  return {pageId:uid("PAGE"),issueId,pageNo:index+1,template:template.id,status:"DRAFT",category:"VOY Magazine",kicker:"VOY by SKANDI",title:copy[0],deck:copy[1],body:copy[2],imageUrl:"",secondaryImageUrl:"",imageCredit:"",imageFit:"cover",imagePosition:"center center",destination:"",ctaLabel:template.id==="back-cover"?"Explore SKANDI":"Explore more",ctaPath:"/",backgroundColor:dark?"#07162c":"#ffffff",textColor:dark?"#ffffff":"#103154",accentColor:"#4dcad6",headingFont:"Montserrat",bodyFont:"Inter",footerText:"VOY by SKANDI · skanditravels.com",blocks:defaultBlocksForTemplate(template.id),seoNotes:"",updatedAt:new Date().toISOString()};
 }
-function wireNewsroom(){
-  document.querySelectorAll("[data-news]").forEach(el=>el.addEventListener("click",()=>{state.selectedNewsId=el.dataset.news;renderNewsroom()}));
-  $("newNews")?.addEventListener("click",()=>{state.selectedNewsId="";renderNewsroom()});
-  $("newsForm")?.addEventListener("submit",e=>{e.preventDefault();post("NEWSROOM_SAVE_POST",{item:{id:$("newsId").value||undefined,articleId:$("newsId").value||undefined,title:$("newsTitle").value,categoryId:$("newsCategory").value,status:$("newsStatus").value,summary:$("newsSummary").value,body:$("newsBody").value}});toast("Saving Newsroom post…")});
-  $("publishNews")?.addEventListener("click",()=>post("NEWSROOM_PUBLISH_POST",{id:$("newsId").value,articleId:$("newsId").value,item:{id:$("newsId").value,articleId:$("newsId").value,title:$("newsTitle").value,categoryId:$("newsCategory").value,status:"PUBLISHED",summary:$("newsSummary").value,body:$("newsBody").value}}));
-  $("archiveNews")?.addEventListener("click",()=>post("NEWSROOM_ARCHIVE_POST",{id:$("newsId").value,articleId:$("newsId").value}));
-  $("categoryForm")?.addEventListener("submit",e=>{e.preventDefault();const name=$("categoryName").value.trim();if(!name)return;post("NEWSROOM_SAVE_CATEGORY",{item:{name,title:name,slug:$("categorySlug").value.trim()||name.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")}});toast("Saving category…")});
-  $("contactForm")?.addEventListener("submit",e=>{e.preventDefault();const name=$("contactName").value.trim();if(!name)return;post("NEWSROOM_SAVE_CONTACT",{item:{name,fullName:name,role:$("contactRole").value,email:$("contactEmail").value}});toast("Saving media contact…")});
-  $("choosePressAsset")?.addEventListener("click",()=>openAssetPicker(asset=>{$("pressMediaAssetId").value=asset.id||"";$("pressMediaUrl").value=asset.previewUrl||asset.publicUrl||"";$("pressMediaAssetLabel").value=asset.displayName||asset.originalName||asset.id}));
-  $("pressMediaForm")?.addEventListener("submit",e=>{e.preventDefault();const assetId=$("pressMediaAssetId").value;if(!assetId){toast("Choose an Asset Library item.","error");return}post("NEWSROOM_SAVE_MEDIA",{item:{title:$("pressMediaTitle").value||$("pressMediaAssetLabel").value,assetId,url:$("pressMediaUrl").value,imageUrl:$("pressMediaUrl").value}});toast("Saving press media…")});
+function init(){
+  if(!modules.some(m=>m.id===state.activeModule))state.activeModule="management";
+  const activeModule=modules.find(m=>m.id===state.activeModule)||modules[0];
+  if(!activeModule.panels.includes(state.activePanel))state.activePanel=activeModule.panels[0];
+  renderModules(); renderNav(); renderShell(); setInterval(()=>{const c=$("clock");if(c)c.textContent=new Date().toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})},1000);
+  post("MEDIA_CONTROL_READY",{workspace:"media-control-full",version:"V12-2026.10.14-FULL-EDITORIAL-STUDIO"});
+  post("MEDIA_CONTROL_CATALOG_REQUEST",{});
+  post("NEWSROOM_ADMIN_READY",{workspace:"voy-magazine-manager"});
+  window.parent.postMessage({source:"SKANDI_INTERNAL_CHROME",type:"INTERNAL_CHROME_READY",payload:{pagePath:location.pathname},timestamp:new Date().toISOString()},"*");
+  requestLiveRefresh("page-load");
+  setInterval(()=>requestLiveRefresh("auto-5-minute-field-refresh"),LIVE_REFRESH_MS);
+  window.addEventListener("pageshow",()=>requestLiveRefresh("page-show"));
+  document.addEventListener("visibilitychange",()=>{if(!document.hidden&&Date.now()-lastLiveRefreshAt>LIVE_REFRESH_MS)requestLiveRefresh("visible-after-idle")});
+  status("Magazine Manager ready. Waiting for live data sync or use the local editorial draft.");
+}
+function renderModules(){
+  const host=$("mmModules");if(!host)return;
+  host.innerHTML=modules.map(m=>`<button class="mm-module ${state.activeModule===m.id?"active":""}" type="button" data-module="${m.id}">${esc(m.title)}</button>`).join("");
+  const module=modules.find(m=>m.id===state.activeModule)||modules[0];
+  const panel=panels.find(p=>p[0]===state.activePanel);
+  if($("mmBreadcrumb"))$("mmBreadcrumb").textContent=`${module.title} / ${panel?.[1]||"Overview"}`;
+  if($("mmPageTitle"))$("mmPageTitle").textContent=state.activePanel==="builder"?"VOY Magazine Page Builder":state.activePanel==="pressreleases"?"Newsroom & Press Releases":"VOY Magazine & Newsroom Control";
+}
+function renderNav(){
+  const module=modules.find(m=>m.id===state.activeModule)||modules[0];
+  $("nav").innerHTML=`<div class="nav-title">${esc(module.title)}</div>`+module.panels.map(id=>panels.find(p=>p[0]===id)).filter(Boolean).map(p=>`<button class="nav-btn ${state.activePanel===p[0]?"active":""}" data-panel="${p[0]}"><span>${esc(p[1])}</span><span class="nav-key">${esc(p[2])}</span></button>`).join("");
+  renderModules();
+}
+function renderShell(){
+  const content=$("content");
+  content.innerHTML=panels.map(p=>`<section class="panel-view ${state.activePanel===p[0]?"active":""}" id="panel-${p[0]}"></section>`).join("");
+  renderAll();
+}
+function renderAll(){
+  renderNav();
+  updateStats();
+  renderDashboard();
+  renderIssues();
+  renderBuilder();
+  renderArticles();
+  renderAssets();
+  renderResearch();
+  renderCampaign();
+  renderQualityLab();
+  renderBrandKit();
+  renderPrintQa();
+  renderDistribution();
+  renderWorkflow();
+  renderCategories();
+  renderBanners();
+  renderTravelCards();
+  renderApi();
+  renderPressReleases();
+  renderPressContacts();
+  renderSitePlanner();
+  renderWebContent();
+  renderWebMedia();
+  renderPresentationMatrix();
+  renderContentAudit();
+  renderReleaseCenter();
+  saveLocal();
+}
+function setPanel(panel){
+  if(!panels.some(p=>p[0]===panel))return;
+  const current=modules.find(m=>m.id===state.activeModule);
+  if(!current?.panels.includes(panel)){
+    const preferred={siteplan:"website",webcontent:"website",webmedia:"website",presentationmatrix:"governance",contentaudit:"governance",releasecenter:"governance",builder:"production",assets:"production",articles:"production",pressreleases:"marketing",presscontacts:"contacts",distribution:"circulation",quality:"reports",printqa:"reports",research:"tools",api:"tools",brandkit:"tools",categories:"nonadmin",banners:"marketing",travelcards:"marketing",campaign:"marketing"};
+    state.activeModule=preferred[panel]||modules.find(m=>m.panels.includes(panel))?.id||"management";
+  }
+  state.activePanel=panel;
+  document.body.classList.remove("mobile-drawer-open");
+  document.querySelectorAll(".panel-view").forEach(v=>v.classList.toggle("active",v.id===`panel-${panel}`));
+  renderAll();
+  post("VOY_ADMIN_PANEL_CHANGED",{panel});
+}
+function setModule(moduleId){
+  const module=modules.find(m=>m.id===moduleId);if(!module)return;
+  state.activeModule=module.id;
+  if(!module.panels.includes(state.activePanel))state.activePanel=module.panels[0];
+  document.querySelectorAll(".panel-view").forEach(v=>v.classList.toggle("active",v.id===`panel-${state.activePanel}`));
+  renderAll();
+  post("VOY_ADMIN_PANEL_CHANGED",{module:module.id,panel:state.activePanel});
+}
+function updateStats(){
+  $("statIssues").textContent=state.issues.length;
+  $("statPages").textContent=state.pages.length;
+  $("statArticles").textContent=state.articles.length;
+  $("statAssets").textContent=state.assets.length;
+  $("statReady").textContent=state.articles.filter(a=>["APPROVED","READY","PUBLISHED"].includes(String(a.status||"").toUpperCase())).length;
+}
+function currentIssue(){
+  return state.issues.find(i=>i.issueId===state.selectedIssueId||i._id===state.selectedIssueId) || state.issues[0] || null;
+}
+function currentIssueId(){const i=currentIssue();return i?(i.issueId||i._id):""}
+function issuePages(issueId=currentIssueId()){
+  return state.pages.filter(p=>String(p.issueId||p.issueRef||"")===String(issueId)).sort((a,b)=>Number(a.pageNo||0)-Number(b.pageNo||0));
+}
+function currentPage(){
+  return state.pages.find(p=>p.pageId===state.selectedPageId||p._id===state.selectedPageId) || issuePages()[0] || null;
+}
+function currentArticle(){
+  return state.articles.find(a=>a.articleId===state.selectedArticleId||a._id===state.selectedArticleId) || state.articles[0] || null;
+}
+function pill(status){
+  const s=String(status||"DRAFT").toUpperCase();
+  const c=s.includes("APPROVED")||s.includes("READY")||s.includes("PUBLISHED")?"ok":s.includes("REJECT")||s.includes("BLOCK")||s.includes("ARCHIVED")?"bad":s.includes("REVIEW")||s.includes("DRAFT")||s.includes("PROGRESS")?"warn":"info";
+  return `<span class="pill ${c}">${esc(status||"DRAFT")}</span>`;
 }
 
-function renderQuality(){const editorial=state.catalog.filter(p=>p.editorial),unregistered=editorial.filter(p=>!p.presentationRuntime);$("qualityRoot").innerHTML=`<div class="grid two"><div class="panel"><div class="panel-head"><h2>Release controls</h2></div><div class="panel-body"><div class="notice">Editorial records use explicit workflow status. Public presentation output remains filtered by the canonical presentation backend.</div><div class="toolbar" style="margin-top:10px"><button class="btn" id="qualityCheck">Run editorial QA</button><button class="btn" id="brandCheck">Run brand guard</button><button class="btn" id="printCheck">Run VOY print QA</button></div><div id="qaResult" class="help" style="margin-top:10px"></div></div></div><div class="panel"><div class="panel-head"><h2>Ownership controls</h2></div><div class="panel-body"><table class="table"><tbody><tr><td><strong>Inventory facts/media</strong></td><td>Inventory Control</td></tr><tr><td><strong>Policy bodies</strong></td><td>Policy Control</td></tr><tr><td><strong>Commerce</strong></td><td>Wix Stores / Store Control</td></tr><tr><td><strong>Newsroom editorial</strong></td><td>Media Control</td></tr><tr><td><strong>VOY</strong></td><td>Media Control</td></tr><tr><td><strong>Static presentation hooks</strong></td><td>Media Control</td></tr></tbody></table></div></div></div><div style="height:10px"></div><div class="panel"><div class="panel-head"><h2>Presentation-runtime migration state</h2><span>${unregistered.length} registered editorial pages pending live runtime verification</span></div><div class="panel-body"><div class="notice warn">The editor catalog deliberately separates registered editorial fields from operational data. A page is only considered live-editable after its published embed consumes SKANDI_PRESENTATION_DATA. Source registration does not prove a published Wix runtime.</div><table class="table" style="margin-top:10px"><thead><tr><th>Page</th><th>Path</th><th>Registered sections</th><th>Source runtime</th></tr></thead><tbody>${editorial.map(p=>`<tr><td><strong>${esc(p.label)}</strong></td><td class="code">${esc(p.path)}</td><td>${arr(p.sections).length}</td><td><span class="status-text ${p.presentationRuntime?"good":"warn"}">${p.presentationRuntime?"Present":"Requires page runtime"}</span></td></tr>`).join("")}</tbody></table></div></div>`;$("qualityCheck")?.addEventListener("click",()=>post("VOY_QUALITY_LAB_REQUEST",{readiness:{score:100},localChecks:{pageWarnings:unregistered.length,assetWarnings:0,articleDrafts:websiteRecords("article","CONTENT_BLOCK").filter(r=>normStatus(r.status)==="DRAFT").length},pages:state.catalog}));$("brandCheck")?.addEventListener("click",()=>post("VOY_BRAND_GUARD_REQUEST",{}));$("printCheck")?.addEventListener("click",()=>post("VOY_PRINT_QA_REQUEST",{qa:{issues:entityList("issue").length,pages:entityList("page").length}}))}
-function handleMessage(m){const p=obj(m.payload);if(m.type==="MEDIA_CONTROL_HOST_READY"){state.hostReady=true;return}if(m.type==="MEDIA_CONTROL_EDITORIAL_CATALOG"){state.catalog=arr(p.pages);render();return}if(m.type==="VOY_ADMIN_BOOTSTRAP_RESULT"){state.voy=p;render();return}if(m.type==="NEWSROOM_ADMIN_BOOTSTRAP"||m.type==="NEWSROOM_ADMIN_DATA"){state.news=p.data||p;render();return}if(m.type==="MEDIA_CONTROL_LIBRARY"||m.type==="VOY_MEDIA_LIBRARY_RESULT"){state.assets=arr(p.assets);renderAssets();renderDashboard();return}if(m.type==="MEDIA_CONTROL_UPLOAD_READY"){completePreparedUpload(p);return}if(m.type==="MEDIA_CONTROL_UPLOAD_COMPLETE"){pendingUpload=null;if($("uploadProgress"))$("uploadProgress").style.width="100%";toast(p.duplicate?"Existing asset reused.":"Asset uploaded and registered.","ok");post("MEDIA_CONTROL_LIST",{});return}if(m.type==="VOY_ADMIN_SAVED"||m.type==="NEWSROOM_ADMIN_SAVED"){toast("Saved.","ok");return}if(m.type==="VOY_ADMIN_PUBLISHED"){toast("Published.","ok");return}if(m.type==="VOY_ADMIN_ARCHIVED"){toast("Archived.","ok");return}if(m.type==="MEDIA_CONTROL_ERROR"||m.type==="VOY_ADMIN_ERROR"||m.type==="NEWSROOM_ADMIN_ERROR"){toast(p.message||"Action failed.","error");return}if(m.type==="VOY_QUALITY_LAB_RESULT"||m.type==="VOY_BRAND_GUARD_RESULT"||m.type==="VOY_PRINT_QA_RESULT"){const el=$("qaResult");if(el)el.textContent=JSON.stringify(p.result||p,null,2);toast("Quality check complete.","ok")}}
-window.addEventListener("message",e=>{const m=e.data||{};if(m.source!==PARENT)return;handleMessage(m)});
-document.querySelectorAll(".nav").forEach(n=>n.addEventListener("click",()=>changeView(n.dataset.view)));$("refreshAll").addEventListener("click",()=>{post("MEDIA_CONTROL_CATALOG_REQUEST",{});post("MEDIA_CONTROL_LIST",{});post("VOY_ADMIN_BOOTSTRAP",{reason:"manual"});post("NEWSROOM_ADMIN_REFRESH",{});toast("Refreshing Media Control…")});$("logoutBtn").addEventListener("click",()=>window.parent.postMessage({source:"SKANDI_INTERNAL_CHROME",type:"INTERNAL_LOGOUT",payload:{}},"*"));$("modalClose").addEventListener("click",closeModal);$("modal").addEventListener("click",e=>{if(e.target===$("modal"))closeModal()});
-render();post("MEDIA_CONTROL_READY",{});post("MEDIA_CONTROL_CATALOG_REQUEST",{});post("MEDIA_CONTROL_LIST",{});post("VOY_ADMIN_BOOTSTRAP",{});post("NEWSROOM_ADMIN_READY",{});
+function websiteRecords(type,kind){
+  const source=type==="article"?state.articles:type==="banner"?state.banners:state.campaigns;
+  return source.filter(x=>String(x.scope||x.channel||"").toUpperCase()==="WEBSITE" && String(x.presentationKind||"").toUpperCase()===kind);
+}
+function catalogPages(){return Array.isArray(state.catalog)?state.catalog:[]}
+function editorialPages(){return catalogPages().filter(p=>p?.editorial===true&&Array.isArray(p.sections)&&p.sections.length)}
+function pageByKey(key){return catalogPages().find(p=>String(p.key)===String(key))||null}
+function sectionById(page,id){return (page?.sections||[]).find(x=>String(x.id)===String(id))||null}
+function firstSection(page,mode="copy"){return (page?.sections||[]).find(x=>mode==="media"?(x.mediaSlots||[]).length:(x.fields||[]).length)||null}
+function recordId(r){return r.articleId||r.campaignId||r.bannerId||r.cardId||r.categoryId||r.entityId||r._id||r.id||""}
+function option(value,label,selected=""){return `<option value="${esc(value)}" ${String(value)===String(selected)?"selected":""}>${esc(label)}</option>`}
+function pageOptions(pages,selected="",includeLocked=false){const rows=(pages||[]).filter(p=>includeLocked||p.editorial);return rows.map(p=>option(p.key,`${p.label} · ${p.path}${p.editorial?"":" · locked"}`,selected)).join("")}
+function sectionOptions(page,selected="",mode="copy"){return (page?.sections||[]).filter(x=>mode==="media"?(x.mediaSlots||[]).length:(x.fields||[]).length).map(x=>option(x.id,x.label,selected)).join("")}
+function fieldOptions(section,selected=""){return (section?.fields||[]).map(x=>option(x.id,`${x.label} · ${x.id}`,selected)).join("")}
+function mediaOptions(section,selected=""){return (section?.mediaSlots||[]).map(x=>option(x.id,`${x.label} · ${x.id}`,selected)).join("")}
+function ownershipNote(){return `<div class="notice"><b>Authority boundary:</b> Media Control owns registered presentation copy and non-inventory presentation media. Inventory Control remains authoritative for destination, airline, airport, hotel, package and provider-owned facts/media. Policy bodies, Store commerce, customer data and bookings remain with their own systems.</div>`}
+function pageRecordSet(path){return{plans:websiteRecords("campaign","PAGE_PLAN").filter(x=>x.pagePath===path),copy:websiteRecords("article","CONTENT_BLOCK").filter(x=>x.pagePath===path),media:websiteRecords("banner","MEDIA_SLOT").filter(x=>x.pagePath===path)}}
+function statusUpper(x){return String(x?.status||"").toUpperCase()}
+function isPublished(x){return x?.published===true||statusUpper(x)==="PUBLISHED"}
+function isHttpUrl(v){return /^https:\/\//i.test(String(v||"").trim())}
+function selectPlanRecord(page){return websiteRecords("campaign","PAGE_PLAN").find(x=>x.pagePath===page?.path)||null}
+function selectCopyRecord(page,fieldId){return websiteRecords("article","CONTENT_BLOCK").find(x=>x.pagePath===page?.path&&String(x.contentId)===String(fieldId))||null}
+function selectMediaRecord(page,slotId){return websiteRecords("banner","MEDIA_SLOT").find(x=>x.pagePath===page?.path&&String(x.slotId)===String(slotId))||null}
+function presentationCounts(page){const records=pageRecordSet(page.path),fieldCount=(page.sections||[]).reduce((n,x)=>n+(x.fields||[]).length,0),mediaCount=(page.sections||[]).reduce((n,x)=>n+(x.mediaSlots||[]).length,0);return{...records,fieldCount,mediaCount,publishedCopy:records.copy.filter(isPublished).length,publishedMedia:records.media.filter(isPublished).length}}
+function currentCatalogPage(kind){const key=kind==="plan"?state.editorialSelection.planPageKey:kind==="copy"?state.editorialSelection.copyPageKey:kind==="media"?state.editorialSelection.mediaPageKey:state.editorialSelection.releasePageKey;return pageByKey(key)||(kind==="plan"?catalogPages()[0]:editorialPages()[0])||null}
+function ensureCatalogSelections(){
+  const all=catalogPages(),editable=editorialPages();
+  if(!pageByKey(state.editorialSelection.planPageKey))state.editorialSelection.planPageKey=all[0]?.key||"";
+  if(!pageByKey(state.editorialSelection.copyPageKey)?.editorial)state.editorialSelection.copyPageKey=editable[0]?.key||"";
+  if(!pageByKey(state.editorialSelection.mediaPageKey)?.editorial)state.editorialSelection.mediaPageKey=(editable.find(p=>(p.sections||[]).some(s=>(s.mediaSlots||[]).length))||editable[0])?.key||"";
+  if(!pageByKey(state.editorialSelection.releasePageKey))state.editorialSelection.releasePageKey=editable[0]?.key||all[0]?.key||"";
+  const cp=pageByKey(state.editorialSelection.copyPageKey),cs=sectionById(cp,state.editorialSelection.copySectionId)||firstSection(cp,"copy");state.editorialSelection.copySectionId=cs?.id||"";
+  if(!(cs?.fields||[]).some(x=>x.id===state.editorialSelection.copyFieldId))state.editorialSelection.copyFieldId=cs?.fields?.[0]?.id||"";
+  const mp=pageByKey(state.editorialSelection.mediaPageKey),ms=sectionById(mp,state.editorialSelection.mediaSectionId)||firstSection(mp,"media");state.editorialSelection.mediaSectionId=ms?.id||"";
+  if(!(ms?.mediaSlots||[]).some(x=>x.id===state.editorialSelection.mediaSlotId))state.editorialSelection.mediaSlotId=ms?.mediaSlots?.[0]?.id||"";
+}
+function renderSitePlanner(){
+  const el=$("panel-siteplan");if(!el)return;ensureCatalogSelections();const rows=websiteRecords("campaign","PAGE_PLAN"),page=currentCatalogPage("plan")||{};const rec=selectPlanRecord(page)||{};
+  el.innerHTML=`<div class="hero"><div><div class="eyebrow">SKANDI website planning</div><h2>Website Planner</h2><p>Plan every registered public route without typing paths. Editorial and operational ownership remain separated by the V12 authority catalog.</p></div><div class="status-card"><div class="status-number">${catalogPages().length}</div><div class="status-sub">registered public routes</div></div></div>${ownershipNote()}<div class="split"><div class="panel scroll"><h3>Page register</h3><div class="admin-table">${catalogPages().map(p=>{const r=selectPlanRecord(p);return `<div class="admin-row"><div><div class="item-title">${esc(p.label)}</div><div class="item-sub mono">${esc(p.path)} · ${esc(p.authority||"")}</div><div class="item-sub">${r?`${esc(r.status||"DRAFT")} · ${esc(r.notes||r.summary||"")}`:"No page-plan record"}</div></div><div class="row"><button class="btn" data-web-plan-page="${esc(p.key)}">Open</button>${r?`<button class="btn bad" data-delete-web-plan="${esc(recordId(r))}">Delete plan</button>`:""}</div></div>`}).join("")}</div></div><div class="panel"><h3>Page plan</h3><div class="field"><span class="label">Page</span><select id="webPlanPage">${pageOptions(catalogPages(),page.key,true)}</select></div><div class="kv" style="margin:8px 0"><div class="k">Route</div><div class="v mono">${esc(page.path||"")}</div><div class="k">Authority</div><div class="v">${esc(page.authority||"")}</div><div class="k">Editorial</div><div class="v">${page.editorial?"Registered":"System-owned / planning only"}</div></div><div class="field"><span class="label">Status</span><select id="webPlanStatus">${["DRAFT","REVIEW","READY","PUBLISHED"].map(v=>option(v,v,rec.status||"DRAFT")).join("")}</select></div><div class="field full"><span class="label">Planning notes</span><textarea id="webPlanNotes">${esc(rec.notes||rec.summary||"")}</textarea></div><div class="row"><button class="btn primary" data-save-web-plan>Save page plan</button><button class="btn" data-open-public-page="${esc(page.key||"")}">Open public page</button></div></div></div>`;
+}
+function renderWebContent(){
+  const el=$("panel-webcontent");if(!el)return;ensureCatalogSelections();const page=currentCatalogPage("copy")||{},section=sectionById(page,state.editorialSelection.copySectionId)||firstSection(page,"copy"),field=(section?.fields||[]).find(x=>x.id===state.editorialSelection.copyFieldId)||section?.fields?.[0]||null,rec=selectCopyRecord(page,field?.id)||{};const rows=websiteRecords("article","CONTENT_BLOCK");
+  el.innerHTML=`<div class="panel"><h3>Page Copy Registry</h3>${ownershipNote()}<div class="help" style="margin:10px 0">Select the registered page, section and field. Technical content IDs are displayed for traceability but cannot be typed manually.</div><div class="admin-grid"><div class="field"><span class="label">Page</span><select id="webContentPage">${pageOptions(editorialPages(),page.key)}</select></div><div class="field"><span class="label">Section</span><select id="webContentSection">${sectionOptions(page,section?.id,"copy")}</select></div><div class="field full"><span class="label">Editable field</span><select id="webContentField">${fieldOptions(section,field?.id)}</select><div class="help mono">${esc(field?.id||"No editable field registered")}</div></div><div class="field full"><span class="label">Text</span>${field?.type==="LONG_TEXT"?`<textarea id="webContentValue">${esc(rec.value??rec.body??"")}</textarea>`:`<input class="input" id="webContentValue" value="${esc(rec.value??rec.body??"")}">`}</div><div class="field"><span class="label">Status</span><select id="webContentStatus">${["DRAFT","REVIEW","READY","PUBLISHED"].map(v=>option(v,v,rec.status||"DRAFT")).join("")}</select></div><div class="field"><span class="label">Characters</span><div class="input" id="webContentCount" aria-live="polite">${String(rec.value??rec.body??"").length}</div></div></div><div class="row" style="margin-top:8px"><button class="btn primary" data-save-web-content ${field?"":"disabled"}>Save page copy</button>${rec&&recordId(rec)?`<button class="btn bad" data-delete-web-content="${esc(recordId(rec))}">Delete record</button>`:""}<button class="btn" data-open-public-page="${esc(page.key||"")}">Open public page</button></div></div><div class="panel scroll"><h3>Registered copy</h3><div class="admin-table">${rows.map(x=>`<div class="admin-row"><div><div class="item-title">${esc(x.title||x.contentId||"Content block")}</div><div class="item-sub mono">${esc(x.pagePath||"")} · ${esc(x.contentId||"")}</div><div class="item-sub">${esc(String(x.value??x.body??"").slice(0,240))}</div></div><div class="row"><button class="btn" data-edit-web-content="${esc(recordId(x))}">Edit</button>${pill(x.status)}</div></div>`).join("")||`<div class="empty">No website copy records yet.</div>`}</div></div>`;
+}
+function renderWebMedia(){
+  const el=$("panel-webmedia");if(!el)return;ensureCatalogSelections();const page=currentCatalogPage("media")||{},section=sectionById(page,state.editorialSelection.mediaSectionId)||firstSection(page,"media"),slot=(section?.mediaSlots||[]).find(x=>x.id===state.editorialSelection.mediaSlotId)||section?.mediaSlots?.[0]||null,rec=selectMediaRecord(page,slot?.id)||{},rows=websiteRecords("banner","MEDIA_SLOT");
+  el.innerHTML=`<div class="panel"><h3>Hero / Card / Ad Media Registry</h3>${ownershipNote()}<div class="help" style="margin:10px 0">Select a registered presentation slot, then choose a public image from the shared Asset Library. Raw media-slot IDs and raw URLs are not editor inputs.</div><div class="admin-grid"><div class="field"><span class="label">Page</span><select id="webMediaPage">${pageOptions(editorialPages().filter(p=>(p.sections||[]).some(s=>(s.mediaSlots||[]).length)),page.key)}</select></div><div class="field"><span class="label">Section</span><select id="webMediaSection">${sectionOptions(page,section?.id,"media")}</select></div><div class="field full"><span class="label">Media slot</span><select id="webMediaSlotSelect">${mediaOptions(section,slot?.id)}</select><div class="help mono">${esc(slot?.id||"No presentation media slot registered")}</div></div><div class="field wide"><span class="label">Selected asset</span><input class="input" id="webMediaUrl" data-web-media-asset="1" value="${esc(rec.assetUrl||rec.imageUrl||"")}" placeholder="Choose from Asset Library" readonly></div><div class="field"><span class="label">Alt text</span><input class="input" id="webMediaAlt" value="${esc(rec.alt||"")}"></div><div class="field"><span class="label">Status</span><select id="webMediaStatus">${["DRAFT","REVIEW","READY","PUBLISHED"].map(v=>option(v,v,rec.status||"DRAFT")).join("")}</select></div></div><div class="row" style="margin-top:8px"><button class="btn" data-sk-media-choose="website:media">Choose asset</button><button class="btn" data-sk-media-upload="website:media">Upload asset</button><button class="btn primary" data-save-web-media ${slot?"":"disabled"}>Save media slot</button>${recordId(rec)?`<button class="btn bad" data-delete-web-media="${esc(recordId(rec))}">Delete record</button>`:""}</div>${rec.assetUrl||rec.imageUrl?`<div class="asset-card" style="margin-top:10px"><div class="asset-img" style="background-image:url('${esc(rec.assetUrl||rec.imageUrl)}')"></div><div class="asset-body"><div class="asset-title">Current presentation asset</div><div class="asset-meta">${esc(rec.alt||"No alt text")}</div></div></div>`:""}</div><div class="panel scroll"><h3>Registered presentation media</h3><div class="admin-table">${rows.map(x=>`<div class="admin-row"><div><div class="item-title">${esc(x.title||x.slotId||"Media slot")}</div><div class="item-sub mono">${esc(x.pagePath||"")} · ${esc(x.slotId||"")}</div><div class="item-sub">${esc(x.alt||"No alt text")}</div></div><div class="row"><button class="btn" data-edit-web-media="${esc(recordId(x))}">Edit</button>${pill(x.status)}</div></div>`).join("")||`<div class="empty">No website presentation-media records yet.</div>`}</div></div>`;
+}
+function editorialAudit(){
+  const issues=[];const pages=editorialPages(),copy=websiteRecords("article","CONTENT_BLOCK"),media=websiteRecords("banner","MEDIA_SLOT"),plans=websiteRecords("campaign","PAGE_PLAN");
+  const allIds=new Map();for(const p of pages)for(const sec of p.sections||[])for(const f of sec.fields||[]){const k=f.id;if(allIds.has(k))issues.push({severity:"bad",page:p.label,item:k,message:`Duplicate content ID also registered on ${allIds.get(k)}.`});else allIds.set(k,p.label)}
+  for(const p of pages){const c=presentationCounts(p);if(!plans.some(x=>x.pagePath===p.path))issues.push({severity:"warn",page:p.label,item:p.path,message:"No page-plan record."});if(!p.presentationRuntime&&(c.publishedCopy||c.publishedMedia))issues.push({severity:"bad",page:p.label,item:p.path,message:"Published presentation records exist but the catalog does not verify an installed Presentation Runtime."});for(const x of c.media){if(isPublished(x)&&!String(x.alt||"").trim())issues.push({severity:"bad",page:p.label,item:x.slotId||"media",message:"Published presentation media is missing alt text."});if((x.assetUrl||x.imageUrl)&&!isHttpUrl(x.assetUrl||x.imageUrl))issues.push({severity:"bad",page:p.label,item:x.slotId||"media",message:"Presentation asset URL is not HTTPS."})}for(const x of c.copy){if(isPublished(x)&&!String(x.value??x.body??"").trim())issues.push({severity:"bad",page:p.label,item:x.contentId||"copy",message:"Published copy is empty."})}}
+  return issues;
+}
+function renderPresentationMatrix(){
+  const el=$("panel-presentationmatrix");if(!el)return;const pages=catalogPages();el.innerHTML=`<div class="hero"><div><div class="eyebrow">Enterprise presentation registry</div><h2>Presentation Matrix</h2><p>One view of every registered route, source authority, editable hook, runtime status and publishing coverage.</p></div><div class="status-card"><div class="status-number">${pages.filter(p=>p.editorial).length}</div><div class="status-sub">editorial-enabled pages</div></div></div><div class="panel scroll"><h3>Page / authority / runtime matrix</h3><div class="grid"><div class="grid-head" style="grid-template-columns:1.2fr 1.2fr .8fr .55fr .55fr .7fr"><div>Page</div><div>Route</div><div>Authority</div><div>Fields</div><div>Media</div><div>Runtime</div></div><div class="grid-body">${pages.map(p=>{const c=presentationCounts(p);return `<div class="grid-row" style="grid-template-columns:1.2fr 1.2fr .8fr .55fr .55fr .7fr"><div class="cell"><b>${esc(p.label)}</b></div><div class="cell mono">${esc(p.path)}</div><div class="cell">${esc(p.authority||"")}</div><div class="cell">${c.fieldCount} · ${c.publishedCopy} live</div><div class="cell">${c.mediaCount} · ${c.publishedMedia} live</div><div class="cell">${p.presentationRuntime?'<span class="pill ok">Verified</span>':p.editorial?'<span class="pill warn">Needs live test</span>':'<span class="pill info">System-owned</span>'}</div></div>`}).join("")}</div></div></div>`;
+}
+function renderContentAudit(){
+  const el=$("panel-contentaudit");if(!el)return;const issues=editorialAudit(),bad=issues.filter(x=>x.severity==="bad").length,warn=issues.filter(x=>x.severity==="warn").length;el.innerHTML=`<div class="hero"><div><div class="eyebrow">Automated governance</div><h2>Content Audit</h2><p>Static publication checks for catalog integrity, empty live copy, missing alt text, invalid media URLs, missing page plans and runtime coverage.</p></div><div class="status-card"><div class="status-number">${bad}</div><div class="status-sub">blocking findings · ${warn} warnings</div></div></div><div class="panel"><h3>Audit actions</h3><div class="row"><button class="btn primary" data-run-content-audit>Run audit</button><button class="btn" data-export-editorial-snapshot>Export editorial snapshot</button><button class="btn" data-action="brand-guard">Run brand guard</button><button class="btn" data-action="quality-lab">Run VOY quality lab</button></div></div><div class="panel scroll"><h3>Findings</h3><div class="admin-table">${issues.length?issues.map(x=>`<div class="admin-row"><div><div class="item-title">${esc(x.page)}</div><div class="item-sub mono">${esc(x.item)}</div><div class="item-sub">${esc(x.message)}</div></div><div>${x.severity==="bad"?'<span class="pill bad">Block</span>':'<span class="pill warn">Warn</span>'}</div></div>`).join(""):`<div class="empty">No static editorial findings.</div>`}</div></div>`;
+}
+function renderReleaseCenter(){
+  const el=$("panel-releasecenter");if(!el)return;ensureCatalogSelections();const page=currentCatalogPage("release")||{},c=presentationCounts(page),plan=c.plans[0],all=[...c.copy,...c.media],draft=all.filter(x=>!["READY","PUBLISHED"].includes(statusUpper(x))).length,missingAlt=c.media.filter(x=>isPublished(x)&&!String(x.alt||"").trim()).length;const ready=page.editorial&&!!plan&&draft===0&&missingAlt===0&&(page.presentationRuntime||all.length===0);el.innerHTML=`<div class="hero"><div><div class="eyebrow">Controlled publishing</div><h2>Release Center</h2><p>Move a complete page presentation through draft, review, ready and published states from one governed workspace.</p></div><div class="status-card"><div class="status-number">${ready?"READY":"HOLD"}</div><div class="status-sub">${esc(page.label||"No page selected")}</div></div></div><div class="panel"><h3>Page release</h3><div class="field"><span class="label">Page</span><select id="releasePage">${pageOptions(editorialPages(),page.key)}</select></div><div class="kpi-row" style="margin-top:8px"><div class="kpi"><small>Copy</small><b>${c.copy.length}</b><div class="help">${c.publishedCopy} published</div></div><div class="kpi"><small>Media</small><b>${c.media.length}</b><div class="help">${c.publishedMedia} published</div></div><div class="kpi"><small>Outstanding</small><b>${draft}</b><div class="help">Not READY/PUBLISHED</div></div><div class="kpi"><small>Alt gaps</small><b>${missingAlt}</b><div class="help">Published media</div></div><div class="kpi"><small>Runtime</small><b>${page.presentationRuntime?"YES":"TEST"}</b><div class="help">Catalog verification</div></div></div><div class="row"><button class="btn" data-release-status="DRAFT">Return to draft</button><button class="btn warn" data-release-status="REVIEW">Send to review</button><button class="btn ok" data-release-status="READY">Mark ready</button><button class="btn primary" data-release-status="PUBLISHED">Publish page presentation</button><button class="btn" data-open-public-page="${esc(page.key||"")}">Open public page</button></div></div><div class="panel"><h3>Release checklist</h3><div class="kv"><div class="k">Page plan</div><div class="v">${plan?esc(plan.status||"DRAFT"):"Missing"}</div><div class="k">Editorial hooks</div><div class="v">${c.fieldCount} copy · ${c.mediaCount} media</div><div class="k">Unresolved records</div><div class="v">${draft}</div><div class="k">Published alt gaps</div><div class="v">${missingAlt}</div><div class="k">Presentation runtime</div><div class="v">${page.presentationRuntime?"Verified in catalog":"Requires live verification"}</div></div></div>`;
+}
+function saveWebsiteRecordWithStatus(record,status){const published=status==="PUBLISHED";if(record.presentationKind==="CONTENT_BLOCK")post("VOY_ADMIN_SAVE_ARTICLE",{article:{...record,status,published}});else if(record.presentationKind==="MEDIA_SLOT")post("VOY_ADMIN_SAVE_BANNER",{banner:{...record,status,published}});else if(record.presentationKind==="PAGE_PLAN")post("VOY_ADMIN_SAVE_CAMPAIGN",{campaign:{...record,status,published}})}
+function releasePageTo(status){const page=currentCatalogPage("release");if(!page)return;const records=pageRecordSet(page.path),all=[...records.plans,...records.copy,...records.media];if(status==="PUBLISHED"&&!confirm(`Publish ${all.length} presentation record(s) for ${page.label}?`))return;if(!all.length){toast("No presentation records exist for this page.","bad");return}all.forEach(r=>saveWebsiteRecordWithStatus(r,status));toast(`${all.length} records queued for ${status}.`,status==="PUBLISHED"?"ok":"");refreshAfterSave(`release-${status.toLowerCase()}`)}
+function exportEditorialSnapshot(){const payload={exportedAt:new Date().toISOString(),catalog:catalogPages(),pagePlans:websiteRecords("campaign","PAGE_PLAN"),contentBlocks:websiteRecords("article","CONTENT_BLOCK"),mediaSlots:websiteRecords("banner","MEDIA_SLOT"),audit:editorialAudit()};const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=`skandi-media-control-editorial-${today()}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1200)}
+
+function renderDashboard(){
+  const issue=currentIssue();
+  const due=state.articles.filter(a=>["DRAFT","IN PROGRESS","REVIEW"].includes(String(a.status||"").toUpperCase())).length;
+  const adSlots=state.banners.filter(b=>b.active!==false).length;
+  const pages=issuePages();
+  $("panel-dashboard").innerHTML=`
+    <div class="hero">
+      <div>
+        <div class="eyebrow">SKANDI SKANDI publishing & website studio</div>
+        <h2>Magazine & website control room</h2>
+        <p>Plan and publish VOY, Newsroom and public-site presentation from one controlled workspace. Website copy, hero/card/ad presentation slots and shared assets are managed here; Inventory-owned facts and Inventory-owned media remain read-only and outside this editor.</p>
+      </div>
+      <div class="status-card">
+        <span class="status-pill">Active issue</span>
+        <div class="status-number">${esc(issue?.edition || "No issue")}</div>
+        <div class="status-sub">${esc(issue?.title || "Create or select an issue to start building the magazine.")}</div>
+      </div>
+    </div>
+    <div class="kpi-row">
+      <div class="kpi"><small>Issues</small><b>${state.issues.length}</b><div class="help">VOY publications</div></div>
+      <div class="kpi"><small>Pages</small><b>${state.pages.length}</b><div class="help">Magazine layouts</div></div>
+      <div class="kpi"><small>Article tasks</small><b>${state.articles.length}</b><div class="help">Editorial pipeline</div></div>
+      <div class="kpi"><small>Open editorial</small><b>${due}</b><div class="help">Draft/review work</div></div>
+      <div class="kpi"><small>Assets</small><b>${state.assets.length}</b><div class="help">Media library</div></div>
+      <div class="kpi"><small>Ad slots</small><b>${adSlots}</b><div class="help">Active banners/campaigns</div></div>
+    </div>
+    <div class="split">
+      <div class="panel scroll"><h3>Current issue page plan</h3>${pages.length?pages.map(pageRow).join(""):`<div class="empty">No pages yet. Open Magazine Builder and add cover/feature/catalogue pages.</div>`}</div>
+      <div class="stack">
+        <div class="panel"><h3>Production actions</h3>
+          <div class="row"><button class="btn primary" data-action="new-issue">New issue</button><button class="btn" data-action="new-page">New page</button><button class="btn" data-action="new-article">New article brief</button><button class="btn ok" data-action="publish-issue">Publish to VOY Magazine</button><button class="btn" data-action="export-print">Export print package</button></div>
+        </div>
+        <div class="panel"><h3>PR / marketing readiness</h3>
+          <div class="kv"><div class="k">SEO status</div><div class="v">${esc(state.seoResult?.score || "Not checked")}</div><div class="k">Campaigns</div><div class="v">${state.campaigns.length}</div><div class="k">Approvals</div><div class="v">${state.approvals.filter(a=>a.status!=="APPROVED").length} open</div></div>
+        </div>
+      </div>
+    </div>`;
+}
+function pageRow(p){
+  return `<article class="admin-row" data-page="${esc(p.pageId||p._id)}"><div><div class="news-meta">${pill(p.status)}<span class="pill">Page ${esc(p.pageNo||"—")}</span><span class="pill">${esc(p.template||"feature")}</span></div><div class="item-title">${esc(p.title||"Untitled page")}</div><div class="item-sub">${esc(p.kicker||"")} · ${esc((p.body||"").slice(0,160))}</div></div><div class="row"><button class="btn" data-edit-page="${esc(p.pageId||p._id)}">Edit</button><button class="btn bad" data-delete-page="${esc(p.pageId||p._id)}">Delete</button></div></article>`;
+}
+function renderIssues(){
+  const q=String($("globalQuery")?.value||"").toLowerCase();
+  const items=state.issues.filter(i=>!q||[i.title,i.edition,i.slug,i.summary,arr(i.categories).join(" ")].join(" ").toLowerCase().includes(q));
+  $("panel-issues").innerHTML=`
+  <div class="split">
+    <div class="panel scroll">
+      <h3>VOY issues</h3>
+      <div class="row" style="margin-bottom:8px"><button class="btn primary" data-action="new-issue">New issue</button><button class="btn" data-action="new-standard-issue">New VOY issue from current edition</button></div>
+      <div class="admin-table">${items.length?items.map(i=>`<article class="admin-row ${currentIssueId()===(i.issueId||i._id)?"selected":""}"><div><div class="news-meta">${pill(i.publishStatus)}${arr(i.categories).slice(0,4).map(c=>`<span class="pill">${esc(c)}</span>`).join("")}</div><div class="item-title">${esc(i.title||"Untitled issue")}</div><div class="item-sub">${esc(i.edition||"")} · ${esc(i.summary||"")}</div></div><div class="row"><button class="btn" data-select-issue="${esc(i.issueId||i._id)}">Select</button><button class="btn" data-edit-issue="${esc(i.issueId||i._id)}">Adjust</button><button class="btn ok" data-publish-issue="${esc(i.issueId||i._id)}">Publish</button><button class="btn warn" data-archive-issue="${esc(i.issueId||i._id)}">Archive</button><button class="btn bad" data-delete-issue="${esc(i.issueId||i._id)}">Delete</button></div></article>`).join(""):`<div class="empty">No issues found.</div>`}</div>
+    </div>
+    <div class="panel scroll">
+      <h3 id="issueEditorTitle">${state.editingIssueId?"Adjust issue":"Add VOY issue"}</h3>
+      <div class="notice">PDF and media upload are handled through the secure upload connector. This editor sends metadata, page plan, campaign and export requests to the backend.</div>
+      ${issueEditorForm(state.issues.find(i=>(i.issueId||i._id)===state.editingIssueId)||{})}
+    </div>
+  </div>`;
+}
+function issueEditorForm(i={}){
+  return `<div class="admin-grid" style="margin-top:8px">
+    <div class="field wide"><label class="label">Title</label><input class="input" id="issueTitle" value="${esc(i.title||"")}" placeholder="VOY Atelier — Summer Escapes"></div>
+    <div class="field"><label class="label">Edition</label><input class="input" id="issueEdition" value="${esc(i.edition||"")}" placeholder="Issue 01 / Summer 2026"></div>
+    <div class="field"><label class="label">Slug</label><input class="input" id="issueSlug" value="${esc(i.slug||"")}" placeholder="summer-escapes-2026"></div>
+    <div class="field"><label class="label">Publish date</label><input class="input" id="issuePublishDate" type="date" value="${esc(String(i.publishDate||"").slice(0,10))}"></div>
+    <div class="field"><label class="label">Publication status (use Publish / Archive)</label><select id="issuePublishStatus" disabled>${["DRAFT","REVIEW","PUBLISHED","ARCHIVED"].map(s=>`<option ${String(i.publishStatus||"DRAFT")===s?"selected":""}>${s}</option>`).join("")}</select></div>
+    <div class="field"><label class="label">Featured</label><select id="issueFeatured"><option value="false">No</option><option value="true" ${i.featured?"selected":""}>Yes</option></select></div>
+    <div class="field wide"><label class="label">Categories</label><input class="input" id="issueCategories" value="${esc(arr(i.categories).join(", "))}" placeholder="Destinations, Hotels, Culture"></div>
+    <div class="field wide"><label class="label">Destinations</label><input class="input" id="issueDestinations" value="${esc(arr(i.destinations).join(", "))}" placeholder="Crete, Mallorca, New York"></div>
+    <div class="field wide"><label class="label">Cover image asset</label><input class="input" id="issueCoverImage" value="${esc(i.coverImageUrl||i.coverImage||"")}" placeholder="Select or upload a Supabase asset" readonly></div>
+    <div class="field full"><label class="label">Summary</label><textarea id="issueSummary" placeholder="Short public summary">${esc(i.summary||"")}</textarea></div>
+    <div class="field full"><label class="label">Search text / article topics</label><textarea id="issueSearchText" placeholder="Add keywords, article titles, topics and OCR text.">${esc(i.searchText||"")}</textarea></div>
+    <div class="field full"><label class="label">Print settings</label><input class="input" id="issuePrintSettings" value="${esc(i.printSettings||"A4, 3mm bleed, CMYK export by backend")}"></div>
+  </div>
+  <div class="row" style="margin-top:8px"><button class="btn primary" data-action="save-issue">Save issue metadata</button><button class="btn" data-action="save-issue-upload">Upload PDF and save</button><button class="btn ok" data-action="publish-issue">Publish to VOY Magazine</button><button class="btn" data-action="clear-issue">Clear</button></div>`;
+}
+function collectIssue(){
+  return {issueId:state.editingIssueId||state.selectedIssueId||uid("ISSUE"),title:$("issueTitle").value.trim(),edition:$("issueEdition").value.trim(),slug:$("issueSlug").value.trim(),publishDate:$("issuePublishDate").value,publishStatus:$("issuePublishStatus").value,featured:$("issueFeatured").value==="true",categories:arr($("issueCategories").value),destinations:arr($("issueDestinations").value),coverImageUrl:$("issueCoverImage").value.trim(),summary:$("issueSummary").value.trim(),searchText:$("issueSearchText").value.trim(),printSettings:$("issuePrintSettings").value.trim()};
+}
+function renderBuilder(){
+  const issue=currentIssue();
+  const pages=issuePages();
+  const p=currentPage()||{};
+  const activeTemplate=p.template||"cover";
+  $("panel-builder").innerHTML=`
+  <div class="split wide">
+    <div class="stack">
+      <div class="panel scroll"><h3>Issue pages</h3>
+        <div class="row" style="margin-bottom:8px"><select id="builderIssueSelect">${state.issues.map(i=>`<option value="${esc(i.issueId||i._id)}" ${currentIssueId()===(i.issueId||i._id)?"selected":""}>${esc(i.edition||i.title||i.issueId)}</option>`).join("")}</select><button class="btn primary" data-action="new-page">Add page</button><button class="btn" data-action="add-standard-pages">Add all layout types</button><button class="btn ok" data-action="load-current-voy">Load Current VOY</button></div>
+        <div class="admin-table">${pages.length?pages.map(pageRow).join(""):`<div class="empty">No pages in this issue yet.</div>`}</div>
+      </div>
+      <div class="panel scroll"><h3>Layout templates</h3><div class="template-grid">${templates.map(t=>templateCard(t,activeTemplate)).join("")}</div></div>
+    </div>
+    <div class="panel scroll">
+      <h3>Page editor</h3>
+      <div class="mm-page-actions"><button class="btn" data-action="move-page-up">Move up</button><button class="btn" data-action="move-page-down">Move down</button><button class="btn" data-action="copy-page">Duplicate</button><button class="btn bad" data-action="delete-current-page">Remove page</button></div>
+      ${pageEditorForm(p)}
+    </div>
+    <div class="stack">
+      <div class="panel" style="display:flex;flex-direction:column;min-height:0">
+        <h3>Live page preview</h3>
+        <div class="row" style="margin-bottom:8px"><button class="btn" data-action="toggle-bleed">Bleed / safety</button><button class="btn primary" data-action="print-page">Print page</button><button class="btn ok" data-action="export-page-pdf">Export PDF</button></div>
+        <div class="mag-preview-wrap">${magPreview(p)}</div>
+      </div>
+    </div>
+  </div>`;
+}
+function templateCard(t,active){return `<div class="template-card ${t.cls} ${active===t.id?"active":""}" data-template="${esc(t.id)}"><div class="template-thumb"><span class="t-block dark"></span><span class="t-block light"></span><span class="t-block"></span></div><div class="template-title">${esc(t.title)}</div><div class="template-sub">${esc(t.sub)}</div></div>`}
+function pageEditorForm(p={}){
+  return `<div class="admin-grid">
+    <div class="field"><label class="label">Page No.</label><input id="pageNo" class="input" type="number" value="${esc(p.pageNo||nextPageNo())}"></div>
+    <div class="field"><label class="label">Template</label><select id="pageTemplate">${templates.map(t=>`<option value="${t.id}" ${String(p.template||"cover")===t.id?"selected":""}>${esc(t.title)}</option>`).join("")}</select></div>
+    <div class="field"><label class="label">Status</label><select id="pageStatus">${["DRAFT","IN PROGRESS","REVIEW","APPROVED","PUBLISHED"].map(s=>`<option ${String(p.status||"DRAFT")===s?"selected":""}>${s}</option>`).join("")}</select></div>
+    <div class="field"><label class="label">Category</label><input id="pageCategory" class="input" value="${esc(p.category||"")}" placeholder="Destinations"></div>
+    <div class="field wide"><label class="label">Kicker</label><input id="pageKicker" class="input" value="${esc(p.kicker||"")}" placeholder="Mediterranean Escape"></div>
+    <div class="field wide"><label class="label">Title / headline</label><input id="pageTitle" class="input" value="${esc(p.title||"")}" placeholder="Island light, slow mornings and blue horizons"></div>
+    <div class="field full"><label class="label">Deck / standfirst</label><textarea id="pageDeck" placeholder="Short lead paragraph for the page">${esc(p.deck||"")}</textarea></div>
+    <div class="field full"><label class="label">Body copy</label><textarea id="pageBody" style="min-height:180px" placeholder="Magazine article copy, destination guide, offer text or advertorial">${esc(p.body||"")}</textarea></div>
+    <div class="field wide"><label class="label">Hero image asset</label><input id="pageImageUrl" class="input" value="${esc(p.imageUrl||"")}" placeholder="Select or upload a Supabase asset" readonly></div>
+    <div class="field"><label class="label">Hero image fit</label><select id="pageImageFit"><option ${String(p.imageFit||"cover")==="cover"?"selected":""}>cover</option><option ${String(p.imageFit||"")==="contain"?"selected":""}>contain</option></select></div>
+    <div class="field"><label class="label">Hero image position</label><input id="pageImagePosition" class="input" value="${esc(p.imagePosition||"center center")}" placeholder="center 45%"></div>
+    <div class="field wide"><label class="label">Secondary image asset</label><input id="pageSecondaryImageUrl" class="input" value="${esc(p.secondaryImageUrl||"")}" placeholder="Select or upload a Supabase asset" readonly></div>
+    <div class="field wide"><label class="label">Image credit / license</label><input id="pageImageCredit" class="input" value="${esc(p.imageCredit||"")}" placeholder="Photographer / Provider / License"></div>
+    <div class="field"><label class="label">Destination</label><input id="pageDestination" class="input" value="${esc(p.destination||"")}" placeholder="Mallorca"></div>
+    <div class="field"><label class="label">CTA label</label><input id="pageCtaLabel" class="input" value="${esc(p.ctaLabel||"Book the journey")}"></div>
+    <div class="field wide"><label class="label">CTA path / URL</label><input id="pageCtaPath" class="input" value="${esc(p.ctaPath||"")}"></div>
+    <div class="mm-page-style-grid">
+      <div class="field"><label class="label">Background color</label><input id="pageBackgroundColor" class="input" type="color" value="${esc(normalizeHex(p.backgroundColor,"#ffffff"))}"></div>
+      <div class="field"><label class="label">Text color</label><input id="pageTextColor" class="input" type="color" value="${esc(normalizeHex(p.textColor,"#103154"))}"></div>
+      <div class="field"><label class="label">Accent color</label><input id="pageAccentColor" class="input" type="color" value="${esc(normalizeHex(p.accentColor,"#4dcad6"))}"></div>
+      <div class="field"><label class="label">Heading font</label><select id="pageHeadingFont">${fontOptions(p.headingFont||"Montserrat")}</select></div>
+      <div class="field"><label class="label">Body font</label><select id="pageBodyFont">${fontOptions(p.bodyFont||"Inter")}</select></div>
+      <div class="field wide"><label class="label">Footer text</label><input id="pageFooterText" class="input" value="${esc(p.footerText||"VOY by SKANDI · skanditravels.com")}"></div>
+      <div class="mm-template-note">This template has structured, repeatable content. Edit the items below visually, including Supabase image/logo assets. You can add, remove and reorder items without editing HTML.</div>
+      ${renderBlockEditor(p)}
+      <details class="mm-block-source"><summary>Advanced JSON source</summary><div class="field full" style="margin-top:6px"><label class="label">Template data (JSON array)</label><textarea id="pageBlocks" style="min-height:150px">${esc(formatBlocks(p.blocks))}</textarea></div></details>
+    </div>
+    <div class="field full"><label class="label">SEO / social notes</label><textarea id="pageSeoNotes">${esc(p.seoNotes||"")}</textarea></div>
+  </div>
+  <div class="row" style="margin-top:8px"><button class="btn primary" data-action="save-page">Save page</button><button class="btn" data-action="request-copy-assist">Copy assist</button><button class="btn" data-action="seo-check">SEO check</button></div>`;
+}
+function normalizeHex(value,fallback){const v=String(value||"").trim();return /^#[0-9a-f]{6}$/i.test(v)?v:fallback}
+function fontOptions(selected){return ["Montserrat","Inter","Playfair Display","Cormorant Garamond","Georgia","Arial"].map(f=>`<option ${selected===f?"selected":""}>${f}</option>`).join("")}
+function parseBlocks(value){
+  if(Array.isArray(value))return value;
+  if(!value)return [];
+  try{const parsed=JSON.parse(value);return Array.isArray(parsed)?parsed:[]}catch(e){return []}
+}
+function formatBlocks(value){const blocks=parseBlocks(value);return blocks.length?JSON.stringify(blocks,null,2):"[]"}
+function collectPage(){
+  const issueId=currentIssueId()||state.selectedIssueId||"";
+  const p=currentPage()||{};
+  let blocks=collectVisualBlocks();if(!blocks){try{blocks=JSON.parse($("pageBlocks").value||"[]");if(!Array.isArray(blocks))throw new Error("array")}catch(e){throw new Error("Template data must be a valid JSON array.")}}
+  return {pageId:p.pageId||p._id||state.selectedPageId||uid("PAGE"),issueId,pageNo:Number($("pageNo").value||0),template:$("pageTemplate").value,status:$("pageStatus").value,category:$("pageCategory").value.trim(),kicker:$("pageKicker").value.trim(),title:$("pageTitle").value.trim(),deck:$("pageDeck").value.trim(),body:$("pageBody").value.trim(),imageUrl:$("pageImageUrl").value.trim(),secondaryImageUrl:$("pageSecondaryImageUrl").value.trim(),imageCredit:$("pageImageCredit").value.trim(),imageFit:$("pageImageFit")?.value||"cover",imagePosition:$("pageImagePosition")?.value.trim()||"center center",destination:$("pageDestination").value.trim(),ctaLabel:$("pageCtaLabel").value.trim(),ctaPath:$("pageCtaPath").value.trim(),backgroundColor:$("pageBackgroundColor").value,textColor:$("pageTextColor").value,accentColor:$("pageAccentColor").value,headingFont:$("pageHeadingFont").value,bodyFont:$("pageBodyFont").value,footerText:$("pageFooterText").value.trim(),blocks,seoNotes:$("pageSeoNotes").value.trim(),updatedAt:new Date().toISOString()};
+}
+function nextPageNo(){return issuePages().reduce((m,p)=>Math.max(m,Number(p.pageNo||0)),0)+1}
+function magPreview(p={}){
+  const tpl=p.template||"cover";
+  const title=esc(p.title||"Untitled VOY Page");
+  const kicker=esc(p.kicker||"VOY Magazine");
+  const deck=esc(p.deck||"Travel inspiration, destination stories and curated SKANDI recommendations.");
+  const body=esc(p.body||"Start writing the article copy here. Build a destination feature, hotel spotlight, onboard magazine story, or campaign-ready catalogue page.").replace(/\n/g,"<br>");
+  const cta=esc(p.ctaLabel||"Explore more");
+  const vars=previewVars(p);
+  const hero=previewImage(p.imageUrl);
+  const second=previewImage(p.secondaryImageUrl||p.imageUrl);
+  const credit=p.imageCredit?`<div class="voyp-credit">Image: ${esc(p.imageCredit)}</div>`:"";
+  const footer=`<footer class="voyp-footer"><span>${esc(p.footerText||"VOY by SKANDI · skanditravels.com")}</span><b>${esc(p.pageNo||"")}</b></footer>`;
+  const defaults={
+    contents:[{title:"Welcome aboard",meta:"03"},{title:"The blue issue",meta:"06"},{title:"Greece, four ways",meta:"07"},{title:"Worth the detour",meta:"09"},{title:"Travel well",meta:"10"},{title:"Airline & airport guide",meta:"11"}],
+    offers:[{title:"Athens city break",subtitle:"3 nights · selected hotel",price:"From $899"},{title:"Santorini escape",subtitle:"5 nights · breakfast",price:"From $1,249"},{title:"Crete family week",subtitle:"7 nights · transfers",price:"From $1,499"},{title:"Rhodes adults escape",subtitle:"7 nights · selected resort",price:"From $1,329"}],
+    destinations:[{title:"Athens",subtitle:"Culture and city energy"},{title:"Santorini",subtitle:"Clifftop views and slow evenings"},{title:"Crete",subtitle:"Beaches, villages and food"},{title:"Rhodes",subtitle:"History and clear water"}],
+    experiences:[{title:"Cook with a local",subtitle:"A market-to-table afternoon"},{title:"Sail into sunset",subtitle:"Small-group Aegean cruise"},{title:"Walk ancient paths",subtitle:"History beyond the guidebook"}],
+    tips:[{title:"Before you fly",body:"Check documents, baggage and transfer details."},{title:"Pack lighter",body:"Choose pieces that work from beach to dinner."},{title:"Arrive ready",body:"Save key numbers and the SKANDI support line."}],
+    airlines:[{title:"SKANDI partner airline",subtitle:"New York · Copenhagen · Athens",meta:"Economy · Premium · Business"},{title:"Regional connection",subtitle:"Athens · Crete · Rhodes",meta:"Cabin baggage included"}],
+    airports:[{title:"JFK · New York",subtitle:"Departure terminal and check-in details"},{title:"CPH · Copenhagen",subtitle:"Easy Nordic connection"},{title:"ATH · Athens",subtitle:"Gateway to the islands"}],
+    signature:[{title:"The Aegean House",subtitle:"Santorini",meta:"SKANDI Signature Collection"},{title:"Cretan Coast Retreat",subtitle:"Crete",meta:"SKANDI Signature Collection"}]
+  };
+  const items=(fallback)=>previewBlocks(p,fallback);
+  const cards=(rows,cls="")=>rows.map(x=>`<article class="voyp-card ${cls}">${x.imageUrl?`<div class="voyp-card-img" ${previewImage(x.imageUrl)}></div>`:""}<small>${esc(x.meta||x.kicker||"")}</small><h3>${esc(x.title||"Untitled")}</h3><p>${esc(x.subtitle||x.body||"")}</p>${x.price?`<b class="voyp-price">${esc(x.price)}</b>`:""}${x.cta?`<span class="voyp-cta">${esc(x.cta)}</span>`:""}</article>`).join("");
+  if(tpl==="cover")return `<div class="mag-page bleed"><section class="voyp voyp-cover" ${previewVars(p,p.imageUrl)}><div class="voyp-cover-top"><b>VOY</b><span>BY SKANDI</span></div><div class="voyp-cover-copy"><small>${kicker}</small><h1>${title}</h1><p>${deck}</p><div class="voyp-cover-lines">${items(defaults.contents).slice(0,3).map(x=>`<span>${esc(x.title)}</span>`).join("")}</div><em>${esc(currentIssue()?.edition||"Special Edition")}</em></div>${credit}</section></div>`;
+  if(tpl==="contents")return `<div class="mag-page bleed"><section class="voyp voyp-paper" ${vars}><header class="voyp-heading"><small>${kicker}</small><h1>${title||"Inside VOY"}</h1><p>${deck}</p></header><div class="voyp-contents">${items(defaults.contents).map((x,i)=>`<div><b>${esc(x.meta||String(i+1).padStart(2,"0"))}</b><span><strong>${esc(x.title)}</strong><em>${esc(x.subtitle||"")}</em></span></div>`).join("")}</div><aside class="voyp-note">${body}</aside>${footer}</section></div>`;
+  if(tpl==="brand-feature")return `<div class="mag-page bleed"><section class="voyp voyp-split" ${vars}><div class="voyp-split-img" ${hero}></div><div class="voyp-split-copy"><small>${kicker}</small><h1>${title}</h1><p class="voyp-lead">${deck}</p><div class="voyp-columns">${body}</div><span class="voyp-rule"></span></div>${credit}${footer}</section></div>`;
+  if(tpl==="offers")return `<div class="mag-page bleed"><section class="voyp voyp-paper" ${vars}><header class="voyp-heading"><small>${kicker}</small><h1>${title}</h1><p>${deck}</p></header><div class="voyp-card-grid voyp-offers">${cards(items(defaults.offers),"offer")}</div><p class="voyp-smallprint">${body}</p>${footer}</section></div>`;
+  if(tpl==="section-opener")return `<div class="mag-page bleed"><section class="voyp voyp-opener" ${previewVars(p,p.imageUrl)}><div><small>${kicker}</small><h1>${title}</h1><p>${deck}</p><span>${esc(p.destination||"Explore with SKANDI")}</span></div>${credit}</section></div>`;
+  if(tpl==="feature")return `<div class="mag-page bleed"><section class="voyp voyp-feature" ${vars}><div class="voyp-feature-img" ${hero}></div><article><small>${kicker}</small><h1>${title}</h1><p class="voyp-lead">${deck}</p><div class="voyp-columns">${body}</div></article>${credit}${footer}</section></div>`;
+  if(tpl==="destination-grid")return `<div class="mag-page bleed"><section class="voyp voyp-paper" ${vars}><header class="voyp-heading"><small>${kicker}</small><h1>${title}</h1><p>${deck}</p></header><div class="voyp-destination-grid">${cards(items(defaults.destinations))}</div>${footer}</section></div>`;
+  if(tpl==="nightlife")return `<div class="mag-page bleed"><section class="voyp voyp-night" ${previewVars(p,p.imageUrl)}><div class="voyp-night-card"><small>${kicker}</small><h1>${title}</h1><p>${deck}</p><div>${body}</div></div>${credit}${footer}</section></div>`;
+  if(tpl==="experiences")return `<div class="mag-page bleed"><section class="voyp voyp-paper" ${vars}><header class="voyp-heading"><small>${kicker}</small><h1>${title}</h1><p>${deck}</p></header><div class="voyp-experience-grid">${cards(items(defaults.experiences))}</div><div class="voyp-wide-copy">${body}</div>${footer}</section></div>`;
+  if(tpl==="travel-well")return `<div class="mag-page bleed"><section class="voyp voyp-tips" ${vars}><header class="voyp-heading"><small>${kicker}</small><h1>${title}</h1><p>${deck}</p></header><div class="voyp-tip-list">${items(defaults.tips).map((x,i)=>`<article><b>${String(i+1).padStart(2,"0")}</b><div><h3>${esc(x.title)}</h3><p>${esc(x.body||x.subtitle||"")}</p></div></article>`).join("")}</div><aside ${second}></aside>${footer}</section></div>`;
+  if(tpl==="airline-guide")return `<div class="mag-page bleed"><section class="voyp voyp-paper" ${vars}><header class="voyp-heading"><small>${kicker}</small><h1>${title}</h1><p>${deck}</p></header><div class="voyp-guide-list">${items(defaults.airlines).map(x=>`<article><div>${x.logoUrl||x.secondaryLogoUrl?`<div class="voyp-logo-pair">${x.logoUrl?`<img class="voyp-logo" src="${esc(x.logoUrl)}" alt="${esc(x.title||"Airline")} logo">`:""}${x.secondaryLogoUrl?`<img class="voyp-logo" src="${esc(x.secondaryLogoUrl)}" alt="${esc(x.title||"Airline")} secondary logo">`:""}</div>`:""}<small>${esc(x.meta||"")}</small><h3>${esc(x.title)}</h3><p>${esc(x.subtitle||x.body||"")}</p></div><span>${esc(x.cta||"Profile")}</span></article>`).join("")}</div><div class="voyp-wide-copy">${body}</div>${footer}</section></div>`;
+  if(tpl==="onboard-guide")return `<div class="mag-page bleed"><section class="voyp voyp-onboard" ${vars}><div class="voyp-feature-img" ${hero}></div><article><small>${kicker}</small><h1>${title}</h1><p class="voyp-lead">${deck}</p><div class="voyp-service-grid">${cards(items(defaults.tips))}</div></article>${footer}</section></div>`;
+  if(tpl==="airport-guide")return `<div class="mag-page bleed"><section class="voyp voyp-paper" ${vars}><header class="voyp-heading"><small>${kicker}</small><h1>${title}</h1><p>${deck}</p></header><div class="voyp-guide-list">${items(defaults.airports).map(x=>`<article class="voyp-airport-row">${x.logoUrl?`<div class="voyp-airport-logo"><img src="${esc(x.logoUrl)}" alt="${esc(x.title||x.code||"Airport")} logo"></div>`:`<div class="voyp-airport-logo"><b>${esc(x.code||"APT")}</b></div>`}<div><small>${esc([x.code,x.location,x.meta].filter(Boolean).join(" · "))}</small><h3>${esc(x.title||x.code||"Airport")}</h3><p>${esc(x.role||x.subtitle||x.body||"")}</p></div><span>${esc(x.meta||"Airport")}</span></article>`).join("")}</div><div class="voyp-wide-copy">${body}</div>${footer}</section></div>`;
+  if(tpl==="route-map")return `<div class="mag-page bleed"><section class="voyp voyp-map" ${vars}><header class="voyp-heading"><small>${kicker}</small><h1>${title}</h1><p>${deck}</p></header><div class="voyp-map-art"><span class="dot nyc">NYC</span><span class="dot cph">CPH</span><span class="dot ath">ATH</span><span class="dot isl">ISLANDS</span><i class="route r1"></i><i class="route r2"></i><i class="route r3"></i></div><div class="voyp-route-list">${items(defaults.airlines).map(x=>`<div><b>${esc(x.title)}</b><span>${esc(x.subtitle||x.body||"")}</span></div>`).join("")}</div>${footer}</section></div>`;
+  if(tpl==="airline-profile")return `<div class="mag-page bleed"><section class="voyp voyp-paper" ${vars}><header class="voyp-heading"><small>${kicker}</small><h1>${title}</h1><p>${deck}</p></header><div class="voyp-airline-profiles">${items([]).map(x=>`<article class="voyp-airline-profile">${x.logoUrl||x.secondaryLogoUrl?`<div class="voyp-logo-pair">${x.logoUrl?`<img class="voyp-logo" src="${esc(x.logoUrl)}" alt="${esc(x.title||"Airline")} logo">`:""}${x.secondaryLogoUrl?`<img class="voyp-logo" src="${esc(x.secondaryLogoUrl)}" alt="${esc(x.title||"Airline")} secondary logo">`:""}</div>`:""}<small>${esc(x.subtitle||"")}</small><h3>${esc(x.title||"Airline")}</h3><p>${esc(x.body||"")}</p><div class="cabins">${String(x.meta||"").split("·").map(c=>c.trim()).filter(Boolean).map(c=>`<span>${esc(c)}</span>`).join("")}</div><div class="voyp-factgrid"><div><b>Seat & comfort</b><span>${esc(x.seat||"")}</span></div><div><b>Baggage</b><span>${esc(x.baggage||"")}</span></div><div><b>Food & drink</b><span>${esc(x.food||"")}</span></div><div><b>Wi-Fi & power</b><span>${esc(x.wifi||"")}</span></div><div><b>Airport benefits</b><span>${esc(x.airport||"")}</span></div><div><b>Loyalty</b><span>${esc(x.loyalty||"")}</span></div></div><div class="voyp-profile-tip"><b>VOY tip</b>${esc(x.tip||x.booking||"")}</div></article>`).join("")}</div>${footer}</section></div>`;
+  if(tpl==="transfer-promise")return `<div class="mag-page bleed"><section class="voyp voyp-paper" ${vars}><header class="voyp-heading"><small>${kicker}</small><h1>${title}</h1><p>${deck}</p></header><div class="voyp-transfer-grid">${cards(items(defaultBlocksForTemplate("transfer-promise")))}</div><div class="voyp-transfer-banner">${body}</div>${footer}</section></div>`;
+  if(tpl==="signature-collection")return `<div class="mag-page bleed"><section class="voyp voyp-signature" ${vars}><div class="voyp-signature-hero" ${hero}><small>${kicker}</small><h1>${title}</h1><p>${deck}</p></div><div class="voyp-signature-cards">${cards(items(defaults.signature))}</div>${footer}</section></div>`;
+  return `<div class="mag-page bleed"><section class="voyp voyp-back" ${previewVars(p,p.imageUrl)}><div><small>${kicker}</small><h1>${title}</h1><p>${deck}</p><span class="voyp-back-cta">${cta}</span><em>${esc(p.ctaPath||"skanditravels.com")}</em></div>${credit}</section></div>`;
+}
+function previewBlocks(p,fallback){const rows=parseBlocks(p.blocks);return rows.length?rows:fallback}
+function previewImage(url,p=currentPage()||{}){const value=String(url||"").trim().replace(/["'()]/g,"");const fit=String(p.imageFit||"cover")==="contain"?"contain":"cover";const pos=String(p.imagePosition||"center center").replace(/["'<>]/g,"");return value?`style="background-image:url(${value});background-size:${fit};background-position:${pos};background-repeat:no-repeat"`:""}
+function previewVars(p,imageUrl=""){
+  const fonts=["Montserrat","Inter","Playfair Display","Cormorant Garamond","Georgia","Arial"];
+  const heading=fonts.includes(p.headingFont)?p.headingFont:"Montserrat";
+  const body=fonts.includes(p.bodyFont)?p.bodyFont:"Inter";
+  const bg=String(imageUrl||"").trim().replace(/["'()]/g,"");
+  const fit=String(p.imageFit||"cover")==="contain"?"contain":"cover";
+  const pos=String(p.imagePosition||"center center").replace(/["'<>]/g,"");
+  return `style="--p-bg:${normalizeHex(p.backgroundColor,"#ffffff")};--p-text:${normalizeHex(p.textColor,"#103154")};--p-accent:${normalizeHex(p.accentColor,"#4dcad6")};--p-heading:'${heading}';--p-body:'${body}';${bg?`background-image:url(${bg});background-size:${fit};background-position:${pos};background-repeat:no-repeat;`:""}"`;
+}
+function renderArticles(){
+  const q=String($("globalQuery")?.value||"").toLowerCase();
+  const items=state.articles.filter(a=>!q||[a.title,a.destination,a.writer,a.status,a.tags].join(" ").toLowerCase().includes(q));
+  const article=currentArticle()||{};
+  $("panel-articles").innerHTML=`
+  <div class="split">
+    <div class="panel scroll"><h3>Editorial article board</h3><div class="row" style="margin-bottom:8px"><button class="btn primary" data-action="new-article">New article brief</button><button class="btn" data-action="request-pr-brief">Generate PR brief</button></div>
+      <div class="admin-table">${items.length?items.map(a=>`<article class="admin-row"><div><div class="news-meta">${pill(a.status)}<span class="pill">${esc(a.destination||"General")}</span><span class="pill">${esc(a.contentType||"Feature")}</span></div><div class="item-title">${esc(a.title||"Untitled article")}</div><div class="item-sub">${esc(a.writer||"Unassigned")} · ${esc((a.brief||"").slice(0,150))}</div></div><div class="row"><button class="btn" data-edit-article="${esc(a.articleId||a._id)}">Edit</button><button class="btn bad" data-delete-article="${esc(a.articleId||a._id)}">Delete</button></div></article>`).join(""):`<div class="empty">No article briefs yet.</div>`}</div>
+    </div>
+    <div class="panel scroll"><h3>Article brief / assignment</h3>${articleForm(article)}</div>
+  </div>`;
+}
+function articleForm(a={}){
+  return `<div class="admin-grid">
+    <div class="field wide"><label class="label">Title</label><input id="articleTitle" class="input" value="${esc(a.title||"")}" placeholder="36 Hours in Palma"></div>
+    <div class="field"><label class="label">Type</label><select id="articleType">${["Feature","Destination Guide","Hotel Spotlight","Advertorial","Interview","Food & Culture","Shopping","Itinerary"].map(x=>`<option ${String(a.contentType||"Feature")===x?"selected":""}>${x}</option>`).join("")}</select></div>
+    <div class="field"><label class="label">Status</label><select id="articleStatus">${["DRAFT","IN PROGRESS","REVIEW","APPROVED","READY","PUBLISHED"].map(x=>`<option ${String(a.status||"DRAFT")===x?"selected":""}>${x}</option>`).join("")}</select></div>
+    <div class="field"><label class="label">Writer</label><input id="articleWriter" class="input" value="${esc(a.writer||"")}"></div>
+    <div class="field"><label class="label">Deadline</label><input id="articleDeadline" type="date" class="input" value="${esc(String(a.deadline||"").slice(0,10))}"></div>
+    <div class="field"><label class="label">Destination</label><input id="articleDestination" class="input" value="${esc(a.destination||"")}"></div>
+    <div class="field"><label class="label">Target words</label><input id="articleTargetWords" type="number" class="input" value="${esc(a.targetWords||900)}"></div>
+    <div class="field wide"><label class="label">Tags</label><input id="articleTags" class="input" value="${esc(arr(a.tags).join(", "))}" placeholder="Mallorca, luxury, families"></div>
+    <div class="field full"><label class="label">Editorial brief</label><textarea id="articleBrief">${esc(a.brief||"")}</textarea></div>
+    <div class="field full"><label class="label">SEO title / meta description</label><textarea id="articleSeo">${esc(a.seo||"")}</textarea></div>
+    <div class="field full"><label class="label">Social copy / PR hook</label><textarea id="articleSocial">${esc(a.socialCopy||"")}</textarea></div>
+  </div>
+  <div class="row" style="margin-top:8px"><button class="btn primary" data-action="save-article">Save article</button><button class="btn" data-action="send-approval">Send approval</button><button class="btn" data-action="request-copy-assist-article">Copy assist</button></div>`;
+}
+function collectArticle(){
+  const a=currentArticle()||{};
+  return {articleId:a.articleId||a._id||state.selectedArticleId||uid("ARTICLE"),issueId:currentIssueId(),title:$("articleTitle").value.trim(),contentType:$("articleType").value,status:$("articleStatus").value,writer:$("articleWriter").value.trim(),deadline:$("articleDeadline").value,destination:$("articleDestination").value.trim(),targetWords:Number($("articleTargetWords").value||0),tags:arr($("articleTags").value),brief:$("articleBrief").value.trim(),seo:$("articleSeo").value.trim(),socialCopy:$("articleSocial").value.trim(),updatedAt:new Date().toISOString()};
+}
+function renderAssets(){
+  $("panel-assets").innerHTML=`
+  <div class="split">
+    <div class="panel scroll"><h3>External media references</h3>
+      <div class="admin-grid">
+        <div class="field"><label class="label">Provider</label><select id="assetProvider"><option>openverse</option><option>unsplash</option><option>pexels</option><option>pixabay</option><option>wikimedia_commons</option></select></div>
+        <div class="field wide"><label class="label">Search</label><input id="assetQuery" class="input" placeholder="Mallorca beach aerial, Crete village, Nordic cabin"></div>
+        <div class="field"><label class="label">License</label><select id="assetLicense"><option>commercial-safe</option><option>cc0</option><option>cc-by</option><option>public-domain</option><option>provider-standard</option></select></div>
+        <div class="field"><label class="label">Orientation</label><select id="assetOrientation"><option>any</option><option>landscape</option><option>portrait</option><option>square</option></select></div>
+      </div>
+      <div class="row" style="margin:8px 0"><button class="btn primary" data-action="search-assets">Search assets</button><button class="btn" data-action="clear-asset-results">Clear results</button></div>
+      <div class="asset-grid">${state.assetResults.length?state.assetResults.map(assetCard).join(""):`<div class="empty">No external reference results yet. External results are references only; upload an approved copy to Supabase Storage before using it in VOY.</div>`}</div>
+    </div>
+    <div class="panel scroll"><h3>Legacy VOY media references</h3>
+      <div class="row" style="margin-bottom:8px"><button class="btn" data-action="open-asset-upload">Upload to Supabase</button><button class="btn" data-action="audit-asset-licenses">License audit</button><button class="btn primary" data-action="image-enhance">Enhance / optimize</button></div>
+      <div class="asset-grid">${state.assets.length?state.assets.map(assetCard).join(""):`<div class="empty">No legacy media references. New production assets are stored in Supabase Storage above.</div>`}</div>
+    </div>
+  </div>`;
+}
+function assetCard(a){return `<div class="asset-card"><div class="asset-img" style="${a.thumbUrl||a.imageUrl?`background-image:url('${esc(a.thumbUrl||a.imageUrl)}')`:""}">${a.thumbUrl||a.imageUrl?"":"IMAGE"}</div><div class="asset-body"><div class="asset-title">${esc(a.title||a.provider||"Media reference")}</div><div class="asset-meta">${esc(a.creator||"")} · ${esc(a.license||"license")}<br>${esc(a.provider||"")}<br><b>Reference only · upload to Supabase before use</b></div><div class="row" style="margin-top:7px"><button class="btn" data-import-asset="${esc(a.assetId||a.id||a.url||"")}">Save reference</button></div></div></div>`}
+function renderResearch(){
+  const r=state.destinationResearch||{};
+  $("panel-research").innerHTML=`
+  <div class="split">
+    <div class="panel scroll"><h3>Destination research desk</h3>
+      <div class="admin-grid">
+        <div class="field wide"><label class="label">Destination / city / country</label><input id="researchDestination" class="input" value="${esc(r.destination||"")}" placeholder="Crete, Greece"></div>
+        <div class="field"><label class="label">Tone</label><select id="researchTone"><option>Luxury</option><option>Family</option><option>Adventure</option><option>Culture</option><option>Sun and beach</option></select></div>
+        <div class="field"><label class="label">Language</label><select id="researchLang"><option>en</option><option>sv</option><option>no</option><option>da</option><option>fi</option><option>de</option></select></div>
+      </div>
+      <div class="row" style="margin:8px 0"><button class="btn primary" data-action="research-destination">Research destination</button><button class="btn" data-action="insert-research-page">Insert into page</button><button class="btn" data-action="make-travel-card-from-research">Create travel card</button></div>
+      <div class="notice">Backend can combine Wikipedia/MediaWiki summaries, Wikidata facts, REST Countries, OpenTripMap POIs and licensed asset search. Editors should always verify claims before publishing.</div>
+    </div>
+    <div class="panel scroll"><h3>Research result</h3>
+      ${r.destination?`<div class="kv"><div class="k">Destination</div><div class="v">${esc(r.destination)}</div><div class="k">Country</div><div class="v">${esc(r.country||"—")}</div><div class="k">Best for</div><div class="v">${esc(arr(r.bestFor).join(", ")||"—")}</div><div class="k">Sources</div><div class="v">${esc(arr(r.sources).join(", ")||"—")}</div></div><hr><div class="item-title">${esc(r.headline||"Suggested story angle")}</div><p class="help">${esc(r.summary||"No summary returned yet.")}</p><h4>Points of interest</h4>${arr(r.pois).map(x=>`<div class="notice" style="margin-bottom:6px">${esc(x)}</div>`).join("")}`:`<div class="empty">No destination result yet.</div>`}
+    </div>
+  </div>`;
+}
+function renderCampaign(){
+  const issue=currentIssue();
+  $("panel-campaign").innerHTML=`
+  <div class="split">
+    <div class="panel scroll"><h3>PR / marketing campaign studio</h3>
+      <div class="admin-grid">
+        <div class="field wide"><label class="label">Campaign name</label><input id="campName" class="input" value="${esc(issue?.title||"")}" placeholder="Summer Escapes 2026"></div>
+        <div class="field"><label class="label">Audience</label><select id="campAudience"><option>Families</option><option>Couples</option><option>Luxury travellers</option><option>Students</option><option>Business travellers</option><option>Culture seekers</option></select></div>
+        <div class="field"><label class="label">Channel</label><select id="campChannel"><option>Magazine + web</option><option>Email</option><option>Social</option><option>Paid ads</option><option>PR release</option><option>Travel agency window</option></select></div>
+        <div class="field"><label class="label">Market</label><input id="campMarket" class="input" placeholder="Sweden, Norway, Denmark"></div>
+        <div class="field"><label class="label">CTA path</label><input id="campCtaPath" class="input" placeholder="/destinations/greece"></div>
+        <div class="field full"><label class="label">Campaign objective</label><textarea id="campObjective" placeholder="Increase bookings to Crete by positioning the destination as..."></textarea></div>
+        <div class="field full"><label class="label">Offer / product angle</label><textarea id="campOffer" placeholder="Family package, hotel collection, route launch, shoulder-season campaign..."></textarea></div>
+      </div>
+      <div class="row" style="margin-top:8px"><button class="btn primary" data-action="generate-pr-brief">Generate PR brief</button><button class="btn" data-action="generate-social-pack">Social pack</button><button class="btn ok" data-action="save-campaign">Save campaign</button></div>
+    </div>
+    <div class="panel scroll"><h3>Campaign packages</h3>
+      ${state.campaigns.length?state.campaigns.map(c=>`<article class="admin-row"><div><div class="news-meta">${pill(c.status||"DRAFT")}<span class="pill">${esc(c.channel||"Magazine")}</span></div><div class="item-title">${esc(c.name)}</div><div class="item-sub">${esc(c.objective||"")}</div></div><button class="btn" data-edit-campaign="${esc(c.campaignId)}">Edit</button></article>`).join(""):`<div class="empty">No campaigns yet.</div>`}
+    </div>
+  </div>`;
+}
+function collectCampaign(){
+  return {campaignId:uid("CAMPAIGN"),issueId:currentIssueId(),name:$("campName").value.trim(),audience:$("campAudience").value,channel:$("campChannel").value,market:$("campMarket").value.trim(),ctaPath:$("campCtaPath").value.trim(),objective:$("campObjective").value.trim(),offer:$("campOffer").value.trim(),status:"DRAFT",createdAt:new Date().toISOString()};
+}
+
+function readinessStats(){
+  const issue=currentIssue();
+  const pages=issuePages();
+  const articleDrafts=state.articles.filter(a=>String(a.status||"").toUpperCase().includes("DRAFT")||String(a.status||"").toUpperCase().includes("REVIEW")).length;
+  const pageWarnings=pages.reduce((n,p)=>n+[
+    !p.title,
+    !p.deck,
+    !p.imageUrl && !["ad","catalogue"].includes(String(p.template||"")),
+    p.imageUrl && !p.imageCredit,
+    String(p.body||"").length<180 && !["cover","ad"].includes(String(p.template||""))
+  ].filter(Boolean).length,0);
+  const assetWarnings=(state.assets||[]).filter(a=>!a.license||!a.creator||!a.sourceUrl).length;
+  const score=Math.max(0,100-(articleDrafts*6)-(pageWarnings*5)-(assetWarnings*8));
+  return {issue,pages,articleDrafts,pageWarnings,assetWarnings,score};
+}
+function printQaData(){
+  const r=readinessStats();
+  const pages=r.pages.map(p=>{
+    const warnings=[];
+    if(!p.title)warnings.push("Missing title");
+    if(!p.deck&&!["cover","ad"].includes(String(p.template||"")))warnings.push("Missing deck/standfirst");
+    if(!p.imageUrl&&!["ad","catalogue"].includes(String(p.template||"")))warnings.push("Missing hero image");
+    if(p.imageUrl&&!p.imageCredit)warnings.push("Missing image credit");
+    if(String(p.body||"").length<180&&!["cover","ad"].includes(String(p.template||"")))warnings.push("Body may be too short for print");
+    if(!p.status||String(p.status).toUpperCase()==="DRAFT")warnings.push("Not approved");
+    return {pageId:p.pageId||p._id,pageNo:p.pageNo,title:p.title,template:p.template,status:p.status||"DRAFT",warnings};
+  });
+  return {issueId:currentIssueId(),generatedAt:new Date().toISOString(),readinessScore:r.score,pageWarnings:r.pageWarnings,assetWarnings:r.assetWarnings,articleDrafts:r.articleDrafts,pages};
+}
+function qualityChecklist(){
+  const page=currentPage()||{};
+  const article=currentArticle()||{};
+  return [
+    ["Editorial voice",page.title||article.title?"Ready for tone check":"Missing page/article title",page.title||article.title?"ok":"warn"],
+    ["Destination facts",page.destination||article.destination?"Destination present":"Destination missing",page.destination||article.destination?"ok":"warn"],
+    ["SEO headline",String(page.title||article.title||"").length>=28?"Strong length":"Headline may be too short","warn"],
+    ["Image licensing",(state.assets||[]).every(a=>a.license&&a.creator)?"Attribution fields present":"Run license audit before publishing",(state.assets||[]).every(a=>a.license&&a.creator)?"ok":"warn"],
+    ["Print body length",String(page.body||"").length>500?"Feature depth available":"Body may need more editorial depth",String(page.body||"").length>500?"ok":"warn"],
+    ["Accessibility",page.imageAlt||article.imageAlt?"Alt text present":"Alt text should be added","warn"]
+  ];
+}
+function renderQualityLab(){
+  const r=readinessStats();
+  const qr=state.qualityResult||{};
+  $("panel-quality").innerHTML=`
+  <div class="split">
+    <div class="stack">
+      <div class="voy-score">
+        <div class="qa-card"><small>Readiness</small><b>${r.score}%</b><span>Computed from draft, asset and page warnings.</span></div>
+        <div class="qa-card"><small>Page warnings</small><b>${r.pageWarnings}</b><span>Missing images, credits, decks or body depth.</span></div>
+        <div class="qa-card"><small>Asset warnings</small><b>${r.assetWarnings}</b><span>License, creator or source gaps.</span></div>
+        <div class="qa-card"><small>Open editorial</small><b>${r.articleDrafts}</b><span>Draft/review article tasks.</span></div>
+      </div>
+      <div class="panel scroll"><h3>Quality lab</h3>
+        <div class="voy-tool-grid">
+          <div class="voy-tool-card"><b>Copy Chief</b><div class="help">Tone, grammar, line edit, headline alternatives and deck polish.</div><button class="btn primary" data-action="copy-chief-review">Run copy chief review</button></div>
+          <div class="voy-tool-card"><b>Fact & Claim Check</b><div class="help">Flags destination claims, prices, opening times, distances and source gaps.</div><button class="btn" data-action="fact-check-claims">Check claims</button></div>
+          <div class="voy-tool-card"><b>Accessibility / SEO</b><div class="help">Alt text, reading level, metadata, OpenGraph and search snippets.</div><button class="btn" data-action="accessibility-seo-check">Run accessibility + SEO</button></div>
+          <div class="voy-tool-card"><b>Translation Desk</b><div class="help">Create market versions while preserving brand voice and legal disclaimers.</div><div class="row"><input id="qualityLangs" class="input" value="sv,no,da,fi,de" style="min-width:130px"><button class="btn" data-action="translate-package">Translate</button></div></div>
+          <div class="voy-tool-card"><b>License Audit</b><div class="help">Validate provider, license, source URL, creator credit and usage rights.</div><button class="btn warn" data-action="audit-asset-licenses">Audit assets</button></div>
+          <div class="voy-tool-card"><b>Full Quality Run</b><div class="help">Sends issue, pages, assets and brand kit to backend QA worker.</div><button class="btn ok" data-action="run-quality-lab">Run full quality lab</button></div>
+        </div>
+      </div>
+    </div>
+    <div class="panel scroll"><h3>Current checks</h3>
+      <div class="qa-list">${qualityChecklist().map(c=>`<div class="qa-card"><b>${esc(c[0])} ${pill(c[2])}</b><span>${esc(c[1])}</span></div>`).join("")}</div>
+      <h3 style="margin-top:12px">Backend result</h3>
+      ${qr.summary?`<div class="notice">${esc(qr.summary)}</div><div class="kv" style="margin-top:8px"><div class="k">Score</div><div class="v">${esc(qr.score||"—")}</div><div class="k">Priority</div><div class="v">${esc(qr.priority||"—")}</div><div class="k">Updated</div><div class="v">${esc(qr.generatedAt||"—")}</div></div>`:`<div class="empty">No backend quality result yet.</div>`}
+    </div>
+  </div>`;
+}
+function renderBrandKit(){
+  const b=state.brandKit||{};
+  const colors=arr(b.colors||"#022e64,#0b3a7a,#5FC7CF,#ffffff");
+  $("panel-brandkit").innerHTML=`
+  <div class="split">
+    <div class="panel scroll"><h3>SKANDI VOY brand kit</h3>
+      <div class="admin-grid">
+        <div class="field wide"><label class="label">Brand / publication name</label><input id="brandName" class="input" value="${esc(b.name||"SKANDI VOY")}"></div>
+        <div class="field wide"><label class="label">Font system</label><input id="brandFonts" class="input" value="${esc(b.fonts||"Montserrat / Tahoma")}"></div>
+        <div class="field full"><label class="label">Tone of voice</label><textarea id="brandTone">${esc(b.tone||"Premium, warm, practical and commercially sharp")}</textarea></div>
+        <div class="field full"><label class="label">Approved colors</label><input id="brandColors" class="input" value="${esc(colors.join(", "))}"></div>
+        <div class="field full"><label class="label">Required phrases / product vocabulary</label><textarea id="brandRequired">${esc(b.requiredWords||"SKANDI Travels, curated, destination, experience")}</textarea></div>
+        <div class="field full"><label class="label">Blocked words / legal risk phrases</label><textarea id="brandBlocked">${esc(b.blockedWords||"cheap, guaranteed, best in the world")}</textarea></div>
+        <div class="field wide"><label class="label">Default CTA</label><input id="brandCta" class="input" value="${esc(b.defaultCta||"Explore destination")}"></div>
+      </div>
+      <div class="brand-swatch-row">${colors.map(c=>`<span class="brand-swatch" title="${esc(c)}" style="background:${esc(c)}"></span>`).join("")}</div>
+      <div class="row" style="margin-top:10px"><button class="btn primary" data-action="save-brand-kit">Save brand kit</button><button class="btn ok" data-action="run-brand-guard">Run brand guard</button></div>
+    </div>
+    <div class="panel scroll"><h3>Brand guard result</h3>
+      ${state.brandGuardResult?.summary?`<div class="notice">${esc(state.brandGuardResult.summary)}</div>`:`<div class="empty">Run Brand Guard to check all active issue copy against voice, terms and legal risk wording.</div>`}
+      <h3 style="margin-top:12px">Professional additions</h3>
+      <div class="qa-list">
+        <div class="qa-card"><b>Design token lock</b><span>Keep VOY colors, typography, logo clearspace and CTA style synchronized with editor and public pages.</span></div>
+        <div class="qa-card"><b>Legal phrase guard</b><span>Flags absolute claims, unapproved hotel guarantees, outdated price claims and package terms requiring review.</span></div>
+        <div class="qa-card"><b>Market localization</b><span>Adapts copy to Nordic, US and EU markets without changing brand tone.</span></div>
+      </div>
+    </div>
+  </div>`;
+}
+function collectBrandKit(){
+  return {
+    name:$("brandName").value.trim(),
+    fonts:$("brandFonts").value.trim(),
+    tone:$("brandTone").value.trim(),
+    colors:$("brandColors").value.trim(),
+    requiredWords:$("brandRequired").value.trim(),
+    blockedWords:$("brandBlocked").value.trim(),
+    defaultCta:$("brandCta").value.trim(),
+    updatedAt:new Date().toISOString()
+  };
+}
+function renderPrintQa(){
+  const qa=state.printQa||printQaData();
+  $("panel-printqa").innerHTML=`
+  <div class="split">
+    <div class="panel scroll"><h3>Print production QA</h3>
+      <div class="voy-score">
+        <div class="qa-card"><small>Readiness</small><b>${esc(qa.readinessScore||0)}%</b><span>Issue level production score.</span></div>
+        <div class="qa-card"><small>Pages</small><b>${qa.pages?.length||0}</b><span>Current active issue flatplan.</span></div>
+        <div class="qa-card"><small>Page warnings</small><b>${esc(qa.pageWarnings||0)}</b><span>Layout and content gaps.</span></div>
+        <div class="qa-card"><small>Asset warnings</small><b>${esc(qa.assetWarnings||0)}</b><span>License and credit gaps.</span></div>
+      </div>
+      <div class="row" style="margin-bottom:8px"><button class="btn primary" data-action="run-print-qa">Run print QA</button><button class="btn ok" data-action="prepare-print-export">Prepare press package</button><button class="btn" data-action="export-print">Export print package</button></div>
+      <div class="print-flatplan">${(qa.pages||[]).map(p=>`<div class="print-page-tile"><b>Page ${esc(p.pageNo||"—")} · ${esc(p.template||"feature")}</b><span>${esc(p.title||"Untitled")}</span><div style="margin-top:6px">${(p.warnings||[]).length?pill("WARN"):pill("OK")}</div><span>${esc((p.warnings||[]).join(", ")||"Ready")}</span></div>`).join("")||`<div class="empty">No pages in active issue.</div>`}</div>
+    </div>
+    <div class="panel scroll"><h3>Production checklist</h3>
+      <div class="qa-list">
+        <div class="qa-card"><b>Bleed and safe zone</b><span>Backend renderer should check 3mm bleed, trim box, safe text area, page size and crop marks.</span></div>
+        <div class="qa-card"><b>Image quality</b><span>Check DPI, aspect crop, color profile, compression artefacts and minimum size before export.</span></div>
+        <div class="qa-card"><b>Rights and credits</b><span>Every external asset must have provider, license, creator, source URL and usage terms snapshot.</span></div>
+        <div class="qa-card"><b>Public package</b><span>Generate web issue, PDF preview, social crops, booking CTAs and downloadable public PDF.</span></div>
+      </div>
+    </div>
+  </div>`;
+}
+function renderDistribution(){
+  const d=state.distributionKit||{};
+  $("panel-distribution").innerHTML=`
+  <div class="split">
+    <div class="panel scroll"><h3>Distribution and PR launch kit</h3>
+      <div class="admin-grid">
+        <div class="field wide"><label class="label">Launch name</label><input id="distName" class="input" value="${esc(currentIssue()?.title||"VOY launch")}"></div>
+        <div class="field"><label class="label">Primary market</label><input id="distMarket" class="input" placeholder="Sweden / Norway / US"></div>
+        <div class="field"><label class="label">Campaign channel</label><select id="distChannel"><option>All channels</option><option>Press release</option><option>Email newsletter</option><option>Instagram / Facebook</option><option>Google Ads</option><option>Travel agency sales desk</option><option>Onboard magazine</option></select></div>
+        <div class="field"><label class="label">Booking CTA URL</label><input id="distCta" class="input" placeholder="/destinations/greece"></div>
+        <div class="field"><label class="label">UTM campaign</label><input id="distUtm" class="input" value="${esc(String(currentIssue()?.slug||"voy-launch").replace(/[^a-z0-9]+/gi,"-").toLowerCase())}"></div>
+        <div class="field full"><label class="label">Commercial angle</label><textarea id="distAngle" placeholder="Why this issue should convert readers into destination interest and bookings."></textarea></div>
+      </div>
+      <div class="row" style="margin-top:8px"><button class="btn primary" data-action="generate-distribution-kit">Generate launch kit</button><button class="btn ok" data-action="save-distribution-kit">Save kit</button></div>
+      <div class="channel-grid" style="margin-top:10px">
+        ${["Press release","Newsletter","Social captions","Paid ads","Agency brief","Public web issue","PDF download","Sales CTA"].map(x=>`<div class="channel-card"><b>${x}</b><span>Generated from issue, pages, campaigns and brand kit.</span></div>`).join("")}
+      </div>
+    </div>
+    <div class="panel scroll"><h3>Generated kit</h3>
+      ${d.summary?`<div class="notice">${esc(d.summary)}</div><div class="manifest" style="margin-top:8px">${esc(d.copy||JSON.stringify(d,null,2))}</div>`:`<div class="empty">No distribution kit yet.</div>`}
+    </div>
+  </div>`;
+}
+function renderWorkflow(){
+  const lanes=["BRIEF","DRAFT","REVIEW","APPROVED","PUBLISHED"];
+  $("panel-workflow").innerHTML=`<div class="panel scroll"><h3>Editorial workflow / approvals</h3><div class="workflow-lane">${lanes.map(l=>`<div class="workflow-col"><h4>${esc(l)}</h4>${state.articles.filter(a=>String(a.status||"DRAFT").toUpperCase().replace("IN PROGRESS","DRAFT")===l).map(a=>`<div class="workflow-card"><b>${esc(a.title)}</b><div class="help">${esc(a.writer||"Unassigned")} · ${esc(a.deadline||"No deadline")}</div><button class="btn" data-edit-article="${esc(a.articleId||a._id)}">Open</button></div>`).join("")||`<div class="empty">Empty</div>`}</div>`).join("")}</div></div>`;
+}
+function renderCategories(){
+  $("panel-categories").innerHTML=`<div class="split"><div class="panel scroll"><h3>Categories</h3>${categoryForm()}<div class="row" style="margin-top:8px"><button class="btn primary" data-action="save-category">Save category</button><button class="btn" data-action="clear-category">Clear</button></div></div><div class="panel scroll"><h3>Category list</h3><div class="admin-table">${state.categories.length?state.categories.map(c=>`<article class="admin-row"><div><div class="news-meta"><span class="pill ${c.active===false?"bad":"ok"}">${c.active===false?"Hidden":"Active"}</span><span class="pill">Order ${esc(c.sortOrder??"")}</span></div><div class="item-title">${esc(c.title)}</div><div class="item-sub">${esc(c.summary||"")}</div></div><div class="row"><button class="btn" data-edit-category="${esc(c.categoryId||c._id)}">Adjust</button><button class="btn bad" data-delete-category="${esc(c.categoryId||c._id)}">Delete</button></div></article>`).join(""):`<div class="empty">No categories yet.</div>`}</div></div></div>`;
+}
+function categoryForm(){const c=state.categories.find(x=>(x.categoryId||x._id)===state.editingCategoryId)||{};return `<div class="admin-grid"><div class="field wide"><label class="label">Category title</label><input class="input" id="catTitle" value="${esc(c.title||"")}" placeholder="Food & Culture"></div><div class="field"><label class="label">Sort order</label><input class="input" id="catSortOrder" type="number" value="${esc(c.sortOrder||10)}"></div><div class="field"><label class="label">Active</label><select id="catActive"><option value="true" ${c.active!==false?"selected":""}>Yes</option><option value="false" ${c.active===false?"selected":""}>No</option></select></div><div class="field full"><label class="label">Summary</label><textarea id="catSummary">${esc(c.summary||"")}</textarea></div></div>`}
+function collectCategory(){return {categoryId:state.editingCategoryId||uid("CAT"),title:$("catTitle").value.trim(),summary:$("catSummary").value.trim(),sortOrder:Number($("catSortOrder").value||0),active:$("catActive").value==="true"}}
+function renderBanners(){
+  $("panel-banners").innerHTML=`<div class="split"><div class="panel scroll"><h3>Ad / campaign banners</h3>${bannerForm()}<div class="row" style="margin-top:8px"><button class="btn primary" data-action="save-banner">Save banner</button><button class="btn" data-action="clear-banner">Clear</button></div></div><div class="panel scroll"><h3>Banner list</h3><div class="admin-table">${state.banners.length?state.banners.map(b=>`<article class="admin-row"><div><div class="news-meta"><span class="pill">${esc(b.slot)}</span><span class="pill ${b.active===false?"bad":"ok"}">${b.active===false?"Hidden":"Active"}</span></div><div class="item-title">${esc(b.title)}</div><div class="item-sub">${esc(b.summary||"")}</div></div><div class="row"><button class="btn" data-edit-banner="${esc(b.bannerId||b._id)}">Adjust</button><button class="btn bad" data-delete-banner="${esc(b.bannerId||b._id)}">Delete</button></div></article>`).join(""):`<div class="empty">No banners yet.</div>`}</div></div></div>`;
+}
+function bannerForm(){const b=state.banners.find(x=>(x.bannerId||x._id)===state.editingBannerId)||{};return `<div class="admin-grid"><div class="field wide"><label class="label">Title</label><input class="input" id="bannerTitle" value="${esc(b.title||"")}" placeholder="SKANDI Signature Greece"></div><div class="field"><label class="label">Slot</label><select id="bannerSlot">${["top","side","bottom","article-inline","back-cover","sponsored-spread"].map(s=>`<option ${String(b.slot||"top")===s?"selected":""}>${s}</option>`).join("")}</select></div><div class="field"><label class="label">Path</label><input class="input" id="bannerPath" value="${esc(b.path||"")}" placeholder="/signature-collection"></div><div class="field"><label class="label">Active</label><select id="bannerActive"><option value="true" ${b.active!==false?"selected":""}>Yes</option><option value="false" ${b.active===false?"selected":""}>No</option></select></div><div class="field full"><label class="label">Summary</label><textarea id="bannerSummary">${esc(b.summary||"")}</textarea></div></div>`}
+function collectBanner(){return {bannerId:state.editingBannerId||uid("BAN"),title:$("bannerTitle").value.trim(),slot:$("bannerSlot").value,path:$("bannerPath").value.trim(),active:$("bannerActive").value==="true",summary:$("bannerSummary").value.trim()}}
+function renderTravelCards(){
+  $("panel-travelcards").innerHTML=`<div class="split"><div class="panel scroll"><h3>Travel cards</h3>${travelCardForm()}<div class="row" style="margin-top:8px"><button class="btn primary" data-action="save-card">Save travel card</button><button class="btn" data-action="clear-card">Clear</button></div></div><div class="panel scroll"><h3>Travel card list</h3><div class="admin-table">${state.travelCards.length?state.travelCards.map(c=>`<article class="admin-row"><div><div class="news-meta">${arr(c.tags).slice(0,4).map(t=>`<span class="pill">${esc(t)}</span>`).join("")}<span class="pill ${c.active===false?"bad":"ok"}">${c.active===false?"Hidden":"Active"}</span></div><div class="item-title">${esc(c.title)}</div><div class="item-sub">${esc(c.summary||"")}</div></div><div class="row"><button class="btn" data-edit-card="${esc(c.cardId||c._id)}">Adjust</button><button class="btn bad" data-delete-card="${esc(c.cardId||c._id)}">Delete</button></div></article>`).join(""):`<div class="empty">No travel cards yet.</div>`}</div></div></div>`;
+}
+function travelCardForm(){const c=state.travelCards.find(x=>(x.cardId||x._id)===state.editingCardId)||{};return `<div class="admin-grid"><div class="field wide"><label class="label">Title</label><input class="input" id="cardTitle" value="${esc(c.title||"")}" placeholder="Explore Crete"></div><div class="field"><label class="label">Path</label><input class="input" id="cardPath" value="${esc(c.path||"")}" placeholder="/destinations/greece?area=crete"></div><div class="field"><label class="label">Image asset</label><input class="input" id="cardImageUrl" value="${esc(c.imageUrl||"")}" placeholder="Select or upload a Supabase asset" readonly></div><div class="field"><label class="label">Active</label><select id="cardActive"><option value="true" ${c.active!==false?"selected":""}>Yes</option><option value="false" ${c.active===false?"selected":""}>No</option></select></div><div class="field wide"><label class="label">Tags</label><input class="input" id="cardTags" value="${esc(arr(c.tags).join(", "))}" placeholder="Beach, Greece, Family"></div><div class="field full"><label class="label">Summary</label><textarea id="cardSummary">${esc(c.summary||"")}</textarea></div></div>`}
+function collectCard(){return {cardId:state.editingCardId||uid("CARD"),title:$("cardTitle").value.trim(),path:$("cardPath").value.trim(),imageUrl:$("cardImageUrl").value.trim(),active:$("cardActive").value==="true",tags:arr($("cardTags").value),summary:$("cardSummary").value.trim()}}
+function renderApi(){
+  const apis=[
+    ["Openverse","Openly licensed/public-domain image and audio discovery","No key for public search; verify license before publishing","VOY_ASSET_SEARCH_REQUEST"],
+    ["Unsplash","High-quality travel photography","API key and attribution required","VOY_ASSET_SEARCH_REQUEST"],
+    ["Pexels","Free photo/video library","API key; credit/licensing policy should be checked","VOY_ASSET_SEARCH_REQUEST"],
+    ["Pixabay","Stock images/video/music search","API key; backend should store it","VOY_ASSET_SEARCH_REQUEST"],
+    ["Wikimedia Commons","Open media repository","Check license/author/source per file","VOY_ASSET_SEARCH_REQUEST"],
+    ["MediaWiki / Wikipedia","Destination summaries and references","Use for research, not as final unverified copy","VOY_DESTINATION_RESEARCH_REQUEST"],
+    ["Wikidata SPARQL","Structured destination facts","Backend should cache and rate-limit queries","VOY_DESTINATION_RESEARCH_REQUEST"],
+    ["REST Countries","Country facts, flags, currency, language, timezones","Good for catalogue fact boxes","VOY_DESTINATION_RESEARCH_REQUEST"],
+    ["OpenTripMap","POIs, attractions and travel places","API key; suitable for POI suggestions","VOY_DESTINATION_RESEARCH_REQUEST"],
+    ["Adobe Express Embed SDK","Embedded professional design editor, quick actions and AI-assisted editing","Use only through approved backend/session controls","VOY_ADOBE_EXPRESS_OPEN_REQUEST"],
+    ["Canva Connect Brand Templates","Brand template import/listing and template-driven creative workflows","OAuth + brand template permissions; store IDs in backend","VOY_CANVA_TEMPLATE_REQUEST"],
+    ["Figma REST API","Import design frames, layout references and export image/PDF previews","OAuth/token; backend should cache file metadata and export URLs","VOY_FIGMA_IMPORT_REQUEST"],
+    ["Cloudinary","Image transformations, background removal, crops and optimization","Cloud/backend credentials; track derivative assets","VOY_MEDIA_ENHANCE_REQUEST"],
+    ["Mapbox Static Images","Destination map art and static catalogue maps","API key; cache rendered map images","VOY_MAP_STATIC_REQUEST"],
+    ["TinyPNG / Tinify","Compress AVIF, WebP, JPEG and PNG for public pages","API key; run in backend optimization worker","VOY_IMAGE_OPTIMIZE_REQUEST"],
+    ["Getty Images / iStock","Licensed premium editorial visuals for campaigns","Commercial agreement + API credentials; strict rights metadata","VOY_PREMIUM_MEDIA_SEARCH_REQUEST"],
+    ["OpenAI image/copy tools","Image edits, campaign copy, headline alternatives and localization","Backend only; never expose API keys in HTML","VOY_AI_CREATIVE_REQUEST"],
+    ["PDF.js / pdf-lib","PDF preview, import and generated export jobs","Use backend for final press-ready PDF when possible","VOY_EXPORT_PDF_REQUEST"]
+  ];
+  $("panel-api").innerHTML=`<div class="panel scroll"><h3>API connector matrix</h3><div class="notice">The browser does not store API secrets. VOY sends connector requests to secure backend. The backend calls APIs, validates licensing/attribution, caches responses and returns normalized results.</div><div class="api-grid" style="margin-top:8px">${apis.map((a,i)=>`<div class="api-card"><b>${esc(a[0])}</b><div class="help">${esc(a[1])}</div><div class="kv" style="grid-template-columns:90px 1fr;margin-top:8px"><div class="k">Requirement</div><div class="v">${esc(a[2])}</div><div class="k">Event</div><div class="v mono">${esc(a[3])}</div></div><button class="btn" data-test-api="${i}" style="margin-top:8px">Test connector</button></div>`).join("")}</div><h3 style="margin-top:12px">Backend configuration aliases</h3><div class="admin-grid"><div class="field"><label class="label">Asset provider key alias</label><input id="apiAssetAlias" class="input" placeholder="VOY_ASSET_PROVIDER_KEYS"></div><div class="field"><label class="label">Research key alias</label><input id="apiResearchAlias" class="input" placeholder="VOY_RESEARCH_KEYS"></div><div class="field"><label class="label">Export webhook alias</label><input id="apiExportAlias" class="input" placeholder="VOY_EXPORT_WORKER"></div><div class="field"><label class="label">Status</label><select id="apiEnabled"><option value="true">Enabled</option><option value="false">Disabled</option></select></div></div><div class="row" style="margin-top:8px"><button class="btn primary" data-action="save-api-config">Save connector aliases</button></div></div>`;
+}
+function newsroomPostId(item={}){return item.postId||item.post_id||item._id||item.id||""}
+function contactId(item={}){return item.contactId||item.contact_id||item._id||item.id||""}
+function renderPressReleases(){
+  const item=state.newsroomPosts.find(p=>String(newsroomPostId(p))===String(state.editingPostId))||{};
+  const categories=state.newsroomCategories.length?state.newsroomCategories:state.categories;
+  $("panel-pressreleases").innerHTML=`<div class="split">
+    <div class="panel scroll"><h3>Newsroom posts and press releases</h3>
+      <div class="row" style="margin-bottom:8px"><button class="btn primary" data-action="new-news-post">New press release</button><button class="btn" data-action="refresh-newsroom">Refresh</button></div>
+      <div class="admin-table">${state.newsroomPosts.length?state.newsroomPosts.map(p=>`<article class="admin-row"><div><div class="news-meta">${pill(p.status||p.publishStatus)}<span class="pill">${esc(p.contentType||p.type||"Press release")}</span></div><div class="item-title">${esc(p.title||"Untitled press release")}</div><div class="item-sub">${esc(p.excerpt||p.summary||"")}</div></div><div class="row"><button class="btn" data-edit-news-post="${esc(newsroomPostId(p))}">Edit</button><button class="btn ok" data-publish-news-post="${esc(newsroomPostId(p))}">Publish</button><button class="btn bad" data-archive-news-post="${esc(newsroomPostId(p))}">Archive</button></div></article>`).join(""):`<div class="empty">No newsroom posts yet.</div>`}</div>
+    </div>
+    <div class="panel scroll"><h3>${state.editingPostId?"Edit":"Create"} press release</h3>
+      <div class="admin-grid">
+        <div class="field wide"><label class="label">Headline</label><input id="newsPostTitle" class="input" value="${esc(item.title||"")}" placeholder="SKANDI launches…"></div>
+        <div class="field"><label class="label">Slug</label><input id="newsPostSlug" class="input" value="${esc(item.slug||"")}" placeholder="skandi-launches"></div>
+        <div class="field"><label class="label">Type</label><select id="newsPostType">${["Press release","Company news","Media statement","VOY announcement"].map(v=>`<option ${String(item.contentType||item.type||"Press release")===v?"selected":""}>${v}</option>`).join("")}</select></div>
+        <div class="field"><label class="label">Category</label><select id="newsPostCategory"><option value="">Uncategorized</option>${categories.map(c=>`<option value="${esc(c.categoryId||c._id||c.id||c.title)}" ${String(item.categoryId||item.category_id||"")===String(c.categoryId||c._id||c.id||c.title)?"selected":""}>${esc(c.title||c.name||"Category")}</option>`).join("")}</select></div>
+        <div class="field"><label class="label">Publish date/time</label><input id="newsPostPublishAt" class="input" type="datetime-local" value="${esc(String(item.publishDate||item.publishAt||item.publish_at||"").slice(0,16))}"></div>
+        <div class="field wide"><label class="label">Hero image asset</label><input id="newsPostImage" class="input" value="${esc(item.heroImage||item.heroImageUrl||item.hero_image_url||item.imageUrl||"")}" placeholder="Select or upload a Supabase asset" readonly></div>
+        <div class="field full"><label class="label">Excerpt</label><textarea id="newsPostExcerpt">${esc(item.excerpt||item.summary||"")}</textarea></div>
+        <div class="field full"><label class="label">Article body</label><textarea id="newsPostBody" style="min-height:220px">${esc(item.bodyHtml||item.body||item.content||"")}</textarea></div>
+      </div>
+      <div class="row" style="margin-top:8px"><button class="btn primary" data-action="save-news-post">Save draft</button><button class="btn ok" data-action="publish-current-news-post">Publish</button><button class="btn" data-action="clear-news-post">Clear</button></div>
+    </div>
+  </div>`;
+}
+function collectNewsPost(){
+  const existing=state.newsroomPosts.find(p=>String(newsroomPostId(p))===String(state.editingPostId))||{};
+  const bodyHtml=$("newsPostBody").value.trim();
+  const summary=$("newsPostExcerpt").value.trim();
+  const heroImage=$("newsPostImage").value.trim();
+  return {
+    ...existing,
+    postId:state.editingPostId||newsroomPostId(existing)||uid("POST"),
+    title:$("newsPostTitle").value.trim(),
+    slug:$("newsPostSlug").value.trim(),
+    contentType:$("newsPostType").value,
+    categoryId:$("newsPostCategory").value,
+    publishDate:$("newsPostPublishAt").value||null,
+    heroImage,
+    thumbnailImage:existing.thumbnailImage||heroImage,
+    summary,
+    bodyHtml,
+    bodyPlainText:bodyHtml.replace(/<style[\s\S]*?<\/style>/gi," ").replace(/<script[\s\S]*?<\/script>/gi," ").replace(/<[^>]+>/g," ").replace(/\s+/g," ").trim(),
+    status:existing.status||"Draft",
+    active:existing.active===true,
+    updatedAt:new Date().toISOString()
+  };
+}
+function renderPressContacts(){
+  const item=state.pressContacts.find(c=>String(contactId(c))===String(state.editingContactId))||{};
+  $("panel-presscontacts").innerHTML=`<div class="split">
+    <div class="panel scroll"><h3>Press contacts</h3><div class="admin-table">${state.pressContacts.length?state.pressContacts.map(c=>`<article class="admin-row"><div><div class="news-meta"><span class="pill ${c.active===false?"bad":"ok"}">${c.active===false?"Inactive":"Active"}</span><span class="pill">${esc(c.region||c.market||"Global")}</span></div><div class="item-title">${esc(c.name||c.fullName||"Press contact")}</div><div class="item-sub">${esc(c.roleTitle||c.title||c.position||"")} · ${esc(c.email||"")} · ${esc(c.phone||"")}</div></div><button class="btn" data-edit-press-contact="${esc(contactId(c))}">Edit</button></article>`).join(""):`<div class="empty">No press contacts yet.</div>`}</div></div>
+    <div class="panel scroll"><h3>${state.editingContactId?"Edit":"Add"} press contact</h3><div class="admin-grid">
+      <div class="field wide"><label class="label">Name</label><input id="pressContactName" class="input" value="${esc(item.name||item.fullName||"")}"></div>
+      <div class="field wide"><label class="label">Title / position</label><input id="pressContactTitle" class="input" value="${esc(item.roleTitle||item.title||item.position||"")}"></div>
+      <div class="field"><label class="label">Email</label><input id="pressContactEmail" class="input" type="email" value="${esc(item.email||"")}"></div>
+      <div class="field"><label class="label">Phone</label><input id="pressContactPhone" class="input" value="${esc(item.phone||"")}"></div>
+      <div class="field"><label class="label">Market</label><input id="pressContactMarket" class="input" value="${esc(item.region||item.market||"")}" placeholder="US / Nordics / Global"></div>
+      <div class="field"><label class="label">Active</label><select id="pressContactActive"><option value="true" ${item.active!==false?"selected":""}>Yes</option><option value="false" ${item.active===false?"selected":""}>No</option></select></div>
+      <div class="field full"><label class="label">Notes</label><textarea id="pressContactNotes">${esc(item.availabilityText||item.notes||item.summary||"")}</textarea></div>
+    </div><div class="row" style="margin-top:8px"><button class="btn primary" data-action="save-press-contact">Save contact</button><button class="btn" data-action="clear-press-contact">Clear</button></div></div>
+  </div>`;
+}
+function collectPressContact(){
+  const existing=state.pressContacts.find(c=>String(contactId(c))===String(state.editingContactId))||{};
+  return {
+    ...existing,
+    contactId:state.editingContactId||contactId(existing)||uid("CONTACT"),
+    name:$("pressContactName").value.trim(),
+    roleTitle:$("pressContactTitle").value.trim(),
+    email:$("pressContactEmail").value.trim(),
+    phone:$("pressContactPhone").value.trim(),
+    region:$("pressContactMarket").value.trim(),
+    active:$("pressContactActive").value==="true",
+    availabilityText:$("pressContactNotes").value.trim(),
+    updatedAt:new Date().toISOString()
+  };
+}
+function upsert(listName,idField,item){
+  const list=state[listName]||[];
+  const id=item[idField]||item._id;
+  const i=list.findIndex(x=>(x[idField]||x._id)===id);
+  if(i>=0)list[i]={...list[i],...item};else list.unshift(item);
+  state[listName]=list;
+}
+function handleAction(action){
+  if(action==="refresh"){status("Refreshing VOY data...");requestLiveRefresh("manual");return}
+  if(action==="public-preview"){post("VOY_PUBLIC_PREVIEW_REQUEST",{issueId:currentIssueId()});toast("Public preview requested.");return}
+  if(action==="close-modal"){$("modalOverlay").style.display="none";return}
+  if(action==="new-issue"){state.editingIssueId="";setPanel("issues");return}
+  if(action==="new-standard-issue"){
+    const issueId=uid("ISSUE");
+    const issue={issueId,title:"VOY by SKANDI · The Greece Issue",edition:"Issue 01 / Summer 2026",slug:`voy-greece-${new Date().getFullYear()}`,publishDate:today(),publishStatus:"DRAFT",featured:state.issues.length===0,categories:["Destinations","Travel Guide","Airline Guide"],destinations:["Greece","Santorini","Crete","Mykonos","Skiathos"],coverImageUrl:"https://static.wixstatic.com/media/394052_df1cdfcfeb434cd1aa47ee47949309f3~mv2.png",summary:"The current VOY Greece edition loaded as a fully editable template-based issue.",searchText:"VOY Greece airline guide airport guide",printSettings:"A4, 3mm bleed, structured digital issue"};
+    const pages=currentVoyBlueprint(issueId);
+    state.issues.unshift(issue);state.pages.push(...pages);state.selectedIssueId=issueId;state.editingIssueId=issueId;state.selectedPageId=pages[0].pageId;
+    post("VOY_ADMIN_SAVE_ISSUE_PACKAGE",{issue,pages});toast(`Created the current ${pages.length}-page VOY edition as editable templates.`,"ok");setPanel("builder");return;
+  }
+  if(action==="clear-issue"){state.editingIssueId="";renderIssues();return}
+  if(action==="save-issue"||action==="save-issue-upload"){
+    const issue=collectIssue(); if(!issue.title){toast("Issue title is required.","bad");return}
+    upsert("issues","issueId",issue);state.selectedIssueId=issue.issueId;state.editingIssueId=issue.issueId;
+    post(action==="save-issue-upload"?"VOY_ADMIN_SAVE_ISSUE_WITH_UPLOAD":"VOY_ADMIN_SAVE_ISSUE_METADATA",{issue});toast("Issue saved to local draft and sent to backend.","ok");refreshAfterSave("save-issue");renderAll();return;
+  }
+  if(action==="publish-issue"){
+    const issue=currentIssue();const pages=issuePages();
+    if(!issue){toast("Create or select an issue first.","bad");return}
+    if(!pages.length){toast("Add at least one page before publishing.","bad");return}
+    const invalid=pages.find(p=>!String(p.title||"").trim());if(invalid){toast(`Page ${invalid.pageNo||"—"} needs a title.`,"bad");return}
+    post("VOY_ADMIN_PUBLISH_ISSUE",{issueId:currentIssueId(),issue,pages});status("Publishing issue to the public VOY Magazine page…");return;
+  }
+  if(action==="archive-issue"){
+    if(!currentIssueId()){toast("Select an issue first.","bad");return}
+    post("VOY_ADMIN_ARCHIVE_ISSUE",{issueId:currentIssueId()});status("Archiving issue…");return;
+  }
+  if(action==="load-current-voy"){
+    if(!currentIssueId()){toast("Create or select an issue first.","bad");return}
+    if(issuePages().length&&!confirm("Replace the selected issue pages with the current VOY edition?"))return;
+    const issueId=currentIssueId();const existingIds=new Set(issuePages().map(x=>x.pageId||x._id));state.pages=state.pages.filter(x=>!existingIds.has(x.pageId||x._id));const pages=currentVoyBlueprint(issueId);state.pages.push(...pages);state.selectedPageId=pages[0].pageId;
+    post("VOY_ADMIN_SAVE_PAGES",{issueId,pages,replaceIssuePages:true});toast(`Loaded ${pages.length} editable VOY pages into this issue.`,"ok");renderAll();return;
+  }
+  if(action==="add-standard-pages"){
+    if(!currentIssueId()){toast("Create or select an issue first.","bad");return}
+    const existing=new Set(issuePages().map(p=>p.template));const additions=templates.filter(t=>!existing.has(t.id)).map((t,i)=>makeTemplatePage(t,issuePages().length+i,currentIssueId()));
+    if(!additions.length){toast("All layout types are already in this issue.");return}
+    state.pages.push(...additions);post("VOY_ADMIN_SAVE_PAGES",{issueId:currentIssueId(),pages:additions});state.selectedPageId=additions[0].pageId;toast(`Added ${additions.length} missing page layouts.`,"ok");renderAll();return;
+  }
+  if(action==="new-page"){
+    if(!currentIssueId()){toast("Create/select an issue first.","bad");setPanel("issues");return}
+    const p=makeTemplatePage(templates[0],nextPageNo()-1,currentIssueId());p.title="New VOY page";
+    state.pages.push(p);state.selectedPageId=p.pageId;setPanel("builder");return;
+  }
+  if(action==="add-block"){
+    let page;try{page=collectPage()}catch(error){page={...currentPage(),blocks:parseBlocks(currentPage()?.blocks)}}if(!page)return;page.blocks=parseBlocks(page.blocks);const schema=BLOCK_SCHEMAS[page.template]||[];const item={};schema.forEach(([key])=>item[key]="");page.blocks.push(item);upsert("pages","pageId",page);state.selectedPageId=page.pageId;renderBuilder();return;
+  }
+  if(action==="save-page"||action==="save-current"){
+    if(state.activePanel==="builder"){let page;try{page=collectPage()}catch(error){toast(error.message||"Check the page fields.","bad");return}if(!page.title){toast("Page title is required.","bad");return}upsert("pages","pageId",page);state.selectedPageId=page.pageId;post("VOY_ADMIN_SAVE_PAGE",{page});toast("Page saved and sent to backend.","ok");refreshAfterSave("save-page");renderAll();return}
+    if(state.activePanel==="articles"){handleAction("save-article");return}
+    if(state.activePanel==="issues"){handleAction("save-issue");return}
+    if(state.activePanel==="brandkit"){handleAction("save-brand-kit");return}
+    if(state.activePanel==="distribution"){handleAction("save-distribution-kit");return}
+    if(state.activePanel==="pressreleases"){handleAction("save-news-post");return}
+    if(state.activePanel==="presscontacts"){handleAction("save-press-contact");return}
+    toast("Nothing active to save.");return;
+  }
+  if(action==="copy-page"){let p;try{p=collectPage()}catch(error){toast(error.message||"Check the page fields.","bad");return}p.pageId=uid("PAGE");p.pageNo=nextPageNo();p.title=p.title+" copy";state.pages.push(p);state.selectedPageId=p.pageId;post("VOY_ADMIN_SAVE_PAGE",{page:p});renderAll();return}
+  if(action==="move-page-up"||action==="move-page-down"){
+    const current=currentPage();if(!current)return;const ordered=issuePages();const index=ordered.findIndex(p=>(p.pageId||p._id)===(current.pageId||current._id));const target=action==="move-page-up"?index-1:index+1;if(index<0||target<0||target>=ordered.length)return;
+    [ordered[index].pageNo,ordered[target].pageNo]=[ordered[target].pageNo,ordered[index].pageNo];post("VOY_ADMIN_REORDER_PAGES",{issueId:currentIssueId(),pages:ordered.map(p=>({pageId:p.pageId||p._id,pageNo:p.pageNo}))});renderAll();return;
+  }
+  if(action==="delete-current-page"){
+    const p=currentPage();if(!p||!confirm("Remove this page from the issue?"))return;const id=p.pageId||p._id;state.pages=state.pages.filter(x=>(x.pageId||x._id)!==id);state.selectedPageId=issuePages()[0]?.pageId||"";post("VOY_ADMIN_DELETE_PAGE",{pageId:id,issueId:currentIssueId()});renderAll();return;
+  }
+  if(action==="toggle-bleed"){document.querySelectorAll(".mag-page").forEach(p=>p.classList.toggle("bleed"));return}
+  if(action==="print-page"){window.print();return}
+  if(action==="export-page-pdf"){let page;try{page=collectPage()}catch(error){toast(error.message||"Check the page fields.","bad");return}post("VOY_EXPORT_PDF_REQUEST",{issueId:currentIssueId(),page,mode:"single-page"});toast("PDF export request sent.");return}
+  if(action==="export-print"){post("VOY_EXPORT_PRINT_PACKAGE_REQUEST",{issueId:currentIssueId(),pages:issuePages(),format:"press-ready-pdf"});toast("Print package export requested.");return}
+  if(action==="new-article"){const a={articleId:uid("ARTICLE"),issueId:currentIssueId(),title:"New article brief",status:"DRAFT",contentType:"Feature",targetWords:900};state.articles.unshift(a);state.selectedArticleId=a.articleId;setPanel("articles");return}
+  if(action==="save-article"){const a=collectArticle();if(!a.title){toast("Article title is required.","bad");return}upsert("articles","articleId",a);state.selectedArticleId=a.articleId;post("VOY_ADMIN_SAVE_ARTICLE",{article:a});toast("Article saved.","ok");refreshAfterSave("save-article");renderAll();return}
+  if(action==="send-approval"){const a=collectArticle();post("VOY_APPROVAL_SEND_REQUEST",{article:a,issueId:currentIssueId()});toast("Approval request sent.");return}
+  if(action==="request-copy-assist"||action==="request-copy-assist-article"){let payload;if(action.includes("article"))payload={article:collectArticle()};else{try{payload={page:collectPage()}}catch(error){toast(error.message||"Check the page fields.","bad");return}}post("VOY_COPY_ASSIST_REQUEST",payload);toast("Copy assist requested.");return}
+  if(action==="seo-check"){let page;try{page=collectPage()}catch(error){toast(error.message||"Check the page fields.","bad");return}post("VOY_SEO_ANALYZE_REQUEST",{page,issue:currentIssue()});toast("SEO analysis requested.");return}
+  if(action==="search-assets"){post("VOY_ASSET_SEARCH_REQUEST",{provider:$("assetProvider").value,query:$("assetQuery").value,license:$("assetLicense").value,orientation:$("assetOrientation").value});toast("Asset search requested.");return}
+  if(action==="clear-asset-results"){state.assetResults=[];renderAssets();return}
+  if(action==="open-asset-upload"){post("VOY_ASSET_UPLOAD_OPEN_REQUEST",{issueId:currentIssueId()});toast("Upload hook requested.");return}
+  if(action==="audit-asset-licenses"){post("VOY_ASSET_LICENSE_AUDIT_REQUEST",{issueId:currentIssueId(),assets:state.assets});toast("License audit requested.");return}
+  if(action==="research-destination"){post("VOY_DESTINATION_RESEARCH_REQUEST",{destination:$("researchDestination").value,tone:$("researchTone").value,language:$("researchLang").value,providers:["mediawiki","wikidata","restcountries","opentripmap","openverse"]});toast("Destination research requested.");return}
+  if(action==="insert-research-page"){if(!state.destinationResearch){toast("Run research first.","bad");return}if(!currentPage()){handleAction("new-page")}const p=currentPage();p.destination=state.destinationResearch.destination;p.kicker="Destination guide";p.title=state.destinationResearch.headline||p.title;p.deck=state.destinationResearch.summary||p.deck;p.body=[state.destinationResearch.summary,arr(state.destinationResearch.pois).join("\\n")].filter(Boolean).join("\\n\\n");state.selectedPageId=p.pageId;setPanel("builder");return}
+  if(action==="make-travel-card-from-research"){const r=state.destinationResearch;if(!r){toast("Run research first.","bad");return}const c={cardId:uid("CARD"),title:r.destination,path:`/destinations/${String(r.destination).toLowerCase().replace(/[^a-z0-9]+/g,"-")}`,imageUrl:"",active:true,tags:arr(r.bestFor),summary:r.summary};state.travelCards.unshift(c);post("VOY_ADMIN_SAVE_TRAVEL_CARD",{card:c});refreshAfterSave("save-travel-card");setPanel("travelcards");return}
+  if(action==="generate-pr-brief"||action==="request-pr-brief"){post("VOY_PR_BRIEF_GENERATE_REQUEST",{campaign:collectCampaign(),issue:currentIssue(),pages:issuePages()});toast("PR brief generation requested.");return}
+  if(action==="generate-social-pack"){post("VOY_SOCIAL_PACK_GENERATE_REQUEST",{campaign:collectCampaign(),issue:currentIssue()});toast("Social pack requested.");return}
+  if(action==="save-campaign"){const c=collectCampaign();state.campaigns.unshift(c);post("VOY_ADMIN_SAVE_CAMPAIGN",{campaign:c});toast("Campaign saved.");refreshAfterSave("save-campaign");renderAll();return}
+  if(action==="save-category"){const c=collectCategory();if(!c.title){toast("Category title is required.","bad");return}upsert("categories","categoryId",c);post("VOY_ADMIN_SAVE_CATEGORY",{category:c});refreshAfterSave("save-category");renderAll();return}
+  if(action==="clear-category"){state.editingCategoryId="";renderCategories();return}
+  if(action==="save-banner"){const b=collectBanner();if(!b.title){toast("Banner title is required.","bad");return}upsert("banners","bannerId",b);post("VOY_ADMIN_SAVE_BANNER",{banner:b});refreshAfterSave("save-banner");renderAll();return}
+  if(action==="clear-banner"){state.editingBannerId="";renderBanners();return}
+  if(action==="save-card"){const c=collectCard();if(!c.title){toast("Travel card title is required.","bad");return}upsert("travelCards","cardId",c);post("VOY_ADMIN_SAVE_TRAVEL_CARD",{card:c});refreshAfterSave("save-travel-card");renderAll();return}
+  if(action==="clear-card"){state.editingCardId="";renderTravelCards();return}
+  if(action==="run-quality-lab"){
+    const payload={issue:currentIssue(),pages:issuePages(),assets:state.assets,articles:state.articles.filter(a=>String(a.issueId||"")===String(currentIssueId())),brandKit:state.brandKit,localChecks:qualityChecklist(),readiness:readinessStats()};
+    post("VOY_QUALITY_LAB_REQUEST",payload);toast("Quality lab request sent.");return}
+  if(action==="copy-chief-review"){post("VOY_COPY_CHIEF_REVIEW_REQUEST",{page:currentPage(),article:currentArticle(),brandKit:state.brandKit});toast("Copy chief review requested.");return}
+  if(action==="fact-check-claims"){post("VOY_FACT_CHECK_REQUEST",{issue:currentIssue(),page:currentPage(),article:currentArticle(),destination:currentPage()?.destination||currentArticle()?.destination||""});toast("Fact check requested.");return}
+  if(action==="accessibility-seo-check"){post("VOY_ACCESSIBILITY_SEO_REQUEST",{issue:currentIssue(),page:currentPage(),article:currentArticle()});toast("Accessibility and SEO check requested.");return}
+  if(action==="translate-package"){post("VOY_TRANSLATION_PACKAGE_REQUEST",{issue:currentIssue(),pages:issuePages(),languages:arr($("qualityLangs")?.value||"sv,no,da,fi,de"),brandKit:state.brandKit});toast("Translation package requested.");return}
+  if(action==="save-brand-kit"){state.brandKit=collectBrandKit();post("VOY_BRAND_KIT_SAVE",{brandKit:state.brandKit});toast("Brand kit saved locally and sent to backend.","ok");refreshAfterSave("save-brand-kit");renderAll();return}
+  if(action==="run-brand-guard"){const kit=document.getElementById("brandName")?collectBrandKit():state.brandKit;post("VOY_BRAND_GUARD_REQUEST",{brandKit:kit,issue:currentIssue(),pages:issuePages(),articles:state.articles});toast("Brand guard requested.");return}
+  if(action==="run-print-qa"){state.printQa=printQaData();post("VOY_PRINT_QA_REQUEST",{qa:state.printQa,issue:currentIssue(),pages:issuePages(),assets:state.assets});toast("Print QA requested.");renderPrintQa();return}
+  if(action==="prepare-print-export"){state.printQa=printQaData();post("VOY_PREPARE_PRINT_PACKAGE_REQUEST",{issue:currentIssue(),pages:issuePages(),assets:state.assets,qa:state.printQa,format:"press-ready-pdf"});toast("Press package preparation requested.");renderPrintQa();return}
+  if(action==="generate-distribution-kit"){
+    const kit={kitId:uid("DIST"),issueId:currentIssueId(),name:$("distName").value.trim(),market:$("distMarket").value.trim(),channel:$("distChannel").value,ctaPath:$("distCta").value.trim(),utmCampaign:$("distUtm").value.trim(),angle:$("distAngle").value.trim(),createdAt:new Date().toISOString()};
+    post("VOY_DISTRIBUTION_KIT_REQUEST",{kit,issue:currentIssue(),pages:issuePages(),campaigns:state.campaigns,brandKit:state.brandKit});toast("Distribution kit requested.");return}
+  if(action==="save-distribution-kit"){
+    const kit=state.distributionKit||{kitId:uid("DIST"),issueId:currentIssueId(),summary:"Manual distribution kit placeholder",createdAt:new Date().toISOString()};
+    state.distributionKits.unshift(kit);post("VOY_DISTRIBUTION_KIT_SAVE",{kit});toast("Distribution kit saved.","ok");refreshAfterSave("save-distribution-kit");renderAll();return}
+  if(action==="image-enhance"){post("VOY_MEDIA_ENHANCE_REQUEST",{issueId:currentIssueId(),assets:state.assets,mode:"editorial-quality"});toast("Media enhancement request sent.");return}
+  if(action==="save-api-config"){post("VOY_CONNECTOR_CONFIG_SAVE",{aliases:{asset:$("apiAssetAlias").value,research:$("apiResearchAlias").value,export:$("apiExportAlias").value},enabled:$("apiEnabled").value==="true"});toast("Connector aliases sent to backend.");refreshAfterSave("save-connector-config");return}
+  if(action==="refresh-newsroom"){post("NEWSROOM_ADMIN_REFRESH",{});status("Refreshing newsroom data…");return}
+  if(action==="new-news-post"){state.editingPostId="";renderPressReleases();return}
+  if(action==="clear-news-post"){state.editingPostId="";renderPressReleases();return}
+  if(action==="save-news-post"){
+    const item=collectNewsPost();if(!item.title){toast("Press-release headline is required.","bad");return}upsert("newsroomPosts","postId",item);state.editingPostId=item.postId;post("NEWSROOM_SAVE_POST",{item});toast("Press release saved.","ok");return;
+  }
+  if(action==="publish-current-news-post"){
+    const item=collectNewsPost();if(!item.title){toast("Press-release headline is required.","bad");return}upsert("newsroomPosts","postId",item);state.editingPostId=item.postId;post("NEWSROOM_PUBLISH_POST",{postId:item.postId,item});status("Publishing press release…");return;
+  }
+  if(action==="clear-press-contact"){state.editingContactId="";renderPressContacts();return}
+  if(action==="save-press-contact"){
+    const item=collectPressContact();if(!item.name||!item.email){toast("Contact name and email are required.","bad");return}upsert("pressContacts","contactId",item);state.editingContactId=item.contactId;post("NEWSROOM_SAVE_CONTACT",{item});toast("Press contact saved.","ok");return;
+  }
+}
+document.addEventListener("click",e=>{
+  const module=e.target.closest("[data-module]");if(module){setModule(module.dataset.module);return}
+  const nav=e.target.closest("[data-panel]");if(nav){setPanel(nav.dataset.panel);return}
+  const act=e.target.closest("[data-action]");if(act){handleAction(act.dataset.action);return}
+  const tmpl=e.target.closest("[data-template]");if(tmpl){const p=currentPage();if(!p){handleAction("new-page");return}p.template=tmpl.dataset.template;renderBuilder();return}
+  const blockRemove=e.target.closest("[data-block-remove]");if(blockRemove){let p;try{p=collectPage()}catch(_){p=currentPage()}if(p){const b=parseBlocks(p.blocks);b.splice(Number(blockRemove.dataset.blockRemove),1);p.blocks=b;upsert("pages","pageId",p);renderBuilder()}return}
+  const blockMove=e.target.closest("[data-block-move]");if(blockMove){let p;try{p=collectPage()}catch(_){p=currentPage()}if(p){const b=parseBlocks(p.blocks),i=Number(blockMove.dataset.blockIndexAction),j=blockMove.dataset.blockMove==="up"?i-1:i+1;if(i>=0&&j>=0&&j<b.length){[b[i],b[j]]=[b[j],b[i]];p.blocks=b;upsert("pages","pageId",p);renderBuilder()}}return}
+  const page=e.target.closest("[data-edit-page]");if(page){state.selectedPageId=page.dataset.editPage;setPanel("builder");return}
+  const delPage=e.target.closest("[data-delete-page]");if(delPage&&confirm("Delete page?")){const pageId=delPage.dataset.deletePage;state.pages=state.pages.filter(p=>(p.pageId||p._id)!==pageId);post("VOY_ADMIN_DELETE_PAGE",{pageId,issueId:currentIssueId()});renderAll();return}
+  const selIssue=e.target.closest("[data-select-issue]");if(selIssue){state.selectedIssueId=selIssue.dataset.selectIssue;renderAll();return}
+  const editIssue=e.target.closest("[data-edit-issue]");if(editIssue){state.editingIssueId=editIssue.dataset.editIssue;setPanel("issues");return}
+  const publishIssue=e.target.closest("[data-publish-issue]");if(publishIssue){state.selectedIssueId=publishIssue.dataset.publishIssue;handleAction("publish-issue");return}
+  const archiveIssue=e.target.closest("[data-archive-issue]");if(archiveIssue){state.selectedIssueId=archiveIssue.dataset.archiveIssue;handleAction("archive-issue");return}
+  const delIssue=e.target.closest("[data-delete-issue]");if(delIssue&&confirm("Delete issue?")){state.issues=state.issues.filter(i=>(i.issueId||i._id)!==delIssue.dataset.deleteIssue);post("VOY_ADMIN_DELETE_ISSUE",{issueId:delIssue.dataset.deleteIssue});refreshAfterSave("delete-issue");renderAll();return}
+  const editPost=e.target.closest("[data-edit-news-post]");if(editPost){state.editingPostId=editPost.dataset.editNewsPost;setPanel("pressreleases");return}
+  const publishPost=e.target.closest("[data-publish-news-post]");if(publishPost){const item=state.newsroomPosts.find(p=>String(newsroomPostId(p))===String(publishPost.dataset.publishNewsPost));if(item){post("NEWSROOM_PUBLISH_POST",{postId:newsroomPostId(item),item});status("Publishing press release…")}return}
+  const archivePost=e.target.closest("[data-archive-news-post]");if(archivePost){post("NEWSROOM_ARCHIVE_POST",{postId:archivePost.dataset.archiveNewsPost});status("Archiving press release…");return}
+  const editContact=e.target.closest("[data-edit-press-contact]");if(editContact){state.editingContactId=editContact.dataset.editPressContact;setPanel("presscontacts");return}
+  const editArticle=e.target.closest("[data-edit-article]");if(editArticle){state.selectedArticleId=editArticle.dataset.editArticle;setPanel("articles");return}
+  const delArticle=e.target.closest("[data-delete-article]");if(delArticle&&confirm("Delete article?")){state.articles=state.articles.filter(a=>(a.articleId||a._id)!==delArticle.dataset.deleteArticle);post("VOY_ADMIN_DELETE_ARTICLE",{articleId:delArticle.dataset.deleteArticle});refreshAfterSave("delete-article");renderAll();return}
+  const importAsset=e.target.closest("[data-import-asset]");if(importAsset){const id=importAsset.dataset.importAsset;const a=state.assetResults.find(x=>String(x.assetId||x.id||x.url)===id);if(a){state.assets.unshift({...a,assetId:a.assetId||uid("ASSET"),importedAt:new Date().toISOString()});post("VOY_ASSET_IMPORT_REQUEST",{asset:a});toast("Asset imported.");refreshAfterSave("import-asset");renderAll()}return}
+  const editCat=e.target.closest("[data-edit-category]");if(editCat){state.editingCategoryId=editCat.dataset.editCategory;renderCategories();return}
+  const delCat=e.target.closest("[data-delete-category]");if(delCat&&confirm("Delete category?")){state.categories=state.categories.filter(c=>(c.categoryId||c._id)!==delCat.dataset.deleteCategory);post("VOY_ADMIN_DELETE_CATEGORY",{categoryId:delCat.dataset.deleteCategory});refreshAfterSave("delete-category");renderAll();return}
+  const editBan=e.target.closest("[data-edit-banner]");if(editBan){state.editingBannerId=editBan.dataset.editBanner;renderBanners();return}
+  const delBan=e.target.closest("[data-delete-banner]");if(delBan&&confirm("Delete banner?")){state.banners=state.banners.filter(b=>(b.bannerId||b._id)!==delBan.dataset.deleteBanner);post("VOY_ADMIN_DELETE_BANNER",{bannerId:delBan.dataset.deleteBanner});refreshAfterSave("delete-banner");renderAll();return}
+  const editCard=e.target.closest("[data-edit-card]");if(editCard){state.editingCardId=editCard.dataset.editCard;renderTravelCards();return}
+  const delCard=e.target.closest("[data-delete-card]");if(delCard&&confirm("Delete travel card?")){state.travelCards=state.travelCards.filter(c=>(c.cardId||c._id)!==delCard.dataset.deleteCard);post("VOY_ADMIN_DELETE_TRAVEL_CARD",{cardId:delCard.dataset.deleteCard});refreshAfterSave("delete-travel-card");renderAll();return}
+  const test=e.target.closest("[data-test-api]");if(test){post("VOY_API_CONNECTOR_TEST",{index:Number(test.dataset.testApi)});toast("Connector test requested.");return}
+});
+
+document.addEventListener("click",e=>{
+  const planSave=e.target.closest("[data-save-web-plan]");if(planSave){const page=currentCatalogPage("plan");if(!page){toast("Select a registered page.","bad");return}const statusValue=$("webPlanStatus")?.value||"DRAFT",existing=selectPlanRecord(page)||{};post("VOY_ADMIN_SAVE_CAMPAIGN",{campaign:{...existing,campaignId:recordId(existing)||`WEBPAGE-${page.key.toUpperCase()}`,scope:"WEBSITE",presentationKind:"PAGE_PLAN",pagePath:page.path,title:page.label,status:statusValue,notes:$("webPlanNotes")?.value||"",published:statusValue==="PUBLISHED"}});toast("Website page plan queued for save.");return}
+  const copySave=e.target.closest("[data-save-web-content]");if(copySave){const page=currentCatalogPage("copy"),section=sectionById(page,state.editorialSelection.copySectionId),field=(section?.fields||[]).find(x=>x.id===state.editorialSelection.copyFieldId);if(!page||!field){toast("Select a registered page, section and field.","bad");return}const statusValue=$("webContentStatus")?.value||"DRAFT",value=$("webContentValue")?.value||"",existing=selectCopyRecord(page,field.id)||{};post("VOY_ADMIN_SAVE_ARTICLE",{article:{...existing,articleId:recordId(existing)||`WEBCOPY-${page.key}-${field.id}`.replace(/[^a-z0-9._:-]+/gi,"-").slice(0,170),scope:"WEBSITE",presentationKind:"CONTENT_BLOCK",pagePath:page.path,sectionId:section.id,contentId:field.id,title:field.label||field.id,value,body:value,status:statusValue,published:statusValue==="PUBLISHED"}});toast("Page copy queued for save.");return}
+  const mediaSave=e.target.closest("[data-save-web-media]");if(mediaSave){const page=currentCatalogPage("media"),section=sectionById(page,state.editorialSelection.mediaSectionId),slot=(section?.mediaSlots||[]).find(x=>x.id===state.editorialSelection.mediaSlotId),assetUrl=$("webMediaUrl")?.value.trim(),statusValue=$("webMediaStatus")?.value||"DRAFT",alt=$("webMediaAlt")?.value.trim()||"";if(!page||!slot||!isHttpUrl(assetUrl)){toast("Select a registered media slot and a public Asset Library image.","bad");return}if(statusValue==="PUBLISHED"&&!alt){toast("Alt text is required before publishing presentation media.","bad");return}const existing=selectMediaRecord(page,slot.id)||{};post("VOY_ADMIN_SAVE_BANNER",{banner:{...existing,bannerId:recordId(existing)||`WEBMEDIA-${page.key}-${slot.id}`.replace(/[^a-z0-9._:-]+/gi,"-").slice(0,170),scope:"WEBSITE",presentationKind:"MEDIA_SLOT",pagePath:page.path,sectionId:section.id,slotId:slot.id,title:slot.label||slot.id,assetUrl,imageUrl:assetUrl,alt,status:statusValue,published:statusValue==="PUBLISHED",ownership:"MEDIA_CONTROL"}});toast("Presentation media queued for save.");return}
+  const planPage=e.target.closest("[data-web-plan-page]");if(planPage){state.editorialSelection.planPageKey=planPage.dataset.webPlanPage;renderSitePlanner();return}
+  const editCopy=e.target.closest("[data-edit-web-content]");if(editCopy){const r=websiteRecords("article","CONTENT_BLOCK").find(x=>String(recordId(x))===String(editCopy.dataset.editWebContent));if(r){const p=catalogPages().find(x=>x.path===r.pagePath);if(p){state.editorialSelection.copyPageKey=p.key;const sec=(p.sections||[]).find(x=>(x.fields||[]).some(f=>f.id===r.contentId));state.editorialSelection.copySectionId=sec?.id||"";state.editorialSelection.copyFieldId=r.contentId;setPanel("webcontent")}}return}
+  const editMedia=e.target.closest("[data-edit-web-media]");if(editMedia){const r=websiteRecords("banner","MEDIA_SLOT").find(x=>String(recordId(x))===String(editMedia.dataset.editWebMedia));if(r){const p=catalogPages().find(x=>x.path===r.pagePath);if(p){state.editorialSelection.mediaPageKey=p.key;const sec=(p.sections||[]).find(x=>(x.mediaSlots||[]).some(f=>f.id===r.slotId));state.editorialSelection.mediaSectionId=sec?.id||"";state.editorialSelection.mediaSlotId=r.slotId;setPanel("webmedia")}}return}
+  const delPlan=e.target.closest("[data-delete-web-plan]");if(delPlan&&confirm("Delete this page-plan record?")){post("VOY_ADMIN_DELETE_CAMPAIGN",{campaignId:delPlan.dataset.deleteWebPlan});toast("Page-plan deletion queued.");return}
+  const delCopy=e.target.closest("[data-delete-web-content]");if(delCopy&&confirm("Delete this page-copy record?")){post("VOY_ADMIN_DELETE_ARTICLE",{articleId:delCopy.dataset.deleteWebContent});toast("Page-copy deletion queued.");return}
+  const delMedia=e.target.closest("[data-delete-web-media]");if(delMedia&&confirm("Delete this presentation-media record?")){post("VOY_ADMIN_DELETE_BANNER",{bannerId:delMedia.dataset.deleteWebMedia});toast("Presentation-media deletion queued.");return}
+  const release=e.target.closest("[data-release-status]");if(release){releasePageTo(release.dataset.releaseStatus);return}
+  const open=e.target.closest("[data-open-public-page]");if(open){post("MEDIA_CONTROL_OPEN_PUBLIC_PAGE",{pageKey:open.dataset.openPublicPage});return}
+  if(e.target.closest("[data-run-content-audit]")){renderContentAudit();toast("Editorial audit refreshed.","ok");return}
+  if(e.target.closest("[data-export-editorial-snapshot]")){exportEditorialSnapshot();return}
+});
+
+document.addEventListener("change",e=>{
+  if(e.target.id==="builderIssueSelect"){state.selectedIssueId=e.target.value;state.selectedPageId="";renderAll()}
+  if(e.target.id==="pageTemplate"){const p=currentPage();if(p){p.template=e.target.value;if(!parseBlocks(p.blocks).length)p.blocks=defaultBlocksForTemplate(p.template);renderBuilder()}}
+  if(e.target.id==="webPlanPage"){state.editorialSelection.planPageKey=e.target.value;renderSitePlanner()}
+  if(e.target.id==="webContentPage"){state.editorialSelection.copyPageKey=e.target.value;state.editorialSelection.copySectionId="";state.editorialSelection.copyFieldId="";renderWebContent()}
+  if(e.target.id==="webContentSection"){state.editorialSelection.copySectionId=e.target.value;state.editorialSelection.copyFieldId="";renderWebContent()}
+  if(e.target.id==="webContentField"){state.editorialSelection.copyFieldId=e.target.value;renderWebContent()}
+  if(e.target.id==="webMediaPage"){state.editorialSelection.mediaPageKey=e.target.value;state.editorialSelection.mediaSectionId="";state.editorialSelection.mediaSlotId="";renderWebMedia()}
+  if(e.target.id==="webMediaSection"){state.editorialSelection.mediaSectionId=e.target.value;state.editorialSelection.mediaSlotId="";renderWebMedia()}
+  if(e.target.id==="webMediaSlotSelect"){state.editorialSelection.mediaSlotId=e.target.value;renderWebMedia()}
+  if(e.target.id==="releasePage"){state.editorialSelection.releasePageKey=e.target.value;renderReleaseCenter()}
+});
+document.addEventListener("input",e=>{
+  if(e.target.matches("[data-block-field]")){const box=$("pageBlocks");if(box){const blocks=collectVisualBlocks();if(blocks)box.value=JSON.stringify(blocks,null,2)}}
+  if(e.target.id==="webContentValue"&&$("webContentCount"))$("webContentCount").textContent=String(e.target.value||"").length;
+});
+$("globalQuery").addEventListener("input",()=>renderAll());
+$("mobileMenuBtn").addEventListener("click",()=>document.body.classList.add("mobile-drawer-open"));
+$("drawerOverlay").addEventListener("click",()=>document.body.classList.remove("mobile-drawer-open"));
+window.addEventListener("message",e=>{
+  const m=e.data||{};if(m.source&&m.source!==PARENT)return;const p=m.payload||{};
+  if(m.type==="INTERNAL_CHROME_BOOTSTRAP"){
+    const profile=p.profile||{};const name=profile.name||profile.fullName||[profile.firstName,profile.lastName].filter(Boolean).join(" ")||profile.email||"SKANDI Editor";
+    if($("mmUserName"))$("mmUserName").textContent=name;if($("mmUserRole"))$("mmUserRole").textContent=profile.position||profile.jobTitle||profile.role||"Editorial access";if($("mmUserInitials"))$("mmUserInitials").textContent=name.split(/\s+/).slice(0,2).map(x=>x[0]).join("").toUpperCase()||"SK";return;
+  }
+  if(m.type==="MEDIA_CONTROL_EDITORIAL_CATALOG"){state.catalog=Array.isArray(p.pages)?p.pages:[];ensureCatalogSelections();if($("mmSyncState"))$("mmSyncState").textContent="Catalog";renderAll();return}
+  if(m.type==="MEDIA_CONTROL_LIBRARY"){state.assets=p.assets||state.assets;renderAssets();return}
+  if(m.type==="MEDIA_CONTROL_ERROR"){status(p.message||"Media Control action failed.","bad");return}
+  if(m.type==="VOY_ADMIN_BOOTSTRAP_RESULT"){state={...state,...p};status("Loaded VOY data.","ok");if($("mmSyncState"))$("mmSyncState").textContent="Live";renderAll();return}
+  if(m.type==="NEWSROOM_ADMIN_BOOTSTRAP"||m.type==="NEWSROOM_ADMIN_DATA"){
+    const d=p.data||p;
+    state.newsroomPosts=d.posts||d.newsroomPosts||state.newsroomPosts;
+    state.newsroomCategories=d.categories||d.newsroomCategories||state.newsroomCategories;
+    state.newsroomMedia=d.mediaAssets||d.media||d.assets||state.newsroomMedia;
+    state.pressContacts=d.pressContacts||d.contacts||state.pressContacts;
+    if($("mmSyncState"))$("mmSyncState").textContent="Live";renderAll();return;
+  }
+  if(m.type==="VOY_ADMIN_SAVED"){status("Saved. Refreshing live data.","ok");requestLiveRefresh("backend-saved");return}
+  if(m.type==="VOY_ADMIN_PUBLISHED"){
+    const result=p.result||p;const issue=state.issues.find(i=>String(i.issueId||i._id)===String(result.issueId||result.issue_id||currentIssueId()));if(issue){issue.publishStatus="PUBLISHED";issue.publicUrl=result.publicUrl||result.public_url||issue.publicUrl;issue.publishedAt=result.publishedAt||result.published_at||new Date().toISOString()}
+    status("Published. This issue is now available on the public VOY Magazine page.","ok");if($("mmSyncState"))$("mmSyncState").textContent="Published";renderAll();return;
+  }
+  if(m.type==="VOY_ADMIN_ARCHIVED"){const issue=state.issues.find(i=>String(i.issueId||i._id)===String(p.issueId||p.issue_id||currentIssueId()));if(issue)issue.publishStatus="ARCHIVED";status("Issue archived and removed from the public reader.","ok");renderAll();return}
+  if(m.type==="NEWSROOM_ADMIN_SAVED"){status("Newsroom record saved.","ok");post("NEWSROOM_ADMIN_REFRESH",{});return}
+  if(m.type==="VOY_ADMIN_ERROR"){status(m.message||p.message||"VOY backend error.","bad");return}
+  if(m.type==="NEWSROOM_ADMIN_ERROR"){status(m.message||p.message||"Newsroom action failed.","bad");return}
+  if(m.type==="VOY_ASSET_SEARCH_RESULT"){state.assetResults=p.results||p.assets||[];status(`${state.assetResults.length} asset results loaded.`,"ok");setPanel("assets");return}
+  if(m.type==="VOY_DESTINATION_RESEARCH_RESULT"){state.destinationResearch=p.result||p;status("Destination research loaded.","ok");setPanel("research");return}
+  if(m.type==="VOY_COPY_ASSIST_RESULT"){const text=p.text||p.copy||"";if(currentPage()&&text){currentPage().body=text;setPanel("builder")}toast("Copy assist result received.");return}
+  if(m.type==="VOY_SEO_ANALYZE_RESULT"){state.seoResult=p.result||p;toast("SEO analysis received.","ok");renderDashboard();return}
+  if(m.type==="VOY_PR_BRIEF_RESULT"){const c=p.campaign||p.result;if(c){state.campaigns.unshift({...c,campaignId:c.campaignId||uid("CAMPAIGN")});setPanel("campaign")}return}
+  if(m.type==="VOY_QUALITY_LAB_RESULT"){state.qualityResult=p.result||p;status("Quality lab result received.","ok");setPanel("quality");return}
+  if(m.type==="VOY_BRAND_GUARD_RESULT"){state.brandGuardResult=p.result||p;status("Brand guard result received.","ok");setPanel("brandkit");return}
+  if(m.type==="VOY_PRINT_QA_RESULT"){state.printQa=p.result||p;status("Print QA result received.","ok");setPanel("printqa");return}
+  if(m.type==="VOY_DISTRIBUTION_KIT_RESULT"){state.distributionKit=p.result||p;status("Distribution kit received.","ok");setPanel("distribution");return}
+  if(m.type==="VOY_TRANSLATION_PACKAGE_RESULT"){state.translationResult=p.result||p;status("Translation package received.","ok");setPanel("quality");return}
+  if(m.type==="VOY_MEDIA_ENHANCE_RESULT"){state.assets=p.assets||state.assets;status("Media enhancement result received.","ok");setPanel("assets");return}
+});
+init();
 })();
 </script>
+
+<script>
+/* SKANDI Internal Classic Chrome v1 */(function(){
+  const SOURCE="SKANDI_INTERNAL_CHROME",PARENT_SOURCE="SKANDI_WIX_PARENT";
+  const state={pageName:"MAGAZINE MANAGER",pagePath:"/riaintra/voy-control",pageSubtitle:"VOY · Newsroom · Website planning · Media control",profile:{},apps:[],utc:false,searchTimer:null,localSearchIndex:[],isAltea:false};
+  const $=id=>document.getElementById(id);
+  function esc(v){return String(v==null?"":v).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;")}
+  function post(type,payload={}){window.parent.postMessage({source:SOURCE,type,payload,timestamp:new Date().toISOString()},"*")}
+  function setChromeHeight(){const c=$("skInternalChrome");if(!c)return;document.documentElement.classList.add("sk-has-internal-chrome");document.documentElement.style.setProperty("--sk-chrome-height",c.offsetHeight+"px")}
+  function setViewportVars(){document.documentElement.style.setProperty("--sk-vh",(window.innerHeight*.01)+"px");setChromeHeight()}
+  function displayName(p={}){return p.name||p.fullName||[p.firstName,p.lastName].filter(Boolean).join(" ")||p.email||"Staff"}
+  function position(p={}){return p.position||p.jobTitle||p.role||"—"}
+  function base(p={}){return p.base||p.station||p.baseAirportIata||"—"}
+  function renderProfile(){const p=state.profile||{};$("skChromePageName").textContent=state.pageName||"MAGAZINE MANAGER";$("skChromePageSubtitle").textContent=state.pageSubtitle||"Travel magazine publishing";$("skChromeUserName").textContent=displayName(p);$("skChromeSkid").textContent=p.skId||p.skID||"—";$("skChromePosition").textContent=position(p);$("skChromeBase").textContent=base(p);const c=$("skInternalChrome");c.classList.toggle("is-altea",!!state.isAltea||String(state.pagePath||"").includes("/altea"));setChromeHeight()}
+  function tick(){const now=new Date();const opts=state.utc?{hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:false,timeZone:"UTC"}:{hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:false};$("skChromeClockTime").textContent=new Intl.DateTimeFormat(undefined,opts).format(now);$("skChromeClockDate").textContent=state.utc?now.toISOString().slice(0,10)+" UTC":new Intl.DateTimeFormat(undefined,{weekday:"short",day:"2-digit",month:"short"}).format(now).toUpperCase()}
+  function closeMenus(){document.querySelectorAll(".sk-menu.open").forEach(m=>m.classList.remove("open"))}
+  function buildLocalSearchIndex(){const menuLinks=Array.from(document.querySelectorAll("[data-path]")).map(btn=>({title:btn.innerText.trim(),type:"Menu",path:btn.getAttribute("data-path"),summary:"Internal module"}));const apps=(state.apps||[]).map(app=>({title:app.title||app.id||"Tool",type:app.group||"Tool",path:app.path||"",summary:app.subtitle||""})).filter(x=>x.path);state.localSearchIndex=[...menuLinks,...apps]}
+  function localSearch(query){const q=query.toLowerCase();buildLocalSearchIndex();return state.localSearchIndex.filter(item=>[item.title,item.type,item.path,item.summary].join(" ").toLowerCase().includes(q)).slice(0,8)}
+  function renderSearchResults(items=[],pending=false){const box=$("skChromeSearchResults");box.classList.add("visible");if(!items.length){box.innerHTML=`<div class="sk-search-empty">${pending?"Searching…":"No results."}</div>`;return}box.innerHTML=items.map(item=>`<button class="sk-search-result" type="button" data-result-path="${esc(item.path||"")}"><div class="sk-search-result-title">${esc(item.title||"Result")}</div><div class="sk-search-result-meta">${esc(item.type||"RIAINTRA")} · ${esc(item.summary||item.path||"")}</div></button>`).join("");box.querySelectorAll(".sk-search-result").forEach(btn=>btn.addEventListener("click",()=>{const path=btn.getAttribute("data-result-path");if(path)post("INTERNAL_NAVIGATE",{path});closeMenus()}))}
+  function setupMenus(){
+    document.querySelectorAll(".sk-menu-button").forEach(btn=>btn.addEventListener("click",e=>{e.preventDefault();const menu=btn.closest(".sk-menu"),was=menu.classList.contains("open");closeMenus();if(!was)menu.classList.add("open");setChromeHeight()}));
+    document.addEventListener("click",e=>{if(!e.target.closest(".sk-menu"))closeMenus()});
+    document.querySelectorAll(".sk-chrome [data-action='print']").forEach(btn=>btn.addEventListener("click",()=>{closeMenus();window.print()}));
+    document.querySelectorAll(".sk-chrome [data-action='logout']").forEach(btn=>btn.addEventListener("click",()=>{closeMenus();post("INTERNAL_LOGOUT",{destination:"home"})}));
+    document.querySelectorAll(".sk-chrome [data-path]").forEach(btn=>btn.addEventListener("click",()=>{const path=String(btn.getAttribute("data-path")||"").trim();if(path)post("INTERNAL_NAVIGATE",{path});closeMenus()}));
+    $("skChromeClock").addEventListener("click",()=>{state.utc=!state.utc;tick()});
+    const search=$("skChromeSearchInput");search.addEventListener("input",()=>{clearTimeout(state.searchTimer);const query=search.value.trim();if(!query){renderSearchResults([]);return}state.searchTimer=setTimeout(()=>{renderSearchResults(localSearch(query),true);post("INTERNAL_GLOBAL_SEARCH",{query,pagePath:state.pagePath})},180)});search.addEventListener("keydown",e=>{if(e.key==="Enter"){const first=document.querySelector(".sk-search-result");if(first)first.click()}});
+  }
+  window.addEventListener("message",event=>{const data=event.data||{};if(data.source!==PARENT_SOURCE)return;const p=data.payload||{};if(data.type==="INTERNAL_CHROME_BOOTSTRAP"){state.pageName=p.pageName||state.pageName;state.pagePath=p.pagePath||state.pagePath;state.pageSubtitle=p.pageSubtitle||state.pageSubtitle;state.profile=p.profile||state.profile||{};state.apps=p.apps||state.apps||[];state.isAltea=!!p.isAltea;renderProfile();return}if(data.type==="INTERNAL_SEARCH_RESULTS"){renderSearchResults(p.results||[])}});
+  window.SKANDI_INTERNAL_CHROME={setPage(config={}){Object.assign(state,config);renderProfile()},setProfile(profile={}){state.profile=profile;renderProfile()},setSearchResults(results=[]){renderSearchResults(results)}};
+  window.addEventListener("resize",setViewportVars,{passive:true});window.addEventListener("orientationchange",()=>setTimeout(setViewportVars,250),{passive:true});window.addEventListener("pageshow",setViewportVars,{passive:true});
+  setupMenus();renderProfile();tick();setInterval(tick,1000);setViewportVars();post("INTERNAL_CHROME_READY");
+})();
+</script>
+
+
+<style id="skandi-supabase-media-integration-style">
+.sk-media-field-actions{display:flex;gap:5px;align-items:center;flex-wrap:wrap;margin-top:5px}.sk-media-field-actions .btn{min-height:27px!important}.sk-media-locked{background:#f8fafc!important;color:#475569!important}.sk-media-mini{width:46px;height:30px;object-fit:cover;border:1px solid #cbd5e1;background:#e5e7eb}.sk-media-storage-panel{margin-bottom:10px;border-top:2px solid #022e64!important}.sk-media-buckets{display:flex;gap:4px;flex-wrap:wrap;margin:7px 0}.sk-media-bucket{border:1px solid #cbd5e1;background:#fff;padding:4px 7px;font-size:9px;cursor:pointer}.sk-media-bucket.active{background:#022e64;color:#fff;border-color:#022e64}.sk-media-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:7px}.sk-media-card{border:1px solid #d1d5db;background:#fff;min-width:0}.sk-media-thumb{height:92px;display:grid;place-items:center;background:#e5e7eb;color:#64748b;font-size:9px;font-weight:800;overflow:hidden}.sk-media-thumb img{width:100%;height:100%;object-fit:cover}.sk-media-card-body{padding:7px}.sk-media-card-title{font-size:10px;font-weight:800;color:#022e64;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.sk-media-card-meta{font-size:8px;color:#64748b;line-height:1.35;margin-top:3px;word-break:break-word}.sk-media-private,.sk-media-public{display:inline-flex;padding:1px 4px;border:1px solid #fbbf24;color:#92400e;font-size:7px;text-transform:uppercase}.sk-media-public{border-color:#86efac;color:#166534}.sk-media-picker{position:fixed;inset:0;z-index:9900;display:none;align-items:center;justify-content:center;padding:14px;background:rgba(15,23,42,.58)}.sk-media-picker.show{display:flex}.sk-media-dialog{width:min(1080px,96vw);max-height:92vh;display:flex;flex-direction:column;background:#fff;border:1px solid #94a3b8}.sk-media-dialog-head{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:9px;border-bottom:1px solid #d1d5db}.sk-media-dialog-tools{display:flex;gap:6px;align-items:center;flex-wrap:wrap;padding:8px;border-bottom:1px solid #e2e8f0;background:#f8fafc}.sk-media-dialog-body{padding:9px;overflow:auto}.sk-media-dialog .input{min-width:170px}.sk-media-toast{position:fixed;right:12px;bottom:12px;z-index:10000;background:#020617;color:#fff;padding:9px 11px;font-size:11px;display:none}.sk-media-uploading{opacity:.55;pointer-events:none}@media(max-width:600px){.sk-media-grid{grid-template-columns:1fr 1fr}.sk-media-dialog{width:100%;max-height:96vh}.sk-media-dialog-tools{align-items:stretch}.sk-media-dialog-tools .input{min-width:0;flex:1}}
+</style>
+<div class="sk-media-picker" id="skMediaPicker" aria-hidden="true">
+  <div class="sk-media-dialog">
+    <div class="sk-media-dialog-head"><div><b>Supabase Media Library</b><div class="help">Browse every Storage bucket. Public image assets can be selected for VOY; private assets remain view-only.</div></div><button class="btn" id="skMediaClose" type="button">Close</button></div>
+    <div class="sk-media-dialog-tools">
+      <select class="input" id="skMediaBucketFilter"><option value="">All buckets</option></select>
+      <input class="input" id="skMediaQuery" placeholder="Search assets">
+      <button class="btn" id="skMediaRefresh" type="button">Refresh</button>
+      <button class="btn primary" id="skMediaUpload" type="button">Upload image</button>
+      <button class="btn dark" id="skMediaOpenControl" type="button">Open Media Control</button>
+    </div>
+    <div class="sk-media-dialog-body"><div class="sk-media-grid" id="skMediaPickerGrid"></div></div>
+  </div>
+</div>
+<input id="skVoyMediaFile" type="file" accept="image/jpeg,image/png,image/webp,image/avif,image/gif" hidden>
+<div class="sk-media-toast" id="skMediaToast"></div>
+<script id="skandi-supabase-media-integration">
+(()=>{"use strict";
+const SOURCE="SKANDI_MEDIA_CONTROL",PARENT="SKANDI_WIX_PARENT";
+const $=id=>document.getElementById(id);
+const esc=v=>String(v??"").replace(/[&<>"']/g,s=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[s]));
+const media={assets:[],buckets:[],target:null,pending:null,pendingAccess:null,bucket:"",query:"",requested:false};
+
+function post(type,payload={}){window.parent.postMessage({source:SOURCE,type,payload,timestamp:new Date().toISOString()},"*")}
+function toast(t){const e=$("skMediaToast");if(!e)return;e.textContent=t;e.style.display="block";clearTimeout(toast.t);toast.t=setTimeout(()=>e.style.display="none",2300)}
+function bytes(n){n=Number(n||0);if(!n)return"0 B";const u=["B","KB","MB","GB"];let i=0;while(n>=1024&&i<u.length-1){n/=1024;i++}return`${n.toFixed(i?1:0)} ${u[i]}`}
+function isPublicAsset(a){return a?.public===true||String(a?.visibility||"").toUpperCase()==="PUBLIC"}
+function isImageAsset(a){return a?.isImage===true||String(a?.assetType||"").toUpperCase()==="IMAGE"||String(a?.mimeType||"").toLowerCase().startsWith("image/")}
+function normalizeAsset(a={}){
+  const publicAsset=isPublicAsset(a);
+  const publicUrl=a.publicUrl||a.previewUrl||a.imageUrl||a.url||a.readUrl||"";
+  return{
+    ...a,
+    assetId:a.assetId||a.id||"",
+    public:publicAsset,
+    isImage:isImageAsset(a),
+    imageUrl:publicAsset?publicUrl:(a.imageUrl||""),
+    readUrl:a.readUrl||a.previewUrl||a.publicUrl||a.url||"",
+    url:a.url||a.publicUrl||a.previewUrl||a.readUrl||"",
+    path:a.path||a.storagePath||"",
+    name:a.name||a.displayName||a.originalName||a.assetCode||"Asset",
+    size:Number(a.size??a.sizeBytes??0),
+    bucket:a.bucket||""
+  }
+}
+function deriveBuckets(assets){
+  const map=new Map();
+  assets.forEach(a=>{
+    const id=String(a.bucket||"").trim();
+    if(!id)return;
+    const prior=map.get(id);
+    if(!prior)map.set(id,{id,name:id,public:isPublicAsset(a)});
+    else if(isPublicAsset(a))prior.public=true
+  });
+  return[...map.values()].sort((a,b)=>a.name.localeCompare(b.name))
+}
+function requestMedia(){media.requested=true;post("VOY_MEDIA_LIBRARY_REQUEST",{search:media.query||""})}
+function fieldTargetFor(input){if(input.id==="issueCoverImage")return"issue:cover";if(input.id==="pageImageUrl")return"page:imageUrl";if(input.id==="pageSecondaryImageUrl")return"page:secondaryImageUrl";if(input.id==="cardImageUrl")return"travelCard:imageUrl";if(input.id==="newsPostImage")return"newsPost:heroImage";if(input.id==="webMediaUrl")return"website:media";if(input.dataset.blockField&&input.dataset.blockIndex!==undefined)return`block:${input.dataset.blockIndex}:${input.dataset.blockField}`;return""}
+function changeLabel(field){const label=field?.querySelector(".label");if(!label)return;label.textContent=label.textContent.replace(/\s*URL\s*$/i," asset").replace(/image url/ig,"image asset").replace(/logo url/ig,"logo asset")}
+function enhanceInput(input){
+  if(!input||input.dataset.supabaseAsset==="1")return;
+  const target=fieldTargetFor(input);if(!target)return;
+  input.dataset.supabaseAsset="1";input.readOnly=true;input.classList.add("sk-media-locked");input.placeholder="Select or upload a Supabase asset";
+  const field=input.closest(".field");changeLabel(field);
+  const row=document.createElement("div");row.className="sk-media-field-actions";
+  row.innerHTML=`${input.value?`<img class="sk-media-mini" src="${esc(input.value)}" alt="">`:""}<button type="button" class="btn" data-sk-media-choose="${esc(target)}">Choose asset</button><button type="button" class="btn" data-sk-media-upload="${esc(target)}">Upload</button>`;
+  field?.appendChild(row)
+}
+function enhanceFields(){
+  ["issueCoverImage","pageImageUrl","pageSecondaryImageUrl","cardImageUrl","newsPostImage"].forEach(id=>enhanceInput($(id)));
+  document.querySelectorAll("[data-block-field='imageUrl'],[data-block-field='logoUrl'],[data-block-field='secondaryLogoUrl']").forEach(enhanceInput);
+  const assetsPanel=document.querySelector("#panel-assets .panel.scroll:last-child");
+  if(assetsPanel&&!assetsPanel.querySelector("[data-sk-media-library]")){
+    const box=document.createElement("div");box.dataset.skMediaLibrary="1";
+    box.innerHTML=`<div class="row" style="margin-bottom:8px"><button class="btn" type="button" data-sk-media-refresh>Refresh Supabase assets</button><button class="btn primary" type="button" data-sk-media-upload="library">Upload image</button><button class="btn dark" type="button" data-sk-media-open-control>Open Media Control</button></div><div class="sk-media-buckets" data-sk-media-buckets></div><div class="sk-media-grid" data-sk-media-assets></div>`;
+    assetsPanel.prepend(box);requestMedia()
+  }
+}
+function usable(a){return a&&isPublicAsset(a)&&isImageAsset(a)&&!!(a.imageUrl||a.url||a.readUrl)}
+function card(a,selectable=false){
+  const url=a.readUrl||a.imageUrl||a.url||"";
+  return `<article class="sk-media-card"><div class="sk-media-thumb">${a.isImage&&url?`<img src="${esc(url)}" alt="${esc(a.name||"Asset")}">`:`<span>${esc((a.mimeType||"FILE").split("/").pop().toUpperCase())}</span>`}</div><div class="sk-media-card-body"><div class="sk-media-card-title" title="${esc(a.path||"")}">${esc(a.name||a.path||"Asset")}</div><div class="sk-media-card-meta"><span class="${a.public?"sk-media-public":"sk-media-private"}">${a.public?"Public":"Private"}</span> · ${esc(a.bucket||"")}<br>${esc(a.path||"")}<br>${esc(a.mimeType||"")} · ${bytes(a.size)}</div><div class="row" style="margin-top:5px">${a.assetId?`<button type="button" class="btn" data-sk-media-preview="${esc(a.assetId)}">Preview</button>`:""}${selectable&&usable(a)?`<button type="button" class="btn primary" data-sk-media-use="${esc(a.assetId)}">Use asset</button>`:""}${selectable&&!usable(a)?`<span class="help">${a.public?"Not an image":"Private · view only"}</span>`:""}</div></div></article>`
+}
+function filteredAssets(){const q=(media.query||"").toLowerCase();return media.assets.filter(a=>(!media.bucket||a.bucket===media.bucket)&&(!q||[a.bucket,a.path,a.name,a.mimeType,a.libraryRoot,a.libraryFolder,a.category,a.brand,a.system,...(Array.isArray(a.tags)?a.tags:[])].join(" ").toLowerCase().includes(q)))}
+function renderEmbeddedLibrary(){const bhost=document.querySelector("[data-sk-media-buckets]");const ahost=document.querySelector("[data-sk-media-assets]");if(bhost)bhost.innerHTML=`<button type="button" class="sk-media-bucket ${!media.bucket?"active":""}" data-sk-media-bucket="">All</button>`+media.buckets.map(b=>`<button type="button" class="sk-media-bucket ${media.bucket===b.id?"active":""}" data-sk-media-bucket="${esc(b.id)}">${esc(b.name||b.id)} · ${b.public?"public":"private"}</button>`).join("");if(ahost){const rows=filteredAssets().slice(0,80);ahost.innerHTML=rows.length?rows.map(a=>card(a,true)).join(""):`<div class="empty">${media.requested?"No Supabase assets match this view.":"Loading Supabase assets…"}</div>`}}
+function renderPicker(){const sel=$("skMediaBucketFilter");if(sel){const val=sel.value||media.bucket;sel.innerHTML=`<option value="">All buckets</option>`+media.buckets.map(b=>`<option value="${esc(b.id)}">${esc(b.name||b.id)} · ${b.public?"public":"private"}</option>`).join("");sel.value=media.bucket||val||""}const grid=$("skMediaPickerGrid");if(grid){const rows=filteredAssets();grid.innerHTML=rows.length?rows.map(a=>card(a,true)).join(""):`<div class="empty">No assets found.</div>`}}
+function openPicker(target){media.target=target||null;$("skMediaPicker")?.classList.add("show");$("skMediaPicker")?.setAttribute("aria-hidden","false");requestMedia()}
+function closePicker(){$("skMediaPicker")?.classList.remove("show");$("skMediaPicker")?.setAttribute("aria-hidden","true")}
+function targetInput(target){if(!target)return null;if(target==="issue:cover")return $("issueCoverImage");if(target==="page:imageUrl")return $("pageImageUrl");if(target==="page:secondaryImageUrl")return $("pageSecondaryImageUrl");if(target==="travelCard:imageUrl")return $("cardImageUrl");if(target==="newsPost:heroImage")return $("newsPostImage");if(target==="website:media")return $("webMediaUrl");const m=target.match(/^block:(\d+):(imageUrl|logoUrl|secondaryLogoUrl)$/);if(m)return document.querySelector(`[data-block-index="${m[1]}"][data-block-field="${m[2]}"]`);return null}
+function applyAsset(raw){const asset=normalizeAsset(raw);if(!usable(asset)){toast(asset?.public?"Only image assets can be used here.":"Private bucket assets are view-only for public VOY content.");return}const input=targetInput(media.target);if(!input&&media.target!=="library"){toast("The target field is no longer open.");return}if(input){input.value=asset.imageUrl||asset.url||asset.readUrl||"";input.dispatchEvent(new Event("input",{bubbles:true}));input.dispatchEvent(new Event("change",{bubbles:true}));const actions=input.parentElement?.querySelector(".sk-media-field-actions");const img=actions?.querySelector(".sk-media-mini");if(img)img.src=input.value;else if(actions&&input.value){const pic=document.createElement("img");pic.className="sk-media-mini";pic.src=input.value;actions.prepend(pic)}}toast("Supabase asset selected.");closePicker()}
+function chooseUpload(target){media.target=target||"library";$("skVoyMediaFile").value="";$("skVoyMediaFile").click()}
+async function sha256(file){const hash=await crypto.subtle.digest("SHA-256",await file.arrayBuffer());return[...new Uint8Array(hash)].map(b=>b.toString(16).padStart(2,"0")).join("")}
+function uploadPayload(file,hash,allowPossibleDuplicate=false){return{clientRequestId:media.pending?.clientRequestId||"",file:{name:file.name,type:file.type||"application/octet-stream",size:file.size},originalName:file.name,mimeType:file.type||"application/octet-stream",sizeBytes:file.size,sha256:hash,visibility:"PUBLIC",assetType:"IMAGE",libraryRoot:"VOY",libraryFolder:"Magazine",librarySubfolder:"Uploads",displayName:file.name,category:"IMAGE",brand:"SKANDI",system:"VOY",tags:["VOY","Magazine"],contextSystem:"VOY",contextRecordType:"MAGAZINE_MEDIA",fieldName:media.target||"library",allowPossibleDuplicate}}
+async function startUpload(file){
+  if(!file)return;
+  const clientRequestId=`voy-media-${Date.now()}-${Math.random().toString(36).slice(2,8)}`;
+  media.pending={clientRequestId,file,target:media.target,sha256:"",preparePayload:null};
+  document.body.classList.add("sk-media-uploading");
+  try{const hash=await sha256(file);media.pending.sha256=hash;media.pending.preparePayload=uploadPayload(file,hash,false);post("VOY_MEDIA_UPLOAD_CREATE",media.pending.preparePayload)}
+  catch(err){document.body.classList.remove("sk-media-uploading");media.pending=null;toast(err.message||"Unable to prepare upload.")}
+}
+async function uploadSigned(p){
+  if(!media.pending)return;
+  const file=media.pending.file,upload=p.upload||{};
+  if(!file||!upload.signedUrl)throw new Error("Upload authorization is incomplete.");
+  media.pending.backendRequestId=p.requestId||"";
+  const headers={"Content-Type":upload.contentType||file.type||"application/octet-stream"};if(upload.token)headers["x-upsert"]="false";
+  const r=await fetch(upload.signedUrl,{method:upload.method||"PUT",headers,body:file});
+  if(!r.ok)throw new Error(`Upload failed (${r.status})`);
+  post("VOY_MEDIA_UPLOAD_FINALIZE",{requestId:p.requestId})
+}
+function requestPreview(raw){const asset=normalizeAsset(raw);const url=asset.readUrl||asset.imageUrl||asset.url||"";if(url){window.open(url,"_blank","noopener,noreferrer");return}if(!asset.assetId)return;media.pendingAccess={assetId:asset.assetId,purpose:"preview"};post("VOY_MEDIA_REFRESH_URL",{assetId:asset.assetId,expiresIn:600,purpose:"preview"})}
+
+document.addEventListener("click",e=>{
+  const old=e.target.closest('[data-action="open-asset-upload"]');if(old){e.preventDefault();e.stopImmediatePropagation();chooseUpload("library");return}
+  const choose=e.target.closest("[data-sk-media-choose]");if(choose){e.preventDefault();e.stopImmediatePropagation();openPicker(choose.dataset.skMediaChoose);return}
+  const upload=e.target.closest("[data-sk-media-upload]");if(upload){e.preventDefault();e.stopImmediatePropagation();chooseUpload(upload.dataset.skMediaUpload);return}
+  const refresh=e.target.closest("[data-sk-media-refresh]");if(refresh){e.preventDefault();e.stopImmediatePropagation();requestMedia();return}
+  const open=e.target.closest("[data-sk-media-open-control]");if(open){e.preventDefault();e.stopImmediatePropagation();post("VOY_OPEN_MEDIA_CONTROL",{});return}
+  const b=e.target.closest("[data-sk-media-bucket]");if(b){media.bucket=b.dataset.skMediaBucket||"";renderEmbeddedLibrary();renderPicker();return}
+  const use=e.target.closest("[data-sk-media-use]");if(use){applyAsset(media.assets.find(a=>String(a.assetId)===String(use.dataset.skMediaUse)));return}
+  const pre=e.target.closest("[data-sk-media-preview]");if(pre){requestPreview(media.assets.find(a=>String(a.assetId)===String(pre.dataset.skMediaPreview)));return}
+},true);
+
+$("skMediaClose")?.addEventListener("click",closePicker);
+$("skMediaRefresh")?.addEventListener("click",requestMedia);
+$("skMediaUpload")?.addEventListener("click",()=>chooseUpload(media.target||"library"));
+$("skMediaOpenControl")?.addEventListener("click",()=>post("VOY_OPEN_MEDIA_CONTROL",{}));
+$("skMediaBucketFilter")?.addEventListener("change",e=>{media.bucket=e.target.value||"";renderEmbeddedLibrary();renderPicker()});
+$("skMediaQuery")?.addEventListener("input",e=>{media.query=e.target.value||"";renderPicker();renderEmbeddedLibrary()});
+$("skVoyMediaFile")?.addEventListener("change",e=>startUpload(e.target.files?.[0]));
+$("skMediaPicker")?.addEventListener("click",e=>{if(e.target===$("skMediaPicker"))closePicker()});
+
+window.addEventListener("message",async e=>{
+  const m=e.data||{};if(m.source&&m.source!==PARENT)return;const p=m.payload||{};
+  try{
+    if(m.type==="VOY_MEDIA_LIBRARY_RESULT"){media.assets=(p.assets||[]).map(normalizeAsset);media.buckets=deriveBuckets(media.assets);media.requested=true;renderEmbeddedLibrary();renderPicker();return}
+    if(m.type==="VOY_MEDIA_UPLOAD_READY"){
+      if(!media.pending)return;
+      if(p.duplicate){const existing=(p.exactDuplicates||[]).map(normalizeAsset)[0];document.body.classList.remove("sk-media-uploading");const target=media.pending.target;media.pending=null;if(existing){media.target=target;if(target==="library")toast("Existing identical asset reused.");else applyAsset(existing)}requestMedia();return}
+      if(p.needsReview){const proceed=confirm("A possible existing legacy asset has the same file size/type. Upload another physical copy anyway?");if(!proceed){document.body.classList.remove("sk-media-uploading");media.pending=null;return}media.pending.preparePayload={...media.pending.preparePayload,allowPossibleDuplicate:true};post("VOY_MEDIA_UPLOAD_CREATE",media.pending.preparePayload);return}
+      await uploadSigned(p);return
+    }
+    if(m.type==="VOY_MEDIA_UPLOAD_COMPLETE"){document.body.classList.remove("sk-media-uploading");const target=media.pending?.target;media.pending=null;if(p.asset){const asset=normalizeAsset(p.asset);media.target=target;if(target==="library")toast(p.duplicate?"Existing identical asset reused.":"Upload complete.");else applyAsset(asset)}requestMedia();return}
+    if(m.type==="VOY_MEDIA_REFRESH_URL_RESULT"){const id=p.assetId||media.pendingAccess?.assetId||"";const a=media.assets.find(x=>String(x.assetId)===String(id));if(a&&p.url){a.readUrl=p.url;a.url=p.url;if(media.pendingAccess?.purpose==="preview")window.open(p.url,"_blank","noopener,noreferrer");renderEmbeddedLibrary();renderPicker()}media.pendingAccess=null;return}
+    if(m.type==="VOY_ADMIN_ERROR"&&(["VOY_MEDIA_","VOY_ASSET_UPLOAD_"].some(prefix=>String(p.action||"").startsWith(prefix)))){document.body.classList.remove("sk-media-uploading");media.pending=null;toast(p.message||"Media Control error.");return}
+  }catch(err){document.body.classList.remove("sk-media-uploading");media.pending=null;toast(err.message||"Media Control error.")}
+});
+
+let queued=false;const observer=new MutationObserver(()=>{if(queued)return;queued=true;requestAnimationFrame(()=>{queued=false;enhanceFields()})});observer.observe(document.body,{childList:true,subtree:true});enhanceFields();
+})();
+</script>
+
 </body>
 </html>
-
 ```
