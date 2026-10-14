@@ -87,6 +87,8 @@ function translatedText(value, fallback = "") {
   return (
     value.translated ||
     value.original ||
+    value?.plainText?.translated ||
+    value?.plainText?.original ||
     value.name ||
     fallback
   );
@@ -310,6 +312,9 @@ function normalizeCart(cart = {}) {
         cart
           ?.deliveryInfo
           ?.address ||
+        cart
+          ?.paymentInfo
+          ?.billingAddress ||
         {}
       ),
 
@@ -403,6 +408,15 @@ function normalizeCart(cart = {}) {
           )
         : [],
 
+    requiresDelivery:
+      lineItems.some((item) => {
+        const attributes = item?.attributes || {};
+        const preset = cleanText(attributes?.itemType?.preset, 40).toUpperCase();
+        if (attributes?.physicalProperties?.shippable === true) return true;
+        if (["GIFT_CARD", "DIGITAL", "SERVICE"].includes(preset)) return false;
+        return preset === "PHYSICAL";
+      }),
+
     subtotal:
       money(
         cart.subtotal,
@@ -456,13 +470,9 @@ function normalizeCart(cart = {}) {
               ),
 
             imageUrl:
-              attributes
-                ?.image
-                ?.url ||
-              attributes
-                ?.image
-                ?.src ||
-              "",
+              (typeof attributes?.image === "string"
+                ? attributes.image
+                : attributes?.image?.url || attributes?.image?.src || ""),
 
             url:
               attributes
@@ -486,6 +496,22 @@ function normalizeCart(cart = {}) {
                   ?.sku,
                 100
               ),
+
+            itemType:
+              cleanText(
+                attributes
+                  ?.itemType
+                  ?.preset ||
+                attributes
+                  ?.itemType
+                  ?.custom,
+                40
+              ),
+
+            shippable:
+              attributes
+                ?.physicalProperties
+                ?.shippable === true,
 
             quantity:
               Number(
@@ -1082,8 +1108,10 @@ async function buildCheckoutState(preferredAddress = null) {
 
   let deliveryMethods = [];
   let deliveryError = "";
-  try { deliveryMethods = await getDeliveryMethods(address); }
-  catch (_) { deliveryError = "Delivery options could not be loaded. Update your delivery options to retry."; }
+  if (normalizedCart.requiresDelivery) {
+    try { deliveryMethods = await getDeliveryMethods(address); }
+    catch (_) { deliveryError = "Delivery options could not be loaded. Update your delivery options to retry."; }
+  }
 
   const blockingViolations =
     (
@@ -1135,24 +1163,29 @@ export async function saveStoreCheckoutDetailsCore({
           address
         );
 
-      await currentCartV2
-        .updateCurrentCart({
-          customerInfo:
-            cleanCustomer,
+      const current = await getCurrentCartSafe();
+      const requiresDelivery = current ? normalizeCart(current).requiresDelivery : false;
+      const update = {
+        customerInfo: cleanCustomer,
+        paymentInfo: {
+          billingContact: {
+            firstName: cleanCustomer.firstName,
+            lastName: cleanCustomer.lastName,
+            phone: cleanCustomer.phone
+          },
+          ...(cleanAddress.country
+            ? { billingAddress: cartAddress(cleanAddress) }
+            : {})
+        },
+        ...(requiresDelivery && cleanAddress.country
+          ? { deliveryInfo: { address: cartAddress(cleanAddress) } }
+          : {}),
+        note: cleanText(note, 1000)
+      };
 
-          deliveryInfo: { address: cartAddress(cleanAddress) },
-          paymentInfo: { billingAddress: cartAddress(cleanAddress), billingContact: { firstName: cleanCustomer.firstName, lastName: cleanCustomer.lastName, phone: cleanCustomer.phone } },
+      await currentCartV2.updateCurrentCart(update);
 
-          note:
-            cleanText(
-              note,
-              1000
-            )
-        });
-
-      return buildCheckoutState(
-        cleanAddress
-      );
+      return buildCheckoutState(cleanAddress);
     }
 
 
