@@ -63,3 +63,11 @@ Current Destinations flow uses measured child height and parent-side clamping. T
 ## 9. Historical fixed-height settings are not the chrome authority
 
 Older fixed desktop/mobile heights may remain useful as emergency layout fallbacks, but they do not override the route-by-route chrome rules in `PAGE_SETTINGS.md` and do not justify suppressing a required global footer.
+
+
+## 2026-10-13 mobile focus + footer handoff correction
+- Wix `wix-window-frontend.formFactor` is used only to enable the footer gate on true Mobile form factor; desktop chrome rules remain unchanged.
+- Wix `getBoundingRect()` provides outer document `scroll.y`; the gate uses that value only on APP_VIEWPORT routes.
+- The footer is hidden without collapsing on gated mobile routes. Its layout height remains available for the browser's natural iframe-to-page scroll chaining, preventing the footer from being visible while the iframe is still the active scroll surface.
+- CONTENT_AUTO routes are not gated because their footer already follows real document content.
+- The global customer header/footer now apply a 16px mobile minimum to editable text controls. The shared `master-config-bridge.js` installs the same rule for embeds that include the bridge, without disabling pinch zoom.
