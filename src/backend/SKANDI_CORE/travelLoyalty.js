@@ -5,6 +5,7 @@
 import { accounts } from "wix-loyalty.v2";
 import { elevate } from "wix-auth";
 import { restRequest } from "backend/SKANDI_CORE/supabaseServer";
+import { errorCode } from "backend/SKANDI_CORE/platformErrors";
 
 const elevatedGetAccountBySecondaryId = elevate(accounts.getAccountBySecondaryId);
 const elevatedEarnPoints = elevate(accounts.earnPoints);
@@ -280,10 +281,10 @@ export async function releaseEligibleTravelPoints() {
       await markAccrual(booking, {
         ...latestAccrual,
         lastCheckedAt: isoNow(),
-        errorCode: clean(error?.code || error?.name || "TRAVEL_POINTS_RELEASE_FAILED", 120),
-        errorMessage: clean(error?.message || "Travel points release failed.", 500)
+        errorCode: errorCode(error, "TRAVEL_POINTS_RELEASE_FAILED"),
+        errorMessage: clean(error instanceof Error ? error.message : "Travel points release failed.", 500)
       }).catch(() => {});
-      results.push({ bookingId: booking.id, error: clean(error?.message || error, 500) });
+      results.push({ bookingId: booking.id, error: clean(error instanceof Error ? error.message : error, 500) });
     }
   }
 
@@ -292,7 +293,7 @@ export async function releaseEligibleTravelPoints() {
     version: VERSION,
     checked: bookings.length,
     processed: results.length,
-    posted: results.filter(item => item.posted).length,
+    posted: results.filter(item => "posted" in item && item.posted === true).length,
     results
   };
 }
