@@ -18,7 +18,7 @@ export const SITE_MAP = Object.freeze({
   inventoryControl: "/riaintra/success-factors/altea/inventory-control", uniformCenter: "/riaintra/success-factors/uniform",
   uniformControl: "/riaintra/success-factors/uniform/admin-control", alteaTimatic: "/riaintra/success-factors/altea/timatic",
   mail: "/riaintra/success-factors/mail", docunet: "/riaintra/success-factors/docunet",
-  serviceDesk: "/riaintra/success-factors/helpdesk", policyControl: "/riaintra/success-factors/policy-control",
+  docunetAdmin: "/riaintra/success-factors/docunet/admin", serviceDesk: "/riaintra/success-factors/service-desk", policyControl: "/riaintra/success-factors/policy-control",
   mediaControl: "/riaintra/success-factors/media-control", storeControl: "/riaintra/success-factors/store-control",
   payroll: "/riaintra/success-factors/payroll"
 });
