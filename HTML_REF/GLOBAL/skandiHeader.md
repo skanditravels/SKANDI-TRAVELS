@@ -16,9 +16,11 @@ LAST SYNCED: 2026-10-13
 - Logged-in desktop/mobile chrome exposes `Logout`, emitting the existing `HEADER_LOGOUT` contract handled by the parent with Wix Members logout.
 - `Forgot password?` now routes to `/forgot-password`; it no longer opens the old header-level prompt directly.
 - Existing 118px fixed geometry, search, settings, favorites, navigation, Club inline sign-in, language/currency and responsive behavior are retained.
+- Mobile text-entry controls now enforce a 16px minimum font size at widths up to 767px to prevent iOS focus auto-zoom without disabling user pinch zoom.
 - STATICALLY VERIFIED against repository `skanditravels/SKANDI-TRAVELS`, branch `main`, HEAD `e44a4c7df428faa198d4b386bf261ceb202e7dc9` and the complete user-supplied V12 header source.
 
 ## CHANGE LOG
+- 2026-10-13 — Mobile focus UX: text-entry inputs/selects/textarea use a 16px minimum at mobile widths; no `user-scalable=no` or pinch-zoom lock is introduced.
 - 2026-09-16 — B-011.18: Global SKANDI customer header registered at 118px desktop/tablet/mobile.
 - 2026-09-18 — B-011.18.1: Intended 118px invariant introduced; later cross-layer audit found parent-side growth still possible.
 - 2026-09-18 — B-011.18.2: Premium global-header convergence; fixed 118px invariant, My Profile account routing and parent clamp.
@@ -772,6 +774,15 @@ html.mobile-menu-open,body.mobile-menu-open{overflow:hidden!important}
   .header-shell::before,.expandbar::before{transition:none!important}
   .action-btn:hover::after,.mobile-btn:hover::after,.settings-apply:hover::after,.club-submit:hover::after,.mobile-drawer-action:hover::after{animation:none!important;opacity:0!important}
   .club-panel,.mobile-drawer,.settings-menu,.search-field-shell{transform:none!important;filter:none!important}
+}
+
+
+/* SKANDI mobile focus-zoom guard: keep editable controls at iOS-safe 16px without disabling pinch zoom. */
+@media (max-width:767px){
+  input[type="text"],input[type="search"],input[type="email"],input[type="password"],
+  input[type="tel"],input[type="url"],input[type="number"],input[type="date"],
+  input[type="time"],input[type="datetime-local"],input[type="month"],input[type="week"],
+  input:not([type]),select,textarea{font-size:16px!important}
 }
 
 </style>
