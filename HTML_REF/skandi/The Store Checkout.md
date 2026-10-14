@@ -10,7 +10,7 @@
 - Gift Card authority: Wix Gift Cards + Wix Cart V2. SKANDI checkout does not issue cards or maintain balances.
 - New child→parent contracts: `CHECKOUT_APPLY_GIFT_CARD`, `CHECKOUT_REMOVE_GIFT_CARD`; existing checkout contracts remain unchanged.
 - Status: STATICALLY VERIFIED / REQUIRES LIVE TEST.
-- Last source verification: 2026-10-13 against `skanditravels/SKANDI-TRAVELS`, `main`, head `77845115c0d3a839a845522f3ecbfbfd69c82153`, preserving the approved 2026-10-07 checkout repair.
+- Last source verification: 2026-10-13 against `skanditravels/SKANDI-TRAVELS`, `main`, head `96e4b8598c5ab2c176f8b838fbc35e6ca9c2971c`, preserving the approved 2026-10-07 checkout repair.
 - Intended source only: this package does not modify GitHub, deployed Wix code, Wix Gift Card settings or Supabase.
 
 ## 2026-10-07 — V12 complete-chain repair
@@ -25,7 +25,7 @@ Payment retry is persisted in Wix session storage and verified against customer 
 
 The custom checkout now applies and removes one Wix Gift Card through the documented Current Cart V2 methods. The checkout renders only the obfuscated code returned by Wix, recalculates the authoritative cart after every change, shows the gift-card deduction from Wix totals, and uses `totalAfterGiftCards` as the remaining amount due. `placeOrder` remains the sole order writer, so Wix performs final gift-card redemption as part of the existing order placement flow.
 
-No raw gift-card balance ledger, payment secret, full stored card code or duplicate checkout database was introduced. The existing secure Wix payment window is still used only when a balance remains.
+No raw gift-card balance ledger, payment secret, full stored card code or duplicate checkout database was introduced. The existing secure Wix payment window is still used only when a balance remains. Gift-card-only/digital carts are now identified from Cart V2 item attributes, so they use the buyer billing address for Wix payment/tax calculation but do not require a shipping delivery method; mixed carts still use the existing live shipping configuration.
 
 STATICALLY VERIFIED: message names, facade/core exports, Current Cart V2 method signatures, order-placement ownership and HTML syntax. REQUIRES LIVE TEST: Wix Gift Cards must be installed/activated; apply a live test code, remove it, apply it again, test partial coverage and full coverage, then verify final Wix order/gift-card balances.
 
@@ -516,6 +516,9 @@ function money(m){
 function formValue(id){
   return ($(id)?.value||"").trim();
 }
+function requiresDelivery(){
+  return STATE?.cart?.requiresDelivery!==false;
+}
 
 function formPayload(){
   return {
@@ -584,6 +587,7 @@ function violationsHtml(){
 }
 
 function renderDelivery(){
+  if(!requiresDelivery())return `<div class="notice info">Digital order — no shipping method is required.</div>`;
   if(STATE?.deliveryError)return `<div class="notice error">${esc(STATE.deliveryError)}</div>`;
   const methods=STATE?.deliveryMethods||[];
   const selected=STATE?.cart?.selectedDeliveryMethod||null;
@@ -653,7 +657,7 @@ function totalsHtml(){
     <div class="totals">
       <div class="total-row"><span>Subtotal</span><strong>${esc(money(s.subtotal||STATE?.cart?.subtotal))}</strong></div>
       ${discount?`<div class="total-row"><span>Discount</span><strong>− ${esc(money(s.discount))}</strong></div>`:""}
-      <div class="total-row"><span>Delivery</span><strong>${esc(money(s.delivery))}</strong></div>
+      ${requiresDelivery()?`<div class="total-row"><span>Delivery</span><strong>${esc(money(s.delivery))}</strong></div>`:""}
       ${fees?`<div class="total-row"><span>Fees</span><strong>${esc(money(s.additionalFees))}</strong></div>`:""}
       <div class="total-row"><span>Tax</span><strong>${esc(money(s.tax))}</strong></div>
       ${giftCardApplied>0?`<div class="total-row"><span>Gift card</span><strong>− ${esc(money({amount:giftCardApplied,currency}))}</strong></div>`:""}
@@ -699,11 +703,20 @@ function giftCardHtml(){
 function formHtml(){
   const c=DRAFT?.customer||STATE?.cart?.customer||{};
   const a=DRAFT?.address||STATE?.cart?.address||{};
+  const delivery=requiresDelivery();
+  const deliveryMethodSection=delivery?`
+    <section class="card">
+      <div class="card-head">
+        <h2>Delivery method</h2>
+        <p>Available options come directly from SKANDI's live Wix shipping configuration.</p>
+      </div>
+      <div class="card-body" id="deliveryWrap">${renderDelivery()}</div>
+    </section>`:"";
   return `
     <section class="card">
       <div class="card-head">
         <h2>Your details</h2>
-        <p>We'll use this information for your order confirmation and delivery.</p>
+        <p>${delivery?"We'll use this information for your order confirmation and delivery.":"We'll use this information for your order confirmation."}</p>
       </div>
       <div class="card-body">
         <div class="grid2">
@@ -717,8 +730,8 @@ function formHtml(){
 
     <section class="card">
       <div class="card-head">
-        <h2>Delivery address</h2>
-        <p>Your shipping options and taxes are calculated from this address.</p>
+        <h2>${delivery?"Delivery address":"Billing address"}</h2>
+        <p>${delivery?"Your shipping options and taxes are calculated from this address.":"No shipping method is required. Wix uses this address for billing and applicable tax calculation."}</p>
       </div>
       <div class="card-body">
         <div class="grid2">
@@ -731,18 +744,12 @@ function formHtml(){
           <div class="field full"><label>Order note (optional)</label><textarea id="note" maxlength="1000" placeholder="Special instructions">${esc(DRAFT?.note??STATE?.cart?.note??"")}</textarea></div>
         </div>
         <div class="actions">
-          <button id="saveDetails" class="btn btn-secondary">Update delivery options</button>
+          <button id="saveDetails" class="btn btn-secondary">${delivery?"Update delivery options":"Update order details"}</button>
         </div>
       </div>
     </section>
 
-    <section class="card">
-      <div class="card-head">
-        <h2>Delivery method</h2>
-        <p>Available options come directly from SKANDI's live Wix shipping configuration.</p>
-      </div>
-      <div class="card-body" id="deliveryWrap">${renderDelivery()}</div>
-    </section>
+    ${deliveryMethodSection}
 
     <section class="card">
       <div class="card-head">
@@ -847,18 +854,18 @@ function bind(){
   $("payBtn")?.addEventListener("click",()=>{
     if(BUSY)return;
     if(!validateForm())return;
-    if(STATE?.deliveryError){status(STATE.deliveryError,0);return}
+    if(requiresDelivery()&&STATE?.deliveryError){status(STATE.deliveryError,0);return}
     if(!$("terms")?.checked){status("Please accept the terms before continuing.");return}
 
-    const methods=STATE?.deliveryMethods||[];
+    const methods=requiresDelivery()?(STATE?.deliveryMethods||[]):[];
     let deliveryMethod=null;
 
-    if(methods.length){
+    if(requiresDelivery()&&methods.length){
       const checked=document.querySelector('input[name="delivery"]:checked');
       if(!checked){status("Choose a delivery method.");return}
       const [appId,code]=checked.value.split("|");
       deliveryMethod={appId,code};
-    }else if(STATE?.cart?.selectedDeliveryMethod){
+    }else if(requiresDelivery()&&STATE?.cart?.selectedDeliveryMethod){
       deliveryMethod=STATE.cart.selectedDeliveryMethod;
     }
 
@@ -974,6 +981,5 @@ post("CHECKOUT_READY",{});
 </script>
 </body>
 </html>
-
 ```
 
