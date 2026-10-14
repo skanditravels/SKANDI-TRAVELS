@@ -45,6 +45,7 @@ export const SITE_MAP = Object.freeze({
   mail: "/riaintra/success-factors/mail",
   docunet: "/riaintra/success-factors/docunet",
   serviceDesk: "/riaintra/success-factors/helpdesk",
+  policyControl: "/riaintra/success-factors/policy-control",
   mediaControl: "/riaintra/success-factors/media-control",
   storeControl: "/riaintra/success-factors/store-control",
   payroll: "/riaintra/success-factors/payroll"
