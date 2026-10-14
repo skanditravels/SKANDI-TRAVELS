@@ -1,17 +1,17 @@
 key,route,mode,header,footer,main_section_height,html_component_size,vertical_scroll_owner,page_overflow,section_overflow
 home,/,CONTENT_AUTO,Customer 118px base,Customer ON,680px min; grows with embed,W 100%; H runtime 680–30000,Wix page,Hide,Show
-search,/search,APP_VIEWPORT_PUBLIC,Customer 118px base,OFF,calc(100vh - 118px),W/H 100%,Embed,Hide,Hide
-flights,/flights,APP_VIEWPORT_PUBLIC,Customer 118px base,OFF,calc(100vh - 118px),W/H 100%,Embed,Hide,Hide
-carRental,/car-rental,APP_VIEWPORT_PUBLIC,Customer 118px base,OFF,calc(100vh - 118px),W/H 100%,Embed,Hide,Hide
-hotels,/hotels,APP_VIEWPORT_PUBLIC,Customer 118px base,OFF,calc(100vh - 118px),W/H 100%,Embed,Hide,Hide
-packages,/packages,APP_VIEWPORT_PUBLIC,Customer 118px base,OFF,calc(100vh - 118px),W/H 100%,Embed,Hide,Hide
-tours,/tours,APP_VIEWPORT_PUBLIC,Customer 118px base,OFF,calc(100vh - 118px),W/H 100%,Embed,Hide,Hide
-activities,/activities,APP_VIEWPORT_PUBLIC,Customer 118px base,OFF,calc(100vh - 118px),W/H 100%,Embed,Hide,Hide
-transfers,/transfers,APP_VIEWPORT_PUBLIC,Customer 118px base,OFF,calc(100vh - 118px),W/H 100%,Embed,Hide,Hide
+search,/search,APP_VIEWPORT_PUBLIC,Customer 118px base,Customer ON,calc(100vh - 118px),W/H 100%,Embed,Hide,Hide
+flights,/flights,APP_VIEWPORT_PUBLIC,Customer 118px base,Customer ON,calc(100vh - 118px),W/H 100%,Embed,Hide,Hide
+carRental,/car-rental,APP_VIEWPORT_PUBLIC,Customer 118px base,Customer ON,calc(100vh - 118px),W/H 100%,Embed,Hide,Hide
+hotels,/hotels,APP_VIEWPORT_PUBLIC,Customer 118px base,Customer ON,calc(100vh - 118px),W/H 100%,Embed,Hide,Hide
+packages,/packages,APP_VIEWPORT_PUBLIC,Customer 118px base,Customer ON,calc(100vh - 118px),W/H 100%,Embed,Hide,Hide
+tours,/tours,APP_VIEWPORT_PUBLIC,Customer 118px base,Customer ON,calc(100vh - 118px),W/H 100%,Embed,Hide,Hide
+activities,/activities,APP_VIEWPORT_PUBLIC,Customer 118px base,Customer ON,calc(100vh - 118px),W/H 100%,Embed,Hide,Hide
+transfers,/transfers,APP_VIEWPORT_PUBLIC,Customer 118px base,Customer ON,calc(100vh - 118px),W/H 100%,Embed,Hide,Hide
 destinations,/destinations,CONTENT_AUTO,Customer 118px base,Customer ON,680px min; grows with embed,W 100%; H runtime 680–30000,Wix page,Hide,Show
 country,/destinations/country,CONTENT_AUTO,Customer 118px base,Customer ON,680px min; grows with embed,W 100%; H runtime 680–30000,Wix page,Hide,Show
 destination,/destinations/country/destination,CONTENT_AUTO,Customer 118px base,Customer ON,680px min; grows with embed,W 100%; H runtime 680–30000,Wix page,Hide,Show
-offers,/offers,APP_VIEWPORT_PUBLIC,Customer 118px base,OFF,calc(100vh - 118px),W/H 100%,Embed,Hide,Hide
+offers,/offers,APP_VIEWPORT_PUBLIC,Customer 118px base,Customer ON,calc(100vh - 118px),W/H 100%,Embed,Hide,Hide
 travelInfo,/travel-info,CONTENT_AUTO,Customer 118px base,Customer ON,680px min; grows with embed,W 100%; H runtime 680–30000,Wix page,Hide,Show
 skandiCollection,/skandi-collection,CONTENT_AUTO,Customer 118px base,Customer ON,680px min; grows with embed,W 100%; H runtime 680–30000,Wix page,Hide,Show
 voy,/voy-magazine,CONTENT_AUTO,Customer 118px base,Customer ON,680px min; grows with embed,W 100%; H runtime 680–30000,Wix page,Hide,Show
@@ -19,43 +19,43 @@ club,/skandi-club,CONTENT_AUTO,Customer 118px base,Customer ON,680px min; grows 
 forgotPassword,/forgot-password,CONTENT_AUTO,Customer 118px base,Customer ON,680px min; grows with embed,W 100%; H runtime 680–30000,Wix page,Hide,Show
 about,/about,CONTENT_AUTO,Customer 118px base,Customer ON,680px min; grows with embed,W 100%; H runtime 680–30000,Wix page,Hide,Show
 support,/about/support,CONTENT_AUTO,Customer 118px base,Customer ON,680px min; grows with embed,W 100%; H runtime 680–30000,Wix page,Hide,Show
-memberSupport,/my-profile/support,APP_VIEWPORT_PUBLIC,Customer 118px base,OFF,calc(100vh - 118px),W/H 100%,Embed,Hide,Hide
+memberSupport,/my-profile/support,APP_VIEWPORT_PUBLIC,Customer 118px base,Customer ON,calc(100vh - 118px),W/H 100%,Embed,Hide,Hide
 newsroom,/about/news-room,CONTENT_AUTO,Customer 118px base,Customer ON,680px min; grows with embed,W 100%; H runtime 680–30000,Wix page,Hide,Show
-theStore,/the-store,APP_VIEWPORT_PUBLIC,Customer 118px base,OFF,calc(100vh - 118px),W/H 100%,Embed,Hide,Hide
-storeCheckout,/the-store/store-checkout,NATIVE_WIX,native/current checkout chrome,OFF recommended,Auto/native,no custom iframe sizing,Wix/native,Hide,n/a
-storeConfirmation,/the-store/store-checkout/order-confirmation,NATIVE_WIX,native/current confirmation chrome,OFF recommended,Auto/native,no custom iframe sizing,Wix/native,Hide,n/a
+theStore,/the-store,APP_FULLSCREEN_CHROME_FREE,OFF,OFF,100vh,W/H 100%,Embed,Hide,Hide
+storeCheckout,/the-store/store-checkout,APP_FULLSCREEN_CHROME_FREE,OFF,OFF,100vh,W/H 100%,Embed,Hide,Hide
+storeConfirmation,/the-store/store-checkout/order-confirmation,APP_FULLSCREEN_CHROME_FREE,OFF,OFF,100vh,W/H 100%,Embed,Hide,Hide
 ourNetwork,/about/our-network,CONTENT_AUTO,Customer 118px base,Customer ON,680px min; grows with embed,W 100%; H runtime 680–30000,Wix page,Hide,Show
 legal,/about/legal,CONTENT_AUTO,Customer 118px base,Customer ON,680px min; grows with embed,W 100%; H runtime 680–30000,Wix page,Hide,Show
 policies,/about/legal/policies,CONTENT_AUTO,Customer 118px base,Customer ON,680px min; grows with embed,W 100%; H runtime 680–30000,Wix page,Hide,Show
-riaintra,/riaintra,APP_VIEWPORT_RIAINTRA,RIA 52px,OFF,calc(100vh - 52px),W/H 100%,Embed,Hide,Hide
-staffLogin,/riaintra,APP_VIEWPORT_RIAINTRA,RIA 52px,OFF,calc(100vh - 52px),W/H 100%,Embed,Hide,Hide
-successFactors,/riaintra/success-factors,APP_VIEWPORT_RIAINTRA,RIA 52px,OFF,calc(100vh - 52px),W/H 100%,Embed,Hide,Hide
-legalInternal,/riaintra/success-factors/legal-internal,APP_VIEWPORT_RIAINTRA,RIA 52px,OFF,calc(100vh - 52px),W/H 100%,Embed,Hide,Hide
-legalInternalPolicy,/riaintra/success-factors/legal-internal/policies-internal,APP_VIEWPORT_RIAINTRA,RIA 52px,OFF,calc(100vh - 52px),W/H 100%,Embed,Hide,Hide
-policyControl,/riaintra/success-factors/policy-control,APP_VIEWPORT_RIAINTRA,RIA 52px,OFF,calc(100vh - 52px),W/H 100%,Embed,Hide,Hide
-alteaLaunchpad,/riaintra/success-factors/altea,APP_VIEWPORT_ALTEA,RIA 52px + ALTEA 48px,OFF,calc(100vh - 100px),W/H 100%,Embed,Hide,Hide
-alteaReservations,/riaintra/success-factors/altea/reservations,APP_VIEWPORT_ALTEA,RIA 52px + ALTEA 48px,OFF,calc(100vh - 100px),W/H 100%,Embed,Hide,Hide
-inventoryControl,/riaintra/success-factors/altea/inventory-control,APP_VIEWPORT_ALTEA,RIA 52px + ALTEA 48px,OFF,calc(100vh - 100px),W/H 100%,Embed,Hide,Hide
-alteaTimatic,/riaintra/success-factors/altea/timatic,APP_VIEWPORT_ALTEA,RIA 52px + ALTEA 48px,OFF,calc(100vh - 100px),W/H 100%,Embed,Hide,Hide
-mail,/riaintra/success-factors/mail,APP_VIEWPORT_RIAINTRA,RIA 52px,OFF,calc(100vh - 52px),W/H 100%,Embed,Hide,Hide
-docunet,/riaintra/success-factors/docunet,APP_VIEWPORT_RIAINTRA,RIA 52px,OFF,calc(100vh - 52px),W/H 100%,Embed,Hide,Hide
-docunetAdmin,REQUIRES LIVE ROUTE VERIFICATION,APP_VIEWPORT_RIAINTRA,RIA 52px,OFF,calc(100vh - 52px),W/H 100%,Embed,Hide,Hide
-serviceDesk,/riaintra/success-factors/helpdesk,APP_VIEWPORT_RIAINTRA,RIA 52px,OFF,calc(100vh - 52px),W/H 100%,Embed,Hide,Hide
-mediaControl,/riaintra/success-factors/media-control,APP_VIEWPORT_RIAINTRA,RIA 52px,OFF,calc(100vh - 52px),W/H 100%,Embed,Hide,Hide
-storeControl,/riaintra/success-factors/store-control,APP_VIEWPORT_RIAINTRA,RIA 52px,OFF,calc(100vh - 52px),W/H 100%,Embed,Hide,Hide
-payroll,/riaintra/success-factors/payroll,APP_VIEWPORT_RIAINTRA,RIA 52px,OFF,calc(100vh - 52px),W/H 100%,Embed,Hide,Hide
-uniformCenter,/riaintra/success-factors/uniform,APP_VIEWPORT_RIAINTRA,RIA 52px,OFF,calc(100vh - 52px),W/H 100%,Embed,Hide,Hide
-uniformControl,/riaintra/success-factors/uniform/admin-control,APP_VIEWPORT_RIAINTRA,RIA 52px,OFF,calc(100vh - 52px),W/H 100%,Embed,Hide,Hide
-staffDocumentControl,REQUIRES LIVE ROUTE VERIFICATION,APP_VIEWPORT_RIAINTRA,RIA 52px,OFF,calc(100vh - 52px),W/H 100%,Embed,Hide,Hide
-transportCompliance,REQUIRES LIVE ROUTE VERIFICATION,APP_VIEWPORT_RIAINTRA,RIA 52px,OFF,calc(100vh - 52px),W/H 100%,Embed,Hide,Hide
-bookingFlow,/booking,APP_VIEWPORT_PUBLIC,Customer 118px base,OFF,calc(100vh - 118px),active booking state embed W/H 100%,Active embed,Hide,Hide
-myProfile,/my-profile,APP_VIEWPORT_PUBLIC,Customer 118px base,OFF,calc(100vh - 118px),W/H 100%,Embed,Hide,Hide
-myTrips,/my-profile?tab=trips,APP_VIEWPORT_PUBLIC,Customer 118px base,OFF,calc(100vh - 118px),W/H 100%,Embed,Hide,Hide
+riaintra,/riaintra,APP_FULLSCREEN_CHROME_FREE,OFF,OFF,100vh,W/H 100%,Embed,Hide,Hide
+staffLogin,/riaintra,APP_FULLSCREEN_CHROME_FREE,OFF,OFF,100vh,W/H 100%,Embed,Hide,Hide
+successFactors,/riaintra/success-factors,APP_VIEWPORT_RIAINTRA,RIA 52px only,RIA ON,calc(100vh - 52px),W/H 100%,Embed,Hide,Hide
+legalInternal,/riaintra/success-factors/legal-internal,APP_VIEWPORT_RIAINTRA,RIA 52px only,RIA ON,calc(100vh - 52px),W/H 100%,Embed,Hide,Hide
+legalInternalPolicy,/riaintra/success-factors/legal-internal/policies-internal,APP_VIEWPORT_RIAINTRA,RIA 52px only,RIA ON,calc(100vh - 52px),W/H 100%,Embed,Hide,Hide
+policyControl,/riaintra/success-factors/policy-control,APP_VIEWPORT_RIAINTRA,RIA 52px only,RIA ON,calc(100vh - 52px),W/H 100%,Embed,Hide,Hide
+alteaLaunchpad,/riaintra/success-factors/altea,APP_VIEWPORT_ALTEA,ALTEA 48px only,ALTEA ON,calc(100vh - 48px),W/H 100%,Embed,Hide,Hide
+alteaReservations,/riaintra/success-factors/altea/reservations,APP_VIEWPORT_ALTEA,ALTEA 48px only,ALTEA ON,calc(100vh - 48px),W/H 100%,Embed,Hide,Hide
+inventoryControl,/riaintra/success-factors/altea/inventory-control,APP_VIEWPORT_ALTEA,ALTEA 48px only,ALTEA ON,calc(100vh - 48px),W/H 100%,Embed,Hide,Hide
+alteaTimatic,/riaintra/success-factors/altea/timatic,APP_VIEWPORT_ALTEA,ALTEA 48px only,ALTEA ON,calc(100vh - 48px),W/H 100%,Embed,Hide,Hide
+mail,/riaintra/success-factors/mail,APP_VIEWPORT_RIAINTRA,RIA 52px only,RIA ON,calc(100vh - 52px),W/H 100%,Embed,Hide,Hide
+docunet,/riaintra/success-factors/docunet,APP_VIEWPORT_RIAINTRA,RIA 52px only,RIA ON,calc(100vh - 52px),W/H 100%,Embed,Hide,Hide
+docunetAdmin,REQUIRES LIVE ROUTE VERIFICATION,APP_VIEWPORT_RIAINTRA,RIA 52px only,RIA ON,calc(100vh - 52px),W/H 100%,Embed,Hide,Hide
+serviceDesk,/riaintra/success-factors/helpdesk,APP_VIEWPORT_RIAINTRA,RIA 52px only,RIA ON,calc(100vh - 52px),W/H 100%,Embed,Hide,Hide
+mediaControl,/riaintra/success-factors/media-control,APP_VIEWPORT_RIAINTRA,RIA 52px only,RIA ON,calc(100vh - 52px),W/H 100%,Embed,Hide,Hide
+storeControl,/riaintra/success-factors/store-control,APP_VIEWPORT_RIAINTRA,RIA 52px only,RIA ON,calc(100vh - 52px),W/H 100%,Embed,Hide,Hide
+payroll,/riaintra/success-factors/payroll,APP_VIEWPORT_RIAINTRA,RIA 52px only,RIA ON,calc(100vh - 52px),W/H 100%,Embed,Hide,Hide
+uniformCenter,/riaintra/success-factors/uniform,APP_VIEWPORT_RIAINTRA,RIA 52px only,RIA ON,calc(100vh - 52px),W/H 100%,Embed,Hide,Hide
+uniformControl,/riaintra/success-factors/uniform/admin-control,APP_VIEWPORT_RIAINTRA,RIA 52px only,RIA ON,calc(100vh - 52px),W/H 100%,Embed,Hide,Hide
+staffDocumentControl,REQUIRES LIVE ROUTE VERIFICATION,APP_VIEWPORT_RIAINTRA,RIA 52px only,RIA ON,calc(100vh - 52px),W/H 100%,Embed,Hide,Hide
+transportCompliance,REQUIRES LIVE ROUTE VERIFICATION,APP_VIEWPORT_RIAINTRA,RIA 52px only,RIA ON,calc(100vh - 52px),W/H 100%,Embed,Hide,Hide
+bookingFlow,/booking,APP_FULLSCREEN_CHROME_FREE,OFF,OFF,100vh,Active state embed 100% W x 100% H,Active embed,Hide,Hide
+myProfile,/my-profile,APP_VIEWPORT_PUBLIC,Customer 118px base,Customer ON,calc(100vh - 118px),W/H 100%,Embed,Hide,Hide
+myTrips,/my-profile?tab=trips,APP_VIEWPORT_PUBLIC,Customer 118px base,Customer ON,calc(100vh - 118px),W/H 100%,Embed,Hide,Hide
 careers,/about/careers,CONTENT_AUTO,Customer 118px base,Customer ON,680px min; grows with embed,W 100%; H runtime 680–30000,Wix page,Hide,Show
-myRoster,/riaintra/success-factors/my-roster,APP_VIEWPORT_RIAINTRA,RIA 52px,OFF,calc(100vh - 52px),W/H 100%,Embed,Hide,Hide
+myRoster,/riaintra/success-factors/my-roster,APP_VIEWPORT_RIAINTRA,RIA 52px only,RIA ON,calc(100vh - 52px),W/H 100%,Embed,Hide,Hide
 groupTalk,/riaintra/success-factors/altea/grouptalk,APP_FULLSCREEN_CHROME_FREE,OFF,OFF,100vh,W/H 100%,Embed,Hide,Hide
 passportVisa,/travel-info/passport-visa,CONTENT_AUTO,Customer 118px base,Customer ON,680px min; grows with embed,W 100%; H runtime 680–30000,Wix page,Hide,Show
 baggageAllowance,/travel-info/baggage-allowance,CONTENT_AUTO,Customer 118px base,Customer ON,680px min; grows with embed,W 100%; H runtime 680–30000,Wix page,Hide,Show
 travelInsurance,/travel-info/insurance,CONTENT_AUTO,Customer 118px base,Customer ON,680px min; grows with embed,W 100%; H runtime 680–30000,Wix page,Hide,Show
 specialAssistance,/travel-info/special-assistance,CONTENT_AUTO,Customer 118px base,Customer ON,680px min; grows with embed,W 100%; H runtime 680–30000,Wix page,Hide,Show
-flightStatus,/travel-info/flight-status,APP_VIEWPORT_PUBLIC,Customer 118px base,OFF,calc(100vh - 118px),W/H 100%,Embed/FIDS,Hide,Hide
+flightStatus,/travel-info/flight-status,APP_VIEWPORT_PUBLIC,Customer 118px base,Customer ON,calc(100vh - 118px),W/H 100%,Embed/FIDS,Hide,Hide
