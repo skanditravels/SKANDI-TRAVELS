@@ -71,7 +71,7 @@ V12 desktop chrome authority correction: 2026-10-13. This register uses the page
 | alteaTimatic | `/riaintra/success-factors/altea/timatic` | APP_VIEWPORT_ALTEA | ALTEA 48px only | ALTEA ON | calc(100vh - 48px) | W/H 100% | Embed | Hide | Hide |
 | mail | `/riaintra/success-factors/mail` | APP_VIEWPORT_RIAINTRA | RIA 52px only | RIA ON | calc(100vh - 52px) | W/H 100% | Embed | Hide | Hide |
 | docunet | `/riaintra/success-factors/docunet` | APP_VIEWPORT_RIAINTRA | RIA 52px only | RIA ON | calc(100vh - 52px) | W/H 100% | Embed | Hide | Hide |
-| docunetAdmin | /riaintra/success-factors/docunet/admin | APP_VIEWPORT_RIAINTRA | RIA 52px only | RIA ON | calc(100vh - 52px) | W/H 100% | Embed | Hide | Hide |
+| docunetAdmin | '/riaintra/success-factors/docunet/admin' | APP_VIEWPORT_RIAINTRA | RIA 52px only | RIA ON | calc(100vh - 52px) | W/H 100% | Embed | Hide | Hide |
 | serviceDesk | `/riaintra/success-factors/service-desk` | APP_VIEWPORT_RIAINTRA | RIA 52px only | RIA ON | calc(100vh - 52px) | W/H 100% | Embed | Hide | Hide |
 | mediaControl | `/riaintra/success-factors/media-control` | APP_VIEWPORT_RIAINTRA | RIA 52px only | RIA ON | calc(100vh - 52px) | W/H 100% | Embed | Hide | Hide |
 | storeControl | `/riaintra/success-factors/store-control` | APP_VIEWPORT_RIAINTRA | RIA 52px only | RIA ON | calc(100vh - 52px) | W/H 100% | Embed | Hide | Hide |
