@@ -14,9 +14,11 @@ LAST SYNCED: 2026-10-13
 - `Staff Login` is a separate action to the right of the legal links and derives its path from `MASTER_CONFIG.routes.staffLogin`/`riaintra` with `/riaintra` fallback.
 - Website Disclaimer uses `/about/legal/policies?slug=disclaimer`; the duplicated accessibility route in the request is not used for Disclaimer.
 - Navigation continues through the existing `FOOTER_NAVIGATE` → parent contract.
+- Mobile newsletter/text-entry controls now enforce a 16px minimum font size at widths up to 767px to prevent iOS focus auto-zoom without disabling user pinch zoom.
 - STATICALLY VERIFIED; REQUIRES LIVE TEST after replacing the Wix global footer HTML.
 
 ## CHANGE LOG
+- 2026-10-13 — Mobile focus UX: text-entry controls use a 16px minimum at mobile widths; footer navigation/newsletter contracts are unchanged.
 - 2026-10-13 — V12 legal/footer sync: canonical legal utility links installed and Staff Login separated to the right; all other footer features retained.
 
 ## COMPLETE INTENDED LIVE HTML SOURCE
@@ -622,6 +624,15 @@ input:focus-visible {
     transition-duration: .01ms !important;
   }
 }
+
+/* SKANDI mobile focus-zoom guard: keep editable controls at iOS-safe 16px without disabling pinch zoom. */
+@media (max-width:767px){
+  input[type="text"],input[type="search"],input[type="email"],input[type="password"],
+  input[type="tel"],input[type="url"],input[type="number"],input[type="date"],
+  input[type="time"],input[type="datetime-local"],input[type="month"],input[type="week"],
+  input:not([type]),select,textarea{font-size:16px!important}
+}
+
 </style>
 </head>
 <body>
