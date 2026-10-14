@@ -18,6 +18,8 @@ LAST SYNCED: 2026-10-13
 ## CHANGE LOG
 - 2026-10-13 — V12 ALTEA chrome sync: Wix Members logout and Return to Dashboard added; non-functional Area/Cryptic UI removed; Office made read-only and sourced from canonical staff/runtime data.
 
+- 2026-10-13 — Desktop chrome authority correction: ALTEA is the sole global header on ALTEA routes (RIAINTRA global header is suppressed by `masterPage.js`); GroupTalk navigation from the ALTEA header opens `/riaintra/success-factors/altea/grouptalk` in a new browser tab and leaves the current ALTEA page in place.
+
 ## COMPLETE INTENDED LIVE HTML SOURCE
 
 ```html
@@ -263,6 +265,7 @@ html, body {
 
   const SOURCE = "SKANDI_ALTEA_HEADER";
   const PARENT = "SKANDI_WIX_PARENT";
+  const GROUPTALK_PATH = "/riaintra/success-factors/altea/grouptalk";
   let config = null;
   let staff = {};
   let runtime = { officeId:"" };
@@ -352,6 +355,17 @@ html, body {
     const btn = event.target.closest("[data-route]");
     if (!btn) return;
     const path = btn.dataset.route;
+    if (path === GROUPTALK_PATH) {
+      const base = String(config?.baseUrl || "").trim();
+      let target = path;
+      if (base) {
+        try {
+          target = new URL(path.replace(/^\//, ""), base.replace(/\/+$/, "") + "/").href;
+        } catch (_) {}
+      }
+      window.open(target, "_blank", "noopener,noreferrer");
+      return;
+    }
     document.querySelectorAll("#navLinks button").forEach(item => item.classList.remove("active"));
     btn.classList.add("active");
     if (config) config.currentPath = path;
