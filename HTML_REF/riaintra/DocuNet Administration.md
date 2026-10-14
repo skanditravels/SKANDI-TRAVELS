@@ -4,18 +4,19 @@
 - Display/page name: DocuNet Administration.
 - System area: `RIAINTRA`.
 - Wix controller: `/src/pages/DocuNet Administration.u5a64.js`.
-- Route/context: `REQUIRES LIVE ROUTE VERIFICATION`.
+- Route/context: `/riaintra/success-factors/docunet/admin`.
 - Wix HTML element: `#docuNetAdminEmbed`.
 - Child source: `SKANDI_DOCUNET_ADMIN`; parent source: `SKANDI_WIX_PARENT`.
 - Current status: **STATICALLY VERIFIED — REQUIRES LIVE TEST** after Wix installation/publication.
 - Source-of-truth status: complete intended V12 HTML payload below.
 - Canonical ownership: `backend/SKANDI_CORE/docuNet.web.js` → `docuNet.js` → DocuNet tables + private `docunet-controlled` storage.
-- Authentication/authorization: public customer surfaces retain the existing customer/member boundary; internal surfaces require canonical `staffAuth` server authorization. Client-provided roles are not authority.
-- Database verification: relevant tables/columns were inspected read-only against the active SKANDI Supabase project on 2026-10-13. No database rows, schema, policies or storage objects were changed.
-- Document source archive: the supplied Dropbox folder could not be opened from the available runtime. No Dropbox document content was guessed or imported. The existing Supabase catalog remains authoritative for document definitions/rules until those source files are explicitly ingested.
-- Last verified: 2026-10-13 UTC.
+- Authentication/authorization: internal surfaces require canonical `staffAuth` server authorization. Client-provided roles are not authority.
+- Database verification: relevant DocuNet/document tables were inspected read-only against the active SKANDI Supabase project on 2026-10-14. No database rows, schema, policies or storage objects were changed.
+- Document source archive: the Dropbox folder supplied on 2026-10-14 could not be opened through an installed/connected Dropbox connector or the available public fetch path. No Dropbox document content was guessed or imported.
+- Last verified: 2026-10-14.
 - Change log:
   - 2026-10-13 — Converged this surface onto `backend/SKANDI_CORE`, removed legacy/missing backend namespace dependency, preserved supplied HTML design/behavior, and documented the complete runtime chain.
+  - 2026-10-14 — Route authority confirmed as `/riaintra/success-factors/docunet/admin`; route registry and PAGE_SETTINGS updated. Re-audited controller/facade chain for Wix proxy failures: current DocuNet facade uses direct named `webMethod(...)` exports rather than wrapper-produced exports.
 
 ## COMPLETE INTENDED HTML
 
@@ -1206,4 +1207,5 @@ post("ADMIN_READY",{storageProvider:"SUPABASE",htmlUploadControl:"docControlUplo
 </script>
 </body>
 </html>
+
 ```
