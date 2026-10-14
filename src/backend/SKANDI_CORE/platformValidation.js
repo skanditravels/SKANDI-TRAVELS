@@ -85,4 +85,3 @@ export function jsonObject(value) {
   if (value && typeof value === "object" && !Array.isArray(value)) return value;
   return {};
 }
-
