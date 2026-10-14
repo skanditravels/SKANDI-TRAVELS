@@ -219,7 +219,7 @@ function safeProviderError(payload) {
   };
 }
 
-async function jsonRequest({ path, method = "GET", body, rawBody = false, prefer = "return=representation", extraHeaders = {} }) {
+async function jsonRequest({ path = "", method = "GET", body = undefined, rawBody = false, prefer = "return=representation", extraHeaders = {} } = {}) {
   const normalizedMethod = text(method, 12).toUpperCase();
   if (!HTTP_METHODS.has(normalizedMethod)) throw new SkandiError("SUPABASE_METHOD_NOT_ALLOWED");
   const { baseUrl, apiKey, type } = await serverConfig();
@@ -231,9 +231,10 @@ async function jsonRequest({ path, method = "GET", body, rawBody = false, prefer
       body: body === undefined ? undefined : rawBody ? body : JSON.stringify(body)
     });
   } catch (error) {
+    const cause = error instanceof Error ? error.message : String(error ?? "");
     throw new SkandiError("SUPABASE_NETWORK_ERROR", "Supabase could not be reached.", {
       retryable: normalizedMethod === "GET" || normalizedMethod === "HEAD",
-      details: { cause: text(error?.message || error, 300) }
+      details: { cause: text(cause, 300) }
     });
   }
 
@@ -258,11 +259,12 @@ async function jsonRequest({ path, method = "GET", body, rawBody = false, prefer
   if (!response.ok) {
     const safe = safeProviderError(payload);
     console.error("[SKANDI Supabase]", JSON.stringify({ status: response.status, path: text(path, 320), ...safe }));
-    const error = new SkandiError(`SUPABASE_HTTP_${response.status}`, safe.message || "Supabase request failed.", {
-      status: response.status, retryable: isTransientHttpStatus(response.status), details: safe
+    throw new SkandiError(`SUPABASE_HTTP_${response.status}`, safe.message || "Supabase request failed.", {
+      status: response.status,
+      retryable: isTransientHttpStatus(response.status),
+      details: safe,
+      supabase: safe
     });
-    error.supabase = safe;
-    throw error;
   }
   return payload;
 }
@@ -291,7 +293,7 @@ function rpcName(name) {
   return value;
 }
 
-export async function restRequest({ table, schema = "public", method = "GET", query = {}, body, prefer = "return=representation" } = {}) {
+export async function restRequest({ table = "", schema = "public", method = "GET", query = {}, body = undefined, prefer = "return=representation" } = {}) {
   const object = restObject(table);
   const profile = restSchema(schema);
   return jsonRequest({
@@ -300,7 +302,7 @@ export async function restRequest({ table, schema = "public", method = "GET", qu
   });
 }
 
-export async function rpcRequest({ functionName, schema = "public", body = {}, prefer = "return=representation" } = {}) {
+export async function rpcRequest({ functionName = "", schema = "public", body = {}, prefer = "return=representation" } = {}) {
   const name = rpcName(functionName);
   const profile = restSchema(schema);
   return jsonRequest({
@@ -322,11 +324,11 @@ function storagePath(path) {
   if (normalized.split("/").some(part => part === "." || part === "..")) throw new SkandiError("SUPABASE_STORAGE_PATH_INVALID");
   return normalized.split("/").filter(Boolean).map(encodeURIComponent).join("/");
 }
-async function storageJson({ path, method = "GET", body, extraHeaders = {} }) {
+async function storageJson({ path = "", method = "GET", body = undefined, extraHeaders = {} } = {}) {
   return jsonRequest({ path: `/storage/v1${path}`, method, body, prefer: "", extraHeaders });
 }
 
-export async function storageCreateSignedUploadUrl({ bucket, path, upsert = false } = {}) {
+export async function storageCreateSignedUploadUrl({ bucket = "", path = "", upsert = false } = {}) {
   const config = storageBucket(bucket, { write: true });
   const encodedPath = storagePath(path);
   const data = await storageJson({
@@ -343,7 +345,7 @@ export async function storageCreateSignedUploadUrl({ bucket, path, upsert = fals
   return { bucket: config.name, path: text(path, 3000).replace(/^\/+/, ""), signedUrl, token, public: config.public === true };
 }
 
-export async function storageCreateSignedReadUrl({ bucket, path, expiresIn = 600, download = false } = {}) {
+export async function storageCreateSignedReadUrl({ bucket = "", path = "", expiresIn = 600, download = false } = {}) {
   const config = storageBucket(bucket);
   if (config.public) {
     const { publicUrl } = await storageGetPublicUrl({ bucket: config.name, path, download });
@@ -362,11 +364,12 @@ export async function storageCreateSignedReadUrl({ bucket, path, expiresIn = 600
   return { bucket: config.name, path, signedUrl, expiresIn: seconds, public: false };
 }
 
-export async function storageGetObjectInfo({ bucket, path } = {}) {
+export async function storageGetObjectInfo({ bucket = "", path = "" } = {}) {
   const config = storageBucket(bucket);
   return storageJson({ path: `/object/info/${encodeURIComponent(config.name)}/${storagePath(path)}`, method: "GET" });
 }
-export async function storageListObjects({ bucket, prefix = "", limit = 100, offset = 0, search = "" } = {}) {
+
+export async function storageListObjects({ bucket = "", prefix = "", limit = 100, offset = 0, search = "" } = {}) {
   const config = storageBucket(bucket);
   return storageJson({
     path: `/object/list/${encodeURIComponent(config.name)}`, method: "POST",
@@ -378,7 +381,8 @@ export async function storageListObjects({ bucket, prefix = "", limit = 100, off
     }
   });
 }
-export async function storageGetPublicUrl({ bucket, path, download = false } = {}) {
+
+export async function storageGetPublicUrl({ bucket = "", path = "", download = false } = {}) {
   const config = storageBucket(bucket);
   if (!config.public) throw new SkandiError("SUPABASE_STORAGE_BUCKET_NOT_PUBLIC");
   const { baseUrl } = await serverConfig();
@@ -405,7 +409,7 @@ export async function getSupabaseServerDiagnostics() {
   };
 }
 
-export async function realtimeBroadcast({ topic, event = "broadcast", payload = {} } = {}) {
+export async function realtimeBroadcast({ topic = "", event = "broadcast", payload = {} } = {}) {
   const safeTopic = text(topic, 240);
   const safeEvent = text(event, 120);
   if (!safeTopic) throw new SkandiError("SUPABASE_REALTIME_TOPIC_REQUIRED");
@@ -417,14 +421,16 @@ export async function realtimeBroadcast({ topic, event = "broadcast", payload = 
     method: "POST", headers, body: JSON.stringify({ messages: [{ topic: safeTopic, event: safeEvent, payload }] })
   });
   const raw = await response.text().catch(() => "");
-  if (!response.ok) throw new SkandiError(`SUPABASE_REALTIME_HTTP_${response.status}`, {
-    status: response.status, details: raw.slice(0, 500)
-  });
+  if (!response.ok) throw new SkandiError(
+    `SUPABASE_REALTIME_HTTP_${response.status}`,
+    "Supabase realtime broadcast failed.",
+    { status: response.status, details: raw.slice(0, 500) }
+  );
   return { ok: true, topic: safeTopic, event: safeEvent };
 }
 
 export async function storageUploadBase64Object({
-  bucket, path, dataBase64, mimeType = "application/octet-stream",
+  bucket = "", path = "", dataBase64 = "", mimeType = "application/octet-stream",
   maxBytes = 10 * 1024 * 1024, upsert = false
 } = {}) {
   const config = storageBucket(bucket, { write: true });
