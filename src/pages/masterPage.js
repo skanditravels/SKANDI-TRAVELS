@@ -225,11 +225,49 @@ const CHROME_FREE_PATHS = Object.freeze([
   "/the-store"
 ]);
 
+const MOBILE_FOOTER_GATE_PATHS = Object.freeze(new Set([
+  "/search",
+  "/flights",
+  "/car-rental",
+  "/hotels",
+  "/packages",
+  "/tours",
+  "/activities",
+  "/transfers",
+  "/offers",
+  "/my-profile/support",
+  "/riaintra/success-factors",
+  "/riaintra/success-factors/legal-internal",
+  "/riaintra/success-factors/legal-internal/policies-internal",
+  "/riaintra/success-factors/policy-control",
+  "/riaintra/success-factors/altea",
+  "/riaintra/success-factors/altea/reservations",
+  "/riaintra/success-factors/altea/inventory-control",
+  "/riaintra/success-factors/altea/timatic",
+  "/riaintra/success-factors/mail",
+  "/riaintra/success-factors/docunet",
+  "/riaintra/success-factors/helpdesk",
+  "/riaintra/success-factors/media-control",
+  "/riaintra/success-factors/store-control",
+  "/riaintra/success-factors/payroll",
+  "/riaintra/success-factors/uniform",
+  "/riaintra/success-factors/uniform/admin-control",
+  "/my-profile",
+  "/riaintra/success-factors/my-roster",
+  "/travel-info/flight-status"
+].map(normalizePath)));
+const MOBILE_FOOTER_GATE_POLL_MS = 120;
+const MOBILE_FOOTER_GATE_SCROLL_THRESHOLD = 1;
+
 let alteaRuntimeContext = { workArea:"A", crypticActive:false, officeId:"", lmcMode:false };
 let customerSettings = readCustomerSettings();
 const wiredEmbeds = new WeakSet();
 let locationChangeWired = false;
 let presentationState = { path:"", value:null, promise:null };
+let mobileFooterGateTimer = null;
+let mobileFooterGatePath = "";
+let mobileFooterGateRevealed = false;
+let mobileFooterGateBusy = false;
 
 const CHROME_BY_SOURCE = Object.freeze(Object.fromEntries(
   Object.values(GLOBAL_CHROME).map(definition => [definition.source, definition])
@@ -350,6 +388,19 @@ function isAlteaPath(path = currentPathString()) {
 function isChromeFreePath(path = currentPathString()) {
   return CHROME_FREE_PATHS.includes(normalizePath(path));
 }
+function isMobileDevice() {
+  try { return wixWindowFrontend.formFactor === "Mobile"; } catch (_) { return false; }
+}
+function isMobileFooterGatePath(path = currentPathString()) {
+  const value = normalizePath(path);
+  return isMobileDevice() && !isChromeFreePath(value) && MOBILE_FOOTER_GATE_PATHS.has(value);
+}
+function footerElementForPath(path = currentPathString()) {
+  const internal = isInternalPath(path);
+  if (!internal) return firstExisting(IDS.customerFooters);
+  if (isAlteaPath(path)) return firstExisting(IDS.alteaFooters);
+  return firstExisting(IDS.internalFooters);
+}
 function isSafeRoute(path) { return isSafeInternalRoute(path); }
 
 function postToEmbed(embed, type, payload = {}) {
@@ -383,7 +434,9 @@ function wireLocationChangeScroll() {
   try {
     wixLocationFrontend.onChange(async () => {
       scheduleScrollViewportToTop("location-change");
+      stopMobileFooterGate();
       await applyChromeVisibility();
+      startMobileFooterGate();
       pushConfigToAll();
     });
   } catch (_) {}
@@ -796,6 +849,53 @@ async function setElementVisible(element, visible) {
     }
   } catch (_) {}
 }
+async function setElementDisplayPreserveLayout(element, visible) {
+  if (!element) return;
+  try {
+    if (typeof element.expand === "function") await element.expand();
+    if (visible) {
+      if (typeof element.show === "function") await element.show();
+    } else if (typeof element.hide === "function") {
+      await element.hide();
+    }
+  } catch (_) {}
+}
+async function syncMobileFooterGate({ force = false } = {}) {
+  const path = currentPathString();
+  if (!isMobileFooterGatePath(path)) {
+    stopMobileFooterGate();
+    return;
+  }
+  if (mobileFooterGateBusy && !force) return;
+  mobileFooterGateBusy = true;
+  try {
+    const info = await wixWindowFrontend.getBoundingRect();
+    if (!info) return;
+    const scrollY = Math.max(0, Number(info?.scroll?.y || 0));
+    const reveal = scrollY > MOBILE_FOOTER_GATE_SCROLL_THRESHOLD;
+    if (!force && reveal === mobileFooterGateRevealed && mobileFooterGatePath === normalizePath(path)) return;
+    mobileFooterGatePath = normalizePath(path);
+    mobileFooterGateRevealed = reveal;
+    await setElementDisplayPreserveLayout(footerElementForPath(path), reveal);
+  } catch (_) {
+    // If the viewport API is temporarily unavailable, keep the footer hidden but expanded.
+  } finally {
+    mobileFooterGateBusy = false;
+  }
+}
+function stopMobileFooterGate() {
+  if (mobileFooterGateTimer) clearInterval(mobileFooterGateTimer);
+  mobileFooterGateTimer = null;
+  mobileFooterGatePath = "";
+  mobileFooterGateRevealed = false;
+  mobileFooterGateBusy = false;
+}
+function startMobileFooterGate() {
+  stopMobileFooterGate();
+  if (!isMobileFooterGatePath()) return;
+  syncMobileFooterGate({ force:true });
+  mobileFooterGateTimer = setInterval(() => syncMobileFooterGate(), MOBILE_FOOTER_GATE_POLL_MS);
+}
 
 async function applyChromeVisibility() {
   const path = currentPathString();
@@ -806,13 +906,24 @@ async function applyChromeVisibility() {
   const showRiaintraChrome = !chromeFree && internal && !altea;
   const showAlteaChrome = !chromeFree && internal && altea;
 
+  const mobileGate = isMobileFooterGatePath(path);
+  const customerFooter = firstExisting(IDS.customerFooters);
+  const internalFooter = firstExisting(IDS.internalFooters);
+  const alteaFooter = firstExisting(IDS.alteaFooters);
+
   await Promise.all([
     setElementVisible(firstExisting(IDS.customerHeaders), showCustomerChrome),
-    setElementVisible(firstExisting(IDS.customerFooters), showCustomerChrome),
+    mobileGate && showCustomerChrome
+      ? setElementDisplayPreserveLayout(customerFooter, false)
+      : setElementVisible(customerFooter, showCustomerChrome),
     setElementVisible(firstExisting(IDS.internalHeaders), showRiaintraChrome),
-    setElementVisible(firstExisting(IDS.internalFooters), showRiaintraChrome),
+    mobileGate && showRiaintraChrome
+      ? setElementDisplayPreserveLayout(internalFooter, false)
+      : setElementVisible(internalFooter, showRiaintraChrome),
     setElementVisible(firstExisting(IDS.alteaHeaders), showAlteaChrome),
-    setElementVisible(firstExisting(IDS.alteaFooters), showAlteaChrome)
+    mobileGate && showAlteaChrome
+      ? setElementDisplayPreserveLayout(alteaFooter, false)
+      : setElementVisible(alteaFooter, showAlteaChrome)
   ]);
 }
 function pushConfigToAll() {
@@ -821,6 +932,7 @@ function pushConfigToAll() {
 
 $w.onReady(async function () {
   await applyChromeVisibility();
+  startMobileFooterGate();
   scheduleScrollViewportToTop("page-ready");
   wireLocationChangeScroll();
   wireAllHtmlComponents();
@@ -853,6 +965,6 @@ $w.onReady(async function () {
     });
   } catch (_) {}
 
-  setTimeout(async () => { wireAllHtmlComponents(); await applyChromeVisibility(); pushConfigToAll(); }, 250);
-  setTimeout(async () => { wireAllHtmlComponents(); await applyChromeVisibility(); pushConfigToAll(); }, 1200);
+  setTimeout(async () => { wireAllHtmlComponents(); await applyChromeVisibility(); await syncMobileFooterGate({ force:true }); pushConfigToAll(); }, 250);
+  setTimeout(async () => { wireAllHtmlComponents(); await applyChromeVisibility(); await syncMobileFooterGate({ force:true }); pushConfigToAll(); }, 1200);
 });
