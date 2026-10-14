@@ -6,12 +6,12 @@
 - Customer route: `/the-store`
 - Installed HTML element: `#skandiStoreEmbed`
 - Complete replacement embed: `/embed/The-Store.html`
-- Canonical backend chain: `backend/SKANDI_CORE/storefront.web.js → storefront.js`; `storeCartV2.web.js → Wix Current Cart V2`; checkout gift-card redemption remains owned by `storeCheckout.web.js → storeCheckout.js`.
-- Gift Card purchase authority: native Wix Gift Cards app/page at `/gift-card`; SKANDI does not create or maintain a parallel stored-value ledger.
+- Canonical backend chain: `backend/SKANDI_CORE/storefront.web.js → storefront.js`; `storeCartV2.web.js → Wix Current Cart V2`; `storeGiftCards.web.js → storeGiftCards.js → Wix Gift Cards / Wix Automations`; checkout gift-card redemption remains owned by `storeCheckout.web.js → storeCheckout.js`.
+- Gift Card purchase authority: Wix Gift Cards remains the stored-value/code/balance authority. The Store presents each configured preset denomination as a virtual SKANDI Store product and carries the selected SKANDI design/recipient data into the paid-order fulfillment flow; no parallel stored-value ledger is created.
 - Authority: public catalog; Wix visitor/member owns the current cart. Existing support, catalog, cart and checkout boundaries remain in place.
 - Status: STATICALLY VERIFIED / REQUIRES LIVE TEST.
-- Last source verification: 2026-10-13 against `skanditravels/SKANDI-TRAVELS`, `main`, head `77845115c0d3a839a845522f3ecbfbfd69c82153`, preserving the approved 2026-10-07 Store repair and 2026-10-08 image repair.
-- Intended source only: this package does not modify GitHub, deployed Wix code, Wix Gift Card settings or Supabase.
+- Last source verification: 2026-10-13 against `skanditravels/SKANDI-TRAVELS`, `main`, head `96e4b8598c5ab2c176f8b838fbc35e6ca9c2971c`, preserving the approved 2026-10-07 Store repair and 2026-10-08 image repair.
+- Intended source only: this package does not modify GitHub, deployed Wix code, Wix Gift Card/Loyalty settings, Automations or Supabase.
 
 ## 2026-10-07 — V12 complete-chain repair
 
@@ -37,7 +37,20 @@ The custom Store checkout is extended separately to apply and remove a Wix Gift 
 
 STATICALLY VERIFIED: Store navigation uses the existing `STOREFRONT_NAVIGATE` boundary and the route passes the existing internal-route validation. REQUIRES LIVE TEST: activate/configure Wix Gift Cards, publish, purchase a real test card, confirm recipient delivery, then redeem/remove it in the custom Store checkout.
 
+## 2026-10-13 — V12 Store-native Gift Cards + SKANDI Points integration
+
+Supersedes the earlier 2026-10-13 link-only Gift Card Store entry while preserving its Wix-underlay principle. The Store now receives the single live Wix Gift Card Product through `backend/SKANDI_CORE/storeGiftCards.web.js → storeGiftCards.js`, expands each Wix preset denomination into its own virtual Store product, and renders multiple SKANDI design images on every denomination detail page. The customer selects a design, recipient, sender, message and optional delivery date before the gift card is added to the existing Wix Current Cart V2 as a fixed, non-shippable `GIFT_CARD` custom item.
+
+The selected design and recipient data are carried in the order line description contract. After the custom checkout returns a verified paid order, Order Confirmation calls the canonical gift-card finalizer. The finalizer re-verifies order ownership in caller context, validates the paid gift-card line against the current Wix Gift Card Product denominations, creates the stored-value card through Wix Gift Cards with an idempotency key, and runs the design-specific Wix Automation trigger. Full redemption codes are deterministically derived with the backend-only `SKANDI_GIFT_CARD_CODE_KEY`; the automation trigger map is read from `SKANDI_GIFT_CARD_AUTOMATION_TRIGGERS`. Neither secret is exposed to the embed.
+
+Wix Loyalty is the SKANDI Points authority. Do not add a second points ledger or call manual Earn Points from this Store flow. After Wix Loyalty is installed, configure the Wix Stores paid-order earning rule (`stores/OrderPaid`) with the approved SKANDI Points conversion rate. The existing Store products then earn through Wix Loyalty. Gift-card-only orders use a custom Cart V2 `GIFT_CARD` item, so their eligibility under the Stores paid-order trigger must be proven in the published site before claiming points for gift-card purchases. The live site did not have Wix Loyalty installed during source verification, so points activation remains an explicit deployment prerequisite rather than a fabricated runtime success.
+
+STATICALLY VERIFIED: Store message contracts, Cart V2 custom-item shape, paid-order ownership boundary, Wix Gift Card Product preset values, Wix Gift Card create/idempotency contract, style-to-automation payload contract, and existing Gift Card redemption checkout path. REQUIRES LIVE TEST: install/configure Wix Loyalty; create the five design automations and secrets; publish the supplied files; buy each denomination/design through the custom Store checkout; verify one Wix Gift Card is created per paid gift-card order line; verify the matching design email; redeem the card; verify SKANDI Points are credited once for normal Store purchases; separately verify a gift-card-only order before treating gift-card purchases as points-eligible.
+
 ## Historical INFO / LOG (preserved)
+
+
+
 
 # INFO / LOG — THE STORE
 
@@ -614,6 +627,30 @@ body.page-product .search-dock{display:none}
 .product-media{background:linear-gradient(145deg,#f6f9fc,#edf3f8)}
 button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #5fc7cf;outline-offset:3px}
 @media(prefers-reduced-motion:reduce){.product-card{transition:none}.product-card:hover{transform:none}}
+
+
+/* V12 SKANDI Gift Cards — Store-native presentation over Wix Gift Cards. */
+.gift-card-product-page{align-items:start}
+.gift-card-gallery{display:grid;gap:14px;min-width:0}
+.gift-card-main{background:#f4f7fb;border:1px solid var(--border,#d9e0e8);padding:18px;display:flex;align-items:center;justify-content:center;min-height:420px}
+.gift-card-main img{display:block;width:100%;height:auto;max-height:560px;object-fit:contain;border-radius:18px;box-shadow:0 18px 45px rgba(2,46,100,.14)}
+.gift-card-thumbnails{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.gift-card-style{border:1px solid var(--border,#d9e0e8);background:#fff;padding:8px;text-align:left;cursor:pointer;transition:border-color .18s ease,box-shadow .18s ease,transform .18s ease}
+.gift-card-style:hover{transform:translateY(-1px);border-color:#8ca4bf}
+.gift-card-style.active{border-color:#022e64;box-shadow:0 0 0 2px rgba(2,46,100,.12)}
+.gift-card-style img{display:block;width:100%;aspect-ratio:1.58/1;object-fit:cover;border-radius:7px;margin-bottom:7px}
+.gift-card-style span{display:block;font-size:12px;font-weight:700;color:#1b2a3a}
+.gift-card-selection-copy{margin:18px 0 10px;font-size:13px;color:#526170}
+.gift-card-form{display:grid;grid-template-columns:1fr 1fr;gap:14px 16px;margin:12px 0 20px;padding:18px;background:#f8fafc;border:1px solid var(--border,#d9e0e8)}
+.gift-card-field{display:flex;flex-direction:column;gap:7px}
+.gift-card-field-wide{grid-column:1/-1}
+.gift-card-field label{font-size:12px;font-weight:800;color:#1c2938}
+.gift-card-field input,.gift-card-field textarea{width:100%;border:1px solid #cbd5df;background:#fff;color:#142033;padding:12px 13px;font:inherit;border-radius:0;outline:none}
+.gift-card-field input:focus,.gift-card-field textarea:focus{border-color:#022e64;box-shadow:0 0 0 2px rgba(2,46,100,.08)}
+.gift-card-field textarea{resize:vertical;min-height:92px}
+.gift-card-field small{font-size:11px;color:#6d7884}
+.gift-card-actions{margin-top:4px}
+@media(max-width:800px){.gift-card-main{min-height:280px;padding:12px}.gift-card-thumbnails{grid-template-columns:repeat(2,minmax(0,1fr))}.gift-card-form{grid-template-columns:1fr}.gift-card-field-wide{grid-column:auto}}
 </style></head>
 <body>
 <a class="sr" href="#productGrid">Skip to products</a>
@@ -639,7 +676,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
       <button id="categoriesBtn">Categories</button>
       <button data-category="SKANDI">SKANDI collection</button>
       <button data-category="Gift">Gifts</button>
-      <button data-open-path="/gift-card">Gift Cards</button>
+      <button data-category="Gift Cards">Gift Cards</button>
       <button data-category="Sale">Offers</button>
     </nav>
     <div class="header-actions">
@@ -665,7 +702,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
       </label>
       <input id="quickSearch" class="hidden" aria-hidden="true" tabindex="-1"/>
       <div class="quick-links" id="topTabs">
-        <button data-category="Travel Essentials">For the journey</button><button data-category="Luggage">Luggage</button><button data-category="Beach">Beach</button><button data-category="Family">Family</button><button data-open-path="/gift-card">Gift Cards</button><button data-category="New">New arrivals</button>
+        <button data-category="Travel Essentials">For the journey</button><button data-category="Luggage">Luggage</button><button data-category="Beach">Beach</button><button data-category="Family">Family</button><button data-category="Gift Cards">Gift Cards</button><button data-category="New">New arrivals</button>
       </div>
     </div>
   </div>
@@ -1023,7 +1060,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
       <div class="footer-brand"><img id="storeFooter" data-master-logo="storeFooter" src="https://static.wixstatic.com/media/394052_cd31153a91694b14a27c5f756f8089bd~mv2.png" alt="SKANDI The Store"><span>The Store</span></div>
       <p>Travel essentials, luggage, gifts and SKANDI products.</p>
     </div>
-    <div><h4>Shop</h4><button data-route="shop">All products</button><button id="footerCategoriesBtn">Categories</button><button data-category="SKANDI">SKANDI collection</button><button data-category="Gift">Gifts</button><button data-open-path="/gift-card">Gift Cards</button></div>
+    <div><h4>Shop</h4><button data-route="shop">All products</button><button id="footerCategoriesBtn">Categories</button><button data-category="SKANDI">SKANDI collection</button><button data-category="Gift">Gifts</button><button data-category="Gift Cards">Gift Cards</button></div>
     <div><h4>Travel</h4><button data-category="Luggage">Luggage</button><button data-category="Travel Essentials">Travel essentials</button><button data-category="Beach">Beach</button><button data-category="Family">Family</button></div>
     <div><h4>Support</h4><button data-route="support">Customer service</button><button data-route="orders">My orders</button><button data-open-path="/terms">Terms</button><button data-open-path="/privacy">Privacy</button><button id="refreshStoreBtn">Refresh store</button></div>
   </div>
@@ -1034,7 +1071,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
   <div class="mobile-nav-head"><div class="brand-mark"><img data-master-logo="storeHeader" src="https://static.wixstatic.com/media/394052_eaf2188b7f7e48468fa25d61f8881b10~mv2.png" alt="SKANDI The Store"></div><div class="brand-divider"></div><button class="close-button" data-close="mobile">×</button></div>
   <div class="mobile-nav-body" id="mobileNavList">
     <div class="mobile-nav-heading">Store</div>
-    <button data-route="home">Home</button><button data-route="shop">All products</button><button id="mobileCategoriesBtn">Categories</button><button data-category="SKANDI">SKANDI collection</button><button data-category="Gift">Gifts</button><button data-open-path="/gift-card">Gift Cards</button><button data-category="Sale">Offers</button>
+    <button data-route="home">Home</button><button data-route="shop">All products</button><button id="mobileCategoriesBtn">Categories</button><button data-category="SKANDI">SKANDI collection</button><button data-category="Gift">Gifts</button><button data-category="Gift Cards">Gift Cards</button><button data-category="Sale">Offers</button>
     <div class="mobile-nav-heading">My store</div>
     <button data-route="saved">Saved products</button><button data-route="bag">Shopping bag</button><button data-route="orders">My orders</button><button data-route="support">Customer service</button>
   </div>
@@ -1053,7 +1090,7 @@ let PRODUCTS=[],CATEGORIES=[],CART={lineItems:[]},BANNERS=[],TRAVEL_CARDS=[];
 let STOREFRONT_CONNECTED=false;
 let STOREFRONT_REQUEST_ATTEMPTS=0;
 let STOREFRONT_RETRY_TIMER=null;
-let ACTIVE="",ACTIVE_PRODUCT=null,FILTERS={stock:false,sale:false},VISIBLE_LIMIT=12;
+let ACTIVE="",ACTIVE_PRODUCT=null,ACTIVE_GIFT_STYLE="",FILTERS={stock:false,sale:false},VISIBLE_LIMIT=12;
 let SAVED=new Set(loadSaved());
 const $=id=>document.getElementById(id);
 const esc=v=>String(v??"").replace(/[&<>'"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[c]));
@@ -1138,6 +1175,25 @@ function money(price){
   return `${price.currency||""} ${amount.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}`.trim();
 }
 function textOf(p){return [p.name,p.brand,p.description,p.summary,p.sku,(p.categoryNames||[]).join(" "),p.ribbon,p.badge,p.recommendation].join(" ").toLowerCase()}
+function giftCardArtwork(style={},amount=""){
+  const bg=String(style.background||"#022e64"),secondary=String(style.secondary||"#063f78"),accent=String(style.accent||"#5FC7CF"),text=String(style.text||"#FFFFFF");
+  const label=String(style.name||"SKANDI Gift Card"),value=String(amount||""),motif=String(style.motif||"wave");
+  const motifSvg={
+    wave:`<path d="M-90 545 C170 402 345 704 630 522 C850 382 1018 552 1285 402" fill="none" stroke="${accent}" stroke-width="22" opacity=".92"/><path d="M-90 598 C172 456 354 744 648 566 C878 428 1036 597 1285 456" fill="none" stroke="${text}" stroke-width="4" opacity=".46"/>`,
+    horizon:`<circle cx="925" cy="216" r="126" fill="none" stroke="${accent}" stroke-width="3" opacity=".45"/><path d="M675 215h500M735 155h380M735 275h380" stroke="${accent}" stroke-width="2" opacity=".28"/><path d="M-60 515 C230 460 445 545 730 500 C935 468 1080 487 1280 442" fill="none" stroke="${accent}" stroke-width="13" opacity=".85"/><path d="M816 197l145 35-145 35 28-35-28-35Z" fill="${text}" opacity=".92"/>`,
+    nordic:`<path d="M730 112h350v350H730z" fill="none" stroke="${accent}" stroke-width="2" opacity=".22"/><path d="M730 112l350 350M1080 112L730 462" stroke="${accent}" stroke-width="2" opacity=".22"/><path d="M78 540h760" stroke="${accent}" stroke-width="8"/><circle cx="1008" cy="552" r="82" fill="${secondary}" opacity=".7"/><circle cx="1008" cy="552" r="43" fill="none" stroke="${accent}" stroke-width="5"/>`,
+    celebration:`<g fill="${accent}" opacity=".9"><circle cx="820" cy="170" r="8"/><circle cx="930" cy="116" r="6"/><circle cx="1055" cy="205" r="10"/><circle cx="890" cy="310" r="7"/><circle cx="1120" cy="344" r="6"/></g><g stroke="${text}" stroke-width="5" opacity=".7"><path d="M770 98l22 42M990 260l33 26M1088 112l-20 42M852 246l-37 22M1142 252l31-22"/></g><path d="M-70 605 C210 470 380 720 665 570 C895 449 1030 565 1280 460" fill="none" stroke="${accent}" stroke-width="16" opacity=".82"/>`,
+    platinum:`<defs><linearGradient id="metal" x1="0" x2="1"><stop offset="0" stop-color="${accent}" stop-opacity=".16"/><stop offset=".48" stop-color="${text}" stop-opacity=".62"/><stop offset="1" stop-color="${accent}" stop-opacity=".12"/></linearGradient></defs><rect x="686" y="88" width="420" height="430" rx="28" fill="url(#metal)" opacity=".52"/><path d="M720 142h350M720 194h350M720 246h350M720 298h350M720 350h350M720 402h350" stroke="${text}" stroke-width="1" opacity=".22"/><path d="M72 548h1035" stroke="${accent}" stroke-width="3" opacity=".75"/>`
+  }[motif]||"";
+  const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${bg}"/><stop offset="1" stop-color="${secondary}"/></linearGradient></defs><rect width="1200" height="760" rx="42" fill="url(#g)"/>${motifSvg}<text x="82" y="122" fill="${text}" font-family="Arial,Helvetica,sans-serif" font-size="48" font-weight="700" letter-spacing="6">SKANDI</text><text x="82" y="178" fill="${text}" font-family="Arial,Helvetica,sans-serif" font-size="24" letter-spacing="5">GIFT CARD</text><text x="82" y="618" fill="${text}" font-family="Arial,Helvetica,sans-serif" font-size="30">${esc(label)}</text><text x="1112" y="650" text-anchor="end" fill="${text}" font-family="Arial,Helvetica,sans-serif" font-size="76" font-weight="700">${esc(value)}</text></svg>`;
+  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+}
+function hydrateGiftCardProduct(product={}){
+  const amount=product.giftCardValue?.formatted||product.price?.formatted||money(product.price);
+  const styles=(product.styles||[]).map(style=>({...style,imageUrl:giftCardArtwork(style,amount)}));
+  const images=[...styles.map(style=>style.imageUrl),...(product.imageCandidates||[]),product.imageUrl].filter(Boolean);
+  return normalizeProductImage({...product,styles,imageCandidates:[...new Set(images)],imageUrl:images[0]||product.imageUrl||""});
+}
 function browserImageUrl(value){
   if(typeof value!=="string")return"";
   const raw=value.trim();if(!raw)return"";
@@ -1406,21 +1462,24 @@ function categoryItem(name){
   return `<button class="category-orb" data-category="${esc(name)}"><span class="category-orb-media" style="${imageStyle(url)}">${url?"":`<span class="category-initials">${esc(initials)}</span>`}</span><span class="category-orb-label">${esc(name)}</span></button>`;
 }
 function renderCategories(){
-  const defaults=["Travel Essentials","Luggage","SKANDI","Beach","Family","Gifts"];
+  const defaults=["Travel Essentials","Luggage","SKANDI","Beach","Family","Gifts","Gift Cards"];
   const names=[...new Set([...categoryNames(),...defaults])].slice(0,12);
   $("popularCategories").innerHTML=names.slice(0,6).map(categoryItem).join("");
   $("categoryMenuList").innerHTML=`<button data-category="">All products</button>`+names.map(n=>`<button data-category="${esc(n)}">${esc(n)}</button>`).join("");
 }
 function productCard(p){
   const disabled=p.inStock===false||p.canAddToCart===false;
-  const label=p.accessLabel||p.ribbon||(p.inStock===false?"Sold out":isSale(p)?"Offer":"");
+  const label=p.virtualGiftCard?"":(p.accessLabel||p.ribbon||(p.inStock===false?"Sold out":isSale(p)?"Offer":""));
+  const action=p.virtualGiftCard
+    ? `<button data-view="${esc(p.id)}">Choose design</button>`
+    : `<button data-add="${esc(p.id)}" ${disabled?"disabled":""}>${disabled?"Unavailable":"Add to bag"}</button>`;
   return `<article class="product-card">
     <div class="product-media">
       ${imageTagForProduct(p,p.name||"Product")}
       ${p.imageUrl?"":`<span class="product-placeholder">SKANDI</span>`}
       ${label?`<span class="product-ribbon">${esc(label)}</span>`:""}
       <button class="save-button" data-save="${esc(p.id)}" aria-label="Save ${esc(p.name)}">${SAVED.has(String(p.id))?"♥":"♡"}</button>
-      <div class="product-overlay"><button data-view="${esc(p.id)}">View product</button><button data-add="${esc(p.id)}" ${disabled?"disabled":""}>${disabled?"Unavailable":"Add to bag"}</button></div>
+      <div class="product-overlay"><button data-view="${esc(p.id)}">View product</button>${action}</div>
     </div>
     <div class="product-content">
       <button class="product-card-link" data-view="${esc(p.id)}">
@@ -1458,6 +1517,77 @@ function selectedChoices(scope){
   document.querySelectorAll(`[data-option-scope="${scope}"]`).forEach(s=>out[s.dataset.option]=s.value);
   return out;
 }
+function selectGiftStyle(styleId){
+  const p=ACTIVE_PRODUCT;
+  if(!p?.virtualGiftCard)return;
+  const style=(p.styles||[]).find(item=>String(item.id)===String(styleId));
+  if(!style)return;
+  ACTIVE_GIFT_STYLE=style.id;
+  document.querySelectorAll("[data-gift-style]").forEach(button=>button.classList.toggle("active",button.dataset.giftStyle===style.id));
+  const image=$("giftCardHeroImage");if(image)image.src=style.imageUrl||p.imageUrl||"";
+  const label=$("giftCardSelectedStyle");if(label)label.textContent=style.name||"Selected design";
+}
+function renderGiftCardProductPage(p,host){
+  ACTIVE_PRODUCT=p;
+  ACTIVE_GIFT_STYLE=p.styles?.[0]?.id||"";
+  $("relatedSection").classList.remove("hidden");
+  $("productBreadcrumb").textContent=p.name||"SKANDI Gift Card";
+  const selected=p.styles?.[0]||{};
+  const today=new Date().toISOString().slice(0,10);
+  host.innerHTML=`<div class="product-page gift-card-product-page">
+    <div class="gift-card-gallery">
+      <div class="gift-card-main"><img id="giftCardHeroImage" src="${esc(selected.imageUrl||p.imageUrl||"")}" alt="${esc(selected.name||p.name||"SKANDI Gift Card")}"></div>
+      <div class="gift-card-thumbnails" aria-label="Gift card designs">${(p.styles||[]).map(style=>`<button type="button" class="gift-card-style ${style.id===ACTIVE_GIFT_STYLE?"active":""}" data-gift-style="${esc(style.id)}" aria-label="${esc(style.name)}"><img src="${esc(style.imageUrl||"")}" alt="${esc(style.name)}"><span>${esc(style.name)}</span></button>`).join("")}</div>
+    </div>
+    <div class="product-page-info">
+      <div class="product-page-kicker">SKANDI Gift Card</div>
+      <h1 class="product-page-title">${esc(p.name||"SKANDI Gift Card")}</h1>
+      <div class="product-page-price">${esc(money(p.price))}</div>
+      <p class="product-page-description">${esc(p.description||p.summary||"")}</p>
+      <div class="gift-card-selection-copy">Selected design: <strong id="giftCardSelectedStyle">${esc(selected.name||"")}</strong></div>
+      <div class="gift-card-form" id="giftCardForm">
+        <div class="gift-card-field"><label for="giftRecipientName">Recipient name</label><input id="giftRecipientName" maxlength="200" autocomplete="name" placeholder="Recipient name"></div>
+        <div class="gift-card-field"><label for="giftRecipientEmail">Recipient email</label><input id="giftRecipientEmail" type="email" maxlength="254" autocomplete="email" placeholder="recipient@example.com"></div>
+        <div class="gift-card-field"><label for="giftSenderName">From</label><input id="giftSenderName" maxlength="200" placeholder="Your name"></div>
+        <div class="gift-card-field gift-card-field-wide"><label for="giftMessage">Personal message</label><textarea id="giftMessage" maxlength="500" rows="4" placeholder="Add an optional message"></textarea><small>Up to 500 characters.</small></div>
+        <div class="gift-card-field"><label for="giftDeliveryDate">Delivery date</label><input id="giftDeliveryDate" type="date" min="${today}"><small>Leave blank to send after payment.</small></div>
+      </div>
+      <div class="product-page-actions gift-card-actions">
+        <button class="cta navy" data-gift-card-add="${esc(p.id)}">Add gift card to bag</button>
+        <button class="icon-square" data-save="${esc(p.id)}" aria-label="Save gift card">${SAVED.has(String(p.id))?"♥":"♡"}</button>
+      </div>
+      <div class="product-page-meta">
+        <div><small>Gift card value</small><strong>${esc(p.giftCardValue?.formatted||money(p.price))}</strong></div>
+        <div><small>Delivery</small><strong>Digital</strong></div>
+      </div>
+      <div class="accordion">
+        <details open><summary>How it works</summary><p>Choose a design and recipient. After payment, SKANDI issues the stored value through Wix Gift Cards and sends the selected SKANDI design using the configured gift-card automation.</p></details>
+        <details><summary>Using the gift card</summary><p>The recipient receives a redemption code that can be applied as a gift card payment method during SKANDI checkout.</p></details>
+      </div>
+    </div>
+  </div>`;
+  const related=PRODUCTS.filter(x=>x.virtualGiftCard&&String(x.id)!==String(p.id)).slice(0,4);
+  $("relatedProductGrid").innerHTML=related.map(productCard).join("");
+}
+function giftCardPurchasePayload(p){
+  const recipientName=String($("giftRecipientName")?.value||"").trim();
+  const recipientEmail=String($("giftRecipientEmail")?.value||"").trim();
+  const senderName=String($("giftSenderName")?.value||"").trim();
+  const message=String($("giftMessage")?.value||"").trim();
+  const deliveryDate=String($("giftDeliveryDate")?.value||"").trim();
+  if(!ACTIVE_GIFT_STYLE){toast("Choose a gift card design.");return null}
+  if(!recipientName){toast("Enter the recipient's name.");$("giftRecipientName")?.focus();return null}
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recipientEmail)){toast("Enter a valid recipient email address.");$("giftRecipientEmail")?.focus();return null}
+  if(!senderName){toast("Enter the sender name.");$("giftSenderName")?.focus();return null}
+  return {
+    virtualProductId:p.id,
+    giftCardProductId:p.giftCardProductId,
+    giftCardVariantId:p.giftCardVariantId,
+    amount:p.giftCardValue?.amount||p.price?.amount,
+    styleId:ACTIVE_GIFT_STYLE,
+    recipientName,recipientEmail,senderName,message,deliveryDate
+  };
+}
 function renderProductPage(id){
   const p=PRODUCTS.find(x=>String(x.id)===String(id));
   const host=$("productPageContent");
@@ -1468,7 +1598,9 @@ function renderProductPage(id){
     $("productBreadcrumb").textContent="Product unavailable";
     return;
   }
+  if(p.virtualGiftCard){renderGiftCardProductPage(p,host);return}
   ACTIVE_PRODUCT=p;
+  ACTIVE_GIFT_STYLE="";
   $("relatedSection").classList.remove("hidden");
   $("productBreadcrumb").textContent=p.name||"Product";
   const disabled=p.inStock===false||p.canAddToCart===false;
@@ -1555,6 +1687,7 @@ let ADDING=false;
 function addToCart(id,qty=1,choices={}){
   if(ADDING)return;
   const p=PRODUCTS.find(x=>String(x.id)===String(id));if(!p)return;
+  if(p.virtualGiftCard){navigate("product",{id});toast("Choose a design and recipient details first.");return}
   if(p.canAddToCart===false||p.inStock===false){toast(p.accessMessage||"This product is currently unavailable.");return}
   if((p.options||[]).some(o=>!choices[o.name])){navigate("product",{id});toast("Choose your product options first.");return}
   ADDING=true;
@@ -1691,6 +1824,15 @@ function handleClick(event){
   if(view){navigate("product",{id:view.dataset.view});return}
   const add=event.target.closest("[data-add]");
   if(add){addToCart(add.dataset.add,1,{});return}
+  const giftStyle=event.target.closest("[data-gift-style]");
+  if(giftStyle){selectGiftStyle(giftStyle.dataset.giftStyle);return}
+  const giftAdd=event.target.closest("[data-gift-card-add]");
+  if(giftAdd){
+    const p=PRODUCTS.find(x=>String(x.id)===String(giftAdd.dataset.giftCardAdd));
+    if(!p)return;
+    const payload=giftCardPurchasePayload(p);if(!payload)return;
+    if(ADDING)return;ADDING=true;toast("Adding gift card to bag…");post("STOREFRONT_ADD_GIFT_CARD",payload);return;
+  }
   const detailAdd=event.target.closest("[data-product-add]");
   if(detailAdd){addToCart(detailAdd.dataset.productAdd,$("productPageQty")?.value||1,selectedChoices("productPageOptions"));return}
   const save=event.target.closest("[data-save]");
@@ -1782,7 +1924,9 @@ window.addEventListener("message",event=>{
   if(message.type==="STOREFRONT_PRODUCTS"){
     STOREFRONT_CONNECTED=true;
     clearTimeout(STOREFRONT_RETRY_TIMER);
-    PRODUCTS=(payload.products||[]).map(normalizeProductImage);
+    const storeProducts=(payload.products||[]).map(normalizeProductImage);
+    const giftCardProducts=(payload.giftCardProducts||[]).map(hydrateGiftCardProduct);
+    PRODUCTS=[...giftCardProducts,...storeProducts];
     CATEGORIES=payload.categories||[];
     BANNERS=payload.banners||[];
     TRAVEL_CARDS=payload.travelCards||[];
@@ -1807,8 +1951,8 @@ window.addEventListener("message",event=>{
 
     status(
       PRODUCTS.length
-        ? `${PRODUCTS.length} products loaded from Wix Stores.`
-        : "Wix Stores returned 0 visible products.",
+        ? `${PRODUCTS.length} products loaded in SKANDI The Store.`
+        : "The Store returned 0 visible products.",
       PRODUCTS.length ? "ok" : "warn"
     );
     return;
@@ -1854,4 +1998,5 @@ requestStorefront("initial");
 </script>
 </body>
 </html>
+
 ```
