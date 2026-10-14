@@ -1,56 +1,65 @@
 # Current-source findings that determine the settings
 
+V12 desktop chrome authority correction: 2026-10-13.
+
 ## 1. Route authority
-The page list follows the current named `siteMap.js` retrieved from the SKANDI library. It contains `SITE_MAP` and `APP_ROUTES` and is treated as the route authority for this configuration document.
 
-## 2. Chrome authority
-The B-011.18 route/chrome registry provides these global values:
-- Customer header: collapsedHeight 118, maxHeight 1200
-- Customer footer: collapsedHeight 0, maxHeight 2400
-- RIAINTRA header: collapsedHeight 52, maxHeight 700
-- ALTEA header: collapsedHeight 48, maxHeight 300
-- ALTEA footer: collapsedHeight 30, maxHeight 120
+The route list is derived from current `src/public/siteMap.js` together with the page identities/routes documented in `/HTML_REF`. An HTML_REF surface whose route is explicitly unresolved remains `REQUIRES LIVE ROUTE VERIFICATION`; this register does not invent a slug.
 
-## 3. Current master-page visibility behavior
-Current master page behavior:
-- public route → customer header + customer footer shown
-- internal route → RIAINTRA header + internal footer shown
-- ALTEA route → RIAINTRA header + ALTEA header + internal footer shown
-- `/riaintra/success-factors/altea/grouptalk` → chrome-free
+## 2. Global chrome authority
 
-This is the reason APP_VIEWPORT routes need route-aware footer suppression to become truly single-scroll.
+Current global chrome components are:
+- SKANDI customer header: 118 px base
+- SKANDI customer footer
+- RIAINTRA header: 52 px
+- RIAINTRA footer
+- ALTEA header: 48 px
+- ALTEA footer: 30 px base
 
-## 4. Runtime height setter already exists
-The current master page handles the customer header's `SKANDI_EMBED_RESIZE` and sets `embed.height` after clamping 118–1200.
+The governing desktop rule is one header family + one matching footer family per routed page, except the six exact chrome-free routes documented in `PAGE_SETTINGS.md`.
 
-Therefore dynamic HTML-component height is already an accepted SKANDI runtime mechanism; it is not a speculative architecture.
+## 3. Corrected master-page visibility behavior
 
-## 5. Destinations already demonstrates full content auto-height
-Current Destinations flow:
-- child document measures its scroll/offset height
-- `ResizeObserver` watches the child DOM
-- fallback interval/initial delayed measurements are also used
-- flow posts `DESTINATION_FLOW_RESIZE`
-- Wix page controller clamps the requested value to 680–30000
-- page controller writes `html.height = height`
+The prior master-page condition allowed RIAINTRA and ALTEA headers to be visible together on ALTEA routes. That stacked-header behavior is superseded.
 
-This should be the model for CONTENT_AUTO pages.
+Correct V12 desktop behavior:
+- public SKANDI route → SKANDI customer header + SKANDI customer footer
+- RIAINTRA route that is not ALTEA → RIAINTRA header + RIAINTRA footer
+- ALTEA route → ALTEA header + ALTEA footer only
+- exact chrome-free route → no global header/footer
 
-## 6. Wix Studio behavior confirmed from current Wix documentation
-- HTML embeds are iframe-based/sandboxed.
-- Embedded/nested iframe width and height should use 100% rather than hard-coded pixel dimensions to fill the Wix container.
-- Wix Studio supports element size/responsive settings per breakpoint.
-- Studio advanced sizing supports Auto on some elements and formula-based size values.
-- A section set to Fixed Height acts as a minimum and may become taller if a child element pushes its height.
-- Section/container Overflow may be Show, Hide or Scroll.
-- Page Overflow may be Show or Hide.
-- Wix specifically recommends Hide at the mobile page level when horizontal overflow creates a scrollbar.
+The exact chrome-free route set is:
+- `/riaintra/success-factors/altea/grouptalk`
+- `/riaintra`
+- `/booking`
+- `/the-store/store-checkout/order-confirmation`
+- `/the-store/store-checkout`
+- `/the-store`
 
-## 7. Historical fixed-height settings found but superseded for scrolling architecture
-Examples found in older setup files:
-- Storefront: 1800 desktop / 2600 phone
-- SKANDI Club: 2300 desktop / 3400 phone
-- About: 2500 desktop / 3600 phone
-- Flight Status: 900 desktop / 1000 tablet / 1400 phone
+`/riaintra` is matched exactly; its child routes do not inherit chrome-free state.
 
-These numbers are useful as emergency non-resize fallbacks, but they cannot solve dynamic-content sizing cleanly across all routes.
+## 4. No-double-header invariant
+
+`masterPage.js` must never show both `IDS.internalHeaders` and `IDS.alteaHeaders` for the same route. ALTEA replaces RIAINTRA global chrome inside the ALTEA route scope; it is not stacked beneath it.
+
+## 5. Store page classification
+
+The Store Checkout and Store Confirmation customer experiences are custom HTML embeds. Wix native commerce pages remain the underlying Wix integration/commerce host only. They are not `NATIVE_WIX` customer-facing surfaces in this page-settings register.
+
+The Store, Store Checkout and Store Confirmation are explicit chrome-free 100vh HTML-embed routes.
+
+## 6. GroupTalk navigation
+
+GroupTalk remains chrome-free at `/riaintra/success-factors/altea/grouptalk`. The ALTEA global header opens that route in a new browser tab so the current ALTEA workspace remains open in its original tab.
+
+## 7. Runtime height setter already exists
+
+The master page accepts approved embed resize messages and clamps HTML-component height. Dynamic HTML-component height is therefore an established SKANDI runtime mechanism, not a speculative architecture.
+
+## 8. Destinations already demonstrates content auto-height
+
+Current Destinations flow uses measured child height and parent-side clamping. This remains the precedent for CONTENT_AUTO pages. The chrome correction does not replace or remove page-specific content-resize contracts.
+
+## 9. Historical fixed-height settings are not the chrome authority
+
+Older fixed desktop/mobile heights may remain useful as emergency layout fallbacks, but they do not override the route-by-route chrome rules in `PAGE_SETTINGS.md` and do not justify suppressing a required global footer.
