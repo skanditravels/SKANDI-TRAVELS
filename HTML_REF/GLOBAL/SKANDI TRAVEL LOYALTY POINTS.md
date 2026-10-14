@@ -47,3 +47,13 @@ Current source-of-truth Club tiers provide an earning multiplier. This implement
 - Kept customer booking and ALTEA Reservations on one shared lifecycle.
 - No customer-facing HTML or ALTEA Reservations HTML replacement is required for the runtime calculation fix.
 - Wix Loyalty Program must be installed and ACTIVE on the SKANDI TRAVELS site and Club members must have Wix Loyalty accounts before pending travel points can release.
+
+### 2026-10-14 — Wix compile / deployment repair
+
+- Restored the canonical `platformValidation.js` and `platformErrors.js` modules required by the V12 SKANDI_CORE import chain.
+- Made custom error metadata access safe for Wix's stricter JavaScript type checker; no error contract or public message behavior was removed.
+- Added explicit defaults to optional destructured Supabase transport inputs so Wix does not emit binding-initializer diagnostics.
+- Preserved `magazine_manager` as an approved canonical schema; the live Supabase schema exists and must be exposed through the Data API rather than removed or duplicated into `public`.
+- Removed direct `error.code` access from deferred travel-point release handling and routed coded errors through the canonical platform error helper.
+- No travel-points earning, pending, release-date, cancellation, idempotency or ALTEA ownership rule changed.
+- STATICALLY VERIFIED; REQUIRES LIVE TEST after Wix replacement/publish, Supabase Data API schema exposure, and Wix Loyalty installation/configuration.
