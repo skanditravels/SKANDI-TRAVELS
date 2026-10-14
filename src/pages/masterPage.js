@@ -2,7 +2,6 @@
 // SKANDI GLOBAL CHROME CONTROL — Backend Base 1.0 / B-011 canonical route convergence
 // Single source of truth for public/internal chrome, routes, assets and safe navigation.
 
-
 import wixLocationFrontend from "wix-location-frontend";
 import wixSiteFrontend from "wix-site-frontend";
 import wixWindowFrontend from "wix-window-frontend";
@@ -13,9 +12,6 @@ import { getStaffPortalSession } from "backend/SKANDI_CORE/staffAuth.web";
 import { getPublicTravelInfoPayload } from "backend/SKANDI_CORE/publicContent.web";
 import { getPublicPagePresentation } from "backend/SKANDI_CORE/presentation.web";
 import { SITE_MAP, APP_ROUTES, GLOBAL_CHROME, isSafeInternalRoute } from "public/siteMap";
-
-
-
 
 const MASTER_VERSION = "BACKEND-BASE-1.0-B011.18-GLOBAL-CHROME";
 const MASTER_ENV = "PRD";
@@ -37,7 +33,6 @@ const CONTENT_RESIZE_SOURCES = new Set([
 ]);
 const CONTENT_RESIZE_MIN = 680;
 const CONTENT_RESIZE_MAX = 30000;
-
 
 const MASTER_CONFIG = Object.freeze({
   brand: Object.freeze({
@@ -82,14 +77,7 @@ const MASTER_CONFIG = Object.freeze({
       })
     })
   }),
-
-
-  routes: Object.freeze({
-    ...SITE_MAP,
-    ...APP_ROUTES
-  }),
-
-
+  routes: Object.freeze({ ...SITE_MAP, ...APP_ROUTES }),
   customer: Object.freeze({
     header: Object.freeze({
       primaryNav: Object.freeze([
@@ -111,7 +99,7 @@ const MASTER_CONFIG = Object.freeze({
     }),
     footer: Object.freeze({
       columns: Object.freeze([
-        {
+        Object.freeze({
           title:"BOOK & TRAVEL",
           links:Object.freeze([
             { label:"Book a trip", path:SITE_MAP.home },
@@ -123,8 +111,8 @@ const MASTER_CONFIG = Object.freeze({
             { label:"Car Rental", path:SITE_MAP.carRental },
             { label:"Last Chance", path:SITE_MAP.offers }
           ])
-        },
-        {
+        }),
+        Object.freeze({
           title:"HELP & TRAVEL INFO",
           links:Object.freeze([
             { label:"Before you travel", path:SITE_MAP.travelInfo },
@@ -135,8 +123,8 @@ const MASTER_CONFIG = Object.freeze({
             { label:"Flight Status", path:APP_ROUTES.flightStatus },
             { label:"Help Center", path:SITE_MAP.support }
           ])
-        },
-        {
+        }),
+        Object.freeze({
           title:"SKANDI",
           links:Object.freeze([
             { label:"Join SKANDI Club", path:SITE_MAP.club },
@@ -145,8 +133,8 @@ const MASTER_CONFIG = Object.freeze({
             { label:"THE STORE", path:SITE_MAP.theStore },
             { label:"VOY Magazine", path:SITE_MAP.voy }
           ])
-        },
-        {
+        }),
+        Object.freeze({
           title:"ABOUT SKANDI",
           links:Object.freeze([
             { label:"About SKANDI", path:SITE_MAP.about },
@@ -154,7 +142,7 @@ const MASTER_CONFIG = Object.freeze({
             { label:"Newsroom", path:SITE_MAP.newsroom },
             { label:"Our Network", path:SITE_MAP.ourNetwork }
           ])
-        }
+        })
       ]),
       newsletter:Object.freeze({
         title:"Get SKANDI offers and travel inspiration",
@@ -175,13 +163,11 @@ const MASTER_CONFIG = Object.freeze({
         Object.freeze({ label:"Staff Login", path:SITE_MAP.riaintra })
       ]),
       termsText:"Payment methods, supplier terms and package travel conditions may vary by product.",
-      staffLogin: Object.freeze({ label:"Staff Login", path:SITE_MAP.riaintra })
+      staffLogin:Object.freeze({ label:"Staff Login", path:SITE_MAP.riaintra })
     })
   }),
-
-
   internal: Object.freeze({
-    header: Object.freeze({
+    header:Object.freeze({
       productName:"RIAINTRA",
       productContext:"Enterprise Workforce Suite",
       primaryNav:Object.freeze([
@@ -205,8 +191,6 @@ const MASTER_CONFIG = Object.freeze({
       ])
     })
   }),
-
-
   altea:Object.freeze({
     header:Object.freeze({
       productName:"ALTEA",
@@ -222,7 +206,6 @@ const MASTER_CONFIG = Object.freeze({
   })
 });
 
-
 const IDS = Object.freeze({
   customerHeaders:[...GLOBAL_CHROME.customerHeader.elementIds],
   customerFooters:[...GLOBAL_CHROME.customerFooter.elementIds],
@@ -232,12 +215,15 @@ const IDS = Object.freeze({
   alteaFooters:[...GLOBAL_CHROME.alteaFooter.elementIds]
 });
 
-
 const INTERNAL_PREFIXES = ["/riaintra", "/altea", "/_functions"];
-const GROUPTALK_CHROME_FREE_PATHS = Object.freeze([
-  "/riaintra/success-factors/altea/grouptalk"
+const CHROME_FREE_PATHS = Object.freeze([
+  "/riaintra/success-factors/altea/grouptalk",
+  "/riaintra",
+  "/booking",
+  "/the-store/store-checkout/order-confirmation",
+  "/the-store/store-checkout",
+  "/the-store"
 ]);
-
 
 let alteaRuntimeContext = { workArea:"A", crypticActive:false, officeId:"", lmcMode:false };
 let customerSettings = readCustomerSettings();
@@ -260,8 +246,7 @@ function normalizeCustomerSettings(value = {}) {
 function readCustomerSettings() {
   try {
     const raw = local.getItem(SETTINGS_STORAGE_KEY);
-    if (!raw) return { language:"EN", currency:"USD" };
-    return normalizeCustomerSettings(JSON.parse(raw));
+    return raw ? normalizeCustomerSettings(JSON.parse(raw)) : { language:"EN", currency:"USD" };
   } catch (_) {
     return { language:"EN", currency:"USD" };
   }
@@ -276,7 +261,6 @@ async function currentPagePresentation({ force = false } = {}) {
   const path = currentPathString();
   if (!force && presentationState.path === path && presentationState.value) return presentationState.value;
   if (!force && presentationState.path === path && presentationState.promise) return presentationState.promise;
-
   const promise = getPublicPagePresentation({ path })
     .then(result => {
       const value = result || { ok:true, path, contentBlocks:[], mediaSlots:[], pagePlans:[] };
@@ -287,11 +271,9 @@ async function currentPagePresentation({ force = false } = {}) {
       if (presentationState.path === path) presentationState = { path, value:null, promise:null };
       throw error;
     });
-
   presentationState = { path, value:null, promise };
   return promise;
 }
-
 
 function safeEl(id) {
   try { return $w(id); } catch (_) { return null; }
@@ -320,7 +302,6 @@ function internalFooterEl() { return firstHtml(IDS.internalFooters); }
 function alteaHeaderEl() { return firstHtml(IDS.alteaHeaders); }
 function alteaFooterEl() { return firstHtml(IDS.alteaFooters); }
 
-
 function allHtmlComponents() {
   try {
     const result = $w("HtmlComponent");
@@ -334,7 +315,6 @@ function allHtmlComponents() {
     return [];
   }
 }
-
 
 function currentWixPageInfo() {
   try {
@@ -355,22 +335,22 @@ function currentPathString() {
   const path = wixLocationFrontend.path || [];
   return "/" + path.join("/");
 }
+function normalizePath(path = "") {
+  return String(path || "").toLowerCase().split("?")[0].split("#")[0].replace(/\/+$/, "") || "/";
+}
 function isInternalPath(path = currentPathString()) {
-  return INTERNAL_PREFIXES.some(prefix => path === prefix || path.startsWith(prefix + "/"));
+  const value = normalizePath(path);
+  return INTERNAL_PREFIXES.some(prefix => value === prefix || value.startsWith(prefix + "/"));
 }
 function isAlteaPath(path = currentPathString()) {
-  const value = String(path || "").toLowerCase();
+  const value = normalizePath(path);
   return ["/riaintra/success-factors/altea", "/riaintra/altea", "/altea"]
     .some(prefix => value === prefix || value.startsWith(prefix + "/"));
 }
-function isChromeFreeInternalPath(path = currentPathString()) {
-  const value = String(path || "").toLowerCase().split("?")[0].replace(/\/+$/, "") || "/";
-  return GROUPTALK_CHROME_FREE_PATHS.some(p => value === p || value.startsWith(p + "/"));
+function isChromeFreePath(path = currentPathString()) {
+  return CHROME_FREE_PATHS.includes(normalizePath(path));
 }
-function isSafeRoute(path) {
-  return isSafeInternalRoute(path);
-}
-
+function isSafeRoute(path) { return isSafeInternalRoute(path); }
 
 function postToEmbed(embed, type, payload = {}) {
   if (!isHtmlEmbed(embed)) return false;
@@ -382,8 +362,6 @@ function postToEmbed(embed, type, payload = {}) {
     return false;
   }
 }
-
-
 function pushScrollTopToEmbeds(reason = "") {
   for (const embed of allHtmlComponents()) postToEmbed(embed, "SKANDI_SCROLL_TOP", { reason });
 }
@@ -403,10 +381,13 @@ function wireLocationChangeScroll() {
   if (locationChangeWired || typeof wixLocationFrontend.onChange !== "function") return;
   locationChangeWired = true;
   try {
-    wixLocationFrontend.onChange(() => scheduleScrollViewportToTop("location-change"));
+    wixLocationFrontend.onChange(async () => {
+      scheduleScrollViewportToTop("location-change");
+      await applyChromeVisibility();
+      pushConfigToAll();
+    });
   } catch (_) {}
 }
-
 
 function masterPayload(extra = {}) {
   const page = currentWixPageInfo();
@@ -421,6 +402,7 @@ function masterPayload(extra = {}) {
     isAltea:altea,
     currentPath:path,
     currentPage:page,
+    baseUrl:String(wixLocationFrontend.baseUrl || "").trim(),
     brand:MASTER_CONFIG.brand,
     routes:MASTER_CONFIG.routes,
     customer:MASTER_CONFIG.customer,
@@ -434,9 +416,7 @@ function masterPayload(extra = {}) {
     ...extra
   };
 }
-function pushMasterConfig(embed, extra = {}) {
-  postToEmbed(embed, "SKANDI_MASTER_CONFIG", masterPayload(extra));
-}
+function pushMasterConfig(embed, extra = {}) { postToEmbed(embed, "SKANDI_MASTER_CONFIG", masterPayload(extra)); }
 function pushNavigation(embed) {
   postToEmbed(embed, "SKANDI_MASTER_NAVIGATION", {
     customer:MASTER_CONFIG.customer,
@@ -446,9 +426,7 @@ function pushNavigation(embed) {
     currentPath:currentPathString()
   });
 }
-function closeCustomerHeaderPanels() {
-  postToEmbed(customerHeaderEl(), "CLOSE_CUSTOMER_HEADER_PANELS", {});
-}
+function closeCustomerHeaderPanels() { postToEmbed(customerHeaderEl(), "CLOSE_CUSTOMER_HEADER_PANELS", {}); }
 function navigate(path) {
   const value = String(path || "").trim();
   if (!isSafeRoute(value)) {
@@ -459,7 +437,6 @@ function navigate(path) {
   scheduleScrollViewportToTop("navigation");
   wixLocationFrontend.to(value, { disableScrollToTop:false });
 }
-
 
 async function getCustomerState() {
   try {
@@ -480,8 +457,7 @@ async function getCustomerState() {
   }
 }
 async function pushCustomerHeaderState(embed = customerHeaderEl()) {
-  if (!embed) return;
-  postToEmbed(embed, "CUSTOMER_HEADER_STATE", await getCustomerState());
+  if (embed) postToEmbed(embed, "CUSTOMER_HEADER_STATE", await getCustomerState());
 }
 async function getStaffState() {
   try {
@@ -508,21 +484,15 @@ async function pushStaffHeaderState(embed = internalHeaderEl()) {
     assets:MASTER_CONFIG.brand.assets
   });
 }
-
 function pushCustomerSettingsState(embed = customerHeaderEl(), type = "CUSTOMER_SETTINGS_STATE") {
-  if (!embed) return;
-  postToEmbed(embed, type, { ...customerSettings });
+  if (embed) postToEmbed(embed, type, { ...customerSettings });
 }
 
 function alteaChromeState(staff = { authorized:false, profile:{} }) {
   const page = currentWixPageInfo();
   const profile = staff?.profile || {};
-  const fallbackBase = String(profile.base || profile.baseCode || "ARN").trim().toUpperCase().slice(0,3) || "ARN";
   const context = String(
-    alteaRuntimeContext.systemContext ||
-    alteaRuntimeContext.context ||
-    page.name ||
-    "ALTEA DASHBOARD"
+    alteaRuntimeContext.systemContext || alteaRuntimeContext.context || page.name || "ALTEA DASHBOARD"
   ).trim();
   return {
     env:MASTER_ENV,
@@ -535,7 +505,7 @@ function alteaChromeState(staff = { authorized:false, profile:{} }) {
     timeZone:String(alteaRuntimeContext.timeZone || profile.timeZone || "").trim(),
     workArea:String(alteaRuntimeContext.workArea || "A").trim().toUpperCase().slice(0,1) || "A",
     crypticActive:Boolean(alteaRuntimeContext.crypticActive),
-    officeId:String(alteaRuntimeContext.officeId || profile.officeId || `${fallbackBase}1A0900`).trim().toUpperCase(),
+    officeId:String(alteaRuntimeContext.officeId || profile.officeId || profile.office_id || "").trim().toUpperCase(),
     lmcMode:Boolean(alteaRuntimeContext.lmcMode),
     systemMessage:alteaRuntimeContext.systemMessage || {
       text:staff?.authorized ? "READY" : "SESSION REQUIRED",
@@ -544,9 +514,8 @@ function alteaChromeState(staff = { authorized:false, profile:{} }) {
     profile
   };
 }
-
 async function pushAlteaChromeState() {
-  if (!isAlteaPath()) return;
+  if (!isAlteaPath() || isChromeFreePath()) return;
   const staff = await getStaffState();
   const state = alteaChromeState(staff);
   const header = alteaHeaderEl();
@@ -562,36 +531,25 @@ async function pushAlteaChromeState() {
   }
 }
 
-
 async function handleMasterMessage(embed, message = {}) {
   const type = String(message?.type || "");
   const source = String(message?.source || "");
   const payload = message?.payload && typeof message.payload === "object" ? message.payload : {};
 
-
   if (SCROLL_TOP_MESSAGE_TYPES.has(type)) {
     scheduleScrollViewportToTop(type.toLowerCase());
     return true;
   }
-
-
   if (type === "MASTER_CONFIG_REQUEST" || type === "SKANDI_MASTER_CONFIG_REQUEST") {
-    const extra = isInternalPath()
-      ? { staff:await getStaffState() }
-      : { customerSession:await getCustomerState() };
+    const extra = isInternalPath() ? { staff:await getStaffState() } : { customerSession:await getCustomerState() };
     pushMasterConfig(embed, extra);
-
-
-    if ((source === ALTEA_HEADER_SOURCE || source === ALTEA_FOOTER_SOURCE) && isAlteaPath()) {
+    if ((source === ALTEA_HEADER_SOURCE || source === ALTEA_FOOTER_SOURCE) && isAlteaPath() && !isChromeFreePath()) {
       const state = alteaChromeState(extra.staff || {});
       if (source === ALTEA_HEADER_SOURCE) postToEmbed(embed, "ALTEA_HEADER_CONTEXT", state);
       if (source === ALTEA_FOOTER_SOURCE) postToEmbed(embed, "ALTEA_FOOTER_STATE", state);
     }
     return true;
   }
-
-
-
   if (type === "SKANDI_PRESENTATION_READY") {
     try {
       const result = await currentPagePresentation();
@@ -601,7 +559,6 @@ async function handleMasterMessage(embed, message = {}) {
     }
     return true;
   }
-
   if (type === "MASTER_ASSETS_REQUEST") {
     postToEmbed(embed, "SKANDI_MASTER_ASSETS", MASTER_CONFIG.brand.assets);
     return true;
@@ -614,8 +571,6 @@ async function handleMasterMessage(embed, message = {}) {
     navigate(message.path || payload.path || "");
     return true;
   }
-
-
 
   if (source === SPECIAL_ASSISTANCE_SOURCE) {
     if (type === "SPECIAL_ASSISTANCE_READY" || type === "SPECIAL_ASSISTANCE_REFRESH") {
@@ -650,12 +605,11 @@ async function handleMasterMessage(embed, message = {}) {
     };
     alteaRuntimeContext = {
       ...alteaRuntimeContext,
-      ...Object.fromEntries(Object.entries(next).filter(([, value]) => Boolean(value)))
+      ...Object.fromEntries(Object.entries(next).filter(([, value]) => value !== undefined && value !== ""))
     };
     await pushAlteaChromeState();
     return true;
   }
-
 
   if (type === "SKANDI_CONTENT_RESIZE" && CONTENT_RESIZE_SOURCES.has(source)) {
     const requested = Number(payload.height);
@@ -664,8 +618,6 @@ async function handleMasterMessage(embed, message = {}) {
     try { if ("height" in embed) embed.height = height; } catch (_) {}
     return true;
   }
-
-
   if (type === "SKANDI_EMBED_RESIZE" && CHROME_BY_SOURCE[source]) {
     const definition = CHROME_BY_SOURCE[source];
     const requested = Number(payload.height);
@@ -677,19 +629,14 @@ async function handleMasterMessage(embed, message = {}) {
     return true;
   }
 
-
   if (source === CUSTOMER_HEADER_SOURCE) {
     switch (type) {
       case "HEADER_READY":
         pushMasterConfig(embed, { customerSession:await getCustomerState() });
         await pushCustomerHeaderState(embed);
         return true;
-      case "HEADER_NAVIGATE":
-        navigate(message.path || payload.path);
-        return true;
-      case "HEADER_SEARCH":
-        navigate(MASTER_CONFIG.routes.search);
-        return true;
+      case "HEADER_NAVIGATE": navigate(message.path || payload.path); return true;
+      case "HEADER_SEARCH": navigate(MASTER_CONFIG.routes.search); return true;
       case "HEADER_LOGIN":
         closeCustomerHeaderPanels();
         try { await authentication.promptLogin(); } catch (_) {}
@@ -725,11 +672,9 @@ async function handleMasterMessage(embed, message = {}) {
         pushConfigToAll();
         return true;
       }
-      default:
-        break;
+      default: break;
     }
   }
-
 
   if (source === CUSTOMER_FOOTER_SOURCE) {
     switch (type) {
@@ -741,12 +686,8 @@ async function handleMasterMessage(embed, message = {}) {
           assets:MASTER_CONFIG.brand.assets
         });
         return true;
-      case "FOOTER_NAVIGATE":
-        navigate(message.path || payload.path);
-        return true;
-      case "FOOTER_STAFF_LOGIN":
-        navigate(MASTER_CONFIG.routes.riaintra);
-        return true;
+      case "FOOTER_NAVIGATE": navigate(message.path || payload.path); return true;
+      case "FOOTER_STAFF_LOGIN": navigate(MASTER_CONFIG.routes.riaintra); return true;
       case "FOOTER_NEWSLETTER_SIGNUP": {
         const email = String(message.email || payload.email || "").trim();
         if (!email) {
@@ -766,11 +707,9 @@ async function handleMasterMessage(embed, message = {}) {
         }
         return true;
       }
-      default:
-        break;
+      default: break;
     }
   }
-
 
   if (source === ALTEA_HEADER_SOURCE || source === ALTEA_FOOTER_SOURCE) {
     if (type === "ALTEA_HEADER_READY" || type === "ALTEA_FOOTER_READY") {
@@ -796,9 +735,8 @@ async function handleMasterMessage(embed, message = {}) {
     }
   }
 
-
   if (type === "RIAINTRA_HEADER_READY" || type === "INTERNAL_HEADER_READY") {
-    await pushStaffHeaderState(embed);
+    if (!isAlteaPath() && !isChromeFreePath()) await pushStaffHeaderState(embed);
     return true;
   }
   if (type === "RIAINTRA_NAVIGATE" || type === "INTERNAL_MASTER_NAVIGATE") {
@@ -811,22 +749,17 @@ async function handleMasterMessage(embed, message = {}) {
     wixLocationFrontend.to(MASTER_CONFIG.routes.home, { disableScrollToTop:false });
     return true;
   }
-
-
   return false;
 }
 
-
 function wireHtmlComponent(embed) {
-  if (!isHtmlEmbed(embed)) return;
-  if (wiredEmbeds.has(embed)) return;
+  if (!isHtmlEmbed(embed) || wiredEmbeds.has(embed)) return;
   wiredEmbeds.add(embed);
   const key = embed.id || "unknown embed";
   embed.onMessage(async event => {
     try { await handleMasterMessage(embed, event?.data || {}); }
     catch (error) { console.error(`[MasterPage] Message handling failed for ${embed.id || key}.`, error); }
   });
-  // Initial push is useful for components that are already loaded; components also request it when ready.
   pushMasterConfig(embed);
   if (!isInternalPath()) {
     currentPagePresentation()
@@ -834,8 +767,6 @@ function wireHtmlComponent(embed) {
       .catch(() => {});
   }
 }
-
-
 function wireAllHtmlComponents() {
   const found = new Map();
   const idGroups = [
@@ -853,8 +784,6 @@ function wireAllHtmlComponents() {
   for (const el of allHtmlComponents()) found.set(el.id || String(el), el);
   for (const el of found.values()) wireHtmlComponent(el);
 }
-
-
 async function setElementVisible(element, visible) {
   if (!element) return;
   try {
@@ -868,64 +797,62 @@ async function setElementVisible(element, visible) {
   } catch (_) {}
 }
 
-
 async function applyChromeVisibility() {
   const path = currentPathString();
+  const chromeFree = isChromeFreePath(path);
   const internal = isInternalPath(path);
-  const altea = isAlteaPath(path);
-  const chromeFree = isChromeFreeInternalPath(path);
-
+  const altea = internal && isAlteaPath(path);
+  const showCustomerChrome = !chromeFree && !internal;
+  const showRiaintraChrome = !chromeFree && internal && !altea;
+  const showAlteaChrome = !chromeFree && internal && altea;
 
   await Promise.all([
-    setElementVisible(firstExisting(IDS.customerHeaders), !internal),
-    setElementVisible(firstExisting(IDS.customerFooters), !internal),
-    setElementVisible(firstExisting(IDS.internalHeaders), internal && !chromeFree),
-    setElementVisible(firstExisting(IDS.internalFooters), internal && !chromeFree),
-    setElementVisible(firstExisting(IDS.alteaHeaders), internal && altea && !chromeFree),
-    setElementVisible(firstExisting(IDS.alteaFooters), internal && altea && !chromeFree)
+    setElementVisible(firstExisting(IDS.customerHeaders), showCustomerChrome),
+    setElementVisible(firstExisting(IDS.customerFooters), showCustomerChrome),
+    setElementVisible(firstExisting(IDS.internalHeaders), showRiaintraChrome),
+    setElementVisible(firstExisting(IDS.internalFooters), showRiaintraChrome),
+    setElementVisible(firstExisting(IDS.alteaHeaders), showAlteaChrome),
+    setElementVisible(firstExisting(IDS.alteaFooters), showAlteaChrome)
   ]);
 }
-
-
 function pushConfigToAll() {
   for (const embed of allHtmlComponents()) pushMasterConfig(embed);
 }
 
-
 $w.onReady(async function () {
+  await applyChromeVisibility();
   scheduleScrollViewportToTop("page-ready");
   wireLocationChangeScroll();
   wireAllHtmlComponents();
-  await applyChromeVisibility();
 
+  const path = currentPathString();
+  const chromeFree = isChromeFreePath(path);
+  const internal = isInternalPath(path);
+  const altea = internal && isAlteaPath(path);
 
-  const header = customerHeaderEl();
-  const footer = customerFooterEl();
-  const internalHeader = internalHeaderEl();
-  const alteaHeader = alteaHeaderEl();
-  const alteaFooter = alteaFooterEl();
-
-
-  if (!isInternalPath()) {
+  if (!chromeFree && !internal) {
+    const header = customerHeaderEl();
+    const footer = customerFooterEl();
     if (header) await pushCustomerHeaderState(header);
     if (footer) pushMasterConfig(footer);
-  } else {
-    if (internalHeader) await pushStaffHeaderState(internalHeader);
-    if (isAlteaPath() && (alteaHeader || alteaFooter)) {
-      await pushAlteaChromeState();
-    }
+  } else if (!chromeFree && altea) {
+    if (alteaHeaderEl() || alteaFooterEl()) await pushAlteaChromeState();
+  } else if (!chromeFree && internal) {
+    const header = internalHeaderEl();
+    const footer = internalFooterEl();
+    if (header) await pushStaffHeaderState(header);
+    if (footer) pushMasterConfig(footer, { staff:await getStaffState() });
   }
-
 
   try {
     authentication.onLogin(() => {
-      const currentHeader = customerHeaderEl();
-      if (currentHeader) pushCustomerHeaderState(currentHeader);
+      if (!isChromeFreePath() && !isInternalPath()) {
+        const currentHeader = customerHeaderEl();
+        if (currentHeader) pushCustomerHeaderState(currentHeader);
+      }
     });
   } catch (_) {}
 
-
-  // Re-enumerate after Wix has mounted page-level HTML Components.
-  setTimeout(() => { wireAllHtmlComponents(); pushConfigToAll(); }, 250);
-  setTimeout(() => { wireAllHtmlComponents(); pushConfigToAll(); }, 1200);
+  setTimeout(async () => { wireAllHtmlComponents(); await applyChromeVisibility(); pushConfigToAll(); }, 250);
+  setTimeout(async () => { wireAllHtmlComponents(); await applyChromeVisibility(); pushConfigToAll(); }, 1200);
 });
