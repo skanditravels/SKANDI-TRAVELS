@@ -6,7 +6,7 @@
 - WIX PAGE FILE: `/src/pages/Inventory Control.jsdik.js`
 - WIX ROUTE / SLUG: `/riaintra/success-factors/altea/inventory-control`
 - WIX HTML ELEMENT: `#inventoryControlEmbed`
-- CURRENT STATUS: V12 INVENTORY MODAL / PAGINATION / ASSET UX REPAIR PREPARED — REQUIRES LIVE TEST
+- CURRENT STATUS: V12 ADD RECORD UX REPAIR PREPARED — REQUIRES LIVE TEST
 - SOURCE-OF-TRUTH STATUS: AUTHORITATIVE intended V12 embed payload supplied for this repair.
 - CANONICAL WEB FACADE: `/src/backend/SKANDI_CORE/inventory.web.js`
 - CANONICAL CORE: `/src/backend/SKANDI_CORE/inventory.js`
@@ -17,9 +17,10 @@
 - PROVIDER SNAPSHOT: the provider evidence remains under `payload.duffel` (`normalized` + `raw`). The migration promotes the normalized provider-owned subset into the canonical Inventory detail object and retains a read-only `inventory_details.duffel` / `details.duffel` copy for audit/context; SKANDI enrichment remains editable only in Inventory Control.
 - AUTHORIZATION: unchanged from current V12 page/facade/core boundaries. No frontend role or provider secret becomes authoritative.
 - MESSAGE CONTRACTS / ELEMENT IDS: unchanged.
-- LAST VERIFIED: 2026-10-11 — current repo `skanditravels/SKANDI-TRAVELS`, branch `main`, HEAD `878d01bef64636c7335c8b71a4093b1104a9e8dc` inspected for this repair; Wix live runtime was not executed in this session.
+- LAST VERIFIED: 2026-10-14 — current repo `skanditravels/SKANDI-TRAVELS`, branch `main`, current `Inventory Control.md` blob `559c661d6d8abb2a71469caafdf73c5d3d489466` inspected; Wix live runtime was not executed in this session.
 
 ## CHANGE LOG
+- 2026-10-14 — Add Record UX repair: Master Records `+ New Record` now opens a record-type chooser when Record Family is `All`, then opens the existing canonical RecordEditor with the selected real inventory type. Existing direct-create behavior for a preselected family and the separate Guided Tour / Activity create controls remain intact. No page-controller, facade, core, message-contract, authorization, schema or stored-data change. STATICALLY VERIFIED; REQUIRES LIVE TEST after replacing and publishing `#inventoryControlEmbed`.
 - 2026-10-11 — Inventory UX repair: record editor and nested Asset Library dialogs now own their scroll surface and lock the background document while open; Master Records is paged at 100 rows with Previous/Next controls plus status, customer visibility, ALTEA visibility and sort dropdown filters; Asset Library browsing is paged at 100 assets and Folder/Subfolder/Category are dropdowns derived from the current indexed library and canonical category choices; Inventory/Asset Library image previews use contain scaling so the complete image remains visible instead of being cropped. Existing message contracts, page controller, facade, core writes, authorization and stored records are unchanged. STATICALLY VERIFIED; REQUIRES LIVE TEST after replacing and publishing `#inventoryControlEmbed`.
 - 2026-10-11 — Aircraft cabin double-count repair: Aircraft & Cabin Studio now builds its displayed cabin set only from active cabin rows and collapses exact canonical/descriptive duplicates before calculating cabin count, cabin map proportions and cabin seat totals. Per-cabin seat values remain sourced from the canonical `travel_info_aircraft_cabins.seat_count` field returned by `INVENTORY_V9_GET_AIRCRAFT`; aircraft total seats remain sourced from `travel_info_aircraft.total_seats`. Existing message contracts, page controller, facade, core writes, authorization and stored records are unchanged. STATICALLY VERIFIED; REQUIRES LIVE TEST after replacing and publishing `#inventoryControlEmbed`.
 - 2026-10-10 — Gray-window boot repair: removed one duplicate top-level object closure from the current V12 Inventory embed. The extra `};` caused the module script to fail parsing before React could mount, leaving the Wix HTML component blank/gray. Message names, element IDs, page-controller imports, backend actions, authorization, data contracts and existing features remain unchanged. Prepared against GitHub `main` HEAD `19d7059098c6f2e880e1a94ad8f6b11e00c9b115`. STATICALLY VERIFIED; REQUIRES LIVE TEST after replacing and publishing `#inventoryControlEmbed`.
@@ -1038,6 +1039,9 @@ function MasterRecords({boot,setBoot,setBusy,setToast}){
   const [search,setSearch]=useState("");
   const [page,setPage]=useState(1);
   const [editor,setEditor]=useState(null);
+  const [createPicker,setCreatePicker]=useState(false);
+  const [createType,setCreateType]=useState("");
+  const createTypeLabels={COUNTRY:"Country",DESTINATION:"Destination",AREA:"Area / Resort",AIRPORT:"Airport",AIRLINE:"Airline",SUPPLIER:"Supplier",HOTEL:"Hotel",GUIDED_TOUR:"Guided Tour",ACTIVITY:"Activity",PARTNER_TICKET:"Partner Ticket",TRANSFER:"Transfer",CAR_RENTAL:"Car Rental",PACKAGE:"Package",ANCILLARY:"Ancillary"};
   const matchesType=r=>!type||(type==="TOURS_ACTIVITIES"?["GUIDED_TOUR","ACTIVITY"].includes(r.entityType)&&(!tourSubtype||r.entityType===tourSubtype):r.entityType===type);
   const filtered=(boot.records||[]).filter(r=>matchesType(r)&&(!statusFilter||r.status===statusFilter)&&(!customerFilter||(customerFilter==="YES"?r.customerVisible===true:r.customerVisible!==true))&&(!alteaFilter||(alteaFilter==="YES"?r.alteaVisible===true:r.alteaVisible!==true))&&(!search||[r.code,r.name,r.slug,r.entityType,r.status].join(" ").toLowerCase().includes(search.toLowerCase())));
   const records=[...filtered].sort((a,b)=>sortBy==="TITLE_ASC"?text(a.name).localeCompare(text(b.name)):sortBy==="CODE_ASC"?text(a.code).localeCompare(text(b.code)):sortBy==="TYPE_ASC"?`${a.entityType}|${a.name}`.localeCompare(`${b.entityType}|${b.name}`):text(b.updatedAt).localeCompare(text(a.updatedAt)));
@@ -1049,9 +1053,22 @@ function MasterRecords({boot,setBoot,setBusy,setToast}){
     e.stopPropagation();if(!confirm(`Archive ${r.name}?`))return;
     try{setBusy("Archiving record…");await request("INVENTORY_V9_ARCHIVE_RECORD",{id:r.id,entityType:r.entityType});setToast("Record archived.")}catch(err){setToast(err.message,true)}finally{setBusy("")}
   }
+  function startCreate(){
+    if(type){setEditor(recordBundle(type));return}
+    setCreateType("");
+    setCreatePicker(true);
+  }
+  function confirmCreate(){
+    if(!createType)return setToast("Choose a record type.",true);
+    setCreatePicker(false);
+    setType(createType);
+    setTourSubtype("");
+    setPage(1);
+    setEditor(recordBundle(createType));
+  }
   const createButtons=type==="TOURS_ACTIVITIES"
     ?html`<div className="toolbar"><button className="btn primary" onClick=${()=>setEditor(recordBundle("GUIDED_TOUR"))}>+ New Guided Tour</button><button className="btn primary" onClick=${()=>setEditor(recordBundle("ACTIVITY"))}>+ New Activity</button></div>`
-    :html`<button className="btn primary" onClick=${()=>{if(!type)return setToast("Choose a record family first.",true);setEditor(recordBundle(type))}}>+ New ${type?(LABEL[type]||type).replace(/s$/," ").trim():"Record"}</button>`;
+    :html`<button className="btn primary" onClick=${startCreate}>+ New ${type?(createTypeLabels[type]||LABEL[type]||type):"Record"}</button>`;
   return html`<div className="card panel">
     <div className="paneltitle"><span>Master & Reference Records</span>${createButtons}</div>
     <div className="filters"><div className="field w240"><label>Record Family</label><select className="select" value=${type} onChange=${e=>{setType(e.target.value);setTourSubtype("");setPage(1)}}><option value="">All</option>${MASTER_FILTERS.map(t=>html`<option value=${t}>${MASTER_FILTER_LABEL[t]}</option>`)}</select></div>${type==="TOURS_ACTIVITIES"?html`<div className="field w240"><label>Product Type</label><select className="select" value=${tourSubtype} onChange=${e=>{setTourSubtype(e.target.value);setPage(1)}}><option value="">All Tours & Activities</option><option value="GUIDED_TOUR">Guided Tour</option><option value="ACTIVITY">Activity</option></select></div>`:null}<div className="field w180"><label>Status</label><select className="select" value=${statusFilter} onChange=${e=>{setStatusFilter(e.target.value);setPage(1)}}><option value="">All statuses</option>${STATUS.map(s=>html`<option value=${s}>${s}</option>`)}</select></div><div className="field w180"><label>Customer Visible</label><select className="select" value=${customerFilter} onChange=${e=>{setCustomerFilter(e.target.value);setPage(1)}}><option value="">All</option><option value="YES">Yes</option><option value="NO">No</option></select></div><div className="field w180"><label>ALTEA Visible</label><select className="select" value=${alteaFilter} onChange=${e=>{setAlteaFilter(e.target.value);setPage(1)}}><option value="">All</option><option value="YES">Yes</option><option value="NO">No</option></select></div><div className="field w240"><label>Sort</label><select className="select" value=${sortBy} onChange=${e=>{setSortBy(e.target.value);setPage(1)}}><option value="UPDATED_DESC">Recently updated</option><option value="TITLE_ASC">Title A–Z</option><option value="CODE_ASC">Code A–Z</option><option value="TYPE_ASC">Type / Title</option></select></div><div className="field grow"><label>Search</label><input className="input" value=${search} onInput=${e=>{setSearch(e.target.value);setPage(1)}} placeholder="Code, title, slug, type or status"/></div></div>
@@ -1060,6 +1077,9 @@ function MasterRecords({boot,setBoot,setBusy,setToast}){
       ${pageRecords.length?pageRecords.map(r=>html`<tr className="clickrow" onClick=${()=>open(r)}><td>${r.entityType==="GUIDED_TOUR"?"Guided Tour":r.entityType==="ACTIVITY"?"Activity":r.entityType}</td><td><b>${r.code}</b></td><td>${r.name}</td><td>${statusPill(r.status)}</td><td>${r.customerVisible?"Yes":"No"}</td><td>${r.alteaVisible?"Yes":"No"}</td><td>${text(r.updatedAt).slice(0,10)}</td><td><button className="btn small danger" onClick=${e=>archived(r,e)}>Archive</button></td></tr>`):html`<tr><td colSpan="8"><div className="empty">No matching records.</div></td></tr>`}
     </tbody></table></div>
     <${Pagination} page=${safePage} totalPages=${totalPages} total=${records.length} pageSize=${pageSize} onPage=${setPage}/>
+    ${createPicker?html`<${Modal} title="Add Inventory Record" onClose=${()=>setCreatePicker(false)} actions=${html`<button className="btn small primary" onClick=${confirmCreate}>Continue</button>`}>
+      <div className="formgrid"><${Field} label="Record Type" type="select" options=${TYPES.map(t=>({value:t,label:createTypeLabels[t]||LABEL[t]||t}))} value=${createType} onChange=${setCreateType} help="Choose the Inventory record family to add. The existing record editor opens as a Draft."/></div>
+    <//>`:null}
     ${editor?html`<${RecordEditor} bundle=${editor.bundle||editor} languages=${boot.languages||["EN"]} records=${boot.records||[]} onClose=${()=>setEditor(null)} onSaved=${()=>{}} setBusy=${setBusy} setToast=${setToast}/>`:null}
   </div>`
 }
