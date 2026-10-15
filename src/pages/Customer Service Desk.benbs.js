@@ -2,6 +2,7 @@
 // Route: /riaintra/customer-service
 // R-007.4 canonical Customer Service Center bridge with parent-owned Supabase synchronization.
 // Supabase remains the persistent Support source of truth through customerSupport.web.js.
+// V12 Wix Automations connection: authorized Admin Center bootstrap metadata comes from automationControl.web.js.
 
 
 import {
@@ -13,6 +14,7 @@ import {
   createAgentSupportCase,
   deleteAgentSupportCase
 } from "backend/SKANDI_CORE/customerSupport.web";
+import { getAutomationAdminSnapshot } from "backend/SKANDI_CORE/automationControl.web";
 
 
 const PRIMARY_HTML_ID = "#customerServiceCenterEmbed";
@@ -82,6 +84,23 @@ function updateFilters(payload) {
 function errorText(error) { return String(error?.publicMessage || error?.message || "Customer service action failed.").slice(0, 300); }
 
 
+async function automationSnapshot() {
+  try {
+    return await getAutomationAdminSnapshot({});
+  } catch (error) {
+    console.warn("[Customer Service Center] Wix Automations snapshot unavailable for this staff session.", error);
+    return {
+      ok: false,
+      source: "Wix Automations",
+      readOnly: true,
+      triggers: [],
+      automations: [],
+      counts: { triggers: 0, automations: 0, active: 0, inactive: 0 }
+    };
+  }
+}
+
+
 async function refreshAgentState(html, { includeDetail = true, requestId = "", silent = true } = {}) {
   if (!agentReady || syncInFlight) return;
   syncInFlight = true;
@@ -112,12 +131,26 @@ function startSync(html) {
 
 async function bootstrap(html, payload, requestId) {
   updateFilters(payload);
-  const [base, list] = await Promise.all([
+  const [base, list, automationAdmin] = await Promise.all([
     getAgentSupportBootstrap({}),
-    listAgentSupportCases(currentFilters)
+    listAgentSupportCases(currentFilters),
+    automationSnapshot()
   ]);
   agentReady = true;
-  post(html, "AGENT_BOOTSTRAP", { ...objectOf(base), ...objectOf(list), sync: { intervalMs: SYNC_INTERVAL_MS, sourceOfTruth: "Supabase" } }, requestId);
+  post(html, "AGENT_BOOTSTRAP", {
+    ...objectOf(base),
+    ...objectOf(list),
+    triggers: Array.isArray(automationAdmin?.triggers) ? automationAdmin.triggers : [],
+    automations: Array.isArray(automationAdmin?.automations) ? automationAdmin.automations : [],
+    automationControl: {
+      ok: automationAdmin?.ok === true,
+      source: automationAdmin?.source || "Wix Automations",
+      readOnly: true,
+      counts: objectOf(automationAdmin?.counts),
+      retrievedAt: automationAdmin?.retrievedAt || null
+    },
+    sync: { intervalMs: SYNC_INTERVAL_MS, sourceOfTruth: "Supabase" }
+  }, requestId);
   startSync(html);
 }
 
