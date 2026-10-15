@@ -1,7 +1,7 @@
 // /src/backend/SKANDI_CORE/automationControl.js
-// SKANDI V12 — canonical Wix Automations administration/read bridge.
-// Wix Automations remains the workflow source of truth. This module exposes only normalized,
-// non-secret automation metadata to authorized RIAINTRA administration surfaces.
+// SKANDI V12 — canonical Wix Automations administration/read bridge and Git-managed action entry point.
+// Wix Automations remains the workflow source of truth. Administration metadata stays normalized and
+// non-secret; customer-facing automation workflows must be mapped explicitly before they can execute.
 
 import { automationsV2 } from "@wix/automations";
 import { auth } from "@wix/essentials";
@@ -12,6 +12,7 @@ import { lower, stringArray, text, upper } from "backend/SKANDI_CORE/platformVal
 const queryAutomationsElevated = auth.elevate(automationsV2.queryAutomations);
 const PRIVILEGED_ROLES = new Set(["SUPER_ADMIN", "OWNER", "COMPANY_OWNER"]);
 const MAX_AUTOMATIONS = 100;
+const ENTRYPOINT_TEST_ACTION = "SKANDI_AUTOMATION_ENTRYPOINT_TEST";
 
 function objectOf(value) {
   return value && typeof value === "object" && !Array.isArray(value) ? value : {};
@@ -118,6 +119,16 @@ function normalizeTriggers(automations = []) {
     .sort((a, b) => a.name.localeCompare(b.name));
 }
 
+function automationActionPayload(options = {}) {
+  const envelope = objectOf(options);
+  if (Object.prototype.hasOwnProperty.call(envelope, "payload")) return objectOf(envelope.payload);
+  return envelope;
+}
+
+function automationActionName(payload = {}) {
+  return upper(payload.skandiAction || payload.automationAction || payload.eventType, 120);
+}
+
 async function queryLiveAutomations() {
   const query = queryAutomationsElevated();
   const result = await query.limit(MAX_AUTOMATIONS).find();
@@ -155,3 +166,48 @@ export async function getAutomationAdminSnapshotCore() {
     }
   };
 }
+
+export async function runAutomationActionCore(options = {}, context = {}) {
+  const payload = automationActionPayload(options);
+  const action = automationActionName(payload);
+
+  if (action === ENTRYPOINT_TEST_ACTION) {
+    console.info("[SKANDI][WixAutomations] Git-managed V12 action entry point reached.", {
+      action,
+      payloadKeys: Object.keys(payload).slice(0, 30),
+      contextKeys: Object.keys(objectOf(context)).slice(0, 20)
+    });
+    return {
+      ok: true,
+      action,
+      receivedAt: new Date().toISOString()
+    };
+  }
+
+  throw new SkandiError(
+    "AUTOMATION_WORKFLOW_NOT_MAPPED",
+    action
+      ? `Wix Automation action ${action} is not mapped to a canonical SKANDI V12 workflow handler.`
+      : "The Wix Automation action did not identify a canonical SKANDI V12 workflow handler.",
+    {
+      publicMessage: "This Wix Automation action is connected to SKANDI, but its business workflow has not been mapped yet.",
+      details: {
+        action: action || null,
+        payloadKeys: Object.keys(payload).slice(0, 30)
+      }
+    }
+  );
+}
+
+// Git-managed Wix sites cannot create the Automations Action service-plugin file from the
+// Automations UI. Wix's supported Git path is to select an existing backend function.
+// Select this exported function in Run Velo Code. It intentionally delegates into the
+// canonical SKANDI_CORE action boundary and returns the empty object required by Wix.
+export async function skandiAutomationHandler(options = {}, context = {}) {
+  await runAutomationActionCore(options, context);
+  return {};
+}
+
+// Retain the documented Wix Automations custom-action entry name as an alias for runtimes
+// that resolve the conventional invoke() export rather than the descriptive function name.
+export const invoke = skandiAutomationHandler;
