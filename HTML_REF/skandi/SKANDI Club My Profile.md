@@ -1,12 +1,12 @@
-# MY CLUB PROFILE
-
-STATUS: V12 DUFFEL CUSTOMER SERVICING STATICALLY VERIFIED — REQUIRES LIVE TEST
-SLUG: `/my-profile`
-WIX PAGE: My Profile.u4k31
-AREA: SKANDI
+# SKANDI CLUB MY PROFILE — V12.1 REPAIR LOG
+Date: 2026-10-14
+Canonical HTML_REF: /HTML_REF/skandi/SKANDI Club My Profile.md
+Runtime page: /src/pages/My Club Profile.u4k31.js
+Route: /my-profile
+HTML element: #htmlMyProfile
 LIVE HTML: YES
-ELEMENT: #htmlMyProfile
-VERSION: `B-011.31`
+STATUS: STATICALLY VERIFIED — REQUIRES LIVE TEST
+SLUG: `/my-profile`
 
 ## INFO
 - Customer account core: `/src/backend/SKANDI_CORE/customerProfile.js`
@@ -16,12 +16,44 @@ VERSION: `B-011.31`
 - Booking ownership: canonical `altea_bookings` ownership plus verified customer booking links.
 - Live supplier capabilities gate cancellation, flight changes, post-booking baggage, airline-initiated changes, stay cancellation and car cancellation.
 
+This is reference documentation for the controller-only repair. It does NOT replace the canonical HTML_REF file and it does NOT require replacing the live HTML embed.
+
+Confirmed failure chain:
+HTML embed -> MY_PROFILE_READY -> Wix page controller -> customerProfile.web.js -> customerProfile.js -> Supabase.
+
+Confirmed startup defect:
+- The B-011.31 HTML emits MY_PROFILE_READY once during script startup.
+- The page controller registers its Wix HTML-component listener during $w.onReady and then sends MY_PROFILE_HOST_READY.
+- The B-011.31 HTML does not consume MY_PROFILE_HOST_READY.
+- If the one-shot MY_PROFILE_READY is emitted before the page listener is attached, the bootstrap request is lost and the profile remains on its loading state indefinitely.
+
+Confirmed duplicate-load defect:
+- The HTML emits MY_PROFILE_READY and CUSTOMER_DOCUMENT_CENTER_READY at startup.
+- The prior controller independently invoked getCustomerProfileBootstrap for both messages.
+- The V12.1 controller single-flights and briefly caches the read-only bootstrap so those startup requests share one backend operation.
+
 ## CHANGE LOG
-- **2026-09-18 · B-011.31:** Replaced the horizontal account menu with hierarchical side navigation. Added My Club → Overview, Points Activity and Program Information; page-addressable account workspaces; time-aware greeting; live points/status/member-since summary; booking-specific document/action center under My Upcoming Trips; legacy document message compatibility retained; no database schema mutation.
-- **2026-09-18 · B-011.30:** Established the approved dark, premium, static My Profile visual direction inspired by SKANDI Our Network. Removed decorative motion and converted the account to dark architectural surfaces with ivory content planes.
-- **2026-09-18 · B-011.29:** Experimental motion-rich visual pass; superseded by B-011.30.
-- **2026-09-18 · B-011.28:** Initial My Profile + SKANDI Club convergence integrating customer account, loyalty, trips, travelers, documents, wallet, saved items, notifications and settings.
-- **2026-10-12 · V12 servicing audit:** Confirmed the live page bridge already routes booking detail and management through `customerProfile.web.js` and the canonical Duffel servicing core. Fixed the cancellation-quote amount styling to reference canonical `--sk-navy` instead of undefined `--navy`. No direct provider call, duplicate booking store, or schema mutation was introduced. STATICALLY VERIFIED; live Duffel/Wix servicing actions require live test.
+### - **2026-09-18 · B-011.31:** Replaced the horizontal account menu with hierarchical side navigation. Added My Club → Overview, Points Activity and Program Information; page-addressable account workspaces; time-aware greeting; live points/status/member-since summary; booking-specific document/action center under My Upcoming Trips; legacy document message compatibility retained; no database schema mutation.
+### - **2026-09-18 · B-011.30:** Established the approved dark, premium, static My Profile visual direction inspired by SKANDI Our Network. Removed decorative motion and converted the account to dark architectural surfaces with ivory content planes.
+### - **2026-09-18 · B-011.29:** Experimental motion-rich visual pass; superseded by B-011.30.
+### - **2026-09-18 · B-011.28:** Initial My Profile + SKANDI Club convergence integrating customer account, loyalty, trips, travelers, documents, wallet, saved items, notifications and settings.
+### - **2026-10-12 · V12 servicing audit:** Confirmed the live page bridge already routes booking detail and management through `customerProfile.web.js` and the canonical Duffel servicing core. Fixed the cancellation-quote amount styling to reference canonical `--sk-navy` instead of undefined `--navy`. No direct provider call, duplicate booking store, or schema mutation was introduced. STATICALLY VERIFIED; live Duffel/Wix servicing actions require live test.
+### **2026-10-14 · V12.1 repair:**
+- Listener remains registered before any host message is sent.
+- MY_PROFILE_HOST_READY is repeated for a bounded startup window.
+- If no valid HTML message is observed, the controller performs one read-only bootstrap fallback after 250 ms.
+- The returned MY_PROFILE_DATA is replayed for a bounded startup window only when the HTML channel has not yet been observed. No mutation or navigation is replayed.
+- Bootstrap calls are single-flight and use a five-second cache to prevent the profile-ready/document-center-ready pair from doubling database traffic.
+- Explicit MY_PROFILE_REFRESH and CUSTOMER_DOCUMENT_REFRESH force a fresh backend read.
+- Mutations invalidate the bootstrap cache before reloading canonical state.
+- The bootstrap boundary now has a 22-second UI timeout so a backend stall resolves to MY_PROFILE_ERROR instead of an endless spinner.
+- Existing message names, HTML source names, routes, element ID, servicing actions, authentication, booking ownership, Duffel ownership, and visible HTML remain unchanged.
+#### Runtime evidence reviewed:
+- Supabase project schema confirms the current customer, Club, booking, document, wallet, notification, traveler and reference objects used by customerProfile.js exist.
+- Supabase production logs around 2026-10-14 20:51 UTC contain multiple PostgREST "Thread killed by timeout manager" entries. Those logs support reducing duplicate bootstrap pressure but do not identify a specific profile table as the sole cause.
+- Wix site context confirms SKANDI TRAVELS is published, Wix Studio/Velo is enabled, and the site was updated on 2026-10-14 shortly before the reported failure.
+#### Installation note for canonical HTML_REF:
+Append this repair record to the INFO / CHANGE LOG in /HTML_REF/skandi/SKANDI Club My Profile.md when synchronizing documentation. Preserve the complete existing B-011.31 HTML payload verbatim because this repair does not modify the embed.
 
 ## LIVE HTML
 ```html
