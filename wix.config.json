@@ -1,4 +1,12 @@
 {
   "siteId": "97bf5405-2507-4744-b53a-0f1a5a61796d",
-  "uiVersion": "566"
+  "uiVersion": "566",
+  "siteUrl": "https://www.skanditravels.com/",
+  "employeePortalUrl": "https://www.skanditravels.com/riaintra",
+  "employeeEmailDomain": "@skanditravels.com",
+  "employeeCompanyMarker": "SKANDI",
+  "skandiTravelsLogoUrl": "https://supabase.com/dashboard/project/muvpffdnugzxjbnbpgac/storage/files/buckets/skandi-public-assets?path=logos%2Fdark+background+logos&preview=SKANDI_TRAVELS_LIGHT.svg",
+  "skandiGroupLogoUrl": "https://supabase.com/dashboard/project/muvpffdnugzxjbnbpgac/storage/files/buckets/skandi-public-assets?path=logos%2Fdark+background+logos&preview=SKANDI_GROUP-White+-+source+%281%29.png",
+  "customerSenderDetailsId": "",
+  "employeeSenderDetailsId": ""
 }
