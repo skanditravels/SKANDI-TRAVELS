@@ -11,7 +11,7 @@ export const SITE_MAP = Object.freeze({
   about: "/about", support: "/about/support", newsroom: "/about/news-room",
   theStore: "/the-store", giftCard: "/gift-card", storeCheckout: "/the-store/store-checkout",
   storeConfirmation: "/the-store/store-checkout/order-confirmation", ourNetwork: "/about/our-network",
-  legal: "/about/legal", policies: "/about/legal/policies", riaintra: "/riaintra",
+  legal: "/about/legal", policies: "/about/legal/policies", cookiePreferences: "/about/legal/cookie-preferences", riaintra: "/riaintra",
   staffLogin: "/riaintra", successFactors: "/riaintra/success-factors",
   legalInternal: "/riaintra/success-factors/legal-internal", alteaLaunchpad: "/riaintra/success-factors/altea",
   alteaReservations: "/riaintra/success-factors/altea/reservations", opsControl: "/riaintra/success-factors/altea/ops",
@@ -125,6 +125,7 @@ export const EDITORIAL_PAGE_CATALOG = Object.freeze([
     section("policy-acknowledgement","Acknowledgement",[field("policy-acknowledgement-eyebrow","Eyebrow"),field("policy-acknowledgement-h2","Headline"),field("policy-acknowledgement-copy","Copy","LONG_TEXT")]),
     section("policy-document-head","Document header",[field("policy-document-eyebrow","Eyebrow")])
   ]),
+  page("cookiePreferences", "Cookie Preferences", SITE_MAP.cookiePreferences, "CONSENT_POLICY"),
   page("theStore", "The Store", SITE_MAP.theStore, "STORE", [
     section("store-hero","Store hero",[field("store-hero-eyebrow","Eyebrow"),field("store-hero-h1","Headline"),field("store-hero-copy","Hero copy","LONG_TEXT")])
   ]),
@@ -142,6 +143,7 @@ export const CUSTOMER_AUTH_POPUPS = Object.freeze({
 export const GLOBAL_CHROME = Object.freeze({
   customerHeader:Object.freeze({system:"SKANDI",role:"HEADER",file:"/embed/SKANDI-Global-Header.html",source:"SKANDI_CUSTOMER_HEADER_EXPANDBAR",elementIds:Object.freeze(["#skandiHeaderEmbed","#skandiCustomerHeaderEmbed"]),collapsedHeight:118,maxHeight:118}),
   customerFooter:Object.freeze({system:"SKANDI",role:"FOOTER",file:"/embed/SKANDI-Global-Footer.html",source:"SKANDI_CUSTOMER_FOOTER",elementIds:Object.freeze(["#skandiFooterEmbed","#skandiCustomerFooterEmbed"]),collapsedHeight:0,maxHeight:2400}),
+  cookieBanner:Object.freeze({system:"SKANDI",role:"CONSENT",file:"/embed/SKANDI-Cookie-Banner.html",source:"SKANDI_COOKIE_BANNER",elementIds:Object.freeze(["#skandiCookieBannerEmbed"]),collapsedHeight:1,maxHeight:560}),
   riaintraHeader:Object.freeze({system:"RIAINTRA",role:"HEADER",file:"/embed/RIAINTRA-Global-Header.html",source:"SKANDI_RIAINTRA_HEADER",elementIds:Object.freeze(["#riaintraHeaderEmbed","#riaintraHeader","#staffInternalChromeEmbed"]),collapsedHeight:52,maxHeight:700}),
   riaintraFooter:Object.freeze({system:"RIAINTRA",role:"FOOTER",file:"/embed/RIAINTRA-Global-Footer.html",source:"SKANDI_RIAINTRA_FOOTER",elementIds:Object.freeze(["#riaintraFooterEmbed","#riaintraFooter"]),collapsedHeight:0,maxHeight:180}),
   alteaHeader:Object.freeze({system:"ALTEA",role:"HEADER",file:"/embed/ALTEA-Global-Header.html",source:"SKANDI_ALTEA_HEADER",elementIds:Object.freeze(["#alteaHeaderEmbed","#alteaHeader"]),collapsedHeight:48,maxHeight:300}),
