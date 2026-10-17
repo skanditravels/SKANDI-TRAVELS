@@ -4,7 +4,7 @@
 
 import wixLocationFrontend from "wix-location-frontend";
 import wixSiteFrontend from "wix-site-frontend";
-import wixWindowFrontend from "wix-window-frontend";
+import wixWindowFrontend, { consentPolicy } from "wix-window-frontend";
 import { currentMember, authentication } from "wix-members-frontend";
 import { local } from "wix-storage-frontend";
 import { getCustomerHeaderSession, subscribeCustomerNewsletter } from "backend/SKANDI_CORE/customerSession.web";
@@ -19,6 +19,9 @@ const SETTINGS_STORAGE_KEY = "skandi_customer_settings_v1";
 const PARENT_SOURCE = "SKANDI_WIX_PARENT";
 const CUSTOMER_HEADER_SOURCE = GLOBAL_CHROME.customerHeader.source;
 const CUSTOMER_FOOTER_SOURCE = GLOBAL_CHROME.customerFooter.source;
+const COOKIE_BANNER_SOURCE = GLOBAL_CHROME.cookieBanner?.source || "SKANDI_COOKIE_BANNER";
+const COOKIE_PREFERENCES_SOURCE = "SKANDI_COOKIE_PREFERENCES";
+const COOKIE_CONSENT_SOURCES = new Set([COOKIE_BANNER_SOURCE, COOKIE_PREFERENCES_SOURCE]);
 const RIAINTRA_HEADER_SOURCE = GLOBAL_CHROME.riaintraHeader.source;
 const ALTEA_HEADER_SOURCE = GLOBAL_CHROME.alteaHeader.source;
 const ALTEA_FOOTER_SOURCE = GLOBAL_CHROME.alteaFooter.source;
@@ -29,7 +32,8 @@ const CONTENT_RESIZE_SOURCES = new Set([
   "SKANDI_PASSPORT_VISA_PAGE",
   "SKANDI_ASSISTANCE_PAGE",
   "SKANDI_BAGGAGE_PAGE",
-  "SKANDI_SIGNATURE_COLLECTION"
+  "SKANDI_SIGNATURE_COLLECTION",
+  COOKIE_PREFERENCES_SOURCE
 ]);
 const CONTENT_RESIZE_MIN = 680;
 const CONTENT_RESIZE_MAX = 30000;
@@ -209,6 +213,8 @@ const MASTER_CONFIG = Object.freeze({
 const IDS = Object.freeze({
   customerHeaders:[...GLOBAL_CHROME.customerHeader.elementIds],
   customerFooters:[...GLOBAL_CHROME.customerFooter.elementIds],
+  cookieBanners:[...(GLOBAL_CHROME.cookieBanner?.elementIds || ["#skandiCookieBannerEmbed"])],
+  cookiePreferenceEmbeds:["#cookiePreferencesEmbed"],
   internalHeaders:[...GLOBAL_CHROME.riaintraHeader.elementIds],
   internalFooters:["#riaintraFooterEmbed", "#riaintraFooter"],
   alteaHeaders:[...GLOBAL_CHROME.alteaHeader.elementIds],
@@ -295,6 +301,56 @@ function persistCustomerSettings(value = {}) {
   return { ...customerSettings };
 }
 
+function normalizeConsentPolicy(value = {}, { gpc = false } = {}) {
+  return {
+    essential:true,
+    functional:value?.functional === true,
+    analytics:value?.analytics === true,
+    advertising:value?.advertising === true,
+    dataToThirdParty:gpc ? false : value?.dataToThirdParty === true
+  };
+}
+function normalizeConsentDetails(details = {}) {
+  const created = details?.createdDate instanceof Date
+    ? details.createdDate.toISOString()
+    : (details?.createdDate ? String(details.createdDate) : "");
+  return {
+    ok:true,
+    defaultPolicy:details?.defaultPolicy === true,
+    createdDate:created,
+    policy:normalizeConsentPolicy(details?.policy || {})
+  };
+}
+function readConsentDetails() {
+  try {
+    return normalizeConsentDetails(consentPolicy.getCurrentConsentPolicy() || {});
+  } catch (error) {
+    console.error("[MasterPage] Consent policy read failed.", error);
+    return { ok:false, defaultPolicy:true, createdDate:"", policy:normalizeConsentPolicy({}), message:"Privacy preferences are temporarily unavailable." };
+  }
+}
+function pushConsentState(embed) {
+  if (embed) postToEmbed(embed, "SKANDI_CONSENT_STATE", readConsentDetails());
+}
+function pushConsentStateToAll() {
+  const state = readConsentDetails();
+  for (const embed of allHtmlComponents()) postToEmbed(embed, "SKANDI_CONSENT_STATE", state);
+}
+async function saveConsentPolicy(embed, value = {}, { gpc = false } = {}) {
+  const policy = normalizeConsentPolicy(value, { gpc });
+  try {
+    const details = await consentPolicy.setConsentPolicy(policy);
+    const state = normalizeConsentDetails(details || consentPolicy.getCurrentConsentPolicy() || { policy, defaultPolicy:false });
+    postToEmbed(embed, "SKANDI_CONSENT_SAVED", { ...state, ok:true, reloadRequired:true });
+    postToEmbed(embed, "SKANDI_CONSENT_STATE", state);
+    return state;
+  } catch (error) {
+    console.error("[MasterPage] Consent policy save failed.", error);
+    postToEmbed(embed, "SKANDI_CONSENT_SAVED", { ok:false, message:"We could not save your privacy preferences. Please try again." });
+    return null;
+  }
+}
+
 async function currentPagePresentation({ force = false } = {}) {
   const path = currentPathString();
   if (!force && presentationState.path === path && presentationState.value) return presentationState.value;
@@ -335,6 +391,7 @@ function firstHtml(ids = []) {
 }
 function customerHeaderEl() { return firstHtml(IDS.customerHeaders); }
 function customerFooterEl() { return firstHtml(IDS.customerFooters); }
+function cookieBannerEl() { return firstHtml(IDS.cookieBanners); }
 function internalHeaderEl() { return firstHtml(IDS.internalHeaders); }
 function internalFooterEl() { return firstHtml(IDS.internalFooters); }
 function alteaHeaderEl() { return firstHtml(IDS.alteaHeaders); }
@@ -438,6 +495,7 @@ function wireLocationChangeScroll() {
       await applyChromeVisibility();
       startMobileFooterGate();
       pushConfigToAll();
+      pushConsentStateToAll();
     });
   } catch (_) {}
 }
@@ -602,6 +660,28 @@ async function handleMasterMessage(embed, message = {}) {
       if (source === ALTEA_FOOTER_SOURCE) postToEmbed(embed, "ALTEA_FOOTER_STATE", state);
     }
     return true;
+  }
+  if (COOKIE_CONSENT_SOURCES.has(source)) {
+    if (type === "SKANDI_CONSENT_REQUEST") {
+      pushConsentState(embed);
+      return true;
+    }
+    if (type === "SKANDI_CONSENT_ACCEPT_ALL") {
+      await saveConsentPolicy(embed, { essential:true, functional:true, analytics:true, advertising:true, dataToThirdParty:true }, { gpc:payload.gpc === true });
+      return true;
+    }
+    if (type === "SKANDI_CONSENT_REJECT_OPTIONAL") {
+      await saveConsentPolicy(embed, { essential:true, functional:false, analytics:false, advertising:false, dataToThirdParty:false }, { gpc:payload.gpc === true });
+      return true;
+    }
+    if (type === "SKANDI_CONSENT_SAVE") {
+      await saveConsentPolicy(embed, payload.policy || {}, { gpc:payload.gpc === true });
+      return true;
+    }
+    if (type === "SKANDI_CONSENT_NAVIGATE") {
+      navigate(message.path || payload.path || SITE_MAP.cookiePreferences);
+      return true;
+    }
   }
   if (type === "SKANDI_PRESENTATION_READY") {
     try {
@@ -825,6 +905,8 @@ function wireAllHtmlComponents() {
   const idGroups = [
     ...IDS.customerHeaders,
     ...IDS.customerFooters,
+    ...IDS.cookieBanners,
+    ...IDS.cookiePreferenceEmbeds,
     ...IDS.internalHeaders,
     ...IDS.internalFooters,
     ...IDS.alteaHeaders,
@@ -912,6 +994,7 @@ async function applyChromeVisibility() {
   const alteaFooter = firstExisting(IDS.alteaFooters);
 
   await Promise.all([
+    setElementVisible(cookieBannerEl(), !internal),
     setElementVisible(firstExisting(IDS.customerHeaders), showCustomerChrome),
     mobileGate && showCustomerChrome
       ? setElementDisplayPreserveLayout(customerFooter, false)
@@ -942,6 +1025,8 @@ $w.onReady(async function () {
   const internal = isInternalPath(path);
   const altea = internal && isAlteaPath(path);
 
+  if (!internal) pushConsentState(cookieBannerEl());
+
   if (!chromeFree && !internal) {
     const header = customerHeaderEl();
     const footer = customerFooterEl();
@@ -965,6 +1050,10 @@ $w.onReady(async function () {
     });
   } catch (_) {}
 
-  setTimeout(async () => { wireAllHtmlComponents(); await applyChromeVisibility(); await syncMobileFooterGate({ force:true }); pushConfigToAll(); }, 250);
-  setTimeout(async () => { wireAllHtmlComponents(); await applyChromeVisibility(); await syncMobileFooterGate({ force:true }); pushConfigToAll(); }, 1200);
+  try {
+    consentPolicy.onConsentPolicyChanged(() => pushConsentStateToAll());
+  } catch (_) {}
+
+  setTimeout(async () => { wireAllHtmlComponents(); await applyChromeVisibility(); await syncMobileFooterGate({ force:true }); pushConfigToAll(); if (!isInternalPath()) pushConsentStateToAll(); }, 250);
+  setTimeout(async () => { wireAllHtmlComponents(); await applyChromeVisibility(); await syncMobileFooterGate({ force:true }); pushConfigToAll(); if (!isInternalPath()) pushConsentStateToAll(); }, 1200);
 });
