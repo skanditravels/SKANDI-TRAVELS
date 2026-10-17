@@ -6,6 +6,13 @@
 import { automationsV2 } from "@wix/automations";
 import { auth } from "@wix/essentials";
 import { requireStaffPortalSessionCore } from "backend/SKANDI_CORE/staffAuth";
+import {
+  generateAutomationEmailActionMapping,
+  getAutomationEmailPlatformSnapshot,
+  inspectAutomationEmailAction,
+  previewAutomationEmailAction,
+  syncAutomationEmailAction
+} from "backend/SKANDI_CORE/automationEmailPlatform";
 import { SkandiError } from "backend/SKANDI_CORE/platformErrors";
 import { lower, stringArray, text, upper } from "backend/SKANDI_CORE/platformValidation";
 
@@ -55,9 +62,15 @@ function assertAutomationAdministrator(session = {}) {
   const privileged = session.isSystemAdmin === true || PRIVILEGED_ROLES.has(role) || groups.has("system-admin") || keys.has("system-admin");
   if (!privileged) {
     throw new SkandiError("AUTOMATION_ADMIN_REQUIRED", "System administrator access is required.", {
-      publicMessage: "System administrator access is required to view Wix Automations."
+      publicMessage: "System administrator access is required to manage Wix Automations."
     });
   }
+}
+
+async function requireAutomationAdministrator() {
+  const session = await requireStaffPortalSessionCore();
+  assertAutomationAdministrator(session);
+  return session;
 }
 
 function normalizeAutomation(value = {}) {
@@ -141,8 +154,7 @@ async function queryLiveAutomations() {
 }
 
 export async function getAutomationAdminSnapshotCore() {
-  const session = await requireStaffPortalSessionCore();
-  assertAutomationAdministrator(session);
+  await requireAutomationAdministrator();
 
   const rows = await queryLiveAutomations();
   const automations = rows
@@ -165,6 +177,31 @@ export async function getAutomationAdminSnapshotCore() {
       inactive: automations.filter(item => !item.enabled).length
     }
   };
+}
+
+export async function getAutomationEmailPlatformSnapshotCore() {
+  await requireAutomationAdministrator();
+  return getAutomationEmailPlatformSnapshot();
+}
+
+export async function generateAutomationEmailActionMappingCore(options = {}) {
+  await requireAutomationAdministrator();
+  return generateAutomationEmailActionMapping(objectOf(options));
+}
+
+export async function inspectAutomationEmailActionCore(options = {}) {
+  await requireAutomationAdministrator();
+  return inspectAutomationEmailAction(objectOf(options));
+}
+
+export async function previewAutomationEmailActionCore(options = {}) {
+  await requireAutomationAdministrator();
+  return previewAutomationEmailAction(objectOf(options));
+}
+
+export async function syncAutomationEmailActionCore(options = {}) {
+  await requireAutomationAdministrator();
+  return syncAutomationEmailAction(objectOf(options));
 }
 
 export async function runAutomationActionCore(options = {}, context = {}) {
@@ -199,15 +236,11 @@ export async function runAutomationActionCore(options = {}, context = {}) {
   );
 }
 
-// Git-managed Wix sites cannot create the Automations Action service-plugin file from the
-// Automations UI. Wix's supported Git path is to select an existing backend function.
-// Select this exported function in Run Velo Code. It intentionally delegates into the
-// canonical SKANDI_CORE action boundary and returns the empty object required by Wix.
+// Runtime Run Velo Code actions remain intentionally separate from email-content synchronization.
+// Email content must be synchronized administratively, never rewritten during each live automation execution.
 export async function skandiAutomationHandler(options = {}, context = {}) {
   await runAutomationActionCore(options, context);
   return {};
 }
 
-// Retain the documented Wix Automations custom-action entry name as an alias for runtimes
-// that resolve the conventional invoke() export rather than the descriptive function name.
 export const invoke = skandiAutomationHandler;
