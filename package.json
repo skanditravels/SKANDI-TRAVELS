@@ -27,16 +27,14 @@
   "scripts": {
     "postinstall": "wix sync-types",
     "dev": "wix dev",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "check": "node installer/install-member-email-automations.mjs --check",
+    "plan": "node installer/install-member-email-automations.mjs --plan"
   },
   "name": "skandi-v12-member-security-email-installer",
   "private": true,
   "type": "module",
   "engines": {
     "node": ">=18"
-  },
-  "scripts": {
-    "check": "node installer/install-member-email-automations.mjs --check",
-    "plan": "node installer/install-member-email-automations.mjs --plan"
   }
 }
