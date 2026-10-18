@@ -1,0 +1,10 @@
+import { Duffel } from '@duffel/api';
+import { secrets } from 'wix-secrets-backend.v2';
+import { elevate } from 'wix-auth';
+
+const getSecretValue = elevate(secrets.getSecretValue);
+
+export async function getDuffelClient() {
+  const token = await getSecretValue('DUFFEL_ACCESS_TOKEN');
+  return new Duffel({ token });
+}
