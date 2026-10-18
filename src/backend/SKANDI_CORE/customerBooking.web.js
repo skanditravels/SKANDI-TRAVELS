@@ -45,6 +45,7 @@ import {
   loadCustomerCarBookingCore,
   cancelCustomerCarBookingCore
 } from "backend/SKANDI_CORE/customerBooking";
+import { dispatchConfirmedBookingEmailCore } from "backend/SKANDI_CORE/bookingConfirmationEmail";
 
 
 async function memberContext() {
@@ -88,6 +89,30 @@ async function memberCall(handler, input = {}) {
   catch (error) { throw publicMessage(error); }
 }
 
+// Notification delivery is a secondary side effect. Never reverse a completed
+// supplier booking or re-run a payment because Wix mail delivery is unavailable.
+// The server-owned booking ID is reloaded with member ownership before dispatch.
+async function confirmedMemberCall(handler, input = {}) {
+  try {
+    const context = await memberContext();
+    const result = await handler(context, input || {});
+    const status = String(result?.status || result?.cart?.status || "");
+    const cartId = String(result?.cartId || result?.cart?.cartId || input?.cartId || "");
+    if (status === "Confirmed" && cartId) {
+      try {
+        const member = await currentMember.getMember({fieldsets:["FULL"]});
+        if (!member?._id || member._id !== context.memberId) throw new Error("WIX_MEMBER_SESSION_CHANGED");
+        await dispatchConfirmedBookingEmailCore({...context, contactId:String(member.contactId || "")}, cartId);
+      }
+      catch (mailError) {
+        console.error("[SKANDI][BookingEmail] Confirmed booking email dispatch requires attention", {
+          cartId, code:mailError?.code || "BOOKING_EMAIL_ERROR", message:mailError?.message || ""
+        });
+      }
+    }
+    return result;
+  } catch (error) { throw publicMessage(error); }
+}
 
 export const searchLiveFlightOffers = webMethod(Permissions.Anyone, (input = {}) => publicCall(searchLiveFlightOffersCore, input));
 export const searchUnifiedOffers = webMethod(Permissions.Anyone, (input = {}) => publicCall(searchUnifiedOffersCore, input));
@@ -118,8 +143,8 @@ export const saveBookingTravelers = webMethod(Permissions.SiteMember, (input = {
 export const loadSeatMaps = webMethod(Permissions.SiteMember, (input = {}) => memberCall(loadSeatMapsCore, input));
 export const storeSeatSelections = webMethod(Permissions.SiteMember, (input = {}) => memberCall(storeSeatSelectionsCore, input));
 export const prepareBookingPayment = webMethod(Permissions.SiteMember, (input = {}) => memberCall(prepareBookingPaymentCore, input));
-export const commitBooking = webMethod(Permissions.SiteMember, (input = {}) => memberCall(commitBookingCore, input));
-export const reconcileBooking = webMethod(Permissions.SiteMember, (input = {}) => memberCall(reconcileBookingCore, input));
+export const commitBooking = webMethod(Permissions.SiteMember, (input = {}) => confirmedMemberCall(commitBookingCore, input));
+export const reconcileBooking = webMethod(Permissions.SiteMember, (input = {}) => confirmedMemberCall(reconcileBookingCore, input));
 export const loadBookingConfirmation = webMethod(Permissions.SiteMember, (input = {}) => memberCall(loadBookingConfirmationCore, input));
 export const loadBookingDocuments = webMethod(Permissions.SiteMember, (input = {}) => memberCall(loadBookingDocumentsCore, input));
 
@@ -127,14 +152,14 @@ export const loadBookingDocuments = webMethod(Permissions.SiteMember, (input = {
 export const createHotelCart = webMethod(Permissions.SiteMember, (input = {}) => memberCall(createHotelCartCore, input));
 export const saveHotelGuests = webMethod(Permissions.SiteMember, (input = {}) => memberCall(saveHotelGuestsCore, input));
 export const prepareHotelPayment = webMethod(Permissions.SiteMember, (input = {}) => memberCall(prepareHotelPaymentCore, input));
-export const commitHotelBooking = webMethod(Permissions.SiteMember, (input = {}) => memberCall(commitHotelBookingCore, input));
+export const commitHotelBooking = webMethod(Permissions.SiteMember, (input = {}) => confirmedMemberCall(commitHotelBookingCore, input));
 
 
 export const createCarCart = webMethod(Permissions.SiteMember, (input = {}) => memberCall(createCarCartCore, input));
 export const saveCarDriver = webMethod(Permissions.SiteMember, (input = {}) => memberCall(saveCarDriverCore, input));
 export const prepareCarCheckout = webMethod(Permissions.SiteMember, (input = {}) => memberCall(prepareCarCheckoutCore, input));
-export const commitCarBooking = webMethod(Permissions.SiteMember, (input = {}) => memberCall(commitCarBookingCore, input));
-export const createCustomerCarBooking = webMethod(Permissions.SiteMember, (input = {}) => memberCall(createCustomerCarBookingCore, input));
+export const commitCarBooking = webMethod(Permissions.SiteMember, (input = {}) => confirmedMemberCall(commitCarBookingCore, input));
+export const createCustomerCarBooking = webMethod(Permissions.SiteMember, (input = {}) => confirmedMemberCall(createCustomerCarBookingCore, input));
 
 
 export const loadBookingRequirements = webMethod(Permissions.SiteMember, (input = {}) => memberCall(loadBookingRequirementsCore, input));
