@@ -126,3 +126,69 @@ Custom Velo-code triggers remain an approved SKANDI pattern where required by a 
 - **2026-10-14** — Added the canonical V12 Wix Automations read connection. Live automation metadata is normalized in `SKANDI_CORE`, system-admin gated, and merged into the existing Customer Service Desk `AGENT_BOOTSTRAP` contract. No automation workflow, status or HTML payload was modified.
 - **2026-10-15** — Added the missing Git-managed Run Velo Code entry point to the existing canonical `automationControl.js`. `skandiAutomationHandler` delegates to the canonical action boundary and `invoke` aliases the same implementation for Wix custom-action compatibility. Unmapped customer-facing workflows fail closed rather than returning false success. No automation definition, email workflow, Supabase resource, Wix deployment or external provider was modified. **STATICALLY VERIFIED — REQUIRES LIVE TEST.**
 - **2026-10-16** — Added the V12 centralized automated-email platform. Shared brand/legal/contact/social values and a 71-workflow catalog now live in `automationEmailConfig.js`; deterministic MJML compilation lives in `automationEmailTemplates.js`; authorized Wix Automation Email Action inspection/preview/content synchronization and new-action mapping live in `automationEmailPlatform.js`. Existing automation administration and runtime entry behavior are preserved. Secure Wix member values remain trigger-scoped. Business Critical email remains the security delivery layer and promotional modules are prevented from entering Business Critical/non-promotional transactional templates. No live Wix automation was modified by this package. **STATICALLY VERIFIED — REQUIRES LIVE TEST.**
+
+## Booking completion → branded booking-confirmation email (2026-10-18)
+
+The canonical Wix customer-booking facade now dispatches a single owner-verified
+**BOOKING_CONFIRMED** Wix Automation custom trigger after the established
+`commitBooking`, `commitHotelBooking`, `commitCarBooking`,
+`createCustomerCarBooking`, or `reconcileBooking` operation has **returned a
+Confirmed result**. The underlying Duffel, Stripe, ALTEA, cart-persistence and
+payment interfaces remain unchanged. The Wix member contact ID is resolved by
+Wix server-side after the booking is saved, and the confirmed cart is reread
+through `customerBooking.js` with established owner checks. No browser or HTML
+embed may provide the recipient, booking state, amount, or supplier references.
+
+The exact chain is:
+
+`Booking.confirmation HTML_REF (unchanged)` → `Booking.e8twe.js (unchanged)` →
+`customerBooking.web.js` → `customerBooking.js + bookingCart.js (unchanged)` →
+`bookingConfirmationEmail.js` → existing `supabaseServer.js` →
+`customer_notifications` unique delivery claim →
+Wix `@wix/automations` `customTrigger.runTrigger` →
+existing `BOOKING_CONFIRMED` MJML workflow content in
+`automationEmailConfig.js` + `automationEmailTemplates.js` → Wix Send an email action.
+
+Wix custom trigger must be created in the live Wix Automations builder and its
+**trigger ID (not automation ID)** placed into Wix Secrets Manager under
+`SKANDI_BOOKING_CONFIRMATION_TRIGGER_ID`. The exact trigger ID is not included
+in Git. Wix recipient mapping must use the `contactId` payload field and the
+Send an email action must have the approved Business Transactional classification,
+notification topic, sender configuration and published email content. The
+admin email-platform sync operation can install the `BOOKING_CONFIRMED` MJML
+into the selected existing Wix email action after Wix settings are configured.
+This package does not create or activate Wix Automations.
+
+Flat, source-grounded fields include: `contactId`, `memberId`, `bookingId`,
+`bookingReference`, `supplierReference`, `customerEmail`, `productType`,
+`confirmationDate`, `travelerDetails`, `flightDetails`, `hotelDetails`,
+`carDetails`, `transferDetails`, `seatDetails`, `extrasDetails`,
+`totalAmount`, `currency`, `paymentStatus`, `manageBookingUrl`,
+`documentCenterUrl`, `confirmationSource`.
+
+For flight/package, hotel, and car bookings, applicable provider details must
+be present before dispatch. Incomplete source data, mismatched member/contact
+email, unconfirmed status or invalid currency blocks email dispatch rather
+than generating invented information. Relevant omitted products are labeled
+as not part of that booking. Neither the email nor custom trigger grants staff
+access or changes booking/payment state. The primary CTA goes to authenticated
+My Profile to see current complete documents; an email is not a ticket or voucher.
+
+`customer_notifications.notification_id` is the existing unique delivery claim,
+keyed by confirmed cart. The server records an accepted trigger separately from
+verified customer receipt; ambiguous failures require operator review, not
+automatic duplicate sends. Email dispatch errors are logged independently:
+a completed and paid booking must never be reversed or retried because email
+failed. The customer-facing Booking Confirmation HTML payload and its live embed
+are intentionally unchanged; **no live HTML replacement is required**.
+
+**STATICALLY VERIFIED** against repository `main` tree SHA
+`bd1edfda1411114197c61f79bfc9401ff252955e`, current Wix custom-trigger
+API, and Supabase `booking_carts`/`customer_notifications` columns and unique
+constraints. **REQUIRES LIVE TEST:** Wix custom trigger ID, recipient mapping,
+Business Transactional classification/topic, email action content sync,
+Wix Git module resolution, booking reconciliation and actual email delivery.
+
+## CHANGE LOG — continued
+
+- **2026-10-18** — Added V12 completed-booking customer-email dispatch at the existing customer booking web facade. Owner-verified confirmed-cart data is flattened into the existing branded `BOOKING_CONFIRMED` automation email content, including travelers, itinerary, booked services, amount and payment state. Reuses the unique `customer_notifications` delivery claim, preserves all existing Booking HTML_REF content and backend service boundaries, and does not alter external deployment. **STATICALLY VERIFIED — REQUIRES LIVE TEST.**
