@@ -153,6 +153,31 @@ function primaryAction(definition, copy, audience) {
   return `<mj-section padding="0 38px 28px 38px"><mj-column><mj-button background-color="${EMAIL_PLATFORM.brand.cyan}" color="${EMAIL_PLATFORM.brand.navy}" font-family="Arial,Helvetica,sans-serif" font-size="15px" line-height="18px" font-weight="800" border-radius="8px" href="${esc(href)}" align="left" padding="0">${esc(copy.ctaLabel)}</mj-button></mj-column></mj-section>`;
 }
 
+// Details are supplied by the owner-verified confirmation-cart bridge, not by
+// the Wix Automation editor's test data or visitor-controlled form fields.
+function confirmedBookingDetailsMjml(workflowKey) {
+  if (workflowKey !== "BOOKING_CONFIRMED") return "";
+  const fields = [
+    ["Booking reference", "bookingReference"],
+    ["Supplier confirmation", "supplierReference"],
+    ["Date confirmed", "confirmationDate"],
+    ["Travelers", "travelerDetails"],
+    ["Flights", "flightDetails"],
+    ["Accommodation", "hotelDetails"],
+    ["Car rental", "carDetails"],
+    ["Transfers", "transferDetails"],
+    ["Seat assignments", "seatDetails"],
+    ["Booked extras", "extrasDetails"],
+    ["Booking total", "totalAmount"],
+    ["Payment status", "paymentStatus"]
+  ];
+  return `<mj-section background-color="#ffffff" padding="4px 38px 26px 38px"><mj-column background-color="${EMAIL_PLATFORM.brand.panel}" padding="18px 20px" border="1px solid ${EMAIL_PLATFORM.brand.line}" border-radius="9px">
+    <mj-text font-family="Arial,Helvetica,sans-serif" font-weight="800" font-size="13px" line-height="20px" color="${EMAIL_PLATFORM.brand.navy}" padding="0 0 10px">YOUR BOOKING DETAILS</mj-text>
+    ${fields.map(([label, key]) => `<mj-text font-family="Arial,Helvetica,sans-serif" font-size="13px" line-height="21px" color="${EMAIL_PLATFORM.brand.body}" padding="7px 0"><strong>${esc(label)}</strong><br/>${wixPlaceholder(key)}</mj-text>`).join("")}
+    <mj-text font-family="Arial,Helvetica,sans-serif" font-size="11px" line-height="18px" color="${EMAIL_PLATFORM.brand.muted}" padding="14px 0 0">Supplier ticket numbers, vouchers, exact check-in rules and document availability remain subject to their current confirmed status in My Profile. This email is not a boarding pass.</mj-text>
+  </mj-column></mj-section>`;
+}
+
 function securityNotice(definition) {
   if (!definition.secure) return "";
   return `<mj-section padding="0 38px 28px 38px"><mj-column><mj-text font-family="Arial,Helvetica,sans-serif" font-size="12px" line-height="19px" color="${EMAIL_PLATFORM.brand.muted}" padding="0">●&#160;&#160;Security notice: security links and verification codes are intended only for the recipient. Do not forward this email or share the secure value.</mj-text></mj-column></mj-section>`;
@@ -185,6 +210,7 @@ export function compileAutomationEmailContent({ workflowKey, audience, copyOverr
     ${heroMjml(normalizedAudience, copy)}
     <mj-section background-color="#ffffff" padding="32px 38px 8px 38px"><mj-column><mj-text font-size="11px" line-height="16px" font-weight="800" letter-spacing="1.4px" color="#2a9eaa" padding="0 0 8px 0">${esc(definition.category.replace(/_/g, " "))}</mj-text><mj-text font-size="28px" line-height="36px" font-weight="800" color="${EMAIL_PLATFORM.brand.ink}" padding="0">${esc(copy.headline)}</mj-text></mj-column></mj-section>
     <mj-section background-color="#ffffff" padding="0 38px 22px 38px"><mj-column><mj-text font-size="16px" line-height="26px" color="${EMAIL_PLATFORM.brand.body}" padding="0">${esc(copy.intro)}</mj-text></mj-column></mj-section>
+    ${confirmedBookingDetailsMjml(key)}
     ${primaryAction(definition, copy, normalizedAudience)}
     ${securityNotice(definition)}
     ${marketing ? clubPromoMjml() : ""}
