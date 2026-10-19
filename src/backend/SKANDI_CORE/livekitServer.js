@@ -4,12 +4,10 @@
 // LiveKit Agents owns Alexandra runtime; Supabase customer_support_* owns durable Support cases/messages.
 // GroupTalk remains a separate operational domain.
 
-
-import { AccessToken, LiveKitAPI } from "livekit-server-sdk";
+import { AccessToken, AgentDispatchClient } from "livekit-server-sdk";
 import { createHash, randomUUID } from "crypto";
 import { secrets } from "wix-secrets-backend.v2";
 import { elevate } from "wix-auth";
-
 
 const elevatedGetSecretValue = elevate(secrets.getSecretValue);
 const DEFAULT_TTL = "15m";
@@ -17,11 +15,9 @@ const SUPPORT_TEXT_TOPIC = "skandi.support.chat";
 const ALEXANDRA_TEXT_TOPIC = "lk.chat";
 const ALEXANDRA_AGENT_NAME = "alexandra-prod";
 
-
 function clean(value, max = 240) {
   return String(value ?? "").trim().slice(0, max);
 }
-
 
 function safeTokenPart(value, fallback = "session") {
   const normalized = clean(value, 300)
@@ -32,11 +28,9 @@ function safeTokenPart(value, fallback = "session") {
   return normalized || fallback;
 }
 
-
 function opaquePart(value, length = 18) {
   return createHash("sha256").update(String(value ?? "")).digest("hex").slice(0, length);
 }
-
 
 function liveKitApiHost(url) {
   const value = clean(url, 1000);
@@ -44,7 +38,6 @@ function liveKitApiHost(url) {
   if (value.startsWith("ws://")) return `http://${value.slice(5)}`.replace(/\/+$/, "");
   return value.replace(/\/+$/, "");
 }
-
 
 async function secret(name) {
   const result = await elevatedGetSecretValue(name);
@@ -56,7 +49,6 @@ async function secret(name) {
   return normalized;
 }
 
-
 async function liveKitCredentials() {
   const [apiKey, apiSecret, livekitUrl] = await Promise.all([
     secret("LIVEKIT_API_KEY"),
@@ -66,20 +58,17 @@ async function liveKitCredentials() {
   return { apiKey, apiSecret, livekitUrl, apiHost: liveKitApiHost(livekitUrl) };
 }
 
-
 export function supportRoomName(caseId) {
   const raw = clean(caseId, 160);
   if (!raw) throw new Error("SUPPORT_CASE_ID_REQUIRED");
   return `skandi-support-${opaquePart(`support-room:${raw}`, 32)}`;
 }
 
-
 export function supportParticipantIdentity({ role, subjectId, caseId }) {
   const normalizedRole = role === "agent" ? "agent" : "customer";
   const seed = `${normalizedRole}:${clean(subjectId, 300)}:${clean(caseId, 160)}`;
   return `support-${normalizedRole}-${opaquePart(seed, 24)}`;
 }
-
 
 export async function issueLiveKitRoomTokenCore({
   roomName,
@@ -97,7 +86,6 @@ export async function issueLiveKitRoomTokenCore({
   const participant = clean(identity, 120);
   if (!room || !participant) throw new Error("LIVEKIT_ROOM_IDENTITY_REQUIRED");
 
-
   const { apiKey, apiSecret, livekitUrl } = await liveKitCredentials();
   const token = new AccessToken(apiKey, apiSecret, {
     identity: participant,
@@ -113,7 +101,6 @@ export async function issueLiveKitRoomTokenCore({
     })
   });
 
-
   token.addGrant({
     roomJoin: true,
     room,
@@ -121,7 +108,6 @@ export async function issueLiveKitRoomTokenCore({
     canPublish: canPublish === true,
     canPublishData: canPublish === true
   });
-
 
   return {
     url: livekitUrl,
@@ -134,7 +120,6 @@ export async function issueLiveKitRoomTokenCore({
     expiresIn: ttl
   };
 }
-
 
 export async function issueSupportLiveKitSessionCore({
   caseId,
@@ -158,7 +143,6 @@ export async function issueSupportLiveKitSessionCore({
   });
 }
 
-
 export async function issueAlexandraLiveKitSessionCore({
   locale = "en-US",
   currency = "USD",
@@ -171,7 +155,6 @@ export async function issueAlexandraLiveKitSessionCore({
   const contextId = `ctx_${randomUUID().replaceAll("-", "").slice(0, 24)}`;
   const roomName = `alexandra-${randomUUID().replaceAll("-", "").slice(0, 24)}`;
   const identity = `web-${randomUUID().replaceAll("-", "").slice(0, 24)}`;
-
 
   const jobMetadata = {
     brand: "SKANDI TRAVELS",
@@ -188,12 +171,17 @@ export async function issueAlexandraLiveKitSessionCore({
     support_message_table: "customer_support_messages"
   };
 
-
-  const api = new LiveKitAPI({ host: apiHost, apiKey, secret: apiSecret });
-  const dispatch = await api.agentDispatch.createDispatch(roomName, ALEXANDRA_AGENT_NAME, {
+  // livekit-server-sdk 2.15.5 (the pinned SKANDI version) exposes AgentDispatchClient.
+  // LiveKitAPI is only available from 2.17.0; importing it breaks session startup.
+  const dispatcher = new AgentDispatchClient(apiHost, apiKey, apiSecret);
+  const dispatch = await dispatcher.createDispatch(roomName, ALEXANDRA_AGENT_NAME, {
     metadata: JSON.stringify(jobMetadata)
   });
-
+  if (!dispatch?.id) {
+    const error = new Error("ALEXANDRA_DISPATCH_UNCONFIRMED");
+    error.code = "ALEXANDRA_DISPATCH_UNCONFIRMED";
+    throw error;
+  }
 
   const token = new AccessToken(apiKey, apiSecret, {
     identity,
@@ -214,7 +202,6 @@ export async function issueAlexandraLiveKitSessionCore({
     canPublishData: true
   });
 
-
   return {
     url: livekitUrl,
     token: await token.toJwt(),
@@ -226,7 +213,7 @@ export async function issueAlexandraLiveKitSessionCore({
     agentRuntime: "LiveKit Agents",
     provider: "LiveKit",
     caseStore: "Supabase",
-    dispatchId: clean(dispatch?.id, 200),
+    dispatchId: clean(dispatch.id, 200),
     textTopic: ALEXANDRA_TEXT_TOPIC,
     transcriptionTopic: "lk.transcription",
     metadata: jobMetadata,
