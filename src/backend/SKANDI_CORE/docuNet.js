@@ -5,7 +5,10 @@ import {
   restRequest,
   storageCreateSignedUploadUrl,
   storageCreateSignedReadUrl,
-  storageGetObjectInfo
+  storageGetObjectInfo,
+  storageListObjects,
+  storageCopyObject,
+  storageRemoveObjects
 } from "backend/SKANDI_CORE/supabaseServer";
 import { requireStaffPortalSessionCore } from "backend/SKANDI_CORE/staffAuth";
 import { getAdobePdfPropertiesFromUrl } from "backend/SKANDI_CORE/adobePdf";
@@ -271,7 +274,7 @@ export async function createDocuNetUploadCore({ requestId, metadata: meta, file 
   const m = metadata(meta);
   const request = clean(requestId, 100);
   if (!request) throw new Error("DOCUNET_REQUEST_ID_REQUIRED");
-  if (!file || file.type !== "application/pdf" || !Number(file.size) || Number(file.size) > 150 * 1024 * 1024) {
+  if (!file || file.type !== "application/pdf" || !Number(file.size) || Number(file.size) > 50 * 1024 * 1024) {
     throw new Error("DOCUNET_VALID_PDF_REQUIRED");
   }
   const path = `${m.documentCode.toLowerCase()}/${m.revision}/${request}-${safeFile(file.name)}`;
@@ -782,4 +785,196 @@ export async function acknowledgeDocuNetDocumentCore({ documentId, revisionId } 
   });
   await audit(a, "DOCUNET_ACKNOWLEDGED", { revision: rev }, id, receipt.revision_id);
   return { ok: true, documentId: id, acknowledgedAt: now };
+}
+
+// V12 controlled bucket administration. Raw files are NOT automatically approved staff documents.
+// Every entry point authorizes staff on the server; never trust client-provided role/status.
+function safeStoragePdfPath(value) {
+  const path = clean(value, 900);
+  if (!path || path.startsWith("/") || path.includes("\\") || path.includes("//") ||
+      path.split("/").some(v => v === ".." || v === "." || !v) ||
+      /[?#%\x00-\x1f]/.test(path) || !/^[a-z0-9_.@()\- /]+\.pdf$/i.test(path)) {
+    throw new Error("DOCUNET_STORAGE_PDF_PATH_INVALID");
+  }
+  return path;
+}
+function standardPath(path) {
+  return `supabase://${BUCKET}/${path}`;
+}
+async function referenceReport(path) {
+  const [revisions, sessions, legal, attachments, templates] = await Promise.all([
+    restRequest({ table: "docunet_revisions", query: { select: "id,document_id,revision,revision_status,storage_path", storage_bucket: `eq.${BUCKET}`, storage_path: `eq.${path}`, limit: 100 } }),
+    restRequest({ table: "docunet_upload_sessions", query: { select: "request_id,completed_at,expires_at", storage_bucket: `eq.${BUCKET}`, storage_path: `eq.${path}`, limit: 100 } }),
+    restRequest({ table: "legal_policies", query: { select: "policy_id,status", pdf_file_url: `eq.${standardPath(path)}`, limit: 100 } }),
+    restRequest({ table: "document_attachments", query: { select: "id,storage_provider,storage_key", storage_key: `in.("${path}","${BUCKET}/${path}")`, limit: 100 } }),
+    restRequest({ table: "document_templates", query: { select: "id", file_url: `eq.${standardPath(path)}`, limit: 100 } })
+  ]);
+  const activeUploads = arr(sessions).filter(v => !v.completed_at && Date.parse(v.expires_at || "") > Date.now());
+  return { revisions: arr(revisions), activeUploads, legal: arr(legal), attachments: arr(attachments), templates: arr(templates) };
+}
+function assertNoExternalReferences(report) {
+  if (report.legal.length || report.attachments.length || report.templates.length || report.activeUploads.length) {
+    throw new Error("DOCUNET_STORAGE_REFERENCED_BY_OTHER_SYSTEM");
+  }
+}
+function mimePdf(info) {
+  const type = lower(info?.mimetype || info?.mime_type || info?.metadata?.mimetype || info?.metadata?.mime_type || "application/pdf");
+  if (type !== "application/pdf") throw new Error("DOCUNET_STORAGE_EXPECTED_PDF");
+}
+
+export async function listDocuNetStorageCore({ prefix = "", search = "" } = {}) {
+  await access(true);
+  const match = lower(search).slice(0, 150);
+  const start = clean(prefix, 400).replace(/^\/+|\/+$/g, "");
+  if (start && (start.includes("..") || start.includes("\\") || /[?#%]/.test(start))) throw new Error("DOCUNET_STORAGE_PREFIX_INVALID");
+  const folders = [start];
+  const seenDirs = new Set();
+  const files = [];
+  const seenPaths = new Set();
+  let truncated = false;
+  while (folders.length) {
+    if (seenDirs.size >= 200 || files.length >= 1000) { truncated = true; break; }
+    const folder = folders.shift();
+    if (seenDirs.has(folder)) continue;
+    seenDirs.add(folder);
+    if (folder.split("/").length > 10) { truncated = true; continue; }
+    for (let offset = 0; offset < 1000; offset += 100) {
+      const batch = await storageListObjects({ bucket: BUCKET, prefix: folder, limit: 100, offset });
+      if (!Array.isArray(batch)) throw new Error("DOCUNET_STORAGE_LIST_INVALID");
+      for (const obj of batch) {
+        const name = clean(obj?.name, 600);
+        if (!name) continue;
+        const path = !folder || !name.startsWith(`${folder}/`) ? [folder, name].filter(Boolean).join("/") : name;
+        if (!obj.id && !obj.metadata) {
+          if (!folders.includes(path) && !seenDirs.has(path)) folders.push(path);
+          continue;
+        }
+        if (!path.toLowerCase().endsWith(".pdf") || seenPaths.has(path)) continue;
+        seenPaths.add(path);
+        if (match && !path.toLowerCase().includes(match)) continue;
+        files.push({ path, name: path.split("/").pop(), bytes: Number(obj.metadata?.size || 0), createdAt: obj.created_at || "", mimeType: obj.metadata?.mimetype || "application/pdf" });
+      }
+      if (batch.length < 100) break;
+      if (offset === 900) truncated = true;
+    }
+  }
+  const [revisions, legal, attachments] = await Promise.all([
+    restRequest({ table: "docunet_revisions", query: { select: "id,document_id,storage_path", storage_bucket: `eq.${BUCKET}`, limit: 5000 } }),
+    restRequest({ table: "legal_policies", query: { select: "policy_id,pdf_file_url", limit: 500 } }),
+    restRequest({ table: "document_attachments", query: { select: "storage_key", limit: 5000 } })
+  ]);
+  const revisionMap = new Map();
+  for (const r of arr(revisions)) revisionMap.set(r.storage_path, [...(revisionMap.get(r.storage_path) || []), r.id]);
+  const legalPaths = new Set(arr(legal).map(r => clean(r.pdf_file_url, 1500)).filter(Boolean));
+  const attachmentKeys = new Set(arr(attachments).map(r => clean(r.storage_key, 1500)).filter(Boolean));
+  return {
+    bucket: BUCKET,
+    private: true,
+    truncated,
+    files: files.map(f => ({
+      ...f,
+      registered: Boolean(revisionMap.get(f.path)?.length),
+      revisionCount: (revisionMap.get(f.path) || []).length,
+      linkedElsewhere: legalPaths.has(standardPath(f.path)) || attachmentKeys.has(f.path) || attachmentKeys.has(`${BUCKET}/${f.path}`)
+    }))
+  };
+}
+
+export async function getDocuNetStoragePreviewCore({ path } = {}) {
+  await access(true);
+  const source = safeStoragePdfPath(path);
+  await storageGetObjectInfo({ bucket: BUCKET, path: source });
+  const signed = await storageCreateSignedReadUrl({ bucket: BUCKET, path: source, expiresIn: 600 });
+  return { path: source, title: source.split("/").pop(), signedUrl: signed.signedUrl, expiresIn: 600 };
+}
+
+export async function registerDocuNetStoredPdfCore({ path, metadata: raw } = {}) {
+  const session = await access(true);
+  const a = actor(session);
+  const sourcePath = safeStoragePdfPath(path);
+  const m = metadata({ ...raw, publishStatus: "DRAFT" });
+  const refs = await referenceReport(sourcePath);
+  if (refs.revisions.length || refs.activeUploads.length) throw new Error("DOCUNET_STORAGE_ALREADY_REGISTERED_OR_PENDING");
+  const info = await storageGetObjectInfo({ bucket: BUCKET, path: sourcePath });
+  mimePdf(info);
+  const signed = await storageCreateSignedReadUrl({ bucket: BUCKET, path: sourcePath, expiresIn: 900 });
+  const properties = await getAdobePdfPropertiesFromUrl({ url: signed.signedUrl, pageLevel: false });
+  const pages = Number(properties.pageCount);
+  if (!Number.isInteger(pages) || pages < 1) throw new Error("DOCUNET_STORAGE_PDF_PAGE_COUNT_UNVERIFIED");
+  const existing = first(await restRequest({ table: "docunet_documents", query: { select: "id", document_code: `eq.${m.documentCode}`, deleted_at: "is.null", limit: 2 } }));
+  if (existing && existing.id !== m.documentId) throw new Error("DOCUNET_DOCUMENT_CODE_ALREADY_EXISTS");
+  if (m.documentId && (!existing || existing.id !== m.documentId)) throw new Error("DOCUNET_DOCUMENT_ID_CODE_MISMATCH");
+  const now = new Date().toISOString();
+  const docData = {
+    document_code: m.documentCode, title: m.title, short_title: m.shortTitle, owner: m.owner,
+    document_type: m.documentType, category_text: m.category, group_name: m.group, summary: m.summary,
+    tags: m.tags, services: m.services, markets: m.markets, audiences: m.audiences,
+    publish_status: "DRAFT", requires_acknowledgement: m.requiresAcknowledgement, is_critical: m.isCritical,
+    page_count: pages, updated_by: a.skId || a.id, updated_at: now
+  };
+  const rows = existing
+    ? await restRequest({ table: "docunet_documents", method: "PATCH", query: { id: `eq.${existing.id}` }, body: docData })
+    : await restRequest({ table: "docunet_documents", method: "POST", body: { ...docData, created_by: a.skId || a.id, created_at: now } });
+  const doc = first(rows) || { ...docData, id: existing?.id };
+  if (!doc.id) throw new Error("DOCUNET_STORAGE_DOCUMENT_WRITE_FAILED");
+  const revs = await restRequest({ table: "docunet_revisions", query: { select: "id", document_id: `eq.${doc.id}`, revision: `eq.${m.revision}`, limit: 1 } });
+  if (revs.length) throw new Error("DOCUNET_REVISION_ALREADY_EXISTS");
+  const revRows = await restRequest({ table: "docunet_revisions", method: "POST", body: {
+    document_id: doc.id, revision: m.revision, effective_date: m.effectiveDate,
+    revision_status: "DRAFT", storage_bucket: BUCKET, storage_path: sourcePath,
+    file_name: sourcePath.split("/").pop(), file_size: Number(info?.metadata?.size || info?.size || properties.fileSize || 0),
+    mime_type: "application/pdf", search_text: m.searchText || "", checksum_sha256: null, created_by: a.skId || a.id
+  }});
+  const revision = first(revRows);
+  if (!revision?.id) throw new Error("DOCUNET_STORAGE_REVISION_WRITE_FAILED");
+  await restRequest({ table: "docunet_documents", method: "PATCH", query: { id: `eq.${doc.id}` }, body: { current_revision_id: revision.id, updated_at: now } });
+  await syncDefinition({ ...m, pageCount: pages });
+  await audit(a, "DOCUNET_STORAGE_REGISTERED", { path: sourcePath, source: "EXISTING_BUCKET_PDF", revision: m.revision }, doc.id, revision.id);
+  return { ok: true, documentId: doc.id, revisionId: revision.id, status: "DRAFT", pageCount: pages };
+}
+
+export async function renameDocuNetStorageObjectCore({ path, destinationPath } = {}) {
+  const session = await access(true);
+  const a = actor(session);
+  const source = safeStoragePdfPath(path);
+  const target = safeStoragePdfPath(destinationPath);
+  if (source === target) throw new Error("DOCUNET_STORAGE_NO_RENAME_CHANGE");
+  await storageGetObjectInfo({ bucket: BUCKET, path: source });
+  const refs = await referenceReport(source);
+  assertNoExternalReferences(refs);
+  const targetRefs = await referenceReport(target);
+  if (targetRefs.revisions.length || targetRefs.legal.length || targetRefs.attachments.length || targetRefs.activeUploads.length) {
+    throw new Error("DOCUNET_STORAGE_DESTINATION_REFERENCED");
+  }
+  // Copy first, preserve the old object until the authoritative revision path has been updated.
+  await storageCopyObject({ bucket: BUCKET, sourcePath: source, destinationPath: target });
+  if (refs.revisions.length) {
+    // One PostgREST update statement relinks every revision referencing this object.
+    const changed = await restRequest({
+      table: "docunet_revisions", method: "PATCH",
+      query: { storage_bucket: `eq.${BUCKET}`, storage_path: `eq.${source}` },
+      body: { storage_path: target, file_name: target.split("/").pop() }
+    });
+    if (changed.length !== refs.revisions.length) throw new Error("DOCUNET_STORAGE_REVISION_RELINK_INCOMPLETE_SOURCE_PRESERVED");
+  }
+  const remaining = await referenceReport(source);
+  assertNoExternalReferences(remaining);
+  if (remaining.revisions.length) throw new Error("DOCUNET_STORAGE_SOURCE_STILL_REFERENCED_CLEANUP_REQUIRED");
+  // Storage removal is deliberately last; a cleanup failure leaves the copied file recoverable.
+  await storageRemoveObjects({ bucket: BUCKET, paths: [source] });
+  await audit(a, "DOCUNET_STORAGE_MOVED", { source, destination: target, revisionCount: refs.revisions.length }, refs.revisions[0]?.document_id || null, refs.revisions[0]?.id || null);
+  return { ok: true, path: target, movedRevisions: refs.revisions.length };
+}
+
+export async function deleteDocuNetUnregisteredStorageObjectCore({ path } = {}) {
+  const session = await access(true);
+  const a = actor(session);
+  const source = safeStoragePdfPath(path);
+  const refs = await referenceReport(source);
+  assertNoExternalReferences(refs);
+  if (refs.revisions.length) throw new Error("DOCUNET_STORAGE_REVISION_MUST_BE_RETAINED");
+  await storageGetObjectInfo({ bucket: BUCKET, path: source });
+  await storageRemoveObjects({ bucket: BUCKET, paths: [source] });
+  await audit(a, "DOCUNET_STORAGE_UNLINKED_PDF_DELETED", { path: source });
+  return { ok: true, path: source };
 }
