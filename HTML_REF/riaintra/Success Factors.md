@@ -2,24 +2,24 @@
 
 | Field | Value |
 | --- | --- |
-| Code identity | SKANDI Success Factors v12 |
-| System | RIAINTRA / Success Factors |
-| Route | `/riaintra/success-factors` |
-| Wix page | `src/pages/Success Factors.sh6tw.js` |
-| Wix HTML component | `#staffHrEmbed` |
-| Complete embed | `embeds/Success-Factors.html`; identical HTML is reproduced below |
-| Backend facade | `backend/SKANDI_CORE/orgStructure.web` |
-| Canonical core | `backend/SKANDI_CORE/orgStructure` |
-| Shared dependencies | `staffAuth`, `supabaseServer`, `platformValidation`, `platformErrors`, `platformAudit`, `platformCache`, `public/siteMap` |
-| Source pin | `skanditravels/SKANDI-TRAVELS` at `907c2a9e1fc17852844d7e6e0cd292997d3bcdc1`, latest supplied B-011.32 embed and preserved release-01 repairs |
-| Data ownership | Existing `agent_users`, organization/HR and recruiting records. Dashboard news: `intranet_news`. Assigned tasks: `career_onboarding_tasks`. Preferences: additive `agent_users.payload.successFactors.portal`. Payroll and roster remain outside this core. |
-| Authentication | Existing Wix member session and canonical staff authorization. Employee mutations bind to the authenticated staff ID; management writes retain HR-manage checks. Read-only staff projections exclude private HR fields. |
-| Parent message source | `SKANDI_WIX_PARENT` |
-| Accepted child sources | `SKANDI_HR_STAFF`, `SKANDI_SUCCESSFACTORS` |
-| Dashboard actions | `INTRANET_TASK_COMPLETE`, `INTRANET_TASK_DISMISS`, `INTRANET_FAVORITES_UPDATE`, `INTRANET_NOTIFICATIONS_READ` |
-| Responses | Existing `INTRANET_BOOTSTRAP`, with additive `partial`, `action` and `requestId` for saves; existing `INTRANET_ERROR` carries correlated failures. Other existing HR and navigation contracts are retained. |
-| Latest web-method source inspection | Git `102e6077d900eb9ef7ac29b13caa8b622cbcf6bd`; published revision 1158 has an empty HR proxy. Intended repair: direct `Permissions.SiteMember` on all 37 methods; live rebuild pending. |
-| Verification | 31 controlled checks passed on 2026-10-05. Live Wix, database-write and browser verification remain required. |
+| **Code identity** | SKANDI Success Factors v12 |
+| **System** | RIAINTRA / Success Factors |
+| **Route** | `/riaintra/success-factors` |
+| **Wix page** | `src/pages/Success Factors.sh6tw.js` |
+| **Wix HTML component** | `#staffHrEmbed` |
+| **Complete embed** | `embeds/Success-Factors.html`; identical HTML is reproduced below |
+| **Backend facade** | `backend/SKANDI_CORE/orgStructure.web` |
+| **Canonical core** | `backend/SKANDI_CORE/orgStructure` |
+| **Shared dependencies** | `staffAuth`, `supabaseServer`, `platformValidation`, `platformErrors`, `platformAudit`, `platformCache`, `public/siteMap` |
+| **Source pin** | `skanditravels/SKANDI-TRAVELS` at `907c2a9e1fc17852844d7e6e0cd292997d3bcdc1`, latest supplied B-011.32 embed and preserved release-01 repairs |
+| **Data ownership** | Existing `agent_users`, organization/HR and recruiting records. Dashboard news: `intranet_news`. Assigned tasks: `career_onboarding_tasks`. Preferences: additive `agent_users.payload.successFactors.portal`. Payroll and roster remain outside this core. |
+| Authentication** | Existing Wix member session and canonical staff authorization. Employee mutations bind to the authenticated staff ID; management writes retain HR-manage checks. Read-only staff projections exclude private HR fields. |
+| **Parent message source** | `SKANDI_WIX_PARENT` |
+| **Accepted child sources** | `SKANDI_HR_STAFF`, `SKANDI_SUCCESSFACTORS` |
+| **Dashboard actions** | `INTRANET_TASK_COMPLETE`, `INTRANET_TASK_DISMISS`, `INTRANET_FAVORITES_UPDATE`, `INTRANET_NOTIFICATIONS_READ` |
+| **Responses** | Existing `INTRANET_BOOTSTRAP`, with additive `partial`, `action` and `requestId` for saves; existing `INTRANET_ERROR` carries correlated failures. Other existing HR and navigation contracts are retained. |
+| **Latest web-method** source inspection | Git `102e6077d900eb9ef7ac29b13caa8b622cbcf6bd`; published revision 1158 has an empty HR proxy. Intended repair: direct `Permissions.SiteMember` on all 37 methods; live rebuild pending. |
+| **Verification** | 31 controlled checks passed on 2026-10-05. Live Wix, database-write and browser verification remain required. |
 
 # LOG
 
@@ -30,6 +30,8 @@
 4. 2026-10-05 — v12 staff-auth cache repair: inspected Git commit `8a3e5dd90d455e9ca6039e492272bf2dbf3d619e` stores the audit module in `src/backend/SKANDI_CORE/platformCache.js`, omitting `TtlCache` and preventing `staffAuth.web.js` from loading. Restore the existing cache implementation from Git blob `38e8b712cecdae09ed16e347d2a3e4f0e750d826` at commit `907c2a9e1fc17852844d7e6e0cd292997d3bcdc1`. Only this runtime file changes; the HTML and authentication contracts stay intact. Eight controlled checks pass, including reproducing the failure and loading the repaired dependency chain with Wix services stubbed. REQUIRES LIVE TEST for Wix deployment and authenticated sessions. No deployed or database changes were performed.
 
 5. 2026-10-05 — v12 Success Factors web-method repair: published revision 1158 bundles the `orgStructure.web` import as an empty module; the actual published page reproduces `getOrgStructureBootstrap is not a function` before any backend request. Current Git commit `102e6077d900eb9ef7ac29b13caa8b622cbcf6bd` already declares the 37 methods and includes the previous cache fix. Replace the local `MEMBER` permission alias with direct `Permissions.SiteMember` arguments on all 37 exports, following Wix’s documented shape and the working staff-auth facade. All existing names, core mappings, permissions and HTML are retained. Eight checks pass, including published-bundle failure reproduction and controlled delegation tests. The alias is a suspected compiler-recognition trigger; its causality and the repaired proxy require a live Wix rebuild. No deployment or database change performed.
+
+6. 2026-10-19 — SuccessFactors responsive layout repair from the exact uploaded HTML payload matching the current Git HTML_REF byte-for-byte (FNV32 8ce5bc53; 363488 source characters). Consolidated late cascade grid constraints, removed presentation-only backend connectivity tags, divided application library into existing server-provided groups, prevented overflow/overlap and trimmed homepage duplicate app tiles/quick actions. Preserved source paths, backend authorization, navigation, favorites, HR, recruiting, directory, badges, profile and message contracts. No changes to live site or Supabase. STATICALLY VERIFIED; REQUIRES LIVE TEST after embed replacement. The server-authoritative `staffAuth.js` app catalog is incomplete and needs a separately verified full-file server replacement; no unauthorized client-side app catalog or links were added. Independent page embeds/global chrome were not altered.
 
 # COMPLETE HTML
 
@@ -3452,6 +3454,75 @@ This reference is documentation, not a runtime import. Install the HTML below in
         background: #fff;
       }
     }
+
+
+    /* SKANDI V12: SuccessFactors layout and application-library constraints. */
+    #portal, #mainContent, .page, .section, .intranet-stack, .intranet-panel,
+    .intranet-columns > *, .app-tile, .tile-copy, .tile-footer,
+    .page-header-copy, .toolbar, .section-header, .section-title-group { min-width: 0; }
+    #portal { max-width:100%; overflow-x:clip; }
+    .page { max-width:100%; }
+    .launchpad-grid, .tool-section .launchpad-grid {
+      display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,225px),1fr));
+      gap:14px; width:100%; align-items:stretch;
+    }
+    .app-tile, .tool-section .app-tile {
+      grid-column:span 1; min-height:174px; height:auto; isolation:isolate;
+      border-radius:15px; padding:18px; overflow:hidden;
+    }
+    .app-tile.wide { grid-column:span 1; }
+    .app-tile::after { pointer-events:none; z-index:0; }
+    .tile-head, .tile-copy, .tile-footer { min-width:0; max-width:100%; }
+    .tile-copy h3 { overflow-wrap:anywhere; font-size:15px; line-height:1.3; }
+    .tile-copy p { overflow-wrap:anywhere; -webkit-line-clamp:3; line-height:1.5; }
+    .tile-footer { align-items:center; flex-wrap:wrap; gap:8px; }
+    .tile-open { margin-left:auto; white-space:nowrap; }
+    .tile-metric { overflow-wrap:anywhere; font-size:14px; }
+    .tile-metric small { overflow-wrap:anywhere; font-size:10px; }
+    .quick-actions-card { max-width:100%; min-width:0; overscroll-behavior-x:contain; }
+    .quick-action { min-width:185px; max-width:255px; flex:0 0 auto; }
+    .quick-action > span:last-child { min-width:0; }
+    .quick-action strong, .quick-action span span { overflow-wrap:anywhere; }
+    .toolbar, .page-header, .section-header { max-width:100%; }
+    .filter-chips { max-width:100%; overflow-x:auto; flex-wrap:nowrap; padding-bottom:3px; }
+    .filter-chip { flex:0 0 auto; }
+    .top-nav { top:0; max-width:100%; }
+    .top-nav-inner { max-width:100%; }
+    .intranet-columns, .welcome-band { min-width:0; max-width:100%; }
+    .intranet-panel-head { flex-wrap:wrap; }
+    .context-card, .context-grid > *, .mini-news-grid > * { min-width:0; }
+    .welcome-profile .profile-line { grid-template-columns:minmax(75px,112px) minmax(0,1fr); }
+    .welcome-profile strong, .context-fact strong { overflow-wrap:anywhere; white-space:normal; }
+    #applicationGrid [hidden] { display:none!important; }
+    @media (max-width:1050px) {
+      .intranet-columns { grid-template-columns:minmax(0,1fr); }
+      .welcome-band { grid-template-columns:minmax(0,1fr); }
+      .tool-section .launchpad-grid { grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr)); }
+    }
+    @media (max-width:680px) {
+      .page { padding:15px 14px 80px; }
+      .section-header { flex-wrap:wrap; gap:10px; }
+      .tool-section .launchpad-grid, .launchpad-grid { grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr)); }
+      .welcome-band { padding:22px 18px; }
+      .welcome-profile .profile-line { grid-template-columns:minmax(75px,92px) minmax(0,1fr); }
+      .app-tile, .tool-section .app-tile { min-height:158px; }
+      .app-tile .tile-copy { margin-top:12px; }
+      .toolbar { gap:12px; }
+      .inline-search { width:100%; }
+    }
+    @media (max-width:420px) {
+      .launchpad-grid, .tool-section .launchpad-grid { grid-template-columns:minmax(0,1fr); }
+      .mini-news-grid, .context-grid { grid-template-columns:minmax(0,1fr); }
+      .quick-action { max-width:min(80vw,260px); }
+    }
+
+    .app-library-sections { display:grid; gap:26px; min-width:0; }
+    .app-group-section { min-width:0; }
+    .app-group-heading { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:8px;
+      padding:0 0 10px; margin-bottom:13px; border-bottom:1px solid #d5dadd; }
+    .app-group-heading h2 { margin:0; font-size:17px; color:#133657; line-height:1.3; }
+    .app-group-heading span { color:#5c7185; font-size:12px; }
+    .app-group-section[hidden] { display:none!important; }
   </style>
 </head>
 <body>
@@ -4031,7 +4102,7 @@ This reference is documentation, not a runtime import. Install the HTML below in
         soft: item.soft || item.backgroundColor || palette[1],
         group: item.group || item.category || item.permissionGroup || "",
         metric: item.metric !== undefined ? String(item.metric) : (item.badge !== undefined ? String(item.badge) : ""),
-        metricLabel: item.metricLabel || item.statusLabel || "",
+        metricLabel: item.metricLabel || "",
         tag: item.tag || item.system || "",
         path: item.path || item.href || item.route || item.url || "",
         wide: Boolean(item.wide),
@@ -5581,8 +5652,11 @@ This reference is documentation, not a runtime import. Install the HTML below in
       const tasks = roleItems("toDoTasks").filter(item => !completedTasks.has(item.id) && !dismissedTasks.has(item.id));
       const notifications = roleItems("notifications").filter(item => !readNotifications.has(item.id));
       const news = roleItems("newsItems");
-      const apps = recommendedApps(8);
-      const quickActions = roleItems("quickActions").slice(0,6);
+      const apps = recommendedApps(4);
+      const visibleAppIds = new Set(apps.map(app => String(app.id)));
+      const quickActions = roleItems("quickActions")
+        .filter(action => !visibleAppIds.has(String(action.target || action.id)))
+        .slice(0, 3);
       const secondaryNews = news.filter((_,index)=>index!==currentNewsIndex).slice(0,4);
       const links = portalState.usefulLinks.filter(scopeAllows).slice(0,6);
       const today = new Intl.DateTimeFormat(undefined,{weekday:"long",month:"long",day:"numeric"}).format(new Date());
@@ -5689,8 +5763,8 @@ This reference is documentation, not a runtime import. Install the HTML below in
             <p>${escapeHtml(tile.subtitle)}</p>
           </div>
           <div class="tile-footer">
-            <div class="tile-metric">${escapeHtml(tile.metric)}<small>${escapeHtml(tile.metricLabel)}</small></div>
-            <span class="tile-open">${escapeHtml(tile.tag)} ${icon("arrowRight", 13)}</span>
+            ${tile.metric && !/^(live|online|live server|ready|sync)$/i.test(String(tile.metric).trim()) ? `<div class="tile-metric">${escapeHtml(tile.metric)}${tile.metricLabel ? `<small>${escapeHtml(tile.metricLabel)}</small>` : ""}</div>` : ""}
+            <span class="tile-open">Open ${icon("arrowRight", 13)}</span>
           </div>
         </article>
       `;
@@ -5788,10 +5862,14 @@ This reference is documentation, not a runtime import. Install the HTML below in
       `;
     }
 
+    function displayAppGroup(group) {
+      return ({ MyProfile: "Employee tools", Communication: "Communication", Operations: "Operations", Administration: "Administration" })[group] || group;
+    }
+
     function renderAppsPage() {
       const allApps = roleItems("applicationTiles");
-      const groups = ["All", ...new Set(allApps.map(item => item.group).filter(Boolean))];
-      const apps = appGroupFilter === "All" ? allApps : allApps.filter(item => item.group === appGroupFilter);
+      const groups = ["All", ...new Set(allApps.map(item => item.group || "Other"))];
+      const apps = appGroupFilter === "All" ? allApps : allApps.filter(item => (item.group || "Other") === appGroupFilter);
 
       return `
         <main class="page" id="mainContent">
@@ -5801,16 +5879,14 @@ This reference is documentation, not a runtime import. Install the HTML below in
               <h1 class="page-title">Application Library</h1>
               <p class="page-subtitle">${allApps.length} enterprise applications are assigned to your ${escapeHtml(getRole().label)} role.</p>
             </div>
-            <div class="page-actions">
-              <span class="role-pill">${icon("lock", 14)} RBAC active</span>
-            </div>
+
           </div>
 
           <div class="toolbar">
             <div class="filter-chips" role="group" aria-label="Filter applications by group">
               ${groups.map(group => `
                 <button class="filter-chip ${appGroupFilter === group ? "active" : ""}" type="button" data-action="app-group-filter" data-filter="${escapeHtml(group)}" aria-pressed="${appGroupFilter === group}">
-                  ${escapeHtml(group)}
+                  ${escapeHtml(displayAppGroup(group))}
                 </button>
               `).join("")}
             </div>
@@ -5821,12 +5897,18 @@ This reference is documentation, not a runtime import. Install the HTML below in
             </label>
           </div>
 
-          <div class="launchpad-grid" id="applicationGrid">
-            ${apps.length ? apps.map(renderAppTile).join("") : `
-              <div class="empty-card" style="grid-column:1/-1">
+          <div class="app-library-sections" id="applicationGrid">
+            ${apps.length ? (appGroupFilter === "All" ? groups.filter(group => group !== "All") : [appGroupFilter]).map(group => {
+              const groupApps = apps.filter(app => (app.group || "Other") === group);
+              return `<section class="app-group-section" aria-label="${escapeHtml(group)} applications">
+                <div class="app-group-heading"><h2>${escapeHtml(displayAppGroup(group))}</h2><span>${groupApps.length} applications</span></div>
+                <div class="launchpad-grid">${groupApps.map(renderAppTile).join("")}</div>
+              </section>`;
+            }).join("") : `
+              <div class="empty-card">
                 <span class="empty-icon">${icon("apps", 24)}</span>
-                <strong>No applications returned</strong>
-                <span>Application access is supplied by the RIAINTRA backend.</span>
+                <strong>No applications assigned</strong>
+                <span>Access to applications is configured by the staff administrator.</span>
               </div>
             `}
           </div>
@@ -6287,7 +6369,7 @@ This reference is documentation, not a runtime import. Install the HTML below in
             <section class="workspace-panel">
               <div class="panel-header">
                 <h2>${escapeHtml(workspace.heading || "Application Data")}</h2>
-                <span class="status-badge info">Live backend data</span>
+                
               </div>
               <div class="data-table-wrap">
                 ${rows.length && columns.length ? `
@@ -6673,7 +6755,7 @@ This reference is documentation, not a runtime import. Install the HTML below in
 
     function renderOrgProvisionCard(record={}){
       if (!orgCatalogReady()) {
-        return `<div class="org-provision-card" id="orgProvisionCard"><div class="org-provision-head"><div><h3>Smart Employment Assignment</h3><p>The live organization catalog is not available. No fallback codebook is used in V9.</p></div><span class="status-badge warning">Live data required</span></div><div class="org-warning">Departments, bases, positions, access roles and payroll rules must load from the System before an assignment can be changed.</div><div style="margin-top:10px"><button class="secondary-button" type="button" data-action="hr-org-refresh">Reload organization data</button></div></div>`;
+        return `<div class="org-provision-card" id="orgProvisionCard"><div class="org-provision-head"><div><h3>Smart Employment Assignment</h3><p>The live organization catalog is not available. No fallback codebook is used in V9.</p></div></div><div class="org-warning">Departments, bases, positions, access roles and payroll rules must load from the System before an assignment can be changed.</div><div style="margin-top:10px"><button class="secondary-button" type="button" data-action="hr-org-refresh">Reload organization data</button></div></div>`;
       }
       const c=orgCatalog(),countryCode=orgRecordCountryCode(record),baseCode=orgRecordBaseCode(record),roleId=orgRecordRoleId(record);
       const countries=orgEmploymentCountries(record),baseChoices=orgBasesForCountry(countryCode),roleChoices=orgRolesForBase(baseCode,countryCode);
@@ -8408,6 +8490,9 @@ This reference is documentation, not a runtime import. Install the HTML below in
         document.querySelectorAll("#applicationGrid .app-tile").forEach(tile => {
           tile.hidden = Boolean(query) && !tile.textContent.toLowerCase().includes(query);
         });
+        document.querySelectorAll("#applicationGrid .app-group-section").forEach(section => {
+          section.hidden = !section.querySelector(".app-tile:not([hidden])");
+        });
       } else if (event.target.id === "directorySearch") {
         directoryQuery = event.target.value;
         const query = directoryQuery.trim().toLowerCase();
@@ -8574,4 +8659,3 @@ This reference is documentation, not a runtime import. Install the HTML below in
 </body>
 </html>
 ```
-
