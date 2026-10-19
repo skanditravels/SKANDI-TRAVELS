@@ -202,10 +202,8 @@ async function bootstrap(payload = {}, { force = false, startupReplay = false } 
 }
 
 async function bootstrapDocuments(payload = {}, { force = false } = {}) {
-  const data = await bootstrap(
-    { section: "trips", view: "upcoming", ...payload },
-    { force }
-  );
+  // Load documents independently; do not reset the selected workspace by emitting MY_PROFILE_DATA.
+  const data = await loadBootstrap("trips", { force });
   const bookingId = String(payload.bookingId || "");
   post("CUSTOMER_DOCUMENTS_LOAD", {
     bookingId,
@@ -225,7 +223,8 @@ async function run(type, payload = {}) {
         await bootstrap(payload);
         return;
       case "MY_PROFILE_REFRESH":
-        await bootstrap(payload, { force: true });
+        result = await bootstrap(payload, { force: true });
+        post("MY_PROFILE_RESULT", { requestId: request, action: type, result });
         return;
       case "MY_PROFILE_SAVE_PROFILE":
         result = await updateCustomerProfile(payload);
@@ -310,6 +309,22 @@ async function run(type, payload = {}) {
       case "CUSTOMER_DOCUMENT_CLOSE":
         post("MY_PROFILE_SET_PAGE", { section: "trips", view: "upcoming" });
         return;
+      case "MY_PROFILE_QUERY_UPDATE": {
+        const section = String(payload.section || "").toLowerCase().slice(0, 40);
+        const view = String(payload.view || "").toLowerCase().slice(0, 40);
+        if (!VALID_PAGES[section]?.has(view)) {
+          post("MY_PROFILE_URL_SYNC_ERROR", { code: "MY_PROFILE_INVALID_PAGE" });
+          return;
+        }
+        try {
+          // Wix Location updates the address bar without navigating or rebuilding this page.
+          wixLocationFrontend.queryParams.add({ section, view });
+        } catch (error) {
+          console.error("[My Profile] Unable to update the current page query parameters.", error);
+          post("MY_PROFILE_URL_SYNC_ERROR", { code: "MY_PROFILE_QUERY_SYNC_FAILED" });
+        }
+        return;
+      }
       case "MY_PROFILE_NAVIGATE": {
         const path = safePath(payload.path);
         if (path) wixLocationFrontend.to(path);
@@ -393,6 +408,12 @@ $w.onReady(() => {
     inboundSeen = true;
     run(String(message.type || ""), message.payload || {});
   });
+
+  if (typeof wixLocationFrontend.onChange === "function") {
+    wixLocationFrontend.onChange(() => {
+      post("MY_PROFILE_SET_PAGE", resolvePage({}));
+    });
+  }
 
   const page = resolvePage({});
   announceHostReady(page);
