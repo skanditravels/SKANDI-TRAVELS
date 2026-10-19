@@ -15,11 +15,15 @@
 - Database verification: relevant DocuNet/document tables were inspected read-only against the active SKANDI Supabase project on 2026-10-14. No database rows, schema, policies or storage objects were changed by this repair package.
 - Storage requirement: `docunet-controlled` is intended to be private. Live storage configuration must be verified before production controlled-document ingestion.
 - Document source archive: the Dropbox folder supplied on 2026-10-14 could not be opened through an installed/connected Dropbox connector or the available public fetch path. No Dropbox document content was guessed or imported.
-- Last verified: 2026-10-14.
+- Last verified: 2026-10-19 (source audit and prepared file-manager repair; Wix live test required).
 - Change log:
   - 2026-10-13 — Converged this surface onto `backend/SKANDI_CORE`, removed legacy/missing backend namespace dependency, preserved supplied HTML design/behavior, and documented the complete runtime chain.
   - 2026-10-14 — Route authority confirmed as `/riaintra/success-factors/docunet/admin`; route registry and PAGE_SETTINGS updated. Re-audited controller/facade chain for Wix proxy failures: current DocuNet facade uses direct named `webMethod(...)` exports rather than wrapper-produced exports.
   - 2026-10-14 — Added canonical server-only Adobe PDF Services validation to DocuNet upload finalization through `backend/SKANDI_CORE/adobePdf.js`; authoritative page count now comes from Adobe PDF Properties. Corrected existing admin service/market/audience filtering in `docuNet.js`. HTML message contracts and executable embed payload are unchanged.
+
+  - 2026-10-19 — Corrected the PDF upload cap from 150 MiB to 50 MiB across the admin HTML, DocuNet core, and Adobe transport to match the read-only verified private `docunet-controlled` Supabase bucket limit (52,428,800 bytes). Adobe standard limit is 100 MB; the stricter live bucket limit governs. No documents were imported by this source change. Live Wix embed replacement is needed because its executable upload validation changed.
+
+  - 2026-10-19 — Added a controlled Supabase bucket manager (nested PDF discovery, signed preview, register existing PDFs as DRAFT, physical rename/move with revision relinking, and permanent deletion of unregistered/unreferenced objects). `backend/SKANDI_CORE/supabaseServer.js` owns the approved Storage copy/remove REST transport. `docuNet.js` enforces staff authorization, active-upload/reference checks and audit. Existing document soft-delete retains revisions. Source checks only: deploy and live Adobe/storage checks required.
 
 ## COMPLETE INTENDED HTML
 
@@ -573,6 +577,7 @@ html,body{background:#d8dde2;font-size:13px}
         <div class="tabs">
           <button class="active" data-panel="documents">Document register</button>
           <button data-panel="editor">PDF ingestion / revision</button>
+          <button data-panel="storage">Supabase PDF files</button>
           <button data-panel="categories">Category structure</button>
           <button data-panel="audit">Audit and traceability</button>
         </div>
@@ -580,12 +585,12 @@ html,body{background:#d8dde2;font-size:13px}
         <div class="side-stat"><span>Master source</span><b>PDF</b></div>
         <div class="side-stat"><span>Storage</span><b>SUPABASE</b></div>
         <div class="side-stat"><span>Publication model</span><b>REV</b></div>
-        <div class="side-stat"><span>Record state</span><b>LIVE</b></div>
+        <div class="side-stat"><span>Record state</span><b>Controlled</b></div>
       </div>
       <div class="side-register">
         <h4>Publisher status</h4>
-        <div class="side-stat"><span>Environment</span><b>PROD</b></div>
-        <div class="side-stat"><span>Supabase connection</span><b>READY</b></div>
+        <div class="side-stat"><span>Environment</span><b>Staff session</b></div>
+        <div class="side-stat"><span>Storage access</span><b>Authorised on request</b></div>
         <div class="side-stat"><span>Upload type</span><b>PDF / FORM</b></div>
       </div>
     </aside>
@@ -599,7 +604,7 @@ html,body{background:#d8dde2;font-size:13px}
         <div class="workspace-meta">
           <span>MODULE DOC-ADMIN</span>
           <span>CONTROL CLASS INTERNAL</span>
-          <span>SESSION ACTIVE</span>
+          <span>STAFF-RESTRICTED</span>
         </div>
       </header>
 
@@ -885,6 +890,20 @@ html,body{background:#d8dde2;font-size:13px}
           </div>
         </section>
 
+        <section class="panel" id="panel-storage">
+          <div class="card">
+            <div class="card-head"><div><h2>Supabase controlled PDF storage</h2><p>Browse stored PDF objects. Existing objects are not automatically published to staff.</p></div>
+              <div class="actions"><button class="btn secondary" id="storageRefreshBtn">Refresh bucket files</button></div>
+            </div>
+            <div class="card-body">
+              <div class="field"><label>Filter by file name or path</label><input id="storageQuery" placeholder="Search PDF files in the private bucket"></div>
+              <p>Registration creates a DRAFT record. Relocation updates DocuNet revision paths. Linked legal/operational files are protected; only unreferenced files can be permanently removed.</p>
+              <div id="storageSummary" class="note" aria-live="polite">Open this tab to discover stored PDFs.</div>
+            </div>
+          </div>
+          <div id="storageTable" class="table"></div>
+        </section>
+
         <section class="panel" id="panel-categories">
           <div class="category-grid">
             <div class="card">
@@ -946,8 +965,8 @@ const SCHEMA_VERSION="SKANDI_DOCUNET_V1";
 const SERVICE_LABELS={ALL:"All Services",DESTINATION:"Destination Services",TRANSFERS:"Transfers",TOURS:"Tours & Activities",PACKAGES:"Travel Packages"};
 const MARKET_LABELS={ALL:"All Markets",USNYC:"USNYC · New York",SESTO:"SESTO · Stockholm",GRHER:"GRHER · Crete"};
 const AUDIENCE_LABELS={ALL:"All Teams",OPERATIONS:"Operations",DESTINATION_STAFF:"Destination Staff",CUSTOMER_CARE:"Customer Care",PARTNER_MANAGEMENT:"Partner Management"};
-let state={session:{},categories:[],documents:[],audit:[],editingDocId:"",editingCatId:"",previewUrl:"",selectedPdfFile:null,pendingUpload:null,uploadRequestId:"",uploadInFlight:false};
-const MAX_PDF_BYTES=150*1024*1024;
+let state={session:{},categories:[],documents:[],audit:[],storageFiles:[],existingStoragePath:"",editingDocId:"",editingCatId:"",previewUrl:"",selectedPdfFile:null,pendingUpload:null,uploadRequestId:"",uploadInFlight:false};
+const MAX_PDF_BYTES=50*1024*1024;
 
 const $=id=>document.getElementById(id);
 function post(type,payload={}){window.parent.postMessage({source:SOURCE,module:MODULE,schemaVersion:SCHEMA_VERSION,type,...payload},"*")}
@@ -978,6 +997,7 @@ function normalizedAudienceValues(d){
 function status(msg,mode=""){const e=$("status");e.textContent=msg||"";e.className=msg?`status show ${mode}`:"status"}
 function fmt(v){if(!v)return "";try{return new Date(v).toLocaleDateString()}catch(e){return String(v)}}
 function activePanel(name){
+  if(name==="storage")refreshStorage();
   document.querySelectorAll("[data-panel]").forEach(b=>b.classList.toggle("active",b.dataset.panel===name));
   document.querySelectorAll(".panel").forEach(p=>p.classList.toggle("active",p.id===`panel-${name}`));
 }
@@ -1035,7 +1055,7 @@ function renderDocs(payload){
   document.querySelectorAll("[data-revise]").forEach(b=>b.onclick=()=>editDoc(b.dataset.revise,true));
   document.querySelectorAll("[data-archive]").forEach(b=>b.onclick=()=>post("ADMIN_DOC_STATUS",{documentId:b.dataset.archive,publishStatus:"ARCHIVED"}));
   document.querySelectorAll("[data-restore]").forEach(b=>b.onclick=()=>post("ADMIN_DOC_STATUS",{documentId:b.dataset.restore,publishStatus:"PUBLISHED"}));
-  document.querySelectorAll("[data-delete]").forEach(b=>b.onclick=()=>{if(confirm("Delete this document and all revisions?"))post("ADMIN_DOC_DELETE",{documentId:b.dataset.delete})});
+  document.querySelectorAll("[data-delete]").forEach(b=>b.onclick=()=>{if(confirm("Remove this document from the active register? The PDFs and revision/audit history are retained."))post("ADMIN_DOC_DELETE",{documentId:b.dataset.delete})});
   status("");
 }
 function preview(url,title){
@@ -1062,7 +1082,7 @@ function validatePdf(file){
 function selectPdf(file){
   const error=validatePdf(file);
   if(error){state.selectedPdfFile=null;fileState(error,"error");status(error,"warn");return false;}
-  state.selectedPdfFile=file;
+  state.existingStoragePath="";$("saveDocBtn").textContent="Upload PDF and publish record";state.selectedPdfFile=file;
   fileState(`${file.name} · ${bytesLabel(file.size)} · PDF READY`,"ready");
   $("uploadEngineStatus").textContent="PDF selected and ready for secure Supabase upload.";
   status("PDF selected. Complete the metadata and publish when ready.","ok");
@@ -1129,7 +1149,7 @@ function bindPdfUpload(){
   drop.addEventListener("drop",e=>{if(state.uploadInFlight)return;const file=e.dataTransfer?.files?.[0];if(file&&selectPdf(file)){try{const dt=new DataTransfer();dt.items.add(file);input.files=dt.files}catch(_e){}}});
   drop.addEventListener("keydown",e=>{if((e.key==="Enter"||e.key===" ")&&!state.uploadInFlight&&e.target===drop){e.preventDefault();input.click()}});
 }
-function clearDoc(){
+function clearDoc(){state.existingStoragePath="";$("saveDocBtn").textContent="Upload PDF and publish record";
   state.editingDocId="";state.selectedPdfFile=null;state.pendingUpload=null;state.uploadRequestId="";state.uploadInFlight=false;$("editorTitle").textContent="Add document / new revision";
   ["title","shortTitle","documentCode","revision","effectiveDate","tags","summary","searchText"].forEach(id=>$(id).value="");
   $("owner").value="SKANDI Travels";$("pageCount").value="1";$("documentType").value="Manual";$("publishStatus").value="PUBLISHED";$("requiresAcknowledgement").value="false";$("isCritical").value="false";
@@ -1147,7 +1167,7 @@ function clearDoc(){
   if($("sensitivityClass"))$("sensitivityClass").value="STANDARD";
   if($("officialSourceUrl"))$("officialSourceUrl").value="";
 }
-function editDoc(id,revisionMode){
+function editDoc(id,revisionMode){state.existingStoragePath="";$("saveDocBtn").textContent="Upload PDF and publish record";
   const d=state.documents.find(x=>x._id===id)||{};
   activePanel("editor");state.editingDocId=id;
   $("editorTitle").textContent=revisionMode?"Add new revision":"Adjust document";
@@ -1181,6 +1201,60 @@ function renderCategories(){
 function clearCat(){state.editingCatId="";$("catEditorTitle").textContent="Add category";$("catTitle").value="";$("catDescription").value="";$("catSortOrder").value="10";$("catActive").value="true"}
 function editCat(id){const c=state.categories.find(x=>x._id===id)||{};state.editingCatId=id;$("catEditorTitle").textContent="Adjust category";$("catTitle").value=c.title||c.name||"";$("catDescription").value=c.description||"";$("catSortOrder").value=c.sortOrder||10;$("catActive").value=String(c.active!==false)}
 function collectCat(){return {categoryId:state.editingCatId,title:$("catTitle").value.trim(),description:$("catDescription").value.trim(),sortOrder:Number($("catSortOrder").value||0),active:$("catActive").value==="true"}}
+
+function refreshStorage(){
+  const query=$('storageQuery').value.trim();
+  $('storageSummary').textContent='Reading the private Supabase bucket…';
+  post('ADMIN_STORAGE_LIST',{filters:{search:query}});
+}
+function storagePreview(path){post('ADMIN_STORAGE_PREVIEW',{path});}
+function renderStorage(data={}){
+  state.storageFiles=data.files||[];
+  $('storageSummary').textContent=`${state.storageFiles.length} PDF object(s) found in ${data.bucket||'docunet-controlled'}${data.truncated?' · listing capped; narrow the search':''}. Published DocuNet documents are managed in Document register.`;
+  $('storageTable').innerHTML=state.storageFiles.length?state.storageFiles.map(f=>`
+    <article class="row">
+      <div><h3>${esc(f.name)}</h3><p>${esc(f.path)} · ${Number(f.bytes||0).toLocaleString()} bytes</p>
+        <p>${f.registered?'Registered revision':'Not in DocuNet'}${f.linkedElsewhere?' · Linked in another system':''}</p></div>
+      <div class="actions">
+        <button class="btn secondary" data-store-preview="${esc(f.path)}">Preview</button>
+        <button class="btn secondary" data-store-register="${esc(f.path)}" ${f.registered?'disabled':''}>Register draft</button>
+        <button class="btn secondary" data-store-move="${esc(f.path)}" ${f.linkedElsewhere?'disabled':''}>Rename / move</button>
+        <button class="btn danger" data-store-delete="${esc(f.path)}" ${(f.registered||f.linkedElsewhere)?'disabled':''}>Delete PDF</button>
+      </div>
+    </article>`).join(''):'<div class="card"><p>No PDF objects match this search.</p></div>';
+  document.querySelectorAll('[data-store-preview]').forEach(b=>b.onclick=()=>storagePreview(b.dataset.storePreview));
+  document.querySelectorAll('[data-store-register]').forEach(b=>b.onclick=()=>{
+    const path=b.dataset.storeRegister,filename=path.split('/').pop();
+    clearDoc();state.existingStoragePath=path;activePanel('editor');
+    $('title').value=filename.replace(/\.pdf$/i,'').replace(/[-_]/g,' ');
+    $('documentCode').value=filename.replace(/\.pdf$/i,'').replace(/[^a-z0-9]/gi,'-').replace(/^-|-$/g,'').toUpperCase().slice(0,40);
+    $('revision').value='1.0';$('publishStatus').value='DRAFT';
+    $('editorTitle').textContent='Register existing Supabase PDF as draft';
+    $('saveDocBtn').textContent='Register existing PDF as draft';
+    status('Review document metadata and audience settings. This action does not re-upload or automatically publish the source PDF.','warn');
+  });
+  document.querySelectorAll('[data-store-move]').forEach(b=>b.onclick=()=>{
+    const path=b.dataset.storeMove;
+    const target=prompt('Enter the complete new PDF path (folder/filename.pdf). The original path will be retired only after references have been updated.',path);
+    if(target&&target!==path&&confirm(`Move this PDF?\n${path}\n→ ${target}`)){
+      status('Copying PDF and updating revision references…');post('ADMIN_STORAGE_MOVE',{path,destinationPath:target});
+    }
+  });
+  document.querySelectorAll('[data-store-delete]').forEach(b=>b.onclick=()=>{
+    const path=b.dataset.storeDelete;
+    if(confirm(`PERMANENTLY delete this unregistered, unreferenced PDF from Supabase Storage?\n${path}\nThis cannot be undone.`)){
+      status('Checking references before physical deletion…');post('ADMIN_STORAGE_DELETE',{path});
+    }
+  });
+}
+function registerExistingStoragePdf(){
+  const metadata=collectDoc();
+  if(!metadata.documentCode||!metadata.title||!metadata.revision)return status('Document code, title and revision are required.','warn');
+  if(!confirm(`Register ${state.existingStoragePath} as a DRAFT? It will not be automatically published.`))return;
+  status('Validating stored PDF with Adobe and registering a controlled draft…');
+  post('ADMIN_STORAGE_REGISTER',{path:state.existingStoragePath,metadata:{...metadata,publishStatus:'DRAFT'}});
+}
+
 function renderAudit(payload){
   state.audit=payload.events||[];
   $("auditTable").innerHTML=state.audit.length?state.audit.map(a=>`<article class="row"><div><div class="meta"><span class="pill">${esc(a.eventType)}</span><span class="pill gray">${esc(fmt(a.createdAt))}</span></div><h3>${esc(a.staffName||a.staffEmail||"System")}</h3><p>${esc(JSON.stringify(a.payload||{}))}</p></div></article>`).join(""):`<div class="card"><p>No audit events found.</p></div>`;
@@ -1188,7 +1262,8 @@ function renderAudit(payload){
 document.querySelectorAll("[data-panel]").forEach(b=>b.onclick=()=>activePanel(b.dataset.panel));
 $("refreshBtn").onclick=load;$("staffPageBtn").onclick=()=>post("ADMIN_NAVIGATE_STAFF");$("searchDocsBtn").onclick=searchDocs;$("docQuery").addEventListener("keydown",e=>{if(e.key==="Enter")searchDocs()});
 ["docCategory","docStatus","docType","docService","docMarket","docAudience"].forEach(id=>$(id).onchange=searchDocs);
-$("saveDocBtn").onclick=requestSupabaseUpload;
+$("saveDocBtn").onclick=()=>state.existingStoragePath?registerExistingStoragePdf():requestSupabaseUpload();
+$("storageRefreshBtn").onclick=refreshStorage;$("storageQuery").addEventListener("keydown",e=>{if(e.key==="Enter")refreshStorage()});
 $("saveMetaBtn").onclick=()=>{const meta=collectDoc();if(!meta.title||!meta.documentCode)return status("Title and code are required.","warn");status("Saving metadata...");post("ADMIN_DOC_SAVE_METADATA",{metadata:meta})};
 $("clearDocBtn").onclick=clearDoc;$("saveCatBtn").onclick=()=>{const category=collectCat();if(!category.title)return status("Category title is required.","warn");post("ADMIN_CATEGORY_SAVE",{category})};$("clearCatBtn").onclick=clearCat;
 $("closeViewerBtn").onclick=()=>{$("viewer").classList.remove("open");$("pdfFrame").src=""};$("openFullBtn").onclick=()=>state.previewUrl?window.open(state.previewUrl,"_blank"):"";
@@ -1201,6 +1276,10 @@ window.addEventListener("message",e=>{
   if(m.type==="ADMIN_DOC_PREVIEW_RESULT"){const p=m.payload||{};if(p.signedUrl)preview(p.signedUrl,p.title||"Document preview");else status("Preview URL was not returned.","error");}
   if(m.type==="ADMIN_CATEGORIES_RESULT"){state.categories=m.payload.categories||[];renderCategories();status(m.message||"Categories updated.","ok");}
   if(m.type==="ADMIN_DOC_RESULT"){status(m.message||"Document saved.","ok");clearDoc();activePanel("documents");searchDocs();post("ADMIN_AUDIT_SEARCH",{});}
+  if(m.type==="ADMIN_STORAGE_LIST_RESULT")renderStorage(m.payload||{});
+  if(m.type==="ADMIN_STORAGE_PREVIEW_RESULT"){const p=m.payload||{};if(p.signedUrl)preview(p.signedUrl,p.title||"PDF preview");else status("Storage PDF preview URL unavailable.","error");}
+  if(m.type==="ADMIN_STORAGE_REGISTER_RESULT"){state.existingStoragePath="";clearDoc();status(m.message||"Existing PDF registered as draft.","ok");activePanel("storage");post("ADMIN_SEARCH_DOCS",{filters:{}});post("ADMIN_AUDIT_SEARCH",{});}
+  if(m.type==="ADMIN_STORAGE_MUTATION_RESULT"){status(m.message||"Storage file updated.","ok");refreshStorage();post("ADMIN_SEARCH_DOCS",{filters:{}});post("ADMIN_AUDIT_SEARCH",{});}
   if(m.type==="ADMIN_AUDIT_RESULT")renderAudit(m.payload||{events:[]});
   if(m.type==="ADMIN_ERROR"){setUploadBusy(false);status(m.message||"Admin action failed.","error");}
 });
