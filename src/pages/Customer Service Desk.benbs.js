@@ -15,7 +15,12 @@ import {
   deleteAgentSupportCase
 } from "backend/SKANDI_CORE/customerSupport.web";
 import { getAutomationAdminSnapshot } from "backend/SKANDI_CORE/automationControl.web";
-
+import {
+  getAgentDuffelSupportContext,
+  verifyAgentDuffelSupportBooking,
+  routeAgentDuffelSupportCase,
+  prepareAgentDuffelSupportHandoff
+} from "backend/SKANDI_CORE/duffelAssistant.web";
 
 const PRIMARY_HTML_ID = "#customerServiceCenterEmbed";
 const LEGACY_HTML_ID = "#customerServiceAgentEmbed";
@@ -25,13 +30,11 @@ const MAX_REPLY_LENGTH = 20000;
 const SYNC_INTERVAL_MS = 12000;
 const ALLOWED_CASE_FIELDS = new Set(["status", "priority", "type", "group", "assigneeId", "assigneeName", "followers", "ccs", "tags", "queue"]);
 
-
 let activeCaseId = "";
 let currentFilters = {};
 let syncTimer = null;
 let syncInFlight = false;
 let agentReady = false;
-
 
 function objectOf(value) { return value && typeof value === "object" && !Array.isArray(value) ? value : {}; }
 function payloadOf(message) { return { ...objectOf(message), ...objectOf(message?.payload) }; }
@@ -83,7 +86,6 @@ function updateFilters(payload) {
 }
 function errorText(error) { return String(error?.publicMessage || error?.message || "Customer service action failed.").slice(0, 300); }
 
-
 async function automationSnapshot() {
   try {
     return await getAutomationAdminSnapshot({});
@@ -99,7 +101,6 @@ async function automationSnapshot() {
     };
   }
 }
-
 
 async function refreshAgentState(html, { includeDetail = true, requestId = "", silent = true } = {}) {
   if (!agentReady || syncInFlight) return;
@@ -120,14 +121,12 @@ async function refreshAgentState(html, { includeDetail = true, requestId = "", s
   }
 }
 
-
 function startSync(html) {
   if (syncTimer) return;
   syncTimer = setInterval(() => {
     refreshAgentState(html, { includeDetail: Boolean(activeCaseId), silent: true }).catch(() => {});
   }, SYNC_INTERVAL_MS);
 }
-
 
 async function bootstrap(html, payload, requestId) {
   updateFilters(payload);
@@ -154,24 +153,20 @@ async function bootstrap(html, payload, requestId) {
   startSync(html);
 }
 
-
 async function refreshListAfterMutation(html, requestId = "") {
   const list = await listAgentSupportCases({ ...currentFilters, silentSync: true });
   post(html, "AGENT_CASE_LIST", list, requestId);
 }
 
-
 $w.onReady(function () {
   const html = findHtml();
   if (!html) { console.error(`[Customer Service Center] Missing ${PRIMARY_HTML_ID} (legacy ${LEGACY_HTML_ID} also not found).`); return; }
-
 
   html.onMessage(async event => {
     const message = objectOf(event.data);
     if (message.source !== CHILD_SOURCE) return;
     const payload = payloadOf(message);
     const requestId = String(message.requestId || payload.requestId || "");
-
 
     try {
       switch (message.type) {
@@ -180,13 +175,11 @@ $w.onReady(function () {
           await bootstrap(html, payload, requestId);
           return;
 
-
         case "AGENT_LIST_CASES":
         case "AGENT_REFRESH_CASES":
           updateFilters(payload);
           post(html, "AGENT_CASE_LIST", await listAgentSupportCases(currentFilters), requestId);
           return;
-
 
         case "AGENT_OPEN_CASE":
         case "AGENT_CALL_START": {
@@ -197,6 +190,35 @@ $w.onReady(function () {
           return;
         }
 
+        case "AGENT_DUFFEL_CONTEXT_REQUEST": {
+          const caseId = caseIdOf(payload);
+          const result = await getAgentDuffelSupportContext({ caseId });
+          post(html, "AGENT_DUFFEL_CONTEXT", result, requestId);
+          return;
+        }
+        case "AGENT_DUFFEL_VERIFY_REQUEST": {
+          const caseId = caseIdOf(payload);
+          const result = await verifyAgentDuffelSupportBooking({ caseId });
+          post(html, "AGENT_DUFFEL_RESULT", { ...objectOf(result), action: "verify" }, requestId);
+          post(html, "AGENT_CASE_DETAIL", await getAgentSupportCase({ caseId, includeLiveKit: false, silentSync: true }), requestId);
+          await refreshListAfterMutation(html, requestId);
+          return;
+        }
+        case "AGENT_DUFFEL_ROUTE_BOOKING": {
+          const caseId = caseIdOf(payload);
+          const result = await routeAgentDuffelSupportCase({ caseId, reason: String(payload.reason || "").slice(0, 1400) });
+          post(html, "AGENT_DUFFEL_RESULT", { ...objectOf(result), action: "route" }, requestId);
+          post(html, "AGENT_CASE_DETAIL", await getAgentSupportCase({ caseId, includeLiveKit: false, silentSync: true }), requestId);
+          await refreshListAfterMutation(html, requestId);
+          return;
+        }
+        case "AGENT_DUFFEL_PREPARE_HANDOFF": {
+          const caseId = caseIdOf(payload);
+          const result = await prepareAgentDuffelSupportHandoff({ caseId, issueType: String(payload.issueType || ""), summary: String(payload.summary || "").slice(0, 1800) });
+          post(html, "AGENT_DUFFEL_RESULT", { ...objectOf(result), action: "handoff" }, requestId);
+          post(html, "AGENT_CASE_DETAIL", await getAgentSupportCase({ caseId, includeLiveKit: false, silentSync: true }), requestId);
+          return;
+        }
 
         case "AGENT_REPLY": {
           const caseId = caseIdOf(payload);
@@ -214,7 +236,6 @@ $w.onReady(function () {
           return;
         }
 
-
         case "AGENT_UPDATE_CASE": {
           const caseId = caseIdOf(payload);
           activeCaseId = caseId || activeCaseId;
@@ -224,7 +245,6 @@ $w.onReady(function () {
           await refreshListAfterMutation(html, requestId);
           return;
         }
-
 
         case "AGENT_BULK_UPDATE": {
           const rows = Array.isArray(payload.cases) ? payload.cases : [];
@@ -244,7 +264,6 @@ $w.onReady(function () {
           return;
         }
 
-
         case "AGENT_CREATE_CASE": {
           const result = await createAgentSupportCase({ case: payload.case || payload });
           const createdId = caseIdOf(result?.case || result);
@@ -253,7 +272,6 @@ $w.onReady(function () {
           await refreshListAfterMutation(html, requestId);
           return;
         }
-
 
         case "AGENT_DELETE_CASE": {
           const caseId = caseIdOf(payload);
@@ -264,14 +282,12 @@ $w.onReady(function () {
           return;
         }
 
-
         case "AGENT_CLOSE_TAB": {
           const caseId = caseIdOf(payload);
           if (!caseId || caseId === activeCaseId) activeCaseId = "";
           post(html, "AGENT_ACTION_ACK", { action: message.type }, requestId);
           return;
         }
-
 
         case "AGENT_CALL_END":
         case "AGENT_SET_PRESENCE":
@@ -284,12 +300,10 @@ $w.onReady(function () {
           post(html, "AGENT_ACTION_ACK", { action: message.type }, requestId);
           return;
 
-
         case "AGENT_MERGE_CASES":
         case "AGENT_SAVE_SETTINGS":
           post(html, "AGENT_ERROR", { action: message.type, message: "This action has no canonical Support Center persistence contract yet." }, requestId);
           return;
-
 
         default:
           return;
