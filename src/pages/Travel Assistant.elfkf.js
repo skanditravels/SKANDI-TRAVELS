@@ -1,6 +1,6 @@
-// /src/pages/Travel Assistant.elfkf.js
-// Wix Velo controller for the dedicated SKANDI Duffel Assistant page.
-// HTML element: #htmlDuffelAssistant ; page route: /travel-assistant.
+// /src/pages/Travel Assistance.elfkf.js
+// Wix Velo controller for the dedicated SKANDI Travel Assistant page.
+// HTML element: #htmlDuffelAssistant ; page route: /my-profile/travel-assistance.
 
 import { authentication } from "wix-members-frontend";
 import wixLocationFrontend from "wix-location-frontend";
