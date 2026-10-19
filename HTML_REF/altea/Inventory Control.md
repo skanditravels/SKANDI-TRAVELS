@@ -6,7 +6,7 @@
 - WIX PAGE FILE: `/src/pages/Inventory Control.jsdik.js`
 - WIX ROUTE / SLUG: `/riaintra/success-factors/altea/inventory-control`
 - WIX HTML ELEMENT: `#inventoryControlEmbed`
-- CURRENT STATUS: V12 ADD RECORD UX REPAIR PREPARED — REQUIRES LIVE TEST
+- CURRENT STATUS: V12 AMADEUS / PROPERTY DIRECTOR REFERENCE RECONSTRUCTION — REQUIRES LIVE TEST
 - SOURCE-OF-TRUTH STATUS: AUTHORITATIVE intended V12 embed payload supplied for this repair.
 - CANONICAL WEB FACADE: `/src/backend/SKANDI_CORE/inventory.web.js`
 - CANONICAL CORE: `/src/backend/SKANDI_CORE/inventory.js`
@@ -17,7 +17,7 @@
 - PROVIDER SNAPSHOT: the provider evidence remains under `payload.duffel` (`normalized` + `raw`). The migration promotes the normalized provider-owned subset into the canonical Inventory detail object and retains a read-only `inventory_details.duffel` / `details.duffel` copy for audit/context; SKANDI enrichment remains editable only in Inventory Control.
 - AUTHORIZATION: unchanged from current V12 page/facade/core boundaries. No frontend role or provider secret becomes authoritative.
 - MESSAGE CONTRACTS / ELEMENT IDS: unchanged.
-- LAST VERIFIED: 2026-10-14 — current repo `skanditravels/SKANDI-TRAVELS`, branch `main`, current `Inventory Control.md` blob `559c661d6d8abb2a71469caafdf73c5d3d489466` inspected; Wix live runtime was not executed in this session.
+- LAST VERIFIED: 2026-10-19 — GitHub `skanditravels/SKANDI-TRAVELS`, branch `main`, Inventory HTML_REF, Wix page controller and canonical facade/core read in source. Amadeus design and V12 uploaded HTML compared; local static syntax checked. Wix runtime not executed.
 
 ## CHANGE LOG
 - 2026-10-14 — Add Record UX repair: Master Records `+ New Record` now opens a record-type chooser when Record Family is `All`, then opens the existing canonical RecordEditor with the selected real inventory type. Existing direct-create behavior for a preselected family and the separate Guided Tour / Activity create controls remain intact. No page-controller, facade, core, message-contract, authorization, schema or stored-data change. STATICALLY VERIFIED; REQUIRES LIVE TEST after replacing and publishing `#inventoryControlEmbed`.
@@ -29,6 +29,10 @@
 - 2026-10-08 — One-true-source enforcement finalized: Duffel-linked provider identity/facts are read-only in Inventory Control and refresh through the provider workspace; provider technical snapshots are hidden from generic editable fields; compatibility columns are database-derived. Current GitHub `main` at `86deedb4705fae292851256726cd81e13669aa98` was inspected and preserved.
 - 2026-10-08 — V12 one-true-source convergence prepared. Shared reference/master facts now have one editable Inventory/Supabase authority after provider import. Legacy Travel Info fields are derived compatibility projections, provider-key uniqueness is database-enforced, and current Duffel snapshots refresh provider-owned canonical facts without creating alternate data stores. The HTML design, IDs, message names, routes and permission boundaries are unchanged. STATICALLY VERIFIED; REQUIRES LIVE TEST after SQL/Wix publication.
 
+- 2026-10-19 — Amadeus-inspired dense enterprise presentation applied to Inventory Control using supplied design reference without changing pinned React 19 imports, bridge events or backend action names. Added one memory-scoped Master Filter in the global header, reused as the Master Records record-family selector, and contextualized Overview/Provider views; scope selection remains through internal menu navigation and resets when the embed/window closes. Added Property Director menu for real canonical HOTEL records using the existing RecordEditor and inventory facade (no sample data, new database or backend actions). Earlier package did not match the Property Director reference or include its five-module workspace; superseded by the correction below. STATICALLY VERIFIED; REQUIRES LIVE TEST on Wix after embed publication.
+
+- 2026-10-19 — CORRECTION: inspected the newly supplied complete 820-line Property Director reference. Replaced Inventory Control's prior approximate shell with the exact Property Director global header, typography, 220px sidebar, body placement, table/control dimensions, and five-tab Hotel workspace design. The sole header Context dropdown becomes the session-lived Master Filter. Property Directory and full five modules (Master & Geo, Inventory Models, Channel Matrix, Content & Media, Audit Gate) now use current canonical HOTEL bundles rather than mocked properties and fake success. Room definitions reuse HOTEL `details.rooms`; further property configuration stays inside its canonical details JSONB, with no new independent data store. Shared localized content/media use existing child resources and Asset Library. Audit is read-only from the existing audited backend; no unverified verification logging. The baseline page controller, backend facade, core, message contracts and element ID remain unchanged. STATICALLY VERIFIED locally; REQUIRES LIVE TEST in Wix, including user permissions, saved hotel properties and provider distribution support.
+
 ## COMPLETE INTENDED HTML
 
 ```html
@@ -39,124 +43,463 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>SKANDI Inventory Control</title>
 <style>
+/* AMADEUS / CRS ENTERPRISE STYLESHEET */
 :root{
-  --navy:#022e64;--navy2:#081d39;--cyan:#5fc7cf;--blue:#1777d2;--ink:#142234;
-  --muted:#657489;--bg:#eef3f7;--card:#fff;--line:#d7e0e8;--line2:#e8eef3;
-  --green:#147a4b;--amber:#9b6700;--red:#b42332;--purple:#6247aa;
-  --shadow:0 14px 42px rgba(13,34,59,.10);--r:18px;--rs:12px;
-  --font:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  --navy: #0A1C35;      /* Amadeus Deep Navy */
+  --navy2: #051020;
+  --cyan: #00A1E0;      /* Amadeus Light Blue Accent */
+  --blue: #005EB8;      /* Amadeus Action Blue */
+  --ink: #2C333A;
+  --muted: #5E6973;
+  --bg: #F0F2F5;        /* Enterprise Grey */
+  --card: #FFFFFF;
+  --line: #C7D0D9;
+  --line2: #E1E6EB;
+  --green: #008A00;
+  --amber: #E28C05;
+  --red: #D30000;
+  --shadow: 0 2px 5px rgba(0,0,0,.04);
+  --r: 2px;             /* Sharp corners */
+  --rs: 2px;
+  --font: Arial, Helvetica, sans-serif; /* High-density system font */
 }
 *{box-sizing:border-box}html,body,#root{min-height:100%;margin:0}
-body{font:13px var(--font);background:var(--bg);color:var(--ink)}
+body{font:12px var(--font);background:var(--bg);color:var(--ink)}
 button,input,select,textarea{font:inherit}button{cursor:pointer}
-.shell{min-height:100vh;display:grid;grid-template-columns:244px minmax(0,1fr)}
-.sidebar{background:linear-gradient(180deg,var(--navy2),var(--navy));color:#fff;padding:18px 12px;position:sticky;top:0;height:100vh;overflow:auto}
-.brand{padding:4px 8px 18px}.brand b{font-size:18px;letter-spacing:.08em}.brand small{display:block;color:#a9c8e5;margin-top:5px}
-.group{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#84a7c8;padding:17px 9px 7px}
-.navbtn{width:100%;border:0;background:transparent;color:#dceaf6;text-align:left;padding:10px 11px;border-radius:10px;margin:2px 0}
-.navbtn:hover{background:rgba(255,255,255,.08)}.navbtn.active{background:#fff;color:var(--navy);font-weight:800}
-.main{min-width:0;padding:18px 20px 34px}
-.top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:16px}
-.eyebrow{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--blue);font-weight:800}
-h1{margin:3px 0 5px;font-size:28px;line-height:1.12;color:var(--navy2)}
-.sub{color:var(--muted);max-width:820px;line-height:1.5}
-.toolbar{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
-.btn{border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:10px;padding:8px 12px;font-weight:750;min-height:36px}
-.btn:hover{border-color:#a8bacb}.btn.primary{background:var(--navy);border-color:var(--navy);color:#fff}.btn.cyan{background:var(--cyan);border-color:var(--cyan);color:#062a39}.btn.danger{color:var(--red);border-color:#efc4c9;background:#fff8f9}.btn.small{padding:5px 9px;min-height:30px;font-size:12px}
+
+/* CRS LAYOUT */
+.shell{display:grid;grid-template-columns:220px minmax(0,1fr);height:100vh;overflow:hidden;}
+
+.sidebar{background:#1C2B3E;color:#fff;padding:12px 0;overflow-y:auto;border-right:1px solid #111B28;}
+.group{font-size:10px;font-weight:bold;text-transform:uppercase;color:#859BB4;padding:12px 16px 6px;letter-spacing:0.05em;}
+.navbtn{width:100%;border:0;background:transparent;color:#C1CEDB;text-align:left;padding:8px 16px;margin:1px 0;font-size:12px;transition:none;}
+.navbtn:hover{background:#26384F;color:#fff;}
+.navbtn.active{background:var(--blue);color:#fff;font-weight:bold;border-left:4px solid var(--cyan);padding-left:12px;}
+
+.main{min-width:0;padding:16px;overflow-y:auto;}
+.top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--line);}
+.eyebrow{font-size:10px;font-weight:bold;text-transform:uppercase;color:var(--muted);letter-spacing:0.05em;}
+h1{margin:4px 0 0;font-size:20px;font-weight:normal;color:var(--navy);}
+.sub{color:var(--muted);max-width:820px;line-height:1.4;margin-top:4px;font-size:11px;}
+
+/* ENTERPRISE COMPONENTS */
+.toolbar{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.btn{border:1px solid var(--line);background:#f8f9fa;color:var(--ink);border-radius:var(--r);padding:6px 12px;font-weight:bold;min-height:28px;font-size:11px;text-transform:uppercase;}
+.btn:hover{background:#e2e6ea;border-color:#b5c0cb;}
+.btn.primary{background:var(--blue);border-color:var(--blue);color:#fff;}
+.btn.primary:hover{background:#004D96;border-color:#004D96;}
+.btn.cyan{background:var(--cyan);border-color:var(--cyan);color:#fff;}
+.btn.danger{color:#fff;border-color:var(--red);background:var(--red);}
+.btn.danger:hover{background:#B30000;}
+.btn.small{padding:4px 8px;min-height:24px;font-size:10px;}
+.btn[disabled]{opacity:0.5;cursor:not-allowed;}
+
 .grid{display:grid;gap:12px}.stats{grid-template-columns:repeat(5,minmax(0,1fr));margin-bottom:14px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow)}
-.stat{padding:15px}.stat span{display:block;color:var(--muted);font-size:11px}.stat strong{font-size:24px;color:var(--navy);display:block;margin-top:4px}.stat em{font-style:normal;font-size:10px;color:var(--muted)}
-.panel{padding:14px}.paneltitle{font-size:14px;font-weight:800;color:var(--navy2);display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
-.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:11px}
-.input,.select,.textarea{width:100%;border:1px solid #bac8d4;background:#fff;border-radius:9px;padding:8px 10px;color:var(--ink);outline:none}
-.input:focus,.select:focus,.textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(23,119,210,.11)}
-.textarea{min-height:92px;resize:vertical}.field{display:grid;gap:5px;min-width:0}.field label{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:#526277}
-.field small{color:var(--muted);line-height:1.35}.w180{width:180px}.w240{width:240px}.grow{flex:1;min-width:220px}
-.tablewrap{overflow:auto;border:1px solid var(--line2);border-radius:12px}.table{width:100%;border-collapse:collapse;font-size:12px}
-.table th{position:sticky;top:0;background:#f2f6f9;color:#42556a;text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);font-size:10px;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
-.table td{padding:9px 10px;border-bottom:1px solid var(--line2);white-space:nowrap;max-width:290px;overflow:hidden;text-overflow:ellipsis}
-.table tr:last-child td{border-bottom:0}.table tbody tr:hover{background:#f7fbfe}.clickrow{cursor:pointer}
-.pill{display:inline-flex;align-items:center;gap:5px;padding:3px 8px;border-radius:999px;font-size:10px;font-weight:800;background:#eef2f5;color:#526274}
-.pill.PUBLISHED,.pill.OPEN{background:#e7f5ed;color:var(--green)}.pill.REVIEW,.pill.DRAFT{background:#fff3dd;color:var(--amber)}.pill.ARCHIVED,.pill.SUSPENDED,.pill.BLACKOUT,.pill.STOP_SALE,.pill.SOLD_OUT{background:#fdebed;color:var(--red)}
-.split{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(320px,.85fr);gap:13px}
-.notice{padding:12px 14px;border-radius:12px;border:1px solid #bcdcea;background:#f0f9fc;color:#31566d;line-height:1.45}
-.notice.warn{background:#fff8e8;border-color:#ead39b;color:#71541c}.notice.bad{background:#fff2f3;border-color:#ebbdc2;color:#842433}
-.empty{padding:38px 18px;text-align:center;color:var(--muted)}
-.modalback{position:fixed;inset:0;background:rgba(3,18,37,.63);z-index:100;display:grid;place-items:center;padding:10px 18px;overflow:hidden;overscroll-behavior:contain}
-.modal{background:#fff;border-radius:18px;width:min(1160px,100%);height:min(900px,calc(100vh - 20px));max-height:calc(100vh - 20px);overflow:hidden;display:grid;grid-template-rows:auto minmax(0,1fr);box-shadow:0 35px 100px rgba(0,0,0,.35)}
-.modal.wide{width:min(1450px,100%)}.modalhead{padding:13px 16px;background:var(--navy2);color:#fff;display:flex;justify-content:space-between;align-items:center;gap:12px}.modalhead h2{font-size:16px;margin:0}.modalbody{min-height:0;overflow:auto;overscroll-behavior:contain;padding:16px}
-.tabs{display:flex;gap:5px;overflow:auto;border-bottom:1px solid var(--line);padding-bottom:8px;margin-bottom:14px}.tab{white-space:nowrap;border:0;border-radius:9px;padding:8px 10px;background:#edf3f7;color:#4d5f72;font-weight:750}.tab.active{background:var(--navy);color:#fff}
-.formgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}.formgrid.three{grid-template-columns:repeat(3,minmax(0,1fr))}.full{grid-column:1/-1}
-.sectiontitle{font-size:14px;font-weight:850;color:var(--navy);margin:4px 0 12px}.hr{height:1px;background:var(--line2);margin:14px 0}
-.langtabs{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px}.lang{border:1px solid var(--line);background:#fff;border-radius:8px;padding:6px 9px;font-weight:800}.lang.active{background:var(--cyan);border-color:var(--cyan)}
-.mediaitem,.relitem,.childitem{border:1px solid var(--line);border-radius:12px;padding:10px;margin-bottom:8px;background:#fbfdff}
-.preview{width:100%;aspect-ratio:16/8;background:#edf2f6;border-radius:12px;overflow:hidden;display:grid;place-items:center;color:var(--muted)}
-.preview img{width:100%;height:100%;object-fit:contain;display:block;background:#fff;padding:6px}
-.asseturladd{display:grid;grid-template-columns:minmax(220px,1fr) 180px minmax(180px,.7fr) auto;gap:8px;align-items:end;padding:12px;border:1px solid var(--line);border-radius:12px;background:#f8fbfd;margin:10px 0 14px}.providersource{font-size:10px;color:var(--muted);font-weight:700}.mediaitem.providerowned{border-color:#9ed7dc;background:#f4fcfc}@media(max-width:780px){.asseturladd{grid-template-columns:1fr}}
-.aircraftlayout{display:grid;grid-template-columns:330px minmax(0,1fr);gap:12px}.airlist{max-height:720px;overflow:auto}.airrow{padding:10px;border:1px solid var(--line);border-radius:11px;margin:6px 0;background:#fff;cursor:pointer}.airrow.active{border-color:var(--blue);box-shadow:0 0 0 2px rgba(23,119,210,.1)}.airrow b{display:block}.airrow small{color:var(--muted)}
-.cabinmap{display:flex;align-items:stretch;border:1px solid #91a8bd;border-radius:70px 18px 18px 70px;overflow:hidden;min-height:92px;background:#e9f2f8;padding:6px}
-.cabinzone{min-width:54px;display:grid;place-items:center;text-align:center;border-right:1px solid rgba(2,46,100,.14);padding:7px;background:rgba(255,255,255,.82)}.cabinzone:first-child{border-radius:60px 0 0 60px}.cabinzone:last-child{border-right:0;border-radius:0 11px 11px 0}.cabinzone b{color:var(--navy);font-size:12px}.cabinzone small{color:var(--muted);font-size:10px}
-.studioimg{position:relative;aspect-ratio:16/9;border-radius:14px;overflow:hidden;background:#fff}.studioimg img{width:100%;height:100%;object-fit:contain;padding:6px}
-.hotspot{position:absolute;width:26px;height:26px;border-radius:50%;border:3px solid #fff;background:var(--cyan);box-shadow:0 4px 16px rgba(0,0,0,.35);transform:translate(-50%,-50%);display:grid;place-items:center;font-size:9px;font-weight:900;color:var(--navy);cursor:grab}
-.hotspot.dragging{cursor:grabbing;transform:translate(-50%,-50%) scale(1.12)}.hotlabel{position:absolute;transform:translate(-50%,11px);background:rgba(3,24,49,.92);color:#fff;padding:3px 6px;border-radius:6px;font-size:9px;white-space:nowrap;pointer-events:none}
-.kpirow{display:flex;gap:7px;flex-wrap:wrap}.kpi{border:1px solid var(--line);background:#fff;border-radius:10px;padding:7px 9px}.kpi b{color:var(--navy)}
-.toast{position:fixed;right:18px;bottom:18px;background:#122b46;color:#fff;border-left:4px solid var(--cyan);padding:11px 14px;border-radius:10px;box-shadow:var(--shadow);z-index:300;max-width:min(480px,calc(100vw - 36px))}.toast.error{border-left-color:#f05b69}
+.card{background:var(--card);border:1px solid var(--line);border-radius:0;border-top:3px solid var(--blue);box-shadow:var(--shadow);}
+.stat{padding:12px;border-right:1px solid var(--line2);}.stat:last-child{border-right:none;}
+.stat span{display:block;color:var(--muted);font-size:11px;text-transform:uppercase;}
+.stat strong{font-size:22px;color:var(--navy);display:block;margin-top:2px;}
+.stat em{font-style:normal;font-size:10px;color:var(--muted)}
 
+.panel{padding:16px;}
+.paneltitle{font-size:14px;font-weight:bold;color:var(--navy);display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--line2);}
 
-.smartgroup{grid-column:1/-1;border:1px solid var(--line2);border-radius:12px;background:#f8fbfd;padding:11px}
-.smartgroup>.smarttitle{font-size:11px;font-weight:850;color:var(--navy);margin-bottom:9px;text-transform:uppercase;letter-spacing:.04em}
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;background:#FAFAFB;padding:10px;border:1px solid var(--line2);}
+.input,.select,.textarea{width:100%;border:1px solid #A1ABB3;background:#fff;border-radius:var(--r);padding:6px 8px;color:var(--ink);outline:none;font-size:12px;min-height:28px;}
+.input:focus,.select:focus,.textarea:focus{border-color:var(--blue);box-shadow:inset 0 0 0 1px var(--blue);}
+.textarea{min-height:80px;resize:vertical}
+.field{display:grid;gap:4px;min-width:0}
+.field label{font-size:11px;font-weight:bold;color:var(--navy);}
+.field small{color:var(--muted);line-height:1.3;font-size:10px;}
+.w180{width:180px}.w240{width:240px}.grow{flex:1;min-width:220px}
+
+/* DENSE DATA GRIDS */
+.tablewrap{overflow:auto;border:1px solid var(--line);border-radius:0;background:#fff;}
+.table{width:100%;border-collapse:collapse;font-size:11px;}
+.table th{position:sticky;top:0;background:#E1E6EB;color:var(--navy);text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);border-right:1px solid var(--line2);font-weight:bold;}
+.table td{padding:8px 10px;border-bottom:1px solid var(--line2);border-right:1px solid var(--line2);white-space:nowrap;max-width:290px;overflow:hidden;text-overflow:ellipsis;}
+.table tr:last-child td{border-bottom:0}.table tbody tr:nth-child(even){background:#F9FAFB;}.table tbody tr:hover{background:#EBF3FA;}
+.clickrow{cursor:pointer}
+
+/* BADGES */
+.pill{display:inline-flex;align-items:center;padding:2px 6px;border-radius:2px;font-size:10px;font-weight:bold;text-transform:uppercase;border:1px solid transparent;}
+.pill.PUBLISHED,.pill.OPEN{background:#E5F5E5;color:var(--green);border-color:#B3DDB3;}
+.pill.REVIEW,.pill.DRAFT{background:#FFF4E5;color:var(--amber);border-color:#F5D1A3;}
+.pill.ARCHIVED,.pill.SUSPENDED,.pill.BLACKOUT,.pill.STOP_SALE,.pill.SOLD_OUT{background:#FAEBEC;color:var(--red);border-color:#EBA1A4;}
+
+.split{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(320px,.85fr);gap:12px}
+.notice{padding:10px 12px;border:1px solid #BCE0FD;background:#EBF5FF;color:#004D96;line-height:1.4;font-size:11px;}
+.notice.warn{background:#FFF8E8;border-color:#EAD39B;color:#71541C;}
+.notice.bad{background:#FAEBEC;border-color:#EBA1A4;color:var(--red);}
+.empty{padding:30px 16px;text-align:center;color:var(--muted);font-style:italic;}
+
+/* MODALS */
+.modalback{position:fixed;inset:0;background:rgba(10,28,53,.7);z-index:100;display:grid;place-items:center;padding:20px;overflow:hidden;overscroll-behavior:contain}
+.modal{background:#fff;border-radius:0;width:min(1160px,100%);height:min(900px,calc(100vh - 40px));max-height:calc(100vh - 40px);overflow:hidden;display:grid;grid-template-rows:auto minmax(0,1fr);box-shadow:0 10px 30px rgba(0,0,0,.5);border:1px solid var(--navy);}
+.modal.wide{width:min(1450px,100%)}
+.modalhead{padding:10px 16px;background:var(--navy);color:#fff;display:flex;justify-content:space-between;align-items:center;gap:12px;border-bottom:3px solid var(--cyan);}
+.modalhead h2{font-size:14px;margin:0;font-weight:bold;}
+.modalbody{min-height:0;overflow:auto;overscroll-behavior:contain;padding:16px;background:var(--bg);}
+
+/* TABS */
+.tabs{display:flex;gap:2px;overflow:visible;border-bottom:2px solid var(--line);margin-bottom:16px;}
+.tab{white-space:nowrap;border:1px solid var(--line);border-bottom:none;border-radius:2px 2px 0 0;padding:8px 16px;background:#E1E6EB;color:var(--muted);font-weight:bold;font-size:11px;text-transform:uppercase;}
+.tab:hover{background:#D1D9E0;}
+.tab.active{background:var(--card);color:var(--blue);position:relative;top:2px;border-bottom:2px solid var(--card);}
+
+.formgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.formgrid.three{grid-template-columns:repeat(3,minmax(0,1fr))}.full{grid-column:1/-1}
+.sectiontitle{font-size:12px;font-weight:bold;color:var(--navy);text-transform:uppercase;margin:4px 0 12px;border-bottom:1px solid var(--line2);padding-bottom:4px;}
+.hr{height:1px;background:var(--line2);margin:16px 0}
+
+.langtabs{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:12px}
+.lang{border:1px solid var(--line);background:#fff;border-radius:2px;padding:4px 8px;font-weight:bold;font-size:11px;}
+.lang.active{background:var(--navy);color:#fff;border-color:var(--navy);}
+
+.mediaitem,.relitem,.childitem{border:1px solid var(--line);border-radius:0;padding:12px;margin-bottom:8px;background:#fff;}
+.preview{width:100%;aspect-ratio:16/8;background:#F0F2F5;border:1px solid var(--line2);display:grid;place-items:center;color:var(--muted)}
+.preview img{width:100%;height:100%;object-fit:contain;background:#fff;}
+
+.asseturladd{display:grid;grid-template-columns:minmax(220px,1fr) 180px minmax(180px,.7fr) auto;gap:12px;align-items:end;padding:12px;border:1px solid var(--line);background:#FAFAFB;margin:10px 0 16px;}
+.providersource{font-size:10px;color:var(--muted);font-weight:bold;}
+.mediaitem.providerowned{border-color:var(--cyan);background:#F2FCFD;}
+@media(max-width:780px){.asseturladd{grid-template-columns:1fr}}
+
+.aircraftlayout{display:grid;grid-template-columns:330px minmax(0,1fr);gap:12px}.airlist{max-height:720px;overflow:auto}
+.airrow{padding:10px;border:1px solid var(--line);border-radius:0;margin:6px 0;background:#fff;cursor:pointer}
+.airrow.active{border-color:var(--blue);border-left:3px solid var(--blue);}
+.airrow b{display:block}.airrow small{color:var(--muted)}
+
+.cabinmap{display:flex;align-items:stretch;border:1px solid var(--line);overflow:hidden;min-height:80px;background:#fff;}
+.cabinzone{min-width:54px;display:grid;place-items:center;text-align:center;border-right:1px solid var(--line2);padding:6px;background:#F9FAFB;}
+.cabinzone:last-child{border-right:0;}
+.cabinzone b{color:var(--navy);font-size:11px;display:block;}
+.cabinzone small{color:var(--muted);font-size:10px}
+
+.studioimg{position:relative;aspect-ratio:16/9;border:1px solid var(--line);background:#fff}.studioimg img{width:100%;height:100%;object-fit:contain;}
+.hotspot{position:absolute;width:24px;height:24px;border-radius:50%;border:2px solid #fff;background:var(--cyan);box-shadow:0 2px 5px rgba(0,0,0,.5);transform:translate(-50%,-50%);display:grid;place-items:center;font-size:10px;font-weight:bold;color:#fff;cursor:grab}
+.hotspot.dragging{cursor:grabbing;transform:translate(-50%,-50%) scale(1.1)}
+.hotlabel{position:absolute;transform:translate(-50%,12px);background:var(--navy);color:#fff;padding:2px 4px;font-size:9px;white-space:nowrap;pointer-events:none}
+
+.kpirow{display:flex;gap:8px;flex-wrap:wrap}.kpi{border:1px solid var(--line);background:#fff;padding:8px 12px;font-size:11px;}
+.kpi b{color:var(--blue);font-size:14px;}
+
+.toast{position:fixed;right:20px;bottom:20px;background:var(--navy);color:#fff;border-left:4px solid var(--cyan);padding:12px 16px;box-shadow:0 4px 12px rgba(0,0,0,.15);z-index:300;max-width:min(480px,calc(100vw - 40px));font-size:12px;}
+.toast.error{border-left-color:var(--red);}
+
+.smartgroup{grid-column:1/-1;border:1px solid var(--line);background:#fff;padding:12px;margin-bottom:12px;}
+.smartgroup>.smarttitle{font-size:11px;font-weight:bold;color:var(--navy);margin-bottom:10px;text-transform:uppercase;border-bottom:1px solid var(--line2);padding-bottom:4px;}
 .smartlist{display:grid;gap:8px}.smartrow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:end}
-.smartobject{border:1px solid var(--line);border-radius:11px;background:#fff;padding:10px;margin-top:7px}
-.smartempty{grid-column:1/-1;color:var(--muted);font-size:12px;padding:8px 0}
-.positionbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:9px}
-.positionreadout{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:999px;padding:6px 10px;background:#fff;color:var(--navy);font-weight:800}
-.placementon{background:#e8fbfc;border-color:var(--cyan);color:#0b5961}
-.studioimg.place{cursor:crosshair;box-shadow:0 0 0 3px rgba(95,199,207,.3)}
+.smartobject{border:1px solid var(--line2);background:#F9FAFB;padding:12px;margin-top:8px}
+.smartempty{grid-column:1/-1;color:var(--muted);font-size:11px;padding:8px 0;font-style:italic;}
+
+.positionbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px}
+.positionreadout{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);padding:4px 8px;background:#fff;color:var(--navy);font-weight:bold;font-size:11px;}
+.placementon{background:#EBF5FF;border-color:var(--blue);color:var(--blue);}
+.studioimg.place{cursor:crosshair;box-shadow:inset 0 0 0 2px var(--cyan);}
+
+.assetgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px}
+.assetcard{border:1px solid var(--line);background:#fff;display:grid;grid-template-rows:120px 1fr}
+.assetthumb{background:#F0F2F5;display:grid;place-items:center;overflow:hidden;border-bottom:1px solid var(--line2);}.assetthumb img{width:100%;height:100%;object-fit:contain;}
+.assettype{font-size:24px;color:var(--muted);font-weight:bold;}
+.assetbody{padding:10px;display:grid;gap:6px;}
+.assetname{font-weight:bold;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11px;}
+.assetpath{font-size:10px;color:var(--muted);min-height:24px;word-break:break-all;}
+.assetbadges,.assetactions{display:flex;gap:4px;flex-wrap:wrap}
+.badge{display:inline-flex;padding:2px 4px;background:#E1E6EB;color:var(--muted);font-size:9px;font-weight:bold;text-transform:uppercase;}
+.badge.dup{background:#FFF4E5;color:var(--amber);}
+.badge.private{background:#F0E6FA;color:#6A00FF;}
+.badge.public{background:#E5F5E5;color:var(--green);}
+
+.assetcurrent{border:1px solid var(--line);background:#FAFAFB;padding:10px;display:grid;gap:8px;}.assetcurrent .preview{aspect-ratio:16/6;}
+.uploadzone{border:2px dashed #A1ABB3;background:#FAFAFB;padding:16px;display:grid;gap:10px;text-align:center;}
+.assetfilters{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:12px}
+.assetsection{border-top:1px solid var(--line);padding-top:16px;margin-top:16px}
+.dupbox{border:1px solid var(--amber);background:#FFFDF5;padding:12px;margin:12px 0;}
+.assetlibraryhero{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center}
+.assetfolder{font-weight:bold;color:var(--navy);font-size:11px;}
+.fileinput{display:block;width:100%;border:1px solid var(--line);background:#fff;padding:8px;font-size:11px;}
+
+.pager{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:12px 0;background:#fff;padding:8px;border:1px solid var(--line);}
+.pagerinfo{font-size:11px;color:var(--muted);font-weight:bold;}
+.pagerbuttons{display:flex;gap:4px;}
+
+/* Provider Workspace Matrix */
+.providerhero{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px;align-items:center;padding:16px;border:1px solid var(--line);border-top:3px solid var(--blue);background:#fff;margin-bottom:16px}
+.providerhero h2{margin:0 0 4px;color:var(--navy);font-size:16px;font-weight:normal;}
+.providerhero p{margin:0;color:var(--muted);font-size:11px;line-height:1.4}
+.sourcebadge{display:inline-flex;align-items:center;gap:6px;padding:4px 8px;background:var(--blue);color:#fff;font-size:10px;font-weight:bold;text-transform:uppercase;}
+.providergrid{display:grid;grid-template-columns:minmax(250px,.8fr) minmax(0,1.2fr);gap:16px}
+.providerresult{display:flex;gap:12px;align-items:center}
+.providerlogo{width:40px;height:40px;border:1px solid var(--line);background:#F0F2F5;display:grid;place-items:center;flex:0 0 auto;}.providerlogo img{width:100%;height:100%;object-fit:contain;}.providerlogo b{font-size:11px;color:var(--muted);}
+.matchtag{display:inline-flex;padding:2px 4px;font-size:9px;font-weight:bold;text-transform:uppercase;border:1px solid transparent;}
+.matchtag.duffel{background:#EBF5FF;color:var(--blue);border-color:#BCE0FD;}
+.matchtag.collection{background:#E5F5E5;color:var(--green);border-color:#B3DDB3;}
+.matchtag.match{background:#FFF4E5;color:var(--amber);border-color:#F5D1A3;}
+.matchtag.block{background:#FAEBEC;color:var(--red);border-color:#EBA1A4;}
+.detailgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);}
+.detailcell{padding:10px;background:#fff;min-width:0}
+.detailcell small{display:block;color:var(--muted);font-size:9px;text-transform:uppercase;font-weight:bold;margin-bottom:2px}
+.detailcell div{font-size:11px;word-break:break-word}
+
+.scopebox{border:1px solid var(--line);padding:12px;background:#FAFAFB}
+.provideractions{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}
+.selectedlist{display:flex;gap:4px;flex-wrap:wrap;margin-top:8px}
+.selectedchip{display:inline-flex;align-items:center;gap:6px;padding:2px 6px;border:1px solid var(--line);background:#fff;font-size:10px;}
+.selectedchip button{border:0;background:transparent;color:var(--red);cursor:pointer;font-weight:bold;padding:0;}
+
+.loading{position:fixed;inset:0;background:rgba(10,28,53,.6);z-index:250;display:grid;place-items:center}
+.loaderbox{background:#fff;border:1px solid var(--blue);border-top:4px solid var(--blue);padding:20px 30px;box-shadow:0 10px 30px rgba(0,0,0,.3);font-weight:bold;color:var(--navy);font-size:12px;text-transform:uppercase;letter-spacing:1px;}
+
+/* V12 functional affordances preserved with the requested high-density surface. */
+.brand{padding:4px 16px 15px;border-bottom:1px solid rgba(255,255,255,.13);margin-bottom:6px}
+.brand b{font-size:16px;letter-spacing:.06em;color:#fff}
+.brand small{display:block;color:#9cb2cc;margin-top:4px;font-size:10px}
+.inlinehelp{font-size:10px;color:var(--muted);line-height:1.4}
+.detailcell a{color:var(--blue);text-decoration:none}.detailcell a:hover{text-decoration:underline}
+.sectiontitle{line-height:1.35}
+.assetcard{min-width:0}.assetactions button{max-width:100%}
+.assetpath{overflow-wrap:anywhere}
+.preview img,.studioimg img,.assetthumb img{padding:5px}
+.panel .stats{grid-template-columns:repeat(5,minmax(0,1fr))}
+/* Persistent session-scoped control bar: React state, never browser storage. */
+.master-toolbar{display:flex;gap:10px;align-items:end;flex-wrap:wrap;justify-content:flex-end}
+.master-scope{display:grid;gap:4px;min-width:212px}
+.master-scope label{font-size:10px;font-weight:bold;letter-spacing:.04em;color:var(--muted);text-transform:uppercase}
+.master-scope select{border-left:3px solid var(--cyan);background:#fff;color:var(--navy);font-weight:bold;min-height:31px}
+.scope-label{color:var(--muted);font-size:10px;line-height:1.4;margin:0 0 12px}
+.scope-caption{color:var(--muted);font-size:10px;font-weight:bold;text-transform:uppercase;letter-spacing:.04em}
+.property-toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:end;justify-content:space-between}
+.property-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:12px 0}
+.property-summary .card{padding:12px}
+.property-summary span{display:block;font-size:10px;color:var(--muted);text-transform:uppercase}
+.property-summary strong{display:block;margin-top:5px;font-size:19px;color:var(--navy)}
+.scope-empty{padding:22px;background:#fff;border:1px solid var(--line);font-size:12px;color:var(--muted)}
+@media(max-width:1100px){.stats,.panel .stats{grid-template-columns:repeat(3,minmax(0,1fr))}.split,.aircraftlayout,.providergrid{grid-template-columns:1fr}.airlist{max-height:260px}}
+@media(max-width:900px){.providerhero{grid-template-columns:1fr}.provideractions{justify-content:flex-start}}
+@media(max-width:760px){
+  .shell{height:auto;min-height:100vh;overflow:visible;grid-template-columns:1fr;grid-template-rows:auto minmax(0,1fr)}
+  .sidebar{position:relative;height:auto;min-height:48px;display:flex;gap:3px;overflow-x:auto;overflow-y:hidden;padding:6px}
+  .brand,.group{display:none}.navbtn{width:auto;flex:0 0 auto;white-space:nowrap;padding:9px 10px;border-left:0!important}
+  .navbtn.active{border-bottom:3px solid var(--cyan);padding:9px 10px 6px}
+  .main{padding:10px;overflow:visible}.top{display:block}.toolbar,.master-toolbar{justify-content:flex-start;margin-top:10px}
+  .master-toolbar{width:100%}.master-scope{min-width:min(100%,230px)}
+  .stats,.panel .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .property-summary{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .formgrid,.formgrid.three{grid-template-columns:1fr}.full{grid-column:auto}
+  .modalback{padding:0}.modal{height:100vh;max-height:100vh;width:100%;border:0}
+  .assetfilters{grid-template-columns:1fr}.assetgrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .asseturladd{grid-template-columns:1fr}.tabs{overflow-x:auto;overflow-y:hidden}
+  .cabinmap{overflow-x:auto}.providergrid{grid-template-columns:1fr}
+}
+@media(max-width:430px){.stats,.panel .stats,.property-summary{grid-template-columns:1fr 1fr}.master-scope{flex:1}}
+
+/* Exact CSS from the supplied Property Director reference; overrides earlier visual rules. */
+
+/* AMADEUS / CRS ENTERPRISE STYLESHEET */
+:root {
+  --navy: #0A1C35;      
+  --navy2: #051020;
+  --cyan: #00A1E0;      
+  --blue: #005EB8;      
+  --ink: #2C333A;
+  --muted: #5E6973;
+  --bg: #F0F2F5;        
+  --card: #FFFFFF;
+  --line: #C7D0D9;
+  --line2: #E1E6EB;
+  --green: #008A00;
+  --amber: #E28C05;
+  --red: #D30000;
+  --font: Arial, Helvetica, sans-serif; 
+}
+* { box-sizing: border-box; }
+html, body, #root { min-height: 100%; margin: 0; }
+body { font: 12px var(--font); background: var(--bg); color: var(--ink); }
+button, input, select, textarea { font: inherit; }
+button { cursor: pointer; }
+
+/* GLOBAL SHELL */
+.shell { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+.global-header { background: var(--navy); color: #fff; height: 44px; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; font-size: 11px; flex-shrink: 0; }
+.global-header select { background: #051020; color: #fff; border: 1px solid #334; padding: 4px 8px; border-radius: 2px; outline: none; font-size: 11px; }
+
+.shell-body { display: flex; flex: 1; min-height: 0; }
+.sidebar { width: 220px; background: #1C2B3E; color: #fff; padding: 12px 0; overflow-y: auto; border-right: 1px solid #111B28; flex-shrink: 0; }
+.main { flex: 1; padding: 16px; overflow-y: auto; background: var(--bg); }
+
+.group { font-size: 10px; font-weight: bold; text-transform: uppercase; color: #859BB4; padding: 12px 16px 6px; letter-spacing: 0.05em; }
+.navbtn { width: 100%; border: 0; background: transparent; color: #C1CEDB; text-align: left; padding: 8px 16px; margin: 1px 0; font-size: 12px; }
+.navbtn:hover { background: #26384F; color: #fff; }
+.navbtn.active { background: var(--blue); color: #fff; font-weight: bold; border-left: 4px solid var(--cyan); padding-left: 12px; }
+
+/* TYPOGRAPHY & HEADER */
+.top { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
+.eyebrow { font-size: 10px; font-weight: bold; text-transform: uppercase; color: var(--muted); letter-spacing: 0.05em; }
+h1 { margin: 4px 0 0; font-size: 20px; font-weight: normal; color: var(--navy); }
+.sub { color: var(--muted); line-height: 1.4; margin-top: 4px; font-size: 11px; }
+
+/* ENTERPRISE COMPONENTS */
+.toolbar { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; align-items: center; }
+.btn { border: 1px solid var(--line); background: #f8f9fa; color: var(--ink); border-radius: 2px; padding: 6px 12px; font-weight: bold; min-height: 28px; font-size: 11px; text-transform: uppercase; }
+.btn:hover { background: #e2e6ea; border-color: #b5c0cb; }
+.btn.primary { background: var(--blue); border-color: var(--blue); color: #fff; }
+.btn.primary:hover { background: #004D96; border-color: #004D96; }
+.btn.cyan { background: var(--cyan); border-color: var(--cyan); color: #fff; }
+.btn.danger { color: #fff; border-color: var(--red); background: var(--red); }
+.btn.small { padding: 4px 8px; min-height: 24px; font-size: 10px; }
+.btn[disabled] { opacity: 0.5; cursor: not-allowed; }
+
+.card { background: var(--card); border: 1px solid var(--line); border-top: 3px solid var(--blue); margin-bottom: 16px; }
+.panel { padding: 16px; }
+.paneltitle { font-size: 14px; font-weight: bold; color: var(--navy); display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--line2); text-transform: uppercase; }
+.sectiontitle { font-size: 12px; font-weight: bold; color: var(--navy); text-transform: uppercase; margin: 16px 0 8px; border-bottom: 1px solid var(--line2); padding-bottom: 4px; }
+
+/* FORMS */
+.formgrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.formgrid.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.formgrid.four { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.field { display: flex; flex-direction: column; gap: 4px; }
+.field label { font-size: 10px; font-weight: bold; color: var(--navy); text-transform: uppercase; }
+.field small { color: var(--muted); font-size: 10px; }
+.input, .select, .textarea { border: 1px solid #A1ABB3; border-radius: 2px; padding: 6px 8px; font-size: 12px; min-height: 28px; width: 100%; }
+.input:focus, .select:focus, .textarea:focus { border-color: var(--blue); box-shadow: inset 0 0 0 1px var(--blue); outline: none; }
+.input[disabled], .select[disabled], .textarea[disabled] { background: #F0F2F5; color: #5E6973; border-color: var(--line); }
+.textarea { min-height: 80px; resize: vertical; }
+.unit-group { display: flex; align-items: center; gap: 8px; }
+
+/* DATA GRIDS */
+.tablewrap { overflow: auto; border: 1px solid var(--line); background: #fff; margin-bottom: 16px; }
+.table { width: 100%; border-collapse: collapse; font-size: 11px; }
+.table th { background: #E1E6EB; color: var(--navy); text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); border-right: 1px solid var(--line2); font-weight: bold; text-transform: uppercase; }
+.table td { padding: 6px 8px; border-bottom: 1px solid var(--line2); border-right: 1px solid var(--line2); }
+.table tbody tr:nth-child(even) { background: #F9FAFB; }
+.table tbody tr:hover { background: #EBF3FA; }
+.matrix-cell { padding: 4px !important; }
+.matrix-input { width: 100%; border: 1px solid transparent; background: transparent; padding: 4px; font-size: 11px; text-transform: uppercase; }
+.matrix-input:focus { background: #fff; border-color: var(--blue); }
+.matrix-missing { background: #FFF4E5 !important; border-left: 3px solid var(--amber) !important; }
+
+/* UTILS */
+.pill { display: inline-block; padding: 2px 6px; font-size: 10px; font-weight: bold; text-transform: uppercase; border-radius: 2px; }
+.pill.active { background: #E5F5E5; color: var(--green); }
+.pill.review { background: #FFF4E5; color: var(--amber); }
+.pill.draft { background: #F0F2F5; color: var(--muted); }
+
+.notice { padding: 10px 12px; border: 1px solid #BCE0FD; background: #EBF5FF; color: #004D96; font-size: 11px; margin-bottom: 12px; }
+.notice.warn { background: #FFF8E8; border-color: #EAD39B; color: #71541C; }
+.empty { padding: 20px; text-align: center; color: var(--muted); font-style: italic; }
+
+/* MAP & CMS COMPONENTS */
+.map-widget { background: #E1E6EB; height: 200px; display: grid; place-items: center; border: 1px solid var(--line); position: relative; margin-top: 4px; }
+.map-marker { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -100%); font-size: 24px; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.3)); }
+.split-screen { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+.seo-preview { border: 1px solid var(--line); padding: 12px; background: #fff; }
+.seo-title { color: #1a0dab; font-size: 16px; font-family: arial, sans-serif; cursor: pointer; text-decoration: none; }
+.seo-url { color: #006621; font-size: 12px; font-family: arial, sans-serif; margin-bottom: 2px; }
+.seo-desc { color: #545454; font-size: 12px; font-family: arial, sans-serif; }
+.char-count { font-size: 9px; text-align: right; color: var(--muted); }
+.char-count.over { color: var(--red); font-weight: bold; }
+
+/* MEDIA GRID */
+.media-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+.media-card { border: 1px solid var(--line); background: #fff; padding: 8px; display: flex; flex-direction: column; gap: 8px; }
+.media-img { width: 100%; height: 120px; object-fit: cover; border: 1px solid var(--line2); background: #eee; }
+
+/* TOAST */
+.toast { position: fixed; bottom: 20px; right: 20px; background: var(--navy); color: #fff; padding: 12px 16px; border-left: 4px solid var(--cyan); box-shadow: 0 4px 12px rgba(0,0,0,0.2); z-index: 1000; font-size: 12px; }
+
+/* TABS */
+.tabs { display: flex; gap: 2px; overflow: visible; border-bottom: 2px solid var(--line); margin-bottom: 16px; }
+.tab { white-space: nowrap; border: 1px solid var(--line); border-bottom: none; border-radius: 2px 2px 0 0; padding: 8px 16px; background: #E1E6EB; color: var(--muted); font-weight: bold; font-size: 11px; text-transform: uppercase; }
+.tab:hover { background: #D1D9E0; }
+.tab.active { background: var(--card); color: var(--blue); position: relative; top: 2px; border-bottom: 2px solid var(--card); }
+
+/* SMART FACTS */
+.smartgroup { border: 1px solid var(--line); background: #fff; padding: 12px; margin-bottom: 12px; }
+.smarttitle { font-size: 11px; font-weight: bold; color: var(--navy); margin-bottom: 10px; text-transform: uppercase; border-bottom: 1px solid var(--line2); padding-bottom: 4px; display: flex; justify-content: space-between; }
+.smartlist { display: grid; gap: 8px; }
+.smartrow { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: end; }
 
 
-.assetgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}
-.assetcard{border:1px solid var(--line);border-radius:13px;background:#fff;overflow:hidden;display:grid;grid-template-rows:128px 1fr}
-.assetthumb{background:#fff;display:grid;place-items:center;overflow:hidden}.assetthumb img{width:100%;height:100%;object-fit:contain;padding:8px}
-.assettype{font-size:25px;color:var(--navy);font-weight:900}.assetbody{padding:9px;display:grid;gap:5px;min-width:0}
-.assetname{font-weight:850;color:var(--navy2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.assetpath{font-size:10px;color:var(--muted);line-height:1.35;min-height:28px}
-.assetbadges,.assetactions{display:flex;gap:4px;flex-wrap:wrap}.badge{display:inline-flex;padding:3px 6px;border-radius:999px;background:#edf3f7;color:#53677a;font-size:9px;font-weight:850}
-.badge.dup{background:#fff0dd;color:#875800}.badge.private{background:#f1eafd;color:#5c4193}.badge.public{background:#e6f6ee;color:#12724a}
-.assetcurrent{border:1px solid var(--line);border-radius:12px;background:#f8fbfd;padding:9px;display:grid;gap:8px}.assetcurrent .preview{aspect-ratio:16/7}
-.uploadzone{border:2px dashed #b8c9d8;border-radius:14px;background:#f8fbfd;padding:14px;display:grid;gap:10px}.uploadzone strong{color:var(--navy)}
-.assetfilters{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:10px}.assetsection{border-top:1px solid var(--line2);padding-top:13px;margin-top:13px}
-.dupbox{border:1px solid #e4bd7d;background:#fff8e9;border-radius:12px;padding:11px;margin:10px 0}.assetlibraryhero{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center}
-.assetfolder{font-weight:850;color:var(--navy);font-size:12px}.fileinput{display:block;width:100%;border:1px solid var(--line);border-radius:10px;background:#fff;padding:9px}
-.pager{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:10px 0}.pagerinfo{font-size:11px;color:var(--muted);font-weight:700}.pagerbuttons{display:flex;gap:6px;align-items:center}.pager .btn[disabled]{opacity:.42;cursor:default}
-
-
-/* R-003.9 Duffel / SKANDI Collection workspace */
-.providerhero{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:14px;align-items:center;padding:16px;border:1px solid #c9dce8;background:linear-gradient(135deg,#f7fbfd,#eef7fa);border-radius:14px;margin-bottom:14px}
-.providerhero h2{margin:0 0 5px;color:var(--navy2);font-size:19px}.providerhero p{margin:0;color:var(--muted);font-size:12px;line-height:1.55}
-.sourcebadge{display:inline-flex;align-items:center;gap:7px;border-radius:999px;padding:7px 10px;background:#fff;border:1px solid #bfd4df;color:var(--navy);font-size:11px;font-weight:900}.sourcebadge:before{content:"";width:8px;height:8px;border-radius:50%;background:var(--cyan);box-shadow:0 0 0 3px rgba(95,199,207,.18)}
-.providergrid{display:grid;grid-template-columns:minmax(250px,.8fr) minmax(0,1.2fr);gap:14px}.providerresult{display:flex;gap:11px;align-items:center}.providerlogo{width:42px;height:42px;border:1px solid var(--line);border-radius:10px;background:#fff;display:grid;place-items:center;overflow:hidden;flex:0 0 auto}.providerlogo img{width:100%;height:100%;object-fit:contain;padding:5px}.providerlogo b{font-size:11px;color:var(--navy)}
-.matchtag{display:inline-flex;border-radius:999px;padding:4px 7px;font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:.04em}.matchtag.duffel{background:#edf7f8;color:#0c6771}.matchtag.collection{background:#e7f3ff;color:#075ca9}.matchtag.match{background:#fff5d9;color:#8a6300}.matchtag.block{background:#ffe8eb;color:#9b2838}
-.detailgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:9px}.detailcell{border:1px solid var(--line2);border-radius:10px;padding:10px;background:#fbfdfe;min-width:0}.detailcell small{display:block;color:var(--muted);font-size:9px;text-transform:uppercase;letter-spacing:.05em;font-weight:800;margin-bottom:4px}.detailcell div{font-size:12px;word-break:break-word}.detailcell a{color:var(--blue);text-decoration:none}.detailcell a:hover{text-decoration:underline}
-.scopebox{border:1px solid var(--line);border-radius:12px;padding:12px;background:#f9fbfc}.provideractions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}.inlinehelp{font-size:10px;color:var(--muted);line-height:1.45}.selectedlist{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.selectedchip{display:inline-flex;align-items:center;gap:6px;padding:5px 8px;border:1px solid var(--line);border-radius:999px;background:#fff;font-size:10px}.selectedchip button{border:0;background:transparent;color:var(--red);cursor:pointer;font-weight:900}
-@media(max-width:900px){.providergrid{grid-template-columns:1fr}.providerhero{grid-template-columns:1fr}.provideractions{justify-content:flex-start}}
-
-
-@media(max-width:760px){.assetfilters{grid-template-columns:1fr}.assetgrid{grid-template-columns:repeat(2,minmax(0,1fr))}.assetcard{grid-template-rows:110px 1fr}}
-.loading{position:fixed;inset:0;background:rgba(238,243,247,.72);backdrop-filter:blur(3px);z-index:250;display:grid;place-items:center}.loaderbox{background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px 22px;box-shadow:var(--shadow);font-weight:800;color:var(--navy)}
-@media(max-width:1100px){.stats{grid-template-columns:repeat(3,1fr)}.split{grid-template-columns:1fr}.aircraftlayout{grid-template-columns:1fr}.airlist{max-height:260px}}
-
-
-/* R-003.9 Duffel / SKANDI Collection workspace */
-.providerhero{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:14px;align-items:center;padding:16px;border:1px solid #c9dce8;background:linear-gradient(135deg,#f7fbfd,#eef7fa);border-radius:14px;margin-bottom:14px}
-.providerhero h2{margin:0 0 5px;color:var(--navy2);font-size:19px}.providerhero p{margin:0;color:var(--muted);font-size:12px;line-height:1.55}
-.sourcebadge{display:inline-flex;align-items:center;gap:7px;border-radius:999px;padding:7px 10px;background:#fff;border:1px solid #bfd4df;color:var(--navy);font-size:11px;font-weight:900}.sourcebadge:before{content:"";width:8px;height:8px;border-radius:50%;background:var(--cyan);box-shadow:0 0 0 3px rgba(95,199,207,.18)}
-.providergrid{display:grid;grid-template-columns:minmax(250px,.8fr) minmax(0,1.2fr);gap:14px}.providerresult{display:flex;gap:11px;align-items:center}.providerlogo{width:42px;height:42px;border:1px solid var(--line);border-radius:10px;background:#fff;display:grid;place-items:center;overflow:hidden;flex:0 0 auto}.providerlogo img{width:100%;height:100%;object-fit:contain;padding:5px}.providerlogo b{font-size:11px;color:var(--navy)}
-.matchtag{display:inline-flex;border-radius:999px;padding:4px 7px;font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:.04em}.matchtag.duffel{background:#edf7f8;color:#0c6771}.matchtag.collection{background:#e7f3ff;color:#075ca9}.matchtag.match{background:#fff5d9;color:#8a6300}.matchtag.block{background:#ffe8eb;color:#9b2838}
-.detailgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:9px}.detailcell{border:1px solid var(--line2);border-radius:10px;padding:10px;background:#fbfdfe;min-width:0}.detailcell small{display:block;color:var(--muted);font-size:9px;text-transform:uppercase;letter-spacing:.05em;font-weight:800;margin-bottom:4px}.detailcell div{font-size:12px;word-break:break-word}.detailcell a{color:var(--blue);text-decoration:none}.detailcell a:hover{text-decoration:underline}
-.scopebox{border:1px solid var(--line);border-radius:12px;padding:12px;background:#f9fbfc}.provideractions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}.inlinehelp{font-size:10px;color:var(--muted);line-height:1.45}.selectedlist{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.selectedchip{display:inline-flex;align-items:center;gap:6px;padding:5px 8px;border:1px solid var(--line);border-radius:999px;background:#fff;font-size:10px}.selectedchip button{border:0;background:transparent;color:var(--red);cursor:pointer;font-weight:900}
-@media(max-width:900px){.providergrid{grid-template-columns:1fr}.providerhero{grid-template-columns:1fr}.provideractions{justify-content:flex-start}}
-
-
-@media(max-width:760px){.shell{grid-template-columns:1fr;grid-template-rows:auto 1fr}.sidebar{position:relative;height:60px;display:flex;gap:5px;overflow:auto;padding:8px}.brand,.group{display:none}.navbtn{width:auto;white-space:nowrap}.main{padding:12px}.top{display:block}.toolbar{justify-content:flex-start;margin-top:10px}.stats{grid-template-columns:repeat(2,1fr)}.formgrid,.formgrid.three{grid-template-columns:1fr}.full{grid-column:auto}.modalback{padding:0;place-items:center}.modal{max-height:100vh;height:100vh;border-radius:0}.cabinmap{border-radius:16px;overflow:auto}.cabinzone:first-child,.cabinzone:last-child{border-radius:8px}}
+/* Property Director reference compatibility for every existing V12 inventory workspace */
+.global-header{gap:12px}
+.global-brand,.global-controls{display:flex;align-items:center;gap:16px;min-width:0}
+.global-brand strong{font-size:16px;letter-spacing:1px;color:#00A1E0;font-weight:700}
+.global-brand .system-label{border-left:1px solid #1C2B3E;padding-left:16px;color:#859BB4;font-weight:bold;white-space:nowrap}
+.global-controls label{color:#859BB4;white-space:nowrap}
+.global-scope{display:flex;align-items:center;gap:8px}
+.global-controls .operator{border-left:1px solid #1C2B3E;padding-left:16px;white-space:nowrap}
+.global-header select{width:auto;min-width:172px;max-width:235px}
+.shell-body{min-height:0}
+.sidebar{position:relative;height:auto;max-height:none;top:auto;display:block;flex-direction:column;border-radius:0}
+.main{max-height:none}
+.table .clickrow{cursor:pointer}
+.card{border-radius:0;box-shadow:none}
+.grid{display:grid;gap:12px}
+.stats{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
+.stat{padding:12px;background:#fff;border:1px solid var(--line);min-width:0}
+.stat span{display:block;text-transform:uppercase;font-size:10px;color:var(--muted)}
+.stat strong{font-size:21px;color:var(--navy);display:block;margin-top:5px}
+.pill.PUBLISHED,.pill.OPEN,.pill.ACTIVE{background:#E5F5E5;color:#008A00}
+.pill.REVIEW,.pill.DRAFT{background:#FFF4E5;color:#A35D00}
+.pill.ARCHIVED,.pill.SUSPENDED,.pill.SOLD_OUT{background:#FAEBEC;color:#B21B24}
+.pill{border-radius:2px}
+.btn,.tab,.navbtn,.lang,.select,.input,.textarea,.modal,.mediaitem,.assetcard,.childitem,.smartgroup,.notice,.pager,.card,.sourcebadge,.providerhero,.toast{border-radius:2px}
+.btn:focus-visible,.tab:focus-visible,.navbtn:focus-visible,.global-header select:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+.modalback{z-index:1000}
+.modal{height:min(900px,calc(100vh - 40px));max-height:calc(100vh - 40px)}
+.modalhead{background:var(--navy);border-bottom:3px solid var(--cyan)}
+.modalbody{background:var(--bg)}
+.filters{background:#fafafb;padding:10px;border:1px solid var(--line2)}
+.assetfilters{display:grid;grid-template-columns:repeat(4,minmax(0,1fr))}
+.property-workspace{min-height:0}
+.property-workspace .tabs{flex-wrap:wrap;overflow-x:auto}
+.property-workspace .tabs .tab{font-size:11px}
+.property-workspace .property-body{min-height:0;overflow-y:auto;flex:1}
+.property-workspace .top{align-items:center}
+.property-workspace .formgrid.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+.property-workspace .formgrid.four{grid-template-columns:repeat(4,minmax(0,1fr))}
+.property-workspace .field.full{grid-column:1/-1}
+.property-workspace .media-grid img{object-fit:contain}
+.pd-field-row{display:flex;align-items:center;gap:8px}
+.pd-field-row>*{flex:1;min-width:0}
+.pd-check-row{display:flex;align-items:center;gap:8px;margin:6px 0;font-size:11px}
+.pd-check-row span{flex:1}
+.pd-check-row input{flex:0 0 auto}
+.pd-muted{color:var(--muted);font-size:11px}
+.pd-scroll{max-width:100%;overflow-x:auto}
+.pd-context-name{padding:0 16px;font-size:11px;color:#fff;margin-bottom:8px;overflow-wrap:anywhere}
+.pd-module-title{margin-top:24px!important}
+.pd-flex{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.pd-code{font-weight:bold}
+.pd-asset-empty{min-height:90px;display:grid;place-items:center;border:1px dashed var(--line)}
+.pd-unavailable{color:var(--muted);font-size:10px;padding:6px 0}
+.pd-danger-row{background:#FFF4E5}
+.pd-header-status{margin-right:12px}
+.pd-map{background:#E1E6EB;height:200px;border:1px solid var(--line);position:relative;margin-top:4px;display:grid;place-items:center;overflow:hidden}
+.pd-map-empty{color:#5E6973;text-align:center;max-width:80%;font-size:11px}
+@media(max-width:1100px){.stats{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:900px){.global-header{padding:0 10px}.global-brand,.global-controls{gap:8px}.global-brand .system-label{padding-left:10px}.global-controls .operator{padding-left:10px}.global-header select{min-width:130px;max-width:175px}}
+@media(max-width:760px){
+ .shell{height:100vh;min-height:100vh;display:flex;flex-direction:column;overflow:hidden}
+ .global-header{height:auto;min-height:44px;padding:7px 10px;gap:6px;flex-wrap:wrap}
+ .global-brand strong{font-size:14px}.global-brand .system-label{font-size:9px}
+ .global-controls .operator{display:none}.global-scope label{font-size:10px}
+ .shell-body{display:flex;flex-direction:column;min-height:0;overflow:hidden}
+ .sidebar{width:100%;flex:0 0 auto;display:flex;flex-direction:row;align-items:center;gap:2px;padding:6px;min-height:43px;max-height:80px;overflow-x:auto;overflow-y:hidden;white-space:nowrap}
+ .sidebar .group,.sidebar .pd-context-name{display:none}.sidebar .navbtn{width:auto;min-width:max-content;padding:8px 10px;margin:0;border-left:0}
+ .sidebar .navbtn.active{padding:8px 10px 5px;border-bottom:3px solid var(--cyan)}
+ .main{flex:1;min-height:0;padding:10px;overflow:auto}
+ .top{display:block}.toolbar{justify-content:flex-start;margin-top:8px}
+ .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .formgrid,.formgrid.three,.formgrid.four,.property-workspace .formgrid.three,.property-workspace .formgrid.four{grid-template-columns:1fr}
+ .split-screen,.split{grid-template-columns:1fr}
+ .property-workspace .top{display:block}
+ .property-workspace .property-body{overflow:visible}
+ .assetfilters{grid-template-columns:1fr 1fr}
+ .modalback{padding:0}.modal{height:100vh;max-height:100vh;border-radius:0}
+}
+@media(max-width:450px){.global-header select{min-width:116px}.global-controls{width:100%;justify-content:flex-end}.global-brand{width:100%}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.assetfilters{grid-template-columns:1fr}}
 </style>
 <script type="importmap">
 {
@@ -813,7 +1156,7 @@ function RecordEditor({bundle,languages,records,onClose,onSaved,setBusy,setToast
     </div>`:null}
     ${tab==="media"?html`<div>
       <div className="paneltitle"><span>Assets</span><button className="btn small" onClick=${()=>setAssetPicker({index:-1,isNew:true,context:assetContextForRecord(rec,"GALLERY")})}>+ Browse / Upload Asset</button></div>
-      <div className="notice">This is the only image/logo source for this record. Add an existing Asset Library file or paste a URL. Duffel-supplied airline logos are provider-owned and replace the matching logo assets whenever Duffel is refreshed.</div>
+      <div className="notice">This is the only image/logo source for this record. Add an existing Asset Library file or paste a URL. Airline logos are provider-owned and replace the matching logo assets whenever system is refreshed.</div>
       <div className="asseturladd"><${Field} label="Asset URL" type="url" value=${assetUrl} onChange=${setAssetUrl}/><${Field} label="Role" type="select" options=${["PRIMARY","HERO","CARD","MOBILE","GALLERY","OG","LOGO","MAP","ROOM","THUMBNAIL"]} value=${assetRole} onChange=${setAssetRole}/><${Field} label="Alt Text" value=${assetAlt} onChange=${setAssetAlt}/><button className="btn primary" onClick=${addUrlAsset}>Add URL Asset</button></div>
       ${media.length?media.map((m,i)=>{const providerOwned=(m.payload?.provider||m.source)==="DUFFEL";return html`<div className=${`mediaitem ${providerOwned?"providerowned":""}`}><div className="formgrid three">
         <${Field} label="Role" type="select" options=${["PRIMARY","HERO","CARD","MOBILE","GALLERY","OG","LOGO","MAP","ROOM","THUMBNAIL"]} value=${m.role} disabled=${providerOwned} onChange=${v=>setDraft(d=>{const x=[...(d.media||[])];x[i]={...x[i],role:v};return{...d,media:x}})}/>
@@ -822,7 +1165,7 @@ function RecordEditor({bundle,languages,records,onClose,onSaved,setBusy,setToast
         <${Field} label="Credit" value=${m.credit||""} onChange=${v=>setDraft(d=>{const x=[...(d.media||[])];x[i]={...x[i],credit:v};return{...d,media:x}})}/>
         <${Field} label="Focal X %" type="number" value=${m.focalX??""} onChange=${v=>setDraft(d=>{const x=[...(d.media||[])];x[i]={...x[i],focalX:v};return{...d,media:x}})}/>
         <${Field} label="Focal Y %" type="number" value=${m.focalY??""} onChange=${v=>setDraft(d=>{const x=[...(d.media||[])];x[i]={...x[i],focalY:v};return{...d,media:x}})}/>
-      </div><div className="assetcurrent" style=${{marginTop:"8px"}}>${m.url?html`<div className="preview"><img src=${m.url} alt=${m.altText||""}/></div>`:html`<div className="preview">No asset selected</div>`}<div className="toolbar">${providerOwned?html`<span className="providersource">Managed by Duffel · refresh in Provider workspace</span>`:html`<button className="btn small" onClick=${()=>setAssetPicker({index:i,isNew:false,context:assetContextForRecord(rec,m.role||"GALLERY")})}>Replace / Browse Asset Library</button>`}<span className="sub">${m.assetId||m.sourceKind==="ASSET_LIBRARY"?"Managed Asset Library file":m.sourceKind==="URL"?"URL asset":"Linked image"}</span>${providerOwned?null:html`<button className="btn small danger" onClick=${()=>setDraft(d=>({...d,media:(d.media||[]).filter((_,x)=>x!==i)}))}>Remove from record</button>`}</div></div></div>`}):html`<div className="empty">No assets attached. Add a URL or browse the Asset Library.</div>`}
+      </div><div className="assetcurrent" style=${{marginTop:"8px"}}>${m.url?html`<div className="preview"><img src=${m.url} alt=${m.altText||""}/></div>`:html`<div className="preview">No asset selected</div>`}<div className="toolbar">${providerOwned?html`<span className="providersource">Managed by SKANDI Partner · refresh in Provider workspace</span>`:html`<button className="btn small" onClick=${()=>setAssetPicker({index:i,isNew:false,context:assetContextForRecord(rec,m.role||"GALLERY")})}>Replace / Browse Asset Library</button>`}<span className="sub">${m.assetId||m.sourceKind==="ASSET_LIBRARY"?"Managed Asset Library file":m.sourceKind==="URL"?"URL asset":"Linked image"}</span>${providerOwned?null:html`<button className="btn small danger" onClick=${()=>setDraft(d=>({...d,media:(d.media||[]).filter((_,x)=>x!==i)}))}>Remove from record</button>`}</div></div></div>`}):html`<div className="empty">No assets attached. Add a URL or browse the Asset Library.</div>`}
       ${assetPicker?html`<${AssetLibraryModal} context=${{...assetPicker.context,lockedContext:true}} onClose=${()=>setAssetPicker(null)} onSelect=${asset=>useRecordAsset(assetPicker.index,asset,assetPicker.isNew)} setBusy=${setBusy} setToast=${setToast}/>`:null}
     </div>`:null}
     ${tab==="relations"?html`<div>
@@ -877,7 +1220,7 @@ function safeUrl(url){const v=text(url);return /^https?:\/\//i.test(v)?v:""}
 function ProviderDetailGrid({resource,type}){
   const rows=[];
   const add=(label,value,kind="text")=>{if(value===undefined||value===null||value===""||(Array.isArray(value)&&!value.length))return;rows.push({label,value,kind})};
-  add("Duffel ID",resource?.id);
+  add("Hotel ID",resource?.id);
   add("Name",resource?.name);
   add("IATA code",resource?.iataCode);
   add("ICAO code",resource?.icaoCode);
@@ -904,7 +1247,7 @@ function ProviderDetailGrid({resource,type}){
   return html`<div className="detailgrid">${rows.map(r=>html`<div className="detailcell"><small>${r.label}</small><div>${r.kind==="url"&&safeUrl(r.value)?html`<a href=${r.value} target="_blank" rel="noreferrer">${r.value}</a>`:text(r.value)}</div></div>`)}</div>`
 }
 
-function ProviderWorkspace({boot,setBusy,setToast}){
+function ProviderWorkspace({boot,setBusy,setToast,masterFilter}){
   const [mode,setMode]=useState("collection");
   const [resourceType,setResourceType]=useState("HOTEL");
   const [query,setQuery]=useState("");
@@ -922,15 +1265,23 @@ function ProviderWorkspace({boot,setBusy,setToast}){
   const areas=(boot.records||[]).filter(r=>r.entityType==="AREA"&&r.status!=="ARCHIVED");
   const countries=(boot.records||[]).filter(r=>r.entityType==="COUNTRY"&&r.status!=="ARCHIVED");
   const typeOptions=[["HOTEL","Hotels"],["AIRLINE","Airlines"],["AIRPORT","Airports"],["DESTINATION","Destinations / Cities"],["AIRCRAFT","Aircraft reference"]];
+  const providerMatchesScope=!masterFilter||["HOTEL","AIRLINE","AIRPORT","DESTINATION"].includes(masterFilter);
+  useEffect(()=>{
+    if(masterFilter&&masterFilter!=="HOTEL")setMode("collection");
+    if(["HOTEL","AIRLINE","AIRPORT","DESTINATION"].includes(masterFilter)){
+      setResourceType(masterFilter);setResults([]);setDetail(null);
+    }
+  },[masterFilter]);
 
 
   async function search(){
+    if(!providerMatchesScope)return setToast("This provider workspace has no source search for the selected master family. Change the master filter to Hotels, Airlines, Airports, Destinations or All.",true);
     if(resourceType==="HOTEL"&&query.trim().length<3)return setToast("Enter at least 3 characters for a hotel search.",true);
     if(["AIRPORT","DESTINATION"].includes(resourceType)&&!query.trim())return setToast("Enter an airport, city or IATA code.",true);
-    try{setBusy(`Searching Duffel ${resourceType.toLowerCase()} data…`);const r=await request("INVENTORY_PROVIDER_SEARCH",{resourceType,query:query.trim(),limit:60});setResults(r.items||[]);setDetail(null);if(!(r.items||[]).length)setToast("Duffel returned no matching resources.")}catch(e){setToast(e.message,true)}finally{setBusy("")}
+    try{setBusy(`Searching ${resourceType.toLowerCase()} data…`);const r=await request("INVENTORY_PROVIDER_SEARCH",{resourceType,query:query.trim(),limit:60});setResults(r.items||[]);setDetail(null);if(!(r.items||[]).length)setToast("Inventory returned no matching resources.")}catch(e){setToast(e.message,true)}finally{setBusy("")}
   }
   async function inspect(item){
-    try{setBusy("Loading Duffel source record…");const r=await request("INVENTORY_PROVIDER_GET_RESOURCE",{resourceType:item.entityType,providerId:item.providerId});setDetail(r)}catch(e){setToast(e.message,true)}finally{setBusy("")}
+    try{setBusy("Loading record…");const r=await request("INVENTORY_PROVIDER_GET_RESOURCE",{resourceType:item.entityType,providerId:item.providerId});setDetail(r)}catch(e){setToast(e.message,true)}finally{setBusy("")}
   }
   async function openExisting(item){
     const existing=item?.existingRecord;if(!existing?.id)return;
@@ -938,17 +1289,17 @@ function ProviderWorkspace({boot,setBusy,setToast}){
   }
   async function importItem(item,{linkExisting=false}={}){
     if(item.entityType==="AIRCRAFT")return setToast("Aircraft is reference-only here. Use Aircraft & Cabin Studio for SKANDI aircraft configuration.",true);
-    if(item.importSupported===false)return setToast("This Duffel resource cannot be imported safely into the current SKANDI schema.",true);
-    if(linkExisting&&!confirm(`Link Duffel ${item.name} to the existing SKANDI ${item.entityType.toLowerCase()} record?`))return;
+    if(item.importSupported===false)return setToast("This resource cannot be imported safely.",true);
+    if(linkExisting&&!confirm(`Link ${item.name} to the existing SKANDI ${item.entityType.toLowerCase()} record?`))return;
     if(!linkExisting&&!confirm(`Add ${item.name} to the SKANDI Collection as DRAFT?`))return;
     const payload={resourceType:item.entityType,providerId:item.providerId,linkExisting};
     if(item.entityType==="HOTEL"){if(destinationId)payload.destinationId=destinationId;if(areaId)payload.areaId=areaId}
     if(item.entityType==="DESTINATION"&&countryId)payload.parentEntityId=countryId;
     try{
-      setBusy(linkExisting?"Linking Duffel source…":"Adding to SKANDI Collection…");
+      setBusy(linkExisting?"Linking source…":"Adding to SKANDI Collection…");
       const r=await request("INVENTORY_PROVIDER_IMPORT",payload);
-      if(r.conflict){setToast("A matching SKANDI record already exists. Use Link Duffel instead.",true);return}
-      setToast(r.alreadyExists?"This resource is already in the SKANDI Collection.":(r.linked?"Duffel source linked to the existing SKANDI record.":"Added to SKANDI Collection as DRAFT."));
+      if(r.conflict){setToast("A matching SKANDI record already exists. Link through Supplier & Distribution instead.",true);return}
+      setToast(r.alreadyExists?"This resource is already in the SKANDI Collection.":(r.linked?"Source linked to the existing SKANDI record.":"Added to SKANDI Collection as DRAFT."));
       const record=r.bundle?.record||r.bundle?.bundle?.record;
       if(record?.id){const full=await request("INVENTORY_V9_GET_RECORD",{id:record.id,entityType:item.entityType});setEditor(full)}
       const refreshed=await request("INVENTORY_PROVIDER_SEARCH",{resourceType,query:query.trim(),limit:60});setResults(refreshed.items||[]);
@@ -956,11 +1307,11 @@ function ProviderWorkspace({boot,setBusy,setToast}){
   }
   async function refreshSource(item){
     const existing=item?.existingRecord;if(!existing?.id)return;
-    if(!confirm(`Refresh Duffel source data for ${existing.name||item.name}? SKANDI editorial/media fields will be preserved.`))return;
-    try{setBusy("Refreshing Duffel source snapshot…");await request("INVENTORY_PROVIDER_REFRESH",{entityType:item.entityType,id:existing.id});setToast("Duffel source refreshed. SKANDI enrichment was preserved.");const r=await request("INVENTORY_PROVIDER_SEARCH",{resourceType,query:query.trim(),limit:60});setResults(r.items||[])}catch(e){setToast(e.message,true)}finally{setBusy("")}
+    if(!confirm(`Refresh data for ${existing.name||item.name}? SKANDI editorial/media fields will be preserved.`))return;
+    try{setBusy("Refreshing Duffel source snapshot…");await request("INVENTORY_PROVIDER_REFRESH",{entityType:item.entityType,id:existing.id});setToast("Datarefreshed. SKANDI enrichment was preserved.");const r=await request("INVENTORY_PROVIDER_SEARCH",{resourceType,query:query.trim(),limit:60});setResults(r.items||[])}catch(e){setToast(e.message,true)}finally{setBusy("")}
   }
   async function loadRates(){
-    try{setBusy("Loading Duffel negotiated rates…");const r=await request("INVENTORY_NEGOTIATED_RATES_LIST",{limit:200});setRates(r.items||[])}catch(e){setToast(e.message,true)}finally{setBusy("")}
+    try{setBusy("Loading negotiated rates…");const r=await request("INVENTORY_NEGOTIATED_RATES_LIST",{limit:200});setRates(r.items||[])}catch(e){setToast(e.message,true)}finally{setBusy("")}
   }
   useEffect(()=>{if(mode==="rates"&&!rates.length)loadRates()},[mode]);
   function newRate(){setRateEdit({id:"",displayName:"",rateAccessCode:"",liveMode:false,scope:"accommodations",chainId:"",accommodationIds:[]})}
@@ -973,18 +1324,18 @@ function ProviderWorkspace({boot,setBusy,setToast}){
     try{setBusy(x.id?"Updating negotiated rate…":"Creating negotiated rate…");await request(x.id?"INVENTORY_NEGOTIATED_RATE_UPDATE":"INVENTORY_NEGOTIATED_RATE_CREATE",payload);setRateEdit(null);setRateLookupResults([]);setToast(x.id?"Negotiated rate updated.":"Negotiated rate created.");await loadRates()}catch(e){setToast(e.message,true)}finally{setBusy("")}
   }
   async function deleteRate(row){
-    if(!confirm(`Delete negotiated rate ${row.displayName}? This changes your Duffel organisation configuration.`))return;
+    if(!confirm(`Delete negotiated rate ${row.displayName}? This changes your organisation configuration.`))return;
     try{setBusy("Deleting negotiated rate…");await request("INVENTORY_NEGOTIATED_RATE_DELETE",{id:row.id});setToast("Negotiated rate deleted.");await loadRates()}catch(e){setToast(e.message,true)}finally{setBusy("")}
   }
   async function searchRateHotels(){
     if(rateLookup.trim().length<3)return setToast("Enter at least 3 characters to find a hotel.",true);
-    try{setBusy("Searching Duffel hotels…");const r=await request("INVENTORY_PROVIDER_SEARCH",{resourceType:"HOTEL",query:rateLookup.trim(),limit:25});setRateLookupResults(r.items||[])}catch(e){setToast(e.message,true)}finally{setBusy("")}
+    try{setBusy("Searching hotels…");const r=await request("INVENTORY_PROVIDER_SEARCH",{resourceType:"HOTEL",query:rateLookup.trim(),limit:25});setRateLookupResults(r.items||[])}catch(e){setToast(e.message,true)}finally{setBusy("")}
   }
   async function chooseRateHotel(item,scope){
     try{
       setBusy("Loading hotel source details…");const r=await request("INVENTORY_PROVIDER_GET_RESOURCE",{resourceType:"HOTEL",providerId:item.providerId});const hotel=r.resource||{};
       if(scope==="chain"){
-        if(!hotel.chain?.id)return setToast("Duffel did not return a hotel-chain ID for this accommodation.",true);
+        if(!hotel.chain?.id)return setToast("Inventory did not return a hotel-chain ID for this accommodation.",true);
         setRateEdit(x=>({...x,scope:"chain",chainId:hotel.chain.id,accommodationIds:[]}));setToast(`Using chain ${hotel.chain.name||hotel.chain.id}.`)
       }else{
         setRateEdit(x=>({...x,scope:"accommodations",chainId:"",accommodationIds:Array.from(new Set([...(x.accommodationIds||[]),item.providerId]))}));setToast(`${item.name} added to the negotiated-rate scope.`)
@@ -996,23 +1347,24 @@ function ProviderWorkspace({boot,setBusy,setToast}){
 
   const detailItem=detail?.item||null, detailResource=detail?.resource||null;
   return html`<div>
-    <div className="providerhero"><div><h2>Duffel + SKANDI Collection</h2><p>Search the live Duffel resource catalogue, review the provider record, then deliberately add only selected resources to the SKANDI Collection. Supabase remains the curated SKANDI layer, not a copy of Duffel.</p></div><span className="sourcebadge">LIVE PROVIDER SOURCE</span></div>
-    <div className="tabs">${[["collection","Collection Import"],["rates","Negotiated Hotel Rates"]].map(([k,l])=>html`<button className=${`tab ${mode===k?"active":""}`} onClick=${()=>setMode(k)}>${l}</button>`)}</div>
+    <div className="providerhero"><div><h2>SKANDI Partner + SKANDI Collection</h2><p>Search the resource catalogue, review the provider record, then deliberately add only selected resources to the SKANDI Collection. Inventory remains the curated SKANDI layer,</p></div><span className="sourcebadge">LIVE PROVIDER SOURCE</span></div>
+    <div className="tabs">${[["collection","Collection Import"],["rates","Negotiated Hotel Rates"]].map(([k,l])=>html`<button className=${`tab ${mode===k?"active":""}`} disabled=${k==="rates"&&Boolean(masterFilter)&&masterFilter!=="HOTEL"} onClick=${()=>setMode(k)}>${l}</button>`)}</div>
+    ${!providerMatchesScope?html`<div className="notice warn">The selected master family has no discovery endpoint in this workspace. Existing master records remain available under Master Records.</div>`:null}
 
 
     ${mode==="collection"?html`<div className="grid">
-      <div className="card panel"><div className="paneltitle"><span>Find a Duffel resource</span><span className="matchtag duffel">Duffel source</span></div>
-        <div className="formgrid three"><${Field} label="Resource type" type="select" value=${resourceType} options=${typeOptions.map(([value,label])=>({value,label}))} onChange=${v=>{setResourceType(v);setResults([]);setDetail(null)}}/><${Field} label="Search" full=${true} value=${query} onChange=${setQuery} help=${resourceType==="HOTEL"?"Hotel name, city or property search term":"Name, city, IATA/ICAO or aircraft code"}/><div className="field"><label>Search Duffel</label><button className="btn primary" onClick=${search}>Search provider</button></div></div>
+      <div className="card panel"><div className="paneltitle"><span>Find a resource</span><span className="matchtag duffel">Source</span></div>
+        <div className="formgrid three"><${Field} label="Resource type" type="select" value=${resourceType} options=${typeOptions.map(([value,label])=>({value,label}))} disabled=${Boolean(masterFilter)} onChange=${v=>{setResourceType(v);setResults([]);setDetail(null)}}/><${Field} label="Search" full=${true} value=${query} onChange=${setQuery} help=${resourceType==="HOTEL"?"Hotel name, city or property search term":"Name, city, IATA/ICAO or aircraft code"}/><div className="field"><label>Search</label><button className="btn primary" disabled=${!providerMatchesScope} onClick=${search}>Search provider</button></div></div>
         ${resourceType==="DESTINATION"?html`<div className="scopebox" style=${{marginTop:"10px"}}><div className="sectiontitle">Import geography</div><div className="field"><label>Parent country for new SKANDI destination</label><select className="select" value=${countryId} onChange=${e=>setCountryId(e.target.value)}><option value="">No parent yet · keep Draft</option>${countries.map(r=>html`<option value=${r.id}>${r.code} · ${r.name}</option>`)}</select></div></div>`:null}
         ${resourceType==="HOTEL"?html`<div className="scopebox" style=${{marginTop:"10px"}}><div className="sectiontitle">Optional SKANDI geography</div><div className="formgrid"><div className="field"><label>Destination</label><select className="select" value=${destinationId} onChange=${e=>setDestinationId(e.target.value)}><option value="">Assign later</option>${destinations.map(r=>html`<option value=${r.id}>${r.code} · ${r.name}</option>`)}</select></div><div className="field"><label>Area / Resort</label><select className="select" value=${areaId} onChange=${e=>setAreaId(e.target.value)}><option value="">Assign later</option>${areas.map(r=>html`<option value=${r.id}>${r.code} · ${r.name}</option>`)}</select></div></div></div>`:null}
       </div>
       <div className="card panel"><div className="paneltitle"><span>Search results</span><span className="pill">${results.length}</span></div>
-        ${results.length?html`<div className="tablewrap"><table className="table"><thead><tr><th>Resource</th><th>Code</th><th>Duffel ID</th><th>SKANDI status</th><th></th></tr></thead><tbody>${results.map(item=>html`<tr><td><div className="providerresult"><div className="providerlogo">${item.preview?.logoSymbolUrl?html`<img src=${item.preview.logoSymbolUrl}/>`:html`<b>${item.code||item.entityType.slice(0,3)}</b>`}</div><div><b>${item.name||"Unnamed resource"}</b><div className="sub">${item.secondary||item.providerResourceType}</div></div></div></td><td><b>${item.code||"—"}</b></td><td>${item.providerId}</td><td>${item.alreadyInSkandiCollection?html`<span className="matchtag collection">In SKANDI Collection</span>`:item.canonicalMatch?html`<span className="matchtag match">Existing SKANDI match</span>`:item.importSupported===false?html`<span className="matchtag block">Reference only</span>`:html`<span className="matchtag duffel">Duffel only</span>`}</td><td><div className="provideractions"><button className="btn small" onClick=${()=>inspect(item)}>Details</button>${item.alreadyInSkandiCollection?html`<button className="btn small" onClick=${()=>openExisting(item)}>Open</button><button className="btn small" onClick=${()=>refreshSource(item)}>Refresh Duffel</button>`:item.canonicalMatch?html`<button className="btn small cyan" onClick=${()=>importItem(item,{linkExisting:true})}>Link Duffel</button>`:item.importSupported!==false?html`<button className="btn small primary" onClick=${()=>importItem(item)}>Add to Collection</button>`:null}</div></td></tr>`)}</tbody></table></div>`:html`<div className="empty">Search Duffel to find hotels, airlines, airports, destinations/cities or aircraft references.</div>`}
+        ${results.length?html`<div className="tablewrap"><table className="table"><thead><tr><th>Resource</th><th>Code</th><th>Duffel ID</th><th>SKANDI status</th><th></th></tr></thead><tbody>${results.map(item=>html`<tr><td><div className="providerresult"><div className="providerlogo">${item.preview?.logoSymbolUrl?html`<img src=${item.preview.logoSymbolUrl}/>`:html`<b>${item.code||item.entityType.slice(0,3)}</b>`}</div><div><b>${item.name||"Unnamed resource"}</b><div className="sub">${item.secondary||item.providerResourceType}</div></div></div></td><td><b>${item.code||"—"}</b></td><td>${item.providerId}</td><td>${item.alreadyInSkandiCollection?html`<span className="matchtag collection">In SKANDI Collection</span>`:item.canonicalMatch?html`<span className="matchtag match">Existing SKANDI match</span>`:item.importSupported===false?html`<span className="matchtag block">Reference only</span>`:html`<span className="matchtag duffel">Duffel only</span>`}</td><td><div className="provideractions"><button className="btn small" onClick=${()=>inspect(item)}>Details</button>${item.alreadyInSkandiCollection?html`<button className="btn small" onClick=${()=>openExisting(item)}>Open</button><button className="btn small" onClick=${()=>refreshSource(item)}>Refresh Duffel</button>`:item.canonicalMatch?html`<button className="btn small cyan" onClick=${()=>importItem(item,{linkExisting:true})}>Link Duffel</button>`:item.importSupported!==false?html`<button className="btn small primary" onClick=${()=>importItem(item)}>Add to Collection</button>`:null}</div></td></tr>`)}</tbody></table></div>`:html`<div className="empty">Search to find hotels, airlines, airports, destinations/cities or aircraft references.</div>`}
       </div>
     </div>`:null}
 
 
-    ${mode==="rates"?html`<div className="grid"><div className="card panel"><div className="paneltitle"><span>Negotiated hotel rates</span><div className="toolbar"><button className="btn" onClick=${loadRates}>Refresh</button><button className="btn primary" onClick=${newRate}>+ Negotiated Rate</button></div></div><div className="notice">These are Duffel organisation commercial settings, not Supabase inventory records. Creating, updating or deleting a rate changes your Duffel Stays configuration.</div><div className="tablewrap" style=${{marginTop:"12px"}}><table className="table"><thead><tr><th>Display name</th><th>RAC</th><th>Environment</th><th>Scope</th><th>Duffel ID</th><th></th></tr></thead><tbody>${rates.length?rates.map(r=>html`<tr><td><b>${r.displayName}</b></td><td>${r.rateAccessCode}</td><td>${r.liveMode?"LIVE":"TEST"}</td><td>${r.chainId?`Chain · ${r.chainId}`:`${(r.accommodationIds||[]).length} accommodation(s)`}</td><td>${r.id}</td><td><div className="provideractions"><button className="btn small" onClick=${()=>editRate(r)}>Edit</button><button className="btn small danger" onClick=${()=>deleteRate(r)}>Delete</button></div></td></tr>`):html`<tr><td colSpan="6"><div className="empty">No negotiated rates returned by Duffel.</div></td></tr>`}</tbody></table></div></div></div>`:null}
+    ${mode==="rates"?html`<div className="grid"><div className="card panel"><div className="paneltitle"><span>Negotiated hotel rates</span><div className="toolbar"><button className="btn" onClick=${loadRates}>Refresh</button><button className="btn primary" onClick=${newRate}>+ Negotiated Rate</button></div></div><div className="notice">These are SKANDI Partner's organisation commercial settings, not Inventory records. Creating, updating or deleting a rate changes your hotel configuration.</div><div className="tablewrap" style=${{marginTop:"12px"}}><table className="table"><thead><tr><th>Display name</th><th>RAC</th><th>Environment</th><th>Scope</th><th>Hotel ID</th><th></th></tr></thead><tbody>${rates.length?rates.map(r=>html`<tr><td><b>${r.displayName}</b></td><td>${r.rateAccessCode}</td><td>${r.liveMode?"LIVE":"TEST"}</td><td>${r.chainId?`Chain · ${r.chainId}`:`${(r.accommodationIds||[]).length} accommodation(s)`}</td><td>${r.id}</td><td><div className="provideractions"><button className="btn small" onClick=${()=>editRate(r)}>Edit</button><button className="btn small danger" onClick=${()=>deleteRate(r)}>Delete</button></div></td></tr>`):html`<tr><td colSpan="6"><div className="empty">No negotiated rates returned by Duffel.</div></td></tr>`}</tbody></table></div></div></div>`:null}
 
 
     ${detail?html`<${Modal} title=${`Duffel Source · ${detailItem?.name||detailResource?.name||resourceType}`} onClose=${()=>setDetail(null)} actions=${html`<button className="btn" onClick=${()=>setDetail(null)}>Close</button>`}><div className="notice">Provider data is displayed for review. Importing creates or links a DRAFT SKANDI Collection record; provider URLs/images are not copied into the SKANDI Asset Library.</div><div className="hr"></div><${ProviderDetailGrid} resource=${detailResource||detailItem?.preview||{}} type=${detail?.entityType||resourceType}/>${detailResource?.description?html`<div><div className="hr"></div><div className="sectiontitle">Provider description</div><div className="notice">${detailResource.description}</div></div>`:null}</${Modal}>`:null}
@@ -1022,15 +1374,16 @@ function ProviderWorkspace({boot,setBusy,setToast}){
 
 
     ${rateEdit?html`<${Modal} title=${rateEdit.id?"Edit Negotiated Hotel Rate":"Create Negotiated Hotel Rate"} onClose=${()=>{setRateEdit(null);setRateLookupResults([])}} actions=${html`<button className="btn" onClick=${()=>{setRateEdit(null);setRateLookupResults([])}}>Cancel</button><button className="btn primary" onClick=${saveRate}>${rateEdit.id?"Save Changes":"Create Rate"}</button>`}><div className="formgrid three"><${Field} label="Display name" value=${rateEdit.displayName} onChange=${v=>setRateEdit(x=>({...x,displayName:v}))}/><${Field} label="Rate access code (RAC)" value=${rateEdit.rateAccessCode} disabled=${Boolean(rateEdit.id)} onChange=${v=>setRateEdit(x=>({...x,rateAccessCode:v.toUpperCase()}))} help=${rateEdit.id?"Duffel does not allow changing the RAC after creation.":"Provided by the hotel/chain."}/><${Field} label="Scope" type="select" value=${rateEdit.scope} options=${[{value:"accommodations",label:"Specific accommodations"},{value:"chain",label:"Hotel chain"}]} onChange=${v=>setRateEdit(x=>({...x,scope:v,chainId:v==="chain"?x.chainId:"",accommodationIds:v==="accommodations"?x.accommodationIds:[]}))}/></div>
-      <div className="scopebox" style=${{marginTop:"12px"}}><div className="sectiontitle">Find the Duffel hotel / chain</div><div className="filters"><div className="field grow"><label>Hotel search</label><input className="input" value=${rateLookup} onInput=${e=>setRateLookup(e.target.value)} placeholder="Search a hotel to retrieve its Duffel accommodation and chain IDs"/></div><button className="btn" onClick=${searchRateHotels}>Search hotels</button></div>${rateLookupResults.length?html`<div className="tablewrap" style=${{marginTop:"10px"}}><table className="table"><thead><tr><th>Hotel</th><th>Duffel ID</th><th></th></tr></thead><tbody>${rateLookupResults.map(item=>html`<tr><td><b>${item.name}</b><div className="sub">${item.secondary}</div></td><td>${item.providerId}</td><td><div className="provideractions"><button className="btn small" onClick=${()=>chooseRateHotel(item,"accommodations")}>Add Hotel</button><button className="btn small" onClick=${()=>chooseRateHotel(item,"chain")}>Use Its Chain</button></div></td></tr>`)}</tbody></table></div>`:null}</div>
-      ${rateEdit.scope==="chain"?html`<div className="field" style=${{marginTop:"12px"}}><label>Duffel chain ID</label><input className="input" value=${rateEdit.chainId||""} onInput=${e=>setRateEdit(x=>({...x,chainId:e.target.value}))} placeholder="chn_…"/><small>Use “Use Its Chain” above to populate this from a Duffel accommodation.</small></div>`:html`<div style=${{marginTop:"12px"}}><${ListField} label="Duffel accommodation IDs" value=${rateEdit.accommodationIds} splitPattern=${/[\r\n,]+/} onChange=${v=>setRateEdit(x=>({...x,accommodationIds:v}))} placeholder="acc_… one per line"/><div className="selectedlist">${(rateEdit.accommodationIds||[]).map(id=>html`<span className="selectedchip">${id}<button onClick=${()=>removeAccommodation(id)}>×</button></span>`)}</div></div>`}
-      <div className="notice" style=${{marginTop:"12px"}}>Create requires a display name, RAC, and exactly one scope: either one chain or one or more accommodations. Duffel determines whether the rate is test or live mode.</div></${Modal}>`:null}
+      <div className="scopebox" style=${{marginTop:"12px"}}><div className="sectiontitle">Find hotel / chain</div><div className="filters"><div className="field grow"><label>Hotel search</label><input className="input" value=${rateLookup} onInput=${e=>setRateLookup(e.target.value)} placeholder="Search a hotel to retrieve its accommodation and chain IDs"/></div><button className="btn" onClick=${searchRateHotels}>Search hotels</button></div>${rateLookupResults.length?html`<div className="tablewrap" style=${{marginTop:"10px"}}><table className="table"><thead><tr><th>Hotel</th><th>Hotel ID</th><th></th></tr></thead><tbody>${rateLookupResults.map(item=>html`<tr><td><b>${item.name}</b><div className="sub">${item.secondary}</div></td><td>${item.providerId}</td><td><div className="provideractions"><button className="btn small" onClick=${()=>chooseRateHotel(item,"accommodations")}>Add Hotel</button><button className="btn small" onClick=${()=>chooseRateHotel(item,"chain")}>Use Its Chain</button></div></td></tr>`)}</tbody></table></div>`:null}</div>
+      ${rateEdit.scope==="chain"?html`<div className="field" style=${{marginTop:"12px"}}><label>Duffel chain ID</label><input className="input" value=${rateEdit.chainId||""} onInput=${e=>setRateEdit(x=>({...x,chainId:e.target.value}))} placeholder="chn_…"/><small>Use “Use Its Chain” above to populate.</small></div>`:html`<div style=${{marginTop:"12px"}}><${ListField} label="Hotel accommodation IDs" value=${rateEdit.accommodationIds} splitPattern=${/[\r\n,]+/} onChange=${v=>setRateEdit(x=>({...x,accommodationIds:v}))} placeholder="acc_… one per line"/><div className="selectedlist">${(rateEdit.accommodationIds||[]).map(id=>html`<span className="selectedchip">${id}<button onClick=${()=>removeAccommodation(id)}>×</button></span>`)}</div></div>`}
+      <div className="notice" style=${{marginTop:"12px"}}>Create requires a display name, RAC, and exactly one scope: either one chain or one or more accommodations.</div></${Modal}>`:null}
   </div>`
 }
 
 
-function MasterRecords({boot,setBoot,setBusy,setToast}){
-  const [type,setType]=useState("");
+function MasterRecords({boot,setBoot,setBusy,setToast,masterFilter,setMasterFilter}){
+  const type=masterFilter;
+  const setType=setMasterFilter;
   const [tourSubtype,setTourSubtype]=useState("");
   const [statusFilter,setStatusFilter]=useState("");
   const [customerFilter,setCustomerFilter]=useState("");
@@ -1145,32 +1498,32 @@ function DatedInventory({boot,setBusy,setToast}){
 
   async function save(){
     try{
-      setBusy("Saving dated inventory…");
+      setBusy("Saving inventory…");
       await request("INVENTORY_V9_SAVE_DATED",{row:edit});
       setEdit(null);
       await loadDated({silent:true,entityId:entity});
-      setToast("Dated inventory saved.");
+      setToast("Inventory & Capacity saved.");
     }catch(e){setToast(e.message,true)}finally{setBusy("")}
   }
   async function del(row){
-    if(!confirm("Delete this dated inventory row?"))return;
+    if(!confirm("Delete this inventory row?"))return;
     try{
-      setBusy("Deleting dated inventory…");
+      setBusy("Deleting inventory…");
       await request("INVENTORY_V9_DELETE_DATED",{id:row.id});
       await loadDated({silent:true,entityId:entity});
-      setToast("Dated inventory deleted.");
+      setToast("Inventory deleted.");
     }catch(e){setToast(e.message,true)}finally{setBusy("")}
   }
   const newRow=()=>{if(!entity)return setToast("Choose a product first.",true);setEdit({id:"",entityId:entity,inventoryType:master?.entityType||"GENERAL",serviceDate:"",startTime:"",endTime:"",variantCode:"",variantName:"",capacityTotal:0,held:0,sold:0,waitlistLimit:0,overbookingLimit:0,stopSale:false,blackout:false,status:"OPEN",supplierCost:0,publicPrice:0,adultPrice:0,childPrice:0,infantPrice:0,privatePrice:0,currency:"USD",priceBasis:"PER_PERSON",bookingCutoffHours:0,minStay:0,maxStay:0,releaseDays:0,supplierReference:"",payload:{}})};
   return html`<div className="card panel"><div className="paneltitle"><span>${family==="TOURS_ACTIVITIES"?"Tours & Activities Inventory":"Dated Capacity & Pricing"}</span><div className="toolbar"><span className="sub">${lastSync?`Live · ${lastSync.toLocaleTimeString([], {hour:"2-digit",minute:"2-digit",second:"2-digit"})}`:"Live sync starting…"}</span><button className="btn" onClick=${()=>loadDated({silent:false,entityId:entity})}>Refresh Capacity</button><button className="btn primary" onClick=${newRow}>+ Add Date / Variant</button></div></div>
     <div className="filters"><div className="field w240"><label>Product Family</label><select className="select" value=${family} onChange=${e=>{setFamily(e.target.value);setEntity("")}}><option value="">All sellable products</option><option value="HOTEL">Hotels</option><option value="TOURS_ACTIVITIES">Tours & Activities</option><option value="PARTNER_TICKET">Partner Tickets</option><option value="TRANSFER">Transfers</option><option value="CAR_RENTAL">Car Rental</option><option value="PACKAGE">Packages</option><option value="ANCILLARY">Ancillaries</option></select></div><div className="field grow"><label>Product</label><select className="select" value=${entity} onChange=${e=>setEntity(e.target.value)}><option value="">All in selected family</option>${sellable.map(r=>html`<option value=${r.id}>${r.entityType==="GUIDED_TOUR"?"Guided Tour":r.entityType==="ACTIVITY"?"Activity":r.entityType} · ${r.name}</option>`)}</select></div></div>
     <div className="tablewrap"><table className="table"><thead><tr><th>Date</th><th>Product</th><th>Variant</th><th>Capacity</th><th>Held</th><th>Sold</th><th>Available</th><th>Price</th><th>Status</th><th></th></tr></thead><tbody>
-      ${rows.length?rows.map(r=>html`<tr className="clickrow" onClick=${()=>setEdit(clone(r))}><td>${r.serviceDate}</td><td>${(boot.records||[]).find(x=>x.id===r.entityId)?.name||r.entityId}</td><td>${r.variantName||r.variantCode||"Default"}</td><td>${r.capacityTotal??0}</td><td>${r.held??0}</td><td>${r.sold??0}</td><td><b>${r.available??0}</b></td><td>${r.publicPrice??r.adultPrice??0} ${r.currency||""}</td><td>${statusPill(r.status)}</td><td><button className="btn small danger" onClick=${e=>{e.stopPropagation();del(r)}}>Delete</button></td></tr>`):html`<tr><td colSpan="10"><div className="empty">No dated inventory exists yet. Zero rows is a valid state until capacity is loaded.</div></td></tr>`}
+      ${rows.length?rows.map(r=>html`<tr className="clickrow" onClick=${()=>setEdit(clone(r))}><td>${r.serviceDate}</td><td>${(boot.records||[]).find(x=>x.id===r.entityId)?.name||r.entityId}</td><td>${r.variantName||r.variantCode||"Default"}</td><td>${r.capacityTotal??0}</td><td>${r.held??0}</td><td>${r.sold??0}</td><td><b>${r.available??0}</b></td><td>${r.publicPrice??r.adultPrice??0} ${r.currency||""}</td><td>${statusPill(r.status)}</td><td><button className="btn small danger" onClick=${e=>{e.stopPropagation();del(r)}}>Delete</button></td></tr>`):html`<tr><td colSpan="10"><div className="empty">No inventory exists yet. Zero rows is a valid state until capacity is loaded.</div></td></tr>`}
     </tbody></table></div>
-    ${edit?html`<${Modal} title="Dated Inventory" onClose=${()=>setEdit(null)} actions=${html`<button className="btn small cyan" onClick=${save}>Save</button>`}><div className="formgrid three">
+    ${edit?html`<${Modal} title="Inventory & Capacity" onClose=${()=>setEdit(null)} actions=${html`<button className="btn small cyan" onClick=${save}>Save</button>`}><div className="formgrid three">
       ${[["Service Date","serviceDate","date"],["Start Time","startTime","time"],["End Time","endTime","time"],["Variant Code","variantCode"],["Variant Name","variantName"],["Capacity Total","capacityTotal","number"],["Held","held","number"],["Sold","sold","number"],["Waitlist Limit","waitlistLimit","number"],["Overbooking Limit","overbookingLimit","number"],["Public Price","publicPrice","number"],["Adult Price","adultPrice","number"],["Child Price","childPrice","number"],["Infant Price","infantPrice","number"],["Private Price","privatePrice","number"],["Supplier Cost","supplierCost","number"],["Currency","currency","select",ENUM.currency],["Price Basis","priceBasis","select",ENUM.priceBasis],["Booking Cutoff Hours","bookingCutoffHours","number"],["Minimum Stay","minStay","number"],["Maximum Stay","maxStay","number"],["Release Days","releaseDays","number"],["Supplier Reference","supplierReference"]].map(([label,k,t="text",opts=[]])=>html`<${Field} label=${label} type=${t} options=${opts} value=${edit[k]??""} onChange=${v=>setEdit(x=>({...x,[k]:v}))}/>`)}
       <${Toggle} label="Stop Sale" value=${edit.stopSale===true} onChange=${v=>setEdit(x=>({...x,stopSale:v}))}/><${Toggle} label="Blackout" value=${edit.blackout===true} onChange=${v=>setEdit(x=>({...x,blackout:v}))}/>
-    </div><div className="notice" style=${{marginTop:"12px"}}>Sold / available are read live from canonical dated inventory. Required numeric controls are stored as 0 when blank/not applicable; available and operational status are recalculated by Inventory Control on save.</div><div className="hr"></div><div className="sectiontitle">Additional Dated Inventory Controls</div><${SmartObjectEditor} value=${edit.payload||{}} onChange=${v=>setEdit(x=>({...x,payload:v}))}/></${Modal}>`:null}
+    </div><div className="notice" style=${{marginTop:"12px"}}>Sold / available are read live from canonical inventory. Required numeric controls are stored as 0 when blank/not applicable; available and operational status are recalculated by Inventory Control on save.</div><div className="hr"></div><div className="sectiontitle">Additional Inventory & Capacity Controls</div><${SmartObjectEditor} value=${edit.payload||{}} onChange=${v=>setEdit(x=>({...x,payload:v}))}/></${Modal}>`:null}
   </div>`
 }
 function AirInventory({boot,setBusy,setToast}){
@@ -1380,11 +1733,206 @@ function Audit({setBusy,setToast}){
 }
 
 
-function Overview({boot,setView}){
-  const q=boot.quality||{},s=boot.stats||{};
+
+/* Property Director — original five-module reference layout, canonical V12 HOTEL record bundles. */
+function PDField({label,value,onChange,type="text",options=[],disabled=false,help="",placeholder="",full=false}){
+  return html`<${Field} label=${label} value=${value??""} onChange=${onChange||(()=>{})} type=${type} options=${options} disabled=${disabled} help=${help} placeholder=${placeholder} full=${full}/>`;
+}
+function PDSection({children,title,actions=null,first=false}){
+  return html`<div className=${first?"sectiontitle":"sectiontitle pd-module-title"}>${title}${actions?html`<span>${actions}</span>`:null}</div>${children}`;
+}
+function PDPropertyWorkspace({bundle,boot,onClose,onSaved,setBusy,setToast}){
+  const [draft,setDraft]=useState(()=>clone(bundle));
+  const [tab,setTab]=useState("MASTER");
+  const [lang,setLang]=useState("SV");
+  const [assetPicker,setAssetPicker]=useState(null);
+  const [auditRows,setAuditRows]=useState([]);
+  const [auditError,setAuditError]=useState("");
+  const [auditLoading,setAuditLoading]=useState(false);
+  const rec=draft.record;
+  const d=rec.details||{};
+  const catalog=draft.catalog||{};
+  const rooms=Array.isArray(d.rooms)?d.rooms:[];
+  const sells=Array.isArray(d.sellingRooms)?d.sellingRooms:[];
+  const channels=Array.isArray(d.channels)?d.channels:[];
+  const mappings=Array.isArray(d.mappings)?d.mappings:[];
+  const facilities=Array.isArray(d.facilities)?d.facilities:[];
+  const facts=Array.isArray(d.facts)?d.facts:[];
+  const media=(draft.media||[]).map(normalizeMedia);
+  const languages=[...new Set(["EN",...(boot.languages||[]),"SV","NO","DA","FI"].map(x=>String(x).toUpperCase()))];
+  const localized=(draft.localizedContent||[]).map(normalizeLocalized);
+  const en=localized.find(x=>x.language==="EN")||normalizeLocalized({language:"EN"});
+  const current=localized.find(x=>x.language===lang)||normalizeLocalized({language:lang});
+  const geography=(boot.records||[]).filter(x=>["DESTINATION","AREA"].includes(x.entityType));
+  const airports=(boot.records||[]).filter(x=>x.entityType==="AIRPORT");
+  const destOptions=[{value:"",label:"Choose..."},...geography.filter(x=>x.entityType==="DESTINATION").map(x=>({value:x.id,label:`${x.code||""} ${x.name}`}))];
+  const areaOptions=[{value:"",label:"Choose..."},...geography.filter(x=>x.entityType==="AREA").map(x=>({value:x.id,label:`${x.code||""} ${x.name}`}))];
+  const airportOptions=[{value:"",label:"Choose..."},...airports.map(x=>({value:x.id,label:`${x.code||""} ${x.name}`}))];
+  function update(path,value){setDraft(old=>{const next=clone(old);setPath(next.record,path,value);return next})}
+  function setDetails(name,val){update(`details.${name}`,val)}
+  function setCatalog(name,val){setDraft(old=>({...old,catalog:{...(old.catalog||{}),[name]:val}}))}
+  function setLangValue(name,val){setDraft(old=>{const next=clone(old);let i=(next.localizedContent||[]).findIndex(x=>x.language===lang);if(!Array.isArray(next.localizedContent))next.localizedContent=[];if(i<0){next.localizedContent.push(normalizeLocalized({language:lang}));i=next.localizedContent.length-1;}next.localizedContent[i]={...next.localizedContent[i],[name]:val};return next})}
+  function copyFromEN(){if(lang==="EN")return;setDraft(old=>{const next=clone(old);if(!Array.isArray(next.localizedContent))next.localizedContent=[];const source=normalizeLocalized(next.localizedContent.find(x=>x.language==="EN")||{});const i=next.localizedContent.findIndex(x=>String(x.language).toUpperCase()===lang);const copy={...(i<0?{}:next.localizedContent[i]),language:lang,shortDescription:source.shortDescription||"",fullDescription:source.fullDescription||"",seoTitle:source.seoTitle||"",seoDescription:source.seoDescription||""};if(i<0)next.localizedContent.push(copy);else next.localizedContent[i]=copy;return next});setToast(`English source fields copied into ${lang}. Review the text before publishing.`)}
+  function editRoomOccupancy(index,field,value){setDraft(old=>{const next=clone(old);const rows=Array.isArray(next.record.details.rooms)?next.record.details.rooms:[];next.record.details.rooms=rows.map((r,i)=>{if(i!==index)return r;const updated={...r,[field]:value};updated.maxGuests=(Number(updated.adults)||0)+(Number(updated.children)||0);return updated});return next})}
+  function editDetailRow(key,index,name,value){setDraft(old=>{const next=clone(old);const rows=Array.isArray(next.record.details?.[key])?next.record.details[key]:[];next.record.details[key]=rows.map((v,i)=>i===index?{...v,[name]:value}:v);return next})}
+  function appendDetailRow(key,row){setDetails(key,[...(Array.isArray(d[key])?d[key]:[]),row])}
+  function dropDetailRow(key,index){setDetails(key,(Array.isArray(d[key])?d[key]:[]).filter((_,i)=>i!==index))}
+  function newId(){return (typeof crypto!=="undefined"&&crypto.randomUUID)?crypto.randomUUID():`PD-${Date.now()}-${Math.random().toString(36).slice(2,12)}`}
+  function updateMap(roomId,channelId,key,value){const i=mappings.findIndex(x=>x.roomId===roomId&&x.channelId===channelId);const newMap=i<0?{roomId,channelId,roomCode:"",rateCode:"",[key]:value}:{...mappings[i],[key]:value};setDetails("mappings",i<0?[...mappings,newMap]:mappings.map((x,j)=>i===j?newMap:x))}
+  function addMediaAsset(asset){if(asset.visibility!=="PUBLIC"||!(asset.publicUrl||asset.previewUrl))return setToast("Select a public image with a usable URL from Asset Library.",true);const existing=media.find(m=>m.payload?.assetId===asset.id);if(existing)return setToast("This Asset Library image is already linked to the property.");const added=normalizeMedia({role:"GALLERY",url:asset.publicUrl||asset.previewUrl,sourceKind:"ASSET_LIBRARY",storageBucket:asset.bucket||"",storagePath:asset.storagePath||"",altText:asset.altText||asset.displayName||"",active:true,sortOrder:(media.length+1)*10,payload:{assetId:asset.id,assetCode:asset.assetCode||"",tag:"General",roomLink:""}});setDraft(old=>({...old,media:[...(old.media||[]),added]}));setAssetPicker(null)}
+  function updateMedia(i,key,value){setDraft(old=>{const next=clone(old);if(key.startsWith("payload.")){const k=key.split(".")[1];next.media[i].payload={...(next.media[i].payload||{}),[k]:value};}else next.media[i][key]=value;return next})}
+  async function save(){
+    try{
+      setBusy("Saving property to canonical Inventory…");
+      const payload=clone(draft);
+      payload.record.details={...(payload.record.details||{})};
+      for(const key of ["logoLockupUrl","logoSymbolUrl","logoUrl","logoIconUrl","heroImageUrl","imageUrl","mediaAssets","media_assets"])delete payload.record.details[key];
+      if(!payload.catalog)payload.catalog={catalogType:"NONE",partnerTier:"",searchable:false,featured:false,homepageFeatured:false,searchPriority:100,searchKeywords:[],marketCodes:["ALL"],salesChannels:["WEB"],active:true};
+      const response=await request("INVENTORY_V9_SAVE_BUNDLE",{bundle:payload});
+      if(response?.ok!==true||!response?.bundle?.record?.id)throw new Error("The Inventory backend did not confirm that the property was saved.");
+      const saved=response.bundle;
+      for(const m of saved.media||[]){const id=m?.payload?.assetId||m?.assetId;if(id)try{await request("INVENTORY_ASSET_REGISTER_USAGE",{assetId:id,system:"Inventory Control",recordType:"HOTEL",recordId:saved.record.id,usageRole:m.role||"MEDIA",fieldName:"inventory_media_assets"})}catch(err){setToast(`Property saved; asset usage registration failed: ${err.message}`,true)}}
+      setDraft(clone(saved));
+      setToast("Property committed to canonical Inventory.");
+      await onSaved?.(saved.record);
+    }catch(err){setToast(err.message||"Property save failed.",true)}finally{setBusy("")}
+  }
+  async function getAudit(){if(!rec.id){setAuditRows([]);return;}setAuditLoading(true);setAuditError("");try{const r=await request("INVENTORY_V9_GET_AUDIT",{limit:300});const events=Array.isArray(r.audit)?r.audit:[];setAuditRows(events.filter(a=>String(a.entityId||a.recordId||"")===String(rec.id)))}catch(err){setAuditError(err.message)}finally{setAuditLoading(false)}}
+  useEffect(()=>{if(tab==="AUDIT")getAudit()},[tab,rec.id]);
+  const addressIsObject=!!(d.address&&typeof d.address==="object"&&!Array.isArray(d.address));
+  const addressText=addressIsObject?(d.address.line1||d.address.addressLine1||d.address.street||""):d.address||"";
+  const setAddress=v=>addressIsObject?update("details.address.line1",v):setDetails("address",v);
+  const distKm=d.distanceToAirport??"";
+  const miles=distKm===""?"":Number.isFinite(Number(distKm))?(Number(distKm)*0.621371).toFixed(2):"";
+  const status=rec.status||"DRAFT";
+  const facilityGroups=[{name:"Wellness",items:["Pool","Spa","Gym","Sauna"]},{name:"Business",items:["Meeting Rooms","Co-working Space"]},{name:"Logistics",items:["EV Charging","Parking","Free Wi-Fi","Restaurant","Pet Friendly"]}];
+  const published=rec.status==="PUBLISHED";
+  const locName=(id)=>((boot.records||[]).find(x=>x.id===id)?.name)||"";
+  const renderMaster=()=>html`<div className="card panel">
+    <${PDSection} title="General Information" first=${true}>
+      <div className="formgrid three">
+        <${PDField} label="System Code" value=${rec.code} onChange=${v=>update("code",v)} help="Unique canonical Inventory code"/>
+        <${PDField} label="Master Name" value=${rec.name} onChange=${v=>update("name",v)}/>
+        <${PDField} label="Brand / Chain" value=${d.brand||""} onChange=${v=>setDetails("brand",v)} help="Provider-owned fields may require inventory refresh"/>
+        <${PDField} label="Property Type" type="select" options=${ENUM.propertyType} value=${d.propertyType||""} onChange=${v=>setDetails("propertyType",v)}/>
+        <${PDField} label="SKANDI Tier" type="select" options=${["SIGNATURE","SELECT","ESSENTIAL","CLASSIC"]} value=${catalog.partnerTier||""} onChange=${v=>setCatalog("partnerTier",v)}/>
+        <${PDField} label="Settlement Currency" type="select" options=${ENUM.currency} value=${rec.commercial?.currency||"USD"} onChange=${v=>update("commercial.currency",v)}/>
+        <${PDField} label="URL Slug" value=${rec.slug||""} onChange=${v=>update("slug",v)} help="Blank = generated from Master Name"/>
+        <${PDField} label="Public ID" value=${rec.publicId||""} disabled=${true} help="Generated by canonical Inventory"/>
+        <${PDField} label="Status" type="select" options=${STATUS} value=${status} onChange=${v=>update("status",v)}/>
+      </div>
+    </${PDSection}>
+    <${PDSection} title="Geography & Routing">
+      <div className="formgrid">
+        <div>
+          <div className="formgrid"><${PDField} label="Destination" type="select" options=${destOptions} value=${d.destinationId||""} onChange=${v=>setDetails("destinationId",v)}/><${PDField} label="Area / Resort" type="select" options=${areaOptions} value=${d.areaId||""} onChange=${v=>setDetails("areaId",v)}/></div>
+          <div className="formgrid" style=${{marginTop:"12px"}}><${PDField} label="Address" value=${addressText} onChange=${setAddress}/><${PDField} label="City" value=${d.city||""} onChange=${v=>setDetails("city",v)}/></div>
+          <div className="formgrid" style=${{marginTop:"12px"}}><${PDField} label="Postal Code" value=${d.postalCode||""} onChange=${v=>setDetails("postalCode",v)}/><${PDField} label="Country" value=${d.countryName||d.country||""} onChange=${v=>setDetails("countryName",v)}/></div>
+          <div className="formgrid" style=${{marginTop:"12px"}}><${PDField} label="Nearest Airport" type="select" value=${d.nearestAirportId||""} options=${airportOptions} onChange=${v=>setDetails("nearestAirportId",v)}/><${PDField} label="Transfer Time (Min)" type="number" value=${d.transferTimeMinutes??""} onChange=${v=>setDetails("transferTimeMinutes",v)}/></div>
+          <div className="pd-field-row" style=${{marginTop:"12px"}}><${PDField} label="Distance to Airport (km)" type="number" value=${distKm} onChange=${v=>setDetails("distanceToAirport",v)}/><span style=${{fontSize:"10px",flex:"0 0 auto"}}>⇄</span><${PDField} label="Distance (mi)" type="number" value=${miles} onChange=${v=>setDetails("distanceToAirport",v===""?null:Number(v)/0.621371)}/></div>
+          ${Number(distKm)>25&&!d.transferTimeMinutes?html`<div className="notice warn" style=${{marginTop:"8px"}}>Distance exceeds 25 km. Confirm transfer information.</div>`:null}
+        </div>
+        <div><div className="pd-field-row"><${PDField} label="Latitude" type="number" value=${d.latitude??""} onChange=${v=>setDetails("latitude",v)}/><${PDField} label="Longitude" type="number" value=${d.longitude??""} onChange=${v=>setDetails("longitude",v)}/></div><div className="pd-map"><div className="pd-map-empty">${d.latitude!=null&&d.longitude!=null?`Coordinates: ${d.latitude}, ${d.longitude}`:"No coordinates are assigned"}<div className="pd-muted">Map preview is not connected to a geocoding service</div></div></div></div>
+      </div>
+    </${PDSection}>
+    <${PDSection} title="Facilities & Ratings">
+      <div className="formgrid four"><${PDField} label="Star Rating" type="number" value=${d.officialStarRating??""} onChange=${v=>setDetails("officialStarRating",v)}/><${PDField} label="Editorial Rating" type="number" value=${d.skandiRating??""} onChange=${v=>setDetails("skandiRating",v)}/><${PDField} label="Guest Rating" type="number" value=${d.guestRating??""} onChange=${v=>setDetails("guestRating",v)}/><${PDField} label="Review Count" type="number" value=${d.reviewCount??""} onChange=${v=>setDetails("reviewCount",v)}/></div>
+      <div className="notice" style=${{marginTop:"12px"}}>Enable facilities. Assign one HERO facility for primary display.</div>
+      <div className="formgrid three">${facilityGroups.map(group=>html`<div><div className="sectiontitle">${group.name}</div>${group.items.map(name=>html`<label className="pd-check-row"><input type="checkbox" checked=${facilities.includes(name)} onChange=${()=>{const active=facilities.includes(name);setDetails("facilities",active?facilities.filter(x=>x!==name):[...facilities,name]);if(active&&d.heroFacility===name)setDetails("heroFacility","")}}/><span>${name}</span>${facilities.includes(name)?html`<button className=${`btn small ${d.heroFacility===name?"cyan":""}`} type="button" onClick=${e=>{e.preventDefault();setDetails("heroFacility",name)}}>HERO</button>`:null}</label>`)}</div>`)}</div>
+      <${ListField} label="Other Facilities — one per line" value=${facilities.filter(x=>!facilityGroups.some(group=>group.items.includes(x)))} onChange=${v=>setDetails("facilities",[...facilities.filter(x=>facilityGroups.some(group=>group.items.includes(x))),...v])}/>
+    </${PDSection}>
+    <${PDSection} title="Policies & Operational Facts">
+      <div className="formgrid three"><${PDField} label="Check-in Time" type="time" value=${d.checkinTime||""} onChange=${v=>setDetails("checkinTime",v)}/><${PDField} label="Check-out Time" type="time" value=${d.checkoutTime||""} onChange=${v=>setDetails("checkoutTime",v)}/><${PDField} label="Min Age" type="number" value=${d.minimumCheckinAge??""} onChange=${v=>setDetails("minimumCheckinAge",v)}/></div>
+      <div className="smartgroup" style=${{marginTop:"12px"}}><div className="smarttitle"><span>Hotel Facts</span><button className="btn small" onClick=${()=>appendDetailRow("facts",{label:"",value:""})}>+ APPEND FACT</button></div>
+        ${facts.length?html`<div className="smartlist">${facts.map((f,i)=>html`<div className="smartrow"><div className="formgrid"><${PDField} label="Label" value=${f.label||""} onChange=${v=>editDetailRow("facts",i,"label",v)}/><${PDField} label="Value" value=${f.value||""} onChange=${v=>editDetailRow("facts",i,"value",v)}/></div><button className="btn small danger" onClick=${()=>dropDetailRow("facts",i)}>DROP</button></div>`)}</div>`:html`<div className="empty">No operational facts assigned.</div>`}
+      </div>
+    </${PDSection}>
+    <${PDSection} title="Publishing & Visibility">
+      <div className="formgrid three"><${Toggle} label="Active" value=${rec.active!==false} onChange=${v=>update("active",v)}/><${Toggle} label="Customer Visible" value=${rec.customerVisible===true} onChange=${v=>update("customerVisible",v)}/><${Toggle} label="ALTEA Visible" value=${rec.alteaVisible!==false} onChange=${v=>update("alteaVisible",v)}/></div>
+    </${PDSection}>
+  </div>`;
+  const renderRooms=()=>html`<div className="card panel">
+    <div className="paneltitle"><span>Physical Inventory (Constraints)</span><button className="btn primary small" onClick=${()=>appendDetailRow("rooms",{code:"",name:"",roomType:"",bedType:"",adults:2,children:0,maxGuests:2,sizeSqm:"",window:true})}>+ NEW PHY ROOM</button></div>
+    <div className="tablewrap"><table className="table"><thead><tr><th>INT Code</th><th>Bedding</th><th>ADT</th><th>CHD</th><th>CAP</th><th>SQM</th><th>WIN</th><th>Actions</th></tr></thead><tbody>
+      ${rooms.length?rooms.map((r,i)=>html`<tr><td><input className="input" value=${r.code||""} onInput=${e=>editDetailRow("rooms",i,"code",e.target.value)} placeholder="STD-TWN"/></td><td><input className="input" value=${r.bedType||""} onInput=${e=>editDetailRow("rooms",i,"bedType",e.target.value)} placeholder="2 TWIN"/></td><td><input className="input" type="number" style=${{width:"56px"}} value=${r.adults??r.maxGuests??0} onInput=${e=>editRoomOccupancy(i,"adults",numOrNull(e.target.value))}/></td><td><input className="input" type="number" style=${{width:"56px"}} value=${r.children??0} onInput=${e=>editRoomOccupancy(i,"children",numOrNull(e.target.value))}/></td><td><b>${r.maxGuests??((Number(r.adults)||0)+(Number(r.children)||0))}</b></td><td><input className="input" style=${{width:"80px"}} value=${r.sizeSqm??""} onInput=${e=>editDetailRow("rooms",i,"sizeSqm",e.target.value)}/></td><td><select className="select" value=${r.window===false?"NO":"YES"} onChange=${e=>editDetailRow("rooms",i,"window",e.target.value==="YES")}><option value="YES">YES</option><option value="NO">NO</option></select></td><td><div className="pd-flex"><button className="btn small" onClick=${()=>appendDetailRow("rooms",{...r,code:`${r.code||"ROOM"}-COPY`})}>CLONE</button><button className="btn small danger" onClick=${()=>dropDetailRow("rooms",i)}>DROP</button></div></td></tr>`):html`<tr><td colSpan="8"><div className="empty">No physical room definitions.</div></td></tr>`}
+    </tbody></table></div>
+    ${rooms.some(r=>r.window===false)?html`<div className="notice warn">Windowless rooms require accurate customer-facing description. Check the stored room descriptions before publishing.</div>`:null}
+    <div className="paneltitle pd-module-title"><span>Selling Configurations (Marketing)</span><button className="btn primary small" onClick=${()=>appendDetailRow("sellingRooms",{id:newId(),physId:"",name:"",priority:100,active:true})}>+ NEW SELL PKG</button></div>
+    <div className="tablewrap"><table className="table"><thead><tr><th>Physical Link</th><th>Display Name</th><th>Priority</th><th>Active</th><th>Action</th></tr></thead><tbody>
+      ${sells.length?sells.map((r,i)=>html`<tr><td><select className="select" value=${r.physId||""} onChange=${e=>editDetailRow("sellingRooms",i,"physId",e.target.value)}><option value="">Select PHY...</option>${rooms.map(p=>html`<option value=${p.code}>${p.code||"New room"}</option>`)}</select></td><td><input className="input" value=${r.name||""} onInput=${e=>editDetailRow("sellingRooms",i,"name",e.target.value)}/></td><td><input className="input" type="number" style=${{width:"76px"}} value=${r.priority??100} onInput=${e=>editDetailRow("sellingRooms",i,"priority",numOrNull(e.target.value))}/></td><td><select className="select" value=${r.active!==false?"YES":"NO"} onChange=${e=>editDetailRow("sellingRooms",i,"active",e.target.value==="YES")}><option>YES</option><option>NO</option></select></td><td><button className="btn small danger" onClick=${()=>{dropDetailRow("sellingRooms",i);setDetails("mappings",mappings.filter(x=>x.roomId!==r.id))}}>DROP</button></td></tr>`):html`<tr><td colSpan="5"><div className="empty">No selling packages defined.</div></td></tr>`}
+    </tbody></table></div><div className="pd-muted">Physical rooms reuse the canonical HOTEL Room Types field. Selling configurations remain inside the same hotel record and are not automatically published as provider availability.</div>
+  </div>`;
+  const renderChannels=()=>html`<div className="card panel">
+    <div className="paneltitle"><span>Property Channels</span><button className="btn primary small" onClick=${()=>appendDetailRow("channels",{id:newId(),provider:"AMADEUS",propId:"",active:true})}>+ ADD CHANNEL</button></div>
+    <div className="tablewrap"><table className="table"><thead><tr><th>Provider</th><th>Property ID</th><th>Status</th><th>Actions</th></tr></thead><tbody>
+      ${channels.length?channels.map((r,i)=>html`<tr><td><select className="select" value=${r.provider||""} onChange=${e=>editDetailRow("channels",i,"provider",e.target.value)}><option value="AMADEUS">AMADEUS GDS</option><option value="DUFFEL">DUFFEL</option><option value="HOTELBEDS">HOTELBEDS</option></select></td><td><input className="input" value=${r.propId||""} onInput=${e=>editDetailRow("channels",i,"propId",e.target.value)}/></td><td><select className="select" value=${r.active!==false?"YES":"NO"} onChange=${e=>editDetailRow("channels",i,"active",e.target.value==="YES")}><option>YES</option><option>NO</option></select></td><td><button className="btn small danger" onClick=${()=>{dropDetailRow("channels",i);setDetails("mappings",mappings.filter(x=>x.channelId!==r.id))}}>DROP</button></td></tr>`):html`<tr><td colSpan="4"><div className="empty">No channel identifiers recorded.</div></td></tr>`}
+    </tbody></table></div>
+    <div className="paneltitle pd-module-title">Distribution Matrix</div>
+    <div className="notice">Enter provider room and rate codes. An unassigned code is highlighted. These codes are stored as Inventory reference attributes; they do not trigger external supplier provisioning.</div>
+    <div className="tablewrap pd-scroll"><table className="table"><thead><tr><th style=${{minWidth:"200px"}}>Selling Package</th>${channels.map(c=>html`<th>${c.provider||"—"}<div className="pd-muted">${c.propId||"No ID"}</div></th>`)}</tr></thead><tbody>
+      ${sells.length?sells.map(s=>html`<tr><td><b>${s.name||"Unnamed package"}</b></td>${channels.map(c=>{const m=mappings.find(x=>x.roomId===s.id&&x.channelId===c.id)||{};return html`<td className=${`matrix-cell ${!m.roomCode?"matrix-missing":""}`}><div className="pd-flex" style=${{flexWrap:"nowrap"}}><input className="matrix-input" value=${m.roomCode||""} placeholder="RM CD" aria-label=${`${s.name} ${c.provider} room code`} onInput=${e=>updateMap(s.id,c.id,"roomCode",e.target.value)}/><input className="matrix-input" value=${m.rateCode||""} placeholder="RT CD" aria-label=${`${s.name} ${c.provider} rate code`} onInput=${e=>updateMap(s.id,c.id,"rateCode",e.target.value)}/></div></td>`})}</tr>`):html`<tr><td colSpan=${channels.length+1}><div className="empty">Matrix requires selling packages.</div></td></tr>`}
+    </tbody></table></div>
+  </div>`;
+  const renderCms=()=>html`<div className="card panel">
+    <div className="paneltitle">Multilingual Content</div>
+    <div className="toolbar" style=${{marginBottom:"12px"}}><b className="pd-muted">TARGET LOCALE:</b><select className="select w180" value=${lang} onChange=${e=>setLang(e.target.value)}>${languages.filter(x=>x!=="EN").map(x=>html`<option value=${x}>${x}</option>`)}</select><button className="btn cyan" onClick=${copyFromEN}>CLONE FROM EN</button></div>
+    <div className="split-screen"><div style=${{background:"#F9FAFB",padding:"12px",border:"1px solid var(--line2)"}}><div className="sectiontitle" style=${{marginTop:0}}>MASTER (EN) - LOCKED</div><${PDField} label="Short Description" type="textarea" value=${en.shortDescription||""} disabled=${true}/><${PDField} label="SEO Title" value=${en.seoTitle||""} disabled=${true}/><${PDField} label="SEO Desc" type="textarea" value=${en.seoDescription||""} disabled=${true}/></div>
+      <div><div className="sectiontitle" style=${{marginTop:0}}>TRANSLATION (${lang})</div><${PDField} label="Short Description" type="textarea" value=${current.shortDescription||""} onChange=${v=>setLangValue("shortDescription",v)}/><div className="sectiontitle">SEO Metatags (Wix Sync)</div><${PDField} label="SEO Title" value=${current.seoTitle||""} onChange=${v=>setLangValue("seoTitle",v)}/><div className=${`char-count ${(current.seoTitle||"").length>60?"over":""}`}>${(current.seoTitle||"").length} / 60</div><${PDField} label="SEO Description" type="textarea" value=${current.seoDescription||""} onChange=${v=>setLangValue("seoDescription",v)}/><div className=${`char-count ${(current.seoDescription||"").length>160?"over":""}`}>${(current.seoDescription||"").length} / 160</div><div className="seo-preview" style=${{marginTop:"12px"}}><div className="seo-url">skanditravels.com &gt; hotels &gt; ${rec.slug||"hotel"}</div><div className="seo-title">${current.seoTitle||"Page Title"}</div><div className="seo-desc">${current.seoDescription||"Page description will appear here in search results."}</div></div></div>
+    </div>
+    <div className="paneltitle pd-module-title"><span>Media Repository</span><button className="btn primary small" onClick=${()=>setAssetPicker(assetContextForRecord(rec,"GALLERY"))}>+ ADD ASSET</button></div>
+    <div className="media-grid">${media.length?media.map((m,i)=>html`<div className="media-card"><div className="assetthumb" style=${{height:"120px"}}>${m.url?html`<img className="media-img" alt=${m.altText||"Property image"} src=${m.url}/>`:html`<span>Image unavailable</span>`}</div><${PDField} label="Asset name / Alt" value=${m.altText||""} onChange=${v=>updateMedia(i,"altText",v)}/><${PDField} label="Media Role" type="select" options=${["HERO","GALLERY","ROOM","CARD","MOBILE","THUMBNAIL","LOGO"]} value=${m.role||"GALLERY"} onChange=${v=>updateMedia(i,"role",v)} disabled=${(m.payload?.provider||m.source)==="DUFFEL"}/><${PDField} label="Photo Tag" type="select" options=${["Exterior","Lobby","Room","Bathroom","General"]} value=${m.payload?.tag||"General"} onChange=${v=>updateMedia(i,"payload.tag",v)}/>${m.role==="ROOM"?html`<${PDField} label="Room Package" type="select" options=${[{value:"",label:"Select package"},...sells.map(s=>({value:s.id,label:s.name||s.id}))]} value=${m.payload?.roomLink||""} onChange=${v=>updateMedia(i,"payload.roomLink",v)}/>`:null}<button className="btn small danger" disabled=${(m.payload?.provider||m.source)==="DUFFEL"} onClick=${()=>setDraft(old=>({...old,media:old.media.filter((_,j)=>j!==i)}))}>DROP ASSET</button>${(m.payload?.provider||m.source)==="DUFFEL"?html`<div className="pd-muted">Managed by SKANDI Partner</div>`:null}</div>`):html`<div className="empty" style=${{gridColumn:"1/-1"}}>No media assigned.</div>`}</div>
+    ${assetPicker?html`<${AssetLibraryModal} context=${assetPicker} onClose=${()=>setAssetPicker(null)} onSelect=${addMediaAsset} setBusy=${setBusy} setToast=${setToast}/>`:null}
+  </div>`;
+  const renderAudit=()=>html`<div className="card panel">
+    <div className="paneltitle">Source Verification Gate</div>
+    <div className="notice warn">The canonical Inventory backend currently supports reading its audited ledger, but does not expose the reference's verification-log writer. No verification is recorded until an authorized backend action exists.</div>
+    <div className="formgrid three"><${PDField} label="Source Type" type="select" options=${["Official Website","GDS Audit","Direct Contract","Phone Call"]} disabled=${true}/><${PDField} label="Verification URL / Notes" disabled=${true}/><div className="field"><label>Action</label><button className="btn cyan" disabled=${true} title="Verification log endpoint not available">LOG VERIFICATION</button></div></div>
+    <div className="paneltitle pd-module-title"><span>Transaction Ledger</span><button className="btn small" disabled=${auditLoading} onClick=${getAudit}>REFRESH</button></div>
+    ${auditError?html`<div className="notice bad">${auditError}</div>`:null}
+    <div className="tablewrap"><table className="table"><thead><tr><th>Timestamp</th><th>Operator</th><th>Action</th><th>Message</th></tr></thead><tbody>${auditRows.length?auditRows.map(x=>html`<tr><td>${String(x.timestamp||"").replace("T"," ").slice(0,19)}</td><td>${x.agentName||"—"}</td><td>${x.eventType||"—"}</td><td>${x.message||""}</td></tr>`):html`<tr><td colSpan="4"><div className="empty">${auditLoading?"Retrieving property history…":"No matching property audit events."}</div></td></tr>`}</tbody></table></div>
+  </div>`;
+  return html`<div className="property-workspace" style=${{display:"flex",flexDirection:"column",height:"100%"}}>
+    <div className="top"><div><button className="btn small" onClick=${onClose} style=${{marginBottom:"8px"}}>‹ BACK TO DIRECTORY</button><h1>[${rec.code||"NEW"}] ${rec.name||"New Property"}</h1></div><div className="toolbar"><div className="pd-header-status">${statusPill(status)}</div><button className="btn primary" onClick=${save}>COMMIT WORKSPACE</button></div></div>
+    <div className="tabs">${[["MASTER","1. Master & Geo"],["ROOMS","2. Inventory Models"],["CHANNELS","3. Channel Matrix"],["CMS","4. Content & Media"],["AUDIT","5. Audit Gate"]].map(([id,label])=>html`<button className=${`tab ${tab===id?"active":""}`} onClick=${()=>setTab(id)}>${label}</button>`)}</div>
+    <div className="property-body">${tab==="MASTER"?renderMaster():tab==="ROOMS"?renderRooms():tab==="CHANNELS"?renderChannels():tab==="CMS"?renderCms():renderAudit()}</div>
+  </div>`;
+}
+function PropertyDirector({boot,masterFilter,setBusy,setToast,onSaved}){
+  const [query,setQuery]=useState("");
+  const [status,setStatus]=useState("");
+  const [active,setActive]=useState(null);
+  const [page,setPage]=useState(1);
+  const canViewHotels=!masterFilter||masterFilter==="HOTEL";
+  useEffect(()=>{if(!canViewHotels)setActive(null)},[canViewHotels]);
+  const rows=(boot.records||[]).filter(x=>x.entityType==="HOTEL");
+  const filtered=canViewHotels?rows.filter(h=>(!status||h.status===status)&&(!query||[h.name,h.code,h.slug,h.details?.city].join(" ").toLowerCase().includes(query.toLowerCase()))):[];
+  const hotels=[...filtered].sort((a,b)=>text(a.name).localeCompare(text(b.name)));
+  const pageSize=100;
+  const totalPages=Math.max(1,Math.ceil(hotels.length/pageSize));
+  const currentPage=Math.min(page,totalPages);
+  const visible=hotels.slice((currentPage-1)*pageSize,currentPage*pageSize);
+  async function openHotel(h){try{setBusy("Loading property…");const result=await request("INVENTORY_V9_GET_RECORD",{id:h.id,entityType:"HOTEL"});if(!result?.record||result.record.entityType!=="HOTEL")throw new Error("Hotel record was not returned from Inventory.");setActive(result)}catch(err){setToast(err.message,true)}finally{setBusy("")}}
+  function createHotel(){setActive(recordBundle("HOTEL"))}
+  if(active)return html`<${PDPropertyWorkspace} bundle=${active} boot=${boot} onClose=${()=>setActive(null)} onSaved=${onSaved} setBusy=${setBusy} setToast=${setToast}/>`;
   return html`<div className="grid">
-    <div className="stats">${[["Canonical Records",s.total],["Catalog Placements",s.catalog],["Searchable",s.searchableCatalog],["Aircraft",s.aircraft],["Cabins",s.cabins]].map(([l,v])=>html`<div className="card stat"><span>${l}</span><strong>${v??0}</strong></div>`)}</div>
-    <div className="split"><div className="card panel"><div className="paneltitle">Inventory Families</div><div className="grid" style=${{gridTemplateColumns:"repeat(auto-fit,minmax(145px,1fr))"}}>${Object.entries(s.byType||{}).map(([k,v])=>html`<button className="btn" onClick=${()=>setView("master")}><b>${LABEL[k]||k}</b><br/><span className="sub">${v} records</span></button>`)}</div></div>
+    <div className="top"><div><div className="eyebrow">RIAINTRA / ALTEA</div><h1>Property Master Directory</h1><div className="sub">Global database of physical accommodations. Select a property to enter its workspace.</div></div><div className="toolbar"><button className="btn primary" disabled=${!canViewHotels} onClick=${createHotel}>+ INITIALIZE PROPERTY</button></div></div>
+    ${!canViewHotels?html`<div className="notice warn">Master Filter is ${MASTER_FILTER_LABEL[masterFilter]||masterFilter}. Choose HOTELS or GLOBAL PORTFOLIO to open the property directory.</div>`:html`<div className="card panel">
+      <div className="filters"><div className="field grow"><label>Property / Code</label><input className="input" value=${query} onInput=${e=>{setQuery(e.target.value);setPage(1)}} placeholder="Search real hotel records"/></div><div className="field w180"><label>Status</label><select className="select" value=${status} onChange=${e=>{setStatus(e.target.value);setPage(1)}}><option value="">ALL STATUSES</option>${STATUS.map(s=>html`<option value=${s}>${s}</option>`)}</select></div></div>
+      <div className="tablewrap"><table className="table"><thead><tr><th>Type</th><th>Sys Code</th><th>Master Title</th><th>Dest</th><th>Status</th><th>Actions</th></tr></thead><tbody>
+        ${visible.length?visible.map(h=>html`<tr className="clickrow" onClick=${()=>openHotel(h)}><td>${h.details?.propertyType||"HOTEL"}</td><td><b>${h.code||"—"}</b></td><td>${h.name||"—"}</td><td>${(boot.records||[]).find(x=>x.id===h.details?.destinationId)?.code||h.details?.destinationCode||"—"}</td><td>${statusPill(h.status)}</td><td><button className="btn small" onClick=${e=>{e.stopPropagation();openHotel(h)}}>OPEN</button></td></tr>`):html`<tr><td colSpan="6"><div className="empty">No hotel properties found in canonical Inventory.</div></td></tr>`}
+      </tbody></table></div><${Pagination} page=${currentPage} totalPages=${totalPages} total=${hotels.length} pageSize=${pageSize} onPage=${setPage}/>
+    </div>`}
+  </div>`;
+}
+
+function Overview({boot,setView,masterFilter}){
+  const q=boot.quality||{},s=boot.stats||{};
+  const scopedRecords=(boot.records||[]).filter(r=>!masterFilter||(masterFilter==="TOURS_ACTIVITIES"?["GUIDED_TOUR","ACTIVITY"].includes(r.entityType):r.entityType===masterFilter));
+  const scopedCount=scopedRecords.length;
+  const inScope=Boolean(masterFilter);
+  return html`<div className="grid">
+    <div className="stats">${(inScope?[["Records in scope",scopedCount],["Published",scopedRecords.filter(r=>r.status==="PUBLISHED").length],["Active",scopedRecords.filter(r=>r.active!==false).length],["Customer visible",scopedRecords.filter(r=>r.customerVisible===true).length],["ALTEA visible",scopedRecords.filter(r=>r.alteaVisible!==false).length]]:[["Canonical Records",s.total],["Catalog Placements",s.catalog],["Searchable",s.searchableCatalog],["Aircraft",s.aircraft],["Cabins",s.cabins]]).map(([l,v])=>html`<div className="card stat"><span>${l}</span><strong>${v??0}</strong></div>`)}</div>
+    <div className="split"><div className="card panel"><div className="paneltitle">Inventory Families</div><div className="grid" style=${{gridTemplateColumns:"repeat(auto-fit,minmax(145px,1fr))"}}>${Object.entries(s.byType||{}).filter(([k])=>!masterFilter||masterFilter===k||(masterFilter==="TOURS_ACTIVITIES"&&["GUIDED_TOUR","ACTIVITY"].includes(k))).map(([k,v])=>html`<button className="btn" onClick=${()=>setView("master")}><b>${LABEL[k]||k}</b><br/><span className="sub">${v} records</span></button>`)}</div></div>
       <div className="card panel"><div className="paneltitle">Aircraft Sync Health</div><div className="kpirow"><div className="kpi"><b>${q.aircraftSync?.fleetTemplates??0}</b> fleet templates</div><div className="kpi"><b>${q.aircraftSync?.aircraftRecords??0}</b> aircraft records</div><div className="kpi"><b>${q.aircraftSync?.missing??0}</b> missing</div></div><div className=${`notice ${q.aircraftSync?.missing?"warn":""}`} style=${{marginTop:"12px"}}>${q.aircraftSync?.missing?"Open Aircraft & Cabin Studio and run Smart Sync to create missing records in Review.":"Fleet master is currently reconciled."}</div></div>
     </div>
     <div className="card panel"><div className="paneltitle">Operational Inventory</div><div className="stats">${[["Dated Capacity",s.dated],["Flight Legs",s.flightLegs],["Booking Classes",s.flightClasses],["Schedules",s.schedules],["Nesting Controls",s.nesting]].map(([l,v])=>html`<div className="stat"><span>${l}</span><strong>${v??0}</strong><em>${v?"loaded":"no rows yet"}</em></div>`)}</div></div>
@@ -1395,6 +1943,7 @@ function Overview({boot,setView}){
 function App(){
   const [boot,setBoot]=useState(null);
   const [view,setView]=useState("overview");
+  const [masterFilter,setMasterFilter]=useState("");
   const [busy,setBusy]=useState("Connecting Inventory Control…");
   const [toast,setToastState]=useState(null);
   const [masterConfig,setMasterConfig]=useState(null);
@@ -1450,20 +1999,30 @@ function App(){
   },[]);
 
 
-  const nav=[["overview","Overview"],["provider","Duffel & Collection"],["master","Master Records"],["assets","Asset Library"],["dated","Dated Inventory"],["air","Air Inventory"],["aircraft","Aircraft & Cabin Studio"],["quality","Publishing & QA"],["audit","Audit"]];
-  return html`<div className="shell"><aside className="sidebar"><div className="brand"><b>SKANDI</b><small>Inventory Control · ${VERSION}</small></div><div className="group">Inventory Control</div>${nav.map(([k,l])=>html`<button className=${`navbtn ${view===k?"active":""}`} onClick=${()=>setView(k)}>${l}</button>`)}</aside>
-    <main className="main"><div className="top"><div><div className="eyebrow">RIAINTRA · ALTEA OPERATIONS</div><h1>${nav.find(x=>x[0]===view)?.[1]||"Inventory Control"}</h1><div className="sub">One synchronized control center for Duffel resource discovery, the curated SKANDI Collection, owned inventory, merchandising, capacity and aircraft operations.</div></div><div className="toolbar"><button className="btn" onClick=${refresh}>Refresh</button></div></div>
+  const nav=[["overview","Workspace Dashboard"],["provider","Supplier & Distribution"],["master","Master Records"],["property","Property Director"],["assets","Asset Library"],["dated","Inventory & Capacity"],["air","Air Inventory"],["aircraft","Aircraft & Cabin Studio"],["quality","Publishing & QA"],["audit","Audit"]];
+  return html`<div className="shell">
+    <header className="global-header">
+      <div className="global-brand"><strong>amadeus</strong><span className="system-label">SKANDI INVENTORY CONTROL</span></div>
+      <div className="global-controls">
+        <div className="global-scope"><label htmlFor="inventoryMasterScope">Master Filter:</label><select id="inventoryMasterScope" aria-label="Master Filter" value=${masterFilter} onChange=${e=>setMasterFilter(e.target.value)}><option value="">GLOBAL PORTFOLIO</option>${MASTER_FILTERS.map(t=>html`<option value=${t}>${(MASTER_FILTER_LABEL[t]||t).toUpperCase()}</option>`)}</select></div>
+        <span className="operator">OPE: RIAINTRA</span>
+      </div>
+    </header>
+    <div className="shell-body"><aside className="sidebar"><div className="group">Navigation</div>${nav.map(([k,l])=>html`<button className=${`navbtn ${view===k?"active":""}`} onClick=${()=>setView(k)}>${l}</button>`)}</aside>
+    <main className="main"><div className="top"><div><div className="eyebrow">RIAINTRA · ALTEA OPERATIONS</div><h1>${nav.find(x=>x[0]===view)?.[1]||"Inventory Control"}</h1><div className="sub">Centralized module for resource discovery, curation, capacity yields and distribution logic.</div></div><div className="toolbar"><button className="btn" onClick=${refresh}>Refresh</button></div></div>
+      ${masterFilter&&!["overview","master","property","provider"].includes(view)?html`<div className="scope-label">Master Filter: ${MASTER_FILTER_LABEL[masterFilter]||masterFilter}. Operational views without a matching record-family field keep their original full operational data; the selected filter remains active across menus.</div>`:null}
       ${!boot?html`<div className="card panel"><div className=${`notice ${connectionError?"bad":""}`}><b>${connectionError?"Inventory bridge unavailable":"Waiting for secure system bridge…"}</b>${connectionError?html`<div style=${{marginTop:"8px"}}>${connectionError}</div>`:null}</div></div>`:
-        view==="overview"?html`<${Overview} boot=${boot} setView=${setView}/>`:
-        view==="provider"?html`<${ProviderWorkspace} boot=${boot} setBusy=${setBusy} setToast=${setToast}/>`:
-        view==="master"?html`<${MasterRecords} boot=${boot} setBoot=${setBoot} setBusy=${setBusy} setToast=${setToast}/>`:
+        view==="overview"?html`<${Overview} boot=${boot} setView=${setView} masterFilter=${masterFilter}/>`:
+        view==="provider"?html`<${ProviderWorkspace} boot=${boot} setBusy=${setBusy} setToast=${setToast} masterFilter=${masterFilter}/>`:
+        view==="master"?html`<${MasterRecords} boot=${boot} setBoot=${setBoot} setBusy=${setBusy} setToast=${setToast} masterFilter=${masterFilter} setMasterFilter=${setMasterFilter}/>`:
+        view==="property"?html`<${PropertyDirector} boot=${boot} masterFilter=${masterFilter} setBusy=${setBusy} setToast=${setToast}/>`:
         view==="assets"?html`<${AssetLibraryPanel} setBusy=${setBusy} setToast=${setToast}/>`:
         view==="dated"?html`<${DatedInventory} boot=${boot} setBusy=${setBusy} setToast=${setToast}/>`:
         view==="air"?html`<${AirInventory} boot=${boot} setBusy=${setBusy} setToast=${setToast}/>`:
         view==="aircraft"?html`<${AircraftStudio} boot=${boot} setBusy=${setBusy} setToast=${setToast}/>`:
         view==="quality"?html`<${Quality} boot=${boot} setBusy=${setBusy} setToast=${setToast}/>`:
         html`<${Audit} setBusy=${setBusy} setToast=${setToast}/>`}
-    </main>
+    </main></div>
     ${busy?html`<div className="loading"><div className="loaderbox">${busy}</div></div>`:null}
     ${toast?html`<div className=${`toast ${toast.error?"error":""}`}>${toast.message}</div>`:null}
   </div>`
