@@ -5,14 +5,18 @@
 - WIX HTML: `#customerServiceCenterEmbed` (legacy `#customerServiceAgentEmbed` remains page-controller compatible)
 - CHILD SOURCE: `SKANDI_SUPPORT_AGENT`
 - CANONICAL BACKEND: `/src/backend/SKANDI_CORE/customerSupport.web.js` → `/src/backend/SKANDI_CORE/customerSupport.js`
+- DUFFEL BRIDGE: `/src/backend/SKANDI_CORE/duffelAssistant.web.js` → `/src/backend/SKANDI_CORE/duffelAssistant.js`
 - PERSISTENCE: Supabase `customer_support_cases`, `customer_support_messages`, `alexandra_chat_sessions`, `agent_users`
-- REALTIME CHAT: LiveKit / LiveKit Agents
+- REALTIME CHAT: LiveKit / LiveKit Agents; Duffel conversation history remains private to Duffel Assistant
 - STATUS: **STATICALLY VERIFIED — REQUIRES LIVE TEST**
 - PROXY AUDIT: the current customer-support facade exports the agent bootstrap/read/write methods as direct named `webMethod(...)` declarations. No helper-produced bootstrap export was found in the current V12 facade.
 
 ## CHANGE LOG
 - 2026-10-12 — Member-origin cases are detected from durable support source markers and ranked ahead of standard Help Center cases without reclassifying them as emergency/urgent travel incidents. Dedicated Member priority queue retained. Canonical Supabase persistence remains authoritative. Local-only merge/business-rule mutations remain disabled where no atomic persisted backend contract exists. LiveKit text is published only after canonical reply persistence.
 - 2026-10-14 — Live route corrected to `/riaintra/success-factors/service-desk` in the V12 route registry/PAGE_SETTINGS. Current page controller → `SKANDI_CORE/customerSupport.web.js` chain re-audited; no legacy backend import or wrapper-produced bootstrap export is required for the agent workspace.
+- 2026-10-19 — V12.4: Added agent-only Duffel supplier context and read-only verification from canonical Duffel core; Booking Team queue from the same durable case with a private instruction; agent handoff summary `DUFFEL HANDOFF` for customer-completed supplier specialist contact; a handoff link appears in a reviewable public reply draft rather than being sent automatically. Added Booking Team and Duffel ticket views. Existing LiveKit, priority, case statuses, staff authentication, automation controls and layout retained. Duffel private conversations cannot be read/replied to by SKANDI agents without an official provider API. No refund, ticketing or ALTEA mutation inferred from provider notifications. Live publish required.
+
+- 2026-10-19 — V12.5: Added Alexandra-origin cases as a read-only filtered **Alexandra** queue and labeled context on the existing Customer Service Desk. All customer replies, internal notes, assignment, Booking Team handoff and Duffel controls use the same canonical Support cases. No fake transcript synchronization or separate ticket store. LiveKit SDK dispatch repair is in `backend/SKANDI_CORE/livekitServer.js`; signed Alexandra agent tools require the real `backend/http-functions.js`. STATICALLY VERIFIED; REQUIRES LIVE TEST.
 
 ## COMPLETE INTENDED HTML
 
@@ -134,6 +138,9 @@ const db = {
     { id: "mine", name: "Assigned to me", description: "Tickets assigned to the current agent", filter: t => Boolean(currentAgentId()) && t.assigneeId === currentAgentId() && !["solved", "closed"].includes(t.status) },
     { id: "urgent", name: "Urgent travel", description: "Active disruptions and priority recovery", filter: t => (t.queue === "urgent" || t.priority === "urgent") && !["solved", "closed"].includes(t.status) },
     { id: "member-priority", name: "Member priority", description: "SKANDI Club / signed-in member support ahead of standard Help Center cases", filter: t => t.memberPriority === true && !["solved", "closed"].includes(t.status) },
+    { id: "booking-team", name: "Booking Team", description: "Cases routed from SKANDI Customer Service for booking review", filter: t => t.group === "booking-team" && !["solved", "closed"].includes(t.status) },
+    { id: "duffel", name: "Duffel Assistant", description: "Customer Service cases linked to Duffel Assistant", filter: t => Boolean(t.customAttributes?.duffelAssistant?.customerUserId) && !["solved", "closed"].includes(t.status) },
+    { id: "alexandra", name: "Alexandra", description: "Human follow-ups and requests created by Alexandra", filter: t => (String(t.source || "").toLowerCase()==="alexandra" || String(t.sourceChannel || "").toUpperCase()==="ALEXANDRA") && !["solved", "closed"].includes(t.status) },
     { id: "nordic", name: "Nordic Ops", description: "Destination and package operations", filter: t => t.queue === "nordic" && !["solved", "closed"].includes(t.status) },
     { id: "vendor", name: "Vendor Relations", description: "Waiting on hotels, transfers and activities", filter: t => t.queue === "vendor" && !["solved", "closed"].includes(t.status) },
     { id: "aviation", name: "Flight Operations", description: "Flight disruption and protection cases", filter: t => t.queue === "aviation" && !["solved", "closed"].includes(t.status) },
@@ -166,7 +173,9 @@ const S = {
   kb: "",
   session: { agentId: DEFAULT_AGENT_ID, agentName: "", agentInitials: "" },
   settings: { defaultGroup: "", defaultMacro: "", signature: "" },
-  call: { active: false, seconds: 0, timer: null, ticketId: null }
+  call: { active: false, seconds: 0, timer: null, ticketId: null },
+  duffelContexts: {},
+  duffelHandoffLinks: {}
 };
 
 const due = new Map();
@@ -452,6 +461,9 @@ function normalizeIncomingCase(raw = {}) {
     sentiment: raw.sentiment || { label: "", level: "" },
     travel: raw.travel || { trip: raw.trip || "", vendor: raw.vendor || "", sla: raw.sla || "", flight: "", hotel: "", transfer: "" },
     booking: raw.booking || { pnr: raw.pnr || "", package: raw.package || "", status: raw.bookingStatus || raw.booking_status || "", travelers: raw.travelers ?? null, total: raw.total || "", departure: raw.departure || "" },
+    customAttributes: custom,
+    source: raw.source || custom.source || "",
+    sourceChannel: raw.sourceChannel || custom.sourceChannel || "",
     crm: raw.crm || { owner: raw.owner || "", health: "", renewal: "", arr: raw.booking?.total || "" },
     journey: arrayOf(raw.journey || raw.customer?.journey),
     history
@@ -612,7 +624,10 @@ function openTicket(id, notifyParent = true) {
     const c = $("#conversation");
     if (c) c.scrollTop = c.scrollHeight;
   });
-  if (notifyParent) post("AGENT_OPEN_CASE", { ticketId: t.externalId || t.id, internalId: t.id, caseId: t.caseId, pnr: t.pnr });
+  if (notifyParent) {
+    post("AGENT_OPEN_CASE", { ticketId: t.externalId || t.id, internalId: t.id, caseId: t.caseId, pnr: t.pnr });
+    post("AGENT_DUFFEL_CONTEXT_REQUEST", { caseId: t.caseId });
+  }
 }
 
 function closeTab(id) {
@@ -660,7 +675,8 @@ function ticketHtml(t) {
   const submitStatus = S.submit[t.id] || "open";
   const pending = S.pending.has(t.id);
   const x = sla(t);
-  const groupOptions = [...new Set([...db.groups, t.group].filter(Boolean))];
+  const groupOptions = [...new Set([...db.groups, t.group, "booking-team"].filter(Boolean))];
+  const supplier = S.duffelContexts[t.caseId];
   return `<div class="ticket">
     <header class="thead">
       <div class="trow">
@@ -670,6 +686,9 @@ function ticketHtml(t) {
         </div>
         ${x ? `<div class="sla ${x.breach ? "breach" : ""}" data-sla="${t.id}"><small>${x.breach ? "SLA breached" : "Next reply SLA"}</small><b>${x.text}</b></div>` : ""}
         <button class="btn" id="followBtn">${t.followers.includes(currentAgentId()) ? "Following" : "Follow"}</button>
+        <button class="btn" data-duffel-action="route">Booking Team</button>
+        <button class="btn" data-duffel-action="verify" ${supplier?.bookingLinked ? "" : "disabled"} title="Verify an owned Duffel resource using the canonical API">Verify Duffel</button>
+        <button class="btn" data-duffel-action="handoff" ${supplier?.bookingLinked ? "" : "disabled"} title="Requires a verified Duffel booking linked by the customer">Duffel handoff</button>
         <button class="btn" id="moreBtn">More ▾</button>
       </div>
       <div class="fields">
@@ -678,6 +697,7 @@ function ticketHtml(t) {
         <label>Type <select data-field="type">${["question", "incident", "problem", "task"].map(v => `<option value="${v}" ${t.type === v ? "selected" : ""}>${tc(v)}</option>`).join("")}</select></label>
         <label>Group <select data-field="group">${groupOptions.map(v => `<option value="${esc(v)}" ${t.group === v ? "selected" : ""}>${esc(v)}</option>`).join("")}</select></label>
         <label>Assignee <select data-field="assigneeId"><option value="">Unassigned</option>${db.users.filter(x => x.role === "agent").map(x => `<option value="${x.id}" ${t.assigneeId === x.id ? "selected" : ""}>${esc(x.name)}</option>`).join("")}</select></label>
+        ${supplier?.resourceId ? `<span class="tag">Duffel: ${esc(supplier.resourceId)}</span>` : ""}
         ${t.memberPriority ? `<span class="tag" style="border-color:#5fc7cf;background:#d9f3f4;color:#022e64;font-weight:900">SKANDI CLUB · PRIORITY</span>` : ""}${t.tier ? `<span class="tag">${esc(t.tier)}</span>` : ""}${t.tags.slice(0, 3).map(x => `<span class="tag">#${esc(x)}</span>`).join("")}
       </div>
     </header>
@@ -885,6 +905,7 @@ function contextHtml() {
       <section class="section"><h3>Contact details</h3><div class="details">
         <div class="detail"><span>Email</span><span>${esc(u.email)}</span></div><div class="detail"><span>Phone</span><span>${esc(u.phone)}</span></div><div class="detail"><span>Service tier</span><span>${esc(t.tier || u.plan)}</span></div><div class="detail"><span>Locale</span><span>${esc(u.locale)}</span></div><div class="detail"><span>Time zone</span><span>${esc(u.timezone)}</span></div><div class="detail"><span>Booking value</span><span>${esc(t.booking?.total || u.value)}</span></div>
       </div></section>
+      ${String(t.source || "").toLowerCase()==="alexandra" || String(t.sourceChannel || "").toUpperCase()==="ALEXANDRA" ? `<section class="section"><h3>Alexandra handoff</h3><p class="muted">An Alexandra-origin support case. Agent handoff notes and confirmed conversation details appear in the ticket history; live AI chat transcripts are not mirrored unless the Alexandra provider submits them through the authenticated support gateway.</p></section>` : ""}
       <section class="section"><h3>Travel profile</h3><div class="details"><div class="detail"><span>PNR</span><b>${esc(t.pnr || "—")}</b></div><div class="detail"><span>Trip</span><span>${esc(t.travel?.trip || "—")}</span></div><div class="detail"><span>Vendor</span><span>${esc(t.travel?.vendor || "—")}</span></div><div class="detail"><span>SLA</span><span>${esc(t.travel?.sla || "—")}</span></div></div></section>
       <section class="section"><h3>Customer notes</h3><div>${esc(u.notes || "No notes.")}</div></section>
       <section class="section"><h3>Recent interactions <span>${recent.length}</span></h3>${recent.map(x => `<button class="recent" data-open="${x.id}"><b>${esc(tid(x))} · ${esc(x.subject)}</b><small>${tc(x.status)} · ${short(x.updatedAt)}</small></button>`).join("") || `<span class="muted">No previous tickets.</span>`}</section>
@@ -898,11 +919,32 @@ function contextHtml() {
     return `<section class="section"><h3>Search Help Center</h3><div class="kb"><input id="kbSearch" value="${esc(S.kb)}" placeholder="Search articles…"></div></section><section class="section"><h3>Suggested articles <span>${arts.length}</span></h3>${arts.map(a => `<article class="article"><h4>${esc(a.title)}</h4><p>${esc(a.excerpt)}</p><small>${esc(a.category)} · ▲ ${a.votes}</small><div style="margin-top:8px"><button class="btn" data-preview="${a.id}">Preview</button> <button class="btn primary" data-insert="${a.id}">Insert link</button></div></article>`).join("") || `<span class="muted">No matching articles.</span>`}</section>`;
   }
 
-  return `<section class="section"><h3>Installed apps</h3>
+  const d = S.duffelContexts[t.caseId];
+  const bookingText = d?.bookingRef || t.pnr || "Not linked";
+  const dataStatus = d?.verification ? `${d.verification.status || "Unknown"} · checked ${fmt(d.verification.verifiedAt)}` : "No verified supplier snapshot";
+  const review = d?.verification?.reservationsReview === true ? "Reservations review required" : "No confirmed reconciliation outcome";
+  const duffelCard = `<article class="appcard"><div class="apps-head">Duffel Assistant & Booking Team</div>
+    <div class="details"><div class="detail"><span>SKANDI ref</span><b>${esc(bookingText)}</b></div>
+      <div class="detail"><span>Support queue</span><b>${esc(d?.queue || t.group || "support")}</b></div>
+      <div class="detail"><span>Resource</span><b>${esc(d?.resourceId || "No linked Duffel order")}</b></div>
+      <div class="detail"><span>Duffel</span><span>${esc(dataStatus)}</span></div>
+      <div class="detail"><span>Reconciliation</span><span>${esc(review)}</span></div>
+      ${d?.verification?.altea ? `<div class="detail"><span>ALTEA</span><span>${esc(`${d.verification.altea.bookingReference || d.verification.altea.id} · ${d.verification.altea.status}`)}</span></div>` : ""}
+      ${d?.handoff ? `<div class="detail"><span>Handoff</span><span>${esc(d.handoff.issueType)} · ${fmt(d.handoff.preparedAt)}</span></div>` : ""}
+    </div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:12px">
+      <button class="btn" data-duffel-action="context">Refresh context</button>
+      <button class="btn" data-duffel-action="verify" ${d?.bookingLinked ? "" : "disabled"}>Verify supplier</button>
+      <button class="btn" data-duffel-action="route">Booking Team</button>
+      <button class="btn primary" data-duffel-action="handoff" ${d?.bookingLinked ? "" : "disabled"}>Prepare Duffel handoff</button>
+      ${S.duffelHandoffLinks[t.caseId] ? `<button class="btn" data-duffel-action="draft-link">Add customer link to reply</button>` : ""}
+    </div>
+    <p class="muted" style="font-size:11px;margin:9px 0 0">Customer-facing SKANDI messages stay in this case; Duffel private chat stays with Duffel. Supplier verification does not settle a refund or modify ALTEA.</p></article>`;
+  return `<section class="section"><h3>Installed apps</h3>${duffelCard}
     <article class="appcard"><div class="apps-head">ALTEA Booking & Orders</div><div class="details"><div class="detail"><span>PNR</span><b>${esc(t.booking?.pnr || t.pnr)}</b></div><div class="detail"><span>Package</span><span>${esc(t.booking?.package || "—")}</span></div><div class="detail"><span>Status</span><span>${esc(t.booking?.status || "—")}</span></div><div class="detail"><span>Travelers</span><span>${esc(t.booking?.travelers ?? "—")}</span></div><div class="detail"><span>Total</span><span>${esc(t.booking?.total || "—")}</span></div></div></article>
     <article class="appcard"><div class="apps-head">Flight & Destination Operations</div><div class="details"><div class="detail"><span>Flight</span><span>${esc(t.travel?.flight || "—")}</span></div><div class="detail"><span>Hotel</span><span>${esc(t.travel?.hotel || "—")}</span></div><div class="detail"><span>Transfer</span><span>${esc(t.travel?.transfer || "—")}</span></div><div class="detail"><span>Vendor</span><span>${esc(t.travel?.vendor || "—")}</span></div></div></article>
     <article class="appcard"><div class="apps-head">Customer & Recovery</div><div class="metrics"><div class="metric"><small>Health</small><b>${esc(t.crm?.health || "—")}</b></div><div class="metric"><small>Tier</small><b>${esc(t.tier || u.plan)}</b></div><div class="metric"><small>Owner</small><b>${esc(t.crm?.owner || "—")}</b></div><div class="metric"><small>Booking value</small><b>${esc(t.booking?.total || t.crm?.arr || "—")}</b></div></div></article>
-    <article class="appcard"><div class="apps-head">Traveler identity</div><div class="detail"><span>Verification</span><span class="status s-solved">Verified</span></div></article>
+    <article class="appcard"><div class="apps-head">Traveler identity</div><div class="detail"><span>Verification</span><span>Refer to the authorized booking and identity workflow</span></div></article>
   </section>`;
 }
 
@@ -1370,12 +1412,75 @@ function settlePendingRequest(requestId, succeeded) {
   return pending;
 }
 
+document.addEventListener("click", event => {
+  const button = event.target.closest("[data-duffel-action]");
+  if (!button || button.disabled) return;
+  const t = ticket(S.active);
+  if (!t) return;
+  const action = button.dataset.duffelAction;
+  const context = S.duffelContexts[t.caseId];
+  if (action === "context") return void post("AGENT_DUFFEL_CONTEXT_REQUEST", { caseId: t.caseId });
+  if (action === "verify") return void post("AGENT_DUFFEL_VERIFY_REQUEST", { caseId: t.caseId });
+  if (action === "draft-link") {
+    const link = S.duffelHandoffLinks[t.caseId];
+    if (!link) return toast("No saved handoff link", "Prepare a handoff first.");
+    const text = `SKANDI has prepared support for your booking. Sign in and open the travel assistant: ${link}`;
+    S.drafts[t.id] = `${S.drafts[t.id] ? S.drafts[t.id] + "\n\n" : ""}${text}`;
+    S.modes[t.id] = "chat";
+    renderWorkspace();
+    toast("Link added to reply draft", "Review the draft before sending to the customer.");
+    return;
+  }
+  if (action === "route") {
+    openModal("Send to Booking Team", `<div class="field"><label>Booking reference</label><strong>${esc(context?.bookingRef || t.pnr || "Not linked")}</strong></div><div class="field"><label>Instructions to Booking Team</label><textarea rows="5" id="bookingTeamReason" placeholder="What should Booking Team verify or resolve?"></textarea></div><p class="muted" style="font-size:12px">Routes this SAME Customer Service case to the Booking Team queue with a private instruction. It does not cancel, change, or refund a booking.</p>`, `<button class="btn" id="cancelBookingHandoff">Cancel</button><button class="btn primary" id="confirmBookingHandoff">Send to Booking Team</button>`);
+    $("#cancelBookingHandoff").onclick = closeModal;
+    $("#confirmBookingHandoff").onclick = () => {
+      const reason = $("#bookingTeamReason").value.trim();
+      if (reason.length < 12) return toast("Add instructions", "Use at least 12 characters.");
+      post("AGENT_DUFFEL_ROUTE_BOOKING", { caseId: t.caseId, reason });
+      closeModal();
+      toast("Routing requested", "The case will update after the backend confirms it.");
+    };
+    return;
+  }
+  if (action === "handoff") {
+    if (!context?.bookingLinked) return toast("No verified Duffel booking", "Ask the customer to launch Duffel Assistant for their trip first.");
+    openModal("Prepare Duffel specialist handoff", `<div class="field"><label>Issue type</label><select id="duffelIssueType"><option value="change">Change booking</option><option value="cancellation">Cancellation</option><option value="other">Other</option></select></div><div class="field"><label>Summary for Duffel specialists</label><textarea rows="6" id="duffelSummary" placeholder="State the issue, customer's request, actions already taken, and anything Duffel should verify."></textarea></div><p class="muted" style="font-size:12px">The summary is saved as a private SKANDI Support note. Only the authenticated customer can open the Duffel conversation.</p>`, `<button class="btn" id="cancelDuffelHandoff">Cancel</button><button class="btn primary" id="confirmDuffelHandoff">Prepare handoff</button>`);
+    $("#cancelDuffelHandoff").onclick = closeModal;
+    if (context.handoff?.issueType) $("#duffelIssueType").value = context.handoff.issueType;
+    $("#duffelSummary").value = context.handoff?.summary || "";
+    $("#confirmDuffelHandoff").onclick = () => {
+      const summary = $("#duffelSummary").value.trim();
+      if (summary.length < 12) return toast("Add handoff context", "Use at least 12 characters.");
+      post("AGENT_DUFFEL_PREPARE_HANDOFF", { caseId: t.caseId, issueType: $("#duffelIssueType").value, summary });
+      closeModal();
+      toast("Saving Duffel context…", "A handoff link will appear after the backend confirms the note.");
+    };
+  }
+});
+
 window.addEventListener("message", event => {
   const message = event.data || {};
   if (event.source !== window.parent || message.source !== PARENT) return;
   const payload = message.payload || {};
   const envelope = flattenEnvelope(payload);
 
+  if (message.type === "AGENT_DUFFEL_CONTEXT" || message.type === "AGENT_DUFFEL_RESULT") {
+    const caseId = String(payload.caseId || "");
+    if (caseId) S.duffelContexts[caseId] = payload;
+    if (message.type === "AGENT_DUFFEL_RESULT") {
+      if (payload.action === "handoff" && payload.prepared === true && payload.customerRoute) {
+        S.duffelHandoffLinks[caseId] = payload.customerRoute;
+        toast("Duffel handoff prepared", "Open Apps and add the customer link to your public reply draft.");
+      } else if (payload.action === "route") toast(payload.routed ? "Booking Team queue updated" : "Booking Team routing checked", payload.queue || "");
+      else if (payload.action === "verify") toast("Supplier booking verified", "Check the Apps panel for confirmed Duffel state.");
+    }
+    if (!S.dashboard && ticket(S.active)?.caseId === caseId) {
+      renderWorkspace();
+      renderContext();
+    }
+    return;
+  }
   if (message.type === "AGENT_BOOTSTRAP") {
     applyBootstrapData(payload);
     importCases(payload, false);
@@ -1419,6 +1524,10 @@ window.addEventListener("message", event => {
   }
 
   if (message.type === "AGENT_ERROR") {
+    if (String(envelope.action || "").startsWith("AGENT_DUFFEL_")) {
+      toast("Booking / Duffel action failed", envelope.message || "The backend did not complete this action.");
+      return;
+    }
     settlePendingRequest(String(message.requestId || envelope.requestId || ""), false);
     renderAll();
     toast("Customer service action failed", envelope.message || message.message || "The backend did not complete the request.");
