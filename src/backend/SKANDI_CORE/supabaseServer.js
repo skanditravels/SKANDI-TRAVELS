@@ -325,6 +325,34 @@ export async function storageListObjects({ bucket, prefix = "", limit = 100, off
     offset: Math.max(0, Number(offset) || 0), sortBy: { column: "name", order: "asc" }, search: text(search, 300)
   }});
 }
+// Canonical server-only Storage operations. Domain authorization is enforced by callers.
+// Supabase Storage API: POST /object/copy; DELETE /object/{bucketId} with { prefixes }.
+export async function storageCopyObject({ bucket, sourcePath, destinationPath } = {}) {
+  const config = storageBucket(bucket, { write: true });
+  const source = text(sourcePath, 3000).replace(/^\/+|\/+$/g, "");
+  const destination = text(destinationPath, 3000).replace(/^\/+|\/+$/g, "");
+  storagePath(source);
+  storagePath(destination);
+  if (source === destination) throw new SkandiError("SUPABASE_STORAGE_SAME_PATH");
+  return storageJson({
+    path: "/object/copy", method: "POST",
+    body: { bucketId: config.name, sourceKey: source, destinationKey: destination }
+  });
+}
+export async function storageRemoveObjects({ bucket, paths } = {}) {
+  const config = storageBucket(bucket, { write: true });
+  if (!Array.isArray(paths) || !paths.length || paths.length > 25) throw new SkandiError("SUPABASE_STORAGE_REMOVE_PATHS_INVALID");
+  const prefixes = paths.map(value => {
+    const path = text(value, 3000).replace(/^\/+|\/+$/g, "");
+    storagePath(path);
+    return path;
+  });
+  return storageJson({
+    path: `/object/${encodeURIComponent(config.name)}`, method: "DELETE",
+    body: { prefixes }
+  });
+}
+
 export async function storageGetPublicUrl({ bucket, path, download = false } = {}) {
   const config = storageBucket(bucket);
   if (!config.public) throw new SkandiError("SUPABASE_STORAGE_BUCKET_NOT_PUBLIC");
