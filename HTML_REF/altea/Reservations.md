@@ -24,20 +24,16 @@
 - 2026-10-08 — One-true-source enforcement finalized: Duffel-linked provider identity/facts are read-only in Inventory Control and refresh through the provider workspace; provider technical snapshots are hidden from generic editable fields; compatibility columns are database-derived. Current GitHub `main` at `86deedb4705fae292851256726cd81e13669aa98` was inspected and preserved.
 - 2026-10-08 — V12 one-true-source convergence prepared. Shared reference/master facts now have one editable Inventory/Supabase authority after provider import. Legacy Travel Info fields are derived compatibility projections, provider-key uniqueness is database-enforced, and current Duffel snapshots refresh provider-owned canonical facts without creating alternate data stores. The HTML design, IDs, message names, routes and permission boundaries are unchanged. STATICALLY VERIFIED; REQUIRES LIVE TEST after SQL/Wix publication.
 - 2026-10-11 — Transfer Card print output upgraded to the supplied ATB-size boarding-card model: 203.20 mm × 82.55 mm stock, SKANDI blue header, passenger/booking hierarchy, eight-field transfer matrix, highlighted bus/boarding/seat area, service footer and right-side vertical 2D data mark. Existing `printTransferCard()` action, transfer/passenger state, luggage tag, manifest, Wix bridge, backend, database and provider contracts remain unchanged. The data mark is generated locally and does not add an external barcode service. STATICALLY VERIFIED; REQUIRES LIVE PRINT TEST after Wix publication.
-
 - 2026-10-11 — Reservations PNR workspace/product-category repair: moved the full Seats & Services/seat-map catalogue out of Offer Review and into the dedicated Seats & Services workspace; removed Transfer Inventory from Seats & Services and Baggage & Boarding; promoted Transfers to a first-class Search & Sell category that adds canonical Inventory Control transfer records into the same PNR; product search now opens a dedicated PNR tab and freezes global non-PNR navigation until the agent switches tabs; Preferences now includes boarding-card, e-Ticket PDF and booking-confirmation samples; Offer Review now restores the airline logo at left. Existing Wix bridge, backend facade/core, Supabase schema, provider authority, message contracts and route remain unchanged. STATICALLY VERIFIED; REQUIRES LIVE TEST after Wix publication.
-
 - 2026-10-11 — Required syntax restoration included in the same Reservations runtime: removed an accidental nested `renderBookingFile` wrapper, closed the existing `bindEnterpriseEvents()` function correctly, and collapsed the duplicated/incomplete global date synchronizer wrapper. These source defects existed in the current Reservations payload and prevented complete JavaScript parsing; no interfaces, routes, IDs, data authority or backend contracts were renamed. STATICALLY VERIFIED.
+
+- 2026-10-19 — PARTIAL Duffel interface extension based on the complete staff Reservations HTML supplied in this conversation. Added multi-search for up to eight INDEPENDENT one-way route/date searches using existing authorized DUFFEL_SEARCH_OFFERS calls, not true multi-city ticketing. Added read-only supplier base/tax, tax itemization, airline CO₂, fare brand, eligible airline loyalty/negotiated fare data, flight terminal, aircraft, baggage, cabin and other actual returned offer disclosures; expanded the existing seats catalogue to present Duffel cabin/aisle/wing/section and seat feature/disclosure metadata while keeping original service selection and pricing ownership. Prevented unsupported fare-class, base/tax and baggage defaults in the ALTEA booking-file projection. No new backend, permission, order/payment, checkout, customer Home or /booking code is included. STATICALLY VERIFIED with browser-mocked responses. REQUIRES LIVE WIX + DUFFEL TEST.
+- 2026-10-19 — UNIMPLEMENTED USER-REQUESTED DEPENDENCIES: the provider search core still restricts to at most two slices and ignores departure/arrival time windows, private fare request codes, passenger fare types/loyalty request values, multi-city ticket search and `view=itineraries`. Airline upsells, itinerary reference maps, complete staff post-booking APIs, full order/payment enhancements and customer Home/Booking seat map upgrades are not delivered by this UI-only repair. SUPERADMIN-only airline credit IDs were intentionally excluded because an authoritative backend role gate was not established. Do not deploy this package expecting those features to work.
 
 ## COMPLETE INTENDED HTML
 
 ```html
 <!DOCTYPE html>
-<!-- V12 DATA AUTHORITY: Reservations consumes Duffel live booking resources plus canonical SKANDI Inventory/Supabase records; it does not maintain duplicate reference masters. -->
-- Change log: 2026-10-08 — V12 ALTEA Reservations Amadeus/Duffel workflow convergence. Repaired bounded embed scrolling; removed standalone Trip Components navigation and integrated contextual Inventory Control suggestions into the booking file; added canonical airport autocomplete sourced from Inventory Control/Supabase; added guarded deletion for empty unconfirmed booking files; corrected blank passenger ages being misclassified as INF and replaced raw `documents[]` UI text; upgraded flight results to group complete itineraries with fare cards, filters, baggage, fare basis/cabin, taxes, CO₂, conditions, terminals, aircraft and service context already returned by the canonical Duffel normalization. Reference/master chain remains Duffel import → Inventory Control/Supabase → Reservations; live Duffel offers/orders remain transactional provider data. No Supabase migration required.
-
-<!DOCTYPE html>
-<!-- V12 DATA AUTHORITY: Reservations consumes Duffel live booking resources plus canonical SKANDI Inventory/Supabase records; it does not maintain duplicate reference masters. -->
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -939,7 +935,6 @@
     @media(max-width:850px){#app{grid-template-columns:1fr;grid-template-rows:26px 30px auto 1fr;grid-template-areas:"title" "tabs" "side" "main"}.sidebar{max-height:150px;border-right:0;border-bottom:1px solid #aaa}.nav{display:flex;overflow:auto}.nav-section{display:none}.nav-item{min-width:145px;border-right:1px solid #ccc}.svc-catalog,.svc-body{grid-template-columns:1fr}.svc-nav{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));border-right:0}.svc-nav .sub{padding-left:14px}.svc-top{grid-template-columns:1fr;gap:6px}.seat-legend{border-right:0;border-bottom:1px solid #ccc}}
   </style>
 
-
 </head>
 <body>
     <!-- Altéa Terminal Loading Overlay -->
@@ -1183,6 +1178,9 @@
       cancellation: null,
       customerRefundRequired: false,
       search: null,
+      multiSearchActive:false,
+      multiSearchQueue:[],
+      multiSearchCompleted:0,
       preferences: {
         compact: true,
         currency: "USD",
@@ -1238,7 +1236,7 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
         arrivingAt: seg.arrivingAt || seg.arriving_at,
         aircraft: seg.aircraft?.name || seg.aircraft?.iataCode || "Aircraft",
         duration: seg.duration || "—",
-        rbd: seg.booking_class || seg.rbd || "Y",
+        rbd: seg.booking_class || seg.rbd || null,
         passengers: paxDetails
       });
     });
@@ -1258,13 +1256,13 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
     slicesCount: slices.length,
     segments: enrichedSegments,
     pricingRecord: {
-      baseAmount: baseAmount != null ? baseAmount : Math.max(0, totalAmount - (taxAmount || 0)),
-      taxAmount: taxAmount != null ? taxAmount : 0,
+      baseAmount: baseAmount,
+      taxAmount: taxAmount,
       totalAmount: totalAmount,
       currency: currency,
       fareBrand: slices[0]?.fare_brand_name || slices[0]?.fareBrandName || "Standard",
       validatingCarrier: flightSource.owner?.iataCode || flightSource.owner?.iata_code || firstSeg.marketingCarrier?.iataCode || "SK",
-      paymentDeadline: flightSource.paymentRequiredBy || flightSource.expiresAt || null
+      paymentDeadline: flightSource.paymentRequiredBy || null
     },
     miniRules: {
       refundable: refundRule?.allowed === true,
@@ -1276,149 +1274,296 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
 
   return targetBooking;
 }
-    // --- SESSION MANAGEMENT FOR MULTIPLE TABS ---
+    // --- ALTÉA PAGE-TAB / PNR SESSION MANAGEMENT ---
+    // ARD Web keeps Home separate from record tabs. Each open PNR record owns its
+    // working state; global reference data and host connectivity remain shared.
+    const AMADEUS_HOME_SESSION = "home";
+    const MAX_PNR_TABS = 5;
+    const PNR_PRODUCT_VIEWS = new Set(["search", "hotels", "cars", "transfers", "packagebuilder"]);
+    const PNR_INTERNAL_VIEWS = new Set([
+      "offer", "workspace", "booking", "passengers", "club", "services",
+      "ticketing", "requirements", "actions", "baggage", "manifests", "history"
+    ]);
+    const GLOBAL_ONLY_VIEWS = new Set(["dashboard", "orders", "departure", "reports", "preferences"]);
+    const PNR_REQUIRES_BOOKING_VIEWS = new Set([
+      "booking", "passengers", "club", "ticketing", "requirements",
+      "actions", "baggage", "manifests", "history"
+    ]);
     const SESSION_STATE_KEYS = [
-      "activeView", "search", "offers", "selectedOffer", "seatMaps", "selectedServices",
+      "activeView", "search", "offers", "multiSearchActive", "multiSearchQueue", "multiSearchCompleted", "selectedOffer", "seatMaps", "selectedServices",
       "alteaWorkspace", "selectedPassengerId", "selectedOrder", "cancellation", "customerRefundRequired",
       "changeRequestId", "changeOffers", "pendingChange", "paymentPurpose", "payment",
+      "bookingDocuments", "documentCatalog",
       "clubSelectedCustomerId", "clubSearchLoaded", "clubSearchType", "clubMembershipFilter",
+      "clubSearchResults", "clubProfiles", "clubSearchText", "customerProfileDetail",
       "stayResults", "stayRates", "selectedStayResult", "selectedStayRate", "stayQuote",
       "carResults", "carQuote", "selectedCarRate", "carClientKey", "carCardValid", "carThreeDSecureSessionId",
-      "seatWorkbench", "hotelChildAges", "hotelAmenities", "hotelSearchDraft", "customerProfileDetail",
-      "packageTransferEntityId", "_pendingTransferDetails", "carSearchDraft" // <--- ADDED HERE
+      "seatWorkbench", "hotelChildAges", "hotelAmenities", "hotelSearchDraft", "carSearchDraft",
+      "packageTransferEntityId", "_pendingTransferDetails", "_pendingTransferEntityId",
+      "travelerDrafts", "agentFop", "_apisOfferId", "_lastAutomationTravelers", "_lastFopSummary",
+      "travelDecision", "generatedDocuments", "manifestMode", "dcsSelectedPassengerId"
     ];
+    const requestSessionById = new Map();
+    const GLOBAL_REQUEST_TYPES = new Set([
+      "DUFFEL_APP_READY", "DUFFEL_LIST_ORDERS", "ALTEA_UNIFIED_BOOTSTRAP",
+      "INVENTORY_SEARCH_SELLABLE", "ALTEA_SEARCH_BOOKINGS", "ALTEA_ENTERPRISE_MODULE_READY",
+      "ALTEA_TRANSFER_DCS_BOOTSTRAP", "ALTEA_TRANSFER_DCS_UPDATE_DEPARTURE",
+      "ALTEA_TRANSFER_DCS_UPDATE_PASSENGER", "ALTEA_TRANSFER_DCS_RECORD_DOCUMENT"
+    ]);
+    const RETRIEVAL_REQUEST_TYPES = new Set(["DUFFEL_GET_ORDER", "ALTEA_GET_BOOKING"]);
+    let sessionUiSuspended = 0;
+    let messageRouteRestoreSessionId = "";
+    let messageRouteTargetSessionId = "";
 
-    state.sessions = { "session_1": {} };
-    state.activeSessionId = "session_1";
+    function cloneSessionValue(value, seen = new WeakMap()) {
+      if (value === null || typeof value !== "object") return value;
+      if (value instanceof Date) return new Date(value.getTime());
+      if (value instanceof Map) return new Map(Array.from(value.entries(), ([k, v]) => [cloneSessionValue(k, seen), cloneSessionValue(v, seen)]));
+      if (value instanceof Set) return new Set(Array.from(value, (item) => cloneSessionValue(item, seen)));
+      if (Array.isArray(value)) return value.map((item) => cloneSessionValue(item, seen));
+      if (seen.has(value)) return seen.get(value);
+      const proto = Object.getPrototypeOf(value);
+      if (proto !== Object.prototype && proto !== null) return value;
+      const out = {};
+      seen.set(value, out);
+      for (const [key, item] of Object.entries(value)) out[key] = cloneSessionValue(item, seen);
+      return out;
+    }
 
-    // Initialize first session with current defaults
-    SESSION_STATE_KEYS.forEach(key => state.sessions["session_1"][key] = state[key]);
+    function freshSessionState(startView = "search") {
+      return {
+        __kind: "pnr",
+        __createdAt: Date.now(),
+        activeView: startView,
+        search: null,
+        offers: [],
+        multiSearchActive:false,
+        multiSearchQueue:[],
+        multiSearchCompleted:0,
+        selectedOffer: null,
+        seatMaps: [],
+        selectedServices: new Map(),
+        alteaWorkspace: null,
+        selectedPassengerId: "",
+        selectedOrder: null,
+        cancellation: null,
+        customerRefundRequired: false,
+        changeRequestId: "",
+        changeOffers: [],
+        pendingChange: null,
+        paymentPurpose: null,
+        payment: null,
+        bookingDocuments: [],
+        documentCatalog: [],
+        clubSelectedCustomerId: "",
+        clubSearchLoaded: false,
+        clubSearchType: "all",
+        clubMembershipFilter: "all",
+        clubSearchResults: [],
+        clubProfiles: {},
+        clubSearchText: "",
+        customerProfileDetail: null,
+        stayResults: [],
+        stayRates: [],
+        selectedStayResult: null,
+        selectedStayRate: null,
+        stayQuote: null,
+        carResults: [],
+        carQuote: null,
+        selectedCarRate: null,
+        carClientKey: "",
+        carCardValid: false,
+        carThreeDSecureSessionId: "",
+        seatWorkbench: {category:"seats",activePassengerId:"",selectedPassengerIds:[],activeSegmentId:"",filters:{},requestCradle:false,deck:""},
+        hotelChildAges: [],
+        hotelAmenities: {},
+        hotelSearchDraft: {destination:"",checkInDate:"",checkOutDate:"",rooms:1,adults:2,chainCode:"",radiusKm:25},
+        carSearchDraft: {pickup:"",dropoff:"",pickupDate:"",pickupTime:"10:00",dropoffDate:"",dropoffTime:"10:00",age:30,residence:""},
+        packageTransferEntityId: "",
+        _pendingTransferDetails: null,
+        _pendingTransferEntityId: "",
+        travelerDrafts: {},
+        agentFop: {paymentType:"CC",vendor:"",approvalCode:"",dbi:"",passengerIds:[],segmentIds:[]},
+        _apisOfferId: "",
+        _lastAutomationTravelers: null,
+        _lastFopSummary: null,
+        travelDecision: null,
+        generatedDocuments: [],
+        manifestMode: "passengers",
+        dcsSelectedPassengerId: ""
+      };
+    }
+
+    function freshHomeState() {
+      const home = freshSessionState("dashboard");
+      home.__kind = "home";
+      home.__createdAt = 0;
+      return home;
+    }
+
+    state.sessions = { [AMADEUS_HOME_SESSION]: freshHomeState() };
+    state.activeSessionId = AMADEUS_HOME_SESSION;
+
+    function isHomeSession(sessionId = state.activeSessionId) {
+      return sessionId === AMADEUS_HOME_SESSION;
+    }
+
+    function isPnrSession(sessionId = state.activeSessionId) {
+      return Boolean(sessionId && sessionId !== AMADEUS_HOME_SESSION && state.sessions?.[sessionId]?.__kind === "pnr");
+    }
+
+    function beginSessionMessageRoute(event) {
+      const message = typeof event.data === "string"
+        ? (() => { try { return JSON.parse(event.data); } catch (_) { return null; } })()
+        : event.data;
+      if (!message || message.source !== PARENT_SOURCE) return;
+      const requestId = String(message.requestId || "");
+      const targetSessionId = requestSessionById.get(requestId) || "";
+      if (!targetSessionId || !state.sessions?.[targetSessionId]) return;
+      messageRouteTargetSessionId = targetSessionId;
+      if (targetSessionId !== state.activeSessionId) {
+        saveCurrentSession();
+        messageRouteRestoreSessionId = state.activeSessionId;
+        sessionUiSuspended += 1;
+        loadSession(targetSessionId, { saveOutgoing: false, renderUi: false });
+      }
+    }
+
+    function pnrTabCount() {
+      return Object.entries(state.sessions || {}).filter(([id, session]) => id !== AMADEUS_HOME_SESSION && session?.__kind === "pnr").length;
+    }
+
+    function snapshotCurrentSession() {
+      const current = state.sessions?.[state.activeSessionId] || (isHomeSession() ? freshHomeState() : freshSessionState(state.activeView));
+      const snapshot = {
+        __kind: current.__kind || (isHomeSession() ? "home" : "pnr"),
+        __createdAt: current.__createdAt || Date.now()
+      };
+      SESSION_STATE_KEYS.forEach((key) => {
+        snapshot[key] = cloneSessionValue(state[key]);
+      });
+      return snapshot;
+    }
 
     function saveCurrentSession() {
-      const session = {};
-      SESSION_STATE_KEYS.forEach(key => {
-        if (state[key] instanceof Map) {
-          session[key] = new Map(state[key]); // Clone map
-        } else if (Array.isArray(state[key])) {
-          session[key] = [...state[key]]; // Clone array
-        } else if (state[key] !== null && typeof state[key] === 'object') {
-           session[key] = { ...state[key] }; // Shallow clone objects
-        } else {
-          session[key] = state[key]; // Primitives
-        }
-      });
-      state.sessions[state.activeSessionId] = session;
+      if (!state.sessions || !state.activeSessionId) return;
+      state.sessions[state.activeSessionId] = snapshotCurrentSession();
     }
 
-    function loadSession(sessionId) {
-      if (!state.sessions[sessionId]) return;
-      saveCurrentSession(); // Save outgoing state
-      state.activeSessionId = sessionId;
-      const session = state.sessions[sessionId];
-      
-      // Load incoming state
-      SESSION_STATE_KEYS.forEach(key => {
-        if (session[key] !== undefined) state[key] = session[key];
+    function applySessionState(session) {
+      if (!session) return;
+      const fallback = session.__kind === "home" ? freshHomeState() : freshSessionState(session.activeView || "search");
+      SESSION_STATE_KEYS.forEach((key) => {
+        const value = Object.prototype.hasOwnProperty.call(session, key) ? session[key] : fallback[key];
+        state[key] = cloneSessionValue(value);
       });
-      
-      // 1. Ensure the active view is explicitly synced
-      const targetView = session.activeView || "dashboard";
-      state.activeView = targetView;
+      state.activeView = session.activeView || (session.__kind === "home" ? "dashboard" : "search");
+    }
 
-      // 2. Update sidebar active class
-      $$(".nav-item").forEach((item) => {
-        item.classList.toggle("active", item.dataset.view === targetView);
-      });
-      
-      // 3. Update top title and redraw tabs/content
+    function syncSessionChrome() {
+      if (sessionUiSuspended) return;
+      const targetView = state.activeView || (isHomeSession() ? "dashboard" : "search");
+      $$(".nav-item").forEach((item) => item.classList.toggle("active", item.dataset.view === targetView));
       const titleEl = $("#workspaceTabTitle");
-      if (titleEl) titleEl.textContent = VIEW_TITLES[targetView] || "Dashboard";
-
-      renderTabs();
-      render();
+      if (titleEl) titleEl.textContent = VIEW_TITLES[targetView] || (isHomeSession() ? "Home" : "New PNR");
     }
 
-    function createNewSession() {
-      saveCurrentSession();
-      const newId = "session_" + Date.now();
-      
-      // Initialize a fresh clean slate for the new tab
-      state.sessions[newId] = {
-        activeView: "dashboard", search: null, offers: [], selectedOffer: null, seatMaps: [], selectedServices: new Map(),
-        alteaWorkspace: null, selectedPassengerId: "", selectedOrder: null, cancellation: null, customerRefundRequired: false,
-        changeRequestId: "", changeOffers: [], pendingChange: null, paymentPurpose: null, payment: null,
-        clubSelectedCustomerId: "", clubSearchLoaded: false, clubSearchType: "all", clubMembershipFilter: "all",
-        stayResults: [], stayRates: [], selectedStayResult: null, selectedStayRate: null, stayQuote: null,
-        carResults: [], carQuote: null, selectedCarRate: null, carClientKey: "", carCardValid: false, carThreeDSecureSessionId: "",
-        seatWorkbench: {category:"seats",activePassengerId:"",selectedPassengerIds:[],activeSegmentId:"",filters:{},requestCradle:false,deck:""},
-        hotelChildAges: [], hotelAmenities: {}, hotelSearchDraft: {destination:"",checkInDate:"",checkOutDate:"",rooms:1,adults:2,chainCode:"",radiusKm:25},
-        customerProfileDetail: null, packageTransferEntityId: "",
-        // ... (inside state.sessions[newId] = { ... })
-        hotelChildAges: [], hotelAmenities: {}, hotelSearchDraft: {destination:"",checkInDate:"",checkOutDate:"",rooms:1,adults:2,chainCode:"",radiusKm:25},
-        carSearchDraft: {pickup:"", dropoff:"", pickupDate:"", pickupTime:"10:00", dropoffDate:"", dropoffTime:"10:00", age:30, residence:""}, // <--- ADDED HERE
-        customerProfileDetail: null, packageTransferEntityId: "", _pendingTransferDetails: null, _pendingTransferDetails: null
-      };
-      
-      loadSession(newId);
+    function loadSession(sessionId, options = {}) {
+      const { saveOutgoing = true, renderUi = true } = options;
+      if (!state.sessions?.[sessionId]) return false;
+      if (saveOutgoing && state.activeSessionId && state.sessions[state.activeSessionId]) saveCurrentSession();
+      if (renderUi && state.activeSessionId !== sessionId) {
+        try { closeModal?.(); } catch (_) {}
+        try { state.stripePaymentElement?.destroy?.(); } catch (_) {}
+        state.stripe = null;
+        state.stripeElements = null;
+        state.stripePaymentElement = null;
+      }
+      state.activeSessionId = sessionId;
+      applySessionState(state.sessions[sessionId]);
+      if (renderUi && !sessionUiSuspended) {
+        if (typeof setBusy === "function") setBusy(0);
+        syncSessionChrome();
+        renderTabs();
+        render();
+      }
+      return true;
+    }
+
+    function createNewSession(startView = "search", options = {}) {
+      const { activate = true } = options;
+      if (pnrTabCount() >= MAX_PNR_TABS) {
+        toast("Tab limit reached", `Altéa allows up to ${MAX_PNR_TABS} open PNR workspaces. Close a PNR tab before opening another.`, "warning");
+        return null;
+      }
+      if (state.activeSessionId && state.sessions[state.activeSessionId]) saveCurrentSession();
+      const newId = `pnr_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+      state.sessions[newId] = freshSessionState(startView || "search");
+      if (activate) loadSession(newId, { saveOutgoing: false, renderUi: !sessionUiSuspended });
+      else renderTabs();
+      return newId;
     }
 
     function closeSession(sessionId, event) {
-      event.stopPropagation();
-      const keys = Object.keys(state.sessions);
-      if (keys.length <= 1) return toast("Action Denied", "You must keep at least one tab open.", "warning");
-      
+      event?.stopPropagation?.();
+      if (!sessionId || sessionId === AMADEUS_HOME_SESSION || !state.sessions?.[sessionId]) return;
+      const wasActive = state.activeSessionId === sessionId;
       delete state.sessions[sessionId];
-      
-      // If we closed the active tab, load the first available one
-      if (state.activeSessionId === sessionId) {
-        loadSession(Object.keys(state.sessions)[0]);
-      } else {
-        renderTabs(); // Otherwise just redraw the tab bar
+      for (const [requestId, ownerId] of requestSessionById) {
+        if (ownerId === sessionId) requestSessionById.delete(requestId);
       }
+      if (wasActive) loadSession(AMADEUS_HOME_SESSION, { saveOutgoing: false, renderUi: true });
+      else renderTabs();
     }
 
-    function getSessionTitle(sessionObj) {
-      const workspace = sessionObj.alteaWorkspace;
-      const order = sessionObj.selectedOrder;
-      // Extract the PNR if it exists in the session
-      const pnr = workspace?.booking?.bookingReference || workspace?.booking?.pnrLocator || order?.bookingReference || order?.id;
-      
-      if (pnr) return pnr;
-      return VIEW_TITLES[sessionObj.activeView] || "New Booking";
+    function sessionRecordLocator(sessionObj) {
+      const workspace = sessionObj?.alteaWorkspace;
+      const order = sessionObj?.selectedOrder;
+      return workspace?.booking?.bookingReference || workspace?.booking?.pnrLocator ||
+        order?.bookingReference || order?.pnrLocator || "";
+    }
+
+    function getSessionTitle(sessionObj, sessionId = "") {
+      if (sessionId === AMADEUS_HOME_SESSION || sessionObj?.__kind === "home") return "Home";
+      const locator = sessionRecordLocator(sessionObj);
+      return locator ? `PNR ${locator}` : "New PNR";
     }
 
     function renderTabs() {
+      if (sessionUiSuspended) return;
       const container = document.querySelector(".workspace-tabs");
       if (!container) return;
       saveCurrentSession();
-      
+      const entries = Object.entries(state.sessions || {}).sort(([a, sa], [b, sb]) => {
+        if (a === AMADEUS_HOME_SESSION) return -1;
+        if (b === AMADEUS_HOME_SESSION) return 1;
+        return Number(sa?.__createdAt || 0) - Number(sb?.__createdAt || 0);
+      });
       let html = "";
-      for (const [id, session] of Object.entries(state.sessions)) {
+      for (const [id, session] of entries) {
         const isActive = id === state.activeSessionId;
-        const title = getSessionTitle(session);
-        html += `<div class="ws-tab ${isActive ? "active" : ""}" data-session-id="${id}" title="${escapeHTML(title)}">
-                   <span><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg></span>
-                   <span class="tab-title" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex: 1;">${escapeHTML(title)}</span>
-                   <button class="ws-tab-close" data-close-session="${id}">×</button>
-                 </div>`;
+        const home = id === AMADEUS_HOME_SESSION || session?.__kind === "home";
+        const title = getSessionTitle(session, id);
+        html += `<div class="ws-tab ${isActive ? "active" : ""} ${home ? "ws-tab-home" : "ws-tab-pnr"}" data-session-id="${escapeAttr(id)}" title="${escapeAttr(title)}">` +
+          `<span class="ws-tab-symbol">${home ? "⌂" : "▤"}</span>` +
+          `<span class="tab-title" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">${escapeHTML(title)}</span>` +
+          `${home ? "" : `<button class="ws-tab-close" data-close-session="${escapeAttr(id)}" aria-label="Close ${escapeAttr(title)}">×</button>`}` +
+          `</div>`;
       }
-      html += `<button class="ws-tab-add" data-add-session title="New Workspace">+</button>`;
-      
+      html += `<button class="ws-tab-add" data-add-session title="Create New PNR" ${pnrTabCount() >= MAX_PNR_TABS ? "disabled" : ""}>+</button>`;
       container.innerHTML = html;
-      
-      // Bind Events to new elements
-      container.querySelectorAll(".ws-tab").forEach(tab => {
-        tab.addEventListener("click", (e) => {
-          if (e.target.closest(".ws-tab-close")) return;
+      container.querySelectorAll(".ws-tab[data-session-id]").forEach((tab) => {
+        tab.addEventListener("click", (event) => {
+          if (event.target.closest(".ws-tab-close")) return;
           loadSession(tab.dataset.sessionId);
         });
       });
-      container.querySelectorAll(".ws-tab-close").forEach(btn => {
-        btn.addEventListener("click", (e) => closeSession(btn.dataset.closeSession, e));
+      container.querySelectorAll(".ws-tab-close").forEach((button) => {
+        button.addEventListener("click", (event) => closeSession(button.dataset.closeSession, event));
       });
-      container.querySelector(".ws-tab-add").addEventListener("click", createNewSession);
+      container.querySelector("[data-add-session]")?.addEventListener("click", () => createNewSession("search"));
     }
-    // --- END SESSION MANAGEMENT ---
+    // --- END ALTÉA PAGE-TAB / PNR SESSION MANAGEMENT ---
 
     const main = document.getElementById("main");
     const $ = (selector, root = document) => root.querySelector(selector);
@@ -1439,11 +1584,21 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
 
 
     function post(type, payload = {}, options = {}) {
+      // Retrieval from Home follows ARD Web semantics: open a record tab first,
+      // then let the response populate that PNR tab.
+      if (isHomeSession() && RETRIEVAL_REQUEST_TYPES.has(type)) {
+        const targetView = type === "DUFFEL_GET_ORDER" ? "booking" : "booking";
+        const newSessionId = createNewSession(targetView);
+        if (!newSessionId) return null;
+      }
       if (EXCLUSIVE_ACTIONS.has(type) && Array.from(state.pending.values()).includes(type)) {
         toast("Action already running", "Wait for the current request to finish.", "warning");
         return null;
       }
       const requestId = makeRequestId();
+      if (isPnrSession() && !GLOBAL_REQUEST_TYPES.has(type)) {
+        requestSessionById.set(requestId, state.activeSessionId);
+      }
       if (options.busy !== false) {
         state.pending.set(requestId, type);
         setBusy(1);
@@ -1467,23 +1622,23 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
 
     function setBusy(delta, customText = "COMMUNICATING WITH HOST SYSTEM...") {
       state.busyCount = Math.max(0, state.busyCount + delta);
-      
+      const visiblePending = Array.from(state.pending.entries()).filter(([requestId]) => {
+        const owner = requestSessionById.get(requestId) || "";
+        return isHomeSession() ? !owner : owner === state.activeSessionId;
+      });
+      const visibleBusy = visiblePending.length > 0;
       const busyBar = $("#busyBar");
       const loader = $("#appLoader");
       const loaderText = $("#appLoaderText");
-      
-      if (busyBar) busyBar.classList.toggle("hidden", state.busyCount === 0);
-      
+      if (busyBar) busyBar.classList.toggle("hidden", !visibleBusy);
       if (loader) {
-        loader.classList.toggle("active", state.busyCount > 0);
-        if (state.busyCount > 0 && loaderText) {
-          // Pull action names from pending requests if available, fallback to default text
-          let activeAction = Array.from(state.pending.values())[0] || customText;
+        loader.classList.toggle("active", visibleBusy);
+        if (visibleBusy && loaderText) {
+          let activeAction = visiblePending[0]?.[1] || customText;
           if (activeAction.includes("SEARCH")) activeAction = "QUERYING AIR AVAILABILITY / SELLING PLATFORM CONNECT...";
           else if (activeAction.includes("PAYMENT")) activeAction = "ESTABLISHING SECURE PAYMENT SESSION (PCI-DSS)...";
           else if (activeAction.includes("ORDER")) activeAction = "COMMITTING PNR TO LIVE AIRLINE INVENTORY...";
           else if (activeAction.includes("STAY") || activeAction.includes("HOTEL")) activeAction = "RETRIEVING LIVE HOTEL INVENTORY...";
-          
           loaderText.textContent = activeAction;
         }
       }
@@ -1492,18 +1647,40 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
 
     function navigate(view) {
       if (!VIEW_TITLES[view]) return;
-      state.activeView = view;
-      
-      // Save view to current session
-      if (state.sessions && state.activeSessionId) {
-        state.sessions[state.activeSessionId].activeView = view;
+
+      // While an asynchronous response is being applied to a background PNR,
+      // update only that session state. The visible tab is restored after all
+      // existing message listeners have finished.
+      if (sessionUiSuspended) {
+        state.activeView = view;
+        if (state.sessions?.[state.activeSessionId]) state.sessions[state.activeSessionId].activeView = view;
+        return;
       }
 
-      $$(".nav-item").forEach((item) => item.classList.toggle("active", item.dataset.view === view));
-      
-      const titleEl = $("#workspaceTabTitle");
-      if (titleEl) titleEl.textContent = VIEW_TITLES[view] || "Dashboard";
+      if (isHomeSession()) {
+        if (PNR_PRODUCT_VIEWS.has(view)) {
+          createNewSession(view);
+          return;
+        }
+        if (PNR_INTERNAL_VIEWS.has(view)) {
+          toast("Open a PNR first", "Create or retrieve a PNR before opening a booking-file function.", "warning");
+          return;
+        }
+      } else if (isPnrSession()) {
+        if (GLOBAL_ONLY_VIEWS.has(view)) {
+          toast("PNR workspace active", "Switch to Home to use global tools. This tab remains dedicated to its PNR.", "warning");
+          return;
+        }
+        if (PNR_REQUIRES_BOOKING_VIEWS.has(view) && !state.alteaWorkspace?.booking) {
+          toast("PNR not saved yet", "Add a product or create the booking file before opening this PNR function.", "warning");
+          return;
+        }
+      }
 
+      state.activeView = view;
+      if (state.sessions?.[state.activeSessionId]) state.sessions[state.activeSessionId].activeView = view;
+      saveCurrentSession();
+      syncSessionChrome();
       renderTabs();
       render();
     }
@@ -1604,6 +1781,7 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
                 <select id="tripType">
                   <option value="round_trip" ${saved.tripType === "one_way" ? "" : "selected"}>Round trip</option>
                   <option value="one_way" ${saved.tripType === "one_way" ? "selected" : ""}>One way</option>
+                  <option value="multi_search" ${saved.tripType === "multi_search" ? "selected" : ""}>Multi-search (independent flights)</option>
                 </select>
               </div>
               <div class="field">
@@ -1624,6 +1802,11 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
                 <input id="returnDate" type="date" min="${isoDate(today)}" value="${saved.returnDate || isoDate(returnDate)}">
               </div>
               <button class="primary" type="submit">Search flights</button>
+            </div>
+            <div class="field hidden" id="multiSearchField" style="margin:8px 0">
+              <label for="multiSearchInput">Independent routes (one per line: ORIGIN DESTINATION YYYY-MM-DD; maximum 8)</label>
+              <textarea id="multiSearchInput" rows="4" placeholder="JFK LAX 2026-11-20" spellcheck="false">${escapeHTML(saved.multiSearchInput||"")}</textarea>
+              <small class="muted">Each line is a separate live Duffel offer request. This is not multi-city ticketing or a combined fare.</small>
             </div>
             <div class="search-options">
               <div class="field">
@@ -1678,8 +1861,7 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
       // Group offers by flight schedule (Origin -> Destination & Departure Time)
       const groupedOffers = {};
       state.offers.forEach(offer => {
-        const firstSeg = offer.slices?.[0]?.segments?.[0];
-        const key = `${firstSeg?.origin?.iataCode}-${firstSeg?.destination?.iataCode}-${firstSeg?.departingAt}`;
+        const key = (offer.slices || []).map(slice => (slice.segments || []).map(seg => [seg.origin?.iataCode,seg.destination?.iataCode,seg.departingAt,seg.arrivingAt,seg.marketingCarrier?.iataCode,seg.marketingFlightNumber].join(":" )).join("|")).join(" / ");
         if (!groupedOffers[key]) groupedOffers[key] = [];
         groupedOffers[key].push(offer);
       });
@@ -1689,7 +1871,7 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
       return `<div class="offer-layout">
         <section>
           <div class="panel-head">
-            <span>${flightGroups.length} flight option(s) · ${state.offers.length} total fares</span>
+            <span>${flightGroups.length} flight option(s) · ${state.offers.length} total fares${state.multiSearchActive?` · ${state.multiSearchCompleted} completed, ${state.multiSearchQueue.length} queued`:""}</span>
             <span class="muted">Grouped by schedule</span>
           </div>
           <div style="margin-top:8px">
@@ -1861,6 +2043,57 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
     }
 
 
+
+    function providerText(value, fallback="—") {
+      if(value===null||value===undefined||value==="")return fallback;
+      if(typeof value==="object")return "—";
+      return String(value);
+    }
+    function supplierTaxLines(offer) {
+      const raw=Array.isArray(offer?.taxBreakdown)?offer.taxBreakdown:[];
+      return raw.map(t=>{
+        const label=[t.code,t.name||"Tax",t.description].filter(Boolean).join(" · ");
+        const isCarrier=t.carrierImposed===true||t.carrier_imposed===true;
+        return `<div class="money-line"><span>${escapeHTML(label)}${isCarrier?" (carrier imposed)":""}</span><strong>${money(t.amount||0,t.currency||offer.taxCurrency||offer.totalCurrency)}</strong></div>`;
+      }).join("");
+    }
+    function supplierTravelDisclosure(offer) {
+      if(!offer)return "";
+      const slices=Array.isArray(offer.slices)?offer.slices:[];
+      const refundable=offer.conditions?.refundBeforeDeparture||offer.conditions?.refund_before_departure;
+      const changeable=offer.conditions?.changeBeforeDeparture||offer.conditions?.change_before_departure;
+      const displayRule=(rule,label)=>rule?`<div class="money-line"><span>${label}</span><strong>${rule.allowed===true?"Permitted":rule.allowed===false?"Not permitted":"See airline conditions"}${rule.penaltyAmount!=null||rule.penalty_amount!=null?` · ${money(rule.penaltyAmount??rule.penalty_amount,rule.penaltyCurrency||rule.penalty_currency||offer.totalCurrency)}`:""}</strong></div>`:"";
+      const code=(a,b)=>providerText(a??b,"");
+      return `<section class="panel" style="margin-top:10px">
+        <div class="panel-head">Airline fare, tax and journey details</div>
+        <div class="panel-body">
+          <div class="grid grid-3" style="margin-bottom:10px">
+            <div class="stat"><div class="stat-label">Base fare</div><div class="stat-value" style="font-size:16px">${offer.baseAmount!=null?money(offer.baseAmount,offer.baseCurrency||offer.totalCurrency):"Not supplied"}</div></div>
+            <div class="stat"><div class="stat-label">Tax</div><div class="stat-value" style="font-size:16px">${offer.taxAmount!=null?money(offer.taxAmount,offer.taxCurrency||offer.totalCurrency):"Not supplied"}</div></div>
+            <div class="stat"><div class="stat-label">CO₂ (supplier estimate)</div><div class="stat-value" style="font-size:16px">${offer.totalEmissionsKg!=null?escapeHTML(offer.totalEmissionsKg)+" kg":"Not supplied"}</div></div>
+          </div>
+          ${supplierTaxLines(offer)?`<details><summary>Itemized supplier taxes</summary><div class="panel-body">${supplierTaxLines(offer)}</div></details>`:""}
+          ${displayRule(refundable,"Refund before departure")}${displayRule(changeable,"Change before departure")}
+          ${offer.paymentRequiredBy?`<div class="money-line"><span>Supplier payment deadline</span><strong>${escapeHTML(formatDateTime(offer.paymentRequiredBy))}</strong></div>`:""}
+          ${offer.priceGuaranteeExpiresAt?`<div class="money-line"><span>Price guarantee expires</span><strong>${escapeHTML(formatDateTime(offer.priceGuaranteeExpiresAt))}</strong></div>`:""}
+          ${Array.isArray(offer.supportedLoyaltyProgrammes)&&offer.supportedLoyaltyProgrammes.length?`<div class="money-line"><span>Supported loyalty programs</span><strong>${offer.supportedLoyaltyProgrammes.map(x=>escapeHTML(typeof x==="string"?x:x?.name||x?.iataCode||x?.airline_iata_code||"Program")).join(", ")}</strong></div>`:""}
+          ${Array.isArray(offer.privateFares)&&offer.privateFares.length?`<details><summary>Applied negotiated fare data (staff)</summary><pre style="white-space:pre-wrap;overflow-wrap:anywhere">${escapeHTML(JSON.stringify(offer.privateFares,null,2))}</pre></details>`:""}
+          ${Array.isArray(offer.intendedPaymentMethods)&&offer.intendedPaymentMethods.length?`<details><summary>Supplier intended payment methods (staff)</summary><pre style="white-space:pre-wrap;overflow-wrap:anywhere">${escapeHTML(JSON.stringify(offer.intendedPaymentMethods,null,2))}</pre></details>`:""}
+          ${slices.map((slice,i)=>`<div style="padding:8px 0;border-top:1px solid var(--line)"><strong>Journey ${i+1}: ${escapeHTML(slice.origin?.iataCode||"")} → ${escapeHTML(slice.destination?.iataCode||"")}</strong>
+            ${slice.fareBrandName?`<span class="badge info">${escapeHTML(slice.fareBrandName)}</span>`:""}
+            ${slice.ngsShelf!=null?`<span class="muted">· NGS ${escapeHTML(slice.ngsShelf)}</span>`:""}
+            ${slice.comparisonKey?`<span class="muted">· Comparison ${escapeHTML(slice.comparisonKey)}</span>`:""}
+            ${(slice.segments||[]).map(segment=>`<div class="money-line"><span>${escapeHTML(segment.marketingCarrier?.iataCode||"")}${escapeHTML(segment.marketingFlightNumber||"")} · ${escapeHTML(segment.operatingCarrier?.name||"Operating carrier unavailable")} ${segment.operatingFlightNumber?`(${escapeHTML(segment.operatingFlightNumber)})`:""}</span><strong>${escapeHTML([segment.aircraft?.name,segment.aircraft?.iataCode].filter(Boolean).join(" / ")||"Aircraft not supplied")}</strong></div>
+              <div class="money-line"><span>Terminals</span><strong>${escapeHTML(code(segment.originTerminal)||"—")} → ${escapeHTML(code(segment.destinationTerminal)||"—")}</strong></div>
+              ${(segment.passengers||[]).map(p=>`<div class="money-line"><span>Passenger fare ${escapeHTML(p.id||p.passengerId||"")}</span><strong>${escapeHTML([p.fareBasisCode,p.cabinClassMarketingName,p.cabinClass].filter(Boolean).join(" · ")||"Not supplied")}</strong></div>
+                ${(p.baggages||[]).length?`<div class="muted">Included baggage: ${(p.baggages||[]).map(b=>escapeHTML([b.quantity,b.type,b.weight&&`${b.weight} ${b.weightUnit||""}`].filter(Boolean).join(" "))).join(", ")}</div>`:""}
+                ${p.cabinAmenities?`<details><summary>Cabin amenities from supplier</summary><pre style="white-space:pre-wrap;overflow-wrap:anywhere">${escapeHTML(JSON.stringify(p.cabinAmenities,null,2))}</pre></details>`:""}`).join("")}`).join("")}
+            ${slice.conditions&&Object.keys(slice.conditions).length?`<details><summary>Journey conditions</summary><pre style="white-space:pre-wrap;overflow-wrap:anywhere">${escapeHTML(JSON.stringify(slice.conditions,null,2))}</pre></details>`:""}
+          </div>`).join("")}
+        </div>
+      </section>`;
+    }
+
     function itineraryMarkup(offer) {
       return (offer.slices || []).map((slice, index) => {
         const segments = (slice.segments || []).map((segment) => `
@@ -1889,6 +2122,7 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
         </div>`;
       }).join("");
     }
+
 
 
     function seatMapMarkup() {
@@ -2649,6 +2883,30 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
         return toast("Payment already completed", "Create the pending order or reconcile the completed payment before starting another search.", "warning");
       }
       const tripType = $("#tripType").value;
+      if(tripType==="multi_search"){
+        const lines=String($("#multiSearchInput")?.value||"").split(/\r?\n/).map(line=>line.trim()).filter(Boolean);
+        if(!lines.length||lines.length>8)return toast("Multi-search routes required","Enter 1–8 separate origin/destination/date lines.","warning");
+        const planned=[];
+        for(const line of lines){
+          const match=line.toUpperCase().match(/^([A-Z]{3})\s+([A-Z]{3})\s+(\d{4}-\d{2}-\d{2})$/);
+          if(!match||match[1]===match[2]||match[3]<isoDate(new Date()))return toast("Invalid multi-search route",`Use ORIGIN DESTINATION YYYY-MM-DD with valid future dates: ${line.slice(0,60)}`,"warning");
+          planned.push({origin:match[1],destination:match[2],departureDate:match[3]});
+        }
+        const childAges=parseAges($("#childAges").value,2,17,"Child");
+        const infantAges=parseAges($("#infantAges").value,0,1,"Infant");
+        if(childAges===null||infantAges===null)return;
+        const adults=Number($("#adults").value);
+        if(adults+childAges.length+infantAges.length>9||infantAges.length>adults)return toast("Invalid passenger combination","Maximum 9 travelers; no more infants than adults.","warning");
+        const passengers=[...Array.from({length:adults},()=>({type:"adult"})),...childAges.map(age=>({age})),...infantAges.map(age=>({age}))];
+        const cabinClass=$("#cabinClass").value,maxConnections=Number($("#maxConnections").value),supplierTimeout=state.preferences.supplierTimeout;
+        state.multiSearchQueue=planned.map(route=>({slices:[route],passengers,cabinClass,maxConnections,supplierTimeout}));
+        state.multiSearchCompleted=0;state.multiSearchActive=true;
+        state.search={tripType,multiSearchInput:$("#multiSearchInput").value,adults,childAges,infantAges,cabinClass,maxConnections};
+        state.offers=[];state.selectedOffer=null;state.seatMaps=[];state.selectedServices.clear();state.payment=null;
+        post("DUFFEL_SEARCH_OFFERS",state.multiSearchQueue.shift());
+        return;
+      }
+      state.multiSearchActive=false;state.multiSearchQueue=[];state.multiSearchCompleted=0;
       const origin = iata($("#origin").value);
       const destination = iata($("#destination").value);
       const departureDate = $("#departureDate").value;
@@ -2702,9 +2960,13 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
 
 
     function updateTripType() {
-      const oneWay = $("#tripType")?.value === "one_way";
-      $("#returnDateField")?.classList.toggle("hidden", oneWay);
-      if ($("#returnDate")) $("#returnDate").required = !oneWay;
+      const mode=$("#tripType")?.value;
+      const oneWay=mode==="one_way",multi=mode==="multi_search";
+      $("#returnDateField")?.classList.toggle("hidden",oneWay||multi);
+      $("#multiSearchField")?.classList.toggle("hidden",!multi);
+      ["#origin","#destination","#departureDate"].forEach(id=>{const control=$(id);if(control){control.required=!multi;control.closest(".field")?.classList.toggle("hidden",multi)}});
+      const swap=$("[data-action=swap-airports]");if(swap)swap.classList.toggle("hidden",multi);
+      if($("#returnDate"))$("#returnDate").required=!(oneWay||multi);
     }
 
 
@@ -2732,7 +2994,7 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
 
 
     function loadSeatMaps() {
-      if (!state.selectedOffer?.id) return;
+      if (state.activeView !== "services" || !state.selectedOffer?.id) return;
       post("DUFFEL_GET_SEAT_MAPS", { offerId: state.selectedOffer.id });
     }
 
@@ -3043,9 +3305,25 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
         return;
       }
       if (message.type === "DUFFEL_OFFERS_RESULT") {
-        state.offers = payload.offers || [];
-        navigate("search");
-        toast("Live offers loaded", `${state.offers.length} offer${state.offers.length === 1 ? "" : "s"} returned.`, "success");
+        if (state.multiSearchActive) {
+          const index=new Map((state.offers||[]).map(offer=>[offer.id,offer]));
+          (payload.offers||[]).forEach(offer=>{if(offer?.id)index.set(offer.id,offer)});
+          state.offers=Array.from(index.values());
+          state.multiSearchCompleted+=1;
+          navigate("search");
+          if(state.multiSearchQueue.length){
+            const next=state.multiSearchQueue.shift();
+            post("DUFFEL_SEARCH_OFFERS",next);
+          }else{
+            state.multiSearchActive=false;
+            toast("Multi-search completed",`${state.multiSearchCompleted} separate supplier searches completed; ${state.offers.length} distinct offers returned.`, "success");
+            render();
+          }
+        }else{
+          state.offers = payload.offers || [];
+          navigate("search");
+          toast("Live offers loaded", `${state.offers.length} offer${state.offers.length === 1 ? "" : "s"} returned.`, "success");
+        }
         return;
       }
       if (message.type === "DUFFEL_OFFER_RESULT") {
@@ -3054,12 +3332,11 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
         state.seatMaps = [];
         invalidatePayment();
         navigate("offer");
-        if (state.selectedOffer?.id) loadSeatMaps();
         return;
       }
       if (message.type === "DUFFEL_SEAT_MAPS_RESULT") {
         state.seatMaps = payload.seatMaps || [];
-        if (state.activeView === "offer") render();
+        if (state.activeView === "services") render();
         return;
       }
       if (message.type === "DUFFEL_PAYMENT_RESULT") {
@@ -3212,6 +3489,7 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
         return;
       }
       if (message.type === "DUFFEL_ERROR") {
+        if(state.multiSearchActive){state.multiSearchActive=false;state.multiSearchQueue=[];render();}
         setConnection(state.connected ? "online" : "error", state.connected ? "Duffel ready" : "Connection error");
         if (payload.code === "AUTH_REQUIRED") setConnection("error", "Access denied");
         toast("Action failed", payload.message || "The reservation action could not be completed.", "danger");
@@ -3496,6 +3774,7 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
       }
 
 
+      window.addEventListener("message", beginSessionMessageRoute, true);
       window.addEventListener("message", handleParentMessage);
     }
 
@@ -5541,6 +5820,8 @@ html,body{margin:0!important;padding:0!important;width:203.20mm!important;height
   }
 
 
+  window.skandiAlteaPqrRender = pqrMarkup;
+
   passengerForm = function passengerFormB0073(passenger,index){
     const draft=travelerDraft(passenger,index),primary=primaryTravelDoc(draft)||{},ktn=docByType(draft,"KNOWN_TRAVELER"),redress=docByType(draft,"REDRESS");
     const kind=passengerKind(passenger,index),isInfant=kind==="INF";
@@ -5940,14 +6221,14 @@ html,body{margin:0!important;padding:0!important;width:203.20mm!important;height
     if(type==="empty")return '<span class="seat-cell empty"></span>';
     if(type!=="seat"){
       const label=type==="lavatory"?"WC":type==="galley"?"GAL":type==="bassinet"?"BAS":type==="exit_row"?"EXIT":type.slice(0,4).toUpperCase();
-      return `<span class="seat-cell facility" title="${escapeAttr(humanize(type))}">${escapeHTML(label)}</span>`;
+      return `<span class="seat-cell facility" title="${escapeAttr([humanize(type),el.name,...(Array.isArray(el.features)?el.features:[]),...(Array.isArray(el.disclosures)?el.disclosures.map(x=>typeof x==="string"?x:x?.title||x?.description||""):[])].filter(Boolean).join(" · "))}">${escapeHTML(label)}</span>`;
     }
     const blocked=!(el.availableServices||[]).length;
     const service=serviceForPassenger(el,activeSeatPassenger()?.id);
     const chargeable=(el.availableServices||[]).some(s=>Number(s.totalAmount||0)>0);
     const badge=badgeForSeat(el.designator,map.segmentId),selected=Boolean(badge),hi=highlighted(el);
     const price=service&&Number(service.totalAmount||0)>0?money(service.totalAmount,service.totalCurrency):"";
-    return `<button type="button" class="seat-cell ${blocked?"blocked":""} ${chargeable?"chargeable":""} ${selected?"selected":""} ${hi?"highlight":""}" data-b0074-seat="${escapeAttr(el.designator||"")}" ${blocked?"disabled":""} title="${escapeAttr([el.designator,...(el.disclosures||[])].filter(Boolean).join(" · "))}"><span>${escapeHTML(el.designator||"—")}</span>${badge?`<span class="seat-pax-badge">${badge}</span>`:""}${price?`<span class="seat-price">${escapeHTML(price.replace(/^[A-Z]{3}\s*/,""))}</span>`:""}</button>`;
+    return `<button type="button" class="seat-cell ${blocked?"blocked":""} ${chargeable?"chargeable":""} ${selected?"selected":""} ${hi?"highlight":""}" data-b0074-seat="${escapeAttr(el.designator||"")}" ${blocked?"disabled":""} title="${escapeAttr([el.designator,el.name,...(Array.isArray(el.features)?el.features:[]),...(Array.isArray(el.disclosures)?el.disclosures.map(x=>typeof x==="string"?x:x?.title||x?.description||""):[]),el.coordinates?JSON.stringify(el.coordinates):"",el.metadata?JSON.stringify(el.metadata):""].filter(Boolean).join(" · "))}"><span>${escapeHTML(el.designator||"—")}</span>${badge?`<span class="seat-pax-badge">${badge}</span>`:""}${price?`<span class="seat-price">${escapeHTML(price.replace(/^[A-Z]{3}\s*/,""))}</span>`:""}</button>`;
   }
   function normalizedCabins(map){
     if(Array.isArray(map?.cabins)&&map.cabins.length)return visibleCabins(map);
@@ -5956,7 +6237,7 @@ html,body{margin:0!important;padding:0!important;width:203.20mm!important;height
     return [{cabinName:(map?.seats||[])[0]?.cabinName||"Cabin",rows:[...rows.entries()].sort((a,b)=>Number(a[0])-Number(b[0])).map(([rowNumber,elements])=>({rowNumber,sections:[{elements:elements.sort((a,b)=>String(a.designator).localeCompare(String(b.designator)))}]}))}];
   }
   function cabinGrid(map){
-    return normalizedCabins(map).map(c=>`<div class="cabin-block"><div class="cabin-title">${escapeHTML(c.cabinName||c.cabinClass||"Cabin")}${c.deck!==null&&c.deck!==undefined?` · Deck ${escapeHTML(String(c.deck))}`:""}</div>${(c.rows||[]).map(r=>`<div class="seat-row"><span class="row-number">${escapeHTML(r.rowNumber||"")}</span><div class="seat-row-inner">${(r.sections||[]).map(sec=>`<span class="seat-section">${(sec.elements||[]).map(el=>seatElement(el,map)).join("")}</span>`).join("")}</div><span class="row-number">${escapeHTML(r.rowNumber||"")}</span></div>`).join("")}</div>`).join("");
+    return normalizedCabins(map).map(c=>`<div class="cabin-block"><div class="cabin-title">${escapeHTML(c.cabinName||c.cabinClass||"Cabin")}${c.deck!==null&&c.deck!==undefined?` · Deck ${escapeHTML(String(c.deck))}`:""}${c.aisles!=null?` · Aisles ${escapeHTML(c.aisles)}`:""}${c.wings?` · Wings ${escapeHTML(c.wings.firstRowIndex??"—")}–${escapeHTML(c.wings.lastRowIndex??"—")}`:""}</div>${(c.rows||[]).map(r=>`<div class="seat-row"><span class="row-number">${escapeHTML(r.rowNumber||"")}</span><div class="seat-row-inner">${(r.sections||[]).map(sec=>`<span class="seat-section">${(sec.elements||[]).map(el=>seatElement(el,map)).join("")}</span>`).join("")}</div><span class="row-number">${escapeHTML(r.rowNumber||"")}</span></div>`).join("")}</div>`).join("");
   }
   function legend(){
     return `<div class="seat-legend"><h4>Explanation</h4><div class="legend-row"><span class="legend-swatch selected">1</span>Selected seat / passenger badge</div><div class="legend-row"><span class="legend-swatch"></span>Available</div><div class="legend-row"><span class="legend-swatch blocked">X</span>Occupied / airline blocked</div><div class="legend-row"><span class="legend-swatch chargeable"></span>Chargeable seat</div><div class="legend-row"><span class="legend-swatch">EXIT</span>Exit / facility row</div><div class="legend-row"><span class="legend-swatch">B</span>Bassinet</div><div class="legend-row"><span class="legend-swatch">GAL</span>Galley</div><div class="legend-row"><span class="legend-swatch">WC</span>Lavatory</div><h4 style="margin-top:12px">Features</h4><div class="seat-feature-filter">${[["bassinet","Seat with bassinet facility"],["chargeable","Chargeable seat"],["overwing","Overwing seat(s)"],["child","Seat not suitable for child"],["restricted","Restricted seat - General"],["infant","Seat suitable for adult with an infant"]].map(([k,l])=>`<label><input type="checkbox" data-seat-filter="${k}" ${state.seatWorkbench.filters?.[k]?"checked":""}> ${l}</label>`).join("")}</div></div>`;
@@ -6214,6 +6495,14 @@ html,body{margin:0!important;padding:0!important;width:203.20mm!important;height
   .offer-carrier-name{font-size:14px;font-weight:800;color:#173f5c}.offer-carrier-meta{font-size:10px;color:#667783;margin-top:2px}
   .transfer-search-layout{display:grid;grid-template-columns:minmax(0,1fr) 310px;gap:10px;align-items:start}.transfer-product-card{border:1px solid #bcc6cd;background:#fff;margin-bottom:8px}.transfer-product-head{display:flex;justify-content:space-between;gap:10px;padding:8px 10px;background:#edf2f5;border-bottom:1px solid #c7d0d6}.transfer-product-body{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center;padding:10px}.transfer-product-meta{font-size:10px;color:#657680;margin-top:4px}.transfer-product-price{font-size:16px;font-weight:800;color:#173f5c;white-space:nowrap}
   .doc-sample-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}.doc-sample{border:1px solid #b9c3ca;background:#fff;min-height:210px;display:flex;flex-direction:column}.doc-sample-head{padding:7px 9px;background:linear-gradient(#ececec,#d8d8d8);border-bottom:1px solid #bcbcbc;font-weight:800}.doc-sample-body{padding:10px;flex:1;background:#fafafa}.doc-sample-foot{padding:7px 9px;border-top:1px solid #ccd3d8;background:#f0f2f4}.mini-atb{aspect-ratio:2.46/1;border:1px solid #111;background:#fff;position:relative;overflow:hidden;font-family:Arial,sans-serif}.mini-atb .blue{height:24%;background:#022e64;color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 7px;font-weight:900;font-size:9px}.mini-atb .body{padding:8px}.mini-atb .name{font:900 12px 'Courier New',monospace}.mini-atb .route{display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;margin-top:7px}.mini-atb .route b{display:block;font-size:11px}.mini-atb .seatbox{position:absolute;right:7px;bottom:7px;border:1px solid #111;padding:4px 7px;font-size:8px}.mini-ticket,.mini-confirm{border:1px solid #b7b7b7;background:white;padding:9px;font-family:Arial,sans-serif;min-height:145px}.mini-doc-brand{font-size:13px;font-weight:900;color:#022e64}.mini-doc-title{font-size:11px;font-weight:800;margin:4px 0 8px}.mini-line{height:5px;background:#d8dee3;margin:5px 0}.mini-line.short{width:55%}.mini-line.mid{width:78%}.pnr-lock-note{padding:7px 9px;border:1px solid #d1b25f;background:#fff7dd;color:#695016;margin-bottom:8px;font-size:10px}.services-shell-note{margin-bottom:8px}.transfer-filter-input{width:100%;min-height:30px;padding:0 8px;border:1px solid #aeb9c2}
+
+  .pnr-internal-nav{display:none!important}
+  .workspace-tabs{position:relative;z-index:10001}
+  .workspace-tabs .ws-tab-home{min-width:112px;max-width:140px}
+  .workspace-tabs .ws-tab-pnr{min-width:170px;max-width:260px}
+  .ws-tab-symbol{width:15px;text-align:center;color:#555}
+  .nav-item.pnr-frozen{opacity:.38!important;cursor:not-allowed!important;filter:grayscale(.45)}
+  .nav-item.pnr-frozen:hover{background:linear-gradient(#fafafa,#e8e8e8)!important}
   @media(max-width:980px){.transfer-search-layout,.doc-sample-grid{grid-template-columns:1fr}}
 </style>
 
@@ -6221,25 +6510,20 @@ html,body{margin:0!important;padding:0!important;width:203.20mm!important;height
 (function(){
   "use strict";
 
-  const PNR_PRODUCT_VIEWS = new Set(["search","hotels","cars","transfers","packagebuilder"]);
-  const PNR_BLOCKED_VIEWS = new Set(["dashboard","orders","reports","preferences"]);
-  const pnrSessions = new Set();
-  let pendingTransferEntityId = "";
-
   VIEW_TITLES.transfers = "Transfers";
+  VIEW_TITLES.services = "Seats & Services";
 
-  function activePnrSession(){ return pnrSessions.has(state.activeSessionId); }
-  function markPnrSession(){ if(state.activeSessionId) pnrSessions.add(state.activeSessionId); }
-
-  const originalCreateNewSessionV12 = createNewSession;
-  const originalNavigateV12 = navigate;
-  const originalOpenLocalBookingModalV12 = openLocalBookingModal;
   const originalRenderV12 = render;
+  const originalPreferencesV12 = renderPreferences;
+  const originalOpenLocalBookingModalV12 = openLocalBookingModal;
+  const terminalResponseTypes = new Set(["DUFFEL_ERROR", "ALTEA_ERROR"]);
+
+  function activePnrSession(){ return isPnrSession(); }
 
   function ensureTransferNav(){
     if(document.querySelector('.nav-item[data-view="transfers"]')) return;
-    const cars = document.querySelector('.nav-item[data-view="cars"]');
-    if(!cars) return;
+    const cars=document.querySelector('.nav-item[data-view="cars"]');
+    if(!cars)return;
     const button=document.createElement("button");
     button.type="button";
     button.className="nav-item";
@@ -6248,45 +6532,59 @@ html,body{margin:0!important;padding:0!important;width:203.20mm!important;height
     cars.insertAdjacentElement("afterend",button);
   }
 
-  function updatePnrLockUi(){
+  function configureAmadeusNavigation(){
     ensureTransferNav();
-    const locked=activePnrSession();
-    document.querySelectorAll('.nav-item[data-view]').forEach(btn=>{
-      const frozen=locked && PNR_BLOCKED_VIEWS.has(btn.dataset.view);
-      btn.classList.toggle("pnr-frozen",frozen);
-      btn.setAttribute("aria-disabled",frozen?"true":"false");
-      if(frozen) btn.title="Locked while this PNR workspace is active";
-      else if(btn.title==="Locked while this PNR workspace is active") btn.removeAttribute("title");
+    const services=document.querySelector('.nav-item[data-view="services"]');
+    const passengers=document.querySelector('.nav-item[data-view="passengers"]');
+    if(services){
+      const label=services.querySelector('.nav-label');
+      if(label)label.textContent="Seats & Services";
+      if(passengers && services.previousElementSibling!==passengers) passengers.insertAdjacentElement("afterend",services);
+    }
+    ["offer","workspace"].forEach(view=>{
+      const button=document.querySelector(`.nav-item[data-view="${view}"]`);
+      if(button){button.classList.add("pnr-internal-nav");button.setAttribute("aria-hidden","true");}
     });
   }
 
-  navigate=function(view){
-    if(activePnrSession() && PNR_BLOCKED_VIEWS.has(view)){
-      toast("PNR workspace locked", "Switch to a non-PNR tab to use global Dashboard, Orders, Reports or Preferences.", "warning");
-      updatePnrLockUi();
-      return;
-    }
-    if(PNR_PRODUCT_VIEWS.has(view) && !activePnrSession()){
-      originalCreateNewSessionV12();
-      markPnrSession();
-      originalNavigateV12(view);
-      updatePnrLockUi();
-      return;
-    }
-    originalNavigateV12(view);
-    updatePnrLockUi();
-    if(view==="services" && state.selectedOffer?.id && !state.seatMaps?.length){
-      setTimeout(()=>loadSeatMaps(),0);
-    }
+  function updatePnrLockUi(){
+    configureAmadeusNavigation();
+    const home=isHomeSession();
+    const hasBooking=Boolean(state.alteaWorkspace?.booking);
+    document.querySelectorAll('.nav-item[data-view]').forEach(btn=>{
+      const view=btn.dataset.view||"";
+      let frozen=false;
+      let reason="";
+      if(home && PNR_INTERNAL_VIEWS.has(view)){
+        frozen=true;reason="Open or retrieve a PNR to use this function";
+      }else if(!home && GLOBAL_ONLY_VIEWS.has(view)){
+        frozen=true;reason="Switch to Home to use this global function";
+      }else if(!home && PNR_REQUIRES_BOOKING_VIEWS.has(view) && !hasBooking){
+        frozen=true;reason="Create the booking file before using this PNR function";
+      }
+      btn.classList.toggle("pnr-frozen",frozen);
+      btn.setAttribute("aria-disabled",frozen?"true":"false");
+      if(frozen)btn.title=reason;
+      else if(!btn.classList.contains("pnr-internal-nav") && /^(Open or retrieve a PNR|Switch to Home|Create the booking file)/.test(btn.title||"")) btn.removeAttribute("title");
+    });
+    document.body.classList.toggle("altea-home-context",home);
+    document.body.classList.toggle("altea-pnr-context",!home);
+  }
+
+  // Keep seat maps wholly inside the Seats & Services sub-page. Refreshing an
+  // air offer must never re-insert or reload the seat module in Offer Review.
+  const originalLoadSeatMapsV12=loadSeatMaps;
+  loadSeatMaps=function loadSeatMapsV12Scoped(){
+    if(state.activeView!=="services")return;
+    return originalLoadSeatMapsV12();
   };
 
-  openLocalBookingModal=function(){
-    if(!activePnrSession()){
-      originalCreateNewSessionV12();
-      markPnrSession();
+  openLocalBookingModal=function openLocalBookingModalV12Scoped(){
+    if(isHomeSession()){
+      const sessionId=createNewSession("transfers");
+      if(!sessionId)return;
     }
-    originalOpenLocalBookingModalV12();
-    updatePnrLockUi();
+    return originalOpenLocalBookingModalV12();
   };
 
   function airlineLogoUrl(offer){
@@ -6308,8 +6606,8 @@ html,body{margin:0!important;padding:0!important;width:203.20mm!important;height
     return `${pageHead("Offer Review","Refreshed live offer with agent review.",'<button class="secondary" data-action="refresh-selected-offer">Refresh price</button><button class="secondary" data-action="offer-notice">Offer Notice</button><button class="primary" data-view="workspace">Continue to order</button>')}
       ${offer.isExpired?alertBox("danger","Offer expired","Return to flight search and choose a current offer."):""}
       ${carrierIdentity(offer)}
-      ${pqrMarkup(offer)}
-      <div class="workspace-layout" style="margin-top:10px"><div>${itineraryMarkup(offer)}<section class="panel" style="margin-top:10px"><div class="panel-head">Available baggage and airline services</div><div class="panel-body" style="padding:0">${serviceListMarkup(offer.availableServices||[])}</div></section><div class="alert info" style="margin-top:10px"><span>ℹ</span><div><strong>Seat map moved to Seats & Services</strong>Seat selection is no longer embedded in Offer Review or reinserted after a price refresh. Continue to the PNR, then open Seats & Services.</div></div></div>
+      ${window.skandiAlteaPqrRender(offer)}
+      <div class="workspace-layout" style="margin-top:10px"><div>${itineraryMarkup(offer)}${supplierTravelDisclosure(offer)}<section class="panel" style="margin-top:10px"><div class="panel-head">Available baggage and airline services</div><div class="panel-body" style="padding:0">${serviceListMarkup(offer.availableServices||[])}</div></section><div class="alert info" style="margin-top:10px"><span>ℹ</span><div><strong>Seats & Services is a separate PNR step</strong>Refreshing this offer updates price and availability only. Seat maps load only when the Seats & Services page is opened.</div></div></div>
       <aside class="panel sticky"><div class="panel-head">Offer control</div><div class="panel-body"><div class="money-line"><span>Offer ID</span><strong class="mono">${escapeHTML(offer.id||"—")}</strong></div><div class="money-line"><span>Owner / validating carrier</span><strong>${escapeHTML(offer.owner?.iataCode||offer.owner?.iata_code||offer.owner?.name||"—")}</strong></div><div class="money-line"><span>Offer</span><strong>${money(offer.totalAmount,offer.totalCurrency)}</strong></div><div class="money-line"><span>Selected services</span><strong>${money(selectedServiceTotal(),offer.totalCurrency)}</strong></div><div class="money-line"><span>Total due</span><strong class="price-total">${money(orderTotal(),offer.totalCurrency)}</strong></div><div class="money-line"><span>Price guarantee</span><strong>${formatDateTime(offer.priceGuaranteeExpiresAt||offer.expiresAt)}</strong></div></div><div class="panel-foot"><button class="primary" data-view="workspace" ${offer.isExpired?"disabled":""}>Continue</button></div></aside></div>`;
   };
 
@@ -6317,8 +6615,8 @@ html,body{margin:0!important;padding:0!important;width:203.20mm!important;height
     const offer=state.selectedOffer;
     const w=state.alteaWorkspace;
     return `${pageHead("Seats & Services","Airline-controlled seats, baggage and special-service requests for the active PNR.",'<button class="secondary" data-action="load-seat-maps">Refresh seat map</button>')}
-      <div class="pnr-lock-note">This workspace is scoped to the active PNR. Transfer inventory is intentionally excluded and is sold from the separate Transfers category.</div>
-      ${offer?`<section class="panel"><div class="panel-head"><span>Seats & Services Catalogue</span><span class="mono">${escapeHTML(offer.id||"")}</span></div><div class="panel-body" style="padding:0">${seatMapMarkup()}</div></section><section class="panel" style="margin-top:10px"><div class="panel-head">Live airline services</div><div class="panel-body" style="padding:0">${serviceListMarkup(offer.availableServices||[])}</div></section>`:emptyState("▦","No active airline offer","Open or create an air booking in this PNR before selecting airline seats and services.")}
+      <div class="pnr-lock-note">This sub-page belongs to the active PNR. Transfer inventory is sold separately from Transfers and never appears inside the seat map.</div>
+      ${offer?`<section class="panel"><div class="panel-head"><span>Seats & Services Catalogue</span><span class="mono">${escapeHTML(offer.id||"")}</span></div><div class="panel-body" style="padding:0">${seatMapMarkup()}</div></section><section class="panel" style="margin-top:10px"><div class="panel-head">Live airline services</div><div class="panel-body" style="padding:0">${serviceListMarkup(offer.availableServices||[])}</div></section>`:emptyState("▦","No active airline offer","Search/select an air offer in this PNR before choosing airline seats and services.")}
       ${w?.passengers?.length?`<section class="panel" style="margin-top:10px"><div class="panel-head">Passenger operational status</div><div class="panel-body" style="padding:0">${passengerTable(w.passengers)}</div></section>`:""}`;
   };
 
@@ -6326,7 +6624,7 @@ html,body{margin:0!important;padding:0!important;width:203.20mm!important;height
     const w=state.alteaWorkspace;
     const baggage=(state.selectedOffer?.availableServices||[]).filter(s=>String(s.type||"").toLowerCase()==="baggage");
     return `${pageHead("Baggage & Boarding","Airline baggage services and boarding status for the active PNR.",'<button class="primary" data-view="services">Seats & Services</button>')}
-      <div class="pnr-lock-note">Transfer inventory is not part of this module. Use the separate Transfers category to add transfer services to the same PNR.</div>
+      <div class="pnr-lock-note">Transfer inventory is not part of this module. Use the separate Transfers product page to add a transfer to this PNR.</div>
       <div class="grid grid-2"><section class="panel"><div class="panel-head">Baggage services</div><div class="panel-body" style="padding:0">${baggage.length?serviceListMarkup(baggage):'<div class="empty">No live baggage services returned for the current air offer.</div>'}</div></section><section class="panel"><div class="panel-head">Boarding / passenger status</div><div class="panel-body" style="padding:0">${w?.passengers?.length?passengerTable(w.passengers):'<div class="empty">Open a booking to display passenger boarding status.</div>'}</div></section></div>`;
   };
 
@@ -6340,11 +6638,10 @@ html,body{margin:0!important;padding:0!important;width:203.20mm!important;height
   function renderTransfersV12(){
     const all=transferItems();
     return `${pageHead("Transfers","Search and add published transfer inventory as a first-class PNR product.",'<button class="secondary" data-action="refresh-all">Refresh inventory</button>')}
-      <div class="pnr-lock-note">This product search owns the current PNR workspace tab. Flights, hotels, cars and transfers can all be added into the same PNR; global tools are frozen until you switch tabs.</div>
-      <div class="transfer-search-layout"><section><section class="panel"><div class="panel-head">Transfer search</div><div class="panel-body"><input id="v12TransferFilter" class="transfer-filter-input" placeholder="Search transfer, destination, airport, resort or code"></div></section><div id="v12TransferResults" style="margin-top:8px">${transferCards(all)}</div></section><aside class="panel sticky"><div class="panel-head">PNR basket</div><div class="panel-body"><div class="money-line"><span>Workspace</span><strong class="mono">${escapeHTML(state.alteaWorkspace?.booking?.bookingReference||state.alteaWorkspace?.booking?.pnrLocator||"NEW PNR")}</strong></div><div class="money-line"><span>Transfer products</span><strong>${all.length}</strong></div><div class="money-line"><span>Booking file</span><strong>${state.alteaWorkspace?.booking?"OPEN":"NOT YET CREATED"}</strong></div><div class="muted" style="margin-top:8px">Choose a transfer. If no booking file exists yet, Reservations creates the PNR shell first and then adds the selected transfer.</div></div></aside></div>`;
+      <div class="pnr-lock-note">Flights, hotels, cars and transfers share this same PNR record tab. Global Home functions stay locked until you switch back to Home.</div>
+      <div class="transfer-search-layout"><section><section class="panel"><div class="panel-head">Transfer search</div><div class="panel-body"><input id="v12TransferFilter" class="transfer-filter-input" placeholder="Search transfer, destination, airport, resort or code"></div></section><div id="v12TransferResults" style="margin-top:8px">${transferCards(all)}</div></section><aside class="panel sticky"><div class="panel-head">PNR basket</div><div class="panel-body"><div class="money-line"><span>Workspace</span><strong class="mono">${escapeHTML(state.alteaWorkspace?.booking?.bookingReference||state.alteaWorkspace?.booking?.pnrLocator||"NEW PNR")}</strong></div><div class="money-line"><span>Transfer products</span><strong>${all.length}</strong></div><div class="money-line"><span>Booking file</span><strong>${state.alteaWorkspace?.booking?"OPEN":"NOT YET CREATED"}</strong></div><div class="muted" style="margin-top:8px">Choose a transfer. If the PNR has not yet been saved, Reservations creates its booking shell and then adds the selected transfer.</div></div></aside></div>`;
   }
 
-  const originalPreferencesV12=renderPreferences;
   function sampleBoardingPreview(){return `<div class="mini-atb"><div class="blue"><span>SKANDI TRAVELS</span><span>BOARDING PASS</span><span>SEQ 001</span></div><div class="body"><div class="name">ANDERSSON / ANNA</div><div class="route"><div><small>FROM</small><b>JFK</b></div><div><small>TO</small><b>ARN</b></div><div><small>FLIGHT</small><b>SK904</b></div></div><div class="seatbox">GATE 07 · SEAT 22A</div></div></div>`}
   function sampleTicketPreview(){return `<div class="mini-ticket"><div class="mini-doc-brand">SKANDI TRAVELS</div><div class="mini-doc-title">Electronic Ticket / Receipt</div><div class="mini-line short"></div><div class="mini-line mid"></div><div class="mini-line"></div><div class="mini-line mid"></div><hr><div class="mini-line short"></div><div class="mini-line"></div></div>`}
   function sampleConfirmationPreview(){return `<div class="mini-confirm"><div class="mini-doc-brand">SKANDI TRAVELS</div><div class="mini-doc-title">Booking Confirmation</div><div class="mini-line mid"></div><div class="mini-line short"></div><hr><div class="mini-line"></div><div class="mini-line"></div><div class="mini-line mid"></div><div class="mini-line short"></div></div>`}
@@ -6364,16 +6661,50 @@ html,body{margin:0!important;padding:0!important;width:203.20mm!important;height
     win.document.open();win.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>SKANDI Document Sample</title></head><body>${documentSampleHtml(kind)}</body></html>`);win.document.close();
   }
 
-  render=function renderV12PnrProductFixed(){
+  render=function renderV12AmadeusSessionFixed(){
+    if(sessionUiSuspended)return;
     if(state.activeView==="transfers"){
       main.innerHTML=`<section class="view">${renderTransfersV12()}</section>`;
     }else{
       originalRenderV12();
     }
+    syncSessionChrome();
     updatePnrLockUi();
   };
 
+  // Every backend response carrying a requestId is applied to the PNR tab that
+  // initiated it. This prevents a response from one PNR from overwriting the
+  // tab the agent switched to while the provider request was in flight.
+  function finishMessageSessionRoute(event){
+    const message=typeof event.data==="string"?(()=>{try{return JSON.parse(event.data)}catch(_){return null}})():event.data;
+    if(!message||message.source!==PARENT_SOURCE)return;
+    const requestId=String(message.requestId||"");
+    const targetSessionId=requestSessionById.get(requestId)||messageRouteTargetSessionId||"";
+    if(message.type==="ALTEA_LOCAL_BOOKING_CREATED"&&state._pendingTransferEntityId){
+      const bookingId=message.payload?.workspace?.booking?.id||"";
+      const entityId=state._pendingTransferEntityId;
+      state._pendingTransferEntityId="";
+      if(bookingId)post("ALTEA_ADD_INVENTORY_COMPONENT",{bookingId,entityId,quantity:1},{busy:false});
+    }
+    if(targetSessionId&&state.sessions?.[targetSessionId])saveCurrentSession();
+    if(messageRouteRestoreSessionId&&state.sessions?.[messageRouteRestoreSessionId]){
+      const restoreId=messageRouteRestoreSessionId;
+      messageRouteRestoreSessionId="";
+      messageRouteTargetSessionId="";
+      sessionUiSuspended=Math.max(0,sessionUiSuspended-1);
+      loadSession(restoreId,{saveOutgoing:false,renderUi:false});
+      syncSessionChrome();renderTabs();render();
+    }else{
+      messageRouteTargetSessionId="";
+    }
+    if(requestId && message.type!=="DUFFEL_PROGRESS")requestSessionById.delete(requestId);
+    if(terminalResponseTypes.has(message.type)&&requestId)requestSessionById.delete(requestId);
+  }
+  window.addEventListener("message",finishMessageSessionRoute,false);
+
   document.addEventListener("click",event=>{
+    const frozen=event.target.closest?.('.nav-item.pnr-frozen');
+    if(frozen){event.preventDefault();event.stopImmediatePropagation();toast(isHomeSession()?"Open a PNR first":"Switch to Home",frozen.title||"This function is not available in the current context.","warning");return}
     const sample=event.target.closest?.("[data-v12-doc-sample]");
     if(sample){event.preventDefault();openDocumentSample(sample.dataset.v12DocSample);return}
     const transfer=event.target.closest?.("[data-v12-transfer-entity]");
@@ -6381,11 +6712,15 @@ html,body{margin:0!important;padding:0!important;width:203.20mm!important;height
       event.preventDefault();
       const entityId=transfer.dataset.v12TransferEntity||"";
       if(!entityId)return;
-      markPnrSession();
+      if(isHomeSession()){
+        const sessionId=createNewSession("transfers");
+        if(!sessionId)return;
+      }
       const bookingId=state.alteaWorkspace?.booking?.id||"";
       if(bookingId){post("ALTEA_ADD_INVENTORY_COMPONENT",{bookingId,entityId,quantity:1});return}
-      pendingTransferEntityId=entityId;
-      openLocalBookingModal();
+      state._pendingTransferEntityId=entityId;
+      saveCurrentSession();
+      originalOpenLocalBookingModalV12();
     }
   },true);
 
@@ -6396,18 +6731,16 @@ html,body{margin:0!important;padding:0!important;width:203.20mm!important;height
     const out=document.getElementById("v12TransferResults");if(out)out.innerHTML=transferCards(filtered);
   });
 
-  window.addEventListener("message",event=>{
-    const m=typeof event.data==="string"?(()=>{try{return JSON.parse(event.data)}catch(_){return null}})():event.data;
-    if(!m||m.source!==PARENT_SOURCE)return;
-    if(m.type==="ALTEA_LOCAL_BOOKING_CREATED"&&pendingTransferEntityId){
-      const bookingId=m.payload?.workspace?.booking?.id||"";
-      const entityId=pendingTransferEntityId;pendingTransferEntityId="";
-      if(bookingId)setTimeout(()=>post("ALTEA_ADD_INVENTORY_COMPONENT",{bookingId,entityId,quantity:1}),0);
-    }
-  });
-
-  ensureTransferNav();
+  configureAmadeusNavigation();
+  // Reinitialize the page-tab model after all extension defaults exist so Home
+  // is clean and permanent, then render the Amadeus-style starting context.
+  state.sessions[AMADEUS_HOME_SESSION]=snapshotCurrentSession();
+  state.sessions[AMADEUS_HOME_SESSION].__kind="home";
+  state.sessions[AMADEUS_HOME_SESSION].activeView="dashboard";
+  state.activeSessionId=AMADEUS_HOME_SESSION;
+  applySessionState(state.sessions[AMADEUS_HOME_SESSION]);
   updatePnrLockUi();
+  renderTabs();
   render();
 })();
 </script>
