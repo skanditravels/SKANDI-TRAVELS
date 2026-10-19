@@ -9,7 +9,7 @@ import { secrets } from "wix-secrets-backend.v2";
 import { getCustomerProfileBootstrapCore, getCustomerBookingDetailCore, updateCustomerProfileCore } from "backend/SKANDI_CORE/customerProfile";
 import { createDuffelComponentClientKeyCore } from "backend/SKANDI_CORE/duffelGround";
 import { duffelRequest } from "backend/SKANDI_CORE/duffelClient";
-import { createCustomerSupportCaseCore, listCustomerSupportCasesCore, getCustomerSupportCaseCore } from "backend/SKANDI_CORE/customerSupport";
+import { createCustomerSupportCaseCore, listCustomerSupportCasesCore, getCustomerSupportCaseCore, getAgentSupportCaseCore, updateAgentSupportCaseCore } from "backend/SKANDI_CORE/customerSupport";
 import { restRequest } from "backend/SKANDI_CORE/supabaseServer";
 
 const USER_ID = /^icu_[A-Za-z0-9_]+$/;
@@ -237,7 +237,8 @@ async function reconcileVerifiedResource(row, resourceId, eventType, eventId = "
     snapshot: view, altea, changed, discrepancy, needsReservationsReview: reviewRequired
   } };
   const saved = await restRequest({ table: "customer_support_cases", method: "PATCH", query: {
-    id: `eq.${row.id}`, "payload->duffelAssistant->>customerUserId": `eq.${expectedMeta.customerUserId}`
+    id: `eq.${row.id}`, "payload->duffelAssistant->>customerUserId": `eq.${expectedMeta.customerUserId}`,
+    updated_at: `eq.${row.updated_at}`
   }, body: { payload: { ...obj(row.payload), duffelAssistant: next },
     ...(reviewRequired ? { status: "open" } : {}), updated_at: verifiedAt } });
   if (!arr(saved).length) throw error("RECONCILIATION_NOT_RECORDED", "Could not save verified supplier information to Customer Service.", 503);
@@ -272,7 +273,7 @@ async function ensureAssistantCase(context, { bookingReference = "", bookingId =
     const created = await createCustomerSupportCaseCore({ input: {
       category: "booking", subCategory: "manage-booking", subject,
       message: "Traveler initiated a Duffel Assistant travel support session. Supplier chat content is managed by Duffel and is not mirrored automatically to SKANDI.",
-      source: "duffel-assistant", sourceChannel: "DUFFEL_ASSISTANT", sourcePage: "/duffel-assistant",
+      source: "duffel-assistant", sourceChannel: "DUFFEL_ASSISTANT", sourcePage: "/my-profile/travel-assistance",
       bookingRef: clean(bookingReference, 80), hasBooking: bookingReference ? "yes" : "no",
       requesterType: "CUSTOMER", issueType: clean(issueType, 20),
       firstName: clean(context.firstName, 100), lastName: clean(context.lastName, 100),
@@ -296,7 +297,8 @@ async function ensureAssistantCase(context, { bookingReference = "", bookingId =
   const newPayload = { ...obj(row.payload), duffelAssistant: nextMeta,
     sourceChannel: obj(row.payload).sourceChannel || "DUFFEL_ASSISTANT" };
   const saved = await restRequest({ table: "customer_support_cases", method: "PATCH", query: {
-    id: `eq.${row.id}`, member_id: `eq.${clean(context.memberId, 240)}`
+    id: `eq.${row.id}`, member_id: `eq.${clean(context.memberId, 240)}`,
+    updated_at: `eq.${row.updated_at}`
   }, body: { payload: newPayload, updated_at: new Date().toISOString() } });
   if (!arr(saved).length) throw error("SUPPORT_CASE_LINK_FAILED", "Customer Service did not confirm the Assistant booking link.", 503);
   return { row: saved[0], caseId: found.caseId, caseRef: clean(found.caseRef || obj(newPayload).caseRef, 120) };
@@ -450,4 +452,129 @@ export async function verifyAndRecordDuffelAssistantWebhookCore(rawBody, signatu
     { duffelEventId: event.id, resourceId });
   if (log.duplicate) return { ok: true, recorded: false, duplicate: true, verification };
   return { ok: true, recorded: log.recorded, duplicate: false, verification };
+}
+
+
+// V12.4 staff operations remain in the canonical Customer Service case.
+// getAgentSupportCaseCore and updateAgentSupportCaseCore own staff authorization,
+// team routing, internal notes and the persistent support-case audit trail.
+async function agentAssistantCase(caseId) {
+  const id = clean(caseId, 160);
+  if (!/^case_[A-Za-z0-9_]+$/.test(id)) throw error("SUPPORT_CASE_INVALID", "Select a valid Customer Service case.");
+  const caseDetail = await getAgentSupportCaseCore({ caseId: id, includeLiveKit: false, silentSync: true });
+  if (clean(caseDetail?.case?.caseId, 160) !== id) throw error("SUPPORT_CASE_NOT_FOUND", "Customer Service did not return the selected case.", 404);
+  const rows = await restRequest({ table: "customer_support_cases", query: { select: "*", case_id: `eq.${id}`, limit: "1" } });
+  const row = arr(rows)[0];
+  if (!row) throw error("SUPPORT_CASE_NOT_FOUND", "Customer Service case was not found.", 404);
+  return { row, detail: caseDetail };
+}
+function agentCaseQueue(row) {
+  return clean(obj(row.payload).queueKey || obj(row.payload).inboxKey || "support", 120);
+}
+function agentAssistantContext(row, handoff = null) {
+  const payload = obj(row.payload);
+  const meta = obj(payload.duffelAssistant);
+  const verification = obj(meta.providerVerification);
+  const kind = ORDER_ID.test(clean(meta.resourceId)) ? "air" : STAY_ID.test(clean(meta.resourceId)) ? "stay" : "";
+  const bookingId = BOOKING_ID.test(clean(meta.bookingId, 80)) ? meta.bookingId : "";
+  return {
+    ok: true,
+    caseId: clean(row.case_id, 160),
+    caseRef: clean(payload.caseRef, 120),
+    bookingRef: clean(meta.bookingReference || payload.bookingRef || payload.pnr, 120),
+    queue: agentCaseQueue(row),
+    status: clean(row.status, 60),
+    bookingLinked: Boolean(bookingId && kind),
+    bookingId: bookingId || null,
+    resourceId: kind ? clean(meta.resourceId, 220) : null,
+    resourceType: kind || null,
+    provider: kind ? "Duffel" : null,
+    supplierUserLinked: USER_ID.test(clean(meta.customerUserId)),
+    verification: verification.verifiedAt ? {
+      verifiedAt: verification.verifiedAt,
+      eventType: clean(verification.eventType, 90),
+      status: clean(obj(verification.snapshot).status, 100),
+      supplierChanged: verification.changed === true,
+      discrepancy: verification.discrepancy === true,
+      reservationsReview: verification.needsReservationsReview === true,
+      // Only previously persisted, provider-verified ALTEA state is shown.
+      altea: obj(verification.altea).id ? {
+        id: clean(verification.altea.id, 80),
+        bookingReference: clean(verification.altea.bookingReference, 120),
+        status: clean(verification.altea.status, 80),
+        componentStatus: clean(verification.altea.componentStatus, 80),
+        paymentStatus: clean(verification.altea.paymentStatus, 80),
+        fulfillmentStatus: clean(verification.altea.fulfillmentStatus, 80)
+      } : null
+    } : null,
+    handoff: handoff ? { issueType: handoff.issueType, summary: handoff.summary, preparedAt: handoff.preparedAt } : null,
+    hasBookingReference: Boolean(clean(meta.bookingReference || payload.bookingRef || payload.pnr, 120)),
+    // This link launches an authenticated CUSTOMER session, never a staff-side Duffel chat.
+    customerRoute: bookingId ? `/my-profile/travel-assistance?caseId=${encodeURIComponent(row.case_id)}&bookingId=${encodeURIComponent(bookingId)}`
+      : `/my-profile/travel-assistance?caseId=${encodeURIComponent(row.case_id)}`
+  };
+}
+export async function getAgentDuffelSupportContextCore(input = {}) {
+  const { row } = await agentAssistantCase(input.caseId);
+  return agentAssistantContext(row, await latestStaffHandoff(row));
+}
+export async function verifyAgentDuffelSupportBookingCore(input = {}) {
+  const { row } = await agentAssistantCase(input.caseId);
+  const meta = obj(obj(row.payload).duffelAssistant);
+  const resourceId = clean(meta.resourceId, 220);
+  if (!(ORDER_ID.test(resourceId) || STAY_ID.test(resourceId))) {
+    throw error("DUFFEL_BOOKING_NOT_LINKED", "An authenticated customer must open this case with a linked Duffel flight or hotel before supplier verification.", 409);
+  }
+  const outcome = await reconcileVerifiedResource(row, resourceId, "agent-initiated-check");
+  if (outcome.checked !== true) throw error("DUFFEL_VERIFICATION_INCOMPLETE", "Duffel booking ownership or state could not be verified.", 409);
+  // Re-read: reconciliation writes the latest snapshot into canonical support metadata.
+  const fresh = await agentAssistantCase(input.caseId);
+  return { ...agentAssistantContext(fresh.row, await latestStaffHandoff(fresh.row)), outcome };
+}
+export async function routeAgentDuffelSupportCaseCore(input = {}) {
+  const { row } = await agentAssistantCase(input.caseId);
+  const info = agentAssistantContext(row);
+  if (!info.hasBookingReference && !info.bookingLinked) {
+    throw error("BOOKING_REFERENCE_REQUIRED", "Link a booking or add a verified booking reference to the support case before routing to the Booking Team.", 409);
+  }
+  const reason = clean(input.reason, 1400);
+  if (reason.length < 12) throw error("BOOKING_TEAM_REASON_REQUIRED", "Describe what the Booking Team must investigate (at least 12 characters).");
+  if (info.queue === "booking-team") return { ...info, alreadyRouted: true };
+  // Use the established team queue in the same case. No second case, no separate
+  // booking record, and no claim that a supplier change/refund was performed.
+  await updateAgentSupportCaseCore({ caseId: info.caseId, updates: {
+    action: "INTERNAL_NOTE",
+    internalNote: { content: `BOOKING TEAM HANDOFF\nReference: ${info.bookingRef || "Linked Duffel resource"}\nSupplier resource: ${info.resourceId || "Not yet linked"}\nRequest: ${reason}` },
+    queue: "booking-team", status: "pending", assigneeId: "", assigneeName: ""
+  } });
+  const fresh = await agentAssistantCase(info.caseId);
+  const result = agentAssistantContext(fresh.row, await latestStaffHandoff(fresh.row));
+  if (result.queue !== "booking-team") throw error("BOOKING_TEAM_ROUTING_NOT_SAVED", "The Booking Team queue change was not confirmed.", 503);
+  return { ...result, routed: true };
+}
+export async function prepareAgentDuffelSupportHandoffCore(input = {}) {
+  const { row } = await agentAssistantCase(input.caseId);
+  const meta = obj(obj(row.payload).duffelAssistant);
+  const issueType = clean(input.issueType, 32).toLowerCase();
+  const summary = clean(input.summary, MAX_HANDOFF_SUMMARY);
+  if (!ISSUE_TYPES.has(issueType)) throw error("DUFFEL_ISSUE_TYPE_INVALID", "Select change, cancellation or other.");
+  if (summary.length < 12) throw error("DUFFEL_HANDOFF_SUMMARY_REQUIRED", "Provide a useful supplier handoff summary (at least 12 characters).");
+  if (!USER_ID.test(clean(meta.customerUserId)) || !(
+    ORDER_ID.test(clean(meta.resourceId)) || STAY_ID.test(clean(meta.resourceId))
+  ) || !BOOKING_ID.test(clean(meta.bookingId, 80))) {
+    throw error("DUFFEL_HANDOFF_NOT_LINKED", "The customer must first launch the Assistant for a verified owned booking before a supplier handoff can be prepared.", 409);
+  }
+  // Canonical private agent note: the customer-side Assistant reads it only after
+  // its own Wix-member/booking ownership guards. Duffel chat is never agent-impersonated.
+  await updateAgentSupportCaseCore({ caseId: clean(row.case_id, 160), updates: {
+    action: "INTERNAL_NOTE", internalNote: { content: `DUFFEL HANDOFF\nIssue: ${issueType}\nSummary: ${summary}` }
+  } });
+  const fresh = await agentAssistantCase(row.case_id);
+  const handoff = await latestStaffHandoff(fresh.row);
+  if (!handoff || handoff.issueType !== issueType || handoff.summary !== summary) {
+    throw error("DUFFEL_HANDOFF_NOT_SAVED", "The supplier handoff note was not confirmed in Customer Service.", 503);
+  }
+  const ctx = agentAssistantContext(fresh.row, handoff);
+  const customerRoute = `${ctx.customerRoute}&issueType=${encodeURIComponent(issueType)}`;
+  return { ...ctx, customerRoute, prepared: true };
 }
