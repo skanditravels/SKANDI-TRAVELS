@@ -2,12 +2,15 @@
 // SKANDI Home V12 — correlated embed bridge; canonical backend owns data and prices.
 
 import wixLocationFrontend from "wix-location-frontend";
+import wixWindowFrontend from "wix-window-frontend";
 import { startBookingSearch } from "public/bookingSearch";
 import { getHomeContent, getHomeSearchLocations, getHomeLivePrices } from "backend/SKANDI_CORE/homeContent.web";
 import { SITE_MAP, APP_ROUTES } from "public/siteMap";
 
 const HOME_EMBED_IDS = ["#htmlHome", "#htmlhome", "#home"];
 const HOME_SOURCES = new Set(["SKANDI_HOME", "SKANDI_HOME_LONG_DISCOVERY_V2", "SKANDI_HOME_OLD_STYLE"]);
+const MOBILE_APP_EMBED_ID = "#homeMobileAppEmbed";
+const MOBILE_APP_SOURCE = "SKANDI_HOME_MOBILE_APP";
 const PARENT_SOURCE = "SKANDI_WIX_PARENT";
 const PROTOCOL_VERSION = "V12-HOME";
 const SUPPORTED_LANGUAGES = ["EN","SV","NO","DA","ES","FI","FR-FR","FR-CA","DE","TH"];
@@ -21,6 +24,8 @@ let bootstrapJob = null;
 let locationJob = null;
 let searchJob = null;
 let selectionJob = null;
+let mobileAppNav = null;
+let mobileRefreshId = "";
 
 function clean(value, max = 1000) { return String(value ?? "").trim().slice(0, max); }
 function arr(value) { return Array.isArray(value) ? value : []; }
@@ -67,6 +72,9 @@ function parseMessage(data) {
 function postToHtml(html, type, payload = {}, requestId = "") {
   html.postMessage({ source:PARENT_SOURCE, type, payload, requestId, timestamp:new Date().toISOString() });
 }
+function postMobile(type, payload = {}, requestId = "") {
+  if (mobileAppNav) postToHtml(mobileAppNav, type, payload, requestId);
+}
 function postHomeError(html, error, message = {}) {
   const code = /^[A-Z][A-Z0-9_]{1,79}$/.test(String(error?.code || "")) ? error.code : "HOME_REQUEST_FAILED";
   postToHtml(html, "HOME_ERROR", {
@@ -91,6 +99,9 @@ function postBootstrap(html, job, phase) {
     content:job.content, settings:job.settings, sync:job.content.sync,
     phase, routes:{ ...SITE_MAP, ...APP_ROUTES }
   }, job.requestId);
+  if (job.mobileRequestId && (phase === "content" || phase === "complete")) {
+    postMobile("HOME_APP_REFRESH_RESULT", {phase, completed:phase === "complete"}, job.mobileRequestId);
+  }
 }
 
 async function hydrateLiveHomePrices(html, job) {
@@ -132,7 +143,8 @@ async function sendHomeBootstrap(html, message, force = false) {
     if (bootstrapJob.content) postBootstrap(html, bootstrapJob, bootstrapJob.complete ? "complete" : "content");
     return bootstrapJob.promise;
   }
-  const job = { key, settings, priceSearch, requestId:clean(message.requestId, 160), content:null, complete:false };
+  const job = { key, settings, priceSearch, requestId:clean(message.requestId, 160), content:null, complete:false,
+    mobileRequestId:clean(message.mobileRequestId, 160) };
   bootstrapJob = job;
   job.promise = (async () => {
     try {
@@ -152,6 +164,9 @@ async function sendHomeBootstrap(html, message, force = false) {
       if (bootstrapJob !== job) return;
       bootstrapJob = null;
       postHomeError(html, error, message);
+      if (job.mobileRequestId) postMobile("HOME_APP_REFRESH_ERROR", {
+        message:clean(error?.publicMessage || "Could not refresh Home. Please try again.", 200)
+      }, job.mobileRequestId);
     }
   })();
   return job.promise;
@@ -221,6 +236,54 @@ async function handleHomeMessage(html, message) {
       return; // Global configuration/settings messages belong to masterPage.js.
   }
 }
+function firstMobileAppNav() {
+  try {
+    const element = $w(MOBILE_APP_EMBED_ID);
+    return element && typeof element.onMessage === "function" && typeof element.postMessage === "function" ? element : null;
+  } catch (_) { return null; }
+}
+function wireMobileAppNav(html) {
+  const nav = firstMobileAppNav();
+  if (!nav) return;
+  mobileAppNav = nav;
+  try {
+    if (wixWindowFrontend.formFactor !== "Mobile") {
+      if (typeof nav.collapse === "function") nav.collapse();
+      return;
+    }
+  } catch (_) {}
+  nav.onMessage(async (event) => {
+    const message = parseMessage(event?.data);
+    if (!message || message.source !== MOBILE_APP_SOURCE) return;
+    const requestId = clean(message.requestId, 160);
+    switch (message.type) {
+      case "HOME_APP_READY":
+        postMobile("HOME_APP_READY_ACK", { route:SITE_MAP.home, mobile:true }, requestId);
+        return;
+      case "HOME_APP_FOCUS_SEARCH":
+        postToHtml(html, "HOME_FOCUS_SEARCH", {}, requestId);
+        postMobile("HOME_APP_FOCUS_ACK", {}, requestId);
+        return;
+      case "HOME_APP_REFRESH":
+        if (mobileRefreshId) {
+          postMobile("HOME_APP_REFRESH_ERROR", {message:"Home is already refreshing."}, requestId);
+          return;
+        }
+        mobileRefreshId = requestId;
+        try {
+          await sendHomeBootstrap(html, {type:"HOME_REFRESH",requestId:"",mobileRequestId:requestId}, true);
+        } catch (_) {
+          postMobile("HOME_APP_REFRESH_ERROR", {message:"Could not refresh Home."}, requestId);
+        } finally {
+          if (mobileRefreshId === requestId) mobileRefreshId = "";
+        }
+        return;
+      default:
+        return;
+    }
+  });
+  postMobile("HOME_APP_READY_ACK", {route:SITE_MAP.home, mobile:true});
+}
 
 $w.onReady(function () {
   const html = firstHomeEmbed();
@@ -231,6 +294,7 @@ $w.onReady(function () {
     try { await handleHomeMessage(html, message); }
     catch (error) { postHomeError(html, error, message); }
   });
+  wireMobileAppNav(html);
   postToHtml(html, "HOME_HOST_READY", {
     protocolVersion:PROTOCOL_VERSION, embedId:clean(html.id, 80),
     routes:{ ...SITE_MAP, ...APP_ROUTES }, readyAt:new Date().toISOString()
