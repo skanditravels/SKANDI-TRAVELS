@@ -1,23 +1,42 @@
-# INFO / LOG — SKANDI Home Mobile App Navigation
+# INFO / LOG — SKANDI Home Duffel Flight Explorer
 
-- SOURCE FILE: `/HTML_REF/skandi/Home Mobile App Navigation.md`
-- DISPLAY/PAGE: Home — mobile-only app navigation component
-- SYSTEM: SKANDI
-- ROUTE: `/` (customer Home; mobile layout only)
-- WIX PAGE CONTROLLER: `/src/pages/Home.n73w8.js`
-- WIX HTML COMPONENT ID: `#homeMobileAppEmbed`
-- COMPONENT SOURCE: `SKANDI_HOME_MOBILE_APP`
-- PARENT MESSAGE SOURCE: `SKANDI_WIX_PARENT`
-- CANONICAL BACKEND (UNCHANGED): `backend/SKANDI_CORE/homeContent.web.js` → `homeContent.js` → existing Inventory/Supabase/provider ownership
-- GLOBAL NAVIGATION OWNER (UNCHANGED): `/src/pages/masterPage.js`; `MASTER_NAVIGATE` and `MASTER_CONFIG_REQUEST` are pre-existing contracts.
-- RELATION TO EXISTING HOME: Separate auxiliary Wix iframe; DOES NOT replace the `#htmlHome` HTML payload or `/HTML_REF/skandi/Home.md`.
-- RELATION TO BOOKING: No `/booking` merge in this revision. V12 `/booking` remains canonical until Home Wix statebox/editor and controller migration.
-- AUTHENTICATION / DATA AUTHORITY: No browser Supabase access, no new auth/provider APIs, no sensitive credential storage.
-- STATUS: STATICALLY VERIFIED; REQUIRES LIVE TEST with Wix Studio mobile positioning, masterPage routing and Home live data.
-- LAST VERIFIED: 2026-10-19, against current `skanditravels/SKANDI-TRAVELS` `main` Wix Home source and controller.
+- **Source file:** `/HTML_REF/skandi/Home Duffel Flight Explorer.md`
+- **Display / page name:** Home · Duffel Flight Explorer
+- **System area:** SKANDI customer-facing
+- **Wix route:** `/`
+- **Wix page controller:** `/src/pages/Home.n73w8.js`
+- **Wix HTML element ID:** `#homeDuffelExploreEmbed` (new, must be created in Wix Studio)
+- **Runtime embed source:** `SKANDI_HOME_DUFFEL_EXPLORER`
+- **Parent source:** `SKANDI_WIX_PARENT`
+- **Canonical web facade:** `/src/backend/SKANDI_CORE/customerBooking.web.js`, `searchLiveFlightOffers`
+- **Canonical backend core:** `/src/backend/SKANDI_CORE/customerBooking.js`, `searchLiveFlightOffersCore`
+- **Canonical provider/client:** `/src/backend/SKANDI_CORE/duffelAir.js` → `/src/backend/SKANDI_CORE/duffelClient.js`
+- **Search handoff:** `/src/public/bookingSearch.js` to existing `/booking` V12 `stateOffer`
+- **Authorization:** public read-only flight search; cart/checkout session and all mutations remain under `/booking` and existing member/cart ownership checks
+- **Provider tokens/secrets:** server-only, none in HTML
+- **Reference authority:** this file is the complete intended new embed; it does not modify the existing `Home.md` (`#htmlHome`) payload
+- **Verification:** STATICALLY VERIFIED Node syntax, browser layout and mocked UI response; REQUIRES LIVE TEST on Wix for provider, checkout handoff, responsive height and permissions
+- **Last inspected:** 2026-10-19; GitHub `skanditravels/SKANDI-TRAVELS`, default branch `main`
+
+## INFO / architecture
+
+This is an additive read-only supplier flight explorer that does not replace the canonical V12 booking state machine. Search calls the existing `customerBooking.web.searchLiveFlightOffers` method (normalization already limits results to 50). Selection does not trust or mutate the browser's offered supplier ID; it routes the selected search parameters into canonical `/booking` to requery authoritative inventory and create an owned cart there.
+
+## Bridge contracts
+
+- Child → parent: `HOME_DUFFEL_READY` (no payload); `HOME_DUFFEL_SEARCH` (`payload.search`); `HOME_DUFFEL_CONTINUE` (`payload.search`, `payload.offerId` for UI reference only).
+- Parent → child: `HOME_DUFFEL_HOST_READY`; `HOME_DUFFEL_RESULTS` (`payload.items`, `payload.meta`); `HOME_DUFFEL_BOOKING_ROUTE` (`payload.path`); `HOME_DUFFEL_ERROR` (`payload.message`). Results/errors echo `requestId`.
+- Payment: untouched Stripe PaymentIntent/3DS/reconciliation flow on the V12 Booking state; no direct provider payments from Home.
 
 ## CHANGE LOG
-- 2026-10-19 — Initial new mobile Home app-nav embed. Branded bottom tab bar for Home, Book, Explore, My Trips and Account; Book relays focus to existing V12 Home HTML; refresh uses existing Home content gateway via V12 Home controller; inactive on desktop; no other system behavior altered.
+
+- 2026-10-19 — New additive premium responsive Duffel supplier flight explorer. Supports one-way/return search, traveler ages, infant validation, cabin and stops, provider carrier/segment/aircraft/terminal/baggage projections, fare-card filtering/sorting, bounded loaders and canonical `/booking` handoff. No checkout mutation, database change or new provider integration.
+
+## Known limitations
+
+- No live deployment was performed. This is **not** the `/booking`-in-Home conversion; the Home Wix editor does not presently have the verified eight booking state elements.
+- Duffel data availability is endpoint-specific. This embed displays the subset exposed by the current `mapOfferForHome` rather than fabricating missing values. Advanced full-offer tax/conditions, fare-family grouping, upsells, separate seat-map search, loyalty restrictions, multi-city and gated split-ticket order workflows require separately verified canonical backend changes and complete checkout testing.
+- This file is a new HTML_REF reference artifact and is not imported at runtime.
 
 ## COMPLETE INTENDED LIVE HTML SOURCE
 
@@ -28,154 +47,103 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="color-scheme" content="light">
-<meta name="theme-color" content="#ffffff">
-<title>SKANDI Home · Mobile Navigation</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<title>SKANDI · Flight Explorer</title>
 <style>
-:root{color-scheme:light;--navy:#022e64;--cyan:#5fc7cf;--ink:#122744;--muted:#60748a;--line:#dfe7f0;--base:#ffffff;--safe-bottom:env(safe-area-inset-bottom,0px)}
-*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;overscroll-behavior:none;background:transparent;font-family:Montserrat,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;-webkit-text-size-adjust:100%;touch-action:pan-x pan-y}
-body{display:flex;justify-content:stretch;align-items:flex-end;color:var(--ink)}button{font-family:inherit}button,svg{-webkit-tap-highlight-color:transparent}
-#app-nav{width:100%;position:relative;min-height:88px;padding:8px 6px max(10px,var(--safe-bottom));background:rgba(255,255,255,.975);border-top:1px solid var(--line);box-shadow:0 -8px 24px rgba(2,46,100,.09);display:grid;grid-template-columns:repeat(5,minmax(0,1fr));align-items:stretch;gap:1px;isolation:isolate}
-.nav-item{appearance:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;min-height:63px;border:0;border-radius:12px;color:#58708e;background:transparent;cursor:pointer;font-weight:700;font-size:10px;letter-spacing:-.01em;white-space:nowrap;user-select:none}
-.nav-item svg{width:23px;height:23px;flex:none;stroke:currentColor;stroke-width:1.85;stroke-linecap:round;stroke-linejoin:round;fill:none}
-.nav-item.active{color:var(--navy);background:#edf4fa}
-.nav-item.active .nav-label{font-weight:800}
-.nav-item:active{transform:scale(.97)}.nav-item:focus-visible,#refresh:focus-visible{outline:2px solid var(--cyan);outline-offset:-2px}
-#status{position:absolute;bottom:8px;left:50%;width:min(94%,355px);transform:translateX(-50%) translateY(8px);border:1px solid rgba(2,46,100,.12);border-radius:13px;background:#fff;color:var(--navy);padding:11px 42px 11px 13px;box-shadow:0 10px 30px rgba(2,46,100,.13);font-size:12px;font-weight:600;line-height:1.4;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .18s ease,transform .18s ease;z-index:5;display:flex;align-items:center;gap:9px}
-#status.show{opacity:1;visibility:visible;transform:translateX(-50%) translateY(0);pointer-events:auto}
-#status.error{color:#972c38}
-#status-spinner{width:16px;height:16px;flex:none;display:none;border:2px solid #bdd9e7;border-top-color:var(--navy);border-radius:50%;animation:spin .75s linear infinite}
-#status.busy #status-spinner{display:block}
-#refresh{appearance:none;position:absolute;right:7px;top:7px;width:28px;height:28px;display:grid;place-items:center;border:0;border-radius:8px;background:#f2f6fa;color:var(--navy);cursor:pointer}
-#refresh svg{width:17px;height:17px;stroke:currentColor;stroke-width:2;fill:none;stroke-linejoin:round;stroke-linecap:round}
-#status-copy{padding-right:15px}
-#pull-zone{position:absolute;top:0;left:0;right:0;height:18px;touch-action:pan-x;z-index:4}
-#pull-zone:before{content:"";display:block;margin:3px auto;width:32px;height:3px;border-radius:6px;background:#dce4ed}
-@keyframes spin{to{transform:rotate(360deg)}}
-@media(min-width:751px){html,body,#app-nav{display:none!important}}
-@media(max-width:350px){#app-nav{padding-left:3px;padding-right:3px}.nav-item{font-size:9px;gap:4px}}
-@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+:root{--navy:#022e64;--aqua:#5fc7cf;--soft:#eaf4f8;--line:#dce7ee;--ink:#122a42;--muted:#52677d;--white:#fff;--danger:#ad2333;--shadow:0 14px 36px rgba(1,38,79,.08)}
+*{box-sizing:border-box}html,body{margin:0;padding:0;width:100%;min-height:100%;font-family:Montserrat,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;color:var(--ink);background:#f5f8fb;-webkit-text-size-adjust:100%}button,input,select{font:inherit}button{cursor:pointer}button:disabled{opacity:.6;cursor:not-allowed}a{color:var(--navy)}#shell{max-width:1180px;margin:0 auto;padding:28px 24px 80px}#heading{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;margin-bottom:22px}#eyebrow{font-size:11px;letter-spacing:.23em;text-transform:uppercase;font-weight:800;color:#176c94}h1{margin:9px 0 7px;font-size:clamp(27px,4vw,40px);line-height:1.12;letter-spacing:-.036em;font-weight:800;color:var(--navy)}#heading p{margin:0;font-size:13px;color:var(--muted);line-height:1.55}#mark{font-size:11px;font-weight:800;color:var(--navy);letter-spacing:.08em;white-space:nowrap}#search-card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:20px;box-shadow:var(--shadow)}#fields{display:grid;grid-template-columns:1.12fr 1.12fr 1fr 1fr;gap:12px}.field{display:flex;flex-direction:column;gap:6px;min-width:0}.field label{font-size:11px;font-weight:800;color:#334b62;letter-spacing:.025em}.field input,.field select{appearance:none;width:100%;min-width:0;height:46px;border:1px solid #cddbe6;border-radius:9px;background:#fff;padding:0 12px;color:#102d49;font-size:16px;font-weight:600;outline:none}.field input:focus,.field select:focus{border-color:#077cbb;box-shadow:0 0 0 3px rgba(64,170,201,.13)}.field input::placeholder{color:#9aabba;font-weight:400}#ages{display:none;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:13px}#ages.visible{display:grid}#ages select{height:43px;border:1px solid #cddbe6;border-radius:9px;background:#fff;padding:0 8px;font-size:16px;color:#102d49}.more{display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr 1.35fr;gap:12px;margin-top:13px;align-items:end}.action{height:46px;background:var(--navy);border:1px solid var(--navy);border-radius:9px;color:#fff;font-size:12px;font-weight:800;letter-spacing:.04em}.action:hover{background:#06427f}.action:focus-visible,.secondary:focus-visible,.details:focus-visible{outline:3px solid var(--aqua);outline-offset:2px}#message{font-size:12px;line-height:1.55;min-height:18px;color:var(--muted);margin:13px 2px 0}#message.error{color:var(--danger)}#result-head{display:flex;justify-content:space-between;gap:20px;align-items:center;margin:24px 0 14px}#result-count{font-size:14px;font-weight:800;color:var(--navy)}#filters{display:flex;gap:8px;align-items:center;flex-wrap:wrap}#filters select{font-size:13px;background:#fff;border:1px solid var(--line);border-radius:8px;height:38px;padding:0 12px;color:var(--navy)}#cards{display:grid;gap:14px}.offer{background:#fff;border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:0 6px 18px rgba(2,46,100,.045)}.offer-top{padding:19px;display:flex;align-items:center;gap:15px}.logo{width:52px;height:52px;object-fit:contain;border:1px solid var(--line);border-radius:10px;padding:5px;background:#fff}.logo-fallback{width:52px;height:52px;border-radius:10px;background:var(--soft);display:grid;place-items:center;font-size:17px;font-weight:800;color:var(--navy)}.route{flex:1;min-width:0}.carrier{font-size:11px;color:#345c78;font-weight:800}.route-title{font-size:20px;font-weight:800;letter-spacing:-.03em;color:var(--navy);margin:3px 0}.route-sub{font-size:12px;color:var(--muted);line-height:1.55}.price{text-align:right;white-space:nowrap}.price .amount{font-size:23px;font-weight:800;letter-spacing:-.045em;color:var(--navy)}.price small{display:block;color:var(--muted);font-size:11px;margin-top:3px}.offer-bottom{display:flex;align-items:center;justify-content:space-between;gap:15px;padding:11px 19px;background:#f9fbfd;border-top:1px solid var(--line)}.tags{display:flex;gap:7px;flex-wrap:wrap;align-items:center}.tag{display:inline-flex;align-items:center;border-radius:5px;padding:5px 8px;background:#e7f3f6;color:#134d70;font-size:10px;font-weight:800}.tag.gray{background:#e9eef4;color:#53667c}.offer-actions{display:flex;gap:8px;align-items:center}.secondary,.details{border:1px solid #b8cfdb;border-radius:8px;background:#fff;color:var(--navy);padding:10px 13px;font-weight:800;font-size:11px}.secondary:hover,.details:hover{background:#eef6fa}.details-section{display:none;padding:14px 19px 19px;border-top:1px solid var(--line)}.details-section.open{display:block}.detail-slice{border-bottom:1px solid #e2eaf0;padding:9px 0}.detail-slice:last-child{border-bottom:0}.detail-slice h3{margin:5px 0 12px;font-size:12px;color:var(--navy);font-weight:800}.segment{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:start;padding:10px 0}.segment strong{font-size:14px;color:var(--navy)}.segment small{display:block;color:#5a6d82;font-size:11px;line-height:1.65}.seg-middle{font-size:11px;font-weight:700;color:#7b8e9e;text-align:center}.operator{font-size:11px;color:#4f657a;margin:5px 0 2px}.data-lines{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px 20px;margin-top:9px;color:#38546d;font-size:11px;line-height:1.5}.empty{padding:38px 24px;text-align:center;color:#587187;border:1px dashed #cad9e4;border-radius:15px;background:#fff;font-size:13px}#loading{position:fixed;inset:0;background:rgba(1,24,52,.43);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;z-index:100;padding:22px}#loading.active{display:flex}#loading-card{max-width:340px;width:100%;border-radius:19px;background:#fff;padding:32px;text-align:center;box-shadow:0 22px 80px #0626464d}#spinner{height:36px;width:36px;border:3px solid #d8e9ef;border-top-color:var(--navy);border-radius:50%;animation:turn .8s linear infinite;margin:0 auto 15px}#loading-card strong{display:block;color:var(--navy);font-size:16px}#loading-card p{color:var(--muted);font-size:12px;line-height:1.6}#loading-card button{margin-top:8px;border:1px solid var(--line);padding:10px 20px;background:#fff;border-radius:9px;color:var(--navy);font-size:12px;font-weight:700}@keyframes turn{to{transform:rotate(360deg)}}
+@media(max-width:850px){#shell{padding:20px 16px 108px}#fields{grid-template-columns:repeat(2,minmax(0,1fr))}.more{grid-template-columns:repeat(2,minmax(0,1fr))}.more .action{grid-column:span 2}#heading{align-items:flex-start}#mark{display:none}}
+@media(max-width:520px){#shell{padding:20px 12px 105px}#search-card{padding:15px;border-radius:14px}#heading{margin:6px 4px 16px}#heading h1{font-size:29px}#fields{gap:9px}.more{gap:9px}.offer-top{padding:14px;gap:10px;align-items:flex-start}.logo,.logo-fallback{width:40px;height:40px}.route-title{font-size:18px}.price .amount{font-size:19px}.offer-bottom{padding:10px 14px;flex-wrap:wrap}.offer-actions{width:100%;justify-content:flex-end}.secondary,.details{flex:1;min-height:42px}#result-head{align-items:flex-start;flex-direction:column;gap:12px}.segment{gap:6px}.data-lines{grid-template-columns:1fr}.field input,.field select{font-size:16px}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;scroll-behavior:auto!important}}
 </style>
 </head>
 <body>
-<nav id="app-nav" aria-label="SKANDI mobile app navigation">
-  <div id="pull-zone" role="presentation"></div>
-  <button class="nav-item active" id="nav-home" type="button" data-action="home" aria-current="page">
-    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/></svg><span class="nav-label">Home</span>
-  </button>
-  <button class="nav-item" id="nav-book" type="button" data-action="book">
-    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5M7.5 10.5h6M10.5 7.5v6"/></svg><span class="nav-label">Book</span>
-  </button>
-  <button class="nav-item" id="nav-explore" type="button" data-action="explore">
-    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m15 9-2 6-4 1 1-4z"/></svg><span class="nav-label">Explore</span>
-  </button>
-  <button class="nav-item" id="nav-trips" type="button" data-action="trips">
-    <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="15" rx="2"/><path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2M3 12h18"/></svg><span class="nav-label">My Trips</span>
-  </button>
-  <button class="nav-item" id="nav-account" type="button" data-action="account">
-    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.5 3.5-7 8-7s8 2.5 8 7"/></svg><span class="nav-label">Account</span>
-  </button>
-  <div id="status" role="status" aria-live="polite" aria-atomic="true"><span id="status-spinner" aria-hidden="true"></span><span id="status-copy"></span><button id="refresh" type="button" aria-label="Refresh Home data" title="Refresh Home data"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0 1 3M20 4v7h-7"/></svg></button></div>
-</nav>
+<main id="shell">
+  <header id="heading"><div><div id="eyebrow">SKANDI TRAVELS · LIVE AIR SEARCH</div><h1>Find your next flight.</h1><p>Explore airline-operated journeys with real supplier pricing.</p></div><div id="mark">SKANDI TRAVELS</div></header>
+  <section id="search-card" aria-label="Search available flights">
+    <form id="search-form" novalidate>
+      <div id="fields">
+        <div class="field"><label for="origin">From · airport code</label><input id="origin" name="origin" minlength="3" maxlength="3" required placeholder="JFK" autocomplete="off" spellcheck="false" autocapitalize="characters"></div>
+        <div class="field"><label for="destination">To · airport code</label><input id="destination" name="destination" minlength="3" maxlength="3" required placeholder="ARN" autocomplete="off" spellcheck="false" autocapitalize="characters"></div>
+        <div class="field"><label for="depart">Departure</label><input id="depart" name="depart" type="date" required></div>
+        <div class="field"><label for="return">Return · optional</label><input id="return" name="return" type="date"></div>
+      </div>
+      <div class="more">
+        <div class="field"><label for="adults">Adults</label><select id="adults" name="adults"><option value="1">1 adult</option><option value="2">2 adults</option><option value="3">3 adults</option><option value="4">4 adults</option><option value="5">5 adults</option><option value="6">6 adults</option><option value="7">7 adults</option><option value="8">8 adults</option><option value="9">9 adults</option></select></div>
+        <div class="field"><label for="cabin">Cabin</label><select id="cabin" name="cabin"><option value="economy">Economy</option><option value="premium_economy">Premium Economy</option><option value="business">Business</option><option value="first">First</option></select></div>
+        <div class="field"><label for="connections">Connections</label><select id="connections" name="connections"><option value="1">Up to 1</option><option value="0">Direct only</option><option value="2">Up to 2</option></select></div>
+        <div class="field"><label for="children">Children</label><select id="children" name="children"><option value="0">None</option><option value="1">1 child</option><option value="2">2 children</option><option value="3">3 children</option><option value="4">4 children</option></select></div>
+        <div class="field"><label for="infants">Infants · under 2</label><select id="infants" name="infants"><option value="0">None</option><option value="1">1 infant</option><option value="2">2 infants</option><option value="3">3 infants</option><option value="4">4 infants</option></select></div>
+        <button class="action" id="search" type="submit">SEARCH LIVE FLIGHTS</button>
+      </div>
+      <div id="ages" aria-live="polite"></div>
+    </form>
+    <div id="message" role="status" aria-live="polite">Search live airline availability. Prices are rechecked before booking.</div>
+  </section>
+  <section id="results" aria-label="Flight offers"><div id="result-head"><div id="result-count" aria-live="polite">Flight results</div><div id="filters"><label for="sort">Sort</label><select id="sort"><option value="price">Lowest total</option><option value="duration">Shortest itinerary</option><option value="departure">Earliest departure</option></select><label for="airline">Airline</label><select id="airline"><option value="">All airlines</option></select></div></div><div id="cards"><div class="empty">Enter your flight details to see current available offers.</div></div></section>
+</main>
+<div id="loading" role="dialog" aria-modal="true" aria-labelledby="loading-title" aria-describedby="loading-copy"><div id="loading-card"><div id="spinner" aria-hidden="true"></div><strong id="loading-title">Searching available flights</strong><p id="loading-copy">Contacting airline suppliers and reviewing current fares.</p><button id="cancel" type="button">Cancel search</button></div></div>
 <script>
 (function(){
-  "use strict";
-  const SOURCE="SKANDI_HOME_MOBILE_APP",PARENT="SKANDI_WIX_PARENT";
-  const defaultRoutes=Object.freeze({home:"/",destinations:"/destinations",myTrips:"/my-profile?tab=trips",myProfile:"/my-profile"});
-  const state={routes:{...defaultRoutes},busy:false,refreshId:"",ready:false,feedbackTimer:null,request:0};
-  const status=document.getElementById("status"),statusCopy=document.getElementById("status-copy");
-  const nav=document.getElementById("app-nav"),refresh=document.getElementById("refresh");
-  function nextId(kind){state.request+=1;return kind+"-"+Date.now()+"-"+state.request;}
-  function post(type,payload={},requestId=""){
-    const message={source:SOURCE,type,payload,timestamp:new Date().toISOString()};
-    if(requestId)message.requestId=requestId;
-    window.parent.postMessage(message,"*");
-  }
-  function route(key){const value=String(state.routes[key]||defaultRoutes[key]||"");return value.startsWith("/")&&!value.startsWith("//")?value:"";}
-  function notice(text,opts={}){
-    clearTimeout(state.feedbackTimer);
-    statusCopy.textContent=String(text||"").slice(0,170);
-    status.classList.toggle("busy",Boolean(opts.busy));
-    status.classList.toggle("error",Boolean(opts.error));
-    status.classList.toggle("show",Boolean(text));
-    refresh.disabled=Boolean(opts.busy);
-    if(text&&!opts.busy)state.feedbackTimer=setTimeout(()=>notice(""),opts.duration||3600);
-  }
-  function setActive(name){
-    nav.querySelectorAll(".nav-item").forEach(button=>{
-      const active=button.dataset.action===name;
-      button.classList.toggle("active",active);
-      if(active)button.setAttribute("aria-current","page");else button.removeAttribute("aria-current");
-    });
-  }
-  function showBook(){
-    if(state.busy)return;
-    setActive("book");
-    post("HOME_APP_FOCUS_SEARCH",{},nextId("focus"));
-  }
-  function refreshHome(){
-    if(state.busy)return;
-    state.busy=true;
-    state.refreshId=nextId("refresh");
-    notice("Updating Home content…",{busy:true});
-    post("HOME_APP_REFRESH",{},state.refreshId);
-  }
-  function navigate(action){
-    if(state.busy)return;
-    const key=action==="explore"?"destinations":action==="trips"?"myTrips":action==="account"?"myProfile":"home";
-    const path=route(key);
-    if(!path){notice("This page is currently unavailable.",{error:true});return;}
-    setActive(action);
-    state.busy=true;
-    notice("Opening…",{busy:true});
-    post("MASTER_NAVIGATE",{path},nextId("nav"));
-    setTimeout(()=>{if(state.busy&&!state.refreshId){state.busy=false;notice("Navigation could not be confirmed. Try again.",{error:true});}},8500);
-  }
-  nav.addEventListener("click",event=>{
-    const button=event.target.closest("button[data-action]");
-    if(!button)return;
-    if(button.dataset.action==="book")return showBook();
-    if(button.dataset.action==="home"){setActive("home");return;}
-    navigate(button.dataset.action);
-  });
-  refresh.addEventListener("click",refreshHome);
-  let touchStart=null;
-  document.getElementById("pull-zone").addEventListener("touchstart",event=>{
-    if(event.touches.length!==1||state.busy)return;
-    touchStart={x:event.touches[0].clientX,y:event.touches[0].clientY};
-  },{passive:true});
-  document.getElementById("pull-zone").addEventListener("touchend",event=>{
-    if(!touchStart||!event.changedTouches.length)return;
-    const dx=event.changedTouches[0].clientX-touchStart.x;
-    const dy=event.changedTouches[0].clientY-touchStart.y;
-    touchStart=null;
-    if(dy>42&&Math.abs(dy)>Math.abs(dx)*1.2)refreshHome();
-  },{passive:true});
-  window.addEventListener("message",event=>{
-    if(event.source!==window.parent)return;
-    let data=event.data;
-    if(typeof data==="string"){try{data=JSON.parse(data);}catch(_){return;}}
-    if(!data||data.source!==PARENT)return;
-    if(data.type==="SKANDI_MASTER_CONFIG"){
-      const r=data.payload?.routes;
-      if(r&&typeof r==="object")state.routes={...state.routes,...r};
-    }
-    if(data.type==="HOME_APP_READY_ACK"){state.ready=true;return;}
-    if(data.type==="HOME_APP_FOCUS_ACK"){notice("");return;}
-    if(data.type==="HOME_APP_REFRESH_RESULT"&&data.requestId===state.refreshId){
-      state.busy=false;state.refreshId="";
-      notice(data.payload?.completed?"Home content and price checks updated.":"Home content updated. Live price checks continue.");
-      return;
-    }
-    if(data.type==="HOME_APP_REFRESH_ERROR"&&data.requestId===state.refreshId){
-      state.busy=false;state.refreshId="";
-      notice(data.payload?.message||"Could not refresh Home.",{error:true});
-    }
-  });
-  post("MASTER_CONFIG_REQUEST",{context:"home-mobile-nav"});
-  post("HOME_APP_READY",{},nextId("ready"));
+'use strict';
+const SOURCE='SKANDI_HOME_DUFFEL_EXPLORER',PARENT='SKANDI_WIX_PARENT';
+const $=id=>document.getElementById(id);
+let requestSequence=0,activeId='',busy=false,offers=[],searchContext=null,hostReady=false,watchdog=null;
+const arr=v=>Array.isArray(v)?v:[]; const text=v=>String(v??'');
+function esc(v){return text(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function post(type,payload={},requestId=''){const msg={source:SOURCE,type,payload,timestamp:new Date().toISOString()};if(requestId)msg.requestId=requestId;window.parent.postMessage(msg,'*');}
+function rid(type){requestSequence++;return type+'-'+Date.now()+'-'+requestSequence;}
+function notify(message,error=false){$('message').textContent=message;$('message').classList.toggle('error',error);}
+function lock(flag,title){if(watchdog){clearTimeout(watchdog);watchdog=null;}busy=flag;$('search').disabled=flag;$('cancel').disabled=!flag;$('loading').classList.toggle('active',flag);$('loading-title').textContent=title||'Searching available flights';document.body.style.overflow=flag?'hidden':'';}
+function cleanAirport(id){$(id).value=$(id).value.trim().toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,3);return $(id).value;}
+function dateValid(v){return /^\d{4}-\d{2}-\d{2}$/.test(v)&&!Number.isNaN(Date.parse(v+'T00:00:00Z'));}
+function collect(){let origin=cleanAirport('origin'),destination=cleanAirport('destination'),departureDate=$('depart').value,returnDate=$('return').value;
+ if(!/^[A-Z0-9]{3}$/.test(origin)||!/^[A-Z0-9]{3}$/.test(destination)||origin===destination)throw Error('Enter different three-character origin and destination airport codes.');
+ const today=new Date();let localToday=[today.getFullYear(),String(today.getMonth()+1).padStart(2,'0'),String(today.getDate()).padStart(2,'0')].join('-');
+ if(!dateValid(departureDate)||departureDate<localToday)throw Error('Choose a departure date today or later.');
+ if(returnDate&&(!dateValid(returnDate)||returnDate<departureDate))throw Error('Return date must be on or after departure.');
+ const adults=Number($('adults').value),children=Number($('children').value),infants=Number($('infants').value);
+ if(adults+children+infants>9)throw Error('A flight search can include up to nine travelers.');
+ if(infants>adults)throw Error('Each infant needs a separate adult traveler.');
+ const childAges=[...$('ages').querySelectorAll('select')].map(s=>Number(s.value));
+ if(children!==childAges.length||childAges.some(a=>!Number.isInteger(a)||a<2||a>17))throw Error('Choose the age of every child at the time of travel.');
+ return{tripType:'flightOnly',origin,destination,departureDate,returnDate:returnDate||null,adults,children,childAges,infants,cabinClass:$('cabin').value,maxConnections:Number($('connections').value)};
+}
+function money(v,c){const n=Number(v);if(!Number.isFinite(n))return 'Price on request';return new Intl.NumberFormat('en-US',{style:'currency',currency:c||'USD'}).format(n);}
+function airport(v){return v?.iataCode||v?.iataCityCode||'—';}
+function airlineName(x){return x?.owner?.name||x?.operatingCarriers?.[0]?.name||'Airline';}
+function segs(x){return arr(x.slices).flatMap(s=>arr(s.segments));}
+function epoch(v){const n=Date.parse(v||'');return Number.isFinite(n)?n:Infinity;}
+function duration(x){return arr(x.slices).reduce((a,s)=>a+(isoMinutes(s.duration)||arr(s.segments).reduce((n,g)=>n+(isoMinutes(g.duration)||0),0)),0);}
+function isoMinutes(s){const m=/^PT(?:(\d+)H)?(?:(\d+)M)?$/.exec(text(s));return m?Number(m[1]||0)*60+Number(m[2]||0):0;}
+function logo(c){const src=c?.logoSymbolUrl;return /^https:\/\//.test(src||'')?'<img class="logo" src="'+esc(src)+'" alt="'+esc(c?.name||'Airline')+' logo" loading="lazy" referrerpolicy="no-referrer">':'<div class="logo-fallback" aria-hidden="true">'+esc((c?.iataCode||'SK').slice(0,2))+'</div>';}
+function dataLine(label,value){return value?'<div><strong>'+esc(label)+':</strong> '+esc(value)+'</div>':'';}
+function segmentHtml(seg){const from=seg.origin||{},to=seg.destination||{};const operator=seg.operatingCarrier||{},marketing=seg.marketingCarrier||{};
+ const flightCode=(marketing.iataCode||'')+text(seg.marketingFlightNumber||'');
+ const op=operator.name?'Operated by '+esc(operator.name)+(seg.operatingFlightNumber?' · '+esc((operator.iataCode||'')+seg.operatingFlightNumber):''):'';
+ return'<div class="segment"><div><strong>'+esc(airport(from))+'</strong><small>'+esc(seg.departingAt||'Time not provided')+'</small><small>'+esc(from.name||'')+(seg.originTerminal?' · Terminal '+esc(seg.originTerminal):'')+'</small></div><div class="seg-middle">'+esc(seg.duration||'')+'<br>→</div><div><strong>'+esc(airport(to))+'</strong><small>'+esc(seg.arrivingAt||'Time not provided')+'</small><small>'+esc(to.name||'')+(seg.destinationTerminal?' · Terminal '+esc(seg.destinationTerminal):'')+'</small></div></div>'+
+ '<p class="operator">'+(flightCode?'Flight '+esc(flightCode)+' · ':'')+op+'</p><div class="data-lines">'+dataLine('Aircraft',seg.aircraft?.name||seg.aircraft?.iataCode)+dataLine('Distance',seg.distance)+dataLine('Marketing airline',marketing.name)+dataLine('Operating airline',operator.name)+dataLine('Technical stops',arr(seg.stops).length?arr(seg.stops).map(x=>x.airport?.name||x.airport?.iataCode||'Stop').join(', '):null)+arr(seg.passengers).map(p=>dataLine('Cabin / fare',p.cabinClassMarketingName||p.cabinClass)+dataLine('Included bags',arr(p.baggages).map(b=>[b.quantity,b.type,b.weight?b.weight+' '+(b.weightUnit||''):''].filter(Boolean).join(' ')).join('; '))).join('')+'</div>';
+}
+function detailsHtml(x){return arr(x.slices).map((s,i)=>'<section class="detail-slice"><h3>'+(arr(x.slices).length===1?'Your journey':'Journey '+(i+1))+' · '+esc(airport(s.origin))+' → '+esc(airport(s.destination))+(s.fareBrandName?' · '+esc(s.fareBrandName):'')+'</h3>'+arr(s.segments).map(segmentHtml).join('')+'</section>').join('');}
+function render(){const sort=$('sort').value,airline=$('airline').value;const shown=offers.filter(x=>!airline||airlineName(x)===airline).sort((a,b)=>sort==='duration'?duration(a)-duration(b):sort==='departure'?epoch(segs(a)[0]?.departingAt)-epoch(segs(b)[0]?.departingAt):Number(a.totalAmount)-Number(b.totalAmount));$('result-count').textContent=shown.length+' flight option'+(shown.length===1?'':'s');
+ $('cards').innerHTML=shown.length?shown.map((x,i)=>{const s=arr(x.slices)[0]||{},f=segs(x),name=airlineName(x),direct=arr(s.segments).length<=1;const expired=epoch(x.expiresAt)<Date.now();return'<article class="offer"><div class="offer-top">'+logo(x.owner)+'<div class="route"><div class="carrier">'+esc(name)+'</div><div class="route-title">'+esc(airport(s.origin))+' → '+esc(airport(s.destination))+'</div><div class="route-sub">'+esc(s.segments?.[0]?.departingAt?.slice(0,16)?.replace('T',' ')||'Departure subject to confirmation')+' · '+(direct?'Nonstop':(arr(s.segments).length-1)+' connection(s)')+'</div></div><div class="price"><div class="amount">'+esc(money(x.totalAmount,x.totalCurrency))+'</div><small>Trip total · '+esc(x.totalCurrency||'')+'</small></div></div><div class="offer-bottom"><div class="tags"><span class="tag">'+esc($('cabin').selectedOptions[0].textContent)+'</span><span class="tag gray">'+(direct?'Direct':(arr(s.segments).length-1)+' stop(s)')+'</span>'+(x.expiresAt?'<span class="tag gray">'+(expired?'Offer expired':'Recheck before purchase')+'</span>':'')+'</div><div class="offer-actions"><button class="details" type="button" data-action="detail" data-id="'+esc(x.id)+'" aria-expanded="false">Flight details</button><button class="secondary" type="button" data-action="choose" data-id="'+esc(x.id)+'" '+(expired||busy?'disabled':'')+'>Continue</button></div></div><div class="details-section" id="detail-'+i+'">'+detailsHtml(x)+'</div></article>';}).join(''):'<div class="empty">No current offers match this search or filter. Change the criteria and try again.</div>';
+ $('cards').querySelectorAll('button[data-action]').forEach(b=>b.addEventListener('click',()=>{const id=b.getAttribute('data-id');const card=b.closest('.offer');if(b.dataset.action==='detail'){const sec=card.querySelector('.details-section');const open=sec.classList.toggle('open');b.setAttribute('aria-expanded',String(open));b.textContent=open?'Hide details':'Flight details';}else{if(!searchContext)return;lock(true,'Opening secure booking');activeId=rid('continue');const stamp=activeId;watchdog=setTimeout(()=>{if(activeId===stamp)fail('Could not open checkout. Your booking has not been placed. Please retry from live results.');},15000);post('HOME_DUFFEL_CONTINUE',{search:searchContext,offerId:id},activeId);}}));
+}
+function populateAirlines(){const old=$('airline').value;const names=[...new Set(offers.map(airlineName))].sort();$('airline').innerHTML='<option value="">All airlines</option>'+names.map(x=>'<option value="'+esc(x)+'">'+esc(x)+'</option>').join('');$('airline').value=names.includes(old)?old:'';}
+function fail(message){lock(false);activeId='';notify(message,true);}
+$('search-form').addEventListener('submit',e=>{e.preventDefault();if(busy)return;let search;try{search=collect();}catch(err){notify(err.message,true);return;}searchContext=search;offers=[];populateAirlines();$('cards').innerHTML='<div class="empty">Finding available flights…</div>';activeId=rid('search');lock(true,'Searching available flights');notify('Contacting airline suppliers…');const stamp=activeId;watchdog=setTimeout(()=>{if(activeId===stamp)fail('The airline search timed out. Try again with your current criteria.');},95000);post('HOME_DUFFEL_SEARCH',{search},activeId);});
+$('cancel').addEventListener('click',()=>{if(!busy)return;activeId='';lock(false);notify('Search view closed. Supplier queries may still finish.');});
+$('sort').addEventListener('change',render);$('airline').addEventListener('change',render);
+$('children').addEventListener('change',()=>{const count=Number($('children').value),ages=$('ages');const current=[...ages.querySelectorAll('select')].map(x=>x.value);ages.innerHTML=Array.from({length:count},(_,i)=>'<div class="field"><label for="child-age-'+i+'">Child '+(i+1)+' age</label><select id="child-age-'+i+'" required><option value="">Select age</option>'+Array.from({length:16},(_,j)=>'<option value="'+(j+2)+'" '+(current[i]===String(j+2)?'selected':'')+'>'+(j+2)+' years</option>').join('')+'</select></div>').join('');ages.classList.toggle('visible',count>0);});
+window.addEventListener('message',e=>{if(e.source!==window.parent)return;let m=e.data;if(typeof m==='string'){try{m=JSON.parse(m);}catch(_){return;}}if(!m||m.source!==PARENT)return;
+ if(m.type==='HOME_DUFFEL_HOST_READY'){hostReady=true;return;}
+ if(!['HOME_DUFFEL_RESULTS','HOME_DUFFEL_ERROR','HOME_DUFFEL_BOOKING_ROUTE'].includes(m.type))return;
+ if(!activeId||m.requestId!==activeId)return;
+ if(m.type==='HOME_DUFFEL_ERROR'){fail(m.payload?.message||'The flight service could not complete the request.');return;}
+ if(m.type==='HOME_DUFFEL_RESULTS'){lock(false);activeId='';offers=arr(m.payload?.items).filter(x=>x&&typeof x==='object'&&x.id&&!x.partial&&!x.isExpired);populateAirlines();render();notify(offers.length?'Live offers loaded. The final fare will be checked during booking.':'No available flights were returned. Change your search dates or airports.');return;}
+ if(m.type==='HOME_DUFFEL_BOOKING_ROUTE'){notify('Opening secure checkout…');return;}
+});
+const today=new Date();$('depart').min=[today.getFullYear(),String(today.getMonth()+1).padStart(2,'0'),String(today.getDate()).padStart(2,'0')].join('-');$('return').min=$('depart').min;$('depart').addEventListener('change',()=>$('return').min=$('depart').value||$('depart').min);
+post('HOME_DUFFEL_READY');
 })();
 </script>
 </body>
