@@ -6,10 +6,14 @@
 - CHAT COMPONENT: `#skandiSupportChatEmbed`
 - CHILD SOURCE: `SKANDI_SUPPORT_CUSTOMER_PORTAL`
 - CANONICAL BACKEND: `/src/backend/SKANDI_CORE/customerSupport.web.js` → `/src/backend/SKANDI_CORE/customerSupport.js`
-- STATUS: V12 MEMBER PRIORITY CONVERGENCE STATICALLY VERIFIED — REQUIRES LIVE TEST
+- SUPPLIER SELF-SERVICE LINK: `/my-profile/travel-assistance` (canonical owned booking/session checks remain there)
+- STATUS: V12 MEMBER PRIORITY CONVERGENCE + V12.4 ASSISTANT ENTRY — **STATICALLY VERIFIED; REQUIRES LIVE TEST**
 
 ## CHANGE LOG
 - 2026-10-12 — Every case created from the signed-in Member HelpDesk, including cases created from its shared Human Support chat form/handoff path, is stamped `member-helpdesk` / `MEMBER_HELPDESK`. The master agent workspace uses this durable source to place Member HelpDesk work above standard Help Center cases and displays a dedicated priority flag. Existing customer auth, case ownership, support messaging and LiveKit contracts remain canonical. STATICALLY VERIFIED; REQUIRES LIVE TEST.
+- 2026-10-19 — V12.4: Added contextual travel-assistant entry when a case concerns a booking, flight or hotel. It sends `CUSTOMER_NAVIGATE` through the existing Wix controller to `/my-profile/travel-assistance?caseId=...`, where the user must select and own the Duffel booking. No duplicate SKANDI cases or parallel chat data store. Added defense-in-depth private-message suppression; `customerSupport.web.js` now also excludes staff/internal notes from customer case detail. Original form categories, CSS, chat, LiveKit, priority flow and responsive behavior preserved. REQUIRES LIVE TEST.
+
+- 2026-10-19 — V12.5: Updated the contextual travel-management route to the owner-confirmed `/my-profile/travel-assistance` while preserving `CUSTOMER_NAVIGATE`, `caseId`, existing Support case ownership and the complete standalone human-chat embed. No backend service duplication.
 
 ## COMPLETE INTENDED HTML
 
@@ -1133,6 +1137,10 @@
                         <div class="chat-header">
                             <h2 id="caseTitle" style="font-size: 24px; color: var(--blue);">Select a case</h2>
                             <div id="caseSubtitle" style="font-size: 13px; color: var(--muted); margin-top: 4px;">To view your secure messages</div>
+                            <div id="duffelCaseActions" class="hidden" style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+                                <button id="openDuffelFromCase" type="button" class="btn paper" style="min-height:36px;height:36px">Manage flights / hotels with Duffel</button>
+                                <span style="font-size:11px;color:var(--muted)">For eligible Duffel bookings. SKANDI support messages remain here.</span>
+                            </div>
                         </div>
                         
                         <div id="messages" class="chat-window">
@@ -1814,8 +1822,9 @@
 
         $("caseTitle").textContent = active.subject || activeRef || "Support case";
         $("caseSubtitle").textContent = activeRef ? `Case Reference: ${activeRef}` : "Secure messaging channel";
+        $("duffelCaseActions").classList.toggle("hidden", !activeId || !(active.bookingRef || active.pnr || /booking|duffel|flight|hotel/i.test(String(active.subject || ""))));
 
-        $("messages").innerHTML = (payload.messages || []).map(m => {
+        $("messages").innerHTML = (payload.messages || []).filter(m => m.private !== true && m.kind !== "internal" && String(m.channel || "").toLowerCase() !== "internal").map(m => {
           const senderType = m.sender_type || m.senderType || "";
           const senderName = m.sender_name || m.senderName || "";
           const content = m.message || m.content || "";
@@ -1836,6 +1845,11 @@
         $("messages").scrollTop = $("messages").scrollHeight;
       }
 
+      $("openDuffelFromCase").onclick = () => {
+        const caseId = String(state.active?.caseId || "");
+        if (!/^case_[A-Za-z0-9_]+$/.test(caseId)) return toast("Open your booking support case first.");
+        post("CUSTOMER_NAVIGATE", { path: `/my-profile/travel-assistance?caseId=${encodeURIComponent(caseId)}` });
+      };
       $("refreshBtn").onclick = () => post("CUSTOMER_LIST_CASES");
       $("newBtn").onclick = () => $("newCaseModal").classList.add("open");
 
@@ -2876,6 +2890,6 @@ DE: {
   async function publish(sent,s){const text=String(sent?.message||sent?.content||"").trim();if(!text)return;const r=await connect(s);if(!r)return;await r.localParticipant.sendText(text,{topic:s?.textTopic||DEFAULT_TOPIC,attributes:{caseId:activeCaseId,messageId:String(sent?.messageId||sent?.message_id||""),senderType:"customer"}});}
   window.addEventListener("message",e=>{const m=e.data||{};if(m.source!==PARENT)return;const p=m.payload||{};if(m.type==="CUSTOMER_CASE_DETAIL"){activeCaseId=String(p.case?.caseId||p.case?.case_id||"");connect(p.livekitSession).catch(()=>{});}if(m.type==="CUSTOMER_REPLY_SENT"){activeCaseId=String(p.case?.caseId||p.case?.case_id||activeCaseId);publish(p.sentMessage,p.livekitSession).catch(()=>{});}if(m.type==="CUSTOMER_CASE_CREATED"){activeCaseId=String(p.caseId||p.case?.caseId||p.case?.case_id||activeCaseId);connect(p.livekitSession).catch(()=>{});}});
 })();
-</script>\n</body>
+</script></body>
 </html>
 ```
