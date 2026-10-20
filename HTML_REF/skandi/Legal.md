@@ -110,6 +110,20 @@ Page → HTML:
 
 ## COMPLETE INTENDED LIVE HTML SOURCE
 
+
+## APPROVED REPAIR LOG — 2026-10-03 UTC
+
+Policy Documents.bd8ok.js now imports getPublicLegalHub from the existing canonical legalPolicy.web boundary. LEGAL_HUB_DATA/error contract remains unchanged. Internal legal services remain missing; Policy Documents route ownership requires live verification. Source changes prepared; not deployed.
+
+
+### V12 public legal presentation update — 2026-10-20 UTC
+
+- Confirmed `/src/pages/Legal.nvnld.js` bridges use the current canonical `backend/SKANDI_CORE/legalPolicy.web.js` facade and `legalPolicy.js` public projection. The established public scope/published/active filter, document selector, navigation, PDF link, and acknowledgement submission contracts remain unchanged.
+- Updated the complete Wix HTML payload for `#legalHubEmbed` to a restrained SKANDI navy and cyan legal-document design with larger body text, document headings, controls, accessible mobile sizes and mobile table/rail containment. Existing global Wix header/footer remain owned by `masterPage.js`; no second site header is introduced.
+- Added a bounded, idempotent initial `READY` message retry to recover when the child iframe starts before the Wix page controller has registered its listener. This retries only the existing message contract; it does not bypass the canonical backend or create local legal records.
+- IMPORTANT ROUTE NOTE: The verified canonical V12 route registry currently defines `/about/legal`, NOT the abbreviated `/legal` aliases. Wix page slugs/redirects must be configured separately if `/legal` or `/legal/policies` are explicitly required. No unapproved route mutation is included.
+- **STATICALLY VERIFIED** against the current GitHub `main` HTML message contract and backend imports. **REQUIRES LIVE TEST** in the published Wix page for actual data loading, navigation, sizing, PDF links and any required acknowledgement.
+
 ```html
 <!doctype html>
 <html lang="en">
@@ -509,6 +523,131 @@ button:focus-visible,input:focus-visible{
     scroll-behavior:auto!important;
   }
 }
+
+/* V12 legal reading standard — restrained SKANDI Group corporate presentation. */
+:root{
+  --sk-text:#1c2938;
+  --sk-body:#344357;
+  --sk-muted:#566679;
+  --sk-border:#d6dfeb;
+  --sk-border-soft:#e6ebf2;
+  --sk-pale:#f7f9fd;
+  --sk-radius:10px;
+}
+html,body{font-size:15px;line-height:1.6}
+.hero{
+  padding:54px 24px 46px;
+  background:linear-gradient(180deg,#fff 0%,#f8faff 100%);
+}
+.hero-inner{gap:46px;align-items:center}
+.hero h1{
+  font-size:clamp(38px,4.7vw,56px);
+  line-height:1.1;
+  font-weight:800;
+  letter-spacing:-.037em;
+}
+.hero p{
+  max-width:690px;
+  font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif;
+  font-size:16px;
+  line-height:1.79;
+  color:var(--sk-body);
+}
+.eyebrow{color:var(--sk-blue);font-size:11px;letter-spacing:.135em}
+.section{padding-top:53px}
+.section h2{
+  font-size:clamp(27px,3vw,35px);
+  line-height:1.19;
+  letter-spacing:-.03em;
+  font-weight:750;
+}
+.copy{
+  max-width:790px;
+  font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif;
+  font-size:15px;
+  line-height:1.76;
+  color:var(--sk-body);
+}
+.meta{font-size:12px;line-height:1.6;font-weight:600}
+.search-shell{border-radius:10px;box-shadow:0 3px 15px rgba(2,46,100,.055)}
+.search-shell input{
+  font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif;
+  font-size:15px;
+  font-weight:500;
+  line-height:1.5;
+}
+.btn{
+  min-height:44px;
+  border-radius:7px;
+  font-size:13px;
+  font-weight:750;
+  letter-spacing:.008em;
+}
+.grid{gap:16px}
+.card{
+  min-height:230px;
+  gap:13px;
+  padding:22px;
+  border:1px solid var(--sk-border);
+  border-radius:10px;
+  box-shadow:0 2px 8px rgba(2,46,100,.037);
+}
+.card:hover{
+  transform:translateY(-1px);
+  box-shadow:0 8px 18px rgba(2,46,100,.08);
+}
+.icon{border-radius:8px}
+.card h3{
+  font-size:18px;
+  line-height:1.35;
+  font-weight:750;
+}
+.card p{
+  font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif;
+  font-size:14.5px;
+  line-height:1.75;
+}
+.card-action{
+  font-size:11.5px;
+  line-height:1.6;
+  font-weight:750;
+}
+.library-shell{
+  padding:24px;
+  border-radius:11px;
+  background:#f9fbfe;
+}
+.list{gap:10px}
+.row{
+  padding:18px 20px;
+  border-color:var(--sk-border);
+  border-radius:8px;
+  box-shadow:none;
+}
+.row h3{font-size:17px;line-height:1.43;font-weight:750}
+.row .copy{font-size:14.5px;line-height:1.7}
+.row .meta{font-size:11.5px;line-height:1.7}
+.row-actions .btn{padding:0 20px}
+.empty{font-size:14px;line-height:1.7;border-radius:9px}
+.status-note{font-size:12px;line-height:1.6}
+@media(max-width:940px){
+  .hero-inner{gap:26px}
+}
+@media(max-width:680px){
+  .hero{padding:39px 16px 31px}
+  .hero h1{font-size:38px;line-height:1.12}
+  .hero p{font-size:15.5px;line-height:1.75}
+  .section{padding:39px 16px 0}
+  .section h2{font-size:29px}
+  .card{min-height:0;padding:19px}
+  .card p{font-size:15px}
+  .library-shell{padding:14px}
+  .row{padding:17px 16px}
+  .row h3{font-size:17px}
+  .row-actions{width:100%}
+  .row-actions .btn{width:100%}
+}
+
 </style>
 </head>
 <body>
@@ -586,6 +725,19 @@ let data={
   settings:{}
 };
 let loaded=false;
+let bridgeSettled=false;
+let bridgeRetries=0;
+let bridgeRetryTimer=null;
+function requestInitialHub(){
+  if(bridgeSettled||bridgeRetries>=5)return;
+  bridgeRetries++;
+  post("LEGAL_HUB_READY",{});
+  bridgeRetryTimer=setTimeout(requestInitialHub,1800);
+}
+function settleInitialHub(){
+  bridgeSettled=true;
+  if(bridgeRetryTimer){clearTimeout(bridgeRetryTimer);bridgeRetryTimer=null;}
+}
 
 function post(type,payload={}){
   window.parent.postMessage({
@@ -806,7 +958,13 @@ window.addEventListener("message",event=>{
   if(!message||typeof message!=="object")return;
   if(message.source&&message.source!==PARENT)return;
 
+  if(message.type==="LEGAL_HUB_PARENT_READY"){
+    if(!bridgeSettled)post("LEGAL_HUB_READY",{});
+    return;
+  }
+
   if(message.type==="LEGAL_HUB_DATA"){
+    settleInitialHub();
     const payload=message.payload||{};
     data={
       directPages:Array.isArray(payload.directPages)?payload.directPages:[],
@@ -820,6 +978,7 @@ window.addEventListener("message",event=>{
   }
 
   if(message.type==="LEGAL_HUB_ERROR"||message.type==="LEGAL_ERROR"){
+    settleInitialHub();
     showLoadError(message.payload?.message);
   }
 });
@@ -830,10 +989,11 @@ if("ResizeObserver"in window){
   window.addEventListener("resize",requestHeight);
 }
 
-post("LEGAL_HUB_READY",{});
+requestInitialHub();
 requestHeight();
 })();
 </script>
 </body>
 </html>
 ```
+
