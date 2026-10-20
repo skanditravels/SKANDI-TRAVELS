@@ -6,20 +6,23 @@
 - WIX PAGE FILE: `/src/pages/Inventory Control.jsdik.js`
 - WIX ROUTE / SLUG: `/riaintra/success-factors/altea/inventory-control`
 - WIX HTML ELEMENT: `#inventoryControlEmbed`
-- CURRENT STATUS: V12 AMADEUS / PROPERTY DIRECTOR REFERENCE RECONSTRUCTION — REQUIRES LIVE TEST
+- CURRENT STATUS: V12 PROPERTY DIRECTOR LOCALIZATION INTEGRATION — REQUIRES LIVE TEST
 - SOURCE-OF-TRUTH STATUS: AUTHORITATIVE intended V12 embed payload supplied for this repair.
 - CANONICAL WEB FACADE: `/src/backend/SKANDI_CORE/inventory.web.js`
-- CANONICAL CORE: `/src/backend/SKANDI_CORE/inventory.js`
+- CANONICAL CORE: `/src/backend/SKANDI_CORE/inventory.js` (existing persistence); `/src/backend/SKANDI_CORE/inventoryHotelLocalization.js` (property-only machine-translation adapter)
 - SHARED DATABASE TRANSPORT: `/src/backend/SKANDI_CORE/supabaseServer.js`
 - DATA AUTHORITY: Duffel provider facts -> Inventory Control / Supabase canonical record -> downstream page/core consumers. No embed is permitted to maintain an independent editable copy of shared airline, airport, hotel or destination reference facts.
 - CANONICAL DETAIL STORAGE: `travel_info_airlines.inventory_details`, `travel_info_airports.inventory_details`, and `inventory_master_entities.details`; identity/lifecycle/query fields remain normal table columns. Legacy Travel Info columns are compatibility projections only after the supplied migration.
 - CANONICAL MASTER LIBRARIES: HOTEL, TRANSFER, GUIDED_TOUR, ACTIVITY and PARTNER_TICKET downstream Travel Info content is projected from `inventory_public_entities_v`; legacy `travel_info_hotels/transfers/tours/activities/tickets` are not downstream authorities after this repair.
 - PROVIDER SNAPSHOT: the provider evidence remains under `payload.duffel` (`normalized` + `raw`). The migration promotes the normalized provider-owned subset into the canonical Inventory detail object and retains a read-only `inventory_details.duffel` / `details.duffel` copy for audit/context; SKANDI enrichment remains editable only in Inventory Control.
 - AUTHORIZATION: unchanged from current V12 page/facade/core boundaries. No frontend role or provider secret becomes authoritative.
-- MESSAGE CONTRACTS / ELEMENT IDS: unchanged.
-- LAST VERIFIED: 2026-10-20 (source-only; Wix publication unverified); previous source review 2026-10-19 — GitHub `skanditravels/SKANDI-TRAVELS`, branch `main`, Inventory HTML_REF, Wix page controller and canonical facade/core read in source. Amadeus design and V12 uploaded HTML compared; local static syntax checked. Wix runtime not executed.
+- MESSAGE CONTRACTS / ELEMENT IDS: existing contracts and `#inventoryControlEmbed` unchanged; Property Director adds `INVENTORY_V9_TRANSLATE_HOTEL_CONTENT` -> `INVENTORY_V9_HOTEL_TRANSLATION` through the canonical inventory dispatcher.
+- LAST VERIFIED: 2026-10-20 (Property Director source, backend contracts and local tests; live publication/translation unverified); previous source review 2026-10-19 — GitHub `skanditravels/SKANDI-TRAVELS`, branch `main`, Inventory HTML_REF, Wix page controller and canonical facade/core read in source. Amadeus design and V12 uploaded HTML compared; local static syntax checked. Wix runtime not executed.
 
 ## CHANGE LOG
+
+- 2026-10-20 — Property Director geography-only enhancement: replaced the inert location map rectangle in the existing Master & Geo tab with lazily loaded MapLibre GL JS and public OpenFreeMap map tiles. When coordinates exist, the map opens at the saved location; click or drag the map pin to update only `details.latitude` / `details.longitude` in the already-open HOTEL draft. Manual coordinate edits also reposition the pin. Coordinates are persisted only by the existing COMMIT WORKSPACE canonical HOTEL bundle save. Without coordinates, show the world map without inventing a hotel location. No address geocoding, changes to page controller, facade, backend, translation generation, database, or other Inventory Control modules. STATICALLY VERIFIED; REQUIRES LIVE TEST for published-site map asset and tile loading.
+- 2026-10-20 — Property Director-only parity and multilingual-content repair: compared the complete user-supplied `ACRS_SKANDI_Poperty Manager.html` reference (five hotel modules, property directory, English-led localized content) with the preceding approved V12 embed. Modified only the Property Director workspace within the live Inventory Control HTML; all other modules, navigation, global header, Master Filter, protected hotel ownership, responsive shell, message names, and existing data flows are byte-identical to the previous approved embed. Kept the five hotel workspace sections and canonical `HOTEL` bundle editor; replaced `CLONE FROM EN` (copy-only, no translation) with a real server-side translation action, using the existing staff-session permission boundary and a documented site-native bulk machine-translation service. English drafts are built only from present canonical hotel facts, and localized text is returned to the Property Director editor for explicit review; publishing/persistence still uses `INVENTORY_V9_SAVE_BUNDLE` and `inventory_localized_content` through the existing canonical core. Added editable English source, titles, full descriptions, highlights, included/not-included items, important information and SEO fields; the localization action will never overwrite without user confirmation, never persist automatically, reject incomplete translations, and require staff review before save. No new database tables, alternate translation cache, direct embed API calls, other front-end page/controller changes, or fake content. The existing Audit Gate remains read-only because a separate verified verification-write contract is not available. Backend access to the site-native translation service and credit balance require live validation; language quality requires staff review. STATICALLY VERIFIED, REQUIRES LIVE TEST.
 - **2026-10-20 — Inventory Control employee-facing wording and diagnostics:** Replaced third-party/platform names and overly technical screen copy with SKANDI TRAVELS / ALTEA / RIAINTRA and Supplier language. Channels keep their established stored IDs; supplier/partner names are rendered only as labels, and `SKANDI Partner` appears for a property with the stored `SKANDI_PARTNER` classification. Connection failures, rejected requests, raw diagnostic codes, and system identifiers are never written into employee notifications; the original technical details are emitted only to the browser diagnostic console with action/request correlation and without record payloads. Shortened the Supplier Directory and Property Director instructions. Navigation, HOTEL-only Property Director editing, backend integrations, data, contracts and imports remain unchanged. STATICALLY VERIFIED; REQUIRES LIVE TEST after Wix publication. Browser-console diagnostics are not a persistent help-desk incident registry.
 - 2026-10-20 — Travel Inventory / Property Director ownership repair: renamed the Master Records navigation and panel to Travel Inventory. HOTEL is excluded from generic record browsing, creation, editing and archive actions. Selecting the HOTEL family routes staff to Property Director, including the dashboard hotel shortcut and hotel records opened after provider import/link. A successful hotel import refreshes canonical records before opening Property Director. The master filter retains HOTEL for Property Director; supplier discovery and negotiated-rate operations remain available. Property Director remains the only hotel master editor, includes the canonical property archive action, and refreshes the shared inventory bootstrap after confirmed saves or archives. No database models, API actions, authentication, backend logic or other product families changed. STATICALLY VERIFIED for embed source and bridge contracts; REQUIRES LIVE TEST after Wix HTML publication.
 - 2026-10-14 — Add Record UX repair: Master Records `+ New Record` now opens a record-type chooser when Record Family is `All`, then opens the existing canonical RecordEditor with the selected real inventory type. Existing direct-create behavior for a preselected family and the separate Guided Tour / Activity create controls remain intact. No page-controller, facade, core, message-contract, authorization, schema or stored-data change. STATICALLY VERIFIED; REQUIRES LIVE TEST after replacing and publishing `#inventoryControlEmbed`.
@@ -34,6 +37,7 @@
 - 2026-10-19 — Amadeus-inspired dense enterprise presentation applied to Inventory Control using supplied design reference without changing pinned React 19 imports, bridge events or backend action names. Added one memory-scoped Master Filter in the global header, reused as the Master Records record-family selector, and contextualized Overview/Provider views; scope selection remains through internal menu navigation and resets when the embed/window closes. Added Property Director menu for real canonical HOTEL records using the existing RecordEditor and inventory facade (no sample data, new database or backend actions). Earlier package did not match the Property Director reference or include its five-module workspace; superseded by the correction below. STATICALLY VERIFIED; REQUIRES LIVE TEST on Wix after embed publication.
 
 - 2026-10-19 — CORRECTION: inspected the newly supplied complete 820-line Property Director reference. Replaced Inventory Control's prior approximate shell with the exact Property Director global header, typography, 220px sidebar, body placement, table/control dimensions, and five-tab Hotel workspace design. The sole header Context dropdown becomes the session-lived Master Filter. Property Directory and full five modules (Master & Geo, Inventory Models, Channel Matrix, Content & Media, Audit Gate) now use current canonical HOTEL bundles rather than mocked properties and fake success. Room definitions reuse HOTEL `details.rooms`; further property configuration stays inside its canonical details JSONB, with no new independent data store. Shared localized content/media use existing child resources and Asset Library. Audit is read-only from the existing audited backend; no unverified verification logging. The baseline page controller, backend facade, core, message contracts and element ID remain unchanged. STATICALLY VERIFIED locally; REQUIRES LIVE TEST in Wix, including user permissions, saved hotel properties and provider distribution support.
+
 
 ## COMPLETE INTENDED HTML
 
@@ -1793,10 +1797,116 @@ function PDField({label,value,onChange,type="text",options=[],disabled=false,hel
 function PDSection({children,title,actions=null,first=false}){
   return html`<div className=${first?"sectiontitle":"sectiontitle pd-module-title"}>${title}${actions?html`<span>${actions}</span>`:null}</div>${children}`;
 }
+/* Property Director map: presentation-only; coordinates persist through the existing hotel bundle save. */
+let propertyMapModulePromise = null;
+function loadPropertyMapModule(){
+  if(!propertyMapModulePromise){
+    propertyMapModulePromise=(async()=>{
+      const cssUrl="https://unpkg.com/maplibre-gl@6.15.0/dist/maplibre-gl.css";
+      if(!document.querySelector('link[data-skandi-property-map-css]')){
+        const sheet=document.createElement("link");
+        sheet.rel="stylesheet";
+        sheet.href=cssUrl;
+        sheet.setAttribute("data-skandi-property-map-css","");
+        document.head.appendChild(sheet);
+      }
+      return import("https://unpkg.com/maplibre-gl@6.15.0/dist/maplibre-gl.mjs");
+    })().catch(error=>{propertyMapModulePromise=null;throw error});
+  }
+  return propertyMapModulePromise;
+}
+function propertyMapCoordinates(latitude,longitude){
+  if(latitude==null||longitude==null||String(latitude).trim()===""||String(longitude).trim()==="")return null;
+  const lat=Number(latitude),lng=Number(longitude);
+  if(!Number.isFinite(lat)||!Number.isFinite(lng)||lat < -90||lat > 90||lng < -180||lng > 180)return null;
+  return {lat,lng};
+}
+function PDPropertyMap({latitude,longitude,onCoordinates}){
+  const containerRef=useRef(null);
+  const mapRef=useRef(null);
+  const markerRef=useRef(null);
+  const createMarkerRef=useRef(null);
+  const latestCoordinatesRef=useRef({latitude,longitude});
+  const onCoordinatesRef=useRef(onCoordinates);
+  const [loadingState,setLoadingState]=useState("loading");
+  latestCoordinatesRef.current={latitude,longitude};
+  onCoordinatesRef.current=onCoordinates;
+  useEffect(()=>{
+    let active=true;
+    loadPropertyMapModule().then(lib=>{
+      const host=containerRef.current;
+      if(!active||!host)return;
+      const initial=propertyMapCoordinates(latestCoordinatesRef.current.latitude,latestCoordinatesRef.current.longitude);
+      const map=new lib.Map({
+        container:host,
+        style:"https://tiles.openfreemap.org/styles/liberty",
+        center:initial?[initial.lng,initial.lat]:[0,20],
+        zoom:initial?13:1.6,
+        attributionControl:true
+      });
+      mapRef.current=map;
+      map.addControl(new lib.NavigationControl({showCompass:false}),"top-right");
+      const setMarker=point=>{
+        if(!markerRef.current){
+          markerRef.current=new lib.Marker({color:"#005EB8",draggable:true})
+            .setLngLat([point.lng,point.lat]).addTo(map);
+          markerRef.current.on("dragend",()=>{
+            const p=markerRef.current?.getLngLat();
+            if(p)onCoordinatesRef.current(Number(p.lat.toFixed(6)),Number(p.lng.toFixed(6)));
+          });
+        }else markerRef.current.setLngLat([point.lng,point.lat]);
+      };
+      createMarkerRef.current=setMarker;
+      if(initial)setMarker(initial);
+      map.on("click",event=>{
+        const point=event.lngLat;
+        if(!point)return;
+        setMarker(point);
+        onCoordinatesRef.current(Number(point.lat.toFixed(6)),Number(point.lng.toFixed(6)));
+      });
+      map.on("load",()=>{if(active){map.resize();setLoadingState("ready")}});
+      map.on("error",event=>{
+        console.warn("[SKANDI Property Map] Map rendering issue",event?.error||event);
+        if(active&&!map.isStyleLoaded())setLoadingState("unavailable");
+      });
+      requestAnimationFrame(()=>{if(active)map.resize()});
+    }).catch(error=>{
+      console.warn("[SKANDI Property Map] Map unavailable",error);
+      if(active)setLoadingState("unavailable");
+    });
+    return()=>{
+      active=false;
+      createMarkerRef.current=null;
+      markerRef.current=null;
+      if(mapRef.current){mapRef.current.remove();mapRef.current=null;}
+    };
+  },[]);
+  useEffect(()=>{
+    const map=mapRef.current;
+    if(!map||!createMarkerRef.current)return;
+    const point=propertyMapCoordinates(latitude,longitude);
+    if(point){
+      createMarkerRef.current(point);
+      map.easeTo({center:[point.lng,point.lat],zoom:Math.max(map.getZoom(),11),duration:250});
+    }else if(markerRef.current){
+      markerRef.current.remove();
+      markerRef.current=null;
+    }
+  },[latitude,longitude]);
+  return html`<div>
+    <div className="pd-map" aria-label="Property location map">
+      <div ref=${containerRef} style=${{position:"absolute",inset:"0",width:"100%",height:"100%"}}></div>
+      ${loadingState!=="ready"?html`<div className="pd-map-empty" style=${{position:"relative",pointerEvents:"none",background:"#E1E6EB",padding:"10px"}}>${loadingState==="unavailable"?"Map unavailable. Enter coordinates above.":"Loading property map…"}</div>`:null}
+    </div>
+    <div className="pd-muted" style=${{marginTop:"4px"}}>Select a location or drag the pin to set coordinates.</div>
+  </div>`;
+}
 function PDPropertyWorkspace({bundle,boot,onClose,onSaved,setBusy,setToast}){
   const [draft,setDraft]=useState(()=>clone(bundle));
   const [tab,setTab]=useState("MASTER");
   const [lang,setLang]=useState("SV");
+  const [translationBusy,setTranslationBusy]=useState(false);
+  const [translationReview,setTranslationReview]=useState({});
   const [assetPicker,setAssetPicker]=useState(null);
   const [auditRows,setAuditRows]=useState([]);
   const [auditError,setAuditError]=useState("");
@@ -1823,8 +1933,60 @@ function PDPropertyWorkspace({bundle,boot,onClose,onSaved,setBusy,setToast}){
   function update(path,value){setDraft(old=>{const next=clone(old);setPath(next.record,path,value);return next})}
   function setDetails(name,val){update(`details.${name}`,val)}
   function setCatalog(name,val){setDraft(old=>({...old,catalog:{...(old.catalog||{}),[name]:val}}))}
-  function setLangValue(name,val){setDraft(old=>{const next=clone(old);let i=(next.localizedContent||[]).findIndex(x=>x.language===lang);if(!Array.isArray(next.localizedContent))next.localizedContent=[];if(i<0){next.localizedContent.push(normalizeLocalized({language:lang}));i=next.localizedContent.length-1;}next.localizedContent[i]={...next.localizedContent[i],[name]:val};return next})}
-  function copyFromEN(){if(lang==="EN")return;setDraft(old=>{const next=clone(old);if(!Array.isArray(next.localizedContent))next.localizedContent=[];const source=normalizeLocalized(next.localizedContent.find(x=>x.language==="EN")||{});const i=next.localizedContent.findIndex(x=>String(x.language).toUpperCase()===lang);const copy={...(i<0?{}:next.localizedContent[i]),language:lang,shortDescription:source.shortDescription||"",fullDescription:source.fullDescription||"",seoTitle:source.seoTitle||"",seoDescription:source.seoDescription||""};if(i<0)next.localizedContent.push(copy);else next.localizedContent[i]=copy;return next});setToast(`English source fields copied into ${lang}. Review the text before publishing.`)}
+  function setLangValue(name,val){setDraft(old=>{const next=clone(old);if(!Array.isArray(next.localizedContent))next.localizedContent=[];let i=next.localizedContent.findIndex(x=>String(x.language).toUpperCase()===lang);if(i<0){next.localizedContent.push(normalizeLocalized({language:lang}));i=next.localizedContent.length-1;}next.localizedContent[i]={...next.localizedContent[i],[name]:val};return next});if(lang==="EN")setTranslationReview(old=>Object.fromEntries(Object.keys(old).map(code=>[code,true])))}
+  function setLangArray(name,position,value,action="set"){
+    setDraft(old=>{const next=clone(old);if(!Array.isArray(next.localizedContent))next.localizedContent=[];
+      let i=next.localizedContent.findIndex(x=>String(x.language).toUpperCase()===lang);
+      if(i<0){next.localizedContent.push(normalizeLocalized({language:lang}));i=next.localizedContent.length-1;}
+      const row=normalizeLocalized(next.localizedContent[i]);const items=[...(Array.isArray(row[name])?row[name]:[])];
+      if(action==="add")items.push("");else if(action==="drop")items.splice(position,1);else items[position]=value;
+      row[name]=items;next.localizedContent[i]=row;return next});
+    if(lang==="EN")setTranslationReview(old=>Object.fromEntries(Object.keys(old).map(code=>[code,true])));
+  }
+  const englishEditable=lang==="EN";
+  function generateEnglishDraft(){
+    const hotelName=text(rec.name).trim();
+    if(!hotelName){setToast("Enter the property name before preparing English content.",true);return}
+    const location=[text(d.city).trim(),text(d.countryName||d.country).trim()].filter(Boolean).join(", ");
+    const featureList=Array.isArray(d.facilities)?d.facilities.filter(x=>typeof x==="string"&&x.trim()).slice(0,5):[];
+    const base=location?`${hotelName} is located in ${location}.`:`${hotelName} is a hotel.`;
+    const amenities=featureList.length?` Facilities include ${featureList.join(", ")}.`:"";
+    const shortDescription=base+amenities;
+    const operations=[d.checkIn?`Check-in: ${d.checkIn}.`:"",d.checkOut?`Check-out: ${d.checkOut}.`:""].filter(Boolean).join(" ");
+    const title=hotelName;
+    const seoTitle=location?`${hotelName} | ${text(d.city).trim()}`:hotelName;
+    const seoDescription=`${hotelName}${location?` in ${location}`:""}. ${featureList.length?`Facilities: ${featureList.join(", ")}.`:"View property details with SKANDI TRAVELS."}`.slice(0,160);
+    const suggested={title,shortDescription,fullDescription:[shortDescription,operations].filter(Boolean).join("\n\n"),seoTitle:seoTitle.slice(0,60),seoDescription};
+    const englishFields=Object.keys(suggested);
+    setDraft(old=>{const next=clone(old);if(!Array.isArray(next.localizedContent))next.localizedContent=[];let i=next.localizedContent.findIndex(x=>String(x.language).toUpperCase()==="EN");if(i<0){next.localizedContent.push(normalizeLocalized({language:"EN"}));i=next.localizedContent.length-1}
+      const row=normalizeLocalized(next.localizedContent[i]);for(const key of englishFields){if(!text(row[key]).trim())row[key]=suggested[key]}next.localizedContent[i]=row;return next});
+    setTranslationReview(old=>Object.fromEntries(Object.keys(old).map(code=>[code,true])));
+    setToast("English draft prepared from recorded property information. Review the content before translating.");
+  }
+  async function translateFromEN(){
+    if(lang==="EN")return;
+    const source=normalizeLocalized((draft.localizedContent||[]).find(x=>String(x.language).toUpperCase()==="EN")||{});
+    const translatableKeys=["title","eyebrow","shortDescription","fullDescription","importantInformation","seoTitle","seoDescription","highlights","included","notIncluded"];
+    const input={};for(const key of translatableKeys){const value=source[key];if(Array.isArray(value)&&value.length)input[key]=value;else if(typeof value==="string"&&value.trim())input[key]=value.trim()}
+    if(!Object.keys(input).length){setToast("Enter or generate English property content first.",true);return}
+    const existing=(draft.localizedContent||[]).find(x=>String(x.language).toUpperCase()===lang);
+    if(existing&&translatableKeys.some(key=>Array.isArray(existing[key])?existing[key].length:typeof existing[key]==="string"&&existing[key].trim())){
+      if(!confirm(`Replace the current ${lang} text with a new translation from English? Manual edits in that language will be overwritten.`))return;
+    }
+    try{
+      setTranslationBusy(true);
+      setBusy(`Generating ${lang} content…`);
+      const result=await request("INVENTORY_V9_TRANSLATE_HOTEL_CONTENT",{entityType:"HOTEL",targetLanguage:lang,source:input});
+      if(result?.ok!==true||result.targetLanguage!==lang||!result.translated||result.reviewRequired!==true)throw new Error("Language generation did not return complete content.");
+      const translated=result.translated;
+      if(!Object.keys(input).every(key=>Object.prototype.hasOwnProperty.call(translated,key)))throw new Error("Some property content was not translated.");
+      setDraft(old=>{const next=clone(old);if(!Array.isArray(next.localizedContent))next.localizedContent=[];let index=next.localizedContent.findIndex(x=>String(x.language).toUpperCase()===lang);
+        const updated={...normalizeLocalized(index>=0?next.localizedContent[index]:{language:lang}),...translated,language:lang};if(index<0)next.localizedContent.push(updated);else next.localizedContent[index]=updated;return next});
+      setTranslationReview(old=>({...old,[lang]:true}));
+      setToast(`${lang} content generated. Review names, facts and wording, then save the property.`);
+    }catch(error){setToast(error?.message||"Language generation could not be completed.",true)}
+    finally{setBusy("");setTranslationBusy(false)}
+  }
   function editRoomOccupancy(index,field,value){setDraft(old=>{const next=clone(old);const rows=Array.isArray(next.record.details.rooms)?next.record.details.rooms:[];next.record.details.rooms=rows.map((r,i)=>{if(i!==index)return r;const updated={...r,[field]:value};updated.maxGuests=(Number(updated.adults)||0)+(Number(updated.children)||0);return updated});return next})}
   function editDetailRow(key,index,name,value){setDraft(old=>{const next=clone(old);const rows=Array.isArray(next.record.details?.[key])?next.record.details[key]:[];next.record.details[key]=rows.map((v,i)=>i===index?{...v,[name]:value}:v);return next})}
   function appendDetailRow(key,row){setDetails(key,[...(Array.isArray(d[key])?d[key]:[]),row])}
@@ -1847,6 +2009,7 @@ function PDPropertyWorkspace({bundle,boot,onClose,onSaved,setBusy,setToast}){
     finally{setBusy("")}
   }
   async function save(){
+    if(Object.values(translationReview).some(Boolean)){setToast("Review and confirm generated translations before saving the property.",true);return;}
     try{
       setBusy("Saving property…");
       const payload=clone(draft);
@@ -1897,7 +2060,7 @@ function PDPropertyWorkspace({bundle,boot,onClose,onSaved,setBusy,setToast}){
           <div className="pd-field-row" style=${{marginTop:"12px"}}><${PDField} label="Distance to Airport (km)" type="number" value=${distKm} onChange=${v=>setDetails("distanceToAirport",v)}/><span style=${{fontSize:"10px",flex:"0 0 auto"}}>⇄</span><${PDField} label="Distance (mi)" type="number" value=${miles} onChange=${v=>setDetails("distanceToAirport",v===""?null:Number(v)/0.621371)}/></div>
           ${Number(distKm)>25&&!d.transferTimeMinutes?html`<div className="notice warn" style=${{marginTop:"8px"}}>Distance exceeds 25 km. Confirm transfer information.</div>`:null}
         </div>
-        <div><div className="pd-field-row"><${PDField} label="Latitude" type="number" value=${d.latitude??""} onChange=${v=>setDetails("latitude",v)}/><${PDField} label="Longitude" type="number" value=${d.longitude??""} onChange=${v=>setDetails("longitude",v)}/></div><div className="pd-map"><div className="pd-map-empty">${d.latitude!=null&&d.longitude!=null?`Coordinates: ${d.latitude}, ${d.longitude}`:"No coordinates are assigned"}<div className="pd-muted">Map preview is not connected to a geocoding service</div></div></div></div>
+        <div><div className="pd-field-row"><${PDField} label="Latitude" type="number" value=${d.latitude??""} onChange=${v=>setDetails("latitude",v)}/><${PDField} label="Longitude" type="number" value=${d.longitude??""} onChange=${v=>setDetails("longitude",v)}/></div><${PDPropertyMap} latitude=${d.latitude} longitude=${d.longitude} onCoordinates=${(latitude,longitude)=>setDraft(old=>{const next=clone(old);next.record.details={...(next.record.details||{}),latitude,longitude};return next})}/></div>
       </div>
     </${PDSection}>
     <${PDSection} title="Facilities & Ratings">
@@ -1940,9 +2103,36 @@ function PDPropertyWorkspace({bundle,boot,onClose,onSaved,setBusy,setToast}){
   </div>`;
   const renderCms=()=>html`<div className="card panel">
     <div className="paneltitle">Multilingual Content</div>
-    <div className="toolbar" style=${{marginBottom:"12px"}}><b className="pd-muted">TARGET LOCALE:</b><select className="select w180" value=${lang} onChange=${e=>setLang(e.target.value)}>${languages.filter(x=>x!=="EN").map(x=>html`<option value=${x}>${x}</option>`)}</select><button className="btn cyan" onClick=${copyFromEN}>CLONE FROM EN</button></div>
-    <div className="split-screen"><div style=${{background:"#F9FAFB",padding:"12px",border:"1px solid var(--line2)"}}><div className="sectiontitle" style=${{marginTop:0}}>MASTER (EN) - LOCKED</div><${PDField} label="Short Description" type="textarea" value=${en.shortDescription||""} disabled=${true}/><${PDField} label="SEO Title" value=${en.seoTitle||""} disabled=${true}/><${PDField} label="SEO Desc" type="textarea" value=${en.seoDescription||""} disabled=${true}/></div>
-      <div><div className="sectiontitle" style=${{marginTop:0}}>TRANSLATION (${lang})</div><${PDField} label="Short Description" type="textarea" value=${current.shortDescription||""} onChange=${v=>setLangValue("shortDescription",v)}/><div className="sectiontitle">Website Search Details</div><${PDField} label="SEO Title" value=${current.seoTitle||""} onChange=${v=>setLangValue("seoTitle",v)}/><div className=${`char-count ${(current.seoTitle||"").length>60?"over":""}`}>${(current.seoTitle||"").length} / 60</div><${PDField} label="SEO Description" type="textarea" value=${current.seoDescription||""} onChange=${v=>setLangValue("seoDescription",v)}/><div className=${`char-count ${(current.seoDescription||"").length>160?"over":""}`}>${(current.seoDescription||"").length} / 160</div><div className="seo-preview" style=${{marginTop:"12px"}}><div className="seo-url">skanditravels.com &gt; hotels &gt; ${rec.slug||"hotel"}</div><div className="seo-title">${current.seoTitle||"Page Title"}</div><div className="seo-desc">${current.seoDescription||"Page description will appear here in search results."}</div></div></div>
+    <div className="pd-flex" style=${{justifyContent:"space-between",alignItems:"flex-end",marginBottom:"12px",gap:"10px",flexWrap:"wrap"}}>
+      <div className="field w240"><label>Content Language</label><select className="select" value=${lang} onChange=${e=>setLang(e.target.value)}><option value="EN">EN · English source</option>${languages.filter(x=>x!=="EN").map(x=>html`<option value=${x}>${({SV:"Swedish",NO:"Norwegian",DA:"Danish",FI:"Finnish",DE:"German",FR:"French",ES:"Spanish",IT:"Italian",NL:"Dutch",PT:"Portuguese",EL:"Greek"})[x]||x} (${x})</option>`)}</select></div>
+      <div className="toolbar"><button className="btn" onClick=${generateEnglishDraft}>Prepare English Draft</button>${!englishEditable?html`<button className="btn cyan" disabled=${translationBusy} onClick=${translateFromEN}>${translationBusy?"TRANSLATING…":`GENERATE ${lang} TRANSLATION`}</button>`:null}</div>
+    </div>
+    <div className="split-screen">
+      <div style=${{background:"#F9FAFB",padding:"12px",border:"1px solid var(--line2)"}}>
+        <div className="sectiontitle" style=${{marginTop:0}}>English Source</div>
+        <div className="pd-muted" style=${{marginBottom:"8px"}}>Select English above to edit this source.</div>
+        <${PDField} label="Content Title" value=${en.title||""} disabled=${true}/>
+        <${PDField} label="Short Description" type="textarea" value=${en.shortDescription||""} disabled=${true}/>
+        <${PDField} label="Full Description" type="textarea" value=${en.fullDescription||""} disabled=${true}/>
+        <${PDField} label="SEO Title" value=${en.seoTitle||""} disabled=${true}/>
+        <${PDField} label="SEO Description" type="textarea" value=${en.seoDescription||""} disabled=${true}/>
+      </div>
+      <div>
+        <div className="sectiontitle" style=${{marginTop:0}}>${englishEditable?"Edit English Source":`Translation (${lang})`}</div>
+        ${translationReview[lang]?html`<div className="notice warn"><div>Review the generated content, property names, and local details before saving.</div><button className="btn small" style=${{marginTop:"6px"}} onClick=${()=>setTranslationReview(old=>({...old,[lang]:false}))}>CONFIRM ${lang} CONTENT REVIEWED</button></div>`:null}
+        <${PDField} label="Content Title" value=${current.title||""} onChange=${v=>setLangValue("title",v)}/>
+        <${PDField} label="Short Description" type="textarea" value=${current.shortDescription||""} onChange=${v=>setLangValue("shortDescription",v)}/>
+        <${PDField} label="Full Description" type="textarea" value=${current.fullDescription||""} onChange=${v=>setLangValue("fullDescription",v)}/>
+        <${PDField} label="Section Heading" value=${current.eyebrow||""} onChange=${v=>setLangValue("eyebrow",v)}/>
+        ${["highlights","included","notIncluded"].map((name)=>html`<div className="smartgroup"><div className="smarttitle"><span>${({highlights:"Highlights",included:"Included",notIncluded:"Not Included"})[name]}</span><button className="btn small" onClick=${()=>setLangArray(name,0,"","add")}>+ ADD</button></div>${(current[name]||[]).map((item,index)=>html`<div className="pd-flex" style=${{alignItems:"flex-start",marginBottom:"6px"}}><input className="input" aria-label=${`${name} item ${index+1}`} value=${item} onInput=${e=>setLangArray(name,index,e.target.value)}/><button className="btn small danger" onClick=${()=>setLangArray(name,index,"","drop")}>REMOVE</button></div>`)}</div>`)}
+        <${PDField} label="Important Information" type="textarea" value=${current.importantInformation||""} onChange=${v=>setLangValue("importantInformation",v)}/>
+        <div className="sectiontitle">Website Search Details</div>
+        <${PDField} label="SEO Title" value=${current.seoTitle||""} onChange=${v=>setLangValue("seoTitle",v)}/>
+        <div className=${`char-count ${(current.seoTitle||"").length>60?"over":""}`}>${(current.seoTitle||"").length} / 60</div>
+        <${PDField} label="SEO Description" type="textarea" value=${current.seoDescription||""} onChange=${v=>setLangValue("seoDescription",v)}/>
+        <div className=${`char-count ${(current.seoDescription||"").length>160?"over":""}`}>${(current.seoDescription||"").length} / 160</div>
+        <div className="seo-preview" style=${{marginTop:"12px"}}><div className="seo-url">skanditravels.com &gt; hotels &gt; ${rec.slug||"hotel"}</div><div className="seo-title">${current.seoTitle||"Page Title"}</div><div className="seo-desc">${current.seoDescription||"Page description will appear here in search results."}</div></div>
+      </div>
     </div>
     <div className="paneltitle pd-module-title"><span>Media Repository</span><button className="btn primary small" onClick=${()=>setAssetPicker(assetContextForRecord(rec,"GALLERY"))}>+ ADD ASSET</button></div>
     <div className="media-grid">${media.length?media.map((m,i)=>html`<div className="media-card"><div className="assetthumb" style=${{height:"120px"}}>${m.url?html`<img className="media-img" alt=${m.altText||"Property image"} src=${m.url}/>`:html`<span>Image unavailable</span>`}</div><${PDField} label="Asset name / Alt" value=${m.altText||""} onChange=${v=>updateMedia(i,"altText",v)}/><${PDField} label="Media Role" type="select" options=${["HERO","GALLERY","ROOM","CARD","MOBILE","THUMBNAIL","LOGO"]} value=${m.role||"GALLERY"} onChange=${v=>updateMedia(i,"role",v)} disabled=${(m.payload?.provider||m.source)==="DUFFEL"}/><${PDField} label="Photo Tag" type="select" options=${["Exterior","Lobby","Room","Bathroom","General"]} value=${m.payload?.tag||"General"} onChange=${v=>updateMedia(i,"payload.tag",v)}/>${m.role==="ROOM"?html`<${PDField} label="Room Package" type="select" options=${[{value:"",label:"Select package"},...sells.map(s=>({value:s.id,label:s.name||s.id}))]} value=${m.payload?.roomLink||""} onChange=${v=>updateMedia(i,"payload.roomLink",v)}/>`:null}<button className="btn small danger" disabled=${(m.payload?.provider||m.source)==="DUFFEL"} onClick=${()=>setDraft(old=>({...old,media:old.media.filter((_,j)=>j!==i)}))}>DROP ASSET</button>${(m.payload?.provider||m.source)==="DUFFEL"?html`<div className="pd-muted">${catalog.catalogType==="SKANDI_PARTNER"?"SKANDI Partner-managed":"Supplier-managed"}</div>`:null}</div>`):html`<div className="empty" style=${{gridColumn:"1/-1"}}>No media assigned.</div>`}</div>
