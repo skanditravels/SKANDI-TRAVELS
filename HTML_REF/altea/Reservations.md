@@ -36,6 +36,9 @@
 
 - 2026-10-20 — Stage 5: corrected the positive Duffel order-change manual-capture authorization deadlock. Stripe requires_capture now unlocks order-change confirmation; succeeded is not accepted as a substitute for an uncaptured authorization. Added supplier change-offer, pending-change and cancellation-quote expiry checks (including final modal confirmation), and improved existing supplier order list transparency with returned payment status, deadline and authorized action fields. Prevented implying a supplier cancellation quote is a completed customer refund. No backend provider/payment transaction, exports, Wix IDs, bridge action names, or staff permissions were changed. STATICALLY VERIFIED; REQUIRES LIVE TEST.
 
+
+- 2026-10-20 — Stage 6 (V12 Reservations): repaired the existing independent-route multi-search to correlate each response with its request ID and continue remaining route searches after a route-specific supplier error (except staff authorization expiry); counts successes and failures explicitly. Fixed a seat-service assignment problem in the active ALTEA seats catalogue by respecting the Duffel passenger IDs returned for each available service, preventing duplicate seat assignments and rejecting partial quick-assign selections. Seat, baggage, offer and search changes now stay locked once an order Stripe payment session has started, rather than silently drifting away from its financial authorization. Repaired the B-011.27 Wix page controller to redirect when canonical `reservations.web.js` RETURNS `AUTH_REQUIRED` in a normal DUFFEL_ERROR/ALTEA_ERROR response (previous page code only redirected for thrown exceptions). Existing authorization, routes, facade methods, postMessage contracts, provider calls and Supabase ownership remain unchanged. STATICALLY VERIFIED; REQUIRES LIVE WIX/DUFFEL/STRIPE TEST.
+
 ## COMPLETE INTENDED HTML
 
 ```html
@@ -1215,6 +1218,8 @@
       multiSearchActive:false,
       multiSearchQueue:[],
       multiSearchCompleted:0,
+      multiSearchFailed:0,
+      multiSearchPendingId:"",
       preferences: {
         compact: true,
         currency: "USD",
@@ -1324,7 +1329,7 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
       "actions", "baggage", "manifests", "history"
     ]);
     const SESSION_STATE_KEYS = [
-      "activeView", "search", "offers", "multiSearchActive", "multiSearchQueue", "multiSearchCompleted", "selectedOffer", "seatMaps", "selectedServices",
+      "activeView", "search", "offers", "multiSearchActive", "multiSearchQueue", "multiSearchCompleted", "multiSearchFailed", "multiSearchPendingId", "selectedOffer", "seatMaps", "selectedServices",
       "alteaWorkspace", "selectedPassengerId", "selectedOrder", "cancellation", "customerRefundRequired",
       "changeRequestId", "changeOffers", "pendingChange", "paymentPurpose", "payment",
       "bookingDocuments", "documentCatalog",
@@ -1374,6 +1379,8 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
         multiSearchActive:false,
         multiSearchQueue:[],
         multiSearchCompleted:0,
+      multiSearchFailed:0,
+      multiSearchPendingId:"",
         selectedOffer: null,
         seatMaps: [],
         selectedServices: new Map(),
@@ -1904,7 +1911,7 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
       return `<div class="offer-layout">
         <section>
           <div class="panel-head">
-            <span>${flightGroups.length} flight option(s) · ${state.offers.length} total fares${state.multiSearchActive?` · ${state.multiSearchCompleted} completed, ${state.multiSearchQueue.length} queued`:""}</span>
+            <span>${flightGroups.length} flight option(s) · ${state.offers.length} total fares${state.multiSearchActive?` · ${state.multiSearchCompleted} completed, ${state.multiSearchQueue.length} queued, ${state.multiSearchFailed} failed`:""}</span>
             <span class="muted">Grouped by schedule</span>
           </div>
           <div style="margin-top:8px">
@@ -3017,8 +3024,8 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
 
     function submitSearch(event) {
       event.preventDefault();
-      if (paymentIsCommitted()) {
-        return toast("Payment already completed", "Create the pending order or reconcile the completed payment before starting another search.", "warning");
+      if (paymentIsCommitted() || paymentSessionStarted()) {
+        return toast("Payment session active", "Create or reconcile the pending booking and payment before starting another search.", "warning");
       }
       const tripType = $("#tripType").value;
       if(tripType==="multi_search"){
@@ -3038,13 +3045,13 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
         const passengers=[...Array.from({length:adults},()=>({type:"adult"})),...childAges.map(age=>({age})),...infantAges.map(age=>({age}))];
         const cabinClass=$("#cabinClass").value,maxConnections=Number($("#maxConnections").value),supplierTimeout=state.preferences.supplierTimeout;
         state.multiSearchQueue=planned.map(route=>({slices:[route],passengers,cabinClass,maxConnections,supplierTimeout}));
-        state.multiSearchCompleted=0;state.multiSearchActive=true;
+        state.multiSearchCompleted=0;state.multiSearchFailed=0;state.multiSearchPendingId="";state.multiSearchActive=true;
         state.search={tripType,multiSearchInput:$("#multiSearchInput").value,adults,childAges,infantAges,cabinClass,maxConnections};
         state.offers=[];state.selectedOffer=null;state.seatMaps=[];state.selectedServices.clear();state.payment=null;
-        post("DUFFEL_SEARCH_OFFERS",state.multiSearchQueue.shift());
+        state.multiSearchPendingId=post("DUFFEL_SEARCH_OFFERS",state.multiSearchQueue.shift());
         return;
       }
-      state.multiSearchActive=false;state.multiSearchQueue=[];state.multiSearchCompleted=0;
+      state.multiSearchActive=false;state.multiSearchQueue=[];state.multiSearchCompleted=0;state.multiSearchFailed=0;state.multiSearchPendingId="";
       const origin = iata($("#origin").value);
       const destination = iata($("#destination").value);
       const departureDate = $("#departureDate").value;
@@ -3116,14 +3123,17 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
 
 
     function selectOffer(offerId) {
+      if (paymentSessionStarted() || paymentIsCommitted()) {
+        return toast("Payment session active", "Reconcile the current payment and booking before choosing another fare.", "warning");
+      }
       post("DUFFEL_REFRESH_OFFER", { offerId });
     }
 
 
     function refreshSelectedOffer() {
       if (!state.selectedOffer?.id) return;
-      if (paymentIsCommitted()) {
-        return toast("Payment already completed", "Create the order or reconcile the completed payment before changing the offer.", "warning");
+      if (paymentIsCommitted() || paymentSessionStarted()) {
+        return toast("Payment session active", "Create or reconcile the pending booking before changing the offer.", "warning");
       }
       state.payment = null;
       destroyStripe();
@@ -3138,8 +3148,8 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
 
 
     function toggleService(serviceId) {
-      if (paymentIsCommitted()) {
-        return toast("Payment already completed", "Create the order or reconcile the completed payment before changing services.", "warning");
+      if (paymentIsCommitted() || paymentSessionStarted()) {
+        return toast("Payment session active", "Create or reconcile the pending booking before changing services.", "warning");
       }
       const service = state.selectedOffer?.availableServices?.find((item) => item.id === serviceId);
       if (!service) return;
@@ -3151,8 +3161,8 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
 
 
     function toggleSeat(serviceId) {
-      if (paymentIsCommitted()) {
-        return toast("Payment already completed", "Create the order or reconcile the completed payment before changing seats.", "warning");
+      if (paymentIsCommitted() || paymentSessionStarted()) {
+        return toast("Payment session active", "Create or reconcile the pending booking before changing seats.", "warning");
       }
       if (!serviceId) return;
       const services = state.seatMaps.flatMap((map) => map.seats || []).flatMap((seat) => seat.availableServices || []);
@@ -3446,6 +3456,8 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
       }
       if (message.type === "DUFFEL_OFFERS_RESULT") {
         if (state.multiSearchActive) {
+          if (!state.multiSearchPendingId || message.requestId !== state.multiSearchPendingId) return;
+          state.multiSearchPendingId="";
           const index=new Map((state.offers||[]).map(offer=>[offer.id,offer]));
           (payload.offers||[]).forEach(offer=>{if(offer?.id)index.set(offer.id,offer)});
           state.offers=Array.from(index.values());
@@ -3453,10 +3465,10 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
           navigate("search");
           if(state.multiSearchQueue.length){
             const next=state.multiSearchQueue.shift();
-            post("DUFFEL_SEARCH_OFFERS",next);
+            state.multiSearchPendingId=post("DUFFEL_SEARCH_OFFERS",next);
           }else{
             state.multiSearchActive=false;
-            toast("Multi-search completed",`${state.multiSearchCompleted} separate supplier searches completed; ${state.offers.length} distinct offers returned.`, "success");
+            toast("Multi-search completed",`${state.multiSearchCompleted} succeeded, ${state.multiSearchFailed} failed; ${state.offers.length} distinct supplier offers returned.`,state.multiSearchFailed?"warning":"success");
             render();
           }
         }else{
@@ -3629,7 +3641,23 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
         return;
       }
       if (message.type === "DUFFEL_ERROR") {
-        if(state.multiSearchActive){state.multiSearchActive=false;state.multiSearchQueue=[];render();}
+        if(state.multiSearchActive && state.multiSearchPendingId && message.requestId === state.multiSearchPendingId){
+          state.multiSearchPendingId="";
+          state.multiSearchFailed+=1;
+          const authExpired=String(payload.code||"").toUpperCase()==="AUTH_REQUIRED";
+          if(authExpired){
+            state.multiSearchActive=false;
+            state.multiSearchQueue=[];
+          }else if(state.multiSearchQueue.length){
+            state.multiSearchPendingId=post("DUFFEL_SEARCH_OFFERS",state.multiSearchQueue.shift());
+          }else{
+            state.multiSearchActive=false;
+          }
+          navigate("search");
+          toast("Independent route search failed",payload.message||"A supplier route could not be searched.","warning");
+          if(!state.multiSearchActive)toast("Multi-search finished",`${state.multiSearchCompleted} succeeded, ${state.multiSearchFailed} failed; ${state.offers.length} distinct offers.`,state.multiSearchFailed?"warning":"success");
+          return;
+        }
         setConnection(state.connected ? "online" : "error", state.connected ? "Duffel ready" : "Connection error");
         if (payload.code === "AUTH_REQUIRED") setConnection("error", "Access denied");
         toast("Action failed", payload.message || "The reservation action could not be completed.", "danger");
@@ -3673,6 +3701,10 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
 
     function paymentIsCommitted() {
       return ["succeeded", "processing", "requires_capture"].includes(state.payment?.status);
+    }
+
+    function paymentSessionStarted() {
+      return Boolean(state.payment?.paymentIntentId);
     }
 
 
@@ -6312,8 +6344,12 @@ html,body{margin:0!important;padding:0!important;width:203.20mm!important;height
   }
   function highlighted(el){return Object.entries(state.seatWorkbench.filters||{}).some(([k,v])=>v&&seatFeature(el,k))}
   function serviceForPassenger(el,passengerId){
-    const list=el.availableServices||[];
-    return list.find(s=>!s.passengerId||s.passengerId===passengerId)||list[0]||null;
+    if(!passengerId)return null;
+    const list=Array.isArray(el.availableServices)?el.availableServices:[];
+    return list.find(s=>{
+      const ids=Array.isArray(s.passengerIds)&&s.passengerIds.length?s.passengerIds:(s.passengerId?[s.passengerId]:[]);
+      return !ids.length||ids.includes(passengerId);
+    })||null;
   }
   function assignment(passengerId,segmentId){
     for(const [id,s] of state.selectedServices||[]){
@@ -6329,31 +6365,52 @@ html,body{margin:0!important;padding:0!important;width:203.20mm!important;height
     }
     return "";
   }
-  function selectSeat(el,passengerId,map){
+  function selectSeat(el,passengerId,map,confirmedExit=false){
+    if(paymentIsCommitted()||paymentSessionStarted()){
+      toast("Payment session active","Reconcile payment and booking before changing seat services.","warning");
+      return false;
+    }
     const service=serviceForPassenger(el,passengerId);
-    if(!service)return toast("Seat unavailable",`${el.designator||"This seat"} is not available for the selected passenger.`,"warning");
-    if(seatFeature(el,"exit")&&!window.confirm("Agent Warning: Passenger must be 15+ and able-bodied. Confirm?"))return;
+    if(!service){
+      toast("Seat unavailable",`${el.designator||"This seat"} is not available for the selected passenger.`,"warning");
+      return false;
+    }
+    if(seatFeature(el,"exit")&&!confirmedExit&&!window.confirm("Agent Warning: Passenger must be 15+ and able-bodied. Confirm?"))return false;
+    if([...state.selectedServices.values()].some(s=>s?.type==="seat"&&s.passengerId!==passengerId&&s.designator===el.designator&&(s.segmentId===map.segmentId||!map.segmentId))) {
+      toast("Seat already assigned",`${el.designator||"Seat"} is selected for another passenger.`,"warning");
+      return false;
+    }
     for(const [id,s] of [...state.selectedServices]){
       if(s?.type==="seat"&&s.passengerId===passengerId&&(s.segmentId===map.segmentId||service.segmentId===s.segmentId))state.selectedServices.delete(id);
     }
     state.selectedServices.set(service.id,{...service,type:"seat",designator:el.designator,passengerId,segmentId:map.segmentId||service.segmentId,quantity:1});
+    invalidatePayment();
+    return true;
   }
   function toggleSeat74(el,map){
+    if(paymentIsCommitted()||paymentSessionStarted())return toast("Payment session active","Reconcile payment and booking before changing seats.","warning");
     const pax=activeSeatPassenger();if(!pax)return;
     const current=assignment(pax.id,map.segmentId);
-    if(current?.designator===el.designator){state.selectedServices.delete(current.id);render();return}
+    if(current?.designator===el.designator){state.selectedServices.delete(current.id);invalidatePayment();render();return}
     selectSeat(el,pax.id,map);render();
   }
   function quickAssign(value){
+    if(paymentIsCommitted()||paymentSessionStarted())return toast("Payment session active","Reconcile payment and booking before changing seats.","warning");
     const map=activeSeatMap();if(!map)return;
     const designators=String(value||"").toUpperCase().split(/[\s,;]+/).filter(Boolean);
     const pax=selectedSeatPassengers();if(!designators.length||!pax.length)return;
     if(designators.length!==pax.length)return toast("Seat count mismatch",`Enter exactly ${pax.length} seat number${pax.length===1?"":"s"} for the selected passengers.`,"warning");
+    if(new Set(designators).size!==designators.length)return toast("Duplicate seat","Each passenger must have a different seat.","warning");
+    const proposed=[];
     for(let i=0;i<pax.length;i++){
       const el=(map.seats||[]).find(s=>String(s.designator).toUpperCase()===designators[i]);
-      if(!el)return toast("Seat not found",`${designators[i]} is not present or not selectable on this segment.`,"warning");
-      selectSeat(el,pax[i].id,map);
+      if(!el)return toast("Seat not found",`${designators[i]} is not present on this segment.`,"warning");
+      if(!serviceForPassenger(el,pax[i].id))return toast("Seat unavailable",`${designators[i]} is not selectable for passenger ${i+1}.`,"warning");
+      proposed.push({el,passengerId:pax[i].id});
     }
+    if(proposed.some(({el,passengerId})=>[...state.selectedServices.values()].some(s=>s?.type==="seat"&&s.passengerId!==passengerId&&s.designator===el.designator&&(s.segmentId===map.segmentId||!map.segmentId))))return toast("Seat already assigned","One or more selected seats belong to another passenger. Clear the conflicting assignments before bulk assignment.","warning");
+    if(proposed.some(x=>seatFeature(x.el,"exit"))&&!window.confirm("Agent Warning: Exit-row passengers must be 15+ and able-bodied. Confirm all assignments?"))return;
+    for(const item of proposed){if(!selectSeat(item.el,item.passengerId,map,true))return;}
     render();
   }
   function seatElement(el,map){
