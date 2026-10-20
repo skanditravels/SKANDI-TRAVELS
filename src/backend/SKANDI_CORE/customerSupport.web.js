@@ -19,7 +19,6 @@ import {
   startCustomerSupportChatCore,
   sendCustomerSupportChatMessageCore,
   getHumanSupportAvailabilityCore,
-  startAlexandraSupportSessionCore,
   getAgentSupportBootstrapCore,
   listAgentSupportCasesCore,
   getAgentSupportCaseCore,
@@ -34,6 +33,7 @@ import {
   getStaffHelpDeskSupportCaseCore,
   addStaffHelpDeskSupportMessageCore
 } from "backend/SKANDI_CORE/customerSupport";
+import { startAlexandraAiSessionCore, answerAlexandraAiMessageCore } from "backend/SKANDI_CORE/alexandraWixAi";
 
 
 export const getCustomerSupportBootstrap = webMethod(Permissions.Anyone, () => getCustomerSupportBootstrapCore());
@@ -41,9 +41,16 @@ export const getPublicSupportBootstrap = webMethod(Permissions.Anyone, (input = 
 export const getSupportWorkflow = webMethod(Permissions.Anyone, (input = {}) => getSupportWorkflowCore(input));
 export const createCustomerSupportCase = webMethod(Permissions.Anyone, (input = {}) => createCustomerSupportCaseCore(input));
 export const createPublicSupportCase = webMethod(Permissions.Anyone, (input = {}) => createPublicSupportCaseCore(input));
-export const startAlexandraSupportSession = webMethod(Permissions.Anyone, (input = {}) => startAlexandraSupportSessionCore(input));
+// Contract retained: Alexandra now uses the Wix AI SDK, not the LiveKit worker.
+export const startAlexandraSupportSession = webMethod(Permissions.Anyone, () => startAlexandraAiSessionCore());
+export const sendAlexandraAiMessage = webMethod(Permissions.Anyone, (input = {}) => answerAlexandraAiMessageCore(input));
 export const listCustomerSupportCases = webMethod(Permissions.SiteMember, () => listCustomerSupportCasesCore());
-export const getCustomerSupportCase = webMethod(Permissions.SiteMember, (input = {}) => getCustomerSupportCaseCore(input));
+// Customer-facing responses must never expose internal agent notes, supplier audit
+// events or Booking Team handoff summaries. Agent methods remain unchanged.
+export const getCustomerSupportCase = webMethod(Permissions.SiteMember, async (input = {}) => {
+  const detail = await getCustomerSupportCaseCore(input);
+  return { ...detail, messages: (Array.isArray(detail?.messages) ? detail.messages : []).filter(message => message?.private !== true && message?.kind !== "internal" && String(message?.channel || "").toLowerCase() !== "internal") };
+});
 export const addCustomerSupportMessage = webMethod(Permissions.SiteMember, (input = {}) => addCustomerSupportMessageCore(input));
 export const requestCustomerHumanHandoff = webMethod(Permissions.SiteMember, (input = {}) => requestCustomerHumanHandoffCore(input));
 export const addCustomerLiveSupportMessage = webMethod(Permissions.SiteMember, (input = {}) => addCustomerLiveSupportMessageCore(input));
