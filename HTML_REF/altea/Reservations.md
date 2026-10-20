@@ -29,6 +29,10 @@
 
 - 2026-10-19 — PARTIAL Duffel interface extension based on the complete staff Reservations HTML supplied in this conversation. Added multi-search for up to eight INDEPENDENT one-way route/date searches using existing authorized DUFFEL_SEARCH_OFFERS calls, not true multi-city ticketing. Added read-only supplier base/tax, tax itemization, airline CO₂, fare brand, eligible airline loyalty/negotiated fare data, flight terminal, aircraft, baggage, cabin and other actual returned offer disclosures; expanded the existing seats catalogue to present Duffel cabin/aisle/wing/section and seat feature/disclosure metadata while keeping original service selection and pricing ownership. Prevented unsupported fare-class, base/tax and baggage defaults in the ALTEA booking-file projection. No new backend, permission, order/payment, checkout, customer Home or /booking code is included. STATICALLY VERIFIED with browser-mocked responses. REQUIRES LIVE WIX + DUFFEL TEST.
 - 2026-10-19 — UNIMPLEMENTED USER-REQUESTED DEPENDENCIES: the provider search core still restricts to at most two slices and ignores departure/arrival time windows, private fare request codes, passenger fare types/loyalty request values, multi-city ticket search and `view=itineraries`. Airline upsells, itinerary reference maps, complete staff post-booking APIs, full order/payment enhancements and customer Home/Booking seat map upgrades are not delivered by this UI-only repair. SUPERADMIN-only airline credit IDs were intentionally excluded because an authoritative backend role gate was not established. Do not deploy this package expecting those features to work.
+- 2026-10-19 — CONTINUATION STAGE 2 (staff Reservations): extended the existing active order-confirmation/Changes & Refunds view with read-only Duffel supplier order financial and servicing facts (base amount, tax total and supplied tax breakdown, actual payment-status fields, payment/price-guarantee/void deadlines, booked services, document and airline-change records, booking references and conditions). Expanded the already established seat-map catalogue with explicit inspection of real seat/facility features, disclosures, coordinates and metadata without changing the carrier-derived availability and chargeability. Corrected the ticket document table to distinguish an airline-issued identifier from a supplier record without one. Existing staff booking, Stripe, refund, booking file, search and seat selection APIs and routes remain unchanged. STATICALLY VERIFIED; REQUIRES LIVE WIX/DUFFEL TEST.
+- 2026-10-19 — CONTINUATION STAGE 3 (staff Reservations): upgraded existing V12 grouped schedule/fare rows to a supplier-grounded fare comparison with fare-brand and cabin variants, same-currency price differentials, included baggage by segment/passenger, tax itemization, CO₂, loyalty support, payment/guarantee deadlines, change and refund conditions. Corrected the existing fabricated “up to 3” connection selection (backend accepts 0–2) and prohibited zeroed penalty/changed-total display when the airline omits those fields. No new Duffel API action, payment authority, role or route introduced. Source-only static verification; live provider validation outstanding.
+
+- 2026-10-20 — Stage 4: Added staff read-only Duffel Order Record audit on existing Changes / Refunds page. Uses actual normalized order IDs, booked documents, taxes, payments, services, passengers, airline-initiated changes and change history already returned by V12 backend. Does not introduce new financial actions, fake statuses, client authority or new backend routes. STATICALLY VERIFIED; REQUIRES LIVE TEST.
 
 ## COMPLETE INTENDED HTML
 
@@ -935,6 +939,34 @@
     @media(max-width:850px){#app{grid-template-columns:1fr;grid-template-rows:26px 30px auto 1fr;grid-template-areas:"title" "tabs" "side" "main"}.sidebar{max-height:150px;border-right:0;border-bottom:1px solid #aaa}.nav{display:flex;overflow:auto}.nav-section{display:none}.nav-item{min-width:145px;border-right:1px solid #ccc}.svc-catalog,.svc-body{grid-template-columns:1fr}.svc-nav{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));border-right:0}.svc-nav .sub{padding-left:14px}.svc-top{grid-template-columns:1fr;gap:6px}.seat-legend{border-right:0;border-bottom:1px solid #ccc}}
   </style>
 
+<style id="v12-duffel-supplier-inspector">
+  .supplier-fact-details{padding:8px 0;border-top:1px solid #d6dee5}
+  .supplier-fact-details summary,.supplier-seat-details summary{font-weight:700;color:#12517b;cursor:pointer}
+  .supplier-fact-pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:260px;overflow:auto;font:10px/1.5 ui-monospace,monospace}
+  .supplier-order-disclosure .data-table,.supplier-seat-details .data-table{width:100%;min-width:650px}
+  .supplier-seat-details{margin-top:12px;padding:9px;border:1px solid #c8d3db;background:#f7fafc}
+  .supplier-seat-metadata-table{overflow:auto;max-height:380px;margin-top:9px}
+  .supplier-seat-metadata-table td{max-width:310px;overflow-wrap:anywhere}
+</style>
+<style id="v12-duffel-fare-compare-stage3">
+.altea-fare-variant{background:#fff;border-top:1px solid #c6cfd6}
+.altea-fare-variant-header{display:grid;grid-template-columns:minmax(0,1fr) auto 100px;gap:12px;align-items:center;padding:10px}
+.altea-fare-name{display:flex;flex-direction:column;gap:2px;min-width:0}
+.altea-fare-name strong{font-size:12px;color:#164d73}
+.altea-fare-name span{font-size:10px;color:#506774}
+.altea-fare-price{text-align:right;display:flex;flex-direction:column;gap:3px;min-width:140px}
+.altea-fare-price strong{font-size:15px;color:#174967}
+.altea-fare-price small{font-size:9px;color:#496a81}
+.altea-fare-variant-terms{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;padding:0 10px 8px;color:#667682;font-size:10px}
+.altea-fare-facts{padding:6px 10px;border-top:1px solid #eef2f5;background:#f8fafc}
+.altea-fare-facts summary,.altea-fare-subdetails summary{cursor:pointer;font-weight:650;color:#165579;padding:3px 0}
+.altea-fare-facts-content{padding:5px 0 10px}
+.altea-fare-facts-content .money-line strong{overflow-wrap:anywhere}
+.altea-fare-subdetails{margin:8px 0;padding:6px;border:1px solid #d6e0e8;background:white;overflow-x:auto}
+.altea-fare-subdetails .data-table{min-width:570px}
+.altea-fare-subdetails .data-table td{max-width:240px;overflow-wrap:anywhere}
+@media(max-width:650px){.altea-fare-variant-header{grid-template-columns:minmax(0,1fr) auto;gap:8px}.altea-fare-variant-header .primary{grid-column:1/-1}.altea-fare-price{min-width:0}.altea-fare-facts{padding:6px}}
+</style>
 </head>
 <body>
     <!-- Altéa Terminal Loading Overlay -->
@@ -1836,7 +1868,6 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
                   ${option("0", "Direct only", String(saved.maxConnections ?? 1))}
                   ${option("1", "Up to 1", String(saved.maxConnections ?? 1))}
                   ${option("2", "Up to 2", String(saved.maxConnections ?? 1))}
-                  ${option("2", "Up to 3", String(saved.maxConnections ?? 1))}
                 </select>
               </div>
               <div class="field">
@@ -1891,6 +1922,50 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
       </div>`;
     }
 
+    // Fare comparison reads only the supplier-normalized offers already returned to this session.
+    // It never combines independently priced offers into a ticket, or invents an upsell.
+    function fareSupplierFacts(offer) {
+      const currency=offer.totalCurrency||"";
+      const taxLines=Array.isArray(offer.taxBreakdown)?offer.taxBreakdown:[];
+      const slices=Array.isArray(offer.slices)?offer.slices:[];
+      const passengers=slices.flatMap(slice=>(slice.segments||[]).flatMap(segment=>(segment.passengers||[]).map(p=>({
+        segment:`${segment.origin?.iataCode||"?"}-${segment.destination?.iataCode||"?"}`,
+        fareBasis:p.fareBasisCode||"",
+        cabin:p.cabinClassMarketingName||p.cabinClass||"",
+        baggage:Array.isArray(p.baggages)?p.baggages:[],
+        amenities:p.cabinAmenities||p.cabin?.amenities||null
+      }))));
+      const rules=offer.conditions||{};
+      const conditions=rule=>{
+        if(!rule||typeof rule!=="object")return "Not supplied";
+        const allowed=rule.allowed===true?"Allowed":rule.allowed===false?"Not allowed":"Not specified";
+        const penalty=rule.penaltyAmount??rule.penalty_amount;
+        const penaltyCurrency=rule.penaltyCurrency||rule.penalty_currency||currency;
+        return penalty===null||penalty===undefined?allowed:`${allowed}; penalty ${money(penalty,penaltyCurrency)}`;
+      };
+      const bagText=b=>{
+        const weight=b.weight??b.weightKg??null;
+        return [b.type||"Baggage",b.quantity!=null?`${b.quantity} piece(s)`:"",weight!=null?`${weight} ${b.weightUnit||b.weight_unit||""}`.trim():""].filter(Boolean).join(" · ");
+      };
+      return `<details class="altea-fare-facts"><summary>Included services, fare conditions and itemized pricing</summary>
+        <div class="altea-fare-facts-content">
+          ${offer.baseAmount!=null?`<div class="money-line"><span>Supplier base amount</span><strong>${escapeHTML(money(offer.baseAmount,offer.baseCurrency||currency))}</strong></div>`:""}
+          ${offer.taxAmount!=null?`<div class="money-line"><span>Supplier tax amount</span><strong>${escapeHTML(money(offer.taxAmount,offer.taxCurrency||currency))}</strong></div>`:""}
+          <div class="money-line"><span>Complete supplier offer</span><strong>${escapeHTML(money(offer.totalAmount,currency))}</strong></div>
+          ${offer.totalEmissionsKg!=null?`<div class="money-line"><span>Estimated CO₂ emissions</span><strong>${escapeHTML(String(offer.totalEmissionsKg))} kg</strong></div>`:""}
+          ${slices.some(slice=>slice.comparisonKey||slice.ngsShelf!=null)?`<div class="money-line"><span>Supplier itinerary reference</span><strong class="mono">${escapeHTML(slices.map(slice=>[slice.comparisonKey,slice.ngsShelf].filter(v=>v!==null&&v!==undefined).join(" / ")).filter(Boolean).join(" · "))}</strong></div>`:""}
+          <div class="money-line"><span>Change before departure</span><strong>${escapeHTML(conditions(rules.change_before_departure||rules.changeBeforeDeparture))}</strong></div>
+          <div class="money-line"><span>Refund before departure</span><strong>${escapeHTML(conditions(rules.refund_before_departure||rules.refundBeforeDeparture))}</strong></div>
+          ${passengers.length?`<details class="altea-fare-subdetails"><summary>Segment/passenger fare basis, baggage and cabin amenities</summary><table class="data-table"><thead><tr><th>Flight</th><th>Fare basis</th><th>Cabin</th><th>Included baggage</th><th>Cabin amenities</th></tr></thead><tbody>${passengers.map(p=>`<tr><td>${escapeHTML(p.segment)}</td><td class="mono">${escapeHTML(p.fareBasis||"Not supplied")}</td><td>${escapeHTML(p.cabin||"Not supplied")}</td><td>${escapeHTML(p.baggage.length?p.baggage.map(bagText).join("; "):"Not specified")}</td><td class="mono">${escapeHTML(p.amenities?JSON.stringify(p.amenities):"Not supplied")}</td></tr>`).join("")}</tbody></table></details>`:""}
+          ${taxLines.length?`<details class="altea-fare-subdetails"><summary>Supplier tax breakdown (${taxLines.length} lines)</summary>${taxLines.map(t=>`<div class="money-line"><span>${escapeHTML([t.name||t.code||"Tax",t.code&&t.name?`(${t.code})`:"",t.description||"",t.carrier_imposed===true||t.carrierImposed===true?"Carrier-imposed":""].filter(Boolean).join(" · "))}</span><strong>${t.amount!=null?escapeHTML(money(t.amount,t.currency||offer.taxCurrency||currency)):"Not supplied"}</strong></div>`).join("")}</details>`:""}
+          ${Array.isArray(offer.supportedLoyaltyProgrammes)&&offer.supportedLoyaltyProgrammes.length?`<div class="money-line"><span>Supported loyalty programmes</span><strong>${escapeHTML(offer.supportedLoyaltyProgrammes.map(p=>typeof p==="string"?p:p.iataCode||p.airline_iata_code||p.name||"").filter(Boolean).join(", "))}</strong></div>`:""}
+          ${offer.priceGuaranteeExpiresAt?`<div class="money-line"><span>Price guarantee expires</span><strong>${escapeHTML(formatDateTime(offer.priceGuaranteeExpiresAt))}</strong></div>`:""}
+          ${offer.paymentRequiredBy?`<div class="money-line"><span>Payment required by</span><strong>${escapeHTML(formatDateTime(offer.paymentRequiredBy))}</strong></div>`:""}
+          <small class="muted">These are supplier-returned details for this specific offer, not a comparison generated by the airline's upsell or grouped-itinerary API. Prices are not converted between currencies.</small>
+        </div>
+      </details>`;
+    }
+
     function renderNestedFlightGroup(groupOffers) {
       const baseOffer = groupOffers[0];
       const carrierNames = unique(
@@ -1917,20 +1992,31 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
         </div>`;
       }).join("");
 
-      // Nested Fare / Brand Rows underneath the flight header
-      const fareRows = groupOffers.map(offer => {
-        const brand = offer.slices?.[0]?.fareBrandName || offer.slices?.[0]?.fare_brand_name || "Standard";
-        const cabin = humanize(offer.slices?.[0]?.segments?.[0]?.passengers?.[0]?.cabinClassMarketingName || "Economy");
-        return `<div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; border-bottom: 1px solid #e0e5e8; background: #fafbfc;">
-          <div>
-            <span class="badge info" style="margin-right: 8px;">${escapeHTML(cabin)}</span>
-            <strong>${escapeHTML(brand)}</strong>
-            <span class="muted" style="margin-left: 8px; font-size: 10px;">${expiryLabel(offer.expiresAt)}</span>
+      // Group same-schedule live supplier offers by the returned fare brand/cabin.
+      // Where fare brand/cabin are missing, preserve the offer and show it as unclassified.
+      const priced=groupOffers.slice().sort((a,b)=>{
+        const ac=a.totalCurrency||"",bc=b.totalCurrency||"";
+        if(ac!==bc)return ac.localeCompare(bc);
+        const ap=Number(a.totalAmount),bp=Number(b.totalAmount);
+        return Number.isFinite(ap)&&Number.isFinite(bp)?ap-bp:0;
+      });
+      const fareRows=priced.map(offer=>{
+        const brands=(offer.slices||[]).map(slice=>slice.fareBrandName||slice.fare_brand_name).filter(Boolean);
+        const brand=[...new Set(brands)].join(" / ")||"Fare brand not supplied";
+        const passenger=offer.slices?.[0]?.segments?.[0]?.passengers?.[0]||{};
+        const cabin=passenger.cabinClassMarketingName||passenger.cabinClass||"Cabin not supplied";
+        const comparable=priced.find(other=>other.totalCurrency===offer.totalCurrency&&Number.isFinite(Number(other.totalAmount)));
+        const gap=comparable&&Number.isFinite(Number(offer.totalAmount))
+          ?Number(offer.totalAmount)-Number(comparable.totalAmount):null;
+        const logoOwner=offer.owner?.name||offer.owner?.iataCode||"";
+        return `<div class="altea-fare-variant">
+          <div class="altea-fare-variant-header">
+            <div class="altea-fare-name"><strong>${escapeHTML(brand)}</strong><span>${escapeHTML(cabin)}</span>${logoOwner?`<span>${escapeHTML(logoOwner)}</span>`:""}</div>
+            <div class="altea-fare-price"><strong>${escapeHTML(money(offer.totalAmount,offer.totalCurrency))}</strong>${gap!==null&&gap>0?`<small>+ ${escapeHTML(money(gap,offer.totalCurrency))} vs lowest ${escapeHTML(offer.totalCurrency)} offer</small>`:""}</div>
+            <button class="primary" data-action="select-offer" data-offer-id="${escapeAttr(offer.id)}" ${offer.isExpired?"disabled":""}>Select fare</button>
           </div>
-          <div style="display: flex; align-items: center; gap: 12px;">
-            <strong style="color: #173f5c; font-size: 15px;">${money(offer.totalAmount, offer.totalCurrency)}</strong>
-            <button class="primary" data-action="select-offer" data-offer-id="${escapeAttr(offer.id)}" style="min-height: 24px; font-size: 10px; padding: 0 10px;">Select Fare</button>
-          </div>
+          <div class="altea-fare-variant-terms"><span>${escapeHTML(expiryLabel(offer.expiresAt))}</span><span>Offer <code>${escapeHTML(offer.id||"—")}</code></span></div>
+          ${fareSupplierFacts(offer)}
         </div>`;
       }).join("");
 
@@ -2381,7 +2467,7 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
         const added=offer.slices?.add?.[0];
         const carriers=unique((added?.segments||[]).map(s=>s.operatingCarrier?.name).filter(Boolean));
         const route=added?`${added.origin?.iataCode||added.segments?.[0]?.origin?.iataCode||"—"} → ${added.destination?.iataCode||added.segments?.[Math.max((added.segments?.length||1)-1,0)]?.destination?.iataCode||"—"}`:"Replacement flight";
-        return `<div class="offer-row"><div class="offer-summary"><div class="offer-price"><span class="muted">Change total</span><strong>${money(offer.changeTotalAmount,offer.changeTotalCurrency)}</strong><small>Penalty ${money(offer.penaltyTotalAmount||0,offer.penaltyTotalCurrency||offer.changeTotalCurrency)}</small></div><div class="offer-route"><div class="strong">${escapeHTML(route)}</div><div>${escapeHTML(carriers.join(", ")||"Operating carrier returned by airline")}</div><small>${formatDateTime(added?.segments?.[0]?.departingAt||"")} · expires ${formatDateTime(offer.expiresAt)}</small></div><div class="offer-action"><button class="primary" data-action="select-change-offer" data-change-offer-id="${escapeAttr(offer.id)}">Select change</button></div></div></div>`;
+        return `<div class="offer-row"><div class="offer-summary"><div class="offer-price"><span class="muted">Change total</span><strong>${money(offer.changeTotalAmount,offer.changeTotalCurrency)}</strong><small>${offer.penaltyTotalAmount!=null?`Penalty ${money(offer.penaltyTotalAmount,offer.penaltyTotalCurrency||offer.changeTotalCurrency)}`:"Penalty not supplied"}</small></div><div class="offer-route"><div class="strong">${escapeHTML(route)}</div><div>${escapeHTML(carriers.join(", ")||"Operating carrier returned by airline")}</div><small>${formatDateTime(added?.segments?.[0]?.departingAt||"")} · expires ${formatDateTime(offer.expiresAt)}</small></div><div class="offer-action"><button class="primary" data-action="select-change-offer" data-change-offer-id="${escapeAttr(offer.id)}">Select change</button></div></div></div>`;
       }).join("")}</div>`;
     }
 
@@ -2393,8 +2479,8 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
         ${alertBox(amount<0?"warning":"info", amount<0?"Airline refund due":"Airline change ready", amount<0?"Confirming this change returns value through the supplier flow. SKANDI must separately reconcile the customer payment.":"System requires the final current amount shown below before the flight is changed.")}
         <div class="money-line"><span>Change ID</span><strong class="mono">${escapeHTML(change.id||"")}</strong></div>
         <div class="money-line"><span>Fare difference / refund</span><strong>${money(change.changeTotalAmount,change.changeTotalCurrency)}</strong></div>
-        <div class="money-line"><span>Airline penalty</span><strong>${money(change.penaltyTotalAmount||0,change.penaltyTotalCurrency||change.changeTotalCurrency)}</strong></div>
-        <div class="money-line"><span>New order total</span><strong>${money(change.newTotalAmount||0,change.newTotalCurrency||change.changeTotalCurrency)}</strong></div>
+        <div class="money-line"><span>Airline penalty</span><strong>${change.penaltyTotalAmount!=null?money(change.penaltyTotalAmount,change.penaltyTotalCurrency||change.changeTotalCurrency):"Not supplied"}</strong></div>
+        <div class="money-line"><span>New order total</span><strong>${change.newTotalAmount!=null?money(change.newTotalAmount,change.newTotalCurrency||change.changeTotalCurrency):"Not supplied"}</strong></div>
         <div class="money-line"><span>Price expires</span><strong>${formatDateTime(change.expiresAt)}</strong></div>
       </div><div class="panel-foot">
         ${amount>0 && !paymentReady?`<button class="primary" data-action="prepare-change-payment">Pay ${escapeHTML(money(change.changeTotalAmount,change.changeTotalCurrency))}</button>`:""}
@@ -2410,6 +2496,44 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
         <div class="money-line"><span>Expires</span><strong>${formatDateTime(cancellation.expiresAt)}</strong></div>`;
     }
 
+
+    function supplierOrderDisclosure(order) {
+      const actual=order||{}, cur=actual.totalCurrency||actual.baseCurrency||actual.taxCurrency||"";
+      const line=(label,value)=>value===null||value===undefined||value===""?"":`<div class="money-line"><span>${escapeHTML(label)}</span><strong>${escapeHTML(value)}</strong></div>`;
+      const formatted=(label,amount,currency)=>amount===null||amount===undefined||amount===""?"":`<div class="money-line"><span>${escapeHTML(label)}</span><strong>${escapeHTML(money(amount,currency||cur||"USD"))}</strong></div>`;
+      const taxes=Array.isArray(actual.taxBreakdown)?actual.taxBreakdown:[];
+      const documents=Array.isArray(actual.documents)?actual.documents:[];
+      const services=Array.isArray(actual.services)?actual.services:[];
+      const changes=Array.isArray(actual.airlineInitiatedChanges)?actual.airlineInitiatedChanges:[];
+      const payment=actual.paymentStatus;
+      const paymentLabels=payment&&typeof payment==="object"?Object.entries(payment).filter(([key,value])=>["awaiting_payment","paid_at","payment_required_by","status","type"].includes(key)&&value!==null&&value!==undefined):[];
+      return `<section class="panel supplier-order-disclosure" style="margin-top:10px">
+        <div class="panel-head">Duffel supplier order / payment facts</div>
+        <div class="panel-body">
+          <div class="grid grid-3">
+            <div><div class="muted">Supplier order</div><strong class="mono">${escapeHTML(actual.id||"—")}</strong></div>
+            <div><div class="muted">Order type</div><strong>${escapeHTML(actual.type||"—")}</strong></div>
+            <div><div class="muted">Payment status</div><strong>${escapeHTML(typeof payment==="string"?payment:(payment?.status||(payment?.awaiting_payment===true?"Awaiting payment":"Supplier status not supplied")))}</strong></div>
+          </div>
+          ${formatted("Base fare + booked services (before tax)",actual.baseAmount,actual.baseCurrency)}
+          ${formatted("Supplier tax total",actual.taxAmount,actual.taxCurrency)}
+          ${formatted("Supplier order total",actual.totalAmount,actual.totalCurrency)}
+          ${line("Payment required by",actual.paymentRequiredBy?formatDateTime(actual.paymentRequiredBy):"")}
+          ${line("Price guaranteed until",actual.priceGuaranteedExpiresAt?formatDateTime(actual.priceGuaranteedExpiresAt):"")}
+          ${line("Void window ends",actual.voidWindowEndsAt?formatDateTime(actual.voidWindowEndsAt):"")}
+          ${line("Supplier last synchronized",actual.syncedAt?formatDateTime(actual.syncedAt):"")}
+          ${paymentLabels.map(([k,v])=>line(`Payment ${humanize(k)}`,typeof v==="boolean"?(v?"Yes":"No"):String(v))).join("")}
+          ${taxes.length?`<details class="supplier-fact-details"><summary>Individual supplier tax lines (${taxes.length})</summary>${taxes.map(t=>`<div class="money-line"><span>${escapeHTML([t.name||t.code||"Supplier tax",t.code&&t.name?`(${t.code})`:"",t.description||"",t.carrier_imposed===true||t.carrierImposed===true?"Carrier-imposed":""].filter(Boolean).join(" · "))}</span><strong>${t.amount!=null?escapeHTML(money(t.amount,t.currency||actual.taxCurrency||cur)):"Not provided"}</strong></div>`).join("")}</details>`:""}
+          ${services.length?`<details class="supplier-fact-details"><summary>Booked airline services (${services.length})</summary><table class="data-table"><thead><tr><th>Supplier ID</th><th>Type</th><th>Traveler / Segment</th><th>Quantity</th><th>Supplier amount</th></tr></thead><tbody>${services.map(v=>`<tr><td class="mono">${escapeHTML(v.id||"—")}</td><td>${escapeHTML(v.label||v.type||"—")}</td><td>${escapeHTML([...(v.passengerIds||[]),...(v.segmentIds||[])].join(" / ")||"—")}</td><td>${v.quantity!=null?escapeHTML(v.quantity):"—"}</td><td>${v.totalAmount!=null?escapeHTML(money(v.totalAmount,v.totalCurrency||cur)):"—"}</td></tr>`).join("")}</tbody></table></details>`:""}
+          ${documents.length?line("Supplier document records",String(documents.length)):""}
+          ${changes.length?`<details class="supplier-fact-details"><summary>Recorded airline-initiated changes (${changes.length})</summary>${changes.map(c=>`<div class="money-line"><span class="mono">${escapeHTML(c.id||"—")}</span><strong>${escapeHTML(c.action_taken||c.actionTaken||"No response recorded")}</strong></div>`).join("")}</details>`:""}
+          ${Array.isArray(actual.bookingReferences)&&actual.bookingReferences.length?`<details class="supplier-fact-details"><summary>All booking references</summary><div class="mono">${actual.bookingReferences.map(b=>escapeHTML(typeof b==="string"?b:JSON.stringify(b))).join(" · ")}</div></details>`:""}
+          ${Array.isArray(actual.intendedPaymentMethods)&&actual.intendedPaymentMethods.length?`<details class="supplier-fact-details"><summary>Recorded supplier payment methods</summary><pre class="supplier-fact-pre">${escapeHTML(JSON.stringify(actual.intendedPaymentMethods,null,2))}</pre></details>`:""}
+          ${actual.conditions&&Object.keys(actual.conditions).length?`<details class="supplier-fact-details"><summary>Supplier refund/change conditions</summary><pre class="supplier-fact-pre">${escapeHTML(JSON.stringify(actual.conditions,null,2))}</pre></details>`:""}
+          <div class="muted" style="padding-top:8px">Values shown here are returned by the supplier. They do not constitute a new payment, refund, ticket issue or servicing action. Stripe remains the customer payment authority.</div>
+        </div>
+      </section>`;
+    }
 
     function orderConfirmationMarkup(order) {
       const carrierNames = unique(order.slices?.flatMap((slice) => slice.segments?.map((segment) => segment.operatingCarrier?.name).filter(Boolean)) || []);
@@ -2427,14 +2551,15 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
       <section class="panel" style="margin-top:10px">
         <div class="panel-head">Documents</div>
         <div class="panel-body" style="padding:0">${documentTable(order.documents || [])}</div>
-      </section>`;
+      </section>
+      ${supplierOrderDisclosure(order)}`;
     }
 
 
     function documentTable(documents) {
       if (!documents.length) return emptyState("▧", "No documents returned", "Documents appear when the airline issues them.");
       return `<table class="data-table"><thead><tr><th>Type</th><th>Number</th><th>Status</th></tr></thead><tbody>
-        ${documents.map((document) => `<tr><td>${escapeHTML(document.type || "document")}</td><td class="mono">${escapeHTML(document.uniqueIdentifier || document.id || "—")}</td><td><span class="badge success">ISSUED</span></td></tr>`).join("")}
+        ${documents.map((document) => `<tr><td>${escapeHTML(document.type || "document")}</td><td class="mono">${escapeHTML(document.uniqueIdentifier || document.id || "—")}</td><td><span class="badge ${document.uniqueIdentifier?"success":"neutral"}">${document.uniqueIdentifier?"IDENTIFIER RETURNED":"SUPPLIER RECORD"}</span></td></tr>`).join("")}
       </tbody></table>`;
     }
 
@@ -2870,7 +2995,7 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
       const amount=Number(change.changeTotalAmount||0);
       const paymentIntentId=amount>0 && state.paymentPurpose==="change"?state.payment?.paymentIntentId:null;
       if(amount>0 && (!paymentIntentId||state.payment?.status!=="succeeded"))return toast("Payment required","Complete the secure change payment first.","warning");
-      openModal("Confirm airline change",`${alertBox("warning","Final supplier action","This updates the live airline booking. Review the final fare difference, penalty and routing before confirming.")}<div class="money-line"><span>Change amount</span><strong>${money(change.changeTotalAmount,change.changeTotalCurrency)}</strong></div><div class="money-line"><span>Penalty</span><strong>${money(change.penaltyTotalAmount||0,change.penaltyTotalCurrency||change.changeTotalCurrency)}</strong></div>`,[
+      openModal("Confirm airline change",`${alertBox("warning","Final supplier action","This updates the live airline booking. Review the final fare difference, penalty and routing before confirming.")}<div class="money-line"><span>Change amount</span><strong>${money(change.changeTotalAmount,change.changeTotalCurrency)}</strong></div><div class="money-line"><span>Penalty</span><strong>${change.penaltyTotalAmount!=null?money(change.penaltyTotalAmount,change.penaltyTotalCurrency||change.changeTotalCurrency):"Not supplied"}</strong></div>`,[
         {label:"Back",className:"secondary",close:true},
         {label:"Confirm change",className:"primary",onClick:()=>{closeModal();post("DUFFEL_CONFIRM_ORDER_CHANGE",{orderChangeId:change.id,paymentIntentId});}}
       ]);
@@ -6242,6 +6367,17 @@ html,body{margin:0!important;padding:0!important;width:203.20mm!important;height
   function legend(){
     return `<div class="seat-legend"><h4>Explanation</h4><div class="legend-row"><span class="legend-swatch selected">1</span>Selected seat / passenger badge</div><div class="legend-row"><span class="legend-swatch"></span>Available</div><div class="legend-row"><span class="legend-swatch blocked">X</span>Occupied / airline blocked</div><div class="legend-row"><span class="legend-swatch chargeable"></span>Chargeable seat</div><div class="legend-row"><span class="legend-swatch">EXIT</span>Exit / facility row</div><div class="legend-row"><span class="legend-swatch">B</span>Bassinet</div><div class="legend-row"><span class="legend-swatch">GAL</span>Galley</div><div class="legend-row"><span class="legend-swatch">WC</span>Lavatory</div><h4 style="margin-top:12px">Features</h4><div class="seat-feature-filter">${[["bassinet","Seat with bassinet facility"],["chargeable","Chargeable seat"],["overwing","Overwing seat(s)"],["child","Seat not suitable for child"],["restricted","Restricted seat - General"],["infant","Seat suitable for adult with an infant"]].map(([k,l])=>`<label><input type="checkbox" data-seat-filter="${k}" ${state.seatWorkbench.filters?.[k]?"checked":""}> ${l}</label>`).join("")}</div></div>`;
   }
+  function supplierSeatMapFacts(map){
+    const cabins=normalizedCabins(map);
+    const all=cabins.flatMap((c,cabinIndex)=>(c.rows||[]).flatMap((r,rowIndex)=>(r.sections||[]).flatMap((sec,sectionIndex)=>(sec.elements||[]).map(el=>({c:c.cabinName||c.cabinClass||`Cabin ${cabinIndex+1}`,row:r.rowNumber||rowIndex+1,section:sectionIndex+1,sectionType:sec.type||"",el})))));
+    const notable=all.filter(({el})=>el?.name||(el?.features||[]).length||(el?.disclosures||[]).length||el?.coordinates||el?.metadata||el?.type&&!["seat","empty"].includes(el.type));
+    const printable=x=>x===null||x===undefined?"":typeof x==="string"?x:JSON.stringify(x);
+    if(!notable.length)return "";
+    return `<details class="supplier-seat-details"><summary>Inspect Duffel's physical seat and cabin metadata (${notable.length} elements)</summary>
+      <div class="supplier-seat-metadata-table"><table class="data-table"><thead><tr><th>Cabin · row · section</th><th>Type / Name</th><th>Features</th><th>Disclosures</th><th>Coordinates</th><th>Metadata</th></tr></thead><tbody>
+      ${notable.map(({c,row,section,sectionType,el})=>`<tr><td>${escapeHTML(c)} · ${escapeHTML(row)} · ${escapeHTML(section)}${sectionType?` (${escapeHTML(sectionType)})`:""}</td><td>${escapeHTML([el.designator||"",el.type||"",el.name||""].filter(Boolean).join(" · "))}</td><td>${escapeHTML((el.features||[]).map(printable).join(", ")||"—")}</td><td>${escapeHTML((el.disclosures||[]).map(printable).join("; ")||"—")}</td><td class="mono">${escapeHTML(printable(el.coordinates)||"—")}</td><td class="mono">${escapeHTML(printable(el.metadata)||"—")}</td></tr>`).join("")}</tbody></table></div></details>`;
+  }
+
   function seatServiceView(){
     const category=state.seatWorkbench.category||"seats",pax=state.selectedOffer?.passengers||[];
     if(category==="seat_preference")return `<div class="panel-body"><table class="data-table"><thead><tr><th>Passenger</th><th>Preference</th></tr></thead><tbody>${pax.map((p,i)=>`<tr><td>${escapeHTML(seatPassengerLabel(p,i))}</td><td><select data-seat-pref-passenger="${escapeAttr(p.id)}"><option value="">No preference</option><option value="WINDOW">Window</option><option value="AISLE">Aisle</option><option value="MIDDLE">Middle</option></select></td></tr>`).join("")}</tbody></table><div class="alert info" style="margin:8px">Seat preference is not a confirmed seat. A seat is confirmed only when a seat service is selected.</div></div>`;
@@ -6256,7 +6392,7 @@ html,body{margin:0!important;padding:0!important;width:203.20mm!important;height
     if(!map)return `<div class="panel-body">${emptyState("▦","No seat map loaded","Refresh seat maps after selecting a current live offer.")}</div>`;
     const decks=cabinDecks(map);
     const total=[...state.selectedServices.values()].filter(s=>s.type==="seat").reduce((n,s)=>n+Number(s.totalAmount||0)*Number(s.quantity||1),0);
-    return `<div class="svc-toolbar"><div class="field"><label>Quick Assign / Seat number(s)</label><input id="seatQuickAssign" placeholder="22A, 22B"></div>${decks.length>1?`<div class="field"><label>Deck</label><select id="seatDeckSelect">${decks.map(d=>`<option value="${escapeAttr(d)}" ${String(state.seatWorkbench.deck)===d?"selected":""}>${Number(d)===0?"Lower":Number(d)===1?"Upper":`Deck ${escapeHTML(d)}`}</option>`).join("")}</select></div>`:""}<label class="check"><input id="seatRequestCradle" type="checkbox" ${state.seatWorkbench.requestCradle?"checked":""}> Request cradle / bassinet</label><button class="secondary" data-b0074-action="print-seat-catalog">Print and Save</button></div><div class="svc-body">${legend()}<div class="aircraft-canvas">${cabinGrid(map)}</div></div><div class="svc-footer"><span>Selected seat total <strong>${money(total,state.selectedOffer?.totalCurrency)}</strong></span><button class="primary" data-b0074-action="review-seat-catalog">Review & Submit</button></div>`;
+    return `<div class="svc-toolbar"><div class="field"><label>Quick Assign / Seat number(s)</label><input id="seatQuickAssign" placeholder="22A, 22B"></div>${decks.length>1?`<div class="field"><label>Deck</label><select id="seatDeckSelect">${decks.map(d=>`<option value="${escapeAttr(d)}" ${String(state.seatWorkbench.deck)===d?"selected":""}>${Number(d)===0?"Lower":Number(d)===1?"Upper":`Deck ${escapeHTML(d)}`}</option>`).join("")}</select></div>`:""}<label class="check"><input id="seatRequestCradle" type="checkbox" ${state.seatWorkbench.requestCradle?"checked":""}> Request cradle / bassinet</label><button class="secondary" data-b0074-action="print-seat-catalog">Print and Save</button></div><div class="svc-body">${legend()}<div class="aircraft-canvas">${cabinGrid(map)}${supplierSeatMapFacts(map)}</div></div><div class="svc-footer"><span>Selected seat total <strong>${money(total,state.selectedOffer?.totalCurrency)}</strong></span><button class="primary" data-b0074-action="review-seat-catalog">Review & Submit</button></div>`;
   }
 
 
@@ -6742,6 +6878,61 @@ html,body{margin:0!important;padding:0!important;width:203.20mm!important;height
   updatePnrLockUi();
   renderTabs();
   render();
+})();
+</script>
+
+
+<style id="v12-duffel-order-audit-style">
+.duffel-order-audit{margin-top:10px}.duffel-order-audit details{border-bottom:1px solid #ddd;padding:7px 9px}.duffel-order-audit summary{cursor:pointer;font-weight:700}.duffel-order-audit .audit-entry{display:grid;grid-template-columns:minmax(140px, 1fr) 2fr;gap:10px;border-bottom:1px dotted #ddd;padding:5px 0;word-break:break-word}.duffel-order-audit .audit-entry:last-child{border:0}.duffel-order-audit .audit-entry dt{color:#56616c}.duffel-order-audit .audit-entry dd{margin:0}.duffel-order-audit pre{white-space:pre-wrap;overflow-wrap:anywhere;font:10px/1.4 ui-monospace,Consolas,monospace}.duffel-order-audit .audit-note{font-size:10px;color:#666;margin:7px 0}
+</style>
+<script id="v12-duffel-order-audit">
+(function(){
+  "use strict";
+  // Additive, read-only ALTEA order inspector. No new payment or supplier actions.
+  if(typeof renderActions!=="function"||typeof escapeHTML!=="function")return;
+  const previousActions=renderActions;
+  const asArray=v=>Array.isArray(v)?v:[];
+  const isValue=v=>v!==null&&v!==undefined&&v!=="";
+  function show(value){
+    if(!isValue(value))return "Not provided by supplier";
+    if(Array.isArray(value))return value.length?value.map(item=>typeof item==="object"?JSON.stringify(item):String(item)).join("; "):"None returned";
+    if(typeof value==="object")return JSON.stringify(value);
+    return String(value);
+  }
+  function entry(label,value){return `<div class="audit-entry"><dt>${escapeHTML(label)}</dt><dd class="mono">${escapeHTML(show(value))}</dd></div>`;}
+  function items(label,values,render){
+    const arr=asArray(values);
+    return `<details><summary>${escapeHTML(label)} (${arr.length})</summary>${arr.length?arr.map((item,index)=>`<section style="padding:9px 3px;border-bottom:1px dotted #c3c3c3"><strong>Entry ${index+1}</strong>${render(item,index)}</section>`).join(""):'<p class="audit-note">No records returned by Duffel.</p>'}</details>`;
+  }
+  function audit(order){
+    if(!order?.id)return "";
+    const currencies=[order.totalCurrency,order.baseCurrency,order.taxCurrency].filter(Boolean);
+    return `<section class="panel duffel-order-audit" aria-label="Airline order record details"><div class="panel-head">Duffel Order Record — Read Only</div><div class="panel-body"><p class="audit-note">The fields below reflect data actually returned by the airline. Missing values are not interpreted as zero, authorization or successful ticket issuance. Actions are still controlled by the existing server-side workflow.</p>
+      ${entry("Duffel order ID",order.id)}
+      ${entry("Order status",order.status)}
+      ${entry("Payment status",order.paymentStatus)}
+      ${entry("Booking reference",order.bookingReference)}
+      ${entry("Airline references",order.bookingReferences)}
+      ${entry("Total amount",order.totalAmount)}
+      ${entry("Base amount",order.baseAmount)}
+      ${entry("Tax amount",order.taxAmount)}
+      ${entry("Currency/currencies",currencies)}
+      ${entry("Payment required by",order.paymentRequiredBy)}
+      ${entry("Void window ends",order.voidWindowEndsAt)}
+      ${entry("Available supplier actions",order.availableActions)}
+      ${entry("Intended payment methods",order.intendedPaymentMethods)}
+      ${items("Tax breakdown",order.taxBreakdown,t=>entry("Code",t.code)+entry("Name",t.name)+entry("Amount",t.amount)+entry("Currency",t.currency)+entry("Description",t.description)+entry("Carrier imposed",t.carrier_imposed??t.carrierImposed))}
+      ${items("Supplier-issued documents",order.documents,d=>entry("Document ID",d.id)+entry("Type",d.type)+entry("Identifier",d.uniqueIdentifier??d.unique_identifier)+entry("Passenger IDs",d.passengerIds??d.passenger_ids))}
+      ${items("Booked services",order.services,v=>entry("Service ID",v.id)+entry("Type",v.type)+entry("Passenger IDs",v.passengerIds)+entry("Segment IDs",v.segmentIds)+entry("Amount",v.totalAmount)+entry("Currency",v.totalCurrency))}
+      ${items("Airline-initiated changes",order.airlineInitiatedChanges,c=>entry("ID",c.id)+entry("Action",c.action_taken??c.actionTaken)+entry("Available actions",c.available_actions??c.availableActions)+entry("Added flights",c.added)+entry("Removed flights",c.removed))}
+      ${items("Order changes",order.changes,c=>entry("ID",c.id)+entry("Status",c.status)+entry("Confirmed",c.confirmed_at??c.confirmedAt)+entry("Penalty",c.penalty_total_amount??c.penaltyTotalAmount))}
+      ${items("Passenger records",order.passengers,p=>entry("Passenger ID",p.id)+entry("Name",[p.givenName,p.familyName].filter(Boolean).join(" "))+entry("Documents",p.identityDocuments??p.identity_documents))}
+    </div></section>`;
+  }
+  renderActions=function renderActionsV12DuffelAudit(){
+    const original=previousActions();
+    return state.selectedOrder?.id?original+audit(state.selectedOrder):original;
+  };
 })();
 </script>
 
