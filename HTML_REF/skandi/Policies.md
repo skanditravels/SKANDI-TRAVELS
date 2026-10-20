@@ -150,6 +150,15 @@ Page → HTML:
 
 ## COMPLETE INTENDED LIVE HTML SOURCE
 
+
+### V12 public legal presentation update — 2026-10-20 UTC
+
+- Confirmed `/src/pages/Policies.sgcey.js` bridges use the current canonical `backend/SKANDI_CORE/legalPolicy.web.js` facade and `legalPolicy.js` public projection. The established public scope/published/active filter, document selector, navigation, PDF link, and acknowledgement submission contracts remain unchanged.
+- Updated the complete Wix HTML payload for `#legalPolicyEmbed` to a restrained SKANDI navy and cyan legal-document design with larger body text, document headings, controls, accessible mobile sizes and mobile table/rail containment. Existing global Wix header/footer remain owned by `masterPage.js`; no second site header is introduced.
+- Added a bounded, idempotent initial `READY` message retry to recover when the child iframe starts before the Wix page controller has registered its listener. This retries only the existing message contract; it does not bypass the canonical backend or create local legal records.
+- IMPORTANT ROUTE NOTE: The verified canonical V12 route registry currently defines `/about/legal/policies`, NOT the abbreviated `/legal` aliases. Wix page slugs/redirects must be configured separately if `/legal` or `/legal/policies` are explicitly required. No unapproved route mutation is included.
+- **STATICALLY VERIFIED** against the current GitHub `main` HTML message contract and backend imports. **REQUIRES LIVE TEST** in the published Wix page for actual data loading, navigation, sizing, PDF links and any required acknowledgement.
+
 ```html
 <!doctype html>
 <html lang="en">
@@ -1007,6 +1016,206 @@ button:focus-visible,a:focus-visible{
     transition-duration:.01ms!important;
   }
 }
+
+/* V12 legal reading standard — formal, readable, SKANDI-branded documents. */
+:root{
+  --sk-text:#1c2938;
+  --sk-body:#354459;
+  --sk-muted:#566679;
+  --sk-border:#d6dfeb;
+  --sk-border-soft:#e6ebf2;
+  --sk-pale:#f7f9fd;
+}
+html,body{background:#f8fafd;color:var(--sk-text);font-size:15px}
+.shell{padding-top:36px;padding-bottom:82px}
+.layout{grid-template-columns:252px minmax(0,1fr);gap:25px}
+.rail-card{border-radius:9px;box-shadow:0 2px 10px rgba(2,46,100,.035)}
+.rail-section{padding:17px}
+.rail-eyebrow{color:var(--sk-blue);font-size:11px}
+.rail h2{font-size:16px;line-height:1.4;font-weight:750}
+.back-btn{
+  min-height:47px;
+  border-radius:8px;
+  font-size:13px;
+  line-height:1.45;
+  font-weight:750;
+}
+.toc-list{gap:3px}
+.toc-link{
+  padding:8px;
+  border-radius:6px;
+  font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif;
+  font-size:12.5px;
+  line-height:1.55;
+}
+.toc-number{color:var(--sk-blue2)}
+.toc-empty{font-size:12.5px;line-height:1.6}
+.suggestions{gap:8px}
+.suggested{border-radius:7px;padding:12px}
+.suggested strong{font-size:13px;line-height:1.5}
+.suggested span{font-size:11.5px;line-height:1.55}
+.ack-jump{font-size:13px;min-height:44px}
+.document{
+  border-color:#d2dce9;
+  border-radius:10px;
+  box-shadow:0 5px 22px rgba(2,46,100,.052);
+}
+.document-head{
+  padding:40px 43px 33px;
+  background:linear-gradient(180deg,#fff 0%,#fbfcff 100%);
+}
+.document-head::after{left:43px;right:43px;opacity:.43}
+.eyebrow{color:var(--sk-blue);font-size:11px;letter-spacing:.13em}
+.document h1{
+  margin-top:13px;
+  margin-bottom:18px;
+  font-size:clamp(32px,3.8vw,44px);
+  line-height:1.17;
+  letter-spacing:-.033em;
+  font-weight:800;
+}
+.summary{
+  max-width:76ch;
+  font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif;
+  font-size:16px;
+  line-height:1.79;
+  color:var(--sk-body);
+}
+.meta-row{gap:8px;margin-top:20px}
+.meta-pill{
+  padding:8px 10px;
+  border-radius:5px;
+  font-size:12px;
+  line-height:1.4;
+  font-weight:650;
+}
+.action-btn{
+  min-height:44px;
+  border-radius:7px;
+  font-size:13px;
+  font-weight:750;
+}
+.document-body{padding:40px 43px 50px}
+.introduction{
+  margin-bottom:31px;
+  padding:22px 24px;
+  border-left-color:var(--sk-blue);
+  border-radius:7px;
+  background:#f8fbff;
+  color:var(--sk-body);
+  font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif;
+  font-size:16px;
+  line-height:1.83;
+}
+.introduction p,
+.introduction li{
+  font-size:16px;
+  line-height:1.82;
+}
+.policy-body{
+  color:#25364a;
+  font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif;
+  font-size:16px;
+  line-height:1.84;
+  overflow-wrap:break-word;
+}
+.policy-body h2,
+.policy-body h3,
+.policy-body h4,
+.policy-body h5{
+  color:var(--sk-blue);
+  font-family:"Montserrat",system-ui,-apple-system,"Segoe UI",Arial,sans-serif;
+  letter-spacing:-.02em;
+  line-height:1.37;
+  font-weight:750;
+}
+.policy-body h2{margin:38px 0 14px;padding-top:11px;font-size:23px}
+.policy-body h3{margin:31px 0 12px;font-size:20px}
+.policy-body h4{margin:26px 0 10px;font-size:18px}
+.policy-body h5{margin:22px 0 10px;font-size:16px}
+.section-number{color:var(--sk-blue2);font-weight:800}
+.policy-body p,
+.policy-body li{
+  color:#263648;
+  font-size:16px;
+  line-height:1.84;
+}
+.policy-body p{margin-bottom:18px}
+.policy-body ul,
+.policy-body ol{margin-bottom:21px}
+.policy-body li{margin:7px 0}
+.policy-body blockquote{
+  padding:16px 19px;
+  border-left-color:var(--sk-blue);
+  background:#f7faff;
+  font-size:15px;
+}
+.policy-body table{
+  display:block;
+  max-width:100%;
+  overflow-x:auto;
+  font-size:14px;
+  line-height:1.6;
+}
+.policy-body th,
+.policy-body td{
+  padding:12px 14px;
+  font-size:14px;
+  line-height:1.6;
+}
+.document-control h2{font-size:19px}
+.control-table{font-size:13px;border-radius:7px}
+.control-table th,
+.control-table td{
+  padding:12px 14px;
+  font-size:13px;
+  line-height:1.6;
+}
+.ack-shell{border-radius:10px}
+.ack-intro h2{font-size:24px;line-height:1.24}
+.ack-intro p{font-size:14.5px;line-height:1.72}
+.ack-section h3{font-size:17px}
+.ack-field label,.ack-label{font-size:11px;line-height:1.45}
+.ack-input,.ack-select,.ack-textarea{font-size:15px;line-height:1.5}
+.ack-choice span,.ack-submit,.ack-clear{font-size:13px}
+.ack-consent,.ack-required-marker,.ack-status{font-size:13px;line-height:1.7}
+.loading,.error{font-size:15px;line-height:1.75;border-radius:9px}
+@media(max-width:900px){
+  .layout{grid-template-columns:1fr;gap:19px}
+  .rail{gap:10px}
+}
+@media(max-width:650px){
+  .shell{padding:15px 12px 48px}
+  .rail{gap:9px}
+  .rail-section{padding:13px}
+  .toc-list{max-height:190px;overflow:auto;overscroll-behavior:contain}
+  .suggestions{max-height:160px;overflow:auto;overscroll-behavior:contain}
+  .document{border-radius:8px}
+  .document-head{padding:26px 20px 24px}
+  .document-head::after{left:20px;right:20px}
+  .document h1{font-size:32px;line-height:1.19}
+  .summary{font-size:15.5px}
+  .meta-pill{font-size:11.5px}
+  .document-body{padding:25px 20px 36px}
+  .introduction{padding:17px}
+  .introduction,.introduction p,.introduction li{font-size:15.5px}
+  .policy-body,.policy-body p,.policy-body li{font-size:16px;line-height:1.82}
+  .policy-body h2{font-size:22px}
+  .policy-body h3{font-size:19px}
+  .policy-body h4{font-size:17px}
+  .control-table th,.control-table td{padding:10px;font-size:12.5px}
+}
+@media print{
+  html,body{background:#fff}
+  .document{border:0;box-shadow:none}
+  .document-head{padding:0 0 20px}
+  .document-body{padding:19px 0 0}
+  .policy-body,.policy-body p,.policy-body li,.introduction,.introduction p{font-size:11pt;line-height:1.55}
+  .policy-body h2{font-size:16pt}
+  .policy-body h3{font-size:14pt}
+  .document h1{font-size:27pt}
+}
+
 </style>
 </head>
 <body>
@@ -1072,6 +1281,19 @@ let heightTimer=0;
 let ackHasSignature=false;
 let ackSubmitting=false;
 let ackSubmissionId="";
+let documentBridgeSettled=false;
+let documentBridgeRetries=0;
+let documentBridgeRetryTimer=null;
+function requestInitialDocument(){
+  if(documentBridgeSettled||documentBridgeRetries>=5)return;
+  documentBridgeRetries++;
+  post("LEGAL_DOCUMENT_READY",{path:"/about/legal/policies"});
+  documentBridgeRetryTimer=setTimeout(requestInitialDocument,1800);
+}
+function settleInitialDocument(){
+  documentBridgeSettled=true;
+  if(documentBridgeRetryTimer){clearTimeout(documentBridgeRetryTimer);documentBridgeRetryTimer=null;}
+}
 
 function post(type,payload={}){
   window.parent.postMessage({
@@ -1730,6 +1952,7 @@ window.addEventListener("message",event=>{
   }
 
   if(message.type==="LEGAL_DOCUMENT_DATA"){
+    settleInitialDocument();
     current=normalizeDocument(payload);
     suggested=Array.isArray(payload.suggestedDocuments)
       ?payload.suggestedDocuments
@@ -1776,6 +1999,7 @@ window.addEventListener("message",event=>{
   }
 
   if(message.type==="LEGAL_DOCUMENT_ERROR"){
+    settleInitialDocument();
     current=null;
     suggested=[];
     showError(payload.message);
@@ -1788,7 +2012,7 @@ if("ResizeObserver"in window){
   window.addEventListener("resize",requestHeight);
 }
 
-post("LEGAL_DOCUMENT_READY",{path:"/about/legal/policies"});
+requestInitialDocument();
 requestHeight();
 })();
 </script>
