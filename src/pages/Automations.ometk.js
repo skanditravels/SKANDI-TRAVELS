@@ -1,46 +1,125 @@
-// SKANDI V12 — RIAINTRA Automations console; all Wix automation categories.
-// REPLACES only the previous new Recruiting Automations page controller, not SuccessFactors.
-// Existing HTML element ID #sfAutomationEmbed and event contracts retained.
+// SKANDI V12 — NEW dedicated Recruiting Automations administration page controller.
+// Page-code template only: paste as the COMPLETE page code for a newly created Wix page.
+// Do not replace the current Success Factors.sh6tw.js controller with this file.
+// Wix HTML Component element ID: #sfAutomationEmbed
+// Data and administrator authorization stay in canonical SKANDI_CORE automation services.
+
 import {
-  getAutomationAdminSnapshot, getAutomationEmailPlatformSnapshot,
-  inspectAutomationEmailAction,previewAutomationEmailAction,syncAutomationEmailAction,
+  getAutomationAdminSnapshot,
+  getAutomationEmailPlatformSnapshot,
+  inspectAutomationEmailAction,
+  previewAutomationEmailAction,
+  syncAutomationEmailAction,
   generateAutomationEmailActionMapping
 } from 'backend/SKANDI_CORE/automationControl.web';
-import {
-  getAutomationWorkspace, createAutomationDraft,syncAutomationDesignedEmail,setAutomationStatus,
-  getAutomationGraph,createAutomationGraphDraft
-} from 'backend/SKANDI_CORE/automationWorkspace.web';
-const ID='#sfAutomationEmbed', SOURCE='SKANDI_SF_AUTOMATIONS_EMBED', PARENT='SKANDI_WIX_PARENT';
-const TYPES=new Set(['AUTOMATION_CONSOLE_READY','AUTOMATION_CONSOLE_REFRESH','AUTOMATION_CONSOLE_INSPECT','AUTOMATION_CONSOLE_DRY_RUN','AUTOMATION_CONSOLE_PREVIEW','AUTOMATION_CONSOLE_SYNC','AUTOMATION_CONSOLE_MAPPING','AUTOMATION_CONSOLE_CREATE_DRAFT','AUTOMATION_CONSOLE_SYNC_DESIGNED','AUTOMATION_CONSOLE_SET_STATUS','AUTOMATION_CONSOLE_GRAPH','AUTOMATION_CONSOLE_GRAPH_DRAFT']);
-let embed;const dict=v=>v&&typeof v==='object'&&!Array.isArray(v)?v:{};const clean=(v,n=500)=>String(v??'').trim().slice(0,n);
-function send(type,payload={},requestId=''){embed.postMessage({source:PARENT,type,payload,requestId,timestamp:new Date().toISOString()});}
-function err(e){return{code:clean(e?.code||e?.details?.applicationError?.code||'AUTOMATION_ERROR',100),message:clean(e?.publicMessage||e?.details?.applicationError?.description||e?.message||'Automation operation failed.',600)};}
-async function boot(id){
-  const [platform,live,workspace]=await Promise.allSettled([getAutomationEmailPlatformSnapshot(),getAutomationAdminSnapshot(),getAutomationWorkspace()]);
-  if(platform.status==='rejected'||live.status==='rejected')throw(platform.reason||live.reason||new Error('Wix Automations unavailable.'));
-  send('AUTOMATION_CONSOLE_BOOTSTRAP',{platform:platform.value,live:live.value,workspace:workspace.status==='fulfilled'?workspace.value:{ok:false,error:err(workspace.reason).message}},id);
+
+const EMBED_ID = '#sfAutomationEmbed';
+const CHILD = 'SKANDI_SF_AUTOMATIONS_EMBED';
+const PARENT = 'SKANDI_WIX_PARENT';
+const EVENTS = new Set([
+  'AUTOMATION_CONSOLE_READY',
+  'AUTOMATION_CONSOLE_REFRESH',
+  'AUTOMATION_CONSOLE_INSPECT',
+  'AUTOMATION_CONSOLE_DRY_RUN',
+  'AUTOMATION_CONSOLE_PREVIEW',
+  'AUTOMATION_CONSOLE_SYNC',
+  'AUTOMATION_CONSOLE_MAPPING'
+]);
+
+const str = (value, max = 500) => String(value ?? '').trim().slice(0, max);
+const dict = value => value && typeof value === 'object' && !Array.isArray(value) ? value : {};
+let component;
+let sequence = 0;
+
+function send(type, payload = {}, requestId = '') {
+  if (!component) return;
+  component.postMessage({source: PARENT, type, payload, requestId, timestamp: new Date().toISOString()});
 }
-async function request(type,data,id){
-  const p=dict(data),target={automationId:clean(p.automationId,120),actionId:clean(p.actionId,120)};let result;
-  switch(type){
-    case 'AUTOMATION_CONSOLE_READY':case 'AUTOMATION_CONSOLE_REFRESH':await boot(id);return;
-    case 'AUTOMATION_CONSOLE_INSPECT':result=await inspectAutomationEmailAction(target);break;
-    case 'AUTOMATION_CONSOLE_PREVIEW':result=await previewAutomationEmailAction({...target,customPayload:{}});break;
-    case 'AUTOMATION_CONSOLE_DRY_RUN':case 'AUTOMATION_CONSOLE_SYNC':result=await syncAutomationEmailAction({...target,workflowKey:clean(p.workflowKey,120),audience:clean(p.audience,40),expectedTriggerKey:clean(p.expectedTriggerKey,200),dryRun:type==='AUTOMATION_CONSOLE_DRY_RUN'});break;
-    case 'AUTOMATION_CONSOLE_MAPPING':result=await generateAutomationEmailActionMapping({workflowKey:clean(p.workflowKey,120),audience:clean(p.audience,40),triggerSchemaContactIdPath:clean(p.contactPath||'contactId',240),notificationTopicId:clean(p.notificationTopicId,120),senderDetailsId:clean(p.senderDetailsId,120)});break;
-    case 'AUTOMATION_CONSOLE_CREATE_DRAFT':result=await createAutomationDraft(p);break;
-    case 'AUTOMATION_CONSOLE_GRAPH':result=await getAutomationGraph(p);break;
-    case 'AUTOMATION_CONSOLE_GRAPH_DRAFT':result=await createAutomationGraphDraft(p);break;
-    case 'AUTOMATION_CONSOLE_SYNC_DESIGNED':result=await syncAutomationDesignedEmail({...p,confirm:true,dryRun:false});break;
-    case 'AUTOMATION_CONSOLE_SET_STATUS':result=await setAutomationStatus({...p,confirm:true});break;
-    default:return;
+
+function presentError(error) {
+  return {
+    code: str(error?.code || error?.details?.applicationError?.code || 'AUTOMATION_ERROR', 120),
+    message: str(error?.publicMessage || error?.details?.applicationError?.description || error?.message || 'The requested automation operation failed.', 600)
+  };
+}
+
+async function bootstrap(requestId) {
+  const [platformResult, adminResult] = await Promise.allSettled([
+    getAutomationEmailPlatformSnapshot(),
+    getAutomationAdminSnapshot()
+  ]);
+  if (platformResult.status !== 'fulfilled' || adminResult.status !== 'fulfilled') {
+    const rejected = platformResult.status === 'rejected' ? platformResult.reason : adminResult.reason;
+    throw rejected || new Error('Automation administration could not be loaded.');
   }
-  send('AUTOMATION_CONSOLE_RESULT',{operation:type,data:result},id);
-  if(['AUTOMATION_CONSOLE_CREATE_DRAFT','AUTOMATION_CONSOLE_SET_STATUS','AUTOMATION_CONSOLE_GRAPH_DRAFT'].includes(type)&&result?.ok)await boot('');
+  const platform = platformResult.value;
+  const live = adminResult.value;
+  if (!platform?.ok || !live?.ok) throw new Error('The automation platform did not confirm a successful response.');
+  send('AUTOMATION_CONSOLE_BOOTSTRAP', {platform, live}, requestId);
 }
-$w.onReady(()=>{
-  try{embed=$w(ID);}catch(e){console.error('[SKANDI][Automations] Missing HTML component #sfAutomationEmbed');return;}
-  if(!embed||typeof embed.onMessage!=='function'||typeof embed.postMessage!=='function'){console.error('[SKANDI][Automations] Element is not an HTML Component');return;}
-  embed.onMessage(async event=>{const m=dict(event?.data);if(m.source!==SOURCE||!TYPES.has(m.type))return;try{await request(m.type,m.payload,clean(m.requestId,100));}catch(error){console.error('[SKANDI][Automations]',m.type,err(error));send('AUTOMATION_CONSOLE_ERROR',{operation:m.type,...err(error)},clean(m.requestId,100));}});
-  send('AUTOMATION_CONSOLE_CONTROLLER_ATTACHED',{ok:true});
+
+async function dispatch(type, payload, requestId) {
+  const data = dict(payload);
+  const target = {
+    automationId: str(data.automationId, 120),
+    actionId: str(data.actionId, 120)
+  };
+  switch (type) {
+    case 'AUTOMATION_CONSOLE_READY':
+    case 'AUTOMATION_CONSOLE_REFRESH':
+      await bootstrap(requestId);
+      return;
+    case 'AUTOMATION_CONSOLE_INSPECT':
+      send('AUTOMATION_CONSOLE_RESULT', {operation: 'INSPECT', data: await inspectAutomationEmailAction(target)}, requestId);
+      return;
+    case 'AUTOMATION_CONSOLE_PREVIEW':
+      send('AUTOMATION_CONSOLE_RESULT', {operation: 'PREVIEW', data: await previewAutomationEmailAction({...target, customPayload: {}})}, requestId);
+      return;
+    case 'AUTOMATION_CONSOLE_DRY_RUN':
+    case 'AUTOMATION_CONSOLE_SYNC': {
+      const result = await syncAutomationEmailAction({
+        ...target,
+        workflowKey: str(data.workflowKey, 120),
+        audience: str(data.audience, 40),
+        expectedTriggerKey: str(data.expectedTriggerKey, 240),
+        dryRun: type === 'AUTOMATION_CONSOLE_DRY_RUN'
+      });
+      send('AUTOMATION_CONSOLE_RESULT', {operation: type === 'AUTOMATION_CONSOLE_DRY_RUN' ? 'DRY_RUN' : 'SYNC', data: result}, requestId);
+      return;
+    }
+    case 'AUTOMATION_CONSOLE_MAPPING': {
+      const result = await generateAutomationEmailActionMapping({
+        workflowKey: str(data.workflowKey, 120),
+        audience: str(data.audience, 40),
+        triggerSchemaContactIdPath: str(data.contactPath || 'contactId', 240),
+        notificationTopicId: str(data.notificationTopicId, 120),
+        senderDetailsId: str(data.senderDetailsId, 120)
+      });
+      send('AUTOMATION_CONSOLE_RESULT', {operation: 'MAPPING', data: result}, requestId);
+      return;
+    }
+  }
+}
+
+$w.onReady(() => {
+  try { component = $w(EMBED_ID); }
+  catch (error) {
+    console.error('[SKANDI][Recruiting Automations] Missing HTML element #sfAutomationEmbed', presentError(error));
+    return;
+  }
+  if (!component || typeof component.onMessage !== 'function' || typeof component.postMessage !== 'function') {
+    console.error('[SKANDI][Recruiting Automations] The configured element is not an HTML Component.');
+    return;
+  }
+  component.onMessage(async event => {
+    const message = dict(event?.data);
+    if (message.source !== CHILD || !EVENTS.has(message.type)) return;
+    const id = str(message.requestId, 100) || `request-${++sequence}`;
+    try { await dispatch(message.type, message.payload, id); }
+    catch (error) {
+      console.error('[SKANDI][Recruiting Automations] Action failed:', message.type, presentError(error));
+      send('AUTOMATION_CONSOLE_ERROR', {operation: message.type, ...presentError(error)}, id);
+    }
+  });
+  send('AUTOMATION_CONSOLE_CONTROLLER_ATTACHED', {ok: true});
 });
