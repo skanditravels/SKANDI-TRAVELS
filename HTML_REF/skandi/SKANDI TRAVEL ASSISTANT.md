@@ -1,10 +1,10 @@
-# SKANDI TRAVEL ASSISTANT — V12 NEW INTEGRATION
+# SKANDI TRAVEL ASSISTANT — V12 INTEGRATION
 
 ## INFO
 - System: SKANDI — customer-facing booking support.
-- Route to create in Wix: `/travel-assistant`.
+- OWNER-CONFIRMED ROUTE: `/my-profile/travel-assistance`.
 - Wix HTML element: `#htmlDuffelAssistant` (full-width/full-height embed).
-- Wix page controller: `/src/pages/Travek Assistant.elfkf.js` (bind to the Wix-created page; Wix may assign a generated page-code suffix).
+- Wix page controller: `/src/pages/Travel Assistance.elfkf.js` (actual Wix-assigned code filename, per owner).
 - Web facade: `/src/backend/SKANDI_CORE/duffelAssistant.web.js`.
 - Core: `/src/backend/SKANDI_CORE/duffelAssistant.js`.
 - Reused canonical cores: `customerProfile.js`, `duffelGround.js`, `duffelClient.js`, `customerSupport.js`, `supabaseServer.js`.
@@ -27,7 +27,15 @@
 
 - 2026-10-18 — V12.3: Existing Customer Service Desk private agent note `DUFFEL HANDOFF` (Issue/ Summary) can supply a supplier-facing summary via Duffel's documented `openDuffelAssistant({ context: { issueType, summary } })` on the next authenticated customer launch. Customer-owned case deep links `?caseId=...&bookingId=...&issueType=...` reuse an existing SKANDI case without impersonating travelers or replacing its origin. Added on-demand provider state verification and handling for signed `air.order.changed`, `order_cancellation.confirmed`, and `stays.booking.cancelled` webhooks, with durable Support-side discrepancy evidence. No unsupported Duffel chat transcript API or automatic financial settlement is assumed. REQUIRES LIVE TEST.
 
+- 2026-10-19 — V12.4: The existing Customer Service Desk receives verified Duffel/ALTEA context, can initiate supplier verification, can route the SAME support case to a Booking Team queue with a persistent private note, and can prepare a customer-completed Duffel handoff with the supported issue type and agent summary. The Assistant standalone runtime/embed is unchanged from V12.3. Staff cannot impersonate travelers, read private Duffel transcripts, or automatically settle supplier/financial changes. REQUIRES LIVE TEST.
+
+- 2026-10-19 — V12.5: Owner confirms the customer page display name **Travel Assistant**, Wix page-code filename `Travel Assistance.elfkf.js`, and route `/my-profile/travel-assistance`. All My Support case entry points, provider-owned case `sourcePage`, and customer handoff links use this route; all `DUFFEL_ASSISTANT_*` bridge message names, original HTML element `htmlDuffelAssistant`, and provider custom element remain unchanged. Consolidated reference under the Git-existing `HTML_REF/skandi/SKANDI TRAVEL ASSISTANT.md` instead of creating a second conflicting `SKANDI DUFFEL ASSISTANT.md` implementation.
+- 2026-10-19 — V12.5 Alexandra support: The canonical LiveKit server core now uses `AgentDispatchClient` from pinned `livekit-server-sdk@2.15.5`, preserving `alexandra-prod`, `lk.chat`, `lk.transcription`, the authorized support gateway, and the shared Supabase Support case authority. The intended `/about/support` page still depends on separately hosted `#skandiSupportChatEmbed`; its complete live source is not in Git HTML_REF, and its runtime must be checked before declaring the chat fixed. REQUIRES LIVE TEST.
+
+- 2026-10-20 — V12.6 native mobile Duffel mode: Phone widths (≤620px) hide the desktop SKANDI booking workspace and launch the official `<duffel-assistant>` component through the existing authenticated Wix → Duffel client-key flow. The mobile SKANDI-branded opening chrome and retry/sign-in/customer-service actions are host-controlled; Duffel's supplier chat and trip UI remain Duffel-operated and cannot be restyled internally without a documented Duffel capability. Automatic opening is attempted once after valid profile bootstrap, with an explicit tap-to-open fallback for mobile-browser restrictions. This change also fixes the invalid vendor custom-element closing tag introduced in the prior reference. `#htmlDuffelAssistant`, all existing bridge messages, scoped access verification, case audit, and desktop design stay unchanged. Requires real iOS/Android iframe height and CSP verification.
+
 ## DEPLOYMENT / REVIEW
+- Keep the existing Wix page `/my-profile/travel-assistance` and controller `Travel Assistance.elfkf.js`. On mobile, set the existing `#htmlDuffelAssistant` Wix Studio HTML component to at least **100dvh / device viewport height** with no clipping container, so the official Duffel dialog can fit. Do not create a second page or fake the provider UI. Desktop keeps the present full-height embed.
 - Create and publish the new Wix page and bind the page controller to its actual Wix page code file. Install the full HTML below in the HTML component with ID `htmlDuffelAssistant`; set the embed to fill the page viewport.
 - Verify existing `customerProfile.js` provider sync and any newer deployed version of `duffelIdentity.js` before installing its restoration.
 - The Assistant displays trips that Duffel knows are associated with the customer user; existing bookings are associated when the customer opens a specific verified booking from this page. Generic "All Duffel trips" cannot discover unknown/unlinked supplier orders.
@@ -112,6 +120,23 @@
     @media(max-width:820px){.wrap{width:min(var(--max),calc(100% - 32px))}.hero{padding:52px 0 46px}.layout{display:block}.side-menu{position:relative;top:auto;margin:0 0 28px;padding:0;border:1px solid rgba(255,255,255,.12);border-radius:18px;background:rgba(4,21,39,.6);overflow:hidden}.side-menu-title{padding:16px}.side-category{padding:0 16px}.side-menu-footer{padding:15px}.stage{padding-top:30px}.service-pair{grid-template-columns:1fr}}
     @media(max-width:620px){.wrap{width:min(var(--max),calc(100% - 28px))}.hero h1{font-size:43px}.hero-facts{grid-template-columns:1fr}.fact+.fact{border-left:0;border-top:1px solid rgba(255,255,255,.10);padding-left:0}.selection{grid-template-columns:1fr}.card.pad{padding:20px}.button-row{flex-direction:column}.button-row button{width:100%}.history-entry{grid-template-columns:1fr;gap:7px}.page-intro h2{font-size:37px}.stage{padding-bottom:72px}}
     @media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+
+    /* Small screens use the Duffel-operated Assistant UI, not a second SKANDI trip-management UI.
+       CSS styles only SKANDI-owned launcher/chrome; Duffel iframe stays provider-controlled. */
+    .mobile-launch{display:none}
+    @media(max-width:620px), (max-width:950px) and (pointer:coarse){
+      html,body{width:100%;min-height:100dvh;overflow-x:hidden;background:#03111f}
+      .shell{display:none!important}
+      .mobile-launch{display:flex;flex-direction:column;justify-content:center;align-items:stretch;min-height:100dvh;min-height:100svh;padding:max(22px,env(safe-area-inset-top)) 22px max(22px,env(safe-area-inset-bottom));background:radial-gradient(circle at 80% 15%,rgba(95,199,207,.10),transparent 35%),linear-gradient(160deg,#061c34,#03111f);color:#fff}
+      .mobile-brand{font:800 11px Montserrat,sans-serif;letter-spacing:.21em;color:var(--sk-aqua-soft);text-transform:uppercase}
+      .mobile-launch h1{margin:16px 0 12px;font:600 clamp(32px,10vw,48px)/1.06 Montserrat,sans-serif;letter-spacing:-.045em;color:#fff}
+      .mobile-launch p{margin:0 0 26px;color:rgba(255,255,255,.7);font:400 13px/1.75 Inter,sans-serif}
+      .mobile-launch button{width:100%;min-height:52px;margin:0 0 10px;border:1px solid rgba(157,224,229,.7);border-radius:13px;background:var(--sk-aqua);color:#041523;font:800 12px Inter,sans-serif}
+      .mobile-launch button.secondary{border-color:rgba(255,255,255,.20);background:rgba(255,255,255,.05);color:#fff}
+      .mobile-launch button:disabled{opacity:.53}
+      .mobile-launch .mobile-copy{margin:8px 0 0;color:rgba(255,255,255,.52);font-size:10px;line-height:1.6}
+      duffel-assistant{display:block;width:100%}
+    }
   </style>
 </head>
 <body>
@@ -173,17 +198,28 @@
       </div>
     </section>
   </div>
+  <!-- Mobile: original Duffel Assistant widget, opened from SKANDI-branded launch chrome.
+       The provider UI itself is not copied, redrawn or restyled. -->
+  <div class="mobile-launch" id="mobileLaunch">
+    <div class="mobile-brand">SKANDI TRAVELS · CUSTOMER SERVICE</div>
+    <h1>Travel Assistant</h1>
+    <p>Manage eligible trips and contact Duffel travel specialists through Duffel Assistant.</p>
+    <button id="mobileOpen" type="button" disabled>Opening travel assistant…</button>
+    <button id="mobileSupport" type="button" class="secondary">SKANDI Customer Service</button>
+    <button id="mobileSignIn" type="button" class="secondary hidden">Sign in to SKANDI</button>
+    <div class="mobile-copy" id="mobileStatus" role="status" aria-live="polite">Connecting to your SKANDI account…</div>
+  </div>
   <duffel-assistant></duffel-assistant>
   <script>
   (() => {
     'use strict';
     const SOURCE='SKANDI_DUFFEL_ASSISTANT', PARENT='SKANDI_WIX_PARENT';
     const el=id=>document.getElementById(id), choices=[];
-    let usable=false,pending=false,loadingScript=null,requestId='',keyTimer=null,currentCaseId='',notificationCount=0,staffCaseId='',prefillBooking='',prefillIssue='',activeBookingId='',activeResourceType='';
+    let usable=false,pending=false,loadingScript=null,requestId='',keyTimer=null,currentCaseId='',notificationCount=0,staffCaseId='',prefillBooking='',prefillIssue='',activeBookingId='',activeResourceType='',mobileAutoOpenAttempted=false;
     const esc=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
     function post(type,payload={}){window.parent.postMessage({source:SOURCE,type,payload,timestamp:new Date().toISOString()},'*')}
-    function status(message,isError=false){el('supportStatus').textContent=String(message||'');el('supportStatus').classList.toggle('error',isError)}
-    function pendingState(value){pending=!!value;el('open').disabled=pending||!usable;el('open').textContent=pending?'Preparing Assistant…':'Open Duffel Assistant'}
+    function status(message,isError=false){el('supportStatus').textContent=String(message||'');el('supportStatus').classList.toggle('error',isError);el('mobileStatus').textContent=String(message||'');el('mobileStatus').style.color=isError?'#ffbcb7':''}
+    function pendingState(value){pending=!!value;el('open').disabled=pending||!usable;el('open').textContent=pending?'Preparing Assistant…':'Open Duffel Assistant';el('mobileOpen').disabled=pending||!usable;el('mobileOpen').textContent=pending?'Preparing secure session…':'Open Duffel Assistant'}
     function loadScript(){
       if(typeof window.openDuffelAssistant==='function')return Promise.resolve();
       if(loadingScript)return loadingScript;
@@ -237,6 +273,9 @@
       keyTimer=setTimeout(()=>{if(!pending)return;pendingState(false);requestId='';status('The Assistant could not be prepared in time. Try again or contact SKANDI Support.',true)},45000);
     }
     el('open').addEventListener('click',openAssistant);
+    el('mobileOpen').addEventListener('click',openAssistant);
+    el('mobileSupport').addEventListener('click',()=>post('DUFFEL_ASSISTANT_SUPPORT'));
+    el('mobileSignIn').addEventListener('click',()=>post('DUFFEL_ASSISTANT_SIGN_IN'));
     el('trip').addEventListener('change',()=>{
       const chosen=choices[Number(el('trip').value)];
       el('verify').disabled=!usable||el('trip').value===''||!currentCaseId||chosen?.bookingId!==activeBookingId||chosen?.resourceType!==activeResourceType;
@@ -273,7 +312,13 @@
           prefillIssue=String(payload.prefill?.issueType||'');
           if(['change','cancellation','other'].includes(prefillIssue))el('issue').value=prefillIssue;
           post('DUFFEL_ASSISTANT_READY');break;
-        case 'DUFFEL_ASSISTANT_TRIPS':usable=true;renderTrips(payload.trips);pendingState(false);el('signIn').classList.add('hidden');status(choices.length?'Choose a flight or hotel booking, or open Assistant for all linked Duffel trips.':'No eligible bookings are listed yet. You can still open Assistant for your Duffel account.');break;
+        case 'DUFFEL_ASSISTANT_TRIPS':
+          usable=true;renderTrips(payload.trips);pendingState(false);el('signIn').classList.add('hidden');el('mobileSignIn').classList.add('hidden');
+          status(choices.length?'Choose a flight or hotel booking, or open Assistant for all linked Duffel trips.':'No eligible bookings are listed yet. You can still open Assistant for your Duffel account.');
+          // Try the provider's native mobile UI automatically once. If iOS Safari requires a
+          // click gesture, the accessible Open Duffel Assistant button remains available.
+          if(window.matchMedia('(max-width:620px), (max-width:950px) and (pointer:coarse)').matches&&!mobileAutoOpenAttempted){mobileAutoOpenAttempted=true;openAssistant();}
+          break;
         case 'DUFFEL_ASSISTANT_OPEN':
           if(payload.requestId!==requestId||!pending)return;
           clearTimeout(keyTimer);requestId='';currentCaseId=String(payload.supportCaseId||'');
@@ -309,7 +354,7 @@
         case 'DUFFEL_ASSISTANT_ERROR':
           if(payload.requestId&&requestId&&payload.requestId!==requestId)return;
           clearTimeout(keyTimer);requestId='';pendingState(false);status(payload.message||'Duffel Assistant is unavailable.',true);
-          if(payload.code==='LOGIN_REQUIRED')el('signIn').classList.remove('hidden');
+          if(payload.code==='LOGIN_REQUIRED'){el('signIn').classList.remove('hidden');el('mobileSignIn').classList.remove('hidden');}
           break;
         default:break;
       }
