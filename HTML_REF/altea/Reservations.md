@@ -39,6 +39,12 @@
 
 - 2026-10-20 — Stage 6 (V12 Reservations): repaired the existing independent-route multi-search to correlate each response with its request ID and continue remaining route searches after a route-specific supplier error (except staff authorization expiry); counts successes and failures explicitly. Fixed a seat-service assignment problem in the active ALTEA seats catalogue by respecting the Duffel passenger IDs returned for each available service, preventing duplicate seat assignments and rejecting partial quick-assign selections. Seat, baggage, offer and search changes now stay locked once an order Stripe payment session has started, rather than silently drifting away from its financial authorization. Repaired the B-011.27 Wix page controller to redirect when canonical `reservations.web.js` RETURNS `AUTH_REQUIRED` in a normal DUFFEL_ERROR/ALTEA_ERROR response (previous page code only redirected for thrown exceptions). Existing authorization, routes, facade methods, postMessage contracts, provider calls and Supabase ownership remain unchanged. STATICALLY VERIFIED; REQUIRES LIVE WIX/DUFFEL/STRIPE TEST.
 
+
+- 2026-10-20 — Stage 7 (cumulative): make offer expiry checks time-sensitive throughout ALTEA offer review, the agent order workspace, payment preparation and both final order-confirmation actions, rather than relying exclusively on a supplier normalization snapshot taken when the offer was first returned. Correlate ordinary single- and return-flight search responses to the active request ID, preserving the already-correct independent MULTISEARCH handling and preventing stale results or stale route-specific errors from replacing or interfering with a later search. Prevent selecting a fare while any search remains pending or its returned offer has expired. Correct older Booking File display defaults that had labeled missing supplier booking and payment statuses as CONFIRMED/PAID or guessed SK as a validating carrier; missing fields now display "Not reported". No Duffel backend, Wix facade or payment authority change. STATICALLY VERIFIED; REQUIRES LIVE WIX/DUFFEL/STRIPE TEST.
+
+
+- 2026-10-20 — Stage 8 (cumulative Reservations seat-assignment integrity): bind seat maps strictly to the currently selected Duffel segment instead of falling back to an unrelated segment; decline individual seat services whose declared segment differs from the displayed map. Bulk Quick Assign now validates all requested passengers, supplier seat IDs, segments and other-passenger collisions before replacing any selection, and commits the seat-service map all-or-nothing with a single payment invalidation. Selecting a seat for the active passenger no longer offers another passenger's seat service as clickable. The existing payment-in-progress/committed locks remain. Exit-row agent confirmation now requires checking the carrier's actual restrictions instead of claiming a universally valid age rule. No new Duffel endpoint or payment action; no provider data is invented. STATICALLY VERIFIED; REQUIRES LIVE WIX/DUFFEL TEST.
+
 ## COMPLETE INTENDED HTML
 
 ```html
@@ -1149,6 +1155,13 @@
   <script>
     "use strict";
 
+    function skandiDuffelOfferExpiredNow(offer) {
+      if (!offer || offer.isExpired === true) return true;
+      const expiry = String(offer.expiresAt || "").trim();
+      if (!expiry) return true;
+      const time = Date.parse(expiry);
+      return !Number.isFinite(time) || time <= Date.now();
+    }
 
     const CHILD_SOURCE = "SKANDI_DUFFEL_RESERVATIONS";
     const PARENT_SOURCE = "SKANDI_WIX_PARENT";
@@ -1220,6 +1233,7 @@
       multiSearchCompleted:0,
       multiSearchFailed:0,
       multiSearchPendingId:"",
+      searchPendingId:"",
       preferences: {
         compact: true,
         currency: "USD",
@@ -1300,7 +1314,7 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
       totalAmount: totalAmount,
       currency: currency,
       fareBrand: slices[0]?.fare_brand_name || slices[0]?.fareBrandName || "Standard",
-      validatingCarrier: flightSource.owner?.iataCode || flightSource.owner?.iata_code || firstSeg.marketingCarrier?.iataCode || "SK",
+      validatingCarrier: flightSource.owner?.iataCode || flightSource.owner?.iata_code || firstSeg.marketingCarrier?.iataCode || null,
       paymentDeadline: flightSource.paymentRequiredBy || null
     },
     miniRules: {
@@ -1329,7 +1343,7 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
       "actions", "baggage", "manifests", "history"
     ]);
     const SESSION_STATE_KEYS = [
-      "activeView", "search", "offers", "multiSearchActive", "multiSearchQueue", "multiSearchCompleted", "multiSearchFailed", "multiSearchPendingId", "selectedOffer", "seatMaps", "selectedServices",
+      "activeView", "search", "offers", "multiSearchActive", "multiSearchQueue", "multiSearchCompleted", "multiSearchFailed", "multiSearchPendingId", "searchPendingId", "selectedOffer", "seatMaps", "selectedServices",
       "alteaWorkspace", "selectedPassengerId", "selectedOrder", "cancellation", "customerRefundRequired",
       "changeRequestId", "changeOffers", "pendingChange", "paymentPurpose", "payment",
       "bookingDocuments", "documentCatalog",
@@ -1381,6 +1395,7 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
         multiSearchCompleted:0,
       multiSearchFailed:0,
       multiSearchPendingId:"",
+      searchPendingId:"",
         selectedOffer: null,
         seatMaps: [],
         selectedServices: new Map(),
@@ -2022,7 +2037,7 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
           <div class="altea-fare-variant-header">
             <div class="altea-fare-name"><strong>${escapeHTML(brand)}</strong><span>${escapeHTML(cabin)}</span>${logoOwner?`<span>${escapeHTML(logoOwner)}</span>`:""}</div>
             <div class="altea-fare-price"><strong>${escapeHTML(money(offer.totalAmount,offer.totalCurrency))}</strong>${gap!==null&&gap>0?`<small>+ ${escapeHTML(money(gap,offer.totalCurrency))} vs lowest ${escapeHTML(offer.totalCurrency)} offer</small>`:""}</div>
-            <button class="primary" data-action="select-offer" data-offer-id="${escapeAttr(offer.id)}" ${offer.isExpired?"disabled":""}>Select fare</button>
+            <button class="primary" data-action="select-offer" data-offer-id="${escapeAttr(offer.id)}" ${skandiDuffelOfferExpiredNow(offer)?"disabled":""}>Select fare</button>
           </div>
           <div class="altea-fare-variant-terms"><span>${escapeHTML(expiryLabel(offer.expiresAt))}</span><span>Offer <code>${escapeHTML(offer.id||"—")}</code></span></div>
           ${fareSupplierFacts(offer)}
@@ -2110,7 +2125,7 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
       return `
         ${pageHead("Offer Review", "This price was refreshed before traveler details or payment.",
           '<button class="secondary" data-action="refresh-selected-offer">Refresh price</button><button class="primary" data-view="workspace">Continue to order</button>')}
-        ${offer.isExpired ? alertBox("danger", "Offer expired", "Return to flight search and choose a current offer.") : ""}
+        ${skandiDuffelOfferExpiredNow(offer) ? alertBox("danger", "Offer expired", "Return to flight search and choose a current offer.") : ""}
         <div class="workspace-layout">
           <div>
             ${itineraryMarkup(offer)}
@@ -2132,7 +2147,7 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
               <div class="money-line"><span>Expires</span><strong>${formatDateTime(offer.expiresAt)}</strong></div>
               <div class="money-line"><span>Payment</span><strong>${offer.requiresInstantPayment ? "Instant required" : "Instant or hold"}</strong></div>
             </div>
-            <div class="panel-foot"><button class="primary" data-view="workspace" ${offer.isExpired ? "disabled" : ""}>Continue</button></div>
+            <div class="panel-foot"><button class="primary" data-view="workspace" ${skandiDuffelOfferExpiredNow(offer) ? "disabled" : ""}>Continue</button></div>
           </aside>
         </div>`;
     }
@@ -2242,7 +2257,7 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
       const passengers = offer.passengers || [];
       return `
         ${pageHead("Order Workspace", "Complete traveler details exactly as shown on travel documents.")}
-        ${offer.isExpired ? alertBox("danger", "Offer expired", "Do not collect payment. Return to search and refresh a current offer.") : ""}
+        ${skandiDuffelOfferExpiredNow(offer) ? alertBox("danger", "Offer expired", "Do not collect payment. Return to search and refresh a current offer.") : ""}
         <form id="orderForm" class="workspace-layout">
           <div>
             ${passengers.map((passenger, index) => passengerForm(passenger, index)).join("")}
@@ -2267,7 +2282,7 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
                     <span>ℹ</span>
                     <div><strong>Secure payment</strong>Prepare payment to open Stripe's hosted Payment Element. Card data never enters the ALTEA workspace or SKANDI system bridge.</div>
                   </div>
-                  <button type="button" class="secondary" data-action="prepare-payment" ${offer.isExpired ? "disabled" : ""}>Prepare secure payment</button>
+                  <button type="button" class="secondary" data-action="prepare-payment" ${skandiDuffelOfferExpiredNow(offer) ? "disabled" : ""}>Prepare secure payment</button>
                   <div id="paymentStatus" class="muted" style="margin-top:8px">${state.payment?.paymentIntentId ? `Payment reference: ${escapeHTML(state.payment.paymentIntentId)}` : "No payment prepared."}</div>
                 </div>
               </div>
@@ -2282,7 +2297,7 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
               <div class="money-line"><span>Travelers</span><strong>${passengers.length}</strong></div>
               <div class="money-line"><span>Offer expires</span><strong>${formatDateTime(offer.expiresAt)}</strong></div>
             </div>
-            <div class="panel-foot"><button class="primary" type="submit" ${offer.isExpired ? "disabled" : ""}>Create order</button></div>
+            <div class="panel-foot"><button class="primary" type="submit" ${skandiDuffelOfferExpiredNow(offer) ? "disabled" : ""}>Create order</button></div>
           </aside>
         </form>`;
     }
@@ -3045,13 +3060,13 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
         const passengers=[...Array.from({length:adults},()=>({type:"adult"})),...childAges.map(age=>({age})),...infantAges.map(age=>({age}))];
         const cabinClass=$("#cabinClass").value,maxConnections=Number($("#maxConnections").value),supplierTimeout=state.preferences.supplierTimeout;
         state.multiSearchQueue=planned.map(route=>({slices:[route],passengers,cabinClass,maxConnections,supplierTimeout}));
-        state.multiSearchCompleted=0;state.multiSearchFailed=0;state.multiSearchPendingId="";state.multiSearchActive=true;
+        state.multiSearchCompleted=0;state.multiSearchFailed=0;state.multiSearchPendingId="";state.searchPendingId="";state.multiSearchActive=true;
         state.search={tripType,multiSearchInput:$("#multiSearchInput").value,adults,childAges,infantAges,cabinClass,maxConnections};
         state.offers=[];state.selectedOffer=null;state.seatMaps=[];state.selectedServices.clear();state.payment=null;
         state.multiSearchPendingId=post("DUFFEL_SEARCH_OFFERS",state.multiSearchQueue.shift());
         return;
       }
-      state.multiSearchActive=false;state.multiSearchQueue=[];state.multiSearchCompleted=0;state.multiSearchFailed=0;state.multiSearchPendingId="";
+      state.multiSearchActive=false;state.multiSearchQueue=[];state.multiSearchCompleted=0;state.multiSearchFailed=0;state.multiSearchPendingId="";state.searchPendingId="";
       const origin = iata($("#origin").value);
       const destination = iata($("#destination").value);
       const departureDate = $("#departureDate").value;
@@ -3094,7 +3109,7 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
       ];
 
 
-      post("DUFFEL_SEARCH_OFFERS", {
+      state.searchPendingId=post("DUFFEL_SEARCH_OFFERS", {
         slices,
         passengers,
         cabinClass: state.search.cabinClass,
@@ -3123,6 +3138,13 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
 
 
     function selectOffer(offerId) {
+      if (state.multiSearchActive || state.searchPendingId) {
+        return toast("Search in progress", "Complete the current supplier search before choosing a fare.", "warning");
+      }
+      const candidate = (state.offers || []).find(offer => offer?.id === offerId);
+      if (candidate && skandiDuffelOfferExpiredNow(candidate)) {
+        return toast("Offer expired", "Search again for a current airline offer.", "warning");
+      }
       if (paymentSessionStarted() || paymentIsCommitted()) {
         return toast("Payment session active", "Reconcile the current payment and booking before choosing another fare.", "warning");
       }
@@ -3182,7 +3204,8 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
 
 
     async function preparePayment() {
-      if (!state.selectedOffer) return;
+      if (!state.selectedOffer || skandiDuffelOfferExpiredNow(state.selectedOffer))
+        return toast("Offer expired", "Refresh the offer before collecting payment.", "warning");
       const orderType = $("#orderType")?.value || "instant";
       if (orderType === "hold") return toast("Payment not required", "A hold order is created without payment or paid services.", "info");
       const passengerError = validatePassengerForms(false);
@@ -3242,7 +3265,7 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
 
     function submitOrder(event) {
       event.preventDefault();
-      if (!state.selectedOffer || state.selectedOffer.isExpired) return toast("Offer unavailable", "Refresh or select a current offer.", "warning");
+      if (!state.selectedOffer || skandiDuffelOfferExpiredNow(state.selectedOffer)) return toast("Offer unavailable", "Refresh or select a current offer.", "warning");
       const error = validatePassengerForms(true);
       if (error) return toast("Traveler details incomplete", error, "warning");
 
@@ -3284,6 +3307,8 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
       `, [
         { label: "Back", className: "secondary", close: true },
         { label: "Create order", className: "primary", onClick: () => {
+          if (skandiDuffelOfferExpiredNow(state.selectedOffer))
+            return toast("Offer expired", "Refresh the offer before creating the order.", "warning");
           closeModal();
           post("DUFFEL_CREATE_ORDER", {
             offerId: state.selectedOffer.id,
@@ -3472,6 +3497,8 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
             render();
           }
         }else{
+          if (!state.searchPendingId || message.requestId !== state.searchPendingId) return;
+          state.searchPendingId="";
           state.offers = payload.offers || [];
           navigate("search");
           toast("Live offers loaded", `${state.offers.length} offer${state.offers.length === 1 ? "" : "s"} returned.`, "success");
@@ -3641,6 +3668,10 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
         return;
       }
       if (message.type === "DUFFEL_ERROR") {
+        if (!state.multiSearchActive && String(payload.action || "").toUpperCase() === "DUFFEL_SEARCH_OFFERS" && (!state.searchPendingId || message.requestId !== state.searchPendingId)) return;
+        if (!state.multiSearchActive && state.searchPendingId && message.requestId === state.searchPendingId) {
+          state.searchPendingId="";
+        }
         if(state.multiSearchActive && state.multiSearchPendingId && message.requestId === state.multiSearchPendingId){
           state.multiSearchPendingId="";
           state.multiSearchFailed+=1;
@@ -4327,7 +4358,7 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
       <div class="grid grid-4">
         ${statCard("Master Reference", masterReference(), "Customer-facing PNR")}
         ${statCard("Route", [b.origin, b.destination].filter(Boolean).join(" → ") || "—", b.departureDate || "Travel date pending")}
-        ${statCard("Validating Carrier", pqr?.validatingCarrier || b.supplier || "SKANDI", "Ticketing carrier")}
+        ${statCard("Validating Carrier", pqr?.validatingCarrier || b.supplier || "Not reported", "Ticketing carrier")}
         ${statCard("Grand Total", money(pqr?.totalAmount || b.totalAmount, pqr?.currency || b.currency), "Air + Components")}
       </div>
 
@@ -4344,10 +4375,10 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
               <div class="grid grid-3">
                 <div><span class="muted">Customer</span><div class="strong">${escapeHTML(b.customerName || "—")}</div></div>
                 <div><span class="muted">Email</span><div>${escapeHTML(b.customerEmail || "—")}</div></div>
-                <div><span class="muted">Booking Status</span><div><span class="badge ${statusClass(b.status)}">${escapeHTML(b.status || "CONFIRMED")}</span></div></div>
+                <div><span class="muted">Booking Status</span><div><span class="badge ${statusClass(b.status)}">${escapeHTML(b.status || "Not reported")}</span></div></div>
                 <div><span class="muted">Supplier Locator</span><div class="mono strong">${escapeHTML(b.supplierBookingReference || state.selectedOrder?.bookingReference || "—")}</div></div>
                 <div><span class="muted">Order ID</span><div class="mono strong">${escapeHTML(b.supplierOrderId || state.selectedOrder?.id || "—")}</div></div>
-                <div><span class="muted">Payment Status</span><div>${escapeHTML(b.paymentStatus || "PAID")}</div></div>
+                <div><span class="muted">Payment Status</span><div>${escapeHTML(b.paymentStatus || "Not reported")}</div></div>
               </div>
             </div>
           </section>
@@ -5901,7 +5932,7 @@ html,body{margin:0!important;padding:0!important;width:203.20mm!important;height
     const total=Number(offer?.totalAmount),tax=Number(offer?.taxAmount);
     return Number.isFinite(total)&&Number.isFinite(tax)?Math.max(0,total-tax):null;
   }
-  function offerStatus(offer){return offer?.isExpired?{code:"UN",label:"Expired / unavailable",cls:"un"}:{code:"OO",label:"Active offer",cls:""};}
+  function offerStatus(offer){return skandiDuffelOfferExpiredNow(offer)?{code:"UN",label:"Expired / unavailable",cls:"un"}:{code:"OO",label:"Active offer",cls:""};}
   function conditionCard(title,condition){
     if(!condition)return `<div class="rule-card"><div class="label">${escapeHTML(title)}</div><strong>Not supplied</strong><div class="muted">Carrier did not return a structured rule.</div></div>`;
     const allowed=condition.allowed===true;
@@ -5985,10 +6016,10 @@ html,body{margin:0!important;padding:0!important;width:203.20mm!important;height
     const offer=state.selectedOffer;
     if(!offer)return `${pageHead("Offer Review","A selected offer is refreshed here before checkout.")}${emptyState("▤","No offer selected","Search for flights and choose an offer to review.")}`;
     return `${pageHead("Offer Review","Refreshed live offer with agent review.",'<button class="secondary" data-action="refresh-selected-offer">Refresh price</button><button class="secondary" data-action="offer-notice">Offer Notice</button><button class="primary" data-view="workspace">Continue to order</button>')}
-      ${offer.isExpired?alertBox("danger","Offer expired","Return to flight search and choose a current offer."):""}
+      ${skandiDuffelOfferExpiredNow(offer)?alertBox("danger","Offer expired","Return to flight search and choose a current offer."):""}
       ${pqrMarkup(offer)}
       <div class="workspace-layout" style="margin-top:10px"><div>${itineraryMarkup(offer)}<section class="panel" style="margin-top:10px"><div class="panel-head">Available baggage and services</div><div class="panel-body" style="padding:0">${serviceListMarkup(offer.availableServices||[])}</div></section><section class="panel" style="margin-top:10px"><div class="panel-head"><span>Seat maps</span><button class="link" data-action="load-seat-maps">Refresh seat maps</button></div><div class="panel-body">${seatMapMarkup()}</div></section></div>
-      <aside class="panel sticky"><div class="panel-head">Offer control</div><div class="panel-body"><div class="money-line"><span>Offer ID</span><strong class="mono">${escapeHTML(offer.id||"—")}</strong></div><div class="money-line"><span>Owner / validating carrier</span><strong>${escapeHTML(offer.owner?.iataCode||offer.owner?.name||"—")}</strong></div><div class="money-line"><span>Offer</span><strong>${money(offer.totalAmount,offer.totalCurrency)}</strong></div><div class="money-line"><span>Selected services</span><strong>${money(selectedServiceTotal(),offer.totalCurrency)}</strong></div><div class="money-line"><span>Total due</span><strong class="price-total">${money(orderTotal(),offer.totalCurrency)}</strong></div><div class="money-line"><span>Price guarantee</span><strong>${formatDateTime(offer.priceGuaranteeExpiresAt||offer.expiresAt)}</strong></div></div><div class="panel-foot"><button class="primary" data-view="workspace" ${offer.isExpired?"disabled":""}>Continue</button></div></aside></div>`;
+      <aside class="panel sticky"><div class="panel-head">Offer control</div><div class="panel-body"><div class="money-line"><span>Offer ID</span><strong class="mono">${escapeHTML(offer.id||"—")}</strong></div><div class="money-line"><span>Owner / validating carrier</span><strong>${escapeHTML(offer.owner?.iataCode||offer.owner?.name||"—")}</strong></div><div class="money-line"><span>Offer</span><strong>${money(offer.totalAmount,offer.totalCurrency)}</strong></div><div class="money-line"><span>Selected services</span><strong>${money(selectedServiceTotal(),offer.totalCurrency)}</strong></div><div class="money-line"><span>Total due</span><strong class="price-total">${money(orderTotal(),offer.totalCurrency)}</strong></div><div class="money-line"><span>Price guarantee</span><strong>${formatDateTime(offer.priceGuaranteeExpiresAt||offer.expiresAt)}</strong></div></div><div class="panel-foot"><button class="primary" data-view="workspace" ${skandiDuffelOfferExpiredNow(offer)?"disabled":""}>Continue</button></div></aside></div>`;
   }
 
 
@@ -6052,7 +6083,7 @@ html,body{margin:0!important;padding:0!important;width:203.20mm!important;height
         <div class="field"><label>DBI / cost center</label><input id="fopDbi" maxlength="100" value="${escapeAttr(f.dbi||"")}" placeholder="Cost center / employee ID"></div>
       </div>
       ${fopAssociations(offer)}
-      <div id="paymentArea" style="margin-top:10px"><div class="alert info"><span>🔒</span><div><strong>PCI-DSS secure card capture</strong>For CC, card number and expiry are entered only inside Stripe's hosted Payment Element. ALTEA never receives the raw PAN and cannot reveal it again.</div></div><div class="money-line"><span>Validating carrier</span><strong>${escapeHTML(offer.owner?.iataCode||offer.owner?.name||"Provider determined")}</strong></div><div class="automation-note">Card-brand acceptance is validated by the secure payment path.</div><div class="money-line"><span>Stored card display</span><strong class="fop-mask">${state.payment?.paymentIntentId?`TOKEN ${escapeHTML(state.payment.paymentIntentId)}`:"CC••••••••••••••••"}</strong></div><button type="button" class="secondary" data-action="prepare-payment" ${offer.isExpired?"disabled":""}>Add / authorize Form of Payment</button><div id="paymentStatus" class="muted" style="margin-top:8px">${state.payment?.paymentIntentId?`Secure payment reference: ${escapeHTML(state.payment.paymentIntentId)}`:"No payment prepared."}</div></div>
+      <div id="paymentArea" style="margin-top:10px"><div class="alert info"><span>🔒</span><div><strong>PCI-DSS secure card capture</strong>For CC, card number and expiry are entered only inside Stripe's hosted Payment Element. ALTEA never receives the raw PAN and cannot reveal it again.</div></div><div class="money-line"><span>Validating carrier</span><strong>${escapeHTML(offer.owner?.iataCode||offer.owner?.name||"Provider determined")}</strong></div><div class="automation-note">Card-brand acceptance is validated by the secure payment path.</div><div class="money-line"><span>Stored card display</span><strong class="fop-mask">${state.payment?.paymentIntentId?`TOKEN ${escapeHTML(state.payment.paymentIntentId)}`:"CC••••••••••••••••"}</strong></div><button type="button" class="secondary" data-action="prepare-payment" ${skandiDuffelOfferExpiredNow(offer)?"disabled":""}>Add / authorize Form of Payment</button><div id="paymentStatus" class="muted" style="margin-top:8px">${state.payment?.paymentIntentId?`Secure payment reference: ${escapeHTML(state.payment.paymentIntentId)}`:"No payment prepared."}</div></div>
       <div class="automation-note">The current instant-order settlement path is card; unsupported FOP types cannot be used to create an instant order.</div>
     </div></section>`;
   }
@@ -6062,7 +6093,7 @@ html,body{margin:0!important;padding:0!important;width:203.20mm!important;height
     const offer=state.selectedOffer;
     if(!offer)return `${pageHead("Order Workspace","Traveler details, payment, and order creation.")}${emptyState("◫","No refreshed offer","Select and refresh a live offer before creating an order.")}`;
     const passengers=offer.passengers||[];
-    return `${pageHead("Create Flight Booking")}${offer.isExpired?alertBox("danger","Offer expired","Do not collect payment. Return to search and refresh a current offer."):""}<form id="orderForm"><div class="grid" style="gap:10px">${pqrMarkup(offer)}${passengers.map((p,i)=>passengerForm(p,i)).join("")}${fopPanel(offer)}<section class="panel"><div class="panel-head">Order control</div><div class="panel-body"><div class="automation-grid cols-2"><div class="field"><label for="orderType">Order type</label><select id="orderType"><option value="instant">Instant purchase</option><option value="hold" ${offer.requiresInstantPayment?"disabled":""}>Hold (when permitted)</option></select></div><div class="field"><label for="orderRemarks">Internal reference</label><input id="orderRemarks" maxlength="100" autocomplete="off" placeholder="SKANDI booking reference"></div></div></div><div class="panel-foot"><button class="secondary" type="button" data-action="offer-notice">Offer Notice</button><button class="primary" type="submit" ${offer.isExpired?"disabled":""}>Create order</button></div></section></div></form>`;
+    return `${pageHead("Create Flight Booking")}${skandiDuffelOfferExpiredNow(offer)?alertBox("danger","Offer expired","Do not collect payment. Return to search and refresh a current offer."):""}<form id="orderForm"><div class="grid" style="gap:10px">${pqrMarkup(offer)}${passengers.map((p,i)=>passengerForm(p,i)).join("")}${fopPanel(offer)}<section class="panel"><div class="panel-head">Order control</div><div class="panel-body"><div class="automation-grid cols-2"><div class="field"><label for="orderType">Order type</label><select id="orderType"><option value="instant">Instant purchase</option><option value="hold" ${offer.requiresInstantPayment?"disabled":""}>Hold (when permitted)</option></select></div><div class="field"><label for="orderRemarks">Internal reference</label><input id="orderRemarks" maxlength="100" autocomplete="off" placeholder="SKANDI booking reference"></div></div></div><div class="panel-foot"><button class="secondary" type="button" data-action="offer-notice">Offer Notice</button><button class="primary" type="submit" ${skandiDuffelOfferExpiredNow(offer)?"disabled":""}>Create order</button></div></section></div></form>`;
   }
 
 
@@ -6124,7 +6155,8 @@ html,body{margin:0!important;padding:0!important;width:203.20mm!important;height
 
 
   preparePayment = async function preparePaymentB0073(){
-    if(!state.selectedOffer)return;
+    if(!state.selectedOffer || skandiDuffelOfferExpiredNow(state.selectedOffer))
+      return toast("Offer expired", "Refresh the offer before collecting payment.", "warning");
     captureFop();
     const orderType=$("#orderType")?.value||"instant";
     if(orderType==="hold")return toast("Payment not required","A hold order is created without payment or paid services.","info");
@@ -6136,7 +6168,7 @@ html,body{margin:0!important;padding:0!important;width:203.20mm!important;height
 
   submitOrder = function submitOrderB0073(event){
     event.preventDefault();
-    const offer=state.selectedOffer;if(!offer||offer.isExpired)return toast("Offer unavailable","Refresh or select a current offer.","warning");
+    const offer=state.selectedOffer;if(!offer||skandiDuffelOfferExpiredNow(offer))return toast("Offer unavailable","Refresh or select a current offer.","warning");
     const err=validatePassengerForms(true);if(err)return toast("Traveler details incomplete",err,"warning");
     captureFop();
     const orderType=$("#orderType")?.value||"instant";
@@ -6148,7 +6180,7 @@ html,body{margin:0!important;padding:0!important;width:203.20mm!important;height
     const fopSummary={paymentType:state.agentFop.paymentType,vendor:state.agentFop.vendor,approvalCode:state.agentFop.approvalCode,dbi:state.agentFop.dbi,passengerIds:state.agentFop.passengerIds,segmentIds:state.agentFop.segmentIds};
     openModal("Confirm order creation",`${alertBox("warning","Final booking action",orderType==="instant"?"The secure booking service will verify payment, refresh the live offer again, and create the airline order.":"This creates a hold order without payment. The airline payment deadline will apply.")}<div class="money-line"><span>Order type</span><strong>${escapeHTML(orderType)}</strong></div><div class="money-line"><span>Travelers</span><strong>${passengers.length}</strong></div><div class="money-line"><span>FOP</span><strong>${escapeHTML(fopSummary.paymentType)}${fopSummary.vendor?` · ${escapeHTML(fopSummary.vendor)}`:""}</strong></div><div class="money-line"><span>Total</span><strong>${money(orderTotal(),offer.totalCurrency)}</strong></div>`,[
       {label:"Back",className:"secondary",close:true},
-      {label:"Create order",className:"primary",onClick:()=>{closeModal();state._lastAutomationTravelers=automationTravelers;state._lastFopSummary=fopSummary;post("DUFFEL_CREATE_ORDER",{offerId:offer.id,orderType,passengers,services:orderType==="instant"?selectedServicePayload():[],paymentIntentId:orderType==="instant"?state.payment.paymentIntentId:null,internalReference:$("#orderRemarks")?.value.trim()||""});}}
+      {label:"Create order",className:"primary",onClick:()=>{if(skandiDuffelOfferExpiredNow(state.selectedOffer))return toast("Offer expired","Refresh the offer before creating the order.","warning");closeModal();state._lastAutomationTravelers=automationTravelers;state._lastFopSummary=fopSummary;post("DUFFEL_CREATE_ORDER",{offerId:offer.id,orderType,passengers,services:orderType==="instant"?selectedServicePayload():[],paymentIntentId:orderType==="instant"?state.payment.paymentIntentId:null,internalReference:$("#orderRemarks")?.value.trim()||""});}}
     ]);
   }
 
@@ -6299,10 +6331,8 @@ html,body{margin:0!important;padding:0!important;width:203.20mm!important;height
     return `P${index+1}: ${name||`Traveler ${index+1}`} (${type})`;
   }
   function allSeatSegments(){
-    const ids=(state.seatMaps||[]).map(m=>m.segmentId).filter(Boolean);
-    const all=(state.selectedOffer?.slices||[]).flatMap(s=>s.segments||[]);
-    const matched=all.filter(s=>ids.includes(s.id));
-    return matched.length?matched:all;
+    // Display every flight leg even if the airline does not return a seat map.
+    return (state.selectedOffer?.slices||[]).flatMap(s=>s.segments||[]);
   }
   function activeSeatSegment(){
     const segs=allSeatSegments();
@@ -6322,7 +6352,10 @@ html,body{margin:0!important;padding:0!important;width:203.20mm!important;height
   }
   function activeSeatMap(){
     const seg=activeSeatSegment();
-    return (state.seatMaps||[]).find(m=>!seg||m.segmentId===seg.id)||(state.seatMaps||[])[0]||null;
+    const maps=state.seatMaps||[];
+    // A seat-map service is bound to its Duffel flight segment. Never show or
+    // assign another flight's seats when the selected segment has no map.
+    return seg?.id ? maps.find(m=>m.segmentId===seg.id)||null : maps[0]||null;
   }
   function cabinDecks(map){return [...new Set((map?.cabins||[]).map(c=>String(c.deck??"")).filter(Boolean))]}
   function visibleCabins(map){
@@ -6375,7 +6408,11 @@ html,body{margin:0!important;padding:0!important;width:203.20mm!important;height
       toast("Seat unavailable",`${el.designator||"This seat"} is not available for the selected passenger.`,"warning");
       return false;
     }
-    if(seatFeature(el,"exit")&&!confirmedExit&&!window.confirm("Agent Warning: Passenger must be 15+ and able-bodied. Confirm?"))return false;
+    if(service.segmentId&&map.segmentId&&service.segmentId!==map.segmentId){
+      toast("Seat segment mismatch","The supplier seat service belongs to another flight segment.","warning");
+      return false;
+    }
+    if(seatFeature(el,"exit")&&!confirmedExit&&!window.confirm("Exit-row assignment: verify the airline's actual passenger eligibility rules and seat disclosures before proceeding. This confirmation does not override supplier restrictions."))return false;
     if([...state.selectedServices.values()].some(s=>s?.type==="seat"&&s.passengerId!==passengerId&&s.designator===el.designator&&(s.segmentId===map.segmentId||!map.segmentId))) {
       toast("Seat already assigned",`${el.designator||"Seat"} is selected for another passenger.`,"warning");
       return false;
@@ -6408,9 +6445,33 @@ html,body{margin:0!important;padding:0!important;width:203.20mm!important;height
       if(!serviceForPassenger(el,pax[i].id))return toast("Seat unavailable",`${designators[i]} is not selectable for passenger ${i+1}.`,"warning");
       proposed.push({el,passengerId:pax[i].id});
     }
-    if(proposed.some(({el,passengerId})=>[...state.selectedServices.values()].some(s=>s?.type==="seat"&&s.passengerId!==passengerId&&s.designator===el.designator&&(s.segmentId===map.segmentId||!map.segmentId))))return toast("Seat already assigned","One or more selected seats belong to another passenger. Clear the conflicting assignments before bulk assignment.","warning");
-    if(proposed.some(x=>seatFeature(x.el,"exit"))&&!window.confirm("Agent Warning: Exit-row passengers must be 15+ and able-bodied. Confirm all assignments?"))return;
-    for(const item of proposed){if(!selectSeat(item.el,item.passengerId,map,true))return;}
+    const bulkPassengerIds=new Set(pax.map(p=>p.id));
+    if(proposed.some(({el})=>[...state.selectedServices.values()].some(s=>s?.type==="seat"&&!bulkPassengerIds.has(s.passengerId)&&s.designator===el.designator&&(s.segmentId===map.segmentId||!map.segmentId))))return toast("Seat already assigned","One or more selected seats belong to another passenger outside this bulk assignment.","warning");
+    if(proposed.some(x=>seatFeature(x.el,"exit"))&&!window.confirm("Exit-row assignment: verify each passenger's eligibility against the carrier's actual seat restrictions and disclosures. Continue with the entire assignment?"))return;
+    // Check every service and collision before mutating any assignment. A
+    // rejected later passenger must not leave an earlier passenger changed.
+    const current=new Map(state.selectedServices);
+    const requestedIds=new Set(pax.map(p=>p.id));
+    const staged=new Map(current);
+    for(const [id,s] of current){
+      if(s?.type==="seat"&&requestedIds.has(s.passengerId)&&s.segmentId===map.segmentId)staged.delete(id);
+    }
+    for(const {el,passengerId} of proposed){
+      const service=serviceForPassenger(el,passengerId);
+      if(!service?.id||service.segmentId&&map.segmentId&&service.segmentId!==map.segmentId){
+        return toast("Seat unavailable",`${el.designator||"Seat"} is not a valid supplier service for this flight. No assignments were changed.`,"warning");
+      }
+      const segmentId=map.segmentId||service.segmentId;
+      if([...staged.values()].some(s=>s?.type==="seat"&&s.designator===el.designator&&s.segmentId===segmentId&&s.passengerId!==passengerId)){
+        return toast("Seat already assigned",`${el.designator||"Seat"} already belongs to another passenger. No assignments were changed.`,"warning");
+      }
+      if(staged.has(service.id)&&staged.get(service.id)?.passengerId!==passengerId){
+        return toast("Seat service conflict","The supplier returned a service already used for another traveler. No assignments were changed.","warning");
+      }
+      staged.set(service.id,{...service,type:"seat",designator:el.designator,passengerId,segmentId,quantity:1});
+    }
+    state.selectedServices=staged;
+    invalidatePayment();
     render();
   }
   function seatElement(el,map){
@@ -6420,10 +6481,13 @@ html,body{margin:0!important;padding:0!important;width:203.20mm!important;height
       const label=type==="lavatory"?"WC":type==="galley"?"GAL":type==="bassinet"?"BAS":type==="exit_row"?"EXIT":type.slice(0,4).toUpperCase();
       return `<span class="seat-cell facility" title="${escapeAttr([humanize(type),el.name,...(Array.isArray(el.features)?el.features:[]),...(Array.isArray(el.disclosures)?el.disclosures.map(x=>typeof x==="string"?x:x?.title||x?.description||""):[])].filter(Boolean).join(" · "))}">${escapeHTML(label)}</span>`;
     }
-    const blocked=!(el.availableServices||[]).length;
-    const service=serviceForPassenger(el,activeSeatPassenger()?.id);
-    const chargeable=(el.availableServices||[]).some(s=>Number(s.totalAmount||0)>0);
+    const activePassengerId=activeSeatPassenger()?.id;
+    const service=serviceForPassenger(el,activePassengerId);
+    const current=activePassengerId?assignment(activePassengerId,map.segmentId):null;
     const badge=badgeForSeat(el.designator,map.segmentId),selected=Boolean(badge),hi=highlighted(el);
+    const alreadyMine=Boolean(current?.designator===el.designator);
+    const blocked=!service&&!alreadyMine;
+    const chargeable=(el.availableServices||[]).some(s=>Number(s.totalAmount||0)>0);
     const price=service&&Number(service.totalAmount||0)>0?money(service.totalAmount,service.totalCurrency):"";
     return `<button type="button" class="seat-cell ${blocked?"blocked":""} ${chargeable?"chargeable":""} ${selected?"selected":""} ${hi?"highlight":""}" data-b0074-seat="${escapeAttr(el.designator||"")}" ${blocked?"disabled":""} title="${escapeAttr([el.designator,el.name,...(Array.isArray(el.features)?el.features:[]),...(Array.isArray(el.disclosures)?el.disclosures.map(x=>typeof x==="string"?x:x?.title||x?.description||""):[]),el.coordinates?JSON.stringify(el.coordinates):"",el.metadata?JSON.stringify(el.metadata):""].filter(Boolean).join(" · "))}"><span>${escapeHTML(el.designator||"—")}</span>${badge?`<span class="seat-pax-badge">${badge}</span>`:""}${price?`<span class="seat-price">${escapeHTML(price.replace(/^[A-Z]{3}\s*/,""))}</span>`:""}</button>`;
   }
@@ -6461,7 +6525,7 @@ html,body{margin:0!important;padding:0!important;width:203.20mm!important;height
     if(category==="passenger")return `<div class="panel-body">${pax.map((p,i)=>passengerForm(p,i)).join("")}</div>`;
     if(category!=="seats")return `<div class="panel-body">${emptyState("▦",humanize(category),"No supplier catalogue items were returned for this category on the current offer.")}</div>`;
     const map=activeSeatMap();
-    if(!map)return `<div class="panel-body">${emptyState("▦","No seat map loaded","Refresh seat maps after selecting a current live offer.")}</div>`;
+    if(!map)return `<div class="panel-body">${emptyState("▦","Seat map unavailable for this flight","The selected flight segment has no matching supplier seat map. Select another segment or refresh the current offer; no other flight's seats are substituted.")}</div>`;
     const decks=cabinDecks(map);
     const total=[...state.selectedServices.values()].filter(s=>s.type==="seat").reduce((n,s)=>n+Number(s.totalAmount||0)*Number(s.quantity||1),0);
     return `<div class="svc-toolbar"><div class="field"><label>Quick Assign / Seat number(s)</label><input id="seatQuickAssign" placeholder="22A, 22B"></div>${decks.length>1?`<div class="field"><label>Deck</label><select id="seatDeckSelect">${decks.map(d=>`<option value="${escapeAttr(d)}" ${String(state.seatWorkbench.deck)===d?"selected":""}>${Number(d)===0?"Lower":Number(d)===1?"Upper":`Deck ${escapeHTML(d)}`}</option>`).join("")}</select></div>`:""}<label class="check"><input id="seatRequestCradle" type="checkbox" ${state.seatWorkbench.requestCradle?"checked":""}> Request cradle / bassinet</label><button class="secondary" data-b0074-action="print-seat-catalog">Print and Save</button></div><div class="svc-body">${legend()}<div class="aircraft-canvas">${cabinGrid(map)}${supplierSeatMapFacts(map)}</div></div><div class="svc-footer"><span>Selected seat total <strong>${money(total,state.selectedOffer?.totalCurrency)}</strong></span><button class="primary" data-b0074-action="review-seat-catalog">Review & Submit</button></div>`;
@@ -6812,11 +6876,11 @@ html,body{margin:0!important;padding:0!important;width:203.20mm!important;height
     const offer=state.selectedOffer;
     if(!offer)return `${pageHead("Offer Review","A selected offer is refreshed here before checkout.")}${emptyState("▤","No offer selected","Search for flights and choose an offer to review.")}`;
     return `${pageHead("Offer Review","Refreshed live offer with agent review.",'<button class="secondary" data-action="refresh-selected-offer">Refresh price</button><button class="secondary" data-action="offer-notice">Offer Notice</button><button class="primary" data-view="workspace">Continue to order</button>')}
-      ${offer.isExpired?alertBox("danger","Offer expired","Return to flight search and choose a current offer."):""}
+      ${skandiDuffelOfferExpiredNow(offer)?alertBox("danger","Offer expired","Return to flight search and choose a current offer."):""}
       ${carrierIdentity(offer)}
       ${window.skandiAlteaPqrRender(offer)}
       <div class="workspace-layout" style="margin-top:10px"><div>${itineraryMarkup(offer)}${supplierTravelDisclosure(offer)}<section class="panel" style="margin-top:10px"><div class="panel-head">Available baggage and airline services</div><div class="panel-body" style="padding:0">${serviceListMarkup(offer.availableServices||[])}</div></section><div class="alert info" style="margin-top:10px"><span>ℹ</span><div><strong>Seats & Services is a separate PNR step</strong>Refreshing this offer updates price and availability only. Seat maps load only when the Seats & Services page is opened.</div></div></div>
-      <aside class="panel sticky"><div class="panel-head">Offer control</div><div class="panel-body"><div class="money-line"><span>Offer ID</span><strong class="mono">${escapeHTML(offer.id||"—")}</strong></div><div class="money-line"><span>Owner / validating carrier</span><strong>${escapeHTML(offer.owner?.iataCode||offer.owner?.iata_code||offer.owner?.name||"—")}</strong></div><div class="money-line"><span>Offer</span><strong>${money(offer.totalAmount,offer.totalCurrency)}</strong></div><div class="money-line"><span>Selected services</span><strong>${money(selectedServiceTotal(),offer.totalCurrency)}</strong></div><div class="money-line"><span>Total due</span><strong class="price-total">${money(orderTotal(),offer.totalCurrency)}</strong></div><div class="money-line"><span>Price guarantee</span><strong>${formatDateTime(offer.priceGuaranteeExpiresAt||offer.expiresAt)}</strong></div></div><div class="panel-foot"><button class="primary" data-view="workspace" ${offer.isExpired?"disabled":""}>Continue</button></div></aside></div>`;
+      <aside class="panel sticky"><div class="panel-head">Offer control</div><div class="panel-body"><div class="money-line"><span>Offer ID</span><strong class="mono">${escapeHTML(offer.id||"—")}</strong></div><div class="money-line"><span>Owner / validating carrier</span><strong>${escapeHTML(offer.owner?.iataCode||offer.owner?.iata_code||offer.owner?.name||"—")}</strong></div><div class="money-line"><span>Offer</span><strong>${money(offer.totalAmount,offer.totalCurrency)}</strong></div><div class="money-line"><span>Selected services</span><strong>${money(selectedServiceTotal(),offer.totalCurrency)}</strong></div><div class="money-line"><span>Total due</span><strong class="price-total">${money(orderTotal(),offer.totalCurrency)}</strong></div><div class="money-line"><span>Price guarantee</span><strong>${formatDateTime(offer.priceGuaranteeExpiresAt||offer.expiresAt)}</strong></div></div><div class="panel-foot"><button class="primary" data-view="workspace" ${skandiDuffelOfferExpiredNow(offer)?"disabled":""}>Continue</button></div></aside></div>`;
   };
 
   renderServices=function renderServicesV12Fixed(){
