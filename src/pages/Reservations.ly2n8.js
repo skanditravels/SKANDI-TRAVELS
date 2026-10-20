@@ -214,6 +214,16 @@ $w.onReady(() => {
         result.payload,
         requestId
       );
+
+      // The canonical facade catches authorization failures and returns
+      // ALTEA_ERROR/DUFFEL_ERROR instead of rejecting the web method promise.
+      // Redirect for that response shape as well as for thrown failures.
+      if (
+        (result.responseType === "ALTEA_ERROR" || result.responseType === "DUFFEL_ERROR") &&
+        String(result.payload?.code || "").toUpperCase() === "AUTH_REQUIRED"
+      ) {
+        wixLocation.to(STAFF_LOGIN_PATH);
+      }
     } catch (error) {
       const code = errorCode(error);
       const providerAction = isProviderAction(type);
