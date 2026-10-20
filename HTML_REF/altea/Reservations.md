@@ -45,6 +45,8 @@
 
 - 2026-10-20 — Stage 8 (cumulative Reservations seat-assignment integrity): bind seat maps strictly to the currently selected Duffel segment instead of falling back to an unrelated segment; decline individual seat services whose declared segment differs from the displayed map. Bulk Quick Assign now validates all requested passengers, supplier seat IDs, segments and other-passenger collisions before replacing any selection, and commits the seat-service map all-or-nothing with a single payment invalidation. Selecting a seat for the active passenger no longer offers another passenger's seat service as clickable. The existing payment-in-progress/committed locks remain. Exit-row agent confirmation now requires checking the carrier's actual restrictions instead of claiming a universally valid age rule. No new Duffel endpoint or payment action; no provider data is invented. STATICALLY VERIFIED; REQUIRES LIVE WIX/DUFFEL TEST.
 
+- 2026-10-20 — Stage 9: bounded pending request correlation added to Duffel offer refresh and seat-map responses in each PNR session. Delayed or out-of-order results can no longer replace newer offer/segment selections; matching backend errors clear only their own pending lookup. No API, checkout, permission, exported symbol or price authority changed. STATICALLY VERIFIED; REQUIRES LIVE TEST.
+
 ## COMPLETE INTENDED HTML
 
 ```html
@@ -1234,6 +1236,10 @@
       multiSearchFailed:0,
       multiSearchPendingId:"",
       searchPendingId:"",
+      offerRefreshRequestId:"",
+      offerRefreshOfferId:"",
+      seatMapRequestId:"",
+      seatMapOfferId:"",
       preferences: {
         compact: true,
         currency: "USD",
@@ -1343,7 +1349,7 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
       "actions", "baggage", "manifests", "history"
     ]);
     const SESSION_STATE_KEYS = [
-      "activeView", "search", "offers", "multiSearchActive", "multiSearchQueue", "multiSearchCompleted", "multiSearchFailed", "multiSearchPendingId", "searchPendingId", "selectedOffer", "seatMaps", "selectedServices",
+      "activeView", "search", "offers", "multiSearchActive", "multiSearchQueue", "multiSearchCompleted", "multiSearchFailed", "multiSearchPendingId", "searchPendingId", "offerRefreshRequestId", "offerRefreshOfferId", "seatMapRequestId", "seatMapOfferId", "selectedOffer", "seatMaps", "selectedServices",
       "alteaWorkspace", "selectedPassengerId", "selectedOrder", "cancellation", "customerRefundRequired",
       "changeRequestId", "changeOffers", "pendingChange", "paymentPurpose", "payment",
       "bookingDocuments", "documentCatalog",
@@ -1396,6 +1402,10 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
       multiSearchFailed:0,
       multiSearchPendingId:"",
       searchPendingId:"",
+        offerRefreshRequestId:"",
+        offerRefreshOfferId:"",
+        seatMapRequestId:"",
+        seatMapOfferId:"",
         selectedOffer: null,
         seatMaps: [],
         selectedServices: new Map(),
@@ -3148,7 +3158,8 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
       if (paymentSessionStarted() || paymentIsCommitted()) {
         return toast("Payment session active", "Reconcile the current payment and booking before choosing another fare.", "warning");
       }
-      post("DUFFEL_REFRESH_OFFER", { offerId });
+      state.offerRefreshOfferId=offerId;
+      state.offerRefreshRequestId=post("DUFFEL_REFRESH_OFFER", { offerId });
     }
 
 
@@ -3159,13 +3170,15 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
       }
       state.payment = null;
       destroyStripe();
-      post("DUFFEL_REFRESH_OFFER", { offerId: state.selectedOffer.id });
+      state.offerRefreshOfferId=state.selectedOffer.id;
+      state.offerRefreshRequestId=post("DUFFEL_REFRESH_OFFER", { offerId: state.selectedOffer.id });
     }
 
 
     function loadSeatMaps() {
       if (state.activeView !== "services" || !state.selectedOffer?.id) return;
-      post("DUFFEL_GET_SEAT_MAPS", { offerId: state.selectedOffer.id });
+      state.seatMapOfferId=state.selectedOffer.id;
+      state.seatMapRequestId=post("DUFFEL_GET_SEAT_MAPS", { offerId: state.selectedOffer.id });
     }
 
 
@@ -3506,6 +3519,11 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
         return;
       }
       if (message.type === "DUFFEL_OFFER_RESULT") {
+        if (!state.offerRefreshRequestId || message.requestId !== state.offerRefreshRequestId || !payload.offer?.id || payload.offer.id !== state.offerRefreshOfferId) return;
+        state.offerRefreshRequestId="";
+        state.offerRefreshOfferId="";
+        state.seatMapRequestId="";
+        state.seatMapOfferId="";
         state.selectedOffer = payload.offer;
         state.selectedServices.clear();
         state.seatMaps = [];
@@ -3514,6 +3532,9 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
         return;
       }
       if (message.type === "DUFFEL_SEAT_MAPS_RESULT") {
+        if (!state.seatMapRequestId || message.requestId !== state.seatMapRequestId || state.seatMapOfferId !== state.selectedOffer?.id) return;
+        state.seatMapRequestId="";
+        state.seatMapOfferId="";
         state.seatMaps = payload.seatMaps || [];
         if (state.activeView === "services") render();
         return;
@@ -3668,6 +3689,16 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
         return;
       }
       if (message.type === "DUFFEL_ERROR") {
+        if (String(payload.action||"").toUpperCase()==="DUFFEL_REFRESH_OFFER") {
+          if (message.requestId !== state.offerRefreshRequestId) return;
+          state.offerRefreshRequestId="";
+          state.offerRefreshOfferId="";
+        }
+        if (String(payload.action||"").toUpperCase()==="DUFFEL_GET_SEAT_MAPS") {
+          if (message.requestId !== state.seatMapRequestId) return;
+          state.seatMapRequestId="";
+          state.seatMapOfferId="";
+        }
         if (!state.multiSearchActive && String(payload.action || "").toUpperCase() === "DUFFEL_SEARCH_OFFERS" && (!state.searchPendingId || message.requestId !== state.searchPendingId)) return;
         if (!state.multiSearchActive && state.searchPendingId && message.requestId === state.searchPendingId) {
           state.searchPendingId="";
