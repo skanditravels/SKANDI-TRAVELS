@@ -17,9 +17,11 @@
 - PROVIDER SNAPSHOT: the provider evidence remains under `payload.duffel` (`normalized` + `raw`). The migration promotes the normalized provider-owned subset into the canonical Inventory detail object and retains a read-only `inventory_details.duffel` / `details.duffel` copy for audit/context; SKANDI enrichment remains editable only in Inventory Control.
 - AUTHORIZATION: unchanged from current V12 page/facade/core boundaries. No frontend role or provider secret becomes authoritative.
 - MESSAGE CONTRACTS / ELEMENT IDS: unchanged.
-- LAST VERIFIED: 2026-10-19 — GitHub `skanditravels/SKANDI-TRAVELS`, branch `main`, Inventory HTML_REF, Wix page controller and canonical facade/core read in source. Amadeus design and V12 uploaded HTML compared; local static syntax checked. Wix runtime not executed.
+- LAST VERIFIED: 2026-10-20 (source-only; Wix publication unverified); previous source review 2026-10-19 — GitHub `skanditravels/SKANDI-TRAVELS`, branch `main`, Inventory HTML_REF, Wix page controller and canonical facade/core read in source. Amadeus design and V12 uploaded HTML compared; local static syntax checked. Wix runtime not executed.
 
 ## CHANGE LOG
+- **2026-10-20 — Inventory Control employee-facing wording and diagnostics:** Replaced third-party/platform names and overly technical screen copy with SKANDI TRAVELS / ALTEA / RIAINTRA and Supplier language. Channels keep their established stored IDs; supplier/partner names are rendered only as labels, and `SKANDI Partner` appears for a property with the stored `SKANDI_PARTNER` classification. Connection failures, rejected requests, raw diagnostic codes, and system identifiers are never written into employee notifications; the original technical details are emitted only to the browser diagnostic console with action/request correlation and without record payloads. Shortened the Supplier Directory and Property Director instructions. Navigation, HOTEL-only Property Director editing, backend integrations, data, contracts and imports remain unchanged. STATICALLY VERIFIED; REQUIRES LIVE TEST after Wix publication. Browser-console diagnostics are not a persistent help-desk incident registry.
+- 2026-10-20 — Travel Inventory / Property Director ownership repair: renamed the Master Records navigation and panel to Travel Inventory. HOTEL is excluded from generic record browsing, creation, editing and archive actions. Selecting the HOTEL family routes staff to Property Director, including the dashboard hotel shortcut and hotel records opened after provider import/link. A successful hotel import refreshes canonical records before opening Property Director. The master filter retains HOTEL for Property Director; supplier discovery and negotiated-rate operations remain available. Property Director remains the only hotel master editor, includes the canonical property archive action, and refreshes the shared inventory bootstrap after confirmed saves or archives. No database models, API actions, authentication, backend logic or other product families changed. STATICALLY VERIFIED for embed source and bridge contracts; REQUIRES LIVE TEST after Wix HTML publication.
 - 2026-10-14 — Add Record UX repair: Master Records `+ New Record` now opens a record-type chooser when Record Family is `All`, then opens the existing canonical RecordEditor with the selected real inventory type. Existing direct-create behavior for a preselected family and the separate Guided Tour / Activity create controls remain intact. No page-controller, facade, core, message-contract, authorization, schema or stored-data change. STATICALLY VERIFIED; REQUIRES LIVE TEST after replacing and publishing `#inventoryControlEmbed`.
 - 2026-10-11 — Inventory UX repair: record editor and nested Asset Library dialogs now own their scroll surface and lock the background document while open; Master Records is paged at 100 rows with Previous/Next controls plus status, customer visibility, ALTEA visibility and sort dropdown filters; Asset Library browsing is paged at 100 assets and Folder/Subfolder/Category are dropdowns derived from the current indexed library and canonical category choices; Inventory/Asset Library image previews use contain scaling so the complete image remains visible instead of being cropped. Existing message contracts, page controller, facade, core writes, authorization and stored records are unchanged. STATICALLY VERIFIED; REQUIRES LIVE TEST after replacing and publishing `#inventoryControlEmbed`.
 - 2026-10-11 — Aircraft cabin double-count repair: Aircraft & Cabin Studio now builds its displayed cabin set only from active cabin rows and collapses exact canonical/descriptive duplicates before calculating cabin count, cabin map proportions and cabin seat totals. Per-cabin seat values remain sourced from the canonical `travel_info_aircraft_cabins.seat_count` field returned by `INVENTORY_V9_GET_AIRCRAFT`; aircraft total seats remain sourced from `travel_info_aircraft.total_seats`. Existing message contracts, page controller, facade, core writes, authorization and stored records are unchanged. STATICALLY VERIFIED; REQUIRES LIVE TEST after replacing and publishing `#inventoryControlEmbed`.
@@ -534,10 +536,45 @@ const requests=new Map();
 const REQUEST_TIMEOUT_MS=30000;
 
 
+const INTERNAL_ISSUE_PATTERN=/(?:\b[A-Z][A-Z0-9]*_[A-Z0-9_]{2,}\b|\b(?:Wix|Duffel|Supabase|GraphQL|RLS|backend|web.?method|bootstrap|bridge|schema|database|provider|upstream|internal server|API endpoint|TypeError|ReferenceError|Cannot read properties|is not a function|HTTP [45][0-9]{2})\b)/i;
+function logInventoryIssue(kind,details={}){
+  // Internal-only diagnostics. Never include record data, customer data or credentials.
+  console.error("[ALTEA Inventory Control]",{kind,at:new Date().toISOString(),...details});
+}
+function employeeErrorMessage(message,fallback="The action could not be completed. Please try again."){
+  const raw=text(message).trim();
+  if(/(?:AUTH_REQUIRED|NOT_AUTHENTICATED|SESSION_EXPIRED|LOGIN_REQUIRED)/i.test(raw))return "Your session has ended. Sign in again.";
+  if(/(?:ACCESS_DENIED|PERMISSION_DENIED|FORBIDDEN|NOT_AUTHORIZED)/i.test(raw))return "You do not have access to this action.";
+  if(/(?:RECORD_NOT_FOUND|ENTITY_NOT_FOUND)/i.test(raw))return "The selected record could not be found.";
+  if(!raw||INTERNAL_ISSUE_PATTERN.test(raw)||raw.length>230)return fallback;
+  return raw.replace(/\s*\[[A-Z][A-Z0-9_]{3,}\]\s*/g,"").trim()||fallback;
+}
+function sourceDisplayLabel(value){
+  const key=text(value).toUpperCase();
+  return ({DUFFEL:"Supplier information",SUPPLIER:"Supplier record",SKANDI_PARTNER:"SKANDI Partner",SKANDI:"SKANDI TRAVELS",MANUAL:"Entered by staff",INVENTORY_CONTROL:"ALTEA"})[key]||employeeErrorMessage(value,"Supplier");
+}
+function resourceTypeDisplay(value){
+  return ({HOTEL:"Hotel",ACCOMMODATION:"Hotel",AIRLINE:"Airline",AIRPORT:"Airport",DESTINATION:"Destination",CITY:"City",AIRCRAFT:"Aircraft"})[text(value).toUpperCase()]||"Travel inventory";
+}
+function channelDisplayLabel(value,catalog){
+  if(catalog?.catalogType==="SKANDI_PARTNER"&&value!=="AMADEUS")return `SKANDI Partner ${text(value).toUpperCase()==="DUFFEL"?"channel 1":"channel 2"}`;
+  const key=text(value).toUpperCase();
+  return ({AMADEUS:"ALTEA",DUFFEL:"Supplier channel 1",HOTELBEDS:"Supplier channel 2"})[key]||"Supplier";
+}
+function employeeAuditAction(value){
+  return text(value).replace(/^(?:INVENTORY_|VOY_|ASSET_|SKANDI_)+/,"")
+    .replace(/_/g," ").toLowerCase().replace(/\b\w/g,ch=>ch.toUpperCase())||"Updated";
+}
+function employeeAuditMessage(value){
+  const raw=text(value).trim();
+  if(!raw)return"—";
+  return employeeErrorMessage(raw,"Operation recorded.")
+    .replace(/\b(?:Wix|Duffel|Supabase|Amadeus|Hotelbeds)\b/gi,"Supplier");
+}
 function request(type,payload={}){
   const requestId=`INV-${Date.now()}-${Math.random().toString(36).slice(2,9)}`;
   return new Promise((resolve,reject)=>{
-    const timer=setTimeout(()=>{requests.delete(requestId);reject(new Error("The system did not respond. Check the published system bridge."))},REQUEST_TIMEOUT_MS);
+    const timer=setTimeout(()=>{requests.delete(requestId);logInventoryIssue("request-timeout",{action:type,requestId});reject(new Error("The request took too long. Please try again."))},REQUEST_TIMEOUT_MS);
     requests.set(requestId,{resolve,reject,timer,type});
     window.parent.postMessage({source:SOURCE,type,payload,requestId,timestamp:new Date().toISOString()},"*");
   });
@@ -677,11 +714,11 @@ const ENTITY_SCHEMAS={
   ]},
   SUPPLIER:{details:[
     SF("Supplier Type","details.supplierType","select",ENUM.supplierType),SF("Legal Name","details.legalName"),SF("Country","details.country"),SF("Contact Name","details.contactName"),SF("Contact Email","details.contactEmail","email"),SF("Phone","details.phone"),SF("Website","details.website","url"),
-    SF("API Provider","details.apiProvider","boolean"),SF("Account Reference","details.accountReference"),SF("Contract Status","details.contractStatus","select",ENUM.contractStatus),SF("Payment Terms","details.paymentTerms","textarea"),SF("Commission Model","details.commissionModel")
+    SF("Supplier Integration","details.apiProvider","boolean"),SF("Account Reference","details.accountReference"),SF("Contract Status","details.contractStatus","select",ENUM.contractStatus),SF("Payment Terms","details.paymentTerms","textarea"),SF("Commission Model","details.commissionModel")
   ]},
   HOTEL:{details:[
     SF("Brand","details.brand"),SF("Property Type","details.propertyType","select",ENUM.propertyType),SF("Destination","details.destinationId","reference",[],"",["DESTINATION"]),SF("Area / Resort","details.areaId","reference",[],"",["AREA"]),SF("Nearest Airport","details.nearestAirportId","reference",[],"",["AIRPORT"]),
-    SF("Provider Accommodation ID","details.providerAccommodationId"),SF("Address","details.address"),SF("City","details.city"),SF("Postal Code","details.postalCode"),SF("Latitude","details.latitude","number"),SF("Longitude","details.longitude","number"),
+    SF("Supplier Hotel Reference","details.providerAccommodationId"),SF("Address","details.address"),SF("City","details.city"),SF("Postal Code","details.postalCode"),SF("Latitude","details.latitude","number"),SF("Longitude","details.longitude","number"),
     SF("Official Star Rating","details.officialStarRating","number"),SF("SKANDI Rating","details.skandiRating","number"),SF("Guest Rating","details.guestRating","number"),SF("Review Count","details.reviewCount","number"),
     SF("Check-in Time","details.checkinTime","time"),SF("Check-out Time","details.checkoutTime","time"),SF("Minimum Check-in Age","details.minimumCheckinAge","number"),SF("Pets Allowed","details.petsAllowed","boolean"),SF("Smoking Policy","details.smokingPolicy","select",ENUM.smokingPolicy),
     SF("Distance to Beach km","details.distanceToBeach","number"),SF("Distance to Center km","details.distanceToCenter","number"),SF("Distance to Airport km","details.distanceToAirport","number"),SF("Transfer Time Minutes","details.transferTimeMinutes","number"),
@@ -729,13 +766,13 @@ const ENTITY_SCHEMAS={
     SR("Transport Options","details.transportJson",[SF("Type","type"),SF("Name","name"),SF("Description","description","textarea"),SF("URL","url","url")]),
     SR("Food & Drinks","details.foodDrinksJson",[SF("Name","name"),SF("Category","category"),SF("Terminal / Location","location"),SF("Notes","description","textarea")]),
     SR("Lost & Found","details.lostFoundJson",[SF("Name / Office","name"),SF("Location","location"),SF("Phone / Contact","contact"),SF("URL","url","url")]),
-    SR("Source URLs","details.sourceUrlsJson",[SF("Label","label"),SF("URL","url","url")])
+    SR("Reference links","details.sourceUrlsJson",[SF("Label","label"),SF("URL","url","url")])
   ]},
   AIRLINE:{details:[
     SF("ICAO Code","details.icaoCode"),SF("Short Name","details.shortName"),SF("Alliance","details.alliance"),SF("Brand Group","details.brandGroup"),SF("Country","details.country"),SF("City / Base","details.city"),SF("Website","details.website","url"),SF("Contact URL","details.contactUrl","url"),SF("Summary","details.summary","textarea"),SF("Check-in","details.checkIn","textarea"),SF("Boarding","details.boarding","textarea"),SF("Lounges","details.lounges","textarea"),SF("Loyalty Program","details.loyaltyProgram","textarea"),
     SR("Baggage Allowance","details.baggageAllowance",[SF("Cabin / Fare","name"),SF("Under-seat Bag","underSeatBag"),SF("Carry-on","overheadCarryOn"),SF("Checked Bag","checkedBag"),SF("Notes","description","textarea")]),
     SR("Food & Drinks","details.foodDrinksJson",[SF("Cabin / Fare","name"),SF("Service","service"),SF("Description","description","textarea")]),
-    SR("Wi-Fi / Connectivity","details.wifiOnboardJson",[SF("Product / Provider","name"),SF("Availability","availability"),SF("Price","price"),SF("Notes","description","textarea")]),
+    SR("Wi-Fi / Connectivity","details.wifiOnboardJson",[SF("Product / Supplier","name"),SF("Availability","availability"),SF("Price","price"),SF("Notes","description","textarea")]),
     SR("Ticket Types","details.ticketTypesJson",[SF("Name","name"),SF("Description","description","textarea")]),
     SR("Children / Infants","details.childrenInfantsJson",[SF("Passenger Type","passengerType"),SF("Rule / Allowance","rule"),SF("Description","description","textarea")]),
     SR("Delays / Cancellations","details.delaysCancellationsJson",[SF("Topic","title"),SF("Rule / Policy","description","textarea"),SF("URL","url","url")]),
@@ -745,7 +782,7 @@ const ENTITY_SCHEMAS={
     SR("Cabins","details.cabinsJson",[SF("Cabin","name"),SF("Code","code"),SF("Description","description","textarea")]),
     SR("Hubs","details.hubsJson",[SF("Airport Code","code"),SF("Airport / City","name")]),
     SR("Fleet Summary","details.fleetSummaryJson",[SF("Aircraft","aircraft"),SF("Count","count","number"),SF("Notes","notes","textarea")]),
-    SR("Source URLs","details.sourceUrlsJson",[SF("Label","label"),SF("URL","url","url")])
+    SR("Reference links","details.sourceUrlsJson",[SF("Label","label"),SF("URL","url","url")])
   ]}
 };
 const DEFAULT_COMMERCIAL=[SF("Currency","commercial.currency","select",ENUM.currency),SF("Price Basis","commercial.priceBasis","select",ENUM.priceBasis),SF("Supplier Cost","commercial.supplierCost","number"),SF("Public Price","commercial.publicPrice","number")];
@@ -805,7 +842,7 @@ function RepeatSchemaEditor({field,record,update,records}){
 }
 function ExplicitSchemaEditor({type,section,record,update,records}){
   const fields=schemaFields(type,section);
-  if(!fields.length)return html`<div className="smartempty">No fixed ${section} schema is required for this record family.</div>`;
+  if(!fields.length)return html`<div className="smartempty">No additional fields for this section.</div>`;
   return html`<div className="formgrid three">${fields.map(field=>field.type==="repeat"?html`<${RepeatSchemaEditor} field=${field} record=${record} update=${update} records=${records}/>`:html`<${SchemaScalar} field=${field} records=${records} value=${getPath(record,field.path)} onChange=${v=>update(field.path,v)}/>` )}</div>`;
 }
 function knownSectionKeys(type,section){return schemaFields(type,section).map(f=>f.path.split(".")[1]).filter(Boolean)}
@@ -860,7 +897,7 @@ function SmartObjectEditor({value,onChange,exclude=[]}){
   const obj=value&&typeof value==="object"&&!Array.isArray(value)?value:{};
   const hidden=new Set(exclude.map(x=>text(x)));
   const entries=Object.entries(obj).filter(([k])=>!hidden.has(k));
-  if(!entries.length)return html`<div className="smartempty">No additional system fields are stored for this section.</div>`;
+  if(!entries.length)return html`<div className="smartempty">No additional details.</div>`;
   return html`<div className="formgrid three">${entries.map(([k,v])=>html`<${SmartValueEditor} label=${prettyKey(k)} path=${k} value=${v} onChange=${next=>onChange({...obj,[k]:next})}/>` )}</div>`
 }
 function ConfigurationEditor({value,onChange}){
@@ -1038,7 +1075,7 @@ function AssetLibraryPanel({setBusy,setToast}){
   async function load(){try{setBusy("Loading Asset Library…");setSnapshot(await request("INVENTORY_ASSET_LIST",{}))}catch(e){setToast(e.message,true)}finally{setBusy("")}}
   useEffect(()=>{load()},[]);
   const assets=snapshot?.assets||[],publicCount=assets.filter(a=>a.visibility==="PUBLIC").length,privateCount=assets.filter(a=>a.visibility==="PRIVATE").length,duplicates=assets.filter(a=>a.isKnownDuplicate).length;
-  return html`<div className="card panel"><div className="assetlibraryhero"><div><div className="eyebrow">PLATFORM STANDARD</div><div className="sectiontitle">SKANDI Asset Library</div><div className="sub">One indexed library for website images, PDFs, documents, forms, video, audio and internal files. New uploads use canonical public/private buckets; existing files remain searchable and reusable.</div></div><div className="toolbar"><button className="btn" onClick=${load}>Refresh</button><button className="btn primary" onClick=${()=>setOpen(true)}>Open Library / Upload</button></div></div>
+  return html`<div className="card panel"><div className="assetlibraryhero"><div><div className="eyebrow">PLATFORM STANDARD</div><div className="sectiontitle">SKANDI Asset Library</div><div className="sub">Search, upload and manage SKANDI files.</div></div><div className="toolbar"><button className="btn" onClick=${load}>Refresh</button><button className="btn primary" onClick=${()=>setOpen(true)}>Open Library / Upload</button></div></div>
     <div className="stats" style=${{marginTop:"14px"}}><div className="stat"><span>Indexed Assets</span><strong>${assets.length}</strong></div><div className="stat"><span>Public</span><strong>${publicCount}</strong></div><div className="stat"><span>Private</span><strong>${privateCount}</strong></div><div className="stat"><span>Known Duplicate Rows</span><strong>${duplicates}</strong></div><div className="stat"><span>Folder Roots</span><strong>${snapshot?.roots?.length||0}</strong></div></div>
     <div className="notice">New files must be organized by business meaning, e.g. AIRLINES → British Airways, HOTELS → Scandic Continental, DESTINATIONS → Stockholm, or SKANDI → Marketing.</div>
     ${open?html`<${AssetLibraryModal} context=${{libraryRoot:"SKANDI",libraryFolder:"",visibility:"PUBLIC",assetType:""}} manageOnly=${true} onClose=${()=>{setOpen(false);load()}} setBusy=${setBusy} setToast=${setToast}/>`:null}
@@ -1115,7 +1152,7 @@ function RecordEditor({bundle,languages,records,onClose,onSaved,setBusy,setToast
       <${Field} label=${rec.entityType==="AIRPORT"?"IATA Code":rec.entityType==="AIRLINE"?"IATA Code":"System Code"} value=${rec.code} onChange=${v=>update("code",v)}/>
       <${Field} label="Master Name / Title" value=${rec.name} onChange=${v=>update("name",v)}/>
       <${Field} label="URL Slug" value=${rec.slug} onChange=${v=>update("slug",v)} help="Leave blank to generate from the title."/>
-      <${Field} label="Public ID" value=${rec.publicId} onChange=${()=>{}} disabled=${true} help=${rec.id?"Canonical ID generated by Supabase.":"Generated by Supabase when the record is first saved."}/>
+      <${Field} label="Public ID" value=${rec.publicId} onChange=${()=>{}} disabled=${true} help=${rec.id?"Assigned by SKANDI TRAVELS.":"Assigned when the record is saved."}/>
       <${Field} label="Status" type="select" options=${STATUS} value=${rec.status||"DRAFT"} onChange=${v=>update("status",v)}/>
       <${Field} label="Sort Priority" type="number" value=${rec.sortPriority} onChange=${v=>update("sortPriority",v)}/>
       ${["DESTINATION","AREA"].includes(rec.entityType)?html`<${Field} label="Parent Geography" type="select" options=${parentOptions} value=${rec.parentEntityId||""} onChange=${v=>update("parentEntityId",v)} />`:null}
@@ -1126,7 +1163,7 @@ function RecordEditor({bundle,languages,records,onClose,onSaved,setBusy,setToast
       <${Toggle} label="ALTEA Visible" value=${rec.alteaVisible!==false} onChange=${v=>update("alteaVisible",v)}/>
     </div>`:null}
     ${tab==="details"?html`<div>
-      <div className="notice">Inventory Control uses an explicit schema contract. Empty categorical and relationship fields remain real dropdowns/selectors, repeatable structures can create their first row, and unknown legacy keys remain preserved below.</div>
+      <div className="notice">Complete the fields needed for this record.</div>
       <div style=${{marginTop:"12px"}}><${ExplicitSchemaEditor} type=${rec.entityType} section="details" record=${rec} update=${update} records=${refs}/></div>
       <div className="hr"></div><div className="sectiontitle">Additional Stored Fields</div>
       <${SmartObjectEditor} value=${rec.details||{}} exclude=${detailKnown} onChange=${v=>setSection("details",v)}/>
@@ -1156,7 +1193,7 @@ function RecordEditor({bundle,languages,records,onClose,onSaved,setBusy,setToast
     </div>`:null}
     ${tab==="media"?html`<div>
       <div className="paneltitle"><span>Assets</span><button className="btn small" onClick=${()=>setAssetPicker({index:-1,isNew:true,context:assetContextForRecord(rec,"GALLERY")})}>+ Browse / Upload Asset</button></div>
-      <div className="notice">This is the only image/logo source for this record. Add an existing Asset Library file or paste a URL. Airline logos are provider-owned and replace the matching logo assets whenever system is refreshed.</div>
+      <div className="notice">Choose an image from Asset Library or add an image link. Supplier-managed images are updated during refresh.</div>
       <div className="asseturladd"><${Field} label="Asset URL" type="url" value=${assetUrl} onChange=${setAssetUrl}/><${Field} label="Role" type="select" options=${["PRIMARY","HERO","CARD","MOBILE","GALLERY","OG","LOGO","MAP","ROOM","THUMBNAIL"]} value=${assetRole} onChange=${setAssetRole}/><${Field} label="Alt Text" value=${assetAlt} onChange=${setAssetAlt}/><button className="btn primary" onClick=${addUrlAsset}>Add URL Asset</button></div>
       ${media.length?media.map((m,i)=>{const providerOwned=(m.payload?.provider||m.source)==="DUFFEL";return html`<div className=${`mediaitem ${providerOwned?"providerowned":""}`}><div className="formgrid three">
         <${Field} label="Role" type="select" options=${["PRIMARY","HERO","CARD","MOBILE","GALLERY","OG","LOGO","MAP","ROOM","THUMBNAIL"]} value=${m.role} disabled=${providerOwned} onChange=${v=>setDraft(d=>{const x=[...(d.media||[])];x[i]={...x[i],role:v};return{...d,media:x}})}/>
@@ -1165,7 +1202,7 @@ function RecordEditor({bundle,languages,records,onClose,onSaved,setBusy,setToast
         <${Field} label="Credit" value=${m.credit||""} onChange=${v=>setDraft(d=>{const x=[...(d.media||[])];x[i]={...x[i],credit:v};return{...d,media:x}})}/>
         <${Field} label="Focal X %" type="number" value=${m.focalX??""} onChange=${v=>setDraft(d=>{const x=[...(d.media||[])];x[i]={...x[i],focalX:v};return{...d,media:x}})}/>
         <${Field} label="Focal Y %" type="number" value=${m.focalY??""} onChange=${v=>setDraft(d=>{const x=[...(d.media||[])];x[i]={...x[i],focalY:v};return{...d,media:x}})}/>
-      </div><div className="assetcurrent" style=${{marginTop:"8px"}}>${m.url?html`<div className="preview"><img src=${m.url} alt=${m.altText||""}/></div>`:html`<div className="preview">No asset selected</div>`}<div className="toolbar">${providerOwned?html`<span className="providersource">Managed by SKANDI Partner · refresh in Provider workspace</span>`:html`<button className="btn small" onClick=${()=>setAssetPicker({index:i,isNew:false,context:assetContextForRecord(rec,m.role||"GALLERY")})}>Replace / Browse Asset Library</button>`}<span className="sub">${m.assetId||m.sourceKind==="ASSET_LIBRARY"?"Managed Asset Library file":m.sourceKind==="URL"?"URL asset":"Linked image"}</span>${providerOwned?null:html`<button className="btn small danger" onClick=${()=>setDraft(d=>({...d,media:(d.media||[]).filter((_,x)=>x!==i)}))}>Remove from record</button>`}</div></div></div>`}):html`<div className="empty">No assets attached. Add a URL or browse the Asset Library.</div>`}
+      </div><div className="assetcurrent" style=${{marginTop:"8px"}}>${m.url?html`<div className="preview"><img src=${m.url} alt=${m.altText||""}/></div>`:html`<div className="preview">No asset selected</div>`}<div className="toolbar">${providerOwned?html`<span className="providersource">${catalog.catalogType==="SKANDI_PARTNER"?"SKANDI Partner-managed image":"Supplier-managed image"}</span>`:html`<button className="btn small" onClick=${()=>setAssetPicker({index:i,isNew:false,context:assetContextForRecord(rec,m.role||"GALLERY")})}>Replace / Browse Asset Library</button>`}<span className="sub">${m.assetId||m.sourceKind==="ASSET_LIBRARY"?"Managed Asset Library file":m.sourceKind==="URL"?"URL asset":"Linked image"}</span>${providerOwned?null:html`<button className="btn small danger" onClick=${()=>setDraft(d=>({...d,media:(d.media||[]).filter((_,x)=>x!==i)}))}>Remove from record</button>`}</div></div></div>`}):html`<div className="empty">No assets attached. Add a URL or browse the Asset Library.</div>`}
       ${assetPicker?html`<${AssetLibraryModal} context=${{...assetPicker.context,lockedContext:true}} onClose=${()=>setAssetPicker(null)} onSelect=${asset=>useRecordAsset(assetPicker.index,asset,assetPicker.isNew)} setBusy=${setBusy} setToast=${setToast}/>`:null}
     </div>`:null}
     ${tab==="relations"?html`<div>
@@ -1177,7 +1214,7 @@ function RecordEditor({bundle,languages,records,onClose,onSaved,setBusy,setToast
       </div></div>`):html`<div className="empty">No relations.</div>`}
     </div>`:null}
     ${tab==="catalog"?html`<div className="formgrid three">
-      <${Field} label="Website Placement" type="select" options=${["NONE","SKANDI_COLLECTION","SKANDI_PARTNER"]} value=${catalog.catalogType||"NONE"} onChange=${v=>setCatalog("catalogType",v)}/>
+      <${Field} label="Website Placement" type="select" options=${[{value:"NONE",label:"None"},{value:"SKANDI_COLLECTION",label:"SKANDI TRAVELS"},{value:"SKANDI_PARTNER",label:"SKANDI Partner"}]} value=${catalog.catalogType||"NONE"} onChange=${v=>setCatalog("catalogType",v)}/>
       <${Field} label="Partner Tier" value=${catalog.partnerTier||""} onChange=${v=>setCatalog("partnerTier",v)}/>
       <${Field} label="Search Priority" type="number" value=${catalog.searchPriority??100} onChange=${v=>setCatalog("searchPriority",v)}/>
       <${Toggle} label="Searchable" value=${catalog.searchable===true} onChange=${v=>setCatalog("searchable",v)}/>
@@ -1193,7 +1230,7 @@ function RecordEditor({bundle,languages,records,onClose,onSaved,setBusy,setToast
     ${tab==="publishing"?html`<div>
       <div className="formgrid three">
         <${Field} label="SEO Title" value=${rec.seo?.title||rec.seo?.seoTitle||""} onChange=${v=>update("seo.title",v)}/>
-        <${Field} label="Canonical URL" type="url" value=${rec.seo?.canonicalUrl||""} onChange=${v=>update("seo.canonicalUrl",v)}/>
+        <${Field} label="Website Address" type="url" value=${rec.seo?.canonicalUrl||""} onChange=${v=>update("seo.canonicalUrl",v)}/>
         <${Toggle} label="Exclude from Search Engines" value=${rec.seo?.noIndex===true} onChange=${v=>update("seo.noIndex",v)}/>
         <${Field} label="SEO Description" type="textarea" value=${rec.seo?.description||rec.seo?.seoDescription||""} onChange=${v=>update("seo.description",v)} full=${true}/>
         <${ListField} label="SEO Keywords — one per line" value=${rec.seo?.keywords} onChange=${v=>update("seo.keywords",v)}/>
@@ -1202,7 +1239,7 @@ function RecordEditor({bundle,languages,records,onClose,onSaved,setBusy,setToast
         <${Field} label="Unpublish Date" type="date" value=${rec.publication?.unpublishAt||""} onChange=${v=>update("publication.unpublishAt",v)}/>
         <${Field} label="Content Owner" value=${rec.publication?.owner||""} onChange=${v=>update("publication.owner",v)}/>
         <${Field} label="Approved By" value=${rec.publication?.approvedBy||""} onChange=${v=>update("publication.approvedBy",v)}/>
-        <${Field} label="Source" type="select" options=${smartOptions("source",rec.source||"SKANDI")||[]} value=${rec.source||"SKANDI"} onChange=${v=>update("source",v)}/>
+        <${Field} label="Source" type="select" options=${(smartOptions("source",rec.source||"SKANDI")||[]).map(value=>({value,label:sourceDisplayLabel(value)}))} value=${rec.source||"SKANDI"} onChange=${v=>update("source",v)}/>
         <${Field} label="Source Reference" value=${rec.sourceReference||""} onChange=${v=>update("sourceReference",v)}/>
       </div>
       <div className="hr"></div><div className="sectiontitle">Additional SEO Fields</div>
@@ -1220,7 +1257,7 @@ function safeUrl(url){const v=text(url);return /^https?:\/\//i.test(v)?v:""}
 function ProviderDetailGrid({resource,type}){
   const rows=[];
   const add=(label,value,kind="text")=>{if(value===undefined||value===null||value===""||(Array.isArray(value)&&!value.length))return;rows.push({label,value,kind})};
-  add("Hotel ID",resource?.id);
+  add("Supplier Reference",resource?.id);
   add("Name",resource?.name);
   add("IATA code",resource?.iataCode);
   add("ICAO code",resource?.icaoCode);
@@ -1247,7 +1284,7 @@ function ProviderDetailGrid({resource,type}){
   return html`<div className="detailgrid">${rows.map(r=>html`<div className="detailcell"><small>${r.label}</small><div>${r.kind==="url"&&safeUrl(r.value)?html`<a href=${r.value} target="_blank" rel="noreferrer">${r.value}</a>`:text(r.value)}</div></div>`)}</div>`
 }
 
-function ProviderWorkspace({boot,setBusy,setToast,masterFilter}){
+function ProviderWorkspace({boot,setBoot,setBusy,setToast,masterFilter,setView}){
   const [mode,setMode]=useState("collection");
   const [resourceType,setResourceType]=useState("HOTEL");
   const [query,setQuery]=useState("");
@@ -1275,40 +1312,47 @@ function ProviderWorkspace({boot,setBusy,setToast,masterFilter}){
 
 
   async function search(){
-    if(!providerMatchesScope)return setToast("This provider workspace has no source search for the selected master family. Change the master filter to Hotels, Airlines, Airports, Destinations or All.",true);
+    if(!providerMatchesScope)return setToast("Select Hotels, Airlines, Airports, Destinations or All to search suppliers.",true);
     if(resourceType==="HOTEL"&&query.trim().length<3)return setToast("Enter at least 3 characters for a hotel search.",true);
     if(["AIRPORT","DESTINATION"].includes(resourceType)&&!query.trim())return setToast("Enter an airport, city or IATA code.",true);
-    try{setBusy(`Searching ${resourceType.toLowerCase()} data…`);const r=await request("INVENTORY_PROVIDER_SEARCH",{resourceType,query:query.trim(),limit:60});setResults(r.items||[]);setDetail(null);if(!(r.items||[]).length)setToast("Inventory returned no matching resources.")}catch(e){setToast(e.message,true)}finally{setBusy("")}
+    try{setBusy(`Searching ${resourceType.toLowerCase()}…`);const r=await request("INVENTORY_PROVIDER_SEARCH",{resourceType,query:query.trim(),limit:60});setResults(r.items||[]);setDetail(null);if(!(r.items||[]).length)setToast("No matching results found.")}catch(e){setToast(e.message,true)}finally{setBusy("")}
   }
   async function inspect(item){
-    try{setBusy("Loading record…");const r=await request("INVENTORY_PROVIDER_GET_RESOURCE",{resourceType:item.entityType,providerId:item.providerId});setDetail(r)}catch(e){setToast(e.message,true)}finally{setBusy("")}
+    try{setBusy("Loading supplier details…");const r=await request("INVENTORY_PROVIDER_GET_RESOURCE",{resourceType:item.entityType,providerId:item.providerId});setDetail(r)}catch(e){setToast(e.message,true)}finally{setBusy("")}
   }
   async function openExisting(item){
     const existing=item?.existingRecord;if(!existing?.id)return;
-    try{setBusy("Opening SKANDI Collection record…");const r=await request("INVENTORY_V9_GET_RECORD",{id:existing.id,entityType:item.entityType});setEditor(r)}catch(e){setToast(e.message,true)}finally{setBusy("")}
+    if(item.entityType==="HOTEL"){setView("property");return}
+    try{setBusy("Opening record…");const r=await request("INVENTORY_V9_GET_RECORD",{id:existing.id,entityType:item.entityType});setEditor(r)}catch(e){setToast(e.message,true)}finally{setBusy("")}
   }
   async function importItem(item,{linkExisting=false}={}){
     if(item.entityType==="AIRCRAFT")return setToast("Aircraft is reference-only here. Use Aircraft & Cabin Studio for SKANDI aircraft configuration.",true);
-    if(item.importSupported===false)return setToast("This resource cannot be imported safely.",true);
+    if(item.importSupported===false)return setToast("This record cannot be added.",true);
     if(linkExisting&&!confirm(`Link ${item.name} to the existing SKANDI ${item.entityType.toLowerCase()} record?`))return;
-    if(!linkExisting&&!confirm(`Add ${item.name} to the SKANDI Collection as DRAFT?`))return;
+    if(!linkExisting&&!confirm(`Add ${item.name} to Travel Inventory as a draft?`))return;
     const payload={resourceType:item.entityType,providerId:item.providerId,linkExisting};
     if(item.entityType==="HOTEL"){if(destinationId)payload.destinationId=destinationId;if(areaId)payload.areaId=areaId}
     if(item.entityType==="DESTINATION"&&countryId)payload.parentEntityId=countryId;
     try{
-      setBusy(linkExisting?"Linking source…":"Adding to SKANDI Collection…");
+      setBusy(linkExisting?"Linking supplier record…":"Adding to Travel Inventory…");
       const r=await request("INVENTORY_PROVIDER_IMPORT",payload);
-      if(r.conflict){setToast("A matching SKANDI record already exists. Link through Supplier & Distribution instead.",true);return}
-      setToast(r.alreadyExists?"This resource is already in the SKANDI Collection.":(r.linked?"Source linked to the existing SKANDI record.":"Added to SKANDI Collection as DRAFT."));
+      if(r.conflict){setToast("A matching SKANDI record already exists. Use Link Supplier instead.",true);return}
+      setToast(r.alreadyExists?"This record is already in Travel Inventory.":(r.linked?"Supplier information linked to the SKANDI record.":"Added to Travel Inventory as a draft."));
       const record=r.bundle?.record||r.bundle?.bundle?.record;
-      if(record?.id){const full=await request("INVENTORY_V9_GET_RECORD",{id:record.id,entityType:item.entityType});setEditor(full)}
+      if(record?.id){
+        if(item.entityType==="HOTEL"){
+          const snapshot=await request("INVENTORY_V9_REFRESH",{});
+          setBoot(snapshot);
+          setView("property");
+        }else{const full=await request("INVENTORY_V9_GET_RECORD",{id:record.id,entityType:item.entityType});setEditor(full)}
+      }
       const refreshed=await request("INVENTORY_PROVIDER_SEARCH",{resourceType,query:query.trim(),limit:60});setResults(refreshed.items||[]);
     }catch(e){setToast(e.message,true)}finally{setBusy("")}
   }
   async function refreshSource(item){
     const existing=item?.existingRecord;if(!existing?.id)return;
-    if(!confirm(`Refresh data for ${existing.name||item.name}? SKANDI editorial/media fields will be preserved.`))return;
-    try{setBusy("Refreshing Duffel source snapshot…");await request("INVENTORY_PROVIDER_REFRESH",{entityType:item.entityType,id:existing.id});setToast("Datarefreshed. SKANDI enrichment was preserved.");const r=await request("INVENTORY_PROVIDER_SEARCH",{resourceType,query:query.trim(),limit:60});setResults(r.items||[])}catch(e){setToast(e.message,true)}finally{setBusy("")}
+    if(!confirm(`Update supplier details for ${existing.name||item.name}? SKANDI edits will be kept.`))return;
+    try{setBusy("Updating supplier details…");await request("INVENTORY_PROVIDER_REFRESH",{entityType:item.entityType,id:existing.id});setToast("Supplier details updated. SKANDI edits were kept.");const r=await request("INVENTORY_PROVIDER_SEARCH",{resourceType,query:query.trim(),limit:60});setResults(r.items||[])}catch(e){setToast(e.message,true)}finally{setBusy("")}
   }
   async function loadRates(){
     try{setBusy("Loading negotiated rates…");const r=await request("INVENTORY_NEGOTIATED_RATES_LIST",{limit:200});setRates(r.items||[])}catch(e){setToast(e.message,true)}finally{setBusy("")}
@@ -1324,7 +1368,7 @@ function ProviderWorkspace({boot,setBusy,setToast,masterFilter}){
     try{setBusy(x.id?"Updating negotiated rate…":"Creating negotiated rate…");await request(x.id?"INVENTORY_NEGOTIATED_RATE_UPDATE":"INVENTORY_NEGOTIATED_RATE_CREATE",payload);setRateEdit(null);setRateLookupResults([]);setToast(x.id?"Negotiated rate updated.":"Negotiated rate created.");await loadRates()}catch(e){setToast(e.message,true)}finally{setBusy("")}
   }
   async function deleteRate(row){
-    if(!confirm(`Delete negotiated rate ${row.displayName}? This changes your organisation configuration.`))return;
+    if(!confirm(`Delete negotiated rate ${row.displayName}? This changes the supplier rate setup.`))return;
     try{setBusy("Deleting negotiated rate…");await request("INVENTORY_NEGOTIATED_RATE_DELETE",{id:row.id});setToast("Negotiated rate deleted.");await loadRates()}catch(e){setToast(e.message,true)}finally{setBusy("")}
   }
   async function searchRateHotels(){
@@ -1335,7 +1379,7 @@ function ProviderWorkspace({boot,setBusy,setToast,masterFilter}){
     try{
       setBusy("Loading hotel source details…");const r=await request("INVENTORY_PROVIDER_GET_RESOURCE",{resourceType:"HOTEL",providerId:item.providerId});const hotel=r.resource||{};
       if(scope==="chain"){
-        if(!hotel.chain?.id)return setToast("Inventory did not return a hotel-chain ID for this accommodation.",true);
+        if(!hotel.chain?.id)return setToast("No chain reference was found for this hotel.",true);
         setRateEdit(x=>({...x,scope:"chain",chainId:hotel.chain.id,accommodationIds:[]}));setToast(`Using chain ${hotel.chain.name||hotel.chain.id}.`)
       }else{
         setRateEdit(x=>({...x,scope:"accommodations",chainId:"",accommodationIds:Array.from(new Set([...(x.accommodationIds||[]),item.providerId]))}));setToast(`${item.name} added to the negotiated-rate scope.`)
@@ -1347,43 +1391,44 @@ function ProviderWorkspace({boot,setBusy,setToast,masterFilter}){
 
   const detailItem=detail?.item||null, detailResource=detail?.resource||null;
   return html`<div>
-    <div className="providerhero"><div><h2>SKANDI Partner + SKANDI Collection</h2><p>Search the resource catalogue, review the provider record, then deliberately add only selected resources to the SKANDI Collection. Inventory remains the curated SKANDI layer,</p></div><span className="sourcebadge">LIVE PROVIDER SOURCE</span></div>
-    <div className="tabs">${[["collection","Collection Import"],["rates","Negotiated Hotel Rates"]].map(([k,l])=>html`<button className=${`tab ${mode===k?"active":""}`} disabled=${k==="rates"&&Boolean(masterFilter)&&masterFilter!=="HOTEL"} onClick=${()=>setMode(k)}>${l}</button>`)}</div>
-    ${!providerMatchesScope?html`<div className="notice warn">The selected master family has no discovery endpoint in this workspace. Existing master records remain available under Master Records.</div>`:null}
+    <div className="providerhero"><div><h2>Supplier Directory</h2><p>Find and manage supplier records.</p></div></div>
+    <div className="tabs">${[["collection","Add to Inventory"],["rates","Negotiated Hotel Rates"]].map(([k,l])=>html`<button className=${`tab ${mode===k?"active":""}`} disabled=${k==="rates"&&Boolean(masterFilter)&&masterFilter!=="HOTEL"} onClick=${()=>setMode(k)}>${l}</button>`)}</div>
+    ${!providerMatchesScope?html`<div className="notice warn">Select a supported category to search suppliers. Hotels are managed in Property Director.</div>`:null}
 
 
     ${mode==="collection"?html`<div className="grid">
-      <div className="card panel"><div className="paneltitle"><span>Find a resource</span><span className="matchtag duffel">Source</span></div>
-        <div className="formgrid three"><${Field} label="Resource type" type="select" value=${resourceType} options=${typeOptions.map(([value,label])=>({value,label}))} disabled=${Boolean(masterFilter)} onChange=${v=>{setResourceType(v);setResults([]);setDetail(null)}}/><${Field} label="Search" full=${true} value=${query} onChange=${setQuery} help=${resourceType==="HOTEL"?"Hotel name, city or property search term":"Name, city, IATA/ICAO or aircraft code"}/><div className="field"><label>Search</label><button className="btn primary" disabled=${!providerMatchesScope} onClick=${search}>Search provider</button></div></div>
+      <div className="card panel"><div className="paneltitle"><span>Find a Supplier</span><span className="matchtag duffel">Supplier</span></div>
+        <div className="formgrid three"><${Field} label="Resource type" type="select" value=${resourceType} options=${typeOptions.map(([value,label])=>({value,label}))} disabled=${Boolean(masterFilter)} onChange=${v=>{setResourceType(v);setResults([]);setDetail(null)}}/><${Field} label="Search" full=${true} value=${query} onChange=${setQuery} help=${resourceType==="HOTEL"?"Hotel name, city or property search term":"Name, city, IATA/ICAO or aircraft code"}/><div className="field"><label>Search Supplier</label><button className="btn primary" disabled=${!providerMatchesScope} onClick=${search}>Search</button></div></div>
         ${resourceType==="DESTINATION"?html`<div className="scopebox" style=${{marginTop:"10px"}}><div className="sectiontitle">Import geography</div><div className="field"><label>Parent country for new SKANDI destination</label><select className="select" value=${countryId} onChange=${e=>setCountryId(e.target.value)}><option value="">No parent yet · keep Draft</option>${countries.map(r=>html`<option value=${r.id}>${r.code} · ${r.name}</option>`)}</select></div></div>`:null}
         ${resourceType==="HOTEL"?html`<div className="scopebox" style=${{marginTop:"10px"}}><div className="sectiontitle">Optional SKANDI geography</div><div className="formgrid"><div className="field"><label>Destination</label><select className="select" value=${destinationId} onChange=${e=>setDestinationId(e.target.value)}><option value="">Assign later</option>${destinations.map(r=>html`<option value=${r.id}>${r.code} · ${r.name}</option>`)}</select></div><div className="field"><label>Area / Resort</label><select className="select" value=${areaId} onChange=${e=>setAreaId(e.target.value)}><option value="">Assign later</option>${areas.map(r=>html`<option value=${r.id}>${r.code} · ${r.name}</option>`)}</select></div></div></div>`:null}
       </div>
       <div className="card panel"><div className="paneltitle"><span>Search results</span><span className="pill">${results.length}</span></div>
-        ${results.length?html`<div className="tablewrap"><table className="table"><thead><tr><th>Resource</th><th>Code</th><th>Duffel ID</th><th>SKANDI status</th><th></th></tr></thead><tbody>${results.map(item=>html`<tr><td><div className="providerresult"><div className="providerlogo">${item.preview?.logoSymbolUrl?html`<img src=${item.preview.logoSymbolUrl}/>`:html`<b>${item.code||item.entityType.slice(0,3)}</b>`}</div><div><b>${item.name||"Unnamed resource"}</b><div className="sub">${item.secondary||item.providerResourceType}</div></div></div></td><td><b>${item.code||"—"}</b></td><td>${item.providerId}</td><td>${item.alreadyInSkandiCollection?html`<span className="matchtag collection">In SKANDI Collection</span>`:item.canonicalMatch?html`<span className="matchtag match">Existing SKANDI match</span>`:item.importSupported===false?html`<span className="matchtag block">Reference only</span>`:html`<span className="matchtag duffel">Duffel only</span>`}</td><td><div className="provideractions"><button className="btn small" onClick=${()=>inspect(item)}>Details</button>${item.alreadyInSkandiCollection?html`<button className="btn small" onClick=${()=>openExisting(item)}>Open</button><button className="btn small" onClick=${()=>refreshSource(item)}>Refresh Duffel</button>`:item.canonicalMatch?html`<button className="btn small cyan" onClick=${()=>importItem(item,{linkExisting:true})}>Link Duffel</button>`:item.importSupported!==false?html`<button className="btn small primary" onClick=${()=>importItem(item)}>Add to Collection</button>`:null}</div></td></tr>`)}</tbody></table></div>`:html`<div className="empty">Search to find hotels, airlines, airports, destinations/cities or aircraft references.</div>`}
+        ${results.length?html`<div className="tablewrap"><table className="table"><thead><tr><th>Resource</th><th>Code</th><th>Supplier Reference</th><th>Status</th><th></th></tr></thead><tbody>${results.map(item=>html`<tr><td><div className="providerresult"><div className="providerlogo">${item.preview?.logoSymbolUrl?html`<img src=${item.preview.logoSymbolUrl}/>`:html`<b>${item.code||item.entityType.slice(0,3)}</b>`}</div><div><b>${item.name||"Unnamed resource"}</b><div className="sub">${item.secondary||resourceTypeDisplay(item.entityType||item.providerResourceType)}</div></div></div></td><td><b>${item.code||"—"}</b></td><td>${item.providerId}</td><td>${item.alreadyInSkandiCollection?html`<span className="matchtag collection">${item.existingRecord?.collectionType==="SKANDI_PARTNER"?"SKANDI Partner":"In Inventory"}</span>`:item.canonicalMatch?html`<span className="matchtag match">Existing record</span>`:item.importSupported===false?html`<span className="matchtag block">Reference only</span>`:html`<span className="matchtag duffel">${item.existingRecord?.collectionType==="SKANDI_PARTNER"?"SKANDI Partner":"Supplier only"}</span>`}</td><td><div className="provideractions"><button className="btn small" onClick=${()=>inspect(item)}>Details</button>${item.alreadyInSkandiCollection?html`<button className="btn small" onClick=${()=>openExisting(item)}>Open</button><button className="btn small" onClick=${()=>refreshSource(item)}>Refresh</button>`:item.canonicalMatch?html`<button className="btn small cyan" onClick=${()=>importItem(item,{linkExisting:true})}>Link Supplier</button>`:item.importSupported!==false?html`<button className="btn small primary" onClick=${()=>importItem(item)}>Add to Inventory</button>`:null}</div></td></tr>`)}</tbody></table></div>`:html`<div className="empty">Search Supplier to find hotels, airlines, airports, destinations/cities or aircraft references.</div>`}
       </div>
     </div>`:null}
 
 
-    ${mode==="rates"?html`<div className="grid"><div className="card panel"><div className="paneltitle"><span>Negotiated hotel rates</span><div className="toolbar"><button className="btn" onClick=${loadRates}>Refresh</button><button className="btn primary" onClick=${newRate}>+ Negotiated Rate</button></div></div><div className="notice">These are SKANDI Partner's organisation commercial settings, not Inventory records. Creating, updating or deleting a rate changes your hotel configuration.</div><div className="tablewrap" style=${{marginTop:"12px"}}><table className="table"><thead><tr><th>Display name</th><th>RAC</th><th>Environment</th><th>Scope</th><th>Hotel ID</th><th></th></tr></thead><tbody>${rates.length?rates.map(r=>html`<tr><td><b>${r.displayName}</b></td><td>${r.rateAccessCode}</td><td>${r.liveMode?"LIVE":"TEST"}</td><td>${r.chainId?`Chain · ${r.chainId}`:`${(r.accommodationIds||[]).length} accommodation(s)`}</td><td>${r.id}</td><td><div className="provideractions"><button className="btn small" onClick=${()=>editRate(r)}>Edit</button><button className="btn small danger" onClick=${()=>deleteRate(r)}>Delete</button></div></td></tr>`):html`<tr><td colSpan="6"><div className="empty">No negotiated rates returned by Duffel.</div></td></tr>`}</tbody></table></div></div></div>`:null}
+    ${mode==="rates"?html`<div className="grid"><div className="card panel"><div className="paneltitle"><span>Negotiated hotel rates</span><div className="toolbar"><button className="btn" onClick=${loadRates}>Refresh</button><button className="btn primary" onClick=${newRate}>+ Negotiated Rate</button></div></div><div className="notice">Manage negotiated hotel rates.</div><div className="tablewrap" style=${{marginTop:"12px"}}><table className="table"><thead><tr><th>Display name</th><th>RAC</th><th>Environment</th><th>Scope</th><th>Supplier Reference</th><th></th></tr></thead><tbody>${rates.length?rates.map(r=>html`<tr><td><b>${r.displayName}</b></td><td>${r.rateAccessCode}</td><td>${r.liveMode?"LIVE":"TEST"}</td><td>${r.chainId?`Chain · ${r.chainId}`:`${(r.accommodationIds||[]).length} accommodation(s)`}</td><td>${r.id}</td><td><div className="provideractions"><button className="btn small" onClick=${()=>editRate(r)}>Edit</button><button className="btn small danger" onClick=${()=>deleteRate(r)}>Delete</button></div></td></tr>`):html`<tr><td colSpan="6"><div className="empty">No negotiated rates found.</div></td></tr>`}</tbody></table></div></div></div>`:null}
 
 
-    ${detail?html`<${Modal} title=${`Duffel Source · ${detailItem?.name||detailResource?.name||resourceType}`} onClose=${()=>setDetail(null)} actions=${html`<button className="btn" onClick=${()=>setDetail(null)}>Close</button>`}><div className="notice">Provider data is displayed for review. Importing creates or links a DRAFT SKANDI Collection record; provider URLs/images are not copied into the SKANDI Asset Library.</div><div className="hr"></div><${ProviderDetailGrid} resource=${detailResource||detailItem?.preview||{}} type=${detail?.entityType||resourceType}/>${detailResource?.description?html`<div><div className="hr"></div><div className="sectiontitle">Provider description</div><div className="notice">${detailResource.description}</div></div>`:null}</${Modal}>`:null}
+    ${detail?html`<${Modal} title=${`Supplier Details · ${detailItem?.name||detailResource?.name||resourceType}`} onClose=${()=>setDetail(null)} actions=${html`<button className="btn" onClick=${()=>setDetail(null)}>Close</button>`}><div className="notice">Review the supplier details before adding or linking the record.</div><div className="hr"></div><${ProviderDetailGrid} resource=${detailResource||detailItem?.preview||{}} type=${detail?.entityType||resourceType}/>${detailResource?.description?html`<div><div className="hr"></div><div className="sectiontitle">Supplier description</div><div className="notice">${detailResource.description}</div></div>`:null}</${Modal}>`:null}
 
 
-    ${editor?html`<${RecordEditor} bundle=${editor.bundle||editor} languages=${boot.languages||["EN"]} records=${boot.records||[]} onClose=${()=>setEditor(null)} onSaved=${()=>{}} setBusy=${setBusy} setToast=${setToast}/>`:null}
+    ${editor&&editor?.record?.entityType!=="HOTEL"&&editor?.bundle?.record?.entityType!=="HOTEL"?html`<${RecordEditor} bundle=${editor.bundle||editor} languages=${boot.languages||["EN"]} records=${boot.records||[]} onClose=${()=>setEditor(null)} onSaved=${()=>{}} setBusy=${setBusy} setToast=${setToast}/>`:null}
 
 
-    ${rateEdit?html`<${Modal} title=${rateEdit.id?"Edit Negotiated Hotel Rate":"Create Negotiated Hotel Rate"} onClose=${()=>{setRateEdit(null);setRateLookupResults([])}} actions=${html`<button className="btn" onClick=${()=>{setRateEdit(null);setRateLookupResults([])}}>Cancel</button><button className="btn primary" onClick=${saveRate}>${rateEdit.id?"Save Changes":"Create Rate"}</button>`}><div className="formgrid three"><${Field} label="Display name" value=${rateEdit.displayName} onChange=${v=>setRateEdit(x=>({...x,displayName:v}))}/><${Field} label="Rate access code (RAC)" value=${rateEdit.rateAccessCode} disabled=${Boolean(rateEdit.id)} onChange=${v=>setRateEdit(x=>({...x,rateAccessCode:v.toUpperCase()}))} help=${rateEdit.id?"Duffel does not allow changing the RAC after creation.":"Provided by the hotel/chain."}/><${Field} label="Scope" type="select" value=${rateEdit.scope} options=${[{value:"accommodations",label:"Specific accommodations"},{value:"chain",label:"Hotel chain"}]} onChange=${v=>setRateEdit(x=>({...x,scope:v,chainId:v==="chain"?x.chainId:"",accommodationIds:v==="accommodations"?x.accommodationIds:[]}))}/></div>
-      <div className="scopebox" style=${{marginTop:"12px"}}><div className="sectiontitle">Find hotel / chain</div><div className="filters"><div className="field grow"><label>Hotel search</label><input className="input" value=${rateLookup} onInput=${e=>setRateLookup(e.target.value)} placeholder="Search a hotel to retrieve its accommodation and chain IDs"/></div><button className="btn" onClick=${searchRateHotels}>Search hotels</button></div>${rateLookupResults.length?html`<div className="tablewrap" style=${{marginTop:"10px"}}><table className="table"><thead><tr><th>Hotel</th><th>Hotel ID</th><th></th></tr></thead><tbody>${rateLookupResults.map(item=>html`<tr><td><b>${item.name}</b><div className="sub">${item.secondary}</div></td><td>${item.providerId}</td><td><div className="provideractions"><button className="btn small" onClick=${()=>chooseRateHotel(item,"accommodations")}>Add Hotel</button><button className="btn small" onClick=${()=>chooseRateHotel(item,"chain")}>Use Its Chain</button></div></td></tr>`)}</tbody></table></div>`:null}</div>
-      ${rateEdit.scope==="chain"?html`<div className="field" style=${{marginTop:"12px"}}><label>Duffel chain ID</label><input className="input" value=${rateEdit.chainId||""} onInput=${e=>setRateEdit(x=>({...x,chainId:e.target.value}))} placeholder="chn_…"/><small>Use “Use Its Chain” above to populate.</small></div>`:html`<div style=${{marginTop:"12px"}}><${ListField} label="Hotel accommodation IDs" value=${rateEdit.accommodationIds} splitPattern=${/[\r\n,]+/} onChange=${v=>setRateEdit(x=>({...x,accommodationIds:v}))} placeholder="acc_… one per line"/><div className="selectedlist">${(rateEdit.accommodationIds||[]).map(id=>html`<span className="selectedchip">${id}<button onClick=${()=>removeAccommodation(id)}>×</button></span>`)}</div></div>`}
-      <div className="notice" style=${{marginTop:"12px"}}>Create requires a display name, RAC, and exactly one scope: either one chain or one or more accommodations.</div></${Modal}>`:null}
+    ${rateEdit?html`<${Modal} title=${rateEdit.id?"Edit Negotiated Hotel Rate":"Create Negotiated Hotel Rate"} onClose=${()=>{setRateEdit(null);setRateLookupResults([])}} actions=${html`<button className="btn" onClick=${()=>{setRateEdit(null);setRateLookupResults([])}}>Cancel</button><button className="btn primary" onClick=${saveRate}>${rateEdit.id?"Save Changes":"Create Rate"}</button>`}><div className="formgrid three"><${Field} label="Display name" value=${rateEdit.displayName} onChange=${v=>setRateEdit(x=>({...x,displayName:v}))}/><${Field} label="Rate access code (RAC)" value=${rateEdit.rateAccessCode} disabled=${Boolean(rateEdit.id)} onChange=${v=>setRateEdit(x=>({...x,rateAccessCode:v.toUpperCase()}))} help=${rateEdit.id?"The rate access code cannot be changed after creation.":"Provided by the hotel/chain."}/><${Field} label="Scope" type="select" value=${rateEdit.scope} options=${[{value:"accommodations",label:"Specific accommodations"},{value:"chain",label:"Hotel chain"}]} onChange=${v=>setRateEdit(x=>({...x,scope:v,chainId:v==="chain"?x.chainId:"",accommodationIds:v==="accommodations"?x.accommodationIds:[]}))}/></div>
+      <div className="scopebox" style=${{marginTop:"12px"}}><div className="sectiontitle">Find hotel / chain</div><div className="filters"><div className="field grow"><label>Hotel search</label><input className="input" value=${rateLookup} onInput=${e=>setRateLookup(e.target.value)} placeholder="Search hotel or chain"/></div><button className="btn" onClick=${searchRateHotels}>Search hotels</button></div>${rateLookupResults.length?html`<div className="tablewrap" style=${{marginTop:"10px"}}><table className="table"><thead><tr><th>Hotel</th><th>Supplier Reference</th><th></th></tr></thead><tbody>${rateLookupResults.map(item=>html`<tr><td><b>${item.name}</b><div className="sub">${item.secondary}</div></td><td>${item.providerId}</td><td><div className="provideractions"><button className="btn small" onClick=${()=>chooseRateHotel(item,"accommodations")}>Add Hotel</button><button className="btn small" onClick=${()=>chooseRateHotel(item,"chain")}>Use Its Chain</button></div></td></tr>`)}</tbody></table></div>`:null}</div>
+      ${rateEdit.scope==="chain"?html`<div className="field" style=${{marginTop:"12px"}}><label>Chain Reference</label><input className="input" value=${rateEdit.chainId||""} onInput=${e=>setRateEdit(x=>({...x,chainId:e.target.value}))} placeholder="chn_…"/><small>Choose a hotel to use its chain.</small></div>`:html`<div style=${{marginTop:"12px"}}><${ListField} label="Hotel References" value=${rateEdit.accommodationIds} splitPattern=${/[\r\n,]+/} onChange=${v=>setRateEdit(x=>({...x,accommodationIds:v}))} placeholder="acc_… one per line"/><div className="selectedlist">${(rateEdit.accommodationIds||[]).map(id=>html`<span className="selectedchip">${id}<button onClick=${()=>removeAccommodation(id)}>×</button></span>`)}</div></div>`}
+      <div className="notice" style=${{marginTop:"12px"}}>Enter a name and rate access code, then choose a hotel or chain.</div></${Modal}>`:null}
   </div>`
 }
 
 
-function MasterRecords({boot,setBoot,setBusy,setToast,masterFilter,setMasterFilter}){
+function MasterRecords({boot,setBoot,setBusy,setToast,masterFilter,setMasterFilter,setView}){
   const type=masterFilter;
-  const setType=setMasterFilter;
+  const setType=next=>{setMasterFilter(next);if(next==="HOTEL")setView("property")};
+  useEffect(()=>{if(type==="HOTEL")setView("property")},[type,setView]);
   const [tourSubtype,setTourSubtype]=useState("");
   const [statusFilter,setStatusFilter]=useState("");
   const [customerFilter,setCustomerFilter]=useState("");
@@ -1395,23 +1440,27 @@ function MasterRecords({boot,setBoot,setBusy,setToast,masterFilter,setMasterFilt
   const [createPicker,setCreatePicker]=useState(false);
   const [createType,setCreateType]=useState("");
   const createTypeLabels={COUNTRY:"Country",DESTINATION:"Destination",AREA:"Area / Resort",AIRPORT:"Airport",AIRLINE:"Airline",SUPPLIER:"Supplier",HOTEL:"Hotel",GUIDED_TOUR:"Guided Tour",ACTIVITY:"Activity",PARTNER_TICKET:"Partner Ticket",TRANSFER:"Transfer",CAR_RENTAL:"Car Rental",PACKAGE:"Package",ANCILLARY:"Ancillary"};
-  const matchesType=r=>!type||(type==="TOURS_ACTIVITIES"?["GUIDED_TOUR","ACTIVITY"].includes(r.entityType)&&(!tourSubtype||r.entityType===tourSubtype):r.entityType===type);
+  const matchesType=r=>r.entityType!=="HOTEL"&&(!type||(type==="TOURS_ACTIVITIES"?["GUIDED_TOUR","ACTIVITY"].includes(r.entityType)&&(!tourSubtype||r.entityType===tourSubtype):r.entityType===type));
   const filtered=(boot.records||[]).filter(r=>matchesType(r)&&(!statusFilter||r.status===statusFilter)&&(!customerFilter||(customerFilter==="YES"?r.customerVisible===true:r.customerVisible!==true))&&(!alteaFilter||(alteaFilter==="YES"?r.alteaVisible===true:r.alteaVisible!==true))&&(!search||[r.code,r.name,r.slug,r.entityType,r.status].join(" ").toLowerCase().includes(search.toLowerCase())));
   const records=[...filtered].sort((a,b)=>sortBy==="TITLE_ASC"?text(a.name).localeCompare(text(b.name)):sortBy==="CODE_ASC"?text(a.code).localeCompare(text(b.code)):sortBy==="TYPE_ASC"?`${a.entityType}|${a.name}`.localeCompare(`${b.entityType}|${b.name}`):text(b.updatedAt).localeCompare(text(a.updatedAt)));
   const pageSize=100,totalPages=Math.max(1,Math.ceil(records.length/pageSize)),safePage=Math.min(page,totalPages),pageRecords=records.slice((safePage-1)*pageSize,safePage*pageSize);
   async function open(r){
+    if(r.entityType==="HOTEL"){setView("property");return}
     try{setBusy("Loading complete record…");const x=await request("INVENTORY_V9_GET_RECORD",{id:r.id,entityType:r.entityType});setEditor(x)}catch(e){setToast(e.message,true)}finally{setBusy("")}
   }
   async function archived(r,e){
-    e.stopPropagation();if(!confirm(`Archive ${r.name}?`))return;
+    e.stopPropagation();if(r.entityType==="HOTEL"){setView("property");return}
+    if(!confirm(`Archive ${r.name}?`))return;
     try{setBusy("Archiving record…");await request("INVENTORY_V9_ARCHIVE_RECORD",{id:r.id,entityType:r.entityType});setToast("Record archived.")}catch(err){setToast(err.message,true)}finally{setBusy("")}
   }
   function startCreate(){
+    if(type==="HOTEL"){setView("property");return}
     if(type){setEditor(recordBundle(type));return}
     setCreateType("");
     setCreatePicker(true);
   }
   function confirmCreate(){
+    if(createType==="HOTEL"){setCreatePicker(false);setMasterFilter("HOTEL");setView("property");return}
     if(!createType)return setToast("Choose a record type.",true);
     setCreatePicker(false);
     setType(createType);
@@ -1419,11 +1468,14 @@ function MasterRecords({boot,setBoot,setBusy,setToast,masterFilter,setMasterFilt
     setPage(1);
     setEditor(recordBundle(createType));
   }
-  const createButtons=type==="TOURS_ACTIVITIES"
+  const createButtons=type==="HOTEL"
+    ?html`<button className="btn primary" onClick=${()=>setView("property")}>Open Property Director</button>`
+    :type==="TOURS_ACTIVITIES"
     ?html`<div className="toolbar"><button className="btn primary" onClick=${()=>setEditor(recordBundle("GUIDED_TOUR"))}>+ New Guided Tour</button><button className="btn primary" onClick=${()=>setEditor(recordBundle("ACTIVITY"))}>+ New Activity</button></div>`
     :html`<button className="btn primary" onClick=${startCreate}>+ New ${type?(createTypeLabels[type]||LABEL[type]||type):"Record"}</button>`;
   return html`<div className="card panel">
-    <div className="paneltitle"><span>Master & Reference Records</span>${createButtons}</div>
+    <div className="paneltitle"><span>Travel Inventory</span>${createButtons}</div>
+    <div className="notice">Hotels are managed in Property Director.</div>
     <div className="filters"><div className="field w240"><label>Record Family</label><select className="select" value=${type} onChange=${e=>{setType(e.target.value);setTourSubtype("");setPage(1)}}><option value="">All</option>${MASTER_FILTERS.map(t=>html`<option value=${t}>${MASTER_FILTER_LABEL[t]}</option>`)}</select></div>${type==="TOURS_ACTIVITIES"?html`<div className="field w240"><label>Product Type</label><select className="select" value=${tourSubtype} onChange=${e=>{setTourSubtype(e.target.value);setPage(1)}}><option value="">All Tours & Activities</option><option value="GUIDED_TOUR">Guided Tour</option><option value="ACTIVITY">Activity</option></select></div>`:null}<div className="field w180"><label>Status</label><select className="select" value=${statusFilter} onChange=${e=>{setStatusFilter(e.target.value);setPage(1)}}><option value="">All statuses</option>${STATUS.map(s=>html`<option value=${s}>${s}</option>`)}</select></div><div className="field w180"><label>Customer Visible</label><select className="select" value=${customerFilter} onChange=${e=>{setCustomerFilter(e.target.value);setPage(1)}}><option value="">All</option><option value="YES">Yes</option><option value="NO">No</option></select></div><div className="field w180"><label>ALTEA Visible</label><select className="select" value=${alteaFilter} onChange=${e=>{setAlteaFilter(e.target.value);setPage(1)}}><option value="">All</option><option value="YES">Yes</option><option value="NO">No</option></select></div><div className="field w240"><label>Sort</label><select className="select" value=${sortBy} onChange=${e=>{setSortBy(e.target.value);setPage(1)}}><option value="UPDATED_DESC">Recently updated</option><option value="TITLE_ASC">Title A–Z</option><option value="CODE_ASC">Code A–Z</option><option value="TYPE_ASC">Type / Title</option></select></div><div className="field grow"><label>Search</label><input className="input" value=${search} onInput=${e=>{setSearch(e.target.value);setPage(1)}} placeholder="Code, title, slug, type or status"/></div></div>
     <${Pagination} page=${safePage} totalPages=${totalPages} total=${records.length} pageSize=${pageSize} onPage=${setPage}/>
     <div className="tablewrap"><table className="table"><thead><tr><th>Type</th><th>Code</th><th>Title</th><th>Status</th><th>Customer</th><th>ALTEA</th><th>Updated</th><th></th></tr></thead><tbody>
@@ -1431,7 +1483,7 @@ function MasterRecords({boot,setBoot,setBusy,setToast,masterFilter,setMasterFilt
     </tbody></table></div>
     <${Pagination} page=${safePage} totalPages=${totalPages} total=${records.length} pageSize=${pageSize} onPage=${setPage}/>
     ${createPicker?html`<${Modal} title="Add Inventory Record" onClose=${()=>setCreatePicker(false)} actions=${html`<button className="btn small primary" onClick=${confirmCreate}>Continue</button>`}>
-      <div className="formgrid"><${Field} label="Record Type" type="select" options=${TYPES.map(t=>({value:t,label:createTypeLabels[t]||LABEL[t]||t}))} value=${createType} onChange=${setCreateType} help="Choose the Inventory record family to add. The existing record editor opens as a Draft."/></div>
+      <div className="formgrid"><${Field} label="Record Type" type="select" options=${TYPES.filter(t=>t!=="HOTEL").map(t=>({value:t,label:createTypeLabels[t]||LABEL[t]||t}))} value=${createType} onChange=${setCreateType} help="Choose the Inventory record family to add. The existing record editor opens as a Draft."/></div>
     <//>`:null}
     ${editor?html`<${RecordEditor} bundle=${editor.bundle||editor} languages=${boot.languages||["EN"]} records=${boot.records||[]} onClose=${()=>setEditor(null)} onSaved=${()=>{}} setBusy=${setBusy} setToast=${setToast}/>`:null}
   </div>`
@@ -1498,32 +1550,32 @@ function DatedInventory({boot,setBusy,setToast}){
 
   async function save(){
     try{
-      setBusy("Saving inventory…");
+      setBusy("Saving dated inventory…");
       await request("INVENTORY_V9_SAVE_DATED",{row:edit});
       setEdit(null);
       await loadDated({silent:true,entityId:entity});
-      setToast("Inventory & Capacity saved.");
+      setToast("Dated inventory saved.");
     }catch(e){setToast(e.message,true)}finally{setBusy("")}
   }
   async function del(row){
-    if(!confirm("Delete this inventory row?"))return;
+    if(!confirm("Delete this dated inventory row?"))return;
     try{
-      setBusy("Deleting inventory…");
+      setBusy("Deleting dated inventory…");
       await request("INVENTORY_V9_DELETE_DATED",{id:row.id});
       await loadDated({silent:true,entityId:entity});
-      setToast("Inventory deleted.");
+      setToast("Dated inventory deleted.");
     }catch(e){setToast(e.message,true)}finally{setBusy("")}
   }
   const newRow=()=>{if(!entity)return setToast("Choose a product first.",true);setEdit({id:"",entityId:entity,inventoryType:master?.entityType||"GENERAL",serviceDate:"",startTime:"",endTime:"",variantCode:"",variantName:"",capacityTotal:0,held:0,sold:0,waitlistLimit:0,overbookingLimit:0,stopSale:false,blackout:false,status:"OPEN",supplierCost:0,publicPrice:0,adultPrice:0,childPrice:0,infantPrice:0,privatePrice:0,currency:"USD",priceBasis:"PER_PERSON",bookingCutoffHours:0,minStay:0,maxStay:0,releaseDays:0,supplierReference:"",payload:{}})};
   return html`<div className="card panel"><div className="paneltitle"><span>${family==="TOURS_ACTIVITIES"?"Tours & Activities Inventory":"Dated Capacity & Pricing"}</span><div className="toolbar"><span className="sub">${lastSync?`Live · ${lastSync.toLocaleTimeString([], {hour:"2-digit",minute:"2-digit",second:"2-digit"})}`:"Live sync starting…"}</span><button className="btn" onClick=${()=>loadDated({silent:false,entityId:entity})}>Refresh Capacity</button><button className="btn primary" onClick=${newRow}>+ Add Date / Variant</button></div></div>
     <div className="filters"><div className="field w240"><label>Product Family</label><select className="select" value=${family} onChange=${e=>{setFamily(e.target.value);setEntity("")}}><option value="">All sellable products</option><option value="HOTEL">Hotels</option><option value="TOURS_ACTIVITIES">Tours & Activities</option><option value="PARTNER_TICKET">Partner Tickets</option><option value="TRANSFER">Transfers</option><option value="CAR_RENTAL">Car Rental</option><option value="PACKAGE">Packages</option><option value="ANCILLARY">Ancillaries</option></select></div><div className="field grow"><label>Product</label><select className="select" value=${entity} onChange=${e=>setEntity(e.target.value)}><option value="">All in selected family</option>${sellable.map(r=>html`<option value=${r.id}>${r.entityType==="GUIDED_TOUR"?"Guided Tour":r.entityType==="ACTIVITY"?"Activity":r.entityType} · ${r.name}</option>`)}</select></div></div>
     <div className="tablewrap"><table className="table"><thead><tr><th>Date</th><th>Product</th><th>Variant</th><th>Capacity</th><th>Held</th><th>Sold</th><th>Available</th><th>Price</th><th>Status</th><th></th></tr></thead><tbody>
-      ${rows.length?rows.map(r=>html`<tr className="clickrow" onClick=${()=>setEdit(clone(r))}><td>${r.serviceDate}</td><td>${(boot.records||[]).find(x=>x.id===r.entityId)?.name||r.entityId}</td><td>${r.variantName||r.variantCode||"Default"}</td><td>${r.capacityTotal??0}</td><td>${r.held??0}</td><td>${r.sold??0}</td><td><b>${r.available??0}</b></td><td>${r.publicPrice??r.adultPrice??0} ${r.currency||""}</td><td>${statusPill(r.status)}</td><td><button className="btn small danger" onClick=${e=>{e.stopPropagation();del(r)}}>Delete</button></td></tr>`):html`<tr><td colSpan="10"><div className="empty">No inventory exists yet. Zero rows is a valid state until capacity is loaded.</div></td></tr>`}
+      ${rows.length?rows.map(r=>html`<tr className="clickrow" onClick=${()=>setEdit(clone(r))}><td>${r.serviceDate}</td><td>${(boot.records||[]).find(x=>x.id===r.entityId)?.name||r.entityId}</td><td>${r.variantName||r.variantCode||"Default"}</td><td>${r.capacityTotal??0}</td><td>${r.held??0}</td><td>${r.sold??0}</td><td><b>${r.available??0}</b></td><td>${r.publicPrice??r.adultPrice??0} ${r.currency||""}</td><td>${statusPill(r.status)}</td><td><button className="btn small danger" onClick=${e=>{e.stopPropagation();del(r)}}>Delete</button></td></tr>`):html`<tr><td colSpan="10"><div className="empty">No dated inventory exists yet. Zero rows is a valid state until capacity is loaded.</div></td></tr>`}
     </tbody></table></div>
-    ${edit?html`<${Modal} title="Inventory & Capacity" onClose=${()=>setEdit(null)} actions=${html`<button className="btn small cyan" onClick=${save}>Save</button>`}><div className="formgrid three">
+    ${edit?html`<${Modal} title="Dated Inventory" onClose=${()=>setEdit(null)} actions=${html`<button className="btn small cyan" onClick=${save}>Save</button>`}><div className="formgrid three">
       ${[["Service Date","serviceDate","date"],["Start Time","startTime","time"],["End Time","endTime","time"],["Variant Code","variantCode"],["Variant Name","variantName"],["Capacity Total","capacityTotal","number"],["Held","held","number"],["Sold","sold","number"],["Waitlist Limit","waitlistLimit","number"],["Overbooking Limit","overbookingLimit","number"],["Public Price","publicPrice","number"],["Adult Price","adultPrice","number"],["Child Price","childPrice","number"],["Infant Price","infantPrice","number"],["Private Price","privatePrice","number"],["Supplier Cost","supplierCost","number"],["Currency","currency","select",ENUM.currency],["Price Basis","priceBasis","select",ENUM.priceBasis],["Booking Cutoff Hours","bookingCutoffHours","number"],["Minimum Stay","minStay","number"],["Maximum Stay","maxStay","number"],["Release Days","releaseDays","number"],["Supplier Reference","supplierReference"]].map(([label,k,t="text",opts=[]])=>html`<${Field} label=${label} type=${t} options=${opts} value=${edit[k]??""} onChange=${v=>setEdit(x=>({...x,[k]:v}))}/>`)}
       <${Toggle} label="Stop Sale" value=${edit.stopSale===true} onChange=${v=>setEdit(x=>({...x,stopSale:v}))}/><${Toggle} label="Blackout" value=${edit.blackout===true} onChange=${v=>setEdit(x=>({...x,blackout:v}))}/>
-    </div><div className="notice" style=${{marginTop:"12px"}}>Sold / available are read live from canonical inventory. Required numeric controls are stored as 0 when blank/not applicable; available and operational status are recalculated by Inventory Control on save.</div><div className="hr"></div><div className="sectiontitle">Additional Inventory & Capacity Controls</div><${SmartObjectEditor} value=${edit.payload||{}} onChange=${v=>setEdit(x=>({...x,payload:v}))}/></${Modal}>`:null}
+    </div><div className="notice" style=${{marginTop:"12px"}}>Available units and status are calculated when you save.</div><div className="hr"></div><div className="sectiontitle">Additional Dated Inventory Controls</div><${SmartObjectEditor} value=${edit.payload||{}} onChange=${v=>setEdit(x=>({...x,payload:v}))}/></${Modal}>`:null}
   </div>`
 }
 function AirInventory({boot,setBusy,setToast}){
@@ -1553,7 +1605,7 @@ function AirInventory({boot,setBusy,setToast}){
     try{setBusy("Saving air inventory…");await request("INVENTORY_V9_SAVE_AIR_ROW",{kind,item:edit});setEdit(null);setToast("Air inventory saved.")}catch(e){setToast(e.message,true)}finally{setBusy("")}
   }
   return html`<div className="card panel"><div className="paneltitle"><span>Air Inventory & Revenue Control</span><button className="btn primary" onClick=${()=>setEdit({status:"OPEN",payload:{}})}>+ New ${kind}</button></div>
-    <div className="notice">Airport and equipment controls use canonical Inventory records. Existing legacy IATA/equipment values remain selectable until intentionally normalized.</div>
+    <div className="notice">Choose an airport and aircraft from the available records.</div>
     <div className="tabs">${[["flight","Flight Legs"],["class","Booking Classes"],["schedule","Schedules"],["nesting","Nesting / Revenue"]].map(([k,l])=>html`<button className=${`tab ${kind===k?"active":""}`} onClick=${()=>setKind(k)}>${l}</button>`)}</div>
     <div className="tablewrap"><table className="table"><thead><tr>${cols.map(([k,l])=>html`<th>${l}</th>`)}</tr></thead><tbody>
       ${rows.length?rows.map(r=>html`<tr className="clickrow" onClick=${()=>setEdit(clone(r))}>${cols.map(([k])=>html`<td>${k==="status"?statusPill(r[k]):text(r[k])||"—"}</td>`)}</tr>`):html`<tr><td colSpan=${cols.length}><div className="empty">No ${kind} inventory rows have been loaded yet.</div></td></tr>`}
@@ -1717,8 +1769,8 @@ function Quality({boot,setBusy,setToast}){
   const issues=q.issues||{};
   return html`<div className="grid">
     <div className="card panel"><div className="paneltitle"><span>Publishing & Quality Control</span><button className="btn" onClick=${run}>Run Again</button></div>
-      <div className="stats">${[["Canonical Records",q.counts?.canonical],["Searchable Catalog",q.counts?.searchableCatalog],["Aircraft",q.counts?.aircraft],["Cabins",q.counts?.cabins],["Cabin Views",q.counts?.views]].map(([l,v])=>html`<div className="stat"><span>${l}</span><strong>${v??0}</strong></div>`)}</div>
-      <div className="notice">${q.aircraftSync?.missing?`${q.aircraftSync.missing} airline fleet templates still need an Aircraft record.`:"Aircraft master records are reconciled with current airline fleet templates."}</div>
+      <div className="stats">${[["Travel Records",q.counts?.canonical],["Searchable Catalog",q.counts?.searchableCatalog],["Aircraft",q.counts?.aircraft],["Cabins",q.counts?.cabins],["Cabin Views",q.counts?.views]].map(([l,v])=>html`<div className="stat"><span>${l}</span><strong>${v??0}</strong></div>`)}</div>
+      <div className="notice">${q.aircraftSync?.missing?`${q.aircraftSync.missing} aircraft records need attention.`:"Aircraft records are up to date."}</div>
     </div>
     ${[["Cabin seat mismatches",issues.cabinSeatMismatches],["Aircraft without cabins",issues.aircraftWithoutCabins],["Aircraft without views",issues.aircraftWithoutViews],["Published hotel/destination records without media",issues.publicRecordsWithoutMedia]].map(([title,rows])=>html`<div className="card panel"><div className="paneltitle"><span>${title}</span><span className="pill">${rows?.length||0}</span></div>${rows?.length?html`<div className="tablewrap"><table className="table"><tbody>${rows.slice(0,100).map(r=>html`<tr>${Object.entries(r).slice(0,6).map(([k,v])=>html`<td><b>${k}</b><br/>${text(v)}</td>`)}</tr>`)}</tbody></table></div>`:html`<div className="empty">No issues found.</div>`}</div>`)}
   </div>`
@@ -1729,7 +1781,7 @@ function Audit({setBusy,setToast}){
   const [rows,setRows]=useState([]);
   async function load(){try{setBusy("Loading audit…");const r=await request("INVENTORY_V9_GET_AUDIT",{limit:300});setRows(r.audit||[])}catch(e){setToast(e.message,true)}finally{setBusy("")}}
   useEffect(()=>{load()},[]);
-  return html`<div className="card panel"><div className="paneltitle"><span>Inventory Audit</span><button className="btn" onClick=${load}>Refresh</button></div><div className="tablewrap"><table className="table"><thead><tr><th>Time</th><th>Event</th><th>Domain</th><th>Record</th><th>Message</th><th>Agent</th></tr></thead><tbody>${rows.length?rows.map(r=>html`<tr><td>${text(r.timestamp).replace("T"," ").slice(0,19)}</td><td>${r.eventType}</td><td>${r.domain}</td><td>${r.entityId||r.productKey||"—"}</td><td>${r.message||""}</td><td>${r.agentName||""}</td></tr>`):html`<tr><td colSpan="6"><div className="empty">No audit events.</div></td></tr>`}</tbody></table></div></div>`
+  return html`<div className="card panel"><div className="paneltitle"><span>Inventory Audit</span><button className="btn" onClick=${load}>Refresh</button></div><div className="tablewrap"><table className="table"><thead><tr><th>Time</th><th>Event</th><th>Domain</th><th>Record</th><th>Message</th><th>Agent</th></tr></thead><tbody>${rows.length?rows.map(r=>html`<tr><td>${text(r.timestamp).replace("T"," ").slice(0,19)}</td><td>${employeeAuditAction(r.eventType)}</td><td>${employeeAuditAction(r.domain)}</td><td>${r.entityId||r.productKey||"—"}</td><td>${employeeAuditMessage(r.message)}</td><td>${r.agentName||""}</td></tr>`):html`<tr><td colSpan="6"><div className="empty">No audit events.</div></td></tr>`}</tbody></table></div></div>`
 }
 
 
@@ -1781,19 +1833,32 @@ function PDPropertyWorkspace({bundle,boot,onClose,onSaved,setBusy,setToast}){
   function updateMap(roomId,channelId,key,value){const i=mappings.findIndex(x=>x.roomId===roomId&&x.channelId===channelId);const newMap=i<0?{roomId,channelId,roomCode:"",rateCode:"",[key]:value}:{...mappings[i],[key]:value};setDetails("mappings",i<0?[...mappings,newMap]:mappings.map((x,j)=>i===j?newMap:x))}
   function addMediaAsset(asset){if(asset.visibility!=="PUBLIC"||!(asset.publicUrl||asset.previewUrl))return setToast("Select a public image with a usable URL from Asset Library.",true);const existing=media.find(m=>m.payload?.assetId===asset.id);if(existing)return setToast("This Asset Library image is already linked to the property.");const added=normalizeMedia({role:"GALLERY",url:asset.publicUrl||asset.previewUrl,sourceKind:"ASSET_LIBRARY",storageBucket:asset.bucket||"",storagePath:asset.storagePath||"",altText:asset.altText||asset.displayName||"",active:true,sortOrder:(media.length+1)*10,payload:{assetId:asset.id,assetCode:asset.assetCode||"",tag:"General",roomLink:""}});setDraft(old=>({...old,media:[...(old.media||[]),added]}));setAssetPicker(null)}
   function updateMedia(i,key,value){setDraft(old=>{const next=clone(old);if(key.startsWith("payload.")){const k=key.split(".")[1];next.media[i].payload={...(next.media[i].payload||{}),[k]:value};}else next.media[i][key]=value;return next})}
+  async function archiveProperty(){
+    if(!rec.id||rec.status==="ARCHIVED")return;
+    if(!confirm(`Archive property ${rec.name||rec.code||rec.id}? This removes it from active and customer-visible inventory.`))return;
+    try{
+      setBusy("Archiving property…");
+      const result=await request("INVENTORY_V9_ARCHIVE_RECORD",{id:rec.id,entityType:"HOTEL"});
+      if(result?.ok!==true)throw new Error("The property could not be archived.");
+      setToast("Property archived.");
+      await onSaved?.({id:rec.id,entityType:"HOTEL",status:"ARCHIVED"});
+      onClose();
+    }catch(error){setToast(error.message||"Property archive failed.",true)}
+    finally{setBusy("")}
+  }
   async function save(){
     try{
-      setBusy("Saving property to canonical Inventory…");
+      setBusy("Saving property…");
       const payload=clone(draft);
       payload.record.details={...(payload.record.details||{})};
       for(const key of ["logoLockupUrl","logoSymbolUrl","logoUrl","logoIconUrl","heroImageUrl","imageUrl","mediaAssets","media_assets"])delete payload.record.details[key];
       if(!payload.catalog)payload.catalog={catalogType:"NONE",partnerTier:"",searchable:false,featured:false,homepageFeatured:false,searchPriority:100,searchKeywords:[],marketCodes:["ALL"],salesChannels:["WEB"],active:true};
       const response=await request("INVENTORY_V9_SAVE_BUNDLE",{bundle:payload});
-      if(response?.ok!==true||!response?.bundle?.record?.id)throw new Error("The Inventory backend did not confirm that the property was saved.");
+      if(response?.ok!==true||!response?.bundle?.record?.id)throw new Error("The property could not be saved.");
       const saved=response.bundle;
       for(const m of saved.media||[]){const id=m?.payload?.assetId||m?.assetId;if(id)try{await request("INVENTORY_ASSET_REGISTER_USAGE",{assetId:id,system:"Inventory Control",recordType:"HOTEL",recordId:saved.record.id,usageRole:m.role||"MEDIA",fieldName:"inventory_media_assets"})}catch(err){setToast(`Property saved; asset usage registration failed: ${err.message}`,true)}}
       setDraft(clone(saved));
-      setToast("Property committed to canonical Inventory.");
+      setToast("Property saved.");
       await onSaved?.(saved.record);
     }catch(err){setToast(err.message||"Property save failed.",true)}finally{setBusy("")}
   }
@@ -1811,14 +1876,14 @@ function PDPropertyWorkspace({bundle,boot,onClose,onSaved,setBusy,setToast}){
   const renderMaster=()=>html`<div className="card panel">
     <${PDSection} title="General Information" first=${true}>
       <div className="formgrid three">
-        <${PDField} label="System Code" value=${rec.code} onChange=${v=>update("code",v)} help="Unique canonical Inventory code"/>
+        <${PDField} label="System Code" value=${rec.code} onChange=${v=>update("code",v)} help="Unique property code"/>
         <${PDField} label="Master Name" value=${rec.name} onChange=${v=>update("name",v)}/>
-        <${PDField} label="Brand / Chain" value=${d.brand||""} onChange=${v=>setDetails("brand",v)} help="Provider-owned fields may require inventory refresh"/>
+        <${PDField} label="Brand / Chain" value=${d.brand||""} onChange=${v=>setDetails("brand",v)} help="Supplier details may change after refresh"/>
         <${PDField} label="Property Type" type="select" options=${ENUM.propertyType} value=${d.propertyType||""} onChange=${v=>setDetails("propertyType",v)}/>
         <${PDField} label="SKANDI Tier" type="select" options=${["SIGNATURE","SELECT","ESSENTIAL","CLASSIC"]} value=${catalog.partnerTier||""} onChange=${v=>setCatalog("partnerTier",v)}/>
         <${PDField} label="Settlement Currency" type="select" options=${ENUM.currency} value=${rec.commercial?.currency||"USD"} onChange=${v=>update("commercial.currency",v)}/>
         <${PDField} label="URL Slug" value=${rec.slug||""} onChange=${v=>update("slug",v)} help="Blank = generated from Master Name"/>
-        <${PDField} label="Public ID" value=${rec.publicId||""} disabled=${true} help="Generated by canonical Inventory"/>
+        <${PDField} label="Public ID" value=${rec.publicId||""} disabled=${true} help="Assigned by SKANDI TRAVELS"/>
         <${PDField} label="Status" type="select" options=${STATUS} value=${status} onChange=${v=>update("status",v)}/>
       </div>
     </${PDSection}>
@@ -1860,39 +1925,39 @@ function PDPropertyWorkspace({bundle,boot,onClose,onSaved,setBusy,setToast}){
     <div className="paneltitle pd-module-title"><span>Selling Configurations (Marketing)</span><button className="btn primary small" onClick=${()=>appendDetailRow("sellingRooms",{id:newId(),physId:"",name:"",priority:100,active:true})}>+ NEW SELL PKG</button></div>
     <div className="tablewrap"><table className="table"><thead><tr><th>Physical Link</th><th>Display Name</th><th>Priority</th><th>Active</th><th>Action</th></tr></thead><tbody>
       ${sells.length?sells.map((r,i)=>html`<tr><td><select className="select" value=${r.physId||""} onChange=${e=>editDetailRow("sellingRooms",i,"physId",e.target.value)}><option value="">Select PHY...</option>${rooms.map(p=>html`<option value=${p.code}>${p.code||"New room"}</option>`)}</select></td><td><input className="input" value=${r.name||""} onInput=${e=>editDetailRow("sellingRooms",i,"name",e.target.value)}/></td><td><input className="input" type="number" style=${{width:"76px"}} value=${r.priority??100} onInput=${e=>editDetailRow("sellingRooms",i,"priority",numOrNull(e.target.value))}/></td><td><select className="select" value=${r.active!==false?"YES":"NO"} onChange=${e=>editDetailRow("sellingRooms",i,"active",e.target.value==="YES")}><option>YES</option><option>NO</option></select></td><td><button className="btn small danger" onClick=${()=>{dropDetailRow("sellingRooms",i);setDetails("mappings",mappings.filter(x=>x.roomId!==r.id))}}>DROP</button></td></tr>`):html`<tr><td colSpan="5"><div className="empty">No selling packages defined.</div></td></tr>`}
-    </tbody></table></div><div className="pd-muted">Physical rooms reuse the canonical HOTEL Room Types field. Selling configurations remain inside the same hotel record and are not automatically published as provider availability.</div>
+    </tbody></table></div><div className="pd-muted">Configure rooms and selling packages. Availability is managed separately.</div>
   </div>`;
   const renderChannels=()=>html`<div className="card panel">
     <div className="paneltitle"><span>Property Channels</span><button className="btn primary small" onClick=${()=>appendDetailRow("channels",{id:newId(),provider:"AMADEUS",propId:"",active:true})}>+ ADD CHANNEL</button></div>
-    <div className="tablewrap"><table className="table"><thead><tr><th>Provider</th><th>Property ID</th><th>Status</th><th>Actions</th></tr></thead><tbody>
-      ${channels.length?channels.map((r,i)=>html`<tr><td><select className="select" value=${r.provider||""} onChange=${e=>editDetailRow("channels",i,"provider",e.target.value)}><option value="AMADEUS">AMADEUS GDS</option><option value="DUFFEL">DUFFEL</option><option value="HOTELBEDS">HOTELBEDS</option></select></td><td><input className="input" value=${r.propId||""} onInput=${e=>editDetailRow("channels",i,"propId",e.target.value)}/></td><td><select className="select" value=${r.active!==false?"YES":"NO"} onChange=${e=>editDetailRow("channels",i,"active",e.target.value==="YES")}><option>YES</option><option>NO</option></select></td><td><button className="btn small danger" onClick=${()=>{dropDetailRow("channels",i);setDetails("mappings",mappings.filter(x=>x.channelId!==r.id))}}>DROP</button></td></tr>`):html`<tr><td colSpan="4"><div className="empty">No channel identifiers recorded.</div></td></tr>`}
+    <div className="tablewrap"><table className="table"><thead><tr><th>Channel</th><th>Property ID</th><th>Status</th><th>Actions</th></tr></thead><tbody>
+      ${channels.length?channels.map((r,i)=>html`<tr><td><select className="select" value=${r.provider||""} onChange=${e=>editDetailRow("channels",i,"provider",e.target.value)}><option value="AMADEUS">ALTEA</option><option value="DUFFEL">Supplier channel 1</option><option value="HOTELBEDS">Supplier channel 2</option></select></td><td><input className="input" value=${r.propId||""} onInput=${e=>editDetailRow("channels",i,"propId",e.target.value)}/></td><td><select className="select" value=${r.active!==false?"YES":"NO"} onChange=${e=>editDetailRow("channels",i,"active",e.target.value==="YES")}><option>YES</option><option>NO</option></select></td><td><button className="btn small danger" onClick=${()=>{dropDetailRow("channels",i);setDetails("mappings",mappings.filter(x=>x.channelId!==r.id))}}>DROP</button></td></tr>`):html`<tr><td colSpan="4"><div className="empty">No channel identifiers recorded.</div></td></tr>`}
     </tbody></table></div>
     <div className="paneltitle pd-module-title">Distribution Matrix</div>
-    <div className="notice">Enter provider room and rate codes. An unassigned code is highlighted. These codes are stored as Inventory reference attributes; they do not trigger external supplier provisioning.</div>
-    <div className="tablewrap pd-scroll"><table className="table"><thead><tr><th style=${{minWidth:"200px"}}>Selling Package</th>${channels.map(c=>html`<th>${c.provider||"—"}<div className="pd-muted">${c.propId||"No ID"}</div></th>`)}</tr></thead><tbody>
-      ${sells.length?sells.map(s=>html`<tr><td><b>${s.name||"Unnamed package"}</b></td>${channels.map(c=>{const m=mappings.find(x=>x.roomId===s.id&&x.channelId===c.id)||{};return html`<td className=${`matrix-cell ${!m.roomCode?"matrix-missing":""}`}><div className="pd-flex" style=${{flexWrap:"nowrap"}}><input className="matrix-input" value=${m.roomCode||""} placeholder="RM CD" aria-label=${`${s.name} ${c.provider} room code`} onInput=${e=>updateMap(s.id,c.id,"roomCode",e.target.value)}/><input className="matrix-input" value=${m.rateCode||""} placeholder="RT CD" aria-label=${`${s.name} ${c.provider} rate code`} onInput=${e=>updateMap(s.id,c.id,"rateCode",e.target.value)}/></div></td>`})}</tr>`):html`<tr><td colSpan=${channels.length+1}><div className="empty">Matrix requires selling packages.</div></td></tr>`}
+    <div className="notice">Enter the room and rate codes for each channel.</div>
+    <div className="tablewrap pd-scroll"><table className="table"><thead><tr><th style=${{minWidth:"200px"}}>Selling Package</th>${channels.map(c=>html`<th>${channelDisplayLabel(c.provider,catalog)}<div className="pd-muted">${c.propId||"No ID"}</div></th>`)}</tr></thead><tbody>
+      ${sells.length?sells.map(s=>html`<tr><td><b>${s.name||"Unnamed package"}</b></td>${channels.map(c=>{const m=mappings.find(x=>x.roomId===s.id&&x.channelId===c.id)||{};return html`<td className=${`matrix-cell ${!m.roomCode?"matrix-missing":""}`}><div className="pd-flex" style=${{flexWrap:"nowrap"}}><input className="matrix-input" value=${m.roomCode||""} placeholder="RM CD" aria-label=${`${s.name} ${channelDisplayLabel(c.provider,catalog)} room code`} onInput=${e=>updateMap(s.id,c.id,"roomCode",e.target.value)}/><input className="matrix-input" value=${m.rateCode||""} placeholder="RT CD" aria-label=${`${s.name} ${channelDisplayLabel(c.provider,catalog)} rate code`} onInput=${e=>updateMap(s.id,c.id,"rateCode",e.target.value)}/></div></td>`})}</tr>`):html`<tr><td colSpan=${channels.length+1}><div className="empty">Matrix requires selling packages.</div></td></tr>`}
     </tbody></table></div>
   </div>`;
   const renderCms=()=>html`<div className="card panel">
     <div className="paneltitle">Multilingual Content</div>
     <div className="toolbar" style=${{marginBottom:"12px"}}><b className="pd-muted">TARGET LOCALE:</b><select className="select w180" value=${lang} onChange=${e=>setLang(e.target.value)}>${languages.filter(x=>x!=="EN").map(x=>html`<option value=${x}>${x}</option>`)}</select><button className="btn cyan" onClick=${copyFromEN}>CLONE FROM EN</button></div>
     <div className="split-screen"><div style=${{background:"#F9FAFB",padding:"12px",border:"1px solid var(--line2)"}}><div className="sectiontitle" style=${{marginTop:0}}>MASTER (EN) - LOCKED</div><${PDField} label="Short Description" type="textarea" value=${en.shortDescription||""} disabled=${true}/><${PDField} label="SEO Title" value=${en.seoTitle||""} disabled=${true}/><${PDField} label="SEO Desc" type="textarea" value=${en.seoDescription||""} disabled=${true}/></div>
-      <div><div className="sectiontitle" style=${{marginTop:0}}>TRANSLATION (${lang})</div><${PDField} label="Short Description" type="textarea" value=${current.shortDescription||""} onChange=${v=>setLangValue("shortDescription",v)}/><div className="sectiontitle">SEO Metatags (Wix Sync)</div><${PDField} label="SEO Title" value=${current.seoTitle||""} onChange=${v=>setLangValue("seoTitle",v)}/><div className=${`char-count ${(current.seoTitle||"").length>60?"over":""}`}>${(current.seoTitle||"").length} / 60</div><${PDField} label="SEO Description" type="textarea" value=${current.seoDescription||""} onChange=${v=>setLangValue("seoDescription",v)}/><div className=${`char-count ${(current.seoDescription||"").length>160?"over":""}`}>${(current.seoDescription||"").length} / 160</div><div className="seo-preview" style=${{marginTop:"12px"}}><div className="seo-url">skanditravels.com &gt; hotels &gt; ${rec.slug||"hotel"}</div><div className="seo-title">${current.seoTitle||"Page Title"}</div><div className="seo-desc">${current.seoDescription||"Page description will appear here in search results."}</div></div></div>
+      <div><div className="sectiontitle" style=${{marginTop:0}}>TRANSLATION (${lang})</div><${PDField} label="Short Description" type="textarea" value=${current.shortDescription||""} onChange=${v=>setLangValue("shortDescription",v)}/><div className="sectiontitle">Website Search Details</div><${PDField} label="SEO Title" value=${current.seoTitle||""} onChange=${v=>setLangValue("seoTitle",v)}/><div className=${`char-count ${(current.seoTitle||"").length>60?"over":""}`}>${(current.seoTitle||"").length} / 60</div><${PDField} label="SEO Description" type="textarea" value=${current.seoDescription||""} onChange=${v=>setLangValue("seoDescription",v)}/><div className=${`char-count ${(current.seoDescription||"").length>160?"over":""}`}>${(current.seoDescription||"").length} / 160</div><div className="seo-preview" style=${{marginTop:"12px"}}><div className="seo-url">skanditravels.com &gt; hotels &gt; ${rec.slug||"hotel"}</div><div className="seo-title">${current.seoTitle||"Page Title"}</div><div className="seo-desc">${current.seoDescription||"Page description will appear here in search results."}</div></div></div>
     </div>
     <div className="paneltitle pd-module-title"><span>Media Repository</span><button className="btn primary small" onClick=${()=>setAssetPicker(assetContextForRecord(rec,"GALLERY"))}>+ ADD ASSET</button></div>
-    <div className="media-grid">${media.length?media.map((m,i)=>html`<div className="media-card"><div className="assetthumb" style=${{height:"120px"}}>${m.url?html`<img className="media-img" alt=${m.altText||"Property image"} src=${m.url}/>`:html`<span>Image unavailable</span>`}</div><${PDField} label="Asset name / Alt" value=${m.altText||""} onChange=${v=>updateMedia(i,"altText",v)}/><${PDField} label="Media Role" type="select" options=${["HERO","GALLERY","ROOM","CARD","MOBILE","THUMBNAIL","LOGO"]} value=${m.role||"GALLERY"} onChange=${v=>updateMedia(i,"role",v)} disabled=${(m.payload?.provider||m.source)==="DUFFEL"}/><${PDField} label="Photo Tag" type="select" options=${["Exterior","Lobby","Room","Bathroom","General"]} value=${m.payload?.tag||"General"} onChange=${v=>updateMedia(i,"payload.tag",v)}/>${m.role==="ROOM"?html`<${PDField} label="Room Package" type="select" options=${[{value:"",label:"Select package"},...sells.map(s=>({value:s.id,label:s.name||s.id}))]} value=${m.payload?.roomLink||""} onChange=${v=>updateMedia(i,"payload.roomLink",v)}/>`:null}<button className="btn small danger" disabled=${(m.payload?.provider||m.source)==="DUFFEL"} onClick=${()=>setDraft(old=>({...old,media:old.media.filter((_,j)=>j!==i)}))}>DROP ASSET</button>${(m.payload?.provider||m.source)==="DUFFEL"?html`<div className="pd-muted">Managed by SKANDI Partner</div>`:null}</div>`):html`<div className="empty" style=${{gridColumn:"1/-1"}}>No media assigned.</div>`}</div>
+    <div className="media-grid">${media.length?media.map((m,i)=>html`<div className="media-card"><div className="assetthumb" style=${{height:"120px"}}>${m.url?html`<img className="media-img" alt=${m.altText||"Property image"} src=${m.url}/>`:html`<span>Image unavailable</span>`}</div><${PDField} label="Asset name / Alt" value=${m.altText||""} onChange=${v=>updateMedia(i,"altText",v)}/><${PDField} label="Media Role" type="select" options=${["HERO","GALLERY","ROOM","CARD","MOBILE","THUMBNAIL","LOGO"]} value=${m.role||"GALLERY"} onChange=${v=>updateMedia(i,"role",v)} disabled=${(m.payload?.provider||m.source)==="DUFFEL"}/><${PDField} label="Photo Tag" type="select" options=${["Exterior","Lobby","Room","Bathroom","General"]} value=${m.payload?.tag||"General"} onChange=${v=>updateMedia(i,"payload.tag",v)}/>${m.role==="ROOM"?html`<${PDField} label="Room Package" type="select" options=${[{value:"",label:"Select package"},...sells.map(s=>({value:s.id,label:s.name||s.id}))]} value=${m.payload?.roomLink||""} onChange=${v=>updateMedia(i,"payload.roomLink",v)}/>`:null}<button className="btn small danger" disabled=${(m.payload?.provider||m.source)==="DUFFEL"} onClick=${()=>setDraft(old=>({...old,media:old.media.filter((_,j)=>j!==i)}))}>DROP ASSET</button>${(m.payload?.provider||m.source)==="DUFFEL"?html`<div className="pd-muted">${catalog.catalogType==="SKANDI_PARTNER"?"SKANDI Partner-managed":"Supplier-managed"}</div>`:null}</div>`):html`<div className="empty" style=${{gridColumn:"1/-1"}}>No media assigned.</div>`}</div>
     ${assetPicker?html`<${AssetLibraryModal} context=${assetPicker} onClose=${()=>setAssetPicker(null)} onSelect=${addMediaAsset} setBusy=${setBusy} setToast=${setToast}/>`:null}
   </div>`;
   const renderAudit=()=>html`<div className="card panel">
-    <div className="paneltitle">Source Verification Gate</div>
-    <div className="notice warn">The canonical Inventory backend currently supports reading its audited ledger, but does not expose the reference's verification-log writer. No verification is recorded until an authorized backend action exists.</div>
-    <div className="formgrid three"><${PDField} label="Source Type" type="select" options=${["Official Website","GDS Audit","Direct Contract","Phone Call"]} disabled=${true}/><${PDField} label="Verification URL / Notes" disabled=${true}/><div className="field"><label>Action</label><button className="btn cyan" disabled=${true} title="Verification log endpoint not available">LOG VERIFICATION</button></div></div>
+    <div className="paneltitle">Property Verification</div>
+    <div className="notice warn">Verification is currently unavailable. You can review property history below.</div>
+    <div className="formgrid three"><${PDField} label="Source Type" type="select" options=${["Official Website","GDS Audit","Direct Contract","Phone Call"]} disabled=${true}/><${PDField} label="Verification URL / Notes" disabled=${true}/><div className="field"><label>Action</label><button className="btn cyan" disabled=${true} title="Verification is currently unavailable">LOG VERIFICATION</button></div></div>
     <div className="paneltitle pd-module-title"><span>Transaction Ledger</span><button className="btn small" disabled=${auditLoading} onClick=${getAudit}>REFRESH</button></div>
-    ${auditError?html`<div className="notice bad">${auditError}</div>`:null}
-    <div className="tablewrap"><table className="table"><thead><tr><th>Timestamp</th><th>Operator</th><th>Action</th><th>Message</th></tr></thead><tbody>${auditRows.length?auditRows.map(x=>html`<tr><td>${String(x.timestamp||"").replace("T"," ").slice(0,19)}</td><td>${x.agentName||"—"}</td><td>${x.eventType||"—"}</td><td>${x.message||""}</td></tr>`):html`<tr><td colSpan="4"><div className="empty">${auditLoading?"Retrieving property history…":"No matching property audit events."}</div></td></tr>`}</tbody></table></div>
+    ${auditError?html`<div className="notice bad">${employeeErrorMessage(auditError)}</div>`:null}
+    <div className="tablewrap"><table className="table"><thead><tr><th>Timestamp</th><th>Operator</th><th>Action</th><th>Message</th></tr></thead><tbody>${auditRows.length?auditRows.map(x=>html`<tr><td>${String(x.timestamp||"").replace("T"," ").slice(0,19)}</td><td>${x.agentName||"—"}</td><td>${employeeAuditAction(x.eventType)}</td><td>${employeeAuditMessage(x.message)}</td></tr>`):html`<tr><td colSpan="4"><div className="empty">${auditLoading?"Retrieving property history…":"No matching property audit events."}</div></td></tr>`}</tbody></table></div>
   </div>`;
   return html`<div className="property-workspace" style=${{display:"flex",flexDirection:"column",height:"100%"}}>
-    <div className="top"><div><button className="btn small" onClick=${onClose} style=${{marginBottom:"8px"}}>‹ BACK TO DIRECTORY</button><h1>[${rec.code||"NEW"}] ${rec.name||"New Property"}</h1></div><div className="toolbar"><div className="pd-header-status">${statusPill(status)}</div><button className="btn primary" onClick=${save}>COMMIT WORKSPACE</button></div></div>
+    <div className="top"><div><button className="btn small" onClick=${onClose} style=${{marginBottom:"8px"}}>‹ BACK TO DIRECTORY</button><h1>[${rec.code||"NEW"}] ${rec.name||"New Property"}</h1></div><div className="toolbar"><div className="pd-header-status">${statusPill(status)}</div>${rec.id&&status!=="ARCHIVED"?html`<button className="btn small danger" onClick=${archiveProperty}>ARCHIVE PROPERTY</button>`:null}<button className="btn primary" onClick=${save}>COMMIT WORKSPACE</button></div></div>
     <div className="tabs">${[["MASTER","1. Master & Geo"],["ROOMS","2. Inventory Models"],["CHANNELS","3. Channel Matrix"],["CMS","4. Content & Media"],["AUDIT","5. Audit Gate"]].map(([id,label])=>html`<button className=${`tab ${tab===id?"active":""}`} onClick=${()=>setTab(id)}>${label}</button>`)}</div>
     <div className="property-body">${tab==="MASTER"?renderMaster():tab==="ROOMS"?renderRooms():tab==="CHANNELS"?renderChannels():tab==="CMS"?renderCms():renderAudit()}</div>
   </div>`;
@@ -1915,11 +1980,11 @@ function PropertyDirector({boot,masterFilter,setBusy,setToast,onSaved}){
   function createHotel(){setActive(recordBundle("HOTEL"))}
   if(active)return html`<${PDPropertyWorkspace} bundle=${active} boot=${boot} onClose=${()=>setActive(null)} onSaved=${onSaved} setBusy=${setBusy} setToast=${setToast}/>`;
   return html`<div className="grid">
-    <div className="top"><div><div className="eyebrow">RIAINTRA / ALTEA</div><h1>Property Master Directory</h1><div className="sub">Global database of physical accommodations. Select a property to enter its workspace.</div></div><div className="toolbar"><button className="btn primary" disabled=${!canViewHotels} onClick=${createHotel}>+ INITIALIZE PROPERTY</button></div></div>
+    <div className="top"><div><div className="eyebrow">RIAINTRA / ALTEA</div><h1>Property Master Directory</h1><div className="sub">Choose a hotel to view or edit its details.</div></div><div className="toolbar"><button className="btn primary" disabled=${!canViewHotels} onClick=${createHotel}>+ INITIALIZE PROPERTY</button></div></div>
     ${!canViewHotels?html`<div className="notice warn">Master Filter is ${MASTER_FILTER_LABEL[masterFilter]||masterFilter}. Choose HOTELS or GLOBAL PORTFOLIO to open the property directory.</div>`:html`<div className="card panel">
       <div className="filters"><div className="field grow"><label>Property / Code</label><input className="input" value=${query} onInput=${e=>{setQuery(e.target.value);setPage(1)}} placeholder="Search real hotel records"/></div><div className="field w180"><label>Status</label><select className="select" value=${status} onChange=${e=>{setStatus(e.target.value);setPage(1)}}><option value="">ALL STATUSES</option>${STATUS.map(s=>html`<option value=${s}>${s}</option>`)}</select></div></div>
       <div className="tablewrap"><table className="table"><thead><tr><th>Type</th><th>Sys Code</th><th>Master Title</th><th>Dest</th><th>Status</th><th>Actions</th></tr></thead><tbody>
-        ${visible.length?visible.map(h=>html`<tr className="clickrow" onClick=${()=>openHotel(h)}><td>${h.details?.propertyType||"HOTEL"}</td><td><b>${h.code||"—"}</b></td><td>${h.name||"—"}</td><td>${(boot.records||[]).find(x=>x.id===h.details?.destinationId)?.code||h.details?.destinationCode||"—"}</td><td>${statusPill(h.status)}</td><td><button className="btn small" onClick=${e=>{e.stopPropagation();openHotel(h)}}>OPEN</button></td></tr>`):html`<tr><td colSpan="6"><div className="empty">No hotel properties found in canonical Inventory.</div></td></tr>`}
+        ${visible.length?visible.map(h=>html`<tr className="clickrow" onClick=${()=>openHotel(h)}><td>${h.details?.propertyType||"HOTEL"}</td><td><b>${h.code||"—"}</b></td><td>${h.name||"—"}</td><td>${(boot.records||[]).find(x=>x.id===h.details?.destinationId)?.code||h.details?.destinationCode||"—"}</td><td>${statusPill(h.status)}</td><td><button className="btn small" onClick=${e=>{e.stopPropagation();openHotel(h)}}>OPEN</button></td></tr>`):html`<tr><td colSpan="6"><div className="empty">No matching hotels found.</div></td></tr>`}
       </tbody></table></div><${Pagination} page=${currentPage} totalPages=${totalPages} total=${hotels.length} pageSize=${pageSize} onPage=${setPage}/>
     </div>`}
   </div>`;
@@ -1931,8 +1996,8 @@ function Overview({boot,setView,masterFilter}){
   const scopedCount=scopedRecords.length;
   const inScope=Boolean(masterFilter);
   return html`<div className="grid">
-    <div className="stats">${(inScope?[["Records in scope",scopedCount],["Published",scopedRecords.filter(r=>r.status==="PUBLISHED").length],["Active",scopedRecords.filter(r=>r.active!==false).length],["Customer visible",scopedRecords.filter(r=>r.customerVisible===true).length],["ALTEA visible",scopedRecords.filter(r=>r.alteaVisible!==false).length]]:[["Canonical Records",s.total],["Catalog Placements",s.catalog],["Searchable",s.searchableCatalog],["Aircraft",s.aircraft],["Cabins",s.cabins]]).map(([l,v])=>html`<div className="card stat"><span>${l}</span><strong>${v??0}</strong></div>`)}</div>
-    <div className="split"><div className="card panel"><div className="paneltitle">Inventory Families</div><div className="grid" style=${{gridTemplateColumns:"repeat(auto-fit,minmax(145px,1fr))"}}>${Object.entries(s.byType||{}).filter(([k])=>!masterFilter||masterFilter===k||(masterFilter==="TOURS_ACTIVITIES"&&["GUIDED_TOUR","ACTIVITY"].includes(k))).map(([k,v])=>html`<button className="btn" onClick=${()=>setView("master")}><b>${LABEL[k]||k}</b><br/><span className="sub">${v} records</span></button>`)}</div></div>
+    <div className="stats">${(inScope?[["Records in scope",scopedCount],["Published",scopedRecords.filter(r=>r.status==="PUBLISHED").length],["Active",scopedRecords.filter(r=>r.active!==false).length],["Customer visible",scopedRecords.filter(r=>r.customerVisible===true).length],["ALTEA visible",scopedRecords.filter(r=>r.alteaVisible!==false).length]]:[["Travel Records",s.total],["Catalog Placements",s.catalog],["Searchable",s.searchableCatalog],["Aircraft",s.aircraft],["Cabins",s.cabins]]).map(([l,v])=>html`<div className="card stat"><span>${l}</span><strong>${v??0}</strong></div>`)}</div>
+    <div className="split"><div className="card panel"><div className="paneltitle">Inventory Families</div><div className="grid" style=${{gridTemplateColumns:"repeat(auto-fit,minmax(145px,1fr))"}}>${Object.entries(s.byType||{}).filter(([k])=>!masterFilter||masterFilter===k||(masterFilter==="TOURS_ACTIVITIES"&&["GUIDED_TOUR","ACTIVITY"].includes(k))).map(([k,v])=>html`<button className="btn" onClick=${()=>setView(k==="HOTEL"?"property":"master")}><b>${LABEL[k]||k}</b><br/><span className="sub">${v} records</span></button>`)}</div></div>
       <div className="card panel"><div className="paneltitle">Aircraft Sync Health</div><div className="kpirow"><div className="kpi"><b>${q.aircraftSync?.fleetTemplates??0}</b> fleet templates</div><div className="kpi"><b>${q.aircraftSync?.aircraftRecords??0}</b> aircraft records</div><div className="kpi"><b>${q.aircraftSync?.missing??0}</b> missing</div></div><div className=${`notice ${q.aircraftSync?.missing?"warn":""}`} style=${{marginTop:"12px"}}>${q.aircraftSync?.missing?"Open Aircraft & Cabin Studio and run Smart Sync to create missing records in Review.":"Fleet master is currently reconciled."}</div></div>
     </div>
     <div className="card panel"><div className="paneltitle">Operational Inventory</div><div className="stats">${[["Dated Capacity",s.dated],["Flight Legs",s.flightLegs],["Booking Classes",s.flightClasses],["Schedules",s.schedules],["Nesting Controls",s.nesting]].map(([l,v])=>html`<div className="stat"><span>${l}</span><strong>${v??0}</strong><em>${v?"loaded":"no rows yet"}</em></div>`)}</div></div>
@@ -1948,9 +2013,13 @@ function App(){
   const [toast,setToastState]=useState(null);
   const [masterConfig,setMasterConfig]=useState(null);
   const [connectionError,setConnectionError]=useState("");
-  function setToast(message,error=false){setToastState({message,error});setTimeout(()=>setToastState(null),4200)}
+  function setToast(message,error=false){
+    const display=error?employeeErrorMessage(message):text(message);
+    if(error&&!requests.size&&INTERNAL_ISSUE_PATTERN.test(text(message)))logInventoryIssue("ui-error",{kind:"technical-response"});
+    setToastState({message:display,error});setTimeout(()=>setToastState(null),4200);
+  }
   async function refresh(){
-    try{setBusy("Refreshing Inventory Control…");setConnectionError("");const r=await request("INVENTORY_V9_REFRESH",{});setBoot(r)}catch(e){if(!boot)setConnectionError(e.message);setToast(e.message,true)}finally{setBusy("")}
+    try{setBusy("Refreshing Inventory Control…");setConnectionError("");const r=await request("INVENTORY_V9_REFRESH",{});setBoot(r)}catch(e){if(!boot)setConnectionError(employeeErrorMessage(e.message,"Unable to load Inventory Control. Select Refresh to try again."));setToast(e.message,true)}finally{setBusy("")}
   }
   useEffect(()=>{
     let bootstrapSettled=false;
@@ -1971,14 +2040,14 @@ function App(){
       }
       if(m.type==="INVENTORY_ERROR"){
         const code=String(m.payload?.code||"");
-        const suffix=/^[A-Z][A-Z0-9_]{0,119}$/.test(code)?` [${code}]`:"";
-        const message=(m.payload?.message||"Inventory request failed.")+suffix;
+        const raw=String(m.payload?.message||"Inventory request failed.");
         const p=requests.get(m.requestId);
-        if(p){clearTimeout(p.timer);requests.delete(m.requestId);p.reject(new Error(message))}
+        logInventoryIssue("backend-response",{action:p?.type||"connection",requestId:String(m.requestId||""),code});
+        if(p){clearTimeout(p.timer);requests.delete(m.requestId);const error=new Error(raw);error.code=code;p.reject(error)}
         else if(String(m.requestId||"").startsWith("READY-")){
-          bootstrapSettled=true;clearReadyTimers();setBusy("");setConnectionError(message);
+          bootstrapSettled=true;clearReadyTimers();setBusy("");setConnectionError("Unable to load Inventory Control. Select Refresh to try again.");
         }
-        else setToast(message,true);
+        else setToast(raw,true);
         return;
       }
       if(m.type==="INVENTORY_V9_PROGRESS")return;
@@ -1991,7 +2060,8 @@ function App(){
     readyInterval=setInterval(()=>{if(!bootstrapSettled)sendReady()},1500);
     bridgeWatchdog=setTimeout(()=>{
       bootstrapSettled=true;clearReadyTimers();setBusy("");
-      setConnectionError("Inventory Control did not finish loading. Select Refresh to retry. [INVENTORY_BOOTSTRAP_TIMEOUT]");
+      logInventoryIssue("connection-timeout",{action:"INVENTORY_V9_READY"});
+      setConnectionError("Unable to load Inventory Control. Select Refresh to try again.");
     },REQUEST_TIMEOUT_MS);
     sendReady();
     window.parent.postMessage({source:SOURCE,type:"SKANDI_MASTER_CONFIG_REQUEST",payload:{}}, "*");
@@ -1999,23 +2069,23 @@ function App(){
   },[]);
 
 
-  const nav=[["overview","Workspace Dashboard"],["provider","Supplier & Distribution"],["master","Master Records"],["property","Property Director"],["assets","Asset Library"],["dated","Inventory & Capacity"],["air","Air Inventory"],["aircraft","Aircraft & Cabin Studio"],["quality","Publishing & QA"],["audit","Audit"]];
+  const nav=[["overview","Workspace Dashboard"],["provider","Supplier & Distribution"],["master","Travel Inventory"],["property","Property Director"],["assets","Asset Library"],["dated","Inventory & Capacity"],["air","Air Inventory"],["aircraft","Aircraft & Cabin Studio"],["quality","Publishing & QA"],["audit","Audit"]];
   return html`<div className="shell">
     <header className="global-header">
-      <div className="global-brand"><strong>amadeus</strong><span className="system-label">SKANDI INVENTORY CONTROL</span></div>
+      <div className="global-brand"><strong>ALTEA</strong><span className="system-label">SKANDI TRAVELS · INVENTORY CONTROL</span></div>
       <div className="global-controls">
         <div className="global-scope"><label htmlFor="inventoryMasterScope">Master Filter:</label><select id="inventoryMasterScope" aria-label="Master Filter" value=${masterFilter} onChange=${e=>setMasterFilter(e.target.value)}><option value="">GLOBAL PORTFOLIO</option>${MASTER_FILTERS.map(t=>html`<option value=${t}>${(MASTER_FILTER_LABEL[t]||t).toUpperCase()}</option>`)}</select></div>
         <span className="operator">OPE: RIAINTRA</span>
       </div>
     </header>
     <div className="shell-body"><aside className="sidebar"><div className="group">Navigation</div>${nav.map(([k,l])=>html`<button className=${`navbtn ${view===k?"active":""}`} onClick=${()=>setView(k)}>${l}</button>`)}</aside>
-    <main className="main"><div className="top"><div><div className="eyebrow">RIAINTRA · ALTEA OPERATIONS</div><h1>${nav.find(x=>x[0]===view)?.[1]||"Inventory Control"}</h1><div className="sub">Centralized module for resource discovery, curation, capacity yields and distribution logic.</div></div><div className="toolbar"><button className="btn" onClick=${refresh}>Refresh</button></div></div>
-      ${masterFilter&&!["overview","master","property","provider"].includes(view)?html`<div className="scope-label">Master Filter: ${MASTER_FILTER_LABEL[masterFilter]||masterFilter}. Operational views without a matching record-family field keep their original full operational data; the selected filter remains active across menus.</div>`:null}
-      ${!boot?html`<div className="card panel"><div className=${`notice ${connectionError?"bad":""}`}><b>${connectionError?"Inventory bridge unavailable":"Waiting for secure system bridge…"}</b>${connectionError?html`<div style=${{marginTop:"8px"}}>${connectionError}</div>`:null}</div></div>`:
+    <main className="main"><div className="top"><div><div className="eyebrow">SKANDI TRAVELS · ALTEA · RIAINTRA</div><h1>${nav.find(x=>x[0]===view)?.[1]||"Inventory Control"}</h1><div className="sub">Manage travel inventory, hotels, suppliers, rates and aircraft.</div></div><div className="toolbar"><button className="btn" onClick=${refresh}>Refresh</button></div></div>
+      ${masterFilter&&!["overview","master","property","provider"].includes(view)?html`<div className="scope-label">Showing ${MASTER_FILTER_LABEL[masterFilter]||masterFilter}.</div>`:null}
+      ${!boot?html`<div className="card panel"><div className=${`notice ${connectionError?"bad":""}`}><b>${connectionError?"Inventory Control is unavailable":"Connecting to Inventory Control…"}</b>${connectionError?html`<div style=${{marginTop:"8px"}}>${connectionError}</div>`:null}</div></div>`:
         view==="overview"?html`<${Overview} boot=${boot} setView=${setView} masterFilter=${masterFilter}/>`:
-        view==="provider"?html`<${ProviderWorkspace} boot=${boot} setBusy=${setBusy} setToast=${setToast} masterFilter=${masterFilter}/>`:
-        view==="master"?html`<${MasterRecords} boot=${boot} setBoot=${setBoot} setBusy=${setBusy} setToast=${setToast} masterFilter=${masterFilter} setMasterFilter=${setMasterFilter}/>`:
-        view==="property"?html`<${PropertyDirector} boot=${boot} masterFilter=${masterFilter} setBusy=${setBusy} setToast=${setToast}/>`:
+        view==="provider"?html`<${ProviderWorkspace} boot=${boot} setBoot=${setBoot} setBusy=${setBusy} setToast=${setToast} masterFilter=${masterFilter} setView=${setView}/>`:
+        view==="master"?html`<${MasterRecords} boot=${boot} setBoot=${setBoot} setBusy=${setBusy} setToast=${setToast} masterFilter=${masterFilter} setMasterFilter=${setMasterFilter} setView=${setView}/>`:
+        view==="property"?html`<${PropertyDirector} boot=${boot} masterFilter=${masterFilter} setBusy=${setBusy} setToast=${setToast} onSaved=${refresh}/>`:
         view==="assets"?html`<${AssetLibraryPanel} setBusy=${setBusy} setToast=${setToast}/>`:
         view==="dated"?html`<${DatedInventory} boot=${boot} setBusy=${setBusy} setToast=${setToast}/>`:
         view==="air"?html`<${AirInventory} boot=${boot} setBusy=${setBusy} setToast=${setToast}/>`:
