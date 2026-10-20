@@ -46,6 +46,7 @@
 - 2026-10-20 — Stage 8 (cumulative Reservations seat-assignment integrity): bind seat maps strictly to the currently selected Duffel segment instead of falling back to an unrelated segment; decline individual seat services whose declared segment differs from the displayed map. Bulk Quick Assign now validates all requested passengers, supplier seat IDs, segments and other-passenger collisions before replacing any selection, and commits the seat-service map all-or-nothing with a single payment invalidation. Selecting a seat for the active passenger no longer offers another passenger's seat service as clickable. The existing payment-in-progress/committed locks remain. Exit-row agent confirmation now requires checking the carrier's actual restrictions instead of claiming a universally valid age rule. No new Duffel endpoint or payment action; no provider data is invented. STATICALLY VERIFIED; REQUIRES LIVE WIX/DUFFEL TEST.
 
 - 2026-10-20 — Stage 9: bounded pending request correlation added to Duffel offer refresh and seat-map responses in each PNR session. Delayed or out-of-order results can no longer replace newer offer/segment selections; matching backend errors clear only their own pending lookup. No API, checkout, permission, exported symbol or price authority changed. STATICALLY VERIFIED; REQUIRES LIVE TEST.
+- 2026-10-20 — Stage 10: Wix `DUFFEL_PROGRESS` messages no longer settle in-flight operations or unlock exclusive actions before their terminal response; per-PNR Duffel order payment preparation now retains request/offer identity until completion and rejects unmatched or structurally incomplete Stripe intents. Both existing payment initiation paths use the same guard, and matching prepare failures release the lock. No provider, payment capture, permissions, or facade contracts changed. STATICALLY VERIFIED; REQUIRES LIVE TEST.
 
 ## COMPLETE INTENDED HTML
 
@@ -1240,6 +1241,8 @@
       offerRefreshOfferId:"",
       seatMapRequestId:"",
       seatMapOfferId:"",
+      paymentPrepareRequestId:"",
+      paymentPrepareOfferId:"",
       preferences: {
         compact: true,
         currency: "USD",
@@ -1349,7 +1352,7 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
       "actions", "baggage", "manifests", "history"
     ]);
     const SESSION_STATE_KEYS = [
-      "activeView", "search", "offers", "multiSearchActive", "multiSearchQueue", "multiSearchCompleted", "multiSearchFailed", "multiSearchPendingId", "searchPendingId", "offerRefreshRequestId", "offerRefreshOfferId", "seatMapRequestId", "seatMapOfferId", "selectedOffer", "seatMaps", "selectedServices",
+      "activeView", "search", "offers", "multiSearchActive", "multiSearchQueue", "multiSearchCompleted", "multiSearchFailed", "multiSearchPendingId", "searchPendingId", "offerRefreshRequestId", "offerRefreshOfferId", "seatMapRequestId", "seatMapOfferId", "paymentPrepareRequestId", "paymentPrepareOfferId", "selectedOffer", "seatMaps", "selectedServices",
       "alteaWorkspace", "selectedPassengerId", "selectedOrder", "cancellation", "customerRefundRequired",
       "changeRequestId", "changeOffers", "pendingChange", "paymentPurpose", "payment",
       "bookingDocuments", "documentCatalog",
@@ -3223,10 +3226,7 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
       if (orderType === "hold") return toast("Payment not required", "A hold order is created without payment or paid services.", "info");
       const passengerError = validatePassengerForms(false);
       if (passengerError) return toast("Traveler details incomplete", passengerError, "warning");
-      post("DUFFEL_PREPARE_PAYMENT", {
-        offerId: state.selectedOffer.id,
-        services: selectedServicePayload()
-      });
+      requestOrderPaymentPreparation();
     }
 
 
@@ -3431,7 +3431,7 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
       const message = event.data || {};
       if (message.source !== PARENT_SOURCE) return;
       state.bridgeConnected = true;
-      settle(message.requestId);
+      if (message.type !== "DUFFEL_PROGRESS") settle(message.requestId);
       const payload = message.payload || {};
 
 
@@ -3540,6 +3540,14 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
         return;
       }
       if (message.type === "DUFFEL_PAYMENT_RESULT") {
+        if (!state.paymentPrepareRequestId || message.requestId !== state.paymentPrepareRequestId) return;
+        const matchingOffer = state.paymentPrepareOfferId && state.paymentPrepareOfferId === state.selectedOffer?.id;
+        state.paymentPrepareRequestId = "";
+        state.paymentPrepareOfferId = "";
+        if (!matchingOffer || !payload.payment?.paymentIntentId || !payload.payment?.clientSecret || !payload.payment?.publishableKey) {
+          toast("Payment preparation unavailable", "The returned payment is incomplete or does not belong to the selected offer. No payment was presented.", "danger");
+          return;
+        }
         state.paymentPurpose="order";
         mountStripePayment(payload.payment);
         return;
@@ -3689,6 +3697,11 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
         return;
       }
       if (message.type === "DUFFEL_ERROR") {
+        if (String(payload.action||"").toUpperCase()==="DUFFEL_PREPARE_PAYMENT") {
+          if (!state.paymentPrepareRequestId || message.requestId !== state.paymentPrepareRequestId) return;
+          state.paymentPrepareRequestId = "";
+          state.paymentPrepareOfferId = "";
+        }
         if (String(payload.action||"").toUpperCase()==="DUFFEL_REFRESH_OFFER") {
           if (message.requestId !== state.offerRefreshRequestId) return;
           state.offerRefreshRequestId="";
@@ -3766,7 +3779,26 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
     }
 
     function paymentSessionStarted() {
-      return Boolean(state.payment?.paymentIntentId);
+      return Boolean(state.payment?.paymentIntentId || state.paymentPrepareRequestId);
+    }
+
+
+    function requestOrderPaymentPreparation() {
+      if (paymentSessionStarted() || paymentIsCommitted()) {
+        return toast("Payment in progress", "Complete or reconcile the existing payment before preparing another.", "warning");
+      }
+      const offerId = state.selectedOffer?.id;
+      if (!offerId || skandiDuffelOfferExpiredNow(state.selectedOffer)) {
+        return toast("Offer unavailable", "Refresh a valid offer before starting payment.", "warning");
+      }
+      const requestId = post("DUFFEL_PREPARE_PAYMENT", {
+        offerId,
+        services: selectedServicePayload()
+      });
+      if (requestId) {
+        state.paymentPrepareRequestId = requestId;
+        state.paymentPrepareOfferId = offerId;
+      }
     }
 
 
@@ -6193,7 +6225,7 @@ html,body{margin:0!important;padding:0!important;width:203.20mm!important;height
     if(orderType==="hold")return toast("Payment not required","A hold order is created without payment or paid services.","info");
     if(state.agentFop.paymentType!=="CC")return toast("FOP not supported for supplier issue",`${state.agentFop.paymentType} is available in the agent UI, but this instant-order path currently settles by secure card/Stripe only. Use CC or a permitted hold order.`,"warning");
     const passengerError=validatePassengerForms(false);if(passengerError)return toast("Traveler details incomplete",passengerError,"warning");
-    post("DUFFEL_PREPARE_PAYMENT",{offerId:state.selectedOffer.id,services:selectedServicePayload()});
+    requestOrderPaymentPreparation();
   }
 
 
