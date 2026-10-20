@@ -34,6 +34,8 @@
 
 - 2026-10-20 — Stage 4: Added staff read-only Duffel Order Record audit on existing Changes / Refunds page. Uses actual normalized order IDs, booked documents, taxes, payments, services, passengers, airline-initiated changes and change history already returned by V12 backend. Does not introduce new financial actions, fake statuses, client authority or new backend routes. STATICALLY VERIFIED; REQUIRES LIVE TEST.
 
+- 2026-10-20 — Stage 5: corrected the positive Duffel order-change manual-capture authorization deadlock. Stripe requires_capture now unlocks order-change confirmation; succeeded is not accepted as a substitute for an uncaptured authorization. Added supplier change-offer, pending-change and cancellation-quote expiry checks (including final modal confirmation), and improved existing supplier order list transparency with returned payment status, deadline and authorized action fields. Prevented implying a supplier cancellation quote is a completed customer refund. No backend provider/payment transaction, exports, Wix IDs, bridge action names, or staff permissions were changed. STATICALLY VERIFIED; REQUIRES LIVE TEST.
+
 ## COMPLETE INTENDED HTML
 
 ```html
@@ -2379,7 +2381,7 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
     function orderTable(orders) {
       if (!orders.length) return emptyState(`<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>`, "No live orders loaded", "Refresh orders or retrieve a specific order-ID.");
       return `<table class="data-table">
-        <thead><tr><th>Booking reference</th><th>Order-ID</th><th>Route</th><th>Travelers</th><th>Total</th><th>Status</th><th>Created</th></tr></thead>
+        <thead><tr><th>Booking reference</th><th>Order-ID</th><th>Route</th><th>Travelers</th><th>Total</th><th>Order status</th><th>Payment status</th><th>Payment deadline</th><th>Supplier actions</th><th>Created</th></tr></thead>
         <tbody>${orders.map((order) => `<tr>
           <td><button class="link mono" data-action="open-order" data-order-id="${escapeAttr(order.id)}">${escapeHTML(order.bookingReference || "Pending")}</button></td>
           <td class="mono">${escapeHTML(shortId(order.id))}</td>
@@ -2387,6 +2389,9 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
           <td>${Number(order.passengerCount || 0)}</td>
           <td class="nowrap">${money(order.totalAmount, order.totalCurrency)}</td>
           <td><span class="badge ${statusClass(order.status)}">${escapeHTML(order.status || "unknown")}</span></td>
+          <td>${escapeHTML(typeof order.paymentStatus==="string"?order.paymentStatus:order.paymentStatus?.status||"Not reported")}</td>
+          <td class="nowrap">${order.paymentRequiredBy?formatDateTime(order.paymentRequiredBy):'<span class="muted">Not supplied</span>'}</td>
+          <td>${Array.isArray(order.availableActions) && order.availableActions.length?escapeHTML(order.availableActions.join(", ")):'<span class="muted">None returned</span>'}</td>
           <td class="nowrap">${formatDateTime(order.createdAt)}</td>
         </tr>`).join("")}</tbody>
       </table>`;
@@ -2425,9 +2430,9 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
                 ${state.cancellation ? cancellationMarkup(state.cancellation) : '<p class="muted">Create a cancellation quote to inspect the airline refund before confirming.</p>'}
               </div>
               <div class="panel-foot">
-                ${state.cancellation
+                ${state.cancellation && (!state.cancellation.expiresAt || Date.parse(state.cancellation.expiresAt)>Date.now())
                   ? `<button class="danger-btn" data-action="confirm-cancellation">Confirm cancellation</button>`
-                  : `<button class="secondary" data-action="quote-cancellation" ${canCancel ? "" : "disabled"}>Quote cancellation</button>`}
+                  : `<button class="secondary" data-action="quote-cancellation" ${canCancel ? "" : "disabled"}>${state.cancellation?"Renew expired quote":"Quote cancellation"}</button>`}
               </div>
             </section>
           </div>
@@ -2467,14 +2472,15 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
         const added=offer.slices?.add?.[0];
         const carriers=unique((added?.segments||[]).map(s=>s.operatingCarrier?.name).filter(Boolean));
         const route=added?`${added.origin?.iataCode||added.segments?.[0]?.origin?.iataCode||"—"} → ${added.destination?.iataCode||added.segments?.[Math.max((added.segments?.length||1)-1,0)]?.destination?.iataCode||"—"}`:"Replacement flight";
-        return `<div class="offer-row"><div class="offer-summary"><div class="offer-price"><span class="muted">Change total</span><strong>${money(offer.changeTotalAmount,offer.changeTotalCurrency)}</strong><small>${offer.penaltyTotalAmount!=null?`Penalty ${money(offer.penaltyTotalAmount,offer.penaltyTotalCurrency||offer.changeTotalCurrency)}`:"Penalty not supplied"}</small></div><div class="offer-route"><div class="strong">${escapeHTML(route)}</div><div>${escapeHTML(carriers.join(", ")||"Operating carrier returned by airline")}</div><small>${formatDateTime(added?.segments?.[0]?.departingAt||"")} · expires ${formatDateTime(offer.expiresAt)}</small></div><div class="offer-action"><button class="primary" data-action="select-change-offer" data-change-offer-id="${escapeAttr(offer.id)}">Select change</button></div></div></div>`;
+        return `<div class="offer-row"><div class="offer-summary"><div class="offer-price"><span class="muted">Change total</span><strong>${money(offer.changeTotalAmount,offer.changeTotalCurrency)}</strong><small>${offer.penaltyTotalAmount!=null?`Penalty ${money(offer.penaltyTotalAmount,offer.penaltyTotalCurrency||offer.changeTotalCurrency)}`:"Penalty not supplied"}</small></div><div class="offer-route"><div class="strong">${escapeHTML(route)}</div><div>${escapeHTML(carriers.join(", ")||"Operating carrier returned by airline")}</div><small>${formatDateTime(added?.segments?.[0]?.departingAt||"")} · expires ${formatDateTime(offer.expiresAt)}</small></div><div class="offer-action"><button class="primary" data-action="select-change-offer" data-change-offer-id="${escapeAttr(offer.id)}" ${offer.expiresAt && Date.parse(offer.expiresAt)<=Date.now()?"disabled":""}>Select change</button></div></div></div>`;
       }).join("")}</div>`;
     }
 
 
     function pendingChangeMarkup(change){
       const amount=Number(change.changeTotalAmount||0);
-      const paymentReady=state.paymentPurpose==="change" && state.payment?.paymentIntentId && state.payment?.status==="succeeded";
+      const paymentReady=state.paymentPurpose==="change" && !!state.payment?.paymentIntentId && state.payment?.status==="requires_capture";
+      const changeExpired=!!change.expiresAt && Date.parse(change.expiresAt)<=Date.now();
       return `<div class="panel" style="margin-top:12px;box-shadow:none"><div class="panel-head">Pending airline change · final review</div><div class="panel-body">
         ${alertBox(amount<0?"warning":"info", amount<0?"Airline refund due":"Airline change ready", amount<0?"Confirming this change returns value through the supplier flow. SKANDI must separately reconcile the customer payment.":"System requires the final current amount shown below before the flight is changed.")}
         <div class="money-line"><span>Change ID</span><strong class="mono">${escapeHTML(change.id||"")}</strong></div>
@@ -2482,9 +2488,11 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
         <div class="money-line"><span>Airline penalty</span><strong>${change.penaltyTotalAmount!=null?money(change.penaltyTotalAmount,change.penaltyTotalCurrency||change.changeTotalCurrency):"Not supplied"}</strong></div>
         <div class="money-line"><span>New order total</span><strong>${change.newTotalAmount!=null?money(change.newTotalAmount,change.newTotalCurrency||change.changeTotalCurrency):"Not supplied"}</strong></div>
         <div class="money-line"><span>Price expires</span><strong>${formatDateTime(change.expiresAt)}</strong></div>
+        ${changeExpired?alertBox("warning","Supplier change offer expired","Request a fresh airline change quote before authorizing payment or confirming the change."):""}
+        ${amount>0 && state.paymentPurpose==="change" && state.payment?.paymentIntentId && !paymentReady?alertBox("info","Payment authorization pending","Only a Stripe PaymentIntent with requires_capture status qualifies for the supplier change confirmation."):""}
       </div><div class="panel-foot">
-        ${amount>0 && !paymentReady?`<button class="primary" data-action="prepare-change-payment">Pay ${escapeHTML(money(change.changeTotalAmount,change.changeTotalCurrency))}</button>`:""}
-        ${amount<=0 || paymentReady?`<button class="${amount<0?"secondary":"primary"}" data-action="confirm-order-change">Confirm airline change</button>`:""}
+        ${!changeExpired && amount>0 && !paymentReady?`<button class="primary" data-action="prepare-change-payment">Authorize ${escapeHTML(money(change.changeTotalAmount,change.changeTotalCurrency))}</button>`:""}
+        ${!changeExpired && (amount<=0 || paymentReady)?`<button class="${amount<0?"secondary":"primary"}" data-action="confirm-order-change">Confirm airline change</button>`:""}
       </div></div>`;
     }
 
@@ -2492,8 +2500,9 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
     function cancellationMarkup(cancellation) {
       return `${alertBox("warning", "Review before confirmation", "Confirming this quote cancels the order. This cannot be undone from this screen.")}
         <div class="money-line"><span>Quote ID</span><strong class="mono">${escapeHTML(cancellation.id)}</strong></div>
-        <div class="money-line"><span>Refund from airline</span><strong>${money(cancellation.refundAmount, cancellation.refundCurrency)}</strong></div>
-        <div class="money-line"><span>Expires</span><strong>${formatDateTime(cancellation.expiresAt)}</strong></div>`;
+        <div class="money-line"><span>Quoted supplier refund (not yet processed)</span><strong>${cancellation.refundAmount!=null?money(cancellation.refundAmount,cancellation.refundCurrency):"Not provided by airline"}</strong></div>
+        <div class="money-line"><span>Expires</span><strong>${cancellation.expiresAt?formatDateTime(cancellation.expiresAt):"Not supplied"}</strong></div>
+        ${cancellation.expiresAt && Date.parse(cancellation.expiresAt)<=Date.now()?alertBox("warning","Quote expired","Create a new quote before confirming the supplier cancellation."):""}`;
     }
 
 
@@ -2976,6 +2985,9 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
 
     function selectChangeOffer(id){
       if(!id)return;
+      const selected=state.changeOffers.find(o=>o.id===id);
+      if(!selected)return toast("Unknown change offer","Search again to retrieve current supplier offers.","warning");
+      if(selected.expiresAt && Date.parse(selected.expiresAt)<=Date.now())return toast("Change offer expired","Search again for a current supplier offer.","warning");
       state.pendingChange=null;
       if(state.paymentPurpose==="change")invalidatePayment();
       post("DUFFEL_CREATE_ORDER_CHANGE",{orderChangeOfferId:id});
@@ -2993,11 +3005,12 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
       const change=state.pendingChange;
       if(!change?.id)return;
       const amount=Number(change.changeTotalAmount||0);
+      if(change.expiresAt && Date.parse(change.expiresAt)<=Date.now())return toast("Change quote expired","Search for a fresh supplier change offer before confirming.","warning");
       const paymentIntentId=amount>0 && state.paymentPurpose==="change"?state.payment?.paymentIntentId:null;
-      if(amount>0 && (!paymentIntentId||state.payment?.status!=="succeeded"))return toast("Payment required","Complete the secure change payment first.","warning");
+      if(amount>0 && (!paymentIntentId||state.payment?.status!=="requires_capture"))return toast("Authorization required","Complete secure payment authorization; the payment must be in requires_capture status.","warning");
       openModal("Confirm airline change",`${alertBox("warning","Final supplier action","This updates the live airline booking. Review the final fare difference, penalty and routing before confirming.")}<div class="money-line"><span>Change amount</span><strong>${money(change.changeTotalAmount,change.changeTotalCurrency)}</strong></div><div class="money-line"><span>Penalty</span><strong>${change.penaltyTotalAmount!=null?money(change.penaltyTotalAmount,change.penaltyTotalCurrency||change.changeTotalCurrency):"Not supplied"}</strong></div>`,[
         {label:"Back",className:"secondary",close:true},
-        {label:"Confirm change",className:"primary",onClick:()=>{closeModal();post("DUFFEL_CONFIRM_ORDER_CHANGE",{orderChangeId:change.id,paymentIntentId});}}
+        {label:"Confirm change",className:"primary",onClick:()=>{if(change.expiresAt && Date.parse(change.expiresAt)<=Date.now())return toast("Change quote expired","Search for a fresh supplier change offer.","warning");if(amount>0 && (state.payment?.paymentIntentId!==paymentIntentId || state.payment?.status!=="requires_capture"))return toast("Authorization required","The payment authorization is not ready or has changed.","warning");closeModal();post("DUFFEL_CONFIRM_ORDER_CHANGE",{orderChangeId:change.id,paymentIntentId});}}
       ]);
     }
 
@@ -3324,6 +3337,7 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
 
     function confirmCancellation() {
       if (!state.cancellation?.id) return;
+      if (state.cancellation.expiresAt && Date.parse(state.cancellation.expiresAt)<=Date.now())return toast("Cancellation quote expired","Create a fresh cancellation quote before confirming.","warning");
       openModal("Confirm cancellation", `
         ${alertBox("danger", "This action is irreversible", `The booking order will be cancelled. Quoted airline refund: ${money(state.cancellation.refundAmount, state.cancellation.refundCurrency)}.`)}
         <label class="check"><input id="cancelAck" type="checkbox"> I reviewed the refund and want to cancel this order.</label>
@@ -3331,6 +3345,7 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
         { label: "Back", className: "secondary", close: true },
         { label: "Cancel order", className: "danger-btn", onClick: () => {
           if (!$("#cancelAck").checked) return toast("Confirmation required", "Select the confirmation checkbox.", "warning");
+          if(state.cancellation?.expiresAt && Date.parse(state.cancellation.expiresAt)<=Date.now())return toast("Cancellation quote expired","Create a fresh cancellation quote.","warning");
           closeModal();
           post("DUFFEL_CONFIRM_CANCELLATION", { cancellationId: state.cancellation.id });
         }}
