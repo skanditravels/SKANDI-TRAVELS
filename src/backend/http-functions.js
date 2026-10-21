@@ -12,6 +12,7 @@ import {
   requestHumanHandoffTrustedCore
 } from "backend/SKANDI_CORE/customerSupport";
 import { verifyAndRecordDuffelAssistantWebhookCore } from "backend/SKANDI_CORE/duffelAssistant";
+import { verifyWhatsAppWebhookChallengeCore, receiveWhatsAppWebhookCore } from "backend/SKANDI_CORE/whatsAppCustomerCare";
 
 function header(request, name) {
   const lowerName = String(name || "").toLowerCase();
@@ -88,5 +89,41 @@ export async function post_duffelAssistantWebhook(request) {
     if (/INVALID|BAD_JSON|BAD_MODE/.test(code)) return badRequest(responseBody({ ok: false, error: code }));
     console.error("[Duffel Assistant webhook]", { code });
     return serverError(responseBody({ ok: false, error: code }));
+  }
+}
+
+// Meta WhatsApp Cloud API: webhook GET challenge and HMAC-authenticated POST events.
+// Register https://www.skanditravels.com/_functions/skandiWhatsAppWebhook in Meta.
+export async function get_skandiWhatsAppWebhook(request) {
+  const q = request?.query || {};
+  try {
+    const challenge = await verifyWhatsAppWebhookChallengeCore({
+      mode: String(q["hub.mode"] || ""),
+      token: String(q["hub.verify_token"] || ""),
+      challenge: String(q["hub.challenge"] || "")
+    });
+    return ok({ headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" }, body: challenge });
+  } catch (error) {
+    return forbidden(responseBody({ ok: false, error: "WHATSAPP_WEBHOOK_VERIFICATION_FAILED" }));
+  }
+}
+export async function post_skandiWhatsAppWebhook(request) {
+  try {
+    // Verification needs the exact bytes Meta signed: do not parse before HMAC verification.
+    const raw = typeof request?.body?.text === "function" ? await request.body.text() : "";
+    const signature = header(request, "X-Hub-Signature-256");
+    const result = await receiveWhatsAppWebhookCore(raw, signature);
+    return ok(responseBody(result));
+  } catch (error) {
+    const code = String(error?.code || "WHATSAPP_WEBHOOK_FAILED").slice(0, 140);
+    if (code === "WHATSAPP_WEBHOOK_UNAUTHORIZED" || code === "WHATSAPP_WABA_ID_MISMATCH" || code === "WHATSAPP_PHONE_ID_MISMATCH") {
+      return forbidden(responseBody({ ok: false, error: "WHATSAPP_WEBHOOK_UNAUTHORIZED" }));
+    }
+    if (/WHATSAPP_WEBHOOK_(?:BAD_JSON|BODY_INVALID|OBJECT_INVALID)|WHATSAPP_INBOUND_(?:ID_INVALID|TIMESTAMP_INVALID)/.test(code)) {
+      return badRequest(responseBody({ ok: false, error: code }));
+    }
+    console.error("[WhatsApp Customer Care] Signed webhook processing failed", { code });
+    // A transient failure must not be falsely acknowledged; Meta may retry.
+    return serverError(responseBody({ ok: false, error: "WHATSAPP_WEBHOOK_RETRY_REQUIRED" }));
   }
 }
