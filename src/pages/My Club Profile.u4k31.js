@@ -3,6 +3,7 @@
 // V12.1 repairs startup handshake loss and duplicate bootstrap pressure without changing the embed contract.
 
 import wixLocationFrontend from "wix-location-frontend";
+import { getCustomerSupportBootstrap, listCustomerSupportCases, getCustomerSupportCase, addCustomerSupportMessage, createCustomerSupportCase } from "backend/SKANDI_CORE/customerSupport.web";
 import { authentication } from "wix-members-frontend";
 import {
   getCustomerProfileBootstrap,
@@ -100,7 +101,8 @@ const VALID_PAGES = Object.freeze({
   club: new Set(["overview", "activity", "program"]),
   trips: new Set(["upcoming", "past", "drafts"]),
   profile: new Set(["details", "travelers", "wallet", "saved"]),
-  account: new Set(["notifications", "settings"])
+  account: new Set(["notifications", "settings"]),
+  support: new Set(["cases", "new"])
 });
 
 const LEGACY_TABS = Object.freeze({
@@ -113,7 +115,8 @@ const LEGACY_TABS = Object.freeze({
   wallet: ["profile", "wallet"],
   saved: ["profile", "saved"],
   notifications: ["account", "notifications"],
-  settings: ["account", "settings"]
+  settings: ["account", "settings"],
+  support: ["support", "cases"]
 });
 
 function resolvePage(payload = {}) {
@@ -128,6 +131,7 @@ function resolvePage(payload = {}) {
 }
 
 function legacyTab(section, view) {
+  if (section === "support") return "support";
   if (section === "trips" && view === "drafts") return "orders";
   if (section === "trips") return "trips";
   if (section === "profile" && view === "travelers") return "travelers";
@@ -226,6 +230,20 @@ async function run(type, payload = {}) {
         result = await bootstrap(payload, { force: true });
         post("MY_PROFILE_RESULT", { requestId: request, action: type, result });
         return;
+      case "MY_PROFILE_SUPPORT_LOAD": {
+        const [bootstrapResult, casesResult] = await Promise.all([getCustomerSupportBootstrap(), listCustomerSupportCases({})]);
+        result = { workflows: bootstrapResult?.workflows || [], cases: casesResult?.cases || [] };
+        break;
+      }
+      case "MY_PROFILE_SUPPORT_OPEN":
+        result = await getCustomerSupportCase({ caseId: String(payload.caseId || "").slice(0, 160) });
+        break;
+      case "MY_PROFILE_SUPPORT_REPLY":
+        result = await addCustomerSupportMessage({ caseId: String(payload.caseId || "").slice(0, 160), content: String(payload.content || "").slice(0, 12000) });
+        break;
+      case "MY_PROFILE_SUPPORT_CREATE":
+        result = await createCustomerSupportCase({ input: { ...payload.input, source: "member-helpdesk", sourceChannel: "MEMBER_HELPDESK", sourcePage: "/my-profile", memberPriority: true } });
+        break;
       case "MY_PROFILE_SAVE_PROFILE":
         result = await updateCustomerProfile(payload);
         break;
