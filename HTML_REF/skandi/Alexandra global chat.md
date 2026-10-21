@@ -1,12 +1,12 @@
-# SKANDI ALEXANDRA — V12.7 SITEWIDE ALEXANDRA GLOBAL LAUNCHER
+# SKANDI ALEXANDRA — V12.7 SITEWIDE ALEXANDRA GLOBAL CHAT
 
 ## INFO / LOG
 - Wix site: SKANDI TRAVELS, Wix Studio.
 - System: customer-facing SKANDI only. Exclude staff/ALTEA/RIA INTRA pages.
-- Wix site-master HTML Component: `#skandiAlexandraLauncherEmbed` (NEW, add in Wix Studio site elements; pin to page bottom left).
-- Runtime source: `WIX_HTML/Alexandra Launcher.html` (complete, identical to HTML source below).
+- Wix site-master HTML Component: `#skandiAlexandraGlobalEmbed` (NEW, add in Wix Studio site elements; pin to page bottom left).
+- Runtime source: `WIX_HTML/Alexandra Global Chat.html` (complete, identical to HTML source below).
 - Required site Velo host: current `src/pages/masterPage.js` invoking `src/public/alexandraGlobalBridge.js` (masterPage.js binding now provided from the user-supplied 2026-10-21 Wix source, preserving newer custom logo assets).
-- Purpose: Site-wide bottom-left launcher, separate small component so closed panel cannot block page interactions.
+- Purpose: Site-wide persistent conversation panel, hidden until launched, Wix AI SDK through canonical support web facade.
 - Message source: `SKANDI_SUPPORT_CHAT` for panel; `SKANDI_ALEXANDRA_LAUNCHER` for launcher; parent replies source `SKANDI_WIX_PARENT`.
 - Canonical backend: `backend/SKANDI_CORE/customerSupport.web.js` → `alexandraWixAi.js` + `alexandraKnowledge.js` for AI answers; customerSupport.js for authorized case creation; no duplicate database or model.
 - Canonical support cases: existing customer_support_cases / customer_support_messages.
@@ -19,107 +19,29 @@
 - 2026-10-21 V12.7: new public sitewide global component prepared; dark-navy SKANDI branding, fixed bottom-left pin location by Wix Studio setup, minimization, browser-tab conversation state, canonical Customer Service case creation, WhatsApp +1 711-216-0382 and call +1 951-620-7875. WhatsApp supplied number is an invalid +1 N11 area code; link held pending a valid Meta-registered number.
 - 2026-10-21 V12.7 master-source convergence: compared the complete user-provided 1059-line Wix masterPage.js, installed bridge bootstrapping and live route/identity handling without reverting branded Supabase logos, preserved canonical Customer Service case creation. WhatsApp contact remains disabled until valid Meta Business number; voice phone +1 951-620-7875 retained. STATICALLY VERIFIED; REQUIRES LIVE TEST.
 
+- 2026-10-21 V12.7.1: Deployment-source restoration: GitHub `main` masterPage.js imports `public/alexandraGlobalBridge.js` but the public module is absent (confirmed GitHub 404). Restore the complete previously approved bridge at `src/public/alexandraGlobalBridge.js`, preserve existing Wix AI `customerSupport.web.js` endpoints and `masterPage.js`. This reference file is restored with unchanged full embed HTML. In Wix Studio set `#skandiAlexandraGlobalEmbed` to Hidden on load via Properties & Events (not breakpoint Hide); keep launcher visible and both site-wide. A visibly embedded chat with an empty `sessionId` silently declines form submission until the bridge starts the actual AI session, which explains the inert initial text field when the master import fails. STATICALLY VERIFIED; REQUIRES LIVE TEST after Git sync, Wix build and publish.
+
 ## COMPLETE HTML SOURCE
 ```html
 <!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Alexandra · SKANDI</title>
-<style>
-  * { box-sizing: border-box; }
-  html, body {
-    margin: 0;
-    width: 100%;
-    height: 100%;
-    background: transparent;
-    overflow: hidden;
-    font-family: Arial, sans-serif;
-  }
-  button {
-    position: relative;
-    display: grid;
-    place-items: center;
-    width: 74px;
-    height:74px;
-    padding: 0;
-    border: 2px solid #9de0e5;
-    border-radius: 50%;
-    background: linear-gradient(135deg,#074379,#022e64);
-    color: white;
-    box-shadow: 0 8px 24px rgba(2,46,100,.3);
-    cursor: pointer;
-    overflow: hidden;
-  }
-  button:focus-visible {
-    outline: 3px solid #5fc7cf;
-    outline-offset: -4px;
-  }
-  button video {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    pointer-events: none;
-  }
-  .mark {
-    position: relative;
-    z-index: 1;
-    font: bold 27px Georgia, serif;
-    line-height: 1;
-    color: #fff;
-  }
-  .label {
-    position: relative;
-    z-index: 1;
-    display: block;
-    margin-top: -12px;
-    color: #9de0e5;
-    font-size: 7px;
-    font-weight: bold;
-    letter-spacing: .09em;
-    text-transform: uppercase;
-  }
-</style>
-</head>
-<body>
-
-<button id="launch" type="button" aria-label="Open Alexandra SKANDI customer service chat">
-  <video autoplay muted loop playsinline>
-    <source src="https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/MP4/SKANDI_ALEXANDRA_AVATAR_LOOP_WHITE-BACKGROUND_01.mp4" type="video/mp4">
-  </video>
-</button>
-
-<script>(()=>{
-  'use strict';
-  const source = 'SKANDI_ALEXANDRA_LAUNCHER';
-  const send = type => window.parent.postMessage({source, type}, '*');
-  
-  const video = document.querySelector('video');
-  
-  // Set video speed to 0.75x
-  if (video) {
-    video.playbackRate = 0.75;
-    video.addEventListener('ratechange', () => {
-      if (video.playbackRate !== 0.75) video.playbackRate = 0.75;
-    });
-  }
-
-  document.getElementById('launch').addEventListener('click', () => send('SUPPORT_LAUNCHER_CLICK'));
-  
-  window.addEventListener('message', e => {
-    if (e.source !== window.parent) return;
-    if (e.data?.source === 'SKANDI_WIX_PARENT' && e.data?.type === 'SUPPORT_LAUNCHER_ERROR') {
-      document.getElementById('launch').title = e.data?.payload?.message || 'Alexandra unavailable';
-    }
-  });
-
-  send('SUPPORT_LAUNCHER_READY');
-  setTimeout(() => send('SUPPORT_LAUNCHER_READY'), 900);
-})();</script>
-
-</body>
-</html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Alexandra · SKANDI Customer Service</title><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@500;600;700&display=swap" rel="stylesheet"><style>
+:root{--navy:#022e64;--deep:#03111f;--aqua:#5fc7cf;--ivory:#fbfaf6;--line:#dce3e8;--slate:#48596b}*{box-sizing:border-box}html,body{width:100%;height:100%;margin:0;background:transparent}body{font-family:Inter,Arial,sans-serif;color:#16283c}button,textarea,input{font:inherit}button{cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}#chat{width:100%;height:100%;display:flex;flex-direction:column;min-height:0;overflow:hidden;border:1px solid rgba(95,199,207,.5);border-radius:18px;background:var(--ivory);box-shadow:0 16px 44px rgba(3,17,31,.22)}.head{display:flex;align-items:center;gap:12px;flex:none;padding:15px;background:linear-gradient(135deg,#062749,#022e64);color:white}.avatar{display:grid;place-items:center;width:42px;height:42px;flex:none;border:1px solid #78d4dc;border-radius:12px;background:rgba(95,199,207,.12);font:700 20px Montserrat,sans-serif;color:#aee9eb}.head h1{margin:0;font:600 18px Montserrat,sans-serif}.head p{margin:4px 0 0;color:#cee1ec;font-size:10px}.spacer{flex:1}.head button{padding:7px 12px;border:1px solid rgba(255,255,255,.25);border-radius:30px;background:transparent;color:white;font-size:11px;font-weight:700}.disclaimer{flex:none;padding:8px 14px;border-bottom:1px solid var(--line);background:#f0f7f7;color:#526777;font-size:10px;line-height:1.5}.messages{flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column;gap:12px;padding:16px 13px;overscroll-behavior:contain}.bubble{align-self:flex-start;max-width:94%;padding:12px 13px;border:1px solid #dbe4e7;border-radius:14px 14px 14px 3px;background:white;color:#273a4b;font-size:12px;line-height:1.58;white-space:pre-wrap;overflow-wrap:anywhere}.bubble.user{align-self:flex-end;border-color:#022e64;border-radius:14px 14px 3px 14px;background:#022e64;color:white}.meta{margin-bottom:5px;color:#76889b;font-size:9px;font-weight:700}.bubble.user .meta{color:#cbdce9}.status{flex:none;min-height:20px;padding:0 14px;color:#527584;font-size:10px}.status.error{color:#983c37}.footer{flex:none;padding:11px 12px 13px;border-top:1px solid var(--line);background:#fff}.compose{display:flex;gap:7px}.compose textarea{flex:1;min-width:0;max-height:90px;min-height:46px;padding:10px;border:1px solid #cbd7de;border-radius:11px;resize:vertical;background:var(--ivory);font-size:12px}.compose button,.actions button,.case-form button{min-height:40px;padding:0 12px;border:0;border-radius:10px;background:var(--navy);color:white;font-size:11px;font-weight:700}.actions{display:flex;flex-wrap:wrap;gap:5px;margin-top:9px}.actions button,.actions a{display:inline-flex;align-items:center;justify-content:center;min-height:32px;padding:6px 9px;border:1px solid #d2e0e4;border-radius:10px;background:#eaf3f4;color:var(--navy);font-size:10px;font-weight:700;text-decoration:none}.actions .primary{background:var(--navy);color:#fff}.case-form{display:none;flex:none;max-height:60%;overflow:auto;padding:13px;border-top:1px solid var(--line);background:#f4f6f7}.case-form.open{display:block}.case-form h2{margin:0 0 8px;font:600 14px Montserrat,sans-serif}.case-form p{margin:0 0 10px;color:#637386;font-size:11px;line-height:1.5}.case-form label{display:block;margin-bottom:8px;color:#45586b;font-size:10px;font-weight:700}.case-form input,.case-form textarea{display:block;width:100%;margin-top:4px;padding:8px 10px;border:1px solid #cad8e2;border-radius:8px;background:white;color:#17283a;font-size:12px}.case-form button{width:100%}@media(max-width:620px){#chat{border-radius:0;border:0}.head{padding-top:max(15px,env(safe-area-inset-top))}.footer{padding-bottom:max(13px,env(safe-area-inset-bottom))}}
+</style></head><body><section id="chat" aria-label="Alexandra SKANDI Customer Service"><header class="head"><div class="avatar" aria-hidden="true">A</div><div><h1>Alexandra</h1><p>SKANDI Digital Customer Service · AI</p></div><div class="spacer"></div><button id="close" type="button" aria-label="Minimise Alexandra">Minimise</button></header><div class="disclaimer">General travel assistance. Do not share passwords, payment card details, passport information or other sensitive data in AI chat. Your requests to SKANDI Customer Service use a separate case workflow.</div><main id="messages" class="messages" role="log" aria-live="polite"></main><div id="status" class="status" role="status" aria-live="polite"></div><footer class="footer"><form id="composeForm" class="compose"><textarea id="question" rows="2" maxlength="1700" required placeholder="Ask Alexandra about travel..." aria-label="Your message"></textarea><button type="submit" id="send">Send</button></form><div class="actions"><button type="button" class="primary" id="support">My Support</button><button type="button" id="newCase">Request follow-up</button><button type="button" disabled title="WhatsApp contact is unavailable until a valid SKANDI Business number is verified">WhatsApp</button><a href="tel:+19516207875">Call SKANDI</a></div></footer><form id="caseForm" class="case-form"><h2>Customer Service follow-up</h2><p>A SKANDI case is only created after our system confirms it. Do not provide private payment or identity documents.</p><label>Name<input id="caseName" autocomplete="name" maxlength="120" required></label><label>Email<input type="email" id="caseEmail" autocomplete="email" maxlength="254" required></label><label>Subject<input id="caseSubject" maxlength="160" required value="Travel assistance request"></label><label>Details<textarea id="caseDetails" maxlength="2400" rows="3" required></textarea></label><button id="submitCase" type="submit">Submit support request</button></form></section><script>
+(()=>{'use strict';const SOURCE='SKANDI_SUPPORT_CHAT',PARENT='SKANDI_WIX_PARENT',$=id=>document.getElementById(id);let sessionId='',pending=false,casePending=false,currentRequest='',loggedIn=false,counter=0,history=[],messages=[],responseTimer=null,caseTimer=null,opened=false;
+const makeId=()=>`ax_${Date.now().toString(36)}_${(++counter).toString(36)}`;
+const post=(type,payload={})=>window.parent.postMessage({source:SOURCE,type,requestId:payload.requestId||'',payload},'*');
+const status=(message,bad=false)=>{$('status').textContent=message||'';$('status').classList.toggle('error',bad)};
+function say(role,text,save=true){const content=String(text||'').slice(0,1900);if(!content)return;const node=document.createElement('div');node.className='bubble'+(role==='user'?' user':'');const meta=document.createElement('div');meta.className='meta';meta.textContent=role==='user'?'You':'Alexandra';const body=document.createElement('div');body.textContent=content;node.append(meta,body);$('messages').append(node);$('messages').scrollTop=$('messages').scrollHeight;if(save){messages.push({role,content});messages=messages.slice(-18);snapshot()}}
+function snapshot(){if(sessionId)post('SUPPORT_CHAT_SNAPSHOT',{messages:messages.slice(-18),history:history.slice(-8)})}
+function busy(flag){pending=flag;$('send').disabled=flag;$('question').disabled=flag}
+function open(info){opened=true;const next=String(info?.alexandraSession?.sessionId||'');if(!next){status('Alexandra could not confirm the session.',true);return}const isNew=next!==sessionId;sessionId=next;loggedIn=info.loggedIn===true;if(isNew){messages=[];history=[];$('messages').replaceChildren();if(Array.isArray(info?.messages)&&info.messages.length){for(const item of info.messages.slice(-18))if(item&&['user','assistant'].includes(item.role))say(item.role,item.content,false);messages=info.messages.slice(-18);history=Array.isArray(info.history)?info.history.slice(-8):[]}else say('assistant','Welcome to SKANDI Travels. I’m Alexandra, your AI travel assistant. How can I help?')}status('');snapshot()}
+$('close').addEventListener('click',()=>{$('caseForm').classList.remove('open');post('SUPPORT_CHAT_PANEL_CLOSE')});
+$('composeForm').addEventListener('submit',event=>{event.preventDefault();const message=$('question').value.trim();if(!message||pending||!sessionId)return;const id=makeId();currentRequest=id;say('user',message);$('question').value='';busy(true);status('Alexandra is preparing a response...');clearTimeout(responseTimer);responseTimer=setTimeout(()=>{if(currentRequest===id&&pending){busy(false);status('Alexandra did not respond. Please try again.',true)}},35000);post('SUPPORT_CHAT_ALEXANDRA_MESSAGE',{requestId:id,sessionId,message,history:history.slice(-8)});history.push({role:'user',content:message});snapshot()});
+$('newCase').addEventListener('click',()=>{$('caseForm').classList.toggle('open');$('caseDetails').value=$('caseDetails').value||'I would like assistance from SKANDI Customer Service.'});
+$('support').addEventListener('click',()=>post('SUPPORT_CHAT_NAVIGATE',{path:loggedIn?'/my-profile?section=support&view=cases':'/about/support'}));
+$('caseForm').addEventListener('submit',event=>{event.preventDefault();if(casePending)return;casePending=true;$('submitCase').disabled=true;status('Submitting your request...');clearTimeout(caseTimer);caseTimer=setTimeout(()=>{if(casePending){casePending=false;$('submitCase').disabled=false;status('SKANDI did not confirm the request. Check My Support before retrying.',true)}},35000);const fullName=$('caseName').value.trim(),names=fullName.split(/\s+/);post('SUPPORT_CHAT_SUBMIT_FORM',{requestId:makeId(),input:{firstName:names[0]||'',lastName:names.slice(1).join(' '),fullName,email:$('caseEmail').value.trim(),subject:$('caseSubject').value.trim(),message:$('caseDetails').value.trim(),category:'general'}})});
+window.addEventListener('message',event=>{if(event.source!==window.parent)return;let m=event.data;if(typeof m==='string'){try{m=JSON.parse(m)}catch(_){return}}if(!m||m.source!==PARENT)return;const p=m.payload||{};switch(m.type){case 'SUPPORT_CHAT_OPEN':open(p);return;case 'SUPPORT_CHAT_ALEXANDRA_REPLY':if(p.requestId!==currentRequest)return;clearTimeout(responseTimer);busy(false);status('');if(p.reply){say('assistant',p.reply);history.push({role:'assistant',content:p.reply});snapshot()}else status('No answer was returned.',true);return;case 'SUPPORT_CHAT_CASE_CREATED':clearTimeout(caseTimer);casePending=false;$('submitCase').disabled=false;if(p.caseId||p.caseRef){$('caseForm').classList.remove('open');status('Case submitted: '+(p.caseRef||p.caseId))}else status('The server did not confirm the case.',true);return;case 'SUPPORT_CHAT_ERROR':clearTimeout(responseTimer);clearTimeout(caseTimer);busy(false);casePending=false;$('submitCase').disabled=false;status(p.message||'Request failed.',true);return;default:return}});
+post('SUPPORT_CHAT_READY');setTimeout(()=>{if(!opened)post('SUPPORT_CHAT_READY')},900);setTimeout(()=>{if(!opened)post('SUPPORT_CHAT_READY')},2600);
+})();
+</script></body></html>
 ```
