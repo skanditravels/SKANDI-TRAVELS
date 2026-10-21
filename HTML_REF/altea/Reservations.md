@@ -56,6 +56,8 @@
 
 - 2026-10-21 — Stage 14: Duffel order retrieval uses request-bound PNR state, matching only the latest order lookup. A delayed successful response or failed response for an older lookup cannot overwrite a newer lookup in that tab. When retrieving an explicit Duffel order ID, mismatched supplier order IDs are rejected. PNR closing is blocked while a lookup is unresolved. A read-only recheck is exposed for supplier servicing reconciliation; it never clears a required Stripe/supplier reconciliation lock. Remove calls to the undefined `setConnection()` helper from the parent-ready, supplier bootstrap and supplier-error paths; bridge readiness and provider readiness remain independently authoritative. No new provider endpoints, database contracts, or permission changes. STATICALLY VERIFIED; REQUIRES LIVE WIX/DUFFEL TEST.
 
+- 2026-10-21 — Stage 15 (cumulative, read-only Duffel pending order-change servicing): wired the V12 `DUFFEL_GET_ORDER_CHANGE` facade action to a request-ID/order-ID/change-ID correlated recheck for existing staff pending-change records, without introducing any new backend or payment operation. The supplier change record can be rechecked following an unresolved POST when Duffel returned an attributable ID; stale, cross-order and structurally mismatched replies are ignored or rejected. A returned `confirmedAt` suppresses further payment authorization and duplicate change confirmation and retains the reconciliation safeguard until the airline order and Stripe outcome are separately verified. The new read-only supplier details never clear an existing reconciliation lock or infer payment settlement. Source parse and browser-mocked contracts verified; requires live Wix/Duffel/Stripe test.
+
 ## COMPLETE INTENDED HTML
 
 ```html
@@ -1231,6 +1233,7 @@
       changeRequestId: "",
       changeOffers: [],
       pendingChange: null,
+      recheckedChange: null,
       paymentPurpose: null,
       selectedPassengerId: "",
       bookingDocuments: [],
@@ -1367,7 +1370,7 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
     const SESSION_STATE_KEYS = [
       "activeView", "search", "offers", "multiSearchActive", "multiSearchQueue", "multiSearchCompleted", "multiSearchFailed", "multiSearchPendingId", "searchPendingId", "orderLookupRequestId", "orderLookupReference", "offerRefreshRequestId", "offerRefreshOfferId", "seatMapRequestId", "seatMapOfferId", "paymentPrepareRequestId", "paymentPrepareOfferId", "orderCreateRequestId", "orderCreateOfferId", "selectedOffer", "seatMaps", "selectedServices",
       "alteaWorkspace", "selectedPassengerId", "selectedOrder", "cancellation", "customerRefundRequired",
-      "changeRequestId", "changeOffers", "pendingChange", "paymentPurpose", "payment", "servicingRequests", "servicingReconciliation", "cancellationQuoteOrderId",
+      "changeRequestId", "changeOffers", "pendingChange", "recheckedChange", "paymentPurpose", "payment", "servicingRequests", "servicingReconciliation", "cancellationQuoteOrderId",
       "bookingDocuments", "documentCatalog",
       "clubSelectedCustomerId", "clubSearchLoaded", "clubSearchType", "clubMembershipFilter",
       "clubSearchResults", "clubProfiles", "clubSearchText", "customerProfileDetail",
@@ -1437,7 +1440,8 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
         changeRequestId: "",
         changeOffers: [],
         pendingChange: null,
-        servicingRequests: { cancellationQuote:null, cancellationConfirm:null, changeSearch:null, changeCreate:null, changePayment:null, changeConfirm:null },
+        recheckedChange: null,
+        servicingRequests: { cancellationQuote:null, cancellationConfirm:null, changeSearch:null, changeCreate:null, changePayment:null, changeConfirm:null, changeRecheck:null },
         servicingReconciliation: null,
         cancellationQuoteOrderId: "",
         paymentPurpose: null,
@@ -2559,6 +2563,8 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
                 ${!canChange ? alertBox("warning", "Change unavailable", "System does not currently report the change action for this airline order.") : changeSearchMarkup(order)}
                 ${canChange && state.changeOffers.length ? changeOffersMarkup(state.changeOffers) : ""}
                 ${state.pendingChange ? pendingChangeMarkup(state.pendingChange) : ""}
+                ${state.recheckedChange && state.recheckedChange.orderId===order.id && state.recheckedChange.id!==state.pendingChange?.id ? pendingChangeRecheckMarkup(state.recheckedChange) : ""}
+                ${state.recheckedChange && !state.pendingChange && state.selectedOrder?.id===state.recheckedChange.orderId?`<button class="secondary" data-action="recheck-pending-change" ${state.servicingRequests?.changeRecheck?"disabled":""}>Recheck supplier change again</button>`:""}
               </div>
             </section>
             <section class="panel" style="margin-top:10px">
@@ -2615,10 +2621,23 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
     }
 
 
+    function pendingChangeRecheckMarkup(change){
+      const confirmed=Boolean(change.confirmedAt);
+      return `<section class="panel" style="margin-top:12px;box-shadow:none"><div class="panel-head">Supplier change status · read-only recheck</div><div class="panel-body">
+        ${alertBox("warning",confirmed?"Change recorded as confirmed by supplier":"Change record retrieved",confirmed?"Duffel reports a confirmation timestamp. Reconcile the live order and Stripe capture before taking another action.":"Duffel returned a supplier change record. Review this record and the live order independently before releasing any servicing lock.")}
+        <div class="money-line"><span>Change ID</span><strong class="mono">${escapeHTML(change.id||"Not reported")}</strong></div>
+        <div class="money-line"><span>Supplier confirmed at</span><strong>${change.confirmedAt?formatDateTime(change.confirmedAt):"Not confirmed in supplier record"}</strong></div>
+        <div class="money-line"><span>Fare difference</span><strong>${change.changeTotalAmount!=null?money(change.changeTotalAmount,change.changeTotalCurrency):"Not reported"}</strong></div>
+        <div class="money-line"><span>Expires</span><strong>${change.expiresAt?formatDateTime(change.expiresAt):"Not reported"}</strong></div>
+      </div></section>`;
+    }
+
     function pendingChangeMarkup(change){
       const amount=Number(change.changeTotalAmount||0);
       const paymentReady=state.paymentPurpose==="change" && !!state.payment?.paymentIntentId && state.payment?.status==="requires_capture";
       const changeExpired=!!change.expiresAt && Date.parse(change.expiresAt)<=Date.now();
+      const alreadyConfirmed=Boolean(change.confirmedAt);
+      const rechecking=Boolean(state.servicingRequests?.changeRecheck);
       return `<div class="panel" style="margin-top:12px;box-shadow:none"><div class="panel-head">Pending airline change · final review</div><div class="panel-body">
         ${alertBox(amount<0?"warning":"info", amount<0?"Airline refund due":"Airline change ready", amount<0?"Confirming this change returns value through the supplier flow. SKANDI must separately reconcile the customer payment.":"System requires the final current amount shown below before the flight is changed.")}
         <div class="money-line"><span>Change ID</span><strong class="mono">${escapeHTML(change.id||"")}</strong></div>
@@ -2627,10 +2646,13 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
         <div class="money-line"><span>New order total</span><strong>${change.newTotalAmount!=null?money(change.newTotalAmount,change.newTotalCurrency||change.changeTotalCurrency):"Not supplied"}</strong></div>
         <div class="money-line"><span>Price expires</span><strong>${formatDateTime(change.expiresAt)}</strong></div>
         ${changeExpired?alertBox("warning","Supplier change offer expired","Request a fresh airline change quote before authorizing payment or confirming the change."):""}
+        ${alreadyConfirmed?alertBox("warning","Supplier has confirmed this change","Do not submit a duplicate confirmation. Retrieve the latest airline order and reconcile Stripe payment/capture status."):""}
+        ${state.servicingReconciliation?.orderId===change.orderId?alertBox("warning","Servicing reconciliation active","This read-only status is not authorization to repeat a supplier or payment action."):""}
         ${amount>0 && state.paymentPurpose==="change" && state.payment?.paymentIntentId && !paymentReady?alertBox("info","Payment authorization pending","Only a Stripe PaymentIntent with requires_capture status qualifies for the supplier change confirmation."):""}
       </div><div class="panel-foot">
-        ${!changeExpired && amount>0 && !paymentReady?`<button class="primary" data-action="prepare-change-payment">Authorize ${escapeHTML(money(change.changeTotalAmount,change.changeTotalCurrency))}</button>`:""}
-        ${!changeExpired && (amount<=0 || paymentReady)?`<button class="${amount<0?"secondary":"primary"}" data-action="confirm-order-change">Confirm airline change</button>`:""}
+        <button class="secondary" data-action="recheck-pending-change" ${rechecking?"disabled":""}>${rechecking?"Checking supplier…":"Recheck supplier change"}</button>
+        ${!alreadyConfirmed && !changeExpired && !state.servicingReconciliation && amount>0 && !paymentReady?`<button class="primary" data-action="prepare-change-payment">Authorize ${escapeHTML(money(change.changeTotalAmount,change.changeTotalCurrency))}</button>`:""}
+        ${!alreadyConfirmed && !changeExpired && !state.servicingReconciliation && (amount<=0 || paymentReady)?`<button class="${amount<0?"secondary":"primary"}" data-action="confirm-order-change">Confirm airline change</button>`:""}
       </div></div>`;
     }
 
@@ -3008,6 +3030,7 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
         if (action === "search-order-changes") searchOrderChanges();
         if (action === "select-change-offer") selectChangeOffer(element.dataset.changeOfferId);
         if (action === "prepare-change-payment") prepareChangePayment();
+        if (action === "recheck-pending-change") recheckPendingChange();
         if (action === "confirm-order-change") confirmOrderChange();
         if (action === "export-orders") exportOrders();
         if (action === "save-preferences") savePreferences();
@@ -3136,8 +3159,19 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
     }
 
 
+    function recheckPendingChange(){
+      const orderId=state.selectedOrder?.id||"";
+      const changeId=state.pendingChange?.id||state.recheckedChange?.id||"";
+      if(!orderId||!changeId)return toast("Change reference required","Select a supplier change attached to the current order.","warning");
+      if(state.servicingRequests?.changeRecheck)return toast("Supplier lookup running","A change lookup is already in progress.","warning");
+      const requestId=post("DUFFEL_GET_ORDER_CHANGE",{orderChangeId:changeId});
+      if(requestId)state.servicingRequests.changeRecheck={requestId,orderId,changeId};
+    }
+
     function prepareChangePayment(){
       if(!state.pendingChange?.id)return;
+      if(state.pendingChange.confirmedAt)return toast("Change already confirmed","Reconcile the existing supplier change instead of preparing another authorization.","warning");
+      if(state.servicingReconciliation?.orderId===state.selectedOrder?.id||state.servicingRequests?.changeRecheck)return toast("Supplier review required","Complete the supplier change recheck and any required reconciliation before authorizing payment.","warning");
       if(state.payment?.paymentIntentId||state.servicingRequests.changePayment)return toast("Payment session active","Reconcile or complete the existing change payment before creating another authorization.","warning");
       state.paymentPurpose="change";
       const requestId=post("DUFFEL_PREPARE_CHANGE_PAYMENT",{orderChangeId:state.pendingChange.id});
@@ -3148,6 +3182,8 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
     function confirmOrderChange(){
       const change=state.pendingChange;
       if(!change?.id)return;
+      if(change.confirmedAt)return toast("Change already confirmed","Duffel reports this change as confirmed. Retrieve the current order and reconcile any payment status.","warning");
+      if(state.servicingRequests?.changeRecheck)return toast("Supplier status pending","Finish the read-only change recheck first.","warning");
       if(state.servicingReconciliation?.orderId===state.selectedOrder?.id)return toast("Supplier reconciliation required","Check the airline change and Stripe capture status before another submission.","warning");
       if(change.orderId && change.orderId!==state.selectedOrder?.id)return toast("Order mismatch","This change belongs to another supplier order.","danger");
       const amount=Number(change.changeTotalAmount||0);
@@ -3156,7 +3192,7 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
       if(amount>0 && (!paymentIntentId||state.payment?.status!=="requires_capture"))return toast("Authorization required","Complete secure payment authorization; the payment must be in requires_capture status.","warning");
       openModal("Confirm airline change",`${alertBox("warning","Final supplier action","This updates the live airline booking. Review the final fare difference, penalty and routing before confirming.")}<div class="money-line"><span>Change amount</span><strong>${money(change.changeTotalAmount,change.changeTotalCurrency)}</strong></div><div class="money-line"><span>Penalty</span><strong>${change.penaltyTotalAmount!=null?money(change.penaltyTotalAmount,change.penaltyTotalCurrency||change.changeTotalCurrency):"Not supplied"}</strong></div>`,[
         {label:"Back",className:"secondary",close:true},
-        {label:"Confirm change",className:"primary",onClick:()=>{if(change.expiresAt && Date.parse(change.expiresAt)<=Date.now())return toast("Change quote expired","Search for a fresh supplier change offer.","warning");if(amount>0 && (state.payment?.paymentIntentId!==paymentIntentId || state.payment?.status!=="requires_capture"))return toast("Authorization required","The payment authorization is not ready or has changed.","warning");closeModal();const requestId=post("DUFFEL_CONFIRM_ORDER_CHANGE",{orderChangeId:change.id,paymentIntentId});if(requestId)state.servicingRequests.changeConfirm={requestId,orderId:state.selectedOrder?.id,changeId:change.id};}}
+        {label:"Confirm change",className:"primary",onClick:()=>{if(change.confirmedAt)return toast("Change already confirmed","Do not resubmit a confirmed supplier change.","warning");if(change.expiresAt && Date.parse(change.expiresAt)<=Date.now())return toast("Change quote expired","Search for a fresh supplier change offer.","warning");if(amount>0 && (state.payment?.paymentIntentId!==paymentIntentId || state.payment?.status!=="requires_capture"))return toast("Authorization required","The payment authorization is not ready or has changed.","warning");closeModal();const requestId=post("DUFFEL_CONFIRM_ORDER_CHANGE",{orderChangeId:change.id,paymentIntentId});if(requestId)state.servicingRequests.changeConfirm={requestId,orderId:state.selectedOrder?.id,changeId:change.id};}}
       ]);
     }
 
@@ -3779,14 +3815,34 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
         return;
       }
       if (message.type === "DUFFEL_ORDER_CHANGE_PENDING") {
+        const recheck=state.servicingRequests?.changeRecheck;
+        if(recheck && message.requestId===recheck.requestId){
+          state.servicingRequests.changeRecheck=null;
+          if(state.selectedOrder?.id!==recheck.orderId)return;
+          const change=payload.change;
+          if(!change?.id||change.id!==recheck.changeId||change.orderId!==recheck.orderId){
+            toast("Supplier change mismatch","Duffel did not return the requested change for this order. Do not retry the supplier action.","danger");render();return;
+          }
+          state.recheckedChange=change;
+          if(change.confirmedAt){
+            if(state.pendingChange?.id===change.id)state.pendingChange={...state.pendingChange,confirmedAt:change.confirmedAt};
+            state.servicingReconciliation={orderId:recheck.orderId,action:"supplier_change_confirmed_recheck",changeId:change.id};
+            toast("Supplier change confirmed","Duffel reports that the change was confirmed. Check the live order and Stripe before closing reconciliation.","warning");
+          }else{
+            toast("Supplier change retrieved","Duffel reports a pending change. This lookup does not confirm payment authorization or clear reconciliation.","info");
+          }
+          render();return;
+        }
         const expected=state.servicingRequests.changeCreate;
         if(!expected||message.requestId!==expected.requestId||state.selectedOrder?.id!==expected.orderId)return;
         state.servicingRequests.changeCreate=null;
         if(payload.reconciliationRequired===true||!payload.change?.id||payload.change.orderId!==expected.orderId){
+          state.recheckedChange=payload.change?.id&&payload.change?.orderId===expected.orderId?payload.change:null;
           state.servicingReconciliation={orderId:expected.orderId,action:"create_change",providerRequestId:payload.requestId||null,correlationId:payload.correlationId||null};
           toast("Airline change requires reconciliation","The pending change was not verified. Check Duffel before creating another change or payment authorization.","warning");render();return;
         }
         state.pendingChange=payload.change;
+        state.recheckedChange=null;
         state.changeOffers=[];
         if(state.paymentPurpose==="change")invalidatePayment();
         navigate("actions");
@@ -3816,7 +3872,7 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
           render();return;
         }
         state.servicingReconciliation=null;
-        state.changeOffers=[];state.pendingChange=null;state.changeRequestId="";
+        state.changeOffers=[];state.pendingChange=null;state.recheckedChange=null;state.changeRequestId="";
         if(state.paymentPurpose==="change")invalidatePayment();
         if(state.selectedOrder?.id===expected.orderId){
           state.selectedOrder=payload.order;
@@ -3893,12 +3949,13 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
       }
       if (message.type === "DUFFEL_ERROR") {
         const action=String(payload.action||"").toUpperCase();
-        const servicingErrors={DUFFEL_CREATE_CANCELLATION:"cancellationQuote",DUFFEL_CONFIRM_CANCELLATION:"cancellationConfirm",DUFFEL_SEARCH_ORDER_CHANGES:"changeSearch",DUFFEL_CREATE_ORDER_CHANGE:"changeCreate",DUFFEL_PREPARE_CHANGE_PAYMENT:"changePayment",DUFFEL_CONFIRM_ORDER_CHANGE:"changeConfirm"};
+        const servicingErrors={DUFFEL_GET_ORDER_CHANGE:"changeRecheck",DUFFEL_CREATE_CANCELLATION:"cancellationQuote",DUFFEL_CONFIRM_CANCELLATION:"cancellationConfirm",DUFFEL_SEARCH_ORDER_CHANGES:"changeSearch",DUFFEL_CREATE_ORDER_CHANGE:"changeCreate",DUFFEL_PREPARE_CHANGE_PAYMENT:"changePayment",DUFFEL_CONFIRM_ORDER_CHANGE:"changeConfirm"};
         const serviceKey=servicingErrors[action];
         if(serviceKey){
           const expected=state.servicingRequests[serviceKey];
           if(!expected||message.requestId!==expected.requestId)return;
           state.servicingRequests[serviceKey]=null;
+          if(serviceKey==="changeRecheck"){toast("Supplier recheck unavailable","Duffel could not retrieve the pending change. Keep the servicing reconciliation safeguard in place.","warning");render();return;}
           if(serviceKey==="cancellationQuote"){state.cancellation=null;state.cancellationQuoteOrderId="";}
           if(serviceKey==="changePayment"&&state.paymentPurpose==="change"&&!state.payment?.paymentIntentId)state.paymentPurpose=null;
           if(serviceKey==="cancellationConfirm"||serviceKey==="changeConfirm"||serviceKey==="changeCreate"){
