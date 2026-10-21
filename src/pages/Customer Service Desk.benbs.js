@@ -10,6 +10,7 @@ import {
   listAgentSupportCases,
   getAgentSupportCase,
   replyAgentSupportCase,
+  replyAgentWhatsApp,
   updateAgentSupportCase,
   createAgentSupportCase,
   deleteAgentSupportCase
@@ -44,7 +45,22 @@ function findHtml() {
   }
   return null;
 }
-function post(html, type, payload = {}, requestId = "") { html.postMessage({ source: PARENT_SOURCE, type, requestId, payload: { ...objectOf(payload), requestId } }); }
+function asWhatsAppCase(item) {
+  const record = objectOf(item);
+  const isWhatsApp = String(record.source || "").toLowerCase() === "whatsapp" || String(record.sourceChannel || "").toUpperCase() === "WHATSAPP";
+  return !isWhatsApp ? item : { ...record, source: "whatsapp", sourceChannel: "WHATSAPP", channel: "whatsapp", via: "whatsapp", channelLabel: "WhatsApp" };
+}
+function markWhatsAppCases(payload) {
+  const data = objectOf(payload);
+  return {
+    ...data,
+    ...(Array.isArray(data.cases) ? { cases: data.cases.map(asWhatsAppCase) } : {}),
+    ...(data.case ? { case: asWhatsAppCase(data.case) } : {})
+  };
+}
+function post(html, type, payload = {}, requestId = "") {
+  html.postMessage({ source: PARENT_SOURCE, type, requestId, payload: { ...markWhatsAppCases(payload), requestId } });
+}
 function caseIdOf(payload) { return String(payload.caseId ?? payload.case_id ?? payload.ticketId ?? payload.ticket_id ?? payload.id ?? payload.case?.caseId ?? payload.case?.case_id ?? payload.case?.externalId ?? "").trim(); }
 function replyOf(payload) {
   const content = String(payload.content ?? payload.message?.body ?? payload.body ?? "").trim();
@@ -223,15 +239,22 @@ $w.onReady(function () {
         case "AGENT_REPLY": {
           const caseId = caseIdOf(payload);
           activeCaseId = caseId;
-          const result = await replyAgentSupportCase({
-            caseId,
-            content: replyOf(payload),
-            privateNote: payload.privateNote === true || payload.mode === "internal"
-          });
+          // Public replies to WhatsApp-origin cases must travel through Meta, not LiveKit.
+          // Check the canonical case source; never trust the channel claimed by HTML.
+          const current = await getAgentSupportCase({ caseId, includeLiveKit: false, silentSync: true });
+          const isWhatsApp = String(current?.case?.source || "").toLowerCase() === "whatsapp" ||
+            String(current?.case?.sourceChannel || "").toUpperCase() === "WHATSAPP";
+          const privateNote = payload.privateNote === true || payload.mode === "internal";
+          const result = isWhatsApp && !privateNote
+            ? await replyAgentWhatsApp({ caseId, content: replyOf(payload) })
+            : await replyAgentSupportCase({ caseId, content: replyOf(payload), privateNote });
           const updates = updatesOf(payload);
           if (Object.keys(updates).length) await updateAgentSupportCase({ caseId, updates });
           const detail = await getAgentSupportCase({ caseId, includeLiveKit: false, silentSync: true });
-          post(html, "AGENT_REPLY_SENT", { ...objectOf(detail), sentMessage: result.sentMessage, privateNote: result.privateNote, livekitSession: result.livekitSession }, requestId);
+          post(html, "AGENT_REPLY_SENT", { ...objectOf(detail), sentMessage: result.sentMessage,
+            privateNote: privateNote, livekitSession: isWhatsApp ? null : result.livekitSession,
+            providerAccepted: result.providerAccepted === true,
+            deliveryConfirmed: result.deliveryConfirmed === true }, requestId);
           await refreshListAfterMutation(html, requestId);
           return;
         }
