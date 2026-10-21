@@ -61,6 +61,16 @@
 ## COMPLETE INTENDED HTML
 
 ```html
+
+## 2026-10-21 — V12 Duffel offer-data integrity repair (Stage 16)
+
+- Runtime target: `/riaintra/success-factors/altea/reservations` HTML `#alteaReservationsEmbed`. No Wix page code, backend or database change.
+- Correct supplier quote handling: missing price and selected-service amounts are no longer formatted as $0.00; a missing or mismatched selected-service price is never silently omitted from displayed totals.
+- Correct fare review: missing base amount stays unknown (not derived from total minus tax); missing cabin stays unknown (not presumed Economy); unknown change/refund permissions remain unconfirmed (not shown as denied).
+- Payment deadline, price guarantee and offer expiry remain separate supplier fields; one can no longer substitute for another. The carrier offer display no longer asserts live-mode status without supplier evidence.
+- Source verification: static inline JavaScript parse, retained HTML_REF full payload, ZIP CRC. Provider and Wix production integration require live verification.
+- OPEN: Advanced Duffel request filtering/private fare and loyalty writes, itineraries response support, fare-upsell endpoint, customer Home/Booking parity, additional servicing, SUPERADMIN credits, and live financial reconciliation remain outside this deliverable. Do not install this stage as proof those functions are complete.
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -4039,17 +4049,23 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
     function selectedServiceTotal() {
       const currency = state.selectedOffer?.totalCurrency;
       return Array.from(state.selectedServices.values()).reduce((sum, service) => {
-        if (service.totalCurrency !== currency) return sum;
-        return sum + Number(service.totalAmount || 0) * Number(service.quantity || 1);
+        const amount = service?.totalAmount;
+        const quantity = Number(service?.quantity ?? 1);
+        if (!currency || service?.totalCurrency !== currency || amount === null || amount === undefined || amount === "" || !Number.isFinite(Number(amount)) || !Number.isInteger(quantity) || quantity < 1) return NaN;
+        return sum + Number(amount) * quantity;
       }, 0);
     }
 
 
     function orderTotal() {
-      if (state.paymentPurpose === "order" && state.payment?.amount && state.payment?.currency === state.selectedOffer?.totalCurrency) {
+      const currency = state.selectedOffer?.totalCurrency;
+      if (!currency) return NaN;
+      if (state.paymentPurpose === "order" && state.payment?.amount !== null && state.payment?.amount !== undefined && state.payment?.amount !== "" && state.payment?.currency === currency) {
         return Number(state.payment.amount);
       }
-      return Number(state.selectedOffer?.totalAmount || 0) + selectedServiceTotal();
+      const quotedAmount = state.selectedOffer?.totalAmount;
+      if (quotedAmount === null || quotedAmount === undefined || quotedAmount === "" || !Number.isFinite(Number(quotedAmount))) return NaN;
+      return Number(quotedAmount) + selectedServiceTotal();
     }
 
 
@@ -4190,6 +4206,7 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
 
 
     function money(amount, currency = "USD") {
+      if (amount === null || amount === undefined || (typeof amount === "string" && amount.trim() === "")) return "—";
       const value = Number(amount);
       if (!Number.isFinite(value)) return "—";
       try {
@@ -6270,17 +6287,19 @@ html,body{margin:0!important;padding:0!important;width:203.20mm!important;height
 
 
   function offerBase(offer){
-    if(offer?.baseAmount!=null)return Number(offer.baseAmount);
-    const total=Number(offer?.totalAmount),tax=Number(offer?.taxAmount);
-    return Number.isFinite(total)&&Number.isFinite(tax)?Math.max(0,total-tax):null;
+    const raw = offer?.baseAmount;
+    if(raw===null || raw===undefined || raw==="" || !Number.isFinite(Number(raw))) return null;
+    return Number(raw);
   }
   function offerStatus(offer){return skandiDuffelOfferExpiredNow(offer)?{code:"UN",label:"Expired / unavailable",cls:"un"}:{code:"OO",label:"Active offer",cls:""};}
   function conditionCard(title,condition){
     if(!condition)return `<div class="rule-card"><div class="label">${escapeHTML(title)}</div><strong>Not supplied</strong><div class="muted">Carrier did not return a structured rule.</div></div>`;
-    const allowed=condition.allowed===true;
+    const allowed=condition.allowed;
     const penalty=condition.penalty_amount??condition.penaltyAmount;
     const currency=condition.penalty_currency??condition.penaltyCurrency??state.selectedOffer?.totalCurrency;
-    return `<div class="rule-card"><div class="label">${escapeHTML(title)}</div><strong>${allowed?"YES":"NO"}</strong><div class="muted">${allowed?(penalty!=null?`Penalty ${money(penalty,currency)}`:"Penalty not supplied"):"Not permitted before departure"}</div></div>`;
+    const verdict=allowed===true?"YES":allowed===false?"NO":"Not specified";
+    const detail=allowed===true?(penalty!=null?`Penalty ${money(penalty,currency)}`:"Penalty not supplied"):(allowed===false?"Not permitted before departure":"Carrier did not specify permission or penalties");
+    return `<div class="rule-card"><div class="label">${escapeHTML(title)}</div><strong>${verdict}</strong><div class="muted">${detail}</div></div>`;
   }
   function offerRulesMarkup(offer){
     const c=offer?.conditions||{};
@@ -6297,7 +6316,7 @@ html,body{margin:0!important;padding:0!important;width:203.20mm!important;height
         // 2. If the backend stripped the array to save space, look for flattened data or create a safe fallback
         if (!pax.length) {
           pax = [{
-            cabinClass: seg.cabinClassMarketingName || seg.cabin_class || "Economy",
+            cabinClass: seg.cabinClassMarketingName || seg.cabin_class || "Not supplied",
             fareBasisCode: seg.fareBasisCode || seg.fare_basis_code || slice.fareBasisCode || slice.fare_basis_code || "—",
             baggages: seg.baggages || seg.included_baggage || null // null means the data was stripped
           }];
@@ -6305,7 +6324,7 @@ html,body{margin:0!important;padding:0!important;width:203.20mm!important;height
 
         pax.forEach((p) => {
           // Format Fare & Cabin Display (e.g. "Economy · Flex")
-          const cabRaw = p.cabinClassMarketingName || p.cabin_class_marketing_name || p.cabinClass || p.cabin_class || "Economy";
+          const cabRaw = p.cabinClassMarketingName || p.cabin_class_marketing_name || p.cabinClass || p.cabin_class || "Not supplied";
           const cab = humanize(cabRaw);
           const brand = slice.fareBrandName || slice.fare_brand_name;
           const fareDisplay = brand && brand.toLowerCase() !== cab.toLowerCase() 
@@ -6349,7 +6368,7 @@ html,body{margin:0!important;padding:0!important;width:203.20mm!important;height
         <div class="automation-section"><div class="automation-head"><span>Fare / baggage detail</span><span class="mono">TQQ/O1</span></div><div class="automation-body" style="padding:0"><table class="mini-table"><thead><tr><th>SEG</th><th>Flight</th><th>Fare brand / cabin</th><th>Fare basis</th><th>Included baggage</th></tr></thead><tbody>${segmentFareRows(offer)}</tbody></table></div></div>
         <div class="automation-note">The system exposes offer-level tax total but the current SKANDI provider model does not invent airport/government tax-code lines when the supplier does not return them.</div>
       </div></section>
-      <aside class="panel"><div class="panel-head"><span>Mini Rules</span><span class="mono">FWR/O1</span></div><div class="panel-body">${offerRulesMarkup(offer)}<div class="money-line" style="margin-top:8px"><span>Payment deadline</span><strong>${formatDateTime(offer.paymentRequiredBy||offer.priceGuaranteeExpiresAt||offer.expiresAt)}</strong></div><div class="money-line"><span>Offer expiry</span><strong>${formatDateTime(offer.expiresAt)}</strong></div></div></aside>
+      <aside class="panel"><div class="panel-head"><span>Mini Rules</span><span class="mono">FWR/O1</span></div><div class="panel-body">${offerRulesMarkup(offer)}<div class="money-line" style="margin-top:8px"><span>Payment deadline</span><strong>${formatDateTime(offer.paymentRequiredBy)}</strong></div><div class="money-line"><span>Offer expiry</span><strong>${formatDateTime(offer.expiresAt)}</strong></div></div></aside>
     </div>`;
   }
 
@@ -6361,7 +6380,7 @@ html,body{margin:0!important;padding:0!important;width:203.20mm!important;height
       ${skandiDuffelOfferExpiredNow(offer)?alertBox("danger","Offer expired","Return to flight search and choose a current offer."):""}
       ${pqrMarkup(offer)}
       <div class="workspace-layout" style="margin-top:10px"><div>${itineraryMarkup(offer)}<section class="panel" style="margin-top:10px"><div class="panel-head">Available baggage and services</div><div class="panel-body" style="padding:0">${serviceListMarkup(offer.availableServices||[])}</div></section><section class="panel" style="margin-top:10px"><div class="panel-head"><span>Seat maps</span><button class="link" data-action="load-seat-maps">Refresh seat maps</button></div><div class="panel-body">${seatMapMarkup()}</div></section></div>
-      <aside class="panel sticky"><div class="panel-head">Offer control</div><div class="panel-body"><div class="money-line"><span>Offer ID</span><strong class="mono">${escapeHTML(offer.id||"—")}</strong></div><div class="money-line"><span>Owner / validating carrier</span><strong>${escapeHTML(offer.owner?.iataCode||offer.owner?.name||"—")}</strong></div><div class="money-line"><span>Offer</span><strong>${money(offer.totalAmount,offer.totalCurrency)}</strong></div><div class="money-line"><span>Selected services</span><strong>${money(selectedServiceTotal(),offer.totalCurrency)}</strong></div><div class="money-line"><span>Total due</span><strong class="price-total">${money(orderTotal(),offer.totalCurrency)}</strong></div><div class="money-line"><span>Price guarantee</span><strong>${formatDateTime(offer.priceGuaranteeExpiresAt||offer.expiresAt)}</strong></div></div><div class="panel-foot"><button class="primary" data-view="workspace" ${skandiDuffelOfferExpiredNow(offer)?"disabled":""}>Continue</button></div></aside></div>`;
+      <aside class="panel sticky"><div class="panel-head">Offer control</div><div class="panel-body"><div class="money-line"><span>Offer ID</span><strong class="mono">${escapeHTML(offer.id||"—")}</strong></div><div class="money-line"><span>Owner / validating carrier</span><strong>${escapeHTML(offer.owner?.iataCode||offer.owner?.name||"—")}</strong></div><div class="money-line"><span>Offer</span><strong>${money(offer.totalAmount,offer.totalCurrency)}</strong></div><div class="money-line"><span>Selected services</span><strong>${money(selectedServiceTotal(),offer.totalCurrency)}</strong></div><div class="money-line"><span>Total due</span><strong class="price-total">${money(orderTotal(),offer.totalCurrency)}</strong></div><div class="money-line"><span>Price guarantee</span><strong>${formatDateTime(offer.priceGuaranteeExpiresAt)}</strong></div></div><div class="panel-foot"><button class="primary" data-view="workspace" ${skandiDuffelOfferExpiredNow(offer)?"disabled":""}>Continue</button></div></aside></div>`;
   }
 
 
@@ -7216,7 +7235,7 @@ html,body{margin:0!important;padding:0!important;width:203.20mm!important;height
     const code=owner.iataCode||owner.iata_code||offer?.slices?.[0]?.segments?.[0]?.marketingCarrier?.iataCode||"";
     const name=owner.name||offer?.slices?.[0]?.segments?.[0]?.marketingCarrier?.name||code||"Operating airline";
     const url=airlineLogoUrl(offer);
-    return `<div class="offer-carrier-identity">${url?`<img class="offer-carrier-logo" src="${escapeAttr(url)}" alt="${escapeAttr(name)}" onerror="this.style.display='none';this.nextElementSibling.style.display='grid'">`:""}<div class="offer-carrier-mark" style="${url?"display:none":""}">${escapeHTML(code||"AIR")}</div><div><div class="offer-carrier-name">${escapeHTML(name)}</div><div class="offer-carrier-meta">${escapeHTML(code||"—")} · live supplier offer</div></div></div>`;
+    return `<div class="offer-carrier-identity">${url?`<img class="offer-carrier-logo" src="${escapeAttr(url)}" alt="${escapeAttr(name)}" onerror="this.style.display='none';this.nextElementSibling.style.display='grid'">`:""}<div class="offer-carrier-mark" style="${url?"display:none":""}">${escapeHTML(code||"AIR")}</div><div><div class="offer-carrier-name">${escapeHTML(name)}</div><div class="offer-carrier-meta">${escapeHTML(code||"—")} · supplier offer</div></div></div>`;
   }
 
   renderOffer=function renderOfferV12Fixed(){
@@ -7227,7 +7246,7 @@ html,body{margin:0!important;padding:0!important;width:203.20mm!important;height
       ${carrierIdentity(offer)}
       ${window.skandiAlteaPqrRender(offer)}
       <div class="workspace-layout" style="margin-top:10px"><div>${itineraryMarkup(offer)}${supplierTravelDisclosure(offer)}<section class="panel" style="margin-top:10px"><div class="panel-head">Available baggage and airline services</div><div class="panel-body" style="padding:0">${serviceListMarkup(offer.availableServices||[])}</div></section><div class="alert info" style="margin-top:10px"><span>ℹ</span><div><strong>Seats & Services is a separate PNR step</strong>Refreshing this offer updates price and availability only. Seat maps load only when the Seats & Services page is opened.</div></div></div>
-      <aside class="panel sticky"><div class="panel-head">Offer control</div><div class="panel-body"><div class="money-line"><span>Offer ID</span><strong class="mono">${escapeHTML(offer.id||"—")}</strong></div><div class="money-line"><span>Owner / validating carrier</span><strong>${escapeHTML(offer.owner?.iataCode||offer.owner?.iata_code||offer.owner?.name||"—")}</strong></div><div class="money-line"><span>Offer</span><strong>${money(offer.totalAmount,offer.totalCurrency)}</strong></div><div class="money-line"><span>Selected services</span><strong>${money(selectedServiceTotal(),offer.totalCurrency)}</strong></div><div class="money-line"><span>Total due</span><strong class="price-total">${money(orderTotal(),offer.totalCurrency)}</strong></div><div class="money-line"><span>Price guarantee</span><strong>${formatDateTime(offer.priceGuaranteeExpiresAt||offer.expiresAt)}</strong></div></div><div class="panel-foot"><button class="primary" data-view="workspace" ${skandiDuffelOfferExpiredNow(offer)?"disabled":""}>Continue</button></div></aside></div>`;
+      <aside class="panel sticky"><div class="panel-head">Offer control</div><div class="panel-body"><div class="money-line"><span>Offer ID</span><strong class="mono">${escapeHTML(offer.id||"—")}</strong></div><div class="money-line"><span>Owner / validating carrier</span><strong>${escapeHTML(offer.owner?.iataCode||offer.owner?.iata_code||offer.owner?.name||"—")}</strong></div><div class="money-line"><span>Offer</span><strong>${money(offer.totalAmount,offer.totalCurrency)}</strong></div><div class="money-line"><span>Selected services</span><strong>${money(selectedServiceTotal(),offer.totalCurrency)}</strong></div><div class="money-line"><span>Total due</span><strong class="price-total">${money(orderTotal(),offer.totalCurrency)}</strong></div><div class="money-line"><span>Price guarantee</span><strong>${formatDateTime(offer.priceGuaranteeExpiresAt)}</strong></div></div><div class="panel-foot"><button class="primary" data-view="workspace" ${skandiDuffelOfferExpiredNow(offer)?"disabled":""}>Continue</button></div></aside></div>`;
   };
 
   renderServices=function renderServicesV12Fixed(){
