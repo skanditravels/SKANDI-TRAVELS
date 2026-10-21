@@ -50,6 +50,12 @@
 
 - 2026-10-20 — Stage 11: Verified supplier order creation by request ID within the originating V12 PNR tab; completed order responses now clear the paid-session UI and expose success only when a genuine order ID is returned. Ambiguous failures direct agent to reconcile supplier order/payment state rather than suggest an unsafe retry. Prevent closure of PNRs with active exclusive supplier operations or unresolved payment authorizations. Remove an unreachable cross-scope `booking74()` call that caused a runtime exception when the supplier returned an order without an ALTEA workspace. Confirmed-order APIS metadata enrichment requires the same accepted request and clears transient traveler drafts after use. Booking-file fare/seat/conditions projections no longer invent missing supplier fare brands, cabins, baggage entitlements, order amounts/currencies or refund/change permissions. No backend order/payment method or payment-capture behavior changed. STATICALLY VERIFIED; REQUIRES LIVE TEST.
 
+- 2026-10-21 — Stage 12 (cumulative supplier servicing integrity): correlate cancellation quote, cancellation confirmation and airline change search/create/payment/confirmation replies with the originating PNR request and supplier order. A 202/reconciliationRequired Duffel response, incomplete order record, or unverified payment capture must not be displayed as a successful cancellation or flight change; retain uncertainty and require supplier/Stripe reconciliation before retry. Remove the fabricated cancelled-order fallback and prevent wrong-order cancellation quote usage. Keep existing Wix message types, Supabase/Stripe boundaries, and V12 page controller. STATICALLY VERIFIED; REQUIRES LIVE DUFFEL/WIX/STRIPE TEST.
+
+- 2026-10-21 — Stage 13 (cumulative local time-window search result filtering): outbound and return departure/arrival time intervals are now available for staff flight search and independent MULTISEARCH; only supplier-returned offers are narrowed, using scheduled airport-local times, with midnight intervals and accurate result counts. Provider offer requests, offer IDs, authorization and payment workflows are untouched; these filters are explicitly NOT Duffel request-side filters. Missing supplier tax breakdown amounts are not replaced with 0. STATICALLY VERIFIED; REQUIRES LIVE WIX/DUFFEL TEST.
+
+- 2026-10-21 — Stage 14: Duffel order retrieval uses request-bound PNR state, matching only the latest order lookup. A delayed successful response or failed response for an older lookup cannot overwrite a newer lookup in that tab. When retrieving an explicit Duffel order ID, mismatched supplier order IDs are rejected. PNR closing is blocked while a lookup is unresolved. A read-only recheck is exposed for supplier servicing reconciliation; it never clears a required Stripe/supplier reconciliation lock. Remove calls to the undefined `setConnection()` helper from the parent-ready, supplier bootstrap and supplier-error paths; bridge readiness and provider readiness remain independently authoritative. No new provider endpoints, database contracts, or permission changes. STATICALLY VERIFIED; REQUIRES LIVE WIX/DUFFEL TEST.
+
 ## COMPLETE INTENDED HTML
 
 ```html
@@ -1239,6 +1245,8 @@
       multiSearchFailed:0,
       multiSearchPendingId:"",
       searchPendingId:"",
+      orderLookupRequestId:"",
+      orderLookupReference:"",
       offerRefreshRequestId:"",
       offerRefreshOfferId:"",
       seatMapRequestId:"",
@@ -1357,9 +1365,9 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
       "actions", "baggage", "manifests", "history"
     ]);
     const SESSION_STATE_KEYS = [
-      "activeView", "search", "offers", "multiSearchActive", "multiSearchQueue", "multiSearchCompleted", "multiSearchFailed", "multiSearchPendingId", "searchPendingId", "offerRefreshRequestId", "offerRefreshOfferId", "seatMapRequestId", "seatMapOfferId", "paymentPrepareRequestId", "paymentPrepareOfferId", "orderCreateRequestId", "orderCreateOfferId", "selectedOffer", "seatMaps", "selectedServices",
+      "activeView", "search", "offers", "multiSearchActive", "multiSearchQueue", "multiSearchCompleted", "multiSearchFailed", "multiSearchPendingId", "searchPendingId", "orderLookupRequestId", "orderLookupReference", "offerRefreshRequestId", "offerRefreshOfferId", "seatMapRequestId", "seatMapOfferId", "paymentPrepareRequestId", "paymentPrepareOfferId", "orderCreateRequestId", "orderCreateOfferId", "selectedOffer", "seatMaps", "selectedServices",
       "alteaWorkspace", "selectedPassengerId", "selectedOrder", "cancellation", "customerRefundRequired",
-      "changeRequestId", "changeOffers", "pendingChange", "paymentPurpose", "payment",
+      "changeRequestId", "changeOffers", "pendingChange", "paymentPurpose", "payment", "servicingRequests", "servicingReconciliation", "cancellationQuoteOrderId",
       "bookingDocuments", "documentCatalog",
       "clubSelectedCustomerId", "clubSearchLoaded", "clubSearchType", "clubMembershipFilter",
       "clubSearchResults", "clubProfiles", "clubSearchText", "customerProfileDetail",
@@ -1410,6 +1418,8 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
       multiSearchFailed:0,
       multiSearchPendingId:"",
       searchPendingId:"",
+        orderLookupRequestId:"",
+        orderLookupReference:"",
         offerRefreshRequestId:"",
         offerRefreshOfferId:"",
         seatMapRequestId:"",
@@ -1427,6 +1437,9 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
         changeRequestId: "",
         changeOffers: [],
         pendingChange: null,
+        servicingRequests: { cancellationQuote:null, cancellationConfirm:null, changeSearch:null, changeCreate:null, changePayment:null, changeConfirm:null },
+        servicingReconciliation: null,
+        cancellationQuoteOrderId: "",
         paymentPurpose: null,
         payment: null,
         bookingDocuments: [],
@@ -1586,7 +1599,7 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
       const unresolved = Array.from(requestSessionById).some(([requestId, owner]) =>
         owner === sessionId && state.pending.has(requestId) && EXCLUSIVE_ACTIONS.has(state.pending.get(requestId)));
       const source = sessionId === state.activeSessionId ? state : state.sessions[sessionId];
-      if (unresolved || source?.payment?.paymentIntentId || source?.paymentPrepareRequestId || source?.orderCreateRequestId) {
+      if (unresolved || source?.orderLookupRequestId || source?.payment?.paymentIntentId || source?.paymentPrepareRequestId || source?.orderCreateRequestId) {
         toast("Booking reconciliation required", "This PNR has an active supplier operation or payment session. Complete or reconcile it before closing the tab.", "warning");
         return;
       }
@@ -1685,6 +1698,12 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
       if (options.busy !== false) {
         state.pending.set(requestId, type);
         setBusy(1);
+      }
+      if (type === "DUFFEL_GET_ORDER") {
+        // Bound to the PNR created by post() above; a later lookup supersedes
+        // this request even if an older supplier response completes last.
+        state.orderLookupRequestId = requestId;
+        state.orderLookupReference = String(payload?.orderIdOrReference || "").trim();
       }
       if (type === "DUFFEL_CREATE_ORDER") {
         state.orderCreateRequestId = requestId;
@@ -1935,6 +1954,27 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
               </select>
               </div>
             </div>
+            <div class="panel" style="margin-top:12px" aria-label="Local departure and arrival time filters">
+              <div class="panel-head">Departure / arrival time windows</div>
+              <div class="panel-body">
+                <p class="muted" style="margin:0 0 9px">Optional filters on <strong>returned Duffel offers</strong>, using each airport's local scheduled time. These filters are not submitted to the airline and cannot retrieve additional offers. Leave time fields blank to show every returned fare.</p>
+                <div class="search-options">
+                  <div class="field"><label for="outDepartureFrom">Outbound departure from</label><input type="time" id="outDepartureFrom" value="${escapeAttr(saved.timeFilters?.outDepartureFrom||"")}"></div>
+                  <div class="field"><label for="outDepartureTo">Outbound departure to</label><input type="time" id="outDepartureTo" value="${escapeAttr(saved.timeFilters?.outDepartureTo||"")}"></div>
+                  <div class="field"><label for="outArrivalFrom">Outbound arrival from</label><input type="time" id="outArrivalFrom" value="${escapeAttr(saved.timeFilters?.outArrivalFrom||"")}"></div>
+                  <div class="field"><label for="outArrivalTo">Outbound arrival to</label><input type="time" id="outArrivalTo" value="${escapeAttr(saved.timeFilters?.outArrivalTo||"")}"></div>
+                </div>
+                <div id="returnTimeFilters" style="margin-top:9px">
+                  <div class="search-options">
+                    <div class="field"><label for="inDepartureFrom">Return departure from</label><input type="time" id="inDepartureFrom" value="${escapeAttr(saved.timeFilters?.inDepartureFrom||"")}"></div>
+                    <div class="field"><label for="inDepartureTo">Return departure to</label><input type="time" id="inDepartureTo" value="${escapeAttr(saved.timeFilters?.inDepartureTo||"")}"></div>
+                    <div class="field"><label for="inArrivalFrom">Return arrival from</label><input type="time" id="inArrivalFrom" value="${escapeAttr(saved.timeFilters?.inArrivalFrom||"")}"></div>
+                    <div class="field"><label for="inArrivalTo">Return arrival to</label><input type="time" id="inArrivalTo" value="${escapeAttr(saved.timeFilters?.inArrivalTo||"")}"></div>
+                  </div>
+                </div>
+                <small class="muted">Time intervals can span midnight, for example 22:00–05:00. Return fields apply only to round-trip results.</small>
+              </div>
+            </div>
           </form>
         </section>
         <div style="margin-top:10px">
@@ -1943,10 +1983,54 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
     }
 
 
+    function readOfferTimeFilters(tripType){
+      const keys=["outDepartureFrom","outDepartureTo","outArrivalFrom","outArrivalTo"];
+      if(tripType==="round_trip")keys.push("inDepartureFrom","inDepartureTo","inArrivalFrom","inArrivalTo");
+      const result={};
+      for(const key of keys){
+        const value=String(document.getElementById(key)?.value||"").trim();
+        if(value&&!/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(value)){
+          toast("Invalid time filter","Enter a valid 24-hour time for "+key+".","warning");
+          return null;
+        }
+        if(value)result[key]=value;
+      }
+      return result;
+    }
+    function offerAirportLocalTime(value){
+      const match=String(value||"").match(/T([01]\d|2[0-3]):([0-5]\d)/);
+      return match?match[1]+":"+match[2]:null;
+    }
+    function offerTimeInWindow(value,from,to){
+      if(!from&&!to)return true;
+      const local=offerAirportLocalTime(value);
+      if(!local)return false;
+      if(from&&to&&from>to)return local>=from||local<=to;
+      return (!from||local>=from)&&(!to||local<=to);
+    }
+    function matchesOfferTimeFilters(offer,filters){
+      const slices=Array.isArray(offer?.slices)?offer.slices:[];
+      for(const [index,prefix] of [[0,"out"],[1,"in"]]){
+        const fromDeparture=filters?.[prefix+"DepartureFrom"]||"";
+        const toDeparture=filters?.[prefix+"DepartureTo"]||"";
+        const fromArrival=filters?.[prefix+"ArrivalFrom"]||"";
+        const toArrival=filters?.[prefix+"ArrivalTo"]||"";
+        if(!fromDeparture&&!toDeparture&&!fromArrival&&!toArrival)continue;
+        const segments=Array.isArray(slices[index]?.segments)?slices[index].segments:[];
+        if(!segments.length)return false;
+        if(!offerTimeInWindow(segments[0]?.departingAt,fromDeparture,toDeparture))return false;
+        if(!offerTimeInWindow(segments[segments.length-1]?.arrivingAt,fromArrival,toArrival))return false;
+      }
+      return true;
+    }
     function renderOfferResults() {
+      // Client-side narrowing of supplier-returned offers only: Duffel search remains unfiltered.
+      const filters=state.search?.timeFilters||{};
+      const filteredOffers=state.offers.filter(offer=>matchesOfferTimeFilters(offer,filters));
+      const activeFilters=Object.keys(filters).length>0;
       // Group offers by flight schedule (Origin -> Destination & Departure Time)
       const groupedOffers = {};
-      state.offers.forEach(offer => {
+      filteredOffers.forEach(offer => {
         const key = (offer.slices || []).map(slice => (slice.segments || []).map(seg => [seg.origin?.iataCode,seg.destination?.iataCode,seg.departingAt,seg.arrivingAt,seg.marketingCarrier?.iataCode,seg.marketingFlightNumber].join(":" )).join("|")).join(" / ");
         if (!groupedOffers[key]) groupedOffers[key] = [];
         groupedOffers[key].push(offer);
@@ -1957,11 +2041,12 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
       return `<div class="offer-layout">
         <section>
           <div class="panel-head">
-            <span>${flightGroups.length} flight option(s) · ${state.offers.length} total fares${state.multiSearchActive?` · ${state.multiSearchCompleted} completed, ${state.multiSearchQueue.length} queued, ${state.multiSearchFailed} failed`:""}</span>
-            <span class="muted">Grouped by schedule</span>
+            <span>${flightGroups.length} flight option(s) · ${filteredOffers.length}${activeFilters?` of ${state.offers.length}`:""} returned fares${state.multiSearchActive?` · ${state.multiSearchCompleted} completed, ${state.multiSearchQueue.length} queued, ${state.multiSearchFailed} failed`:""}</span>
+            <span class="muted">${activeFilters?"Filtered locally · not airline search criteria":"Grouped by schedule"}</span>
           </div>
           <div style="margin-top:8px">
-            ${flightGroups.map(group => renderNestedFlightGroup(group)).join("")}
+            ${activeFilters?`<p class="muted" role="status">${filteredOffers.length} of ${state.offers.length} supplier-returned offers meet the selected local-airport time windows. This filtering does not change the Duffel request or guarantee all matching airline inventory was returned.</p>`:""}
+            ${filteredOffers.length?flightGroups.map(group => renderNestedFlightGroup(group)).join(""):emptyState("✈","No offers meet these time windows","Try wider time windows or a fresh supplier search. Only the currently returned offers were filtered.")}
           </div>
         </section>
         <aside class="panel sticky">
@@ -2195,7 +2280,7 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
       return raw.map(t=>{
         const label=[t.code,t.name||"Tax",t.description].filter(Boolean).join(" · ");
         const isCarrier=t.carrierImposed===true||t.carrier_imposed===true;
-        return `<div class="money-line"><span>${escapeHTML(label)}${isCarrier?" (carrier imposed)":""}</span><strong>${money(t.amount||0,t.currency||offer.taxCurrency||offer.totalCurrency)}</strong></div>`;
+        return `<div class="money-line"><span>${escapeHTML(label)}${isCarrier?" (carrier imposed)":""}</span><strong>${t.amount!=null&&t.amount!==""?money(t.amount,t.currency||offer.taxCurrency||offer.totalCurrency):"Not provided by supplier"}</strong></div>`;
       }).join("");
     }
     function supplierTravelDisclosure(offer) {
@@ -3030,9 +3115,11 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
       const departureDate=$("#changeDate")?.value||"";
       const cabinClass=$("#changeCabin")?.value||"economy";
       if(!removeSliceId||!origin||!destination||!departureDate)return toast("Change details required","Complete the replacement route and date.","warning");
+      if(state.servicingReconciliation?.orderId===order.id)return toast("Supplier reconciliation required","Verify the previous supplier servicing outcome before submitting another change.","warning");
       state.changeOffers=[];state.pendingChange=null;
       if(state.paymentPurpose==="change")invalidatePayment();
-      post("DUFFEL_SEARCH_ORDER_CHANGES",{orderId:order.id,removeSliceId,addSlice:{origin,destination,departureDate,cabinClass}});
+      const requestId=post("DUFFEL_SEARCH_ORDER_CHANGES",{orderId:order.id,removeSliceId,addSlice:{origin,destination,departureDate,cabinClass}});
+      if(requestId)state.servicingRequests.changeSearch={requestId,orderId:order.id};
     }
 
 
@@ -3041,29 +3128,35 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
       const selected=state.changeOffers.find(o=>o.id===id);
       if(!selected)return toast("Unknown change offer","Search again to retrieve current supplier offers.","warning");
       if(selected.expiresAt && Date.parse(selected.expiresAt)<=Date.now())return toast("Change offer expired","Search again for a current supplier offer.","warning");
+      if(state.servicingReconciliation?.orderId===state.selectedOrder?.id)return toast("Supplier reconciliation required","Reconcile the earlier supplier change before creating another.","warning");
       state.pendingChange=null;
       if(state.paymentPurpose==="change")invalidatePayment();
-      post("DUFFEL_CREATE_ORDER_CHANGE",{orderChangeOfferId:id});
+      const requestId=post("DUFFEL_CREATE_ORDER_CHANGE",{orderChangeOfferId:id});
+      if(requestId)state.servicingRequests.changeCreate={requestId,orderId:state.selectedOrder?.id,offerId:id};
     }
 
 
     function prepareChangePayment(){
       if(!state.pendingChange?.id)return;
+      if(state.payment?.paymentIntentId||state.servicingRequests.changePayment)return toast("Payment session active","Reconcile or complete the existing change payment before creating another authorization.","warning");
       state.paymentPurpose="change";
-      post("DUFFEL_PREPARE_CHANGE_PAYMENT",{orderChangeId:state.pendingChange.id});
+      const requestId=post("DUFFEL_PREPARE_CHANGE_PAYMENT",{orderChangeId:state.pendingChange.id});
+      if(requestId)state.servicingRequests.changePayment={requestId,orderId:state.selectedOrder?.id,changeId:state.pendingChange.id};
     }
 
 
     function confirmOrderChange(){
       const change=state.pendingChange;
       if(!change?.id)return;
+      if(state.servicingReconciliation?.orderId===state.selectedOrder?.id)return toast("Supplier reconciliation required","Check the airline change and Stripe capture status before another submission.","warning");
+      if(change.orderId && change.orderId!==state.selectedOrder?.id)return toast("Order mismatch","This change belongs to another supplier order.","danger");
       const amount=Number(change.changeTotalAmount||0);
       if(change.expiresAt && Date.parse(change.expiresAt)<=Date.now())return toast("Change quote expired","Search for a fresh supplier change offer before confirming.","warning");
       const paymentIntentId=amount>0 && state.paymentPurpose==="change"?state.payment?.paymentIntentId:null;
       if(amount>0 && (!paymentIntentId||state.payment?.status!=="requires_capture"))return toast("Authorization required","Complete secure payment authorization; the payment must be in requires_capture status.","warning");
       openModal("Confirm airline change",`${alertBox("warning","Final supplier action","This updates the live airline booking. Review the final fare difference, penalty and routing before confirming.")}<div class="money-line"><span>Change amount</span><strong>${money(change.changeTotalAmount,change.changeTotalCurrency)}</strong></div><div class="money-line"><span>Penalty</span><strong>${change.penaltyTotalAmount!=null?money(change.penaltyTotalAmount,change.penaltyTotalCurrency||change.changeTotalCurrency):"Not supplied"}</strong></div>`,[
         {label:"Back",className:"secondary",close:true},
-        {label:"Confirm change",className:"primary",onClick:()=>{if(change.expiresAt && Date.parse(change.expiresAt)<=Date.now())return toast("Change quote expired","Search for a fresh supplier change offer.","warning");if(amount>0 && (state.payment?.paymentIntentId!==paymentIntentId || state.payment?.status!=="requires_capture"))return toast("Authorization required","The payment authorization is not ready or has changed.","warning");closeModal();post("DUFFEL_CONFIRM_ORDER_CHANGE",{orderChangeId:change.id,paymentIntentId});}}
+        {label:"Confirm change",className:"primary",onClick:()=>{if(change.expiresAt && Date.parse(change.expiresAt)<=Date.now())return toast("Change quote expired","Search for a fresh supplier change offer.","warning");if(amount>0 && (state.payment?.paymentIntentId!==paymentIntentId || state.payment?.status!=="requires_capture"))return toast("Authorization required","The payment authorization is not ready or has changed.","warning");closeModal();const requestId=post("DUFFEL_CONFIRM_ORDER_CHANGE",{orderChangeId:change.id,paymentIntentId});if(requestId)state.servicingRequests.changeConfirm={requestId,orderId:state.selectedOrder?.id,changeId:change.id};}}
       ]);
     }
 
@@ -3089,10 +3182,12 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
         const adults=Number($("#adults").value);
         if(adults+childAges.length+infantAges.length>9||infantAges.length>adults)return toast("Invalid passenger combination","Maximum 9 travelers; no more infants than adults.","warning");
         const passengers=[...Array.from({length:adults},()=>({type:"adult"})),...childAges.map(age=>({age})),...infantAges.map(age=>({age}))];
+        const timeFilters=readOfferTimeFilters(tripType);
+        if(timeFilters===null)return;
         const cabinClass=$("#cabinClass").value,maxConnections=Number($("#maxConnections").value),supplierTimeout=state.preferences.supplierTimeout;
         state.multiSearchQueue=planned.map(route=>({slices:[route],passengers,cabinClass,maxConnections,supplierTimeout}));
         state.multiSearchCompleted=0;state.multiSearchFailed=0;state.multiSearchPendingId="";state.searchPendingId="";state.multiSearchActive=true;
-        state.search={tripType,multiSearchInput:$("#multiSearchInput").value,adults,childAges,infantAges,cabinClass,maxConnections};
+        state.search={tripType,multiSearchInput:$("#multiSearchInput").value,adults,childAges,infantAges,cabinClass,maxConnections,timeFilters};
         state.offers=[];state.selectedOffer=null;state.seatMaps=[];state.selectedServices.clear();state.payment=null;
         state.multiSearchPendingId=post("DUFFEL_SEARCH_OFFERS",state.multiSearchQueue.shift());
         return;
@@ -3106,6 +3201,8 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
       const infantAges = parseAges($("#infantAges").value, 0, 1, "Infant");
       const adults = Number($("#adults").value);
       const currency = $("#currency").value.toUpperCase();
+      const timeFilters=readOfferTimeFilters(tripType);
+      if(timeFilters===null)return;
 
 
       if (!origin || !destination) return toast("Invalid airport", "Use valid three-letter IATA airport codes.", "warning");
@@ -3122,7 +3219,8 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
       state.search = {
         tripType, origin, destination, departureDate, returnDate, adults, childAges, infantAges,
         cabinClass: $("#cabinClass").value,
-        maxConnections: Number($("#maxConnections").value)
+        maxConnections: Number($("#maxConnections").value),
+        timeFilters
       };
       state.offers = [];
       state.selectedOffer = null;
@@ -3155,6 +3253,7 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
       const oneWay=mode==="one_way",multi=mode==="multi_search";
       $("#returnDateField")?.classList.toggle("hidden",oneWay||multi);
       $("#multiSearchField")?.classList.toggle("hidden",!multi);
+      $("#returnTimeFilters")?.classList.toggle("hidden",mode!=="round_trip");
       ["#origin","#destination","#departureDate"].forEach(id=>{const control=$(id);if(control){control.required=!multi;control.closest(".field")?.classList.toggle("hidden",multi)}});
       const swap=$("[data-action=swap-airports]");if(swap)swap.classList.toggle("hidden",multi);
       if($("#returnDate"))$("#returnDate").required=!(oneWay||multi);
@@ -3396,13 +3495,21 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
 
 
     function quoteCancellation() {
-      if (!state.selectedOrder?.id) return;
-      post("DUFFEL_CREATE_CANCELLATION", { orderId: state.selectedOrder.id });
+      const orderId=state.selectedOrder?.id;
+      if(!orderId)return;
+      if(state.servicingReconciliation?.orderId===orderId)return toast("Supplier reconciliation required","Check the outstanding supplier cancellation outcome before trying again.","warning");
+      state.cancellation=null;
+      state.cancellationQuoteOrderId="";
+      const requestId=post("DUFFEL_CREATE_CANCELLATION", { orderId });
+      if(requestId)state.servicingRequests.cancellationQuote={requestId,orderId};
     }
 
 
     function confirmCancellation() {
       if (!state.cancellation?.id) return;
+      const orderId=state.selectedOrder?.id||"";
+      if(!orderId||state.cancellationQuoteOrderId!==orderId||state.cancellation.orderId&&state.cancellation.orderId!==orderId)return toast("Order mismatch","Get a cancellation quote for the currently selected supplier order.","warning");
+      if(state.servicingReconciliation?.orderId===orderId)return toast("Supplier reconciliation required","Review the previous cancellation outcome with the airline before resubmitting.","warning");
       if (state.cancellation.expiresAt && Date.parse(state.cancellation.expiresAt)<=Date.now())return toast("Cancellation quote expired","Create a fresh cancellation quote before confirming.","warning");
       openModal("Confirm cancellation", `
         ${alertBox("danger", "This action is irreversible", `The booking order will be cancelled. Quoted airline refund: ${money(state.cancellation.refundAmount, state.cancellation.refundCurrency)}.`)}
@@ -3412,8 +3519,11 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
         { label: "Cancel order", className: "danger-btn", onClick: () => {
           if (!$("#cancelAck").checked) return toast("Confirmation required", "Select the confirmation checkbox.", "warning");
           if(state.cancellation?.expiresAt && Date.parse(state.cancellation.expiresAt)<=Date.now())return toast("Cancellation quote expired","Create a fresh cancellation quote.","warning");
+          if(!state.selectedOrder?.id||state.selectedOrder.id!==orderId||state.cancellationQuoteOrderId!==orderId)return toast("Order changed","The selected order has changed. Create a fresh cancellation quote.","warning");
+          const cancellationId=state.cancellation.id;
           closeModal();
-          post("DUFFEL_CONFIRM_CANCELLATION", { cancellationId: state.cancellation.id });
+          const requestId=post("DUFFEL_CONFIRM_CANCELLATION", { cancellationId });
+          if(requestId)state.servicingRequests.cancellationConfirm={requestId,orderId,cancellationId};
         }}
       ]);
     }
@@ -3456,7 +3566,7 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
       // Wix page code sends this after attaching html.onMessage().
       // Re-send the child startup events so iframe/page-code load order cannot lose the handshake.
       if (message.type === "DUFFEL_PARENT_READY") {
-        setConnection("online", "Bridge connected");
+        // Parent message validated: bridgeConnected updated above; Duffel not yet ready.
         if (state.activeView === "dashboard") render();
         post("DUFFEL_APP_READY", { version: "R-006.3-unified", retry: true }, { busy: false });
         post("ALTEA_UNIFIED_BOOTSTRAP", { version: "R-006.3-unified", retry: true }, { busy: false });
@@ -3470,6 +3580,18 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
       if (message.type === "DUFFEL_ORDER_CREATED" || message.type === "DUFFEL_ORDER_RESULT") {
         const created = message.type === "DUFFEL_ORDER_CREATED";
         if (created && (!state.orderCreateRequestId || message.requestId !== state.orderCreateRequestId)) return;
+        if (!created) {
+          // A supplier order fetch is authoritative only for its own request.
+          // Do not let older lookups reselect the wrong PNR/order.
+          if (!state.orderLookupRequestId || message.requestId !== state.orderLookupRequestId) return;
+          const expectedReference = state.orderLookupReference;
+          state.orderLookupRequestId = "";
+          state.orderLookupReference = "";
+          if (/^ord_[A-Za-z0-9_]+$/.test(expectedReference) && payload.order?.id !== expectedReference) {
+            toast("Supplier order mismatch", "Duffel returned a different order ID from the one requested. The current PNR was not changed.", "danger");
+            return;
+          }
+        }
         if (!payload.order?.id) {
           toast("Supplier order unavailable", "The supplier did not return a valid order. Verify order status before attempting another booking.", "danger");
           if (created) { state.orderCreateRequestId = ""; state.orderCreateOfferId = ""; }
@@ -3517,7 +3639,7 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
         state.bridgeConnected = true;state.connected = true;
         state.environment = payload.environment || "Duffel";
         state.preferences.currency = payload.defaultCurrency || state.preferences.currency;
-        setConnection("online", "System ready");
+        // Duffel readiness was established by the successful bootstrap response.
         if (Array.isArray(payload.orders)) state.orders = payload.orders;
         render();
         return;
@@ -3611,27 +3733,43 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
         return;
       }
       if (message.type === "DUFFEL_CANCELLATION_QUOTED") {
-        state.cancellation = payload.cancellation;
+        const expected=state.servicingRequests.cancellationQuote;
+        if(!expected||message.requestId!==expected.requestId||state.selectedOrder?.id!==expected.orderId)return;
+        state.servicingRequests.cancellationQuote=null;
+        if(!payload.cancellation?.id||payload.cancellation.orderId!==expected.orderId){
+          toast("Cancellation quote unavailable","Duffel did not return a valid quote for this order.","danger");return;
+        }
+        state.cancellation=payload.cancellation;
+        state.cancellationQuoteOrderId=expected.orderId;
         render();
         return;
       }
       if (message.type === "DUFFEL_CANCELLATION_CONFIRMED") {
-        state.cancellation = null;
-        state.selectedOrder = payload.order || { ...state.selectedOrder, status: "cancelled" };
-        state.customerRefundRequired = Boolean(payload.customerRefundRequired);
-        upsertOrder(state.selectedOrder);
-        if(payload.alteaWorkspace){ state.alteaWorkspace=payload.alteaWorkspace; upsertAlteaBooking(payload.alteaWorkspace.booking); }
+        const expected=state.servicingRequests.cancellationConfirm;
+        if(!expected||message.requestId!==expected.requestId)return;
+        state.servicingRequests.cancellationConfirm=null;
+        state.cancellation=null;
+        state.cancellationQuoteOrderId="";
+        const matching=state.selectedOrder?.id===expected.orderId;
+        const validOrder=payload.order?.id===expected.orderId && payload.order?.status==="cancelled";
+        const validCancellation=payload.cancellation?.id===expected.cancellationId && payload.cancellation?.orderId===expected.orderId;
+        if(payload.reconciliationRequired===true||!validOrder||!validCancellation){
+          state.servicingReconciliation={orderId:expected.orderId,action:"cancellation",providerRequestId:payload.requestId||null,correlationId:payload.correlationId||null};
+          toast("Cancellation requires reconciliation","Supplier cancellation is not verified. Check the Duffel order and customer payment/refund status; do not send another cancellation request.","warning");
+          render();return;
+        }
+        state.servicingReconciliation=null;
+        if(matching){state.selectedOrder=payload.order;state.customerRefundRequired=Boolean(payload.customerRefundRequired);}
+        upsertOrder(payload.order);
+        if(matching&&payload.alteaWorkspace){state.alteaWorkspace=payload.alteaWorkspace;upsertAlteaBooking(payload.alteaWorkspace.booking);}
         render();
-        toast(
-          "Order cancelled",
-          state.customerRefundRequired
-            ? "System confirmed cancellation. The customer payment now requires refund reconciliation."
-            : "System confirmed the cancellation.",
-          state.customerRefundRequired ? "warning" : "success"
-        );
+        toast("Order cancelled",payload.customerRefundRequired?"Cancellation confirmed by Duffel. Customer refund reconciliation is required.":"Duffel confirmed this order as cancelled.",payload.customerRefundRequired?"warning":"success");
         return;
       }
       if (message.type === "DUFFEL_ORDER_CHANGE_OFFERS") {
+        const expected=state.servicingRequests.changeSearch;
+        if(!expected||message.requestId!==expected.requestId||state.selectedOrder?.id!==expected.orderId||payload.orderId&&payload.orderId!==expected.orderId)return;
+        state.servicingRequests.changeSearch=null;
         state.changeRequestId=payload.changeRequestId||"";
         state.changeOffers=payload.offers||[];
         state.pendingChange=null;
@@ -3641,26 +3779,53 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
         return;
       }
       if (message.type === "DUFFEL_ORDER_CHANGE_PENDING") {
-        state.pendingChange=payload.change||null;
+        const expected=state.servicingRequests.changeCreate;
+        if(!expected||message.requestId!==expected.requestId||state.selectedOrder?.id!==expected.orderId)return;
+        state.servicingRequests.changeCreate=null;
+        if(payload.reconciliationRequired===true||!payload.change?.id||payload.change.orderId!==expected.orderId){
+          state.servicingReconciliation={orderId:expected.orderId,action:"create_change",providerRequestId:payload.requestId||null,correlationId:payload.correlationId||null};
+          toast("Airline change requires reconciliation","The pending change was not verified. Check Duffel before creating another change or payment authorization.","warning");render();return;
+        }
+        state.pendingChange=payload.change;
         state.changeOffers=[];
         if(state.paymentPurpose==="change")invalidatePayment();
         navigate("actions");
         return;
       }
       if (message.type === "DUFFEL_CHANGE_PAYMENT_RESULT") {
-        state.pendingChange=payload.change||state.pendingChange;
+        const expected=state.servicingRequests.changePayment;
+        if(!expected||message.requestId!==expected.requestId||state.selectedOrder?.id!==expected.orderId||state.pendingChange?.id!==expected.changeId)return;
+        state.servicingRequests.changePayment=null;
+        if(payload.change?.id&&payload.change.id!==expected.changeId)return toast("Change payment mismatch","Supplier returned an authorization for a different airline change.","danger");
+        if(payload.paymentRequired!==false&&(!payload.payment?.paymentIntentId||!payload.payment?.clientSecret||!payload.payment?.publishableKey)){
+          toast("Payment details unavailable","The supplier change payment response was incomplete. Reconcile before retrying.","warning");return;
+        }
+        if(payload.change)state.pendingChange=payload.change;
         if(payload.payment){state.paymentPurpose="change";mountStripePayment(payload.payment);}else{render();}
         return;
       }
       if (message.type === "DUFFEL_ORDER_CHANGE_CONFIRMED") {
-        state.selectedOrder=payload.order||state.selectedOrder;
+        const expected=state.servicingRequests.changeConfirm;
+        if(!expected||message.requestId!==expected.requestId)return;
+        state.servicingRequests.changeConfirm=null;
+        const validOrder=payload.order?.id===expected.orderId;
+        const validChange=payload.change?.id===expected.changeId&&payload.change?.orderId===expected.orderId;
+        if(payload.reconciliationRequired===true||payload.customerPaymentCaptureRequired===true||!validOrder||!validChange){
+          state.servicingReconciliation={orderId:expected.orderId,action:"confirm_change",providerRequestId:payload.requestId||null,correlationId:payload.correlationId||null};
+          toast("Airline change requires reconciliation","Supplier confirmation or Stripe capture is not verified. Reconcile the order and payment before retrying the change.","warning");
+          render();return;
+        }
+        state.servicingReconciliation=null;
         state.changeOffers=[];state.pendingChange=null;state.changeRequestId="";
-        state.customerRefundRequired=Boolean(payload.customerRefundRequired);
         if(state.paymentPurpose==="change")invalidatePayment();
-        if(state.selectedOrder)upsertOrder(state.selectedOrder);
-        if(payload.alteaWorkspace){state.alteaWorkspace=payload.alteaWorkspace;upsertAlteaBooking(payload.alteaWorkspace.booking);}
+        if(state.selectedOrder?.id===expected.orderId){
+          state.selectedOrder=payload.order;
+          state.customerRefundRequired=Boolean(payload.customerRefundRequired);
+          if(payload.alteaWorkspace){state.alteaWorkspace=payload.alteaWorkspace;upsertAlteaBooking(payload.alteaWorkspace.booking);}
+        }
+        upsertOrder(payload.order);
         navigate("actions");
-        toast("Airline change confirmed",payload.customerRefundRequired?`Customer refund reconciliation required: ${money(payload.customerRefundAmount,payload.customerRefundCurrency)}.`:"System confirmed the new flight itinerary.",payload.customerRefundRequired?"warning":"success");
+        toast("Airline change confirmed",payload.customerRefundRequired?`Customer refund reconciliation required: ${money(payload.customerRefundAmount,payload.customerRefundCurrency)}.`:"Duffel confirmed this airline change.",payload.customerRefundRequired?"warning":"success");
         return;
       }
       if (message.type === "ALTEA_UNIFIED_BOOTSTRAP_RESULT") {
@@ -3727,6 +3892,26 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
         return;
       }
       if (message.type === "DUFFEL_ERROR") {
+        const action=String(payload.action||"").toUpperCase();
+        const servicingErrors={DUFFEL_CREATE_CANCELLATION:"cancellationQuote",DUFFEL_CONFIRM_CANCELLATION:"cancellationConfirm",DUFFEL_SEARCH_ORDER_CHANGES:"changeSearch",DUFFEL_CREATE_ORDER_CHANGE:"changeCreate",DUFFEL_PREPARE_CHANGE_PAYMENT:"changePayment",DUFFEL_CONFIRM_ORDER_CHANGE:"changeConfirm"};
+        const serviceKey=servicingErrors[action];
+        if(serviceKey){
+          const expected=state.servicingRequests[serviceKey];
+          if(!expected||message.requestId!==expected.requestId)return;
+          state.servicingRequests[serviceKey]=null;
+          if(serviceKey==="cancellationQuote"){state.cancellation=null;state.cancellationQuoteOrderId="";}
+          if(serviceKey==="changePayment"&&state.paymentPurpose==="change"&&!state.payment?.paymentIntentId)state.paymentPurpose=null;
+          if(serviceKey==="cancellationConfirm"||serviceKey==="changeConfirm"||serviceKey==="changeCreate"){
+            state.servicingReconciliation={orderId:expected.orderId,action:serviceKey,code:payload.code||"DUFFEL_ERROR"};
+            toast("Supplier servicing requires reconciliation","The supplier action was not verified. Check the airline order and payment state before submitting another action.","warning");
+            render();return;
+          }
+        }
+        if (String(payload.action || "").toUpperCase() === "DUFFEL_GET_ORDER") {
+          if (!state.orderLookupRequestId || message.requestId !== state.orderLookupRequestId) return;
+          state.orderLookupRequestId = "";
+          state.orderLookupReference = "";
+        }
         if (String(payload.action || "").toUpperCase() === "DUFFEL_CREATE_ORDER") {
           if (!state.orderCreateRequestId || message.requestId !== state.orderCreateRequestId) return;
           state.orderCreateRequestId = "";
@@ -3770,8 +3955,8 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
           if(!state.multiSearchActive)toast("Multi-search finished",`${state.multiSearchCompleted} succeeded, ${state.multiSearchFailed} failed; ${state.offers.length} distinct offers.`,state.multiSearchFailed?"warning":"success");
           return;
         }
-        setConnection(state.connected ? "online" : "error", state.connected ? "Duffel ready" : "Connection error");
-        if (payload.code === "AUTH_REQUIRED") setConnection("error", "Access denied");
+        // A single provider failure does not imply the Wix parent bridge is offline.
+        if (payload.code === "AUTH_REQUIRED") { state.connected = false; render(); }
         toast("Action failed", payload.message || "The reservation action could not be completed.", "danger");
       }
     }
@@ -7172,7 +7357,11 @@ html,body{margin:0!important;padding:0!important;width:203.20mm!important;height
   }
   renderActions=function renderActionsV12DuffelAudit(){
     const original=previousActions();
-    return state.selectedOrder?.id?original+audit(state.selectedOrder):original;
+    const reconciliation=state.servicingReconciliation;
+    const warning=Boolean(reconciliation?.orderId)&&reconciliation.orderId===state.selectedOrder?.id
+      ? `<div class="alert warning" role="alert"><span>!</span><div><strong>Supplier servicing outcome unresolved</strong>Check Duffel order ${escapeHTML(reconciliation.orderId)}, the airline change/cancellation outcome, and customer payment or refund before another submission. Supplier request ID: ${escapeHTML(reconciliation.providerRequestId||"not returned")}. This view does not mark the operation successful.<div style="margin-top:8px"><button type="button" class="secondary" data-action="refresh-current-order">Recheck Duffel order (read only)</button></div><small>Rechecking shows the latest supplier order; it does not independently confirm Stripe captures or refunds, or remove the reconciliation lock.</small></div></div>`
+      : "";
+    return state.selectedOrder?.id?original+warning+audit(state.selectedOrder):original;
   };
 })();
 </script>
