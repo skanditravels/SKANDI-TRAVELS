@@ -119,7 +119,7 @@ const MASTER_CONFIG = Object.freeze({
         Object.freeze({
           title:"HELP & TRAVEL INFO",
           links:Object.freeze([
-            { label:"Before you travel", path:SITE_MAP.travelInfo },
+            { label:"Information Center", path:SITE_MAP.travelInfo },
             { label:"Passport & Visa", path:APP_ROUTES.passportVisa },
             { label:"Baggage Allowance", path:APP_ROUTES.baggageAllowance },
             { label:"Travel Insurance", path:APP_ROUTES.travelInsurance },
