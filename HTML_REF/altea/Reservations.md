@@ -48,6 +48,8 @@
 - 2026-10-20 — Stage 9: bounded pending request correlation added to Duffel offer refresh and seat-map responses in each PNR session. Delayed or out-of-order results can no longer replace newer offer/segment selections; matching backend errors clear only their own pending lookup. No API, checkout, permission, exported symbol or price authority changed. STATICALLY VERIFIED; REQUIRES LIVE TEST.
 - 2026-10-20 — Stage 10: Wix `DUFFEL_PROGRESS` messages no longer settle in-flight operations or unlock exclusive actions before their terminal response; per-PNR Duffel order payment preparation now retains request/offer identity until completion and rejects unmatched or structurally incomplete Stripe intents. Both existing payment initiation paths use the same guard, and matching prepare failures release the lock. No provider, payment capture, permissions, or facade contracts changed. STATICALLY VERIFIED; REQUIRES LIVE TEST.
 
+- 2026-10-20 — Stage 11: Verified supplier order creation by request ID within the originating V12 PNR tab; completed order responses now clear the paid-session UI and expose success only when a genuine order ID is returned. Ambiguous failures direct agent to reconcile supplier order/payment state rather than suggest an unsafe retry. Prevent closure of PNRs with active exclusive supplier operations or unresolved payment authorizations. Remove an unreachable cross-scope `booking74()` call that caused a runtime exception when the supplier returned an order without an ALTEA workspace. Confirmed-order APIS metadata enrichment requires the same accepted request and clears transient traveler drafts after use. Booking-file fare/seat/conditions projections no longer invent missing supplier fare brands, cabins, baggage entitlements, order amounts/currencies or refund/change permissions. No backend order/payment method or payment-capture behavior changed. STATICALLY VERIFIED; REQUIRES LIVE TEST.
+
 ## COMPLETE INTENDED HTML
 
 ```html
@@ -62,215 +64,36 @@
   <script src="https://assets.duffel.com/components/3.17.0/duffel-card-form.js"></script>
   <script src="https://assets.duffel.com/components/3.17.0/createThreeDSecureSession.js"></script>
   <style>
-    :root {
-      --brand: #005eb8;
-      --brand-dark: #003b73;
-      --brand-mid: #0b75cf;
-      --brand-pale: #eaf4fc;
-      --bg: #eef1f4;
-      --panel: #fff;
-      --line: #cbd3da;
-      --line-dark: #9ca9b4;
-      --text: #1d2a34;
-      --muted: #62717d;
-      --success: #14804a;
-      --success-bg: #e5f6ec;
-      --warning: #8a5200;
-      --warning-bg: #fff3d6;
-      --danger: #b42318;
-      --danger-bg: #fdebea;
-      --info: #0969a8;
-      --shadow: 0 8px 24px rgba(20, 48, 74, .14);
-      --sidebar: 224px;
-      --tabs: 38px;
-      --radius: 3px;
-    }
-
-
+    :root {--brand: #005eb8;--brand-dark: #003b73;--brand-mid: #0b75cf;--brand-pale: #eaf4fc;--bg: #eef1f4;--panel: #fff;--line: #cbd3da;--line-dark: #9ca9b4;--text: #1d2a34;--muted: #62717d;--success: #14804a;--success-bg: #e5f6ec;--warning: #8a5200;--warning-bg: #fff3d6;--danger: #b42318;--danger-bg: #fdebea;--info: #0969a8;--shadow: 0 8px 24px rgba(20, 48, 74, .14);--sidebar: 224px;--tabs: 38px;--radius: 3px;}
     * { box-sizing: border-box; }
-    html, body {
-      height: 100%;
-      margin: 0;
-      overflow: hidden;
-      background: var(--bg);
-      color: var(--text);
-      font: 12px/1.35 Tahoma, "Segoe UI", Arial, sans-serif;
-    }
+    html, body {height: 100%;margin: 0;overflow: hidden;background: var(--bg);color: var(--text);font: 12px/1.35 Tahoma, "Segoe UI", Arial, sans-serif;}
     button, input, select, textarea { font: inherit; }
     button { cursor: pointer; }
     button:disabled { cursor: not-allowed; opacity: .55; }
     .hidden { display: none !important; }
-    .sr-only {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      padding: 0;
-      margin: -1px;
-      overflow: hidden;
-      clip: rect(0, 0, 0, 0);
-      white-space: nowrap;
-      border: 0;
-    }
-    .app-loader-overlay {
-      position: fixed;
-      inset: 0;
-      z-index: 9999;
-      background: rgba(0, 0, 0, 0.65);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 14px;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.1s ease;
-      font-family: Arial, Tahoma, "Segoe UI", sans-serif;
-    }
-    .app-loader-overlay.active {
-      opacity: 1;
-      pointer-events: auto;
-    }
-    .altea-loader-box {
-      background: linear-gradient(#f2f2f2, #dedede);
-      border: 2px solid #7f7f7f;
-      border-top-color: #555;
-      border-left-color: #555;
-      padding: 18px 24px;
-      box-shadow: 0 12px 36px rgba(0,0,0,0.4);
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      min-width: 320px;
-    }
-    .altea-spinner {
-      width: 24px;
-      height: 24px;
-      border: 3px solid #ccc;
-      border-top-color: #1976ad; /* Amadeus Blue */
-      border-right-color: #f3bd00; /* Amadeus Yellow */
-      border-radius: 50%;
-      animation: altea-spin 0.6s linear infinite;
-    }
-    .altea-loader-content {
-      display: flex;
-      flex-direction: column;
-      gap: 3px;
-    }
-    .app-loader-text {
-      color: #222;
-      font-weight: 700;
-      font-size: 11px;
-      letter-spacing: 0.03em;
-      text-transform: uppercase;
-    }
-    .altea-subtext {
-      color: #555;
-      font-size: 9px;
-      font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
-    }
-    @keyframes altea-spin {
-      to { transform: rotate(360deg); }
-    }
-    #app {
-      height: 100%;
-      display: grid;
-      grid-template-columns: var(--sidebar) 1fr;
-      grid-template-rows: var(--tabs) 1fr;
-      grid-template-areas: "side tabs" "side main";
-      transition: grid-template-columns .18s ease;
-    }
+    .sr-only {position: absolute;width: 1px;height: 1px;padding: 0;margin: -1px;overflow: hidden;clip: rect(0, 0, 0, 0);white-space: nowrap;border: 0;}.app-loader-overlay {position: fixed;inset: 0;z-index: 9999;background: rgba(0, 0, 0, 0.65);display: flex;flex-direction: column;align-items: center;justify-content: center;gap: 14px;opacity: 0;pointer-events: none;transition: opacity 0.1s ease;font-family: Arial, Tahoma, "Segoe UI", sans-serif;}
+    .app-loader-overlay.active {opacity: 1;pointer-events: auto;}
+    .altea-loader-box {background: linear-gradient(#f2f2f2, #dedede);border: 2px solid #7f7f7f;border-top-color: #555;border-left-color: #555;padding: 18px 24px;box-shadow: 0 12px 36px rgba(0,0,0,0.4);display: flex;align-items: center;gap: 16px;min-width: 320px;}
+    .altea-spinner {width: 24px;height: 24px;border: 3px solid #ccc;border-top-color: #1976ad;border-right-color: #f3bd00;border-radius: 50%;animation: altea-spin 0.6s linear infinite;}
+    .altea-loader-content {display: flex;flex-direction: column;gap: 3px;}
+    .app-loader-text {color: #222;font-weight: 700;font-size: 11px;letter-spacing: 0.03em;text-transform: uppercase;}
+    .altea-subtext {color: #555;font-size: 9px;font-family: ui-monospace, SFMono-Regular, Consolas, monospace;}
+    @keyframes altea-spin {to { transform: rotate(360deg); }}
+    #app {height: 100%;display: grid;grid-template-columns: var(--sidebar) 1fr;grid-template-rows: var(--tabs) 1fr;grid-template-areas: "side tabs" "side main";transition: grid-template-columns .18s ease;}
     #app.sidebar-collapsed { --sidebar: 48px; }
-    /* -- NEW TAB STYLES -- */
-    .workspace-tabs {
-      gap: 3px;
-    }
-    .ws-tab {
-      cursor: pointer;
-      color: #647581;
-      background: #eef1f4;
-      border-radius: 4px 4px 0 0;
-      transition: background 0.15s ease;
-    }
-    .ws-tab:hover {
-      background: #e0e6eb;
-    }
-    .ws-tab.active {
-      color: #14384f;
-      background: #fff;
-      border-bottom: 1px solid #fff;
-      margin-bottom: -1px;
-    }
-    .ws-tab-close {
-      margin-left: auto;
-      border: none;
-      background: none;
-      color: #a7b2bb;
-      cursor: pointer;
-      font-size: 15px;
-      line-height: 1;
-      padding: 0 4px;
-      border-radius: 2px;
-    }
-    .ws-tab-close:hover {
-      color: #b42318;
-      background: #fdebea;
-    }
-    .ws-tab-add {
-      height: 28px;
-      width: 28px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border: 0px dashed #a7b2bb;
-      background: transparent;
-      cursor: pointer;
-      margin-left: 4px;
-      color: #647581;
-      border-radius: 4px;
-      font-size: 18px;
-    }
-    .ws-tab-add:hover {
-      background: #e0e6eb;
-      color: #14384f;
-    }
-    .sidebar {
-      grid-area: side;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      color: #dce6ed;
-      border-right: 1px solid #162430;
-      background: #263746;
-    }
-    .sidebar-toggle {
-      height: 35px;
-      display: flex;
-      align-items: center;
-      justify-content: flex-end;
-      padding: 0 10px;
-      border-bottom: 1px solid rgba(255, 255, 255, .08);
-    }
-    .ghost {
-      padding: 4px 7px;
-      color: inherit;
-      border: 0;
-      border-radius: 2px;
-      background: transparent;
-    }
+    .workspace-tabs {gap: 3px;}
+    .ws-tab {cursor: pointer;color: #647581;background: #eef1f4;border-radius: 4px 4px 0 0;transition: background 0.15s ease;}
+    .ws-tab:hover {background: #e0e6eb;}
+    .ws-tab.active {color: #14384f;background: #fff;border-bottom: 1px solid #fff;margin-bottom: -1px;}
+    .ws-tab-close {margin-left: auto;border: none;background: none;color: #a7b2bb;cursor: pointer;font-size: 15px;line-height: 1;padding: 0 4px;border-radius: 2px;}.ws-tab-close:hover {color: #b42318;background: #fdebea;}
+    .ws-tab-add {height: 28px;width: 28px;display: flex;align-items: center;justify-content: center;border: 0px dashed #a7b2bb;background: transparent;cursor: pointer;margin-left: 4px;color: #647581;border-radius: 4px;font-size: 18px;}
+    .ws-tab-add:hover {background: #e0e6eb;color: #14384f;}
+    .sidebar {grid-area: side;overflow: hidden;display: flex;flex-direction: column;color: #dce6ed;border-right: 1px solid #162430;background: #263746;}
+    .sidebar-toggle {height: 35px;display: flex;align-items: center;justify-content: flex-end;padding: 0 10px;border-bottom: 1px solid rgba(255, 255, 255, .08);}
+    .ghost {padding: 4px 7px;color: inherit;border: 0;border-radius: 2px;background: transparent;}
     .ghost:hover { background: rgba(0, 0, 0, .12); }
-    .nav {
-      flex: 1;
-      padding: 4px 0;
-      overflow: auto hidden;
-    }
-    .nav-section {
-      padding: 10px 13px 5px;
-      color: #8398a8;
-      font-size: 9px;
-      letter-spacing: .09em;
-      text-transform: uppercase;
-      white-space: nowrap;
-    }
+    .nav {flex: 1;padding: 4px 0;overflow: auto hidden;}
+    .nav-section {padding: 10px 13px 5px;color: #8398a8;font-size: 9px;letter-spacing: .09em;text-transform: uppercase;white-space: nowrap;}
     .nav-item {
       width: 100%;
       height: 30px;
@@ -463,48 +286,15 @@
     .alert.danger { color: #85231d; border-color: #e8a6a2; background: var(--danger-bg); }
     .alert.success { color: #14633d; border-color: #9cd4b6; background: var(--success-bg); }
     .alert strong { display: block; margin-bottom: 2px; }
-    .field {
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
-      margin-bottom: 10px;
-    }
+    .field {display: flex;flex-direction: column;gap: 5px;margin-bottom: 10px;}
     .field label { color: #33434f; font-weight: 650; }
-    .field input,
-    .field select,
-    .field textarea {
-      width: 100%;
-      min-height: 32px;
-      padding: 0 9px;
-      color: #1c2b35;
-      outline: none;
-      border: 1px solid #aeb9c2;
-      border-radius: 2px;
-      background: #fff;
-    }
+    .field input, .field select, .field textarea {width: 100%;min-height: 32px;padding: 0 9px;color: #1c2b35;outline: none;border: 1px solid #aeb9c2;border-radius: 2px;background: #fff;}
     .field textarea { min-height: 70px; padding: 8px; resize: vertical; }
-    .field input:focus,
-    .field select:focus,
-    .field textarea:focus {
-      border-color: var(--brand);
-      box-shadow: 0 0 0 2px rgba(0, 94, 184, .13);
-    }
+    .field input:focus, .field select:focus, .field textarea:focus {border-color: var(--brand);box-shadow: 0 0 0 2px rgba(0, 94, 184, .13);}
     .check { display: flex; align-items: center; gap: 7px; color: #596974; }
     .check input { width: 14px; height: 14px; }
-    .primary,
-    .secondary,
-    .danger-btn {
-      min-height: 31px;
-      padding: 0 12px;
-      font-weight: 650;
-      border-radius: 2px;
-    }
-    .primary {
-      color: #fff;
-      border: 1px solid var(--brand-dark);
-      background: var(--brand);
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, .18);
-    }
+    .primary, .secondary, .danger-btn {min-height: 31px;padding: 0 12px;font-weight: 650;border-radius: 2px;}
+    .primary {color: #fff;border: 1px solid var(--brand-dark);background: var(--brand);box-shadow: inset 0 1px 0 rgba(255, 255, 255, .18);}
     .primary:hover { background: #004f9d; }
     .secondary { color: #263742; border: 1px solid #9eabb5; background: #fff; }
     .secondary:hover { background: #f3f6f8; }
@@ -516,57 +306,16 @@
     .nowrap { white-space: nowrap; }
     .empty { padding: 30px; color: #71808a; text-align: center; }
     .empty .big { margin-bottom: 8px; font-size: 30px; opacity: .55; }
-
-
-    .form-grid {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 8px;
-      align-items: end;
-    }
+    .form-grid {display: grid;grid-template-columns: repeat(4, minmax(0, 1fr));gap: 8px;align-items: end;}
     .subtle { color: var(--muted); }
-    .club-cm-grid {
-      display: grid;
-      grid-template-columns: minmax(0, 1.45fr) minmax(310px, .75fr);
-      gap: 8px;
-      min-height: 520px;
-    }
-    .club-manifest-panel {
-      display: flex;
-      flex-direction: column;
-      min-height: 0;
-    }
-    .club-searchbar {
-      display: flex;
-      gap: 5px;
-      align-items: center;
-      padding: 6px;
-      background: #edf1f4;
-      border-bottom: 1px solid var(--line);
-      flex-wrap: wrap;
-    }
+    .club-cm-grid {display: grid;grid-template-columns: minmax(0, 1.45fr) minmax(310px, .75fr);gap: 8px;min-height: 520px;}
+    .club-manifest-panel {display: flex;flex-direction: column;min-height: 0;}
+    .club-searchbar {display: flex;gap: 5px;align-items: center;padding: 6px;background: #edf1f4;border-bottom: 1px solid var(--line);flex-wrap: wrap;}
     .club-searchbar input { flex: 1; min-width: 180px; }
     .club-searchbar select { min-width: 120px; }
-    .club-table-wrap {
-      flex: 1;
-      overflow: auto;
-      min-height: 280px;
-    }
-    .club-table tr.selected td {
-      background: #cfe8fa !important;
-      outline-top: 1px solid #55a8df;
-      outline-bottom: 1px solid #55a8df;
-    }
-    .club-footer {
-      min-height: 30px;
-      border-top: 1px solid var(--line);
-      display: flex;
-      align-items: center;
-      padding: 4px 7px;
-      background: #edf1f4;
-      gap: 12px;
-      font-size: 10px;
-    }
+    .club-table-wrap {flex: 1;overflow: auto;min-height: 280px;}
+    .club-table tr.selected td {background: #cfe8fa !important;outline-top: 1px solid #55a8df;outline-bottom: 1px solid #55a8df;}
+    .club-footer {min-height: 30px;border-top: 1px solid var(--line);display: flex;align-items: center;padding: 4px 7px;background: #edf1f4;gap: 12px;font-size: 10px;}
     .club-footer .spacer { flex: 1; }
     .club-profile { padding: 0; }
     .club-profile-banner {
@@ -637,10 +386,7 @@
       display: flex;
       gap: 5px;
       padding: 8px;
-      flex-wrap: wrap;
-    }
-
-
+      flex-wrap: wrap;}
     .toolbar {
       display: flex;
       align-items: center;
@@ -650,8 +396,6 @@
       border-bottom: 1px solid var(--line);
       background: #f5f7f8;
     }
-
-
     .dashboard-layout {
       display: grid;
       grid-template-columns: minmax(0, 2fr) minmax(300px, 1fr);
@@ -667,8 +411,6 @@
     }
     .quick-action:hover { border-color: #75a9d0; background: #f1f8fd; }
     .quick-action b { display: block; margin-bottom: 3px; color: #0c568f; }
-
-
     .search-form {
       display: grid;
       grid-template-columns: .8fr 1fr 38px 1fr .78fr .78fr .72fr;
@@ -700,9 +442,7 @@
       grid-template-columns: 130px minmax(0, 1fr) 145px;
       align-items: stretch;
     }
-    .offer-price,
-    .offer-route,
-    .offer-action { padding: 10px; }
+    .offer-price, .offer-route, .offer-action { padding: 10px; }
     .offer-price { border-right: 1px solid #e0e5e8; }
     .offer-price strong { display: block; color: #173f5c; font-size: 18px; }
     .offer-route { display: grid; gap: 7px; }
@@ -784,8 +524,6 @@
     .passenger-card { margin-bottom: 9px; border: 1px solid var(--line); background: #fff; }
     .passenger-card .panel-body { padding-bottom: 0; }
     .payment-shell { min-height: 120px; padding: 10px; border: 1px solid #b7c4cc; background: #fff; }
-
-
     .modal-root:empty { display: none; }
     .modal-backdrop {
       position: fixed;
@@ -913,14 +651,11 @@
       .segment > div:nth-child(2) { border-right: 0; }
     }
   </style>
-
-
   <style id="b0075-amadeus-shell">
     :root{
       --am-yellow:#f3bd00;--am-yellow-dark:#d99c00;--am-blue:#1976ad;--am-blue-dark:#0b5f93;
       --am-grey-0:#fff;--am-grey-1:#f6f6f6;--am-grey-2:#e5e5e5;--am-grey-3:#d0d0d0;--am-grey-4:#b7b7b7;
-      --am-text:#222;--sidebar:196px;--tabs:30px;--radius:0px;
-    }
+      --am-text:#222;--sidebar:196px;--tabs:30px;--radius:0px;}
     html,body{font-family:Arial,Tahoma,"Segoe UI",sans-serif;background:#fff;color:var(--am-text);font-size:11px}
     #app{grid-template-columns:var(--sidebar) 1fr;grid-template-rows:26px var(--tabs) 1fr;grid-template-areas:"title title" "side tabs" "side main";transition:none;background:#fff}
     #app.sidebar-collapsed{--sidebar:196px}
@@ -1012,8 +747,6 @@
         <button type="button" class="nav-item" data-view="offer"><span class="nav-icon"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><line x1="10" y1="9" x2="8" y2="9"></line></svg></span><span class="nav-label">Offer Review</span></button>
         <button type="button" class="nav-item" data-view="workspace"><span class="nav-icon"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"></path><path d="M13 5v2"></path><path d="M13 17v2"></path><path d="M13 11v2"></path></svg></span><span class="nav-label">Create Air Booking</span></button>
         <button type="button" class="nav-item" data-view="orders"><span class="nav-icon"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg></span><span class="nav-label">Bookings &amp; Orders</span></button>
-
-
         <div class="nav-section">Booking File</div>
         <button type="button" class="nav-item" data-view="booking"><span class="nav-icon"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"></path></svg></span><span class="nav-label">Booking File</span></button>
         <button type="button" class="nav-item" data-view="passengers"><span class="nav-icon">
@@ -1026,7 +759,6 @@
   </span>
   <span class="nav-label">Passengers / APIS</span>
 </button>
-
 <button type="button" class="nav-item" data-view="club">
   <span class="nav-icon">
     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1035,7 +767,6 @@
   </span>
   <span class="nav-label">SKANDI Club</span>
 </button>
-
 <button type="button" class="nav-item" data-view="ticketing">
   <span class="nav-icon">
     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1047,7 +778,6 @@
   </span>
   <span class="nav-label">Ticketing &amp; Documents</span>
 </button>
-
 <button type="button" class="nav-item" data-view="requirements">
   <span class="nav-icon">
     <!-- Inline SVG for Travel Requirements (Check Circle) -->
@@ -1058,7 +788,6 @@
   </span>
   <span class="nav-label">Travel Requirements</span>
 </button>
-
 <button type="button" class="nav-item" data-view="actions">
   <span class="nav-icon">
     <!-- Inline SVG for Changes / Refunds (Refresh/Rotate CCW) -->
@@ -1141,31 +870,22 @@
 </button>
       </nav>
     </aside>
-
-
     <div class="workspace-tabs">
       <div class="ws-tab"><span><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg></span><span id="workspaceTabTitle">Agent Dashboard</span></div>
     </div>
-
-
     <main id="main" class="main" aria-live="polite"></main>
   </div>
   <div id="busyBar" class="busy-bar hidden" aria-hidden="true"></div>
   <div id="modalRoot" class="modal-root"></div>
   <div id="toastStack" class="toast-stack" aria-live="polite"></div>
-
-
   <script>
-    "use strict";
-
+    "use strict"
     function skandiDuffelOfferExpiredNow(offer) {
       if (!offer || offer.isExpired === true) return true;
       const expiry = String(offer.expiresAt || "").trim();
       if (!expiry) return true;
       const time = Date.parse(expiry);
-      return !Number.isFinite(time) || time <= Date.now();
-    }
-
+      return !Number.isFinite(time) || time <= Date.now();}
     const CHILD_SOURCE = "SKANDI_DUFFEL_RESERVATIONS";
     const PARENT_SOURCE = "SKANDI_WIX_PARENT";
     const EXCLUSIVE_ACTIONS = new Set([
@@ -1243,6 +963,8 @@
       seatMapOfferId:"",
       paymentPrepareRequestId:"",
       paymentPrepareOfferId:"",
+      orderCreateRequestId:"",
+      orderCreateOfferId:"",
       preferences: {
         compact: true,
         currency: "USD",
@@ -1269,8 +991,9 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
   // Extract Fare Breakdown
   const baseAmount = flightSource.baseAmount != null ? Number(flightSource.baseAmount) : null;
   const taxAmount = flightSource.taxAmount != null ? Number(flightSource.taxAmount) : null;
-  const totalAmount = Number(flightSource.totalAmount || targetBooking.totalAmount || 0);
-  const currency = flightSource.totalCurrency || targetBooking.currency || "USD";
+  const knownTotal = flightSource.totalAmount ?? targetBooking.totalAmount;
+  const totalAmount = knownTotal === null || knownTotal === undefined || knownTotal === "" || !Number.isFinite(Number(knownTotal)) ? null : Number(knownTotal);
+  const currency = flightSource.totalCurrency || targetBooking.currency || null;
 
   // Build Comprehensive Segments Matrix
   const enrichedSegments = [];
@@ -1278,26 +1001,26 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
     (slice.segments || []).forEach((seg, segIdx) => {
       const paxDetails = (seg.passengers || []).map(p => ({
         passengerId: p.passenger_id || p.id,
-        fareBasisCode: p.fare_basis_code || p.fareBasisCode || slice.fare_basis_code || slice.fareBasisCode || "—",
-        cabinClass: p.cabin_class || p.cabinClass || "economy",
-        cabinBrand: slice.fare_brand_name || slice.fareBrandName || humanize(p.cabin_class || "Economy"),
-        baggage: Array.isArray(p.baggages) && p.baggages.length > 0 
-          ? p.baggages.map(b => `${b.quantity || 1}PC (${b.type || "checked"})`).join(", ") 
-          : "0PC (No checked bag)"
+        fareBasisCode: p.fare_basis_code || p.fareBasisCode || slice.fare_basis_code || slice.fareBasisCode || null,
+        cabinClass: p.cabin_class || p.cabinClass || null,
+        cabinBrand: slice.fare_brand_name || slice.fareBrandName || p.cabin_class_marketing_name || p.cabinClassMarketingName || null,
+        baggage: Array.isArray(p.baggages) && p.baggages.length > 0
+          ? p.baggages.map(b => `${b.quantity == null ? "Unknown quantity" : b.quantity} (${b.type || "type not supplied"})`).join(", ")
+          : null
       }));
 
       enrichedSegments.push({
         segId: `${sliceIdx + 1}.${segIdx + 1}`,
         flightNumber: `${seg.marketingCarrier?.iataCode || seg.marketing_carrier?.iata_code || ""}${seg.marketingFlightNumber || seg.marketing_flight_number || ""}`,
-        operatingCarrier: seg.operatingCarrier?.name || seg.operating_carrier?.name || "Operating carrier",
+        operatingCarrier: seg.operatingCarrier?.name || seg.operating_carrier?.name || null,
         origin: seg.origin?.iataCode || seg.origin?.iata_code || "",
         originTerminal: seg.originTerminal || seg.origin_terminal || "—",
         destination: seg.destination?.iataCode || seg.destination?.iata_code || "",
         destinationTerminal: seg.destinationTerminal || seg.destination_terminal || "—",
         departingAt: seg.departingAt || seg.departing_at,
         arrivingAt: seg.arrivingAt || seg.arriving_at,
-        aircraft: seg.aircraft?.name || seg.aircraft?.iataCode || "Aircraft",
-        duration: seg.duration || "—",
+        aircraft: seg.aircraft?.name || seg.aircraft?.iataCode || null,
+        duration: seg.duration || null,
         rbd: seg.booking_class || seg.rbd || null,
         passengers: paxDetails
       });
@@ -1322,14 +1045,14 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
       taxAmount: taxAmount,
       totalAmount: totalAmount,
       currency: currency,
-      fareBrand: slices[0]?.fare_brand_name || slices[0]?.fareBrandName || "Standard",
+      fareBrand: slices[0]?.fare_brand_name || slices[0]?.fareBrandName || null,
       validatingCarrier: flightSource.owner?.iataCode || flightSource.owner?.iata_code || firstSeg.marketingCarrier?.iataCode || null,
       paymentDeadline: flightSource.paymentRequiredBy || null
     },
     miniRules: {
-      refundable: refundRule?.allowed === true,
+      refundable: typeof refundRule?.allowed === "boolean" ? refundRule.allowed : null,
       refundPenalty: refundRule?.penalty_amount || refundRule?.penaltyAmount || null,
-      changeable: changeRule?.allowed === true,
+      changeable: typeof changeRule?.allowed === "boolean" ? changeRule.allowed : null,
       changePenalty: changeRule?.penalty_amount || changeRule?.penaltyAmount || null
     }
   };
@@ -1352,7 +1075,7 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
       "actions", "baggage", "manifests", "history"
     ]);
     const SESSION_STATE_KEYS = [
-      "activeView", "search", "offers", "multiSearchActive", "multiSearchQueue", "multiSearchCompleted", "multiSearchFailed", "multiSearchPendingId", "searchPendingId", "offerRefreshRequestId", "offerRefreshOfferId", "seatMapRequestId", "seatMapOfferId", "paymentPrepareRequestId", "paymentPrepareOfferId", "selectedOffer", "seatMaps", "selectedServices",
+      "activeView", "search", "offers", "multiSearchActive", "multiSearchQueue", "multiSearchCompleted", "multiSearchFailed", "multiSearchPendingId", "searchPendingId", "offerRefreshRequestId", "offerRefreshOfferId", "seatMapRequestId", "seatMapOfferId", "paymentPrepareRequestId", "paymentPrepareOfferId", "orderCreateRequestId", "orderCreateOfferId", "selectedOffer", "seatMaps", "selectedServices",
       "alteaWorkspace", "selectedPassengerId", "selectedOrder", "cancellation", "customerRefundRequired",
       "changeRequestId", "changeOffers", "pendingChange", "paymentPurpose", "payment",
       "bookingDocuments", "documentCatalog",
@@ -1409,6 +1132,8 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
         offerRefreshOfferId:"",
         seatMapRequestId:"",
         seatMapOfferId:"",
+        orderCreateRequestId:"",
+        orderCreateOfferId:"",
         selectedOffer: null,
         seatMaps: [],
         selectedServices: new Map(),
@@ -1576,6 +1301,13 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
     function closeSession(sessionId, event) {
       event?.stopPropagation?.();
       if (!sessionId || sessionId === AMADEUS_HOME_SESSION || !state.sessions?.[sessionId]) return;
+      const unresolved = Array.from(requestSessionById).some(([requestId, owner]) =>
+        owner === sessionId && state.pending.has(requestId) && EXCLUSIVE_ACTIONS.has(state.pending.get(requestId)));
+      const source = sessionId === state.activeSessionId ? state : state.sessions[sessionId];
+      if (unresolved || source?.payment?.paymentIntentId || source?.paymentPrepareRequestId || source?.orderCreateRequestId) {
+        toast("Booking reconciliation required", "This PNR has an active supplier operation or payment session. Complete or reconcile it before closing the tab.", "warning");
+        return;
+      }
       const wasActive = state.activeSessionId === sessionId;
       delete state.sessions[sessionId];
       for (const [requestId, ownerId] of requestSessionById) {
@@ -1671,6 +1403,10 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
       if (options.busy !== false) {
         state.pending.set(requestId, type);
         setBusy(1);
+      }
+      if (type === "DUFFEL_CREATE_ORDER") {
+        state.orderCreateRequestId = requestId;
+        state.orderCreateOfferId = String(payload?.offerId || "");
       }
       window.parent.postMessage({
         source: CHILD_SOURCE,
@@ -3449,22 +3185,34 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
         }, { busy: false });
         return;
       }
-        if (message.type === "DUFFEL_ORDER_CREATED" || message.type === "DUFFEL_ORDER_RESULT") {
+      if (message.type === "DUFFEL_ORDER_CREATED" || message.type === "DUFFEL_ORDER_RESULT") {
+        const created = message.type === "DUFFEL_ORDER_CREATED";
+        if (created && (!state.orderCreateRequestId || message.requestId !== state.orderCreateRequestId)) return;
+        if (!payload.order?.id) {
+          toast("Supplier order unavailable", "The supplier did not return a valid order. Verify order status before attempting another booking.", "danger");
+          if (created) { state.orderCreateRequestId = ""; state.orderCreateOfferId = ""; }
+          return;
+        }
+        if (created) {
+          state._verifiedOrderCreationRequestId = message.requestId;
+          state.orderCreateRequestId = "";
+          state.orderCreateOfferId = "";
+        }
         state.selectedOrder = payload.order;
         state.cancellation = null;
         state.customerRefundRequired = false;
         upsertOrder(payload.order);
-        
-        // Sync rich flight & fare data into ALTEA booking
         if (payload.alteaWorkspace?.booking) {
           state.alteaWorkspace = payload.alteaWorkspace;
           syncFlightDataToBooking(state.alteaWorkspace.booking, payload.order);
           state.selectedPassengerId = state.alteaWorkspace.passengers?.[0]?.id || "";
           upsertAlteaBooking(state.alteaWorkspace.booking);
-        } else if (booking74()) {
-          syncFlightDataToBooking(booking74(), payload.order);
         }
-        
+        if (created) {
+          invalidatePayment();
+          closeModal();
+          toast("Order created", `Booking reference ${payload.order.bookingReference || payload.order.id}.`, "success");
+        }
         navigate(payload.alteaWorkspace ? "booking" : "actions");
         return;
       }
@@ -3697,6 +3445,13 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
         return;
       }
       if (message.type === "DUFFEL_ERROR") {
+        if (String(payload.action || "").toUpperCase() === "DUFFEL_CREATE_ORDER") {
+          if (!state.orderCreateRequestId || message.requestId !== state.orderCreateRequestId) return;
+          state.orderCreateRequestId = "";
+          state.orderCreateOfferId = "";
+          toast("Booking requires reconciliation", "The supplier did not confirm order creation. Check the supplier orders and payment status before retrying; an interrupted response does not prove that booking failed.", "warning");
+          return;
+        }
         if (String(payload.action||"").toUpperCase()==="DUFFEL_PREPARE_PAYMENT") {
           if (!state.paymentPrepareRequestId || message.requestId !== state.paymentPrepareRequestId) return;
           state.paymentPrepareRequestId = "";
@@ -6308,7 +6063,8 @@ html,body{margin:0!important;padding:0!important;width:203.20mm!important;height
       const id=payload.offer?.id||"";
       if(id && state._apisOfferId!==id){state.travelerDrafts={};state._apisOfferId=id;state.agentFop={paymentType:"CC",vendor:"",approvalCode:"",dbi:"",passengerIds:[],segmentIds:[]};}
     }
-    if(message.type==="DUFFEL_ORDER_CREATED" && payload.alteaWorkspace?.booking?.id && Array.isArray(state._lastAutomationTravelers)){
+    if(message.type==="DUFFEL_ORDER_CREATED" && state._verifiedOrderCreationRequestId===message.requestId){
+      if(payload.alteaWorkspace?.booking?.id && Array.isArray(state._lastAutomationTravelers)){
       const workspace=payload.alteaWorkspace;
       const bySupplier=new Map((workspace.passengers||[]).map(p=>[String(p.supplierPassengerId||""),p]));
       state._lastAutomationTravelers.forEach(draft=>{
@@ -6320,6 +6076,10 @@ html,body{margin:0!important;padding:0!important;width:203.20mm!important;height
         const f=state._lastFopSummary;
         post("ALTEA_ADD_HISTORY_NOTE",{bookingId:workspace.booking.id,eventType:"FORM_OF_PAYMENT_RECORDED",note:`FOP ${f.paymentType}${f.vendor?`/${f.vendor}`:""}${f.approvalCode?` approval ${f.approvalCode}`:""}${f.dbi?` DBI ${f.dbi}`:""}; passengers=${f.passengerIds.join(",")||"ALL"}; segments=${f.segmentIds.join(",")||"ALL"}. Raw card data was handled by Stripe and not stored in ALTEA.`},{busy:false});
       }
+      }
+      state._verifiedOrderCreationRequestId="";
+      state._lastAutomationTravelers=null;
+      state._lastFopSummary=null;
     }
   });
 })();
@@ -7104,13 +6864,7 @@ html,body{margin:0!important;padding:0!important;width:203.20mm!important;height
     return `<details><summary>${escapeHTML(label)} (${arr.length})</summary>${arr.length?arr.map((item,index)=>`<section style="padding:9px 3px;border-bottom:1px dotted #c3c3c3"><strong>Entry ${index+1}</strong>${render(item,index)}</section>`).join(""):'<p class="audit-note">No records returned by Duffel.</p>'}</details>`;
   }
   function audit(order){
-    if(!order?.id)return "";
-    const currencies=[order.totalCurrency,order.baseCurrency,order.taxCurrency].filter(Boolean);
-    return `<section class="panel duffel-order-audit" aria-label="Airline order record details"><div class="panel-head">Duffel Order Record — Read Only</div><div class="panel-body"><p class="audit-note">The fields below reflect data actually returned by the airline. Missing values are not interpreted as zero, authorization or successful ticket issuance. Actions are still controlled by the existing server-side workflow.</p>
-      ${entry("Duffel order ID",order.id)}
-      ${entry("Order status",order.status)}
-      ${entry("Payment status",order.paymentStatus)}
-      ${entry("Booking reference",order.bookingReference)}
+    if(!order?.id)return "";const currencies=[order.totalCurrency,order.baseCurrency,order.taxCurrency].filter(Boolean);return `<section class="panel duffel-order-audit" aria-label="Airline order record details"><div class="panel-head">Duffel Order Record — Read Only</div><div class="panel-body"><p class="audit-note">The fields below reflect data actually returned by the airline. Missing values are not interpreted as zero, authorization or successful ticket issuance. Actions are still controlled by the existing server-side workflow.</p>${entry("Duffel order ID",order.id)}${entry("Order status",order.status)}${entry("Payment status",order.paymentStatus)}${entry("Booking reference",order.bookingReference)}
       ${entry("Airline references",order.bookingReferences)}
       ${entry("Total amount",order.totalAmount)}
       ${entry("Base amount",order.baseAmount)}
