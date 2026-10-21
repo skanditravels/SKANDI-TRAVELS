@@ -114,11 +114,22 @@ export function bindAlexandraGlobal({ wixSelector = $w, navigate, enabled = () =
       default:return;
     }
   });
-  identity().then(id=>{
+  const refreshIdentity = async () => {
+    const id = await identity();
+    try {
+      const previous = session.getItem(STORAGE_KEY+'_identity');
+      if (previous && previous !== id) {
+        state=null;
+        openRequested=false;
+        storageSave(null);
+      }
+      session.setItem(STORAGE_KEY+'_identity',id);
+    } catch (_) {}
     memberId=id;
-    try {const prev=session.getItem(STORAGE_KEY+'_identity');if(prev&&prev!==id){state=null;openRequested=false;storageSave(null)}session.setItem(STORAGE_KEY+'_identity',id)}catch(_){}
-    syncOpen();if(openRequested&&state?.session)open();
-  });
+    syncOpen();
+    if (openRequested && state?.session) await open();
+  };
+  refreshIdentity().catch(error => console.warn('[Alexandra Global] Identity unavailable.', error));
   syncOpen();
   return {
     installed:true,
@@ -126,6 +137,7 @@ export function bindAlexandraGlobal({ wixSelector = $w, navigate, enabled = () =
     open:()=>open(),
     close:()=>{openRequested=false; if(state)save(state);syncOpen()},
     clear:()=>{state=null;openRequested=false;storageSave(null);syncOpen()},
+    refreshIdentity,
     isOpen:()=>openRequested
   };
 }
