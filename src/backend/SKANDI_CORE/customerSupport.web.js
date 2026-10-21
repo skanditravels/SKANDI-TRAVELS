@@ -34,6 +34,7 @@ import {
   addStaffHelpDeskSupportMessageCore
 } from "backend/SKANDI_CORE/customerSupport";
 import { startAlexandraAiSessionCore, answerAlexandraAiMessageCore } from "backend/SKANDI_CORE/alexandraWixAi";
+import { replyAgentWhatsAppCore } from "backend/SKANDI_CORE/whatsAppCustomerCare";
 
 
 export const getCustomerSupportBootstrap = webMethod(Permissions.Anyone, () => getCustomerSupportBootstrapCore());
@@ -63,6 +64,7 @@ export const getAgentSupportBootstrap = webMethod(Permissions.SiteMember, () => 
 export const listAgentSupportCases = webMethod(Permissions.SiteMember, (input = {}) => listAgentSupportCasesCore(input));
 export const getAgentSupportCase = webMethod(Permissions.SiteMember, (input = {}) => getAgentSupportCaseCore(input));
 export const replyAgentSupportCase = webMethod(Permissions.SiteMember, (input = {}) => replyAgentSupportCaseCore(input));
+export const replyAgentWhatsApp = webMethod(Permissions.SiteMember, (input = {}) => replyAgentWhatsAppCore(input));
 export const updateAgentSupportCase = webMethod(Permissions.SiteMember, (input = {}) => updateAgentSupportCaseCore(input));
 export const createAgentSupportCase = webMethod(Permissions.SiteMember, (input = {}) => createAgentSupportCaseCore(input));
 export const deleteAgentSupportCase = webMethod(Permissions.SiteMember, (input = {}) => deleteAgentSupportCaseCore(input));
