@@ -56,24 +56,24 @@ const MASTER_CONFIG = Object.freeze({
     currencies: Object.freeze(["USD", "SEK", "NOK", "DKK", "EUR"]),
     assets: Object.freeze({
       logos: Object.freeze({
-        customerHeader: "https://static.wixstatic.com/media/394052_504704bd94f44f01a95f304bd19640e5~mv2.png",
-        customerFooter: "https://static.wixstatic.com/media/394052_504704bd94f44f01a95f304bd19640e5~mv2.png",
-        storeHeader: "https://static.wixstatic.com/media/394052_eaf2188b7f7e48468fa25d61f8881b10~mv2.png",
+        customerHeader: "https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/logos/SKANDI_TRAVELS-NAVY-SIDE-WAVE.svg",
+        customerFooter: "https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/logos/SKANDI_TRAVELS-LIGHT-STACKED-WAVE.svg",
+        storeHeader: "https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/logos/SKANDI_TRAVELS-NAVY-SIDE-WAVE.svg",
         storeFooter: "https://static.wixstatic.com/media/394052_cd31153a91694b14a27c5f756f8089bd~mv2.png",
         skandiPrimary: "https://static.wixstatic.com/media/394052_504704bd94f44f01a95f304bd19640e5~mv2.png",
         skandiWhite: "https://static.wixstatic.com/media/394052_01730d7e719548178e24009021b261ae~mv2.png",
         skandiTravels: "https://static.wixstatic.com/media/394052_504704bd94f44f01a95f304bd19640e5~mv2.png",
         skandiWave: "https://static.wixstatic.com/media/394052_26dde0904052424faf8f2390ecc4cfd6~mv2.png",
-        skandiGroup: "https://static.wixstatic.com/media/394052_2d05baf211aa4f1481abf7e4e78bed20~mv2.png",
-        skandiGroupWhite: "https://static.wixstatic.com/media/394052_191b0c7832294e6db41f8d81f678f03b~mv2.png",
-        riaintra: "https://static.wixstatic.com/media/394052_1024542c47664bff8f4e145d1adf472d~mv2.png",
-        altea: "https://static.wixstatic.com/media/394052_c952c7f463894591948e16d273fd1138~mv2.png",
+        skandiGroup: "https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/logos/SKANDI_GROUP-MEMBER-NAVY.svg",
+        skandiGroupWhite: "https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/logos/SKANDI_GROUP-MEMBER-LIGHT.svg",
+        riaintra: "https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/logos/RIAINTRA-LIGHT.svg",
+        altea: "https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/logos/ALTEA_LOGO-LIGHT.svg",
         alteaWhite: "https://static.wixstatic.com/media/394052_46045c41aebf421d98314b31ef83c677~mv2.png",
         alteaIconWhite: "https://static.wixstatic.com/media/394052_e551cf4d47a749248311125bce5846d7~mv2.png",
         voy: "https://static.wixstatic.com/media/394052_30b8bebbf5ee493da7d47329d04de494~mv2.png",
         voyWhite: "https://static.wixstatic.com/media/394052_3770b6753c474d73a77c674b20eab305~mv2.png",
-        skandiClub: "https://static.wixstatic.com/media/394052_a951f7d81eb04993981da0a51f26465e~mv2.png",
-        signatureCollection: "https://static.wixstatic.com/media/394052_fa7c76ccb96049f5ae4242d425b6791c~mv2.png"
+        skandiClub: "https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/logos/SKANDI_CLUB-LIGHT.svg",
+        signatureCollection: "https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/SIGNATURE_COLLECTION-BADGE.svg"
       }),
       icons: Object.freeze({
         home: "", bookings: "", favorites: "", documents: "", travelers: "",
