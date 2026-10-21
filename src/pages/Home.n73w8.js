@@ -11,6 +11,7 @@ const HOME_EMBED_IDS = ["#htmlHome", "#htmlhome", "#home"];
 const HOME_SOURCES = new Set(["SKANDI_HOME", "SKANDI_HOME_LONG_DISCOVERY_V2", "SKANDI_HOME_OLD_STYLE"]);
 const MOBILE_APP_EMBED_ID = "#homeMobileAppEmbed";
 const MOBILE_APP_SOURCE = "SKANDI_HOME_MOBILE_APP";
+const MOBILE_APP_BAR_HEIGHT = 88;
 const PARENT_SOURCE = "SKANDI_WIX_PARENT";
 const PROTOCOL_VERSION = "V12-HOME";
 const SUPPORTED_LANGUAGES = ["EN","SV","NO","DA","ES","FI","FR-FR","FR-CA","DE","TH"];
@@ -26,6 +27,7 @@ let searchJob = null;
 let selectionJob = null;
 let mobileAppNav = null;
 let mobileRefreshId = "";
+let mobileDrawerExpanded = false;
 
 function clean(value, max = 1000) { return String(value ?? "").trim().slice(0, max); }
 function arr(value) { return Array.isArray(value) ? value : []; }
@@ -252,6 +254,9 @@ function wireMobileAppNav(html) {
       return;
     }
   } catch (_) {}
+  try {
+    if ("height" in nav) nav.height = MOBILE_APP_BAR_HEIGHT;
+  } catch (_) {}
   nav.onMessage(async (event) => {
     const message = parseMessage(event?.data);
     if (!message || message.source !== MOBILE_APP_SOURCE) return;
@@ -260,6 +265,30 @@ function wireMobileAppNav(html) {
       case "HOME_APP_READY":
         postMobile("HOME_APP_READY_ACK", { route:SITE_MAP.home, mobile:true }, requestId);
         return;
+      case "HOME_APP_DRAWER_RESIZE": {
+        // Keep the pinned Home mobile iframe at tab-bar height until the drawer opens.
+        // A child iframe cannot display a full-height side drawer beyond its Wix bounds.
+        const expand = message.payload?.open === true;
+        try {
+          let height = MOBILE_APP_BAR_HEIGHT;
+          if (expand) {
+            const bounds = await wixWindowFrontend.getBoundingRect();
+            const viewportHeight = Number(bounds?.window?.height);
+            if (!Number.isFinite(viewportHeight) || viewportHeight < 280) {
+              throw new Error("Mobile viewport dimensions are unavailable.");
+            }
+            height = Math.max(240, Math.min(820, Math.floor(viewportHeight) - 16));
+          }
+          if (!("height" in nav)) throw new Error("Wix HTML component does not support resizing.");
+          nav.height = height;
+          mobileDrawerExpanded = expand;
+          postMobile("HOME_APP_DRAWER_RESIZE_ACK", {open:expand, height}, requestId);
+        } catch (error) {
+          console.error("[Home V12] Mobile drawer resize failed.", error);
+          postMobile("HOME_APP_DRAWER_RESIZE_ERROR", {open:expand, message:"The menu could not be displayed. Please try again."}, requestId);
+        }
+        return;
+      }
       case "HOME_APP_FOCUS_SEARCH":
         postToHtml(html, "HOME_FOCUS_SEARCH", {}, requestId);
         postMobile("HOME_APP_FOCUS_ACK", {}, requestId);
