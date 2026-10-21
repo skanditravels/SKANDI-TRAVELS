@@ -12,6 +12,7 @@ import { getStaffPortalSession } from "backend/SKANDI_CORE/staffAuth.web";
 import { getPublicTravelInfoPayload } from "backend/SKANDI_CORE/publicContent.web";
 import { getPublicPagePresentation } from "backend/SKANDI_CORE/presentation.web";
 import { SITE_MAP, APP_ROUTES, GLOBAL_CHROME, isSafeInternalRoute } from "public/siteMap";
+import { bindAlexandraGlobal } from "public/alexandraGlobalBridge.js";
 
 const MASTER_VERSION = "BACKEND-BASE-1.0-B011.18-GLOBAL-CHROME";
 const MASTER_ENV = "PRD";
@@ -274,6 +275,7 @@ let mobileFooterGateTimer = null;
 let mobileFooterGatePath = "";
 let mobileFooterGateRevealed = false;
 let mobileFooterGateBusy = false;
+let alexandraGlobal = null;
 
 const CHROME_BY_SOURCE = Object.freeze(Object.fromEntries(
   Object.values(GLOBAL_CHROME).map(definition => [definition.source, definition])
@@ -490,6 +492,7 @@ function wireLocationChangeScroll() {
   locationChangeWired = true;
   try {
     wixLocationFrontend.onChange(async () => {
+      alexandraGlobal?.onRouteChange?.(currentPathString());
       scheduleScrollViewportToTop("location-change");
       stopMobileFooterGate();
       await applyChromeVisibility();
@@ -790,6 +793,7 @@ async function handleMasterMessage(embed, message = {}) {
       case "HEADER_LOGOUT":
         closeCustomerHeaderPanels();
         try { await authentication.logout(); } catch (_) {}
+        alexandraGlobal?.clear?.();
         scheduleScrollViewportToTop("logout-navigation");
         wixLocationFrontend.to(MASTER_CONFIG.routes.home, { disableScrollToTop:false });
         return true;
@@ -878,6 +882,7 @@ async function handleMasterMessage(embed, message = {}) {
   }
   if (type === "RIAINTRA_LOGOUT" || type === "INTERNAL_MASTER_LOGOUT") {
     try { await authentication.logout(); } catch (_) {}
+    alexandraGlobal?.clear?.();
     scheduleScrollViewportToTop("logout-navigation");
     wixLocationFrontend.to(MASTER_CONFIG.routes.home, { disableScrollToTop:false });
     return true;
@@ -1019,6 +1024,12 @@ $w.onReady(async function () {
   scheduleScrollViewportToTop("page-ready");
   wireLocationChangeScroll();
   wireAllHtmlComponents();
+  alexandraGlobal = bindAlexandraGlobal({
+    wixSelector: $w,
+    navigate,
+    enabled: () => !isInternalPath(currentPathString())
+  });
+  alexandraGlobal?.onRouteChange?.(currentPathString());
 
   const path = currentPathString();
   const chromeFree = isChromeFreePath(path);
@@ -1043,6 +1054,7 @@ $w.onReady(async function () {
 
   try {
     authentication.onLogin(() => {
+      alexandraGlobal?.refreshIdentity?.().catch(error => console.warn("[MasterPage] Alexandra identity refresh failed.", error));
       if (!isChromeFreePath() && !isInternalPath()) {
         const currentHeader = customerHeaderEl();
         if (currentHeader) pushCustomerHeaderState(currentHeader);
