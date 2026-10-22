@@ -27,6 +27,12 @@ const RIAINTRA_HEADER_SOURCE = GLOBAL_CHROME.riaintraHeader.source;
 const ALTEA_HEADER_SOURCE = GLOBAL_CHROME.alteaHeader.source;
 const ALTEA_FOOTER_SOURCE = GLOBAL_CHROME.alteaFooter.source;
 const SPECIAL_ASSISTANCE_SOURCE = "SKANDI_ASSISTANCE_PAGE";
+const MOBILE_APP_SOURCE = "SKANDI_HOME_MOBILE_APP";
+const GLOBAL_MOBILE_NAV_ID = "#skandiMobileAppNavEmbed";
+const GLOBAL_MOBILE_TOP_COVER_ID = "#skandiMobileTopCoverEmbed";
+const LEGACY_HOME_MOBILE_NAV_ID = "#homeMobileAppEmbed";
+const MOBILE_APP_BAR_HEIGHT = 88;
+const MOBILE_TOP_COVER_HEIGHT = 52;
 const SCROLL_TOP_MESSAGE_TYPES = new Set(["MASTER_SCROLL_TOP", "SKANDI_SCROLL_TOP", "SKANDI_VIEW_OPENED", "SKANDI_PAGE_OPENED"]);
 const CONTENT_RESIZE_SOURCES = new Set([
   "SKANDI_INSURANCE_PAGE",
@@ -275,6 +281,7 @@ let mobileFooterGateTimer = null;
 let mobileFooterGatePath = "";
 let mobileFooterGateRevealed = false;
 let mobileFooterGateBusy = false;
+let mobileDrawerResizeEpoch = 0;
 let alexandraGlobal = null;
 
 const CHROME_BY_SOURCE = Object.freeze(Object.fromEntries(
@@ -391,6 +398,57 @@ function firstHtml(ids = []) {
   }
   return null;
 }
+function globalMobileNavEl() { return firstHtml([GLOBAL_MOBILE_NAV_ID]); }
+function globalMobileTopCoverEl() { return firstHtml([GLOBAL_MOBILE_TOP_COVER_ID]); }
+function isPublicMobileChromePath(path = currentPathString()) {
+  return isMobileDevice() && !isInternalPath(path);
+}
+function isGlobalMobileNavMessage(embed, message) {
+  return isHtmlEmbed(embed) && embed.id === GLOBAL_MOBILE_NAV_ID.slice(1) && message?.source === MOBILE_APP_SOURCE;
+}
+function postGlobalMobileNav(type, payload = {}, requestId = "") {
+  const embed = globalMobileNavEl();
+  if (!embed) return false;
+  try {
+    embed.postMessage({ source:PARENT_SOURCE, type, payload, requestId, timestamp:new Date().toISOString() });
+    return true;
+  } catch (error) {
+    console.warn("[MasterPage] Mobile navigation response failed.", error);
+    return false;
+  }
+}
+async function resetGlobalMobileDrawer() {
+  ++mobileDrawerResizeEpoch;
+  const nav = globalMobileNavEl();
+  if (!nav) return;
+  try { nav.height = MOBILE_APP_BAR_HEIGHT; } catch (_) {}
+  postGlobalMobileNav("HOME_APP_DRAWER_FORCE_CLOSE", {});
+}
+async function handleGlobalMobileDrawerResize(embed, message) {
+  const requestId = String(message.requestId || "").slice(0, 160);
+  const opening = message.payload?.open === true;
+  const epoch = ++mobileDrawerResizeEpoch;
+  if (!isPublicMobileChromePath()) {
+    postGlobalMobileNav("HOME_APP_DRAWER_RESIZE_ERROR", { open:opening, message:"This menu is unavailable on this page." }, requestId);
+    return;
+  }
+  try {
+    let height = MOBILE_APP_BAR_HEIGHT;
+    if (opening) {
+      const dimensions = await wixWindowFrontend.getBoundingRect();
+      const viewportHeight = Number(dimensions?.window?.height);
+      if (!Number.isFinite(viewportHeight) || viewportHeight < 300) throw new Error("MOBILE_VIEWPORT_UNAVAILABLE");
+      height = Math.max(220, Math.floor(viewportHeight) - MOBILE_TOP_COVER_HEIGHT);
+    }
+    if (epoch !== mobileDrawerResizeEpoch) return;
+    if (!("height" in embed)) throw new Error("MOBILE_HTML_RESIZE_UNSUPPORTED");
+    embed.height = height;
+    postGlobalMobileNav("HOME_APP_DRAWER_RESIZE_ACK", { open:opening, height }, requestId);
+  } catch (error) {
+    console.warn("[MasterPage] Global mobile drawer failed.", error);
+    postGlobalMobileNav("HOME_APP_DRAWER_RESIZE_ERROR", { open:opening, message:"The menu could not be displayed. Please try again." }, requestId);
+  }
+}
 function customerHeaderEl() { return firstHtml(IDS.customerHeaders); }
 function customerFooterEl() { return firstHtml(IDS.customerFooters); }
 function cookieBannerEl() { return firstHtml(IDS.cookieBanners); }
@@ -493,6 +551,7 @@ function wireLocationChangeScroll() {
   try {
     wixLocationFrontend.onChange(async () => {
       alexandraGlobal?.onRouteChange?.(currentPathString());
+      await resetGlobalMobileDrawer();
       scheduleScrollViewportToTop("location-change");
       stopMobileFooterGate();
       await applyChromeVisibility();
@@ -649,6 +708,34 @@ async function handleMasterMessage(embed, message = {}) {
   const type = String(message?.type || "");
   const source = String(message?.source || "");
   const payload = message?.payload && typeof message.payload === "object" ? message.payload : {};
+
+  if (embed?.id === GLOBAL_MOBILE_NAV_ID.slice(1) && source === 'SKANDI_SUPPORT_CHAT') {
+    if (!isPublicMobileChromePath()) return true;
+    if (typeof alexandraGlobal?.handleMobileMessage === 'function') {
+      await alexandraGlobal.handleMobileMessage(message);
+    } else {
+      postToEmbed(embed, 'SUPPORT_CHAT_ERROR', { message:'Alexandra is not available yet. Please try again.' });
+    }
+    return true;
+  }
+
+  if (isGlobalMobileNavMessage(embed, message)) {
+    if (type === "HOME_APP_READY") {
+      pushMasterConfig(embed);
+      postGlobalMobileNav("HOME_APP_READY_ACK", { route:currentPathString(), mobile:isPublicMobileChromePath() }, String(message.requestId || ""));
+      return true;
+    }
+    if (type === "HOME_APP_DRAWER_RESIZE") {
+      await handleGlobalMobileDrawerResize(embed, message);
+      return true;
+    }
+    if (type === "HOME_APP_FOCUS_SEARCH" && normalizePath(currentPathString()) !== "/") {
+      navigate(SITE_MAP.home);
+      return true;
+    }
+    // On Home, its existing V12 page controller still owns focus-search and refresh.
+    // Other navigation intents retain the canonical MASTER_NAVIGATE contract below.
+  }
 
   if (SCROLL_TOP_MESSAGE_TYPES.has(type)) {
     scheduleScrollViewportToTop(type.toLowerCase());
@@ -915,7 +1002,9 @@ function wireAllHtmlComponents() {
     ...IDS.internalHeaders,
     ...IDS.internalFooters,
     ...IDS.alteaHeaders,
-    ...IDS.alteaFooters
+    ...IDS.alteaFooters,
+    GLOBAL_MOBILE_NAV_ID,
+    GLOBAL_MOBILE_TOP_COVER_ID
   ];
   for (const id of idGroups) {
     const el = safeEl(id);
@@ -994,16 +1083,26 @@ async function applyChromeVisibility() {
   const showAlteaChrome = !chromeFree && internal && altea;
 
   const mobileGate = isMobileFooterGatePath(path);
+  const globalNav = globalMobileNavEl();
+  const globalTopCover = globalMobileTopCoverEl();
+  const showGlobalMobile = isPublicMobileChromePath(path);
+  // The sitewide mobile nav may be hosted by the existing global footer section.
+  // Do not hide/collapse its parent on mobile gated routes or chrome-free checkout.
+  const keepMobileFooterHost = showGlobalMobile && Boolean(globalNav);
+  const legacyHomeNav = globalNav ? firstExisting([LEGACY_HOME_MOBILE_NAV_ID]) : null;
   const customerFooter = firstExisting(IDS.customerFooters);
   const internalFooter = firstExisting(IDS.internalFooters);
   const alteaFooter = firstExisting(IDS.alteaFooters);
 
   await Promise.all([
+    setElementVisible(globalNav, showGlobalMobile),
+    setElementVisible(globalTopCover, showGlobalMobile),
+    setElementVisible(legacyHomeNav, false),
     setElementVisible(cookieBannerEl(), !internal),
     setElementVisible(firstExisting(IDS.customerHeaders), showCustomerChrome),
-    mobileGate && showCustomerChrome
+    mobileGate && showCustomerChrome && !keepMobileFooterHost
       ? setElementDisplayPreserveLayout(customerFooter, false)
-      : setElementVisible(customerFooter, showCustomerChrome),
+      : setElementVisible(customerFooter, showCustomerChrome || keepMobileFooterHost),
     setElementVisible(firstExisting(IDS.internalHeaders), showRiaintraChrome),
     mobileGate && showRiaintraChrome
       ? setElementDisplayPreserveLayout(internalFooter, false)
@@ -1024,10 +1123,12 @@ $w.onReady(async function () {
   scheduleScrollViewportToTop("page-ready");
   wireLocationChangeScroll();
   wireAllHtmlComponents();
+  await resetGlobalMobileDrawer();
   alexandraGlobal = bindAlexandraGlobal({
     wixSelector: $w,
     navigate,
-    enabled: () => !isInternalPath(currentPathString())
+    enabled: () => !isInternalPath(currentPathString()),
+    mobileEnabled: () => isPublicMobileChromePath()
   });
   alexandraGlobal?.onRouteChange?.(currentPathString());
 
