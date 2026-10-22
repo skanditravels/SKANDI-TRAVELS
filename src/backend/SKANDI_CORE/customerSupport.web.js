@@ -34,6 +34,7 @@ import {
   addStaffHelpDeskSupportMessageCore
 } from "backend/SKANDI_CORE/customerSupport";
 import { startAlexandraAiSessionCore, answerAlexandraAiMessageCore } from "backend/SKANDI_CORE/alexandraWixAi";
+import { startAlexandraSupportSessionCore } from "backend/SKANDI_CORE/customerSupport";
 import { replyAgentWhatsAppCore } from "backend/SKANDI_CORE/whatsAppCustomerCare";
 
 
@@ -42,8 +43,10 @@ export const getPublicSupportBootstrap = webMethod(Permissions.Anyone, (input = 
 export const getSupportWorkflow = webMethod(Permissions.Anyone, (input = {}) => getSupportWorkflowCore(input));
 export const createCustomerSupportCase = webMethod(Permissions.Anyone, (input = {}) => createCustomerSupportCaseCore(input));
 export const createPublicSupportCase = webMethod(Permissions.Anyone, (input = {}) => createPublicSupportCaseCore(input));
-// Contract retained: Alexandra now uses the Wix AI SDK, not the LiveKit worker.
+// Preserve the existing Wix AI facade for the dedicated /about/support page.
 export const startAlexandraSupportSession = webMethod(Permissions.Anyone, () => startAlexandraAiSessionCore());
+// Sitewide desktop and mobile Alexandra share the established canonical LiveKit dispatch core.
+export const startAlexandraLiveKitSession = webMethod(Permissions.Anyone, (input = {}) => startAlexandraSupportSessionCore(input));
 export const sendAlexandraAiMessage = webMethod(Permissions.Anyone, (input = {}) => answerAlexandraAiMessageCore(input));
 export const listCustomerSupportCases = webMethod(Permissions.SiteMember, () => listCustomerSupportCasesCore());
 // Customer-facing responses must never expose internal agent notes, supplier audit
