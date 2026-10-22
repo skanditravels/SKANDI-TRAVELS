@@ -26,6 +26,8 @@
 
 - 2026-10-21 — V12 mobile Alexandra merge: Added animated 74px avatar entry and full functional AI chat, Customer Service follow-up form and support contacts inside the existing global navigation drawer. Reuses the same `SKANDI_SUPPORT_CHAT` message contract and canonical `alexandraGlobalBridge.js`/`customerSupport.web.js`/`alexandraWixAi.js` services as the desktop Alexandra, with shared per-browser-session transcript. No second mobile chat iframe, backend API, customer store or duplicated launcher. Existing five-tab mobile navigation, destinations, travel info, My Club, menu routes, Home refresh, slide-out and iPhone top cover are unchanged. Mobile Alexandra requires the full global nav iframe to open via existing `HOME_APP_DRAWER_RESIZE` flow; live Wix verification remains required.
 
+- 2026-10-22 — V12 global mobile Menu opening diagnostic/repair: The parent now processes the sitewide mobile drawer resize request on public Studio responsive previews that do not report the `Mobile` runtime form factor (internal routes remain excluded). The iframe waits for an actually expanded layout before exposing the Alexandra/drawer interface and reports a real, actionable Wix pinned-host sizing failure rather than treating a Velo resize ACK as proof of visibility. Existing navigation, Alexandra/Customer Service contracts, desktop UI, default closed height (88px) and all prior HTML payload content preserved. An iframe confined in an 88px footer or clipped host **cannot render the full drawer**; Wix positioning must allow the full iframe to expand upwards. STATICALLY VERIFIED; REQUIRES LIVE TEST on published iPhone and Studio.
+
 ## COMPLETE INTENDED LIVE HTML SOURCE
 
 ```html
@@ -333,13 +335,29 @@ body{display:flex;justify-content:stretch;align-items:flex-end;color:var(--ink)}
   }
   function drawerReady(){
     clearTimeout(state.drawerTimer);
-    state.drawerRequestId="";
-    state.drawerOpen=true;
-    drawerLayer.classList.add("open");
-    drawerLayer.setAttribute("aria-hidden","false");
-    menuButton.setAttribute("aria-expanded","true");
-    menuButton.setAttribute("aria-label","Close menu");
-    document.getElementById("drawer-close").focus({preventScroll:true});
+    const requestId=state.drawerRequestId;
+    if(!requestId)return;
+    let attempts=0;
+    function verifyExpandedFrame(){
+      if(state.drawerRequestId!==requestId)return;
+      // An ACK confirms the requested Wix height, NOT the rendered iframe geometry.
+      // In particular, an 88px footer/cell can clip the whole drawer.
+      if(window.innerHeight >= 220){
+        state.drawerRequestId="";
+        state.drawerOpen=true;
+        drawerLayer.classList.add("open");
+        drawerLayer.setAttribute("aria-hidden","false");
+        menuButton.setAttribute("aria-expanded","true");
+        menuButton.setAttribute("aria-label","Close menu");
+        document.getElementById("drawer-close").focus({preventScroll:true});
+        return;
+      }
+      if(++attempts<14){setTimeout(verifyExpandedFrame,95);return;}
+      state.drawerRequestId="";
+      post("HOME_APP_DRAWER_RESIZE",{open:false},nextId("drawer-layout-reset"));
+      notice("Wix is keeping the menu iframe at 88px. Pin the navigation embed to Page, bottom 0, outside the footer.",{error:true,duration:8500});
+    }
+    requestAnimationFrame(verifyExpandedFrame);
   }
   function refreshHome(){
     if(state.busy||state.currentPath!=="/")return;
