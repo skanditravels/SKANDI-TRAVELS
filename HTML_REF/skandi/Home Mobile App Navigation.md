@@ -28,6 +28,8 @@
 
 - 2026-10-22 — V12 global mobile Menu opening diagnostic/repair: The parent now processes the sitewide mobile drawer resize request on public Studio responsive previews that do not report the `Mobile` runtime form factor (internal routes remain excluded). The iframe waits for an actually expanded layout before exposing the Alexandra/drawer interface and reports a real, actionable Wix pinned-host sizing failure rather than treating a Velo resize ACK as proof of visibility. Existing navigation, Alexandra/Customer Service contracts, desktop UI, default closed height (88px) and all prior HTML payload content preserved. An iframe confined in an 88px footer or clipped host **cannot render the full drawer**; Wix positioning must allow the full iframe to expand upwards. STATICALLY VERIFIED; REQUIRES LIVE TEST on published iPhone and Studio.
 
+- 2026-10-22 — V12 mobile navigation status presentation repair: the bottom tab bar no longer displays loading, timeout, resize or error notices over its five buttons. The existing `aria-live` region remains visually hidden for accessibility, and the refresh control remains keyboard-inaccessible when hidden. A Wix-acknowledged resize that leaves the iframe at 88px now logs its actionable host-layout blocker to the browser console instead of overlaying the nav. This change deliberately does **not** claim to make a Wix-constrained 88px iframe expand: the `#skandiMobileAppNavEmbed` editor element must be pinned to **Page**, outside `#skandiFooter` and all height-limited or clipping ancestors, at 100% mobile width with scaling disabled. The actual Menu drawer, Alexandra AI chat, sitewide routing, Wix message contracts, desktop/footer code, and all prior repairs are retained. STATICALLY VERIFIED; REQUIRES LIVE TEST in Wix Studio and on a published phone.
+
 ## COMPLETE INTENDED LIVE HTML SOURCE
 
 ```html
@@ -52,14 +54,10 @@ body{display:flex;justify-content:stretch;align-items:flex-end;color:var(--ink)}
 .nav-item.active{color:var(--navy);background:#edf4fa}
 .nav-item.active .nav-label{font-weight:800}
 .nav-item:active{transform:scale(.97)}.nav-item:focus-visible,#refresh:focus-visible{outline:2px solid var(--cyan);outline-offset:-2px}
-#status{position:absolute;bottom:8px;left:50%;width:min(94%,355px);transform:translateX(-50%) translateY(8px);border:1px solid rgba(2,46,100,.12);border-radius:13px;background:#fff;color:var(--navy);padding:11px 42px 11px 13px;box-shadow:0 10px 30px rgba(2,46,100,.13);font-size:12px;font-weight:600;line-height:1.4;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .18s ease,transform .18s ease;z-index:5;display:flex;align-items:center;gap:9px}
-#status.show{opacity:1;visibility:visible;transform:translateX(-50%) translateY(0);pointer-events:auto}
-#status.error{color:#972c38}
-#status-spinner{width:16px;height:16px;flex:none;display:none;border:2px solid #bdd9e7;border-top-color:var(--navy);border-radius:50%;animation:spin .75s linear infinite}
-#status.busy #status-spinner{display:block}
-#refresh{appearance:none;position:absolute;right:7px;top:7px;width:28px;height:28px;display:grid;place-items:center;border:0;border-radius:8px;background:#f2f6fa;color:var(--navy);cursor:pointer}
-#refresh svg{width:17px;height:17px;stroke:currentColor;stroke-width:2;fill:none;stroke-linejoin:round;stroke-linecap:round}
-#status-copy{padding-right:15px}
+/* Accessible announcements only. Never place loading/error messages above the five navigation buttons. */
+#status,#status.show,#status.error,#status.busy{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;border:0!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;clip-path:inset(50%)!important;white-space:nowrap!important;pointer-events:none!important;box-shadow:none!important;opacity:1!important;visibility:visible!important;transform:none!important}
+#status-spinner,#status.busy #status-spinner{display:none!important}
+#refresh{display:none!important}
 #pull-zone{position:absolute;top:0;left:0;right:0;height:18px;touch-action:pan-x;z-index:4}
 #pull-zone:before{content:"";display:block;margin:3px auto;width:32px;height:3px;border-radius:6px;background:#dce4ed}
 /* The drawer occupies only the space ABOVE the existing bottom tab bar. Wix Velo expands the pinned iframe on request. */
@@ -184,7 +182,7 @@ body{display:flex;justify-content:stretch;align-items:flex-end;color:var(--ink)}
   <button class="nav-item" id="nav-menu" type="button" data-action="menu" aria-haspopup="dialog" aria-controls="app-drawer" aria-expanded="false" aria-label="Open menu">
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg><span class="nav-label">Menu</span>
   </button>
-  <div id="status" role="status" aria-live="polite" aria-atomic="true"><span id="status-spinner" aria-hidden="true"></span><span id="status-copy"></span><button id="refresh" type="button" aria-label="Refresh Home data" title="Refresh Home data"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0 1 3M20 4v7h-7"/></svg></button></div>
+  <div id="status" role="status" aria-live="polite" aria-atomic="true"><span id="status-spinner" aria-hidden="true"></span><span id="status-copy"></span><button id="refresh" type="button" tabindex="-1" aria-hidden="true" aria-label="Refresh Home data" title="Refresh Home data"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0 1 3M20 4v7h-7"/></svg></button></div>
 </nav>
 <script>
 (function(){
@@ -355,7 +353,7 @@ body{display:flex;justify-content:stretch;align-items:flex-end;color:var(--ink)}
       if(++attempts<14){setTimeout(verifyExpandedFrame,95);return;}
       state.drawerRequestId="";
       post("HOME_APP_DRAWER_RESIZE",{open:false},nextId("drawer-layout-reset"));
-      notice("Wix is keeping the menu iframe at 88px. Pin the navigation embed to Page, bottom 0, outside the footer.",{error:true,duration:8500});
+      console.warn("[SKANDI Mobile Nav] The iframe is still 88px after Wix acknowledged resize. Move #skandiMobileAppNavEmbed outside #skandiFooter, pin it to Page with bottom 0, disable proportional scaling, and remove any 88px parent/max-height constraint.");
     }
     requestAnimationFrame(verifyExpandedFrame);
   }
