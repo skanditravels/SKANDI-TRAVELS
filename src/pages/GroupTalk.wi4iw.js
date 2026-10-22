@@ -98,9 +98,9 @@ $w.onReady(() => {
         }
       }
       if (source !== SOURCE) return;
-      const send = async (outType, fn) => {
-        const result = await fn(payload);
-        post(html, outType, { requestId, ...result });
+      const send = async (outType, fn, input = payload) => {
+        const result = await fn(input);
+        post(html, outType, { ...result, requestId });
       };
       switch (type) {
         case "GT_READY":
@@ -111,7 +111,14 @@ $w.onReady(() => {
         case "PRESENCE_UPDATE": await send("PRESENCE_UPDATE_RESPONSE", updateGroupTalkPresence); break;
         case "PRESENCE_REQUEST": await send("PRESENCE_RESPONSE", getGroupTalkPresence); break;
         case "LIVEKIT_TOKEN_REQUEST": await send("LIVEKIT_TOKEN_RESPONSE", createLiveKitToken); break;
-        case "PTT_EVENT": await send("PTT_EVENT_RESULT", triggerGroupTalkEvent); break;
+        case "PTT_EVENT": {
+          // The authoritative HTML sends optional telephone/emergency details in `extra`.
+          // The existing canonical core expects those details at the top level.
+          const extra = payload.extra && typeof payload.extra === "object" &&
+            !Array.isArray(payload.extra) ? payload.extra : {};
+          await send("PTT_EVENT_RESULT", triggerGroupTalkEvent, { ...extra, ...payload });
+          break;
+        }
         case "PHONEBOOK_REQUEST": await send("PHONEBOOK_RESPONSE", getPhoneBook); break;
         case "LOCATION_PING": await send("LOCATION_PING_RESULT", sendLocationPing); break;
         case "LIVE_LOCATIONS_REQUEST": await send("LIVE_LOCATIONS_RESPONSE", getLiveLocations); break;
