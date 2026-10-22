@@ -428,7 +428,10 @@ async function handleGlobalMobileDrawerResize(embed, message) {
   const requestId = String(message.requestId || "").slice(0, 160);
   const opening = message.payload?.open === true;
   const epoch = ++mobileDrawerResizeEpoch;
-  if (!isPublicMobileChromePath()) {
+  // A responsive Studio preview can display the mobile embed while reporting
+  // desktop formFactor. The request is already scoped to the exact global embed;
+  // reject internal routes, not the simulated device class.
+  if (isInternalPath()) {
     postGlobalMobileNav("HOME_APP_DRAWER_RESIZE_ERROR", { open:opening, message:"This menu is unavailable on this page." }, requestId);
     return;
   }
