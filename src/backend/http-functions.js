@@ -13,6 +13,8 @@ import {
 } from "backend/SKANDI_CORE/customerSupport";
 import { verifyAndRecordDuffelAssistantWebhookCore } from "backend/SKANDI_CORE/duffelAssistant";
 import { verifyWhatsAppWebhookChallengeCore, receiveWhatsAppWebhookCore } from "backend/SKANDI_CORE/whatsAppCustomerCare";
+import { getPublicTravelInfoPayloadCore } from "backend/SKANDI_CORE/publicContent";
+import { applyInventoryAuthorityToTravelInfoCore } from "backend/SKANDI_CORE/publicContentInventoryProjection";
 
 function header(request, name) {
   const lowerName = String(name || "").toLowerCase();
@@ -61,6 +63,112 @@ async function run(request, handler) {
 export function post_alexandraSupportWorkflow(request) {
   return run(request, body => getSupportWorkflowTrustedCore(body));
 }
+// LiveKit's existing search_travel_info HTTP tool uses this authenticated public-only endpoint.
+// Read the exact same canonical Travel Info + Inventory projection as the Wix page.
+// Only small, explicit public text fields leave this boundary; no raw Inventory rows.
+function travelText(value, max = 1000) {
+  return String(value ?? "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim().slice(0, max);
+}
+function travelFold(value) {
+  return travelText(value, 6000).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+}
+function travelLanguage(locale) {
+  const value = String(locale || "en").toLowerCase().split(/[-_]/)[0];
+  return ({ sv:"SV", no:"NO", nb:"NO", nn:"NO", da:"DA" })[value] || "EN";
+}
+function travelBaggage(row) {
+  const baggage = row?.baggage;
+  if (!baggage || typeof baggage !== "object") return travelText(row?.baggageAllowance, 1400);
+  if (baggage.mode === "narrative") return travelText(baggage.text, 1400);
+  if (baggage.mode !== "structured" || !Array.isArray(baggage.cabins)) return "";
+  const fareDetails = [];
+  for (const cabin of baggage.cabins.slice(0, 8)) {
+    for (const fare of (Array.isArray(cabin?.fares) ? cabin.fares : []).slice(0, 8)) {
+      fareDetails.push([cabin.cabinType, fare.name, fare.description, fare.underSeatBag, fare.overheadCarryOn, fare.checkedBag].filter(Boolean).join(": "));
+    }
+  }
+  return travelText(fareDetails.join("; "), 1400);
+}
+function travelCandidates(payload) {
+  const sections = [
+    ["airline", payload.airlines],
+    ["airport", payload.airports],
+    ["hotel", payload.hotels],
+    ["transfer", payload.transfers],
+    ["tour", payload.tours],
+    ["activity", payload.activities],
+    ["ticket", payload.tickets],
+    ["article", payload.articles],
+    ["travel-requirement", payload.travelRequirements],
+    ["help-topic", payload.helpCenter?.topics]
+  ];
+  const matches = [];
+  for (const [category, items] of sections) {
+    if (!Array.isArray(items)) continue;
+    for (const row of items) {
+      if (!row || typeof row !== "object" || Array.isArray(row)) continue;
+      const title = travelText(row.title || row.name, 220);
+      if (!title) continue;
+      const code = travelText(row.iataCode || row.iata || row.code, 12);
+      const baggage = category === "airline" ? travelBaggage(row) : "";
+      const summary = travelText(row.summary || row.excerpt || row.subtitle || row.body, 1600);
+      const content = [title, code, row.city, row.country, row.category, row.slug,
+        summary, travelText(row.body, 1400), travelText(row.tags, 300),
+        baggage, baggage ? "baggage allowance luggage" : "", row.boarding, row.checkInDeadline].filter(Boolean).join(" ");
+      const link = typeof row.path === "string" && /^\/travel-info(?:\/|$|\?)/.test(row.path)
+        ? travelText(row.path, 400) : "/travel-info";
+      matches.push({ category, title, code, summary, baggage, content, path:link });
+    }
+  }
+  return matches;
+}
+async function alexandraTravelInfoQuery(body = {}) {
+  const query = travelText(body.query, 240);
+  if (!query) throw new Error("TRAVEL_INFO_QUERY_REQUIRED");
+  const language = travelLanguage(body.locale);
+  let payload;
+  try {
+    payload = await applyInventoryAuthorityToTravelInfoCore(
+      await getPublicTravelInfoPayloadCore({ language })
+    );
+  } catch (error) {
+    console.error("[Alexandra Travel Info] Public source read failed", {
+      code:String(error?.code || "PUBLIC_READ_FAILED").slice(0, 80)
+    });
+    throw new Error("TRAVEL_INFO_SOURCE_UNAVAILABLE");
+  }
+  if (!payload || payload.ok !== true) throw new Error("TRAVEL_INFO_SOURCE_UNAVAILABLE");
+
+  const stopwords = new Set(["the", "and", "for", "what", "how", "does", "can", "you", "please", "about", "with", "from", "have", "are", "where", "this", "that", "is", "on", "in", "to", "at", "do", "of", "a", "i", "my", "me"]);
+  const terms = [...new Set(travelFold(query).split(/[^a-z0-9]+/).filter(term => term.length > 1 && !stopwords.has(term)))].slice(0, 16);
+  if (!terms.length) throw new Error("TRAVEL_INFO_QUERY_INVALID");
+  const matches = [];
+  const baggageQuery = /\b(bag|bags|baggage|luggage|carry.on|checked bag)\b/i.test(query);
+  for (const item of travelCandidates(payload)) {
+    const text = travelFold(item.content);
+    const heading = travelFold(`${item.title} ${item.code}`);
+    const hits = terms.filter(term => text.includes(term));
+    if (!hits.length) continue;
+    const score = hits.length * 3 + terms.filter(term => heading.includes(term)).length * 7 +
+      (heading.includes(travelFold(query)) ? 12 : 0);
+    const excerpt = baggageQuery && item.category === "airline" && item.baggage
+      ? item.baggage : item.summary;
+    matches.push({ score, category:item.category, title:item.title, code:item.code || undefined,
+      summary:travelText(excerpt, 1100), path:item.path });
+  }
+  matches.sort((a, b) => b.score - a.score || a.title.localeCompare(b.title));
+  const results = matches.slice(0, 8).map(({ score, ...item }) => item);
+  return {
+    ok:true, source:"SKANDI_PUBLIC_TRAVEL_INFO", language, query,
+    totalMatches:matches.length, results,
+    generatedAt:payload.generatedAt || null,
+    ...(results.length ? {} : { message:"No matching published SKANDI Travel Info content was found." })
+  };
+}
+export function post_alexandraTravelInfo(request) {
+  return run(request, alexandraTravelInfoQuery);
+}
+
 export function post_alexandraCreateSupportCase(request) {
   return run(request, body => createSupportCaseTrustedCore(body));
 }
