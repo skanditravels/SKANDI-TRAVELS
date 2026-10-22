@@ -9,7 +9,7 @@
 - COMPONENT SOURCE: `SKANDI_HOME_MOBILE_APP`
 - PARENT MESSAGE SOURCE: `SKANDI_WIX_PARENT`
 - CANONICAL BACKEND (UNCHANGED): `backend/SKANDI_CORE/homeContent.web.js` → `homeContent.js` → existing Inventory/Supabase/provider ownership
-- ALEXANDRA MOBILE: within `#skandiMobileAppNavEmbed` slide-out, using `SKANDI_SUPPORT_CHAT` → site `masterPage.js` → `public/alexandraGlobalBridge.js` → `backend/SKANDI_CORE/customerSupport.web.js` → `alexandraWixAi.js` and canonical customer support core.
+- ALEXANDRA MOBILE: within `#skandiMobileAppNavEmbed` slide-out, using `SKANDI_SUPPORT_CHAT` → site `masterPage.js` → `public/alexandraGlobalBridge.js` → `backend/SKANDI_CORE/customerSupport.web.js` → `customerSupport.js` → `livekitServer.js` → existing LiveKit Agents worker `alexandra-prod`; Supabase cases via canonical customer support core.
 - GLOBAL NAVIGATION OWNER (UNCHANGED): `/src/pages/masterPage.js`; `MASTER_NAVIGATE` and `MASTER_CONFIG_REQUEST` are pre-existing contracts.
 - RELATION TO EXISTING HOME: Sitewide auxiliary Wix iframe; DOES NOT replace the `#htmlHome` HTML payload or `/HTML_REF/skandi/Home.md`.
 - RELATION TO BOOKING: No `/booking` merge in this revision. V12 `/booking` remains canonical until Home Wix statebox/editor and controller migration.
@@ -29,6 +29,8 @@
 - 2026-10-22 — V12 global mobile Menu opening diagnostic/repair: The parent now processes the sitewide mobile drawer resize request on public Studio responsive previews that do not report the `Mobile` runtime form factor (internal routes remain excluded). The iframe waits for an actually expanded layout before exposing the Alexandra/drawer interface and reports a real, actionable Wix pinned-host sizing failure rather than treating a Velo resize ACK as proof of visibility. Existing navigation, Alexandra/Customer Service contracts, desktop UI, default closed height (88px) and all prior HTML payload content preserved. An iframe confined in an 88px footer or clipped host **cannot render the full drawer**; Wix positioning must allow the full iframe to expand upwards. STATICALLY VERIFIED; REQUIRES LIVE TEST on published iPhone and Studio.
 
 - 2026-10-22 — V12 mobile navigation status presentation repair: the bottom tab bar no longer displays loading, timeout, resize or error notices over its five buttons. The existing `aria-live` region remains visually hidden for accessibility, and the refresh control remains keyboard-inaccessible when hidden. A Wix-acknowledged resize that leaves the iframe at 88px now logs its actionable host-layout blocker to the browser console instead of overlaying the nav. This change deliberately does **not** claim to make a Wix-constrained 88px iframe expand: the `#skandiMobileAppNavEmbed` editor element must be pinned to **Page**, outside `#skandiFooter` and all height-limited or clipping ancestors, at 100% mobile width with scaling disabled. The actual Menu drawer, Alexandra AI chat, sitewide routing, Wix message contracts, desktop/footer code, and all prior repairs are retained. STATICALLY VERIFIED; REQUIRES LIVE TEST in Wix Studio and on a published phone.
+
+- 2026-10-22 — V12 Alexandra LiveKit restoration: Reuses the approved `startAlexandraLiveKitSession` facade and canonical `customerSupport.js` → `livekitServer.js` explicit dispatch of `alexandra-prod`. Mobile inline chat now joins using a server-issued short-lived token; sends `lk.chat` text; receives agent output from `lk.transcription` (and compatible custom `lk.chat` streams), disconnects when the drawer closes, and preserves browser-tab transcript via the shared bridge. No changes to mobile navigation layout, menu geometry, Home refresh, routes or human support case creation. LiveKit worker deployment, cloud secrets, published Wix facade and iframe CDN loading REQUIRES LIVE TEST.
 
 ## COMPLETE INTENDED LIVE HTML SOURCE
 
@@ -78,7 +80,7 @@ body{display:flex;justify-content:stretch;align-items:flex-end;color:var(--ink)}
 .drawer-link:hover,.drawer-link:focus-visible{outline:none;background:#edf4fa;color:var(--navy)}
 #drawer-close:focus-visible,.nav-item:focus-visible{outline:2px solid var(--cyan);outline-offset:-2px}
 #app-nav{z-index:9;flex:0 0 auto}
-/* Alexandra shares the same sitewide iframe, drawer and V12 Wix AI/Support bridge. */
+/* Alexandra shares the sitewide iframe, drawer and canonical V12 LiveKit/Support bridge. */
 .alexandra-entry{display:flex;align-items:center;gap:11px;width:100%;padding:12px 8px;border:1px solid #dce9ee;border-radius:12px;background:linear-gradient(125deg,#f5fcfd,#edf5f8);color:#022e64;text-align:left;min-height:92px}
 .alexandra-avatar{position:relative;display:block;flex:0 0 74px;width:74px;height:74px;border:2px solid #9de0e5;border-radius:50%;background:linear-gradient(135deg,#074379,#022e64);overflow:hidden;box-shadow:0 8px 24px rgba(2,46,100,.16)}
 .alexandra-avatar video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none}
@@ -184,6 +186,7 @@ body{display:flex;justify-content:stretch;align-items:flex-end;color:var(--ink)}
   </button>
   <div id="status" role="status" aria-live="polite" aria-atomic="true"><span id="status-spinner" aria-hidden="true"></span><span id="status-copy"></span><button id="refresh" type="button" tabindex="-1" aria-hidden="true" aria-label="Refresh Home data" title="Refresh Home data"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0 1 3M20 4v7h-7"/></svg></button></div>
 </nav>
+<script src="https://cdn.jsdelivr.net/npm/livekit-client@2.23.0/dist/livekit-client.umd.min.js"></script>
 <script>
 (function(){
   "use strict";
@@ -195,7 +198,8 @@ body{display:flex;justify-content:stretch;align-items:flex-end;color:var(--ink)}
   const nav=document.getElementById("app-nav"),refresh=document.getElementById("refresh");
   const drawerLayer=document.getElementById("drawer-layer"),drawer=document.getElementById("app-drawer"),menuButton=document.getElementById("nav-menu");
   const chat=$("alexandra-chat-view"),chatStatus=$("alexandra-status"),chatMessages=$("alexandra-messages"),chatQuestion=$("alexandra-question");
-  const chatState={sessionId:"",messages:[],history:[],pending:false,casePending:false,requestId:"",responseTimer:null,caseTimer:null,loggedIn:false};
+  const chatState={sessionId:"",messages:[],history:[],pending:false,casePending:false,requestId:"",responseTimer:null,caseTimer:null,loggedIn:false,connected:false,responseSeen:false};
+  let liveRoom=null,liveEpoch=0,liveConnecting=null;
   function nextId(kind){state.request+=1;return kind+"-"+Date.now()+"-"+state.request;}
   function post(type,payload={},requestId=""){
     const message={source:SOURCE,type,payload,timestamp:new Date().toISOString()};
@@ -208,7 +212,7 @@ body{display:flex;justify-content:stretch;align-items:flex-end;color:var(--ink)}
     window.parent.postMessage({source:"SKANDI_SUPPORT_CHAT",type,requestId:payload.requestId||"",payload},"*");
   }
   function chatNotice(message,bad=false){chatStatus.textContent=String(message||"");chatStatus.classList.toggle("error",bad);}
-  function chatBusy(value){chatState.pending=value;$("alexandra-send").disabled=value;chatQuestion.disabled=value;}
+  function chatBusy(value){chatState.pending=value;$("alexandra-send").disabled=value||!chatState.connected;chatQuestion.disabled=value||!chatState.connected;}
   function chatSay(role,message,save=true){
     const content=String(message||"").slice(0,1900);if(!content)return;
     const bubble=document.createElement("div");bubble.className="alexandra-bubble"+(role==="user"?" customer":"");
@@ -217,19 +221,64 @@ body{display:flex;justify-content:stretch;align-items:flex-end;color:var(--ink)}
     bubble.append(from,body);chatMessages.append(bubble);chatMessages.scrollTop=chatMessages.scrollHeight;
     if(save){chatState.messages.push({role,content});chatState.messages=chatState.messages.slice(-18);chatSnapshot();}
   }
-  function chatSnapshot(){if(chatState.sessionId)postChat("SUPPORT_CHAT_SNAPSHOT",{messages:chatState.messages.slice(-18),history:chatState.history.slice(-8)});}
+  function chatSnapshot(){postChat("SUPPORT_CHAT_SNAPSHOT",{messages:chatState.messages.slice(-18),history:chatState.history.slice(-8)});}
+  function liveDisconnect(){
+    liveEpoch++;
+    const old=liveRoom;liveRoom=null;liveConnecting=null;chatState.connected=false;
+    clearTimeout(chatState.responseTimer);chatBusy(false);
+    try{old?.disconnect();}catch(_){}
+  }
+  async function liveConnect(session){
+    liveDisconnect();
+    const epoch=liveEpoch, sdk=window.LivekitClient;
+    if(!sdk?.Room||!session?.url||!session?.token||!session?.sessionId){chatNotice("Alexandra's LiveKit connection is unavailable.",true);return;}
+    const room=new sdk.Room({adaptiveStream:true,dynacast:true});
+    liveRoom=room;
+    const receive=async(reader,participant)=>{
+      if(epoch!==liveEpoch||!liveRoom)return;
+      if(participant?.identity===room.localParticipant?.identity)return;
+      try{
+        const message=String(await reader.readAll()||"").trim().slice(0,1900);
+        if(!message||epoch!==liveEpoch||liveRoom!==room)return;
+        chatState.responseSeen=true;
+        clearTimeout(chatState.responseTimer);chatBusy(false);
+        chatSay("assistant",message);chatState.history.push({role:"assistant",content:message});chatState.history=chatState.history.slice(-8);
+        chatSnapshot();chatNotice("");
+      }catch(error){if(epoch===liveEpoch)chatNotice("Alexandra's reply could not be read. Please retry.",true);}
+    };
+    room.registerTextStreamHandler("lk.transcription",receive);
+    // Also accept custom agent text on lk.chat, if the installed worker emits it.
+    room.registerTextStreamHandler("lk.chat",receive);
+    room.on(sdk.RoomEvent.Disconnected,()=>{
+      if(epoch!==liveEpoch)return;
+      chatState.connected=false;chatBusy(false);
+      chatNotice("Alexandra disconnected. Return to Menu and reopen to reconnect.",true);
+    });
+    try{
+      liveConnecting=room.connect(session.url,session.token);
+      await liveConnecting;
+      if(epoch!==liveEpoch){room.disconnect();return;}
+      chatState.connected=true;chatBusy(false);chatNotice("");
+    }catch(error){if(epoch===liveEpoch){chatState.connected=false;chatBusy(false);chatNotice("Could not connect to Alexandra's LiveKit room. Please reopen chat.",true);}}
+    finally{if(epoch===liveEpoch)liveConnecting=null;}
+  }
   function showChat(){
     if(!state.drawerOpen)return;
     drawer.classList.add("chat-mode");chat.hidden=false;$("drawer-title").textContent="SKANDI Support";
-    chatNotice("Connecting to Alexandra...");
+    chatState.connected=false;chatBusy(false);chatNotice("Connecting to Alexandra...");
     postChat("SUPPORT_CHAT_START_ALEXANDRA",{requestId:nextId("alexandra-open")});
   }
-  function backToMenu(){drawer.classList.remove("chat-mode");chat.hidden=true;$("drawer-title").textContent="Explore SKANDI";$("alexandra-case-form").hidden=true;$("alexandra-entry").focus({preventScroll:true});}
+  function backToMenu(){
+    liveDisconnect();postChat("SUPPORT_CHAT_PANEL_CLOSE");
+    drawer.classList.remove("chat-mode");chat.hidden=true;$("drawer-title").textContent="Explore SKANDI";
+    $("alexandra-case-form").hidden=true;$("alexandra-entry").focus({preventScroll:true});
+  }
   function chatOpened(data={}){
-    const sessionId=String(data?.alexandraSession?.sessionId||"");
-    if(!sessionId){chatNotice("Alexandra could not confirm the session.",true);return;}
-    const reset=chatState.sessionId!==sessionId;
-    chatState.sessionId=sessionId;chatState.loggedIn=data.loggedIn===true;
+    if(!state.drawerOpen||chat.hidden){postChat("SUPPORT_CHAT_PANEL_CLOSE");return;}
+    const newSession=data?.alexandraSession;
+    if(!newSession?.sessionId||!newSession?.token||!newSession?.url){chatNotice("LiveKit did not return a usable connection.",true);return;}
+    const reset=chatState.sessionId!==newSession.sessionId;
+    chatState.sessionId=String(newSession.sessionId);chatState.loggedIn=data.loggedIn===true;
     if(reset){
       chatState.messages=[];chatState.history=[];chatMessages.replaceChildren();
       if(Array.isArray(data.messages)&&data.messages.length){
@@ -238,19 +287,27 @@ body{display:flex;justify-content:stretch;align-items:flex-end;color:var(--ink)}
         chatState.history=Array.isArray(data.history)?data.history.slice(-8):[];
       }else chatSay("assistant","Welcome to SKANDI Travels. I'm Alexandra, your AI travel assistant. How can I help?");
     }
-    chatNotice("");chatSnapshot();
+    chatSnapshot();void liveConnect(newSession);
   }
   $("alexandra-entry").addEventListener("click",showChat);
   $("alexandra-back").addEventListener("click",backToMenu);
-  $("alexandra-compose").addEventListener("submit",event=>{
+  $("alexandra-compose").addEventListener("submit",async event=>{
     event.preventDefault();const message=chatQuestion.value.trim();
-    if(!message||chatState.pending||!chatState.sessionId)return;
+    if(!message||chatState.pending)return;
+    if(!chatState.connected||!liveRoom){chatNotice("Alexandra is not connected. Reopen chat to try again.",true);return;}
     const requestId=nextId("alexandra-msg");chatState.requestId=requestId;
-    chatSay("user",message);chatQuestion.value="";chatBusy(true);chatNotice("Alexandra is preparing a response...");
-    clearTimeout(chatState.responseTimer);
-    chatState.responseTimer=setTimeout(()=>{if(chatState.pending&&chatState.requestId===requestId){chatBusy(false);chatNotice("Alexandra did not respond. Please try again.",true)}},35000);
-    postChat("SUPPORT_CHAT_ALEXANDRA_MESSAGE",{requestId,sessionId:chatState.sessionId,message,history:chatState.history.slice(-8)});
-    chatState.history.push({role:"user",content:message});chatSnapshot();
+    chatState.responseSeen=false;chatBusy(true);chatNotice("Sending to Alexandra...");
+    try{
+      await liveRoom.localParticipant.sendText(message,{topic:"lk.chat"});
+      if(chatState.requestId!==requestId)return;
+      chatSay("user",message);chatQuestion.value="";
+      chatState.history.push({role:"user",content:message});chatState.history=chatState.history.slice(-8);chatSnapshot();
+      if(!chatState.responseSeen){
+        chatNotice("Alexandra is preparing a response...");
+        clearTimeout(chatState.responseTimer);
+        chatState.responseTimer=setTimeout(()=>{if(chatState.pending&&chatState.requestId===requestId){chatBusy(false);chatNotice("Alexandra did not respond. You can try again.",true);}},35000);
+      }
+    }catch(error){if(chatState.requestId===requestId){chatBusy(false);chatNotice("Message not sent through LiveKit. Please retry.",true);}}
   });
   $("alexandra-support").addEventListener("click",()=>postChat("SUPPORT_CHAT_NAVIGATE",{path:chatState.loggedIn?"/my-profile?section=support&view=cases":"/about/support"}));
   $("alexandra-followup").addEventListener("click",()=>{$("alexandra-case-form").hidden=!$("alexandra-case-form").hidden;
@@ -270,18 +327,13 @@ body{display:flex;justify-content:stretch;align-items:flex-end;color:var(--ink)}
     const p=data.payload||{};
     switch(data.type){
       case "SUPPORT_CHAT_OPEN":chatOpened(p);return true;
-      case "SUPPORT_CHAT_ALEXANDRA_REPLY":
-        if(p.requestId!==chatState.requestId)return true;
-        clearTimeout(chatState.responseTimer);chatBusy(false);chatNotice("");
-        if(p.reply){chatSay("assistant",p.reply);chatState.history.push({role:"assistant",content:p.reply});chatSnapshot();}
-        else chatNotice("No answer was returned.",true);return true;
       case "SUPPORT_CHAT_CASE_CREATED":
         clearTimeout(chatState.caseTimer);chatState.casePending=false;$("alexandra-case-submit").disabled=false;
         if(p.caseId||p.caseRef){$("alexandra-case-form").hidden=true;chatNotice("Case submitted: "+(p.caseRef||p.caseId));}
         else chatNotice("The server did not confirm the case.",true);return true;
       case "SUPPORT_CHAT_ERROR":
-        clearTimeout(chatState.responseTimer);clearTimeout(chatState.caseTimer);
-        chatBusy(false);chatState.casePending=false;$("alexandra-case-submit").disabled=false;
+        clearTimeout(chatState.caseTimer);
+        chatState.casePending=false;$("alexandra-case-submit").disabled=false;
         chatNotice(p.message||"Request failed.",true);return true;
       default:return false;
     }
@@ -323,6 +375,7 @@ body{display:flex;justify-content:stretch;align-items:flex-end;color:var(--ink)}
     clearTimeout(state.drawerTimer);
     state.drawerRequestId="";
     const wasOpen=state.drawerOpen;
+    if(!chat.hidden){liveDisconnect();postChat("SUPPORT_CHAT_PANEL_CLOSE");}
     state.drawerOpen=false;
     drawerLayer.classList.remove("open");
     drawerLayer.setAttribute("aria-hidden","true");
@@ -431,6 +484,7 @@ body{display:flex;justify-content:stretch;align-items:flex-end;color:var(--ink)}
       }
     }
     if(data.type==="HOME_APP_DRAWER_FORCE_CLOSE"){
+      if(!chat.hidden){liveDisconnect();postChat("SUPPORT_CHAT_PANEL_CLOSE");}
       drawer.classList.remove("chat-mode");chat.hidden=true;$("drawer-title").textContent="Explore SKANDI";
       clearTimeout(state.drawerTimer);
       state.drawerRequestId="";
@@ -464,10 +518,13 @@ body{display:flex;justify-content:stretch;align-items:flex-end;color:var(--ink)}
       notice(data.payload?.message||"Could not refresh Home.",{error:true});
     }
   });
+  chatBusy(false);
   post("MASTER_CONFIG_REQUEST",{context:"home-mobile-nav"});
   post("HOME_APP_READY",{},nextId("ready"));
 })();
 </script>
 </body>
 </html>
+
+
 ```
