@@ -1,32 +1,33 @@
 # GLOBAL SKANDI TRAVELS HEADER
 
-STATUS: V12 SYNC PREPARED — REQUIRES LIVE TEST
+STATUS: V12 VISUAL UPGRADE PREPARED — REQUIRES LIVE TEST
 SLUG: GLOBAL SECTION
 WIX PAGE: `masterPage.js`
 AREA: SKANDI
-LIVE HTML: YES
+LIVE HTML: INTENDED EMBED REPLACEMENT ONLY; NOT DEPLOYED BY THIS PACKAGE
 ELEMENT: `#skandiHeaderEmbed` / `#skandiCustomerHeaderEmbed`
-VERSION: B-011.18.5
-LAST SYNCED: 2026-10-13
+VERSION: B-011.18.5 / VISUAL-2026-10-22
+LAST SOURCE REVIEW: 2026-10-22
 
 ## INFO
-- Linked parent: `/src/pages/masterPage.js`; canonical routes/chrome registry: `/src/public/siteMap.js`.
-- Authentication remains Wix Members owned by `masterPage.js`; the embed only emits login/navigation/settings intents.
-- Logged-out primary action is `Login`. Logged-in primary action is `My Club` and routes to `/my-profile`.
-- Logged-in desktop/mobile chrome exposes `Logout`, emitting the existing `HEADER_LOGOUT` contract handled by the parent with Wix Members logout.
-- `Forgot password?` now routes to `/forgot-password`; it no longer opens the old header-level prompt directly.
-- Existing 118px fixed geometry, search, settings, favorites, navigation, Club inline sign-in, language/currency and responsive behavior are retained.
-- Mobile text-entry controls now enforce a 16px minimum font size at widths up to 767px to prevent iOS focus auto-zoom without disabling user pinch zoom.
-- STATICALLY VERIFIED against repository `skanditravels/SKANDI-TRAVELS`, branch `main`, HEAD `e44a4c7df428faa198d4b386bf261ceb202e7dc9` and the complete user-supplied V12 header source.
+- Source basis: `skanditravels/SKANDI-TRAVELS`, `main`, `HTML_REF/GLOBAL/skandiHeader.md`, canonical reference as reviewed on 2026-10-22.
+- `/src/pages/masterPage.js` remains the owner of Wix Members authentication, parent routing and global chrome.
+- `/src/public/siteMap.js` remains the route / chrome registry. No backend or route changes are required by this visual update.
+- Preserve 118px fixed header geometry (74px + 44px), all IDs, search, favorites, settings, responsive drawer, Club inline login, session display, and source/message strings.
+- Restore/reconcile 2026-10-13 auth sync from current GitHub reference: Login/My Club CTA, Wix-owned `HEADER_LOGOUT`, My Profile route, and dedicated Forgot Password route.
+- Preserve 2026-10-13 mobile focus guard (editable inputs 16px minimum at mobile width) and user zoom.
+- Visual theme: Nordic Horizon — SKANDI navy #022e64, glacier cyan #5FC7CF, polar white #FFFFFF, glacier ice #F6FAFF.
+- Static verification only. Wix component height and dynamic interactions require a live smoke test after publication.
 
 ## CHANGE LOG
-- 2026-10-13 — Mobile focus UX: text-entry inputs/selects/textarea use a 16px minimum at mobile widths; no `user-scalable=no` or pinch-zoom lock is introduced.
-- 2026-09-16 — B-011.18: Global SKANDI customer header registered at 118px desktop/tablet/mobile.
-- 2026-09-18 — B-011.18.1: Intended 118px invariant introduced; later cross-layer audit found parent-side growth still possible.
-- 2026-09-18 — B-011.18.2: Premium global-header convergence; fixed 118px invariant, My Profile account routing and parent clamp.
-- 2026-09-18 — B-011.18.3: Premium interaction refinement with reduced-motion-aware hover/focus interactions.
-- 2026-09-18 — B-011.18.4: SKANDI Club login convergence to the premium My Profile visual system.
-- 2026-10-13 — B-011.18.5 / V12 auth sync: logged-out Club CTA renamed `Login`; logged-in `My Club` now opens `/my-profile`; Wix Members logout controls added for desktop/mobile; Forgot Password now routes to the dedicated `/forgot-password` page. No masterPage authentication contract was replaced.
+- 2026-09-16 — B-011.18: Global customer header registered at 118px desktop/tablet/mobile.
+- 2026-09-18 — B-011.18.1: Intended 118px invariant; later cross-layer audit found parent growth could occur.
+- 2026-09-18 — B-011.18.2: Premium global-header convergence, profile routing and parent clamp.
+- 2026-09-18 — B-011.18.3: Reduced-motion-aware interactions and hover/focus refinement.
+- 2026-09-18 — B-011.18.4: SKANDI Club inline login convergence to My Profile visual system.
+- 2026-10-13 — B-011.18.5 / V12 auth sync: logged-out Login, logged-in My Club, Wix-owned logout, /forgot-password.
+- 2026-10-13 — iOS mobile text-entry controls standardized to 16px to prevent focus zoom.
+- 2026-10-22 — Nordic Horizon visual redesign of header colors, interactive states, linework, utility strip, Club surface, mobile menu; no message or functional interface intentionally changed.
 
 ## COMPLETE INTENDED LIVE HTML SOURCE
 
@@ -37,7 +38,7 @@ LAST SYNCED: 2026-10-13
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
 <meta name="theme-color" content="#022e64"/>
-<title>SKANDI Customer Header · B-011.18.4</title>
+<title>SKANDI Customer Header · B-011.18.5</title>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
 
 <style>
@@ -776,13 +777,123 @@ html.mobile-menu-open,body.mobile-menu-open{overflow:hidden!important}
   .club-panel,.mobile-drawer,.settings-menu,.search-field-shell{transform:none!important;filter:none!important}
 }
 
-
-/* SKANDI mobile focus-zoom guard: keep editable controls at iOS-safe 16px without disabling pinch zoom. */
+/* Mobile form focus-size invariant from approved 2026-10-13 V12 sync. */
 @media (max-width:767px){
   input[type="text"],input[type="search"],input[type="email"],input[type="password"],
   input[type="tel"],input[type="url"],input[type="number"],input[type="date"],
   input[type="time"],input[type="datetime-local"],input[type="month"],input[type="week"],
   input:not([type]),select,textarea{font-size:16px!important}
+}
+
+/* ======================================================================
+   SKANDI CUSTOMER CHROME / NORDIC HORIZON DESIGN — 2026-10-22
+   Presentation-only rules. All 118px sizing, page IDs, events and parent
+   postMessage contracts remain owned by the established V12 integration.
+   ====================================================================== */
+:root{
+  --sk-navy:#022e64;
+  --sk-blue:#104b80;
+  --sk-blue-soft:#286a98;
+  --sk-ink:#041b35;
+  --sk-ink-soft:#07264b;
+  --sk-aqua:#5fc7cf;
+  --sk-aqua-soft:#a6e9ec;
+  --sk-ivory:#ffffff;
+  --sk-porcelain:#f6faff;
+  --sk-limestone:#dae8f0;
+  --sk-champagne:#a6e9ec;
+  --sk-graphite:#092744;
+  --sk-muted:#61758b;
+  --sk-line:rgba(2,46,100,.13);
+  --sk-line-light:rgba(255,255,255,.17);
+}
+.header-shell{
+  background:#fff;
+  border-bottom:1px solid rgba(2,46,100,.12);
+  box-shadow:0 6px 22px rgba(2,38,72,.09);
+  backdrop-filter:blur(18px) saturate(135%);
+  -webkit-backdrop-filter:blur(18px) saturate(135%);
+}
+.mainline{
+  background:linear-gradient(117deg,#fff 0%,#fff 47%,#f3faff 100%);
+  border-bottom:1px solid rgba(2,46,100,.09);
+}
+.mainline::after{
+  opacity:1;
+  background:linear-gradient(90deg,transparent 0%,rgba(95,199,207,.75) 28%,rgba(95,199,207,.18) 79%,transparent 100%);
+}
+.header-shell::before{
+  mix-blend-mode:normal;
+  opacity:.4;
+  background:radial-gradient(ellipse at 89% 12%,rgba(95,199,207,.14),transparent 35%);
+}
+.logo{border-radius:8px}
+.logo:hover{background:rgba(95,199,207,.06)}
+.nav-btn{
+  color:#173b61;
+  letter-spacing:.02em;
+  font-weight:700;
+  border-radius:7px;
+}
+.nav-btn:hover{
+  color:var(--sk-navy);
+  background:rgba(95,199,207,.12);
+}
+.nav-btn.active{
+  color:var(--sk-navy);
+  background:rgba(95,199,207,.10);
+}
+.nav-btn::after{background:var(--sk-aqua)}
+.action-btn,.mobile-btn{
+  border-color:rgba(2,46,100,.16);
+  color:var(--sk-navy);
+  background:rgba(255,255,255,.84);
+  box-shadow:0 2px 6px rgba(2,46,100,.04);
+}
+.action-btn:hover,.mobile-btn:hover{
+  background:#eaf9fa;
+  border-color:rgba(95,199,207,.6);
+  color:#073e66;
+}
+.action-btn.primary{
+  color:#fff;
+  background:linear-gradient(112deg,#022e64,#0b4978);
+  border:1px solid rgba(2,46,100,.5);
+  box-shadow:0 7px 17px rgba(2,46,100,.17);
+}
+.action-btn.primary:hover{
+  background:linear-gradient(112deg,#053c70,#0b557d);
+  border-color:var(--sk-aqua);
+}
+.expandbar,
+.mobile-menu-bottom{
+  color:#fff;
+  background:linear-gradient(100deg,#031f42 0%,#022e64 56%,#0b4978 100%);
+  border-top:1px solid rgba(95,199,207,.22);
+}
+.expandbar::after{
+  background:linear-gradient(90deg,transparent,rgba(95,199,207,.7) 34%,rgba(255,255,255,.12) 67%,transparent);
+}
+.master-slogan{color:rgba(240,252,255,.88);letter-spacing:.155em}
+.account-mini-tier,.account-mini-points{color:#a6e9ec}
+.settings-menu{background:linear-gradient(90deg,#042950,#104875)}
+.settings-apply{background:var(--sk-aqua);color:#022e64}
+.search-field-inner,.club-field{border-color:rgba(95,199,207,.35)}
+.club-panel{
+  background:radial-gradient(circle at 88% 10%,rgba(95,199,207,.15),transparent 31%),linear-gradient(118deg,#03182f 0%,#022e64 100%);
+  border-left-color:rgba(95,199,207,.4);
+}
+.club-panel::before{background:linear-gradient(180deg,#5fc7cf,#b7edf0)}
+.club-submit{background:linear-gradient(115deg,#5fc7cf,#a6e9ec);color:#052d56}
+.mobile-menu-top{background:linear-gradient(100deg,#fff,#f3faff)}
+.mobile-menu-link.active{border-color:var(--sk-aqua);color:var(--sk-navy)}
+.mobile-drawer-action.primary{border-color:rgba(95,199,207,.55);background:rgba(95,199,207,.20);color:#fff}
+button:focus-visible,input:focus-visible,select:focus-visible{
+  outline:2px solid #29aab7;
+  outline-offset:2px;
+}
+@media (prefers-reduced-motion:reduce){
+  .nav-btn,.action-btn,.mobile-btn{transition:none!important}
 }
 
 </style>
@@ -947,8 +1058,7 @@ html.mobile-menu-open,body.mobile-menu-open{overflow:hidden!important}
 
       <button class="mobile-drawer-action primary" id="mobileAccountBtn"
         type="button" data-i18n="nav.signIn">Login</button>
-      <button class="mobile-drawer-action" id="mobileLogoutBtn"
-        type="button" hidden>Logout</button>
+      <button class="mobile-drawer-action" id="mobileLogoutBtn" type="button" hidden>Logout</button>
     </div>
   </aside>
 </div>
@@ -1349,12 +1459,10 @@ html.mobile-menu-open,body.mobile-menu-open{overflow:hidden!important}
     }
 
     if ($("mobileAccountBtn")) {
-      $("mobileAccountBtn").textContent =
-        session.loggedIn
+      $("mobileAccountBtn").textContent = session.loggedIn
           ? "My Club"
           : translation("nav.clubBtn","Login");
     }
-
     if ($("mobileLogoutBtn")) {
       $("mobileLogoutBtn").hidden = !session.loggedIn;
     }
@@ -1544,7 +1652,6 @@ html.mobile-menu-open,body.mobile-menu-open{overflow:hidden!important}
       $("clubBtn").textContent = session.loggedIn ? "My Club" : translation("nav.clubBtn","Login");
       $("clubBtn").setAttribute("aria-label", session.loggedIn ? "Open My Profile" : "Open Login");
     }
-
     if ($("customerLogoutBtn")) {
       $("customerLogoutBtn").hidden = !session.loggedIn;
     }
@@ -1620,10 +1727,7 @@ html.mobile-menu-open,body.mobile-menu-open{overflow:hidden!important}
 
       if (action?.dataset.action === "forgot-password") {
         setClubMessage("");
-        navTo(
-          master?.routes?.forgotPassword ||
-          "/forgot-password"
-        );
+        navTo(master?.routes?.forgotPassword || "/forgot-password");
         return;
       }
 
@@ -1701,10 +1805,7 @@ html.mobile-menu-open,body.mobile-menu-open{overflow:hidden!important}
       closeMobile();
 
       if (session.loggedIn) {
-        navTo(
-          master?.routes?.myProfile ||
-          "/my-profile"
-        );
+        navTo(master?.routes?.myProfile || "/my-profile");
       } else {
         openClub();
       }
