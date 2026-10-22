@@ -1102,7 +1102,7 @@ async function applyChromeVisibility() {
     setElementVisible(globalTopCover, showGlobalMobile),
     setElementVisible(legacyHomeNav, false),
     setElementVisible(cookieBannerEl(), !internal),
-    setElementVisible(firstExisting(IDS.customerHeaders), showCustomerChrome),
+    setElementVisible(firstExisting(IDS.customerHeaders), showCustomerChrome && !showGlobalMobile),
     mobileGate && showCustomerChrome && !keepMobileFooterHost
       ? setElementDisplayPreserveLayout(customerFooter, false)
       : setElementVisible(customerFooter, showCustomerChrome || keepMobileFooterHost),
