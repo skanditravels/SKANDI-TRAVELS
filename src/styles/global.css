@@ -1,19 +1,19 @@
-/* Closed state: sits strictly at the bottom as a 68px bar */
-.nav-closed,
-.nav-closed iframe {
-  height: 68px !important;
-  min-height: 68px !important;
-  max-height: 68px !important;
+/* Closed state: 88px bottom bar so everything behind it is clickable */
+.skandi-mobile-nav-closed,
+.skandi-mobile-nav-closed iframe {
+  height: 88px !important;
+  min-height: 88px !important;
+  max-height: 88px !important;
   top: auto !important;
   bottom: 0 !important;
 }
 
-/* Open state: expands to full screen so the slideout menu is visible */
-.nav-open,
-.nav-open iframe {
-  height: 100vh !important;
-  min-height: 100vh !important;
-  max-height: 100vh !important;
-  top: 0 !important;
+/* Open state: expands to full screen (minus the 52px top cover) */
+.skandi-mobile-nav-open,
+.skandi-mobile-nav-open iframe {
+  height: calc(100vh - 52px) !important;
+  min-height: calc(100vh - 52px) !important;
+  max-height: calc(100vh - 52px) !important;
+  top: 52px !important;
   bottom: 0 !important;
 }
