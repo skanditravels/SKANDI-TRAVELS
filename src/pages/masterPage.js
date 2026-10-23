@@ -1119,7 +1119,23 @@ async function applyChromeVisibility() {
 function pushConfigToAll() {
   for (const embed of allHtmlComponents()) pushMasterConfig(embed);
 }
+$w.onReady(function () {
+  const navEmbed = $w('#skandiMobileAppNavEmbed');
+  
+  // Start in the closed state so the page behind is clickable
+  navEmbed.customClassList.add('nav-closed');
 
+  // Listen for open/close signals from inside the HTML embed
+  navEmbed.onMessage((event) => {
+    if (event.data === 'menu-open') {
+      navEmbed.customClassList.remove('nav-closed');
+      navEmbed.customClassList.add('nav-open');
+    } else if (event.data === 'menu-close') {
+      navEmbed.customClassList.remove('nav-open');
+      navEmbed.customClassList.add('nav-closed');
+    }
+  });
+});
 $w.onReady(async function () {
   await applyChromeVisibility();
   startMobileFooterGate();
