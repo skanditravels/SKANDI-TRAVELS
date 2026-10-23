@@ -1,13 +1,19 @@
-/* Default closed state: only as tall as the bottom nav bar */
-.nav-closed {
-  height: 68px !important; /* Adjust to match your bottom bar height */
+/* Closed state: sits strictly at the bottom as a 68px bar */
+.nav-closed,
+.nav-closed iframe {
+  height: 68px !important;
+  min-height: 68px !important;
+  max-height: 68px !important;
   top: auto !important;
   bottom: 0 !important;
 }
 
-/* Open state: full screen so the slideout drawer is visible */
-.nav-open {
+/* Open state: expands to full screen so the slideout menu is visible */
+.nav-open,
+.nav-open iframe {
   height: 100vh !important;
+  min-height: 100vh !important;
+  max-height: 100vh !important;
   top: 0 !important;
   bottom: 0 !important;
 }
