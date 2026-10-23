@@ -1,0 +1,13 @@
+/* Default closed state: only as tall as the bottom nav bar */
+.nav-closed {
+  height: 68px !important; /* Adjust to match your bottom bar height */
+  top: auto !important;
+  bottom: 0 !important;
+}
+
+/* Open state: full screen so the slideout drawer is visible */
+.nav-open {
+  height: 100vh !important;
+  top: 0 !important;
+  bottom: 0 !important;
+}
