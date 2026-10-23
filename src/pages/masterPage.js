@@ -421,35 +421,46 @@ async function resetGlobalMobileDrawer() {
   ++mobileDrawerResizeEpoch;
   const nav = globalMobileNavEl();
   if (!nav) return;
-  try { nav.height = MOBILE_APP_BAR_HEIGHT; } catch (_) {}
+  try {
+    nav.customClassList?.remove("skandi-mobile-nav-open");
+    nav.customClassList?.add("skandi-mobile-nav-closed");
+  } catch (_) {}
   postGlobalMobileNav("HOME_APP_DRAWER_FORCE_CLOSE", {});
 }
+
 async function handleGlobalMobileDrawerResize(embed, message) {
   const requestId = String(message.requestId || "").slice(0, 160);
   const opening = message.payload?.open === true;
   const epoch = ++mobileDrawerResizeEpoch;
-  // A responsive Studio preview can display the mobile embed while reporting
-  // desktop formFactor. The request is already scoped to the exact global embed;
-  // reject internal routes, not the simulated device class.
+
   if (isInternalPath()) {
-    postGlobalMobileNav("HOME_APP_DRAWER_RESIZE_ERROR", { open:opening, message:"This menu is unavailable on this page." }, requestId);
+    postGlobalMobileNav("HOME_APP_DRAWER_RESIZE_ERROR", { open: opening, message: "This menu is unavailable on this page." }, requestId);
     return;
   }
+
   try {
     let height = MOBILE_APP_BAR_HEIGHT;
     if (opening) {
       const dimensions = await wixWindowFrontend.getBoundingRect();
-      const viewportHeight = Number(dimensions?.window?.height);
-      if (!Number.isFinite(viewportHeight) || viewportHeight < 300) throw new Error("MOBILE_VIEWPORT_UNAVAILABLE");
+      const viewportHeight = Number(dimensions?.window?.height) || 844;
       height = Math.max(220, Math.floor(viewportHeight) - MOBILE_TOP_COVER_HEIGHT);
     }
     if (epoch !== mobileDrawerResizeEpoch) return;
-    if (!("height" in embed)) throw new Error("MOBILE_HTML_RESIZE_UNSUPPORTED");
-    embed.height = height;
-    postGlobalMobileNav("HOME_APP_DRAWER_RESIZE_ACK", { open:opening, height }, requestId);
+
+    // Toggle the global.css height classes instead of embed.height
+    if (opening) {
+      embed.customClassList?.remove("skandi-mobile-nav-closed");
+      embed.customClassList?.add("skandi-mobile-nav-open");
+    } else {
+      embed.customClassList?.remove("skandi-mobile-nav-open");
+      embed.customClassList?.add("skandi-mobile-nav-closed");
+    }
+
+    // Send the ACK that the embed is waiting for before sliding the drawer open!
+    postGlobalMobileNav("HOME_APP_DRAWER_RESIZE_ACK", { open: opening, height }, requestId);
   } catch (error) {
     console.warn("[MasterPage] Global mobile drawer failed.", error);
-    postGlobalMobileNav("HOME_APP_DRAWER_RESIZE_ERROR", { open:opening, message:"The menu could not be displayed. Please try again." }, requestId);
+    postGlobalMobileNav("HOME_APP_DRAWER_RESIZE_ERROR", { open: opening, message: "The menu could not be displayed. Please try again." }, requestId);
   }
 }
 function customerHeaderEl() { return firstHtml(IDS.customerHeaders); }
@@ -1119,23 +1130,6 @@ async function applyChromeVisibility() {
 function pushConfigToAll() {
   for (const embed of allHtmlComponents()) pushMasterConfig(embed);
 }
-$w.onReady(function () {
-  const navEmbed = $w('#skandiMobileAppNavEmbed');
-  
-  // Start in the closed state so the page behind is clickable
-  navEmbed.customClassList.add('nav-closed');
-
-  // Listen for open/close signals from inside the HTML embed
-  navEmbed.onMessage((event) => {
-    if (event.data === 'menu-open') {
-      navEmbed.customClassList.remove('nav-closed');
-      navEmbed.customClassList.add('nav-open');
-    } else if (event.data === 'menu-close') {
-      navEmbed.customClassList.remove('nav-open');
-      navEmbed.customClassList.add('nav-closed');
-    }
-  });
-});
 $w.onReady(async function () {
   await applyChromeVisibility();
   startMobileFooterGate();
