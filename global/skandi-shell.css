@@ -1,0 +1,22 @@
+/* SKANDI V12 responsive application shell. Loaded last in compiled pages. */
+:root { --sk-shell-navy:#022e64; --sk-shell-aqua:#5FC7CF; --sk-shell-nav:68px; }
+*,*::before,*::after { box-sizing:border-box; }
+html,body { width:100%!important; margin:0!important; padding:0!important; max-width:none!important; background:#fff; }
+body { min-height:100%; }
+#skandi-shell-root { display:grid; grid-template-rows:118px minmax(0,1fr) auto; width:100%; min-height:100vh; min-height:100dvh; background:#fff; }
+#skandi-global-header-root { grid-row:1; position:relative; height:118px; overflow:hidden; z-index:20; }
+#skandi-global-header-root #skandi-site-header { height:118px!important; max-height:118px!important; }
+#skandi-app-root { grid-row:2; position:relative; min-height:0; max-height:none!important; height:auto!important; overflow:visible; background:#fff; }
+#skandi-global-footer-root { grid-row:3; min-width:0; min-height:0; overflow:visible; }
+#skandi-mobile-nav-root { display:none; }
+/* Desktop remains natural document scrolling, including the complete footer. */
+@media (max-width:1020px) {
+  html,body { height:100%!important; min-height:0!important; max-height:none!important; overflow:hidden!important; overscroll-behavior:none; }
+  #skandi-shell-root { position:fixed!important; inset:0; width:100%; height:100vh!important; height:100dvh!important; min-height:0!important; max-height:none!important; overflow:hidden!important; overscroll-behavior:none; display:grid; grid-template-rows:minmax(0,1fr) auto; }
+  #skandi-global-header-root,#skandi-global-footer-root { display:none!important; }
+  #skandi-app-root { grid-row:1; min-height:0!important; height:100%!important; overflow-x:hidden!important; overflow-y:auto!important; -webkit-overflow-scrolling:touch; overscroll-behavior:none; scrollbar-gutter:auto; padding-bottom:0; }
+  #skandi-mobile-nav-root { grid-row:2; display:block!important; width:100%; min-height:var(--sk-shell-nav); padding:0 0 env(safe-area-inset-bottom,0px); background:var(--sk-shell-navy); z-index:50; overflow:hidden; }
+  #skandi-app-root input:not([type="hidden"]),#skandi-app-root select,#skandi-app-root textarea { font-size:16px!important; }
+  #skandi-app-root button,#skandi-app-root a,#skandi-mobile-nav-root button { touch-action:manipulation; }
+}
+@media (prefers-reduced-motion:reduce) { #skandi-app-root { scroll-behavior:auto!important; } }
