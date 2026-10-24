@@ -1,4 +1,4 @@
-const SOURCE = "SKANDI_HOME";
+const SOURCE = "./skandi-home.js";
 const HOME_PROTOCOL_VERSION = "V12-HOME";
 const PARENT = "SKANDI_WIX_PARENT";
 
