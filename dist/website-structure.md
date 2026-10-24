@@ -34,7 +34,7 @@ Route authority: `src/public/siteMap.js`. This file is generated evidence, not r
 | cookiePreferences | /about/legal/cookie-preferences | skandi-embeds/cookie-preferences/skandi-cookie-preferences.{html,css,js} | public / public | UNVERIFIED | PENDING SOURCE |
 | riaintra | /riaintra | riaintra-embeds/riaintra/riaintra.{html,css,js} | riaintra / none | src/pages/RIAINTRA.rc14z.js | BUILT |
 | staffLogin | /riaintra | Alias of riaintra | riaintra / none | src/pages/RIAINTRA.rc14z.js | ALIAS |
-| successFactors | /riaintra/success-factors | skandi-embeds/success-factors/skandi-success-factors.{html,css,js} | riaintra / riaintra | src/pages/Success Factors.sh6tw.js | PENDING SOURCE |
+| successFactors | /riaintra/success-factors | skandi-embeds/success-factors/skandi-success-factors.{html,css,js} | riaintra / riaintra | src/pages/Success Factors.sh6tw.js | FAILED |
 | legalInternal | /riaintra/success-factors/legal-internal | skandi-embeds/legal-internal/skandi-legal-internal.{html,css,js} | riaintra / riaintra | src/pages/RIAINTRA Legal.xvi17.js | PENDING SOURCE |
 | alteaLaunchpad | /riaintra/success-factors/altea | skandi-embeds/altea-launchpad/skandi-altea-launchpad.{html,css,js} | altea / altea | src/pages/ALTEA Launchpad.ajs4y.js | PENDING SOURCE |
 | alteaReservations | /riaintra/success-factors/altea/reservations | skandi-embeds/altea-reservations/skandi-altea-reservations.{html,css,js} | altea / altea | src/pages/Reservations.ly2n8.js | PENDING SOURCE |
@@ -134,7 +134,7 @@ These actual repository controllers are preserved. No new route or build is inve
 - **legal**: NOT READY: PENDING SOURCE
 - **policies**: NOT READY: PENDING SOURCE
 - **cookiePreferences**: NOT READY: No verified canonical controller mapping.
-- **successFactors**: NOT READY: riaintra-header: PENDING SOURCE (skandi-embeds/riaintra-global/riaintra-header.html, skandi-embeds/riaintra-global/riaintra-header.css, skandi-embeds/riaintra-global/riaintra-header.js); riaintra-footer: PENDING SOURCE (skandi-embeds/riaintra-global/riaintra-footer.html, skandi-embeds/riaintra-global/riaintra-footer.css, skandi-embeds/riaintra-global/riaintra-footer.js)
+- **successFactors**: NOT READY: [successFactors] INCOMPLETE SOURCE: skandi-embeds/success-factors/skandi-success-factors.html, skandi-embeds/success-factors/skandi-success-factors.js
 - **legalInternal**: NOT READY: riaintra-header: PENDING SOURCE (skandi-embeds/riaintra-global/riaintra-header.html, skandi-embeds/riaintra-global/riaintra-header.css, skandi-embeds/riaintra-global/riaintra-header.js); riaintra-footer: PENDING SOURCE (skandi-embeds/riaintra-global/riaintra-footer.html, skandi-embeds/riaintra-global/riaintra-footer.css, skandi-embeds/riaintra-global/riaintra-footer.js)
 - **alteaLaunchpad**: NOT READY: altea-header: PENDING SOURCE (skandi-embeds/altea-global/altea-header.html, skandi-embeds/altea-global/altea-header.css, skandi-embeds/altea-global/altea-header.js); altea-footer: PENDING SOURCE (skandi-embeds/altea-global/altea-footer.html, skandi-embeds/altea-global/altea-footer.css, skandi-embeds/altea-global/altea-footer.js)
 - **alteaReservations**: NOT READY: altea-header: PENDING SOURCE (skandi-embeds/altea-global/altea-header.html, skandi-embeds/altea-global/altea-header.css, skandi-embeds/altea-global/altea-header.js); altea-footer: PENDING SOURCE (skandi-embeds/altea-global/altea-footer.html, skandi-embeds/altea-global/altea-footer.css, skandi-embeds/altea-global/altea-footer.js)

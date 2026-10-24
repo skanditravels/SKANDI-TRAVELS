@@ -1544,7 +1544,7 @@
       "sources": [],
       "binding": "explicit",
       "requiresStaff": true,
-      "status": "PENDING SOURCE",
+      "status": "FAILED",
       "files": [
         "skandi-embeds/success-factors/skandi-success-factors.html",
         "skandi-embeds/success-factors/skandi-success-factors.css",
@@ -1552,7 +1552,6 @@
       ],
       "missing": [
         "skandi-embeds/success-factors/skandi-success-factors.html",
-        "skandi-embeds/success-factors/skandi-success-factors.css",
         "skandi-embeds/success-factors/skandi-success-factors.js"
       ],
       "issues": [],
@@ -1653,11 +1652,12 @@
       ],
       "output": null,
       "dynamic": false,
-      "sourceStatus": "PENDING SOURCE",
+      "sourceStatus": "INCOMPLETE SOURCE",
       "blockers": [
         "riaintra-header: PENDING SOURCE (skandi-embeds/riaintra-global/riaintra-header.html, skandi-embeds/riaintra-global/riaintra-header.css, skandi-embeds/riaintra-global/riaintra-header.js)",
         "riaintra-footer: PENDING SOURCE (skandi-embeds/riaintra-global/riaintra-footer.html, skandi-embeds/riaintra-global/riaintra-footer.css, skandi-embeds/riaintra-global/riaintra-footer.js)"
       ],
+      "error": "[successFactors] INCOMPLETE SOURCE: skandi-embeds/success-factors/skandi-success-factors.html, skandi-embeds/success-factors/skandi-success-factors.js",
       "retainedArtifact": false
     },
     {
