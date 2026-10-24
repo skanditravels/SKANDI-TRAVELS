@@ -1,0 +1,168 @@
+[
+  {
+    "slug": "home",
+    "viewport": {
+      "width": 1440,
+      "height": 1000
+    },
+    "errors": [],
+    "geometry": {
+      "width": 1440,
+      "scrollWidth": 1440,
+      "header": "block",
+      "footer": "block",
+      "nav": "none",
+      "mountWidth": 1440,
+      "rootHeight": 5693.734375
+    },
+    "messageTypes": [
+      "SKANDI_SHELL_READY",
+      "MASTER_CONFIG_REQUEST",
+      "CUSTOMER_SETTINGS_REQUEST",
+      "HEADER_READY",
+      "FOOTER_READY",
+      "HOME_APP_READY",
+      "MASTER_NAVIGATION_REQUEST",
+      "HOME_READY"
+    ]
+  },
+  {
+    "slug": "home",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "errors": [],
+    "geometry": {
+      "width": 390,
+      "scrollWidth": 390,
+      "header": "none",
+      "footer": "none",
+      "nav": "block",
+      "mountWidth": 390,
+      "rootHeight": 844,
+      "drawerOpen": "false",
+      "drawerBox": {
+        "x": -0.03125,
+        "y": 0,
+        "width": 360,
+        "height": 844
+      }
+    },
+    "messageTypes": [
+      "SKANDI_SHELL_READY",
+      "MASTER_CONFIG_REQUEST",
+      "CUSTOMER_SETTINGS_REQUEST",
+      "HEADER_READY",
+      "FOOTER_READY",
+      "HOME_APP_READY",
+      "MASTER_NAVIGATION_REQUEST",
+      "HOME_READY"
+    ]
+  },
+  {
+    "slug": "flight-status",
+    "viewport": {
+      "width": 1440,
+      "height": 1000
+    },
+    "errors": [],
+    "geometry": {
+      "width": 1440,
+      "scrollWidth": 1440,
+      "header": "block",
+      "footer": "block",
+      "nav": "none",
+      "mountWidth": 1440,
+      "rootHeight": 1226.828125
+    },
+    "messageTypes": [
+      "SKANDI_SHELL_READY",
+      "MASTER_CONFIG_REQUEST",
+      "CUSTOMER_SETTINGS_REQUEST",
+      "HEADER_READY",
+      "FOOTER_READY",
+      "HOME_APP_READY",
+      "FLIGHT_STATUS_READY",
+      "FLIGHT_STATUS_AIRPORTS_REQUEST"
+    ]
+  },
+  {
+    "slug": "flight-status",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "errors": [],
+    "geometry": {
+      "width": 390,
+      "scrollWidth": 390,
+      "header": "none",
+      "footer": "none",
+      "nav": "block",
+      "mountWidth": 390,
+      "rootHeight": 844,
+      "drawerOpen": "false",
+      "drawerBox": {
+        "x": 0,
+        "y": 0,
+        "width": 360,
+        "height": 844
+      }
+    },
+    "messageTypes": [
+      "SKANDI_SHELL_READY",
+      "MASTER_CONFIG_REQUEST",
+      "CUSTOMER_SETTINGS_REQUEST",
+      "HEADER_READY",
+      "FOOTER_READY",
+      "HOME_APP_READY",
+      "FLIGHT_STATUS_READY",
+      "FLIGHT_STATUS_AIRPORTS_REQUEST"
+    ]
+  },
+  {
+    "slug": "riaintra",
+    "viewport": {
+      "width": 1440,
+      "height": 1000
+    },
+    "errors": [],
+    "geometry": {
+      "width": 1440,
+      "scrollWidth": 1440,
+      "header": null,
+      "footer": null,
+      "nav": null,
+      "mountWidth": 1440,
+      "rootHeight": 1000
+    },
+    "messageTypes": [
+      "SKANDI_SHELL_READY",
+      "STAFF_LOGIN_READY",
+      "MASTER_CONFIG_REQUEST"
+    ]
+  },
+  {
+    "slug": "riaintra",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "errors": [],
+    "geometry": {
+      "width": 390,
+      "scrollWidth": 390,
+      "header": null,
+      "footer": null,
+      "nav": null,
+      "mountWidth": 390,
+      "rootHeight": 844
+    },
+    "messageTypes": [
+      "SKANDI_SHELL_READY",
+      "STAFF_LOGIN_READY",
+      "MASTER_CONFIG_REQUEST"
+    ]
+  }
+]

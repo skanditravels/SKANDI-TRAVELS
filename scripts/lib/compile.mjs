@@ -1,0 +1,211 @@
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import {Script} from 'node:vm';
+import {createHash} from 'node:crypto';
+import {parse,parseFragment,serialize,serializeOuter} from 'parse5';
+import postcss from 'postcss';
+import selectorParser from 'postcss-selector-parser';
+import {read,triplet} from './inventory.mjs';
+
+export const hash = value => createHash('sha256').update(value).digest('hex');
+export const escapeHTML = value => String(value).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
+const safeJS = js => js.replace(/<\/script/gi,'<\\/script');
+const safeCSS = css => css.replace(/<\/style/gi,'<\\/style');
+const attr = (n,key) => n.attrs?.find(a=>a.name===key)?.value;
+function walk(node, fn, inert=false) { fn(node,inert); for(const child of [...(node.childNodes||[])]) walk(child,fn,inert); if(node.content) walk(node.content,fn,true); }
+const remove = n => {const a=n.parentNode?.childNodes;if(a)a.splice(a.indexOf(n),1);};
+const setAttr = (n,key,value) => {const a=n.attrs.find(a=>a.name===key);if(a)a.value=value;else n.attrs.push({name:key,value});};
+const mime = {'.png':'image/png','.jpg':'image/jpeg','.jpeg':'image/jpeg','.gif':'image/gif','.svg':'image/svg+xml','.webp':'image/webp','.avif':'image/avif','.woff':'font/woff','.woff2':'font/woff2','.ico':'image/x-icon','.mp4':'video/mp4','.pdf':'application/pdf'};
+async function localFile(root,from,url) {
+  const plain=url.split(/[?#]/)[0];
+  const file=path.resolve(root,path.dirname(from),decodeURIComponent(plain));
+  const rel=path.relative(root,file);
+  if(rel.startsWith('..')||path.isAbsolute(rel)) throw new Error(`${from}: asset escapes repository: ${url}`);
+  const real=await fs.realpath(file).catch(()=>{throw new Error(`${from}: missing asset ${url}`);});
+  if(!real.startsWith(await fs.realpath(root)+path.sep)) throw new Error(`${from}: asset symlink escapes repository: ${url}`);
+  return {file:real,rel};
+}
+async function asset(root,from,url) {
+  if(!url || /^(?:[a-z][\w+.-]*:|\/|#)/i.test(url)) return url;
+  const {file}=await localFile(root,from,url);
+  const data=await fs.readFile(file);
+  if(data.length>10*1024*1024) throw new Error(`${from}: local asset exceeds 10 MiB; use its approved public asset URL: ${url}`);
+  return `data:${mime[path.extname(file).toLowerCase()]||'application/octet-stream'};base64,${data.toString('base64')}` + (url.includes('#')?'#'+url.split('#')[1]:'');
+}
+export function scopeSelector(source,mount) {
+  return selectorParser(selectors=>selectors.each(sel=>{
+    // Preserve real document state and insert the component boundary after the
+    // whole html/body ancestor chain (including functional pseudo-classes).
+    const nodes=[...sel.nodes];let i=0,last=-1,state=false;
+    while(i<nodes.length) {
+      const n=nodes[i];
+      if(!((n.type==='tag' && /^(html|body)$/i.test(n.value))||(n.type==='pseudo'&&n.value===':root'))) break;
+      last=i;if(n.type==='pseudo') n.replaceWith(selectorParser.tag({value:'html'}));i++;
+      while(i<nodes.length && nodes[i].type!=='combinator') {state=true;last=i;i++;}
+      if(i<nodes.length && nodes[i].type==='combinator' && i+1<nodes.length && nodes[i+1].type==='tag' && /^(html|body)$/i.test(nodes[i+1].value)) {last=i;i++;continue;}
+      break;
+    }
+    const mountNode=selectorParser.id({value:mount.replace(/^#/,'')});
+    if(last>=0 && !state) {
+      for(let j=0;j<=last;j++) sel.nodes[0].remove();
+      sel.prepend(mountNode);
+    } else if(last>=0) {
+      const after=sel.nodes[last];
+      sel.insertAfter(after,selectorParser.combinator({value:' '}));
+      sel.insertAfter(sel.nodes[last+1],mountNode);
+    } else {
+      mountNode.spaces.before=sel.first.spaces.before;sel.first.spaces.before='';
+      sel.prepend(selectorParser.combinator({value:' '}));sel.prepend(mountNode);
+    }
+  })).processSync(source);
+}
+export async function cssFor(source,mount,file,root) {
+  const ast=postcss.parse(source,{from:file}),animations=new Map();
+  ast.walkAtRules(rule=>{
+    if(/keyframes$/i.test(rule.name)) {const old=rule.params;const next=mount+'-'+old;animations.set(old,next);rule.params=next;}
+    if(rule.name.toLowerCase()==='import') throw new Error(`${file}: @import must be resolved into the CSS source or a font stylesheet link in HTML`);
+  });
+  ast.walkRules(rule=>{
+    let p=rule.parent;while(p){if(p.type==='atrule'&&/keyframes$/i.test(p.name))return;p=p.parent;}
+    if(rule.selector.includes('&')) throw new Error(`${file}: flatten nested CSS selectors before compilation`);
+    rule.selector=scopeSelector(rule.selector,mount);
+  });
+  const work=[];
+  ast.walkDecls(decl=>{
+    if(/^(?:-webkit-)?animation(?:-name)?$/.test(decl.prop)) for(const [old,next] of animations) decl.value=decl.value.replace(new RegExp('(?<![\\w-])'+old.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'(?![\\w-])','g'),next);
+    const matches=[...decl.value.matchAll(/url\(\s*(["']?)(.*?)\1\s*\)/gi)];
+    if(matches.length) work.push((async()=>{for(const m of matches) decl.value=decl.value.replace(m[0],`url("${await asset(root,file,m[2].trim())}")`);})());
+  });
+  await Promise.all(work);return ast.toString();
+}
+export async function normalizeHTML(html,css,js,{root,file,mount}) {
+  const full=/<(?:!doctype|html|head|body)(?:\s|>)/i.test(html),errors=[];
+  const tree=(full?parse:parseFragment)(html,{sourceCodeLocationInfo:true,onParseError:e=>errors.push(e)});
+  const fatal=errors.filter(e=>e.code!=='missing-doctype');
+  if(fatal.length) throw new Error(`${file}:${fatal[0].startLine}: invalid HTML (${fatal[0].code})`);
+  const nodes=[],inertNodes=new Set();walk(tree,(n,inert)=>{nodes.push(n);if(inert)inertNodes.add(n);});
+  if(nodes.some(n=>n.tagName==='iframe')) throw new Error(`${file}: nested iframe is not supported; retain the existing Wix integration`);
+  if(nodes.some(n=>n.tagName==='base')) throw new Error(`${file}: <base> changes receiver/navigation ownership; use explicit asset URLs`);
+  const bodies=nodes.filter(n=>n.tagName==='body'),heads=nodes.filter(n=>n.tagName==='head');
+  const head=heads[0],body=bodies[0];
+  const bodyAttrs=body?.attrs||[],htmlNode=nodes.find(n=>n.tagName==='html');
+  for(const a of [...bodyAttrs,...(htmlNode?.attrs||[])]) if(!['lang','dir','class','style','id'].includes(a.name) && !a.name.startsWith('data-') && !a.name.startsWith('on')) throw new Error(`${file}: unsupported document attribute ${a.name}; move it to page markup`);
+  const inlineCSS=[],inlineJS=[],external=[],handlers=[],tasks=[];
+  let scriptStarted=false;
+  for(const n of [...(body?.childNodes||tree.childNodes||[])]) {
+    if(n.tagName==='script') scriptStarted=true;
+    else if(scriptStarted && n.tagName && !['script','style'].includes(n.tagName)) throw new Error(`${file}: executable scripts interleaved with markup; move scripts after page markup before splitting`);
+  }
+  for(const n of nodes) {
+    if(inertNodes.has(n)&&['script','style'].includes(n.tagName))continue;
+    if(n.tagName==='style') {inlineCSS.push(serialize(n));remove(n);}
+    if(n.tagName==='script') {
+      const type=(attr(n,'type')||'').toLowerCase();
+      if(type && !['text/javascript','application/javascript'].includes(type)) {
+        if(type==='module' || type==='importmap') throw new Error(`${file}: module scripts require bundling into the page .js first`);
+        continue; // JSON, JSON-LD and inert templates retain their original bytes.
+      }
+      const src=attr(n,'src');
+      if(src) {
+        if(/^(https?:)?\/\//.test(src)) {
+          if(attr(n,'async')!==undefined || attr(n,'defer')!==undefined) throw new Error(`${file}: async/defer external script ordering is ambiguous; use a blocking library script or bundle into .js`);
+          external.push(serializeOuter(n));
+        } else tasks.push((async()=>{const {file:target}=await localFile(root,file,src);inlineJS.push(await fs.readFile(target,'utf8'));})());
+      } else inlineJS.push(serialize(n));
+      remove(n);
+    }
+    if(n.tagName==='link' && attr(n,'rel')==='stylesheet') {
+      const href=attr(n,'href')||'';
+      if(/^https:\/\/fonts\.googleapis\.com\//.test(href)) {external.push(serializeOuter(n));remove(n);}
+      else if(!/^(?:[a-z]+:|\/)/i.test(href)) tasks.push((async()=>{const {file:target}=await localFile(root,file,href);inlineCSS.push(await fs.readFile(target,'utf8'));remove(n);})());
+      else throw new Error(`${file}: external stylesheet cannot be scoped: ${href}; put its rules in the CSS source`);
+    }
+    if(n.attrs) for(const a of [...n.attrs]) {
+      if(/^on[a-z]+$/.test(a.name)) {
+        if(['html','body'].includes(n.tagName)) throw new Error(`${file}: move ${n.tagName}.${a.name} into the JS source`);
+        const index=handlers.length;setAttr(n,'data-skandi-handler-'+index,'');n.attrs=n.attrs.filter(x=>x!==a);
+        handlers.push({index,event:a.name.slice(2),code:a.value});
+      }
+      if((['src','poster'].includes(a.name) && n.tagName!=='script') || (a.name==='href' && n.tagName==='link' && attr(n,'rel')!=='stylesheet')) tasks.push(asset(root,file,a.value).then(v=>a.value=v));
+      if(a.name==='srcset' && !a.value.startsWith('data:')) tasks.push((async()=>{a.value=(await Promise.all(a.value.split(',').map(async chunk=>{const [url,...size]=chunk.trim().split(/\s+/);return [await asset(root,file,url),...size].join(' ');}))).join(', ');})());
+      if(a.name==='style') tasks.push((async()=>{const parsed=postcss.parse(`a{${a.value}}`);const d=[];parsed.walkDecls(x=>d.push(x));for(const x of d)for(const m of [...x.value.matchAll(/url\(\s*(["']?)(.*?)\1\s*\)/gi)])x.value=x.value.replace(m[0],`url("${await asset(root,file,m[2])}")`);a.value=parsed.first.nodes.map(x=>x.toString()).join(';');})());
+      if(a.name==='href' && ['image','use'].includes(n.tagName) && !a.value.startsWith('#')) tasks.push(asset(root,file,a.value).then(v=>a.value=v));
+    }
+  }
+  await Promise.all(tasks);
+  const combine=(inside,outside,kind)=>{
+    const joined=inside.join('\n').trim();if(!joined)return outside;
+    if(joined===outside.trim())return outside;
+    // Empty/comment-only sidecars explicitly allow a legacy inline-only document.
+    const significant=outside.replace(/\/\*[\s\S]*?\*\//g,'').replace(/^\s*\/\/.*$/gm,'').trim();
+    if(significant)throw new Error(`${file}: inline ${kind} and sidecar ${kind} overlap or have ambiguous order; consolidate into the sidecar (no code was discarded)`);
+    return joined;
+  };
+  let headHTML='';
+  if(head) for(const n of head.childNodes||[]) {
+    if(n.tagName==='title' || (n.tagName==='meta'&&(attr(n,'charset')!==undefined||attr(n,'name')==='viewport')))continue;
+    headHTML+=serializeOuter(n);
+  }
+  let markup=full?serialize(body):serialize(tree);
+  // Keep document classes on the actual document for body.state selectors.
+  const documentAttrs={body:bodyAttrs,html:htmlNode?.attrs||[]};
+  const titleNode=head?.childNodes?.find(n=>n.tagName==='title');
+  const title=titleNode?.childNodes?.map(n=>n.value||'').join('')||'';
+  return {title,html:markup,css:combine(inlineCSS,css,'CSS'),js:combine(inlineJS,js,'JavaScript'),headHTML,external,handlers,documentAttrs};
+}
+function scopedScript(js,mount,handlers=[]) {
+  const binds=handlers.map(h=>`__root.querySelector('[data-skandi-handler-${h.index}]').addEventListener(${JSON.stringify(h.event)},function(event){const result=(function(event){${h.code}\n}).call(this,event);if(result===false){event.preventDefault();}});`).join('\n');
+  return `(function(){\nconst __root=window.document.getElementById(${JSON.stringify(mount)});\nconst document=new Proxy(window.document,{get(target,key){if(key==='getElementById')return id=>{const el=target.getElementById(id);return el&&(__root===el||__root.contains(el))?el:null;};if(key==='querySelector'||key==='querySelectorAll')return selector=>{if(/^(?:html|body|head|meta|title|link)(?:[\\s.#[:]|$)/i.test(selector)&&!selector.includes(' '))return target[key](selector);return __root[key](selector);};if(key==='getElementsByClassName'||key==='getElementsByTagName')return value=>__root[key](value);const value=Reflect.get(target,key,target);return typeof value==='function'?value.bind(target):value;}});\n${js}\n${binds}\n})();`;
+}
+function adapt(js,key) {
+  if(key==='mobile-nav')return js.replaceAll('window.parent===window','(window.parent===window||Boolean(window.__SKANDI_SHELL__))').replaceAll('window.parent!==window','(window.parent!==window&&!window.__SKANDI_SHELL__)');
+  if(key==='header')return js.replace(/post\(\s*["']SKANDI_EMBED_RESIZE["']\s*,\s*\{\s*height\s*:\s*118\s*\}\s*\)\s*;/g,'/* Compiled shell owns component geometry. */');
+  if(key==='home')return js.replace(/send\(\s*["']RESIZE_IFRAME["']\s*,\s*\{\s*height\s*\}\s*\)\s*;/g,'/* Compiled shell owns component geometry. */');
+  return js;
+}
+export const chromeParts = family => family==='none'?[]:family==='public'?[
+  {key:'header',directory:'skandi-embeds/global',stem:'skandi-header',mount:'skandi-global-header-root'},
+  {key:'footer',directory:'skandi-embeds/global',stem:'skandi-footer',mount:'skandi-global-footer-root'},
+  {key:'mobile-nav',directory:'skandi-embeds/global',stem:'skandi-mobile-nav',mount:'skandi-mobile-nav-container'}
+]:['header','footer'].map(key=>({key,directory:`skandi-embeds/${family}-global`,stem:`${family}-${key}`,mount:`${family}-global-${key}-root`}));
+export async function compilePage(root,page) {
+  const descriptors=[...chromeParts(page.chrome),{key:page.slug,directory:page.sourceDirectory,stem:page.stem,mount:'skandi-app-root'}];
+  const parts=[],ids=new Map([['skandi-shell-root','compiler'],...descriptors.map(d=>[d.mount,'compiler'])]);
+  for(const d of descriptors) {
+    const input=await triplet(root,d.directory,d.stem);
+    if(input.status!=='COMPLETE SOURCE')throw new Error(`[${page.key} / ${d.key}] ${input.status}: ${input.missing.join(', ')}`);
+    let [html,css,js]=input.contents;
+    // The standalone header and FIDS both own searchBtn. Only the compiled
+    // header copy receives a private DOM ID; canonical source/message IDs stay intact.
+    if(d.key==='header'&&d.stem==='skandi-header') {
+      html=html.replace(/id="searchBtn"/g,'id="skandi-header-searchBtn"');
+      css=css.replace(/#searchBtn\b/g,'#skandi-header-searchBtn');
+      js=js.replace(/(["'])searchBtn\1/g,'"skandi-header-searchBtn"');
+    }
+    try {
+      const part=await normalizeHTML(html,css,js,{root,file:input.files[0],mount:d.mount});
+      walk(parseFragment(part.html),n=>{const id=attr(n,'id');if(id){if(ids.has(id))throw new Error(`duplicate id="${id}" (also in ${ids.get(id)})`);ids.set(id,input.files[0]);}});
+      for(const attrs of Object.values(part.documentAttrs)) for(const a of attrs) if(a.name==='id') {if(ids.has(a.value))throw new Error(`duplicate document id ${a.value}`);ids.set(a.value,input.files[0]);}
+      if(d.key!==page.slug && Object.values(part.documentAttrs).some(attrs=>attrs.length))throw new Error('global component document attributes are ambiguous; use a fragment');
+      part.css=await cssFor(part.css,d.mount,input.files[1],root);
+      part.script=scopedScript(adapt(part.js,d.key),d.mount,part.handlers);
+      new Script(part.script,{filename:input.files[2]});
+      parts.push({...d,...part});
+    } catch(e) {throw new Error(`[${page.key} / ${d.key}] ${input.files.join(', ')}: ${e.message}`);}
+  }
+  const pagePart=parts.at(-1),style=parts.map(p=>`<style data-skandi-part="${p.key}">${safeCSS(p.css)}</style>`);
+  const shellCSS=page.chrome==='public'?(await read(root,'skandi-embeds/global/skandi-shell.css')).replaceAll('#skandi-mobile-nav-root','#skandi-mobile-nav-container'):
+    `html,body{margin:0;width:100%;min-height:100%;}*,*::before,*::after{box-sizing:border-box}#skandi-shell-root{min-height:100vh;min-width:0;display:flex;flex-direction:column}#skandi-app-root{flex:1;min-width:0;position:relative}${page.chrome==='none'?'':`#${page.chrome}-global-header-root,#${page.chrome}-global-footer-root{flex:none}`}@media(max-width:767px){input:not([type=hidden]),select,textarea{font-size:16px!important}}`;
+  const shellJS=await read(root,'skandi-embeds/global/skandi-shell.js');new Script(shellJS,{filename:'skandi-shell.js'});
+  const render=p=>p?`<div id="${p.mount}">${p.html}</div>`:'';
+  const header=parts.find(p=>p.key==='header'),footer=parts.find(p=>p.key==='footer'),mobile=parts.find(p=>p.key==='mobile-nav');
+  const attrs=(list,omitLanguage=false)=>list.filter(a=>!omitLanguage||!['lang','dir'].includes(a.name)).map(a=>` ${a.name}="${escapeHTML(a.value)}"`).join('');
+  const pageBodyAttrs=attrs(pagePart.documentAttrs.body),pageHTMLAttrs=attrs(pagePart.documentAttrs.html,true);
+  const lang=pagePart.documentAttrs.html.find(a=>a.name==='lang')?.value||'en';
+  const dir=pagePart.documentAttrs.html.find(a=>a.name==='dir')?.value;
+  const scripts=parts.filter(p=>p!==pagePart).concat(pagePart).map(p=>`<script data-skandi-part="${p.key}">${safeJS(p.script)}</script>`);
+  const html=`<!doctype html>\n<html lang="${escapeHTML(lang)}"${dir?` dir="${escapeHTML(dir)}"`:''}${pageHTMLAttrs}>\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">\n<meta name="theme-color" content="#022e64">\n<title>${escapeHTML(pagePart.title || page.title+' | SKANDI')}</title>\n<link rel="preconnect" href="https://fonts.googleapis.com">\n<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">\n${[...new Set(parts.flatMap(p=>[p.headHTML,...p.external]).filter(Boolean))].join('\n')}\n${style.join('\n')}\n<style data-skandi-part="shell">${safeCSS(shellCSS)}</style>\n</head>\n<body${pageBodyAttrs}>\n<div id="skandi-shell-root" data-skandi-page="${page.slug}" data-skandi-key="${page.key}" data-skandi-family="${page.family}" data-skandi-chrome="${page.chrome}">\n${render(header)}\n${render(pagePart)}\n${render(footer)}\n${render(mobile)}\n</div>\n<script data-skandi-part="skandi-shell-runtime">${safeJS(shellJS)}</script>\n${scripts.join('\n')}\n</body>\n</html>\n`;
+  // Validate serialized scripts too: HTML escaping must never publish invalid JS.
+  walk(parse(html),n=>{if(n.tagName==='script'&&!attr(n,'src')&&(!attr(n,'type')||/javascript/.test(attr(n,'type'))))new Script(serialize(n),{filename:page.output});});
+  return html;
+}
