@@ -118,7 +118,7 @@ These actual repository controllers are preserved. No new route or build is inve
 - **transfers**: NOT READY: No verified canonical controller mapping.
 - **destinations**: NOT READY: No verified canonical controller mapping.
 - **offers**: NOT READY: No verified canonical controller mapping.
-- **travelInfo**: NOT READY: [travelInfo] INCOMPLETE SOURCE: skandi-embeds/travel-info/skandi-travel-info.html, skandi-embeds/travel-info/skandi-travel-info.js
+- **travelInfo**: NOT READY: [travelInfo] INCOMPLETE SOURCE: skandi-embeds/travel-info/skandi-travel-info.js
 - **skandiCollection**: NOT READY: PENDING SOURCE
 - **voy**: NOT READY: PENDING SOURCE
 - **club**: NOT READY: PENDING SOURCE
