@@ -586,7 +586,7 @@
       ],
       "binding": "explicit",
       "requiresStaff": false,
-      "status": "PENDING SOURCE",
+      "status": "FAILED",
       "files": [
         "skandi-embeds/travel-info/skandi-travel-info.html",
         "skandi-embeds/travel-info/skandi-travel-info.css",
@@ -594,7 +594,6 @@
       ],
       "missing": [
         "skandi-embeds/travel-info/skandi-travel-info.html",
-        "skandi-embeds/travel-info/skandi-travel-info.css",
         "skandi-embeds/travel-info/skandi-travel-info.js"
       ],
       "issues": [],
@@ -652,8 +651,9 @@
       ],
       "output": null,
       "dynamic": false,
-      "sourceStatus": "PENDING SOURCE",
+      "sourceStatus": "INCOMPLETE SOURCE",
       "blockers": [],
+      "error": "[travelInfo] INCOMPLETE SOURCE: skandi-embeds/travel-info/skandi-travel-info.html, skandi-embeds/travel-info/skandi-travel-info.js",
       "retainedArtifact": false
     },
     {

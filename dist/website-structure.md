@@ -16,7 +16,7 @@ Route authority: `src/public/siteMap.js`. This file is generated evidence, not r
 | transfers | /transfers | skandi-embeds/transfers/skandi-transfers.{html,css,js} | public / public | UNVERIFIED | PENDING SOURCE |
 | destinations | /destinations | skandi-embeds/destinations/skandi-destinations.{html,css,js} | public / public | UNVERIFIED | PENDING SOURCE |
 | offers | /offers | skandi-embeds/offers/skandi-offers.{html,css,js} | public / public | UNVERIFIED | PENDING SOURCE |
-| travelInfo | /travel-info | skandi-embeds/travel-info/skandi-travel-info.{html,css,js} | public / public | src/pages/Travel Info.m43d6.js | PENDING SOURCE |
+| travelInfo | /travel-info | skandi-embeds/travel-info/skandi-travel-info.{html,css,js} | public / public | src/pages/Travel Info.m43d6.js | FAILED |
 | skandiCollection | /skandi-collection | skandi-embeds/skandi-collection/skandi-skandi-collection.{html,css,js} | public / public | src/pages/SKANDI Collection.lo9p5.js | PENDING SOURCE |
 | voy | /voy-magazine | skandi-embeds/voy/skandi-voy.{html,css,js} | public / public | src/pages/VOY Magazine.gecp7.js | PENDING SOURCE |
 | club | /skandi-club | skandi-embeds/club/skandi-club.{html,css,js} | public / public | src/pages/SKANDI Signature Club.gsejz.js | PENDING SOURCE |
@@ -118,7 +118,7 @@ These actual repository controllers are preserved. No new route or build is inve
 - **transfers**: NOT READY: No verified canonical controller mapping.
 - **destinations**: NOT READY: No verified canonical controller mapping.
 - **offers**: NOT READY: No verified canonical controller mapping.
-- **travelInfo**: NOT READY: PENDING SOURCE
+- **travelInfo**: NOT READY: [travelInfo] INCOMPLETE SOURCE: skandi-embeds/travel-info/skandi-travel-info.html, skandi-embeds/travel-info/skandi-travel-info.js
 - **skandiCollection**: NOT READY: PENDING SOURCE
 - **voy**: NOT READY: PENDING SOURCE
 - **club**: NOT READY: PENDING SOURCE
