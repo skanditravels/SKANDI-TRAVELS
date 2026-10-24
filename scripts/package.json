@@ -1,0 +1,10 @@
+{
+  "name": "skandi-compiled-html-build-tools",
+  "version": "12.0.1",
+  "private": true,
+  "type": "module",
+  "description": "Isolated HTML compiler tooling; leaves the Wix project root package.json intact",
+  "dependencies": {
+    "postcss": "8.5.6"
+  }
+}
