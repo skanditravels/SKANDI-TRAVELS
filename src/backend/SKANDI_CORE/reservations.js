@@ -530,6 +530,7 @@ export async function getAlteaUnifiedBootstrapCore(input={}){
 
 export async function createAlteaLocalBookingCore(input={}){
   const session=await requireReservationsAccessCore({write:true});
+  if(input.paymentStatus!==undefined&&lower(input.paymentStatus,80)!=="unpaid")throw new Error("PAYMENT_STATUS_CONTROLLED_BY_STRIPE");
   const ref=upper(input.bookingReference,120).replace(/[^A-Z0-9-]/g,"")||
     `SK${Date.now().toString().slice(-8)}${Math.random().toString(36).slice(2,4).toUpperCase()}`;
   const productType=safeProductType(input.productType||input.bookingType,"MIXED_PACKAGE");
@@ -541,7 +542,7 @@ export async function createAlteaLocalBookingCore(input={}){
     customer_email:lower(input.customerEmail,400)||null,
     customer_name:clean(input.customerName,300)||null,
     status:safeBookingStatus(input.status,"draft"),
-    payment_status:lower(input.paymentStatus||"unpaid",80),
+    payment_status:"unpaid",
     fulfillment_status:lower(input.fulfillmentStatus||"pending",80),
     origin:upper(input.origin,12)||null,destination:upper(input.destination,12)||null,
     departure_date:clean(input.departureDate||input.startDate,20)||null,
@@ -567,7 +568,7 @@ function bookingPatch(input={}){
   if(p.bookingType!==undefined)db.booking_type=upper(p.bookingType,80);
   if(p.productType!==undefined)db.product_type=safeProductType(p.productType);
   if(p.status!==undefined)db.status=safeBookingStatus(p.status);
-  if(p.paymentStatus!==undefined)db.payment_status=lower(p.paymentStatus,80);
+  if(p.paymentStatus!==undefined)throw new Error("PAYMENT_STATUS_CONTROLLED_BY_STRIPE");
   if(p.fulfillmentStatus!==undefined)db.fulfillment_status=lower(p.fulfillmentStatus,80);
   if(p.customerName!==undefined)db.customer_name=clean(p.customerName,300)||null;
   if(p.customerEmail!==undefined)db.customer_email=lower(p.customerEmail,400)||null;
@@ -650,6 +651,7 @@ export async function addAlteaHistoryNoteCore(input={}){
   const session=await requireReservationsAccessCore({write:true});
   const bookingId=clean(input.bookingId,80);if(!isUuid(bookingId))throw new Error("BOOKING_REQUIRED");
   const note=clean(input.note||input.message,4000);if(!note)throw new Error("HISTORY_NOTE_REQUIRED");
+  if(/^AGENCY_PAYMENT_COLLECTED$|^STRIPE_(?:PAYMENT|CAPTURE|CHARGE)/.test(upper(input.eventType,100)))throw new Error("PAYMENT_EVENT_REQUIRES_PROVIDER_VERIFICATION");
   const rows=await history(bookingId,input.eventType||"AGENT_NOTE",{note},session);
   return{ok:true,history:rows.map(historyView)};
 }
