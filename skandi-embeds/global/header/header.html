@@ -1,0 +1,161 @@
+<div id="skandi-site-header">
+<header class="header-shell" id="header" data-component="customer-header">
+  <section class="mainline">
+    <div class="inner">
+      <button class="logo" id="logoBtn" type="button" aria-label="SKANDI home">
+        <img id="headerLogo" alt="SKANDI Travels">
+      </button>
+
+      <nav class="nav" id="nav" aria-label="Main navigation"></nav>
+
+      <div class="actions">
+        <div class="settings-wrap">
+          <button class="action-btn desktop-only" id="settingsBtn" type="button"
+            aria-haspopup="true" aria-expanded="false" aria-label="Language and currency">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+            </svg>
+            <span id="settingsSummary">EN · USD</span>
+          </button>
+
+          <div class="settings-menu" id="settingsMenu">
+            <div class="settings-group">
+              <label for="langSelect" data-i18n="settings.language">Language</label>
+              <select id="langSelect">
+                <option value="EN">EN</option>
+                <option value="SV">SV</option>
+                <option value="NO">NO</option>
+                <option value="DA">DA</option>
+              </select>
+            </div>
+
+            <div class="settings-group">
+              <label for="currSelect" data-i18n="settings.currency">Currency</label>
+              <select id="currSelect">
+                <option value="USD">USD</option>
+                <option value="SEK">SEK</option>
+                <option value="NOK">NOK</option>
+                <option value="DKK">DKK</option>
+                <option value="EUR">EUR</option>
+              </select>
+            </div>
+
+            <button class="settings-apply" id="saveSettingsBtn" type="button" aria-label="Apply settings">✓</button>
+          </div>
+        </div>
+
+        <div class="search-wrap desktop-only" id="searchWrap">
+          <div class="search-field-shell">
+            <div class="search-field-inner">
+              <input id="headerSearchInput" type="search" placeholder="Search SKANDI"
+                autocomplete="off" aria-label="Search SKANDI website">
+              <button class="search-go" id="headerSearchGo" type="button" aria-label="Run search">→</button>
+            </div>
+          </div>
+          <button class="action-btn" id="searchBtn" type="button" data-i18n="nav.search">Search</button>
+        </div>
+
+        <button class="action-btn" id="favBtn" type="button" aria-label="Favorites">♡</button>
+        <button class="action-btn primary desktop-only" id="clubBtn" type="button" data-i18n="nav.clubBtn">Login</button>
+        <button class="action-btn desktop-only" id="customerLogoutBtn" type="button" hidden>Logout</button>
+
+        <button class="mobile-btn" id="mobileBtn" type="button"
+          aria-label="Open menu" aria-expanded="false" aria-controls="mobileDrawer">
+          <span data-i18n="nav.menu">MENU</span><span>☰</span>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <section class="expandbar" id="expandbar">
+    <div class="expand-inner">
+      <div class="default-bar">
+        <div class="master-slogan" id="masterSlogan"></div>
+        <div id="accountMini"></div>
+      </div>
+    </div>
+  </section>
+
+  <button id="clubOutsideOverlay" type="button" aria-label="Close Club login"></button>
+  <aside class="club-panel" id="clubPanel" aria-label="SKANDI Club sign in" aria-hidden="true">
+    <form id="inlineLoginForm" class="club-login-strip">
+      <div class="club-intro" aria-hidden="true">
+        <img class="club-brand-logo" src="https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/logos/SKANDI_CLUB-LIGHT.svg" alt="" decoding="async">
+      </div>
+
+      <div class="club-field email">
+        <label for="loginEmail">Email</label>
+        <input type="email" id="loginEmail" placeholder="name@example.com"
+          autocomplete="email" aria-label="Email address" required>
+      </div>
+
+      <div class="club-field password">
+        <label for="loginPassword">Password</label>
+        <input type="password" id="loginPassword" placeholder="Enter password"
+          autocomplete="current-password" aria-label="Password" required>
+      </div>
+
+      <button type="submit" class="club-submit" id="clubLoginSubmit">Sign in</button>
+      <div class="club-login-status" id="clubLoginStatus" aria-live="polite">Secure member access</div>
+
+      <div class="club-links">
+        <button type="button" class="club-link" data-action="forgot-password">Forgot password?</button>
+        <button type="button" class="club-link" data-action="join-club">Join SKANDI Club</button>
+      </div>
+
+      <button class="club-close" id="clubClose" type="button" aria-label="Close SKANDI Club login">×</button>
+    </form>
+  </aside>
+</header>
+</div>
+
+<div class="mobile-menu-layer" id="mobileMenuLayer" aria-hidden="true">
+  <button class="mobile-menu-backdrop" id="mobileMenuBackdrop" type="button"
+    tabindex="-1" aria-label="Close mobile menu"></button>
+
+  <aside class="mobile-drawer" id="mobileDrawer" role="dialog"
+    aria-modal="true" aria-labelledby="mobileMenuTitle" tabindex="-1">
+
+    <div class="mobile-menu-top">
+      <div class="mobile-drawer-brand">
+        <strong id="mobileMenuTitle" data-i18n="nav.menu">Menu</strong>
+        <span id="mobileAccount">Explore SKANDI Travels</span>
+      </div>
+
+      <nav class="mobile-menu-list" id="mobileList" aria-label="Mobile navigation"></nav>
+      <button id="mobileMenuClose" type="button" aria-label="Close menu">×</button>
+    </div>
+
+    <div class="mobile-menu-bottom">
+      <div class="mobile-settings-bar">
+        <select id="mobileLangSelect" aria-label="Language">
+          <option value="EN">EN</option>
+          <option value="SV">SV</option>
+          <option value="NO">NO</option>
+          <option value="DA">DA</option>
+        </select>
+
+        <select id="mobileCurrSelect" aria-label="Currency">
+          <option value="USD">USD</option>
+          <option value="SEK">SEK</option>
+          <option value="NOK">NOK</option>
+          <option value="DKK">DKK</option>
+          <option value="EUR">EUR</option>
+        </select>
+      </div>
+
+      <div class="mobile-menu-spacer"></div>
+
+      <div class="mobile-search-wrap" id="mobileSearchWrap">
+        <input id="mobileSearchInput" type="search" placeholder="Search"
+          autocomplete="off" aria-label="Search SKANDI website">
+        <button class="mobile-drawer-action" id="mobileSearchBtn"
+          type="button" data-i18n="nav.search">Search</button>
+      </div>
+
+      <button class="mobile-drawer-action primary" id="mobileAccountBtn"
+        type="button" data-i18n="nav.signIn">Login</button>
+      <button class="mobile-drawer-action" id="mobileLogoutBtn" type="button" hidden>Logout</button>
+    </div>
+  </aside>
+</div>
