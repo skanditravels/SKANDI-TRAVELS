@@ -1,1 +1,421 @@
-<!-- SKANDI_PENDING_SOURCE: replace with complete page markup. -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>SKANDI DocuNet Publisher Administration</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<link rel="stylesheet" href="skandi-docunet-admin.css">
+</head>
+<body>
+<div class="app">
+  <section class="chrome">
+    <div class="chrome-top">
+      <div class="brand">
+        <div class="logo">D</div>
+        <div class="brand-copy">
+          <strong>Docu<span>Net</span></strong>
+          <small>Publisher Administration</small>
+        </div>
+        <div class="header-context" aria-hidden="true">
+        </div>
+      </div>
+      <div class="actions">
+        <button class="btn light" id="staffPageBtn">Staff page</button>
+        <button class="btn light" id="refreshBtn">Refresh</button>
+      </div>
+    </div>
+    
+  </section>
+
+  <div class="shell">
+    <aside class="sidebar" aria-label="Publisher navigation">
+      <div class="side-title">Document administration</div>
+      <div class="side-nav">
+        <div class="side-group">Library management</div>
+        <div class="tabs">
+          <button class="active" data-panel="documents">Document register</button>
+          <button data-panel="editor">PDF ingestion / revision</button>
+          <button data-panel="storage">Supabase PDF files</button>
+          <button data-panel="categories">Category structure</button>
+          <button data-panel="audit">Audit and traceability</button>
+        </div>
+        <div class="side-group">Control principles</div>
+        <div class="side-stat"><span>Master source</span><b>PDF</b></div>
+        <div class="side-stat"><span>Storage</span><b>SUPABASE</b></div>
+        <div class="side-stat"><span>Publication model</span><b>REV</b></div>
+        <div class="side-stat"><span>Record state</span><b>Controlled</b></div>
+      </div>
+      <div class="side-register">
+        <h4>Publisher status</h4>
+        <div class="side-stat"><span>Environment</span><b>Staff session</b></div>
+        <div class="side-stat"><span>Storage access</span><b>Authorised on request</b></div>
+        <div class="side-stat"><span>Upload type</span><b>PDF / FORM</b></div>
+      </div>
+    </aside>
+
+    <main class="workspace">
+      <header class="workspace-head">
+        <div class="workspace-title">
+          <h1>Controlled Document Library</h1>
+          <p>Publish, revise, classify and audit SKANDI business manuals, procedures and controlled PDF documents.</p>
+        </div>
+        <div class="workspace-meta">
+          <span>MODULE DOC-ADMIN</span>
+          <span>CONTROL CLASS INTERNAL</span>
+          <span>STAFF-RESTRICTED</span>
+        </div>
+      </header>
+
+      <div class="content">
+        <div id="status" class="status show">Loading document control...</div>
+
+        <section class="viewer" id="viewer">
+          <div class="viewer-top">
+            <div><h2 id="viewerTitle">Preview</h2><p id="viewerMeta"></p></div>
+            <div class="actions">
+              <button class="btn secondary" id="openFullBtn">Open full screen</button>
+              <button class="btn secondary" id="closeViewerBtn">Close preview</button>
+            </div>
+          </div>
+          <iframe id="pdfFrame" class="pdf" title="Document preview"></iframe>
+        </section>
+
+        <section class="panel active" id="panel-documents">
+          <div class="card">
+            <div class="card-head">
+              <div>
+                <h2>Document register search</h2>
+                <p>Query the controlled library by identity, classification and publication state.</p>
+              </div>
+              <span class="section-help">Search results include current document records and latest file references.</span>
+            </div>
+            <div class="searchgrid">
+              <div class="field"><label>Search register</label><input id="docQuery" placeholder="Title, document code, category or revision"></div>
+              <div class="field"><label>Category</label><select id="docCategory"></select></div>
+              <div class="field"><label>Publication status</label><select id="docStatus"><option value="">All</option><option>PUBLISHED</option><option>DRAFT</option><option>ARCHIVED</option></select></div>
+              <div class="field"><label>Document type</label><select id="docType"><option value="">All</option><option>Manual</option><option>Procedure</option><option>Notice</option><option>Training</option><option>Form</option><option>Checklist</option><option>Policy</option></select></div>
+              <div class="field"><label>Service line</label><select id="docService"><option value="">All</option><option value="DESTINATION">Destination Services</option><option value="TRANSFERS">Transfers</option><option value="TOURS">Tours &amp; Activities</option><option value="PACKAGES">Travel Packages</option></select></div>
+              <div class="field"><label>Operating market</label><select id="docMarket"><option value="">All</option>
+              <optgroup label="- - H E A D Q U A R T E R S - &amp; - A D M I N - -">
+              <option value="NYCXEC">NYCXEC · New York City Global HQ</option>
+              <option value="STOXEC">STOXEC · Stockholm Regional HQ</option>
+              <option value="BKKXEC">BKKXEC · Bangkok Main Asia Office</option>
+              </optgroup>
+              <optgroup label="- - U N I T E D  S T A T E S - -">
+              <option value="NYCGOP">NYCGOP · New York City</option>
+              <option value="ORLGOP">ORLGOP · Orlando</option>
+              <option value="MIAGOP">MIAGOP · Miami</option>
+              <option value="LAXGOP">LAXGOP · Los Angeles</option>
+              <option value="LASGOP">LASGOP · Las Vegas</option>
+              <option value="SFOGOP">SFOGOP · San Fransisco</option>
+              </optgroup>
+              <optgroup label="- - S W E D E N - -">
+              <option value="STOGOP">STOGOP · Stockholm</option>
+              <option value="GOTGOP">GOTGOP · Gothenburg</option>
+              <option value="KRNGOP">KRNGOP · Kiruna</option>
+              <option value="KRNICE">KRNICE · Jukkasjärvi   ICEHOTEL Field Team </option>
+              <option value="LLAGOP">LLAGOP · Luleå </option>
+              <option value="BDNGOP">BDNGOP · Boden / TREEHOTEL </option>
+              </optgroup>
+              <optgroup label="- - N O R W A Y - -">
+              <option value="OSLGOP">OSLGOP · Oslo</option>
+              <option value="TOSGOP">TOSGOP · Tromsø</option>
+              </optgroup>
+              <optgroup label="- - D E N M A R K - -">
+              <option value="CPHGOP">CPHGOP · Copenhagen</option>
+              </optgroup>
+              <optgroup label="- - F I N L A N D - -">
+                  <option value="HELGOP">HELGOP · Helsinki</option>
+                  <option value="RVNGOP">RVNGOP · Rovaniemi</option>
+              </optgroup>
+              <optgroup label="- - G R E E C E - -">
+              <option value="JMKGOP">JMKGOP · Mykonos</option>
+              <option value="CHQGOP">CHQGOP · Crete / Chania</option>
+              <option value="HERGOP">HERGOP · Crete / Heraklion</option>
+              <option value="SKGGOP">SKGOP · Thessaloniki</option>
+              <option value="RHOGOP">RHOGOP · Rhodes</option>
+              <option value="JTRGOP">JTRGOP · Santorini</option>
+              <option value="JSIGOP">JSIGOP · Skiathos</option>
+              </optgroup>
+              <optgroup label="- - S P A I N - -">
+              </optgroup>
+                  <optgroup label="↳ M A I N L A N D  &amp;  B E L E A R I C S">
+                      <option value="AGPGOP">AGPGOP · Malaga</option>
+                      <option value="ALCGOP">ALCGOP · Alicante</option>
+                      <option value="PMIGOP">PMIGOP · Palma de Mallorca</option>
+                  </optgroup>
+                  <optgroup label="↳ C A N A R Y  I S L A N D S">
+                      <option value="TCIGOP">TCIGOP · Tenerife</option>
+                      <option value="FUEGOP">FUEGOP · Fuertuventura</option>
+                      </optgroup>
+
+                      <optgroup label="↳ G R A N  C A N A R I A">
+                          <option value="LPAGOP">LPAGOP · Las Palmas (All Gran Canaria)</option>
+                          <option value="LPASWG">LPASWG · Southwest Coast Team (Puerto Rico, Amadores, Mogán, Playa del Cura)</option>
+                          <option value="LPASEG">LPASEG · Southeast Coast Team (Maspalomas, Meloneras, San Agustín, Playa del Inglés)</option>
+                          </optgroup>
+                          <optgroup label="- - T H A I L A N D - -">
+                              <option value="BKKGOP">BKKGOP · Bangkok</option>
+                              <option value="LNTGOP">LNTGOP · Koh Lanta</option>
+                              <option value="HKTGOP">HKTGOP · Phuket</option>
+                              <option value="KBVGOP">KBVGOP · Krabi</option>
+                              <option value="USMGOP">USMGOP · Koh Samui</option>
+                          </optgroup>
+
+              </select></div>
+              <div class="field"><label>Staff audience</label><select id="docAudience"><option value="">All</option><option value="OPERATIONS">Operations</option><option value="DESTINATION_STAFF">Destination Staff</option><option value="CUSTOMER_CARE">Customer Care</option><option value="PARTNER_MANAGEMENT">Partner Management</option></select></div>
+              <button class="btn" id="searchDocsBtn">Run search</button>
+            </div>
+          </div>
+          <div class="register-head" aria-hidden="true">
+            <span>Document identity / description</span>
+            <span>Category</span>
+            <span>Revision</span>
+            <span>Status</span>
+            <span>Publisher actions</span>
+          </div>
+          <div id="docTable" class="table"></div>
+        </section>
+
+        <section class="panel" id="panel-editor">
+          <div class="card">
+            <div class="card-head">
+              <div>
+                <h2 id="editorTitle">Add document / new revision</h2>
+                <p>Controlled PDF ingestion with mandatory publication metadata and revision traceability.</p>
+              </div>
+              <span class="required-tag">REQUIRED FIELDS MUST BE COMPLETED</span>
+            </div>
+            <div class="card-body">
+              <div class="ingestion-layout">
+                <div class="upload-engine">
+                  <div class="upload-engine-head">
+                    <b>PDF ingestion engine</b>
+                    <span>ACCEPTED: APPLICATION/PDF · SINGLE FILE</span>
+                  </div>
+                  <div class="upload-target" id="pdfDropzone" tabindex="0" role="button" aria-label="Select or drop a PDF file">
+                    <div class="upload-picker">
+                      <div class="upload-icon" aria-hidden="true"></div>
+                      <strong>Select or drop the controlled source PDF</strong>
+                      <p>The PDF is selected inside this HTML embed and uploaded to Supabase Storage through a signed upload URL.</p>
+                      <input id="docControlUploadButton" class="pdf-file-input" type="file" accept="application/pdf,.pdf" aria-describedby="uploadFileState">
+                      <div id="uploadFileState" class="file-state" aria-live="polite">No PDF selected</div>
+                    </div>
+                  </div>
+                  <div class="upload-engine-foot">
+                    <span id="uploadEngineStatus">PDF validation occurs before the Supabase upload request.</span>
+                    <span>One PDF per publication action.</span>
+                  </div>
+                </div>
+                <aside class="compliance-box">
+                  <h3>Pre-publication control check</h3>
+                  <ul class="compliance-list">
+                    <li>Source file is an approved PDF.</li>
+                    <li>Document code matches the controlled register.</li>
+                    <li>Revision identifier is unique and verified.</li>
+                    <li>Effective date and audience are confirmed.</li>
+                    <li>Critical and acknowledgement flags are reviewed.</li>
+                  </ul>
+                  <div class="note">
+                    The HTML file input <strong>#docControlUploadButton</strong> is the upload control. Secure Supabase upload authorization is requested automatically before the selected PDF is transferred.
+                  </div>
+                </aside>
+              </div>
+
+              <div class="form-section">
+                <div class="form-section-title">A. Controlled document identity</div>
+                <div class="form-section-body">
+                  <div class="grid">
+                    <div class="field wide"><label>Document title</label><input id="title" placeholder="SKANDI Destination Services Manual"></div>
+                    <div class="field"><label>Short title</label><input id="shortTitle" placeholder="Destination Services"></div>
+                    <div class="field"><label>Document code</label><input id="documentCode" placeholder="DSM"></div>
+                    <div class="field"><label>Document owner</label><input id="owner" value="SKANDI Travels" placeholder="SKANDI Travels"></div>
+                    <div class="field"><label>Revision</label><input id="revision" placeholder="14"></div>
+                    <div class="field"><label>Effective date</label><input id="effectiveDate" type="date"></div>
+                    <div class="field"><label>Publication status</label><select id="publishStatus"><option>PUBLISHED</option><option>DRAFT</option></select></div>
+                    <div class="field"><label>Viewer page count</label><input id="pageCount" type="number" min="1" value="1"></div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-section">
+                <div class="form-section-title">B. Classification, audience and compliance controls</div>
+                <div class="form-section-body">
+                  <div class="grid">
+                    <div class="field"><label>Document type</label><select id="documentType"><option>Manual</option><option>Procedure</option><option>Notice</option><option>Training</option><option>Form</option><option>Checklist</option><option>Policy</option></select></div>
+                    <div class="field"><label>Category</label><select id="category"></select></div>
+                    <div class="field"><label>Service applicability</label><select id="services" multiple><option value="ALL">All Services</option><option value="DESTINATION">Destination Services</option><option value="TRANSFERS">Transfers</option><option value="TOURS">Tours &amp; Activities</option><option value="PACKAGES">Travel Packages</option></select><div class="field-hint">Select one or more. Use All Services only for company-wide documents.</div></div>
+                    <div class="field"><label>Operating markets</label><select id="markets" multiple><option value="ALL">All Markets</option>
+<optgroup label="Headquarters & Admin">
+<option value="NYCXEC">NYCXEC · New York City Global HQ</option>
+<option value="STOXEC">STOXEC · Stockholm Regional HQ</option>
+<option value="BKKXEC">BKKXEC · Bangkok Main Asia Office</option>
+</optgroup>
+<optgroup label="United States">
+<option value="NYCGOP">NYCGOP · New York City</option>
+<option value="ORLGOP">ORLGOP · Orlando</option>
+<option value="MIAGOP">MIAGOP · Miami</option>
+<option value="LAXGOP">LAXGOP · Los Angeles</option>
+<option value="LASGOP">LASGOP · Las Vegas</option>
+<option value="SFOGOP">SFOGOP · San Francisco</option>
+</optgroup>
+<optgroup label="Sweden">
+<option value="STOGOP">STOGOP · Stockholm</option>
+<option value="GOTGOP">GOTGOP · Gothenburg</option>
+<option value="KRNGOP">KRNGOP · Kiruna</option>
+<option value="KRNICE">KRNICE · Jukkasjärvi / ICEHOTEL Field Team</option>
+<option value="LLAGOP">LLAGOP · Luleå</option>
+<option value="BDNGOP">BDNGOP · Boden / TREEHOTEL</option>
+</optgroup>
+<optgroup label="Norway">
+<option value="OSLGOP">OSLGOP · Oslo</option>
+<option value="TOSGOP">TOSGOP · Tromsø</option>
+</optgroup>
+<optgroup label="Denmark"><option value="CPHGOP">CPHGOP · Copenhagen</option></optgroup>
+<optgroup label="Finland">
+<option value="HELGOP">HELGOP · Helsinki</option>
+<option value="RVNGOP">RVNGOP · Rovaniemi</option>
+</optgroup>
+<optgroup label="Greece">
+<option value="JMKGOP">JMKGOP · Mykonos</option>
+<option value="CHQGOP">CHQGOP · Crete / Chania</option>
+<option value="HERGOP">HERGOP · Crete / Heraklion</option>
+<option value="SKGGOP">SKGGOP · Thessaloniki</option>
+<option value="RHOGOP">RHOGOP · Rhodes</option>
+<option value="JTRGOP">JTRGOP · Santorini</option>
+<option value="JSIGOP">JSIGOP · Skiathos</option>
+</optgroup>
+<optgroup label="Spain">
+<option value="AGPGOP">AGPGOP · Malaga</option>
+<option value="ALCGOP">ALCGOP · Alicante</option>
+<option value="PMIGOP">PMIGOP · Palma de Mallorca</option>
+<option value="TCIGOP">TCIGOP · Tenerife</option>
+<option value="FUEGOP">FUEGOP · Fuerteventura</option>
+<option value="LPAGOP">LPAGOP · Las Palmas / Gran Canaria</option>
+<option value="LPASWG">LPASWG · Gran Canaria Southwest Coast Team</option>
+<option value="LPASEG">LPASEG · Gran Canaria Southeast Coast Team</option>
+</optgroup>
+<optgroup label="Thailand">
+<option value="BKKGOP">BKKGOP · Bangkok</option>
+<option value="LNTGOP">LNTGOP · Koh Lanta</option>
+<option value="HKTGOP">HKTGOP · Phuket</option>
+<option value="KBVGOP">KBVGOP · Krabi</option>
+<option value="USMGOP">USMGOP · Koh Samui</option>
+</optgroup></select><div class="field-hint">Matches the market codes used by the staff viewer.</div></div>
+                    <div class="field"><label>Staff audiences</label><select id="audiences" multiple><option value="ALL">All Teams</option><option value="OPERATIONS">Operations</option><option value="DESTINATION_STAFF">Destination Staff</option><option value="CUSTOMER_CARE">Customer Care</option><option value="PARTNER_MANAGEMENT">Partner Management</option></select><div class="field-hint">Controls staff assignment and viewer applicability.</div></div>
+                    <div class="field"><label>Requires acknowledgement</label><select id="requiresAcknowledgement"><option value="false">No</option><option value="true">Yes</option></select></div>
+                    <div class="field"><label>Critical document</label><select id="isCritical"><option value="false">No</option><option value="true">Yes</option></select></div>
+                    <div class="field wide"><label>Tags</label><input id="tags" placeholder="destination services, transfers, guest care"></div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-section">
+                <div class="form-section-title">C. Staff-facing abstract and retrieval indexing</div>
+                <div class="form-section-body">
+                  <div class="grid">
+                    <div class="field full"><label>Controlled summary</label><textarea id="summary" placeholder="Visible staff summary"></textarea></div>
+                    <div class="field full"><label>Search keywords / PDF table of contents</label><textarea id="searchText" placeholder="Add searchable phrases, sections, chapters and keywords."></textarea></div>
+                  </div>
+                </div>
+              </div>
+
+              
+<div class="form-section" id="documentAccessSection">
+  <div class="form-section-title">Customer access & operational channel availability</div>
+  <div class="form-section-body">
+    <div class="grid">
+      <div class="field"><label>Public blank template</label><select id="publicTemplateAccess"><option value="HIDDEN">Hidden</option><option value="OPEN">Open access</option></select><div class="field-hint">Open access exposes only a blank template. It never exposes a booking instance.</div></div>
+      <div class="field"><label>Customer instance access</label><select id="customerInstanceAccess"><option value="NONE">No customer instance</option><option value="SECURE_MEMBER_OR_ACCESS_CODE">Member login or access code</option></select></div>
+      <div class="field"><label>Blank download</label><select id="allowBlankDownload"><option value="false">No</option><option value="true">Yes</option></select></div><div class="field"><label>Blank online fill</label><select id="allowBlankFill"><option value="false">No</option><option value="true">Yes</option></select></div>
+      <div class="field"><label>Customer self-start</label><select id="allowSelfStart"><option value="false">No</option><option value="true">Yes</option></select></div>
+      <div class="field"><label>Reservations</label><select id="reservationsAvailable"><option value="false">Not available</option><option value="true">Available to booking agents</option></select></div>
+      <div class="field"><label>Departure Control</label><select id="departureControlAvailable"><option value="false">Not available</option><option value="true">Available at airport</option></select></div>
+      <div class="field"><label>DocuNet</label><select id="docunetAvailable"><option value="true">Available internally</option><option value="false">Hidden</option></select></div>
+      <div class="field"><label>Sensitivity</label><select id="sensitivityClass"><option>STANDARD</option><option>IDENTITY_PII</option><option>HEALTH</option><option>MINOR</option><option>FINANCIAL</option><option>OPERATIONAL_SAFETY</option><option>COMMERCIAL_CONTRACT</option></select></div>
+      <div class="field full"><label>Official source URL</label><input id="officialSourceUrl" placeholder="Optional official regulator / government source"></div>
+    </div>
+    <div class="note">Template changes create a controlled revision. Issued passenger documents are immutable and are never rewritten by changing the master template.</div>
+  </div>
+</div>
+
+<div class="editor-actions">
+                <button class="btn secondary" id="clearDocBtn">Clear form</button>
+                <button class="btn secondary" id="saveMetaBtn">Save metadata only</button>
+                <button class="btn" id="saveDocBtn">Upload PDF and publish record</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel" id="panel-storage">
+          <div class="card">
+            <div class="card-head"><div><h2>Supabase controlled PDF storage</h2><p>Browse stored PDF objects. Existing objects are not automatically published to staff.</p></div>
+              <div class="actions"><button class="btn secondary" id="storageRefreshBtn">Refresh bucket files</button></div>
+            </div>
+            <div class="card-body">
+              <div class="field"><label>Filter by file name or path</label><input id="storageQuery" placeholder="Search PDF files in the private bucket"></div>
+              <p>Registration creates a DRAFT record. Relocation updates DocuNet revision paths. Linked legal/operational files are protected; only unreferenced files can be permanently removed.</p>
+              <div id="storageSummary" class="note" aria-live="polite">Open this tab to discover stored PDFs.</div>
+            </div>
+          </div>
+          <div id="storageTable" class="table"></div>
+        </section>
+
+        <section class="panel" id="panel-categories">
+          <div class="category-grid">
+            <div class="card">
+              <div class="card-head">
+                <div><h2 id="catEditorTitle">Add category</h2><p>Maintain the controlled library folder structure.</p></div>
+              </div>
+              <div class="card-body">
+                <div class="form-section">
+                  <div class="form-section-title">Category definition</div>
+                  <div class="form-section-body">
+                    <div class="field"><label>Category title</label><input id="catTitle" placeholder="Destination Operations"></div>
+                    <div class="field"><label>Description</label><textarea id="catDescription" placeholder="What this controlled folder contains"></textarea></div>
+                    <div class="grid">
+                      <div class="field"><label>Sort order</label><input id="catSortOrder" type="number" value="10"></div>
+                      <div class="field"><label>Active</label><select id="catActive"><option value="true">Yes</option><option value="false">No</option></select></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="actions">
+                  <button class="btn secondary" id="clearCatBtn">Clear</button>
+                  <button class="btn" id="saveCatBtn">Save category</button>
+                </div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-head"><div><h2>Category register</h2><p>Active and hidden folders available to the publication workflow.</p></div></div>
+              <div class="card-body"><div id="catTable" class="table"></div></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel" id="panel-audit">
+          <div class="card">
+            <div class="card-head">
+              <div><h2>Audit and traceability register</h2><p>Document publication, reading, acknowledgement, category and administrative events.</p></div>
+            </div>
+            <div class="audit-guide" aria-hidden="true">
+              <div><b>Scope</b><span>ALL EVENTS</span></div>
+              <div><b>Order</b><span>NEWEST FIRST</span></div>
+              <div><b>Control state</b><span>READ ONLY</span></div>
+              <div><b>Source</b><span>SUPABASE</span></div>
+            </div>
+          </div>
+          <div id="auditTable" class="table"></div>
+        </section>
+      </div>
+    </main>
+  </div>
+</div>
+<footer class="global-footer">
+  <div class="global-footer-section"><strong>© 2026 SKANDI Travels</strong><span>Privacy</span><span>Terms of Access</span><span class="global-build">Build v2.14.8</span><span class="global-operational">Operational</span></div>
+  <div class="global-footer-section"><button data-global-path="/riaintra/success-factors/helpdesk">HelpDesk</button><button id="globalSecurityBtn">Session Security</button></div>
+</footer>
+
+<script src="skandi-docunet-admin.js"></script>
+</body>
+</html>

@@ -1,1 +1,451 @@
-<!-- SKANDI_PENDING_SOURCE: replace with complete page markup. -->
+<!DOCTYPE html>
+<!--
+  SKANDI OPS — Wix Component Viewport Configuration
+
+  - Component Type: Custom Element or HTML/IFrame Embed.
+  - Initial Height Setting: Set to at least 900px to accommodate the dashboard layout on load without clipping.
+  - Scrolling Property: Set to Disabled / No Scrolling, allowing the dynamic iframe resize script to handle bounds naturally.
+  - Container Styling: Ensure the parent section/strip in Wix is set to Auto-fit content or a flexible height layout so it expands downward when side drawers or the open time tray are toggled.
+
+  Data contract: the embed contains no operational sample data. Wix supplies the
+  canonical OPS_BOOTSTRAP payload and persists every OPS_ACTION mutation.
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>SKANDI OPS Control | Global Workforce</title>
+  
+  <link rel="stylesheet" href="skandi-ops-control.css">
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-logo">JEPPESEN</div>
+      <div class="brand-text">Operations Tracking <span class="brand-sub">| GLOBAL WORKFORCE</span></div>
+    </div>
+    
+    <div class="top-actions">
+      <!-- Profile/Settings entry point -->
+      <button class="icon-btn" onclick="switchView('view-settings', document.getElementById('navSettings'))" title="Settings"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="1.5em" height="1.5em">
+  <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+</svg></button>
+      <button class="icon-btn" id="btnAlerts" onclick="toggleAlerts()" title="Alerts">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="1.3em" height="1.3em">
+  <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/>
+</svg><span class="badge-dot" id="alertBadge"></span>
+      </button>
+    </div>
+  </header>
+
+  <div class="app-layout">
+    <aside class="icon-sidebar">
+      <div class="nav-icon active" id="navTracking" data-target="view-tracking" title="Live Tracking" onclick="switchView('view-tracking', this)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="1em" height="1em">
+  <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+</svg></div>
+      <div class="nav-icon" id="navVacation" data-target="view-vacation" title="Vacation Planning" onclick="switchView('view-vacation', this)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="1em" height="1em">
+  <path d="M12 2C6.48 2 2 6.48 2 12h8v5c0 1.1.9 2 2 2s2-.9 2-2v-5h8c0-5.52-4.48-10-10-10z"/>
+</svg></div>
+      <div class="nav-icon" id="navFtl" data-target="view-ftl" title="Labor Laws & Compliance" onclick="switchView('view-ftl', this)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="1em" height="1em">
+  <path d="M15 1H9v2h6V1zm-4 13h2V8h-2v6zm8.03-6.61l1.42-1.42c-.43-.51-.9-.99-1.41-1.41l-1.42 1.42A8.962 8.962 0 0012 4c-4.97 0-9 4.03-9 9s4.02 9 9 9a8.994 8.994 0 007.03-14.61zM12 20c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/>
+</svg></div>
+      <div class="nav-icon" id="navTriptrade" data-target="view-triptrade" title="TripTrade Control" onclick="switchView('view-triptrade', this)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="1em" height="1em">
+  <path d="M22 8l-4-4v3H3v2h15v3l4-4zM2 16l4 4v-3h15v-2H6v-3l-4 4z"/>
+</svg></div>
+      <div class="nav-icon" id="navLogistics" data-target="view-logistics" title="Accommodations & Logistics" onclick="switchView('view-logistics', this)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="1em" height="1em">
+  <path d="M7 13c1.66 0 3-1.34 3-3S8.66 7 7 7s-3 1.34-3 3 1.34 3 3 3zm12-6h-8v7H3V5H1v15h2v-3h18v3h2v-9c0-2.21-1.79-4-4-4z"/>
+</svg></div>
+      <div class="nav-icon" id="navMessages" data-target="view-messages" title="Operational Messages" onclick="switchView('view-messages', this)">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="1em" height="1em">
+    <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+  </svg>
+</div>
+      <div class="nav-icon" id="navAudit" data-target="view-audit" title="Reports & Audit Log" onclick="switchView('view-audit', this)">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="1em" height="1em">
+    <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
+  </svg>
+</div>
+      <div class="nav-icon bottom" title="System Settings" onclick="showToast('Global Configuration')">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="1em" height="1em">
+    <path d="M19.43 12.98c.04-.32.07-.64.07-.98 0-.34-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98 0 .33.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/>
+  </svg>
+</div>
+    </aside>
+
+    <main class="view-container active" id="view-tracking">
+      <div class="view-toolbar">
+        <h1 class="view-title">
+          Operations Tracking - Live View 
+          <span class="edit-badge" id="editBadge" style="display:none; background:var(--bar-disruption); color:#fff; font-size:9px; padding:2px 6px; border-radius:3px; margin-left:8px;">EDIT MODE</span>
+        </h1>
+        <div class="toolbar-actions">
+          <div class="date-nav-controls">
+            <button onclick="shiftDate(-1)" title="Previous Day">◀</button>
+            <span class="date-span" id="dateWindowSpan">Loading…</span>
+            <button onclick="shiftDate(1)" title="Next Day">▶</button>
+          </div>
+          <div class="zoom-controls">
+            <button onclick="zoomGantt('out')" title="Zoom Out">-</button>
+            <button onclick="zoomGantt('in')" title="Zoom In">+</button>
+          </div>
+          <button class="btn" id="btnEditMode" onclick="toggleEditMode()"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="1.2em" height="1.2em" style="margin-right: 4px;">
+  <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.9959.9959 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+</svg>️ Edit virtual boarded</button>
+          <button class="btn" id="btnMarkTitles" onclick="toggleMarkTitles()"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="1.2em" height="1.2em" style="margin-right: 4px;">
+  <path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2l-2-2z"/>
+</svg> Mark titles</button>
+          <button class="btn primary" onclick="openOptimizerModal()"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="1.2em" height="1.2em" style="margin-right: 4px;">
+  <path d="M7.5 5.6L5 7l1.4-2.5L5 2l2.5 1.4L10 2 8.6 4.5 10 7 7.5 5.6zm12 9.8L17 14l1.4 2.5L17 19l2.5-1.4L22 19l-1.4-2.5L22 14l-2.5 1.4zM22 2l-2.5 1.4L17 2l1.4 2.5L17 7l2.5-1.4L22 7l-1.4-2.5L22 2zm-7.63 5.29c-.39-.39-1.02-.39-1.41 0L1.29 18.96c-.39.39-.39 1.02 0 1.41l2.34 2.34c.39.39 1.02.39 1.41 0L16.71 11.04c.39-.39.39-1.02 0-1.41l-2.34-2.34z"/>
+</svg> Travchant / Optimize</button>
+          <button class="btn" onclick="toggleFiltersMobile()" style="display: none;" id="btnFilterMobile"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="1.2em" height="1.2em" style="margin-right: 4px;">
+  <path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.06-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.73,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.06,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.43-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.49-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/>
+</svg> Filters</button>
+          <button class="btn" onclick="toggleOpenTime()"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="1.2em" height="1.2em" style="margin-right: 4px;">
+  <path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
+</svg> Open Time</button>
+        </div>
+      </div>
+
+      <div class="sub-toolbar">
+        <div class="search-box">
+          <input type="text" id="searchInput" placeholder="Search by name, role, base..." oninput="handleFilterChange()">
+        </div>
+        <div style="color: var(--j-text-muted); font-weight: 600;" id="jurisdictionSubtitle">
+          Global Network View (Multi-Jurisdictional)
+        </div>
+      </div>
+
+      <div class="tracking-workspace">
+        <div class="roster-pane" id="rosterPane">
+          <div class="pane-handle handle-left" onclick="togglePane('roster')">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="1.2em" height="1.2em"><path d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6z"/></svg>
+</div>
+          <div class="roster-header">
+            <div class="col-icon"></div>
+            <div class="col-ci" title="Check-in Status">CI</div>
+            <div class="col-name">Staff Name</div>
+            <div class="col-flight">Assigned</div>
+            <div class="col-role">Role</div>
+            <div class="col-cost">Base</div>
+          </div>
+          <div class="roster-body" id="rosterBody" onscroll="syncScroll(this, 'vertical')"></div>
+        </div>
+
+        <div class="gantt-pane" id="ganttPane">
+          <div class="gantt-header-container" id="ganttHeader"></div>
+          <div class="gantt-body-scroll" id="ganttBody" onscroll="syncScroll(this, 'both')">
+            <div class="gantt-bg-grid-days"></div>
+            <div class="now-line" id="nowLine"></div>
+            <div class="now-tag" id="nowTag">Current Time</div>
+            <div id="ganttRowsContainer"></div>
+            
+            <div class="details-popover" id="popover">
+              <div class="pop-title" id="popTitle"><span>Details</span><span class="j-badge green" style="font-size:8px" id="popStatusTag">ON-TIME</span></div>
+              <div class="pop-row"><span>Status:</span><span id="popStatus"></span></div>
+              <div class="pop-row"><span>Staff:</span><span id="popCrew"></span></div>
+              <div class="pop-row"><span>Type:</span><span id="popType"></span></div>
+              <div class="pop-row"><span>Duration:</span><span id="popDur"></span></div>
+              <div style="margin-top: 8px; font-size: 9px; color: var(--j-text-muted); border-top: 1px solid var(--j-border); padding-top: 6px;">Click to interact</div>
+            </div>
+          </div>
+          
+          <div class="open-time-tray" id="openTimeTray">
+            <div class="tray-header">
+              <span>Unassigned Operations (Open Time)</span>
+              <button class="icon-btn" style="width:24px;height:24px;font-size:12px;color:#fff" onclick="toggleOpenTime()">✕</button>
+            </div>
+            <div class="tray-body" id="openTimeTrayBody"></div>
+          </div>
+        </div>
+
+        <div class="pane-handle handle-right" onclick="togglePane('filters')">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="1.2em" height="1.2em" style="margin-right: 4px;">
+  <path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.06-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.73,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.06,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.43-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.49-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/>
+</svg>
+</div>
+          <aside class="filter-sidebar" id="filterSidebar">
+            <div class="filter-header">
+              <span>Filters & Scope</span>
+              <button class="icon-btn" onclick="toggleFiltersMobile()" style="display:none;" id="btnCloseFilterMobile">✕</button>
+            </div>
+            
+            <div class="filter-section">
+              <div class="filter-title" onclick="toggleSection(this)">Base / Region <span>▼</span></div>
+              <div class="filter-content" id="baseFilterContent"></div>
+            </div>
+
+            <div class="filter-section">
+              <div class="filter-title" onclick="toggleSection(this)">Role <span>▼</span></div>
+              <div class="filter-content" id="roleFilterContent"></div>
+            </div>
+
+            <div class="filter-section">
+              <div class="filter-title" onclick="toggleSection(this)">Compliance Status <span>▼</span></div>
+              <div class="filter-content">
+                <label class="checkbox-row"><input type="checkbox" value="Legal" class="filter-comp" checked onchange="handleFilterChange()"> <span>Legal</span></label>
+                <label class="checkbox-row"><input type="checkbox" value="Warning" class="filter-comp" checked onchange="handleFilterChange()"> <span>Warning</span></label>
+                <label class="checkbox-row"><input type="checkbox" value="Violation" class="filter-comp" checked onchange="handleFilterChange()"> <span>Violation</span></label>
+              </div>
+            </div>
+
+            <div class="filter-section">
+              <div class="filter-title" onclick="toggleSection(this)">Legend <span>▼</span></div>
+              <div class="filter-content">
+                <label class="checkbox-row"><input type="checkbox" value="flight" class="filter-act" checked onchange="handleFilterChange()"> <span class="legend-dot bg-flight"></span> <span>Tour / Excursion</span></label>
+                <label class="checkbox-row"><input type="checkbox" value="duty" class="filter-act" checked onchange="handleFilterChange()"> <span class="legend-dot bg-duty"></span> <span>Transfer Duty</span></label>
+                <label class="checkbox-row"><input type="checkbox" value="rest" class="filter-act" checked onchange="handleFilterChange()"> <span class="legend-dot bg-rest"></span> <span>Rest / Off</span></label>
+                <label class="checkbox-row"><input type="checkbox" value="sby" class="filter-act" checked onchange="handleFilterChange()"> <span class="legend-dot bg-sby"></span> <span>Standby</span></label>
+                <label class="checkbox-row"><input type="checkbox" value="vacation" class="filter-act" checked onchange="handleFilterChange()"> <span class="legend-dot bg-vacation"></span> <span>Vacation</span></label>
+                <label class="checkbox-row"><input type="checkbox" value="disrupted" class="filter-act" checked onchange="handleFilterChange()"> <span class="legend-dot bg-disrupted"></span> <span>Disrupted</span></label>
+              </div>
+            </div>
+            <div style="padding: 16px;">
+              <button class="btn" style="width: 100%; justify-content: center;" onclick="resetFilters()">Reset Filters</button>
+            </div>
+          </aside>
+        </div>
+      <div class="context-menu" id="contextMenu"></div>
+    </main>
+    <main class="view-container" id="view-vacation">
+      <div class="view-toolbar">
+        <h1 class="view-title">Vacation Planning & Bidding</h1>
+        <div class="toolbar-actions">
+          <button class="btn primary" onclick="openVacationModal()">+ Request Vacation Block</button>
+        </div>
+      </div>
+      <div class="sub-toolbar"><div style="color: var(--j-text-muted);">Entitlements automatically calculated based on employee base jurisdiction.</div></div>
+      <div class="data-table-container">
+        <h3 style="color: var(--j-text-main); margin-bottom: 12px; font-size: 13px;">Submitted Vacation Requests & Awards</h3>
+        <table class="j-table">
+          <thead><tr><th>Request ID</th><th>Staff Member</th><th>Base</th><th>Period</th><th>Duration</th><th>Jurisdiction Rule</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="vacationTableBody"></tbody>
+        </table>
+      </div>
+    </main>
+
+    <main class="view-container" id="view-ftl">
+      <div class="view-toolbar"><h1 class="view-title">Labor Laws & Compliance Monitor</h1></div>
+      <div class="sub-toolbar"><div style="color: var(--j-text-muted);" id="ftlSubtext">Dynamic limits continuously enforced based on each employee's base region.</div></div>
+      <div class="data-table-container">
+        <table class="j-table">
+          <thead><tr><th>Staff Name</th><th>Base / Region</th><th>Role</th><th>7-Day Work Limit</th><th>28-Day Work Limit</th><th>Annual Work Limit</th><th>Active Jurisdiction Rule</th><th>Status</th></tr></thead>
+          <tbody id="ftlTableBody"></tbody>
+        </table>
+      </div>
+    </main>
+
+    <main class="view-container" id="view-triptrade">
+      <div class="view-toolbar"><h1 class="view-title">TripTrade Control Queue</h1></div>
+      <div class="sub-toolbar"><div style="color: var(--j-text-muted);">Pending crew-to-crew exchange requests requiring OCC approval.</div></div>
+      <div class="data-table-container">
+        <table class="j-table">
+          <thead><tr><th>Request ID</th><th>Staff A</th><th>Staff B</th><th>Exchange Details</th><th>Jurisdiction Check</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="tradeTableBody"></tbody>
+        </table>
+      </div>
+    </main>
+
+    <main class="view-container" id="view-logistics">
+      <div class="view-toolbar"><h1 class="view-title">Accommodations & Logistics</h1></div>
+      <div class="sub-toolbar"><div style="color: var(--j-text-muted);">Manage layover hotels and ground transportation suppliers.</div></div>
+      <div class="data-table-container">
+        <table class="j-table">
+          <thead><tr><th>Ref ID</th><th>Staff Name</th><th>Location</th><th>Supplier</th><th>Service Dates</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="logisticsTableBody"></tbody>
+        </table>
+      </div>
+    </main>
+
+    <main class="view-container" id="view-messages">
+      <div class="view-toolbar">
+        <h1 class="view-title">Operational Message Queue</h1>
+        <div class="toolbar-actions"><button class="btn primary" disabled title="Operational messaging is managed in GroupTalk">New Message</button></div>
+      </div>
+      <div class="sub-toolbar"><div style="color: var(--j-text-muted);">Track push notifications, SMS, and in-app communications.</div></div>
+      <div class="data-table-container">
+        <table class="j-table">
+          <thead><tr><th>Time (ZULU)</th><th>Recipient</th><th>Channel</th><th>Message Subject</th><th>Delivery Status</th><th>Read Receipt</th><th>Actions</th></tr></thead>
+          <tbody id="messagesTableBody"></tbody>
+        </table>
+      </div>
+    </main>
+
+    <main class="view-container" id="view-audit">
+      <div class="view-toolbar"><h1 class="view-title">System Reports & Audit Log</h1></div>
+      <div class="sub-toolbar"><div style="color: var(--j-text-muted);">Immutable record of all operational modifications and approvals.</div></div>
+      <div class="data-table-container">
+        <table class="j-table">
+          <thead><tr><th>Timestamp (ZULU)</th><th>Action</th><th>Details</th><th>Status</th></tr></thead>
+          <tbody id="auditTableBody"></tbody>
+        </table>
+      </div>
+    </main>
+
+    <main class="view-container" id="view-settings">
+      <div class="view-toolbar">
+        <h1 class="view-title">System Settings & Profile Configuration</h1>
+        <div class="toolbar-actions">
+          <button class="btn primary" onclick="saveSettings()">Apply Display Settings</button>
+        </div>
+      </div>
+      <div class="sub-toolbar"><div style="color: var(--j-text-muted);">Manage global platform defaults and your personal user profile.</div></div>
+      
+      <div class="data-table-container split-view" style="display: flex; gap: 20px;">
+        <div class="profile-card">
+          <h3>User Profile Identity</h3>
+          <div class="form-group"><label>Agent ID</label><input id="profileAgentId" type="text" value="" disabled style="opacity: 0.7;"></div>
+          <div class="form-group"><label>Full Name</label><input id="profileFullName" type="text" value="" disabled style="opacity: 0.7;"></div>
+          <div class="form-group"><label>Operational Role</label><input id="profileRole" type="text" value="" disabled style="opacity: 0.7;"></div>
+          <div class="form-group"><label>Contact Email</label><input id="profileEmail" type="email" value="" disabled style="opacity: 0.7;"></div>
+        </div>
+        
+        <div class="profile-card" style="flex: 2;">
+          <h3>Global System Configuration</h3>
+          <div class="settings-grid">
+            <div class="form-group">
+              <label>Default Timeline Zoom (Gantt)</label>
+              <select id="settingZoom" onchange="zoomGanttFromSettings(this.value)">
+                <option value="5">Compact (5px/hr)</option>
+                <option value="7.5" selected>Standard (7.5px/hr)</option>
+                <option value="15">Detailed (15px/hr)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>System Theme Profile</label>
+              <select id="settingTheme">
+                <option value="dark" selected>Classic Jeppesen (Dark Mode)</option>
+                <option value="light">Lufthansa NetLine (High Contrast Day Mode)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Time Mode</label>
+              <select><option>UTC / ZULU</option><option>Local Station Time</option></select>
+            </div>
+            <div class="form-group">
+              <label>Audio Alerts</label>
+              <select><option>Critical Only</option><option>All Alerts</option><option>Muted</option></select>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <div class="alerts-drawer" id="alertsDrawer">
+      <div class="drawer-header">
+        <span class="drawer-title">Alert Monitor</span>
+        <button class="close-btn" onclick="toggleAlerts()">✕</button>
+      </div>
+      <div class="alert-list" id="alertList"></div>
+    </div>
+  </div>
+
+  <div class="overlay" id="modalOverlay" onclick="closeModalOnBgClick(event)">
+    <div class="modal" id="editModal">
+      <div class="modal-header">
+        <span>Edit Operation</span>
+        <button class="icon-btn" style="width: 24px; height: 24px; font-size: 14px;" onclick="closeModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group"><label>Identifier</label><input type="text" id="editLabel"></div>
+        <div class="form-group">
+          <label>Classification</label>
+          <select id="editType">
+            <option value="flight">Tour / Excursion</option>
+            <option value="duty">Transfer</option>
+            <option value="sby">Standby</option>
+            <option value="rest">Rest / Leave</option>
+            <option value="vacation">Vacation</option>
+            <option value="disrupted">Disrupted / Violation</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Status</label>
+          <select id="editStatus">
+            <option value="ON-TIME">ON-TIME</option>
+            <option value="DELAYED">DELAYED</option>
+            <option value="CANCELED">CANCELED</option>
+            <option value="COMPLETED">COMPLETED</option>
+            <option value="REST VIOLATION">REST VIOLATION</option>
+            <option value="STANDBY">STANDBY</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" onclick="closeModal()">Cancel</button>
+        <button class="btn primary" onclick="saveAssignment()">Apply Changes</button>
+      </div>
+    </div>
+
+    <div class="modal" id="standbyModal">
+      <div class="modal-header">
+        <span>Activate Standby / Call Out</span>
+        <button class="icon-btn" style="width: 24px; height: 24px; font-size: 14px;" onclick="closeModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div style="font-size: 12px; color: var(--j-text-muted);">Assign an open operation to this reserve staff member under their base labor limits.</div>
+        <div class="form-group"><label>New Reference (e.g. TRF-JFK)</label><input type="text" id="sbyFlightNum" placeholder="e.g. TRF-01"></div>
+        <div class="form-group">
+          <label>Activity Type</label>
+          <select id="sbyType"><option value="flight">Tour / Excursion</option><option value="duty">Transfer Duty</option></select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" onclick="closeModal()">Cancel</button>
+        <button class="btn primary" onclick="executeStandbyCallout()">Activate & Assign</button>
+      </div>
+    </div>
+
+    <div class="modal" id="vacationModal">
+      <div class="modal-header">
+        <span>Request Vacation Block</span>
+        <button class="icon-btn" style="width: 24px; height: 24px; font-size: 14px;" onclick="closeModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div style="font-size: 12px; color: var(--j-text-muted);">Submit dates for annual leave. Entitlements mapped to employee's base jurisdiction.</div>
+        <div class="form-group"><label>Staff Member</label>
+          <select id="vacStaffSelect"></select>
+        </div>
+        <div class="form-group"><label>Start Date</label><input type="date" id="vacStart"></div>
+        <div class="form-group"><label>End Date</label><input type="date" id="vacEnd"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" onclick="closeModal()">Cancel</button>
+        <button class="btn primary" onclick="submitVacationRequest()">Submit Request</button>
+      </div>
+    </div>
+
+    <div class="modal" id="messageModal">
+      <div class="modal-header">
+        <span>Compose Operational Message</span>
+        <button class="icon-btn" style="width: 24px; height: 24px; font-size: 14px;" onclick="closeModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group"><label>Recipient</label><select id="msgRecipientSelect"></select></div>
+        <div class="form-group"><label>Subject</label><input type="text" id="msgSubject" placeholder="e.g. Duty Update"></div>
+        <div class="form-group"><label>Message Content</label><textarea id="msgBody" rows="4" placeholder="Enter message details..."></textarea></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" onclick="closeModal()">Cancel</button>
+        <button class="btn primary" onclick="sendMessage()">Dispatch Message</button>
+      </div>
+    </div>
+
+    <div class="modal" id="optimizerModal">
+      <div class="modal-header"><span>Travchant Optimizer Engine</span></div>
+      <div class="modal-body">
+        <div style="font-size: 12px; color: var(--j-text-muted); margin-bottom: 10px;" id="optJurisdictionNote">Resolving network disruptions using Multi-Jurisdictional legality matrices...</div>
+        <div class="console-box" id="optConsole"><div class="console-line info">> Initializing optimization core...</div></div>
+      </div>
+      <div class="modal-footer" style="justify-content: space-between;">
+        <span id="optProgressText" style="font-weight: 600; color: var(--j-text-main); font-size: 12px;">0%</span>
+        <button class="btn primary" id="btnOptClose" style="display: none;" onclick="closeModal()">Close & Apply</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="skandi-ops-control.js"></script>
+</body>
+</html>

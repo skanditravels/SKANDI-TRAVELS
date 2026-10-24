@@ -1,0 +1,18 @@
+
+.altea-fare-variant{background:#fff;border-top:1px solid #c6cfd6}
+.altea-fare-variant-header{display:grid;grid-template-columns:minmax(0,1fr) auto 100px;gap:12px;align-items:center;padding:10px}
+.altea-fare-name{display:flex;flex-direction:column;gap:2px;min-width:0}
+.altea-fare-name strong{font-size:12px;color:#164d73}
+.altea-fare-name span{font-size:10px;color:#506774}
+.altea-fare-price{text-align:right;display:flex;flex-direction:column;gap:3px;min-width:140px}
+.altea-fare-price strong{font-size:15px;color:#174967}
+.altea-fare-price small{font-size:9px;color:#496a81}
+.altea-fare-variant-terms{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;padding:0 10px 8px;color:#667682;font-size:10px}
+.altea-fare-facts{padding:6px 10px;border-top:1px solid #eef2f5;background:#f8fafc}
+.altea-fare-facts summary,.altea-fare-subdetails summary{cursor:pointer;font-weight:650;color:#165579;padding:3px 0}
+.altea-fare-facts-content{padding:5px 0 10px}
+.altea-fare-facts-content .money-line strong{overflow-wrap:anywhere}
+.altea-fare-subdetails{margin:8px 0;padding:6px;border:1px solid #d6e0e8;background:white;overflow-x:auto}
+.altea-fare-subdetails .data-table{min-width:570px}
+.altea-fare-subdetails .data-table td{max-width:240px;overflow-wrap:anywhere}
+@media(max-width:650px){.altea-fare-variant-header{grid-template-columns:minmax(0,1fr) auto;gap:8px}.altea-fare-variant-header .primary{grid-column:1/-1}.altea-fare-price{min-width:0}.altea-fare-facts{padding:6px}}

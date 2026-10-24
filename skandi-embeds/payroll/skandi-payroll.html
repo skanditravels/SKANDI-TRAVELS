@@ -1,1 +1,19 @@
-<!-- SKANDI_PENDING_SOURCE: replace with complete page markup. -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light">
+<title>Zalaris ePayroll Portal · SKANDI</title>
+<link rel="stylesheet" href="skandi-payroll.css">
+</head>
+<body>
+<div id="loading" class="loading"><div><div class="spinner"></div><p>Loading Payroll…</p></div></div>
+<header class="shell"><button id="menuBtn" class="menu" aria-label="Menu">☰</button><div class="brand"><div class="mark">Z</div><div><strong>ZALARIS</strong><span>ePayroll Portal · SKANDI ECP</span></div></div><div class="search"><input id="globalSearch" placeholder="Search payroll profiles, runs or periods"></div><div class="shell-space"></div><div class="profile"><div class="avatar" id="avatar">SK</div><div><strong id="profileName">SKANDI Staff</strong><span id="profileRole">Payroll</span></div></div></header>
+<div id="scrim" class="scrim"></div>
+<aside class="sidebar"><div class="nav-group">My Payroll</div><button class="nav-btn active" data-view="home">Payroll Home</button><button class="nav-btn" data-view="payslips">My Payslips</button><div class="nav-group admin-only">Payroll Control</div><button class="nav-btn admin-only" data-view="employees">Employee Payroll Profiles</button><button class="nav-btn admin-only" data-view="periods">Periods & Runs</button><button class="nav-btn admin-only" data-view="run-lines">Run Lines</button><button class="nav-btn admin-only" data-view="adjustments">Adjustments</button><button class="nav-btn admin-only" data-view="exports">Provider Exports</button><div class="nav-group">Connected Systems</div><button class="nav-btn" data-view="successfactors">SuccessFactors</button></aside>
+<div class="workspace"><header class="page-head"><div><h1 id="pageTitle">Payroll Home</h1><p id="pageSubtitle">Employee payroll workspace</p></div><div class="actions"><button class="btn" data-action="refresh">Refresh</button></div></header><main class="content"><div id="view"></div></main></div>
+<div id="toast" class="toast hidden"></div>
+<script src="skandi-payroll.js"></script>
+</body>
+</html>

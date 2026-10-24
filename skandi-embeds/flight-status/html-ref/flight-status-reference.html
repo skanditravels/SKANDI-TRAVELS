@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
+<meta content="#f6faff" name="theme-color"/>
+<title>Flight Status | SKANDI Travels · B-011.40</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="[https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&amp;family=Roboto+Mono:wght@500;600;700&amp;display=swap](https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800\&amp;family=Roboto+Mono:wght@500;600;700\&amp;display=swap)" rel="stylesheet"/>
+<link rel="stylesheet" href="flight-status-reference.css">
+<link rel="stylesheet" href="flight-status-reference.part-02.css" id="skandiNoSystemStatePills"></head>
+<body>
+<div class="page">
+<section aria-label="Flight information" class="hero" id="hero">
+<div class="wrap hero-inner">
+<div class="hero-copy">
+<div class="eyebrow">SKANDI TRAVELS · TRAVEL INFO</div>
+<h1>Flight information</h1>
+<p class="hero-lede" id="boardMeta">Departures, arrivals and flight tracking.</p>
+</div>
+<div class="hero-status">
+<div class="hero-stat">
+<label>Airport time</label><strong id="utcClock">--:--:-- UTC</strong>
+
+</div>
+<div class="hero-stat">
+<label>Current board</label><strong id="boardSubMode">Departures</strong>
+
+</div>
+</div>
+</div>
+</section>
+<section class="board-section">
+<div class="wrap">
+<div aria-label="Flight status search type" class="lookup-mode-tabs reveal" role="tablist">
+<button aria-selected="true" class="lookup-mode active" data-lookup-mode="airport" role="tab" type="button"><span>APT</span> Airport board</button>
+<button aria-selected="false" class="lookup-mode" data-lookup-mode="flight" role="tab" type="button"><span>FLT</span> Flight number</button>
+<button aria-selected="false" class="lookup-mode" data-lookup-mode="route" role="tab" type="button"><span>RTE</span> Route</button>
+</div>
+<div aria-label="Flight status controls" class="airport-controls reveal">
+<div class="airport-control airport-code-control lookup-field" data-mode-field="airport" id="fieldAirport">
+<span class="control-sign">APT</span>
+<div>
+<label for="airport">Airport</label>
+<input aria-autocomplete="list" aria-controls="airportSuggestions" aria-expanded="false" autocomplete="off" id="airport" inputmode="search" placeholder="Search airport, city or IATA" role="combobox"/>
+<div aria-label="Airport suggestions" class="airport-suggestions" id="airportSuggestions" role="listbox"></div>
+</div>
+</div>
+<div class="airport-control lookup-field hidden" data-mode-field="flight" id="fieldFlight">
+<span class="control-sign">FLT</span>
+<div>
+<label for="flightNumber">Flight number</label>
+<input autocomplete="off" id="flightNumber" inputmode="text" maxlength="16" placeholder="SK904"/>
+</div>
+</div>
+<div class="airport-control airport-code-control lookup-field hidden" data-mode-field="route" id="fieldFrom">
+<span class="control-sign">FROM</span>
+<div>
+<label for="from">From</label>
+<input aria-autocomplete="list" aria-controls="fromSuggestions" aria-expanded="false" autocomplete="off" id="from" inputmode="search" placeholder="Airport, city or IATA" role="combobox"/>
+<div aria-label="Origin airport suggestions" class="airport-suggestions" id="fromSuggestions" role="listbox"></div>
+</div>
+</div>
+<div class="airport-control airport-code-control lookup-field hidden" data-mode-field="route" id="fieldTo">
+<span class="control-sign">TO</span>
+<div>
+<label for="to">To</label>
+<input aria-autocomplete="list" aria-controls="toSuggestions" aria-expanded="false" autocomplete="off" id="to" inputmode="search" placeholder="Airport, city or IATA" role="combobox"/>
+<div aria-label="Destination airport suggestions" class="airport-suggestions" id="toSuggestions" role="listbox"></div>
+</div>
+</div>
+<div class="airport-control lookup-date-control">
+<span class="control-sign">DATE</span>
+<div>
+<label for="date">Travel date</label>
+<input id="date" type="date"/>
+</div>
+</div>
+<div aria-label="Board type" class="airport-board-toggle" id="airportBoardToggle" role="group">
+<button class="airport-toggle active" data-board-view="departures" type="button"><span>↑</span> Departures</button>
+<button class="airport-toggle" data-board-view="arrivals" type="button"><span>↓</span> Arrivals</button>
+</div>
+<select aria-label="Board type" class="sr-only" id="boardType">
+<option selected="" value="departures">Departures</option>
+<option value="arrivals">Arrivals</option>
+</select>
+<button class="airport-update" id="searchBtn" type="button"><span class="airport-update-led"></span> Show board</button>
+<button aria-label="Reset search" class="airport-reset airport-clear-btn" id="clearBtn" type="button">Clear</button>
+<div aria-live="polite" class="notice airport-notice" id="notice" role="status"></div>
+<span class="airport-control-note" id="dateHint">Available dates are loading…</span>
+<span class="sr-only" id="boardMode">Airport Board</span>
+<span class="sr-only" id="dateWindow">Loading dates…</span>
+</div>
+<div class="flight-board-shell" id="hardwareCasing">
+<div class="board-top">
+<div class="board-brand">
+<div aria-hidden="true" class="board-monogram" id="boardDirectionIcon">↗</div>
+<div>
+<strong id="railTitle">DEPARTURES</strong>
+<span>Passenger Flight Information Display</span>
+</div>
+</div>
+<div class="board-query">
+<label id="queryLabel">Airport board</label>
+<strong id="querySummary">Select an airport to load the board</strong>
+</div>
+
+</div>
+<div aria-label="Airport flight information display" class="board-screen" role="table">
+<div class="board-airport-bar">
+<div class="airport-code-display"><small id="screenPrimaryLabel">AIRPORT</small><strong id="screenAirport">---</strong></div>
+<div class="airport-date-display"><small>DATE</small><strong id="screenDate">---</strong></div>
+<div class="airport-clock-display"><small id="boardClockLabel">UTC</small><strong id="boardClockEcho">--:--:--</strong></div>
+</div>
+<div class="board-columns fids-layout" role="row">
+<div role="columnheader">Airline</div>
+<div role="columnheader">Flight No.</div>
+<div id="timeHeader" role="columnheader">Departure time</div>
+<div id="placeHeader" role="columnheader">To</div>
+<div role="columnheader">Terminal</div>
+<div role="columnheader">Gate</div>
+<div role="columnheader">Remarks</div>
+</div>
+<div class="board-scroll">
+<div class="flip-body" id="rows" role="rowgroup">
+<div class="board-message">Preparing airport board…</div>
+</div>
+</div>
+</div>
+<div class="board-footer"><span>Passenger flight information</span><span><strong id="updatedAt"></strong></span><span><span id="resultScopeLabel">Airport view</span> · <strong id="resultCount"></strong></span></div>
+</div>
+<div aria-hidden="true" class="terminal-floor-reflection"></div>
+</div>
+
+</section>
+
+</div>
+<script src="flight-status-reference.js"></script>
+</body>
+</html>

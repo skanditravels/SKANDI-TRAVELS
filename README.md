@@ -1,6 +1,6 @@
 # SKANDI Website Builder
 
-Maintain the three source files listed for a page in [the website register](dist/website-structure.md), commit them, then run **Actions → SKANDI Website Builder → Run workflow**. The workflow builds every complete eligible page and commits generated output to `dist/` on `main`. The same workflow validates pull requests without publishing their output. It does not deploy GitHub Pages.
+Maintain the HTML, CSS and JavaScript source files listed for a page in [the website register](dist/website-structure.md), commit them, then run **Actions → SKANDI Website Builder → Run workflow**. The workflow builds every complete eligible page and commits generated output to `dist/` on `main`. The same workflow validates pull requests without publishing their output. It does not deploy GitHub Pages.
 
 ## Sources and page discovery
 
@@ -26,7 +26,7 @@ When sources are removed or invalidated, the manifest stops advertising their ou
 | ALTEA | `skandi-embeds/altea-global/altea-{header,footer}.*` | Independent operational chrome |
 | Chrome-free | Canonical master rules | No injected global chrome |
 
-The separate RIAINTRA and ALTEA global components have explicit pending slots because their approved source was unavailable within this task's allowed sources. Supply those approved triplets before migrating pages that use them. Public components are never substituted. RIAINTRA login and GroupTalk remain chrome-free, as do Booking and the existing store/checkout routes.
+The separate RIAINTRA and ALTEA global components are now extracted from HTML_REF. Public components are never substituted. The [HTML_REF migration report](docs/html-ref-migration.md) maps all 72 HTML payloads to their split source folders and records sources that need additional integration work. RIAINTRA login and GroupTalk remain chrome-free, as do Booking and the existing store/checkout routes.
 
 ## Local validation
 
@@ -57,3 +57,11 @@ The publisher stages all generated `dist/` files, checks for actual changes, ver
 An invalid page never replaces its previous HTML. Failed build status remains visible, and the workflow fails even if it successfully commits a manifest withdrawing an invalid page. Pending and blocked pages are listed in the Actions summary. Unknown receiver routes, denied staff sessions, missing builds and stale CDN digests show explicit load errors.
 
 See [the implementation and verification report](docs/website-builder-verification.md). No Wix receiver installation, production data flow or backend deployment is claimed by a successful compiler run.
+
+## HTML_REF source import
+
+The page folders now contain extracted HTML_REF source. The original Markdown stays unchanged. A page with several inline blocks has additional `.part-NN.css` or `.part-NN.js` files linked in its HTML, preserving source order and script boundaries. Keep those companion files with the primary triplet. JSON, import maps, inert templates and external library references remain in HTML.
+
+Edit these developer files directly for normal work. `node scripts/import-html-ref.mjs` checks the original import; `--write` performs it and refuses to overwrite subsequently edited source. This importer is not part of the normal build workflow. The compiler includes linked local files automatically.
+
+Current authored Home, Flight Status, Travel Info, RIAINTRA login, Success Factors and public chrome were preserved. Their HTML_REF alternatives are under `html-ref/` subfolders. Source provenance and initial hashes are in [html-ref-import.json](docs/html-ref-import.json); the compact folder mapping is [html-ref-source-map.csv](docs/html-ref-source-map.csv). See the migration report before installing any newly built page.

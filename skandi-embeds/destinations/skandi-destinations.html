@@ -1,1 +1,172 @@
-<!-- SKANDI_PENDING_SOURCE: replace with complete page markup. -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<meta name="theme-color" content="#f6faff" />
+<title>Our Network | SKANDI Travels</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" />
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.css" />
+<script defer src="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.js"></script>
+<link rel="stylesheet" href="skandi-destinations.css">
+</head>
+<body>
+<div class="network-app" id="networkApp">
+  <section class="network-hero" id="networkHero" aria-labelledby="networkTitle">
+    <div id="networkMap" role="application" aria-label="Interactive SKANDI network map"></div>
+    <div class="map-loading" id="mapLoading" aria-hidden="true"></div>
+    <div class="map-atmosphere" aria-hidden="true"></div>
+
+    <header class="hero-copy">
+      <div class="hero-eyebrow">SKANDI Travels</div>
+      <h1 id="networkTitle">Our Network</h1>
+      <p>Where the SKANDI world comes together. Explore destinations, handpicked Collection stays and trusted airline connections.</p>
+      <div class="network-meta" id="networkMeta" aria-live="polite"></div>
+      <button class="destinations-list-trigger" id="destinationsListOpen" type="button" aria-controls="destinationsListPage">See our full Destinations list</button>
+    </header>
+
+    <div class="map-toolbar" aria-label="Network map modes">
+      <div class="mode-rail" id="modeRail">
+        <button class="mode-btn active" type="button" data-mode="explore" aria-pressed="true">Explore</button>
+        <button class="mode-btn" type="button" data-mode="destinations" aria-pressed="false">Destinations</button>
+        <button class="mode-btn" type="button" data-mode="collection" aria-pressed="false">Collection</button>
+        <button class="mode-btn" type="button" data-mode="airlines" aria-pressed="false">Airlines</button>
+      </div>
+      <button class="icon-btn" id="searchOpen" type="button" aria-label="Search the SKANDI network">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.8-3.8"></path></svg>
+      </button>
+    </div>
+
+    <div class="region-strip" id="regionStrip" aria-label="Filter network by region"></div>
+
+    <div class="map-legend" aria-label="Map legend">
+      <div class="legend-chip"><span class="legend-dot destination" aria-hidden="true"></span><span>Destination</span></div>
+      <div class="legend-chip"><span class="legend-dot hotel" aria-hidden="true"></span><span>SKANDI Collection</span></div>
+      <div class="legend-chip"><span class="legend-dot airport" aria-hidden="true"></span><span>Airport</span></div>
+      <div class="legend-chip"><span class="legend-line" aria-hidden="true"></span><span>Partner route</span></div>
+    </div>
+
+    <div class="map-utilities" aria-label="Map controls">
+      <div class="utility-stack">
+        <button id="zoomIn" type="button" aria-label="Zoom in">+</button>
+        <button id="zoomOut" type="button" aria-label="Zoom out">−</button>
+      </div>
+      <button class="icon-btn" id="resetMap" type="button" aria-label="Reset network view">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7"></path><path d="M20 4v7h-7"></path></svg>
+      </button>
+    </div>
+
+    <div class="map-tooltip" id="mapTooltip" role="tooltip"><strong></strong><span></span></div>
+
+    <aside class="detail-panel" id="detailPanel" aria-label="Selected network detail" aria-hidden="true">
+      <div class="panel-media">
+        <div class="panel-fallback">SKANDI Network</div>
+        <img id="panelImage" alt="" loading="lazy" />
+        <button class="panel-close" id="panelClose" type="button" aria-label="Close detail panel">×</button>
+      </div>
+      <div class="panel-body" id="panelBody"></div>
+    </aside>
+
+    <section class="mobile-sheet" id="mobileSheet" data-snap="peek" aria-label="Selected network detail">
+      <div class="sheet-handle" aria-hidden="true"></div>
+      <button class="sheet-snap" id="sheetSnap" type="button" aria-label="Expand details">Expand</button>
+      <div class="mobile-sheet-content" id="mobileSheetContent"></div>
+    </section>
+
+    <div class="search-layer" id="searchLayer" aria-hidden="true">
+      <section class="search-panel" role="dialog" aria-modal="true" aria-labelledby="searchLabel">
+        <div class="search-head">
+          <div class="search-symbol" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.8-3.8"></path></svg></div>
+          <label class="sr-only" id="searchLabel" for="networkSearch">Search the SKANDI network</label>
+          <input class="search-input" id="networkSearch" autocomplete="off" placeholder="Search the SKANDI network" />
+          <button class="search-close" id="searchClose" type="button" aria-label="Close search">×</button>
+        </div>
+        <div class="search-body" id="searchResults"></div>
+      </section>
+    </div>
+
+    <div class="map-status" id="mapStatus" data-tone="info" hidden>
+      <span id="mapStatusText"></span>
+      <button id="mapRetry" type="button" hidden>Try again</button>
+    </div>
+
+    <div class="sr-only" id="selectionLive" aria-live="polite"></div>
+  </section>
+</div>
+
+<main class="editorial" id="editorialContent">
+  <section class="chapter" aria-labelledby="discoverHeading">
+    <div class="chapter-head">
+      <div>
+        <div class="chapter-kicker">From the Nordics, outward</div>
+        <h2 id="discoverHeading">Travel the network, not just the map.</h2>
+      </div>
+      <p class="chapter-intro">A curated view of the places, stays and airline relationships published across the SKANDI network. Select any story below to return directly to its geography.</p>
+    </div>
+    <div class="feature-grid" id="featuredDestinations"></div>
+  </section>
+
+  <section class="chapter" id="collectionChapter" aria-labelledby="collectionHeading">
+    <div class="chapter-head">
+      <div>
+        <div class="chapter-kicker">Handpicked by SKANDI</div>
+        <h2 id="collectionHeading">SKANDI Collection</h2>
+      </div>
+      <p class="chapter-intro">Selected properties with a distinct sense of place. Availability and live pricing are requested only when you enter the booking journey.</p>
+    </div>
+    <div class="collection-rail" id="collectionRail"></div>
+  </section>
+
+  <section class="chapter" id="airlineChapter" aria-labelledby="airlineHeading">
+    <div class="chapter-head">
+      <div>
+        <div class="chapter-kicker">Trusted connections</div>
+        <h2 id="airlineHeading">Partner airlines</h2>
+      </div>
+      <p class="chapter-intro">Explore the airline relationships attached to published SKANDI network connections. Airline operation remains clearly attributed to the operating carrier.</p>
+    </div>
+    <div class="airline-rail" id="airlineRail"></div>
+    <div class="plan-band">
+      <div>
+        <h3>Seen somewhere you want to go?</h3>
+        <p>Move from discovery into the existing SKANDI booking journey without losing the network context you selected.</p>
+      </div>
+      <button type="button" id="planJourney">Plan your journey</button>
+    </div>
+  </section>
+</main>
+
+<section class="directory" aria-labelledby="directoryHeading">
+  <div class="directory-inner">
+    <div class="directory-head">
+      <div><h2 id="directoryHeading">Network directory</h2></div>
+      <p>Accessible links to the same published network shown on the map.</p>
+    </div>
+    <div class="directory-grid" id="directoryGrid"></div>
+  </div>
+</section>
+
+<section class="destinations-list-page" id="destinationsListPage" aria-labelledby="destinationsListHeading" hidden>
+  <div class="destinations-list-page-header">
+    <div class="destinations-list-page-header-inner">
+      <button class="destinations-list-back" id="destinationsListBack" type="button">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5"></path><path d="m11 18-6-6 6-6"></path></svg>
+        <span>Back to Our Network</span>
+      </button>
+      <div class="destinations-list-page-label">SKANDI Travels</div>
+    </div>
+  </div>
+  <div class="destinations-list-hero">
+    <div class="destinations-list-kicker">Explore with SKANDI</div>
+    <h2 id="destinationsListHeading">All destinations.</h2>
+    <p>Browse every published SKANDI destination by country. Countries and destinations are listed alphabetically and open the existing Country and Destination pages.</p>
+    <nav class="destinations-alphabet" id="destinationsAlphabet" aria-label="Jump to country"></nav>
+  </div>
+  <div class="destinations-list-content" id="destinationsListContent" aria-live="polite"></div>
+</section>
+
+<script src="skandi-destinations.js"></script>
+</body>
+</html>

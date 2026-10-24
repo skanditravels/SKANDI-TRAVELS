@@ -1,1 +1,169 @@
-<!-- SKANDI_PENDING_SOURCE: replace with complete page markup. -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>DocuNet | SKANDI Business Manual Viewer</title>
+<link rel="stylesheet" href="skandi-docunet.css">
+</head>
+<body>
+
+<div class="app-shell" id="appShell">
+  <header class="app-header">
+    <div class="brand-block">
+
+      <div class="brand-copy">
+        <div class="brand-name">Docu<span>Net</span></div>
+        <div class="brand-subtitle">Digital Manuals</div>
+      </div>
+    </div>
+    <nav class="header-nav" aria-label="Primary">
+  <button class="active" id="viewerHeaderBtn">Viewer</button>
+  <button id="libraryHeaderBtn">Library</button>
+  <button id="updatesHeaderBtn">Updates</button>
+  <button id="formsHeaderBtn">Forms</button><button id="helpBtn">Help</button>
+</nav>
+  </header>
+
+  <section class="global-toolbar" aria-label="Document tools">
+    <div class="tool-group history">
+      <button class="tool-btn" id="backBtn" title="Back" aria-label="Back"></button>
+      <button class="tool-btn" id="forwardBtn" title="Forward" aria-label="Forward"></button>
+      <button class="tool-btn sidebar-overlay-toggle" id="mobileLibraryBtn" title="Open library" aria-label="Open library"></button>
+    </div>
+    <div class="global-search">
+      <span class="search-icon" id="searchIcon"></span>
+      <input id="globalSearch" type="search" autocomplete="off" placeholder="Search manuals, chapters and document content…">
+      <span class="shortcut">Ctrl K</span>
+    </div>
+    <div class="tool-group">
+      <button class="tool-btn" id="searchSubmitBtn">Search</button>
+      <button class="tool-btn" id="bookmarkBtn" title="Bookmark current section"></button>
+      <button class="tool-btn" id="printBtn" title="Print current section"></button>
+      <button class="tool-btn" id="ackBtn" title="Acknowledge current revision">Acknowledge</button>
+      <button class="tool-btn" id="nightModeBtn" title="Night mode"></button>
+      <button class="tool-btn active" id="inspectorBtn" title="Document information"></button>
+    </div>
+    <div class="toolbar-separator"></div>
+    <div class="effectivity-group">
+      <span class="effectivity-label">Applicability</span>
+      <select class="compact-select" id="serviceFilter" aria-label="Service line filter">
+        <option value="ALL">All Services</option>
+        <option value="DESTINATION" selected>Destination Services</option>
+        <option value="TRANSFERS">Transfers</option>
+        <option value="TOURS">Tours &amp; Activities</option>
+        <option value="PACKAGES">Travel Packages</option>
+      </select>
+      <select class="compact-select" id="marketFilter" aria-label="Operating market filter">
+        <option value="ALL">All Markets</option>
+        <option value="USNYC" selected>USNYC · New York</option>
+        <option value="SESTO">SESTO · Stockholm</option>
+        <option value="GRHER">GRHER · Crete</option>
+      </select>
+      <select class="compact-select" id="audienceFilter" aria-label="Staff audience filter">
+        <option value="OPERATIONS" selected>Operations</option>
+        <option value="DESTINATION_STAFF">Destination Staff</option>
+        <option value="CUSTOMER_CARE">Customer Care</option>
+        <option value="PARTNER_MANAGEMENT">Partner Management</option>
+        <option value="ALL">All Teams</option>
+      </select>
+      <div class="effectivity-summary" id="effectivitySummary"></div>
+    </div>
+  </section>
+
+  <div class="document-tabs" id="documentTabs" role="tablist"></div>
+
+  <main class="workspace">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-tabs" role="tablist">
+        <button class="sidebar-tab active" data-side-tab="library"></button>
+        <button class="sidebar-tab" data-side-tab="search"></button>
+        <button class="sidebar-tab" data-side-tab="bookmarks"></button>
+        <button class="sidebar-tab" data-side-tab="updates"></button>
+      </div>
+      <div class="sidebar-body">
+        <section class="side-panel" id="libraryPanel">
+          <div class="side-panel-head">
+            <div class="side-panel-title"><b>Manual Library</b><div><button class="mini-btn" id="collapseAllBtn" title="Collapse all"></button><button class="mini-btn" id="expandAllBtn" title="Expand all"></button></div></div>
+            <div class="tree-filter"><input id="treeFilter" placeholder="Filter library tree"><span id="treeFilterIcon"></span></div>
+            <div class="library-summary"><span id="manualCount">0 manuals</span><span id="applicableCount">0 applicable</span><span>Current</span></div>
+          </div>
+          <div class="tree-scroll" id="libraryTree"></div>
+        </section>
+
+        <section class="side-panel hidden" id="searchPanel">
+          <div class="side-panel-head">
+            <div class="side-panel-title"><b>Search Results</b><button class="mini-btn" id="clearSearchBtn">Clear</button></div>
+            <div class="tree-filter"><input id="panelSearch" placeholder="Search document library"><span id="panelSearchIcon"></span></div>
+            <div class="search-options"><select id="searchScope"><option value="ALL">Entire library</option><option value="CURRENT">Current manual</option><option value="GROUP">Current group</option></select><select id="searchMatch"><option value="ANY">Any word</option><option value="PHRASE">Exact phrase</option></select></div>
+          </div>
+          <div class="result-list" id="searchResults"></div>
+        </section>
+
+        <section class="side-panel hidden" id="bookmarksPanel">
+          <div class="side-panel-head"><div class="side-panel-title"><b>Bookmarks</b><button class="mini-btn" id="clearBookmarksBtn">Clear all</button></div><div class="tree-filter"><input id="bookmarkFilter" placeholder="Filter bookmarks"><span id="bookmarkFilterIcon"></span></div></div>
+          <div class="bookmark-list" id="bookmarkList"></div>
+        </section>
+
+        <section class="side-panel hidden" id="updatesPanel">
+          <div class="side-panel-head"><div class="side-panel-title"><b>Document Updates</b><button class="mini-btn" id="syncNowBtn">Sync now</button></div><div class="library-summary"><span>1 pending</span><span>4 current</span></div></div>
+          <div class="update-list" id="updateList"></div>
+        </section>
+      </div>
+    </aside>
+
+    <section class="viewer">
+      <div class="viewer-header">
+        <div class="breadcrumbs" id="breadcrumbs"></div>
+        <div class="viewer-header-spacer"></div>
+        <div class="revision-badge" id="revisionBadge"></div>
+      </div>
+      <div class="viewer-scroll" id="viewerScroll">
+        <div class="demo-warning" id="demoWarning"></div>
+        <article class="document-page" id="documentPage"></article>
+      </div>
+      <div class="viewer-footer">
+        <div class="page-nav">
+          <button class="footer-btn" id="firstSectionBtn" title="First section"></button>
+          <button class="footer-btn" id="previousSectionBtn" title="Previous section"></button>
+          <div class="page-field"><span>Page</span><input id="pageNumber" value="1"><span id="pageTotal">of 1</span></div>
+          <button class="footer-btn" id="nextSectionBtn" title="Next section"></button>
+          <button class="footer-btn" id="lastSectionBtn" title="Last section"></button>
+        </div>
+        <div class="view-controls">
+          <button class="footer-btn" id="zoomOutBtn" title="Zoom out"></button>
+          <div class="zoom-value" id="zoomValue">100%</div>
+          <button class="footer-btn" id="zoomInBtn" title="Zoom in"></button>
+          <button class="footer-btn" id="fitWidthBtn">Fit width</button>
+          <button class="footer-btn" id="fitPageBtn">Fit page</button>
+        </div>
+      </div>
+    </section>
+
+    <aside class="inspector" id="inspector">
+      <div class="inspector-head"><span>Document Information</span><button class="inspector-close" id="inspectorCloseBtn"></button></div>
+      <div class="inspector-scroll" id="inspectorContent"></div>
+    </aside>
+  </main>
+
+  <footer class="status-bar">
+    <div class="status-cell"><span id="statusShield"></span><strong>Operational Library</strong></div>
+    <div class="status-cell" id="statusDocument">No document selected</div>
+    <div class="status-cell" id="statusEffectivity">Applicability: Destination Services / USNYC / Operations</div>
+    <div class="status-spacer"></div>
+    <div class="status-cell" id="lastSyncCell">Last sync —</div>
+    <div class="status-cell"><div class="sync-progress"><span></span></div><strong id="syncStateText">Connecting…</strong></div>
+  </footer>
+</div>
+
+<div class="modal-backdrop" id="commandBackdrop" role="dialog" aria-modal="true" aria-label="Quick search">
+  <div class="command-modal">
+    <div class="command-head"><span id="commandSearchIcon"></span><input id="commandInput" placeholder="Quick search manuals and sections…"><span class="shortcut">ESC</span></div>
+    <div class="command-results" id="commandResults"></div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script src="skandi-docunet.js"></script>
+</body>
+</html>

@@ -1,0 +1,60 @@
+home: BUILT -> dist/home/index.html
+search: BUILT -> dist/search/index.html
+flights: PENDING SOURCE
+carRental: BUILT -> dist/car-rental/index.html
+hotels: PENDING SOURCE
+packages: PENDING SOURCE
+cruises: PENDING SOURCE
+tours: BUILT -> dist/tours/index.html
+activities: PENDING SOURCE
+transfers: PENDING SOURCE
+destinations: FAILED — [destinations / destinations] skandi-embeds/destinations/skandi-destinations.html, skandi-embeds/destinations/skandi-destinations.css, skandi-embeds/destinations/skandi-destinations.js: skandi-embeds/destinations/skandi-destinations.html: external stylesheet cannot be scoped: https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.css; put its rules in the CSS source
+offers: PENDING SOURCE
+travelInfo: FAILED — [travelInfo / travel-info] skandi-embeds/travel-info/skandi-travel-info.html, skandi-embeds/travel-info/skandi-travel-info.css, skandi-embeds/travel-info/skandi-travel-info.js: skandi-embeds/travel-info/skandi-travel-info.css:1264:7: Unexpected }
+skandiCollection: FAILED — [skandiCollection / skandi-collection] skandi-embeds/skandi-collection/skandi-skandi-collection.html, skandi-embeds/skandi-collection/skandi-skandi-collection.css, skandi-embeds/skandi-collection/skandi-skandi-collection.js: skandi-embeds/skandi-collection/skandi-skandi-collection.css: missing asset YOUR-IMAGE-URL.jpg
+voy: PENDING SOURCE
+club: BUILT -> dist/club/index.html
+forgotPassword: BUILT -> dist/forgot-password/index.html
+about: BUILT -> dist/about/index.html
+support: BLOCKED INTEGRATION
+newsroom: BUILT -> dist/newsroom/index.html
+theStore: BUILT -> dist/the-store/index.html
+giftCard: PENDING SOURCE
+storeCheckout: BUILT -> dist/store-checkout/index.html
+storeConfirmation: BUILT -> dist/store-confirmation/index.html
+ourNetwork: PENDING SOURCE
+legal: BUILT -> dist/legal/index.html
+policies: BUILT -> dist/policies/index.html
+cookiePreferences: BUILT -> dist/cookie-preferences/index.html
+riaintra: BUILT -> dist/riaintra/index.html
+staffLogin: ALIAS
+successFactors: BUILT -> dist/success-factors/index.html
+legalInternal: BUILT -> dist/legal-internal/index.html
+alteaLaunchpad: BUILT -> dist/altea-launchpad/index.html
+alteaReservations: FAILED — [alteaReservations / altea-reservations] skandi-embeds/altea-reservations/skandi-altea-reservations.html, skandi-embeds/altea-reservations/skandi-altea-reservations.css, skandi-embeds/altea-reservations/skandi-altea-reservations.js: skandi-embeds/altea-reservations/skandi-altea-reservations.html: executable scripts interleaved with markup; move scripts after page markup before splitting
+opsControl: BUILT -> dist/ops-control/index.html
+inventoryControl: FAILED — [inventoryControl / inventory-control] skandi-embeds/inventory-control/skandi-inventory-control.html, skandi-embeds/inventory-control/skandi-inventory-control.css, skandi-embeds/inventory-control/skandi-inventory-control.js: skandi-embeds/inventory-control/skandi-inventory-control.html: module scripts require bundling into the page .js first
+uniformCenter: BUILT -> dist/uniform-center/index.html
+uniformControl: PENDING SOURCE
+alteaTimatic: PENDING SOURCE
+mail: BUILT -> dist/mail/index.html
+docunet: BUILT -> dist/docunet/index.html
+docunetAdmin: FAILED — [docunetAdmin / docunet-admin] skandi-embeds/docunet-admin/skandi-docunet-admin.html, skandi-embeds/docunet-admin/skandi-docunet-admin.css, skandi-embeds/docunet-admin/skandi-docunet-admin.js: skandi-embeds/docunet-admin/skandi-docunet-admin.html: nested iframe is not supported; retain the existing Wix integration
+serviceDesk: PENDING SOURCE
+policyControl: BUILT -> dist/policy-control/index.html
+mediaControl: FAILED — [mediaControl / media-control] skandi-embeds/media-control/skandi-media-control.html, skandi-embeds/media-control/skandi-media-control.css, skandi-embeds/media-control/skandi-media-control.js: skandi-embeds/media-control/skandi-media-control.html: executable scripts interleaved with markup; move scripts after page markup before splitting
+storeControl: BUILT -> dist/store-control/index.html
+payroll: BUILT -> dist/payroll/index.html
+country: BLOCKED INTEGRATION
+bookingFlow: PENDING SOURCE
+myProfile: BUILT -> dist/my-profile/index.html
+myTrips: ALIAS
+careers: PENDING SOURCE
+myRoster: PENDING SOURCE
+groupTalk: FAILED — [groupTalk / group-talk] skandi-embeds/group-talk/skandi-group-talk.html, skandi-embeds/group-talk/skandi-group-talk.css, skandi-embeds/group-talk/skandi-group-talk.js: skandi-embeds/group-talk/skandi-group-talk.html: external stylesheet cannot be scoped: https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.css; put its rules in the CSS source
+passportVisa: BUILT -> dist/passport-visa/index.html
+baggageAllowance: BUILT -> dist/baggage-allowance/index.html
+travelInsurance: BUILT -> dist/travel-insurance/index.html
+specialAssistance: BUILT -> dist/special-assistance/index.html
+flightStatus: BUILT -> dist/flight-status/index.html
+Built 31; pending 16; blocked 2; aliases 2; failed 8.

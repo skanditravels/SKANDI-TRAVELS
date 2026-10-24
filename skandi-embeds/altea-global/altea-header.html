@@ -1,1 +1,45 @@
-<!-- SKANDI_PENDING_SOURCE: approved global component required. -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>ALTEA Global Header - Modern</title>
+<link rel="stylesheet" href="altea-header.css">
+</head>
+<body>
+
+<header class="altea-toolbar">
+  <div class="toolbar-left">
+    <img id="logo" class="logo" alt="ALTEA">
+    <div class="brand-title">
+      <strong id="productName">Loading...</strong>
+      <span id="productContext">SKANDI SYSTEMS</span>
+    </div>
+    <div class="env-badge" id="envBadge" title="Environment">PRD</div>
+  </div>
+
+  <nav class="toolbar-nav" id="navLinks" aria-label="Navigation"></nav>
+
+  <div class="toolbar-right">
+    <div class="utility-actions">
+      <button class="utility-action" id="returnDashboardBtn" type="button">Return to Dashboard</button>
+      <button class="utility-action" id="logoutBtn" type="button">Logout</button>
+    </div>
+
+    <div class="credentials" id="userProfile">
+      <span class="cred-lbl">User:</span>
+      <span class="cred-val" id="userName">--</span>
+      <span class="cred-lbl">Office:</span>
+      <span class="cred-val link" id="officeId">--</span>
+    </div>
+
+    <div class="sys-clock" id="sysClock" title="Click to toggle UTC / Local">
+      <span class="clock-time" id="clockTime">--:--:--</span>
+      <span class="clock-lbl" id="clockDate">LOCAL</span>
+    </div>
+  </div>
+</header>
+
+<script src="altea-header.js"></script>
+</body>
+</html>

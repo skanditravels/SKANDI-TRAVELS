@@ -1,0 +1,239 @@
+
+/* Eight-column contemporary passenger FIDS. Functional gate/belt badges are wayfinding, not decorative state pills. */
+.ti-airport-flight-panel{
+  --fids-accent:#f2c94c;
+  --fids-accent-muted:#8e7a34;
+  --fids-ok:#71d5b7;
+  --fids-warn:#f2c94c;
+  --fids-bad:#ff7d86;
+}
+.ti-airport-flight-panel.is-arrivals{
+  --fids-accent:#72d7b6;
+  --fids-accent-muted:#477f70;
+}
+.ti-airport-flight-panel .flight-board-shell{
+  border-color:#26343d;
+  border-radius:6px;
+  background:#05090c;
+  box-shadow:0 14px 38px rgba(2,18,32,.16);
+}
+.ti-airport-flight-panel .board-airport-bar{
+  min-height:66px;
+  grid-template-columns:minmax(150px,.78fr) minmax(180px,1fr) minmax(180px,.82fr);
+  border-bottom-color:#34434d;
+  background:#0a1218;
+}
+.ti-airport-flight-panel .board-airport-bar>div{border-right-color:#27343d}
+.ti-airport-flight-panel .board-airport-bar small{color:#768894}
+.ti-airport-flight-panel .board-airport-bar strong{
+  color:#f7fafc;
+  font-size:23px;
+}
+.ti-airport-flight-panel .board-airport-bar>div:nth-child(2) strong,
+.ti-airport-flight-panel .board-clock strong{color:var(--fids-accent)}
+.ti-airport-flight-panel .board-columns{
+  min-height:42px;
+  border-bottom-color:#3b4b56;
+  background:#111c23;
+}
+.ti-airport-flight-panel .board-columns>div{
+  padding:13px 10px;
+  color:#9aaab5;
+  font-family:"Roboto Mono",monospace;
+  font-size:9px;
+  font-weight:700;
+  letter-spacing:.105em;
+  text-transform:uppercase;
+  border-right-color:#2c3a43;
+  white-space:nowrap;
+}
+.ti-airport-flight-panel .fids-layout{
+  grid-template-columns:150px 100px 110px 100px minmax(200px,1fr) 80px 85px minmax(180px,220px);
+}
+.ti-airport-flight-panel .fids-row{
+  min-height:66px;
+  background:#071018;
+  border-bottom-color:#25333c;
+}
+.ti-airport-flight-panel .fids-row:nth-of-type(even){background:#09131b}
+.ti-airport-flight-panel .fids-row:hover{background:#0d1a22}
+.ti-airport-flight-panel .fids-cell{
+  min-height:66px;
+  padding:8px 10px;
+  border-right-color:#202e37;
+  overflow:hidden;
+}
+.ti-airport-flight-panel .cell-airline{padding-left:12px;padding-right:12px}
+.ti-airport-flight-panel .fids-carrier{
+  width:100%;
+  height:100%;
+  display:flex;
+  align-items:center;
+  justify-content:flex-start;
+}
+.ti-airport-flight-panel .fids-tail{
+  width:118px;
+  height:42px;
+  padding:5px 8px;
+  border-radius:3px;
+  background:#fff;
+  border:1px solid rgba(255,255,255,.75);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.ti-airport-flight-panel .fids-tail img{
+  width:100%;
+  height:100%;
+  max-width:102px;
+  max-height:30px;
+  object-fit:contain;
+}
+.ti-airport-flight-panel .fids-tail.fallback{
+  width:118px;
+  height:42px;
+  color:#0b2d4f;
+  background:#eaf0f4;
+  font-family:"Roboto Mono",monospace;
+  font-size:18px;
+  font-weight:800;
+}
+.ti-airport-flight-panel .fids-carrier-name{display:none!important}
+.ti-airport-flight-panel .fids-flight strong{
+  color:#f2c94c;
+  font-family:"Roboto Mono",monospace;
+  font-size:18px;
+  font-weight:650;
+  letter-spacing:.018em;
+  white-space:nowrap;
+}
+.ti-airport-flight-panel .fids-codeshare{
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+  max-width:100%;
+  color:#a2adb5;
+  font-family:"Roboto Mono",monospace;
+  font-size:14px;
+  font-weight:500;
+  letter-spacing:.015em;
+  white-space:nowrap;
+  transition:opacity .16s ease,transform .16s ease;
+}
+.ti-airport-flight-panel .fids-codeshare.is-changing{
+  opacity:.18;
+  transform:translateY(-3px);
+}
+.ti-airport-flight-panel .fids-codeshare-rotate{
+  color:#657986;
+  font-size:13px;
+  line-height:1;
+}
+.ti-airport-flight-panel .fids-time-main{
+  color:#f7fafc;
+  font-family:"Roboto Mono",monospace;
+  font-size:25px;
+  font-weight:650;
+  letter-spacing:.01em;
+  white-space:nowrap;
+}
+.ti-airport-flight-panel .fids-destination strong{
+  color:#f7fafc;
+  font-family:"Roboto Mono",monospace;
+  font-size:18px;
+  font-weight:650;
+  letter-spacing:.005em;
+  line-height:1.14;
+  white-space:nowrap;
+}
+.ti-airport-flight-panel .fids-destination strong span{color:#9aacb7}
+.ti-airport-flight-panel .fids-terminal{
+  color:#dce5ea;
+  font-family:"Roboto Mono",monospace;
+  font-size:18px;
+  font-weight:400;
+  white-space:nowrap;
+}
+.ti-airport-flight-panel .fids-gate{
+  min-width:54px;
+  min-height:30px;
+  padding:5px 8px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  border:1px solid #55656f;
+  border-radius:4px;
+  background:#26323a;
+  color:#f7fafc;
+  font-family:"Roboto Mono",monospace;
+  font-size:16px;
+  font-weight:800;
+  letter-spacing:.02em;
+  white-space:nowrap;
+}
+.ti-airport-flight-panel .fids-gate.is-belt{
+  border-color:#3e806b;
+  background:#17392f;
+  color:#9ce5ca;
+}
+.ti-airport-flight-panel .fids-status{
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+  color:var(--fids-ok);
+  font-family:"Roboto Mono",monospace;
+  font-size:12px;
+  font-weight:800;
+  letter-spacing:.025em;
+  line-height:1.25;
+  white-space:normal;
+}
+.ti-airport-flight-panel .fids-status::before{
+  content:"";
+  width:7px;
+  height:7px;
+  flex:0 0 7px;
+  display:block;
+  border-radius:50%;
+  background:currentColor;
+  box-shadow:0 0 8px color-mix(in srgb,currentColor 45%,transparent);
+}
+.ti-airport-flight-panel .fids-status.flap-warn{color:var(--fids-warn)}
+.ti-airport-flight-panel .fids-status.flap-bad{color:var(--fids-bad)}
+.ti-airport-flight-panel.is-arrivals .board-columns,
+.ti-airport-flight-panel.is-arrivals .board-airport-bar{
+  border-color:#2d4b42;
+}
+.ti-airport-flight-panel.is-arrivals .board-airport-bar>div,
+.ti-airport-flight-panel.is-arrivals .board-columns>div,
+.ti-airport-flight-panel.is-arrivals .fids-cell{
+  border-color:#203c34;
+}
+.ti-airport-flight-panel .fids-group-divider{grid-column:1/-1}
+@media(max-width:1180px) and (min-width:981px){
+  .ti-airport-flight-panel .fids-layout{
+    grid-template-columns:124px 92px 100px 88px minmax(170px,1fr) 72px 78px minmax(150px,190px);
+  }
+  .ti-airport-flight-panel .fids-tail{width:100px}
+  .ti-airport-flight-panel .fids-tail img{max-width:88px}
+  .ti-airport-flight-panel .fids-destination strong{font-size:16px}
+  .ti-airport-flight-panel .fids-flight strong{font-size:17px}
+  .ti-airport-flight-panel .fids-time-main{font-size:22px}
+}
+@media(max-width:980px){
+  .ti-airport-flight-panel .fids-layout{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+  .ti-airport-flight-panel .cell-airline,
+  .ti-airport-flight-panel .cell-place,
+  .ti-airport-flight-panel .cell-remarks{grid-column:span 2}
+  .ti-airport-flight-panel .cell-codeshare{grid-column:span 1}
+  .ti-airport-flight-panel .fids-tail{width:112px}
+  .ti-airport-flight-panel .fids-destination strong{white-space:normal}
+}
+@media(max-width:620px){
+  .ti-airport-flight-panel .fids-layout{grid-template-columns:1fr 1fr}
+  .ti-airport-flight-panel .cell-airline,
+  .ti-airport-flight-panel .cell-place,
+  .ti-airport-flight-panel .cell-remarks{grid-column:span 2}
+}

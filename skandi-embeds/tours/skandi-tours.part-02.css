@@ -1,0 +1,7 @@
+
+/* Dynamic page is embedded below the site-level Wix header and above the site-level footer. */
+:root{--header-total:0px!important;--header-h:0px!important;--bar-height:0px!important}
+.country-page,.destination-page,.area-page,.hotel-page{padding-top:0!important}
+.country-subnav,.destination-subnav,.area-subnav,.hotel-nav-wrap{top:0!important}
+.signature,.destination-signature,.area-signature{top:80px!important}
+.ta-collections:has(> :only-child){grid-template-columns:1fr}.ta-book-card button:disabled{opacity:.55;cursor:not-allowed}.ta-exp-img:empty{background:linear-gradient(135deg,#e9f0f9,#f5f8fc)}.ta-detail-gallery .ta-empty{grid-column:1/-1}

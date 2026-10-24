@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="color-scheme" content="light" />
+<title>SKANDI SuccessFactors — Recruiting Automations</title>
+<link rel="stylesheet" href="automation-control.css">
+</head>
+<body>
+<header><div><small>RIA INTRA / SUCCESSFACTORS / ADMINISTRATION</small><h1>Recruiting &amp; onboarding automations</h1><p>Review the existing SKANDI email catalog and Wix workflow definitions. Prepare, inspect, preview and synchronize content through authorized V12 Velo functions. Email sends and automation activation remain controlled by Wix.</p></div><button id="refresh" type="button">Refresh platform</button></header>
+<main>
+<section>
+<div class="pane"><div class="eyebrow">Workflow library</div><div class="title">Available email workflows</div><p class="desc">Only workflows returned by the canonical backend are selectable. Missing lifecycle emails are documented separately in the installation package, not represented as configured.</p><div class="field"><label for="search">Search workflow</label><input id="search" type="search" autocomplete="off" placeholder="Application, interview, welcome…" /></div><div class="tabs" aria-label="Email audience"><button class="tab" data-filter="ALL" aria-selected="true">All</button><button class="tab" data-filter="CAREERS" aria-selected="false">Careers</button><button class="tab" data-filter="EMPLOYEE" aria-selected="false">Employees</button><button class="tab" data-filter="SECURITY" aria-selected="false">Access</button></div><div id="workflowList" class="listing" aria-live="polite"><p class="desc">Requesting workflows from Velo…</p></div></div>
+<div class="pane"><div class="eyebrow">Existing Wix automations</div><div class="title">Configured workflows</div><p class="desc">Read-only status from Wix Automations. An automation's presence does not confirm that a recruitment event is wired to it.</p><div id="automationList" class="listing"><p class="desc">Loading Wix automations…</p></div></div>
+</section>
+<section>
+<div id="status" class="status" role="status">Connecting to the Wix Velo page controller…</div>
+<div class="pane"><div class="eyebrow">Selected workflow</div><div class="title" id="selectedTitle">Select a workflow</div><div class="cols" id="selectedMeta"><div class="info"><small>Email type</small><b>—</b></div><div class="info"><small>Audience</small><b>—</b></div></div><p class="note">This console does not send candidate or employee emails. It only configures content of verified Wix Send Email actions. The Wix automation must have a real trigger, recipient mapping and active state before sending.</p>
+<div class="field"><label for="audience">Audience</label><select id="audience"><option value="EMPLOYEE">Employee</option><option value="CUSTOMER">Customer / Applicant</option></select></div>
+<div class="field"><label for="automationId">Wix automation ID</label><input id="automationId" spellcheck="false" autocomplete="off" placeholder="Automation GUID from Wix" /></div>
+<div class="field"><label for="actionId">Wix Send Email action ID</label><input id="actionId" spellcheck="false" autocomplete="off" placeholder="Send Email action GUID" /></div>
+<div class="actions"><button class="btn" id="inspect" type="button">Inspect action</button><button class="btn" id="dryRun" type="button">Validate change</button><button class="btn" id="preview" type="button">Preview email</button><button class="btn primary" id="sync" type="button">Apply email content</button></div><div id="result" class="result" aria-live="polite">No actions performed.</div><iframe id="emailPreview" class="preview" title="Email content preview" sandbox="" hidden></iframe>
+</div>
+<div class="pane"><div class="eyebrow">Create action mapping</div><div class="title">Wix configuration support</div><p class="desc">Generate a provider mapping for a configured Wix trigger. You must supply the real notification topic ID for transactional emails. No automation is created or enabled by this action.</p><div class="field"><label for="contactPath">Recipient contact ID property path</label><input id="contactPath" value="contactId" spellcheck="false"/></div><div class="field"><label for="topicId">Notification topic ID</label><input id="topicId" spellcheck="false" placeholder="Required for Business Transactional" /></div><div class="field"><label for="senderId">Sender details ID (optional)</label><input id="senderId" spellcheck="false" /></div><div class="actions"><button type="button" class="btn" id="mapping">Generate action mapping</button></div></div>
+<p class="foot">Source of truth: Wix Automations for activation, workflow definitions and delivery; SKANDI V12 backend for approved email content. HR, payroll, credentials and applicant documents must not be inserted into arbitrary email templates.</p>
+</section>
+</main>
+<script src="automation-control.js"></script>
+</body>
+</html>
+

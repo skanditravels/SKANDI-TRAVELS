@@ -1,1 +1,88 @@
-<!-- SKANDI_PENDING_SOURCE: replace with complete page markup. -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#022e64">
+<title>SKANDI Newsroom · B-011.2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="skandi-newsroom.css">
+</head>
+<body>
+<main class="newsroom" id="sk-newsroom">
+  <div class="container">
+    <header class="intro" data-section-id="newsroom-intro">
+      <div>
+        <div class="eyebrow" data-content-id="newsroom-eyebrow">SKANDI NEWSROOM</div>
+        <h1 data-content-id="newsroom-h1">Newsroom</h1>
+      </div>
+      <p class="intro-copy" data-content-id="newsroom-copy">
+        Official press releases, company updates and approved media resources from SKANDI.
+      </p>
+    </header>
+
+    <div class="search-panel" data-section-id="newsroom-search">
+      <input id="search" class="search" aria-label="Search newsroom" placeholder="Search newsroom, press releases or media…">
+      <select id="typeFilter" class="select" aria-label="Filter newsroom by content type">
+        <option value="all">All content</option>
+      </select>
+    </div>
+
+    <nav class="tabs" id="tabs" aria-label="Newsroom categories"></nav>
+
+    <section class="feature" id="hero" data-section-id="newsroom-featured" data-media-slot="newsroom-featured"></section>
+    <section class="grid" id="grid" data-section-id="newsroom-posts"></section>
+    <article class="detail" id="detail" aria-live="polite"></article>
+
+    <section class="media-section" data-section-id="newsroom-media-library">
+      <div class="section-head">
+        <div>
+          <div class="eyebrow" data-content-id="newsroom-media-eyebrow">PRESS RESOURCES</div>
+          <h2 data-content-id="newsroom-media-h2">Media Library</h2>
+          <p data-content-id="newsroom-media-copy">
+            Approved SKANDI media resources for editorial and press use. Usage rights and credit information are shown with every asset.
+          </p>
+        </div>
+        <button class="btn secondary" id="mediaToggle" type="button">View media</button>
+      </div>
+      <div class="media-grid hidden" id="mediaGrid"></div>
+    </section>
+
+    <section data-section-id="newsroom-contacts">
+      <div class="section-head">
+        <div>
+          <div class="eyebrow" data-content-id="newsroom-contacts-eyebrow">MEDIA RELATIONS</div>
+          <h2 data-content-id="newsroom-contacts-h2">Media Contacts</h2>
+          <p data-content-id="newsroom-contacts-copy">
+            For press enquiries, contact the appropriate SKANDI communications representative.
+          </p>
+        </div>
+      </div>
+      <div class="contact-grid" id="contacts"></div>
+    </section>
+
+    <section class="subscribe" data-section-id="newsroom-subscribe">
+      <div>
+        <div class="eyebrow" style="color:var(--sk-aqua-soft)" data-content-id="newsroom-subscribe-eyebrow">SKANDI UPDATES</div>
+        <h2 data-content-id="newsroom-subscribe-h2">Get SKANDI updates</h2>
+        <p data-content-id="newsroom-subscribe-copy">Subscribe to public newsroom updates and press releases.</p>
+      </div>
+      <div class="subscribe-form">
+        <input id="subEmail" type="email" autocomplete="email" aria-label="Email address" placeholder="Email address">
+        <button class="btn" id="subBtn" type="button">Subscribe</button>
+      </div>
+    </section>
+  </div>
+</main>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="skandi-newsroom.js"></script>
+
+<script src="skandi-newsroom.part-02.js"></script>
+
+</body>
+</html>
+

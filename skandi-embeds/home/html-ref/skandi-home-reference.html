@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light">
+<title>SKANDI · Flight Explorer</title>
+<link rel="stylesheet" href="skandi-home-reference.css">
+</head>
+<body>
+<main id="shell">
+  <header id="heading"><div><div id="eyebrow">SKANDI TRAVELS · LIVE AIR SEARCH</div><h1>Find your next flight.</h1><p>Explore airline-operated journeys with real supplier pricing.</p></div><div id="mark">SKANDI TRAVELS</div></header>
+  <section id="search-card" aria-label="Search available flights">
+    <form id="search-form" novalidate>
+      <div id="fields">
+        <div class="field"><label for="origin">From · airport code</label><input id="origin" name="origin" minlength="3" maxlength="3" required placeholder="JFK" autocomplete="off" spellcheck="false" autocapitalize="characters"></div>
+        <div class="field"><label for="destination">To · airport code</label><input id="destination" name="destination" minlength="3" maxlength="3" required placeholder="ARN" autocomplete="off" spellcheck="false" autocapitalize="characters"></div>
+        <div class="field"><label for="depart">Departure</label><input id="depart" name="depart" type="date" required></div>
+        <div class="field"><label for="return">Return · optional</label><input id="return" name="return" type="date"></div>
+      </div>
+      <div class="more">
+        <div class="field"><label for="adults">Adults</label><select id="adults" name="adults"><option value="1">1 adult</option><option value="2">2 adults</option><option value="3">3 adults</option><option value="4">4 adults</option><option value="5">5 adults</option><option value="6">6 adults</option><option value="7">7 adults</option><option value="8">8 adults</option><option value="9">9 adults</option></select></div>
+        <div class="field"><label for="cabin">Cabin</label><select id="cabin" name="cabin"><option value="economy">Economy</option><option value="premium_economy">Premium Economy</option><option value="business">Business</option><option value="first">First</option></select></div>
+        <div class="field"><label for="connections">Connections</label><select id="connections" name="connections"><option value="1">Up to 1</option><option value="0">Direct only</option><option value="2">Up to 2</option></select></div>
+        <div class="field"><label for="children">Children</label><select id="children" name="children"><option value="0">None</option><option value="1">1 child</option><option value="2">2 children</option><option value="3">3 children</option><option value="4">4 children</option></select></div>
+        <div class="field"><label for="infants">Infants · under 2</label><select id="infants" name="infants"><option value="0">None</option><option value="1">1 infant</option><option value="2">2 infants</option><option value="3">3 infants</option><option value="4">4 infants</option></select></div>
+        <button class="action" id="search" type="submit">SEARCH LIVE FLIGHTS</button>
+      </div>
+      <div id="ages" aria-live="polite"></div>
+    </form>
+    <div id="message" role="status" aria-live="polite">Search live airline availability. Prices are rechecked before booking.</div>
+  </section>
+  <section id="results" aria-label="Flight offers"><div id="result-head"><div id="result-count" aria-live="polite">Flight results</div><div id="filters"><label for="sort">Sort</label><select id="sort"><option value="price">Lowest total</option><option value="duration">Shortest itinerary</option><option value="departure">Earliest departure</option></select><label for="airline">Airline</label><select id="airline"><option value="">All airlines</option></select></div></div><div id="cards"><div class="empty">Enter your flight details to see current available offers.</div></div></section>
+</main>
+<div id="loading" role="dialog" aria-modal="true" aria-labelledby="loading-title" aria-describedby="loading-copy"><div id="loading-card"><div id="spinner" aria-hidden="true"></div><strong id="loading-title">Searching available flights</strong><p id="loading-copy">Contacting airline suppliers and reviewing current fares.</p><button id="cancel" type="button">Cancel search</button></div></div>
+<script src="skandi-home-reference.js"></script>
+</body>
+</html>
+

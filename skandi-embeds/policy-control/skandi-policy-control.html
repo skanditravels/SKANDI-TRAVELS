@@ -1,1 +1,21 @@
-<!-- SKANDI_PENDING_SOURCE: replace with complete page markup. -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light">
+<title>SKANDI Policy Control</title>
+<link rel="stylesheet" href="skandi-policy-control.css">
+</head>
+<body>
+<div class="app">
+<div class="toolbar no-print"><button id="newBtn" class="button primary">New Policy</button><button id="saveBtn" class="button">Save Draft</button><button id="publishBtn" class="button primary">Publish</button><button id="archiveBtn" class="button">Archive</button><button id="deleteBtn" class="button danger">Delete</button><div class="grow"></div><button id="pdfBtn" class="button">Regenerate PDF</button><a id="downloadBtn" class="button hidden" target="_blank" rel="noopener noreferrer" href="#">Download PDF</a><button id="exportHtmlBtn" class="button">Export HTML</button><span class="state-text" id="dirtyState" role="status" aria-live="polite"></span></div>
+<div class="mobile-nav no-print" id="mobileNav"></div><div class="no-print" id="documentState" role="status" aria-live="polite"></div>
+<div class="workspace"><aside class="sidebar no-print"><h2>Policy workspace</h2><div id="desktopNav"></div></aside><main class="main"><div class="intro no-print"><div><h1 id="pageTitle">Policy documents</h1><p id="pageSubtitle">Author, review, import and publish controlled policies.</p></div><span id="counter" class="status-count"></span></div><div id="status" class="hidden"></div><div id="content"></div></main></div></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<div class="modal hidden" id="policyLinkModal" role="dialog" aria-modal="true" aria-label="Insert policy link"><div class="modal-window"><div class="modal-title"><h2>Insert policy link</h2><button type="button" class="button ghost" id="closeLinkModal">Close</button></div><div class="modal-body"><label class="field"><span class="field-title">Find a policy</span><input class="input" id="linkSearch" placeholder="Title, category or document ID"></label><div id="linkOptions" style="margin-top:12px"></div></div></div></div>
+<div id="leaveGuard" class="policy-guard hidden no-print" role="presentation"><div class="policy-guard-dialog" role="dialog" aria-modal="true" aria-labelledby="guardTitle" aria-describedby="guardDescription"><h2 id="guardTitle">Unsaved policy changes</h2><p id="guardDescription">Your changes have not been saved. Save this document before leaving, or discard your changes.</p><div class="policy-guard-actions"><button type="button" id="guardCancel" class="button">Keep editing</button><button type="button" id="guardDiscard" class="button danger">Discard changes</button><button type="button" id="guardSave" class="button primary">Save draft &amp; continue</button></div></div></div>
+<script src="skandi-policy-control.js"></script>
+</body>
+</html>
+

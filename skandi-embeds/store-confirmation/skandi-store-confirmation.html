@@ -1,1 +1,72 @@
-<!-- SKANDI_PENDING_SOURCE: replace with complete page markup. -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#071b44">
+<title>SKANDI The Store — Order Confirmation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<link rel="stylesheet" href="skandi-store-confirmation.css">
+</head>
+<body>
+<header class="store-confirmation-header" aria-label="SKANDI The Store order confirmation header">
+  <div class="store-confirmation-header-inner">
+    <div class="store-confirmation-brand">
+      <button class="store-confirmation-brand-logo" type="button" data-master-route="theStore" aria-label="Return to SKANDI The Store">
+        <img id="storeConfirmationHeaderLogo" data-master-logo="storeHeader" src="https://static.wixstatic.com/media/394052_eaf2188b7f7e48468fa25d61f8881b10~mv2.png" alt="SKANDI">
+      </button>
+      <span class="store-confirmation-brand-divider" aria-hidden="true"></span>
+      <div class="store-confirmation-brand-context">The Store<span>Order confirmation</span></div>
+    </div>
+    <button class="store-confirmation-return" type="button" data-master-route="theStore">Back to The Store</button>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="panel" data-section-id="store-order-confirmation">
+    <div class="check">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m5 12 4 4L19 6"/></svg>
+    </div>
+    <div class="eyebrow" data-content-id="store-confirmation-eyebrow">SKANDI STORE</div>
+    <h1 data-content-id="store-confirmation-h1">Checking your order</h1>
+    <p data-content-id="store-confirmation-copy">We are checking your order reference and payment status.</p>
+    <div class="meta">
+      <div class="row"><span>Order reference</span><strong id="orderId">Available in My Orders</strong></div>
+      <div class="row"><span>Payment status</span><strong id="paymentStatus">Submitted</strong></div>
+      <div class="row"><span>Confirmation generated</span><strong id="generatedAt">—</strong></div>
+    </div>
+    <div class="actions">
+      <button id="orders" class="action primary">View My Orders</button>
+      <button id="download" disabled class="action download">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 19h14"/></svg>
+        Download Confirmation
+      </button>
+      <button id="store" class="action secondary">Continue shopping</button>
+    </div>
+    <div class="small">A confirmation may also be sent using the email attached to your order.</div>
+    <div id="status" class="status" role="status" aria-live="polite"></div>
+  </section>
+</main>
+
+<footer class="store-confirmation-footer" aria-label="SKANDI The Store order confirmation footer">
+  <div class="store-confirmation-footer-main">
+    <div class="store-confirmation-footer-brand">
+      <img id="storeConfirmationFooterLogo" data-master-logo="storeFooter" src="https://static.wixstatic.com/media/394052_cd31153a91694b14a27c5f756f8089bd~mv2.png" alt="SKANDI">
+      <div class="store-confirmation-footer-copy"><strong>The Store</strong>Order confirmation powered by SKANDI.</div>
+    </div>
+    <button class="store-confirmation-footer-return" type="button" data-master-route="theStore">Return to The Store</button>
+  </div>
+  <div class="store-confirmation-footer-bottom">
+    <div class="store-confirmation-footer-bottom-inner">
+      <div id="storeConfirmationSlogan" class="store-confirmation-slogan">Unforgettable Moments.</div>
+      <div class="store-confirmation-copyright">© <span id="storeConfirmationFooterYear"></span> SKANDI Travels. All rights reserved.</div>
+    </div>
+  </div>
+</footer>
+
+<script src="skandi-store-confirmation.js"></script>
+</body>
+</html>

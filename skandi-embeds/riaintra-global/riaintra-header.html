@@ -1,1 +1,65 @@
-<!-- SKANDI_PENDING_SOURCE: approved global component required. -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover" />
+<meta name="color-scheme" content="light dark" />
+<title>RIAINTRA Global Header</title>
+<link rel="stylesheet" href="riaintra-header.css">
+</head>
+<body>
+
+<!-- MAIN HEADER -->
+<header class="shellbar">
+  <div class="shellbar-inner">
+    
+    <div class="shell-left">
+      <button id="burger" class="burger" type="button" aria-label="Open menu">☰</button>
+      <div class="product">
+        <img id="logo" src="" alt="RIAINTRA">
+        <div class="product-text">
+          <strong id="productName">RIAINTRA</strong>
+          <small id="productContext">Enterprise Workforce Suite</small>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Desktop Navigation -->
+    <nav id="desktopNav" class="shell-nav" aria-label="Internal navigation"></nav>
+    
+    <div class="shell-right">
+      <button id="returnDashboardBtn" class="utility-action" type="button" hidden>Return to Dashboard</button>
+      <button id="logoutBtn" class="utility-action" type="button">Logout</button>
+
+      <!-- Clock -->
+      <div id="sfClock" class="clock" title="Toggle local / UTC">
+        <strong id="sfClockTime">--:--:--</strong>
+        <small id="sfClockDate">LOCAL</small>
+      </div>
+      
+      <!-- Profile -->
+      <div class="profile" id="userProfile">
+        <div class="profile-name" id="userName">--</div>
+        <div class="profile-meta" id="userMeta">--</div>
+        <div class="profile-email" id="userEmail">--</div>
+        <img id="badge_photo_url" class="profile-avatar" alt="Staff badge photo" style="display:none">
+        <div id="avatarFallback" class="profile-avatar">--</div>
+      </div>
+    </div>
+
+  </div>
+</header>
+
+<!-- MOBILE DRAWER -->
+<div id="mobileDrawer" class="mobile-drawer">
+  <div class="mobile-head">
+    <strong>RIAINTRA</strong>
+    <button id="drawerClose" class="close" type="button" aria-label="Close menu">×</button>
+  </div>
+  <nav id="mobileNav" class="mobile-nav"></nav>
+</div>
+<div id="drawerOverlay" class="overlay"></div>
+
+<script src="riaintra-header.js"></script>
+</body>
+</html>

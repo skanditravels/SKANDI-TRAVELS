@@ -1,0 +1,32 @@
+✔ compiles Home and multiple pages with three distinct chrome families and chrome-free routes (342.586563ms)
+✔ scoping preserves body/html state, functional selectors, child combinators and keyframes (2.330112ms)
+✔ legacy complete documents preserve styles, scripts, templates, SVG, datasets and handlers without double execution (101.612842ms)
+✔ overlapping legacy sidecars, invalid JavaScript, missing assets and duplicate IDs fail with page/file evidence (96.937451ms)
+✔ blank slots stay pending; partial source names exact missing files; stale artifacts are retained but withdrawn (53.033726ms)
+✔ route aliases and query views share a build; nested and explicit template routes keep their identity (70.075152ms)
+✔ conflicting routes, unverified controllers and multi-component mappings cannot produce runnable output (42.324594ms)
+✔ local assets are verified and embedded; external asset URLs are preserved (28.453627ms)
+✔ missing internal chrome blocks only that family; completed public pages still build (34.003852ms)
+✔ identical consecutive builds are byte-for-byte idempotent regardless of GITHUB_SHA (82.24804ms)
+✔ repository outputs preserve IDs and contracts; failed sources are unadvertised; legacy Home receiver is unchanged (1767.154253ms)
+✔ workflow supports every dist file, PR validation, deterministic dependencies and no Pages deployment (1.100168ms)
+Committed and pushed 2 generated files.
+No generated changes; no commit created.
+✔ publisher stages multiple generated pages, commits once and rejects concurrent main changes (200.18049ms)
+✔ every HTML_REF payload is mapped and reconstructs exactly from its split files (877.011407ms)
+✔ splitting preserves execution positions, modules, external libraries, data scripts and inert templates (1.622465ms)
+✔ extractor excludes Markdown accidentally placed before the document inside an HTML fence (0.619033ms)
+✔ compiler reads explicit local sidecars once and preserves additional CSS/script order (9.28847ms)
+✔ receiver ignores spoofed windows, origins, unrelated messages and unmatched handshake nonces (119.592703ms)
+✔ receiver resolves the parent canonical page, verifies integrity and replaces the original document (27.508126ms)
+✔ unknown pages never default to Home, failed integrity never executes, startup retries are bounded (60.942432ms)
+✔ internal build requires parent staff authorization before requesting HTML (42.825739ms)
+✔ master derives page identity from canonical route and owning component, and rejects anonymous staff access (37.864773ms)
+ℹ tests 22
+ℹ suites 0
+ℹ pass 22
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3515.883177

@@ -1,1 +1,270 @@
-<!-- SKANDI_PENDING_SOURCE: replace with complete page markup. -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<title>SKANDI Store Control Center</title>
+<link rel="stylesheet" href="skandi-store-control.css">
+</head>
+<body>
+
+<div class="skandi-hm-ops app-shell app">
+  <aside class="ops-rail uniform-sidebar side-rail" aria-label="SKANDI Store backend navigation">
+    <div class="ops-brand">
+      <div class="ops-brand__label">SKANDI GROUP</div>
+      <div class="ops-brand__mark">THE STORE</div>
+      <div class="ops-brand__tag"><b>Control Center</b></div>
+    </div>
+
+    <div class="ops-rail-search">
+      <input id="query" class="input search" type="search" placeholder="Search SKU, product, order, customer…" />
+    </div>
+
+    <nav id="sideNav" class="ops-menu nav-group">
+      <div class="ops-menu__section">Operations</div>
+      <button class="nav-btn nav-button active" data-panel="dashboard" type="button"><span class="nav-icon">D</span><span>Dashboard</span></button>
+      <button class="nav-btn nav-button" data-panel="orders" type="button"><span class="nav-icon">O</span><span>Order Queue</span><span class="nav-count">ECOM</span></button>
+      <button class="nav-btn nav-button" data-panel="products" type="button"><span class="nav-icon">P</span><span>Product Catalog</span><span class="nav-count">SKU</span></button>
+      <button class="nav-btn nav-button" data-panel="inventory" type="button"><span class="nav-icon">I</span><span>Inventory</span><span class="nav-count">VAR</span></button>
+
+      <div class="ops-menu__section">Configuration</div>
+      <button class="nav-btn nav-button" data-panel="collections" type="button"><span class="nav-icon">C</span><span>Collections</span><span class="nav-count">SET</span></button>
+      <button class="nav-btn nav-button" data-panel="discounts" type="button"><span class="nav-icon">%</span><span>Promotions</span><span class="nav-count">RULE</span></button>
+
+      <div class="ops-menu__section">Trace</div>
+      <button class="nav-btn nav-button" data-panel="audit" type="button"><span class="nav-icon">L</span><span>Session Activity</span><span class="nav-count">LOG</span></button>
+    </nav>
+
+    <div class="ops-rail-footer">
+      <strong><span class="mini-led"></span>Operating with no issues</strong>
+      Operator: <span class="mono">STOREFRONT</span><br>
+      Access: <span class="mono">RETAIL</span><br>
+      Sync: <span class="mono">LIVE</span>
+    </div>
+  </aside>
+
+  <main class="ops-main main-shell uniform-workspace">
+    <div class="uniform-status-bar">
+      <div class="toast" id="status">Loading Store Control...</div>
+    </div>
+
+    <section class="ops-workspace workspace uniform-content" id="workspace">
+      <section class="panel active" id="panel-dashboard">
+        <div class="panel-header">
+          <div class="panel-heading">
+            <div class="panel-kicker">Control overview</div>
+            <h3 data-subtitle="Live Storefront totals, connection state, and admin readiness.">Store operations status</h3>
+          </div>
+          <div class="panel-tools">
+            <span class="pill ok">Store control</span>
+            <span class="pill info mono">LIVE ADMIN</span>
+          </div>
+        </div>
+        <div class="panel-body">
+          <div class="status-strip">
+            <div><span>System</span><b>Storefront</b></div>
+            <div><span>Owner</span><b>SKANDI</b></div>
+            <div><span>Mode</span><b>Admin</b></div>
+            <div><span>Queue</span><b>Live Sync</b></div>
+            <div><span>Style</span><b>Backend Ops</b></div>
+          </div>
+          <div class="kv-grid" id="statsGrid"></div>
+          <div class="ops-dashboard-lower">
+            <div class="ops-card">
+              <div class="panel-kicker">Store health</div>
+              <h3 data-subtitle="Operational snapshot from products, inventory, orders, and Storefront permissions.">Backend checks</h3>
+              <div class="process-list" id="healthFeed"></div>
+            </div>
+            <div class="ops-card">
+              <div class="panel-kicker">Stock attention</div>
+              <h3 data-subtitle="Products below reorder threshold returned by Storefront inventory.">Critical stock</h3>
+              <div id="lowStockFeed"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel" id="panel-orders">
+        <div class="panel-header">
+          <div class="panel-heading">
+            <div class="panel-kicker">Order management</div>
+            <h3 data-subtitle="Review the Storefront order queue and send fulfilment actions through SKANDI.">Storefront order queue</h3>
+          </div>
+          <div class="panel-tools">
+            <select class="select" id="orderFilter" style="width:190px">
+              <option value="">All statuses</option>
+              <option value="PAID">Paid</option>
+              <option value="NOT_FULFILLED">Unfulfilled</option>
+              <option value="PARTIALLY_FULFILLED">Partially fulfilled</option>
+              <option value="FULFILLED">Fulfilled</option>
+              <option value="CANCELED">Canceled</option>
+            </select>
+            <button class="btn primary red" id="refreshOrdersBtn" type="button">Refresh Orders</button>
+          </div>
+        </div>
+        <div class="panel-body">
+          <div class="status-strip">
+            <div><span>Payment</span><b>From Wix</b></div>
+            <div><span>Pick</span><b>Unfulfilled</b></div>
+            <div><span>Pack</span><b>Order note</b></div>
+            <div><span>Ship</span><b>Tracking</b></div>
+            <div><span>Activity</span><b>This session</b></div>
+          </div>
+          <div class="table" id="orderPipeline"></div>
+
+          <div class="list-with-toolbar">
+            <div class="list-titlebar"><strong>Fulfillment action</strong><span class="ops-note">Send order lifecycle updates to SKANDI Storefront.</span></div>
+            <div class="form-grid">
+              <div class="field"><label class="label" for="fulfillmentOrderId">Order ID</label><input class="input" id="fulfillmentOrderId" placeholder="Storefront order ID"/></div>
+              <div class="field"><label class="label" for="fulfillmentStatus">Action</label><select class="select" id="fulfillmentStatus"><option value="READY">Add ready-to-ship note</option><option value="FULFILLED">Mark fulfilled</option><option value="CANCELED">Cancel order</option><option value="ARCHIVED">Archive order</option></select></div>
+              <div class="field"><label class="label" for="carrier">Carrier</label><input class="input" id="carrier" placeholder="DHL / PostNord / Bring"/></div>
+              <div class="field"><label class="label" for="trackingNumber">Tracking Number</label><input class="input" id="trackingNumber" placeholder="Tracking number"/></div>
+              <div class="field full"><label class="label" for="orderNote">Internal Note</label><textarea class="textarea" id="orderNote" placeholder="Note saved with the ready-to-ship action"></textarea></div>
+            </div>
+            <div class="row form-actions"><button class="btn primary red" id="sendFulfillmentBtn" type="button">Send Fulfillment Update</button><button class="btn" id="clearFulfillmentBtn" type="button">Clear</button></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel" id="panel-products">
+        <div class="panel-header">
+          <div class="panel-heading">
+            <div class="panel-kicker">Product data</div>
+            <h3 data-subtitle="Create, update, hide, and publish Storefront products through SKANDI.">Product catalog</h3>
+          </div>
+          <div class="panel-tools">
+            <span class="pill info" id="productModeBadge">New product</span>
+          </div>
+        </div>
+        <div class="panel-body">
+          <div class="form-grid">
+            <div class="field wide"><label class="label" for="productName">Product Name</label><input class="input" id="productName" placeholder="Cabin crew blazer"/></div>
+            <div class="field"><label class="label" for="productSku">SKU</label><input class="input" id="productSku" placeholder="SKD-BLZ-001"/></div>
+            <div class="field"><label class="label" for="productVariant">Variant to edit</label><select class="select" id="productVariant"></select></div><div class="field"><label class="label" for="productPrice">Price</label><input class="input" id="productPrice" type="number" step="0.01" min="0" placeholder="49.00"/></div>
+            <div class="field"><label class="label" for="productCurrency">Currency</label><input readonly class="input" id="productCurrency" value="USD" placeholder="USD"/></div>
+            <div class="field"><label class="label" for="productCollection">Collection</label><select class="select" id="productCollection"></select></div>
+            <div class="field"><label class="label" for="productVisible">Visibility</label><select class="select" id="productVisible"><option value="true">Visible</option><option value="false">Hidden</option></select></div>
+            <div class="field"><label class="label" for="productWeight">Weight</label><input class="input" id="productWeight" type="number" step="0.01" min="0" placeholder="0.4"/></div>
+            <div class="field"><label class="label" for="productTrackInventory">Track Inventory</label><select class="select" id="productTrackInventory"><option value="true">Track stock</option><option value="false">Do not track</option></select></div>
+            <div class="field full"><label class="label" for="productDescription">Description</label><textarea class="textarea" id="productDescription" placeholder="Product description visible in Storefront"></textarea></div>
+            <div class="field full">
+              <label class="label">Product media</label>
+              <div class="upload-box">
+                <div class="upload-existing">Product media is managed in the canonical Supabase Media Control. Store Control never creates duplicate Data URL media.</div>
+                <div class="row" style="justify-content:flex-start;margin-top:8px">
+                  <button class="btn primary" id="openMediaControlBtn" type="button">Open Media Control</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="row form-actions">
+            <button class="btn primary red" id="saveProductBtn" type="button">Save Product</button>
+            <button class="btn" id="clearProductBtn" type="button">Clear Product</button>
+            <div class="field"><label>Bulk product IDs</label><textarea class="input" id="bulkProductIds"></textarea><select id="bulkPriceOperation" class="select"><option value="PERCENT">Percent change</option><option value="SET">Set price</option><option value="ADD">Add amount</option><option value="SUBTRACT">Subtract amount</option></select><input id="bulkPriceValue" class="input" type="number" step="0.01"><button id="bulkPriceBtn" class="btn" type="button">Update selected prices</button></div><button class="btn bad" id="deleteProductBtn" type="button">Hide Product</button>
+          </div>
+          <div class="list-with-toolbar">
+            <div class="list-titlebar"><strong>Product records</strong><span class="ops-note">Live products returned by SKANDI Storefront.</span></div>
+            <div class="table" id="productsTable"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel" id="panel-inventory">
+        <div class="panel-header">
+          <div class="panel-heading">
+            <div class="panel-kicker">Inventory control</div>
+            <h3 data-subtitle="Update storefront inventory per product or variant.">Inventory board</h3>
+          </div>
+          <div class="panel-tools">
+            <span class="pill warn">Elevated backend required</span>
+            <button class="btn primary red" id="refreshInventoryBtn" type="button">Refresh Inventory</button>
+          </div>
+        </div>
+        <div class="panel-body">
+          <div class="form-grid">
+            <div class="field wide"><label class="label" for="inventoryRecord">Stock record / location</label><select class="select" id="inventoryRecord"></select></div><div class="field"><label class="label" for="inventoryProductId">Product ID</label><input class="input" readonly id="inventoryProductId" placeholder="Product ID"/></div>
+            <div class="field"><label class="label" for="inventoryVariantId">Variant ID</label><input class="input" readonly id="inventoryVariantId" placeholder="Variant ID, optional"/></div>
+            <div class="field"><label class="label" for="inventorySku">SKU</label><input class="input" id="inventorySku" placeholder="SKU reference"/></div>
+            <div class="field"><label class="label" for="inventoryMode">Mode</label><select class="select" id="inventoryMode"><option value="SET">Set exact quantity</option><option value="INCREMENT">Increment quantity</option><option value="DECREMENT">Decrement quantity</option></select></div>
+            <div class="field"><label class="label" for="inventoryQuantity">Quantity</label><input class="input" id="inventoryQuantity" type="number" step="1" placeholder="10"/></div>
+            <div class="field"><label class="label" for="inventoryTracked">Tracking</label><select class="select" id="inventoryTracked"><option value="true">Tracked</option><option value="false">Not tracked</option></select></div>
+            <div class="field full"><label class="label" for="inventoryReason">Reason (session note)</label><textarea class="textarea" id="inventoryReason" placeholder="Stock count, return, damaged item, supplier delivery..."></textarea></div>
+          </div>
+          <div class="row form-actions"><button class="btn primary red" id="updateInventoryBtn" type="button">Update Inventory</button><button class="btn" id="clearInventoryBtn" type="button">Clear</button></div>
+          <div class="list-with-toolbar">
+            <div class="list-titlebar"><strong>Inventory records</strong><span class="ops-note">Current stock levels, low-stock flags, and variant tracking.</span></div>
+            <div class="table" id="inventoryTable"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel" id="panel-collections">
+        <div class="panel-header">
+          <div class="panel-heading">
+            <div class="panel-kicker">Store setup</div>
+            <h3 data-subtitle="Create/update collections and assign Storefront products to collection groups.">Collection manager</h3>
+          </div>
+        </div>
+        <div class="panel-body">
+          <div class="form-grid">
+            <div class="field wide"><label class="label" for="collectionId">Assign products to collection</label><select class="select" id="collectionId"></select></div><div class="field wide"><label class="label" for="collectionTitle">Collection Name</label><input class="input" id="collectionTitle" placeholder="Storefront Essentials"/></div>
+            <div class="field"><label class="label" for="collectionSlug">Slug</label><input class="input" id="collectionSlug" placeholder="uniform-essentials"/></div>
+            <div class="field full"><label class="label" for="collectionDescription">Description</label><textarea class="textarea" id="collectionDescription" placeholder="Collection description"></textarea></div>
+            <div class="field full"><label class="label" for="collectionProductIds">Product IDs</label><textarea class="textarea" id="collectionProductIds" placeholder="One product ID per line, or comma separated"></textarea></div>
+          </div>
+          <div class="row form-actions">
+            <button class="btn primary red" id="saveCollectionBtn" type="button">Create Collection</button>
+            <button class="btn" id="assignCollectionBtn" type="button">Assign Products</button>
+            <button class="btn" id="clearCollectionBtn" type="button">Clear</button>
+          </div>
+          <div class="list-with-toolbar">
+            <div class="list-titlebar"><strong>Collection records</strong><span class="ops-note">Returned by SKANDI Storefront.</span></div>
+            <div class="table" id="collectionsList"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel" id="panel-discounts">
+        <div class="panel-header">
+          <div class="panel-heading">
+            <div class="panel-kicker">Promotion rules</div>
+            <h3 data-subtitle="Draft store promotions/coupons for SKANDI Storefront.">Promotions</h3>
+          </div>
+          <div class="panel-tools"><span class="pill warn">Draft workflow</span></div>
+        </div>
+        <div class="panel-body">
+          <div class="form-grid">
+            <div class="field wide"><label class="label" for="promoName">Promotion Name</label><input class="input" id="promoName" placeholder="Crew launch discount"/></div>
+            <div class="field"><label class="label" for="promoCode">Code</label><input class="input" id="promoCode" placeholder="CREW10"/></div>
+            <div class="field"><label class="label" for="promoType">Type</label><select class="select" id="promoType"><option value="PERCENT">Percent</option><option value="AMOUNT">Amount</option><option value="FREE_SHIPPING">Free shipping</option></select></div>
+            <div class="field"><label class="label" for="promoValue">Value</label><input class="input" id="promoValue" type="number" step="0.01" placeholder="10"/></div>
+            <div class="field"><label class="label" for="promoStarts">Starts</label><input class="input" id="promoStarts" type="date"/></div>
+            <div class="field"><label class="label" for="promoEnds">Ends</label><input class="input" id="promoEnds" type="date"/></div>
+            <div class="field full"><label class="label" for="promoScope">Scope</label><textarea class="textarea" id="promoScope" placeholder="Collections, product IDs, staff segment, limits..."></textarea></div>
+          </div>
+          <div class="row form-actions"><button class="btn primary red" id="savePromoBtn" type="button">Save Promotion Draft</button><button class="btn" id="clearPromoBtn" type="button">Clear</button></div>
+          <div class="list-with-toolbar">
+            <div class="list-titlebar"><strong>Promotion records</strong><span class="ops-note">Local drafts plus SKANDI Storefront responses.</span></div>
+            <div class="table" id="promotionsList"></div>
+          </div>
+        </div>
+      </section>
+      <section class="panel" id="panel-audit">
+        <div class="panel-header">
+          <div class="panel-heading">
+            <div class="panel-kicker">Trace events</div>
+            <h3 data-subtitle="Local actions plus audit events returned by SKANDI Storefront.">Audit log</h3>
+          </div>
+          <div class="panel-tools"><button class="btn primary red" id="clearAuditBtn" type="button">Clear Local Audit</button></div>
+        </div>
+        <div class="panel-body">
+          <div class="table" id="auditTable"></div>
+        </div>
+      </section>
+    </section>
+  </main>
+</div>
+
+<script src="skandi-store-control.js"></script>
+</body>
+</html>

@@ -1,1 +1,99 @@
-<!-- SKANDI_PENDING_SOURCE: canonical route/controller mapping required before compilation. -->
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<meta name="theme-color" content="#022e64"/>
+<title>SKANDI Corporate Finance Control</title>
+<link rel="stylesheet" href="gboi3.css">
+</head>
+<body>
+<div class="use-global-chrome">
+  <div id="skInternalChrome" class="sk-chrome" data-page-name="CORPORATE FINANCE">
+    <nav class="sk-menu-bar" aria-label="Internal classic menu">
+      <div class="sk-menu"><button class="sk-menu-button" type="button">FILE</button><div class="sk-menu-dropdown">
+        <button class="sk-menu-item" type="button" data-action="print"><span>Print</span><span class="sk-menu-shortcut">⌘P</span></button>
+        <div class="sk-menu-sep"></div><button class="sk-menu-item" type="button" data-action="logout"><span>Logout</span><span class="sk-menu-shortcut">HOME</span></button>
+      </div></div>
+      <div class="sk-menu"><button class="sk-menu-button" type="button">FINANCE</button><div class="sk-menu-dropdown">
+        <button class="sk-menu-item" data-view="home">Finance Home</button><button class="sk-menu-item" data-view="pnl">Corporate P&L</button><button class="sk-menu-item" data-view="journal">Universal Journal</button><button class="sk-menu-item" data-view="costcenters">Cost Centers</button>
+      </div></div>
+      <div class="sk-menu"><button class="sk-menu-button" type="button">OPERATIONS</button><div class="sk-menu-dropdown">
+        <button class="sk-menu-item" data-view="expenses">Expense Reports</button><button class="sk-menu-item" data-view="purchases">Purchase Tracker</button><button class="sk-menu-item" data-view="invoices">Invoice Studio</button><button class="sk-menu-item" data-view="payments">Bank / Payments</button>
+      </div></div>
+      <div class="sk-menu"><button class="sk-menu-button" type="button">CONTROL</button><div class="sk-menu-dropdown">
+        <button class="sk-menu-item" data-view="payrollsettings">Payroll Finance Settings</button><button class="sk-menu-item" data-view="taxcurrency">Tax / Currency</button><button class="sk-menu-item" data-view="approvals">Approvals</button><button class="sk-menu-item" data-view="audit">Audit</button>
+      </div></div>
+      <div class="sk-menu sk-help-menu"><button class="sk-menu-button" type="button">HELP</button><div class="sk-menu-dropdown" style="left:auto;right:0">
+        <div class="sk-search-wrap"><input id="skChromeSearchInput" class="sk-search-input" placeholder="Search finance…" /><div id="skChromeSearchResults" class="sk-search-results"></div></div>
+      </div></div>
+    </nav>
+  </div>
+</div>
+
+<div class="app">
+  <aside class="sidebar" id="sidebar" aria-label="Corporate Finance navigation">
+    <input id="sideSearch" class="side-search" placeholder="Search finance module"/>
+    <div class="nav-title">Corporate Control</div>
+    <button class="nav-btn active" data-view="home"><span class="nav-icon">▣</span><span class="nav-label">Finance Home</span></button>
+    <button class="nav-btn" data-view="pnl"><span class="nav-icon">▤</span><span class="nav-label">Corporate P&L</span></button>
+    <button class="nav-btn" data-view="journal"><span class="nav-icon">▦</span><span class="nav-label">Universal Journal</span></button>
+    <div class="nav-title">Finance Operations</div>
+    <button class="nav-btn" data-view="expenses"><span class="nav-icon">▣</span><span class="nav-label">Expense Reports</span></button>
+    <button class="nav-btn" data-view="purchases"><span class="nav-icon">▣</span><span class="nav-label">Purchase Tracker</span></button>
+    <button class="nav-btn" data-view="invoices"><span class="nav-icon">▣</span><span class="nav-label">Invoice Studio</span></button>
+    <button class="nav-btn" data-view="payments"><span class="nav-icon">▣</span><span class="nav-label">Bank / Payments</span></button>
+    <div class="nav-title">Corporate Settings</div>
+    <button class="nav-btn" data-view="costcenters"><span class="nav-icon">▣</span><span class="nav-label">Cost Centers</span></button>
+    <button class="nav-btn" data-view="payrollsettings"><span class="nav-icon">▣</span><span class="nav-label">Payroll Finance Settings</span></button>
+    <button class="nav-btn" data-view="taxcurrency"><span class="nav-icon">▣</span><span class="nav-label">Tax / Currency / Benefits</span></button>
+    <button class="nav-btn" data-view="approvals"><span class="nav-icon">▣</span><span class="nav-label">Approvals / Policies</span></button>
+    <div class="nav-title">Oversight</div>
+    <button class="nav-btn" data-view="integrations"><span class="nav-icon">▣</span><span class="nav-label">Data Intake</span></button>
+    <button class="nav-btn" data-view="audit"><span class="nav-icon">▣</span><span class="nav-label">Audit</span></button>
+  </aside>
+
+  <main class="workspace">
+    <div class="topline">
+      <button class="btn mobile-menu-btn" id="mobileMenuBtn" type="button" aria-controls="sidebar" aria-expanded="false">☰ Menu</button>
+      <div class="brand">
+  <img src="https://static.wixstatic.com/media/394052_cd31153a91694b14a27c5f756f8089bd~mv2.png" alt="SKANDI" style="height: 20px;">
+  Corporate Finance Control
+</div>
+      <div class="sub" id="pageContext">Corporate finance settings, P&L, invoices, expenses, payroll financial rules</div>
+      <div class="actions">
+        <button class="btn" data-action="print">Print</button>
+        <button class="btn primary" data-action="refresh">Refresh Data</button>
+      </div>
+    </div>
+    <div class="toolbar">
+      <span class="badge">Journal <b id="journalCount">0</b></span>
+      <span class="badge">Open approvals <b id="approvalCount">0</b></span>
+      <select id="companyFilter" class="input"><option value="all">All companies</option></select>
+      <select id="periodFilter" class="input"><option value="all">All periods</option></select>
+      <input id="globalSearch" class="input search" placeholder="Search invoices, expenses, purchase orders, suppliers, cost centers, receipts…" />
+      <button class="btn ok" data-action="save-current">Save Current</button>
+    </div>
+    <div class="status-line" id="statusBox"></div>
+    <div class="content">
+      <section class="view active" id="view-home"></section>
+      <section class="view" id="view-pnl"></section>
+      <section class="view" id="view-journal"></section>
+      <section class="view" id="view-expenses"></section>
+      <section class="view" id="view-purchases"></section>
+      <section class="view" id="view-invoices"></section>
+      <section class="view" id="view-payments"></section>
+      <section class="view" id="view-costcenters"></section>
+      <section class="view" id="view-payrollsettings"></section>
+      <section class="view" id="view-taxcurrency"></section>
+      <section class="view" id="view-approvals"></section>
+      <section class="view" id="view-integrations"></section>
+      <section class="view" id="view-audit"></section>
+    </div>
+  </main>
+</div>
+<div class="drawer-backdrop" id="drawerBackdrop" aria-hidden="true"></div>
+<div class="toast" id="toast"></div>
+
+<script src="gboi3.js"></script>
+</body>
+</html>

@@ -1,1 +1,221 @@
-<!-- SKANDI_PENDING_SOURCE: replace with complete page markup. -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>SKANDI ALTEA Unified Reservations B-007.5</title>
+  <script src="https://js.stripe.com/v3/"></script>
+  <script src="https://assets.duffel.com/components/3.17.0/duffel-card-form.js"></script>
+  <script src="https://assets.duffel.com/components/3.17.0/createThreeDSecureSession.js"></script>
+  <link rel="stylesheet" href="skandi-altea-reservations.css">
+
+
+  <link rel="stylesheet" href="skandi-altea-reservations.part-02.css" id="b0075-amadeus-shell">
+
+<link rel="stylesheet" href="skandi-altea-reservations.part-03.css" id="v12-duffel-supplier-inspector">
+<link rel="stylesheet" href="skandi-altea-reservations.part-04.css" id="v12-duffel-fare-compare-stage3">
+</head>
+<body>
+    <!-- Altéa Terminal Loading Overlay -->
+  <div id="appLoader" class="app-loader-overlay">
+    <div class="altea-loader-box">
+      <div class="altea-spinner"></div>
+      <div class="altea-loader-content">
+        <div id="appLoaderText" class="app-loader-text">COMMUNICATING WITH HOST SYSTEM...</div>
+        <div class="altea-subtext">PROCESSING COMMAND / PLEASE WAIT</div>
+      </div>
+    </div>
+  </div>
+  <div id="app">
+    <header class="amadeus-titlebar">
+      <div class="amadeus-title-left"><span class="amadeus-a">a</span><strong>SKANDI ALTEA Reservations</strong><span class="amadeus-title-context" id="amadeusTitleContext">Selling Platform Connect</span></div>
+    </header>
+    <aside class="sidebar">
+      <div class="sidebar-toggle">
+        <button id="sidebarToggle" type="button" class="ghost" aria-label="Collapse navigation">☰</button>
+      </div>
+      <nav class="nav" aria-label="ALTEA unified workspace">
+        <div class="nav-section">Search &amp; Sell</div>
+        <button type="button" class="nav-item active" data-view="dashboard"><span class="nav-icon"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg></span><span class="nav-label">Dashboard</span></button>
+        <button type="button" class="nav-item" data-view="search"><span class="nav-icon"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.2-1.1.6L3 8l6 5-3.2 3.2-3.1-1-1.4 1.4 3.7 2.4 2.4 3.7 1.4-1.4-1-3.1 3.2-3.2 5 6l1.2-.7c.4-.2.7-.6.6-1.1z"></path></svg></span><span class="nav-label">Flight Search</span></button>
+        <button type="button" class="nav-item" data-view="hotels"><span class="nav-icon"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect><path d="M9 22v-4h6v4"></path><path d="M8 6h.01"></path><path d="M16 6h.01"></path><path d="M8 10h.01"></path><path d="M16 10h.01"></path><path d="M8 14h.01"></path><path d="M16 14h.01"></path></svg></span><span class="nav-label">Hotel Search</span></button>
+        <button type="button" class="nav-item" data-view="cars"><span class="nav-icon"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"></path><circle cx="7" cy="17" r="2"></circle><path d="M9 17h6"></path><circle cx="17" cy="17" r="2"></circle></svg></span><span class="nav-label">Car Rental</span></button>
+        <button type="button" class="nav-item" data-view="services"><span class="nav-icon"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><path d="M12 8v8"></path><path d="M8 12h8"></path></svg></span><span class="nav-label">Trip Components</span></button>
+        <button type="button" class="nav-item" data-view="packagebuilder"><span class="nav-icon"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7.5 4.27 9 5.15"></path><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"></path><path d="m3.3 7 8.7 5 8.7-5"></path><path d="M12 22V12"></path></svg></span><span class="nav-label">Package Builder</span></button>
+        <button type="button" class="nav-item" data-view="offer"><span class="nav-icon"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><line x1="10" y1="9" x2="8" y2="9"></line></svg></span><span class="nav-label">Offer Review</span></button>
+        <button type="button" class="nav-item" data-view="workspace"><span class="nav-icon"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"></path><path d="M13 5v2"></path><path d="M13 17v2"></path><path d="M13 11v2"></path></svg></span><span class="nav-label">Create Air Booking</span></button>
+        <button type="button" class="nav-item" data-view="orders"><span class="nav-icon"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg></span><span class="nav-label">Bookings &amp; Orders</span></button>
+
+
+        <div class="nav-section">Booking File</div>
+        <button type="button" class="nav-item" data-view="booking"><span class="nav-icon"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"></path></svg></span><span class="nav-label">Booking File</span></button>
+        <button type="button" class="nav-item" data-view="passengers"><span class="nav-icon">
+    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+      <circle cx="9" cy="7" r="4"></circle>
+      <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+      <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+    </svg>
+  </span>
+  <span class="nav-label">Passengers / APIS</span>
+</button>
+
+<button type="button" class="nav-item" data-view="club">
+  <span class="nav-icon">
+    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+    </svg>
+  </span>
+  <span class="nav-label">SKANDI Club</span>
+</button>
+
+<button type="button" class="nav-item" data-view="ticketing">
+  <span class="nav-icon">
+    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"></path>
+      <path d="M16 8h-8"></path>
+      <path d="M16 12h-8"></path>
+      <path d="M16 16h-8"></path>
+    </svg>
+  </span>
+  <span class="nav-label">Ticketing &amp; Documents</span>
+</button>
+
+<button type="button" class="nav-item" data-view="requirements">
+  <span class="nav-icon">
+    <!-- Inline SVG for Travel Requirements (Check Circle) -->
+    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+      <polyline points="22 4 12 14.01 9 11.01"></polyline>
+    </svg>
+  </span>
+  <span class="nav-label">Travel Requirements</span>
+</button>
+
+<button type="button" class="nav-item" data-view="actions">
+  <span class="nav-icon">
+    <!-- Inline SVG for Changes / Refunds (Refresh/Rotate CCW) -->
+    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+      <path d="M3 3v5h5"></path>
+    </svg>
+  </span>
+  <span class="nav-label">Changes / Refunds</span>
+</button>
+
+        <div class="nav-section">Departure &amp; Operations</div>
+
+<button type="button" class="nav-item" data-view="departure">
+  <span class="nav-icon">
+    <!-- Inline SVG for Departure Control (Navigation / Arrow) -->
+    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <polygon points="3 11 22 2 13 21 11 13 3 11"></polygon>
+    </svg></span>
+  <span class="nav-label">Departure Control</span>
+</button>
+
+<button type="button" class="nav-item" data-view="baggage">
+  <span class="nav-icon">
+    <!-- Inline SVG for Baggage & Boarding (Briefcase / Luggage) -->
+    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+      <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+    </svg>
+  </span>
+  <span class="nav-label">Baggage &amp; Boarding</span>
+</button>
+
+<button type="button" class="nav-item" data-view="manifests">
+  <span class="nav-icon">
+    <!-- Inline SVG for Operations & Manifests (List / Tasks) -->
+    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="8" y1="6" x2="21" y2="6"></line>
+      <line x1="8" y1="12" x2="21" y2="12"></line>
+      <line x1="8" y1="18" x2="21" y2="18"></line>
+      <line x1="3" y1="6" x2="3.01" y2="6"></line>
+      <line x1="3" y1="12" x2="3.01" y2="12"></line>
+      <line x1="3" y1="18" x2="3.01" y2="18"></line>
+    </svg>
+  </span>
+  <span class="nav-label">Operations &amp; Manifests</span>
+</button>
+
+<button type="button" class="nav-item" data-view="history">
+  <span class="nav-icon">
+    <!-- Inline SVG for History & Audit (Clock) -->
+    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10"></circle>
+      <polyline points="12 6 12 12 16 14"></polyline>
+    </svg>
+  </span>
+  <span class="nav-label">History &amp; Audit</span>
+</button>
+
+<button type="button" class="nav-item" data-view="reports">
+  <span class="nav-icon">
+    <!-- Inline SVG for Sales Reports (Pie Chart) -->
+    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path>
+      <path d="M22 12A10 10 0 0 0 12 2v10z"></path>
+    </svg>
+  </span>
+  <span class="nav-label">Sales Reports</span>
+</button>
+
+<button type="button" class="nav-item" data-view="preferences">
+  <span class="nav-icon">
+    <!-- Inline SVG for Preferences (Gear / Settings) -->
+    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="3"></circle>
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+    </svg>
+  </span>
+  <span class="nav-label">Preferences</span>
+</button>
+      </nav>
+    </aside>
+
+
+    <div class="workspace-tabs">
+      <div class="ws-tab"><span><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg></span><span id="workspaceTabTitle">Agent Dashboard</span></div>
+    </div>
+
+
+    <main id="main" class="main" aria-live="polite"></main>
+  </div>
+  <div id="busyBar" class="busy-bar hidden" aria-hidden="true"></div>
+  <div id="modalRoot" class="modal-root"></div>
+  <div id="toastStack" class="toast-stack" aria-live="polite"></div>
+
+
+  <script src="skandi-altea-reservations.js"></script>
+<script src="skandi-altea-reservations.part-02.js"></script>
+
+
+<script src="skandi-altea-reservations.part-03.js"></script>
+
+
+
+
+
+
+<link rel="stylesheet" href="skandi-altea-reservations.part-05.css" id="b0073-altea-automation-style">
+<script id="b0073-altea-automation-script" src="skandi-altea-reservations.part-04.js"></script>
+
+
+
+
+<link rel="stylesheet" href="skandi-altea-reservations.part-06.css" id="b0074-enterprise-workbenches">
+<script id="b0074-enterprise-workbenches-script" src="skandi-altea-reservations.part-05.js"></script>
+
+<link rel="stylesheet" href="skandi-altea-reservations.part-07.css" id="v12-reservations-pnr-product-repair">
+
+<script id="v12-reservations-pnr-product-repair-script" src="skandi-altea-reservations.part-06.js"></script>
+
+
+<link rel="stylesheet" href="skandi-altea-reservations.part-08.css" id="v12-duffel-order-audit-style">
+<script id="v12-duffel-order-audit" src="skandi-altea-reservations.part-07.js"></script>
+
+</body>
+</html>

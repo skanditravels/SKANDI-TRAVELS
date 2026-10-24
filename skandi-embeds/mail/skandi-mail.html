@@ -1,1 +1,73 @@
-<!-- SKANDI_PENDING_SOURCE: replace with complete page markup. -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover" />
+<meta name="color-scheme" content="light dark" />
+<title>Mail | RIAINTRA</title>
+<link rel="stylesheet" href="skandi-mail.css">
+</head>
+<body>
+
+<div class="app">
+  <header class="suite">
+    <button class="launcher" type="button" aria-label="Mail"><span class="waffle"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span></button>
+    <div class="brand">MAIL</div>
+    <div class="search-wrap"><span>⌕</span><input id="globalSearch" class="global-search" type="search" placeholder="Search mail" autocomplete="off"></div>
+    <div></div>
+    <div class="suite-actions">
+      <button id="settingsBtn" class="suite-btn" type="button" title="Mail settings">⚙</button>
+      <button id="profileBtn" class="suite-avatar" type="button" title="Staff profile">—</button>
+    </div>
+  </header>
+  <main class="workspace">
+    <aside class="rail"><button class="rail-btn active" type="button" title="Mail">✉</button><button id="directoryRail" class="rail-btn" type="button" title="People">◎</button></aside>
+    <aside class="folder-pane">
+      <div class="folder-actions"><button id="newMessageBtn" class="new-btn" type="button">✎ &nbsp;New message</button></div>
+      <div class="folder-scroll">
+        <section class="folder-section"><button class="folder-title" type="button">Favorites</button>
+          <button class="folder-link active" data-folder="Inbox"><span>▣</span><span>Inbox</span><span class="folder-count" data-count-for="Inbox"></span></button>
+          <button class="folder-link" data-folder="Unread"><span>●</span><span>Unread</span><span class="folder-count" data-count-for="Unread"></span></button>
+          <button class="folder-link" data-filter="flagged"><span>⚑</span><span>Flagged</span><span class="folder-count" data-count-for="Flagged"></span></button>
+        </section>
+        <section class="folder-section"><button class="folder-title" type="button">Folders</button>
+          <button class="folder-link" data-folder="Inbox"><span>✉</span><span>Inbox</span><span class="folder-count" data-count-for="Inbox"></span></button>
+          <button class="folder-link" data-folder="Sent"><span>➤</span><span>Sent Items</span><span class="folder-count" data-count-for="Sent"></span></button>
+          <button class="folder-link" data-folder="Drafts"><span>✎</span><span>Drafts</span><span class="folder-count" data-count-for="Drafts"></span></button>
+          <button class="folder-link" data-folder="Deleted"><span>⌫</span><span>Deleted Items</span><span class="folder-count" data-count-for="Deleted"></span></button>
+          <button class="folder-link" data-folder="Archive"><span>▥</span><span>Archive</span><span class="folder-count" data-count-for="Archive"></span></button>
+        </section>
+      </div>
+    </aside>
+    <section class="message-pane">
+      <div class="command"><h1 id="folderHeading">Inbox</h1><div class="tools"><span id="connectionStatus" class="connection">Mail: connecting</span><button id="refreshBtn" class="tool" type="button" title="Refresh">↻</button><button id="directoryBtn" class="tool" type="button" title="People">◎</button></div></div>
+      <div class="tabs"><button class="tab active" data-list-filter="all">All</button><button class="tab" data-list-filter="unread">Unread</button><button class="tab" data-list-filter="flagged">Flagged</button></div>
+      <div class="list-wrap"><div id="searchStatus" class="status">Connecting to mail services…</div><div id="messageList" class="message-list"></div></div>
+    </section>
+    <section class="reading">
+      <div class="reading-toolbar"><div class="reading-actions"><button class="action primary" data-compose="reply">↩ Reply</button><button class="action" data-compose="replyAll">↶ Reply all</button><button class="action" data-compose="forward">↪ Forward</button></div><div class="reading-actions"><button class="tool" data-state="archive" title="Archive">▥</button><button class="tool" data-state="deleteForMe" title="Delete">⌫</button><button class="tool" data-state="flag" title="Flag">⚑</button><button class="tool" data-state="markUnread" title="Mark unread">○</button></div></div>
+      <article id="readingContent" class="reading-content"></article>
+    </section>
+  </main>
+</div>
+<div id="composeBackdrop" class="compose-backdrop">
+  <form id="composeForm" class="compose">
+    <div class="compose-title"><span id="composeTitle">New message</span><button id="composeClose" class="close" type="button">×</button></div>
+    <div class="compose-fields">
+      <div class="compose-field"><label>To</label><input id="composeTo" autocomplete="off" placeholder="firstname.lastname@skanditravels.com or SK-ID" required></div>
+      <div class="compose-field"><label>Cc</label><input id="composeCc" autocomplete="off" placeholder="Optional"></div>
+      <div class="compose-field"><label>Bcc</label><input id="composeBcc" autocomplete="off" placeholder="Optional"></div>
+      <div class="compose-field"><label>Subject</label><input id="composeSubject" autocomplete="off" required></div>
+      <div class="compose-field"><label>Priority</label><select id="composePriority"><option>Normal</option><option>High</option><option>Urgent</option><option>Low</option></select></div>
+    </div>
+    <div class="editor"><textarea id="composeBody" class="body" required placeholder="Write your message…"></textarea><div id="composeSignature" class="signature"></div><div id="composeQuote" class="quote" hidden></div><div class="upload"><input id="composeFiles" type="file" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.webp,.txt"><div id="attachList" class="attach-list"></div></div></div>
+    <div class="compose-footer"><span id="composeMessage">Internal company mail only.</span><span><button id="saveDraftBtn" class="action" type="button">Save draft</button> <button class="send" type="submit">Send</button></span></div>
+  </form>
+</div>
+<div id="directoryPanel" class="directory"><div class="directory-head"><span>Company directory</span><button id="directoryClose" type="button">×</button></div><div id="directoryBody" class="directory-body"></div></div>
+<div id="settingsOverlay" class="settings-overlay"></div><aside id="settingsPanel" class="settings"><div class="settings-head"><h2>Mail settings</h2><button id="settingsClose" type="button">×</button></div><div class="settings-content"><section class="setting-section"><h3>Appearance</h3><p>These display preferences are stored only in this browser.</p><div class="setting-row"><label>Theme</label><select id="themeSetting"><option value="light">Light</option><option value="dark">Dark</option><option value="system">Use system</option></select></div><div class="setting-row"><label>Density</label><select id="densitySetting"><option value="comfortable">Comfortable</option><option value="compact">Compact</option></select></div></section><section class="setting-section"><h3>Email signature</h3><p>The signature is generated from your authenticated SKANDI staff profile.</p><div class="setting-row"><label>Automatic signature</label><select id="signatureSetting"><option value="on">On</option><option value="off">Off</option></select></div><div class="setting-row"><label>Signature on replies</label><select id="replySignatureSetting"><option value="on">On</option><option value="off">Off</option></select></div></section></div><div class="settings-footer"><button id="settingsCancel" class="action" type="button">Cancel</button><button id="settingsSave" class="action primary" type="button">Save</button></div></aside>
+<div id="toast" class="toast"></div>
+
+<script src="skandi-mail.js"></script>
+</body>
+</html>

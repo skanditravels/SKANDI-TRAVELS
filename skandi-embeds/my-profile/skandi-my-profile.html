@@ -1,1 +1,104 @@
-<!-- SKANDI_PENDING_SOURCE: replace with complete page markup. -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#03111f">
+<title>SKANDI My Profile · B-011.31</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://js.stripe.com/v3/"></script>
+<link rel="stylesheet" href="skandi-my-profile.css">
+</head>
+<body>
+<div class="shell">
+<section class="hero account-masthead">
+  <div class="wrap">
+    <div class="account-summary">
+      <div class="account-greeting">
+        <div class="eyebrow">SKANDI Club · My Profile</div>
+        <h1 id="greetingLine">Good morning, <span id="heroName">Member</span></h1>
+        <p>Your private SKANDI account for Club status, upcoming journeys and the travel details connected to your bookings.</p>
+      </div>
+      <div class="account-summary-grid" aria-label="Club account summary">
+        <div class="account-summary-item"><span class="account-summary-label">SKANDI Points available</span><strong class="account-summary-value" id="heroPoints">0</strong><span class="account-summary-sub">Available balance</span></div>
+        <div class="account-summary-item"><span class="account-summary-label">Club Status</span><strong class="account-summary-value" id="heroTier">Member</strong><span class="account-summary-sub" id="heroStatusNote">Current level</span></div>
+        <div class="account-summary-item"><span class="account-summary-label">Club Member since</span><strong class="account-summary-value" id="heroMemberSince">—</strong><span class="account-summary-sub">Enrollment date</span></div>
+      </div>
+    </div>
+    <div class="account-identity-strip"><span>SKANDI Club <strong id="heroNumber">Account</strong></span><span><strong id="heroTrips">0</strong> upcoming trips</span></div>
+  </div>
+</section>
+<section class="account-stage">
+  <div class="wrap account-layout">
+    <aside class="side-menu" id="sideMenu" aria-label="My Profile navigation">
+      <div class="side-menu-title">My Profile</div>
+      <div class="side-category open active" data-category="club">
+        <button class="side-category-head" type="button" data-category-toggle="club" aria-expanded="true">My Club</button>
+        <div class="side-options">
+          <button class="side-link active" type="button" data-section="club" data-view="overview">Overview</button>
+          <button class="side-link" type="button" data-section="club" data-view="activity">Points Activity</button>
+          <button class="side-link" type="button" data-section="club" data-view="program">Program Information</button>
+        </div>
+      </div>
+      <div class="side-category" data-category="trips">
+        <button class="side-category-head" type="button" data-category-toggle="trips" aria-expanded="false">My Trips</button>
+        <div class="side-options">
+          <button class="side-link" type="button" data-section="trips" data-view="upcoming">My Upcoming Trips</button>
+          <button class="side-link" type="button" data-section="trips" data-view="past">Past Trips</button>
+          <button class="side-link" type="button" data-section="trips" data-view="drafts">Booking Drafts</button>
+        </div>
+      </div>
+      <div class="side-category" data-category="profile">
+        <button class="side-category-head" type="button" data-category-toggle="profile" aria-expanded="false">My Profile</button>
+        <div class="side-options">
+          <button class="side-link" type="button" data-section="profile" data-view="details">Personal Information</button>
+          <button class="side-link" type="button" data-section="profile" data-view="travelers">Saved Travelers</button>
+          <button class="side-link" type="button" data-section="profile" data-view="wallet">Wallet & Payments</button>
+          <button class="side-link" type="button" data-section="profile" data-view="saved">Saved</button>
+        </div>
+      </div>
+      <div class="side-category" data-category="account">
+        <button class="side-category-head" type="button" data-category-toggle="account" aria-expanded="false">Account</button>
+        <div class="side-options">
+          <button class="side-link" type="button" data-section="account" data-view="notifications">Notifications</button>
+          <button class="side-link" type="button" data-section="account" data-view="settings">Preferences</button>
+        </div>
+      </div>
+      <div class="side-category" data-category="support"><button class="side-category-head" type="button" data-category-toggle="support" aria-expanded="false">My Support</button><div class="side-options"><button class="side-link" type="button" data-section="support" data-view="cases">Support Cases</button><button class="side-link" type="button" data-section="support" data-view="new">Start New Case</button></div></div>
+      <div class="side-menu-footer">Need help with a booking or account?<br><button type="button" data-section="support" data-view="cases">Contact SKANDI Support</button></div>
+    </aside>
+    <main class="account-workspace" id="accountWorkspace">
+      <section class="view active" data-page="club-overview"><div id="clubView"></div></section>
+      <section class="view" data-page="club-activity"><div id="clubActivityView"></div></section>
+      <section class="view" data-page="club-program"><div id="clubProgramView"></div></section>
+
+      <section class="view" data-page="trips-upcoming">
+        <div class="page-intro"><div><div class="kicker">Booking management</div><h2>My Upcoming Trips</h2></div><div><p>Each upcoming booking is its own travel workspace. Required information and documents appear with the booking that needs them, while live supplier actions are checked when you open the trip.</p></div></div>
+        <div class="trip-page-toolbar"><button class="btn small primary" id="linkBookingBtn">Link a booking</button></div>
+        <div id="tripList" class="trip-list"></div>
+      </section>
+      <section class="view" data-page="trips-past"><div class="page-intro"><div><div class="kicker">Travel history</div><h2>Past Trips</h2></div><p>Completed, cancelled and previous bookings linked to your SKANDI account.</p></div><div id="tripHistoryList" class="trip-list"></div></section>
+      <section class="view" data-page="trips-drafts"><div class="page-intro"><div><div class="kicker">Continue booking</div><h2>Booking Drafts</h2></div><p>Booking carts that have not yet been completed.</p></div><div id="tripDraftList" class="trip-list"></div></section>
+
+      <section class="view" data-page="profile-details"><div class="page-intro"><div><div class="kicker">Personal information</div><h2>My Details</h2></div><p>Contact and traveler information used by SKANDI. Sign-in identity remains controlled by your Wix member account.</p></div><div class="card pad"><div id="profileSummary"></div></div></section>
+      <section class="view" data-page="profile-travelers"><div class="section-head"><div><div class="kicker">Traveler profiles</div><h2>Saved Travelers</h2></div><div><button class="btn primary" id="addTraveler">Add traveler</button></div></div><div id="travelerGrid" class="grid grid3"></div></section>
+      <section class="view" data-page="profile-wallet"><div class="section-head"><div><div class="kicker">Wallet</div><h2>Wallet & Payments</h2></div><p>Only masked payment metadata is displayed. Full card details are never returned to My Profile.</p></div><h3 class="subhead">Payment methods</h3><div id="paymentGrid" class="grid grid3"></div><h3 class="subhead">Wallet items</h3><div id="walletGrid" class="grid grid3"></div></section>
+      <section class="view" data-page="profile-saved"><div class="section-head"><div><div class="kicker">Saved for later</div><h2>Saved</h2></div><p>Hotels, destinations and other items you saved while exploring SKANDI.</p></div><div id="favorites" class="grid grid2"></div></section>
+
+      <section class="view" data-page="support-cases"><div class="page-intro"><div><div class="kicker">SKANDI CARE</div><h2>My Support</h2></div><p>Track your requests and continue secure conversations with SKANDI Customer Service. Case records are loaded only for your verified member account.</p></div><div class="support-contacts"><a class="support-contact" href="https://wa.me/17112160382" target="_blank" rel="noopener noreferrer">WhatsApp: +1 711-216-0382</a><a class="support-contact" href="tel:+19516207875">Call: +1 951-620-7875</a><button class="support-contact" type="button" data-section="support" data-view="new">Start New Case</button></div><div class="support-layout"><div class="support-panel"><div class="support-panel-header"><strong>Your Cases</strong><button class="btn small" type="button" id="supportRefresh">Refresh</button></div><input class="support-search" id="supportSearch" aria-label="Search support cases" placeholder="Search cases or references"><div class="support-cases" id="supportCases"><div class="support-case-status">Open My Support to load your cases.</div></div></div><div class="support-panel"><div class="support-panel-header"><strong id="supportThreadTitle">Select a case</strong><button type="button" class="btn small" id="supportDuffel" hidden>Manage trip</button></div><div class="support-case-thread" id="supportMessages"><div class="support-case-status">Select a case to view your secure messages.</div></div><form id="supportReplyForm" class="support-reply" hidden><textarea id="supportReplyText" maxlength="12000" required aria-label="Reply to SKANDI Support" placeholder="Type a secure reply"></textarea><button type="submit" class="btn primary">Send reply</button></form></div></div><div id="supportStatus" class="support-case-status" aria-live="polite"></div></section>
+      <section class="view" data-page="support-new"><div class="page-intro"><div><div class="kicker">SKANDI CARE</div><h2>Start New Case</h2></div><p>Contact SKANDI Customer Service about your travel, booking, membership or account. Requests appear in your Support Cases after confirmation.</p></div><div class="support-contacts"><a class="support-contact" href="https://wa.me/17112160382" target="_blank" rel="noopener noreferrer">WhatsApp: +1 711-216-0382</a><a class="support-contact" href="tel:+19516207875">Call: +1 951-620-7875</a></div><form id="supportNewForm" class="support-new-case"><h3>How can we assist?</h3><div class="profile-form"><div><label>Name<input id="supportName" name="fullName" maxlength="200" required autocomplete="name"></label></div><div><label>Email<input id="supportEmail" name="email" type="email" maxlength="254" required autocomplete="email"></label></div><div><label>Category<select id="supportCategory" name="category" required><option value="general">General enquiry</option></select></label></div><div><label>Booking reference (when applicable)<input name="bookingRef" maxlength="80" autocomplete="off"></label></div><div class="field full" id="supportDynamicFields"></div><div class="field full"><label>Subject<input name="subject" minlength="3" maxlength="240" required></label></div><div class="field full"><label>Details<textarea name="message" minlength="5" maxlength="12000" required placeholder="Describe how SKANDI can assist"></textarea></label></div><div class="field full"><div class="button-row"><button class="btn primary" type="submit">Submit support request</button><button class="btn soft" type="button" data-section="support" data-view="cases">View Support Cases</button></div></div></div><div id="supportFormStatus" class="support-case-status" role="status" aria-live="polite"></div></form></section>
+      <section class="view" data-page="account-notifications"><div class="section-head"><div><div class="kicker">Account updates</div><h2>Notifications</h2></div></div><div class="card" id="notifications"></div></section>
+      <section class="view" data-page="account-settings"><div class="section-head"><div><div class="kicker">Account preferences</div><h2>Preferences</h2></div><p>Travel preferences SKANDI may use to streamline future booking and service flows.</p></div><div class="card pad"><form id="profileForm" class="profile-form"><div class="field"><label>First name</label><input class="control" name="firstName" autocomplete="given-name"></div><div class="field"><label>Last name</label><input class="control" name="lastName" autocomplete="family-name"></div><div class="field"><label>Contact email</label><input class="control" name="email" type="email" autocomplete="email"></div><div class="field"><label>Phone</label><input class="control" name="phone" autocomplete="tel"></div><div class="field"><label>Country of residence</label><select class="control" name="countryOfResidenceId"></select></div><div class="field"><label>Preferred language</label><select class="control" name="preferredLanguageId"></select></div><div class="field"><label>Preferred currency</label><select class="control" name="preferredCurrency"><option value="">Select</option><option>USD</option><option>SEK</option><option>NOK</option><option>DKK</option><option>EUR</option></select></div><div class="field"><label>Home / departure airport</label><select class="control" name="preferredDepartureAirportId"></select></div><div class="field"><label>Seat preference</label><select class="control" name="seatPreference"><option value="">No preference</option><option value="window">Window</option><option value="aisle">Aisle</option></select></div><div class="field"><label>Dietary preferences</label><input class="control" name="dietaryPrefs"></div><div class="field full"><label>General accessibility needs</label><textarea class="control" name="accessibilityNeeds"></textarea></div><div class="field full"><label class="checkbox"><input type="checkbox" name="marketingConsent"><span>I want to receive SKANDI travel inspiration, Club updates and relevant offers. Transactional travel messages are managed separately.</span></label></div><div class="field full"><div class="button-row"><button class="btn primary" type="submit">Save preferences</button><button class="btn soft" type="button" data-section="support" data-view="cases">Contact support</button><button class="btn danger" type="button" id="logoutBtn">Log out</button></div></div></form><div id="providerSyncNote" class="provider-note hidden"></div></div></section>
+    </main>
+  </div>
+</section>
+<div class="legacy-doc-contract hidden" aria-hidden="true"><button id="refreshBtn"></button><button id="closeBtn"></button><div id="mReady">0</div><div id="mAction">0</div><div id="mIssued">0</div><div id="mChanges">0</div><div id="documents"></div></div>
+</div>
+<div class="drawer-shade" id="drawerShade"></div><aside class="drawer" id="bookingDrawer" aria-label="Booking details"><div class="drawer-head"><strong>Trip details</strong><button class="iconbtn" id="closeDrawer" aria-label="Close">×</button></div><div class="drawer-body" id="bookingDetail"></div></aside>
+<div class="modal-shade" id="modalShade"><div class="modal"><div class="modal-head"><h3 id="modalTitle">Manage trip</h3><button class="iconbtn" id="closeModal">×</button></div><div class="modal-body" id="modalBody"></div><div class="modal-foot" id="modalFoot"></div></div></div>
+<div class="toast" id="toast"></div><div class="loading" id="loading"><div class="spinner"></div></div>
+<script src="skandi-my-profile.js"></script>
+</body>
+</html>

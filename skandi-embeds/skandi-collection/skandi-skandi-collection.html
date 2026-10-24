@@ -1,1 +1,298 @@
-<!-- SKANDI_PENDING_SOURCE: replace with complete page markup. -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
+<meta content="#022e64" name="theme-color"/>
+<title>SKANDI Collection</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="skandi-skandi-collection.css">
+</head>
+<body>
+<div class="luxury-progress" aria-hidden="true"><span id="luxuryProgressBar"></span></div>
+
+<div id="collectionLive" class="visually-hidden" aria-live="polite"></div>
+<header class="hero" id="hero">
+  <div class="hero-media" aria-hidden="true"></div>
+  <div class="hero-veil" aria-hidden="true"></div>
+  <div class="hero-grain" aria-hidden="true"></div>
+  <div class="hero-rule" aria-hidden="true"></div>
+
+  <div class="wrap hero-inner">
+    <div class="hero-copy">
+      <div class="collection-brand">
+        <img id="collectionLogo" alt="SKANDI Collection" hidden>
+        <div id="collectionLogoFallback" class="collection-wordmark">SKANDI <span>Collection</span></div>
+      </div>
+
+      <div class="hero-kicker">The places we would choose ourselves</div>
+      <h1>Stay somewhere <em>worth remembering.</em></h1>
+      <p class="hero-lede">A handpicked edit of hotels, destinations and experiences with character, atmosphere and a genuine sense of place. The Collection is where SKANDI puts forward the choices we believe are worth making.</p>
+
+      <div class="hero-actions">
+        <button class="btn aqua" type="button" id="heroExploreBtn">Enter the Collection <span class="icon-arrow">→</span></button>
+        <button class="btn secondary" type="button" id="heroSearchBtn">Plan with SKANDI</button>
+      </div>
+    </div>
+
+    <aside class="hero-aside">
+      <div class="hero-aside-label">The Collection Edit</div>
+      <h2>Not simply somewhere to stay.</h2>
+      <p>We look for the details that change how a place feels: identity, setting, design and the moments that stay with you long after the journey.</p>
+
+      <div class="hero-values">
+        <div class="hero-value"><span>01</span><strong>Places with a point of view</strong></div>
+        <div class="hero-value"><span>02</span><strong>Hotels with atmosphere and identity</strong></div>
+        <div class="hero-value"><span>03</span><strong>Journeys chosen to be remembered</strong></div>
+      </div>
+    </aside>
+  </div>
+
+  <div id="heroMetrics" class="hero-metrics">
+    <div class="hero-metric"><strong>—</strong><span>Selections</span></div>
+    <div class="hero-metric"><strong>—</strong><span>Destinations</span></div>
+    <div class="hero-metric"><strong>—</strong><span>Hotels</span></div>
+    <div class="hero-metric"><strong>—</strong><span>Experiences</span></div>
+  </div>
+
+  <div class="hero-scroll">Discover</div>
+</header>
+
+<section class="search" id="collectionSearch">
+  <div class="wrap">
+    <div class="search-card">
+      <div class="search-head">
+        <div><div class="eyebrow">Collection concierge</div><h2>Make it your journey.</h2></div>
+        <p>Start with your route and dates. We will search the live SKANDI booking service for Collection journey options.</p>
+      </div>
+      
+      <div class="search-bar">
+        <div class="search-field" id="originField">
+          <label for="originInput">From</label>
+          <input type="text" id="originInput" placeholder="City or airport code" autocomplete="off" />
+          <input type="hidden" id="originCode" />
+          <div class="sk-dropdown" id="originDropdown">
+            <div class="sk-dropdown-list" id="originList"></div>
+          </div>
+        </div>
+        <div class="search-divider"></div>
+        <div class="search-field" id="destinationField">
+          <label for="destInput">To</label>
+          <input type="text" id="destInput" placeholder="Where to?" autocomplete="off" />
+          <input type="hidden" id="destCode" />
+          <div class="sk-dropdown" id="destDropdown">
+            <div class="sk-dropdown-list" id="destList"></div>
+          </div>
+        </div>
+        <div class="search-divider"></div>
+        <div class="search-field" id="datesField">
+          <label>Depart – Return</label>
+          <div class="date-display"><span id="displayStart">Add dates</span> – <span id="displayEnd"></span></div>
+          <input type="hidden" id="departureDate" />
+          <input type="hidden" id="returnDate" />
+          
+          <div class="sk-calendar-popup" id="calendarPopup">
+            <!-- Calendar UI injected via JS -->
+          </div>
+        </div>
+        <div class="search-divider"></div>
+        <div class="search-field">
+          <label for="adults">Guests</label>
+          <select id="adults">
+            <option value="1">1 Adult</option>
+            <option selected value="2">2 Adults</option>
+            <option value="3">3 Adults</option>
+            <option value="4">4 Adults</option>
+            <option value="5">5 Adults</option>
+          </select>
+        </div>
+        <button class="btn dark search-submit" id="searchBtn" type="button">Search</button>
+      </div>
+
+      <div class="filters-bar">
+        <div class="field">
+           <label for="collectionFilter">Browse by</label>
+           <select id="collectionFilter">
+             <option value="all">All Collection items</option>
+             <option value="destinations">Destinations</option>
+             <option value="hotels">Hotels</option>
+             <option value="tours">Tours &amp; Activities</option>
+             <option value="airlines">Airlines</option>
+             <option value="airports">Airports</option>
+             <option value="partners">SKANDI Partners</option>
+           </select>
+        </div>
+      </div>
+      
+      <div class="package-status" id="searchStatus">Enter route and dates when you are ready to plan a Collection journey.</div>
+      <div class="results" id="offers"></div>
+    </div>
+  </div>
+</section>
+
+<div class="collection-marquee" aria-hidden="true">
+  <div class="marquee-track">
+    <span>SKANDI COLLECTION</span><b>◆</b><span>HANDPICKED HOTELS</span><b>◆</b><span>DISTINCTIVE DESTINATIONS</span><b>◆</b><span>CONSIDERED EXPERIENCES</span><b>◆</b><span>SIGNATURE TRAVELS, UNFORGETTABLE MOMENTS</span><b>◆</b>
+    <span>SKANDI COLLECTION</span><b>◆</b><span>HANDPICKED HOTELS</span><b>◆</b><span>DISTINCTIVE DESTINATIONS</span><b>◆</b><span>CONSIDERED EXPERIENCES</span><b>◆</b><span>SIGNATURE TRAVELS, UNFORGETTABLE MOMENTS</span><b>◆</b>
+  </div>
+</div>
+
+<main>
+  <section class="manifesto-section">
+    <div class="wrap manifesto-grid">
+      <div class="manifesto-copy reveal">
+        <div class="eyebrow gold">Why the Collection exists</div>
+        <h2>The luxury is not <strong>more choice.</strong> It is knowing what is worth choosing.</h2>
+        <p>SKANDI Collection brings together the hotels, destinations and experiences we want to put forward with confidence. It is a more considered way to discover a trip: fewer distractions, a stronger point of view and places selected because they can become part of the memory, not simply somewhere to stay.</p>
+      </div>
+      <aside class="manifesto-note reveal">
+        <strong>Some places are more than a stop on the itinerary. They become the reason you remember the journey.</strong>
+        <p>That is the idea behind the Collection: to make the search feel more inspiring, more focused and more special from the first click.</p>
+        <div class="manifesto-signature">The SKANDI point of view</div>
+      </aside>
+    </div>
+  </section>
+
+  <section class="section value-section">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <div><div class="eyebrow">A better kind of choice</div><h2>What makes a Collection journey feel different.</h2></div>
+        <p class="copy">Collection is not a separate trip type. It is SKANDI's curated layer across the travel experience, designed to help the most distinctive choices stand out.</p>
+      </div>
+      <!-- DYNAMIC VALUE CARDS CONTAINER -->
+      <div class="value-grid" id="valueGrid"></div>
+    </div>
+  </section>
+
+  <section class="collection-quote">
+    <div class="wrap quote-inner reveal">
+      <div class="quote-mark">SKANDI Collection</div>
+      <div>
+        <div class="quote-copy">Travel can be comfortable. It can be beautiful. Or it can feel <em>chosen for a reason.</em></div>
+        <p class="quote-sub">Collection is our way of highlighting the places and experiences that deserve a little more attention when you are deciding where to go next.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <div><div class="eyebrow gold">The Collection standard</div><h2>Three ways to discover something special.</h2></div>
+        <p class="copy">The Collection is organized into Select, Signature and Excelsior so you can move from beautifully considered choices to our most elevated travel experiences.</p>
+      </div>
+      <div class="philosophy-grid">
+        <article class="philosophy-card fx-card reveal"><div class="philosophy-no">01 / Select</div><div><div class="philosophy-line"></div><h3>Select</h3><p>Thoughtful places and experiences chosen for travelers who value design, setting and a journey that feels considered from the start.</p></div></article>
+        <article class="philosophy-card fx-card reveal"><div class="philosophy-no">02 / Signature</div><div><div class="philosophy-line"></div><h3>Signature</h3><p>Distinctive stays and destinations that express the SKANDI point of view most clearly, with character, atmosphere and a memorable sense of place.</p></div></article>
+        <article class="philosophy-card fx-card reveal"><div class="philosophy-no">03 / Excelsior</div><div><div class="philosophy-line"></div><h3>Excelsior</h3><p>Our most elevated Collection tier for exceptional journeys where the stay, setting and experience are intended to feel genuinely special.</p></div></article>
+      </div>
+    </div>
+  </section>
+
+  <section class="section soft" id="collectionSpotlight">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <div><div class="eyebrow">Featured from the Collection</div><h2>Places that set the tone for the trip.</h2></div>
+        <p class="copy">A live edit of Collection selections. As new customer-visible hotels, destinations and experiences are published, they can appear here automatically.</p>
+      </div>
+      <div id="spotlightGrid" class="spotlight-grid"><div class="spotlight-empty">Loading the Collection edit…</div></div>
+    </div>
+  </section>
+
+  <section class="section story-section" id="collectionStories">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <div><div class="eyebrow">The Collection Edit</div><h2>Stay a little longer in the inspiration.</h2></div>
+        <p class="copy">A wider look at published Collection selections, presented as an editorial rail so the journey starts with atmosphere rather than a list.</p>
+      </div>
+      <div id="storyRail" class="story-rail"><div class="story-empty">Loading more from the Collection…</div></div>
+      <div class="story-nav" aria-label="Collection stories">
+        <button type="button" id="storyPrev" aria-label="Previous Collection stories">←</button>
+        <button type="button" id="storyNext" aria-label="Next Collection stories">→</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="section experience-section">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <div><div class="eyebrow gold">Why choose Collection</div><h2>For trips where the details matter more.</h2></div>
+        <p class="copy">Collection works best when you want the hotel, destination or experience to contribute something to the journey, not simply fill a space in the itinerary.</p>
+      </div>
+      <div class="experience-shell">
+        <article class="experience-intro fx-card reveal">
+          <div class="eyebrow gold">A more considered escape</div>
+          <div><h3>Choose it when you want the stay to feel like part of the destination.</h3><p>Whether the trip is short or long, Collection helps bring distinctive choices forward so the experience can begin before you arrive.</p></div>
+        </article>
+        <!-- DYNAMIC EXPERIENCE CARDS CONTAINER -->
+        <div class="experience-list" id="experienceList"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section soft" id="collectionDirectory">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <div><div class="eyebrow gold">Explore the portfolio</div><h2>Find your Collection.</h2></div>
+        <p class="copy">Browse the current published Collection by tier or travel type. Every item below comes from the customer-facing Collection catalogue.</p>
+      </div>
+      <div class="filters-shell">
+        <div class="filters-line">
+          <div><div class="tabs" id="tierTabs"></div><div class="tabs" id="tabs"></div></div>
+          <div class="filter-select">
+            <label class="visually-hidden" for="collectionFilterMirror">Collection type</label>
+            <select id="collectionFilterMirror" aria-label="Collection type">
+              <option value="all">All Collection items</option><option value="destinations">Destinations</option><option value="hotels">Hotels</option><option value="tours">Tours &amp; Activities</option><option value="airlines">Airlines</option><option value="airports">Airports</option><option value="partners">SKANDI Partners</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="notice accent" id="collectionStatus">Loading the SKANDI Collection…</div>
+      <div class="cards" id="cards" style="margin-top:18px"></div>
+    </div>
+  </section>
+
+  <section class="section journey-section">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <div><div class="eyebrow">From inspiration to itinerary</div><h2>Discover first. Decide with confidence.</h2></div>
+        <p class="copy">The Collection is designed to make discovery feel editorial while keeping the path into the existing SKANDI booking journey straightforward.</p>
+      </div>
+      <div class="journey-grid">
+        <article class="journey-step reveal"><div class="journey-no">01 / Discover</div><div><h3>Start with what draws you in.</h3><p>Explore Collection hotels, destinations and experiences as a curated edit rather than a conventional search result.</p></div></article>
+        <article class="journey-step reveal"><div class="journey-no">02 / Shape</div><div><h3>Turn inspiration into a journey.</h3><p>Use your route, dates and party details to search live travel options around the Collection choice that inspired you.</p></div></article>
+        <article class="journey-step reveal"><div class="journey-no">03 / Book</div><div><h3>Continue with SKANDI.</h3><p>Availability, pricing and checkout remain in the established SKANDI booking flow, so the editorial experience connects directly with the real trip.</p></div></article>
+      </div>
+      <div class="journey-cta"><button class="btn dark" id="journeySearchBtn" type="button">Plan a Collection journey <span class="icon-arrow">→</span></button></div>
+    </div>
+  </section>
+
+  <section class="section dark">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <div><div class="eyebrow light">Selected, not simply listed</div><h2>The trip should feel as considered as the destination.</h2></div>
+        <p class="copy">The SKANDI Collection is our curated layer across the wider travel portfolio, bringing the choices we want to place front and center into one signature experience.</p>
+      </div>
+      <div class="promise-grid">
+        <article class="promise-card reveal"><div class="promise-mark">SKANDI Collection</div><h3>Curated around the experience.</h3><p>Hotels, destinations and experiences sit together so the inspiration and the journey can feel connected rather than fragmented.</p></article>
+        <article class="promise-card reveal"><div class="promise-mark">Your journey</div><h3>Discover first. Plan when it feels right.</h3><p>Explore the Collection, then use the concierge search above when you are ready to turn a place or idea into a live itinerary.</p></article>
+      </div>
+      <div class="closing-signature reveal">
+        <div class="closing-signature-inner">
+          <div>
+            <div class="eyebrow gold">Signature Travels, Unforgettable Moments.</div>
+            <h3>Choose the place you will still be thinking about after you come home.</h3>
+            <p>The SKANDI Collection is there for the trips where choosing well matters. Explore the current edit, find the place that feels right, then build the real journey around it.</p>
+          </div>
+          <button class="btn" type="button" id="finalSearchBtn">Start your Collection journey <span class="icon-arrow">→</span></button>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+<div class="toast" id="toast"></div>
+
+<script src="skandi-skandi-collection.js"></script>
+</body>
+</html>

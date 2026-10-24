@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<meta name="theme-color" content="#022e64" />
+<title>SKANDI Privacy Choices</title>
+<link rel="stylesheet" href="skandi-cookie-consent-banner.css">
+</head>
+<body>
+<div id="app" hidden>
+  <button id="privacyTrigger" class="trigger" type="button" hidden>Privacy choices</button>
+  <section id="bannerPanel" class="banner" role="dialog" aria-modal="false" aria-labelledby="title" aria-describedby="copy">
+    <div class="inner">
+      <div>
+        <div class="brand-row">
+          <img id="logo" class="logo" src="https://static.wixstatic.com/media/394052_504704bd94f44f01a95f304bd19640e5~mv2.png" alt="SKANDI Travels" />
+          <div class="eyebrow">Privacy choices</div>
+        </div>
+        <h1 id="title">Your privacy at SKANDI</h1>
+        <p id="copy">We use essential technologies to keep SKANDI secure and working. With your permission, we also use functional, analytics and marketing technologies. You can accept all optional uses, reject them, or choose exactly what you allow.</p>
+        <div id="gpc" class="gpc">Your browser is sending a Global Privacy Control signal. Third-party data sharing will remain disabled.</div>
+        <div class="legal-links">
+          <button type="button" data-path="/about/legal/policies?slug=skandi-travels-cookies-policy">Cookie Policy</button>
+          <button type="button" data-path="/about/legal/policies?slug=privacy-policy">Privacy Policy</button>
+        </div>
+        <div id="status" class="status" aria-live="polite"></div>
+      </div>
+      <div class="actions" aria-label="Cookie choices">
+        <button id="acceptAll" class="btn btn-primary" type="button">Accept all</button>
+        <button id="rejectAll" class="btn btn-primary" type="button">Reject optional</button>
+        <button id="manage" class="btn btn-manage" type="button">Manage preferences</button>
+      </div>
+    </div>
+  </section>
+</div>
+<script src="skandi-cookie-consent-banner.js"></script>
+</body>
+</html>

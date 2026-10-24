@@ -1,1 +1,67 @@
-<!-- SKANDI_PENDING_SOURCE: replace with complete page markup. -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<meta name="color-scheme" content="light"/>
+<meta name="theme-color" content="#f6faff"/>
+<title>Search | SKANDI Travels · B-011.1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="skandi-search.css">
+</head>
+<body>
+
+<header class="search-hero" data-section-id="search-hero">
+  <div class="wrap hero-inner">
+    <div class="hero-copy">
+      <div class="eyebrow" data-content-id="search-hero-eyebrow">SKANDI TRAVELS</div>
+      <h1 data-content-id="search-hero-h1">Find your way through SKANDI.</h1>
+      <p data-content-id="search-hero-copy">
+        Search the public SKANDI website for booking pages, travel information,
+        destinations, help, company information and customer services.
+      </p>
+    </div>
+
+    <div class="search-shell">
+      <form class="search-form" id="searchForm" role="search">
+        <div class="search-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24">
+            <circle cx="11" cy="11" r="6.5"></circle>
+            <path d="m16 16 4 4"></path>
+          </svg>
+        </div>
+        <label class="sr-only" for="searchInput">Search SKANDI website</label>
+        <input
+          id="searchInput"
+          type="search"
+          autocomplete="off"
+          maxlength="100"
+          placeholder="Flights, baggage, car rental, support…"
+          aria-describedby="searchHint"
+        />
+        <button class="search-submit" type="submit">Search</button>
+      </form>
+      <div class="search-hint" id="searchHint">
+        <span class="key">↵</span>
+        <span>Press Enter to search the public SKANDI website.</span>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main class="search-main" data-section-id="search-content">
+  <div class="wrap">
+    <div id="output">
+      <div class="loading-state">
+        <span class="spinner" aria-hidden="true"></span>
+        <span>Preparing the SKANDI public search index…</span>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script src="skandi-search.js"></script>
+</body>
+</html>

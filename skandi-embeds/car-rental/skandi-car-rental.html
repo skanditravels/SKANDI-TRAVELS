@@ -1,1 +1,397 @@
-<!-- SKANDI_PENDING_SOURCE: replace with complete page markup. -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#03111f">
+<title>Car Rental | SKANDI Travels · B-011.1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://assets.duffel.com/components/3.17.0/duffel-card-form.js"></script>
+<script src="https://assets.duffel.com/components/3.17.0/createThreeDSecureSession.js"></script>
+<link rel="stylesheet" href="skandi-car-rental.css">
+</head>
+<body>
+
+<section class="rental-hero" data-section-id="car-rental-hero">
+  <div class="wrap hero-inner">
+    <div class="hero-copy">
+      <div class="eyebrow" data-content-id="car-rental-hero-eyebrow">SKANDI CAR RENTAL</div>
+      <h1 data-content-id="car-rental-hero-h1">Your trip.<br><strong>Your road.</strong></h1>
+      <p data-content-id="car-rental-hero-copy">
+        Compare live rental-car availability, review the supplier's final conditions before you commit,
+        and keep the confirmed vehicle connected to the same SKANDI trip as the rest of your journey.
+      </p>
+      <div class="hero-actions">
+        <button class="btn light" type="button" data-focus-search>Find a car</button>
+        <button class="btn light" type="button" data-nav="/my-profile?tab=trips">Manage my rental</button>
+      </div>
+    </div>
+
+    <section class="reservation-desk" id="searchPanel" aria-labelledby="searchTitle" data-section-id="car-rental-search">
+      <div class="desk-head">
+        <div class="desk-label">
+          <span>Reservation desk</span>
+          <span class="live-pill">Live rates</span>
+        </div>
+        <h2 id="searchTitle" data-content-id="car-rental-search-h2">Where do you want to drive?</h2>
+        <p data-content-id="car-rental-search-copy">Search airport, city or destination locations from the live rental supply.</p>
+      </div>
+
+      <div class="desk-body">
+        <div class="search-grid">
+          <div class="field full location-field">
+            <label for="pickup">Pick-up location</label>
+            <input id="pickup" autocomplete="off" placeholder="Airport, city or destination">
+          </div>
+
+          <label class="check">
+            <input id="same" type="checkbox" checked>
+            Return the car to the same location
+          </label>
+
+          <div class="field full location-field hidden" id="dropField">
+            <label for="dropoff">Return location</label>
+            <input id="dropoff" autocomplete="off" placeholder="Airport, city or destination">
+          </div>
+
+          <div class="field">
+            <label for="pickupDate">Pick-up date</label>
+            <input id="pickupDate" type="date">
+          </div>
+          <div class="field">
+            <label for="pickupTime">Pick-up time</label>
+            <input id="pickupTime" type="time" value="10:00">
+          </div>
+          <div class="field">
+            <label for="dropoffDate">Return date</label>
+            <input id="dropoffDate" type="date">
+          </div>
+          <div class="field">
+            <label for="dropoffTime">Return time</label>
+            <input id="dropoffTime" type="time" value="10:00">
+          </div>
+          <div class="field">
+            <label for="driverAge">Driver age</label>
+            <input id="driverAge" type="number" min="18" max="99" value="30">
+          </div>
+          <div class="field">
+            <label for="residence">Country of residence</label>
+            <select id="residence">
+              <option value="US">United States</option>
+              <option value="SE">Sweden</option>
+              <option value="NO">Norway</option>
+              <option value="DK">Denmark</option>
+              <option value="FI">Finland</option>
+              <option value="GB">United Kingdom</option>
+              <option value="CA">Canada</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="desk-actions">
+          <button class="btn wide" id="searchBtn" type="button">Show live cars</button>
+          <button class="manage-link" type="button" data-nav="/my-profile?tab=trips">View booking</button>
+        </div>
+        <div id="searchStatus" class="status hidden" role="status" aria-live="polite"></div>
+      </div>
+    </section>
+  </div>
+
+  <div class="hero-road" aria-hidden="true">
+    <svg viewBox="0 0 760 240" preserveAspectRatio="none">
+      <path class="road" d="M-20 228C145 128 292 118 420 137c129 19 218 2 367-85"/>
+      <path class="road-accent" d="M-15 239C151 143 297 135 426 152c125 17 216 0 360-83"/>
+      <path class="car-line" d="M140 160h96l28-34h77l42 34h38c12 0 21 9 21 21v11h-28"/>
+      <path class="car-line" d="M140 160c-14 0-25 11-25 25v7h27"/>
+      <circle class="car-line" cx="170" cy="190" r="18"/>
+      <circle class="car-line" cx="385" cy="190" r="18"/>
+      <path class="car-line" d="M188 190h179M266 126l-8 34M342 126l17 34"/>
+    </svg>
+  </div>
+</section>
+
+<div class="wrap confidence-shell" data-section-id="car-rental-confidence">
+  <div class="confidence">
+    <div class="confidence-item">
+      <div class="confidence-icon">01</div>
+      <div><strong>Live supplier availability</strong><span>Search current vehicle rates for the location and dates you choose.</span></div>
+    </div>
+    <div class="confidence-item">
+      <div class="confidence-icon">02</div>
+      <div><strong>Conditions before booking</strong><span>The final quote is rechecked and supplier conditions are shown before confirmation.</span></div>
+    </div>
+    <div class="confidence-item">
+      <div class="confidence-icon">03</div>
+      <div><strong>One connected SKANDI trip</strong><span>Your confirmed rental remains tied to your owned SKANDI booking cart and My Trips.</span></div>
+    </div>
+  </div>
+</div>
+
+<main>
+  <div class="transaction-zone">
+    <section class="view" id="resultsView" aria-live="polite">
+      <div class="section-head">
+        <div>
+          <div class="eyebrow dark">LIVE AVAILABILITY</div>
+          <h2>Choose your car.</h2>
+          <p id="resultSummary">Current supplier rates for your search.</p>
+        </div>
+        <div class="toolbar">
+          <button class="btn secondary" type="button" data-focus-search>Edit search</button>
+          <label class="visually-hidden" for="sort">Sort car rental results</label>
+          <select id="sort">
+            <option value="recommended">Recommended</option>
+            <option value="low">Price: low to high</option>
+            <option value="high">Price: high to low</option>
+          </select>
+        </div>
+      </div>
+      <div id="offers" class="offers"></div>
+    </section>
+
+    <section class="view" id="checkoutView">
+      <div class="section-head">
+        <div>
+          <div class="eyebrow dark">FINAL QUOTE</div>
+          <h2>Review & book.</h2>
+          <p>The selected rate is revalidated before the booking is sent to the rental supplier.</p>
+        </div>
+      </div>
+
+      <div class="checkout-progress" aria-label="Car rental booking progress">
+        <span class="on">1 · Vehicle</span>
+        <span class="on">2 · Driver</span>
+        <span class="on">3 · Payment</span>
+      </div>
+
+      <div class="detail">
+        <div class="checkout-stack">
+          <section class="card">
+            <div class="card-head">
+              <span class="step-no">Step 01</span>
+              <h3>Main driver</h3>
+              <p>The driver details must match the documents presented to the rental supplier.</p>
+            </div>
+            <div class="card-body">
+              <div class="driver-grid">
+                <div class="field">
+                  <label for="firstName">First name</label>
+                  <input id="firstName" autocomplete="given-name">
+                </div>
+                <div class="field">
+                  <label for="lastName">Last name</label>
+                  <input id="lastName" autocomplete="family-name">
+                </div>
+                <div class="field">
+                  <label for="email">Email</label>
+                  <input id="email" type="email" autocomplete="email">
+                </div>
+                <div class="field">
+                  <label for="phone">Phone in international format</label>
+                  <input id="phone" type="tel" autocomplete="tel" placeholder="+12125550123">
+                </div>
+                <div class="field">
+                  <label for="dob">Date of birth</label>
+                  <input id="dob" type="date" autocomplete="bday">
+                </div>
+                <div class="field">
+                  <label for="flightNo">Inbound flight (optional)</label>
+                  <input id="flightNo" autocomplete="off" placeholder="SK123">
+                </div>
+                <div class="field full">
+                  <label for="loyaltyNo">Rental supplier loyalty number (optional)</label>
+                  <input id="loyaltyNo" autocomplete="off" placeholder="Enter if applicable">
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="card">
+            <div class="card-head">
+              <span class="step-no">Step 02</span>
+              <h3>Supplier conditions & privacy</h3>
+              <p>Review the live quote conditions. Supplier requirements can vary by location, vehicle and driver.</p>
+            </div>
+            <div class="card-body">
+              <div id="conditions"></div>
+              <div id="policies"></div>
+              <label class="policy">
+                <input type="checkbox" id="acceptTerms">
+                <span>I accept the displayed rental conditions, cancellation rules, supplier terms and SKANDI booking terms.</span>
+              </label>
+            </div>
+          </section>
+
+          <section class="card">
+            <div class="card-head">
+              <span class="step-no">Step 03</span>
+              <h3>Payment & confirmation</h3>
+              <p>The payment method follows the rental supplier's returned payment type.</p>
+            </div>
+            <div class="card-body">
+              <div id="paymentCopy"></div>
+              <div id="securePayment" class="payment-box hidden">
+                <h4>Secure card verification</h4>
+                <div class="secure-note">Duffel secure card form + 3-D Secure</div>
+                <div class="duffel-wrap"><duffel-card-form></duffel-card-form></div>
+              </div>
+              <div class="actions">
+                <button class="btn secondary" id="backBtn" type="button">Back to cars</button>
+                <button class="btn" id="bookBtn" type="button">Confirm booking</button>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <aside class="card summary-card" aria-label="Selected rental summary">
+          <div class="summary-visual" id="summaryVisual"><div class="placeholder">Selected vehicle</div></div>
+          <div class="summary-title">
+            <small id="summarySupplier">Rental supplier</small>
+            <h3 id="summaryVehicle">Your rental</h3>
+          </div>
+          <div id="summaryRows" class="rows"></div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="view" id="confirmationView" aria-live="polite">
+      <div class="card confirmation">
+        <div class="confirmation-top">
+          <div class="tick">✓</div>
+          <div class="eyebrow dark" style="justify-content:center">BOOKING CONFIRMED</div>
+          <h2>Car rental confirmed.</h2>
+          <p>Your rental is connected to your SKANDI trip. Open My Trips for the latest booking information and supplier reference.</p>
+          <div class="ref" id="confirmationRef">Confirmed</div>
+        </div>
+        <div class="confirmation-actions">
+          <button class="btn" type="button" data-nav="/my-profile?tab=trips">Open My Trips</button>
+          <button class="btn secondary" type="button" data-focus-search>Search another car</button>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <section class="editorial" data-section-id="car-rental-editorial">
+    <div class="wrap">
+      <section class="editorial-section" data-section-id="car-rental-fleet">
+        <div class="editorial-head">
+          <div>
+            <div class="eyebrow dark" data-content-id="car-rental-fleet-eyebrow">THE RIGHT SHAPE FOR THE TRIP</div>
+            <h2 data-content-id="car-rental-fleet-h2">City streets, coast roads, long weekends.</h2>
+          </div>
+          <p data-content-id="car-rental-fleet-copy">
+            Vehicle categories and exact models depend on live supplier availability. Use the search above to see what is actually offered for your route and dates.
+          </p>
+        </div>
+
+        <div class="fleet-story">
+          <article class="fleet-panel">
+            <div class="fleet-copy">
+              <div class="fleet-kicker">Everyday travel</div>
+              <h3>Compact & city cars</h3>
+              <p>For lighter luggage, shorter distances and places where easy parking matters.</p>
+            </div>
+            <svg class="car-sketch" viewBox="0 0 240 100" aria-hidden="true">
+              <path d="M22 70h18l12-26h86l26 26h44c8 0 14 6 14 14v3h-17"/>
+              <path d="M22 70c-7 0-13 6-13 13v4h17M70 44l-4 26M136 44l13 26M85 87h82"/>
+              <circle cx="50" cy="86" r="13"/><circle cx="190" cy="86" r="13"/>
+            </svg>
+          </article>
+
+          <article class="fleet-panel">
+            <div class="fleet-copy">
+              <div class="fleet-kicker">More room</div>
+              <h3>SUV & crossover</h3>
+              <p>Extra space can make longer drives and fuller itineraries more comfortable.</p>
+            </div>
+          </article>
+
+          <article class="fleet-panel">
+            <div class="fleet-copy">
+              <div class="fleet-kicker">Refined drive</div>
+              <h3>Premium</h3>
+              <p>When the vehicle is part of the experience, not only the transport.</p>
+            </div>
+          </article>
+
+          <article class="fleet-panel">
+            <div class="fleet-copy">
+              <div class="fleet-kicker">Lower-emission options</div>
+              <h3>Electric & hybrid, where offered</h3>
+              <p>Live results determine whether electric, hybrid or other fuel types are available at your chosen rental location.</p>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="editorial-section" data-section-id="car-rental-process">
+        <div class="editorial-head">
+          <div>
+            <div class="eyebrow dark">FROM SEARCH TO KEYS</div>
+            <h2>A shorter route to the road.</h2>
+          </div>
+          <p>SKANDI keeps the supplier transaction visible: live rate, final quote, driver details, required acknowledgements and the supplier's payment method.</p>
+        </div>
+
+        <div class="process">
+          <article class="process-step">
+            <span class="process-no">01 · SEARCH</span>
+            <h3>Tell us where and when.</h3>
+            <p>Choose the pick-up and return location, dates, times, driver age and country of residence.</p>
+          </article>
+          <article class="process-step">
+            <span class="process-no">02 · COMPARE</span>
+            <h3>See the live vehicles.</h3>
+            <p>Compare the current supplier, vehicle characteristics, payment type and total rental price returned for the search.</p>
+          </article>
+          <article class="process-step">
+            <span class="process-no">03 · CONFIRM</span>
+            <h3>Review before you book.</h3>
+            <p>The selected rate is quoted again. Complete the driver and supplier requirements before SKANDI confirms the rental.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="editorial-section" data-section-id="car-rental-road-ready">
+        <div class="road-ready">
+          <div class="road-ready-copy">
+            <div class="eyebrow gold">BEFORE PICK-UP</div>
+            <h3>Arrive road-ready.</h3>
+            <p>Rental requirements vary by supplier and location. The final quote and booking conditions remain the authority for your specific reservation.</p>
+          </div>
+          <div class="checklist">
+            <div class="check-item">
+              <strong>Driver documents</strong>
+              <span>Bring the licence and identification required by the rental supplier and local rules.</span>
+            </div>
+            <div class="check-item">
+              <strong>Card & deposit</strong>
+              <span>Supplier deposit, card and guarantee requirements can differ from the amount paid or guaranteed online.</span>
+            </div>
+            <div class="check-item">
+              <strong>Fuel, mileage & return</strong>
+              <span>Check the returned supplier conditions for the applicable fuel, mileage, timing and return rules.</span>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </section>
+</main>
+
+<div class="loader" id="loader" aria-hidden="true">
+  <div class="loader-box">
+    <div class="spin"></div>
+    <strong id="loaderTitle">Working</strong>
+    <p id="loaderCopy">Please wait.</p>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="skandi-car-rental.js"></script>
+</body>
+</html>

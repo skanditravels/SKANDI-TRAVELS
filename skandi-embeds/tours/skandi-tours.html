@@ -1,1 +1,78 @@
-<!-- SKANDI_PENDING_SOURCE: replace with complete page markup. -->
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/><meta content="#022e64" name="theme-color"/><title>SKANDI Tours &amp; Activities</title><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&amp;family=Playfair+Display:wght@600;700;800&amp;display=swap" rel="stylesheet"/><link rel="stylesheet" href="skandi-tours.css"><link rel="stylesheet" href="skandi-tours.part-02.css"></head><body>
+<!-- Welcome/First Visit Settings Modal -->
+<div class="welcome-modal-layer" id="welcomeSettingsModal">
+<div class="welcome-backdrop" id="welcomeBackdrop"></div>
+<div class="welcome-card">
+<div class="globe-icon">
+<svg viewbox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"></path></svg>
+</div>
+<h2 data-i18n="welcome.title">Welcome to SKANDI</h2>
+<p data-i18n="welcome.copy">Please confirm your preferred language and currency before continuing.</p>
+<div class="settings-group">
+<select id="welcomeLang">
+<option value="EN">United States - English</option>
+<option value="SV">Sweden - Svenska</option>
+<option value="NO">Norway - Norsk</option>
+<option value="DA">Denmark - Dansk</option>
+</select>
+</div>
+<div class="settings-group">
+<select id="welcomeCurr">
+<option value="USD">USD ($)</option>
+<option value="SEK">SEK (kr)</option>
+<option value="NOK">NOK (kr)</option>
+<option value="DKK">DKK (kr)</option>
+<option value="EUR">EUR (€)</option>
+</select>
+</div>
+<button class="btn" data-i18n="welcome.btn" id="welcomeSaveBtn" style="width:100%; margin-top: 12px;">Continue to Site</button>
+</div>
+</div>
+<!-- Mobile Menu Layer -->
+
+<main class="ta-page" id="taMain">
+<section class="ta-view active" id="taHomeView">
+<section class="ta-hero">
+<div class="ta-shell ta-hero-inner">
+<div class="ta-kicker" data-i18n="ta.hero.kicker">SKANDI EXPERIENCES</div>
+<h1 data-i18n="ta.hero.title">Find something worth remembering.</h1>
+<p class="ta-hero-copy" data-i18n="ta.hero.copy">Book excursions, attractions, day trips, transfers and local experiences for your next destination.</p>
+<form class="ta-search-card" id="taSearchForm">
+<div class="ta-search-grid">
+<div class="ta-field">
+<label data-i18n="ta.search.destination">Where do you want to go?</label>
+<input autocomplete="off" data-i18n-placeholder="ta.search.destinationPh" id="taDestinationInput" placeholder="City, island, resort or attraction"/>
+<div class="ta-suggestions" id="taSuggestions"></div>
+</div>
+<div class="ta-field"><label data-i18n="ta.search.from">From</label><input id="taFromDate" type="date"/></div>
+<div class="ta-field"><label data-i18n="ta.search.to">To</label><input id="taToDate" type="date"/></div>
+<div class="ta-field"><label data-i18n="ta.search.travelers">Travellers</label><select id="taTravelers"><option value="1">1</option><option selected="" value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option></select></div>
+<button class="ta-primary" data-i18n="ta.search.button" type="submit">Search experiences</button>
+</div>
+<div class="ta-nearby-row"><button class="ta-nearby" id="taNearbyBtn" type="button">⌖ <span data-i18n="ta.search.nearby">Find experiences near me</span></button><span class="ta-nearby-copy" data-i18n="ta.search.nearbyCopy">Use your location to discover what is close by.</span></div>
+</form>
+</div>
+</section>
+<div class="ta-shell"><div class="ta-categories" id="taCategoryChips"></div></div>
+<section class="ta-section"><div class="ta-shell"><div class="ta-collections" id="taCollections"></div><div class="ta-member"><div><h3 data-i18n="ta.member.title">Keep every ticket in one place</h3><p data-i18n="ta.member.copy">Sign in to save favourites, access vouchers and keep experiences connected to your SKANDI trip.</p></div><button class="ta-primary" data-i18n="ta.member.button" id="taMemberBtn" type="button">Open SKANDI Club</button></div></div></section>
+<section class="ta-section alt"><div class="ta-shell"><div class="ta-section-head"><div><div class="ta-kicker" data-i18n="ta.popular.eyebrow">Explore by destination</div><h2 data-i18n="ta.popular.title">Popular destinations</h2><p data-i18n="ta.popular.copy">Start with places that offer a wide mix of day trips, attractions and local activities.</p></div></div><div class="ta-dest-grid" id="taPopularDestinations"></div></div></section>
+<section class="ta-section"><div class="ta-shell"><div class="ta-section-head"><div><div class="ta-kicker" data-i18n="ta.recommended.eyebrow">Selected for you</div><h2 data-i18n="ta.recommended.title">Recommended experiences</h2><p data-i18n="ta.recommended.copy">Published SKANDI experiences, synchronized with Inventory Control.</p></div><button class="ta-link-button" data-i18n="ta.viewAll" id="taViewAllBtn" type="button">View all experiences</button></div><div class="ta-exp-grid" id="taRecommendedGrid"></div></div></section>
+<section class="ta-section alt"><div class="ta-shell"><div class="ta-trust"><div><h2 data-i18n="ta.trust.title">Travel with clear information</h2><p data-i18n="ta.trust.copy">See meeting points, duration, language, accessibility, cancellation terms and what is included before you book.</p></div><div class="ta-shield">◇</div></div></div></section>
+<section class="ta-section"><div class="ta-shell"><div class="ta-section-head"><div><h2 data-i18n="ta.benefits.title">Why book an experience with SKANDI</h2></div></div><div class="ta-benefits"><article class="ta-benefit"><div class="ta-benefit-icon">◎</div><h3 data-i18n="ta.benefit.world">Experiences around the world</h3><p data-i18n="ta.benefit.worldCopy">Discover activities in beach resorts, cities and countryside destinations.</p></article><article class="ta-benefit"><div class="ta-benefit-icon">⌖</div><h3 data-i18n="ta.benefit.local">Selected with local knowledge</h3><p data-i18n="ta.benefit.localCopy">Find cultural highlights, hidden corners and practical options for your trip.</p></article><article class="ta-benefit"><div class="ta-benefit-icon">✓</div><h3 data-i18n="ta.benefit.easy">Simple from search to voucher</h3><p data-i18n="ta.benefit.easyCopy">Keep booking details, tickets and pickup information connected to your trip.</p></article></div></div></section>
+<section class="ta-section alt"><div class="ta-shell"><div class="ta-section-head"><div><div class="ta-kicker" data-i18n="ta.directory.eyebrow">Destination directory</div><h2 data-i18n="ta.directory.title">Find your destination</h2><p data-i18n="ta.directory.copy">Browse available locations by country and open a filtered experience search.</p></div></div><div class="ta-directory-tabs" id="taCountryTabs"></div><div class="ta-directory-grid" id="taDirectoryGrid"></div></div></section>
+</section>
+<section class="ta-view" id="taResultsView">
+<div class="ta-results-hero"><div class="ta-shell"><button class="ta-breadcrumb-btn" data-i18n="ta.results.back" id="taBackHomeBtn">Back to inspiration</button><h1 id="taResultsTitle">Experiences</h1><p id="taResultsSubtitle"></p></div></div>
+<div class="ta-shell ta-results-layout">
+<aside class="ta-filter-panel"><div class="ta-filter-head"><h2 data-i18n="ta.filters.title">Filter experiences</h2><button class="ta-filter-clear" data-i18n="ta.filters.clear" id="taClearFilters">Clear all</button></div><div id="taFilterContent"></div></aside>
+<section><div class="ta-results-toolbar"><strong id="taResultCount"></strong><select class="ta-sort" id="taSort"><option data-i18n="ta.results.popular" value="recommended">Recommended</option><option data-i18n="ta.results.price" value="price">Lowest price</option><option data-i18n="ta.results.rating" value="rating">Highest rating</option></select></div><div class="ta-results-grid" id="taResultsGrid"></div><div class="ta-load-more"><button class="ta-secondary" data-i18n="ta.loadMore" id="taLoadMoreBtn">Show more experiences</button></div></section>
+</div>
+</section>
+<section class="ta-view" id="taDetailView"><div class="ta-shell ta-detail-hero"><button class="ta-breadcrumb-btn" data-i18n="ta.detail.back" id="taBackResultsBtn">Back to results</button><div class="ta-detail-gallery" id="taDetailGallery"></div><div class="ta-detail-head"><div><div class="ta-kicker" id="taDetailCategory"></div><h1 id="taDetailTitle"></h1><div class="ta-detail-sub" id="taDetailMeta"></div></div><div class="ta-detail-actions"><button class="ta-secondary" data-i18n="ta.detail.share" id="taShareBtn">Share</button><button class="ta-secondary" data-i18n="ta.detail.favorite" id="taFavoriteBtn">Save</button></div></div><div class="ta-detail-layout"><div class="ta-detail-content" id="taDetailContent"></div><aside class="ta-book-card"><div class="ta-book-price" id="taBookPrice"></div><div class="ta-book-grid"><div class="ta-book-field full"><label data-i18n="ta.detail.date">Date</label><input id="taBookDate" type="date"/></div><div class="ta-book-field full"><label data-i18n="ta.detail.time">Time</label><select id="taBookTime"><option value="">Select a date first</option></select></div><div class="ta-book-field"><label data-i18n="ta.detail.adults">Adults</label><select id="taBookAdults"><option>1</option><option selected="">2</option><option>3</option><option>4</option><option>5</option><option>6</option></select></div><div class="ta-book-field"><label data-i18n="ta.detail.children">Children</label><select id="taBookChildren"><option selected="">0</option><option>1</option><option>2</option><option>3</option><option>4</option></select></div></div><div class="ta-book-total"><span data-i18n="ta.detail.total">Estimated total</span><strong id="taBookTotal"></strong></div><button class="ta-primary" data-i18n="ta.detail.book" id="taBookBtn">Continue to booking</button><div class="ta-live-note" data-i18n="ta.detail.liveRequired">Only configured Inventory departures are shown. Online booking is not yet available.</div></aside></div></div></section>
+</main>
+<div class="ta-toast" id="taToast"></div>
+
+<div aria-live="polite" class="skandi-toast" id="skandiToast" role="status"></div>
+<script src="skandi-tours.js"></script>
+</body></html>

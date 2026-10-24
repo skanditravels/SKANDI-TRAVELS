@@ -1,0 +1,2376 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#022e64">
+<title>SKANDI Store Control Center</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+
+
+<meta name="color-scheme" content="light dark">
+
+
+
+
+
+
+
+
+
+<style data-skandi-part="header">
+#riaintra-global-header-root {
+  --shell-h: 52px;
+  --shell: #354a5f;
+  --shell-hover: rgba(255, 255, 255, 0.14);
+  --blue: #106ebe;
+  --canvas: #ffffff;
+  --text: #323130;
+  --border: #edebe9;
+  --font: "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
+}
+
+#riaintra-global-header-root * { box-sizing: border-box; }
+#riaintra-global-header-root,#riaintra-global-header-root {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: var(--font);
+  color: var(--text);
+  background: transparent;
+  font-size: 14px;
+  user-select: none;
+}
+#riaintra-global-header-root button { font: inherit; border: 0; background: transparent; color: inherit; cursor: pointer; }
+
+/* Desktop Shellbar */
+#riaintra-global-header-root .shellbar {
+  position: fixed;
+  inset: 0 0 auto;
+  height: var(--shell-h);
+  background: var(--shell);
+  color: #fff;
+  z-index: 1000;
+  box-shadow: 0 1px 2px rgba(34, 54, 73, 0.12);
+}
+#riaintra-global-header-root .shellbar-inner {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12px;
+  gap: 12px;
+}
+#riaintra-global-header-root .shell-left, #riaintra-global-header-root .shell-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+/* Branding */
+#riaintra-global-header-root .product {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+#riaintra-global-header-root .product img {
+  height: 30px;
+  width: auto;
+  object-fit: contain;
+  border-radius: 3px;
+  display: none;
+}
+#riaintra-global-header-root .product img[src] {
+  display: block;
+}
+#riaintra-global-header-root .product-text strong {
+  display: block;
+  font-size: 13px;
+}
+#riaintra-global-header-root .product-text small {
+  display: block;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 10px;
+  margin-top: 2px;
+}
+
+/* Desktop Navigation */
+#riaintra-global-header-root .shell-nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 1 1 auto;
+  justify-content: flex-start;
+  padding-left: 24px;
+}
+#riaintra-global-header-root .shell-nav button {
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 10px;
+  border-radius: 4px;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+#riaintra-global-header-root .shell-nav button:hover, #riaintra-global-header-root .shell-nav button.active {
+  color: #fff;
+  background: var(--shell-hover);
+}
+
+/* Session / Dashboard Actions */
+#riaintra-global-header-root .utility-action {
+  min-height: 32px;
+  padding: 0 10px;
+  border: 1px solid rgba(255,255,255,.20);
+  border-radius: 4px;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+#riaintra-global-header-root .utility-action:hover { background: var(--shell-hover); }
+#riaintra-global-header-root .utility-action[hidden] { display: none !important; }
+
+/* Clock */
+#riaintra-global-header-root .clock {
+  min-width: 110px;
+  text-align: right;
+  border-inline: 1px solid rgba(255, 255, 255, 0.18);
+  padding: 4px 10px;
+  cursor: pointer;
+}
+#riaintra-global-header-root .clock strong {
+  display: block;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+#riaintra-global-header-root .clock small {
+  display: block;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 9px;
+  margin-top: 3px;
+  text-transform: uppercase;
+}
+
+/* User Profile */
+#riaintra-global-header-root .profile {
+  display: none;
+  grid-template-columns: minmax(150px, 230px) 38px;
+  grid-template-rows: repeat(3, auto);
+  column-gap: 9px;
+  row-gap: 1px;
+  align-items: center;
+  min-width: 0;
+}
+#riaintra-global-header-root .profile-name,
+#riaintra-global-header-root .profile-meta,
+#riaintra-global-header-root .profile-email {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: right;
+}
+#riaintra-global-header-root .profile-name {
+  grid-column: 1;
+  grid-row: 1;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+}
+#riaintra-global-header-root .profile-meta {
+  grid-column: 1;
+  grid-row: 2;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+}
+#riaintra-global-header-root .profile-email {
+  grid-column: 1;
+  grid-row: 3;
+  color: rgba(255,255,255,.70);
+  font-size: 9px;
+}
+#riaintra-global-header-root .profile-avatar {
+  grid-column: 2;
+  grid-row: 1 / span 3;
+  width: 38px;
+  height: 38px;
+  border-radius: 4px;
+  display: grid;
+  place-items: center;
+  background: #d1e8ff;
+  color: #073b69;
+  font-size: 11px;
+  font-weight: 800;
+  overflow: hidden;
+}
+#riaintra-global-header-root .profile-avatar img,
+#riaintra-global-header-root img.profile-avatar {
+  width: 38px;
+  height: 38px;
+  object-fit: cover;
+}
+
+/* Mobile Burger Icon */
+
+#riaintra-global-header-root .burger {
+  display: none;
+  width: 36px;
+  height: 36px;
+  color: #fff;
+  border-radius: 4px;
+}
+#riaintra-global-header-root .burger:hover {
+  background: var(--shell-hover);
+}
+
+/* Mobile Drawer (Horizontal Slider) */
+#riaintra-global-header-root .mobile-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  z-index: 1100;
+  width: 100%;
+  height: var(--shell-h);
+  background: var(--shell);
+  color: #fff;
+  box-shadow: -20px 0 45px rgba(13, 31, 48, 0.25);
+  transform: translateX(102%);
+  opacity: 0.98;
+  transition: transform 0.44s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.25s ease;
+  display: flex;
+  align-items: center;
+}
+#riaintra-global-header-root .mobile-drawer.open {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+/* Mobile Drawer Title Area */
+#riaintra-global-header-root .mobile-head {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 12px 0 18px;
+  border-right: 1px solid rgba(255, 255, 255, 0.18);
+  flex: 0 0 auto;
+}
+#riaintra-global-header-root .mobile-head strong { font-size: 13px; }
+#riaintra-global-header-root .mobile-head .close {
+  width: 28px;
+  height: 28px;
+  font-size: 22px;
+  display: grid;
+  place-items: center;
+}
+
+/* Mobile Drawer Nav List */
+#riaintra-global-header-root .mobile-nav {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  overflow-x: auto;
+  scrollbar-width: none;
+  flex: 1;
+  padding: 0 12px;
+  gap: 4px;
+}
+#riaintra-global-header-root .mobile-nav::-webkit-scrollbar { display: none; }
+#riaintra-global-header-root .mobile-nav button {
+  display: block;
+  width: auto;
+  white-space: nowrap;
+  padding: 8px 12px;
+  font-weight: 600;
+  border-radius: 4px;
+}
+#riaintra-global-header-root .mobile-nav button:hover, #riaintra-global-header-root .mobile-nav button.active {
+  background: var(--shell-hover);
+}
+
+/* Mobile Overlay */
+#riaintra-global-header-root .overlay {
+  position: fixed;
+  inset: var(--shell-h) 0 0 0;
+  background: rgba(7, 27, 68, 0.46);
+  z-index: 1090;
+  display: none;
+}
+#riaintra-global-header-root .overlay.show { display: block; }
+
+body[data-theme="dark"] #riaintra-global-header-root {
+  --canvas: #1f1f1f;
+  --border: #3a3a3a;
+  --text: #f3f2f1;
+}
+
+@media(max-width: 950px) {
+  #riaintra-global-header-root .shell-nav { display: none; }
+  #riaintra-global-header-root .burger { display: grid; place-items: center; }
+  #riaintra-global-header-root .profile-email { display: none; }
+}
+@media(max-width: 700px) {
+  #riaintra-global-header-root .profile { display: none !important; }
+  #riaintra-global-header-root .clock { display: none; }
+  #riaintra-global-header-root .utility-action { padding: 0 8px; font-size: 9px; }
+}
+</style>
+<style data-skandi-part="footer">
+#riaintra-global-footer-root * { box-sizing: border-box; }
+#riaintra-global-footer-root,#riaintra-global-footer-root {
+  margin: 0;
+  font-family: "72", Inter, Arial, sans-serif;
+  width: 100%;
+}
+
+#riaintra-global-footer-root footer {
+  width: 100%;
+  padding: 10px 24px;
+  margin-top: auto;
+  background: #354a5f;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+#riaintra-global-footer-root .wrap {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  width: 100%;
+}
+
+#riaintra-global-footer-root .footer-left {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  justify-self: flex-start;
+}
+
+#riaintra-global-footer-root .links {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+#riaintra-global-footer-root .meta {
+  font-size: 9px;
+  color: #ffffff;
+}
+
+#riaintra-global-footer-root .global-footer {
+  justify-self: center;
+  text-align: center;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+#riaintra-global-footer-root .footer-right {
+  justify-self: flex-end;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+#riaintra-global-footer-root #grouplogo img {
+  height: 16px;
+  border-radius: 0;
+  object-fit: contain;
+  background: transparent;
+  display: block;
+}
+
+#riaintra-global-footer-root button {
+  border: 0;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.75);
+  padding: 5px 7px;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+#riaintra-global-footer-root button:hover {
+  color: #ffffff;
+  text-decoration: underline;
+}
+</style>
+<style data-skandi-part="store-control">
+#skandi-app-root{
+  --blue:#022e64;
+  --blue2:#0b3a7a;
+  --cyan:#5FC7CF;
+  --bg:#f3f5f8;
+  --panel:#ffffff;
+  --panel2:#f8fafc;
+  --line:#d1d5db;
+  --line2:#9ca3af;
+  --text:#111827;
+  --muted:#6b7280;
+  --ok:#15803d;
+  --warn:#b45309;
+  --bad:#b91c1c;
+  --dark:#020617;
+  --dark2:#0b1220;
+  --shadow:0 18px 50px rgba(15,23,42,.16);
+  --radius:12px;
+  --font:Tahoma,"Segoe UI",system-ui,-apple-system,BlinkMacSystemFont,sans-serif;
+  --mono:"Consolas","Courier New",ui-monospace,monospace;
+
+  /* compatibility names used by the backend-style shell */
+  --hm-black:var(--dark);
+  --hm-black-2:var(--dark2);
+  --hm-red:var(--cyan);
+  --hm-red-dark:var(--blue2);
+  --hm-ink:var(--text);
+  --hm-text:var(--text);
+  --hm-muted:var(--muted);
+  --hm-soft:var(--bg);
+  --hm-line:var(--line);
+  --hm-card:var(--panel);
+  --hm-card-2:var(--panel2);
+  --hm-success:var(--ok);
+  --hm-warning:var(--warn);
+  --hm-danger:var(--bad);
+  --hm-blue:var(--blue);
+  --hm-shadow:var(--shadow);
+  --radius-sm:8px;
+  --radius-md:12px;
+  --radius-lg:16px;
+}
+#skandi-app-root *{box-sizing:border-box}
+#skandi-app-root,#skandi-app-root{
+  margin:0;
+  min-height:100%;
+  background:var(--hm-soft);
+  color:var(--hm-text);
+  font-family:Arial, Helvetica, sans-serif;
+  font-size:12px;
+}
+#skandi-app-root{overflow:auto}
+#skandi-app-root button,#skandi-app-root input,#skandi-app-root select,#skandi-app-root textarea{font:inherit}
+#skandi-app-root button{cursor:pointer}
+#skandi-app-root #skInternalChrome{
+  display:none!important;
+  height:0!important;
+  min-height:0!important;
+  overflow:hidden!important;
+}
+
+/* SKANDI backend using the supplied operational system visual language */
+#skandi-app-root .skandi-hm-ops{
+  min-height:100vh;
+  display:grid;
+  grid-template-columns:258px minmax(0,1fr);
+  background:
+    linear-gradient(180deg,var(--bg) 0%,var(--panel2) 100%);
+}
+#skandi-app-root .ops-rail{
+  background:#071b44;
+  color:#fff;
+  min-height:100vh;
+  position:sticky;
+  top:0;
+  display:flex;
+  flex-direction:column;
+  border-right:1px solid var(--dark);
+  box-shadow:6px 0 20px rgba(0,0,0,.06);
+}
+#skandi-app-root .ops-brand{
+  padding:22px 18px 18px;
+  border-bottom:1px solid rgba(255,255,255,.12);
+}
+#skandi-app-root .ops-brand__label{
+  color:var(--line2);
+  text-transform:uppercase;
+  letter-spacing:.14em;
+  font-size:10px;
+  font-weight:700;
+  margin-bottom:10px;
+}
+#skandi-app-root .ops-brand__mark{
+  color:#fff;
+  font-size:26px;
+  line-height:1;
+  letter-spacing:.04em;
+  font-weight:900;
+}
+#skandi-app-root .ops-brand__tag{
+  margin-top:10px;
+  color:var(--line);
+  line-height:1.45;
+  font-size:11px;
+}
+#skandi-app-root .ops-brand__tag b{
+  color:#fff;
+  font-weight:900;
+}
+#skandi-app-root .ops-rail-search{
+  padding:14px 14px 10px;
+  border-bottom:1px solid rgba(255,255,255,.08);
+}
+#skandi-app-root .ops-rail-search input{
+  width:100%;
+  height:34px;
+  border:1px solid rgba(255,255,255,.16);
+  background:var(--dark2);
+  color:#fff;
+  outline:0;
+  padding:0 11px;
+  border-radius:var(--radius-sm);
+}
+#skandi-app-root .ops-rail-search input::placeholder{color:var(--line2)}
+#skandi-app-root .ops-menu{
+  padding:14px 10px;
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+  overflow:auto;
+}
+#skandi-app-root .ops-menu__section{
+  margin:10px 8px 6px;
+  color:var(--line2);
+  text-transform:uppercase;
+  letter-spacing:.12em;
+  font-size:9px;
+  font-weight:800;
+}
+#skandi-app-root .nav-btn{
+  appearance:none;
+  border:0;
+  width:100%;
+  background:transparent;
+  color:var(--line);
+  min-height:40px;
+  display:grid;
+  grid-template-columns:28px minmax(0,1fr) auto;
+  align-items:center;
+  gap:9px;
+  padding:8px 10px;
+  text-align:left;
+  border-left:3px solid transparent;
+  border-radius:0;
+  font-weight:700;
+}
+#skandi-app-root .nav-btn:hover{
+  background:var(--blue2);
+  color:#fff;
+}
+#skandi-app-root .nav-btn.active{
+  background:#fff;
+  color:#111;
+  border-left-color:var(--hm-red);
+}
+#skandi-app-root .nav-icon{
+  width:24px;
+  height:24px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:50%;
+  background:rgba(255,255,255,.12);
+  color:inherit;
+  font-family:Arial, Helvetica, sans-serif;
+  font-size:10px;
+  font-weight:900;
+}
+#skandi-app-root .nav-btn.active .nav-icon{
+  background:var(--hm-red);
+  color:#fff;
+}
+#skandi-app-root .nav-count{
+  color:var(--line2);
+  font-family:"Courier New",monospace;
+  font-size:10px;
+}
+#skandi-app-root .nav-btn.active .nav-count{color:var(--muted)}
+#skandi-app-root .ops-rail-footer{
+  margin-top:auto;
+  padding:15px 16px 18px;
+  border-top:1px solid rgba(255,255,255,.10);
+  color:var(--line);
+  line-height:1.55;
+}
+#skandi-app-root .ops-rail-footer strong{
+  display:block;
+  color:#fff;
+  margin-bottom:5px;
+}
+#skandi-app-root .ops-rail-footer .mini-led{
+  display:inline-block;
+  width:7px;
+  height:7px;
+  border-radius:50%;
+  background:var(--ok);
+  margin-right:6px;
+  box-shadow:0 0 0 3px rgba(31,191,117,.16);
+}
+
+/* main */
+#skandi-app-root .ops-main{
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+}
+#skandi-app-root .ops-topbar{
+  min-height:68px;
+  background:#fff;
+  border-bottom:1px solid var(--hm-line);
+  display:grid;
+  grid-template-columns:minmax(250px,1fr) minmax(350px,560px) auto;
+  gap:18px;
+  align-items:center;
+  padding:0 22px;
+  position:sticky;
+  top:0;
+  z-index:40;
+}
+#skandi-app-root .ops-page-title{
+  min-width:0;
+}
+#skandi-app-root .ops-page-title .eyebrow{
+  color:var(--hm-red);
+  text-transform:uppercase;
+  letter-spacing:.12em;
+  font-size:10px;
+  font-weight:900;
+}
+#skandi-app-root .ops-page-title strong{
+  display:block;
+  margin-top:4px;
+  color:#111;
+  font-size:18px;
+  line-height:1.1;
+  letter-spacing:-.01em;
+}
+#skandi-app-root .ops-page-title span{
+  display:block;
+  margin-top:4px;
+  color:var(--hm-muted);
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+#skandi-app-root .ops-command{
+  display:grid;
+  grid-template-columns:1fr auto;
+  gap:8px;
+  align-items:center;
+}
+#skandi-app-root .input,#skandi-app-root select,#skandi-app-root textarea{
+  width:100%;
+  border:1px solid var(--hm-line);
+  background:#fff;
+  color:#111;
+  border-radius:var(--radius-sm);
+  outline:0;
+  transition:border .12s ease, box-shadow .12s ease;
+}
+#skandi-app-root .input,#skandi-app-root select{height:34px;padding:0 10px}
+#skandi-app-root textarea{min-height:86px;padding:9px 10px;resize:vertical}
+#skandi-app-root .input:focus,#skandi-app-root select:focus,#skandi-app-root textarea:focus{
+  border-color:#111;
+  box-shadow:0 0 0 2px rgba(0,0,0,.08);
+}
+#skandi-app-root .ops-meta{
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:8px;
+  white-space:nowrap;
+}
+#skandi-app-root .meta-chip,#skandi-app-root .health-toggle,#skandi-app-root .badge{
+  min-height:30px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+  border:1px solid var(--hm-line);
+  background:#fff;
+  color:var(--text);
+  padding:0 9px;
+  font-size:10px;
+  font-weight:900;
+  text-transform:uppercase;
+  letter-spacing:.04em;
+}
+#skandi-app-root .health-dot{
+  width:8px;
+  height:8px;
+  border-radius:50%;
+  background:var(--ok);
+  box-shadow:0 0 0 3px rgba(8,127,91,.14);
+}
+#skandi-app-root .ops-subnav{
+  min-height:42px;
+  background:var(--panel2);
+  border-bottom:1px solid var(--hm-line);
+  display:flex;
+  align-items:center;
+  gap:7px;
+  padding:0 22px;
+  overflow:auto;
+}
+#skandi-app-root .ops-subnav span{
+  color:var(--muted);
+  font-weight:800;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+  font-size:10px;
+}
+#skandi-app-root .ops-subnav button{
+  border:1px solid var(--hm-line);
+  background:#fff;
+  color:var(--text);
+  min-height:28px;
+  padding:0 9px;
+  border-radius:999px;
+  font-weight:800;
+  font-size:10px;
+}
+#skandi-app-root .ops-subnav button:hover{border-color:#111}
+#skandi-app-root .uniform-status-bar{margin:14px 22px 0}
+#skandi-app-root .toast{
+  display:none;
+  border:1px solid #111;
+  background:#111;
+  color:#fff;
+  padding:10px 12px;
+  border-radius:var(--radius-sm);
+  font-weight:800;
+  box-shadow:var(--hm-shadow);
+}
+#skandi-app-root .ops-workspace{
+  padding:14px 22px 34px;
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+}
+#skandi-app-root .panel{
+  display:none;
+  background:var(--hm-card);
+  border:1px solid var(--hm-line);
+  border-radius:var(--radius-md);
+  box-shadow:0 1px 0 rgba(0,0,0,.02);
+  overflow:hidden;
+}
+#skandi-app-root .panel.active{display:block}
+#skandi-app-root .panel-header{
+  min-height:58px;
+  padding:12px 14px;
+  background:#fff;
+  border-bottom:1px solid var(--hm-line);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+}
+#skandi-app-root .panel-heading{min-width:0}
+#skandi-app-root .panel-kicker{
+  color:var(--hm-red);
+  text-transform:uppercase;
+  letter-spacing:.12em;
+  font-weight:900;
+  font-size:9px;
+}
+#skandi-app-root .panel h3{
+  margin:4px 0 0;
+  color:#111;
+  font-size:15px;
+  font-weight:900;
+  letter-spacing:-.01em;
+}
+#skandi-app-root .panel h3::after{
+  content:attr(data-subtitle);
+  display:block;
+  margin-top:4px;
+  color:var(--hm-muted);
+  font-size:11px;
+  font-weight:500;
+  letter-spacing:0;
+  text-transform:none;
+}
+#skandi-app-root .panel-tools{
+  display:flex;
+  align-items:center;
+  gap:7px;
+  flex-wrap:wrap;
+}
+#skandi-app-root .panel-body{padding:14px}
+#skandi-app-root .dashboard-grid{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:12px;
+}
+#skandi-app-root .kv-grid{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:12px;
+}
+#skandi-app-root .kv-tile,#skandi-app-root .metric-card,#skandi-app-root .ops-card{
+  background:#fff;
+  border:1px solid var(--hm-line);
+  border-radius:var(--radius-md);
+  padding:13px;
+  min-height:92px;
+}
+#skandi-app-root .kv-tile{
+  display:flex;
+  flex-direction:column-reverse;
+  justify-content:flex-end;
+  gap:10px;
+  border-top:3px solid #111;
+}
+#skandi-app-root .kv-tile span,#skandi-app-root .metric-label{
+  color:var(--hm-muted);
+  text-transform:uppercase;
+  letter-spacing:.08em;
+  font-weight:900;
+  font-size:10px;
+}
+#skandi-app-root .kv-tile b,#skandi-app-root .metric-value{
+  color:#111;
+  font-size:26px;
+  line-height:1;
+  font-weight:900;
+  letter-spacing:-.04em;
+}
+#skandi-app-root .metric-note{
+  color:var(--hm-muted);
+  margin-top:8px;
+  line-height:1.45;
+}
+#skandi-app-root .ops-dashboard-lower{
+  margin-top:14px;
+  display:grid;
+  grid-template-columns:1.1fr .9fr;
+  gap:14px;
+}
+#skandi-app-root .process-list{
+  display:grid;
+  gap:8px;
+}
+#skandi-app-root .process-row{
+  display:grid;
+  grid-template-columns:110px 1fr auto;
+  gap:10px;
+  align-items:center;
+  border:1px solid var(--hm-line);
+  background:var(--panel2);
+  padding:10px;
+}
+#skandi-app-root .process-row b{
+  color:#111;
+  font-weight:900;
+}
+#skandi-app-root .process-row span{color:var(--hm-muted)}
+#skandi-app-root .progress-track{
+  height:7px;
+  border-radius:99px;
+  background:var(--line);
+  overflow:hidden;
+}
+#skandi-app-root .progress-fill{
+  height:100%;
+  background:#111;
+  width:50%;
+}
+#skandi-app-root .ops-alert{
+  border-left:3px solid var(--hm-red);
+  background:var(--panel2);
+  padding:12px;
+  line-height:1.5;
+}
+#skandi-app-root .ops-alert strong{color:#111;display:block;margin-bottom:4px}
+#skandi-app-root .form-grid{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(130px,1fr));
+  gap:10px;
+}
+#skandi-app-root .field{
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  gap:5px;
+}
+#skandi-app-root .field.wide{grid-column:span 2}
+#skandi-app-root .field.full{grid-column:1 / -1}
+#skandi-app-root .label{
+  color:var(--muted);
+  text-transform:uppercase;
+  letter-spacing:.08em;
+  font-size:10px;
+  font-weight:900;
+}
+#skandi-app-root .row{
+  display:flex;
+  justify-content:flex-end;
+  align-items:center;
+  gap:7px;
+  flex-wrap:wrap;
+}
+#skandi-app-root .form-actions{
+  margin-top:12px;
+  padding-top:12px;
+  border-top:1px solid var(--hm-line);
+}
+#skandi-app-root .btn,#skandi-app-root .button{
+  border:1px solid var(--hm-line);
+  background:#fff;
+  color:#111;
+  min-height:32px;
+  padding:0 10px;
+  border-radius:var(--radius-sm);
+  font-size:10px;
+  font-weight:900;
+  text-transform:uppercase;
+  letter-spacing:.04em;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+}
+#skandi-app-root .btn:hover,#skandi-app-root .button:hover{border-color:#111;background:var(--panel2)}
+#skandi-app-root .btn.primary,#skandi-app-root .button.primary{
+  background:#111;
+  border-color:#111;
+  color:#fff;
+}
+#skandi-app-root .btn.ok{background:var(--ok);border-color:var(--ok);color:#fff}
+#skandi-app-root .btn.warn{background:var(--warn);border-color:var(--warn);color:#fff}
+#skandi-app-root .btn.bad{background:var(--bad);border-color:var(--bad);color:#fff}
+#skandi-app-root .btn.red,#skandi-app-root .button.red{background:var(--hm-red);border-color:var(--hm-red);color:#fff}
+#skandi-app-root .upload-box{
+  border:1px solid var(--hm-line);
+  background:var(--panel2);
+  border-radius:var(--radius-md);
+  padding:12px;
+}
+#skandi-app-root .upload-drop{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  grid-template-areas:"title button" "text button";
+  gap:4px 12px;
+  align-items:center;
+  min-height:72px;
+  border:1px dashed var(--line2);
+  background:#fff;
+  padding:14px;
+  cursor:pointer;
+}
+#skandi-app-root .upload-drop:hover{border-color:#111}
+#skandi-app-root .upload-drop__title{
+  grid-area:title;
+  color:#111;
+  font-size:13px;
+  font-weight:900;
+}
+#skandi-app-root .upload-drop__text{
+  grid-area:text;
+  color:var(--hm-muted);
+  line-height:1.4;
+}
+#skandi-app-root .upload-drop__button{
+  grid-area:button;
+  background:#111;
+  color:#fff;
+  min-height:32px;
+  padding:0 12px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  font-size:10px;
+  font-weight:900;
+  text-transform:uppercase;
+  letter-spacing:.04em;
+}
+#skandi-app-root .upload-input{
+  position:absolute;
+  width:1px;
+  height:1px;
+  overflow:hidden;
+  opacity:0;
+  pointer-events:none;
+}
+#skandi-app-root .upload-preview{
+  margin-top:10px;
+  display:grid;
+  gap:8px;
+}
+#skandi-app-root .upload-card{
+  display:grid;
+  grid-template-columns:54px minmax(0,1fr) auto;
+  align-items:center;
+  gap:10px;
+  border:1px solid var(--hm-line);
+  background:#fff;
+  padding:9px;
+}
+#skandi-app-root .upload-thumb{
+  width:54px;
+  height:54px;
+  border:1px solid var(--hm-line);
+  background:var(--panel2);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+  color:#111;
+  font-weight:900;
+  font-size:11px;
+}
+#skandi-app-root .upload-thumb img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+}
+#skandi-app-root .upload-name{
+  color:#111;
+  font-weight:900;
+  overflow-wrap:anywhere;
+}
+#skandi-app-root .upload-meta{
+  color:var(--hm-muted);
+  margin-top:3px;
+  line-height:1.4;
+}
+#skandi-app-root .upload-main{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  color:#111;
+  font-size:10px;
+  font-weight:900;
+  text-transform:uppercase;
+  letter-spacing:.04em;
+  white-space:nowrap;
+}
+#skandi-app-root .upload-remove{
+  border:0;
+  background:rgba(185,28,28,.10);
+  color:var(--bad);
+  min-height:28px;
+  padding:0 8px;
+  font-size:10px;
+  font-weight:900;
+  text-transform:uppercase;
+}
+#skandi-app-root .upload-existing,#skandi-app-root .upload-empty,#skandi-app-root .upload-rule{
+  color:var(--hm-muted);
+  line-height:1.45;
+}
+#skandi-app-root .upload-existing{
+  border:1px solid var(--hm-line);
+  background:#fff;
+  padding:9px;
+}
+#skandi-app-root .upload-empty{
+  border:1px dashed var(--line2);
+  background:#fff;
+  padding:12px;
+}
+#skandi-app-root .upload-rule{
+  margin-top:8px;
+  font-size:11px;
+}
+#skandi-app-root .table{
+  display:flex;
+  flex-direction:column;
+  gap:0;
+  border:1px solid var(--hm-line);
+  border-radius:var(--radius-md);
+  overflow:auto;
+  background:#fff;
+}
+#skandi-app-root .admin-row{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:12px;
+  align-items:center;
+  min-height:54px;
+  padding:11px 12px;
+  border-bottom:1px solid var(--hm-line);
+}
+#skandi-app-root .admin-row:last-child{border-bottom:0}
+#skandi-app-root .admin-row:hover{background:var(--panel2)}
+#skandi-app-root .item-title{
+  color:#111;
+  font-size:12px;
+  font-weight:900;
+  line-height:1.25;
+  overflow-wrap:anywhere;
+}
+#skandi-app-root .item-sub{
+  margin-top:4px;
+  color:var(--hm-muted);
+  line-height:1.45;
+  overflow-wrap:anywhere;
+}
+#skandi-app-root .empty{
+  border:1px dashed var(--line2);
+  background:var(--panel2);
+  color:var(--hm-muted);
+  padding:28px;
+  text-align:center;
+}
+#skandi-app-root .list-with-toolbar{
+  margin-top:14px;
+}
+#skandi-app-root .list-titlebar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  padding:0 0 8px;
+}
+#skandi-app-root .list-titlebar strong{
+  color:#111;
+  font-size:12px;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+}
+#skandi-app-root .status-strip{
+  display:grid;
+  grid-template-columns:repeat(5,minmax(0,1fr));
+  border:1px solid var(--hm-line);
+  background:#fff;
+  margin-bottom:14px;
+}
+#skandi-app-root .status-strip div{
+  padding:10px 12px;
+  border-right:1px solid var(--hm-line);
+}
+#skandi-app-root .status-strip div:last-child{border-right:0}
+#skandi-app-root .status-strip span{
+  display:block;
+  color:var(--hm-muted);
+  font-size:10px;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+  font-weight:900;
+}
+#skandi-app-root .status-strip b{
+  display:block;
+  margin-top:4px;
+  color:#111;
+  font-size:13px;
+}
+#skandi-app-root .mono{
+  font-family:"Courier New", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+#skandi-app-root .pill,#skandi-app-root .status-badge{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:999px;
+  min-height:22px;
+  padding:0 8px;
+  font-size:10px;
+  font-weight:900;
+  text-transform:uppercase;
+  letter-spacing:.04em;
+}
+#skandi-app-root .pill.ok,#skandi-app-root .status-shipped{background:rgba(21,128,61,.10);color:var(--ok)}
+#skandi-app-root .pill.warn,#skandi-app-root .status-pending{background:rgba(180,83,9,.12);color:var(--warn)}
+#skandi-app-root .pill.bad,#skandi-app-root .status-cancelled{background:rgba(185,28,28,.10);color:var(--bad)}
+#skandi-app-root .pill.info,#skandi-app-root .status-picking{background:rgba(2,46,100,.10);color:var(--blue)}
+#skandi-app-root .ops-note{
+  color:var(--hm-muted);
+  line-height:1.5;
+}
+#skandi-app-root .hidden-compat{
+  position:absolute!important;
+  width:1px!important;
+  height:1px!important;
+  overflow:hidden!important;
+  opacity:0!important;
+  pointer-events:none!important;
+}
+@media(max-width:1180px){
+  #skandi-app-root .ops-topbar{grid-template-columns:1fr;position:static;height:auto;padding:14px 16px}
+  #skandi-app-root .ops-meta{justify-content:flex-start;flex-wrap:wrap}
+  #skandi-app-root .dashboard-grid,#skandi-app-root .kv-grid,#skandi-app-root .status-strip{grid-template-columns:repeat(2,minmax(0,1fr))}
+  #skandi-app-root .ops-dashboard-lower{grid-template-columns:1fr}
+  #skandi-app-root .form-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  #skandi-app-root .field.wide,#skandi-app-root .field.full{grid-column:1 / -1}
+}
+@media(max-width:820px){
+  #skandi-app-root .skandi-hm-ops{grid-template-columns:1fr}
+  #skandi-app-root .ops-rail{position:static;min-height:auto}
+  #skandi-app-root .ops-menu{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+  #skandi-app-root .ops-menu__section{grid-column:1 / -1}
+  #skandi-app-root .ops-command{grid-template-columns:1fr}
+  #skandi-app-root .dashboard-grid,#skandi-app-root .kv-grid,#skandi-app-root .status-strip,#skandi-app-root .form-grid{grid-template-columns:1fr}
+  #skandi-app-root .ops-workspace{padding:12px}
+  #skandi-app-root .uniform-status-bar{margin:12px 12px 0}
+  #skandi-app-root .admin-row{grid-template-columns:1fr}
+  #skandi-app-root .row{justify-content:stretch}
+  #skandi-app-root .btn,#skandi-app-root .button{width:auto}
+}
+@media(max-width:540px){
+  #skandi-app-root .ops-menu{grid-template-columns:1fr}
+  #skandi-app-root .ops-meta>*{width:100%;justify-content:center}
+  #skandi-app-root .btn,#skandi-app-root .button{width:100%}
+}
+
+
+
+
+/* Supplied SKANDI blue/cyan palette overrides */
+#skandi-app-root,#skandi-app-root{
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--font);
+}
+#skandi-app-root button,#skandi-app-root input,#skandi-app-root select,#skandi-app-root textarea{font-family:var(--font)}
+#skandi-app-root .skandi-hm-ops{
+  background:linear-gradient(180deg,var(--bg) 0%,var(--panel2) 100%);
+}
+#skandi-app-root .ops-rail{
+  background:linear-gradient(180deg,var(--dark) 0%,var(--dark2) 100%);
+  border-right-color:var(--dark2);
+}
+#skandi-app-root .ops-brand__mark{color:#fff}
+#skandi-app-root .ops-brand__label,#skandi-app-root .ops-menu__section,#skandi-app-root .nav-count{color:var(--line2)}
+#skandi-app-root .ops-rail-search input{
+  background:var(--dark2);
+  border-color:rgba(209,213,219,.18);
+}
+#skandi-app-root .nav-btn:hover{
+  background:rgba(95,199,207,.12);
+  color:#fff;
+}
+#skandi-app-root .nav-btn.active{
+  background:var(--panel);
+  color:var(--blue);
+  border-left-color:var(--cyan);
+}
+#skandi-app-root .nav-btn.active .nav-icon{
+  background:var(--cyan);
+  color:var(--dark);
+}
+#skandi-app-root .nav-btn.active .nav-count{color:var(--blue2)}
+#skandi-app-root .ops-topbar,#skandi-app-root .panel-header,#skandi-app-root .kv-tile,#skandi-app-root .metric-card,#skandi-app-root .ops-card,#skandi-app-root .panel,#skandi-app-root .table,#skandi-app-root .admin-row,#skandi-app-root .status-strip,#skandi-app-root .upload-card,#skandi-app-root .upload-existing{
+  background:var(--panel);
+}
+#skandi-app-root .ops-subnav,#skandi-app-root .process-row,#skandi-app-root .upload-box,#skandi-app-root .empty{
+  background:var(--panel2);
+}
+#skandi-app-root .ops-page-title .eyebrow,#skandi-app-root .panel-kicker{
+  color:var(--blue);
+}
+#skandi-app-root .ops-page-title strong,#skandi-app-root .panel h3,#skandi-app-root .kv-tile b,#skandi-app-root .metric-value,#skandi-app-root .process-row b,#skandi-app-root .item-title,#skandi-app-root .list-titlebar strong,#skandi-app-root .status-strip b,#skandi-app-root .upload-name,#skandi-app-root .upload-drop__title{
+  color:var(--text);
+}
+#skandi-app-root .input,#skandi-app-root select,#skandi-app-root textarea,#skandi-app-root .meta-chip,#skandi-app-root .health-toggle,#skandi-app-root .badge,#skandi-app-root .ops-subnav button,#skandi-app-root .btn,#skandi-app-root .button{
+  border-color:var(--line);
+  background:var(--panel);
+  color:var(--text);
+}
+#skandi-app-root .input:focus,#skandi-app-root select:focus,#skandi-app-root textarea:focus{
+  border-color:var(--cyan);
+  box-shadow:0 0 0 3px rgba(95,199,207,.20);
+}
+#skandi-app-root .ops-subnav button:hover,#skandi-app-root .btn:hover,#skandi-app-root .button:hover,#skandi-app-root .upload-drop:hover{
+  border-color:var(--cyan);
+}
+#skandi-app-root .toast,#skandi-app-root .btn.primary,#skandi-app-root .button.primary,#skandi-app-root .upload-drop__button{
+  background:var(--blue);
+  border-color:var(--blue);
+  color:#fff;
+}
+#skandi-app-root .btn.primary:hover,#skandi-app-root .button.primary:hover,#skandi-app-root .upload-drop__button:hover{
+  background:var(--blue2);
+  border-color:var(--blue2);
+}
+#skandi-app-root .btn.red,#skandi-app-root .button.red{
+  background:var(--cyan);
+  border-color:var(--cyan);
+  color:var(--dark);
+}
+#skandi-app-root .btn.ok{background:var(--ok);border-color:var(--ok);color:#fff}
+#skandi-app-root .btn.warn{background:var(--warn);border-color:var(--warn);color:#fff}
+#skandi-app-root .btn.bad{background:var(--bad);border-color:var(--bad);color:#fff}
+#skandi-app-root .kv-tile{
+  border-top-color:var(--blue);
+}
+#skandi-app-root .progress-fill{
+  background:linear-gradient(90deg,var(--blue),var(--cyan));
+}
+#skandi-app-root .ops-alert{
+  border-left-color:var(--cyan);
+  background:var(--panel2);
+}
+#skandi-app-root .health-dot,#skandi-app-root .ops-rail-footer .mini-led{
+  background:var(--ok);
+  box-shadow:0 0 0 3px rgba(21,128,61,.16);
+}
+#skandi-app-root .upload-drop{
+  border-color:var(--line2);
+  background:var(--panel);
+}
+#skandi-app-root .upload-thumb{
+  background:var(--panel2);
+  color:var(--blue);
+}
+#skandi-app-root .upload-remove{
+  background:rgba(185,28,28,.10);
+  color:var(--bad);
+}
+#skandi-app-root .pill.ok,#skandi-app-root .status-shipped{background:rgba(21,128,61,.10);color:var(--ok)}
+#skandi-app-root .pill.warn,#skandi-app-root .status-pending{background:rgba(180,83,9,.12);color:var(--warn)}
+#skandi-app-root .pill.bad,#skandi-app-root .status-cancelled{background:rgba(185,28,28,.10);color:var(--bad)}
+#skandi-app-root .pill.info,#skandi-app-root .status-picking{background:rgba(2,46,100,.10);color:var(--blue)}
+#skandi-app-root .ops-rail-footer strong,#skandi-app-root .nav-btn .nav-icon{color:inherit}
+#skandi-app-root .mono{font-family:var(--mono)}
+
+/* Store-control functional helpers; visual tokens match the replica shell. */
+#skandi-app-root .code{font-family:var(--mono);font-size:11px;color:var(--muted)}
+#skandi-app-root .stock-low{color:var(--bad);font-weight:900}
+#skandi-app-root .stock-ok{color:var(--ok);font-weight:900}
+#skandi-app-root .stock-watch{color:var(--warn);font-weight:900}
+#skandi-app-root pre{
+  margin:0;
+  background:var(--dark);
+  color:#dbeafe;
+  border-radius:var(--radius-md);
+  padding:14px;
+  overflow:auto;
+  font-size:12px;
+  line-height:1.45;
+  font-family:var(--mono);
+}
+
+</style>
+<style data-skandi-part="shell">html,body{margin:0;width:100%;min-height:100%;}*,*::before,*::after{box-sizing:border-box}#skandi-shell-root{min-height:100vh;min-width:0;display:flex;flex-direction:column}#skandi-app-root{flex:1;min-width:0;position:relative}#riaintra-global-header-root,#riaintra-global-footer-root{flex:none}@media(max-width:767px){input:not([type=hidden]),select,textarea{font-size:16px!important}}html,body{height:100%;overflow:hidden}#skandi-shell-root{height:100vh;height:100dvh;min-height:0;overflow:hidden}#skandi-app-root{height:auto;min-height:0;overflow:auto}#riaintra-global-header-root{position:relative;height:52px;min-height:52px;overflow:visible;z-index:2000}#riaintra-global-footer-root{height:auto;overflow:visible;z-index:2000}#riaintra-global-header-root .shellbar{position:absolute}#altea-global-footer-root .status-bar{position:relative}@media(max-width:600px){#riaintra-global-footer-root .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px}#riaintra-global-footer-root .footer-left{flex-wrap:wrap;gap:6px}}</style>
+</head>
+<body>
+<div id="skandi-shell-root" data-skandi-page="store-control" data-skandi-key="storeControl" data-skandi-family="riaintra" data-skandi-chrome="riaintra">
+<div id="riaintra-global-header-root">
+
+<!-- MAIN HEADER -->
+<header class="shellbar">
+  <div class="shellbar-inner">
+    
+    <div class="shell-left">
+      <button id="burger" class="burger" type="button" aria-label="Open menu">☰</button>
+      <div class="product">
+        <img id="logo" src="" alt="RIAINTRA">
+        <div class="product-text">
+          <strong id="riaintra-header-productName">RIAINTRA</strong>
+          <small id="productContext">Enterprise Workforce Suite</small>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Desktop Navigation -->
+    <nav id="riaintra-header-desktopNav" class="shell-nav" aria-label="Internal navigation"></nav>
+    
+    <div class="shell-right">
+      <button id="returnDashboardBtn" class="utility-action" type="button" hidden="">Return to Dashboard</button>
+      <button id="logoutBtn" class="utility-action" type="button">Logout</button>
+
+      <!-- Clock -->
+      <div id="sfClock" class="clock" title="Toggle local / UTC">
+        <strong id="sfClockTime">--:--:--</strong>
+        <small id="sfClockDate">LOCAL</small>
+      </div>
+      
+      <!-- Profile -->
+      <div class="profile" id="userProfile">
+        <div class="profile-name" id="userName">--</div>
+        <div class="profile-meta" id="userMeta">--</div>
+        <div class="profile-email" id="userEmail">--</div>
+        <img id="badge_photo_url" class="profile-avatar" alt="Staff badge photo" style="display:none">
+        <div id="avatarFallback" class="profile-avatar">--</div>
+      </div>
+    </div>
+
+  </div>
+</header>
+
+<!-- MOBILE DRAWER -->
+<div id="mobileDrawer" class="mobile-drawer">
+  <div class="mobile-head">
+    <strong>RIAINTRA</strong>
+    <button id="drawerClose" class="close" type="button" aria-label="Close menu">×</button>
+  </div>
+  <nav id="riaintra-header-mobileNav" class="mobile-nav"></nav>
+</div>
+<div id="drawerOverlay" class="overlay"></div>
+
+
+
+
+</div>
+<div id="skandi-app-root">
+
+<div class="skandi-hm-ops app-shell app">
+  <aside class="ops-rail uniform-sidebar side-rail" aria-label="SKANDI Store backend navigation">
+    <div class="ops-brand">
+      <div class="ops-brand__label">SKANDI GROUP</div>
+      <div class="ops-brand__mark">THE STORE</div>
+      <div class="ops-brand__tag"><b>Control Center</b></div>
+    </div>
+
+    <div class="ops-rail-search">
+      <input id="query" class="input search" type="search" placeholder="Search SKU, product, order, customer…">
+    </div>
+
+    <nav id="sideNav" class="ops-menu nav-group">
+      <div class="ops-menu__section">Operations</div>
+      <button class="nav-btn nav-button active" data-panel="dashboard" type="button"><span class="nav-icon">D</span><span>Dashboard</span></button>
+      <button class="nav-btn nav-button" data-panel="orders" type="button"><span class="nav-icon">O</span><span>Order Queue</span><span class="nav-count">ECOM</span></button>
+      <button class="nav-btn nav-button" data-panel="products" type="button"><span class="nav-icon">P</span><span>Product Catalog</span><span class="nav-count">SKU</span></button>
+      <button class="nav-btn nav-button" data-panel="inventory" type="button"><span class="nav-icon">I</span><span>Inventory</span><span class="nav-count">VAR</span></button>
+
+      <div class="ops-menu__section">Configuration</div>
+      <button class="nav-btn nav-button" data-panel="collections" type="button"><span class="nav-icon">C</span><span>Collections</span><span class="nav-count">SET</span></button>
+      <button class="nav-btn nav-button" data-panel="discounts" type="button"><span class="nav-icon">%</span><span>Promotions</span><span class="nav-count">RULE</span></button>
+
+      <div class="ops-menu__section">Trace</div>
+      <button class="nav-btn nav-button" data-panel="audit" type="button"><span class="nav-icon">L</span><span>Session Activity</span><span class="nav-count">LOG</span></button>
+    </nav>
+
+    <div class="ops-rail-footer">
+      <strong><span class="mini-led"></span>Operating with no issues</strong>
+      Operator: <span class="mono">STOREFRONT</span><br>
+      Access: <span class="mono">RETAIL</span><br>
+      Sync: <span class="mono">LIVE</span>
+    </div>
+  </aside>
+
+  <main class="ops-main main-shell uniform-workspace">
+    <div class="uniform-status-bar">
+      <div class="toast" id="status">Loading Store Control...</div>
+    </div>
+
+    <section class="ops-workspace workspace uniform-content" id="workspace">
+      <section class="panel active" id="panel-dashboard">
+        <div class="panel-header">
+          <div class="panel-heading">
+            <div class="panel-kicker">Control overview</div>
+            <h3 data-subtitle="Live Storefront totals, connection state, and admin readiness.">Store operations status</h3>
+          </div>
+          <div class="panel-tools">
+            <span class="pill ok">Store control</span>
+            <span class="pill info mono">LIVE ADMIN</span>
+          </div>
+        </div>
+        <div class="panel-body">
+          <div class="status-strip">
+            <div><span>System</span><b>Storefront</b></div>
+            <div><span>Owner</span><b>SKANDI</b></div>
+            <div><span>Mode</span><b>Admin</b></div>
+            <div><span>Queue</span><b>Live Sync</b></div>
+            <div><span>Style</span><b>Backend Ops</b></div>
+          </div>
+          <div class="kv-grid" id="statsGrid"></div>
+          <div class="ops-dashboard-lower">
+            <div class="ops-card">
+              <div class="panel-kicker">Store health</div>
+              <h3 data-subtitle="Operational snapshot from products, inventory, orders, and Storefront permissions.">Backend checks</h3>
+              <div class="process-list" id="healthFeed"></div>
+            </div>
+            <div class="ops-card">
+              <div class="panel-kicker">Stock attention</div>
+              <h3 data-subtitle="Products below reorder threshold returned by Storefront inventory.">Critical stock</h3>
+              <div id="lowStockFeed"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel" id="panel-orders">
+        <div class="panel-header">
+          <div class="panel-heading">
+            <div class="panel-kicker">Order management</div>
+            <h3 data-subtitle="Review the Storefront order queue and send fulfilment actions through SKANDI.">Storefront order queue</h3>
+          </div>
+          <div class="panel-tools">
+            <select class="select" id="orderFilter" style="width:190px">
+              <option value="">All statuses</option>
+              <option value="PAID">Paid</option>
+              <option value="NOT_FULFILLED">Unfulfilled</option>
+              <option value="PARTIALLY_FULFILLED">Partially fulfilled</option>
+              <option value="FULFILLED">Fulfilled</option>
+              <option value="CANCELED">Canceled</option>
+            </select>
+            <button class="btn primary red" id="refreshOrdersBtn" type="button">Refresh Orders</button>
+          </div>
+        </div>
+        <div class="panel-body">
+          <div class="status-strip">
+            <div><span>Payment</span><b>From Wix</b></div>
+            <div><span>Pick</span><b>Unfulfilled</b></div>
+            <div><span>Pack</span><b>Order note</b></div>
+            <div><span>Ship</span><b>Tracking</b></div>
+            <div><span>Activity</span><b>This session</b></div>
+          </div>
+          <div class="table" id="orderPipeline"></div>
+
+          <div class="list-with-toolbar">
+            <div class="list-titlebar"><strong>Fulfillment action</strong><span class="ops-note">Send order lifecycle updates to SKANDI Storefront.</span></div>
+            <div class="form-grid">
+              <div class="field"><label class="label" for="fulfillmentOrderId">Order ID</label><input class="input" id="fulfillmentOrderId" placeholder="Storefront order ID"></div>
+              <div class="field"><label class="label" for="fulfillmentStatus">Action</label><select class="select" id="fulfillmentStatus"><option value="READY">Add ready-to-ship note</option><option value="FULFILLED">Mark fulfilled</option><option value="CANCELED">Cancel order</option><option value="ARCHIVED">Archive order</option></select></div>
+              <div class="field"><label class="label" for="carrier">Carrier</label><input class="input" id="carrier" placeholder="DHL / PostNord / Bring"></div>
+              <div class="field"><label class="label" for="trackingNumber">Tracking Number</label><input class="input" id="trackingNumber" placeholder="Tracking number"></div>
+              <div class="field full"><label class="label" for="orderNote">Internal Note</label><textarea class="textarea" id="orderNote" placeholder="Note saved with the ready-to-ship action"></textarea></div>
+            </div>
+            <div class="row form-actions"><button class="btn primary red" id="sendFulfillmentBtn" type="button">Send Fulfillment Update</button><button class="btn" id="clearFulfillmentBtn" type="button">Clear</button></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel" id="panel-products">
+        <div class="panel-header">
+          <div class="panel-heading">
+            <div class="panel-kicker">Product data</div>
+            <h3 data-subtitle="Create, update, hide, and publish Storefront products through SKANDI.">Product catalog</h3>
+          </div>
+          <div class="panel-tools">
+            <span class="pill info" id="productModeBadge">New product</span>
+          </div>
+        </div>
+        <div class="panel-body">
+          <div class="form-grid">
+            <div class="field wide"><label class="label" for="productName">Product Name</label><input class="input" id="productName" placeholder="Cabin crew blazer"></div>
+            <div class="field"><label class="label" for="productSku">SKU</label><input class="input" id="productSku" placeholder="SKD-BLZ-001"></div>
+            <div class="field"><label class="label" for="productVariant">Variant to edit</label><select class="select" id="productVariant"></select></div><div class="field"><label class="label" for="productPrice">Price</label><input class="input" id="productPrice" type="number" step="0.01" min="0" placeholder="49.00"></div>
+            <div class="field"><label class="label" for="productCurrency">Currency</label><input readonly="" class="input" id="productCurrency" value="USD" placeholder="USD"></div>
+            <div class="field"><label class="label" for="productCollection">Collection</label><select class="select" id="productCollection"></select></div>
+            <div class="field"><label class="label" for="productVisible">Visibility</label><select class="select" id="productVisible"><option value="true">Visible</option><option value="false">Hidden</option></select></div>
+            <div class="field"><label class="label" for="productWeight">Weight</label><input class="input" id="productWeight" type="number" step="0.01" min="0" placeholder="0.4"></div>
+            <div class="field"><label class="label" for="productTrackInventory">Track Inventory</label><select class="select" id="productTrackInventory"><option value="true">Track stock</option><option value="false">Do not track</option></select></div>
+            <div class="field full"><label class="label" for="productDescription">Description</label><textarea class="textarea" id="productDescription" placeholder="Product description visible in Storefront"></textarea></div>
+            <div class="field full">
+              <label class="label">Product media</label>
+              <div class="upload-box">
+                <div class="upload-existing">Product media is managed in the canonical Supabase Media Control. Store Control never creates duplicate Data URL media.</div>
+                <div class="row" style="justify-content:flex-start;margin-top:8px">
+                  <button class="btn primary" id="openMediaControlBtn" type="button">Open Media Control</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="row form-actions">
+            <button class="btn primary red" id="saveProductBtn" type="button">Save Product</button>
+            <button class="btn" id="clearProductBtn" type="button">Clear Product</button>
+            <div class="field"><label>Bulk product IDs</label><textarea class="input" id="bulkProductIds"></textarea><select id="bulkPriceOperation" class="select"><option value="PERCENT">Percent change</option><option value="SET">Set price</option><option value="ADD">Add amount</option><option value="SUBTRACT">Subtract amount</option></select><input id="bulkPriceValue" class="input" type="number" step="0.01"><button id="bulkPriceBtn" class="btn" type="button">Update selected prices</button></div><button class="btn bad" id="deleteProductBtn" type="button">Hide Product</button>
+          </div>
+          <div class="list-with-toolbar">
+            <div class="list-titlebar"><strong>Product records</strong><span class="ops-note">Live products returned by SKANDI Storefront.</span></div>
+            <div class="table" id="productsTable"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel" id="panel-inventory">
+        <div class="panel-header">
+          <div class="panel-heading">
+            <div class="panel-kicker">Inventory control</div>
+            <h3 data-subtitle="Update storefront inventory per product or variant.">Inventory board</h3>
+          </div>
+          <div class="panel-tools">
+            <span class="pill warn">Elevated backend required</span>
+            <button class="btn primary red" id="refreshInventoryBtn" type="button">Refresh Inventory</button>
+          </div>
+        </div>
+        <div class="panel-body">
+          <div class="form-grid">
+            <div class="field wide"><label class="label" for="inventoryRecord">Stock record / location</label><select class="select" id="inventoryRecord"></select></div><div class="field"><label class="label" for="inventoryProductId">Product ID</label><input class="input" readonly="" id="inventoryProductId" placeholder="Product ID"></div>
+            <div class="field"><label class="label" for="inventoryVariantId">Variant ID</label><input class="input" readonly="" id="inventoryVariantId" placeholder="Variant ID, optional"></div>
+            <div class="field"><label class="label" for="inventorySku">SKU</label><input class="input" id="inventorySku" placeholder="SKU reference"></div>
+            <div class="field"><label class="label" for="inventoryMode">Mode</label><select class="select" id="inventoryMode"><option value="SET">Set exact quantity</option><option value="INCREMENT">Increment quantity</option><option value="DECREMENT">Decrement quantity</option></select></div>
+            <div class="field"><label class="label" for="inventoryQuantity">Quantity</label><input class="input" id="inventoryQuantity" type="number" step="1" placeholder="10"></div>
+            <div class="field"><label class="label" for="inventoryTracked">Tracking</label><select class="select" id="inventoryTracked"><option value="true">Tracked</option><option value="false">Not tracked</option></select></div>
+            <div class="field full"><label class="label" for="inventoryReason">Reason (session note)</label><textarea class="textarea" id="inventoryReason" placeholder="Stock count, return, damaged item, supplier delivery..."></textarea></div>
+          </div>
+          <div class="row form-actions"><button class="btn primary red" id="updateInventoryBtn" type="button">Update Inventory</button><button class="btn" id="clearInventoryBtn" type="button">Clear</button></div>
+          <div class="list-with-toolbar">
+            <div class="list-titlebar"><strong>Inventory records</strong><span class="ops-note">Current stock levels, low-stock flags, and variant tracking.</span></div>
+            <div class="table" id="inventoryTable"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel" id="panel-collections">
+        <div class="panel-header">
+          <div class="panel-heading">
+            <div class="panel-kicker">Store setup</div>
+            <h3 data-subtitle="Create/update collections and assign Storefront products to collection groups.">Collection manager</h3>
+          </div>
+        </div>
+        <div class="panel-body">
+          <div class="form-grid">
+            <div class="field wide"><label class="label" for="collectionId">Assign products to collection</label><select class="select" id="collectionId"></select></div><div class="field wide"><label class="label" for="collectionTitle">Collection Name</label><input class="input" id="collectionTitle" placeholder="Storefront Essentials"></div>
+            <div class="field"><label class="label" for="collectionSlug">Slug</label><input class="input" id="collectionSlug" placeholder="uniform-essentials"></div>
+            <div class="field full"><label class="label" for="collectionDescription">Description</label><textarea class="textarea" id="collectionDescription" placeholder="Collection description"></textarea></div>
+            <div class="field full"><label class="label" for="collectionProductIds">Product IDs</label><textarea class="textarea" id="collectionProductIds" placeholder="One product ID per line, or comma separated"></textarea></div>
+          </div>
+          <div class="row form-actions">
+            <button class="btn primary red" id="saveCollectionBtn" type="button">Create Collection</button>
+            <button class="btn" id="assignCollectionBtn" type="button">Assign Products</button>
+            <button class="btn" id="clearCollectionBtn" type="button">Clear</button>
+          </div>
+          <div class="list-with-toolbar">
+            <div class="list-titlebar"><strong>Collection records</strong><span class="ops-note">Returned by SKANDI Storefront.</span></div>
+            <div class="table" id="collectionsList"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel" id="panel-discounts">
+        <div class="panel-header">
+          <div class="panel-heading">
+            <div class="panel-kicker">Promotion rules</div>
+            <h3 data-subtitle="Draft store promotions/coupons for SKANDI Storefront.">Promotions</h3>
+          </div>
+          <div class="panel-tools"><span class="pill warn">Draft workflow</span></div>
+        </div>
+        <div class="panel-body">
+          <div class="form-grid">
+            <div class="field wide"><label class="label" for="promoName">Promotion Name</label><input class="input" id="promoName" placeholder="Crew launch discount"></div>
+            <div class="field"><label class="label" for="promoCode">Code</label><input class="input" id="promoCode" placeholder="CREW10"></div>
+            <div class="field"><label class="label" for="promoType">Type</label><select class="select" id="promoType"><option value="PERCENT">Percent</option><option value="AMOUNT">Amount</option><option value="FREE_SHIPPING">Free shipping</option></select></div>
+            <div class="field"><label class="label" for="promoValue">Value</label><input class="input" id="promoValue" type="number" step="0.01" placeholder="10"></div>
+            <div class="field"><label class="label" for="promoStarts">Starts</label><input class="input" id="promoStarts" type="date"></div>
+            <div class="field"><label class="label" for="promoEnds">Ends</label><input class="input" id="promoEnds" type="date"></div>
+            <div class="field full"><label class="label" for="promoScope">Scope</label><textarea class="textarea" id="promoScope" placeholder="Collections, product IDs, staff segment, limits..."></textarea></div>
+          </div>
+          <div class="row form-actions"><button class="btn primary red" id="savePromoBtn" type="button">Save Promotion Draft</button><button class="btn" id="clearPromoBtn" type="button">Clear</button></div>
+          <div class="list-with-toolbar">
+            <div class="list-titlebar"><strong>Promotion records</strong><span class="ops-note">Local drafts plus SKANDI Storefront responses.</span></div>
+            <div class="table" id="promotionsList"></div>
+          </div>
+        </div>
+      </section>
+      <section class="panel" id="panel-audit">
+        <div class="panel-header">
+          <div class="panel-heading">
+            <div class="panel-kicker">Trace events</div>
+            <h3 data-subtitle="Local actions plus audit events returned by SKANDI Storefront.">Audit log</h3>
+          </div>
+          <div class="panel-tools"><button class="btn primary red" id="clearAuditBtn" type="button">Clear Local Audit</button></div>
+        </div>
+        <div class="panel-body">
+          <div class="table" id="auditTable"></div>
+        </div>
+      </section>
+    </section>
+  </main>
+</div>
+
+
+
+
+</div>
+<div id="riaintra-global-footer-root">
+<footer>
+  <div class="wrap">
+    <div class="footer-left">
+      <div id="links" class="links"></div>
+      <div class="meta">RIAINTRA</div>
+    </div>
+
+    <div id="grouplogo" class="global-footer">
+      <img src="https://static.wixstatic.com/media/394052_02ed0c030fea4f14b5e5677fdaeae197~mv2.png" alt="SKANDI GROUP MEMBER">
+    </div>
+
+    <div class="footer-right">
+      © 2026 SKANDI TRAVELS
+    </div>
+  </div>
+</footer>
+
+
+
+</div>
+
+</div>
+<script data-skandi-part="skandi-shell-runtime">/** SKANDI compiled public-shell runtime — no alternate backend, no local cart. */
+const SKANDI_SHELL_SOURCE = 'SKANDI_SHELL';
+const SKANDI_SHELL_PARENT = 'SKANDI_WIX_PARENT';
+const shellRoot = document.getElementById('skandi-shell-root');
+if (!shellRoot) throw new Error('SKANDI shell mount missing');
+window.__SKANDI_SHELL__ = Object.freeze({
+  mode:'compiled-single-embed',
+  page:shellRoot.dataset.skandiPage || '',
+  root:shellRoot
+});
+// A single iframe passes Home, Header, Footer and Mobile messages to the
+// same Wix Velo HtmlComponent. Existing message source/type values remain.
+// The Wix master controller supplies canonical route and session data.
+window.addEventListener('message', event => {
+  if (event.source !== window.parent) return;
+  let message = event.data;
+  if (typeof message === 'string') {
+    try { message = JSON.parse(message); } catch (_) { return; }
+  }
+  if (!message || message.source !== SKANDI_SHELL_PARENT) return;
+  if (message.type === 'SKANDI_MASTER_CONFIG') {
+    shellRoot.dataset.skandiPath = String(message.payload?.currentPath || '/');
+  }
+  if (message.type === 'SKANDI_SCROLL_TOP' || message.type === 'MASTER_SCROLL_TOP') {
+    document.getElementById('skandi-app-root')?.scrollTo({ top:0, behavior:'instant' });
+  }
+});
+window.parent?.postMessage({
+  source:SKANDI_SHELL_SOURCE,
+  type:'SKANDI_SHELL_READY',
+  payload:{page:shellRoot.dataset.skandiPage || ''},
+  timestamp:new Date().toISOString()
+}, '*');
+
+// The universal receiver supplies this context only after canonical parent,
+// manifest and digest validation. Legacy Home never opts into this handshake.
+let shellAttempts = 0;
+let shellConfigReceived = false;
+let shellTimer;
+function requestShellConfig() {
+  if (++shellAttempts > 40 || shellConfigReceived) { clearInterval(shellTimer); return; }
+  window.parent.postMessage({source:SKANDI_SHELL_SOURCE,type:'MASTER_CONFIG_REQUEST',payload:{context:'compiled-shell'}},'*');
+}
+window.addEventListener('message', event => {
+  if (event.source !== window.parent) return;
+  let message=event.data;
+  if(typeof message==='string'){try{message=JSON.parse(message);}catch(_){return;}}
+  if(message?.source===SKANDI_SHELL_PARENT && message.type==='SKANDI_MASTER_CONFIG') {
+    shellConfigReceived=true;clearInterval(shellTimer);
+  }
+});
+function startCompiledShell() {
+  const context=window.__SKANDI_RECEIVER_CONTEXT__;
+  if(context?.allowed===true && context.key===shellRoot.dataset.skandiKey) {
+    window.parent.postMessage({source:SKANDI_SHELL_SOURCE,type:'SKANDI_COMPILED_READY',payload:{key:context.key}},'*');
+  }
+  shellTimer=setInterval(requestShellConfig,500);requestShellConfig();
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',startCompiledShell,{once:true});
+else startCompiledShell();
+</script>
+<script data-skandi-part="header">(function(){
+const __root=window.document.getElementById("riaintra-global-header-root");
+const document=new Proxy(window.document,{get(target,key){if(key==='getElementById')return id=>{const el=target.getElementById(id);return el&&(__root===el||__root.contains(el))?el:null;};if(key==='querySelector'||key==='querySelectorAll')return selector=>{if(/^(?:html|body|head|meta|title|link)(?:[\s.#[:]|$)/i.test(selector)&&!selector.includes(' '))return target[key](selector);return __root[key](selector);};if(key==='getElementsByClassName'||key==='getElementsByTagName')return value=>__root[key](value);const value=Reflect.get(target,key,target);return typeof value==='function'?value.bind(target):value;},set(target,key,value){return Reflect.set(target,key,value,target);}});
+
+(()=>{
+  "use strict";
+  
+  const SOURCE = "SKANDI_RIAINTRA_HEADER";
+  const PARENT = "SKANDI_WIX_PARENT";
+
+  let config = null;
+  let staff = {};
+
+  const $ = id => document.getElementById(id);
+  const esc = v => String(v ?? "").replace(/[&<>"']/g, s => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;"
+  }[s]));
+
+  function post(type, payload = {}) {
+    if (window.parent && window.parent !== window) {
+      window.parent.postMessage({
+        source: SOURCE,
+        type,
+        payload,
+        timestamp: new Date().toISOString()
+      }, "*");
+    }
+  }
+
+  // Mobile Menu Logic
+  function closeMenu() {
+    $("mobileDrawer")?.classList.remove("open");
+    $("drawerOverlay")?.classList.remove("show");
+    /* Compiled shell owns internal chrome geometry. */
+  }
+
+  $("burger")?.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const menu = $("mobileDrawer");
+    const overlay = $("drawerOverlay");
+    
+    menu.classList.toggle("open");
+    overlay.classList.toggle("show");
+    
+    if (menu.classList.contains("open")) {
+      // Command Wix to expand iframe slightly so the dark overlay shows
+      /* Compiled shell owns internal chrome geometry. */ 
+    } else {
+      /* Compiled shell owns internal chrome geometry. */
+    }
+  });
+
+  $("drawerClose")?.addEventListener("click", closeMenu);
+  $("drawerOverlay")?.addEventListener("click", closeMenu);
+
+  // Render Data
+  function render() {
+    // 1. Branding
+    const header = config?.internal?.header || {};
+    const logo = config?.brand?.assets?.logos?.riaintra || config?.brand?.assets?.logos?.skandiPrimary || "";
+    
+    if (logo && $("logo")) $("logo").src = logo;
+    if (header.productName && $("riaintra-header-productName")) $("riaintra-header-productName").textContent = header.productName;
+    if (header.productContext && $("productContext")) $("productContext").textContent = header.productContext;
+
+    // 2. Navigation
+    const current = config?.currentPath || "";
+    const items = header.primaryNav || config?.nav || [];
+    
+    if (Array.isArray(items) && items.length > 0) {
+      const markup = items.map(i => {
+        const active = current === i.path || (i.path && current.startsWith(i.path + "/"));
+        return `<button type="button" class="${active ? "active" : ""}" data-path="${esc(i.path)}">${esc(i.label)}</button>`;
+      }).join("");
+      
+      if ($("riaintra-header-desktopNav")) $("riaintra-header-desktopNav").innerHTML = markup;
+      if ($("riaintra-header-mobileNav")) $("riaintra-header-mobileNav").innerHTML = markup;
+    }
+
+    // 3. Canonical staff profile from Wix parent -> SKANDI_CORE/staffAuth -> Supabase agent_users.
+    const p = staff.profile || config?.staff?.profile || {};
+    const full =
+      p.displayName || p.display_name || p.fullName || p.name ||
+      [p.firstName || p.first_name, p.lastName || p.last_name].filter(Boolean).join(" ") ||
+      "Employee";
+    const skId = String(p.skId || p.skID || p.sk_id || p.employeeId || p.employee_id || "").trim().toUpperCase();
+    const baseCode = String(p.baseCode || p.base_code || p.base || p.station || "").trim().toUpperCase();
+    const corporateEmail = String(
+      p.corporateEmail || p.corporate_email || p.corporateEmailAddress ||
+      p.corporate_email_address || p.workEmail || p.email || ""
+    ).trim();
+    const photo = String(
+      p.badgePhotoUrl || p.badge_photo_url || p.photoUrl ||
+      p.profilePhotoUrl || p.photo || ""
+    ).trim();
+    const hasData = Boolean(skId || full !== "Employee" || corporateEmail || photo);
+
+    if ($("userProfile")) $("userProfile").style.display = hasData ? "grid" : "none";
+
+    if (hasData) {
+      const initials = [p.firstName || p.first_name, p.lastName || p.last_name]
+        .filter(Boolean).map(v => String(v)[0]).join("").slice(0, 2).toUpperCase() ||
+        full.slice(0, 2).toUpperCase();
+
+      if ($("userName")) $("userName").textContent = full;
+      if ($("userMeta")) $("userMeta").textContent = [skId, baseCode].filter(Boolean).join(" • ") || "RIAINTRA";
+      if ($("userEmail")) $("userEmail").textContent = corporateEmail || "—";
+
+      if (photo) {
+        $("badge_photo_url").src = photo;
+        $("badge_photo_url").style.display = "block";
+        $("avatarFallback").style.display = "none";
+      } else {
+        $("badge_photo_url").style.display = "none";
+        $("avatarFallback").style.display = "grid";
+        $("avatarFallback").textContent = initials;
+      }
+    }
+
+    // Return to Dashboard is hidden only on the Success Factors dashboard itself.
+    const normalizedCurrent = String(current || "").split("?")[0].replace(/\/$/, "") || "/";
+    if ($("returnDashboardBtn")) {
+      $("returnDashboardBtn").hidden = normalizedCurrent === "/riaintra/success-factors";
+    }
+  }
+
+  // Navigation Logic
+  document.addEventListener("click", e => {
+    const btn = e.target.closest("[data-path]");
+    if (!btn) return;
+    
+    const path = btn.dataset.path;
+    
+    // Update local active state visually
+    document.querySelectorAll("[data-path]").forEach(b => b.classList.remove("active"));
+    document.querySelectorAll(`[data-path="${path}"]`).forEach(b => b.classList.add("active"));
+    
+    if (config) config.currentPath = path;
+
+    closeMenu();
+    post("RIAINTRA_NAVIGATE", { path });
+  });
+
+  $("returnDashboardBtn")?.addEventListener("click", () => {
+    post("RIAINTRA_NAVIGATE", {
+      path:config?.routes?.successFactors || "/riaintra/success-factors"
+    });
+  });
+
+  $("logoutBtn")?.addEventListener("click", () => {
+    post("RIAINTRA_LOGOUT", {});
+  });
+
+  // Clock Logic
+  let clockUsesUtc = false;
+  function updateClock() {
+    const now = new Date();
+    const opts = {
+      hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false,
+      ...(clockUsesUtc ? { timeZone: "UTC" } : {})
+    };
+    if ($("sfClockTime")) $("sfClockTime").textContent = new Intl.DateTimeFormat(undefined, opts).format(now);
+    if ($("sfClockDate")) $("sfClockDate").textContent = clockUsesUtc 
+      ? `${now.toISOString().slice(0, 10)} UTC` 
+      : new Intl.DateTimeFormat(undefined, { weekday: "short", day: "2-digit", month: "short" }).format(now).toUpperCase();
+  }
+
+  $("sfClock")?.addEventListener("click", () => {
+    clockUsesUtc = !clockUsesUtc;
+    updateClock();
+  });
+  
+  setInterval(updateClock, 1000);
+  updateClock();
+
+  // Listen for Wix Parent Messages
+  window.addEventListener("message", e => {
+    const m = e.data || {};
+    if (m.source !== PARENT) return;
+
+    if (m.type === "SKANDI_MASTER_CONFIG") {
+      config = m.payload || {};
+      render();
+    }
+
+    if ([
+      "RIAINTRA_HEADER_STATE",
+      "UPDATE_PROFILE",
+      "INTERNAL_CHROME_BOOTSTRAP",
+      "GLOBAL_HEADER_BOOTSTRAP"
+    ].includes(m.type)) {
+      const payloadProfile =
+        m.payload?.profile ||
+        m.payload?.session?.profile ||
+        m.payload?.session ||
+        m.payload ||
+        {};
+      staff.profile = { ...staff.profile, ...payloadProfile };
+      render();
+    }
+  });
+
+  // Signal Wix parent window that embed is ready
+  post("MASTER_CONFIG_REQUEST", { context: "riaintra-header" });
+  post("RIAINTRA_HEADER_READY", {});
+  /* Compiled shell owns internal chrome geometry. */
+
+})();
+
+
+})();</script>
+<script data-skandi-part="footer">(function(){
+const __root=window.document.getElementById("riaintra-global-footer-root");
+const document=new Proxy(window.document,{get(target,key){if(key==='getElementById')return id=>{const el=target.getElementById(id);return el&&(__root===el||__root.contains(el))?el:null;};if(key==='querySelector'||key==='querySelectorAll')return selector=>{if(/^(?:html|body|head|meta|title|link)(?:[\s.#[:]|$)/i.test(selector)&&!selector.includes(' '))return target[key](selector);return __root[key](selector);};if(key==='getElementsByClassName'||key==='getElementsByTagName')return value=>__root[key](value);const value=Reflect.get(target,key,target);return typeof value==='function'?value.bind(target):value;},set(target,key,value){return Reflect.set(target,key,value,target);}});
+
+(()=>{
+  const SOURCE="SKANDI_RIAINTRA_FOOTER",PARENT="SKANDI_WIX_PARENT";
+  const LEGAL_PATH="/riaintra/success-factors/legal-internal";
+  let config=null;
+  const $=id=>document.getElementById(id);
+  const esc=v=>String(v??"").replace(/[&<>"']/g,s=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[s]));
+  const post=(type,payload={})=>window.parent.postMessage({source:SOURCE,type,payload,timestamp:new Date().toISOString()},"*");
+
+  function render(){
+    const legalPath=String(config?.routes?.legalInternal||LEGAL_PATH);
+    const links=Array.isArray(config?.internal?.footer?.links)?[...config.internal.footer.links]:[];
+    if(!links.some(i=>String(i?.path||"")===legalPath)){
+      links.push({label:"Legal & Policies",path:legalPath});
+    }
+    $("links").innerHTML=links.map(i=>`<button data-path="${esc(i.path)}">${esc(i.label)}</button>`).join("");
+  }
+
+  document.addEventListener("click",e=>{
+    const path=e.target.closest("[data-path]")?.dataset.path;
+    if(path)post("MASTER_NAVIGATE",{path});
+  });
+
+  window.addEventListener("message",e=>{
+    const m=e.data||{};if(m.source!==PARENT)return;
+    if(m.type==="SKANDI_MASTER_CONFIG"){config=m.payload||{};render()}
+  });
+
+  post("MASTER_CONFIG_REQUEST",{context:"riaintra-footer"});
+})();
+
+
+})();</script>
+<script data-skandi-part="store-control">(function(){
+const __root=window.document.getElementById("skandi-app-root");
+const document=new Proxy(window.document,{get(target,key){if(key==='getElementById')return id=>{const el=target.getElementById(id);return el&&(__root===el||__root.contains(el))?el:null;};if(key==='querySelector'||key==='querySelectorAll')return selector=>{if(/^(?:html|body|head|meta|title|link)(?:[\s.#[:]|$)/i.test(selector)&&!selector.includes(' '))return target[key](selector);return __root[key](selector);};if(key==='getElementsByClassName'||key==='getElementsByTagName')return value=>__root[key](value);const value=Reflect.get(target,key,target);return typeof value==='function'?value.bind(target):value;},set(target,key,value){return Reflect.set(target,key,value,target);}});
+
+
+const SOURCE="SKANDI_STORE_CONTROL_V3";
+const PARENT="SKANDI_WIX_PARENT";
+const STOREFRONT_APP_ID="215238eb-22a5-4c36-9e7b-e7c08025e04e";
+let backendResponded=false, BUSY=false;
+let detail=null,lastMutation=null;
+function busy(v){BUSY=v;document.querySelectorAll("button").forEach(b=>b.disabled=v)}
+let state={
+  session:{},
+  stats:{products:"—",orders:"—",openOrders:"—",lowStock:"—",collections:"—",revenue:"—"},
+  products:[],
+  orders:[],
+  inventory:[],
+  collections:[],
+  promotions:[],
+  audit:[],
+  editingProductId:"",
+  productUploads:[],
+  mainUploadIndex:null,
+  storeUrl:""
+};
+
+const $=id=>document.getElementById(id);
+const money=(v,c="USD")=>{const n=Number(v||0);try{return new Intl.NumberFormat("en-US",{style:"currency",currency:c||"USD"}).format(n)}catch(e){return "$"+n.toFixed(2)}}
+function esc(v=""){return String(v??"").replace(/[&<>"']/g,s=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[s]))}
+function post(type,payload={}){
+  if(/^STORE_CONTROL_(CREATE_|SAVE_|SET_|BULK_|DELETE_|UPDATE_)/.test(type)){if(BUSY)return;lastMutation={type,payload};busy(true);status("Saving to Wix…")}
+  window.parent.postMessage({source:SOURCE,type,payload,timestamp:new Date().toISOString()},"*")
+}
+function audit(action,detail,mode=""){state.audit.unshift({time:new Date().toISOString(),action,detail,mode});renderAudit()}
+function status(msg,mode=""){const e=$("status");e.textContent=msg||"";e.style.display=msg?"block":"none";e.style.background=mode==="error"?"#b91c1c":mode==="ok"?"#15803d":mode==="warn"?"#b45309":"#020617"}
+function arr(v){return Array.isArray(v)?v:String(v||"").split(/[\n,]/).map(x=>x.trim()).filter(Boolean)}
+function bool(v){return v===true||String(v)==="true"}
+function activePanel(name){
+  const labels={
+    dashboard:["Store Control Center","Live store operations, product maintenance, order fulfilment, and inventory control."],
+    orders:["Storefront Orders","Operate payment, picking, fulfilment, tracking, and cancellations."],
+    products:["Product Catalog","Create, update, hide, and publish Storefront products."],
+    inventory:["Inventory Control","Update product and variant stock through SKANDI Storefront inventory."],
+    collections:["Collection Manager","Manage store collections and product routing."],
+    discounts:["Promotions","Draft and send promotion/coupon payloads to SKANDI Storefront."],
+    audit:["Session Activity","Actions confirmed during this browser session."]
+  };
+  document.querySelectorAll("[data-panel]").forEach(b=>b.classList.toggle("active",b.dataset.panel===name));
+  document.querySelectorAll(".panel[id^='panel-']").forEach(p=>p.classList.toggle("active",p.id===`panel-${name}`));
+  if($("currentWorkspaceTitle")&&labels[name])$("currentWorkspaceTitle").textContent=labels[name][0];
+  if($("currentWorkspaceSubtitle")&&labels[name])$("currentWorkspaceSubtitle").textContent=labels[name][1];
+}
+document.querySelectorAll("[data-panel]").forEach(b=>b.onclick=()=>activePanel(b.dataset.panel));
+document.querySelectorAll("[data-panel-jump]").forEach(b=>b.onclick=()=>activePanel(b.dataset.panelJump));
+
+function seedData(){
+  state={
+    ...state,
+    stats:{products:"—",orders:"—",openOrders:"—",lowStock:"—",collections:"—",revenue:"—"},
+    products:[],
+    inventory:[],
+    orders:[],
+    collections:[],
+    promotions:[],
+    audit:[{time:new Date().toISOString(),action:"SESSION_START",detail:"Storefront session initialized.",mode:"ok"}]
+  };
+}
+
+function render(p={}){
+  state={...state,...p};
+  if(p && Object.keys(p).length){backendResponded=true}
+  if($("apiBadge")){
+    $("apiBadge").textContent=backendResponded?(Object.keys(state.serviceErrors||{}).length?"Partially connected":"Storefront connected"):"Connection pending";
+    $("apiBadge").className="pill "+(backendResponded?"ok":"warn");
+  }
+  renderStats();
+  renderHealth();
+  renderProducts();
+  renderInventory();
+  renderOrders();
+  renderCollections();
+  renderPromotions();
+  renderAudit();
+  renderCollectionOptions();
+}
+function renderStats(){
+  const stats=[
+    ["Products",state.stats.products??state.products.length],
+    ["Open orders (latest 100)",state.stats.openOrders??"Unavailable"],
+    ["Low Stock",state.stats.lowStock??"Unavailable"],
+    ["Collections",state.stats.categories??"—"]
+  ];
+  $("statsGrid").innerHTML=stats.map(([k,v])=>`<div class="kv-tile"><b>${esc(v)}</b><span>${esc(k)}</span></div>`).join("");
+}
+function renderHealth(){
+  const checks=[
+    ["Product service",backendResponded?"Connected":"Waiting for Storefront connection",backendResponded?"live":"warn"],
+    ["Inventory service",state.serviceErrors?.inventory|| (backendResponded?"Ready":"Connection required"),backendResponded&&!state.serviceErrors?.inventory?"live":"warn"],
+    ["Order service",state.serviceErrors?.orders||(backendResponded?"Latest 100 orders":"Connection required"),backendResponded&&!state.serviceErrors?.orders?"live":"warn"],
+    ["Store session",backendResponded?"Live":"Pending",backendResponded?"live":"warn"]
+  ];
+  $("healthFeed").innerHTML=checks.map(([a,b,m])=>`<article class="admin-row"><div><div class="item-title">${esc(a)}</div><div class="item-sub">${esc(b)}</div></div><span class="pill ${m==="live"?"ok":"warn"}">${m==="live"?"Ready":"Pending"}</span></article>`).join("");
+  const low=state.inventory.filter(i=>Number(i.quantity)<=5).slice(0,5);
+  $("lowStockFeed").innerHTML=low.length?low.map(i=>`<article class="admin-row"><div><div class="item-title">${esc(i.name)}</div><div class="item-sub">${esc(i.sku)} · ${esc(i.variant||"Default")}</div></div><span class="pill bad">${esc(i.quantity)} left</span></article>`).join(""):`<div class="item-sub">No low-stock items returned.</div>`;
+}
+function stockClass(q){q=Number(q||0);return q<=0?"stock-low":q<=5?"stock-watch":"stock-ok"}
+function renderProducts(){
+  const q=($("query")?.value||"").toLowerCase();
+  const rows=state.products.filter(p=>!q||[p.name,p.sku,p.id].join(" ").toLowerCase().includes(q));
+  $("productsTable").innerHTML=rows.map(p=>`
+    <article class="admin-row">
+      <div>
+        <div class="item-title">${esc(p.name)}</div>
+        <div class="item-sub"><span class="mono">${esc(p.id||"")}</span> · SKU ${esc(p.sku||"—")} · ${esc(money(p.price,p.currency))}</div>
+      </div>
+      <div class="row">
+        <span class="pill ${p.stock==null?"info":Number(p.stock)<=0?"bad":Number(p.stock)<=5?"warn":"ok"}">${esc(p.stock??"—")} stock</span>
+        <span class="pill ${p.visible!==false?"ok":"warn"}">${p.visible!==false?"Visible":"Hidden"}</span>
+        <button class="btn" data-edit-product="${esc(p.id)}" type="button">Adjust</button>
+      </div>
+    </article>`).join("") || `<div class="empty">No products returned.</div>`;
+  document.querySelectorAll("[data-edit-product]").forEach(btn=>btn.onclick=()=>editProduct(btn.dataset.editProduct));
+}
+
+function renderInventory(){
+  const q=($("query")?.value||"").toLowerCase();
+  const rows=state.inventory.filter(i=>!q||[i.name,i.sku,i.productId,i.variantId].join(" ").toLowerCase().includes(q));
+  $("inventoryTable").innerHTML=rows.map(i=>`
+    <article class="admin-row">
+      <div>
+        <div class="item-title">${esc(i.name)} · ${esc(i.variant||"Default")}</div>
+        <div class="item-sub"><span class="mono">${esc(i.productId||"")}</span> · SKU ${esc(i.sku||"—")} · ${esc(i.variantId||"base")} · Location ${esc(i.locationId||"default")}</div>
+      </div>
+      <div class="row">
+        <span class="pill ${Number(i.quantity||0)<=0?"bad":Number(i.quantity||0)<=5?"warn":"ok"}">${esc(i.quantity??"—")} qty</span>
+        <span class="pill ${i.tracked!==false?"info":"warn"}">${i.tracked!==false?"Tracked":"Not tracked"}</span>
+        <button class="btn" data-inv-product="${esc(i.productId)}" data-inventory-id="${esc(i.id)}" data-inv-variant="${esc(i.variantId||"")}" type="button">Adjust</button>
+      </div>
+    </article>`).join("") || `<div class="empty">No inventory records returned.</div>`;
+  document.querySelectorAll("[data-inv-product]").forEach(btn=>btn.onclick=()=>{
+    const item=state.inventory.find(i=>i.id===btn.dataset.inventoryId);
+    if(!item)return;
+    $("inventoryRecord").value=item.id;
+    $("inventoryProductId").value=item.productId||"";
+    $("inventoryVariantId").value=item.variantId||"";
+    $("inventorySku").value=item.sku||"";
+    $("inventoryQuantity").value=item.quantity??"";
+    $("inventoryTracked").value=String(item.tracked!==false);
+    activePanel("inventory");
+  });
+}
+
+function orderLane(status,label){
+  const rows=state.orders.filter(o=>String(o.fulfillmentStatus||"").toUpperCase()===status || (status==="UNFULFILLED" && !o.fulfillmentStatus));
+  return rows.map(o=>`
+    <article class="admin-row">
+      <div>
+        <div class="item-title">${esc(label)} · #${esc(o.number||o.id)}</div>
+        <div class="item-sub">${esc(o.customer||"Customer")} · ${esc(o.items||0)} items · ${esc(money(o.total,o.currency))}</div>
+      </div>
+      <div class="row">
+        <span class="pill info">${esc(label)}</span>
+        <button class="btn" data-order-fill="${esc(o.id)}" type="button">Action</button>
+      </div>
+    </article>`).join("");
+}
+
+function renderOrders(){
+  const filter=$("orderFilter")?.value||"ALL";
+  const rows=state.orders.filter(o=>filter==="ALL"||filter==="all"||!filter||o.fulfillmentStatus===filter||o.paymentStatus===filter||o.status===filter);
+  $("orderPipeline").innerHTML=rows.map(o=>`
+    <article class="admin-row">
+      <div>
+        <div class="item-title">#${esc(o.number||o.id)} · ${esc(o.customer||"Customer")}</div>
+        <div class="item-sub">${esc(o.items||0)} items · ${esc(money(o.total,o.currency))} · ${esc(o.paymentStatus||"—")} · ${esc(new Date(o.created||Date.now()).toLocaleString())}</div>
+      </div>
+      <div class="row">
+        <span class="pill ${String(o.fulfillmentStatus||"UNFULFILLED").toUpperCase()==="FULFILLED"?"ok":String(o.fulfillmentStatus||"").toUpperCase()==="READY"?"info":"warn"}">${esc(o.fulfillmentStatus||"UNFULFILLED")}</span>
+        <button class="btn" data-order-fill="${esc(o.id)}" type="button">Action</button>
+      </div>
+    </article>`).join("") || `<div class="empty">No orders returned.</div>`;
+  document.querySelectorAll("[data-order-fill]").forEach(btn=>btn.onclick=()=>{
+    $("fulfillmentOrderId").value=btn.dataset.orderFill;
+    activePanel("orders");
+  });
+}
+
+function renderCollections(){
+  $("collectionsList").innerHTML=state.collections.map(c=>`
+    <article class="admin-row">
+      <div><div class="item-title">${esc(c.name)}</div><div class="item-sub code">${esc(c.id)} · /${esc(c.slug||"")}</div></div>
+      <div class="row"><span class="pill ${c.visible!==false?"ok":"warn"}">${c.visible!==false?"Visible":"Hidden"}</span><span class="pill info">${esc(c.products||0)} products</span></div>
+    </article>`).join("") || `<div class="item-sub">No collections returned.</div>`;
+}
+function renderCollectionOptions(){
+  const select=$("productCollection");
+  const value=select.value;
+  select.innerHTML=`<option value="">No collection</option>`+state.collections.map(c=>`<option value="${esc(c.id)}">${esc(c.name)}</option>`).join("");
+  if([...select.options].some(o=>o.value===value)) select.value=value;
+  const collection=$("collectionId"),selected=collection.value;
+  collection.innerHTML='<option value="">Select collection for assignment</option>'+state.collections.map(c=>`<option value="${esc(c.id)}">${esc(c.name)}</option>`).join("");collection.value=selected;
+  const inv=$("inventoryRecord"),iv=inv.value;
+  inv.innerHTML='<option value="">Select stock record</option>'+state.inventory.map(i=>`<option value="${esc(i.id)}">${esc(i.name)} · ${esc(i.variantId)} · ${esc(i.locationId||"default")}</option>`).join("");inv.value=iv;
+}
+function renderPromotions(){
+  $("promotionsList").innerHTML=state.promotions.map(p=>`
+    <article class="admin-row">
+      <div><div class="item-title">${esc(p.name)}</div><div class="item-sub">${esc(p.code)} · ${esc(p.type)} ${esc(p.value||"")}</div></div>
+      <span class="pill ${p.status==="Active"?"ok":"warn"}">${esc(p.status||"Draft")}</span>
+    </article>`).join("") || `<div class="item-sub">No promotions returned.</div>`;
+}
+function renderAudit(){
+  $("auditTable").innerHTML=state.audit.map(a=>`
+    <article class="admin-row">
+      <div>
+        <div class="item-title">${esc(a.action)}</div>
+        <div class="item-sub">${esc(a.detail)}</div>
+      </div>
+      <span class="pill ${a.mode==="warn"?"warn":a.mode==="error"?"bad":"info"}">${esc(new Date(a.time).toLocaleString())}</span>
+    </article>
+  `).join("") || `<div class="empty">No audit records.</div>`;
+}
+
+function editProduct(id){status("Loading full product and variants…");post("STORE_CONTROL_OPEN_PRODUCT",{productId:id})}
+function fillProduct(p){
+  detail=p;state.editingProductId=p.id;
+  $("productModeBadge").textContent="Editing "+p.name;
+  $("productName").value=p.name||"";$("productCurrency").value=p.currency||state.currency||"USD";
+  $("productCollection").value=p.categoryIds?.[0]||"";$("productVisible").value=String(p.visible!==false);
+  $("productDescription").value=p.plainDescription||"";
+  $("productVariant").innerHTML=(p.variants||[]).map(v=>`<option value="${esc(v.id)}">${esc(v.label||v.sku||v.id)}</option>`).join("");
+  fillVariant();activePanel("products");
+}
+function fillVariant(){const v=detail?.variants?.find(x=>x.id===$("productVariant").value);if(!v)return;$("productSku").value=v.sku||"";$("productPrice").value=v.actualPrice??"";$("productWeight").value=v.weight??"";$("productTrackInventory").value=String(v.inventory?.some(i=>i.trackQuantity));$("productTrackInventory").disabled=true;}
+function clearProduct(){
+  state.editingProductId="";detail=null;$("productVariant").innerHTML="";$("productTrackInventory").disabled=false;
+  state.productUploads=[];
+  state.mainUploadIndex=null;
+  $("productModeBadge").textContent="New product";
+  ["productName","productSku","productPrice","productCurrency","productCollection","productWeight","productDescription"].forEach(id=>$(id).value=id==="productCurrency"?"USD":"");
+  $("productVisible").value="true";
+  $("productTrackInventory").value="true";
+  renderMediaPreview();
+}
+function renderMediaPreview(){const box=$("productMediaPreview");if(box)box.textContent="Manage product media in Media Control."}
+function saveProduct(){
+  const name=$("productName").value.trim(),price=$("productPrice").value;
+  if(!name||price===""||!Number.isFinite(Number(price))||Number(price)<0){status("Name and a non-negative price are required.","error");return}
+  const variant={id:$("productVariant").value,sku:$("productSku").value.trim(),actualPrice:Number(price),weight:Number($("productWeight").value||0)};
+  const selected=$("productCollection").value;
+  const product={name,description:$("productDescription").value.trim(),visible:bool($("productVisible").value),...variant,trackQuantity:bool($("productTrackInventory").value),quantity:0,inStock:true,categoryIds:selected?[selected]:[]};
+  if(detail){
+    // Preserve other memberships when changing the primary collection shown here.
+    const ids=[...new Set([...(detail.categoryIds||[]).slice(1),...(selected?[selected]:[])])];
+    post("STORE_CONTROL_SAVE_CORE",{productId:detail.id,patch:{name:product.name,description:product.description,visible:product.visible,revision:detail.revision,variant,categoryIds:ids}});
+  }else post("STORE_CONTROL_CREATE_PRODUCT",{product});
+}
+function deleteProduct(){
+  if(!state.editingProductId){status("Select a product first.","warn");return}
+  post("STORE_CONTROL_SET_VISIBILITY",{productId:state.editingProductId,visible:false});
+}
+function updateInventory(){
+  const record=state.inventory.find(i=>i.id===$("inventoryRecord").value);
+  if(!record){status("Select a stock record and location first.","error");return}
+  const q=$("inventoryQuantity").value;
+  if(q===""||!Number.isInteger(Number(q))||Number(q)<0){status("Enter a non-negative whole-number quantity.","error");return}
+  post("STORE_CONTROL_UPDATE_INVENTORY",{inventoryId:record.id,revision:record.revision,mode:$("inventoryMode").value,quantity:Number(q),tracked:bool($("inventoryTracked").value),reason:$("inventoryReason").value.trim()});
+}
+function sendFulfillment(){
+  const payload={
+    orderId:$("fulfillmentOrderId").value.trim(),
+    action:$("fulfillmentStatus").value,
+    carrier:$("carrier").value.trim(),
+    trackingNumber:$("trackingNumber").value.trim(),
+    note:$("orderNote").value.trim()
+  };
+  if(!payload.orderId){status("Order ID is required.","error");return}
+  if(["CANCELED","FULFILLED"].includes(payload.action)){
+    const verb=payload.action==="CANCELED"?"CANCEL":"FULFILL";
+    const detail=verb==="CANCEL"?"Cancellation does not refund or restock the order.":"This fulfills all remaining items. Wix may send its configured shipping notification.";
+    if(!window.confirm(detail+" Continue?"))return;
+    payload.confirmation=verb+" "+payload.orderId;
+  }
+  post("STORE_CONTROL_UPDATE_ORDER",payload);
+}
+function saveCollection(assignOnly=false){
+  const payload={
+    name:$("collectionTitle").value.trim(),
+    slug:$("collectionSlug").value.trim(),
+    description:$("collectionDescription").value.trim(),
+    productIds:arr($("collectionProductIds").value),
+    assignOnly,categoryId:$("collectionId").value
+  };
+  if(!payload.name && !assignOnly){status("Collection name is required.","error");return}
+  if(assignOnly && !payload.productIds.length){status("Add product IDs before assigning.","error");return}
+  if(assignOnly&&!payload.categoryId){status("Select an existing collection.","error");return}
+  post("STORE_CONTROL_SAVE_COLLECTION",payload);
+}
+function savePromo(){
+  const payload={
+    name:$("promoName").value.trim(),
+    code:$("promoCode").value.trim(),
+    type:$("promoType").value,
+    value:Number($("promoValue").value||0),
+    starts:$("promoStarts").value,
+    ends:$("promoEnds").value,
+    scope:$("promoScope").value.trim()
+  };
+  if(!payload.name || !payload.code){status("Promotion name and code are required.","error");return}
+  post("STORE_CONTROL_SAVE_PROMOTION",payload);
+}
+function load(){post("STORE_CONTROL_READY",{})}
+function refresh(){status("Refreshing Wix data…");post("STORE_CONTROL_REFRESH",{query:$("query").value})}
+window.addEventListener("message",event=>{
+  if(event.source!==window.parent)return;const m=event.data||{};if(m.source!==PARENT)return;const p=m.payload||{};
+  if(m.type==="STORE_CONTROL_PARENT_READY"){load();return}
+  if(m.type==="STORE_CONTROL_BOOTSTRAP"){
+    backendResponded=true;
+    const inventory=(p.inventory||[]).map(i=>({...i,tracked:i.trackQuantity,name:p.products?.find(x=>x.id===i.productId)?.name||i.productId}));
+    render({...p,inventory,products:(p.products||[]).map(x=>({...x,price:x.minPrice,stock:!p.serviceErrors?.inventory && inventory.some(i=>i.productId===x.id&&i.tracked)?inventory.filter(i=>i.productId===x.id&&i.tracked).reduce((n,i)=>n+Number(i.quantity||0),0):null})),collections:(p.categories||[]).map(c=>({...c,products:c.itemCounter}))});
+    const errors=Object.values(p.serviceErrors||{});status(errors.length?errors.join(" "):p.scope||"Wix data refreshed.",errors.length?"warn":"");return;
+  }
+  if(m.type==="STORE_CONTROL_PRODUCT"){fillProduct(p.product);status("Product loaded.");return}
+  if(m.type==="STORE_CONTROL_PROGRESS"){busy(true);status(p.message||"Working…");return}
+  if(m.type==="STORE_CONTROL_IDLE"){busy(false);return}
+  if(m.type==="STORE_CONTROL_MUTATION_OK"){
+    if(p.product)fillProduct(p.product);
+    status(p.message||"Saved to Wix.","ok");audit(p.action||"SAVE",(p.message||"Wix confirmed the update.")+(lastMutation?.payload?.reason?" Session note: "+lastMutation.payload.reason:""),"ok");
+    (p.results||[]).filter(x=>!x.ok).forEach(x=>audit("ASSIGNMENT_FAILED",x.productId,"error"));return;
+  }
+  if(m.type==="STORE_CONTROL_BULK_RESULT"){status(`${p.succeeded||0} updated; ${p.failed||0} failed.`,p.failed?"warn":"ok");(p.results||[]).forEach(x=>audit("BULK_PRICE",x.productId+": "+(x.ok?"Saved":x.message),x.ok?"ok":"error"));return}
+  if(m.type==="STORE_CONTROL_ERROR"){busy(false);status(p.message||"The action failed. Refresh before retrying.","error");audit(p.stage||"ERROR",p.message||"Action failed.","error");}
+});
+
+if($("refreshBtn")) $("refreshBtn").onclick=load;
+if($("syncStoreBtn")) $("syncStoreBtn").onclick=()=>refresh("SKANDI_STOREFRONT_FULL_SYNC");
+if($("openStoreBtn")) $("openStoreBtn").onclick=()=>{post("STORE_CONTROL_NAVIGATE",{path:"/the-store"});};
+$("refreshOrdersBtn").onclick=()=>refresh("SKANDI_STOREFRONT_ORDERS_REFRESH");
+if($("refreshProductsBtn")) $("refreshProductsBtn").onclick=()=>refresh("SKANDI_STOREFRONT_PRODUCTS_REFRESH");
+$("refreshInventoryBtn").onclick=()=>refresh("SKANDI_STOREFRONT_INVENTORY_REFRESH");
+if($("refreshCollectionsBtn")) $("refreshCollectionsBtn").onclick=()=>refresh("SKANDI_STOREFRONT_COLLECTIONS_REFRESH");
+$("openMediaControlBtn")?.addEventListener("click",()=>post("STORE_CONTROL_NAVIGATE",{path:"/riaintra/success-factors/media-control"}));
+$("saveProductBtn").onclick=saveProduct;
+$("clearProductBtn").onclick=clearProduct;
+$("deleteProductBtn").onclick=deleteProduct;
+$("updateInventoryBtn").onclick=updateInventory;
+$("clearInventoryBtn").onclick=()=>["inventoryRecord","inventoryProductId","inventoryVariantId","inventorySku","inventoryQuantity","inventoryReason"].forEach(id=>$(id).value="");
+$("sendFulfillmentBtn").onclick=sendFulfillment;
+$("clearFulfillmentBtn").onclick=()=>["fulfillmentOrderId","carrier","trackingNumber","orderNote"].forEach(id=>$(id).value="");
+$("saveCollectionBtn").onclick=()=>saveCollection(false);
+$("assignCollectionBtn").onclick=()=>saveCollection(true);
+$("clearCollectionBtn").onclick=()=>["collectionTitle","collectionSlug","collectionDescription","collectionProductIds"].forEach(id=>$(id).value="");
+$("savePromoBtn").onclick=savePromo;
+$("clearPromoBtn").onclick=()=>["promoName","promoCode","promoValue","promoStarts","promoEnds","promoScope"].forEach(id=>$(id).value="");
+$("clearAuditBtn").onclick=()=>{state.audit=[];renderAudit();};
+$("query").addEventListener("input",()=>{renderProducts();renderInventory();});
+$("orderFilter").addEventListener("change",renderOrders);
+
+$("productVariant").onchange=fillVariant;
+$("inventoryRecord").onchange=()=>{const i=state.inventory.find(x=>x.id===$("inventoryRecord").value);if(!i)return;$("inventoryProductId").value=i.productId;$("inventoryVariantId").value=i.variantId;$("inventoryQuantity").value=i.quantity??"";$("inventoryTracked").value=String(i.tracked);};
+$("bulkPriceBtn").onclick=()=>{const value=$("bulkPriceValue").value;if(value===""||!Number.isFinite(Number(value))){status("Enter a price adjustment.","error");return}post("STORE_CONTROL_BULK_PRICE",{productIds:arr($("bulkProductIds").value),operation:$("bulkPriceOperation").value,value:Number(value),compareAtMode:"KEEP"})};
+seedData();render();load();
+
+
+
+})();</script>
+</body>
+</html>

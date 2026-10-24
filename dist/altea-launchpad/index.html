@@ -1,0 +1,2064 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#022e64">
+<title>SKANDI ALTEA Launchpad · V12</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+
+
+
+
+
+
+  
+  
+  <meta name="color-scheme" content="light">
+  <meta name="theme-color" content="#354a5f">
+  
+  
+
+<style data-skandi-part="header">
+#altea-global-header-root {
+  --altea-blue: #005eb8; /* Modern Amadeus Blue */
+  --altea-cyan: #5fc7cf; /* Modern Accent Cyan */
+  --text-main: #ffffff;
+  --text-muted: rgba(255, 255, 255, 0.75);
+  --border-color: rgba(255, 255, 255, 0.2);
+  --font-main: Arial, "Segoe UI", sans-serif;
+  --font-mono: "Consolas", "Courier New", monospace;
+}
+
+#altea-global-header-root * { box-sizing: border-box; }
+#altea-global-header-root,#altea-global-header-root {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: transparent;
+  font-family: var(--font-main);
+  user-select: none;
+}
+
+/* Toolbar container */
+#altea-global-header-root .altea-toolbar {
+  height: 48px;
+  background: var(--altea-blue);
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  border-bottom: 1px solid var(--border-color);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Left: Branding & Environment */
+#altea-global-header-root .toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 0 0 auto;
+}
+#altea-global-header-root .logo {
+  height: 26px;
+  width: auto;
+  object-fit: contain;
+  display: none;
+}
+#altea-global-header-root .logo[src] {
+  display: block;
+}
+#altea-global-header-root .brand-title {
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--border-color);
+  padding-right: 12px;
+}
+#altea-global-header-root .brand-title strong {
+  font-size: 13px;
+  letter-spacing: 0.03em;
+  line-height: 1.1;
+}
+#altea-global-header-root .brand-title span {
+  font-size: 9px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  margin-top: 1px;
+}
+#altea-global-header-root .env-badge {
+  background: #0e703e; /* Flatter modern green */
+  color: white;
+  font-size: 10px;
+  font-weight: bold;
+  padding: 3px 6px;
+  border-radius: 3px;
+  letter-spacing: 0.03em;
+  cursor: default;
+}
+
+/* Center: Dynamic Navigation */
+#altea-global-header-root .toolbar-nav {
+  display: flex;
+  gap: 4px;
+  flex: 1 1 auto;
+  padding-left: 16px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+#altea-global-header-root .toolbar-nav::-webkit-scrollbar {
+  display: none;
+}
+#altea-global-header-root .toolbar-nav button {
+  border: 0;
+  background: transparent;
+  color: var(--text-main);
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+#altea-global-header-root .toolbar-nav button:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+#altea-global-header-root .toolbar-nav button.active {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Right: System & Credentials */
+#altea-global-header-root .toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex: 0 0 auto;
+}
+
+#altea-global-header-root .utility-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+#altea-global-header-root .utility-action {
+  height: 30px;
+  padding: 0 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background: rgba(255,255,255,.06);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+}
+#altea-global-header-root .utility-action:hover { background: rgba(255,255,255,.14); }
+#altea-global-header-root .utility-action[hidden] { display: none !important; }
+
+/* Credentials */
+
+#altea-global-header-root .credentials {
+  display: none;
+  grid-template-columns: auto auto;
+  column-gap: 8px;
+  row-gap: 2px;
+  font-size: 10px;
+  font-family: var(--font-mono);
+}
+#altea-global-header-root .cred-lbl {
+  color: var(--text-muted);
+  text-align: right;
+}
+#altea-global-header-root .cred-val {
+  font-weight: bold;
+  color: #fff;
+}
+#altea-global-header-root .cred-val.link {
+  color: var(--altea-cyan);
+  text-decoration: underline;
+  cursor: pointer;
+}
+#altea-global-header-root .cred-val.link:hover {
+  color: #fff;
+}
+
+/* Clock */
+#altea-global-header-root .sys-clock {
+  text-align: right;
+  cursor: pointer;
+  border-left: 1px solid var(--border-color);
+  padding-left: 16px;
+}
+#altea-global-header-root .clock-time {
+  display: block;
+  font-size: 13px;
+  font-weight: bold;
+}
+#altea-global-header-root .clock-lbl {
+  display: block;
+  font-size: 9px;
+  color: var(--text-muted);
+  font-weight: bold;
+  margin-top: 1px;
+}
+
+@media(max-width: 950px) {
+}
+@media(max-width: 750px) {
+  #altea-global-header-root .credentials, #altea-global-header-root .sys-clock { display: none; }
+  #altea-global-header-root .toolbar-nav button { font-size: 11px; padding: 8px; }
+  #altea-global-header-root .env-badge { display: none; }
+  #altea-global-header-root .utility-action { padding: 0 8px; font-size: 9px; }
+}
+</style>
+<style data-skandi-part="footer">
+#altea-global-footer-root {
+  --altea-blue: #005eb8;
+  --text-main: #ffffff;
+  --text-muted: rgba(255, 255, 255, 0.75);
+  --status-ok: #5fc7cf;
+  --status-err: #ff6b6b;
+  --status-warn: #ffb900;
+  --border-color: rgba(255, 255, 255, 0.2);
+  --font-main: Arial, sans-serif;
+}
+
+#altea-global-footer-root * { box-sizing: border-box; }
+#altea-global-footer-root,#altea-global-footer-root {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: transparent;
+  font-family: var(--font-main);
+  user-select: none;
+}
+
+#altea-global-footer-root .status-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 30px;
+  background: var(--altea-blue);
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  font-size: 11px;
+  letter-spacing: 0.03em;
+  border-top: 1px solid var(--border-color);
+}
+#altea-global-footer-root .section {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  white-space: nowrap;
+}
+#altea-global-footer-root .divider {
+  width: 1px;
+  height: 14px;
+  background: var(--border-color);
+}
+#altea-global-footer-root .sys-message {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: bold;
+}
+#altea-global-footer-root .network-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--status-ok);
+}
+#altea-global-footer-root .network-dot.offline { background: var(--status-err); }
+#altea-global-footer-root .sys-text {
+  text-transform: uppercase;
+  font-size: 10px;
+}
+#altea-global-footer-root .sys-text.error { color: var(--status-err); }
+#altea-global-footer-root .sys-text.success { color: var(--status-ok); }
+#altea-global-footer-root .context-area {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  font-weight: bold;
+  color: var(--text-main);
+  font-size: 11px;
+}
+#altea-global-footer-root .mode-badge {
+  display: none;
+  background: var(--status-warn);
+  color: #000;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 9px;
+  font-weight: 900;
+  margin-left: 8px;
+}
+#altea-global-footer-root .mode-badge.active { display: inline-block; }
+#altea-global-footer-root .indicator {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-muted);
+  font-weight: bold;
+  font-size: 10px;
+}
+#altea-global-footer-root .val { color: #fff; }
+#altea-global-footer-root .footer-link {
+  border: 0;
+  background: transparent;
+  color: rgba(255,255,255,.82);
+  padding: 2px 0;
+  font: inherit;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+}
+#altea-global-footer-root .footer-link:hover { color: #fff; text-decoration: underline; }
+#altea-global-footer-root .clock-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-weight: bold;
+}
+#altea-global-footer-root .clock-time { font-size: 12px; }
+#altea-global-footer-root .clock-lbl {
+  font-size: 9px;
+  color: var(--text-muted);
+}
+
+@media(max-width: 700px) {
+  #altea-global-footer-root .context-area { display: none; }
+  #altea-global-footer-root .indicator { display: none; }
+  #altea-global-footer-root .section { gap: 10px; }
+}
+</style>
+<style data-skandi-part="altea-launchpad">
+    #skandi-app-root {
+      /* Amadeus Colors */
+      --amadeus-blue: #005eb8;
+      --amadeus-blue-dark: #004783;
+      --amadeus-blue-deep: #003b70;
+      --amadeus-blue-soft: #e8f3fc;
+      --blue-800:#004f99;
+      --blue-700:#005eb8;
+      --canvas: #f4f5f6;
+      --surface: #ffffff;
+      --surface-subtle: #f8fafb;
+      --slate: #707070;
+      --text: #1d2a35;
+      --text-soft: #52616d;
+      --border: #d8dee3;
+      --border-strong: #bcc7d0;
+      --success: #16804a;
+      --success-soft: #e7f5ed;
+      --warning: #b35b00;
+      --danger: #b42318;
+      --shadow-sm: 0 2px 7px rgba(24, 39, 53, 0.09);
+      --shadow-md: 0 10px 26px rgba(24, 39, 53, 0.15);
+      --radius: 6px;
+      --transition: 180ms ease;
+      --font-family: "72", "Inter", "Segoe UI", Roboto, Arial, sans-serif;
+    }
+
+    #skandi-app-root * {
+      box-sizing: border-box;
+    }
+
+    #skandi-app-root {
+      min-height: 100%;
+      background: var(--canvas);
+    }
+
+    #skandi-app-root {
+      min-width: 320px;
+      min-height: 100vh;
+      margin: 0;
+      overflow-x: hidden;
+      color: var(--text);
+      background:
+        linear-gradient(180deg, rgba(0, 94, 184, 0.055), transparent 230px),
+        var(--canvas);
+      font-family: var(--font-family);
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+
+    #skandi-app-root button,
+    #skandi-app-root select,
+    #skandi-app-root input {
+      font: inherit;
+    }
+
+    #skandi-app-root button,
+    #skandi-app-root select {
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    #skandi-app-root button:focus-visible,
+    #skandi-app-root select:focus-visible,
+    #skandi-app-root input:focus-visible {
+      outline: 3px solid rgba(0, 94, 184, 0.28);
+      outline-offset: 2px;
+    }
+
+    /* =========================================
+       PAGE CONTENT STYLES
+       ========================================= */
+    #skandi-app-root .page-shell {
+      min-height: 100vh;
+      padding-top: 20px; /* Adjusted since header is removed */
+    }
+
+    #skandi-app-root .main-workspace {
+      width: min(1180px, calc(100% - 48px));
+      margin: 0 auto;
+      padding: 38px 0 62px;
+    }
+
+    #skandi-app-root .workspace-intro {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      margin-bottom: 24px;
+      gap: 24px;
+    }
+
+    #skandi-app-root .workspace-intro h1 {
+      margin: 0;
+      color: #172531;
+      font-size: clamp(26px, 3.1vw, 38px);
+      font-weight: 650;
+      letter-spacing: -0.025em;
+      line-height: 1.14;
+    }
+
+    #skandi-app-root .workspace-intro p {
+      max-width: 650px;
+      margin: 9px 0 0;
+      color: var(--text-soft);
+      font-size: 14px;
+      line-height: 1.55;
+    }
+
+    #skandi-app-root .launchpad-panel {
+      overflow: hidden;
+      background: rgba(255, 255, 255, 0.68);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+    }
+
+    #skandi-app-root .panel-toolbar {
+      min-height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 18px;
+      gap: 18px;
+      background: #fff;
+      border-bottom: 1px solid var(--border);
+    }
+
+    #skandi-app-root .panel-heading {
+      min-width: 0;
+    }
+
+    #skandi-app-root .panel-heading h2 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    #skandi-app-root .panel-heading span {
+      display: block;
+      margin-top: 3px;
+      color: var(--slate);
+      font-size: 11px;
+    }
+
+    #skandi-app-root .app-search {
+      position: relative;
+      width: min(310px, 40vw);
+      flex: 0 1 310px;
+    }
+
+    #skandi-app-root .panel-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    #skandi-app-root .button:disabled {
+      opacity: .55;
+      cursor: wait;
+    }
+
+    #skandi-app-root .app-search svg {
+      position: absolute;
+      top: 50%;
+      left: 11px;
+      width: 17px;
+      height: 17px;
+      fill: none;
+      stroke: var(--slate);
+      stroke-width: 1.9;
+      transform: translateY(-50%);
+      pointer-events: none;
+    }
+
+    #skandi-app-root .app-search input {
+      width: 100%;
+      height: 36px;
+      padding: 0 34px 0 36px;
+      color: var(--text);
+      background: var(--surface-subtle);
+      border: 1px solid var(--border-strong);
+      border-radius: 3px;
+      font-size: 13px;
+      transition:
+        background var(--transition),
+        border-color var(--transition),
+        box-shadow var(--transition);
+    }
+
+    #skandi-app-root .app-search input:focus {
+      background: #fff;
+      border-color: var(--amadeus-blue);
+      box-shadow: inset 0 0 0 1px var(--amadeus-blue);
+      outline: none;
+    }
+
+    #skandi-app-root .clear-search {
+      position: absolute;
+      top: 50%;
+      right: 6px;
+      width: 26px;
+      height: 26px;
+      display: none;
+      place-items: center;
+      padding: 0;
+      color: var(--slate);
+      background: transparent;
+      border: 0;
+      border-radius: 3px;
+      font-size: 18px;
+      line-height: 1;
+      transform: translateY(-50%);
+      cursor: pointer;
+    }
+
+    #skandi-app-root .clear-search.visible {
+      display: grid;
+    }
+
+    #skandi-app-root .clear-search:hover {
+      color: var(--text);
+      background: #e9edf0;
+    }
+
+    #skandi-app-root .app-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      padding: 22px;
+      gap: 18px;
+    }
+
+    #skandi-app-root .app-tile {
+      position: relative;
+      min-height: 250px;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      padding: 0;
+      overflow: hidden;
+      color: var(--text);
+      text-align: left;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      box-shadow: 0 1px 3px rgba(24, 39, 53, 0.07);
+      cursor: pointer;
+      transition:
+        transform var(--transition),
+        border-color var(--transition),
+        box-shadow var(--transition);
+    }
+
+    #skandi-app-root .app-tile::before {
+      position: absolute;
+      z-index: 1;
+      inset: 0 auto 0 0;
+      width: 4px;
+      content: "";
+      background: var(--tile-accent, var(--amadeus-blue));
+      transform: scaleY(0);
+      transform-origin: bottom;
+      transition: transform var(--transition);
+    }
+
+    #skandi-app-root .app-tile:hover {
+      border-color: #aebbc5;
+      box-shadow: var(--shadow-md);
+      transform: translateY(-4px);
+    }
+
+    #skandi-app-root .app-tile:hover::before,
+    #skandi-app-root .app-tile:focus-visible::before {
+      transform: scaleY(1);
+    }
+
+    #skandi-app-root .app-tile:disabled {
+      cursor: not-allowed;
+      opacity: .72;
+      transform: none;
+      box-shadow: none;
+    }
+    #skandi-app-root .app-tile:disabled::before { transform: scaleY(0); }
+
+    #skandi-app-root .tile-visual {
+      position: relative;
+      height: 92px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 19px;
+      color: var(--tile-accent, var(--amadeus-blue));
+      background:
+        radial-gradient(circle at 92% 12%, rgba(0, 94, 184, 0.12), transparent 44%),
+        #f4f8fb;
+      border-bottom: 1px solid #e2e9ee;
+    }
+
+    #skandi-app-root .tile-icon {
+      width: 52px;
+      height: 52px;
+      display: grid;
+      place-items: center;
+      color: var(--tile-accent, var(--amadeus-blue));
+      background: #fff;
+      border: 1px solid #cadce9;
+      border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0, 62, 119, 0.08);
+    }
+
+    #skandi-app-root .tile-icon svg {
+      width: 30px;
+      height: 30px;
+      fill: none;
+      stroke: currentColor;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-width: 1.65;
+    }
+
+    #skandi-app-root .tile-code {
+      color: #536a7b;
+      font-size: 11px;
+      font-weight: 750;
+      letter-spacing: 0.085em;
+      text-transform: uppercase;
+    }
+
+    #skandi-app-root .tile-content {
+      display: flex;
+      flex: 1;
+      flex-direction: column;
+      padding: 18px 19px 17px;
+    }
+
+    #skandi-app-root .tile-content h3 {
+      margin: 0;
+      color: #172531;
+      font-size: 16px;
+      font-weight: 700;
+      line-height: 1.35;
+    }
+
+    #skandi-app-root .tile-content p {
+      margin: 10px 0 18px;
+      color: var(--text-soft);
+      font-size: 12.5px;
+      line-height: 1.52;
+    }
+
+    #skandi-app-root .tile-launch {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: auto;
+      padding-top: 13px;
+      color: var(--amadeus-blue-dark);
+      border-top: 1px solid #e7ebee;
+      font-size: 12px;
+      font-weight: 750;
+    }
+
+    #skandi-app-root .tile-launch svg {
+      width: 17px;
+      height: 17px;
+      fill: none;
+      stroke: currentColor;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-width: 2;
+      transition: transform var(--transition);
+    }
+
+    #skandi-app-root .app-tile:hover .tile-launch svg {
+      transform: translateX(3px);
+    }
+
+    #skandi-app-root .empty-state {
+      grid-column: 1 / -1;
+      min-height: 245px;
+      display: none;
+      place-items: center;
+      padding: 30px;
+      color: var(--text-soft);
+      text-align: center;
+      background: #fff;
+      border: 1px dashed var(--border-strong);
+      border-radius: 5px;
+    }
+
+    #skandi-app-root .empty-state.visible {
+      display: grid;
+    }
+
+    #skandi-app-root .empty-state svg {
+      width: 38px;
+      height: 38px;
+      margin-bottom: 12px;
+      fill: none;
+      stroke: var(--slate);
+      stroke-width: 1.5;
+    }
+
+    #skandi-app-root .empty-state strong {
+      display: block;
+      margin-bottom: 5px;
+      color: var(--text);
+      font-size: 15px;
+    }
+
+    #skandi-app-root .loading-overlay,
+    #skandi-app-root .modal-layer {
+      position: fixed;
+      z-index: 100;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      padding: 22px;
+      opacity: 0;
+      visibility: hidden;
+      transition:
+        opacity 160ms ease,
+        visibility 160ms ease;
+    }
+
+    #skandi-app-root .loading-overlay {
+      color: #fff;
+      background: rgba(0, 38, 74, 0.88);
+      backdrop-filter: blur(4px);
+    }
+
+    #skandi-app-root .loading-overlay.visible,
+    #skandi-app-root .modal-layer.visible {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    #skandi-app-root .loading-card {
+      width: min(410px, 100%);
+      padding: 34px 30px 30px;
+      text-align: center;
+      background: rgba(0, 57, 109, 0.94);
+      border: 1px solid rgba(255, 255, 255, 0.28);
+      border-radius: 6px;
+      box-shadow: 0 22px 50px rgba(0, 15, 28, 0.34);
+    }
+
+    #skandi-app-root .spinner {
+      width: 46px;
+      height: 46px;
+      margin: 0 auto 22px;
+      border: 4px solid rgba(255, 255, 255, 0.27);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: skandi-app-root-spin 700ms linear infinite;
+    }
+
+    @keyframes skandi-app-root-spin {
+      to { transform: rotate(360deg); }
+    }
+
+    #skandi-app-root .loading-card h2 {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 650;
+    }
+
+    #skandi-app-root .loading-app-name {
+      min-height: 38px;
+      margin: 8px auto 15px;
+      color: rgba(255, 255, 255, 0.84);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    #skandi-app-root .loading-progress {
+      height: 3px;
+      overflow: hidden;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 4px;
+    }
+
+    #skandi-app-root .loading-progress span {
+      display: block;
+      width: 35%;
+      height: 100%;
+      background: #fff;
+    }
+
+    #skandi-app-root .loading-overlay.visible .loading-progress span {
+      animation: skandi-app-root-progress 1200ms ease-in-out infinite;
+    }
+
+    @keyframes skandi-app-root-progress {
+      from { transform: translateX(-100%); }
+      to { transform: translateX(290%); }
+    }
+
+    #skandi-app-root .modal-layer {
+      z-index: 110;
+      background: rgba(22, 37, 49, 0.53);
+      backdrop-filter: blur(2px);
+    }
+
+    #skandi-app-root .modal-card {
+      width: min(470px, 100%);
+      overflow: hidden;
+      background: #fff;
+      border: 1px solid #acbac5;
+      border-radius: 6px;
+      box-shadow: 0 24px 56px rgba(20, 34, 45, 0.28);
+      transform: translateY(8px) scale(0.985);
+      transition: transform 180ms ease;
+    }
+
+    #skandi-app-root .modal-layer.visible .modal-card {
+      transform: translateY(0) scale(1);
+    }
+
+    #skandi-app-root .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 18px;
+      background: var(--surface-subtle);
+      border-bottom: 1px solid var(--border);
+    }
+
+    #skandi-app-root .modal-header h2 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    #skandi-app-root .modal-close {
+      width: 30px;
+      height: 30px;
+      display: grid;
+      place-items: center;
+      padding: 0;
+      color: var(--slate);
+      background: transparent;
+      border: 0;
+      border-radius: 3px;
+      font-size: 23px;
+      line-height: 1;
+      cursor: pointer;
+    }
+
+    #skandi-app-root .modal-close:hover {
+      color: var(--text);
+      background: #e6ebee;
+    }
+
+    #skandi-app-root .modal-body {
+      padding: 22px 20px 20px;
+    }
+
+    #skandi-app-root .modal-status {
+      display: flex;
+      align-items: flex-start;
+      gap: 13px;
+    }
+
+    #skandi-app-root .modal-status-icon {
+      width: 39px;
+      height: 39px;
+      display: grid;
+      flex: 0 0 auto;
+      place-items: center;
+      color: var(--success);
+      background: var(--success-soft);
+      border: 1px solid #b8dfc9;
+      border-radius: 50%;
+    }
+
+    #skandi-app-root .modal-status-icon svg {
+      width: 20px;
+      height: 20px;
+      fill: none;
+      stroke: currentColor;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-width: 2.2;
+    }
+
+    #skandi-app-root .modal-message {
+      margin: 0;
+      color: var(--text);
+      font-size: 14px;
+      line-height: 1.55;
+    }
+
+    #skandi-app-root .modal-message strong {
+      display: block;
+      margin-bottom: 3px;
+      font-size: 15px;
+    }
+
+    #skandi-app-root .session-details {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      margin-top: 20px;
+      padding: 13px;
+      gap: 12px;
+      background: var(--surface-subtle);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+    }
+
+    #skandi-app-root .session-details span {
+      display: block;
+      color: var(--slate);
+      font-size: 10px;
+      font-weight: 650;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    #skandi-app-root .session-details strong {
+      display: block;
+      margin-top: 4px;
+      color: var(--text);
+      font-size: 12px;
+      overflow-wrap: anywhere;
+    }
+
+    #skandi-app-root .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      padding: 13px 18px;
+      gap: 9px;
+      background: var(--surface-subtle);
+      border-top: 1px solid var(--border);
+    }
+
+    #skandi-app-root .button {
+      min-height: 35px;
+      padding: 0 15px;
+      border: 1px solid transparent;
+      border-radius: 3px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition:
+        color var(--transition),
+        background var(--transition),
+        border-color var(--transition);
+    }
+
+    #skandi-app-root .button-primary {
+      color: #fff;
+      background: var(--amadeus-blue);
+      border-color: var(--amadeus-blue);
+    }
+
+    #skandi-app-root .button-primary:hover {
+      background: var(--amadeus-blue-dark);
+      border-color: var(--amadeus-blue-dark);
+    }
+
+    #skandi-app-root .button-secondary {
+      color: var(--text);
+      background: #fff;
+      border-color: var(--border-strong);
+    }
+
+    #skandi-app-root .button-secondary:hover {
+      background: #edf1f3;
+    }
+
+    #skandi-app-root .toast-region {
+      position: fixed;
+      z-index: 160;
+      right: 22px;
+      bottom: 22px;
+      width: min(360px, calc(100% - 44px));
+      display: grid;
+      gap: 10px;
+      pointer-events: none;
+    }
+
+    #skandi-app-root .toast {
+      display: flex;
+      align-items: flex-start;
+      padding: 13px 14px;
+      gap: 11px;
+      color: #fff;
+      background: #263844;
+      border-left: 4px solid #69c594;
+      border-radius: 4px;
+      box-shadow: 0 13px 30px rgba(20, 34, 45, 0.25);
+      opacity: 0;
+      pointer-events: auto;
+      transform: translateY(12px);
+      animation: skandi-app-root-toast-in 220ms ease forwards;
+    }
+
+    @keyframes skandi-app-root-toast-in {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    #skandi-app-root .toast svg {
+      width: 18px;
+      height: 18px;
+      flex: 0 0 auto;
+      fill: none;
+      stroke: #8ee0b2;
+      stroke-width: 2;
+    }
+
+    #skandi-app-root .toast p {
+      margin: 0;
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    #skandi-app-root .toast strong {
+      display: block;
+      margin-bottom: 2px;
+      font-size: 13px;
+    }
+
+    #skandi-app-root .sr-only {
+      position: absolute !important;
+      width: 1px !important;
+      height: 1px !important;
+      padding: 0 !important;
+      margin: -1px !important;
+      overflow: hidden !important;
+      clip: rect(0, 0, 0, 0) !important;
+      white-space: nowrap !important;
+      border: 0 !important;
+    }
+
+    body.modal-open #skandi-app-root {
+      overflow: hidden;
+    }
+
+    @media (max-width: 1080px) {
+      #skandi-app-root .app-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 850px) {
+      #skandi-app-root .main-workspace {
+        width: min(100% - 30px, 760px);
+        padding-top: 28px;
+      }
+    }
+
+    @media (max-width: 680px) {
+      #skandi-app-root .main-workspace {
+        width: min(100% - 24px, 580px);
+        padding: 24px 0 40px;
+      }
+      #skandi-app-root .workspace-intro {
+        display: block;
+      }
+      #skandi-app-root .workspace-intro h1 {
+        font-size: 27px;
+      }
+      #skandi-app-root .panel-toolbar {
+        align-items: stretch;
+        flex-direction: column;
+        padding: 14px;
+        gap: 12px;
+      }
+      #skandi-app-root .app-search {
+        width: 100%;
+        flex-basis: auto;
+      }
+      #skandi-app-root .panel-controls { width: 100%; }
+      #skandi-app-root .panel-controls .app-search { flex: 1; min-width: 0; }
+      #skandi-app-root .app-grid {
+        grid-template-columns: 1fr;
+        padding: 14px;
+        gap: 13px;
+      }
+      #skandi-app-root .app-tile {
+        min-height: 228px;
+      }
+    }
+
+    @media (max-width: 440px) {
+      #skandi-app-root .workspace-intro p {
+        font-size: 13px;
+      }
+      #skandi-app-root .session-details {
+        grid-template-columns: 1fr;
+      }
+      #skandi-app-root .modal-actions {
+        flex-direction: column-reverse;
+      }
+      #skandi-app-root .modal-actions .button {
+        width: 100%;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      #skandi-app-root *,
+      #skandi-app-root *::before,
+      #skandi-app-root *::after {
+        scroll-behavior: auto !important;
+        animation-duration: 1ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 1ms !important;
+      }
+    }
+  </style>
+<style data-skandi-part="shell">html,body{margin:0;width:100%;min-height:100%;}*,*::before,*::after{box-sizing:border-box}#skandi-shell-root{min-height:100vh;min-width:0;display:flex;flex-direction:column}#skandi-app-root{flex:1;min-width:0;position:relative}#altea-global-header-root,#altea-global-footer-root{flex:none}@media(max-width:767px){input:not([type=hidden]),select,textarea{font-size:16px!important}}html,body{height:100%;overflow:hidden}#skandi-shell-root{height:100vh;height:100dvh;min-height:0;overflow:hidden}#skandi-app-root{height:auto;min-height:0;overflow:auto}#altea-global-header-root{position:relative;height:48px;min-height:48px;overflow:visible;z-index:2000}#altea-global-footer-root{height:auto;overflow:visible;z-index:2000}#riaintra-global-header-root .shellbar{position:absolute}#altea-global-footer-root .status-bar{position:relative}@media(max-width:600px){#riaintra-global-footer-root .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px}#riaintra-global-footer-root .footer-left{flex-wrap:wrap;gap:6px}}</style>
+</head>
+<body>
+<div id="skandi-shell-root" data-skandi-page="altea-launchpad" data-skandi-key="alteaLaunchpad" data-skandi-family="altea" data-skandi-chrome="altea">
+<div id="altea-global-header-root">
+
+<header class="altea-toolbar">
+  <div class="toolbar-left">
+    <img id="logo" class="logo" alt="ALTEA">
+    <div class="brand-title">
+      <strong id="productName">Loading...</strong>
+      <span id="productContext">SKANDI SYSTEMS</span>
+    </div>
+    <div class="env-badge" id="envBadge" title="Environment">PRD</div>
+  </div>
+
+  <nav class="toolbar-nav" id="navLinks" aria-label="Navigation"></nav>
+
+  <div class="toolbar-right">
+    <div class="utility-actions">
+      <button class="utility-action" id="returnDashboardBtn" type="button">Return to Dashboard</button>
+      <button class="utility-action" id="logoutBtn" type="button">Logout</button>
+    </div>
+
+    <div class="credentials" id="userProfile">
+      <span class="cred-lbl">User:</span>
+      <span class="cred-val" id="userName">--</span>
+      <span class="cred-lbl">Office:</span>
+      <span class="cred-val link" id="officeId">--</span>
+    </div>
+
+    <div class="sys-clock" id="sysClock" title="Click to toggle UTC / Local">
+      <span class="clock-time" id="clockTime">--:--:--</span>
+      <span class="clock-lbl" id="clockDate">LOCAL</span>
+    </div>
+  </div>
+</header>
+
+
+
+
+</div>
+<div id="skandi-app-root">
+
+  <!-- =========================================
+       SKANDI ALTEA WORKSPACE PAGE CONTENT
+       ========================================= -->
+  <div class="page-shell" id="applicationRoot">
+    <main class="main-workspace">
+      <section class="workspace-intro" aria-labelledby="pageTitle">
+        <div>
+          <h1 id="pageTitle">Application Launchpad</h1>
+          <p>
+            Select an authorized SKANDI ALTEA application.
+          </p>
+        </div>
+      </section>
+
+      <section class="launchpad-panel" aria-labelledby="applicationsHeading">
+        <div class="panel-toolbar">
+          <div class="panel-heading">
+            <h2 id="applicationsHeading">Authorized applications</h2>
+            <span id="applicationCount">Loading authorized applications…</span>
+          </div>
+          <div class="panel-controls">
+          <div class="app-search">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="10.5" cy="10.5" r="6.5"></circle>
+              <path d="m15.5 15.5 5 5"></path>
+            </svg>
+            <label class="sr-only" for="appSearch">Find an application</label>
+            <input id="appSearch" type="search" placeholder="Find an application" autocomplete="off" spellcheck="false">
+            <button class="clear-search" id="clearSearch" type="button" aria-label="Clear search">
+              ×
+            </button>
+          </div>
+          <button class="button button-secondary" id="refreshApps" type="button">Refresh</button>
+          </div>
+        </div>
+
+        <div class="app-grid" id="appGrid" aria-live="polite"></div>
+      </section>
+    </main>
+  </div>
+
+  <div class="loading-overlay" id="loadingOverlay" role="status" aria-live="assertive" aria-hidden="true">
+    <div class="loading-card">
+      <div class="spinner" aria-hidden="true"></div>
+      <h2>Opening application…</h2>
+      <p class="loading-app-name" id="loadingAppName">
+        Establishing secure connection...
+      </p>
+      <div class="loading-progress" aria-hidden="true"><span></span></div>
+    </div>
+  </div>
+
+  <div class="modal-layer" id="dialogLayer" role="dialog" aria-modal="true" aria-labelledby="dialogTitle" aria-hidden="true">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2 id="dialogTitle">Secure session ready</h2>
+        <button class="modal-close" id="dialogClose" type="button" aria-label="Close dialog">×</button>
+      </div>
+      <div class="modal-body" id="dialogBody"></div>
+      <div class="modal-actions" id="dialogActions"></div>
+    </div>
+  </div>
+
+  <div class="toast-region" id="toastRegion" aria-live="polite"></div>
+
+  
+
+
+</div>
+<div id="altea-global-footer-root">
+
+<footer class="status-bar">
+  <div class="section left-section">
+    <div class="sys-message" title="Host Connection Status">
+      <div class="network-dot" id="networkDot"></div>
+      <span class="sys-text" id="sysMessage">READY</span>
+    </div>
+  </div>
+
+  <div class="context-area">
+    <span id="activeContext">ALTEA DASHBOARD</span>
+    <span id="lmcBadge" class="mode-badge">LMC</span>
+  </div>
+
+  <div class="section right-section">
+    <button class="footer-link" id="legalPoliciesBtn" type="button">Legal &amp; Policies</button>
+    <div class="divider"></div>
+    <div class="indicator">ENV: <span class="val" id="envState">PRD</span></div>
+    <div class="divider"></div>
+    <div class="clock-group" id="altea-footer-sysClock" title="Click to toggle UTC / Local">
+      <span class="clock-time" id="altea-footer-clockTime">--:--:--</span>
+      <span class="clock-lbl" id="altea-footer-clockDate">LOCAL</span>
+    </div>
+  </div>
+</footer>
+
+
+
+
+</div>
+
+</div>
+<script data-skandi-part="skandi-shell-runtime">/** SKANDI compiled public-shell runtime — no alternate backend, no local cart. */
+const SKANDI_SHELL_SOURCE = 'SKANDI_SHELL';
+const SKANDI_SHELL_PARENT = 'SKANDI_WIX_PARENT';
+const shellRoot = document.getElementById('skandi-shell-root');
+if (!shellRoot) throw new Error('SKANDI shell mount missing');
+window.__SKANDI_SHELL__ = Object.freeze({
+  mode:'compiled-single-embed',
+  page:shellRoot.dataset.skandiPage || '',
+  root:shellRoot
+});
+// A single iframe passes Home, Header, Footer and Mobile messages to the
+// same Wix Velo HtmlComponent. Existing message source/type values remain.
+// The Wix master controller supplies canonical route and session data.
+window.addEventListener('message', event => {
+  if (event.source !== window.parent) return;
+  let message = event.data;
+  if (typeof message === 'string') {
+    try { message = JSON.parse(message); } catch (_) { return; }
+  }
+  if (!message || message.source !== SKANDI_SHELL_PARENT) return;
+  if (message.type === 'SKANDI_MASTER_CONFIG') {
+    shellRoot.dataset.skandiPath = String(message.payload?.currentPath || '/');
+  }
+  if (message.type === 'SKANDI_SCROLL_TOP' || message.type === 'MASTER_SCROLL_TOP') {
+    document.getElementById('skandi-app-root')?.scrollTo({ top:0, behavior:'instant' });
+  }
+});
+window.parent?.postMessage({
+  source:SKANDI_SHELL_SOURCE,
+  type:'SKANDI_SHELL_READY',
+  payload:{page:shellRoot.dataset.skandiPage || ''},
+  timestamp:new Date().toISOString()
+}, '*');
+
+// The universal receiver supplies this context only after canonical parent,
+// manifest and digest validation. Legacy Home never opts into this handshake.
+let shellAttempts = 0;
+let shellConfigReceived = false;
+let shellTimer;
+function requestShellConfig() {
+  if (++shellAttempts > 40 || shellConfigReceived) { clearInterval(shellTimer); return; }
+  window.parent.postMessage({source:SKANDI_SHELL_SOURCE,type:'MASTER_CONFIG_REQUEST',payload:{context:'compiled-shell'}},'*');
+}
+window.addEventListener('message', event => {
+  if (event.source !== window.parent) return;
+  let message=event.data;
+  if(typeof message==='string'){try{message=JSON.parse(message);}catch(_){return;}}
+  if(message?.source===SKANDI_SHELL_PARENT && message.type==='SKANDI_MASTER_CONFIG') {
+    shellConfigReceived=true;clearInterval(shellTimer);
+  }
+});
+function startCompiledShell() {
+  const context=window.__SKANDI_RECEIVER_CONTEXT__;
+  if(context?.allowed===true && context.key===shellRoot.dataset.skandiKey) {
+    window.parent.postMessage({source:SKANDI_SHELL_SOURCE,type:'SKANDI_COMPILED_READY',payload:{key:context.key}},'*');
+  }
+  shellTimer=setInterval(requestShellConfig,500);requestShellConfig();
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',startCompiledShell,{once:true});
+else startCompiledShell();
+</script>
+<script data-skandi-part="header">(function(){
+const __root=window.document.getElementById("altea-global-header-root");
+const document=new Proxy(window.document,{get(target,key){if(key==='getElementById')return id=>{const el=target.getElementById(id);return el&&(__root===el||__root.contains(el))?el:null;};if(key==='querySelector'||key==='querySelectorAll')return selector=>{if(/^(?:html|body|head|meta|title|link)(?:[\s.#[:]|$)/i.test(selector)&&!selector.includes(' '))return target[key](selector);return __root[key](selector);};if(key==='getElementsByClassName'||key==='getElementsByTagName')return value=>__root[key](value);const value=Reflect.get(target,key,target);return typeof value==='function'?value.bind(target):value;},set(target,key,value){return Reflect.set(target,key,value,target);}});
+
+(()=>{
+  "use strict";
+
+  const SOURCE = "SKANDI_ALTEA_HEADER";
+  const PARENT = "SKANDI_WIX_PARENT";
+  const GROUPTALK_PATH = "/riaintra/success-factors/altea/grouptalk";
+  let config = null;
+  let staff = {};
+  let runtime = { officeId:"" };
+
+  const $ = id => document.getElementById(id);
+  const esc = v => String(v ?? "").replace(/[&<>"']/g, s => ({
+    "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"
+  }[s]));
+
+  function post(type, payload = {}) {
+    if (window.parent && window.parent !== window) {
+      window.parent.postMessage({
+        source:SOURCE,
+        type,
+        payload,
+        timestamp:new Date().toISOString()
+      }, "*");
+    }
+  }
+
+  function profile() {
+    return staff.profile || config?.staff?.profile || runtime.profile || {};
+  }
+
+  function headerConfig() {
+    return config?.altea?.header || config?.internal?.header || {};
+  }
+
+  function applyRuntime(value = {}) {
+    const next = value && typeof value === "object" ? value : {};
+    runtime = { ...runtime, ...next };
+    if (next.profile && typeof next.profile === "object") {
+      staff.profile = { ...staff.profile, ...next.profile };
+    }
+  }
+
+  function render() {
+    const header = headerConfig();
+    const altea = config?.altea || {};
+    const p = profile();
+    const logo = config?.brand?.assets?.logos?.altea ||
+                 config?.brand?.assets?.logos?.riaintra ||
+                 config?.brand?.assets?.logos?.skandiPrimary || "";
+
+    if (logo && $("logo")) $("logo").src = logo;
+    if ($("productName")) $("productName").textContent = header.productName || altea.systemName || "ALTEA";
+    if ($("productContext")) $("productContext").textContent = header.productContext || altea.systemContext || "SKANDI SYSTEMS";
+
+    const env = runtime.env || altea.env || config?.env || "PRD";
+    if ($("envBadge")) $("envBadge").textContent = String(env).trim().toUpperCase() || "PRD";
+
+    const current = config?.currentPath || "";
+    const items = Array.isArray(header.primaryNav) ? header.primaryNav : [];
+    if ($("navLinks")) {
+      $("navLinks").innerHTML = items.map(item => {
+        const path = String(item?.path || "");
+        const active = current === path || (path && current.startsWith(path + "/"));
+        return `<button type="button" class="${active ? "active" : ""}" data-route="${esc(path)}">${esc(item?.label || "")}</button>`;
+      }).join("");
+    }
+
+    const hasData = Boolean(
+      p.skId || p.skID || p.sk_id || p.employeeId || p.employee_id ||
+      p.displayName || p.display_name || p.firstName || p.first_name
+    );
+    if ($("userProfile")) $("userProfile").style.display = hasData ? "grid" : "none";
+    if (hasData) {
+      const userId = String(
+        p.skId || p.skID || p.sk_id || p.employeeId || p.employee_id ||
+        p.displayName || p.display_name || "USER"
+      ).trim();
+      const office = String(
+        runtime.officeId || altea.officeId || p.officeId || p.office_id ||
+        p.baseCode || p.base_code || p.base || p.station || ""
+      ).trim().toUpperCase();
+      if ($("userName")) $("userName").textContent = userId;
+      if ($("officeId")) $("officeId").textContent = office || "—";
+    }
+
+    const normalizedCurrent = String(current || "").split("?")[0].replace(/\/$/, "") || "/";
+    if ($("returnDashboardBtn")) {
+      $("returnDashboardBtn").hidden = normalizedCurrent === "/riaintra/success-factors";
+    }
+  }
+
+  document.addEventListener("click", event => {
+    const btn = event.target.closest("[data-route]");
+    if (!btn) return;
+    const path = btn.dataset.route;
+    if (path === GROUPTALK_PATH) {
+      const base = String(config?.baseUrl || "").trim();
+      let target = path;
+      if (base) {
+        try {
+          target = new URL(path.replace(/^\//, ""), base.replace(/\/+$/, "") + "/").href;
+        } catch (_) {}
+      }
+      window.open(target, "_blank", "noopener,noreferrer");
+      return;
+    }
+    document.querySelectorAll("#navLinks button").forEach(item => item.classList.remove("active"));
+    btn.classList.add("active");
+    if (config) config.currentPath = path;
+    post("RIAINTRA_NAVIGATE", { path });
+  });
+
+  $("returnDashboardBtn")?.addEventListener("click", () => {
+    post("RIAINTRA_NAVIGATE", {
+      path:config?.routes?.successFactors || "/riaintra/success-factors"
+    });
+  });
+
+  $("logoutBtn")?.addEventListener("click", () => {
+    post("RIAINTRA_LOGOUT", {});
+  });
+
+  let clockUsesUtc = false;
+  function updateClock() {
+    const now = new Date();
+    const opts = {
+      hour:"2-digit", minute:"2-digit", second:"2-digit", hour12:false,
+      ...(clockUsesUtc ? { timeZone:"UTC" } : {})
+    };
+    if ($("clockTime")) $("clockTime").textContent = new Intl.DateTimeFormat(undefined, opts).format(now);
+    if ($("clockDate")) {
+      $("clockDate").textContent = clockUsesUtc
+        ? `${now.toISOString().slice(0, 10)} UTC`
+        : new Intl.DateTimeFormat(undefined, { weekday:"short", day:"2-digit", month:"short" }).format(now).toUpperCase();
+    }
+  }
+  $("sysClock")?.addEventListener("click", () => {
+    clockUsesUtc = !clockUsesUtc;
+    updateClock();
+  });
+  setInterval(updateClock, 1000);
+  updateClock();
+
+  window.addEventListener("message", event => {
+    let message = event.data;
+    if (typeof message === "string") {
+      try { message = JSON.parse(message); } catch (_) { return; }
+    }
+    if (!message || typeof message !== "object" || message.source !== PARENT) return;
+
+    if (message.type === "SKANDI_MASTER_CONFIG") {
+      config = message.payload || {};
+      applyRuntime(config?.altea || {});
+      render();
+      return;
+    }
+
+    if (message.type === "ALTEA_HEADER_STATE" || message.type === "ALTEA_HEADER_CONTEXT") {
+      applyRuntime(message.payload || {});
+      render();
+      return;
+    }
+
+    if (["RIAINTRA_HEADER_STATE", "UPDATE_PROFILE", "INTERNAL_CHROME_BOOTSTRAP", "GLOBAL_HEADER_BOOTSTRAP"].includes(message.type)) {
+      const payloadProfile =
+        message.payload?.profile ||
+        message.payload?.session?.profile ||
+        message.payload?.session ||
+        message.payload ||
+        {};
+      staff.profile = { ...staff.profile, ...payloadProfile };
+      render();
+    }
+  });
+
+  post("MASTER_CONFIG_REQUEST", { context:"altea-header" });
+  post("ALTEA_HEADER_READY", {});
+  /* Compiled shell owns internal chrome geometry. */
+})();
+
+
+})();</script>
+<script data-skandi-part="footer">(function(){
+const __root=window.document.getElementById("altea-global-footer-root");
+const document=new Proxy(window.document,{get(target,key){if(key==='getElementById')return id=>{const el=target.getElementById(id);return el&&(__root===el||__root.contains(el))?el:null;};if(key==='querySelector'||key==='querySelectorAll')return selector=>{if(/^(?:html|body|head|meta|title|link)(?:[\s.#[:]|$)/i.test(selector)&&!selector.includes(' '))return target[key](selector);return __root[key](selector);};if(key==='getElementsByClassName'||key==='getElementsByTagName')return value=>__root[key](value);const value=Reflect.get(target,key,target);return typeof value==='function'?value.bind(target):value;},set(target,key,value){return Reflect.set(target,key,value,target);}});
+
+(()=>{
+  "use strict";
+
+  const SOURCE = "SKANDI_ALTEA_FOOTER";
+  const PARENT = "SKANDI_WIX_PARENT";
+  const LEGAL_PATH = "/riaintra/success-factors/legal-internal";
+  let legalPath = LEGAL_PATH;
+  const $ = id => document.getElementById(id);
+
+  function post(type, payload = {}) {
+    if (window.parent && window.parent !== window) {
+      window.parent.postMessage({
+        source:SOURCE,
+        type,
+        payload,
+        timestamp:new Date().toISOString()
+      }, "*");
+    }
+  }
+
+  function setSystemMessage(text, type = "info") {
+    const target = $("sysMessage");
+    if (!target) return;
+    target.textContent = String(text || "READY");
+    target.className = "sys-text";
+    if (type === "error") target.classList.add("error");
+    if (type === "success") target.classList.add("success");
+  }
+
+  function renderState(state = {}) {
+    if (state.connected !== undefined && $("networkDot")) {
+      $("networkDot").className = state.connected ? "network-dot" : "network-dot offline";
+      if (!state.connected && !state.systemMessage) setSystemMessage("HOST DISCONNECTED", "error");
+    }
+    if (state.systemMessage) setSystemMessage(state.systemMessage.text, state.systemMessage.type);
+    if (state.context !== undefined && $("activeContext")) {
+      $("activeContext").textContent = state.context ? String(state.context) : "ALTEA DASHBOARD";
+    }
+    if (state.env && $("envState")) $("envState").textContent = String(state.env).toUpperCase();
+    if (state.lmcMode !== undefined && $("lmcBadge")) {
+      $("lmcBadge").classList.toggle("active", Boolean(state.lmcMode));
+    }
+  }
+
+  let clockUsesUtc = false;
+  function updateClock() {
+    const now = new Date();
+    const opts = {
+      hour:"2-digit", minute:"2-digit", second:"2-digit", hour12:false,
+      ...(clockUsesUtc ? { timeZone:"UTC" } : {})
+    };
+    if ($("altea-footer-clockTime")) $("altea-footer-clockTime").textContent = new Intl.DateTimeFormat(undefined, opts).format(now);
+    if ($("altea-footer-clockDate")) {
+      $("altea-footer-clockDate").textContent = clockUsesUtc
+        ? `${now.toISOString().slice(0, 10)} UTC`
+        : new Intl.DateTimeFormat(undefined, { weekday:"short", day:"2-digit", month:"short" }).format(now).toUpperCase();
+    }
+  }
+
+  $("altea-footer-sysClock")?.addEventListener("click", () => {
+    clockUsesUtc = !clockUsesUtc;
+    updateClock();
+  });
+
+  $("legalPoliciesBtn")?.addEventListener("click", () => {
+    post("RIAINTRA_NAVIGATE", { path:legalPath });
+  });
+
+  setInterval(updateClock, 1000);
+  updateClock();
+
+  window.addEventListener("message", event => {
+    let message = event.data;
+    if (typeof message === "string") {
+      try { message = JSON.parse(message); } catch (_) { return; }
+    }
+    if (!message || typeof message !== "object" || message.source !== PARENT) return;
+
+    if (message.type === "ALTEA_FOOTER_STATE") {
+      renderState(message.payload || {});
+      return;
+    }
+
+    if (message.type === "SKANDI_MASTER_CONFIG") {
+      const payload = message.payload || {};
+      legalPath = String(payload?.routes?.legalInternal || LEGAL_PATH);
+      renderState({
+        env:payload?.altea?.env || payload?.env || "PRD",
+        context:payload?.altea?.systemContext || payload?.altea?.pageName || payload?.altea?.systemName || "ALTEA DASHBOARD",
+        lmcMode:Boolean(payload?.altea?.lmcMode)
+      });
+    }
+  });
+
+  post("MASTER_CONFIG_REQUEST", { context:"altea-footer" });
+  post("ALTEA_FOOTER_READY", {});
+  /* Compiled shell owns internal chrome geometry. */
+})();
+
+
+})();</script>
+<script data-skandi-part="altea-launchpad">(function(){
+const __root=window.document.getElementById("skandi-app-root");
+const document=new Proxy(window.document,{get(target,key){if(key==='getElementById')return id=>{const el=target.getElementById(id);return el&&(__root===el||__root.contains(el))?el:null;};if(key==='querySelector'||key==='querySelectorAll')return selector=>{if(/^(?:html|body|head|meta|title|link)(?:[\s.#[:]|$)/i.test(selector)&&!selector.includes(' '))return target[key](selector);return __root[key](selector);};if(key==='getElementsByClassName'||key==='getElementsByTagName')return value=>__root[key](value);const value=Reflect.get(target,key,target);return typeof value==='function'?value.bind(target):value;},set(target,key,value){return Reflect.set(target,key,value,target);}});
+
+    (() => {
+      "use strict";
+
+      const SOURCE = "SKANDI_ALTEA_LAUNCHPAD";
+      const PARENT_SOURCE = "SKANDI_WIX_PARENT";
+      const VERSION = "V12-ALTEA-LAUNCHPAD-2026.10.06";
+      const REQUEST_TIMEOUT_MS = 30000;
+      const READY_RETRY_MS = 1500;
+
+      const icons = {
+        plane: `
+          <svg viewBox="0 0 32 32" aria-hidden="true">
+            <path d="m3.5 17.8 10.2 1.6-3.1 6.2 2.5.6 5.4-6.1 7.3 1.2c1.6.3 2.7-.5 2.7-1.7s-1-2-2.7-2.2l-7.3-1.2-5.4-6.1-2.5.6 3.1 6.2-10.2-1.6z"></path>
+            <path d="M21.8 12.5 24.2 9"></path>
+          </svg>`,
+        inventory: `
+          <svg viewBox="0 0 32 32" aria-hidden="true">
+            <rect x="4.5" y="5" width="23" height="22" rx="2"></rect>
+            <path d="M4.5 11.5h23M11.8 11.5V27M20.2 11.5V27"></path>
+            <path d="M8 8.2h.1M11 8.2h.1M14 8.2h.1M14.4 16h3.2M14.4 20h3.2"></path>
+          </svg>`,
+        barcode: `
+          <svg viewBox="0 0 32 32" aria-hidden="true">
+            <path d="M5 7v18M8 7v18M11.5 7v18M14 7v18M18 7v18M20.5 7v18M24 7v18M27 7v18"></path>
+            <path d="M4 4.5h6M4 4.5v4M28 4.5h-6M28 4.5v4M4 27.5h6M4 27.5v-4M28 27.5h-6M28 27.5v-4"></path>
+          </svg>`,
+        passenger: `
+          <svg viewBox="0 0 32 32" aria-hidden="true">
+            <circle cx="11" cy="9.5" r="3.5"></circle>
+            <path d="M4.5 23.5c.5-5 2.7-7.5 6.5-7.5s6 2.5 6.5 7.5"></path>
+            <path d="M19 8.5h8.5v15H19M21.5 12h3.5M21.5 15.5h3.5M21.5 19h3.5"></path>
+          </svg>`,
+        passport: `
+          <svg viewBox="0 0 32 32" aria-hidden="true">
+            <rect x="6" y="3.5" width="20" height="25" rx="2"></rect>
+            <circle cx="16" cy="15" r="5"></circle>
+            <path d="M11 15h10M16 10c1.5 1.4 2.2 3.1 2.2 5s-.7 3.6-2.2 5c-1.5-1.4-2.2-3.1-2.2-5s.7-3.6 2.2-5zM11 24h10"></path>
+          </svg>`,
+        communication: `
+          <svg viewBox="0 0 32 32" aria-hidden="true">
+            <path d="M6 7.5h20v13H14l-6 4v-4H6z"></path>
+            <path d="M10 12h12M10 16h8"></path>
+          </svg>`,
+        arrow: `
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M5 12h13M14 7l5 5-5 5"></path>
+          </svg>`,
+        check: `
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="m5 12.5 4.2 4.2L19 7"></path>
+          </svg>`,
+        search: `
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="10.5" cy="10.5" r="6.5"></circle>
+            <path d="m15.5 15.5 5 5"></path>
+          </svg>`
+      };
+
+      const state = {
+        applications: [],
+        profile: null,
+        phase: "loading",
+        bootstrap: null,
+        launch: null,
+        requestSequence: 0,
+        returnFocus: null
+      };
+
+      const elements = {
+        root: document.getElementById("applicationRoot"),
+        appGrid: document.getElementById("appGrid"),
+        appSearch: document.getElementById("appSearch"),
+        clearSearch: document.getElementById("clearSearch"),
+        refresh: document.getElementById("refreshApps"),
+        applicationCount: document.getElementById("applicationCount"),
+        loadingOverlay: document.getElementById("loadingOverlay"),
+        loadingAppName: document.getElementById("loadingAppName"),
+        dialogLayer: document.getElementById("dialogLayer"),
+        dialogTitle: document.getElementById("dialogTitle"),
+        dialogBody: document.getElementById("dialogBody"),
+        dialogActions: document.getElementById("dialogActions"),
+        dialogClose: document.getElementById("dialogClose"),
+        toastRegion: document.getElementById("toastRegion")
+      };
+
+      // The browser's referrer identifies the immediate Wix parent when available.
+      // Source-window validation remains mandatory even without a referrer.
+      const parentOrigin = (() => {
+        try {
+          const url = new URL(document.referrer);
+          return /^https?:$/.test(url.protocol) ? url.origin : "";
+        } catch (_) { return ""; }
+      })();
+
+      function esc(value) {
+        return String(value ?? "").replace(/[&<>"']/g, char => ({
+          "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+        })[char]);
+      }
+
+      function isRecord(value) {
+        return value !== null && typeof value === "object" && !Array.isArray(value);
+      }
+
+      function cleanApp(raw) {
+        if (!isRecord(raw)) return null;
+        const id = String(raw.id || "").trim().slice(0, 80);
+        const path = String(raw.path || "").trim().slice(0, 240);
+        if (!id || !path.startsWith("/riaintra/")) return null;
+        try {
+          const decoded = decodeURIComponent(path);
+          if (decoded.includes("//") || decoded.includes("..") || /[\\\x00-\x1f\x7f]/.test(decoded)) return null;
+        } catch (_) { return null; }
+        return {
+          id,
+          title: String(raw.title || id).trim().slice(0, 160),
+          description: String(raw.description || "").trim().slice(0, 600),
+          icon: String(raw.icon || "arrow").trim().slice(0, 40),
+          code: String(raw.code || id).trim().slice(0, 80),
+          accent: /^#[0-9a-f]{6}$/i.test(String(raw.accent || "")) ? raw.accent : "#005eb8",
+          available: raw.available !== false,
+          unavailableReason: raw.available === false ? String(raw.unavailableReason || "Application unavailable").trim().slice(0, 240) : "",
+          path
+        };
+      }
+
+      function nextRequestId(type) {
+        state.requestSequence += 1;
+        return type + "-" + Date.now() + "-" + state.requestSequence;
+      }
+
+      function post(type, payload, requestId) {
+        window.parent.postMessage({
+          source: SOURCE, type, requestId, payload,
+          timestamp: new Date().toISOString()
+        }, parentOrigin || "*");
+      }
+
+      function setLayerVisibility(element, visible) {
+        element.classList.toggle("visible", visible);
+        element.setAttribute("aria-hidden", String(!visible));
+        const blocked = elements.loadingOverlay.classList.contains("visible") ||
+          elements.dialogLayer.classList.contains("visible");
+        document.body.classList.toggle("modal-open", blocked);
+        elements.root.inert = blocked;
+      }
+
+      function updateControls() {
+        elements.refresh.disabled = Boolean(state.bootstrap || state.launch);
+        elements.appSearch.disabled = state.phase !== "ready";
+        elements.clearSearch.disabled = state.phase !== "ready";
+      }
+
+      function stopBootstrap() {
+        if (state.bootstrap) {
+          clearTimeout(state.bootstrap.timer);
+          clearInterval(state.bootstrap.retry);
+        }
+        state.bootstrap = null;
+        updateControls();
+      }
+
+      function stopLaunch() {
+        if (state.launch) clearTimeout(state.launch.timer);
+        state.launch = null;
+        setLayerVisibility(elements.loadingOverlay, false);
+        updateControls();
+      }
+
+      function sendBootstrap() {
+        const pending = state.bootstrap;
+        if (!pending) return;
+        try {
+          post(pending.type, { version: VERSION }, pending.requestId);
+        } catch (_) {
+          showError("The Launchpad could not connect to its page. Select Retry to reconnect.", "ALTEA_BRIDGE_UNAVAILABLE");
+        }
+      }
+
+      function beginBootstrap(type = "ALTEA_LAUNCHPAD_REFRESH") {
+        stopBootstrap();
+        stopLaunch();
+        closeDialog();
+        state.applications = [];
+        state.profile = null;
+        state.phase = "loading";
+        state.bootstrap = {
+          type,
+          requestId: nextRequestId(type),
+          timer: setTimeout(() => {
+            showError("The Launchpad did not receive a response. Select Retry to reconnect.", "ALTEA_BOOTSTRAP_TIMEOUT");
+          }, REQUEST_TIMEOUT_MS),
+          retry: setInterval(sendBootstrap, READY_RETRY_MS)
+        };
+        renderApplications();
+        updateControls();
+        sendBootstrap();
+      }
+
+      function renderApplications() {
+        const query = elements.appSearch.value.trim().toLocaleLowerCase();
+        const filtered = state.applications.filter(app =>
+          (app.title + " " + app.description + " " + app.code).toLocaleLowerCase().includes(query)
+        );
+        elements.appGrid.replaceChildren();
+        elements.appGrid.setAttribute("aria-busy", String(state.phase === "loading"));
+        if (state.phase !== "ready") {
+          const empty = document.createElement("div");
+          empty.className = "empty-state visible";
+          empty.textContent = state.phase === "loading"
+            ? "Checking your staff session and authorized applications…"
+            : "Applications are unavailable. Select Refresh to reconnect.";
+          elements.appGrid.append(empty);
+          elements.applicationCount.textContent = state.phase === "loading"
+            ? "Loading authorized applications…" : "Authorization unavailable";
+          return;
+        }
+        filtered.forEach(app => {
+          const tile = document.createElement("button");
+          tile.type = "button";
+          tile.className = "app-tile";
+          tile.disabled = !app.available;
+          tile.dataset.appId = app.id;
+          tile.style.setProperty("--tile-accent", app.accent);
+          tile.setAttribute("aria-label", (app.available ? "Open " : "Unavailable: ") + app.title);
+          tile.innerHTML =
+            '<span class="tile-visual"><span class="tile-icon">' + (icons[app.icon] || icons.arrow) + '</span>' +
+            '<span class="tile-code">' + esc(app.code) + '</span></span>' +
+            '<span class="tile-content"><h3>' + esc(app.title) + '</h3><p>' + esc(app.description) + '</p>' +
+            '<span class="tile-launch"><span>' + (app.available ? "Open Application" : esc(app.unavailableReason)) + '</span>' + (app.available ? icons.arrow : "") + '</span></span>';
+          tile.addEventListener("click", () => requestLaunch(app));
+          elements.appGrid.append(tile);
+        });
+        if (!filtered.length) {
+          const empty = document.createElement("div");
+          empty.className = "empty-state visible";
+          const title = state.applications.length ? "No matching applications" : "No authorized applications";
+          const message = state.applications.length
+            ? "Try a different application name or module."
+            : "No ALTEA applications are assigned to your current staff access profile.";
+          empty.innerHTML = "<div>" + icons.search + "<strong>" + title + "</strong><span>" + message + "</span></div>";
+          elements.appGrid.append(empty);
+        }
+        elements.applicationCount.textContent = filtered.length + (query ? " matching" : " authorized") +
+          " application" + (filtered.length === 1 ? "" : "s");
+      }
+
+      function requestLaunch(app) {
+        if (state.launch || state.bootstrap || state.phase !== "ready" || !app || !app.available) return;
+        state.returnFocus = document.activeElement;
+        const requestId = nextRequestId("ALTEA_LAUNCHPAD_NAVIGATE");
+        state.launch = {
+          requestId, app,
+          timer: setTimeout(() => {
+            showError("The application did not respond. Select Retry to refresh your authorization.", "ALTEA_LAUNCH_TIMEOUT");
+          }, REQUEST_TIMEOUT_MS)
+        };
+        elements.loadingAppName.textContent = "Checking access and opening " + app.title;
+        setLayerVisibility(elements.loadingOverlay, true);
+        updateControls();
+        try {
+          // Navigation is sent once. Only read-only authorization requests retry.
+          post("ALTEA_LAUNCHPAD_NAVIGATE", { appId: app.id, path: app.path }, requestId);
+        } catch (_) {
+          showError("The application could not be opened. Select Retry to reconnect.", "ALTEA_BRIDGE_UNAVAILABLE");
+        }
+      }
+
+      function applyBootstrap(payload, duringLaunch = false) {
+        if (!isRecord(payload) || !Array.isArray(payload.apps)) return false;
+        const apps = payload.apps.map(cleanApp);
+        if (apps.some(app => !app) || new Set(apps.map(app => app.id)).size !== apps.length) return false;
+        if (!duringLaunch) stopBootstrap();
+        state.applications = apps;
+        state.profile = isRecord(payload.profile) ? payload.profile : null;
+        state.phase = "ready";
+        renderApplications();
+        updateControls();
+        if (!duringLaunch) {
+          closeDialog();
+          const name = String(state.profile?.preferredName || state.profile?.displayName || state.profile?.firstName || "").trim();
+          const role = String(payload.accessRole || state.profile?.accessRole || "").trim();
+          if (name || role) showToast("Secure ALTEA session", [name, role].filter(Boolean).join(" · "));
+        }
+        return true;
+      }
+
+      function showToast(title, message = "") {
+        const toast = document.createElement("div");
+        toast.className = "toast";
+        toast.setAttribute("role", "status");
+        toast.innerHTML = icons.check + "<p><strong>" + esc(title) + "</strong>" + esc(message) + "</p>";
+        elements.toastRegion.append(toast);
+        setTimeout(() => toast.remove(), 4200);
+      }
+
+      function showError(message, code = "ALTEA_UNAVAILABLE", retainApps = false) {
+        if (!elements.dialogLayer.classList.contains("visible") && !elements.loadingOverlay.classList.contains("visible")) {
+          state.returnFocus = document.activeElement;
+        }
+        stopBootstrap();
+        stopLaunch();
+        if (!retainApps) {
+          state.phase = "error";
+          state.applications = [];
+          state.profile = null;
+          renderApplications();
+        }
+        updateControls();
+        elements.dialogTitle.textContent = "ALTEA access unavailable";
+        elements.dialogBody.innerHTML = '<p class="modal-message" role="alert">' + esc(message || "The ALTEA launchpad could not be loaded.") + "</p>" +
+          (/^[A-Z][A-Z0-9_]{0,99}$/.test(code) ? '<p class="modal-message"><small>' + esc(code) + "</small></p>" : "");
+        elements.dialogActions.innerHTML =
+          '<button class="button button-secondary" type="button" data-action="close">Close</button>' +
+          '<button class="button button-primary" type="button" data-action="retry">Retry</button>';
+        elements.dialogActions.querySelector('[data-action="close"]').addEventListener("click", closeDialog);
+        elements.dialogActions.querySelector('[data-action="retry"]').addEventListener("click", () => beginBootstrap());
+        setLayerVisibility(elements.dialogLayer, true);
+        elements.dialogActions.querySelector('[data-action="retry"]').focus();
+      }
+
+      function closeDialog() {
+        const wasOpen = elements.dialogLayer.classList.contains("visible");
+        setLayerVisibility(elements.dialogLayer, false);
+        if (wasOpen) {
+          const target = state.returnFocus?.isConnected && !state.returnFocus.disabled ? state.returnFocus : elements.refresh;
+          target.focus();
+        }
+      }
+
+      elements.refresh.addEventListener("click", () => beginBootstrap());
+      elements.appSearch.addEventListener("input", () => {
+        elements.clearSearch.classList.toggle("visible", Boolean(elements.appSearch.value));
+        renderApplications();
+      });
+      elements.clearSearch.addEventListener("click", () => {
+        elements.appSearch.value = "";
+        elements.clearSearch.classList.remove("visible");
+        renderApplications();
+        elements.appSearch.focus();
+      });
+      elements.dialogClose.addEventListener("click", closeDialog);
+      elements.dialogLayer.addEventListener("mousedown", event => {
+        if (event.target === elements.dialogLayer) closeDialog();
+      });
+      document.addEventListener("keydown", event => {
+        if (!elements.dialogLayer.classList.contains("visible")) return;
+        if (event.key === "Escape") {
+          event.preventDefault();
+          closeDialog();
+        } else if (event.key === "Tab") {
+          const controls = [...elements.dialogLayer.querySelectorAll("button:not(:disabled)")];
+          const first = controls[0], last = controls[controls.length - 1];
+          if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+          else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+        }
+      });
+
+      window.addEventListener("message", event => {
+        if (event.source !== window.parent || (parentOrigin && event.origin !== parentOrigin)) return;
+        let data = event.data;
+        if (typeof data === "string") {
+          try { data = JSON.parse(data); } catch (_) { return; }
+        }
+        if (!isRecord(data) || data.source !== PARENT_SOURCE) return;
+        if (data.type === "ALTEA_LAUNCHPAD_HOST_READY") {
+          sendBootstrap();
+          return;
+        }
+        const bootstrapMatch = Boolean(state.bootstrap && data.requestId === state.bootstrap.requestId);
+        const launchMatch = Boolean(state.launch && data.requestId === state.launch.requestId);
+        if (!bootstrapMatch && !launchMatch) return;
+        if (data.type === "ALTEA_LAUNCHPAD_BOOTSTRAP") {
+          if (!applyBootstrap(data.payload, launchMatch)) {
+            showError("The authorization service returned an invalid application list.", "ALTEA_RESPONSE_INVALID");
+          }
+        } else if (data.type === "ALTEA_LAUNCHPAD_ERROR") {
+          const code = String(data.payload?.code || "ALTEA_UNAVAILABLE");
+          showError(data.payload?.message, code, launchMatch && ["ALTEA_APP_ACCESS_CHANGED", "ALTEA_REQUEST_BUSY", "ALTEA_APP_UNAVAILABLE"].includes(code));
+        } else if (data.type === "ALTEA_LAUNCHPAD_NAVIGATING" && launchMatch) {
+          if (data.payload?.appId !== state.launch.app.id || data.payload?.path !== state.launch.app.path) {
+            showError("The application launch response was invalid.", "ALTEA_RESPONSE_INVALID");
+            return;
+          }
+          stopLaunch();
+        }
+      });
+
+      window.addEventListener("pagehide", () => {
+        stopBootstrap();
+        stopLaunch();
+      });
+      window.addEventListener("pageshow", event => {
+        if (event.persisted) beginBootstrap();
+      });
+      beginBootstrap("ALTEA_LAUNCHPAD_READY");
+    })();
+  
+
+})();</script>
+</body>
+</html>

@@ -1,1 +1,444 @@
-<!-- SKANDI_PENDING_SOURCE: replace with complete page markup. -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<meta name="theme-color" content="#071b44"/>
+<title>SKANDI The Store · B-011.15</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="skandi-the-store.css">
+<link rel="stylesheet" href="skandi-the-store.part-02.css" id="store-v12-polish"></head>
+<body>
+<a class="sr" href="#productGrid">Skip to products</a>
+
+<div class="utility-bar">
+  <div class="utility-inner">
+    <div class="utility-links">
+    </div>
+    <div class="utility-account">
+      <button id="ordersBtn">My orders</button><span>•</span><button data-open-path="/">Go to SKANDI Travels</button>
+    </div>
+  </div>
+</div>
+
+<header class="site-header">
+  <div class="header-main">
+    <div class="brand-lockup" aria-label="SKANDI — The Store">
+      <div class="brand-mark"><img id="storeHeader" data-master-logo="storeHeader" src="https://static.wixstatic.com/media/394052_eaf2188b7f7e48468fa25d61f8881b10~mv2.png" alt="SKANDI The Store"></div><div class="brand-divider"></div>
+    </div>
+    <nav class="primary-nav" id="mainNav" aria-label="Shop navigation">
+      <button class="active" data-route="home">Home</button>
+      <button data-route="shop">Shop</button>
+      <button id="categoriesBtn">Categories</button>
+      <button data-category="SKANDI">SKANDI collection</button>
+      <button data-category="Gift">Gifts</button>
+      <button data-category="Gift Cards">Gift Cards</button>
+      <button data-category="Sale">Offers</button>
+    </nav>
+    <div class="header-actions">
+      <button class="action-button desktop-only" id="searchBtn" aria-label="Search">
+        <span class="action-icon"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"></circle><path d="m16.2 16.2 4.2 4.2"></path></svg></span><span>Search</span>
+      </button>
+      <button class="action-button desktop-only" id="savedBtn" aria-label="Saved products">
+        <span class="action-icon"><svg viewBox="0 0 24 24"><path d="M20.8 4.7c-2-2-5.2-2-7.2 0L12 6.3l-1.6-1.6c-2-2-5.2-2-7.2 0s-2 5.2 0 7.2L12 20.7l8.8-8.8c2-2 2-5.2 0-7.2Z"></path></svg><b class="badge" id="savedCount">0</b></span><span>Saved</span>
+      </button>
+      <button class="action-button" id="bagBtn" aria-label="Shopping bag">
+        <span class="action-icon"><svg viewBox="0 0 24 24"><path d="M5 8h14l-1 12H6L5 8Z"></path><path d="M9 9V6a3 3 0 0 1 6 0v3"></path></svg><b class="badge" id="bagCount">0</b></span><span>Bag</span>
+      </button>
+      <button class="action-button mobile-menu-button" id="mobileMenuBtn" aria-label="Open menu">
+        <span class="action-icon"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"></path></svg></span><span>Menu</span>
+      </button>
+    </div>
+  </div>
+  <div class="search-dock">
+    <div class="search-inner">
+      <label class="search-box" for="query">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"></circle><path d="m16.2 16.2 4.2 4.2"></path></svg>
+        <input id="query" autocomplete="off" placeholder="Search products, categories or product code"/>
+      </label>
+      <input id="quickSearch" class="hidden" aria-hidden="true" tabindex="-1"/>
+      <div class="quick-links" id="topTabs">
+        <button data-category="Travel Essentials">For the journey</button><button data-category="Luggage">Luggage</button><button data-category="Beach">Beach</button><button data-category="Family">Family</button><button data-category="Gift Cards">Gift Cards</button><button data-category="New">New arrivals</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="category-menu" id="categoryMenu" aria-hidden="true">
+  <div class="category-menu-inner">
+    <div class="category-menu-intro"><h3>Shop by category</h3><p>Browse SKANDI travel products, destination essentials and selected lifestyle items.</p></div>
+    <div class="category-menu-list" id="categoryMenuList"></div>
+  </div>
+</div>
+
+
+<main id="pageHost">
+  <!-- HOME -->
+  <section class="page-view active" id="page-home" data-page="home">
+    <section class="hero-wrap" data-section-id="store-hero">
+      <div class="hero" id="heroBanner">
+        <div class="hero-panel">
+          <div class="hero-kicker" data-content-id="store-hero-eyebrow">SKANDI The Store</div>
+          <h1 id="heroTitle" data-content-id="store-hero-h1">Everything for the journey</h1>
+          <p id="heroText" data-content-id="store-hero-copy">Travel-ready essentials, SKANDI products and destination picks available to every SKANDI customer.</p>
+          <button class="cta teal" data-route="shop">Explore products <span aria-hidden="true">→</span></button>
+        </div>
+      </div>
+    </section>
+
+    <section class="customer-assurance" aria-label="Store benefits">
+      <article><div class="customer-assurance-icon">✓</div><div><strong>Open to everyone</strong><span>No SKANDI Club membership is required to shop.</span></div></article>
+      <article><div class="customer-assurance-icon">✈</div><div><strong>Made for travel</strong><span>Products selected for the airport, journey and destination.</span></div></article>
+      <article><div class="customer-assurance-icon">↗</div><div><strong>Secure checkout</strong><span>Shop, review your bag and complete payment in one continuous experience.</span></div></article>
+    </section>
+
+    <div class="content-shell">
+      <section class="section" aria-labelledby="categoryHeading">
+        <div class="section-head">
+          <div><h2 id="categoryHeading">Popular categories</h2><p>Start with the items most useful before and during your trip.</p></div>
+          <button class="text-link" data-route="shop">View all products</button>
+        </div>
+        <div class="category-strip" id="popularCategories"></div>
+      </section>
+
+      <section class="section" aria-label="Featured campaigns">
+        <div class="campaign-grid" id="bannerRow"></div>
+      </section>
+
+      <section class="section" aria-labelledby="featuredProductsHeading">
+        <div class="section-head">
+          <div><h2 id="featuredProductsHeading">Popular products</h2><p>Selected products available from SKANDI The Store.</p></div>
+          <button class="text-link" data-route="shop">View all products</button>
+        </div>
+        <div id="homeProductGrid" class="home-featured-grid"></div>
+      </section>
+
+      <section class="section" aria-labelledby="travelHeading">
+        <div class="section-head">
+          <div><h2 id="travelHeading">Travel inspiration</h2><p>Practical recommendations selected for the way SKANDI customers travel.</p></div>
+        </div>
+        <div class="editorial-grid" id="travelCards"></div>
+      </section>
+    </div>
+  </section>
+
+  <!-- SHOP / CATEGORY / SEARCH -->
+  <section class="page-view" id="page-shop" data-page="shop">
+    <div class="page-shell">
+      <div class="page-topline">
+        <div class="breadcrumb"><button data-route="home">Home</button><span aria-hidden="true">/</span><span id="shopBreadcrumb">Shop</span></div>
+      </div>
+      <div class="shop-page-head">
+        <div class="shop-page-head-copy">
+          <h1 class="page-heading" id="categoryTitle">All products</h1>
+          <p class="page-intro" id="categoryDescription">Browse products available from THE STORE.</p>
+        </div>
+        <button class="cta ghost" id="shopCategoriesBtn">Browse categories</button>
+      </div>
+
+      <div class="product-toolbar">
+        <div class="toolbar-left">
+          <span class="toolbar-count" id="productCount">0 products</span>
+          <button class="filter-button" data-filter="category">Category</button>
+          <button class="filter-button" data-filter="stock">In stock</button>
+          <button class="filter-button" data-filter="sale">Offers</button>
+          <button class="clear-button" id="clearFiltersBtn">Clear</button>
+        </div>
+        <div class="toolbar-right">
+          <select class="sort-select" id="sort" aria-label="Sort products">
+            <option value="recommended">Recommended</option>
+            <option value="newest">Newest</option>
+            <option value="priceAsc">Price: low to high</option>
+            <option value="priceDesc">Price: high to low</option>
+            <option value="name">Name: A–Z</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="productGrid" class="product-grid"></div>
+      <div class="load-more-wrap"><button class="cta ghost" id="loadMoreBtn">Show more products</button></div>
+    </div>
+  </section>
+
+  <!-- PRODUCT DETAIL -->
+  <section class="page-view" id="page-product" data-page="product">
+    <div class="page-shell">
+      <div class="page-topline">
+        <div class="breadcrumb"><button data-route="home">Home</button><span aria-hidden="true">/</span><button data-route="shop">Shop</button><span aria-hidden="true">/</span><span id="productBreadcrumb">Product</span></div>
+        <button class="route-back" data-back>Back</button>
+      </div>
+      <div id="productPageContent"></div>
+      <section class="related-section" id="relatedSection">
+        <div class="section-head">
+          <div><h2>You may also like</h2><p>More products selected from the same journey or category.</p></div>
+          <button class="text-link" data-route="shop">View all products</button>
+        </div>
+        <div id="relatedProductGrid" class="product-grid"></div>
+      </section>
+    </div>
+  </section>
+
+  <!-- SAVED -->
+  <section class="page-view" id="page-saved" data-page="saved">
+    <div class="page-shell">
+      <div class="page-topline">
+        <div class="breadcrumb"><button data-route="home">Home</button><span aria-hidden="true">/</span><span>Saved products</span></div>
+      </div>
+      <h1 class="page-heading">Saved products</h1>
+      <p class="page-intro">Products you have saved on this device.</p>
+      <div id="savedPageGrid" class="saved-page-grid" style="margin-top:32px"></div>
+    </div>
+  </section>
+
+  <!-- BAG -->
+  <section class="page-view" id="page-bag" data-page="bag">
+    <div class="page-shell">
+      <div class="page-topline">
+        <div class="breadcrumb"><button data-route="home">Home</button><span aria-hidden="true">/</span><span>Shopping bag</span></div>
+      </div>
+      <h1 class="page-heading">Shopping bag</h1>
+      <p class="page-intro">Review your selected products before continuing to checkout.</p>
+      <div class="bag-page-layout" style="margin-top:32px">
+        <div id="bagPageItems" class="bag-page-list"></div>
+        <aside class="order-summary">
+          <h2>Order summary</h2>
+          <div class="order-summary-line"><span>Items</span><span id="bagItemCount">0</span></div>
+          <div class="order-summary-line"><span>Delivery</span><span>Calculated at checkout</span></div>
+          <div class="order-summary-total"><span>Total</span><span id="bagTotal">—</span></div>
+          <button class="cta navy" id="checkoutBtn">Proceed to checkout</button>
+          <button class="cta white" data-route="shop">Continue shopping</button>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <!-- ORDERS -->
+  <section class="page-view" id="page-orders" data-page="orders">
+    <div class="page-shell narrow">
+      <div class="page-topline"><div class="breadcrumb"><button data-route="home">Home</button><span aria-hidden="true">/</span><span>My orders</span></div></div>
+      <h1 class="page-heading">My orders</h1>
+      <p class="page-intro">Sign in to review your SKANDI store orders, delivery progress and purchase details.</p>
+      <div class="orders-panel">
+        <h2>Open your order history</h2>
+        <p>You may be asked to sign in before your order history and purchase details are displayed.</p>
+        <button class="cta navy" id="ordersPageBtn">Open my orders</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- CUSTOMER SERVICE -->
+  <section class="page-view" id="page-support" data-page="support">
+    <div class="page-shell">
+      <div class="page-topline"><div class="breadcrumb"><button data-route="home">Home</button><span aria-hidden="true">/</span><span>Customer service</span></div></div>
+
+      <section class="support-hero">
+        <div class="support-eyebrow">SKANDI Customer Service</div>
+        <h1>How can we help?</h1>
+        <p>Find help with orders, delivery, returns, refunds, payments, products, warranties, promotions, accounts or technical issues without leaving the store.</p>
+        <div class="support-search">
+          <input id="supportSearchInput" type="search" autocomplete="off" placeholder="Search orders, tracking, returns, refunds, payments, products…">
+          <button id="supportSearchBtn" type="button">Search help</button>
+        </div>
+      </section>
+
+      <div class="support-channel-grid">
+        <article class="support-channel"><div class="support-channel-icon">□</div><h2>Order assistance</h2><p>Review your order history or contact us about an existing purchase.</p><button data-route="orders">View my orders</button></article>
+        <article class="support-channel"><div class="support-channel-icon">↗</div><h2>Delivery & returns</h2><p>Get help with tracking, delayed parcels, missing items, returns, exchanges or refunds.</p><button data-support-prefill="shipping_delivery">Get delivery help</button></article>
+        <article class="support-channel"><div class="support-channel-icon">?</div><h2>Contact support</h2><p>Send a detailed request to SKANDI Customer Service and include any relevant order or product information.</p><button data-support-form>Open contact form</button></article>
+      </div>
+
+      <div class="support-layout">
+        <aside class="support-sidebar">
+          <div class="support-side-card">
+            <h3>Popular help topics</h3>
+            <div class="support-topic-list" id="supportTopicList">
+              <button class="support-topic" data-support-topic data-support-category="order_management" data-support-subcategory="Order status">Where is my order?</button>
+              <button class="support-topic" data-support-topic data-support-category="shipping_delivery" data-support-subcategory="Tracking not updating">My tracking is not updating</button>
+              <button class="support-topic" data-support-topic data-support-category="shipping_delivery" data-support-subcategory="Marked delivered but not received">Marked delivered but not received</button>
+              <button class="support-topic" data-support-topic data-support-category="returns_exchanges" data-support-subcategory="Start a return">Start a return</button>
+              <button class="support-topic" data-support-topic data-support-category="returns_exchanges" data-support-subcategory="Exchange size, color or product">Exchange a product</button>
+              <button class="support-topic" data-support-topic data-support-category="refunds_credits" data-support-subcategory="Refund status">Check a refund status</button>
+              <button class="support-topic" data-support-topic data-support-category="payments_checkout" data-support-subcategory="Payment declined">Payment or checkout problem</button>
+              <button class="support-topic" data-support-topic data-support-category="damaged_wrong_missing" data-support-subcategory="Damaged item">Damaged, wrong or missing item</button>
+              <button class="support-topic" data-support-topic data-support-category="promotions_gift_cards" data-support-subcategory="Promo code not working">Promo code not working</button>
+              <button class="support-topic" data-support-topic data-support-category="account_security" data-support-subcategory="Sign-in issue">I cannot access my account</button>
+            </div>
+            <div class="support-no-results" id="supportNoResults">No matching help topic was found. Use the contact form and describe what happened.</div>
+          </div>
+          <div class="support-side-card navy">
+            <h3>Already placed an order?</h3>
+            <p>Opening your account first may give you the fastest answer and lets you review the latest order and delivery status.</p>
+            <button class="cta white" data-route="orders">Open my orders</button>
+          </div>
+        </aside>
+
+        <section class="support-form-card" id="supportFormCard">
+          <div class="support-priority">
+            <div class="support-priority-icon">◷</div>
+            <div><strong>Customer service request</strong><p>Select the most accurate category and topic so your request reaches the right team. Include order numbers, product details and supporting documents whenever available.</p></div>
+          </div>
+
+          <div id="supportStatus" class="support-status" role="status" aria-live="polite"></div>
+          <div id="supportConfirmation" class="support-confirmation"><strong id="supportConfirmationTitle">Request submitted</strong><p id="supportConfirmationText">SKANDI Customer Service will follow up by email.</p></div>
+
+          <form id="publicSupportForm" novalidate>
+            <div class="support-form-section">1. Contact information</div>
+            <div class="support-grid-2">
+              <div class="support-field"><label for="firstName">First name <span class="support-required">*</span></label><input id="firstName" type="text" required autocomplete="given-name"></div>
+              <div class="support-field"><label for="lastName">Last name <span class="support-required">*</span></label><input id="lastName" type="text" required autocomplete="family-name"></div>
+            </div>
+            <div class="support-grid-2">
+              <div class="support-field"><label for="email">Email address <span class="support-required">*</span></label><input id="email" type="email" required autocomplete="email"></div>
+              <div class="support-field"><label for="phone">Phone number</label><div style="display:grid;grid-template-columns:92px 1fr;gap:8px"><select id="phonePrefix" aria-label="Phone country code"><option>+1</option><option>+44</option><option>+46</option><option>+47</option><option>+45</option><option>+358</option></select><input id="phone" type="tel" autocomplete="tel"></div></div>
+            </div>
+            <div class="support-grid-2">
+              <div class="support-field"><label for="countryOfResidence">Country or region <span class="support-required">*</span></label><input id="countryOfResidence" type="text" required autocomplete="country-name"></div>
+              <div class="support-field"><label for="preferredContact">Preferred contact method</label><select id="preferredContact"><option value="email">Email</option><option value="phone">Phone</option></select></div>
+            </div>
+
+            <div class="support-form-section">2. Purchase details</div>
+            <div class="support-grid-2">
+              <div class="support-field"><label for="hasOrder">Does this relate to an existing order? <span class="support-required">*</span></label><select id="hasOrder" required><option value="">Select</option><option value="yes">Yes, I have an order</option><option value="no">No, this is a pre-purchase or general question</option></select></div>
+              <div class="support-field"><label for="purchaseChannel">Purchase channel</label><select id="purchaseChannel"><option value="">Select when applicable</option><option value="online-store">SKANDI online store</option><option value="customer-service">Customer Service order</option><option value="gift-recipient">I received the item as a gift</option><option value="not-purchased">Not purchased yet</option><option value="other">Other</option></select></div>
+            </div>
+
+            <div id="orderFields" class="support-dynamic-module">
+              <h4>Order information</h4>
+              <div class="support-grid-2">
+                <div class="support-field"><label for="orderNumber">Order number <span class="support-required">*</span></label><input id="orderNumber" type="text" placeholder="Order number"></div>
+                <div class="support-field"><label for="orderEmail">Email used for the order</label><input id="orderEmail" type="email" autocomplete="email"></div>
+              </div>
+              <div class="support-grid-2">
+                <div class="support-field"><label for="orderDate">Order date</label><input id="orderDate" type="date"></div>
+                <div class="support-field"><label for="orderTotal">Order total and currency</label><input id="orderTotal" type="text" placeholder="Example: USD 129.00"></div>
+              </div>
+            </div>
+
+            <div class="support-form-section">3. Request category</div>
+            <div class="support-grid-2">
+              <div class="support-field"><label for="caseCategory">Category <span class="support-required">*</span></label><select id="caseCategory" required>
+                <option value="">Select category</option>
+                <option value="order_management">Orders & order changes</option>
+                <option value="shipping_delivery">Shipping, tracking & delivery</option>
+                <option value="returns_exchanges">Returns & exchanges</option>
+                <option value="refunds_credits">Refunds & store credit</option>
+                <option value="payments_checkout">Payments, charges & checkout</option>
+                <option value="product_information">Product information & availability</option>
+                <option value="damaged_wrong_missing">Damaged, defective, wrong or missing items</option>
+                <option value="warranty_repairs">Warranty, repairs & replacement parts</option>
+                <option value="promotions_gift_cards">Promotions, gift cards & rewards</option>
+                <option value="account_security">Account access & security</option>
+                <option value="privacy_data">Privacy & personal data</option>
+                <option value="technical_accessibility">Technical & accessibility support</option>
+                <option value="business_bulk">Business, bulk & corporate orders</option>
+                <option value="feedback_other">Feedback, complaints & other inquiries</option>
+              </select></div>
+              <div class="support-field"><label for="caseSubCategory">Specific topic <span class="support-required">*</span></label><select id="caseSubCategory" required><option value="">Select category first</option></select></div>
+            </div>
+
+            <div id="shippingDetailsModule" class="support-dynamic-module">
+              <h4>Shipping and delivery details</h4>
+              <div class="support-grid-2"><div class="support-field"><label for="carrierName">Carrier</label><input id="carrierName" type="text" placeholder="UPS, FedEx, USPS, DHL…"></div><div class="support-field"><label for="trackingNumber">Tracking number</label><input id="trackingNumber" type="text"></div></div>
+              <div class="support-grid-2"><div class="support-field"><label for="expectedDeliveryDate">Expected delivery date</label><input id="expectedDeliveryDate" type="date"></div><div class="support-field"><label for="deliveryPostcode">Delivery postal code</label><input id="deliveryPostcode" type="text" autocomplete="postal-code"></div></div>
+            </div>
+
+            <div id="returnDetailsModule" class="support-dynamic-module">
+              <h4>Return, exchange or resolution details</h4>
+              <div class="support-grid-2"><div class="support-field"><label for="returnNumber">Return or authorization number</label><input id="returnNumber" type="text"></div><div class="support-field"><label for="returnSentDate">Date returned</label><input id="returnSentDate" type="date"></div></div>
+              <div class="support-grid-2"><div class="support-field"><label for="itemCondition">Item condition</label><select id="itemCondition"><option value="">Select</option><option>Unopened and unused</option><option>Opened but unused</option><option>Used</option><option>Damaged on arrival</option><option>Defective</option><option>Incorrect item</option><option>Missing item or part</option></select></div><div class="support-field"><label for="requestedResolution">Preferred resolution</label><select id="requestedResolution"><option value="">Select</option><option>Refund</option><option>Exchange</option><option>Replacement</option><option>Repair</option><option>Store credit</option><option>Missing item sent</option><option>Information only</option></select></div></div>
+            </div>
+
+            <div id="paymentDetailsModule" class="support-dynamic-module">
+              <h4>Payment details</h4>
+              <div class="support-grid-2"><div class="support-field"><label for="paymentMethod">Payment method</label><select id="paymentMethod"><option value="">Select</option><option>Credit card</option><option>Debit card</option><option>Digital wallet</option><option>Gift card</option><option>Store credit</option><option>Other</option></select></div><div class="support-field"><label for="transactionDate">Transaction date</label><input id="transactionDate" type="date"></div></div>
+              <div class="support-grid-2"><div class="support-field"><label for="transactionAmount">Amount and currency</label><input id="transactionAmount" type="text" placeholder="Example: USD 129.00"></div><div class="support-field"><label for="paymentLast4">Last 4 digits only</label><input id="paymentLast4" type="text" inputmode="numeric" maxlength="4" pattern="[0-9]{4}" placeholder="1234"></div></div>
+              <div class="support-field"><label for="paymentError">Error or bank message</label><input id="paymentError" type="text" placeholder="Do not enter a full card number"></div>
+            </div>
+
+            <div id="productDetailsModule" class="support-dynamic-module">
+              <h4>Product details</h4>
+              <div class="support-grid-2"><div class="support-field"><label for="productName">Product name <span class="support-required">*</span></label><input id="productName" type="text"></div><div class="support-field"><label for="productSku">SKU or product code</label><input id="productSku" type="text"></div></div>
+              <div class="support-grid-2"><div class="support-field"><label for="productQuantity">Quantity affected</label><input id="productQuantity" type="number" min="1" step="1"></div><div class="support-field"><label for="dateReceived">Date received</label><input id="dateReceived" type="date"></div></div>
+            </div>
+
+            <div id="promotionDetailsModule" class="support-dynamic-module">
+              <h4>Promotion, gift card or reward details</h4>
+              <div class="support-grid-2"><div class="support-field"><label for="promotionCode">Promotion or gift card code</label><input id="promotionCode" type="text"></div><div class="support-field"><label for="promotionName">Promotion name</label><input id="promotionName" type="text"></div></div>
+              <div class="support-grid-2"><div class="support-field"><label for="giftCardLast4">Gift card last 4 characters</label><input id="giftCardLast4" type="text" maxlength="4"></div><div class="support-field"><label for="expectedDiscount">Expected discount or benefit</label><input id="expectedDiscount" type="text"></div></div>
+            </div>
+
+            <div id="technicalDetailsModule" class="support-dynamic-module">
+              <h4>Technical details</h4>
+              <div class="support-grid-2"><div class="support-field"><label for="deviceType">Device</label><input id="deviceType" type="text" placeholder="Example: iPhone 16, Windows laptop"></div><div class="support-field"><label for="browserName">Browser and version</label><input id="browserName" type="text" placeholder="Example: Safari 19"></div></div>
+              <div class="support-field"><label for="pageUrl">Page or screen where the issue occurred</label><input id="pageUrl" type="text"></div>
+              <div class="support-field"><label for="technicalError">Error message</label><input id="technicalError" type="text"></div>
+            </div>
+
+            <div id="businessDetailsModule" class="support-dynamic-module">
+              <h4>Business or bulk order details</h4>
+              <div class="support-grid-2"><div class="support-field"><label for="companyName">Company name <span class="support-required">*</span></label><input id="companyName" type="text" autocomplete="organization"></div><div class="support-field"><label for="companyTaxId">Tax or registration number</label><input id="companyTaxId" type="text"></div></div>
+              <div class="support-grid-2"><div class="support-field"><label for="bulkQuantity">Estimated quantity <span class="support-required">*</span></label><input id="bulkQuantity" type="number" min="1" step="1"></div><div class="support-field"><label for="requiredByDate">Required-by date</label><input id="requiredByDate" type="date"></div></div>
+            </div>
+
+            <div class="support-field"><label for="caseSubject">Subject <span class="support-required">*</span></label><input id="caseSubject" type="text" required maxlength="160" placeholder="Briefly summarize your request"></div>
+            <div class="support-field"><label for="caseDescription">Detailed description <span class="support-required">*</span></label><textarea id="caseDescription" required placeholder="Explain what happened, which item or order is affected, what you have already tried and the resolution you need."></textarea></div>
+
+            <div class="support-form-section">4. Supporting documents</div>
+            <div class="support-file-drop" id="supportFileDrop" tabindex="0" role="button" aria-controls="fileInput">
+              <strong>Choose files or drag them here</strong><span>Maximum 3 files: PDF, JPG or PNG. Maximum 10 MB total. Remove full payment-card numbers and other unnecessary sensitive information.</span>
+              <input id="fileInput" type="file" hidden multiple accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png">
+            </div>
+            <div class="support-file-list" id="fileSummary"></div>
+
+            <div class="support-checkbox"><input id="consentPrivacy" type="checkbox" required><label for="consentPrivacy">I confirm the information is accurate and consent to processing of my personal data under SKANDI’s Privacy Policy. <span class="support-required">*</span></label></div>
+            <div class="support-checkbox"><input id="consentSla" type="checkbox" required><label for="consentSla">I understand that response times depend on request type and current support volume. <span class="support-required">*</span></label></div>
+
+            <button id="submitBtn" class="cta navy support-submit" type="submit">Submit support request</button>
+          </form>
+        </section>
+      </div>
+    </div>
+  </section>
+
+  <!-- NOT FOUND -->
+  <section class="page-view" id="page-notfound" data-page="notfound">
+    <div class="page-shell not-found">
+      <h1>Page not found</h1>
+      <p>The store page you tried to open does not exist.</p>
+      <button class="cta navy" data-route="home">Return to the store</button>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  <div class="footer-main">
+    <div>
+      <div class="footer-brand"><img id="storeFooter" data-master-logo="storeFooter" src="https://static.wixstatic.com/media/394052_cd31153a91694b14a27c5f756f8089bd~mv2.png" alt="SKANDI The Store"><span>The Store</span></div>
+      <p>Travel essentials, luggage, gifts and SKANDI products.</p>
+    </div>
+    <div><h4>Shop</h4><button data-route="shop">All products</button><button id="footerCategoriesBtn">Categories</button><button data-category="SKANDI">SKANDI collection</button><button data-category="Gift">Gifts</button><button data-category="Gift Cards">Gift Cards</button></div>
+    <div><h4>Travel</h4><button data-category="Luggage">Luggage</button><button data-category="Travel Essentials">Travel essentials</button><button data-category="Beach">Beach</button><button data-category="Family">Family</button></div>
+    <div><h4>Support</h4><button data-route="support">Customer service</button><button data-route="orders">My orders</button><button data-open-path="/terms">Terms</button><button data-open-path="/privacy">Privacy</button><button id="refreshStoreBtn">Refresh store</button></div>
+  </div>
+  <div class="footer-bottom"><div class="footer-bottom-inner"><div class="default-bar" id="storeSlogan" data-content-id="store-footer-slogan">Unforgettable Moments.</div><span>© <span id="footerYear"></span> SKANDI Travels. All rights reserved.</span></div></div>
+</footer>
+
+<section class="mobile-nav" id="mobileNav" aria-hidden="true">
+  <div class="mobile-nav-head"><div class="brand-mark"><img data-master-logo="storeHeader" src="https://static.wixstatic.com/media/394052_eaf2188b7f7e48468fa25d61f8881b10~mv2.png" alt="SKANDI The Store"></div><div class="brand-divider"></div><button class="close-button" data-close="mobile">×</button></div>
+  <div class="mobile-nav-body" id="mobileNavList">
+    <div class="mobile-nav-heading">Store</div>
+    <button data-route="home">Home</button><button data-route="shop">All products</button><button id="mobileCategoriesBtn">Categories</button><button data-category="SKANDI">SKANDI collection</button><button data-category="Gift">Gifts</button><button data-category="Gift Cards">Gift Cards</button><button data-category="Sale">Offers</button>
+    <div class="mobile-nav-heading">My store</div>
+    <button data-route="saved">Saved products</button><button data-route="bag">Shopping bag</button><button data-route="orders">My orders</button><button data-route="support">Customer service</button>
+  </div>
+</section>
+
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+
+<script src="skandi-the-store.js"></script>
+</body>
+</html>
+

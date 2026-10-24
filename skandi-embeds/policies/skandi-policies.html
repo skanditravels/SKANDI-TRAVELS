@@ -1,1 +1,56 @@
-<!-- SKANDI_PENDING_SOURCE: replace with complete page markup. -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#022e64">
+<title>SKANDI Legal Document · B-011.3</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="skandi-policies.css">
+</head>
+<body>
+<a class="skip" href="#policyContent">Skip to policy content</a>
+
+<div class="shell">
+  <div class="layout">
+    <aside class="rail" id="sideRail" aria-label="Legal document navigation">
+      <button class="back-btn" id="backToLegal" type="button">
+        <span>←</span><span>Back to Legal</span>
+      </button>
+
+      <section class="rail-card rail-section" data-section-id="policy-toc">
+        <div class="rail-eyebrow" data-content-id="policy-toc-eyebrow">ON THIS PAGE</div>
+        <h2 data-content-id="policy-toc-h2">Table of contents</h2>
+        <nav id="toc" aria-label="Table of contents">
+          <div class="toc-empty">Loading document sections…</div>
+        </nav>
+      </section>
+
+      <section class="rail-card rail-section" data-section-id="policy-suggested">
+        <div class="rail-eyebrow" data-content-id="policy-suggested-eyebrow">RELATED LEGAL</div>
+        <h2 data-content-id="policy-suggested-h2">Suggested documents</h2>
+        <div class="suggestions" id="suggestions">
+          <div class="toc-empty">Loading suggestions…</div>
+        </div>
+      </section>
+
+      <section class="rail-card rail-section hidden" id="ackRailCard" data-section-id="policy-acknowledgement-nav">
+        <div class="rail-eyebrow">ACTION REQUIRED</div>
+        <h2>Policy acknowledgement</h2>
+        <div class="ack-required-marker">This published policy requires an acknowledgement.</div>
+        <button class="ack-jump" id="ackJumpBtn" type="button">Go to acknowledgement ↓</button>
+      </section>
+    </aside>
+
+    <main id="documentHost" aria-live="polite">
+      <div class="loading">Loading legal document…</div>
+    </main>
+  </div>
+</div>
+
+<script src="skandi-policies.js"></script>
+</body>
+</html>

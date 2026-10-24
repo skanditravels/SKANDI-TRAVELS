@@ -1,1 +1,151 @@
-<!-- SKANDI_PENDING_SOURCE: canonical route/controller mapping required before compilation. -->
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
+<meta content="#022e64" name="theme-color"/>
+<title>SKANDI Destination</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&amp;family=Playfair+Display:wght@600;700;800&amp;display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="u4y1p.css">
+<link rel="stylesheet" href="u4y1p.part-02.css"></head>
+<body>
+
+<!-- Welcome/First Visit Settings Modal -->
+<div class="welcome-modal-layer" id="welcomeSettingsModal">
+<div class="welcome-backdrop" id="welcomeBackdrop"></div>
+<div class="welcome-card">
+<div class="globe-icon">
+<svg viewbox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"></path></svg>
+</div>
+<h2 data-i18n="welcome.title">Welcome to SKANDI</h2>
+<p data-i18n="welcome.copy">Please confirm your preferred language and currency before continuing.</p>
+<div class="settings-group">
+<select id="welcomeLang">
+<option value="EN">United States - English</option>
+<option value="SV">Sweden - Svenska</option>
+<option value="NO">Norway - Norsk</option>
+<option value="DA">Denmark - Dansk</option>
+<option value="ES">Spain - Español</option>
+<option value="FI">Finland - Suomi</option>
+<option value="FR-FR">France - Français</option>
+<option value="FR-CA">Canada - Français Canadien</option>
+<option value="DE">Germany - Deutch</option>
+<option value="TH">Thailand / ประเทศ - Thai ภาษาไทย</option>
+</select>
+</div>
+<div class="settings-group">
+<select id="welcomeCurr">
+<option value="USD">USD ($)</option>
+<option value="SEK">SEK (kr)</option>
+<option value="NOK">NOK (kr)</option>
+<option value="DKK">DKK (kr)</option>
+<option value="EUR">EUR (€)</option>
+</select>
+</div>
+<button class="btn" data-i18n="welcome.btn" id="welcomeSaveBtn" style="width:100%; margin-top: 12px;">Continue to Site</button>
+</div>
+</div>
+<!-- Mobile Menu Layer -->
+
+<main class="destination-page" id="destinationPage">
+<div class="destination-shell">
+<nav class="destination-breadcrumb">
+<button data-destination-nav="/home" type="button">SKANDI</button><span>›</span>
+<button data-destination-nav="/destinations" data-i18n="destination.breadcrumb.destinations" type="button">Destinations</button><span>›</span>
+<button id="breadcrumbCountry" type="button">—</button><span>›</span>
+<span class="current" id="breadcrumbDestination">—</span>
+</nav>
+</div>
+<section class="destination-hero" id="overview">
+<div aria-hidden="true" class="destination-hero-grid">
+<img alt="" class="primary" id="destinationHeroPrimary"/>
+<img alt="" class="secondary" id="destinationHeroSecondary1"/>
+<img alt="" class="secondary" id="destinationHeroSecondary2"/>
+</div>
+<div class="destination-shell destination-hero-content">
+<div class="destination-selectors">
+<div class="destination-selector"><label data-i18n="country.choose" for="countrySelector">Choose country</label><select id="countrySelector"></select></div>
+<div class="destination-selector"><label data-i18n="destination.selector.destination" for="destinationSelector">Destination</label><select id="destinationSelector"></select></div>
+</div>
+<div class="destination-kicker" id="destinationKicker">SKANDI DESTINATIONS</div>
+<h1 id="destinationHeroTitle">—</h1>
+<p class="destination-hero-summary" id="destinationHeroSummary"></p>
+<div class="destination-actions">
+<button class="destination-btn light" data-i18n="destination.hero.search" id="searchTripsBtn" type="button">Search trips</button>
+<button class="destination-btn ghost" data-i18n="destination.hero.hotels" id="viewHotelsBtn" type="button">View hotels</button>
+<button class="destination-btn ghost" data-i18n="destination.nav.guide" id="guideBtn" type="button">Destination guide</button>
+</div>
+</div>
+<button class="destination-btn ghost destination-gallery-button" data-i18n="destination.hero.gallery" id="galleryBtn" type="button">View gallery</button>
+</section>
+<div class="destination-shell destination-facts-wrap"><div class="destination-facts" id="destinationFacts"></div></div>
+<nav class="destination-subnav"><div class="destination-shell destination-subnav-inner">
+<button class="active" data-i18n="destination.nav.overview" data-scroll-target="overview" type="button">Overview</button>
+<button data-i18n="destination.nav.offers" data-scroll-target="offers" type="button">Trips &amp; prices</button>
+<button data-i18n="destination.nav.hotels" data-scroll-target="hotels" type="button">Hotels</button>
+<button data-i18n="destination.nav.guide" data-scroll-target="guide" type="button">Destination guide</button>
+<button data-i18n="destination.nav.weather" data-scroll-target="weather" type="button">Weather</button>
+<button data-i18n="destination.nav.areas" data-scroll-target="areas" type="button">Holiday areas</button>
+<button data-i18n="destination.nav.inspiration" data-scroll-target="inspiration" type="button">Inspiration</button>
+<button data-i18n="destination.nav.faq" data-scroll-target="faq" type="button">FAQ</button>
+</div></nav>
+<section class="destination-section">
+<div class="destination-shell">
+<div class="destination-heading"><div><div class="eyebrow" data-i18n="destination.section.overview">The SKANDI guide</div><h2 id="destinationIntroTitle">—</h2></div><p data-i18n="destination.section.overviewCopy">Places, flavours and experiences worth travelling for.</p></div>
+<div class="destination-intro-grid">
+<article class="destination-editorial" id="destinationIntroCopy"></article>
+<aside class="destination-signature"><div class="mini">SKANDI SIGNATURE VIEW</div><h3 id="destinationSignatureTitle">—</h3><p id="destinationSignatureCopy"></p><div class="destination-signature-list" id="destinationSignatureList"></div></aside>
+</div>
+<div class="destination-story-grid" id="destinationStoryGrid"></div>
+</div>
+</section>
+<section class="destination-section dark" id="offers">
+<div class="destination-shell">
+<div class="destination-heading"><div><div class="eyebrow" data-i18n="destination.section.offers">Find your trip</div><h2 id="destinationOffersHeading">—</h2></div><p data-i18n="destination.section.offersCopy">Search current flights, hotels and packages.</p></div>
+<form class="destination-search-panel" id="destinationSearchForm"><div class="destination-search-grid">
+<div class="destination-field"><label data-i18n="destination.search.from" for="destinationOrigin">Flying from</label><input data-i18n-placeholder="destination.search.fromPh" id="destinationOrigin" placeholder="City or airport"/></div>
+<div class="destination-field"><label data-i18n="destination.search.depart" for="destinationDepart">Departure</label><input id="destinationDepart" type="date"/></div>
+<div class="destination-field"><label data-i18n="destination.search.return" for="destinationReturn">Return</label><input id="destinationReturn" type="date"/></div>
+<div class="destination-field"><label data-i18n="destination.search.duration" for="destinationDuration">Duration</label><select id="destinationDuration"><option data-i18n="destination.duration.7" value="7">1 week</option><option data-i18n="destination.duration.10" value="10">10 nights</option><option data-i18n="destination.duration.14" value="14">2 weeks</option></select></div>
+<div class="destination-field"><label data-i18n="destination.search.travelers" for="destinationTravelers">Travellers</label><select id="destinationTravelers"><option value="1">1</option><option selected="" value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option></select></div>
+<button class="destination-btn" data-i18n="destination.search.button" type="submit">Search trips</button>
+</div></form>
+<div class="destination-offer-status" data-i18n="destination.search.empty" id="destinationOfferStatus">Start a search to see current SKANDI options.</div>
+<div class="destination-offer-grid" id="destinationOfferGrid"></div>
+</div>
+</section>
+<section class="destination-section alt" id="hotels"><div class="destination-shell">
+<div class="destination-heading"><div><div class="eyebrow" data-i18n="destination.section.hotels">Hotels selected for the way you travel</div><h2 id="destinationHotelsHeading">—</h2></div><p data-i18n="destination.section.hotelsCopy">Compare current hotels, room options, meal plans and flexible travel combinations.</p></div>
+<div class="destination-hotel-grid" id="destinationHotelGrid"></div>
+</div></section>
+<section class="destination-section" id="guide"><div class="destination-shell">
+<div class="destination-heading"><div><div class="eyebrow" data-i18n="destination.section.guide">Your destination guide</div><h2 id="destinationGuideHeading">—</h2></div><p data-i18n="destination.section.guideCopy">Beaches, food, shopping, activities, transport and practical local knowledge.</p></div>
+<div class="destination-guide-tabs"><div class="destination-guide-menu" id="destinationGuideMenu"></div><article class="destination-guide-content"><h3 id="destinationGuideTitle">—</h3><p id="destinationGuideText"></p><div class="destination-guide-media"><img alt="" id="destinationGuideImage"/></div></article></div>
+</div></section>
+<section class="destination-section alt" id="weather"><div class="destination-shell">
+<div class="destination-heading"><div><div class="eyebrow" data-i18n="destination.section.weather">Weather &amp; best time to travel</div><h2 id="destinationWeatherHeading">—</h2></div><p data-i18n="destination.section.weatherCopy">Compare monthly temperature and rainfall before choosing dates.</p></div>
+<div class="destination-climate-scroll"><div class="destination-climate-table" id="destinationClimateTable"></div></div><div class="destination-weather-note" id="destinationWeatherNote"></div>
+</div></section>
+<section class="destination-section" id="areas"><div class="destination-shell">
+<div class="destination-heading"><div><div class="eyebrow" data-i18n="destination.section.areas">Discover the holiday areas</div><h2 id="destinationAreasHeading">—</h2></div><p data-i18n="destination.section.areasCopy">Each area has its own pace, beach character and style of stay.</p></div>
+<div class="destination-area-grid" id="destinationAreaGrid"></div>
+</div></section>
+<section class="destination-section alt" id="inspiration"><div class="destination-shell">
+<div class="destination-heading"><div><div class="eyebrow" data-i18n="destination.section.inspiration">Travel ideas &amp; inspiration</div><h2 id="destinationInspirationHeading">—</h2></div><p data-i18n="destination.section.overviewCopy">Places, flavours and experiences worth travelling for.</p></div>
+<div class="destination-inspiration-grid" id="destinationInspirationGrid"></div>
+</div></section>
+<section class="destination-section" id="faq"><div class="destination-shell">
+<div class="destination-heading"><div><div class="eyebrow" data-i18n="destination.section.faq">Frequently asked questions</div><h2 id="destinationFaqHeading">—</h2></div><p data-i18n="destination.section.overviewCopy">Places, flavours and experiences worth travelling for.</p></div>
+<div class="destination-faq-list" id="destinationFaqList"></div>
+</div></section>
+</main>
+<div aria-hidden="true" class="destination-gallery-modal" id="destinationGalleryModal"><div class="destination-gallery-inner"><button class="destination-gallery-close" id="destinationGalleryClose" type="button">×</button><img alt="" id="destinationGalleryImage"/></div></div>
+<div class="destination-toast" id="destinationToast"></div>
+
+<div aria-live="polite" class="skandi-toast" id="skandiToast" role="status"></div>
+<script src="u4y1p.js"></script>
+</body>
+</html>

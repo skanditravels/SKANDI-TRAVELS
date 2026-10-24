@@ -1,1 +1,317 @@
-/* SKANDI_PENDING_SOURCE: replace with complete page source. */
+
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --sk-blue:#022e64;
+  --sk-blue-soft:#285ca8;
+  --sk-blue2:#0b3a7a;
+  --sk-light:#d7e6ff;
+  --sk-pale:#f6faff;
+  --sk-bg:#f7faff;
+  --sk-border:#dbe3ef;
+  --sk-border-soft:#eef2f7;
+  --sk-text:#111;
+  --sk-body:#555;
+  --sk-muted:#667085;
+  --sk-cyan:#5FC7CF;
+  --sk-ok:#087443;
+  --sk-danger:#8a1f1f;
+  --sk-shadow:0 8px 26px rgba(0,0,0,.08);
+  --sk-shadow-strong:0 14px 34px rgba(0,0,0,.12);
+}
+html,body{
+  width:100%;
+  min-height:100%;
+  font-family:"Montserrat",system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  background:#fff;
+  color:var(--sk-text);
+  overflow-x:hidden;
+}
+
+/* HERO SECTION */
+#hero-wrap{
+  transition: all 0.3s ease;    
+  width:100%;
+  min-height:420px;
+  background: linear-gradient(rgba(2, 46, 100, 0.4), rgba(2, 46, 100, 0.7)), url("https://images.unsplash.com/photo-1516483638261-f40af5ed32c5?auto=format&fit=crop&w=1920&q=80") center/cover;
+  padding:76px 32px 54px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+}
+.hero-kicker{
+  font-size:12px;
+  font-weight:800;
+  color:var(--sk-cyan);
+  text-transform:uppercase;
+  letter-spacing:.14em;
+  margin-bottom:10px;
+}
+#hero-title{
+  font-size:clamp(36px,4vw,56px);
+  line-height:1.1;
+  letter-spacing:-.04em;
+  font-weight:700;
+  color:#fff;
+  margin-bottom:16px;
+}
+#hero-sub{
+  font-size:16px;
+  color:rgba(255,255,255,0.9);
+  line-height:1.65;
+  max-width:720px;
+}
+
+/* CONTENT LAYOUT */
+.content-section{
+  padding:58px 32px;
+  max-width:1180px;
+  margin:0 auto;
+}
+.section-title{
+  font-size:30px;
+  font-weight:700;
+  color:var(--sk-blue);
+  margin-bottom:12px;
+  letter-spacing:-.04em;
+  text-align:center;
+}
+.section-subtitle{
+  color:#555;
+  font-size:15px;
+  line-height:1.6;
+  margin-bottom:32px;
+  max-width:780px;
+  text-align:center;
+  margin-inline:auto;
+}
+
+/* INSURANCE CARDS */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 24px;
+}
+.ins-card {
+  background: #fff;
+  border: 1px solid var(--sk-border);
+  border-radius: 16px;
+  padding: 32px;
+  box-shadow: var(--sk-shadow);
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.ins-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--sk-shadow-strong);
+  border-color: var(--sk-cyan);
+}
+.ins-icon {
+  width: 56px;
+  height: 56px;
+  background: var(--sk-pale);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  color: var(--sk-blue);
+  margin-bottom: 20px;
+}
+.ins-card h3 {
+  font-size: 22px;
+  color: var(--sk-blue);
+  margin-bottom: 12px;
+}
+.ins-card p {
+  color: var(--sk-body);
+  font-size: 14px;
+  line-height: 1.6;
+  margin-bottom: 24px;
+  flex-grow: 1;
+}
+.ins-features {
+  list-style: none;
+  margin-bottom: 24px;
+}
+.ins-features li {
+  font-size: 13px;
+  color: var(--sk-text);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-weight: 500;
+}
+.ins-features li::before {
+  content: "✓";
+  color: var(--sk-cyan);
+  font-weight: 900;
+}
+.ins-price {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--sk-blue);
+  margin-bottom: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--sk-border-soft);
+}
+.btn-primary {
+  display: block;
+  width: 100%;
+  padding: 14px;
+  border-radius: 999px;
+  background: var(--sk-blue);
+  color: #fff;
+  border: none;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: .18s ease;
+  text-align: center;
+  margin-bottom: 12px;
+}
+.btn-primary:hover {
+  background: #03438b;
+}
+
+/* LEGAL MINI (Card Footer) */
+.legal-mini {
+  text-align: center;
+  font-size: 11px;
+  color: var(--sk-muted);
+  line-height: 1.4;
+}
+.legal-mini a {
+  color: var(--sk-blue);
+  text-decoration: underline;
+}
+
+/* COMPARISON TABLE */
+.table-wrapper {
+  overflow-x: auto;
+  margin-top: 40px;
+  background: #fff;
+  border-radius: 16px;
+  border: 1px solid var(--sk-border);
+  box-shadow: var(--sk-shadow);
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+th, td {
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--sk-border-soft);
+  font-size: 14px;
+}
+th {
+  background: var(--sk-pale);
+  color: var(--sk-blue);
+  font-weight: 700;
+  white-space: nowrap;
+}
+td:not(:first-child), th:not(:first-child) {
+  text-align: center;
+}
+tr:last-child td {
+  border-bottom: none;
+}
+.check {
+  color: var(--sk-ok);
+  font-weight: bold;
+  font-size: 18px;
+}
+.cross {
+  color: var(--sk-danger);
+  font-weight: bold;
+  font-size: 18px;
+}
+
+/* FAQ SECTION */
+#faq-section {
+  background: var(--sk-bg);
+}
+.faq-grid {
+  max-width: 800px;
+  margin: 0 auto;
+}
+details {
+  background: #fff;
+  border: 1px solid var(--sk-border);
+  border-radius: 12px;
+  margin-bottom: 12px;
+  overflow: hidden;
+}
+summary {
+  padding: 20px;
+  font-weight: 700;
+  color: var(--sk-blue);
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+summary::-webkit-details-marker {
+  display: none;
+}
+summary::after {
+  content: "+";
+  font-size: 20px;
+  color: var(--sk-cyan);
+}
+details[open] summary::after {
+  content: "−";
+}
+.faq-content {
+  padding: 0 20px 20px;
+  color: var(--sk-body);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* LEGAL DISCLAIMER SECTION */
+.legal-section {
+  border-top: 1px solid var(--sk-border);
+}
+.legal-section h4 {
+  font-size: 14px;
+  color: var(--sk-blue);
+  margin-bottom: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.legal-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 24px;
+}
+.legal-box {
+  background: var(--sk-bg);
+  padding: 20px;
+  border-radius: 12px;
+  font-size: 12px;
+  color: var(--sk-muted);
+  line-height: 1.5;
+}
+.legal-box strong {
+  display: block;
+  color: var(--sk-text);
+  margin-bottom: 6px;
+}
+
+/* RESPONSIVE */
+@media(max-width:860px){
+  #hero-wrap { padding: 54px 14px 38px; min-height: 320px; }
+  #hero-title { font-size: 32px; }
+  .content-section { padding: 42px 14px; }
+  th, td { padding: 14px 12px; font-size: 13px; }
+}
+
+/* LIVE INSURANCE CONTENT SEARCH */
+.ins-search{background:#fff;border:1px solid var(--sk-border);border-radius:18px;padding:28px;box-shadow:var(--sk-shadow);margin-bottom:30px}.ins-search-row{display:grid;grid-template-columns:1fr auto;gap:12px}.ins-search input{width:100%;min-height:50px;border:1px solid var(--sk-border);border-radius:14px;padding:0 16px;font:600 14px Montserrat;color:var(--sk-blue);outline:none}.ins-search input:focus{border-color:var(--sk-cyan);box-shadow:0 0 0 4px rgba(95,199,207,.12)}.ins-search button{min-height:50px;border:0;border-radius:999px;background:var(--sk-blue);color:#fff;padding:0 24px;font-weight:800;cursor:pointer}.live-status{margin-top:16px;border-left:4px solid var(--sk-cyan);background:var(--sk-pale);border-radius:12px;padding:16px;color:var(--sk-body);font-size:13px;line-height:1.6}.live-results{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin-top:18px}.live-product{border:1px solid var(--sk-border);border-radius:14px;padding:20px;background:#fff}.live-product h4{font-size:17px;color:var(--sk-blue);margin-bottom:8px}.live-product p{font-size:13px;color:var(--sk-body);line-height:1.6}.live-meta{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:var(--sk-cyan);margin-bottom:7px}.live-links{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.live-links a{font-size:11px;font-weight:800;color:var(--sk-blue);text-decoration:underline}.neutral{color:var(--sk-muted);font-size:12px;line-height:1.6}.compare-text{font-weight:700;color:var(--sk-blue)}
+@media(max-width:860px){.ins-search-row{grid-template-columns:1fr}.ins-search button{width:100%}}

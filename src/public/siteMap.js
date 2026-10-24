@@ -160,6 +160,22 @@ export function isSafeInternalRoute(value){const path=String(value||"").trim();c
 // Compiler integration bindings. No route strings are duplicated here.
 // Source-verified controller contracts; Wix element installation still requires live verification.
 export const PAGE_BUILD_INTEGRATIONS = Object.freeze({
+  "destinations": {
+    "controller": "src/pages/Our Destinations.wfe5g.js",
+    "embedIds": ["#htmlSkandiMap"],
+    "sources": ["SKANDI_PUBLIC_NETWORK_MAP"]
+  },
+  "cookiePreferences": {
+    "controller": "src/pages/masterPage.js",
+    "embedIds": ["#cookiePreferencesEmbed"],
+    "sources": ["SKANDI_COOKIE_PREFERENCES"]
+  },
+  "specialAssistance": {
+    "controller": "src/pages/masterPage.js",
+    "embedIds": [],
+    "sources": ["SKANDI_ASSISTANCE_PAGE"],
+    "binding": "handshake"
+  },
   "home": {
     "controller": "src/pages/Home.n73w8.js",
     "embedIds": [
@@ -223,6 +239,8 @@ export const PAGE_BUILD_INTEGRATIONS = Object.freeze({
   },
   "successFactors": {
     "controller": "src/pages/Success Factors.sh6tw.js",
+    "sourceDirectory": "riaintra-embeds/success-factors",
+    "stem": "success-factors",
     "embedIds": [
       "#staffHrEmbed"
     ],

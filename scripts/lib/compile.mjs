@@ -91,6 +91,7 @@ export async function normalizeHTML(html,css,js,{root,file,mount}) {
   const bodyAttrs=body?.attrs||[],htmlNode=nodes.find(n=>n.tagName==='html');
   for(const a of [...bodyAttrs,...(htmlNode?.attrs||[])]) if(!['lang','dir','class','style','id'].includes(a.name) && !a.name.startsWith('data-') && !a.name.startsWith('on')) throw new Error(`${file}: unsupported document attribute ${a.name}; move it to page markup`);
   const inlineCSS=[],inlineJS=[],external=[],handlers=[],tasks=[];
+  let linkedCSS=false,linkedJS=false;
   let scriptStarted=false;
   for(const n of [...(body?.childNodes||tree.childNodes||[])]) {
     if(n.tagName==='script') scriptStarted=true;
@@ -110,14 +111,29 @@ export async function normalizeHTML(html,css,js,{root,file,mount}) {
         if(/^(https?:)?\/\//.test(src)) {
           if(attr(n,'async')!==undefined || attr(n,'defer')!==undefined) throw new Error(`${file}: async/defer external script ordering is ambiguous; use a blocking library script or bundle into .js`);
           external.push(serializeOuter(n));
-        } else tasks.push((async()=>{const {file:target}=await localFile(root,file,src);inlineJS.push(await fs.readFile(target,'utf8'));})());
+        } else {
+          const {file:target}=await localFile(root,file,src);
+          const content=await fs.readFile(target,'utf8');inlineJS.push(content);
+          if(target===path.resolve(root,file.replace(/\.html$/,'.js'))) {
+            if(content!==js)throw new Error(`${file}: linked primary JavaScript differs from sidecar`);
+            linkedJS=true;
+          }
+        }
       } else inlineJS.push(serialize(n));
       remove(n);
     }
     if(n.tagName==='link' && attr(n,'rel')==='stylesheet') {
       const href=attr(n,'href')||'';
       if(/^https:\/\/fonts\.googleapis\.com\//.test(href)) {external.push(serializeOuter(n));remove(n);}
-      else if(!/^(?:[a-z]+:|\/)/i.test(href)) tasks.push((async()=>{const {file:target}=await localFile(root,file,href);inlineCSS.push(await fs.readFile(target,'utf8'));remove(n);})());
+      else if(!/^(?:[a-z]+:|\/)/i.test(href)) {
+        const {file:target}=await localFile(root,file,href);
+        const content=await fs.readFile(target,'utf8');
+        const media=attr(n,'media');inlineCSS.push(media?`@media ${media}{\n${content}\n}`:content);remove(n);
+        if(target===path.resolve(root,file.replace(/\.html$/,'.css'))) {
+          if(content!==css)throw new Error(`${file}: linked primary CSS differs from sidecar`);
+          linkedCSS=true;
+        }
+      }
       else throw new Error(`${file}: external stylesheet cannot be scoped: ${href}; put its rules in the CSS source`);
     }
     if(n.attrs) for(const a of [...n.attrs]) {
@@ -133,7 +149,8 @@ export async function normalizeHTML(html,css,js,{root,file,mount}) {
     }
   }
   await Promise.all(tasks);
-  const combine=(inside,outside,kind)=>{
+  const combine=(inside,outside,kind,linked)=>{
+    if(linked)return inside.join('\n'); // Explicit local links define order, including .part-NN sources.
     const joined=inside.join('\n').trim();if(!joined)return outside;
     if(joined===outside.trim())return outside;
     // Empty/comment-only sidecars explicitly allow a legacy inline-only document.
@@ -151,17 +168,27 @@ export async function normalizeHTML(html,css,js,{root,file,mount}) {
   const documentAttrs={body:bodyAttrs,html:htmlNode?.attrs||[]};
   const titleNode=head?.childNodes?.find(n=>n.tagName==='title');
   const title=titleNode?.childNodes?.map(n=>n.value||'').join('')||'';
-  return {title,html:markup,css:combine(inlineCSS,css,'CSS'),js:combine(inlineJS,js,'JavaScript'),headHTML,external,handlers,documentAttrs};
+  return {title,html:markup,css:combine(inlineCSS,css,'CSS',linkedCSS),js:combine(inlineJS,js,'JavaScript',linkedJS),headHTML,external,handlers,documentAttrs};
 }
 function scopedScript(js,mount,handlers=[]) {
   const binds=handlers.map(h=>`__root.querySelector('[data-skandi-handler-${h.index}]').addEventListener(${JSON.stringify(h.event)},function(event){const result=(function(event){${h.code}\n}).call(this,event);if(result===false){event.preventDefault();}});`).join('\n');
-  return `(function(){\nconst __root=window.document.getElementById(${JSON.stringify(mount)});\nconst document=new Proxy(window.document,{get(target,key){if(key==='getElementById')return id=>{const el=target.getElementById(id);return el&&(__root===el||__root.contains(el))?el:null;};if(key==='querySelector'||key==='querySelectorAll')return selector=>{if(/^(?:html|body|head|meta|title|link)(?:[\\s.#[:]|$)/i.test(selector)&&!selector.includes(' '))return target[key](selector);return __root[key](selector);};if(key==='getElementsByClassName'||key==='getElementsByTagName')return value=>__root[key](value);const value=Reflect.get(target,key,target);return typeof value==='function'?value.bind(target):value;}});\n${js}\n${binds}\n})();`;
+  return `(function(){\nconst __root=window.document.getElementById(${JSON.stringify(mount)});\nconst document=new Proxy(window.document,{get(target,key){if(key==='getElementById')return id=>{const el=target.getElementById(id);return el&&(__root===el||__root.contains(el))?el:null;};if(key==='querySelector'||key==='querySelectorAll')return selector=>{if(/^(?:html|body|head|meta|title|link)(?:[\\s.#[:]|$)/i.test(selector)&&!selector.includes(' '))return target[key](selector);return __root[key](selector);};if(key==='getElementsByClassName'||key==='getElementsByTagName')return value=>__root[key](value);const value=Reflect.get(target,key,target);return typeof value==='function'?value.bind(target):value;},set(target,key,value){return Reflect.set(target,key,value,target);}});\n${js}\n${binds}\n})();`;
 }
 function adapt(js,key) {
   if(key==='mobile-nav')return js.replaceAll('window.parent===window','(window.parent===window||Boolean(window.__SKANDI_SHELL__))').replaceAll('window.parent!==window','(window.parent!==window&&!window.__SKANDI_SHELL__)');
   if(key==='header')return js.replace(/post\(\s*["']SKANDI_EMBED_RESIZE["']\s*,\s*\{\s*height\s*:\s*118\s*\}\s*\)\s*;/g,'/* Compiled shell owns component geometry. */');
   if(key==='home')return js.replace(/send\(\s*["']RESIZE_IFRAME["']\s*,\s*\{\s*height\s*\}\s*\)\s*;/g,'/* Compiled shell owns component geometry. */');
   return js;
+}
+function privateIds(part,prefix,names) {
+  for(const id of names) {
+    const next=prefix+'-'+id;
+    part.html=part.html.replace(new RegExp('id="'+id+'"','g'),'id="'+next+'"');
+    part.css=part.css.replace(new RegExp('#'+id+'(?![\\w-])','g'),'#'+next);
+    // These audited global components look up these IDs only through $().
+    // Do not rename object fields, message data, or arbitrary string literals.
+    part.js=part.js.replace(new RegExp('(\\$\\(\\s*)(["\\\'])'+id+'\\2(\\s*\\))','g'),'$1"'+next+'"$3');
+  }
 }
 export const chromeParts = family => family==='none'?[]:family==='public'?[
   {key:'header',directory:'skandi-embeds/global',stem:'skandi-header',mount:'skandi-global-header-root'},
@@ -184,18 +211,28 @@ export async function compilePage(root,page) {
     }
     try {
       const part=await normalizeHTML(html,css,js,{root,file:input.files[0],mount:d.mount});
+      if(d.key==='mobile-nav')privateIds(part,'skandi-mobile',['status','closeBtn']);
+      if(d.stem==='riaintra-header')privateIds(part,'riaintra-header',['mobileNav','desktopNav','productName']);
+      if(d.stem==='altea-footer')privateIds(part,'altea-footer',['sysClock','clockTime','clockDate']);
       walk(parseFragment(part.html),n=>{const id=attr(n,'id');if(id){if(ids.has(id))throw new Error(`duplicate id="${id}" (also in ${ids.get(id)})`);ids.set(id,input.files[0]);}});
       for(const attrs of Object.values(part.documentAttrs)) for(const a of attrs) if(a.name==='id') {if(ids.has(a.value))throw new Error(`duplicate document id ${a.value}`);ids.set(a.value,input.files[0]);}
-      if(d.key!==page.slug && Object.values(part.documentAttrs).some(attrs=>attrs.length))throw new Error('global component document attributes are ambiguous; use a fragment');
+      if(d.key!==page.slug && (part.documentAttrs.body.length || part.documentAttrs.html.some(a=>a.name!=='lang')))throw new Error('global component document attributes are ambiguous; use a fragment');
       part.css=await cssFor(part.css,d.mount,input.files[1],root);
-      part.script=scopedScript(adapt(part.js,d.key),d.mount,part.handlers);
+      const jsForShell=/^(riaintra|altea)-(header|footer)$/.test(d.stem)
+        ?part.js.replace(/post\(\s*["']SKANDI_EMBED_RESIZE["']\s*,\s*\{\s*height\s*:\s*\d+\s*\}\s*\)\s*;/g,'/* Compiled shell owns internal chrome geometry. */')
+        :part.js;
+      part.script=scopedScript(adapt(jsForShell,d.key),d.mount,part.handlers);
       new Script(part.script,{filename:input.files[2]});
       parts.push({...d,...part});
-    } catch(e) {throw new Error(`[${page.key} / ${d.key}] ${input.files.join(', ')}: ${e.message}`);}
+    } catch(e) {throw new Error(`[${page.key} / ${d.key}] ${input.files.join(', ')}: ${e.message.replaceAll(root+path.sep,'')}`);}
   }
   const pagePart=parts.at(-1),style=parts.map(p=>`<style data-skandi-part="${p.key}">${safeCSS(p.css)}</style>`);
-  const shellCSS=page.chrome==='public'?(await read(root,'skandi-embeds/global/skandi-shell.css')).replaceAll('#skandi-mobile-nav-root','#skandi-mobile-nav-container'):
+  let shellCSS=page.chrome==='public'?(await read(root,'skandi-embeds/global/skandi-shell.css')).replaceAll('#skandi-mobile-nav-root','#skandi-mobile-nav-container'):
     `html,body{margin:0;width:100%;min-height:100%;}*,*::before,*::after{box-sizing:border-box}#skandi-shell-root{min-height:100vh;min-width:0;display:flex;flex-direction:column}#skandi-app-root{flex:1;min-width:0;position:relative}${page.chrome==='none'?'':`#${page.chrome}-global-header-root,#${page.chrome}-global-footer-root{flex:none}`}@media(max-width:767px){input:not([type=hidden]),select,textarea{font-size:16px!important}}`;
+  if(['riaintra','altea'].includes(page.chrome)) {
+    const family=page.chrome,height=family==='riaintra'?52:48;
+    shellCSS+=`html,body{height:100%;overflow:hidden}#skandi-shell-root{height:100vh;height:100dvh;min-height:0;overflow:hidden}#skandi-app-root{height:auto;min-height:0;overflow:auto}#${family}-global-header-root{position:relative;height:${height}px;min-height:${height}px;overflow:visible;z-index:2000}#${family}-global-footer-root{height:auto;overflow:visible;z-index:2000}#riaintra-global-header-root .shellbar{position:absolute}#altea-global-footer-root .status-bar{position:relative}@media(max-width:600px){#riaintra-global-footer-root .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px}#riaintra-global-footer-root .footer-left{flex-wrap:wrap;gap:6px}}`;
+  }
   const shellJS=await read(root,'skandi-embeds/global/skandi-shell.js');new Script(shellJS,{filename:'skandi-shell.js'});
   const render=p=>p?`<div id="${p.mount}">${p.html}</div>`:'';
   const header=parts.find(p=>p.key==='header'),footer=parts.find(p=>p.key==='footer'),mobile=parts.find(p=>p.key==='mobile-nav');

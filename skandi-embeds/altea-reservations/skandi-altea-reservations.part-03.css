@@ -1,0 +1,8 @@
+
+  .supplier-fact-details{padding:8px 0;border-top:1px solid #d6dee5}
+  .supplier-fact-details summary,.supplier-seat-details summary{font-weight:700;color:#12517b;cursor:pointer}
+  .supplier-fact-pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:260px;overflow:auto;font:10px/1.5 ui-monospace,monospace}
+  .supplier-order-disclosure .data-table,.supplier-seat-details .data-table{width:100%;min-width:650px}
+  .supplier-seat-details{margin-top:12px;padding:9px;border:1px solid #c8d3db;background:#f7fafc}
+  .supplier-seat-metadata-table{overflow:auto;max-height:380px;margin-top:9px}
+  .supplier-seat-metadata-table td{max-width:310px;overflow-wrap:anywhere}

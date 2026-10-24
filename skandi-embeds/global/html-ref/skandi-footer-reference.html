@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<meta name="theme-color" content="#022e64"/>
+<title>SKANDI Customer Footer</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+
+<link rel="stylesheet" href="skandi-footer-reference.css">
+</head>
+<body>
+
+<div id="skandi-site-footer">
+<footer class="footer" data-component="customer-footer">
+
+  <section class="newsletter">
+    <div class="news-inner">
+      <div>
+        <h2 id="newsletterTitle">Get SKANDI offers and travel inspiration</h2>
+        <p id="newsletterDescription">
+          Receive destination guides, SKANDI Collections updates and member offers.
+        </p>
+        <div id="newsletterStatus" aria-live="polite"></div>
+      </div>
+
+      <div class="news-form">
+        <input
+          id="newsletterEmail"
+          type="email"
+          placeholder="Email address"
+          autocomplete="email"/>
+
+        <button id="newsletterBtn" type="button">
+          Sign up
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <section class="footer-main">
+    <div class="brand">
+      <img id="footerLogo" class="logo" alt="SKANDI Travels">
+      <div class="social-links" id="socialLinks" aria-label="Social media links"></div>
+    </div>
+    <div id="footerColumns"></div>
+  </section>
+
+  <section class="footer-bottom">
+    <div class="bottom-row">
+      <div class="legal-text-container">
+        <p id="footerTerms">Payment methods, supplier terms, and package travel conditions vary by product.<br>
+          SKANDI TRAVELS acts as a direct operator for select proprietary services and as an agent for independent third-party suppliers.</p>
+      </div>
+      <div class="bottom-actions">
+        <div class="bottom-links" id="bottomLinks"></div>
+        <button class="staff-login-btn" id="staffLoginBtn" type="button" data-path="/riaintra">Staff Login</button>
+      </div>
+    </div>
+    <div class="bottom-row copy-row">
+      <div class="copyright-text">
+        © <span id="year"></span> SKANDI GROUP Inc. (United States) &amp; SKANDI GROUP Aktiebolag (Sweden). All rights reserved. SKANDI TRAVELS™ is a trademark of the SKANDI GROUP.
+      </div>
+      <img id="wordmarkLogo" class="wordmark-logo" alt="SKANDI GROUP" style="display:none;">
+    </div>
+  </section>
+</footer>
+</div>
+
+<script src="skandi-footer-reference.js"></script>
+</body>
+</html>

@@ -1,0 +1,845 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#022e64">
+<title>SKANDI Internal Policy Library</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+
+
+<meta name="color-scheme" content="light dark">
+
+
+
+
+
+
+
+
+
+
+
+
+<meta name="color-scheme" content="light">
+
+
+
+<style data-skandi-part="header">
+#riaintra-global-header-root {
+  --shell-h: 52px;
+  --shell: #354a5f;
+  --shell-hover: rgba(255, 255, 255, 0.14);
+  --blue: #106ebe;
+  --canvas: #ffffff;
+  --text: #323130;
+  --border: #edebe9;
+  --font: "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
+}
+
+#riaintra-global-header-root * { box-sizing: border-box; }
+#riaintra-global-header-root,#riaintra-global-header-root {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: var(--font);
+  color: var(--text);
+  background: transparent;
+  font-size: 14px;
+  user-select: none;
+}
+#riaintra-global-header-root button { font: inherit; border: 0; background: transparent; color: inherit; cursor: pointer; }
+
+/* Desktop Shellbar */
+#riaintra-global-header-root .shellbar {
+  position: fixed;
+  inset: 0 0 auto;
+  height: var(--shell-h);
+  background: var(--shell);
+  color: #fff;
+  z-index: 1000;
+  box-shadow: 0 1px 2px rgba(34, 54, 73, 0.12);
+}
+#riaintra-global-header-root .shellbar-inner {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12px;
+  gap: 12px;
+}
+#riaintra-global-header-root .shell-left, #riaintra-global-header-root .shell-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+/* Branding */
+#riaintra-global-header-root .product {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+#riaintra-global-header-root .product img {
+  height: 30px;
+  width: auto;
+  object-fit: contain;
+  border-radius: 3px;
+  display: none;
+}
+#riaintra-global-header-root .product img[src] {
+  display: block;
+}
+#riaintra-global-header-root .product-text strong {
+  display: block;
+  font-size: 13px;
+}
+#riaintra-global-header-root .product-text small {
+  display: block;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 10px;
+  margin-top: 2px;
+}
+
+/* Desktop Navigation */
+#riaintra-global-header-root .shell-nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 1 1 auto;
+  justify-content: flex-start;
+  padding-left: 24px;
+}
+#riaintra-global-header-root .shell-nav button {
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 10px;
+  border-radius: 4px;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+#riaintra-global-header-root .shell-nav button:hover, #riaintra-global-header-root .shell-nav button.active {
+  color: #fff;
+  background: var(--shell-hover);
+}
+
+/* Session / Dashboard Actions */
+#riaintra-global-header-root .utility-action {
+  min-height: 32px;
+  padding: 0 10px;
+  border: 1px solid rgba(255,255,255,.20);
+  border-radius: 4px;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+#riaintra-global-header-root .utility-action:hover { background: var(--shell-hover); }
+#riaintra-global-header-root .utility-action[hidden] { display: none !important; }
+
+/* Clock */
+#riaintra-global-header-root .clock {
+  min-width: 110px;
+  text-align: right;
+  border-inline: 1px solid rgba(255, 255, 255, 0.18);
+  padding: 4px 10px;
+  cursor: pointer;
+}
+#riaintra-global-header-root .clock strong {
+  display: block;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+#riaintra-global-header-root .clock small {
+  display: block;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 9px;
+  margin-top: 3px;
+  text-transform: uppercase;
+}
+
+/* User Profile */
+#riaintra-global-header-root .profile {
+  display: none;
+  grid-template-columns: minmax(150px, 230px) 38px;
+  grid-template-rows: repeat(3, auto);
+  column-gap: 9px;
+  row-gap: 1px;
+  align-items: center;
+  min-width: 0;
+}
+#riaintra-global-header-root .profile-name,
+#riaintra-global-header-root .profile-meta,
+#riaintra-global-header-root .profile-email {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: right;
+}
+#riaintra-global-header-root .profile-name {
+  grid-column: 1;
+  grid-row: 1;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+}
+#riaintra-global-header-root .profile-meta {
+  grid-column: 1;
+  grid-row: 2;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+}
+#riaintra-global-header-root .profile-email {
+  grid-column: 1;
+  grid-row: 3;
+  color: rgba(255,255,255,.70);
+  font-size: 9px;
+}
+#riaintra-global-header-root .profile-avatar {
+  grid-column: 2;
+  grid-row: 1 / span 3;
+  width: 38px;
+  height: 38px;
+  border-radius: 4px;
+  display: grid;
+  place-items: center;
+  background: #d1e8ff;
+  color: #073b69;
+  font-size: 11px;
+  font-weight: 800;
+  overflow: hidden;
+}
+#riaintra-global-header-root .profile-avatar img,
+#riaintra-global-header-root img.profile-avatar {
+  width: 38px;
+  height: 38px;
+  object-fit: cover;
+}
+
+/* Mobile Burger Icon */
+
+#riaintra-global-header-root .burger {
+  display: none;
+  width: 36px;
+  height: 36px;
+  color: #fff;
+  border-radius: 4px;
+}
+#riaintra-global-header-root .burger:hover {
+  background: var(--shell-hover);
+}
+
+/* Mobile Drawer (Horizontal Slider) */
+#riaintra-global-header-root .mobile-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  z-index: 1100;
+  width: 100%;
+  height: var(--shell-h);
+  background: var(--shell);
+  color: #fff;
+  box-shadow: -20px 0 45px rgba(13, 31, 48, 0.25);
+  transform: translateX(102%);
+  opacity: 0.98;
+  transition: transform 0.44s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.25s ease;
+  display: flex;
+  align-items: center;
+}
+#riaintra-global-header-root .mobile-drawer.open {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+/* Mobile Drawer Title Area */
+#riaintra-global-header-root .mobile-head {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 12px 0 18px;
+  border-right: 1px solid rgba(255, 255, 255, 0.18);
+  flex: 0 0 auto;
+}
+#riaintra-global-header-root .mobile-head strong { font-size: 13px; }
+#riaintra-global-header-root .mobile-head .close {
+  width: 28px;
+  height: 28px;
+  font-size: 22px;
+  display: grid;
+  place-items: center;
+}
+
+/* Mobile Drawer Nav List */
+#riaintra-global-header-root .mobile-nav {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  overflow-x: auto;
+  scrollbar-width: none;
+  flex: 1;
+  padding: 0 12px;
+  gap: 4px;
+}
+#riaintra-global-header-root .mobile-nav::-webkit-scrollbar { display: none; }
+#riaintra-global-header-root .mobile-nav button {
+  display: block;
+  width: auto;
+  white-space: nowrap;
+  padding: 8px 12px;
+  font-weight: 600;
+  border-radius: 4px;
+}
+#riaintra-global-header-root .mobile-nav button:hover, #riaintra-global-header-root .mobile-nav button.active {
+  background: var(--shell-hover);
+}
+
+/* Mobile Overlay */
+#riaintra-global-header-root .overlay {
+  position: fixed;
+  inset: var(--shell-h) 0 0 0;
+  background: rgba(7, 27, 68, 0.46);
+  z-index: 1090;
+  display: none;
+}
+#riaintra-global-header-root .overlay.show { display: block; }
+
+body[data-theme="dark"] #riaintra-global-header-root {
+  --canvas: #1f1f1f;
+  --border: #3a3a3a;
+  --text: #f3f2f1;
+}
+
+@media(max-width: 950px) {
+  #riaintra-global-header-root .shell-nav { display: none; }
+  #riaintra-global-header-root .burger { display: grid; place-items: center; }
+  #riaintra-global-header-root .profile-email { display: none; }
+}
+@media(max-width: 700px) {
+  #riaintra-global-header-root .profile { display: none !important; }
+  #riaintra-global-header-root .clock { display: none; }
+  #riaintra-global-header-root .utility-action { padding: 0 8px; font-size: 9px; }
+}
+</style>
+<style data-skandi-part="footer">
+#riaintra-global-footer-root * { box-sizing: border-box; }
+#riaintra-global-footer-root,#riaintra-global-footer-root {
+  margin: 0;
+  font-family: "72", Inter, Arial, sans-serif;
+  width: 100%;
+}
+
+#riaintra-global-footer-root footer {
+  width: 100%;
+  padding: 10px 24px;
+  margin-top: auto;
+  background: #354a5f;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+#riaintra-global-footer-root .wrap {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  width: 100%;
+}
+
+#riaintra-global-footer-root .footer-left {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  justify-self: flex-start;
+}
+
+#riaintra-global-footer-root .links {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+#riaintra-global-footer-root .meta {
+  font-size: 9px;
+  color: #ffffff;
+}
+
+#riaintra-global-footer-root .global-footer {
+  justify-self: center;
+  text-align: center;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+#riaintra-global-footer-root .footer-right {
+  justify-self: flex-end;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+#riaintra-global-footer-root #grouplogo img {
+  height: 16px;
+  border-radius: 0;
+  object-fit: contain;
+  background: transparent;
+  display: block;
+}
+
+#riaintra-global-footer-root button {
+  border: 0;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.75);
+  padding: 5px 7px;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+#riaintra-global-footer-root button:hover {
+  color: #ffffff;
+  text-decoration: underline;
+}
+</style>
+<style data-skandi-part="legal-internal">
+#skandi-app-root{--blue:#005eb8;--blue-dark:#004783;--blue-deep:#003b70;--blue-soft:#e8f3fc;--canvas:#f4f5f6;--surface:#fff;--slate:#707070;--text:#1d2a35;--text-soft:#52616d;--border:#d8dee3;--border-strong:#bcc7d0;--warning-soft:#fff4e5;--danger:#b42318;--shadow:0 2px 7px rgba(24,39,53,.09);--radius:6px;--font:"72","Inter","Segoe UI",Roboto,Arial,sans-serif}#skandi-app-root *{box-sizing:border-box}#skandi-app-root{min-height:100%;background:var(--canvas)}#skandi-app-root{min-width:320px;min-height:100vh;margin:0;color:var(--text);background:linear-gradient(180deg,rgba(0,94,184,.055),transparent 230px),var(--canvas);font-family:var(--font);-webkit-font-smoothing:antialiased}#skandi-app-root button,#skandi-app-root select,#skandi-app-root input{font:inherit}#skandi-app-root button:focus-visible,#skandi-app-root select:focus-visible,#skandi-app-root input:focus-visible{outline:3px solid rgba(0,94,184,.28);outline-offset:2px}#skandi-app-root .main-workspace{width:min(1180px,calc(100% - 48px));margin:0 auto;padding:38px 0 62px}#skandi-app-root .workspace-intro{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:24px;gap:24px}#skandi-app-root .workspace-intro h1{margin:0;color:#172531;font-size:clamp(26px,3.1vw,38px);font-weight:650;letter-spacing:-.025em;line-height:1.14}#skandi-app-root .workspace-intro p{max-width:720px;margin:9px 0 0;color:var(--text-soft);font-size:14px;line-height:1.55}#skandi-app-root .internal-label{display:inline-flex;align-items:center;gap:8px;min-height:32px;padding:0 12px;color:#8b4300;background:var(--warning-soft);border:1px solid #e9a75b;border-radius:3px;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap}#skandi-app-root .internal-label:before{width:7px;height:7px;border-radius:50%;background:#d97706;content:"";box-shadow:0 0 0 3px rgba(217,119,6,.14)}#skandi-app-root .launchpad-panel{overflow:hidden;background:rgba(255,255,255,.68);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow)}#skandi-app-root .panel-toolbar{min-height:60px;display:flex;align-items:center;justify-content:space-between;padding:12px 18px;gap:18px;background:#fff;border-bottom:1px solid var(--border)}#skandi-app-root .panel-heading h2{margin:0;font-size:16px}#skandi-app-root .panel-heading span{display:block;margin-top:3px;color:var(--slate);font-size:11px}#skandi-app-root .toolbar-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;min-width:0;flex:1}#skandi-app-root .app-search{position:relative;width:min(350px,38vw);flex:0 1 350px}#skandi-app-root .app-search input{width:100%;height:36px;padding:0 34px 0 12px;background:#f8fafb;border:1px solid var(--border-strong);border-radius:3px;font-size:13px}#skandi-app-root .clear-search{position:absolute;top:50%;right:6px;width:26px;height:26px;display:none;place-items:center;padding:0;color:var(--slate);background:transparent;border:0;border-radius:3px;font-size:18px;transform:translateY(-50%);cursor:pointer}#skandi-app-root .clear-search.visible{display:grid}#skandi-app-root .filter-select{height:36px;min-width:148px;padding:0 30px 0 10px;background:#fff;border:1px solid var(--border-strong);border-radius:3px;font-size:12px}#skandi-app-root .button{min-height:36px;padding:0 14px;border:1px solid var(--border-strong);border-radius:3px;background:#fff;color:var(--text);font-size:12px;font-weight:700;cursor:pointer}#skandi-app-root .button:hover{background:#edf1f3}#skandi-app-root .library-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;padding:16px 18px;background:#f8fafb;border-bottom:1px solid var(--border)}#skandi-app-root .summary-card{padding:12px 14px;background:#fff;border:1px solid var(--border);border-radius:4px}#skandi-app-root .summary-card span{display:block;color:var(--slate);font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}#skandi-app-root .summary-card strong{display:block;margin-top:5px;color:#172531;font-size:20px}#skandi-app-root .table-wrap{width:100%;overflow-x:auto;background:#fff}#skandi-app-root .policy-table{width:100%;min-width:900px;border-collapse:collapse}#skandi-app-root .policy-table th{padding:9px 12px;color:#44535f;background:#e8edf1;border-bottom:1px solid var(--border-strong);font-size:10px;font-weight:800;letter-spacing:.07em;text-align:left;text-transform:uppercase;white-space:nowrap}#skandi-app-root .policy-table td{padding:12px;border-bottom:1px solid #e4e8eb;font-size:12px;vertical-align:middle}#skandi-app-root .policy-table tbody tr:nth-child(even) td{background:#fbfcfd}#skandi-app-root .policy-table tbody tr:hover td{background:#eef6fc}#skandi-app-root .policy-name{color:var(--blue-deep);font-size:13px;font-weight:800}#skandi-app-root .policy-meta{margin-top:4px;color:var(--slate);font-size:10px;line-height:1.4}#skandi-app-root .brand-badge,#skandi-app-root .review-badge{display:inline-flex;align-items:center;min-height:24px;padding:0 8px;border-radius:999px;font-size:10px;font-weight:800;white-space:nowrap}#skandi-app-root .brand-badge{color:var(--blue-deep);background:var(--blue-soft);border:1px solid #bfd9ed}#skandi-app-root .review-badge.none,#skandi-app-root .review-badge.scheduled{color:#345564;background:#f0f4f6;border:1px solid #cbd5dc}#skandi-app-root .review-badge.dueSoon{color:#8b4300;background:#fff4e5;border:1px solid #e9a75b}#skandi-app-root .review-badge.overdue{color:var(--danger);background:#fef0ef;border:1px solid #efaaa5}#skandi-app-root .open-policy{min-height:32px;padding:0 12px;color:#fff;background:var(--blue);border:1px solid var(--blue);border-radius:3px;font-size:11px;font-weight:800;cursor:pointer}#skandi-app-root .open-policy:hover{background:var(--blue-dark)}#skandi-app-root .empty-state{padding:50px 24px!important;color:var(--text-soft)!important;text-align:center}#skandi-app-root .empty-state strong{display:block;margin-bottom:5px;color:var(--text);font-size:14px}#skandi-app-root .error-banner{display:none;margin-bottom:16px;padding:12px 14px;color:#8c1d18;background:#fef0ef;border:1px solid #efaaa5;border-radius:4px;font-size:12px}#skandi-app-root .error-banner.visible{display:block}#skandi-app-root .sr-only{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}@media(max-width:850px){#skandi-app-root .main-workspace{width:min(100% - 30px,760px);padding-top:28px}#skandi-app-root .workspace-intro{align-items:flex-start}#skandi-app-root .panel-toolbar{align-items:stretch;flex-direction:column}#skandi-app-root .toolbar-actions{justify-content:stretch;flex-wrap:wrap}#skandi-app-root .app-search{width:100%;flex-basis:100%}#skandi-app-root .filter-select{flex:1}}@media(max-width:680px){#skandi-app-root .main-workspace{width:min(100% - 24px,580px);padding:24px 0 40px}#skandi-app-root .workspace-intro{display:block}#skandi-app-root .workspace-intro h1{font-size:27px}#skandi-app-root .internal-label{margin-top:14px}#skandi-app-root .library-summary{grid-template-columns:1fr}#skandi-app-root .filter-select,#skandi-app-root .button{width:100%}}
+</style>
+<style data-skandi-part="shell">html,body{margin:0;width:100%;min-height:100%;}*,*::before,*::after{box-sizing:border-box}#skandi-shell-root{min-height:100vh;min-width:0;display:flex;flex-direction:column}#skandi-app-root{flex:1;min-width:0;position:relative}#riaintra-global-header-root,#riaintra-global-footer-root{flex:none}@media(max-width:767px){input:not([type=hidden]),select,textarea{font-size:16px!important}}html,body{height:100%;overflow:hidden}#skandi-shell-root{height:100vh;height:100dvh;min-height:0;overflow:hidden}#skandi-app-root{height:auto;min-height:0;overflow:auto}#riaintra-global-header-root{position:relative;height:52px;min-height:52px;overflow:visible;z-index:2000}#riaintra-global-footer-root{height:auto;overflow:visible;z-index:2000}#riaintra-global-header-root .shellbar{position:absolute}#altea-global-footer-root .status-bar{position:relative}@media(max-width:600px){#riaintra-global-footer-root .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px}#riaintra-global-footer-root .footer-left{flex-wrap:wrap;gap:6px}}</style>
+</head>
+<body>
+<div id="skandi-shell-root" data-skandi-page="legal-internal" data-skandi-key="legalInternal" data-skandi-family="riaintra" data-skandi-chrome="riaintra">
+<div id="riaintra-global-header-root">
+
+<!-- MAIN HEADER -->
+<header class="shellbar">
+  <div class="shellbar-inner">
+    
+    <div class="shell-left">
+      <button id="burger" class="burger" type="button" aria-label="Open menu">☰</button>
+      <div class="product">
+        <img id="logo" src="" alt="RIAINTRA">
+        <div class="product-text">
+          <strong id="riaintra-header-productName">RIAINTRA</strong>
+          <small id="productContext">Enterprise Workforce Suite</small>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Desktop Navigation -->
+    <nav id="riaintra-header-desktopNav" class="shell-nav" aria-label="Internal navigation"></nav>
+    
+    <div class="shell-right">
+      <button id="returnDashboardBtn" class="utility-action" type="button" hidden="">Return to Dashboard</button>
+      <button id="logoutBtn" class="utility-action" type="button">Logout</button>
+
+      <!-- Clock -->
+      <div id="sfClock" class="clock" title="Toggle local / UTC">
+        <strong id="sfClockTime">--:--:--</strong>
+        <small id="sfClockDate">LOCAL</small>
+      </div>
+      
+      <!-- Profile -->
+      <div class="profile" id="userProfile">
+        <div class="profile-name" id="userName">--</div>
+        <div class="profile-meta" id="userMeta">--</div>
+        <div class="profile-email" id="userEmail">--</div>
+        <img id="badge_photo_url" class="profile-avatar" alt="Staff badge photo" style="display:none">
+        <div id="avatarFallback" class="profile-avatar">--</div>
+      </div>
+    </div>
+
+  </div>
+</header>
+
+<!-- MOBILE DRAWER -->
+<div id="mobileDrawer" class="mobile-drawer">
+  <div class="mobile-head">
+    <strong>RIAINTRA</strong>
+    <button id="drawerClose" class="close" type="button" aria-label="Close menu">×</button>
+  </div>
+  <nav id="riaintra-header-mobileNav" class="mobile-nav"></nav>
+</div>
+<div id="drawerOverlay" class="overlay"></div>
+
+
+
+
+</div>
+<div id="skandi-app-root">
+<main class="main-workspace">
+<section class="workspace-intro" aria-labelledby="pageTitle"><div><h1 id="pageTitle">Internal Policy Library</h1><p>Published SKANDI TRAVELS and ALTEA policies for authorized employees and operational users.</p></div><span class="internal-label">Internal Use Only</span></section>
+<div id="errorBanner" class="error-banner" role="alert"></div>
+<section class="launchpad-panel" aria-labelledby="libraryHeading"><div class="panel-toolbar"><div class="panel-heading"><h2 id="libraryHeading">Controlled documents</h2><span id="applicationCount">Loading published internal policies</span></div><div class="toolbar-actions"><div class="app-search"><label class="sr-only" for="search">Search internal policies</label><input id="search" type="search" placeholder="Find a policy or document ID" autocomplete="off" spellcheck="false"><button class="clear-search" id="clearSearch" type="button" aria-label="Clear search">×</button></div><label class="sr-only" for="brandFilter">Filter by brand</label><select id="brandFilter" class="filter-select"><option value="all">All brands</option><option value="SKANDI TRAVELS">SKANDI TRAVELS</option><option value="ALTEA">ALTEA</option></select><button id="refresh" class="button" type="button">Refresh</button></div></div><div class="library-summary" aria-label="Policy library summary"><div class="summary-card"><span>Total documents</span><strong id="totalCount">0</strong></div><div class="summary-card"><span>SKANDI TRAVELS</span><strong id="skandiCount">0</strong></div><div class="summary-card"><span>ALTEA</span><strong id="alteaCount">0</strong></div></div><div class="table-wrap"><table class="policy-table"><thead><tr><th>Policy</th><th>Brand</th><th>Version</th><th>Effective</th><th>Review</th><th>Owner</th><th></th></tr></thead><tbody id="rows"><tr><td colspan="7" class="empty-state"><strong>Loading internal policies…</strong>Please wait while the controlled-document library is synchronized.</td></tr></tbody></table></div></section>
+</main>
+
+
+
+</div>
+<div id="riaintra-global-footer-root">
+<footer>
+  <div class="wrap">
+    <div class="footer-left">
+      <div id="links" class="links"></div>
+      <div class="meta">RIAINTRA</div>
+    </div>
+
+    <div id="grouplogo" class="global-footer">
+      <img src="https://static.wixstatic.com/media/394052_02ed0c030fea4f14b5e5677fdaeae197~mv2.png" alt="SKANDI GROUP MEMBER">
+    </div>
+
+    <div class="footer-right">
+      © 2026 SKANDI TRAVELS
+    </div>
+  </div>
+</footer>
+
+
+
+</div>
+
+</div>
+<script data-skandi-part="skandi-shell-runtime">/** SKANDI compiled public-shell runtime — no alternate backend, no local cart. */
+const SKANDI_SHELL_SOURCE = 'SKANDI_SHELL';
+const SKANDI_SHELL_PARENT = 'SKANDI_WIX_PARENT';
+const shellRoot = document.getElementById('skandi-shell-root');
+if (!shellRoot) throw new Error('SKANDI shell mount missing');
+window.__SKANDI_SHELL__ = Object.freeze({
+  mode:'compiled-single-embed',
+  page:shellRoot.dataset.skandiPage || '',
+  root:shellRoot
+});
+// A single iframe passes Home, Header, Footer and Mobile messages to the
+// same Wix Velo HtmlComponent. Existing message source/type values remain.
+// The Wix master controller supplies canonical route and session data.
+window.addEventListener('message', event => {
+  if (event.source !== window.parent) return;
+  let message = event.data;
+  if (typeof message === 'string') {
+    try { message = JSON.parse(message); } catch (_) { return; }
+  }
+  if (!message || message.source !== SKANDI_SHELL_PARENT) return;
+  if (message.type === 'SKANDI_MASTER_CONFIG') {
+    shellRoot.dataset.skandiPath = String(message.payload?.currentPath || '/');
+  }
+  if (message.type === 'SKANDI_SCROLL_TOP' || message.type === 'MASTER_SCROLL_TOP') {
+    document.getElementById('skandi-app-root')?.scrollTo({ top:0, behavior:'instant' });
+  }
+});
+window.parent?.postMessage({
+  source:SKANDI_SHELL_SOURCE,
+  type:'SKANDI_SHELL_READY',
+  payload:{page:shellRoot.dataset.skandiPage || ''},
+  timestamp:new Date().toISOString()
+}, '*');
+
+// The universal receiver supplies this context only after canonical parent,
+// manifest and digest validation. Legacy Home never opts into this handshake.
+let shellAttempts = 0;
+let shellConfigReceived = false;
+let shellTimer;
+function requestShellConfig() {
+  if (++shellAttempts > 40 || shellConfigReceived) { clearInterval(shellTimer); return; }
+  window.parent.postMessage({source:SKANDI_SHELL_SOURCE,type:'MASTER_CONFIG_REQUEST',payload:{context:'compiled-shell'}},'*');
+}
+window.addEventListener('message', event => {
+  if (event.source !== window.parent) return;
+  let message=event.data;
+  if(typeof message==='string'){try{message=JSON.parse(message);}catch(_){return;}}
+  if(message?.source===SKANDI_SHELL_PARENT && message.type==='SKANDI_MASTER_CONFIG') {
+    shellConfigReceived=true;clearInterval(shellTimer);
+  }
+});
+function startCompiledShell() {
+  const context=window.__SKANDI_RECEIVER_CONTEXT__;
+  if(context?.allowed===true && context.key===shellRoot.dataset.skandiKey) {
+    window.parent.postMessage({source:SKANDI_SHELL_SOURCE,type:'SKANDI_COMPILED_READY',payload:{key:context.key}},'*');
+  }
+  shellTimer=setInterval(requestShellConfig,500);requestShellConfig();
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',startCompiledShell,{once:true});
+else startCompiledShell();
+</script>
+<script data-skandi-part="header">(function(){
+const __root=window.document.getElementById("riaintra-global-header-root");
+const document=new Proxy(window.document,{get(target,key){if(key==='getElementById')return id=>{const el=target.getElementById(id);return el&&(__root===el||__root.contains(el))?el:null;};if(key==='querySelector'||key==='querySelectorAll')return selector=>{if(/^(?:html|body|head|meta|title|link)(?:[\s.#[:]|$)/i.test(selector)&&!selector.includes(' '))return target[key](selector);return __root[key](selector);};if(key==='getElementsByClassName'||key==='getElementsByTagName')return value=>__root[key](value);const value=Reflect.get(target,key,target);return typeof value==='function'?value.bind(target):value;},set(target,key,value){return Reflect.set(target,key,value,target);}});
+
+(()=>{
+  "use strict";
+  
+  const SOURCE = "SKANDI_RIAINTRA_HEADER";
+  const PARENT = "SKANDI_WIX_PARENT";
+
+  let config = null;
+  let staff = {};
+
+  const $ = id => document.getElementById(id);
+  const esc = v => String(v ?? "").replace(/[&<>"']/g, s => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;"
+  }[s]));
+
+  function post(type, payload = {}) {
+    if (window.parent && window.parent !== window) {
+      window.parent.postMessage({
+        source: SOURCE,
+        type,
+        payload,
+        timestamp: new Date().toISOString()
+      }, "*");
+    }
+  }
+
+  // Mobile Menu Logic
+  function closeMenu() {
+    $("mobileDrawer")?.classList.remove("open");
+    $("drawerOverlay")?.classList.remove("show");
+    /* Compiled shell owns internal chrome geometry. */
+  }
+
+  $("burger")?.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const menu = $("mobileDrawer");
+    const overlay = $("drawerOverlay");
+    
+    menu.classList.toggle("open");
+    overlay.classList.toggle("show");
+    
+    if (menu.classList.contains("open")) {
+      // Command Wix to expand iframe slightly so the dark overlay shows
+      /* Compiled shell owns internal chrome geometry. */ 
+    } else {
+      /* Compiled shell owns internal chrome geometry. */
+    }
+  });
+
+  $("drawerClose")?.addEventListener("click", closeMenu);
+  $("drawerOverlay")?.addEventListener("click", closeMenu);
+
+  // Render Data
+  function render() {
+    // 1. Branding
+    const header = config?.internal?.header || {};
+    const logo = config?.brand?.assets?.logos?.riaintra || config?.brand?.assets?.logos?.skandiPrimary || "";
+    
+    if (logo && $("logo")) $("logo").src = logo;
+    if (header.productName && $("riaintra-header-productName")) $("riaintra-header-productName").textContent = header.productName;
+    if (header.productContext && $("productContext")) $("productContext").textContent = header.productContext;
+
+    // 2. Navigation
+    const current = config?.currentPath || "";
+    const items = header.primaryNav || config?.nav || [];
+    
+    if (Array.isArray(items) && items.length > 0) {
+      const markup = items.map(i => {
+        const active = current === i.path || (i.path && current.startsWith(i.path + "/"));
+        return `<button type="button" class="${active ? "active" : ""}" data-path="${esc(i.path)}">${esc(i.label)}</button>`;
+      }).join("");
+      
+      if ($("riaintra-header-desktopNav")) $("riaintra-header-desktopNav").innerHTML = markup;
+      if ($("riaintra-header-mobileNav")) $("riaintra-header-mobileNav").innerHTML = markup;
+    }
+
+    // 3. Canonical staff profile from Wix parent -> SKANDI_CORE/staffAuth -> Supabase agent_users.
+    const p = staff.profile || config?.staff?.profile || {};
+    const full =
+      p.displayName || p.display_name || p.fullName || p.name ||
+      [p.firstName || p.first_name, p.lastName || p.last_name].filter(Boolean).join(" ") ||
+      "Employee";
+    const skId = String(p.skId || p.skID || p.sk_id || p.employeeId || p.employee_id || "").trim().toUpperCase();
+    const baseCode = String(p.baseCode || p.base_code || p.base || p.station || "").trim().toUpperCase();
+    const corporateEmail = String(
+      p.corporateEmail || p.corporate_email || p.corporateEmailAddress ||
+      p.corporate_email_address || p.workEmail || p.email || ""
+    ).trim();
+    const photo = String(
+      p.badgePhotoUrl || p.badge_photo_url || p.photoUrl ||
+      p.profilePhotoUrl || p.photo || ""
+    ).trim();
+    const hasData = Boolean(skId || full !== "Employee" || corporateEmail || photo);
+
+    if ($("userProfile")) $("userProfile").style.display = hasData ? "grid" : "none";
+
+    if (hasData) {
+      const initials = [p.firstName || p.first_name, p.lastName || p.last_name]
+        .filter(Boolean).map(v => String(v)[0]).join("").slice(0, 2).toUpperCase() ||
+        full.slice(0, 2).toUpperCase();
+
+      if ($("userName")) $("userName").textContent = full;
+      if ($("userMeta")) $("userMeta").textContent = [skId, baseCode].filter(Boolean).join(" • ") || "RIAINTRA";
+      if ($("userEmail")) $("userEmail").textContent = corporateEmail || "—";
+
+      if (photo) {
+        $("badge_photo_url").src = photo;
+        $("badge_photo_url").style.display = "block";
+        $("avatarFallback").style.display = "none";
+      } else {
+        $("badge_photo_url").style.display = "none";
+        $("avatarFallback").style.display = "grid";
+        $("avatarFallback").textContent = initials;
+      }
+    }
+
+    // Return to Dashboard is hidden only on the Success Factors dashboard itself.
+    const normalizedCurrent = String(current || "").split("?")[0].replace(/\/$/, "") || "/";
+    if ($("returnDashboardBtn")) {
+      $("returnDashboardBtn").hidden = normalizedCurrent === "/riaintra/success-factors";
+    }
+  }
+
+  // Navigation Logic
+  document.addEventListener("click", e => {
+    const btn = e.target.closest("[data-path]");
+    if (!btn) return;
+    
+    const path = btn.dataset.path;
+    
+    // Update local active state visually
+    document.querySelectorAll("[data-path]").forEach(b => b.classList.remove("active"));
+    document.querySelectorAll(`[data-path="${path}"]`).forEach(b => b.classList.add("active"));
+    
+    if (config) config.currentPath = path;
+
+    closeMenu();
+    post("RIAINTRA_NAVIGATE", { path });
+  });
+
+  $("returnDashboardBtn")?.addEventListener("click", () => {
+    post("RIAINTRA_NAVIGATE", {
+      path:config?.routes?.successFactors || "/riaintra/success-factors"
+    });
+  });
+
+  $("logoutBtn")?.addEventListener("click", () => {
+    post("RIAINTRA_LOGOUT", {});
+  });
+
+  // Clock Logic
+  let clockUsesUtc = false;
+  function updateClock() {
+    const now = new Date();
+    const opts = {
+      hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false,
+      ...(clockUsesUtc ? { timeZone: "UTC" } : {})
+    };
+    if ($("sfClockTime")) $("sfClockTime").textContent = new Intl.DateTimeFormat(undefined, opts).format(now);
+    if ($("sfClockDate")) $("sfClockDate").textContent = clockUsesUtc 
+      ? `${now.toISOString().slice(0, 10)} UTC` 
+      : new Intl.DateTimeFormat(undefined, { weekday: "short", day: "2-digit", month: "short" }).format(now).toUpperCase();
+  }
+
+  $("sfClock")?.addEventListener("click", () => {
+    clockUsesUtc = !clockUsesUtc;
+    updateClock();
+  });
+  
+  setInterval(updateClock, 1000);
+  updateClock();
+
+  // Listen for Wix Parent Messages
+  window.addEventListener("message", e => {
+    const m = e.data || {};
+    if (m.source !== PARENT) return;
+
+    if (m.type === "SKANDI_MASTER_CONFIG") {
+      config = m.payload || {};
+      render();
+    }
+
+    if ([
+      "RIAINTRA_HEADER_STATE",
+      "UPDATE_PROFILE",
+      "INTERNAL_CHROME_BOOTSTRAP",
+      "GLOBAL_HEADER_BOOTSTRAP"
+    ].includes(m.type)) {
+      const payloadProfile =
+        m.payload?.profile ||
+        m.payload?.session?.profile ||
+        m.payload?.session ||
+        m.payload ||
+        {};
+      staff.profile = { ...staff.profile, ...payloadProfile };
+      render();
+    }
+  });
+
+  // Signal Wix parent window that embed is ready
+  post("MASTER_CONFIG_REQUEST", { context: "riaintra-header" });
+  post("RIAINTRA_HEADER_READY", {});
+  /* Compiled shell owns internal chrome geometry. */
+
+})();
+
+
+})();</script>
+<script data-skandi-part="footer">(function(){
+const __root=window.document.getElementById("riaintra-global-footer-root");
+const document=new Proxy(window.document,{get(target,key){if(key==='getElementById')return id=>{const el=target.getElementById(id);return el&&(__root===el||__root.contains(el))?el:null;};if(key==='querySelector'||key==='querySelectorAll')return selector=>{if(/^(?:html|body|head|meta|title|link)(?:[\s.#[:]|$)/i.test(selector)&&!selector.includes(' '))return target[key](selector);return __root[key](selector);};if(key==='getElementsByClassName'||key==='getElementsByTagName')return value=>__root[key](value);const value=Reflect.get(target,key,target);return typeof value==='function'?value.bind(target):value;},set(target,key,value){return Reflect.set(target,key,value,target);}});
+
+(()=>{
+  const SOURCE="SKANDI_RIAINTRA_FOOTER",PARENT="SKANDI_WIX_PARENT";
+  const LEGAL_PATH="/riaintra/success-factors/legal-internal";
+  let config=null;
+  const $=id=>document.getElementById(id);
+  const esc=v=>String(v??"").replace(/[&<>"']/g,s=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[s]));
+  const post=(type,payload={})=>window.parent.postMessage({source:SOURCE,type,payload,timestamp:new Date().toISOString()},"*");
+
+  function render(){
+    const legalPath=String(config?.routes?.legalInternal||LEGAL_PATH);
+    const links=Array.isArray(config?.internal?.footer?.links)?[...config.internal.footer.links]:[];
+    if(!links.some(i=>String(i?.path||"")===legalPath)){
+      links.push({label:"Legal & Policies",path:legalPath});
+    }
+    $("links").innerHTML=links.map(i=>`<button data-path="${esc(i.path)}">${esc(i.label)}</button>`).join("");
+  }
+
+  document.addEventListener("click",e=>{
+    const path=e.target.closest("[data-path]")?.dataset.path;
+    if(path)post("MASTER_NAVIGATE",{path});
+  });
+
+  window.addEventListener("message",e=>{
+    const m=e.data||{};if(m.source!==PARENT)return;
+    if(m.type==="SKANDI_MASTER_CONFIG"){config=m.payload||{};render()}
+  });
+
+  post("MASTER_CONFIG_REQUEST",{context:"riaintra-footer"});
+})();
+
+
+})();</script>
+<script data-skandi-part="legal-internal">(function(){
+const __root=window.document.getElementById("skandi-app-root");
+const document=new Proxy(window.document,{get(target,key){if(key==='getElementById')return id=>{const el=target.getElementById(id);return el&&(__root===el||__root.contains(el))?el:null;};if(key==='querySelector'||key==='querySelectorAll')return selector=>{if(/^(?:html|body|head|meta|title|link)(?:[\s.#[:]|$)/i.test(selector)&&!selector.includes(' '))return target[key](selector);return __root[key](selector);};if(key==='getElementsByClassName'||key==='getElementsByTagName')return value=>__root[key](value);const value=Reflect.get(target,key,target);return typeof value==='function'?value.bind(target):value;},set(target,key,value){return Reflect.set(target,key,value,target);}});
+
+(()=>{
+"use strict";
+const SOURCE="SKANDI_INTERNAL_LEGAL_HUB",PARENT="SKANDI_WIX_PARENT",$=id=>document.getElementById(id);const state={policies:[]};
+function post(type,payload={}){window.parent.postMessage({source:SOURCE,type,payload,timestamp:new Date().toISOString()},"*")}
+function esc(v){return String(v??"").replace(/[&<>'"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;","\"":"&quot;"}[c]))}
+function safeText(v,f=""){const t=String(v||"").trim();return t||f}
+function safeRoute(value,policy={}){const raw=String(value||"").trim()||(policy.slug?`/riaintra/success-factors/legal-internal/policies-internal?slug=${encodeURIComponent(policy.slug)}`:"");if(raw.startsWith("/"))return raw;try{const u=new URL(raw,location.origin);return ["https:","http:"].includes(u.protocol)?u.href:""}catch{return""}}
+function formatDate(value){if(!value)return"—";const d=new Date(String(value).length<=10?`${value}T12:00:00Z`:value);return Number.isNaN(d.getTime())?"—":new Intl.DateTimeFormat(undefined,{year:"numeric",month:"short",day:"2-digit"}).format(d)}
+function normalize(p={}){return{...p,documentId:p.documentId||p.document_id||"",effectiveDate:p.effectiveDate||p.effective_date||"",reviewDate:p.reviewDate||p.review_date||"",status:p.status||"Published",scope:String(p.scope||"internal").toLowerCase(),active:p.active!==false,route:safeRoute(p.route||p.url,p)}}
+function reviewBadge(policy){const review=policy.review||{},s=["none","scheduled","dueSoon","overdue"].includes(review.state)?review.state:"none",label=review.label||(policy.reviewDate?formatDate(policy.reviewDate):"No review");return`<span class="review-badge ${esc(s)}">${esc(label)}</span>`}
+function publishedInternal(){return state.policies.filter(p=>p.scope==="internal"&&String(p.status).toLowerCase()==="published"&&p.active!==false&&p.deleted!==true)}
+function filteredPolicies(){const q=safeText($("search").value).toLowerCase(),brand=$("brandFilter").value;return publishedInternal().filter(p=>{if(brand!=="all"&&safeText(p.brand).toUpperCase()!==brand.toUpperCase())return false;if(!q)return true;return[p.title,p.documentId,p.brand,p.category,p.summary,p.owner,p.version,p.slug].join(" ").toLowerCase().includes(q)})}
+function render(){const all=publishedInternal(),rows=filteredPolicies();$("totalCount").textContent=String(all.length);$("skandiCount").textContent=String(all.filter(p=>safeText(p.brand).toUpperCase()==="SKANDI TRAVELS").length);$("alteaCount").textContent=String(all.filter(p=>safeText(p.brand).toUpperCase()==="ALTEA").length);$("applicationCount").textContent=`${rows.length} published document${rows.length===1?"":"s"} available`;$("clearSearch").classList.toggle("visible",Boolean($("search").value));$("rows").innerHTML=rows.length?rows.map(p=>`<tr><td><div class="policy-name">${esc(p.title||"Untitled Policy")}</div><div class="policy-meta">${esc(p.documentId||"—")} · ${esc(p.category||"Policy")}</div></td><td><span class="brand-badge">${esc(p.brand||"SKANDI TRAVELS")}</span></td><td>${esc(p.version||"—")}</td><td>${esc(formatDate(p.effectiveDate))}</td><td>${reviewBadge(p)}</td><td>${esc(p.owner||"—")}</td><td><button class="open-policy" type="button" data-route="${esc(p.route)}" ${p.route?"":"disabled"}>Open</button></td></tr>`).join(""):`<tr><td colspan="7" class="empty-state"><strong>No matching internal policies</strong>Change the search text or brand filter and try again.</td></tr>`;requestHeight()}
+function showError(message){const b=$("errorBanner");b.textContent=message||"Internal policies are temporarily unavailable.";b.classList.add("visible");$("rows").innerHTML=`<tr><td colspan="7" class="empty-state"><strong>Policy library unavailable</strong>${esc(message||"Please try again shortly.")}</td></tr>`;requestHeight()}
+function clearError(){const b=$("errorBanner");b.classList.remove("visible");b.textContent=""}
+let ht=0;function requestHeight(){clearTimeout(ht);ht=setTimeout(()=>post("INTERNAL_LEGAL_HEIGHT",{height:Math.ceil(document.documentElement.scrollHeight)}),50)}
+window.addEventListener("message",e=>{if(e.source!==window.parent)return;const m=e.data||{};if(m.source!==PARENT)return;const p=m.payload||{};if(m.type==="INTERNAL_LEGAL_HUB_DATA"){clearError();state.policies=(Array.isArray(p.policies)?p.policies:[]).map(normalize);render();return}if(m.type==="INTERNAL_LEGAL_ERROR")showError(p.message)});
+document.addEventListener("click",e=>{const btn=e.target.closest("[data-route]");if(btn){const route=safeRoute(btn.getAttribute("data-route"));if(route)post("NAVIGATE",{path:route})}});$("search").addEventListener("input",render);$("brandFilter").addEventListener("change",render);$("clearSearch").addEventListener("click",()=>{$("search").value="";render();$("search").focus()});$("refresh").addEventListener("click",()=>post("INTERNAL_LEGAL_REFRESH",{}));if("ResizeObserver"in window)new ResizeObserver(requestHeight).observe(document.body);else window.addEventListener("resize",requestHeight);post("INTERNAL_LEGAL_READY",{path:location.pathname});requestHeight();
+})();
+
+
+})();</script>
+</body>
+</html>

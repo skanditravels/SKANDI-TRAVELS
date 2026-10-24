@@ -64,10 +64,10 @@ test('scoping preserves body/html state, functional selectors, child combinators
 
 test('legacy complete documents preserve styles, scripts, templates, SVG, datasets and handlers without double execution',async t=>{
   const root=await fixture(t);
-  await page(root,'home',{html:'<!doctype html><html lang="sv"><head><style>.label{color:red}</style></head><body class="search-mode"><button id="tap" onclick="tap(event)" data-item="one">Tap</button><template id="template"><svg viewBox="0 0 1 1"><path d="M0 0"/></svg><script>window.templateExecuted=true;</script></template><script>let n=0;function tap(){window.clicked=++n;}window.executions=(window.executions||0)+1;</script></body></html>',css:'/* styles are in the legacy document */',js:'/* script is in the legacy document */'});
+  await page(root,'home',{html:'<!doctype html><html lang="sv"><head><style>.label{color:red}</style></head><body class="search-mode"><button id="tap" onclick="tap(event)" data-item="one">Tap</button><template id="template"><svg viewBox="0 0 1 1"><path d="M0 0"/></svg><script>window.templateExecuted=true;</script></template><script>document.title="Updated page title";let n=0;function tap(){window.clicked=++n;}window.executions=(window.executions||0)+1;</script></body></html>',css:'/* styles are in the legacy document */',js:'/* script is in the legacy document */'});
   const result=await run(root);assert.deepEqual(result.errors,[]);
   const dom=new JSDOM(await htmlOf(root,'home'),{runScripts:'dangerously',url:'https://test.example',beforeParse:w=>{w.scrollTo=()=>{};}});t.after(()=>dom.window.close());
-  assert.equal(dom.window.document.documentElement.lang,'sv');assert.equal(dom.window.document.body.className,'search-mode');
+  assert.equal(dom.window.document.title,'Updated page title');assert.equal(dom.window.document.documentElement.lang,'sv');assert.equal(dom.window.document.body.className,'search-mode');
   dom.window.document.getElementById('tap').click();assert.equal(dom.window.clicked,1);assert.equal(dom.window.executions,1);assert.equal(dom.window.templateExecuted,undefined);
   assert.ok(dom.window.document.getElementById('template').content.querySelector('svg'));assert.equal(dom.window.document.getElementById('tap').dataset.item,'one');
 });

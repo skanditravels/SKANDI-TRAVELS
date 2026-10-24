@@ -78,8 +78,8 @@
       "dynamic": false,
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
-      "sha256": "f10df573874660e033f6ec303b3a6afe962ef73e9b65249895ad09550e68f208",
-      "bytes": 422212
+      "sha256": "e8ce48b20df08d087603088efb85bed43b26a8b12009be73d15019b4b26ad569",
+      "bytes": 422610
     },
     {
       "key": "search",
@@ -99,17 +99,13 @@
       ],
       "binding": "explicit",
       "requiresStaff": false,
-      "status": "PENDING SOURCE",
+      "status": "BUILT",
       "files": [
         "skandi-embeds/search/skandi-search.html",
         "skandi-embeds/search/skandi-search.css",
         "skandi-embeds/search/skandi-search.js"
       ],
-      "missing": [
-        "skandi-embeds/search/skandi-search.html",
-        "skandi-embeds/search/skandi-search.css",
-        "skandi-embeds/search/skandi-search.js"
-      ],
+      "missing": [],
       "issues": [],
       "backend": [],
       "messages": [
@@ -123,11 +119,12 @@
         "SKANDI_SEARCH_RESULTS",
         "SKANDI_WIX_PARENT"
       ],
-      "output": null,
+      "output": "dist/search/index.html",
       "dynamic": false,
-      "sourceStatus": "PENDING SOURCE",
+      "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
-      "retainedArtifact": false
+      "sha256": "779b19227421d20397569db346159c22ce4b7b518c1d2abbb90d72e141e61315",
+      "bytes": 163576
     },
     {
       "key": "flights",
@@ -185,17 +182,13 @@
       ],
       "binding": "explicit",
       "requiresStaff": false,
-      "status": "PENDING SOURCE",
+      "status": "BUILT",
       "files": [
         "skandi-embeds/car-rental/skandi-car-rental.html",
         "skandi-embeds/car-rental/skandi-car-rental.css",
         "skandi-embeds/car-rental/skandi-car-rental.js"
       ],
-      "missing": [
-        "skandi-embeds/car-rental/skandi-car-rental.html",
-        "skandi-embeds/car-rental/skandi-car-rental.css",
-        "skandi-embeds/car-rental/skandi-car-rental.js"
-      ],
+      "missing": [],
       "issues": [],
       "backend": [
         "src/backend/SKANDI_CORE/customerBooking.web.js"
@@ -231,11 +224,12 @@
         "SKANDI_CAR_RENTAL",
         "SKANDI_WIX_PARENT"
       ],
-      "output": null,
+      "output": "dist/car-rental/index.html",
       "dynamic": false,
-      "sourceStatus": "PENDING SOURCE",
+      "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
-      "retainedArtifact": false
+      "sha256": "01364b612ef7e07356e0e720037521e12e246627d47cbfa9ade8103ac1306bdc",
+      "bytes": 199113
     },
     {
       "key": "hotels",
@@ -369,17 +363,13 @@
       ],
       "binding": "explicit",
       "requiresStaff": false,
-      "status": "PENDING SOURCE",
+      "status": "BUILT",
       "files": [
         "skandi-embeds/tours/skandi-tours.html",
         "skandi-embeds/tours/skandi-tours.css",
         "skandi-embeds/tours/skandi-tours.js"
       ],
-      "missing": [
-        "skandi-embeds/tours/skandi-tours.html",
-        "skandi-embeds/tours/skandi-tours.css",
-        "skandi-embeds/tours/skandi-tours.js"
-      ],
+      "missing": [],
       "issues": [],
       "backend": [
         "src/backend/SKANDI_CORE/customerSession.web.js",
@@ -408,11 +398,12 @@
         "TOURS_SEARCH_RESULT",
         "UPDATE_SETTINGS"
       ],
-      "output": null,
+      "output": "dist/tours/index.html",
       "dynamic": false,
-      "sourceStatus": "PENDING SOURCE",
+      "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
-      "retainedArtifact": false
+      "sha256": "aa508318b8b183b11b915a97e3cbe9b5d6ed6621f14f0ff88fe3e90962e88985",
+      "bytes": 287838
     },
     {
       "key": "activities",
@@ -499,33 +490,39 @@
       "chrome": "public",
       "sourceDirectory": "skandi-embeds/destinations",
       "stem": "skandi-destinations",
-      "controller": null,
-      "embedIds": [],
-      "sources": [],
+      "controller": "src/pages/Our Destinations.wfe5g.js",
+      "embedIds": [
+        "#htmlSkandiMap"
+      ],
+      "sources": [
+        "SKANDI_PUBLIC_NETWORK_MAP"
+      ],
       "binding": "explicit",
       "requiresStaff": false,
-      "status": "PENDING SOURCE",
+      "status": "FAILED",
       "files": [
         "skandi-embeds/destinations/skandi-destinations.html",
         "skandi-embeds/destinations/skandi-destinations.css",
         "skandi-embeds/destinations/skandi-destinations.js"
       ],
-      "missing": [
-        "skandi-embeds/destinations/skandi-destinations.html",
-        "skandi-embeds/destinations/skandi-destinations.css",
-        "skandi-embeds/destinations/skandi-destinations.js"
+      "missing": [],
+      "issues": [],
+      "backend": [
+        "src/backend/SKANDI_CORE/networkMap.web.js"
       ],
-      "issues": [
-        "No verified canonical controller mapping."
+      "messages": [
+        "SKANDI_MAP_DATA",
+        "SKANDI_MAP_ERROR",
+        "SKANDI_MAP_READY",
+        "SKANDI_MAP_REFRESH",
+        "SKANDI_PUBLIC_NETWORK_MAP",
+        "SKANDI_WIX_PARENT"
       ],
-      "backend": [],
-      "messages": [],
       "output": null,
       "dynamic": false,
-      "sourceStatus": "PENDING SOURCE",
-      "blockers": [
-        "No verified canonical controller mapping."
-      ],
+      "sourceStatus": "COMPLETE SOURCE",
+      "blockers": [],
+      "error": "[destinations / destinations] skandi-embeds/destinations/skandi-destinations.html, skandi-embeds/destinations/skandi-destinations.css, skandi-embeds/destinations/skandi-destinations.js: skandi-embeds/destinations/skandi-destinations.html: external stylesheet cannot be scoped: https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.css; put its rules in the CSS source",
       "retainedArtifact": false
     },
     {
@@ -650,7 +647,7 @@
       "dynamic": false,
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
-      "error": "[travelInfo / travel-info] skandi-embeds/travel-info/skandi-travel-info.html, skandi-embeds/travel-info/skandi-travel-info.css, skandi-embeds/travel-info/skandi-travel-info.js: /home/runner/work/SKANDI-TRAVELS/SKANDI-TRAVELS/skandi-embeds/travel-info/skandi-travel-info.css:1264:7: Unexpected }",
+      "error": "[travelInfo / travel-info] skandi-embeds/travel-info/skandi-travel-info.html, skandi-embeds/travel-info/skandi-travel-info.css, skandi-embeds/travel-info/skandi-travel-info.js: skandi-embeds/travel-info/skandi-travel-info.css:1264:7: Unexpected }",
       "retainedArtifact": false
     },
     {
@@ -675,17 +672,13 @@
       ],
       "binding": "explicit",
       "requiresStaff": false,
-      "status": "PENDING SOURCE",
+      "status": "FAILED",
       "files": [
         "skandi-embeds/skandi-collection/skandi-skandi-collection.html",
         "skandi-embeds/skandi-collection/skandi-skandi-collection.css",
         "skandi-embeds/skandi-collection/skandi-skandi-collection.js"
       ],
-      "missing": [
-        "skandi-embeds/skandi-collection/skandi-skandi-collection.html",
-        "skandi-embeds/skandi-collection/skandi-skandi-collection.css",
-        "skandi-embeds/skandi-collection/skandi-skandi-collection.js"
-      ],
+      "missing": [],
       "issues": [],
       "backend": [
         "src/backend/SKANDI_CORE/publicContent.web.js",
@@ -711,8 +704,9 @@
       ],
       "output": null,
       "dynamic": false,
-      "sourceStatus": "PENDING SOURCE",
+      "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
+      "error": "[skandiCollection / skandi-collection] skandi-embeds/skandi-collection/skandi-skandi-collection.html, skandi-embeds/skandi-collection/skandi-skandi-collection.css, skandi-embeds/skandi-collection/skandi-skandi-collection.js: skandi-embeds/skandi-collection/skandi-skandi-collection.css: missing asset YOUR-IMAGE-URL.jpg",
       "retainedArtifact": false
     },
     {
@@ -792,17 +786,13 @@
       ],
       "binding": "explicit",
       "requiresStaff": false,
-      "status": "PENDING SOURCE",
+      "status": "BUILT",
       "files": [
         "skandi-embeds/club/skandi-club.html",
         "skandi-embeds/club/skandi-club.css",
         "skandi-embeds/club/skandi-club.js"
       ],
-      "missing": [
-        "skandi-embeds/club/skandi-club.html",
-        "skandi-embeds/club/skandi-club.css",
-        "skandi-embeds/club/skandi-club.js"
-      ],
+      "missing": [],
       "issues": [],
       "backend": [
         "src/backend/SKANDI_CORE/clubPublic.web.js"
@@ -822,11 +812,12 @@
         "SKANDI_CLUB_TERMS_OPEN",
         "SKANDI_WIX_PARENT"
       ],
-      "output": null,
+      "output": "dist/club/index.html",
       "dynamic": false,
-      "sourceStatus": "PENDING SOURCE",
+      "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
-      "retainedArtifact": false
+      "sha256": "ae46c710caa6a9147375d709409f030d9116566eeb0f64d3b7988414df4f895a",
+      "bytes": 166714
     },
     {
       "key": "forgotPassword",
@@ -846,17 +837,13 @@
       ],
       "binding": "explicit",
       "requiresStaff": false,
-      "status": "PENDING SOURCE",
+      "status": "BUILT",
       "files": [
         "skandi-embeds/forgot-password/skandi-forgot-password.html",
         "skandi-embeds/forgot-password/skandi-forgot-password.css",
         "skandi-embeds/forgot-password/skandi-forgot-password.js"
       ],
-      "missing": [
-        "skandi-embeds/forgot-password/skandi-forgot-password.html",
-        "skandi-embeds/forgot-password/skandi-forgot-password.css",
-        "skandi-embeds/forgot-password/skandi-forgot-password.js"
-      ],
+      "missing": [],
       "issues": [],
       "backend": [],
       "messages": [
@@ -867,11 +854,12 @@
         "SKANDI_FORGOT_PASSWORD",
         "SKANDI_WIX_PARENT"
       ],
-      "output": null,
+      "output": "dist/forgot-password/index.html",
       "dynamic": false,
-      "sourceStatus": "PENDING SOURCE",
+      "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
-      "retainedArtifact": false
+      "sha256": "26e0563da61f515d8ed7111a0a814f593f9cca9366f8deae1341dc2ab90c0fba",
+      "bytes": 137263
     },
     {
       "key": "about",
@@ -891,17 +879,13 @@
       ],
       "binding": "explicit",
       "requiresStaff": false,
-      "status": "PENDING SOURCE",
+      "status": "BUILT",
       "files": [
         "skandi-embeds/about/skandi-about.html",
         "skandi-embeds/about/skandi-about.css",
         "skandi-embeds/about/skandi-about.js"
       ],
-      "missing": [
-        "skandi-embeds/about/skandi-about.html",
-        "skandi-embeds/about/skandi-about.css",
-        "skandi-embeds/about/skandi-about.js"
-      ],
+      "missing": [],
       "issues": [],
       "backend": [
         "src/backend/SKANDI_CORE/publicContent.web.js"
@@ -917,11 +901,12 @@
         "SKANDI_ABOUT_PAGE",
         "SKANDI_WIX_PARENT"
       ],
-      "output": null,
+      "output": "dist/about/index.html",
       "dynamic": false,
-      "sourceStatus": "PENDING SOURCE",
+      "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
-      "retainedArtifact": false
+      "sha256": "d38048b36f50822c1de48e5ec794a58ed134cdfe57101bde9b30752a39d44c4a",
+      "bytes": 188881
     },
     {
       "key": "support",
@@ -944,17 +929,13 @@
       ],
       "binding": "multi-component",
       "requiresStaff": false,
-      "status": "PENDING SOURCE",
+      "status": "BLOCKED INTEGRATION",
       "files": [
         "skandi-embeds/support/skandi-support.html",
         "skandi-embeds/support/skandi-support.css",
         "skandi-embeds/support/skandi-support.js"
       ],
-      "missing": [
-        "skandi-embeds/support/skandi-support.html",
-        "skandi-embeds/support/skandi-support.css",
-        "skandi-embeds/support/skandi-support.js"
-      ],
+      "missing": [],
       "issues": [
         "src/public/customerAuthUi.js: imported export openCustomerLogin is absent",
         "Help Center and support chat are separate HTML components; preserve them until a verified single-component migration."
@@ -1000,7 +981,7 @@
       ],
       "output": null,
       "dynamic": false,
-      "sourceStatus": "PENDING SOURCE",
+      "sourceStatus": "COMPLETE SOURCE",
       "blockers": [
         "src/public/customerAuthUi.js: imported export openCustomerLogin is absent",
         "Help Center and support chat are separate HTML components; preserve them until a verified single-component migration."
@@ -1025,17 +1006,13 @@
       ],
       "binding": "explicit",
       "requiresStaff": false,
-      "status": "PENDING SOURCE",
+      "status": "BUILT",
       "files": [
         "skandi-embeds/newsroom/skandi-newsroom.html",
         "skandi-embeds/newsroom/skandi-newsroom.css",
         "skandi-embeds/newsroom/skandi-newsroom.js"
       ],
-      "missing": [
-        "skandi-embeds/newsroom/skandi-newsroom.html",
-        "skandi-embeds/newsroom/skandi-newsroom.css",
-        "skandi-embeds/newsroom/skandi-newsroom.js"
-      ],
+      "missing": [],
       "issues": [],
       "backend": [
         "src/backend/SKANDI_CORE/publicContent.web.js",
@@ -1053,11 +1030,12 @@
         "SKANDI_PUBLIC_NEWSROOM",
         "SKANDI_WIX_PARENT"
       ],
-      "output": null,
+      "output": "dist/newsroom/index.html",
       "dynamic": false,
-      "sourceStatus": "PENDING SOURCE",
+      "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
-      "retainedArtifact": false
+      "sha256": "8c8811b9112c02dba6472f2d6b52ba10d524846d8dd966cddd3c7811a2cfd05e",
+      "bytes": 168667
     },
     {
       "key": "theStore",
@@ -1077,17 +1055,13 @@
       ],
       "binding": "explicit",
       "requiresStaff": false,
-      "status": "PENDING SOURCE",
+      "status": "BUILT",
       "files": [
         "skandi-embeds/the-store/skandi-the-store.html",
         "skandi-embeds/the-store/skandi-the-store.css",
         "skandi-embeds/the-store/skandi-the-store.js"
       ],
-      "missing": [
-        "skandi-embeds/the-store/skandi-the-store.html",
-        "skandi-embeds/the-store/skandi-the-store.css",
-        "skandi-embeds/the-store/skandi-the-store.js"
-      ],
+      "missing": [],
       "issues": [],
       "backend": [
         "src/backend/SKANDI_CORE/customerSupport.web.js",
@@ -1119,11 +1093,12 @@
         "STOREFRONT_REFRESH",
         "WIX_GIFT_CARDS"
       ],
-      "output": null,
+      "output": "dist/the-store/index.html",
       "dynamic": false,
-      "sourceStatus": "PENDING SOURCE",
+      "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
-      "retainedArtifact": false
+      "sha256": "e3330e4fc05e9ec068364ad3e1886b6d7f49dfeb5e2a1ec3a77b1ca9c0ee677a",
+      "bytes": 144409
     },
     {
       "key": "giftCard",
@@ -1181,17 +1156,13 @@
       ],
       "binding": "explicit",
       "requiresStaff": false,
-      "status": "PENDING SOURCE",
+      "status": "BUILT",
       "files": [
         "skandi-embeds/store-checkout/skandi-store-checkout.html",
         "skandi-embeds/store-checkout/skandi-store-checkout.css",
         "skandi-embeds/store-checkout/skandi-store-checkout.js"
       ],
-      "missing": [
-        "skandi-embeds/store-checkout/skandi-store-checkout.html",
-        "skandi-embeds/store-checkout/skandi-store-checkout.css",
-        "skandi-embeds/store-checkout/skandi-store-checkout.js"
-      ],
+      "missing": [],
       "issues": [],
       "backend": [
         "src/backend/SKANDI_CORE/storeCheckout.web.js"
@@ -1221,11 +1192,12 @@
         "SKANDI_STORE_PENDING_PAYMENT",
         "SKANDI_WIX_PARENT"
       ],
-      "output": null,
+      "output": "dist/store-checkout/index.html",
       "dynamic": false,
-      "sourceStatus": "PENDING SOURCE",
+      "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
-      "retainedArtifact": false
+      "sha256": "20e1e3848c4a6e0695a9d1a5c72be38086d0dece03a99c07e407443524f61f8b",
+      "bytes": 42599
     },
     {
       "key": "storeConfirmation",
@@ -1245,17 +1217,13 @@
       ],
       "binding": "explicit",
       "requiresStaff": false,
-      "status": "PENDING SOURCE",
+      "status": "BUILT",
       "files": [
         "skandi-embeds/store-confirmation/skandi-store-confirmation.html",
         "skandi-embeds/store-confirmation/skandi-store-confirmation.css",
         "skandi-embeds/store-confirmation/skandi-store-confirmation.js"
       ],
-      "missing": [
-        "skandi-embeds/store-confirmation/skandi-store-confirmation.html",
-        "skandi-embeds/store-confirmation/skandi-store-confirmation.css",
-        "skandi-embeds/store-confirmation/skandi-store-confirmation.js"
-      ],
+      "missing": [],
       "issues": [],
       "backend": [
         "src/backend/SKANDI_CORE/storeCheckout.web.js",
@@ -1274,11 +1242,12 @@
         "STORE_CONFIRMATION_PARENT_READY",
         "WIX_GIFT_CARDS"
       ],
-      "output": null,
+      "output": "dist/store-confirmation/index.html",
       "dynamic": false,
-      "sourceStatus": "PENDING SOURCE",
+      "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
-      "retainedArtifact": false
+      "sha256": "2e825915054e0618f2e4f08d3fd51309c16c4766c44719050519b79243c2f8b6",
+      "bytes": 28266
     },
     {
       "key": "ourNetwork",
@@ -1336,17 +1305,13 @@
       ],
       "binding": "explicit",
       "requiresStaff": false,
-      "status": "PENDING SOURCE",
+      "status": "BUILT",
       "files": [
         "skandi-embeds/legal/skandi-legal.html",
         "skandi-embeds/legal/skandi-legal.css",
         "skandi-embeds/legal/skandi-legal.js"
       ],
-      "missing": [
-        "skandi-embeds/legal/skandi-legal.html",
-        "skandi-embeds/legal/skandi-legal.css",
-        "skandi-embeds/legal/skandi-legal.js"
-      ],
+      "missing": [],
       "issues": [],
       "backend": [
         "src/backend/SKANDI_CORE/legalPolicy.web.js"
@@ -1363,11 +1328,12 @@
         "SKANDI_LEGAL_HUB",
         "SKANDI_WIX_PARENT"
       ],
-      "output": null,
+      "output": "dist/legal/index.html",
       "dynamic": false,
-      "sourceStatus": "PENDING SOURCE",
+      "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
-      "retainedArtifact": false
+      "sha256": "00365b644f56395237fdbfe0710a43a22850b6ed12234abbe2eaa0e8c9e14dcc",
+      "bytes": 156492
     },
     {
       "key": "policies",
@@ -1387,17 +1353,13 @@
       ],
       "binding": "explicit",
       "requiresStaff": false,
-      "status": "PENDING SOURCE",
+      "status": "BUILT",
       "files": [
         "skandi-embeds/policies/skandi-policies.html",
         "skandi-embeds/policies/skandi-policies.css",
         "skandi-embeds/policies/skandi-policies.js"
       ],
-      "missing": [
-        "skandi-embeds/policies/skandi-policies.html",
-        "skandi-embeds/policies/skandi-policies.css",
-        "skandi-embeds/policies/skandi-policies.js"
-      ],
+      "missing": [],
       "issues": [],
       "backend": [
         "src/backend/SKANDI_CORE/legalPolicy.web.js"
@@ -1421,11 +1383,12 @@
         "SKANDI_LEGAL_DOCUMENT",
         "SKANDI_WIX_PARENT"
       ],
-      "output": null,
+      "output": "dist/policies/index.html",
       "dynamic": false,
-      "sourceStatus": "PENDING SOURCE",
+      "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
-      "retainedArtifact": false
+      "sha256": "c82305e80fd0429a03cb82b03dc960b98ed28b3ff7b50e40a6bd042952833c8e",
+      "bytes": 185120
     },
     {
       "key": "cookiePreferences",
@@ -1436,34 +1399,132 @@
       "chrome": "public",
       "sourceDirectory": "skandi-embeds/cookie-preferences",
       "stem": "skandi-cookie-preferences",
-      "controller": null,
-      "embedIds": [],
-      "sources": [],
+      "controller": "src/pages/masterPage.js",
+      "embedIds": [
+        "#cookiePreferencesEmbed"
+      ],
+      "sources": [
+        "SKANDI_COOKIE_PREFERENCES"
+      ],
       "binding": "explicit",
       "requiresStaff": false,
-      "status": "PENDING SOURCE",
+      "status": "BUILT",
       "files": [
         "skandi-embeds/cookie-preferences/skandi-cookie-preferences.html",
         "skandi-embeds/cookie-preferences/skandi-cookie-preferences.css",
         "skandi-embeds/cookie-preferences/skandi-cookie-preferences.js"
       ],
-      "missing": [
-        "skandi-embeds/cookie-preferences/skandi-cookie-preferences.html",
-        "skandi-embeds/cookie-preferences/skandi-cookie-preferences.css",
-        "skandi-embeds/cookie-preferences/skandi-cookie-preferences.js"
+      "missing": [],
+      "issues": [],
+      "backend": [
+        "src/backend/SKANDI_CORE/customerSession.web.js",
+        "src/backend/SKANDI_CORE/staffAuth.web.js",
+        "src/backend/SKANDI_CORE/publicContent.web.js",
+        "src/backend/SKANDI_CORE/presentation.web.js"
       ],
-      "issues": [
-        "No verified canonical controller mapping."
+      "messages": [
+        "ALREADY_ACTIVE",
+        "ALTEA",
+        "ALTEA_FOOTER_READY",
+        "ALTEA_FOOTER_STATE",
+        "ALTEA_HEADER_CONTEXT",
+        "ALTEA_HEADER_READY",
+        "ALTEA_HEADER_STATE",
+        "ALTEA_OFFICE_CHANGE",
+        "ALTEA_SYSTEM_CONTEXT",
+        "ALTEA_TOGGLE_CRYPTIC",
+        "ALTEA_WORK_AREA_CHANGE",
+        "CLOSE_CUSTOMER_HEADER_PANELS",
+        "CUSTOMER_FOOTER_STATE",
+        "CUSTOMER_HEADER_STATE",
+        "CUSTOMER_SETTINGS_REQUEST",
+        "CUSTOMER_SETTINGS_SAVED",
+        "CUSTOMER_SETTINGS_STATE",
+        "EMAIL_REQUIRED",
+        "FOOTER_NAVIGATE",
+        "FOOTER_NEWSLETTER_RESULT",
+        "FOOTER_NEWSLETTER_SIGNUP",
+        "FOOTER_READY",
+        "FOOTER_STAFF_LOGIN",
+        "HEADER_FORGOT_PASSWORD",
+        "HEADER_LOGIN",
+        "HEADER_LOGIN_SUBMIT",
+        "HEADER_LOGOUT",
+        "HEADER_NAVIGATE",
+        "HEADER_READY",
+        "HEADER_SEARCH",
+        "HOME_APP_DRAWER_FORCE_CLOSE",
+        "HOME_APP_DRAWER_RESIZE",
+        "HOME_APP_DRAWER_RESIZE_ACK",
+        "HOME_APP_DRAWER_RESIZE_ERROR",
+        "HOME_APP_FOCUS_SEARCH",
+        "HOME_APP_READY",
+        "HOME_APP_READY_ACK",
+        "HOME_ERROR",
+        "HOME_FOCUS_SEARCH",
+        "INTERNAL_HEADER_READY",
+        "INTERNAL_MASTER_LOGOUT",
+        "INTERNAL_MASTER_NAVIGATE",
+        "MASTER_ASSETS_REQUEST",
+        "MASTER_CONFIG_REQUEST",
+        "MASTER_NAVIGATE",
+        "MASTER_NAVIGATION_REQUEST",
+        "MASTER_SCROLL_TOP",
+        "READY",
+        "RIAINTRA",
+        "RIAINTRA_HEADER_READY",
+        "RIAINTRA_HEADER_STATE",
+        "RIAINTRA_LOGOUT",
+        "RIAINTRA_NAVIGATE",
+        "SIGNUP_FAILED",
+        "SKANDI",
+        "SKANDI_ASSISTANCE_PAGE",
+        "SKANDI_BAGGAGE_PAGE",
+        "SKANDI_COMPILED_READY",
+        "SKANDI_CONSENT_ACCEPT_ALL",
+        "SKANDI_CONSENT_NAVIGATE",
+        "SKANDI_CONSENT_REJECT_OPTIONAL",
+        "SKANDI_CONSENT_REQUEST",
+        "SKANDI_CONSENT_SAVE",
+        "SKANDI_CONSENT_SAVED",
+        "SKANDI_CONSENT_STATE",
+        "SKANDI_CONTENT_RESIZE",
+        "SKANDI_COOKIE_BANNER",
+        "SKANDI_COOKIE_PREFERENCES",
+        "SKANDI_EMBED_RESIZE",
+        "SKANDI_HOME_MOBILE_APP",
+        "SKANDI_INSURANCE_PAGE",
+        "SKANDI_MASTER_ASSETS",
+        "SKANDI_MASTER_CONFIG",
+        "SKANDI_MASTER_CONFIG_REQUEST",
+        "SKANDI_MASTER_NAVIGATION",
+        "SKANDI_PAGE_OPENED",
+        "SKANDI_PASSPORT_VISA_PAGE",
+        "SKANDI_PRESENTATION_DATA",
+        "SKANDI_PRESENTATION_READY",
+        "SKANDI_SCROLL_TOP",
+        "SKANDI_SETTINGS_REQUEST",
+        "SKANDI_SHELL",
+        "SKANDI_SIGNATURE_COLLECTION",
+        "SKANDI_SUPPORT_CHAT",
+        "SKANDI_UNIVERSAL_RECEIVER",
+        "SKANDI_VIEW_OPENED",
+        "SKANDI_WIX_PARENT",
+        "SPECIAL_ASSISTANCE_DATA",
+        "SPECIAL_ASSISTANCE_ERROR",
+        "SPECIAL_ASSISTANCE_NAVIGATE",
+        "SPECIAL_ASSISTANCE_READY",
+        "SPECIAL_ASSISTANCE_REFRESH",
+        "SUBSCRIBED",
+        "SUPPORT_CHAT_ERROR",
+        "UPDATE_SETTINGS"
       ],
-      "backend": [],
-      "messages": [],
-      "output": null,
+      "output": "dist/cookie-preferences/index.html",
       "dynamic": false,
-      "sourceStatus": "PENDING SOURCE",
-      "blockers": [
-        "No verified canonical controller mapping."
-      ],
-      "retainedArtifact": false
+      "sourceStatus": "COMPLETE SOURCE",
+      "blockers": [],
+      "sha256": "47b8beda36bd903259aca91e9da794ac92f88a29601d77885d5bc63f01beca34",
+      "bytes": 143219
     },
     {
       "key": "riaintra",
@@ -1509,8 +1570,8 @@
       "dynamic": false,
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
-      "sha256": "e8a5785d532cda8c57a33ef8a3df28884b4f3a291eea0efc1f81dedfeed5707e",
-      "bytes": 41214
+      "sha256": "675ff1354bc7d545a9f7e4972c0dc7ee1548a878d9e9045bcf1e719356781d2a",
+      "bytes": 41282
     },
     {
       "key": "staffLogin",
@@ -1535,8 +1596,8 @@
       "title": "Success Factors",
       "family": "riaintra",
       "chrome": "riaintra",
-      "sourceDirectory": "skandi-embeds/success-factors",
-      "stem": "skandi-success-factors",
+      "sourceDirectory": "riaintra-embeds/success-factors",
+      "stem": "success-factors",
       "controller": "src/pages/Success Factors.sh6tw.js",
       "embedIds": [
         "#staffHrEmbed"
@@ -1544,17 +1605,13 @@
       "sources": [],
       "binding": "explicit",
       "requiresStaff": true,
-      "status": "PENDING SOURCE",
+      "status": "BUILT",
       "files": [
-        "skandi-embeds/success-factors/skandi-success-factors.html",
-        "skandi-embeds/success-factors/skandi-success-factors.css",
-        "skandi-embeds/success-factors/skandi-success-factors.js"
+        "riaintra-embeds/success-factors/success-factors.html",
+        "riaintra-embeds/success-factors/success-factors.css",
+        "riaintra-embeds/success-factors/success-factors.js"
       ],
-      "missing": [
-        "skandi-embeds/success-factors/skandi-success-factors.html",
-        "skandi-embeds/success-factors/skandi-success-factors.css",
-        "skandi-embeds/success-factors/skandi-success-factors.js"
-      ],
+      "missing": [],
       "issues": [],
       "backend": [
         "src/backend/SKANDI_CORE/orgStructure.web.js"
@@ -1651,14 +1708,12 @@
         "SUCCESSFACTORS_HOST_READY",
         "WIX_MEMBER_PROVISION_PENDING"
       ],
-      "output": null,
+      "output": "dist/success-factors/index.html",
       "dynamic": false,
-      "sourceStatus": "PENDING SOURCE",
-      "blockers": [
-        "riaintra-header: PENDING SOURCE (skandi-embeds/riaintra-global/riaintra-header.html, skandi-embeds/riaintra-global/riaintra-header.css, skandi-embeds/riaintra-global/riaintra-header.js)",
-        "riaintra-footer: PENDING SOURCE (skandi-embeds/riaintra-global/riaintra-footer.html, skandi-embeds/riaintra-global/riaintra-footer.css, skandi-embeds/riaintra-global/riaintra-footer.js)"
-      ],
-      "retainedArtifact": false
+      "sourceStatus": "COMPLETE SOURCE",
+      "blockers": [],
+      "sha256": "75e5da018407f30f9df89348ab10305eb746988def45d14d7469855ba970c3fa",
+      "bytes": 406716
     },
     {
       "key": "legalInternal",
@@ -1676,17 +1731,13 @@
       "sources": [],
       "binding": "explicit",
       "requiresStaff": true,
-      "status": "PENDING SOURCE",
+      "status": "BUILT",
       "files": [
         "skandi-embeds/legal-internal/skandi-legal-internal.html",
         "skandi-embeds/legal-internal/skandi-legal-internal.css",
         "skandi-embeds/legal-internal/skandi-legal-internal.js"
       ],
-      "missing": [
-        "skandi-embeds/legal-internal/skandi-legal-internal.html",
-        "skandi-embeds/legal-internal/skandi-legal-internal.css",
-        "skandi-embeds/legal-internal/skandi-legal-internal.js"
-      ],
+      "missing": [],
       "issues": [],
       "backend": [
         "src/backend/SKANDI_CORE/policyControl.web.js"
@@ -1701,14 +1752,12 @@
         "SKANDI_INTERNAL_LEGAL_HUB",
         "SKANDI_WIX_PARENT"
       ],
-      "output": null,
+      "output": "dist/legal-internal/index.html",
       "dynamic": false,
-      "sourceStatus": "PENDING SOURCE",
-      "blockers": [
-        "riaintra-header: PENDING SOURCE (skandi-embeds/riaintra-global/riaintra-header.html, skandi-embeds/riaintra-global/riaintra-header.css, skandi-embeds/riaintra-global/riaintra-header.js)",
-        "riaintra-footer: PENDING SOURCE (skandi-embeds/riaintra-global/riaintra-footer.html, skandi-embeds/riaintra-global/riaintra-footer.css, skandi-embeds/riaintra-global/riaintra-footer.js)"
-      ],
-      "retainedArtifact": false
+      "sourceStatus": "COMPLETE SOURCE",
+      "blockers": [],
+      "sha256": "e29313190afe4253645688804cead3479d57fea223334f53f04e99fabe3022b6",
+      "bytes": 41443
     },
     {
       "key": "alteaLaunchpad",
@@ -1726,17 +1775,13 @@
       ],
       "binding": "handshake",
       "requiresStaff": true,
-      "status": "PENDING SOURCE",
+      "status": "BUILT",
       "files": [
         "skandi-embeds/altea-launchpad/skandi-altea-launchpad.html",
         "skandi-embeds/altea-launchpad/skandi-altea-launchpad.css",
         "skandi-embeds/altea-launchpad/skandi-altea-launchpad.js"
       ],
-      "missing": [
-        "skandi-embeds/altea-launchpad/skandi-altea-launchpad.html",
-        "skandi-embeds/altea-launchpad/skandi-altea-launchpad.css",
-        "skandi-embeds/altea-launchpad/skandi-altea-launchpad.js"
-      ],
+      "missing": [],
       "issues": [],
       "backend": [
         "src/backend/SKANDI_CORE/staffAuth.web.js"
@@ -1767,14 +1812,12 @@
         "SUPABASE_",
         "WIX_MEMBER_LINK_MISMATCH"
       ],
-      "output": null,
+      "output": "dist/altea-launchpad/index.html",
       "dynamic": false,
-      "sourceStatus": "PENDING SOURCE",
-      "blockers": [
-        "altea-header: PENDING SOURCE (skandi-embeds/altea-global/altea-header.html, skandi-embeds/altea-global/altea-header.css, skandi-embeds/altea-global/altea-header.js)",
-        "altea-footer: PENDING SOURCE (skandi-embeds/altea-global/altea-footer.html, skandi-embeds/altea-global/altea-footer.css, skandi-embeds/altea-global/altea-footer.js)"
-      ],
-      "retainedArtifact": false
+      "sourceStatus": "COMPLETE SOURCE",
+      "blockers": [],
+      "sha256": "db51b333573b12c88cd1647f769c595cb4089be1da69b994058e7131c18cec92",
+      "bytes": 67796
     },
     {
       "key": "alteaReservations",
@@ -1794,17 +1837,13 @@
       ],
       "binding": "explicit",
       "requiresStaff": true,
-      "status": "PENDING SOURCE",
+      "status": "FAILED",
       "files": [
         "skandi-embeds/altea-reservations/skandi-altea-reservations.html",
         "skandi-embeds/altea-reservations/skandi-altea-reservations.css",
         "skandi-embeds/altea-reservations/skandi-altea-reservations.js"
       ],
-      "missing": [
-        "skandi-embeds/altea-reservations/skandi-altea-reservations.html",
-        "skandi-embeds/altea-reservations/skandi-altea-reservations.css",
-        "skandi-embeds/altea-reservations/skandi-altea-reservations.js"
-      ],
+      "missing": [],
       "issues": [],
       "backend": [
         "src/backend/SKANDI_CORE/reservations.web.js"
@@ -1824,11 +1863,9 @@
       ],
       "output": null,
       "dynamic": false,
-      "sourceStatus": "PENDING SOURCE",
-      "blockers": [
-        "altea-header: PENDING SOURCE (skandi-embeds/altea-global/altea-header.html, skandi-embeds/altea-global/altea-header.css, skandi-embeds/altea-global/altea-header.js)",
-        "altea-footer: PENDING SOURCE (skandi-embeds/altea-global/altea-footer.html, skandi-embeds/altea-global/altea-footer.css, skandi-embeds/altea-global/altea-footer.js)"
-      ],
+      "sourceStatus": "COMPLETE SOURCE",
+      "blockers": [],
+      "error": "[alteaReservations / altea-reservations] skandi-embeds/altea-reservations/skandi-altea-reservations.html, skandi-embeds/altea-reservations/skandi-altea-reservations.css, skandi-embeds/altea-reservations/skandi-altea-reservations.js: skandi-embeds/altea-reservations/skandi-altea-reservations.html: executable scripts interleaved with markup; move scripts after page markup before splitting",
       "retainedArtifact": false
     },
     {
@@ -1851,17 +1888,13 @@
       ],
       "binding": "explicit",
       "requiresStaff": true,
-      "status": "PENDING SOURCE",
+      "status": "BUILT",
       "files": [
         "skandi-embeds/ops-control/skandi-ops-control.html",
         "skandi-embeds/ops-control/skandi-ops-control.css",
         "skandi-embeds/ops-control/skandi-ops-control.js"
       ],
-      "missing": [
-        "skandi-embeds/ops-control/skandi-ops-control.html",
-        "skandi-embeds/ops-control/skandi-ops-control.css",
-        "skandi-embeds/ops-control/skandi-ops-control.js"
-      ],
+      "missing": [],
       "issues": [],
       "backend": [
         "src/backend/SKANDI_CORE/staffAuth.web.js",
@@ -1880,14 +1913,12 @@
         "SKANDI_OPS_CONTROL",
         "SKANDI_WIX_PARENT"
       ],
-      "output": null,
+      "output": "dist/ops-control/index.html",
       "dynamic": false,
-      "sourceStatus": "PENDING SOURCE",
-      "blockers": [
-        "altea-header: PENDING SOURCE (skandi-embeds/altea-global/altea-header.html, skandi-embeds/altea-global/altea-header.css, skandi-embeds/altea-global/altea-header.js)",
-        "altea-footer: PENDING SOURCE (skandi-embeds/altea-global/altea-footer.html, skandi-embeds/altea-global/altea-footer.css, skandi-embeds/altea-global/altea-footer.js)"
-      ],
-      "retainedArtifact": false
+      "sourceStatus": "COMPLETE SOURCE",
+      "blockers": [],
+      "sha256": "3107e7b3bf39f8e59ad67fbca8d34414dc2735edb2171fa4d5febdb1a360bbb6",
+      "bytes": 146762
     },
     {
       "key": "inventoryControl",
@@ -1907,17 +1938,13 @@
       ],
       "binding": "explicit",
       "requiresStaff": true,
-      "status": "PENDING SOURCE",
+      "status": "FAILED",
       "files": [
         "skandi-embeds/inventory-control/skandi-inventory-control.html",
         "skandi-embeds/inventory-control/skandi-inventory-control.css",
         "skandi-embeds/inventory-control/skandi-inventory-control.js"
       ],
-      "missing": [
-        "skandi-embeds/inventory-control/skandi-inventory-control.html",
-        "skandi-embeds/inventory-control/skandi-inventory-control.css",
-        "skandi-embeds/inventory-control/skandi-inventory-control.js"
-      ],
+      "missing": [],
       "issues": [],
       "backend": [
         "src/backend/SKANDI_CORE/inventory.web.js"
@@ -1938,11 +1965,9 @@
       ],
       "output": null,
       "dynamic": false,
-      "sourceStatus": "PENDING SOURCE",
-      "blockers": [
-        "altea-header: PENDING SOURCE (skandi-embeds/altea-global/altea-header.html, skandi-embeds/altea-global/altea-header.css, skandi-embeds/altea-global/altea-header.js)",
-        "altea-footer: PENDING SOURCE (skandi-embeds/altea-global/altea-footer.html, skandi-embeds/altea-global/altea-footer.css, skandi-embeds/altea-global/altea-footer.js)"
-      ],
+      "sourceStatus": "COMPLETE SOURCE",
+      "blockers": [],
+      "error": "[inventoryControl / inventory-control] skandi-embeds/inventory-control/skandi-inventory-control.html, skandi-embeds/inventory-control/skandi-inventory-control.css, skandi-embeds/inventory-control/skandi-inventory-control.js: skandi-embeds/inventory-control/skandi-inventory-control.html: module scripts require bundling into the page .js first",
       "retainedArtifact": false
     },
     {
@@ -1963,17 +1988,13 @@
       ],
       "binding": "explicit",
       "requiresStaff": true,
-      "status": "PENDING SOURCE",
+      "status": "BUILT",
       "files": [
         "skandi-embeds/uniform-center/skandi-uniform-center.html",
         "skandi-embeds/uniform-center/skandi-uniform-center.css",
         "skandi-embeds/uniform-center/skandi-uniform-center.js"
       ],
-      "missing": [
-        "skandi-embeds/uniform-center/skandi-uniform-center.html",
-        "skandi-embeds/uniform-center/skandi-uniform-center.css",
-        "skandi-embeds/uniform-center/skandi-uniform-center.js"
-      ],
+      "missing": [],
       "issues": [],
       "backend": [
         "src/backend/SKANDI_CORE/staffAuth.web.js",
@@ -1995,14 +2016,12 @@
         "UNIFORM_EMPLOYEE_READY",
         "UNIFORM_EMPLOYEE_SUBMIT_ORDER"
       ],
-      "output": null,
+      "output": "dist/uniform-center/index.html",
       "dynamic": false,
-      "sourceStatus": "PENDING SOURCE",
-      "blockers": [
-        "riaintra-header: PENDING SOURCE (skandi-embeds/riaintra-global/riaintra-header.html, skandi-embeds/riaintra-global/riaintra-header.css, skandi-embeds/riaintra-global/riaintra-header.js)",
-        "riaintra-footer: PENDING SOURCE (skandi-embeds/riaintra-global/riaintra-footer.html, skandi-embeds/riaintra-global/riaintra-footer.css, skandi-embeds/riaintra-global/riaintra-footer.js)"
-      ],
-      "retainedArtifact": false
+      "sourceStatus": "COMPLETE SOURCE",
+      "blockers": [],
+      "sha256": "4f48b38940d246b1ade277bb5008655bdba5ed2cbcc01e68543c916203702f12",
+      "bytes": 134400
     },
     {
       "key": "uniformControl",
@@ -2055,10 +2074,7 @@
       "output": null,
       "dynamic": false,
       "sourceStatus": "PENDING SOURCE",
-      "blockers": [
-        "riaintra-header: PENDING SOURCE (skandi-embeds/riaintra-global/riaintra-header.html, skandi-embeds/riaintra-global/riaintra-header.css, skandi-embeds/riaintra-global/riaintra-header.js)",
-        "riaintra-footer: PENDING SOURCE (skandi-embeds/riaintra-global/riaintra-footer.html, skandi-embeds/riaintra-global/riaintra-footer.css, skandi-embeds/riaintra-global/riaintra-footer.js)"
-      ],
+      "blockers": [],
       "retainedArtifact": false
     },
     {
@@ -2095,9 +2111,7 @@
       "dynamic": false,
       "sourceStatus": "PENDING SOURCE",
       "blockers": [
-        "No verified canonical controller mapping.",
-        "altea-header: PENDING SOURCE (skandi-embeds/altea-global/altea-header.html, skandi-embeds/altea-global/altea-header.css, skandi-embeds/altea-global/altea-header.js)",
-        "altea-footer: PENDING SOURCE (skandi-embeds/altea-global/altea-footer.html, skandi-embeds/altea-global/altea-footer.css, skandi-embeds/altea-global/altea-footer.js)"
+        "No verified canonical controller mapping."
       ],
       "retainedArtifact": false
     },
@@ -2119,17 +2133,13 @@
       ],
       "binding": "explicit",
       "requiresStaff": true,
-      "status": "PENDING SOURCE",
+      "status": "BUILT",
       "files": [
         "skandi-embeds/mail/skandi-mail.html",
         "skandi-embeds/mail/skandi-mail.css",
         "skandi-embeds/mail/skandi-mail.js"
       ],
-      "missing": [
-        "skandi-embeds/mail/skandi-mail.html",
-        "skandi-embeds/mail/skandi-mail.css",
-        "skandi-embeds/mail/skandi-mail.js"
-      ],
+      "missing": [],
       "issues": [],
       "backend": [
         "src/backend/SKANDI_CORE/staffAuth.web.js",
@@ -2166,14 +2176,12 @@
         "SKANDI_MAIL_EMBED",
         "SKANDI_WIX_PARENT"
       ],
-      "output": null,
+      "output": "dist/mail/index.html",
       "dynamic": false,
-      "sourceStatus": "PENDING SOURCE",
-      "blockers": [
-        "riaintra-header: PENDING SOURCE (skandi-embeds/riaintra-global/riaintra-header.html, skandi-embeds/riaintra-global/riaintra-header.css, skandi-embeds/riaintra-global/riaintra-header.js)",
-        "riaintra-footer: PENDING SOURCE (skandi-embeds/riaintra-global/riaintra-footer.html, skandi-embeds/riaintra-global/riaintra-footer.css, skandi-embeds/riaintra-global/riaintra-footer.js)"
-      ],
-      "retainedArtifact": false
+      "sourceStatus": "COMPLETE SOURCE",
+      "blockers": [],
+      "sha256": "fba9387d190b052a5468a125befbaea871db66dfe0d3be458659632fd13b81f6",
+      "bytes": 70111
     },
     {
       "key": "docunet",
@@ -2191,17 +2199,13 @@
       "sources": [],
       "binding": "explicit",
       "requiresStaff": true,
-      "status": "PENDING SOURCE",
+      "status": "BUILT",
       "files": [
         "skandi-embeds/docunet/skandi-docunet.html",
         "skandi-embeds/docunet/skandi-docunet.css",
         "skandi-embeds/docunet/skandi-docunet.js"
       ],
-      "missing": [
-        "skandi-embeds/docunet/skandi-docunet.html",
-        "skandi-embeds/docunet/skandi-docunet.css",
-        "skandi-embeds/docunet/skandi-docunet.js"
-      ],
+      "missing": [],
       "issues": [],
       "backend": [
         "src/backend/SKANDI_CORE/docuNet.web.js"
@@ -2217,14 +2221,12 @@
         "SKANDI_DOCUNET_VIEWER",
         "SKANDI_WIX_PARENT"
       ],
-      "output": null,
+      "output": "dist/docunet/index.html",
       "dynamic": false,
-      "sourceStatus": "PENDING SOURCE",
-      "blockers": [
-        "riaintra-header: PENDING SOURCE (skandi-embeds/riaintra-global/riaintra-header.html, skandi-embeds/riaintra-global/riaintra-header.css, skandi-embeds/riaintra-global/riaintra-header.js)",
-        "riaintra-footer: PENDING SOURCE (skandi-embeds/riaintra-global/riaintra-footer.html, skandi-embeds/riaintra-global/riaintra-footer.css, skandi-embeds/riaintra-global/riaintra-footer.js)"
-      ],
-      "retainedArtifact": false
+      "sourceStatus": "COMPLETE SOURCE",
+      "blockers": [],
+      "sha256": "526ba7886dc1dd8ae6b54aa3fbee3203718747c8ba72147d62237d0cb499b449",
+      "bytes": 137156
     },
     {
       "key": "docunetAdmin",
@@ -2244,17 +2246,13 @@
       ],
       "binding": "explicit",
       "requiresStaff": true,
-      "status": "PENDING SOURCE",
+      "status": "FAILED",
       "files": [
         "skandi-embeds/docunet-admin/skandi-docunet-admin.html",
         "skandi-embeds/docunet-admin/skandi-docunet-admin.css",
         "skandi-embeds/docunet-admin/skandi-docunet-admin.js"
       ],
-      "missing": [
-        "skandi-embeds/docunet-admin/skandi-docunet-admin.html",
-        "skandi-embeds/docunet-admin/skandi-docunet-admin.css",
-        "skandi-embeds/docunet-admin/skandi-docunet-admin.js"
-      ],
+      "missing": [],
       "issues": [],
       "backend": [
         "src/backend/SKANDI_CORE/docuNet.web.js"
@@ -2297,11 +2295,9 @@
       ],
       "output": null,
       "dynamic": false,
-      "sourceStatus": "PENDING SOURCE",
-      "blockers": [
-        "riaintra-header: PENDING SOURCE (skandi-embeds/riaintra-global/riaintra-header.html, skandi-embeds/riaintra-global/riaintra-header.css, skandi-embeds/riaintra-global/riaintra-header.js)",
-        "riaintra-footer: PENDING SOURCE (skandi-embeds/riaintra-global/riaintra-footer.html, skandi-embeds/riaintra-global/riaintra-footer.css, skandi-embeds/riaintra-global/riaintra-footer.js)"
-      ],
+      "sourceStatus": "COMPLETE SOURCE",
+      "blockers": [],
+      "error": "[docunetAdmin / docunet-admin] skandi-embeds/docunet-admin/skandi-docunet-admin.html, skandi-embeds/docunet-admin/skandi-docunet-admin.css, skandi-embeds/docunet-admin/skandi-docunet-admin.js: skandi-embeds/docunet-admin/skandi-docunet-admin.html: nested iframe is not supported; retain the existing Wix integration",
       "retainedArtifact": false
     },
     {
@@ -2338,9 +2334,7 @@
       "dynamic": false,
       "sourceStatus": "PENDING SOURCE",
       "blockers": [
-        "No verified canonical controller mapping.",
-        "riaintra-header: PENDING SOURCE (skandi-embeds/riaintra-global/riaintra-header.html, skandi-embeds/riaintra-global/riaintra-header.css, skandi-embeds/riaintra-global/riaintra-header.js)",
-        "riaintra-footer: PENDING SOURCE (skandi-embeds/riaintra-global/riaintra-footer.html, skandi-embeds/riaintra-global/riaintra-footer.css, skandi-embeds/riaintra-global/riaintra-footer.js)"
+        "No verified canonical controller mapping."
       ],
       "retainedArtifact": false
     },
@@ -2360,17 +2354,13 @@
       "sources": [],
       "binding": "explicit",
       "requiresStaff": true,
-      "status": "PENDING SOURCE",
+      "status": "BUILT",
       "files": [
         "skandi-embeds/policy-control/skandi-policy-control.html",
         "skandi-embeds/policy-control/skandi-policy-control.css",
         "skandi-embeds/policy-control/skandi-policy-control.js"
       ],
-      "missing": [
-        "skandi-embeds/policy-control/skandi-policy-control.html",
-        "skandi-embeds/policy-control/skandi-policy-control.css",
-        "skandi-embeds/policy-control/skandi-policy-control.js"
-      ],
+      "missing": [],
       "issues": [],
       "backend": [
         "src/backend/SKANDI_CORE/policyControl.web.js"
@@ -2395,14 +2385,12 @@
         "SKANDI_POLICY_CONTROL",
         "SKANDI_WIX_PARENT"
       ],
-      "output": null,
+      "output": "dist/policy-control/index.html",
       "dynamic": false,
-      "sourceStatus": "PENDING SOURCE",
-      "blockers": [
-        "riaintra-header: PENDING SOURCE (skandi-embeds/riaintra-global/riaintra-header.html, skandi-embeds/riaintra-global/riaintra-header.css, skandi-embeds/riaintra-global/riaintra-header.js)",
-        "riaintra-footer: PENDING SOURCE (skandi-embeds/riaintra-global/riaintra-footer.html, skandi-embeds/riaintra-global/riaintra-footer.css, skandi-embeds/riaintra-global/riaintra-footer.js)"
-      ],
-      "retainedArtifact": false
+      "sourceStatus": "COMPLETE SOURCE",
+      "blockers": [],
+      "sha256": "5246aee248a4f9a4679746a7701f494296bb42eab6c6ff86d223d006250596d0",
+      "bytes": 117677
     },
     {
       "key": "mediaControl",
@@ -2420,17 +2408,13 @@
       "sources": [],
       "binding": "explicit",
       "requiresStaff": true,
-      "status": "PENDING SOURCE",
+      "status": "FAILED",
       "files": [
         "skandi-embeds/media-control/skandi-media-control.html",
         "skandi-embeds/media-control/skandi-media-control.css",
         "skandi-embeds/media-control/skandi-media-control.js"
       ],
-      "missing": [
-        "skandi-embeds/media-control/skandi-media-control.html",
-        "skandi-embeds/media-control/skandi-media-control.css",
-        "skandi-embeds/media-control/skandi-media-control.js"
-      ],
+      "missing": [],
       "issues": [],
       "backend": [
         "src/backend/SKANDI_CORE/staffAuth.web.js",
@@ -2535,11 +2519,9 @@
       ],
       "output": null,
       "dynamic": false,
-      "sourceStatus": "PENDING SOURCE",
-      "blockers": [
-        "riaintra-header: PENDING SOURCE (skandi-embeds/riaintra-global/riaintra-header.html, skandi-embeds/riaintra-global/riaintra-header.css, skandi-embeds/riaintra-global/riaintra-header.js)",
-        "riaintra-footer: PENDING SOURCE (skandi-embeds/riaintra-global/riaintra-footer.html, skandi-embeds/riaintra-global/riaintra-footer.css, skandi-embeds/riaintra-global/riaintra-footer.js)"
-      ],
+      "sourceStatus": "COMPLETE SOURCE",
+      "blockers": [],
+      "error": "[mediaControl / media-control] skandi-embeds/media-control/skandi-media-control.html, skandi-embeds/media-control/skandi-media-control.css, skandi-embeds/media-control/skandi-media-control.js: skandi-embeds/media-control/skandi-media-control.html: executable scripts interleaved with markup; move scripts after page markup before splitting",
       "retainedArtifact": false
     },
     {
@@ -2560,17 +2542,13 @@
       ],
       "binding": "explicit",
       "requiresStaff": true,
-      "status": "PENDING SOURCE",
+      "status": "BUILT",
       "files": [
         "skandi-embeds/store-control/skandi-store-control.html",
         "skandi-embeds/store-control/skandi-store-control.css",
         "skandi-embeds/store-control/skandi-store-control.js"
       ],
-      "missing": [
-        "skandi-embeds/store-control/skandi-store-control.html",
-        "skandi-embeds/store-control/skandi-store-control.css",
-        "skandi-embeds/store-control/skandi-store-control.js"
-      ],
+      "missing": [],
       "issues": [],
       "backend": [
         "src/backend/SKANDI_CORE/staffAuth.web.js",
@@ -2608,14 +2586,12 @@
         "STORE_CONTROL_UPDATE_INVENTORY",
         "STORE_CONTROL_UPDATE_ORDER"
       ],
-      "output": null,
+      "output": "dist/store-control/index.html",
       "dynamic": false,
-      "sourceStatus": "PENDING SOURCE",
-      "blockers": [
-        "riaintra-header: PENDING SOURCE (skandi-embeds/riaintra-global/riaintra-header.html, skandi-embeds/riaintra-global/riaintra-header.css, skandi-embeds/riaintra-global/riaintra-header.js)",
-        "riaintra-footer: PENDING SOURCE (skandi-embeds/riaintra-global/riaintra-footer.html, skandi-embeds/riaintra-global/riaintra-footer.css, skandi-embeds/riaintra-global/riaintra-footer.js)"
-      ],
-      "retainedArtifact": false
+      "sourceStatus": "COMPLETE SOURCE",
+      "blockers": [],
+      "sha256": "53ae44b7bf370ee54e965b94b0825d7526db310aa1b130ac47fd9ec374efacf2",
+      "bytes": 94439
     },
     {
       "key": "payroll",
@@ -2633,17 +2609,13 @@
       "sources": [],
       "binding": "explicit",
       "requiresStaff": true,
-      "status": "PENDING SOURCE",
+      "status": "BUILT",
       "files": [
         "skandi-embeds/payroll/skandi-payroll.html",
         "skandi-embeds/payroll/skandi-payroll.css",
         "skandi-embeds/payroll/skandi-payroll.js"
       ],
-      "missing": [
-        "skandi-embeds/payroll/skandi-payroll.html",
-        "skandi-embeds/payroll/skandi-payroll.css",
-        "skandi-embeds/payroll/skandi-payroll.js"
-      ],
+      "missing": [],
       "issues": [],
       "backend": [
         "src/backend/SKANDI_CORE/payroll.web.js"
@@ -2664,14 +2636,12 @@
         "SKANDI_WIX_PARENT",
         "SKANDI_ZALARIS_PAYROLL"
       ],
-      "output": null,
+      "output": "dist/payroll/index.html",
       "dynamic": false,
-      "sourceStatus": "PENDING SOURCE",
-      "blockers": [
-        "riaintra-header: PENDING SOURCE (skandi-embeds/riaintra-global/riaintra-header.html, skandi-embeds/riaintra-global/riaintra-header.css, skandi-embeds/riaintra-global/riaintra-header.js)",
-        "riaintra-footer: PENDING SOURCE (skandi-embeds/riaintra-global/riaintra-footer.html, skandi-embeds/riaintra-global/riaintra-footer.css, skandi-embeds/riaintra-global/riaintra-footer.js)"
-      ],
-      "retainedArtifact": false
+      "sourceStatus": "COMPLETE SOURCE",
+      "blockers": [],
+      "sha256": "45bc670e334e9681d7a153aea8927f93984339ce01179c8650f0d3605a565c5a",
+      "bytes": 63150
     },
     {
       "key": "country",
@@ -2689,17 +2659,13 @@
       ],
       "binding": "handshake",
       "requiresStaff": false,
-      "status": "PENDING SOURCE",
+      "status": "BLOCKED INTEGRATION",
       "files": [
         "skandi-embeds/country/skandi-country.html",
         "skandi-embeds/country/skandi-country.css",
         "skandi-embeds/country/skandi-country.js"
       ],
-      "missing": [
-        "skandi-embeds/country/skandi-country.html",
-        "skandi-embeds/country/skandi-country.css",
-        "skandi-embeds/country/skandi-country.js"
-      ],
+      "missing": [],
       "issues": [
         "src/public/customerAuthUi.js: imported export openCustomerLogin is absent"
       ],
@@ -2746,7 +2712,7 @@
       ],
       "output": null,
       "dynamic": false,
-      "sourceStatus": "PENDING SOURCE",
+      "sourceStatus": "COMPLETE SOURCE",
       "blockers": [
         "src/public/customerAuthUi.js: imported export openCustomerLogin is absent"
       ],
@@ -2880,17 +2846,13 @@
       ],
       "binding": "explicit",
       "requiresStaff": false,
-      "status": "PENDING SOURCE",
+      "status": "BUILT",
       "files": [
         "skandi-embeds/my-profile/skandi-my-profile.html",
         "skandi-embeds/my-profile/skandi-my-profile.css",
         "skandi-embeds/my-profile/skandi-my-profile.js"
       ],
-      "missing": [
-        "skandi-embeds/my-profile/skandi-my-profile.html",
-        "skandi-embeds/my-profile/skandi-my-profile.css",
-        "skandi-embeds/my-profile/skandi-my-profile.js"
-      ],
+      "missing": [],
       "issues": [],
       "backend": [
         "src/backend/SKANDI_CORE/customerSupport.web.js",
@@ -2952,11 +2914,12 @@
         "SKANDI_MY_PROFILE",
         "SKANDI_WIX_PARENT"
       ],
-      "output": null,
+      "output": "dist/my-profile/index.html",
       "dynamic": false,
-      "sourceStatus": "PENDING SOURCE",
+      "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
-      "retainedArtifact": false
+      "sha256": "dfb89941e6c751bb50c4b45e2b9b57f1ec805a7cbdfe62818d7d54a24f7f814b",
+      "bytes": 268298
     },
     {
       "key": "myTrips",
@@ -2972,7 +2935,7 @@
       "embedIds": [
         "#htmlMyProfile"
       ],
-      "targetStatus": "PENDING SOURCE"
+      "targetStatus": "BUILT"
     },
     {
       "key": "careers",
@@ -3113,9 +3076,7 @@
       "sourceStatus": "PENDING SOURCE",
       "blockers": [
         "src/backend/FINAL/internalChrome.web.js: missing imported module",
-        "src/backend/SKANDI_CORE/myRoster.web.js: missing imported module",
-        "riaintra-header: PENDING SOURCE (skandi-embeds/riaintra-global/riaintra-header.html, skandi-embeds/riaintra-global/riaintra-header.css, skandi-embeds/riaintra-global/riaintra-header.js)",
-        "riaintra-footer: PENDING SOURCE (skandi-embeds/riaintra-global/riaintra-footer.html, skandi-embeds/riaintra-global/riaintra-footer.css, skandi-embeds/riaintra-global/riaintra-footer.js)"
+        "src/backend/SKANDI_CORE/myRoster.web.js: missing imported module"
       ],
       "retainedArtifact": false
     },
@@ -3137,17 +3098,13 @@
       ],
       "binding": "explicit",
       "requiresStaff": true,
-      "status": "PENDING SOURCE",
+      "status": "FAILED",
       "files": [
         "skandi-embeds/group-talk/skandi-group-talk.html",
         "skandi-embeds/group-talk/skandi-group-talk.css",
         "skandi-embeds/group-talk/skandi-group-talk.js"
       ],
-      "missing": [
-        "skandi-embeds/group-talk/skandi-group-talk.html",
-        "skandi-embeds/group-talk/skandi-group-talk.css",
-        "skandi-embeds/group-talk/skandi-group-talk.js"
-      ],
+      "missing": [],
       "issues": [],
       "backend": [
         "src/backend/SKANDI_CORE/staffAuth.web.js",
@@ -3204,8 +3161,9 @@
       ],
       "output": null,
       "dynamic": false,
-      "sourceStatus": "PENDING SOURCE",
+      "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
+      "error": "[groupTalk / group-talk] skandi-embeds/group-talk/skandi-group-talk.html, skandi-embeds/group-talk/skandi-group-talk.css, skandi-embeds/group-talk/skandi-group-talk.js: skandi-embeds/group-talk/skandi-group-talk.html: external stylesheet cannot be scoped: https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.css; put its rules in the CSS source",
       "retainedArtifact": false
     },
     {
@@ -3226,17 +3184,13 @@
       ],
       "binding": "explicit",
       "requiresStaff": false,
-      "status": "PENDING SOURCE",
+      "status": "BUILT",
       "files": [
         "skandi-embeds/passport-visa/skandi-passport-visa.html",
         "skandi-embeds/passport-visa/skandi-passport-visa.css",
         "skandi-embeds/passport-visa/skandi-passport-visa.js"
       ],
-      "missing": [
-        "skandi-embeds/passport-visa/skandi-passport-visa.html",
-        "skandi-embeds/passport-visa/skandi-passport-visa.css",
-        "skandi-embeds/passport-visa/skandi-passport-visa.js"
-      ],
+      "missing": [],
       "issues": [],
       "backend": [
         "src/backend/SKANDI_CORE/publicContent.web.js"
@@ -3257,11 +3211,12 @@
         "SKANDI_PASSPORT_VISA_PAGE",
         "SKANDI_WIX_PARENT"
       ],
-      "output": null,
+      "output": "dist/passport-visa/index.html",
       "dynamic": false,
-      "sourceStatus": "PENDING SOURCE",
+      "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
-      "retainedArtifact": false
+      "sha256": "2f5b03a87bde729030b8c99e5ae3679a86f00d25cb688f01fbe270d117c322f5",
+      "bytes": 173280
     },
     {
       "key": "baggageAllowance",
@@ -3281,17 +3236,13 @@
       ],
       "binding": "explicit",
       "requiresStaff": false,
-      "status": "PENDING SOURCE",
+      "status": "BUILT",
       "files": [
         "skandi-embeds/baggage-allowance/skandi-baggage-allowance.html",
         "skandi-embeds/baggage-allowance/skandi-baggage-allowance.css",
         "skandi-embeds/baggage-allowance/skandi-baggage-allowance.js"
       ],
-      "missing": [
-        "skandi-embeds/baggage-allowance/skandi-baggage-allowance.html",
-        "skandi-embeds/baggage-allowance/skandi-baggage-allowance.css",
-        "skandi-embeds/baggage-allowance/skandi-baggage-allowance.js"
-      ],
+      "missing": [],
       "issues": [],
       "backend": [
         "src/backend/SKANDI_CORE/publicContent.web.js"
@@ -3307,11 +3258,12 @@
         "SKANDI_BAGGAGE_PAGE",
         "SKANDI_WIX_PARENT"
       ],
-      "output": null,
+      "output": "dist/baggage-allowance/index.html",
       "dynamic": false,
-      "sourceStatus": "PENDING SOURCE",
+      "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
-      "retainedArtifact": false
+      "sha256": "b40f87ddde3fcc47b42563fc051b3d39de9d4406bfdaa247269bab7981b213f9",
+      "bytes": 171544
     },
     {
       "key": "travelInsurance",
@@ -3331,17 +3283,13 @@
       ],
       "binding": "explicit",
       "requiresStaff": false,
-      "status": "PENDING SOURCE",
+      "status": "BUILT",
       "files": [
         "skandi-embeds/travel-insurance/skandi-travel-insurance.html",
         "skandi-embeds/travel-insurance/skandi-travel-insurance.css",
         "skandi-embeds/travel-insurance/skandi-travel-insurance.js"
       ],
-      "missing": [
-        "skandi-embeds/travel-insurance/skandi-travel-insurance.html",
-        "skandi-embeds/travel-insurance/skandi-travel-insurance.css",
-        "skandi-embeds/travel-insurance/skandi-travel-insurance.js"
-      ],
+      "missing": [],
       "issues": [],
       "backend": [
         "src/backend/SKANDI_CORE/publicContent.web.js"
@@ -3359,11 +3307,12 @@
         "SKANDI_INSURANCE_PAGE",
         "SKANDI_WIX_PARENT"
       ],
-      "output": null,
+      "output": "dist/travel-insurance/index.html",
       "dynamic": false,
-      "sourceStatus": "PENDING SOURCE",
+      "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
-      "retainedArtifact": false
+      "sha256": "db6f1e3d189d7c21bdd435b07d7481a038d6ce015a70cac6aed482cf62d27348",
+      "bytes": 161357
     },
     {
       "key": "specialAssistance",
@@ -3374,34 +3323,130 @@
       "chrome": "public",
       "sourceDirectory": "skandi-embeds/special-assistance",
       "stem": "skandi-special-assistance",
-      "controller": null,
+      "controller": "src/pages/masterPage.js",
       "embedIds": [],
-      "sources": [],
-      "binding": "explicit",
+      "sources": [
+        "SKANDI_ASSISTANCE_PAGE"
+      ],
+      "binding": "handshake",
       "requiresStaff": false,
-      "status": "PENDING SOURCE",
+      "status": "BUILT",
       "files": [
         "skandi-embeds/special-assistance/skandi-special-assistance.html",
         "skandi-embeds/special-assistance/skandi-special-assistance.css",
         "skandi-embeds/special-assistance/skandi-special-assistance.js"
       ],
-      "missing": [
-        "skandi-embeds/special-assistance/skandi-special-assistance.html",
-        "skandi-embeds/special-assistance/skandi-special-assistance.css",
-        "skandi-embeds/special-assistance/skandi-special-assistance.js"
+      "missing": [],
+      "issues": [],
+      "backend": [
+        "src/backend/SKANDI_CORE/customerSession.web.js",
+        "src/backend/SKANDI_CORE/staffAuth.web.js",
+        "src/backend/SKANDI_CORE/publicContent.web.js",
+        "src/backend/SKANDI_CORE/presentation.web.js"
       ],
-      "issues": [
-        "No verified canonical controller mapping."
+      "messages": [
+        "ALREADY_ACTIVE",
+        "ALTEA",
+        "ALTEA_FOOTER_READY",
+        "ALTEA_FOOTER_STATE",
+        "ALTEA_HEADER_CONTEXT",
+        "ALTEA_HEADER_READY",
+        "ALTEA_HEADER_STATE",
+        "ALTEA_OFFICE_CHANGE",
+        "ALTEA_SYSTEM_CONTEXT",
+        "ALTEA_TOGGLE_CRYPTIC",
+        "ALTEA_WORK_AREA_CHANGE",
+        "CLOSE_CUSTOMER_HEADER_PANELS",
+        "CUSTOMER_FOOTER_STATE",
+        "CUSTOMER_HEADER_STATE",
+        "CUSTOMER_SETTINGS_REQUEST",
+        "CUSTOMER_SETTINGS_SAVED",
+        "CUSTOMER_SETTINGS_STATE",
+        "EMAIL_REQUIRED",
+        "FOOTER_NAVIGATE",
+        "FOOTER_NEWSLETTER_RESULT",
+        "FOOTER_NEWSLETTER_SIGNUP",
+        "FOOTER_READY",
+        "FOOTER_STAFF_LOGIN",
+        "HEADER_FORGOT_PASSWORD",
+        "HEADER_LOGIN",
+        "HEADER_LOGIN_SUBMIT",
+        "HEADER_LOGOUT",
+        "HEADER_NAVIGATE",
+        "HEADER_READY",
+        "HEADER_SEARCH",
+        "HOME_APP_DRAWER_FORCE_CLOSE",
+        "HOME_APP_DRAWER_RESIZE",
+        "HOME_APP_DRAWER_RESIZE_ACK",
+        "HOME_APP_DRAWER_RESIZE_ERROR",
+        "HOME_APP_FOCUS_SEARCH",
+        "HOME_APP_READY",
+        "HOME_APP_READY_ACK",
+        "HOME_ERROR",
+        "HOME_FOCUS_SEARCH",
+        "INTERNAL_HEADER_READY",
+        "INTERNAL_MASTER_LOGOUT",
+        "INTERNAL_MASTER_NAVIGATE",
+        "MASTER_ASSETS_REQUEST",
+        "MASTER_CONFIG_REQUEST",
+        "MASTER_NAVIGATE",
+        "MASTER_NAVIGATION_REQUEST",
+        "MASTER_SCROLL_TOP",
+        "READY",
+        "RIAINTRA",
+        "RIAINTRA_HEADER_READY",
+        "RIAINTRA_HEADER_STATE",
+        "RIAINTRA_LOGOUT",
+        "RIAINTRA_NAVIGATE",
+        "SIGNUP_FAILED",
+        "SKANDI",
+        "SKANDI_ASSISTANCE_PAGE",
+        "SKANDI_BAGGAGE_PAGE",
+        "SKANDI_COMPILED_READY",
+        "SKANDI_CONSENT_ACCEPT_ALL",
+        "SKANDI_CONSENT_NAVIGATE",
+        "SKANDI_CONSENT_REJECT_OPTIONAL",
+        "SKANDI_CONSENT_REQUEST",
+        "SKANDI_CONSENT_SAVE",
+        "SKANDI_CONSENT_SAVED",
+        "SKANDI_CONSENT_STATE",
+        "SKANDI_CONTENT_RESIZE",
+        "SKANDI_COOKIE_BANNER",
+        "SKANDI_COOKIE_PREFERENCES",
+        "SKANDI_EMBED_RESIZE",
+        "SKANDI_HOME_MOBILE_APP",
+        "SKANDI_INSURANCE_PAGE",
+        "SKANDI_MASTER_ASSETS",
+        "SKANDI_MASTER_CONFIG",
+        "SKANDI_MASTER_CONFIG_REQUEST",
+        "SKANDI_MASTER_NAVIGATION",
+        "SKANDI_PAGE_OPENED",
+        "SKANDI_PASSPORT_VISA_PAGE",
+        "SKANDI_PRESENTATION_DATA",
+        "SKANDI_PRESENTATION_READY",
+        "SKANDI_SCROLL_TOP",
+        "SKANDI_SETTINGS_REQUEST",
+        "SKANDI_SHELL",
+        "SKANDI_SIGNATURE_COLLECTION",
+        "SKANDI_SUPPORT_CHAT",
+        "SKANDI_UNIVERSAL_RECEIVER",
+        "SKANDI_VIEW_OPENED",
+        "SKANDI_WIX_PARENT",
+        "SPECIAL_ASSISTANCE_DATA",
+        "SPECIAL_ASSISTANCE_ERROR",
+        "SPECIAL_ASSISTANCE_NAVIGATE",
+        "SPECIAL_ASSISTANCE_READY",
+        "SPECIAL_ASSISTANCE_REFRESH",
+        "SUBSCRIBED",
+        "SUPPORT_CHAT_ERROR",
+        "UPDATE_SETTINGS"
       ],
-      "backend": [],
-      "messages": [],
-      "output": null,
+      "output": "dist/special-assistance/index.html",
       "dynamic": false,
-      "sourceStatus": "PENDING SOURCE",
-      "blockers": [
-        "No verified canonical controller mapping."
-      ],
-      "retainedArtifact": false
+      "sourceStatus": "COMPLETE SOURCE",
+      "blockers": [],
+      "sha256": "fa54f8fc2cf423160cf4c05697ed1bd00abcd99492df7a6020f93ebe4c22ee96",
+      "bytes": 168154
     },
     {
       "key": "flightStatus",
@@ -3460,8 +3505,8 @@
       "dynamic": false,
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
-      "sha256": "f1072c61107d0b78f3f6ea68df98bff72fca521ef38fa9640c9d5a9b55bd1f28",
-      "bytes": 310848
+      "sha256": "6dbab833f0f7b0ed87adc6e0175e4fed9f59fa88b78de349ef04cf6f145891af",
+      "bytes": 311246
     }
   ],
   "globalComponents": {
@@ -3485,41 +3530,25 @@
     "riaintra": [
       {
         "component": "riaintra-header",
-        "status": "PENDING SOURCE",
-        "missing": [
-          "skandi-embeds/riaintra-global/riaintra-header.html",
-          "skandi-embeds/riaintra-global/riaintra-header.css",
-          "skandi-embeds/riaintra-global/riaintra-header.js"
-        ]
+        "status": "COMPLETE SOURCE",
+        "missing": []
       },
       {
         "component": "riaintra-footer",
-        "status": "PENDING SOURCE",
-        "missing": [
-          "skandi-embeds/riaintra-global/riaintra-footer.html",
-          "skandi-embeds/riaintra-global/riaintra-footer.css",
-          "skandi-embeds/riaintra-global/riaintra-footer.js"
-        ]
+        "status": "COMPLETE SOURCE",
+        "missing": []
       }
     ],
     "altea": [
       {
         "component": "altea-header",
-        "status": "PENDING SOURCE",
-        "missing": [
-          "skandi-embeds/altea-global/altea-header.html",
-          "skandi-embeds/altea-global/altea-header.css",
-          "skandi-embeds/altea-global/altea-header.js"
-        ]
+        "status": "COMPLETE SOURCE",
+        "missing": []
       },
       {
         "component": "altea-footer",
-        "status": "PENDING SOURCE",
-        "missing": [
-          "skandi-embeds/altea-global/altea-footer.html",
-          "skandi-embeds/altea-global/altea-footer.css",
-          "skandi-embeds/altea-global/altea-footer.js"
-        ]
+        "status": "COMPLETE SOURCE",
+        "missing": []
       }
     ]
   },
