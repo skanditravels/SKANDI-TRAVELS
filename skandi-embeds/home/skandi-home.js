@@ -7,7 +7,15 @@ let MASTER_CONTEXT = { routes:{}, customer:{} };
 function masterRoute(key, fallback="") {
   return safeRouteValue(MASTER_CONTEXT?.routes?.[key], fallback);
 }
-
+// Ensure the host window is listening before firing the ready signal
+function initializeBridge() {
+  if (window.parent && window.parent !== window) {
+    requestBootstrap();
+  } else {
+    // Retry shortly if the iframe parent context isn't instantly attached
+    setTimeout(initializeBridge, 200);
+  }
+}
 function flattenMasterLinks() {
   const customer = MASTER_CONTEXT?.customer || {};
   const out = [];
@@ -3903,3 +3911,4 @@ if(typeof ResizeObserver==="function"){
 // Start it
 setTimeout(typeWriter, 1000);
 boot();
+initializeBridge();
