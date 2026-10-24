@@ -76,17 +76,17 @@
     }
 
     #app-header { display: flex; justify-content: space-between; align-items: center; }
-    #SK-logo { display: flex; align-items: center; gap: 17px; min-width: 0; }
-    #SK-logo img { display: block; width: auto; max-width: 150px; height: 53px; object-fit: contain; }
-    #SK-logo-text { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
-    #SK-logo-text strong {
+    :is(#SK-logo,#SK-logo-endorsement) { display: flex; align-items: center; gap: 17px; min-width: 0; }
+    :is(#SK-logo,#SK-logo-endorsement) img { display: block; width: auto; max-width: 150px; height: 53px; object-fit: contain; }
+    :is(#SK-logo-text,#SK-logo-text-endorsement) { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+    :is(#SK-logo-text,#SK-logo-text-endorsement) strong {
       font-size: 13px;
       font-weight: 800;
       line-height: 1.15;
       letter-spacing: .12em;
       text-transform: uppercase;
     }
-    #SK-logo-text span {
+    :is(#SK-logo-text,#SK-logo-text-endorsement) span {
       color: rgba(255,255,255,.69);
       font-size: 10px;
       font-weight: 600;
@@ -375,10 +375,10 @@
         padding: calc(23px + env(safe-area-inset-top, 0px)) 25px 39px;
       }
       #login-left::after { width: 420px; height: 420px; right: -295px; top: -105px; }
-      #SK-logo { gap: 12px; }
-      #SK-logo img { height: 41px; max-width: 125px; }
-      #SK-logo-text strong { font-size: 12px; }
-      #SK-logo-text span { font-size: 9px; }
+      :is(#SK-logo,#SK-logo-endorsement) { gap: 12px; }
+      :is(#SK-logo,#SK-logo-endorsement) img { height: 41px; max-width: 125px; }
+      :is(#SK-logo-text,#SK-logo-text-endorsement) strong { font-size: 12px; }
+      :is(#SK-logo-text,#SK-logo-text-endorsement) span { font-size: 9px; }
       .brand-center { max-width: none; padding: 0; }
       .brand-rule { width: 28px; height: 2px; margin-bottom: 14px; }
       .brand-eyebrow { margin: 0 0 9px; font-size: 9px; letter-spacing: .19em; }
@@ -482,7 +482,7 @@
     }
     @media (max-width: 360px) and (max-height: 640px) {
       #login-left { gap: 13px; padding-top: calc(15px + env(safe-area-inset-top, 0px)); padding-bottom: 31px; }
-      #SK-logo img { height: 36px; }
+      :is(#SK-logo,#SK-logo-endorsement) img { height: 36px; }
       .brand-rule { margin-bottom: 9px; }
       #login-sub { margin-top: 7px; }
       #login-right { padding-top: 24px; }

@@ -1,0 +1,3530 @@
+{
+  "schemaVersion": 2,
+  "routeAuthority": "src/public/siteMap.js",
+  "pages": [
+    {
+      "key": "home",
+      "route": "/",
+      "slug": "home",
+      "title": "Home",
+      "family": "public",
+      "chrome": "public",
+      "sourceDirectory": "skandi-embeds/home",
+      "stem": "skandi-home",
+      "controller": "src/pages/Home.n73w8.js",
+      "embedIds": [
+        "#htmlHome",
+        "#htmlhome",
+        "#home"
+      ],
+      "sources": [
+        "SKANDI_HOME",
+        "SKANDI_HOME_LONG_DISCOVERY_V2",
+        "SKANDI_HOME_OLD_STYLE"
+      ],
+      "binding": "explicit",
+      "requiresStaff": false,
+      "status": "BUILT",
+      "files": [
+        "skandi-embeds/home/skandi-home.html",
+        "skandi-embeds/home/skandi-home.css",
+        "skandi-embeds/home/skandi-home.js"
+      ],
+      "missing": [],
+      "issues": [],
+      "backend": [
+        "src/backend/SKANDI_CORE/homeContent.web.js"
+      ],
+      "messages": [
+        "HOME",
+        "HOME_APP_DRAWER_RESIZE",
+        "HOME_APP_DRAWER_RESIZE_ACK",
+        "HOME_APP_DRAWER_RESIZE_ERROR",
+        "HOME_APP_FOCUS_ACK",
+        "HOME_APP_FOCUS_SEARCH",
+        "HOME_APP_READY",
+        "HOME_APP_READY_ACK",
+        "HOME_APP_REFRESH",
+        "HOME_APP_REFRESH_ERROR",
+        "HOME_APP_REFRESH_RESULT",
+        "HOME_BOOTSTRAP_RESULT",
+        "HOME_ERROR",
+        "HOME_FOCUS_SEARCH",
+        "HOME_HOST_READY",
+        "HOME_INVALID_CONTENT",
+        "HOME_INVALID_LOCATIONS",
+        "HOME_INVALID_ROUTE",
+        "HOME_LOCATIONS_REQUEST",
+        "HOME_LOCATION_DATA",
+        "HOME_NAVIGATE",
+        "HOME_NAVIGATE_TO_OFFER",
+        "HOME_READY",
+        "HOME_REFRESH",
+        "HOME_REQUEST_FAILED",
+        "HOME_SEARCH",
+        "HOME_SELECT_OFFER",
+        "HOME_TIMEOUT",
+        "PENDING",
+        "RESIZE_IFRAME",
+        "SEARCH_FAILED",
+        "SKANDI_HOME",
+        "SKANDI_HOME_LONG_DISCOVERY_V2",
+        "SKANDI_HOME_MOBILE_APP",
+        "SKANDI_HOME_OLD_STYLE",
+        "SKANDI_WIX_PARENT",
+        "UNAVAILABLE"
+      ],
+      "output": "dist/home/index.html",
+      "dynamic": false,
+      "sourceStatus": "COMPLETE SOURCE",
+      "blockers": [],
+      "sha256": "f10df573874660e033f6ec303b3a6afe962ef73e9b65249895ad09550e68f208",
+      "bytes": 422212
+    },
+    {
+      "key": "search",
+      "route": "/search",
+      "slug": "search",
+      "title": "Search",
+      "family": "public",
+      "chrome": "public",
+      "sourceDirectory": "skandi-embeds/search",
+      "stem": "skandi-search",
+      "controller": "src/pages/Search.b7zch.js",
+      "embedIds": [
+        "#searchResultsEmbed"
+      ],
+      "sources": [
+        "SKANDI_SEARCH_RESULTS"
+      ],
+      "binding": "explicit",
+      "requiresStaff": false,
+      "status": "PENDING SOURCE",
+      "files": [
+        "skandi-embeds/search/skandi-search.html",
+        "skandi-embeds/search/skandi-search.css",
+        "skandi-embeds/search/skandi-search.js"
+      ],
+      "missing": [
+        "skandi-embeds/search/skandi-search.html",
+        "skandi-embeds/search/skandi-search.css",
+        "skandi-embeds/search/skandi-search.js"
+      ],
+      "issues": [],
+      "backend": [],
+      "messages": [
+        "SEARCH_INDEX_UPDATE",
+        "SEARCH_PAGE_QUERY",
+        "SEARCH_QUERY_UPDATE",
+        "SEARCH_READY",
+        "SEARCH_RESIZE",
+        "SEARCH_RESULT_NAVIGATE",
+        "SKANDI",
+        "SKANDI_SEARCH_RESULTS",
+        "SKANDI_WIX_PARENT"
+      ],
+      "output": null,
+      "dynamic": false,
+      "sourceStatus": "PENDING SOURCE",
+      "blockers": [],
+      "retainedArtifact": false
+    },
+    {
+      "key": "flights",
+      "route": "/flights",
+      "slug": "flights",
+      "title": "Flights",
+      "family": "public",
+      "chrome": "public",
+      "sourceDirectory": "skandi-embeds/flights",
+      "stem": "skandi-flights",
+      "controller": null,
+      "embedIds": [],
+      "sources": [],
+      "binding": "explicit",
+      "requiresStaff": false,
+      "status": "PENDING SOURCE",
+      "files": [
+        "skandi-embeds/flights/skandi-flights.html",
+        "skandi-embeds/flights/skandi-flights.css",
+        "skandi-embeds/flights/skandi-flights.js"
+      ],
+      "missing": [
+        "skandi-embeds/flights/skandi-flights.html",
+        "skandi-embeds/flights/skandi-flights.css",
+        "skandi-embeds/flights/skandi-flights.js"
+      ],
+      "issues": [
+        "No verified canonical controller mapping."
+      ],
+      "backend": [],
+      "messages": [],
+      "output": null,
+      "dynamic": false,
+      "sourceStatus": "PENDING SOURCE",
+      "blockers": [
+        "No verified canonical controller mapping."
+      ],
+      "retainedArtifact": false
+    },
+    {
+      "key": "carRental",
+      "route": "/car-rental",
+      "slug": "car-rental",
+      "title": "Car Rental",
+      "family": "public",
+      "chrome": "public",
+      "sourceDirectory": "skandi-embeds/car-rental",
+      "stem": "skandi-car-rental",
+      "controller": "src/pages/Car Rental.i9rnb.js",
+      "embedIds": [
+        "#carRentalEmbed"
+      ],
+      "sources": [
+        "SKANDI_CAR_RENTAL"
+      ],
+      "binding": "explicit",
+      "requiresStaff": false,
+      "status": "PENDING SOURCE",
+      "files": [
+        "skandi-embeds/car-rental/skandi-car-rental.html",
+        "skandi-embeds/car-rental/skandi-car-rental.css",
+        "skandi-embeds/car-rental/skandi-car-rental.js"
+      ],
+      "missing": [
+        "skandi-embeds/car-rental/skandi-car-rental.html",
+        "skandi-embeds/car-rental/skandi-car-rental.css",
+        "skandi-embeds/car-rental/skandi-car-rental.js"
+      ],
+      "issues": [],
+      "backend": [
+        "src/backend/SKANDI_CORE/customerBooking.web.js"
+      ],
+      "messages": [
+        "CAR_RENTAL_BOOK",
+        "CAR_RENTAL_BOOKING_RESULT",
+        "CAR_RENTAL_BOOTSTRAP",
+        "CAR_RENTAL_CANCEL_BOOKING",
+        "CAR_RENTAL_CANCEL_RESULT",
+        "CAR_RENTAL_CART_CREATED",
+        "CAR_RENTAL_CHECKOUT_READY",
+        "CAR_RENTAL_CREATE_CART",
+        "CAR_RENTAL_DRIVER_SAVED",
+        "CAR_RENTAL_ERROR",
+        "CAR_RENTAL_GET_OFFER",
+        "CAR_RENTAL_HEIGHT",
+        "CAR_RENTAL_LOOKUP_BOOKING",
+        "CAR_RENTAL_LOOKUP_RESULT",
+        "CAR_RENTAL_NAVIGATE",
+        "CAR_RENTAL_OFFER_RESULT",
+        "CAR_RENTAL_PREPARE_CHECKOUT",
+        "CAR_RENTAL_PREPARE_SUPPLIER_PAYMENT",
+        "CAR_RENTAL_READY",
+        "CAR_RENTAL_REPRICE",
+        "CAR_RENTAL_REPRICE_RESULT",
+        "CAR_RENTAL_SAVE_DRIVER",
+        "CAR_RENTAL_SEARCH",
+        "CAR_RENTAL_SEARCH_RESULT",
+        "CAR_RENTAL_SUPPLIER_PAYMENT_READY",
+        "DUFFEL_CARS",
+        "SKANDI_CAR_CART_ID",
+        "SKANDI_CAR_RENTAL",
+        "SKANDI_WIX_PARENT"
+      ],
+      "output": null,
+      "dynamic": false,
+      "sourceStatus": "PENDING SOURCE",
+      "blockers": [],
+      "retainedArtifact": false
+    },
+    {
+      "key": "hotels",
+      "route": "/hotels",
+      "slug": "hotels",
+      "title": "Hotels",
+      "family": "public",
+      "chrome": "public",
+      "sourceDirectory": "skandi-embeds/hotels",
+      "stem": "skandi-hotels",
+      "controller": null,
+      "embedIds": [],
+      "sources": [],
+      "binding": "explicit",
+      "requiresStaff": false,
+      "status": "PENDING SOURCE",
+      "files": [
+        "skandi-embeds/hotels/skandi-hotels.html",
+        "skandi-embeds/hotels/skandi-hotels.css",
+        "skandi-embeds/hotels/skandi-hotels.js"
+      ],
+      "missing": [
+        "skandi-embeds/hotels/skandi-hotels.html",
+        "skandi-embeds/hotels/skandi-hotels.css",
+        "skandi-embeds/hotels/skandi-hotels.js"
+      ],
+      "issues": [
+        "No verified canonical controller mapping."
+      ],
+      "backend": [],
+      "messages": [],
+      "output": null,
+      "dynamic": false,
+      "sourceStatus": "PENDING SOURCE",
+      "blockers": [
+        "No verified canonical controller mapping."
+      ],
+      "retainedArtifact": false
+    },
+    {
+      "key": "packages",
+      "route": "/packages",
+      "slug": "packages",
+      "title": "Packages",
+      "family": "public",
+      "chrome": "public",
+      "sourceDirectory": "skandi-embeds/packages",
+      "stem": "skandi-packages",
+      "controller": null,
+      "embedIds": [],
+      "sources": [],
+      "binding": "explicit",
+      "requiresStaff": false,
+      "status": "PENDING SOURCE",
+      "files": [
+        "skandi-embeds/packages/skandi-packages.html",
+        "skandi-embeds/packages/skandi-packages.css",
+        "skandi-embeds/packages/skandi-packages.js"
+      ],
+      "missing": [
+        "skandi-embeds/packages/skandi-packages.html",
+        "skandi-embeds/packages/skandi-packages.css",
+        "skandi-embeds/packages/skandi-packages.js"
+      ],
+      "issues": [
+        "No verified canonical controller mapping."
+      ],
+      "backend": [],
+      "messages": [],
+      "output": null,
+      "dynamic": false,
+      "sourceStatus": "PENDING SOURCE",
+      "blockers": [
+        "No verified canonical controller mapping."
+      ],
+      "retainedArtifact": false
+    },
+    {
+      "key": "cruises",
+      "route": "/cruises",
+      "slug": "cruises",
+      "title": "Cruises",
+      "family": "public",
+      "chrome": "public",
+      "sourceDirectory": "skandi-embeds/cruises",
+      "stem": "skandi-cruises",
+      "controller": null,
+      "embedIds": [],
+      "sources": [],
+      "binding": "explicit",
+      "requiresStaff": false,
+      "status": "PENDING SOURCE",
+      "files": [
+        "skandi-embeds/cruises/skandi-cruises.html",
+        "skandi-embeds/cruises/skandi-cruises.css",
+        "skandi-embeds/cruises/skandi-cruises.js"
+      ],
+      "missing": [
+        "skandi-embeds/cruises/skandi-cruises.html",
+        "skandi-embeds/cruises/skandi-cruises.css",
+        "skandi-embeds/cruises/skandi-cruises.js"
+      ],
+      "issues": [
+        "No verified canonical controller mapping."
+      ],
+      "backend": [],
+      "messages": [],
+      "output": null,
+      "dynamic": false,
+      "sourceStatus": "PENDING SOURCE",
+      "blockers": [
+        "No verified canonical controller mapping."
+      ],
+      "retainedArtifact": false
+    },
+    {
+      "key": "tours",
+      "route": "/tours",
+      "slug": "tours",
+      "title": "Tours & Activities",
+      "family": "public",
+      "chrome": "public",
+      "sourceDirectory": "skandi-embeds/tours",
+      "stem": "skandi-tours",
+      "controller": "src/pages/Tours & Activities.jxipw.js",
+      "embedIds": [
+        "#toursActivitiesHtml"
+      ],
+      "sources": [
+        "SKANDI_TOURS_ACTIVITIES"
+      ],
+      "binding": "explicit",
+      "requiresStaff": false,
+      "status": "PENDING SOURCE",
+      "files": [
+        "skandi-embeds/tours/skandi-tours.html",
+        "skandi-embeds/tours/skandi-tours.css",
+        "skandi-embeds/tours/skandi-tours.js"
+      ],
+      "missing": [
+        "skandi-embeds/tours/skandi-tours.html",
+        "skandi-embeds/tours/skandi-tours.css",
+        "skandi-embeds/tours/skandi-tours.js"
+      ],
+      "issues": [],
+      "backend": [
+        "src/backend/SKANDI_CORE/customerSession.web.js",
+        "src/backend/SKANDI_CORE/toursActivities.web.js"
+      ],
+      "messages": [
+        "CUSTOMER_HEADER_STATE",
+        "SKANDI_TOURS_ACTIVITIES",
+        "SKANDI_WIX_PARENT",
+        "TOURS_ACTION_FAILED",
+        "TOURS_ACTIVITY_OPEN",
+        "TOURS_ACTIVITY_RESULT",
+        "TOURS_BOOK_ACTIVITY",
+        "TOURS_BOOK_RESULT",
+        "TOURS_BOOTSTRAP_RESULT",
+        "TOURS_ERROR",
+        "TOURS_FAVORITE",
+        "TOURS_FAVORITE_RESULT",
+        "TOURS_MEMBER_LOGIN",
+        "TOURS_MEMBER_LOGOUT",
+        "TOURS_NAVIGATE",
+        "TOURS_NEARBY_RESULT",
+        "TOURS_NEARBY_SEARCH",
+        "TOURS_READY",
+        "TOURS_SEARCH",
+        "TOURS_SEARCH_RESULT",
+        "UPDATE_SETTINGS"
+      ],
+      "output": null,
+      "dynamic": false,
+      "sourceStatus": "PENDING SOURCE",
+      "blockers": [],
+      "retainedArtifact": false
+    },
+    {
+      "key": "activities",
+      "route": "/activities",
+      "slug": "activities",
+      "title": "Activities",
+      "family": "public",
+      "chrome": "public",
+      "sourceDirectory": "skandi-embeds/activities",
+      "stem": "skandi-activities",
+      "controller": null,
+      "embedIds": [],
+      "sources": [],
+      "binding": "explicit",
+      "requiresStaff": false,
+      "status": "PENDING SOURCE",
+      "files": [
+        "skandi-embeds/activities/skandi-activities.html",
+        "skandi-embeds/activities/skandi-activities.css",
+        "skandi-embeds/activities/skandi-activities.js"
+      ],
+      "missing": [
+        "skandi-embeds/activities/skandi-activities.html",
+        "skandi-embeds/activities/skandi-activities.css",
+        "skandi-embeds/activities/skandi-activities.js"
+      ],
+      "issues": [
+        "No verified canonical controller mapping."
+      ],
+      "backend": [],
+      "messages": [],
+      "output": null,
+      "dynamic": false,
+      "sourceStatus": "PENDING SOURCE",
+      "blockers": [
+        "No verified canonical controller mapping."
+      ],
+      "retainedArtifact": false
+    },
+    {
+      "key": "transfers",
+      "route": "/transfers",
+      "slug": "transfers",
+      "title": "Transfers",
+      "family": "public",
+      "chrome": "public",
+      "sourceDirectory": "skandi-embeds/transfers",
+      "stem": "skandi-transfers",
+      "controller": null,
+      "embedIds": [],
+      "sources": [],
+      "binding": "explicit",
+      "requiresStaff": false,
+      "status": "PENDING SOURCE",
+      "files": [
+        "skandi-embeds/transfers/skandi-transfers.html",
+        "skandi-embeds/transfers/skandi-transfers.css",
+        "skandi-embeds/transfers/skandi-transfers.js"
+      ],
+      "missing": [
+        "skandi-embeds/transfers/skandi-transfers.html",
+        "skandi-embeds/transfers/skandi-transfers.css",
+        "skandi-embeds/transfers/skandi-transfers.js"
+      ],
+      "issues": [
+        "No verified canonical controller mapping."
+      ],
+      "backend": [],
+      "messages": [],
+      "output": null,
+      "dynamic": false,
+      "sourceStatus": "PENDING SOURCE",
+      "blockers": [
+        "No verified canonical controller mapping."
+      ],
+      "retainedArtifact": false
+    },
+    {
+      "key": "destinations",
+      "route": "/destinations",
+      "slug": "destinations",
+      "title": "Destinations",
+      "family": "public",
+      "chrome": "public",
+      "sourceDirectory": "skandi-embeds/destinations",
+      "stem": "skandi-destinations",
+      "controller": null,
+      "embedIds": [],
+      "sources": [],
+      "binding": "explicit",
+      "requiresStaff": false,
+      "status": "PENDING SOURCE",
+      "files": [
+        "skandi-embeds/destinations/skandi-destinations.html",
+        "skandi-embeds/destinations/skandi-destinations.css",
+        "skandi-embeds/destinations/skandi-destinations.js"
+      ],
+      "missing": [
+        "skandi-embeds/destinations/skandi-destinations.html",
+        "skandi-embeds/destinations/skandi-destinations.css",
+        "skandi-embeds/destinations/skandi-destinations.js"
+      ],
+      "issues": [
+        "No verified canonical controller mapping."
+      ],
+      "backend": [],
+      "messages": [],
+      "output": null,
+      "dynamic": false,
+      "sourceStatus": "PENDING SOURCE",
+      "blockers": [
+        "No verified canonical controller mapping."
+      ],
+      "retainedArtifact": false
+    },
+    {
+      "key": "offers",
+      "route": "/offers",
+      "slug": "offers",
+      "title": "Offers",
+      "family": "public",
+      "chrome": "public",
+      "sourceDirectory": "skandi-embeds/offers",
+      "stem": "skandi-offers",
+      "controller": null,
+      "embedIds": [],
+      "sources": [],
+      "binding": "explicit",
+      "requiresStaff": false,
+      "status": "PENDING SOURCE",
+      "files": [
+        "skandi-embeds/offers/skandi-offers.html",
+        "skandi-embeds/offers/skandi-offers.css",
+        "skandi-embeds/offers/skandi-offers.js"
+      ],
+      "missing": [
+        "skandi-embeds/offers/skandi-offers.html",
+        "skandi-embeds/offers/skandi-offers.css",
+        "skandi-embeds/offers/skandi-offers.js"
+      ],
+      "issues": [
+        "No verified canonical controller mapping."
+      ],
+      "backend": [],
+      "messages": [],
+      "output": null,
+      "dynamic": false,
+      "sourceStatus": "PENDING SOURCE",
+      "blockers": [
+        "No verified canonical controller mapping."
+      ],
+      "retainedArtifact": false
+    },
+    {
+      "key": "travelInfo",
+      "route": "/travel-info",
+      "slug": "travel-info",
+      "title": "Travel Info",
+      "family": "public",
+      "chrome": "public",
+      "sourceDirectory": "skandi-embeds/travel-info",
+      "stem": "skandi-travel-info",
+      "controller": "src/pages/Travel Info.m43d6.js",
+      "embedIds": [
+        "#travelInfoHtml",
+        "#travelInfoEmbed",
+        "#html1"
+      ],
+      "sources": [
+        "SKANDI_PUBLIC_TRAVEL_INFO"
+      ],
+      "binding": "explicit",
+      "requiresStaff": false,
+      "status": "PENDING SOURCE",
+      "files": [
+        "skandi-embeds/travel-info/skandi-travel-info.html",
+        "skandi-embeds/travel-info/skandi-travel-info.css",
+        "skandi-embeds/travel-info/skandi-travel-info.js"
+      ],
+      "missing": [
+        "skandi-embeds/travel-info/skandi-travel-info.html",
+        "skandi-embeds/travel-info/skandi-travel-info.css",
+        "skandi-embeds/travel-info/skandi-travel-info.js"
+      ],
+      "issues": [],
+      "backend": [
+        "src/backend/SKANDI_CORE/publicContent.web.js",
+        "src/backend/SKANDI_CORE/customerSupport.web.js",
+        "src/backend/SKANDI_CORE/flightStatus.web.js"
+      ],
+      "messages": [
+        "ACTIVITY",
+        "AIRPORT_CONTEXT",
+        "ALEXANDRA_MESSAGE",
+        "ALEXANDRA_RESET",
+        "ALEXANDRA_RESPONSE",
+        "DESTINATION",
+        "EXPERIENCE",
+        "HOTEL",
+        "MASTER_NAVIGATE",
+        "PASSPORT",
+        "SEARCH",
+        "SKANDI_PUBLIC_TRAVEL_INFO",
+        "SKANDI_WIX_PARENT",
+        "TRANSFER",
+        "TRAVEL_INFO_AIRCRAFT_DATA",
+        "TRAVEL_INFO_AIRPORT_ACTION",
+        "TRAVEL_INFO_AIRPORT_CONTEXT_ERROR",
+        "TRAVEL_INFO_AIRPORT_CONTEXT_REQUEST",
+        "TRAVEL_INFO_AIRPORT_CONTEXT_RESULT",
+        "TRAVEL_INFO_AIRPORT_FLIGHTS_ERROR",
+        "TRAVEL_INFO_AIRPORT_FLIGHTS_REQUEST",
+        "TRAVEL_INFO_AIRPORT_FLIGHTS_RESULT",
+        "TRAVEL_INFO_AI_ASK",
+        "TRAVEL_INFO_BOOTSTRAP_TIMEOUT",
+        "TRAVEL_INFO_DATA",
+        "TRAVEL_INFO_ERROR",
+        "TRAVEL_INFO_HOST_READY",
+        "TRAVEL_INFO_HTML_READY",
+        "TRAVEL_INFO_NAVIGATE",
+        "TRAVEL_INFO_OPEN_ALEXANDRA",
+        "TRAVEL_INFO_OPEN_BAGGAGE",
+        "TRAVEL_INFO_OPEN_INSURANCE",
+        "TRAVEL_INFO_OPEN_PASSPORT_VISA",
+        "TRAVEL_INFO_PROGRESS",
+        "TRAVEL_INFO_READY",
+        "TRAVEL_INFO_REFRESH",
+        "TRAVEL_INFO_REQUEST_AIRCRAFT",
+        "TRAVEL_INFO_REQUIREMENTS_ERROR",
+        "TRAVEL_INFO_REQUIREMENTS_RESULT",
+        "TRAVEL_INFO_REQUIREMENTS_SEARCH",
+        "TRAVEL_INFO_REQUIREMENTS_SEARCHING",
+        "TRAVEL_INFO_WEATHER",
+        "TRAVEL_INFO_WEATHER_REQUEST",
+        "TRAVEL_SUPPORT_REQUEST",
+        "TRAVEL_SUPPORT_RESULT"
+      ],
+      "output": null,
+      "dynamic": false,
+      "sourceStatus": "PENDING SOURCE",
+      "blockers": [],
+      "retainedArtifact": false
+    },
+    {
+      "key": "skandiCollection",
+      "route": "/skandi-collection",
+      "slug": "skandi-collection",
+      "title": "SKANDI Collection",
+      "family": "public",
+      "chrome": "public",
+      "sourceDirectory": "skandi-embeds/skandi-collection",
+      "stem": "skandi-skandi-collection",
+      "controller": "src/pages/SKANDI Collection.lo9p5.js",
+      "embedIds": [
+        "#skandiCollectionEmbed",
+        "#signatureCollectionEmbed",
+        "#skandiCollectionHtml",
+        "#signatureCollectionHtml",
+        "#html1"
+      ],
+      "sources": [
+        "SKANDI_SIGNATURE_COLLECTION"
+      ],
+      "binding": "explicit",
+      "requiresStaff": false,
+      "status": "PENDING SOURCE",
+      "files": [
+        "skandi-embeds/skandi-collection/skandi-skandi-collection.html",
+        "skandi-embeds/skandi-collection/skandi-skandi-collection.css",
+        "skandi-embeds/skandi-collection/skandi-skandi-collection.js"
+      ],
+      "missing": [
+        "skandi-embeds/skandi-collection/skandi-skandi-collection.html",
+        "skandi-embeds/skandi-collection/skandi-skandi-collection.css",
+        "skandi-embeds/skandi-collection/skandi-skandi-collection.js"
+      ],
+      "issues": [],
+      "backend": [
+        "src/backend/SKANDI_CORE/publicContent.web.js",
+        "src/backend/SKANDI_CORE/customerBooking.web.js"
+      ],
+      "messages": [
+        "AIRLINE",
+        "AIRPORT",
+        "COLLECTION_NAVIGATE",
+        "SIGNATURE_COLLECTION_DATA",
+        "SIGNATURE_COLLECTION_ERROR",
+        "SIGNATURE_COLLECTION_HOST_READY",
+        "SIGNATURE_COLLECTION_LOADING",
+        "SIGNATURE_COLLECTION_READY",
+        "SIGNATURE_COLLECTION_REFRESH",
+        "SIGNATURE_PACKAGE_RESULTS",
+        "SIGNATURE_PACKAGE_SEARCH",
+        "SKANDI_COLLECTION",
+        "SKANDI_COLLECTION_READY",
+        "SKANDI_PARTNER",
+        "SKANDI_SIGNATURE_COLLECTION",
+        "SKANDI_WIX_PARENT"
+      ],
+      "output": null,
+      "dynamic": false,
+      "sourceStatus": "PENDING SOURCE",
+      "blockers": [],
+      "retainedArtifact": false
+    },
+    {
+      "key": "voy",
+      "route": "/voy-magazine",
+      "slug": "voy",
+      "title": "VOY Magazine",
+      "family": "public",
+      "chrome": "public",
+      "sourceDirectory": "skandi-embeds/voy",
+      "stem": "skandi-voy",
+      "controller": "src/pages/VOY Magazine.gecp7.js",
+      "embedIds": [
+        "#voyMagazineEmbed"
+      ],
+      "sources": [],
+      "binding": "explicit",
+      "requiresStaff": false,
+      "status": "PENDING SOURCE",
+      "files": [
+        "skandi-embeds/voy/skandi-voy.html",
+        "skandi-embeds/voy/skandi-voy.css",
+        "skandi-embeds/voy/skandi-voy.js"
+      ],
+      "missing": [
+        "skandi-embeds/voy/skandi-voy.html",
+        "skandi-embeds/voy/skandi-voy.css",
+        "skandi-embeds/voy/skandi-voy.js"
+      ],
+      "issues": [],
+      "backend": [
+        "src/backend/SKANDI_CORE/voyMagazine.web.js"
+      ],
+      "messages": [
+        "INTERACTION_CLICKED",
+        "ISSUE_OPENED",
+        "ISSUE_SHARED",
+        "SKANDI_VOY_MAGAZINE",
+        "SKANDI_WIX_PARENT",
+        "VOY_BOOTSTRAP_RESULT",
+        "VOY_ERROR",
+        "VOY_INTERACTION_CLICKED",
+        "VOY_INTERACTIVE_",
+        "VOY_ISSUE_ID_REQUIRED",
+        "VOY_ISSUE_NOT_FOUND",
+        "VOY_ISSUE_OPENED",
+        "VOY_ISSUE_SAVED",
+        "VOY_NAVIGATE",
+        "VOY_NOT_AUTHENTICATED",
+        "VOY_PUBLIC_ORGANIZATION_NOT_CONFIGURED",
+        "VOY_READY",
+        "VOY_REFRESH",
+        "VOY_SAVE_ISSUE",
+        "VOY_SHARE_ISSUE"
+      ],
+      "output": null,
+      "dynamic": false,
+      "sourceStatus": "PENDING SOURCE",
+      "blockers": [],
+      "retainedArtifact": false
+    },
+    {
+      "key": "club",
+      "route": "/skandi-club",
+      "slug": "club",
+      "title": "SKANDI Club",
+      "family": "public",
+      "chrome": "public",
+      "sourceDirectory": "skandi-embeds/club",
+      "stem": "skandi-club",
+      "controller": "src/pages/SKANDI Signature Club.gsejz.js",
+      "embedIds": [
+        "#skandiClubInfoEmbed"
+      ],
+      "sources": [
+        "SKANDI_CLUB_INFO"
+      ],
+      "binding": "explicit",
+      "requiresStaff": false,
+      "status": "PENDING SOURCE",
+      "files": [
+        "skandi-embeds/club/skandi-club.html",
+        "skandi-embeds/club/skandi-club.css",
+        "skandi-embeds/club/skandi-club.js"
+      ],
+      "missing": [
+        "skandi-embeds/club/skandi-club.html",
+        "skandi-embeds/club/skandi-club.css",
+        "skandi-embeds/club/skandi-club.js"
+      ],
+      "issues": [],
+      "backend": [
+        "src/backend/SKANDI_CORE/clubPublic.web.js"
+      ],
+      "messages": [
+        "SKANDI_CLUB_AUTH_OPEN",
+        "SKANDI_CLUB_HEIGHT",
+        "SKANDI_CLUB_INFO",
+        "SKANDI_CLUB_INFO_DATA",
+        "SKANDI_CLUB_INFO_ERROR",
+        "SKANDI_CLUB_INFO_READY",
+        "SKANDI_CLUB_INFO_REFRESH",
+        "SKANDI_CLUB_MEMBER_STATUS",
+        "SKANDI_CLUB_NAVIGATE",
+        "SKANDI_CLUB_PARENT_READY",
+        "SKANDI_CLUB_PROFILE_OPEN",
+        "SKANDI_CLUB_TERMS_OPEN",
+        "SKANDI_WIX_PARENT"
+      ],
+      "output": null,
+      "dynamic": false,
+      "sourceStatus": "PENDING SOURCE",
+      "blockers": [],
+      "retainedArtifact": false
+    },
+    {
+      "key": "forgotPassword",
+      "route": "/forgot-password",
+      "slug": "forgot-password",
+      "title": "Forgot Password",
+      "family": "public",
+      "chrome": "public",
+      "sourceDirectory": "skandi-embeds/forgot-password",
+      "stem": "skandi-forgot-password",
+      "controller": "src/pages/Forgot Password.uagf0.js",
+      "embedIds": [
+        "#forgotPasswordHtml"
+      ],
+      "sources": [
+        "SKANDI_FORGOT_PASSWORD"
+      ],
+      "binding": "explicit",
+      "requiresStaff": false,
+      "status": "PENDING SOURCE",
+      "files": [
+        "skandi-embeds/forgot-password/skandi-forgot-password.html",
+        "skandi-embeds/forgot-password/skandi-forgot-password.css",
+        "skandi-embeds/forgot-password/skandi-forgot-password.js"
+      ],
+      "missing": [
+        "skandi-embeds/forgot-password/skandi-forgot-password.html",
+        "skandi-embeds/forgot-password/skandi-forgot-password.css",
+        "skandi-embeds/forgot-password/skandi-forgot-password.js"
+      ],
+      "issues": [],
+      "backend": [],
+      "messages": [
+        "FORGOT_PASSWORD_OPEN_LOGIN",
+        "FORGOT_PASSWORD_OPEN_RESET",
+        "FORGOT_PASSWORD_READY",
+        "FORGOT_PASSWORD_RESULT",
+        "SKANDI_FORGOT_PASSWORD",
+        "SKANDI_WIX_PARENT"
+      ],
+      "output": null,
+      "dynamic": false,
+      "sourceStatus": "PENDING SOURCE",
+      "blockers": [],
+      "retainedArtifact": false
+    },
+    {
+      "key": "about",
+      "route": "/about",
+      "slug": "about",
+      "title": "About SKANDI",
+      "family": "public",
+      "chrome": "public",
+      "sourceDirectory": "skandi-embeds/about",
+      "stem": "skandi-about",
+      "controller": "src/pages/About.xcftf.js",
+      "embedIds": [
+        "#aboutEmbed"
+      ],
+      "sources": [
+        "SKANDI_ABOUT_PAGE"
+      ],
+      "binding": "explicit",
+      "requiresStaff": false,
+      "status": "PENDING SOURCE",
+      "files": [
+        "skandi-embeds/about/skandi-about.html",
+        "skandi-embeds/about/skandi-about.css",
+        "skandi-embeds/about/skandi-about.js"
+      ],
+      "missing": [
+        "skandi-embeds/about/skandi-about.html",
+        "skandi-embeds/about/skandi-about.css",
+        "skandi-embeds/about/skandi-about.js"
+      ],
+      "issues": [],
+      "backend": [
+        "src/backend/SKANDI_CORE/publicContent.web.js"
+      ],
+      "messages": [
+        "ABOUT_HOST_READY",
+        "ABOUT_NAVIGATE",
+        "ABOUT_PAGE_DATA",
+        "ABOUT_PAGE_ERROR",
+        "ABOUT_PAGE_LOADING",
+        "ABOUT_PAGE_READY",
+        "ABOUT_PAGE_REFRESH",
+        "SKANDI_ABOUT_PAGE",
+        "SKANDI_WIX_PARENT"
+      ],
+      "output": null,
+      "dynamic": false,
+      "sourceStatus": "PENDING SOURCE",
+      "blockers": [],
+      "retainedArtifact": false
+    },
+    {
+      "key": "support",
+      "route": "/about/support",
+      "slug": "support",
+      "title": "Help Center",
+      "family": "public",
+      "chrome": "public",
+      "sourceDirectory": "skandi-embeds/support",
+      "stem": "skandi-support",
+      "controller": "src/pages/How can we help_.k0iqp.js",
+      "embedIds": [
+        "#skandiHelpCenterEmbed",
+        "#skandiSupportChatEmbed"
+      ],
+      "sources": [
+        "HELP_CENTER",
+        "help-center",
+        "SKANDI_SUPPORT_PUBLIC"
+      ],
+      "binding": "multi-component",
+      "requiresStaff": false,
+      "status": "PENDING SOURCE",
+      "files": [
+        "skandi-embeds/support/skandi-support.html",
+        "skandi-embeds/support/skandi-support.css",
+        "skandi-embeds/support/skandi-support.js"
+      ],
+      "missing": [
+        "skandi-embeds/support/skandi-support.html",
+        "skandi-embeds/support/skandi-support.css",
+        "skandi-embeds/support/skandi-support.js"
+      ],
+      "issues": [
+        "src/public/customerAuthUi.js: imported export openCustomerLogin is absent",
+        "Help Center and support chat are separate HTML components; preserve them until a verified single-component migration."
+      ],
+      "backend": [
+        "src/backend/SKANDI_CORE/customerSupport.web.js"
+      ],
+      "messages": [
+        "ALEXANDRA",
+        "ALEXANDRA_WIX_AI",
+        "FORM",
+        "HANDOFF_PENDING",
+        "HELP_CENTER",
+        "PUBLIC_SUPPORT_BOOTSTRAP",
+        "PUBLIC_SUPPORT_CASE_CREATED",
+        "PUBLIC_SUPPORT_CREATE_CASE",
+        "PUBLIC_SUPPORT_ERROR",
+        "PUBLIC_SUPPORT_LOGIN",
+        "PUBLIC_SUPPORT_NAVIGATE",
+        "PUBLIC_SUPPORT_OPEN_ALEXANDRA",
+        "PUBLIC_SUPPORT_OPEN_FORM",
+        "PUBLIC_SUPPORT_READY",
+        "PUBLIC_SUPPORT_REQUEST_BOOTSTRAP",
+        "PUBLIC_SUPPORT_REQUEST_HUMAN",
+        "SKANDI_CLUB_LOGIN",
+        "SKANDI_SUPPORT_CHAT",
+        "SKANDI_SUPPORT_PUBLIC",
+        "SKANDI_WIX_PARENT",
+        "SUPPORT_CHAT_ALEXANDRA_MESSAGE",
+        "SUPPORT_CHAT_ALEXANDRA_REPLY",
+        "SUPPORT_CHAT_BOOTSTRAP",
+        "SUPPORT_CHAT_CASE_CREATED",
+        "SUPPORT_CHAT_ERROR",
+        "SUPPORT_CHAT_HUMAN_HANDOFF",
+        "SUPPORT_CHAT_HUMAN_MESSAGE",
+        "SUPPORT_CHAT_HUMAN_MESSAGE_SAVED",
+        "SUPPORT_CHAT_NAVIGATE",
+        "SUPPORT_CHAT_OPEN",
+        "SUPPORT_CHAT_READY",
+        "SUPPORT_CHAT_START_ALEXANDRA",
+        "SUPPORT_CHAT_START_HUMAN",
+        "SUPPORT_CHAT_SUBMIT_FORM"
+      ],
+      "output": null,
+      "dynamic": false,
+      "sourceStatus": "PENDING SOURCE",
+      "blockers": [
+        "src/public/customerAuthUi.js: imported export openCustomerLogin is absent",
+        "Help Center and support chat are separate HTML components; preserve them until a verified single-component migration."
+      ],
+      "retainedArtifact": false
+    },
+    {
+      "key": "newsroom",
+      "route": "/about/news-room",
+      "slug": "newsroom",
+      "title": "Newsroom",
+      "family": "public",
+      "chrome": "public",
+      "sourceDirectory": "skandi-embeds/newsroom",
+      "stem": "skandi-newsroom",
+      "controller": "src/pages/News Room.vn46g.js",
+      "embedIds": [
+        "#newsroomEmbed"
+      ],
+      "sources": [
+        "SKANDI_PUBLIC_NEWSROOM"
+      ],
+      "binding": "explicit",
+      "requiresStaff": false,
+      "status": "PENDING SOURCE",
+      "files": [
+        "skandi-embeds/newsroom/skandi-newsroom.html",
+        "skandi-embeds/newsroom/skandi-newsroom.css",
+        "skandi-embeds/newsroom/skandi-newsroom.js"
+      ],
+      "missing": [
+        "skandi-embeds/newsroom/skandi-newsroom.html",
+        "skandi-embeds/newsroom/skandi-newsroom.css",
+        "skandi-embeds/newsroom/skandi-newsroom.js"
+      ],
+      "issues": [],
+      "backend": [
+        "src/backend/SKANDI_CORE/publicContent.web.js",
+        "src/backend/SKANDI_CORE/customerSession.web.js"
+      ],
+      "messages": [
+        "MEDIA_CONTROL",
+        "NEWSROOM_DATA",
+        "NEWSROOM_ERROR",
+        "NEWSROOM_HOST_READY",
+        "NEWSROOM_READY",
+        "NEWSROOM_REFRESH",
+        "NEWSROOM_SUBSCRIBE",
+        "NEWSROOM_SUBSCRIBE_RESULT",
+        "SKANDI_PUBLIC_NEWSROOM",
+        "SKANDI_WIX_PARENT"
+      ],
+      "output": null,
+      "dynamic": false,
+      "sourceStatus": "PENDING SOURCE",
+      "blockers": [],
+      "retainedArtifact": false
+    },
+    {
+      "key": "theStore",
+      "route": "/the-store",
+      "slug": "the-store",
+      "title": "The Store",
+      "family": "public",
+      "chrome": "none",
+      "sourceDirectory": "skandi-embeds/the-store",
+      "stem": "skandi-the-store",
+      "controller": "src/pages/The Store.iv8g6.js",
+      "embedIds": [
+        "#skandiStoreEmbed"
+      ],
+      "sources": [
+        "SKANDI_STOREFRONT"
+      ],
+      "binding": "explicit",
+      "requiresStaff": false,
+      "status": "PENDING SOURCE",
+      "files": [
+        "skandi-embeds/the-store/skandi-the-store.html",
+        "skandi-embeds/the-store/skandi-the-store.css",
+        "skandi-embeds/the-store/skandi-the-store.js"
+      ],
+      "missing": [
+        "skandi-embeds/the-store/skandi-the-store.html",
+        "skandi-embeds/the-store/skandi-the-store.css",
+        "skandi-embeds/the-store/skandi-the-store.js"
+      ],
+      "issues": [],
+      "backend": [
+        "src/backend/SKANDI_CORE/customerSupport.web.js",
+        "src/backend/SKANDI_CORE/storefront.web.js",
+        "src/backend/SKANDI_CORE/storeCartV2.web.js",
+        "src/backend/SKANDI_CORE/storeGiftCards.web.js"
+      ],
+      "messages": [
+        "PRODUCTION_CART_V2",
+        "PUBLIC_SUPPORT_CASE_CREATED",
+        "PUBLIC_SUPPORT_CREATE_CASE",
+        "PUBLIC_SUPPORT_ERROR",
+        "SKANDI_STOREFRONT",
+        "SKANDI_SUPPORT_PUBLIC",
+        "SKANDI_WIX_PARENT",
+        "STOREFRONT_ADD_GIFT_CARD",
+        "STOREFRONT_ADD_TO_CART",
+        "STOREFRONT_CART",
+        "STOREFRONT_CART_REQUEST",
+        "STOREFRONT_CART_UPDATED",
+        "STOREFRONT_CHECKOUT",
+        "STOREFRONT_ERROR",
+        "STOREFRONT_NAVIGATE",
+        "STOREFRONT_ORDERS",
+        "STOREFRONT_PARENT_READY",
+        "STOREFRONT_PRODUCTS",
+        "STOREFRONT_PROGRESS",
+        "STOREFRONT_READY",
+        "STOREFRONT_REFRESH",
+        "WIX_GIFT_CARDS"
+      ],
+      "output": null,
+      "dynamic": false,
+      "sourceStatus": "PENDING SOURCE",
+      "blockers": [],
+      "retainedArtifact": false
+    },
+    {
+      "key": "giftCard",
+      "route": "/gift-card",
+      "slug": "gift-card",
+      "title": "Gift Card",
+      "family": "public",
+      "chrome": "public",
+      "sourceDirectory": "skandi-embeds/gift-card",
+      "stem": "skandi-gift-card",
+      "controller": null,
+      "embedIds": [],
+      "sources": [],
+      "binding": "explicit",
+      "requiresStaff": false,
+      "status": "PENDING SOURCE",
+      "files": [
+        "skandi-embeds/gift-card/skandi-gift-card.html",
+        "skandi-embeds/gift-card/skandi-gift-card.css",
+        "skandi-embeds/gift-card/skandi-gift-card.js"
+      ],
+      "missing": [
+        "skandi-embeds/gift-card/skandi-gift-card.html",
+        "skandi-embeds/gift-card/skandi-gift-card.css",
+        "skandi-embeds/gift-card/skandi-gift-card.js"
+      ],
+      "issues": [
+        "No verified canonical controller mapping."
+      ],
+      "backend": [],
+      "messages": [],
+      "output": null,
+      "dynamic": false,
+      "sourceStatus": "PENDING SOURCE",
+      "blockers": [
+        "No verified canonical controller mapping."
+      ],
+      "retainedArtifact": false
+    },
+    {
+      "key": "storeCheckout",
+      "route": "/the-store/store-checkout",
+      "slug": "store-checkout",
+      "title": "Store Checkout",
+      "family": "public",
+      "chrome": "none",
+      "sourceDirectory": "skandi-embeds/store-checkout",
+      "stem": "skandi-store-checkout",
+      "controller": "src/pages/Checkout.qofcb.js",
+      "embedIds": [
+        "#storeCheckoutEmbed"
+      ],
+      "sources": [
+        "SKANDI_STORE_CHECKOUT"
+      ],
+      "binding": "explicit",
+      "requiresStaff": false,
+      "status": "PENDING SOURCE",
+      "files": [
+        "skandi-embeds/store-checkout/skandi-store-checkout.html",
+        "skandi-embeds/store-checkout/skandi-store-checkout.css",
+        "skandi-embeds/store-checkout/skandi-store-checkout.js"
+      ],
+      "missing": [
+        "skandi-embeds/store-checkout/skandi-store-checkout.html",
+        "skandi-embeds/store-checkout/skandi-store-checkout.css",
+        "skandi-embeds/store-checkout/skandi-store-checkout.js"
+      ],
+      "issues": [],
+      "backend": [
+        "src/backend/SKANDI_CORE/storeCheckout.web.js"
+      ],
+      "messages": [
+        "CANCELED",
+        "CHECKOUT_APPLY_COUPON",
+        "CHECKOUT_APPLY_GIFT_CARD",
+        "CHECKOUT_ERROR",
+        "CHECKOUT_NAVIGATE",
+        "CHECKOUT_PARENT_READY",
+        "CHECKOUT_PAYMENT_STATUS",
+        "CHECKOUT_PROGRESS",
+        "CHECKOUT_READY",
+        "CHECKOUT_REFRESH",
+        "CHECKOUT_REMOVE_COUPON",
+        "CHECKOUT_REMOVE_GIFT_CARD",
+        "CHECKOUT_REMOVE_ITEM",
+        "CHECKOUT_SAVE_DETAILS",
+        "CHECKOUT_SET_DELIVERY",
+        "CHECKOUT_STATE",
+        "CHECKOUT_SUBMIT",
+        "CHECKOUT_UPDATE_QTY",
+        "PAID",
+        "REJECTED",
+        "SKANDI_STORE_CHECKOUT",
+        "SKANDI_STORE_PENDING_PAYMENT",
+        "SKANDI_WIX_PARENT"
+      ],
+      "output": null,
+      "dynamic": false,
+      "sourceStatus": "PENDING SOURCE",
+      "blockers": [],
+      "retainedArtifact": false
+    },
+    {
+      "key": "storeConfirmation",
+      "route": "/the-store/store-checkout/order-confirmation",
+      "slug": "store-confirmation",
+      "title": "Store Order Confirmation",
+      "family": "public",
+      "chrome": "none",
+      "sourceDirectory": "skandi-embeds/store-confirmation",
+      "stem": "skandi-store-confirmation",
+      "controller": "src/pages/Order Confirmation.u5zzl.js",
+      "embedIds": [
+        "#storeOrderConfirmationEmbed"
+      ],
+      "sources": [
+        "SKANDI_STORE_CONFIRMATION"
+      ],
+      "binding": "explicit",
+      "requiresStaff": false,
+      "status": "PENDING SOURCE",
+      "files": [
+        "skandi-embeds/store-confirmation/skandi-store-confirmation.html",
+        "skandi-embeds/store-confirmation/skandi-store-confirmation.css",
+        "skandi-embeds/store-confirmation/skandi-store-confirmation.js"
+      ],
+      "missing": [
+        "skandi-embeds/store-confirmation/skandi-store-confirmation.html",
+        "skandi-embeds/store-confirmation/skandi-store-confirmation.css",
+        "skandi-embeds/store-confirmation/skandi-store-confirmation.js"
+      ],
+      "issues": [],
+      "backend": [
+        "src/backend/SKANDI_CORE/storeCheckout.web.js",
+        "src/backend/SKANDI_CORE/storeGiftCards.web.js"
+      ],
+      "messages": [
+        "CONFIRMATION_NAVIGATE",
+        "CONFIRMATION_READY",
+        "CONFIRMATION_REFRESH",
+        "PAID",
+        "SKANDI_STORE_CONFIRMATION",
+        "SKANDI_WIX_PARENT",
+        "STORE_CONFIRMATION_DATA",
+        "STORE_CONFIRMATION_ERROR",
+        "STORE_CONFIRMATION_LOADING",
+        "STORE_CONFIRMATION_PARENT_READY",
+        "WIX_GIFT_CARDS"
+      ],
+      "output": null,
+      "dynamic": false,
+      "sourceStatus": "PENDING SOURCE",
+      "blockers": [],
+      "retainedArtifact": false
+    },
+    {
+      "key": "ourNetwork",
+      "route": "/about/our-network",
+      "slug": "our-network",
+      "title": "Our Network",
+      "family": "public",
+      "chrome": "public",
+      "sourceDirectory": "skandi-embeds/our-network",
+      "stem": "skandi-our-network",
+      "controller": null,
+      "embedIds": [],
+      "sources": [],
+      "binding": "explicit",
+      "requiresStaff": false,
+      "status": "PENDING SOURCE",
+      "files": [
+        "skandi-embeds/our-network/skandi-our-network.html",
+        "skandi-embeds/our-network/skandi-our-network.css",
+        "skandi-embeds/our-network/skandi-our-network.js"
+      ],
+      "missing": [
+        "skandi-embeds/our-network/skandi-our-network.html",
+        "skandi-embeds/our-network/skandi-our-network.css",
+        "skandi-embeds/our-network/skandi-our-network.js"
+      ],
+      "issues": [
+        "No verified canonical controller mapping."
+      ],
+      "backend": [],
+      "messages": [],
+      "output": null,
+      "dynamic": false,
+      "sourceStatus": "PENDING SOURCE",
+      "blockers": [
+        "No verified canonical controller mapping."
+      ],
+      "retainedArtifact": false
+    },
+    {
+      "key": "legal",
+      "route": "/about/legal",
+      "slug": "legal",
+      "title": "Legal",
+      "family": "public",
+      "chrome": "public",
+      "sourceDirectory": "skandi-embeds/legal",
+      "stem": "skandi-legal",
+      "controller": "src/pages/Legal.nvnld.js",
+      "embedIds": [
+        "#legalHubEmbed"
+      ],
+      "sources": [
+        "SKANDI_LEGAL_HUB"
+      ],
+      "binding": "explicit",
+      "requiresStaff": false,
+      "status": "PENDING SOURCE",
+      "files": [
+        "skandi-embeds/legal/skandi-legal.html",
+        "skandi-embeds/legal/skandi-legal.css",
+        "skandi-embeds/legal/skandi-legal.js"
+      ],
+      "missing": [
+        "skandi-embeds/legal/skandi-legal.html",
+        "skandi-embeds/legal/skandi-legal.css",
+        "skandi-embeds/legal/skandi-legal.js"
+      ],
+      "issues": [],
+      "backend": [
+        "src/backend/SKANDI_CORE/legalPolicy.web.js"
+      ],
+      "messages": [
+        "LEGAL_HUB_DATA",
+        "LEGAL_HUB_ERROR",
+        "LEGAL_HUB_HEIGHT",
+        "LEGAL_HUB_LOAD_FAILED",
+        "LEGAL_HUB_PARENT_READY",
+        "LEGAL_HUB_READY",
+        "LEGAL_HUB_REFRESH",
+        "LEGAL_NAVIGATE",
+        "SKANDI_LEGAL_HUB",
+        "SKANDI_WIX_PARENT"
+      ],
+      "output": null,
+      "dynamic": false,
+      "sourceStatus": "PENDING SOURCE",
+      "blockers": [],
+      "retainedArtifact": false
+    },
+    {
+      "key": "policies",
+      "route": "/about/legal/policies",
+      "slug": "policies",
+      "title": "Policy Document",
+      "family": "public",
+      "chrome": "public",
+      "sourceDirectory": "skandi-embeds/policies",
+      "stem": "skandi-policies",
+      "controller": "src/pages/Policies.sgcey.js",
+      "embedIds": [
+        "#legalPolicyEmbed"
+      ],
+      "sources": [
+        "SKANDI_LEGAL_DOCUMENT"
+      ],
+      "binding": "explicit",
+      "requiresStaff": false,
+      "status": "PENDING SOURCE",
+      "files": [
+        "skandi-embeds/policies/skandi-policies.html",
+        "skandi-embeds/policies/skandi-policies.css",
+        "skandi-embeds/policies/skandi-policies.js"
+      ],
+      "missing": [
+        "skandi-embeds/policies/skandi-policies.html",
+        "skandi-embeds/policies/skandi-policies.css",
+        "skandi-embeds/policies/skandi-policies.js"
+      ],
+      "issues": [],
+      "backend": [
+        "src/backend/SKANDI_CORE/legalPolicy.web.js"
+      ],
+      "messages": [
+        "LEGAL_ACK_ERROR",
+        "LEGAL_ACK_NOT_REQUIRED",
+        "LEGAL_ACK_POLICY_VERSION_CHANGED",
+        "LEGAL_ACK_RESULT",
+        "LEGAL_ACK_SUBMIT",
+        "LEGAL_DOCUMENT_CONTEXT",
+        "LEGAL_DOCUMENT_DATA",
+        "LEGAL_DOCUMENT_ERROR",
+        "LEGAL_DOCUMENT_HEIGHT",
+        "LEGAL_DOCUMENT_IDENTIFIER_REQUIRED",
+        "LEGAL_DOCUMENT_LOAD_FAILED",
+        "LEGAL_DOCUMENT_NAVIGATE",
+        "LEGAL_DOCUMENT_NOT_FOUND",
+        "LEGAL_DOCUMENT_READY",
+        "LEGAL_DOCUMENT_REFRESH",
+        "SKANDI_LEGAL_DOCUMENT",
+        "SKANDI_WIX_PARENT"
+      ],
+      "output": null,
+      "dynamic": false,
+      "sourceStatus": "PENDING SOURCE",
+      "blockers": [],
+      "retainedArtifact": false
+    },
+    {
+      "key": "cookiePreferences",
+      "route": "/about/legal/cookie-preferences",
+      "slug": "cookie-preferences",
+      "title": "Cookie Preferences",
+      "family": "public",
+      "chrome": "public",
+      "sourceDirectory": "skandi-embeds/cookie-preferences",
+      "stem": "skandi-cookie-preferences",
+      "controller": null,
+      "embedIds": [],
+      "sources": [],
+      "binding": "explicit",
+      "requiresStaff": false,
+      "status": "PENDING SOURCE",
+      "files": [
+        "skandi-embeds/cookie-preferences/skandi-cookie-preferences.html",
+        "skandi-embeds/cookie-preferences/skandi-cookie-preferences.css",
+        "skandi-embeds/cookie-preferences/skandi-cookie-preferences.js"
+      ],
+      "missing": [
+        "skandi-embeds/cookie-preferences/skandi-cookie-preferences.html",
+        "skandi-embeds/cookie-preferences/skandi-cookie-preferences.css",
+        "skandi-embeds/cookie-preferences/skandi-cookie-preferences.js"
+      ],
+      "issues": [
+        "No verified canonical controller mapping."
+      ],
+      "backend": [],
+      "messages": [],
+      "output": null,
+      "dynamic": false,
+      "sourceStatus": "PENDING SOURCE",
+      "blockers": [
+        "No verified canonical controller mapping."
+      ],
+      "retainedArtifact": false
+    },
+    {
+      "key": "riaintra",
+      "route": "/riaintra",
+      "slug": "riaintra",
+      "title": "RIAINTRA",
+      "family": "riaintra",
+      "chrome": "none",
+      "sourceDirectory": "riaintra-embeds/riaintra",
+      "stem": "riaintra",
+      "controller": "src/pages/RIAINTRA.rc14z.js",
+      "embedIds": [
+        "#staffLoginEmbed"
+      ],
+      "sources": [
+        "SKANDI_STAFF_LOGIN"
+      ],
+      "binding": "explicit",
+      "requiresStaff": false,
+      "status": "BUILT",
+      "files": [
+        "riaintra-embeds/riaintra/riaintra.html",
+        "riaintra-embeds/riaintra/riaintra.css",
+        "riaintra-embeds/riaintra/riaintra.js"
+      ],
+      "missing": [],
+      "issues": [],
+      "backend": [
+        "src/backend/SKANDI_CORE/staffAuth.web.js"
+      ],
+      "messages": [
+        "SKANDI_STAFF_LOGIN",
+        "SKANDI_WIX_PARENT",
+        "STAFF_FORGOT_PASSWORD",
+        "STAFF_LOGIN_ERROR",
+        "STAFF_LOGIN_NOTICE",
+        "STAFF_LOGIN_OK",
+        "STAFF_LOGIN_PROGRESS",
+        "STAFF_LOGIN_READY",
+        "STAFF_LOGIN_REQUEST"
+      ],
+      "output": "dist/riaintra/index.html",
+      "dynamic": false,
+      "sourceStatus": "COMPLETE SOURCE",
+      "blockers": [],
+      "sha256": "e8a5785d532cda8c57a33ef8a3df28884b4f3a291eea0efc1f81dedfeed5707e",
+      "bytes": 41214
+    },
+    {
+      "key": "staffLogin",
+      "route": "/riaintra",
+      "status": "ALIAS",
+      "aliasOf": "riaintra",
+      "slug": "riaintra",
+      "family": "riaintra",
+      "chrome": "none",
+      "sourceDirectory": "riaintra-embeds/riaintra",
+      "stem": "riaintra",
+      "controller": "src/pages/RIAINTRA.rc14z.js",
+      "embedIds": [
+        "#staffLoginEmbed"
+      ],
+      "targetStatus": "BUILT"
+    },
+    {
+      "key": "successFactors",
+      "route": "/riaintra/success-factors",
+      "slug": "success-factors",
+      "title": "Success Factors",
+      "family": "riaintra",
+      "chrome": "riaintra",
+      "sourceDirectory": "skandi-embeds/success-factors",
+      "stem": "skandi-success-factors",
+      "controller": "src/pages/Success Factors.sh6tw.js",
+      "embedIds": [
+        "#staffHrEmbed"
+      ],
+      "sources": [],
+      "binding": "explicit",
+      "requiresStaff": true,
+      "status": "PENDING SOURCE",
+      "files": [
+        "skandi-embeds/success-factors/skandi-success-factors.html",
+        "skandi-embeds/success-factors/skandi-success-factors.css",
+        "skandi-embeds/success-factors/skandi-success-factors.js"
+      ],
+      "missing": [
+        "skandi-embeds/success-factors/skandi-success-factors.html",
+        "skandi-embeds/success-factors/skandi-success-factors.css",
+        "skandi-embeds/success-factors/skandi-success-factors.js"
+      ],
+      "issues": [],
+      "backend": [
+        "src/backend/SKANDI_CORE/orgStructure.web.js"
+      ],
+      "messages": [
+        "CAREERS_",
+        "CAREERS_ACTION_OK",
+        "CAREERS_BOOTSTRAP",
+        "CAREERS_CREATE_DOCUMENT_PACKET",
+        "CAREERS_DATA",
+        "CAREERS_DETECT_HISTORY_GAPS",
+        "CAREERS_DISPATCH_QUEUED_EMAILS",
+        "CAREERS_DOCUMENT_UPLOAD_REQUEST",
+        "CAREERS_DUPLICATE_JOB_POSTING",
+        "CAREERS_ERROR",
+        "CAREERS_EXPORT_AUDIT",
+        "CAREERS_MOVE_CANDIDATE_STAGE",
+        "CAREERS_OPEN_DOCUMENT_EXECUTION",
+        "CAREERS_PUBLISH_JOB_POSTING",
+        "CAREERS_READY",
+        "CAREERS_REFRESH",
+        "CAREERS_REFRESH_RESULT",
+        "CAREERS_RESEND_DOCUMENT_PACKET",
+        "CAREERS_RESOLVE_GAP_REQUEST",
+        "CAREERS_SAVE_CANDIDATE",
+        "CAREERS_SAVE_HISTORY_SEGMENT",
+        "CAREERS_SAVE_INTERVIEW",
+        "CAREERS_SAVE_JOB_POSTING",
+        "CAREERS_SAVE_ONBOARDING_TASK",
+        "CAREERS_SAVE_SETTINGS",
+        "CAREERS_SAVE_TRAINING_RECORD",
+        "CAREERS_SCHEDULE_MAINTENANCE",
+        "CAREERS_START_SRA_VETTING",
+        "CAREERS_SYNC_MAILBOX_REPLIES",
+        "CAREERS_TEST_INTEGRATIONS",
+        "CAREERS_VERIFY_DOCUMENT",
+        "CAREERS_VERIFY_HISTORY_SEGMENT",
+        "HR_ACTION_FAILED",
+        "HR_BADGE_CONTROL_DATA",
+        "HR_BADGE_CONTROL_REFRESH",
+        "HR_BADGE_CONTROL_SAVE",
+        "HR_BADGE_CONTROL_SAVED",
+        "HR_BADGE_PRINTED",
+        "HR_BOOTSTRAP",
+        "HR_EMPLOYEE",
+        "HR_ERROR",
+        "HR_GENERATE_SKID",
+        "HR_GET_EMPLOYEE",
+        "HR_GET_MANAGER_CANDIDATES",
+        "HR_MANAGER_CANDIDATES",
+        "HR_ORGANIZATION_SAVED",
+        "HR_ORG_CATALOG",
+        "HR_ORG_REFRESH",
+        "HR_PRINT_BADGE",
+        "HR_PROVISION_ORGANIZATION",
+        "HR_PROVISION_WIX_MEMBER",
+        "HR_READY",
+        "HR_REFRESH",
+        "HR_SESSION",
+        "HR_SKID_GENERATED",
+        "HR_STAFF_ARCHIVE",
+        "HR_STAFF_SAVE",
+        "HR_STAFF_SAVED",
+        "HR_WIX_MEMBER_PROVISION",
+        "HR_WIX_RESULT",
+        "INTRANET_",
+        "INTRANET_BOOTSTRAP",
+        "INTRANET_COLLEAGUES",
+        "INTRANET_COLLEAGUES_REQUEST",
+        "INTRANET_ERROR",
+        "INTRANET_FAVORITES_UPDATE",
+        "INTRANET_NOTIFICATIONS_READ",
+        "INTRANET_PROFILE_SAVE",
+        "INTRANET_PROFILE_SAVED",
+        "INTRANET_READY",
+        "INTRANET_REFRESH",
+        "INTRANET_SIGNED_OUT",
+        "INTRANET_SIGN_OUT",
+        "INTRANET_TASK_COMPLETE",
+        "INTRANET_TASK_DISMISS",
+        "MASTER_NAVIGATE",
+        "MASTER_NAVIGATION_REQUEST",
+        "PRINTED",
+        "RECRUITING_PROVIDER_NOT_CONFIGURED",
+        "SK01",
+        "SKANDI_HR_STAFF",
+        "SKANDI_MASTER_CONFIG",
+        "SKANDI_MASTER_CONFIG_REQUEST",
+        "SKANDI_MASTER_NAVIGATION",
+        "SKANDI_STANDARD",
+        "SKANDI_SUCCESSFACTORS",
+        "SKANDI_WIX_PARENT",
+        "STARTED",
+        "SUCCESSFACTORS_HOST_READY",
+        "WIX_MEMBER_PROVISION_PENDING"
+      ],
+      "output": null,
+      "dynamic": false,
+      "sourceStatus": "PENDING SOURCE",
+      "blockers": [
+        "riaintra-header: PENDING SOURCE (skandi-embeds/riaintra-global/riaintra-header.html, skandi-embeds/riaintra-global/riaintra-header.css, skandi-embeds/riaintra-global/riaintra-header.js)",
+        "riaintra-footer: PENDING SOURCE (skandi-embeds/riaintra-global/riaintra-footer.html, skandi-embeds/riaintra-global/riaintra-footer.css, skandi-embeds/riaintra-global/riaintra-footer.js)"
+      ],
+      "retainedArtifact": false
+    },
+    {
+      "key": "legalInternal",
+      "route": "/riaintra/success-factors/legal-internal",
+      "slug": "legal-internal",
+      "title": "RIAINTRA Legal",
+      "family": "riaintra",
+      "chrome": "riaintra",
+      "sourceDirectory": "skandi-embeds/legal-internal",
+      "stem": "skandi-legal-internal",
+      "controller": "src/pages/RIAINTRA Legal.xvi17.js",
+      "embedIds": [
+        "#internalLegalHubEmbed"
+      ],
+      "sources": [],
+      "binding": "explicit",
+      "requiresStaff": true,
+      "status": "PENDING SOURCE",
+      "files": [
+        "skandi-embeds/legal-internal/skandi-legal-internal.html",
+        "skandi-embeds/legal-internal/skandi-legal-internal.css",
+        "skandi-embeds/legal-internal/skandi-legal-internal.js"
+      ],
+      "missing": [
+        "skandi-embeds/legal-internal/skandi-legal-internal.html",
+        "skandi-embeds/legal-internal/skandi-legal-internal.css",
+        "skandi-embeds/legal-internal/skandi-legal-internal.js"
+      ],
+      "issues": [],
+      "backend": [
+        "src/backend/SKANDI_CORE/policyControl.web.js"
+      ],
+      "messages": [
+        "INTERNAL_LEGAL_ERROR",
+        "INTERNAL_LEGAL_HEIGHT",
+        "INTERNAL_LEGAL_HUB_DATA",
+        "INTERNAL_LEGAL_READY",
+        "INTERNAL_LEGAL_REFRESH",
+        "NAVIGATE",
+        "SKANDI_INTERNAL_LEGAL_HUB",
+        "SKANDI_WIX_PARENT"
+      ],
+      "output": null,
+      "dynamic": false,
+      "sourceStatus": "PENDING SOURCE",
+      "blockers": [
+        "riaintra-header: PENDING SOURCE (skandi-embeds/riaintra-global/riaintra-header.html, skandi-embeds/riaintra-global/riaintra-header.css, skandi-embeds/riaintra-global/riaintra-header.js)",
+        "riaintra-footer: PENDING SOURCE (skandi-embeds/riaintra-global/riaintra-footer.html, skandi-embeds/riaintra-global/riaintra-footer.css, skandi-embeds/riaintra-global/riaintra-footer.js)"
+      ],
+      "retainedArtifact": false
+    },
+    {
+      "key": "alteaLaunchpad",
+      "route": "/riaintra/success-factors/altea",
+      "slug": "altea-launchpad",
+      "title": "ALTEA Launchpad",
+      "family": "altea",
+      "chrome": "altea",
+      "sourceDirectory": "skandi-embeds/altea-launchpad",
+      "stem": "skandi-altea-launchpad",
+      "controller": "src/pages/ALTEA Launchpad.ajs4y.js",
+      "embedIds": [],
+      "sources": [
+        "SKANDI_ALTEA_LAUNCHPAD"
+      ],
+      "binding": "handshake",
+      "requiresStaff": true,
+      "status": "PENDING SOURCE",
+      "files": [
+        "skandi-embeds/altea-launchpad/skandi-altea-launchpad.html",
+        "skandi-embeds/altea-launchpad/skandi-altea-launchpad.css",
+        "skandi-embeds/altea-launchpad/skandi-altea-launchpad.js"
+      ],
+      "missing": [
+        "skandi-embeds/altea-launchpad/skandi-altea-launchpad.html",
+        "skandi-embeds/altea-launchpad/skandi-altea-launchpad.css",
+        "skandi-embeds/altea-launchpad/skandi-altea-launchpad.js"
+      ],
+      "issues": [],
+      "backend": [
+        "src/backend/SKANDI_CORE/staffAuth.web.js"
+      ],
+      "messages": [
+        "ALTEA_APP_ACCESS_CHANGED",
+        "ALTEA_APP_NOT_AUTHORIZED",
+        "ALTEA_APP_UNAVAILABLE",
+        "ALTEA_LAUNCHPAD_BOOTSTRAP",
+        "ALTEA_LAUNCHPAD_ERROR",
+        "ALTEA_LAUNCHPAD_HOST_READY",
+        "ALTEA_LAUNCHPAD_NAVIGATE",
+        "ALTEA_LAUNCHPAD_NAVIGATING",
+        "ALTEA_LAUNCHPAD_READY",
+        "ALTEA_LAUNCHPAD_REFRESH",
+        "ALTEA_LOGIN_REDIRECT_FAILED",
+        "ALTEA_NAVIGATION_FAILED",
+        "ALTEA_REQUEST_BUSY",
+        "ALTEA_RESPONSE_INVALID",
+        "ALTEA_SERVICE_TIMEOUT",
+        "ALTEA_SERVICE_UNAVAILABLE",
+        "ALTEA_WEB_FACADE_MISMATCH",
+        "SKANDI_ALTEA_LAUNCHPAD",
+        "SKANDI_WIX_PARENT",
+        "STAFF_",
+        "STAFF_ACCESS_DENIED",
+        "STAFF_AUTH_REQUIRED",
+        "SUPABASE_",
+        "WIX_MEMBER_LINK_MISMATCH"
+      ],
+      "output": null,
+      "dynamic": false,
+      "sourceStatus": "PENDING SOURCE",
+      "blockers": [
+        "altea-header: PENDING SOURCE (skandi-embeds/altea-global/altea-header.html, skandi-embeds/altea-global/altea-header.css, skandi-embeds/altea-global/altea-header.js)",
+        "altea-footer: PENDING SOURCE (skandi-embeds/altea-global/altea-footer.html, skandi-embeds/altea-global/altea-footer.css, skandi-embeds/altea-global/altea-footer.js)"
+      ],
+      "retainedArtifact": false
+    },
+    {
+      "key": "alteaReservations",
+      "route": "/riaintra/success-factors/altea/reservations",
+      "slug": "altea-reservations",
+      "title": "Reservations",
+      "family": "altea",
+      "chrome": "altea",
+      "sourceDirectory": "skandi-embeds/altea-reservations",
+      "stem": "skandi-altea-reservations",
+      "controller": "src/pages/Reservations.ly2n8.js",
+      "embedIds": [
+        "#alteaReservationsEmbed"
+      ],
+      "sources": [
+        "SKANDI_DUFFEL_RESERVATIONS"
+      ],
+      "binding": "explicit",
+      "requiresStaff": true,
+      "status": "PENDING SOURCE",
+      "files": [
+        "skandi-embeds/altea-reservations/skandi-altea-reservations.html",
+        "skandi-embeds/altea-reservations/skandi-altea-reservations.css",
+        "skandi-embeds/altea-reservations/skandi-altea-reservations.js"
+      ],
+      "missing": [
+        "skandi-embeds/altea-reservations/skandi-altea-reservations.html",
+        "skandi-embeds/altea-reservations/skandi-altea-reservations.css",
+        "skandi-embeds/altea-reservations/skandi-altea-reservations.js"
+      ],
+      "issues": [],
+      "backend": [
+        "src/backend/SKANDI_CORE/reservations.web.js"
+      ],
+      "messages": [
+        "ALTEA_ACTION_FAILED",
+        "ALTEA_EMPTY_RESPONSE_TYPE",
+        "ALTEA_ERROR",
+        "AUTH_REQUIRED",
+        "DUFFEL_",
+        "DUFFEL_ERROR",
+        "DUFFEL_PARENT_READY",
+        "DUFFEL_PROGRESS",
+        "MASTER_NAVIGATE",
+        "SKANDI_DUFFEL_RESERVATIONS",
+        "SKANDI_WIX_PARENT"
+      ],
+      "output": null,
+      "dynamic": false,
+      "sourceStatus": "PENDING SOURCE",
+      "blockers": [
+        "altea-header: PENDING SOURCE (skandi-embeds/altea-global/altea-header.html, skandi-embeds/altea-global/altea-header.css, skandi-embeds/altea-global/altea-header.js)",
+        "altea-footer: PENDING SOURCE (skandi-embeds/altea-global/altea-footer.html, skandi-embeds/altea-global/altea-footer.css, skandi-embeds/altea-global/altea-footer.js)"
+      ],
+      "retainedArtifact": false
+    },
+    {
+      "key": "opsControl",
+      "route": "/riaintra/success-factors/altea/ops",
+      "slug": "ops-control",
+      "title": "OPS Control",
+      "family": "altea",
+      "chrome": "altea",
+      "sourceDirectory": "skandi-embeds/ops-control",
+      "stem": "skandi-ops-control",
+      "controller": "src/pages/OPS Control.uposx.js",
+      "embedIds": [
+        "#opsControlEmbed",
+        "#htmlOpsControl",
+        "#occEmbed"
+      ],
+      "sources": [
+        "SKANDI_OPS_CONTROL"
+      ],
+      "binding": "explicit",
+      "requiresStaff": true,
+      "status": "PENDING SOURCE",
+      "files": [
+        "skandi-embeds/ops-control/skandi-ops-control.html",
+        "skandi-embeds/ops-control/skandi-ops-control.css",
+        "skandi-embeds/ops-control/skandi-ops-control.js"
+      ],
+      "missing": [
+        "skandi-embeds/ops-control/skandi-ops-control.html",
+        "skandi-embeds/ops-control/skandi-ops-control.css",
+        "skandi-embeds/ops-control/skandi-ops-control.js"
+      ],
+      "issues": [],
+      "backend": [
+        "src/backend/SKANDI_CORE/staffAuth.web.js",
+        "src/backend/SKANDI_CORE/opsControl.web.js"
+      ],
+      "messages": [
+        "OPS_ACTION",
+        "OPS_ACTION_RESULT",
+        "OPS_BOOTSTRAP",
+        "OPS_BOOTSTRAP_REQUEST",
+        "OPS_CONTROL_FAILED",
+        "OPS_ERROR",
+        "OPS_LOGOUT",
+        "OPS_READY",
+        "OPS_REFRESH",
+        "SKANDI_OPS_CONTROL",
+        "SKANDI_WIX_PARENT"
+      ],
+      "output": null,
+      "dynamic": false,
+      "sourceStatus": "PENDING SOURCE",
+      "blockers": [
+        "altea-header: PENDING SOURCE (skandi-embeds/altea-global/altea-header.html, skandi-embeds/altea-global/altea-header.css, skandi-embeds/altea-global/altea-header.js)",
+        "altea-footer: PENDING SOURCE (skandi-embeds/altea-global/altea-footer.html, skandi-embeds/altea-global/altea-footer.css, skandi-embeds/altea-global/altea-footer.js)"
+      ],
+      "retainedArtifact": false
+    },
+    {
+      "key": "inventoryControl",
+      "route": "/riaintra/success-factors/altea/inventory-control",
+      "slug": "inventory-control",
+      "title": "Inventory Control",
+      "family": "altea",
+      "chrome": "altea",
+      "sourceDirectory": "skandi-embeds/inventory-control",
+      "stem": "skandi-inventory-control",
+      "controller": "src/pages/Inventory Control.jsdik.js",
+      "embedIds": [
+        "#inventoryControlEmbed"
+      ],
+      "sources": [
+        "SKANDI_INVENTORY_EMBED"
+      ],
+      "binding": "explicit",
+      "requiresStaff": true,
+      "status": "PENDING SOURCE",
+      "files": [
+        "skandi-embeds/inventory-control/skandi-inventory-control.html",
+        "skandi-embeds/inventory-control/skandi-inventory-control.css",
+        "skandi-embeds/inventory-control/skandi-inventory-control.js"
+      ],
+      "missing": [
+        "skandi-embeds/inventory-control/skandi-inventory-control.html",
+        "skandi-embeds/inventory-control/skandi-inventory-control.css",
+        "skandi-embeds/inventory-control/skandi-inventory-control.js"
+      ],
+      "issues": [],
+      "backend": [
+        "src/backend/SKANDI_CORE/inventory.web.js"
+      ],
+      "messages": [
+        "INVENTORY_",
+        "INVENTORY_DISPATCH_RESPONSE_INVALID",
+        "INVENTORY_DISPATCH_RESPONSE_MISMATCH",
+        "INVENTORY_ERROR",
+        "INVENTORY_V9_BOOTSTRAP",
+        "INVENTORY_V9_HOST_READY",
+        "INVENTORY_V9_PROGRESS",
+        "INVENTORY_V9_READY",
+        "INVENTORY_V9_REFRESH",
+        "INVENTORY_WEB_FACADE_MISMATCH",
+        "SKANDI_INVENTORY_EMBED",
+        "SKANDI_INVENTORY_PARENT"
+      ],
+      "output": null,
+      "dynamic": false,
+      "sourceStatus": "PENDING SOURCE",
+      "blockers": [
+        "altea-header: PENDING SOURCE (skandi-embeds/altea-global/altea-header.html, skandi-embeds/altea-global/altea-header.css, skandi-embeds/altea-global/altea-header.js)",
+        "altea-footer: PENDING SOURCE (skandi-embeds/altea-global/altea-footer.html, skandi-embeds/altea-global/altea-footer.css, skandi-embeds/altea-global/altea-footer.js)"
+      ],
+      "retainedArtifact": false
+    },
+    {
+      "key": "uniformCenter",
+      "route": "/riaintra/success-factors/uniform",
+      "slug": "uniform-center",
+      "title": "Uniform Center",
+      "family": "riaintra",
+      "chrome": "riaintra",
+      "sourceDirectory": "skandi-embeds/uniform-center",
+      "stem": "skandi-uniform-center",
+      "controller": "src/pages/Uniform Center.lukfc.js",
+      "embedIds": [
+        "#uniformCenterEmbed"
+      ],
+      "sources": [
+        "SKANDI_UNIFORM_EMPLOYEE"
+      ],
+      "binding": "explicit",
+      "requiresStaff": true,
+      "status": "PENDING SOURCE",
+      "files": [
+        "skandi-embeds/uniform-center/skandi-uniform-center.html",
+        "skandi-embeds/uniform-center/skandi-uniform-center.css",
+        "skandi-embeds/uniform-center/skandi-uniform-center.js"
+      ],
+      "missing": [
+        "skandi-embeds/uniform-center/skandi-uniform-center.html",
+        "skandi-embeds/uniform-center/skandi-uniform-center.css",
+        "skandi-embeds/uniform-center/skandi-uniform-center.js"
+      ],
+      "issues": [],
+      "backend": [
+        "src/backend/SKANDI_CORE/staffAuth.web.js",
+        "src/backend/SKANDI_CORE/uniform.web.js"
+      ],
+      "messages": [
+        "SKANDI_UNIFORM_EMPLOYEE",
+        "SKANDI_WIX_PARENT",
+        "UNIFORM_ADMIN_ACCESS_DENIED",
+        "UNIFORM_ADMIN_BOOTSTRAP",
+        "UNIFORM_EMPLOYEE_ACK_POLICY",
+        "UNIFORM_EMPLOYEE_ADMIN_DENIED",
+        "UNIFORM_EMPLOYEE_ADMIN_GRANTED",
+        "UNIFORM_EMPLOYEE_ADMIN_LOGIN",
+        "UNIFORM_EMPLOYEE_BOOTSTRAP",
+        "UNIFORM_EMPLOYEE_ERROR",
+        "UNIFORM_EMPLOYEE_HOST_READY",
+        "UNIFORM_EMPLOYEE_NAVIGATE",
+        "UNIFORM_EMPLOYEE_READY",
+        "UNIFORM_EMPLOYEE_SUBMIT_ORDER"
+      ],
+      "output": null,
+      "dynamic": false,
+      "sourceStatus": "PENDING SOURCE",
+      "blockers": [
+        "riaintra-header: PENDING SOURCE (skandi-embeds/riaintra-global/riaintra-header.html, skandi-embeds/riaintra-global/riaintra-header.css, skandi-embeds/riaintra-global/riaintra-header.js)",
+        "riaintra-footer: PENDING SOURCE (skandi-embeds/riaintra-global/riaintra-footer.html, skandi-embeds/riaintra-global/riaintra-footer.css, skandi-embeds/riaintra-global/riaintra-footer.js)"
+      ],
+      "retainedArtifact": false
+    },
+    {
+      "key": "uniformControl",
+      "route": "/riaintra/success-factors/uniform/admin-control",
+      "slug": "uniform-control",
+      "title": "Uniform Control",
+      "family": "riaintra",
+      "chrome": "riaintra",
+      "sourceDirectory": "skandi-embeds/uniform-control",
+      "stem": "skandi-uniform-control",
+      "controller": "src/pages/Uniform Control.yx92b.js",
+      "embedIds": [
+        "#uniformControlEmbed"
+      ],
+      "sources": [],
+      "binding": "explicit",
+      "requiresStaff": true,
+      "status": "PENDING SOURCE",
+      "files": [
+        "skandi-embeds/uniform-control/skandi-uniform-control.html",
+        "skandi-embeds/uniform-control/skandi-uniform-control.css",
+        "skandi-embeds/uniform-control/skandi-uniform-control.js"
+      ],
+      "missing": [
+        "skandi-embeds/uniform-control/skandi-uniform-control.html",
+        "skandi-embeds/uniform-control/skandi-uniform-control.css",
+        "skandi-embeds/uniform-control/skandi-uniform-control.js"
+      ],
+      "issues": [],
+      "backend": [
+        "src/backend/SKANDI_CORE/uniform.web.js"
+      ],
+      "messages": [
+        "SKANDI_UNIFORM_ADMIN",
+        "SKANDI_WIX_PARENT",
+        "STAFF_AUTH_REQUIRED",
+        "STAFF_PROFILE_NOT_FOUND",
+        "UNIFORM_ACTION_FAILED",
+        "UNIFORM_ADMIN_",
+        "UNIFORM_ADMIN_BOOTSTRAP",
+        "UNIFORM_ADMIN_BOOTSTRAP_FAILED",
+        "UNIFORM_ADMIN_ERROR",
+        "UNIFORM_ADMIN_HOST_READY",
+        "UNIFORM_ADMIN_NAVIGATE",
+        "UNIFORM_ADMIN_READY",
+        "UNIFORM_ADMIN_SAVED",
+        "UNIFORM_SYSTEM_STATUS",
+        "UNIFORM_WEB_FACADE_MISMATCH"
+      ],
+      "output": null,
+      "dynamic": false,
+      "sourceStatus": "PENDING SOURCE",
+      "blockers": [
+        "riaintra-header: PENDING SOURCE (skandi-embeds/riaintra-global/riaintra-header.html, skandi-embeds/riaintra-global/riaintra-header.css, skandi-embeds/riaintra-global/riaintra-header.js)",
+        "riaintra-footer: PENDING SOURCE (skandi-embeds/riaintra-global/riaintra-footer.html, skandi-embeds/riaintra-global/riaintra-footer.css, skandi-embeds/riaintra-global/riaintra-footer.js)"
+      ],
+      "retainedArtifact": false
+    },
+    {
+      "key": "alteaTimatic",
+      "route": "/riaintra/success-factors/altea/timatic",
+      "slug": "altea-timatic",
+      "title": "alteaTimatic",
+      "family": "altea",
+      "chrome": "altea",
+      "sourceDirectory": "skandi-embeds/altea-timatic",
+      "stem": "skandi-altea-timatic",
+      "controller": null,
+      "embedIds": [],
+      "sources": [],
+      "binding": "explicit",
+      "requiresStaff": true,
+      "status": "PENDING SOURCE",
+      "files": [
+        "skandi-embeds/altea-timatic/skandi-altea-timatic.html",
+        "skandi-embeds/altea-timatic/skandi-altea-timatic.css",
+        "skandi-embeds/altea-timatic/skandi-altea-timatic.js"
+      ],
+      "missing": [
+        "skandi-embeds/altea-timatic/skandi-altea-timatic.html",
+        "skandi-embeds/altea-timatic/skandi-altea-timatic.css",
+        "skandi-embeds/altea-timatic/skandi-altea-timatic.js"
+      ],
+      "issues": [
+        "No verified canonical controller mapping."
+      ],
+      "backend": [],
+      "messages": [],
+      "output": null,
+      "dynamic": false,
+      "sourceStatus": "PENDING SOURCE",
+      "blockers": [
+        "No verified canonical controller mapping.",
+        "altea-header: PENDING SOURCE (skandi-embeds/altea-global/altea-header.html, skandi-embeds/altea-global/altea-header.css, skandi-embeds/altea-global/altea-header.js)",
+        "altea-footer: PENDING SOURCE (skandi-embeds/altea-global/altea-footer.html, skandi-embeds/altea-global/altea-footer.css, skandi-embeds/altea-global/altea-footer.js)"
+      ],
+      "retainedArtifact": false
+    },
+    {
+      "key": "mail",
+      "route": "/riaintra/success-factors/mail",
+      "slug": "mail",
+      "title": "Mail",
+      "family": "riaintra",
+      "chrome": "riaintra",
+      "sourceDirectory": "skandi-embeds/mail",
+      "stem": "skandi-mail",
+      "controller": "src/pages/Mail.ecik8.js",
+      "embedIds": [
+        "#mailEmbed"
+      ],
+      "sources": [
+        "SKANDI_MAIL_EMBED"
+      ],
+      "binding": "explicit",
+      "requiresStaff": true,
+      "status": "PENDING SOURCE",
+      "files": [
+        "skandi-embeds/mail/skandi-mail.html",
+        "skandi-embeds/mail/skandi-mail.css",
+        "skandi-embeds/mail/skandi-mail.js"
+      ],
+      "missing": [
+        "skandi-embeds/mail/skandi-mail.html",
+        "skandi-embeds/mail/skandi-mail.css",
+        "skandi-embeds/mail/skandi-mail.js"
+      ],
+      "issues": [],
+      "backend": [
+        "src/backend/SKANDI_CORE/staffAuth.web.js",
+        "src/backend/SKANDI_CORE/internalSearch.web.js",
+        "src/backend/SKANDI_CORE/mail.web.js"
+      ],
+      "messages": [
+        "INTERNAL_CHROME_BOOTSTRAP",
+        "INTERNAL_CHROME_READY",
+        "INTERNAL_GLOBAL_SEARCH",
+        "INTERNAL_LOGOUT",
+        "INTERNAL_NAVIGATE",
+        "INTERNAL_PROFILE_OPEN",
+        "INTERNAL_SEARCH_RESULTS",
+        "MAIL_BOOTSTRAP",
+        "MAIL_DIAGNOSTICS_REQUEST",
+        "MAIL_DIAGNOSTICS_RESPONSE",
+        "MAIL_DIRECTORY_REQUEST",
+        "MAIL_DIRECTORY_RESPONSE",
+        "MAIL_DRAFT_SAVE_REQUEST",
+        "MAIL_DRAFT_SAVE_RESPONSE",
+        "MAIL_ERROR",
+        "MAIL_GET_REQUEST",
+        "MAIL_GET_RESPONSE",
+        "MAIL_LIST_REQUEST",
+        "MAIL_LIST_RESPONSE",
+        "MAIL_NAVIGATE",
+        "MAIL_READY",
+        "MAIL_SEND_REQUEST",
+        "MAIL_SEND_RESPONSE",
+        "MAIL_STATE_REQUEST",
+        "MAIL_STATE_RESPONSE",
+        "SKANDI_INTERNAL_CHROME",
+        "SKANDI_MAIL_EMBED",
+        "SKANDI_WIX_PARENT"
+      ],
+      "output": null,
+      "dynamic": false,
+      "sourceStatus": "PENDING SOURCE",
+      "blockers": [
+        "riaintra-header: PENDING SOURCE (skandi-embeds/riaintra-global/riaintra-header.html, skandi-embeds/riaintra-global/riaintra-header.css, skandi-embeds/riaintra-global/riaintra-header.js)",
+        "riaintra-footer: PENDING SOURCE (skandi-embeds/riaintra-global/riaintra-footer.html, skandi-embeds/riaintra-global/riaintra-footer.css, skandi-embeds/riaintra-global/riaintra-footer.js)"
+      ],
+      "retainedArtifact": false
+    },
+    {
+      "key": "docunet",
+      "route": "/riaintra/success-factors/docunet",
+      "slug": "docunet",
+      "title": "DocuNet",
+      "family": "riaintra",
+      "chrome": "riaintra",
+      "sourceDirectory": "skandi-embeds/docunet",
+      "stem": "skandi-docunet",
+      "controller": "src/pages/DocuNet.twh13.js",
+      "embedIds": [
+        "#docuNetViewerEmbed"
+      ],
+      "sources": [],
+      "binding": "explicit",
+      "requiresStaff": true,
+      "status": "PENDING SOURCE",
+      "files": [
+        "skandi-embeds/docunet/skandi-docunet.html",
+        "skandi-embeds/docunet/skandi-docunet.css",
+        "skandi-embeds/docunet/skandi-docunet.js"
+      ],
+      "missing": [
+        "skandi-embeds/docunet/skandi-docunet.html",
+        "skandi-embeds/docunet/skandi-docunet.css",
+        "skandi-embeds/docunet/skandi-docunet.js"
+      ],
+      "issues": [],
+      "backend": [
+        "src/backend/SKANDI_CORE/docuNet.web.js"
+      ],
+      "messages": [
+        "DOCUNET_ACKNOWLEDGE",
+        "DOCUNET_ACKNOWLEDGE_RESULT",
+        "DOCUNET_BOOTSTRAP_RESULT",
+        "DOCUNET_DOCUMENT_ACCESS_RESULT",
+        "DOCUNET_ERROR",
+        "DOCUNET_OPEN_DOCUMENT",
+        "DOCUNET_READY",
+        "SKANDI_DOCUNET_VIEWER",
+        "SKANDI_WIX_PARENT"
+      ],
+      "output": null,
+      "dynamic": false,
+      "sourceStatus": "PENDING SOURCE",
+      "blockers": [
+        "riaintra-header: PENDING SOURCE (skandi-embeds/riaintra-global/riaintra-header.html, skandi-embeds/riaintra-global/riaintra-header.css, skandi-embeds/riaintra-global/riaintra-header.js)",
+        "riaintra-footer: PENDING SOURCE (skandi-embeds/riaintra-global/riaintra-footer.html, skandi-embeds/riaintra-global/riaintra-footer.css, skandi-embeds/riaintra-global/riaintra-footer.js)"
+      ],
+      "retainedArtifact": false
+    },
+    {
+      "key": "docunetAdmin",
+      "route": "/riaintra/success-factors/docunet/admin",
+      "slug": "docunet-admin",
+      "title": "DocuNet Administration",
+      "family": "riaintra",
+      "chrome": "riaintra",
+      "sourceDirectory": "skandi-embeds/docunet-admin",
+      "stem": "skandi-docunet-admin",
+      "controller": "src/pages/DocuNet Administration.u5a64.js",
+      "embedIds": [
+        "#docuNetAdminEmbed"
+      ],
+      "sources": [
+        "SKANDI_DOCUNET_ADMIN"
+      ],
+      "binding": "explicit",
+      "requiresStaff": true,
+      "status": "PENDING SOURCE",
+      "files": [
+        "skandi-embeds/docunet-admin/skandi-docunet-admin.html",
+        "skandi-embeds/docunet-admin/skandi-docunet-admin.css",
+        "skandi-embeds/docunet-admin/skandi-docunet-admin.js"
+      ],
+      "missing": [
+        "skandi-embeds/docunet-admin/skandi-docunet-admin.html",
+        "skandi-embeds/docunet-admin/skandi-docunet-admin.css",
+        "skandi-embeds/docunet-admin/skandi-docunet-admin.js"
+      ],
+      "issues": [],
+      "backend": [
+        "src/backend/SKANDI_CORE/docuNet.web.js"
+      ],
+      "messages": [
+        "ADMIN_AUDIT_RESULT",
+        "ADMIN_AUDIT_SEARCH",
+        "ADMIN_BOOTSTRAP",
+        "ADMIN_BOOTSTRAP_RESULT",
+        "ADMIN_CATEGORIES_RESULT",
+        "ADMIN_CATEGORY_DELETE",
+        "ADMIN_CATEGORY_SAVE",
+        "ADMIN_DOC_DELETE",
+        "ADMIN_DOC_PREVIEW",
+        "ADMIN_DOC_PREVIEW_RESULT",
+        "ADMIN_DOC_RESULT",
+        "ADMIN_DOC_SAVE_METADATA",
+        "ADMIN_DOC_SAVE_WITH_UPLOAD",
+        "ADMIN_DOC_SEARCH_RESULT",
+        "ADMIN_DOC_STATUS",
+        "ADMIN_ERROR",
+        "ADMIN_NAVIGATE_STAFF",
+        "ADMIN_READY",
+        "ADMIN_SEARCH_DOCS",
+        "ADMIN_STORAGE_DELETE",
+        "ADMIN_STORAGE_LIST",
+        "ADMIN_STORAGE_LIST_RESULT",
+        "ADMIN_STORAGE_MOVE",
+        "ADMIN_STORAGE_MUTATION_RESULT",
+        "ADMIN_STORAGE_PREVIEW",
+        "ADMIN_STORAGE_PREVIEW_RESULT",
+        "ADMIN_STORAGE_REGISTER",
+        "ADMIN_STORAGE_REGISTER_RESULT",
+        "ADMIN_SUPABASE_UPLOAD_ERROR",
+        "ADMIN_SUPABASE_UPLOAD_INIT",
+        "ADMIN_SUPABASE_UPLOAD_READY",
+        "NAVIGATE",
+        "SKANDI_DOCUNET_ADMIN",
+        "SKANDI_WIX_PARENT"
+      ],
+      "output": null,
+      "dynamic": false,
+      "sourceStatus": "PENDING SOURCE",
+      "blockers": [
+        "riaintra-header: PENDING SOURCE (skandi-embeds/riaintra-global/riaintra-header.html, skandi-embeds/riaintra-global/riaintra-header.css, skandi-embeds/riaintra-global/riaintra-header.js)",
+        "riaintra-footer: PENDING SOURCE (skandi-embeds/riaintra-global/riaintra-footer.html, skandi-embeds/riaintra-global/riaintra-footer.css, skandi-embeds/riaintra-global/riaintra-footer.js)"
+      ],
+      "retainedArtifact": false
+    },
+    {
+      "key": "serviceDesk",
+      "route": "/riaintra/success-factors/service-desk",
+      "slug": "service-desk",
+      "title": "serviceDesk",
+      "family": "riaintra",
+      "chrome": "riaintra",
+      "sourceDirectory": "skandi-embeds/service-desk",
+      "stem": "skandi-service-desk",
+      "controller": null,
+      "embedIds": [],
+      "sources": [],
+      "binding": "explicit",
+      "requiresStaff": true,
+      "status": "PENDING SOURCE",
+      "files": [
+        "skandi-embeds/service-desk/skandi-service-desk.html",
+        "skandi-embeds/service-desk/skandi-service-desk.css",
+        "skandi-embeds/service-desk/skandi-service-desk.js"
+      ],
+      "missing": [
+        "skandi-embeds/service-desk/skandi-service-desk.html",
+        "skandi-embeds/service-desk/skandi-service-desk.css",
+        "skandi-embeds/service-desk/skandi-service-desk.js"
+      ],
+      "issues": [
+        "No verified canonical controller mapping."
+      ],
+      "backend": [],
+      "messages": [],
+      "output": null,
+      "dynamic": false,
+      "sourceStatus": "PENDING SOURCE",
+      "blockers": [
+        "No verified canonical controller mapping.",
+        "riaintra-header: PENDING SOURCE (skandi-embeds/riaintra-global/riaintra-header.html, skandi-embeds/riaintra-global/riaintra-header.css, skandi-embeds/riaintra-global/riaintra-header.js)",
+        "riaintra-footer: PENDING SOURCE (skandi-embeds/riaintra-global/riaintra-footer.html, skandi-embeds/riaintra-global/riaintra-footer.css, skandi-embeds/riaintra-global/riaintra-footer.js)"
+      ],
+      "retainedArtifact": false
+    },
+    {
+      "key": "policyControl",
+      "route": "/riaintra/success-factors/policy-control",
+      "slug": "policy-control",
+      "title": "Policy Control",
+      "family": "riaintra",
+      "chrome": "riaintra",
+      "sourceDirectory": "skandi-embeds/policy-control",
+      "stem": "skandi-policy-control",
+      "controller": "src/pages/Policy Control.ec9p4.js",
+      "embedIds": [
+        "#policyControlEmbed"
+      ],
+      "sources": [],
+      "binding": "explicit",
+      "requiresStaff": true,
+      "status": "PENDING SOURCE",
+      "files": [
+        "skandi-embeds/policy-control/skandi-policy-control.html",
+        "skandi-embeds/policy-control/skandi-policy-control.css",
+        "skandi-embeds/policy-control/skandi-policy-control.js"
+      ],
+      "missing": [
+        "skandi-embeds/policy-control/skandi-policy-control.html",
+        "skandi-embeds/policy-control/skandi-policy-control.css",
+        "skandi-embeds/policy-control/skandi-policy-control.js"
+      ],
+      "issues": [],
+      "backend": [
+        "src/backend/SKANDI_CORE/policyControl.web.js"
+      ],
+      "messages": [
+        "POLICY_ARCHIVE_REQUEST",
+        "POLICY_BOOTSTRAP",
+        "POLICY_DELETED",
+        "POLICY_DELETE_REQUEST",
+        "POLICY_DETAIL",
+        "POLICY_ERROR",
+        "POLICY_GET_REQUEST",
+        "POLICY_LIST",
+        "POLICY_LIST_REQUEST",
+        "POLICY_PDF_PARSED",
+        "POLICY_PDF_PARSE_REQUEST",
+        "POLICY_PDF_REGENERATE_REQUEST",
+        "POLICY_PUBLISH_REQUEST",
+        "POLICY_READY",
+        "POLICY_SAVED",
+        "POLICY_SAVE_REQUEST",
+        "SKANDI_POLICY_CONTROL",
+        "SKANDI_WIX_PARENT"
+      ],
+      "output": null,
+      "dynamic": false,
+      "sourceStatus": "PENDING SOURCE",
+      "blockers": [
+        "riaintra-header: PENDING SOURCE (skandi-embeds/riaintra-global/riaintra-header.html, skandi-embeds/riaintra-global/riaintra-header.css, skandi-embeds/riaintra-global/riaintra-header.js)",
+        "riaintra-footer: PENDING SOURCE (skandi-embeds/riaintra-global/riaintra-footer.html, skandi-embeds/riaintra-global/riaintra-footer.css, skandi-embeds/riaintra-global/riaintra-footer.js)"
+      ],
+      "retainedArtifact": false
+    },
+    {
+      "key": "mediaControl",
+      "route": "/riaintra/success-factors/media-control",
+      "slug": "media-control",
+      "title": "Media Control",
+      "family": "riaintra",
+      "chrome": "riaintra",
+      "sourceDirectory": "skandi-embeds/media-control",
+      "stem": "skandi-media-control",
+      "controller": "src/pages/Media Control.chm91.js",
+      "embedIds": [
+        "#mediaControlEmbed"
+      ],
+      "sources": [],
+      "binding": "explicit",
+      "requiresStaff": true,
+      "status": "PENDING SOURCE",
+      "files": [
+        "skandi-embeds/media-control/skandi-media-control.html",
+        "skandi-embeds/media-control/skandi-media-control.css",
+        "skandi-embeds/media-control/skandi-media-control.js"
+      ],
+      "missing": [
+        "skandi-embeds/media-control/skandi-media-control.html",
+        "skandi-embeds/media-control/skandi-media-control.css",
+        "skandi-embeds/media-control/skandi-media-control.js"
+      ],
+      "issues": [],
+      "backend": [
+        "src/backend/SKANDI_CORE/staffAuth.web.js",
+        "src/backend/SKANDI_CORE/publicContent.web.js",
+        "src/backend/SKANDI_CORE/mediaControl.web.js"
+      ],
+      "messages": [
+        "ARCHIVE_ASSET",
+        "CHECK_DUPLICATE",
+        "FINALIZE_UPLOAD",
+        "GET_ACCESS_URL",
+        "INTERNAL_CHROME_BOOTSTRAP",
+        "INTERNAL_CHROME_READY",
+        "INTERNAL_LOGOUT",
+        "INTERNAL_NAVIGATE",
+        "LIST_ASSETS",
+        "LOCAL_RULES_CHECKED",
+        "MEDIA_CONTROL_ACCESS_URL",
+        "MEDIA_CONTROL_ACCESS_URL_RESULT",
+        "MEDIA_CONTROL_ACTION_FAILED",
+        "MEDIA_CONTROL_ARCHIVE",
+        "MEDIA_CONTROL_ARCHIVED",
+        "MEDIA_CONTROL_CATALOG_REQUEST",
+        "MEDIA_CONTROL_DUPLICATE_CHECK",
+        "MEDIA_CONTROL_DUPLICATE_RESULT",
+        "MEDIA_CONTROL_EDITORIAL_CATALOG",
+        "MEDIA_CONTROL_ERROR",
+        "MEDIA_CONTROL_HOST_READY",
+        "MEDIA_CONTROL_LIBRARY",
+        "MEDIA_CONTROL_LIST",
+        "MEDIA_CONTROL_OPEN_PUBLIC_PAGE",
+        "MEDIA_CONTROL_PUBLIC_PAGE_INVALID",
+        "MEDIA_CONTROL_READY",
+        "MEDIA_CONTROL_REFRESH_ALL",
+        "MEDIA_CONTROL_REGISTER_USAGE",
+        "MEDIA_CONTROL_UPLOAD_COMPLETE",
+        "MEDIA_CONTROL_UPLOAD_FINALIZE",
+        "MEDIA_CONTROL_UPLOAD_PREPARE",
+        "MEDIA_CONTROL_UPLOAD_READY",
+        "MEDIA_CONTROL_USAGE_REGISTERED",
+        "NEWSROOM_",
+        "NEWSROOM_ADMIN_BOOTSTRAP",
+        "NEWSROOM_ADMIN_DATA",
+        "NEWSROOM_ADMIN_ERROR",
+        "NEWSROOM_ADMIN_READY",
+        "NEWSROOM_ADMIN_REFRESH",
+        "NEWSROOM_ADMIN_SAVED",
+        "NEWSROOM_ARCHIVE_POST",
+        "NEWSROOM_BOOTSTRAP",
+        "NEWSROOM_PUBLISH_POST",
+        "NEWSROOM_SAVE_CATEGORY",
+        "NEWSROOM_SAVE_CONTACT",
+        "NEWSROOM_SAVE_MEDIA",
+        "NEWSROOM_SAVE_POST",
+        "PACKAGE_PREPARED",
+        "PREPARE_UPLOAD",
+        "REGISTER_USAGE",
+        "SKANDI_INTERNAL_CHROME",
+        "SKANDI_MEDIA_CONTROL",
+        "SKANDI_NEWSROOM_CONTROL",
+        "SKANDI_WIX_PARENT",
+        "VOY_",
+        "VOY_ADMIN_ARCHIVED",
+        "VOY_ADMIN_ARCHIVE_ISSUE",
+        "VOY_ADMIN_BOOTSTRAP",
+        "VOY_ADMIN_BOOTSTRAP_RESULT",
+        "VOY_ADMIN_DELETE_ISSUE",
+        "VOY_ADMIN_DELETE_PAGE",
+        "VOY_ADMIN_ERROR",
+        "VOY_ADMIN_PANEL_CHANGED",
+        "VOY_ADMIN_PUBLISHED",
+        "VOY_ADMIN_PUBLISH_ISSUE",
+        "VOY_ADMIN_REORDER_PAGES",
+        "VOY_ADMIN_SAVED",
+        "VOY_ADMIN_SAVE_ISSUE_METADATA",
+        "VOY_ADMIN_SAVE_ISSUE_PACKAGE",
+        "VOY_ADMIN_SAVE_ISSUE_WITH_UPLOAD",
+        "VOY_ADMIN_SAVE_PAGE",
+        "VOY_ADMIN_SAVE_PAGES",
+        "VOY_ASSET_UPLOAD_OPEN_REQUEST",
+        "VOY_BRAND_GUARD_REQUEST",
+        "VOY_BRAND_GUARD_RESULT",
+        "VOY_CONNECTOR_NOT_CONFIGURED",
+        "VOY_DISTRIBUTION_KIT_REQUEST",
+        "VOY_DISTRIBUTION_KIT_RESULT",
+        "VOY_MEDIA_LIBRARY_REQUEST",
+        "VOY_MEDIA_LIBRARY_RESULT",
+        "VOY_MEDIA_REFRESH_URL",
+        "VOY_MEDIA_REFRESH_URL_RESULT",
+        "VOY_MEDIA_UPLOAD_COMPLETE",
+        "VOY_MEDIA_UPLOAD_CREATE",
+        "VOY_MEDIA_UPLOAD_FINALIZE",
+        "VOY_MEDIA_UPLOAD_READY",
+        "VOY_OPEN_MEDIA_CONTROL",
+        "VOY_PRINT_QA_REQUEST",
+        "VOY_PRINT_QA_RESULT",
+        "VOY_PUBLIC_PREVIEW_REQUEST",
+        "VOY_QUALITY_LAB_REQUEST",
+        "VOY_QUALITY_LAB_RESULT",
+        "VOY_TRANSLATION_PACKAGE_REQUEST",
+        "VOY_TRANSLATION_PACKAGE_RESULT"
+      ],
+      "output": null,
+      "dynamic": false,
+      "sourceStatus": "PENDING SOURCE",
+      "blockers": [
+        "riaintra-header: PENDING SOURCE (skandi-embeds/riaintra-global/riaintra-header.html, skandi-embeds/riaintra-global/riaintra-header.css, skandi-embeds/riaintra-global/riaintra-header.js)",
+        "riaintra-footer: PENDING SOURCE (skandi-embeds/riaintra-global/riaintra-footer.html, skandi-embeds/riaintra-global/riaintra-footer.css, skandi-embeds/riaintra-global/riaintra-footer.js)"
+      ],
+      "retainedArtifact": false
+    },
+    {
+      "key": "storeControl",
+      "route": "/riaintra/success-factors/store-control",
+      "slug": "store-control",
+      "title": "The Store Control",
+      "family": "riaintra",
+      "chrome": "riaintra",
+      "sourceDirectory": "skandi-embeds/store-control",
+      "stem": "skandi-store-control",
+      "controller": "src/pages/The Store Control.y10le.js",
+      "embedIds": [
+        "#storeControlEmbed"
+      ],
+      "sources": [
+        "SKANDI_STORE_CONTROL_V3"
+      ],
+      "binding": "explicit",
+      "requiresStaff": true,
+      "status": "PENDING SOURCE",
+      "files": [
+        "skandi-embeds/store-control/skandi-store-control.html",
+        "skandi-embeds/store-control/skandi-store-control.css",
+        "skandi-embeds/store-control/skandi-store-control.js"
+      ],
+      "missing": [
+        "skandi-embeds/store-control/skandi-store-control.html",
+        "skandi-embeds/store-control/skandi-store-control.css",
+        "skandi-embeds/store-control/skandi-store-control.js"
+      ],
+      "issues": [],
+      "backend": [
+        "src/backend/SKANDI_CORE/staffAuth.web.js",
+        "src/backend/SKANDI_CORE/storeCartV3.web.js"
+      ],
+      "messages": [
+        "SKANDI_STORE_CONTROL_V3",
+        "SKANDI_WIX_PARENT",
+        "STAFF_AUTH_REQUIRED",
+        "STORE_CONTROL_AUTH_REQUIRED",
+        "STORE_CONTROL_BOOTSTRAP",
+        "STORE_CONTROL_BOOTSTRAP_FAILED",
+        "STORE_CONTROL_BULK_PRICE",
+        "STORE_CONTROL_BULK_RESULT",
+        "STORE_CONTROL_CREATE_PRODUCT",
+        "STORE_CONTROL_DELETE_PRODUCT",
+        "STORE_CONTROL_ERROR",
+        "STORE_CONTROL_IDLE",
+        "STORE_CONTROL_MUTATION_OK",
+        "STORE_CONTROL_NAVIGATE",
+        "STORE_CONTROL_OPEN_PRODUCT",
+        "STORE_CONTROL_PARENT_READY",
+        "STORE_CONTROL_PRODUCT",
+        "STORE_CONTROL_PROGRESS",
+        "STORE_CONTROL_READY",
+        "STORE_CONTROL_REFRESH",
+        "STORE_CONTROL_REQUEST_FAILED",
+        "STORE_CONTROL_SAVE_CATEGORIES",
+        "STORE_CONTROL_SAVE_COLLECTION",
+        "STORE_CONTROL_SAVE_CORE",
+        "STORE_CONTROL_SAVE_PROMOTION",
+        "STORE_CONTROL_SAVE_VARIANTS",
+        "STORE_CONTROL_SEARCH",
+        "STORE_CONTROL_SET_VISIBILITY",
+        "STORE_CONTROL_UPDATE_INVENTORY",
+        "STORE_CONTROL_UPDATE_ORDER"
+      ],
+      "output": null,
+      "dynamic": false,
+      "sourceStatus": "PENDING SOURCE",
+      "blockers": [
+        "riaintra-header: PENDING SOURCE (skandi-embeds/riaintra-global/riaintra-header.html, skandi-embeds/riaintra-global/riaintra-header.css, skandi-embeds/riaintra-global/riaintra-header.js)",
+        "riaintra-footer: PENDING SOURCE (skandi-embeds/riaintra-global/riaintra-footer.html, skandi-embeds/riaintra-global/riaintra-footer.css, skandi-embeds/riaintra-global/riaintra-footer.js)"
+      ],
+      "retainedArtifact": false
+    },
+    {
+      "key": "payroll",
+      "route": "/riaintra/success-factors/payroll",
+      "slug": "payroll",
+      "title": "Payroll",
+      "family": "riaintra",
+      "chrome": "riaintra",
+      "sourceDirectory": "skandi-embeds/payroll",
+      "stem": "skandi-payroll",
+      "controller": "src/pages/Payroll.rzo0a.js",
+      "embedIds": [
+        "#payrollStaffEmbed"
+      ],
+      "sources": [],
+      "binding": "explicit",
+      "requiresStaff": true,
+      "status": "PENDING SOURCE",
+      "files": [
+        "skandi-embeds/payroll/skandi-payroll.html",
+        "skandi-embeds/payroll/skandi-payroll.css",
+        "skandi-embeds/payroll/skandi-payroll.js"
+      ],
+      "missing": [
+        "skandi-embeds/payroll/skandi-payroll.html",
+        "skandi-embeds/payroll/skandi-payroll.css",
+        "skandi-embeds/payroll/skandi-payroll.js"
+      ],
+      "issues": [],
+      "backend": [
+        "src/backend/SKANDI_CORE/payroll.web.js"
+      ],
+      "messages": [
+        "PAYROLL_ACTION_FAILED",
+        "PAYROLL_BOOTSTRAP",
+        "PAYROLL_BOOTSTRAP_FAILED",
+        "PAYROLL_CREATE_EXPORT",
+        "PAYROLL_ERROR",
+        "PAYROLL_EXPORT_READY",
+        "PAYROLL_HOST_READY",
+        "PAYROLL_NAVIGATE",
+        "PAYROLL_READY",
+        "PAYROLL_REFRESH",
+        "PAYROLL_WORKSPACE",
+        "READ_ONLY_MASTER",
+        "SKANDI_WIX_PARENT",
+        "SKANDI_ZALARIS_PAYROLL"
+      ],
+      "output": null,
+      "dynamic": false,
+      "sourceStatus": "PENDING SOURCE",
+      "blockers": [
+        "riaintra-header: PENDING SOURCE (skandi-embeds/riaintra-global/riaintra-header.html, skandi-embeds/riaintra-global/riaintra-header.css, skandi-embeds/riaintra-global/riaintra-header.js)",
+        "riaintra-footer: PENDING SOURCE (skandi-embeds/riaintra-global/riaintra-footer.html, skandi-embeds/riaintra-global/riaintra-footer.css, skandi-embeds/riaintra-global/riaintra-footer.js)"
+      ],
+      "retainedArtifact": false
+    },
+    {
+      "key": "country",
+      "route": "/destinations/country",
+      "slug": "country",
+      "title": "Destination country",
+      "family": "public",
+      "chrome": "public",
+      "sourceDirectory": "skandi-embeds/country",
+      "stem": "skandi-country",
+      "controller": "src/pages/Country.nxtpn.js",
+      "embedIds": [],
+      "sources": [
+        "SKANDI_DYNAMIC_COUNTRY_PAGE"
+      ],
+      "binding": "handshake",
+      "requiresStaff": false,
+      "status": "PENDING SOURCE",
+      "files": [
+        "skandi-embeds/country/skandi-country.html",
+        "skandi-embeds/country/skandi-country.css",
+        "skandi-embeds/country/skandi-country.js"
+      ],
+      "missing": [
+        "skandi-embeds/country/skandi-country.html",
+        "skandi-embeds/country/skandi-country.css",
+        "skandi-embeds/country/skandi-country.js"
+      ],
+      "issues": [
+        "src/public/customerAuthUi.js: imported export openCustomerLogin is absent"
+      ],
+      "backend": [
+        "src/backend/SKANDI_CORE/destinationFlow.web.js",
+        "src/backend/SKANDI_CORE/customerBooking.web.js"
+      ],
+      "messages": [
+        "BOOKING_CART_AUTH",
+        "COUNTRY",
+        "COUNTRY_ARRIVAL_REQUIRED",
+        "COUNTRY_CART_UNCONFIRMED",
+        "COUNTRY_CONTENT_UNAVAILABLE",
+        "COUNTRY_EMPTY",
+        "COUNTRY_ERROR",
+        "COUNTRY_HOST_READY",
+        "COUNTRY_INVALID_DATES",
+        "COUNTRY_INVALID_OFFERS",
+        "COUNTRY_INVALID_ROUTE",
+        "COUNTRY_INVALID_TRAVELERS",
+        "COUNTRY_NAVIGATE",
+        "COUNTRY_NAVIGATE_TO_OFFER",
+        "COUNTRY_NOT_FOUND",
+        "COUNTRY_OFFERS_RESULT",
+        "COUNTRY_OFFER_EXPIRED",
+        "COUNTRY_ORIGIN_REQUIRED",
+        "COUNTRY_PAGE_RESULT",
+        "COUNTRY_READY",
+        "COUNTRY_REQUEST_FAILED",
+        "COUNTRY_REQUIRED",
+        "COUNTRY_SEARCH_OFFERS",
+        "COUNTRY_SELECTION_PENDING",
+        "COUNTRY_SELECT_COUNTRY",
+        "COUNTRY_SELECT_OFFER",
+        "COUNTRY_TIMEOUT",
+        "LOGIN_CANCELLED",
+        "LOGIN_REQUIRED",
+        "RESIZE_IFRAME",
+        "SEARCH_FAILED",
+        "SKANDI_DYNAMIC_COUNTRY_PAGE",
+        "SKANDI_WIX_PARENT",
+        "SUPABASE_PUBLIC_INVENTORY",
+        "UPDATE_SETTINGS"
+      ],
+      "output": null,
+      "dynamic": false,
+      "sourceStatus": "PENDING SOURCE",
+      "blockers": [
+        "src/public/customerAuthUi.js: imported export openCustomerLogin is absent"
+      ],
+      "retainedArtifact": false
+    },
+    {
+      "key": "bookingFlow",
+      "route": "/booking",
+      "slug": "booking-flow",
+      "title": "Booking Flow",
+      "family": "public",
+      "chrome": "none",
+      "sourceDirectory": "skandi-embeds/booking-flow",
+      "stem": "skandi-booking-flow",
+      "controller": "src/pages/Booking.e8twe.js",
+      "embedIds": [
+        "#bookingOfferEmbed",
+        "#bookingExtrasEmbed",
+        "#signatureTransferEmbed",
+        "#apisHtml",
+        "#seatmapEmbed",
+        "#paymentEmbed",
+        "#confirmationEmbed",
+        "#bookingDocumentsEmbed"
+      ],
+      "sources": [],
+      "binding": "multi-component",
+      "requiresStaff": false,
+      "status": "PENDING SOURCE",
+      "files": [
+        "skandi-embeds/booking-flow/skandi-booking-flow.html",
+        "skandi-embeds/booking-flow/skandi-booking-flow.css",
+        "skandi-embeds/booking-flow/skandi-booking-flow.js"
+      ],
+      "missing": [
+        "skandi-embeds/booking-flow/skandi-booking-flow.html",
+        "skandi-embeds/booking-flow/skandi-booking-flow.css",
+        "skandi-embeds/booking-flow/skandi-booking-flow.js"
+      ],
+      "issues": [
+        "src/public/customerAuthUi.js: imported export openCustomerLogin is absent",
+        "Retain the eight-step Wix state/HTML components. A single receiver requires a separately verified controller migration."
+      ],
+      "backend": [
+        "src/backend/SKANDI_CORE/customerBooking.web.js"
+      ],
+      "messages": [
+        "APIS_CART_RULES_LOADED",
+        "APIS_HTML_READY",
+        "APIS_REQUIREMENTS_RESULT",
+        "APIS_RULES_REFRESH",
+        "APIS_SAVE_AND_CONTINUE",
+        "BOOKING",
+        "BOOKING_BACK_TO_RESULTS",
+        "BOOKING_CART_AUTH",
+        "BOOKING_CART_LOADED",
+        "BOOKING_DOCUMENTS_LOADED",
+        "BOOKING_DOCUMENTS_READY",
+        "BOOKING_ERROR",
+        "BOOKING_EXTRAS_LOADED",
+        "BOOKING_EXTRAS_READY",
+        "BOOKING_EXTRAS_SAVE",
+        "BOOKING_HOST_READY",
+        "BOOKING_NAVIGATE",
+        "BOOKING_OFFER_ACCEPTED",
+        "BOOKING_OFFER_READY",
+        "BOOKING_REQUEST_FAILED",
+        "BOOKING_RETRY",
+        "BOOKING_SEARCH_LOADING",
+        "BOOKING_SEARCH_REFRESH",
+        "BOOKING_SEARCH_RESULTS",
+        "BOOKING_SEARCH_SELECT",
+        "BOOKING_STEP_ACTIVE",
+        "BOOKING_STEP_INACTIVE",
+        "BOOKING_TIMEOUT",
+        "CAR_RENTAL_ONLY",
+        "CONFIRMATION_LOADED",
+        "CONFIRMATION_NAVIGATE",
+        "CONFIRMATION_READY",
+        "FLIGHT",
+        "HOTEL_ONLY",
+        "PAYMENT_COMMIT",
+        "PAYMENT_PROGRESS",
+        "PAYMENT_READY",
+        "PAYMENT_SESSION_LOADED",
+        "SEARCH_FAILED",
+        "SEATMAP_LOADED",
+        "SEATMAP_READY",
+        "SEATMAP_SAVE",
+        "SEATMAP_SKIP",
+        "SIGNATURE_TRANSFER_OPTIONS",
+        "SIGNATURE_TRANSFER_READY",
+        "SIGNATURE_TRANSFER_SELECT",
+        "SIGNATURE_TRANSFER_SKIP",
+        "SKANDI_BOOKING_APIS_V2",
+        "SKANDI_BOOKING_CART_ID",
+        "SKANDI_BOOKING_CART_TOKEN",
+        "SKANDI_BOOKING_CONFIRMATION_V2",
+        "SKANDI_BOOKING_DOCUMENTS",
+        "SKANDI_BOOKING_EXTRAS",
+        "SKANDI_BOOKING_OFFER",
+        "SKANDI_BOOKING_PAYMENT",
+        "SKANDI_BOOKING_SEATMAP",
+        "SKANDI_SIGNATURE_TRANSFER",
+        "SKANDI_WIX_PARENT"
+      ],
+      "output": null,
+      "dynamic": false,
+      "sourceStatus": "PENDING SOURCE",
+      "blockers": [
+        "src/public/customerAuthUi.js: imported export openCustomerLogin is absent",
+        "Retain the eight-step Wix state/HTML components. A single receiver requires a separately verified controller migration."
+      ],
+      "retainedArtifact": false
+    },
+    {
+      "key": "myProfile",
+      "route": "/my-profile",
+      "slug": "my-profile",
+      "title": "My Profile",
+      "family": "public",
+      "chrome": "public",
+      "sourceDirectory": "skandi-embeds/my-profile",
+      "stem": "skandi-my-profile",
+      "controller": "src/pages/My Club Profile.u4k31.js",
+      "embedIds": [
+        "#htmlMyProfile"
+      ],
+      "sources": [
+        "SKANDI_MY_PROFILE"
+      ],
+      "binding": "explicit",
+      "requiresStaff": false,
+      "status": "PENDING SOURCE",
+      "files": [
+        "skandi-embeds/my-profile/skandi-my-profile.html",
+        "skandi-embeds/my-profile/skandi-my-profile.css",
+        "skandi-embeds/my-profile/skandi-my-profile.js"
+      ],
+      "missing": [
+        "skandi-embeds/my-profile/skandi-my-profile.html",
+        "skandi-embeds/my-profile/skandi-my-profile.css",
+        "skandi-embeds/my-profile/skandi-my-profile.js"
+      ],
+      "issues": [],
+      "backend": [
+        "src/backend/SKANDI_CORE/customerSupport.web.js",
+        "src/backend/SKANDI_CORE/customerProfile.web.js"
+      ],
+      "messages": [
+        "CUSTOMER_DOCUMENTS_LOAD",
+        "CUSTOMER_DOCUMENT_",
+        "CUSTOMER_DOCUMENT_ACTION_REQUIRED",
+        "CUSTOMER_DOCUMENT_CENTER_READY",
+        "CUSTOMER_DOCUMENT_CLOSE",
+        "CUSTOMER_DOCUMENT_COMPLETE",
+        "CUSTOMER_DOCUMENT_ERROR",
+        "CUSTOMER_DOCUMENT_OPEN",
+        "CUSTOMER_DOCUMENT_REFRESH",
+        "CUSTOMER_DOCUMENT_RESULT",
+        "CUSTOMER_PROFILE",
+        "MEMBER_HELPDESK",
+        "MY_PROFILE_AIRLINE_CHANGES",
+        "MY_PROFILE_AIRLINE_CHANGE_ACCEPT",
+        "MY_PROFILE_BAGGAGE_CONFIRM",
+        "MY_PROFILE_BAGGAGE_LIST",
+        "MY_PROFILE_BAGGAGE_PREPARE_PAYMENT",
+        "MY_PROFILE_BOOKING_DETAIL",
+        "MY_PROFILE_BOOTSTRAP_TIMEOUT",
+        "MY_PROFILE_CAR_CANCEL",
+        "MY_PROFILE_DATA",
+        "MY_PROFILE_ERROR",
+        "MY_PROFILE_FLIGHT_CANCEL_CONFIRM",
+        "MY_PROFILE_FLIGHT_CANCEL_QUOTE",
+        "MY_PROFILE_FLIGHT_CHANGE_CONFIRM",
+        "MY_PROFILE_FLIGHT_CHANGE_PREPARE_PAYMENT",
+        "MY_PROFILE_FLIGHT_CHANGE_SEARCH",
+        "MY_PROFILE_FLIGHT_CHANGE_SELECT",
+        "MY_PROFILE_HOST_READY",
+        "MY_PROFILE_INVALID_PAGE",
+        "MY_PROFILE_LINK_BOOKING",
+        "MY_PROFILE_LOGOUT",
+        "MY_PROFILE_MARK_NOTIFICATION_READ",
+        "MY_PROFILE_NAVIGATE",
+        "MY_PROFILE_QUERY_SYNC_FAILED",
+        "MY_PROFILE_QUERY_UPDATE",
+        "MY_PROFILE_READY",
+        "MY_PROFILE_REFRESH",
+        "MY_PROFILE_REMOVE_FAVORITE",
+        "MY_PROFILE_REMOVE_TRAVELER",
+        "MY_PROFILE_REQUEST_FAILED",
+        "MY_PROFILE_RESULT",
+        "MY_PROFILE_SAVE_PROFILE",
+        "MY_PROFILE_SAVE_TRAVELER",
+        "MY_PROFILE_SET_PAGE",
+        "MY_PROFILE_STAY_CANCEL",
+        "MY_PROFILE_SUPPORT_CREATE",
+        "MY_PROFILE_SUPPORT_LOAD",
+        "MY_PROFILE_SUPPORT_OPEN",
+        "MY_PROFILE_SUPPORT_REPLY",
+        "MY_PROFILE_URL_SYNC_ERROR",
+        "SKANDI_CUSTOMER_DOCUMENT_CENTER",
+        "SKANDI_MY_PROFILE",
+        "SKANDI_WIX_PARENT"
+      ],
+      "output": null,
+      "dynamic": false,
+      "sourceStatus": "PENDING SOURCE",
+      "blockers": [],
+      "retainedArtifact": false
+    },
+    {
+      "key": "myTrips",
+      "route": "/my-profile?tab=trips",
+      "status": "ALIAS",
+      "aliasOf": "myProfile",
+      "slug": "my-profile",
+      "family": "public",
+      "chrome": "public",
+      "sourceDirectory": "skandi-embeds/my-profile",
+      "stem": "skandi-my-profile",
+      "controller": "src/pages/My Club Profile.u4k31.js",
+      "embedIds": [
+        "#htmlMyProfile"
+      ],
+      "targetStatus": "PENDING SOURCE"
+    },
+    {
+      "key": "careers",
+      "route": "/about/careers",
+      "slug": "careers",
+      "title": "Careers",
+      "family": "public",
+      "chrome": "public",
+      "sourceDirectory": "skandi-embeds/careers",
+      "stem": "skandi-careers",
+      "controller": "src/pages/Work at SKANDI.dyodg.js",
+      "embedIds": [
+        "#careersEmbed"
+      ],
+      "sources": [
+        "SKANDI_CAREERS_HUB"
+      ],
+      "binding": "explicit",
+      "requiresStaff": false,
+      "status": "PENDING SOURCE",
+      "files": [
+        "skandi-embeds/careers/skandi-careers.html",
+        "skandi-embeds/careers/skandi-careers.css",
+        "skandi-embeds/careers/skandi-careers.js"
+      ],
+      "missing": [
+        "skandi-embeds/careers/skandi-careers.html",
+        "skandi-embeds/careers/skandi-careers.css",
+        "skandi-embeds/careers/skandi-careers.js"
+      ],
+      "issues": [],
+      "backend": [
+        "src/backend/SKANDI_CORE/careers.web.js"
+      ],
+      "messages": [
+        "APPLICANT_OPEN_DOCUMENT",
+        "APPLICANT_PORTAL_CODE_RESULT",
+        "APPLICANT_PORTAL_DATA",
+        "APPLICANT_PORTAL_LOGIN",
+        "APPLICANT_PORTAL_LOGIN_RESULT",
+        "APPLICANT_PORTAL_LOGOUT",
+        "APPLICANT_PORTAL_LOGOUT_RESULT",
+        "APPLICANT_PORTAL_REFRESH",
+        "APPLICANT_PORTAL_REQUEST_CODE",
+        "CAREERS_APPLICATION_RESULT",
+        "CAREERS_APPLY",
+        "CAREERS_DATA",
+        "CAREERS_ERROR",
+        "CAREERS_HEIGHT",
+        "CAREERS_HOST_READY",
+        "CAREERS_NAVIGATE",
+        "CAREERS_NAVIGATE_RESULT",
+        "CAREERS_NAVIGATION_INVALID",
+        "CAREERS_PUBLIC_FORMS_DATA",
+        "CAREERS_READY",
+        "CAREERS_REFRESH",
+        "CAREERS_UPLOAD_PREPARE",
+        "CAREERS_UPLOAD_READY",
+        "DOCUMENT_EXECUTION_RESULT",
+        "DOCUMENT_EXEC_SUBMIT",
+        "DOCUMENT_PACKET_DATA",
+        "DOCUMENT_PACKET_LOAD_REQUEST",
+        "DOCUMENT_SUPPORT_REQUEST",
+        "SKANDI_CAREERS_HUB",
+        "SKANDI_WIX_PARENT"
+      ],
+      "output": null,
+      "dynamic": false,
+      "sourceStatus": "PENDING SOURCE",
+      "blockers": [],
+      "retainedArtifact": false
+    },
+    {
+      "key": "myRoster",
+      "route": "/riaintra/success-factors/my-roster",
+      "slug": "my-roster",
+      "title": "MyRoster",
+      "family": "riaintra",
+      "chrome": "riaintra",
+      "sourceDirectory": "skandi-embeds/my-roster",
+      "stem": "skandi-my-roster",
+      "controller": "src/pages/MyRoster.l8p5m.js",
+      "embedIds": [
+        "#myRosterEmbed"
+      ],
+      "sources": [
+        "SKANDI_MYROSTER_EMBED"
+      ],
+      "binding": "explicit",
+      "requiresStaff": true,
+      "status": "PENDING SOURCE",
+      "files": [
+        "skandi-embeds/my-roster/skandi-my-roster.html",
+        "skandi-embeds/my-roster/skandi-my-roster.css",
+        "skandi-embeds/my-roster/skandi-my-roster.js"
+      ],
+      "missing": [
+        "skandi-embeds/my-roster/skandi-my-roster.html",
+        "skandi-embeds/my-roster/skandi-my-roster.css",
+        "skandi-embeds/my-roster/skandi-my-roster.js"
+      ],
+      "issues": [
+        "src/backend/FINAL/internalChrome.web.js: missing imported module",
+        "src/backend/SKANDI_CORE/myRoster.web.js: missing imported module"
+      ],
+      "backend": [
+        "src/backend/SKANDI_CORE/staffAuth.web.js",
+        "src/backend/FINAL/internalChrome.web.js",
+        "src/backend/SKANDI_CORE/myRoster.web.js"
+      ],
+      "messages": [
+        "INTERNAL_CHROME_BOOTSTRAP",
+        "INTERNAL_CHROME_READY",
+        "INTERNAL_GLOBAL_SEARCH",
+        "INTERNAL_LOGOUT",
+        "INTERNAL_NAVIGATE",
+        "INTERNAL_SEARCH_RESULTS",
+        "MYROSTER_ACTION_OK",
+        "MYROSTER_BID_REQUEST",
+        "MYROSTER_BOOTSTRAP",
+        "MYROSTER_CLOCK_EVENT_REQUEST",
+        "MYROSTER_ERROR",
+        "MYROSTER_NAVIGATE",
+        "MYROSTER_PAYROLL_EXPORT_REQUEST",
+        "MYROSTER_PUBLISH_REQUEST",
+        "MYROSTER_READY",
+        "MYROSTER_REFRESH_REQUEST",
+        "MYROSTER_SYNC_ALTEA_REQUEST",
+        "MYROSTER_TIMEOFF_REQUEST",
+        "MYROSTER_TRIPTRADE_DROP_REQUEST",
+        "MYROSTER_TRIPTRADE_PICKUP_REQUEST",
+        "SKANDI_INTERNAL_CHROME",
+        "SKANDI_MYROSTER_EMBED",
+        "SKANDI_WIX_PARENT"
+      ],
+      "output": null,
+      "dynamic": false,
+      "sourceStatus": "PENDING SOURCE",
+      "blockers": [
+        "src/backend/FINAL/internalChrome.web.js: missing imported module",
+        "src/backend/SKANDI_CORE/myRoster.web.js: missing imported module",
+        "riaintra-header: PENDING SOURCE (skandi-embeds/riaintra-global/riaintra-header.html, skandi-embeds/riaintra-global/riaintra-header.css, skandi-embeds/riaintra-global/riaintra-header.js)",
+        "riaintra-footer: PENDING SOURCE (skandi-embeds/riaintra-global/riaintra-footer.html, skandi-embeds/riaintra-global/riaintra-footer.css, skandi-embeds/riaintra-global/riaintra-footer.js)"
+      ],
+      "retainedArtifact": false
+    },
+    {
+      "key": "groupTalk",
+      "route": "/riaintra/success-factors/altea/grouptalk",
+      "slug": "group-talk",
+      "title": "GroupTalk",
+      "family": "altea",
+      "chrome": "none",
+      "sourceDirectory": "skandi-embeds/group-talk",
+      "stem": "skandi-group-talk",
+      "controller": "src/pages/GroupTalk.wi4iw.js",
+      "embedIds": [
+        "#htmlGroupTalk"
+      ],
+      "sources": [
+        "GROUPTALK_HTML"
+      ],
+      "binding": "explicit",
+      "requiresStaff": true,
+      "status": "PENDING SOURCE",
+      "files": [
+        "skandi-embeds/group-talk/skandi-group-talk.html",
+        "skandi-embeds/group-talk/skandi-group-talk.css",
+        "skandi-embeds/group-talk/skandi-group-talk.js"
+      ],
+      "missing": [
+        "skandi-embeds/group-talk/skandi-group-talk.html",
+        "skandi-embeds/group-talk/skandi-group-talk.css",
+        "skandi-embeds/group-talk/skandi-group-talk.js"
+      ],
+      "issues": [],
+      "backend": [
+        "src/backend/SKANDI_CORE/staffAuth.web.js",
+        "src/backend/SKANDI_CORE/groupTalk.web.js"
+      ],
+      "messages": [
+        "ADMIN_SAVE_GROUP",
+        "ADMIN_SAVE_GROUP_RESPONSE",
+        "ADMIN_SET_MEMBERSHIP",
+        "ADMIN_SET_MEMBERSHIP_RESPONSE",
+        "GROUPTALK_ACTION_FAILED",
+        "GROUPTALK_HTML",
+        "GT_BOOTSTRAP",
+        "GT_ERROR",
+        "GT_NAVIGATE",
+        "GT_READY",
+        "GT_REFRESH",
+        "HISTORY_SEARCH_REQUEST",
+        "HISTORY_SEARCH_RESPONSE",
+        "INTERNAL_CHROME_BOOTSTRAP",
+        "INTERNAL_CHROME_READY",
+        "INTERNAL_LOGOUT",
+        "INTERNAL_NAVIGATE",
+        "LIVEKIT_TOKEN_REQUEST",
+        "LIVEKIT_TOKEN_RESPONSE",
+        "LIVE_LOCATIONS_REQUEST",
+        "LIVE_LOCATIONS_RESPONSE",
+        "LOCATION_PING",
+        "LOCATION_PING_RESULT",
+        "PHONEBOOK_REQUEST",
+        "PHONEBOOK_RESPONSE",
+        "PRESENCE_REQUEST",
+        "PRESENCE_RESPONSE",
+        "PRESENCE_UPDATE",
+        "PRESENCE_UPDATE_RESPONSE",
+        "PTT_EVENT",
+        "PTT_EVENT_RESULT",
+        "REALTIME_CONFIG_REQUEST",
+        "REALTIME_CONFIG_RESPONSE",
+        "SKANDI_INTERNAL_CHROME",
+        "SKANDI_WIX_PARENT",
+        "TICKET_CATEGORY_DELETE",
+        "TICKET_CATEGORY_DELETE_RESPONSE",
+        "TICKET_CATEGORY_LIST_REQUEST",
+        "TICKET_CATEGORY_LIST_RESPONSE",
+        "TICKET_CATEGORY_SAVE",
+        "TICKET_CATEGORY_SAVE_RESPONSE",
+        "TICKET_CREATE",
+        "TICKET_CREATE_RESPONSE",
+        "TICKET_LIST_REQUEST",
+        "TICKET_LIST_RESPONSE",
+        "TICKET_REPLY",
+        "TICKET_REPLY_RESPONSE"
+      ],
+      "output": null,
+      "dynamic": false,
+      "sourceStatus": "PENDING SOURCE",
+      "blockers": [],
+      "retainedArtifact": false
+    },
+    {
+      "key": "passportVisa",
+      "route": "/travel-info/passport-visa",
+      "slug": "passport-visa",
+      "title": "Passport & Visa",
+      "family": "public",
+      "chrome": "public",
+      "sourceDirectory": "skandi-embeds/passport-visa",
+      "stem": "skandi-passport-visa",
+      "controller": "src/pages/Passport & Visa.zohjw.js",
+      "embedIds": [
+        "#passportVisaEmbed"
+      ],
+      "sources": [
+        "SKANDI_PASSPORT_VISA_PAGE"
+      ],
+      "binding": "explicit",
+      "requiresStaff": false,
+      "status": "PENDING SOURCE",
+      "files": [
+        "skandi-embeds/passport-visa/skandi-passport-visa.html",
+        "skandi-embeds/passport-visa/skandi-passport-visa.css",
+        "skandi-embeds/passport-visa/skandi-passport-visa.js"
+      ],
+      "missing": [
+        "skandi-embeds/passport-visa/skandi-passport-visa.html",
+        "skandi-embeds/passport-visa/skandi-passport-visa.css",
+        "skandi-embeds/passport-visa/skandi-passport-visa.js"
+      ],
+      "issues": [],
+      "backend": [
+        "src/backend/SKANDI_CORE/publicContent.web.js"
+      ],
+      "messages": [
+        "PASSPORT",
+        "PASSPORT_VISA_DATA",
+        "PASSPORT_VISA_ERROR",
+        "PASSPORT_VISA_HOST_READY",
+        "PASSPORT_VISA_LOADING",
+        "PASSPORT_VISA_NAVIGATE",
+        "PASSPORT_VISA_READY",
+        "PASSPORT_VISA_REFRESH",
+        "PASSPORT_VISA_SEARCH",
+        "PASSPORT_VISA_SEARCHING",
+        "PASSPORT_VISA_SEARCH_ERROR",
+        "PASSPORT_VISA_SEARCH_RESULT",
+        "SKANDI_PASSPORT_VISA_PAGE",
+        "SKANDI_WIX_PARENT"
+      ],
+      "output": null,
+      "dynamic": false,
+      "sourceStatus": "PENDING SOURCE",
+      "blockers": [],
+      "retainedArtifact": false
+    },
+    {
+      "key": "baggageAllowance",
+      "route": "/travel-info/baggage-allowance",
+      "slug": "baggage-allowance",
+      "title": "Baggage Allowance",
+      "family": "public",
+      "chrome": "public",
+      "sourceDirectory": "skandi-embeds/baggage-allowance",
+      "stem": "skandi-baggage-allowance",
+      "controller": "src/pages/Baggage Allowance.tf8xc.js",
+      "embedIds": [
+        "#baggageInfoEmbed"
+      ],
+      "sources": [
+        "SKANDI_BAGGAGE_PAGE"
+      ],
+      "binding": "explicit",
+      "requiresStaff": false,
+      "status": "PENDING SOURCE",
+      "files": [
+        "skandi-embeds/baggage-allowance/skandi-baggage-allowance.html",
+        "skandi-embeds/baggage-allowance/skandi-baggage-allowance.css",
+        "skandi-embeds/baggage-allowance/skandi-baggage-allowance.js"
+      ],
+      "missing": [
+        "skandi-embeds/baggage-allowance/skandi-baggage-allowance.html",
+        "skandi-embeds/baggage-allowance/skandi-baggage-allowance.css",
+        "skandi-embeds/baggage-allowance/skandi-baggage-allowance.js"
+      ],
+      "issues": [],
+      "backend": [
+        "src/backend/SKANDI_CORE/publicContent.web.js"
+      ],
+      "messages": [
+        "BAGGAGE_DATA",
+        "BAGGAGE_ERROR",
+        "BAGGAGE_HOST_READY",
+        "BAGGAGE_LOADING",
+        "BAGGAGE_NAVIGATE",
+        "BAGGAGE_READY",
+        "BAGGAGE_REFRESH",
+        "SKANDI_BAGGAGE_PAGE",
+        "SKANDI_WIX_PARENT"
+      ],
+      "output": null,
+      "dynamic": false,
+      "sourceStatus": "PENDING SOURCE",
+      "blockers": [],
+      "retainedArtifact": false
+    },
+    {
+      "key": "travelInsurance",
+      "route": "/travel-info/insurance",
+      "slug": "travel-insurance",
+      "title": "Travel Insurance",
+      "family": "public",
+      "chrome": "public",
+      "sourceDirectory": "skandi-embeds/travel-insurance",
+      "stem": "skandi-travel-insurance",
+      "controller": "src/pages/Insurance.ojo62.js",
+      "embedIds": [
+        "#travelInsuranceEmbed"
+      ],
+      "sources": [
+        "SKANDI_INSURANCE_PAGE"
+      ],
+      "binding": "explicit",
+      "requiresStaff": false,
+      "status": "PENDING SOURCE",
+      "files": [
+        "skandi-embeds/travel-insurance/skandi-travel-insurance.html",
+        "skandi-embeds/travel-insurance/skandi-travel-insurance.css",
+        "skandi-embeds/travel-insurance/skandi-travel-insurance.js"
+      ],
+      "missing": [
+        "skandi-embeds/travel-insurance/skandi-travel-insurance.html",
+        "skandi-embeds/travel-insurance/skandi-travel-insurance.css",
+        "skandi-embeds/travel-insurance/skandi-travel-insurance.js"
+      ],
+      "issues": [],
+      "backend": [
+        "src/backend/SKANDI_CORE/publicContent.web.js"
+      ],
+      "messages": [
+        "INSURANCE_DATA",
+        "INSURANCE_ERROR",
+        "INSURANCE_HOST_READY",
+        "INSURANCE_LOADING",
+        "INSURANCE_NAVIGATE",
+        "INSURANCE_READY",
+        "INSURANCE_REFRESH",
+        "INSURANCE_SEARCH_TRIPS",
+        "INSURANCE_SUPPORT",
+        "SKANDI_INSURANCE_PAGE",
+        "SKANDI_WIX_PARENT"
+      ],
+      "output": null,
+      "dynamic": false,
+      "sourceStatus": "PENDING SOURCE",
+      "blockers": [],
+      "retainedArtifact": false
+    },
+    {
+      "key": "specialAssistance",
+      "route": "/travel-info/special-assistance",
+      "slug": "special-assistance",
+      "title": "Special Assistance",
+      "family": "public",
+      "chrome": "public",
+      "sourceDirectory": "skandi-embeds/special-assistance",
+      "stem": "skandi-special-assistance",
+      "controller": null,
+      "embedIds": [],
+      "sources": [],
+      "binding": "explicit",
+      "requiresStaff": false,
+      "status": "PENDING SOURCE",
+      "files": [
+        "skandi-embeds/special-assistance/skandi-special-assistance.html",
+        "skandi-embeds/special-assistance/skandi-special-assistance.css",
+        "skandi-embeds/special-assistance/skandi-special-assistance.js"
+      ],
+      "missing": [
+        "skandi-embeds/special-assistance/skandi-special-assistance.html",
+        "skandi-embeds/special-assistance/skandi-special-assistance.css",
+        "skandi-embeds/special-assistance/skandi-special-assistance.js"
+      ],
+      "issues": [
+        "No verified canonical controller mapping."
+      ],
+      "backend": [],
+      "messages": [],
+      "output": null,
+      "dynamic": false,
+      "sourceStatus": "PENDING SOURCE",
+      "blockers": [
+        "No verified canonical controller mapping."
+      ],
+      "retainedArtifact": false
+    },
+    {
+      "key": "flightStatus",
+      "route": "/travel-info/flight-status",
+      "slug": "flight-status",
+      "title": "Flight Status",
+      "family": "public",
+      "chrome": "public",
+      "sourceDirectory": "skandi-embeds/flight-status",
+      "stem": "flight-status",
+      "controller": "src/pages/Flight Status.cn7ah.js",
+      "embedIds": [
+        "#flightStatusEmbed"
+      ],
+      "sources": [
+        "SKANDI_FLIGHT_STATUS"
+      ],
+      "binding": "explicit",
+      "requiresStaff": false,
+      "status": "BUILT",
+      "files": [
+        "skandi-embeds/flight-status/flight-status.html",
+        "skandi-embeds/flight-status/flight-status.css",
+        "skandi-embeds/flight-status/flight-status.js"
+      ],
+      "missing": [],
+      "issues": [],
+      "backend": [
+        "src/backend/SKANDI_CORE/flightStatus.web.js"
+      ],
+      "messages": [
+        "ACTIVITY",
+        "AIRPORT_CONTEXT",
+        "AIRPORT_DIRECTORY",
+        "DESTINATION",
+        "EXPERIENCE",
+        "FLIGHT_STATUS_AIRPORTS_ERROR",
+        "FLIGHT_STATUS_AIRPORTS_REQUEST",
+        "FLIGHT_STATUS_AIRPORTS_RESULTS",
+        "FLIGHT_STATUS_AIRPORT_ACTION",
+        "FLIGHT_STATUS_AIRPORT_CONTEXT_ERROR",
+        "FLIGHT_STATUS_AIRPORT_CONTEXT_REQUEST",
+        "FLIGHT_STATUS_AIRPORT_CONTEXT_RESULTS",
+        "FLIGHT_STATUS_ERROR",
+        "FLIGHT_STATUS_HOST_READY",
+        "FLIGHT_STATUS_READY",
+        "FLIGHT_STATUS_RESULTS",
+        "FLIGHT_STATUS_SEARCH",
+        "HOTEL",
+        "SEARCH",
+        "SKANDI_FLIGHT_STATUS",
+        "SKANDI_WIX_PARENT",
+        "TRANSFER"
+      ],
+      "output": "dist/flight-status/index.html",
+      "dynamic": false,
+      "sourceStatus": "COMPLETE SOURCE",
+      "blockers": [],
+      "sha256": "f1072c61107d0b78f3f6ea68df98bff72fca521ef38fa9640c9d5a9b55bd1f28",
+      "bytes": 310848
+    }
+  ],
+  "globalComponents": {
+    "public": [
+      {
+        "component": "skandi-header",
+        "status": "COMPLETE SOURCE",
+        "missing": []
+      },
+      {
+        "component": "skandi-footer",
+        "status": "COMPLETE SOURCE",
+        "missing": []
+      },
+      {
+        "component": "skandi-mobile-nav",
+        "status": "COMPLETE SOURCE",
+        "missing": []
+      }
+    ],
+    "riaintra": [
+      {
+        "component": "riaintra-header",
+        "status": "PENDING SOURCE",
+        "missing": [
+          "skandi-embeds/riaintra-global/riaintra-header.html",
+          "skandi-embeds/riaintra-global/riaintra-header.css",
+          "skandi-embeds/riaintra-global/riaintra-header.js"
+        ]
+      },
+      {
+        "component": "riaintra-footer",
+        "status": "PENDING SOURCE",
+        "missing": [
+          "skandi-embeds/riaintra-global/riaintra-footer.html",
+          "skandi-embeds/riaintra-global/riaintra-footer.css",
+          "skandi-embeds/riaintra-global/riaintra-footer.js"
+        ]
+      }
+    ],
+    "altea": [
+      {
+        "component": "altea-header",
+        "status": "PENDING SOURCE",
+        "missing": [
+          "skandi-embeds/altea-global/altea-header.html",
+          "skandi-embeds/altea-global/altea-header.css",
+          "skandi-embeds/altea-global/altea-header.js"
+        ]
+      },
+      {
+        "component": "altea-footer",
+        "status": "PENDING SOURCE",
+        "missing": [
+          "skandi-embeds/altea-global/altea-footer.html",
+          "skandi-embeds/altea-global/altea-footer.css",
+          "skandi-embeds/altea-global/altea-footer.js"
+        ]
+      }
+    ]
+  },
+  "orphanedArtifacts": []
+}

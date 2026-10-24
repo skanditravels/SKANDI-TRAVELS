@@ -1,50 +1,85 @@
 name: SKANDI Website Builder
 
 on:
+  workflow_dispatch:
   push:
     branches: [main]
-  workflow_dispatch:
+    paths:
+      - 'skandi-embeds/**'
+      - 'riaintra-embeds/**'
+      - 'src/pages/**'
+      - 'src/public/**'
+      - 'src/backend/SKANDI_CORE/**'
+      - 'scripts/**'
+      - 'tests/**'
+      - '.github/workflows/skandi-app-build.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'skandi-embeds/**'
+      - 'riaintra-embeds/**'
+      - 'src/**'
+      - 'scripts/**'
+      - 'tests/**'
+      - '.github/workflows/skandi-app-build.yml'
+
+concurrency:
+  group: skandi-website-builder-${{ github.event_name == 'pull_request' && github.event.pull_request.number || 'main' }}
+  cancel-in-progress: false
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     permissions:
       contents: write
-
     steps:
-      - name: Checkout repository
+      - name: Checkout current source
         uses: actions/checkout@v4
         with:
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || 'main' }}
           fetch-depth: 0
-
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
-
-      - name: Install build tooling
-        working-directory: scripts
-        run: npm ci
-
-      - name: Run build validation and regression tests
-        run: node --test tests/build-skandi-app.test.mjs
-
-      - name: Build the SKANDI site
+          node-version: 22
+          cache: npm
+          cache-dependency-path: scripts/package-lock.json
+      - name: Install deterministic compiler tooling
+        run: npm ci --prefix scripts --ignore-scripts --no-audit --no-fund
+      - name: Validate route inventory and integration evidence
+        run: node scripts/build-skandi-app.mjs --inventory
+      - name: Run compilation and regression tests
+        id: tests
+        run: node --test tests/*.test.mjs
+      - name: Compile every complete eligible page
+        id: build
+        continue-on-error: true
         run: node scripts/build-skandi-app.mjs
-
-      - name: Commit generated output
+      - name: Report every page and retain validation evidence
+        if: always() && steps.build.outcome != 'skipped'
+        run: |
+          if [ -f dist/website-structure.md ]; then
+            cat dist/website-structure.md >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - name: Save build artifacts for review or a protected-branch PR
+        if: always() && steps.build.outcome != 'skipped'
+        uses: actions/upload-artifact@v4
+        with:
+          name: skandi-generated-build
+          path: dist/
+          if-no-files-found: error
+      - name: Commit generated output to main
+        if: github.event_name != 'pull_request' && steps.tests.outcome == 'success' && (steps.build.outcome == 'success' || steps.build.outcome == 'failure')
         env:
           GIT_AUTHOR_NAME: github-actions[bot]
           GIT_AUTHOR_EMAIL: github-actions[bot]@users.noreply.github.com
           GIT_COMMITTER_NAME: github-actions[bot]
           GIT_COMMITTER_EMAIL: github-actions[bot]@users.noreply.github.com
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add -A -- dist/
-          if git diff --cached --quiet -- dist/; then
-            echo "No generated HTML changes to commit."
-            exit 0
-          fi
-          git commit -m "Build SKANDI website"
-          git push origin HEAD:main
+        # publish-skandi-build uses git add -A -- dist/ and git diff --cached --quiet.
+        # Failed sources are removed from current manifest lookup, while installed
+        # legacy HTML artifacts are retained. No invalid HTML replaces a working page.
+        run: node scripts/publish-skandi-build.mjs
+      - name: Fail visibly when any source failed compilation
+        if: steps.build.outcome == 'failure'
+        run: exit 1

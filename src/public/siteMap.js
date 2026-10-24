@@ -156,3 +156,441 @@ export function getGlobalChrome(key){return Object.prototype.hasOwnProperty.call
 export function getCustomerAuthPopup(key){return Object.prototype.hasOwnProperty.call(CUSTOMER_AUTH_POPUPS,key)?CUSTOMER_AUTH_POPUPS[key]:null}
 export function getEditorialPageCatalog(){return EDITORIAL_PAGE_CATALOG}
 export function isSafeInternalRoute(value){const path=String(value||"").trim();const invalid=input=>/[\\\x00-\x1F\x7F]/.test(input);if(!path.startsWith("/")||path.startsWith("//")||invalid(path))return false;try{const decoded=decodeURIComponent(path.split(/[?#]/,1)[0]);return decoded.startsWith("/")&&!decoded.startsWith("//")&&!invalid(decoded)}catch(_){return false}}
+
+// Compiler integration bindings. No route strings are duplicated here.
+// Source-verified controller contracts; Wix element installation still requires live verification.
+export const PAGE_BUILD_INTEGRATIONS = Object.freeze({
+  "home": {
+    "controller": "src/pages/Home.n73w8.js",
+    "embedIds": [
+      "#htmlHome",
+      "#htmlhome",
+      "#home"
+    ],
+    "sources": [
+      "SKANDI_HOME",
+      "SKANDI_HOME_LONG_DISCOVERY_V2",
+      "SKANDI_HOME_OLD_STYLE"
+    ]
+  },
+  "search": {
+    "controller": "src/pages/Search.b7zch.js",
+    "embedIds": [
+      "#searchResultsEmbed"
+    ],
+    "sources": [
+      "SKANDI_SEARCH_RESULTS"
+    ]
+  },
+  "carRental": {
+    "controller": "src/pages/Car Rental.i9rnb.js",
+    "embedIds": [
+      "#carRentalEmbed"
+    ],
+    "sources": [
+      "SKANDI_CAR_RENTAL"
+    ]
+  },
+  "country": {
+    "controller": "src/pages/Country.nxtpn.js",
+    "embedIds": [],
+    "sources": [
+      "SKANDI_DYNAMIC_COUNTRY_PAGE"
+    ],
+    "binding": "handshake"
+  },
+  "flightStatus": {
+    "controller": "src/pages/Flight Status.cn7ah.js",
+    "embedIds": [
+      "#flightStatusEmbed"
+    ],
+    "sources": [
+      "SKANDI_FLIGHT_STATUS"
+    ],
+    "stem": "flight-status"
+  },
+  "riaintra": {
+    "controller": "src/pages/RIAINTRA.rc14z.js",
+    "embedIds": [
+      "#staffLoginEmbed"
+    ],
+    "sources": [
+      "SKANDI_STAFF_LOGIN"
+    ],
+    "sourceDirectory": "riaintra-embeds/riaintra",
+    "stem": "riaintra",
+    "publicEntry": true
+  },
+  "successFactors": {
+    "controller": "src/pages/Success Factors.sh6tw.js",
+    "embedIds": [
+      "#staffHrEmbed"
+    ],
+    "sources": []
+  },
+  "alteaLaunchpad": {
+    "controller": "src/pages/ALTEA Launchpad.ajs4y.js",
+    "embedIds": [],
+    "sources": [
+      "SKANDI_ALTEA_LAUNCHPAD"
+    ],
+    "binding": "handshake"
+  },
+  "alteaReservations": {
+    "controller": "src/pages/Reservations.ly2n8.js",
+    "embedIds": [
+      "#alteaReservationsEmbed"
+    ],
+    "sources": [
+      "SKANDI_DUFFEL_RESERVATIONS"
+    ]
+  },
+  "opsControl": {
+    "controller": "src/pages/OPS Control.uposx.js",
+    "embedIds": [
+      "#opsControlEmbed",
+      "#htmlOpsControl",
+      "#occEmbed"
+    ],
+    "sources": [
+      "SKANDI_OPS_CONTROL"
+    ]
+  },
+  "inventoryControl": {
+    "controller": "src/pages/Inventory Control.jsdik.js",
+    "embedIds": [
+      "#inventoryControlEmbed"
+    ],
+    "sources": [
+      "SKANDI_INVENTORY_EMBED"
+    ]
+  },
+  "groupTalk": {
+    "controller": "src/pages/GroupTalk.wi4iw.js",
+    "embedIds": [
+      "#htmlGroupTalk"
+    ],
+    "sources": [
+      "GROUPTALK_HTML"
+    ]
+  },
+  "uniformCenter": {
+    "controller": "src/pages/Uniform Center.lukfc.js",
+    "embedIds": [
+      "#uniformCenterEmbed"
+    ],
+    "sources": [
+      "SKANDI_UNIFORM_EMPLOYEE"
+    ]
+  },
+  "uniformControl": {
+    "controller": "src/pages/Uniform Control.yx92b.js",
+    "embedIds": [
+      "#uniformControlEmbed"
+    ],
+    "sources": []
+  },
+  "mail": {
+    "controller": "src/pages/Mail.ecik8.js",
+    "embedIds": [
+      "#mailEmbed"
+    ],
+    "sources": [
+      "SKANDI_MAIL_EMBED"
+    ]
+  },
+  "docunet": {
+    "controller": "src/pages/DocuNet.twh13.js",
+    "embedIds": [
+      "#docuNetViewerEmbed"
+    ],
+    "sources": []
+  },
+  "docunetAdmin": {
+    "controller": "src/pages/DocuNet Administration.u5a64.js",
+    "embedIds": [
+      "#docuNetAdminEmbed"
+    ],
+    "sources": [
+      "SKANDI_DOCUNET_ADMIN"
+    ]
+  },
+  "policyControl": {
+    "controller": "src/pages/Policy Control.ec9p4.js",
+    "embedIds": [
+      "#policyControlEmbed"
+    ],
+    "sources": []
+  },
+  "mediaControl": {
+    "controller": "src/pages/Media Control.chm91.js",
+    "embedIds": [
+      "#mediaControlEmbed"
+    ],
+    "sources": []
+  },
+  "storeControl": {
+    "controller": "src/pages/The Store Control.y10le.js",
+    "embedIds": [
+      "#storeControlEmbed"
+    ],
+    "sources": [
+      "SKANDI_STORE_CONTROL_V3"
+    ]
+  },
+  "payroll": {
+    "controller": "src/pages/Payroll.rzo0a.js",
+    "embedIds": [
+      "#payrollStaffEmbed"
+    ],
+    "sources": []
+  },
+  "myRoster": {
+    "controller": "src/pages/MyRoster.l8p5m.js",
+    "embedIds": [
+      "#myRosterEmbed"
+    ],
+    "sources": [
+      "SKANDI_MYROSTER_EMBED"
+    ],
+    "note": "Existing controller imports backend/FINAL/internalChrome.web.js, which is absent. Preserve existing behavior; integration remains blocked."
+  },
+  "legalInternal": {
+    "controller": "src/pages/RIAINTRA Legal.xvi17.js",
+    "embedIds": [
+      "#internalLegalHubEmbed"
+    ],
+    "sources": []
+  },
+  "about": {
+    "controller": "src/pages/About.xcftf.js",
+    "embedIds": [
+      "#aboutEmbed"
+    ],
+    "sources": [
+      "SKANDI_ABOUT_PAGE"
+    ]
+  },
+  "club": {
+    "controller": "src/pages/SKANDI Signature Club.gsejz.js",
+    "embedIds": [
+      "#skandiClubInfoEmbed"
+    ],
+    "sources": [
+      "SKANDI_CLUB_INFO"
+    ]
+  },
+  "forgotPassword": {
+    "controller": "src/pages/Forgot Password.uagf0.js",
+    "embedIds": [
+      "#forgotPasswordHtml"
+    ],
+    "sources": [
+      "SKANDI_FORGOT_PASSWORD"
+    ]
+  },
+  "myProfile": {
+    "controller": "src/pages/My Club Profile.u4k31.js",
+    "embedIds": [
+      "#htmlMyProfile"
+    ],
+    "sources": [
+      "SKANDI_MY_PROFILE"
+    ]
+  },
+  "newsroom": {
+    "controller": "src/pages/News Room.vn46g.js",
+    "embedIds": [
+      "#newsroomEmbed"
+    ],
+    "sources": [
+      "SKANDI_PUBLIC_NEWSROOM"
+    ]
+  },
+  "voy": {
+    "controller": "src/pages/VOY Magazine.gecp7.js",
+    "embedIds": [
+      "#voyMagazineEmbed"
+    ],
+    "sources": []
+  },
+  "careers": {
+    "controller": "src/pages/Work at SKANDI.dyodg.js",
+    "embedIds": [
+      "#careersEmbed"
+    ],
+    "sources": [
+      "SKANDI_CAREERS_HUB"
+    ]
+  },
+  "legal": {
+    "controller": "src/pages/Legal.nvnld.js",
+    "embedIds": [
+      "#legalHubEmbed"
+    ],
+    "sources": [
+      "SKANDI_LEGAL_HUB"
+    ]
+  },
+  "policies": {
+    "controller": "src/pages/Policies.sgcey.js",
+    "embedIds": [
+      "#legalPolicyEmbed"
+    ],
+    "sources": [
+      "SKANDI_LEGAL_DOCUMENT"
+    ]
+  },
+  "passportVisa": {
+    "controller": "src/pages/Passport & Visa.zohjw.js",
+    "embedIds": [
+      "#passportVisaEmbed"
+    ],
+    "sources": [
+      "SKANDI_PASSPORT_VISA_PAGE"
+    ]
+  },
+  "baggageAllowance": {
+    "controller": "src/pages/Baggage Allowance.tf8xc.js",
+    "embedIds": [
+      "#baggageInfoEmbed"
+    ],
+    "sources": [
+      "SKANDI_BAGGAGE_PAGE"
+    ]
+  },
+  "travelInsurance": {
+    "controller": "src/pages/Insurance.ojo62.js",
+    "embedIds": [
+      "#travelInsuranceEmbed"
+    ],
+    "sources": [
+      "SKANDI_INSURANCE_PAGE"
+    ]
+  },
+  "travelInfo": {
+    "controller": "src/pages/Travel Info.m43d6.js",
+    "embedIds": [
+      "#travelInfoHtml",
+      "#travelInfoEmbed",
+      "#html1"
+    ],
+    "sources": [
+      "SKANDI_PUBLIC_TRAVEL_INFO"
+    ]
+  },
+  "skandiCollection": {
+    "controller": "src/pages/SKANDI Collection.lo9p5.js",
+    "embedIds": [
+      "#skandiCollectionEmbed",
+      "#signatureCollectionEmbed",
+      "#skandiCollectionHtml",
+      "#signatureCollectionHtml",
+      "#html1"
+    ],
+    "sources": [
+      "SKANDI_SIGNATURE_COLLECTION"
+    ]
+  },
+  "tours": {
+    "controller": "src/pages/Tours & Activities.jxipw.js",
+    "embedIds": [
+      "#toursActivitiesHtml"
+    ],
+    "sources": [
+      "SKANDI_TOURS_ACTIVITIES"
+    ]
+  },
+  "theStore": {
+    "controller": "src/pages/The Store.iv8g6.js",
+    "embedIds": [
+      "#skandiStoreEmbed"
+    ],
+    "sources": [
+      "SKANDI_STOREFRONT"
+    ]
+  },
+  "storeCheckout": {
+    "controller": "src/pages/Checkout.qofcb.js",
+    "embedIds": [
+      "#storeCheckoutEmbed"
+    ],
+    "sources": [
+      "SKANDI_STORE_CHECKOUT"
+    ]
+  },
+  "storeConfirmation": {
+    "controller": "src/pages/Order Confirmation.u5zzl.js",
+    "embedIds": [
+      "#storeOrderConfirmationEmbed"
+    ],
+    "sources": [
+      "SKANDI_STORE_CONFIRMATION"
+    ]
+  },
+  "bookingFlow": {
+    "controller": "src/pages/Booking.e8twe.js",
+    "embedIds": [
+      "#bookingOfferEmbed",
+      "#bookingExtrasEmbed",
+      "#signatureTransferEmbed",
+      "#apisHtml",
+      "#seatmapEmbed",
+      "#paymentEmbed",
+      "#confirmationEmbed",
+      "#bookingDocumentsEmbed"
+    ],
+    "sources": [],
+    "binding": "multi-component",
+    "note": "Retain the eight-step Wix state/HTML components. A single receiver requires a separately verified controller migration."
+  },
+  "support": {
+    "controller": "src/pages/How can we help_.k0iqp.js",
+    "embedIds": [
+      "#skandiHelpCenterEmbed",
+      "#skandiSupportChatEmbed"
+    ],
+    "sources": [
+      "HELP_CENTER",
+      "help-center",
+      "SKANDI_SUPPORT_PUBLIC"
+    ],
+    "binding": "multi-component",
+    "note": "Help Center and support chat are separate HTML components; preserve them until a verified single-component migration."
+  }
+});
+
+// These rules were moved unchanged from masterPage.js so compilation and Wix agree.
+export const INTERNAL_PATH_PREFIXES = Object.freeze(["/riaintra", "/altea", "/_functions"]);
+export const ALTEA_PATH_PREFIXES = Object.freeze([SITE_MAP.alteaLaunchpad, "/riaintra/altea", "/altea"]);
+export const CHROME_FREE_PATHS = Object.freeze([
+  APP_ROUTES.groupTalk, SITE_MAP.riaintra, APP_ROUTES.bookingFlow,
+  SITE_MAP.storeConfirmation, SITE_MAP.storeCheckout, SITE_MAP.theStore
+]);
+export function normalizeSitePath(value = "") {
+  return String(value || "").toLowerCase().split(/[?#]/)[0].replace(/\/+$/, "") || "/";
+}
+export function getPageFamily(route) {
+  const value = normalizeSitePath(route);
+  const under = prefix => value === prefix || value.startsWith(prefix + "/");
+  if (ALTEA_PATH_PREFIXES.some(under)) return "altea";
+  return INTERNAL_PATH_PREFIXES.some(under) ? "riaintra" : "public";
+}
+export function getPageChrome(route) {
+  return CHROME_FREE_PATHS.includes(normalizeSitePath(route)) ? "none" : getPageFamily(route);
+}
+export function resolveBuildRoute(value) {
+  if (!isSafeInternalRoute(value)) return null;
+  const pathname = normalizeSitePath(value);
+  const routes = { ...SITE_MAP, ...APP_ROUTES };
+  const entries = Object.entries(routes).filter(([, route]) => !/[?#]/.test(route));
+  const exact = entries.find(([, route]) => normalizeSitePath(route) === pathname);
+  if (exact) return { key:exact[0], route:exact[1] };
+  // Only explicit templates in the canonical registry may match dynamic URLs.
+  const dynamic = entries.filter(([, route]) => /(^|\/):[A-Za-z][\w]*|\[[A-Za-z][\w]*\]/.test(route));
+  const matches = dynamic.filter(([, route]) => {
+    const a = normalizeSitePath(route).split("/"), b = pathname.split("/");
+    return a.length === b.length && a.every((part, i) => /^:[a-z][\w]*$|^\[[a-z][\w]*\]$/.test(part) ? Boolean(b[i]) : part === b[i]);
+  });
+  return matches.length === 1 ? { key:matches[0][0], route:matches[0][1] } : null;
+}

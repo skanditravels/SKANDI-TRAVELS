@@ -49,25 +49,26 @@ function show(el) {try {el?.show();} catch(_) {}}
 async function identity(){try{const m=await currentMember.getMember();return String(m?._id||'guest').slice(0,120);}catch(_){return 'guest';}}
 function safeFailure(error){return clean(error?.publicMessage||error?.message||'Live customer assistance could not connect.',350);}
 
-export function bindAlexandraGlobal({ wixSelector=$w, navigate, enabled=()=>true, mobileEnabled=()=>false }={}) {
+export function bindAlexandraGlobal({ wixSelector=$w, navigate, enabled=()=>true, mobileEnabled=()=>false, mobileTarget=()=>null }={}) {
   let launcher,panel,mobileNav;
   try{launcher=wixSelector(LAUNCHER_ID);}catch(_){}
   try{panel=wixSelector(PANEL_ID);}catch(_){}
   try{mobileNav=wixSelector(MOBILE_NAV_ID);}catch(_){}
   const desktopAvailable=Boolean(launcher&&panel&&typeof launcher.onMessage==='function'&&typeof panel.onMessage==='function');
-  const mobileAvailable=Boolean(mobileNav&&typeof mobileNav.postMessage==='function');
-  if(!desktopAvailable&&!mobileAvailable){
+  const mobileElement=()=>mobileTarget() || mobileNav;
+  const mobileAvailable=()=>Boolean(mobileElement()&&typeof mobileElement().postMessage==='function');
+  if(!desktopAvailable&&!mobileAvailable()&&arguments[0]?.mobileTarget===undefined){
     console.warn('[Alexandra Global] Neither desktop chat nor mobile navigation is installed.');
     return {installed:false};
   }
   let memberId='guest',state=storageRead(),openRequested=state.open,currentPath='',busy=false;
   let activeDesktop=null,activeMobile=null,desktopInitialized=false;
   let desktopEpoch=0,mobileEpoch=0;
-  const targetEl=target=>target==='mobile'?mobileNav:panel;
+  const targetEl=target=>target==='mobile'?mobileElement():panel;
   const allowed=()=>enabled()!==false&&currentPath.startsWith('/')&&!/^\/(?:riaintra|altea|intra|staff|admin)(?:\/|$)/i.test(currentPath);
   function syncOpen(){
     if(!allowed()){hide(launcher);hide(panel);return;}
-    if(mobileAvailable&&mobileEnabled()===true){hide(launcher);hide(panel);return;}
+    if(mobileAvailable()&&mobileEnabled()===true){hide(launcher);hide(panel);return;}
     if(desktopAvailable){show(launcher);if(openRequested)show(panel);else hide(panel);post(launcher,'SUPPORT_LAUNCHER_STATE',{open:openRequested});}
   }
   function save(next){state=transcript({...next,open:openRequested});storageSave(state);}
@@ -128,7 +129,7 @@ export function bindAlexandraGlobal({ wixSelector=$w, navigate, enabled=()=>true
     panel.onMessage(async ev=>{const msg=obj(ev?.data);if(msg.source!==CHAT_SOURCE)return;await handleChatMessage(msg,'desktop');});
   }
   const handleMobileMessage=async msg=>{
-    if(!mobileAvailable||mobileEnabled()!==true||!allowed())return;
+    if(!mobileAvailable()||mobileEnabled()!==true||!allowed())return;
     const m=obj(msg);if(m.source===CHAT_SOURCE)await handleChatMessage(m,'mobile');
   };
   const refreshIdentity=async()=>{

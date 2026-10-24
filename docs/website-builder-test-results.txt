@@ -1,0 +1,28 @@
+✔ compiles Home and multiple pages with three distinct chrome families and chrome-free routes (979.619588ms)
+✔ scoping preserves body/html state, functional selectors, child combinators and keyframes (21.322822ms)
+✔ legacy complete documents preserve styles, scripts, templates, SVG, datasets and handlers without double execution (461.612489ms)
+✔ overlapping legacy sidecars, invalid JavaScript, missing assets and duplicate IDs fail with page/file evidence (836.147511ms)
+✔ blank slots stay pending; partial source names exact missing files; stale artifacts are retained but withdrawn (221.374842ms)
+✔ route aliases and query views share a build; nested and explicit template routes keep their identity (475.483673ms)
+✔ conflicting routes, unverified controllers and multi-component mappings cannot produce runnable output (955.267066ms)
+✔ local assets are verified and embedded; external asset URLs are preserved (597.013558ms)
+✔ missing internal chrome blocks only that family; completed public pages still build (797.564763ms)
+✔ identical consecutive builds are byte-for-byte idempotent regardless of GITHUB_SHA (1357.6496ms)
+✔ repository outputs preserve IDs and contracts; failed sources are unadvertised; legacy Home receiver is unchanged (3884.643452ms)
+✔ workflow supports every dist file, PR validation, deterministic dependencies and no Pages deployment (5.596604ms)
+Committed and pushed 2 generated files.
+No generated changes; no commit created.
+✔ publisher stages multiple generated pages, commits once and rejects concurrent main changes (795.151733ms)
+✔ receiver ignores spoofed windows, origins, unrelated messages and unmatched handshake nonces (255.830326ms)
+✔ receiver resolves the parent canonical page, verifies integrity and replaces the original document (36.106745ms)
+✔ unknown pages never default to Home, failed integrity never executes, startup retries are bounded (140.049281ms)
+✔ internal build requires parent staff authorization before requesting HTML (112.858638ms)
+✔ master derives page identity from canonical route and owning component, and rejects anonymous staff access (169.330885ms)
+ℹ tests 18
+ℹ suites 0
+ℹ pass 18
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 12747.226379

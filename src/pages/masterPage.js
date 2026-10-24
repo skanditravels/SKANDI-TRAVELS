@@ -11,7 +11,7 @@ import { getCustomerHeaderSession, subscribeCustomerNewsletter } from "backend/S
 import { getStaffPortalSession } from "backend/SKANDI_CORE/staffAuth.web";
 import { getPublicTravelInfoPayload } from "backend/SKANDI_CORE/publicContent.web";
 import { getPublicPagePresentation } from "backend/SKANDI_CORE/presentation.web";
-import { SITE_MAP, APP_ROUTES, GLOBAL_CHROME, isSafeInternalRoute } from "public/siteMap";
+import { SITE_MAP, APP_ROUTES, GLOBAL_CHROME, isSafeInternalRoute, PAGE_BUILD_INTEGRATIONS, INTERNAL_PATH_PREFIXES, CHROME_FREE_PATHS, getPageFamily, getPageChrome, resolveBuildRoute } from "public/siteMap";
 import { bindAlexandraGlobal } from "public/alexandraGlobalBridge.js";
 
 const MASTER_VERSION = "BACKEND-BASE-1.0-B011.18-GLOBAL-CHROME";
@@ -228,15 +228,7 @@ const IDS = Object.freeze({
   alteaFooters:[...GLOBAL_CHROME.alteaFooter.elementIds]
 });
 
-const INTERNAL_PREFIXES = ["/riaintra", "/altea", "/_functions"];
-const CHROME_FREE_PATHS = Object.freeze([
-  "/riaintra/success-factors/altea/grouptalk",
-  "/riaintra",
-  "/booking",
-  "/the-store/store-checkout/order-confirmation",
-  "/the-store/store-checkout",
-  "/the-store"
-]);
+const INTERNAL_PREFIXES = INTERNAL_PATH_PREFIXES;
 
 const MOBILE_FOOTER_GATE_PATHS = Object.freeze(new Set([
   "/search",
@@ -283,6 +275,31 @@ let mobileFooterGateRevealed = false;
 let mobileFooterGateBusy = false;
 let mobileDrawerResizeEpoch = 0;
 let alexandraGlobal = null;
+
+// Only a successfully loaded universal receiver opts into compiled chrome.
+// Legacy Home and all other existing embeds keep their current behavior.
+const compiledEmbeds = new Map();
+function compiledIdentity(embed, staff = {}) {
+  const match = resolveBuildRoute(currentPathString());
+  const binding = match && PAGE_BUILD_INTEGRATIONS[match.key];
+  if (!binding || binding.binding === "multi-component") return { allowed:false, reason:"No verified single-component integration for this route." };
+  const id = "#" + String(embed.id || "").replace(/^#/, "");
+  let correct = binding.embedIds.includes(id);
+  if (binding.binding === "handshake") {
+    const chromeIds = new Set(Object.values(GLOBAL_CHROME).flatMap(part => part.elementIds || []).concat([GLOBAL_MOBILE_NAV_ID, GLOBAL_MOBILE_TOP_COVER_ID, LEGACY_HOME_MOBILE_NAV_ID]));
+    const content = allHtmlComponents().filter(el => !chromeIds.has("#" + el.id));
+    correct = content.length === 1 && content[0] === embed;
+  }
+  if (!correct) return { allowed:false, reason:"Install the receiver in the owning page HTML component; its ID could not be verified." };
+  const family = getPageFamily(match.route);
+  const requiresStaff = family !== "public" && binding.publicEntry !== true;
+  if (requiresStaff && staff.authorized !== true) return { allowed:false, reason:"An authorized staff session is required." };
+  return { allowed:true, key:match.key, route:match.route, family, chrome:getPageChrome(match.route), embedId:id, staffAuthorized:staff.authorized === true };
+}
+function activeCompiledPage() {
+  const match = resolveBuildRoute(currentPathString());
+  return match && Array.from(compiledEmbeds.values()).find(p => p.key === match.key);
+}
 
 const CHROME_BY_SOURCE = Object.freeze(Object.fromEntries(
   Object.values(GLOBAL_CHROME).map(definition => [definition.source, definition])
@@ -512,9 +529,7 @@ function isInternalPath(path = currentPathString()) {
   return INTERNAL_PREFIXES.some(prefix => value === prefix || value.startsWith(prefix + "/"));
 }
 function isAlteaPath(path = currentPathString()) {
-  const value = normalizePath(path);
-  return ["/riaintra/success-factors/altea", "/riaintra/altea", "/altea"]
-    .some(prefix => value === prefix || value.startsWith(prefix + "/"));
+  return getPageFamily(path) === "altea";
 }
 function isChromeFreePath(path = currentPathString()) {
   return CHROME_FREE_PATHS.includes(normalizePath(path));
@@ -524,7 +539,7 @@ function isMobileDevice() {
 }
 function isMobileFooterGatePath(path = currentPathString()) {
   const value = normalizePath(path);
-  return isMobileDevice() && !isChromeFreePath(value) && MOBILE_FOOTER_GATE_PATHS.has(value);
+  return !activeCompiledPage() && isMobileDevice() && !isChromeFreePath(value) && MOBILE_FOOTER_GATE_PATHS.has(value);
 }
 function footerElementForPath(path = currentPathString()) {
   const internal = isInternalPath(path);
@@ -751,12 +766,42 @@ async function handleMasterMessage(embed, message = {}) {
     // Other navigation intents retain the canonical MASTER_NAVIGATE contract below.
   }
 
+  if (source === "SKANDI_SHELL" && type === "SKANDI_COMPILED_READY") {
+    const identity = compiledIdentity(embed, isInternalPath() ? await getStaffState() : {});
+    if (identity.allowed && identity.key === payload.key) {
+      compiledEmbeds.set(embed.id, identity);
+      stopMobileFooterGate();
+      await applyChromeVisibility();
+      pushMasterConfig(embed);
+    }
+    return true;
+  }
+  // Internal global components report their standalone height; never apply
+  // those component heights to a complete compiled application iframe.
+  if (compiledEmbeds.has(embed.id) && type === "SKANDI_EMBED_RESIZE" && CHROME_BY_SOURCE[source]) return true;
+
+  if (compiledEmbeds.has(embed.id) && source === MOBILE_APP_SOURCE) {
+    if (type === "HOME_APP_FOCUS_SEARCH") {
+      if (normalizePath(currentPathString()) === "/") postToEmbed(embed,"HOME_FOCUS_SEARCH",{});
+      else navigate(SITE_MAP.home);
+      return true;
+    }
+    if (type === "SKANDI_SUPPORT_CHAT" && typeof alexandraGlobal?.handleMobileMessage === "function") {
+      await alexandraGlobal.handleMobileMessage({ source:"SKANDI_SUPPORT_CHAT", type:payload.type, payload:payload.payload || {}, requestId:message.requestId });
+      return true;
+    }
+  }
+
   if (SCROLL_TOP_MESSAGE_TYPES.has(type)) {
     scheduleScrollViewportToTop(type.toLowerCase());
     return true;
   }
   if (type === "MASTER_CONFIG_REQUEST" || type === "SKANDI_MASTER_CONFIG_REQUEST") {
     const extra = isInternalPath() ? { staff:await getStaffState() } : { customerSession:await getCustomerState() };
+    if (source === "SKANDI_UNIVERSAL_RECEIVER" && payload.receiverProtocol === 1) {
+      extra.receiverRequestId = String(payload.receiverRequestId || "").slice(0,160);
+      extra.compiledPage = compiledIdentity(embed, extra.staff);
+    }
     pushMasterConfig(embed, extra);
     if ((source === ALTEA_HEADER_SOURCE || source === ALTEA_FOOTER_SOURCE) && isAlteaPath() && !isChromeFreePath()) {
       const state = alteaChromeState(extra.staff || {});
@@ -1088,6 +1133,12 @@ function startMobileFooterGate() {
 }
 
 async function applyChromeVisibility() {
+  if (activeCompiledPage()) {
+    const chromeIds = [...IDS.customerHeaders, ...IDS.customerFooters, ...IDS.internalHeaders, ...IDS.internalFooters, ...IDS.alteaHeaders, ...IDS.alteaFooters, GLOBAL_MOBILE_NAV_ID, GLOBAL_MOBILE_TOP_COVER_ID, LEGACY_HOME_MOBILE_NAV_ID];
+    await Promise.all(chromeIds.map(id => setElementVisible(safeEl(id), false)));
+    await setElementVisible(cookieBannerEl(), !isInternalPath());
+    return;
+  }
   const path = currentPathString();
   const chromeFree = isChromeFreePath(path);
   const internal = isInternalPath(path);
@@ -1141,7 +1192,8 @@ $w.onReady(async function () {
     wixSelector: $w,
     navigate,
     enabled: () => !isInternalPath(currentPathString()),
-    mobileEnabled: () => isPublicMobileChromePath()
+    mobileEnabled: () => isPublicMobileChromePath(),
+    mobileTarget: () => allHtmlComponents().find(el => compiledEmbeds.has(el.id) && compiledEmbeds.get(el.id).key === resolveBuildRoute(currentPathString())?.key) || null
   });
   alexandraGlobal?.onRouteChange?.(currentPathString());
 

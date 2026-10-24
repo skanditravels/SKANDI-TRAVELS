@@ -5,6 +5,10 @@
   "type": "module",
   "description": "Isolated HTML compiler tooling; leaves the Wix project root package.json intact",
   "dependencies": {
-    "postcss": "8.5.6"
+    "acorn": "8.15.0",
+    "jsdom": "26.1.0",
+    "parse5": "7.3.0",
+    "postcss": "8.5.6",
+    "postcss-selector-parser": "7.1.0"
   }
 }
