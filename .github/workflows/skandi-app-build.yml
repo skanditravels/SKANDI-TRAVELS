@@ -41,10 +41,10 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          if git diff --quiet -- dist/home/index.html; then
+          git add -- dist/home/index.html
+          if git diff --cached --quiet -- dist/home/index.html; then
             echo "No generated HTML changes to commit."
             exit 0
           fi
-          git add -- dist/home/index.html
           git commit -m "Build SKANDI home page"
           git push origin HEAD:main
