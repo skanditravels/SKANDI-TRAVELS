@@ -592,9 +592,7 @@
         "skandi-embeds/travel-info/skandi-travel-info.css",
         "skandi-embeds/travel-info/skandi-travel-info.js"
       ],
-      "missing": [
-        "skandi-embeds/travel-info/skandi-travel-info.js"
-      ],
+      "missing": [],
       "issues": [],
       "backend": [
         "src/backend/SKANDI_CORE/publicContent.web.js",
@@ -650,9 +648,9 @@
       ],
       "output": null,
       "dynamic": false,
-      "sourceStatus": "INCOMPLETE SOURCE",
+      "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
-      "error": "[travelInfo] INCOMPLETE SOURCE: skandi-embeds/travel-info/skandi-travel-info.js",
+      "error": "[travelInfo / travel-info] skandi-embeds/travel-info/skandi-travel-info.html, skandi-embeds/travel-info/skandi-travel-info.css, skandi-embeds/travel-info/skandi-travel-info.js: /home/runner/work/SKANDI-TRAVELS/SKANDI-TRAVELS/skandi-embeds/travel-info/skandi-travel-info.css:1264:7: Unexpected }",
       "retainedArtifact": false
     },
     {
