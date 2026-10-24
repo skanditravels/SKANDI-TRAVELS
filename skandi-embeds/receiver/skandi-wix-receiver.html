@@ -6,9 +6,9 @@
   <meta name="theme-color" content="#022e64">
   <title>SKANDI Travels</title>
   <style>
-    *{box-sizing:border-box}
-    html,body{width:100%;height:100%;margin:0;padding:0;overflow:hidden;background:#fff}
-    #skandi-receiver-status{padding:24px;color:#022e64;font:500 14px/1.5 system-ui,sans-serif}
+    *,*::before,*::after { box-sizing:border-box }
+    html,body { width:100%;height:100%;margin:0;padding:0;overflow:hidden;background:#fff }
+    #skandi-receiver-status { padding:24px;color:#022e64;font:500 14px/1.5 system-ui,sans-serif }
   </style>
 </head>
 <body>
@@ -16,32 +16,47 @@
   <script>
     (() => {
       'use strict';
-      // GitHub Pages is the published result of the SKANDI build workflow.
-      // The receiver does NOT create a second iframe.
-      const DISTRIBUTION_URL = 'https://skanditravels.github.io/SKANDI-TRAVELS/home/index.html';
+      // Git owns and assembles the entire HTML document at dist/home/index.html.
+      // No GitHub Pages, website deployment, or nested iframe is involved.
+      const RAW_GIT = 'https://raw.githubusercontent.com/skanditravels/SKANDI-TRAVELS/main/dist/home/index.html';
+      const CDN_GIT = 'https://cdn.jsdelivr.net/gh/skanditravels/SKANDI-TRAVELS@main/dist/home/index.html';
       const status = document.getElementById('skandi-receiver-status');
-      async function load() {
-        try {
-          const response = await fetch(DISTRIBUTION_URL, {
-            credentials: 'omit',
-            cache: 'no-store',
-            redirect: 'error'
-          });
-          if (!response.ok) throw new Error(`HTTP ${response.status}`);
-          const html = await response.text();
-          if (!/^\s*<!doctype html>/i.test(html) || !html.includes('id="skandi-shell-root"')) {
-            throw new Error('Invalid SKANDI build response');
-          }
-          // Replaces the receiver document in the SAME Wix HTML iframe.
-          // Browser parsing executes the bundled inline component scripts.
-          document.open();
-          document.write(html);
-          document.close();
-        } catch (error) {
-          console.error('[SKANDI Receiver] Could not load published build:', error);
-          status.textContent = 'SKANDI could not load. Please refresh this page.';
-          status.setAttribute('role','alert');
+
+      async function readBuild(url) {
+        const response = await fetch(url, {
+          mode: 'cors', credentials: 'omit', cache: 'no-store'
+        });
+        if (!response.ok) throw new Error('Compiled Git HTML unavailable: ' + response.status);
+        const html = await response.text();
+        if (!/^\s*<!doctype html>/i.test(html)
+          || !/<div\s+id="skandi-shell-root"\b/i.test(html)
+          || !html.includes('data-skandi-page="home"')) {
+          throw new Error('Unexpected or incomplete SKANDI build');
         }
+        return html;
+      }
+
+      async function load() {
+        let build;
+        try {
+          build = await readBuild(RAW_GIT);
+        } catch (firstError) {
+          console.warn('[SKANDI Receiver] Direct Git delivery unavailable, trying Git CDN.', firstError);
+          try {
+            build = await readBuild(CDN_GIT);
+          } catch (secondError) {
+            console.error('[SKANDI Receiver] Both Git delivery paths failed.', secondError);
+            status.textContent = 'SKANDI could not load. Please refresh the page.';
+            status.setAttribute('role', 'alert');
+            return;
+          }
+        }
+        // Execute the already-compiled document in the original Wix HTML
+        // component. The canonical postMessage parent remains the Wix page.
+        // No nested iframe and no duplicated source modules in Wix.
+        document.open();
+        document.write(build);
+        document.close();
       }
       load();
     })();
