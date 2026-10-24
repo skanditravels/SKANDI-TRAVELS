@@ -1,0 +1,93 @@
+<div id="app-shell">
+    <main id="app-main">
+      <div id="pull-refresh" role="status" aria-live="polite" aria-hidden="true">
+        <span class="pull-icon" aria-hidden="true">↻</span><span id="pull-refresh-label">Pull to refresh</span>
+      </div>
+      <section id="login-view" aria-label="RIAINTRA staff login">
+        <div id="login-left">
+          <header id="app-header">
+            <div id="SK-logo">
+              <img src="https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/logos/RIAINTRA-LIGHT.svg" alt="RIAINTRA logo">
+              <div id="SK-logo-text">
+                <span>SKANDI STAFF PORTAL</span>
+              </div>
+            </div>
+          </header>
+          <div class="brand-center">
+            <div class="brand-rule" aria-hidden="true"></div>
+            <p class="brand-eyebrow">The SKANDI internal network</p>
+            <h1 id="login-tagline">One team.<br>One connected <em>workspace.</em></h1>
+            <p id="login-sub">Your gateway to the tools, people and operations that keep SKANDI moving—across every team and destination.</p>
+            <button type="button" id="login-drop-btn">Go to staff sign in <span class="arrow" aria-hidden="true">→</span></button>
+          </div>
+          <div class="brand-bottom">
+            <div class="brand-bottom-copy">
+              <div id="SK-logo">
+                <img src="https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/logos/RIAINTRA_LIGHT.svg" alt="A SKANDI GROUP MEMBER"><div id="SK-logo-text">· INTERNAL SYSTEMS</div></div>
+              <div>For authorized staff use only.</div>
+            </div>
+            <div id="header-meta"><span id="clock">LOCAL TIME</span></div>
+          </div>
+        </div>
+
+        <div id="login-card-wrap">
+          <div id="login-right">
+            <div class="right-upper">Employee access</div>
+            <div class="login-middle">
+              <div id="login-card">
+                <div class="login-overline">RIAINTRA / EMPLOYEE PORTAL</div>
+                <h2>Welcome back.</h2>
+                <p class="login-intro">Enter your SK-ID and password to access your staff workspace.</p>
+
+                <div id="login-error" role="alert" aria-live="assertive"></div>
+                <div id="login-notice" role="status" aria-live="polite"></div>
+
+                <form id="login-form" novalidate>
+                  <div class="field-group">
+                    <div class="field-label-row">
+                      <label for="login-username">SK-ID</label>
+                      <span class="field-helper">Two letters + four digits</span>
+                    </div>
+                    <input type="text" id="login-username" name="skid" maxlength="6"
+                      pattern="[A-Za-z]{2}[0-9]{4}" placeholder="AA0000"
+                      autocomplete="username" autocapitalize="characters" spellcheck="false"
+                      aria-describedby="login-error" required>
+                  </div>
+
+                  <div class="field-group">
+                    <div class="field-label-row">
+                      <label for="login-password">Password</label>
+                    </div>
+                    <div class="password-wrap">
+                      <input type="password" id="login-password" name="password"
+                        placeholder="Enter your password" autocomplete="current-password"
+                        maxlength="256" aria-describedby="login-error" required>
+                      <button type="button" id="password-visibility" aria-label="Show or hide password" aria-pressed="false">Show</button>
+                    </div>
+                  </div>
+
+                  <button type="submit" id="login-submit">Sign in to RIAINTRA</button>
+                  <div class="login-actions">
+                    <button type="button" id="forgot-password" class="link-button">Forgot your password?</button>
+                  </div>
+                </form>
+
+                <div class="login-help">
+                  Need assistance with your account?
+                  <a href="https://www.skanditravels.com/about/support" target="_blank" rel="noopener noreferrer">Contact support →</a>
+                </div>
+              </div>
+            </div>
+            <footer class="right-footer">
+              <p>© 2026 SKANDI GROUP</p>
+              <nav class="right-links" aria-label="External links">
+                <a href="https://www.skanditravels.com/" target="_blank" rel="noopener noreferrer">SKANDI TRAVELS</a>
+                <a href="https://www.skanditravels.com/about/legal" target="_blank" rel="noopener noreferrer">Legal</a>
+              </nav>
+              <button type="button" id="refresh-session" aria-label="Refresh staff session">Refresh</button>
+            </footer>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
