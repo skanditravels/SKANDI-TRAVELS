@@ -29,7 +29,7 @@ jobs:
       - name: Run build-tool tests
         run: node --test tests/build-skandi-app.test.mjs
 
-      - name: Build the Git-rendered home page
+      - name: Build the Git-rendered flight-status page
         run: node scripts/build-skandi-app.mjs
 
       - name: Commit generated HTML back to Git
@@ -41,10 +41,10 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add -- dist/home/index.html
-          if git diff --cached --quiet -- dist/home/index.html; then
+          git add -- dist/flight-status/index.html
+          if git diff --cached --quiet -- dist/flight-status/index.html; then
             echo "No generated HTML changes to commit."
             exit 0
           fi
-          git commit -m "Build SKANDI home page"
+          git commit -m "Build SKANDI flight-status page"
           git push origin HEAD:main
