@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#022e64">
+  <title>SKANDI Travels</title>
+  <style>
+    *{box-sizing:border-box}
+    html,body{width:100%;height:100%;margin:0;padding:0;overflow:hidden;background:#fff}
+    #skandi-receiver-status{padding:24px;color:#022e64;font:500 14px/1.5 system-ui,sans-serif}
+  </style>
+</head>
+<body>
+  <div id="skandi-receiver-status" role="status" aria-live="polite">Loading SKANDI Travels…</div>
+  <script>
+    (() => {
+      'use strict';
+      // GitHub Pages is the published result of the SKANDI build workflow.
+      // The receiver does NOT create a second iframe.
+      const DISTRIBUTION_URL = 'https://skanditravels.github.io/SKANDI-TRAVELS/home/index.html';
+      const status = document.getElementById('skandi-receiver-status');
+      async function load() {
+        try {
+          const response = await fetch(DISTRIBUTION_URL, {
+            credentials: 'omit',
+            cache: 'no-store',
+            redirect: 'error'
+          });
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          const html = await response.text();
+          if (!/^\s*<!doctype html>/i.test(html) || !html.includes('id="skandi-shell-root"')) {
+            throw new Error('Invalid SKANDI build response');
+          }
+          // Replaces the receiver document in the SAME Wix HTML iframe.
+          // Browser parsing executes the bundled inline component scripts.
+          document.open();
+          document.write(html);
+          document.close();
+        } catch (error) {
+          console.error('[SKANDI Receiver] Could not load published build:', error);
+          status.textContent = 'SKANDI could not load. Please refresh this page.';
+          status.setAttribute('role','alert');
+        }
+      }
+      load();
+    })();
+  </script>
+</body>
+</html>
