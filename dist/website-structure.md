@@ -134,7 +134,7 @@ These actual repository controllers are preserved. No new route or build is inve
 - **legal**: NOT READY: PENDING SOURCE
 - **policies**: NOT READY: PENDING SOURCE
 - **cookiePreferences**: NOT READY: No verified canonical controller mapping.
-- **successFactors**: NOT READY: [successFactors] INCOMPLETE SOURCE: skandi-embeds/success-factors/skandi-success-factors.html, skandi-embeds/success-factors/skandi-success-factors.js
+- **successFactors**: NOT READY: [successFactors] INCOMPLETE SOURCE: skandi-embeds/success-factors/skandi-success-factors.html
 - **legalInternal**: NOT READY: riaintra-header: PENDING SOURCE (skandi-embeds/riaintra-global/riaintra-header.html, skandi-embeds/riaintra-global/riaintra-header.css, skandi-embeds/riaintra-global/riaintra-header.js); riaintra-footer: PENDING SOURCE (skandi-embeds/riaintra-global/riaintra-footer.html, skandi-embeds/riaintra-global/riaintra-footer.css, skandi-embeds/riaintra-global/riaintra-footer.js)
 - **alteaLaunchpad**: NOT READY: altea-header: PENDING SOURCE (skandi-embeds/altea-global/altea-header.html, skandi-embeds/altea-global/altea-header.css, skandi-embeds/altea-global/altea-header.js); altea-footer: PENDING SOURCE (skandi-embeds/altea-global/altea-footer.html, skandi-embeds/altea-global/altea-footer.css, skandi-embeds/altea-global/altea-footer.js)
 - **alteaReservations**: NOT READY: altea-header: PENDING SOURCE (skandi-embeds/altea-global/altea-header.html, skandi-embeds/altea-global/altea-header.css, skandi-embeds/altea-global/altea-header.js); altea-footer: PENDING SOURCE (skandi-embeds/altea-global/altea-footer.html, skandi-embeds/altea-global/altea-footer.css, skandi-embeds/altea-global/altea-footer.js)
