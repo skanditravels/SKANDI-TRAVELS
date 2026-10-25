@@ -1,1 +1,18 @@
-<!-- SKANDI_PENDING_SOURCE: canonical route/controller mapping required before compilation. -->
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>SKANDI Document Control</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="ycgof.css"></head>
+<body><div class="shell">
+<div class="topbar"><div class="brand">SKANDI TRAVELS<br><small>DOCUMENT CONTROL</small></div><div class="topmeta"><span class="badge" id="agent">STAFF</span><span class="badge" id="station">GLOBAL</span></div></div>
+<div class="main">
+<aside class="sidebar"><button class="navbtn active" data-tab="instances">Documents</button><button class="navbtn" data-tab="definitions">Definitions</button><button class="navbtn" data-tab="rules">Automation Rules</button><button class="navbtn" data-tab="events">Events</button><button class="navbtn" data-tab="compliance">Compliance</button></aside>
+<main class="content">
+<div class="pagehead"><div><h1 id="pageTitle">Documents</h1><p id="pageDesc">Live, issued and historical SKANDI documents.</p></div><div class="actions"><button class="btn" id="refreshBtn">Refresh</button><button class="btn primary" id="newBtn">Create document</button></div></div>
+<div class="metrics"><div class="metric"><div class="n" id="mDraft">0</div><div class="l">Draft / waiting</div></div><div class="metric"><div class="n" id="mReady">0</div><div class="l">Ready</div></div><div class="metric"><div class="n" id="mIssued">0</div><div class="l">Issued</div></div><div class="metric"><div class="n" id="mErrors">0</div><div class="l">Exceptions</div></div></div>
+<div class="card"><div class="cardhead"><strong>Search & filter</strong></div><div class="cardbody"><div class="filters"><div class="field"><label>Search</label><input class="control" id="search" placeholder="PNR, document no., passenger, supplier..."></div><div class="field"><label>Category</label><select class="control" id="category"><option value="">All</option></select></div><div class="field"><label>Status</label><select class="control" id="statusFilter"><option value="">All</option><option>DRAFT</option><option>READY</option><option>ISSUED</option><option>SENT</option><option>ACKNOWLEDGED</option></select></div><div class="field"><label>Station</label><input class="control" id="stationFilter"></div></div></div></div>
+<div class="card"><div class="cardhead"><strong id="tableTitle">Document instances</strong><span id="count">0</span></div><div class="tablewrap"><table><thead id="thead"></thead><tbody id="tbody"></tbody></table></div></div>
+</main></div></div>
+<div class="drawer" id="drawer"><div class="drawerhead"><strong id="drawerTitle">Document</strong><button class="btn secondary" id="drawerClose">Close</button></div><div class="drawerbody" id="drawerBody"></div></div>
+<script src="ycgof.js"></script></body></html>

@@ -1,0 +1,73 @@
+HTML_REF source,source folder,primary stem,disposition,inline CSS blocks,inline JS blocks,canonical key,build status,note
+HTML_REF/altea/ALTEA Launchpad.md,skandi-embeds/altea-launchpad,skandi-altea-launchpad,IMPORTED,1,1,alteaLaunchpad,BUILT,
+HTML_REF/altea/Inventory Control.md,skandi-embeds/inventory-control,skandi-inventory-control,IMPORTED,1,1,inventoryControl,FAILED,
+HTML_REF/altea/OPS Control.md,skandi-embeds/ops-control,skandi-ops-control,IMPORTED,1,1,opsControl,BUILT,
+HTML_REF/altea/Reservations.md,skandi-embeds/altea-reservations,skandi-altea-reservations,IMPORTED,8,7,alteaReservations,FAILED,
+HTML_REF/GLOBAL/alteaFooter.md,skandi-embeds/altea-global,altea-footer,IMPORTED,1,1,,SOURCE ONLY,
+HTML_REF/GLOBAL/alteaHeader.md,skandi-embeds/altea-global,altea-header,IMPORTED,1,1,,SOURCE ONLY,
+HTML_REF/GLOBAL/riaintraFooter.md,skandi-embeds/riaintra-global,riaintra-footer,IMPORTED,1,1,,SOURCE ONLY,
+HTML_REF/GLOBAL/riaintraHeader.md,skandi-embeds/riaintra-global,riaintra-header,IMPORTED,1,1,,SOURCE ONLY,
+HTML_REF/GLOBAL/SKANDI COOKIE CONSENT BANNER.md,skandi-embeds/global,skandi-cookie-consent-banner,SEPARATE COMPONENT,1,1,,SOURCE ONLY,Cookie consent remains a separate Wix component owned by masterPage.
+HTML_REF/GLOBAL/skandiFooter.md,skandi-embeds/global/html-ref,skandi-footer-reference,PRESERVED CURRENT SOURCE,1,1,,SOURCE ONLY,Current Git public chrome remains active.
+HTML_REF/GLOBAL/skandiHeader.md,skandi-embeds/global/html-ref,skandi-header-reference,PRESERVED CURRENT SOURCE,1,1,,SOURCE ONLY,Current Git public chrome remains active.
+HTML_REF/riaintra/Automation Control.md,skandi-embeds/_unregistered/automation-control,automation-control,UNREGISTERED CONTROLLER,1,1,,SOURCE ONLY,Source specifies a new Wix admin page; no assigned controller or canonical route is available.
+HTML_REF/riaintra/Customer Service Desk.md,skandi-embeds/_unregistered/benbs/html-ref,customer-service-desk-reference,SOURCE CONFLICT,8,7,,SOURCE ONLY,"This document contains an ALTEA Reservations implementation and contract, not Customer Service Desk. Kept separate from both active controllers."
+HTML_REF/riaintra/DocuNet Administration.md,skandi-embeds/docunet-admin,skandi-docunet-admin,IMPORTED,1,1,docunetAdmin,FAILED,
+HTML_REF/riaintra/DocuNet.md,skandi-embeds/docunet,skandi-docunet,IMPORTED,1,1,docunet,BUILT,
+HTML_REF/riaintra/Finance Control.md,skandi-embeds/_unregistered/gboi3,gboi3,UNREGISTERED CONTROLLER,1,1,,SOURCE ONLY,Existing controller is preserved; this source is not assigned a new canonical route.
+HTML_REF/riaintra/GroupTalk.md,skandi-embeds/group-talk,skandi-group-talk,IMPORTED,1,1,groupTalk,FAILED,
+HTML_REF/riaintra/Mail.md,skandi-embeds/mail,skandi-mail,IMPORTED,1,1,mail,BUILT,
+HTML_REF/riaintra/Media Control.md,skandi-embeds/media-control,skandi-media-control,IMPORTED,4,4,mediaControl,FAILED,
+HTML_REF/riaintra/Payroll.md,skandi-embeds/payroll,skandi-payroll,IMPORTED,1,1,payroll,BUILT,
+HTML_REF/riaintra/Policy Control.md,skandi-embeds/policy-control,skandi-policy-control,IMPORTED,1,1,policyControl,BUILT,
+HTML_REF/riaintra/RIAINTRA Legal.md,skandi-embeds/legal-internal,skandi-legal-internal,IMPORTED,1,1,legalInternal,BUILT,
+HTML_REF/riaintra/RIAINTRA Login.md,riaintra-embeds/riaintra/html-ref,riaintra-reference,PRESERVED CURRENT SOURCE,1,1,,SOURCE ONLY,Current Git source remains active; the HTML_REF version is extracted here for reference.
+HTML_REF/riaintra/RIAINTRA Policies.md,skandi-embeds/_unregistered/k053q,k053q,UNREGISTERED CONTROLLER,1,1,,SOURCE ONLY,Existing controller is preserved; this source is not assigned a new canonical route.
+HTML_REF/riaintra/Staff Document Control.md,skandi-embeds/_unregistered/ycgof,ycgof,UNREGISTERED CONTROLLER,1,1,,SOURCE ONLY,Existing controller is preserved; this source is not assigned a new canonical route.
+HTML_REF/riaintra/Success Factors.md,riaintra-embeds/success-factors/html-ref,success-factors-reference,PRESERVED CURRENT SOURCE,1,1,,SOURCE ONLY,Current Git source remains active; the HTML_REF version is extracted here for reference.
+HTML_REF/riaintra/The Store Control.md,skandi-embeds/store-control,skandi-store-control,IMPORTED,1,1,storeControl,BUILT,
+HTML_REF/riaintra/Transport Compliance.md,skandi-embeds/_unregistered/bsgb8,bsgb8,UNREGISTERED CONTROLLER,1,1,,SOURCE ONLY,Existing controller is preserved; this source is not assigned a new canonical route.
+HTML_REF/riaintra/Uniform Center.md,skandi-embeds/uniform-center,skandi-uniform-center,IMPORTED,1,1,uniformCenter,BUILT,
+HTML_REF/riaintra/Uniform Control.md,skandi-embeds/uniform-control/html-ref,uniform-control-reference,SOURCE CONFLICT,1,1,,SOURCE ONLY,Identical to Uniform Center and emits SKANDI_UNIFORM_EMPLOYEE; the admin controller requires SKANDI_UNIFORM_ADMIN. Admin slot remains pending.
+HTML_REF/skandi/About.md,skandi-embeds/about,skandi-about,IMPORTED,1,1,about,BUILT,
+HTML_REF/skandi/Alexandra Chat.md,skandi-embeds/global/alexandra,skandi-alexandra-chat,SEPARATE COMPONENT,1,1,,SOURCE ONLY,Separate sitewide Wix chat component; not injected a second time into compiled chrome.
+HTML_REF/skandi/Alexandra global chat.md,skandi-embeds/global/html-ref,skandi-alexandra-chat-legacy,SEPARATE COMPONENT,1,1,,SOURCE ONLY,Older alternate chat source is retained separately.
+HTML_REF/skandi/Alexandra Global Launcher.md,skandi-embeds/global/alexandra,skandi-alexandra-launcher,SEPARATE COMPONENT,1,1,,SOURCE ONLY,Separate sitewide Wix chat component; not injected a second time into compiled chrome.
+HTML_REF/skandi/Baggage Allowance.md,skandi-embeds/baggage-allowance,skandi-baggage-allowance,IMPORTED,1,1,baggageAllowance,BUILT,
+HTML_REF/skandi/Booking/Booking.apis.md,skandi-embeds/booking-flow/components/apis,skandi-booking-apis,SEPARATE COMPONENT,2,1,,SOURCE ONLY,Preserves the existing eight-component Booking controller; no single-iframe migration is implied.
+HTML_REF/skandi/Booking/Booking.confirmation.md,skandi-embeds/booking-flow/components/confirmation,skandi-booking-confirmation,SEPARATE COMPONENT,2,1,,SOURCE ONLY,Preserves the existing eight-component Booking controller; no single-iframe migration is implied.
+HTML_REF/skandi/Booking/Booking.documents.md,skandi-embeds/booking-flow/components/documents,skandi-booking-documents,SEPARATE COMPONENT,1,1,,SOURCE ONLY,Preserves the existing eight-component Booking controller; no single-iframe migration is implied.
+HTML_REF/skandi/Booking/Booking.extras.md,skandi-embeds/booking-flow/components/extras,skandi-booking-extras,SEPARATE COMPONENT,2,1,,SOURCE ONLY,Preserves the existing eight-component Booking controller; no single-iframe migration is implied.
+HTML_REF/skandi/Booking/Booking.offer.md,skandi-embeds/booking-flow/components/offer,skandi-booking-offer,SEPARATE COMPONENT,2,1,,SOURCE ONLY,Preserves the existing eight-component Booking controller; no single-iframe migration is implied.
+HTML_REF/skandi/Booking/Booking.payment.md,skandi-embeds/booking-flow/components/payment,skandi-booking-payment,SEPARATE COMPONENT,2,1,,SOURCE ONLY,Preserves the existing eight-component Booking controller; no single-iframe migration is implied.
+HTML_REF/skandi/Booking/Booking.seats.md,skandi-embeds/booking-flow/components/seats,skandi-booking-seats,SEPARATE COMPONENT,2,1,,SOURCE ONLY,Preserves the existing eight-component Booking controller; no single-iframe migration is implied.
+HTML_REF/skandi/Booking/Booking.transfer.md,skandi-embeds/booking-flow/components/transfer,skandi-booking-transfer,SEPARATE COMPONENT,2,1,,SOURCE ONLY,Preserves the existing eight-component Booking controller; no single-iframe migration is implied.
+HTML_REF/skandi/Car Rental.md,skandi-embeds/car-rental,skandi-car-rental,IMPORTED,1,1,carRental,BUILT,
+HTML_REF/skandi/Country.md,skandi-embeds/country,skandi-country,IMPORTED,3,1,country,BLOCKED INTEGRATION,
+HTML_REF/skandi/Customer Document Center.md,skandi-embeds/_unregistered/jtp4b,jtp4b,UNREGISTERED CONTROLLER,1,1,,SOURCE ONLY,Existing controller is preserved; this source is not assigned a new canonical route.
+HTML_REF/skandi/Destination.md,skandi-embeds/_unregistered/u4y1p,u4y1p,UNREGISTERED CONTROLLER,2,1,,SOURCE ONLY,Existing controller is preserved; this source is not assigned a new canonical route.
+HTML_REF/skandi/Flight Status.md,skandi-embeds/flight-status/html-ref,flight-status-reference,PRESERVED CURRENT SOURCE,2,1,,SOURCE ONLY,Current Git source remains active; the HTML_REF version is extracted here for reference.
+HTML_REF/skandi/Forgot Password.md,skandi-embeds/forgot-password,skandi-forgot-password,IMPORTED,1,1,forgotPassword,BUILT,
+HTML_REF/skandi/Home Mobile App Navigation.md,skandi-embeds/global/html-ref,skandi-mobile-nav-reference,PRESERVED CURRENT SOURCE,1,1,,SOURCE ONLY,Current Git mobile navigation remains active.
+HTML_REF/skandi/Home.md,skandi-embeds/home/html-ref,skandi-home-reference,PRESERVED CURRENT SOURCE,1,1,,SOURCE ONLY,Current Git source remains active; the HTML_REF version is extracted here for reference.
+HTML_REF/skandi/How can we help.md,skandi-embeds/support,skandi-support,IMPORTED,1,1,support,BLOCKED INTEGRATION,
+HTML_REF/skandi/Legal.md,skandi-embeds/legal,skandi-legal,IMPORTED,1,1,legal,BUILT,
+HTML_REF/skandi/Media Control.md,skandi-embeds/media-control,skandi-media-control,DUPLICATE SOURCE,4,4,mediaControl,FAILED,Byte-identical HTML to HTML_REF/riaintra/Media Control.md; one shared split target.
+HTML_REF/skandi/News Room.md,skandi-embeds/newsroom,skandi-newsroom,IMPORTED,1,2,newsroom,BUILT,
+HTML_REF/skandi/Our Destinations.md,skandi-embeds/destinations,skandi-destinations,IMPORTED,1,1,destinations,FAILED,
+HTML_REF/skandi/Passport & Visa.md,skandi-embeds/passport-visa,skandi-passport-visa,IMPORTED,1,1,passportVisa,BUILT,
+HTML_REF/skandi/Policies.md,skandi-embeds/policies,skandi-policies,IMPORTED,1,1,policies,BUILT,
+HTML_REF/skandi/Search.md,skandi-embeds/search,skandi-search,IMPORTED,1,1,search,BUILT,
+HTML_REF/skandi/SKANDI Club My Profile.md,skandi-embeds/my-profile,skandi-my-profile,IMPORTED,1,1,myProfile,BUILT,
+HTML_REF/skandi/SKANDI Club Support.md,skandi-embeds/_unregistered/yk7x3,yk7x3,UNREGISTERED CONTROLLER,2,3,,SOURCE ONLY,Existing controller is preserved; this source is not assigned a new canonical route.
+HTML_REF/skandi/SKANDI Club.md,skandi-embeds/club,skandi-club,IMPORTED,1,1,club,BUILT,
+HTML_REF/skandi/SKANDI Collection.md,skandi-embeds/skandi-collection,skandi-skandi-collection,IMPORTED,1,1,skandiCollection,FAILED,
+HTML_REF/skandi/SKANDI COOKIE PREFERENCES.md,skandi-embeds/cookie-preferences,skandi-cookie-preferences,IMPORTED,1,1,cookiePreferences,BUILT,
+HTML_REF/skandi/SKANDI TRAVEL ASSISTANT.md,skandi-embeds/_unregistered/elfkf,elfkf,UNREGISTERED CONTROLLER,1,1,,SOURCE ONLY,Existing controller is preserved; this source is not assigned a new canonical route.
+HTML_REF/skandi/Special Assistance.md,skandi-embeds/special-assistance,skandi-special-assistance,IMPORTED,1,1,specialAssistance,BUILT,
+HTML_REF/skandi/The Store Checkout.md,skandi-embeds/store-checkout,skandi-store-checkout,IMPORTED,1,1,storeCheckout,BUILT,
+HTML_REF/skandi/The Store Order Confirmation.md,skandi-embeds/store-confirmation,skandi-store-confirmation,IMPORTED,1,1,storeConfirmation,BUILT,
+HTML_REF/skandi/The Store.md,skandi-embeds/the-store,skandi-the-store,IMPORTED,2,1,theStore,BUILT,
+HTML_REF/skandi/Tours & Activities.md,skandi-embeds/tours,skandi-tours,IMPORTED,2,1,tours,BUILT,
+HTML_REF/skandi/Travel Info.md,skandi-embeds/travel-info/html-ref,skandi-travel-info-reference,PRESERVED CURRENT SOURCE,5,3,,SOURCE ONLY,Current Git source remains active; the HTML_REF version is extracted here for reference.
+HTML_REF/skandi/Travel Insurance.md,skandi-embeds/travel-insurance,skandi-travel-insurance,IMPORTED,2,2,travelInsurance,BUILT,

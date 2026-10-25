@@ -1,0 +1,715 @@
+
+        #skandi-site-header {
+            --sk-blue: #022e64;
+            --sk-blue2: #0b3a7a;
+            --sk-cyan: #5FC7CF;
+            --sk-line: #e6e9ee;
+            --sk-border-soft: #eef2f7;
+            --sk-muted: #667085;
+            --sk-body: #555;
+            --sk-pale: #f6faff;
+            --header-h: 74px;
+            --bar-height: 44px;
+            --header-total: 118px;
+            width: 100%;
+            display: block;
+            margin: 0;
+            font-family: Montserrat, system-ui, sans-serif;
+            background: transparent;
+            overflow: visible;
+        }
+
+        #skandi-site-header,
+        #skandi-site-header * { box-sizing: border-box; }
+        #skandi-site-header button { font: inherit; cursor: pointer; }
+        #skandi-site-header .header-shell {
+            position: relative;
+            z-index: 100;
+            height: var(--header-total);
+            background: #fff;
+            box-shadow: 0 4px 24px rgba(15, 23, 42, .08);
+        }
+        #skandi-site-header .mainline {
+            height: var(--header-h);
+            background: #fff;
+            border-bottom: 1px solid var(--sk-line);
+        }
+        #skandi-site-header .inner {
+            max-width: 1240px;
+            margin: 0 auto;
+            height: 100%;
+            padding: 0 18px;
+            display: flex;
+            align-items: center;
+            gap: 18px;
+        }
+        #skandi-site-header button.logo {
+            flex: 0 1 auto;
+            min-width: 0;
+            height: auto;
+            padding: 0;
+            border: 0;
+            background: transparent;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+        #skandi-site-header button.logo img {
+            height: clamp(34px, 10vw, 50px);
+            width: auto;
+            max-width: 100%;
+            object-fit: contain;
+            object-position: left center;
+            display: block;
+        }
+        #skandi-site-header .nav {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            min-width: 0;
+        }
+        #skandi-site-header .nav-btn {
+            border: 0;
+            background: transparent;
+            color: var(--sk-blue);
+            border-radius: 999px;
+            padding: 10px 14px;
+            font-size: 13px;
+            font-weight: 800;
+            white-space: nowrap;
+            position: relative;
+            overflow: visible;
+            transition: color .3s;
+        }
+        #skandi-site-header .nav-btn:hover { color: var(--sk-cyan); }
+        #skandi-site-header .nav-btn::after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 0;
+            height: 3px;
+            background: var(--sk-cyan);
+            border-radius: 999px;
+            transition: width .3s ease, left .3s ease;
+        }
+        #skandi-site-header .nav-btn:hover::after,
+        #skandi-site-header .nav-btn.active::after { width: 80%; left: 10%; }
+        #skandi-site-header .actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex: 0 0 auto;
+        }
+        #skandi-site-header .action-btn,
+        #skandi-site-header .mobile-btn {
+            border: 0;
+            background: #fff;
+            color: var(--sk-blue);
+            border-radius: 999px;
+            min-height: 40px;
+            padding: 0 16px;
+            font-size: 12px;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all .3s;
+        }
+        #skandi-site-header .action-btn:hover { background: var(--sk-pale); }
+        #skandi-site-header .action-btn.primary { background: var(--sk-blue); color: #fff; }
+        #skandi-site-header .action-btn.primary:hover {
+            background: var(--sk-blue2);
+            box-shadow: 0 8px 16px rgba(2, 46, 100, .2);
+            transform: translateY(-1px);
+        }
+        #skandi-site-header .mobile-btn {
+            display: none;
+            width: auto;
+            height: 40px;
+            gap: 8px;
+            white-space: nowrap;
+        }
+        #skandi-site-header .expandbar {
+            height: var(--bar-height);
+            background: linear-gradient(90deg, var(--sk-blue), var(--sk-blue2));
+            color: #fff;
+            position: relative;
+            overflow: hidden;
+            z-index: 80;
+        }
+        #skandi-site-header .expand-inner {
+            max-width: 1240px;
+            margin: 0 auto;
+            height: 100%;
+            padding: 0 18px;
+            position: relative;
+        }
+        #skandi-site-header .default-bar {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+            color: rgba(255, 255, 255, .88);
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: .09em;
+            font-style: italic;
+            text-transform: uppercase;
+        }
+        #skandi-site-header .expandbar-img {
+            height: 58px;
+            width: auto;
+            object-fit: contain;
+            display: block;
+        }
+        #skandi-site-header .settings-wrap { position: relative; display: inline-block; }
+        #skandi-site-header #settingsBtn { padding: 0 10px; }
+        #skandi-site-header #settingsBtn svg {
+            width: 22px;
+            height: 22px;
+            fill: currentColor;
+            transition: transform .3s;
+        }
+        #skandi-site-header #settingsBtn:hover svg { transform: rotate(15deg); }
+        #skandi-site-header .settings-menu {
+            position: absolute;
+            top: calc(100% + 14px);
+            right: 0;
+            width: 260px;
+            padding: 24px;
+            z-index: 200;
+            background: rgba(255, 255, 255, .95);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--sk-line);
+            border-radius: 20px;
+            box-shadow: 0 20px 50px rgba(2, 46, 100, .15);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px) scale(.95);
+            transform-origin: top right;
+            transition: all .3s cubic-bezier(.22, 1, .36, 1);
+        }
+        #skandi-site-header .settings-menu.open {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0) scale(1);
+        }
+        #skandi-site-header .settings-group,
+        #welcomeSettingsModal .settings-group { margin-bottom: 16px; text-align: left; }
+        #skandi-site-header .settings-group label {
+            display: block;
+            font-size: 11px;
+            font-weight: 800;
+            color: var(--sk-muted);
+            text-transform: uppercase;
+            letter-spacing: .05em;
+            margin-bottom: 8px;
+        }
+        #skandi-site-header .settings-group select,
+        #welcomeSettingsModal .settings-group select {
+            width: 100%;
+            padding: 14px 16px;
+            border: 1px solid var(--sk-border-soft, #eef2f7);
+            border-radius: 12px;
+            font-size: 13px;
+            color: var(--sk-blue, #022e64);
+            font-weight: 600;
+            outline: none;
+            background: #f9fafb;
+            cursor: pointer;
+            transition: all .2s;
+        }
+        #skandi-site-header .settings-group select:focus,
+        #skandi-site-header .settings-group select:hover,
+        #welcomeSettingsModal .settings-group select:focus,
+        #welcomeSettingsModal .settings-group select:hover {
+            border-color: var(--sk-cyan, #5FC7CF);
+            background: #fff;
+            box-shadow: 0 4px 12px rgba(95, 199, 207, .1);
+        }
+        #skandi-site-header .shell-btn,
+        #welcomeSettingsModal .shell-btn {
+            position: relative;
+            appearance: none;
+            border: 1px solid transparent;
+            background: var(--sk-blue, #022e64);
+            color: #fff;
+            border-radius: 999px;
+            padding: 14px 28px;
+            font-size: 13px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: .12em;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            min-height: 48px;
+            overflow: hidden;
+            transition: transform .3s cubic-bezier(.22, 1, .36, 1), box-shadow .3s ease, background .3s ease;
+        }
+        #skandi-site-header .shell-btn:hover,
+        #welcomeSettingsModal .shell-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 28px rgba(2, 46, 100, .2);
+        }
+        #skandi-site-header .shell-btn.secondary {
+            background: #fff;
+            color: var(--sk-blue);
+            border-color: var(--sk-line);
+        }
+        #skandi-site-header .club-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(2, 18, 39, .5);
+            backdrop-filter: blur(6px);
+            z-index: 9998;
+            opacity: 0;
+            visibility: hidden;
+            transition: all .4s ease;
+        }
+        #skandi-site-header .club-backdrop.open { opacity: 1; visibility: visible; }
+        #skandi-site-header .club-panel {
+            position: fixed;
+            top: 0;
+            right: 0;
+            height: 100dvh;
+            width: min(440px, 100vw);
+            background: #fff;
+            box-shadow: -20px 0 60px rgba(2, 46, 100, .15);
+            z-index: 9999;
+            border-top-left-radius: 32px;
+            border-bottom-left-radius: 32px;
+            overflow: hidden;
+            transform: translateX(100%);
+            opacity: 0;
+            pointer-events: none;
+            transition: transform .55s cubic-bezier(.22, 1, .36, 1), opacity .55s ease;
+            display: flex;
+            flex-direction: column;
+        }
+        #skandi-site-header .club-panel.open { transform: translateX(0); opacity: 1; pointer-events: auto; }
+        #skandi-site-header .club-head {
+            height: 90px;
+            background: linear-gradient(135deg, var(--sk-blue), var(--sk-blue2));
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 32px;
+        }
+        #skandi-site-header .club-head strong { font-size: 18px; font-weight: 800; letter-spacing: -.02em; }
+        #skandi-site-header .club-close {
+            border: 1px solid rgba(255, 255, 255, .28);
+            background: rgba(255, 255, 255, .12);
+            color: #fff;
+            width: 40px;
+            height: 40px;
+            border-radius: 999px;
+            font-size: 24px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all .3s ease;
+        }
+        #skandi-site-header .club-close:hover { background: rgba(255, 255, 255, .25); transform: rotate(90deg); }
+        #skandi-site-header .club-body { padding: 40px 32px; flex: 1; overflow-y: auto; }
+        #skandi-site-header .club-profile { display: flex; flex-direction: column; margin-bottom: 24px; }
+        #skandi-site-header .login-form { display: flex; flex-direction: column; gap: 16px; }
+        #skandi-site-header .login-form input {
+            width: 100%;
+            padding: 18px 20px;
+            border: 1px solid var(--sk-border-soft);
+            border-radius: 14px;
+            font-size: 15px;
+            background: #f9fafb;
+            transition: all .3s ease;
+        }
+        #skandi-site-header .login-form input:focus {
+            outline: none;
+            border-color: var(--sk-cyan);
+            background: #fff;
+            box-shadow: 0 0 0 4px rgba(95, 199, 207, .1);
+        }
+        #skandi-site-header #favBtn { transition: color .2s ease, transform .2s; transform-origin: center; }
+        #skandi-site-header #favBtn.saved { animation: skandiFavPop .4s cubic-bezier(.175, .885, .32, 1.275); }
+
+        #welcomeSettingsModal {
+            --sk-blue: #022e64;
+            --sk-cyan: #5FC7CF;
+            --sk-body: #555;
+            position: fixed;
+            inset: 0;
+            z-index: 99999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            visibility: hidden;
+            pointer-events: none;
+            font-family: Montserrat, system-ui, sans-serif;
+        }
+        #welcomeSettingsModal.active { visibility: visible; pointer-events: auto; }
+        #welcomeSettingsModal .welcome-backdrop {
+            position: absolute;
+            inset: 0;
+            background: rgba(2, 18, 39, .7);
+            backdrop-filter: blur(8px);
+            opacity: 0;
+            transition: opacity .4s ease;
+        }
+        #welcomeSettingsModal.active .welcome-backdrop { opacity: 1; }
+        #welcomeSettingsModal .welcome-card {
+            position: relative;
+            background: #fff;
+            width: min(440px, 90vw);
+            border-radius: 32px;
+            box-shadow: 0 32px 80px rgba(2, 46, 100, .25);
+            padding: 48px 40px;
+            text-align: center;
+            transform: translateY(20px) scale(.95);
+            opacity: 0;
+            transition: all .5s cubic-bezier(.22, 1, .36, 1);
+        }
+        #welcomeSettingsModal.active .welcome-card { transform: translateY(0) scale(1); opacity: 1; }
+        #welcomeSettingsModal .globe-icon { color: var(--sk-cyan); margin-bottom: 20px; }
+        #welcomeSettingsModal .globe-icon svg {
+            width: 56px;
+            height: 56px;
+            fill: currentColor;
+            margin: 0 auto;
+            animation: skandiPulseGlow 3s infinite alternate;
+        }
+        #welcomeSettingsModal h2 { color: var(--sk-blue); font-size: 28px; font-weight: 800; margin-bottom: 12px; letter-spacing: -.03em; }
+        #welcomeSettingsModal p { color: var(--sk-body); font-size: 15px; margin-bottom: 32px; line-height: 1.6; }
+
+        #mobileMenuLayer {
+            --drawer-blue: #022e64;
+            --drawer-blue2: #0b3a7a;
+            --drawer-cyan: #5FC7CF;
+            --drawer-line: #e6e9ee;
+            position: fixed;
+            inset: 0;
+            z-index: 2000;
+            visibility: hidden;
+            pointer-events: none;
+            transition: visibility 0s linear .3s;
+            font-family: Montserrat, system-ui, sans-serif;
+        }
+        #mobileMenuLayer,
+        #mobileMenuLayer * { box-sizing: border-box; }
+        #mobileMenuLayer.open { visibility: visible; pointer-events: auto; transition-delay: 0s; }
+        #mobileMenuLayer .mobile-menu-backdrop {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            border: 0;
+            padding: 0;
+            background: rgba(2, 18, 39, .6);
+            backdrop-filter: blur(6px);
+            opacity: 0;
+            cursor: default;
+            transition: opacity .4s ease;
+        }
+        #mobileMenuLayer.open .mobile-menu-backdrop { opacity: 1; }
+        #mobileMenuLayer .mobile-drawer {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: min(86vw, 380px);
+            height: 100dvh;
+            background: #fff;
+            color: #111827;
+            box-shadow: -18px 0 48px rgba(15, 23, 42, .25);
+            transform: translateX(105%);
+            transition: transform .4s cubic-bezier(.22, .8, .2, 1);
+            display: flex;
+            flex-direction: column;
+            border-top-left-radius: 24px;
+            border-bottom-left-radius: 24px;
+            overflow: hidden;
+            outline: none;
+        }
+        #mobileMenuLayer.open .mobile-drawer { transform: translateX(0); }
+        #mobileMenuLayer .mobile-drawer-head {
+            padding: 20px 24px;
+            background: linear-gradient(135deg, var(--drawer-blue), var(--drawer-blue2));
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        #mobileMenuLayer .mobile-drawer-head strong { display: block; font-size: 20px; font-weight: 800; line-height: 1.2; letter-spacing: -.02em; }
+        #mobileMenuLayer .mobile-drawer-head span { display: block; margin-top: 4px; color: rgba(255, 255, 255, .8); font-size: 12px; font-weight: 600; }
+        #mobileMenuLayer #mobileMenuClose {
+            width: 40px;
+            height: 40px;
+            border: 1px solid rgba(255, 255, 255, .32);
+            border-radius: 999px;
+            background: rgba(255, 255, 255, .12);
+            color: #fff;
+            font-size: 26px;
+            cursor: pointer;
+            transition: all .3s;
+        }
+        #mobileMenuLayer #mobileMenuClose:hover { background: rgba(255, 255, 255, .25); transform: rotate(90deg); }
+        #mobileMenuLayer .mobile-drawer-body { flex: 1; min-height: 0; overflow-y: auto; padding: 0; }
+        #mobileMenuLayer .mobile-settings-bar {
+            display: flex;
+            gap: 10px;
+            padding: 16px;
+            border-bottom: 1px solid var(--drawer-line);
+            background: #f6faff;
+        }
+        #mobileMenuLayer .mobile-settings-bar select {
+            flex: 1;
+            min-width: 0;
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid var(--drawer-line);
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--drawer-blue);
+            background: #fff;
+        }
+        #mobileMenuLayer .mobile-menu-list { display: flex; flex-direction: column; }
+        #mobileMenuLayer .mobile-menu-link {
+            width: 100%;
+            min-height: 60px;
+            border: 0;
+            border-bottom: 1px solid #eef2f7;
+            background: #fff;
+            color: var(--drawer-blue);
+            padding: 16px 24px;
+            text-align: left;
+            font-size: 15px;
+            font-weight: 700;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            transition: background .2s;
+        }
+        #mobileMenuLayer .mobile-menu-link:hover { background: #f6faff; }
+        #mobileMenuLayer .mobile-menu-link::after { content: "›"; color: var(--drawer-cyan); font-size: 28px; font-weight: 500; }
+        #mobileMenuLayer .mobile-drawer-actions {
+            padding: 20px 24px calc(20px + env(safe-area-inset-bottom));
+            border-top: 1px solid var(--drawer-line);
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            background: #fff;
+        }
+        #mobileMenuLayer .mobile-drawer-action {
+            min-height: 48px;
+            border: 1px solid var(--drawer-line);
+            border-radius: 999px;
+            background: #fff;
+            color: var(--drawer-blue);
+            font-size: 13px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all .3s;
+        }
+        #mobileMenuLayer .mobile-drawer-action.primary { background: var(--drawer-blue); color: #fff; border-color: var(--drawer-blue); }
+        #mobileMenuLayer .mobile-drawer-action:hover { transform: translateY(-2px); box-shadow: 0 8px 16px rgba(2, 46, 100, .1); }
+        html.mobile-menu-open,
+        body.mobile-menu-open { overflow: hidden; overscroll-behavior: none; }
+
+        #skandi-site-footer {
+            --sk-blue: #022e64;
+            --sk-blue2: #0b3a7a;
+            --sk-cyan: #5FC7CF;
+            --sk-light: #d7e6ff;
+            --sk-pale: #f6faff;
+            --sk-line: #e6e9ee;
+            width: 100%;
+            display: block;
+            margin: 0;
+            font-family: Montserrat, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: transparent;
+        }
+        #skandi-site-footer,
+        #skandi-site-footer * { box-sizing: border-box; }
+        #skandi-site-footer button,
+        #skandi-site-footer input { font-family: inherit; }
+        #skandi-site-footer .footer { background: var(--sk-blue); color: #fff; width: 100%; }
+        #skandi-site-footer .newsletter {
+            background: linear-gradient(135deg, var(--sk-light), var(--sk-pale));
+            color: var(--sk-blue);
+            padding: 40px 32px;
+            border-top: 1px solid var(--sk-line);
+        }
+        #skandi-site-footer .news-inner {
+            max-width: 1240px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 32px;
+            align-items: center;
+        }
+        #skandi-site-footer .newsletter h2 { margin: 0 0 8px; font-size: 28px; letter-spacing: -.03em; font-weight: 800; }
+        #skandi-site-footer .newsletter p { margin: 0; color: #49617e; line-height: 1.5; }
+        #skandi-site-footer .news-form { display: grid; grid-template-columns: 1fr auto; gap: 12px; }
+        #skandi-site-footer .news-form input {
+            border: 1px solid var(--sk-line);
+            border-radius: 999px;
+            min-height: 48px;
+            padding: 14px 20px;
+            font-size: 15px;
+            outline: none;
+            background: #fff;
+        }
+        #skandi-site-footer .news-form input:focus { border-color: var(--sk-cyan); }
+        #skandi-site-footer .news-form button {
+            border: 0;
+            background: var(--sk-blue);
+            color: #fff;
+            border-radius: 999px;
+            padding: 0 24px;
+            font-size: 13px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+            cursor: pointer;
+            transition: background .3s;
+        }
+        #skandi-site-footer .news-form button:hover { background: var(--sk-blue2); }
+        #skandi-site-footer .footer-main {
+            max-width: 1240px;
+            margin: 0 auto;
+            padding: 64px 32px;
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 32px;
+        }
+        #skandi-site-footer .brand { grid-column: span 2; }
+        #skandi-site-footer .brand img.logo {
+            width: 190px;
+            max-width: 100%;
+            height: auto;
+            margin-bottom: 16px;
+            object-fit: contain;
+            display: block;
+        }
+        #skandi-site-footer .social-links { display: flex; align-items: center; gap: 12px; margin-top: 20px; flex-wrap: wrap; }
+        #skandi-site-footer .social-btn {
+            width: 44px;
+            height: 44px;
+            border: 1px solid rgba(255, 255, 255, .2);
+            border-radius: 50%;
+            padding: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+            transition: all .3s ease;
+            cursor: pointer;
+        }
+        #skandi-site-footer .social-btn img { width: 100%; height: 100%; object-fit: contain; display: block; }
+        #skandi-site-footer .social-btn:hover { transform: translateY(-3px); border-color: var(--sk-cyan); background: rgba(95, 199, 207, .1); }
+        #skandi-site-footer .col h3 { font-size: 13px; text-transform: uppercase; letter-spacing: .15em; font-weight: 800; color: #fff; margin: 0 0 20px; }
+        #skandi-site-footer .col button {
+            display: block;
+            background: transparent;
+            border: 0;
+            color: rgba(255, 255, 255, .7);
+            font-size: 14px;
+            font-weight: 500;
+            padding: 0;
+            margin: 0 0 12px;
+            cursor: pointer;
+            text-align: left;
+            transition: color .2s;
+        }
+        #skandi-site-footer .col button:hover { color: #fff; }
+        #skandi-site-footer .footer-bottom { border-top: 1px solid rgba(255, 255, 255, .1); padding: 24px 32px; }
+        #skandi-site-footer .bottom-inner {
+            max-width: 1240px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+            font-size: 13px;
+            color: rgba(255, 255, 255, .6);
+        }
+        #skandi-site-footer .bottom-links { display: flex; gap: 20px; flex-wrap: wrap; }
+        #skandi-site-footer .bottom-links button {
+            background: transparent;
+            border: 0;
+            color: rgba(255, 255, 255, .8);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 0;
+        }
+        #skandi-site-footer .bottom-links button:hover { color: #fff; }
+
+        .skandi-shell-toast {
+            position: fixed;
+            right: 20px;
+            bottom: 20px;
+            z-index: 100000;
+            max-width: min(380px, calc(100vw - 40px));
+            display: none;
+            padding: 14px 18px;
+            border-radius: 14px;
+            background: #022e64;
+            color: #fff;
+            box-shadow: 0 18px 42px rgba(2, 46, 100, .25);
+            font-size: 13px;
+            font-weight: 700;
+            line-height: 1.5;
+        }
+        .skandi-shell-toast.show { display: block; }
+        .skandi-shell-toast.error { background: #8a1f1f; }
+
+        @keyframes skandiFavPop {
+            0% { transform: scale(1); }
+            40% { transform: scale(1.35); color: #5FC7CF; }
+            100% { transform: scale(1); }
+        }
+        @keyframes skandiPulseGlow {
+            0% { filter: drop-shadow(0 0 4px rgba(95, 199, 207, .3)); }
+            100% { filter: drop-shadow(0 0 16px rgba(95, 199, 207, .8)); }
+        }
+        @media (max-width: 980px) {
+            #skandi-site-footer .footer-main { grid-template-columns: repeat(3, 1fr); }
+            #skandi-site-footer .brand { grid-column: span 3; }
+            #skandi-site-footer .news-inner { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 900px) {
+            #skandi-site-header .nav,
+            #skandi-site-header .desktop-only { display: none; }
+            #skandi-site-header .inner { justify-content: space-between; gap: 12px; }
+            #skandi-site-header .actions { flex-shrink: 0; }
+            #skandi-site-header .mobile-btn { display: inline-flex; }
+        }
+        @media (max-width: 600px) {
+            #skandi-site-footer .footer-main { grid-template-columns: 1fr; padding: 40px 18px; gap: 36px; }
+            #skandi-site-footer .brand { grid-column: span 1; display: flex; flex-direction: column; align-items: center; text-align: center; }
+            #skandi-site-footer .social-links { justify-content: center; }
+            #skandi-site-footer .col { text-align: center; }
+            #skandi-site-footer .col h3 { margin-bottom: 12px; }
+            #skandi-site-footer .col button { text-align: center; margin: 0 auto 12px; }
+            #skandi-site-footer .newsletter { padding: 32px 18px; }
+            #skandi-site-footer .news-inner { text-align: center; }
+            #skandi-site-footer .news-form { grid-template-columns: 1fr; width: 100%; max-width: 400px; margin: 0 auto; }
+            #skandi-site-footer .news-form button { min-height: 48px; }
+            #skandi-site-footer .bottom-inner { flex-direction: column; text-align: center; }
+            #skandi-site-footer .bottom-links { justify-content: center; gap: 12px 16px; }
+            #welcomeSettingsModal .welcome-card { padding: 40px 24px; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            #mobileMenuLayer,
+            #mobileMenuLayer *,
+            #welcomeSettingsModal,
+            #welcomeSettingsModal * { transition: none !important; animation: none !important; }
+        }
+    

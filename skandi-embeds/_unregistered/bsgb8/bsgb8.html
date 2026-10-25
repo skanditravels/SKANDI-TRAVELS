@@ -1,1 +1,17 @@
-<!-- SKANDI_PENDING_SOURCE: canonical route/controller mapping required before compilation. -->
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>SKANDI Transport Compliance</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="bsgb8.css"></head>
+<body><div class="shell"><div class="topbar"><div class="brand">SKANDI TRAVELS<br><small>U.S. TRANSPORT COMPLIANCE</small></div></div>
+<main class="content">
+<div class="pagehead"><div><h1>Transport compliance</h1><p>Company, driver and vehicle eligibility for SKANDI-operated transfers and tours.</p></div><div class="actions"><button class="btn" id="refreshBtn">Refresh</button><button class="btn primary" id="verifyBtn">Verify record</button></div></div>
+<div class="notice warn">A document upload does not automatically make a driver, vehicle or company compliant. Evidence must be verified and valid on the service date.</div>
+<div class="metrics"><div class="metric"><div class="n" id="mValid">0</div><div class="l">Valid</div></div><div class="metric"><div class="n" id="mDue">0</div><div class="l">Expiring soon</div></div><div class="metric"><div class="n" id="mMissing">0</div><div class="l">Missing</div></div><div class="metric"><div class="n" id="mBlocked">0</div><div class="l">Dispatch blocked</div></div></div>
+<div class="compliance-grid">
+<div class="card"><div class="cardhead"><strong>Subjects</strong></div><div class="subject-list" id="subjects"></div></div>
+<div class="card"><div class="cardhead"><strong id="subjectTitle">Select a subject</strong><span id="dispatchState" class="status">—</span></div><div class="cardbody"><div id="requirements"><div class="empty">Select a company, driver or vehicle.</div></div></div></div>
+</div>
+</main></div>
+<script src="bsgb8.js"></script></body></html>

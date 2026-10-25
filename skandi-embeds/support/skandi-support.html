@@ -1,1 +1,324 @@
-<!-- SKANDI_PENDING_SOURCE: replace with complete page markup. -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#022e64">
+<title>SKANDI Help Center · B-011.1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="skandi-support.css">
+</head>
+<body>
+<header class="hero" data-section-id="support-hero">
+  <div class="hero-inner">
+    <div>
+      <div class="eyebrow" data-content-id="support-hero-eyebrow">SKANDI HELP CENTER</div>
+      <h1 data-content-id="support-hero-h1">How can we help?</h1>
+      <p data-content-id="support-hero-copy">
+        Search SKANDI help articles or send a detailed request to Customer Service. Booking-related enquiries can be linked to an existing SKANDI booking.
+      </p>
+    </div>
+
+    <div>
+      <div class="search-shell" role="search">
+        <input id="helpSearch" type="search" class="search-input" placeholder="Search booking, payment, baggage, refunds…" aria-label="Search SKANDI Help Center">
+        <button id="helpSearchBtn" class="search-btn" type="button">Search</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="helpSearchResults" class="search-results hidden" aria-live="polite"></div>
+</header>
+
+<main class="page">
+  <aside class="sidebar" aria-label="Support shortcuts">
+    <section class="card sidebar-card" data-section-id="support-popular-topics">
+      <div class="eyebrow" style="margin-bottom:9px" data-content-id="support-popular-eyebrow">QUICK HELP</div>
+      <h3 data-content-id="support-popular-h3">Popular Help Topics</h3>
+      <p class="sidebar-copy" data-content-id="support-popular-copy">
+        Helpful articles and common support topics are loaded from SKANDI Support.
+      </p>
+      <ul id="faqList" class="faq-list"></ul>
+    </section>
+
+    <section class="card sidebar-card" id="supportChannelsCard" data-section-id="support-channels">
+      <div class="eyebrow" style="margin-bottom:9px" data-content-id="support-channels-eyebrow">CONTACT SKANDI</div>
+      <h3 data-content-id="support-channels-h3">Choose how to get help</h3>
+      <div class="channel-stack">
+        <button id="alexandraChatBtn" class="channel-btn primary" type="button">Chat with Alexandra</button>
+        <button id="humanSupportBtn" class="channel-btn soft" type="button">Chat with a Human SKANDI Customer Service Agent</button>
+        <button id="mySupportCasesBtn" class="channel-btn" type="button">My Support Cases</button>
+      </div>
+      <p id="humanSupportHint" class="channel-hint">Sign in to use live human chat.</p>
+    </section>
+
+    <section class="card club-card" data-section-id="support-club">
+      <div class="eyebrow" style="color:var(--sk-aqua-soft);margin-bottom:9px" data-content-id="support-club-eyebrow">SKANDI CLUB</div>
+      <h3 data-content-id="support-club-h3">Member support</h3>
+      <p data-content-id="support-club-copy">
+        Club Members receive priority routing, dedicated Alexandra assistant access, and faster resolution times.
+      </p>
+      <button id="clubLoginBtn" class="channel-btn" type="button">Log In to SKANDI Club</button>
+    </section>
+  </aside>
+
+  <section class="form-card" data-section-id="support-form">
+    <div class="form-intro">
+      <div>
+        <div class="eyebrow" data-content-id="support-form-eyebrow">CUSTOMER SERVICE</div>
+        <h2 data-content-id="support-form-h2">Send a support request</h2>
+        <p data-content-id="support-form-copy">
+          Provide the details below so the request can be routed to the correct SKANDI support workflow.
+        </p>
+      </div>
+      <div class="queue-pill">
+        <strong>Standard queue</strong>
+        <span>Expected initial response: 48–72 hours</span>
+      </div>
+    </div>
+
+    <div id="status" class="status"></div>
+    <div id="memberLinkedNotice" class="status ok" style="display:none"></div>
+
+    <form id="publicSupportForm">
+      <section class="form-section">
+        <div class="form-section-head">
+          <div class="step">1</div>
+          <h3>Traveler Information</h3>
+        </div>
+
+        <div class="grid-2">
+          <div class="field">
+            <label for="firstName">First Name <span class="required">*</span></label>
+            <input id="firstName" type="text" required autocomplete="given-name" placeholder="Legal first name">
+          </div>
+          <div class="field">
+            <label for="lastName">Last Name <span class="required">*</span></label>
+            <input id="lastName" type="text" required autocomplete="family-name" placeholder="Legal last name">
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="field">
+            <label for="email">Email Address <span class="required">*</span></label>
+            <input id="email" type="email" required autocomplete="email" placeholder="name@example.com">
+          </div>
+          <div class="field">
+            <label for="phone">Phone Number <span class="required">*</span></label>
+            <div style="display:grid;grid-template-columns:90px minmax(0,1fr);gap:8px">
+              <select id="phonePrefix" aria-label="Phone prefix">
+                <option>+1</option><option>+44</option><option>+46</option><option>+47</option><option>+45</option>
+              </select>
+              <input id="phone" type="tel" required autocomplete="tel" placeholder="Phone number">
+            </div>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="field">
+            <label for="nationality">Nationality</label>
+            <input id="nationality" type="text" autocomplete="country-name" placeholder="e.g. Swedish">
+          </div>
+          <div class="field">
+            <label for="countryOfResidence">Country of Residence <span class="required">*</span></label>
+            <input id="countryOfResidence" type="text" required placeholder="Where do you currently live?">
+          </div>
+        </div>
+      </section>
+
+      <section class="form-section">
+        <div class="form-section-head">
+          <div class="step">2</div>
+          <h3>Trip Details</h3>
+        </div>
+
+        <div class="field">
+          <label for="hasBooking">Does this request relate to an existing booking? <span class="required">*</span></label>
+          <select id="hasBooking" required>
+            <option value="">Select an option</option>
+            <option value="yes">Yes, I have a booking</option>
+            <option value="no">No, general inquiry</option>
+          </select>
+        </div>
+
+        <div id="bookingFields" class="detail-module">
+          <div class="grid-2">
+            <div class="field">
+              <label for="pnrField">Booking Reference / PNR <span class="required">*</span></label>
+              <input id="pnrField" type="text" placeholder="6–8 alphanumeric characters">
+            </div>
+            <div class="field">
+              <label for="supplierField">Operating Airline / Supplier</label>
+              <input id="supplierField" type="text" placeholder="e.g. SAS, Lufthansa, Hilton">
+            </div>
+          </div>
+          <div class="grid-2">
+            <div class="field">
+              <label for="dateField">Date of Travel <span class="required">*</span></label>
+              <input id="dateField" type="date">
+            </div>
+            <div class="field">
+              <label for="destDropdown">Destination <span class="required">*</span></label>
+              <input id="destDropdown" type="text" placeholder="Destination">
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="form-section" id="requestDetailsSection">
+        <div class="form-section-head">
+          <div class="step">3</div>
+          <h3>Request Details</h3>
+        </div>
+        <p class="section-note">Categories and topics are synchronized from the canonical SKANDI Support workflow.</p>
+
+        <div class="grid-2">
+          <div class="field">
+            <label for="caseCategory">Category <span class="required">*</span></label>
+            <select id="caseCategory" required>
+              <option value="">Select Category</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="caseSubCategory">Specific Topic <span class="required">*</span></label>
+            <select id="caseSubCategory" required>
+              <option value="">Select Category First</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="flightDetailsModule" class="detail-module flight">
+          <div class="module-title">Flight itinerary details</div>
+          <div class="grid-2">
+            <div class="field">
+              <label for="flightAirline">Operating Airline <span class="required">*</span></label>
+              <input id="flightAirline" type="text" placeholder="Airline">
+            </div>
+            <div class="field">
+              <label for="flightNumber">Flight Number <span class="required">*</span></label>
+              <input id="flightNumber" type="text" pattern="^[A-Z0-9]{2}\s?\d{1,4}[A-Za-z]?$" placeholder="e.g. SK 903">
+            </div>
+          </div>
+          <div class="grid-2">
+            <div class="field">
+              <label for="depAirport">Departure Airport <span class="required">*</span></label>
+              <input id="depAirport" type="text" placeholder="Departure airport">
+            </div>
+            <div class="field">
+              <label for="arrAirport">Arrival Airport <span class="required">*</span></label>
+              <input id="arrAirport" type="text" placeholder="Arrival airport">
+            </div>
+          </div>
+        </div>
+
+        <div id="baggageDetailsModule" class="detail-module baggage">
+          <div class="module-title">Baggage tracing details</div>
+          <div class="field">
+            <label for="hasPir">Have you already filed a Property Irregularity Report (PIR)? <span class="required">*</span></label>
+            <select id="hasPir">
+              <option value="">Select an option</option>
+              <option value="yes">Yes, I already have a PIR</option>
+              <option value="no">No, I do not have a PIR yet</option>
+            </select>
+          </div>
+
+          <div id="pirGuidance" class="status"></div>
+
+          <div class="grid-2">
+            <div class="field" id="pirNumberWrap" style="display:none">
+              <label for="pirNumber">PIR Number <span class="required">*</span></label>
+              <input id="pirNumber" type="text" placeholder="e.g. ARNFI12345">
+            </div>
+            <div class="field">
+              <label for="bagTag">Baggage Tag Number</label>
+              <input id="bagTag" type="text" placeholder="e.g. SK123456">
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <div class="field">
+              <label for="bagType">Baggage Type <span class="required">*</span></label>
+              <select id="bagType">
+                <option value="">Select Type</option>
+                <option>Hard Shell Spinner</option>
+                <option>Soft Shell Upright</option>
+                <option>Duffle Bag</option>
+                <option>Backpack</option>
+                <option>Box / Odd Size</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="bagColor">Dominant Color <span class="required">*</span></label>
+              <select id="bagColor">
+                <option value="">Select Color</option>
+                <option>Black</option>
+                <option>Blue / Navy</option>
+                <option>Grey / Silver</option>
+                <option>Red / Burgundy</option>
+                <option>Other</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="bagBrand">Brand & Distinguishing Features <span class="required">*</span></label>
+            <input id="bagBrand" type="text" placeholder="e.g. Samsonite, red ribbon on handle">
+          </div>
+          <div class="field">
+            <label for="bagAddress">Temporary Delivery Address</label>
+            <textarea id="bagAddress" placeholder="Full delivery address."></textarea>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="caseSubject">Subject Line <span class="required">*</span></label>
+          <input id="caseSubject" type="text" required placeholder="Briefly summarize your request">
+        </div>
+        <div class="field">
+          <label for="caseDescription">Detailed Description <span class="required">*</span></label>
+          <textarea id="caseDescription" required placeholder="Please provide a thorough explanation."></textarea>
+        </div>
+      </section>
+
+      <section class="form-section">
+        <div class="form-section-head">
+          <div class="step">4</div>
+          <h3>Supporting Documents</h3>
+        </div>
+        <p class="section-note">Providing receipts, PIR reports or screenshots can help Customer Service understand the request.</p>
+
+        <div id="fileDrop" class="file-drop">
+          <button id="fileBrowseBtn" type="button">Choose supporting files</button>
+          <p>PDF, JPG or PNG. Maximum 3 files and 10 MB total.</p>
+          <span id="fileSummary" class="file-summary">No files selected.</span>
+          <input type="file" id="fileInput" class="hidden" multiple accept=".pdf,.jpg,.png,.jpeg">
+        </div>
+
+        <div class="checkbox-row">
+          <input type="checkbox" required id="consentPrivacy">
+          <label for="consentPrivacy">
+            I confirm that the information provided is accurate, and I consent to the processing of my personal data in accordance with SKANDI's
+            <a href="/legal/privacy-policy" data-support-nav="/legal/privacy-policy">Privacy Policy</a>.
+            <span class="required">*</span>
+          </label>
+        </div>
+        <div class="checkbox-row">
+          <input type="checkbox" required id="consentSla">
+          <label for="consentSla">
+            I acknowledge that standard support requests may take up to 72 hours for an initial response.
+            <span class="required">*</span>
+          </label>
+        </div>
+
+        <button id="submitBtn" type="submit" class="btn-submit">Submit Request</button>
+      </section>
+    </form>
+  </section>
+</main>
+
+<script src="skandi-support.js"></script>
+</body>
+</html>
+

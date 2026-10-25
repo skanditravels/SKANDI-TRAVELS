@@ -1,1 +1,86 @@
-<!-- SKANDI_PENDING_SOURCE: canonical route/controller mapping required before compilation. -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#03111f" />
+  <title>SKANDI · Travel Assistant</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="elfkf.css">
+</head>
+<body>
+  <div class="shell">
+    <section class="hero">
+      <div class="wrap hero-grid">
+        <div>
+          <div class="eyebrow">SKANDI Travels · Booking Service</div>
+          <h1>Travel Assistant</h1>
+          <p>Manage eligible Duffel flight and hotel bookings, reach Duffel's travel specialists when a booking needs personal support, and keep a connected service-activity record with SKANDI Customer Service.</p>
+        </div>
+        <div class="hero-facts" aria-label="Travel support information">
+          <div class="fact"><span class="fact-label">Linked bookings</span><strong id="heroTrips">—</strong><small>SKANDI account</small></div>
+          <div class="fact"><span class="fact-label">Service reference</span><strong id="heroCase">—</strong><small>Customer Service</small></div>
+        </div>
+      </div>
+    </section>
+    <section class="stage">
+      <div class="wrap layout">
+        <aside class="side-menu" aria-label="Travel Assistant navigation">
+          <div class="side-menu-title">Travel Assistant</div>
+          <div class="side-category open">
+            <button class="side-category-head" data-category-toggle aria-expanded="true">My Travel</button>
+            <div class="side-options"><button class="side-link active" data-scroll-to="manage">Manage a booking</button><button class="side-link" data-scroll-to="activity">Service activity</button></div>
+          </div>
+          <div class="side-category open">
+            <button class="side-category-head" data-category-toggle aria-expanded="true">Service & Support</button>
+            <div class="side-options"><button class="side-link" id="supportNav">Customer Service</button><button class="side-link" id="refreshNav">Refresh bookings</button></div>
+          </div>
+          <div class="side-menu-footer">For bookings not serviced by Duffel,<br><button id="supportAside" type="button">contact SKANDI Support</button>.</div>
+        </aside>
+        <main class="workspace">
+          <div class="page-intro" id="manage"><div><div class="kicker">My Travel · Booking Service</div><h2>How can we help?</h2></div><p>Select a linked booking to pass the correct trip details to Duffel, or open Assistant for your Duffel customer account.</p></div>
+          <section class="card pad" aria-labelledby="assistantTitle">
+            <h3 id="assistantTitle">Your travel, one place.</h3>
+            <p>Duffel handles eligible supplier-side support. SKANDI retains your booking record and a separate service-activity history for Customer Service.</p>
+            <div class="selection">
+              <div class="field"><label for="trip">Booking</label><select class="control" id="trip" aria-describedby="supportStatus"><option value="">All linked Duffel trips</option></select></div>
+              <div class="field"><label for="issue">Support reason</label><select class="control" id="issue"><option value="">Choose inside Assistant</option><option value="change">Change a booking</option><option value="cancellation">Cancel a booking</option><option value="other">Other travel support</option></select></div>
+            </div>
+            <div class="button-row">
+              <button class="btn primary" id="open" type="button" disabled>Open Duffel Assistant</button>
+              <button class="btn soft" id="refresh" type="button">Refresh bookings</button>
+              <button class="btn soft" id="verify" type="button" disabled>Verify supplier booking</button>
+              <button class="btn hidden" id="signIn" type="button">Sign in to SKANDI</button>
+            </div>
+            <div id="supportStatus" class="status" role="status" aria-live="polite">Connecting to your SKANDI account…</div>
+            <div id="handoffNote" class="service-note hidden" role="status" aria-live="polite"></div>
+            <div class="service-note">The Assistant may complete supplier servicing independently. A session launch or conversation notification is not proof that a booking was changed, cancelled, refunded or synchronized into SKANDI. Check your trip confirmation and SKANDI booking record for final status.</div>
+          </section>
+          <div class="section-heading" id="activity"><h3>Customer Service activity</h3><span id="activityCaption">Shared support history</span></div>
+          <div id="activityHistory" class="history" aria-live="polite"><div class="history-empty">Open the Assistant for a selected booking to link an activity record with SKANDI Customer Service.</div></div>
+          <div class="service-pair">
+            <div class="service-mini"><strong>Duffel travel specialists</strong><p>Supplier questions, eligible flight and stay management, and conversations maintained by Duffel.</p></div>
+            <div class="service-mini"><strong>SKANDI Customer Service</strong><p>Your SKANDI case, service events, booking follow-up and travel support outside Duffel's scope.</p></div>
+          </div>
+          <div class="audit-context">Support activity records only verified server-side events and clearly labeled interface notifications. <strong>Private Duffel chat messages are not replicated.</strong></div>
+        </main>
+      </div>
+    </section>
+  </div>
+  <!-- Mobile: original Duffel Assistant widget, opened from SKANDI-branded launch chrome.
+       The provider UI itself is not copied, redrawn or restyled. -->
+  <div class="mobile-launch" id="mobileLaunch">
+    <div class="mobile-brand">SKANDI TRAVELS · CUSTOMER SERVICE</div>
+    <h1>Travel Assistant</h1>
+    <p>Manage eligible trips and contact Duffel travel specialists through Duffel Assistant.</p>
+    <button id="mobileOpen" type="button" disabled>Opening travel assistant…</button>
+    <button id="mobileSupport" type="button" class="secondary">SKANDI Customer Service</button>
+    <button id="mobileSignIn" type="button" class="secondary hidden">Sign in to SKANDI</button>
+    <div class="mobile-copy" id="mobileStatus" role="status" aria-live="polite">Connecting to your SKANDI account…</div>
+  </div>
+  <duffel-assistant></duffel-assistant>
+  <script src="elfkf.js"></script>
+</body>
+</html>

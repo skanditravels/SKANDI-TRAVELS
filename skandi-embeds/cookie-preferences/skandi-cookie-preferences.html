@@ -1,1 +1,55 @@
-<!-- SKANDI_PENDING_SOURCE: replace with complete page markup. -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<meta name="theme-color" content="#ffffff" />
+<title>Cookie Preferences | SKANDI</title>
+<link rel="stylesheet" href="skandi-cookie-preferences.css">
+</head>
+<body>
+<main>
+  <div class="eyebrow">SKANDI · Privacy</div>
+  <h1>Cookie preferences</h1>
+  <p class="lead">Choose which optional technologies SKANDI may use in this browser. Essential technologies are required for security, authentication, checkout and core site operation and cannot be switched off.</p>
+  <div class="summary" id="summary" aria-live="polite"><strong>Loading your current preferences…</strong></div>
+
+  <section class="grid" aria-label="Privacy preference categories">
+    <article class="row">
+      <div><h2>Essential</h2><p>Required for security, fraud prevention, authentication, session continuity, checkout and services you explicitly request.</p><div class="state">Always on</div></div>
+      <label class="toggle" aria-label="Essential cookies always enabled"><input type="checkbox" checked disabled /><span class="track"></span></label>
+    </article>
+    <article class="row">
+      <div><h2>Functional</h2><p>Allows optional functionality and remembered preferences that improve how the site behaves for you.</p></div>
+      <label class="toggle" aria-label="Allow functional cookies"><input id="functional" type="checkbox" /><span class="track"></span></label>
+    </article>
+    <article class="row">
+      <div><h2>Analytics</h2><p>Helps SKANDI understand performance and how visitors use the site so we can improve journeys, content and reliability.</p></div>
+      <label class="toggle" aria-label="Allow analytics cookies"><input id="analytics" type="checkbox" /><span class="track"></span></label>
+    </article>
+    <article class="row">
+      <div><h2>Marketing</h2><p>Allows advertising and campaign technologies, including approved pixels and attribution tools, where configured.</p></div>
+      <label class="toggle" aria-label="Allow marketing cookies"><input id="advertising" type="checkbox" /><span class="track"></span></label>
+    </article>
+    <article class="row">
+      <div><h2>Third-party data sharing</h2><p>Controls whether personal data may be transferred to third parties for optional services. Browser privacy signals are respected.</p><div class="state" id="gpcState"></div></div>
+      <label class="toggle" aria-label="Allow third-party data sharing"><input id="dataToThirdParty" type="checkbox" /><span class="track"></span></label>
+    </article>
+  </section>
+
+  <div class="actions">
+    <button id="save" class="btn primary" type="button">Save preferences</button>
+    <button id="reject" class="btn secondary" type="button">Reject optional</button>
+    <button id="accept" class="btn secondary" type="button">Accept all</button>
+  </div>
+  <div id="status" class="status" aria-live="polite"></div>
+  <div class="links">
+    <button type="button" data-path="/about/legal/policies?slug=skandi-travels-cookies-policy">Cookie Policy</button>
+    <button type="button" data-path="/about/legal/policies?slug=privacy-policy">Privacy Policy</button>
+    <button type="button" data-path="/about/legal">Legal</button>
+  </div>
+  <p class="note">Changing your preferences affects future use of optional technologies in this browser. Wix applies a changed consent policy fully after the next page load. Technologies that are strictly necessary remain available. A preference change does not itself delete data already processed before the change; privacy rights and deletion requests are handled under the Privacy Policy.</p>
+</main>
+<script src="skandi-cookie-preferences.js"></script>
+</body>
+</html>

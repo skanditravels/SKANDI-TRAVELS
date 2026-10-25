@@ -961,8 +961,8 @@ html.mobile-menu-open #skandi-global-header-root,body.mobile-menu-open #skandi-g
 #skandi-mobile-nav-container #app-nav{position:relative;z-index:3;width:100%;min-height:88px;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:2px;align-items:center;padding:7px 7px max(10px,var(--safe));background:rgba(255,255,255,.98);border-top:1px solid #d5e5f0;box-shadow:0 -9px 30px rgba(2,46,100,.08);backdrop-filter:blur(14px)}
 #skandi-mobile-nav-container .nav-item{min-height:62px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;border:1px solid transparent;border-radius:13px;background:transparent;color:#58718b;font-weight:700;font-size:10px;letter-spacing:.005em;white-space:nowrap;transition:color .18s,background .18s,border-color .18s,transform .18s}#skandi-mobile-nav-container .nav-item:hover{background:#f3f9fc;color:var(--navy)}#skandi-mobile-nav-container .nav-item.active{background:linear-gradient(180deg,#edf8fc,#f5faff);border-color:rgba(95,199,207,.25);color:var(--navy)}#skandi-mobile-nav-container .nav-item.active svg{stroke-width:2.15}#skandi-mobile-nav-container .nav-item:active{transform:scale(.97)}
 #skandi-mobile-nav-container #overlay{position:fixed;inset:0;z-index:5;background:rgba(3,21,42,.36);opacity:0;visibility:hidden;pointer-events:none;transition:opacity .2s,visibility .2s}#skandi-mobile-nav-container #drawer{position:fixed;z-index:6;top:0;bottom:0;left:0;width:min(360px,calc(100% - 20px));display:flex;flex-direction:column;background:#fff;box-shadow:18px 0 60px rgba(2,46,100,.16);border-right:1px solid #e0edf3;transform:translateX(-105%);visibility:hidden;pointer-events:none;transition:transform .27s cubic-bezier(.22,1,.36,1),visibility .27s}body.drawer-open #skandi-mobile-nav-container #overlay{opacity:1;visibility:visible;pointer-events:auto}body.drawer-open #skandi-mobile-nav-container #drawer{transform:translateX(0);visibility:visible;pointer-events:auto}
-#skandi-mobile-nav-container .drawer-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:21px 19px 18px;background:linear-gradient(135deg,#fff,#eef8fd);border-bottom:1px solid var(--line)}#skandi-mobile-nav-container .eyebrow{font-size:9px;font-weight:800;color:#428892;letter-spacing:.18em}#skandi-mobile-nav-container .drawer-head h2{margin:5px 0 0;font-size:20px;letter-spacing:-.04em;color:var(--navy);font-weight:800}#skandi-mobile-nav-container #closeBtn,#skandi-mobile-nav-container #chatBack{display:grid;place-items:center;width:38px;height:38px;flex:0 0 38px;background:#fff;border:1px solid #d9e6ef;border-radius:11px;color:var(--navy)}#skandi-mobile-nav-container .drawer-scroll{flex:1;overflow:auto;overscroll-behavior:contain;padding:15px 13px 20px}#skandi-mobile-nav-container .group-heading{padding:13px 9px 7px;color:#6a7c8e;font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase}#skandi-mobile-nav-container .drawer-link{width:100%;display:flex;justify-content:space-between;align-items:center;text-align:left;min-height:44px;padding:10px 12px;border:1px solid transparent;border-radius:10px;background:transparent;color:var(--ink);font-size:12.5px;font-weight:650;transition:background .18s,border .18s,color .18s}#skandi-mobile-nav-container .drawer-link:hover,#skandi-mobile-nav-container .drawer-link:focus-visible{background:var(--ice);border-color:#dceef6;color:var(--navy)}#skandi-mobile-nav-container .drawer-link b{font-size:19px;color:#70aeb7;font-weight:500}#skandi-mobile-nav-container .drawer-foot{border-top:1px solid var(--line);padding:12px 16px max(17px,var(--safe));background:#f9fcfe;display:grid;gap:9px}#skandi-mobile-nav-container .drawer-cta{min-height:43px;border-radius:10px;border:1px solid #022e64;background:var(--navy);color:#fff;font-size:12px;font-weight:800}#skandi-mobile-nav-container .drawer-cta:hover{background:#08457e}#skandi-mobile-nav-container .drawer-cta.secondary{color:var(--navy);background:#fff;border-color:#d4e4ee}
-#skandi-mobile-nav-container #chat{display:none;flex:1;min-height:0;flex-direction:column}#skandi-mobile-nav-container .chat-mode .drawer-scroll,#skandi-mobile-nav-container .chat-mode .drawer-foot{display:none}#skandi-mobile-nav-container .chat-mode #chat{display:flex}#skandi-mobile-nav-container .chat-log{flex:1;overflow-y:auto;padding:17px 13px;display:flex;flex-direction:column;gap:11px;background:#f6faff}#skandi-mobile-nav-container .bubble{max-width:90%;padding:11px 13px;border-radius:14px 14px 14px 4px;font-size:12px;line-height:1.5;background:#fff;border:1px solid #e2edf3;color:#1a3350;white-space:pre-wrap;overflow-wrap:anywhere}#skandi-mobile-nav-container .bubble.mine{align-self:flex-end;border-color:var(--navy);background:var(--navy);color:#fff;border-radius:14px 14px 4px 14px}#skandi-mobile-nav-container .chat-compose{display:flex;gap:7px;padding:10px;background:#fff;border-top:1px solid var(--line)}#skandi-mobile-nav-container .chat-compose input{flex:1;min-width:0;min-height:43px;padding:0 12px;border-radius:9px;border:1px solid #d8e6ef;font-size:16px}#skandi-mobile-nav-container .chat-compose button{border:0;border-radius:9px;padding:0 13px;background:var(--navy);color:#fff;font-weight:800;font-size:12px}#skandi-mobile-nav-container #status{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0 0 0 0)!important;white-space:nowrap!important}#skandi-mobile-nav-container #chatStatus{font-size:11px;color:#61788d;padding:0 12px 9px}
+#skandi-mobile-nav-container .drawer-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:21px 19px 18px;background:linear-gradient(135deg,#fff,#eef8fd);border-bottom:1px solid var(--line)}#skandi-mobile-nav-container .eyebrow{font-size:9px;font-weight:800;color:#428892;letter-spacing:.18em}#skandi-mobile-nav-container .drawer-head h2{margin:5px 0 0;font-size:20px;letter-spacing:-.04em;color:var(--navy);font-weight:800}#skandi-mobile-nav-container #skandi-mobile-closeBtn,#skandi-mobile-nav-container #chatBack{display:grid;place-items:center;width:38px;height:38px;flex:0 0 38px;background:#fff;border:1px solid #d9e6ef;border-radius:11px;color:var(--navy)}#skandi-mobile-nav-container .drawer-scroll{flex:1;overflow:auto;overscroll-behavior:contain;padding:15px 13px 20px}#skandi-mobile-nav-container .group-heading{padding:13px 9px 7px;color:#6a7c8e;font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase}#skandi-mobile-nav-container .drawer-link{width:100%;display:flex;justify-content:space-between;align-items:center;text-align:left;min-height:44px;padding:10px 12px;border:1px solid transparent;border-radius:10px;background:transparent;color:var(--ink);font-size:12.5px;font-weight:650;transition:background .18s,border .18s,color .18s}#skandi-mobile-nav-container .drawer-link:hover,#skandi-mobile-nav-container .drawer-link:focus-visible{background:var(--ice);border-color:#dceef6;color:var(--navy)}#skandi-mobile-nav-container .drawer-link b{font-size:19px;color:#70aeb7;font-weight:500}#skandi-mobile-nav-container .drawer-foot{border-top:1px solid var(--line);padding:12px 16px max(17px,var(--safe));background:#f9fcfe;display:grid;gap:9px}#skandi-mobile-nav-container .drawer-cta{min-height:43px;border-radius:10px;border:1px solid #022e64;background:var(--navy);color:#fff;font-size:12px;font-weight:800}#skandi-mobile-nav-container .drawer-cta:hover{background:#08457e}#skandi-mobile-nav-container .drawer-cta.secondary{color:var(--navy);background:#fff;border-color:#d4e4ee}
+#skandi-mobile-nav-container #chat{display:none;flex:1;min-height:0;flex-direction:column}#skandi-mobile-nav-container .chat-mode .drawer-scroll,#skandi-mobile-nav-container .chat-mode .drawer-foot{display:none}#skandi-mobile-nav-container .chat-mode #chat{display:flex}#skandi-mobile-nav-container .chat-log{flex:1;overflow-y:auto;padding:17px 13px;display:flex;flex-direction:column;gap:11px;background:#f6faff}#skandi-mobile-nav-container .bubble{max-width:90%;padding:11px 13px;border-radius:14px 14px 14px 4px;font-size:12px;line-height:1.5;background:#fff;border:1px solid #e2edf3;color:#1a3350;white-space:pre-wrap;overflow-wrap:anywhere}#skandi-mobile-nav-container .bubble.mine{align-self:flex-end;border-color:var(--navy);background:var(--navy);color:#fff;border-radius:14px 14px 4px 14px}#skandi-mobile-nav-container .chat-compose{display:flex;gap:7px;padding:10px;background:#fff;border-top:1px solid var(--line)}#skandi-mobile-nav-container .chat-compose input{flex:1;min-width:0;min-height:43px;padding:0 12px;border-radius:9px;border:1px solid #d8e6ef;font-size:16px}#skandi-mobile-nav-container .chat-compose button{border:0;border-radius:9px;padding:0 13px;background:var(--navy);color:#fff;font-weight:800;font-size:12px}#skandi-mobile-nav-container #skandi-mobile-status{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0 0 0 0)!important;white-space:nowrap!important}#skandi-mobile-nav-container #chatStatus{font-size:11px;color:#61788d;padding:0 12px 9px}
 @media(max-width:360px){#skandi-mobile-nav-container .nav-item{font-size:9px}#skandi-mobile-nav-container .nav-item svg{width:20px;height:20px}#skandi-mobile-nav-container #app-nav{padding-left:3px;padding-right:3px}}
 @media(prefers-reduced-motion:reduce){#skandi-mobile-nav-container *,#skandi-mobile-nav-container *::before,#skandi-mobile-nav-container *::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 
@@ -1006,7 +1006,7 @@ html.mobile-menu-open #skandi-global-header-root,body.mobile-menu-open #skandi-g
 }
 #skandi-mobile-nav-container .eyebrow{color:#aacde7;letter-spacing:.12em;font-size:10px;font-weight:780}
 #skandi-mobile-nav-container .drawer-head h2{color:#fff;font-size:21px;letter-spacing:-.027em;font-weight:735}
-#skandi-mobile-nav-container #closeBtn,#skandi-mobile-nav-container #chatBack{background:rgba(51,103,151,.31);color:#fff;
+#skandi-mobile-nav-container #skandi-mobile-closeBtn,#skandi-mobile-nav-container #chatBack{background:rgba(51,103,151,.31);color:#fff;
   border:1px solid rgba(199,220,243,.32);border-radius:12px}
 #skandi-mobile-nav-container .drawer-scroll{background:transparent;padding:16px 13px 20px}
 #skandi-mobile-nav-container .group-heading{color:#a5c7e1;font-size:10px;letter-spacing:.09em;font-weight:760;padding:15px 10px 8px}
@@ -4317,7 +4317,7 @@ body { min-height:100%; }
 </div>
 <div id="skandi-mobile-nav-container"><div id="overlay" aria-hidden="true"></div>
 <aside id="drawer" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="drawer-title" aria-hidden="true">
-  <div class="drawer-head"><div><div class="eyebrow">SKANDI TRAVELS</div><h2 id="drawer-title">Explore SKANDI</h2></div><button id="closeBtn" aria-label="Close menu" type="button"><svg viewBox="0 0 24 24"><path d="M5 5l14 14M19 5L5 19"></path></svg></button></div>
+  <div class="drawer-head"><div><div class="eyebrow">SKANDI TRAVELS</div><h2 id="drawer-title">Explore SKANDI</h2></div><button id="skandi-mobile-closeBtn" aria-label="Close menu" type="button"><svg viewBox="0 0 24 24"><path d="M5 5l14 14M19 5L5 19"></path></svg></button></div>
   <div class="drawer-scroll" id="drawerLinks"></div>
   <div class="drawer-foot"><button type="button" class="drawer-cta secondary" id="profileLink">My Profile</button><button type="button" class="drawer-cta" id="searchLink">Search trips</button><button type="button" class="drawer-cta secondary" id="alexandraLink">Chat with Alexandra</button></div>
   <section id="chat" aria-label="Alexandra customer support"><div class="chat-log" id="chatLog" role="log" aria-live="polite"><div class="bubble">How can I help with your trip?</div></div><div id="chatStatus" role="status">SKANDI Customer Service</div><form class="chat-compose" id="chatForm"><input id="chatInput" type="text" maxlength="1000" autocomplete="off" placeholder="Write your message" aria-label="Message to Alexandra"><button type="submit">Send</button></form></section>
@@ -4339,7 +4339,7 @@ body { min-height:100%; }
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"></path></svg><span>Menu</span>
   </button>
 </nav>
-<div id="status" role="status" aria-live="polite"></div>
+<div id="skandi-mobile-status" role="status" aria-live="polite"></div>
 </div>
 </div>
 <script data-skandi-part="skandi-shell-runtime">/** SKANDI compiled public-shell runtime — no alternate backend, no local cart. */
@@ -4405,7 +4405,7 @@ else startCompiledShell();
 </script>
 <script data-skandi-part="header">(function(){
 const __root=window.document.getElementById("skandi-global-header-root");
-const document=new Proxy(window.document,{get(target,key){if(key==='getElementById')return id=>{const el=target.getElementById(id);return el&&(__root===el||__root.contains(el))?el:null;};if(key==='querySelector'||key==='querySelectorAll')return selector=>{if(/^(?:html|body|head|meta|title|link)(?:[\s.#[:]|$)/i.test(selector)&&!selector.includes(' '))return target[key](selector);return __root[key](selector);};if(key==='getElementsByClassName'||key==='getElementsByTagName')return value=>__root[key](value);const value=Reflect.get(target,key,target);return typeof value==='function'?value.bind(target):value;}});
+const document=new Proxy(window.document,{get(target,key){if(key==='getElementById')return id=>{const el=target.getElementById(id);return el&&(__root===el||__root.contains(el))?el:null;};if(key==='querySelector'||key==='querySelectorAll')return selector=>{if(/^(?:html|body|head|meta|title|link)(?:[\s.#[:]|$)/i.test(selector)&&!selector.includes(' '))return target[key](selector);return __root[key](selector);};if(key==='getElementsByClassName'||key==='getElementsByTagName')return value=>__root[key](value);const value=Reflect.get(target,key,target);return typeof value==='function'?value.bind(target):value;},set(target,key,value){return Reflect.set(target,key,value,target);}});
 const SOURCE = "SKANDI_CUSTOMER_HEADER_EXPANDBAR";
   const PARENT = "SKANDI_WIX_PARENT";
   function updateHeaderFx(event) {
@@ -5330,7 +5330,7 @@ const SOURCE = "SKANDI_CUSTOMER_HEADER_EXPANDBAR";
 })();</script>
 <script data-skandi-part="footer">(function(){
 const __root=window.document.getElementById("skandi-global-footer-root");
-const document=new Proxy(window.document,{get(target,key){if(key==='getElementById')return id=>{const el=target.getElementById(id);return el&&(__root===el||__root.contains(el))?el:null;};if(key==='querySelector'||key==='querySelectorAll')return selector=>{if(/^(?:html|body|head|meta|title|link)(?:[\s.#[:]|$)/i.test(selector)&&!selector.includes(' '))return target[key](selector);return __root[key](selector);};if(key==='getElementsByClassName'||key==='getElementsByTagName')return value=>__root[key](value);const value=Reflect.get(target,key,target);return typeof value==='function'?value.bind(target):value;}});
+const document=new Proxy(window.document,{get(target,key){if(key==='getElementById')return id=>{const el=target.getElementById(id);return el&&(__root===el||__root.contains(el))?el:null;};if(key==='querySelector'||key==='querySelectorAll')return selector=>{if(/^(?:html|body|head|meta|title|link)(?:[\s.#[:]|$)/i.test(selector)&&!selector.includes(' '))return target[key](selector);return __root[key](selector);};if(key==='getElementsByClassName'||key==='getElementsByTagName')return value=>__root[key](value);const value=Reflect.get(target,key,target);return typeof value==='function'?value.bind(target):value;},set(target,key,value){return Reflect.set(target,key,value,target);}});
 const SOURCE = 'SKANDI_CUSTOMER_FOOTER';
 const PARENT = 'SKANDI_WIX_PARENT';
 const $ = id => document.getElementById(id);
@@ -5472,7 +5472,7 @@ post('FOOTER_READY');
 })();</script>
 <script data-skandi-part="mobile-nav">(function(){
 const __root=window.document.getElementById("skandi-mobile-nav-container");
-const document=new Proxy(window.document,{get(target,key){if(key==='getElementById')return id=>{const el=target.getElementById(id);return el&&(__root===el||__root.contains(el))?el:null;};if(key==='querySelector'||key==='querySelectorAll')return selector=>{if(/^(?:html|body|head|meta|title|link)(?:[\s.#[:]|$)/i.test(selector)&&!selector.includes(' '))return target[key](selector);return __root[key](selector);};if(key==='getElementsByClassName'||key==='getElementsByTagName')return value=>__root[key](value);const value=Reflect.get(target,key,target);return typeof value==='function'?value.bind(target):value;}});
+const document=new Proxy(window.document,{get(target,key){if(key==='getElementById')return id=>{const el=target.getElementById(id);return el&&(__root===el||__root.contains(el))?el:null;};if(key==='querySelector'||key==='querySelectorAll')return selector=>{if(/^(?:html|body|head|meta|title|link)(?:[\s.#[:]|$)/i.test(selector)&&!selector.includes(' '))return target[key](selector);return __root[key](selector);};if(key==='getElementsByClassName'||key==='getElementsByTagName')return value=>__root[key](value);const value=Reflect.get(target,key,target);return typeof value==='function'?value.bind(target):value;},set(target,key,value){return Reflect.set(target,key,value,target);}});
 const SOURCE='SKANDI_HOME_MOBILE_APP';
   const PARENT='SKANDI_WIX_PARENT';
   const ROUTE_FALLBACKS=Object.freeze({
@@ -5495,7 +5495,7 @@ const SOURCE='SKANDI_HOME_MOBILE_APP';
   const BUTTONS=Array.from(document.querySelectorAll('#skandi-mobile-nav-root [data-route]'));
   const menuButton=BUTTONS.find(btn=>btn.dataset.route==='menu');
   const drawer=$('drawer');
-  const status=$('status');
+  const status=$("skandi-mobile-status");
   const state={routes:{...defaults},currentPath:'/',request:0,drawerOpen:false,drawerPending:'',drawerTimer:null,chatOpen:false,lastFocused:null};
   let focusTransitionToken=0;
   const safePath=value=>{
@@ -5566,7 +5566,7 @@ const SOURCE='SKANDI_HOME_MOBILE_APP';
     if(state.drawerOpen||state.drawerPending)return;
     state.lastFocused=document.activeElement;
     announce('');
-    if((window.parent===window||Boolean(window.__SKANDI_SHELL__))){setDrawerVisible(true);$('closeBtn').focus({preventScroll:true});return;}
+    if((window.parent===window||Boolean(window.__SKANDI_SHELL__))){setDrawerVisible(true);$("skandi-mobile-closeBtn").focus({preventScroll:true});return;}
     const requestId=nextId('drawer-open');
     state.drawerPending=requestId;
     requestSize(true,requestId);
@@ -5604,7 +5604,7 @@ const SOURCE='SKANDI_HOME_MOBILE_APP';
         clearTimeout(state.drawerTimer);
         state.drawerPending='';
         setDrawerVisible(true);
-        $('closeBtn').focus({preventScroll:true});
+        $("skandi-mobile-closeBtn").focus({preventScroll:true});
         return;
       }
       if(Date.now()-started>=1100){
@@ -5649,7 +5649,7 @@ const SOURCE='SKANDI_HOME_MOBILE_APP';
     });
   }
   $('overlay').addEventListener('click',closeDrawer);
-  $('closeBtn').addEventListener('click',()=>state.chatOpen?stopChat():closeDrawer());
+  $("skandi-mobile-closeBtn").addEventListener('click',()=>state.chatOpen?stopChat():closeDrawer());
   $('profileLink').addEventListener('click',()=>navigate('myProfile'));
   $('searchLink').addEventListener('click',()=>{
     closeDrawer();
@@ -5729,7 +5729,7 @@ const SOURCE='SKANDI_HOME_MOBILE_APP';
 })();</script>
 <script data-skandi-part="flight-status">(function(){
 const __root=window.document.getElementById("skandi-app-root");
-const document=new Proxy(window.document,{get(target,key){if(key==='getElementById')return id=>{const el=target.getElementById(id);return el&&(__root===el||__root.contains(el))?el:null;};if(key==='querySelector'||key==='querySelectorAll')return selector=>{if(/^(?:html|body|head|meta|title|link)(?:[\s.#[:]|$)/i.test(selector)&&!selector.includes(' '))return target[key](selector);return __root[key](selector);};if(key==='getElementsByClassName'||key==='getElementsByTagName')return value=>__root[key](value);const value=Reflect.get(target,key,target);return typeof value==='function'?value.bind(target):value;}});
+const document=new Proxy(window.document,{get(target,key){if(key==='getElementById')return id=>{const el=target.getElementById(id);return el&&(__root===el||__root.contains(el))?el:null;};if(key==='querySelector'||key==='querySelectorAll')return selector=>{if(/^(?:html|body|head|meta|title|link)(?:[\s.#[:]|$)/i.test(selector)&&!selector.includes(' '))return target[key](selector);return __root[key](selector);};if(key==='getElementsByClassName'||key==='getElementsByTagName')return value=>__root[key](value);const value=Reflect.get(target,key,target);return typeof value==='function'?value.bind(target):value;},set(target,key,value){return Reflect.set(target,key,value,target);}});
 const SOURCE = "SKANDI_FLIGHT_STATUS";
             const PARENT_SOURCE = "SKANDI_WIX_PARENT";
             let currentMode = "airport";

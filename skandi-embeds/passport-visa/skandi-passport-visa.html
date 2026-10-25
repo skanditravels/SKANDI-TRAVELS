@@ -1,1 +1,163 @@
-<!-- SKANDI_PENDING_SOURCE: replace with complete page markup. -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>SKANDI • Passport & Visa</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="skandi-passport-visa.css">
+</head>
+<body>
+<nav class="travel-rail" aria-label="Travel Info navigation">
+  <div class="travel-rail-inner">
+    <button id="backToTravelInfo" class="travel-back" type="button" aria-label="Back to Travel Info"><span aria-hidden="true">←</span> Travel Info</button>
+    <div class="travel-context">Passport &amp; Visa</div>
+  </div>
+</nav>
+
+<header class="hero" data-section-id="passport-hero">
+  <div class="hero-inner">
+    <div class="hero-copy">
+      <div class="eyebrow" data-content-id="passport-hero-kicker">SKANDI TRAVEL INFO</div>
+      <h1 data-content-id="passport-hero-title">Travel documents, checked before you go.</h1>
+      <p class="hero-lede" data-content-id="passport-hero-copy">Search the same approved travel-requirements service used by SKANDI operations, review published destination guidance, and confirm the final rules with the relevant authorities before departure.</p>
+      <div class="hero-note"><span class="hero-note-mark" aria-hidden="true"></span><span>Entry and transit rules depend on nationality, route, document type and travel date. A general rule should never replace a trip-specific check.</span></div>
+    </div>
+    <aside class="hero-panel" aria-label="How to use the travel document checker">
+      <h2>Before you travel</h2>
+      <p>Use the checker as your starting point, then complete the final verification before check-in.</p>
+      <div class="hero-step"><div class="hero-step-no">01</div><div><strong>Enter the route</strong><span>Add nationality and destination. Origin and dates improve the context.</span></div></div>
+      <div class="hero-step"><div class="hero-step-no">02</div><div><strong>Review the result</strong><span>Read provider fields, SKANDI guidance and any important notices returned.</span></div></div>
+      <div class="hero-step"><div class="hero-step-no">03</div><div><strong>Verify the final authority</strong><span>Recheck official government, border and visa sources close to departure.</span></div></div>
+    </aside>
+  </div>
+</header>
+
+<main>
+<section class="section checker-wrap" aria-labelledby="checker-title">
+  <div class="checker">
+    <div class="checker-top">
+      <div>
+        <div class="section-kicker">Trip-specific document check</div>
+        <h2 id="checker-title">Check passport &amp; visa requirements</h2>
+        <p>Nationality and destination are required. Add the remaining trip details when available so the connected requirements source receives the best possible context.</p>
+      </div>
+    </div>
+    <div class="checker-body">
+      <div class="form-grid">
+        <div class="field"><label for="nationality">Nationality <span>Required</span></label><input id="nationality" maxlength="3" placeholder="SE / SWE" autocomplete="country-code" autocapitalize="characters"></div>
+        <div class="field"><label for="residenceCountry">Country of residence <span>Optional</span></label><input id="residenceCountry" maxlength="3" placeholder="US / USA" autocomplete="country-code" autocapitalize="characters"></div>
+        <div class="field"><label for="origin">Origin <span>Optional</span></label><input id="origin" maxlength="12" placeholder="ARN / JFK" autocomplete="off" autocapitalize="characters"></div>
+        <div class="field"><label for="destination">Destination <span>Required</span></label><input id="destination" list="destinationOptions" maxlength="80" placeholder="United States, JFK, Thailand…" autocomplete="off"><datalist id="destinationOptions"></datalist></div>
+        <div class="field"><label for="departureDate">Departure date <span>Optional</span></label><input id="departureDate" type="date"></div>
+        <div class="field"><label for="returnDate">Return date <span>Optional</span></label><input id="returnDate" type="date"></div>
+      </div>
+      <div class="form-actions">
+        <div class="form-hint">The checker uses the existing SKANDI V12 travel-requirements backend. If the approved external provider is unavailable, the page clearly identifies the result as guidance rather than a live boarding decision.</div>
+        <div class="action-buttons">
+          <button id="resetSearch" class="btn btn-secondary" type="button">Reset</button>
+          <button id="requirementsSearch" class="btn btn-primary" type="button">Check requirements</button>
+        </div>
+      </div>
+      <div id="lookupStatus" class="lookup-status" role="status" aria-live="polite">Enter your nationality and destination to begin.</div>
+      <div id="lookupResult" class="lookup-result" tabindex="-1"></div>
+    </div>
+  </div>
+</section>
+
+<div class="guidance-band">
+  <section class="section" aria-labelledby="guidance-title">
+    <div class="section-head">
+      <div class="section-copy">
+        <div class="section-kicker">Passport guidance</div>
+        <h2 class="section-title" id="guidance-title">The details that commonly change the answer</h2>
+        <p class="section-subtitle">These are planning reminders only. The exact rule comes from the destination, transit authority and operating carrier requirements for your trip.</p>
+      </div>
+    </div>
+    <div class="guidance-grid">
+      <article class="guidance-card">
+        <div class="icon-box" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2"></rect><circle cx="12" cy="10" r="3"></circle><path d="M8 17h8"></path></svg></div>
+        <h3>Passport validity</h3>
+        <p>There is no universal six-month rule. Required validity can differ by destination, nationality and travel document, including whether the passport must remain valid beyond the planned stay.</p>
+      </article>
+      <article class="guidance-card">
+        <div class="icon-box" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 17h16"></path><path d="M7 17V7l5-3 5 3v10"></path><path d="M10 10h4"></path></svg></div>
+        <h3>Transit points</h3>
+        <p>A connection can introduce separate document or visa requirements even when the final destination would otherwise be permitted. Check every country and airport in the itinerary.</p>
+      </article>
+      <article class="guidance-card">
+        <div class="icon-box" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"></circle><circle cx="16" cy="10" r="2.5"></circle><path d="M3 20c.7-4 2.7-6 6-6s5.3 2 6 6"></path><path d="M14 15c3.5 0 5.7 1.7 6.5 5"></path></svg></div>
+        <h3>Children &amp; guardians</h3>
+        <p>Children need documents accepted for their nationality and route. Some journeys can also require consent, custody or relationship documentation when a minor travels with one parent or another adult.</p>
+      </article>
+    </div>
+    <div class="warning-box">
+      <div class="warning-icon" aria-hidden="true">!</div>
+      <div><h4>Damaged, emergency or temporary passports</h4><p>Acceptance varies by country and carrier. A document that is damaged, provisional, emergency-issued or otherwise non-standard should be verified specifically rather than assumed valid.</p></div>
+    </div>
+  </section>
+</div>
+
+<section class="section" aria-labelledby="authorization-title">
+  <div class="authorization">
+    <div>
+      <div class="section-kicker" style="color:var(--sk-cyan)">Visas &amp; electronic authorization</div>
+      <h2 id="authorization-title">A passport alone may not be enough.</h2>
+      <p>Depending on nationality and itinerary, a traveler may need a visa, visa waiver, electronic travel authorization or other pre-departure approval. SKANDI can show connected guidance, but final eligibility remains with the relevant authority and operating carrier.</p>
+      <button id="officialHelp" class="btn" type="button">Return to Travel Info</button>
+    </div>
+    <div class="auth-list">
+      <div class="auth-row"><div class="auth-check">1</div><div><strong>Match the travel document</strong><span>The booking name and identity details should match the document intended for travel.</span></div></div>
+      <div class="auth-row"><div class="auth-check">2</div><div><strong>Check authorization timing</strong><span>Some approvals must be obtained before check-in and may not be issued instantly.</span></div></div>
+      <div class="auth-row"><div class="auth-check">3</div><div><strong>Recheck before departure</strong><span>Requirements can change after booking, including transit and document-validity rules.</span></div></div>
+    </div>
+  </div>
+</section>
+
+<section class="section" aria-labelledby="destination-title">
+  <div class="section-head">
+    <div class="section-copy">
+      <div class="section-kicker">Published SKANDI guidance</div>
+      <h2 class="section-title" id="destination-title">Destination document information</h2>
+      <p class="section-subtitle">These summaries come from the existing SKANDI Inventory / Travel Info content chain. They supplement the trip-specific checker above and are not a substitute for an official decision.</p>
+    </div>
+    <div class="destination-tools">
+      <input id="destinationFilter" class="destination-search" type="search" placeholder="Filter destinations" aria-label="Filter destination guidance">
+      <span id="destinationCount" class="destination-count"></span>
+    </div>
+  </div>
+  <div id="destinationResults" class="destination-results"></div>
+  <div class="load-more-wrap"><button id="loadMoreDestinations" class="btn btn-secondary" type="button" hidden>Show more destinations</button></div>
+</section>
+
+<section class="section compact" aria-labelledby="faq-title">
+  <div class="section-head">
+    <div class="section-copy">
+      <div class="section-kicker">Common questions</div>
+      <h2 class="section-title" id="faq-title">Passport &amp; visa FAQ</h2>
+    </div>
+  </div>
+  <div class="faq-grid">
+    <details><summary>Do transit countries have separate requirements?</summary><div class="faq-content">They can. Transit requirements depend on nationality, airport, document type, whether border control is crossed and the rules in force on the date of travel. Every transit country should be checked.</div></details>
+    <details><summary>I have dual citizenship. Which passport should I use?</summary><div class="faq-content">Use a passport that satisfies the route's requirements and ensure the booking details match the document presented for travel. Some countries require their citizens to enter or leave using that country's passport.</div></details>
+    <details><summary>What if the connected checker has no detailed result?</summary><div class="faq-content">Treat that as a signal to verify the trip directly with official government, border-control and visa-authority sources. A missing provider field is not confirmation that no requirement exists.</div></details>
+    <details><summary>What happens if my documents do not meet the requirements?</summary><div class="faq-content">The operating carrier or border authority can refuse travel when required documents or authorizations are missing or invalid. Any resulting cost is governed by the applicable booking, supplier and authority rules.</div></details>
+  </div>
+</section>
+
+<div class="final-check">
+  <section class="section">
+    <div class="final-grid">
+      <div class="final-intro"><div class="section-kicker">Final check</div><h2>Before leaving for the airport</h2><p>Do one final review close to departure, especially if the booking was made well in advance.</p></div>
+      <div class="final-item"><strong>Document condition</strong><span>Carry the original accepted travel document in usable condition.</span></div>
+      <div class="final-item"><strong>Validity &amp; authorization</strong><span>Confirm passport validity and any required visa or electronic authorization.</span></div>
+      <div class="final-item"><strong>Every country in the route</strong><span>Recheck destination and transit requirements, not only the final stop.</span></div>
+    </div>
+  </section>
+</div>
+</main>
+
+<script src="skandi-passport-visa.js"></script>
+</body>
+</html>
+

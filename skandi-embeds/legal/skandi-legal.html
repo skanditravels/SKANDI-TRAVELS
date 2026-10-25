@@ -1,1 +1,72 @@
-<!-- SKANDI_PENDING_SOURCE: replace with complete page markup. -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#022e64">
+<title>SKANDI Legal Information · B-011.1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="skandi-legal.css">
+</head>
+<body>
+<main>
+  <section class="hero" data-section-id="legal-hero">
+    <div class="hero-inner">
+      <div>
+        <div class="eyebrow" data-content-id="legal-hero-eyebrow">SKANDI LEGAL</div>
+        <h1 id="heroTitle" data-content-id="legal-hero-h1">Legal Information</h1>
+        <p id="heroSubtitle" data-content-id="legal-hero-copy">
+          Find SKANDI Travels public policies, terms, statements and legal notices.
+        </p>
+      </div>
+
+      <div class="search-shell" role="search">
+        <label class="sr-only" for="search">Search legal documents</label>
+        <input id="search" type="search" autocomplete="off" placeholder="Search policies, terms, privacy, cookies…">
+        <button class="btn" id="searchBtn" type="button">Search</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" data-section-id="legal-featured">
+    <div class="section-head">
+      <div>
+        <div class="eyebrow" data-content-id="legal-featured-eyebrow">FREQUENTLY REQUESTED</div>
+        <h2 data-content-id="legal-featured-h2">Key legal documents</h2>
+        <p class="copy" data-content-id="legal-featured-copy">
+          Direct access to SKANDI’s most frequently requested public policies and terms.
+        </p>
+      </div>
+    </div>
+    <div class="grid" id="directGrid">
+      <div class="empty">Loading published legal documents…</div>
+    </div>
+  </section>
+
+  <section class="section" data-section-id="legal-library">
+    <div class="section-head">
+      <div>
+        <div class="eyebrow" data-content-id="legal-library-eyebrow">PUBLIC POLICIES</div>
+        <h2 data-content-id="legal-library-h2">Policy library</h2>
+        <p class="copy" data-content-id="legal-library-copy">
+          Current published external policies maintained in SKANDI Policy Control.
+        </p>
+      </div>
+      <span class="meta" id="count"></span>
+    </div>
+
+    <div class="library-shell">
+      <div class="list" id="policyList">
+        <div class="empty">Loading published policies…</div>
+      </div>
+      <div class="status-note" id="statusNote"></div>
+    </div>
+  </section>
+</main>
+
+<script src="skandi-legal.js"></script>
+</body>
+</html>

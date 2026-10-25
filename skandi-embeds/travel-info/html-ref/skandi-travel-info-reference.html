@@ -1,0 +1,170 @@
+<!doctype html>
+<!-- V12 DATA AUTHORITY: Duffel provider facts are curated/persisted through Inventory Control + Supabase before this public consumer receives them. This embed owns no duplicate reference data. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#061a30">
+<title>Travel Info | SKANDI Travels</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="skandi-travel-info-reference.css">
+<link rel="stylesheet" href="skandi-travel-info-reference.part-02.css">
+
+<link rel="stylesheet" href="skandi-travel-info-reference.part-03.css" id="tiAirportFlightInfoStyles">
+
+<link rel="stylesheet" href="skandi-travel-info-reference.part-04.css" id="tiModernAirportFids">
+
+
+<link rel="stylesheet" href="skandi-travel-info-reference.part-05.css" id="tiEightColumnPassengerFids">
+
+</head>
+<body>
+<div id="tiLive" class="ti-visually-hidden" aria-live="polite"></div>
+
+<section id="tiHome" class="ti-home" aria-label="SKANDI Travel Info">
+  <header class="ti-atlas">
+    <div class="ti-orbit ti-orbit-a"></div>
+    <div class="ti-orbit ti-orbit-b"></div>
+    <svg class="ti-route-art" viewBox="0 0 1440 760" preserveAspectRatio="none" aria-hidden="true">
+      <defs><linearGradient id="tiRouteGradient" x1="0" x2="1"><stop offset="0" stop-color="#5fc7cf" stop-opacity=".05"/><stop offset=".5" stop-color="#9de0e5" stop-opacity=".8"/><stop offset="1" stop-color="#d1bc98" stop-opacity=".18"/></linearGradient></defs>
+      <path d="M-80,620 C270,300 525,285 810,430 C1060,558 1250,420 1510,140"/>
+      <path d="M50,180 C350,360 650,125 940,250 C1180,352 1280,310 1470,215"/>
+      <circle cx="810" cy="430" r="3"/><circle cx="940" cy="250" r="3"/><circle cx="1260" cy="410" r="2.5"/>
+    </svg>
+    <div class="ti-wrap ti-atlas-inner">
+      <div class="ti-atlas-copy">
+        <div class="ti-kicker">SKANDI Travel Companion</div>
+        <h1>Travel info,<br>made effortless.</h1>
+        <p class="ti-atlas-lede">Airline and airport guidance, baggage, accessibility, travel requirements and destination support, brought together for every stage of your journey.</p>
+        <div id="tiNetworkMeta" class="ti-network-meta" aria-label="Published Travel Info summary"></div>
+        <form id="tiHeroSearchForm" class="ti-command" role="search" autocomplete="off">
+          <span id="tiHeroSearchIcon" aria-hidden="true"></span>
+          <label class="ti-visually-hidden" for="tiHeroSearch">Search Travel Info</label>
+          <input id="tiHeroSearch" type="search" placeholder="What do you need to know?" enterkeyhint="search" autocomplete="off">
+          <button class="ti-btn ti-btn-aqua" type="submit"><span>Search</span><span id="tiSearchArrow" aria-hidden="true"></span></button>
+        </form>
+        <div class="ti-action-rail" aria-label="Travel Info quick actions">
+          <button class="ti-action-chip" type="button" data-action="baggage"><span data-icon="bag"></span>Baggage</button>
+          <button class="ti-action-chip" type="button" data-action="assistance"><span data-icon="help"></span>Special assistance</button>
+          <button class="ti-action-chip" type="button" data-action="requirements"><span data-icon="passport"></span>Travel requirements</button>
+          <button class="ti-action-chip" type="button" data-action="airports"><span data-icon="pin"></span>Airports</button>
+          <button class="ti-action-chip" type="button" data-action="airlines"><span data-icon="aircraft"></span>Airlines</button>
+          <button class="ti-action-chip" type="button" data-action="support"><span data-icon="help"></span>Support</button>
+        </div>
+        <div id="tiStatus" class="ti-atlas-status" hidden></div>
+      </div>
+    </div>
+    <div id="tiAtlasCodes" class="ti-atlas-codes" aria-hidden="true"></div>
+  </header>
+
+  <main>
+    <section class="ti-section ti-section-tight" aria-labelledby="tiJourneyHeading">
+      <div class="ti-wrap">
+        <div class="ti-heading-row">
+          <div><div class="ti-kicker ti-kicker-dark">Your journey</div><h2 id="tiJourneyHeading">Know what matters, when it matters.</h2></div>
+          <p>Move through your trip from planning to return. Each stage opens the guidance currently published for that part of the journey.</p>
+        </div>
+        <div class="ti-journey-shell"><div id="tiJourneyTrack" class="ti-journey-track"></div></div>
+      </div>
+    </section>
+
+    <section class="ti-section ti-section-tint" aria-labelledby="tiPopularHeading">
+      <div class="ti-wrap">
+        <div class="ti-heading-row">
+          <div><div class="ti-kicker ti-kicker-dark">Popular help</div><h2 id="tiPopularHeading">Answers travelers open first.</h2></div>
+        </div>
+        <div id="tiFeaturedHelp" class="ti-featured-layout"></div>
+      </div>
+    </section>
+
+    <section class="ti-section" aria-labelledby="tiLibrariesHeading">
+      <div class="ti-wrap">
+        <div class="ti-heading-row">
+          <div><div class="ti-kicker ti-kicker-dark">Explore Travel Info</div><h2 id="tiLibrariesHeading">A guide for every part of the trip.</h2></div>
+          <p>Browse the live SKANDI information library. New published airlines, airports and travel products appear here automatically.</p>
+        </div>
+        <div id="tiGatewayGrid" class="ti-gateway-grid"></div>
+      </div>
+    </section>
+
+    <section id="tiDirectory" class="ti-section ti-section-tint" aria-labelledby="tiDirectoryHeading">
+      <div class="ti-wrap">
+        <div class="ti-heading-row">
+          <div><div class="ti-kicker ti-kicker-dark">Travel library</div><h2 id="tiDirectoryHeading">Browse Travel Info.</h2></div>
+          <p id="tiDirectoryLead">Airlines, airports, stays, transfers and experiences, plus help articles for the questions that come up along the way.</p>
+        </div>
+        <div class="ti-directory-shell">
+          <div class="ti-filter-row">
+            <div id="tiFilterTabs" class="ti-filter-tabs" role="toolbar" aria-label="Travel Info filters"></div>
+            <div id="tiResultCount" class="ti-result-count"></div>
+          </div>
+          <div id="tiDirectoryList" class="ti-directory-list"></div>
+          <div id="tiLoadMoreWrap" class="ti-load-more" hidden><button id="tiLoadMore" class="ti-btn ti-btn-light" type="button">Show more</button></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="ti-support-chapter" aria-labelledby="tiSupportHeading">
+      <div class="ti-wrap ti-support-grid">
+        <div>
+          <div class="ti-kicker">SKANDI Support</div>
+          <h2 id="tiSupportHeading">Need something more specific?</h2>
+          <p>Alexandra can take you into the shared SKANDI support experience, or you can send a travel-information request directly to our support team.</p>
+        </div>
+        <div class="ti-support-actions">
+          <button class="ti-btn ti-btn-ghost" type="button" data-action="alexandra"><span data-icon="spark"></span>Ask Alexandra</button>
+          <button class="ti-btn ti-btn-aqua" type="button" data-action="support"><span data-icon="message"></span>Contact support</button>
+        </div>
+      </div>
+    </section>
+  </main>
+</section>
+
+<section id="tiDetail" class="ti-detail-view" data-active="false" aria-label="Travel Info detail">
+  <div class="ti-wrap">
+    <div class="ti-backbar"><button id="tiBack" class="ti-back-btn" type="button"><span data-icon="back"></span>Back to Travel Info</button></div>
+    <div id="tiDetailMount"></div>
+  </div>
+</section>
+
+<div id="tiSearchLayer" class="ti-search-layer" data-open="false" aria-hidden="true">
+  <button class="ti-scrim" type="button" data-close-search aria-label="Close search"></button>
+  <section class="ti-search-shell" role="dialog" aria-modal="true" aria-labelledby="tiSearchDialogTitle">
+    <h2 id="tiSearchDialogTitle" class="ti-visually-hidden">Search Travel Info</h2>
+    <div class="ti-search-head">
+      <span id="tiSearchDialogIcon" aria-hidden="true"></span>
+      <label class="ti-visually-hidden" for="tiSearchInput">Search the SKANDI Travel Info library</label>
+      <input id="tiSearchInput" type="search" placeholder="Search airline, airport, baggage, accessibility, passport..." autocomplete="off">
+      <button class="ti-search-esc" type="button" data-close-search>Esc</button>
+    </div>
+    <div id="tiSearchResults" class="ti-search-results"></div>
+  </section>
+</div>
+
+<div id="tiOverlay" class="ti-overlay" data-open="false" aria-hidden="true">
+  <button class="ti-scrim" type="button" data-close-overlay aria-label="Close panel"></button>
+  <section id="tiSheet" class="ti-sheet" role="dialog" aria-modal="true" aria-labelledby="tiSheetTitle">
+    <header class="ti-sheet-head">
+      <div><div id="tiSheetKicker" class="ti-kicker ti-kicker-dark">Travel Info</div><h2 id="tiSheetTitle">Travel Info</h2><p id="tiSheetSubtitle"></p></div>
+      <button id="tiSheetClose" class="ti-round-btn" type="button" data-close-overlay aria-label="Close panel"><span data-icon="close"></span></button>
+    </header>
+    <div id="tiSheetBody" class="ti-sheet-body"></div>
+  </section>
+</div>
+
+<button id="tiAlexandraLauncher" class="ti-alexandra-launcher" type="button" aria-label="Ask Alexandra">
+  <span class="ti-alexandra-avatar"><video src="https://video.wixstatic.com/video/394052_b44198f20fc44baa90b3fc03d87602ea/1080p/mp4/file.mp4" autoplay loop muted playsinline preload="metadata"></video></span>
+  <span class="ti-alexandra-label"><strong>Ask Alexandra</strong><span>SKANDI Digital Support</span></span>
+</button>
+
+<script src="skandi-travel-info-reference.js"></script>
+
+
+<script src="skandi-travel-info-reference.part-02.js"></script>
+
+<script type="importmap">{"imports":{"react":"https://esm.sh/react@19.3.0","react-dom/client":"https://esm.sh/react-dom@19.3.0/client?external=react","htm":"https://esm.sh/htm@3.1.1"}}</script>
+<script type="module" src="skandi-travel-info-reference.part-03.js"></script>
+</body>
+</html>

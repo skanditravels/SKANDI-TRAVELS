@@ -1,1 +1,38 @@
-<!-- SKANDI_PENDING_SOURCE: approved global component required. -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>ALTEA Status Bar - Modern Blue</title>
+<link rel="stylesheet" href="altea-footer.css">
+</head>
+<body>
+
+<footer class="status-bar">
+  <div class="section left-section">
+    <div class="sys-message" title="Host Connection Status">
+      <div class="network-dot" id="networkDot"></div>
+      <span class="sys-text" id="sysMessage">READY</span>
+    </div>
+  </div>
+
+  <div class="context-area">
+    <span id="activeContext">ALTEA DASHBOARD</span>
+    <span id="lmcBadge" class="mode-badge">LMC</span>
+  </div>
+
+  <div class="section right-section">
+    <button class="footer-link" id="legalPoliciesBtn" type="button">Legal &amp; Policies</button>
+    <div class="divider"></div>
+    <div class="indicator">ENV: <span class="val" id="envState">PRD</span></div>
+    <div class="divider"></div>
+    <div class="clock-group" id="sysClock" title="Click to toggle UTC / Local">
+      <span class="clock-time" id="clockTime">--:--:--</span>
+      <span class="clock-lbl" id="clockDate">LOCAL</span>
+    </div>
+  </div>
+</footer>
+
+<script src="altea-footer.js"></script>
+</body>
+</html>

@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#ffffff">
+<title>SKANDI Travels · Sitewide Mobile Navigation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="skandi-mobile-nav-reference.css">
+</head>
+<body>
+<div id="drawer-layer" aria-hidden="true">
+  <button id="drawer-backdrop" type="button" tabindex="-1" aria-label="Close menu"></button>
+  <aside id="app-drawer" role="dialog" aria-modal="true" aria-labelledby="drawer-title" tabindex="-1">
+    <div class="drawer-head"><div><span class="drawer-eyebrow">SKANDI TRAVELS</span><h2 id="drawer-title">Explore SKANDI</h2></div><button id="drawer-close" type="button" aria-label="Close menu"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5 19 19M19 5 5 19"/></svg></button></div>
+    <div class="drawer-scroll" id="drawer-menu-view">
+      <div class="drawer-group-title">Alexandra · Digital Customer Service</div>
+      <button type="button" id="alexandra-entry" class="alexandra-entry" aria-label="Chat with Alexandra">
+        <span class="alexandra-avatar"><video autoplay muted loop playsinline aria-hidden="true"><source src="https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/MP4/SKANDI_ALEXANDRA_AVATAR_LOOP_WHITE-BACKGROUND_01.mp4" type="video/mp4"></video></span>
+        <span class="alexandra-entry-copy"><strong>Chat with Alexandra</strong><small>SKANDI AI Travel Assistant</small><span>Get travel help or contact Customer Service</span></span>
+        <span class="alexandra-chevron" aria-hidden="true">›</span>
+      </button>
+      <div class="drawer-group-title">Book &amp; Travel</div>
+      <button type="button" class="drawer-link" data-focus-search="true">Book a trip <span aria-hidden="true">›</span></button>
+      <button type="button" class="drawer-link" data-route="flights">Flights <span aria-hidden="true">›</span></button>
+      <button type="button" class="drawer-link" data-route="hotels">Hotels <span aria-hidden="true">›</span></button>
+      <button type="button" class="drawer-link" data-route="packages">Flight + Hotel <span aria-hidden="true">›</span></button>
+      <button type="button" class="drawer-link" data-route="cruises">Cruises <span aria-hidden="true">›</span></button>
+      <button type="button" class="drawer-link" data-route="carRental">Car Rental <span aria-hidden="true">›</span></button>
+      <button type="button" class="drawer-link" data-route="tours">Tours &amp; Activities <span aria-hidden="true">›</span></button>
+      <div class="drawer-group-title">My SKANDI</div>
+      <button type="button" class="drawer-link" data-route="myTrips">My Trips <span aria-hidden="true">›</span></button>
+      <button type="button" class="drawer-link" data-route="myProfile">My Club <span aria-hidden="true">›</span></button>
+      <div class="drawer-group-title">Information &amp; Support</div>
+      <button type="button" class="drawer-link" data-route="offers">Offers <span aria-hidden="true">›</span></button>
+      <button type="button" class="drawer-link" data-route="support">Customer Service <span aria-hidden="true">›</span></button>
+    </div>
+    <section id="alexandra-chat-view" aria-label="Alexandra chat" hidden>
+      <div class="alexandra-chat-heading">
+        <button type="button" id="alexandra-back" aria-label="Return to navigation">‹ Menu</button>
+        <strong>Alexandra</strong><span>SKANDI AI Customer Service</span>
+      </div>
+      <div class="alexandra-disclaimer">General travel assistance. Do not share passwords, card details, passport information or other sensitive data.</div>
+      <main id="alexandra-messages" class="alexandra-messages" role="log" aria-live="polite"></main>
+      <div id="alexandra-status" class="alexandra-status" role="status" aria-live="polite"></div>
+      <form id="alexandra-compose" class="alexandra-compose">
+        <textarea id="alexandra-question" aria-label="Message Alexandra" placeholder="Ask Alexandra about travel..." rows="2" maxlength="1700" required></textarea>
+        <button type="submit" id="alexandra-send">Send</button>
+      </form>
+      <div class="alexandra-actions">
+        <button type="button" id="alexandra-support">My Support</button>
+        <button type="button" id="alexandra-followup">Request follow-up</button>
+        <a href="https://wa.me/17112160382" target="_blank" rel="noopener noreferrer">WhatsApp</a>
+        <a href="tel:+19516207875">Call SKANDI</a>
+      </div>
+      <form id="alexandra-case-form" class="alexandra-case-form" hidden>
+        <strong>Customer Service follow-up</strong>
+        <p>We create a case only after receiving system confirmation. Do not send payment or identity documents.</p>
+        <label>Name<input id="alexandra-case-name" maxlength="120" autocomplete="name" required></label>
+        <label>Email<input id="alexandra-case-email" type="email" maxlength="254" autocomplete="email" required></label>
+        <label>Subject<input id="alexandra-case-subject" maxlength="160" value="Travel assistance request" required></label>
+        <label>Details<textarea id="alexandra-case-details" maxlength="2400" rows="3" required></textarea></label>
+        <button type="submit" id="alexandra-case-submit">Submit support request</button>
+      </form>
+    </section>
+  </aside>
+</div>
+<nav id="app-nav" aria-label="SKANDI mobile app navigation">
+  <div id="pull-zone" role="presentation"></div>
+  <button class="nav-item active" id="nav-home" type="button" data-action="home" aria-current="page">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/></svg><span class="nav-label">Home</span>
+  </button>
+  <button class="nav-item" id="nav-explore" type="button" data-action="explore">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m15 9-2 6-4 1 1-4z"/></svg><span class="nav-label">Explore</span>
+  </button>
+  <button class="nav-item" id="nav-travel-info" type="button" data-action="travelInfo">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7.6h.01"/></svg><span class="nav-label">Travel Info</span>
+  </button>
+  <button class="nav-item" id="nav-my-club" type="button" data-action="myProfile">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.5 3.5-7 8-7s8 2.5 8 7"/></svg><span class="nav-label">My Club</span>
+  </button>
+  <button class="nav-item" id="nav-menu" type="button" data-action="menu" aria-haspopup="dialog" aria-controls="app-drawer" aria-expanded="false" aria-label="Open menu">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg><span class="nav-label">Menu</span>
+  </button>
+  <div id="status" role="status" aria-live="polite" aria-atomic="true"><span id="status-spinner" aria-hidden="true"></span><span id="status-copy"></span><button id="refresh" type="button" tabindex="-1" aria-hidden="true" aria-label="Refresh Home data" title="Refresh Home data"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0 1 3M20 4v7h-7"/></svg></button></div>
+</nav>
+<script src="https://cdn.jsdelivr.net/npm/livekit-client@2.23.0/dist/livekit-client.umd.min.js"></script>
+<script src="skandi-mobile-nav-reference.js"></script>
+</body>
+</html>
+
+

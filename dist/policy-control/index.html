@@ -1,0 +1,1069 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#022e64">
+<title>SKANDI Policy Control</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+
+
+<meta name="color-scheme" content="light dark">
+
+
+
+
+
+
+
+
+
+
+
+
+<meta name="color-scheme" content="light">
+
+
+
+<style data-skandi-part="header">
+#riaintra-global-header-root {
+  --shell-h: 52px;
+  --shell: #354a5f;
+  --shell-hover: rgba(255, 255, 255, 0.14);
+  --blue: #106ebe;
+  --canvas: #ffffff;
+  --text: #323130;
+  --border: #edebe9;
+  --font: "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
+}
+
+#riaintra-global-header-root * { box-sizing: border-box; }
+#riaintra-global-header-root,#riaintra-global-header-root {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: var(--font);
+  color: var(--text);
+  background: transparent;
+  font-size: 14px;
+  user-select: none;
+}
+#riaintra-global-header-root button { font: inherit; border: 0; background: transparent; color: inherit; cursor: pointer; }
+
+/* Desktop Shellbar */
+#riaintra-global-header-root .shellbar {
+  position: fixed;
+  inset: 0 0 auto;
+  height: var(--shell-h);
+  background: var(--shell);
+  color: #fff;
+  z-index: 1000;
+  box-shadow: 0 1px 2px rgba(34, 54, 73, 0.12);
+}
+#riaintra-global-header-root .shellbar-inner {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12px;
+  gap: 12px;
+}
+#riaintra-global-header-root .shell-left, #riaintra-global-header-root .shell-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+/* Branding */
+#riaintra-global-header-root .product {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+#riaintra-global-header-root .product img {
+  height: 30px;
+  width: auto;
+  object-fit: contain;
+  border-radius: 3px;
+  display: none;
+}
+#riaintra-global-header-root .product img[src] {
+  display: block;
+}
+#riaintra-global-header-root .product-text strong {
+  display: block;
+  font-size: 13px;
+}
+#riaintra-global-header-root .product-text small {
+  display: block;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 10px;
+  margin-top: 2px;
+}
+
+/* Desktop Navigation */
+#riaintra-global-header-root .shell-nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 1 1 auto;
+  justify-content: flex-start;
+  padding-left: 24px;
+}
+#riaintra-global-header-root .shell-nav button {
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 10px;
+  border-radius: 4px;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+#riaintra-global-header-root .shell-nav button:hover, #riaintra-global-header-root .shell-nav button.active {
+  color: #fff;
+  background: var(--shell-hover);
+}
+
+/* Session / Dashboard Actions */
+#riaintra-global-header-root .utility-action {
+  min-height: 32px;
+  padding: 0 10px;
+  border: 1px solid rgba(255,255,255,.20);
+  border-radius: 4px;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+#riaintra-global-header-root .utility-action:hover { background: var(--shell-hover); }
+#riaintra-global-header-root .utility-action[hidden] { display: none !important; }
+
+/* Clock */
+#riaintra-global-header-root .clock {
+  min-width: 110px;
+  text-align: right;
+  border-inline: 1px solid rgba(255, 255, 255, 0.18);
+  padding: 4px 10px;
+  cursor: pointer;
+}
+#riaintra-global-header-root .clock strong {
+  display: block;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+#riaintra-global-header-root .clock small {
+  display: block;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 9px;
+  margin-top: 3px;
+  text-transform: uppercase;
+}
+
+/* User Profile */
+#riaintra-global-header-root .profile {
+  display: none;
+  grid-template-columns: minmax(150px, 230px) 38px;
+  grid-template-rows: repeat(3, auto);
+  column-gap: 9px;
+  row-gap: 1px;
+  align-items: center;
+  min-width: 0;
+}
+#riaintra-global-header-root .profile-name,
+#riaintra-global-header-root .profile-meta,
+#riaintra-global-header-root .profile-email {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: right;
+}
+#riaintra-global-header-root .profile-name {
+  grid-column: 1;
+  grid-row: 1;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+}
+#riaintra-global-header-root .profile-meta {
+  grid-column: 1;
+  grid-row: 2;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+}
+#riaintra-global-header-root .profile-email {
+  grid-column: 1;
+  grid-row: 3;
+  color: rgba(255,255,255,.70);
+  font-size: 9px;
+}
+#riaintra-global-header-root .profile-avatar {
+  grid-column: 2;
+  grid-row: 1 / span 3;
+  width: 38px;
+  height: 38px;
+  border-radius: 4px;
+  display: grid;
+  place-items: center;
+  background: #d1e8ff;
+  color: #073b69;
+  font-size: 11px;
+  font-weight: 800;
+  overflow: hidden;
+}
+#riaintra-global-header-root .profile-avatar img,
+#riaintra-global-header-root img.profile-avatar {
+  width: 38px;
+  height: 38px;
+  object-fit: cover;
+}
+
+/* Mobile Burger Icon */
+
+#riaintra-global-header-root .burger {
+  display: none;
+  width: 36px;
+  height: 36px;
+  color: #fff;
+  border-radius: 4px;
+}
+#riaintra-global-header-root .burger:hover {
+  background: var(--shell-hover);
+}
+
+/* Mobile Drawer (Horizontal Slider) */
+#riaintra-global-header-root .mobile-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  z-index: 1100;
+  width: 100%;
+  height: var(--shell-h);
+  background: var(--shell);
+  color: #fff;
+  box-shadow: -20px 0 45px rgba(13, 31, 48, 0.25);
+  transform: translateX(102%);
+  opacity: 0.98;
+  transition: transform 0.44s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.25s ease;
+  display: flex;
+  align-items: center;
+}
+#riaintra-global-header-root .mobile-drawer.open {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+/* Mobile Drawer Title Area */
+#riaintra-global-header-root .mobile-head {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 12px 0 18px;
+  border-right: 1px solid rgba(255, 255, 255, 0.18);
+  flex: 0 0 auto;
+}
+#riaintra-global-header-root .mobile-head strong { font-size: 13px; }
+#riaintra-global-header-root .mobile-head .close {
+  width: 28px;
+  height: 28px;
+  font-size: 22px;
+  display: grid;
+  place-items: center;
+}
+
+/* Mobile Drawer Nav List */
+#riaintra-global-header-root .mobile-nav {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  overflow-x: auto;
+  scrollbar-width: none;
+  flex: 1;
+  padding: 0 12px;
+  gap: 4px;
+}
+#riaintra-global-header-root .mobile-nav::-webkit-scrollbar { display: none; }
+#riaintra-global-header-root .mobile-nav button {
+  display: block;
+  width: auto;
+  white-space: nowrap;
+  padding: 8px 12px;
+  font-weight: 600;
+  border-radius: 4px;
+}
+#riaintra-global-header-root .mobile-nav button:hover, #riaintra-global-header-root .mobile-nav button.active {
+  background: var(--shell-hover);
+}
+
+/* Mobile Overlay */
+#riaintra-global-header-root .overlay {
+  position: fixed;
+  inset: var(--shell-h) 0 0 0;
+  background: rgba(7, 27, 68, 0.46);
+  z-index: 1090;
+  display: none;
+}
+#riaintra-global-header-root .overlay.show { display: block; }
+
+body[data-theme="dark"] #riaintra-global-header-root {
+  --canvas: #1f1f1f;
+  --border: #3a3a3a;
+  --text: #f3f2f1;
+}
+
+@media(max-width: 950px) {
+  #riaintra-global-header-root .shell-nav { display: none; }
+  #riaintra-global-header-root .burger { display: grid; place-items: center; }
+  #riaintra-global-header-root .profile-email { display: none; }
+}
+@media(max-width: 700px) {
+  #riaintra-global-header-root .profile { display: none !important; }
+  #riaintra-global-header-root .clock { display: none; }
+  #riaintra-global-header-root .utility-action { padding: 0 8px; font-size: 9px; }
+}
+</style>
+<style data-skandi-part="footer">
+#riaintra-global-footer-root * { box-sizing: border-box; }
+#riaintra-global-footer-root,#riaintra-global-footer-root {
+  margin: 0;
+  font-family: "72", Inter, Arial, sans-serif;
+  width: 100%;
+}
+
+#riaintra-global-footer-root footer {
+  width: 100%;
+  padding: 10px 24px;
+  margin-top: auto;
+  background: #354a5f;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+#riaintra-global-footer-root .wrap {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  width: 100%;
+}
+
+#riaintra-global-footer-root .footer-left {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  justify-self: flex-start;
+}
+
+#riaintra-global-footer-root .links {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+#riaintra-global-footer-root .meta {
+  font-size: 9px;
+  color: #ffffff;
+}
+
+#riaintra-global-footer-root .global-footer {
+  justify-self: center;
+  text-align: center;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+#riaintra-global-footer-root .footer-right {
+  justify-self: flex-end;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+#riaintra-global-footer-root #grouplogo img {
+  height: 16px;
+  border-radius: 0;
+  object-fit: contain;
+  background: transparent;
+  display: block;
+}
+
+#riaintra-global-footer-root button {
+  border: 0;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.75);
+  padding: 5px 7px;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+#riaintra-global-footer-root button:hover {
+  color: #ffffff;
+  text-decoration: underline;
+}
+</style>
+<style data-skandi-part="policy-control">
+#skandi-app-root{--navy:#354a5f;--blue:#005eb8;--blue-dark:#003e77;--blue-soft:#eaf4fe;--canvas:#f3f5f7;--surface:#fff;--panel:#f8fafc;--ink:#1d2a35;--muted:#536474;--border:#d8e0e7;--danger:#9c2828;--success:#196942;--warning:#8e5800;--r:8px;--shadow:0 2px 10px rgba(20,40,65,.06)}
+#skandi-app-root *{box-sizing:border-box}#skandi-app-root{height:100%;scroll-behavior:smooth}#skandi-app-root{margin:0;min-width:320px;min-height:100%;background:var(--canvas);color:var(--ink);font:13px/1.5 "72",Inter,"Segoe UI",Arial,sans-serif}#skandi-app-root button,#skandi-app-root input,#skandi-app-root select,#skandi-app-root textarea{font:inherit}#skandi-app-root button{cursor:pointer}#skandi-app-root button:disabled{opacity:.5;cursor:not-allowed}#skandi-app-root button:focus-visible,#skandi-app-root input:focus-visible,#skandi-app-root select:focus-visible,#skandi-app-root textarea:focus-visible,#skandi-app-root [contenteditable]:focus-visible{outline:3px solid #78b6f1;outline-offset:2px}#skandi-app-root a{color:var(--blue)}#skandi-app-root h1,#skandi-app-root h2,#skandi-app-root h3,#skandi-app-root p{margin-top:0}#skandi-app-root .hidden{display:none!important}#skandi-app-root .app{min-height:100dvh;display:flex;flex-direction:column}#skandi-app-root .toolbar{display:flex;flex-wrap:wrap;gap:7px;align-items:center;padding:12px 16px;background:#fff;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:35}#skandi-app-root .button{display:inline-flex;align-items:center;justify-content:center;gap:5px;min-height:38px;padding:8px 13px;background:#fff;border:1px solid #bac8d2;border-radius:5px;color:#263c4d;font-weight:700;font-size:12px;text-align:center;white-space:nowrap}#skandi-app-root .button:hover:not(:disabled){background:#edf5fb}#skandi-app-root .button.primary{background:var(--blue);color:white;border-color:var(--blue)}#skandi-app-root .button.primary:hover:not(:disabled){background:var(--blue-dark)}#skandi-app-root .button.danger{color:var(--danger);border-color:#d5a9a7}#skandi-app-root .button.ghost{border-color:transparent;background:transparent}#skandi-app-root .toolbar .grow{flex:1}#skandi-app-root .state-text{font-size:11px;color:var(--muted);padding:0 5px}#skandi-app-root .workspace{flex:1;display:grid;grid-template-columns:224px minmax(0,1fr);min-height:0;max-width:1800px;width:100%;margin:0 auto}#skandi-app-root .sidebar{padding:15px 10px;background:#f8fafc;border-right:1px solid var(--border)}#skandi-app-root .sidebar h2{font-size:10px;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;padding:5px 13px}#skandi-app-root .nav{display:flex;align-items:center;gap:8px;width:100%;text-align:left;padding:12px 13px;background:transparent;border:0;border-left:3px solid transparent;border-radius:4px;font-weight:700;font-size:12px;color:#344b60}#skandi-app-root .nav.active{border-left-color:var(--blue);background:var(--blue-soft);color:var(--blue-dark)}#skandi-app-root .nav:hover{background:#e7f0f7}#skandi-app-root .main{padding:18px;min-width:0}#skandi-app-root .intro{display:flex;justify-content:space-between;align-items:start;gap:12px;margin-bottom:14px}#skandi-app-root .intro h1{font-size:clamp(21px,2vw,29px);line-height:1.18;letter-spacing:-.02em;margin:0 0 6px}#skandi-app-root .intro p{color:var(--muted);font-size:12px;margin:0}#skandi-app-root .card{background:#fff;border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow);margin-bottom:13px}#skandi-app-root .card-head{padding:12px 15px;background:#f9fbfc;border-bottom:1px solid var(--border);display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}#skandi-app-root .card-head h2{font-size:13px;margin:0;font-weight:800}#skandi-app-root .card-body{padding:17px}#skandi-app-root .notice{border:1px solid #aac9e7;background:#ecf5fc;color:#143c61;border-radius:5px;padding:11px 13px;font-size:12px;margin-bottom:14px}#skandi-app-root .notice.error{border-color:#e2a6a4;background:#fff2f1;color:#882520}#skandi-app-root .notice.warning{border-color:#e5c58b;background:#fff9ed;color:#775100}#skandi-app-root .notice.success{border-color:#abd3b7;background:#eef8f0;color:#235b37}#skandi-app-root .filters{display:flex;gap:9px;flex-wrap:wrap;padding:14px}#skandi-app-root .filters>*{flex:1;min-width:145px}#skandi-app-root .field{display:flex;flex-direction:column;gap:5px;min-width:0}#skandi-app-root .field label,#skandi-app-root .field-title{font-size:11px;font-weight:800;color:#40576b}#skandi-app-root .field small{font-size:10px;color:var(--muted)}#skandi-app-root .input,#skandi-app-root .select,#skandi-app-root .textarea{width:100%;min-width:0;min-height:39px;padding:9px 10px;border:1px solid #b8c6d1;border-radius:5px;background:#fff;color:var(--ink)}#skandi-app-root .textarea{min-height:84px;resize:vertical}#skandi-app-root .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}#skandi-app-root .grid.two{grid-template-columns:repeat(2,minmax(0,1fr))}#skandi-app-root .field.full,#skandi-app-root .full{grid-column:1/-1}#skandi-app-root .check{display:inline-flex;align-items:center;gap:9px;font-weight:600;min-height:36px}#skandi-app-root .check input{width:17px;height:17px;accent-color:var(--blue)}#skandi-app-root .table-scroll{overflow:auto;width:100%}#skandi-app-root table{border-collapse:collapse;width:100%}#skandi-app-root th,#skandi-app-root td{padding:11px 12px;border-bottom:1px solid #e7ecf0;text-align:left;vertical-align:top}#skandi-app-root th{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:#546779;background:#f3f7fa}#skandi-app-root tr:last-child td{border-bottom:0}#skandi-app-root tr[data-id]{cursor:pointer}#skandi-app-root tr[data-id]:hover td{background:#f0f7fc}#skandi-app-root .muted{color:var(--muted)}#skandi-app-root .small{font-size:11px}#skandi-app-root .tag{font-weight:700;font-size:10px;white-space:nowrap}#skandi-app-root .split{display:grid;grid-template-columns:minmax(0,1fr) minmax(250px,380px);gap:14px}#skandi-app-root .flex{display:flex;gap:8px;align-items:center;flex-wrap:wrap}#skandi-app-root .flex.end{justify-content:flex-end}#skandi-app-root .section{border:1px solid var(--border);border-radius:6px;background:#fff;margin-bottom:11px;overflow:hidden}#skandi-app-root .section-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:space-between;padding:11px;background:#f8fafc}#skandi-app-root .section-title{font-weight:700;flex:1;min-width:170px}#skandi-app-root .section-actions{display:flex;gap:4px;flex-wrap:wrap}#skandi-app-root .micro{font-size:11px;padding:5px 8px;min-height:30px;border:1px solid var(--border);background:white;border-radius:4px;color:#35506a}#skandi-app-root .micro:hover{background:#edf5fb}#skandi-app-root .section-body{padding:13px}#skandi-app-root .rich-toolbar{display:flex;flex-wrap:wrap;gap:4px;padding:7px;border:1px solid #bac8d2;border-radius:5px 5px 0 0;background:#f8fafc}#skandi-app-root .rich-toolbar button{min-width:30px;min-height:30px;border:1px solid transparent;background:transparent;border-radius:4px;color:#27425c;font-size:12px;padding:3px 7px}#skandi-app-root .rich-toolbar button:hover{border-color:#b8c9d8;background:#fff}#skandi-app-root .rich{min-height:130px;max-height:70vh;overflow:auto;background:#fff;border:1px solid #bac8d2;border-top:0;border-radius:0 0 5px 5px;padding:13px;font:14px/1.65 Inter,"Segoe UI",Arial,sans-serif;overflow-wrap:anywhere}#skandi-app-root .rich:empty:before{content:attr(data-placeholder);color:#91a0ae}#skandi-app-root .rich table{border:1px solid #d0d9e1}#skandi-app-root .rich td,#skandi-app-root .rich th{border:1px solid #d0d9e1}#skandi-app-root .section .section{margin:11px 0 0 14px;border-left:3px solid #bbd3e8}#skandi-app-root .preview{padding:25px;max-width:900px;margin:auto;line-height:1.75;font-size:14px;overflow-wrap:anywhere}#skandi-app-root .preview h1{font-size:27px}#skandi-app-root .preview h2{font-size:20px;color:var(--blue-dark);border-bottom:1px solid var(--border);padding-bottom:6px}#skandi-app-root .preview h3{font-size:16px;color:#31506c}#skandi-app-root .toc{border:1px solid var(--border);background:#f9fbfc;padding:16px;border-radius:6px;margin:14px 0}#skandi-app-root .toc a{display:block;padding:3px 0}#skandi-app-root .drop{display:flex;flex-direction:column;gap:10px;padding:28px;border:2px dashed #a5bbcc;border-radius:10px;text-align:center;align-items:center;background:#f9fbfe;cursor:pointer}#skandi-app-root .drop.over{border-color:var(--blue);background:#eaf5ff}#skandi-app-root .drop strong{font-size:16px}#skandi-app-root .drop span{font-size:12px;color:var(--muted)}#skandi-app-root .drop input{max-width:100%;font-size:12px}#skandi-app-root .review-list{display:grid;gap:9px}#skandi-app-root .review-row{display:grid;grid-template-columns:24px minmax(130px,170px) minmax(0,1fr);gap:10px;align-items:start;border-bottom:1px solid var(--border);padding:11px 0}#skandi-app-root .review-row input[type=checkbox]{width:18px;height:18px;accent-color:var(--blue)}#skandi-app-root .review-row strong{font-size:11px}#skandi-app-root .review-row small{display:block;color:var(--muted);font-size:10px;font-weight:400}#skandi-app-root .review-value{border:1px solid #cbd7e0;border-radius:4px;padding:8px;min-width:0;background:white;overflow-wrap:anywhere}#skandi-app-root .review-value input,#skandi-app-root .review-value textarea,#skandi-app-root .review-value select{width:100%;background:transparent;border:0;outline:0;font:12px inherit;color:var(--ink)}#skandi-app-root .review-value input,#skandi-app-root .review-value select{min-height:24px}#skandi-app-root .review-value textarea{resize:vertical;min-height:65px}#skandi-app-root .review-row.warn{background:#fffaf0}#skandi-app-root .review-row .source{font-size:10px;color:#586b7c;line-height:1.4;margin-top:6px}#skandi-app-root .progress{height:8px;background:#e5edf4;overflow:hidden;border-radius:5px}#skandi-app-root .progress>div{height:100%;width:0;background:#005eb8;transition:width .15s}#skandi-app-root .source-view{white-space:pre-wrap;overflow-wrap:anywhere;padding:14px;border:1px solid var(--border);border-radius:6px;background:#fafbfd;max-height:330px;overflow:auto;font:12px/1.55 ui-monospace,Consolas,monospace}#skandi-app-root .import-tabs{display:flex;gap:5px;flex-wrap:wrap}#skandi-app-root .empty{padding:25px;text-align:center;color:var(--muted)}#skandi-app-root .shortcut{border:1px solid #d9e0e6;border-radius:4px;padding:1px 4px;font-size:10px}#skandi-app-root .toast{position:fixed;bottom:16px;right:16px;max-width:min(400px,calc(100vw - 32px));padding:11px 15px;border-radius:6px;background:#23415b;color:white;box-shadow:0 10px 40px #1e35464d;z-index:100;display:none}#skandi-app-root .toast.show{display:block}#skandi-app-root .modal{position:fixed;inset:0;background:#1128399c;z-index:60;display:flex;align-items:center;justify-content:center;padding:18px}#skandi-app-root .modal-window{background:#fff;border-radius:8px;width:min(740px,100%);max-height:90dvh;overflow:auto;box-shadow:0 16px 60px #001e3666}#skandi-app-root .modal-title{padding:16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border)}#skandi-app-root .modal-title h2{font-size:17px;margin:0}#skandi-app-root .modal-body{padding:17px}#skandi-app-root .modal-footer{padding:14px 17px;display:flex;justify-content:flex-end;gap:8px;border-top:1px solid var(--border)}#skandi-app-root .status-count{color:#57718b;font-size:12px}#skandi-app-root .mobile-nav{display:none}#skandi-app-root .pdf-box{display:flex;gap:14px;align-items:center;flex-wrap:wrap}#skandi-app-root .pdf-box a{word-break:break-word}#skandi-app-root .tip{background:#f7f9fb;border-left:3px solid #9abbdb;padding:10px 13px;font-size:11px;line-height:1.5}#skandi-app-root .sticky-actions{position:sticky;bottom:0;padding:10px 12px;background:#fff;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;z-index:20}#skandi-app-root .summary-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}#skandi-app-root .summary-cards>div{padding:13px;border:1px solid var(--border);border-radius:6px;background:#fff}#skandi-app-root .summary-cards strong{display:block;font-size:22px;color:var(--blue-dark)}#skandi-app-root .summary-cards small{color:var(--muted)}
+@media(max-width:1090px){#skandi-app-root .workspace{grid-template-columns:190px minmax(0,1fr)}#skandi-app-root .split{grid-template-columns:1fr}#skandi-app-root .grid{grid-template-columns:repeat(2,minmax(0,1fr))}#skandi-app-root .main{padding:13px}}
+@media(max-width:740px){#skandi-app-root .toolbar{top:0;padding:8px;gap:5px}#skandi-app-root .toolbar .button{min-height:37px;padding:7px 10px}#skandi-app-root .toolbar .grow{display:none}#skandi-app-root .workspace{display:block}#skandi-app-root .sidebar{display:none}#skandi-app-root .mobile-nav{display:flex;align-items:center;gap:5px;overflow:auto;position:sticky;top:var(--policy-toolbar-height,70px);z-index:30;background:#fff;padding:6px 9px;border-bottom:1px solid var(--border)}#skandi-app-root .mobile-nav .nav{width:auto;min-width:max-content;border-left:0;border-bottom:3px solid transparent;padding:9px 12px}#skandi-app-root .mobile-nav .nav.active{border-bottom-color:var(--blue)}#skandi-app-root .main{padding:12px}#skandi-app-root .grid,#skandi-app-root .grid.two{grid-template-columns:1fr}#skandi-app-root .card-body{padding:12px}#skandi-app-root .filters{padding:10px}#skandi-app-root .review-row{grid-template-columns:20px minmax(0,1fr)}#skandi-app-root .review-row>div:nth-child(3){grid-column:2}#skandi-app-root .section-head{align-items:stretch}#skandi-app-root .section-title{flex-basis:100%}#skandi-app-root .section-actions{width:100%}#skandi-app-root .section .section{margin-left:7px}#skandi-app-root .preview{padding:14px}#skandi-app-root .intro h1{font-size:22px}#skandi-app-root .rich{min-height:170px}#skandi-app-root .button{min-height:42px}#skandi-app-root .input,#skandi-app-root .select,#skandi-app-root .textarea,#skandi-app-root input[type=date]{font-size:16px}#skandi-app-root .modal{padding:8px}#skandi-app-root .modal-window{max-height:96dvh}#skandi-app-root .summary-cards{grid-template-columns:1fr 1fr}}
+@media(max-width:410px){#skandi-app-root .toolbar .button{font-size:11px;padding:6px 8px}#skandi-app-root .main{padding:9px}#skandi-app-root .summary-cards{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){#skandi-app-root *,#skandi-app-root *:before,#skandi-app-root *:after{scroll-behavior:auto!important;transition:none!important}}
+@media print{#skandi-app-root .toolbar,#skandi-app-root .sidebar,#skandi-app-root .mobile-nav,#skandi-app-root .intro,#skandi-app-root .no-print,#skandi-app-root .sticky-actions,#skandi-app-root .toast{display:none!important}#skandi-app-root .workspace{display:block}#skandi-app-root .main{padding:0}#skandi-app-root .card{border:0;box-shadow:none}#skandi-app-root .preview{max-width:none}}
+#skandi-app-root .policy-guard{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;padding:18px;background:rgba(17,36,56,.55)}#skandi-app-root .policy-guard-dialog{width:min(100%,480px);background:#fff;border-radius:10px;padding:25px;box-shadow:0 25px 75px rgba(0,0,0,.24)}#skandi-app-root .policy-guard-dialog h2{margin:0 0 9px;font-size:19px}#skandi-app-root .policy-guard-dialog p{color:#536474;line-height:1.55}#skandi-app-root .policy-guard-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px;margin-top:23px}#skandi-app-root #documentState{padding:8px 18px;font-size:12px;background:#eaf4fe;border-bottom:1px solid #d8e0e7;color:#224663;font-weight:600}#skandi-app-root #documentState[data-state="unsaved"]{background:#fff5e7;color:#78500b}#skandi-app-root #documentState[data-state="saved"]{background:#ebf7f0;color:#195e3c}#skandi-app-root #documentState[data-state="published"]{background:#e5f4eb;color:#16593a}#skandi-app-root #documentState[data-state="saving"]{background:#eaf4fe;color:#224663}
+</style>
+<style data-skandi-part="shell">html,body{margin:0;width:100%;min-height:100%;}*,*::before,*::after{box-sizing:border-box}#skandi-shell-root{min-height:100vh;min-width:0;display:flex;flex-direction:column}#skandi-app-root{flex:1;min-width:0;position:relative}#riaintra-global-header-root,#riaintra-global-footer-root{flex:none}@media(max-width:767px){input:not([type=hidden]),select,textarea{font-size:16px!important}}html,body{height:100%;overflow:hidden}#skandi-shell-root{height:100vh;height:100dvh;min-height:0;overflow:hidden}#skandi-app-root{height:auto;min-height:0;overflow:auto}#riaintra-global-header-root{position:relative;height:52px;min-height:52px;overflow:visible;z-index:2000}#riaintra-global-footer-root{height:auto;overflow:visible;z-index:2000}#riaintra-global-header-root .shellbar{position:absolute}#altea-global-footer-root .status-bar{position:relative}@media(max-width:600px){#riaintra-global-footer-root .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px}#riaintra-global-footer-root .footer-left{flex-wrap:wrap;gap:6px}}</style>
+</head>
+<body>
+<div id="skandi-shell-root" data-skandi-page="policy-control" data-skandi-key="policyControl" data-skandi-family="riaintra" data-skandi-chrome="riaintra">
+<div id="riaintra-global-header-root">
+
+<!-- MAIN HEADER -->
+<header class="shellbar">
+  <div class="shellbar-inner">
+    
+    <div class="shell-left">
+      <button id="burger" class="burger" type="button" aria-label="Open menu">☰</button>
+      <div class="product">
+        <img id="logo" src="" alt="RIAINTRA">
+        <div class="product-text">
+          <strong id="riaintra-header-productName">RIAINTRA</strong>
+          <small id="productContext">Enterprise Workforce Suite</small>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Desktop Navigation -->
+    <nav id="riaintra-header-desktopNav" class="shell-nav" aria-label="Internal navigation"></nav>
+    
+    <div class="shell-right">
+      <button id="returnDashboardBtn" class="utility-action" type="button" hidden="">Return to Dashboard</button>
+      <button id="logoutBtn" class="utility-action" type="button">Logout</button>
+
+      <!-- Clock -->
+      <div id="sfClock" class="clock" title="Toggle local / UTC">
+        <strong id="sfClockTime">--:--:--</strong>
+        <small id="sfClockDate">LOCAL</small>
+      </div>
+      
+      <!-- Profile -->
+      <div class="profile" id="userProfile">
+        <div class="profile-name" id="userName">--</div>
+        <div class="profile-meta" id="userMeta">--</div>
+        <div class="profile-email" id="userEmail">--</div>
+        <img id="badge_photo_url" class="profile-avatar" alt="Staff badge photo" style="display:none">
+        <div id="avatarFallback" class="profile-avatar">--</div>
+      </div>
+    </div>
+
+  </div>
+</header>
+
+<!-- MOBILE DRAWER -->
+<div id="mobileDrawer" class="mobile-drawer">
+  <div class="mobile-head">
+    <strong>RIAINTRA</strong>
+    <button id="drawerClose" class="close" type="button" aria-label="Close menu">×</button>
+  </div>
+  <nav id="riaintra-header-mobileNav" class="mobile-nav"></nav>
+</div>
+<div id="drawerOverlay" class="overlay"></div>
+
+
+
+
+</div>
+<div id="skandi-app-root">
+<div class="app">
+<div class="toolbar no-print"><button id="newBtn" class="button primary">New Policy</button><button id="saveBtn" class="button">Save Draft</button><button id="publishBtn" class="button primary">Publish</button><button id="archiveBtn" class="button">Archive</button><button id="deleteBtn" class="button danger">Delete</button><div class="grow"></div><button id="pdfBtn" class="button">Regenerate PDF</button><a id="downloadBtn" class="button hidden" target="_blank" rel="noopener noreferrer" href="#">Download PDF</a><button id="exportHtmlBtn" class="button">Export HTML</button><span class="state-text" id="dirtyState" role="status" aria-live="polite"></span></div>
+<div class="mobile-nav no-print" id="mobileNav"></div><div class="no-print" id="documentState" role="status" aria-live="polite"></div>
+<div class="workspace"><aside class="sidebar no-print"><h2>Policy workspace</h2><div id="desktopNav"></div></aside><main class="main"><div class="intro no-print"><div><h1 id="pageTitle">Policy documents</h1><p id="pageSubtitle">Author, review, import and publish controlled policies.</p></div><span id="counter" class="status-count"></span></div><div id="status" class="hidden"></div><div id="content"></div></main></div></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<div class="modal hidden" id="policyLinkModal" role="dialog" aria-modal="true" aria-label="Insert policy link"><div class="modal-window"><div class="modal-title"><h2>Insert policy link</h2><button type="button" class="button ghost" id="closeLinkModal">Close</button></div><div class="modal-body"><label class="field"><span class="field-title">Find a policy</span><input class="input" id="linkSearch" placeholder="Title, category or document ID"></label><div id="linkOptions" style="margin-top:12px"></div></div></div></div>
+<div id="leaveGuard" class="policy-guard hidden no-print" role="presentation"><div class="policy-guard-dialog" role="dialog" aria-modal="true" aria-labelledby="guardTitle" aria-describedby="guardDescription"><h2 id="guardTitle">Unsaved policy changes</h2><p id="guardDescription">Your changes have not been saved. Save this document before leaving, or discard your changes.</p><div class="policy-guard-actions"><button type="button" id="guardCancel" class="button">Keep editing</button><button type="button" id="guardDiscard" class="button danger">Discard changes</button><button type="button" id="guardSave" class="button primary">Save draft &amp; continue</button></div></div></div>
+
+
+
+
+</div>
+<div id="riaintra-global-footer-root">
+<footer>
+  <div class="wrap">
+    <div class="footer-left">
+      <div id="links" class="links"></div>
+      <div class="meta">RIAINTRA</div>
+    </div>
+
+    <div id="grouplogo" class="global-footer">
+      <img src="https://static.wixstatic.com/media/394052_02ed0c030fea4f14b5e5677fdaeae197~mv2.png" alt="SKANDI GROUP MEMBER">
+    </div>
+
+    <div class="footer-right">
+      © 2026 SKANDI TRAVELS
+    </div>
+  </div>
+</footer>
+
+
+
+</div>
+
+</div>
+<script data-skandi-part="skandi-shell-runtime">/** SKANDI compiled public-shell runtime — no alternate backend, no local cart. */
+const SKANDI_SHELL_SOURCE = 'SKANDI_SHELL';
+const SKANDI_SHELL_PARENT = 'SKANDI_WIX_PARENT';
+const shellRoot = document.getElementById('skandi-shell-root');
+if (!shellRoot) throw new Error('SKANDI shell mount missing');
+window.__SKANDI_SHELL__ = Object.freeze({
+  mode:'compiled-single-embed',
+  page:shellRoot.dataset.skandiPage || '',
+  root:shellRoot
+});
+// A single iframe passes Home, Header, Footer and Mobile messages to the
+// same Wix Velo HtmlComponent. Existing message source/type values remain.
+// The Wix master controller supplies canonical route and session data.
+window.addEventListener('message', event => {
+  if (event.source !== window.parent) return;
+  let message = event.data;
+  if (typeof message === 'string') {
+    try { message = JSON.parse(message); } catch (_) { return; }
+  }
+  if (!message || message.source !== SKANDI_SHELL_PARENT) return;
+  if (message.type === 'SKANDI_MASTER_CONFIG') {
+    shellRoot.dataset.skandiPath = String(message.payload?.currentPath || '/');
+  }
+  if (message.type === 'SKANDI_SCROLL_TOP' || message.type === 'MASTER_SCROLL_TOP') {
+    document.getElementById('skandi-app-root')?.scrollTo({ top:0, behavior:'instant' });
+  }
+});
+window.parent?.postMessage({
+  source:SKANDI_SHELL_SOURCE,
+  type:'SKANDI_SHELL_READY',
+  payload:{page:shellRoot.dataset.skandiPage || ''},
+  timestamp:new Date().toISOString()
+}, '*');
+
+// The universal receiver supplies this context only after canonical parent,
+// manifest and digest validation. Legacy Home never opts into this handshake.
+let shellAttempts = 0;
+let shellConfigReceived = false;
+let shellTimer;
+function requestShellConfig() {
+  if (++shellAttempts > 40 || shellConfigReceived) { clearInterval(shellTimer); return; }
+  window.parent.postMessage({source:SKANDI_SHELL_SOURCE,type:'MASTER_CONFIG_REQUEST',payload:{context:'compiled-shell'}},'*');
+}
+window.addEventListener('message', event => {
+  if (event.source !== window.parent) return;
+  let message=event.data;
+  if(typeof message==='string'){try{message=JSON.parse(message);}catch(_){return;}}
+  if(message?.source===SKANDI_SHELL_PARENT && message.type==='SKANDI_MASTER_CONFIG') {
+    shellConfigReceived=true;clearInterval(shellTimer);
+  }
+});
+function startCompiledShell() {
+  const context=window.__SKANDI_RECEIVER_CONTEXT__;
+  if(context?.allowed===true && context.key===shellRoot.dataset.skandiKey) {
+    window.parent.postMessage({source:SKANDI_SHELL_SOURCE,type:'SKANDI_COMPILED_READY',payload:{key:context.key}},'*');
+  }
+  shellTimer=setInterval(requestShellConfig,500);requestShellConfig();
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',startCompiledShell,{once:true});
+else startCompiledShell();
+</script>
+<script data-skandi-part="header">(function(){
+const __root=window.document.getElementById("riaintra-global-header-root");
+const document=new Proxy(window.document,{get(target,key){if(key==='getElementById')return id=>{const el=target.getElementById(id);return el&&(__root===el||__root.contains(el))?el:null;};if(key==='querySelector'||key==='querySelectorAll')return selector=>{if(/^(?:html|body|head|meta|title|link)(?:[\s.#[:]|$)/i.test(selector)&&!selector.includes(' '))return target[key](selector);return __root[key](selector);};if(key==='getElementsByClassName'||key==='getElementsByTagName')return value=>__root[key](value);const value=Reflect.get(target,key,target);return typeof value==='function'?value.bind(target):value;},set(target,key,value){return Reflect.set(target,key,value,target);}});
+
+(()=>{
+  "use strict";
+  
+  const SOURCE = "SKANDI_RIAINTRA_HEADER";
+  const PARENT = "SKANDI_WIX_PARENT";
+
+  let config = null;
+  let staff = {};
+
+  const $ = id => document.getElementById(id);
+  const esc = v => String(v ?? "").replace(/[&<>"']/g, s => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;"
+  }[s]));
+
+  function post(type, payload = {}) {
+    if (window.parent && window.parent !== window) {
+      window.parent.postMessage({
+        source: SOURCE,
+        type,
+        payload,
+        timestamp: new Date().toISOString()
+      }, "*");
+    }
+  }
+
+  // Mobile Menu Logic
+  function closeMenu() {
+    $("mobileDrawer")?.classList.remove("open");
+    $("drawerOverlay")?.classList.remove("show");
+    /* Compiled shell owns internal chrome geometry. */
+  }
+
+  $("burger")?.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const menu = $("mobileDrawer");
+    const overlay = $("drawerOverlay");
+    
+    menu.classList.toggle("open");
+    overlay.classList.toggle("show");
+    
+    if (menu.classList.contains("open")) {
+      // Command Wix to expand iframe slightly so the dark overlay shows
+      /* Compiled shell owns internal chrome geometry. */ 
+    } else {
+      /* Compiled shell owns internal chrome geometry. */
+    }
+  });
+
+  $("drawerClose")?.addEventListener("click", closeMenu);
+  $("drawerOverlay")?.addEventListener("click", closeMenu);
+
+  // Render Data
+  function render() {
+    // 1. Branding
+    const header = config?.internal?.header || {};
+    const logo = config?.brand?.assets?.logos?.riaintra || config?.brand?.assets?.logos?.skandiPrimary || "";
+    
+    if (logo && $("logo")) $("logo").src = logo;
+    if (header.productName && $("riaintra-header-productName")) $("riaintra-header-productName").textContent = header.productName;
+    if (header.productContext && $("productContext")) $("productContext").textContent = header.productContext;
+
+    // 2. Navigation
+    const current = config?.currentPath || "";
+    const items = header.primaryNav || config?.nav || [];
+    
+    if (Array.isArray(items) && items.length > 0) {
+      const markup = items.map(i => {
+        const active = current === i.path || (i.path && current.startsWith(i.path + "/"));
+        return `<button type="button" class="${active ? "active" : ""}" data-path="${esc(i.path)}">${esc(i.label)}</button>`;
+      }).join("");
+      
+      if ($("riaintra-header-desktopNav")) $("riaintra-header-desktopNav").innerHTML = markup;
+      if ($("riaintra-header-mobileNav")) $("riaintra-header-mobileNav").innerHTML = markup;
+    }
+
+    // 3. Canonical staff profile from Wix parent -> SKANDI_CORE/staffAuth -> Supabase agent_users.
+    const p = staff.profile || config?.staff?.profile || {};
+    const full =
+      p.displayName || p.display_name || p.fullName || p.name ||
+      [p.firstName || p.first_name, p.lastName || p.last_name].filter(Boolean).join(" ") ||
+      "Employee";
+    const skId = String(p.skId || p.skID || p.sk_id || p.employeeId || p.employee_id || "").trim().toUpperCase();
+    const baseCode = String(p.baseCode || p.base_code || p.base || p.station || "").trim().toUpperCase();
+    const corporateEmail = String(
+      p.corporateEmail || p.corporate_email || p.corporateEmailAddress ||
+      p.corporate_email_address || p.workEmail || p.email || ""
+    ).trim();
+    const photo = String(
+      p.badgePhotoUrl || p.badge_photo_url || p.photoUrl ||
+      p.profilePhotoUrl || p.photo || ""
+    ).trim();
+    const hasData = Boolean(skId || full !== "Employee" || corporateEmail || photo);
+
+    if ($("userProfile")) $("userProfile").style.display = hasData ? "grid" : "none";
+
+    if (hasData) {
+      const initials = [p.firstName || p.first_name, p.lastName || p.last_name]
+        .filter(Boolean).map(v => String(v)[0]).join("").slice(0, 2).toUpperCase() ||
+        full.slice(0, 2).toUpperCase();
+
+      if ($("userName")) $("userName").textContent = full;
+      if ($("userMeta")) $("userMeta").textContent = [skId, baseCode].filter(Boolean).join(" • ") || "RIAINTRA";
+      if ($("userEmail")) $("userEmail").textContent = corporateEmail || "—";
+
+      if (photo) {
+        $("badge_photo_url").src = photo;
+        $("badge_photo_url").style.display = "block";
+        $("avatarFallback").style.display = "none";
+      } else {
+        $("badge_photo_url").style.display = "none";
+        $("avatarFallback").style.display = "grid";
+        $("avatarFallback").textContent = initials;
+      }
+    }
+
+    // Return to Dashboard is hidden only on the Success Factors dashboard itself.
+    const normalizedCurrent = String(current || "").split("?")[0].replace(/\/$/, "") || "/";
+    if ($("returnDashboardBtn")) {
+      $("returnDashboardBtn").hidden = normalizedCurrent === "/riaintra/success-factors";
+    }
+  }
+
+  // Navigation Logic
+  document.addEventListener("click", e => {
+    const btn = e.target.closest("[data-path]");
+    if (!btn) return;
+    
+    const path = btn.dataset.path;
+    
+    // Update local active state visually
+    document.querySelectorAll("[data-path]").forEach(b => b.classList.remove("active"));
+    document.querySelectorAll(`[data-path="${path}"]`).forEach(b => b.classList.add("active"));
+    
+    if (config) config.currentPath = path;
+
+    closeMenu();
+    post("RIAINTRA_NAVIGATE", { path });
+  });
+
+  $("returnDashboardBtn")?.addEventListener("click", () => {
+    post("RIAINTRA_NAVIGATE", {
+      path:config?.routes?.successFactors || "/riaintra/success-factors"
+    });
+  });
+
+  $("logoutBtn")?.addEventListener("click", () => {
+    post("RIAINTRA_LOGOUT", {});
+  });
+
+  // Clock Logic
+  let clockUsesUtc = false;
+  function updateClock() {
+    const now = new Date();
+    const opts = {
+      hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false,
+      ...(clockUsesUtc ? { timeZone: "UTC" } : {})
+    };
+    if ($("sfClockTime")) $("sfClockTime").textContent = new Intl.DateTimeFormat(undefined, opts).format(now);
+    if ($("sfClockDate")) $("sfClockDate").textContent = clockUsesUtc 
+      ? `${now.toISOString().slice(0, 10)} UTC` 
+      : new Intl.DateTimeFormat(undefined, { weekday: "short", day: "2-digit", month: "short" }).format(now).toUpperCase();
+  }
+
+  $("sfClock")?.addEventListener("click", () => {
+    clockUsesUtc = !clockUsesUtc;
+    updateClock();
+  });
+  
+  setInterval(updateClock, 1000);
+  updateClock();
+
+  // Listen for Wix Parent Messages
+  window.addEventListener("message", e => {
+    const m = e.data || {};
+    if (m.source !== PARENT) return;
+
+    if (m.type === "SKANDI_MASTER_CONFIG") {
+      config = m.payload || {};
+      render();
+    }
+
+    if ([
+      "RIAINTRA_HEADER_STATE",
+      "UPDATE_PROFILE",
+      "INTERNAL_CHROME_BOOTSTRAP",
+      "GLOBAL_HEADER_BOOTSTRAP"
+    ].includes(m.type)) {
+      const payloadProfile =
+        m.payload?.profile ||
+        m.payload?.session?.profile ||
+        m.payload?.session ||
+        m.payload ||
+        {};
+      staff.profile = { ...staff.profile, ...payloadProfile };
+      render();
+    }
+  });
+
+  // Signal Wix parent window that embed is ready
+  post("MASTER_CONFIG_REQUEST", { context: "riaintra-header" });
+  post("RIAINTRA_HEADER_READY", {});
+  /* Compiled shell owns internal chrome geometry. */
+
+})();
+
+
+})();</script>
+<script data-skandi-part="footer">(function(){
+const __root=window.document.getElementById("riaintra-global-footer-root");
+const document=new Proxy(window.document,{get(target,key){if(key==='getElementById')return id=>{const el=target.getElementById(id);return el&&(__root===el||__root.contains(el))?el:null;};if(key==='querySelector'||key==='querySelectorAll')return selector=>{if(/^(?:html|body|head|meta|title|link)(?:[\s.#[:]|$)/i.test(selector)&&!selector.includes(' '))return target[key](selector);return __root[key](selector);};if(key==='getElementsByClassName'||key==='getElementsByTagName')return value=>__root[key](value);const value=Reflect.get(target,key,target);return typeof value==='function'?value.bind(target):value;},set(target,key,value){return Reflect.set(target,key,value,target);}});
+
+(()=>{
+  const SOURCE="SKANDI_RIAINTRA_FOOTER",PARENT="SKANDI_WIX_PARENT";
+  const LEGAL_PATH="/riaintra/success-factors/legal-internal";
+  let config=null;
+  const $=id=>document.getElementById(id);
+  const esc=v=>String(v??"").replace(/[&<>"']/g,s=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[s]));
+  const post=(type,payload={})=>window.parent.postMessage({source:SOURCE,type,payload,timestamp:new Date().toISOString()},"*");
+
+  function render(){
+    const legalPath=String(config?.routes?.legalInternal||LEGAL_PATH);
+    const links=Array.isArray(config?.internal?.footer?.links)?[...config.internal.footer.links]:[];
+    if(!links.some(i=>String(i?.path||"")===legalPath)){
+      links.push({label:"Legal & Policies",path:legalPath});
+    }
+    $("links").innerHTML=links.map(i=>`<button data-path="${esc(i.path)}">${esc(i.label)}</button>`).join("");
+  }
+
+  document.addEventListener("click",e=>{
+    const path=e.target.closest("[data-path]")?.dataset.path;
+    if(path)post("MASTER_NAVIGATE",{path});
+  });
+
+  window.addEventListener("message",e=>{
+    const m=e.data||{};if(m.source!==PARENT)return;
+    if(m.type==="SKANDI_MASTER_CONFIG"){config=m.payload||{};render()}
+  });
+
+  post("MASTER_CONFIG_REQUEST",{context:"riaintra-footer"});
+})();
+
+
+})();</script>
+<script data-skandi-part="policy-control">(function(){
+const __root=window.document.getElementById("skandi-app-root");
+const document=new Proxy(window.document,{get(target,key){if(key==='getElementById')return id=>{const el=target.getElementById(id);return el&&(__root===el||__root.contains(el))?el:null;};if(key==='querySelector'||key==='querySelectorAll')return selector=>{if(/^(?:html|body|head|meta|title|link)(?:[\s.#[:]|$)/i.test(selector)&&!selector.includes(' '))return target[key](selector);return __root[key](selector);};if(key==='getElementsByClassName'||key==='getElementsByTagName')return value=>__root[key](value);const value=Reflect.get(target,key,target);return typeof value==='function'?value.bind(target):value;},set(target,key,value){return Reflect.set(target,key,value,target);}});
+
+(()=>{'use strict';
+const SOURCE='SKANDI_POLICY_CONTROL',PARENT='SKANDI_WIX_PARENT';
+const $=id=>document.getElementById(id);const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const clean=v=>String(v??'').trim(),uid=()=>`SEC-${Math.random().toString(36).slice(2,10).toUpperCase()}`, slugify=v=>clean(v).toLowerCase().replace(/&/g,' and ').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
+const STATES=['Draft','In Review','Approved','Published','Archived','Superseded','Deleted'],NAV=[['documents','Documents'],['editor','Editor'],['preview','Website Preview'],['import','Document Import'],['history','History']];
+let profile={},policies=[],current=null,revisions=[],reviewSummary={overdue:0,dueSoon:0},filterState={search:'',scope:'all',status:'all'},view='documents',dirty=false,pendingAction='',busy=false,bootstrapped=false,selectedEditor=null,savedSelection=null,importState=null,requestStamp=0,leaveTarget=null,saveIntent='',requestContext='',lastSaveNotice='',documentGeneration=0,editorRevision=0,saveRevision=0;
+const post=(type,payload={})=>window.parent.postMessage({source:SOURCE,type,payload,timestamp:new Date().toISOString()},'*');
+const safeUrl=v=>{const s=clean(v);if(s.startsWith('/')&&!s.startsWith('//'))return s;try{const u=new URL(s,location.origin);return ['https:','http:','mailto:','tel:'].includes(u.protocol)?u.href:''}catch{return''}};
+const sanitize=v=>{const d=document.createElement('template');d.innerHTML=String(v||'');d.content.querySelectorAll('script,style,iframe,object,embed,form,button,input,textarea,select,link,meta,base,svg,math').forEach(n=>n.remove());d.content.querySelectorAll('*').forEach(n=>{[...n.attributes].forEach(a=>{if(/^on/i.test(a.name)||a.name==='style'||a.name==='srcdoc'||(a.name==='href'&&!safeUrl(a.value))||(a.name==='src'&&!safeUrl(a.value)))n.removeAttribute(a.name)});if(n.tagName==='A'){n.setAttribute('rel','noopener noreferrer')}});return d.innerHTML};
+const richPlain=v=>{const d=document.createElement('div');d.innerHTML=sanitize(v);return d.textContent||''};
+const makeSection=(title='',bodyHtml='<p></p>',children=[])=>({id:uid(),title,bodyHtml,children});
+const defaultPolicy=()=>({_id:'',policyId:'',documentId:'',title:'',slug:'',scope:'external',brand:'SKANDI TRAVELS',publicType:'custom',status:'Draft',category:'Legal',summary:'',introductionHtml:'',sections:[makeSection('Purpose')],effectiveDate:'',reviewMode:'none',reviewIntervalMonths:12,reviewDate:'',owner:'Legal / Compliance',approvedBySkId:'',approvedByName:'',version:'1.0',acknowledgementRequired:false,featured:false,active:false,sortOrder:999});
+const toast=m=>{const e=$('toast');e.textContent=m;e.classList.add('show');clearTimeout(toast.timer);toast.timer=setTimeout(()=>e.classList.remove('show'),4800)};
+const status=(m,kind='')=>{const e=$('status');if(!m){e.className='hidden';e.textContent='';return}e.className=`notice ${kind}`;e.textContent=m};
+const isNew=()=>!!current&&!current._id;
+const stateDisplay=(message,kind)=>{const e=$('documentState');e.textContent=message;e.dataset.state=kind||'';e.classList.toggle('hidden',!message)};
+function refreshDocumentState(){
+ if(busy&&saveIntent){stateDisplay(saveIntent==='publish'?'Publishing policy…':'Saving policy…','saving');return}
+ if(!current){stateDisplay('Select an existing policy or choose New Policy.','');return}
+ if(dirty||isNew()){stateDisplay(isNew()?'NEW POLICY · Not yet saved to the policy register. Complete the fields and choose Save Draft.':'UNSAVED CHANGES · Your edits have not been stored.','unsaved');return}
+ if(current.status==='Published'&&current.active===true){stateDisplay(`PUBLISHED · ${current.documentId||'Policy'}${current.publishedAt?' · '+new Date(current.publishedAt).toLocaleString():''}. Changes saved to this published record are live.`, 'published');return}
+ stateDisplay(`SAVED · ${current.documentId||'Policy'} · ${current.status||'Draft'}. This is not a newly published change.`, 'saved')
+}
+const setDirty=b=>{dirty=!!b;if(dirty)editorRevision++;$('dirtyState').textContent=dirty?'Unsaved edits':(current?._id?'Saved':'New document');updateButtons();refreshDocumentState()};
+function closeLeaveGuard(){leaveTarget=null;$('leaveGuard').classList.add('hidden')}
+function performDestination(target){if(!target)return;if(target.kind==='policy'){post('POLICY_GET_REQUEST',{_id:target.id});status('Loading controlled policy…');return}if(target.kind==='new'){current=defaultPolicy();documentGeneration++;revisions=[];view='editor';importState=null;setDirty(true);render();status('New document: not saved or published.','warning');return}if(target.kind==='view'){if(view==='editor')syncEditor();if(target.id==='documents'&&isNew()){current=null;revisions=[];setDirty(false)}view=target.id;status('');render()}}
+function attemptLeave(target){if(busy){toast('Finish the current policy action before switching.');return}if(view==='editor')syncEditor();if(current&&(dirty||isNew())){leaveTarget=target;$('leaveGuard').classList.remove('hidden');$('guardCancel').focus();return}performDestination(target)}
+const fmtDate=v=>{if(!v)return'—';const d=new Date(v);return Number.isNaN(d.getTime())?String(v):d.toLocaleDateString()};
+const flatten=(items,depth=0,path=[],out=[])=>{(items||[]).forEach((s,i)=>{const nums=[...path,i+1];out.push({s,number:nums.join('.'),depth});flatten(s.children,depth+1,nums,out)});return out};
+const searchNode=(id,items=current?.sections||[])=>{for(let i=0;i<items.length;i++){if(items[i].id===id)return{node:items[i],items,index:i};const child=searchNode(id,items[i].children||[]);if(child)return child}return null};
+const reviewDateSummary=()=>`${Number(reviewSummary.overdue||0)} overdue · ${Number(reviewSummary.dueSoon||0)} due within 31 days`;
+function updateButtons(){const has=!!current;for(const id of ['saveBtn','publishBtn','archiveBtn','deleteBtn','pdfBtn'])$(id).disabled=busy||!has; $('downloadBtn').classList.toggle('hidden',!has||!safeUrl(current?.pdfUrl));$('downloadBtn').href=has?safeUrl(current?.pdfUrl)||'#':'#';$('exportHtmlBtn').disabled=!has;}
+function navigation(){const s=NAV.map(([id,title])=>`<button class="nav ${view===id?'active':''}" type="button" data-view="${id}">${esc(title)}</button>`).join('');$('desktopNav').innerHTML=s;$('mobileNav').innerHTML=s}
+function shell(){navigation();const titles={documents:'Policy documents',editor:'Document editor',preview:'Website preview',import:'Smart document import',history:'Policy history'};$('pageTitle').textContent=titles[view];$('pageSubtitle').textContent=({documents:'Search and manage the official policy register.',editor:'Edit metadata, formatting, sections and controlled links.',preview:'Preview the structured web policy before publication.',import:'Extract and review source evidence before applying any values.',history:'View authoritative revision and approval history.'})[view];$('counter').textContent=view==='documents'?`${policies.length} policies`:current?`${current.documentId||'Unsaved policy'} · ${current.status||'Draft'}`:'';updateButtons()}
+function render(){shell();const renderers={documents:renderDocuments,editor:renderEditor,preview:renderPreview,import:renderImport,history:renderHistory};renderers[view]();}
+function renderDocuments(){const rows=filteredPolicies();$('content').innerHTML=`<div class="summary-cards"><div><strong>${policies.length}</strong><small>Controlled policies</small></div><div><strong>${Number(reviewSummary.overdue||0)}</strong><small>Overdue reviews</small></div><div><strong>${Number(reviewSummary.dueSoon||0)}</strong><small>Reviews due within 31 days</small></div></div><div class="card"><div class="card-head"><h2>Document register</h2><button id="refreshBtn" class="button">Refresh</button></div><div class="filters"><input class="input" id="search" value="${esc(filterState.search)}" placeholder="Search title, ID, description"><select class="select" id="scopeFilter"><option value="all">All scopes</option><option value="external">External</option><option value="internal">Internal</option></select><select class="select" id="statusFilter"><option value="all">All statuses</option>${STATES.map(s=>`<option>${esc(s)}</option>`).join('')}</select></div><div class="table-scroll"><table><thead><tr><th>Document</th><th>Status</th><th>Scope / brand</th><th>Effective</th><th>Review</th></tr></thead><tbody>${rows.map(p=>`<tr data-id="${esc(p._id)}"><td><strong>${esc(p.title||'Untitled')}</strong><div class="small muted">${esc(p.documentId||'No ID')} · v${esc(p.version||'1.0')}</div><div class="small muted">${esc(p.approvedBySkId||'')} · PDF: ${esc(p.pdfStatus||'pending')}</div></td><td class="tag">${esc(p.status||'Draft')}</td><td>${esc(p.scope||'')}<div class="small muted">${esc(p.brand||'')}</div></td><td>${esc(fmtDate(p.effectiveDate))}</td><td>${esc(fmtDate(p.reviewDate))}</td></tr>`).join('')||'<tr><td colspan="5" class="empty">No documents match the register filters.</td></tr>'}</tbody></table></div></div>`;
+$('scopeFilter').value=filterState.scope;$('statusFilter').value=filterState.status;$('refreshBtn').onclick=()=>requestList();const filter=()=>{filterState={search:$('search').value,scope:$('scopeFilter').value,status:$('statusFilter').value};requestList()};for(const id of ['search','scopeFilter','statusFilter'])$(id).addEventListener(id==='search'?'input':'change',debounce(filter,220));$('content').querySelectorAll('tr[data-id]').forEach(row=>row.onclick=()=>openPolicy(row.dataset.id));}
+function filteredPolicies(){return policies}
+function debounce(fn,delay){let t;return(...v)=>{clearTimeout(t);t=setTimeout(()=>fn(...v),delay)}}
+function requestList(){post('POLICY_LIST_REQUEST',{search:filterState.search,scope:filterState.scope,status:filterState.status})}
+function field(id,title,value,type='text',hint=''){return `<div class="field"><label for="${id}">${esc(title)}</label><input class="input" id="${id}" type="${type}" value="${esc(value??'')}">${hint?`<small>${esc(hint)}</small>`:''}</div>`}
+function selectField(id,title,value,options){return `<div class="field"><label for="${id}">${esc(title)}</label><select class="select" id="${id}">${options.map(s=>{const op=typeof s==='string'?{value:s,label:s}:s;return `<option value="${esc(op.value)}" ${String(value)===String(op.value)?'selected':''}>${esc(op.label)}</option>`}).join('')}</select></div>`}
+function checklistField(id,title,on){return `<label class="check"><input id="${id}" type="checkbox" ${on?'checked':''}>${esc(title)}</label>`}
+function richToolbar(id){return `<div class="rich-toolbar" data-editor="${esc(id)}"><button type="button" data-cmd="bold" title="Bold"><b>B</b></button><button type="button" data-cmd="italic" title="Italic"><i>I</i></button><button type="button" data-cmd="underline" title="Underline"><u>U</u></button><button type="button" data-cmd="insertUnorderedList">• List</button><button type="button" data-cmd="insertOrderedList">1. List</button><button type="button" data-cmd="formatBlock" data-value="h3">Heading</button><button type="button" data-cmd="formatBlock" data-value="p">Paragraph</button><button type="button" data-special="link">Link</button><button type="button" data-special="policy-link">Policy Link</button><button type="button" data-cmd="undo" title="Undo">↶</button><button type="button" data-cmd="redo" title="Redo">↷</button><button type="button" data-cmd="removeFormat">Clear</button></div>`}
+function richArea(id,html,placeholder){return `${richToolbar(id)}<div class="rich" data-rich-id="${esc(id)}" data-placeholder="${esc(placeholder)}" contenteditable="true" spellcheck="true" role="textbox" aria-multiline="true">${sanitize(html)}</div>`}
+function sectionHTML(s,index=1,depth=0){return `<div class="section" data-section-id="${esc(s.id)}"><div class="section-head"><span class="small muted">${index}.</span><input class="input section-title" aria-label="Section title" data-title-id="${esc(s.id)}" value="${esc(s.title||'')}" placeholder="Section heading"><div class="section-actions"><button class="micro" data-op="child" data-id="${esc(s.id)}" title="Add subsection">+ Sub</button><button class="micro" data-op="up" data-id="${esc(s.id)}" title="Move up">↑</button><button class="micro" data-op="down" data-id="${esc(s.id)}" title="Move down">↓</button><button class="micro" data-op="remove" data-id="${esc(s.id)}">Delete</button></div></div><div class="section-body">${richArea(s.id,s.bodyHtml||'','Write policy text, tables and lists…')}${depth<3?(s.children||[]).map((x,i)=>sectionHTML(x,`${index}.${i+1}`,depth+1)).join(''):''}</div></div>`}
+function renderEditor(){if(!current){$('content').innerHTML='<div class="card empty">Select a policy or create a new one to start editing.</div>';return}const p=current;const reconcileBanner=p.__controlledImportWarning?`<div class="notice warning">Source version ${esc(p.__controlledImportWarning.sourceVersion)} differs from the observed published version ${esc(p.__controlledImportWarning.liveVersion)} for ${esc(p.__controlledImportWarning.documentId)}. This is an unsaved review draft. Save is blocked until the matching current policy has been compared and the import re-applied with explicit reconciliation.</div>`:'';const metadata=`<div class="grid">${field('title','Policy Name',p.title)}${field('documentId','Document ID',p.documentId)}${field('slug','Web URL slug',p.slug||'')}${selectField('scope','Audience / scope',p.scope,['external','internal'])}${selectField('brand','Brand',p.brand,['SKANDI TRAVELS','ALTEA'])}${selectField('publicType','Public policy type',p.publicType||'custom',['custom','cookies','privacy','accessibility','terms','bookingTerms'])}${field('category','Category',p.category)}${field('owner','Policy owner',p.owner)}${field('version','Version',p.version)}${field('approvedBySkId','Approved by SK-ID',profile.skId||p.approvedBySkId||'')}${field('effectiveDate','Effective date',String(p.effectiveDate||'').slice(0,10),'date')}${selectField('statusField','Document status',p.status||'Draft',STATES)}${field('sortOrder','Sort order',p.sortOrder,'number')}<div class="field full"><label for="summary">Summary</label><textarea class="textarea" id="summary" rows="3">${esc(p.summary||'')}</textarea></div></div>`;
+$('content').innerHTML=`${reconcileBanner}<div class="card"><div class="card-head"><h2>Document metadata</h2><span class="small muted">Required: name, document ID, effective date</span></div><div class="card-body">${metadata}</div></div><div class="card"><div class="card-head"><h2>Review, compliance and display</h2></div><div class="card-body"><div class="grid">${selectField('reviewMode','Review schedule',p.reviewMode||'none',[{value:'none',label:'No scheduled review'},{value:'months',label:'Every N months'},{value:'custom',label:'Specific review date'}])}${field('reviewIntervalMonths','Review every (months)',p.reviewIntervalMonths||12,'number')}${field('reviewDate','Review date',String(p.reviewDate||'').slice(0,10),'date')}<div class="field full"><div class="flex">${checklistField('acknowledgementRequired','Acknowledgement required',p.acknowledgementRequired)}${checklistField('featured','Featured policy',p.featured)}${checklistField('active','Active',p.active)}</div></div></div></div></div><div class="card"><div class="card-head"><h2>Introduction</h2></div><div class="card-body">${richArea('__intro__',p.introductionHtml||'','Enter introduction, applicability and background…')}</div></div><div class="card"><div class="card-head"><h2>Policy sections</h2><button class="button" id="addSectionBtn">+ Add Section</button></div><div class="card-body" id="sections">${(p.sections||[]).map((s,i)=>sectionHTML(s,i+1)).join('')||'<div class="tip">This policy has no sections. Add one below.</div>'}</div></div><div class="sticky-actions no-print"><button class="button" id="editorImport">Import document</button><button class="button" id="editorPreview">Preview</button><button class="button primary" id="editorSave">Save changes</button></div>`;
+$('approvedBySkId').readOnly=true;$('approvedBySkId').title='Verified staff identity from the Wix session';for(const id of ['title','documentId','slug','scope','brand','publicType','category','owner','version','effectiveDate','statusField','sortOrder','summary','reviewMode','reviewIntervalMonths','reviewDate'])$(id).addEventListener('input',e=>{const name=id==='statusField'?'status':id;p[name]=id==='sortOrder'||id==='reviewIntervalMonths'?Number(e.target.value||0):e.target.value;setDirty(true);if(id==='title'&&(!p.slug||p.slug===slugify(p._lastTitle||''))){p.slug=slugify(p.title);$('slug').value=p.slug}if(id==='title')p._lastTitle=p.title;});
+for(const id of ['acknowledgementRequired','featured','active'])$(id).addEventListener('change',e=>{p[id]=e.target.checked;setDirty(true)});
+$('addSectionBtn').onclick=()=>{syncEditor();p.sections=p.sections||[];p.sections.push(makeSection(`New Section ${p.sections.length+1}`));setDirty(true);renderEditor()};
+$('editorImport').onclick=()=>{syncEditor();view='import';render()};$('editorPreview').onclick=()=>{syncEditor();view='preview';render()};$('editorSave').onclick=()=>savePolicy();bindRichHandlers();
+}
+function syncEditor(){if(view!=='editor'||!current)return;document.querySelectorAll('[data-rich-id]').forEach(el=>{const id=el.dataset.richId,html=sanitize(el.innerHTML);if(id==='__intro__')current.introductionHtml=html;else {const n=searchNode(id);if(n)n.node.bodyHtml=html}});document.querySelectorAll('[data-title-id]').forEach(el=>{const n=searchNode(el.dataset.titleId);if(n)n.node.title=el.value})}
+function bindRichHandlers(){document.querySelectorAll('[data-rich-id]').forEach(el=>{el.addEventListener('focus',()=>selectedEditor=el);el.addEventListener('input',()=>{setDirty(true)});el.addEventListener('keyup',saveSelection);el.addEventListener('mouseup',saveSelection)});document.querySelectorAll('.rich-toolbar').forEach(tb=>tb.addEventListener('mousedown',e=>{if(e.target.closest('button'))e.preventDefault()}));}
+function saveSelection(){const s=window.getSelection();if(!s?.rangeCount||!selectedEditor?.contains(s.anchorNode))return;savedSelection=s.getRangeAt(0).cloneRange()}
+function restoreSelection(){if(!selectedEditor)return;selectedEditor.focus();if(savedSelection){const s=window.getSelection();s.removeAllRanges();try{s.addRange(savedSelection)}catch{}}}
+function editCommand(cmd,val){restoreSelection();document.execCommand(cmd,false,val||null);setDirty(true);saveSelection()}
+function renderPreview(){if(view==='editor')syncEditor();if(!current){$('content').innerHTML='<div class="card empty">No document selected.</div>';return}const p=current;const sections=flatten(p.sections||[]);$('content').innerHTML=`<div class="card"><div class="card-head"><h2>Live-format website preview</h2><div class="flex"><button id="printPreview" class="button">Print</button><button id="editPreview" class="button primary">Back to editor</button></div></div><article class="preview" aria-label="Policy website preview"><div class="small muted">${esc(p.documentId)} · ${esc(p.brand)} · Version ${esc(p.version)}</div><h1>${esc(p.title||'Untitled policy')}</h1><p>${esc(p.summary||'')}</p><p class="small muted">Effective: ${esc(fmtDate(p.effectiveDate))} · Last status: ${esc(p.status)}</p>${sections.length?`<nav class="toc"><strong>Contents</strong>${sections.map(x=>`<a style="padding-left:${x.depth*13}px" href="#pv-${esc(x.number.replaceAll('.','-'))}">${esc(x.number)} ${esc(x.s.title)}</a>`).join('')}</nav>`:''}${p.scope==='internal'?'<p class="small"><b>Internal Use Only</b></p>':''}${sanitize(p.introductionHtml||'')}${sections.map(x=>`<section id="pv-${esc(x.number.replaceAll('.','-'))}"><h${Math.min(6,2+x.depth)}>${esc(x.number)} ${esc(x.s.title)}</h${Math.min(6,2+x.depth)}>${sanitize(x.s.bodyHtml||'')}</section>`).join('')}<hr><h2>Document control</h2><div class="small">Approved by: ${esc(p.approvedBySkId||profile.skId||'Not set')} · Owner: ${esc(p.owner||'')} · Classification: ${p.scope==='internal'?'Internal use':'External publication'}</div></article></div>`;$('editPreview').onclick=()=>{view='editor';render()};$('printPreview').onclick=()=>window.print();}
+function renderHistory(){if(!current){$('content').innerHTML='<div class="card empty">Select a policy to inspect its version history.</div>';return}$('content').innerHTML=`<div class="card"><div class="card-head"><h2>Controlled revision history</h2><span class="small muted">Read-only Supabase revision log</span></div><div class="table-scroll"><table><thead><tr><th>Date</th><th>Action</th><th>Version</th><th>Changed by</th><th>Summary</th></tr></thead><tbody>${revisions.map(r=>`<tr><td>${esc(fmtDate(r.created_at))}</td><td>${esc(r.action)}</td><td>${esc(r.version_from||'—')} → ${esc(r.version_to||'—')}</td><td>${esc(r.created_by_name||r.created_by_sk_id||'System')}</td><td>${esc(r.change_summary||'')}</td></tr>`).join('')||'<tr><td colspan="5" class="empty">No revision events have been recorded.</td></tr>'}</tbody></table></div></div>`;}
+function openPolicy(id){if(current?._id===id){view='editor';render();return}attemptLeave({kind:'policy',id})}
+function savePolicy(after=''){if(!current)return;if(view==='editor')syncEditor();const p=current;if(p.__controlledImportWarning){status(`Version reconciliation required: controlled source ${p.__controlledImportWarning.sourceVersion} vs observed live policy ${p.__controlledImportWarning.liveVersion}. Compare the published record before saving.`, 'error');return}if(!clean(p.title)||!clean(p.documentId)||!clean(p.effectiveDate)){status('Policy name, document ID and effective date are required.','error');view='editor';render();return}if(!(p.sections||[]).length){status('Add at least one policy section.','error');view='editor';render();return}if(busy)return;busy=true;pendingAction=after;saveIntent='save';saveRevision=editorRevision;updateButtons();refreshDocumentState();status('Saving policy to the controlled register…');post('POLICY_SAVE_REQUEST',{policy:current,changeSummary:'Saved from Policy Control V12 responsive editor.'})}
+function changeStatus(kind){if(!current?._id)return;if(view==='editor')syncEditor();if(dirty){savePolicy(kind==='publish'?'publish':'');return}const messages={publish:['POLICY_PUBLISH_REQUEST','Publishing'],archive:['POLICY_ARCHIVE_REQUEST','Archiving'],delete:['POLICY_DELETE_REQUEST','Deleting']};const [type,verb]=messages[kind];if((kind==='delete'||kind==='archive')&&!confirm(`${verb} ${current.title}? ${kind==='delete'?'Audit history will be retained.':''}`))return;busy=true;saveIntent=kind;updateButtons();refreshDocumentState();status(`${verb} policy…`);post(type,{_id:current._id,changeSummary:`${verb} from Policy Control editor.`})}
+function pdfGenerate(){if(!current?._id)return;busy=true;updateButtons();post('POLICY_PDF_REGENERATE_REQUEST',{_id:current._id,changeSummary:'PDF refresh requested from Policy Control.'})}
+function download(){if(!current)return;if(view==='editor')syncEditor();const doc=document.implementation.createHTMLDocument(current.title||'Policy');doc.body.innerHTML=`<h1>${esc(current.title)}</h1>${sanitize(current.introductionHtml||'')}${flatten(current.sections||[]).map(x=>`<h${Math.min(6,2+x.depth)}>${esc(x.number)} ${esc(x.s.title)}</h${Math.min(6,2+x.depth)}>${sanitize(x.s.bodyHtml)}`).join('')}`;const blob=new Blob(['<!DOCTYPE html><meta charset="utf-8"><title>Policy</title>',doc.body.innerHTML],{type:'text/html;charset=utf-8'}),u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download=(current.documentId||'policy').replace(/[^a-z0-9_-]/gi,'_')+'.html';a.click();setTimeout(()=>URL.revokeObjectURL(u),1000)}
+function renderLinkOptions(){const q=clean($('linkSearch').value).toLowerCase();const items=policies.filter(p=>[p.title,p.documentId,p.category].join(' ').toLowerCase().includes(q)).filter(p=>p.slug&&p._id&&p.status==='Published'&&((current?.scope==='internal')||p.scope==='external'));$('linkOptions').innerHTML=items.slice(0,70).map(p=>`<button class="button" style="width:100%;justify-content:flex-start;margin-bottom:7px" data-insert-policy="${esc(p._id)}">${esc(p.title)} <small class="muted">${esc(p.documentId)} · ${esc(p.scope)}</small></button>`).join('')||'<p class="muted">No matching policies with published routes.</p>'}
+function insertLink(id){const p=policies.find(x=>x._id===id);if(!p||p.status!=='Published'||(current?.scope==='external'&&p.scope!=='external'))return;const path=p.route|| (p.scope==='internal'?'/riaintra/success-factors/legal-internal/policies-internal?slug=':'/about/legal/policies?slug=')+encodeURIComponent(p.slug);const safe=safeUrl(path);if(!safe)return;restoreSelection();const label=window.getSelection()?.toString()||p.title;document.execCommand('insertHTML',false,`<a href="${esc(safe)}" rel="noopener noreferrer">${esc(label)}</a>`);$('policyLinkModal').classList.add('hidden');setDirty(true)}
+function onMessage(e){if(e.source!==window.parent)return;const m=e.data||{};if(m.source!==PARENT)return;const p=m.payload||{};if(m.type==='POLICY_BOOTSTRAP'){bootstrapped=true;busy=false;if(!p.ok){status(p.error||p.message||'Policy Control access required.','error');return}profile=p.profile||{};policies=p.policies||[];reviewSummary=p.reviewSummary||{};status('');render();if(!current&&policies[0])post('POLICY_GET_REQUEST',{_id:policies[0]._id});return}if(m.type==='POLICY_LIST'){policies=p.policies||[];reviewSummary=p.reviewSummary||reviewSummary;if(view==='documents')render();return}if(m.type==='POLICY_DETAIL'){if(dirty||isNew())return;busy=false;current=p.policy||null;documentGeneration++;revisions=p.revisions||[];setDirty(false);status('');if(current)render();return}if(m.type==='POLICY_SAVED'){
+ const intent=saveIntent;saveIntent='';busy=false;
+ if(p.ok!==true||!p.policy){status(p.message||'The server did not confirm the policy action.','error');pendingAction='';refreshDocumentState();updateButtons();return}
+ const wasEditedDuringSave=editorRevision!==saveRevision&&intent==='save';
+ if(wasEditedDuringSave){const persisted=p.policy;current._id=persisted._id;current.policyId=persisted.policyId;current.publishedAt=persisted.publishedAt;status('The previous version was saved; newer edits are still unsaved.','warning');setDirty(true)}
+ else{current=p.policy;setDirty(false)}
+ if(intent==='save'&&pendingAction==='publish'&&!wasEditedDuringSave){pendingAction='';changeStatus('publish');return}
+ pendingAction='';
+ if(intent==='publish')status(`Published successfully: ${current.documentId||current.title}${current.publishedAt?' · '+new Date(current.publishedAt).toLocaleString():''}.`,'success');
+ else if(intent==='archive')status('Policy archived successfully.','success');
+ else if(intent==='save')status(`Policy changes saved${current.documentId?' · '+current.documentId:''}. ${current.status==='Published'?'This record remains Published and saved edits may already be visible publicly.':'The policy has not been published.'}`, 'success');
+ else status(p.message||'Policy action completed.','success');
+ if(p.pdfWarning&&intent==='save')toast('Draft saved. The PDF renderer is not configured.');
+ render();
+ if(current?._id&&view!=='editor')post('POLICY_GET_REQUEST',{_id:current._id});
+ requestList();
+ if(intent==='save'&&!wasEditedDuringSave&&leaveTarget){const target=leaveTarget;closeLeaveGuard();performDestination(target)}
+ return}
+ if(m.type==='POLICY_DELETED'){busy=false;current=null;revisions=[];policies=p.policies||[];reviewSummary=p.reviewSummary||{};view='documents';setDirty(false);status('');toast(p.message||'Policy archived from use.');render();return}if(m.type==='POLICY_PDF_PARSED'){busy=false;if(p.prefill){importState={...(importState||{}),backendPrefill:p.prefill};status('Legacy parser prefill available for manual review.')}return}if(m.type==='POLICY_ERROR'){busy=false;saveIntent='';pendingAction='';status(p.message||'Policy Control action failed. No save/publication was confirmed.','error');updateButtons();refreshDocumentState();}}
+function handleClick(e){const nav=e.target.closest('[data-view]');if(nav){const next=nav.dataset.view;if(next==='documents'&&next!==view){attemptLeave({kind:'view',id:next});return}if(view==='editor')syncEditor();view=next;status('');render();return}const op=e.target.closest('[data-op]');if(op){syncEditor();const r=searchNode(op.dataset.id);if(!r)return;const depth=flatten(current.sections||[]).find(x=>x.s.id===r.node.id)?.depth||0;if(op.dataset.op==='child'){if(depth>=3){toast('Maximum of four heading levels.');return}r.node.children=r.node.children||[];r.node.children.push(makeSection('New subsection'))}if(op.dataset.op==='up'&&r.index>0)[r.items[r.index-1],r.items[r.index]]=[r.items[r.index],r.items[r.index-1]];if(op.dataset.op==='down'&&r.index<r.items.length-1)[r.items[r.index+1],r.items[r.index]]=[r.items[r.index],r.items[r.index+1]];if(op.dataset.op==='remove'){if(!confirm(`Delete ${r.node.title} and all subsections?`))return;r.items.splice(r.index,1)}setDirty(true);renderEditor();return}const command=e.target.closest('[data-cmd], [data-special]');if(command){const bar=command.closest('.rich-toolbar');const el=document.querySelector(`[data-rich-id="${CSS.escape(bar.dataset.editor)}"]`);if(el)selectedEditor=el;if(command.dataset.cmd)editCommand(command.dataset.cmd,command.dataset.value||null);else if(command.dataset.special==='link'){const entered=prompt('Enter an HTTPS, mailto or telephone link');if(entered){const url=safeUrl(entered);if(url)editCommand('createLink',url);else toast('Enter a valid HTTPS, mailto or telephone link.')}}else{$('policyLinkModal').classList.remove('hidden');$('linkSearch').value='';renderLinkOptions()}return}const insert=e.target.closest('[data-insert-policy]');if(insert){insertLink(insert.dataset.insertPolicy);return}}
+document.addEventListener('click',handleClick);$('closeLinkModal').onclick=()=>$('policyLinkModal').classList.add('hidden');$('linkSearch').addEventListener('input',renderLinkOptions);$('policyLinkModal').addEventListener('click',e=>{if(e.target===$('policyLinkModal'))$('policyLinkModal').classList.add('hidden')});
+$('newBtn').onclick=()=>attemptLeave({kind:'new'});$('saveBtn').onclick=()=>savePolicy();$('guardCancel').onclick=closeLeaveGuard;$('guardDiscard').onclick=()=>{const target=leaveTarget;closeLeaveGuard();dirty=false;performDestination(target)};$('guardSave').onclick=()=>{if(busy)return;savePolicy()};$('publishBtn').onclick=()=>{if(!current)return;if(!current._id||dirty)savePolicy('publish');else changeStatus('publish')};$('archiveBtn').onclick=()=>changeStatus('archive');$('deleteBtn').onclick=()=>changeStatus('delete');$('pdfBtn').onclick=pdfGenerate;$('exportHtmlBtn').onclick=download;
+window.addEventListener('message',onMessage);window.addEventListener('beforeunload',e=>{if(dirty||isNew()){e.preventDefault();e.returnValue=''}});document.addEventListener('visibilitychange',()=>{if(!document.hidden&& !bootstrapped)post('POLICY_READY',{path:location.pathname})});
+// Keep mobile tab navigation immediately below the sticky action toolbar.
+const policyToolbar=document.querySelector('.toolbar');
+const syncToolbarOffset=()=>document.documentElement.style.setProperty('--policy-toolbar-height',`${Math.ceil(policyToolbar?.getBoundingClientRect().height||0)}px`);
+syncToolbarOffset();window.addEventListener('resize',syncToolbarOffset);
+if(window.ResizeObserver&&policyToolbar){new ResizeObserver(syncToolbarOffset).observe(policyToolbar)}
+setDirty(false);render();post('POLICY_READY',{path:location.pathname});[800,2400,6000].forEach(ms=>setTimeout(()=>{if(!bootstrapped)post('POLICY_READY',{path:location.pathname})},ms));setTimeout(()=>{if(!bootstrapped)status('Unable to connect to the Policy Control Wix page bridge. Verify #policyControlEmbed and publish the V12 page controller.','error')},9500);
+// DOCUMENT IMPORT AND EXTRACTION IMPLEMENTATION
+const FIELD_MAP=[
+['title','Policy title'],['documentId','Document ID'],['slug','Web URL slug'],['version','Controlled source version'],['effectiveDate','Source effective date'],['reviewDate','Next review date'],['reviewMode','Review mode'],['reviewIntervalMonths','Review interval (months)'],['owner','Policy owner / department code'],['category','Category'],['summary','Summary'],['scope','Scope / audience'],['brand','Brand'],['publicType','Public type'],['sortOrder','Sort order'],['acknowledgementRequired','Acknowledgement required'],['featured','Featured policy']
+];
+const HEADING_NAMES=/^(purpose|scope|applicability|overview|introduction|policy statement|responsibilities|roles and responsibilities|definitions|procedure|procedures|requirements|guidelines|general provisions|compliance|exceptions|enforcement|monitoring|record keeping|records and retention|data protection|privacy|security|approval|review|revision history|related documents|references|appendix|appendices|contact information|objectives|eligibility|effective date|terms and conditions|background)$/i;
+const LABELS={
+ title:/^(?:policy\s+(?:name|title)|document\s+title|title)\s*[:\-–]\s*(.+)$/i,
+ documentId:/^(?:document\s*(?:id|number|no\.?|reference|ref\.?)|policy\s*(?:id|number|no\.?|reference)|reference\s+(?:id|number|no\.?)|doc\s*(?:id|no\.?))\s*[:#\-–]\s*(.+)$/i,
+ version:/^(?:(?:document|policy)\s+)?(?:version|revision(?:\s+number)?|rev\.?)\s*[:#\-–]\s*(.+)$/i,
+ effectiveDate:/^(?:effective\s+(?:date|from)|date\s+(?:effective|of effect)|takes\s+effect(?:\s+on)?|in\s+effect\s+from)\s*[:\-–]\s*(.+)$/i,
+ reviewDate:/^(?:next\s+(?:review|scheduled review)(?:\s+date)?|review\s+due(?:\s+date)?|due\s+for\s+review)\s*[:\-–]\s*(.+)$/i,
+ owner:/^(?:(?:policy|document)\s+)?(?:owner|responsible\s+(?:department|person|party)|policy\s+custodian|document\s+controller)\s*[:\-–]\s*(.+)$/i,
+ category:/^(?:(?:policy|document)\s+)?(?:category|classification|topic)\s*[:\-–]\s*(.+)$/i,
+ summary:/^(?:executive\s+summary|policy\s+summary|summary|abstract)\s*[:\-–]\s*(.+)$/i,
+ scope:/^(?:audience|policy\s+scope|intended\s+audience|access\s+scope|scope\s+type)\s*[:\-–]\s*(.+)$/i,
+ brand:/^(?:company|brand|organisation|organization|operating\s+brand)\s*[:\-–]\s*(.+)$/i,
+ publicType:/^(?:public\s+(?:policy\s+)?type|policy\s+type)\s*[:\-–]\s*(.+)$/i
+};
+function detectDate(raw){const v=clean(raw.replace(/^(?:on|from|the)\s+/i,'').replace(/[.,;]$/,'')).slice(0,80);if(!v)return'';
+ let m=v.match(/^([12]\d{3})[-/.](0?[1-9]|1[0-2])[-/.](0?[1-9]|[12]\d|3[01])$/);if(m)return validISO(`${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`);
+ m=v.match(/^(0?[1-9]|[12]\d|3[01])[\/.-](0?[1-9]|[12]\d|3[01])[\/.-]([12]\d{3})$/);if(m){const a=Number(m[1]),b=Number(m[2]);if(a<=12&&b<=12)return'';const month=a>12?b:a,day=a>12?a:b;return validISO(`${m[3]}-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}`)}
+ m=v.match(/^([12]\d{3})\-(0?[1-9]|1[0-2])\-(0?[1-9]|[12]\d|3[01])T/);if(m)return validISO(`${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`);
+ const months={january:1,february:2,march:3,april:4,may:5,june:6,july:7,august:8,september:9,october:10,november:11,december:12};
+ m=v.match(/^(?:(\d{1,2})(?:st|nd|rd|th)?\s+)?(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{1,2})(?:st|nd|rd|th)?(?:,\s*|\s+)([12]\d{3})$/i);if(m&&m[1]==null)return validISO(`${m[4]}-${String(months[m[2].toLowerCase()]).padStart(2,'0')}-${String(Number(m[3])).padStart(2,'0')}`);
+ m=v.match(/^(\d{1,2})(?:st|nd|rd|th)?\s+(January|February|March|April|May|June|July|August|September|October|November|December)(?:,?\s+)([12]\d{3})$/i);if(m)return validISO(`${m[3]}-${String(months[m[2].toLowerCase()]).padStart(2,'0')}-${String(Number(m[1])).padStart(2,'0')}`);
+ return'';
+}
+function validISO(v){const d=new Date(v+'T12:00:00Z');return Number.isNaN(d.getTime())||d.toISOString().slice(0,10)!==v?'':v}
+function inferMetadata(source,fileName){const lines=source.split(/\r?\n/).map(x=>clean(x).replace(/\s+/g,' ')).filter(Boolean);const proposals={};const warnings=[];
+ function add(key,value,evidence,confidence='high'){if(!value||proposals[key])return;proposals[key]={value,evidence,confidence,selected:confidence==='high'&&!['scope','brand','publicType'].includes(key)};}
+ lines.forEach((line,index)=>{if(index>3500)return;for(const [key,rx] of Object.entries(LABELS)){const m=line.match(rx);if(!m)continue;let val=clean(m[1]).slice(0,key==='summary'?3000:350);if(key==='effectiveDate'||key==='reviewDate'){const iso=detectDate(val);if(!iso){warnings.push(`${key==='effectiveDate'?'Effective':'Review'} date could not be resolved unambiguously: ${val}`);continue}val=iso}if(key==='version'){val=val.match(/^([A-Za-z0-9][\w.\-]{0,24})\b/)?.[1]||''}if(key==='documentId'){val=val.match(/^[A-Za-z0-9][A-Za-z0-9._\-\/]{0,118}/)?.[0]||''}if(key==='scope'){if(/\bexternal|public|customer\b/i.test(val))val='external';else if(/\binternal|staff|employee\b/i.test(val))val='internal';else continue}if(key==='brand'){if(/SKANDI\s*TRAVELS/i.test(val))val='SKANDI TRAVELS';else if(/\bALTEA|ALT[ÉE]A/i.test(val))val='ALTEA';else continue}if(key==='title'&&val.length>300)continue;add(key,val,`Line ${index+1}: ${line}`,index>65?'medium':'high')}});
+ const twoLineLabels={title:/^(?:policy\s+(?:title|name)|document\s+title|title)\s*:?$/i,documentId:/^(?:document\s+(?:id|number|no\.?|reference)|policy\s+(?:id|number|no\.?))\s*:?$/i,version:/^version\s*:?$/i,effectiveDate:/^effective\s+date\s*:?$/i,reviewDate:/^(?:review\s+date|next\s+review(?:\s+date)?)\s*:?$/i,owner:/^(?:policy\s+owner|owner|responsible\s+department)\s*:?$/i,category:/^category\s*:?$/i,summary:/^summary\s*:?$/i};
+ lines.slice(0,350).forEach((line,i)=>{for(const [key,rx] of Object.entries(twoLineLabels)){if(proposals[key]||!rx.test(line))continue;const next=lines[i+1]||'';if(!next||next.length>210||/^(?:\d+\.)?\s*(?:Purpose|Scope|Version|Effective Date|Review Date|Document ID|Owner)\s*:/i.test(next))continue;let value=next;if(key==='effectiveDate'||key==='reviewDate')value=detectDate(next);if(key==='documentId')value=next.match(/^[a-z0-9][\w.\/\-]{0,118}/i)?.[0]||'';if(key==='version')value=next.match(/^[a-z0-9][\w.\-]{0,24}/i)?.[0]||'';add(key,value,`Two-line field near line ${i+1}: ${line} / ${next}`,'medium')}});
+ if(!proposals.title){const ignore=/^(skandi\s+(group|travels)|policy\s+control|internal|confidential|document\s+control|page\s+\d+\s+of\s+\d+|table\s+of\s+contents|contents|version\s*[:#]|effective\s+date\s*[:#])/i;const title=lines.slice(0,15).find(x=>x.length>=8&&x.length<=160&&!ignore.test(x)&&!/^(?:\d+(?:\.\d+)*\s+)?(?:purpose|scope|definitions|introduction)$/i.test(x)&&!x.includes(' | ')&&!x.includes('@')&&!/^(?:document|policy)\s*(?:id|no|number)\s*[:#\-]/i.test(x));if(title)add('title',title,`First-page header: ${title}`,'medium')}
+ if(!proposals.documentId){const m=fileName.match(/(?:POL|SK|DOC)[-_]?[A-Z]{0,4}[-_]?\d{2,7}/i);if(m)add('documentId',m[0],`Filename: ${fileName}`,'medium')}
+ const match=source.match(/\b(?:review(?:ed)?|revised)\s+(?:at\s+least\s+)?every\s+(\d{1,3})\s+(months?|years?)\b/i);if(match){const n=Number(match[1])*(match[2].startsWith('year')?12:1);if(n>0&&n<=120)add('reviewIntervalMonths',n,`Review schedule: ${match[0]}`,'medium')}
+ return{proposals,warnings};
+}
+function classifyHeading(line,next='',hint=''){const v=clean(line);if(!v||v.length>140||v.length<3)return null;let match=v.match(/^(\d+(?:\.\d+){0,3})[.)]?\s+(.{3,115})$/);if(match&&match[2].split(/\s+/).length<=15&&!/[.;]$/.test(match[2]))return{title:match[2],level:Math.min(3,match[1].split('.').length-1),confidence:'high',number:match[1]};
+ match=v.match(/^([A-Z])[.)]\s+(.{3,115})$/);if(match&&!/[.;]$/.test(match[2]))return{title:v,level:1,confidence:'high',letter:match[1]};
+ match=v.match(/^#{1,4}\s+(.{3,115})$/);if(match)return{title:match[1],level:Math.min(3,Math.max(0,v.match(/^#+/)[0].length-2)),confidence:'high'};
+ if(hint==='heading'&&!/[.;]$/.test(v)&&v.split(/\s+/).length<=14)return{title:v,level:0,confidence:'high'};
+ if(HEADING_NAMES.test(v.replace(/:$/,''))&&next&&!/^[:;,]/.test(next))return{title:v.replace(/:$/,''),level:0,confidence:'medium'};
+ return null;
+}
+function textToMarkup(lines){return controlledParagraphs(lines)}
+function inferSections(source,hints=[]){const lines=String(source||'').split(/\r?\n/).map(s=>s.replace(/\u00a0/g,' ').trim());const headings=[];const startLimit=Math.min(lines.length,10000);let inToc=false;
+ for(let i=0;i<startLimit;i++){const s=lines[i];if(/^(table\s+of\s+contents|contents)$/i.test(s)){inToc=true;continue}if(inToc){if(!s){inToc=false;continue}if(/\.{3,}\s*\d+$/.test(s)||(/^\d+(?:\.\d+)*\s+/.test(s)&&/\s+\d{1,3}$/.test(s)))continue;inToc=false}
+ const h=classifyHeading(s,lines[i+1],hints[i]);if(h){const following=lines.slice(i+1,i+4).join(' ');if(/^(?:page\s*\d+\s*\/\s*\d+|\d+\s*of\s*\d+)$/i.test(following))continue;headings.push({index:i,...h})}}
+ const introduction=lines.slice(0,headings[0]?.index||0);const sections=[],stack=[];const problems=[];
+ if(!headings.length){return{sections:[makeSection('Document Content',textToMarkup(lines))],introductionHtml:'',warnings:['No reliable section headings detected. Full source text is preserved in one editable section.'],headingCount:0}}
+ for(let h=0;h<headings.length;h++){const item=headings[h],next=headings[h+1]?.index??lines.length;const body=textToMarkup(lines.slice(item.index+1,next));const entry=makeSection(item.title,body);let depth=item.level;
+ if(item.number==null&&item.confidence==='medium')depth=0;
+ if(depth>stack.length){depth=stack.length;problems.push(`Heading "${item.title}" was flattened because a parent level was missing.`)}
+ if(depth===0){sections.push(entry);stack.length=0;stack[0]=entry}else {const parent=stack[depth-1];if(!parent){sections.push(entry);stack.length=0;stack[0]=entry;continue}parent.children.push(entry);stack.length=depth;stack[depth]=entry}
+ }
+ return{sections,introductionHtml:textToMarkup(introduction),warnings:problems,headingCount:headings.length};
+}
+// Controlled SKANDI policy markdown: YAML scalar front matter, labelled fields,
+// provenance and complete controlled source are distinct regions of the document.
+function scalarValue(raw){let s=String(raw||'').trim();if((s.startsWith('"')&&s.endsWith('"'))||(s.startsWith("'")&&s.endsWith("'")))s=s.slice(1,-1);return s.replace(/^`|`$/g,'').trim()}
+function boolSource(v){const s=scalarValue(v).toLowerCase();return ['true','yes','y','required','1'].includes(s)?true:['false','no','n','not required','0'].includes(s)?false:null}
+function controlledInfo(source){const lines=String(source||'').replace(/\r\n?/g,'\n').split('\n'),fields={},evidence={},notices=[];let frontEnd=-1,controlledStart=-1,fieldSectionSeen=false,inProvenance=false;
+ if(lines[0]?.trim()==='---')for(let i=1;i<Math.min(lines.length,100);i++){if(lines[i].trim()==='---'){frontEnd=i;break}const m=lines[i].match(/^([a-z_][a-z0-9_]*)\s*:\s*(.*?)\s*$/i);if(m){const key=m[1].toLowerCase();fields[key]=scalarValue(m[2]);evidence[key]=`Front matter, line ${i+1}`}}
+ let inFields=false;for(let i=frontEnd+1;i<lines.length;i++){const l=lines[i].trim();const h=l.match(/^#{1,4}\s+(.+)$/)||l.match(/^(Policy Control fields|Document control & provenance|Full controlled source text)\s*$/i);if(h){const name=h[1].trim().toLowerCase();if(/^(full controlled source text|full source text|controlled source text|full policy text|complete source text|policy body)$/.test(name)){controlledStart=i+1;break}inFields=/^policy control fields$/.test(name);inProvenance=/^document control\s*(?:&|and)\s*provenance$/.test(name);if(inFields)fieldSectionSeen=true;continue}
+ if(!inFields&&!inProvenance)continue;if(inProvenance&&/^[-*]?\s*(?:\*\*)?existing live policy control record/i.test(l)){const v=l.match(/\bversion\s+([0-9]+(?:\.[0-9]+)*)/i),st=l.match(/\b(published|draft|approved|archived)\b/i);if(v&&!fields.live_policy_version_observed)fields.live_policy_version_observed=v[1];if(st&&!fields.live_policy_status_observed)fields.live_policy_status_observed=st[1];}const m=l.match(/^[-*]\s+\*\*([^*]+?)\*\*\s*:\s*(.*)$/)||l.match(/^(?:[-*•]\s+)?([A-Za-z][A-Za-z &()/?-]{2,80}?)\s*:\s*(.*)$/);if(m){const key=m[1].trim().toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'');const val=scalarValue(m[2]);if(val)fields['label_'+key]=val}}
+ return{lines,fields,evidence,controlledStart,frontEnd,notices,isControlled:controlledStart>=0&&(frontEnd>=0||fieldSectionSeen)};}
+function markdownInline(value){let s=esc(value);s=s.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,(_,$1,$2)=>`<a href="${$2}" rel="noopener noreferrer">${$1}</a>`);s=s.replace(/\*\*([^*\n]+)\*\*/g,'<strong>$1</strong>');s=s.replace(/`([^`\n]+)`/g,'<code>$1</code>');return s}
+function controlledParagraphs(lines){let out=[],para=[],list=[],listType='';const flushPara=()=>{if(!para.length)return;const content=para.map(v=>v.trim()).filter(Boolean);if(content.length){const contact=content.some(v=>/^(?:attn:|phone:|email:|website:|\+\d|\d{2,}\s+\w)/i.test(v))||content.some(v=>/^SKANDI\s+TRAVELS\s*\|/i.test(v));out.push(`<p>${content.map(markdownInline).join(contact?'<br>':' ')}</p>`)}para=[]};const flushList=()=>{if(list.length){out.push(`<${listType}>${list.map(s=>`<li>${markdownInline(s)}</li>`).join('')}</${listType}>`);list=[];listType=''}};
+ for(const raw of lines){const text=raw.trim();if(!text){flushPara();continue}let li=text.match(/^[-*•]\s+(.+)$/);let typ=li?'ul':'';if(!li){li=text.match(/^\d+[.)]\s+(.+)$/);if(li)typ='ol'}if(li){flushPara();if(list.length&&typ!==listType)flushList();listType=typ;list.push(li[1]);continue}flushList();para.push(text)}flushPara();flushList();return out.join('')||'<p></p>'}
+function controlledSections(sourceLines,start){const lines=sourceLines.slice(start),sections=[],stack=[],warnings=[],intro=[],entries=[];let first=-1;
+ for(let i=0;i<lines.length;i++){const l=lines[i].trim(),m=l.match(/^(#{2,5})\s+(.+)$/)||(/^\d{1,3}[.)]\s+[A-Z][^.;]{3,115}$/.test(l)?['', '##',l]:null)||(/^[A-Z][.)]\s+[A-Z][^.;]{3,115}$/.test(l)?['','###',l]:null)||(entries.some(e=>e.depth===0)&&i>0&&!lines[i-1].trim()&&!lines[i+1]?.trim()&&/^[A-Z][A-Za-z &-]{5,100}$/.test(l)&&l.trim().split(/\s+/).length>=3?['','###',l]:null);if(!m)continue;const header=m[2].trim(),number=header.match(/^(\d{1,3})(?:[.)]|\s*[-–])\s+(.+)$/);const roman=header.match(/^([A-Z])[.)]\s+(.+)$/);const hierarchy=m[1].length;
+ if(first<0&&hierarchy<=2&&!number){warnings.push(`Unexpected heading before numbered policy sections: ${header}. Verify heading order.`)}
+ const title=number?number[2]:header,depth=hierarchy<=2?0:hierarchy-2;
+ entries.push({index:i,title,depth:Math.min(3,depth),number:number?.[1]||'',roman:roman?.[1]||''});if(first<0)first=i}
+ if(first<0)return{sections:[makeSection('Document Content',controlledParagraphs(lines))],introductionHtml:'',headingCount:0,warnings:['No structured legal headings were identified. Source text was retained in one section.']};
+ intro.push(...lines.slice(0,first));for(let i=0;i<entries.length;i++){const e=entries[i],following=entries[i+1]?.index??lines.length,item=makeSection(e.title,controlledParagraphs(lines.slice(e.index+1,following)));let depth=e.depth;if(depth>stack.length){warnings.push(`Heading \\"${e.title}\\" has no parent and was promoted one level.`);depth=stack.length}if(depth===0){sections.push(item);stack.length=0;stack[0]=item}else{stack[depth-1].children.push(item);stack.length=depth;stack[depth]=item}}
+ return{sections,introductionHtml:controlledParagraphs(intro),headingCount:entries.length,warnings};}
+function parseControlledMarkdown(source,fileName){const c=controlledInfo(source);if(!c.isControlled)return null;const f=c.fields,proposals={},warnings=[],notes=[];const from=(key,label)=>f[key]!==undefined?{value:f[key],evidence:`${c.evidence[key]||label}: ${key}`,key}:null;
+ function pick(key,value,evidence,selected=true,confidence='high'){if(value===null||value===undefined||value==='')return;proposals[key]={value,confidence,evidence,selected}}
+ const name=from('policy_name')||from('label_policy_name','Policy Control fields');if(name)pick('title',name.value,name.evidence);
+ const doc=from('document_id')||from('label_document_id','Document control');if(doc)pick('documentId',doc.value,doc.evidence);
+ const cat=from('category')||from('label_category','Policy Control fields');if(cat)pick('category',cat.value,cat.evidence);
+ const slug=from('slug')||from('label_slug','Policy Control fields');if(slug)pick('slug',slug.value,slug.evidence);
+ const owner=from('policy_owner_department_code')||from('label_policy_owner_full_department_code','Policy Control fields');if(owner)pick('owner',owner.value,owner.evidence);
+ const visibility=from('visibility')||from('label_external_or_internal','Policy Control fields');if(visibility){const v=visibility.value.toLowerCase();if(v==='external'||v==='internal')pick('scope',v,visibility.evidence);else warnings.push(`Scope needs review: ${visibility.value}`)}
+ const brand=from('brand')||from('label_brand','Policy Control fields');if(brand&&['SKANDI TRAVELS','ALTEA'].includes(brand.value.toUpperCase()))pick('brand',brand.value.toUpperCase(),brand.evidence);
+ const order=from('sort_order')||from('label_sort_order','Policy Control fields');if(order){const n=Number(order.value);if(Number.isSafeInteger(n)&&n>=0&&n<=100000)pick('sortOrder',n,order.evidence);else warnings.push(`Invalid sort order: ${order.value}`)}
+ const interval=from('review_interval_months')||from('review_schedule')||from('label_review_schedule','Policy Control fields');let months=0;if(interval){const s=interval.value.toLowerCase(),m=s.match(/(?:every\s+)?(\d{1,3})\s+(months?|years?)\b/);months=/^\d{1,3}$/.test(s)?Number(s):m?Number(m[1])*(m[2].startsWith('year')?12:1):0;if(months>0&&months<=120){pick('reviewMode','months',interval.evidence);pick('reviewIntervalMonths',months,interval.evidence)}else warnings.push(`Review schedule could not be interpreted: ${interval.value}`)}
+ if(f.review_mode&&['none','months','custom'].includes(f.review_mode)&&!proposals.reviewMode)pick('reviewMode',f.review_mode,'Front matter: review_mode');
+ const ack=from('acknowledgement_required')||from('label_acknowledgment_required','Policy Control fields')||from('label_acknowledgement_required','Policy Control fields');if(ack){const v=boolSource(ack.value);if(v!==null)pick('acknowledgementRequired',v,ack.evidence);else warnings.push(`Unrecognized acknowledgement setting: ${ack.value}`)}
+ const feat=from('featured')||from('label_featured_policy','Policy Control fields');if(feat){const v=boolSource(feat.value);if(v!==null)pick('featured',v,feat.evidence)}
+ const effective=from('source_effective_date')||from('label_source_effective_date','Document control');if(effective){const d=detectDate(effective.value);if(d)pick('effectiveDate',d,effective.evidence);else warnings.push(`Source effective date requires manual review: ${effective.value}`)}
+ const vers=from('source_version')||from('label_controlled_source_version','Document control');if(vers)pick('version',vers.value,vers.evidence,false);
+ const live=from('live_policy_version_observed'),liveStatus=from('live_policy_status_observed');const actual=policies.find(p=>doc?.value&&String(p.documentId||'').toUpperCase()===String(doc.value).toUpperCase());const currentVersion=String(actual?.version||live?.value||'');const currentStatus=String(actual?.status||liveStatus?.value||'');const conflict=!!(currentVersion&&vers?.value&&currentVersion!==vers.value);
+ if(currentVersion){notes.push(`Observed existing live policy version: ${currentVersion}${currentStatus?' ('+currentStatus+')':''}. This is provenance, not imported document version.`)}
+ if(conflict)warnings.push(`VERSION RECONCILIATION REQUIRED: controlled source ${vers.value}; observed live record ${currentVersion}. Never overwrite the live document without comparing content and approved revisions.`);
+ const proposed=from('metadata_assignment_status');if(proposed?.value)notes.push(`Metadata assignment status: ${proposed.value}. Suggested classifications remain reviewable and are not published by import.`);
+ if(f.live_next_review_date_observed)notes.push(`Observed live review date ${f.live_next_review_date_observed} was not imported as a new source review-date proposal.`);
+ const structure=controlledSections(c.lines,c.controlledStart);warnings.push(...structure.warnings);
+ // Policy type is suggested, not asserted: only the explicit policy title supports this classification.
+ const type=String(name?.value||'').toLowerCase();const inferred=/\bcookies?\b/.test(type)?'cookies':/\bprivacy\b/.test(type)?'privacy':/\baccessibility\b/.test(type)?'accessibility':'';
+ if(inferred)pick('publicType',inferred,`Inferred from policy name: ${name.value}`,false,'medium');
+ return{fileName,source,proposals,sections:structure.sections,introductionHtml:structure.introductionHtml,warnings,notes,headings:structure.headingCount,createdAt:new Date().toISOString(),preserveSource:true,controlled:true,sourceVersion:vers?.value||'',observedLiveVersion:currentVersion,observedLiveStatus:currentStatus,reconciliationRequired:conflict,documentId:doc?.value||''};}
+
+function analyzeDocument(source,fileName,hints=[]){const data=String(source||'').replace(/\r\n?/g,'\n').replace(/[\u2028\u2029]/g,'\n').replace(/\u0000/g,'').slice(0,200000);if(data.trim().length<35)throw new Error('Not enough readable document text was detected. Try OCR or a clearer source document.');const special=parseControlledMarkdown(data,fileName);if(special)return special;const meta=inferMetadata(data,fileName);const blocks=inferSections(data,hints);return{fileName,source:data,proposals:meta.proposals,sections:blocks.sections,introductionHtml:blocks.introductionHtml,warnings:[...meta.warnings,...blocks.warnings],headings:blocks.headingCount,createdAt:new Date().toISOString(),preserveSource:true};}
+function scriptOnce(src){return new Promise((resolve,reject)=>{const el=document.createElement('script');el.src=src;el.async=true;el.onload=resolve;el.onerror=()=>reject(new Error(`Import library unavailable: ${src.split('/').pop()}. Check browser/network access.`));document.head.appendChild(el)})}
+async function getTesseract(){if(!window.Tesseract?.createWorker)await scriptOnce('https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js');return window.Tesseract}
+function ocrLayout(data){const blocks=Array.isArray(data?.blocks)?data.blocks:[];let regions=[];for(const b of blocks){const paras=Array.isArray(b.paragraphs)?b.paragraphs:[];for(const p of paras){let out=[];for(const line of p.lines||[]){const words=(line.words||[]).map(w=>String(w.text||'').trim()).filter(Boolean);const txt=words.join(' ').trim();if(txt)out.push(txt)}if(out.length)regions.push(out.join('\n'))}}return regions.length?regions.join('\n\n'):String(data?.text||'');}
+async function imageOcr(file){const t=await getTesseract(),worker=await t.createWorker('eng');try{const r=await worker.recognize(file,{}, {text:true,blocks:true});return{source:ocrLayout(r.data),confidence:r.data?.confidence||0}}finally{await worker.terminate()}}
+function setImportProgress(percent,message){const p=$('importProgress'),m=$('importMessage');if(p)p.style.width=`${Math.max(0,Math.min(100,percent))}%`;if(m)m.textContent=message||''}
+async function getPdfJs(){const pdfjs=await import('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.min.mjs');pdfjs.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.worker.min.mjs';return pdfjs}
+async function extractPdf(file,allowOcr=true){const pdfjs=await getPdfJs();const buffer=await file.arrayBuffer();const pdf=await pdfjs.getDocument({data:buffer,useSystemFonts:true}).promise;const pages=[],notes=[],maxPages=80;let ocrWorker=null;
+ try{for(let num=1;num<=Math.min(pdf.numPages,maxPages);num++){const page=await pdf.getPage(num);const content=await page.getTextContent({includeMarkedContent:false});const raw=content.items.filter(x=>typeof x.str==='string');const byRow=[];
+ for(const item of raw){const t=item.transform||[],x=Number(t[4]||0),y=Number(t[5]||0),size=Math.hypot(t[0]||0,t[1]||0)||Math.abs(t[3]||0)||10,entry={txt:item.str,x,y,size};let row=byRow.find(r=>Math.abs(r.y-y)<=Math.max(2.5,Math.min(5,size*.28)));if(!row){row={y,entries:[]};byRow.push(row)}row.entries.push(entry)}
+ byRow.sort((a,b)=>b.y-a.y);const textLines=byRow.map(r=>{r.entries.sort((a,b)=>a.x-b.x);return{text:r.entries.map(e=>e.txt).join(' ').replace(/\s+/g,' ').trim(),size:Math.max(...r.entries.map(e=>e.size)),y:r.y}}).filter(x=>x.text);const median=textLines.map(x=>x.size).sort((a,b)=>a-b)[Math.floor(textLines.length/2)]||11;let previous=null;let pageText=textLines.map(r=>{const space=previous&&previous.y-r.y>median*1.7?'\n':'';previous=r;const heading=/^\d{1,3}[.)]\s+[A-Z]/.test(r.text)?`## ${r.text}`:/^[A-Z][.)]\s+[A-Z]/.test(r.text)?`### ${r.text}`:(r.size>median*1.26&&r.text.length<120?`## ${r.text}`:r.text);return space+heading}).join('\n');
+ if(clean(pageText).length<50&&allowOcr){setImportProgress(Math.round(num/pdf.numPages*85),`Page ${num}/${pdf.numPages}: image-only page, running OCR locally…`);try{if(!ocrWorker){const t=await getTesseract();ocrWorker=await t.createWorker('eng')}const vp=page.getViewport({scale:2});const canvas=document.createElement('canvas'),ctx=canvas.getContext('2d',{alpha:false});canvas.width=Math.ceil(vp.width);canvas.height=Math.ceil(vp.height);await page.render({canvasContext:ctx,viewport:vp}).promise;const r=await ocrWorker.recognize(canvas,{}, {text:true,blocks:true});pageText=ocrLayout(r.data).trim();if(!pageText)notes.push(`Page ${num}: OCR produced no readable text.`);else if((r.data?.confidence||0)<70)notes.push(`Page ${num}: OCR confidence is low; verify imported content against source.`)}catch(error){notes.push(`Page ${num}: OCR unavailable (${error.message}).`)}}
+ pages.push(pageText);setImportProgress(Math.round(num/pdf.numPages*85),`Reading page ${num} of ${pdf.numPages}…`)}
+ if(pdf.numPages>maxPages)notes.push(`PDF contains ${pdf.numPages} pages; only the first ${maxPages} were processed. Import the remaining pages separately.`);
+ return{source:pages.join('\n\n'),warnings:notes};}
+ finally{if(ocrWorker)await ocrWorker.terminate().catch(()=>{});await pdf.destroy()}}
+async function extractDocx(file){if(!window.mammoth?.extractRawText)await scriptOnce('https://cdn.jsdelivr.net/npm/mammoth@1.13.0/mammoth.browser.min.js');const buff=await file.arrayBuffer();const [raw,styled]=await Promise.all([window.mammoth.extractRawText({arrayBuffer:buff}),window.mammoth.convertToHtml({arrayBuffer:buff})]);const warns=[...(raw.messages||[]),...(styled.messages||[])].filter(m=>m.type==='warning').map(m=>m.message).slice(0,12);let text=raw.value||'';const doc=document.createElement('div');doc.innerHTML=sanitize(styled.value||'');const heads=[];if(doc.querySelector('h1,h2,h3,h4')){const walk=(node)=>{if(node.nodeType!==1)return'';if(/^H[1-4]$/.test(node.tagName))return`\n${'#'.repeat(Number(node.tagName.slice(1)))} ${node.textContent.trim()}\n`;if(node.tagName==='P')return`\n${node.textContent.trim()}\n`;if(node.tagName==='LI')return`\n• ${node.textContent.trim()}\n`;if(node.tagName==='TABLE')return`\n${[...node.querySelectorAll('tr')].map(tr=>[...tr.querySelectorAll('th,td')].map(t=>t.textContent.trim()).join(' | ')).join('\n')}\n`;if(node.tagName==='UL'||node.tagName==='OL')return[...node.children].map(walk).join('');return[...node.childNodes].map(walk).join('')};const refined=walk(doc);if(refined.trim().length>text.trim().length*.65)text=refined}return{source:text,warnings:warns}}
+async function extractFile(file){const name=file.name||'uploaded-document',ext=name.split('.').pop().toLowerCase();if(file.size>14*1024*1024)throw new Error('File exceeds 14 MB. Split large documents into smaller parts.');
+ if(ext==='pdf')return extractPdf(file,true);if(ext==='docx')return extractDocx(file);if(['jpg','jpeg','png','webp','bmp'].includes(ext)){setImportProgress(13,'Recognizing image text locally (OCR)…');const r=await imageOcr(file);return{source:r.source,warnings:r.confidence<70?['Image OCR confidence is low. Verify every extracted field and paragraph.']:[]}}
+ if(['txt','md','markdown','csv'].includes(ext))return{source:await file.text(),warnings:[]};if(['html','htm'].includes(ext)){const text=await file.text();const doc=new DOMParser().parseFromString(text,'text/html');doc.querySelectorAll('script,style,noscript,iframe').forEach(x=>x.remove());return{source:doc.body?.innerText||doc.body?.textContent||'',warnings:[]}}throw new Error('Supported formats: PDF, DOCX, TXT, Markdown, HTML, PNG, JPG, WebP and BMP.')}
+function fieldControl(key,value){if(key==='summary')return `<textarea class="textarea" rows="3" data-suggestion="${key}">${esc(value)}</textarea>`;if(['scope','brand','reviewMode','publicType','acknowledgementRequired','featured'].includes(key)){const options={scope:[['external','External'],['internal','Internal']],brand:[['SKANDI TRAVELS','SKANDI TRAVELS'],['ALTEA','ALTEA']],reviewMode:[['none','No scheduled review'],['months','Every N months'],['custom','Specific date']],publicType:[['custom','Custom'],['cookies','Cookies'],['privacy','Privacy'],['accessibility','Accessibility'],['terms','Terms'],['bookingTerms','Booking terms']],acknowledgementRequired:[['true','Yes'],['false','No']],featured:[['true','Yes'],['false','No']]};return `<select class="select" data-suggestion="${key}">${options[key].map(([v,label])=>`<option value="${esc(v)}" ${String(value)===v?'selected':''}>${esc(label)}</option>`).join('')}</select>`}if(['effectiveDate','reviewDate'].includes(key))return `<input class="input" type="date" data-suggestion="${key}" value="${esc(value)}">`;return `<input class="input" ${['sortOrder','reviewIntervalMonths'].includes(key)?'type="number"':'type="text"'} data-suggestion="${key}" value="${esc(value)}">`}
+
+function importReview(){const a=importState;if(!a)return'';const existingMatch=!!(current?._id&&a.documentId&&String(current.documentId||'').toUpperCase()===String(a.documentId).toUpperCase());return `<div class="card"><div class="card-head"><h2>Extraction review</h2><span class="small muted">${esc(a.fileName)} · ${a.headings} headings</span></div><div class="card-body"><div class="notice">No document content is automatically published. Review suggested values, choose what to apply, and save the resulting policy as a draft. A missing or ambiguous value is never invented.</div>${a.notes?.length?`<div class="notice">${a.notes.map(esc).join(' · ')}</div>`:''}${a.warnings.length?`<div class="notice warning">${a.warnings.slice(0,12).map(esc).join(' · ')}</div>`:''}<div class="review-list">${FIELD_MAP.map(([key,label])=>{const v=a.proposals[key];return `<div class="review-row ${v?.confidence==='medium'?'warn':''}"><input type="checkbox" data-include="${key}" aria-label="Use ${esc(label)}" ${v?.selected?'checked':''} ${!v?'disabled':''}><div><strong>${esc(label)}</strong><small>${v?'Match: '+v.confidence:'Not identified in source'}</small></div><div class="review-value">${v?`${fieldControl(key,v.value)}<div class="source">Evidence: ${esc(v.evidence)}</div>`:'<span class="muted">Review manually in the editor if needed.</span>'}</div></div>`}).join('')}</div><div class="card" style="margin-top:14px"><div class="card-head"><h2>Document body and heading structure</h2></div><div class="card-body"><label class="check"><input id="includeSections" type="checkbox" checked>Include ${esc(a.sections.length)} top-level sections (${esc(a.headings)} headings detected)</label><label class="check"><input id="includeIntro" type="checkbox" checked>Include document introduction</label><p class="small muted">For SKANDI controlled Markdown, provenance and Policy Control field blocks are excluded from legal content; the body starts at Full controlled source text. Numbered and nested headings, paragraphs and bulleted lists are preserved. Verify OCR and complex PDF layouts against their source.</p>${a.reconciliationRequired?`<div class="notice warning"><strong>Controlled document protection:</strong> The source version differs from the observed published version. You may review this import as an unsaved draft, or explicitly compare it against the currently selected matching published record. No overwrite occurs automatically.</div>`:''}${a.reconciliationRequired?(existingMatch?`<label class="check"><input type="checkbox" id="reconciledImport">I have compared the full source with the selected current policy (${esc(current.version)}); I authorize importing these reviewed changes into that existing record.</label>`:`<div class="notice warning">To reconcile, open the matching policy in the Documents register, then return to Document Import and compare both versions. The extracted suggestions will remain available.</div>`):''}<label class="field"><span class="field-title">Apply destination</span><select class="select" id="importDestination"><option value="new">Create a new unsaved draft for reconciliation</option>${current&&(!a.reconciliationRequired||existingMatch)?'<option value="existing">Apply reviewed content to selected policy (requires Save)</option>':''}</select></label><div class="flex end" style="margin-top:13px"><button class="button" id="newImport">Import another document</button><button class="button" id="showExtracted">Review original extracted text</button><button class="button primary" id="applyImport">Apply to editor</button></div><div id="sourceTextPreview" class="source-view hidden" style="margin-top:13px"></div></div></div></div></div>`}
+function renderImport(){if(!importState){$('content').innerHTML=`<div class="card"><div class="card-head"><h2>Import policy or controlled document</h2></div><div class="card-body"><label class="drop" id="dropZone"><strong>Upload a document for structured extraction</strong><span>PDF · DOCX · TXT · Markdown · HTML · JPG · PNG · WebP · BMP</span><input id="pdfFile" type="file" accept=".pdf,.docx,.txt,.md,.markdown,.csv,.html,.htm,.png,.jpg,.jpeg,.webp,.bmp,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"><span>PDF/DOCX paragraphs, numbering and headings are analyzed. Scanned pages use on-device OCR when browser support is available.</span></label><div style="margin:16px 0"><label class="field-title" for="pastedImport">Paste full policy text or controlled Markdown</label><textarea class="textarea" id="pastedImport" rows="9" placeholder="Paste the entire Markdown policy, including the --- metadata block, Policy Control fields, provenance and Full controlled source text…"></textarea><p class="small muted">You can paste directly from a .md file. The importer separates source metadata from the legal body and does not write to the live policy until saved.</p></div><div class="flex" style="margin:13px 0"><label class="check"><input id="ocrEnabled" type="checkbox" checked>Use local OCR for scanned PDF pages and images</label></div><button class="button primary" id="importPdfBtn">Read and analyze document</button><div class="progress" style="margin-top:14px"><div id="importProgress"></div></div><p class="small muted" id="importMessage" role="status" style="margin-top:8px"></p><div class="tip">Document text is processed in your browser. PDF, Word and OCR libraries are loaded from public CDNs; a network connection is needed. Import does not upload source files or write to Supabase until Save. For legally sensitive material, verify every field, including dates and section boundaries, before publishing.</div></div></div>`;
+ const zone=$('dropZone');for(const ev of ['dragenter','dragover'])zone.addEventListener(ev,e=>{e.preventDefault();zone.classList.add('over')});for(const ev of ['dragleave','drop'])zone.addEventListener(ev,e=>{e.preventDefault();zone.classList.remove('over')});zone.addEventListener('drop',e=>{const f=e.dataTransfer?.files?.[0];if(f){const target=$('pdfFile');try{const dt=new DataTransfer();dt.items.add(f);target.files=dt.files}catch{zone.dataset.fileName=f.name}zone._droppedFile=f}});
+ $('importPdfBtn').onclick=async()=>{const file=zone._droppedFile||$('pdfFile')?.files?.[0];const pasted=clean($('pastedImport')?.value);if(!file&&!pasted){status('Choose a source file or paste document text first.','error');return}zone._droppedFile=null;const btn=$('importPdfBtn');btn.disabled=true;status('');try{setImportProgress(5,file?`Opening ${file.name}…`:'Analyzing pasted document text…');const ext=file?file.name.split('.').pop().toLowerCase():'';let result;if(pasted)result={source:pasted,warnings:file?['Pasted text was used instead of the selected file.']:[]};else if(ext==='pdf'&&!$('ocrEnabled').checked)result=await extractPdf(file,false);else result=await extractFile(file);setImportProgress(93,'Detecting document fields and section hierarchy…');const parsed=analyzeDocument(result.source,pasted?'Pasted document text':file.name);parsed.warnings.unshift(...(result.warnings||[]));importState=parsed;setImportProgress(100,'Extraction complete. Review suggestions and source evidence.');renderImport()}catch(error){status(error.message||'Document extraction failed.','error');setImportProgress(0,'Import failed.')}finally{btn.disabled=false}};
+ }else{$('content').innerHTML=importReview();$('showExtracted').onclick=()=>{const el=$('sourceTextPreview');el.textContent=importState.source;el.classList.toggle('hidden')};$('applyImport').onclick=applyImport;$('newImport').onclick=()=>{importState=null;renderImport()}}}
+function applyImport(){if(!importState)return;const a=importState;const dest=$('importDestination').value;if(dest==='existing'&&a.reconciliationRequired&&(!current?._id||String(current.documentId||'').toUpperCase()!==String(a.documentId).toUpperCase()||!$('reconciledImport')?.checked)){status('First compare the selected existing policy against the controlled source and explicitly confirm reconciliation.','error');return}if(dest==='existing'&&current){if(!confirm(`Replace the currently selected policy's content with imported values and sections? This will not save or publish until you explicitly save.`))return}else if(dirty&&!confirm('Start a new unsaved policy from this import? Existing unsaved changes will be lost.'))return;
+ const p=dest==='existing'&&current?current:defaultPolicy();let count=0;for(const [key] of FIELD_MAP){if(!$(`content`)?.querySelector(`[data-include="${key}"]`)?.checked)continue;const input=$('content').querySelector(`[data-suggestion="${key}"]`);if(!input)continue;let val=clean(input.value);if(!val)continue;if(['effectiveDate','reviewDate'].includes(key)&&!validISO(val)){status(`Invalid ${key}. Review the original document.`, 'error');return}if(key==='reviewIntervalMonths'||key==='sortOrder'){val=Number(val);if(!Number.isSafeInteger(val)||(key==='reviewIntervalMonths'?(val<1||val>120):(val<0||val>100000))){status(`Invalid ${key}. Review original document.`, 'error');return}if(key==='reviewIntervalMonths')p.reviewMode='months'}if(key==='acknowledgementRequired'||key==='featured')val=val==='true';if(key==='version'&&a.reconciliationRequired){status('The controlled source version is older than the observed published version. Import it as supporting evidence rather than assigning that version.','error');return}p[key]=val;count++}
+ if($('includeSections').checked){p.sections=JSON.parse(JSON.stringify(a.sections));count++}if($('includeIntro').checked){p.introductionHtml=a.introductionHtml;count++}if(dest!=='existing'){p.status='Draft';p.active=false;p._id='';p.policyId='';if(a.reconciliationRequired)p.version='1.0'}if(p.title&&!p.slug)p.slug=slugify(p.title);if(a.fileName.toLowerCase().endsWith('.pdf'))p.sourcePdfName=a.fileName;
+ p.__controlledImportWarning=a.reconciliationRequired&&dest!=='existing'?{sourceVersion:a.sourceVersion,liveVersion:a.observedLiveVersion,documentId:a.documentId}:null;current=p;revisions=dest==='existing'?revisions:[];view='editor';setDirty(true);render();status(`Imported ${count} selected fields/content groups from ${a.fileName}. Review all metadata and sections before saving.`);toast('Document imported into an unsaved draft.');}
+})();
+
+
+})();</script>
+</body>
+</html>

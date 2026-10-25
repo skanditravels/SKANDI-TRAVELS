@@ -1,1 +1,144 @@
-<!-- SKANDI_PENDING_SOURCE: replace with complete page markup. -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SKANDI Uniform Shop</title>
+  <link rel="stylesheet" href="skandi-uniform-center.css">
+</head>
+<body>
+
+  <!-- =========================================
+       SKANDI UNIFORM SHOP
+       ========================================= -->
+  <div id="hm-app" class="hm-shell">
+    <div id="status-banner" class="status-banner">Loading Uniform Center from Supabase...</div>
+    
+    <div class="uniform-toolbar-shell" aria-label="Uniform Center controls">
+      <div class="uniform-toolbar-main">
+        <button class="uniform-brand" type="button" data-action="route-home" aria-label="Uniform Center home">
+          <strong>UNIFORM CENTER</strong><span>SKANDI STAFF PORTAL</span>
+        </button>
+        <div class="uniform-staff"><span id="staff-name">Staff</span><span>•</span><strong id="wallet-points">0 points</strong></div>
+        <nav class="uniform-utilities" aria-label="Uniform actions">
+          <button type="button" data-action="admin-login">Admin Login</button>
+          <button type="button" data-action="sync-uniform">Sync</button>
+          <button type="button" data-action="route-regulations">Uniform Regulations</button>
+          <button type="button" data-action="route-orders">Orders (<span id="orders-count">0</span>)</button>
+          <button type="button" data-action="route-favorites">Saved (<span data-favorites-count>0</span>)</button>
+          <button type="button" data-action="route-bag">Bag (<span data-bag-count>0</span>)</button>
+        </nav>
+      </div>
+      <nav class="nav-rail" id="main-nav-rail" aria-label="Uniform categories"></nav>
+      <div class="promo-ticker" id="promo-ticker">Loading your Supabase uniform allowance…</div>
+    </div>
+
+    <main>
+      <section id="view-home" class="view" data-view="home" aria-label="Home page">
+        <div class="hero-panel">
+          <div class="hero-content">
+            <p class="hero-kicker">Duty Required</p>
+            <h1 class="hero-title serif">Uniform Essentials</h1>
+            <button class="btn hero-button" type="button" data-action="route-category" data-category="">SHOP CATALOG</button>
+          </div>
+        </div>
+
+        <div class="container">
+          <div class="curated-grid">
+            <article class="curated-card curated-men" tabindex="0" role="button" data-action="route-subcategory" data-subcategory="Men" aria-label="Shop men's uniform">
+              <div class="curated-content">
+                <h2 class="curated-title serif">Men</h2>
+                <span class="btn btn-light btn-small">Shop Men</span>
+              </div>
+            </article>
+            <article class="curated-card curated-divided" tabindex="0" role="button" data-action="route-subcategory" data-subcategory="Women" aria-label="Shop women's uniform">
+              <div class="curated-content">
+                <h2 class="curated-title serif">Women</h2>
+                <span class="btn btn-light btn-small">Shop Women</span>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section id="view-plp" class="view d-none" data-view="plp" aria-label="Product listing page">
+        <div class="container">
+          <div id="plp-root"></div>
+        </div>
+      </section>
+
+      <section id="view-pdp" class="view d-none" data-view="pdp" aria-label="Product detail page">
+        <div class="container">
+          <div id="pdp-root"></div>
+        </div>
+      </section>
+
+      <section id="view-bag" class="view d-none" data-view="bag" aria-label="Shopping bag page">
+        <div class="container">
+          <div id="bag-root"></div>
+        </div>
+      </section>
+
+      <section id="view-checkout" class="view d-none" data-view="checkout" aria-label="Checkout page">
+        <div class="container">
+          <div id="checkout-root"></div>
+        </div>
+      </section>
+
+      <section id="view-orders" class="view d-none" data-view="orders" aria-label="Orders page">
+        <div class="container" style="padding: 44px 0 82px;">
+          <h1 class="page-heading serif">My Uniform Orders</h1>
+          <div id="orders-root"></div>
+        </div>
+      </section>
+
+      <section id="view-regulations" class="view d-none" data-view="regulations" aria-label="Uniform Regulations">
+        <div class="container">
+          <div id="regulations-root"></div>
+        </div>
+      </section>
+
+    </main>
+
+    <div id="size-guide-modal" class="modal-overlay d-none" role="dialog" aria-modal="true" aria-labelledby="size-guide-title">
+      <div class="modal">
+        <button class="modal-close" type="button" data-action="close-size-guide" aria-label="Close size guide">×</button>
+        <h2 id="size-guide-title" class="serif" style="font-size: 34px; margin: 0 0 16px;">Size Guide</h2>
+        <p style="color: var(--hm-muted-text); font-size:13px; font-weight:600; line-height:1.6;">
+          Choose your normal uniform size. For fitted items, use the size you usually wear on duty. Uniform Control can adjust the request before fulfillment if your measurements are registered in the staff profile.
+        </p>
+        <table style="width: 100%; border-collapse: collapse; margin-top: 22px; font-size:13px; font-weight:600; text-align:center;">
+          <thead>
+            <tr>
+              <th style="border: 1px solid var(--hm-border-muted); padding: 12px; background: var(--hm-bg-secondary); color: var(--hm-black);">Size</th>
+              <th style="border: 1px solid var(--hm-border-muted); padding: 12px; background: var(--hm-bg-secondary); color: var(--hm-black);">Chest</th>
+              <th style="border: 1px solid var(--hm-border-muted); padding: 12px; background: var(--hm-bg-secondary); color: var(--hm-black);">Waist</th>
+              <th style="border: 1px solid var(--hm-border-muted); padding: 12px; background: var(--hm-bg-secondary); color: var(--hm-black);">Hip</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td style="border: 1px solid var(--hm-border-muted); padding: 12px;">XS</td><td style="border: 1px solid var(--hm-border-muted); padding: 12px;">31-33 in</td><td style="border: 1px solid var(--hm-border-muted); padding: 12px;">24-26 in</td><td style="border: 1px solid var(--hm-border-muted); padding: 12px;">34-36 in</td></tr>
+            <tr><td style="border: 1px solid var(--hm-border-muted); padding: 12px;">S</td><td style="border: 1px solid var(--hm-border-muted); padding: 12px;">34-36 in</td><td style="border: 1px solid var(--hm-border-muted); padding: 12px;">27-29 in</td><td style="border: 1px solid var(--hm-border-muted); padding: 12px;">37-39 in</td></tr>
+            <tr><td style="border: 1px solid var(--hm-border-muted); padding: 12px;">M</td><td style="border: 1px solid var(--hm-border-muted); padding: 12px;">37-39 in</td><td style="border: 1px solid var(--hm-border-muted); padding: 12px;">30-32 in</td><td style="border: 1px solid var(--hm-border-muted); padding: 12px;">40-42 in</td></tr>
+            <tr><td style="border: 1px solid var(--hm-border-muted); padding: 12px;">L</td><td style="border: 1px solid var(--hm-border-muted); padding: 12px;">40-42 in</td><td style="border: 1px solid var(--hm-border-muted); padding: 12px;">33-35 in</td><td style="border: 1px solid var(--hm-border-muted); padding: 12px;">43-45 in</td></tr>
+            <tr><td style="border: 1px solid var(--hm-border-muted); padding: 12px;">XL</td><td style="border: 1px solid var(--hm-border-muted); padding: 12px;">43-46 in</td><td style="border: 1px solid var(--hm-border-muted); padding: 12px;">36-39 in</td><td style="border: 1px solid var(--hm-border-muted); padding: 12px;">46-49 in</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    
+    <div id="admin-auth-modal" class="modal-overlay d-none" role="dialog" aria-modal="true" aria-labelledby="admin-auth-title">
+      <div class="modal" style="max-width:520px">
+        <button class="modal-close" type="button" data-action="close-admin-auth" aria-label="Close">×</button>
+        <h2 id="admin-auth-title" class="serif" style="margin:0 0 12px;font-size:34px">Uniform Control access</h2>
+        <p id="admin-auth-copy" style="margin:0;color:var(--hm-muted-text);line-height:1.65">Checking your staff permissions…</p>
+        <div style="margin-top:22px;display:flex;justify-content:flex-end"><button class="btn btn-small" type="button" data-action="close-admin-auth">Close</button></div>
+      </div>
+    </div>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+  </div>
+
+  <script src="skandi-uniform-center.js"></script>
+</body>
+</html>

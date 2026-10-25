@@ -1,0 +1,6 @@
+
+/* Dynamic page is embedded below the site-level Wix header and above the site-level footer. */
+:root{--header-total:0px!important;--header-h:0px!important;--bar-height:0px!important}
+.country-page,.destination-page,.area-page,.hotel-page{padding-top:0!important}
+.country-subnav,.destination-subnav,.area-subnav,.hotel-nav-wrap{top:0!important}
+.signature,.destination-signature,.area-signature{top:80px!important}

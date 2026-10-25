@@ -1,0 +1,28 @@
+
+  .automation-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;align-items:end}
+  .automation-grid.cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .automation-grid.cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .automation-section{margin-top:10px;border:1px solid #cfd7dd;background:#fbfcfd}
+  .automation-section>.automation-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 9px;border-bottom:1px solid #d9e0e5;background:#eef3f6;color:#29475a;font-weight:800}
+  .automation-section>.automation-body{padding:9px}
+  .automation-note{font-size:10px;color:#687783;margin-top:3px}
+  .gds-preview{padding:8px;border:1px dashed #9daab4;background:#f7f9fa;font:11px/1.45 ui-monospace,SFMono-Regular,Consolas,monospace;overflow-wrap:anywhere}
+  .pqr-grid{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(280px,.75fr);gap:10px;align-items:start}
+  .rule-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+  .rule-card{border:1px solid #cfd7dd;background:#fff;padding:8px}
+  .rule-card .label{color:#637581;font-size:9px;text-transform:uppercase;letter-spacing:.05em}
+  .rule-card strong{display:block;margin-top:3px;color:#24465d}
+  .fop-associations{max-height:132px;overflow:auto;border:1px solid #d4dce1;background:#fff;padding:7px}
+  .fop-associations label{display:flex;gap:6px;align-items:center;margin:4px 0}
+  .apis-sensitive{border-left:3px solid #d08a16;background:#fff7e6;padding:8px 9px;margin:8px 0;color:#62470d}
+  .apis-sensitive strong{display:block;margin-bottom:2px}
+  .upper-input{text-transform:uppercase}
+  .mini-table{width:100%;border-collapse:collapse;font-size:10px}
+  .mini-table th,.mini-table td{border:1px solid #d8dee3;padding:6px;text-align:left;vertical-align:top}
+  .mini-table th{background:#eef2f5;color:#405662}
+  .offer-status{display:inline-flex;align-items:center;gap:6px}
+  .offer-status-code{min-width:26px;text-align:center;padding:2px 5px;border-radius:2px;font:800 10px/1.4 ui-monospace,SFMono-Regular,Consolas,monospace;background:#173c5a;color:#fff}
+  .offer-status-code.un{background:#a71910}
+  .fop-mask{font:700 11px ui-monospace,SFMono-Regular,Consolas,monospace;color:#1d4058}
+  @media(max-width:920px){.automation-grid,.automation-grid.cols-3{grid-template-columns:repeat(2,minmax(0,1fr))}.pqr-grid{grid-template-columns:1fr}.rule-cards{grid-template-columns:1fr}}
+  @media(max-width:620px){.automation-grid,.automation-grid.cols-3,.automation-grid.cols-2{grid-template-columns:1fr}}

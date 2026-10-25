@@ -1,0 +1,864 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#022e64">
+<title>Zalaris ePayroll Portal · SKANDI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+
+
+<meta name="color-scheme" content="light dark">
+
+
+
+
+
+
+
+
+
+
+
+
+<meta name="color-scheme" content="light">
+
+
+
+<style data-skandi-part="header">
+#riaintra-global-header-root {
+  --shell-h: 52px;
+  --shell: #354a5f;
+  --shell-hover: rgba(255, 255, 255, 0.14);
+  --blue: #106ebe;
+  --canvas: #ffffff;
+  --text: #323130;
+  --border: #edebe9;
+  --font: "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
+}
+
+#riaintra-global-header-root * { box-sizing: border-box; }
+#riaintra-global-header-root,#riaintra-global-header-root {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: var(--font);
+  color: var(--text);
+  background: transparent;
+  font-size: 14px;
+  user-select: none;
+}
+#riaintra-global-header-root button { font: inherit; border: 0; background: transparent; color: inherit; cursor: pointer; }
+
+/* Desktop Shellbar */
+#riaintra-global-header-root .shellbar {
+  position: fixed;
+  inset: 0 0 auto;
+  height: var(--shell-h);
+  background: var(--shell);
+  color: #fff;
+  z-index: 1000;
+  box-shadow: 0 1px 2px rgba(34, 54, 73, 0.12);
+}
+#riaintra-global-header-root .shellbar-inner {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12px;
+  gap: 12px;
+}
+#riaintra-global-header-root .shell-left, #riaintra-global-header-root .shell-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+/* Branding */
+#riaintra-global-header-root .product {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+#riaintra-global-header-root .product img {
+  height: 30px;
+  width: auto;
+  object-fit: contain;
+  border-radius: 3px;
+  display: none;
+}
+#riaintra-global-header-root .product img[src] {
+  display: block;
+}
+#riaintra-global-header-root .product-text strong {
+  display: block;
+  font-size: 13px;
+}
+#riaintra-global-header-root .product-text small {
+  display: block;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 10px;
+  margin-top: 2px;
+}
+
+/* Desktop Navigation */
+#riaintra-global-header-root .shell-nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 1 1 auto;
+  justify-content: flex-start;
+  padding-left: 24px;
+}
+#riaintra-global-header-root .shell-nav button {
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 10px;
+  border-radius: 4px;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+#riaintra-global-header-root .shell-nav button:hover, #riaintra-global-header-root .shell-nav button.active {
+  color: #fff;
+  background: var(--shell-hover);
+}
+
+/* Session / Dashboard Actions */
+#riaintra-global-header-root .utility-action {
+  min-height: 32px;
+  padding: 0 10px;
+  border: 1px solid rgba(255,255,255,.20);
+  border-radius: 4px;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+#riaintra-global-header-root .utility-action:hover { background: var(--shell-hover); }
+#riaintra-global-header-root .utility-action[hidden] { display: none !important; }
+
+/* Clock */
+#riaintra-global-header-root .clock {
+  min-width: 110px;
+  text-align: right;
+  border-inline: 1px solid rgba(255, 255, 255, 0.18);
+  padding: 4px 10px;
+  cursor: pointer;
+}
+#riaintra-global-header-root .clock strong {
+  display: block;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+#riaintra-global-header-root .clock small {
+  display: block;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 9px;
+  margin-top: 3px;
+  text-transform: uppercase;
+}
+
+/* User Profile */
+#riaintra-global-header-root .profile {
+  display: none;
+  grid-template-columns: minmax(150px, 230px) 38px;
+  grid-template-rows: repeat(3, auto);
+  column-gap: 9px;
+  row-gap: 1px;
+  align-items: center;
+  min-width: 0;
+}
+#riaintra-global-header-root .profile-name,
+#riaintra-global-header-root .profile-meta,
+#riaintra-global-header-root .profile-email {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: right;
+}
+#riaintra-global-header-root .profile-name {
+  grid-column: 1;
+  grid-row: 1;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+}
+#riaintra-global-header-root .profile-meta {
+  grid-column: 1;
+  grid-row: 2;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+}
+#riaintra-global-header-root .profile-email {
+  grid-column: 1;
+  grid-row: 3;
+  color: rgba(255,255,255,.70);
+  font-size: 9px;
+}
+#riaintra-global-header-root .profile-avatar {
+  grid-column: 2;
+  grid-row: 1 / span 3;
+  width: 38px;
+  height: 38px;
+  border-radius: 4px;
+  display: grid;
+  place-items: center;
+  background: #d1e8ff;
+  color: #073b69;
+  font-size: 11px;
+  font-weight: 800;
+  overflow: hidden;
+}
+#riaintra-global-header-root .profile-avatar img,
+#riaintra-global-header-root img.profile-avatar {
+  width: 38px;
+  height: 38px;
+  object-fit: cover;
+}
+
+/* Mobile Burger Icon */
+
+#riaintra-global-header-root .burger {
+  display: none;
+  width: 36px;
+  height: 36px;
+  color: #fff;
+  border-radius: 4px;
+}
+#riaintra-global-header-root .burger:hover {
+  background: var(--shell-hover);
+}
+
+/* Mobile Drawer (Horizontal Slider) */
+#riaintra-global-header-root .mobile-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  z-index: 1100;
+  width: 100%;
+  height: var(--shell-h);
+  background: var(--shell);
+  color: #fff;
+  box-shadow: -20px 0 45px rgba(13, 31, 48, 0.25);
+  transform: translateX(102%);
+  opacity: 0.98;
+  transition: transform 0.44s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.25s ease;
+  display: flex;
+  align-items: center;
+}
+#riaintra-global-header-root .mobile-drawer.open {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+/* Mobile Drawer Title Area */
+#riaintra-global-header-root .mobile-head {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 12px 0 18px;
+  border-right: 1px solid rgba(255, 255, 255, 0.18);
+  flex: 0 0 auto;
+}
+#riaintra-global-header-root .mobile-head strong { font-size: 13px; }
+#riaintra-global-header-root .mobile-head .close {
+  width: 28px;
+  height: 28px;
+  font-size: 22px;
+  display: grid;
+  place-items: center;
+}
+
+/* Mobile Drawer Nav List */
+#riaintra-global-header-root .mobile-nav {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  overflow-x: auto;
+  scrollbar-width: none;
+  flex: 1;
+  padding: 0 12px;
+  gap: 4px;
+}
+#riaintra-global-header-root .mobile-nav::-webkit-scrollbar { display: none; }
+#riaintra-global-header-root .mobile-nav button {
+  display: block;
+  width: auto;
+  white-space: nowrap;
+  padding: 8px 12px;
+  font-weight: 600;
+  border-radius: 4px;
+}
+#riaintra-global-header-root .mobile-nav button:hover, #riaintra-global-header-root .mobile-nav button.active {
+  background: var(--shell-hover);
+}
+
+/* Mobile Overlay */
+#riaintra-global-header-root .overlay {
+  position: fixed;
+  inset: var(--shell-h) 0 0 0;
+  background: rgba(7, 27, 68, 0.46);
+  z-index: 1090;
+  display: none;
+}
+#riaintra-global-header-root .overlay.show { display: block; }
+
+body[data-theme="dark"] #riaintra-global-header-root {
+  --canvas: #1f1f1f;
+  --border: #3a3a3a;
+  --text: #f3f2f1;
+}
+
+@media(max-width: 950px) {
+  #riaintra-global-header-root .shell-nav { display: none; }
+  #riaintra-global-header-root .burger { display: grid; place-items: center; }
+  #riaintra-global-header-root .profile-email { display: none; }
+}
+@media(max-width: 700px) {
+  #riaintra-global-header-root .profile { display: none !important; }
+  #riaintra-global-header-root .clock { display: none; }
+  #riaintra-global-header-root .utility-action { padding: 0 8px; font-size: 9px; }
+}
+</style>
+<style data-skandi-part="footer">
+#riaintra-global-footer-root * { box-sizing: border-box; }
+#riaintra-global-footer-root,#riaintra-global-footer-root {
+  margin: 0;
+  font-family: "72", Inter, Arial, sans-serif;
+  width: 100%;
+}
+
+#riaintra-global-footer-root footer {
+  width: 100%;
+  padding: 10px 24px;
+  margin-top: auto;
+  background: #354a5f;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+#riaintra-global-footer-root .wrap {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  width: 100%;
+}
+
+#riaintra-global-footer-root .footer-left {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  justify-self: flex-start;
+}
+
+#riaintra-global-footer-root .links {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+#riaintra-global-footer-root .meta {
+  font-size: 9px;
+  color: #ffffff;
+}
+
+#riaintra-global-footer-root .global-footer {
+  justify-self: center;
+  text-align: center;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+#riaintra-global-footer-root .footer-right {
+  justify-self: flex-end;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+#riaintra-global-footer-root #grouplogo img {
+  height: 16px;
+  border-radius: 0;
+  object-fit: contain;
+  background: transparent;
+  display: block;
+}
+
+#riaintra-global-footer-root button {
+  border: 0;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.75);
+  padding: 5px 7px;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+#riaintra-global-footer-root button:hover {
+  color: #ffffff;
+  text-decoration: underline;
+}
+</style>
+<style data-skandi-part="payroll">
+#skandi-app-root{--navy:#003366;--navy2:#00264d;--blue:#0a6ed1;--blue2:#085caf;--cyan:#00a6c7;--canvas:#f3f4f5;--surface:#fff;--surface2:#f7f8f9;--line:#d9dfe3;--line2:#b9c3ca;--text:#1d2d3e;--muted:#5b6b7a;--green:#188918;--orange:#e76500;--red:#bb0000;--info:#eaf3fc;--radius:7px;--shadow:0 2px 8px rgba(0,35,70,.10);--shell:54px;--side:246px;font-family:"72",Arial,sans-serif}
+#skandi-app-root *{box-sizing:border-box}#skandi-app-root,#skandi-app-root{margin:0;min-width:320px;min-height:100%;background:var(--canvas);color:var(--text);font-family:"72",Arial,sans-serif}#skandi-app-root button,#skandi-app-root input,#skandi-app-root select,#skandi-app-root textarea{font:inherit}#skandi-app-root button{cursor:pointer}#skandi-app-root .hidden{display:none!important}#skandi-app-root :focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+#skandi-app-root .shell{position:fixed;inset:0 0 auto;height:var(--shell);z-index:100;display:flex;align-items:center;gap:13px;padding:0 16px;background:linear-gradient(100deg,var(--navy2),var(--navy));color:#fff;box-shadow:0 1px 5px rgba(0,0,0,.22)}#skandi-app-root .menu{width:36px;height:36px;border:0;border-radius:4px;background:transparent;color:#fff;font-size:20px}#skandi-app-root .menu:hover{background:rgba(255,255,255,.12)}#skandi-app-root .brand{min-width:238px;display:flex;align-items:center;gap:10px}#skandi-app-root .mark{width:31px;height:31px;border:2px solid #fff;border-radius:50%;display:grid;place-items:center;font-weight:900;position:relative}#skandi-app-root .mark:after{content:"";position:absolute;width:7px;height:7px;right:-3px;top:-3px;border:2px solid var(--navy);border-radius:50%;background:var(--cyan)}#skandi-app-root .brand strong{display:block;line-height:1;font-size:16px;letter-spacing:.8px}#skandi-app-root .brand span{display:block;margin-top:3px;color:#cae0ee;font-size:9px;text-transform:uppercase}#skandi-app-root .search{flex:1;max-width:560px}#skandi-app-root .search input{width:100%;height:34px;padding:0 12px;border:1px solid rgba(255,255,255,.25);border-radius:4px;background:rgba(255,255,255,.12);color:#fff}#skandi-app-root .search input::placeholder{color:#c8d9e6}#skandi-app-root .search input:focus{background:#fff;color:var(--text);outline:none}#skandi-app-root .shell-space{flex:1}#skandi-app-root .profile{display:flex;align-items:center;gap:8px;min-width:0}#skandi-app-root .avatar{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:#d8eaf7;color:var(--navy);font-size:10px;font-weight:800;overflow:hidden}#skandi-app-root .profile strong,#skandi-app-root .profile span{display:block;max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#skandi-app-root .profile strong{font-size:11px}#skandi-app-root .profile span{font-size:9px;color:#cbdde9}
+#skandi-app-root .sidebar{position:fixed;left:0;top:var(--shell);bottom:0;z-index:80;width:var(--side);overflow:auto;background:#fff;border-right:1px solid var(--line);transition:transform .2s}#skandi-app-root .nav-group{padding:15px 14px 6px;color:#748696;font-size:9px;font-weight:800;letter-spacing:.7px;text-transform:uppercase}#skandi-app-root .nav-btn{width:calc(100% - 14px);min-height:42px;margin:2px 7px;padding:0 12px;border:0;border-radius:4px;background:transparent;color:#354b5e;text-align:left;font-weight:600;font-size:11px}#skandi-app-root .nav-btn:hover{background:#eef5fb;color:var(--blue)}#skandi-app-root .nav-btn.active{background:#e8f2fb;color:var(--blue);border-left:3px solid var(--blue)}#skandi-app-root .nav-btn.admin-only{display:none}#skandi-app-root .admin .nav-btn.admin-only{display:block}#skandi-app-root .workspace{min-height:100vh;padding:var(--shell) 0 0 var(--side)}#skandi-app-root .page-head{position:sticky;top:var(--shell);z-index:40;min-height:78px;padding:13px 21px;display:flex;align-items:center;justify-content:space-between;gap:14px;background:#fff;border-bottom:1px solid var(--line)}#skandi-app-root .page-head h1{margin:0;font-size:21px;font-weight:500}#skandi-app-root .page-head p{margin:4px 0 0;color:var(--muted);font-size:10px}#skandi-app-root .content{max-width:1550px;margin:auto;padding:18px 20px 40px}#skandi-app-root .actions{display:flex;gap:8px;flex-wrap:wrap}#skandi-app-root .btn{min-height:33px;padding:5px 12px;border:1px solid var(--line2);border-radius:4px;background:#fff;color:var(--blue);font-size:11px;font-weight:800}#skandi-app-root .btn:hover{background:#eef5fb}#skandi-app-root .btn.primary{background:var(--blue);border-color:var(--blue);color:#fff}#skandi-app-root .btn.primary:hover{background:var(--blue2)}#skandi-app-root .btn.danger{color:var(--red);border-color:#d77}#skandi-app-root .btn:disabled{opacity:.45;cursor:not-allowed}
+#skandi-app-root .grid{display:grid;gap:14px}#skandi-app-root .grid4{grid-template-columns:repeat(4,minmax(0,1fr))}#skandi-app-root .grid2{grid-template-columns:repeat(2,minmax(0,1fr))}#skandi-app-root .card{background:#fff;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;box-shadow:0 1px 2px rgba(0,35,70,.04)}#skandi-app-root .card-head{min-height:50px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid var(--line)}#skandi-app-root .card-head h2,#skandi-app-root .card-head h3{margin:0;font-size:14px}#skandi-app-root .card-head p{margin:2px 0 0;color:var(--muted);font-size:9px}#skandi-app-root .card-body{padding:14px}#skandi-app-root .kpi{padding:15px;min-height:116px}#skandi-app-root .kpi small{display:block;color:var(--muted);font-size:9px;text-transform:uppercase;font-weight:800}#skandi-app-root .kpi strong{display:block;margin-top:13px;font-size:27px;font-weight:500}#skandi-app-root .kpi span{display:block;margin-top:8px;color:var(--muted);font-size:9px}#skandi-app-root .status{display:inline-flex;align-items:center;min-height:22px;padding:0 8px;border-radius:12px;background:#eef3f7;color:#455a6d;font-size:9px;font-weight:800}#skandi-app-root .status.good{background:#edf8ed;color:var(--green)}#skandi-app-root .status.warn{background:#fff4e5;color:#9a4d00}#skandi-app-root .status.bad{background:#ffebeb;color:var(--red)}#skandi-app-root .notice{padding:12px;border:1px solid #b8d4f3;border-radius:6px;background:#eef7ff;color:#254b71}#skandi-app-root .notice.warn{border-color:#f2c076;background:#fff5e7;color:#754500}#skandi-app-root .section-gap{margin-top:14px}#skandi-app-root .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}#skandi-app-root .input,#skandi-app-root .select{min-height:34px;padding:0 9px;border:1px solid #8996a5;border-radius:4px;background:#fff;color:var(--text)}#skandi-app-root .input{min-width:220px}#skandi-app-root .table-wrap{overflow:auto}#skandi-app-root .table{width:100%;border-collapse:collapse;min-width:780px}#skandi-app-root .table th,#skandi-app-root .table td{padding:9px 10px;border-bottom:1px solid #e5e9ec;text-align:left;font-size:10px;vertical-align:middle}#skandi-app-root .table th{background:#f7f8f9;color:#53687b;text-transform:uppercase;font-size:9px;letter-spacing:.35px}#skandi-app-root .table tr[data-id]{cursor:pointer}#skandi-app-root .table tr[data-id]:hover{background:#f4f9fd}#skandi-app-root .table tr.selected{background:#eaf3fc}#skandi-app-root .form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}#skandi-app-root .field{display:flex;flex-direction:column;gap:5px}#skandi-app-root .field.full{grid-column:1/-1}#skandi-app-root .field label{font-size:9px;color:#53687b;text-transform:uppercase;font-weight:800}#skandi-app-root .field input,#skandi-app-root .field select,#skandi-app-root .field textarea{width:100%;min-height:36px;padding:7px 9px;border:1px solid #8996a5;border-radius:4px}#skandi-app-root .field textarea{min-height:76px}#skandi-app-root .summary{display:grid;gap:8px}#skandi-app-root .summary div{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid #edf0f2}#skandi-app-root .summary span{color:var(--muted)}#skandi-app-root .summary strong{text-align:right}#skandi-app-root .empty{padding:38px 20px;text-align:center;color:var(--muted)}#skandi-app-root .empty strong{display:block;color:var(--text);font-size:14px;margin-bottom:4px}#skandi-app-root .loading{position:fixed;inset:0;z-index:150;background:rgba(243,244,245,.86);display:grid;place-items:center}#skandi-app-root .spinner{width:34px;height:34px;border:4px solid #ccd8e3;border-top-color:var(--blue);border-radius:50%;animation:skandi-app-root-spin .8s linear infinite}@keyframes skandi-app-root-spin{to{transform:rotate(360deg)}}#skandi-app-root .toast{position:fixed;right:18px;bottom:18px;z-index:170;max-width:min(430px,calc(100vw - 36px));padding:12px 14px;background:#223548;color:#fff;border-radius:7px;box-shadow:0 14px 30px rgba(0,0,0,.2)}#skandi-app-root .scrim{display:none}
+@media(max-width:980px){#skandi-app-root .grid4{grid-template-columns:repeat(2,minmax(0,1fr))}#skandi-app-root .profile>div:last-child,#skandi-app-root .search{display:none}#skandi-app-root .sidebar{transform:translateX(-100%)}body.menu-open #skandi-app-root .sidebar{transform:translateX(0)}#skandi-app-root .workspace{padding-left:0}#skandi-app-root .scrim{position:fixed;inset:var(--shell) 0 0;z-index:70;background:rgba(0,28,54,.42)}body.menu-open #skandi-app-root .scrim{display:block}#skandi-app-root .brand{min-width:0}#skandi-app-root .page-head{top:var(--shell)}}
+@media(max-width:620px){#skandi-app-root .shell{padding:0 9px}#skandi-app-root .brand span{display:none}#skandi-app-root .content{padding:13px 10px 30px}#skandi-app-root .page-head{padding:10px 12px;align-items:flex-start;flex-direction:column}#skandi-app-root .grid4,#skandi-app-root .grid2,#skandi-app-root .form{grid-template-columns:1fr}#skandi-app-root .field.full{grid-column:auto}#skandi-app-root .toolbar{flex-direction:column;align-items:stretch}#skandi-app-root .input,#skandi-app-root .select,#skandi-app-root .toolbar .btn{width:100%;min-width:0}#skandi-app-root .actions{width:100%}#skandi-app-root .actions .btn{flex:1}}
+</style>
+<style data-skandi-part="shell">html,body{margin:0;width:100%;min-height:100%;}*,*::before,*::after{box-sizing:border-box}#skandi-shell-root{min-height:100vh;min-width:0;display:flex;flex-direction:column}#skandi-app-root{flex:1;min-width:0;position:relative}#riaintra-global-header-root,#riaintra-global-footer-root{flex:none}@media(max-width:767px){input:not([type=hidden]),select,textarea{font-size:16px!important}}html,body{height:100%;overflow:hidden}#skandi-shell-root{height:100vh;height:100dvh;min-height:0;overflow:hidden}#skandi-app-root{height:auto;min-height:0;overflow:auto}#riaintra-global-header-root{position:relative;height:52px;min-height:52px;overflow:visible;z-index:2000}#riaintra-global-footer-root{height:auto;overflow:visible;z-index:2000}#riaintra-global-header-root .shellbar{position:absolute}#altea-global-footer-root .status-bar{position:relative}@media(max-width:600px){#riaintra-global-footer-root .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px}#riaintra-global-footer-root .footer-left{flex-wrap:wrap;gap:6px}}</style>
+</head>
+<body>
+<div id="skandi-shell-root" data-skandi-page="payroll" data-skandi-key="payroll" data-skandi-family="riaintra" data-skandi-chrome="riaintra">
+<div id="riaintra-global-header-root">
+
+<!-- MAIN HEADER -->
+<header class="shellbar">
+  <div class="shellbar-inner">
+    
+    <div class="shell-left">
+      <button id="burger" class="burger" type="button" aria-label="Open menu">☰</button>
+      <div class="product">
+        <img id="logo" src="" alt="RIAINTRA">
+        <div class="product-text">
+          <strong id="riaintra-header-productName">RIAINTRA</strong>
+          <small id="productContext">Enterprise Workforce Suite</small>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Desktop Navigation -->
+    <nav id="riaintra-header-desktopNav" class="shell-nav" aria-label="Internal navigation"></nav>
+    
+    <div class="shell-right">
+      <button id="returnDashboardBtn" class="utility-action" type="button" hidden="">Return to Dashboard</button>
+      <button id="logoutBtn" class="utility-action" type="button">Logout</button>
+
+      <!-- Clock -->
+      <div id="sfClock" class="clock" title="Toggle local / UTC">
+        <strong id="sfClockTime">--:--:--</strong>
+        <small id="sfClockDate">LOCAL</small>
+      </div>
+      
+      <!-- Profile -->
+      <div class="profile" id="userProfile">
+        <div class="profile-name" id="userName">--</div>
+        <div class="profile-meta" id="userMeta">--</div>
+        <div class="profile-email" id="userEmail">--</div>
+        <img id="badge_photo_url" class="profile-avatar" alt="Staff badge photo" style="display:none">
+        <div id="avatarFallback" class="profile-avatar">--</div>
+      </div>
+    </div>
+
+  </div>
+</header>
+
+<!-- MOBILE DRAWER -->
+<div id="mobileDrawer" class="mobile-drawer">
+  <div class="mobile-head">
+    <strong>RIAINTRA</strong>
+    <button id="drawerClose" class="close" type="button" aria-label="Close menu">×</button>
+  </div>
+  <nav id="riaintra-header-mobileNav" class="mobile-nav"></nav>
+</div>
+<div id="drawerOverlay" class="overlay"></div>
+
+
+
+
+</div>
+<div id="skandi-app-root">
+<div id="loading" class="loading"><div><div class="spinner"></div><p>Loading Payroll…</p></div></div>
+<header class="shell"><button id="menuBtn" class="menu" aria-label="Menu">☰</button><div class="brand"><div class="mark">Z</div><div><strong>ZALARIS</strong><span>ePayroll Portal · SKANDI ECP</span></div></div><div class="search"><input id="globalSearch" placeholder="Search payroll profiles, runs or periods"></div><div class="shell-space"></div><div class="profile"><div class="avatar" id="avatar">SK</div><div><strong id="profileName">SKANDI Staff</strong><span id="profileRole">Payroll</span></div></div></header>
+<div id="scrim" class="scrim"></div>
+<aside class="sidebar"><div class="nav-group">My Payroll</div><button class="nav-btn active" data-view="home">Payroll Home</button><button class="nav-btn" data-view="payslips">My Payslips</button><div class="nav-group admin-only">Payroll Control</div><button class="nav-btn admin-only" data-view="employees">Employee Payroll Profiles</button><button class="nav-btn admin-only" data-view="periods">Periods &amp; Runs</button><button class="nav-btn admin-only" data-view="run-lines">Run Lines</button><button class="nav-btn admin-only" data-view="adjustments">Adjustments</button><button class="nav-btn admin-only" data-view="exports">Provider Exports</button><div class="nav-group">Connected Systems</div><button class="nav-btn" data-view="successfactors">SuccessFactors</button></aside>
+<div class="workspace"><header class="page-head"><div><h1 id="pageTitle">Payroll Home</h1><p id="pageSubtitle">Employee payroll workspace</p></div><div class="actions"><button class="btn" data-action="refresh">Refresh</button></div></header><main class="content"><div id="view"></div></main></div>
+<div id="toast" class="toast hidden"></div>
+
+
+
+</div>
+<div id="riaintra-global-footer-root">
+<footer>
+  <div class="wrap">
+    <div class="footer-left">
+      <div id="links" class="links"></div>
+      <div class="meta">RIAINTRA</div>
+    </div>
+
+    <div id="grouplogo" class="global-footer">
+      <img src="https://static.wixstatic.com/media/394052_02ed0c030fea4f14b5e5677fdaeae197~mv2.png" alt="SKANDI GROUP MEMBER">
+    </div>
+
+    <div class="footer-right">
+      © 2026 SKANDI TRAVELS
+    </div>
+  </div>
+</footer>
+
+
+
+</div>
+
+</div>
+<script data-skandi-part="skandi-shell-runtime">/** SKANDI compiled public-shell runtime — no alternate backend, no local cart. */
+const SKANDI_SHELL_SOURCE = 'SKANDI_SHELL';
+const SKANDI_SHELL_PARENT = 'SKANDI_WIX_PARENT';
+const shellRoot = document.getElementById('skandi-shell-root');
+if (!shellRoot) throw new Error('SKANDI shell mount missing');
+window.__SKANDI_SHELL__ = Object.freeze({
+  mode:'compiled-single-embed',
+  page:shellRoot.dataset.skandiPage || '',
+  root:shellRoot
+});
+// A single iframe passes Home, Header, Footer and Mobile messages to the
+// same Wix Velo HtmlComponent. Existing message source/type values remain.
+// The Wix master controller supplies canonical route and session data.
+window.addEventListener('message', event => {
+  if (event.source !== window.parent) return;
+  let message = event.data;
+  if (typeof message === 'string') {
+    try { message = JSON.parse(message); } catch (_) { return; }
+  }
+  if (!message || message.source !== SKANDI_SHELL_PARENT) return;
+  if (message.type === 'SKANDI_MASTER_CONFIG') {
+    shellRoot.dataset.skandiPath = String(message.payload?.currentPath || '/');
+  }
+  if (message.type === 'SKANDI_SCROLL_TOP' || message.type === 'MASTER_SCROLL_TOP') {
+    document.getElementById('skandi-app-root')?.scrollTo({ top:0, behavior:'instant' });
+  }
+});
+window.parent?.postMessage({
+  source:SKANDI_SHELL_SOURCE,
+  type:'SKANDI_SHELL_READY',
+  payload:{page:shellRoot.dataset.skandiPage || ''},
+  timestamp:new Date().toISOString()
+}, '*');
+
+// The universal receiver supplies this context only after canonical parent,
+// manifest and digest validation. Legacy Home never opts into this handshake.
+let shellAttempts = 0;
+let shellConfigReceived = false;
+let shellTimer;
+function requestShellConfig() {
+  if (++shellAttempts > 40 || shellConfigReceived) { clearInterval(shellTimer); return; }
+  window.parent.postMessage({source:SKANDI_SHELL_SOURCE,type:'MASTER_CONFIG_REQUEST',payload:{context:'compiled-shell'}},'*');
+}
+window.addEventListener('message', event => {
+  if (event.source !== window.parent) return;
+  let message=event.data;
+  if(typeof message==='string'){try{message=JSON.parse(message);}catch(_){return;}}
+  if(message?.source===SKANDI_SHELL_PARENT && message.type==='SKANDI_MASTER_CONFIG') {
+    shellConfigReceived=true;clearInterval(shellTimer);
+  }
+});
+function startCompiledShell() {
+  const context=window.__SKANDI_RECEIVER_CONTEXT__;
+  if(context?.allowed===true && context.key===shellRoot.dataset.skandiKey) {
+    window.parent.postMessage({source:SKANDI_SHELL_SOURCE,type:'SKANDI_COMPILED_READY',payload:{key:context.key}},'*');
+  }
+  shellTimer=setInterval(requestShellConfig,500);requestShellConfig();
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',startCompiledShell,{once:true});
+else startCompiledShell();
+</script>
+<script data-skandi-part="header">(function(){
+const __root=window.document.getElementById("riaintra-global-header-root");
+const document=new Proxy(window.document,{get(target,key){if(key==='getElementById')return id=>{const el=target.getElementById(id);return el&&(__root===el||__root.contains(el))?el:null;};if(key==='querySelector'||key==='querySelectorAll')return selector=>{if(/^(?:html|body|head|meta|title|link)(?:[\s.#[:]|$)/i.test(selector)&&!selector.includes(' '))return target[key](selector);return __root[key](selector);};if(key==='getElementsByClassName'||key==='getElementsByTagName')return value=>__root[key](value);const value=Reflect.get(target,key,target);return typeof value==='function'?value.bind(target):value;},set(target,key,value){return Reflect.set(target,key,value,target);}});
+
+(()=>{
+  "use strict";
+  
+  const SOURCE = "SKANDI_RIAINTRA_HEADER";
+  const PARENT = "SKANDI_WIX_PARENT";
+
+  let config = null;
+  let staff = {};
+
+  const $ = id => document.getElementById(id);
+  const esc = v => String(v ?? "").replace(/[&<>"']/g, s => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;"
+  }[s]));
+
+  function post(type, payload = {}) {
+    if (window.parent && window.parent !== window) {
+      window.parent.postMessage({
+        source: SOURCE,
+        type,
+        payload,
+        timestamp: new Date().toISOString()
+      }, "*");
+    }
+  }
+
+  // Mobile Menu Logic
+  function closeMenu() {
+    $("mobileDrawer")?.classList.remove("open");
+    $("drawerOverlay")?.classList.remove("show");
+    /* Compiled shell owns internal chrome geometry. */
+  }
+
+  $("burger")?.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const menu = $("mobileDrawer");
+    const overlay = $("drawerOverlay");
+    
+    menu.classList.toggle("open");
+    overlay.classList.toggle("show");
+    
+    if (menu.classList.contains("open")) {
+      // Command Wix to expand iframe slightly so the dark overlay shows
+      /* Compiled shell owns internal chrome geometry. */ 
+    } else {
+      /* Compiled shell owns internal chrome geometry. */
+    }
+  });
+
+  $("drawerClose")?.addEventListener("click", closeMenu);
+  $("drawerOverlay")?.addEventListener("click", closeMenu);
+
+  // Render Data
+  function render() {
+    // 1. Branding
+    const header = config?.internal?.header || {};
+    const logo = config?.brand?.assets?.logos?.riaintra || config?.brand?.assets?.logos?.skandiPrimary || "";
+    
+    if (logo && $("logo")) $("logo").src = logo;
+    if (header.productName && $("riaintra-header-productName")) $("riaintra-header-productName").textContent = header.productName;
+    if (header.productContext && $("productContext")) $("productContext").textContent = header.productContext;
+
+    // 2. Navigation
+    const current = config?.currentPath || "";
+    const items = header.primaryNav || config?.nav || [];
+    
+    if (Array.isArray(items) && items.length > 0) {
+      const markup = items.map(i => {
+        const active = current === i.path || (i.path && current.startsWith(i.path + "/"));
+        return `<button type="button" class="${active ? "active" : ""}" data-path="${esc(i.path)}">${esc(i.label)}</button>`;
+      }).join("");
+      
+      if ($("riaintra-header-desktopNav")) $("riaintra-header-desktopNav").innerHTML = markup;
+      if ($("riaintra-header-mobileNav")) $("riaintra-header-mobileNav").innerHTML = markup;
+    }
+
+    // 3. Canonical staff profile from Wix parent -> SKANDI_CORE/staffAuth -> Supabase agent_users.
+    const p = staff.profile || config?.staff?.profile || {};
+    const full =
+      p.displayName || p.display_name || p.fullName || p.name ||
+      [p.firstName || p.first_name, p.lastName || p.last_name].filter(Boolean).join(" ") ||
+      "Employee";
+    const skId = String(p.skId || p.skID || p.sk_id || p.employeeId || p.employee_id || "").trim().toUpperCase();
+    const baseCode = String(p.baseCode || p.base_code || p.base || p.station || "").trim().toUpperCase();
+    const corporateEmail = String(
+      p.corporateEmail || p.corporate_email || p.corporateEmailAddress ||
+      p.corporate_email_address || p.workEmail || p.email || ""
+    ).trim();
+    const photo = String(
+      p.badgePhotoUrl || p.badge_photo_url || p.photoUrl ||
+      p.profilePhotoUrl || p.photo || ""
+    ).trim();
+    const hasData = Boolean(skId || full !== "Employee" || corporateEmail || photo);
+
+    if ($("userProfile")) $("userProfile").style.display = hasData ? "grid" : "none";
+
+    if (hasData) {
+      const initials = [p.firstName || p.first_name, p.lastName || p.last_name]
+        .filter(Boolean).map(v => String(v)[0]).join("").slice(0, 2).toUpperCase() ||
+        full.slice(0, 2).toUpperCase();
+
+      if ($("userName")) $("userName").textContent = full;
+      if ($("userMeta")) $("userMeta").textContent = [skId, baseCode].filter(Boolean).join(" • ") || "RIAINTRA";
+      if ($("userEmail")) $("userEmail").textContent = corporateEmail || "—";
+
+      if (photo) {
+        $("badge_photo_url").src = photo;
+        $("badge_photo_url").style.display = "block";
+        $("avatarFallback").style.display = "none";
+      } else {
+        $("badge_photo_url").style.display = "none";
+        $("avatarFallback").style.display = "grid";
+        $("avatarFallback").textContent = initials;
+      }
+    }
+
+    // Return to Dashboard is hidden only on the Success Factors dashboard itself.
+    const normalizedCurrent = String(current || "").split("?")[0].replace(/\/$/, "") || "/";
+    if ($("returnDashboardBtn")) {
+      $("returnDashboardBtn").hidden = normalizedCurrent === "/riaintra/success-factors";
+    }
+  }
+
+  // Navigation Logic
+  document.addEventListener("click", e => {
+    const btn = e.target.closest("[data-path]");
+    if (!btn) return;
+    
+    const path = btn.dataset.path;
+    
+    // Update local active state visually
+    document.querySelectorAll("[data-path]").forEach(b => b.classList.remove("active"));
+    document.querySelectorAll(`[data-path="${path}"]`).forEach(b => b.classList.add("active"));
+    
+    if (config) config.currentPath = path;
+
+    closeMenu();
+    post("RIAINTRA_NAVIGATE", { path });
+  });
+
+  $("returnDashboardBtn")?.addEventListener("click", () => {
+    post("RIAINTRA_NAVIGATE", {
+      path:config?.routes?.successFactors || "/riaintra/success-factors"
+    });
+  });
+
+  $("logoutBtn")?.addEventListener("click", () => {
+    post("RIAINTRA_LOGOUT", {});
+  });
+
+  // Clock Logic
+  let clockUsesUtc = false;
+  function updateClock() {
+    const now = new Date();
+    const opts = {
+      hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false,
+      ...(clockUsesUtc ? { timeZone: "UTC" } : {})
+    };
+    if ($("sfClockTime")) $("sfClockTime").textContent = new Intl.DateTimeFormat(undefined, opts).format(now);
+    if ($("sfClockDate")) $("sfClockDate").textContent = clockUsesUtc 
+      ? `${now.toISOString().slice(0, 10)} UTC` 
+      : new Intl.DateTimeFormat(undefined, { weekday: "short", day: "2-digit", month: "short" }).format(now).toUpperCase();
+  }
+
+  $("sfClock")?.addEventListener("click", () => {
+    clockUsesUtc = !clockUsesUtc;
+    updateClock();
+  });
+  
+  setInterval(updateClock, 1000);
+  updateClock();
+
+  // Listen for Wix Parent Messages
+  window.addEventListener("message", e => {
+    const m = e.data || {};
+    if (m.source !== PARENT) return;
+
+    if (m.type === "SKANDI_MASTER_CONFIG") {
+      config = m.payload || {};
+      render();
+    }
+
+    if ([
+      "RIAINTRA_HEADER_STATE",
+      "UPDATE_PROFILE",
+      "INTERNAL_CHROME_BOOTSTRAP",
+      "GLOBAL_HEADER_BOOTSTRAP"
+    ].includes(m.type)) {
+      const payloadProfile =
+        m.payload?.profile ||
+        m.payload?.session?.profile ||
+        m.payload?.session ||
+        m.payload ||
+        {};
+      staff.profile = { ...staff.profile, ...payloadProfile };
+      render();
+    }
+  });
+
+  // Signal Wix parent window that embed is ready
+  post("MASTER_CONFIG_REQUEST", { context: "riaintra-header" });
+  post("RIAINTRA_HEADER_READY", {});
+  /* Compiled shell owns internal chrome geometry. */
+
+})();
+
+
+})();</script>
+<script data-skandi-part="footer">(function(){
+const __root=window.document.getElementById("riaintra-global-footer-root");
+const document=new Proxy(window.document,{get(target,key){if(key==='getElementById')return id=>{const el=target.getElementById(id);return el&&(__root===el||__root.contains(el))?el:null;};if(key==='querySelector'||key==='querySelectorAll')return selector=>{if(/^(?:html|body|head|meta|title|link)(?:[\s.#[:]|$)/i.test(selector)&&!selector.includes(' '))return target[key](selector);return __root[key](selector);};if(key==='getElementsByClassName'||key==='getElementsByTagName')return value=>__root[key](value);const value=Reflect.get(target,key,target);return typeof value==='function'?value.bind(target):value;},set(target,key,value){return Reflect.set(target,key,value,target);}});
+
+(()=>{
+  const SOURCE="SKANDI_RIAINTRA_FOOTER",PARENT="SKANDI_WIX_PARENT";
+  const LEGAL_PATH="/riaintra/success-factors/legal-internal";
+  let config=null;
+  const $=id=>document.getElementById(id);
+  const esc=v=>String(v??"").replace(/[&<>"']/g,s=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[s]));
+  const post=(type,payload={})=>window.parent.postMessage({source:SOURCE,type,payload,timestamp:new Date().toISOString()},"*");
+
+  function render(){
+    const legalPath=String(config?.routes?.legalInternal||LEGAL_PATH);
+    const links=Array.isArray(config?.internal?.footer?.links)?[...config.internal.footer.links]:[];
+    if(!links.some(i=>String(i?.path||"")===legalPath)){
+      links.push({label:"Legal & Policies",path:legalPath});
+    }
+    $("links").innerHTML=links.map(i=>`<button data-path="${esc(i.path)}">${esc(i.label)}</button>`).join("");
+  }
+
+  document.addEventListener("click",e=>{
+    const path=e.target.closest("[data-path]")?.dataset.path;
+    if(path)post("MASTER_NAVIGATE",{path});
+  });
+
+  window.addEventListener("message",e=>{
+    const m=e.data||{};if(m.source!==PARENT)return;
+    if(m.type==="SKANDI_MASTER_CONFIG"){config=m.payload||{};render()}
+  });
+
+  post("MASTER_CONFIG_REQUEST",{context:"riaintra-footer"});
+})();
+
+
+})();</script>
+<script data-skandi-part="payroll">(function(){
+const __root=window.document.getElementById("skandi-app-root");
+const document=new Proxy(window.document,{get(target,key){if(key==='getElementById')return id=>{const el=target.getElementById(id);return el&&(__root===el||__root.contains(el))?el:null;};if(key==='querySelector'||key==='querySelectorAll')return selector=>{if(/^(?:html|body|head|meta|title|link)(?:[\s.#[:]|$)/i.test(selector)&&!selector.includes(' '))return target[key](selector);return __root[key](selector);};if(key==='getElementsByClassName'||key==='getElementsByTagName')return value=>__root[key](value);const value=Reflect.get(target,key,target);return typeof value==='function'?value.bind(target):value;},set(target,key,value){return Reflect.set(target,key,value,target);}});
+
+(() => {
+"use strict";
+const CHILD_SOURCE="SKANDI_ZALARIS_PAYROLL",PARENT_SOURCE="SKANDI_WIX_PARENT";
+const $=id=>document.getElementById(id),arr=v=>Array.isArray(v)?v:[];
+const state={data:null,view:"home",query:"",selectedProfileId:"",selectedPeriodId:"",selectedRunId:"",selectedLineId:"",busy:false,workspaceReceived:false};
+const esc=v=>String(v??"").replace(/[&<>'"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[c]));
+const post=(type,payload={})=>parent.postMessage({source:CHILD_SOURCE,type,payload,timestamp:new Date().toISOString()},"*");
+const money=(n,c="USD")=>{try{return new Intl.NumberFormat(undefined,{style:"currency",currency:c||"USD"}).format(Number(n)||0)}catch{return `${Number(n)||0} ${c||""}`}};
+const initials=name=>String(name||"SK").split(/\s+/).filter(Boolean).slice(0,2).map(x=>x[0]).join("").toUpperCase();
+function busy(on){state.busy=!!on;$("loading").classList.toggle("hidden",!on)}function toast(m){const e=$("toast");e.textContent=m;e.classList.remove("hidden");clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.add("hidden"),4500)}
+function admin(){return state.data?.mode==="ADMIN"&&!!state.data?.session?.payrollAdmin}function selfProfile(){return state.data?.self?.profile||null}function profiles(){return arr(state.data?.admin?.profiles)}function periods(){return arr(state.data?.admin?.periods)}function runs(){return arr(state.data?.admin?.runs)}function lines(){return arr(state.data?.admin?.lines)}
+function setIdentity(){const p=state.data?.session?.profile||{};$("profileName").textContent=p.displayName||p.fullName||p.skId||"SKANDI Staff";$("profileRole").textContent=admin()?"Payroll Administrator":(p.jobTitle||"Employee Payroll");$("avatar").textContent=initials(p.displayName||p.fullName);document.body.classList.toggle("admin",admin())}
+function setView(v){if(!admin()&&["employees","periods","run-lines","adjustments","exports"].includes(v))v="home";state.view=v;document.querySelectorAll(".nav-btn").forEach(b=>b.classList.toggle("active",b.dataset.view===v));const titles={home:["Payroll Home",admin()?"Employee and Payroll Control workspace":"Your payroll overview"],payslips:["My Payslips","Finalized and calculated payroll results"],employees:["Employee Payroll Profiles","Payroll-owned employee setup, compensation and rates"],periods:["Periods & Runs","Create payroll periods and controlled run shells"],"run-lines":["Run Lines","Enter explicit line amounts; no automatic pay formula is assumed"],adjustments:["Adjustments","Payroll-owned adjustments"],exports:["Provider Exports","Generate controlled provider files after finalization"],successfactors:["SuccessFactors","Organization and employee master data"]};const t=titles[v]||titles.home;$("pageTitle").textContent=t[0];$("pageSubtitle").textContent=t[1];render();document.body.classList.remove("menu-open")}
+function render(){if(!state.data)return;setIdentity();({home:renderHome,payslips:renderPayslips,employees:renderEmployees,periods:renderPeriods,"run-lines":renderRunLines,adjustments:renderAdjustments,exports:renderExports,successfactors:renderSuccessFactors}[state.view]||renderHome)();wire()}
+function renderHome(){const p=selfProfile(),sl=arr(state.data?.self?.payslips),latest=sl[0],a=state.data?.admin;$("view").innerHTML=`<section class="grid grid4"><article class="card kpi"><small>Payroll mode</small><strong>${admin()?"ADMIN":"SELF"}</strong><span>Permission-preset controlled</span></article><article class="card kpi"><small>Currency</small><strong>${esc(p?.currency||"—")}</strong><span>${esc(p?.taxRegion||"No jurisdiction")}</span></article><article class="card kpi"><small>Latest Net</small><strong>${money(latest?.netPay||0,latest?.currency||p?.currency||"USD")}</strong><span>${esc(latest?.status||"No payslip")}</span></article><article class="card kpi"><small>Payroll Profile</small><strong>${p?.payrollEnabled?"ACTIVE":"—"}</strong><span>${esc(p?.bankStatus||"Not initialized")}</span></article></section><section class="grid grid2 section-gap"><article class="card"><div class="card-head"><div><h2>My payroll</h2><p>Employee self-service</p></div><span class="status ${p?.payrollEnabled?'good':'warn'}">${p?.payrollEnabled?'Active':'Not active'}</span></div><div class="card-body">${p?`<div class="summary"><div><span>Employee</span><strong>${esc(p.displayName)}</strong></div><div><span>SK-ID</span><strong>${esc(p.skId)}</strong></div><div><span>Employment type</span><strong>${esc(p.employmentType)}</strong></div><div><span>Currency</span><strong>${esc(p.currency)}</strong></div><div><span>Tax region</span><strong>${esc(p.taxRegion||'—')}</strong></div><div><span>Bank status</span><strong>${esc(p.bankStatus)}</strong></div></div>`:`<div class="empty"><strong>No payroll profile</strong>SuccessFactors must provide the employee and jurisdiction master data before Payroll setup can be completed.</div>`}</div></article><article class="card"><div class="card-head"><div><h2>Authority model</h2><p>B-008 convergence</p></div><span class="status good">Payroll-owned</span></div><div class="card-body"><div class="notice">SuccessFactors owns organization, position, manager and jurisdiction master data. Payroll consumes that master data and owns compensation, rates, payroll enablement, periods, run amounts, adjustments, finalization and provider export state. Payroll does not overwrite SuccessFactors-owned fields.</div>${admin()?`<div class="notice warn section-gap">Run creation intentionally does not invent a pay formula. Every employee line begins with zero amounts and must receive explicit controlled values before finalization.</div>`:""}</div></article></section>${admin()?`<section class="grid grid4 section-gap"><article class="card kpi"><small>Profiles</small><strong>${profiles().length}</strong><span>Live backend rows</span></article><article class="card kpi"><small>Periods</small><strong>${periods().length}</strong><span>No sample periods</span></article><article class="card kpi"><small>Runs</small><strong>${runs().length}</strong><span>No sample runs</span></article><article class="card kpi"><small>Pending Lines</small><strong>${lines().filter(x=>x.status!=="calculated").length}</strong><span>Require explicit amounts</span></article></section>`:""}`}
+function renderPayslips(){const p=selfProfile(),sl=arr(state.data?.self?.payslips);$("view").innerHTML=`<section class="card"><div class="card-head"><div><h2>My Payslips</h2><p>${esc(p?.displayName||"Employee")}</p></div></div><div class="table-wrap"><table class="table"><thead><tr><th>Date</th><th>Status</th><th>Hours</th><th>Earnings</th><th>Deductions</th><th>Net</th></tr></thead><tbody>${sl.map(x=>`<tr><td>${esc((x.createdAt||"").slice(0,10)||'—')}</td><td><span class="status ${x.status==='calculated'?'good':'warn'}">${esc(x.status)}</span></td><td>${esc(x.hours)}</td><td>${money(x.earnings,x.currency)}</td><td>${money(x.deductions,x.currency)}</td><td><strong>${money(x.netPay,x.currency)}</strong></td></tr>`).join("")||`<tr><td colspan="6"><div class="empty"><strong>No payroll results</strong>No payroll run lines have been returned for your profile.</div></td></tr>`}</tbody></table></div></section>`}
+function filteredProfiles(){const q=state.query.trim().toLowerCase();return profiles().filter(x=>!q||[x.displayName,x.skId,x.email,x.taxRegion].some(v=>String(v||"").toLowerCase().includes(q)))}
+function renderEmployees(){if(!admin())return setView("home");const rows=filteredProfiles(),sel=profiles().find(x=>x.id===state.selectedProfileId)||rows[0]||null;if(sel&&!state.selectedProfileId)state.selectedProfileId=sel.id;$("view").innerHTML=`<section class="grid grid2"><article class="card"><div class="card-head"><div><h2>Payroll Profiles</h2><p>${rows.length} live profiles</p></div></div><div class="card-body"><div class="toolbar"><input id="profileSearch" class="input" value="${esc(state.query)}" placeholder="Search employee or SK-ID"></div></div><div class="table-wrap"><table class="table"><thead><tr><th>Employee</th><th>SK-ID</th><th>Currency</th><th>Status</th></tr></thead><tbody>${rows.map(x=>`<tr data-id="${esc(x.id)}" class="${state.selectedProfileId===x.id?'selected':''}"><td>${esc(x.displayName)}</td><td>${esc(x.skId)}</td><td>${esc(x.currency)}</td><td><span class="status ${x.payrollEnabled?'good':'warn'}">${x.payrollEnabled?'Enabled':'Disabled'}</span></td></tr>`).join("")||`<tr><td colspan="4"><div class="empty"><strong>No profiles</strong>No payroll profiles were returned.</div></td></tr>`}</tbody></table></div></article><article class="card"><div class="card-head"><div><h2>Payroll setup</h2><p>Payroll-owned fields</p></div>${sel?`<span class="status good">${esc(sel.currency)}</span>`:""}</div><div class="card-body">${sel?`<form id="profileForm" class="form"><div class="field full"><label>Employee</label><input value="${esc(sel.displayName)} · ${esc(sel.skId)}" disabled></div><div class="field"><label>Employment type</label><input id="employmentType" value="${esc(sel.employmentType)}"></div><div class="field"><label>Payroll enabled</label><select id="payrollEnabled"><option value="true" ${sel.payrollEnabled?'selected':''}>Enabled</option><option value="false" ${!sel.payrollEnabled?'selected':''}>Disabled</option></select></div><div class="field"><label>Base salary / configured amount</label><input id="baseSalary" type="number" min="0" step="0.01" value="${esc(sel.baseSalary)}"></div><div class="field"><label>Hourly rate</label><input id="hourlyRate" type="number" min="0" step="0.01" value="${esc(sel.hourlyRate)}"></div><div class="field"><label>Standard hours</label><input id="standardHours" type="number" min="0" step="0.01" value="${esc(sel.standardHours)}"></div><div class="field"><label>Bank status</label><input id="bankStatus" value="${esc(sel.bankStatus)}"></div><div class="field"><label>Currency (SuccessFactors jurisdiction)</label><input value="${esc(sel.currency)}" disabled></div><div class="field"><label>Tax region (SuccessFactors jurisdiction)</label><input value="${esc(sel.taxRegion||'—')}" disabled></div><div class="field full"><label>Payroll note</label><textarea id="payrollNote">${esc(sel.payrollNote||'')}</textarea></div><div class="field full"><button class="btn primary" type="submit">Save Payroll Profile</button></div></form>`:`<div class="empty"><strong>Select a profile</strong>Choose an employee payroll profile.</div>`}</div></article></section>`;const s=$("profileSearch");s?.addEventListener("input",e=>{state.query=e.target.value;renderEmployees()});document.querySelectorAll("tr[data-id]").forEach(r=>r.addEventListener("click",()=>{state.selectedProfileId=r.dataset.id;renderEmployees()}));$("profileForm")?.addEventListener("submit",e=>{e.preventDefault();busy(true);post("PAYROLL_SAVE_PROFILE",{id:sel.id,employmentType:$("employmentType").value,payrollEnabled:$("payrollEnabled").value==="true",baseSalary:$("baseSalary").value,hourlyRate:$("hourlyRate").value,standardHours:$("standardHours").value,bankStatus:$("bankStatus").value,payrollNote:$("payrollNote").value})})}
+function renderPeriods(){if(!admin())return setView("home");const ps=periods(),rs=runs(),selP=ps.find(x=>x.id===state.selectedPeriodId)||ps[0]||null;if(selP&&!state.selectedPeriodId)state.selectedPeriodId=selP.id;$("view").innerHTML=`<section class="grid grid2"><article class="card"><div class="card-head"><div><h2>Payroll periods</h2><p>Create controlled processing windows</p></div></div><div class="card-body"><form id="periodForm" class="form"><div class="field"><label>Period code</label><input id="periodCode" placeholder="SEK-2026-09"></div><div class="field"><label>Currency</label><input id="periodCurrency" maxlength="3" placeholder="SEK"></div><div class="field"><label>Start date</label><input id="periodStart" type="date"></div><div class="field"><label>End date</label><input id="periodEnd" type="date"></div><div class="field full"><button class="btn primary" type="submit">Create Period</button></div></form></div><div class="table-wrap"><table class="table"><thead><tr><th>Code</th><th>Dates</th><th>Currency</th><th>Status</th></tr></thead><tbody>${ps.map(x=>`<tr data-period="${esc(x.id)}" class="${state.selectedPeriodId===x.id?'selected':''}"><td>${esc(x.periodCode)}</td><td>${esc(x.startDate)} → ${esc(x.endDate)}</td><td>${esc(x.currency)}</td><td><span class="status">${esc(x.status)}</span></td></tr>`).join("")||`<tr><td colspan="4"><div class="empty"><strong>No periods</strong>Create the first live payroll period.</div></td></tr>`}</tbody></table></div></article><article class="card"><div class="card-head"><div><h2>Payroll runs</h2><p>Run shells contain no assumed pay formula</p></div>${selP?`<button class="btn primary" data-action="create-run">Create Run</button>`:""}</div><div class="table-wrap"><table class="table"><thead><tr><th>Run</th><th>Period</th><th>Status</th><th>Gross</th><th>Net</th></tr></thead><tbody>${rs.map(x=>`<tr data-run="${esc(x.id)}" class="${state.selectedRunId===x.id?'selected':''}"><td>${esc(x.runCode)}</td><td>${esc(x.periodCode)}</td><td><span class="status ${x.status==='finalized'?'good':'warn'}">${esc(x.status)}</span></td><td>${money(x.grossTotal,x.currency)}</td><td>${money(x.netTotal,x.currency)}</td></tr>`).join("")||`<tr><td colspan="5"><div class="empty"><strong>No runs</strong>Create a run from an open payroll period.</div></td></tr>`}</tbody></table></div></article></section>`;$("periodForm")?.addEventListener("submit",e=>{e.preventDefault();busy(true);post("PAYROLL_CREATE_PERIOD",{periodCode:$("periodCode").value,currency:$("periodCurrency").value,startDate:$("periodStart").value,endDate:$("periodEnd").value})});document.querySelectorAll("tr[data-period]").forEach(r=>r.addEventListener("click",()=>{state.selectedPeriodId=r.dataset.period;renderPeriods()}));document.querySelectorAll("tr[data-run]").forEach(r=>r.addEventListener("click",()=>{state.selectedRunId=r.dataset.run;setView("run-lines")}))}
+function selectedRun(){return runs().find(x=>x.id===state.selectedRunId)||runs()[0]||null}function renderRunLines(){if(!admin())return setView("home");const run=selectedRun();if(run&&!state.selectedRunId)state.selectedRunId=run.id;const ls=run?lines().filter(x=>x.payrollRunId===run.id):[],sel=ls.find(x=>x.id===state.selectedLineId)||ls[0]||null;if(sel&&!state.selectedLineId)state.selectedLineId=sel.id;$("view").innerHTML=`<section class="card"><div class="card-head"><div><h2>${esc(run?.runCode||"No run selected")}</h2><p>${run?`${esc(run.periodCode)} · ${esc(run.currency)} · ${ls.length} lines`:"Select a run in Periods & Runs"}</p></div>${run&&run.status!=="finalized"?`<button class="btn primary" data-action="finalize-run">Finalize Run</button>`:""}</div>${run?`<div class="table-wrap"><table class="table"><thead><tr><th>Employee</th><th>Hours</th><th>Earnings</th><th>Deductions</th><th>Net</th><th>Status</th></tr></thead><tbody>${ls.map(x=>`<tr data-line="${esc(x.id)}" class="${state.selectedLineId===x.id?'selected':''}"><td>${esc(x.displayName)}<br><small>${esc(x.skId)}</small></td><td>${esc(x.hours)}</td><td>${money(x.earnings,x.currency)}</td><td>${money(x.deductions,x.currency)}</td><td><strong>${money(x.netPay,x.currency)}</strong></td><td><span class="status ${x.status==='calculated'?'good':'warn'}">${esc(x.status)}</span></td></tr>`).join("")}</tbody></table></div>`:`<div class="empty"><strong>No run selected</strong>Open Periods & Runs first.</div>`}</section>${sel&&run?.status!=="finalized"?`<section class="card section-gap"><div class="card-head"><div><h2>Edit run line</h2><p>Explicit controlled values only</p></div></div><div class="card-body"><form id="lineForm" class="form"><div class="field full"><label>Employee</label><input value="${esc(sel.displayName)} · ${esc(sel.skId)}" disabled></div><div class="field"><label>Hours</label><input id="lineHours" type="number" min="0" step="0.01" value="${esc(sel.hours)}"></div><div class="field"><label>Earnings</label><input id="lineEarnings" type="number" min="0" step="0.01" value="${esc(sel.earnings)}"></div><div class="field"><label>Deductions</label><input id="lineDeductions" type="number" min="0" step="0.01" value="${esc(sel.deductions)}"></div><div class="field"><label>Net (derived)</label><input value="${esc(Math.max(0,(Number(sel.earnings)||0)-(Number(sel.deductions)||0)))}" disabled></div><div class="field full"><div class="notice warn">B-008 does not guess whether base salary is annual, monthly or per-period. Payroll staff must supply the controlled run amount or a later approved calculation provider must do so.</div></div><div class="field full"><button class="btn primary" type="submit">Save Run Line</button></div></form></div></section>`:""}`;document.querySelectorAll("tr[data-line]").forEach(r=>r.addEventListener("click",()=>{state.selectedLineId=r.dataset.line;renderRunLines()}));$("lineForm")?.addEventListener("submit",e=>{e.preventDefault();busy(true);post("PAYROLL_SAVE_RUN_LINE",{id:sel.id,hours:$("lineHours").value,earnings:$("lineEarnings").value,deductions:$("lineDeductions").value})})}
+function renderAdjustments(){if(!admin())return setView("home");const a=arr(state.data?.admin?.adjustments),p=profiles();$("view").innerHTML=`<section class="grid grid2"><article class="card"><div class="card-head"><div><h2>New Adjustment</h2><p>Payroll-owned control</p></div></div><div class="card-body"><form id="adjForm" class="form"><div class="field full"><label>Employee</label><select id="adjProfile"><option value="">Select employee</option>${p.map(x=>`<option value="${esc(x.id)}">${esc(x.displayName)} · ${esc(x.skId)}</option>`).join("")}</select></div><div class="field"><label>Type</label><input id="adjType" value="OTHER"></div><div class="field"><label>Amount</label><input id="adjAmount" type="number" step="0.01" value="0"></div><div class="field"><label>Taxable</label><select id="adjTaxable"><option value="true">Yes</option><option value="false">No</option></select></div><div class="field"><label>Run</label><select id="adjRun"><option value="">Not linked</option>${runs().map(x=>`<option value="${esc(x.id)}">${esc(x.runCode)}</option>`).join("")}</select></div><div class="field full"><label>Reason</label><textarea id="adjReason"></textarea></div><div class="field full"><button class="btn primary" type="submit">Save Adjustment</button></div></form></div></article><article class="card"><div class="card-head"><div><h2>Adjustments</h2><p>${a.length} live records</p></div></div><div class="table-wrap"><table class="table"><thead><tr><th>Employee</th><th>Type</th><th>Amount</th><th>Taxable</th><th>Status</th></tr></thead><tbody>${a.map(x=>`<tr><td>${esc(x.skId||x.staffKey)}</td><td>${esc(x.adjustmentType)}</td><td>${esc(x.amount)}</td><td>${x.taxable?'Yes':'No'}</td><td>${esc(x.status)}</td></tr>`).join("")||`<tr><td colspan="5"><div class="empty"><strong>No adjustments</strong>No live adjustment records.</div></td></tr>`}</tbody></table></div></article></section>`;$("adjForm")?.addEventListener("submit",e=>{e.preventDefault();const prof=p.find(x=>x.id===$("adjProfile").value);if(!prof){toast("Select an employee.");return}const run=runs().find(x=>x.id===$("adjRun").value);busy(true);post("PAYROLL_SAVE_ADJUSTMENT",{staffKey:prof.staffKey,agentUserId:prof.agentUserId,skId:prof.skId,adjustmentType:$("adjType").value,amount:$("adjAmount").value,taxable:$("adjTaxable").value==="true",payrollRunId:run?.id||"",payrollPeriodId:run?.payrollPeriodId||"",reason:$("adjReason").value,status:"DRAFT"})})}
+function renderExports(){if(!admin())return setView("home");const ex=arr(state.data?.admin?.exports),finalized=runs().filter(x=>x.status==="finalized");$("view").innerHTML=`<section class="grid grid2"><article class="card"><div class="card-head"><div><h2>Create Provider Export</h2><p>File generation only; no external provider API call is claimed</p></div></div><div class="card-body"><form id="exportForm" class="form"><div class="field full"><label>Finalized run</label><select id="exportRun"><option value="">Select run</option>${finalized.map(x=>`<option value="${esc(x.id)}">${esc(x.runCode)} · ${esc(x.currency)}</option>`).join("")}</select></div><div class="field full"><label>Provider code</label><input id="exportProvider" value="GUSTO"></div><div class="field full"><button class="btn primary" type="submit">Generate CSV Export</button></div></form><div class="notice warn section-gap">The current B-008 contract creates a controlled provider file and audit row only. It does not pretend a Zalaris API transmission exists until a real provider integration is separately registered.</div></div></article><article class="card"><div class="card-head"><div><h2>Export History</h2><p>${ex.length} records</p></div></div><div class="table-wrap"><table class="table"><thead><tr><th>Export</th><th>Provider</th><th>Status</th><th>Reference</th></tr></thead><tbody>${ex.map(x=>`<tr><td>${esc(x.exportKey)}</td><td>${esc(x.provider)}</td><td><span class="status ${x.status==='SENT'?'good':'warn'}">${esc(x.status)}</span></td><td>${esc(x.providerReference||'—')}</td></tr>`).join("")||`<tr><td colspan="4"><div class="empty"><strong>No exports</strong>No provider export files have been generated.</div></td></tr>`}</tbody></table></div></article></section>`;$("exportForm")?.addEventListener("submit",e=>{e.preventDefault();const runId=$("exportRun").value;if(!runId){toast("Select a finalized run.");return}busy(true);post("PAYROLL_CREATE_EXPORT",{runId,provider:$("exportProvider").value})})}
+function renderSuccessFactors(){$("view").innerHTML=`<section class="card"><div class="card-head"><div><h2>SuccessFactors</h2><p>Employee organization source of truth</p></div><button class="btn primary" data-action="open-successfactors">Open SuccessFactors</button></div><div class="card-body"><div class="notice">Use SuccessFactors for country of employment, work location/base, position, manager and system-access assignment. Return to Payroll for compensation, payroll setup and processing.</div></div></section>`}
+function wire(){document.querySelectorAll("[data-action]").forEach(b=>b.addEventListener("click",()=>{const a=b.dataset.action;if(a==="refresh"){busy(true);post("PAYROLL_REFRESH")}if(a==="open-successfactors")post("PAYROLL_NAVIGATE",{path:"/riaintra/success-factors"});if(a==="create-run"){if(!state.selectedPeriodId){toast("Select a payroll period.");return}busy(true);post("PAYROLL_CREATE_RUN",{periodId:state.selectedPeriodId})}if(a==="finalize-run"){const run=selectedRun();if(!run)return;busy(true);post("PAYROLL_FINALIZE_RUN",{runId:run.id})}}))}
+document.querySelectorAll(".nav-btn").forEach(b=>b.addEventListener("click",()=>setView(b.dataset.view)));$("menuBtn").addEventListener("click",()=>document.body.classList.toggle("menu-open"));$("scrim").addEventListener("click",()=>document.body.classList.remove("menu-open"));$("globalSearch").addEventListener("input",e=>{state.query=e.target.value;if(state.view==="employees")renderEmployees()});
+window.addEventListener("message",event=>{const m=event.data||{};if(m.source!==PARENT_SOURCE)return;if(m.type==="PAYROLL_HOST_READY"){if(!state.workspaceReceived)post("PAYROLL_REFRESH")}else if(m.type==="PAYROLL_WORKSPACE"){state.data=m.payload;state.workspaceReceived=true;busy(false);render()}else if(m.type==="PAYROLL_EXPORT_READY"){busy(false);const p=m.payload||{};if(p.csv){const blob=new Blob([p.csv],{type:"text/csv;charset=utf-8"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=p.fileName||"skandi-payroll-export.csv";a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);toast("Provider export generated and recorded.")}post("PAYROLL_REFRESH")}else if(m.type==="PAYROLL_ERROR"){busy(false);toast(m.payload?.message||"Payroll action failed.")}});
+busy(true);post("PAYROLL_READY");
+setTimeout(()=>{if(!state.workspaceReceived)post("PAYROLL_REFRESH")},650);
+setTimeout(()=>{if(!state.workspaceReceived)post("PAYROLL_REFRESH")},2400);
+setTimeout(()=>{if(!state.workspaceReceived){busy(false);toast("Payroll could not synchronize with the Wix page bridge. Republish the Payroll page and verify staff access.")}},8000);
+})();
+
+
+})();</script>
+</body>
+</html>
