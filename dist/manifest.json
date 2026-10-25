@@ -647,7 +647,7 @@
       "dynamic": false,
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
-      "error": "[travelInfo / travel-info] skandi-embeds/travel-info/skandi-travel-info.html, skandi-embeds/travel-info/skandi-travel-info.css, skandi-embeds/travel-info/skandi-travel-info.js: skandi-embeds/travel-info/skandi-travel-info.css:1264:7: Unexpected }",
+      "error": "[travelInfo / travel-info] skandi-embeds/travel-info/skandi-travel-info.html, skandi-embeds/travel-info/skandi-travel-info.css, skandi-embeds/travel-info/skandi-travel-info.js: Unexpected token '<'",
       "retainedArtifact": false
     },
     {
@@ -1837,7 +1837,7 @@
       ],
       "binding": "explicit",
       "requiresStaff": true,
-      "status": "FAILED",
+      "status": "BUILT",
       "files": [
         "skandi-embeds/altea-reservations/skandi-altea-reservations.html",
         "skandi-embeds/altea-reservations/skandi-altea-reservations.css",
@@ -1861,12 +1861,12 @@
         "SKANDI_DUFFEL_RESERVATIONS",
         "SKANDI_WIX_PARENT"
       ],
-      "output": null,
+      "output": "dist/altea-reservations/index.html",
       "dynamic": false,
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
-      "error": "[alteaReservations / altea-reservations] skandi-embeds/altea-reservations/skandi-altea-reservations.html, skandi-embeds/altea-reservations/skandi-altea-reservations.css, skandi-embeds/altea-reservations/skandi-altea-reservations.js: skandi-embeds/altea-reservations/skandi-altea-reservations.html: executable scripts interleaved with markup; move scripts after page markup before splitting",
-      "retainedArtifact": false
+      "sha256": "5732d1559a1fa06bf505e9d3db0edefb66fee77a9f17c1382b1daf7bf3e60c6e",
+      "bytes": 592737
     },
     {
       "key": "opsControl",

@@ -37,7 +37,7 @@ Route authority: `src/public/siteMap.js`. This file is generated evidence, not r
 | successFactors | /riaintra/success-factors | riaintra-embeds/success-factors/success-factors.{html,css,js} | riaintra / riaintra | src/pages/Success Factors.sh6tw.js | BUILT |
 | legalInternal | /riaintra/success-factors/legal-internal | skandi-embeds/legal-internal/skandi-legal-internal.{html,css,js} | riaintra / riaintra | src/pages/RIAINTRA Legal.xvi17.js | BUILT |
 | alteaLaunchpad | /riaintra/success-factors/altea | skandi-embeds/altea-launchpad/skandi-altea-launchpad.{html,css,js} | altea / altea | src/pages/ALTEA Launchpad.ajs4y.js | BUILT |
-| alteaReservations | /riaintra/success-factors/altea/reservations | skandi-embeds/altea-reservations/skandi-altea-reservations.{html,css,js} | altea / altea | src/pages/Reservations.ly2n8.js | FAILED |
+| alteaReservations | /riaintra/success-factors/altea/reservations | skandi-embeds/altea-reservations/skandi-altea-reservations.{html,css,js} | altea / altea | src/pages/Reservations.ly2n8.js | BUILT |
 | opsControl | /riaintra/success-factors/altea/ops | skandi-embeds/ops-control/skandi-ops-control.{html,css,js} | altea / altea | src/pages/OPS Control.uposx.js | BUILT |
 | inventoryControl | /riaintra/success-factors/altea/inventory-control | skandi-embeds/inventory-control/skandi-inventory-control.{html,css,js} | altea / altea | src/pages/Inventory Control.jsdik.js | FAILED |
 | uniformCenter | /riaintra/success-factors/uniform | skandi-embeds/uniform-center/skandi-uniform-center.{html,css,js} | riaintra / riaintra | src/pages/Uniform Center.lukfc.js | BUILT |
@@ -114,13 +114,12 @@ These actual repository controllers are preserved. No new route or build is inve
 - **transfers**: NOT READY: No verified canonical controller mapping.
 - **destinations**: NOT READY: [destinations / destinations] skandi-embeds/destinations/skandi-destinations.html, skandi-embeds/destinations/skandi-destinations.css, skandi-embeds/destinations/skandi-destinations.js: skandi-embeds/destinations/skandi-destinations.html: external stylesheet cannot be scoped: https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.css; put its rules in the CSS source
 - **offers**: NOT READY: No verified canonical controller mapping.
-- **travelInfo**: NOT READY: [travelInfo / travel-info] skandi-embeds/travel-info/skandi-travel-info.html, skandi-embeds/travel-info/skandi-travel-info.css, skandi-embeds/travel-info/skandi-travel-info.js: skandi-embeds/travel-info/skandi-travel-info.css:1264:7: Unexpected }
+- **travelInfo**: NOT READY: [travelInfo / travel-info] skandi-embeds/travel-info/skandi-travel-info.html, skandi-embeds/travel-info/skandi-travel-info.css, skandi-embeds/travel-info/skandi-travel-info.js: Unexpected token '<'
 - **skandiCollection**: NOT READY: [skandiCollection / skandi-collection] skandi-embeds/skandi-collection/skandi-skandi-collection.html, skandi-embeds/skandi-collection/skandi-skandi-collection.css, skandi-embeds/skandi-collection/skandi-skandi-collection.js: skandi-embeds/skandi-collection/skandi-skandi-collection.css: missing asset YOUR-IMAGE-URL.jpg
 - **voy**: NOT READY: PENDING SOURCE
 - **support**: NOT READY: src/public/customerAuthUi.js: imported export openCustomerLogin is absent; Help Center and support chat are separate HTML components; preserve them until a verified single-component migration.
 - **giftCard**: NOT READY: No verified canonical controller mapping.
 - **ourNetwork**: NOT READY: No verified canonical controller mapping.
-- **alteaReservations**: NOT READY: [alteaReservations / altea-reservations] skandi-embeds/altea-reservations/skandi-altea-reservations.html, skandi-embeds/altea-reservations/skandi-altea-reservations.css, skandi-embeds/altea-reservations/skandi-altea-reservations.js: skandi-embeds/altea-reservations/skandi-altea-reservations.html: executable scripts interleaved with markup; move scripts after page markup before splitting
 - **inventoryControl**: NOT READY: [inventoryControl / inventory-control] skandi-embeds/inventory-control/skandi-inventory-control.html, skandi-embeds/inventory-control/skandi-inventory-control.css, skandi-embeds/inventory-control/skandi-inventory-control.js: skandi-embeds/inventory-control/skandi-inventory-control.html: module scripts require bundling into the page .js first
 - **uniformControl**: NOT READY: PENDING SOURCE
 - **alteaTimatic**: NOT READY: No verified canonical controller mapping.

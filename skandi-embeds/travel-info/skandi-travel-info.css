@@ -1047,11 +1047,9 @@ body{
   .ti-motion-reveal{opacity:1!important;transform:none!important}
 }
 
-</style>
-<style>
 
 /* =========================================================
-   SKANDI Travel Info V12 — V11/V12 HYBRID VISUAL SYSTEM
+   SKANDI Travel Info V12 â€” V11/V12 HYBRID VISUAL SYSTEM
    V11 clarity + V12 motion, tabs, structured data and cabin interactions.
    Presentation only; V12 bridge, messages and data ownership are unchanged.
    ========================================================= */
@@ -1257,11 +1255,9 @@ body{background:#fff;color:var(--hybrid-text)}
   .ti-entity-media{min-height:118px}.ti-entity-chevron{display:none}
 }
 
-</style>
 
-<style id="tiAirportFlightInfoStyles">
+
 #tiDetail{--sk-navy:#022e64;--sk-navy-deep:#0b3a7a;--sk-navy-black:#04254a;--sk-blue:#285ca8;--sk-blue-2:#0b5c85;--sk-aqua:#5fc7cf;--sk-aqua-soft:#d9f1f1;--sk-aqua-pale:#eef9fa;--sk-ice:#e9eef8;--sk-sand:#f2e9dc;--sk-porcelain:#f6faff;--sk-section:#f3f6f8;--sk-white:#fff;--sk-graphite:#111827;--sk-muted:#667085;--sk-body:#526274;--sk-border:#dbe3ef;--sk-champagne:#d1bc98;--sk-danger:#d85f66;--sk-warning:#d59a36;--sk-success:#2f9170;--ease:cubic-bezier(.16,1,.3,1);--content:1180px}
-      }
         /* =========================================================
    FIDS HARDWARE SHELL
    ========================================================= */
@@ -1595,7 +1591,7 @@ body{background:#fff;color:var(--hybrid-text)}
         .board-screen[aria-busy="true"] {
             cursor: progress
         }
-        /* FIDS FLIGHT ROWS — Physical Hardware Setup */
+        /* FIDS FLIGHT ROWS â€” Physical Hardware Setup */
         .fids-row {
             position: relative;
             min-height: 64px;
@@ -2626,9 +2622,7 @@ body{background:#fff;color:var(--hybrid-text)}
         
 .ti-airport-experience{width:100%;padding-bottom:76px;background:#fff}.ti-airport-experience .wrap{width:min(1180px,calc(100% - 56px));margin-inline:auto}.ti-airport-experience .eyebrow{display:flex;align-items:center;gap:11px;color:var(--sk-blue);font-size:10px;font-weight:800;letter-spacing:.18em;text-transform:uppercase}.ti-airport-experience .eyebrow:before{content:"";width:38px;height:1px;background:linear-gradient(90deg,var(--sk-aqua),transparent)}.ti-airport-experience .eyebrow.light{color:#c8e3e8}.ti-airport-experience .ti-section-nav-wrap{width:min(1180px,calc(100% - 56px));margin:18px auto 0}.ti-section-nav[data-mode="airport-tabs"]{gap:7px;padding:8px 0}.ti-section-nav[data-mode="airport-tabs"] .ti-section-link{border:0;background:transparent;font-size:9.5px}.ti-section-nav[data-mode="airport-tabs"] .ti-section-link[aria-selected="true"]{background:var(--ti-navy);color:#fff;box-shadow:none}.ti-airport-tab-panels{width:min(1180px,calc(100% - 56px));margin:22px auto 0}.ti-airport-tab-panels>.ti-tab-panel{gap:18px}.ti-airport-tab-panels .airport-context-grid{width:100%;margin:0}.ti-airport-tab-panels .airport-commerce,.ti-airport-tab-panels .airport-destination-edit,.ti-airport-tab-panels .airport-practical{margin-top:24px;border-radius:24px;overflow:hidden}.ti-airport-tab-panels .airport-commerce>.section-head,.ti-airport-tab-panels .airport-practical>.section-head{padding-left:0;padding-right:0}.ti-airport-tab-panels .commerce-grid,.ti-airport-tab-panels .destination-edit-grid,.ti-airport-tab-panels .practical-grid{width:100%}.ti-airport-flight-panel{display:grid;gap:20px}.ti-airport-flight-heading{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:24px;align-items:end}.ti-airport-flight-heading h2{margin:8px 0;color:#022e64;font-size:clamp(28px,3.8vw,44px);font-weight:600;letter-spacing:-.05em}.ti-airport-flight-heading p{margin:0;color:#667085;font-size:11px;line-height:1.65}.ti-airport-flight-panel .airport-board-toggle{min-width:250px}.ti-airport-flight-panel .terminal-bay{width:100%;margin-top:4px}.ti-airport-flight-panel .flight-board-shell{width:100%}.ti-airport-flight-panel .board-footer{grid-template-columns:1fr auto}.ti-airport-board-retry{border:1px solid rgba(95,199,207,.4);background:transparent;color:#d9f1f1;padding:9px 13px;border-radius:8px;font-size:9px;font-weight:800}.ti-airport-experience .airport-profile{margin-top:8px}.ti-airport-experience .context-action{border-radius:10px}.ti-airport-experience .transfer-ribbon{border-radius:0 0 0 10px}.ti-airport-experience .commerce-card button,.ti-airport-experience .transfer-cta{border-radius:8px}.ti-airport-experience .airport-priority-strip{width:100%;margin-top:0}.ti-airport-experience .live-pill,.ti-airport-experience .board-live,.ti-airport-experience [data-system-state-pill]{display:none!important}
 @media(max-width:760px){.ti-airport-experience .wrap,.ti-airport-experience .ti-section-nav-wrap,.ti-airport-tab-panels{width:calc(100% - 24px)}.ti-airport-flight-heading{grid-template-columns:1fr}.ti-airport-flight-panel .airport-board-toggle{min-width:0}.ti-airport-experience .airport-profile-inner{width:calc(100% - 24px)}.ti-airport-experience .terminal-bay{padding-left:8px;padding-right:8px}.ti-airport-experience .airport-priority-strip{grid-template-columns:1fr}}
-</style>
 
-<style id="tiModernAirportFids">
 /* Modern airport FIDS: flat digital display, no decorative status pills/hardware. */
 .ti-airport-flight-panel .terminal-bay{
   width:100%;
@@ -2955,10 +2949,7 @@ body{background:#fff;color:var(--hybrid-text)}
   .ti-airport-flight-panel .board-footer>span:last-child{text-align:left}
   .ti-airport-flight-panel .fids-earlier-control{justify-self:start}
 }
-</style>
 
-
-<style id="tiEightColumnPassengerFids">
 /* Eight-column contemporary passenger FIDS. Functional gate/belt badges are wayfinding, not decorative state pills. */
 .ti-airport-flight-panel{
   --fids-accent:#f2c94c;
