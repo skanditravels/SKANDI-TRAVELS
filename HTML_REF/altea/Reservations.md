@@ -21,6 +21,7 @@
 - LAST SOURCE VERIFIED: 2026-10-11 — repo `skanditravels/SKANDI-TRAVELS`, branch `main`, HEAD `87e65bfd6a43e2a86bdc6a79895eea0519520ceb`; current Reservations HTML_REF, Wix page bridge, canonical reservations facade/core and shared ATB renderer inspected. Live Wix print/browser runtime was not exercised.
 
 ## CHANGE LOG
+- 2026-10-19 — Draft payment-integrity guard: the simulated agency card form and its false-paid action are removed pending the unified verified Stripe checkout; ALTEA booking/core now rejects client-supplied paid statuses and forged payment-collection history. No real payment processor integration or receipt delivery is claimed. This branch is NOT deployable as the complete Travel Cart; requires shared financial/tax orchestration and live validation.
 - 2026-10-08 — One-true-source enforcement finalized: Duffel-linked provider identity/facts are read-only in Inventory Control and refresh through the provider workspace; provider technical snapshots are hidden from generic editable fields; compatibility columns are database-derived. Current GitHub `main` at `86deedb4705fae292851256726cd81e13669aa98` was inspected and preserved.
 - 2026-10-08 — V12 one-true-source convergence prepared. Shared reference/master facts now have one editable Inventory/Supabase authority after provider import. Legacy Travel Info fields are derived compatibility projections, provider-key uniqueness is database-enforced, and current Duffel snapshots refresh provider-owned canonical facts without creating alternate data stores. The HTML design, IDs, message names, routes and permission boundaries are unchanged. STATICALLY VERIFIED; REQUIRES LIVE TEST after SQL/Wix publication.
 - 2026-10-11 — Transfer Card print output upgraded to the supplied ATB-size boarding-card model: 203.20 mm × 82.55 mm stock, SKANDI blue header, passenger/booking hierarchy, eight-field transfer matrix, highlighted bus/boarding/seat area, service footer and right-side vertical 2D data mark. Existing `printTransferCard()` action, transfer/passenger state, luggage tag, manifest, Wix bridge, backend, database and provider contracts remain unchanged. The data mark is generated locally and does not add an external barcode service. STATICALLY VERIFIED; REQUIRES LIVE PRINT TEST after Wix publication.
@@ -4920,81 +4921,24 @@ function syncFlightDataToBooking(targetBooking, flightSource) {
 function openSkandiCheckout() {
     const b = booking74();
     if (!b) return;
-    
-    // Find components that are not yet marked as PAID
     const comps = components74();
-    const unpaidComps = comps.filter(c => c.paymentStatus !== "PAID" && c.status !== "CONFIRMED");
+    const unpaidComps = comps.filter(c => c.paymentStatus !== "PAID" && c.status !== "CANCELLED" && c.status !== "REMOVED");
+    const currencies = [...new Set(unpaidComps.map(c => String(c.currency || b.currency || "").toUpperCase()))];
     const totalDue = unpaidComps.reduce((sum, c) => sum + Number(c.totalAmount || 0), 0);
-    
-    if (totalDue <= 0) return toast("Balance is zero", "No pending SKANDI component balances to settle.", "info");
-
+    if (!unpaidComps.length || totalDue <= 0) {
+      return toast("Balance review", "No unsettled component balance is available to collect.", "info");
+    }
     openModal("SKANDI Checkout & Settlement", `
-      <div class="alert info">
-        <span>💳</span>
-        <div><strong>Secure Agency Collection</strong>Process payment for self-owned inventory (Transfers, Tours, Hotels). Airfares are settled separately with the airline.</div>
-      </div>
-      
-      <table class="data-table" style="margin: 10px 0;">
+      <div class="alert warning"><span>!</span><div><strong>Payment verification required</strong>
+      This ALTEA checkout cannot accept card details or mark components paid until the shared server-side Stripe authorization, verified capture and component-tax reconciliation have been completed. The booking remains unpaid. Use the existing secure Duffel Stripe payment workflow for eligible airline purchases; do not enter card numbers into ALTEA.</div></div>
+      <table class="data-table" style="margin:10px 0">
         <thead><tr><th>Item</th><th>Amount</th></tr></thead>
-        <tbody>
-          ${unpaidComps.map(c => `<tr><td>${escapeHTML(serviceLabel(c))}</td><td>${money(c.totalAmount, c.currency || b.currency)}</td></tr>`).join("")}
-          <tr style="background:#fbfcfd;">
-            <td class="right strong">Total Due:</td>
-            <td class="strong price-total" style="color:#14804a;">${money(totalDue, b.currency || state.preferences.currency)}</td>
-          </tr>
-        </tbody>
+        <tbody>${unpaidComps.map(c => `<tr><td>${escapeHTML(serviceLabel(c))}</td><td>${money(c.totalAmount, c.currency || b.currency)}</td></tr>`).join("")}
+        <tr><td class="right strong">Recorded component total (not a payment quote)</td>
+        <td class="strong">${currencies.length === 1 ? money(totalDue, currencies[0]) : escapeHTML("Multiple currencies — cannot total")}</td></tr></tbody>
       </table>
-
-      <div class="field" style="margin-top:15px;">
-        <label>Form of Payment</label>
-        <select id="checkoutFop">
-          <option value="CARD_MOTO">Credit/Debit Card (Manual Entry)</option>
-          <option value="PAY_LINK">Send Secure Payment Link</option>
-          <option value="CASH">Cash / Bank Transfer</option>
-        </select>
-      </div>
-
-      <!-- Simulated Stripe Card Input Frame -->
-      <div id="motoCardFrame" style="padding:12px; border:1px solid #cbd3da; border-radius:3px; background:#f4f6f8; margin-bottom:10px;">
-         <label style="font-size:10px; font-weight:700; color:#425663; display:block; margin-bottom:6px;">CARD DETAILS</label>
-         <div style="display:flex; gap:8px;">
-            <input placeholder="Card number" style="flex:1; height:32px; padding:0 8px; border:1px solid #aeb9c2;" maxlength="19">
-            <input placeholder="MM/YY" style="width:70px; height:32px; padding:0 8px; border:1px solid #aeb9c2;" maxlength="5">
-            <input placeholder="CVC" style="width:60px; height:32px; padding:0 8px; border:1px solid #aeb9c2;" maxlength="4">
-         </div>
-      </div>
-    `, [
-      { label: "Cancel", className: "secondary", close: true },
-      { label: "Charge & Confirm", className: "primary", onClick: () => {
-         const fop = document.getElementById("checkoutFop").value;
-         closeModal();
-         
-         // 1. Update all unpaid components to PAID and CONFIRMED
-         unpaidComps.forEach(c => {
-           post("ALTEA_UPDATE_COMPONENT", { 
-             componentId: c.id, 
-             patch: { paymentStatus: "PAID", status: "CONFIRMED" } 
-           }, { busy: false });
-         });
-
-         // 2. Mark master booking as PAID
-         post("ALTEA_UPDATE_BOOKING", { bookingId: b.id, patch: { paymentStatus: "PAID" }});
-         
-         // 3. Log the payment to the history audit trail
-         post("ALTEA_ADD_HISTORY_NOTE", { 
-           bookingId: b.id, 
-           eventType: "AGENCY_PAYMENT_COLLECTED", 
-           note: `Collected ${money(totalDue, b.currency)} via ${fop}. Associated components marked as CONFIRMED.` 
-         });
-
-         toast("Payment Successful", `Balance settled via ${fop}. Components are now confirmed for boarding.`, "success");
-      }}
-    ]);
-
-    // Simple toggle logic for the fake card frame
-    document.getElementById("checkoutFop").addEventListener("change", (e) => {
-      document.getElementById("motoCardFrame").style.display = e.target.value === "CARD_MOTO" ? "block" : "none";
-    });
+      <div class="muted">Supplier-specific taxes, local service taxes, fees, and amounts due later must be verified before a single-currency Stripe charge can be prepared.</div>
+    `, [{ label:"Close",className:"primary",close:true }]);
   }
   function renderPackageBuilder(){
     const w=workspace();if(!w?.booking)return `${pageHead("Package Builder","Combine flights, hotels, cars, transfers, tours and SKANDI products under one master reference.",'<button class="primary" data-action="new-local-booking">New SKANDI booking</button>')}
