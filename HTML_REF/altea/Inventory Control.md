@@ -40,7 +40,7 @@
 
 
 ## COMPLETE INTENDED HTML
-
+{% raw %}
 ```html
 <!doctype html>
 <html lang="en">
@@ -2294,3 +2294,4 @@ createRoot(document.getElementById("root")).render(html`<${React.StrictMode}><${
 </body>
 </html>
 ```
+{% endraw %}
