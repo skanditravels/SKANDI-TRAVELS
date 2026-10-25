@@ -94,8 +94,11 @@ export async function normalizeHTML(html,css,js,{root,file,mount}) {
   let linkedCSS=false,linkedJS=false;
   let scriptStarted=false;
   for(const n of [...(body?.childNodes||tree.childNodes||[])]) {
+    // Splitting an inline <style> creates a stylesheet <link> in the same
+    // position. Both are style sources, not late application markup.
+    const stylesheet=n.tagName==='style'||(n.tagName==='link'&&attr(n,'rel')==='stylesheet');
     if(n.tagName==='script') scriptStarted=true;
-    else if(scriptStarted && n.tagName && !['script','style'].includes(n.tagName)) throw new Error(`${file}: executable scripts interleaved with markup; move scripts after page markup before splitting`);
+    else if(scriptStarted && n.tagName && !stylesheet) throw new Error(`${file}: executable scripts interleaved with markup; move scripts after page markup before splitting`);
   }
   for(const n of nodes) {
     if(inertNodes.has(n)&&['script','style'].includes(n.tagName))continue;
