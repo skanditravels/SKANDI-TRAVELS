@@ -49,3 +49,21 @@ test('compiler reads explicit local sidecars once and preserves additional CSS/s
   assert.ok(normalized.css.indexOf('color:red')<normalized.css.indexOf('color:blue'));
   assert.match(normalized.css,/@media screen/);
 });
+
+test('split stylesheet links between final scripts are styles, while actual interleaved markup remains rejected',async t=>{
+  const directory=await fs.mkdtemp(path.join(os.tmpdir(),'skandi-body-styles-'));t.after(()=>fs.rm(directory,{recursive:true,force:true}));
+  const original='<!doctype html><html><head><style>.x{color:red}</style></head><body><p class="x">Page</p><script>window.order=[1];</script><style id="extension-style">.x{color:blue}</style><script>window.order.push(2);</script></body></html>';
+  const split=splitDocument(original,'page');for(const [name,content] of Object.entries(split.files))await fs.writeFile(path.join(directory,name),content);
+  const options={root:directory,file:'page.html',mount:'app'};
+  const normalized=await normalizeHTML(split.files['page.html'],split.files['page.css'],split.files['page.js'],options);
+  const inline=await normalizeHTML(original,'/* inline styles */','/* inline scripts */',options);
+  assert.equal(normalized.css.trim(),inline.css.trim());
+  assert.equal(normalized.js.trim(),inline.js.trim());
+  assert.ok(normalized.css.indexOf('color:red')<normalized.css.indexOf('color:blue'));
+  assert.equal(normalized.js.match(/window.order=\[1\]/g).length,1);
+  assert.ok(normalized.js.indexOf('order=[1]')<normalized.js.indexOf('order.push(2)'));
+  for(const unsafe of ['<div>Late page content</div>','<link rel="preload" href="late.js" as="script">']) {
+    const html=split.files['page.html'].replace('</body>',unsafe+'</body>');
+    await assert.rejects(normalizeHTML(html,split.files['page.css'],split.files['page.js'],options),/executable scripts interleaved with markup/);
+  }
+});
