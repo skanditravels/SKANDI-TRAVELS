@@ -650,7 +650,7 @@
       "dynamic": false,
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
-      "error": "[travelInfo / travel-info] skandi-embeds/travel-info/skandi-travel-info.html, skandi-embeds/travel-info/skandi-travel-info.css, skandi-embeds/travel-info/skandi-travel-info.js: /home/runner/work/SKANDI-TRAVELS/SKANDI-TRAVELS/skandi-embeds/travel-info/skandi-travel-info.css:1264:7: Unexpected }",
+      "error": "[travelInfo / travel-info] skandi-embeds/travel-info/skandi-travel-info.html, skandi-embeds/travel-info/skandi-travel-info.css, skandi-embeds/travel-info/skandi-travel-info.js: Unexpected token '<'",
       "retainedArtifact": false
     },
     {
