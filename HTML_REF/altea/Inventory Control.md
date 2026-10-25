@@ -1046,7 +1046,7 @@ function AssetLibraryModal({context,onClose,onSelect,manageOnly=false,setBusy,se
   const pageSize=100,totalPages=Math.max(1,Math.ceil(filtered.length/pageSize)),safePage=Math.min(page,totalPages),pageAssets=filtered.slice((safePage-1)*pageSize,safePage*pageSize);
   return html`<${Modal} title=${manageOnly?"SKANDI Asset Library":"Choose from SKANDI Asset Library"} onClose=${onClose} wide=${true}>
     <div className="notice">Existing assets are always shown before upload. Reuse an existing file whenever possible; exact SHA-256 duplicates are blocked.</div>
-    <div className="assetfilters" style=${{marginTop:"12px"}}>
+    <div className="assetfilters" style=$marginTop:"12px"}}>
       <${Field} label="Library Root" type="select" options=${ASSET_ROOTS} value=${root} disabled=${locked} onChange=${v=>{setRoot(v);if(!locked){setFolder("");setSubfolder("");setCategory("")}setPage(1)}}/>
       <${Field} label="Folder" type="select" options=${folderOptions} value=${folder} disabled=${locked} onChange=${v=>{setFolder(v);setSubfolder("");setPage(1)}}/><${Field} label="Subfolder" type="select" options=${subfolderOptions} value=${subfolder} disabled=${locked} onChange=${v=>{setSubfolder(v);setPage(1)}}/><${Field} label="Category" type="select" options=${categoryOptions} value=${category} disabled=${locked} onChange=${v=>{setCategory(v);setPage(1)}}/>
       ${manageOnly?html`<${Field} label="Visibility" type="select" options=${["PUBLIC","PRIVATE"]} value=${visibility} onChange=${v=>{setVisibility(v);setPage(1)}}/>`:null}
@@ -1061,8 +1061,8 @@ function AssetLibraryModal({context,onClose,onSelect,manageOnly=false,setBusy,se
       ${manageOnly&&!locked?html`<div className="notice">Choose the business folder above, e.g. AIRLINES → British Airways or SKANDI → Marketing.</div>`:null}
       <input className="fileinput" type="file" accept=${assetType==="IMAGE"?"image/*":undefined} onChange=${e=>chooseFile(e.target.files?.[0]||null)}/>
       ${file?html`<div><b>${file.name}</b> · ${humanBytes(file.size)} · ${file.type||"unknown type"}</div>`:null}${uploading?html`<div className="sub">Checking file and Asset Library…</div>`:null}
-      ${dup?.exact?.length?html`<div className="dupbox"><b>Exact file already exists.</b><div className="sub">Upload is disabled. Use the existing asset.</div><div className="assetgrid" style=${{marginTop:"8px"}}>${dup.exact.map(a=>html`<${AssetCard} asset=${a} onUse=${onSelect} onOpen=${openAsset} manageOnly=${manageOnly}/>` )}</div></div>`:null}
-      ${dup?.possible?.length?html`<div className="dupbox"><b>Possible legacy duplicate found.</b><div className="sub">Check these older files before creating another copy.</div><div className="assetgrid" style=${{marginTop:"8px"}}>${dup.possible.map(a=>html`<${AssetCard} asset=${a} onUse=${onSelect} onOpen=${openAsset} manageOnly=${manageOnly}/>` )}</div><div className="assetactions"><button className="btn" onClick=${()=>upload(true)}>I checked — upload as new anyway</button></div></div>`:null}
+      ${dup?.exact?.length?html`<div className="dupbox"><b>Exact file already exists.</b><div className="sub">Upload is disabled. Use the existing asset.</div><div className="assetgrid" style=$marginTop:"8px"}}>${dup.exact.map(a=>html`<${AssetCard} asset=${a} onUse=${onSelect} onOpen=${openAsset} manageOnly=${manageOnly}/>` )}</div></div>`:null}
+      ${dup?.possible?.length?html`<div className="dupbox"><b>Possible legacy duplicate found.</b><div className="sub">Check these older files before creating another copy.</div><div className="assetgrid" style=$marginTop:"8px"}}>${dup.possible.map(a=>html`<${AssetCard} asset=${a} onUse=${onSelect} onOpen=${openAsset} manageOnly=${manageOnly}/>` )}</div><div className="assetactions"><button className="btn" onClick=${()=>upload(true)}>I checked — upload as new anyway</button></div></div>`:null}
       ${file&&!dup?.exact?.length&&!dup?.possible?.length?html`<button className="btn cyan" disabled=${uploading} onClick=${()=>upload(false)}>Upload to ${visibility==="PRIVATE"?"Private":"Public"} Asset Library</button>`:null}
     </div></div>
   <//>`
@@ -1628,7 +1628,9 @@ function DraggableHotspot({item,index,onMove,onSelect}){
     const y=Math.max(0,Math.min(100,((e.clientY-rect.top)/rect.height)*100));
     onMove(x,y);
   }
-  return html`<div className=${`hotspot ${drag?"dragging":""}`} style=${{left:`${item.x??50}%`,top:`${item.y??50}%`}} onPointerDown=${e=>{e.currentTarget.setPointerCapture(e.pointerId);setDrag(true)}} onPointerMove=${move} onPointerUp=${()=>setDrag(false)} onClick=${e=>{e.stopPropagation();onSelect?.()}}>${index+1}<div className="hotlabel">${item.label||item.title||`Hotspot ${index+1}`}</div></div>`
+  return html`<div className=${`hotspot ${drag?"dragging":""}`} style={% raw %}
+{{left:`${item.x ?? 50}`}}
+{% endraw %}`,top:`${item.y??50}%`}} onPointerDown=${e=>{e.currentTarget.setPointerCapture(e.pointerId);setDrag(true)}} onPointerMove=${move} onPointerUp=${()=>setDrag(false)} onClick=${e=>{e.stopPropagation();onSelect?.()}}>${index+1}<div className="hotlabel">${item.label||item.title||`Hotspot ${index+1}`}</div></div>`
 }
 
 
