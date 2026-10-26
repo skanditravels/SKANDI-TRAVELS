@@ -81,19 +81,21 @@ export async function inventory(root) {
     if(shapes.has(shape)) throw new Error(`Conflicting template routes ${key} and ${shapes.get(shape)}`);
     shapes.set(shape,key);
     const source=await triplet(root,directory,stem), components=[];
-    const componentFolders=new Set([folderKey]);
+    const componentFolders=new Set([folderKey]),componentKeys=new Set(),componentMounts=new Set(['skandi-shell-root','skandi-app-root','skandi-home-content']);
     for(const component of meta.components||[]) {
       const componentKey=String(component.key||'').trim();
       const componentDirectory=component.sourceDirectory||`skandi-embeds/${slug}/${componentKey}`;
       const componentStem=component.stem||`skandi-${slug}-${componentKey}`;
       const mount=component.mount||`skandi-${kebab(componentKey)}-root`;
       if(!/^[a-z0-9-]+$/.test(componentKey) || !/^[a-z0-9-]+$/.test(componentStem) || !/^(?:skandi-embeds|riaintra-embeds)\/[a-z0-9/-]+$/.test(componentDirectory) || componentDirectory.includes('..') || !/^[A-Za-z][A-Za-z0-9_-]*$/.test(mount)) throw new Error(`Unsafe component source mapping: ${key}/${componentKey}`);
+      if(componentKeys.has(componentKey)||componentMounts.has(mount)) throw new Error(`Conflicting component key or mount for ${key}: ${componentKey}/${mount}`);
+      componentKeys.add(componentKey);componentMounts.add(mount);
       const componentFolder=componentDirectory+'/'+componentStem;
       if(folders.has(componentFolder)||componentFolders.has(componentFolder)) throw new Error(`Conflicting source mapping ${componentFolder}`);
       componentFolders.add(componentFolder);
       folders.set(componentFolder,`${key}/${componentKey}`);
       const part=await triplet(root,componentDirectory,componentStem);
-      components.push({key:componentKey,sourceDirectory:componentDirectory,stem:componentStem,mount,sources:component.sources||[],...part});
+      components.push({key:componentKey,sourceDirectory:componentDirectory,stem:componentStem,mount,sources:component.sources||[],status:part.status,files:part.files,missing:part.missing});
     }
     const evidence=await integrationEvidence(root,meta);
     const row={key,route,slug,title:reg.EDITORIAL_PAGE_CATALOG?.find(p=>p.key===key)?.label||meta.controller?.split('/').pop().replace(/\.[^.]+\.js$/,'')||key,

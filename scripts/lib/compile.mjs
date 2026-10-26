@@ -231,7 +231,9 @@ export async function compilePage(root,page) {
   if(page.key==='mediaControl')return compileMediaControl(root,page);
   const descriptors=[...chromeParts(page.chrome),{key:page.slug,directory:page.sourceDirectory,stem:page.stem,mount:'skandi-app-root'},
     ...(page.components||[]).map(component=>({key:component.key,directory:component.sourceDirectory,stem:component.stem,mount:component.mount}))];
-  const reservedIds=[['skandi-shell-root','compiler'],...(page.key==='home'?[['skandi-home-content','compiler']]:[]),...descriptors.map(d=>[d.mount,'compiler'])];
+  const mountIds=['skandi-shell-root',...(page.key==='home'?['skandi-home-content']:[]),...descriptors.map(d=>d.mount)];
+  if(new Set(mountIds).size!==mountIds.length)throw new Error(`[${page.key}] Duplicate component mount ID.`);
+  const reservedIds=mountIds.map(id=>[id,'compiler']);
   const parts=[],ids=new Map(reservedIds);
   for(const d of descriptors) {
     const input=await triplet(root,d.directory,d.stem);
