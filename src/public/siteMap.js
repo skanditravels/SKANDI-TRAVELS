@@ -24,7 +24,8 @@ export const SITE_MAP = Object.freeze({
 });
 
 export const APP_ROUTES = Object.freeze({
-  country: "/destinations/country", bookingFlow: "/booking", myProfile: "/my-profile",
+  country: "/destinations/country", bookingFlow: SITE_MAP.home, // Legacy route key; booking runs inside Home.
+  myProfile: "/my-profile",
   myTrips: "/my-profile?tab=trips", careers: "/about/careers",
   myRoster: "/riaintra/success-factors/my-roster", groupTalk: "/riaintra/success-factors/altea/grouptalk",
   passportVisa: "/travel-info/passport-visa", baggageAllowance: "/travel-info/baggage-allowance",
@@ -77,7 +78,6 @@ export const EDITORIAL_PAGE_CATALOG = Object.freeze([
   page("skandiCollection", "SKANDI Collection", SITE_MAP.skandiCollection, "INVENTORY"),
   page("voy", "VOY Magazine", SITE_MAP.voy, "VOY", [], { presentationRuntime:true }),
   page("forgotPassword", "Forgot Password", SITE_MAP.forgotPassword, "CUSTOMER_AUTH"),
-  page("bookingFlow", "Booking", APP_ROUTES.bookingFlow, "BOOKING"),
   page("myProfile", "My Profile", APP_ROUTES.myProfile, "CUSTOMER_PROFILE"),
   page("myTrips", "My Trips", APP_ROUTES.myTrips, "CUSTOMER_PROFILE"),
   page("club", "SKANDI Club", SITE_MAP.club, "PUBLIC_PRESENTATION", [
@@ -185,8 +185,22 @@ export const PAGE_BUILD_INTEGRATIONS = Object.freeze({
     "sources": [
       "SKANDI_HOME",
       "SKANDI_HOME_LONG_DISCOVERY_V2",
-      "SKANDI_HOME_OLD_STYLE"
+      "SKANDI_HOME_OLD_STYLE",
+      "SKANDI_BOOKING_OFFER"
+    ],
+    "components": [
+      {
+        "key": "booking-flow",
+        "sourceDirectory": "skandi-embeds/booking-flow",
+        "stem": "skandi-booking-flow",
+        "mount": "skandi-booking-flow-root",
+        "sources": ["SKANDI_BOOKING_OFFER"]
+      }
     ]
+  },
+  "bookingFlow": {
+    "controller": "src/pages/Booking.e8twe.js",
+    "legacyRedirect": true
   },
   "search": {
     "controller": "src/pages/Search.b7zch.js",
@@ -545,17 +559,6 @@ export const PAGE_BUILD_INTEGRATIONS = Object.freeze({
       "SKANDI_STORE_CONFIRMATION"
     ]
   },
-  "bookingFlow": {
-    "controller": "src/pages/Booking.e8twe.js",
-    "sourceDirectory": "skandi-embeds/booking-flow",
-    "stem": "skandi-booking-flow",
-    "embedIds": [
-      "#bookingFlowEmbed"
-    ],
-    "sources": [
-      "SKANDI_BOOKING_OFFER"
-    ]
-  },
   "support": {
     "controller": "src/pages/How can we help_.k0iqp.js",
     "embedIds": [
@@ -576,7 +579,7 @@ export const PAGE_BUILD_INTEGRATIONS = Object.freeze({
 export const INTERNAL_PATH_PREFIXES = Object.freeze(["/riaintra", "/altea", "/_functions"]);
 export const ALTEA_PATH_PREFIXES = Object.freeze([SITE_MAP.alteaLaunchpad, "/riaintra/altea", "/altea"]);
 export const CHROME_FREE_PATHS = Object.freeze([
-  APP_ROUTES.groupTalk, SITE_MAP.riaintra, APP_ROUTES.bookingFlow,
+  APP_ROUTES.groupTalk, SITE_MAP.riaintra,
   SITE_MAP.storeConfirmation, SITE_MAP.storeCheckout, SITE_MAP.theStore
 ]);
 export function normalizeSitePath(value = "") {

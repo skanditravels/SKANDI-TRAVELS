@@ -229,8 +229,12 @@ export async function compilePage(root,page) {
   // Preserve its document and execution positions instead of flattening it into
   // another application's DOM. The receiver still enforces the staff boundary.
   if(page.key==='mediaControl')return compileMediaControl(root,page);
-  const descriptors=[...chromeParts(page.chrome),{key:page.slug,directory:page.sourceDirectory,stem:page.stem,mount:'skandi-app-root'}];
-  const parts=[],ids=new Map([['skandi-shell-root','compiler'],...descriptors.map(d=>[d.mount,'compiler'])]);
+  const descriptors=[...chromeParts(page.chrome),{key:page.slug,directory:page.sourceDirectory,stem:page.stem,mount:'skandi-app-root'},
+    ...(page.components||[]).map(component=>({key:component.key,directory:component.sourceDirectory,stem:component.stem,mount:component.mount}))];
+  const mountIds=['skandi-shell-root',...(page.key==='home'?['skandi-home-content']:[]),...descriptors.map(d=>d.mount)];
+  if(new Set(mountIds).size!==mountIds.length)throw new Error(`[${page.key}] Duplicate component mount ID.`);
+  const reservedIds=mountIds.map(id=>[id,'compiler']);
+  const parts=[],ids=new Map(reservedIds);
   for(const d of descriptors) {
     const input=await triplet(root,d.directory,d.stem);
     if(input.status!=='COMPLETE SOURCE')throw new Error(`[${page.key} / ${d.key}] ${input.status}: ${input.missing.join(', ')}`);
@@ -250,7 +254,8 @@ export async function compilePage(root,page) {
       walk(parseFragment(part.html),n=>{const id=attr(n,'id');if(id){if(ids.has(id))throw new Error(`duplicate id="${id}" (also in ${ids.get(id)})`);ids.set(id,input.files[0]);}});
       for(const attrs of Object.values(part.documentAttrs)) for(const a of attrs) if(a.name==='id') {if(ids.has(a.value))throw new Error(`duplicate document id ${a.value}`);ids.set(a.value,input.files[0]);}
       if(d.key!==page.slug && (part.documentAttrs.body.length || part.documentAttrs.html.some(a=>a.name!=='lang')))throw new Error('global component document attributes are ambiguous; use a fragment');
-      part.css=await cssFor(part.css,d.mount,input.files[1],root);
+      const cssMount=page.key==='home'&&d.key==='home'?'skandi-home-content':d.mount;
+      part.css=await cssFor(part.css,cssMount,input.files[1],root);
       const jsForShell=/^(riaintra|altea)-(header|footer)$/.test(d.stem)
         ?part.js.replace(/post\(\s*["']SKANDI_EMBED_RESIZE["']\s*,\s*\{\s*height\s*:\s*\d+\s*\}\s*\)\s*;/g,'/* Compiled shell owns internal chrome geometry. */')
         :part.js;
@@ -259,7 +264,7 @@ export async function compilePage(root,page) {
       parts.push({...d,...part});
     } catch(e) {throw new Error(`[${page.key} / ${d.key}] ${input.files.join(', ')}: ${e.message.replaceAll(root+path.sep,'')}`);}
   }
-  const pagePart=parts.at(-1),style=parts.map(p=>`<style data-skandi-part="${p.key}">${safeCSS(p.css)}</style>`);
+  const pagePart=parts.find(p=>p.key===page.slug);if(!pagePart)throw new Error(`[${page.key}] Main page source did not compile.`);const style=parts.map(p=>`<style data-skandi-part="${p.key}">${safeCSS(p.css)}</style>`);
   let shellCSS=page.chrome==='public'?(await read(root,'skandi-embeds/global/skandi-shell.css')).replaceAll('#skandi-mobile-nav-root','#skandi-mobile-nav-container'):
     `html,body{margin:0;width:100%;min-height:100%;}*,*::before,*::after{box-sizing:border-box}#skandi-shell-root{min-height:100vh;min-width:0;display:flex;flex-direction:column}#skandi-app-root{flex:1;min-width:0;position:relative}${page.chrome==='none'?'':`#${page.chrome}-global-header-root,#${page.chrome}-global-footer-root{flex:none}`}@media(max-width:767px){input:not([type=hidden]),select,textarea{font-size:16px!important}}`;
   if(['riaintra','altea'].includes(page.chrome)) {
@@ -267,7 +272,14 @@ export async function compilePage(root,page) {
     shellCSS+=`html,body{height:100%;overflow:hidden}#skandi-shell-root{height:100vh;height:100dvh;min-height:0;overflow:hidden}#skandi-app-root{height:auto;min-height:0;overflow:auto}#${family}-global-header-root{position:relative;height:${height}px;min-height:${height}px;overflow:visible;z-index:2000}#${family}-global-footer-root{height:auto;overflow:visible;z-index:2000}#riaintra-global-header-root .shellbar{position:absolute}#altea-global-footer-root .status-bar{position:relative}@media(max-width:600px){#riaintra-global-footer-root .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px}#riaintra-global-footer-root .footer-left{flex-wrap:wrap;gap:6px}}`;
   }
   const shellJS=await read(root,'skandi-embeds/global/skandi-shell.js');new Script(shellJS,{filename:'skandi-shell.js'});
-  const render=p=>p?`<div id="${p.mount}">${p.html}</div>`:'';
+  const render=p=>{
+    if(!p)return '';
+    if(page.key==='home'&&p.key==='home') {
+      const bookingPart=parts.find(part=>part.key==='booking-flow');
+      return `<div id="${p.mount}"><div id="skandi-home-content">${p.html}</div>${bookingPart?`<div id="${bookingPart.mount}" hidden>${bookingPart.html}</div>`:''}</div>`;
+    }
+    return `<div id="${p.mount}">${p.html}</div>`;
+  };
   const header=parts.find(p=>p.key==='header'),footer=parts.find(p=>p.key==='footer'),mobile=parts.find(p=>p.key==='mobile-nav');
   const attrs=(list,omitLanguage=false)=>list.filter(a=>!omitLanguage||!['lang','dir'].includes(a.name)).map(a=>` ${a.name}="${escapeHTML(a.value)}"`).join('');
   const pageBodyAttrs=attrs(pagePart.documentAttrs.body),pageHTMLAttrs=attrs(pagePart.documentAttrs.html,true);

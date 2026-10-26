@@ -1,5 +1,5 @@
 // /src/public/bookingSearch.js
-// One browser-session handoff to the canonical /booking offer state.
+// One browser-session handoff to the Home-embedded booking offer state.
 // Search criteria are untrusted UI state; prices, offers and ownership are resolved by the backend.
 import { session } from "wix-storage";
 import { APP_ROUTES } from "public/siteMap";
