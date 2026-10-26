@@ -5,7 +5,8 @@
 - **Page:** RIAINTRA staff login
 - **Wix route:** `/riaintra`
 - **Wix HTML component:** `#staffLoginEmbed`
-- **Wix page controller:** `src/pages/RIAINTRA.rc14z.js` (checked against repository default branch `main` on 2026-10-19; unchanged)
+- **Wix page controller:** `src/pages/RIAINTRA.rc14z.js`
+- **Sitewide route/logout guard:** `src/pages/masterPage.js`
 - **Canonical web facade:** `src/backend/SKANDI_CORE/staffAuth.web.js` (unchanged)
 - **Canonical auth core:** `src/backend/SKANDI_CORE/staffAuth.js` (unchanged)
 - **Ownership:** login/session handled by Wix Members and canonical SKANDI staff-auth core; no provider/database logic in HTML
@@ -22,6 +23,8 @@
 - **2026-10-19 — Split-screen redesign prepared:** corporate SKANDI navy left panel and white right-hand login. Existing SK-ID validation, `requestId` correlation, message identities, Wix-authentication ownership and password-reset bridge preserved. Credentials remain transmitted only through the existing parent message contract. Login form is immediately visible, without a separate reveal step. Added client-side password visibility toggle, public support and policy links from verified site-map routes. No backend or permission change.
 
 - **2026-10-19 — Mobile app-like viewport and pull-to-refresh:** Full-height bounded mobile iframe document (inner content-only scrolling), native-style branded header/sheet layout, iOS 16px input sizing (no focus-induced zoom), responsive visualViewport keyboard fit, in-app pull-down refresh plus accessible Refresh action. Refresh reissues the existing `STAFF_LOGIN_READY` session check with a correlated `requestId` and honors the Wix parent response; no new message types, fake data, application caches, permission changes or backend functions. Retained native pinch zoom accessibility; parent Wix page scroll, iframe geometry and iOS browser chrome remain outside embed control.
+
+- **2026-10-26 — Typed-login and exit-session guard:** `STAFF_LOGIN_READY` now logs out any existing Wix member session and always leaves the user at the credential form. RIAINTRA no longer redirects based on an existing staff session. A Wix memory-storage marker is written only after typed SK-ID/password login completes the existing authorized-session check; it supports in-site route changes and clears when the page reloads or closes. The site master logs out and clears the marker when leaving `/riaintra`, and directs direct/reloaded RIAINTRA subroutes to `/riaintra` so credentials must be typed again. On `pagehide`, it starts logout and stores a non-sensitive pending-logout flag so the next SKANDI page retries logout if the browser cancels that request. The login HTML, staff-auth facade, core, permissions, and database are unchanged.
 
 ## COMPLETE WIX HTML EMBED
 
