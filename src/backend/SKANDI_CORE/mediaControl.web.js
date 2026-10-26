@@ -3,6 +3,8 @@
 // Business logic remains owned by backend/SKANDI_CORE/assets.js.
 
 import { Permissions, webMethod } from "@wix/web-methods";
+import { getWebsiteDesignCore, saveWebsiteDesignCore } from 'backend/SKANDI_CORE/websiteDesign';
+import { getWebsitePreviewCore, searchMediaSourcesCore, importMediaSourceCore, importWebsiteImageCore, getWebsiteFontCore } from 'backend/SKANDI_CORE/mediaControlSources';
 import {
   listAssetsCore,
   checkAssetDuplicateCore,
@@ -17,6 +19,13 @@ const object = value => value && typeof value === "object" && !Array.isArray(val
 const clean = value => String(value || "").trim().toUpperCase();
 
 const ACTIONS = Object.freeze({
+  GET_WEBSITE_DESIGN: getWebsiteDesignCore,
+  SAVE_WEBSITE_DESIGN: saveWebsiteDesignCore,
+  GET_WEBSITE_PREVIEW: getWebsitePreviewCore,
+  SEARCH_MEDIA_SOURCES: searchMediaSourcesCore,
+  IMPORT_MEDIA_SOURCE: importMediaSourceCore,
+  IMPORT_WEBSITE_IMAGE: importWebsiteImageCore,
+  GET_WEBSITE_FONT: getWebsiteFontCore,
   LIST_ASSETS: listAssetsCore,
   CHECK_DUPLICATE: checkAssetDuplicateCore,
   PREPARE_UPLOAD: prepareAssetUploadCore,

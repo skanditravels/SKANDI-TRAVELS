@@ -78,8 +78,8 @@
       "dynamic": false,
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
-      "sha256": "e8ce48b20df08d087603088efb85bed43b26a8b12009be73d15019b4b26ad569",
-      "bytes": 422610
+      "sha256": "918abf0d3fd16b0066b9d61de89e3b32d23124de4930c44f58846fea2ad7f097",
+      "bytes": 430833
     },
     {
       "key": "search",
@@ -123,8 +123,8 @@
       "dynamic": false,
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
-      "sha256": "779b19227421d20397569db346159c22ce4b7b518c1d2abbb90d72e141e61315",
-      "bytes": 163576
+      "sha256": "0b3888ab10cc45c46761d5fb8054559caeea8937f3062f07d19564d1985d8ee4",
+      "bytes": 171807
     },
     {
       "key": "flights",
@@ -228,8 +228,8 @@
       "dynamic": false,
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
-      "sha256": "01364b612ef7e07356e0e720037521e12e246627d47cbfa9ade8103ac1306bdc",
-      "bytes": 199113
+      "sha256": "d8d05ff8beb91a78178cf780986eafea46991b6659cd554e7c7c09ddc5e4846a",
+      "bytes": 207351
     },
     {
       "key": "hotels",
@@ -402,8 +402,8 @@
       "dynamic": false,
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
-      "sha256": "aa508318b8b183b11b915a97e3cbe9b5d6ed6621f14f0ff88fe3e90962e88985",
-      "bytes": 287838
+      "sha256": "e9e030b48a7a3945135eab5e0fdb9acc568458406e45603a7f6a5fc777bc7546",
+      "bytes": 296067
     },
     {
       "key": "activities",
@@ -816,8 +816,8 @@
       "dynamic": false,
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
-      "sha256": "ae46c710caa6a9147375d709409f030d9116566eeb0f64d3b7988414df4f895a",
-      "bytes": 166714
+      "sha256": "4438bc3db0fd92a7d9481d2c40a66fac34716843df1f3430fd5fc1acf0230ff7",
+      "bytes": 174948
     },
     {
       "key": "forgotPassword",
@@ -858,8 +858,8 @@
       "dynamic": false,
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
-      "sha256": "26e0563da61f515d8ed7111a0a814f593f9cca9366f8deae1341dc2ab90c0fba",
-      "bytes": 137263
+      "sha256": "4d1c2d2a7599bc525199e9d425f8512a7e67564612d3b47500b64df7839bdcff",
+      "bytes": 145511
     },
     {
       "key": "about",
@@ -905,8 +905,8 @@
       "dynamic": false,
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
-      "sha256": "d38048b36f50822c1de48e5ec794a58ed134cdfe57101bde9b30752a39d44c4a",
-      "bytes": 188881
+      "sha256": "855c66ade2132a922a5ff82157c58f5a9a6be55b47c215d06cd78acda22b09ed",
+      "bytes": 197110
     },
     {
       "key": "support",
@@ -1034,8 +1034,8 @@
       "dynamic": false,
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
-      "sha256": "8c8811b9112c02dba6472f2d6b52ba10d524846d8dd966cddd3c7811a2cfd05e",
-      "bytes": 168667
+      "sha256": "92df569500fd3b69c1449b8afea79555b9a8119edda946fdc801b4176c6df770",
+      "bytes": 176909
     },
     {
       "key": "theStore",
@@ -1097,8 +1097,8 @@
       "dynamic": false,
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
-      "sha256": "e3330e4fc05e9ec068364ad3e1886b6d7f49dfeb5e2a1ec3a77b1ca9c0ee677a",
-      "bytes": 144409
+      "sha256": "ce487a30cd6cd0730b05d1b7c7d780f1f6e10cf769ebd08faa6077c157e1d634",
+      "bytes": 152645
     },
     {
       "key": "giftCard",
@@ -1196,8 +1196,8 @@
       "dynamic": false,
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
-      "sha256": "20e1e3848c4a6e0695a9d1a5c72be38086d0dece03a99c07e407443524f61f8b",
-      "bytes": 42599
+      "sha256": "de15d88123f2d1f32360003fe8420a9f0aee50a7243a73824936b1e82f7cd8e4",
+      "bytes": 50855
     },
     {
       "key": "storeConfirmation",
@@ -1246,8 +1246,8 @@
       "dynamic": false,
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
-      "sha256": "2e825915054e0618f2e4f08d3fd51309c16c4766c44719050519b79243c2f8b6",
-      "bytes": 28266
+      "sha256": "166f3cd1b4d807058242e5a69dabbc1924e9bc2893c5e1f1e6049a1dddc5e8d8",
+      "bytes": 36545
     },
     {
       "key": "ourNetwork",
@@ -1332,8 +1332,8 @@
       "dynamic": false,
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
-      "sha256": "00365b644f56395237fdbfe0710a43a22850b6ed12234abbe2eaa0e8c9e14dcc",
-      "bytes": 156492
+      "sha256": "3027eaf6f92017fa953706ec5ac2d8334a313658d7840ae3767bb749f04a83c3",
+      "bytes": 164727
     },
     {
       "key": "policies",
@@ -1387,8 +1387,8 @@
       "dynamic": false,
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
-      "sha256": "c82305e80fd0429a03cb82b03dc960b98ed28b3ff7b50e40a6bd042952833c8e",
-      "bytes": 185120
+      "sha256": "cc3ad91c2c25ed2ab09e5bbf003983ab4d799fef79f45d721076eea83bd1eec8",
+      "bytes": 193367
     },
     {
       "key": "cookiePreferences",
@@ -1523,8 +1523,8 @@
       "dynamic": false,
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
-      "sha256": "47b8beda36bd903259aca91e9da794ac92f88a29601d77885d5bc63f01beca34",
-      "bytes": 143219
+      "sha256": "948067f1c3cddc47d9e6527fd2c1edcefeec3145321f8f590f248cb1ebc3abe6",
+      "bytes": 151485
     },
     {
       "key": "riaintra",
@@ -2408,7 +2408,7 @@
       "sources": [],
       "binding": "explicit",
       "requiresStaff": true,
-      "status": "FAILED",
+      "status": "BUILT",
       "files": [
         "skandi-embeds/media-control/skandi-media-control.html",
         "skandi-embeds/media-control/skandi-media-control.css",
@@ -2426,6 +2426,11 @@
         "CHECK_DUPLICATE",
         "FINALIZE_UPLOAD",
         "GET_ACCESS_URL",
+        "GET_WEBSITE_DESIGN",
+        "GET_WEBSITE_FONT",
+        "GET_WEBSITE_PREVIEW",
+        "IMPORT_MEDIA_SOURCE",
+        "IMPORT_WEBSITE_IMAGE",
         "INTERNAL_CHROME_BOOTSTRAP",
         "INTERNAL_CHROME_READY",
         "INTERNAL_LOGOUT",
@@ -2455,6 +2460,8 @@
         "MEDIA_CONTROL_UPLOAD_PREPARE",
         "MEDIA_CONTROL_UPLOAD_READY",
         "MEDIA_CONTROL_USAGE_REGISTERED",
+        "MEDIA_CONTROL_WEBSITE_ACTION",
+        "MEDIA_CONTROL_WEBSITE_RESULT",
         "NEWSROOM_",
         "NEWSROOM_ADMIN_BOOTSTRAP",
         "NEWSROOM_ADMIN_DATA",
@@ -2472,6 +2479,8 @@
         "PACKAGE_PREPARED",
         "PREPARE_UPLOAD",
         "REGISTER_USAGE",
+        "SAVE_WEBSITE_DESIGN",
+        "SEARCH_MEDIA_SOURCES",
         "SKANDI_INTERNAL_CHROME",
         "SKANDI_MEDIA_CONTROL",
         "SKANDI_NEWSROOM_CONTROL",
@@ -2515,14 +2524,15 @@
         "VOY_QUALITY_LAB_REQUEST",
         "VOY_QUALITY_LAB_RESULT",
         "VOY_TRANSLATION_PACKAGE_REQUEST",
-        "VOY_TRANSLATION_PACKAGE_RESULT"
+        "VOY_TRANSLATION_PACKAGE_RESULT",
+        "WEBSITE_ACTION_INVALID"
       ],
-      "output": null,
+      "output": "dist/media-control/index.html",
       "dynamic": false,
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
-      "error": "[mediaControl / media-control] skandi-embeds/media-control/skandi-media-control.html, skandi-embeds/media-control/skandi-media-control.css, skandi-embeds/media-control/skandi-media-control.js: skandi-embeds/media-control/skandi-media-control.html: executable scripts interleaved with markup; move scripts after page markup before splitting",
-      "retainedArtifact": false
+      "sha256": "5cee8139862fcd88078ba62ddd3795b9fe36506f11acd5ba643180b57b62a6df",
+      "bytes": 426091
     },
     {
       "key": "storeControl",
@@ -2924,8 +2934,8 @@
       "dynamic": false,
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
-      "sha256": "dfb89941e6c751bb50c4b45e2b9b57f1ec805a7cbdfe62818d7d54a24f7f814b",
-      "bytes": 268298
+      "sha256": "b24e553d80f902aba96a0886f8863884a0c759758a44258d62a2d3017f2dc9f3",
+      "bytes": 276536
     },
     {
       "key": "myTrips",
@@ -3221,8 +3231,8 @@
       "dynamic": false,
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
-      "sha256": "2f5b03a87bde729030b8c99e5ae3679a86f00d25cb688f01fbe270d117c322f5",
-      "bytes": 173280
+      "sha256": "ebbccd1a5d37c539b8aa2a357c7aa8d383fc079da236dab3d6a6c452b4cf6746",
+      "bytes": 181536
     },
     {
       "key": "baggageAllowance",
@@ -3268,8 +3278,8 @@
       "dynamic": false,
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
-      "sha256": "b40f87ddde3fcc47b42563fc051b3d39de9d4406bfdaa247269bab7981b213f9",
-      "bytes": 171544
+      "sha256": "3c5627843b0f7ad3c862cc6306561efd2f3ca0efdece25c6973781c0c99d10df",
+      "bytes": 179808
     },
     {
       "key": "travelInsurance",
@@ -3317,8 +3327,8 @@
       "dynamic": false,
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
-      "sha256": "db6f1e3d189d7c21bdd435b07d7481a038d6ce015a70cac6aed482cf62d27348",
-      "bytes": 161357
+      "sha256": "5e426327e86868c9b9ffb7fdb2d630e1eb9569c409383c2fd4f47607972fbf27",
+      "bytes": 169612
     },
     {
       "key": "specialAssistance",
@@ -3451,8 +3461,8 @@
       "dynamic": false,
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
-      "sha256": "fa54f8fc2cf423160cf4c05697ed1bd00abcd99492df7a6020f93ebe4c22ee96",
-      "bytes": 168154
+      "sha256": "f4de31869f795b3454b5588292319eed3bac7f038dffb82193229a7305988fa4",
+      "bytes": 176420
     },
     {
       "key": "flightStatus",
@@ -3511,8 +3521,8 @@
       "dynamic": false,
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
-      "sha256": "6dbab833f0f7b0ed87adc6e0175e4fed9f59fa88b78de349ef04cf6f145891af",
-      "bytes": 311246
+      "sha256": "fc55466c114424e382b3bf2e7fe2308a184cf1fb72ccf31f57162e44e43fc513",
+      "bytes": 319502
     }
   ],
   "globalComponents": {

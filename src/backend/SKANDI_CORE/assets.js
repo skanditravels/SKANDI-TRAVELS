@@ -99,7 +99,7 @@ function normalizeAsset(row={}){
     libraryFolder:clean(row.library_folder,240),librarySubfolder:clean(row.library_subfolder,500),
     folderPath:clean(row.folder_path,1000),category:clean(row.category,180),
     brand:clean(row.brand,180),system:clean(row.system,180),tags:arr(row.tags),
-    altText:clean(row.alt_text,1000),caption:clean(row.caption,3000),credit:clean(row.credit,500),
+    altText:clean(row.alt_text,1000),caption:clean(row.caption,3000),credit:clean(row.credit,2000),
     widthPx:row.width_px??null,heightPx:row.height_px??null,status:upper(row.status,30),
     source:clean(row.source,120),publicUrl:publicAssetUrl(row),
     previewUrl:row.visibility==="PUBLIC"?publicAssetUrl(row):"",
@@ -125,7 +125,7 @@ async function requireAssetAccess({write=false}={}){
   const canWrite =
     lower(session.permissionPreset||profile.permissionPreset,80)==="all" ||
     session.canManage===true || profile.canManage===true ||
-    ["system-admin","asset-library","inventory-control","marketing","content","newsroom",
+    ["system-admin","asset-library","inventory-control","media-control","marketing","content","newsroom",
      "docunet","uniform-center","hr","travel-info"].some(k=>keys.has(k));
 
   if(!canWrite){
@@ -302,7 +302,7 @@ export async function prepareAssetUploadCore(input={}){
       library_subfolder:librarySubfolder||null,category:category||assetType,
       brand:clean(input.brand||"SKANDI",180),system:clean(input.system||input.contextSystem||"Platform",180),
       tags:uniqueStrings(input.tags),alt_text:clean(input.altText,1000)||null,
-      caption:clean(input.caption,3000)||null,credit:clean(input.credit,500)||null,
+      caption:clean(input.caption,3000)||null,credit:clean(input.credit,2000)||null,
       metadata,
       expires_at:new Date(Date.now()+2*60*60*1000).toISOString()
     }

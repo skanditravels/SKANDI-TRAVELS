@@ -13,6 +13,8 @@ import {
 import { handleMediaControlAssetAction } from "backend/SKANDI_CORE/mediaControl.web";
 import { SITE_MAP, EDITORIAL_PAGE_CATALOG, isSafeInternalRoute } from "public/siteMap";
 
+import { WEBSITE_STYLE_PROPERTIES } from "public/websiteDesign";
+
 const EMBED_ID = "#mediaControlEmbed";
 const CHILD_SOURCES = new Set(["SKANDI_MEDIA_CONTROL", "SKANDI_NEWSROOM_CONTROL", "SKANDI_INTERNAL_CHROME"]);
 const PARENT_SOURCE = "SKANDI_WIX_PARENT";
@@ -57,7 +59,7 @@ async function assetAction(action, payload = {}) {
   return handleMediaControlAssetAction({ action, payload:obj(payload) });
 }
 function sendEditorialCatalog() {
-  send("MEDIA_CONTROL_EDITORIAL_CATALOG", { version:VERSION, pages:EDITORIAL_PAGE_CATALOG });
+  send("MEDIA_CONTROL_EDITORIAL_CATALOG", { version:VERSION, pages:EDITORIAL_PAGE_CATALOG, styleProperties:WEBSITE_STYLE_PROPERTIES });
 }
 
 async function bootstrap(force = false) {
@@ -139,6 +141,13 @@ $w.onReady(function () {
       }
       if (type === "MEDIA_CONTROL_READY") { sendEditorialCatalog(); await bootstrap(); return; }
       if (type === "MEDIA_CONTROL_CATALOG_REQUEST") { sendEditorialCatalog(); return; }
+      if (type === 'MEDIA_CONTROL_WEBSITE_ACTION') {
+        const allowed = ['GET_WEBSITE_DESIGN','SAVE_WEBSITE_DESIGN','GET_WEBSITE_PREVIEW','SEARCH_MEDIA_SOURCES','IMPORT_MEDIA_SOURCE','IMPORT_WEBSITE_IMAGE','GET_WEBSITE_FONT'];
+        if (!allowed.includes(payload.action)) throw new Error('WEBSITE_ACTION_INVALID');
+        const result = await assetAction(payload.action, payload.input || {});
+        send('MEDIA_CONTROL_WEBSITE_RESULT', { requestId:payload.requestId, action:payload.action, result });
+        return;
+      }
       if (type === "MEDIA_CONTROL_REFRESH_ALL") { await bootstrap(true); return; }
       if (type === "MEDIA_CONTROL_OPEN_PUBLIC_PAGE") {
         const target = EDITORIAL_PAGE_CATALOG.find(item => String(item.key) === String(payload.pageKey || "") || String(item.path) === String(payload.path || ""));

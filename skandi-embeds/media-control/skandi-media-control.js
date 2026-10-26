@@ -37,7 +37,7 @@ const baseState={
 };
 let state={...baseState,...loadLocal()};
 const modules=[
-  {id:"website",title:"Website",panels:["siteplan","webcontent","webmedia","assets","pressreleases"]},
+  {id:"website",title:"Website",panels:["websiteeditor","siteplan","webcontent","webmedia","assets","pressreleases"]},
   {id:"management",title:"Management",panels:["dashboard","issues","workflow"]},
   {id:"contacts",title:"Contacts",panels:["presscontacts","articles"]},
   {id:"reports",title:"Reports",panels:["quality","printqa","distribution"]},
@@ -51,7 +51,7 @@ const modules=[
   {id:"communications",title:"Communications",panels:["emailstudio"]}
 ];
 const panels=[
-  ["dashboard","Studio Desk","F1"],["issues","Issues","F2"],["builder","Magazine Builder","F3"],["articles","Articles","F4"],["assets","Assets / Media","F5"],
+  ["websiteeditor","Visual Website Editor","EDIT"],["dashboard","Studio Desk","F1"],["issues","Issues","F2"],["builder","Magazine Builder","F3"],["articles","Articles","F4"],["assets","Assets / Media","F5"],
   ["research","Destination Research","F6"],["campaign","Campaigns","F7"],["quality","Quality Lab","QA"],["brandkit","Brand Kit","BK"],["printqa","Print QA","PQ"],["distribution","Distribution","DS"],["workflow","Workflow","F8"],["categories","Categories","F9"],["banners","Banners","F10"],["travelcards","Travel Cards","F11"],["api","API Connectors","F12"],
   ["pressreleases","Press Releases","PR"],["presscontacts","Press Contacts","PC"],["siteplan","Website Planner","WEB"],["webcontent","Page Copy","TXT"],["webmedia","Hero / Card Media","IMG"],
   ["presentationmatrix","Presentation Matrix","PM"],["contentaudit","Content Audit","CA"],["releasecenter","Release Center","RC"],["emailstudio","Email Template Studio","EM"]
@@ -251,7 +251,7 @@ function renderAll(){
   renderPresentationMatrix();
   renderContentAudit();
   renderReleaseCenter();
-  saveLocal();window.SKANDIEmailStudioHostMount?.();
+  saveLocal();window.SKANDIEmailStudioHostMount?.();window.SKANDIWebsiteStudioMount?.({pages:state.catalog,assets:state.assets});
 }
 function setPanel(panel){
   if(!panels.some(p=>p[0]===panel))return;
