@@ -123,6 +123,6 @@ These actual repository controllers are preserved. No new route or build is inve
 - **docunetAdmin**: NOT READY: [docunetAdmin / docunet-admin] skandi-embeds/docunet-admin/skandi-docunet-admin.html, skandi-embeds/docunet-admin/skandi-docunet-admin.css, skandi-embeds/docunet-admin/skandi-docunet-admin.js: skandi-embeds/docunet-admin/skandi-docunet-admin.html: nested iframe is not supported; retain the existing Wix integration
 - **serviceDesk**: NOT READY: No verified canonical controller mapping.
 - **country**: NOT READY: src/public/customerAuthUi.js: imported export openCustomerLogin is absent
-- **bookingFlow**: NOT READY: [bookingFlow] INCOMPLETE SOURCE: skandi-embeds/booking-flow/skandi-booking-flow.html, skandi-embeds/booking-flow/skandi-booking-flow.js
+- **bookingFlow**: NOT READY: [bookingFlow] INCOMPLETE SOURCE: skandi-embeds/booking-flow/skandi-booking-flow.js
 - **careers**: NOT READY: PENDING SOURCE
 - **myRoster**: NOT READY: src/backend/FINAL/internalChrome.web.js: missing imported module; src/backend/SKANDI_CORE/myRoster.web.js: missing imported module

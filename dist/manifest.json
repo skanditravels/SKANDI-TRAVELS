@@ -2758,7 +2758,6 @@
         "skandi-embeds/booking-flow/skandi-booking-flow.js"
       ],
       "missing": [
-        "skandi-embeds/booking-flow/skandi-booking-flow.html",
         "skandi-embeds/booking-flow/skandi-booking-flow.js"
       ],
       "issues": [
@@ -2841,7 +2840,7 @@
         "src/public/customerAuthUi.js: imported export openCustomerLogin is absent",
         "Retain the eight-step Wix state/HTML components. A single receiver requires a separately verified controller migration."
       ],
-      "error": "[bookingFlow] INCOMPLETE SOURCE: skandi-embeds/booking-flow/skandi-booking-flow.html, skandi-embeds/booking-flow/skandi-booking-flow.js",
+      "error": "[bookingFlow] INCOMPLETE SOURCE: skandi-embeds/booking-flow/skandi-booking-flow.js",
       "retainedArtifact": false
     },
     {
