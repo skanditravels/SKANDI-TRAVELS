@@ -2,7 +2,7 @@
 
 Base: `skanditravels/SKANDI-TRAVELS` main `18a25b1b339f600cf94bec613a87dd4f5bdec08a`. Review branch: `codex/html-ref-split-sources`.
 
-Extracted all **72 HTML payloads into 270 HTML/CSS/JavaScript files** in the website source structure. Ten Markdown files contained documentation only. All 72 payloads reconstruct exactly from the generated source ranges. The HTML_REF files were not modified.
+Extracted all **73 HTML payloads into 273 HTML/CSS/JavaScript files** in the website source structure. Nine Markdown files contain documentation only. All 73 payloads reconstruct exactly from the generated source ranges. The HTML_REF files were not modified.
 
 The primary triplet uses the existing page folder and stem. Additional blocks use `.part-NN` companions so scripts retain their original execution positions, attributes and boundaries. This matters for modules, third-party libraries, scripts between markup, and styles with a media condition. JSON/import maps and inert templates remain in HTML. The Reservations change log accidentally inside its code fence is excluded from the HTML payload.
 
@@ -10,7 +10,7 @@ The primary triplet uses the existing page folder and stem. Additional blocks us
 
 - Eight current source sets remain active and unchanged: Home, Flight Status, Travel Info, RIAINTRA login, Success Factors, public header, public footer and mobile navigation. Their reference alternatives are split under `html-ref/` subfolders. The registry now points to your renamed `riaintra-embeds/success-factors/success-factors.*` files.
 - Four RIAINTRA/ALTEA global components fill their existing pending folders. Generated shell code handles shared iframe geometry and component ID collisions; extracted source remains unchanged.
-- Booking keeps eight separate component folders under `skandi-embeds/booking-flow/components/`; its existing controller has eight component bindings.
+- Booking keeps eight separate component folders under `skandi-embeds/booking-flow/components/`; its existing controller has eight component bindings. The conflicting merged single-embed proposal is split under `skandi-embeds/booking-flow/html-ref/` and remains reference-only.
 - Nine unregistered controller/component sources are extracted under `_unregistered/`. Their routes are not invented.
 - `Uniform Control.md` is a duplicate of the employee Uniform Center, not the admin source. Its extraction is under `uniform-control/html-ref/`; the admin slot remains pending.
 - `Customer Service Desk.md` contains an ALTEA Reservations implementation. It is retained under `_unregistered/benbs/html-ref/` and is not assigned to the Customer Service Desk controller.

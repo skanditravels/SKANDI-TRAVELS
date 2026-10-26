@@ -462,5 +462,12 @@
     "directory": "skandi-embeds/travel-insurance",
     "stem": "skandi-travel-insurance",
     "disposition": "IMPORTED"
+  },
+  {
+    "source": "HTML_REF/skandi/Booking/README.md",
+    "directory": "skandi-embeds/booking-flow/html-ref",
+    "stem": "skandi-booking-merged-reference",
+    "disposition": "SOURCE CONFLICT",
+    "note": "Merged single-embed proposal conflicts with the existing eight-component Booking controller; retained as a reference only until a verified Wix migration is approved."
   }
 ]

@@ -2,6 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import {Script} from 'node:vm';
 import {createHash} from 'node:crypto';
+import {parse as parseJS} from 'acorn';
 import {parse,parseFragment,serialize,serializeOuter} from 'parse5';
 import postcss from 'postcss';
 import selectorParser from 'postcss-selector-parser';
@@ -90,7 +91,7 @@ export async function normalizeHTML(html,css,js,{root,file,mount}) {
   const head=heads[0],body=bodies[0];
   const bodyAttrs=body?.attrs||[],htmlNode=nodes.find(n=>n.tagName==='html');
   for(const a of [...bodyAttrs,...(htmlNode?.attrs||[])]) if(!['lang','dir','class','style','id'].includes(a.name) && !a.name.startsWith('data-') && !a.name.startsWith('on')) throw new Error(`${file}: unsupported document attribute ${a.name}; move it to page markup`);
-  const inlineCSS=[],inlineJS=[],external=[],handlers=[],tasks=[];
+  const inlineCSS=[],inlineJS=[],external=[],moduleScripts=[],handlers=[],tasks=[];
   let linkedCSS=false,linkedJS=false;
   let scriptStarted=false;
   for(const n of [...(body?.childNodes||tree.childNodes||[])]) {
@@ -106,13 +107,35 @@ export async function normalizeHTML(html,css,js,{root,file,mount}) {
     if(n.tagName==='script') {
       const type=(attr(n,'type')||'').toLowerCase();
       if(type && !['text/javascript','application/javascript'].includes(type)) {
-        if(type==='module' || type==='importmap') throw new Error(`${file}: module scripts require bundling into the page .js first`);
+        if(type==='importmap') {
+          const source=(n.childNodes||[]).map(c=>c.value||'').join('');
+          try { JSON.parse(source); } catch(e) { throw new Error(`${file}: invalid import map JSON: ${e.message}`); }
+          external.push(serializeOuter(n));remove(n);
+          continue;
+        }
+        if(type==='module') {
+          const src=attr(n,'src');
+          if(src&&/^(?:https?:)?\/\//i.test(src)) {
+            moduleScripts.push(serializeOuter(n));remove(n);
+            continue;
+          }
+          const code=src
+            ?await fs.readFile((await localFile(root,file,src)).file,'utf8')
+            :n.sourceCodeLocation?.startTag&&n.sourceCodeLocation?.endTag
+              ?html.slice(n.sourceCodeLocation.startTag.endOffset,n.sourceCodeLocation.endTag.startOffset)
+              :(n.childNodes||[]).map(c=>c.value||'').join('');
+          parseJS(code,{ecmaVersion:'latest',sourceType:'module'});
+          const attrs=(n.attrs||[]).filter(a=>!(src&&a.name==='src')).map(a=>` ${a.name}="${escapeHTML(a.value)}"`).join('');
+          moduleScripts.push(`<script${attrs}>${safeJS(code)}</script>`);remove(n);
+          continue;
+        }
         continue; // JSON, JSON-LD and inert templates retain their original bytes.
       }
       const src=attr(n,'src');
       if(src) {
         if(/^(https?:)?\/\//.test(src)) {
-          if(attr(n,'async')!==undefined || attr(n,'defer')!==undefined) throw new Error(`${file}: async/defer external script ordering is ambiguous; use a blocking library script or bundle into .js`);
+          const pinnedMapLibre=/^https:\/\/unpkg\.com\/maplibre-gl@\d+\.\d+\.\d+\/dist\/maplibre-gl\.js(?:[?#].*)?$/.test(src);
+          if(attr(n,'async')!==undefined || (attr(n,'defer')!==undefined&&!pinnedMapLibre)) throw new Error(`${file}: async/defer external script ordering is ambiguous; use a blocking library script or bundle into .js`);
           external.push(serializeOuter(n));
         } else {
           const {file:target}=await localFile(root,file,src);
@@ -137,7 +160,10 @@ export async function normalizeHTML(html,css,js,{root,file,mount}) {
           linkedCSS=true;
         }
       }
-      else throw new Error(`${file}: external stylesheet cannot be scoped: ${href}; put its rules in the CSS source`);
+      else if(/^https:\/\/unpkg\.com\/maplibre-gl@\d+(?:\.\d+){0,2}\/dist\/maplibre-gl\.css(?:[?#].*)?$/.test(href)) {
+        // Compiled pages run inside their own Wix HTML-component iframe.
+        external.push(serializeOuter(n));remove(n);
+      } else throw new Error(`${file}: external stylesheet cannot be scoped: ${href}; put its rules in the CSS source`);
     }
     if(n.attrs) for(const a of [...n.attrs]) {
       if(/^on[a-z]+$/.test(a.name)) {
@@ -171,7 +197,7 @@ export async function normalizeHTML(html,css,js,{root,file,mount}) {
   const documentAttrs={body:bodyAttrs,html:htmlNode?.attrs||[]};
   const titleNode=head?.childNodes?.find(n=>n.tagName==='title');
   const title=titleNode?.childNodes?.map(n=>n.value||'').join('')||'';
-  return {title,html:markup,css:combine(inlineCSS,css,'CSS',linkedCSS),js:combine(inlineJS,js,'JavaScript',linkedJS),headHTML,external,handlers,documentAttrs};
+  return {title,html:markup,css:combine(inlineCSS,css,'CSS',linkedCSS),js:combine(inlineJS,js,'JavaScript',linkedJS),headHTML,external,moduleScripts,handlers,documentAttrs};
 }
 function scopedScript(js,mount,handlers=[]) {
   const binds=handlers.map(h=>`__root.querySelector('[data-skandi-handler-${h.index}]').addEventListener(${JSON.stringify(h.event)},function(event){const result=(function(event){${h.code}\n}).call(this,event);if(result===false){event.preventDefault();}});`).join('\n');
@@ -248,14 +274,15 @@ export async function compilePage(root,page) {
   const lang=pagePart.documentAttrs.html.find(a=>a.name==='lang')?.value||'en';
   const dir=pagePart.documentAttrs.html.find(a=>a.name==='dir')?.value;
   const scripts=parts.filter(p=>p!==pagePart).concat(pagePart).map(p=>`<script data-skandi-part="${p.key}">${safeJS(p.script)}</script>`);
+  const moduleScripts=parts.flatMap(p=>p.moduleScripts||[]);
   if(page.family==='public') {
     const runtime=await read(root,'skandi-embeds/global/skandi-website-design.js');
     new Script(runtime,{filename:'skandi-website-design.js'});
     scripts.push(`<script data-skandi-part="website-design">window.SKANDI_WEBSITE_DESIGN_CONFIG=${safeJS(JSON.stringify({pageKey:page.key,path:page.route}))};${safeJS(runtime)}</script>`);
   }
-  const html=`<!doctype html>\n<html lang="${escapeHTML(lang)}"${dir?` dir="${escapeHTML(dir)}"`:''}${pageHTMLAttrs}>\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">\n<meta name="theme-color" content="#022e64">\n<title>${escapeHTML(pagePart.title || page.title+' | SKANDI')}</title>\n<link rel="preconnect" href="https://fonts.googleapis.com">\n<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">\n${[...new Set(parts.flatMap(p=>[p.headHTML,...p.external]).filter(Boolean))].join('\n')}\n${style.join('\n')}\n<style data-skandi-part="shell">${safeCSS(shellCSS)}</style>\n</head>\n<body${pageBodyAttrs}>\n<div id="skandi-shell-root" data-skandi-page="${page.slug}" data-skandi-key="${page.key}" data-skandi-family="${page.family}" data-skandi-chrome="${page.chrome}">\n${render(header)}\n${render(pagePart)}\n${render(footer)}\n${render(mobile)}\n</div>\n<script data-skandi-part="skandi-shell-runtime">${safeJS(shellJS)}</script>\n${scripts.join('\n')}\n</body>\n</html>\n`;
+  const html=`<!doctype html>\n<html lang="${escapeHTML(lang)}"${dir?` dir="${escapeHTML(dir)}"`:''}${pageHTMLAttrs}>\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">\n<meta name="theme-color" content="#022e64">\n<title>${escapeHTML(pagePart.title || page.title+' | SKANDI')}</title>\n<link rel="preconnect" href="https://fonts.googleapis.com">\n<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">\n${[...new Set(parts.flatMap(p=>[p.headHTML,...p.external]).filter(Boolean))].join('\n')}\n${style.join('\n')}\n<style data-skandi-part="shell">${safeCSS(shellCSS)}</style>\n</head>\n<body${pageBodyAttrs}>\n<div id="skandi-shell-root" data-skandi-page="${page.slug}" data-skandi-key="${page.key}" data-skandi-family="${page.family}" data-skandi-chrome="${page.chrome}">\n${render(header)}\n${render(pagePart)}\n${render(footer)}\n${render(mobile)}\n</div>\n<script data-skandi-part="skandi-shell-runtime">${safeJS(shellJS)}</script>\n${scripts.join('\n')}\n${moduleScripts.join('\n')}\n</body>\n</html>\n`;
   // Validate serialized scripts too: HTML escaping must never publish invalid JS.
-  walk(parse(html),n=>{if(n.tagName==='script'&&!attr(n,'src')&&(!attr(n,'type')||/javascript/.test(attr(n,'type'))))new Script(serialize(n),{filename:page.output});});
+  walk(parse(html),n=>{if(n.tagName==='script'&&!attr(n,'src')){const type=(attr(n,'type')||'').toLowerCase(),code=(n.childNodes||[]).map(c=>c.value||'').join('');if(type==='module')parseJS(code,{ecmaVersion:'latest',sourceType:'module'});else if(!type||['text/javascript','application/javascript'].includes(type))new Script(code,{filename:page.output});}});
   return html;
 }
 
