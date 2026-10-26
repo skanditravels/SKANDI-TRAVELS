@@ -83,12 +83,12 @@ const PUBLIC_SEARCH_INDEX = Object.freeze([
     priority: 10
   }),
   Object.freeze({
-    title: "Offers",
-    path: SITE_MAP.offers,
+    title: "Booking",
+    path: APP_ROUTES.bookingFlow,
     category: "Book",
-    description: "Browse current SKANDI travel offers.",
-    keywords: "offer offers deal deals sale last chance travel",
-    priority: 7
+    description: "Start or continue a passenger booking.",
+    keywords: "booking passenger flight hotel travel",
+    priority: 9
   }),
   Object.freeze({
     title: "Destinations",

@@ -29,10 +29,10 @@ There are **59 canonical route entries**, consisting of **57 page identities and
 
 ## Integration blockers retained
 
-- No verified controller mapping: flights, hotels, packages, cruises, activities, transfers, destinations, offers, giftCard, ourNetwork, cookiePreferences, alteaTimatic, serviceDesk and specialAssistance. Route existence alone is not installation evidence.
-- `support`, `country` and `bookingFlow` import `openCustomerLogin` from `src/public/customerAuthUi.js`, but the current module exports a route/chrome registry instead. This pre-existing mismatch is reported and left outside this compiler task.
+- No verified controller mapping: flights, hotels, packages, cruises, activities, transfers, destinations, giftCard, ourNetwork, cookiePreferences, alteaTimatic, serviceDesk and specialAssistance. `/offers` has been retired; Booking now has a single-embed controller mapping.
+- `src/public/customerAuthUi.js` now delegates login and password-reset popups to the canonical popup registry in `src/public/siteMap.js`; the missing `openCustomerLogin` and `openCustomerResetPassword` exports are restored.
 - `myRoster` imports absent `src/backend/FINAL/internalChrome.web.js` and `src/backend/SKANDI_CORE/myRoster.web.js`. These are reported without adding alternate backend wrappers.
-- Booking uses eight HTML components and a Wix multi-state flow. Help Center uses separate help/chat components. Those pages require an explicitly verified integration migration before a single receiver can be installed.
+- Booking uses one Wix HTML component (`#bookingFlowEmbed`) on `/booking`; its steps are internal views. The root `skandi-booking-flow` HTML/CSS/JS triplet is the single builder input. Help Center still uses separate help/chat components and requires its own verified integration migration.
 - Country and ALTEA Launchpad discover their HTML components by handshake. Their installed IDs are unknown from source; the universal master bridge requires a single unambiguous non-chrome component for those bindings.
 - Internal global header/footer source is pending. Existing RIAINTRA/ALTEA chrome must remain installed until approved source is supplied and live migration verified.
 

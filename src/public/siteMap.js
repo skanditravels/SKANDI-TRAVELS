@@ -6,7 +6,7 @@ export const SITE_MAP = Object.freeze({
   home: "/", search: "/search", flights: "/flights", carRental: "/car-rental",
   hotels: "/hotels", packages: "/packages", cruises: "/cruises", tours: "/tours",
   activities: "/activities", transfers: "/transfers", destinations: "/destinations",
-  offers: "/offers", travelInfo: "/travel-info", skandiCollection: "/skandi-collection",
+  travelInfo: "/travel-info", skandiCollection: "/skandi-collection",
   voy: "/voy-magazine", club: "/skandi-club", forgotPassword: "/forgot-password",
   about: "/about", support: "/about/support", newsroom: "/about/news-room",
   theStore: "/the-store", giftCard: "/gift-card", storeCheckout: "/the-store/store-checkout",
@@ -64,7 +64,6 @@ export const EDITORIAL_PAGE_CATALOG = Object.freeze([
   page("transfers", "Transfers", SITE_MAP.transfers, "OPERATIONAL"),
   page("destinations", "Destinations", SITE_MAP.destinations, "INVENTORY"),
   page("country", "Destination country", APP_ROUTES.country, "INVENTORY"),
-  page("offers", "Offers", SITE_MAP.offers, "INVENTORY"),
   page("travelInfo", "Travel Info", SITE_MAP.travelInfo, "INVENTORY"),
   page("passportVisa", "Passport & Visa", APP_ROUTES.passportVisa, "PUBLIC_PRESENTATION", [
     section("passport-hero","Hero",[field("passport-hero-kicker","Kicker"),field("passport-hero-title","Headline"),field("passport-hero-copy","Hero copy","LONG_TEXT")])
@@ -78,7 +77,7 @@ export const EDITORIAL_PAGE_CATALOG = Object.freeze([
   page("skandiCollection", "SKANDI Collection", SITE_MAP.skandiCollection, "INVENTORY"),
   page("voy", "VOY Magazine", SITE_MAP.voy, "VOY", [], { presentationRuntime:true }),
   page("forgotPassword", "Forgot Password", SITE_MAP.forgotPassword, "CUSTOMER_AUTH"),
-  page("bookingFlow", "Booking Flow", APP_ROUTES.bookingFlow, "BOOKING"),
+  page("bookingFlow", "Booking", APP_ROUTES.bookingFlow, "BOOKING"),
   page("myProfile", "My Profile", APP_ROUTES.myProfile, "CUSTOMER_PROFILE"),
   page("myTrips", "My Trips", APP_ROUTES.myTrips, "CUSTOMER_PROFILE"),
   page("club", "SKANDI Club", SITE_MAP.club, "PUBLIC_PRESENTATION", [
@@ -548,19 +547,14 @@ export const PAGE_BUILD_INTEGRATIONS = Object.freeze({
   },
   "bookingFlow": {
     "controller": "src/pages/Booking.e8twe.js",
+    "sourceDirectory": "skandi-embeds/booking-flow",
+    "stem": "skandi-booking-flow",
     "embedIds": [
-      "#bookingOfferEmbed",
-      "#bookingExtrasEmbed",
-      "#signatureTransferEmbed",
-      "#apisHtml",
-      "#seatmapEmbed",
-      "#paymentEmbed",
-      "#confirmationEmbed",
-      "#bookingDocumentsEmbed"
+      "#bookingFlowEmbed"
     ],
-    "sources": [],
-    "binding": "multi-component",
-    "note": "Retain the eight-step Wix state/HTML components. A single receiver requires a separately verified controller migration."
+    "sources": [
+      "SKANDI_BOOKING_OFFER"
+    ]
   },
   "support": {
     "controller": "src/pages/How can we help_.k0iqp.js",

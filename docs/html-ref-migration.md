@@ -10,7 +10,7 @@ The primary triplet uses the existing page folder and stem. Additional blocks us
 
 - Eight current source sets remain active and unchanged: Home, Flight Status, Travel Info, RIAINTRA login, Success Factors, public header, public footer and mobile navigation. Their reference alternatives are split under `html-ref/` subfolders. The registry now points to your renamed `riaintra-embeds/success-factors/success-factors.*` files.
 - Four RIAINTRA/ALTEA global components fill their existing pending folders. Generated shell code handles shared iframe geometry and component ID collisions; extracted source remains unchanged.
-- Booking keeps eight separate component folders under `skandi-embeds/booking-flow/components/`; its existing controller has eight component bindings. The conflicting merged single-embed proposal is split under `skandi-embeds/booking-flow/html-ref/` and remains reference-only.
+- Booking is one public page at `/booking` and one Wix HTML component, `#bookingFlowEmbed`. The canonical build input is `skandi-embeds/booking-flow/skandi-booking-flow.{html,css,js}` with the existing V12 page controller and booking facade. Former step components and duplicate merged copies remain only as superseded historical sources; they are not separate routes or build inputs.
 - Nine unregistered controller/component sources are extracted under `_unregistered/`. Their routes are not invented.
 - `Uniform Control.md` is a duplicate of the employee Uniform Center, not the admin source. Its extraction is under `uniform-control/html-ref/`; the admin slot remains pending.
 - `Customer Service Desk.md` contains an ALTEA Reservations implementation. It is retained under `_unregistered/benbs/html-ref/` and is not assigned to the Customer Service Desk controller.

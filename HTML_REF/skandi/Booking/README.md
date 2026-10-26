@@ -1,8 +1,9 @@
 # SKANDI INFO / LOG — V12 merged customer booking journey
 
-- Source identity: `/HTML_REF/skandi/Booking/Booking.merged.md` (new authoritative combined-embed source). System: SKANDI.
+- Source identity: `/HTML_REF/skandi/Booking/README.md` (authoritative consolidated-embed source). System: SKANDI.
 - Wix route: `/booking`. Wix controller: `/src/pages/Booking.e8twe.js`.
-- Active HTML element: `#bookingEmbed`.
+- Active HTML element: `#bookingFlowEmbed`.
+- Build source: `skandi-embeds/booking-flow/skandi-booking-flow.{html,css,js}`; the root triplet is the single compiled Booking page.
 - Parent-to-HTML source: `SKANDI_WIX_PARENT`. HTML-to-parent source: `SKANDI_BOOKING_OFFER`.
 - Important preserved canonical message actions: `BOOKING_OFFER_READY`, `BOOKING_SEARCH_SELECT`, `BOOKING_OFFER_ACCEPTED`, `BOOKING_EXTRAS_SAVE`, `SIGNATURE_TRANSFER_SKIP/SELECT`, `APIS_SAVE_AND_CONTINUE`, `SEATMAP_SAVE/SKIP`, `PAYMENT_COMMIT`, `BOOKING_NAVIGATE`.
 - Additional internal presentation-only transitions: `BOOKING_HOTEL_CONTINUE`, `BOOKING_UPSELL_CONTINUE` do not create supplier orders or bypass booking-cart validation.
@@ -11,12 +12,14 @@
 - Cart ownership: Wix current-member authorization and owned-cart server checks. Never trust client-supplied prices or booking states. Payment capture/order authority remains exclusively server-side.
 - Product limitations: the current V12 backend permits flight+hotel package selection at live offer search, not room changes after saving flight extras. It returns no live transfer options and exposes no purchasable tours/insurance catalog on the customer cart. Consequently these sections show the authoritative selected quote or an unavailable state, never mock products or invented prices.
 - The merged Wix embed retains its supplied visual design, layout classes and responsive CSS. Demo toolbar, sample flight/hotel/transfer/tour arrays, fabricated ticket IDs, hardcoded itinerary, traveler identity data and false confirmation are not used.
-- Last inspected: 2026-10-25. Source: `skanditravels/SKANDI-TRAVELS`, `main`, baseline of the canonical V12 booking controller, facade, mapper and core as available from GitHub read-only. No external code/data changes made.
+- Last inspected: 2026-10-26. Repository baseline: `skanditravels/SKANDI-TRAVELS` `main` at `7280b532fca39e69ee84cd5be0226819a1a62d3b`; the V12 booking controller, facade, mapper and core remain canonical. Git changes are prepared in a review branch; no Wix or database changes were made.
 - STATICALLY VERIFIED: Node JavaScript parsing of the replacement UI/controller; DOM-stub source-data rendering and mock-parent full booking-flow adapter tests. REQUIRES LIVE TEST: Wix page publication, login, Duffel pricing, Stripe authorization/3DS and final provider order and ALTEA handoff.
 
 ## CHANGE LOG (append-only)
 
 - **2026-10-25** — Introduced a single combined HTML UI at `#bookingEmbed`. The canonical booking cart now controls product prices, traveler counts, supplier selections, seats, payments, supplier references and document numbers. Removed all fake customer names, passport data, mock hotel room prices, invented airline taxes and fabricated booking confirmations. One Wix page controller hosts the full on-page journey and preserves its existing backend facade and supplier ownership boundaries. Flights, package selection and hotel-only offers use the current `searchUnifiedOffers` contract. Added explicit unavailable states for product services not supported by the V12 cart. Wix installation/live verification outstanding.
+
+- **2026-10-26** — Corrected the active route integration to a single `/booking` page and Wix HTML element `#bookingFlowEmbed`. The split `skandi-booking-flow` triplet is the Git build input; previous per-step source files are superseded historical references, not separate live pages or embeds. `/offers` is retired as a separate route.
 
 ## COMPLETE INTENDED LIVE HTML SOURCE
 

@@ -1,3 +1,5 @@
+> **Superseded on 2026-10-26.** This file preserves the complete historical source for a former Booking step component. It is not a separate page, active Wix HTML element, route, build input or installation target. The passenger journey now uses one `/booking` page with `#bookingFlowEmbed`; see `HTML_REF/skandi/Booking/README.md` for the canonical consolidated source.
+
 # SKANDI INFO / LOG — V12 journey integration
 
 - Source identity: `/HTML_REF/skandi/Booking/Booking.payment.md`. System: SKANDI. Complete intended source; HTML_REF is never imported at runtime.

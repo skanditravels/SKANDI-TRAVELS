@@ -120,7 +120,7 @@ const MASTER_CONFIG = Object.freeze({
             { label:"Hotels", path:SITE_MAP.hotels },
             { label:"Tours & Activities", path:SITE_MAP.tours },
             { label:"Car Rental", path:SITE_MAP.carRental },
-            { label:"Last Chance", path:SITE_MAP.offers }
+            { label:"Booking", path:APP_ROUTES.bookingFlow }
           ])
         }),
         Object.freeze({
