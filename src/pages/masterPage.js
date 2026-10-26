@@ -6,7 +6,7 @@ import wixLocationFrontend from "wix-location-frontend";
 import wixSiteFrontend from "wix-site-frontend";
 import wixWindowFrontend, { consentPolicy } from "wix-window-frontend";
 import { currentMember, authentication } from "wix-members-frontend";
-import { local } from "wix-storage-frontend";
+import { local, memory } from "wix-storage-frontend";
 import { getCustomerHeaderSession, subscribeCustomerNewsletter } from "backend/SKANDI_CORE/customerSession.web";
 import { getStaffPortalSession } from "backend/SKANDI_CORE/staffAuth.web";
 import { getPublicTravelInfoPayload } from "backend/SKANDI_CORE/publicContent.web";
@@ -17,6 +17,8 @@ import { bindAlexandraGlobal } from "public/alexandraGlobalBridge.js";
 const MASTER_VERSION = "BACKEND-BASE-1.0-B011.18-GLOBAL-CHROME";
 const MASTER_ENV = "PRD";
 const SETTINGS_STORAGE_KEY = "skandi_customer_settings_v1";
+const RIAINTRA_MANUAL_SESSION_KEY = "skandi_riaintra_manual_session_v1";
+const RIAINTRA_EXIT_LOGOUT_PENDING_KEY = "skandi_riaintra_exit_logout_pending_v1";
 const PARENT_SOURCE = "SKANDI_WIX_PARENT";
 const CUSTOMER_HEADER_SOURCE = GLOBAL_CHROME.customerHeader.source;
 const CUSTOMER_FOOTER_SOURCE = GLOBAL_CHROME.customerFooter.source;
@@ -120,7 +122,7 @@ const MASTER_CONFIG = Object.freeze({
             { label:"Hotels", path:SITE_MAP.hotels },
             { label:"Tours & Activities", path:SITE_MAP.tours },
             { label:"Car Rental", path:SITE_MAP.carRental },
-            { label:"Booking", path:APP_ROUTES.bookingFlow }
+            { label:"Last Chance", path:SITE_MAP.offers }
           ])
         }),
         Object.freeze({
@@ -275,6 +277,10 @@ let mobileFooterGateRevealed = false;
 let mobileFooterGateBusy = false;
 let mobileDrawerResizeEpoch = 0;
 let alexandraGlobal = null;
+let manualRiaintraSessionActive = false;
+let observedPath = "";
+let riaintraLogoutPromise = null;
+let riaintraLifecycleWired = false;
 
 // Only a successfully loaded universal receiver opts into compiled chrome.
 // Legacy Home and all other existing embeds keep their current behavior.
@@ -524,6 +530,63 @@ function currentPathString() {
 function normalizePath(path = "") {
   return String(path || "").toLowerCase().split("?")[0].split("#")[0].replace(/\/+$/, "") || "/";
 }
+function isRiaintraPath(path = currentPathString()) {
+  const value = normalizePath(path);
+  return value === "/riaintra" || value.startsWith("/riaintra/");
+}
+function isRiaintraChildPath(path = currentPathString()) {
+  return normalizePath(path).startsWith("/riaintra/");
+}
+async function logoutRiaintraSession() {
+  manualRiaintraSessionActive = false;
+  try { memory.removeItem(RIAINTRA_MANUAL_SESSION_KEY); } catch (_) {}
+  try { local.removeItem(RIAINTRA_EXIT_LOGOUT_PENDING_KEY); } catch (_) {}
+  if (riaintraLogoutPromise) return riaintraLogoutPromise;
+  riaintraLogoutPromise = (async () => {
+    try { await authentication.logout(); }
+    catch (error) { console.warn("[MasterPage] RIAINTRA logout could not be confirmed.", error); }
+  })();
+  try { await riaintraLogoutPromise; }
+  finally { riaintraLogoutPromise = null; }
+}
+function hasManualRiaintraSession() {
+  if (manualRiaintraSessionActive) return true;
+  try {
+    manualRiaintraSessionActive = memory.getItem(RIAINTRA_MANUAL_SESSION_KEY) === "typed";
+  } catch (_) { manualRiaintraSessionActive = false; }
+  return manualRiaintraSessionActive;
+}
+async function requireManualRiaintraLogin() {
+  await logoutRiaintraSession();
+  if (normalizePath(currentPathString()) !== "/riaintra") {
+    wixLocationFrontend.to(SITE_MAP.riaintra, { disableScrollToTop:false });
+  }
+}
+function wireRiaintraLifecycle() {
+  if (riaintraLifecycleWired) return;
+  riaintraLifecycleWired = true;
+  try {
+    globalThis.addEventListener("pagehide", () => {
+      if (!isRiaintraPath()) return;
+      manualRiaintraSessionActive = false;
+      try { memory.removeItem(RIAINTRA_MANUAL_SESSION_KEY); } catch (_) {}
+      try { local.setItem(RIAINTRA_EXIT_LOGOUT_PENDING_KEY, "yes"); } catch (_) {}
+      try {
+        const pendingLogout = authentication.logout();
+        if (pendingLogout && typeof pendingLogout.catch === "function") {
+          pendingLogout.catch(error => console.warn("[MasterPage] RIAINTRA close logout could not be confirmed.", error));
+        }
+      } catch (error) {
+        console.warn("[MasterPage] RIAINTRA close logout could not be started.", error);
+      }
+    });
+    globalThis.addEventListener("pageshow", () => {
+      if (isRiaintraChildPath() && !hasManualRiaintraSession()) void requireManualRiaintraLogin();
+    });
+  } catch (error) {
+    console.warn("[MasterPage] RIAINTRA page lifecycle logout hooks are unavailable.", error);
+  }
+}
 function isInternalPath(path = currentPathString()) {
   const value = normalizePath(path);
   return INTERNAL_PREFIXES.some(prefix => value === prefix || value.startsWith(prefix + "/"));
@@ -579,6 +642,17 @@ function wireLocationChangeScroll() {
   locationChangeWired = true;
   try {
     wixLocationFrontend.onChange(async () => {
+      const nextPath = currentPathString();
+      const previousPath = observedPath || nextPath;
+      if (isRiaintraPath(previousPath) && !isRiaintraPath(nextPath)) {
+        await logoutRiaintraSession();
+        try { await alexandraGlobal?.refreshIdentity?.(); } catch (_) {}
+      } else if (isRiaintraChildPath(nextPath) && !hasManualRiaintraSession()) {
+        observedPath = nextPath;
+        await requireManualRiaintraLogin();
+        return;
+      }
+      observedPath = nextPath;
       alexandraGlobal?.onRouteChange?.(currentPathString());
       await resetGlobalMobileDrawer();
       scheduleScrollViewportToTop("location-change");
@@ -1027,8 +1101,9 @@ async function handleMasterMessage(embed, message = {}) {
     return true;
   }
   if (type === "RIAINTRA_LOGOUT" || type === "INTERNAL_MASTER_LOGOUT") {
-    try { await authentication.logout(); } catch (_) {}
+    await logoutRiaintraSession();
     alexandraGlobal?.clear?.();
+    try { await alexandraGlobal?.refreshIdentity?.(); } catch (_) {}
     scheduleScrollViewportToTop("logout-navigation");
     wixLocationFrontend.to(MASTER_CONFIG.routes.home, { disableScrollToTop:false });
     return true;
@@ -1182,6 +1257,22 @@ function pushConfigToAll() {
   for (const embed of allHtmlComponents()) pushMasterConfig(embed);
 }
 $w.onReady(async function () {
+  let closeLogoutPending = false;
+  try {
+    closeLogoutPending = local.getItem(RIAINTRA_EXIT_LOGOUT_PENDING_KEY) === "yes";
+    local.removeItem(RIAINTRA_EXIT_LOGOUT_PENDING_KEY);
+  } catch (_) {}
+  if (closeLogoutPending) {
+    try { await authentication.logout(); }
+    catch (error) { console.warn("[MasterPage] Pending RIAINTRA logout could not be confirmed.", error); }
+  }
+  observedPath = currentPathString();
+  wireRiaintraLifecycle();
+  manualRiaintraSessionActive = hasManualRiaintraSession();
+  if (isRiaintraChildPath(observedPath) && !manualRiaintraSessionActive) {
+    await requireManualRiaintraLogin();
+    return;
+  }
   await applyChromeVisibility();
   startMobileFooterGate();
   scheduleScrollViewportToTop("page-ready");
