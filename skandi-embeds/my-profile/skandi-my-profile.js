@@ -75,7 +75,7 @@ function renderTrips(){
   const up=$("tripList"),past=$("tripHistoryList"),draft=$("tripDraftList");
   if(up)up.innerHTML=upcoming.map(b=>tripCard(b,false)).join("")||empty("No upcoming trips","Bookings linked to this account will appear here.","plane");
   if(past)past.innerHTML=history.map(b=>tripCard(b,true)).join("")||empty("No past trips yet","Completed and cancelled SKANDI bookings will appear here.","plane");
-  if(draft)draft.innerHTML=carts.map(c=>`<article class="trip-card"><div class="trip-datebox"><strong>${esc(friendly(c.status||"Draft"))}</strong><span>${esc(date(c.updatedAt||c.createdAt))}</span></div><div><h3>${esc(c.payload?.selectedOffer?.summary||c.payload?.productType||"Booking in progress")}</h3><p>${esc(c.cartId||"")}${c.total?` · ${esc(money(c.total,c.currency))}`:""}</p></div><div><button class="btn small primary" data-route="/booking?cartId=${encodeURIComponent(c.cartId||"")}">Continue</button></div></article>`).join("")||empty("No booking drafts","Unfinished SKANDI booking carts will appear here.","plane")
+  if(draft)draft.innerHTML=carts.map(c=>`<article class="trip-card"><div class="trip-datebox"><strong>${esc(friendly(c.status||"Draft"))}</strong><span>${esc(date(c.updatedAt||c.createdAt))}</span></div><div><h3>${esc(c.payload?.selectedOffer?.summary||c.payload?.productType||"Booking in progress")}</h3><p>${esc(c.cartId||"")}${c.total?` · ${esc(money(c.total,c.currency))}`:""}</p></div><div><button class="btn small primary" data-route="/?cartId=${encodeURIComponent(c.cartId||"")}">Continue</button></div></article>`).join("")||empty("No booking drafts","Unfinished SKANDI booking carts will appear here.","plane")
 }
 function renderClub(){
   const d=state.data,c=d?.club||{},tiers=arr(c.tiers),ledger=arr(c.ledger);

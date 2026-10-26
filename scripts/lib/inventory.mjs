@@ -61,8 +61,13 @@ export async function inventory(root) {
     const pathname=reg.normalizeSitePath(route),alias=seen.get(pathname);
     const meta=reg.PAGE_BUILD_INTEGRATIONS?.[key]||{};
     if(alias) {
-      if(meta.controller && meta.controller!==alias.controller) throw new Error(`Conflicting controllers for route ${pathname}: ${alias.key}, ${key}`);
-      rows.push({key,route,status:'ALIAS',aliasOf:alias.key,slug:alias.slug,family:alias.family,chrome:alias.chrome,sourceDirectory:alias.sourceDirectory,stem:alias.stem,controller:alias.controller,embedIds:alias.embedIds});
+      if(meta.controller && meta.controller!==alias.controller && !meta.legacyRedirect) throw new Error(`Conflicting controllers for route ${pathname}: ${alias.key}, ${key}`);
+      const controller=meta.legacyRedirect?meta.controller:alias.controller;
+      if(meta.legacyRedirect) {
+        const evidence=await integrationEvidence(root,{controller,embedIds:[],sources:[]});
+        if(evidence.issues.length) throw new Error(`Invalid legacy redirect controller for ${key}: ${evidence.issues.join('; ')}`);
+      }
+      rows.push({key,route,status:'ALIAS',aliasOf:alias.key,slug:alias.slug,family:alias.family,chrome:alias.chrome,sourceDirectory:alias.sourceDirectory,stem:alias.stem,controller,embedIds:alias.embedIds,legacyRedirect:meta.legacyRedirect===true});
       continue;
     }
     if(/[?#]/.test(route)) throw new Error(`Query view ${key} has no canonical base route ${pathname}`);
@@ -75,10 +80,25 @@ export async function inventory(root) {
     const shape=pathname.replace(/:[a-z][\w]*|\[[a-z][\w]*\]/g,':parameter');
     if(shapes.has(shape)) throw new Error(`Conflicting template routes ${key} and ${shapes.get(shape)}`);
     shapes.set(shape,key);
-    const source=await triplet(root,directory,stem), evidence=await integrationEvidence(root,meta);
+    const source=await triplet(root,directory,stem), components=[];
+    const componentFolders=new Set([folderKey]);
+    for(const component of meta.components||[]) {
+      const componentKey=String(component.key||'').trim();
+      const componentDirectory=component.sourceDirectory||`skandi-embeds/${slug}/${componentKey}`;
+      const componentStem=component.stem||`skandi-${slug}-${componentKey}`;
+      const mount=component.mount||`skandi-${kebab(componentKey)}-root`;
+      if(!/^[a-z0-9-]+$/.test(componentKey) || !/^[a-z0-9-]+$/.test(componentStem) || !/^(?:skandi-embeds|riaintra-embeds)\/[a-z0-9/-]+$/.test(componentDirectory) || componentDirectory.includes('..') || !/^[A-Za-z][A-Za-z0-9_-]*$/.test(mount)) throw new Error(`Unsafe component source mapping: ${key}/${componentKey}`);
+      const componentFolder=componentDirectory+'/'+componentStem;
+      if(folders.has(componentFolder)||componentFolders.has(componentFolder)) throw new Error(`Conflicting source mapping ${componentFolder}`);
+      componentFolders.add(componentFolder);
+      folders.set(componentFolder,`${key}/${componentKey}`);
+      const part=await triplet(root,componentDirectory,componentStem);
+      components.push({key:componentKey,sourceDirectory:componentDirectory,stem:componentStem,mount,sources:component.sources||[],...part});
+    }
+    const evidence=await integrationEvidence(root,meta);
     const row={key,route,slug,title:reg.EDITORIAL_PAGE_CATALOG?.find(p=>p.key===key)?.label||meta.controller?.split('/').pop().replace(/\.[^.]+\.js$/,'')||key,
       family:reg.getPageFamily(route),chrome:reg.getPageChrome(route),sourceDirectory:directory,stem,
-      controller:meta.controller||null,embedIds:meta.embedIds||[],sources:meta.sources||[],binding:meta.binding||'explicit',
+      controller:meta.controller||null,embedIds:meta.embedIds||[],sources:meta.sources||[],components,binding:meta.binding||'explicit',
       requiresStaff:reg.getPageFamily(route)!=='public' && meta.publicEntry!==true,
       status:source.status,files:source.files,missing:source.missing,issues:evidence.issues,backend:evidence.backend,messages:evidence.messages,
       output:`dist/${slug}/index.html`,dynamic:shape!==pathname};
@@ -89,7 +109,7 @@ export async function inventory(root) {
 export async function scaffold(root) {
   const {rows}=await inventory(root);
   for(const row of rows.filter(p=>p.status!=='ALIAS')) {
-    for(const file of row.files) {
+    for(const file of [...row.files,...(row.components||[]).flatMap(component=>component.files)]) {
       await fs.mkdir(path.dirname(path.join(root,file)),{recursive:true});
       const mark=file.endsWith('.html')?'<!-- SKANDI_PENDING_SOURCE: replace with complete page markup. -->\n':'/* SKANDI_PENDING_SOURCE: replace with complete page source. */\n';
       await fs.writeFile(path.join(root,file),mark,{flag:'wx'}).catch(e=>{if(e.code!=='EEXIST')throw e;});

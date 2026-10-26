@@ -2607,6 +2607,12 @@ function requestBootstrap(refresh=false) {
       childAges:[...state.childAges],infantAges:[...state.infantAges],rooms:1}
   });
 }
+function setBookingView(active){
+  const home=document.getElementById("skandi-home-content");
+  const booking=document.getElementById("skandi-booking-flow-root");
+  if(home){home.hidden=!!active;home.style.display=active?"none":"";}
+  if(booking){booking.hidden=!active;booking.style.display=active?"":"none";}
+}
 function stayGuestsForHome() {
   return [...Array.from({length:state.adults},()=>({type:"adult"})),
     ...[...state.childAges,...state.infantAges].map(age=>({type:"child",age}))];
@@ -3814,6 +3820,11 @@ window.addEventListener("message",event=>{
     state.hostReady=msg.payload||{};
     MASTER_CONTEXT.routes={...MASTER_CONTEXT.routes,...(msg.payload?.routes||{})};
     if(!state.hasBootstrapped)requestBootstrap();
+  }
+  if(msg.type==="HOME_BOOKING_MODE")setBookingView(true);
+  if(msg.type==="HOME_CONTENT_MODE"){
+    setBookingView(false);
+    requestBootstrap(true);
   }
   if(msg.type==="HOME_LOCATION_DATA"&&releaseRequest("locations",msg.requestId))renderLocationData(msg.payload||{});
   if(msg.type==="HOME_BOOTSTRAP_RESULT"&&msg.requestId===state.bootstrapId){

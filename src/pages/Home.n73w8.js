@@ -4,6 +4,7 @@
 import wixLocationFrontend from "wix-location-frontend";
 import wixWindowFrontend from "wix-window-frontend";
 import { startBookingSearch } from "public/bookingSearch";
+import { createBookingFlowHost } from "public/bookingFlowHost";
 import { getHomeContent, getHomeSearchLocations, getHomeLivePrices } from "backend/SKANDI_CORE/homeContent.web";
 import { SITE_MAP, APP_ROUTES } from "public/siteMap";
 
@@ -13,6 +14,7 @@ const MOBILE_APP_EMBED_ID = "#homeMobileAppEmbed";
 const MOBILE_APP_SOURCE = "SKANDI_HOME_MOBILE_APP";
 const MOBILE_APP_BAR_HEIGHT = 88;
 const PARENT_SOURCE = "SKANDI_WIX_PARENT";
+const BOOKING_SOURCE = "SKANDI_BOOKING_OFFER";
 const PROTOCOL_VERSION = "V12-HOME";
 const SUPPORTED_LANGUAGES = ["EN","SV","NO","DA","ES","FI","FR-FR","FR-CA","DE","TH"];
 const SUPPORTED_CURRENCIES = ["USD","SEK","NOK","DKK","EUR"];
@@ -28,6 +30,7 @@ let selectionJob = null;
 let mobileAppNav = null;
 let mobileRefreshId = "";
 let mobileDrawerExpanded = false;
+let bookingHost = null;
 
 function clean(value, max = 1000) { return String(value ?? "").trim().slice(0, max); }
 function arr(value) { return Array.isArray(value) ? value : []; }
@@ -199,11 +202,14 @@ async function searchHome(html, message, payload) {
   const raw = obj(message.search || payload.search);
   const search = {...raw,language:raw.language||currentSettings.language,locale:raw.locale||currentSettings.language,currency:raw.currency||currentSettings.currency};
   const path = startBookingSearch(search, "HOME");
+  const searchId = new URL(path, "https://www.skanditravels.com").searchParams.get("searchId");
+  if (!searchId || !bookingHost) throw failure("BOOKING_HOST_UNAVAILABLE", "The booking flow is temporarily unavailable. Please try again.");
   postToHtml(html, "HOME_NAVIGATE_TO_OFFER", {path,step:"offer"}, clean(message.requestId,160));
-  navigateTo(path);
+  postToHtml(html, "HOME_BOOKING_MODE", {step:"offer"});
+  await bookingHost.startSearch(searchId);
 }
 async function selectOffer(html, message, payload) {
-  // Search and offer selection are owned by /booking stateOffer.
+  // Search and offer selection are handled by the Home booking child.
   return searchHome(html, message, {search:message.search||payload.search||searchJob?.search||{}});
 }
 async function handleHomeMessage(html, message) {
@@ -317,15 +323,31 @@ function wireMobileAppNav(html) {
 $w.onReady(function () {
   const html = firstHomeEmbed();
   if (!html) return;
+  bookingHost = createBookingFlowHost({
+    html, location:wixLocationFrontend,
+    onReturnHome:() => {
+      try { wixLocationFrontend.queryParams?.remove(["step","searchId","cartId","cartToken"]); } catch (_) {}
+      postToHtml(html, "HOME_CONTENT_MODE", {});
+    }
+  });
   html.onMessage(async event => {
     const message = parseMessage(event?.data);
-    if (!message?.type || !HOME_SOURCES.has(String(message.source || ""))) return;
+    if (!message?.type) return;
+    if (message.source === BOOKING_SOURCE) {
+      await bookingHost.handleMessage(message);
+      return;
+    }
+    if (!HOME_SOURCES.has(String(message.source || ""))) return;
     try { await handleHomeMessage(html, message); }
     catch (error) { postHomeError(html, error, message); }
   });
   wireMobileAppNav(html);
+  bookingHost.announceReady();
   postToHtml(html, "HOME_HOST_READY", {
     protocolVersion:PROTOCOL_VERSION, embedId:clean(html.id, 80),
     routes:{ ...SITE_MAP, ...APP_ROUTES }, readyAt:new Date().toISOString()
   });
+  bookingHost.startFromLocation().then(started => {
+    if (started) postToHtml(html, "HOME_BOOKING_MODE", {step:"offer"});
+  }).catch(error => bookingHost.reportError(error));
 });
