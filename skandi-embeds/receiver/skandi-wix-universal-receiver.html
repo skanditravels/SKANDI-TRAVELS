@@ -12,7 +12,7 @@
 (() => {
   'use strict';
   const SOURCE='SKANDI_UNIVERSAL_RECEIVER',PARENT='SKANDI_WIX_PARENT';
-  const ORIGINS=new Set(['https://www.skanditravels.com','https://skanditravels.com','https://editor.wix.com']);
+  const ORIGINS=new Set(['https://www.skanditravels.com','https://skanditravels.com','https://editor.wix.com','https://skanditravels-my-site-2.editor.wix.com']);
   const ROOTS=['https://raw.githubusercontent.com/skanditravels/SKANDI-TRAVELS/main/','https://cdn.jsdelivr.net/gh/skanditravels/SKANDI-TRAVELS@main/'];
   const nonce=Array.from(crypto.getRandomValues(new Uint32Array(4)),x=>x.toString(16)).join('-');
   let attempts=0,loading=false,timer;

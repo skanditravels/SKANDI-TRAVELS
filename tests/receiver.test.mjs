@@ -33,6 +33,11 @@ test('receiver ignores spoofed windows, origins, unrelated messages and unmatche
   const h=await harness(t);h.send(h.message(),'https://untrusted.example');h.send(h.message(),'https://www.skanditravels.com',{});const m=h.message();m.payload.receiverRequestId='unmatched';h.send(m);await tick();assert.equal(h.calls.length,0);assert.equal(h.writes.length,0);
 });
 
+test('receiver accepts the exact verified Wix Studio preview origin and rejects other preview hosts',async t=>{
+  const preview=await harness(t);preview.send(preview.message(),'https://skanditravels-my-site-2.editor.wix.com');await settled(preview);assert.equal(preview.writes[0],preview.html);
+  const other=await harness(t);other.send(other.message(),'https://another-site.editor.wix.com');await tick();assert.equal(other.calls.length,0);assert.equal(other.writes.length,0);
+});
+
 test('receiver resolves the parent canonical page, verifies integrity and replaces the original document',async t=>{
   const h=await harness(t);h.send();await settled(h);assert.equal(h.writes[0],h.html);assert.equal(h.w.__SKANDI_RECEIVER_CONTEXT__.key,'search');assert.ok(h.calls.some(u=>u.endsWith('/dist/search/index.html')));assert.ok(h.calls.every(u=>!u.includes('/dist/home/')));
 });
