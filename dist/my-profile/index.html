@@ -1115,43 +1115,39 @@ body.drawer-open #skandi-mobile-nav-container{min-height:100%;height:100%}
   --sk-porcelain:#f5f1ea;
   --sk-champagne:#d1bc98;
   --sk-limestone:#d8d2c8;
-  --sk-graphite:#e8eef5;
-  --sk-muted:#8fa3b8;
+  --sk-graphite:#1a1a1a;
+  --sk-muted:#66758a;
   --sk-dark-muted:#93a4b7;
-  --sk-surface:rgba(10, 29, 49, 0.78);
-  --sk-surface-elevated:rgba(14, 38, 64, 0.88);
-  --sk-surface-input:rgba(5, 18, 33, 0.88);
   --sk-line:rgba(255,255,255,.13);
   --sk-line-soft:rgba(255,255,255,.08);
-  --sk-line-dark:rgba(255,255,255,.10);
-  --sk-ok:#38b887;
-  --sk-warn:#e0b252;
-  --sk-danger:#e06c62;
+  --sk-line-dark:rgba(2,46,100,.13);
+  --sk-ok:#146b4c;
+  --sk-warn:#8a641d;
+  --sk-danger:#9e3b31;
   --r-sm:10px;
   --r-md:18px;
   --r-lg:26px;  
-  --shadow-dark:0 28px 86px rgba(0,0,0,.42);
-  --shadow-panel:0 24px 58px rgba(0,0,0,.32);
-  --shadow-light:0 18px 46px rgba(0,0,0,.26);
+  --shadow-dark:0 28px 86px rgba(0,0,0,.30);
+  --shadow-panel:0 24px 58px rgba(0,0,0,.17);
+  --shadow-light:0 18px 46px rgba(3,17,31,.11);
   --max:1240px;
-  --hero-bg-img: url("https://static.wixstatic.com/media/394052_a1c96fea7d944811bfb9602e4f9e16e5~mv2.png");
-  color-scheme: dark;
+  --hero-bg-img: url("https://static.wixstatic.com/media/394052_a1c96fea7d944811bfb9602e4f9e16e5~mv2.png"); /* Or 'none' if no image */
 }
 
 #skandi-app-root *{box-sizing:border-box}
-#skandi-app-root{background:var(--sk-navy-black)}
-#skandi-app-root{margin:0;min-width:320px;background:var(--sk-navy-black);color:var(--sk-graphite);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;overflow-x:hidden}
+#skandi-app-root{background:var(--sk-navy)}
+#skandi-app-root{margin:0;min-width:320px;background:var(--sk-blue-soft);color:var(--sk-graphite);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;overflow-x:hidden}
 #skandi-app-root button,#skandi-app-root input,#skandi-app-root select,#skandi-app-root textarea{font:inherit}
 #skandi-app-root button{cursor:pointer}
 #skandi-app-root button:disabled{cursor:not-allowed;opacity:.46}
 #skandi-app-root a{color:inherit}
 #skandi-app-root .hidden{display:none!important}
-#skandi-app-root :focus-visible{outline:2px solid rgba(95,199,207,.75);outline-offset:2px}
+#skandi-app-root :focus-visible{outline:3px solid rgba(95,199,207,.7);outline-offset:3px}
 #skandi-app-root .shell{min-height:100vh;background:var(--sk-navy-black)}
 #skandi-app-root .wrap{width:min(var(--max),calc(100% - 48px));margin-inline:auto}
 
 /* Hero */
-#skandi-app-root .hero{position:relative;isolation:isolate;min-height:400px;padding:68px 0 76px;color:#fff;overflow:hidden;background:
+#skandi-app-root .hero{position:relative;isolation:isolate;min-height:520px;padding:76px 0 128px;color:#fff;overflow:hidden;background:
   radial-gradient(circle at 77% 16%,rgba(95,199,207,.12),transparent 27%),
   radial-gradient(circle at 18% 90%,rgba(209,188,152,.07),transparent 31%),
   linear-gradient(145deg,#071c32 0%,#06172b 50%,#03101d 100%)}
@@ -1159,10 +1155,56 @@ body.drawer-open #skandi-mobile-nav-container{min-height:100%;height:100%}
 #skandi-app-root .hero::after{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:
   linear-gradient(180deg,rgba(1,12,25,.06),transparent 36%,rgba(1,12,25,.30) 100%),
   linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px);background-size:auto,84px 100%;mask-image:linear-gradient(90deg,#000,transparent 72%)}
+#skandi-app-root .hero-grid{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(370px,.7fr);gap:70px;align-items:end}
+#skandi-app-root .hero-copy-wrap{max-width:760px}
 #skandi-app-root .eyebrow{display:flex;align-items:center;gap:12px;color:var(--sk-aqua-soft);font-family:Montserrat,sans-serif;font-size:11px;font-weight:800;letter-spacing:.18em;text-transform:uppercase}
 #skandi-app-root .eyebrow::before{content:"";width:34px;height:1px;background:var(--sk-aqua)}
+#skandi-app-root .hero h1{margin:17px 0 20px;max-width:760px;font-family:Montserrat,sans-serif;font-size:clamp(44px,6vw,76px);font-weight:600;line-height:.95;letter-spacing:-.055em}
+#skandi-app-root .hero-copy{max-width:650px;margin:0;color:rgba(255,255,255,.74);font-size:15px;font-weight:500;line-height:1.75}
+#skandi-app-root .hero-actions{display:flex;flex-wrap:wrap;gap:9px;margin-top:29px}
+#skandi-app-root .hero-btn{min-height:44px;padding:0 18px;border:1px solid rgba(255,255,255,.18);border-radius:999px;background:rgba(3,17,31,.56);color:#fff;font-size:11px;font-weight:800;letter-spacing:.02em;backdrop-filter:blur(16px)}
+#skandi-app-root .hero-btn:hover{border-color:rgba(157,224,229,.54);background:rgba(8,35,59,.78)}
+#skandi-app-root .hero-btn.primary{border-color:var(--sk-ivory);background:var(--sk-ivory);color:#07192c}
+#skandi-app-root .hero-btn.primary:hover{background:#fff;border-color:#fff}
+#skandi-app-root .hero-mini-status{display:flex;flex-wrap:wrap;gap:7px 0;margin-top:24px;color:rgba(255,255,255,.58);font-size:10px;font-weight:700;letter-spacing:.02em}
+#skandi-app-root .hero-mini-status span{display:flex;align-items:center}
+#skandi-app-root .hero-mini-status span+span::before{content:"·";margin:0 11px;color:rgba(255,255,255,.25)}
 
-#skandi-app-root .section-head{display:grid;grid-template-columns:minmax(0,1fr) minmax(280px,520px);gap:48px;align-items:end;margin:0 0 28px;padding-bottom:22px;border-bottom:1px solid rgba(255,255,255,.10)}
+/* Premium membership card */
+#skandi-app-root .member-card{position:relative;min-height:330px;overflow:hidden;padding:28px;border:1px solid rgba(209,188,152,.24);border-radius:24px;color:#fff;background: 
+  radial-gradient(circle at 88% 8%,rgba(95,199,207,.11),transparent 27%),
+  linear-gradient(150deg,rgba(13,40,65,.96),rgba(5,25,44,.98) 62%,rgba(3,17,31,.98));box-shadow:0 34px 95px rgba(0,0,0,.34)}
+#skandi-app-root .member-card::before{content:"";position:absolute;inset:18px;border:1px solid rgba(255,255,255,.055);border-radius:16px;pointer-events:none}
+#skandi-app-root .member-card::after{content:"SKANDI";position:absolute;right:-6px;bottom:-11px;color:rgba(255,255,255,.028);font:700 66px/1 Montserrat,sans-serif;letter-spacing:-.06em;pointer-events:none}
+#skandi-app-root .member-top,#skandi-app-root .member-name,#skandi-app-root .member-number,#skandi-app-root .member-stats{position:relative;z-index:1}
+#skandi-app-root .member-top{display:flex;justify-content:space-between;gap:20px;align-items:center}
+#skandi-app-root .club-word{font-family:Montserrat,sans-serif;font-size:12px;font-weight:800;letter-spacing:.18em}
+#skandi-app-root .member-tier{padding-left:12px;border-left:1px solid rgba(209,188,152,.46);color:var(--sk-aqua-soft);font-size:10px;font-weight:800;letter-spacing:.14em;text-transform:uppercase}
+#skandi-app-root .member-name{margin-top:78px;max-width:86%;font-family:Montserrat,sans-serif;font-size:28px;font-weight:600;letter-spacing:-.035em}
+#skandi-app-root .member-number{margin-top:7px;color:rgba(255,255,255,.53);font-size:11px;letter-spacing:.04em}
+#skandi-app-root .member-stats{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:26px;padding-top:18px;border-top:1px solid rgba(255,255,255,.10)}
+#skandi-app-root .member-stat strong{display:block;font-family:Montserrat,sans-serif;font-size:26px;font-weight:600;letter-spacing:-.04em}
+#skandi-app-root .member-stat span{display:block;margin-top:4px;color:rgba(255,255,255,.46);font-size:9px;font-weight:700;letter-spacing:.13em;text-transform:uppercase}
+#skandi-app-root .member-shine,#skandi-app-root .member-orbits,#skandi-app-root .member-orbit-core,#skandi-app-root .profile-sky,#skandi-app-root .profile-strip,#skandi-app-root .floating-profile-action{display:none!important}
+
+/* Navigation */
+#skandi-app-root .nav-wrap{position:relative;z-index:8;margin-top:-58px}
+#skandi-app-root .account-nav{display:flex;gap:4px;overflow:auto;padding:5px;border:1px solid rgba(255,255,255,.14);border-radius:999px;background:rgba(4,21,39,.86);box-shadow:0 20px 60px rgba(0,0,0,.26);backdrop-filter:blur(18px) saturate(1.12);scrollbar-width:none}
+#skandi-app-root .account-nav::-webkit-scrollbar{display:none}
+#skandi-app-root .navbtn{flex:0 0 auto;min-height:40px;padding:0 14px;border:0;border-radius:999px;background:transparent;color:rgba(255,255,255,.62);font-size:10px;font-weight:800;letter-spacing:.045em;text-transform:uppercase;white-space:nowrap}
+#skandi-app-root .navbtn:hover{background:rgba(255,255,255,.06);color:#fff}
+#skandi-app-root .navbtn.active{background:var(--sk-ivory);color:#07192c;box-shadow:0 8px 22px rgba(0,0,0,.20)}
+
+/* Main dark atlas surface */
+#skandi-app-root .main{position:relative;padding:58px 0 110px;background:
+  radial-gradient(circle at 14% 8%,rgba(31,107,163,.11),transparent 20%),
+  radial-gradient(circle at 86% 24%,rgba(95,199,207,.055),transparent 22%),
+  linear-gradient(180deg,#06192d 0%,#06172a 44%,#03111f 100%)}
+#skandi-app-root .main::before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.08;background-image:radial-gradient(rgba(255,255,255,.26) .55px,transparent .65px);background-size:20px 20px;mask-image:linear-gradient(180deg,#000,transparent 70%)}
+#skandi-app-root .main>.wrap{position:relative;z-index:1}
+#skandi-app-root .view{display:none}
+#skandi-app-root .view.active{display:block}
+#skandi-app-root .section-head{display:grid;grid-template-columns:minmax(0,1fr) minmax(280px,520px);gap:48px;align-items:end;margin:24px 0 28px;padding-bottom:22px;border-bottom:1px solid rgba(255,255,255,.10)}
 #skandi-app-root .section-head h2{margin:6px 0 0;color:#fff;font-family:Montserrat,sans-serif;font-size:clamp(34px,4.3vw,54px);font-weight:600;line-height:.98;letter-spacing:-.05em}
 #skandi-app-root .section-head p{max-width:520px;margin:0;color:rgba(255,255,255,.57);font-size:13px;line-height:1.7}
 #skandi-app-root .kicker{display:flex;align-items:center;gap:9px;color:var(--sk-aqua-soft);font-size:10px;font-weight:800;letter-spacing:.16em;text-transform:uppercase}
@@ -1173,140 +1215,183 @@ body.drawer-open #skandi-mobile-nav-container{min-height:100%;height:100%}
 #skandi-app-root .grid2{grid-template-columns:repeat(2,minmax(0,1fr))}
 #skandi-app-root .grid3{grid-template-columns:repeat(3,minmax(0,1fr))}
 #skandi-app-root .grid4{grid-template-columns:repeat(4,minmax(0,1fr))}
-
-/* Unified Dark-Glass Cards */
-#skandi-app-root .card{position:relative;overflow:hidden;border:1px solid rgba(255,255,255,.12);border-radius:var(--r-md);background:linear-gradient(155deg, rgba(13, 35, 58, 0.86), rgba(7, 22, 38, 0.92));color:#fff;box-shadow:var(--shadow-light);backdrop-filter:blur(14px)}
-#skandi-app-root .card.pad{padding:26px}
-#skandi-app-root .card h3{margin:0 0 9px;color:#fff;font-family:Montserrat,sans-serif;font-size:18px;font-weight:700;letter-spacing:-.025em}
+#skandi-app-root .card{position:relative;overflow:hidden;border:1px solid rgba(216,210,200,.80);border-radius:var(--r-md);background:var(--sk-ivory);box-shadow:var(--shadow-light)}
+#skandi-app-root .card.pad{padding:24px}
+#skandi-app-root .card h3{margin:0 0 9px;color:var(--sk-navy-deep);font-family:Montserrat,sans-serif;font-size:18px;font-weight:700;letter-spacing:-.025em}
 #skandi-app-root .card p{margin:0;color:var(--sk-muted);font-size:12px;line-height:1.65}
-#skandi-app-root .card:hover{border-color:rgba(95,199,207,.34)}
+#skandi-app-root .card:hover{border-color:rgba(95,199,207,.52)}
 
-/* SAS-Style Modular Profile Settings Layout */
-#skandi-app-root .sas-group{margin-bottom:38px}
-#skandi-app-root .sas-group-head{margin-bottom:18px}
-#skandi-app-root .sas-group-head h3{margin:0 0 6px;color:#fff;font-family:Montserrat,sans-serif;font-size:22px;font-weight:700;letter-spacing:-.03em}
-#skandi-app-root .sas-group-head p{margin:0;color:rgba(255,255,255,.58);font-size:13px;line-height:1.6}
-#skandi-app-root .sas-grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);gap:18px;align-items:start}
-#skandi-app-root .sas-grid.equal{grid-template-columns:repeat(2,minmax(0,1fr))}
-#skandi-app-root .sas-card{padding:26px;border:1px solid rgba(255,255,255,.13);border-radius:18px;background:linear-gradient(155deg, rgba(12, 33, 55, 0.88), rgba(6, 20, 35, 0.94));box-shadow:var(--shadow-light)}
-#skandi-app-root .sas-card.editing{border-color:rgba(95,199,207,.55);box-shadow:0 0 0 1px rgba(95,199,207,.20),var(--shadow-panel)}
-#skandi-app-root .sas-card-top{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:18px}
-#skandi-app-root .sas-card-top h4{margin:0;color:#fff;font-family:Montserrat,sans-serif;font-size:17px;font-weight:700;letter-spacing:-.02em}
-#skandi-app-root .sas-desc{margin:0 0 18px;padding-bottom:16px;border-bottom:1px solid rgba(255,255,255,.09);color:rgba(255,255,255,.60);font-size:12px;line-height:1.6}
-#skandi-app-root .sas-edit-pill{min-height:34px;padding:0 18px;border:1.5px solid rgba(95,199,207,.55);border-radius:999px;background:transparent;color:var(--sk-aqua-soft);font-size:11px;font-weight:700;transition:all .16s ease}
-#skandi-app-root .sas-edit-pill:hover{border-color:var(--sk-aqua-soft);background:rgba(95,199,207,.14);color:#fff}
-#skandi-app-root .sas-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px 24px}
-#skandi-app-root .sas-field span{display:block;color:rgba(255,255,255,.46);font-size:11px;font-weight:500}
-#skandi-app-root .sas-field strong{display:block;margin-top:4px;color:#fff;font-size:13px;font-weight:600;line-height:1.45;word-break:break-word}
-#skandi-app-root .sas-airport-row{display:flex;align-items:center;gap:14px;padding:6px 0}
-#skandi-app-root .sas-airport-badge{display:grid;place-items:center;flex:0 0 auto;width:44px;height:44px;border:1px solid rgba(95,199,207,.25);border-radius:50%;background:rgba(95,199,207,.10);color:var(--sk-aqua-soft)}
-#skandi-app-root .sas-airport-meta{flex:1;min-width:0}
-#skandi-app-root .sas-airport-meta strong{display:block;color:#fff;font-size:13px;font-weight:600}
-#skandi-app-root .sas-airport-meta span{display:block;margin-top:2px;color:var(--sk-muted);font-size:11px}
-#skandi-app-root .sas-text-btn{border:0;background:transparent;color:var(--sk-aqua-soft);font-size:12px;font-weight:700;padding:6px 8px}
-#skandi-app-root .sas-text-btn:hover{color:#fff;text-decoration:underline}
-
-/* SAS-Style Communication Toggle Switches */
-#skandi-app-root .sas-toggle-row{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.07)}
-#skandi-app-root .sas-toggle-row:last-child{border-bottom:0;padding-bottom:0}
-#skandi-app-root .sas-toggle-row span{color:#fff;font-size:13px;font-weight:500}
-#skandi-app-root .sas-switch{position:relative;display:inline-block;width:46px;height:26px;flex:0 0 auto}
-#skandi-app-root .sas-switch input{opacity:0;width:0;height:0}
-#skandi-app-root .sas-slider{position:absolute;inset:0;cursor:pointer;border-radius:999px;background:rgba(255,255,255,.22);transition:.22s}
-#skandi-app-root .sas-slider::before{content:"";position:absolute;left:3px;bottom:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:.22s}
-#skandi-app-root .sas-switch input:checked+.sas-slider{background:var(--sk-aqua)}
-#skandi-app-root .sas-switch input:checked+.sas-slider::before{transform:translateX(20px);background:#04182b}
+/* Overview */
+#skandi-app-root .overview-feature{display:grid;grid-template-columns:minmax(0,1.28fr) minmax(310px,.72fr);gap:16px}
+#skandi-app-root .next-trip{position:relative;min-height:360px;overflow:hidden;padding:31px;border:1px solid rgba(95,199,207,.20);border-radius:var(--r-lg);color:#fff;background:
+  radial-gradient(circle at 86% 16%,rgba(95,199,207,.17),transparent 26%),
+  radial-gradient(circle at 18% 100%,rgba(209,188,152,.08),transparent 28%),
+  linear-gradient(145deg,#082440,#05223b 58%,#04182b);box-shadow:var(--shadow-dark)}
+#skandi-app-root .next-trip::before{content:"";position:absolute;left:31px;right:31px;top:94px;height:1px;background:linear-gradient(90deg,rgba(95,199,207,.08),rgba(95,199,207,.46),rgba(209,188,152,.24),transparent)}
+#skandi-app-root .next-trip::after{content:"";position:absolute;right:30px;top:89px;width:9px;height:9px;border:1px solid var(--sk-champagne);border-radius:50%;background:#082440}
+#skandi-app-root .trip-inner{position:relative;z-index:1;display:flex;flex-direction:column;height:100%}
+#skandi-app-root .trip-status{display:inline-flex;align-items:center;gap:8px;color:var(--sk-aqua-soft);font-size:10px;font-weight:800;letter-spacing:.14em;text-transform:uppercase}
+#skandi-app-root .trip-status::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--sk-aqua)}
+#skandi-app-root .route{margin:52px 0 8px;font-family:Montserrat,sans-serif;font-size:clamp(34px,4.3vw,56px);font-weight:600;line-height:1;letter-spacing:-.055em}
+#skandi-app-root .trip-date{color:rgba(255,255,255,.60);font-size:12px}
+#skandi-app-root .trip-bottom{display:flex;justify-content:space-between;gap:18px;align-items:flex-end;margin-top:auto}
+#skandi-app-root .trip-ref{color:rgba(255,255,255,.46);font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase}
+#skandi-app-root .action-list{display:grid;gap:0;margin-top:8px;border-top:1px solid var(--sk-line-dark)}
+#skandi-app-root .action-item{position:relative;display:flex;gap:14px;align-items:flex-start;width:100%;padding:16px 0;border:0;border-bottom:1px solid var(--sk-line-dark);background:transparent;text-align:left}
+#skandi-app-root .action-item:last-child{border-bottom:0}
+#skandi-app-root .action-item:hover strong{color:var(--sk-blue-soft)}
+#skandi-app-root .action-icon{display:grid;place-items:center;flex:0 0 auto;width:36px;height:36px;border:1px solid rgba(2,46,100,.11);border-radius:50%;background:#eef5f4;color:var(--sk-navy)}
+#skandi-app-root .action-item strong{display:block;color:var(--sk-navy-deep);font-size:12px}
+#skandi-app-root .action-item span span{display:block;margin-top:4px;color:var(--sk-muted);font-size:11px;line-height:1.5}
+#skandi-app-root .overview-feature+.grid4{gap:0;margin-top:16px!important;overflow:hidden;border:1px solid rgba(255,255,255,.11);border-radius:var(--r-md);background:rgba(255,255,255,.035)}
+#skandi-app-root .overview-feature+.grid4 .metric{min-height:132px;border:0;border-right:1px solid rgba(255,255,255,.09);border-radius:0;background:transparent;box-shadow:none}
+#skandi-app-root .overview-feature+.grid4 .metric:last-child{border-right:0}
+#skandi-app-root .metric{padding:22px}
+#skandi-app-root .metric .num{color:#fff;font-family:Montserrat,sans-serif;font-size:31px;font-weight:600;letter-spacing:-.04em}
+#skandi-app-root .metric .label{margin-top:5px;color:rgba(255,255,255,.48);font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+#skandi-app-root .metric .micro{margin-top:14px;color:var(--sk-aqua-soft);font-size:10px;font-weight:700}
 
 /* Buttons, chips and controls */
-#skandi-app-root .btn{min-height:40px;padding:0 16px;border:1px solid rgba(255,255,255,.18);border-radius:999px;background:rgba(255,255,255,.06);color:#fff;font-size:11px;font-weight:800;transition:all .18s ease}
-#skandi-app-root .btn:hover{border-color:var(--sk-aqua-soft);background:rgba(95,199,207,.12);box-shadow:0 0 0 3px rgba(95,199,207,.10)}
-#skandi-app-root .btn.primary{border-color:var(--sk-aqua);background:linear-gradient(135deg,#154b78,#0d3559);color:#fff}
-#skandi-app-root .btn.primary:hover{border-color:var(--sk-aqua-soft);background:linear-gradient(135deg,#1b5b91,#11426e)}
-#skandi-app-root .btn.cyan{border-color:var(--sk-aqua);background:var(--sk-aqua);color:#04182b}
-#skandi-app-root .btn.soft{border-color:rgba(255,255,255,.14);background:rgba(255,255,255,.05);color:rgba(255,255,255,.88)}
-#skandi-app-root .btn.soft:hover{background:rgba(255,255,255,.10);color:#fff}
-#skandi-app-root .btn.danger{border-color:rgba(224,108,98,.38);background:rgba(158,59,49,.16);color:#f39c93}
-#skandi-app-root .btn.danger:hover{border-color:#f39c93;background:rgba(158,59,49,.28)}
-#skandi-app-root .btn.small{min-height:34px;padding:0 13px;font-size:10px}
-#skandi-app-root .button-row{display:flex;flex-wrap:wrap;gap:8px}
+#skandi-app-root .btn{min-height:42px;padding:0 16px;border:1px solid var(--sk-navy);border-radius:999px;background:#fff;color:var(--sk-navy);font-size:11px;font-weight:800}
+#skandi-app-root .btn:hover{border-color:var(--sk-blue-soft);box-shadow:0 0 0 3px rgba(95,199,207,.09)}
+#skandi-app-root .btn.primary{border-color:var(--sk-navy-deep);background:var(--sk-navy-deep);color:#fff}
+#skandi-app-root .btn.primary:hover{background:#092844}
+#skandi-app-root .btn.cyan{border-color:var(--sk-aqua);background:var(--sk-aqua);color:#05223b}
+#skandi-app-root .btn.soft{border-color:#d8dee1;background:#f3f4f2;color:var(--sk-navy)}
+#skandi-app-root .btn.danger{border-color:#dcb9b4;background:#fff;color:var(--sk-danger)}
+#skandi-app-root .btn.small{min-height:34px;padding:0 12px;font-size:10px}
+#skandi-app-root .button-row{display:flex;flex-wrap:wrap;gap:7px}
+#skandi-app-root .linkbtn{padding:0;border:0;background:transparent;color:var(--sk-blue-soft);font-size:11px;font-weight:800}
 #skandi-app-root .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
-#skandi-app-root .chip{display:inline-flex;align-items:center;min-height:25px;padding:0 9px;border:1px solid rgba(255,255,255,.12);border-radius:999px;background:rgba(255,255,255,.06);color:rgba(255,255,255,.78);font-size:9px;font-weight:700}
-#skandi-app-root .chip.ok{border-color:rgba(56,184,135,.35);background:rgba(20,107,76,.28);color:#7ce0b8}
-#skandi-app-root .chip.warn{border-color:rgba(224,178,82,.35);background:rgba(138,100,29,.28);color:#f5cf7e}
-#skandi-app-root .chip.blue{border-color:rgba(95,199,207,.35);background:rgba(31,107,163,.28);color:var(--sk-aqua-soft)}
+#skandi-app-root .chip{display:inline-flex;align-items:center;min-height:25px;padding:0 9px;border:1px solid rgba(2,46,100,.08);border-radius:999px;background:#eef1f2;color:#53606f;font-size:9px;font-weight:700}
+#skandi-app-root .chip.ok{border-color:#d3e8dd;background:#e8f4ee;color:var(--sk-ok)}
+#skandi-app-root .chip.warn{border-color:#eadbb9;background:#fff6e2;color:var(--sk-warn)}
+#skandi-app-root .chip.blue{border-color:#d2e0ea;background:#eaf1f6;color:var(--sk-navy)}
 
 /* Trips */
-#skandi-app-root .trip-list{display:grid;gap:0;overflow:hidden;border:1px solid rgba(255,255,255,.12);border-radius:var(--r-lg);background:linear-gradient(155deg, rgba(11, 31, 52, 0.85), rgba(6, 20, 35, 0.92));box-shadow:var(--shadow-panel)}
-#skandi-app-root .trip-card{display:grid;grid-template-columns:112px minmax(0,1fr) auto;gap:20px;align-items:center;padding:20px 22px;border:0;border-bottom:1px solid rgba(255,255,255,.09);background:transparent}
+#skandi-app-root .trip-toolbar{display:inline-flex;gap:4px;margin-bottom:16px;padding:5px;border:1px solid rgba(255,255,255,.12);border-radius:999px;background:rgba(4,21,39,.72)}
+#skandi-app-root .filterbtn{min-height:36px;padding:0 13px;border:0;border-radius:999px;background:transparent;color:rgba(255,255,255,.60);font-size:10px;font-weight:800;letter-spacing:.03em}
+#skandi-app-root .filterbtn:hover{color:#fff;background:rgba(255,255,255,.06)}
+#skandi-app-root .filterbtn.active{background:var(--sk-ivory);color:#07192c}
+#skandi-app-root .trip-list{display:grid;gap:0;overflow:hidden;border:1px solid rgba(216,210,200,.82);border-radius:var(--r-lg);background:var(--sk-ivory);box-shadow:var(--shadow-panel)}
+#skandi-app-root .trip-card{display:grid;grid-template-columns:120px 1fr auto;gap:20px;align-items:center;padding:20px 22px;border:0;border-bottom:1px solid rgba(2,46,100,.10);background:transparent}
 #skandi-app-root .trip-card:last-child{border-bottom:0}
-#skandi-app-root .trip-card:hover{background:rgba(255,255,255,.03)}
-#skandi-app-root .trip-datebox{padding-right:19px;border-right:1px solid rgba(255,255,255,.10)}
-#skandi-app-root .trip-datebox strong{display:block;color:#fff;font-family:Montserrat,sans-serif;font-size:22px;font-weight:700}
-#skandi-app-root .trip-datebox span{color:var(--sk-muted);font-size:10px}
-#skandi-app-root .trip-card h3{margin:0 0 6px;color:#fff;font-family:Montserrat,sans-serif;font-size:18px;font-weight:700}
+#skandi-app-root .trip-card:hover{background:#fff}
+#skandi-app-root .trip-datebox{padding-right:19px;border-right:1px solid rgba(2,46,100,.10)}
+#skandi-app-root .trip-datebox strong{display:block;color:var(--sk-navy-deep);font-family:Montserrat,sans-serif;font-size:22px;font-weight:700}
+#skandi-app-root .trip-datebox span{color:#8894a0;font-size:10px}
+#skandi-app-root .trip-card h3{margin:0 0 6px;color:var(--sk-navy-deep);font-family:Montserrat,sans-serif;font-size:18px;font-weight:700}
 #skandi-app-root .trip-card p{margin:0;color:var(--sk-muted);font-size:11px}
+
+/* Club */
+#skandi-app-root .club-section{position:relative;overflow:hidden;padding:32px;border:1px solid rgba(209,188,152,.16);border-radius:var(--r-lg);background:
+  radial-gradient(circle at 92% 0,rgba(95,199,207,.08),transparent 25%),
+  linear-gradient(145deg,#0a2138,#061a30 58%,#041523);box-shadow:var(--shadow-dark)}
+#skandi-app-root .club-section::after{content:"";position:absolute;right:-90px;top:-130px;width:280px;height:280px;border:1px solid rgba(209,188,152,.11);border-radius:50%;box-shadow:0 0 0 34px rgba(209,188,152,.025),0 0 0 72px rgba(95,199,207,.02);pointer-events:none}
+#skandi-app-root .club-grid{position:relative;z-index:1;display:grid;grid-template-columns:minmax(300px,.76fr) minmax(0,1.24fr);gap:30px;align-items:stretch}
+#skandi-app-root .club-digital{position:relative;display:flex;flex-direction:column;min-height:300px;padding:25px;border:1px solid rgba(209,188,152,.24);border-radius:22px;color:#fff;background:linear-gradient(150deg,#071a2d,#0a2a49 62%,#082239);box-shadow:0 24px 55px rgba(0,0,0,.23)}
+#skandi-app-root .club-digital::after{content:"SKANDI";position:absolute;right:-10px;bottom:-14px;color:rgba(255,255,255,.027);font:700 58px/1 Montserrat,sans-serif;letter-spacing:-.055em}
+#skandi-app-root .club-digital .brandline{display:flex;justify-content:space-between;gap:18px;font-family:Montserrat,sans-serif;font-size:10px;font-weight:800;letter-spacing:.16em}
+#skandi-app-root .club-digital .club-tier{color:var(--sk-aqua-soft)}
+#skandi-app-root .club-digital .member-name2{margin-top:auto;color:#fff;font-family:Montserrat,sans-serif;font-size:24px;font-weight:600;letter-spacing:-.035em}
+#skandi-app-root .club-digital .member-no2{margin-top:5px;color:rgba(255,255,255,.48);font-size:10px}
+#skandi-app-root .club-digital .points2{margin-top:18px;color:#fff;font-family:Montserrat,sans-serif;font-size:29px;font-weight:600}
+#skandi-app-root .club-section .kicker{color:var(--sk-aqua-soft)}
+#skandi-app-root .club-section h3,#skandi-app-root .club-section h3[style]{color:#fff!important;font-weight:600!important}
+#skandi-app-root .club-section p,#skandi-app-root .club-section p[style]{color:rgba(255,255,255,.59)!important}
+#skandi-app-root .progress{position:relative;height:7px;overflow:visible;border-radius:99px;background:rgba(255,255,255,.10)}
+#skandi-app-root .progress span{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,var(--sk-blue-soft),var(--sk-aqua))}
+#skandi-app-root .progress::after{content:"";position:absolute;left:var(--club-progress);top:50%;width:11px;height:11px;border:3px solid #071a2d;border-radius:50%;background:var(--sk-aqua);box-shadow:0 0 0 1px rgba(157,224,229,.40);transform:translate(-50%,-50%)}
+#skandi-app-root .tier-line{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:18px}
+#skandi-app-root .tier-pill{padding:11px 7px;border:1px solid rgba(255,255,255,.10);border-radius:12px;background:rgba(255,255,255,.035);color:rgba(255,255,255,.48);text-align:center;font-size:9px}
+#skandi-app-root .tier-pill.current{border-color:rgba(157,224,229,.45);background:rgba(95,199,207,.10);color:#fff}
+#skandi-app-root .tier-pill strong{display:block;margin-bottom:3px;color:inherit;font-size:10px}
+#skandi-app-root .ledger{position:relative;z-index:1;margin-top:22px;border-top:1px solid rgba(255,255,255,.10)}
+#skandi-app-root .club-section .subhead{color:rgba(255,255,255,.78)}
+#skandi-app-root .ledger-row{display:grid;grid-template-columns:110px 1fr auto;gap:15px;align-items:center;padding:13px 0;border-bottom:1px solid rgba(255,255,255,.08)}
+#skandi-app-root .ledger-row .date{color:rgba(255,255,255,.40);font-size:10px}
+#skandi-app-root .ledger-row strong{color:#fff;font-size:12px}
+#skandi-app-root .ledger-row .pts{color:var(--sk-aqua-soft);font-family:Montserrat,sans-serif;font-weight:700}
+#skandi-app-root .ledger-row .pts.neg{color:#efb2ab}
 
 /* Travelers */
 #skandi-app-root .traveler-card{padding:22px}
 #skandi-app-root .traveler-head{display:flex;align-items:center;gap:13px}
-#skandi-app-root .avatar{display:grid;place-items:center;width:46px;height:46px;border:1px solid rgba(95,199,207,.30);border-radius:50%;background:rgba(95,199,207,.12);color:var(--sk-aqua-soft);font-family:Montserrat,sans-serif;font-size:12px;font-weight:800}
-#skandi-app-root .traveler-name{color:#fff;font-family:Montserrat,sans-serif;font-weight:700}
+#skandi-app-root .avatar{display:grid;place-items:center;width:46px;height:46px;border:1px solid rgba(2,46,100,.10);border-radius:50%;background:#e9f2f3;color:var(--sk-navy);font-family:Montserrat,sans-serif;font-size:12px;font-weight:800}
+#skandi-app-root .traveler-name{color:var(--sk-navy-deep);font-family:Montserrat,sans-serif;font-weight:700}
 #skandi-app-root .traveler-meta{margin-top:3px;color:var(--sk-muted);font-size:10px}
-#skandi-app-root .traveler-info{display:grid;grid-template-columns:repeat(2,1fr);gap:11px;margin-top:18px;padding-top:17px;border-top:1px solid rgba(255,255,255,.10)}
-#skandi-app-root .info-pair{padding:11px 13px;border:1px solid rgba(255,255,255,.07);border-radius:12px;background:rgba(4,16,29,.55)}
-#skandi-app-root .info-pair span{display:block;color:var(--sk-aqua-soft);font-size:8px;font-weight:800;letter-spacing:.11em;text-transform:uppercase;opacity:.85}
-#skandi-app-root .info-pair strong{display:block;margin-top:4px;color:#fff;font-size:12px;font-weight:600}
+#skandi-app-root .traveler-info{display:grid;grid-template-columns:repeat(2,1fr);gap:11px;margin-top:18px;padding-top:17px;border-top:1px solid rgba(2,46,100,.10)}
+#skandi-app-root .info-pair span{display:block;color:#8a96a4;font-size:8px;font-weight:800;letter-spacing:.09em;text-transform:uppercase}
+#skandi-app-root .info-pair strong{display:block;margin-top:4px;color:#344252;font-size:11px}
 #skandi-app-root .traveler-actions{display:flex;gap:7px;margin-top:18px}
 
-/* Empty States */
-#skandi-app-root .empty{padding:44px 20px;border:1px solid rgba(255,255,255,.10);border-radius:var(--r-md);background:rgba(8, 24, 42, 0.55);text-align:center}
+/* Documents */
+#skandi-app-root .docmetrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;overflow:hidden;margin-bottom:18px;border:1px solid rgba(255,255,255,.11);border-radius:var(--r-md);background:rgba(255,255,255,.035)}
+#skandi-app-root .docmetric{padding:18px 20px;border:0;border-right:1px solid rgba(255,255,255,.08);background:transparent}
+#skandi-app-root .docmetric:last-child{border-right:0}
+#skandi-app-root .docmetric .n{color:#fff;font-family:Montserrat,sans-serif;font-size:27px;font-weight:600}
+#skandi-app-root .docmetric .l{margin-top:4px;color:rgba(255,255,255,.45);font-size:9px;font-weight:700;letter-spacing:.09em;text-transform:uppercase}
+#skandi-app-root .sectiontitle{margin:24px 0 10px;color:rgba(255,255,255,.68);font-size:9px;font-weight:800;letter-spacing:.12em;text-transform:uppercase}
+#skandi-app-root .docitem{display:grid;grid-template-columns:44px 1fr auto;gap:14px;align-items:center;margin-bottom:8px;padding:14px;border:1px solid rgba(216,210,200,.80);border-radius:15px;background:var(--sk-ivory)}
+#skandi-app-root .docitem:hover{border-color:rgba(95,199,207,.48)}
+#skandi-app-root .docicon{display:grid;place-items:center;width:42px;height:42px;border:1px solid rgba(2,46,100,.08);border-radius:50%;background:#edf2f2;color:var(--sk-navy);font-size:9px;font-weight:800}
+#skandi-app-root .docitem h3{margin:0 0 4px;color:var(--sk-navy-deep);font-family:Montserrat,sans-serif;font-size:13px}
+#skandi-app-root .docitem p{margin:0;color:var(--sk-muted);font-size:10px}
+#skandi-app-root .docactions{display:flex;gap:6px}
+#skandi-app-root .status{display:inline-flex;align-items:center;min-height:24px;padding:0 8px;border-radius:999px;background:#eef1f2;color:#596674;font-size:8px;font-weight:800;letter-spacing:.06em;text-transform:uppercase}
+#skandi-app-root .status.ok{background:#e8f4ee;color:var(--sk-ok)}
+#skandi-app-root .status.warn{background:#fff6e2;color:var(--sk-warn)}
+#skandi-app-root .status.bad{background:#fff0ef;color:var(--sk-danger)}
+
+/* Empty */
+#skandi-app-root .empty{padding:44px 20px;border:1px solid rgba(255,255,255,.11);border-radius:var(--r-md);background:rgba(255,255,255,.035);text-align:center}
 #skandi-app-root .empty svg{width:36px;height:36px;margin-bottom:12px;color:var(--sk-aqua-soft)}
 #skandi-app-root .empty strong{display:block;color:#fff;font-family:Montserrat,sans-serif;font-size:15px;font-weight:600}
-#skandi-app-root .empty span{display:block;max-width:430px;margin:6px auto 0;color:rgba(255,255,255,.52);font-size:11px;line-height:1.6}
-#skandi-app-root .trip-list .empty,#skandi-app-root .activity-list .empty,#skandi-app-root #notifications .empty{border:0;border-radius:0;background:transparent}
+#skandi-app-root .empty span{display:block;max-width:430px;margin:6px auto 0;color:rgba(255,255,255,.48);font-size:11px;line-height:1.6}
+#skandi-app-root .trip-list .empty{border:0;border-radius:0;background:var(--sk-ivory)}
+#skandi-app-root .trip-list .empty strong{color:var(--sk-navy-deep)}
+#skandi-app-root .trip-list .empty span{color:var(--sk-muted)}
+#skandi-app-root .trip-list .empty svg{color:var(--sk-blue-soft)}
 
 /* Wallet / Saved / Notifications */
-#skandi-app-root .wallet-card{min-height:190px;padding:20px;border-color:rgba(95,199,207,.18);background:
-  radial-gradient(circle at 90% 10%,rgba(95,199,207,.14),transparent 28%),
-  linear-gradient(145deg,#0c2c4b,#061a30);color:#fff;box-shadow:var(--shadow-panel)}
+#skandi-app-root .wallet-card{min-height:190px;padding:20px;border-color:rgba(95,199,207,.14);background:
+  radial-gradient(circle at 90% 10%,rgba(95,199,207,.12),transparent 28%),
+  linear-gradient(145deg,#0a2743,#061a30);color:#fff;box-shadow:var(--shadow-panel)}
 #skandi-app-root .card-chip{width:40px;height:27px;margin-bottom:29px;border:1px solid rgba(255,255,255,.20);border-radius:6px;background:linear-gradient(135deg,#bba172,#e1cfaa)}
 #skandi-app-root .wallet-number{color:#fff;font-family:Montserrat,sans-serif;font-size:15px;letter-spacing:.10em}
-#skandi-app-root .wallet-meta{display:flex;justify-content:space-between;margin-top:10px;color:rgba(255,255,255,.54);font-size:10px}
+#skandi-app-root .wallet-meta{display:flex;justify-content:space-between;margin-top:10px;color:rgba(255,255,255,.48);font-size:10px}
 #skandi-app-root .saved-card{display:grid;grid-template-columns:88px 1fr auto;gap:15px;align-items:center;padding:12px}
-#skandi-app-root .saved-img{width:88px;height:72px;border-radius:10px;object-fit:cover;background:linear-gradient(145deg,#123758,#091f35)}
-#skandi-app-root .notif{display:grid;grid-template-columns:12px 1fr auto;gap:14px;align-items:start;padding:18px;border-bottom:1px solid rgba(255,255,255,.09)}
+#skandi-app-root .saved-img{width:88px;height:72px;border-radius:10px;object-fit:cover;background:linear-gradient(145deg,#c9e8e9,#d9dce4)}
+#skandi-app-root .notif{display:grid;grid-template-columns:12px 1fr auto;gap:14px;align-items:start;padding:18px;border-bottom:1px solid rgba(2,46,100,.10)}
 #skandi-app-root .notif:last-child{border-bottom:0}
-#skandi-app-root .notif.unread{background:rgba(95,199,207,.06)}
-#skandi-app-root .notif-dot{width:7px;height:7px;margin-top:5px;border-radius:50%;background:rgba(255,255,255,.24)}
+#skandi-app-root .notif.unread{background:#f4f9f8}
+#skandi-app-root .notif-dot{width:7px;height:7px;margin-top:5px;border-radius:50%;background:#c4ccd3}
 #skandi-app-root .notif.unread .notif-dot{background:var(--sk-aqua)}
-#skandi-app-root .notif strong{color:#fff;font-size:12px}
+#skandi-app-root .notif strong{color:var(--sk-navy-deep);font-size:12px}
 #skandi-app-root .notif p{margin:4px 0 0;color:var(--sk-muted);font-size:11px;line-height:1.55}
 
-/* Form controls inside unlocked SAS cards & modals */
-#skandi-app-root .profile-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}
+/* Profile form */
+#skandi-app-root .profile-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:17px}
 #skandi-app-root .field.full{grid-column:1/-1}
-#skandi-app-root .field label{display:block;margin:0 0 6px;color:var(--sk-aqua-soft);font-size:9px;font-weight:800;letter-spacing:.10em;text-transform:uppercase;opacity:.9}
-#skandi-app-root .control{width:100%;min-height:44px;padding:0 13px;border:1px solid rgba(255,255,255,.16);border-radius:10px;outline:0;background:var(--sk-surface-input);color:#fff;font-size:13px;transition:border-color .16s ease,box-shadow .16s ease}
-#skandi-app-root .control::placeholder{color:rgba(255,255,255,.32)}
-#skandi-app-root .control:hover{border-color:rgba(255,255,255,.28)}
-#skandi-app-root .control:focus{border-color:var(--sk-aqua);background:rgba(7, 25, 44, 0.96);box-shadow:0 0 0 3px rgba(95,199,207,.16)}
-#skandi-app-root select.control option{background:#06182c;color:#fff}
-#skandi-app-root textarea.control{min-height:88px;padding:11px 13px;resize:vertical}
-#skandi-app-root .checkbox{display:flex;gap:10px;align-items:flex-start;color:rgba(255,255,255,.72);font-size:12px;line-height:1.5}
-#skandi-app-root .checkbox input{margin-top:3px;accent-color:var(--sk-aqua)}
-#skandi-app-root .provider-note{margin-top:16px;padding:13px 14px;border:1px solid rgba(95,199,207,.24);border-radius:12px;background:rgba(95,199,207,.08);color:#c7e8ea;font-size:10px;line-height:1.6}
+#skandi-app-root .field label{display:block;margin:0 0 7px;color:#637181;font-size:9px;font-weight:800;letter-spacing:.09em;text-transform:uppercase}
+#skandi-app-root .control{width:100%;min-height:46px;padding:0 13px;border:1px solid #cbd5dd;border-radius:10px;outline:0;background:#fff;color:#152130}
+#skandi-app-root .control:focus{border-color:var(--sk-aqua);box-shadow:0 0 0 3px rgba(95,199,207,.12)}
+#skandi-app-root textarea.control{min-height:100px;padding:12px;resize:vertical}
+#skandi-app-root .checkbox{display:flex;gap:10px;align-items:flex-start;color:var(--sk-muted);font-size:12px;line-height:1.5}
+#skandi-app-root .checkbox input{margin-top:3px}
+#skandi-app-root .provider-note{margin-top:16px;padding:13px 14px;border:1px solid #c5e1e3;border-radius:12px;background:#edf7f8;color:#31596a;font-size:10px;line-height:1.6}
 
-/* Booking Drawer */
-#skandi-app-root .drawer-shade{position:fixed;inset:0;z-index:90;pointer-events:none;opacity:0;background:rgba(1,10,20,.72);backdrop-filter:blur(5px);transition:opacity .24s ease}
+/* Drawer */
+#skandi-app-root .drawer-shade{position:fixed;inset:0;z-index:90;pointer-events:none;opacity:0;background:rgba(1,10,20,.68);backdrop-filter:blur(4px)}
 #skandi-app-root .drawer-shade.open{pointer-events:auto;opacity:1}
 #skandi-app-root .drawer{position:fixed;z-index:91;top:0;right:0;width:min(720px,100vw);height:100vh;overflow:auto;background:
   radial-gradient(circle at 100% 0,rgba(95,199,207,.08),transparent 22%),
-  linear-gradient(180deg,#071c32,#041523);box-shadow:-32px 0 90px rgba(0,0,0,.48);transform:translateX(102%);transition:transform .28s cubic-bezier(.22,1,.36,1)}
+  linear-gradient(180deg,#071c32,#041523);box-shadow:-32px 0 90px rgba(0,0,0,.38);transform:translateX(102%)}
 #skandi-app-root .drawer.open{transform:none}
 #skandi-app-root .drawer-head{position:sticky;top:0;z-index:2;display:flex;justify-content:space-between;align-items:center;padding:18px 22px;border-bottom:1px solid rgba(255,255,255,.10);background:rgba(4,21,35,.92);backdrop-filter:blur(14px)}
 #skandi-app-root .drawer-head strong{color:#fff;font-family:Montserrat,sans-serif;font-size:13px}
 #skandi-app-root .iconbtn{display:grid;place-items:center;width:38px;height:38px;border:1px solid rgba(255,255,255,.14);border-radius:50%;background:rgba(255,255,255,.05);color:#fff}
-#skandi-app-root .iconbtn:hover{border-color:rgba(157,224,229,.44);background:rgba(255,255,255,.10)}
+#skandi-app-root .iconbtn:hover{border-color:rgba(157,224,229,.44);background:rgba(255,255,255,.08)}
 #skandi-app-root .drawer-body{padding:24px;color:#fff}
 #skandi-app-root .booking-hero{padding:25px;border:1px solid rgba(95,199,207,.17);border-radius:22px;background:
   radial-gradient(circle at 82% 20%,rgba(209,188,152,.10),transparent 23%),
@@ -1321,30 +1406,104 @@ body.drawer-open #skandi-mobile-nav-container{min-height:100%;height:100%}
 #skandi-app-root .component strong{color:#fff;font-size:11px}
 #skandi-app-root .component span{display:block;margin-top:3px;color:rgba(255,255,255,.48);font-size:10px}
 #skandi-app-root .drawer .subhead{color:var(--sk-aqua-soft)}
+#skandi-app-root .drawer .provider-note{background:rgba(95,199,207,.08);border-color:rgba(95,199,207,.18);color:#c7e8ea}
+#skandi-app-root .drawer .btn.soft{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.15);color:#fff}
+#skandi-app-root .drawer .btn.primary{border-color:var(--sk-ivory);background:var(--sk-ivory);color:#07192c}
+#skandi-app-root .drawer .card{border-color:rgba(255,255,255,.10);background:rgba(255,255,255,.05);box-shadow:none}
+#skandi-app-root .drawer .card h3{color:#fff}
+#skandi-app-root .drawer .card p{color:rgba(255,255,255,.55)}
 
 /* Modal */
-#skandi-app-root .modal-shade{position:fixed;inset:0;z-index:110;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(1,10,20,.78);backdrop-filter:blur(6px)}
+#skandi-app-root .modal-shade{position:fixed;inset:0;z-index:110;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(1,10,20,.76);backdrop-filter:blur(5px)}
 #skandi-app-root .modal-shade.open{display:flex}
-#skandi-app-root .modal{width:min(650px,100%);max-height:90vh;overflow:auto;border:1px solid rgba(255,255,255,.15);border-radius:22px;background:linear-gradient(160deg,#09213a,#051526);color:#fff;box-shadow:0 44px 120px rgba(0,0,0,.58)}
-#skandi-app-root .modal-head{display:flex;justify-content:space-between;align-items:center;padding:19px 22px;border-bottom:1px solid rgba(255,255,255,.10);background:rgba(4,16,29,.65)}
-#skandi-app-root .modal-head h3{margin:0;color:#fff;font-family:Montserrat,sans-serif;font-size:17px}
+#skandi-app-root .modal{width:min(650px,100%);max-height:90vh;overflow:auto;border:1px solid rgba(255,255,255,.12);border-radius:22px;background:var(--sk-ivory);box-shadow:0 44px 120px rgba(0,0,0,.42)}
+#skandi-app-root .modal-head{display:flex;justify-content:space-between;align-items:center;padding:19px 22px;border-bottom:1px solid var(--sk-line-dark);background:#f7f4ee}
+#skandi-app-root .modal-head h3{margin:0;color:var(--sk-navy-deep);font-family:Montserrat,sans-serif;font-size:17px}
+#skandi-app-root .modal .iconbtn{border-color:var(--sk-line-dark);background:#fff;color:var(--sk-navy)}
 #skandi-app-root .modal-body{padding:22px}
-#skandi-app-root .modal-foot{display:flex;justify-content:flex-end;gap:8px;padding:17px 22px;border-top:1px solid rgba(255,255,255,.10);background:rgba(4,16,29,.65)}
-#skandi-app-root .choice{display:flex;gap:12px;margin-bottom:8px;padding:14px;border:1px solid rgba(255,255,255,.12);border-radius:13px;background:rgba(255,255,255,.04)}
-#skandi-app-root .choice input{margin-top:4px;accent-color:var(--sk-aqua)}
-#skandi-app-root .choice strong{display:block;color:#fff;font-size:11px}
+#skandi-app-root .modal-foot{display:flex;justify-content:flex-end;gap:8px;padding:17px 22px;border-top:1px solid var(--sk-line-dark);background:#f7f4ee}
+#skandi-app-root .choice{display:flex;gap:12px;margin-bottom:8px;padding:14px;border:1px solid var(--sk-line-dark);border-radius:13px;background:#fff}
+#skandi-app-root .choice input{margin-top:4px}
+#skandi-app-root .choice strong{display:block;color:var(--sk-navy-deep);font-size:11px}
 #skandi-app-root .choice span{display:block;margin-top:3px;color:var(--sk-muted);font-size:10px}
-#skandi-app-root .price{margin-left:auto;white-space:nowrap;color:var(--sk-aqua-soft);font-family:Montserrat,sans-serif;font-weight:700}
-#skandi-app-root .stripe-box{margin-top:12px;padding:15px;border:1px solid rgba(255,255,255,.14);border-radius:13px;background:rgba(5,18,33,.85)}
+#skandi-app-root .price{margin-left:auto;white-space:nowrap;color:var(--sk-navy);font-family:Montserrat,sans-serif;font-weight:700}
+#skandi-app-root .stripe-box{margin-top:12px;padding:15px;border:1px solid var(--sk-line-dark);border-radius:13px;background:#fff}
 
 /* Toast / loading */
-#skandi-app-root .toast{position:fixed;z-index:200;left:50%;bottom:24px;pointer-events:none;opacity:0;padding:11px 17px;border:1px solid rgba(95,199,207,.28);border-radius:999px;background:#071c32;color:#fff;box-shadow:0 16px 45px rgba(0,0,0,.42);font-size:11px;font-weight:700;transform:translateX(-50%);transition:opacity .2s ease}
+#skandi-app-root .toast{position:fixed;z-index:200;left:50%;bottom:24px;pointer-events:none;opacity:0;padding:11px 17px;border:1px solid rgba(255,255,255,.10);border-radius:999px;background:#07192c;color:#fff;box-shadow:0 16px 45px rgba(0,0,0,.28);font-size:11px;font-weight:700;transform:translateX(-50%)}
 #skandi-app-root .toast.show{opacity:1}
-#skandi-app-root .toast.bad{border-color:rgba(224,108,98,.45);background:#5b1f1b}
+#skandi-app-root .toast.bad{background:#6f2824}
 #skandi-app-root .loading{position:fixed;inset:0;z-index:300;display:none;place-items:center;background:rgba(3,17,31,.70);backdrop-filter:blur(7px)}
 #skandi-app-root .loading.show{display:grid}
-#skandi-app-root .spinner{width:46px;height:46px;border:2px solid rgba(255,255,255,.20);border-top-color:var(--sk-aqua);border-radius:50%;animation:skandi-app-root-spin .8s linear infinite}
-@keyframes skandi-app-root-spin{to{transform:rotate(360deg)}}
+#skandi-app-root .spinner{width:46px;height:46px;border:2px solid rgba(255,255,255,.20);border-top-color:var(--sk-aqua);border-radius:50%}
+
+@media(max-width:980px){
+  #skandi-app-root .wrap{width:min(100% - 32px,var(--max))}
+  #skandi-app-root .hero{min-height:0;padding:62px 0 114px}
+  #skandi-app-root .hero-grid,#skandi-app-root .overview-feature,#skandi-app-root .club-grid{grid-template-columns:1fr}
+  #skandi-app-root .hero-grid{gap:34px}
+  #skandi-app-root .member-card{max-width:600px;min-height:300px}
+  #skandi-app-root .member-name{margin-top:58px}
+  #skandi-app-root .section-head{grid-template-columns:1fr;gap:14px;align-items:start}
+  #skandi-app-root .grid4{grid-template-columns:repeat(2,1fr)}
+  #skandi-app-root .grid3{grid-template-columns:repeat(2,1fr)}
+  #skandi-app-root .overview-feature+.grid4 .metric:nth-child(2){border-right:0}
+  #skandi-app-root .overview-feature+.grid4 .metric:nth-child(-n+2){border-bottom:1px solid rgba(255,255,255,.09)}
+  #skandi-app-root .trip-card{grid-template-columns:100px 1fr}
+  #skandi-app-root .trip-card>.button-row,#skandi-app-root .trip-card>div:last-child{grid-column:1/-1}
+  #skandi-app-root .profile-form{grid-template-columns:1fr}
+  #skandi-app-root .field.full{grid-column:auto}
+}
+@media(max-width:640px){
+  #skandi-app-root .wrap{width:min(100% - 20px,var(--max))}
+  #skandi-app-root .hero{padding:48px 0 96px}
+  #skandi-app-root .hero h1{font-size:44px}
+  #skandi-app-root .hero-copy{font-size:13px}
+  #skandi-app-root .hero-mini-status{display:none}
+  #skandi-app-root .hero-grid{gap:26px}
+  #skandi-app-root .member-card{min-height:286px;padding:22px;border-radius:20px}
+  #skandi-app-root .member-name{margin-top:48px;font-size:24px}
+  #skandi-app-root .member-card::after{font-size:50px}
+  #skandi-app-root .nav-wrap{margin-top:-43px}
+  #skandi-app-root .account-nav{border-radius:16px;padding:5px}
+  #skandi-app-root .navbtn{min-height:38px;padding:0 12px;font-size:9px}
+  #skandi-app-root .main{padding:45px 0 80px}
+  #skandi-app-root .section-head{margin-top:12px;padding-bottom:18px}
+  #skandi-app-root .section-head h2{font-size:38px}
+  #skandi-app-root .grid2,#skandi-app-root .grid3,#skandi-app-root .grid4,#skandi-app-root .docmetrics{grid-template-columns:1fr}
+  #skandi-app-root .overview-feature+.grid4 .metric{border-right:0;border-bottom:1px solid rgba(255,255,255,.09)}
+  #skandi-app-root .overview-feature+.grid4 .metric:last-child{border-bottom:0}
+  #skandi-app-root .next-trip{min-height:310px;padding:23px}
+  #skandi-app-root .next-trip::before{left:23px;right:23px;top:82px}
+  #skandi-app-root .next-trip::after{right:22px;top:77px}
+  #skandi-app-root .route{margin-top:44px}
+  #skandi-app-root .trip-bottom{align-items:flex-start;flex-direction:column}
+  #skandi-app-root .trip-card{grid-template-columns:1fr;padding:18px}
+  #skandi-app-root .trip-datebox{padding:0 0 12px;border-right:0;border-bottom:1px solid rgba(2,46,100,.10)}
+  #skandi-app-root .club-section{padding:18px}
+  #skandi-app-root .club-digital{min-height:260px}
+  #skandi-app-root .tier-line{grid-template-columns:repeat(2,1fr)}
+  #skandi-app-root .ledger-row{grid-template-columns:1fr auto}
+  #skandi-app-root .ledger-row .date{grid-column:1/-1}
+  #skandi-app-root .traveler-info{grid-template-columns:1fr}
+  #skandi-app-root .docmetric{border-right:0;border-bottom:1px solid rgba(255,255,255,.08)}
+  #skandi-app-root .docmetric:last-child{border-bottom:0}
+  #skandi-app-root .docitem{grid-template-columns:42px 1fr}
+  #skandi-app-root .docactions{grid-column:1/-1;justify-content:flex-end}
+  #skandi-app-root .saved-card{grid-template-columns:76px 1fr}
+  #skandi-app-root .saved-img{width:76px;height:68px}
+  #skandi-app-root .saved-card>.button-row{grid-column:1/-1}
+  #skandi-app-root .notif{grid-template-columns:10px 1fr}
+  #skandi-app-root .notif>.btn,#skandi-app-root .notif>button{grid-column:2}
+  #skandi-app-root .drawer-body{padding:16px}
+  #skandi-app-root .cap-grid{grid-template-columns:1fr}
+  #skandi-app-root .modal-shade{padding:10px}
+  #skandi-app-root .modal{border-radius:18px}
+}
+@media(prefers-reduced-motion:reduce){
+  #skandi-app-root *,#skandi-app-root *::before,#skandi-app-root *::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}
+}
+
 
 /* B-011.31 account shell -------------------------------------------------- */
 #skandi-app-root .account-masthead {
@@ -1378,15 +1537,8 @@ body.drawer-open #skandi-mobile-nav-container{min-height:100%;height:100%}
   linear-gradient(30deg,rgba(255,255,255,.06) 12%,transparent 12.5%,transparent 87%,rgba(255,255,255,.06) 87.5%),
   linear-gradient(150deg,rgba(255,255,255,.04) 12%,transparent 12.5%,transparent 87%,rgba(255,255,255,.04) 87.5%);background-size:108px 188px;mask-image:linear-gradient(90deg,transparent,#000 22%,#000 78%,transparent)}
 #skandi-app-root .account-layout{position:relative;z-index:1;display:grid;grid-template-columns:248px minmax(0,1fr);gap:48px;align-items:start}
-
-/* Mobile Slide-Out Trigger Bar & Drawer Elements (hidden on desktop) */
-#skandi-app-root .mobile-nav-bar{display:none}
-#skandi-app-root .mobile-nav-shade{display:none}
-#skandi-app-root .side-menu-head{display:flex;align-items:center;justify-content:space-between;padding:0 0 18px}
-#skandi-app-root .side-menu-title{color:rgba(255,255,255,.42);font-family:Montserrat,sans-serif;font-size:9px;font-weight:800;letter-spacing:.18em;text-transform:uppercase}
-#skandi-app-root .side-menu-close{display:none}
-
 #skandi-app-root .side-menu{position:sticky;top:24px;padding:4px 0 24px;color:#fff}
+#skandi-app-root .side-menu-title{padding:0 0 18px;color:rgba(255,255,255,.35);font-family:Montserrat,sans-serif;font-size:9px;font-weight:800;letter-spacing:.18em;text-transform:uppercase}
 #skandi-app-root .side-category{border-top:1px solid rgba(255,255,255,.12)}
 #skandi-app-root .side-category:last-of-type{border-bottom:1px solid rgba(255,255,255,.12)}
 #skandi-app-root .side-category-head{display:flex;align-items:center;justify-content:space-between;width:100%;padding:18px 0;border:0;background:transparent;color:#fff;text-align:left;font-family:Montserrat,sans-serif;font-size:13px;font-weight:700;letter-spacing:-.01em}
@@ -1432,23 +1584,20 @@ body.drawer-open #skandi-mobile-nav-container{min-height:100%;height:100%}
 #skandi-app-root .status-fact{padding:18px 18px 0 0}
 #skandi-app-root .status-fact strong{display:block;color:#fff;font-family:Montserrat,sans-serif;font-size:19px;font-weight:600}
 #skandi-app-root .status-fact span{display:block;margin-top:5px;color:rgba(255,255,255,.40);font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
-
-#skandi-app-root .club-points-card{display:flex;flex-direction:column;min-height:430px;padding:30px;border:1px solid rgba(95,199,207,.18);border-radius:24px;background:linear-gradient(155deg, rgba(13, 38, 64, 0.88), rgba(6, 20, 36, 0.94));color:#fff;box-shadow:var(--shadow-light)}
-#skandi-app-root .club-points-card .label{color:var(--sk-aqua-soft);font-size:9px;font-weight:800;letter-spacing:.11em;text-transform:uppercase}
-#skandi-app-root .club-points-card .points{margin-top:12px;color:#fff;font-family:Montserrat,sans-serif;font-size:54px;font-weight:550;letter-spacing:-.055em}
+#skandi-app-root .club-points-card{display:flex;flex-direction:column;min-height:430px;padding:30px;border:1px solid rgba(216,210,200,.84);border-radius:24px;background:var(--sk-ivory);box-shadow:var(--shadow-light)}
+#skandi-app-root .club-points-card .label{color:var(--sk-muted);font-size:9px;font-weight:800;letter-spacing:.11em;text-transform:uppercase}
+#skandi-app-root .club-points-card .points{margin-top:12px;color:var(--sk-navy-deep);font-family:Montserrat,sans-serif;font-size:54px;font-weight:550;letter-spacing:-.055em}
 #skandi-app-root .club-points-card p{margin:9px 0 0;color:var(--sk-muted);font-size:11px;line-height:1.65}
-#skandi-app-root .club-points-card .member-since{margin-top:auto;padding-top:24px;border-top:1px solid rgba(255,255,255,.10)}
-#skandi-app-root .club-points-card .member-since strong{display:block;color:#fff;font-size:14px}
+#skandi-app-root .club-points-card .member-since{margin-top:auto;padding-top:24px;border-top:1px solid var(--sk-line-dark)}
+#skandi-app-root .club-points-card .member-since strong{display:block;color:var(--sk-navy-deep);font-size:14px}
 #skandi-app-root .club-points-card .member-since span{display:block;margin-top:4px;color:var(--sk-muted);font-size:10px}
-
 #skandi-app-root .quick-links-title{margin:34px 0 14px;color:#fff;font-family:Montserrat,sans-serif;font-size:21px;font-weight:550;letter-spacing:-.025em}
 #skandi-app-root .quick-links{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
-#skandi-app-root .quick-link{min-height:155px;padding:20px;border:1px solid rgba(255,255,255,.11);border-radius:16px;background:linear-gradient(155deg, rgba(12, 34, 57, 0.82), rgba(7, 21, 37, 0.90));color:#fff;text-align:left;box-shadow:var(--shadow-light);transition:border-color .18s ease,transform .18s ease}
-#skandi-app-root .quick-link .quick-icon{display:grid;place-items:center;width:38px;height:38px;border:1px solid rgba(95,199,207,.24);border-radius:50%;background:rgba(95,199,207,.10);color:var(--sk-aqua-soft)}
-#skandi-app-root .quick-link strong{display:block;margin-top:20px;color:#fff;font-family:Montserrat,sans-serif;font-size:14px}
+#skandi-app-root .quick-link{min-height:155px;padding:20px;border:1px solid rgba(216,210,200,.78);border-radius:16px;background:var(--sk-ivory);box-shadow:var(--shadow-light)}
+#skandi-app-root .quick-link .quick-icon{display:grid;place-items:center;width:38px;height:38px;border:1px solid rgba(2,46,100,.10);border-radius:50%;background:#edf4f4;color:var(--sk-navy)}
+#skandi-app-root .quick-link strong{display:block;margin-top:20px;color:var(--sk-navy-deep);font-family:Montserrat,sans-serif;font-size:14px}
 #skandi-app-root .quick-link span{display:block;margin-top:5px;color:var(--sk-muted);font-size:10px;line-height:1.5}
-#skandi-app-root .quick-link:hover{border-color:rgba(95,199,207,.55);transform:translateY(-2px)}
-
+#skandi-app-root .quick-link:hover{border-color:rgba(95,199,207,.55)}
 #skandi-app-root .club-snapshot{margin-top:18px;overflow:hidden;border:1px solid rgba(255,255,255,.10);border-radius:18px;background:rgba(255,255,255,.035)}
 #skandi-app-root .club-snapshot-head{display:flex;justify-content:space-between;gap:20px;align-items:center;padding:19px 22px;border-bottom:1px solid rgba(255,255,255,.08)}
 #skandi-app-root .club-snapshot-head strong{color:#fff;font-family:Montserrat,sans-serif;font-size:15px}
@@ -1464,142 +1613,69 @@ body.drawer-open #skandi-mobile-nav-container{min-height:100%;height:100%}
 #skandi-app-root .activity-filters{display:flex;flex-wrap:wrap;gap:7px}
 #skandi-app-root .activity-filter{min-height:34px;padding:0 12px;border:1px solid rgba(255,255,255,.12);border-radius:999px;background:transparent;color:rgba(255,255,255,.55);font-size:9px;font-weight:800}
 #skandi-app-root .activity-filter.active{border-color:var(--sk-aqua);background:rgba(95,199,207,.10);color:#fff}
-#skandi-app-root .activity-list{overflow:hidden;border:1px solid rgba(255,255,255,.11);border-radius:20px;background:linear-gradient(155deg, rgba(11, 31, 52, 0.85), rgba(6, 20, 35, 0.92));box-shadow:var(--shadow-light)}
-#skandi-app-root .activity-row{display:grid;grid-template-columns:132px 1fr 130px;gap:18px;align-items:center;padding:18px 22px;border-bottom:1px solid rgba(255,255,255,.08)}
+#skandi-app-root .activity-list{overflow:hidden;border:1px solid rgba(216,210,200,.82);border-radius:20px;background:var(--sk-ivory);box-shadow:var(--shadow-light)}
+#skandi-app-root .activity-row{display:grid;grid-template-columns:132px 1fr 130px;gap:18px;align-items:center;padding:18px 22px;border-bottom:1px solid var(--sk-line-dark)}
 #skandi-app-root .activity-row:last-child{border-bottom:0}
-#skandi-app-root .activity-row .date{color:var(--sk-muted);font-size:10px}
-#skandi-app-root .activity-row strong{display:block;color:#fff;font-size:12px}
+#skandi-app-root .activity-row .date{color:#8a96a3;font-size:10px}
+#skandi-app-root .activity-row strong{display:block;color:var(--sk-navy-deep);font-size:12px}
 #skandi-app-root .activity-row small{display:block;margin-top:4px;color:var(--sk-muted);font-size:9px}
-#skandi-app-root .activity-row .amount{text-align:right;color:var(--sk-aqua-soft);font-family:Montserrat,sans-serif;font-size:15px;font-weight:700}
+#skandi-app-root .activity-row .amount{text-align:right;color:var(--sk-navy);font-family:Montserrat,sans-serif;font-size:15px;font-weight:700}
 #skandi-app-root .activity-row .amount.neg{color:var(--sk-danger)}
-
-#skandi-app-root .tier-table{overflow:hidden;border:1px solid rgba(255,255,255,.12);border-radius:20px;background:linear-gradient(155deg, rgba(11, 31, 52, 0.85), rgba(6, 20, 35, 0.92));box-shadow:var(--shadow-light)}
-#skandi-app-root .tier-row{display:grid;grid-template-columns:1.1fr 1fr 1fr 1fr;gap:14px;align-items:center;padding:17px 22px;border-bottom:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.78)}
+#skandi-app-root .tier-table{overflow:hidden;border:1px solid rgba(216,210,200,.82);border-radius:20px;background:var(--sk-ivory);box-shadow:var(--shadow-light)}
+#skandi-app-root .tier-row{display:grid;grid-template-columns:1.1fr 1fr 1fr 1fr;gap:14px;align-items:center;padding:17px 22px;border-bottom:1px solid var(--sk-line-dark)}
 #skandi-app-root .tier-row:last-child{border-bottom:0}
-#skandi-app-root .tier-row.header{background:rgba(255,255,255,.04);color:var(--sk-aqua-soft);font-size:9px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
-#skandi-app-root .tier-row strong{color:#fff;font-family:Montserrat,sans-serif;font-size:13px}
-#skandi-app-root .tier-row.current{background:rgba(95,199,207,.10)}
+#skandi-app-root .tier-row.header{background:#f0f2ef;color:#7b8793;font-size:9px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+#skandi-app-root .tier-row strong{color:var(--sk-navy-deep);font-family:Montserrat,sans-serif;font-size:13px}
+#skandi-app-root .tier-row.current{background:#eef7f6}
 
 /* My Trips pages */
 #skandi-app-root .trip-page-toolbar{display:flex;justify-content:flex-end;gap:8px;margin:-4px 0 18px}
+#skandi-app-root .trip-card{grid-template-columns:112px minmax(0,1fr) auto}
 #skandi-app-root .trip-action-notice{display:flex;align-items:center;gap:8px;margin-top:11px;color:var(--sk-warn);font-size:10px;font-weight:800}
-#skandi-app-root .trip-action-notice::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--sk-warn)}
-#skandi-app-root .trip-clear-note{margin-top:10px;color:var(--sk-muted);font-size:9px}
-#skandi-app-root .trip-doc-task{display:grid;grid-template-columns:36px 1fr auto;gap:12px;align-items:center;padding:13px 0;border-bottom:1px solid rgba(255,255,255,.09)}
+#skandi-app-root .trip-action-notice::before{content:"";width:7px;height:7px;border-radius:50%;background:#d0a146}
+#skandi-app-root .trip-clear-note{margin-top:10px;color:#7d8b98;font-size:9px}
+#skandi-app-root .trip-doc-task{display:grid;grid-template-columns:36px 1fr auto;gap:12px;align-items:center;padding:13px 0;border-bottom:1px solid var(--sk-line-dark)}
 #skandi-app-root .trip-doc-task:last-child{border-bottom:0}
-#skandi-app-root .trip-doc-task .docicon{display:grid;place-items:center;width:34px;height:34px;border:1px solid rgba(95,199,207,.24);border-radius:50%;background:rgba(95,199,207,.10);color:var(--sk-aqua-soft);font-size:9px;font-weight:800}
-#skandi-app-root .trip-doc-task strong{display:block;color:#fff;font-size:11px}
+#skandi-app-root .trip-doc-task .docicon{width:34px;height:34px}
+#skandi-app-root .trip-doc-task strong{display:block;color:var(--sk-navy-deep);font-size:11px}
 #skandi-app-root .trip-doc-task span{display:block;margin-top:3px;color:var(--sk-muted);font-size:9px}
-#skandi-app-root .trip-attention{margin:0 0 18px;padding:18px;border:1px solid rgba(224,178,82,.35);border-radius:14px;background:rgba(138,100,29,.20);color:#f5cf7e}
-#skandi-app-root .trip-attention strong{display:block;color:#fff;font-size:12px}
+#skandi-app-root .trip-attention{margin:0 0 18px;padding:18px;border:1px solid #e8d5b5;border-radius:14px;background:#fff7e8;color:#644c20}
+#skandi-app-root .trip-attention strong{display:block;color:#523b12;font-size:12px}
 #skandi-app-root .trip-attention p{margin:5px 0 0;font-size:10px;line-height:1.55}
 #skandi-app-root .provider-doc-list{display:grid;gap:8px}
-#skandi-app-root .provider-doc{display:flex;justify-content:space-between;gap:16px;padding:12px 14px;border:1px solid rgba(255,255,255,.10);border-radius:12px;background:rgba(255,255,255,.04)}
-#skandi-app-root .provider-doc strong{color:#fff;font-size:10px}
+#skandi-app-root .provider-doc{display:flex;justify-content:space-between;gap:16px;padding:12px 14px;border:1px solid var(--sk-line-dark);border-radius:12px;background:#fff}
+#skandi-app-root .provider-doc strong{color:var(--sk-navy-deep);font-size:10px}
 #skandi-app-root .provider-doc span{color:var(--sk-muted);font-size:9px}
 
+/* Reuse existing settings surfaces inside new shell */
+#skandi-app-root .account-workspace .section-head{margin-top:0}
+#skandi-app-root .account-workspace .section-head h2{color:#fff}
+#skandi-app-root .account-workspace .section-head p{color:rgba(255,255,255,.54)}
+#skandi-app-root .account-workspace>.view>.card.pad,#skandi-app-root .account-workspace>.view>.card{box-shadow:var(--shadow-light)}
 #skandi-app-root .legacy-doc-contract{display:none!important}
 
 @media(max-width:1040px){
   #skandi-app-root .account-summary{grid-template-columns:1fr;gap:30px}
   #skandi-app-root .account-summary-grid{max-width:760px}
   #skandi-app-root .account-layout{grid-template-columns:210px minmax(0,1fr);gap:30px}
-  #skandi-app-root .club-overview-grid,#skandi-app-root .sas-grid,#skandi-app-root .sas-grid.equal{grid-template-columns:1fr}
+  #skandi-app-root .club-overview-grid{grid-template-columns:1fr}
   #skandi-app-root .club-points-card{min-height:280px}
 }
-@media(max-width:980px){
-  #skandi-app-root .wrap{width:min(100% - 32px,var(--max))}
-  #skandi-app-root .section-head{grid-template-columns:1fr;gap:14px;align-items:start}
-  #skandi-app-root .grid4{grid-template-columns:repeat(2,1fr)}
-  #skandi-app-root .grid3{grid-template-columns:repeat(2,1fr)}
-  #skandi-app-root .profile-form{grid-template-columns:1fr}
-  #skandi-app-root .field.full{grid-column:auto}
-}
-
-/* Mobile Slide-Out Side Menu (<= 820px) */
 @media(max-width:820px){
   #skandi-app-root .account-masthead{padding-top:42px}
   #skandi-app-root .account-summary-grid{grid-template-columns:1fr 1fr 1fr}
   #skandi-app-root .account-layout{display:block}
-  
-  #skandi-app-root .mobile-nav-bar{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:14px;
-    margin-bottom:24px;
-    padding:13px 16px;
-    border:1px solid rgba(255,255,255,.14);
-    border-radius:16px;
-    background:rgba(6, 22, 39, 0.88);
-    box-shadow:0 16px 40px rgba(0,0,0,.28);
-    backdrop-filter:blur(14px);
-  }
-  #skandi-app-root .mobile-nav-trigger{
-    display:inline-flex;
-    align-items:center;
-    gap:10px;
-    padding:9px 14px;
-    border:1px solid rgba(95,199,207,.34);
-    border-radius:999px;
-    background:rgba(95,199,207,.12);
-    color:#fff;
-    font-family:Montserrat,sans-serif;
-    font-size:10px;
-    font-weight:800;
-    letter-spacing:.10em;
-    text-transform:uppercase;
-  }
-  #skandi-app-root .mobile-nav-trigger svg{width:16px;height:16px;color:var(--sk-aqua-soft)}
-  #skandi-app-root .mobile-nav-current{text-align:right;min-width:0}
-  #skandi-app-root .mobile-nav-current span{display:block;color:rgba(255,255,255,.45);font-size:8px;font-weight:800;letter-spacing:.14em;text-transform:uppercase}
-  #skandi-app-root .mobile-nav-current strong{display:block;margin-top:2px;color:#fff;font-family:Montserrat,sans-serif;font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-
-  #skandi-app-root .mobile-nav-shade{
-    display:block;
-    position:fixed;
-    inset:0;
-    z-index:120;
-    pointer-events:none;
-    opacity:0;
-    background:rgba(1, 10, 20, 0.72);
-    backdrop-filter:blur(5px);
-    transition:opacity .26s ease;
-  }
-  #skandi-app-root .mobile-nav-shade.open{pointer-events:auto;opacity:1}
-
-  #skandi-app-root .side-menu{
-    position:fixed;
-    top:0;
-    left:0;
-    bottom:0;
-    z-index:121;
-    width:min(310px, 86vw);
-    height:100vh;
-    margin:0;
-    padding:22px 20px 32px;
-    overflow-y:auto;
-    border-right:1px solid rgba(255,255,255,.14);
-    border-radius:0;
-    background:
-      radial-gradient(circle at 0% 0%, rgba(95,199,207,.12), transparent 32%),
-      linear-gradient(180deg, #071d33 0%, #041322 100%);
-    box-shadow:28px 0 80px rgba(0,0,0,.55);
-    transform:translateX(-104%);
-    transition:transform .28s cubic-bezier(.22,1,.36,1);
-  }
-  #skandi-app-root .side-menu.mobile-open{transform:translateX(0)}
-  #skandi-app-root .side-menu-head{padding:0 0 18px;margin-bottom:6px;border-bottom:1px solid rgba(255,255,255,.10)}
-  #skandi-app-root .side-menu-title{padding:0;color:var(--sk-aqua-soft);font-size:10px}
-  #skandi-app-root .side-menu-close{display:grid;place-items:center;width:34px;height:34px;border:1px solid rgba(255,255,255,.16);border-radius:50%;background:rgba(255,255,255,.05);color:#fff;font-size:18px;line-height:1}
-  #skandi-app-root .side-category:first-of-type{border-top:0}
+  #skandi-app-root .side-menu{position:relative;top:auto;margin-bottom:28px;padding:0;border:1px solid rgba(255,255,255,.12);border-radius:18px;background:rgba(4,21,39,.60);overflow:hidden}
+  #skandi-app-root .side-menu-title{padding:15px 16px 12px}
+  #skandi-app-root .side-category{padding:0 16px}
+  #skandi-app-root .side-category:last-of-type{border-bottom:0}
+  #skandi-app-root .side-menu-footer{padding:16px}
   #skandi-app-root .page-intro{grid-template-columns:1fr;gap:12px}
   #skandi-app-root .club-status-body{grid-template-columns:1fr;justify-items:start}
   #skandi-app-root .status-facts{grid-template-columns:1fr 1fr 1fr}
   #skandi-app-root .quick-links{grid-template-columns:1fr}
 }
-
-@media(max-width:640px){
+@media(max-width:620px){
   #skandi-app-root .wrap{width:min(var(--max),calc(100% - 28px))}
   #skandi-app-root .account-masthead{padding-top:36px}
   #skandi-app-root .account-greeting h1{font-size:38px}
@@ -1610,7 +1686,6 @@ body.drawer-open #skandi-mobile-nav-container{min-height:100%;height:100%}
   #skandi-app-root .account-summary-value{font-size:20px}
   #skandi-app-root .account-identity-strip{display:grid;grid-template-columns:1fr 1fr;gap:8px 20px}
   #skandi-app-root .account-stage{padding:28px 0 78px}
-  #skandi-app-root .grid2,#skandi-app-root .grid3,#skandi-app-root .grid4,#skandi-app-root .sas-fields{grid-template-columns:1fr}
   #skandi-app-root .club-status-panel{padding:22px;min-height:0}
   #skandi-app-root .club-status-head{display:block}
   #skandi-app-root .club-number-badge{display:inline-block;margin-top:14px}
@@ -1626,23 +1701,43 @@ body.drawer-open #skandi-mobile-nav-container{min-height:100%;height:100%}
   #skandi-app-root .activity-row .date{grid-column:1/-1}
   #skandi-app-root .tier-row{grid-template-columns:1.1fr .9fr .9fr}
   #skandi-app-root .tier-row>*:nth-child(3){display:none}
-  #skandi-app-root .trip-card{grid-template-columns:1fr;gap:12px;padding:18px}
-  #skandi-app-root .trip-datebox{padding:0 0 11px;border-right:0;border-bottom:1px solid rgba(255,255,255,.10)}
+  #skandi-app-root .trip-card{grid-template-columns:1fr;gap:12px}
+  #skandi-app-root .trip-datebox{padding:0 0 11px;border-right:0;border-bottom:1px solid var(--sk-line-dark)}
   #skandi-app-root .trip-page-toolbar{justify-content:flex-start}
-  #skandi-app-root .traveler-info{grid-template-columns:1fr}
-  #skandi-app-root .saved-card{grid-template-columns:76px 1fr}
-  #skandi-app-root .saved-img{width:76px;height:68px}
-  #skandi-app-root .saved-card>.button-row{grid-column:1/-1}
-  #skandi-app-root .notif{grid-template-columns:10px 1fr}
-  #skandi-app-root .notif>.btn,#skandi-app-root .notif>button{grid-column:2}
-  #skandi-app-root .drawer-body{padding:16px}
-  #skandi-app-root .cap-grid{grid-template-columns:1fr}
-  #skandi-app-root .modal-shade{padding:10px}
-  #skandi-app-root .modal{border-radius:18px}
 }
-@media(prefers-reduced-motion:reduce){
-  #skandi-app-root *,#skandi-app-root *::before,#skandi-app-root *::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}
-}
+
+
+/* SKANDI V12.7: My Support shares the existing B-011 My Profile workspace. */
+#skandi-app-root .support-contacts{display:flex;flex-wrap:wrap;gap:10px;margin:15px 0 24px}
+#skandi-app-root .support-contact{display:inline-flex;align-items:center;justify-content:center;min-height:42px;padding:10px 16px;border:1px solid rgba(157,224,229,.28);border-radius:12px;background:rgba(95,199,207,.085);color:#e7f9fa;text-decoration:none;font:700 11px Inter,sans-serif}
+#skandi-app-root .support-contact:hover{border-color:var(--sk-aqua);color:#fff}
+#skandi-app-root .support-layout{display:grid;grid-template-columns:minmax(220px,.8fr) minmax(0,1.3fr);gap:16px;align-items:start}
+#skandi-app-root .support-panel{min-height:410px;overflow:hidden;border:1px solid rgba(216,210,200,.76);border-radius:18px;background:var(--sk-ivory);box-shadow:var(--shadow-light);color:var(--sk-navy-deep)}
+#skandi-app-root .support-panel-header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:19px 20px;border-bottom:1px solid var(--sk-line-dark)}
+#skandi-app-root .support-panel-header strong{font:700 14px Montserrat,sans-serif;color:var(--sk-navy-deep)}
+#skandi-app-root .support-panel-header .btn{min-height:32px;padding:0 12px}
+#skandi-app-root .support-search{width:calc(100% - 32px);margin:15px 16px;padding:12px;border:1px solid #cdd7df;border-radius:10px;background:#fff;color:#162b3e;font-size:12px}
+#skandi-app-root .support-cases{max-height:600px;overflow:auto}
+#skandi-app-root .support-case-item{display:block;width:100%;padding:16px 19px;border:0;border-bottom:1px solid var(--sk-line-dark);background:transparent;text-align:left;color:var(--sk-navy-deep)}
+#skandi-app-root .support-case-item:hover,#skandi-app-root .support-case-item.active{background:#eef7f7}
+#skandi-app-root .support-case-item strong{display:block;font:700 12px Montserrat,sans-serif}
+#skandi-app-root .support-case-item small{display:block;margin-top:5px;color:#64788a;font-size:10px}
+#skandi-app-root .support-case-thread{height:390px;overflow:auto;display:flex;flex-direction:column;gap:12px;padding:19px;background:#f5f7f7}
+#skandi-app-root .support-message{max-width:86%;align-self:flex-start;padding:12px 15px;border:1px solid #d5e0e3;border-radius:13px 13px 13px 3px;background:#fff;color:#223648;font-size:12px;line-height:1.65;white-space:pre-wrap;overflow-wrap:anywhere}
+#skandi-app-root .support-message.mine{align-self:flex-end;border-color:#022e64;border-radius:13px 13px 3px 13px;background:#022e64;color:#fff}
+#skandi-app-root .support-message small{display:block;margin-bottom:5px;opacity:.68;font-size:9px}
+#skandi-app-root .support-reply{display:flex;gap:10px;padding:14px;border-top:1px solid var(--sk-line-dark)}
+#skandi-app-root .support-reply[hidden],#skandi-app-root #supportDuffel[hidden]{display:none!important}
+#skandi-app-root .support-reply textarea{flex:1;min-width:0;min-height:54px;padding:10px 12px;border:1px solid #c9d6df;border-radius:10px;background:#fff;color:#172638;resize:vertical;font-size:12px}
+#skandi-app-root .support-new-case{margin-top:17px;padding:24px;border:1px solid rgba(216,210,200,.8);border-radius:18px;background:var(--sk-ivory);color:var(--sk-navy-deep)}
+#skandi-app-root .support-new-case h3{margin:0 0 16px;color:var(--sk-navy-deep);font:700 18px Montserrat,sans-serif}
+#skandi-app-root .support-new-case label{display:block;margin-bottom:12px;font-size:11px;font-weight:700;color:#4b5d6d}
+#skandi-app-root .support-new-case input,#skandi-app-root .support-new-case select,#skandi-app-root .support-new-case textarea{display:block;width:100%;margin-top:6px;min-height:43px;padding:10px 12px;border:1px solid #c7d4de;border-radius:10px;background:#fff;color:#172638;font:500 12px Inter,sans-serif}
+#skandi-app-root .support-new-case textarea{min-height:108px;resize:vertical}
+#skandi-app-root .support-case-status{padding:16px;color:#657989;font-size:12px;line-height:1.65}
+#skandi-app-root .support-case-error{color:#9e3b31}
+@media(max-width:1000px){#skandi-app-root .support-layout{grid-template-columns:1fr}#skandi-app-root .support-panel{min-height:0}#skandi-app-root .support-cases{max-height:270px}}
+@media(max-width:620px){#skandi-app-root .support-panel-header{padding:15px}#skandi-app-root .support-reply{flex-direction:column}#skandi-app-root .support-reply button{align-self:flex-end}#skandi-app-root .support-case-thread{height:330px}#skandi-app-root .support-contacts{flex-direction:column}#skandi-app-root .support-contact{width:100%}}
 </style>
 <style data-skandi-part="shell">/* SKANDI V12 responsive application shell. Loaded last in compiled pages. */
 :root { --sk-shell-navy:#022e64; --sk-shell-aqua:#5FC7CF; --sk-shell-nav:68px; }
@@ -1843,27 +1938,8 @@ body { min-height:100%; }
 </section>
 <section class="account-stage">
   <div class="wrap account-layout">
-    <!-- Mobile Top Bar Trigger for Slide-Out Drawer -->
-    <div class="mobile-nav-bar">
-      <button class="mobile-nav-trigger" type="button" id="mobileMenuBtn" aria-expanded="false" aria-controls="sideMenu">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h10"></path></svg>
-        <span>My Profile</span>
-      </button>
-      <div class="mobile-nav-current">
-        <span>Active Section</span>
-        <strong id="mobileCurrentLabel">My Club · Overview</strong>
-      </div>
-    </div>
-
-    <!-- Backdrop Shade for Slide-Out Mobile Menu -->
-    <div class="mobile-nav-shade" id="mobileNavShade"></div>
-
-    <!-- Side Navigation (Sticky on Desktop, Slide-Out Drawer on Mobile) -->
     <aside class="side-menu" id="sideMenu" aria-label="My Profile navigation">
-      <div class="side-menu-head">
-        <div class="side-menu-title">My Profile</div>
-        <button class="side-menu-close" type="button" id="closeMobileMenu" aria-label="Close menu">×</button>
-      </div>
+      <div class="side-menu-title">My Profile</div>
       <div class="side-category open active" data-category="club">
         <button class="side-category-head" type="button" data-category-toggle="club" aria-expanded="true">My Club</button>
         <div class="side-options">
@@ -1893,11 +1969,12 @@ body { min-height:100%; }
         <button class="side-category-head" type="button" data-category-toggle="account" aria-expanded="false">Account</button>
         <div class="side-options">
           <button class="side-link" type="button" data-section="account" data-view="notifications">Notifications</button>
+          <button class="side-link" type="button" data-section="account" data-view="settings">Preferences</button>
         </div>
       </div>
-      <div class="side-menu-footer">Need help with a booking or account?<br><button type="button" data-route="/my-profile/support">Contact SKANDI Support</button></div>
+      <div class="side-category" data-category="support"><button class="side-category-head" type="button" data-category-toggle="support" aria-expanded="false">My Support</button><div class="side-options"><button class="side-link" type="button" data-section="support" data-view="cases">Support Cases</button><button class="side-link" type="button" data-section="support" data-view="new">Start New Case</button></div></div>
+      <div class="side-menu-footer">Need help with a booking or account?<br><button type="button" data-section="support" data-view="cases">Contact SKANDI Support</button></div>
     </aside>
-
     <main class="account-workspace" id="accountWorkspace">
       <section class="view active" data-page="club-overview"><div id="clubView"></div></section>
       <section class="view" data-page="club-activity"><div id="clubActivityView"></div></section>
@@ -1911,24 +1988,15 @@ body { min-height:100%; }
       <section class="view" data-page="trips-past"><div class="page-intro"><div><div class="kicker">Travel history</div><h2>Past Trips</h2></div><p>Completed, cancelled and previous bookings linked to your SKANDI account.</p></div><div id="tripHistoryList" class="trip-list"></div></section>
       <section class="view" data-page="trips-drafts"><div class="page-intro"><div><div class="kicker">Continue booking</div><h2>Booking Drafts</h2></div><p>Booking carts that have not yet been completed.</p></div><div id="tripDraftList" class="trip-list"></div></section>
 
-      <!-- SAS-Style Personal Information Workspace (with inline Edit unlock) -->
-      <section class="view" data-page="profile-details">
-        <div class="page-intro">
-          <div>
-            <div class="kicker">My Profile</div>
-            <h2>Personal Information</h2>
-          </div>
-          <p>Make sure your personal details are up to date, and manage all settings and travel details connected to you and your SKANDI profile.</p>
-        </div>
-        <div id="profileSummary"></div>
-        <div id="providerSyncNote" class="provider-note hidden"></div>
-      </section>
-
+      <section class="view" data-page="profile-details"><div class="page-intro"><div><div class="kicker">Personal information</div><h2>My Details</h2></div><p>Contact and traveler information used by SKANDI. Sign-in identity remains controlled by your Wix member account.</p></div><div class="card pad"><div id="profileSummary"></div></div></section>
       <section class="view" data-page="profile-travelers"><div class="section-head"><div><div class="kicker">Traveler profiles</div><h2>Saved Travelers</h2></div><div><button class="btn primary" id="addTraveler">Add traveler</button></div></div><div id="travelerGrid" class="grid grid3"></div></section>
       <section class="view" data-page="profile-wallet"><div class="section-head"><div><div class="kicker">Wallet</div><h2>Wallet &amp; Payments</h2></div><p>Only masked payment metadata is displayed. Full card details are never returned to My Profile.</p></div><h3 class="subhead">Payment methods</h3><div id="paymentGrid" class="grid grid3"></div><h3 class="subhead">Wallet items</h3><div id="walletGrid" class="grid grid3"></div></section>
       <section class="view" data-page="profile-saved"><div class="section-head"><div><div class="kicker">Saved for later</div><h2>Saved</h2></div><p>Hotels, destinations and other items you saved while exploring SKANDI.</p></div><div id="favorites" class="grid grid2"></div></section>
 
+      <section class="view" data-page="support-cases"><div class="page-intro"><div><div class="kicker">SKANDI CARE</div><h2>My Support</h2></div><p>Track your requests and continue secure conversations with SKANDI Customer Service. Case records are loaded only for your verified member account.</p></div><div class="support-contacts"><a class="support-contact" href="https://wa.me/17112160382" target="_blank" rel="noopener noreferrer">WhatsApp: +1 711-216-0382</a><a class="support-contact" href="tel:+19516207875">Call: +1 951-620-7875</a><button class="support-contact" type="button" data-section="support" data-view="new">Start New Case</button></div><div class="support-layout"><div class="support-panel"><div class="support-panel-header"><strong>Your Cases</strong><button class="btn small" type="button" id="supportRefresh">Refresh</button></div><input class="support-search" id="supportSearch" aria-label="Search support cases" placeholder="Search cases or references"><div class="support-cases" id="supportCases"><div class="support-case-status">Open My Support to load your cases.</div></div></div><div class="support-panel"><div class="support-panel-header"><strong id="supportThreadTitle">Select a case</strong><button type="button" class="btn small" id="supportDuffel" hidden="">Manage trip</button></div><div class="support-case-thread" id="supportMessages"><div class="support-case-status">Select a case to view your secure messages.</div></div><form id="supportReplyForm" class="support-reply" hidden=""><textarea id="supportReplyText" maxlength="12000" required="" aria-label="Reply to SKANDI Support" placeholder="Type a secure reply"></textarea><button type="submit" class="btn primary">Send reply</button></form></div></div><div id="supportStatus" class="support-case-status" aria-live="polite"></div></section>
+      <section class="view" data-page="support-new"><div class="page-intro"><div><div class="kicker">SKANDI CARE</div><h2>Start New Case</h2></div><p>Contact SKANDI Customer Service about your travel, booking, membership or account. Requests appear in your Support Cases after confirmation.</p></div><div class="support-contacts"><a class="support-contact" href="https://wa.me/17112160382" target="_blank" rel="noopener noreferrer">WhatsApp: +1 711-216-0382</a><a class="support-contact" href="tel:+19516207875">Call: +1 951-620-7875</a></div><form id="supportNewForm" class="support-new-case"><h3>How can we assist?</h3><div class="profile-form"><div><label>Name<input id="supportName" name="fullName" maxlength="200" required="" autocomplete="name"></label></div><div><label>Email<input id="supportEmail" name="email" type="email" maxlength="254" required="" autocomplete="email"></label></div><div><label>Category<select id="supportCategory" name="category" required=""><option value="general">General enquiry</option></select></label></div><div><label>Booking reference (when applicable)<input name="bookingRef" maxlength="80" autocomplete="off"></label></div><div class="field full" id="supportDynamicFields"></div><div class="field full"><label>Subject<input name="subject" minlength="3" maxlength="240" required=""></label></div><div class="field full"><label>Details<textarea name="message" minlength="5" maxlength="12000" required="" placeholder="Describe how SKANDI can assist"></textarea></label></div><div class="field full"><div class="button-row"><button class="btn primary" type="submit">Submit support request</button><button class="btn soft" type="button" data-section="support" data-view="cases">View Support Cases</button></div></div></div><div id="supportFormStatus" class="support-case-status" role="status" aria-live="polite"></div></form></section>
       <section class="view" data-page="account-notifications"><div class="section-head"><div><div class="kicker">Account updates</div><h2>Notifications</h2></div></div><div class="card" id="notifications"></div></section>
+      <section class="view" data-page="account-settings"><div class="section-head"><div><div class="kicker">Account preferences</div><h2>Preferences</h2></div><p>Travel preferences SKANDI may use to streamline future booking and service flows.</p></div><div class="card pad"><form id="profileForm" class="profile-form"><div class="field"><label>First name</label><input class="control" name="firstName" autocomplete="given-name"></div><div class="field"><label>Last name</label><input class="control" name="lastName" autocomplete="family-name"></div><div class="field"><label>Contact email</label><input class="control" name="email" type="email" autocomplete="email"></div><div class="field"><label>Phone</label><input class="control" name="phone" autocomplete="tel"></div><div class="field"><label>Country of residence</label><select class="control" name="countryOfResidenceId"></select></div><div class="field"><label>Preferred language</label><select class="control" name="preferredLanguageId"></select></div><div class="field"><label>Preferred currency</label><select class="control" name="preferredCurrency"><option value="">Select</option><option>USD</option><option>SEK</option><option>NOK</option><option>DKK</option><option>EUR</option></select></div><div class="field"><label>Home / departure airport</label><select class="control" name="preferredDepartureAirportId"></select></div><div class="field"><label>Seat preference</label><select class="control" name="seatPreference"><option value="">No preference</option><option value="window">Window</option><option value="aisle">Aisle</option></select></div><div class="field"><label>Dietary preferences</label><input class="control" name="dietaryPrefs"></div><div class="field full"><label>General accessibility needs</label><textarea class="control" name="accessibilityNeeds"></textarea></div><div class="field full"><label class="checkbox"><input type="checkbox" name="marketingConsent"><span>I want to receive SKANDI travel inspiration, Club updates and relevant offers. Transactional travel messages are managed separately.</span></label></div><div class="field full"><div class="button-row"><button class="btn primary" type="submit">Save preferences</button><button class="btn soft" type="button" data-section="support" data-view="cases">Contact support</button><button class="btn danger" type="button" id="logoutBtn">Log out</button></div></div></form><div id="providerSyncNote" class="provider-note hidden"></div></div></section>
     </main>
   </div>
 </section>
@@ -1937,6 +2005,7 @@ body { min-height:100%; }
 <div class="drawer-shade" id="drawerShade"></div><aside class="drawer" id="bookingDrawer" aria-label="Booking details"><div class="drawer-head"><strong>Trip details</strong><button class="iconbtn" id="closeDrawer" aria-label="Close">×</button></div><div class="drawer-body" id="bookingDetail"></div></aside>
 <div class="modal-shade" id="modalShade"><div class="modal"><div class="modal-head"><h3 id="modalTitle">Manage trip</h3><button class="iconbtn" id="closeModal">×</button></div><div class="modal-body" id="modalBody"></div><div class="modal-foot" id="modalFoot"></div></div></div>
 <div class="toast" id="toast"></div><div class="loading" id="loading"><div class="spinner"></div></div>
+
 
 
 </div>
@@ -3386,87 +3455,10 @@ const document=new Proxy(window.document,{get(target,key){if(key==='getElementBy
 
 (() => {
 "use strict";
+// B-011.31 hierarchical account shell + Club overview + trip action center. Data ownership and provider contracts remain canonical.
 const SOURCE="SKANDI_MY_PROFILE",DOC_SOURCE="SKANDI_CUSTOMER_DOCUMENT_CENTER",PARENT="SKANDI_WIX_PARENT",$=id=>document.getElementById(id);
-
-const DEFAULT_DATA = {
-  profile: {
-    firstName: "",
-    lastName: "",
-    displayName: "Member",
-    dateOfBirth: "",
-    email: "",
-    phone: "",
-    addressLine: "",
-    preferredCurrency: "USD",
-    passportLast4: "",
-    passportExpiry: "",
-    status: "Active",
-    clubNumber: "",
-    memberId: "—",
-    accountCreatedAt: "",
-    countryOfResidenceId: "US",
-    preferredLanguageId: "en",
-    preferredDepartureAirportId: "JFK",
-    dietaryPrefs: "",
-    accessibilityNeeds: "",
-    marketingConsent: true,
-    smsConsent: false,
-    personalizationConsent: true,
-    payload: { seatPreference: "" }
-  },
-  club: {
-    enrolled: true,
-    pointsBalance: 0,
-    memberSince: "",
-    tier: { id: "member", name: "Member", minPoints: 0, maxPoints: 9999, multiplier: 1 },
-    nextTier: { id: "silver", name: "Silver", minPoints: 10000, maxPoints: 24999, multiplier: 1.25 },
-    progress: { percent: 0, pointsToNext: 10000 },
-    tiers: [
-      { id: "member", name: "Member", minPoints: 0, maxPoints: 9999, multiplier: 1 },
-      { id: "silver", name: "Silver", minPoints: 10000, maxPoints: 24999, multiplier: 1.25 },
-      { id: "gold", name: "Gold", minPoints: 25000, maxPoints: 49999, multiplier: 1.5 },
-      { id: "platinum", name: "Platinum", minPoints: 50000, maxPoints: null, multiplier: 2 }
-    ],
-    ledger: []
-  },
-  trips: { upcoming: [], history: [], carts: [] },
-  travelers: [],
-  documents: [],
-  paymentMethods: [],
-  wallet: [],
-  favorites: [],
-  notifications: [],
-  references: {
-    countries: [
-      { id: "US", name: "United States of America", code: "US" },
-      { id: "SE", name: "Sweden", code: "SE" },
-      { id: "NO", name: "Norway", code: "NO" },
-      { id: "DK", name: "Denmark", code: "DK" },
-      { id: "FI", name: "Finland", code: "FI" },
-      { id: "TH", name: "Thailand", code: "TH" }
-    ],
-    languages: [
-      { id: "en", name: "English", code: "EN" },
-      { id: "sv", name: "Svenska", code: "SV" },
-      { id: "no", name: "Norsk", code: "NO" },
-      { id: "da", name: "Dansk", code: "DA" }
-    ],
-    airports: [
-      { id: "JFK", iata: "JFK", city: "New York", name: "John F. Kennedy Intl", country: "United States" },
-      { id: "EWR", iata: "EWR", city: "Newark", name: "Newark Liberty Intl", country: "United States" },
-      { id: "ARN", iata: "ARN", city: "Stockholm", name: "Arlanda", country: "Sweden" },
-      { id: "LLA", iata: "LLA", city: "Luleå", name: "Kallax", country: "Sweden" },
-      { id: "CPH", iata: "CPH", city: "Copenhagen", name: "Kastrup", country: "Denmark" },
-      { id: "OSL", iata: "OSL", city: "Oslo", name: "Gardermoen", country: "Norway" },
-      { id: "HEL", iata: "HEL", city: "Helsinki", name: "Vantaa", country: "Finland" },
-      { id: "BKK", iata: "BKK", city: "Bangkok", name: "Suvarnabhumi", country: "Thailand" }
-    ]
-  }
-};
-
-// editCard tracks which SAS-style card is currently unlocked: null | "personal" | "passport" | "airport"
-const state={data:structuredClone(DEFAULT_DATA),section:"club",view:"overview",editCard:null,ledgerFilter:"all",bookingDetail:null,pending:new Map(),stripe:null,elements:null,payment:null,legacyDocuments:null};
-const icon=(name)=>{const paths={calendar:'<path d="M7 2v3M17 2v3M3.5 9h17M5 4.5h14a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-13a2 2 0 0 1 2-2Z"/>',user:'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',doc:'<path d="M6 2h8l4 4v16H6z"/><path d="M14 2v5h5M9 12h6M9 16h6"/>',bell:'<path d="M18 8a6 6 0 1 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/>',heart:'<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8Z"/>',bag:'<path d="M6 7h12l1 14H5L6 7Z"/><path d="M9 7V5a3 3 0 0 1 6 0v2"/>',plane:'<path d="M22 2 9.5 14.5 3 12l-2 2 7 3 3 7 2-2-2.5-6.5L23 3z"/>',tower:'<path d="M8 22h8M12 14v8M7 10l5 4 5-4M5 6h14M8 6V3h8v3"/>',check:'<path d="m5 12 4 4L19 6"/>',wallet:'<path d="M3 6h17v14H3zM3 9h17M15 13h3v3h-3z"/>'};return `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths[name]||paths.check}</svg>`};
+const state={data:null,section:"club",view:"overview",ledgerFilter:"all",bookingDetail:null,pending:new Map(),stripe:null,elements:null,payment:null,legacyDocuments:null,support:{loaded:false,loading:false,cases:[],selectedCaseId:"",detail:null,workflows:[],activeRequest:0}};
+const icon=(name)=>{const paths={calendar:'<path d="M7 2v3M17 2v3M3.5 9h17M5 4.5h14a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-13a2 2 0 0 1 2-2Z"/>',user:'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',doc:'<path d="M6 2h8l4 4v16H6z"/><path d="M14 2v5h5M9 12h6M9 16h6"/>',bell:'<path d="M18 8a6 6 0 1 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/>',heart:'<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8Z"/>',bag:'<path d="M6 7h12l1 14H5L6 7Z"/><path d="M9 7V5a3 3 0 0 1 6 0v2"/>',plane:'<path d="M22 2 9.5 14.5 3 12l-2 2 7 3 3 7 2-2-2.5-6.5L23 3z"/>',check:'<path d="m5 12 4 4L19 6"/>',wallet:'<path d="M3 6h17v14H3zM3 9h17M15 13h3v3h-3z"/>'};return `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths[name]||paths.check}</svg>`};
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
 const arr=v=>Array.isArray(v)?v:[]; const money=(a,c)=>a===null||a===undefined||a===""?"":new Intl.NumberFormat(undefined,{style:"currency",currency:c||"USD"}).format(Number(a)||0); const date=v=>{if(!v)return"";try{return new Intl.DateTimeFormat(undefined,{month:"short",day:"numeric",year:"numeric"}).format(new Date(String(v).length===10?`${v}T12:00:00`:v))}catch{return String(v)}}; const num=v=>new Intl.NumberFormat().format(Number(v)||0);
 function post(type,payload={},source=SOURCE){window.parent.postMessage({source,type,payload,timestamp:new Date().toISOString()},"*")}
@@ -3476,55 +3468,25 @@ function busy(on){$("loading").classList.toggle("show",!!on)}
 let toastTimer;function toast(message,bad=false){clearTimeout(toastTimer);const el=$("toast");el.textContent=message;el.className=`toast show${bad?" bad":""}`;toastTimer=setTimeout(()=>el.className="toast",4200)}
 function empty(title,body,ic="doc"){return `<div class="empty">${icon(ic)}<strong>${esc(title)}</strong><span>${esc(body)}</span></div>`}
 function setTab(tab,push=false){
-  const map={overview:["club","overview"],club:["club","overview"],trips:["trips","upcoming"],orders:["trips","drafts"],documents:["trips","upcoming"],travelers:["profile","travelers"],wallet:["profile","wallet"],saved:["profile","saved"],notifications:["account","notifications"],settings:["profile","details"],details:["profile","details"]};
+  const map={overview:["club","overview"],club:["club","overview"],trips:["trips","upcoming"],orders:["trips","drafts"],documents:["trips","upcoming"],travelers:["profile","travelers"],wallet:["profile","wallet"],saved:["profile","saved"],notifications:["account","notifications"],settings:["account","settings"],support:["support","cases"]};
   const pair=map[String(tab||"")]||["club","overview"];
   setPage(pair[0],pair[1],push);
 }
 
-function toggleMobileMenu(force){
-  const menu=$("sideMenu"),shade=$("mobileNavShade"),btn=$("mobileMenuBtn");
-  if(!menu)return;
-  const open=typeof force==="boolean"?force:!menu.classList.contains("mobile-open");
-  menu.classList.toggle("mobile-open",open);
-  if(shade)shade.classList.toggle("open",open);
-  if(btn)btn.setAttribute("aria-expanded",open?"true":"false");
-  if(window.innerWidth<=820){
-    document.body.style.overflow=open?"hidden":"";
-  }
-}
-
 function pageKey(section,view){return `${section}-${view}`}
+function pagePath(section,view){return `/my-profile?section=${encodeURIComponent(section)}&view=${encodeURIComponent(view)}`}
 function setPage(section,view,push=false){
-  // Redirect any legacy account-settings call to profile-details
-  if(section==="account"&&view==="settings"){section="profile";view="details"}
+  // Workspace navigation is immediate: never put the blocking loader over a local tab switch.
   const key=pageKey(section,view), target=document.querySelector(`[data-page="${key}"]`);
   if(!target){section="club";view="overview"}
   state.section=section;state.view=view;
   document.querySelectorAll(".view").forEach(v=>v.classList.toggle("active",v.dataset.page===pageKey(section,view)));
-  let activeLinkText = "Overview";
-  let activeCatText = "My Club";
-  document.querySelectorAll(".side-link").forEach(link=>{
-    const isMatch = link.dataset.section===section&&link.dataset.view===view;
-    link.classList.toggle("active",isMatch);
-    if(isMatch) activeLinkText = link.textContent.trim();
-  });
-  document.querySelectorAll(".side-category").forEach(cat=>{
-    const active=cat.dataset.category===section;
-    cat.classList.toggle("active",active);
-    if(active){
-      cat.classList.add("open");
-      const h=cat.querySelector("[data-category-toggle]");
-      if(h) activeCatText = h.textContent.trim();
-    }
-    const h=cat.querySelector("[data-category-toggle]");
-    if(h)h.setAttribute("aria-expanded",cat.classList.contains("open")?"true":"false");
-  });
-  if($("mobileCurrentLabel")) $("mobileCurrentLabel").textContent = `${activeCatText} · ${activeLinkText}`;
-  toggleMobileMenu(false);
-  if(push){
-    window.scrollTo({top:Math.max(0,(document.querySelector(".account-stage")?.offsetTop||0)-6),behavior:"auto"});
-    post("MY_PROFILE_QUERY_UPDATE",{section,view});
-  }
+  document.querySelectorAll(".side-link").forEach(link=>link.classList.toggle("active",link.dataset.section===section&&link.dataset.view===view));
+  document.querySelectorAll(".side-category").forEach(cat=>{const active=cat.dataset.category===section;cat.classList.toggle("active",active);if(active)cat.classList.add("open");const h=cat.querySelector("[data-category-toggle]");if(h)h.setAttribute("aria-expanded",cat.classList.contains("open")?"true":"false")});
+  window.scrollTo({top:Math.max(0,(document.querySelector(".account-stage")?.offsetTop||0)-6),behavior:"auto"});
+  // The parent owns the browser URL; update query parameters without a Wix page reload.
+  if(push)post("MY_PROFILE_QUERY_UPDATE",{section,view});
+  if(section==="support" && (!state.support.loaded || view==="cases" && !state.support.cases.length)) loadSupport().catch(e=>supportStatus(e.message,true));
 }
 function greetingForNow(){const h=new Date().getHours();return h<12?"Good morning":h<18?"Good afternoon":"Good evening"}
 function monthYear(v){if(!v)return"—";try{return new Intl.DateTimeFormat(undefined,{month:"short",year:"numeric"}).format(new Date(v))}catch{return date(v)||"—"}}
@@ -3539,6 +3501,7 @@ function currentPageFromData(){const d=state.data||{};return [d.requestedSection
 function statusClass(s){s=String(s||"").toUpperCase();if(["ISSUED","SENT","ACKNOWLEDGED","READY","CONFIRMED","POSTED"].includes(s))return"ok";if(["WAITING_FOR_DATA","WAITING_FOR_SIGNATURE","WAITING_FOR_APPROVAL","REQUIRED","PENDING","HELD"].includes(s))return"warn";if(["CANCELLED","REJECTED","FAILED"].includes(s))return"bad";return""}
 function friendly(s){return String(s||"").replaceAll("_"," ").replace(/\b\w/g,c=>c.toUpperCase())}
 function groupFor(doc){const s=String(doc.status||"").toUpperCase();if(["WAITING_FOR_DATA","WAITING_FOR_SIGNATURE","WAITING_FOR_APPROVAL","REQUIRED","PENDINGREVIEW"].includes(s))return"Action required";if(["ISSUED","SENT","ACKNOWLEDGED"].includes(s))return"Issued documents";if(String(doc.document_code||"").startsWith("F")||String(doc.document_code||"").startsWith("P10"))return"Travel changes";return"Upcoming / preparing"}
+function nextTrip(){return arr(state.data?.trips?.upcoming)[0]||null}
 function renderHero(){
   const d=state.data;if(!d)return;const p=d.profile||{},c=d.club||{},first=(p.firstName||p.displayName||"Member").split(" ")[0];
   $("heroName").textContent=first;
@@ -3552,10 +3515,10 @@ function renderHero(){
   const progress=Math.max(0,Math.min(100,Number(c.progress?.percent||0)));document.documentElement.style.setProperty("--club-progress",`${progress}%`);
 }
 function renderOverview(){
-  const d=state.data;if(!d)return;const p=d.profile||{},c=d.club||{},progress=Math.max(0,Math.min(100,Number(c.progress?.percent||0))),first=(p.firstName||p.displayName||"Member").split(" ")[0];
-  if(!c.enrolled){$("clubView").innerHTML=`<div class="page-intro"><div><div class="kicker">My Club · Overview</div><h2>${esc(greetingForNow())}, ${esc(first)}</h2></div><p>Your SKANDI account is active, but SKANDI Club enrollment is not currently linked to this customer profile.</p></div><div class="club-overview-grid"><div class="club-status-panel"><div class="club-status-head"><div><div class="club-status-name">SKANDI Club</div><div class="club-status-caption">Loyalty membership</div></div></div><div class="status-copy" style="margin-top:42px"><h3>Make every journey count.</h3><p>Club status, points and qualification information will appear here once enrollment is active on the canonical customer record.</p><div class="button-row" style="margin-top:22px"><button class="btn cyan" data-route="/skandi-club">Explore SKANDI Club</button><button class="btn" data-route="/my-profile/support">Enrollment help</button></div></div></div><div class="club-points-card"><span class="label">SKANDI Points available</span><div class="points">0</div><p>Points activity starts when Club enrollment and eligible transactions are posted.</p><div class="member-since"><strong>Not enrolled</strong><span>No Club enrollment date is stored for this profile.</span></div></div></div>`;return}
+  const d=state.data;if(!d)return;const p=d.profile||{},c=d.club||{},tiers=arr(c.tiers),progress=Math.max(0,Math.min(100,Number(c.progress?.percent||0))),first=(p.firstName||p.displayName||"Member").split(" ")[0];
+  if(!c.enrolled){$("clubView").innerHTML=`<div class="page-intro"><div><div class="kicker">My Club · Overview</div><h2>${esc(greetingForNow())}, ${esc(first)}</h2></div><p>Your SKANDI account is active, but SKANDI Club enrollment is not currently linked to this customer profile.</p></div><div class="club-overview-grid"><div class="club-status-panel"><div class="club-status-head"><div><div class="club-status-name">SKANDI Club</div><div class="club-status-caption">Loyalty membership</div></div></div><div class="status-copy" style="margin-top:42px"><h3>Make every journey count.</h3><p>Club status, points and qualification information will appear here once enrollment is active on the canonical customer record.</p><div class="button-row" style="margin-top:22px"><button class="btn cyan" data-route="/skandi-club">Explore SKANDI Club</button><button class="btn" data-section="support" data-view="cases">Enrollment help</button></div></div></div><div class="club-points-card"><span class="label">SKANDI Points available</span><div class="points">0</div><p>Points activity starts when Club enrollment and eligible transactions are posted.</p><div class="member-since"><strong>Not enrolled</strong><span>No Club enrollment date is stored for this profile.</span></div></div></div>`;return}
   const recent=arr(c.ledger).slice(0,5);
-  $("clubView").innerHTML=`<div class="page-intro"><div><div class="kicker">My Club · Overview</div><h2>${esc(greetingForNow())}, ${esc(first)}</h2></div><p>A concise view of your SKANDI Club account, current status and the activity that moves you toward your next level.</p></div><div class="club-overview-grid"><section class="club-status-panel"><div class="club-status-head"><div><div class="club-status-name">${esc(c.tier?.name||"Member")}</div><div class="club-status-caption">Current Club Status</div></div><div class="club-number-badge">Club ${esc(p.clubNumber||p.memberId||"—")}</div></div><div class="club-status-body"><div class="status-ring" style="--p:${progress}"><div class="status-ring-content"><strong>${progress.toFixed(0)}%</strong><span>${c.nextTier?`to ${esc(c.nextTier.name)}`:"top level"}</span></div></div><div class="status-copy"><h3>${c.nextTier?`${esc(c.tier?.name||"Member")} → ${esc(c.nextTier.name)}`:`${esc(c.tier?.name||"Member")} status`}</h3><p>${c.nextTier?`${num(c.progress?.pointsToNext)} more SKANDI Points are needed to reach ${esc(c.nextTier.name)} based on the current configured tier thresholds.`:"You are currently at the highest configured SKANDI Club level."}</p><div class="status-facts"><div class="status-fact"><strong>${Number(c.tier?.multiplier||1).toFixed(2).replace(/\.00$/,'')}×</strong><span>Earning multiplier</span></div><div class="status-fact"><strong>${num(c.tier?.minPoints||0)}</strong><span>Level threshold</span></div><div class="status-fact"><strong>${c.nextTier?num(c.nextTier.minPoints):"—"}</strong><span>Next threshold</span></div></div></div></div></section><aside class="club-points-card"><span class="label">SKANDI Points available</span><div class="points">${num(c.pointsBalance)}</div><p>Your available balance is calculated from the canonical SKANDI Points ledger, excluding reversed, void and cancelled entries.</p><div class="member-since"><strong>Club Member since ${esc(monthYear(c.memberSince||p.accountCreatedAt))}</strong><span>${p.clubNumber?`Membership #${esc(p.clubNumber)}`:"Membership linked to this account"}</span></div></aside></div><h3 class="quick-links-title">My Club</h3><div class="quick-links">${pageLink("club","activity","Points Activity","wallet")}${pageLink("club","program","Program Information","check")}${pageLink("profile","details","Personal Information","user")}</div><div class="club-snapshot"><div class="club-snapshot-head"><strong>Recent Club activity</strong><button type="button" data-section="club" data-view="activity">View all activity</button></div>${recent.length?recent.map(x=>`<div class="club-activity-mini"><div class="date">${esc(date(x.date))}</div><strong>${esc(x.description||friendly(x.type)||"SKANDI Club activity")}</strong><div class="pts ${Number(x.amount)<0?"neg":""}">${Number(x.amount)>0?"+":""}${num(x.amount)}</div></div>`).join(""):`<div class="club-activity-mini"><div class="date">—</div><strong>No posted Club activity yet</strong><div class="pts">0</div></div>`}</div>`
+  $("clubView").innerHTML=`<div class="page-intro"><div><div class="kicker">My Club · Overview</div><h2>${esc(greetingForNow())}, ${esc(first)}</h2></div><p>A concise view of your SKANDI Club account, current status and the activity that moves you toward your next level.</p></div><div class="club-overview-grid"><section class="club-status-panel"><div class="club-status-head"><div><div class="club-status-name">${esc(c.tier?.name||"Member")}</div><div class="club-status-caption">Current Club Status</div></div><div class="club-number-badge">Club ${esc(p.clubNumber||p.memberId)}</div></div><div class="club-status-body"><div class="status-ring" style="--p:${progress}"><div class="status-ring-content"><strong>${progress.toFixed(0)}%</strong><span>${c.nextTier?`to ${esc(c.nextTier.name)}`:"top level"}</span></div></div><div class="status-copy"><h3>${c.nextTier?`${esc(c.tier?.name||"Member")} → ${esc(c.nextTier.name)}`:`${esc(c.tier?.name||"Member")} status`}</h3><p>${c.nextTier?`${num(c.progress?.pointsToNext)} more SKANDI Points are needed to reach ${esc(c.nextTier.name)} based on the current configured tier thresholds.`:"You are currently at the highest configured SKANDI Club level."}</p><div class="status-facts"><div class="status-fact"><strong>${Number(c.tier?.multiplier||1).toFixed(2).replace(/\.00$/,'')}×</strong><span>Earning multiplier</span></div><div class="status-fact"><strong>${num(c.tier?.minPoints||0)}</strong><span>Level threshold</span></div><div class="status-fact"><strong>${c.nextTier?num(c.nextTier.minPoints):"—"}</strong><span>Next threshold</span></div></div></div></div></section><aside class="club-points-card"><span class="label">SKANDI Points available</span><div class="points">${num(c.pointsBalance)}</div><p>Your available balance is calculated from the canonical SKANDI Points ledger, excluding reversed, void and cancelled entries.</p><div class="member-since"><strong>Club Member since ${esc(monthYear(c.memberSince||p.accountCreatedAt))}</strong><span>${p.clubNumber?`Membership #${esc(p.clubNumber)}`:"Membership linked to this account"}</span></div></aside></div><h3 class="quick-links-title">My Club</h3><div class="quick-links">${pageLink("club","activity","Points Activity","wallet")}${pageLink("club","program","Program Information","check")}${pageLink("profile","details","My Profile Information","user")}</div><div class="club-snapshot"><div class="club-snapshot-head"><strong>Recent Club activity</strong><button type="button" data-section="club" data-view="activity">View all activity</button></div>${recent.length?recent.map(x=>`<div class="club-activity-mini"><div class="date">${esc(date(x.date))}</div><strong>${esc(x.description||friendly(x.type)||"SKANDI Club activity")}</strong><div class="pts ${Number(x.amount)<0?"neg":""}">${Number(x.amount)>0?"+":""}${num(x.amount)}</div></div>`).join(""):`<div class="club-activity-mini"><div class="date">—</div><strong>No posted Club activity yet</strong><div class="pts">0</div></div>`}</div>`
 }
 function tripCard(b,past=false){
   const comps=arr(b.components),tasks=actionDocsForBooking(b.id),allDocs=docsForBooking(b.id);return `<article class="trip-card"><div class="trip-datebox"><strong>${esc(b.departureDate?new Date(`${b.departureDate}T12:00:00`).toLocaleDateString(undefined,{month:"short",day:"numeric"}):"Trip")}</strong><span>${esc(b.departureDate?new Date(`${b.departureDate}T12:00:00`).getFullYear():b.status||"")}</span></div><div><h3>${esc(b.origin||"SKANDI")} → ${esc(b.destination||b.productType||"Booking")}</h3><p>${esc(b.bookingReference?`Booking ${b.bookingReference}`:"SKANDI booking")}${b.totalAmount!==null?` · ${esc(money(b.totalAmount,b.currency))}`:""}</p><div class="chips"><span class="chip ${statusClass(b.status)}">${esc(friendly(b.status||"Booked"))}</span>${comps.slice(0,5).map(c=>`<span class="chip">${esc(friendly(c.type))}</span>`).join("")}</div>${!past&&tasks.length?`<div class="trip-action-notice">${tasks.length} travel item${tasks.length===1?"":"s"} require your action</div>`:!past&&allDocs.length?`<div class="trip-clear-note">No outstanding SKANDI information request is currently attached to this booking.</div>`:""}</div><div class="button-row"><button class="btn small primary" data-booking="${esc(b.id)}">${past?"View":"Manage trip"}</button></div></article>`
@@ -3566,10 +3529,10 @@ function renderTrips(){
   const up=$("tripList"),past=$("tripHistoryList"),draft=$("tripDraftList");
   if(up)up.innerHTML=upcoming.map(b=>tripCard(b,false)).join("")||empty("No upcoming trips","Bookings linked to this account will appear here.","plane");
   if(past)past.innerHTML=history.map(b=>tripCard(b,true)).join("")||empty("No past trips yet","Completed and cancelled SKANDI bookings will appear here.","plane");
-  if(draft)draft.innerHTML=carts.map(c=>`<article class="trip-card"><div class="trip-datebox"><strong>${esc(friendly(c.status||"Draft"))}</strong><span>${esc(date(c.updatedAt||c.createdAt))}</span></div><div><h3>${esc(c.payload?.selectedOffer?.summary||c.payload?.productType||"Booking in progress")}</h3><p>${esc(c.cartId||"")}${c.total?` · ${esc(money(c.total,c.currency))}`:""}</p></div><div><button class="btn small primary" data-route="/booking?cartId=${encodeURIComponent(c.cartId||"")}">Continue</button></div></article>`).join("")||empty("No booking drafts","Unfinished SKANDI booking carts will appear here.","plane")
+  if(draft)draft.innerHTML=carts.map(c=>`<article class="trip-card"><div class="trip-datebox"><strong>${esc(friendly(c.status||"Draft"))}</strong><span>${esc(date(c.updatedAt||c.createdAt))}</span></div><div><h3>${esc(c.payload?.selectedOffer?.summary||c.payload?.productType||"Booking in progress")}</h3><p>${esc(c.cartId||"")}${c.total?` · ${esc(money(c.total,c.currency))}`:""}</p></div><div><button class="btn small primary" data-route="/?cartId=${encodeURIComponent(c.cartId||"")}">Continue</button></div></article>`).join("")||empty("No booking drafts","Unfinished SKANDI booking carts will appear here.","plane")
 }
 function renderClub(){
-  const d=state.data,c=d?.club||{},tiers=arr(c.tiers).length?arr(c.tiers):DEFAULT_DATA.club.tiers,ledger=arr(c.ledger);
+  const d=state.data,c=d?.club||{},tiers=arr(c.tiers),ledger=arr(c.ledger);
   const activityRoot=$("clubActivityView"),programRoot=$("clubProgramView");
   if(activityRoot){let rows=ledger;if(state.ledgerFilter==="earned")rows=rows.filter(x=>Number(x.amount)>0);else if(state.ledgerFilter==="used")rows=rows.filter(x=>Number(x.amount)<0);else if(state.ledgerFilter==="pending")rows=rows.filter(x=>String(x.status||"").toUpperCase()==="PENDING");activityRoot.innerHTML=`<div class="page-intro"><div><div class="kicker">My Club · Account Activity</div><h2>Points Activity</h2></div><p>Posted and pending entries from your canonical SKANDI Points ledger.</p></div><div class="activity-toolbar"><div class="activity-filters">${[["all","All"],["earned","Earned"],["used","Used"],["pending","Pending"]].map(([v,l])=>`<button class="activity-filter ${state.ledgerFilter===v?"active":""}" data-ledger-filter="${v}">${l}</button>`).join("")}</div><div style="color:rgba(255,255,255,.42);font-size:10px">${num(rows.length)} entries</div></div><div class="activity-list">${rows.length?rows.map(x=>`<div class="activity-row"><div class="date">${esc(date(x.date))}</div><div><strong>${esc(x.description||friendly(x.type)||"SKANDI Club activity")}</strong><small>${esc(x.bookingReference||friendly(x.status||"Posted"))}</small></div><div class="amount ${Number(x.amount)<0?"neg":""}">${Number(x.amount)>0?"+":""}${num(x.amount)} pts</div></div>`).join(""):empty("No matching activity","There are no Club ledger entries in this filter.","wallet")}</div>`}
   if(programRoot){programRoot.innerHTML=`<div class="page-intro"><div><div class="kicker">My Club · Program Information</div><h2>Club Levels</h2></div><p>The level names, point thresholds and earning multipliers below come directly from the active SKANDI Club configuration. Benefits are not invented here when they have not been configured.</p></div><div class="tier-table"><div class="tier-row header"><span>Club level</span><span>From</span><span>Through</span><span>Multiplier</span></div>${tiers.map(t=>`<div class="tier-row ${t.id===c.tier?.id?"current":""}"><strong>${esc(t.name)}</strong><span>${num(t.minPoints)} pts</span><span>${t.maxPoints===null||t.maxPoints===undefined?"No upper limit":`${num(t.maxPoints)} pts`}</span><span>${Number(t.multiplier||1).toFixed(2).replace(/\.00$/,'')}×</span></div>`).join("")}</div><div class="provider-note" style="margin-top:18px">SKANDI Club status is determined by the active Club configuration and your posted SKANDI Points balance. Program-specific benefits should only appear here once they are defined in the Club configuration.</div>`}
@@ -3583,240 +3546,25 @@ function renderDocuments(){
 function renderWallet(){const pays=arr(state.data?.paymentMethods),wallet=arr(state.data?.wallet);$("paymentGrid").innerHTML=pays.length?pays.map(p=>`<div class="card wallet-card"><div class="card-chip"></div><div class="wallet-number">•••• •••• •••• ${esc(p.last4||"••••")}</div><div class="wallet-meta"><span>${esc(p.brand||"Card")}</span><span>${p.expiryMonth&&p.expiryYear?`${String(p.expiryMonth).padStart(2,"0")}/${String(p.expiryYear).slice(-2)}`:""}</span></div></div>`).join(""):empty("No saved payment methods","Payment methods saved by secure checkout will appear here only as masked metadata.","wallet");$("walletGrid").innerHTML=wallet.length?wallet.map(w=>`<div class="card pad"><h3>${esc(w.title)}</h3><p>${esc(friendly(w.type))}${w.expiresAt?` · expires ${esc(date(w.expiresAt))}`:""}</p>${w.code?`<div class="chips"><span class="chip blue">${esc(w.code)}</span></div>`:""}</div>`).join(""):empty("Your wallet is empty","Eligible vouchers, passes and travel wallet items will appear here.","wallet")}
 function renderSaved(){const items=arr(state.data?.favorites);$("favorites").innerHTML=items.length?items.map(x=>`<article class="card saved-card">${x.image?`<img class="saved-img" src="${esc(x.image)}" alt="">`:`<div class="saved-img"></div>`}<div><h3 style="margin:0 0 5px">${esc(x.title)}</h3><p>${esc(friendly(x.type))}</p></div><div class="button-row">${x.url?`<button class="btn small primary" data-route="${esc(x.url)}">View</button>`:""}<button class="btn small" data-remove-favorite="${esc(x.id)}">Remove</button></div></article>`).join(""):empty("Nothing saved yet","Save hotels, destinations and travel ideas while browsing SKANDI and they will appear here.","heart")}
 function renderNotifications(){const items=arr(state.data?.notifications);$("notifications").innerHTML=items.length?items.map(n=>`<div class="notif ${n.read?"":"unread"}"><div class="notif-dot"></div><div><strong>${esc(n.title)}</strong><p>${esc(n.message)}</p><div style="font-size:10px;color:#98a3ad;margin-top:7px">${esc(date(n.createdAt))}</div></div><div class="button-row">${n.actionPath?`<button class="btn small" data-route="${esc(n.actionPath)}">Open</button>`:""}${!n.read?`<button class="btn small soft" data-read-notification="${esc(n.id)}">Mark read</button>`:""}</div></div>`).join(""):empty("You're all caught up","Booking, Club and account updates will appear here.","bell")}
-function lookupLabel(list,id,fn){const found=arr(list).find(x=>String(x.id)===String(id));return found?fn(found):id}
+function fillSelect(el,rows,value,labelFn){el.innerHTML=`<option value="">Select</option>`+rows.map(x=>`<option value="${esc(x.id)}" ${x.id===value?"selected":""}>${esc(labelFn(x))}</option>`).join("")}
+function renderProfileSummary(){const p=state.data?.profile||{},root=$("profileSummary");if(!root)return;root.innerHTML=`<div class="grid grid2"><div><div class="info-pair"><span>Name</span><strong>${esc(p.displayName||[p.firstName,p.lastName].filter(Boolean).join(" ")||"Not saved")}</strong></div><div class="info-pair"><span>Email</span><strong>${esc(p.email||"Not saved")}</strong></div><div class="info-pair"><span>Phone</span><strong>${esc(p.phone||"Not saved")}</strong></div></div><div><div class="info-pair"><span>Preferred currency</span><strong>${esc(p.preferredCurrency||"Not selected")}</strong></div><div class="info-pair"><span>Passport</span><strong>${esc(p.passportLast4?`•••• ${p.passportLast4}`:"Not saved")}</strong></div><div class="info-pair"><span>Account status</span><strong>${esc(p.status||"Active")}</strong></div></div></div><div class="button-row" style="margin-top:22px"><button class="btn primary" data-section="account" data-view="settings">Edit preferences</button><button class="btn soft" data-section="profile" data-view="travelers">Saved travelers</button></div>`}
+function renderSettings(){const d=state.data,p=d?.profile||{},f=$("profileForm");f.firstName.value=p.firstName||"";f.lastName.value=p.lastName||"";f.email.value=p.email||"";f.phone.value=p.phone||"";f.preferredCurrency.value=p.preferredCurrency||"";f.seatPreference.value=p.payload?.seatPreference||"";f.dietaryPrefs.value=p.dietaryPrefs||"";f.accessibilityNeeds.value=p.accessibilityNeeds||"";f.marketingConsent.checked=p.marketingConsent===true;fillSelect(f.countryOfResidenceId,arr(d.references?.countries),p.countryOfResidenceId,x=>`${x.name}${x.code?` · ${x.code}`:""}`);fillSelect(f.preferredLanguageId,arr(d.references?.languages),p.preferredLanguageId,x=>`${x.name}${x.code?` · ${x.code}`:""}`);fillSelect(f.preferredDepartureAirportId,arr(d.references?.airports),p.preferredDepartureAirportId,x=>`${x.iata} · ${x.city||x.name}`)}
+function renderAll(){if(!state.data)return;renderHero();renderOverview();renderTrips();renderClub();renderTravelers();renderDocuments();renderWallet();renderSaved();renderNotifications();renderProfileSummary();renderSettings();populateSupportForm();const [section,view]=currentPageFromData();setPage(section,view,false)}
 
-// SAS-Inspired Modular Personal Information Renderer (Unlockable Edit Cards)
-function renderProfileSummary(){
-  const d=state.data||DEFAULT_DATA,p=d.profile||{},refs=d.references||DEFAULT_DATA.references,root=$("profileSummary");if(!root)return;
-  const countries=arr(refs.countries).length?arr(refs.countries):DEFAULT_DATA.references.countries;
-  const languages=arr(refs.languages).length?arr(refs.languages):DEFAULT_DATA.references.languages;
-  const airports=arr(refs.airports).length?arr(refs.airports):DEFAULT_DATA.references.airports;
+// Canonical member Support transport: the page controller calls customerSupport.web.js;
+// this HTML only renders customer-safe results and sends explicit actions.
+const supportCaseId=c=>String(c?.caseId||c?.case_id||c?.id||"");
+const supportRef=c=>String(c?.caseRef||c?.case_ref||supportCaseId(c));
+function supportStatus(msg,bad=false,id="supportStatus"){const el=$(id);if(el){el.textContent=String(msg||"");el.classList.toggle("support-case-error",bad)}}
+function drawSupportCases(){const q=String($("supportSearch")?.value||"").toLowerCase().trim();const list=state.support.cases.filter(c=>!q||[supportRef(c),c.subject,c.category,c.status,c.bookingRef].join(" ").toLowerCase().includes(q));$("supportCases").innerHTML=list.length?list.map(c=>`<button class="support-case-item ${supportCaseId(c)===state.support.selectedCaseId?"active":""}" type="button" data-support-case="${esc(supportCaseId(c))}"><strong>${esc(c.subject||"Support request")}</strong><small>${esc(supportRef(c))} · ${esc(c.category||"General")} · ${esc(c.status||"Open")}</small></button>`).join(""):`<div class="support-case-status">${state.support.cases.length?"No matching cases.":"No support cases have been returned for this account."}</div>`}
+function drawSupportDetail(){const d=state.support.detail||{},c=d.case||{},messages=arr(d.messages);$("supportThreadTitle").textContent=c.subject||"Select a case";$("supportReplyForm").hidden=!supportCaseId(c);$("supportDuffel").hidden=!supportCaseId(c)||!(c.bookingRef||c.pnr);$("supportMessages").innerHTML=messages.length?messages.filter(m=>m.private!==true&&m.privateNote!==true&&m.kind!=="internal"&&String(m.channel||"").toLowerCase()!=="internal").map(m=>{const sender=String(m.senderType||m.sender_type||"").toLowerCase(),mine=["customer","member","user"].includes(sender);return `<div class="support-message ${mine?"mine":""}"><small>${esc(m.senderName||m.sender_name||(mine?"You":"SKANDI Support"))}</small>${esc(m.content||m.message||"")}</div>`}).join(""):`<div class="support-case-status">No customer-visible messages yet.</div>`;$("supportMessages").scrollTop=$("supportMessages").scrollHeight}
+function populateSupportForm(){const p=state.data?.profile||{};const name=$("supportName"),mail=$("supportEmail");if(name&&!name.value)name.value=p.displayName||[p.firstName,p.lastName].filter(Boolean).join(" ");if(mail&&!mail.value)mail.value=p.email||"";const select=$("supportCategory");if(select&&state.support.workflows.length){const chosen=select.value;select.innerHTML=state.support.workflows.filter(x=>x.key).map(x=>`<option value="${esc(x.key)}">${esc(x.title||x.key)}</option>`).join("");if([...select.options].some(o=>o.value===chosen))select.value=chosen;renderSupportRequirements()}}
+function renderSupportRequirements(){const current=state.support.workflows.find(w=>w.key===$("supportCategory")?.value)||{};const root=$("supportDynamicFields");if(!root)return;const labels={flightAirline:"Operating airline",flightNumber:"Flight number",depAirport:"Departure airport",arrAirport:"Arrival airport",bagType:"Baggage type",bagColor:"Baggage color",bagBrand:"Baggage brand",pirNumber:"Baggage report reference (PIR)"};const fields=arr(current.requiredFields).filter(f=>!['subject','message','fullName','email','bookingRef'].includes(f));const markup=fields.map(f=>`<label>${esc(labels[f]||friendly(f))}<input name="${esc(f)}" maxlength="140" required></label>`).join('');root.innerHTML=(arr(current.topics).length?`<label>Request topic<select name="subCategory"><option value="">Select topic</option>${arr(current.topics).map(x=>`<option value="${esc(x.key)}">${esc(x.title)}</option>`).join('')}</select></label>`:'')+markup+(current.key==='baggage'?'<label>Was a baggage irregularity report filed?<select name="hasPir" id="supportHasPir"><option value="no">No</option><option value="yes">Yes</option></select></label><div id="supportPirField"></div>':'');$("supportHasPir")?.addEventListener("change",()=>{$("supportPirField").innerHTML=$("supportHasPir").value==='yes'?'<label>PIR reference<input name="pirNumber" maxlength="80" required></label>':''})}
 
-  const fullName=[p.firstName,p.lastName].filter(Boolean).join(" ")||(p.displayName&&p.displayName!=="Member"?p.displayName:"Not saved");
-  const countryLabel=p.countryOfResidenceId?lookupLabel(countries,p.countryOfResidenceId,x=>x.name):"Not saved";
-  const langLabel=p.preferredLanguageId?lookupLabel(languages,p.preferredLanguageId,x=>x.name):"English";
-  const airportObj=airports.find(x=>String(x.id)===String(p.preferredDepartureAirportId))||airports[0];
-  const favs=arr(d.favorites);
+async function loadSupport(force=false){if(state.support.loading)return;if(state.support.loaded&&!force)return;state.support.loading=true;supportStatus("Loading your support cases...");try{const result=await request("MY_PROFILE_SUPPORT_LOAD");const data=result.result||{};state.support.cases=arr(data.cases);state.support.workflows=arr(data.workflows);state.support.loaded=true;drawSupportCases();populateSupportForm();supportStatus("");if(state.support.selectedCaseId){await openSupportCase(state.support.selectedCaseId)}}catch(e){supportStatus(e.message,true);throw e}finally{state.support.loading=false}}
+async function openSupportCase(id){state.support.selectedCaseId=String(id||"").slice(0,160);drawSupportCases();supportStatus("Opening case...");try{const r=await request("MY_PROFILE_SUPPORT_OPEN",{caseId:state.support.selectedCaseId});if(state.support.selectedCaseId!==id)return;state.support.detail=r.result||{};drawSupportDetail();supportStatus("")}catch(e){supportStatus(e.message,true)}}
+async function submitSupportCase(event){event.preventDefault();const form=event.currentTarget;if(!form.reportValidity())return;const button=form.querySelector('[type="submit"]');button.disabled=true;supportStatus("Submitting your request...",false,"supportFormStatus");try{const raw=Object.fromEntries(new FormData(form).entries());const fullName=String(raw.fullName||"").trim();const parts=fullName.split(/\s+/);const input={...raw,fullName,firstName:parts[0]||"",lastName:parts.slice(1).join(" "),source:"member-helpdesk",sourceChannel:"MEMBER_HELPDESK",sourcePage:"/my-profile",memberPriority:true,hasBooking:raw.bookingRef?"yes":"no"};const r=await request("MY_PROFILE_SUPPORT_CREATE",{input});const outcome=r.result||{};if(!outcome.caseId&&!outcome.caseRef)throw Error("The server did not confirm case creation.");supportStatus(`Case submitted: ${outcome.caseRef||outcome.caseId}.`,false,"supportFormStatus");form.reset();state.support.loaded=false;state.support.selectedCaseId=String(outcome.caseId||"");state.support.detail=null;setPage("support","cases",true);await loadSupport(true)}catch(e){supportStatus(e.message,true,"supportFormStatus")}finally{button.disabled=false}}
 
-  const editPersonal = state.editCard==="personal";
-  const editPassport = state.editCard==="passport";
-  const editAirport  = state.editCard==="airport";
-
-  root.innerHTML = `
-    <!-- Section 1: Personal Details & Sign-in Identity (SAS top row) -->
-    <div class="sas-group">
-      <div class="sas-grid">
-        <div class="sas-card ${editPersonal?"editing":""}">
-          <div class="sas-card-top">
-            <h4>Personal details</h4>
-            ${!editPersonal?`<button class="sas-edit-pill" type="button" data-unlock-card="personal">Edit</button>`:""}
-          </div>
-          ${!editPersonal ? `
-            <div class="sas-fields">
-              <div class="sas-field"><span>Name</span><strong>${esc(fullName)}</strong></div>
-              <div class="sas-field"><span>Phone number</span><strong>${esc(p.phone||"Not saved")}</strong></div>
-              <div class="sas-field"><span>Date of birth</span><strong>${esc(p.dateOfBirth?date(p.dateOfBirth):"Not saved")}</strong></div>
-              <div class="sas-field"><span>Country / Address</span><strong>${esc([p.addressLine,countryLabel].filter(Boolean).join(", ")||"Not saved")}</strong></div>
-              <div class="sas-field"><span>Email</span><strong>${esc(p.email||"Not saved")}</strong></div>
-              <div class="sas-field"><span>Language</span><strong>${esc(langLabel)}</strong></div>
-            </div>
-          ` : `
-            <form id="sasPersonalForm" class="profile-form">
-              <div class="field"><label>First name</label><input class="control" name="firstName" value="${esc(p.firstName||"")}" placeholder="First name" required></div>
-              <div class="field"><label>Last name</label><input class="control" name="lastName" value="${esc(p.lastName||"")}" placeholder="Last name" required></div>
-              <div class="field"><label>Date of birth</label><input class="control" type="date" name="dateOfBirth" value="${esc(p.dateOfBirth||"")}"></div>
-              <div class="field"><label>Phone number</label><input class="control" name="phone" value="${esc(p.phone||"")}" placeholder="+1 (555) 000-0000"></div>
-              <div class="field"><label>Email</label><input class="control" type="email" name="email" value="${esc(p.email||"")}" placeholder="name@example.com"></div>
-              <div class="field"><label>Preferred language</label><select class="control" name="preferredLanguageId">${languages.map(x=>`<option value="${esc(x.id)}" ${x.id===p.preferredLanguageId?"selected":""}>${esc(x.name)}</option>`).join("")}</select></div>
-              <div class="field"><label>Street address / City</label><input class="control" name="addressLine" value="${esc(p.addressLine||"")}" placeholder="75 Baxter St, 10013 New York"></div>
-              <div class="field"><label>Country of residence</label><select class="control" name="countryOfResidenceId"><option value="">Select</option>${countries.map(x=>`<option value="${esc(x.id)}" ${x.id===p.countryOfResidenceId?"selected":""}>${esc(x.name)}</option>`).join("")}</select></div>
-              <div class="field full"><div class="button-row" style="margin-top:6px"><button class="btn primary" type="submit">Save changes</button><button class="btn soft" type="button" data-cancel-card>Cancel</button></div></div>
-            </form>
-          `}
-        </div>
-
-        <div class="sas-card">
-          <div class="sas-card-top">
-            <h4>Password & Security</h4>
-            <button class="sas-edit-pill" type="button" id="logoutBtn">Log out</button>
-          </div>
-          <div class="sas-fields">
-            <div class="sas-field"><span>Password</span><strong style="letter-spacing:.22em;font-size:15px">••••••••</strong></div>
-            <div class="sas-field"><span>Account status</span><strong>${esc(p.status||"Active")}</strong></div>
-          </div>
-          <p style="margin:16px 0 0;color:var(--sk-muted);font-size:11px;line-height:1.55">Sign-in credentials are managed securely through your authenticated SKANDI member session.</p>
-        </div>
-      </div>
-
-      <!-- Passport & Travel Preferences Card (SAS second row) -->
-      <div class="sas-grid" style="margin-top:18px">
-        <div class="sas-card ${editPassport?"editing":""}">
-          <div class="sas-card-top">
-            <h4>Passport & Travel details</h4>
-            ${!editPassport?`<button class="sas-edit-pill" type="button" data-unlock-card="passport">Edit</button>`:""}
-          </div>
-          <p class="sas-desc">Add your travel document and onboard preferences so we can pre-fill your details during check-in and booking.</p>
-          ${!editPassport ? `
-            <div class="sas-fields">
-              <div class="sas-field"><span>Passport number</span><strong>${esc(p.passportLast4?`•••• •••• ${p.passportLast4}`:"Not saved")}</strong></div>
-              <div class="sas-field"><span>Nationality</span><strong>${esc(countryLabel)}</strong></div>
-              <div class="sas-field"><span>Seat preference</span><strong>${esc(friendly(p.payload?.seatPreference||p.seatPreference||"No preference"))}</strong></div>
-              <div class="sas-field"><span>Preferred currency</span><strong>${esc(p.preferredCurrency||"USD")}</strong></div>
-              <div class="sas-field"><span>Dietary preferences</span><strong>${esc(p.dietaryPrefs||"None saved")}</strong></div>
-              <div class="sas-field"><span>Accessibility needs</span><strong>${esc(p.accessibilityNeeds||"None saved")}</strong></div>
-            </div>
-          ` : `
-            <form id="sasPassportForm" class="profile-form">
-              <div class="field"><label>Preferred currency</label><select class="control" name="preferredCurrency"><option value="USD" ${p.preferredCurrency==="USD"?"selected":""}>USD</option><option value="SEK" ${p.preferredCurrency==="SEK"?"selected":""}>SEK</option><option value="NOK" ${p.preferredCurrency==="NOK"?"selected":""}>NOK</option><option value="DKK" ${p.preferredCurrency==="DKK"?"selected":""}>DKK</option><option value="EUR" ${p.preferredCurrency==="EUR"?"selected":""}>EUR</option></select></div>
-              <div class="field"><label>Seat preference</label><select class="control" name="seatPreference"><option value="">No preference</option><option value="window" ${(p.payload?.seatPreference||p.seatPreference)==="window"?"selected":""}>Window</option><option value="aisle" ${(p.payload?.seatPreference||p.seatPreference)==="aisle"?"selected":""}>Aisle</option></select></div>
-              <div class="field"><label>Dietary preferences</label><input class="control" name="dietaryPrefs" value="${esc(p.dietaryPrefs||"")}" placeholder="e.g. Vegetarian, Gluten-free"></div>
-              <div class="field"><label>Nationality / Country</label><select class="control" name="countryOfResidenceId"><option value="">Select</option>${countries.map(x=>`<option value="${esc(x.id)}" ${x.id===p.countryOfResidenceId?"selected":""}>${esc(x.name)}</option>`).join("")}</select></div>
-              <div class="field full"><label>General accessibility needs</label><textarea class="control" name="accessibilityNeeds" placeholder="Share any mobility, vision, hearing or service assistance requirements">${esc(p.accessibilityNeeds||"")}</textarea></div>
-              <div class="field full"><div class="button-row" style="margin-top:6px"><button class="btn primary" type="submit">Save travel details</button><button class="btn soft" type="button" data-cancel-card>Cancel</button></div></div>
-            </form>
-          `}
-        </div>
-      </div>
-    </div>
-
-    <!-- Section 2: Customize your flight search (SAS middle section) -->
-    <div class="sas-group">
-      <div class="sas-group-head">
-        <h3>Customize your travel search</h3>
-        <p>Choose your default departure airport and manage your saved destinations to speed up the booking process.</p>
-      </div>
-      <div class="sas-grid equal">
-        <div class="sas-card ${editAirport?"editing":""}">
-          <div class="sas-card-top"><h4>Default airport</h4></div>
-          <p class="sas-desc">Add your default airport to easily select where you usually depart from.</p>
-          ${!editAirport ? `
-            <div class="sas-airport-row">
-              <div class="sas-airport-badge">${icon("tower")}</div>
-              <div class="sas-airport-meta">
-                <strong>${esc(airportObj?`${airportObj.city}, ${airportObj.name}, ${airportObj.iata}`:"Not selected")}</strong>
-                <span>${esc(airportObj?.country||"Select departure airport")}</span>
-              </div>
-              <button class="sas-text-btn" type="button" data-unlock-card="airport">Edit</button>
-            </div>
-          ` : `
-            <form id="sasAirportForm" class="profile-form">
-              <div class="field full">
-                <label>Home / Departure Airport</label>
-                <select class="control" name="preferredDepartureAirportId">
-                  ${airports.map(x=>`<option value="${esc(x.id)}" ${x.id===p.preferredDepartureAirportId?"selected":""}>${esc(x.city)} · ${esc(x.name)} (${esc(x.iata)})</option>`).join("")}
-                </select>
-              </div>
-              <div class="field full"><div class="button-row"><button class="btn primary" type="submit">Save airport</button><button class="btn soft" type="button" data-cancel-card>Cancel</button></div></div>
-            </form>
-          `}
-        </div>
-
-        <div class="sas-card">
-          <div class="sas-card-top"><h4>Favorite destinations</h4></div>
-          <p class="sas-desc">Save your favorite places to quickly pick where you want to travel and receive tailored offers.</p>
-          ${favs.length ? favs.slice(0,3).map(f=>`
-            <div class="sas-airport-row" style="border-bottom:1px solid rgba(255,255,255,.07);padding:9px 0">
-              <div class="sas-airport-badge">${icon("plane")}</div>
-              <div class="sas-airport-meta">
-                <strong>${esc(f.title)}</strong>
-                <span>${esc(friendly(f.type||"Destination"))}</span>
-              </div>
-              <button class="sas-text-btn" type="button" data-remove-favorite="${esc(f.id)}">Remove</button>
-            </div>
-          `).join("") : `
-            <div class="sas-airport-row">
-              <div class="sas-airport-badge">${icon("plane")}</div>
-              <div class="sas-airport-meta">
-                <strong>Stockholm, Arlanda, ARN</strong>
-                <span>Sweden</span>
-              </div>
-              <button class="sas-text-btn" type="button" data-section="profile" data-view="saved">Manage</button>
-            </div>
-          `}
-          <div style="margin-top:16px">
-            <button class="sas-edit-pill" type="button" data-section="profile" data-view="saved">View saved destinations</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Section 3: Communication (SAS bottom section) -->
-    <div class="sas-group" style="margin-bottom:10px">
-      <div class="sas-group-head">
-        <h3>Communication</h3>
-        <p>Decide which updates and travel inspiration you want to receive from SKANDI Travels.</p>
-      </div>
-      <div class="sas-grid equal">
-        <div class="sas-card">
-          <div class="sas-card-top"><h4>Offers & News</h4></div>
-          <p class="sas-desc">Receive travel tips, seasonal charter releases and Club offers.</p>
-          <div class="sas-toggle-row">
-            <span>E-mail</span>
-            <label class="sas-switch"><input type="checkbox" data-comm-toggle="marketingConsent" ${p.marketingConsent?"checked":""}><span class="sas-slider"></span></label>
-          </div>
-          <div class="sas-toggle-row">
-            <span>SMS</span>
-            <label class="sas-switch"><input type="checkbox" data-comm-toggle="smsConsent" ${p.smsConsent?"checked":""}><span class="sas-slider"></span></label>
-          </div>
-        </div>
-
-        <div class="sas-card">
-          <div class="sas-card-top"><h4>Personalization</h4></div>
-          <p class="sas-desc">Tailored communication and offers based on your preferences and activity within SKANDI Club.</p>
-          <div class="sas-toggle-row" style="align-items:flex-start">
-            <span style="font-size:12px;color:rgba(255,255,255,.76);line-height:1.55">I consent to SKANDI Travels personalizing my SKANDI Club membership and sending tailored travel recommendations and offers.</span>
-            <label class="sas-switch" style="margin-top:2px"><input type="checkbox" data-comm-toggle="personalizationConsent" ${p.personalizationConsent!==false?"checked":""}><span class="sas-slider"></span></label>
-          </div>
-        </div>
-      </div>
-      <div style="display:flex;justify-content:flex-end;margin-top:18px">
-        <button class="btn primary" type="button" id="unsubscribeAllBtn">Unsubscribe from all</button>
-      </div>
-    </div>
-  `;
-}
-
-async function saveProfileChanges(partial){
-  const p = state.data.profile || {};
-  const merged = {
-    ...p,
-    ...partial,
-    displayName: [partial.firstName ?? p.firstName, partial.lastName ?? p.lastName].filter(Boolean).join(" ") || p.displayName || "Member",
-    payload: { ...(p.payload||{}), seatPreference: partial.seatPreference ?? p.payload?.seatPreference ?? p.seatPreference ?? "" }
-  };
-  state.data.profile = merged;
-  state.editCard = null;
-  renderHero();
-  renderOverview();
-  renderProfileSummary();
-  if(window.parent===window){
-    toast("Personal information updated.");
-    return;
-  }
-  busy(true);
-  try{
-    const r=await request("MY_PROFILE_SAVE_PROFILE",{profile:merged}),data=r.result||r;
-    toast("Personal information updated.");
-    if(data.providerSync){const note=$("providerSyncNote");note.classList.remove("hidden");note.textContent=data.providerSync.ok?"Travel supplier profile synchronized.":data.providerSync.skipped?data.providerSync.reason:`Profile saved. Supplier sync will retry later: ${data.providerSync.error?.message||"unavailable"}`}
-    await refresh();
-  }catch(x){toast(x.message,true)}finally{busy(false)}
-}
-
-function renderAll(){
-  if(!state.data) state.data = structuredClone(DEFAULT_DATA);
-  renderHero();
-  renderOverview();
-  renderTrips();
-  renderClub();
-  renderTravelers();
-  renderDocuments();
-  renderWallet();
-  renderSaved();
-  renderNotifications();
-  renderProfileSummary();
-  const [section,view]=currentPageFromData();
-  setPage(section,view,false);
-}
 function openDrawer(){$("drawerShade").classList.add("open");$("bookingDrawer").classList.add("open");document.body.style.overflow="hidden"}function closeDrawer(){$("drawerShade").classList.remove("open");$("bookingDrawer").classList.remove("open");document.body.style.overflow=""}
 async function loadBooking(id){busy(true);openDrawer();$("bookingDetail").innerHTML=empty("Loading trip","Checking the latest booking and supplier capabilities.","plane");try{const res=await request("MY_PROFILE_BOOKING_DETAIL",{bookingId:id});state.bookingDetail=res.result||res;renderBookingDetail()}catch(e){$("bookingDetail").innerHTML=empty("Trip unavailable",e.message,"plane")}finally{busy(false)}}
 function renderBookingDetail(){
@@ -3827,28 +3575,25 @@ function renderBookingDetail(){
 }
 function openModal(title,body,foot=""){$("modalTitle").textContent=title;$("modalBody").innerHTML=body;$("modalFoot").innerHTML=foot;$("modalShade").classList.add("open")}function closeModal(){$("modalShade").classList.remove("open");state.payment=null;state.elements=null}
 function linkBookingModal(){openModal("Link a booking",`<div class="provider-note">Use the booking reference and traveler surname exactly as shown on the confirmation. This verifies ownership before the booking is added to My Trips.</div><form id="linkBookingForm" class="profile-form" style="margin-top:16px"><div class="field"><label>Booking reference</label><input class="control" name="bookingReference" required maxlength="120" autocomplete="off" placeholder="Booking reference"></div><div class="field"><label>Traveler surname</label><input class="control" name="lastName" required maxlength="160" autocomplete="family-name" placeholder="Surname"></div></form>`,`<button class="btn soft" data-close-modal>Cancel</button><button class="btn primary" id="confirmLinkBooking">Link booking</button>`)}
-function travelerModal(t={}){const refs=state.data?.references||DEFAULT_DATA.references;const countries=arr(refs.countries).length?arr(refs.countries):DEFAULT_DATA.references.countries;openModal(t.id?"Edit traveler":"Add traveler",`<form id="travelerForm" class="profile-form"><input type="hidden" name="id" value="${esc(t.id||"")}"><div class="field"><label>First name</label><input class="control" name="firstName" required value="${esc(t.firstName||"")}"></div><div class="field"><label>Last name</label><input class="control" name="lastName" required value="${esc(t.lastName||"")}"></div><div class="field"><label>Date of birth</label><input class="control" type="date" name="dateOfBirth" value="${esc(t.dateOfBirth||"")}"></div><div class="field"><label>Gender</label><select class="control" name="gender"><option value="">Select</option><option value="female" ${lowerEq(t.gender,"female")}>Female</option><option value="male" ${lowerEq(t.gender,"male")}>Male</option><option value="unspecified" ${lowerEq(t.gender,"unspecified")}>Unspecified</option></select></div><div class="field"><label>Nationality</label><select class="control" name="nationalityId"><option value="">Select</option>${countries.map(x=>`<option value="${esc(x.id)}" ${x.id===t.nationalityId?"selected":""}>${esc(x.name)}</option>`).join("")}</select></div><div class="field"><label>Contact email</label><input class="control" type="email" name="email" value="${esc(t.email||"")}"></div><div class="field"><label>Phone</label><input class="control" name="phone" value="${esc(t.phone||"")}"></div><div class="field"><label>Passport expiry</label><input class="control" type="date" name="passportExpiry" value="${esc(t.passportExpiry||"")}"></div><div class="field full"><label>Dietary preferences</label><input class="control" name="dietaryPrefs" value="${esc(t.dietaryPrefs||"")}"></div><div class="field full"><label>Accessibility needs</label><textarea class="control" name="accessibilityNeeds">${esc(t.accessibilityNeeds||"")}</textarea></div><div class="field full"><label class="checkbox"><input type="checkbox" name="isPrimary" ${t.isPrimary?"checked":""}><span>Use as primary traveler profile.</span></label></div></form>`,`<button class="btn soft" data-close-modal>Cancel</button><button class="btn primary" id="saveTravelerModal">Save traveler</button>`)}function lowerEq(a,b){return String(a||"").toLowerCase()===b?"selected":""}
-async function manage(kind){const d=state.bookingDetail,b=d?.booking;if(!b)return;if(kind==="flight-cancel"){busy(true);try{const r=await request("MY_PROFILE_FLIGHT_CANCEL_QUOTE",{bookingId:b.id});const q=r.result||r,canDirect=Number(q.cancellation?.refundAmount||0)<=0;openModal("Cancellation quote",`<div class="card pad"><h3>Airline cancellation quote</h3><p>Refund quoted by airline</p><div style="font-family:Montserrat;font-size:32px;font-weight:700;color:var(--sk-aqua-soft);margin-top:10px">${esc(money(q.cancellation?.refundAmount,q.cancellation?.refundCurrency))}</div><p style="margin-top:12px">Quote expires ${esc(date(q.cancellation?.expiresAt))}. Nothing has been cancelled yet.</p></div>${!canDirect?`<div class="provider-note">This cancellation includes a customer refund. SKANDI will not cancel the supplier order here until the customer-refund workflow is completed. Continue through Support so the refund and cancellation remain one controlled transaction.</div>`:""}`,canDirect?`<button class="btn soft" data-close-modal>Keep booking</button><button class="btn danger" data-confirm-cancel="${esc(q.cancellation?.id||"")}">Confirm cancellation</button>`:`<button class="btn soft" data-close-modal>Keep booking</button><button class="btn primary" data-route="/my-profile/support">Continue with Support</button>`)}catch(e){toast(e.message,true)}finally{busy(false)}}else if(kind==="flight-change")flightChangeModal();else if(kind==="baggage")baggageModal();else if(kind==="stay-cancel")confirmSimple("Cancel hotel booking","This sends a live cancellation request to the accommodation supplier. Cancellation terms from your booking still apply.","MY_PROFILE_STAY_CANCEL");else if(kind==="car-cancel")confirmSimple("Cancel car rental","This sends a live cancellation request to the rental supplier. Supplier conditions still apply.","MY_PROFILE_CAR_CANCEL")}
+function travelerModal(t={}){const refs=state.data?.references||{};openModal(t.id?"Edit traveler":"Add traveler",`<form id="travelerForm" class="profile-form"><input type="hidden" name="id" value="${esc(t.id||"")}"><div class="field"><label>First name</label><input class="control" name="firstName" required value="${esc(t.firstName||"")}"></div><div class="field"><label>Last name</label><input class="control" name="lastName" required value="${esc(t.lastName||"")}"></div><div class="field"><label>Date of birth</label><input class="control" type="date" name="dateOfBirth" value="${esc(t.dateOfBirth||"")}"></div><div class="field"><label>Gender</label><select class="control" name="gender"><option value="">Select</option><option value="female" ${lowerEq(t.gender,"female")}>Female</option><option value="male" ${lowerEq(t.gender,"male")}>Male</option><option value="unspecified" ${lowerEq(t.gender,"unspecified")}>Unspecified</option></select></div><div class="field"><label>Nationality</label><select class="control" name="nationalityId"><option value="">Select</option>${arr(refs.countries).map(x=>`<option value="${esc(x.id)}" ${x.id===t.nationalityId?"selected":""}>${esc(x.name)}</option>`).join("")}</select></div><div class="field"><label>Contact email</label><input class="control" type="email" name="email" value="${esc(t.email||"")}"></div><div class="field"><label>Phone</label><input class="control" name="phone" value="${esc(t.phone||"")}"></div><div class="field"><label>Passport expiry</label><input class="control" type="date" name="passportExpiry" value="${esc(t.passportExpiry||"")}"></div><div class="field full"><label>Dietary preferences</label><input class="control" name="dietaryPrefs" value="${esc(t.dietaryPrefs||"")}"></div><div class="field full"><label>Accessibility needs</label><textarea class="control" name="accessibilityNeeds">${esc(t.accessibilityNeeds||"")}</textarea></div><div class="field full"><label class="checkbox"><input type="checkbox" name="isPrimary" ${t.isPrimary?"checked":""}><span>Use as primary traveler profile.</span></label></div></form>`,`<button class="btn soft" data-close-modal>Cancel</button><button class="btn primary" id="saveTravelerModal">Save traveler</button>`)}function lowerEq(a,b){return String(a||"").toLowerCase()===b?"selected":""}
+async function manage(kind){const d=state.bookingDetail,b=d?.booking;if(!b)return;if(kind==="flight-cancel"){busy(true);try{const r=await request("MY_PROFILE_FLIGHT_CANCEL_QUOTE",{bookingId:b.id});const q=r.result||r,canDirect=Number(q.cancellation?.refundAmount||0)<=0;openModal("Cancellation quote",`<div class="card pad"><h3>Airline cancellation quote</h3><p>Refund quoted by airline</p><div style="font-family:Montserrat;font-size:32px;font-weight:700;color:var(--sk-navy);margin-top:10px">${esc(money(q.cancellation?.refundAmount,q.cancellation?.refundCurrency))}</div><p style="margin-top:12px">Quote expires ${esc(date(q.cancellation?.expiresAt))}. Nothing has been cancelled yet.</p></div>${!canDirect?`<div class="provider-note">This cancellation includes a customer refund. SKANDI will not cancel the supplier order here until the customer-refund workflow is completed. Continue through Support so the refund and cancellation remain one controlled transaction.</div>`:""}`,canDirect?`<button class="btn soft" data-close-modal>Keep booking</button><button class="btn danger" data-confirm-cancel="${esc(q.cancellation?.id||"")}">Confirm cancellation</button>`:`<button class="btn soft" data-close-modal>Keep booking</button><button class="btn primary" data-section="support" data-view="cases">Continue with Support</button>`)}catch(e){toast(e.message,true)}finally{busy(false)}}else if(kind==="flight-change")flightChangeModal();else if(kind==="baggage")baggageModal();else if(kind==="stay-cancel")confirmSimple("Cancel hotel booking","This sends a live cancellation request to the accommodation supplier. Cancellation terms from your booking still apply.","MY_PROFILE_STAY_CANCEL");else if(kind==="car-cancel")confirmSimple("Cancel car rental","This sends a live cancellation request to the rental supplier. Supplier conditions still apply.","MY_PROFILE_CAR_CANCEL")}
 function flightChangeModal(){const air=state.bookingDetail?.provider?.air,slices=arr(air?.slices);openModal("Change flight",`<form id="changeSearchForm" class="profile-form"><div class="field full"><label>Flight to change</label><select class="control" name="removeSliceId">${slices.map(s=>`<option value="${esc(s.id)}">${esc(s.origin?.iataCode||"")} → ${esc(s.destination?.iataCode||"")}</option>`).join("")}</select></div><div class="field"><label>Origin</label><input class="control" name="origin" maxlength="3" value="${esc(slices[0]?.origin?.iataCode||"")}"></div><div class="field"><label>Destination</label><input class="control" name="destination" maxlength="3" value="${esc(slices[0]?.destination?.iataCode||"")}"></div><div class="field"><label>New departure date</label><input class="control" type="date" name="departureDate" min="${new Date().toISOString().slice(0,10)}"></div><div class="field"><label>Cabin</label><select class="control" name="cabinClass"><option value="economy">Economy</option><option value="premium_economy">Premium Economy</option><option value="business">Business</option><option value="first">First</option></select></div></form><div id="changeOffers"></div>`,`<button class="btn soft" data-close-modal>Close</button><button class="btn primary" id="searchChangesBtn">Search changes</button>`)}
 async function searchChanges(){const f=$("changeSearchForm"),b=state.bookingDetail.booking;busy(true);try{const r=await request("MY_PROFILE_FLIGHT_CHANGE_SEARCH",{bookingId:b.id,removeSliceId:f.removeSliceId.value,addSlice:{origin:f.origin.value.toUpperCase(),destination:f.destination.value.toUpperCase(),departureDate:f.departureDate.value,cabinClass:f.cabinClass.value}}),data=r.result||r,offers=arr(data.offers);$("changeOffers").innerHTML=offers.length?`<h3 class="subhead">Available alternatives</h3>${offers.map(o=>`<div class="choice"><div><strong>${esc(arr(o.slices?.add)[0]?.origin?.iataCode||"")} → ${esc(arr(o.slices?.add)[0]?.destination?.iataCode||"")}</strong><span>Change total ${esc(money(o.changeTotalAmount,o.changeTotalCurrency))}${o.penaltyTotalAmount?` · penalty ${esc(money(o.penaltyTotalAmount,o.penaltyTotalCurrency))}`:""}</span></div><div class="price">${esc(money(o.changeTotalAmount,o.changeTotalCurrency))}</div><button class="btn small primary" data-select-change="${esc(o.id)}" data-change-amount="${esc(o.changeTotalAmount||"0")}">Select</button></div>`).join("")}`:empty("No alternatives returned","The airline did not return a change offer for these details.","plane")}catch(e){toast(e.message,true)}finally{busy(false)}}
-async function selectChange(offerId,amount){if(Number(amount)<0){openModal("Refund change requires support",`<div class="provider-note">This flight change would create a customer refund. The current SKANDI supplier flow can confirm the airline change, but customer refund settlement must remain part of the same controlled transaction. Continue through Support instead of confirming it here.</div>`,`<button class="btn soft" data-close-modal>Close</button><button class="btn primary" data-route="/my-profile/support">Continue with Support</button>`);return}busy(true);try{const b=state.bookingDetail.booking,r=await request("MY_PROFILE_FLIGHT_CHANGE_SELECT",{bookingId:b.id,orderChangeOfferId:offerId}),data=r.result||r,change=data.change;if(!change?.id)throw new Error("The airline did not return a pending change.");const prep=await request("MY_PROFILE_FLIGHT_CHANGE_PREPARE_PAYMENT",{bookingId:b.id,orderChangeId:change.id}),pd=prep.result||prep;if(pd.paymentRequired)await openPayment({kind:"change",bookingId:b.id,orderChangeId:change.id,prepared:pd});else{await request("MY_PROFILE_FLIGHT_CHANGE_CONFIRM",{bookingId:b.id,orderChangeId:change.id});toast("Flight change confirmed.");closeModal();await refreshBooking()}}catch(e){toast(e.message,true)}finally{busy(false)}}
+async function selectChange(offerId,amount){if(Number(amount)<0){openModal("Refund change requires support",`<div class="provider-note">This flight change would create a customer refund. The current SKANDI supplier flow can confirm the airline change, but customer refund settlement must remain part of the same controlled transaction. Continue through Support instead of confirming it here.</div>`,`<button class="btn soft" data-close-modal>Close</button><button class="btn primary" data-section="support" data-view="cases">Continue with Support</button>`);return}busy(true);try{const b=state.bookingDetail.booking,r=await request("MY_PROFILE_FLIGHT_CHANGE_SELECT",{bookingId:b.id,orderChangeOfferId:offerId}),data=r.result||r,change=data.change;if(!change?.id)throw new Error("The airline did not return a pending change.");const prep=await request("MY_PROFILE_FLIGHT_CHANGE_PREPARE_PAYMENT",{bookingId:b.id,orderChangeId:change.id}),pd=prep.result||prep;if(pd.paymentRequired)await openPayment({kind:"change",bookingId:b.id,orderChangeId:change.id,prepared:pd});else{const done=await request("MY_PROFILE_FLIGHT_CHANGE_CONFIRM",{bookingId:b.id,orderChangeId:change.id});toast("Flight change confirmed.");closeModal();await refreshBooking()}}catch(e){toast(e.message,true)}finally{busy(false)}}
 async function baggageModal(){const b=state.bookingDetail.booking;busy(true);try{const r=await request("MY_PROFILE_BAGGAGE_LIST",{bookingId:b.id}),data=r.result||r,services=arr(data.services);openModal("Add baggage",services.length?`<div id="bagChoices">${services.map(s=>`<label class="choice"><input type="checkbox" value="${esc(s.id)}" data-max="${Number(s.maximumQuantity||1)}"><div><strong>${esc(s.label||"Additional baggage")}</strong><span>${arr(s.passengerIds).length?`Passenger-specific · `:""}${arr(s.segmentIds).length?"Flight-specific":""}</span></div><div class="price">${esc(money(s.totalAmount,s.totalCurrency))}</div></label>`).join("")}</div>`:empty("No baggage offers","The airline is not currently offering post-booking baggage for this order.","bag"),services.length?`<button class="btn soft" data-close-modal>Close</button><button class="btn primary" id="prepareBagsBtn">Continue to payment</button>`:`<button class="btn soft" data-close-modal>Close</button>`)}catch(e){toast(e.message,true)}finally{busy(false)}}
 async function prepareBags(){const services=[...document.querySelectorAll("#bagChoices input:checked")].map(x=>({id:x.value,quantity:1}));if(!services.length){toast("Choose at least one baggage option.",true);return}busy(true);try{const b=state.bookingDetail.booking,r=await request("MY_PROFILE_BAGGAGE_PREPARE_PAYMENT",{bookingId:b.id,services}),data=r.result||r;await openPayment({kind:"baggage",bookingId:b.id,services,prepared:data})}catch(e){toast(e.message,true)}finally{busy(false)}}
-async function openPayment(flow){const p=flow.prepared?.payment;if(!p?.clientSecret||!p?.publishableKey)throw new Error("Secure payment could not be prepared.");state.payment=flow;openModal(flow.kind==="baggage"?"Secure baggage payment":"Secure change payment",`<div class="card pad"><h3>${esc(money(p.amount,p.currency))}</h3><p>The payment is authorized first and captured only after the supplier confirms the servicing action.</p></div><div class="stripe-box" id="paymentElement"></div><div id="paymentError" style="color:var(--sk-danger);font-size:11px;margin-top:10px"></div>`,`<button class="btn soft" data-close-modal>Cancel</button><button class="btn primary" id="confirmPaymentBtn">Authorize & continue</button>`);if(!window.Stripe)throw new Error("Secure payment is temporarily unavailable.");state.stripe=Stripe(p.publishableKey);state.elements=state.stripe.elements({clientSecret:p.clientSecret,appearance:{theme:"night",variables:{colorPrimary:"#5fc7cf",colorBackground:"#051221",colorText:"#ffffff",fontFamily:"Inter, sans-serif",borderRadius:"10px"}}});state.elements.create("payment").mount("#paymentElement")}
+async function openPayment(flow){const p=flow.prepared?.payment;if(!p?.clientSecret||!p?.publishableKey)throw new Error("Secure payment could not be prepared.");state.payment=flow;openModal(flow.kind==="baggage"?"Secure baggage payment":"Secure change payment",`<div class="card pad"><h3>${esc(money(p.amount,p.currency))}</h3><p>The payment is authorized first and captured only after the supplier confirms the servicing action.</p></div><div class="stripe-box" id="paymentElement"></div><div id="paymentError" style="color:var(--danger);font-size:11px;margin-top:10px"></div>`,`<button class="btn soft" data-close-modal>Cancel</button><button class="btn primary" id="confirmPaymentBtn">Authorize & continue</button>`);if(!window.Stripe)throw new Error("Secure payment is temporarily unavailable.");state.stripe=Stripe(p.publishableKey);state.elements=state.stripe.elements({clientSecret:p.clientSecret,appearance:{theme:"stripe",variables:{colorPrimary:"#022e64",fontFamily:"Inter, sans-serif",borderRadius:"10px"}}});state.elements.create("payment").mount("#paymentElement")}
 async function confirmPayment(){const flow=state.payment,p=flow?.prepared?.payment;if(!flow||!state.stripe||!state.elements)return;busy(true);try{const result=await state.stripe.confirmPayment({elements:state.elements,redirect:"if_required"});if(result.error)throw new Error(result.error.message||"Payment authorization failed.");const paymentIntentId=result.paymentIntent?.id||p.paymentIntentId;if(flow.kind==="baggage")await request("MY_PROFILE_BAGGAGE_CONFIRM",{bookingId:flow.bookingId,services:flow.services,paymentIntentId});else await request("MY_PROFILE_FLIGHT_CHANGE_CONFIRM",{bookingId:flow.bookingId,orderChangeId:flow.orderChangeId,paymentIntentId});toast(flow.kind==="baggage"?"Baggage added to your booking.":"Flight change confirmed.");closeModal();await refreshBooking()}catch(e){$("paymentError").textContent=e.message||"Payment could not be completed.";toast(e.message,true)}finally{busy(false)}}
 function confirmSimple(title,body,type){openModal(title,`<div class="provider-note">${esc(body)}</div>`,`<button class="btn soft" data-close-modal>Keep booking</button><button class="btn danger" data-confirm-simple="${esc(type)}">Confirm cancellation</button>`)}
 async function refreshBooking(){const id=state.bookingDetail?.booking?.id;if(!id)return;const r=await request("MY_PROFILE_BOOKING_DETAIL",{bookingId:id});state.bookingDetail=r.result||r;renderBookingDetail()}
+function profilePayload(form){return {firstName:form.firstName.value.trim(),lastName:form.lastName.value.trim(),email:form.email.value.trim(),phone:form.phone.value.trim(),countryOfResidenceId:form.countryOfResidenceId.value,preferredLanguageId:form.preferredLanguageId.value,preferredCurrency:form.preferredCurrency.value,preferredDepartureAirportId:form.preferredDepartureAirportId.value,seatPreference:form.seatPreference.value,dietaryPrefs:form.dietaryPrefs.value.trim(),accessibilityNeeds:form.accessibilityNeeds.value.trim(),marketingConsent:form.marketingConsent.checked}}
 async function refresh(){busy(true);try{const r=await request("MY_PROFILE_REFRESH",{section:state.section,view:state.view});if(r.result?.profile||r.profile){state.data=r.result||r;renderAll()}}catch(e){toast(e.message,true)}finally{busy(false)}}
-
 document.addEventListener("click",async e=>{
-  if(e.target.closest("#mobileMenuBtn")){toggleMobileMenu(true);return}
-  if(e.target.closest("#closeMobileMenu")||e.target.id==="mobileNavShade"){toggleMobileMenu(false);return}
-  const unlock=e.target.closest("[data-unlock-card]");if(unlock){state.editCard=unlock.dataset.unlockCard;renderProfileSummary();return}
-  if(e.target.closest("[data-cancel-card]")){state.editCard=null;renderProfileSummary();return}
-  if(e.target.id==="unsubscribeAllBtn"){await saveProfileChanges({marketingConsent:false,smsConsent:false,personalizationConsent:false});toast("Unsubscribed from marketing communications.");return}
-  if(e.target.id==="logoutBtn"){post("MY_PROFILE_LOGOUT");return}
   const cat=e.target.closest("[data-category-toggle]");if(cat){const wrap=cat.closest(".side-category");const willOpen=!wrap.classList.contains("open");wrap.classList.toggle("open",willOpen);cat.setAttribute("aria-expanded",willOpen?"true":"false");return}
   const page=e.target.closest("[data-section][data-view]");if(page){setPage(page.dataset.section,page.dataset.view,true);return}
+  const supportCase=e.target.closest("[data-support-case]");if(supportCase){openSupportCase(supportCase.dataset.supportCase);return}
+  if(e.target.id==="supportRefresh"){loadSupport(true).catch(()=>{});return}
+  if(e.target.id==="supportDuffel"){const c=state.support.detail?.case;if(c?.caseId)post("MY_PROFILE_NAVIGATE",{path:`/my-profile/travel-assistance?caseId=${encodeURIComponent(c.caseId)}`});return}
   if(e.target.id==="linkBookingBtn"){linkBookingModal();return}
   if(e.target.id==="confirmLinkBooking"){const f=$("linkBookingForm");if(!f?.reportValidity())return;busy(true);try{const data=Object.fromEntries(new FormData(f).entries());await request("MY_PROFILE_LINK_BOOKING",data);toast("Booking linked to your profile.");closeModal();state.section="trips";state.view="upcoming";await refresh()}catch(x){toast(x.message,true)}finally{busy(false)}return}
   if(e.target.id==="refreshBtn"){post("CUSTOMER_DOCUMENT_REFRESH",{bookingId:state.bookingDetail?.booking?.id||""},DOC_SOURCE);await refresh();return}
@@ -3870,37 +3615,15 @@ document.addEventListener("click",async e=>{
   const simple=e.target.closest("[data-confirm-simple]");if(simple){busy(true);try{await request(simple.dataset.confirmSimple,{bookingId:state.bookingDetail.booking.id});toast("Cancellation request completed.");closeModal();await refreshBooking()}catch(x){toast(x.message,true)}finally{busy(false)}return}
   const sel=e.target.closest("[data-select-change]");if(sel){selectChange(sel.dataset.selectChange,sel.dataset.changeAmount);return}
   if(e.target.id==="searchChangesBtn"){searchChanges();return}if(e.target.id==="prepareBagsBtn"){prepareBags();return}if(e.target.id==="confirmPaymentBtn"){confirmPayment();return}
-  if(e.target.id==="saveTravelerModal"){const f=$("travelerForm");if(!f?.reportValidity())return;const data=Object.fromEntries(new FormData(f).entries());data.isPrimary=f.isPrimary.checked;if(window.parent===window){const list=arr(state.data.travelers);if(data.id){const idx=list.findIndex(x=>x.id===data.id);if(idx>-1)list[idx]={...list[idx],...data}}else{list.push({...data,id:`trv_${Date.now()}`})}state.data.travelers=list;renderTravelers();closeModal();toast("Traveler saved locally.");return}busy(true);try{await request("MY_PROFILE_SAVE_TRAVELER",{traveler:data});toast("Traveler saved.");closeModal();await refresh()}catch(x){toast(x.message,true)}finally{busy(false)}return}
+  if(e.target.id==="saveTravelerModal"){const f=$("travelerForm"),data=Object.fromEntries(new FormData(f).entries());data.isPrimary=f.isPrimary.checked;busy(true);try{await request("MY_PROFILE_SAVE_TRAVELER",{traveler:data});toast("Traveler saved.");closeModal();await refresh()}catch(x){toast(x.message,true)}finally{busy(false)}return}
 });
-
-// Handle inline SAS card form submissions & instant communication switch toggles
-document.addEventListener("submit", async e=>{
-  if(e.target.id==="sasPersonalForm"||e.target.id==="sasPassportForm"||e.target.id==="sasAirportForm"){
-    e.preventDefault();
-    const formData = Object.fromEntries(new FormData(e.target).entries());
-    await saveProfileChanges(formData);
-  }
-});
-document.addEventListener("change", async e=>{
-  const toggle = e.target.closest("[data-comm-toggle]");
-  if(toggle){
-    const key = toggle.dataset.commToggle;
-    await saveProfileChanges({ [key]: toggle.checked });
-  }
-});
-
-$("addTraveler")?.addEventListener("click",()=>travelerModal({}));$("closeDrawer")?.addEventListener("click",closeDrawer);$("drawerShade")?.addEventListener("click",closeDrawer);$("closeModal")?.addEventListener("click",closeModal);$("modalShade")?.addEventListener("click",e=>{if(e.target===$("modalShade"))closeModal()});
-window.addEventListener("message",e=>{let m=e.data;if(typeof m==="string"){try{m=JSON.parse(m)}catch{return}}if(!m||typeof m!=="object")return;if(m.source&&m.source!==PARENT)return;const p=m.payload||{};if(m.type==="MY_PROFILE_DATA"){state.data={...structuredClone(DEFAULT_DATA), ...p, profile:{...DEFAULT_DATA.profile, ...(p.profile||{})}, club:{...DEFAULT_DATA.club, ...(p.club||{})}, references:{...DEFAULT_DATA.references, ...(p.references||{})}};state.legacyDocuments=null;renderAll();return}if(m.type==="MY_PROFILE_RESULT"){const h=state.pending.get(p.requestId);if(h){clearTimeout(h.t);state.pending.delete(p.requestId);h.resolve(p)}return}if(m.type==="MY_PROFILE_ERROR"){const h=state.pending.get(p.requestId);if(h){clearTimeout(h.t);state.pending.delete(p.requestId);h.reject(new Error(p.message||"The request failed."))}else toast(p.message||"The request failed.",true);return}if(m.type==="MY_PROFILE_SET_PAGE"){setPage(p.section||"club",p.view||"overview");return}if(m.type==="MY_PROFILE_SET_TAB"){setTab(p.tab||"overview");return}if(m.type==="MY_PROFILE_URL_SYNC_ERROR"){toast("Section opened, but the browser URL could not be updated.",true);return}if(m.type==="CUSTOMER_DOCUMENTS_LOAD"){state.legacyDocuments=arr(p.documents);renderDocuments();renderTrips();return}if(m.type==="CUSTOMER_DOCUMENT_RESULT"){const doc=p.document||{};if(doc.fileUrl){window.open(doc.fileUrl,"_blank","noopener")}else toast("This document has no downloadable file yet.")}if(m.type==="CUSTOMER_DOCUMENT_ACTION_REQUIRED"){const doc=p.document||{};if(doc.bookingId){setPage("trips","upcoming",false);toast("This booking needs your attention. Open the trip to continue.")}else{setPage("profile","travelers",false);toast("Complete the requested traveler information here.")}return}if(m.type==="CUSTOMER_DOCUMENT_ERROR")toast(p.message||"Document request failed.",true)});
-
-const qs=new URLSearchParams(location.search);
-if(qs.get("section")) state.section = qs.get("section");
-if(qs.get("view")) state.view = qs.get("view");
-if(qs.get("tab")) setTab(qs.get("tab"), false);
-
-renderAll();
-
-post("MY_PROFILE_READY",{section:state.section,view:state.view,tab:qs.get("tab")||""});
-post("CUSTOMER_DOCUMENT_CENTER_READY",{},DOC_SOURCE);
+$("supportSearch")?.addEventListener("input",drawSupportCases);
+$("supportCategory")?.addEventListener("change",renderSupportRequirements);
+$("supportNewForm")?.addEventListener("submit",submitSupportCase);
+$("supportReplyForm")?.addEventListener("submit",async e=>{e.preventDefault();const content=$("supportReplyText").value.trim(),caseId=state.support.selectedCaseId;if(!content||!caseId)return;const button=e.currentTarget.querySelector('button[type="submit"]');button.disabled=true;supportStatus("Sending your reply...");try{const r=await request("MY_PROFILE_SUPPORT_REPLY",{caseId,content});if(!(r.result||{}).ok)throw Error("The server did not confirm the reply.");$("supportReplyText").value="";await openSupportCase(caseId)}catch(x){supportStatus(x.message,true)}finally{button.disabled=false}});
+$("addTraveler")?.addEventListener("click",()=>travelerModal({}));$("closeDrawer")?.addEventListener("click",closeDrawer);$("drawerShade")?.addEventListener("click",closeDrawer);$("closeModal")?.addEventListener("click",closeModal);$("modalShade")?.addEventListener("click",e=>{if(e.target===$("modalShade"))closeModal()});$("logoutBtn")?.addEventListener("click",()=>post("MY_PROFILE_LOGOUT"));$("profileForm")?.addEventListener("submit",async e=>{e.preventDefault();busy(true);try{const r=await request("MY_PROFILE_SAVE_PROFILE",{profile:profilePayload(e.currentTarget)}),data=r.result||r;toast("Preferences saved.");if(data.providerSync){const note=$("providerSyncNote");note.classList.remove("hidden");note.textContent=data.providerSync.ok?"Travel supplier profile synchronized.":data.providerSync.skipped?data.providerSync.reason:`Profile saved. Supplier sync will retry later: ${data.providerSync.error?.message||"unavailable"}`}await refresh()}catch(x){toast(x.message,true)}finally{busy(false)}});
+window.addEventListener("message",e=>{let m=e.data;if(typeof m==="string"){try{m=JSON.parse(m)}catch{return}}if(!m||typeof m!=="object")return;if(m.source&&m.source!==PARENT)return;const p=m.payload||{};if(m.type==="MY_PROFILE_DATA"){state.data=p;state.legacyDocuments=null;renderAll();return}if(m.type==="MY_PROFILE_RESULT"){const h=state.pending.get(p.requestId);if(h){clearTimeout(h.t);state.pending.delete(p.requestId);h.resolve(p)}return}if(m.type==="MY_PROFILE_ERROR"){const h=state.pending.get(p.requestId);if(h){clearTimeout(h.t);state.pending.delete(p.requestId);h.reject(new Error(p.message||"The request failed."))}else toast(p.message||"The request failed.",true);return}if(m.type==="MY_PROFILE_SET_PAGE"){setPage(p.section||"club",p.view||"overview");return}if(m.type==="MY_PROFILE_SET_TAB"){setTab(p.tab||"overview");return}if(m.type==="MY_PROFILE_URL_SYNC_ERROR"){toast("Section opened, but the browser URL could not be updated.",true);return}if(m.type==="CUSTOMER_DOCUMENTS_LOAD"){state.legacyDocuments=arr(p.documents);renderDocuments();renderTrips();return}if(m.type==="CUSTOMER_DOCUMENT_RESULT"){const doc=p.document||{};if(doc.fileUrl){window.open(doc.fileUrl,"_blank","noopener")}else toast("This document has no downloadable file yet.")}if(m.type==="CUSTOMER_DOCUMENT_ACTION_REQUIRED"){const doc=p.document||{};if(doc.bookingId){setPage("trips","upcoming",false);toast("This booking needs your attention. Open the trip to continue.")}else{setPage("profile","travelers",false);toast("Complete the requested traveler information here.")}return}if(m.type==="CUSTOMER_DOCUMENT_ERROR")toast(p.message||"Document request failed.",true)});
+const qs=new URLSearchParams(location.search);post("MY_PROFILE_READY",{section:qs.get("section")||"club",view:qs.get("view")||"overview",tab:qs.get("tab")||""});post("CUSTOMER_DOCUMENT_CENTER_READY",{},DOC_SOURCE);
 })();
 
 
