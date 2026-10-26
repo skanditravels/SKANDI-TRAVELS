@@ -20,7 +20,26 @@
       "sources": [
         "SKANDI_HOME",
         "SKANDI_HOME_LONG_DISCOVERY_V2",
-        "SKANDI_HOME_OLD_STYLE"
+        "SKANDI_HOME_OLD_STYLE",
+        "SKANDI_BOOKING_OFFER"
+      ],
+      "components": [
+        {
+          "key": "booking-flow",
+          "sourceDirectory": "skandi-embeds/booking-flow",
+          "stem": "skandi-booking-flow",
+          "mount": "skandi-booking-flow-root",
+          "sources": [
+            "SKANDI_BOOKING_OFFER"
+          ],
+          "status": "COMPLETE SOURCE",
+          "files": [
+            "skandi-embeds/booking-flow/skandi-booking-flow.html",
+            "skandi-embeds/booking-flow/skandi-booking-flow.css",
+            "skandi-embeds/booking-flow/skandi-booking-flow.js"
+          ],
+          "missing": []
+        }
       ],
       "binding": "explicit",
       "requiresStaff": false,
@@ -36,6 +55,7 @@
         "src/backend/SKANDI_CORE/homeContent.web.js"
       ],
       "messages": [
+        "BOOKING_HOST_UNAVAILABLE",
         "HOME",
         "HOME_APP_DRAWER_RESIZE",
         "HOME_APP_DRAWER_RESIZE_ACK",
@@ -47,7 +67,9 @@
         "HOME_APP_REFRESH",
         "HOME_APP_REFRESH_ERROR",
         "HOME_APP_REFRESH_RESULT",
+        "HOME_BOOKING_MODE",
         "HOME_BOOTSTRAP_RESULT",
+        "HOME_CONTENT_MODE",
         "HOME_ERROR",
         "HOME_FOCUS_SEARCH",
         "HOME_HOST_READY",
@@ -67,6 +89,7 @@
         "PENDING",
         "RESIZE_IFRAME",
         "SEARCH_FAILED",
+        "SKANDI_BOOKING_OFFER",
         "SKANDI_HOME",
         "SKANDI_HOME_LONG_DISCOVERY_V2",
         "SKANDI_HOME_MOBILE_APP",
@@ -78,8 +101,8 @@
       "dynamic": false,
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
-      "sha256": "115b5b2c14e58d2595eae4dd860b99a37c8848b94723633c04025ae38366d2ec",
-      "bytes": 430834
+      "sha256": "6fec05069085cd91d34640f84119b84b55098695946abbfc7d91343727058145",
+      "bytes": 501928
     },
     {
       "key": "search",
@@ -97,6 +120,7 @@
       "sources": [
         "SKANDI_SEARCH_RESULTS"
       ],
+      "components": [],
       "binding": "explicit",
       "requiresStaff": false,
       "status": "BUILT",
@@ -123,8 +147,8 @@
       "dynamic": false,
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
-      "sha256": "6565ac9b97bb3998f84b7043481fad72d013103c3c5d4da1ad0669cc4c51b09c",
-      "bytes": 171808
+      "sha256": "22313293ace71172b664317a862756ce2676be5fa9dba38a9d733d5be54cb1b1",
+      "bytes": 171727
     },
     {
       "key": "flights",
@@ -138,6 +162,7 @@
       "controller": null,
       "embedIds": [],
       "sources": [],
+      "components": [],
       "binding": "explicit",
       "requiresStaff": false,
       "status": "PENDING SOURCE",
@@ -180,6 +205,7 @@
       "sources": [
         "SKANDI_CAR_RENTAL"
       ],
+      "components": [],
       "binding": "explicit",
       "requiresStaff": false,
       "status": "BUILT",
@@ -228,8 +254,8 @@
       "dynamic": false,
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
-      "sha256": "ac49ed97212b2be61f9899a86c000402cc155637999de74dd434a16886e81a51",
-      "bytes": 207352
+      "sha256": "91afddc49aeec4c35abf358f66a476e68dd71eebe5140c2675aa37e6621873d6",
+      "bytes": 207271
     },
     {
       "key": "hotels",
@@ -243,6 +269,7 @@
       "controller": null,
       "embedIds": [],
       "sources": [],
+      "components": [],
       "binding": "explicit",
       "requiresStaff": false,
       "status": "PENDING SOURCE",
@@ -281,6 +308,7 @@
       "controller": null,
       "embedIds": [],
       "sources": [],
+      "components": [],
       "binding": "explicit",
       "requiresStaff": false,
       "status": "PENDING SOURCE",
@@ -319,6 +347,7 @@
       "controller": null,
       "embedIds": [],
       "sources": [],
+      "components": [],
       "binding": "explicit",
       "requiresStaff": false,
       "status": "PENDING SOURCE",
@@ -361,6 +390,7 @@
       "sources": [
         "SKANDI_TOURS_ACTIVITIES"
       ],
+      "components": [],
       "binding": "explicit",
       "requiresStaff": false,
       "status": "BUILT",
@@ -402,8 +432,8 @@
       "dynamic": false,
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
-      "sha256": "e3e845c1f79e8326f56384bd004f33f95d2b06a037238713914a3759f0976297",
-      "bytes": 296068
+      "sha256": "028420a65045e1cf2c6c0a2e387cf73f7a639b9eead3ec130d0795f6e4a6a64c",
+      "bytes": 295987
     },
     {
       "key": "activities",
@@ -417,6 +447,7 @@
       "controller": null,
       "embedIds": [],
       "sources": [],
+      "components": [],
       "binding": "explicit",
       "requiresStaff": false,
       "status": "PENDING SOURCE",
@@ -455,6 +486,7 @@
       "controller": null,
       "embedIds": [],
       "sources": [],
+      "components": [],
       "binding": "explicit",
       "requiresStaff": false,
       "status": "PENDING SOURCE",
@@ -497,6 +529,7 @@
       "sources": [
         "SKANDI_PUBLIC_NETWORK_MAP"
       ],
+      "components": [],
       "binding": "explicit",
       "requiresStaff": false,
       "status": "BUILT",
@@ -522,8 +555,8 @@
       "dynamic": false,
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
-      "sha256": "e0310f45e30a08274c54b9744997151f0c46b73d98b4be3c97ac11fbacec04ea",
-      "bytes": 301054
+      "sha256": "ba3a9fb3dcdf5217e728439ac4a76831443288768bc366c97723f4567f268f50",
+      "bytes": 300973
     },
     {
       "key": "travelInfo",
@@ -543,6 +576,7 @@
       "sources": [
         "SKANDI_PUBLIC_TRAVEL_INFO"
       ],
+      "components": [],
       "binding": "explicit",
       "requiresStaff": false,
       "status": "BUILT",
@@ -609,8 +643,8 @@
       "dynamic": false,
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
-      "sha256": "e98dca1cbb6500b5a54e4f9727ebf8d35e9bd3ed378bcaf0eea69f70bdf3c410",
-      "bytes": 462052
+      "sha256": "6dddd57044060cf6a1056a7d1e4d3662c5754d49482430e45debebf1e9b3f604",
+      "bytes": 461971
     },
     {
       "key": "skandiCollection",
@@ -632,6 +666,7 @@
       "sources": [
         "SKANDI_SIGNATURE_COLLECTION"
       ],
+      "components": [],
       "binding": "explicit",
       "requiresStaff": false,
       "status": "BUILT",
@@ -668,8 +703,8 @@
       "dynamic": false,
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
-      "sha256": "95ebed515abead206a7f9e5ab890d808af0a3c7d1130503dc2705db05a7e8e96",
-      "bytes": 234749
+      "sha256": "d499d0147b391168f33229e5471eb87e20456001ddb47383349330d61d360aae",
+      "bytes": 234668
     },
     {
       "key": "voy",
@@ -685,6 +720,7 @@
         "#voyMagazineEmbed"
       ],
       "sources": [],
+      "components": [],
       "binding": "explicit",
       "requiresStaff": false,
       "status": "PENDING SOURCE",
@@ -746,6 +782,7 @@
       "sources": [
         "SKANDI_CLUB_INFO"
       ],
+      "components": [],
       "binding": "explicit",
       "requiresStaff": false,
       "status": "BUILT",
@@ -778,8 +815,8 @@
       "dynamic": false,
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
-      "sha256": "15b59c41f1f7c0a992f1dae4120b0f19a3f3ee2205a858c22063db4b7f921cd2",
-      "bytes": 174949
+      "sha256": "819f81dcc5ac9c67099d4b32249fb1fd561297868e10491d1aa02f496aae4661",
+      "bytes": 174868
     },
     {
       "key": "forgotPassword",
@@ -797,6 +834,7 @@
       "sources": [
         "SKANDI_FORGOT_PASSWORD"
       ],
+      "components": [],
       "binding": "explicit",
       "requiresStaff": false,
       "status": "BUILT",
@@ -820,8 +858,8 @@
       "dynamic": false,
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
-      "sha256": "5dc23cd91f3e85581b2f46a7ea26a7ff955f7a7df7055f2b06e8766e43f43d38",
-      "bytes": 145512
+      "sha256": "b47c39404bf523e5c5bce58fdd5132f7cefa0645915c752e4d86045fc6a0fa31",
+      "bytes": 145431
     },
     {
       "key": "about",
@@ -839,6 +877,7 @@
       "sources": [
         "SKANDI_ABOUT_PAGE"
       ],
+      "components": [],
       "binding": "explicit",
       "requiresStaff": false,
       "status": "BUILT",
@@ -867,8 +906,8 @@
       "dynamic": false,
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
-      "sha256": "31513fd1157a1d2b83cacf554f98cfb2c0433307bad84e337ee61f11db643830",
-      "bytes": 197111
+      "sha256": "dd6ac0336d76ac05b1a31f8285a6a63480cf28e66070de221bd8fbc8fb7438a4",
+      "bytes": 197030
     },
     {
       "key": "support",
@@ -889,6 +928,7 @@
         "help-center",
         "SKANDI_SUPPORT_PUBLIC"
       ],
+      "components": [],
       "binding": "multi-component",
       "requiresStaff": false,
       "status": "BLOCKED INTEGRATION",
@@ -964,6 +1004,7 @@
       "sources": [
         "SKANDI_PUBLIC_NEWSROOM"
       ],
+      "components": [],
       "binding": "explicit",
       "requiresStaff": false,
       "status": "BUILT",
@@ -994,8 +1035,8 @@
       "dynamic": false,
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
-      "sha256": "b21ccdac60fcca2b955c7636b0b5bbb29590e8776cd196221f9a1341b6430245",
-      "bytes": 176910
+      "sha256": "2726fa84c75d5077bcfc290909ac27275975060aaf67b511c59877ddd018078b",
+      "bytes": 176829
     },
     {
       "key": "theStore",
@@ -1013,6 +1054,7 @@
       "sources": [
         "SKANDI_STOREFRONT"
       ],
+      "components": [],
       "binding": "explicit",
       "requiresStaff": false,
       "status": "BUILT",
@@ -1072,6 +1114,7 @@
       "controller": null,
       "embedIds": [],
       "sources": [],
+      "components": [],
       "binding": "explicit",
       "requiresStaff": false,
       "status": "PENDING SOURCE",
@@ -1114,6 +1157,7 @@
       "sources": [
         "SKANDI_STORE_CHECKOUT"
       ],
+      "components": [],
       "binding": "explicit",
       "requiresStaff": false,
       "status": "BUILT",
@@ -1175,6 +1219,7 @@
       "sources": [
         "SKANDI_STORE_CONFIRMATION"
       ],
+      "components": [],
       "binding": "explicit",
       "requiresStaff": false,
       "status": "BUILT",
@@ -1221,6 +1266,7 @@
       "controller": null,
       "embedIds": [],
       "sources": [],
+      "components": [],
       "binding": "explicit",
       "requiresStaff": false,
       "status": "PENDING SOURCE",
@@ -1263,6 +1309,7 @@
       "sources": [
         "SKANDI_LEGAL_HUB"
       ],
+      "components": [],
       "binding": "explicit",
       "requiresStaff": false,
       "status": "BUILT",
@@ -1292,8 +1339,8 @@
       "dynamic": false,
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
-      "sha256": "b85a6768447e9476b8efa7d1e9d444e74c81f3d651f05a486766fa5a93fb4046",
-      "bytes": 164728
+      "sha256": "c2e7f88e7915b0244359c24a018b0a441fcbdc00dbc155d808f8fdf191391f44",
+      "bytes": 164647
     },
     {
       "key": "policies",
@@ -1311,6 +1358,7 @@
       "sources": [
         "SKANDI_LEGAL_DOCUMENT"
       ],
+      "components": [],
       "binding": "explicit",
       "requiresStaff": false,
       "status": "BUILT",
@@ -1347,8 +1395,8 @@
       "dynamic": false,
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
-      "sha256": "d73f81b247abe1304f49a495d7787413e77a2771f4c6fdde74f14e1e192b7afe",
-      "bytes": 193368
+      "sha256": "b6a52cff5d88806cb86ed599e659da20f47ca8f4c5dab4632e98d309c1fdb1f2",
+      "bytes": 193287
     },
     {
       "key": "cookiePreferences",
@@ -1366,6 +1414,7 @@
       "sources": [
         "SKANDI_COOKIE_PREFERENCES"
       ],
+      "components": [],
       "binding": "explicit",
       "requiresStaff": false,
       "status": "BUILT",
@@ -1483,8 +1532,8 @@
       "dynamic": false,
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
-      "sha256": "5d21dfa69bb62af54d327bd0985207bcab973812cad67b80bb61a0ad8869a0ec",
-      "bytes": 151486
+      "sha256": "e441971c61682926a31d1d7878289fa2fd4ea8fb3d7122476c791352d9899fae",
+      "bytes": 151405
     },
     {
       "key": "riaintra",
@@ -1502,6 +1551,7 @@
       "sources": [
         "SKANDI_STAFF_LOGIN"
       ],
+      "components": [],
       "binding": "explicit",
       "requiresStaff": false,
       "status": "BUILT",
@@ -1547,6 +1597,7 @@
       "embedIds": [
         "#staffLoginEmbed"
       ],
+      "legacyRedirect": false,
       "targetStatus": "BUILT"
     },
     {
@@ -1563,6 +1614,7 @@
         "#staffHrEmbed"
       ],
       "sources": [],
+      "components": [],
       "binding": "explicit",
       "requiresStaff": true,
       "status": "BUILT",
@@ -1689,6 +1741,7 @@
         "#internalLegalHubEmbed"
       ],
       "sources": [],
+      "components": [],
       "binding": "explicit",
       "requiresStaff": true,
       "status": "BUILT",
@@ -1733,6 +1786,7 @@
       "sources": [
         "SKANDI_ALTEA_LAUNCHPAD"
       ],
+      "components": [],
       "binding": "handshake",
       "requiresStaff": true,
       "status": "BUILT",
@@ -1795,6 +1849,7 @@
       "sources": [
         "SKANDI_DUFFEL_RESERVATIONS"
       ],
+      "components": [],
       "binding": "explicit",
       "requiresStaff": true,
       "status": "BUILT",
@@ -1846,6 +1901,7 @@
       "sources": [
         "SKANDI_OPS_CONTROL"
       ],
+      "components": [],
       "binding": "explicit",
       "requiresStaff": true,
       "status": "BUILT",
@@ -1896,6 +1952,7 @@
       "sources": [
         "SKANDI_INVENTORY_EMBED"
       ],
+      "components": [],
       "binding": "explicit",
       "requiresStaff": true,
       "status": "FAILED",
@@ -1946,6 +2003,7 @@
       "sources": [
         "SKANDI_UNIFORM_EMPLOYEE"
       ],
+      "components": [],
       "binding": "explicit",
       "requiresStaff": true,
       "status": "BUILT",
@@ -1997,6 +2055,7 @@
         "#uniformControlEmbed"
       ],
       "sources": [],
+      "components": [],
       "binding": "explicit",
       "requiresStaff": true,
       "status": "PENDING SOURCE",
@@ -2049,6 +2108,7 @@
       "controller": null,
       "embedIds": [],
       "sources": [],
+      "components": [],
       "binding": "explicit",
       "requiresStaff": true,
       "status": "PENDING SOURCE",
@@ -2091,6 +2151,7 @@
       "sources": [
         "SKANDI_MAIL_EMBED"
       ],
+      "components": [],
       "binding": "explicit",
       "requiresStaff": true,
       "status": "BUILT",
@@ -2157,6 +2218,7 @@
         "#docuNetViewerEmbed"
       ],
       "sources": [],
+      "components": [],
       "binding": "explicit",
       "requiresStaff": true,
       "status": "BUILT",
@@ -2204,6 +2266,7 @@
       "sources": [
         "SKANDI_DOCUNET_ADMIN"
       ],
+      "components": [],
       "binding": "explicit",
       "requiresStaff": true,
       "status": "FAILED",
@@ -2272,6 +2335,7 @@
       "controller": null,
       "embedIds": [],
       "sources": [],
+      "components": [],
       "binding": "explicit",
       "requiresStaff": true,
       "status": "PENDING SOURCE",
@@ -2312,6 +2376,7 @@
         "#policyControlEmbed"
       ],
       "sources": [],
+      "components": [],
       "binding": "explicit",
       "requiresStaff": true,
       "status": "BUILT",
@@ -2366,6 +2431,7 @@
         "#mediaControlEmbed"
       ],
       "sources": [],
+      "components": [],
       "binding": "explicit",
       "requiresStaff": true,
       "status": "BUILT",
@@ -2510,6 +2576,7 @@
       "sources": [
         "SKANDI_STORE_CONTROL_V3"
       ],
+      "components": [],
       "binding": "explicit",
       "requiresStaff": true,
       "status": "BUILT",
@@ -2577,6 +2644,7 @@
         "#payrollStaffEmbed"
       ],
       "sources": [],
+      "components": [],
       "binding": "explicit",
       "requiresStaff": true,
       "status": "BUILT",
@@ -2627,6 +2695,7 @@
       "sources": [
         "SKANDI_DYNAMIC_COUNTRY_PAGE"
       ],
+      "components": [],
       "binding": "handshake",
       "requiresStaff": false,
       "status": "BUILT",
@@ -2682,96 +2751,27 @@
       "dynamic": false,
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
-      "sha256": "b2bfc6abcba4fd8f1493cd917aa4a023244abd88720cd6777a0cfc1610bafc02",
-      "bytes": 374640
+      "sha256": "ce3e981980a7ff2d976591588c4070bb41ba76f5b51d09d616e54139bff44963",
+      "bytes": 374559
     },
     {
       "key": "bookingFlow",
-      "route": "/booking",
-      "slug": "booking-flow",
-      "title": "Booking",
+      "route": "/",
+      "status": "ALIAS",
+      "aliasOf": "home",
+      "slug": "home",
       "family": "public",
-      "chrome": "none",
-      "sourceDirectory": "skandi-embeds/booking-flow",
-      "stem": "skandi-booking-flow",
+      "chrome": "public",
+      "sourceDirectory": "skandi-embeds/home",
+      "stem": "skandi-home",
       "controller": "src/pages/Booking.e8twe.js",
       "embedIds": [
-        "#bookingFlowEmbed"
+        "#htmlHome",
+        "#htmlhome",
+        "#home"
       ],
-      "sources": [
-        "SKANDI_BOOKING_OFFER"
-      ],
-      "binding": "explicit",
-      "requiresStaff": false,
-      "status": "BUILT",
-      "files": [
-        "skandi-embeds/booking-flow/skandi-booking-flow.html",
-        "skandi-embeds/booking-flow/skandi-booking-flow.css",
-        "skandi-embeds/booking-flow/skandi-booking-flow.js"
-      ],
-      "missing": [],
-      "issues": [],
-      "backend": [
-        "src/backend/SKANDI_CORE/customerBooking.web.js"
-      ],
-      "messages": [
-        "APIS_CART_RULES_LOADED",
-        "APIS_REQUIREMENTS_RESULT",
-        "APIS_RULES_REFRESH",
-        "APIS_SAVE_AND_CONTINUE",
-        "BOOKING",
-        "BOOKING_BACK_TO_RESULTS",
-        "BOOKING_CART_ACCESS_DENIED",
-        "BOOKING_CART_AUTH",
-        "BOOKING_CART_LOADED",
-        "BOOKING_DOCUMENTS_LOADED",
-        "BOOKING_ERROR",
-        "BOOKING_EXTRAS_LOADED",
-        "BOOKING_EXTRAS_SAVE",
-        "BOOKING_HOST_READY",
-        "BOOKING_HOTEL_CONTINUE",
-        "BOOKING_LIVE_OFFER_INVALID",
-        "BOOKING_NAVIGATE",
-        "BOOKING_OFFER_ACCEPTED",
-        "BOOKING_OFFER_READY",
-        "BOOKING_PAYMENT_NOT_COMPLETE",
-        "BOOKING_RECONCILIATION_REQUIRED",
-        "BOOKING_REQUEST_FAILED",
-        "BOOKING_RETRY",
-        "BOOKING_SEARCH_LOADING",
-        "BOOKING_SEARCH_REFRESH",
-        "BOOKING_SEARCH_RESULTS",
-        "BOOKING_SEARCH_SELECT",
-        "BOOKING_STEP_ACTIVE",
-        "BOOKING_TIMEOUT",
-        "BOOKING_UPSELL_CONTINUE",
-        "CAR_RENTAL_ONLY",
-        "CONFIRMATION_LOADED",
-        "HOTEL_ONLY",
-        "LOGIN_REQUIRED",
-        "MIXED_PACKAGE",
-        "PACKAGE",
-        "PAYMENT_COMMIT",
-        "PAYMENT_PROGRESS",
-        "PAYMENT_SESSION_LOADED",
-        "SEATMAP_LOADED",
-        "SEATMAP_SAVE",
-        "SEATMAP_SKIP",
-        "SIGNATURE_TRANSFER_OPTIONS",
-        "SIGNATURE_TRANSFER_SELECT",
-        "SIGNATURE_TRANSFER_SKIP",
-        "SKANDI_BOOKING_CART_ID",
-        "SKANDI_BOOKING_CART_TOKEN",
-        "SKANDI_BOOKING_OFFER",
-        "SKANDI_WIX_PARENT",
-        "TERMS_REQUIRED"
-      ],
-      "output": "dist/booking-flow/index.html",
-      "dynamic": false,
-      "sourceStatus": "COMPLETE SOURCE",
-      "blockers": [],
-      "sha256": "f1dfed706dcb1da12111b956b1e246e99f88a5310a86203b144142d71aedc8bd",
-      "bytes": 78614
+      "legacyRedirect": true,
+      "targetStatus": "BUILT"
     },
     {
       "key": "myProfile",
@@ -2789,6 +2789,7 @@
       "sources": [
         "SKANDI_MY_PROFILE"
       ],
+      "components": [],
       "binding": "explicit",
       "requiresStaff": false,
       "status": "BUILT",
@@ -2863,8 +2864,8 @@
       "dynamic": false,
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
-      "sha256": "4e7a61199f1695b58509a5a41d30d9ab30e8254919547ee03716dd32d40266eb",
-      "bytes": 276537
+      "sha256": "470cdf3c472a501c9fd84e84742cfa4d3a5db05072ac95771a41317ac66cfc92",
+      "bytes": 276449
     },
     {
       "key": "myTrips",
@@ -2880,6 +2881,7 @@
       "embedIds": [
         "#htmlMyProfile"
       ],
+      "legacyRedirect": false,
       "targetStatus": "BUILT"
     },
     {
@@ -2898,6 +2900,7 @@
       "sources": [
         "SKANDI_CAREERS_HUB"
       ],
+      "components": [],
       "binding": "explicit",
       "requiresStaff": false,
       "status": "PENDING SOURCE",
@@ -2969,6 +2972,7 @@
       "sources": [
         "SKANDI_MYROSTER_EMBED"
       ],
+      "components": [],
       "binding": "explicit",
       "requiresStaff": true,
       "status": "PENDING SOURCE",
@@ -3041,6 +3045,7 @@
       "sources": [
         "GROUPTALK_HTML"
       ],
+      "components": [],
       "binding": "explicit",
       "requiresStaff": true,
       "status": "BUILT",
@@ -3127,6 +3132,7 @@
       "sources": [
         "SKANDI_PASSPORT_VISA_PAGE"
       ],
+      "components": [],
       "binding": "explicit",
       "requiresStaff": false,
       "status": "BUILT",
@@ -3160,8 +3166,8 @@
       "dynamic": false,
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
-      "sha256": "1a748a605a34a4fa3ea547fe6e5cf288a9a00a57d78d42f8ee2d4d9da1c599eb",
-      "bytes": 181537
+      "sha256": "cb203de0113bfc3d46e37dc1d7247affd5075bc44d35c6b1744158cca49f063c",
+      "bytes": 181456
     },
     {
       "key": "baggageAllowance",
@@ -3179,6 +3185,7 @@
       "sources": [
         "SKANDI_BAGGAGE_PAGE"
       ],
+      "components": [],
       "binding": "explicit",
       "requiresStaff": false,
       "status": "BUILT",
@@ -3207,8 +3214,8 @@
       "dynamic": false,
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
-      "sha256": "14ed0b74e76a6aeccba0757a8eb520b521c970420aec24201002274bad59c0a8",
-      "bytes": 179809
+      "sha256": "258f5ebeab22ee2bb55118cb897d3b51b0f0fab14befb7c8790b9d21cbad3ecd",
+      "bytes": 179728
     },
     {
       "key": "travelInsurance",
@@ -3226,6 +3233,7 @@
       "sources": [
         "SKANDI_INSURANCE_PAGE"
       ],
+      "components": [],
       "binding": "explicit",
       "requiresStaff": false,
       "status": "BUILT",
@@ -3256,8 +3264,8 @@
       "dynamic": false,
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
-      "sha256": "3a2cc275b5e8da9124b589a1c03b79c5ee6d5045de93d535ac5d0e0d0c13ed1a",
-      "bytes": 169613
+      "sha256": "a552b80da52692eb3e248d4795615127653814e5623b6d98b512c696dd32fbf9",
+      "bytes": 169532
     },
     {
       "key": "specialAssistance",
@@ -3273,6 +3281,7 @@
       "sources": [
         "SKANDI_ASSISTANCE_PAGE"
       ],
+      "components": [],
       "binding": "handshake",
       "requiresStaff": false,
       "status": "BUILT",
@@ -3390,8 +3399,8 @@
       "dynamic": false,
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
-      "sha256": "6e82b9bd7d7c5c0eabfda506c3bad34909a1b3cb412eedced743825e263691f5",
-      "bytes": 176421
+      "sha256": "9fee4ce377f8445b65bde946a4333b3c9e96cf6043743d48b2c072b05b0b0d2b",
+      "bytes": 176340
     },
     {
       "key": "flightStatus",
@@ -3409,6 +3418,7 @@
       "sources": [
         "SKANDI_FLIGHT_STATUS"
       ],
+      "components": [],
       "binding": "explicit",
       "requiresStaff": false,
       "status": "BUILT",
@@ -3450,8 +3460,8 @@
       "dynamic": false,
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
-      "sha256": "0d5cad18f167864f3840c04548a34dfd2291ba4459583bfb11d0cea08502b975",
-      "bytes": 319503
+      "sha256": "d35f9a2ae1e80f07b1bec3897a954d468521942a5b409c70406d816570151611",
+      "bytes": 319422
     }
   ],
   "globalComponents": {
@@ -3497,5 +3507,11 @@
       }
     ]
   },
-  "orphanedArtifacts": []
+  "orphanedArtifacts": [
+    {
+      "path": "dist/booking-flow/index.html",
+      "status": "RETAINED UNREGISTERED ARTIFACT",
+      "advertised": false
+    }
+  ]
 }

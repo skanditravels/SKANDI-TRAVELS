@@ -3183,7 +3183,7 @@ const document=new Proxy(window.document,{get(target,key){if(key==='getElementBy
 const SOURCE='SKANDI_HOME_MOBILE_APP';
   const PARENT='SKANDI_WIX_PARENT';
   const ROUTE_FALLBACKS=Object.freeze({
-    home:'/', destinations:'/destinations', bookingFlow:'/booking',
+    home:'/', destinations:'/destinations', 
     myTrips:'/my-profile?tab=trips', myProfile:'/my-profile'
   });
   const defaults={
@@ -3222,7 +3222,6 @@ const SOURCE='SKANDI_HOME_MOBILE_APP';
     let active='';
     if(normalized==='/')active='home';
     else if(normalized.startsWith('/destinations'))active='destinations';
-    else if(normalized==='/booking')active='bookingFlow';
     else if(normalized.startsWith('/my-profile')&&(/(?:\?|&)tab=trips(?:&|$)/.test(current)))active='myTrips';
     for(const button of BUTTONS){
       if(button.dataset.route===active)button.setAttribute('aria-current','page');
