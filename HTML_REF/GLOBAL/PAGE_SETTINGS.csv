@@ -11,7 +11,6 @@ transfers,/transfers,APP_VIEWPORT_PUBLIC,Customer 118px base,Customer ON,calc(10
 destinations,/destinations,CONTENT_AUTO,Customer 118px base,Customer ON,680px min; grows with embed,W 100%; H runtime 680–30000,Wix page,Hide,Show
 country,/destinations/country,CONTENT_AUTO,Customer 118px base,Customer ON,680px min; grows with embed,W 100%; H runtime 680–30000,Wix page,Hide,Show
 destination,/destinations/country/destination,CONTENT_AUTO,Customer 118px base,Customer ON,680px min; grows with embed,W 100%; H runtime 680–30000,Wix page,Hide,Show
-offers,/offers,APP_VIEWPORT_PUBLIC,Customer 118px base,Customer ON,calc(100vh - 118px),W/H 100%,Embed,Hide,Hide
 travelInfo,/travel-info,CONTENT_AUTO,Customer 118px base,Customer ON,680px min; grows with embed,W 100%; H runtime 680–30000,Wix page,Hide,Show
 skandiCollection,/skandi-collection,CONTENT_AUTO,Customer 118px base,Customer ON,680px min; grows with embed,W 100%; H runtime 680–30000,Wix page,Hide,Show
 voy,/voy-magazine,CONTENT_AUTO,Customer 118px base,Customer ON,680px min; grows with embed,W 100%; H runtime 680–30000,Wix page,Hide,Show
@@ -49,7 +48,7 @@ uniformCenter,/riaintra/success-factors/uniform,APP_VIEWPORT_RIAINTRA,RIA 52px o
 uniformControl,/riaintra/success-factors/uniform/admin-control,APP_VIEWPORT_RIAINTRA,RIA 52px only,RIA ON,calc(100vh - 52px),W/H 100%,Embed,Hide,Hide
 staffDocumentControl,REQUIRES LIVE ROUTE VERIFICATION,APP_VIEWPORT_RIAINTRA,RIA 52px only,RIA ON,calc(100vh - 52px),W/H 100%,Embed,Hide,Hide
 transportCompliance,REQUIRES LIVE ROUTE VERIFICATION,APP_VIEWPORT_RIAINTRA,RIA 52px only,RIA ON,calc(100vh - 52px),W/H 100%,Embed,Hide,Hide
-bookingFlow,/booking,APP_FULLSCREEN_CHROME_FREE,OFF,OFF,100vh,Active state embed 100% W x 100% H,Active embed,Hide,Hide
+bookingFlow,/booking,APP_FULLSCREEN_CHROME_FREE,OFF,OFF,100vh,#bookingFlowEmbed 100% W x 100% H,Single HTML embed,Hide,Hide
 myProfile,/my-profile,APP_VIEWPORT_PUBLIC,Customer 118px base,Customer ON,calc(100vh - 118px),W/H 100%,Embed,Hide,Hide
 myTrips,/my-profile?tab=trips,APP_VIEWPORT_PUBLIC,Customer 118px base,Customer ON,calc(100vh - 118px),W/H 100%,Embed,Hide,Hide
 careers,/about/careers,CONTENT_AUTO,Customer 118px base,Customer ON,680px min; grows with embed,W 100%; H runtime 680–30000,Wix page,Hide,Show
