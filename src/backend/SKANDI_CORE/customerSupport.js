@@ -961,7 +961,7 @@ export async function requestCustomerHumanHandoffCore({ caseId = "", input = {},
       message: clean(input.message || "I would like to chat with a Human SKANDI Customer Service Agent.", 12000),
       bookingRef: clean(input.bookingRef || input.pnr, 80), pnr: clean(input.pnr || input.bookingRef, 80),
       requestedSupportCategory: clean(input.category, 80), requestedSupportTopic: clean(input.subCategory, 160),
-      source: "human-live-chat", sourcePage: "/about/support"
+      source: "human-live-chat", sourcePage: clean(input.sourcePage || "/about/support", 300)
     }, { allowGenericCategory: true });
     id = created.caseId;
   } else await customerCase(id, { adopt: true });
