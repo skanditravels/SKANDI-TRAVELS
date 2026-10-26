@@ -2751,15 +2751,13 @@
       "sources": [],
       "binding": "multi-component",
       "requiresStaff": false,
-      "status": "FAILED",
+      "status": "BLOCKED INTEGRATION",
       "files": [
         "skandi-embeds/booking-flow/skandi-booking-flow.html",
         "skandi-embeds/booking-flow/skandi-booking-flow.css",
         "skandi-embeds/booking-flow/skandi-booking-flow.js"
       ],
-      "missing": [
-        "skandi-embeds/booking-flow/skandi-booking-flow.js"
-      ],
+      "missing": [],
       "issues": [
         "Controller no longer declares #bookingExtrasEmbed",
         "Controller no longer declares #signatureTransferEmbed",
@@ -2828,7 +2826,7 @@
       ],
       "output": null,
       "dynamic": false,
-      "sourceStatus": "INCOMPLETE SOURCE",
+      "sourceStatus": "COMPLETE SOURCE",
       "blockers": [
         "Controller no longer declares #bookingExtrasEmbed",
         "Controller no longer declares #signatureTransferEmbed",
@@ -2840,7 +2838,6 @@
         "src/public/customerAuthUi.js: imported export openCustomerLogin is absent",
         "Retain the eight-step Wix state/HTML components. A single receiver requires a separately verified controller migration."
       ],
-      "error": "[bookingFlow] INCOMPLETE SOURCE: skandi-embeds/booking-flow/skandi-booking-flow.js",
       "retainedArtifact": false
     },
     {

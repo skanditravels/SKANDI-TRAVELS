@@ -52,7 +52,7 @@ Route authority: `src/public/siteMap.js`. This file is generated evidence, not r
 | storeControl | /riaintra/success-factors/store-control | skandi-embeds/store-control/skandi-store-control.{html,css,js} | riaintra / riaintra | src/pages/The Store Control.y10le.js | BUILT |
 | payroll | /riaintra/success-factors/payroll | skandi-embeds/payroll/skandi-payroll.{html,css,js} | riaintra / riaintra | src/pages/Payroll.rzo0a.js | BUILT |
 | country | /destinations/country | skandi-embeds/country/skandi-country.{html,css,js} | public / public | src/pages/Country.nxtpn.js | BLOCKED INTEGRATION |
-| bookingFlow | /booking | skandi-embeds/booking-flow/skandi-booking-flow.{html,css,js} | public / none | src/pages/Booking.e8twe.js | FAILED |
+| bookingFlow | /booking | skandi-embeds/booking-flow/skandi-booking-flow.{html,css,js} | public / none | src/pages/Booking.e8twe.js | BLOCKED INTEGRATION |
 | myProfile | /my-profile | skandi-embeds/my-profile/skandi-my-profile.{html,css,js} | public / public | src/pages/My Club Profile.u4k31.js | BUILT |
 | myTrips | /my-profile?tab=trips | Alias of myProfile | public / public | src/pages/My Club Profile.u4k31.js | ALIAS |
 | careers | /about/careers | skandi-embeds/careers/skandi-careers.{html,css,js} | public / public | src/pages/Work at SKANDI.dyodg.js | PENDING SOURCE |
@@ -123,6 +123,6 @@ These actual repository controllers are preserved. No new route or build is inve
 - **docunetAdmin**: NOT READY: [docunetAdmin / docunet-admin] skandi-embeds/docunet-admin/skandi-docunet-admin.html, skandi-embeds/docunet-admin/skandi-docunet-admin.css, skandi-embeds/docunet-admin/skandi-docunet-admin.js: skandi-embeds/docunet-admin/skandi-docunet-admin.html: nested iframe is not supported; retain the existing Wix integration
 - **serviceDesk**: NOT READY: No verified canonical controller mapping.
 - **country**: NOT READY: src/public/customerAuthUi.js: imported export openCustomerLogin is absent
-- **bookingFlow**: NOT READY: [bookingFlow] INCOMPLETE SOURCE: skandi-embeds/booking-flow/skandi-booking-flow.js
+- **bookingFlow**: NOT READY: Controller no longer declares #bookingExtrasEmbed; Controller no longer declares #signatureTransferEmbed; Controller no longer declares #apisHtml; Controller no longer declares #seatmapEmbed; Controller no longer declares #paymentEmbed; Controller no longer declares #confirmationEmbed; Controller no longer declares #bookingDocumentsEmbed; src/public/customerAuthUi.js: imported export openCustomerLogin is absent; Retain the eight-step Wix state/HTML components. A single receiver requires a separately verified controller migration.
 - **careers**: NOT READY: PENDING SOURCE
 - **myRoster**: NOT READY: src/backend/FINAL/internalChrome.web.js: missing imported module; src/backend/SKANDI_CORE/myRoster.web.js: missing imported module
