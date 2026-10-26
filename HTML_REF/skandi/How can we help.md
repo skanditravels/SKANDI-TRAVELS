@@ -17,6 +17,7 @@
 ### Change log
 - 2026-09-24 — B-011.1: Restyled the supplied Help Center into the shared customer B-011 palette; preserved public support fields/contracts; moved category/topic ownership to canonical Support bootstrap; retained local workflow fallbacks; connected Popular Help Topics/search to canonical Support articles; preserved profile prefill, Alexandra launch, signed-in human handoff, My Support Cases, SKANDI Club login and parent-routed Privacy navigation; no second backend/provider/schema was introduced.
 - 2026-10-12 — Standard Help Center cases now carry explicit durable `help-center` / `HELP_CENTER` source identity through form, shared-chat form and human-handoff creation paths. This lets the master Support Center rank signed-in Member HelpDesk work above standard public cases without reclassifying it as an emergency. STATICALLY VERIFIED; REQUIRES LIVE TEST.
+- 2026-10-26 — Signed-in Help Center case navigation now opens the My Support workspace at `/my-profile?section=support&view=cases`, aligning with the canonical `/my-profile` account route. Existing support forms and backend ownership checks remain unchanged. STATICALLY VERIFIED; REQUIRES LIVE TEST.
 
 ## COMPLETE INTENDED LIVE HTML SOURCE
 
@@ -1441,7 +1442,7 @@ $("mySupportCasesBtn").addEventListener("click",()=>{
     post("PUBLIC_SUPPORT_LOGIN",{reason:"MY_SUPPORT_CASES"});
     return;
   }
-  post("PUBLIC_SUPPORT_NAVIGATE",{path:"/my-profile/support"});
+  post("PUBLIC_SUPPORT_NAVIGATE",{path:"/my-profile?section=support&view=cases"});
 });
 $("clubLoginBtn").addEventListener("click",()=>post("PUBLIC_SUPPORT_LOGIN",{reason:"SKANDI_CLUB_SUPPORT"}));
 
