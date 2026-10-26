@@ -15,7 +15,6 @@ Route authority: `src/public/siteMap.js`. This file is generated evidence, not r
 | activities | /activities | skandi-embeds/activities/skandi-activities.{html,css,js} | public / public | UNVERIFIED | PENDING SOURCE |
 | transfers | /transfers | skandi-embeds/transfers/skandi-transfers.{html,css,js} | public / public | UNVERIFIED | PENDING SOURCE |
 | destinations | /destinations | skandi-embeds/destinations/skandi-destinations.{html,css,js} | public / public | src/pages/Our Destinations.wfe5g.js | BUILT |
-| offers | /offers | skandi-embeds/offers/skandi-offers.{html,css,js} | public / public | UNVERIFIED | PENDING SOURCE |
 | travelInfo | /travel-info | skandi-embeds/travel-info/skandi-travel-info.{html,css,js} | public / public | src/pages/Travel Info.m43d6.js | BUILT |
 | skandiCollection | /skandi-collection | skandi-embeds/skandi-collection/skandi-skandi-collection.{html,css,js} | public / public | src/pages/SKANDI Collection.lo9p5.js | BUILT |
 | voy | /voy-magazine | skandi-embeds/voy/skandi-voy.{html,css,js} | public / public | src/pages/VOY Magazine.gecp7.js | PENDING SOURCE |
@@ -51,8 +50,8 @@ Route authority: `src/public/siteMap.js`. This file is generated evidence, not r
 | mediaControl | /riaintra/success-factors/media-control | skandi-embeds/media-control/skandi-media-control.{html,css,js} | riaintra / riaintra | src/pages/Media Control.chm91.js | BUILT |
 | storeControl | /riaintra/success-factors/store-control | skandi-embeds/store-control/skandi-store-control.{html,css,js} | riaintra / riaintra | src/pages/The Store Control.y10le.js | BUILT |
 | payroll | /riaintra/success-factors/payroll | skandi-embeds/payroll/skandi-payroll.{html,css,js} | riaintra / riaintra | src/pages/Payroll.rzo0a.js | BUILT |
-| country | /destinations/country | skandi-embeds/country/skandi-country.{html,css,js} | public / public | src/pages/Country.nxtpn.js | BLOCKED INTEGRATION |
-| bookingFlow | /booking | skandi-embeds/booking-flow/skandi-booking-flow.{html,css,js} | public / none | src/pages/Booking.e8twe.js | BLOCKED INTEGRATION |
+| country | /destinations/country | skandi-embeds/country/skandi-country.{html,css,js} | public / public | src/pages/Country.nxtpn.js | BUILT |
+| bookingFlow | /booking | skandi-embeds/booking-flow/skandi-booking-flow.{html,css,js} | public / none | src/pages/Booking.e8twe.js | BUILT |
 | myProfile | /my-profile | skandi-embeds/my-profile/skandi-my-profile.{html,css,js} | public / public | src/pages/My Club Profile.u4k31.js | BUILT |
 | myTrips | /my-profile?tab=trips | Alias of myProfile | public / public | src/pages/My Club Profile.u4k31.js | ALIAS |
 | careers | /about/careers | skandi-embeds/careers/skandi-careers.{html,css,js} | public / public | src/pages/Work at SKANDI.dyodg.js | PENDING SOURCE |
@@ -112,9 +111,8 @@ These actual repository controllers are preserved. No new route or build is inve
 - **cruises**: NOT READY: No verified canonical controller mapping.
 - **activities**: NOT READY: No verified canonical controller mapping.
 - **transfers**: NOT READY: No verified canonical controller mapping.
-- **offers**: NOT READY: No verified canonical controller mapping.
 - **voy**: NOT READY: PENDING SOURCE
-- **support**: NOT READY: src/public/customerAuthUi.js: imported export openCustomerLogin is absent; Help Center and support chat are separate HTML components; preserve them until a verified single-component migration.
+- **support**: NOT READY: Help Center and support chat are separate HTML components; preserve them until a verified single-component migration.
 - **giftCard**: NOT READY: No verified canonical controller mapping.
 - **ourNetwork**: NOT READY: No verified canonical controller mapping.
 - **inventoryControl**: NOT READY: [inventoryControl / inventory-control] skandi-embeds/inventory-control/skandi-inventory-control.html, skandi-embeds/inventory-control/skandi-inventory-control.css, skandi-embeds/inventory-control/skandi-inventory-control.js: Cannot use import statement outside a module
@@ -122,7 +120,5 @@ These actual repository controllers are preserved. No new route or build is inve
 - **alteaTimatic**: NOT READY: No verified canonical controller mapping.
 - **docunetAdmin**: NOT READY: [docunetAdmin / docunet-admin] skandi-embeds/docunet-admin/skandi-docunet-admin.html, skandi-embeds/docunet-admin/skandi-docunet-admin.css, skandi-embeds/docunet-admin/skandi-docunet-admin.js: skandi-embeds/docunet-admin/skandi-docunet-admin.html: nested iframe is not supported; retain the existing Wix integration
 - **serviceDesk**: NOT READY: No verified canonical controller mapping.
-- **country**: NOT READY: src/public/customerAuthUi.js: imported export openCustomerLogin is absent
-- **bookingFlow**: NOT READY: Controller no longer declares #bookingExtrasEmbed; Controller no longer declares #signatureTransferEmbed; Controller no longer declares #apisHtml; Controller no longer declares #seatmapEmbed; Controller no longer declares #paymentEmbed; Controller no longer declares #confirmationEmbed; Controller no longer declares #bookingDocumentsEmbed; src/public/customerAuthUi.js: imported export openCustomerLogin is absent; Retain the eight-step Wix state/HTML components. A single receiver requires a separately verified controller migration.
 - **careers**: NOT READY: PENDING SOURCE
 - **myRoster**: NOT READY: src/backend/FINAL/internalChrome.web.js: missing imported module; src/backend/SKANDI_CORE/myRoster.web.js: missing imported module

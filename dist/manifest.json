@@ -526,44 +526,6 @@
       "bytes": 301054
     },
     {
-      "key": "offers",
-      "route": "/offers",
-      "slug": "offers",
-      "title": "Offers",
-      "family": "public",
-      "chrome": "public",
-      "sourceDirectory": "skandi-embeds/offers",
-      "stem": "skandi-offers",
-      "controller": null,
-      "embedIds": [],
-      "sources": [],
-      "binding": "explicit",
-      "requiresStaff": false,
-      "status": "PENDING SOURCE",
-      "files": [
-        "skandi-embeds/offers/skandi-offers.html",
-        "skandi-embeds/offers/skandi-offers.css",
-        "skandi-embeds/offers/skandi-offers.js"
-      ],
-      "missing": [
-        "skandi-embeds/offers/skandi-offers.html",
-        "skandi-embeds/offers/skandi-offers.css",
-        "skandi-embeds/offers/skandi-offers.js"
-      ],
-      "issues": [
-        "No verified canonical controller mapping."
-      ],
-      "backend": [],
-      "messages": [],
-      "output": null,
-      "dynamic": false,
-      "sourceStatus": "PENDING SOURCE",
-      "blockers": [
-        "No verified canonical controller mapping."
-      ],
-      "retainedArtifact": false
-    },
-    {
       "key": "travelInfo",
       "route": "/travel-info",
       "slug": "travel-info",
@@ -937,7 +899,6 @@
       ],
       "missing": [],
       "issues": [
-        "src/public/customerAuthUi.js: imported export openCustomerLogin is absent",
         "Help Center and support chat are separate HTML components; preserve them until a verified single-component migration."
       ],
       "backend": [
@@ -983,7 +944,6 @@
       "dynamic": false,
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [
-        "src/public/customerAuthUi.js: imported export openCustomerLogin is absent",
         "Help Center and support chat are separate HTML components; preserve them until a verified single-component migration."
       ],
       "retainedArtifact": false
@@ -2669,16 +2629,14 @@
       ],
       "binding": "handshake",
       "requiresStaff": false,
-      "status": "BLOCKED INTEGRATION",
+      "status": "BUILT",
       "files": [
         "skandi-embeds/country/skandi-country.html",
         "skandi-embeds/country/skandi-country.css",
         "skandi-embeds/country/skandi-country.js"
       ],
       "missing": [],
-      "issues": [
-        "src/public/customerAuthUi.js: imported export openCustomerLogin is absent"
-      ],
+      "issues": [],
       "backend": [
         "src/backend/SKANDI_CORE/destinationFlow.web.js",
         "src/backend/SKANDI_CORE/customerBooking.web.js"
@@ -2720,55 +2678,39 @@
         "SUPABASE_PUBLIC_INVENTORY",
         "UPDATE_SETTINGS"
       ],
-      "output": null,
+      "output": "dist/country/index.html",
       "dynamic": false,
       "sourceStatus": "COMPLETE SOURCE",
-      "blockers": [
-        "src/public/customerAuthUi.js: imported export openCustomerLogin is absent"
-      ],
-      "retainedArtifact": false
+      "blockers": [],
+      "sha256": "b2bfc6abcba4fd8f1493cd917aa4a023244abd88720cd6777a0cfc1610bafc02",
+      "bytes": 374640
     },
     {
       "key": "bookingFlow",
       "route": "/booking",
       "slug": "booking-flow",
-      "title": "Booking Flow",
+      "title": "Booking",
       "family": "public",
       "chrome": "none",
       "sourceDirectory": "skandi-embeds/booking-flow",
       "stem": "skandi-booking-flow",
       "controller": "src/pages/Booking.e8twe.js",
       "embedIds": [
-        "#bookingOfferEmbed",
-        "#bookingExtrasEmbed",
-        "#signatureTransferEmbed",
-        "#apisHtml",
-        "#seatmapEmbed",
-        "#paymentEmbed",
-        "#confirmationEmbed",
-        "#bookingDocumentsEmbed"
+        "#bookingFlowEmbed"
       ],
-      "sources": [],
-      "binding": "multi-component",
+      "sources": [
+        "SKANDI_BOOKING_OFFER"
+      ],
+      "binding": "explicit",
       "requiresStaff": false,
-      "status": "BLOCKED INTEGRATION",
+      "status": "BUILT",
       "files": [
         "skandi-embeds/booking-flow/skandi-booking-flow.html",
         "skandi-embeds/booking-flow/skandi-booking-flow.css",
         "skandi-embeds/booking-flow/skandi-booking-flow.js"
       ],
       "missing": [],
-      "issues": [
-        "Controller no longer declares #bookingExtrasEmbed",
-        "Controller no longer declares #signatureTransferEmbed",
-        "Controller no longer declares #apisHtml",
-        "Controller no longer declares #seatmapEmbed",
-        "Controller no longer declares #paymentEmbed",
-        "Controller no longer declares #confirmationEmbed",
-        "Controller no longer declares #bookingDocumentsEmbed",
-        "src/public/customerAuthUi.js: imported export openCustomerLogin is absent",
-        "Retain the eight-step Wix state/HTML components. A single receiver requires a separately verified controller migration."
-      ],
+      "issues": [],
       "backend": [
         "src/backend/SKANDI_CORE/customerBooking.web.js"
       ],
@@ -2824,21 +2766,12 @@
         "SKANDI_WIX_PARENT",
         "TERMS_REQUIRED"
       ],
-      "output": null,
+      "output": "dist/booking-flow/index.html",
       "dynamic": false,
       "sourceStatus": "COMPLETE SOURCE",
-      "blockers": [
-        "Controller no longer declares #bookingExtrasEmbed",
-        "Controller no longer declares #signatureTransferEmbed",
-        "Controller no longer declares #apisHtml",
-        "Controller no longer declares #seatmapEmbed",
-        "Controller no longer declares #paymentEmbed",
-        "Controller no longer declares #confirmationEmbed",
-        "Controller no longer declares #bookingDocumentsEmbed",
-        "src/public/customerAuthUi.js: imported export openCustomerLogin is absent",
-        "Retain the eight-step Wix state/HTML components. A single receiver requires a separately verified controller migration."
-      ],
-      "retainedArtifact": false
+      "blockers": [],
+      "sha256": "f1dfed706dcb1da12111b956b1e246e99f88a5310a86203b144142d71aedc8bd",
+      "bytes": 78614
     },
     {
       "key": "myProfile",
