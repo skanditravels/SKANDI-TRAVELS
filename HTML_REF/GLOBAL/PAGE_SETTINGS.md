@@ -43,7 +43,6 @@ V12 desktop chrome authority correction: 2026-10-13. This register uses the page
 | destinations | `/destinations` | CONTENT_AUTO | Customer 118px base | Customer ON | 680px min; grows with embed | W 100%; H runtime 680–30000 | Wix page | Hide | Show |
 | country | `/destinations/country` | CONTENT_AUTO | Customer 118px base | Customer ON | 680px min; grows with embed | W 100%; H runtime 680–30000 | Wix page | Hide | Show |
 | destination | `/destinations/country/destination` | CONTENT_AUTO | Customer 118px base | Customer ON | 680px min; grows with embed | W 100%; H runtime 680–30000 | Wix page | Hide | Show |
-| offers | `/offers` | APP_VIEWPORT_PUBLIC | Customer 118px base | Customer ON | calc(100vh - 118px) | W/H 100% | Embed | Hide | Hide |
 | travelInfo | `/travel-info` | CONTENT_AUTO | Customer 118px base | Customer ON | 680px min; grows with embed | W 100%; H runtime 680–30000 | Wix page | Hide | Show |
 | skandiCollection | `/skandi-collection` | CONTENT_AUTO | Customer 118px base | Customer ON | 680px min; grows with embed | W 100%; H runtime 680–30000 | Wix page | Hide | Show |
 | voy | `/voy-magazine` | CONTENT_AUTO | Customer 118px base | Customer ON | 680px min; grows with embed | W 100%; H runtime 680–30000 | Wix page | Hide | Show |
@@ -81,7 +80,7 @@ V12 desktop chrome authority correction: 2026-10-13. This register uses the page
 | uniformControl | `/riaintra/success-factors/uniform/admin-control` | APP_VIEWPORT_RIAINTRA | RIA 52px only | RIA ON | calc(100vh - 52px) | W/H 100% | Embed | Hide | Hide |
 | staffDocumentControl | REQUIRES LIVE ROUTE VERIFICATION | APP_VIEWPORT_RIAINTRA | RIA 52px only | RIA ON | calc(100vh - 52px) | W/H 100% | Embed | Hide | Hide |
 | transportCompliance | REQUIRES LIVE ROUTE VERIFICATION | APP_VIEWPORT_RIAINTRA | RIA 52px only | RIA ON | calc(100vh - 52px) | W/H 100% | Embed | Hide | Hide |
-| bookingFlow | `/booking` | APP_FULLSCREEN_CHROME_FREE | OFF | OFF | 100vh | Active state embed 100% W x 100% H | Active embed | Hide | Hide |
+| bookingFlow | `/booking` | APP_FULLSCREEN_CHROME_FREE | OFF | OFF | 100vh | `#bookingFlowEmbed` 100% W x 100% H | Single HTML embed | Hide | Hide |
 | myProfile | `/my-profile` | APP_VIEWPORT_PUBLIC | Customer 118px base | Customer ON | calc(100vh - 118px) | W/H 100% | Embed | Hide | Hide |
 | myTrips | `/my-profile?tab=trips` | APP_VIEWPORT_PUBLIC | Customer 118px base | Customer ON | calc(100vh - 118px) | W/H 100% | Embed | Hide | Hide |
 | careers | `/about/careers` | CONTENT_AUTO | Customer 118px base | Customer ON | 680px min; grows with embed | W 100%; H runtime 680–30000 | Wix page | Hide | Show |
@@ -96,7 +95,7 @@ V12 desktop chrome authority correction: 2026-10-13. This register uses the page
 ## Route-specific notes
 
 ### `/booking`
-Booking is an explicit chrome-free exception. Only the active booking-state HTML component may be expanded to 100vh; inactive booking-state components must be hidden **and collapsed** so they do not add page height.
+Booking is a single chrome-free page. The one `#bookingFlowEmbed` component fills the viewport; offer, traveler, payment and confirmation stages are internal views in that embed. There is no Wix booking state box or set of per-step HTML components.
 
 ### `/the-store`, `/the-store/store-checkout`, `/the-store/store-checkout/order-confirmation`
 All three are explicit chrome-free customer surfaces. The visible Store Checkout and Store Confirmation experiences are custom HTML embeds. Wix native commerce pages remain only as their underlying Wix integration/commerce host; they are not the customer-facing layout authority.
