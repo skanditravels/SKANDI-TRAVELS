@@ -1,4 +1,47 @@
-<!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Alexandra · SKANDI Customer Service</title><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@500;600;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="skandi-alexandra-chat.css"></head><body><section id="chat" aria-label="Alexandra SKANDI Customer Service"><header class="head"><div class="avatar"><video autoplay muted loop playsinline><source src="https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/MP4/SKANDI_ALEXANDRA_AVATAR_LOOP_WHITE-BACKGROUND_01.mp4" type="video/mp4"></video></div><div><h1>Alexandra</h1><p>SKANDI Digital Customer Service · AI</p></div><div class="spacer"></div><button id="close" type="button" aria-label="Minimise Alexandra">Minimise</button></header><div class="disclaimer">General travel assistance. Do not share passwords, payment card details, passport information or other sensitive data in AI chat. Your requests to SKANDI Customer Service use a separate case workflow.</div><main id="messages" class="messages" role="log" aria-live="polite"></main><div id="status" class="status" role="status" aria-live="polite"></div><footer class="footer"><form id="composeForm" class="compose"><textarea id="question" rows="2" maxlength="1700" required placeholder="Ask Alexandra about travel..." aria-label="Your message"></textarea><button type="submit" id="send">Send</button></form><div class="actions"><button type="button" class="primary" id="support">My Support</button><button type="button" id="newCase">Request follow-up</button><a href="https://wa.me/17112160382" target="_blank" rel="noopener noreferrer">WhatsApp</a><a href="tel:+19516207875">Call SKANDI</a></div></footer><form id="caseForm" class="case-form"><h2>Customer Service follow-up</h2><p>A SKANDI case is only created after our system confirms it. Do not provide private payment or identity documents.</p><label>Name<input id="caseName" autocomplete="name" maxlength="120" required></label><label>Email<input type="email" id="caseEmail" autocomplete="email" maxlength="254" required></label><label>Subject<input id="caseSubject" maxlength="160" required value="Travel assistance request"></label><label>Details<textarea id="caseDetails" maxlength="2400" rows="3" required></textarea></label><button id="submitCase" type="submit">Submit support request</button></form></section><script src="https://cdn.jsdelivr.net/npm/livekit-client@2.23.0/dist/livekit-client.umd.min.js"></script>
-<script src="skandi-alexandra-chat.js"></script></body></html>
-
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
+<title>SKANDI Support Chat</title>
+<link rel="stylesheet" href="skandi-alexandra-chat.css">
+<div class="host">
+  <button class="launcher" id="launcher" type="button" aria-label="Open SKANDI Support">💬</button>
+  <section class="panel" id="panel" aria-label="SKANDI Support chat">
+    <div class="chat-shell">
+      <header class="head">
+        <button class="head-btn hidden" id="backBtn" type="button" aria-label="Back">‹</button>
+        <div class="avatar-wrap" data-asset-key="alexandra-support-avatar"><video id="avatarVideo" muted="" loop="" autoplay="" playsinline="" preload="metadata"></video><span class="avatar-fallback" id="avatarFallback">A</span></div>
+        <div class="who"><b id="agentName">Alexandra</b><small id="agentRole">Digital Customer Service Agent</small><span class="presence"><i class="dot"></i><span id="presenceText">Online</span></span></div>
+        <button class="head-btn" id="humanBtn" type="button" title="Human Customer Service">♙</button>
+        <button class="head-btn" id="closeBtn" type="button" aria-label="Close">×</button>
+      </header>
+      <main class="messages" id="messages" aria-live="polite"><div class="msg system">To start human live chat directly, sign in to your SKANDI account. Alexandra can still collect your contact details and transfer the conversation to Customer Service when needed.</div><div class="msg mine"><strong>You</strong>Hi</div><div class="msg system">Connecting to Alexandra…</div></main>
+      <footer class="composer">
+        <button class="circle tool" id="formBtn" type="button" title="Support form">＋</button>
+        <textarea id="input" rows="1" placeholder="Type a message…" enterkeyhint="send" style="height: 40px;"></textarea>
+        <button class="circle send" id="sendBtn" type="button" aria-label="Send">➤</button>
+      </footer>
+    </div>
+    <section class="sheet" id="formSheet">
+      <header class="sheet-head"><button class="btn" id="formClose" type="button">Back</button><h2>Support request</h2></header>
+      <div class="sheet-body">
+        <div id="formNotice" class="notice hidden"></div>
+        <div class="field"><label for="contactName">Full name</label><input id="contactName" maxlength="200" autocomplete="name" required></div>
+        <div class="field"><label for="contactEmail">Email</label><input id="contactEmail" type="email" maxlength="254" autocomplete="email" required></div>
+        <div class="field"><label>Category</label><select id="category"><option value="general">General Support</option></select></div>
+        <div class="field"><label>Topic</label><select id="topic"><option value="general-question">General Question</option></select></div>
+        <div class="field"><label>Booking reference / PNR</label><input id="bookingRef" maxlength="80" placeholder="Optional"></div>
+        <div class="field"><label>Subject</label><input id="subject" maxlength="240" required="" placeholder="What do you need help with?"></div>
+        <div id="baggageFields" class="hidden">
+          <div class="field"><label>Have you already filed a PIR?</label><select id="hasPir"><option value="">Select</option><option value="yes">Yes</option><option value="no">No</option></select></div>
+          <div class="field hidden" id="pirWrap"><label>PIR number</label><input id="pirNumber" maxlength="80"></div>
+          <div class="field"><label>Baggage tag</label><input id="bagTag" maxlength="80"></div>
+          <div class="field"><label>Baggage type</label><input id="bagType" maxlength="120"></div>
+          <div class="field"><label>Color</label><input id="bagColor" maxlength="120"></div>
+          <div class="field"><label>Brand / distinguishing features</label><input id="bagBrand" maxlength="300"></div>
+        </div>
+        <div class="field"><label>Description</label><textarea id="description" required="" placeholder="Describe what happened or what you need."></textarea></div>
+      </div>
+      <footer class="sheet-foot"><button class="btn primary" id="submitForm" type="button">Submit request</button></footer>
+    </section>
+  </section>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/livekit-client@2.23.0/dist/livekit-client.umd.min.js"></script>
+<script src="skandi-alexandra-chat.js"></script>
