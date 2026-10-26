@@ -1,53 +1,81 @@
-
-(()=>{'use strict';const SOURCE='SKANDI_SUPPORT_CHAT',PARENT='SKANDI_WIX_PARENT',$=id=>document.getElementById(id);let sessionId='',pending=false,casePending=false,currentRequest='',loggedIn=false,counter=0,history=[],messages=[],responseTimer=null,caseTimer=null,opened=false,connected=false,liveRoom=null,liveEpoch=0,replyArrived=false;
-const makeId=()=>`ax_${Date.now().toString(36)}_${(++counter).toString(36)}`;
-const post=(type,payload={})=>window.parent.postMessage({source:SOURCE,type,requestId:payload.requestId||'',payload},'*');
-const status=(message,bad=false)=>{$('status').textContent=message||'';$('status').classList.toggle('error',bad)};
-const video=document.querySelector('video');if(video){video.playbackRate=0.75;video.addEventListener('ratechange',()=>{if(video.playbackRate!==0.75)video.playbackRate=0.75})}
-function say(role,text,save=true){const content=String(text||'').slice(0,1900);if(!content)return;const node=document.createElement('div');node.className='bubble'+(role==='user'?' user':'');const meta=document.createElement('div');meta.className='meta';meta.textContent=role==='user'?'You':'Alexandra';const body=document.createElement('div');body.textContent=content;node.append(meta,body);$('messages').append(node);$('messages').scrollTop=$('messages').scrollHeight;if(save){messages.push({role,content});messages=messages.slice(-18);snapshot()}}
-function snapshot(){post('SUPPORT_CHAT_SNAPSHOT',{messages:messages.slice(-18),history:history.slice(-8)})}
-function busy(flag){pending=flag;$('send').disabled=flag||!connected;$('question').disabled=flag||!connected}
-function disconnectLive(){liveEpoch++;const old=liveRoom;liveRoom=null;connected=false;clearTimeout(responseTimer);busy(false);try{old?.disconnect()}catch(_){}}
-async function connectLive(session){
-  disconnectLive();const epoch=liveEpoch,sdk=window.LivekitClient;
-  if(!sdk?.Room||!session?.url||!session?.token){status('LiveKit could not initialize. Reload the page and retry.',true);return}
-  const room=new sdk.Room({adaptiveStream:true,dynacast:true});liveRoom=room;
-  const onText=async(reader,participant)=>{
-    if(epoch!==liveEpoch||participant?.identity===room.localParticipant?.identity)return;
-    try{const text=String(await reader.readAll()||'').trim().slice(0,1900);if(!text||epoch!==liveEpoch||room!==liveRoom)return;
-      replyArrived=true;clearTimeout(responseTimer);busy(false);say('assistant',text);history.push({role:'assistant',content:text});history=history.slice(-8);snapshot();status('');
-    }catch(_){if(epoch===liveEpoch)status('Alexandra response could not be read.',true)}
-  };
-  room.registerTextStreamHandler('lk.transcription',onText);
-  room.registerTextStreamHandler('lk.chat',onText);
-  room.on(sdk.RoomEvent.Disconnected,()=>{if(epoch!==liveEpoch)return;connected=false;busy(false);status('Alexandra disconnected. Minimise and reopen to reconnect.',true)});
-  try{await room.connect(session.url,session.token);if(epoch!==liveEpoch){room.disconnect();return}connected=true;busy(false);status('')}
-  catch(_){if(epoch===liveEpoch){connected=false;busy(false);status('LiveKit connection failed. Minimise and reopen Alexandra.',true)}}
-}
-function open(info){
-  opened=true;const next=info?.alexandraSession;
-  if(!next?.sessionId||!next?.url||!next?.token){status('Alexandra did not confirm the LiveKit session.',true);return}
-  const isNew=next.sessionId!==sessionId;sessionId=String(next.sessionId);loggedIn=info.loggedIn===true;
-  if(isNew){messages=[];history=[];$('messages').replaceChildren();if(Array.isArray(info?.messages)&&info.messages.length){
-      for(const item of info.messages.slice(-18))if(item&&['user','assistant'].includes(item.role))say(item.role,item.content,false);
-      messages=info.messages.slice(-18).filter(item=>item&&['user','assistant'].includes(item.role));history=Array.isArray(info.history)?info.history.slice(-8):[];
-    }else say('assistant','Welcome to SKANDI Travels. I’m Alexandra, your AI travel assistant. How can I help?')}
-  snapshot();status('Connecting to Alexandra...');void connectLive(next);
-}
-$('close').addEventListener('click',()=>{$('caseForm').classList.remove('open');disconnectLive();post('SUPPORT_CHAT_PANEL_CLOSE')});
-$('composeForm').addEventListener('submit',async event=>{
-  event.preventDefault();const message=$('question').value.trim();
-  if(!message||pending)return;
-  if(!connected||!liveRoom){status('Alexandra is disconnected. Reopen chat to try again.',true);return}
-  const id=makeId();currentRequest=id;replyArrived=false;busy(true);status('Sending to Alexandra...');
-  try{await liveRoom.localParticipant.sendText(message,{topic:'lk.chat'});if(currentRequest!==id)return;
-    say('user',message);$('question').value='';history.push({role:'user',content:message});history=history.slice(-8);snapshot();
-    if(!replyArrived){status('Alexandra is preparing a response...');clearTimeout(responseTimer);
-      responseTimer=setTimeout(()=>{if(currentRequest===id&&pending){busy(false);status('Alexandra did not respond. You can try again.',true)}},35000);}
-  }catch(_){if(currentRequest===id){busy(false);status('Message not sent through LiveKit. Please retry.',true)}}
-});
-$('newCase').addEventListener('click',()=>{$('caseForm').classList.toggle('open');$('caseDetails').value=$('caseDetails').value||'I would like assistance from SKANDI Customer Service.'});$('support').addEventListener('click',()=>post('SUPPORT_CHAT_NAVIGATE',{path:loggedIn?'/my-profile?section=support&view=cases':'/about/support'}));
-$('caseForm').addEventListener('submit',event=>{event.preventDefault();if(casePending)return;casePending=true;$('submitCase').disabled=true;status('Submitting your request...');clearTimeout(caseTimer);caseTimer=setTimeout(()=>{if(casePending){casePending=false;$('submitCase').disabled=false;status('SKANDI did not confirm the request. Check My Support before retrying.',true)}},35000);const fullName=$('caseName').value.trim(),names=fullName.split(/\s+/);post('SUPPORT_CHAT_SUBMIT_FORM',{requestId:makeId(),input:{firstName:names[0]||'',lastName:names.slice(1).join(' '),fullName,email:$('caseEmail').value.trim(),subject:$('caseSubject').value.trim(),message:$('caseDetails').value.trim(),category:'general'}})});
-window.addEventListener('message',event=>{if(event.source!==window.parent)return;let m=event.data;if(typeof m==='string'){try{m=JSON.parse(m)}catch(_){return}}if(!m||m.source!==PARENT)return;const p=m.payload||{};switch(m.type){case 'SUPPORT_CHAT_OPEN':open(p);return;case 'SUPPORT_CHAT_CASE_CREATED':clearTimeout(caseTimer);casePending=false;$('submitCase').disabled=false;if(p.caseId||p.caseRef){$('caseForm').classList.remove('open');status('Case submitted: '+(p.caseRef||p.caseId))}else status('The server did not confirm the case.',true);return;case 'SUPPORT_CHAT_ERROR':clearTimeout(caseTimer);casePending=false;$('submitCase').disabled=false;status(p.message||'Request failed.',true);return;default:return}});
-busy(false);post('SUPPORT_CHAT_READY');setTimeout(()=>{if(!opened)post('SUPPORT_CHAT_READY')},900);setTimeout(()=>{if(!opened)post('SUPPORT_CHAT_READY')},2600);
+(() => {
+  "use strict";
+  const SOURCE="SKANDI_SUPPORT_CHAT",PARENT="SKANDI_WIX_PARENT",ALEX_TOPIC="lk.chat",HUMAN_TOPIC="skandi.support.chat";
+  const $=id=>document.getElementById(id);let boot={},mode="ALEXANDRA",caseId="",alexRoom=null,humanRoom=null,alexSession=null,humanSession=null,transcript=[],connected=false,loggedIn=false,avatarCfg={},roomEpoch=0,bootstrapReceived=false,hostBlocked=false;
+  const clean=(v,n=30000)=>String(v??"").trim().slice(0,n);const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  function post(type,payload={}){window.parent.postMessage({source:SOURCE,type,requestId:`${Date.now()}-${Math.random().toString(36).slice(2,8)}`,payload},"*")}
+  function setViewport(){const h=window.visualViewport?.height||window.innerHeight||document.documentElement.clientHeight;document.documentElement.style.setProperty("--vvh",`${Math.round(h)}px`)}
+  setViewport();window.addEventListener("resize",setViewport);window.visualViewport?.addEventListener("resize",setViewport);window.visualViewport?.addEventListener("scroll",setViewport);
+  function openPanel(){ $("panel").classList.add("open");$("launcher").classList.add("hidden");setViewport();setTimeout(()=>$("input").focus(),80)}
+  function closePanel(){ $("panel").classList.remove("open");$("launcher").classList.remove("hidden");$("input").blur() }
+  function disconnectRooms(){
+    roomEpoch++;
+    const rooms=[alexRoom,humanRoom].filter(Boolean);
+    alexRoom=null;humanRoom=null;alexSession=null;humanSession=null;connected=false;
+    for(const room of rooms){try{Promise.resolve(room.disconnect()).catch(()=>{})}catch(_){}}
+  }
+  function forceClose(){
+    hostBlocked=true;disconnectRooms();caseId="";transcript=[];loggedIn=false;boot={};avatarCfg={};
+    $("messages").replaceChildren();$("input").value="";$("input").disabled=false;$("sendBtn").disabled=false;
+    $("formSheet").classList.remove("open");$("subject").value="";$("description").value="";
+    $("contactName").value="";$("contactEmail").value="";$("humanBtn").title="Sign in for human chat";setMode("ALEXANDRA");closePanel();
+  }
+  function scrollBottom(){requestAnimationFrame(()=>{$("messages").scrollTop=$("messages").scrollHeight})}
+  function message(kind,text,name=""){text=clean(text);if(!text)return;const n=document.createElement("div");n.className=`msg ${kind}`;n.innerHTML=(name?`<strong>${esc(name)}</strong>`:"")+esc(text);$("messages").appendChild(n);scrollBottom();if(kind!=="system")transcript.push({role:kind==="mine"?"customer":mode==="ALEXANDRA"?"alexandra":"human-agent",text,at:new Date().toISOString()})}
+  function system(text){message("system",text)}
+  function setMode(next){mode=next;const human=next==="HUMAN";$("agentName").textContent=human?"SKANDI Customer Service":"Alexandra";$("agentRole").textContent=human?"Human SKANDI Customer Service Agent":"Digital Customer Service Agent";$("avatarFallback").textContent=human?"S":"A";if(human){$("avatarVideo").pause?.();$("avatarVideo").style.display="none";$("avatarFallback").style.display="inline"}else{setupAvatar(avatarCfg)}$("presenceText").textContent=next==="HANDOFF_PENDING"?"Connecting…":"Online";$("humanBtn").classList.toggle("hidden",human);$("input").disabled=next==="HANDOFF_PENDING";$("sendBtn").disabled=next==="HANDOFF_PENDING"}
+  function setupAvatar(cfg={}){avatarCfg=cfg||{};const video=$("avatarVideo"),url=clean(cfg.avatarVideoUrl,2000);if(!url){video.removeAttribute("src");video.style.display="none";$("avatarFallback").style.display="inline";return}video.src=url;video.defaultPlaybackRate=0.75;const apply=()=>{video.playbackRate=0.75;video.muted=true;video.loop=true;video.playsInline=true;video.style.display="block";$("avatarFallback").style.display="none";video.play().catch(()=>{})};video.onloadedmetadata=apply;video.oncanplay=apply}
+  function applyBoot(p={}){boot=p||{};loggedIn=Boolean(p.loggedIn||p.profile?.loggedIn||p.profile?.memberId);setupAvatar(boot.alexandra||{});$("humanBtn").title=loggedIn?"Human Customer Service":"Sign in for human chat";const profile=boot.profile||{};if(!$("contactName").value)$("contactName").value=clean(profile.displayName||[profile.firstName,profile.lastName].filter(Boolean).join(" "),200);if(!$("contactEmail").value)$("contactEmail").value=clean(profile.email,254);const list=Array.isArray(boot.workflows)?boot.workflows:[];$("category").innerHTML=list.map(w=>`<option value="${esc(w.key)}">${esc(w.title||w.key)}</option>`).join("")||'<option value="general">General Support</option>';updateTopics()}
+  function workflow(){return (boot.workflows||[]).find(w=>w.key===$("category").value)||null}
+  function updateTopics(){const w=workflow();$("topic").innerHTML=(w?.topics||[{key:"general-question",title:"General Question"}]).map(t=>`<option value="${esc(t.key)}">${esc(t.title||t.key)}</option>`).join("");$("baggageFields").classList.toggle("hidden",$("category").value!=="baggage");updatePir()}
+  function updatePir(){const yes=$("hasPir").value==="yes",no=$("hasPir").value==="no";$("pirWrap").classList.toggle("hidden",!yes);const w=workflow();$("formNotice").textContent=no?(w?.guidance?.noPir||"A SKANDI support case does not replace the formal baggage report/PIR required by the operating airline or airport baggage service."):"";$("formNotice").classList.toggle("hidden",!no)}
+  async function connectAlex(s){
+    if(!s?.url||!s?.token||!window.LivekitClient)return;
+    const epoch=++roomEpoch,previous=[alexRoom,humanRoom].filter(Boolean);
+    alexRoom=null;humanRoom=null;alexSession=s;humanSession=null;connected=false;
+    for(const room of previous){try{await room.disconnect()}catch(_){}}
+    if(epoch!==roomEpoch)return;
+    const sdk=window.LivekitClient,r=new sdk.Room({adaptiveStream:true,dynacast:true});
+    r.registerTextStreamHandler(s.transcriptionTopic||"lk.transcription",async(reader,p)=>{
+      if(p?.identity===r.localParticipant?.identity)return;
+      try{const text=await reader.readAll();if(epoch===roomEpoch&&r===alexRoom)message("remote",text,"Alexandra")}catch(_){}
+    });
+    r.on(sdk.RoomEvent.TrackSubscribed,track=>{if(track.kind==="audio"){const el=track.attach();el.autoplay=true;document.body.appendChild(el)}});
+    r.on(sdk.RoomEvent.Disconnected,()=>{if(epoch===roomEpoch){connected=false;system("Alexandra disconnected. Reopen the chat to reconnect.")}});
+    r.registerRpcMethod("open_support_form",async(data)=>{let parsed={};try{parsed=JSON.parse(data?.payload||"{}")}catch(_){}openForm(parsed);return JSON.stringify({ok:true})});
+    r.registerRpcMethod("start_human_chat",async(data)=>{let parsed={};try{parsed=JSON.parse(data?.payload||"{}")}catch(_){}await startHuman(parsed);return JSON.stringify({ok:true})});
+    try{await r.connect(s.url,s.token)}catch(error){if(epoch===roomEpoch)system("Alexandra could not connect. Please try again.");return}
+    if(epoch!==roomEpoch){try{await r.disconnect()}catch(_){}return}
+    alexRoom=r;connected=true;setMode("ALEXANDRA");
+  }
+  async function connectHuman(s){
+    if(!s?.url||!s?.token||!window.LivekitClient)return;
+    const epoch=++roomEpoch,previous=[alexRoom,humanRoom].filter(Boolean);
+    alexRoom=null;humanRoom=null;alexSession=null;humanSession=s;connected=false;
+    for(const room of previous){try{await room.disconnect()}catch(_){}}
+    if(epoch!==roomEpoch)return;
+    const sdk=window.LivekitClient,r=new sdk.Room({adaptiveStream:true,dynacast:true});
+    r.registerTextStreamHandler(s.textTopic||HUMAN_TOPIC,async(reader,p)=>{
+      if(p?.identity===r.localParticipant?.identity)return;
+      try{const text=await reader.readAll();if(epoch===roomEpoch&&r===humanRoom)message("remote",text,"SKANDI Customer Service")}catch(_){}
+    });
+    r.on(sdk.RoomEvent.TrackSubscribed,track=>{if(track.kind==="audio"){const el=track.attach();el.autoplay=true;document.body.appendChild(el)}});
+    r.on(sdk.RoomEvent.Disconnected,()=>{if(epoch===roomEpoch){connected=false;system("Customer Service chat disconnected. You can continue through your case.")}});
+    try{await r.connect(s.url,s.token)}catch(error){if(epoch===roomEpoch)system("Customer Service chat could not connect. Your request remains in the queue.");return}
+    if(epoch!==roomEpoch){try{await r.disconnect()}catch(_){}return}
+    humanRoom=r;connected=true;setMode("HUMAN");
+  }
+  async function send(){const text=clean($("input").value);if(!text)return;$("input").value="";message("mine",text,"You");if(mode==="ALEXANDRA"){if(!alexRoom||alexRoom.state!=="connected"){system("Connecting to Alexandra…");post("SUPPORT_CHAT_START_ALEXANDRA");return}await alexRoom.localParticipant.sendText(text,{topic:alexSession?.textTopic||ALEX_TOPIC})}else if(mode==="HUMAN"){if(!caseId){system("No support case is connected yet.");return}$("sendBtn").disabled=true;post("SUPPORT_CHAT_HUMAN_MESSAGE",{caseId,content:text})}}
+  async function startHuman(extra={}){
+    if(extra?.caseId&&extra?.livekitSession){caseId=String(extra.caseId);setMode("HANDOFF_PENDING");system(extra.message||"Connecting you with a Human SKANDI Customer Service Agent. Your existing context will be passed along.");try{if(alexRoom)await alexRoom.disconnect()}catch(_){}alexRoom=null;connected=false;await connectHuman(extra.livekitSession);system("A Human SKANDI Customer Service Agent can now join this conversation.");return}
+    if(extra?.status==="queued"&&extra?.caseId){caseId=String(extra.caseId);setMode("HUMAN");$("input").disabled=true;$("sendBtn").disabled=true;system(extra.message||"Your request is in the Customer Service queue.");return}
+    if(!loggedIn){system("To start human live chat directly, sign in to your SKANDI account. Alexandra can still collect your contact details and transfer the conversation to Customer Service when needed.");return}
+    setMode("HANDOFF_PENDING");system("Connecting you with a Human SKANDI Customer Service Agent. Your existing context will be passed along.");post("SUPPORT_CHAT_START_HUMAN",{caseId,reason:extra.reason||"Customer requested a human agent.",summary:extra.summary||"",transcript:transcript.slice(-60)})
+  }
+  function openForm(prefill={}){$("formSheet").classList.add("open");if(prefill.category){$("category").value=prefill.category;updateTopics()}if(prefill.subject)$("subject").value=prefill.subject;if(prefill.message)$("description").value=prefill.message}
+  function formPayload(){const fullName=clean($("contactName").value,200),parts=fullName.split(/\s+/);return{firstName:parts[0]||"",lastName:parts.slice(1).join(" "),fullName,email:clean($("contactEmail").value,254),category:$("category").value,subCategory:$("topic").value,bookingRef:clean($("bookingRef").value,80),pnr:clean($("bookingRef").value,80),subject:clean($("subject").value,240),message:clean($("description").value,12000),hasPir:$("hasPir").value,pirNumber:clean($("pirNumber").value,80),bagTag:clean($("bagTag").value,80),bagType:clean($("bagType").value,120),bagColor:clean($("bagColor").value,120),bagBrand:clean($("bagBrand").value,300),source:"support-chat-form",sourcePage:"/about/support"}}
+  $("launcher").onclick=()=>{openPanel();if(boot.defaultMode==="HUMAN"){startHuman().catch(()=>{})}else if(!connected)post("SUPPORT_CHAT_START_ALEXANDRA")};$("closeBtn").onclick=closePanel;$("humanBtn").onclick=()=>{startHuman().catch(()=>{})};$("sendBtn").onclick=()=>send().catch(e=>system(e.message||"Message failed."));$("input").onkeydown=e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send().catch(()=>{})}};$("input").oninput=e=>{e.target.style.height="42px";e.target.style.height=Math.min(e.target.scrollHeight,112)+"px"};$("formBtn").onclick=()=>openForm();$("formClose").onclick=()=>$("formSheet").classList.remove("open");$("category").onchange=updateTopics;$("hasPir").onchange=updatePir;$("submitForm").onclick=()=>{const p=formPayload();if(!p.fullName||!p.email){$("formNotice").textContent="Enter your name and email so Customer Service can reply.";$("formNotice").classList.remove("hidden");return}if(!p.subject||!p.message){$("formNotice").textContent="Subject and description are required.";$("formNotice").classList.remove("hidden");return}post("SUPPORT_CHAT_SUBMIT_FORM",{input:p})};
+  window.addEventListener("message",async e=>{const m=e.data||{};if(m.source!==PARENT)return;const p=m.payload||{};if(m.type==="SUPPORT_CHAT_FORCE_CLOSE"){forceClose();return}if(m.type==="SUPPORT_CHAT_BOOTSTRAP"){bootstrapReceived=true;hostBlocked=false;applyBoot(p)}if(m.type==="SUPPORT_CHAT_OPEN"){openPanel();if(p.mode==="FORM"){openForm(p.formPrefill||{});return}if(p.mode==="HANDOFF_PENDING"){setMode("HANDOFF_PENDING");return}if(p.alexandraSession){await connectAlex(p.alexandraSession);if(!transcript.length)system("Hi, I’m Alexandra. How can I help you today?")}}if(m.type==="SUPPORT_CHAT_HUMAN_HANDOFF"){caseId=String(p.caseId||caseId);if(alexRoom){try{await alexRoom.disconnect()}catch(_){}alexRoom=null}connected=false;if(p.status==="live"&&p.livekitSession){await connectHuman(p.livekitSession);system("A Human SKANDI Customer Service Agent can now join this conversation.")}else{setMode("HUMAN");$("input").disabled=true;$("sendBtn").disabled=true;system(p.message||"Your request is in the Customer Service queue.")}}if(m.type==="SUPPORT_CHAT_HUMAN_MESSAGE_SAVED"){$("sendBtn").disabled=false;const s=p.livekitSession||humanSession;if(s){if(!humanRoom||humanRoom.state!=="connected")await connectHuman(s);const text=clean(p.sentMessage?.content||p.sentMessage?.body);if(text)await humanRoom.localParticipant.sendText(text,{topic:s.textTopic||HUMAN_TOPIC,attributes:{caseId:String(p.caseId||caseId),messageId:String(p.sentMessage?.messageId||p.sentMessage?.id||""),senderType:"customer"}})}}if(m.type==="SUPPORT_CHAT_CASE_CREATED"){caseId=String(p.caseId||caseId);$("formSheet").classList.remove("open");system(`Support request ${p.caseRef||""} was created.`)}if(m.type==="SUPPORT_CHAT_ERROR"){setMode(mode==="HANDOFF_PENDING"?"ALEXANDRA":mode);system(p.message||"Support action failed.")}});
+  const signalReady=()=>{if(!bootstrapReceived&&!hostBlocked)post("SUPPORT_CHAT_READY",{integrated:true,page:window.location.pathname})};
+  signalReady();setTimeout(signalReady,900);setTimeout(signalReady,2600);
 })();
