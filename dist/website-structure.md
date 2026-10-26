@@ -14,10 +14,10 @@ Route authority: `src/public/siteMap.js`. This file is generated evidence, not r
 | tours | /tours | skandi-embeds/tours/skandi-tours.{html,css,js} | public / public | src/pages/Tours & Activities.jxipw.js | BUILT |
 | activities | /activities | skandi-embeds/activities/skandi-activities.{html,css,js} | public / public | UNVERIFIED | PENDING SOURCE |
 | transfers | /transfers | skandi-embeds/transfers/skandi-transfers.{html,css,js} | public / public | UNVERIFIED | PENDING SOURCE |
-| destinations | /destinations | skandi-embeds/destinations/skandi-destinations.{html,css,js} | public / public | src/pages/Our Destinations.wfe5g.js | FAILED |
+| destinations | /destinations | skandi-embeds/destinations/skandi-destinations.{html,css,js} | public / public | src/pages/Our Destinations.wfe5g.js | BUILT |
 | offers | /offers | skandi-embeds/offers/skandi-offers.{html,css,js} | public / public | UNVERIFIED | PENDING SOURCE |
-| travelInfo | /travel-info | skandi-embeds/travel-info/skandi-travel-info.{html,css,js} | public / public | src/pages/Travel Info.m43d6.js | FAILED |
-| skandiCollection | /skandi-collection | skandi-embeds/skandi-collection/skandi-skandi-collection.{html,css,js} | public / public | src/pages/SKANDI Collection.lo9p5.js | FAILED |
+| travelInfo | /travel-info | skandi-embeds/travel-info/skandi-travel-info.{html,css,js} | public / public | src/pages/Travel Info.m43d6.js | BUILT |
+| skandiCollection | /skandi-collection | skandi-embeds/skandi-collection/skandi-skandi-collection.{html,css,js} | public / public | src/pages/SKANDI Collection.lo9p5.js | BUILT |
 | voy | /voy-magazine | skandi-embeds/voy/skandi-voy.{html,css,js} | public / public | src/pages/VOY Magazine.gecp7.js | PENDING SOURCE |
 | club | /skandi-club | skandi-embeds/club/skandi-club.{html,css,js} | public / public | src/pages/SKANDI Signature Club.gsejz.js | BUILT |
 | forgotPassword | /forgot-password | skandi-embeds/forgot-password/skandi-forgot-password.{html,css,js} | public / public | src/pages/Forgot Password.uagf0.js | BUILT |
@@ -57,7 +57,7 @@ Route authority: `src/public/siteMap.js`. This file is generated evidence, not r
 | myTrips | /my-profile?tab=trips | Alias of myProfile | public / public | src/pages/My Club Profile.u4k31.js | ALIAS |
 | careers | /about/careers | skandi-embeds/careers/skandi-careers.{html,css,js} | public / public | src/pages/Work at SKANDI.dyodg.js | PENDING SOURCE |
 | myRoster | /riaintra/success-factors/my-roster | skandi-embeds/my-roster/skandi-my-roster.{html,css,js} | riaintra / riaintra | src/pages/MyRoster.l8p5m.js | PENDING SOURCE |
-| groupTalk | /riaintra/success-factors/altea/grouptalk | skandi-embeds/group-talk/skandi-group-talk.{html,css,js} | altea / none | src/pages/GroupTalk.wi4iw.js | FAILED |
+| groupTalk | /riaintra/success-factors/altea/grouptalk | skandi-embeds/group-talk/skandi-group-talk.{html,css,js} | altea / none | src/pages/GroupTalk.wi4iw.js | BUILT |
 | passportVisa | /travel-info/passport-visa | skandi-embeds/passport-visa/skandi-passport-visa.{html,css,js} | public / public | src/pages/Passport & Visa.zohjw.js | BUILT |
 | baggageAllowance | /travel-info/baggage-allowance | skandi-embeds/baggage-allowance/skandi-baggage-allowance.{html,css,js} | public / public | src/pages/Baggage Allowance.tf8xc.js | BUILT |
 | travelInsurance | /travel-info/insurance | skandi-embeds/travel-insurance/skandi-travel-insurance.{html,css,js} | public / public | src/pages/Insurance.ojo62.js | BUILT |
@@ -112,15 +112,12 @@ These actual repository controllers are preserved. No new route or build is inve
 - **cruises**: NOT READY: No verified canonical controller mapping.
 - **activities**: NOT READY: No verified canonical controller mapping.
 - **transfers**: NOT READY: No verified canonical controller mapping.
-- **destinations**: NOT READY: [destinations / destinations] skandi-embeds/destinations/skandi-destinations.html, skandi-embeds/destinations/skandi-destinations.css, skandi-embeds/destinations/skandi-destinations.js: skandi-embeds/destinations/skandi-destinations.html: external stylesheet cannot be scoped: https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.css; put its rules in the CSS source
 - **offers**: NOT READY: No verified canonical controller mapping.
-- **travelInfo**: NOT READY: [travelInfo / travel-info] skandi-embeds/travel-info/skandi-travel-info.html, skandi-embeds/travel-info/skandi-travel-info.css, skandi-embeds/travel-info/skandi-travel-info.js: Unexpected token '<'
-- **skandiCollection**: NOT READY: [skandiCollection / skandi-collection] skandi-embeds/skandi-collection/skandi-skandi-collection.html, skandi-embeds/skandi-collection/skandi-skandi-collection.css, skandi-embeds/skandi-collection/skandi-skandi-collection.js: skandi-embeds/skandi-collection/skandi-skandi-collection.css: missing asset YOUR-IMAGE-URL.jpg
 - **voy**: NOT READY: PENDING SOURCE
 - **support**: NOT READY: src/public/customerAuthUi.js: imported export openCustomerLogin is absent; Help Center and support chat are separate HTML components; preserve them until a verified single-component migration.
 - **giftCard**: NOT READY: No verified canonical controller mapping.
 - **ourNetwork**: NOT READY: No verified canonical controller mapping.
-- **inventoryControl**: NOT READY: [inventoryControl / inventory-control] skandi-embeds/inventory-control/skandi-inventory-control.html, skandi-embeds/inventory-control/skandi-inventory-control.css, skandi-embeds/inventory-control/skandi-inventory-control.js: skandi-embeds/inventory-control/skandi-inventory-control.html: module scripts require bundling into the page .js first
+- **inventoryControl**: NOT READY: [inventoryControl / inventory-control] skandi-embeds/inventory-control/skandi-inventory-control.html, skandi-embeds/inventory-control/skandi-inventory-control.css, skandi-embeds/inventory-control/skandi-inventory-control.js: Cannot use import statement outside a module
 - **uniformControl**: NOT READY: PENDING SOURCE
 - **alteaTimatic**: NOT READY: No verified canonical controller mapping.
 - **docunetAdmin**: NOT READY: [docunetAdmin / docunet-admin] skandi-embeds/docunet-admin/skandi-docunet-admin.html, skandi-embeds/docunet-admin/skandi-docunet-admin.css, skandi-embeds/docunet-admin/skandi-docunet-admin.js: skandi-embeds/docunet-admin/skandi-docunet-admin.html: nested iframe is not supported; retain the existing Wix integration
@@ -129,4 +126,3 @@ These actual repository controllers are preserved. No new route or build is inve
 - **bookingFlow**: NOT READY: Controller no longer declares #bookingExtrasEmbed; Controller no longer declares #signatureTransferEmbed; Controller no longer declares #apisHtml; Controller no longer declares #seatmapEmbed; Controller no longer declares #paymentEmbed; Controller no longer declares #confirmationEmbed; Controller no longer declares #bookingDocumentsEmbed; src/public/customerAuthUi.js: imported export openCustomerLogin is absent; Retain the eight-step Wix state/HTML components. A single receiver requires a separately verified controller migration.
 - **careers**: NOT READY: PENDING SOURCE
 - **myRoster**: NOT READY: src/backend/FINAL/internalChrome.web.js: missing imported module; src/backend/SKANDI_CORE/myRoster.web.js: missing imported module
-- **groupTalk**: NOT READY: [groupTalk / group-talk] skandi-embeds/group-talk/skandi-group-talk.html, skandi-embeds/group-talk/skandi-group-talk.css, skandi-embeds/group-talk/skandi-group-talk.js: skandi-embeds/group-talk/skandi-group-talk.html: external stylesheet cannot be scoped: https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.css; put its rules in the CSS source
