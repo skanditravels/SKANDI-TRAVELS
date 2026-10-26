@@ -72,8 +72,14 @@ Append this repair record to the INFO / CHANGE LOG in /HTML_REF/skandi/SKANDI Cl
 - Reused authenticated `customerSupport.web.js` for member-only case list, ownership-checked case messages, replies, and canonical case creation. No new support database, private fields or privileged access. No fake signature, priority entitlement or response time claims transplanted from the supplied old HelpDesk HTML.
 - My Profile workspace switches remain immediate and nonblocking per prior navigation freeze repair; support loads only on demand and errors remain visible.
 - Customer support contact links: WhatsApp +1 711-216-0382 (verify this unusual destination is provisioned on WhatsApp), phone +1 951-620-7875. No verification of active line or hours was available.
-- Internal existing `/my-profile/support` old route may be retained as a legacy portal until owner redirects it to `/my-profile?section=support&view=cases`; do not silently delete the old live page. The Wix iframe must be replaced with the full HTML below.
+- `/my-profile` is the canonical customer-account and member-support route. The older `/my-profile/support` page remains a separate legacy portal until it is explicitly retired; current profile/support links open `/my-profile?section=support&view=cases`. The Wix iframe must be replaced with the full HTML below.
 - STATICALLY VERIFIED for local source; Wix published runtime, authentication, case flow and messaging REQUIRES LIVE TEST.
+
+### 2026-10-26 — Member support route convergence
+- Updated the customer profile support route and linked Help Center/Alexandra callers to `/my-profile?section=support&view=cases`, keeping support within the existing My Profile page.
+- Retained the existing `/my-profile/support` page and its live human-chat behavior as a legacy page; no page deletion or redirect was performed.
+- The profile HTML source is unchanged because it already implements the `support` workspace. Controller and link changes are included in the accompanying ZIP.
+- STATICALLY VERIFIED; REQUIRES LIVE TEST on published Wix with a signed-in customer.
 
 ## LIVE HTML
 ```html
