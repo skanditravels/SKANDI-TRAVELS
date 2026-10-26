@@ -16,6 +16,9 @@ SLUG: `/my-profile`
 - Booking ownership: canonical `altea_bookings` ownership plus verified customer booking links.
 - Live supplier capabilities gate cancellation, flight changes, post-booking baggage, airline-initiated changes, stay cancellation and car cancellation.
 
+## DELIVERY LOG
+- 2026-10-26 V12 delivery repair: Re-synced the active split HTML/CSS/JS from this complete document, restoring the document wrapper and local sidecar links so the source compiles to `dist/my-profile/index.html`. Applied the latest My Profile change so unfinished booking carts continue directly to Home (`/?cartId=...`); the legacy `/booking` route remains a redirect for older links. Page data/controller/backend contracts are unchanged. STATICALLY VERIFIED; REQUIRES LIVE TEST.
+
 This is reference documentation for the controller-only repair. It does NOT replace the canonical HTML_REF file and it does NOT require replacing the live HTML embed.
 
 Confirmed failure chain:
@@ -897,7 +900,7 @@ function renderTrips(){
   const up=$("tripList"),past=$("tripHistoryList"),draft=$("tripDraftList");
   if(up)up.innerHTML=upcoming.map(b=>tripCard(b,false)).join("")||empty("No upcoming trips","Bookings linked to this account will appear here.","plane");
   if(past)past.innerHTML=history.map(b=>tripCard(b,true)).join("")||empty("No past trips yet","Completed and cancelled SKANDI bookings will appear here.","plane");
-  if(draft)draft.innerHTML=carts.map(c=>`<article class="trip-card"><div class="trip-datebox"><strong>${esc(friendly(c.status||"Draft"))}</strong><span>${esc(date(c.updatedAt||c.createdAt))}</span></div><div><h3>${esc(c.payload?.selectedOffer?.summary||c.payload?.productType||"Booking in progress")}</h3><p>${esc(c.cartId||"")}${c.total?` · ${esc(money(c.total,c.currency))}`:""}</p></div><div><button class="btn small primary" data-route="/booking?cartId=${encodeURIComponent(c.cartId||"")}">Continue</button></div></article>`).join("")||empty("No booking drafts","Unfinished SKANDI booking carts will appear here.","plane")
+  if(draft)draft.innerHTML=carts.map(c=>`<article class="trip-card"><div class="trip-datebox"><strong>${esc(friendly(c.status||"Draft"))}</strong><span>${esc(date(c.updatedAt||c.createdAt))}</span></div><div><h3>${esc(c.payload?.selectedOffer?.summary||c.payload?.productType||"Booking in progress")}</h3><p>${esc(c.cartId||"")}${c.total?` · ${esc(money(c.total,c.currency))}`:""}</p></div><div><button class="btn small primary" data-route="/?cartId=${encodeURIComponent(c.cartId||"")}">Continue</button></div></article>`).join("")||empty("No booking drafts","Unfinished SKANDI booking carts will appear here.","plane")
 }
 function renderClub(){
   const d=state.data,c=d?.club||{},tiers=arr(c.tiers),ledger=arr(c.ledger);

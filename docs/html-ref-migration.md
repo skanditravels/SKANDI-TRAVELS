@@ -1,50 +1,39 @@
-# HTML_REF source migration
+# HTML_REF source map and GitHub-to-Wix delivery
 
-Base: `skanditravels/SKANDI-TRAVELS` main `18a25b1b339f600cf94bec613a87dd4f5bdec08a`. Review branch: `codex/html-ref-split-sources`.
+Checked against `main` commit `c3ab01f` and rebuilt locally on 2026-10-26.
 
-Extracted all **73 HTML payloads into 273 HTML/CSS/JavaScript files** in the website source structure. Nine Markdown files contain documentation only. All 73 payloads reconstruct exactly from the generated source ranges. The HTML_REF files were not modified.
+## Current source inventory
 
-The primary triplet uses the existing page folder and stem. Additional blocks use `.part-NN` companions so scripts retain their original execution positions, attributes and boundaries. This matters for modules, third-party libraries, scripts between markup, and styles with a media condition. JSON/import maps and inert templates remain in HTML. The Reservations change log accidentally inside its code fence is excluded from the HTML payload.
+- **84** Markdown files are in `HTML_REF`: **75** contain HTML payloads and **9** are documentation only.
+- Every payload has a source-map entry and can be reconstructed byte-for-byte from its split HTML/CSS/JavaScript files. The map covers **279 split-file targets**.
+- The latest `/my-profile` source now compiles to `dist/my-profile/index.html`; its canonical Wix component is `#htmlMyProfile`.
+- The latest integrated Alexandra widget is `HTML_REF/riaintra/Alexandra Chat.md`. Although that reference is stored under the `riaintra` folder, its own source says it is for customer-facing SKANDI pages. It is mapped to `skandi-embeds/global/alexandra/`; the existing Wix master bridge hides it on RIAINTRA, ALTEA and other internal routes. It is a separate Wix component (`#skandiAlexandraGlobalEmbed`), so it is not emitted as a page `index.html`.
+- The older Alexandra chat remains under `skandi-embeds/global/html-ref/`. The duplicate legacy launcher is mapped without replacing the integrated widget's own launcher.
+- Booking is a component inside the Home payload. `bookingFlow` resolves to the Home identity, and My Profile draft continuation returns to Home with its cart ID. The old `/booking` Wix route remains only as a query-preserving redirect; the manifest advertises no separate booking page index.
 
-## Source decisions
+## Build result
 
-- Eight current source sets remain active and unchanged: Home, Flight Status, Travel Info, RIAINTRA login, Success Factors, public header, public footer and mobile navigation. Their reference alternatives are split under `html-ref/` subfolders. The registry now points to your renamed `riaintra-embeds/success-factors/success-factors.*` files.
-- Four RIAINTRA/ALTEA global components fill their existing pending folders. Generated shell code handles shared iframe geometry and component ID collisions; extracted source remains unchanged.
-- Booking is one public page at `/booking` and one Wix HTML component, `#bookingFlowEmbed`. The canonical build input is `skandi-embeds/booking-flow/skandi-booking-flow.{html,css,js}` with the existing V12 page controller and booking facade. Former step components and duplicate merged copies remain only as superseded historical sources; they are not separate routes or build inputs.
-- Nine unregistered controller/component sources are extracted under `_unregistered/`. Their routes are not invented.
-- `Uniform Control.md` is a duplicate of the employee Uniform Center, not the admin source. Its extraction is under `uniform-control/html-ref/`; the admin slot remains pending.
-- `Customer Service Desk.md` contains an ALTEA Reservations implementation. It is retained under `_unregistered/benbs/html-ref/` and is not assigned to the Customer Service Desk controller.
-- The two Media Control documents have identical HTML and share one split target. Both Alexandra chat versions are preserved in distinct folders.
-- Destinations, Cookie Preferences and Special Assistance mappings are verified against their existing page/master controllers. No canonical route strings, backend functions, provider operations or database schema changed.
+The latest source build produced **38 page indexes**, with **14 pending source identities**, **1 integration-blocked page**, **3 aliases**, and **2 internal page build failures**. The public-page gate reports **zero public failures**. The two internal failures are:
 
-## Validation
-
-- 22 automated tests pass, including coverage of every HTML payload, exact reconstruction, modules/templates, external library order, media stylesheets, linked companion files, and the existing route/receiver tests.
-- Build result: **31 built, 16 pending, 2 blocked integrations, 2 aliases, 8 failed**. A split source is not a completed Wix migration. The build command deliberately exits 1 for the eight failures; the workflow will remain red until those are addressed. Failed pages are not advertised by the receiver manifest.
-- 62 browser smoke cases (31 pages at 1440×1000 and 390×844) completed with no uncaught JavaScript errors or document-width overflow. Results are recorded in `html-ref-browser-checks.json`. Desktop and mobile checks use a simulated Wix parent with external network requests blocked; they do not prove Wix publication, authenticated data, media/CDN availability or provider operations.
-
-## Remaining compilation failures
-
-| Page | Evidence / remaining work |
+| Page | Current compiler issue |
 | --- | --- |
-| destinations | [destinations / destinations] skandi-embeds/destinations/skandi-destinations.html, skandi-embeds/destinations/skandi-destinations.css, skandi-embeds/destinations/skandi-destinations.js: skandi-embeds/destinations/skandi-destinations.html: external stylesheet cannot be scoped: https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.css; put its rules in the CSS source |
-| travelInfo | [travelInfo / travel-info] skandi-embeds/travel-info/skandi-travel-info.html, skandi-embeds/travel-info/skandi-travel-info.css, skandi-embeds/travel-info/skandi-travel-info.js: skandi-embeds/travel-info/skandi-travel-info.css:1264:7: Unexpected } |
-| skandiCollection | [skandiCollection / skandi-collection] skandi-embeds/skandi-collection/skandi-skandi-collection.html, skandi-embeds/skandi-collection/skandi-skandi-collection.css, skandi-embeds/skandi-collection/skandi-skandi-collection.js: skandi-embeds/skandi-collection/skandi-skandi-collection.css: missing asset YOUR-IMAGE-URL.jpg |
-| alteaReservations | [alteaReservations / altea-reservations] skandi-embeds/altea-reservations/skandi-altea-reservations.html, skandi-embeds/altea-reservations/skandi-altea-reservations.css, skandi-embeds/altea-reservations/skandi-altea-reservations.js: skandi-embeds/altea-reservations/skandi-altea-reservations.html: executable scripts interleaved with markup; move scripts after page markup before splitting |
-| inventoryControl | [inventoryControl / inventory-control] skandi-embeds/inventory-control/skandi-inventory-control.html, skandi-embeds/inventory-control/skandi-inventory-control.css, skandi-embeds/inventory-control/skandi-inventory-control.js: skandi-embeds/inventory-control/skandi-inventory-control.html: module scripts require bundling into the page .js first |
-| docunetAdmin | [docunetAdmin / docunet-admin] skandi-embeds/docunet-admin/skandi-docunet-admin.html, skandi-embeds/docunet-admin/skandi-docunet-admin.css, skandi-embeds/docunet-admin/skandi-docunet-admin.js: skandi-embeds/docunet-admin/skandi-docunet-admin.html: nested iframe is not supported; retain the existing Wix integration |
-| mediaControl | [mediaControl / media-control] skandi-embeds/media-control/skandi-media-control.html, skandi-embeds/media-control/skandi-media-control.css, skandi-embeds/media-control/skandi-media-control.js: skandi-embeds/media-control/skandi-media-control.html: executable scripts interleaved with markup; move scripts after page markup before splitting |
-| groupTalk | [groupTalk / group-talk] skandi-embeds/group-talk/skandi-group-talk.html, skandi-embeds/group-talk/skandi-group-talk.css, skandi-embeds/group-talk/skandi-group-talk.js: skandi-embeds/group-talk/skandi-group-talk.html: external stylesheet cannot be scoped: https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.css; put its rules in the CSS source |
+| `inventoryControl` | Its JavaScript sidecar contains an `import` that the classic-script compiler cannot execute. |
+| `docunetAdmin` | Its source contains a nested iframe; keep the existing Wix integration until that source is migrated. |
 
-## Existing integration blocks
+The pending and blocked pages remain absent from receiver lookup; their existing Wix integrations are not replaced by this build.
 
-- **support**: src/public/customerAuthUi.js: imported export openCustomerLogin is absent; Help Center and support chat are separate HTML components; preserve them until a verified single-component migration.
-- **country**: src/public/customerAuthUi.js: imported export openCustomerLogin is absent
+## What failed and what changed
 
-Travel Info is your existing main-branch source: its CSS contains HTML style tags and an unmatched brace. It is preserved for review rather than overwritten by the older reference. The source alternatives and known placeholder asset are not silently repaired with invented code or imagery.
+The latest GitHub Actions run before this repair stopped in tests because `HTML_REF/riaintra/Alexandra Chat.md` and `HTML_REF/riaintra/Alexandra Global Launcher.md` were unmapped. The workflow also did not watch `HTML_REF/**`, so an authority-file-only change would not start a build. Both payloads are now classified, and changes to `HTML_REF/**` trigger validation.
 
-## Use and installation
+The active My Profile HTML had lost the document wrapper and its local sidecar references. The split source has been restored from its existing complete HTML_REF payload, allowing the current compiler to generate the page index without changing the page controller or backend.
 
-Merge the reviewed changes into the existing repository, retain the linked companion files, then run SKANDI Website Builder. Edit the split source files directly going forward. This is a source package: paste only an eligible generated `dist/<slug>/index.html` or the verified receiver into Wix, never an HTML file containing relative developer-file references. Keep current Wix implementations for pending, blocked or failed routes. Newly built pages require their existing controller and an authenticated/live integration check before receiver installation. No Wix publication or main-branch merge was performed.
+## How the Wix delivery works
 
-The complete source map is `html-ref-source-map.csv`. Initial import provenance, output hashes and reversible source-range metadata are in `html-ref-import.json`.
+1. A source commit on `main` triggers `.github/workflows/skandi-app-build.yml`. The workflow runs source and regression checks, then compiles each complete page to `dist/<slug>/index.html` with `dist/manifest.json`.
+2. On a successful public build, `scripts/publish-skandi-build.mjs` commits and pushes the generated `dist/` files directly to `main`. This is the existing no-PR publishing path; `dist/**` pushes do not retrigger the workflow.
+3. The Wix universal receiver fetches `dist/manifest.json` and the matching `dist/<slug>/index.html` from GitHub `main`, checks the SHA-256 and route identity, and serves that page inside the Wix HTML component.
+
+The builder does not upload page files into Wix Studio. The receiver must already be installed and published in the corresponding Wix component. Repository checks confirm the receiver code and its GitHub fetch path; they cannot confirm the current Wix Studio component placement or test the live page. The SKANDI Wix site is listed as published, but this repair did not modify or publish Wix settings.
+
+The generated source inventory and exact output hashes are in [html-ref-import.json](html-ref-import.json); the compact page/source status table is [html-ref-source-map.csv](html-ref-source-map.csv).

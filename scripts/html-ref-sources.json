@@ -199,10 +199,10 @@
   },
   {
     "source": "HTML_REF/skandi/Alexandra Chat.md",
-    "directory": "skandi-embeds/global/alexandra",
-    "stem": "skandi-alexandra-chat",
-    "disposition": "SEPARATE COMPONENT",
-    "note": "Separate sitewide Wix chat component; not injected a second time into compiled chrome."
+    "directory": "skandi-embeds/global/html-ref",
+    "stem": "skandi-alexandra-chat-v12-legacy",
+    "disposition": "LEGACY REFERENCE",
+    "note": "Older standalone chat source; the 2026-10-26 integrated sitewide widget is the active component."
   },
   {
     "source": "HTML_REF/skandi/Alexandra global chat.md",
@@ -468,6 +468,20 @@
     "directory": "skandi-embeds/booking-flow/html-ref",
     "stem": "skandi-booking-merged-reference",
     "disposition": "SOURCE CONFLICT",
-    "note": "Merged single-embed proposal conflicts with the existing eight-component Booking controller; retained as a reference only until a verified Wix migration is approved."
+    "note": "Merged Booking proposal retained for source reference; the active flow is embedded in Home and the legacy bookingFlow route resolves to Home."
+  },
+  {
+    "source": "HTML_REF/riaintra/Alexandra Chat.md",
+    "directory": "skandi-embeds/global/alexandra",
+    "stem": "skandi-alexandra-chat",
+    "disposition": "SEPARATE COMPONENT",
+    "note": "Current integrated sitewide SKANDI widget supplied 2026-10-26; the master bridge closes it on RIAINTRA, ALTEA and other internal routes."
+  },
+  {
+    "source": "HTML_REF/riaintra/Alexandra Global Launcher.md",
+    "directory": "skandi-embeds/global/alexandra",
+    "stem": "skandi-alexandra-launcher",
+    "disposition": "DUPLICATE SOURCE",
+    "note": "Byte-identical legacy launcher already mapped from HTML_REF/skandi/Alexandra Global Launcher.md; the active integrated widget has its own launcher."
   }
 ]

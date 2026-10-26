@@ -12,6 +12,7 @@ on:
       - 'src/backend/SKANDI_CORE/**'
       - 'scripts/**'
       - 'tests/**'
+      - 'HTML_REF/**'
       - '.github/workflows/skandi-app-build.yml'
   pull_request:
     branches: [main]
@@ -21,6 +22,7 @@ on:
       - 'src/**'
       - 'scripts/**'
       - 'tests/**'
+      - 'HTML_REF/**'
       - '.github/workflows/skandi-app-build.yml'
 
 concurrency:

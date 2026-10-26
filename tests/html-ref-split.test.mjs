@@ -14,7 +14,19 @@ test('every HTML_REF payload is mapped and reconstructs exactly from its split f
   assert.ok(mergedBooking,'Merged Booking reference must remain classified.');
   assert.equal(mergedBooking.disposition,'SOURCE CONFLICT');
   assert.equal(mergedBooking.directory,'skandi-embeds/booking-flow/html-ref');
-  assert.match(mergedBooking.note,/eight-component Booking controller/);
+  assert.match(mergedBooking.note,/bookingFlow route resolves to Home/);
+  const alexandra=map.find(m=>m.source==='HTML_REF/riaintra/Alexandra Chat.md');
+  assert.ok(alexandra,'The latest integrated Alexandra source must be mapped.');
+  assert.equal(alexandra.disposition,'SEPARATE COMPONENT');
+  assert.equal(alexandra.directory,'skandi-embeds/global/alexandra');
+  assert.equal(alexandra.stem,'skandi-alexandra-chat');
+  assert.match(alexandra.note,/sitewide/);
+  const legacyAlexandra=map.find(m=>m.source==='HTML_REF/skandi/Alexandra Chat.md');
+  assert.equal(legacyAlexandra.disposition,'LEGACY REFERENCE');
+  assert.equal(legacyAlexandra.directory,'skandi-embeds/global/html-ref');
+  const duplicateLauncher=map.find(m=>m.source==='HTML_REF/riaintra/Alexandra Global Launcher.md');
+  assert.equal(duplicateLauncher.disposition,'DUPLICATE SOURCE');
+  assert.equal(duplicateLauncher.directory,'skandi-embeds/global/alexandra');
   const sources=new Set(map.map(m=>m.source));
   for(const relative of (await fs.readdir(path.join(root,'HTML_REF'),{recursive:true})).filter(p=>p.endsWith('.md'))) {
     const file='HTML_REF/'+relative,original=extractDocument(await fs.readFile(path.join(root,file),'utf8'));
@@ -35,6 +47,39 @@ test('every HTML_REF payload is mapped and reconstructs exactly from its split f
       }
     }
   }
+});
+
+test('HTML_REF changes trigger the source-validation workflow',async()=>{
+  const workflow=await fs.readFile(path.join(root,'.github/workflows/skandi-app-build.yml'),'utf8');
+  const push=workflow.slice(workflow.indexOf('  push:'),workflow.indexOf('  pull_request:'));
+  const pull=workflow.slice(workflow.indexOf('  pull_request:'),workflow.indexOf('\n\nconcurrency:'));
+  assert.match(push,/HTML_REF\/\*\*/);
+  assert.match(pull,/HTML_REF\/\*\*/);
+});
+
+test('latest My Profile and sitewide Alexandra sidecars match their authoritative payloads',async()=>{
+  const map=JSON.parse(await fs.readFile(path.join(root,'scripts/html-ref-sources.json'),'utf8'));
+  for(const source of ['HTML_REF/skandi/SKANDI Club My Profile.md','HTML_REF/riaintra/Alexandra Chat.md']) {
+    const m=map.find(row=>row.source===source),original=extractDocument(await fs.readFile(path.join(root,source),'utf8'));
+    assert.ok(m,source+' must be mapped');
+    const split=splitDocument(original,m.stem);
+    for(const [name,content] of Object.entries(split.files))
+      assert.equal(await fs.readFile(path.join(root,m.directory,name),'utf8'),content,source+' / '+name);
+  }
+  const master=await fs.readFile(path.join(root,'src/pages/masterPage.js'),'utf8');
+  const bridge=await fs.readFile(path.join(root,'src/public/alexandraGlobalBridge.js'),'utf8');
+  const profileMap=map.find(row=>row.source==='HTML_REF/skandi/SKANDI Club My Profile.md');
+  const profileJS=await fs.readFile(path.join(root,profileMap.directory,profileMap.stem+'.js'),'utf8');
+  const siteMap=await fs.readFile(path.join(root,'src/public/siteMap.js'),'utf8');
+  const legacyBooking=await fs.readFile(path.join(root,'src/pages/Booking.e8twe.js'),'utf8');
+  assert.match(profileJS,/data-route="\/\?cartId=/);
+  assert.doesNotMatch(profileJS,/data-route="\/booking\?cartId=/);
+  assert.match(siteMap,/bookingFlow:\s*SITE_MAP\.home/);
+  assert.match(legacyBooking,/wixLocationFrontend\.to\(SITE_MAP\.home/);
+  assert.match(master,/bindAlexandraGlobal\(/);
+  assert.match(master,/enabled:\s*\(\)\s*=>\s*!isInternalPath\(currentPathString\(\)\)/);
+  assert.match(bridge,/#skandiAlexandraGlobalEmbed/);
+  assert.match(bridge,/riaintra\|altea\|intra\|staff\|admin/);
 });
 
 test('splitting preserves execution positions, modules, external libraries, data scripts and inert templates',()=>{

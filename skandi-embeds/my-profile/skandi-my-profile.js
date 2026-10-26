@@ -1,3 +1,4 @@
+
 (() => {
 "use strict";
 // B-011.31 hierarchical account shell + Club overview + trip action center. Data ownership and provider contracts remain canonical.

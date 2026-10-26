@@ -26,7 +26,7 @@ When sources are removed or invalidated, the manifest stops advertising their ou
 | ALTEA | `skandi-embeds/altea-global/altea-{header,footer}.*` | Independent operational chrome |
 | Chrome-free | Canonical master rules | No injected global chrome |
 
-The separate RIAINTRA and ALTEA global components are now extracted from HTML_REF. Public components are never substituted. The [HTML_REF migration report](docs/html-ref-migration.md) maps all 73 HTML payloads to their split source folders and records source conflicts and pages that need additional integration work. RIAINTRA login and GroupTalk remain chrome-free, as do Booking and the existing store/checkout routes.
+The separate RIAINTRA and ALTEA global components are now extracted from HTML_REF. Public components are never substituted. The [HTML_REF migration report](docs/html-ref-migration.md) maps all 75 HTML payloads to their split source folders and records source conflicts and pages that need additional integration work. RIAINTRA login and GroupTalk remain chrome-free, as do Booking and the existing store/checkout routes.
 
 ## Local validation
 

@@ -59,13 +59,15 @@
       "directory": "skandi-embeds/inventory-control",
       "stem": "skandi-inventory-control",
       "disposition": "IMPORTED",
-      "htmlSha256": "94fd432ae77b072da7ec27bb11de2eede257f28d59a2459a0b256b231ca80ea3",
-      "htmlBytes": 240120,
+      "htmlSha256": "a45ed0b15e8af11496cd4b7fd03b7c238cf219caed99311725854f2310ad12c6",
+      "htmlBytes": 240140,
       "counts": {
         "css": 1,
         "js": 1
       },
-      "diagnostics": [],
+      "diagnostics": [
+        "skandi-inventory-control.js: original source syntax: Unexpected token (1111:8)"
+      ],
       "outputs": [
         {
           "path": "skandi-embeds/inventory-control/skandi-inventory-control.css",
@@ -74,8 +76,8 @@
         },
         {
           "path": "skandi-embeds/inventory-control/skandi-inventory-control.js",
-          "sha256": "d2db1b0ab6698f1109907f4447b7e47795289d3433e0f542d56ef12a6f9ec939",
-          "bytes": 205374
+          "sha256": "cc48ec115123d4c54c8a82c5020e97029630a22a609b3156272535c6d66cf2dd",
+          "bytes": 205394
         },
         {
           "path": "skandi-embeds/inventory-control/skandi-inventory-control.html",
@@ -96,7 +98,7 @@
         },
         {
           "start": 34698,
-          "end": 239894,
+          "end": 239914,
           "name": "skandi-inventory-control.js",
           "opening": "<script type=\"module\">",
           "closing": "</script>",
@@ -163,8 +165,8 @@
       "directory": "skandi-embeds/altea-reservations",
       "stem": "skandi-altea-reservations",
       "disposition": "IMPORTED",
-      "htmlSha256": "f5a8d568de34100e8ce479b0f9c39b7a415b706788234a56215e692c1c4046f4",
-      "htmlBytes": 556833,
+      "htmlSha256": "efa2a1bdade1dde9a35602bb3bb9a6b3d2d9fb83c627373c779fe4f4b77e96c0",
+      "htmlBytes": 554838,
       "counts": {
         "css": 8,
         "js": 7
@@ -203,8 +205,8 @@
         },
         {
           "path": "skandi-embeds/altea-reservations/skandi-altea-reservations.part-03.js",
-          "sha256": "1b91617c49727a13316298cb0ad846a121bc61d15561c95ad5d5aaf44f4fafee",
-          "bytes": 139005
+          "sha256": "721266dafee24390d9a8310ea9a431d6e14097b68a70f07f9899a1c3a115119e",
+          "bytes": 137010
         },
         {
           "path": "skandi-embeds/altea-reservations/skandi-altea-reservations.part-05.css",
@@ -315,7 +317,7 @@
         },
         {
           "start": 267817,
-          "end": 406598,
+          "end": 404603,
           "name": "skandi-altea-reservations.part-03.js",
           "opening": "<script>",
           "closing": "</script>",
@@ -324,84 +326,84 @@
           "sourceLine": 4461
         },
         {
-          "start": 406605,
-          "end": 409193,
+          "start": 404610,
+          "end": 407198,
           "name": "skandi-altea-reservations.part-05.css",
           "opening": "<style id=\"b0073-altea-automation-style\">",
           "closing": "</style>",
           "replacement": "<link rel=\"stylesheet\" href=\"skandi-altea-reservations.part-05.css\" id=\"b0073-altea-automation-style\">",
           "type": "classic",
-          "sourceLine": 6068
+          "sourceLine": 6011
         },
         {
-          "start": 409194,
-          "end": 453648,
+          "start": 407199,
+          "end": 451653,
           "name": "skandi-altea-reservations.part-04.js",
           "opening": "<script id=\"b0073-altea-automation-script\">",
           "closing": "</script>",
           "replacement": "<script id=\"b0073-altea-automation-script\" src=\"skandi-altea-reservations.part-04.js\"></script>",
           "type": "classic",
-          "sourceLine": 6097
+          "sourceLine": 6040
         },
         {
-          "start": 453653,
-          "end": 460439,
+          "start": 451658,
+          "end": 458444,
           "name": "skandi-altea-reservations.part-06.css",
           "opening": "<style id=\"b0074-enterprise-workbenches\">",
           "closing": "</style>",
           "replacement": "<link rel=\"stylesheet\" href=\"skandi-altea-reservations.part-06.css\" id=\"b0074-enterprise-workbenches\">",
           "type": "classic",
-          "sourceLine": 6561
+          "sourceLine": 6504
         },
         {
-          "start": 460440,
-          "end": 524056,
+          "start": 458445,
+          "end": 522061,
           "name": "skandi-altea-reservations.part-05.js",
           "opening": "<script id=\"b0074-enterprise-workbenches-script\">",
           "closing": "</script>",
           "replacement": "<script id=\"b0074-enterprise-workbenches-script\" src=\"skandi-altea-reservations.part-05.js\"></script>",
           "type": "classic",
-          "sourceLine": 6586
+          "sourceLine": 6529
         },
         {
-          "start": 524058,
-          "end": 527681,
+          "start": 522063,
+          "end": 525686,
           "name": "skandi-altea-reservations.part-07.css",
           "opening": "<style id=\"v12-reservations-pnr-product-repair\">",
           "closing": "</style>",
           "replacement": "<link rel=\"stylesheet\" href=\"skandi-altea-reservations.part-07.css\" id=\"v12-reservations-pnr-product-repair\">",
           "type": "classic",
-          "sourceLine": 7054
+          "sourceLine": 6997
         },
         {
-          "start": 527683,
-          "end": 550277,
+          "start": 525688,
+          "end": 548282,
           "name": "skandi-altea-reservations.part-06.js",
           "opening": "<script id=\"v12-reservations-pnr-product-repair-script\">",
           "closing": "</script>",
           "replacement": "<script id=\"v12-reservations-pnr-product-repair-script\" src=\"skandi-altea-reservations.part-06.js\"></script>",
           "type": "classic",
-          "sourceLine": 7074
+          "sourceLine": 7017
         },
         {
-          "start": 550280,
-          "end": 550998,
+          "start": 548285,
+          "end": 549003,
           "name": "skandi-altea-reservations.part-08.css",
           "opening": "<style id=\"v12-duffel-order-audit-style\">",
           "closing": "</style>",
           "replacement": "<link rel=\"stylesheet\" href=\"skandi-altea-reservations.part-08.css\" id=\"v12-duffel-order-audit-style\">",
           "type": "classic",
-          "sourceLine": 7314
+          "sourceLine": 7257
         },
         {
-          "start": 550999,
-          "end": 556046,
+          "start": 549004,
+          "end": 554051,
           "name": "skandi-altea-reservations.part-07.js",
           "opening": "<script id=\"v12-duffel-order-audit\">",
           "closing": "</script>",
           "replacement": "<script id=\"v12-duffel-order-audit\" src=\"skandi-altea-reservations.part-07.js\"></script>",
           "type": "classic",
-          "sourceLine": 7317
+          "sourceLine": 7260
         }
       ]
     },
@@ -1341,64 +1343,79 @@
       "directory": "skandi-embeds/media-control",
       "stem": "skandi-media-control",
       "disposition": "IMPORTED",
-      "htmlSha256": "d9099dfc6dec975f41aeebb716157a4e25fbec36ef5e85af7dce2f9afd19062a",
-      "htmlBytes": 394034,
+      "htmlSha256": "6b533bbd9e2ecb3729b7a47a450d7573255c4de1b76906e8f14d470954e8f2a8",
+      "htmlBytes": 423045,
       "counts": {
-        "css": 4,
-        "js": 4
+        "css": 5,
+        "js": 6
       },
       "diagnostics": [],
       "outputs": [
         {
           "path": "skandi-embeds/media-control/skandi-media-control.css",
-          "sha256": "d22e5d1fe27fa588e40cf416799cfea9bed5869464a702d5a65dea607674bef2",
-          "bytes": 81472
+          "sha256": "166c2355af9a1b453dcd1750ae51bf00ef6cb7f2ccc26abfc13f8275685ebd3b",
+          "bytes": 81469
         },
         {
           "path": "skandi-embeds/media-control/skandi-media-control.part-02.css",
-          "sha256": "1cd9cfcda8bbede88e6fb7cf2b10f367819ba5b7da6b08c5261061f1905246d9",
-          "bytes": 3519
+          "sha256": "c3e76a0d69cfa99116e604d0f5aca67d47a39e21661b80b8d5e9178e020206af",
+          "bytes": 3518
         },
         {
           "path": "skandi-embeds/media-control/skandi-media-control.js",
-          "sha256": "03781978f7c04f26b02863d36702b8d4ea1301924970aa3b2d72f2438f64c94a",
-          "bytes": 179990
+          "sha256": "74fa92cf56e75851afe84136f648336d94ca5aff38c99d7705c02b18ba35ed81",
+          "bytes": 180131
         },
         {
           "path": "skandi-embeds/media-control/skandi-media-control.part-02.js",
-          "sha256": "48529fb1095573c81e888e4217a322f386326f33381011c38b9e37c17a48e2d5",
-          "bytes": 6404
+          "sha256": "df21568c857f5ae61da2f7ee8b4096e550024097da0edf9ea0d32865f97a7c58",
+          "bytes": 6403
         },
         {
           "path": "skandi-embeds/media-control/skandi-media-control.part-03.css",
-          "sha256": "2d44867d8be3799450d72e2d00d62fad78f7da6a158723913234463fa0daf695",
-          "bytes": 2552
+          "sha256": "9a776c262d654b77191ab29d248f7c26e976a6f429ab15d2c09c43419b88b963",
+          "bytes": 2551
         },
         {
           "path": "skandi-embeds/media-control/skandi-media-control.part-03.js",
-          "sha256": "4578dbacfbd308c68714adb4006db48b71f794493b93b3dccfd0c199cb4e9b97",
-          "bytes": 16165
+          "sha256": "b41d2044df0cd9b17ee7d19cca71c97785496d70b055681393c2434d550b8c04",
+          "bytes": 16164
         },
         {
           "path": "skandi-embeds/media-control/skandi-media-control.part-04.css",
-          "sha256": "366c2df2e25a756bafe1632583509e687a8d12c668547db189ae39f40431892d",
-          "bytes": 500
+          "sha256": "695c5c9881c69413eab0db936322b48f24d506d88da80610568b7233d49b1f7f",
+          "bytes": 499
         },
         {
           "path": "skandi-embeds/media-control/skandi-media-control.part-04.js",
-          "sha256": "f77f578206886b7ed83e04c8e0758e7370568bf1bf460f442b3b206127c656da",
-          "bytes": 1387
+          "sha256": "531b236f39b5a63a544edf7f38f789a0d4eecfcb2592d9f572a44ceb8988fc44",
+          "bytes": 1386
+        },
+        {
+          "path": "skandi-embeds/media-control/skandi-media-control.part-05.css",
+          "sha256": "b98c51ca537d73c684a2873e5f857291a51586e7d2c1e949fa46dec895ddd109",
+          "bytes": 2679
+        },
+        {
+          "path": "skandi-embeds/media-control/skandi-media-control.part-05.js",
+          "sha256": "ca524394fa75f10121b11e8c08752d96ac4a1616dfb869a57c3da0be887d92bd",
+          "bytes": 8104
+        },
+        {
+          "path": "skandi-embeds/media-control/skandi-media-control.part-06.js",
+          "sha256": "2553354e622cb4d74ab30034d040d3e3b2a4989fb79875dab92c74c5963f013e",
+          "bytes": 18046
         },
         {
           "path": "skandi-embeds/media-control/skandi-media-control.html",
-          "sha256": "e626140bb7a3437ee51ee52047b1a38fe9b0ef79bbdd764cfa4e3da44d540319",
-          "bytes": 102373
+          "sha256": "b1fd3b411c8001c1f16ded2f816d9544a107df63bfa8093a355be34b37056d52",
+          "bytes": 102547
         }
       ],
       "replacements": [
         {
           "start": 492,
-          "end": 81979,
+          "end": 81976,
           "name": "skandi-media-control.css",
           "opening": "<style>",
           "closing": "</style>",
@@ -1407,74 +1424,104 @@
           "sourceLine": 9
         },
         {
-          "start": 81981,
-          "end": 85552,
+          "start": 81978,
+          "end": 85548,
           "name": "skandi-media-control.part-02.css",
           "opening": "<style id=\"voy-template-studio-integration\">",
           "closing": "</style>",
           "replacement": "<link rel=\"stylesheet\" href=\"skandi-media-control.part-02.css\" id=\"voy-template-studio-integration\">",
           "type": "classic",
-          "sourceLine": 1520
+          "sourceLine": 1518
         },
         {
-          "start": 92772,
-          "end": 272620,
+          "start": 92766,
+          "end": 272755,
           "name": "skandi-media-control.js",
           "opening": "<script>",
           "closing": "</script>",
           "replacement": "<script src=\"skandi-media-control.js\"></script>",
           "type": "classic",
-          "sourceLine": 1685
+          "sourceLine": 1682
         },
         {
-          "start": 272622,
-          "end": 279031,
+          "start": 272757,
+          "end": 279165,
           "name": "skandi-media-control.part-02.js",
           "opening": "<script>",
           "closing": "</script>",
           "replacement": "<script src=\"skandi-media-control.part-02.js\"></script>",
           "type": "classic",
-          "sourceLine": 2877
+          "sourceLine": 2873
         },
         {
-          "start": 279034,
-          "end": 281646,
+          "start": 279168,
+          "end": 281779,
           "name": "skandi-media-control.part-03.css",
           "opening": "<style id=\"skandi-supabase-media-integration-style\">",
           "closing": "</style>",
           "replacement": "<link rel=\"stylesheet\" href=\"skandi-media-control.part-03.css\" id=\"skandi-supabase-media-integration-style\">",
           "type": "classic",
-          "sourceLine": 2912
+          "sourceLine": 2907
         },
         {
-          "start": 282795,
-          "end": 299009,
+          "start": 282928,
+          "end": 299141,
           "name": "skandi-media-control.part-03.js",
           "opening": "<script id=\"skandi-supabase-media-integration\">",
           "closing": "</script>",
           "replacement": "<script id=\"skandi-supabase-media-integration\" src=\"skandi-media-control.part-03.js\"></script>",
           "type": "classic",
-          "sourceLine": 2930
+          "sourceLine": 2924
         },
         {
-          "start": 299012,
-          "end": 299562,
+          "start": 299144,
+          "end": 299693,
           "name": "skandi-media-control.part-04.css",
           "opening": "<style id=\"skandi-integrated-email-style\">",
           "closing": "</style>",
           "replacement": "<link rel=\"stylesheet\" href=\"skandi-media-control.part-04.css\" id=\"skandi-integrated-email-style\">",
           "type": "classic",
-          "sourceLine": 3068
+          "sourceLine": 3061
         },
         {
-          "start": 392407,
-          "end": 393810,
+          "start": 392538,
+          "end": 393940,
           "name": "skandi-media-control.part-04.js",
           "opening": "<script>",
           "closing": "</script>",
           "replacement": "<script src=\"skandi-media-control.part-04.js\"></script>",
           "type": "classic",
-          "sourceLine": 3073
+          "sourceLine": 3065
+        },
+        {
+          "start": 393941,
+          "end": 396635,
+          "name": "skandi-media-control.part-05.css",
+          "opening": "<style>",
+          "closing": "</style>",
+          "replacement": "<link rel=\"stylesheet\" href=\"skandi-media-control.part-05.css\">",
+          "type": "classic",
+          "sourceLine": 3071
+        },
+        {
+          "start": 396636,
+          "end": 404757,
+          "name": "skandi-media-control.part-05.js",
+          "opening": "<script>",
+          "closing": "</script>",
+          "replacement": "<script src=\"skandi-media-control.part-05.js\"></script>",
+          "type": "classic",
+          "sourceLine": 3089
+        },
+        {
+          "start": 404758,
+          "end": 422800,
+          "name": "skandi-media-control.part-06.js",
+          "opening": "<script>",
+          "closing": "</script>",
+          "replacement": "<script src=\"skandi-media-control.part-06.js\"></script>",
+          "type": "classic",
+          "sourceLine": 3197
         }
       ]
     },
@@ -2110,12 +2157,12 @@
     },
     {
       "source": "HTML_REF/skandi/Alexandra Chat.md",
-      "directory": "skandi-embeds/global/alexandra",
-      "stem": "skandi-alexandra-chat",
-      "disposition": "SEPARATE COMPONENT",
-      "note": "Separate sitewide Wix chat component; not injected a second time into compiled chrome.",
-      "htmlSha256": "6a97768f05f891450f82640ba5bf20ca619094cf7e8052515a41d8707329d3ee",
-      "htmlBytes": 23780,
+      "directory": "skandi-embeds/global/html-ref",
+      "stem": "skandi-alexandra-chat-v12-legacy",
+      "disposition": "LEGACY REFERENCE",
+      "note": "Older standalone chat source; the 2026-10-26 integrated sitewide widget is the active component.",
+      "htmlSha256": "e16fc99c8baba98b081b9793962f02082364c167a4b433820b8832add16104d3",
+      "htmlBytes": 13380,
       "counts": {
         "css": 1,
         "js": 1
@@ -2123,41 +2170,41 @@
       "diagnostics": [],
       "outputs": [
         {
-          "path": "skandi-embeds/global/alexandra/skandi-alexandra-chat.css",
-          "sha256": "977ef30a4a28872c26f12005bdf74ca27340aee43a02d7fc7360a9b9099ce8b9",
-          "bytes": 5192
+          "path": "skandi-embeds/global/html-ref/skandi-alexandra-chat-v12-legacy.css",
+          "sha256": "0f0d8a65fd55ac215c0500f38182067ed552bdcd9703095cfec07069197afb5b",
+          "bytes": 3640
         },
         {
-          "path": "skandi-embeds/global/alexandra/skandi-alexandra-chat.js",
-          "sha256": "c2393f4a2ef37d0e5c120e3f3fbdf3f4f79e9a1da233f1ea5da876410391ff44",
-          "bytes": 14189
+          "path": "skandi-embeds/global/html-ref/skandi-alexandra-chat-v12-legacy.js",
+          "sha256": "01ffaf27b349bfda254f5df44f16dccfaf60c8106eb278892306081c82885a66",
+          "bytes": 7112
         },
         {
-          "path": "skandi-embeds/global/alexandra/skandi-alexandra-chat.html",
-          "sha256": "952bfb895f472e8f352b8777a814d14b60bdaa5b25ffd3f78139e869babe37df",
-          "bytes": 4470
+          "path": "skandi-embeds/global/html-ref/skandi-alexandra-chat-v12-legacy.html",
+          "sha256": "db041bc037512b674beb9e60741ee9cbd4f8e82bebf4a028674f9de93a93140c",
+          "bytes": 2722
         }
       ],
       "replacements": [
         {
-          "start": 219,
-          "end": 5426,
-          "name": "skandi-alexandra-chat.css",
+          "start": 342,
+          "end": 3997,
+          "name": "skandi-alexandra-chat-v12-legacy.css",
           "opening": "<style>",
           "closing": "</style>",
-          "replacement": "<link rel=\"stylesheet\" href=\"skandi-alexandra-chat.css\">",
+          "replacement": "<link rel=\"stylesheet\" href=\"skandi-alexandra-chat-v12-legacy.css\">",
           "type": "classic",
-          "sourceLine": 6
+          "sourceLine": 2
         },
         {
-          "start": 9540,
-          "end": 23741,
-          "name": "skandi-alexandra-chat.js",
+          "start": 6233,
+          "end": 13360,
+          "name": "skandi-alexandra-chat-v12-legacy.js",
           "opening": "<script>",
           "closing": "</script>",
-          "replacement": "<script src=\"skandi-alexandra-chat.js\"></script>",
+          "replacement": "<script src=\"skandi-alexandra-chat-v12-legacy.js\"></script>",
           "type": "classic",
-          "sourceLine": 56
+          "sourceLine": 5
         }
       ]
     },
@@ -3229,8 +3276,8 @@
       "stem": "skandi-mobile-nav-reference",
       "disposition": "PRESERVED CURRENT SOURCE",
       "note": "Current Git mobile navigation remains active.",
-      "htmlSha256": "edd6fbedeb12615d437a672f86fa97a2f95b85affa4d33486b292502ab6b26e4",
-      "htmlBytes": 36926,
+      "htmlSha256": "fcdaad250b21d1677c5bc542a3bdc8092438527ef28ac8f7d276c51625967b32",
+      "htmlBytes": 36789,
       "counts": {
         "css": 1,
         "js": 1
@@ -3244,13 +3291,13 @@
         },
         {
           "path": "skandi-embeds/global/html-ref/skandi-mobile-nav-reference.js",
-          "sha256": "92ca488edc9966e5fcc7f27aadcaf873228627becf325baddcf187c25e601298",
-          "bytes": 19783
+          "sha256": "2f9c617db35b139b8b66a1db002e71be1f8aa90bf7c8e7a0d0c95626f41ddc6e",
+          "bytes": 19766
         },
         {
           "path": "skandi-embeds/global/html-ref/skandi-mobile-nav-reference.html",
-          "sha256": "aa289a951abc0406d41d7f87c1e88f47432eabad10a76222440bf10c52514466",
-          "bytes": 7733
+          "sha256": "15d6de0f493153417fb26d05e2f90d0bbad00e3f7a2c6ff4153a9c98e764b140",
+          "bytes": 7613
         }
       ],
       "replacements": [
@@ -3265,14 +3312,14 @@
           "sourceLine": 12
         },
         {
-          "start": 17079,
-          "end": 36875,
+          "start": 16961,
+          "end": 36740,
           "name": "skandi-mobile-nav-reference.js",
           "opening": "<script>",
           "closing": "</script>",
           "replacement": "<script src=\"skandi-mobile-nav-reference.js\"></script>",
           "type": "classic",
-          "sourceLine": 153
+          "sourceLine": 152
         }
       ]
     },
@@ -3334,8 +3381,8 @@
       "directory": "skandi-embeds/support",
       "stem": "skandi-support",
       "disposition": "IMPORTED",
-      "htmlSha256": "51c51cfde9abe3a4e3dbcde91e2bbb964a0ec53bb88e07430d79e2697f19100c",
-      "htmlBytes": 49183,
+      "htmlSha256": "493aca3f02bb96265dc68d6d9daff4289214cd0f1a10d59f3a0dfc572523deff",
+      "htmlBytes": 49202,
       "counts": {
         "css": 1,
         "js": 1
@@ -3349,8 +3396,8 @@
         },
         {
           "path": "skandi-embeds/support/skandi-support.js",
-          "sha256": "7c2307655ff5961f78f63c4005a76e1c6850cdecb7ccff8e1bc919a692b8c563",
-          "bytes": 20948
+          "sha256": "29454aa227cf0f8e798b67dd71892aeedd1f06e3c09405a60faae61311e27ec4",
+          "bytes": 20967
         },
         {
           "path": "skandi-embeds/support/skandi-support.html",
@@ -3371,7 +3418,7 @@
         },
         {
           "start": 28189,
-          "end": 49152,
+          "end": 49171,
           "name": "skandi-support.js",
           "opening": "<script>",
           "closing": "</script>",
@@ -3439,64 +3486,79 @@
       "stem": "skandi-media-control",
       "disposition": "DUPLICATE SOURCE",
       "note": "Byte-identical HTML to HTML_REF/riaintra/Media Control.md; one shared split target.",
-      "htmlSha256": "d9099dfc6dec975f41aeebb716157a4e25fbec36ef5e85af7dce2f9afd19062a",
-      "htmlBytes": 394034,
+      "htmlSha256": "6b533bbd9e2ecb3729b7a47a450d7573255c4de1b76906e8f14d470954e8f2a8",
+      "htmlBytes": 423045,
       "counts": {
-        "css": 4,
-        "js": 4
+        "css": 5,
+        "js": 6
       },
       "diagnostics": [],
       "outputs": [
         {
           "path": "skandi-embeds/media-control/skandi-media-control.css",
-          "sha256": "d22e5d1fe27fa588e40cf416799cfea9bed5869464a702d5a65dea607674bef2",
-          "bytes": 81472
+          "sha256": "166c2355af9a1b453dcd1750ae51bf00ef6cb7f2ccc26abfc13f8275685ebd3b",
+          "bytes": 81469
         },
         {
           "path": "skandi-embeds/media-control/skandi-media-control.part-02.css",
-          "sha256": "1cd9cfcda8bbede88e6fb7cf2b10f367819ba5b7da6b08c5261061f1905246d9",
-          "bytes": 3519
+          "sha256": "c3e76a0d69cfa99116e604d0f5aca67d47a39e21661b80b8d5e9178e020206af",
+          "bytes": 3518
         },
         {
           "path": "skandi-embeds/media-control/skandi-media-control.js",
-          "sha256": "03781978f7c04f26b02863d36702b8d4ea1301924970aa3b2d72f2438f64c94a",
-          "bytes": 179990
+          "sha256": "74fa92cf56e75851afe84136f648336d94ca5aff38c99d7705c02b18ba35ed81",
+          "bytes": 180131
         },
         {
           "path": "skandi-embeds/media-control/skandi-media-control.part-02.js",
-          "sha256": "48529fb1095573c81e888e4217a322f386326f33381011c38b9e37c17a48e2d5",
-          "bytes": 6404
+          "sha256": "df21568c857f5ae61da2f7ee8b4096e550024097da0edf9ea0d32865f97a7c58",
+          "bytes": 6403
         },
         {
           "path": "skandi-embeds/media-control/skandi-media-control.part-03.css",
-          "sha256": "2d44867d8be3799450d72e2d00d62fad78f7da6a158723913234463fa0daf695",
-          "bytes": 2552
+          "sha256": "9a776c262d654b77191ab29d248f7c26e976a6f429ab15d2c09c43419b88b963",
+          "bytes": 2551
         },
         {
           "path": "skandi-embeds/media-control/skandi-media-control.part-03.js",
-          "sha256": "4578dbacfbd308c68714adb4006db48b71f794493b93b3dccfd0c199cb4e9b97",
-          "bytes": 16165
+          "sha256": "b41d2044df0cd9b17ee7d19cca71c97785496d70b055681393c2434d550b8c04",
+          "bytes": 16164
         },
         {
           "path": "skandi-embeds/media-control/skandi-media-control.part-04.css",
-          "sha256": "366c2df2e25a756bafe1632583509e687a8d12c668547db189ae39f40431892d",
-          "bytes": 500
+          "sha256": "695c5c9881c69413eab0db936322b48f24d506d88da80610568b7233d49b1f7f",
+          "bytes": 499
         },
         {
           "path": "skandi-embeds/media-control/skandi-media-control.part-04.js",
-          "sha256": "f77f578206886b7ed83e04c8e0758e7370568bf1bf460f442b3b206127c656da",
-          "bytes": 1387
+          "sha256": "531b236f39b5a63a544edf7f38f789a0d4eecfcb2592d9f572a44ceb8988fc44",
+          "bytes": 1386
+        },
+        {
+          "path": "skandi-embeds/media-control/skandi-media-control.part-05.css",
+          "sha256": "b98c51ca537d73c684a2873e5f857291a51586e7d2c1e949fa46dec895ddd109",
+          "bytes": 2679
+        },
+        {
+          "path": "skandi-embeds/media-control/skandi-media-control.part-05.js",
+          "sha256": "ca524394fa75f10121b11e8c08752d96ac4a1616dfb869a57c3da0be887d92bd",
+          "bytes": 8104
+        },
+        {
+          "path": "skandi-embeds/media-control/skandi-media-control.part-06.js",
+          "sha256": "2553354e622cb4d74ab30034d040d3e3b2a4989fb79875dab92c74c5963f013e",
+          "bytes": 18046
         },
         {
           "path": "skandi-embeds/media-control/skandi-media-control.html",
-          "sha256": "e626140bb7a3437ee51ee52047b1a38fe9b0ef79bbdd764cfa4e3da44d540319",
-          "bytes": 102373
+          "sha256": "b1fd3b411c8001c1f16ded2f816d9544a107df63bfa8093a355be34b37056d52",
+          "bytes": 102547
         }
       ],
       "replacements": [
         {
           "start": 492,
-          "end": 81979,
+          "end": 81976,
           "name": "skandi-media-control.css",
           "opening": "<style>",
           "closing": "</style>",
@@ -3505,74 +3567,104 @@
           "sourceLine": 9
         },
         {
-          "start": 81981,
-          "end": 85552,
+          "start": 81978,
+          "end": 85548,
           "name": "skandi-media-control.part-02.css",
           "opening": "<style id=\"voy-template-studio-integration\">",
           "closing": "</style>",
           "replacement": "<link rel=\"stylesheet\" href=\"skandi-media-control.part-02.css\" id=\"voy-template-studio-integration\">",
           "type": "classic",
-          "sourceLine": 1520
+          "sourceLine": 1518
         },
         {
-          "start": 92772,
-          "end": 272620,
+          "start": 92766,
+          "end": 272755,
           "name": "skandi-media-control.js",
           "opening": "<script>",
           "closing": "</script>",
           "replacement": "<script src=\"skandi-media-control.js\"></script>",
           "type": "classic",
-          "sourceLine": 1685
+          "sourceLine": 1682
         },
         {
-          "start": 272622,
-          "end": 279031,
+          "start": 272757,
+          "end": 279165,
           "name": "skandi-media-control.part-02.js",
           "opening": "<script>",
           "closing": "</script>",
           "replacement": "<script src=\"skandi-media-control.part-02.js\"></script>",
           "type": "classic",
-          "sourceLine": 2877
+          "sourceLine": 2873
         },
         {
-          "start": 279034,
-          "end": 281646,
+          "start": 279168,
+          "end": 281779,
           "name": "skandi-media-control.part-03.css",
           "opening": "<style id=\"skandi-supabase-media-integration-style\">",
           "closing": "</style>",
           "replacement": "<link rel=\"stylesheet\" href=\"skandi-media-control.part-03.css\" id=\"skandi-supabase-media-integration-style\">",
           "type": "classic",
-          "sourceLine": 2912
+          "sourceLine": 2907
         },
         {
-          "start": 282795,
-          "end": 299009,
+          "start": 282928,
+          "end": 299141,
           "name": "skandi-media-control.part-03.js",
           "opening": "<script id=\"skandi-supabase-media-integration\">",
           "closing": "</script>",
           "replacement": "<script id=\"skandi-supabase-media-integration\" src=\"skandi-media-control.part-03.js\"></script>",
           "type": "classic",
-          "sourceLine": 2930
+          "sourceLine": 2924
         },
         {
-          "start": 299012,
-          "end": 299562,
+          "start": 299144,
+          "end": 299693,
           "name": "skandi-media-control.part-04.css",
           "opening": "<style id=\"skandi-integrated-email-style\">",
           "closing": "</style>",
           "replacement": "<link rel=\"stylesheet\" href=\"skandi-media-control.part-04.css\" id=\"skandi-integrated-email-style\">",
           "type": "classic",
-          "sourceLine": 3068
+          "sourceLine": 3061
         },
         {
-          "start": 392407,
-          "end": 393810,
+          "start": 392538,
+          "end": 393940,
           "name": "skandi-media-control.part-04.js",
           "opening": "<script>",
           "closing": "</script>",
           "replacement": "<script src=\"skandi-media-control.part-04.js\"></script>",
           "type": "classic",
-          "sourceLine": 3073
+          "sourceLine": 3065
+        },
+        {
+          "start": 393941,
+          "end": 396635,
+          "name": "skandi-media-control.part-05.css",
+          "opening": "<style>",
+          "closing": "</style>",
+          "replacement": "<link rel=\"stylesheet\" href=\"skandi-media-control.part-05.css\">",
+          "type": "classic",
+          "sourceLine": 3071
+        },
+        {
+          "start": 396636,
+          "end": 404757,
+          "name": "skandi-media-control.part-05.js",
+          "opening": "<script>",
+          "closing": "</script>",
+          "replacement": "<script src=\"skandi-media-control.part-05.js\"></script>",
+          "type": "classic",
+          "sourceLine": 3089
+        },
+        {
+          "start": 404758,
+          "end": 422800,
+          "name": "skandi-media-control.part-06.js",
+          "opening": "<script>",
+          "closing": "</script>",
+          "replacement": "<script src=\"skandi-media-control.part-06.js\"></script>",
+          "type": "classic",
+          "sourceLine": 3197
         }
       ]
     },
@@ -3856,8 +3948,8 @@
       "directory": "skandi-embeds/my-profile",
       "stem": "skandi-my-profile",
       "disposition": "IMPORTED",
-      "htmlSha256": "7bfc75137e3318a7d58304049dd8ec56bf8478241a636ae2d4eec42bca4da329",
-      "htmlBytes": 127410,
+      "htmlSha256": "83500f036d94929c40271a9bf8bf73ac6395a1eeb1f71acefbb21d04cff07f65",
+      "htmlBytes": 127403,
       "counts": {
         "css": 1,
         "js": 1
@@ -3871,8 +3963,8 @@
         },
         {
           "path": "skandi-embeds/my-profile/skandi-my-profile.js",
-          "sha256": "1b86fea77704f4da59c34d59569589935973b19073a219ee6c8a94ef9d1224c8",
-          "bytes": 60498
+          "sha256": "7e5f9b5aaa2116a703a7dcbaab38ff71fbee94ef53858671481c3c6b8322efa9",
+          "bytes": 60491
         },
         {
           "path": "skandi-embeds/my-profile/skandi-my-profile.html",
@@ -3893,7 +3985,7 @@
         },
         {
           "start": 66869,
-          "end": 127289,
+          "end": 127282,
           "name": "skandi-my-profile.js",
           "opening": "<script>",
           "closing": "</script>",
@@ -4732,7 +4824,7 @@
       "directory": "skandi-embeds/booking-flow/html-ref",
       "stem": "skandi-booking-merged-reference",
       "disposition": "SOURCE CONFLICT",
-      "note": "Merged single-embed proposal conflicts with the existing eight-component Booking controller; retained as a reference only until a verified Wix migration is approved.",
+      "note": "Merged Booking proposal retained for source reference; the active flow is embedded in Home and the legacy bookingFlow route resolves to Home.",
       "htmlSha256": "d27f0a471cd35135d2bf0c9e3a143089ff5730c4a089b85c104329cee0bd2d5d",
       "htmlBytes": 62421,
       "counts": {
@@ -4777,6 +4869,112 @@
           "replacement": "<script src=\"skandi-booking-merged-reference.js\"></script>",
           "type": "classic",
           "sourceLine": 426
+        }
+      ]
+    },
+    {
+      "source": "HTML_REF/riaintra/Alexandra Chat.md",
+      "directory": "skandi-embeds/global/alexandra",
+      "stem": "skandi-alexandra-chat",
+      "disposition": "SEPARATE COMPONENT",
+      "note": "Current integrated sitewide SKANDI widget supplied 2026-10-26; the master bridge closes it on RIAINTRA, ALTEA and other internal routes.",
+      "htmlSha256": "6a97768f05f891450f82640ba5bf20ca619094cf7e8052515a41d8707329d3ee",
+      "htmlBytes": 23780,
+      "counts": {
+        "css": 1,
+        "js": 1
+      },
+      "diagnostics": [],
+      "outputs": [
+        {
+          "path": "skandi-embeds/global/alexandra/skandi-alexandra-chat.css",
+          "sha256": "977ef30a4a28872c26f12005bdf74ca27340aee43a02d7fc7360a9b9099ce8b9",
+          "bytes": 5192
+        },
+        {
+          "path": "skandi-embeds/global/alexandra/skandi-alexandra-chat.js",
+          "sha256": "efa62d7c5c5b083358f4622dcd563220fab014da7d29b98ee0b228591c139712",
+          "bytes": 14190
+        },
+        {
+          "path": "skandi-embeds/global/alexandra/skandi-alexandra-chat.html",
+          "sha256": "952bfb895f472e8f352b8777a814d14b60bdaa5b25ffd3f78139e869babe37df",
+          "bytes": 4470
+        }
+      ],
+      "replacements": [
+        {
+          "start": 219,
+          "end": 5426,
+          "name": "skandi-alexandra-chat.css",
+          "opening": "<style>",
+          "closing": "</style>",
+          "replacement": "<link rel=\"stylesheet\" href=\"skandi-alexandra-chat.css\">",
+          "type": "classic",
+          "sourceLine": 6
+        },
+        {
+          "start": 9540,
+          "end": 23741,
+          "name": "skandi-alexandra-chat.js",
+          "opening": "<script>",
+          "closing": "</script>",
+          "replacement": "<script src=\"skandi-alexandra-chat.js\"></script>",
+          "type": "classic",
+          "sourceLine": 56
+        }
+      ]
+    },
+    {
+      "source": "HTML_REF/riaintra/Alexandra Global Launcher.md",
+      "directory": "skandi-embeds/global/alexandra",
+      "stem": "skandi-alexandra-launcher",
+      "disposition": "DUPLICATE SOURCE",
+      "note": "Byte-identical legacy launcher already mapped from HTML_REF/skandi/Alexandra Global Launcher.md; the active integrated widget has its own launcher.",
+      "htmlSha256": "6a7de70ab4290ec38c599470b212c5dd44efca81fd208def6647a70c6a572367",
+      "htmlBytes": 1575,
+      "counts": {
+        "css": 1,
+        "js": 1
+      },
+      "diagnostics": [],
+      "outputs": [
+        {
+          "path": "skandi-embeds/global/alexandra/skandi-alexandra-launcher.css",
+          "sha256": "98b834334f4d84797338817a587d8b94a72254eabd515a688a343ca085a2355e",
+          "bytes": 623
+        },
+        {
+          "path": "skandi-embeds/global/alexandra/skandi-alexandra-launcher.js",
+          "sha256": "1c00bb3225233d8642f65f34ee53558deaf2a44bdc441cbaf52803def5a4b652",
+          "bytes": 550
+        },
+        {
+          "path": "skandi-embeds/global/alexandra/skandi-alexandra-launcher.html",
+          "sha256": "92c4ca88428130fc3eb9822cf01325a795baeeec7c4c6a6f9d7320465538a759",
+          "bytes": 482
+        }
+      ],
+      "replacements": [
+        {
+          "start": 178,
+          "end": 816,
+          "name": "skandi-alexandra-launcher.css",
+          "opening": "<style>",
+          "closing": "</style>",
+          "replacement": "<link rel=\"stylesheet\" href=\"skandi-alexandra-launcher.css\">",
+          "type": "classic",
+          "sourceLine": 1
+        },
+        {
+          "start": 992,
+          "end": 1559,
+          "name": "skandi-alexandra-launcher.js",
+          "opening": "<script>",
+          "closing": "</script>",
+          "replacement": "<script src=\"skandi-alexandra-launcher.js\"></script>",
+          "type": "classic",
+          "sourceLine": 1
         }
       ]
     }
