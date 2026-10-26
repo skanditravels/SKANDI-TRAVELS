@@ -23,7 +23,7 @@ async function fixture(t, extra={}) {
   ['isSafeInternalRoute','normalizeSitePath','getPageFamily','getPageChrome','resolveBuildRoute'].map(k=>'export '+canonical[k].toString()).join('\n');
   await write(root,'src/public/siteMap.js',code);await write(root,'package.json','{"type":"module"}');
   for(const [key,m] of Object.entries(metadata))await write(root,m.controller,`// ${m.embedIds[0]} ${m.sources[0]}\nexport const bridge=true;`);
-  for(const file of ['skandi-shell.css','skandi-shell.js'])await write(root,'skandi-embeds/global/'+file,await fs.readFile(path.join(ROOT,'skandi-embeds/global',file),'utf8'));
+  for(const file of ['skandi-shell.css','skandi-shell.js','skandi-website-design.js'])await write(root,'skandi-embeds/global/'+file,await fs.readFile(path.join(ROOT,'skandi-embeds/global',file),'utf8'));
   for(const family of ['public','riaintra','altea'])for(const role of family==='public'?['header','footer','mobile-nav']:['header','footer']) {
     const directory=family==='public'?'global':family+'-global',stem=(family==='public'?'skandi':family)+'-'+role;
     await write(root,`skandi-embeds/${directory}/${stem}.html`,`<div id="${family}-${role}">${family} ${role}</div>`);
@@ -38,6 +38,17 @@ async function page(root,key,{html=`<section id="${key}-content">${key}</section
 }
 const run=root=>build({root,log:()=>{}});
 const htmlOf=(root,slug)=>fs.readFile(path.join(root,'dist',slug,'index.html'),'utf8');
+
+test('Media Control retains interleaved execution, stylesheet attributes and inert email payload',async t=>{
+  const root=await fixture(t,{mediaControl:'/riaintra/success-factors/media-control'});
+  await page(root,'mediaControl',{html:'<!doctype html><html><head><link rel="stylesheet" href="skandi-media-control.css" id="theme" media="screen"></head><body><div id="before"></div><script src="skandi-media-control.js"></script><div id="after"></div><script id="email" type="application/octet-stream">PGRpdj5FbWFpbDwvZGl2Pg==</script></body></html>',css:'body{color:navy}',js:'window.correctOrder=!!document.getElementById("before")&&!document.getElementById("after");'});
+  const result=await run(root);assert.deepEqual(result.errors,[]);
+  const dom=new JSDOM(await htmlOf(root,'media-control'),{runScripts:'dangerously'});t.after(()=>dom.window.close());
+  assert.equal(dom.window.correctOrder,true);assert.equal(dom.window.document.querySelector('style#theme').media,'screen');
+  assert.equal(dom.window.document.querySelector('#email').textContent,'PGRpdj5FbWFpbDwvZGl2Pg==');
+  assert.equal(dom.window.document.querySelector('#skandi-shell-root').dataset.skandiFamily,'riaintra');
+  assert.equal(dom.window.__skandiWebsiteDesign,undefined);
+});
 
 test('compiles Home and multiple pages with three distinct chrome families and chrome-free routes',async t=>{
   const root=await fixture(t);for(const key of ['home','search','successFactors','alteaReservations','bookingFlow'])await page(root,key);
@@ -120,6 +131,7 @@ test('identical consecutive builds are byte-for-byte idempotent regardless of GI
 });
 
 test('repository outputs preserve IDs and contracts; failed sources are unadvertised; legacy Home receiver is unchanged',async t=>{
+  const backendBefore=execFileSync('git',['diff','--','src/backend/'],{cwd:ROOT,encoding:'utf8'});
   const out=await fs.mkdtemp(path.join(os.tmpdir(),'skandi-actual-'));t.after(()=>fs.rm(out,{recursive:true,force:true}));
   const result=await build({root:ROOT,out,log:()=>{}});
   for(const row of result.manifest.pages)if(!['BUILT','ALIAS'].includes(row.status))assert.equal(row.output,null);
@@ -130,7 +142,7 @@ test('repository outputs preserve IDs and contracts; failed sources are unadvert
     const dom=new JSDOM(html);t.after(()=>dom.window.close());const ids=Array.from(dom.window.document.querySelectorAll('[id]'),n=>n.id);assert.equal(new Set(ids).size,ids.length);assert.equal(result.manifest.pages.find(p=>p.key===key).status,'BUILT');
   }
   const old=execFileSync('git',['show','HEAD:skandi-embeds/receiver/skandi-wix-receiver.html'],{cwd:ROOT,encoding:'utf8'});assert.equal(await fs.readFile(path.join(ROOT,'skandi-embeds/receiver/skandi-wix-receiver.html'),'utf8'),old);
-  assert.equal(execFileSync('git',['diff','--name-only','--','src/backend/'],{cwd:ROOT,encoding:'utf8'}),'');
+  assert.equal(execFileSync('git',['diff','--','src/backend/'],{cwd:ROOT,encoding:'utf8'}),backendBefore);
 });
 
 test('workflow supports every dist file, PR validation, deterministic dependencies and no Pages deployment',async()=>{

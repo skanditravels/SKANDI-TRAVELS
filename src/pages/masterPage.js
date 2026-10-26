@@ -379,12 +379,12 @@ async function saveConsentPolicy(embed, value = {}, { gpc = false } = {}) {
 
 async function currentPagePresentation({ force = false } = {}) {
   const path = currentPathString();
-  if (!force && presentationState.path === path && presentationState.value) return presentationState.value;
+  if (!force && presentationState.path === path && presentationState.value && Date.now() - (presentationState.loadedAt || 0) < 60000) return presentationState.value;
   if (!force && presentationState.path === path && presentationState.promise) return presentationState.promise;
   const promise = getPublicPagePresentation({ path })
     .then(result => {
       const value = result || { ok:true, path, contentBlocks:[], mediaSlots:[], pagePlans:[] };
-      presentationState = { path, value, promise:null };
+      presentationState = { path, value, promise:null, loadedAt:Date.now() };
       return value;
     })
     .catch(error => {

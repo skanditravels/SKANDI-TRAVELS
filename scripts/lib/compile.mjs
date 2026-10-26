@@ -199,6 +199,10 @@ export const chromeParts = family => family==='none'?[]:family==='public'?[
   {key:'mobile-nav',directory:'skandi-embeds/global',stem:'skandi-mobile-nav',mount:'skandi-mobile-nav-container'}
 ]:['header','footer'].map(key=>({key,directory:`skandi-embeds/${family}-global`,stem:`${family}-${key}`,mount:`${family}-global-${key}-root`}));
 export async function compilePage(root,page) {
+  // Media Control is itself a complete application with an isolated email editor.
+  // Preserve its document and execution positions instead of flattening it into
+  // another application's DOM. The receiver still enforces the staff boundary.
+  if(page.key==='mediaControl')return compileMediaControl(root,page);
   const descriptors=[...chromeParts(page.chrome),{key:page.slug,directory:page.sourceDirectory,stem:page.stem,mount:'skandi-app-root'}];
   const parts=[],ids=new Map([['skandi-shell-root','compiler'],...descriptors.map(d=>[d.mount,'compiler'])]);
   for(const d of descriptors) {
@@ -244,8 +248,42 @@ export async function compilePage(root,page) {
   const lang=pagePart.documentAttrs.html.find(a=>a.name==='lang')?.value||'en';
   const dir=pagePart.documentAttrs.html.find(a=>a.name==='dir')?.value;
   const scripts=parts.filter(p=>p!==pagePart).concat(pagePart).map(p=>`<script data-skandi-part="${p.key}">${safeJS(p.script)}</script>`);
+  if(page.family==='public') {
+    const runtime=await read(root,'skandi-embeds/global/skandi-website-design.js');
+    new Script(runtime,{filename:'skandi-website-design.js'});
+    scripts.push(`<script data-skandi-part="website-design">window.SKANDI_WEBSITE_DESIGN_CONFIG=${safeJS(JSON.stringify({pageKey:page.key,path:page.route}))};${safeJS(runtime)}</script>`);
+  }
   const html=`<!doctype html>\n<html lang="${escapeHTML(lang)}"${dir?` dir="${escapeHTML(dir)}"`:''}${pageHTMLAttrs}>\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">\n<meta name="theme-color" content="#022e64">\n<title>${escapeHTML(pagePart.title || page.title+' | SKANDI')}</title>\n<link rel="preconnect" href="https://fonts.googleapis.com">\n<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">\n${[...new Set(parts.flatMap(p=>[p.headHTML,...p.external]).filter(Boolean))].join('\n')}\n${style.join('\n')}\n<style data-skandi-part="shell">${safeCSS(shellCSS)}</style>\n</head>\n<body${pageBodyAttrs}>\n<div id="skandi-shell-root" data-skandi-page="${page.slug}" data-skandi-key="${page.key}" data-skandi-family="${page.family}" data-skandi-chrome="${page.chrome}">\n${render(header)}\n${render(pagePart)}\n${render(footer)}\n${render(mobile)}\n</div>\n<script data-skandi-part="skandi-shell-runtime">${safeJS(shellJS)}</script>\n${scripts.join('\n')}\n</body>\n</html>\n`;
   // Validate serialized scripts too: HTML escaping must never publish invalid JS.
+  walk(parse(html),n=>{if(n.tagName==='script'&&!attr(n,'src')&&(!attr(n,'type')||/javascript/.test(attr(n,'type'))))new Script(serialize(n),{filename:page.output});});
+  return html;
+}
+
+async function compileMediaControl(root,page) {
+  const input=await triplet(root,page.sourceDirectory,page.stem);
+  if(input.status!=='COMPLETE SOURCE')throw new Error('Media Control source is incomplete');
+  let html=input.contents[0];
+  const tree=parse(html,{sourceCodeLocationInfo:true}),nodes=[];walk(tree,n=>nodes.push(n));
+  const replacements=[];
+  for(const node of nodes) {
+    const stylesheet=node.tagName==='link'&&attr(node,'rel')==='stylesheet';
+    const script=node.tagName==='script'&&attr(node,'src');
+    const url=stylesheet?attr(node,'href'):script?attr(node,'src'):null;
+    if(!url||/^(?:[a-z]+:|\/)/i.test(url))continue;
+    const location=node.sourceCodeLocation;
+    if(!location)continue;
+    const target=await localFile(root,input.files[0],url),content=await fs.readFile(target.file,'utf8');
+    if(script)new Script(content,{filename:target.rel});
+    if(stylesheet)postcss.parse(content,{from:target.rel});
+    const attributes=(node.attrs||[]).filter(a=>!['src','href','rel'].includes(a.name)).map(a=>` ${a.name}="${escapeHTML(a.value)}"`).join('');
+    replacements.push({start:location.startOffset,end:location.endOffset,value:stylesheet?`<style${attributes}>${safeCSS(content)}</style>`:`<script${attributes}>${safeJS(content)}</script>`});
+  }
+  for(const replacement of replacements.sort((a,b)=>b.start-a.start))html=html.slice(0,replacement.start)+replacement.value+html.slice(replacement.end);
+  const shellJS=await read(root,'skandi-embeds/global/skandi-shell.js');
+  let body;walk(parse(html,{sourceCodeLocationInfo:true}),n=>{if(n.tagName==='body')body=n;});
+  const start=body?.sourceCodeLocation?.startTag?.endOffset,end=body?.sourceCodeLocation?.endTag?.startOffset;
+  if(!start||!end)throw new Error('Media Control requires a complete body element');
+  html=html.slice(0,start)+`<div id="skandi-shell-root" data-skandi-key="${escapeHTML(page.key)}" data-skandi-page="${escapeHTML(page.slug)}" data-skandi-family="riaintra" style="height:100%;min-height:0"><div id="skandi-app-root" style="height:100%;min-height:0">`+html.slice(start,end)+`</div></div><script>${safeJS(shellJS)}</script>`+html.slice(end);
   walk(parse(html),n=>{if(n.tagName==='script'&&!attr(n,'src')&&(!attr(n,'type')||/javascript/.test(attr(n,'type'))))new Script(serialize(n),{filename:page.output});});
   return html;
 }

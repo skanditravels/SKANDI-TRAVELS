@@ -725,7 +725,7 @@ async function currentWixMemberIdForEditorial() {
   const member = await currentMember.getMember().catch(() => null);
   return editorialText(member?._id || member?.id, 200);
 }
-async function ensureEditorialContext() {
+export async function ensureEditorialContext() {
   const session = await requireStaffPortalSessionCore();
   if (!editorialCanAccess(session)) throw new Error("VOY_EDITOR_ACCESS_DENIED");
   const wixMemberId = await currentWixMemberIdForEditorial();

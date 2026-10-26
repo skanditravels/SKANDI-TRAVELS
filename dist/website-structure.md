@@ -48,7 +48,7 @@ Route authority: `src/public/siteMap.js`. This file is generated evidence, not r
 | docunetAdmin | /riaintra/success-factors/docunet/admin | skandi-embeds/docunet-admin/skandi-docunet-admin.{html,css,js} | riaintra / riaintra | src/pages/DocuNet Administration.u5a64.js | FAILED |
 | serviceDesk | /riaintra/success-factors/service-desk | skandi-embeds/service-desk/skandi-service-desk.{html,css,js} | riaintra / riaintra | UNVERIFIED | PENDING SOURCE |
 | policyControl | /riaintra/success-factors/policy-control | skandi-embeds/policy-control/skandi-policy-control.{html,css,js} | riaintra / riaintra | src/pages/Policy Control.ec9p4.js | BUILT |
-| mediaControl | /riaintra/success-factors/media-control | skandi-embeds/media-control/skandi-media-control.{html,css,js} | riaintra / riaintra | src/pages/Media Control.chm91.js | FAILED |
+| mediaControl | /riaintra/success-factors/media-control | skandi-embeds/media-control/skandi-media-control.{html,css,js} | riaintra / riaintra | src/pages/Media Control.chm91.js | BUILT |
 | storeControl | /riaintra/success-factors/store-control | skandi-embeds/store-control/skandi-store-control.{html,css,js} | riaintra / riaintra | src/pages/The Store Control.y10le.js | BUILT |
 | payroll | /riaintra/success-factors/payroll | skandi-embeds/payroll/skandi-payroll.{html,css,js} | riaintra / riaintra | src/pages/Payroll.rzo0a.js | BUILT |
 | country | /destinations/country | skandi-embeds/country/skandi-country.{html,css,js} | public / public | src/pages/Country.nxtpn.js | BLOCKED INTEGRATION |
@@ -125,7 +125,6 @@ These actual repository controllers are preserved. No new route or build is inve
 - **alteaTimatic**: NOT READY: No verified canonical controller mapping.
 - **docunetAdmin**: NOT READY: [docunetAdmin / docunet-admin] skandi-embeds/docunet-admin/skandi-docunet-admin.html, skandi-embeds/docunet-admin/skandi-docunet-admin.css, skandi-embeds/docunet-admin/skandi-docunet-admin.js: skandi-embeds/docunet-admin/skandi-docunet-admin.html: nested iframe is not supported; retain the existing Wix integration
 - **serviceDesk**: NOT READY: No verified canonical controller mapping.
-- **mediaControl**: NOT READY: [mediaControl / media-control] skandi-embeds/media-control/skandi-media-control.html, skandi-embeds/media-control/skandi-media-control.css, skandi-embeds/media-control/skandi-media-control.js: skandi-embeds/media-control/skandi-media-control.html: executable scripts interleaved with markup; move scripts after page markup before splitting
 - **country**: NOT READY: src/public/customerAuthUi.js: imported export openCustomerLogin is absent
 - **bookingFlow**: NOT READY: src/public/customerAuthUi.js: imported export openCustomerLogin is absent; Retain the eight-step Wix state/HTML components. A single receiver requires a separately verified controller migration.
 - **careers**: NOT READY: PENDING SOURCE

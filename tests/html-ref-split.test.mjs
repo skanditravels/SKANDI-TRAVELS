@@ -17,7 +17,18 @@ test('every HTML_REF payload is mapped and reconstructs exactly from its split f
     assert.ok(sources.has(file),'Unmapped source: '+file);
     const m=map.find(m=>m.source===file),split=splitDocument(original,m.stem);
     assert.equal(restoreDocument(split.files[m.stem+'.html'],split.files,split.replacements),original,file);
-    for(const name of Object.keys(split.files))await fs.access(path.join(root,m.directory,name));
+    const linkedHTML=await fs.readFile(path.join(root,m.directory,m.stem+'.html'),'utf8');
+    for(const [name,content] of Object.entries(split.files)) {
+      try{await fs.access(path.join(root,m.directory,name));}
+      catch(error){
+        if(error.code!=='ENOENT')throw error;
+        // Shared runtimes and named editor modules need not duplicate numbered
+        // sidecars. Require the exact extracted bytes in a linked local file.
+        const links=[...linkedHTML.matchAll(/(?:src|href)="([^"?#]+)"/g)].map(m=>m[1]).filter(u=>!/^([a-z]+:|\/)/i.test(u));
+        const contents=await Promise.all(links.map(async link=>{try{return await fs.readFile(path.resolve(root,m.directory,link),'utf8');}catch{return null;}}));
+        assert.ok(contents.some(value=>value?.trim()===content.trim()),'Missing split content: '+file+' / '+name);
+      }
+    }
   }
 });
 
