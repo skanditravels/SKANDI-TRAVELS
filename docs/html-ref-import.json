@@ -2114,8 +2114,8 @@
       "stem": "skandi-alexandra-chat",
       "disposition": "SEPARATE COMPONENT",
       "note": "Separate sitewide Wix chat component; not injected a second time into compiled chrome.",
-      "htmlSha256": "e16fc99c8baba98b081b9793962f02082364c167a4b433820b8832add16104d3",
-      "htmlBytes": 13380,
+      "htmlSha256": "6a97768f05f891450f82640ba5bf20ca619094cf7e8052515a41d8707329d3ee",
+      "htmlBytes": 23780,
       "counts": {
         "css": 1,
         "js": 1
@@ -2124,40 +2124,40 @@
       "outputs": [
         {
           "path": "skandi-embeds/global/alexandra/skandi-alexandra-chat.css",
-          "sha256": "0f0d8a65fd55ac215c0500f38182067ed552bdcd9703095cfec07069197afb5b",
-          "bytes": 3640
+          "sha256": "977ef30a4a28872c26f12005bdf74ca27340aee43a02d7fc7360a9b9099ce8b9",
+          "bytes": 5192
         },
         {
           "path": "skandi-embeds/global/alexandra/skandi-alexandra-chat.js",
-          "sha256": "01ffaf27b349bfda254f5df44f16dccfaf60c8106eb278892306081c82885a66",
-          "bytes": 7112
+          "sha256": "c2393f4a2ef37d0e5c120e3f3fbdf3f4f79e9a1da233f1ea5da876410391ff44",
+          "bytes": 14189
         },
         {
           "path": "skandi-embeds/global/alexandra/skandi-alexandra-chat.html",
-          "sha256": "6086c4917e1cd26dfbf53b651b511c291659b003ccf03eb8ac498100331c6dc4",
-          "bytes": 2700
+          "sha256": "952bfb895f472e8f352b8777a814d14b60bdaa5b25ffd3f78139e869babe37df",
+          "bytes": 4470
         }
       ],
       "replacements": [
         {
-          "start": 342,
-          "end": 3997,
+          "start": 219,
+          "end": 5426,
           "name": "skandi-alexandra-chat.css",
           "opening": "<style>",
           "closing": "</style>",
           "replacement": "<link rel=\"stylesheet\" href=\"skandi-alexandra-chat.css\">",
           "type": "classic",
-          "sourceLine": 2
+          "sourceLine": 6
         },
         {
-          "start": 6233,
-          "end": 13360,
+          "start": 9540,
+          "end": 23741,
           "name": "skandi-alexandra-chat.js",
           "opening": "<script>",
           "closing": "</script>",
           "replacement": "<script src=\"skandi-alexandra-chat.js\"></script>",
           "type": "classic",
-          "sourceLine": 5
+          "sourceLine": 56
         }
       ]
     },
