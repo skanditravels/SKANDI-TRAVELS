@@ -466,7 +466,7 @@ $("mySupportCasesBtn").addEventListener("click",()=>{
     post("PUBLIC_SUPPORT_LOGIN",{reason:"MY_SUPPORT_CASES"});
     return;
   }
-  post("PUBLIC_SUPPORT_NAVIGATE",{path:"/my-profile/support"});
+  post("PUBLIC_SUPPORT_NAVIGATE",{path:"/my-profile?section=support&view=cases"});
 });
 $("clubLoginBtn").addEventListener("click",()=>post("PUBLIC_SUPPORT_LOGIN",{reason:"SKANDI_CLUB_SUPPORT"}));
 
