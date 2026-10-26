@@ -271,7 +271,7 @@ export async function getCustomerProfileBootstrapCore(context, input = {}) {
     wallet: rows.wallet.map(walletView),
     paymentMethods: rows.payments.map(paymentView),
     references: refs,
-    routes: { overview: "/my-profile?section=club&view=overview", clubActivity: "/my-profile?section=club&view=activity", clubProgram: "/my-profile?section=club&view=program", trips: "/my-profile?section=trips&view=upcoming", tripHistory: "/my-profile?section=trips&view=past", orders: "/my-profile?section=trips&view=drafts", documents: "/my-profile?section=trips&view=upcoming", travelers: "/my-profile?section=profile&view=travelers", wallet: "/my-profile?section=profile&view=wallet", saved: "/my-profile?section=profile&view=saved", notifications: "/my-profile?section=account&view=notifications", settings: "/my-profile?section=account&view=settings", support: "/my-profile/support", clubPublic: "/skandi-club" },
+    routes: { overview: "/my-profile?section=club&view=overview", clubActivity: "/my-profile?section=club&view=activity", clubProgram: "/my-profile?section=club&view=program", trips: "/my-profile?section=trips&view=upcoming", tripHistory: "/my-profile?section=trips&view=past", orders: "/my-profile?section=trips&view=drafts", documents: "/my-profile?section=trips&view=upcoming", travelers: "/my-profile?section=profile&view=travelers", wallet: "/my-profile?section=profile&view=wallet", saved: "/my-profile?section=profile&view=saved", notifications: "/my-profile?section=account&view=notifications", settings: "/my-profile?section=account&view=settings", support: "/my-profile?section=support&view=cases", clubPublic: "/skandi-club" },
     requestedTab: clean(input.tab, 40) || "overview",
     generatedAt: now()
   };
