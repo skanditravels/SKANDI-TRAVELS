@@ -55,7 +55,7 @@ jobs:
       - name: Compile every complete eligible page
         id: build
         continue-on-error: true
-        run: node scripts/build-skandi-app.mjs
+        run: node scripts/build-skandi-app.mjs --fail-on-public
       - name: Report every page and retain validation evidence
         if: always() && steps.build.outcome != 'skipped'
         run: |
@@ -80,6 +80,6 @@ jobs:
         # Failed sources are removed from current manifest lookup, while installed
         # legacy HTML artifacts are retained. No invalid HTML replaces a working page.
         run: node scripts/publish-skandi-build.mjs
-      - name: Fail visibly when any source failed compilation
+      - name: Fail visibly when a public SKANDI page failed compilation
         if: steps.build.outcome == 'failure'
         run: exit 1

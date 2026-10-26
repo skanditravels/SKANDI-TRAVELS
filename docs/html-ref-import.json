@@ -4726,6 +4726,59 @@
           "sourceLine": 732
         }
       ]
+    },
+    {
+      "source": "HTML_REF/skandi/Booking/README.md",
+      "directory": "skandi-embeds/booking-flow/html-ref",
+      "stem": "skandi-booking-merged-reference",
+      "disposition": "SOURCE CONFLICT",
+      "note": "Merged single-embed proposal conflicts with the existing eight-component Booking controller; retained as a reference only until a verified Wix migration is approved.",
+      "htmlSha256": "d27f0a471cd35135d2bf0c9e3a143089ff5730c4a089b85c104329cee0bd2d5d",
+      "htmlBytes": 62421,
+      "counts": {
+        "css": 1,
+        "js": 1
+      },
+      "diagnostics": [],
+      "outputs": [
+        {
+          "path": "skandi-embeds/booking-flow/html-ref/skandi-booking-merged-reference.css",
+          "sha256": "7c33854f23a7bab458df4ab2d5372c6f33e750b801a100708dda8d169c4b47b1",
+          "bytes": 20928
+        },
+        {
+          "path": "skandi-embeds/booking-flow/html-ref/skandi-booking-merged-reference.js",
+          "sha256": "1860d18034414d6915acf6060b1bdb06dc6d0fb49096c73d908b6bf042745c8c",
+          "bytes": 36445
+        },
+        {
+          "path": "skandi-embeds/booking-flow/html-ref/skandi-booking-merged-reference.html",
+          "sha256": "b99bc0a036f115563a6f4902310e8db4ed401ebe23036d5be13377249ff5c280",
+          "bytes": 5140
+        }
+      ],
+      "replacements": [
+        {
+          "start": 543,
+          "end": 21482,
+          "name": "skandi-booking-merged-reference.css",
+          "opening": "<style>",
+          "closing": "</style>",
+          "replacement": "<link rel=\"stylesheet\" href=\"skandi-booking-merged-reference.css\">",
+          "type": "classic",
+          "sourceLine": 13
+        },
+        {
+          "start": 25925,
+          "end": 62345,
+          "name": "skandi-booking-merged-reference.js",
+          "opening": "<script>",
+          "closing": "</script>",
+          "replacement": "<script src=\"skandi-booking-merged-reference.js\"></script>",
+          "type": "classic",
+          "sourceLine": 426
+        }
+      ]
     }
   ],
   "documentationOnly": [
@@ -4737,7 +4790,6 @@
     "HTML_REF/GLOBAL/SKANDI GLOBAL OPS CONTROL & IFRAME AUTO-RESIZE — INFO.md",
     "HTML_REF/GLOBAL/SKANDI TRAVEL LOYALTY POINTS.md",
     "HTML_REF/GLOBAL/WIX_EDITOR_CHECKLIST.md",
-    "HTML_REF/GLOBAL/Wix Automations Integration.md",
-    "HTML_REF/skandi/Booking/README.md"
+    "HTML_REF/GLOBAL/Wix Automations Integration.md"
   ]
 }

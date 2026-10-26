@@ -122,8 +122,22 @@ test('local assets are verified and embedded; external asset URLs are preserved'
   await page(root,'home',{html:'<img id="logo" src="icon.svg"><img src="https://static.wixstatic.com/a.png">',css:'.logo{background:url(icon.svg)}'});const result=await run(root);assert.deepEqual(result.errors,[]);const html=await htmlOf(root,'home');assert.match(html,/data:image\/svg\+xml;base64/);assert.match(html,/https:\/\/static.wixstatic.com\/a.png/);
 });
 
+test('pinned MapLibre styles and import-map module scripts survive compilation',async t=>{
+  const root=await fixture(t);
+  await page(root,'home',{html:'<!doctype html><html><head><script type="importmap">{"imports":{"sample":"https://example.com/sample.js"}}</script><link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.css"><script defer src="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.js"></script></head><body><main id="home-content">Home</main><script type="module" src="skandi-home.module.js"></script></body></html>'});
+  await write(root,'skandi-embeds/home/skandi-home.module.js','import {value} from "sample"; window.moduleValue=value;');
+  const result=await run(root);assert.deepEqual(result.errors,[]);
+  const html=await htmlOf(root,'home');assert.match(html,/https:\/\/unpkg\.com\/maplibre-gl@5\.24\.0\/dist\/maplibre-gl\.css/);assert.match(html,/<script type="importmap">\{"imports":\{"sample":"https:\/\/example\.com\/sample\.js"\}\}<\/script>/);assert.match(html,/<script defer(?:="")? src="https:\/\/unpkg\.com\/maplibre-gl@5\.24\.0\/dist\/maplibre-gl\.js"><\/script>/);assert.match(html,/<script type="module">import \{value\} from "sample"; window\.moduleValue=value;<\/script>/);assert.doesNotMatch(html,/skandi-home\.module\.js/);
+});
+
 test('missing internal chrome blocks only that family; completed public pages still build',async t=>{
   const root=await fixture(t);await page(root,'home');await page(root,'successFactors');await write(root,'skandi-embeds/riaintra-global/riaintra-header.html','<!-- SKANDI_PENDING_SOURCE -->');const result=await run(root);assert.deepEqual(result.errors,[]);assert.deepEqual(result.built,['home']);assert.equal(result.manifest.pages.find(p=>p.key==='successFactors').status,'BLOCKED INTEGRATION');
+});
+
+test('public workflow gate keeps internal compile failures visible without blocking SKANDI pages',async t=>{
+  const root=await fixture(t);await page(root,'home',{js:'const broken = ;'});await page(root,'successFactors',{js:'const brokenInternal = ;'});
+  const result=await build({root,failOnFamilies:['public'],log:()=>{}});
+  assert.equal(result.pageFailures.length,2);assert.equal(result.errors.length,1);assert.match(result.errors[0],/\[home/);assert.equal(result.manifest.pages.find(p=>p.key==='successFactors').status,'FAILED');
 });
 
 test('identical consecutive builds are byte-for-byte idempotent regardless of GITHUB_SHA',async t=>{
@@ -145,8 +159,8 @@ test('repository outputs preserve IDs and contracts; failed sources are unadvert
   assert.equal(execFileSync('git',['diff','--','src/backend/'],{cwd:ROOT,encoding:'utf8'}),backendBefore);
 });
 
-test('workflow supports every dist file, PR validation, deterministic dependencies and no Pages deployment',async()=>{
-  const yaml=await fs.readFile(path.join(ROOT,'.github/workflows/skandi-app-build.yml'),'utf8');assert.match(yaml,/name: SKANDI Website Builder/);assert.match(yaml,/workflow_dispatch:/);assert.match(yaml,/pull_request:/);assert.match(yaml,/npm ci --prefix scripts/);assert.match(yaml,/concurrency:/);assert.match(yaml,/publish-skandi-build.mjs/);assert.doesNotMatch(yaml,/actions\/(?:deploy-pages|upload-pages|configure-pages)/);assert.doesNotMatch(yaml,/dist\/(?:home|flight-status)\/index.html/);await fs.access(path.join(ROOT,'scripts/package-lock.json'));
+test('workflow supports public-page gating, every dist file, PR validation and no Pages deployment',async()=>{
+  const yaml=await fs.readFile(path.join(ROOT,'.github/workflows/skandi-app-build.yml'),'utf8');assert.match(yaml,/name: SKANDI Website Builder/);assert.match(yaml,/workflow_dispatch:/);assert.match(yaml,/pull_request:/);assert.match(yaml,/npm ci --prefix scripts/);assert.match(yaml,/concurrency:/);assert.match(yaml,/publish-skandi-build.mjs/);assert.match(yaml,/build-skandi-app\.mjs --fail-on-public/);assert.doesNotMatch(yaml,/actions\/(?:deploy-pages|upload-pages|configure-pages)/);assert.doesNotMatch(yaml,/dist\/(?:home|flight-status)\/index.html/);await fs.access(path.join(ROOT,'scripts/package-lock.json'));
 });
 
 test('publisher stages multiple generated pages, commits once and rejects concurrent main changes',async t=>{

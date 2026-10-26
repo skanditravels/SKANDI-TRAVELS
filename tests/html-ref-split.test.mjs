@@ -10,6 +10,11 @@ const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 
 test('every HTML_REF payload is mapped and reconstructs exactly from its split files',async()=>{
   const map=JSON.parse(await fs.readFile(path.join(root,'scripts/html-ref-sources.json'),'utf8'));
+  const mergedBooking=map.find(m=>m.source==='HTML_REF/skandi/Booking/README.md');
+  assert.ok(mergedBooking,'Merged Booking reference must remain classified.');
+  assert.equal(mergedBooking.disposition,'SOURCE CONFLICT');
+  assert.equal(mergedBooking.directory,'skandi-embeds/booking-flow/html-ref');
+  assert.match(mergedBooking.note,/eight-component Booking controller/);
   const sources=new Set(map.map(m=>m.source));
   for(const relative of (await fs.readdir(path.join(root,'HTML_REF'),{recursive:true})).filter(p=>p.endsWith('.md'))) {
     const file='HTML_REF/'+relative,original=extractDocument(await fs.readFile(path.join(root,file),'utf8'));

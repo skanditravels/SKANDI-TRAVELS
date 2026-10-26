@@ -7,8 +7,9 @@ import {inventory,scaffold,read,triplet} from './lib/inventory.mjs';
 import {compilePage,chromeParts,hash} from './lib/compile.mjs';
 import {writeRegisters} from './lib/registers.mjs';
 const HERE=path.dirname(fileURLToPath(import.meta.url));
-export async function build({root=process.env.SKANDI_REPO_ROOT||path.resolve(HERE,'..'),out=process.env.SKANDI_OUTPUT_DIR||path.join(root,'dist'),log=console.log}={}) {
-  const {rows}=await inventory(root),errors=[],built=[];
+export async function build({root=process.env.SKANDI_REPO_ROOT||path.resolve(HERE,'..'),out=process.env.SKANDI_OUTPUT_DIR||path.join(root,'dist'),log=console.log,failOnFamilies=null}={}) {
+  const {rows}=await inventory(root),errors=[],pageFailures=[],built=[];
+  const recordFailure=(row,error)=>{pageFailures.push(error);if(!failOnFamilies||failOnFamilies.includes(row.family))errors.push(error);};
   const globals={};
   for(const family of ['public','riaintra','altea']) {
     globals[family]=[];
@@ -24,7 +25,7 @@ export async function build({root=process.env.SKANDI_REPO_ROOT||path.resolve(HER
     row.blockers=[...row.issues];
     row.blockers.push(...(globals[row.chrome]||[]).filter(c=>c.status!=='COMPLETE SOURCE').map(c=>`${c.component}: ${c.status} (${c.missing.join(', ')})`));
     if(row.status==='INCOMPLETE SOURCE') {
-      row.status='FAILED';row.error=`[${row.key}] INCOMPLETE SOURCE: ${row.missing.join(', ')}`;errors.push(row.error);
+      row.status='FAILED';row.error=`[${row.key}] INCOMPLETE SOURCE: ${row.missing.join(', ')}`;recordFailure(row,row.error);
     } else if(row.status==='COMPLETE SOURCE' && row.blockers.length) {
       row.status='BLOCKED INTEGRATION';
     } else if(row.status==='COMPLETE SOURCE') {
@@ -34,7 +35,7 @@ export async function build({root=process.env.SKANDI_REPO_ROOT||path.resolve(HER
         await fs.mkdir(path.dirname(dest),{recursive:true});
         const temp=dest+'.tmp';await fs.writeFile(temp,html);await fs.rename(temp,dest);
         row.status='BUILT';row.sha256=hash(html);row.bytes=Buffer.byteLength(html);built.push(row.key);
-      } catch(e) {row.status='FAILED';row.error=e.message;errors.push(e.message);}
+      } catch(e) {row.status='FAILED';row.error=e.message;recordFailure(row,e.message);}
     }
     if(row.status!=='BUILT') {
       row.retainedArtifact=await fs.stat(path.join(out,row.slug,'index.html')).then(()=>true,()=>false);
@@ -52,11 +53,11 @@ export async function build({root=process.env.SKANDI_REPO_ROOT||path.resolve(HER
   await fs.writeFile(path.join(out,'manifest.json'),JSON.stringify(manifest,null,2)+'\n');
   await writeRegisters(root,out,manifest);
   for(const row of rows) log(`${row.key}: ${row.status}${row.output?' -> '+row.output:''}${row.error?' — '+row.error:''}`);
-  log(`Built ${built.length}; pending ${rows.filter(p=>p.status==='PENDING SOURCE').length}; blocked ${rows.filter(p=>p.status==='BLOCKED INTEGRATION').length}; aliases ${rows.filter(p=>p.status==='ALIAS').length}; failed ${errors.length}.`);
-  return {manifest,errors,built};
+  log(`Built ${built.length}; pending ${rows.filter(p=>p.status==='PENDING SOURCE').length}; blocked ${rows.filter(p=>p.status==='BLOCKED INTEGRATION').length}; aliases ${rows.filter(p=>p.status==='ALIAS').length}; failed pages ${pageFailures.length}; workflow-gated failures ${errors.length}.`);
+  return {manifest,errors,pageFailures,built};
 }
 if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url)) {
   const root=process.env.SKANDI_REPO_ROOT||path.resolve(HERE,'..');
-  const task=process.argv.includes('--scaffold')?scaffold(root):process.argv.includes('--inventory')?inventory(root).then(({rows})=>console.log(rows.map(r=>`${r.key}: ${r.status}`).join('\n'))):build();
+  const task=process.argv.includes('--scaffold')?scaffold(root):process.argv.includes('--inventory')?inventory(root).then(({rows})=>console.log(rows.map(r=>`${r.key}: ${r.status}`).join('\n'))):build({failOnFamilies:process.argv.includes('--fail-on-public')?['public']:null});
   task.then(result=>{if(result?.errors?.length)process.exitCode=1;}).catch(e=>{console.error('SKANDI_BUILD_FAILED:',e.message);process.exitCode=1;});
 }

@@ -71,3 +71,4 @@ HTML_REF/skandi/The Store.md,skandi-embeds/the-store,skandi-the-store,IMPORTED,2
 HTML_REF/skandi/Tours & Activities.md,skandi-embeds/tours,skandi-tours,IMPORTED,2,1,tours,BUILT,
 HTML_REF/skandi/Travel Info.md,skandi-embeds/travel-info/html-ref,skandi-travel-info-reference,PRESERVED CURRENT SOURCE,5,3,,SOURCE ONLY,Current Git source remains active; the HTML_REF version is extracted here for reference.
 HTML_REF/skandi/Travel Insurance.md,skandi-embeds/travel-insurance,skandi-travel-insurance,IMPORTED,2,2,travelInsurance,BUILT,
+HTML_REF/skandi/Booking/README.md,skandi-embeds/booking-flow/html-ref,skandi-booking-merged-reference,SOURCE CONFLICT,1,1,,SOURCE ONLY,Merged single-embed proposal conflicts with the existing eight-component Booking controller; retained as a reference only until a verified Wix migration is approved.
