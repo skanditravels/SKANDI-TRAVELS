@@ -34,6 +34,8 @@
 
 - 2026-10-22 — V12 Alexandra LiveKit restoration: Reuses the approved `startAlexandraLiveKitSession` facade and canonical `customerSupport.js` → `livekitServer.js` explicit dispatch of `alexandra-prod`. Mobile inline chat now joins using a server-issued short-lived token; sends `lk.chat` text; receives agent output from `lk.transcription` (and compatible custom `lk.chat` streams), disconnects when the drawer closes, and preserves browser-tab transcript via the shared bridge. No changes to mobile navigation layout, menu geometry, Home refresh, routes or human support case creation. LiveKit worker deployment, cloud secrets, published Wix facade and iframe CDN loading REQUIRES LIVE TEST.
 
+- 2026-10-26 — Removed the retired `/offers` destination from the mobile navigation route table. The passenger booking journey remains available at `/booking`.
+
 ## COMPLETE INTENDED LIVE HTML SOURCE
 
 ```html
@@ -136,7 +138,6 @@ body{display:flex;justify-content:stretch;align-items:flex-end;color:var(--ink)}
       <button type="button" class="drawer-link" data-route="myTrips">My Trips <span aria-hidden="true">›</span></button>
       <button type="button" class="drawer-link" data-route="myProfile">My Club <span aria-hidden="true">›</span></button>
       <div class="drawer-group-title">Information &amp; Support</div>
-      <button type="button" class="drawer-link" data-route="offers">Offers <span aria-hidden="true">›</span></button>
       <button type="button" class="drawer-link" data-route="support">Customer Service <span aria-hidden="true">›</span></button>
     </div>
     <section id="alexandra-chat-view" aria-label="Alexandra chat" hidden>
@@ -194,7 +195,7 @@ body{display:flex;justify-content:stretch;align-items:flex-end;color:var(--ink)}
   "use strict";
   const SOURCE="SKANDI_HOME_MOBILE_APP",PARENT="SKANDI_WIX_PARENT";
   const $=id=>document.getElementById(id);
-  const defaultRoutes=Object.freeze({home:"/",destinations:"/destinations",travelInfo:"/travel-info",myTrips:"/my-profile?tab=trips",myProfile:"/my-profile",flights:"/flights",hotels:"/hotels",packages:"/packages",cruises:"/cruises",carRental:"/car-rental",tours:"/tours",offers:"/offers",support:"/about/support"});
+  const defaultRoutes=Object.freeze({home:"/",destinations:"/destinations",travelInfo:"/travel-info",myTrips:"/my-profile?tab=trips",myProfile:"/my-profile",flights:"/flights",hotels:"/hotels",packages:"/packages",cruises:"/cruises",carRental:"/car-rental",tours:"/tours",support:"/about/support"});
   const state={routes:{...defaultRoutes},busy:false,refreshId:"",ready:false,feedbackTimer:null,request:0,drawerOpen:false,drawerRequestId:"",drawerTimer:null,currentPath:"/"};
   const status=document.getElementById("status"),statusCopy=document.getElementById("status-copy");
   const nav=document.getElementById("app-nav"),refresh=document.getElementById("refresh");
