@@ -1,7 +1,7 @@
 // /src/pages/Booking.e8twe.js
 // SKANDI V12 — single HTML booking journey using the existing canonical booking API.
-// Route: /booking | Live HTML component: #bookingOfferEmbed inside #bookingFlowStates/stateOffer.
-// Existing other Wix booking state elements are retained in the editor but are not used by this controller.
+// Route: /booking | Single HTML component: #bookingFlowEmbed.
+// Offer, traveler and payment stages are views inside this one passenger booking embed.
 import wixLocation from 'wix-location-frontend';
 import { session } from 'wix-storage';
 import { readBookingSearch } from 'public/bookingSearch';
@@ -244,12 +244,9 @@ async function processMessage(msg){
 }
 $w.onReady(async()=>{
   try{
-    html=$w('#bookingOfferEmbed');
-    if(!html||typeof html.onMessage!=='function')throw new Error('The merged booking HTML element #bookingOfferEmbed is missing.');
-    const box=$w('#bookingFlowStates');
-    if(!box||typeof box.changeState!=='function')throw new Error('The existing booking state box is missing.');
-    // One visual embed for the entire journey; leave the legacy state elements installed and unmodified.
-    await box.changeState('stateOffer');
+    html=$w('#bookingFlowEmbed');
+    if(!html||typeof html.onMessage!=='function')throw new Error('The Booking HTML element #bookingFlowEmbed is missing.');
+    // All booking stages render inside this single HTML component; there is no Wix state box.
     html.onMessage(async event=>{
       const msg=event?.data||{};
       if(msg.source!==SOURCE)return;
