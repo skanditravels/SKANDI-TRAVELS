@@ -1,3 +1,5 @@
+> Historical build snapshot from before the 2026-10-26 Booking consolidation. Its `offers: PENDING SOURCE` and `bookingFlow: PENDING SOURCE` lines are not the current route map. `/offers` is now retired; `/booking` maps to one source triplet and `#bookingFlowEmbed`. The current compile result will be recorded by the workflow.
+
 home: BUILT -> dist/home/index.html
 search: BUILT -> dist/search/index.html
 flights: PENDING SOURCE
