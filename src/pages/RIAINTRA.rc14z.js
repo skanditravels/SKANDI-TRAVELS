@@ -6,6 +6,7 @@
 
 import wixLocationFrontend from "wix-location-frontend";
 import { authentication } from "wix-members-frontend";
+import { memory } from "wix-storage-frontend";
 import {
   loginStaffWithSkId,
   getStaffPortalSession
@@ -16,6 +17,7 @@ const EMBED_ID = "#staffLoginEmbed";
 const CHILD_SOURCE = "SKANDI_STAFF_LOGIN";
 const PARENT_SOURCE = "SKANDI_WIX_PARENT";
 const STAFF_DASHBOARD_PATH = "/riaintra/success-factors";
+const MANUAL_STAFF_SESSION_KEY = "skandi_riaintra_manual_session_v1";
 const SK_ID_PATTERN = /^[A-Z]{2}[0-9]{4}$/;
 
 
@@ -63,30 +65,12 @@ async function handleEmbedMessage(event) {
 
 
 async function handleReady(requestId) {
-  const session = unwrapResult(await getStaffPortalSession());
-
-
-  if (session?.loggedIn === true && session?.authorized === true) {
-    postToEmbed("STAFF_LOGIN_OK", {
-      message: "Session active. Opening RIAINTRA...",
-      profile: publicProfile(session.profile),
-      apps: safeApps(session.apps)
-    }, requestId);
-    redirectToDashboard();
-    return;
-  }
-
-
-  if (session?.loggedIn === true && session?.authorized !== true) {
-    postToEmbed("STAFF_LOGIN_ERROR", {
-      message: sessionReasonMessage(session?.reason)
-    }, requestId);
-    return;
-  }
-
-
+  actionInProgress = false;
+  redirecting = false;
+  clearManualStaffSession();
+  try { await authentication.logout(); } catch (_) {}
   postToEmbed("STAFF_LOGIN_NOTICE", {
-    message: "Secure staff login ready."
+    message: "For your security, enter your SK-ID and password to sign in. Existing sessions are not restored automatically."
   }, requestId);
 }
 
@@ -152,6 +136,13 @@ async function handleLoginRequest(payload, requestId) {
 
     if (!session?.loggedIn || !session?.authorized) {
       throw new PublicError(sessionReasonMessage(session?.reason));
+    }
+
+
+    try { memoryStoreSetManual(); }
+    catch (error) {
+      try { await authentication.logout(); } catch (_) {}
+      throw new PublicError("Secure staff session could not be established. Please try signing in again.");
     }
 
 
@@ -248,6 +239,16 @@ function cleanSkId(value) {
     .toUpperCase()
     .replace(/[^A-Z0-9]/g, "")
     .slice(0, 6);
+}
+
+
+function memoryStoreSetManual() {
+  memory.setItem(MANUAL_STAFF_SESSION_KEY, "typed");
+}
+
+
+function clearManualStaffSession() {
+  try { memory.removeItem(MANUAL_STAFF_SESSION_KEY); } catch (_) {}
 }
 
 
