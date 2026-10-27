@@ -804,6 +804,7 @@
         "src/backend/SKANDI_CORE/clubPublic.web.js"
       ],
       "messages": [
+        "SKANDI_CLUB",
         "SKANDI_CLUB_AUTH_OPEN",
         "SKANDI_CLUB_HEIGHT",
         "SKANDI_CLUB_INFO",
@@ -825,6 +826,65 @@
       "receiver": "skandi-embeds/club/skandi-club.receiver.html",
       "sha256": "2635634ecfbde9dab7d7dd4de08bcf10e590102c131b2232f183aebd48edbd0e",
       "bytes": 190838
+    },
+    {
+      "key": "clubLogin",
+      "route": "/skandi-club/login",
+      "slug": "club-login",
+      "title": "SKANDI Club Login",
+      "family": "public",
+      "chrome": "public",
+      "sourceDirectory": "skandi-embeds/club-login",
+      "stem": "skandi-club-login",
+      "controller": "src/pages/SKANDI Club Log in.noml8.js",
+      "embedIds": [
+        "#skandiClubLoginEmbed"
+      ],
+      "sources": [
+        "SKANDI_CLUB_LOGIN"
+      ],
+      "components": [],
+      "binding": "explicit",
+      "requiresStaff": false,
+      "status": "BUILT",
+      "files": [
+        "skandi-embeds/club-login/skandi-club-login.html",
+        "skandi-embeds/club-login/skandi-club-login.css",
+        "skandi-embeds/club-login/skandi-club-login.js"
+      ],
+      "missing": [],
+      "issues": [],
+      "backend": [],
+      "messages": [
+        "ACCOUNT",
+        "COMPATIBILITY_EXPORT",
+        "FORGOT_PASSWORD",
+        "LEGACY_MODAL",
+        "LOGIN",
+        "LOGIN_PAGE",
+        "MY_TRIPS",
+        "PAGE_BUTTON",
+        "QUERY",
+        "SIGNUP",
+        "SKANDI_CLUB_AUTH_MODAL",
+        "SKANDI_CLUB_LOGIN",
+        "SKANDI_CLUB_LOGIN_ERROR",
+        "SKANDI_CLUB_LOGIN_HEIGHT",
+        "SKANDI_CLUB_LOGIN_NAVIGATE",
+        "SKANDI_CLUB_LOGIN_OPEN",
+        "SKANDI_CLUB_LOGIN_PARENT_READY",
+        "SKANDI_CLUB_LOGIN_READY",
+        "SKANDI_CLUB_RESET_OPEN",
+        "SKANDI_CLUB_SIGNUP_OPEN",
+        "SKANDI_WIX_PARENT"
+      ],
+      "output": "dist/club-login/index.html",
+      "dynamic": false,
+      "sourceStatus": "COMPLETE SOURCE",
+      "blockers": [],
+      "receiver": "skandi-embeds/club-login/skandi-club-login.receiver.html",
+      "sha256": "fa81e81169cc84f928f26c897f16e3d3fcb447c078d52ed5dd992661c70167de",
+      "bytes": 441527
     },
     {
       "key": "forgotPassword",

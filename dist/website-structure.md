@@ -19,6 +19,7 @@ Route authority: `src/public/siteMap.js`. This file is generated evidence, not r
 | skandiCollection | /skandi-collection | skandi-embeds/skandi-collection/skandi-skandi-collection.{html,css,js} | public / public | src/pages/SKANDI Collection.lo9p5.js | BUILT |
 | voy | /voy-magazine | skandi-embeds/voy/skandi-voy.{html,css,js} | public / public | src/pages/VOY Magazine.gecp7.js | PENDING SOURCE |
 | club | /skandi-club | skandi-embeds/club/skandi-club.{html,css,js} | public / public | src/pages/SKANDI Signature Club.gsejz.js | BUILT |
+| clubLogin | /skandi-club/login | skandi-embeds/club-login/skandi-club-login.{html,css,js} | public / public | src/pages/SKANDI Club Log in.noml8.js | BUILT |
 | forgotPassword | /forgot-password | skandi-embeds/forgot-password/skandi-forgot-password.{html,css,js} | public / public | src/pages/Forgot Password.uagf0.js | BUILT |
 | about | /about | skandi-embeds/about/skandi-about.{html,css,js} | public / public | src/pages/About.xcftf.js | BUILT |
 | support | /about/support | skandi-embeds/support/skandi-support.{html,css,js} | public / public | src/pages/How can we help_.k0iqp.js | BLOCKED INTEGRATION |
@@ -92,7 +93,6 @@ These actual repository controllers are preserved. No new route or build is inve
 - `src/pages/Notifications.blgc5.js`
 - `src/pages/Policy Documents.bd8ok.js`
 - `src/pages/RIAINTRA Policies.k053q.js`
-- `src/pages/SKANDI Club Log in.noml8.js`
 - `src/pages/SKANDI Club Support.yk7x3.js`
 - `src/pages/SKANDI Language & Currency.m4h84.js`
 - `src/pages/SKANDI Product.h0gju.js`
