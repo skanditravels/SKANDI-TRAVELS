@@ -3,15 +3,764 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#03111f">
+<meta name="theme-color" content="#022e64">
 <meta name="color-scheme" content="dark light">
 <title>SKANDI Club · B-011.1</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="skandi-club.css">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400&family=Inter:wght@400;500;600;700&family=Montserrat:wght@300;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+@font-face {
+  font-family: "Farrington 7B";
+  src: url("./Farrington7B.woff2") format("woff2");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root{
+  /* Nordic Horizon Update (Aligned with Footer) */
+  --sk-navy:#022e64;
+  --sk-blue:#104b80;
+  --sk-blue-soft:#286a98;
+  --sk-ink:#041b35;
+  --sk-ink-soft:#07264b;
+  --sk-aqua:#5fc7cf;
+  --sk-aqua-soft:#a6e9ec;
+  --sk-ivory:#f6faff;
+  --sk-porcelain:#ffffff;
+  --sk-champagne:#a6e9ec;
+  --sk-limestone:#d9e7f0;
+  --sk-graphite:#0b2946;
+  --sk-muted:#7f9db5;
+  --sk-dark-muted:#4f6880;
+
+  --sk-line:rgba(2,46,100,.13);
+  --sk-line-soft:rgba(255,255,255,.15);
+  --sk-line-dark:rgba(2,46,100,.13);
+  
+  --shadow-dark:0 28px 86px rgba(2,30,60,.35);
+  --shadow-panel:0 24px 58px rgba(2,30,60,.20);
+  --shadow-light:0 18px 46px rgba(2,30,60,.11);
+  --max:1240px;
+  --r-md:18px;
+  --r-lg:26px;
+
+  /* User-approved Club tier card palette */
+  --member-bg1:#0d4082;
+  --member-bg2:#072b5c;
+  --member-bg3:#031530;
+  --member-metal1:#c49548;
+  --member-metal2:#fff2cf;
+  --member-metal3:#dfb368;
+  --member-metal4:#ffffff;
+
+  --silver-bg1:#505b68;
+  --silver-bg2:#343d48;
+  --silver-bg3:#1a2027;
+  --silver-metal1:#b8c1cb;
+  --silver-metal2:#ffffff;
+  --silver-metal3:#dce3ea;
+  --silver-metal4:#f8fafc;
+
+  --gold-bg1:#76521a;
+  --gold-bg2:#4a310d;
+  --gold-bg3:#1c1204;
+  --gold-metal1:#ca9035;
+  --gold-metal2:#fff4d0;
+  --gold-metal3:#e5b35d;
+  --gold-metal4:#ffffff;
+
+  --diamond-bg1:#1e3146;
+  --diamond-bg2:#101b29;
+  --diamond-bg3:#050a12;
+  --diamond-metal1:#98a9b9;
+  --diamond-metal2:#fff;
+  --diamond-metal3:#cfd9e4;
+  --diamond-metal4:#aee9ef;
+}
+
+*{box-sizing:border-box}
+html,body{
+  width:100%;
+  min-height:100%;
+  margin:0;
+  background:var(--sk-ink);
+  color:#f5faff;
+  font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+  overflow-x:hidden;
+}
+button,input{font:inherit}
+button{cursor:pointer}
+button:focus-visible,input:focus-visible,a:focus-visible{
+  outline:3px solid rgba(95,199,207,.7);
+  outline-offset:3px;
+}
+a{color:inherit}
+.hidden{display:none!important}
+.wrap{width:min(var(--max),calc(100% - 48px));margin-inline:auto}
+.eyebrow{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  color:var(--sk-aqua-soft);
+  font:800 10px/1.2 Montserrat,sans-serif;
+  letter-spacing:.18em;
+  text-transform:uppercase;
+}
+.eyebrow::before{
+  content:"";
+  width:32px;
+  height:1px;
+  background:var(--sk-aqua);
+}
+.btn{
+  min-height:44px;
+  padding:0 18px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  border:1px solid rgba(255,255,255,.24);
+  border-radius:999px;
+  background:rgba(4,27,53,.54);
+  color:#fff;
+  font-size:10px;
+  font-weight:800;
+  letter-spacing:.03em;
+  backdrop-filter:blur(16px);
+}
+.btn:hover{
+  border-color:rgba(95,199,207,.72);
+  background:rgba(2,46,100,.82);
+}
+.btn.primary{
+  border-color:var(--sk-ivory);
+  background:var(--sk-ivory);
+  color:var(--sk-navy);
+}
+.btn.primary:hover{
+  background:var(--sk-porcelain);
+  border-color:var(--sk-porcelain);
+}
+
+/* Hero */
+.hero{
+  position:relative;
+  isolation:isolate;
+  overflow:hidden;
+  padding:76px 0 120px;
+  background:
+    radial-gradient(ellipse at 90% 9%,rgba(95,199,207,.15),transparent 35%),
+    radial-gradient(ellipse at 4% 94%,rgba(95,199,207,.11),transparent 40%),
+    linear-gradient(118deg,#041a34 0%,#022e64 72%,#063b6d 100%);
+}
+.hero::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:-2;
+  opacity:.23;
+  background-image:radial-gradient(rgba(255,255,255,.35) .65px,transparent .75px);
+  background-size:24px 24px;
+  mask-image:linear-gradient(180deg,#000,transparent 82%);
+}
+.hero::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:-1;
+  background:
+    linear-gradient(180deg,rgba(2,46,100,.06),transparent 36%,rgba(2,46,100,.42) 100%),
+    linear-gradient(90deg,rgba(255,255,255,.04) 1px,transparent 1px);
+  background-size:auto,84px 100%;
+  mask-image:linear-gradient(90deg,#000,transparent 72%);
+}
+.hero-grid{
+  display:grid;
+  grid-template-columns:minmax(0,1.06fr) minmax(370px,.74fr);
+  gap:64px;
+  align-items:end;
+}
+.hero h1{
+  max-width:780px;
+  margin:16px 0 20px;
+  font:600 clamp(44px,6vw,76px)/.95 Montserrat,sans-serif;
+  letter-spacing:-.055em;
+}
+.hero-copy{
+  max-width:670px;
+  margin:0;
+  color:rgba(245,250,255,.80);
+  font-size:15px;
+  font-weight:500;
+  line-height:1.75;
+}
+.hero-actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:28px}
+.member-status{
+  margin-top:23px;
+  color:var(--sk-champagne);
+  font-size:10px;
+  font-weight:700;
+}
+
+/* Premium summary panel */
+.club-pass{
+  position:relative;
+  min-height:340px;
+  overflow:hidden;
+  padding:29px;
+  border:1px solid rgba(95,199,207,.24);
+  border-radius:24px;
+  background:
+    radial-gradient(circle at 88% 8%,rgba(95,199,207,.15),transparent 35%),
+    linear-gradient(150deg,rgba(11,77,120,.96),rgba(2,46,100,.98) 62%,rgba(4,27,53,.98));
+  box-shadow:0 34px 95px rgba(2,30,60,.45);
+}
+.club-pass::before{
+  content:"";
+  position:absolute;
+  inset:18px;
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:16px;
+}
+.club-pass::after{
+  content:"SKANDI";
+  position:absolute;
+  right:-5px;
+  bottom:-13px;
+  color:rgba(255,255,255,.035);
+  font:700 68px/1 Montserrat,sans-serif;
+  letter-spacing:-.06em;
+}
+.pass-top,.pass-copy,.pass-stats{position:relative;z-index:1}
+.pass-top{
+  display:flex;
+  justify-content:space-between;
+  gap:18px;
+  align-items:center;
+}
+.club-word{
+  font:800 12px/1 Montserrat,sans-serif;
+  letter-spacing:.18em;
+}
+.pass-tag{
+  padding-left:12px;
+  border-left:1px solid rgba(95,199,207,.46);
+  color:var(--sk-aqua-soft);
+  font-size:9px;
+  font-weight:800;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+}
+.pass-copy{
+  margin-top:76px;
+}
+.pass-copy strong{
+  display:block;
+  font:600 30px/1.05 Montserrat,sans-serif;
+  letter-spacing:-.04em;
+}
+.pass-copy span{
+  display:block;
+  max-width:450px;
+  margin-top:9px;
+  color:rgba(245,250,255,.65);
+  font-size:11px;
+  line-height:1.6;
+}
+.pass-stats{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:16px;
+  margin-top:27px;
+  padding-top:18px;
+  border-top:1px solid rgba(255,255,255,.15);
+}
+.pass-stat strong{
+  display:block;
+  font:600 24px/1 Montserrat,sans-serif;
+  letter-spacing:-.04em;
+}
+.pass-stat span{
+  display:block;
+  margin-top:5px;
+  color:rgba(245,250,255,.55);
+  font-size:8px;
+  font-weight:700;
+  letter-spacing:.11em;
+  text-transform:uppercase;
+}
+
+/* Brightened main surface */
+.main{
+  position:relative;
+  padding:66px 0 104px;
+  background:
+    radial-gradient(ellipse at 14% 8%,rgba(95,199,207,.15),transparent 35%),
+    radial-gradient(ellipse at 86% 24%,rgba(95,199,207,.11),transparent 40%),
+    linear-gradient(180deg,#063b6d 0%,#022e64 44%,#041a34 100%);
+}
+.main::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  opacity:.12;
+  background-image:radial-gradient(rgba(255,255,255,.45) .65px,transparent .75px);
+  background-size:24px 24px;
+  mask-image:linear-gradient(180deg,#000,transparent 70%);
+}
+.main>.wrap{position:relative;z-index:1}
+.section{margin-top:70px}
+.section:first-child{margin-top:0}
+.section-head{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(280px,520px);
+  gap:48px;
+  align-items:end;
+  margin-bottom:28px;
+  padding-bottom:22px;
+  border-bottom:1px solid rgba(255,255,255,.15);
+}
+.section-head h2{
+  margin:7px 0 0;
+  color:#fff;
+  font:600 clamp(34px,4.3vw,54px)/.98 Montserrat,sans-serif;
+  letter-spacing:-.05em;
+}
+.section-head p{
+  margin:0;
+  color:rgba(245,250,255,.75);
+  font-size:13px;
+  line-height:1.7;
+}
+
+/* ========================================================
+   HYPER-REALISTIC SVG TIER CARDS WITH HTML OVERLAY
+   ======================================================== */
+.tier-grid{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:15px;
+}
+.tier-card{
+  --bg1:#062948;
+  --bg2:#031e38;
+  --bg3:#021426;
+  --m1:#a76d20;
+  --m2:#f0d291;
+  --m3:#c6944b;
+  --m4:#efcf8a;
+  
+  position:relative;
+  aspect-ratio:1.5854/1;
+  min-height:180px;
+  container-type: inline-size;
+  overflow:hidden;
+  border-radius:18px;
+  background:#030e1a;
+  color:#fff;
+  box-shadow:0 18px 46px rgba(2,30,60,.45);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.tier-card:hover{
+  transform: translateY(-4px);
+  box-shadow:0 24px 64px rgba(2,30,60,.65);
+}
+
+.tier-card.member{
+  --bg1:var(--member-bg1);--bg2:var(--member-bg2);--bg3:var(--member-bg3);
+  --m1:var(--member-metal1);--m2:var(--member-metal2);--m3:var(--member-metal3);--m4:var(--member-metal4);
+}
+.tier-card.silver{
+  --bg1:var(--silver-bg1);--bg2:var(--silver-bg2);--bg3:var(--silver-bg3);
+  --m1:var(--silver-metal1);--m2:var(--silver-metal2);--m3:var(--silver-metal3);--m4:var(--silver-metal4);
+}
+.tier-card.gold{
+  --bg1:var(--gold-bg1);--bg2:var(--gold-bg2);--bg3:var(--gold-bg3);
+  --m1:var(--gold-metal1);--m2:var(--gold-metal2);--m3:var(--gold-metal3);--m4:var(--gold-metal4);
+}
+.tier-card.diamond{
+  --bg1:var(--diamond-bg1);--bg2:var(--diamond-bg2);--bg3:var(--diamond-bg3);
+  --m1:var(--diamond-metal1);--m2:var(--diamond-metal2);--m3:var(--diamond-metal3);--m4:var(--diamond-metal4);
+}
+
+.card-shell-svg {
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  z-index:1;
+  display:block;
+  pointer-events:none;
+}
+
+.tier-overlay {
+  position:absolute;
+  inset:0;
+  z-index:2;
+  display:flex;
+  flex-direction:column;
+  padding: 10% 8% 11%;
+}
+
+.tier-top {
+  display:flex;
+  justify-content:flex-start;
+}
+.tier-name {
+  font:300 clamp(16px, 5.5cqw, 28px)/1 Montserrat, sans-serif;
+  letter-spacing:0.25em;
+  text-transform:uppercase;
+  background:linear-gradient(90deg, var(--m1), var(--m2), var(--m3), var(--m4), var(--m1));
+  -webkit-background-clip:text;
+  background-clip:text;
+  color:transparent;
+  filter:drop-shadow(0 2px 4px rgba(0,0,0,0.6));
+}
+
+.tier-bottom {
+  margin-top:auto;
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-end;
+  gap: 10px;
+}
+
+.tier-points {
+  display:flex;
+  flex-direction:column;
+  gap: 4px;
+}
+.tier-points span {
+  color:rgba(255,255,255,.85);
+  font-family:'IBM Plex Mono', monospace;
+  font-size:clamp(7px, 2.3cqw, 11px);
+  font-weight:400;
+  letter-spacing:0.18em;
+  text-transform:uppercase;
+  text-shadow:0 1px 3px rgba(0,0,0,0.8);
+}
+.tier-points strong {
+  font-family:'Farrington 7B', 'IBM Plex Mono', monospace;
+  font-weight:300;
+  font-size:clamp(16px, 5.8cqw, 28px);
+  line-height:1;
+  letter-spacing:0.07em;
+  background:linear-gradient(90deg, var(--m1), var(--m2), var(--m3), var(--m4));
+  -webkit-background-clip:text;
+  background-clip:text;
+  color:transparent;
+  filter:drop-shadow(0 2px 4px rgba(0,0,0,0.7));
+}
+
+.tier-earn {
+  display:flex;
+  flex-direction:column;
+  align-items:flex-end;
+  gap: 4px;
+  text-align:right;
+}
+.tier-earn span {
+  color:rgba(255,255,255,.78);
+  font-family:Montserrat, sans-serif;
+  font-size:clamp(6px, 1.8cqw, 9px);
+  font-weight:600;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  text-shadow:0 1px 3px rgba(0,0,0,0.8);
+}
+.tier-earn strong {
+  background:linear-gradient(90deg, var(--m2), var(--m4));
+  -webkit-background-clip:text;
+  background-clip:text;
+  color:transparent;
+  font-family:'IBM Plex Mono', monospace;
+  font-weight:400;
+  font-size:clamp(14px, 4cqw, 20px);
+  line-height:1;
+  letter-spacing:.06em;
+  filter:drop-shadow(0 2px 4px rgba(0,0,0,0.7));
+}
+
+/* Premium ivory cards */
+.ivory-grid{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:14px;
+}
+.ivory-card{
+  min-height:200px;
+  padding:24px;
+  border:1px solid rgba(216,210,200,.82);
+  border-radius:18px;
+  background:var(--sk-ivory);
+  color:var(--sk-graphite);
+  box-shadow:var(--shadow-light);
+}
+.ivory-card:hover{border-color:rgba(95,199,207,.55)}
+.ivory-index{
+  width:38px;
+  height:38px;
+  display:grid;
+  place-items:center;
+  border:1px solid rgba(2,46,100,.15);
+  border-radius:50%;
+  background:var(--sk-limestone);
+  color:var(--sk-navy);
+  font:800 10px/1 Montserrat,sans-serif;
+}
+.ivory-card h3{
+  margin:20px 0 8px;
+  color:var(--sk-navy);
+  font:700 17px/1.2 Montserrat,sans-serif;
+  letter-spacing:-.025em;
+}
+.ivory-card p{
+  margin:0;
+  color:var(--sk-dark-muted);
+  font-size:11px;
+  line-height:1.65;
+}
+
+/* Calculator */
+.calculator{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(270px,.55fr);
+  gap:18px;
+  align-items:stretch;
+}
+.calc-panel{
+  padding:30px;
+  border:1px solid rgba(95,199,207,.25);
+  border-radius:24px;
+  background:
+    radial-gradient(circle at 94% 4%,rgba(95,199,207,.18),transparent 35%),
+    linear-gradient(145deg,var(--sk-ink-soft),var(--sk-navy) 62%,var(--sk-ink));
+  box-shadow:var(--shadow-dark);
+}
+.calc-panel h3{
+  margin:10px 0 9px;
+  font:600 31px/1 Montserrat,sans-serif;
+  letter-spacing:-.04em;
+}
+.calc-panel p{
+  max-width:600px;
+  margin:0;
+  color:rgba(245,250,255,.75);
+  font-size:11px;
+  line-height:1.65;
+}
+.calc-input{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-top:22px;
+}
+.calc-input input{
+  min-width:210px;
+  min-height:44px;
+  padding:0 14px;
+  border:1px solid rgba(255,255,255,.24);
+  border-radius:999px;
+  background:rgba(255,255,255,.10);
+  color:#fff;
+  outline:0;
+}
+.calc-result{
+  display:grid;
+  place-content:center;
+  min-height:250px;
+  padding:26px;
+  border:1px solid rgba(216,210,200,.84);
+  border-radius:24px;
+  background:var(--sk-ivory);
+  text-align:center;
+  box-shadow:var(--shadow-light);
+}
+.calc-result span{
+  color:var(--sk-muted);
+  font-size:9px;
+  font-weight:800;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+}
+.calc-result strong{
+  display:block;
+  margin-top:11px;
+  color:var(--sk-navy);
+  font:600 55px/1 Montserrat,sans-serif;
+  letter-spacing:-.055em;
+}
+
+/* Rewards + FAQ */
+.reward-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:12px;
+}
+.reward{
+  padding:20px;
+  border:1px solid rgba(216,210,200,.82);
+  border-radius:16px;
+  background:var(--sk-ivory);
+  color:var(--sk-graphite);
+  box-shadow:var(--shadow-light);
+}
+.reward h3{
+  margin:0 0 7px;
+  color:var(--sk-navy);
+  font:700 15px/1.2 Montserrat,sans-serif;
+}
+.reward p{
+  margin:0;
+  color:var(--sk-dark-muted);
+  font-size:10px;
+  line-height:1.6;
+}
+.tag{
+  display:inline-flex;
+  margin-top:13px;
+  padding:6px 10px;
+  border:1px solid rgba(2,46,100,.15);
+  border-radius:999px;
+  background:var(--sk-limestone);
+  color:var(--sk-navy);
+  font-size:8px;
+  font-weight:800;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+}
+.faq{display:grid;gap:8px}
+.faq-item{
+  overflow:hidden;
+  border:1px solid rgba(255,255,255,.15);
+  border-radius:14px;
+  background:rgba(255,255,255,.05);
+}
+.faq-q{
+  width:100%;
+  min-height:52px;
+  display:flex;
+  justify-content:space-between;
+  gap:14px;
+  align-items:center;
+  padding:0 17px;
+  border:0;
+  background:transparent;
+  color:#fff;
+  text-align:left;
+  font-size:11px;
+  font-weight:750;
+}
+.faq-q span:last-child{color:var(--sk-aqua-soft)}
+.faq-a{
+  display:none;
+  padding:0 17px 17px;
+  color:rgba(245,250,255,.70);
+  font-size:10px;
+  line-height:1.65;
+}
+.faq-item.open .faq-a{display:block}
+
+/* CTA */
+.cta{
+  position:relative;
+  overflow:hidden;
+  margin-top:78px;
+  padding:46px;
+  border:1px solid rgba(95,199,207,.28);
+  border-radius:26px;
+  background:
+    radial-gradient(circle at 90% 0%,rgba(95,199,207,.18),transparent 35%),
+    linear-gradient(145deg,var(--sk-ink-soft),var(--sk-navy) 62%,var(--sk-ink));
+  box-shadow:var(--shadow-dark);
+  text-align:center;
+}
+.cta::after{
+  content:"";
+  position:absolute;
+  left:46px;
+  right:46px;
+  bottom:0;
+  height:2px;
+  background:linear-gradient(90deg,transparent,var(--sk-aqua),var(--sk-champagne),transparent);
+  opacity:.9;
+}
+.cta h2{
+  margin:0;
+  font:600 clamp(31px,4.5vw,50px)/1 Montserrat,sans-serif;
+  letter-spacing:-.05em;
+}
+.cta p{
+  max-width:700px;
+  margin:13px auto 24px;
+  color:rgba(245,250,255,.75);
+  font-size:12px;
+  line-height:1.7;
+}
+.cta-actions{display:flex;justify-content:center;gap:9px;flex-wrap:wrap}
+.toast{
+  position:fixed;
+  right:18px;
+  bottom:18px;
+  z-index:50;
+  display:none;
+  max-width:360px;
+  padding:12px 15px;
+  border:1px solid rgba(255,255,255,.18);
+  border-radius:11px;
+  background:var(--sk-ink-soft);
+  color:#fff;
+  box-shadow:var(--shadow-panel);
+  font-size:10px;
+}
+
+@media(max-width:1080px){
+  .tier-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:900px){
+  .hero-grid,.calculator{grid-template-columns:1fr}
+  .hero{padding:58px 0 94px}
+  .club-pass{max-width:560px}
+  .section-head{grid-template-columns:1fr;gap:14px}
+  .ivory-grid{grid-template-columns:1fr}
+}
+@media(max-width:620px){
+  .wrap{width:min(var(--max),calc(100% - 28px))}
+  .hero{padding-top:46px}
+  .hero h1{font-size:42px}
+  .tier-grid,.reward-grid{grid-template-columns:1fr}
+  .club-pass{padding:23px}
+  .pass-stats{grid-template-columns:1fr}
+  .calc-panel,.calc-result,.cta{padding:23px}
+  .calc-input{display:grid}
+  .calc-input input,.calc-input .btn{width:100%}
+  .cta{margin-top:58px}
+}
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{scroll-behavior:auto!important;transition-duration:.01ms!important}
+}
+</style>
 </head>
 <body>
+
+<!-- SHARED SVG ASSETS FOR TIERS -->
+<svg style="width:0;height:0;position:absolute;pointer-events:none;" aria-hidden="true">
+  <defs>
+    <pattern id="sharedBrushedPattern" width="1440" height="4" patternUnits="userSpaceOnUse">
+      <line x1="0" y1="0.7" x2="1440" y2="0.7" stroke="#ffffff" stroke-width="0.5" stroke-opacity="0.03" />
+      <line x1="0" y1="2.0" x2="1440" y2="2.0" stroke="#000000" stroke-width="0.6" stroke-opacity="0.06" />
+    </pattern>
+    <filter id="sharedLogoShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#000000" flood-opacity="0.6" />
+    </filter>
+  </defs>
+</svg>
+
 <header class="hero" data-section-id="club-hero">
   <div class="wrap hero-grid">
     <div>
@@ -64,33 +813,209 @@
       </div>
 
       <div class="tier-grid" id="tierGrid">
+        
+        <!-- MEMBER CARD -->
         <article class="tier-card member" data-tier-key="member">
-          <div class="tier-frame"></div>
-          <div class="tier-top"><span class="tier-brand">SKANDI CLUB</span><span class="tier-name">Member</span></div>
-          <div class="tier-body"><strong data-tier-range>0–24,999</strong><span>SKANDI Points</span></div>
-          <div class="tier-foot"><span data-tier-multiplier>1× earn rate</span><strong>MEMBER</strong></div>
+          <svg class="card-shell-svg" viewBox="80 95 1440 820" preserveAspectRatio="xMidYMid slice">
+            <defs>
+              <filter id="pvcGrain" x="0" y="0" width="100%" height="100%">
+          <feTurbulence type="fractalNoise" baseFrequency="1.2" numOctaves="3" result="noise" />
+          <feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 0.05 0" in="noise" result="coloredNoise" />
+          <feBlend in="SourceGraphic" in2="coloredNoise" mode="multiply" />
+        </filter>
+              <linearGradient id="bg-member" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="var(--bg1)" /><stop offset="0.48" stop-color="var(--bg2)" /><stop offset="1" stop-color="var(--bg3)" />
+              </linearGradient>
+              <linearGradient id="metal-member" gradientUnits="userSpaceOnUse" x1="140" y1="0" x2="1460" y2="0">
+          <stop offset="0" stop-color="var(--tier-metal-a)" />
+          <stop offset="0.16" stop-color="var(--tier-metal-b)" />
+          <stop offset="0.34" stop-color="var(--tier-metal-c)" />
+          <stop offset="0.52" stop-color="var(--tier-metal-d)" />
+          <stop offset="0.70" stop-color="var(--tier-metal-c)" />
+          <stop offset="0.86" stop-color="var(--tier-metal-b)" />
+          <stop offset="1" stop-color="var(--tier-metal-a)" />
+        </linearGradient>
+
+            </defs>
+            <g filter="url(#pvc-member)"><rect x="80" y="95" width="1440" height="820" fill="url(#bg-member)" /></g>
+            <rect x="80" y="95" width="1440" height="820" fill="url(#sharedBrushedPattern)" style="mix-blend-mode:overlay;opacity:0.8;" />
+            <g pointer-events="none">
+              <circle cx="1232" cy="911" r="954" fill="none" stroke="url(#metal-member)" stroke-opacity="0.02" stroke-width="116" />
+              <circle cx="1232" cy="911" r="846" fill="none" stroke="url(#metal-member)" stroke-opacity="0.04" stroke-width="116" />
+              <circle cx="1232" cy="911" r="792" fill="none" stroke="url(#metal-member)" stroke-opacity="0.24" stroke-width="4.3" />
+            </g>
+            <image x="675" y="382" width="1270" height="312" opacity="0.46" preserveAspectRatio="xMidYMid meet" href="https://static.wixstatic.com/media/394052_3fb4912d85904d4a8a8af70a3147b73c~mv2.png" />
+             <!-- EMV SMART CHIP (Physical Element) -->
+      <g transform="translate(180, 420)">
+        <!-- Chip Base Bevel & Shadow -->
+        <rect x="-2" y="-2" width="134" height="104" rx="14" fill="#000" opacity="0.5"/>
+        <rect x="0" y="0" width="130" height="100" rx="12" fill="url(#tierMetal)" stroke="#333" stroke-width="1.5"/>
+        <!-- Chip Contacts -->
+        <path d="M 35 0 V 100 M 95 0 V 100 M 0 30 H 35 M 95 30 H 130 M 0 70 H 35 M 95 70 H 130" stroke="#000" stroke-width="1.5" stroke-opacity="0.4" fill="none"/>
+        <path d="M 36 0 V 100 M 96 0 V 100 M 0 31 H 35 M 95 31 H 130 M 0 71 H 35 M 95 71 H 130" stroke="#fff" stroke-width="1" stroke-opacity="0.6" fill="none"/>
+        <ellipse cx="65" cy="50" rx="18" ry="26" stroke="#000" stroke-width="1" stroke-opacity="0.4" fill="none"/>
+        <ellipse cx="66" cy="51" rx="18" ry="26" stroke="#fff" stroke-width="1" stroke-opacity="0.6" fill="none"/>
+      </g>
+            <image x="928" y="164" width="560" height="186" preserveAspectRatio="xMaxYMin meet" filter="url(#sharedLogoShadow)" href="https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/logos/SKANDI_CLUB-LIGHT.svg" />
+          </svg>
+          
+         
+
+      <!-- TOP-LEFT: TIER NAME -->
+      <g transform="translate(162, 254)">
+        <text id="tierNameShadow" x="2" y="4.2" fill="#000000" opacity="0.60" font-family="Montserrat" font-size="54" font-weight="300" letter-spacing="19">SILVER</text>
+        <text id="tierNameText" x="0" y="0" fill="url(#tierMetal)" font-family="Montserrat" font-size="54" font-weight="300" letter-spacing="19">SILVER</text>
+      </g>
+      <div class="tier-overlay">
+            <div class="tier-top"><span class="tier-name">Member</span></div>
+            <div class="tier-bottom">
+              <div class="tier-points">
+                <span>SKANDI Points</span>
+                <strong data-tier-range>0–24,999</strong>
+              </div>
+              <div class="tier-earn">
+                <span>Earn Rate</span>
+                <strong data-tier-multiplier>1×</strong>
+              </div>
+            </div>
+          </div>
         </article>
 
+        <!-- SILVER CARD -->
         <article class="tier-card silver" data-tier-key="silver">
-          <div class="tier-frame"></div>
-          <div class="tier-top"><span class="tier-brand">SKANDI CLUB</span><span class="tier-name">Silver</span></div>
-          <div class="tier-body"><strong data-tier-range>25,000–49,999</strong><span>SKANDI Points</span></div>
-          <div class="tier-foot"><span data-tier-multiplier>1.25× earn rate</span><strong>SILVER</strong></div>
+          <svg class="card-shell-svg" viewBox="80 95 1440 820" preserveAspectRatio="xMidYMid slice">
+            <defs>
+              <filter id="pvc-silver"><feTurbulence type="fractalNoise" baseFrequency="1.2" numOctaves="3" result="noise" /><feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 0.05 0" in="noise" result="coloredNoise" /><feBlend in="SourceGraphic" in2="coloredNoise" mode="multiply" /></filter>
+              <linearGradient id="bg-silver" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="var(--bg1)" /><stop offset="0.48" stop-color="var(--bg2)" /><stop offset="1" stop-color="var(--bg3)" />
+              </linearGradient>
+              <linearGradient id="metal-silver" gradientUnits="userSpaceOnUse" x1="140" y1="0" x2="1460" y2="0">
+                <stop offset="0" stop-color="var(--m1)" /><stop offset="0.16" stop-color="var(--m2)" /><stop offset="0.34" stop-color="var(--m3)" /><stop offset="0.52" stop-color="var(--m4)" /><stop offset="0.70" stop-color="var(--m3)" /><stop offset="0.86" stop-color="var(--m2)" /><stop offset="1" stop-color="var(--m1)" />
+              </linearGradient>
+            </defs>
+            <g filter="url(#pvc-silver)"><rect x="80" y="95" width="1440" height="820" fill="url(#bg-silver)" /></g>
+            <rect x="80" y="95" width="1440" height="820" fill="url(#sharedBrushedPattern)" style="mix-blend-mode:overlay;opacity:0.8;" />
+            <g pointer-events="none">
+              <circle cx="1232" cy="911" r="954" fill="none" stroke="url(#metal-silver)" stroke-opacity="0.02" stroke-width="116" />
+              <circle cx="1232" cy="911" r="846" fill="none" stroke="url(#metal-silver)" stroke-opacity="0.04" stroke-width="116" />
+              <circle cx="1232" cy="911" r="792" fill="none" stroke="url(#metal-silver)" stroke-opacity="0.24" stroke-width="4.3" />
+            </g>
+            <image x="675" y="382" width="1270" height="312" opacity="0.46" preserveAspectRatio="xMidYMid meet" href="https://static.wixstatic.com/media/394052_3fb4912d85904d4a8a8af70a3147b73c~mv2.png" />
+            <g transform="translate(180, 420)">
+              <rect x="-2" y="-2" width="134" height="104" rx="14" fill="#000" opacity="0.5"/>
+              <rect x="0" y="0" width="130" height="100" rx="12" fill="url(#metal-silver)" stroke="#333" stroke-width="1.5"/>
+              <path d="M 35 0 V 100 M 95 0 V 100 M 0 30 H 35 M 95 30 H 130 M 0 70 H 35 M 95 70 H 130" stroke="#000" stroke-width="1.5" stroke-opacity="0.4" fill="none"/>
+              <path d="M 36 0 V 100 M 96 0 V 100 M 0 31 H 35 M 95 31 H 130 M 0 71 H 35 M 95 71 H 130" stroke="#fff" stroke-width="1" stroke-opacity="0.6" fill="none"/>
+              <ellipse cx="65" cy="50" rx="18" ry="26" stroke="#000" stroke-width="1" stroke-opacity="0.4" fill="none"/>
+              <ellipse cx="66" cy="51" rx="18" ry="26" stroke="#fff" stroke-width="1" stroke-opacity="0.6" fill="none"/>
+            </g>
+            <image x="928" y="164" width="560" height="186" preserveAspectRatio="xMaxYMin meet" filter="url(#sharedLogoShadow)" href="https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/logos/SKANDI_CLUB-LIGHT.svg" />
+          </svg>
+          <div class="tier-overlay">
+            <div class="tier-top"><span class="tier-name">Silver</span></div>
+            <div class="tier-bottom">
+              <div class="tier-points">
+                <span>SKANDI Points</span>
+                <strong data-tier-range>25,000–49,999</strong>
+              </div>
+              <div class="tier-earn">
+                <span>Earn Rate</span>
+                <strong data-tier-multiplier>1.25×</strong>
+              </div>
+            </div>
+          </div>
         </article>
 
+        <!-- GOLD CARD -->
         <article class="tier-card gold" data-tier-key="gold">
-          <div class="tier-frame"></div>
-          <div class="tier-top"><span class="tier-brand">SKANDI CLUB</span><span class="tier-name">Gold</span></div>
-          <div class="tier-body"><strong data-tier-range>50,000–99,999</strong><span>SKANDI Points</span></div>
-          <div class="tier-foot"><span data-tier-multiplier>1.5× earn rate</span><strong>GOLD</strong></div>
+          <svg class="card-shell-svg" viewBox="80 95 1440 820" preserveAspectRatio="xMidYMid slice">
+            <defs>
+              <filter id="pvc-gold"><feTurbulence type="fractalNoise" baseFrequency="1.2" numOctaves="3" result="noise" /><feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 0.05 0" in="noise" result="coloredNoise" /><feBlend in="SourceGraphic" in2="coloredNoise" mode="multiply" /></filter>
+              <linearGradient id="bg-gold" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="var(--bg1)" /><stop offset="0.48" stop-color="var(--bg2)" /><stop offset="1" stop-color="var(--bg3)" />
+              </linearGradient>
+              <linearGradient id="metal-gold" gradientUnits="userSpaceOnUse" x1="140" y1="0" x2="1460" y2="0">
+                <stop offset="0" stop-color="var(--m1)" /><stop offset="0.16" stop-color="var(--m2)" /><stop offset="0.34" stop-color="var(--m3)" /><stop offset="0.52" stop-color="var(--m4)" /><stop offset="0.70" stop-color="var(--m3)" /><stop offset="0.86" stop-color="var(--m2)" /><stop offset="1" stop-color="var(--m1)" />
+              </linearGradient>
+            </defs>
+            <g filter="url(#pvc-gold)"><rect x="80" y="95" width="1440" height="820" fill="url(#bg-gold)" /></g>
+            <rect x="80" y="95" width="1440" height="820" fill="url(#sharedBrushedPattern)" style="mix-blend-mode:overlay;opacity:0.8;" />
+            <g pointer-events="none">
+              <circle cx="1232" cy="911" r="954" fill="none" stroke="url(#metal-gold)" stroke-opacity="0.02" stroke-width="116" />
+              <circle cx="1232" cy="911" r="846" fill="none" stroke="url(#metal-gold)" stroke-opacity="0.04" stroke-width="116" />
+              <circle cx="1232" cy="911" r="792" fill="none" stroke="url(#metal-gold)" stroke-opacity="0.24" stroke-width="4.3" />
+            </g>
+            <image x="675" y="382" width="1270" height="312" opacity="0.46" preserveAspectRatio="xMidYMid meet" href="https://static.wixstatic.com/media/394052_3fb4912d85904d4a8a8af70a3147b73c~mv2.png" />
+            <g transform="translate(180, 420)">
+              <rect x="-2" y="-2" width="134" height="104" rx="14" fill="#000" opacity="0.5"/>
+              <rect x="0" y="0" width="130" height="100" rx="12" fill="url(#metal-gold)" stroke="#333" stroke-width="1.5"/>
+              <path d="M 35 0 V 100 M 95 0 V 100 M 0 30 H 35 M 95 30 H 130 M 0 70 H 35 M 95 70 H 130" stroke="#000" stroke-width="1.5" stroke-opacity="0.4" fill="none"/>
+              <path d="M 36 0 V 100 M 96 0 V 100 M 0 31 H 35 M 95 31 H 130 M 0 71 H 35 M 95 71 H 130" stroke="#fff" stroke-width="1" stroke-opacity="0.6" fill="none"/>
+              <ellipse cx="65" cy="50" rx="18" ry="26" stroke="#000" stroke-width="1" stroke-opacity="0.4" fill="none"/>
+              <ellipse cx="66" cy="51" rx="18" ry="26" stroke="#fff" stroke-width="1" stroke-opacity="0.6" fill="none"/>
+            </g>
+            <image x="928" y="164" width="560" height="186" preserveAspectRatio="xMaxYMin meet" filter="url(#sharedLogoShadow)" href="https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/logos/SKANDI_CLUB-LIGHT.svg" />
+          </svg>
+          <div class="tier-overlay">
+            <div class="tier-top"><span class="tier-name">Gold</span></div>
+            <div class="tier-bottom">
+              <div class="tier-points">
+                <span>SKANDI Points</span>
+                <strong data-tier-range>50,000–99,999</strong>
+              </div>
+              <div class="tier-earn">
+                <span>Earn Rate</span>
+                <strong data-tier-multiplier>1.5×</strong>
+              </div>
+            </div>
+          </div>
         </article>
 
+        <!-- DIAMOND CARD -->
         <article class="tier-card diamond" data-tier-key="diamond">
-          <div class="tier-frame"></div>
-          <div class="tier-top"><span class="tier-brand">SKANDI CLUB</span><span class="tier-name">Diamond</span></div>
-          <div class="tier-body"><strong data-tier-range>100,000+</strong><span>SKANDI Points</span></div>
-          <div class="tier-foot"><span data-tier-multiplier>2× earn rate</span><strong>DIAMOND</strong></div>
+          <svg class="card-shell-svg" viewBox="80 95 1440 820" preserveAspectRatio="xMidYMid slice">
+            <defs>
+              <filter id="pvc-diamond"><feTurbulence type="fractalNoise" baseFrequency="1.2" numOctaves="3" result="noise" /><feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 0.05 0" in="noise" result="coloredNoise" /><feBlend in="SourceGraphic" in2="coloredNoise" mode="multiply" /></filter>
+              <linearGradient id="bg-diamond" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="var(--bg1)" /><stop offset="0.48" stop-color="var(--bg2)" /><stop offset="1" stop-color="var(--bg3)" />
+              </linearGradient>
+              <linearGradient id="metal-diamond" gradientUnits="userSpaceOnUse" x1="140" y1="0" x2="1460" y2="0">
+                <stop offset="0" stop-color="var(--m1)" /><stop offset="0.16" stop-color="var(--m2)" /><stop offset="0.34" stop-color="var(--m3)" /><stop offset="0.52" stop-color="var(--m4)" /><stop offset="0.70" stop-color="var(--m3)" /><stop offset="0.86" stop-color="var(--m2)" /><stop offset="1" stop-color="var(--m1)" />
+              </linearGradient>
+            </defs>
+            <g filter="url(#pvc-diamond)"><rect x="80" y="95" width="1440" height="820" fill="url(#bg-diamond)" /></g>
+            <rect x="80" y="95" width="1440" height="820" fill="url(#sharedBrushedPattern)" style="mix-blend-mode:overlay;opacity:0.8;" />
+            <g pointer-events="none">
+              <circle cx="1232" cy="911" r="954" fill="none" stroke="url(#metal-diamond)" stroke-opacity="0.02" stroke-width="116" />
+              <circle cx="1232" cy="911" r="846" fill="none" stroke="url(#metal-diamond)" stroke-opacity="0.04" stroke-width="116" />
+              <circle cx="1232" cy="911" r="792" fill="none" stroke="url(#metal-diamond)" stroke-opacity="0.24" stroke-width="4.3" />
+            </g>
+            <image x="675" y="382" width="1270" height="312" opacity="0.46" preserveAspectRatio="xMidYMid meet" href="https://static.wixstatic.com/media/394052_3fb4912d85904d4a8a8af70a3147b73c~mv2.png" />
+            <g transform="translate(180, 420)">
+              <rect x="-2" y="-2" width="134" height="104" rx="14" fill="#000" opacity="0.5"/>
+              <rect x="0" y="0" width="130" height="100" rx="12" fill="url(#metal-diamond)" stroke="#333" stroke-width="1.5"/>
+              <path d="M 35 0 V 100 M 95 0 V 100 M 0 30 H 35 M 95 30 H 130 M 0 70 H 35 M 95 70 H 130" stroke="#000" stroke-width="1.5" stroke-opacity="0.4" fill="none"/>
+              <path d="M 36 0 V 100 M 96 0 V 100 M 0 31 H 35 M 95 31 H 130 M 0 71 H 35 M 95 71 H 130" stroke="#fff" stroke-width="1" stroke-opacity="0.6" fill="none"/>
+              <ellipse cx="65" cy="50" rx="18" ry="26" stroke="#000" stroke-width="1" stroke-opacity="0.4" fill="none"/>
+              <ellipse cx="66" cy="51" rx="18" ry="26" stroke="#fff" stroke-width="1" stroke-opacity="0.6" fill="none"/>
+            </g>
+            <image x="928" y="164" width="560" height="186" preserveAspectRatio="xMaxYMin meet" filter="url(#sharedLogoShadow)" href="https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/logos/SKANDI_CLUB-LIGHT.svg" />
+          </svg>
+          <div class="tier-overlay">
+            <div class="tier-top"><span class="tier-name">Diamond</span></div>
+            <div class="tier-bottom">
+              <div class="tier-points">
+                <span>SKANDI Points</span>
+                <strong data-tier-range>100,000+</strong>
+              </div>
+              <div class="tier-earn">
+                <span>Earn Rate</span>
+                <strong data-tier-multiplier>2×</strong>
+              </div>
+            </div>
+          </div>
         </article>
+
       </div>
     </section>
 
