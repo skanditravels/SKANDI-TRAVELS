@@ -457,6 +457,26 @@ export async function registerAssetUsageCore(input={},sessionOverride=null){
   return{ok:true,usage:created};
 }
 
+export async function deactivateAssetUsageCore(input={}){
+  await requireAssetAccess({write:true});
+  const assetId=clean(input.assetId,80);
+  if(!isUuid(assetId))throw new Error("ASSET_ID_INVALID");
+  const system=clean(input.system,180),recordType=clean(input.recordType,120),recordId=clean(input.recordId,180);
+  const usageRole=clean(input.usageRole,120),fieldName=clean(input.fieldName,180);
+  if(!system||!recordType||!recordId||!usageRole||!fieldName)throw new Error("ASSET_USAGE_IDENTITY_REQUIRED");
+  const matches=await select("platform_asset_usages",{
+    select:"id,record_type,record_id,usage_role,field_name",
+    asset_id:qeq(assetId),system:qeq(system),active:"eq.true",limit:"100"
+  });
+  const targets=matches.filter(row=>clean(row.record_type,120)===recordType&&clean(row.record_id,180)===recordId
+    &&clean(row.usage_role,120)===usageRole&&clean(row.field_name,180)===fieldName);
+  for(const row of targets){
+    await restRequest({table:"platform_asset_usages",method:"PATCH",query:{id:qeq(row.id)},
+      body:{active:false,updated_at:new Date().toISOString()},prefer:"return=minimal"});
+  }
+  return{ok:true,deactivated:targets.length};
+}
+
 export async function archiveAssetCore(input={}){
   const session=await requireAssetAccess({write:true});
   const id=clean(input.assetId,80);
