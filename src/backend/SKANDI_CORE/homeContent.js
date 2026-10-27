@@ -3,12 +3,20 @@
 // Public Home content is projected from the same canonical public Inventory view used by Destination Flow.
 // Provider access reuses customerBooking; no provider HTTP, secrets or booking mutation here.
 
-import { restRequest } from "backend/SKANDI_CORE/supabaseServer";
-import { searchLiveStaysCore } from "backend/SKANDI_CORE/customerBooking";
+import { restRequest, storageGetPublicUrl } from "backend/SKANDI_CORE/supabaseServer";
+import { searchLiveFlightOffersCore, searchLiveStaysCore } from "backend/SKANDI_CORE/customerBooking";
+import { ensureEditorialContext } from "backend/SKANDI_CORE/publicContent";
+import { listAssetsCore, registerAssetUsageCore, deactivateAssetUsageCore } from "backend/SKANDI_CORE/assets";
 
 const PUBLIC_VIEW = "inventory_public_entities_v";
 const CACHE_TTL_MS = 60_000;
 const MAX_ROWS = 5000;
+const HOME_PRICE_CACHE_KEY = "HOME_CARD_V1";
+const HOME_PRICE_CACHE_TTL_MS = 6 * 60 * 60 * 1000;
+const HOME_PRICE_MAX_PRODUCTS = 200;
+const HOME_PRICE_MAX_WORKERS = 2;
+const HOME_PRICE_TYPES = new Set(["flight_only", "charter_package"]);
+const HOME_PRICE_CABINS = new Set(["economy", "premium_economy", "business", "first"]);
 
 let cache = null;
 let cacheExpiresAt = 0;
@@ -24,6 +32,7 @@ function coordinate(value, min, max) {
   return Number.isFinite(n) && n >= min && n <= max ? n : undefined;
 }
 function upper(value, max = 80) { return clean(value, max).toUpperCase(); }
+function lower(value, max = 80) { return clean(value, max).toLowerCase(); }
 function slugify(value) {
   return clean(value, 240).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
     .replace(/&/g, " and ").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
@@ -187,6 +196,387 @@ function card(records, record, language = "EN") {
   };
 }
 
+function safeProductId(value) {
+  const id = clean(value, 160);
+  return /^[A-Za-z0-9_-]{1,160}$/.test(id) ? id : "";
+}
+
+function inFilter(values) {
+  const ids = [...new Set(arr(values).map(safeProductId).filter(Boolean))];
+  return ids.length ? `in.(${ids.join(",")})` : "";
+}
+
+function homePriceConfiguration(product = {}) {
+  const productId = safeProductId(product.product_id);
+  const productType = lower(product.product_type, 60);
+  const payload = obj(product.payload);
+  const raw = obj(payload.homePrice);
+  if (!productId || !HOME_PRICE_TYPES.has(productType)) return null;
+
+  const origin = upper(raw.origin, 3);
+  const destination = upper(raw.destination, 3);
+  if (!/^[A-Z]{3}$/.test(origin) || !/^[A-Z]{3}$/.test(destination) || origin === destination) return null;
+
+  const integer = (value, fallback, min, max) => {
+    const n = value === undefined || value === null || value === "" ? fallback : Number(value);
+    return Number.isInteger(n) && n >= min && n <= max ? n : null;
+  };
+  const departureDaysOut = integer(raw.departureDaysOut, 60, 1, 330);
+  const returnDaysOut = raw.returnDaysOut === undefined || raw.returnDaysOut === null || raw.returnDaysOut === ""
+    ? null : integer(raw.returnDaysOut, null, 2, 365);
+  const adults = integer(raw.adults, 1, 1, 9);
+  const maxConnections = integer(raw.maxConnections, 1, 0, 2);
+  const passengers = adults === null ? [] : Array.from({ length:adults }, () => ({ type:"adult" }));
+  const rawChildAges = arr(raw.childAges);
+  if (rawChildAges.some(age => age === null || age === undefined || clean(age, 8) === "")) return null;
+  const childAges = rawChildAges.map(Number);
+  if (childAges.some(age => !Number.isInteger(age) || age < 0 || age > 17)) return null;
+  passengers.push(...childAges.map(age => ({ age })));
+  const packageAddOns = arr(raw.packageAddOns).slice(0, 20).map(item => ({
+    name:clean(item?.name, 120),
+    retailAmount:Number(item?.retailAmount),
+    quantity:Number(item?.quantity ?? 1)
+  }));
+  if (packageAddOns.some(item => !item.name || !Number.isFinite(item.retailAmount) || item.retailAmount < 0
+      || !Number.isInteger(item.quantity) || item.quantity < 1 || item.quantity > 99)) return null;
+
+  const cabinClass = lower(raw.cabinClass || "economy", 40);
+  const currency = upper(product.currency || "USD", 3);
+  const basePrice = Number(product.base_price ?? 0);
+  const marginPct = Number(product.margin_pct ?? 0);
+  const supplierTimeout = integer(raw.supplierTimeout, 15000, 2000, 20000);
+  if (departureDaysOut === null || (returnDaysOut !== null && (returnDaysOut < departureDaysOut || returnDaysOut === departureDaysOut))
+      || adults === null || maxConnections === null || supplierTimeout === null
+      || passengers.length > 9 || !HOME_PRICE_CABINS.has(cabinClass)
+      || !/^[A-Z]{3}$/.test(currency) || !Number.isFinite(basePrice) || basePrice < 0
+      || !Number.isFinite(marginPct) || marginPct < 0 || marginPct > 1000) return null;
+
+  return {
+    product,
+    productId,
+    productType,
+    origin,
+    destination,
+    departureDaysOut,
+    returnDaysOut,
+    adults,
+    childAges,
+    packageAddOns,
+    passengers,
+    cabinClass,
+    maxConnections,
+    supplierTimeout,
+    currency,
+    basePrice:roundMoney(basePrice),
+    marginPct
+  };
+}
+
+function homePriceProduct(product = {}) {
+  const status = lower(product.status, 40);
+  if (product.customer_visible !== true || !["published", "active"].includes(status)) return null;
+  return homePriceConfiguration(product);
+}
+
+function roundMoney(value) {
+  return Math.round((Number(value) + Number.EPSILON) * 100) / 100;
+}
+
+function targetDate(daysOut) {
+  const date = new Date();
+  date.setUTCHours(0, 0, 0, 0);
+  date.setUTCDate(date.getUTCDate() + daysOut);
+  return date.toISOString().slice(0, 10);
+}
+
+async function readHomeCardProducts(productIds) {
+  const filter = inFilter(productIds);
+  if (!filter) return [];
+  const rows = await restRequest({
+    table:"travel_products",
+    query:{
+      select:"product_id,product_type,title,base_price,margin_pct,currency,customer_visible,status,payload,updated_at",
+      product_id:filter,
+      limit:HOME_PRICE_MAX_PRODUCTS
+    }
+  });
+  return arr(rows);
+}
+
+async function readHomePriceProducts(productIds) {
+  return (await readHomeCardProducts(productIds)).map(homePriceProduct).filter(Boolean);
+}
+
+async function readHomePriceCache(productIds) {
+  const filter = inFilter(productIds);
+  if (!filter) return new Map();
+  const rows = await restRequest({
+    table:"travel_product_price_cache",
+    query:{
+      select:"product_id,cache_key,base_price,live_price,margin_amount,margin_pct,currency,availability,supplier_snapshot,checked_at,expires_at",
+      product_id:filter,
+      cache_key:`eq.${HOME_PRICE_CACHE_KEY}`,
+      limit:HOME_PRICE_MAX_PRODUCTS
+    }
+  });
+  return new Map(arr(rows).map(row => [safeProductId(row.product_id), row]).filter(([id]) => id));
+}
+
+function homePriceSettings(config) {
+  return {
+    productType:config.productType,
+    origin:config.origin,
+    destination:config.destination,
+    departureDaysOut:config.departureDaysOut,
+    returnDaysOut:config.returnDaysOut,
+    adults:config.adults,
+    childAges:config.childAges,
+    packageAddOns:config.packageAddOns,
+    cabinClass:config.cabinClass,
+    maxConnections:config.maxConnections,
+    currency:config.currency,
+    basePrice:config.basePrice,
+    marginPct:config.marginPct
+  };
+}
+
+function priceTotal(cache, product) {
+  const availability = lower(cache?.availability, 40);
+  const expiresAt = Date.parse(cache?.expires_at || "");
+  const basePrice = Number(cache?.base_price);
+  const livePrice = Number(cache?.live_price);
+  const marginAmount = Number(cache?.margin_amount ?? 0);
+  const cachedMarginPct = Number(cache?.margin_pct ?? 0);
+  const currency = upper(cache?.currency || product.currency, 3);
+  const snapshot = obj(cache?.supplier_snapshot);
+  const cachedSettings = obj(snapshot.homePriceSettings);
+  const currentSettings = homePriceSettings(product);
+  if (availability !== "available" || !Number.isFinite(expiresAt) || expiresAt <= Date.now()
+      || !Number.isFinite(basePrice) || basePrice < 0 || !Number.isFinite(livePrice) || livePrice <= 0
+      || !Number.isFinite(marginAmount) || marginAmount < 0 || currency !== product.currency
+      || cachedMarginPct !== product.marginPct || JSON.stringify(cachedSettings) !== JSON.stringify(currentSettings)) return null;
+  return { total:roundMoney(basePrice + livePrice + marginAmount), basePrice, livePrice, marginAmount, currency };
+}
+
+function enrichHomeCard(record, product, cache) {
+  const snapshot = obj(cache?.supplier_snapshot);
+  const prices = priceTotal(cache, product);
+  const unavailable = {
+    ...record,
+    homePriceConfigured:true,
+    homePriceProductType:product.productType,
+    fromPrice:null,
+    currency:product.currency,
+    livePriceFound:false,
+    livePriceStatus:cache ? (upper(cache.availability, 40) || "UNAVAILABLE") : "PENDING",
+    livePriceType:"DUFFEL_FLIGHT_BASELINE",
+    priceExpiresAt:cache?.expires_at || null
+  };
+  if (!prices) return unavailable;
+  return {
+    ...unavailable,
+    fromPrice:prices.total,
+    currency:prices.currency,
+    livePriceFound:true,
+    livePriceStatus:"AVAILABLE",
+    livePriceType:"DUFFEL_FLIGHT_BASELINE",
+    flightPrice:prices.livePrice,
+    packageBasePrice:prices.basePrice,
+    marginAmount:prices.marginAmount,
+    pricePeriod:obj(snapshot.pricePeriod),
+    priceCheckedAt:cache.checked_at || null,
+    priceExpiresAt:cache.expires_at || null
+  };
+}
+
+async function applyCachedHomePrices(content) {
+  const cards = [...arr(content.destinations), ...arr(content.hotels), ...arr(content.offers), ...arr(content.inspiration)];
+  const productIds = [...new Set(cards.map(row => safeProductId(row.publicId)).filter(Boolean))];
+  if (!productIds.length) return content;
+  try {
+    const products = await readHomeCardProducts(productIds);
+    if (!products.length) return content;
+    const enabledProducts = products.map(homePriceProduct).filter(Boolean);
+    const cacheById = enabledProducts.length ? await readHomePriceCache(enabledProducts.map(row => row.productId)) : new Map();
+    const productsById = new Map(products.map(row => [safeProductId(row.product_id), row]));
+    const configsById = new Map(enabledProducts.map(row => [row.productId, row]));
+    const imageByAssetId = await readPublicHomeCardImages(products);
+    const enrich = rows => arr(rows).map(row => {
+      const productId = safeProductId(row.publicId);
+      const productRow = productsById.get(productId);
+      const config = configsById.get(productId);
+      let output = row;
+      if (productRow?.customer_visible === true && ["published", "active"].includes(lower(productRow.status, 40))) {
+        const homeCard = obj(obj(productRow.payload).homeCard);
+        const image = imageByAssetId.get(safeProductId(homeCard.imageAssetId));
+        if (image) output = { ...output, image:image.url, imageAlt:clean(homeCard.imageAlt || image.altText, 500), homeCardImageAssetId:image.id };
+      }
+      return config ? enrichHomeCard(output, config, cacheById.get(productId)) : output;
+    });
+    return {
+      ...content,
+      destinations:enrich(content.destinations),
+      hotels:enrich(content.hotels),
+      offers:enrich(content.offers),
+      inspiration:enrich(content.inspiration)
+    };
+  } catch (error) {
+    console.error("[Home] Could not read the flight price cache.", error?.message || error);
+    return content;
+  }
+}
+
+async function readPublicHomeCardImages(products) {
+  const assetIds = [...new Set(arr(products).filter(row => row.customer_visible === true)
+    .map(row => safeProductId(obj(obj(row.payload).homeCard).imageAssetId)).filter(Boolean))];
+  const filter = inFilter(assetIds);
+  if (!filter) return new Map();
+  const rows = await restRequest({
+    table:"platform_assets",
+    query:{
+      select:"id,bucket,storage_path,public_url,alt_text,status,visibility,asset_type",
+      id:filter,
+      bucket:"eq.skandi-public-assets",
+      status:"eq.ACTIVE",
+      visibility:"eq.PUBLIC",
+      asset_type:"eq.IMAGE",
+      limit:100
+    }
+  });
+  const images = await Promise.all(arr(rows).map(async row => {
+    const url = clean(row.public_url, 1800) || clean((await storageGetPublicUrl({ bucket:row.bucket, path:row.storage_path }))?.publicUrl, 1800);
+    return url ? [safeProductId(row.id), { id:safeProductId(row.id), url, altText:clean(row.alt_text, 500) }] : null;
+  }));
+  return new Map(images.filter(Boolean));
+}
+
+function quoteDatePeriod(config, departureDate, returnDate) {
+  return {
+    origin:config.origin,
+    destination:config.destination,
+    departureDate,
+    returnDate,
+    adults:config.adults,
+    childAges:config.childAges,
+    cabinClass:config.cabinClass
+  };
+}
+
+async function packageBasePrice(config) {
+  if (config.productType !== "charter_package") return 0;
+  const rows = await restRequest({
+    table:"travel_product_components",
+    query:{
+      select:"component_type,quantity,retail_amount",
+      product_id:`eq.${config.productId}`,
+      limit:100
+    }
+  });
+  const componentTotal = arr(rows).reduce((total, row) => {
+    // Flight components are priced separately through Duffel and must not be counted twice.
+    if (/^(FLIGHT|AIR|AIRFARE|AIR_TRAVEL)(_|$)/.test(upper(row.component_type, 80))) return total;
+    const amount = Number(row.retail_amount ?? 0);
+    const quantity = Number(row.quantity ?? 1);
+    if (!Number.isFinite(amount) || amount < 0 || !Number.isFinite(quantity) || quantity < 0) return total;
+    return total + amount * quantity;
+  }, 0);
+  const configuredAddOns = config.packageAddOns.reduce((sum, item) => sum + item.retailAmount * item.quantity, 0);
+  return roundMoney(config.basePrice + componentTotal + configuredAddOns);
+}
+
+async function writeHomePriceCache(config, data) {
+  const body = {
+    product_id:config.productId,
+    cache_key:HOME_PRICE_CACHE_KEY,
+    base_price:data.basePrice ?? config.basePrice,
+    live_price:data.livePrice ?? null,
+    margin_amount:data.marginAmount ?? 0,
+    margin_pct:config.marginPct,
+    currency:config.currency,
+    availability:data.availability,
+    supplier_snapshot:data.supplierSnapshot || {},
+    checked_at:data.checkedAt || new Date().toISOString(),
+    expires_at:data.expiresAt || new Date().toISOString()
+  };
+  await restRequest({
+    table:"travel_product_price_cache",
+    method:"POST",
+    query:{ on_conflict:"product_id,cache_key" },
+    body,
+    prefer:"resolution=merge-duplicates,return=representation"
+  });
+}
+
+async function refreshHomePriceProduct(config) {
+  const checkedAt = new Date();
+  const checkedIso = checkedAt.toISOString();
+  const departureDate = targetDate(config.departureDaysOut);
+  const returnDate = config.returnDaysOut === null ? null : targetDate(config.returnDaysOut);
+  const pricePeriod = quoteDatePeriod(config, departureDate, returnDate);
+  let basePrice = config.basePrice;
+  try {
+    basePrice = await packageBasePrice(config);
+    const result = await searchLiveFlightOffersCore({
+      origin:config.origin,
+      destination:config.destination,
+      departureDate,
+      returnDate,
+      passengers:config.passengers,
+      cabinClass:config.cabinClass,
+      maxConnections:config.maxConnections,
+      supplierTimeout:config.supplierTimeout
+    });
+    const match = arr(result?.items).filter(offer => {
+      const amount = Number(offer?.totalAmount);
+      return Number.isFinite(amount) && amount > 0 && upper(offer?.totalCurrency, 3) === config.currency
+        && (!offer.expiresAt || (Number.isFinite(Date.parse(offer.expiresAt)) && Date.parse(offer.expiresAt) > Date.now()));
+    }).sort((a, b) => Number(a.totalAmount) - Number(b.totalAmount))[0];
+    if (!match) {
+      await writeHomePriceCache(config, {
+        basePrice,
+        availability:"unavailable",
+        supplierSnapshot:{ provider:"Duffel", reason:"NO_CURRENCY_MATCHING_OFFER", pricePeriod, homePriceSettings:homePriceSettings(config) }
+      });
+      return { productId:config.productId, status:"unavailable" };
+    }
+
+    const livePrice = roundMoney(match.totalAmount);
+    const marginAmount = roundMoney((basePrice + livePrice) * config.marginPct / 100);
+    const expiresAt = new Date(checkedAt.getTime() + HOME_PRICE_CACHE_TTL_MS).toISOString();
+    await writeHomePriceCache(config, {
+      basePrice,
+      livePrice,
+      marginAmount,
+      availability:"available",
+      checkedAt:checkedIso,
+      expiresAt,
+      supplierSnapshot:{
+        provider:"Duffel",
+        offerRequestId:clean(result?.offerRequestId, 200),
+        offerId:clean(match.id, 200),
+        supplierOfferExpiresAt:match.expiresAt || null,
+        productType:config.productType,
+        pricePeriod,
+        homePriceSettings:homePriceSettings(config),
+        displayedTotal:roundMoney(basePrice + livePrice + marginAmount)
+      }
+    });
+    return { productId:config.productId, status:"available" };
+  } catch (error) {
+    try {
+      await writeHomePriceCache(config, {
+        basePrice,
+        availability:"error",
+        supplierSnapshot:{ provider:"Duffel", reason:clean(error?.code || error?.message || "PRICE_REFRESH_FAILED", 180), pricePeriod, homePriceSettings:homePriceSettings(config) }
+      });
+    } catch (cacheError) {
+      console.error(`[Home] Could not write failed price refresh for ${config.productId}.`, cacheError?.message || cacheError);
+    }
+    console.error(`[Home] Flight card price refresh failed for ${config.productId}.`, error?.message || error);
+    return { productId:config.productId, status:"error" };
+  }
+}
+
 function airportDto(record) {
   const details = obj(record.details);
   const iata = upper(details.iata || record.code, 3);
@@ -267,7 +657,7 @@ export async function getHomeContentCore(input = {}) {
   const hotels = featured.filter(row => row.entityType === "HOTEL").slice(0, 10).map(row => card(visible, row, language));
   const offers = featured.filter(row => ["PACKAGE", "GUIDED_TOUR", "ACTIVITY", "TRANSFER", "CAR_RENTAL"].includes(row.entityType)).slice(0, 12).map(row => card(visible, row, language));
   const inspiration = featured.filter(row => ["DESTINATION", "AREA", "COUNTRY", "GUIDED_TOUR", "ACTIVITY"].includes(row.entityType)).slice(0, 12).map(row => card(visible, row, language));
-  return {
+  const content = {
     source: "SUPABASE_PUBLIC_INVENTORY",
     protocolVersion: "V12-HOME",
     airports,
@@ -282,6 +672,7 @@ export async function getHomeContentCore(input = {}) {
       counts: { records: visible.length, airports: airports.length, destinations: searchDestinations.length, homepageDestinations: destinations.length, hotels: hotels.length, offers: offers.length }
     }
   };
+  return applyCachedHomePrices(content);
 }
 
 export async function getHomeSearchLocationsCore(input = {}) {
@@ -297,6 +688,270 @@ export async function getHomeSearchLocationsCore(input = {}) {
 
 export async function getOldStyleHomeContentCore(input = {}) {
   return getHomeContentCore(input);
+}
+
+export async function refreshHomeCardPricesCore() {
+  const content = await getHomeContentCore({ force:true });
+  const cards = [...arr(content.destinations), ...arr(content.hotels), ...arr(content.offers), ...arr(content.inspiration)];
+  const productIds = [...new Set(cards.map(row => safeProductId(row.publicId)).filter(Boolean))];
+  if (!productIds.length) return { ok:true, scanned:0, available:0, unavailable:0, errors:0 };
+
+  const products = await readHomePriceProducts(productIds);
+  let cursor = 0;
+  const results = [];
+  async function worker() {
+    while (cursor < products.length) {
+      const product = products[cursor++];
+      results.push(await refreshHomePriceProduct(product));
+    }
+  }
+  await Promise.all(Array.from({ length:Math.min(HOME_PRICE_MAX_WORKERS, products.length) }, worker));
+  const summary = {
+    ok:results.every(row => row.status !== "error"),
+    scanned:results.length,
+    available:results.filter(row => row.status === "available").length,
+    unavailable:results.filter(row => row.status === "unavailable").length,
+    errors:results.filter(row => row.status === "error").length
+  };
+  console.info("[Home] Scheduled card-price refresh complete.", summary);
+  return summary;
+}
+
+function uniqueFeaturedHomeCards(content) {
+  const rows = [...arr(content.destinations), ...arr(content.hotels), ...arr(content.offers), ...arr(content.inspiration)];
+  const seen = new Set();
+  return rows.filter(row => {
+    const id = safeProductId(row.publicId);
+    if (!id || seen.has(id)) return false;
+    seen.add(id);
+    return true;
+  });
+}
+
+function publicManagerAsset(asset = {}) {
+  return {
+    id:safeProductId(asset.id),
+    displayName:clean(asset.displayName || asset.originalName, 300),
+    originalName:clean(asset.originalName, 300),
+    bucket:clean(asset.bucket, 120),
+    visibility:upper(asset.visibility, 20),
+    assetType:upper(asset.assetType, 30),
+    status:upper(asset.status, 30),
+    publicUrl:clean(asset.publicUrl, 1800),
+    altText:clean(asset.altText, 500),
+    widthPx:asset.widthPx ?? null,
+    heightPx:asset.heightPx ?? null
+  };
+}
+
+export async function getHomeCardManagerCore() {
+  await ensureEditorialContext();
+  const content = await getHomeContentCore({ force:true });
+  const cards = uniqueFeaturedHomeCards(content);
+  const ids = cards.map(row => safeProductId(row.publicId));
+  const [products, assets] = await Promise.all([
+    readHomeCardProducts(ids),
+    listAssetsCore({ visibility:"PUBLIC", assetType:"IMAGE" })
+  ]);
+  const productById = new Map(products.map(row => [safeProductId(row.product_id), row]));
+  const assetRows = arr(assets?.assets).map(publicManagerAsset).filter(asset => asset.id && asset.bucket === "skandi-public-assets"
+    && asset.visibility === "PUBLIC" && asset.assetType === "IMAGE" && asset.status === "ACTIVE" && asset.publicUrl);
+  const assetById = new Map(assetRows.map(asset => [asset.id, asset]));
+  const cacheById = await readHomePriceCache(products.map(row => safeProductId(row.product_id)));
+  return {
+    ok:true,
+    cards:cards.map(row => {
+      const productId = safeProductId(row.publicId);
+      const product = productById.get(productId) || null;
+      const payload = obj(product?.payload);
+      const homePrice = obj(payload.homePrice);
+      const homeCard = obj(payload.homeCard);
+      const imageAssetId = safeProductId(homeCard.imageAssetId);
+      const asset = assetById.get(imageAssetId);
+      const configured = Object.keys(homePrice).length > 0;
+      const validConfiguration = Boolean(product && homePriceConfiguration(product));
+      const config = product ? homePriceProduct(product) : null;
+      const cache = cacheById.get(productId);
+      const price = config && cache ? priceTotal(cache, config) : null;
+      const cacheExpired = Date.parse(cache?.expires_at || "") <= Date.now();
+      const cacheStatus = !configured ? "DISABLED"
+        : !validConfiguration ? "CONFIGURATION_REQUIRED"
+          : product.customer_visible !== true ? "HIDDEN"
+            : !["published", "active"].includes(lower(product.status, 40)) ? "DRAFT"
+              : price ? "AVAILABLE" : cache && lower(cache.availability, 40) !== "available" ? upper(cache.availability, 40)
+                : cacheExpired ? "EXPIRED" : "PENDING";
+      return {
+        publicId:productId,
+        id:row.id,
+        title:row.title || row.name,
+        entityType:row.entityType,
+        fallbackImage:row.image || "",
+        productExists:Boolean(product),
+        productType:lower(product?.product_type, 60) || "flight_only",
+        productStatus:upper(product?.status, 40) || "DRAFT",
+        customerVisible:product ? product.customer_visible === true : true,
+        currency:upper(product?.currency, 3) || "USD",
+        basePrice:Number(product?.base_price ?? 0),
+        marginPct:Number(product?.margin_pct ?? 0),
+        priceEnabled:Boolean(Object.keys(homePrice).length),
+        homePrice:{
+          origin:upper(homePrice.origin, 3),
+          destination:upper(homePrice.destination, 3),
+          departureDaysOut:homePrice.departureDaysOut ?? 60,
+          returnDaysOut:homePrice.returnDaysOut ?? "",
+          adults:homePrice.adults ?? 1,
+          childAges:arr(homePrice.childAges),
+          packageAddOns:arr(homePrice.packageAddOns),
+          cabinClass:lower(homePrice.cabinClass, 40) || "economy",
+          maxConnections:homePrice.maxConnections ?? 1,
+          supplierTimeout:homePrice.supplierTimeout ?? 15000
+        },
+        imageAssetId:asset?.id || "",
+        imageUrl:asset?.publicUrl || row.image || "",
+        imageAlt:clean(homeCard.imageAlt || asset?.altText, 500),
+        cachedPrice:price?.total ?? null,
+        cacheCurrency:price?.currency || "",
+        cacheStatus,
+        checkedAt:cache?.checked_at || null,
+        expiresAt:cache?.expires_at || null
+      };
+    }),
+    assets:assetRows
+  };
+}
+
+export async function saveHomeCardManagerCore(input = {}) {
+  const context = await ensureEditorialContext();
+  const publicId = safeProductId(input.publicId);
+  const content = await getHomeContentCore({ force:true });
+  const card = uniqueFeaturedHomeCards(content).find(row => safeProductId(row.publicId) === publicId);
+  if (!publicId || !card) throw new Error("HOME_CARD_NOT_FOUND");
+
+  const productRows = await readHomeCardProducts([publicId]);
+  const existing = productRows.find(row => safeProductId(row.product_id) === publicId) || null;
+  const existingPayload = obj(existing?.payload);
+  const productType = lower(input.productType, 60);
+  const status = upper(input.productStatus || "DRAFT", 40);
+  const customerVisible = input.customerVisible === true;
+  const currency = upper(input.currency || "USD", 3);
+  const basePrice = Number(input.basePrice ?? 0);
+  const marginPct = Number(input.marginPct ?? 0);
+  if (!HOME_PRICE_TYPES.has(productType) || !["DRAFT", "REVIEW", "PUBLISHED", "ACTIVE"].includes(status)
+      || !/^[A-Z]{3}$/.test(currency) || !Number.isFinite(basePrice) || basePrice < 0
+      || !Number.isFinite(marginPct) || marginPct < 0 || marginPct > 1000) {
+    throw new Error("HOME_CARD_PRODUCT_FIELDS_INVALID");
+  }
+
+  const imageAssetId = safeProductId(input.imageAssetId);
+  let selectedAsset = null;
+  if (imageAssetId) {
+    const assets = arr((await listAssetsCore({ visibility:"PUBLIC", assetType:"IMAGE" }))?.assets).map(publicManagerAsset);
+    selectedAsset = assets.find(asset => asset.id === imageAssetId && asset.bucket === "skandi-public-assets"
+      && asset.visibility === "PUBLIC" && asset.assetType === "IMAGE" && asset.status === "ACTIVE" && asset.publicUrl) || null;
+    if (!selectedAsset) throw new Error("HOME_CARD_PUBLIC_IMAGE_REQUIRED");
+  }
+
+  const payload = { ...existingPayload };
+  if (input.priceEnabled === true) {
+    const rawPrice = obj(input.homePrice);
+    const rawAddOns = arr(rawPrice.packageAddOns).map(item => ({
+      name:clean(item?.name, 120), retailAmount:clean(item?.retailAmount, 40), quantity:item?.quantity ?? 1
+    }));
+    if (rawAddOns.some(item => (item.name || item.retailAmount) && (!item.name || !item.retailAmount))) {
+      throw new Error("HOME_CARD_PACKAGE_ADD_ON_INVALID");
+    }
+    const homePrice = {
+      origin:upper(rawPrice.origin, 3),
+      destination:upper(rawPrice.destination, 3),
+      departureDaysOut:rawPrice.departureDaysOut === "" ? 60 : Number(rawPrice.departureDaysOut ?? 60),
+      returnDaysOut:rawPrice.returnDaysOut === "" || rawPrice.returnDaysOut === null || rawPrice.returnDaysOut === undefined
+        ? null : Number(rawPrice.returnDaysOut),
+      adults:Number(rawPrice.adults ?? 1),
+      childAges:arr(rawPrice.childAges).map(Number),
+      packageAddOns:rawAddOns.filter(item => item.name || item.retailAmount).map(item => ({
+        name:item.name, retailAmount:Number(item.retailAmount), quantity:Number(item.quantity)
+      })),
+      cabinClass:lower(rawPrice.cabinClass || "economy", 40),
+      maxConnections:Number(rawPrice.maxConnections ?? 1),
+      supplierTimeout:Number(rawPrice.supplierTimeout ?? 15000)
+    };
+    const candidate = {
+      product_id:publicId, product_type:productType, status, customer_visible:customerVisible,
+      currency, base_price:basePrice, margin_pct:marginPct,
+      payload:{ ...payload, homePrice }
+    };
+    const validated = homePriceConfiguration(candidate);
+    if (!validated) throw new Error("HOME_CARD_PRICE_CONFIGURATION_INVALID");
+    payload.homePrice = homePrice;
+  } else {
+    delete payload.homePrice;
+  }
+
+  const previousAssetId = safeProductId(obj(existingPayload.homeCard).imageAssetId);
+  const imageAlt = clean(input.imageAlt, 500) || clean(selectedAsset?.altText, 500);
+  if (selectedAsset) payload.homeCard = { ...obj(existingPayload.homeCard), imageAssetId, imageAlt };
+  else delete payload.homeCard;
+  const profile = obj(context.session?.profile);
+  payload.homeCardManager = {
+    updatedAt:new Date().toISOString(),
+    updatedBySkId:clean(profile.skId || profile.agentId || "", 60),
+    updatedByName:clean(profile.displayName || profile.fullName || profile.name || "Media Control", 180)
+  };
+
+  if (selectedAsset && imageAssetId !== previousAssetId) {
+    await registerAssetUsageCore({
+      assetId:imageAssetId,
+      system:"Media Control",
+      recordType:"HOME_CARD",
+      recordId:publicId,
+      usageRole:"CARD",
+      fieldName:"homeCard.imageAssetId"
+    });
+  }
+
+  const body = {
+    product_type:productType,
+    title:clean(existing?.title || card.title || card.name, 300),
+    destination:clean(existing?.destination || card.name, 300),
+    base_price:basePrice,
+    margin_pct:marginPct,
+    currency,
+    customer_visible:customerVisible,
+    status,
+    supplier_source:productType === "flight_only" ? "duffel" : "mixed",
+    booking_flow:productType === "flight_only" ? "flightOnly" : "package",
+    payload,
+    updated_at:new Date().toISOString()
+  };
+  if (existing) {
+    const query = { product_id:`eq.${publicId}` };
+    if (existing.updated_at) query.updated_at = `eq.${existing.updated_at}`;
+    const saved = await restRequest({ table:"travel_products", method:"PATCH", query, body, prefer:"return=representation" });
+    if (!arr(saved).length) throw new Error("HOME_CARD_EDIT_CONFLICT");
+  } else {
+    await restRequest({
+      table:"travel_products",
+      method:"POST",
+      query:{ on_conflict:"product_id" },
+      body:{ product_id:publicId, product_type:productType, title:body.title, destination:body.destination,
+        base_price:basePrice, live_price:0, margin_pct:marginPct, currency, availability_status:"available",
+        supplier_source:body.supplier_source, customer_visible:customerVisible, staff_visible:true, altea_visible:true,
+        booking_flow:body.booking_flow, status, payload, created_at:new Date().toISOString(), updated_at:body.updated_at },
+      prefer:"resolution=merge-duplicates,return=representation"
+    });
+  }
+
+  if (previousAssetId && previousAssetId !== imageAssetId) {
+    await deactivateAssetUsageCore({
+      assetId:previousAssetId,
+      system:"Media Control",
+      recordType:"HOME_CARD",
+      recordId:publicId,
+      usageRole:"CARD",
+      fieldName:"homeCard.imageAssetId"
+    });
+  }
+  return getHomeCardManagerCore();
 }
 
 function priceSearch(input = {}) {
@@ -347,6 +1002,10 @@ export async function getHomeLivePricesCore(input = {}) {
   const id = clean(input.recordId, 120);
   const card = [...content.destinations, ...content.hotels].find(row => row.id === id);
   if (!card) throw new Error("That Home record is not available.");
+  if (card.homePriceConfigured === true) {
+    const cached = card.livePriceFound === true && Date.parse(card.priceExpiresAt || "") > Date.now();
+    return { card:cached ? card : noLivePrice(card, card.livePriceStatus || "PENDING") };
+  }
   const search = priceSearch(obj(input.priceSearch));
   try {
     const exactId = clean(card.duffelAccommodationId, 180);
