@@ -71,7 +71,7 @@ The CSV beside this file contains every route, exact source-verified controller/
 
 These actual repository controllers are preserved. No new route or build is invented for them. Some are Wix native app pages, popups, dynamic views or competing mappings. Their source slots are reserved under `skandi-embeds/_unregistered/`; their canonical route and embedding contract must be verified before promotion.
 
-- `src/pages/ADMIN OVERVIEW.vkr95.js`
+- `src/pages/ADMIN OVERVIEW.wkr95.js`
 - `src/pages/Account Settings.cnh00.js`
 - `src/pages/Automations.ometk.js`
 - `src/pages/Cart Page.yke8o.js`
