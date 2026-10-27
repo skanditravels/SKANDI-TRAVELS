@@ -9,10 +9,10 @@
 *{box-sizing:border-box}
 html,body{margin:0;width:100%;min-height:100%;background:var(--deep);color:var(--white);font:15px/1.55 Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
 body{min-height:100vh;min-height:100svh}
-#skandi-receiver-screen{position:relative;isolation:isolate;display:grid;place-items:center;overflow:hidden;min-height:100vh;min-height:100svh;padding:24px;background:radial-gradient(ellipse at 14% 12%,rgba(40,92,168,.46),transparent 39%),radial-gradient(ellipse at 86% 84%,rgba(11,92,133,.38),transparent 37%),linear-gradient(145deg,#061a33 0%,#022e64 55%,#041d3b 100%)}
-#skandi-receiver-screen:before,#skandi-receiver-screen:after{content:"";position:absolute;z-index:-1;border:1px solid rgba(95,199,207,.12);border-radius:50%;pointer-events:none}
-#skandi-receiver-screen:before{width:min(80vw,680px);aspect-ratio:1;right:-30%;top:-56%}
-#skandi-receiver-screen:after{width:min(62vw,490px);aspect-ratio:1;left:-26%;bottom:-57%}
+#skandi-receiver-status{position:relative;isolation:isolate;display:grid;place-items:center;overflow:hidden;min-height:100vh;min-height:100svh;padding:24px;background:radial-gradient(ellipse at 14% 12%,rgba(40,92,168,.46),transparent 39%),radial-gradient(ellipse at 86% 84%,rgba(11,92,133,.38),transparent 37%),linear-gradient(145deg,#061a33 0%,#022e64 55%,#041d3b 100%)}
+#skandi-receiver-status:before,#skandi-receiver-status:after{content:"";position:absolute;z-index:-1;border:1px solid rgba(95,199,207,.12);border-radius:50%;pointer-events:none}
+#skandi-receiver-status:before{width:min(80vw,680px);aspect-ratio:1;right:-30%;top:-56%}
+#skandi-receiver-status:after{width:min(62vw,490px);aspect-ratio:1;left:-26%;bottom:-57%}
 .skandi-loader-card{width:min(100%,520px);padding:clamp(28px,6vw,48px);border:1px solid var(--line);border-radius:24px;background:rgba(2,27,57,.69);box-shadow:0 24px 80px rgba(0,0,0,.27);backdrop-filter:blur(18px);text-align:center}
 .skandi-brand{height:76px;display:flex;align-items:center;justify-content:center;margin:0 auto 26px}
 #skandi-loader-logo{display:block;max-width:min(260px,72vw);max-height:72px;width:auto;height:auto;object-fit:contain}
@@ -33,7 +33,7 @@ body{min-height:100vh;min-height:100svh}
 </style>
 </head>
 <body>
-<main id="skandi-receiver-screen" role="status" aria-live="polite" aria-busy="true">
+<main id="skandi-receiver-status" role="status" aria-live="polite" aria-busy="true">
   <section class="skandi-loader-card" aria-labelledby="skandi-loader-title">
     <div class="skandi-brand">
       <img id="skandi-loader-logo" alt="" hidden>
@@ -57,7 +57,7 @@ body{min-height:100vh;min-height:100svh}
   const ROOTS=['https://raw.githubusercontent.com/skanditravels/SKANDI-TRAVELS/main/','https://cdn.jsdelivr.net/gh/skanditravels/SKANDI-TRAVELS@main/'];
   const nonce=Array.from(crypto.getRandomValues(new Uint32Array(4)),x=>x.toString(16)).join('-');
   let attempts=0,loading=false,timer;
-  const screen=document.getElementById('skandi-receiver-screen');
+  const screen=document.getElementById('skandi-receiver-status');
   const brandEyebrow=document.getElementById('skandi-loader-eyebrow');
   const logo=document.getElementById('skandi-loader-logo');
   const logoFallback=document.getElementById('skandi-loader-fallback');
