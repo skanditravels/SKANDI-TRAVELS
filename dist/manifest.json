@@ -785,7 +785,7 @@
       "components": [],
       "binding": "explicit",
       "requiresStaff": false,
-      "status": "FAILED",
+      "status": "BUILT",
       "files": [
         "skandi-embeds/club/skandi-club.html",
         "skandi-embeds/club/skandi-club.css",
@@ -811,12 +811,12 @@
         "SKANDI_CLUB_TERMS_OPEN",
         "SKANDI_WIX_PARENT"
       ],
-      "output": null,
+      "output": "dist/club/index.html",
       "dynamic": false,
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
-      "error": "[club / club] skandi-embeds/club/skandi-club.html, skandi-embeds/club/skandi-club.css, skandi-embeds/club/skandi-club.js: skandi-embeds/club/skandi-club.css: missing asset ./Farrington7B.woff2",
-      "retainedArtifact": true
+      "sha256": "2635634ecfbde9dab7d7dd4de08bcf10e590102c131b2232f183aebd48edbd0e",
+      "bytes": 190838
     },
     {
       "key": "forgotPassword",

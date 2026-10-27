@@ -18,7 +18,7 @@ Route authority: `src/public/siteMap.js`. This file is generated evidence, not r
 | travelInfo | /travel-info | skandi-embeds/travel-info/skandi-travel-info.{html,css,js} | public / public | src/pages/Travel Info.m43d6.js | BUILT |
 | skandiCollection | /skandi-collection | skandi-embeds/skandi-collection/skandi-skandi-collection.{html,css,js} | public / public | src/pages/SKANDI Collection.lo9p5.js | BUILT |
 | voy | /voy-magazine | skandi-embeds/voy/skandi-voy.{html,css,js} | public / public | src/pages/VOY Magazine.gecp7.js | PENDING SOURCE |
-| club | /skandi-club | skandi-embeds/club/skandi-club.{html,css,js} | public / public | src/pages/SKANDI Signature Club.gsejz.js | FAILED |
+| club | /skandi-club | skandi-embeds/club/skandi-club.{html,css,js} | public / public | src/pages/SKANDI Signature Club.gsejz.js | BUILT |
 | forgotPassword | /forgot-password | skandi-embeds/forgot-password/skandi-forgot-password.{html,css,js} | public / public | src/pages/Forgot Password.uagf0.js | BUILT |
 | about | /about | skandi-embeds/about/skandi-about.{html,css,js} | public / public | src/pages/About.xcftf.js | BUILT |
 | support | /about/support | skandi-embeds/support/skandi-support.{html,css,js} | public / public | src/pages/How can we help_.k0iqp.js | BLOCKED INTEGRATION |
@@ -112,7 +112,6 @@ These actual repository controllers are preserved. No new route or build is inve
 - **activities**: NOT READY: No verified canonical controller mapping.
 - **transfers**: NOT READY: No verified canonical controller mapping.
 - **voy**: NOT READY: PENDING SOURCE
-- **club**: NOT READY: [club / club] skandi-embeds/club/skandi-club.html, skandi-embeds/club/skandi-club.css, skandi-embeds/club/skandi-club.js: skandi-embeds/club/skandi-club.css: missing asset ./Farrington7B.woff2
 - **support**: NOT READY: Help Center and support chat are separate HTML components; preserve them until a verified single-component migration.
 - **giftCard**: NOT READY: No verified canonical controller mapping.
 - **ourNetwork**: NOT READY: No verified canonical controller mapping.
