@@ -5,6 +5,7 @@
 import { Permissions, webMethod } from "@wix/web-methods";
 import { getWebsiteDesignCore, saveWebsiteDesignCore } from 'backend/SKANDI_CORE/websiteDesign';
 import { getWebsitePreviewCore, searchMediaSourcesCore, importMediaSourceCore, importWebsiteImageCore, getWebsiteFontCore } from 'backend/SKANDI_CORE/mediaControlSources';
+import { getHomeCardManagerCore, saveHomeCardManagerCore } from "backend/SKANDI_CORE/homeContent";
 import {
   listAssetsCore,
   checkAssetDuplicateCore,
@@ -26,6 +27,8 @@ const ACTIONS = Object.freeze({
   IMPORT_MEDIA_SOURCE: importMediaSourceCore,
   IMPORT_WEBSITE_IMAGE: importWebsiteImageCore,
   GET_WEBSITE_FONT: getWebsiteFontCore,
+  GET_HOME_CARD_MANAGER: getHomeCardManagerCore,
+  SAVE_HOME_CARD_MANAGER: saveHomeCardManagerCore,
   LIST_ASSETS: listAssetsCore,
   CHECK_DUPLICATE: checkAssetDuplicateCore,
   PREPARE_UPLOAD: prepareAssetUploadCore,
