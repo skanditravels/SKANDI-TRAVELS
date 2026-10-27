@@ -20,7 +20,7 @@ const CHILD_SOURCES = new Set(["SKANDI_MEDIA_CONTROL", "SKANDI_NEWSROOM_CONTROL"
 const PARENT_SOURCE = "SKANDI_WIX_PARENT";
 const LOGIN_PATH = SITE_MAP.riaintra || "/riaintra";
 const PUBLIC_VOY_PATH = SITE_MAP.voy || "/voy-magazine";
-const VERSION = "V12-2026.10.14-FULL-EDITORIAL-STUDIO";
+const VERSION = "V12-2026.10.27-HOME-CARD-MANAGER";
 
 let embed = null;
 let bootstrapPromise = null;
@@ -142,7 +142,7 @@ $w.onReady(function () {
       if (type === "MEDIA_CONTROL_READY") { sendEditorialCatalog(); await bootstrap(); return; }
       if (type === "MEDIA_CONTROL_CATALOG_REQUEST") { sendEditorialCatalog(); return; }
       if (type === 'MEDIA_CONTROL_WEBSITE_ACTION') {
-        const allowed = ['GET_WEBSITE_DESIGN','SAVE_WEBSITE_DESIGN','GET_WEBSITE_PREVIEW','SEARCH_MEDIA_SOURCES','IMPORT_MEDIA_SOURCE','IMPORT_WEBSITE_IMAGE','GET_WEBSITE_FONT'];
+        const allowed = ['GET_WEBSITE_DESIGN','SAVE_WEBSITE_DESIGN','GET_WEBSITE_PREVIEW','SEARCH_MEDIA_SOURCES','IMPORT_MEDIA_SOURCE','IMPORT_WEBSITE_IMAGE','GET_WEBSITE_FONT','GET_HOME_CARD_MANAGER','SAVE_HOME_CARD_MANAGER'];
         if (!allowed.includes(payload.action)) throw new Error('WEBSITE_ACTION_INVALID');
         const result = await assetAction(payload.action, payload.input || {});
         send('MEDIA_CONTROL_WEBSITE_RESULT', { requestId:payload.requestId, action:payload.action, result });
