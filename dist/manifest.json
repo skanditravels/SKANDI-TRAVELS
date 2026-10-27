@@ -785,7 +785,7 @@
       "components": [],
       "binding": "explicit",
       "requiresStaff": false,
-      "status": "BUILT",
+      "status": "FAILED",
       "files": [
         "skandi-embeds/club/skandi-club.html",
         "skandi-embeds/club/skandi-club.css",
@@ -811,12 +811,12 @@
         "SKANDI_CLUB_TERMS_OPEN",
         "SKANDI_WIX_PARENT"
       ],
-      "output": "dist/club/index.html",
+      "output": null,
       "dynamic": false,
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
-      "sha256": "819f81dcc5ac9c67099d4b32249fb1fd561297868e10491d1aa02f496aae4661",
-      "bytes": 174868
+      "error": "[club / club] skandi-embeds/club/skandi-club.html, skandi-embeds/club/skandi-club.css, skandi-embeds/club/skandi-club.js: skandi-embeds/club/skandi-club.html: inline CSS and sidecar CSS overlap or have ambiguous order; consolidate into the sidecar (no code was discarded)",
+      "retainedArtifact": true
     },
     {
       "key": "forgotPassword",
