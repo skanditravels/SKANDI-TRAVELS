@@ -65,7 +65,7 @@ Route authority: `src/public/siteMap.js`. This file is generated evidence, not r
 
 ## Installation boundary
 
-The CSV beside this file contains every route, exact source-verified controller/component ID candidates, geometry, receiver, backend owner and remaining checks. Multiple ID candidates mean the source supports those IDs; inspect Wix to identify the installed one. Handshake-discovered IDs cannot be invented. Do not install receivers for pending, blocked, failed or multi-component routes. Existing Home receiver and all operational embeds remain in place until live migration passes.
+The CSV beside this file contains every route, exact source-verified controller/component ID candidates, geometry, receiver, backend owner and remaining checks. Multiple ID candidates mean the source supports those IDs; inspect Wix to identify the installed one. Install a receiver only for a BUILT route, using the page-specific path in the CSV and the existing Wix HTML component. Shared chrome and nested page components do not have separate route handshakes. Pending, blocked, failed and multi-component routes have no installable receiver.
 
 ## Unregistered or unresolved controllers
 

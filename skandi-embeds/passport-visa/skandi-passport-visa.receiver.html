@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>SKANDI</title>
+<style>html,body{margin:0;width:100%;min-height:100%;background:#fff;color:#022e64;font:14px/1.5 system-ui,sans-serif}#skandi-receiver-status{padding:24px}button{font:inherit;padding:10px 16px}</style>
+</head>
+<body>
+<div id="skandi-receiver-status" role="status" aria-live="polite">Loading SKANDI…</div>
+<script>
+(() => {
+  'use strict';
+  const SOURCE='SKANDI_UNIVERSAL_RECEIVER',PARENT='SKANDI_WIX_PARENT';
+  const EXPECTED=Object.freeze({"key":"passportVisa","route":"/travel-info/passport-visa","family":"public","chrome":"public","embedIds":["#passportVisaEmbed"],"receiver":"skandi-embeds/passport-visa/skandi-passport-visa.receiver.html"});
+  const ORIGINS=new Set(['https://www.skanditravels.com','https://skanditravels.com','https://editor.wix.com','https://skanditravels-my-site-2.editor.wix.com']);
+  const ROOTS=['https://raw.githubusercontent.com/skanditravels/SKANDI-TRAVELS/main/','https://cdn.jsdelivr.net/gh/skanditravels/SKANDI-TRAVELS@main/'];
+  const nonce=Array.from(crypto.getRandomValues(new Uint32Array(4)),x=>x.toString(16)).join('-');
+  let attempts=0,loading=false,timer;
+  const status=document.getElementById('skandi-receiver-status');
+  function fail(error) {
+    clearInterval(timer);window.removeEventListener('message',receive);
+    console.error('[SKANDI receiver]',error);
+    status.textContent='This SKANDI page could not load. '+String(error.message||error);
+    status.setAttribute('role','alert');
+    const retry=document.createElement('button');retry.type='button';retry.textContent='Retry';retry.onclick=()=>location.reload();status.append(document.createElement('br'),retry);
+  }
+  async function get(url) {
+    const abort=new AbortController(),timeout=setTimeout(()=>abort.abort(),12000);
+    try {const r=await fetch(url,{mode:'cors',credentials:'omit',cache:'no-store',signal:abort.signal});if(!r.ok)throw new Error('Git build returned HTTP '+r.status);return await r.text();}finally{clearTimeout(timeout);}
+  }
+  async function resolve(root,identity) {
+    const manifest=JSON.parse(await get(root+'dist/manifest.json'));
+    if(manifest.schemaVersion!==2||!Array.isArray(manifest.pages))throw new Error('Unsupported build manifest.');
+    const matches=manifest.pages.filter(p=>p.key===identity.key);
+    if(matches.length!==1)throw new Error('Unknown or conflicting canonical page.');
+    const page=matches[0];
+    if(page.status!=='BUILT'||page.route!==identity.route||page.family!==identity.family||page.chrome!==identity.chrome)throw new Error('This page has no current verified build.');
+    if(EXPECTED&&(page.receiver!==EXPECTED.receiver||page.key!==EXPECTED.key||page.route!==EXPECTED.route||page.family!==EXPECTED.family||page.chrome!==EXPECTED.chrome))throw new Error('This page receiver is stale or assigned to another route.');
+    if(!/^[a-z0-9-]+$/.test(page.slug)||page.output!=='dist/'+page.slug+'/index.html')throw new Error('Invalid canonical build path.');
+    if(page.requiresStaff&&identity.staffAuthorized!==true)throw new Error('An authorized staff session is required.');
+    if(!/^[a-f0-9]{64}$/.test(page.sha256))throw new Error('Missing build integrity record.');
+    const html=await get(root+page.output);
+    const digest=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(html));
+    const actual=Array.from(new Uint8Array(digest),x=>x.toString(16).padStart(2,'0')).join('');
+    if(actual!==page.sha256)throw new Error('Git delivery is out of date; refresh after the build has propagated.');
+    const doc=new DOMParser().parseFromString(html,'text/html'),shell=doc.getElementById('skandi-shell-root');
+    if(!/^\s*<!doctype html>/i.test(html)||!shell||shell.dataset.skandiKey!==identity.key||shell.dataset.skandiFamily!==identity.family||shell.dataset.skandiChrome!==identity.chrome||doc.querySelector('iframe'))throw new Error('Unexpected compiled document.');
+    return html;
+  }
+  async function receive(event) {
+    if(loading||event.source!==window.parent||!ORIGINS.has(event.origin))return;
+    let message=event.data; if(typeof message==='string'){try{message=JSON.parse(message);}catch{return;}}
+    if(message?.source!==PARENT||message.type!=='SKANDI_MASTER_CONFIG'||message.payload?.receiverRequestId!==nonce)return;
+    const identity=message.payload.compiledPage;
+    if(!identity||identity.allowed!==true){fail(new Error(identity?.reason||'The Wix page/controller mapping is not ready.'));return;}
+    if(typeof identity.key!=='string'||typeof identity.route!=='string'||!['public','riaintra','altea'].includes(identity.family)||!['none','public','riaintra','altea'].includes(identity.chrome)){fail(new Error('Invalid parent page identity.'));return;}
+    if(EXPECTED&&(identity.key!==EXPECTED.key||identity.route!==EXPECTED.route||identity.family!==EXPECTED.family||identity.chrome!==EXPECTED.chrome||(EXPECTED.embedIds.length>0&&!EXPECTED.embedIds.includes(identity.embedId)))){fail(new Error('This receiver is assigned to a different page or Wix component.'));return;}
+    loading=true;clearInterval(timer);
+    let html,last;
+    for(const root of ROOTS)try{html=await resolve(root,identity);break;}catch(e){last=e;}
+    if(!html){fail(last||new Error('Git build unavailable.'));return;}
+    window.removeEventListener('message',receive);
+    // Replace this document inside the original Wix HtmlComponent. The parent
+    // remains the owning Velo controller. No URL navigation or nested iframe.
+    window.__SKANDI_RECEIVER_CONTEXT__=Object.freeze(identity);
+    document.open();document.write(html);document.close();
+  }
+  function request() {
+    if(++attempts>40){fail(new Error('The Wix controller did not complete the startup handshake.'));return;}
+    window.parent.postMessage({source:SOURCE,type:'MASTER_CONFIG_REQUEST',payload:{receiverProtocol:1,receiverRequestId:nonce}},'*');
+  }
+  window.addEventListener('message',receive);timer=setInterval(request,500);request();
+})();
+</script>
+</body>
+</html>
