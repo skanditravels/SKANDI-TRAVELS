@@ -883,8 +883,8 @@
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
       "receiver": "skandi-embeds/club-login/skandi-club-login.receiver.html",
-      "sha256": "fa81e81169cc84f928f26c897f16e3d3fcb447c078d52ed5dd992661c70167de",
-      "bytes": 441527
+      "sha256": "b15a572b9d1bce8859a54b50cf291197db5546557386a660ac9c4d004ea387ee",
+      "bytes": 160048
     },
     {
       "key": "forgotPassword",
