@@ -8,6 +8,7 @@
   const $=selector=>document.querySelector(selector);
   const liveMessage=$("#liveMessage");
   let toastTimer=0;
+  let mediaHeroOverride="";
 
   function post(type,payload={}){
     window.parent.postMessage({source:SOURCE,type,payload,timestamp:new Date().toISOString()},"*");
@@ -41,9 +42,22 @@
       if(String(item.slotId||"")!=="club-login-hero")continue;
       const url=safeStorageUrl(item.assetUrl||item.imageUrl);
       if(!url)continue;
-      const image=document.querySelector('[data-media-slot="club-login-hero"]');
-      if(image){image.src=url;if(item.alt)image.alt=String(item.alt);}
+      mediaHeroOverride=url;
+      applyHeroImage(url,item.alt);
     }
+  }
+
+  function applyHeroImage(url,alt=""){
+    const image=document.querySelector('[data-media-slot="club-login-hero"]');
+    if(!image||!url)return;
+    image.src=url;
+    if(alt)image.alt=String(alt);
+  }
+
+  function applyMasterAssets(assets={}){
+    if(mediaHeroOverride)return;
+    const url=safeStorageUrl(assets?.images?.clubLoginHero);
+    if(url)applyHeroImage(url,"SKANDI Club travel in Santorini, Greece");
   }
 
   document.addEventListener("click",event=>{
@@ -74,6 +88,10 @@
       toast(message.payload?.message||"We could not open the sign-in window. Please try again.");
       return;
     }
+    if(message.source===PARENT&&message.type==="SKANDI_MASTER_ASSETS"){
+      applyMasterAssets(message.payload||{});
+      return;
+    }
     if(message.source===PARENT&&message.type==="SKANDI_PRESENTATION_DATA")applyPresentation(message.payload||{});
   });
 
@@ -85,6 +103,7 @@
   else window.addEventListener("resize",requestHeight);
   window.addEventListener("load",requestHeight,{once:true});
   post("SKANDI_CLUB_LOGIN_READY",{});
+  post("MASTER_ASSETS_REQUEST",{context:"club-login"});
   post("SKANDI_PRESENTATION_READY",{pageKey:"clubLogin",path:"/skandi-club/login"});
   requestHeight();
 })();

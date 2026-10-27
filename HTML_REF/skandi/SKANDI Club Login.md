@@ -10,12 +10,21 @@
 - **HTML child source:** `SKANDI_CLUB_LOGIN`
 - **Wix popup authority:** `src/public/siteMap.js` → `CUSTOMER_AUTH_POPUPS`
 - **Page controller:** `/src/pages/SKANDI Club Log in.noml8.js`
-- **Page assets:** `skandi-embeds/club-login/assets/`
-- **Media Control:** Hero copy, CTA labels and hero image are connected to the public presentation runtime.
+- **Canonical backend facade:** `src/backend/SKANDI_CORE/presentation.web.js` → `getPublicPagePresentation`
+- **Canonical backend core:** `src/backend/SKANDI_CORE/presentation.js`
+- **Supabase resources:** public Storage bucket `skandi-public-assets`; presentation content reads `organizations` and `voy_entities` through the canonical core.
+- **Wix identity boundary:** Wix Site Members authentication through the configured Wix login, signup and reset-password lightboxes. The embed never accepts credentials.
+- **Page assets:** `MASTER_CONFIG.brand.assets.images.clubLoginHero` in `/src/pages/masterPage.js`, served from the verified public Supabase asset map.
+- **Media Control:** Hero copy, CTA labels and the `club-login-hero` media slot use the public presentation runtime. A configured Media Control image overrides the MasterPage default.
+- **Message contracts:** `MASTER_ASSETS_REQUEST` / `SKANDI_MASTER_ASSETS`; `SKANDI_PRESENTATION_READY` / `SKANDI_PRESENTATION_DATA`; `SKANDI_CLUB_LOGIN_OPEN`, `SKANDI_CLUB_SIGNUP_OPEN`, `SKANDI_CLUB_RESET_OPEN`, `SKANDI_CLUB_LOGIN_NAVIGATE`, and `SKANDI_CLUB_LOGIN_HEIGHT`.
 - **Version:** `CLUB-LOGIN-1.0`
 - **Last verified:** `2026-10-27`
 
-The page collects no credentials. Login, sign-up and password reset open the configured Wix member lightboxes through the page controller. Page navigation is sent to Wix and allow-listed by the controller. The default hero image is bundled with this source; Media Control can replace it with an approved public asset URL.
+The page collects no credentials. Login, sign-up and password reset open the configured Wix member lightboxes through the page controller. The controller currently opens the named Wix lightbox `SKANDI Club Log In`; its live contents and Wix publication state still require verification. Page navigation is sent to Wix and allow-listed by the controller. The hero image is requested from the MasterPage Supabase asset map; a valid `club-login-hero` image set in Media Control takes priority.
+
+### Change log
+
+- `2026-10-27` — Replaced the Git-bundled Club Login hero image with the public Supabase lifestyle image exposed by MasterPage. Added MasterPage-first loading and retained the Media Control image override.
 
 ```html
 <!doctype html>
@@ -168,8 +177,7 @@ button { color: inherit; }
   <section class="journey-panel" aria-label="SKANDI Club travel">
     <img
       class="journey-photo"
-      src="assets/club-login-hero.jpg"
-      alt="Travellers looking toward an aircraft beside a bright Mediterranean coast"
+      alt="SKANDI Club travel in Santorini, Greece"
       data-media-slot="club-login-hero"
       data-media-slot-id="club-login-hero"
       loading="eager"
@@ -256,6 +264,7 @@ button { color: inherit; }
   const $=selector=>document.querySelector(selector);
   const liveMessage=$("#liveMessage");
   let toastTimer=0;
+  let mediaHeroOverride="";
 
   function post(type,payload={}){
     window.parent.postMessage({source:SOURCE,type,payload,timestamp:new Date().toISOString()},"*");
@@ -289,9 +298,22 @@ button { color: inherit; }
       if(String(item.slotId||"")!=="club-login-hero")continue;
       const url=safeStorageUrl(item.assetUrl||item.imageUrl);
       if(!url)continue;
-      const image=document.querySelector('[data-media-slot="club-login-hero"]');
-      if(image){image.src=url;if(item.alt)image.alt=String(item.alt);}
+      mediaHeroOverride=url;
+      applyHeroImage(url,item.alt);
     }
+  }
+
+  function applyHeroImage(url,alt=""){
+    const image=document.querySelector('[data-media-slot="club-login-hero"]');
+    if(!image||!url)return;
+    image.src=url;
+    if(alt)image.alt=String(alt);
+  }
+
+  function applyMasterAssets(assets={}){
+    if(mediaHeroOverride)return;
+    const url=safeStorageUrl(assets?.images?.clubLoginHero);
+    if(url)applyHeroImage(url,"SKANDI Club travel in Santorini, Greece");
   }
 
   document.addEventListener("click",event=>{
@@ -322,6 +344,10 @@ button { color: inherit; }
       toast(message.payload?.message||"We could not open the sign-in window. Please try again.");
       return;
     }
+    if(message.source===PARENT&&message.type==="SKANDI_MASTER_ASSETS"){
+      applyMasterAssets(message.payload||{});
+      return;
+    }
     if(message.source===PARENT&&message.type==="SKANDI_PRESENTATION_DATA")applyPresentation(message.payload||{});
   });
 
@@ -333,6 +359,7 @@ button { color: inherit; }
   else window.addEventListener("resize",requestHeight);
   window.addEventListener("load",requestHeight,{once:true});
   post("SKANDI_CLUB_LOGIN_READY",{});
+  post("MASTER_ASSETS_REQUEST",{context:"club-login"});
   post("SKANDI_PRESENTATION_READY",{pageKey:"clubLogin",path:"/skandi-club/login"});
   requestHeight();
 })();
