@@ -36,9 +36,13 @@ New governance tools are added without introducing a new database or alternate c
 
 The page controller adds only two Media Control actions over the existing V12 contract: controlled opening of a registered public page and deletion of an existing website page-plan campaign record. The canonical Asset Library remains `backend/SKANDI_CORE/assets.js` through the existing `mediaControl.web.js` dispatcher; VOY/Newsroom persistence remains in the existing public-content chain.
 
+### 2026-10-27 — Home card price and photo controls
+
+The existing Website Studio adds a **Home Cards & Pricing** panel for featured SKANDI Home cards. Staff can set dynamic flight-price routes and passenger/date options, product visibility, charter add-ons, and the Home card photo/alt text from the shared public Supabase Asset Library. The existing Media Control page controller and `mediaControl.web.js` dispatcher enforce staff authorization. The backend stores the Home-only configuration on the existing `travel_products` row keyed by the inventory card's `public_id` and records photo usage in `platform_asset_usages`. Inventory's original facts and media remain unchanged. Public Home consumes the saved configuration and cached price through the canonical Home content core; Booking rechecks the live fare.
+
 ### Authority boundaries
 
-- **Media Control:** public static presentation copy, registered presentation media, VOY, Newsroom and shared non-inventory assets.
+- **Media Control:** public static presentation copy, registered presentation media, VOY, Newsroom, shared non-inventory assets and Home-only card marketing/price configuration. It does not change Inventory-owned facts or original media.
 - **Inventory Control:** destinations, suppliers, hotels, airports, airlines and inventory-owned facts/media.
 - **Policy Control:** policy titles/bodies/versions/publishing/acknowledgements.
 - **Store / Wix commerce:** products, variants, carts, gift cards, orders and checkout.
