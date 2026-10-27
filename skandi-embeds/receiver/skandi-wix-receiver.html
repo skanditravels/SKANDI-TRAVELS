@@ -6,13 +6,49 @@
   <meta name="theme-color" content="#022e64">
   <title>SKANDI Travels</title>
   <style>
-    *,*::before,*::after { box-sizing:border-box }
-    html,body { width:100%;height:100%;margin:0;padding:0;overflow:hidden;background:#fff }
-    #skandi-receiver-status { padding:24px;color:#022e64;font:500 14px/1.5 system-ui,sans-serif }
+    *,*::before,*::after{box-sizing:border-box}
+    :root{color-scheme:dark;--aqua:#5fc7cf;--muted:#bfd0e2}
+    html,body{width:100%;min-height:100%;margin:0;background:#041d3b;color:#f8fbff;font:15px/1.55 Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    body{min-height:100vh;min-height:100svh}
+    #skandi-receiver-status{position:relative;isolation:isolate;display:grid;place-items:center;overflow:hidden;min-height:100vh;min-height:100svh;padding:24px;background:radial-gradient(ellipse at 14% 12%,rgba(40,92,168,.46),transparent 39%),radial-gradient(ellipse at 86% 84%,rgba(11,92,133,.38),transparent 37%),linear-gradient(145deg,#061a33 0%,#022e64 55%,#041d3b 100%)}
+    #skandi-receiver-status:before,#skandi-receiver-status:after{content:"";position:absolute;z-index:-1;border:1px solid rgba(95,199,207,.12);border-radius:50%;pointer-events:none}
+    #skandi-receiver-status:before{width:min(80vw,680px);aspect-ratio:1;right:-30%;top:-56%}
+    #skandi-receiver-status:after{width:min(62vw,490px);aspect-ratio:1;left:-26%;bottom:-57%}
+    .skandi-loader-card{width:min(100%,520px);padding:clamp(28px,6vw,48px);border:1px solid rgba(232,244,255,.14);border-radius:24px;background:rgba(2,27,57,.69);box-shadow:0 24px 80px rgba(0,0,0,.27);backdrop-filter:blur(18px);text-align:center}
+    .skandi-brand{height:76px;display:flex;align-items:center;justify-content:center;margin:0 auto 26px}
+    #skandi-loader-logo{display:block;max-width:min(260px,72vw);max-height:72px;width:auto;height:auto;object-fit:contain}
+    #skandi-loader-fallback{font-family:Georgia,"Times New Roman",serif;font-size:clamp(26px,7vw,38px);font-weight:600;letter-spacing:.18em;color:#fff}
+    .skandi-loader-eyebrow{margin:0 0 10px;color:var(--aqua);font-size:11px;font-weight:700;letter-spacing:.2em;text-transform:uppercase}
+    #skandi-loader-title{margin:0;color:#fff;font-size:clamp(24px,5vw,32px);line-height:1.2;font-weight:650;letter-spacing:-.025em}
+    #skandi-loader-copy{min-height:48px;margin:14px auto 26px;max-width:360px;color:var(--muted);font-size:14px}
+    .skandi-progress{height:4px;overflow:hidden;border-radius:99px;background:rgba(235,245,255,.13)}
+    .skandi-progress span{display:block;width:36%;height:100%;border-radius:inherit;background:linear-gradient(90deg,#5fc7cf,#a4e5e5);box-shadow:0 0 18px rgba(95,199,207,.55);animation:skandi-progress 1.65s cubic-bezier(.45,0,.55,1) infinite}
+    .skandi-loader-foot{margin:20px 0 0;color:rgba(222,235,248,.68);font-size:11px;letter-spacing:.035em}
+    #skandi-loader-error{margin:17px 0 0;padding:10px 12px;border:1px solid rgba(216,95,102,.38);border-radius:10px;background:rgba(216,95,102,.1);color:#ffe4e5;font-size:12px;overflow-wrap:anywhere;text-align:left}
+    #skandi-loader-retry{margin-top:18px;padding:11px 20px;border:1px solid rgba(95,199,207,.66);border-radius:999px;background:#5fc7cf;color:#06264d;font:inherit;font-size:14px;font-weight:700;cursor:pointer}
+    #skandi-loader-retry:hover{background:#8adddf}
+    #skandi-loader-retry:focus-visible{outline:3px solid #fff;outline-offset:3px}
+    [hidden]{display:none!important}
+    @keyframes skandi-progress{0%{transform:translateX(-115%)}55%{transform:translateX(145%)}100%{transform:translateX(300%)}}
+    @media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
   </style>
 </head>
 <body>
-  <div id="skandi-receiver-status" role="status" aria-live="polite">Loading SKANDI Travels…</div>
+  <main id="skandi-receiver-status" role="status" aria-live="polite" aria-busy="true">
+    <section class="skandi-loader-card" aria-labelledby="skandi-loader-title">
+      <div class="skandi-brand">
+        <img id="skandi-loader-logo" alt="SKANDI Travels logo" hidden>
+        <span id="skandi-loader-fallback" aria-label="SKANDI Travels">SKANDI</span>
+      </div>
+      <p class="skandi-loader-eyebrow">SKANDI TRAVELS</p>
+      <h1 id="skandi-loader-title">Preparing your SKANDI page</h1>
+      <p id="skandi-loader-copy">Connecting securely to the latest Home page experience.</p>
+      <div id="skandi-loader-progress" class="skandi-progress" aria-hidden="true"><span></span></div>
+      <p class="skandi-loader-foot">Loading the current published Home page</p>
+      <p id="skandi-loader-error" hidden></p>
+      <button id="skandi-loader-retry" type="button" hidden>Try again</button>
+    </section>
+  </main>
   <script>
     (() => {
       'use strict';
@@ -21,6 +57,29 @@
       const RAW_GIT = 'https://raw.githubusercontent.com/skanditravels/SKANDI-TRAVELS/main/dist/home/index.html';
       const CDN_GIT = 'https://cdn.jsdelivr.net/gh/skanditravels/SKANDI-TRAVELS@main/dist/home/index.html';
       const status = document.getElementById('skandi-receiver-status');
+      const title = document.getElementById('skandi-loader-title');
+      const copy = document.getElementById('skandi-loader-copy');
+      const progress = document.getElementById('skandi-loader-progress');
+      const errorDetail = document.getElementById('skandi-loader-error');
+      const retry = document.getElementById('skandi-loader-retry');
+      const logo = document.getElementById('skandi-loader-logo');
+      const logoFallback = document.getElementById('skandi-loader-fallback');
+      logo.onload = () => { logo.hidden = false; logoFallback.hidden = true; };
+      logo.onerror = () => { logo.hidden = true; logoFallback.hidden = false; };
+      logo.src = 'https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/logos/SKANDI_TRAVELS-LIGHT-STACKED-WAVE.svg';
+      function fail(error) {
+        console.error('[SKANDI Receiver] Home page loading failed.', error);
+        status.setAttribute('role', 'alert');
+        status.setAttribute('aria-live', 'assertive');
+        status.setAttribute('aria-busy', 'false');
+        title.textContent = 'This SKANDI page could not load';
+        copy.textContent = 'The published Home page could not be retrieved. Please try again.';
+        errorDetail.textContent = String(error?.message || error || 'Unknown loading error').slice(0, 360);
+        errorDetail.hidden = false;
+        progress.hidden = true;
+        retry.hidden = false;
+        retry.onclick = () => location.reload();
+      }
 
       async function readBuild(url) {
         const response = await fetch(url, {
@@ -42,12 +101,11 @@
           build = await readBuild(RAW_GIT);
         } catch (firstError) {
           console.warn('[SKANDI Receiver] Direct Git delivery unavailable, trying Git CDN.', firstError);
+          copy.textContent = 'Connecting through a backup route to the published Home page.';
           try {
             build = await readBuild(CDN_GIT);
           } catch (secondError) {
-            console.error('[SKANDI Receiver] Both Git delivery paths failed.', secondError);
-            status.textContent = 'SKANDI could not load. Please refresh the page.';
-            status.setAttribute('role', 'alert');
+            fail(secondError);
             return;
           }
         }
