@@ -7,7 +7,7 @@ export const SITE_MAP = Object.freeze({
   hotels: "/hotels", packages: "/packages", cruises: "/cruises", tours: "/tours",
   activities: "/activities", transfers: "/transfers", destinations: "/destinations",
   travelInfo: "/travel-info", skandiCollection: "/skandi-collection",
-  voy: "/voy-magazine", club: "/skandi-club", forgotPassword: "/forgot-password",
+  voy: "/voy-magazine", club: "/skandi-club", clubLogin: "/skandi-club/login", forgotPassword: "/forgot-password",
   about: "/about", support: "/about/support", newsroom: "/about/news-room",
   theStore: "/the-store", giftCard: "/gift-card", storeCheckout: "/the-store/store-checkout",
   storeConfirmation: "/the-store/store-checkout/order-confirmation", ourNetwork: "/about/our-network",
@@ -87,6 +87,18 @@ export const EDITORIAL_PAGE_CATALOG = Object.freeze([
     section("club-rewards","Rewards",[field("club-rewards-eyebrow","Eyebrow"),field("club-rewards-h2","Headline"),field("club-rewards-copy","Copy","LONG_TEXT")]),
     section("club-faq","FAQ",[field("club-faq-eyebrow","Eyebrow"),field("club-faq-h2","Headline")]),
     section("club-cta","Final CTA",[field("club-cta-h2","Headline"),field("club-cta-copy","Copy","LONG_TEXT")])
+  ]),
+  page("clubLogin", "SKANDI Club Login", SITE_MAP.clubLogin, "CUSTOMER_AUTH", [
+    section("club-login-hero","Club login hero",[
+      field("club-login-hero-eyebrow","Eyebrow"),
+      field("club-login-hero-title","Headline"),
+      field("club-login-hero-copy","Hero copy","LONG_TEXT"),
+      field("club-login-panel-title","Login panel headline"),
+      field("club-login-panel-copy","Login panel copy","LONG_TEXT"),
+      field("club-login-button-label","Login button label"),
+      field("club-login-join-label","Join button label"),
+      field("club-login-terms-copy","Terms note","LONG_TEXT")
+    ], [Object.freeze({id:"club-login-hero",label:"Club login hero image"})])
   ]),
   page("about", "About SKANDI", SITE_MAP.about, "PUBLIC_PRESENTATION", [
     section("about-hero","Hero",[field("about-hero-eyebrow","Eyebrow"),field("about-hero-h1","Headline"),field("about-hero-copy","Hero copy","LONG_TEXT")]),
@@ -410,6 +422,11 @@ export const PAGE_BUILD_INTEGRATIONS = Object.freeze({
     "sources": [
       "SKANDI_CLUB_INFO"
     ]
+  },
+  "clubLogin": {
+    "controller": "src/pages/SKANDI Club Log in.noml8.js",
+    "embedIds": ["#skandiClubLoginEmbed"],
+    "sources": ["SKANDI_CLUB_LOGIN"]
   },
   "forgotPassword": {
     "controller": "src/pages/Forgot Password.uagf0.js",

@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#092f5d">
+<title>SKANDI Club | Member sign in</title>
+<link rel="stylesheet" href="skandi-club-login.css">
+</head>
+<body>
+<main class="club-login" data-section-id="club-login-hero">
+  <section class="journey-panel" aria-label="SKANDI Club travel">
+    <img
+      class="journey-photo"
+      src="assets/club-login-hero.jpg"
+      alt="Travellers looking toward an aircraft beside a bright Mediterranean coast"
+      data-media-slot="club-login-hero"
+      data-media-slot-id="club-login-hero"
+      loading="eager"
+      fetchpriority="high">
+    <div class="journey-shade" aria-hidden="true"></div>
+
+    <a class="brand-lockup" href="/" data-route="/" aria-label="SKANDI home">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 40 40" focusable="false"><circle cx="20" cy="20" r="17"/><path d="M24.8 14.7 22 22l-7.2 3.3 3.2-7.3 6.8-3.3Z"/><path d="M20 3v5M20 32v5M3 20h5M32 20h5"/></svg>
+      </span>
+      <span class="brand-name">SKANDI<span>TRAVELS</span></span>
+    </a>
+
+    <div class="journey-copy">
+      <p class="eyebrow" data-content-id="club-login-hero-eyebrow">YOUR NEXT JOURNEY STARTS HERE</p>
+      <h1 data-content-id="club-login-hero-title">Travel well.<br>Come back for more.</h1>
+      <p class="journey-description" data-content-id="club-login-hero-copy">Your SKANDI Club account brings your membership, travel details and member offers together in one place.</p>
+    </div>
+
+    <div class="journey-benefits" aria-label="SKANDI Club account features">
+      <span><i aria-hidden="true">✓</i> Your membership</span>
+      <span><i aria-hidden="true">✓</i> Your trips</span>
+      <span><i aria-hidden="true">✓</i> Member offers</span>
+    </div>
+    <p class="photo-credit">A little closer to somewhere wonderful.</p>
+  </section>
+
+  <section class="account-panel" aria-labelledby="login-title">
+    <div class="account-panel-inner">
+      <a class="mobile-brand" href="/" data-route="/" aria-label="SKANDI home">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 40 40" focusable="false"><circle cx="20" cy="20" r="17"/><path d="M24.8 14.7 22 22l-7.2 3.3 3.2-7.3 6.8-3.3Z"/><path d="M20 3v5M20 32v5M3 20h5M32 20h5"/></svg>
+        </span>
+        <span class="brand-name">SKANDI<span>TRAVELS</span></span>
+      </a>
+
+      <div class="account-card" data-section-id="club-login-card">
+        <div class="card-emblem" aria-hidden="true">
+          <svg viewBox="0 0 48 48" focusable="false"><path d="M24 5 39 11v11c0 10-6.4 16.4-15 21-8.6-4.6-15-11-15-21V11l15-6Z"/><path d="m17 24 5 5 10-11"/></svg>
+        </div>
+        <p class="eyebrow card-eyebrow">SKANDI CLUB</p>
+        <h2 id="login-title" data-content-id="club-login-panel-title">Welcome back</h2>
+        <p class="card-copy" data-content-id="club-login-panel-copy">Sign in to see your SKANDI Club membership and manage your journeys.</p>
+
+        <button class="action-button primary-action" type="button" data-action="login">
+          <span data-content-id="club-login-button-label">Log in</span>
+          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 10h13M10 4l6 6-6 6"/></svg>
+        </button>
+        <div class="choice-divider"><span>New to SKANDI Club?</span></div>
+        <button class="action-button secondary-action" type="button" data-action="signup">
+          <span data-content-id="club-login-join-label">Join SKANDI Club</span>
+        </button>
+
+        <button class="text-action" type="button" data-action="reset">Forgot your password?</button>
+
+        <div class="secure-note">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><rect x="4" y="8" width="12" height="9" rx="2"/><path d="M6.5 8V6a3.5 3.5 0 1 1 7 0v2M10 11v3"/></svg>
+          <span>Sign in securely with your SKANDI account.</span>
+        </div>
+      </div>
+
+      <div class="account-help">
+        <a href="/skandi-club" data-route="/skandi-club">Explore Club benefits</a>
+        <span aria-hidden="true">·</span>
+        <a href="/about/support" data-route="/about/support">Need help?</a>
+      </div>
+      <p class="terms-note"><span data-content-id="club-login-terms-copy">By continuing, you agree to SKANDI’s</span> <a href="/about/legal/policies" data-route="/about/legal/policies">terms and privacy policy</a>.</p>
+      <div class="site-links">
+        <a href="/" data-route="/">Home</a>
+        <a href="/skandi-club" data-route="/skandi-club">SKANDI Club</a>
+        <a href="/about/legal/policies" data-route="/about/legal/policies">Terms &amp; privacy</a>
+      </div>
+    </div>
+  </section>
+  <div class="live-message" id="liveMessage" role="status" aria-live="polite"></div>
+</main>
+<script src="skandi-club-login.js"></script>
+</body>
+</html>

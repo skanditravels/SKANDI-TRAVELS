@@ -1,19 +1,20 @@
 // /src/pages/SKANDI Club Log in.noml8.js
-// SKANDI Club page-level auth launcher — B-011.23.
-// Canonical Wix popups:
-// - Log In Form (Popup) / Log In Form (Popup).bytg4.js
-// - Reset Password (Popup) / Reset Password (Popup).rygmm.js
-// The global header is intentionally excluded from this page-level contract.
+// SKANDI Club login page bridge. Customer credentials stay in the Wix auth lightboxes.
 
 import wixLocation from "wix-location-frontend";
 import { currentMember } from "wix-members-frontend";
-import { APP_ROUTES } from "public/siteMap.js";
-import { openCustomerLogin, openCustomerResetPassword } from "public/customerAuthUi.js";
+import { APP_ROUTES, SITE_MAP, isSafeInternalRoute } from "public/siteMap.js";
+import { openCustomerLogin, openCustomerResetPassword, openCustomerSignup } from "public/customerAuthUi.js";
 
 const CLUB_MENU_BUTTON_ID = "#skandiClubMenuButton";
 const LEGACY_MODAL_ID = "#skandiClubAuthModal";
+const LOGIN_EMBED_ID = "#skandiClubLoginEmbed";
+const LOGIN_SOURCE = "SKANDI_CLUB_LOGIN";
+const LOGIN_ROUTE = SITE_MAP.clubLogin;
 const ACCOUNT_PATH = APP_ROUTES.myProfile;
 const MY_TRIPS_PATH = APP_ROUTES.myTrips;
+const LOGIN_ROUTES = new Set([SITE_MAP.home, SITE_MAP.club, SITE_MAP.support, SITE_MAP.policies, ACCOUNT_PATH]);
+let loginEmbed = null;
 
 function getEl(selector) {
   try { return $w(selector); } catch (_) { return null; }
@@ -24,10 +25,13 @@ function isHtmlComponent(element) {
 }
 
 function popupContext(extra = {}) {
-  return { sourcePage: "SKANDI_CLUB", returnTo: wixLocation.path?.length ? `/${wixLocation.path.join("/")}` : "/skandi-club", ...extra };
+  return { sourcePage: "SKANDI_CLUB_LOGIN", returnTo: LOGIN_ROUTE, ...extra };
 }
 
 $w.onReady(async function () {
+  loginEmbed = getEl(LOGIN_EMBED_ID);
+  if (isHtmlComponent(loginEmbed)) loginEmbed.onMessage(handleLoginEmbedMessage);
+
   const trigger = getEl(CLUB_MENU_BUTTON_ID);
   if (trigger && typeof trigger.onClick === "function") {
     trigger.onClick(() => openClubLoginFromCode({ trigger: "PAGE_BUTTON" }));
@@ -48,6 +52,10 @@ $w.onReady(async function () {
     await openClubResetPasswordFromCode({ trigger: "QUERY" });
     return;
   }
+  if (String(query.signup || query.join || "") === "1") {
+    await openClubSignupFromCode({ trigger: "QUERY" });
+    return;
+  }
   if (String(query.openClub || query.login || "") === "1") {
     await openClubLoginFromCode({ trigger: "QUERY" });
   }
@@ -62,7 +70,7 @@ async function handleLegacyModalMessage(event) {
       await openClubLoginFromCode({ trigger: "LEGACY_MODAL", intent: "login" });
       return;
     case "SIGNUP":
-      await openClubLoginFromCode({ trigger: "LEGACY_MODAL", intent: "signup" });
+      await openClubSignupFromCode({ trigger: "LEGACY_MODAL" });
       return;
     case "FORGOT_PASSWORD":
       await openClubResetPasswordFromCode({ trigger: "LEGACY_MODAL" });
@@ -78,12 +86,65 @@ async function handleLegacyModalMessage(event) {
   }
 }
 
+function parseMessage(value) {
+  if (typeof value === "string") {
+    try { return JSON.parse(value); } catch (_) { return null; }
+  }
+  return value && typeof value === "object" ? value : null;
+}
+
+function reply(type, payload = {}) {
+  if (!isHtmlComponent(loginEmbed)) return;
+  loginEmbed.postMessage({ source:"SKANDI_WIX_PARENT", type, payload, timestamp:new Date().toISOString() });
+}
+
+async function handleLoginEmbedMessage(event) {
+  const message = parseMessage(event?.data);
+  if (!message || message.source !== LOGIN_SOURCE) return;
+  const payload = message.payload && typeof message.payload === "object" ? message.payload : {};
+  try {
+    switch (message.type) {
+      case "SKANDI_CLUB_LOGIN_READY":
+        reply("SKANDI_CLUB_LOGIN_PARENT_READY", { route:LOGIN_ROUTE });
+        return;
+      case "SKANDI_CLUB_LOGIN_OPEN":
+        await openClubLoginFromCode({ trigger:"LOGIN_PAGE" });
+        return;
+      case "SKANDI_CLUB_SIGNUP_OPEN":
+        await openClubSignupFromCode({ trigger:"LOGIN_PAGE" });
+        return;
+      case "SKANDI_CLUB_RESET_OPEN":
+        await openClubResetPasswordFromCode({ trigger:"LOGIN_PAGE" });
+        return;
+      case "SKANDI_CLUB_LOGIN_NAVIGATE": {
+        const target = String(payload.path || "").trim();
+        if (LOGIN_ROUTES.has(target) && isSafeInternalRoute(target)) wixLocation.to(target);
+        return;
+      }
+      case "SKANDI_CLUB_LOGIN_HEIGHT": {
+        const height = Number(payload.height || 0);
+        if (Number.isFinite(height) && height > 0 && loginEmbed) loginEmbed.height = Math.max(720, Math.min(1800, Math.ceil(height)));
+        return;
+      }
+      default:
+        return;
+    }
+  } catch (error) {
+    console.error("[SKANDI Club Login] Wix auth popup failed to open.", error);
+    reply("SKANDI_CLUB_LOGIN_ERROR", { message:"We could not open the sign-in window. Please try again." });
+  }
+}
+
 export function openClubModalFromCode(context = {}) {
   return openClubLoginFromCode({ trigger: "COMPATIBILITY_EXPORT", ...context });
 }
 
 export function openClubLoginFromCode(context = {}) {
   return openCustomerLogin(popupContext(context));
+}
+
+export function openClubSignupFromCode(context = {}) {
+  return openCustomerSignup(popupContext(context));
 }
 
 export function openClubResetPasswordFromCode(context = {}) {

@@ -1,0 +1,136 @@
+
+:root {
+  --club-navy: #092f5d;
+  --club-navy-deep: #061f3d;
+  --club-blue: #285ca8;
+  --club-aqua: #66c9cf;
+  --club-sky: #e7f5f5;
+  --club-cream: #f8f6f0;
+  --club-paper: #fffefa;
+  --club-ink: #172638;
+  --club-muted: #677789;
+  --club-border: #e2e8ef;
+  --club-shadow: 0 24px 70px rgb(10 37 68 / 12%);
+  color-scheme: light;
+  font-family: "Montserrat", "Avenir Next", Avenir, Arial, sans-serif;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; min-width: 320px; min-height: 100%; }
+body { min-height: 100vh; color: var(--club-ink); background: var(--club-cream); }
+button, a { font: inherit; }
+button { color: inherit; }
+
+.club-login {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1.04fr) minmax(430px, .96fr);
+  min-height: clamp(680px, calc(100vh - 90px), 900px);
+  overflow: hidden;
+  background: var(--club-paper);
+}
+
+.journey-panel {
+  position: relative;
+  display: flex;
+  min-height: 680px;
+  flex-direction: column;
+  justify-content: space-between;
+  isolation: isolate;
+  overflow: hidden;
+  padding: clamp(28px, 4.5vw, 68px);
+  color: #fff;
+  background: var(--club-navy-deep);
+}
+.journey-photo, .journey-shade { position: absolute; z-index: -1; inset: 0; width: 100%; height: 100%; }
+.journey-photo { object-fit: cover; object-position: 50% 48%; }
+.journey-shade { background: linear-gradient(180deg, rgb(3 25 52 / 42%) 0%, rgb(3 25 52 / 8%) 31%, rgb(3 25 52 / 36%) 58%, rgb(3 25 52 / 91%) 100%), linear-gradient(90deg, rgb(5 33 65 / 24%), transparent 78%); }
+
+.brand-lockup, .mobile-brand { display: inline-flex; width: fit-content; align-items: center; gap: 12px; color: inherit; text-decoration: none; }
+.brand-mark { display: grid; width: 42px; height: 42px; place-items: center; border: 1px solid rgb(255 255 255 / 65%); border-radius: 50%; }
+.brand-mark svg { width: 30px; height: 30px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.4; }
+.brand-name { display: flex; flex-direction: column; gap: 2px; font-size: 19px; font-weight: 700; letter-spacing: .19em; line-height: 1.1; }
+.brand-name span { font-size: 8px; font-weight: 600; letter-spacing: .38em; }
+
+.journey-copy { width: min(100%, 590px); margin-top: auto; padding-top: 90px; }
+.eyebrow { margin: 0 0 18px; color: var(--club-blue); font-size: 10px; font-weight: 700; letter-spacing: .2em; line-height: 1.5; text-transform: uppercase; }
+.journey-copy .eyebrow { color: #c3f0ed; }
+.journey-copy h1 { max-width: 570px; margin: 0; font-size: clamp(40px, 5.4vw, 76px); font-weight: 500; letter-spacing: -.055em; line-height: 1.04; text-wrap: balance; }
+.journey-description { max-width: 470px; margin: 24px 0 0; color: rgb(255 255 255 / 90%); font-size: clamp(14px, 1.18vw, 17px); font-weight: 400; line-height: 1.8; }
+.journey-benefits { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 38px; }
+.journey-benefits span { display: inline-flex; align-items: center; gap: 8px; min-height: 38px; padding: 8px 13px; border: 1px solid rgb(255 255 255 / 35%); border-radius: 999px; background: rgb(4 28 56 / 23%); backdrop-filter: blur(9px); font-size: 11px; font-weight: 500; }
+.journey-benefits i { display: grid; width: 17px; height: 17px; place-items: center; border-radius: 50%; color: var(--club-navy); background: #b7eeeb; font-size: 10px; font-style: normal; font-weight: 800; }
+.photo-credit { align-self: flex-end; margin: 28px 0 0; color: rgb(255 255 255 / 72%); font-size: 10px; letter-spacing: .04em; }
+
+.account-panel { display: grid; min-width: 0; place-items: center; padding: clamp(28px, 5vw, 72px) clamp(24px, 5vw, 80px); background: radial-gradient(circle at 92% 7%, rgb(102 201 207 / 18%), transparent 24%), var(--club-cream); }
+.account-panel-inner { width: min(100%, 430px); }
+.mobile-brand { display: none; color: var(--club-navy); }
+.mobile-brand .brand-mark { border-color: var(--club-navy); }
+.account-card { padding: clamp(27px, 3.2vw, 42px); border: 1px solid rgb(222 229 235 / 90%); border-radius: 20px; background: var(--club-paper); box-shadow: var(--club-shadow); }
+.card-emblem { display: grid; width: 48px; height: 48px; place-items: center; margin-bottom: 25px; border-radius: 15px; color: var(--club-navy); background: var(--club-sky); }
+.card-emblem svg { width: 27px; height: 27px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.7; }
+.card-eyebrow { margin-bottom: 9px; }
+.account-card h2 { margin: 0; color: var(--club-navy-deep); font-size: clamp(25px, 2.7vw, 33px); font-weight: 600; letter-spacing: -.04em; line-height: 1.2; }
+.card-copy { margin: 12px 0 25px; color: var(--club-muted); font-size: 13px; line-height: 1.75; }
+.action-button { position: relative; display: flex; width: 100%; min-height: 54px; align-items: center; justify-content: center; gap: 12px; border: 1px solid transparent; border-radius: 9px; cursor: pointer; font-size: 13px; font-weight: 700; transition: transform .18s ease, box-shadow .18s ease, background .18s ease, border-color .18s ease; }
+.action-button:hover { transform: translateY(-1px); }
+.action-button:focus-visible, .text-action:focus-visible, .account-help a:focus-visible, .site-links a:focus-visible, .brand-lockup:focus-visible, .mobile-brand:focus-visible, .terms-note a:focus-visible { outline: 3px solid var(--club-aqua); outline-offset: 3px; }
+.primary-action { color: #fff; background: var(--club-navy); box-shadow: 0 10px 20px rgb(9 47 93 / 16%); }
+.primary-action:hover { background: #114479; box-shadow: 0 14px 26px rgb(9 47 93 / 22%); }
+.primary-action svg { position: absolute; right: 19px; width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.7; }
+.secondary-action { border-color: #cad6e1; color: var(--club-navy); background: #fff; }
+.secondary-action:hover { border-color: var(--club-blue); background: #f5f9fc; }
+.choice-divider { display: flex; align-items: center; gap: 13px; margin: 19px 0; color: #8390a0; font-size: 10px; }
+.choice-divider::before, .choice-divider::after { height: 1px; flex: 1; background: var(--club-border); content: ""; }
+.text-action { display: block; margin: 17px auto 0; padding: 5px 10px; border: 0; color: var(--club-blue); background: transparent; cursor: pointer; font-size: 11px; font-weight: 600; }
+.text-action:hover { color: var(--club-navy-deep); text-decoration: underline; text-underline-offset: 3px; }
+.secure-note { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 27px; padding-top: 18px; border-top: 1px solid var(--club-border); color: #788696; font-size: 10px; }
+.secure-note svg { width: 16px; height: 16px; flex: 0 0 auto; fill: none; stroke: var(--club-blue); stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.5; }
+.account-help { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 12px; margin-top: 25px; color: #9aa5b0; font-size: 11px; }
+.account-help a, .terms-note a, .site-links a { color: var(--club-blue); text-decoration: none; }
+.account-help a:hover, .terms-note a:hover, .site-links a:hover { color: var(--club-navy-deep); text-decoration: underline; text-underline-offset: 3px; }
+.terms-note { max-width: 350px; margin: 22px auto 0; color: #8894a1; font-size: 10px; line-height: 1.7; text-align: center; }
+.site-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 18px; margin-top: 27px; padding-top: 19px; border-top: 1px solid rgb(205 214 222 / 70%); font-size: 10px; }
+.live-message { position: fixed; z-index: 5; right: 20px; bottom: 18px; display: none; max-width: min(360px, calc(100vw - 40px)); padding: 13px 17px; border: 1px solid rgb(255 255 255 / 25%); border-radius: 10px; color: #fff; background: var(--club-navy-deep); box-shadow: 0 10px 30px rgb(3 25 52 / 25%); font-size: 12px; line-height: 1.55; }
+
+@media (min-width: 1500px) {
+  .journey-panel { padding-left: max(68px, calc((100vw - 1440px) / 2)); }
+}
+@media (max-width: 980px) {
+  .club-login { grid-template-columns: minmax(0, 1fr) minmax(380px, .9fr); }
+  .journey-panel { padding: 34px; }
+  .journey-copy h1 { font-size: clamp(42px, 6vw, 58px); }
+  .journey-benefits { gap: 7px; }
+  .journey-benefits span { padding: 7px 10px; font-size: 10px; }
+  .account-panel { padding: 38px 28px; }
+}
+@media (max-width: 760px) {
+  .club-login { display: flex; min-height: 0; flex-direction: column; overflow: visible; }
+  .journey-panel { min-height: 430px; padding: 28px 24px 24px; }
+  .journey-copy { padding-top: 72px; }
+  .journey-copy h1 { max-width: 480px; font-size: clamp(42px, 10.5vw, 62px); }
+  .journey-description { max-width: 510px; margin-top: 16px; font-size: 13px; line-height: 1.65; }
+  .journey-benefits { margin-top: 21px; }
+  .journey-benefits span { min-height: 34px; }
+  .photo-credit { display: none; }
+  .account-panel { padding: 28px 20px 35px; }
+  .account-panel-inner { width: min(100%, 480px); }
+  .mobile-brand { display: inline-flex; margin: 0 0 23px 2px; }
+  .account-card { padding: 28px 25px; }
+  .card-emblem { margin-bottom: 19px; }
+  .site-links { gap: 14px; }
+}
+@media (max-width: 420px) {
+  .journey-panel { min-height: 410px; padding: 22px 19px; }
+  .brand-mark { width: 38px; height: 38px; }
+  .brand-name { font-size: 17px; }
+  .journey-copy h1 { font-size: 41px; }
+  .journey-benefits { gap: 6px; }
+  .journey-benefits span { gap: 6px; padding: 6px 8px; font-size: 9px; }
+  .account-panel { padding: 23px 14px 28px; }
+  .account-card { padding: 26px 20px; }
+  .account-help { gap: 8px; font-size: 10px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
+}

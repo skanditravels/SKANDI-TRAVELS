@@ -402,6 +402,12 @@
     "disposition": "IMPORTED"
   },
   {
+    "source": "HTML_REF/skandi/SKANDI Club Login.md",
+    "directory": "skandi-embeds/club-login",
+    "stem": "skandi-club-login",
+    "disposition": "IMPORTED"
+  },
+  {
     "source": "HTML_REF/skandi/SKANDI Collection.md",
     "directory": "skandi-embeds/skandi-collection",
     "stem": "skandi-skandi-collection",

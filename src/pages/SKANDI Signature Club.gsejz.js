@@ -4,8 +4,9 @@
 // HTML Component: #skandiClubInfoEmbed
 
 import wixLocationFrontend from "wix-location-frontend";
-import { authentication, currentMember } from "wix-members-frontend";
+import { currentMember } from "wix-members-frontend";
 import { getSkandiClubPublicPayload } from "backend/SKANDI_CORE/clubPublic.web";
+import { openCustomerLogin, openCustomerSignup } from "public/customerAuthUi";
 import { SITE_MAP, APP_ROUTES, isSafeInternalRoute } from "public/siteMap";
 
 const EMBED_ID = "#skandiClubInfoEmbed";
@@ -88,9 +89,11 @@ async function sendPayload(force = false) {
 
 async function openAuth(mode = "signup") {
   try {
-    await authentication.promptLogin({ mode });
+    const context = { sourcePage:"SKANDI_CLUB", returnTo:SITE_MAP.club };
+    if (String(mode).toLowerCase() === "login") await openCustomerLogin(context);
+    else await openCustomerSignup(context);
     await sendPayload(true);
-    wixLocationFrontend.to(PROFILE_PATH);
+    if ((await currentMember.getMember())?._id) wixLocationFrontend.to(PROFILE_PATH);
   } catch (_) {
     // The customer may close the Wix authentication flow.
   }

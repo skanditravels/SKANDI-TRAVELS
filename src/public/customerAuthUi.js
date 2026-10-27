@@ -11,7 +11,11 @@ function openPopup(key, context = {}) {
 }
 
 export function openCustomerLogin(context = {}) {
-  return openPopup("login", context);
+  return openPopup("logIn", context);
+}
+
+export function openCustomerSignup(context = {}) {
+  return openPopup("signUp", context);
 }
 
 export function openCustomerResetPassword(context = {}) {
