@@ -112,7 +112,7 @@ These actual repository controllers are preserved. No new route or build is inve
 - **activities**: NOT READY: No verified canonical controller mapping.
 - **transfers**: NOT READY: No verified canonical controller mapping.
 - **voy**: NOT READY: PENDING SOURCE
-- **club**: NOT READY: [club / club] skandi-embeds/club/skandi-club.html, skandi-embeds/club/skandi-club.css, skandi-embeds/club/skandi-club.js: skandi-embeds/club/skandi-club.html: inline CSS and sidecar CSS overlap or have ambiguous order; consolidate into the sidecar (no code was discarded)
+- **club**: NOT READY: [club / club] skandi-embeds/club/skandi-club.html, skandi-embeds/club/skandi-club.css, skandi-embeds/club/skandi-club.js: skandi-embeds/club/skandi-club.css: missing asset ./Farrington7B.woff2
 - **support**: NOT READY: Help Center and support chat are separate HTML components; preserve them until a verified single-component migration.
 - **giftCard**: NOT READY: No verified canonical controller mapping.
 - **ourNetwork**: NOT READY: No verified canonical controller mapping.

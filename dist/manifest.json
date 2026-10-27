@@ -815,7 +815,7 @@
       "dynamic": false,
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
-      "error": "[club / club] skandi-embeds/club/skandi-club.html, skandi-embeds/club/skandi-club.css, skandi-embeds/club/skandi-club.js: skandi-embeds/club/skandi-club.html: inline CSS and sidecar CSS overlap or have ambiguous order; consolidate into the sidecar (no code was discarded)",
+      "error": "[club / club] skandi-embeds/club/skandi-club.html, skandi-embeds/club/skandi-club.css, skandi-embeds/club/skandi-club.js: skandi-embeds/club/skandi-club.css: missing asset ./Farrington7B.woff2",
       "retainedArtifact": true
     },
     {
