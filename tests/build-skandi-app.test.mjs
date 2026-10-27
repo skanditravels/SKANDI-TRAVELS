@@ -9,6 +9,7 @@ import {execFileSync} from 'node:child_process';
 import {build} from '../scripts/build-skandi-app.mjs';
 import {compilePage,scopeSelector,cssFor,hash} from '../scripts/lib/compile.mjs';
 import {inventory,scaffold} from '../scripts/lib/inventory.mjs';
+import {renderPageReceiver} from '../scripts/lib/page-receiver.mjs';
 import {publish} from '../scripts/publish-skandi-build.mjs';
 import * as canonical from '../src/public/siteMap.js';
 const ROOT=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
@@ -22,8 +23,10 @@ async function fixture(t, extra={}) {
   const code=`export const SITE_MAP=${JSON.stringify(routes)};export const APP_ROUTES={};export const PAGE_BUILD_INTEGRATIONS=${JSON.stringify(metadata)};export const EDITORIAL_PAGE_CATALOG=[];export const INTERNAL_PATH_PREFIXES=['/riaintra','/altea','/_functions'];export const ALTEA_PATH_PREFIXES=['/riaintra/success-factors/altea','/riaintra/altea','/altea'];export const CHROME_FREE_PATHS=['/booking'];\n`+
   ['isSafeInternalRoute','normalizeSitePath','getPageFamily','getPageChrome','resolveBuildRoute'].map(k=>'export '+canonical[k].toString()).join('\n');
   await write(root,'src/public/siteMap.js',code);await write(root,'package.json','{"type":"module"}');
+  await write(root,'skandi-embeds/receiver/skandi-wix-universal-receiver.html',await fs.readFile(path.join(ROOT,'skandi-embeds/receiver/skandi-wix-universal-receiver.html'),'utf8'));
   for(const [key,m] of Object.entries(metadata))await write(root,m.controller,`// ${m.embedIds[0]} ${m.sources[0]}\nexport const bridge=true;`);
   for(const file of ['skandi-shell.css','skandi-shell.js','skandi-website-design.js'])await write(root,'skandi-embeds/global/'+file,await fs.readFile(path.join(ROOT,'skandi-embeds/global',file),'utf8'));
+  for(const file of ['skandi-alexandra-chat.html','skandi-alexandra-chat.css','skandi-alexandra-chat.js'])await write(root,'skandi-embeds/global/alexandra/'+file,await fs.readFile(path.join(ROOT,'skandi-embeds/global/alexandra',file),'utf8'));
   for(const family of ['public','riaintra','altea'])for(const role of family==='public'?['header','footer','mobile-nav']:['header','footer']) {
     const directory=family==='public'?'global':family+'-global',stem=(family==='public'?'skandi':family)+'-'+role;
     await write(root,`skandi-embeds/${directory}/${stem}.html`,`<div id="${family}-${role}">${family} ${role}</div>`);
@@ -38,6 +41,14 @@ async function page(root,key,{html=`<section id="${key}-content">${key}</section
 }
 const run=root=>build({root,log:()=>{}});
 const htmlOf=(root,slug)=>fs.readFile(path.join(root,'dist',slug,'index.html'),'utf8');
+
+test('page receiver generation fixes the route and registered Wix component into its own file',async()=>{
+  const page={key:'search',route:'/search',family:'public',chrome:'public',sourceDirectory:'skandi-embeds/search',stem:'skandi-search',embedIds:['#searchResultsEmbed']};
+  const html=await renderPageReceiver(ROOT,page);
+  assert.ok(html.includes('"key":"search","route":"/search","family":"public","chrome":"public","embedIds":["#searchResultsEmbed"],"receiver":"skandi-embeds/search/skandi-search.receiver.html"'));
+  assert.match(html,/identity\.key!==EXPECTED\.key/);
+  assert.match(html,/page\.receiver!==EXPECTED\.receiver/);
+});
 
 test('Media Control retains interleaved execution, stylesheet attributes and inert email payload',async t=>{
   const root=await fixture(t,{mediaControl:'/riaintra/success-factors/media-control'});
@@ -61,6 +72,9 @@ test('compiles Home and multiple pages with three distinct chrome families and c
   }
   assert.equal(manifest.pages.find(p=>p.key==='home').output,'dist/home/index.html');
   assert.equal(manifest.pages.find(p=>p.key==='home').sha256,hash(await htmlOf(root,'home')));
+  const homeReceiver=manifest.pages.find(p=>p.key==='home');
+  assert.equal(homeReceiver.receiver,'skandi-embeds/home/skandi-home.receiver.html');
+  assert.match(await fs.readFile(path.join(root,homeReceiver.receiver),'utf8'),/"key":"home","route":"\/","family":"public","chrome":"public"/);
   const home=await htmlOf(root,'home');assert.match(home,/@media \(max-width:1020px\)/);assert.match(home,/#skandi-global-header-root,#skandi-global-footer-root \{ display:none!important/);assert.match(home,/env\(safe-area-inset-bottom/);assert.match(home,/font-size:16px!important/);
 });
 
@@ -94,11 +108,11 @@ test('overlapping legacy sidecars, invalid JavaScript, missing assets and duplic
   ]){await page(root,'home',content);const result=await run(root);assert.ok(result.errors.some(e=>expected.test(e)),result.errors.join('\n'));assert.equal(result.manifest.pages.find(p=>p.key==='home').output,null);}
 });
 
-test('blank slots stay pending; partial source names exact missing files; stale artifacts are retained but withdrawn',async t=>{
+test('blank slots stay pending; partial source names exact missing files; stale output is retained but withdrawn',async t=>{
   const root=await fixture(t);let result=await run(root);assert.equal(result.built.length,0);assert.equal(result.manifest.pages[0].status,'PENDING SOURCE');
-  await page(root,'home');await run(root);const before=await htmlOf(root,'home');
+  await page(root,'home');await run(root);const before=await htmlOf(root,'home'),receiverPath='skandi-embeds/home/skandi-home.receiver.html',receiverBefore=await fs.readFile(path.join(root,receiverPath),'utf8');
   await write(root,'skandi-embeds/home/skandi-home.js','');result=await run(root);
-  const row=result.manifest.pages.find(p=>p.key==='home');assert.equal(row.status,'FAILED');assert.match(row.error,/INCOMPLETE SOURCE: skandi-embeds\/home\/skandi-home.js/);assert.equal(row.output,null);assert.equal(row.retainedArtifact,true);assert.equal(await htmlOf(root,'home'),before);
+  const row=result.manifest.pages.find(p=>p.key==='home');assert.equal(row.status,'FAILED');assert.match(row.error,/INCOMPLETE SOURCE: skandi-embeds\/home\/skandi-home.js/);assert.equal(row.output,null);assert.equal(row.receiver,undefined);assert.equal(row.retainedArtifact,true);assert.equal(await htmlOf(root,'home'),before);assert.equal(await fs.readFile(path.join(root,receiverPath),'utf8'),receiverBefore);
   for(const ext of ['html','css','js'])await fs.rm(path.join(root,'skandi-embeds/home/skandi-home.'+ext));
   result=await run(root);assert.equal(result.manifest.pages[0].status,'PENDING SOURCE');assert.equal(result.manifest.pages[0].output,null);assert.equal(await htmlOf(root,'home'),before);
 });
@@ -148,7 +162,15 @@ test('repository outputs preserve IDs and contracts; failed sources are unadvert
   const backendBefore=execFileSync('git',['diff','--','src/backend/'],{cwd:ROOT,encoding:'utf8'});
   const out=await fs.mkdtemp(path.join(os.tmpdir(),'skandi-actual-'));t.after(()=>fs.rm(out,{recursive:true,force:true}));
   const result=await build({root:ROOT,out,log:()=>{}});
-  for(const row of result.manifest.pages)if(!['BUILT','ALIAS'].includes(row.status))assert.equal(row.output,null);
+  for(const row of result.manifest.pages) {
+    if(!['BUILT','ALIAS'].includes(row.status)){assert.equal(row.output,null);assert.equal(row.receiver,undefined);}
+    if(row.status==='BUILT') {
+      assert.equal(row.receiver,`${row.sourceDirectory}/${row.stem}.receiver.html`);
+      const pageReceiver=await fs.readFile(path.join(ROOT,row.receiver),'utf8');
+      assert.ok(pageReceiver.includes(`"key":${JSON.stringify(row.key)}`));
+      assert.ok(pageReceiver.includes(`"route":${JSON.stringify(row.route)}`));
+    }
+  }
   for(const [key,slug,source] of [['home','home','SKANDI_HOME'],['flightStatus','flight-status','SKANDI_FLIGHT_STATUS'],['riaintra','riaintra','SKANDI_STAFF_LOGIN']]) {
     const entry=result.manifest.pages.find(p=>p.key===key);
     if(entry.status!=='BUILT'){assert.equal(entry.output,null);continue;}
@@ -159,14 +181,16 @@ test('repository outputs preserve IDs and contracts; failed sources are unadvert
   assert.equal(execFileSync('git',['diff','--','src/backend/'],{cwd:ROOT,encoding:'utf8'}),backendBefore);
 });
 
-test('workflow supports public-page gating, every dist file, PR validation and no Pages deployment',async()=>{
-  const yaml=await fs.readFile(path.join(ROOT,'.github/workflows/skandi-app-build.yml'),'utf8');assert.match(yaml,/name: SKANDI Website Builder/);assert.match(yaml,/workflow_dispatch:/);assert.match(yaml,/pull_request:/);assert.match(yaml,/npm ci --prefix scripts/);assert.match(yaml,/concurrency:/);assert.match(yaml,/publish-skandi-build.mjs/);assert.match(yaml,/build-skandi-app\.mjs --fail-on-public/);assert.doesNotMatch(yaml,/actions\/(?:deploy-pages|upload-pages|configure-pages)/);assert.doesNotMatch(yaml,/dist\/(?:home|flight-status)\/index.html/);await fs.access(path.join(ROOT,'scripts/package-lock.json'));
+test('workflow builds page receivers with dist, validates PRs and avoids Pages deployment',async()=>{
+  const yaml=await fs.readFile(path.join(ROOT,'.github/workflows/skandi-app-build.yml'),'utf8');assert.match(yaml,/name: SKANDI Website Builder/);assert.match(yaml,/workflow_dispatch:/);assert.match(yaml,/pull_request:/);assert.match(yaml,/npm ci --prefix scripts/);assert.match(yaml,/concurrency:/);assert.match(yaml,/publish-skandi-build.mjs/);assert.match(yaml,/build-skandi-app\.mjs --fail-on-public/);assert.match(yaml,/\*\*\/\*\.receiver\.html/);assert.match(yaml,/!skandi-embeds\/\*\*\/\*\.receiver\.html/);assert.doesNotMatch(yaml,/actions\/(?:deploy-pages|upload-pages|configure-pages)/);assert.doesNotMatch(yaml,/dist\/(?:home|flight-status)\/index.html/);await fs.access(path.join(ROOT,'scripts/package-lock.json'));
 });
 
-test('publisher stages multiple generated pages, commits once and rejects concurrent main changes',async t=>{
+test('publisher stages generated dist and only successful page receivers, commits once and rejects concurrent main changes',async t=>{
   const dir=await fs.mkdtemp(path.join(os.tmpdir(),'skandi-publish-'));t.after(()=>fs.rm(dir,{recursive:true,force:true}));const remote=path.join(dir,'remote.git'),repo=path.join(dir,'repo');await fs.mkdir(repo);
   const git=(...args)=>execFileSync('git',args,{cwd:repo,encoding:'utf8',stdio:['ignore','pipe','pipe']}).trim();
   git('init','--bare',remote);git('init','-b','main');git('config','user.name','Test');git('config','user.email','test@example.invalid');await write(repo,'README.md','initial');git('add','.');git('commit','-m','Initial');git('remote','add','origin',remote);git('push','-u','origin','main');
-  await write(repo,'dist/home/index.html','home');await write(repo,'dist/search/index.html','search');assert.equal(publish(repo),true);const sha=git('rev-parse','HEAD');assert.equal(publish(repo),false);assert.equal(git('rev-parse','HEAD'),sha);assert.equal(git('ls-tree','-r','--name-only','HEAD','dist/').split('\n').length,2);
+  const pages=[{key:'home',status:'BUILT',sourceDirectory:'skandi-embeds/home',stem:'skandi-home',receiver:'skandi-embeds/home/skandi-home.receiver.html'},{key:'search',status:'BUILT',sourceDirectory:'skandi-embeds/search',stem:'skandi-search',receiver:'skandi-embeds/search/skandi-search.receiver.html'},{key:'failed',status:'FAILED',sourceDirectory:'skandi-embeds/failed',stem:'skandi-failed'}];
+  await write(repo,'dist/manifest.json',JSON.stringify({schemaVersion:2,pages}));await write(repo,'dist/home/index.html','home');await write(repo,'dist/search/index.html','search');await write(repo,pages[0].receiver,'home receiver');await write(repo,pages[1].receiver,'search receiver');await write(repo,'skandi-embeds/failed/skandi-failed.receiver.html','stale failed receiver');
+  assert.equal(publish(repo),true);const sha=git('rev-parse','HEAD');assert.equal(publish(repo),false);assert.equal(git('rev-parse','HEAD'),sha);assert.equal(git('ls-tree','-r','--name-only','HEAD','dist/').split('\n').length,3);assert.ok(git('ls-tree','-r','--name-only','HEAD').includes(pages[0].receiver));assert.ok(git('ls-tree','-r','--name-only','HEAD').includes(pages[1].receiver));assert.ok(!git('ls-tree','-r','--name-only','HEAD').includes('skandi-embeds/failed/skandi-failed.receiver.html'));
   git('commit','--allow-empty','-m','unpublished local change');await write(repo,'dist/home/index.html','changed');assert.throws(()=>publish(repo),/main changed during compilation/);
 });

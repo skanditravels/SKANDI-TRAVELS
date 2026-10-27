@@ -5,6 +5,7 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {inventory,scaffold,read,triplet} from './lib/inventory.mjs';
 import {compilePage,chromeParts,hash} from './lib/compile.mjs';
+import {pageReceiverPath,renderPageReceiver} from './lib/page-receiver.mjs';
 import {writeRegisters} from './lib/registers.mjs';
 const HERE=path.dirname(fileURLToPath(import.meta.url));
 export async function build({root=process.env.SKANDI_REPO_ROOT||path.resolve(HERE,'..'),out=process.env.SKANDI_OUTPUT_DIR||path.join(root,'dist'),log=console.log,failOnFamilies=null}={}) {
@@ -31,13 +32,20 @@ export async function build({root=process.env.SKANDI_REPO_ROOT||path.resolve(HER
     } else if(row.status==='COMPLETE SOURCE') {
       try {
         const html=await compilePage(root,row);
+        const receiver=await renderPageReceiver(root,row);
         const dest=path.join(out,row.slug,'index.html');
+        const receiverRelative=pageReceiverPath(row);
+        const receiverDest=path.join(root,receiverRelative);
         await fs.mkdir(path.dirname(dest),{recursive:true});
-        const temp=dest+'.tmp';await fs.writeFile(temp,html);await fs.rename(temp,dest);
-        row.status='BUILT';row.sha256=hash(html);row.bytes=Buffer.byteLength(html);built.push(row.key);
+        await fs.mkdir(path.dirname(receiverDest),{recursive:true});
+        const temp=dest+'.tmp',receiverTemp=receiverDest+'.tmp';
+        await fs.writeFile(temp,html);await fs.writeFile(receiverTemp,receiver);
+        await fs.rename(receiverTemp,receiverDest);await fs.rename(temp,dest);
+        row.status='BUILT';row.receiver=receiverRelative;row.sha256=hash(html);row.bytes=Buffer.byteLength(html);built.push(row.key);
       } catch(e) {row.status='FAILED';row.error=e.message;recordFailure(row,e.message);}
     }
     if(row.status!=='BUILT') {
+      delete row.receiver;
       row.retainedArtifact=await fs.stat(path.join(out,row.slug,'index.html')).then(()=>true,()=>false);
       row.output=null; // Retain installed legacy URLs, but never advertise them as a current build.
     }

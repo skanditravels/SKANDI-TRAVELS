@@ -6,10 +6,14 @@
 - CANONICAL BACKEND: `/src/backend/SKANDI_CORE/groupTalk.web.js` → `/src/backend/SKANDI_CORE/groupTalk.js`
 - VOICE: LiveKit room audio with server-issued short-lived room tokens
 - PRESENCE / ACTIVITY: established Supabase Realtime GroupTalk subsystem
-- STATUS: V12 WALKIE-TALKIE HARDENING STATICALLY VERIFIED — REQUIRES LIVE DEVICE TEST
+- RECEIVER: page-specific receiver generated beside the GroupTalk source after a successful build
+- REQUIRED WIX SECRET: `SUPABASE_JWT_SECRET` (active Supabase HS256 signing secret)
+- SUPABASE MIGRATION: `20261027200056_grouptalk_private_realtime_and_db_broadcasts.sql`
+- STATUS: PRIVATE REALTIME SYNC STATICALLY VERIFIED — REQUIRES LIVE TEST
 
 ## CHANGE LOG
 - 2026-10-12 — Hardened the existing genuine LiveKit push-to-talk path as a walkie-talkie: single-flight room connection prevents duplicate concurrent connects/token requests; group changes and offline/page exit now explicitly mute/disconnect and remove attached remote audio; remote track unsubscribe cleans its audio element; connection establishes in listen-only mode with microphone forced off; browser blur/visibility loss releases PTT to prevent a stuck open microphone; obsolete legacy VOICE_* bridge handlers referencing undeclared state were removed. Existing `PTT_EVENT`, LiveKit token, Supabase Realtime, group permission and audit contracts remain unchanged. STATICALLY VERIFIED; REQUIRES LIVE TEST with at least two devices/users and microphone permission.
+- 2026-10-27 — Added short-lived staff-scoped private Supabase Realtime tokens and database-change invalidation broadcasts for GroupTalk data; retained Wix backend authorization for reads and writes. The successful build now generates and publishes the GroupTalk page receiver beside its source triplet. The receiver remains dependent on the active Wix controller and `SUPABASE_JWT_SECRET`. STATICALLY VERIFIED; REQUIRES LIVE TEST with two authorized staff sessions and voice permissions.
 
 ## COMPLETE INTENDED HTML
 
@@ -1613,7 +1617,7 @@ const state={
   mode:"mobile",profile:{},canManage:false,groups:[],activeGroup:null,config:{},
   lkCbs:new Map(),realtimeCbs:new Map(),room:null,voiceConnectPromise:null,voiceConnectTarget:"",voiceRoomName:"",
   supabaseClient:null,supabaseUrl:"",supabaseKey:"",realtimeChannel:null,realtimeConfig:null,realtimeConnecting:false,
-  realtimeHeartbeat:null,realtimePresenceRefresh:null,syncTimer:null,
+  realtimeHeartbeat:null,realtimePresenceRefresh:null,realtimeAuthRefresh:null,databaseRefreshTimer:null,syncTimer:null,
   members:new Map(),phonebook:[],tickets:[],ticketCategories:[],caseTargets:new Set(),selectedTicket:null,
   outputDeviceId:"",map:null,mapLoaded:false,mapResizeObserver:null,mapRefreshTimer:null,
   mapFitPending:true,markers:new Map(),watch:null,speaking:false,pttHeld:false,pttSequence:0
@@ -1948,12 +1952,36 @@ function setRealtimeStatus(status,label){
 function clearRealtimeTimers(){
   if(state.realtimeHeartbeat){clearInterval(state.realtimeHeartbeat);state.realtimeHeartbeat=null}
   if(state.realtimePresenceRefresh){clearInterval(state.realtimePresenceRefresh);state.realtimePresenceRefresh=null}
+  if(state.realtimeAuthRefresh){clearInterval(state.realtimeAuthRefresh);state.realtimeAuthRefresh=null}
 }
 function requestPresence(){if(gid())post("PRESENCE_REQUEST",{requestId:req("PRES"),groupId:gid()})}
 function startPresenceTimers(){
   clearRealtimeTimers();
   state.realtimeHeartbeat=setInterval(()=>{const c=state.realtimeConfig;if(c?.sessionKey&&gid())post("PRESENCE_UPDATE",{requestId:req("HB"),groupId:gid(),sessionKey:c.sessionKey,status:"online",heartbeat:true})},20000);
   state.realtimePresenceRefresh=setInterval(requestPresence,30000)
+}
+function requestRealtimeAuthRefresh(){
+  const id=req("RTA");return new Promise((resolve,reject)=>{
+    const timer=setTimeout(()=>{state.realtimeCbs.delete(id);reject(new Error("Supabase Realtime authorization refresh timed out."))},12000);
+    state.realtimeCbs.set(id,{resolve:v=>{clearTimeout(timer);resolve(v)},reject:e=>{clearTimeout(timer);reject(e)}});
+    post("REALTIME_AUTH_REFRESH_REQUEST",{requestId:id,groupId:gid()})
+  })
+}
+function startRealtimeAuthRefresh(){
+  if(state.realtimeAuthRefresh)clearInterval(state.realtimeAuthRefresh);
+  state.realtimeAuthRefresh=setInterval(async()=>{
+    if(!state.supabaseClient||!state.realtimeChannel||!gid())return;
+    try{
+      const auth=await requestRealtimeAuthRefresh();
+      if(!auth?.realtimeToken)throw new Error("Realtime authorization token was not returned.");
+      await state.supabaseClient.realtime.setAuth(auth.realtimeToken)
+    }catch(error){
+      console.error("Supabase Realtime authorization refresh failed:",error);
+      setRealtimeStatus("error","Reconnecting…");
+      disconnectSupabaseRealtime(true);
+      connectSupabaseRealtime().catch(e=>{setRealtimeStatus("error","Connection error");console.error("Supabase Realtime reconnect failed:",e)})
+    }
+  },120000)
 }
 function disconnectSupabaseRealtime(markOffline=false){
   clearRealtimeTimers();const c=state.realtimeConfig;
@@ -1980,6 +2008,23 @@ function applyPresenceMember(member){
 function handleSupabaseRealtime(message){
   const event=message?.event||message?.type||"",data=message?.payload??message?.data??message??{};
   if(message?.groupId&&gid()&&message.groupId!==gid())return;
+  if(event==="database-changed"){
+    if(state.databaseRefreshTimer)clearTimeout(state.databaseRefreshTimer);
+    state.databaseRefreshTimer=setTimeout(()=>{
+      state.databaseRefreshTimer=null;
+      const table=data.table||"";
+      if(table==="grouptalk_groups"||table==="grouptalk_group_members"){post("GT_REFRESH",{reason:"supabase-database-change"});return}
+      if(table==="grouptalk_locations"){requestLiveLocations(false);return}
+      if(table==="grouptalk_realtime_sessions"){requestPresence();post("PHONEBOOK_REQUEST",{groupId:gid()});return}
+      if(table==="grouptalk_phonebook"){post("PHONEBOOK_REQUEST",{groupId:gid()});return}
+      if(table==="grouptalk_ticket_categories"){post("TICKET_CATEGORY_LIST_REQUEST",{groupId:gid()});return}
+      if(table==="grouptalk_tickets"||table==="grouptalk_ticket_replies"){
+        post("TICKET_LIST_REQUEST",{groupId:gid()});
+        if(state.selectedTicket)openTicket(ticketKey(state.selectedTicket));
+      }
+    },180);
+    return
+  }
   if(event==="presence-updated"){applyPresenceMember(data.member||data);return}
   if(event==="ptt-started"){if(data.skId!==state.profile.skId){text("mActiveUser",`${data.name||data.skId} speaking`);text("dActiveSub",`${data.name||data.skId} speaking`);vu(true)}return}
   if(event==="ptt-ended"){if(data.skId!==state.profile.skId){text("mActiveUser",[state.profile.base,state.profile.role].filter(Boolean).join(" • "));text("dActiveSub",`${state.activeGroup?.base||state.profile.base||""} • ${state.activeGroup?.category||"Operations"}`);vu(false)}return}
@@ -2000,12 +2045,14 @@ async function connectSupabaseRealtime(){
     if(!state.supabaseClient||state.supabaseUrl!==config.supabaseUrl||state.supabaseKey!==config.publishableKey){
       state.supabaseClient=window.supabase.createClient(config.supabaseUrl,config.publishableKey,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false},realtime:{params:{eventsPerSecond:20}}});state.supabaseUrl=config.supabaseUrl;state.supabaseKey=config.publishableKey
     }
+    if(!config.realtimeToken)throw new Error("Supabase Realtime authorization token is missing.");
+    await state.supabaseClient.realtime.setAuth(config.realtimeToken);
     state.realtimeConfig=config;
-    const channel=state.supabaseClient.channel(config.topic,{config:{broadcast:{self:false}}}).on("broadcast",{event:config.broadcastEvent||"grouptalk"},({payload})=>handleSupabaseRealtime(payload));
+    const channel=state.supabaseClient.channel(config.topic,{config:{private:true,broadcast:{self:false}}}).on("broadcast",{event:config.broadcastEvent||"grouptalk"},({payload})=>handleSupabaseRealtime(payload));
     state.realtimeChannel=channel;
     channel.subscribe(status=>{
       if(state.realtimeChannel!==channel)return;
-      if(status==="SUBSCRIBED"){setRealtimeStatus("online","Connected");requestPresence();startPresenceTimers()}
+      if(status==="SUBSCRIBED"){setRealtimeStatus("online","Connected");requestPresence();startPresenceTimers();startRealtimeAuthRefresh()}
       else if(status==="CHANNEL_ERROR"||status==="TIMED_OUT")setRealtimeStatus("error","Connection error");
       else if(status==="CLOSED")setRealtimeStatus("offline","Offline")
     })
@@ -2077,6 +2124,9 @@ addEventListener("message",e=>{
   if(msg.type==="PTT_EVENT_RESULT"){return}
   if(msg.type==="REALTIME_CONFIG_RESPONSE"){
     const cb=state.realtimeCbs.get(p.requestId);if(cb){state.realtimeCbs.delete(p.requestId);p.ok!==false?cb.resolve(p):cb.reject(new Error(p.message||"Supabase Realtime configuration failed"))}return
+  }
+  if(msg.type==="REALTIME_AUTH_REFRESH_RESPONSE"){
+    const cb=state.realtimeCbs.get(p.requestId);if(cb){state.realtimeCbs.delete(p.requestId);p.ok!==false?cb.resolve(p):cb.reject(new Error(p.message||"Supabase Realtime authorization refresh failed"))}return
   }
   if(msg.type==="PRESENCE_RESPONSE"){state.members.clear();(p.members||[]).forEach(applyPresenceMember);members();return}
   if(msg.type==="LOCATION_SHARING_STATE"){

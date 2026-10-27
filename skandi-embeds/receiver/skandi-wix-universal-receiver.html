@@ -12,6 +12,7 @@
 (() => {
   'use strict';
   const SOURCE='SKANDI_UNIVERSAL_RECEIVER',PARENT='SKANDI_WIX_PARENT';
+  const EXPECTED=null;
   const ORIGINS=new Set(['https://www.skanditravels.com','https://skanditravels.com','https://editor.wix.com','https://skanditravels-my-site-2.editor.wix.com']);
   const ROOTS=['https://raw.githubusercontent.com/skanditravels/SKANDI-TRAVELS/main/','https://cdn.jsdelivr.net/gh/skanditravels/SKANDI-TRAVELS@main/'];
   const nonce=Array.from(crypto.getRandomValues(new Uint32Array(4)),x=>x.toString(16)).join('-');
@@ -35,6 +36,7 @@
     if(matches.length!==1)throw new Error('Unknown or conflicting canonical page.');
     const page=matches[0];
     if(page.status!=='BUILT'||page.route!==identity.route||page.family!==identity.family||page.chrome!==identity.chrome)throw new Error('This page has no current verified build.');
+    if(EXPECTED&&(page.receiver!==EXPECTED.receiver||page.key!==EXPECTED.key||page.route!==EXPECTED.route||page.family!==EXPECTED.family||page.chrome!==EXPECTED.chrome))throw new Error('This page receiver is stale or assigned to another route.');
     if(!/^[a-z0-9-]+$/.test(page.slug)||page.output!=='dist/'+page.slug+'/index.html')throw new Error('Invalid canonical build path.');
     if(page.requiresStaff&&identity.staffAuthorized!==true)throw new Error('An authorized staff session is required.');
     if(!/^[a-f0-9]{64}$/.test(page.sha256))throw new Error('Missing build integrity record.');
@@ -53,6 +55,7 @@
     const identity=message.payload.compiledPage;
     if(!identity||identity.allowed!==true){fail(new Error(identity?.reason||'The Wix page/controller mapping is not ready.'));return;}
     if(typeof identity.key!=='string'||typeof identity.route!=='string'||!['public','riaintra','altea'].includes(identity.family)||!['none','public','riaintra','altea'].includes(identity.chrome)){fail(new Error('Invalid parent page identity.'));return;}
+    if(EXPECTED&&(identity.key!==EXPECTED.key||identity.route!==EXPECTED.route||identity.family!==EXPECTED.family||identity.chrome!==EXPECTED.chrome||(EXPECTED.embedIds.length>0&&!EXPECTED.embedIds.includes(identity.embedId)))){fail(new Error('This receiver is assigned to a different page or Wix component.'));return;}
     loading=true;clearInterval(timer);
     let html,last;
     for(const root of ROOTS)try{html=await resolve(root,identity);break;}catch(e){last=e;}

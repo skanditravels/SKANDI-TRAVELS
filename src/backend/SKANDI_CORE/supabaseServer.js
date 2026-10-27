@@ -6,6 +6,7 @@
 // It must never contain domain authorization, Inventory logic, ALTEA logic, or UI state.
 
 import { Buffer } from "buffer";
+import { createHmac } from "crypto";
 import { secrets } from "wix-secrets-backend.v2";
 import { elevate } from "wix-auth";
 import { fetch } from "wix-fetch";
@@ -186,6 +187,43 @@ async function browserConfig() {
   })();
   try { return await browserConfigPromise; }
   catch (error) { browserConfigPromise = null; throw error; }
+}
+function base64UrlJson(value) {
+  return Buffer.from(JSON.stringify(value), "utf8").toString("base64url");
+}
+export async function createSupabaseRealtimeAccessToken({ agentUserId, topic, ttlSeconds = 300 } = {}) {
+  const subject = text(agentUserId, 80);
+  const safeTopic = text(topic, 240);
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(subject)) {
+    throw new SkandiError("SUPABASE_REALTIME_SUBJECT_INVALID");
+  }
+  if (!safeTopic || !safeTopic.startsWith("grouptalk:")) {
+    throw new SkandiError("SUPABASE_REALTIME_TOPIC_INVALID");
+  }
+  const jwtSecret = await readSecret("SUPABASE_JWT_SECRET");
+  if (jwtSecret.startsWith("sb_secret_") || jwtSecret.startsWith("sb_publishable_") || jwtSecret.split(".").length === 3) {
+    throw new SkandiError("SUPABASE_JWT_SECRET_INVALID");
+  }
+  if (Buffer.byteLength(jwtSecret, "utf8") < 32) {
+    throw new SkandiError("SUPABASE_JWT_SECRET_TOO_SHORT");
+  }
+  const { baseUrl } = await serverConfig();
+  const issuedAt = Math.floor(Date.now() / 1000);
+  const expiresAt = issuedAt + Math.min(600, Math.max(120, Number(ttlSeconds) || 300));
+  const head = base64UrlJson({ alg: "HS256", typ: "JWT" });
+  const body = base64UrlJson({
+    iss: `${baseUrl}/auth/v1`,
+    aud: "authenticated",
+    role: "authenticated",
+    sub: subject,
+    iat: issuedAt,
+    nbf: issuedAt - 5,
+    exp: expiresAt,
+    app_metadata: { grouptalk_topics: [safeTopic] }
+  });
+  const unsigned = `${head}.${body}`;
+  const signature = createHmac("sha256", jwtSecret).update(unsigned, "utf8").digest("base64url");
+  return { token: `${unsigned}.${signature}`, expiresAt };
 }
 function queryString(query = {}) {
   const parts = [];
@@ -368,14 +406,15 @@ export async function getSupabaseServerDiagnostics() {
   const server = await serverConfig();
   return { ok: true, baseUrlConfigured: Boolean(server.baseUrl), serverKeyConfigured: Boolean(server.apiKey), serverKeyType: server.type, allowedRestObjects: REST_OBJECTS.size, allowedRpcFunctions: RPC_FUNCTIONS.size, storageBuckets: Object.keys(STORAGE_BUCKETS) };
 }
-export async function realtimeBroadcast({ topic, event = "broadcast", payload = {} } = {}) {
+export async function realtimeBroadcast({ topic, event = "broadcast", payload = {}, privateChannel = false } = {}) {
   const safeTopic = text(topic, 240), safeEvent = text(event, 120);
   if (!safeTopic) throw new SkandiError("SUPABASE_REALTIME_TOPIC_REQUIRED");
   if (!safeEvent) throw new SkandiError("SUPABASE_REALTIME_EVENT_REQUIRED");
   const { baseUrl, apiKey, type } = await serverConfig();
   const headers = { apikey: apiKey, "Content-Type": "application/json" };
   if (type === "legacy-jwt") headers.Authorization = `Bearer ${apiKey}`;
-  const response = await fetch(`${baseUrl}/realtime/v1/api/broadcast`, { method: "POST", headers, body: JSON.stringify({ messages: [{ topic: safeTopic, event: safeEvent, payload }] }) });
+  const endpoint = `${baseUrl}/realtime/v1/api/broadcast${privateChannel ? "?private=true" : ""}`;
+  const response = await fetch(endpoint, { method: "POST", headers, body: JSON.stringify({ messages: [{ topic: safeTopic, event: safeEvent, payload }] }) });
   const raw = await response.text().catch(() => "");
   if (!response.ok) throw new SkandiError(`SUPABASE_REALTIME_HTTP_${response.status}`, { status: response.status, details: raw.slice(0, 500) });
   return { ok: true, topic: safeTopic, event: safeEvent };

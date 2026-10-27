@@ -9,6 +9,7 @@ const staffOnly = (handler) => webMethod(Permissions.Anyone, async (input = {}) 
 
 export const getGroupTalkBootstrap = staffOnly(core.getGroupTalkBootstrapCore);
 export const getGroupTalkRealtimeConfig = staffOnly(core.getGroupTalkRealtimeConfigCore);
+export const refreshGroupTalkRealtimeAuth = staffOnly(core.refreshGroupTalkRealtimeAuthCore);
 export const updateGroupTalkPresence = staffOnly(core.updateGroupTalkPresenceCore);
 export const getGroupTalkPresence = staffOnly(core.getGroupTalkPresenceCore);
 export const createLiveKitToken = staffOnly(core.createLiveKitTokenCore);

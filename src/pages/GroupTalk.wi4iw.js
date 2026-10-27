@@ -5,7 +5,7 @@ import wixLocation from "wix-location";
 import { authentication } from "wix-members-frontend";
 import { getStaffPortalSession } from "backend/SKANDI_CORE/staffAuth.web";
 import {
-  getGroupTalkBootstrap, getGroupTalkRealtimeConfig, updateGroupTalkPresence, getGroupTalkPresence,
+  getGroupTalkBootstrap, getGroupTalkRealtimeConfig, refreshGroupTalkRealtimeAuth, updateGroupTalkPresence, getGroupTalkPresence,
   createLiveKitToken, triggerGroupTalkEvent, getPhoneBook, sendLocationPing, getLiveLocations,
   createGroupTalkTicket, getGroupTalkTickets, replyToGroupTalkTicket, searchGroupTalkHistory,
   adminSaveGroup, adminSetMembership, getTicketCategories, saveTicketCategory, deleteTicketCategory
@@ -74,6 +74,8 @@ function reportError(html, type, requestId, error) {
     post(html, "LIVEKIT_TOKEN_RESPONSE", failure);
   } else if (type === "REALTIME_CONFIG_REQUEST") {
     post(html, "REALTIME_CONFIG_RESPONSE", failure);
+  } else if (type === "REALTIME_AUTH_REFRESH_REQUEST") {
+    post(html, "REALTIME_AUTH_REFRESH_RESPONSE", failure);
   } else {
     post(html, "GT_ERROR", { ...failure, action: type });
   }
@@ -108,6 +110,7 @@ $w.onReady(() => {
           await bootstrap(html);
           break;
         case "REALTIME_CONFIG_REQUEST": await send("REALTIME_CONFIG_RESPONSE", getGroupTalkRealtimeConfig); break;
+        case "REALTIME_AUTH_REFRESH_REQUEST": await send("REALTIME_AUTH_REFRESH_RESPONSE", refreshGroupTalkRealtimeAuth); break;
         case "PRESENCE_UPDATE": await send("PRESENCE_UPDATE_RESPONSE", updateGroupTalkPresence); break;
         case "PRESENCE_REQUEST": await send("PRESENCE_RESPONSE", getGroupTalkPresence); break;
         case "LIVEKIT_TOKEN_REQUEST": await send("LIVEKIT_TOKEN_RESPONSE", createLiveKitToken); break;

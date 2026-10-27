@@ -14,6 +14,8 @@ on:
       - 'tests/**'
       - 'HTML_REF/**'
       - '.github/workflows/skandi-app-build.yml'
+      - '!skandi-embeds/**/*.receiver.html'
+      - '!riaintra-embeds/**/*.receiver.html'
   pull_request:
     branches: [main]
     paths:
@@ -24,6 +26,8 @@ on:
       - 'tests/**'
       - 'HTML_REF/**'
       - '.github/workflows/skandi-app-build.yml'
+      - '!skandi-embeds/**/*.receiver.html'
+      - '!riaintra-embeds/**/*.receiver.html'
 
 concurrency:
   group: skandi-website-builder-${{ github.event_name == 'pull_request' && github.event.pull_request.number || 'main' }}
@@ -69,7 +73,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: skandi-generated-build
-          path: dist/
+          path: |
+            dist/
+            **/*.receiver.html
           if-no-files-found: error
       - name: Commit generated output to main
         if: github.event_name != 'pull_request' && steps.tests.outcome == 'success' && (steps.build.outcome == 'success' || steps.build.outcome == 'failure')
@@ -78,9 +84,8 @@ jobs:
           GIT_AUTHOR_EMAIL: github-actions[bot]@users.noreply.github.com
           GIT_COMMITTER_NAME: github-actions[bot]
           GIT_COMMITTER_EMAIL: github-actions[bot]@users.noreply.github.com
-        # publish-skandi-build uses git add -A -- dist/ and git diff --cached --quiet.
-        # Failed sources are removed from current manifest lookup, while installed
-        # legacy HTML artifacts are retained. No invalid HTML replaces a working page.
+        # The publisher stages dist/ plus only receiver files for pages marked BUILT
+        # in the new manifest. Failed page output remains unadvertised and retained.
         run: node scripts/publish-skandi-build.mjs
       - name: Fail visibly when a public SKANDI page failed compilation
         if: steps.build.outcome == 'failure'
