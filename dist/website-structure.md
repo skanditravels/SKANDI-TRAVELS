@@ -4,7 +4,7 @@ Route authority: `src/public/siteMap.js`. This file is generated evidence, not r
 
 | Key | Canonical route | Source triplet | Family / chrome | Controller | Status |
 | --- | --- | --- | --- | --- | --- |
-| home | / | skandi-embeds/home/skandi-home.{html,css,js} | public / public | src/pages/Home.n73w8.js | FAILED |
+| home | / | skandi-embeds/home/skandi-home.{html,css,js} | public / public | src/pages/Home.n73w8.js | BUILT |
 | search | /search | skandi-embeds/search/skandi-search.{html,css,js} | public / public | src/pages/Search.b7zch.js | BUILT |
 | flights | /flights | skandi-embeds/flights/skandi-flights.{html,css,js} | public / public | UNVERIFIED | PENDING SOURCE |
 | carRental | /car-rental | skandi-embeds/car-rental/skandi-car-rental.{html,css,js} | public / public | src/pages/Car Rental.i9rnb.js | BUILT |
@@ -107,7 +107,6 @@ These actual repository controllers are preserved. No new route or build is inve
 
 ## Readiness details
 
-- **home**: NOT READY: [home / home] skandi-embeds/home/skandi-home.html, skandi-embeds/home/skandi-home.css, skandi-embeds/home/skandi-home.js: duplicate id="skandi-home-content" (also in compiler)
 - **flights**: NOT READY: No verified canonical controller mapping.
 - **hotels**: NOT READY: No verified canonical controller mapping.
 - **packages**: NOT READY: No verified canonical controller mapping.
