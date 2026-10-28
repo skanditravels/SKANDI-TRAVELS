@@ -3069,58 +3069,38 @@
       "components": [],
       "binding": "explicit",
       "requiresStaff": true,
-      "status": "PENDING SOURCE",
+      "status": "FAILED",
       "files": [
         "skandi-embeds/my-roster/skandi-my-roster.html",
         "skandi-embeds/my-roster/skandi-my-roster.css",
         "skandi-embeds/my-roster/skandi-my-roster.js"
       ],
-      "missing": [
-        "skandi-embeds/my-roster/skandi-my-roster.html",
-        "skandi-embeds/my-roster/skandi-my-roster.css",
-        "skandi-embeds/my-roster/skandi-my-roster.js"
-      ],
-      "issues": [
-        "src/backend/FINAL/internalChrome.web.js: missing imported module",
-        "src/backend/SKANDI_CORE/myRoster.web.js: missing imported module"
-      ],
+      "missing": [],
+      "issues": [],
       "backend": [
         "src/backend/SKANDI_CORE/staffAuth.web.js",
-        "src/backend/FINAL/internalChrome.web.js",
         "src/backend/SKANDI_CORE/myRoster.web.js"
       ],
       "messages": [
-        "INTERNAL_CHROME_BOOTSTRAP",
-        "INTERNAL_CHROME_READY",
-        "INTERNAL_GLOBAL_SEARCH",
-        "INTERNAL_LOGOUT",
-        "INTERNAL_NAVIGATE",
-        "INTERNAL_SEARCH_RESULTS",
         "MYROSTER_ACTION_OK",
-        "MYROSTER_BID_REQUEST",
         "MYROSTER_BOOTSTRAP",
         "MYROSTER_CLOCK_EVENT_REQUEST",
         "MYROSTER_ERROR",
+        "MYROSTER_FAILED",
+        "MYROSTER_LOGOUT",
         "MYROSTER_NAVIGATE",
-        "MYROSTER_PAYROLL_EXPORT_REQUEST",
-        "MYROSTER_PUBLISH_REQUEST",
         "MYROSTER_READY",
         "MYROSTER_REFRESH_REQUEST",
-        "MYROSTER_SYNC_ALTEA_REQUEST",
+        "MYROSTER_SHIFT_CHANGE_REQUEST",
         "MYROSTER_TIMEOFF_REQUEST",
-        "MYROSTER_TRIPTRADE_DROP_REQUEST",
-        "MYROSTER_TRIPTRADE_PICKUP_REQUEST",
-        "SKANDI_INTERNAL_CHROME",
         "SKANDI_MYROSTER_EMBED",
         "SKANDI_WIX_PARENT"
       ],
       "output": null,
       "dynamic": false,
-      "sourceStatus": "PENDING SOURCE",
-      "blockers": [
-        "src/backend/FINAL/internalChrome.web.js: missing imported module",
-        "src/backend/SKANDI_CORE/myRoster.web.js: missing imported module"
-      ],
+      "sourceStatus": "COMPLETE SOURCE",
+      "blockers": [],
+      "error": "[myRoster / my-roster] skandi-embeds/my-roster/skandi-my-roster.html, skandi-embeds/my-roster/skandi-my-roster.css, skandi-embeds/my-roster/skandi-my-roster.js: duplicate id=\"logoutBtn\" (also in skandi-embeds/riaintra-global/riaintra-header.html)",
       "retainedArtifact": false
     },
     {
