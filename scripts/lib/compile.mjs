@@ -295,7 +295,10 @@ export async function compilePage(root,page) {
   const shellJS=await read(root,'skandi-embeds/global/skandi-shell.js');new Script(shellJS,{filename:'skandi-shell.js'});
   const render=p=>{
     if(!p)return '';
-    return `<div id="${p.mount}">${p.html}</div>`;
+    const content=page.key==='home'&&p===pagePart
+      ?`<div id="skandi-home-content">${p.html}</div>`
+      :p.html;
+    return `<div id="${p.mount}">${content}</div>`;
   };
   const header=parts.find(p=>p.key==='header'),footer=parts.find(p=>p.key==='footer'),mobile=parts.find(p=>p.key==='mobile-nav');
   const attrs=(list,omitLanguage=false)=>list.filter(a=>!omitLanguage||!['lang','dir'].includes(a.name)).map(a=>` ${a.name}="${escapeHTML(a.value)}"`).join('');
