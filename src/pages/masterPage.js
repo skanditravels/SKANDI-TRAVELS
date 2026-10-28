@@ -57,7 +57,7 @@ const MASTER_CONFIG = Object.freeze({
     internalName: "RIAINTRA",
     alteaName: "ALTEA",
     slogans: Object.freeze({
-      en: "Unforgettable Moments.",
+      en: "Unforgettable Holidays.",
       sv: "När du längtar bort",
       no: "Når du lengter bort",
       da: "Når du længes væk",
@@ -71,24 +71,30 @@ const MASTER_CONFIG = Object.freeze({
         customerHeader: "https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/logos/SKANDI_TRAVELS-NAVY-SIDE-WAVE.svg",
         customerFooter: "https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/logos/SKANDI_TRAVELS-LIGHT-STACKED-WAVE.svg",
         storeHeader: "https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/logos/SKANDI_TRAVELS-NAVY-SIDE-WAVE.svg",
-        storeFooter: "https://static.wixstatic.com/media/394052_cd31153a91694b14a27c5f756f8089bd~mv2.png",
-        skandiPrimary: "https://static.wixstatic.com/media/394052_504704bd94f44f01a95f304bd19640e5~mv2.png",
-        skandiWhite: "https://static.wixstatic.com/media/394052_01730d7e719548178e24009021b261ae~mv2.png",
-        skandiTravels: "https://static.wixstatic.com/media/394052_504704bd94f44f01a95f304bd19640e5~mv2.png",
-        skandiWave: "https://static.wixstatic.com/media/394052_26dde0904052424faf8f2390ecc4cfd6~mv2.png",
-        skandiGroup: "https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/logos/SKANDI_GROUP-MEMBER-NAVY.svg",
-        skandiGroupWhite: "https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/logos/SKANDI_GROUP-MEMBER-LIGHT.svg",
+        storeFooter: "https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/logos/SKANDI_GROUP-MEMBER-LIGHT.svg",
+        skandiWave: "https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/logos/SKANDI_TRAVELS_WAVE.svg",
+        skandiTravelsRound: "https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/logos/SKANDI_TRAVELS-ROUND.svg",
+        skandiGroupNavy: "https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/logos/SKANDI_GROUP-NAVY.svg",
+        skandiGroupMemberNavy: "https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/logos/SKANDI_GROUP-MEMBER-NAVY.svg",
+        skandiGroupMemberWhite: "https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/logos/SKANDI_GROUP-MEMBER-LIGHT.svg",
         riaintra: "https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/logos/RIAINTRA-LIGHT.svg",
         altea: "https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/logos/ALTEA_LOGO-LIGHT.svg",
-        alteaWhite: "https://static.wixstatic.com/media/394052_46045c41aebf421d98314b31ef83c677~mv2.png",
+        alteaWhite: "https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/logos/ALTEA_LOGO-LIGHT.svg",
         alteaIconWhite: "https://static.wixstatic.com/media/394052_e551cf4d47a749248311125bce5846d7~mv2.png",
-        voy: "https://static.wixstatic.com/media/394052_30b8bebbf5ee493da7d47329d04de494~mv2.png",
-        voyWhite: "https://static.wixstatic.com/media/394052_3770b6753c474d73a77c674b20eab305~mv2.png",
+        voyNavy: "https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/logos/VOY-NAVY-BY_SKANDI.svg",
+        voyWhiteBySkandi: "https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/logos/VOY-LIGHT-BY_SKANDI.svg",
+        voyNavyBySkandi: "https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/logos/VOY-NAVY-BY_SKANDI.svg",
         skandiClub: "https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/logos/SKANDI_CLUB-LIGHT.svg",
         signatureCollection: "https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/SIGNATURE_COLLECTION-BADGE.svg"
       }),
       images: Object.freeze({
         clubLoginHero: "https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/branding/skandi_club/SKANDI_MARKETING_CUSTOMER-LIFESTYLE_GREECE_SANTORINI_PREMIUM-TRAVEL_01.png"
+      }),
+      badges: Object.freeze({
+        selectCollectionBadge: "https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/icons/SELECT_COLECTION-BADGE.svg",
+        signatureCollectionBadge: "https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/icons/SIGNATURE_COLLECTION-BADGE.svg",
+        excelsiorCollectionBadgeGold: "https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/icons/EXCELSIOR_COLLECTION-GOLD-BADGE.svg",
+        excelsiorCollectionBadgeCrystal: "https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/icons/EXCELSIOR_COLLECTION-CRYSTAL-BADGE.svg"
       }),
       icons: Object.freeze({
         home: "", bookings: "", favorites: "", documents: "", travelers: "",
@@ -190,7 +196,6 @@ const MASTER_CONFIG = Object.freeze({
       productName:"RIAINTRA",
       productContext:"Enterprise Workforce Suite",
       primaryNav:Object.freeze([
-        { id:"success-factors", label:"SAP RIAINTRA Dashboard", path:SITE_MAP.successFactors },
         { id:"my-roster", label:"MyRoster", path:APP_ROUTES.myRoster },
         { id:"alteaLaunchpad", label:"ALTEA", path:SITE_MAP.alteaLaunchpad },
         { id:"mail", label:"Mail", path:SITE_MAP.mail },
@@ -205,6 +210,7 @@ const MASTER_CONFIG = Object.freeze({
     footer:Object.freeze({
       links:Object.freeze([
         { label:"RIAINTRA", path:SITE_MAP.riaintra },
+        { label:"SKANDI TRAVELS.com", path:SITE_MAP.home },
         { label:"DocuNet", path:SITE_MAP.docunet },
         { label:"HelpDesk", path:SITE_MAP.serviceDesk }
       ])
@@ -215,7 +221,7 @@ const MASTER_CONFIG = Object.freeze({
       productName:"ALTEA",
       productContext:"SKANDI SYSTEMS",
       primaryNav:Object.freeze([
-        Object.freeze({ id:"altea-home", label:"Home", path:SITE_MAP.alteaLaunchpad }),
+        Object.freeze({ id:"altea-home", label:"ALTEA Apps", path:SITE_MAP.alteaLaunchpad }),
         Object.freeze({ id:"reservations", label:"Reservations", path:SITE_MAP.alteaReservations }),
         Object.freeze({ id:"inventory", label:"Inventory", path:SITE_MAP.inventoryControl }),
         Object.freeze({ id:"my-roster", label:"MyRoster", path:APP_ROUTES.myRoster }),
