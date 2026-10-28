@@ -9,7 +9,7 @@ export const SITE_MAP = Object.freeze({
   travelInfo: "/travel-info", skandiCollection: "/skandi-collection",
   voy: "/voy-magazine", club: "/skandi-club", clubLogin: "/skandi-club/login", forgotPassword: "/forgot-password",
   about: "/about", support: "/about/support", newsroom: "/about/news-room",
-  theStore: "/the-store", giftCard: "/gift-card", storeCheckout: "/the-store/store-checkout",
+  theStore: "/the-store", storeCheckout: "/the-store/store-checkout",
   storeConfirmation: "/the-store/store-checkout/order-confirmation", ourNetwork: "/about/our-network",
   legal: "/about/legal", policies: "/about/legal/policies", cookiePreferences: "/about/legal/cookie-preferences", riaintra: "/riaintra",
   staffLogin: "/riaintra", successFactors: "/riaintra/success-factors",
@@ -143,7 +143,6 @@ export const EDITORIAL_PAGE_CATALOG = Object.freeze([
   page("theStore", "The Store", SITE_MAP.theStore, "STORE", [
     section("store-hero","Store hero",[field("store-hero-eyebrow","Eyebrow"),field("store-hero-h1","Headline"),field("store-hero-copy","Hero copy","LONG_TEXT")])
   ]),
-  page("giftCard", "Gift Card", SITE_MAP.giftCard, "WIX_GIFT_CARDS"),
   page("storeCheckout", "Store Checkout", SITE_MAP.storeCheckout, "STORE"),
   page("storeConfirmation", "Store Order Confirmation", SITE_MAP.storeConfirmation, "STORE")
 ]);

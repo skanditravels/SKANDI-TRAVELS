@@ -211,9 +211,6 @@ A	skandi-embeds/flights/skandi-flights.js
 A	skandi-embeds/forgot-password/skandi-forgot-password.css
 A	skandi-embeds/forgot-password/skandi-forgot-password.html
 A	skandi-embeds/forgot-password/skandi-forgot-password.js
-A	skandi-embeds/gift-card/skandi-gift-card.css
-A	skandi-embeds/gift-card/skandi-gift-card.html
-A	skandi-embeds/gift-card/skandi-gift-card.js
 M	skandi-embeds/global/skandi-shell.js
 A	skandi-embeds/group-talk/skandi-group-talk.css
 A	skandi-embeds/group-talk/skandi-group-talk.html

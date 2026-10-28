@@ -34,7 +34,7 @@ These are relevant open-source/open-content integrations, not every API on the i
 
 Public compiled pages with the new runtime: home, about, legal, policies, cookiePreferences, carRental, tours, newsroom, club, search, theStore, storeCheckout, storeConfirmation, forgotPassword, myProfile, passportVisa, baggageAllowance, travelInsurance, specialAssistance and flightStatus. Use `dist/manifest.json` as the exact key/route authority.
 
-Historical 2026-10-25 result: twelve public routes were PENDING SOURCE. As of 2026-10-26, `/offers` has been retired and `bookingFlow` has a single complete source/controller mapping for `/booking` and `#bookingFlowEmbed`; the next workflow run must record its compiled status. The other routes from that earlier list remain pending: flights, hotels, packages, cruises, activities, transfers, voy, giftCard, ourNetwork and careers.
+Historical 2026-10-25 result: twelve public routes were PENDING SOURCE. As of 2026-10-26, `/offers` has been retired and `bookingFlow` has a single complete source/controller mapping for `/booking` and `#bookingFlowEmbed`; the next workflow run must record its compiled status. The other routes from that earlier list remain pending: flights, hotels, packages, cruises, activities, transfers, voy, ourNetwork and careers. Gift Card denominations are surfaced as products inside The Store, not as a separate page.
 
 Country and Support remain BLOCKED INTEGRATION: their existing controller integration references the absent `openCustomerLogin` export; Support also has multiple HTML components requiring a verified migration.
 

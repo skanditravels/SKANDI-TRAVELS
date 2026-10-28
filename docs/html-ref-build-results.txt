@@ -21,7 +21,6 @@ about: BUILT -> dist/about/index.html
 support: BLOCKED INTEGRATION
 newsroom: BUILT -> dist/newsroom/index.html
 theStore: BUILT -> dist/the-store/index.html
-giftCard: PENDING SOURCE
 storeCheckout: BUILT -> dist/store-checkout/index.html
 storeConfirmation: BUILT -> dist/store-confirmation/index.html
 ourNetwork: PENDING SOURCE

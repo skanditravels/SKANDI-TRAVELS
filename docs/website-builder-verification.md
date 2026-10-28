@@ -22,7 +22,7 @@ The SKANDI Wix site is listed as published in the connected account context. Act
 
 ## Remaining build statuses
 
-- **Pending source (14):** flights, hotels, packages, cruises, activities, transfers, voy, giftCard, ourNetwork, careers, myRoster, uniformControl, alteaTimatic, serviceDesk.
+- **Pending source (13):** flights, hotels, packages, cruises, activities, transfers, voy, ourNetwork, careers, myRoster, uniformControl, alteaTimatic, serviceDesk. Gift Card denominations are surfaced by The Store controller rather than a separate page.
 - **Blocked integration (1):** support.
 - **Internal compiler failures (2):** `inventoryControl` (module import in classic bundle) and `docunetAdmin` (nested iframe).
 

@@ -30,6 +30,7 @@ let loadingPromise = null;
 let cachedCatalog = null;
 let catalogLoadedAt = 0;
 let adding = false;
+let initialCategory = "";
 
 function parseMessage(value) {
   if (typeof value === "string") {
@@ -108,7 +109,8 @@ async function loadCatalog(force = false) {
       categories: Array.isArray(storeResult.categories) ? storeResult.categories : [],
       giftCardCatalog: giftCardResult?.ok === false ? null : giftCardResult,
       giftCardProducts: Array.isArray(giftCardResult?.products) ? giftCardResult.products : [],
-      giftCardAvailable: Boolean(giftCardResult && giftCardResult.ok !== false && giftCardResult.products?.length)
+      giftCardAvailable: Boolean(giftCardResult && giftCardResult.ok !== false && giftCardResult.products?.length),
+      initialCategory
     };
 
     send("STOREFRONT_PRODUCTS", cachedCatalog);
@@ -230,6 +232,13 @@ async function handleMessage(message) {
 }
 
 $w.onReady(function () {
+  try {
+    const requestedCategory = new URL(window.location.href).searchParams.get("category") || "";
+    initialCategory = requestedCategory.trim().toLowerCase() === "gift cards" ? "Gift Cards" : "";
+  } catch (_) {
+    initialCategory = "";
+  }
+
   embed = $w(EMBED_ID);
   embed.onMessage(async event => {
     const message = parseMessage(event.data);

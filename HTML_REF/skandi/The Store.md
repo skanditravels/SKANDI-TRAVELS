@@ -8,10 +8,15 @@
 - Complete replacement embed: `/embed/The-Store.html`
 - Canonical backend chain: `backend/SKANDI_CORE/storefront.web.js → storefront.js`; `storeCartV2.web.js → Wix Current Cart V2`; `storeGiftCards.web.js → storeGiftCards.js → Wix Gift Cards / Wix Automations`; checkout gift-card redemption remains owned by `storeCheckout.web.js → storeCheckout.js`.
 - Gift Card purchase authority: Wix Gift Cards remains the stored-value/code/balance authority. The Store presents each configured preset denomination as a virtual SKANDI Store product and carries the selected SKANDI design/recipient data into the paid-order fulfillment flow; no parallel stored-value ledger is created.
+- Gift Cards storefront route: Gift Card denominations are products in The Store's `Gift Cards` category. The legacy `/gift-card` URL redirects to `/the-store?category=Gift%20Cards`; the standalone Gift Card placeholder is not part of the SKANDI route catalog.
 - Authority: public catalog; Wix visitor/member owns the current cart. Existing support, catalog, cart and checkout boundaries remain in place.
 - Status: STATICALLY VERIFIED / REQUIRES LIVE TEST.
 - Last source verification: 2026-10-13 against `skanditravels/SKANDI-TRAVELS`, `main`, head `96e4b8598c5ab2c176f8b838fbc35e6ca9c2971c`, preserving the approved 2026-10-07 Store repair and 2026-10-08 image repair.
-- Intended source only: this package does not modify GitHub, deployed Wix code, Wix Gift Card/Loyalty settings, Automations or Supabase.
+- Delivery boundary: the legacy URL redirect is live. GitHub source and generated receiver output are updated; the Wix page controller and receiver still require installation/publication. Wix Gift Card/Loyalty settings, automation definitions and Supabase schema/data were not changed.
+
+## 2026-10-28 — Gift Cards consolidated into The Store
+
+Removed the standalone `giftCard` page from the canonical route and Media Control catalogs and removed its pending placeholder embed. The Store continues to load Wix Gift Card preset denominations as Store products and render them with SKANDI product cards, design selection, recipient details, and the existing cart/paid-order fulfillment flow. `/gift-card` redirects to `/the-store?category=Gift%20Cards`; the Store page controller passes the category into the existing embed, which opens the in-store Gift Cards listing. Wix Gift Cards remains the stored-value and redemption authority. The controller/receiver source must be installed in Wix for the query-based category landing to take effect.
 
 ## 2026-10-07 — V12 complete-chain repair
 
@@ -1091,6 +1096,7 @@ let STOREFRONT_CONNECTED=false;
 let STOREFRONT_REQUEST_ATTEMPTS=0;
 let STOREFRONT_RETRY_TIMER=null;
 let ACTIVE="",ACTIVE_PRODUCT=null,ACTIVE_GIFT_STYLE="",FILTERS={stock:false,sale:false},VISIBLE_LIMIT=12;
+let INITIAL_CATEGORY_APPLIED=false;
 let SAVED=new Set(loadSaved());
 const $=id=>document.getElementById(id);
 const esc=v=>String(v??"").replace(/[&<>'"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[c]));
@@ -1947,7 +1953,12 @@ window.addEventListener("message",event=>{
     renderCategories();
     renderHomeProducts();
     renderHeaderCounts();
-    applyRoute();
+    if(!INITIAL_CATEGORY_APPLIED&&String(payload.initialCategory||"").trim().toLowerCase()==="gift cards"){
+      INITIAL_CATEGORY_APPLIED=true;
+      navigate("shop",{category:"Gift Cards"},true);
+    }else{
+      applyRoute();
+    }
 
     status(
       PRODUCTS.length
