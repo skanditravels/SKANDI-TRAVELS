@@ -78,7 +78,6 @@ const MASTER_CONFIG = Object.freeze({
         skandiGroupMemberNavy: "https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/logos/SKANDI_GROUP-MEMBER-NAVY.svg",
         skandiGroupMemberWhite: "https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/logos/SKANDI_GROUP-MEMBER-LIGHT.svg",
         riaintra: "https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/logos/RIAINTRA-LIGHT.svg",
-        altea: "https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/logos/ALTEA_LOGO-LIGHT.svg",
         alteaWhite: "https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/logos/ALTEA_LOGO-LIGHT.svg",
         alteaIconWhite: "https://static.wixstatic.com/media/394052_e551cf4d47a749248311125bce5846d7~mv2.png",
         voyNavy: "https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/logos/VOY-NAVY-BY_SKANDI.svg",
