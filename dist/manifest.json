@@ -20,27 +20,9 @@
       "sources": [
         "SKANDI_HOME",
         "SKANDI_HOME_LONG_DISCOVERY_V2",
-        "SKANDI_HOME_OLD_STYLE",
-        "SKANDI_BOOKING_OFFER"
+        "SKANDI_HOME_OLD_STYLE"
       ],
-      "components": [
-        {
-          "key": "booking-flow",
-          "sourceDirectory": "skandi-embeds/booking-flow",
-          "stem": "skandi-booking-flow",
-          "mount": "skandi-booking-flow-root",
-          "sources": [
-            "SKANDI_BOOKING_OFFER"
-          ],
-          "status": "COMPLETE SOURCE",
-          "files": [
-            "skandi-embeds/booking-flow/skandi-booking-flow.html",
-            "skandi-embeds/booking-flow/skandi-booking-flow.css",
-            "skandi-embeds/booking-flow/skandi-booking-flow.js"
-          ],
-          "missing": []
-        }
-      ],
+      "components": [],
       "binding": "explicit",
       "requiresStaff": false,
       "status": "BUILT",
@@ -55,7 +37,7 @@
         "src/backend/SKANDI_CORE/homeContent.web.js"
       ],
       "messages": [
-        "BOOKING_HOST_UNAVAILABLE",
+        "BOOKING_SEARCH_UNAVAILABLE",
         "HOME",
         "HOME_APP_DRAWER_RESIZE",
         "HOME_APP_DRAWER_RESIZE_ACK",
@@ -67,9 +49,7 @@
         "HOME_APP_REFRESH",
         "HOME_APP_REFRESH_ERROR",
         "HOME_APP_REFRESH_RESULT",
-        "HOME_BOOKING_MODE",
         "HOME_BOOTSTRAP_RESULT",
-        "HOME_CONTENT_MODE",
         "HOME_ERROR",
         "HOME_FOCUS_SEARCH",
         "HOME_HOST_READY",
@@ -89,7 +69,6 @@
         "PENDING",
         "RESIZE_IFRAME",
         "SEARCH_FAILED",
-        "SKANDI_BOOKING_OFFER",
         "SKANDI_HOME",
         "SKANDI_HOME_LONG_DISCOVERY_V2",
         "SKANDI_HOME_MOBILE_APP",
@@ -102,8 +81,8 @@
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
       "receiver": "skandi-embeds/home/skandi-home.receiver.html",
-      "sha256": "6fec05069085cd91d34640f84119b84b55098695946abbfc7d91343727058145",
-      "bytes": 501928
+      "sha256": "71932e3a836378b9c033c34fbd2d8c46cfc9882c5d4fe70a90b786ee3b95bc40",
+      "bytes": 433049
     },
     {
       "key": "search",
@@ -3041,22 +3020,42 @@
     },
     {
       "key": "bookingFlow",
-      "route": "/",
-      "status": "ALIAS",
-      "aliasOf": "home",
-      "slug": "home",
+      "route": "/booking",
+      "slug": "booking",
+      "title": "Booking",
       "family": "public",
-      "chrome": "public",
-      "sourceDirectory": "skandi-embeds/home",
-      "stem": "skandi-home",
+      "chrome": "none",
+      "sourceDirectory": "skandi-embeds/booking",
+      "stem": "skandi-booking-flow",
       "controller": "src/pages/Booking.e8twe.js",
       "embedIds": [
-        "#htmlHome",
-        "#htmlhome",
-        "#home"
+        "#bookingFlowEmbed"
       ],
-      "legacyRedirect": true,
-      "targetStatus": "BUILT"
+      "sources": [
+        "SKANDI_BOOKING_OFFER"
+      ],
+      "components": [],
+      "binding": "explicit",
+      "requiresStaff": false,
+      "status": "BUILT",
+      "files": [
+        "skandi-embeds/booking/skandi-booking-flow.html",
+        "skandi-embeds/booking/skandi-booking-flow.css",
+        "skandi-embeds/booking/skandi-booking-flow.js"
+      ],
+      "missing": [],
+      "issues": [],
+      "backend": [],
+      "messages": [
+        "SKANDI_BOOKING_OFFER"
+      ],
+      "output": "dist/booking/index.html",
+      "dynamic": false,
+      "sourceStatus": "COMPLETE SOURCE",
+      "blockers": [],
+      "receiver": "skandi-embeds/booking/skandi-booking-flow.receiver.html",
+      "sha256": "0b57e15a63b79f73856ab26dfc3ec9d9b8355924851efdf18bbe1bdbdd32633f",
+      "bytes": 78619
     },
     {
       "key": "myProfile",
@@ -3150,8 +3149,8 @@
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
       "receiver": "skandi-embeds/my-profile/skandi-my-profile.receiver.html",
-      "sha256": "470cdf3c472a501c9fd84e84742cfa4d3a5db05072ac95771a41317ac66cfc92",
-      "bytes": 276449
+      "sha256": "ba35ee557c97ef881b7b97e29ae44380a437c496556c4c8c11036cc1cfdb6b20",
+      "bytes": 276456
     },
     {
       "key": "myTrips",
@@ -3828,11 +3827,5 @@
       }
     ]
   },
-  "orphanedArtifacts": [
-    {
-      "path": "dist/booking-flow/index.html",
-      "status": "RETAINED UNREGISTERED ARTIFACT",
-      "advertised": false
-    }
-  ]
+  "orphanedArtifacts": []
 }

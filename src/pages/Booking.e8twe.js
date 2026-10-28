@@ -1,15 +1,43 @@
-// Legacy Wix route compatibility: keep /booking links working while the page is removed.
-// The full booking journey is compiled into the public Home embed.
-import wixLocationFrontend from 'wix-location-frontend';
-import { SITE_MAP } from 'public/siteMap';
+// SKANDI V12 — one Wix HTML component owns the complete passenger booking flow.
+import wixLocationFrontend from "wix-location-frontend";
+import { createBookingFlowHost } from "public/bookingFlowHost";
+import { SITE_MAP } from "public/siteMap";
 
-$w.onReady(() => {
-  const query=wixLocationFrontend.query||{};
-  const params=new URLSearchParams();
-  for(const [key,value] of Object.entries(query)) {
-    if(Array.isArray(value)) for(const item of value) params.append(key,String(item));
-    else if(value!==undefined&&value!==null&&String(value)!=='') params.set(key,String(value));
+const BOOKING_EMBED_ID = "#bookingFlowEmbed";
+const BOOKING_SOURCE = "SKANDI_BOOKING_OFFER";
+
+function bookingEmbed() {
+  try {
+    const html = $w(BOOKING_EMBED_ID);
+    if (html && typeof html.onMessage === "function" && typeof html.postMessage === "function") return html;
+  } catch (_) {}
+  console.error("[Booking] #bookingFlowEmbed is missing or is not an HTML component.");
+  return null;
+}
+
+function parseMessage(data) {
+  if (typeof data === "string") {
+    try { return JSON.parse(data); } catch (_) { return null; }
   }
-  const suffix=params.toString();
-  wixLocationFrontend.to(SITE_MAP.home+(suffix?'?'+suffix:''));
+  return data && typeof data === "object" && !Array.isArray(data) ? data : null;
+}
+
+$w.onReady(function () {
+  const html = bookingEmbed();
+  if (!html) return;
+
+  const host = createBookingFlowHost({
+    html,
+    location:wixLocationFrontend,
+    onReturnHome:() => wixLocationFrontend.to(SITE_MAP.home)
+  });
+
+  html.onMessage(event => {
+    const message = parseMessage(event?.data);
+    if (message?.source !== BOOKING_SOURCE) return;
+    void host.handleMessage(message);
+  });
+
+  host.announceReady();
+  host.startFromLocation().catch(error => host.reportError(error));
 });

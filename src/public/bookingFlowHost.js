@@ -248,7 +248,7 @@ async function processMessage(msg){
 
 export function createBookingFlowHost({html:hostHtml,location,onReturnHome:returnHome}={}) {
   html=hostHtml;locationApi=location;onReturnHome=typeof returnHome==='function'?returnHome:()=>{};
-  if(!html||typeof html.postMessage!=='function')throw new Error('A Home HTML component is required for the booking flow.');
+  if(!html||typeof html.postMessage!=='function')throw new Error('The #bookingFlowEmbed HTML component is required for the booking flow.');
   if(!locationApi)throw new Error('Wix location context is required for the booking flow.');
   return {announceReady,startSearch,startFromLocation,handleMessage,reportError};
 }
@@ -266,15 +266,22 @@ async function startSearch(searchId){
 async function startFromLocation(){
   const query=locationApi.query||{};
   const searchId=text(query.searchId),queryCart=text(query.cartId),queryStep=text(query.step);
-  if(!searchId&&!queryCart&&!text(query.cartToken)&&!queryStep)return false;
   try{
     searchContext=searchId?readBookingSearch(searchId):null;
-    if(!searchContext)persistCart(queryCart||session.getItem('SKANDI_BOOKING_CART_ID')||'',text(query.cartToken)||session.getItem('SKANDI_BOOKING_CART_TOKEN')||'');
+    if(searchContext)persistCart('');
+    else if(searchId&&!queryCart)persistCart('');
+    else {
+      const restoredCart=session.getItem('SKANDI_BOOKING_CART_ID')||'';
+      persistCart(queryCart||restoredCart,text(query.cartToken)||session.getItem('SKANDI_BOOKING_CART_TOKEN')||'');
+    }
     if(cartId){
       const c=await withLoginCart(cart);
       if(c.productType==='CAR_RENTAL_ONLY'){locationApi.to(SITE_MAP.carRental+'?cartId='+encodeURIComponent(cartId));return true}
       step=allowedStep(queryStep||lastServerStep(c),c);
-    }else if(!searchContext)startupError='Your search session is missing or has expired. Return to Home and search again.';
+    }else if(!searchContext){
+      step=normalStep(queryStep||'offer');
+      startupError='Your search session is missing or has expired. Return to Home and search again.';
+    }else {step='offer';startupError=''}
     startupDone=true;
     if(ready)await goStep(step,{silentUrl:true});
     return true;

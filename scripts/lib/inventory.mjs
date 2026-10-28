@@ -71,7 +71,7 @@ export async function inventory(root) {
       continue;
     }
     if(/[?#]/.test(route)) throw new Error(`Query view ${key} has no canonical base route ${pathname}`);
-    const slug=kebab(key), directory=meta.sourceDirectory||`skandi-embeds/${slug}`;
+    const slug=meta.slug||kebab(key), directory=meta.sourceDirectory||`skandi-embeds/${slug}`;
     const stem=meta.stem||`skandi-${slug}`;
     if(!/^[a-z0-9-]+$/.test(slug) || !/^[a-z0-9-]+$/.test(stem) || !/^(?:skandi-embeds|riaintra-embeds)\/[a-z0-9/-]+$/.test(directory) || directory.includes('..')) throw new Error(`Unsafe source mapping: ${key}`);
     const folderKey=directory+'/'+stem;

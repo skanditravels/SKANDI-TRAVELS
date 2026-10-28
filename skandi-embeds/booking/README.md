@@ -8,7 +8,7 @@ The passenger booking journey is one Wix page at `/booking` with one HTML compon
 - `skandi-booking-flow.css` contains the full booking interface styling.
 - `skandi-booking-flow.js` is the single merged journey runtime sidecar.
 
-The `bookingFlow` entry in `src/public/siteMap.js` maps `/booking`, `#bookingFlowEmbed`, the existing Wix controller and this one source triplet. The builder compiles one page to `dist/booking-flow/index.html`.
+The `bookingFlow` entry in `src/public/siteMap.js` maps `/booking`, `#bookingFlowEmbed`, the existing Wix controller and this one source triplet. The builder compiles one page to `dist/booking/index.html`.
 
 The Stripe.js dependency stays as a direct script include in the HTML source. The local JavaScript sidecar is supplied to the builder from Git; it is not a second Wix embed.
 

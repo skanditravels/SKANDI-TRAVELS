@@ -75,5 +75,8 @@ test('master derives page identity from canonical route and owning component, an
   context.wixSiteFrontend.currentPage={url:'/unknown',name:'Unknown',type:'static',isHomePage:false};assert.equal(context.getIdentity({id:'searchResultsEmbed'}).allowed,false);
   context.wixSiteFrontend.currentPage.url=registry.SITE_MAP.alteaReservations;assert.equal(context.getIdentity({id:'alteaReservationsEmbed'},{authorized:false}).allowed,false);assert.equal(context.getIdentity({id:'alteaReservationsEmbed'},{authorized:true}).family,'altea');
   context.wixSiteFrontend.currentPage.url=registry.SITE_MAP.riaintra;assert.equal(context.getIdentity({id:'staffLoginEmbed'},{authorized:false}).allowed,true);
-  context.wixSiteFrontend.currentPage.url=registry.APP_ROUTES.bookingFlow;assert.equal(context.getIdentity({id:'bookingOfferEmbed'}).allowed,false);
+  context.wixSiteFrontend.currentPage.url=registry.APP_ROUTES.bookingFlow;
+  const bookingIdentity=context.getIdentity({id:'bookingFlowEmbed'});
+  assert.equal(bookingIdentity.allowed,true);assert.equal(bookingIdentity.key,'bookingFlow');assert.equal(bookingIdentity.route,'/booking');
+  assert.equal(context.getIdentity({id:'bookingOfferEmbed'}).allowed,false);
 });

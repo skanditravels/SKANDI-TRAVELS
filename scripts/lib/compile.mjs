@@ -295,10 +295,6 @@ export async function compilePage(root,page) {
   const shellJS=await read(root,'skandi-embeds/global/skandi-shell.js');new Script(shellJS,{filename:'skandi-shell.js'});
   const render=p=>{
     if(!p)return '';
-    if(page.key==='home'&&p.key==='home') {
-      const bookingPart=parts.find(part=>part.key==='booking-flow');
-      return `<div id="${p.mount}"><div id="skandi-home-content">${p.html}</div>${bookingPart?`<div id="${bookingPart.mount}" hidden>${bookingPart.html}</div>`:''}</div>`;
-    }
     return `<div id="${p.mount}">${p.html}</div>`;
   };
   const header=parts.find(p=>p.key==='header'),footer=parts.find(p=>p.key==='footer'),mobile=parts.find(p=>p.key==='mobile-nav');

@@ -29,24 +29,29 @@ function masterLinkByLabels(labels, fallback) {
   const hit = flattenMasterLinks().find(row => wanted.some(label => String(row?.label||"").toLowerCase().includes(label)));
   return String(hit?.path || fallback || "/");
 }
-function offersRoute() { return masterRoute("offers"); }
+function bookingRoute() { return masterRoute("bookingFlow", "/booking"); }
 function travelInfoRoute() { return masterRoute("travelInfo"); }
 function destinationsRoute() { return masterRoute("destinations"); }
 function routeByKey(key) {
-  if (key === "offers") return offersRoute();
+  if (key === "offers") return bookingRoute();
   if (key === "travelInfo") return travelInfoRoute();
   if (key === "destinations") return destinationsRoute();
   return masterRoute(key);
 }
 function defaultContentPath(kind) {
-  if (kind === "offer") return offersRoute();
+  if (kind === "offer") return bookingRoute();
   if (kind === "hotel") return masterRoute("hotels");
   if (kind === "inspiration") return masterRoute("voy");
   return destinationsRoute();
 }
 function safeRouteValue(path, fallback="") {
   const value = String(path || "").trim();
-  return /^\/(?!\/)/.test(value) && !/[\\\u0000-\u0020]/.test(value) && !/%5c|%0[0-9a-f]|%1[0-9a-f]/i.test(value) ? value : fallback;
+  if (!/^\/(?!\/)/.test(value) || /[\\\u0000-\u0020]/.test(value) || /%5c|%0[0-9a-f]|%1[0-9a-f]/i.test(value)) return fallback;
+  if (/^\/offers(?:\/|[?#]|$)/i.test(value)) {
+    const suffixAt = value.search(/[?#]/);
+    return bookingRoute() + (suffixAt >= 0 ? value.slice(suffixAt) : "");
+  }
+  return value;
 }
 function postToParent(message) {
   // Wix HTML Components can be hosted on a different origin than the surrounding Wix page.
@@ -2607,12 +2612,6 @@ function requestBootstrap(refresh=false) {
       childAges:[...state.childAges],infantAges:[...state.infantAges],rooms:1}
   });
 }
-function setBookingView(active){
-  const home=document.getElementById("skandi-home-content");
-  const booking=document.getElementById("skandi-booking-flow-root");
-  if(home){home.hidden=!!active;home.style.display=active?"none":"";}
-  if(booking){booking.hidden=!active;booking.style.display=active?"":"none";}
-}
 function stayGuestsForHome() {
   return [...Array.from({length:state.adults},()=>({type:"adult"})),
     ...[...state.childAges,...state.infantAges].map(age=>({type:"child",age}))];
@@ -3254,7 +3253,7 @@ function renderOffers(){
     const price=recordPrice(o)||money(o.price||{});
     const tags=(o.tags||[]).slice(0,3);
     return `
-    <article class="offer-card" data-search='${escAttr(JSON.stringify(o.search||{}))}' data-path="${escAttr(safeRouteValue(o.href||o.path,offersRoute()))}">
+    <article class="offer-card" data-search='${escAttr(JSON.stringify(o.search||{}))}' data-path="${escAttr(safeRouteValue(o.href||o.path,bookingRoute()))}">
       <div class="offer-img" style="${escAttr(imageStyle(o.imageUrl||o.image))}"><div class="card-code">${esc(o.badge||o.destinationCode||skandiTranslate("home.card.offer"))}</div></div>
       <div class="offer-body">
         <h4>${esc(localizedRecordValue(o,"title","SKANDI Offer"))}</h4>
@@ -3265,7 +3264,7 @@ function renderOffers(){
     </article>`;
   }).join("");
   grid.querySelectorAll(".offer-card").forEach(card=>card.onclick=()=>{
-    send("HOME_NAVIGATE",{path:safeRouteValue(card.dataset.path,offersRoute())});
+    send("HOME_NAVIGATE",{path:safeRouteValue(card.dataset.path,bookingRoute())});
   });
 }
 function renderInspiration(){
@@ -3820,11 +3819,6 @@ window.addEventListener("message",event=>{
     state.hostReady=msg.payload||{};
     MASTER_CONTEXT.routes={...MASTER_CONTEXT.routes,...(msg.payload?.routes||{})};
     if(!state.hasBootstrapped)requestBootstrap();
-  }
-  if(msg.type==="HOME_BOOKING_MODE")setBookingView(true);
-  if(msg.type==="HOME_CONTENT_MODE"){
-    setBookingView(false);
-    requestBootstrap(true);
   }
   if(msg.type==="HOME_LOCATION_DATA"&&releaseRequest("locations",msg.requestId))renderLocationData(msg.payload||{});
   if(msg.type==="HOME_BOOTSTRAP_RESULT"&&msg.requestId===state.bootstrapId){

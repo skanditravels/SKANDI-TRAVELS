@@ -128,7 +128,7 @@ const MASTER_CONFIG = Object.freeze({
             { label:"Hotels", path:SITE_MAP.hotels },
             { label:"Tours & Activities", path:SITE_MAP.tours },
             { label:"Car Rental", path:SITE_MAP.carRental },
-            { label:"Last Chance", path:SITE_MAP.offers }
+            { label:"Last Chance", path:APP_ROUTES.bookingFlow }
           ])
         }),
         Object.freeze({
@@ -248,7 +248,6 @@ const MOBILE_FOOTER_GATE_PATHS = Object.freeze(new Set([
   "/tours",
   "/activities",
   "/transfers",
-  "/offers",
   "/my-profile/support",
   "/riaintra/success-factors",
   "/riaintra/success-factors/legal-internal",

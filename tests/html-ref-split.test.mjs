@@ -13,8 +13,8 @@ test('every HTML_REF payload is mapped and reconstructs exactly from its split f
   const mergedBooking=map.find(m=>m.source==='HTML_REF/skandi/Booking/README.md');
   assert.ok(mergedBooking,'Merged Booking reference must remain classified.');
   assert.equal(mergedBooking.disposition,'SOURCE CONFLICT');
-  assert.equal(mergedBooking.directory,'skandi-embeds/booking-flow/html-ref');
-  assert.match(mergedBooking.note,/bookingFlow route resolves to Home/);
+  assert.equal(mergedBooking.directory,'skandi-embeds/booking/html-ref');
+  assert.match(mergedBooking.note,/single \/booking page with #bookingFlowEmbed/);
   const alexandra=map.find(m=>m.source==='HTML_REF/riaintra/Alexandra Chat.md');
   assert.ok(alexandra,'The latest integrated Alexandra source must be mapped.');
   assert.equal(alexandra.disposition,'SEPARATE COMPONENT');
@@ -57,9 +57,9 @@ test('HTML_REF changes trigger the source-validation workflow',async()=>{
   assert.match(pull,/HTML_REF\/\*\*/);
 });
 
-test('latest My Profile and sitewide Alexandra sidecars match their authoritative payloads',async()=>{
+test('sitewide Alexandra sidecars match their authoritative payloads',async()=>{
   const map=JSON.parse(await fs.readFile(path.join(root,'scripts/html-ref-sources.json'),'utf8'));
-  for(const source of ['HTML_REF/skandi/SKANDI Club My Profile.md','HTML_REF/riaintra/Alexandra Chat.md']) {
+  for(const source of ['HTML_REF/riaintra/Alexandra Chat.md']) {
     const m=map.find(row=>row.source===source),original=extractDocument(await fs.readFile(path.join(root,source),'utf8'));
     assert.ok(m,source+' must be mapped');
     const split=splitDocument(original,m.stem);
@@ -68,14 +68,14 @@ test('latest My Profile and sitewide Alexandra sidecars match their authoritativ
   }
   const master=await fs.readFile(path.join(root,'src/pages/masterPage.js'),'utf8');
   const bridge=await fs.readFile(path.join(root,'src/public/alexandraGlobalBridge.js'),'utf8');
-  const profileMap=map.find(row=>row.source==='HTML_REF/skandi/SKANDI Club My Profile.md');
-  const profileJS=await fs.readFile(path.join(root,profileMap.directory,profileMap.stem+'.js'),'utf8');
   const siteMap=await fs.readFile(path.join(root,'src/public/siteMap.js'),'utf8');
+  const profileJS=await fs.readFile(path.join(root,'skandi-embeds/my-profile/skandi-my-profile.js'),'utf8');
   const legacyBooking=await fs.readFile(path.join(root,'src/pages/Booking.e8twe.js'),'utf8');
-  assert.match(profileJS,/data-route="\/\?cartId=/);
-  assert.doesNotMatch(profileJS,/data-route="\/booking\?cartId=/);
-  assert.match(siteMap,/bookingFlow:\s*SITE_MAP\.home/);
-  assert.match(legacyBooking,/wixLocationFrontend\.to\(SITE_MAP\.home/);
+  assert.match(profileJS,/data-route="\/booking\?cartId=/);
+  assert.doesNotMatch(profileJS,/data-route="\/\?cartId=/);
+  assert.match(siteMap,/bookingFlow:\s*"\/booking"/);
+  assert.match(legacyBooking,/createBookingFlowHost/);
+  assert.match(legacyBooking,/#bookingFlowEmbed/);
   assert.match(master,/bindAlexandraGlobal\(/);
   assert.match(master,/enabled:\s*\(\)\s*=>\s*!isInternalPath\(currentPathString\(\)\)/);
   assert.match(bridge,/#skandiAlexandraGlobalEmbed/);

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>SKANDI | Live Flight Board</title>
+<title>SKANDI</title>
 <style>
 :root{color-scheme:dark;--navy:#022e64;--deep:#041d3b;--aqua:#5fc7cf;--white:#f8fbff;--muted:#bfd0e2;--line:rgba(232,244,255,.14)}
 *{box-sizing:border-box}
@@ -36,16 +36,16 @@ body{min-height:100vh;min-height:100svh}
 <main id="skandi-receiver-status" role="status" aria-live="polite" aria-busy="true">
   <section class="skandi-loader-card" aria-labelledby="skandi-loader-title">
     <div class="skandi-brand">
-      <img id="skandi-loader-logo" src="https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/logos/SKANDI_TRAVELS-LIGHT-SIDE-WAVE.svg" alt="SKANDI Travels logo">
-      <span id="skandi-loader-fallback" hidden>SKANDI</span>
+      <img id="skandi-loader-logo" alt="" hidden>
+      <span id="skandi-loader-fallback" aria-label="SKANDI">SKANDI</span>
     </div>
-    <p id="skandi-loader-eyebrow" class="skandi-loader-eyebrow">Live Flight Board</p>
-    <h1 id="skandi-loader-title">Scanning the skies</h1>
-    <p id="skandi-loader-copy">Waking up the departure board and checking gate assignments…</p>
+    <p id="skandi-loader-eyebrow" class="skandi-loader-eyebrow">SKANDI GROUP</p>
+    <h1 id="skandi-loader-title">Preparing your SKANDI page</h1>
+    <p id="skandi-loader-copy">Connecting securely to the latest page experience.</p>
     <div id="skandi-loader-progress" class="skandi-progress" aria-hidden="true"><span></span></div>
-    <p id="skandi-loader-foot" class="skandi-loader-foot">Connecting to Air Traffic Control</p>
+    <p id="skandi-loader-foot" class="skandi-loader-foot">Loading the current published version</p>
     <p id="skandi-loader-error" hidden></p>
-    <button id="skandi-loader-retry" type="button" hidden>Hail the tower again</button>
+    <button id="skandi-loader-retry" type="button" hidden>Try again</button>
   </section>
 </main>
 <script>
@@ -77,18 +77,16 @@ body{min-height:100vh;min-height:100svh}
     const keys=family==='riaintra'?['riaintra']:family==='altea'?['altea','alteaWhite']:['customerFooter','skandiGroupWhite'];
     const logos=brand?.assets?.logos||{};
     brandEyebrow.textContent=labels[family]||String(brand?.groupName||'SKANDI Group');
-    if(logoFallback){
-      logoFallback.textContent=family==='public'?'SKANDI':(labels[family]||'SKANDI');
-      logoFallback.setAttribute('aria-label',labels[family]||'SKANDI');
-    }
-    document.title=(labels[family]||'SKANDI')+' | Live Flight Board';
+    logoFallback.textContent=family==='public'?'SKANDI':(labels[family]||'SKANDI');
+    logoFallback.setAttribute('aria-label',labels[family]||'SKANDI');
+    document.title=(labels[family]||'SKANDI')+' | Loading';
     const candidate=keys.map(key=>logos[key]).find(value=>typeof value==='string'&&value);
-    if(!candidate||!logo)return;
+    if(!candidate)return;
     try {
       const parsed=new URL(candidate);
       if(parsed.protocol!=='https:'||parsed.hostname!=='muvpffdnugzxjbnbpgac.supabase.co'||!parsed.pathname.startsWith('/storage/v1/object/public/skandi-public-assets/')||! /\.(svg|png|webp)$/i.test(parsed.pathname))return;
-      logo.onload=()=>{logo.hidden=false;if(logoFallback)logoFallback.hidden=true;};
-      logo.onerror=()=>{logo.hidden=true;if(logoFallback)logoFallback.hidden=false;};
+      logo.onload=()=>{logo.hidden=false;logoFallback.hidden=true;};
+      logo.onerror=()=>{logo.hidden=true;logoFallback.hidden=false;};
       logo.alt=labels[family]+' logo';
       logo.src=parsed.href;
     } catch(_) {}
@@ -97,19 +95,19 @@ body{min-height:100vh;min-height:100svh}
     clearInterval(timer);window.removeEventListener('message',receive);
     console.error('[SKANDI receiver]',error);
     screen.setAttribute('role','alert');screen.setAttribute('aria-live','assertive');screen.setAttribute('aria-busy','false');
-    title.textContent='Grounded at the gate';
-    copy.textContent='We lost radar contact with the departure board before takeoff.';
-    foot.textContent='Please try again. If the turbulence continues, contact the SKANDI desk.';
+    title.textContent='This page could not load';
+    copy.textContent='The secure page connection stopped before your page was ready.';
+    foot.textContent='Please try again. If the problem continues, contact SKANDI support.';
     errorDetail.textContent=String(error?.message||error||'Unknown loading error').slice(0,360);errorDetail.hidden=false;
     progress.hidden=true;retry.hidden=false;retry.onclick=()=>location.reload();
-    document.title='Flight Board Unavailable | SKANDI';
+    document.title='Page unavailable | SKANDI';
   }
   async function get(url) {
     const abort=new AbortController(),timeout=setTimeout(()=>abort.abort(),12000);
     try {const r=await fetch(url,{mode:'cors',credentials:'omit',cache:'no-store',signal:abort.signal});if(!r.ok)throw new Error('Git build returned HTTP '+r.status);return await r.text();}finally{clearTimeout(timeout);}
   }
   async function resolve(root,identity) {
-    setLoadingStage('Checking the flight plan','Confirming route coordinates and live terminal feeds.','Verifying flight manifest');
+    setLoadingStage('Checking your page','Confirming the current published page and route.','Checking the latest verified build');
     const manifest=JSON.parse(await get(root+'dist/manifest.json'));
     if(manifest.schemaVersion!==2||!Array.isArray(manifest.pages))throw new Error('Unsupported build manifest.');
     const matches=manifest.pages.filter(p=>p.key===identity.key);
@@ -120,9 +118,9 @@ body{min-height:100vh;min-height:100svh}
     if(!/^[a-z0-9-]+$/.test(page.slug)||page.output!=='dist/'+page.slug+'/index.html')throw new Error('Invalid canonical build path.');
     if(page.requiresStaff&&identity.staffAuthorized!==true)throw new Error('An authorized staff session is required.');
     if(!/^[a-f0-9]{64}$/.test(page.sha256))throw new Error('Missing build integrity record.');
-    setLoadingStage('Flipping the split-flap board','Pulling live gate assignments, departure times, and flight status.','Syncing live departures & arrivals');
+    setLoadingStage('Loading your experience','Opening the page content from the verified site build.','Loading page content securely');
     const html=await get(root+page.output);
-    setLoadingStage('Final pre-flight check','Cross-checking live telemetry before lighting up the board.','Cleared for takeoff');
+    setLoadingStage('Securing your page','Checking that the published content matches its integrity record.','Verifying page integrity');
     const digest=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(html));
     const actual=Array.from(new Uint8Array(digest),x=>x.toString(16).padStart(2,'0')).join('');
     if(actual!==page.sha256)throw new Error('Git delivery is out of date; refresh after the build has propagated.');
@@ -141,7 +139,7 @@ body{min-height:100vh;min-height:100svh}
     if(EXPECTED&&(identity.key!==EXPECTED.key||identity.route!==EXPECTED.route||identity.family!==EXPECTED.family||identity.chrome!==EXPECTED.chrome||(EXPECTED.embedIds.length>0&&!EXPECTED.embedIds.includes(identity.embedId)))){fail(new Error('This receiver is assigned to a different page or Wix component.'));return;}
     loading=true;clearInterval(timer);
     screen.setAttribute('aria-busy','true');
-    setLoadingStage('Contacting the control tower','Cleared for approach. Tuning into the live flight feed.','Establishing radar lock');
+    setLoadingStage('Preparing your page','We have your page identity. Checking the latest approved experience.','Starting secure page delivery');
     let html,last;
     for(const root of ROOTS)try{html=await resolve(root,identity);break;}catch(e){last=e;}
     if(!html){fail(last||new Error('Git build unavailable.'));return;}
@@ -152,7 +150,7 @@ body{min-height:100vh;min-height:100svh}
     document.open();document.write(html);document.close();
   }
   function request() {
-    if(++attempts>40){fail(new Error('Grounded at the gate'));return;}
+    if(++attempts>40){fail(new Error('The Wix controller did not complete the startup handshake.'));return;}
     window.parent.postMessage({source:SOURCE,type:'MASTER_CONFIG_REQUEST',payload:{receiverProtocol:1,receiverRequestId:nonce}},'*');
   }
   window.addEventListener('message',receive);timer=setInterval(request,500);request();

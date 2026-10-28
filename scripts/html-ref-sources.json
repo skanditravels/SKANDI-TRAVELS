@@ -232,56 +232,56 @@
   },
   {
     "source": "HTML_REF/skandi/Booking/Booking.apis.md",
-    "directory": "skandi-embeds/booking-flow/components/apis",
+    "directory": "skandi-embeds/booking/components/apis",
     "stem": "skandi-booking-apis",
     "disposition": "SEPARATE COMPONENT",
     "note": "Preserves the existing eight-component Booking controller; no single-iframe migration is implied."
   },
   {
     "source": "HTML_REF/skandi/Booking/Booking.confirmation.md",
-    "directory": "skandi-embeds/booking-flow/components/confirmation",
+    "directory": "skandi-embeds/booking/components/confirmation",
     "stem": "skandi-booking-confirmation",
     "disposition": "SEPARATE COMPONENT",
     "note": "Preserves the existing eight-component Booking controller; no single-iframe migration is implied."
   },
   {
     "source": "HTML_REF/skandi/Booking/Booking.documents.md",
-    "directory": "skandi-embeds/booking-flow/components/documents",
+    "directory": "skandi-embeds/booking/components/documents",
     "stem": "skandi-booking-documents",
     "disposition": "SEPARATE COMPONENT",
     "note": "Preserves the existing eight-component Booking controller; no single-iframe migration is implied."
   },
   {
     "source": "HTML_REF/skandi/Booking/Booking.extras.md",
-    "directory": "skandi-embeds/booking-flow/components/extras",
+    "directory": "skandi-embeds/booking/components/extras",
     "stem": "skandi-booking-extras",
     "disposition": "SEPARATE COMPONENT",
     "note": "Preserves the existing eight-component Booking controller; no single-iframe migration is implied."
   },
   {
     "source": "HTML_REF/skandi/Booking/Booking.offer.md",
-    "directory": "skandi-embeds/booking-flow/components/offer",
+    "directory": "skandi-embeds/booking/components/offer",
     "stem": "skandi-booking-offer",
     "disposition": "SEPARATE COMPONENT",
     "note": "Preserves the existing eight-component Booking controller; no single-iframe migration is implied."
   },
   {
     "source": "HTML_REF/skandi/Booking/Booking.payment.md",
-    "directory": "skandi-embeds/booking-flow/components/payment",
+    "directory": "skandi-embeds/booking/components/payment",
     "stem": "skandi-booking-payment",
     "disposition": "SEPARATE COMPONENT",
     "note": "Preserves the existing eight-component Booking controller; no single-iframe migration is implied."
   },
   {
     "source": "HTML_REF/skandi/Booking/Booking.seats.md",
-    "directory": "skandi-embeds/booking-flow/components/seats",
+    "directory": "skandi-embeds/booking/components/seats",
     "stem": "skandi-booking-seats",
     "disposition": "SEPARATE COMPONENT",
     "note": "Preserves the existing eight-component Booking controller; no single-iframe migration is implied."
   },
   {
     "source": "HTML_REF/skandi/Booking/Booking.transfer.md",
-    "directory": "skandi-embeds/booking-flow/components/transfer",
+    "directory": "skandi-embeds/booking/components/transfer",
     "stem": "skandi-booking-transfer",
     "disposition": "SEPARATE COMPONENT",
     "note": "Preserves the existing eight-component Booking controller; no single-iframe migration is implied."
@@ -477,10 +477,10 @@
   },
   {
     "source": "HTML_REF/skandi/Booking/README.md",
-    "directory": "skandi-embeds/booking-flow/html-ref",
+    "directory": "skandi-embeds/booking/html-ref",
     "stem": "skandi-booking-merged-reference",
     "disposition": "SOURCE CONFLICT",
-    "note": "Merged Booking proposal retained for source reference; the active flow is embedded in Home and the legacy bookingFlow route resolves to Home."
+    "note": "Merged Booking reference retained for provenance; the active flow is the single /booking page with #bookingFlowEmbed."
   },
   {
     "source": "HTML_REF/riaintra/Alexandra Chat.md",
