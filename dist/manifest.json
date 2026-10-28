@@ -2016,8 +2016,8 @@
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
       "receiver": "skandi-embeds/ops-control/skandi-ops-control.receiver.html",
-      "sha256": "1cc03dbe79165c51ee8804d568e034a43697b4318e00b883ca2a7dd6432bbb57",
-      "bytes": 146763
+      "sha256": "ae0ccc08d107cdcefed987e030e9a6ae3aadd32cf321c6be50d356d6c00cbdfc",
+      "bytes": 151395
     },
     {
       "key": "inventoryControl",
@@ -3052,11 +3052,11 @@
     },
     {
       "key": "myRoster",
-      "route": "/riaintra/success-factors/my-roster",
+      "route": "/riaintra/success-factors/altea/my-roster",
       "slug": "my-roster",
       "title": "MyRoster",
-      "family": "riaintra",
-      "chrome": "riaintra",
+      "family": "altea",
+      "chrome": "altea",
       "sourceDirectory": "skandi-embeds/my-roster",
       "stem": "skandi-my-roster",
       "controller": "src/pages/MyRoster.l8p5m.js",
@@ -3093,6 +3093,8 @@
         "MYROSTER_CLOCK_EVENT_REQUEST",
         "MYROSTER_ERROR",
         "MYROSTER_FAILED",
+        "MYROSTER_FLIGHT_SEARCH_REQUEST",
+        "MYROSTER_FLIGHT_SEARCH_RESULTS",
         "MYROSTER_LOGOUT",
         "MYROSTER_NAVIGATE",
         "MYROSTER_READY",
@@ -3108,8 +3110,8 @@
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
       "receiver": "skandi-embeds/my-roster/skandi-my-roster.receiver.html",
-      "sha256": "234b0cec299cf5916ce212ec7c4d68a6811833eea26ee8219d0c713eef153bf2",
-      "bytes": 87637
+      "sha256": "ce630af0d77bab6b64e0edf8507b29bf7e6eab366a8d681809b270472165c895",
+      "bytes": 111481
     },
     {
       "key": "groupTalk",
