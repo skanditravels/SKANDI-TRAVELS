@@ -31,7 +31,7 @@ Route authority: `src/public/siteMap.js`. This file is generated evidence, not r
 | ourNetwork | /about/our-network | skandi-embeds/our-network/skandi-our-network.{html,css,js} | public / public | UNVERIFIED | PENDING SOURCE |
 | legal | /about/legal | skandi-embeds/legal/skandi-legal.{html,css,js} | public / public | src/pages/Legal.nvnld.js | BUILT |
 | policies | /about/legal/policies | skandi-embeds/policies/skandi-policies.{html,css,js} | public / public | src/pages/Policies.sgcey.js | BUILT |
-| cookiePreferences | /about/legal/cookie-preferences | skandi-embeds/cookie-preferences/skandi-cookie-preferences.{html,css,js} | public / public | src/pages/masterPage.js | BUILT |
+| cookiePreferences | /about/legal/cookie-preferences | skandi-embeds/cookie-preferences/skandi-cookie-preferences.{html,css,js} | public / public | src/pages/masterPage.js | BLOCKED INTEGRATION |
 | riaintra | /riaintra | riaintra-embeds/riaintra/riaintra.{html,css,js} | riaintra / none | src/pages/RIAINTRA.rc14z.js | BUILT |
 | staffLogin | /riaintra | Alias of riaintra | riaintra / none | src/pages/RIAINTRA.rc14z.js | ALIAS |
 | successFactors | /riaintra/success-factors | riaintra-embeds/success-factors/success-factors.{html,css,js} | riaintra / riaintra | src/pages/Success Factors.sh6tw.js | BUILT |
@@ -39,7 +39,7 @@ Route authority: `src/public/siteMap.js`. This file is generated evidence, not r
 | alteaLaunchpad | /riaintra/success-factors/altea | skandi-embeds/altea-launchpad/skandi-altea-launchpad.{html,css,js} | altea / altea | src/pages/ALTEA Launchpad.ajs4y.js | BUILT |
 | alteaReservations | /riaintra/success-factors/altea/reservations | skandi-embeds/altea-reservations/skandi-altea-reservations.{html,css,js} | altea / altea | src/pages/Reservations.ly2n8.js | BUILT |
 | opsControl | /riaintra/success-factors/altea/ops | skandi-embeds/ops-control/skandi-ops-control.{html,css,js} | altea / altea | src/pages/OPS Control.uposx.js | BUILT |
-| eos | /riaintra/success-factors/altea/eos | skandi-embeds/eos/skandi-eos.{html,css,js} | altea / altea | src/pages/masterPage.js | BUILT |
+| eos | /riaintra/success-factors/altea/eos | skandi-embeds/eos/skandi-eos.{html,css,js} | altea / altea | src/pages/masterPage.js | BLOCKED INTEGRATION |
 | inventoryControl | /riaintra/success-factors/altea/inventory-control | skandi-embeds/inventory-control/skandi-inventory-control.{html,css,js} | altea / altea | src/pages/Inventory Control.jsdik.js | FAILED |
 | uniformCenter | /riaintra/success-factors/uniform | skandi-embeds/uniform-center/skandi-uniform-center.{html,css,js} | riaintra / riaintra | src/pages/Uniform Center.lukfc.js | BUILT |
 | uniformControl | /riaintra/success-factors/uniform/admin-control | skandi-embeds/uniform-control/skandi-uniform-control.{html,css,js} | riaintra / riaintra | src/pages/Uniform Control.yx92b.js | PENDING SOURCE |
@@ -62,7 +62,7 @@ Route authority: `src/public/siteMap.js`. This file is generated evidence, not r
 | passportVisa | /travel-info/passport-visa | skandi-embeds/passport-visa/skandi-passport-visa.{html,css,js} | public / public | src/pages/Passport & Visa.zohjw.js | BUILT |
 | baggageAllowance | /travel-info/baggage-allowance | skandi-embeds/baggage-allowance/skandi-baggage-allowance.{html,css,js} | public / public | src/pages/Baggage Allowance.tf8xc.js | BUILT |
 | travelInsurance | /travel-info/insurance | skandi-embeds/travel-insurance/skandi-travel-insurance.{html,css,js} | public / public | src/pages/Insurance.ojo62.js | BUILT |
-| specialAssistance | /travel-info/special-assistance | skandi-embeds/special-assistance/skandi-special-assistance.{html,css,js} | public / public | src/pages/masterPage.js | BUILT |
+| specialAssistance | /travel-info/special-assistance | skandi-embeds/special-assistance/skandi-special-assistance.{html,css,js} | public / public | src/pages/masterPage.js | BLOCKED INTEGRATION |
 | flightStatus | /travel-info/flight-status | skandi-embeds/flight-status/flight-status.{html,css,js} | public / public | src/pages/Flight Status.cn7ah.js | BUILT |
 
 ## Installation boundary
@@ -118,9 +118,12 @@ These actual repository controllers are preserved. No new route or build is inve
 - **support**: NOT READY: Help Center and support chat are separate HTML components; preserve them until a verified single-component migration.
 - **giftCard**: NOT READY: No verified canonical controller mapping.
 - **ourNetwork**: NOT READY: No verified canonical controller mapping.
+- **cookiePreferences**: NOT READY: src/backend/SKANDI_CORE/eos.web.js: imported export getEosBootstrap is absent; src/backend/SKANDI_CORE/eos.web.js: imported export searchEosFlights is absent; src/backend/SKANDI_CORE/eos.web.js: imported export searchEosStations is absent; src/backend/SKANDI_CORE/eos.web.js: imported export createEosClockEvent is absent; src/backend/SKANDI_CORE/eos.web.js: imported export submitEosOpsAction is absent
+- **eos**: NOT READY: src/backend/SKANDI_CORE/eos.web.js: imported export getEosBootstrap is absent; src/backend/SKANDI_CORE/eos.web.js: imported export searchEosFlights is absent; src/backend/SKANDI_CORE/eos.web.js: imported export searchEosStations is absent; src/backend/SKANDI_CORE/eos.web.js: imported export createEosClockEvent is absent; src/backend/SKANDI_CORE/eos.web.js: imported export submitEosOpsAction is absent
 - **inventoryControl**: NOT READY: [inventoryControl / inventory-control] skandi-embeds/inventory-control/skandi-inventory-control.html, skandi-embeds/inventory-control/skandi-inventory-control.css, skandi-embeds/inventory-control/skandi-inventory-control.js: Cannot use import statement outside a module
 - **uniformControl**: NOT READY: PENDING SOURCE
 - **alteaTimatic**: NOT READY: No verified canonical controller mapping.
 - **docunetAdmin**: NOT READY: [docunetAdmin / docunet-admin] skandi-embeds/docunet-admin/skandi-docunet-admin.html, skandi-embeds/docunet-admin/skandi-docunet-admin.css, skandi-embeds/docunet-admin/skandi-docunet-admin.js: skandi-embeds/docunet-admin/skandi-docunet-admin.html: nested iframe is not supported; retain the existing Wix integration
 - **serviceDesk**: NOT READY: No verified canonical controller mapping.
 - **careers**: NOT READY: PENDING SOURCE
+- **specialAssistance**: NOT READY: src/backend/SKANDI_CORE/eos.web.js: imported export getEosBootstrap is absent; src/backend/SKANDI_CORE/eos.web.js: imported export searchEosFlights is absent; src/backend/SKANDI_CORE/eos.web.js: imported export searchEosStations is absent; src/backend/SKANDI_CORE/eos.web.js: imported export createEosClockEvent is absent; src/backend/SKANDI_CORE/eos.web.js: imported export submitEosOpsAction is absent

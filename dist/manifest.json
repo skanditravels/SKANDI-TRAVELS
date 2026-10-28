@@ -1493,14 +1493,20 @@
       "components": [],
       "binding": "explicit",
       "requiresStaff": false,
-      "status": "BUILT",
+      "status": "BLOCKED INTEGRATION",
       "files": [
         "skandi-embeds/cookie-preferences/skandi-cookie-preferences.html",
         "skandi-embeds/cookie-preferences/skandi-cookie-preferences.css",
         "skandi-embeds/cookie-preferences/skandi-cookie-preferences.js"
       ],
       "missing": [],
-      "issues": [],
+      "issues": [
+        "src/backend/SKANDI_CORE/eos.web.js: imported export getEosBootstrap is absent",
+        "src/backend/SKANDI_CORE/eos.web.js: imported export searchEosFlights is absent",
+        "src/backend/SKANDI_CORE/eos.web.js: imported export searchEosStations is absent",
+        "src/backend/SKANDI_CORE/eos.web.js: imported export createEosClockEvent is absent",
+        "src/backend/SKANDI_CORE/eos.web.js: imported export submitEosOpsAction is absent"
+      ],
       "backend": [
         "src/backend/SKANDI_CORE/customerSession.web.js",
         "src/backend/SKANDI_CORE/staffAuth.web.js",
@@ -1621,13 +1627,17 @@
         "SUPPORT_CHAT_ERROR",
         "UPDATE_SETTINGS"
       ],
-      "output": "dist/cookie-preferences/index.html",
+      "output": null,
       "dynamic": false,
       "sourceStatus": "COMPLETE SOURCE",
-      "blockers": [],
-      "receiver": "skandi-embeds/cookie-preferences/skandi-cookie-preferences.receiver.html",
-      "sha256": "e441971c61682926a31d1d7878289fa2fd4ea8fb3d7122476c791352d9899fae",
-      "bytes": 151405
+      "blockers": [
+        "src/backend/SKANDI_CORE/eos.web.js: imported export getEosBootstrap is absent",
+        "src/backend/SKANDI_CORE/eos.web.js: imported export searchEosFlights is absent",
+        "src/backend/SKANDI_CORE/eos.web.js: imported export searchEosStations is absent",
+        "src/backend/SKANDI_CORE/eos.web.js: imported export createEosClockEvent is absent",
+        "src/backend/SKANDI_CORE/eos.web.js: imported export submitEosOpsAction is absent"
+      ],
+      "retainedArtifact": true
     },
     {
       "key": "riaintra",
@@ -2055,14 +2065,20 @@
       "components": [],
       "binding": "explicit",
       "requiresStaff": true,
-      "status": "BUILT",
+      "status": "BLOCKED INTEGRATION",
       "files": [
         "skandi-embeds/eos/skandi-eos.html",
         "skandi-embeds/eos/skandi-eos.css",
         "skandi-embeds/eos/skandi-eos.js"
       ],
       "missing": [],
-      "issues": [],
+      "issues": [
+        "src/backend/SKANDI_CORE/eos.web.js: imported export getEosBootstrap is absent",
+        "src/backend/SKANDI_CORE/eos.web.js: imported export searchEosFlights is absent",
+        "src/backend/SKANDI_CORE/eos.web.js: imported export searchEosStations is absent",
+        "src/backend/SKANDI_CORE/eos.web.js: imported export createEosClockEvent is absent",
+        "src/backend/SKANDI_CORE/eos.web.js: imported export submitEosOpsAction is absent"
+      ],
       "backend": [
         "src/backend/SKANDI_CORE/customerSession.web.js",
         "src/backend/SKANDI_CORE/staffAuth.web.js",
@@ -2183,13 +2199,17 @@
         "SUPPORT_CHAT_ERROR",
         "UPDATE_SETTINGS"
       ],
-      "output": "dist/eos/index.html",
+      "output": null,
       "dynamic": false,
       "sourceStatus": "COMPLETE SOURCE",
-      "blockers": [],
-      "receiver": "skandi-embeds/eos/skandi-eos.receiver.html",
-      "sha256": "bd4cbd5ee1cd0e0452bef3285876cd92e20022a392ce21e17d3734759af7fcb4",
-      "bytes": 76158
+      "blockers": [
+        "src/backend/SKANDI_CORE/eos.web.js: imported export getEosBootstrap is absent",
+        "src/backend/SKANDI_CORE/eos.web.js: imported export searchEosFlights is absent",
+        "src/backend/SKANDI_CORE/eos.web.js: imported export searchEosStations is absent",
+        "src/backend/SKANDI_CORE/eos.web.js: imported export createEosClockEvent is absent",
+        "src/backend/SKANDI_CORE/eos.web.js: imported export submitEosOpsAction is absent"
+      ],
+      "retainedArtifact": true
     },
     {
       "key": "inventoryControl",
@@ -3546,14 +3566,20 @@
       "components": [],
       "binding": "handshake",
       "requiresStaff": false,
-      "status": "BUILT",
+      "status": "BLOCKED INTEGRATION",
       "files": [
         "skandi-embeds/special-assistance/skandi-special-assistance.html",
         "skandi-embeds/special-assistance/skandi-special-assistance.css",
         "skandi-embeds/special-assistance/skandi-special-assistance.js"
       ],
       "missing": [],
-      "issues": [],
+      "issues": [
+        "src/backend/SKANDI_CORE/eos.web.js: imported export getEosBootstrap is absent",
+        "src/backend/SKANDI_CORE/eos.web.js: imported export searchEosFlights is absent",
+        "src/backend/SKANDI_CORE/eos.web.js: imported export searchEosStations is absent",
+        "src/backend/SKANDI_CORE/eos.web.js: imported export createEosClockEvent is absent",
+        "src/backend/SKANDI_CORE/eos.web.js: imported export submitEosOpsAction is absent"
+      ],
       "backend": [
         "src/backend/SKANDI_CORE/customerSession.web.js",
         "src/backend/SKANDI_CORE/staffAuth.web.js",
@@ -3674,13 +3700,17 @@
         "SUPPORT_CHAT_ERROR",
         "UPDATE_SETTINGS"
       ],
-      "output": "dist/special-assistance/index.html",
+      "output": null,
       "dynamic": false,
       "sourceStatus": "COMPLETE SOURCE",
-      "blockers": [],
-      "receiver": "skandi-embeds/special-assistance/skandi-special-assistance.receiver.html",
-      "sha256": "9fee4ce377f8445b65bde946a4333b3c9e96cf6043743d48b2c072b05b0b0d2b",
-      "bytes": 176340
+      "blockers": [
+        "src/backend/SKANDI_CORE/eos.web.js: imported export getEosBootstrap is absent",
+        "src/backend/SKANDI_CORE/eos.web.js: imported export searchEosFlights is absent",
+        "src/backend/SKANDI_CORE/eos.web.js: imported export searchEosStations is absent",
+        "src/backend/SKANDI_CORE/eos.web.js: imported export createEosClockEvent is absent",
+        "src/backend/SKANDI_CORE/eos.web.js: imported export submitEosOpsAction is absent"
+      ],
+      "retainedArtifact": true
     },
     {
       "key": "flightStatus",
