@@ -834,17 +834,17 @@
       if (!tbody) return;
       window.resolveMyRosterRequest = function(id, decision, button) {
         const request = STATE.myRosterRequests.find(item => item.id === id);
-        if (!request) return showToast('MyRoster request is no longer available.', 'error');
+        if (!request) return showToast('Staff request is no longer available.', 'error');
         if (!['APPROVED', 'REJECTED'].includes(decision)) return;
         if (button) button.disabled = true;
         const verb = decision === 'APPROVED' ? 'approved' : 'declined';
         dispatchAction('RESOLVE_MYROSTER_REQUEST', {
           sourceId: request.sourceId,
           decision
-        }, `MyRoster ${request.type.toLowerCase()} request ${verb}.`);
+        }, `Staff ${request.type.toLowerCase()} request ${verb}.`);
       };
       if (!STATE.myRosterRequests.length) {
-        tbody.innerHTML = '<tr><td colspan="7" class="empty-state">No MyRoster requests are waiting for OPS review.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" class="empty-state">No MyRoster or EOS requests are waiting for OPS review.</td></tr>';
         return;
       }
       tbody.innerHTML = STATE.myRosterRequests.map(request => {

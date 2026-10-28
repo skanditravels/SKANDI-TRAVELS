@@ -3,6 +3,7 @@
 // staffAuth still owns identity and app access; no element rename is required.
 
 import wixLocationFrontend from "wix-location-frontend";
+import wixWindowFrontend from "wix-window-frontend";
 import { SITE_MAP, isSafeInternalRoute } from "public/siteMap";
 import {
   getStaffPortalSession,
@@ -123,9 +124,12 @@ async function bootstrapLaunchpad(requestId) {
   try {
     const payload = await bootstrapPromise;
     if (generation !== bootstrapGeneration) return;
-    authorizedApps = new Map(payload.apps.map(app => [app.id, app]));
-    lastBootstrap = { requestId, payload };
-    postToEmbed("ALTEA_LAUNCHPAD_BOOTSTRAP", payload, requestId);
+    const visiblePayload = wixWindowFrontend.formFactor === "Desktop"
+      ? { ...payload, apps:payload.apps.filter(app => app.id !== "eos") }
+      : payload;
+    authorizedApps = new Map(visiblePayload.apps.map(app => [app.id, app]));
+    lastBootstrap = { requestId, payload:visiblePayload };
+    postToEmbed("ALTEA_LAUNCHPAD_BOOTSTRAP", visiblePayload, requestId);
   } catch (error) {
     if (generation === bootstrapGeneration) throw error;
   } finally {
@@ -139,6 +143,9 @@ async function handleNavigate(payload, requestId) {
     throw new PublicError("ALTEA_REQUEST_BUSY", "Wait for the current authorization check to finish.");
   }
   const app = authorizedApps.get(cleanText(payload.appId, 80));
+  if (cleanText(payload.appId,80)==="eos" && wixWindowFrontend.formFactor==="Desktop") {
+    throw new PublicError("ALTEA_APP_UNAVAILABLE", "EOS is available on mobile devices and tablets.");
+  }
   if (!app || !cleanPath(payload.path) || app.path !== payload.path) {
     throw new PublicError("ALTEA_APP_NOT_AUTHORIZED", "This application is not authorized for your current access profile.");
   }

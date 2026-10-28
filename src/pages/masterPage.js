@@ -11,6 +11,7 @@ import { getCustomerHeaderSession, subscribeCustomerNewsletter } from "backend/S
 import { getStaffPortalSession } from "backend/SKANDI_CORE/staffAuth.web";
 import { getPublicTravelInfoPayload } from "backend/SKANDI_CORE/publicContent.web";
 import { getPublicPagePresentation } from "backend/SKANDI_CORE/presentation.web";
+import { getEosBootstrap, searchEosFlights, searchEosStations, createEosClockEvent, submitEosOpsAction } from "backend/SKANDI_CORE/eos.web";
 import { SITE_MAP, APP_ROUTES, GLOBAL_CHROME, isSafeInternalRoute, PAGE_BUILD_INTEGRATIONS, INTERNAL_PATH_PREFIXES, CHROME_FREE_PATHS, getPageFamily, getPageChrome, resolveBuildRoute } from "public/siteMap";
 import { bindAlexandraGlobal } from "public/alexandraGlobalBridge.js";
 
@@ -29,6 +30,8 @@ const RIAINTRA_HEADER_SOURCE = GLOBAL_CHROME.riaintraHeader.source;
 const ALTEA_HEADER_SOURCE = GLOBAL_CHROME.alteaHeader.source;
 const ALTEA_FOOTER_SOURCE = GLOBAL_CHROME.alteaFooter.source;
 const SPECIAL_ASSISTANCE_SOURCE = "SKANDI_ASSISTANCE_PAGE";
+const EOS_SOURCE = "SKANDI_EOS_EMBED";
+const EOS_EMBED_ID = "#eosEmbed";
 const MOBILE_APP_SOURCE = "SKANDI_HOME_MOBILE_APP";
 const GLOBAL_MOBILE_NAV_ID = "#skandiMobileAppNavEmbed";
 const GLOBAL_MOBILE_TOP_COVER_ID = "#skandiMobileTopCoverEmbed";
@@ -816,6 +819,40 @@ async function handleMasterMessage(embed, message = {}) {
   const source = String(message?.source || "");
   const payload = message?.payload && typeof message.payload === "object" ? message.payload : {};
 
+  if (source === EOS_SOURCE) {
+    if (wixWindowFrontend.formFactor === "Desktop") { navigate(SITE_MAP.alteaLaunchpad); return true; }
+    if ("#" + String(embed.id || "").replace(/^#/, "") !== EOS_EMBED_ID) return true;
+    const identity=compiledIdentity(embed,await getStaffState());
+    if (!identity.allowed || identity.key !== "eos") return true;
+    compiledEmbeds.set(embed.id,identity);
+    const requestId=String(message.requestId||payload.requestId||"").slice(0,160);
+    const reply=(responseType,result)=>postToEmbed(embed,responseType,{...(result&&typeof result==="object"?result:{}),requestId});
+    try {
+      if (type === "SKANDI_MASTER_CONFIG_REQUEST" || type === "MASTER_CONFIG_REQUEST") { pushMasterConfig(embed); return true; }
+      if (type === "EOS_BOOTSTRAP_REQUEST") { reply("EOS_BOOTSTRAP_RESPONSE",await getEosBootstrap(payload)); return true; }
+      if (type === "EOS_FLIGHT_SEARCH") { reply("EOS_FLIGHT_SEARCH_RESULT",await searchEosFlights(payload)); return true; }
+      if (type === "EOS_STATION_SEARCH") { reply("EOS_STATION_SEARCH_RESULT",await searchEosStations(payload)); return true; }
+      if (type === "EOS_CLOCK_EVENT") { reply("EOS_CLOCK_EVENT_RESULT",await createEosClockEvent(payload)); return true; }
+      if (type === "EOS_OPS_ACTION") { reply("EOS_OPS_ACTION_RESULT",await submitEosOpsAction(payload)); return true; }
+      if (type === "EOS_NAVIGATE") {
+        const path=String(payload.path||"");
+        if (path !== SITE_MAP.groupTalk) { reply("EOS_ERROR",{code:"EOS_NAVIGATION_BLOCKED",message:"That ALTEA destination is unavailable."}); return true; }
+        navigate(path); return true;
+      }
+      if (type === "EOS_LOGOUT") {
+        await logoutRiaintraSession();
+        alexandraGlobal?.clear?.();
+        try { await alexandraGlobal?.refreshIdentity?.(); } catch (_) {}
+        wixLocationFrontend.to(MASTER_CONFIG.routes.home,{disableScrollToTop:false});
+        return true;
+      }
+    } catch (error) {
+      reply("EOS_ERROR",{code:String(error?.code||error?.message||"EOS_FAILED").slice(0,100),message:String(error?.publicMessage||error?.message||"EOS could not complete the request.").slice(0,500)});
+      return true;
+    }
+    return true;
+  }
+
   if (embed?.id === GLOBAL_MOBILE_NAV_ID.slice(1) && source === 'SKANDI_SUPPORT_CHAT') {
     if (!isPublicMobileChromePath()) return true;
     if (typeof alexandraGlobal?.handleMobileMessage === 'function') {
@@ -845,6 +882,10 @@ async function handleMasterMessage(embed, message = {}) {
   }
 
   if (source === "SKANDI_SHELL" && type === "SKANDI_COMPILED_READY") {
+    if (payload.key === "eos" && wixWindowFrontend.formFactor === "Desktop") {
+      navigate(SITE_MAP.alteaLaunchpad);
+      return true;
+    }
     const identity = compiledIdentity(embed, isInternalPath() ? await getStaffState() : {});
     if (identity.allowed && identity.key === payload.key) {
       compiledEmbeds.set(embed.id, identity);

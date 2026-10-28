@@ -39,6 +39,7 @@ Route authority: `src/public/siteMap.js`. This file is generated evidence, not r
 | alteaLaunchpad | /riaintra/success-factors/altea | skandi-embeds/altea-launchpad/skandi-altea-launchpad.{html,css,js} | altea / altea | src/pages/ALTEA Launchpad.ajs4y.js | BUILT |
 | alteaReservations | /riaintra/success-factors/altea/reservations | skandi-embeds/altea-reservations/skandi-altea-reservations.{html,css,js} | altea / altea | src/pages/Reservations.ly2n8.js | BUILT |
 | opsControl | /riaintra/success-factors/altea/ops | skandi-embeds/ops-control/skandi-ops-control.{html,css,js} | altea / altea | src/pages/OPS Control.uposx.js | BUILT |
+| eos | /riaintra/success-factors/altea/eos | skandi-embeds/eos/skandi-eos.{html,css,js} | altea / altea | src/pages/masterPage.js | BUILT |
 | inventoryControl | /riaintra/success-factors/altea/inventory-control | skandi-embeds/inventory-control/skandi-inventory-control.{html,css,js} | altea / altea | src/pages/Inventory Control.jsdik.js | FAILED |
 | uniformCenter | /riaintra/success-factors/uniform | skandi-embeds/uniform-center/skandi-uniform-center.{html,css,js} | riaintra / riaintra | src/pages/Uniform Center.lukfc.js | BUILT |
 | uniformControl | /riaintra/success-factors/uniform/admin-control | skandi-embeds/uniform-control/skandi-uniform-control.{html,css,js} | riaintra / riaintra | src/pages/Uniform Control.yx92b.js | PENDING SOURCE |

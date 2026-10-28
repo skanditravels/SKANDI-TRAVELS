@@ -15,6 +15,7 @@ export const SITE_MAP = Object.freeze({
   staffLogin: "/riaintra", successFactors: "/riaintra/success-factors",
   legalInternal: "/riaintra/success-factors/legal-internal", alteaLaunchpad: "/riaintra/success-factors/altea",
   alteaReservations: "/riaintra/success-factors/altea/reservations", opsControl: "/riaintra/success-factors/altea/ops",
+  eos: "/riaintra/success-factors/altea/eos",
   inventoryControl: "/riaintra/success-factors/altea/inventory-control", uniformCenter: "/riaintra/success-factors/uniform",
   uniformControl: "/riaintra/success-factors/uniform/admin-control", alteaTimatic: "/riaintra/success-factors/altea/timatic",
   mail: "/riaintra/success-factors/mail", docunet: "/riaintra/success-factors/docunet",
@@ -75,6 +76,7 @@ export const EDITORIAL_PAGE_CATALOG = Object.freeze([
   ]),
   page("specialAssistance", "Special Assistance", APP_ROUTES.specialAssistance, "PUBLIC_CONTENT"),
   page("flightStatus", "Flight Status", APP_ROUTES.flightStatus, "OPERATIONAL"),
+  page("eos", "EOS Mobile Operations", SITE_MAP.eos, "ALTEA_OPERATIONAL"),
   page("skandiCollection", "SKANDI Collection", SITE_MAP.skandiCollection, "INVENTORY"),
   page("voy", "VOY Magazine", SITE_MAP.voy, "VOY", [], { presentationRuntime:true }),
   page("forgotPassword", "Forgot Password", SITE_MAP.forgotPassword, "CUSTOMER_AUTH"),
@@ -397,6 +399,12 @@ export const PAGE_BUILD_INTEGRATIONS = Object.freeze({
       "SKANDI_MYROSTER_EMBED"
     ],
     "note": "ALTEA desktop staff embed; server access uses the authenticated SKANDI role and field base, using profile values when organization directories are unseeded. Flight search is independent of personal assignments. OPS Control owns MyRoster request review."
+  },
+  "eos": {
+    "controller": "src/pages/masterPage.js",
+    "embedIds": ["#eosEmbed"],
+    "sources": ["SKANDI_EOS_EMBED"],
+    "note": "ALTEA mobile/tablet operations app; authenticated workforce data is supplied by SKANDI EOS services and reviewed in OPS Control."
   },
   "legalInternal": {
     "controller": "src/pages/RIAINTRA Legal.xvi17.js",

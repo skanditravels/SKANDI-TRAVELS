@@ -340,7 +340,7 @@ async function loadBootstrap(session, {jurisdiction="US-NY",windowStart:windowSt
     };
   });
   const vacationMap=new Map([...ledgerVac,...vacationRequests].map(v=>[v.id,v]));
-  const myRosterRequests=requests.map(r=>mapMyRosterRequest(r,staffMap)).filter(r=>["TIME_OFF","SCHEDULE_CHANGE"].includes(r.type));
+  const myRosterRequests=requests.map(r=>mapMyRosterRequest(r,staffMap)).filter(r=>["TIME_OFF","SCHEDULE_CHANGE","EOS_ACTION"].includes(r.type));
   const trades=requests.map(mapRequest).filter(r=>r.type==="TRIP_TRADE").map(r=>({
     id:r.id,sourceId:r.sourceId,
     crewA:clean(r.payload.crewAName||r.payload.crewA||staffMap.get(r.employeeId)?.name||r.employeeId,180),
@@ -441,7 +441,7 @@ async function resolveMyRosterRequest(session,payload={}){
   const decision=upper(payload.decision,20);
   if(!sourceId||!["APPROVED","REJECTED"].includes(decision)) throw new Error("OPS_MYROSTER_REQUEST_INVALID");
   const row=first(await restRequest({table:TABLES.requests,query:{select:"*",id:`eq.${sourceId}`,limit:1}}));
-  const type=requestType(row||{}), allowedTypes=new Set(["TIME_OFF","SCHEDULE_CHANGE"]);
+  const type=requestType(row||{}), allowedTypes=new Set(["TIME_OFF","SCHEDULE_CHANGE","EOS_ACTION"]);
   if(!row||!allowedTypes.has(type)) throw new Error("OPS_MYROSTER_REQUEST_NOT_FOUND");
   if(!["PENDING","PENDING REVIEW","SUBMITTED","OPEN"].includes(status(row.status))) throw new Error("OPS_MYROSTER_REQUEST_ALREADY_REVIEWED");
   const p=obj(row.payload), employee=upper(row.employee_id,80), actor=profile(session).agentId||profile(session).skId||"OPS";
