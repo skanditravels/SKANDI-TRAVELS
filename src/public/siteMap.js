@@ -79,7 +79,7 @@ export const EDITORIAL_PAGE_CATALOG = Object.freeze([
   page("eos", "EOS Mobile Operations", SITE_MAP.eos, "ALTEA_OPERATIONAL"),
   page("skandiCollection", "SKANDI Collection", SITE_MAP.skandiCollection, "INVENTORY"),
   page("voy", "VOY Magazine", SITE_MAP.voy, "VOY", [], { presentationRuntime:true }),
-  page("forgotPassword", "Forgot Password", SITE_MAP.forgotPassword, "CUSTOMER_AUTH"),
+  page("forgotPassword", "Reset your Password", SITE_MAP.forgotPassword, "CUSTOMER_AUTH"),
   page("myProfile", "My Profile", APP_ROUTES.myProfile, "CUSTOMER_PROFILE"),
   page("myTrips", "My Trips", APP_ROUTES.myTrips, "CUSTOMER_PROFILE"),
   page("club", "SKANDI Club", SITE_MAP.club, "PUBLIC_PRESENTATION", [
