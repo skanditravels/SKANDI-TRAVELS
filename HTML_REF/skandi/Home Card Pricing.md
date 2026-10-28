@@ -6,6 +6,7 @@
 - **Media Manager:** RIAINTRA → Media Control → Website → Home Cards & Pricing
 - **Wix page controller:** `/src/pages/Home.n73w8.js`
 - **Home embed:** `#htmlHome`
+- **Home route identity:** `masterPage.js` maps Wix's `isHomePage` marker to the canonical `/` route, even when Wix reports the page URL as `/home`.
 - **Canonical backend:** `/src/backend/SKANDI_CORE/homeContent.js`
 - **Price refresh:** `/src/backend/jobs.config` → `refreshHomeCardPricesCore`, every six hours
 - **Inventory source:** `inventory_public_entities_v`
@@ -34,5 +35,6 @@ Current live Supabase inspection found the travel-product tables empty, so cards
 
 ## CHANGE LOG
 
+- 2026-10-28 — Fixed Home receiver authorization: Wix's homepage context reports `url: "/home"` with `isHomePage: true`; `masterPage.js` now resolves that context to the canonical `/` integration before authorizing the Home embed.
 - 2026-10-27 — Added Media Manager controls for featured-card pricing configuration, charter add-ons, product visibility, and Home-only photo/alt-text selection from the public Supabase Asset Library.
 - 2026-10-27 — Added scheduled Duffel baseline pricing for featured flight-only and charter-package Home cards. No Supabase schema change was required.

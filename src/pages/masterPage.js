@@ -530,6 +530,10 @@ function currentWixPageInfo() {
 }
 function currentPathString() {
   const page = currentWixPageInfo();
+  // Wix reports the static homepage URL as "/home" even though its canonical
+  // route in SITE_MAP is "/". Resolve the explicit homepage marker first so
+  // compiledIdentity can find the verified Home integration and receiver.
+  if (page.isHomePage) return SITE_MAP.home;
   if (page.url && page.url.startsWith("/")) return page.url.split("?")[0].replace(/\/+$/, "") || "/";
   const path = wixLocationFrontend.path || [];
   return "/" + path.join("/");

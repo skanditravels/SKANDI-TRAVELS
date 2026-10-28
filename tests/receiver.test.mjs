@@ -69,7 +69,10 @@ test('master derives page identity from canonical route and owning component, an
     wixWindowFrontend:{viewMode:'Site',formFactor:'Desktop'},wixLocationFrontend:{baseUrl:'https://www.skanditravels.com',path:[]},wixSiteFrontend:{currentPage:{url:'/search',name:'Search'}},local:{getItem:()=>null},session:{getItem:()=>null},consentPolicy:{getCurrentConsentPolicy:()=>({policy:{}})},$w:Object.assign(()=>[],{onReady:()=>{}})};
   vm.createContext(context);vm.runInContext(source+'\nglobalThis.getIdentity=compiledIdentity;',context);
   assert.equal(context.getIdentity({id:'searchResultsEmbed'}).key,'search');assert.equal(context.getIdentity({id:'skandiHeaderEmbed'}).allowed,false);
-  context.wixSiteFrontend.currentPage.url='/unknown';assert.equal(context.getIdentity({id:'searchResultsEmbed'}).allowed,false);
+  context.wixSiteFrontend.currentPage={url:'/home',name:'Home',type:'static',isHomePage:true};
+  const homeIdentity=context.getIdentity({id:'htmlHome'});
+  assert.equal(homeIdentity.allowed,true);assert.equal(homeIdentity.key,'home');assert.equal(homeIdentity.route,'/');
+  context.wixSiteFrontend.currentPage={url:'/unknown',name:'Unknown',type:'static',isHomePage:false};assert.equal(context.getIdentity({id:'searchResultsEmbed'}).allowed,false);
   context.wixSiteFrontend.currentPage.url=registry.SITE_MAP.alteaReservations;assert.equal(context.getIdentity({id:'alteaReservationsEmbed'},{authorized:false}).allowed,false);assert.equal(context.getIdentity({id:'alteaReservationsEmbed'},{authorized:true}).family,'altea');
   context.wixSiteFrontend.currentPage.url=registry.SITE_MAP.riaintra;assert.equal(context.getIdentity({id:'staffLoginEmbed'},{authorized:false}).allowed,true);
   context.wixSiteFrontend.currentPage.url=registry.APP_ROUTES.bookingFlow;assert.equal(context.getIdentity({id:'bookingOfferEmbed'}).allowed,false);
