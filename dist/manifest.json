@@ -890,7 +890,7 @@
       "key": "forgotPassword",
       "route": "/forgot-password",
       "slug": "forgot-password",
-      "title": "Forgot Password",
+      "title": "Reset your Password",
       "family": "public",
       "chrome": "public",
       "sourceDirectory": "skandi-embeds/forgot-password",
@@ -927,8 +927,8 @@
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
       "receiver": "skandi-embeds/forgot-password/skandi-forgot-password.receiver.html",
-      "sha256": "b47c39404bf523e5c5bce58fdd5132f7cefa0645915c752e4d86045fc6a0fa31",
-      "bytes": 145431
+      "sha256": "8221376be989b945daab1eddacd60a7f44234df3e93e8d17731803cf2cbdd318",
+      "bytes": 146279
     },
     {
       "key": "about",
