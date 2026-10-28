@@ -388,4 +388,6 @@
       .settings-grid { grid-template-columns: 1fr; }
       .data-table-container.split-view { flex-direction: column; }
     }
-  
+  .brand-logo.master-brand-logo{width:auto;max-width:108px;height:28px;object-fit:contain;font-size:0;font-style:normal;letter-spacing:0;filter:none}
+.myroster-queue{margin-top:14px}
+.myroster-queue-note{margin:-4px 0 12px;color:var(--j-text-muted);font-size:11px;line-height:1.45}

@@ -1,4 +1,4 @@
-import { SITE_MAP } from "public/siteMap";
+import { APP_ROUTES, SITE_MAP } from "public/siteMap";
 // /src/backend/SKANDI_CORE/staffAuth.js
 // SKANDI Backend Base 1.0 — canonical staff identity + authorization core.
 // V12 — canonical agentId contract, authorized application catalog and published routes.
@@ -43,7 +43,7 @@ const APP_CATALOG = Object.freeze({
   mail: Object.freeze({ id:"mail", title:"Mail", subtitle:"Internal messages and station notices", path:SITE_MAP.mail, group:"Communication", icon:"M" }),
   grouptalk: Object.freeze({ id:"grouptalk", title:"GroupTalk", subtitle:"Operational communication and team channels", path:"/riaintra/success-factors/altea/grouptalk", group:"Communication", icon:"G" }),
   uniform: Object.freeze({ id:"uniform", title:"Uniform Center", subtitle:"Uniform orders and staff issue", path:SITE_MAP.uniformCenter, group:"MyProfile", icon:"U" }),
-  myroster: Object.freeze({ id:"myroster", title:"MyRoster", subtitle:"Shifts, duties and assignments", path:"/riaintra/success-factors/my-roster", group:"MyProfile", icon:"R" }),
+  myroster: Object.freeze({ id:"myroster", title:"MyRoster", subtitle:"Shifts, duties and assignments", path:APP_ROUTES.myRoster, group:"MyProfile", icon:"R" }),
   payroll: Object.freeze({ id:"payroll", title:"Pay & Time", subtitle:"Payroll and staff pay information", path:SITE_MAP.payroll, group:"MyProfile", icon:"P" }),
   "inventory-control": Object.freeze({ id:"inventory-control", title:"Inventory Control", subtitle:"Product, capacity and aircraft inventory", path:SITE_MAP.inventoryControl, group:"Administration", icon:"I" }),
   "media-control": Object.freeze({ id:"media-control", title:"Media Control", subtitle:"Supabase asset library and controlled media uploads", path:SITE_MAP.mediaControl, group:"Administration", icon:"D" }),

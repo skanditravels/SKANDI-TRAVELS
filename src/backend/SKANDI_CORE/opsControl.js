@@ -63,7 +63,7 @@ function isWildcard(session){
   return values.includes("*") || values.includes("all");
 }
 
-async function requireOpsSession({write=false}={}){
+async function requireOpsSession({write=false,requestReview=false}={}){
   const session=await requireStaffPortalSessionCore();
   const groups=new Set(arr(session.permissionGroups).map(v=>lower(v,100)));
   const privileged=session.isSystemAdmin===true || isWildcard(session) || upper(session.accessRole,80)==="SUPER_ADMIN";
@@ -71,7 +71,11 @@ async function requireOpsSession({write=false}={}){
   if(!operational){
     const error=new Error("OPS_CONTROL_ACCESS_DENIED"); error.code="OPS_CONTROL_ACCESS_DENIED"; throw error;
   }
-  if(write && !(privileged || session.canManage===true || groups.has("occ") || groups.has("system-admin"))){
+  const requestReviewAllowed=privileged || session.canManage===true || [...OPS_GROUPS].some(g=>groups.has(g));
+  if(write && requestReview && !requestReviewAllowed){
+    const error=new Error("OPS_CONTROL_WRITE_DENIED"); error.code="OPS_CONTROL_WRITE_DENIED"; throw error;
+  }
+  if(write && !requestReview && !(privileged || session.canManage===true || groups.has("occ") || groups.has("system-admin"))){
     const error=new Error("OPS_CONTROL_WRITE_DENIED"); error.code="OPS_CONTROL_WRITE_DENIED"; throw error;
   }
   return session;
@@ -186,6 +190,25 @@ function mapRequest(row={}){
   return {id,sourceId:clean(row.id,100),employeeId:upper(row.employee_id,80),status:status(row.status||"PENDING REVIEW"),payload:p,type};
 }
 
+function mapMyRosterRequest(row={},staffMap=new Map()){
+  const request=mapRequest(row), p=request.payload, staff=staffMap.get(request.employeeId);
+  const type=request.type;
+  const start=clean(p.startDate||row.start_time||"",40).slice(0,10);
+  const end=clean(p.endDate||row.end_time||"",40).slice(0,10);
+  return {
+    id:request.sourceId,
+    sourceId:request.sourceId,
+    employeeId:request.employeeId,
+    name:staff?.name||request.employeeId,
+    base:clean(p.baseCode||staff?.base||"",80),
+    type,
+    period:[start,end].filter(Boolean).join(" to "),
+    summary:clean(p.summary||p.reason||p.notes||row.notes||"Request submitted from MyRoster",400),
+    status:request.status,
+    submittedAt:row.created_at||""
+  };
+}
+
 function staffProjection(agent={}){
   const skId=upper(agent.sk_id||agent.agent_id,80);
   return {
@@ -271,7 +294,13 @@ async function loadBootstrap(session, {jurisdiction="US-NY",windowStart:windowSt
   }
 
   const clocks=latestClockByEmployee(clock);
-  const staffMap=new Map(agents.map(a=>{const p=staffProjection(a);return [p.agentId,p];}));
+  const staffMap=new Map();
+  for(const agent of agents){
+    const projected=staffProjection(agent);
+    for(const identifier of [agent.sk_id,agent.agent_id,projected.agentId].map(value=>upper(value,80)).filter(Boolean)){
+      staffMap.set(identifier,projected);
+    }
+  }
   const crewData=agents.map((a,index)=>{
     const skId=upper(a.sk_id||a.agent_id,80), acts=(assignedByEmployee.get(skId)||[]).sort((x,y)=>x.startH-y.startH);
     const current=acts.find(x=>!["rest","vacation"].includes(x.type)) || acts[0];
@@ -311,6 +340,7 @@ async function loadBootstrap(session, {jurisdiction="US-NY",windowStart:windowSt
     };
   });
   const vacationMap=new Map([...ledgerVac,...vacationRequests].map(v=>[v.id,v]));
+  const myRosterRequests=requests.map(r=>mapMyRosterRequest(r,staffMap)).filter(r=>["TIME_OFF","SCHEDULE_CHANGE"].includes(r.type));
   const trades=requests.map(mapRequest).filter(r=>r.type==="TRIP_TRADE").map(r=>({
     id:r.id,sourceId:r.sourceId,
     crewA:clean(r.payload.crewAName||r.payload.crewA||staffMap.get(r.employeeId)?.name||r.employeeId,180),
@@ -343,7 +373,7 @@ async function loadBootstrap(session, {jurisdiction="US-NY",windowStart:windowSt
     })},
     jurisdiction:jurisdictions[jurisdiction]?jurisdiction:Object.keys(jurisdictions)[0],jurisdictions,
     crewData,staff:crewData,assignments:assignmentRows.map(({row,table})=>mapAssignment(row,table,windowStart)),
-    vacations:[...vacationMap.values()],trades,bids,openTime,balances,logistics,
+    vacations:[...vacationMap.values()],myRosterRequests,trades,bids,openTime,balances,logistics,
     messages:[],communicationsManagedBy:"GroupTalk",auditLog,bases,roles,
     syncSources:{
       workforce:{source:TABLES.agents,records:agents.length},
@@ -397,6 +427,44 @@ async function approveVacation(session,payload={}){
   }
 }
 
+function myRosterTimeOffDays(startValue,endValue){
+  const start=clean(startValue,20),end=clean(endValue,20);
+  const valid=value=>/^\d{4}-\d{2}-\d{2}$/.test(value)&&Number.isFinite(Date.parse(value+"T00:00:00Z"))&&new Date(value+"T00:00:00Z").toISOString().slice(0,10)===value;
+  if(!valid(start)||!valid(end)||start>end) throw new Error("OPS_MYROSTER_TIMEOFF_DATES_INVALID");
+  const days=Math.round((Date.parse(end+"T00:00:00Z")-Date.parse(start+"T00:00:00Z"))/86400000)+1;
+  if(days<1||days>94) throw new Error("OPS_MYROSTER_TIMEOFF_DATES_INVALID");
+  return {start,end,days};
+}
+
+async function resolveMyRosterRequest(session,payload={}){
+  const sourceId=clean(payload.sourceId||payload.requestId,100);
+  const decision=upper(payload.decision,20);
+  if(!sourceId||!["APPROVED","REJECTED"].includes(decision)) throw new Error("OPS_MYROSTER_REQUEST_INVALID");
+  const row=first(await restRequest({table:TABLES.requests,query:{select:"*",id:`eq.${sourceId}`,limit:1}}));
+  const type=requestType(row||{}), allowedTypes=new Set(["TIME_OFF","SCHEDULE_CHANGE"]);
+  if(!row||!allowedTypes.has(type)) throw new Error("OPS_MYROSTER_REQUEST_NOT_FOUND");
+  if(!["PENDING","PENDING REVIEW","SUBMITTED","OPEN"].includes(status(row.status))) throw new Error("OPS_MYROSTER_REQUEST_ALREADY_REVIEWED");
+  const p=obj(row.payload), employee=upper(row.employee_id,80), actor=profile(session).agentId||profile(session).skId||"OPS";
+  if(!employee) throw new Error("OPS_MYROSTER_REQUEST_STAFF_REQUIRED");
+  if(decision==="APPROVED"&&type==="TIME_OFF"){
+    const span=myRosterTimeOffDays(p.startDate||row.start_time,p.endDate||row.end_time);
+    const existing=await getRows(TABLES.leave,{employee_id:`eq.${employee}`,order:"created_at.desc"});
+    const found=existing.find(item=>obj(item.payload).sourceRequestId===row.id);
+    if(!found){
+      await restRequest({table:TABLES.leave,method:"POST",body:{
+        employee_id:employee,type:"TIME_OFF",days:span.days,hours:span.days*8,approved_by:actor,
+        start_date:span.start,end_date:span.end,notes:clean(p.notes||row.notes||"MyRoster time-off request",500),
+        payload:{sourceRequestId:row.id,requestType:type,baseCode:clean(p.baseCode,80),reviewedBy:actor,reviewedAt:now()},
+        created_at:now(),updated_at:now()
+      },prefer:"return=minimal"});
+    }
+  }
+  await restRequest({table:TABLES.requests,method:"PATCH",query:{id:`eq.${row.id}`},body:{
+    status:decision,updated_at:now(),payload:{...p,opsDecision:decision,reviewedBy:actor,reviewedAt:now()}
+  },prefer:"return=minimal"});
+  return {ok:true,sourceId:row.id,requestType:type,decision};
+}
+
 async function optimizeAssignments(){
   let recovered=0; const startMs=Date.now()-24*3600000, endMs=Date.now()+8*24*3600000;
   for(const table of ASSIGNMENT_TABLES){
@@ -417,7 +485,8 @@ export async function getOpsControlBootstrapCore(payload={}){
 }
 
 export async function handleOpsControlActionCore({type="",payload={}}={}){
-  const action=upper(type,100), session=await requireOpsSession({write:action!=="REFRESH"}), p=obj(payload);
+  const action=upper(type,100), p=obj(payload);
+  const session=action==="REFRESH"?await requireOpsSession():await requireOpsSession({write:true,requestReview:action==="RESOLVE_MYROSTER_REQUEST"});
   if(action==="REFRESH") return loadBootstrap(session,p);
   if(action==="UPDATE_ASSIGNMENT"){
     await patchAssignment(clean(p.sourceTable,100),clean(p.sourceId,100),{status:status(p.status),type:clean(p.type,80),payload:{label:clean(p.label,120),activityType:clean(p.type,80),status:status(p.status),updatedByAgentId:profile(session).agentId||profile(session).skId,updatedAt:now()}});
@@ -427,6 +496,8 @@ export async function handleOpsControlActionCore({type="",payload={}}={}){
     await createVacationRequest(session,p);
   }else if(action==="APPROVE_VACATION"){
     await approveVacation(session,p);
+  }else if(action==="RESOLVE_MYROSTER_REQUEST"){
+    await resolveMyRosterRequest(session,p);
   }else if(action==="APPROVE_TRIP_TRADE"){
     const id=clean(p.sourceId||p.requestId,100), row=first(await restRequest({table:TABLES.requests,query:{select:"*",id:`eq.${id}`,limit:1}}));
     if(!row || requestType(row)!=="TRIP_TRADE") throw new Error("OPS_TRIP_TRADE_NOT_FOUND");

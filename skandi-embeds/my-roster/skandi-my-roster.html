@@ -4,17 +4,21 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#082f5f">
-  <title>SKANDI MyRoster</title>
+  <title>ALTEA MyRoster</title>
   <link rel="stylesheet" href="skandi-my-roster.css">
 </head>
 <body>
+  <section class="mr-device-unavailable" id="desktopOnlyNotice" hidden aria-live="polite">
+    <div><strong>MyRoster is available on desktop</strong><span>Open ALTEA MyRoster from a desktop browser to view schedules and OPS records.</span></div>
+  </section>
   <div class="mr-shell" id="myRosterRoot">
     <header class="mr-topbar">
       <div class="mr-brand">
-        <div class="mr-brand-mark" aria-hidden="true">S</div>
+        <div class="mr-brand-mark" id="brandMark" aria-hidden="true">A</div>
+        <img class="mr-brand-logo" id="alteaBrandLogo" alt="ALTEA" hidden>
         <div>
-          <div class="mr-brand-name">SKANDI <span>TRAVELS</span></div>
-          <div class="mr-brand-subtitle">DESTINATION STAFF PORTAL</div>
+          <div class="mr-brand-name">ALTEA <span>MYROSTER</span></div>
+          <div class="mr-brand-subtitle">SKANDI OPERATIONS</div>
         </div>
       </div>
       <div class="mr-topbar-right">
@@ -32,11 +36,12 @@
         <div class="mr-nav-title">MY WORK</div>
         <nav class="mr-nav">
           <button class="mr-nav-item active" data-nav="schedule" type="button"><span class="mr-nav-icon">▦</span><span>My schedule</span></button>
+          <button class="mr-nav-item" data-nav="flights" type="button"><span class="mr-nav-icon">⌕</span><span>Flight search</span></button>
           <button class="mr-nav-item" data-nav="time" type="button"><span class="mr-nav-icon">◷</span><span>Time &amp; attendance</span></button>
           <button class="mr-nav-item" data-nav="requests" type="button"><span class="mr-nav-icon">↗</span><span>My requests</span></button>
           <a class="mr-nav-item mr-nav-link" id="groupTalkLink" href="#" hidden><span class="mr-nav-icon">▤</span><span>GroupTalk</span><span class="mr-link-arrow">↗</span></a>
         </nav>
-        <div class="mr-sidebar-note"><span class="mr-note-icon">i</span><span>Your schedule and requests are limited to your SKANDI staff profile and assigned destination.</span></div>
+        <div class="mr-sidebar-note"><span class="mr-note-icon">i</span><span>Your records are scoped to your staff profile. Flight search checks ALTEA data independently of your roster.</span></div>
       </aside>
 
       <main class="mr-main">
@@ -77,6 +82,23 @@
           </div>
         </section>
 
+        <section class="mr-view" id="flightsPanel" data-panel="flights" hidden>
+          <div class="mr-page-head"><div><div class="mr-kicker">ALTEA OPERATIONS</div><h1>Flight search</h1><p>Search live flight and published schedule records. Your own roster assignment is not required.</p></div></div>
+          <section class="mr-flight-search panel" aria-label="Search ALTEA flights">
+            <form id="flightSearchForm" class="mr-flight-search-form">
+              <label class="mr-field-inline mr-flight-term">Flight number or airport code<input type="search" id="flightQuery" minlength="2" maxlength="80" autocomplete="off" placeholder="e.g. SK123 or ARN" required></label>
+              <label class="mr-field-inline">From <input type="date" id="flightDateFrom" required></label>
+              <label class="mr-field-inline">To <input type="date" id="flightDateTo" required></label>
+              <button class="mr-btn mr-btn-primary" id="flightSearchButton" type="submit">Search flights</button>
+            </form>
+            <div class="mr-flight-search-note">Search covers operational FIDS and published ALTEA schedule rows for the selected dates, regardless of personal assignments.</div>
+          </section>
+          <section class="mr-table-panel panel" aria-label="Flight search results">
+            <div class="mr-section-head"><div><h2>Flight records</h2><p id="flightSearchStatus">Enter a flight number or airport code to search.</p></div></div>
+            <div class="mr-table-wrap"><table class="mr-table mr-flight-table"><thead><tr><th>DATE</th><th>FLIGHT</th><th>ROUTE</th><th>SCHEDULE</th><th>STATUS / GATE</th><th>AIRCRAFT</th><th></th></tr></thead><tbody id="flightResultsBody"><tr><td colspan="7"><div class="mr-empty"><strong>No search submitted</strong><span>Flight search does not depend on your personal schedule.</span></div></td></tr></tbody></table></div>
+          </section>
+        </section>
+
         <section class="mr-view" id="timePanel" data-panel="time" hidden>
           <div class="mr-page-head"><div><div class="mr-kicker">PERSONAL RECORD</div><h1>Time &amp; attendance</h1><p>Attendance events recorded against your assigned destination shifts.</p></div><button class="mr-btn mr-btn-secondary" id="timeRefreshBtn" type="button">Refresh records</button></div>
           <section class="mr-metric-row"><div class="mr-metric panel"><span class="mr-overline">RECORDED HOURS</span><strong id="timeHours">—</strong><span>Last 30 days</span></div><div class="mr-metric panel"><span class="mr-overline">LATEST EVENT</span><strong class="mr-metric-text" id="latestClock">No event recorded</strong><span id="latestClockTime">—</span></div><div class="mr-metric panel"><span class="mr-overline">ASSIGNED BASE</span><strong class="mr-metric-text" id="timeBase">—</strong><span id="timeRole">—</span></div></section>
@@ -85,17 +107,19 @@
 
         <section class="mr-view" id="requestsPanel" data-panel="requests" hidden>
           <div class="mr-page-head"><div><div class="mr-kicker">STAFF SELF-SERVICE</div><h1>My requests</h1><p>Time-off and schedule-change requests submitted from this staff account.</p></div><div class="mr-head-actions"><button class="mr-btn mr-btn-secondary" id="openShiftChange" type="button">Request a schedule change</button><button class="mr-btn mr-btn-primary" id="requestsTimeOff" type="button">Request time off</button></div></div>
-          <section class="mr-table-panel panel"><div class="mr-section-head"><div><h2>Request history</h2><p>Requests remain pending until reviewed through SKANDI’s staff scheduling process.</p></div></div><div class="mr-table-wrap"><table class="mr-table"><thead><tr><th>SUBMITTED</th><th>REQUEST</th><th>DETAILS</th><th>STATUS</th><th>UPDATED</th></tr></thead><tbody id="requestsBody"></tbody></table></div><div class="mr-mobile-list" id="mobileRequests"></div></section>
-          <div class="mr-policy-note"><strong>Request handling</strong><span>MyRoster records requests under your authenticated staff ID. It does not approve leave or alter published assignments.</span></div>
+          <section class="mr-table-panel panel"><div class="mr-section-head"><div><h2>Request history</h2><p>OPS reviews these requests in the ALTEA Operations Control queue.</p></div></div><div class="mr-table-wrap"><table class="mr-table"><thead><tr><th>SUBMITTED</th><th>REQUEST</th><th>DETAILS</th><th>STATUS</th><th>UPDATED</th></tr></thead><tbody id="requestsBody"></tbody></table></div><div class="mr-mobile-list" id="mobileRequests"></div></section>
+          <div class="mr-policy-note"><strong>OPS handling</strong><span>MyRoster stores requests under your authenticated SKANDI staff ID. OPS reviews them; approving a schedule change does not publish a roster edit automatically.</span></div>
         </section>
       </main>
     </div>
 
     <dialog class="mr-dialog" id="timeOffDialog" aria-labelledby="timeOffTitle"><form method="dialog" id="timeOffForm"><div class="mr-dialog-head"><div><span class="mr-kicker">STAFF REQUEST</span><h2 id="timeOffTitle">Request time off</h2></div><button class="mr-icon-btn" value="cancel" aria-label="Close">×</button></div><p class="mr-dialog-copy">Your request will be sent for review. It does not change your published schedule.</p><div class="mr-form-grid"><label>Start date<input name="startDate" type="date" required></label><label>End date<input name="endDate" type="date" required></label><label class="mr-form-wide">Note for your manager<textarea name="notes" maxlength="400" rows="3" placeholder="Add any details that will help with the review."></textarea></label></div><div class="mr-dialog-actions"><button class="mr-btn mr-btn-secondary" value="cancel">Cancel</button><button class="mr-btn mr-btn-primary" id="submitTimeOff" type="button">Send request</button></div></form></dialog>
     <dialog class="mr-dialog" id="shiftChangeDialog" aria-labelledby="shiftChangeTitle"><form method="dialog" id="shiftChangeForm"><div class="mr-dialog-head"><div><span class="mr-kicker">STAFF REQUEST</span><h2 id="shiftChangeTitle">Request a schedule change</h2></div><button class="mr-icon-btn" value="cancel" aria-label="Close">×</button></div><p class="mr-dialog-copy" id="shiftChangeAssignment">Choose an assignment first, or describe the date you need reviewed.</p><div class="mr-form-grid"><label class="mr-form-wide">What needs to change?<textarea name="reason" maxlength="600" rows="4" required placeholder="Describe the requested change and your preferred outcome."></textarea></label></div><div class="mr-dialog-actions"><button class="mr-btn mr-btn-secondary" value="cancel">Cancel</button><button class="mr-btn mr-btn-primary" id="submitShiftChange" type="button">Send request</button></div></form></dialog>
+    <dialog class="mr-briefing-dialog" id="briefingDialog" aria-labelledby="briefingDialogTitle"><div class="mr-briefing-toolbar"><strong id="briefingDialogTitle">CARI briefing card</strong><div><button class="mr-btn mr-btn-primary" id="printBriefing" type="button">Print / save PDF</button><button class="mr-btn mr-btn-secondary" id="closeBriefing" type="button">Close</button></div></div><article class="mr-briefing-paper" id="briefingPaper" aria-live="polite"></article></dialog>
     <div class="mr-toast" id="toast" role="status" aria-live="polite"></div>
     <div class="mr-error-screen" id="accessError" hidden><div class="mr-error-card"><div class="mr-error-mark">!</div><h2>MyRoster is unavailable for this account</h2><p id="accessErrorText">Your SKANDI destination staff profile could not be verified.</p><a href="/riaintra">Return to RIAINTRA sign in</a></div></div>
   </div>
   <script src="skandi-my-roster.js"></script>
 </body>
 </html>
+

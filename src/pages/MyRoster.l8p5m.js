@@ -1,11 +1,13 @@
 import wixLocation from "wix-location";
 import { authentication } from "wix-members-frontend";
+import { APP_ROUTES } from "public/siteMap";
 import { getStaffPortalSession } from "backend/SKANDI_CORE/staffAuth.web.js";
 import {
   getMyRosterBootstrap,
   createTimeClockEvent,
   requestTimeOff,
-  requestShiftChange
+  requestShiftChange,
+  searchOperationalFlights
 } from "backend/SKANDI_CORE/myRoster.web.js";
 
 const EMBED = "#myRosterEmbed";
@@ -42,16 +44,20 @@ async function bootstrap(html, filters) {
   send(html, "INTERNAL_CHROME_BOOTSTRAP", {
     pageName: "MyRoster",
     pagePath: currentPath(),
-    pageSubtitle: "Destination staff schedule and requests",
+    pageSubtitle: "ALTEA destination roster, flight search, and OPS-managed requests",
     profile: data.profile,
     apps: authorizedApps,
-    isAltea: false
+    isAltea: true
   });
 }
 async function refresh(html, filters) {
   await bootstrap(html, filters);
 }
 $w.onReady(function () {
+  if (currentPath().toLowerCase() === "/riaintra/success-factors/my-roster") {
+    wixLocation.to(APP_ROUTES.myRoster);
+    return;
+  }
   const html = $w(EMBED);
   html.onMessage(async event => {
     const msg = event.data || {};
@@ -87,6 +93,11 @@ $w.onReady(function () {
       }
       if (type === "MYROSTER_REFRESH_REQUEST") {
         await refresh(html, payload);
+        return;
+      }
+      if (type === "MYROSTER_FLIGHT_SEARCH_REQUEST") {
+        const result = await searchOperationalFlights(payload);
+        send(html, "MYROSTER_FLIGHT_SEARCH_RESULTS", Object.assign({}, result, { requestId: payload.requestId || "" }));
         return;
       }
       if (type === "MYROSTER_CLOCK_EVENT_REQUEST") {

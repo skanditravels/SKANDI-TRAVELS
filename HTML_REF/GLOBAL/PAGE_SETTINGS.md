@@ -84,7 +84,7 @@ V12 desktop chrome authority correction: 2026-10-13. This register uses the page
 | myProfile | `/my-profile` | APP_VIEWPORT_PUBLIC | Customer 118px base | Customer ON | calc(100vh - 118px) | W/H 100% | Embed | Hide | Hide |
 | myTrips | `/my-profile?tab=trips` | APP_VIEWPORT_PUBLIC | Customer 118px base | Customer ON | calc(100vh - 118px) | W/H 100% | Embed | Hide | Hide |
 | careers | `/about/careers` | CONTENT_AUTO | Customer 118px base | Customer ON | 680px min; grows with embed | W 100%; H runtime 680–30000 | Wix page | Hide | Show |
-| myRoster | `/riaintra/success-factors/my-roster` | APP_VIEWPORT_RIAINTRA | RIA 52px only | RIA ON | calc(100vh - 52px) | W/H 100% | Embed | Hide | Hide |
+| myRoster | `/riaintra/success-factors/altea/my-roster` | APP_VIEWPORT_ALTEA | ALTEA 48px only | ALTEA ON | calc(100vh - 48px) | W/H 100% | Embed | Hide | Hide |
 | groupTalk | `/riaintra/success-factors/altea/grouptalk` | APP_FULLSCREEN_CHROME_FREE | OFF | OFF | 100vh | W/H 100% | Embed | Hide | Hide |
 | passportVisa | `/travel-info/passport-visa` | CONTENT_AUTO | Customer 118px base | Customer ON | 680px min; grows with embed | W 100%; H runtime 680–30000 | Wix page | Hide | Show |
 | baggageAllowance | `/travel-info/baggage-allowance` | CONTENT_AUTO | Customer 118px base | Customer ON | 680px min; grows with embed | W 100%; H runtime 680–30000 | Wix page | Hide | Show |
@@ -102,6 +102,9 @@ All three are explicit chrome-free customer surfaces. The visible Store Checkout
 
 ### ALTEA routes
 ALTEA routes must never stack the RIAINTRA header above the ALTEA header. The ALTEA header is the sole global header and the ALTEA footer is the sole global footer. GroupTalk is the one ALTEA exception and is chrome-free.
+
+### MyRoster
+MyRoster uses `/riaintra/success-factors/altea/my-roster` and `APP_VIEWPORT_ALTEA`, so the ALTEA header and footer are the only global chrome. The ALTEA navigation links to MyRoster. Its HTML app is desktop-only; viewports below 768px do not start the staff-data bootstrap. The app and CARI print logo are supplied from `masterPage.js` through `SKANDI_MASTER_CONFIG`. MyRoster time-off and schedule-change requests are reviewed in OPS Control. When the organization role/base directories are empty, the authenticated staff profile provides its role and assigned base.
 
 ### GroupTalk
 `/riaintra/success-factors/altea/grouptalk` is opened from ALTEA navigation in a new browser tab. The GroupTalk page itself remains 100vh and chrome-free.
@@ -123,3 +126,9 @@ Existing content-resize behavior remains unchanged. Public content pages keep th
 - VOY Editor is superseded by Media Manager and must not be restored as a separate page.
 - Careers Portal is merged into Work at SKANDI and must not be restored as a separate page.
 - `Document Viewer.hz1s8.js` page identity is retained by Wix but the product surface is now Document Filler; its route remains unasserted until Wix route evidence is available.
+
+## 2026-10-28 MyRoster route and ownership update
+
+- Moved MyRoster into the ALTEA route family at `/riaintra/success-factors/altea/my-roster` with `APP_VIEWPORT_ALTEA` and the ALTEA header/footer.
+- MyRoster staff requests are reviewed from the OPS Control queue; only time-off approvals write the established leave ledger. Schedule-change approval does not publish a roster mutation.
+- MyRoster flight search filters the existing ALTEA FIDS and published schedule sources by query and date at the server. It remains independent of personal schedule assignments. The organization role/base directories and flight sources were empty at the time of inspection; staff with eligible profile role/base fields can still load MyRoster, while flight results remain empty until ALTEA data is populated.

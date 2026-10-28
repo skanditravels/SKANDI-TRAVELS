@@ -188,7 +188,7 @@ const MASTER_CONFIG = Object.freeze({
       productContext:"Enterprise Workforce Suite",
       primaryNav:Object.freeze([
         { id:"success-factors", label:"SAP RIAINTRA Dashboard", path:SITE_MAP.successFactors },
-        { id:"my-roster", label:"MyRoster", path:"/riaintra/success-factors/my-roster" },
+        { id:"my-roster", label:"MyRoster", path:APP_ROUTES.myRoster },
         { id:"alteaLaunchpad", label:"ALTEA", path:SITE_MAP.alteaLaunchpad },
         { id:"mail", label:"Mail", path:SITE_MAP.mail },
         { id:"docunet", label:"DocuNet", path:SITE_MAP.docunet },
@@ -215,6 +215,7 @@ const MASTER_CONFIG = Object.freeze({
         Object.freeze({ id:"altea-home", label:"Home", path:SITE_MAP.alteaLaunchpad }),
         Object.freeze({ id:"reservations", label:"Reservations", path:SITE_MAP.alteaReservations }),
         Object.freeze({ id:"inventory", label:"Inventory", path:SITE_MAP.inventoryControl }),
+        Object.freeze({ id:"my-roster", label:"MyRoster", path:APP_ROUTES.myRoster }),
         Object.freeze({ id:"grouptalk", label:"GroupTalk", path:APP_ROUTES.groupTalk }),
         Object.freeze({ id:"helpdesk", label:"HelpDesk", path:SITE_MAP.serviceDesk })
       ])
@@ -263,7 +264,7 @@ const MOBILE_FOOTER_GATE_PATHS = Object.freeze(new Set([
   "/riaintra/success-factors/uniform",
   "/riaintra/success-factors/uniform/admin-control",
   "/my-profile",
-  "/riaintra/success-factors/my-roster",
+  APP_ROUTES.myRoster,
   "/travel-info/flight-status"
 ].map(normalizePath)));
 const MOBILE_FOOTER_GATE_POLL_MS = 120;

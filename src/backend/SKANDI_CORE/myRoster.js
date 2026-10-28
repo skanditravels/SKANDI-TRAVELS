@@ -64,34 +64,36 @@ async function destinationContext(session) {
   const identity = identityFrom(session);
   const p = identity.profile;
   const groups = arr(session.permissionGroups || p.permissionGroups);
-  const roleCodes = unique([p.roleId, p.jobCode]);
   let roleRecord = null;
-  for (const roleCode of roleCodes) {
-    for (const column of ["role_id", "job_code"]) {
-      const result = await restRequest({
-        table: "org_job_roles",
-        method: "GET",
-        query: { select: "role_id,job_code,title,work_model,location_scope,department_code,active", [column]: "eq." + roleCode, active: "eq.true", limit: "3" }
-      });
-      roleRecord = rowsOf(result).find(row => row && row.active === true) || null;
-      if (roleRecord) break;
-    }
+  for (const [column, roleCode] of [["role_id", p.roleId], ["job_code", p.jobCode]]) {
+    const value = clean(roleCode, 80).replace(/[^A-Za-z0-9_-]/g, "");
+    if (!value) continue;
+    const result = await restRequest({
+      table: "org_job_roles",
+      method: "GET",
+      query: { select: "role_id,job_code,title,work_model,location_scope,department_code,active", [column]: "eq." + value, active: "eq.true", limit: "3" }
+    });
+    roleRecord = rowsOf(result).find(row => row && row.active === true) || null;
     if (roleRecord) break;
   }
-  if (roleCodes.length && !roleRecord) fail("MYROSTER_DESTINATION_ACCESS_REQUIRED");
-  const baseCandidates = unique([p.baseCode, p.destinationCode, p.station, p.base]);
   let baseRecord = null;
-  for (const candidate of baseCandidates) {
-    for (const column of ["code", "destination_code", "airport_iata", "name", "city"]) {
-      const result = await restRequest({
-        table: "org_bases",
-        method: "GET",
-        query: { select: "code,name,city,country_code,base_type,destination_code,airport_iata,timezone,active", [column]: "eq." + candidate, active: "eq.true", limit: "5" }
-      });
-      const found = rowsOf(result).find(row => row && row.active === true && ["Operating market", "Special field team"].includes(clean(row.base_type, 80)));
-      if (found) { baseRecord = found; break; }
-    }
-    if (baseRecord) break;
+  const baseProbes = [
+    ["code", p.baseCode || p.base],
+    ["destination_code", p.destinationCode],
+    ["airport_iata", p.destinationCode || p.station],
+    ["name", p.baseName || p.base],
+    ["city", p.city || p.station]
+  ];
+  for (const [column, rawValue] of baseProbes) {
+    const candidate = clean(rawValue, 120).replace(/[^A-Za-z0-9 _-]/g, "");
+    if (!candidate) continue;
+    const result = await restRequest({
+      table: "org_bases",
+      method: "GET",
+      query: { select: "code,name,city,country_code,base_type,destination_code,airport_iata,timezone,active", [column]: "eq." + candidate, active: "eq.true", limit: "5" }
+    });
+    const found = rowsOf(result).find(row => row && row.active === true && ["Operating market", "Special field team"].includes(clean(row.base_type, 80)));
+    if (found) { baseRecord = found; break; }
   }
   const roleParts = [
     session.accessRole, session.role, p.accessRole, p.role, p.jobTitle, p.position,
@@ -107,6 +109,23 @@ async function destinationContext(session) {
   const destinationRole = roleRecord ? roleMetadataFieldBased : roleTextFieldBased;
   if (session.isSystemAdmin === true || session.isHr === true || session.isPayrollAdmin === true || excluded || !destinationRole) {
     fail("MYROSTER_DESTINATION_ACCESS_REQUIRED");
+  }
+  // org_job_roles and org_bases may be unseeded while the authenticated staff
+  // profile already carries the canonical role and base assignment.
+  if (!baseRecord) {
+    const code = clean(p.baseCode || p.destinationCode || p.station || p.base, 80).replace(/[^A-Za-z0-9_-]/g, "");
+    if (code) {
+      baseRecord = {
+        code,
+        name: clean(p.baseName || p.station || p.base || code, 180),
+        city: clean(p.city || p.station || p.base || "", 120),
+        country_code: clean(p.countryCode || "", 8),
+        destination_code: clean(p.destinationCode || "", 8),
+        airport_iata: clean(p.airportIata || p.destinationCode || "", 8),
+        timezone: clean(p.timezone || p.timeZone || "", 80),
+        base_type: "Authenticated staff profile"
+      };
+    }
   }
   if (!baseRecord) fail("MYROSTER_DESTINATION_BASE_REQUIRED");
   return {
@@ -177,7 +196,12 @@ function normalizeAssignment(row, table) {
     notes: clean(row.notes || payload.notes || "", 400),
     routeId: clean(row.route_id || payload.routeId || "", 160),
     reference: clean(row.booking_reference || payload.bookingReference || "", 100),
-    timeZone: clean(payload.timeZone || payload.time_zone || "", 80)
+    timeZone: clean(payload.timeZone || payload.time_zone || "", 80),
+    flightNumber: clean(row.flight_number || payload.flightNumber || payload.flight_number || "", 40),
+    origin: clean(row.origin || payload.origin || payload.originCode || "", 8),
+    destination: clean(row.destination || payload.destination || payload.destinationCode || "", 8),
+    aircraftType: clean(row.aircraft_type || payload.aircraftType || payload.equipmentType || "", 80),
+    registration: clean(row.registration || payload.registration || "", 40)
   };
 }
 function normalizedClock(row) {
@@ -327,7 +351,7 @@ export async function createTimeClockEventCore(input = {}) {
     table: "roster_clock_events",
     method: "POST",
     body: {
-      employee_id: ctx.employeeId,
+      employee_id: ctx.staffRef || ctx.employeeId,
       employee_ref: ctx.staffRef || null,
       event_type: eventType,
       event_at: now,
@@ -348,7 +372,7 @@ async function createScheduleRequest(ctx, fields) {
     table: "schedule_change_requests",
     method: "POST",
     body: {
-      employee_id: ctx.employeeId,
+      employee_id: ctx.staffRef || ctx.employeeId,
       route_id: fields.routeId || null,
       booking_reference: fields.bookingReference || null,
       start_time: fields.startTime || null,
@@ -409,4 +433,137 @@ export async function requestShiftChangeCore(input = {}) {
       reason
     }
   });
+}
+
+function flightSearchToken(value) {
+  return clean(value, 80).toUpperCase().replace(/[^A-Z0-9]/g, "");
+}
+function flightMatches(row, token) {
+  const haystack = flightSearchToken([
+    row.flightNumber, row.airlineCode, row.airlineName, row.origin, row.viaPoint, row.destination
+  ].filter(Boolean).join(" "));
+  return haystack.includes(token);
+}
+function dateList(from, to) {
+  const values = [];
+  const cursor = new Date(from + "T00:00:00.000Z");
+  const last = new Date(to + "T00:00:00.000Z");
+  while (cursor <= last && values.length < 14) {
+    values.push(cursor.toISOString().slice(0, 10));
+    cursor.setUTCDate(cursor.getUTCDate() + 1);
+  }
+  return values;
+}
+function scheduleOperatesOn(row, date) {
+  const raw = clean(row.days_of_operation, 80).toUpperCase();
+  if (!raw) return true;
+  const day = new Date(date + "T00:00:00.000Z").getUTCDay();
+  const isoDay = day === 0 ? 7 : day;
+  if (/^[1-7]+$/.test(raw)) return raw.includes(String(isoDay));
+  const names = raw.match(/\b(?:MONDAY|MON|TUESDAY|TUE|WEDNESDAY|WED|THURSDAY|THUR|THU|FRIDAY|FRI|SATURDAY|SAT|SUNDAY|SUN)\b/g) || [];
+  if (!names.length) return false;
+  const key = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"][day];
+  return names.some(name => name.slice(0, 3) === key);
+}
+function normalizedFidsFlight(row) {
+  return {
+    id: "FIDS:" + clean(row.flight_key || row.id, 180),
+    flightNumber: clean(row.flight_number, 40),
+    airlineCode: clean(row.airline_code, 8),
+    airlineName: clean(row.airline_name, 120),
+    origin: clean(row.origin, 8),
+    destination: clean(row.destination, 8),
+    departureDate: clean(row.departure_date, 20),
+    scheduledTime: clean(row.scheduled_time, 40),
+    estimatedTime: clean(row.estimated_time, 40),
+    actualTime: clean(row.actual_time, 40),
+    status: clean(row.status, 80),
+    gate: clean(row.gate, 40),
+    terminal: clean(row.terminal, 40),
+    belt: clean(row.belt, 40),
+    aircraftType: clean(row.aircraft_type, 80),
+    registration: clean(row.registration, 40),
+    source: "ALTEA FIDS"
+  };
+}
+export async function searchOperationalFlightsCore(input = {}) {
+  const session = await requireStaffPortalSessionCore();
+  await destinationContext(session);
+  const token = flightSearchToken(input.query);
+  if (token.length < 2) fail("MYROSTER_FLIGHT_SEARCH_TERM_REQUIRED");
+  const from = validDate(input.from) ? clean(input.from, 20) : new Date().toISOString().slice(0, 10);
+  const to = validDate(input.to) ? clean(input.to, 20) : from;
+  const span = (Date.parse(to + "T00:00:00.000Z") - Date.parse(from + "T00:00:00.000Z")) / 86400000;
+  if (span < 0 || span > 13) fail("MYROSTER_FLIGHT_SEARCH_RANGE_INVALID");
+
+  const [fidsResult, scheduleResult] = await Promise.all([
+    restRequest({
+      table: "altea_fids_flights",
+      method: "GET",
+      query: {
+        select: "id,flight_key,flight_number,airline_code,airline_name,origin,destination,departure_date,scheduled_time,estimated_time,actual_time,gate,terminal,belt,status,aircraft_type,registration",
+        and: "(departure_date.gte." + from + ",departure_date.lte." + to + ")",
+        or: "(flight_number.ilike.*" + token + "*,airline_code.ilike.*" + token + "*,origin.ilike.*" + token + "*,destination.ilike.*" + token + "*)",
+        order: "departure_date.asc,scheduled_time.asc",
+        limit: "1000"
+      }
+    }),
+    restRequest({
+      table: "inventory_schedule_lines",
+      method: "GET",
+      query: {
+        select: "id,flight_number,days_of_operation,board_point,off_point,via_point,std,sta,equipment_type,effective_date,discontinue_date,status",
+        and: "(effective_date.lte." + to + ",or(discontinue_date.is.null,discontinue_date.gte." + from + "))",
+        or: "(flight_number.ilike.*" + token + "*,board_point.ilike.*" + token + "*,via_point.ilike.*" + token + "*,off_point.ilike.*" + token + "*)",
+        order: "flight_number.asc",
+        limit: "1000"
+      }
+    })
+  ]);
+
+  const flights = rowsOf(fidsResult).map(normalizedFidsFlight).filter(row =>
+    row.departureDate >= from && row.departureDate <= to && flightMatches(row, token)
+  );
+  const seen = new Set(flights.map(row => [row.flightNumber, row.departureDate, row.origin, row.destination].map(flightSearchToken).join("|")));
+  const scheduleDates = dateList(from, to);
+  for (const row of rowsOf(scheduleResult)) {
+    const flightNumber = clean(row.flight_number, 40);
+    const origin = clean(row.board_point, 8);
+    const destination = clean(row.off_point, 8);
+    const viaPoint = clean(row.via_point, 8);
+    if (!flightMatches({ flightNumber, origin, viaPoint, destination }, token)) continue;
+    const status = clean(row.status, 80).toUpperCase();
+    if (["CANCELLED", "CANCELED", "INACTIVE", "CLOSED", "DELETED", "EXPIRED"].includes(status)) continue;
+    for (const date of scheduleDates) {
+      if (row.effective_date && clean(row.effective_date, 20) > date) continue;
+      if (row.discontinue_date && clean(row.discontinue_date, 20) < date) continue;
+      if (!scheduleOperatesOn(row, date)) continue;
+      const key = [flightNumber, date, origin, destination].map(flightSearchToken).join("|");
+      if (seen.has(key)) continue;
+      seen.add(key);
+      flights.push({
+        id: "SCHEDULE:" + clean(row.id, 120) + ":" + date,
+        flightNumber,
+        airlineCode: "",
+        airlineName: "",
+        origin,
+        viaPoint,
+        destination,
+        departureDate: date,
+        scheduledTime: clean(row.std, 40),
+        arrivalTime: clean(row.sta, 40),
+        estimatedTime: "",
+        actualTime: "",
+        status: clean(row.status || "SCHEDULED", 80),
+        gate: "",
+        terminal: "",
+        belt: "",
+        aircraftType: clean(row.equipment_type, 80),
+        registration: "",
+        source: "Published ALTEA schedule"
+      });
+    }
+  }
+  flights.sort((a, b) => (a.departureDate + " " + (a.scheduledTime || "")).localeCompare(b.departureDate + " " + (b.scheduledTime || "")));
+  return { ok: true, flights: flights.slice(0, 100), sources: ["ALTEA FIDS", "ALTEA schedule"], dateRange: { from, to }, searchedAt: new Date().toISOString() };
 }

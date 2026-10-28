@@ -22,8 +22,8 @@
 
   <header class="topbar">
     <div class="brand">
-      <div class="brand-logo">JEPPESEN</div>
-      <div class="brand-text">Operations Tracking <span class="brand-sub">| GLOBAL WORKFORCE</span></div>
+      <img class="brand-logo master-brand-logo" id="masterAlteaLogo" alt="ALTEA" hidden>
+      <div class="brand-text">ALTEA Operations <span class="brand-sub">| SKANDI DESTINATION WORKFORCE</span></div>
     </div>
     
     <div class="top-actions">
@@ -44,7 +44,7 @@
       <div class="nav-icon active" id="navTracking" data-target="view-tracking" title="Live Tracking" onclick="switchView('view-tracking', this)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="1em" height="1em">
   <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
 </svg></div>
-      <div class="nav-icon" id="navVacation" data-target="view-vacation" title="Vacation Planning" onclick="switchView('view-vacation', this)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="1em" height="1em">
+      <div class="nav-icon" id="navVacation" data-target="view-vacation" title="Leave & MyRoster Requests" onclick="switchView('view-vacation', this)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="1em" height="1em">
   <path d="M12 2C6.48 2 2 6.48 2 12h8v5c0 1.1.9 2 2 2s2-.9 2-2v-5h8c0-5.52-4.48-10-10-10z"/>
 </svg></div>
       <div class="nav-icon" id="navFtl" data-target="view-ftl" title="Labor Laws & Compliance" onclick="switchView('view-ftl', this)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="1em" height="1em">
@@ -209,7 +209,7 @@
     </main>
     <main class="view-container" id="view-vacation">
       <div class="view-toolbar">
-        <h1 class="view-title">Vacation Planning & Bidding</h1>
+        <h1 class="view-title">Leave &amp; Staff Requests</h1>
         <div class="toolbar-actions">
           <button class="btn primary" onclick="openVacationModal()">+ Request Vacation Block</button>
         </div>
@@ -220,6 +220,14 @@
         <table class="j-table">
           <thead><tr><th>Request ID</th><th>Staff Member</th><th>Base</th><th>Period</th><th>Duration</th><th>Jurisdiction Rule</th><th>Status</th><th>Actions</th></tr></thead>
           <tbody id="vacationTableBody"></tbody>
+        </table>
+      </div>
+      <div class="data-table-container myroster-queue">
+        <h3 style="color: var(--j-text-main); margin-bottom: 5px; font-size: 13px;">MyRoster requests — OPS review queue</h3>
+        <p class="myroster-queue-note">Time-off approvals are recorded in the leave ledger. Approving a schedule-change request records the OPS decision; the changed assignment must still be published through the roster tools.</p>
+        <table class="j-table">
+          <thead><tr><th>Submitted</th><th>Staff Member</th><th>Base</th><th>Request</th><th>Details</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="myRosterRequestsBody"></tbody>
         </table>
       </div>
     </main>
@@ -449,3 +457,4 @@
   <script src="skandi-ops-control.js"></script>
 </body>
 </html>
+

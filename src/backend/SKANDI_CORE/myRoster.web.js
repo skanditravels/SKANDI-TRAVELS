@@ -4,7 +4,8 @@ import {
   getMyRosterBootstrapCore,
   createTimeClockEventCore,
   requestTimeOffCore,
-  requestShiftChangeCore
+  requestShiftChangeCore,
+  searchOperationalFlightsCore
 } from "backend/SKANDI_CORE/myRoster";
 
 function publicError(error) {
@@ -16,7 +17,10 @@ function publicError(error) {
     STAFF_ACCESS_DENIED: "Your SKANDI staff access could not be confirmed.",
     MYROSTER_ASSIGNMENT_NOT_FOUND: "That assignment is no longer available for your staff account.",
     MYROSTER_TIMEOFF_DATES_INVALID: "Enter a valid time-off date range of up to 93 days.",
-    MYROSTER_REQUEST_REASON_REQUIRED: "Add a short note explaining your schedule-change request."
+    MYROSTER_REQUEST_REASON_REQUIRED: "Add a short note explaining your schedule-change request.",
+    MYROSTER_FLIGHT_SEARCH_TERM_REQUIRED: "Enter at least two characters for a flight or airport search.",
+    MYROSTER_FLIGHT_SEARCH_RANGE_INVALID: "Choose a valid flight search date range of up to 14 days.",
+    MYROSTER_FLIGHT_SEARCH_INVALID: "The ALTEA flight search could not be completed."
   };
   const out = new Error(messages[code] || "MyRoster could not complete the request. Refresh the page or contact your local SKANDI manager.");
   out.name = "MyRosterError";
@@ -32,3 +36,4 @@ export const getMyRosterBootstrap = webMethod(Permissions.SiteMember, input => c
 export const createTimeClockEvent = webMethod(Permissions.SiteMember, input => call(createTimeClockEventCore, input));
 export const requestTimeOff = webMethod(Permissions.SiteMember, input => call(requestTimeOffCore, input));
 export const requestShiftChange = webMethod(Permissions.SiteMember, input => call(requestShiftChangeCore, input));
+export const searchOperationalFlights = webMethod(Permissions.SiteMember, input => call(searchOperationalFlightsCore, input));

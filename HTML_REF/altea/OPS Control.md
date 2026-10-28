@@ -10,14 +10,14 @@
 - Canonical backend facade: `/src/backend/SKANDI_CORE/opsControl.web.js`.
 - Canonical backend core: `/src/backend/SKANDI_CORE/opsControl.js`.
 - Canonical transport: `/src/backend/SKANDI_CORE/supabaseServer.js`.
-- Authentication/authorization: Wix Members → `staffAuth.web` / `staffAuth`; OPS access requires established operations/OCC/manager/system-admin authorization. Write actions require management/OCC/system-admin authority and are rechecked server-side.
+- Authentication/authorization: Wix Members → `staffAuth.web` / `staffAuth`; OPS access requires established operations/OCC/manager/system-admin authorization. General assignment mutations retain management/OCC/system-admin write checks. MyRoster request review is separately permissioned to authorized OPS groups and rechecked server-side.
 - Supabase resources verified 2026-10-14: `agent_users`, `roster_shifts`, `roster_clock_events`, `roster_time_ledger`, `schedule_change_requests`, `time_off_balances`, `vacation_sick_leave_ledger`, `crew_assignments`, `driver_assignments`, `tour_assignments`, `airport_duty_assignments`, `vehicle_assignments`, `hr_base_jurisdictions`, `altea_sync_events`.
 - External provider dependencies: none directly from the embed. OPS consumes normalized canonical operational data already stored through SKANDI systems.
-- Message contract: HTML → page `OPS_READY`, `OPS_BOOTSTRAP_REQUEST`, `OPS_REFRESH`, `OPS_ACTION`, `OPS_LOGOUT`; page → HTML `OPS_BOOTSTRAP`, `OPS_ACTION_RESULT`, `OPS_ERROR`.
-- Operational ownership: OPS is the unified workforce/operations control surface. It does not create a second staff, roster, assignment, leave, compliance, communications or ALTEA data model. GroupTalk remains the owner of operational messaging. Mail remains the owner of internal company mail.
+- Message contract: HTML → page `OPS_READY`, `OPS_BOOTSTRAP_REQUEST`, `OPS_REFRESH`, `OPS_ACTION`, `OPS_LOGOUT`; page → HTML `OPS_BOOTSTRAP`, `OPS_ACTION_RESULT`, `OPS_ERROR`. OPS actions include `RESOLVE_MYROSTER_REQUEST`.
+- Operational ownership: OPS is the unified workforce/operations control surface and reviews MyRoster time-off and schedule-change requests from the existing `schedule_change_requests` table. Approved time off is written to the existing leave ledger. Approving a schedule change records the OPS decision; a roster edit still must be published through the roster tools. OPS does not create a second staff, roster, assignment, leave, compliance, communications or ALTEA data model. GroupTalk remains the owner of operational messaging. Mail remains the owner of internal company mail.
 - Status: **STATICALLY VERIFIED — REQUIRES LIVE TEST**.
-- Source-of-truth provenance: no current OPS Control HTML_REF file was present in GitHub `main`; the user-supplied `Pasted text(20261014-174931).txt` is the authoritative HTML input for this V12 convergence.
-- Last verified date: 2026-10-14.
+- Source-of-truth provenance: the current GitHub `HTML_REF/altea/OPS Control.md`, page controller, backend facade/core and split embed sidecars were inspected at main SHA `42b11a4c58e8f97fc6cfea20f46101f96ee86b66` before this change.
+- Last verified date: 2026-10-28.
 
 ## Change log
 
@@ -27,6 +27,7 @@
 - 2026-10-14 — Added read-only ALTEA synchronization audit projection and operational logistics projection from existing assignment tables. GroupTalk messaging remains independently permissioned and is not bulk-exposed through OPS.
 - 2026-10-14 — Converged the embed to `APP_VIEWPORT_ALTEA`: removed content-height mutation, restored pinch zoom, added 16px mobile form-control protection, and added a one-minute visible-page bootstrap refresh.
 - 2026-10-14 — Added OPS Control to the global V12 page settings register at the confirmed `/riaintra/success-factors/altea/ops` route.
+- 2026-10-28 — Added the MyRoster staff-request queue. OPS can approve or decline time-off and schedule-change requests using the existing `schedule_change_requests` and `vacation_sick_leave_ledger` tables; schedule approvals do not mutate assignments. The in-app ALTEA logo now comes from `SKANDI_MASTER_CONFIG`.
 
 ## COMPLETE HTML / SOURCE IMPLEMENTATION
 
@@ -439,14 +440,17 @@
       .settings-grid { grid-template-columns: 1fr; }
       .data-table-container.split-view { flex-direction: column; }
     }
-  </style>
+  .brand-logo.master-brand-logo{width:auto;max-width:108px;height:28px;object-fit:contain;font-size:0;font-style:normal;letter-spacing:0;filter:none}
+.myroster-queue{margin-top:14px}
+.myroster-queue-note{margin:-4px 0 12px;color:var(--j-text-muted);font-size:11px;line-height:1.45}
+</style>
 </head>
 <body>
 
   <header class="topbar">
     <div class="brand">
-      <div class="brand-logo">JEPPESEN</div>
-      <div class="brand-text">Operations Tracking <span class="brand-sub">| GLOBAL WORKFORCE</span></div>
+      <img class="brand-logo master-brand-logo" id="masterAlteaLogo" alt="ALTEA" hidden>
+      <div class="brand-text">ALTEA Operations <span class="brand-sub">| SKANDI DESTINATION WORKFORCE</span></div>
     </div>
     
     <div class="top-actions">
@@ -467,7 +471,7 @@
       <div class="nav-icon active" id="navTracking" data-target="view-tracking" title="Live Tracking" onclick="switchView('view-tracking', this)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="1em" height="1em">
   <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
 </svg></div>
-      <div class="nav-icon" id="navVacation" data-target="view-vacation" title="Vacation Planning" onclick="switchView('view-vacation', this)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="1em" height="1em">
+      <div class="nav-icon" id="navVacation" data-target="view-vacation" title="Leave & MyRoster Requests" onclick="switchView('view-vacation', this)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="1em" height="1em">
   <path d="M12 2C6.48 2 2 6.48 2 12h8v5c0 1.1.9 2 2 2s2-.9 2-2v-5h8c0-5.52-4.48-10-10-10z"/>
 </svg></div>
       <div class="nav-icon" id="navFtl" data-target="view-ftl" title="Labor Laws & Compliance" onclick="switchView('view-ftl', this)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="1em" height="1em">
@@ -632,7 +636,7 @@
     </main>
     <main class="view-container" id="view-vacation">
       <div class="view-toolbar">
-        <h1 class="view-title">Vacation Planning & Bidding</h1>
+        <h1 class="view-title">Leave &amp; Staff Requests</h1>
         <div class="toolbar-actions">
           <button class="btn primary" onclick="openVacationModal()">+ Request Vacation Block</button>
         </div>
@@ -643,6 +647,14 @@
         <table class="j-table">
           <thead><tr><th>Request ID</th><th>Staff Member</th><th>Base</th><th>Period</th><th>Duration</th><th>Jurisdiction Rule</th><th>Status</th><th>Actions</th></tr></thead>
           <tbody id="vacationTableBody"></tbody>
+        </table>
+      </div>
+      <div class="data-table-container myroster-queue">
+        <h3 style="color: var(--j-text-main); margin-bottom: 5px; font-size: 13px;">MyRoster requests — OPS review queue</h3>
+        <p class="myroster-queue-note">Time-off approvals are recorded in the leave ledger. Approving a schedule-change request records the OPS decision; the changed assignment must still be published through the roster tools.</p>
+        <table class="j-table">
+          <thead><tr><th>Submitted</th><th>Staff Member</th><th>Base</th><th>Request</th><th>Details</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="myRosterRequestsBody"></tbody>
         </table>
       </div>
     </main>
@@ -902,6 +914,7 @@
       crewData: [],
 
       vacations: [],
+      myRosterRequests: [],
       trades: [],
       logistics: [],
       messages: [],
@@ -920,6 +933,16 @@
 
     function postToWix(type, payload = {}) {
       window.parent.postMessage({ source: OPS_SOURCE, type, payload }, '*');
+    }
+
+    function applyMasterConfig(config) {
+      const logos = config?.brand?.assets?.logos || {};
+      const logoUrl = String(logos.altea || logos.alteaWhite || logos.skandiGroupWhite || '').trim();
+      if (!/^https:\/\//i.test(logoUrl)) return;
+      const logo = document.getElementById('masterAlteaLogo');
+      if (!logo) return;
+      logo.src = logoUrl;
+      logo.hidden = false;
     }
 
     function setSyncState(label, status = '') {
@@ -1030,6 +1053,21 @@
       };
     }
 
+    function normalizeMyRosterRequest(row) {
+      return {
+        id: idOf(row.id ?? row.requestId ?? row.request_id),
+        sourceId: idOf(row.sourceId ?? row.source_id ?? row.id),
+        employeeId: idOf(row.employeeId ?? row.employee_id),
+        name: String(row.name ?? row.staffName ?? row.staff_name ?? ''),
+        base: String(row.base ?? row.baseCode ?? row.base_code ?? ''),
+        type: String(row.type ?? row.requestType ?? row.request_type ?? 'STAFF REQUEST').toUpperCase().replaceAll('_', ' '),
+        period: String(row.period ?? ''),
+        summary: String(row.summary ?? row.details ?? row.notes ?? ''),
+        status: String(row.status ?? 'PENDING').toUpperCase().replaceAll('_', ' '),
+        submittedAt: String(row.submittedAt ?? row.createdAt ?? row.created_at ?? '')
+      };
+    }
+
     function normalizeTrade(row) {
       return {
         id: idOf(row.id ?? row.tradeId ?? row.trade_id),
@@ -1098,6 +1136,7 @@
       STATE.windowStart = payload.windowStart ?? payload.window_start ?? payload.window?.startAt ?? STATE.windowStart;
       STATE.crewData = staff.map(row => normalizeCrew(asObject(row), assignments));
       STATE.vacations = asArray(payload.vacations ?? payload.vacationRequests).map(row => normalizeVacation(asObject(row)));
+      STATE.myRosterRequests = asArray(payload.myRosterRequests).map(row => normalizeMyRosterRequest(asObject(row)));
       STATE.trades = asArray(payload.tripTrades ?? payload.trades).map(row => normalizeTrade(asObject(row)));
       STATE.logistics = asArray(payload.logistics).map(row => normalizeLogistics(asObject(row)));
       STATE.messages = asArray(payload.messages).map(row => normalizeMessage(asObject(row)));
@@ -1153,6 +1192,10 @@
       if (event.source !== window.parent) return;
       const message = asObject(event.data);
       if (message.source && message.source !== OPS_PARENT) return;
+      if (message.type === 'SKANDI_MASTER_CONFIG') {
+        applyMasterConfig(message.payload);
+        return;
+      }
       if (message.type === 'OPS_BOOTSTRAP' || message.type === 'OPS_STATE') {
         applyBootstrap(message.payload);
         return;
@@ -1291,6 +1334,7 @@
       renderAlertsDrawer();
       renderFTL();
       renderVacation();
+      renderMyRosterRequests();
       renderTripTrades();
       renderLogistics();
       renderMessages();
@@ -1668,6 +1712,33 @@
       }
     }
 
+    function renderMyRosterRequests() {
+      const tbody = document.getElementById('myRosterRequestsBody');
+      if (!tbody) return;
+      window.resolveMyRosterRequest = function(id, decision, button) {
+        const request = STATE.myRosterRequests.find(item => item.id === id);
+        if (!request) return showToast('MyRoster request is no longer available.', 'error');
+        if (!['APPROVED', 'REJECTED'].includes(decision)) return;
+        if (button) button.disabled = true;
+        const verb = decision === 'APPROVED' ? 'approved' : 'declined';
+        dispatchAction('RESOLVE_MYROSTER_REQUEST', {
+          sourceId: request.sourceId,
+          decision
+        }, `MyRoster ${request.type.toLowerCase()} request ${verb}.`);
+      };
+      if (!STATE.myRosterRequests.length) {
+        tbody.innerHTML = '<tr><td colspan="7" class="empty-state">No MyRoster requests are waiting for OPS review.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = STATE.myRosterRequests.map(request => {
+        const pending = ['PENDING', 'PENDING REVIEW', 'SUBMITTED', 'OPEN'].includes(request.status);
+        const actions = pending
+          ? `<button class="btn primary" onclick="resolveMyRosterRequest('${escapeHtml(request.id)}','APPROVED',this)">Approve</button> <button class="btn" onclick="resolveMyRosterRequest('${escapeHtml(request.id)}','REJECTED',this)">Decline</button>`
+          : '<span style="color:var(--j-text-muted)">Reviewed</span>';
+        return `<tr><td>${escapeHtml(request.submittedAt || '—')}</td><td><b>${escapeHtml(request.name || request.employeeId || 'Staff')}</b></td><td>${escapeHtml(request.base || '—')}</td><td>${escapeHtml(request.type)}</td><td>${escapeHtml([request.period, request.summary].filter(Boolean).join(' · ') || '—')}</td><td><span class="j-badge ${pending ? 'yellow' : request.status === 'APPROVED' ? 'green' : 'red'}">${escapeHtml(request.status)}</span></td><td>${actions}</td></tr>`;
+      }).join('');
+    }
+
     function renderTripTrades() {
       const tbody = document.getElementById('tradeTableBody');
       if(!tbody) return;
@@ -1823,6 +1894,7 @@
 
     window.onload = () => {
       renderApp();
+      postToWix('MASTER_CONFIG_REQUEST', { purpose: 'ALTEA_LOGO' });
       postToWix('OPS_READY', {
         version: 'V12-OPS-CONTROL-2026.10.14',
         contractVersion: 2,
@@ -1838,7 +1910,9 @@
     });
   // V12 APP_VIEWPORT_ALTEA: Wix owns the fixed app region; no iframe height mutation.
   function sendHeight() {}
-  </script>
+  
+</script>
 </body>
 </html>
+
 ```

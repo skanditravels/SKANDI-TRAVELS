@@ -5,6 +5,15 @@
   const PARENT_SOURCE = "SKANDI_WIX_PARENT";
   const root = document.getElementById("myRosterRoot");
   if (!root) return;
+  const desktopOnlyNotice = document.getElementById("desktopOnlyNotice");
+  const desktopViewport = typeof window.matchMedia === "function"
+    ? window.matchMedia("(min-width: 768px)").matches
+    : window.innerWidth >= 768;
+  if (!desktopViewport) {
+    root.hidden = true;
+    if (desktopOnlyNotice) desktopOnlyNotice.hidden = false;
+    return;
+  }
 
   const $ = (selector) => root.querySelector(selector);
   const $$ = (selector) => [...root.querySelectorAll(selector)];
@@ -15,9 +24,12 @@
     clocks: [],
     timeOffBalances: [],
     pending: new Map(),
+    flights: [],
+    flightRequestId: "",
     selectedAssignment: null,
     activePanel: "schedule",
     lastSync: null,
+    brandLogoUrl: "",
     loading: true
   };
 
@@ -54,6 +66,70 @@
   }
   function post(type, payload = {}) {
     window.parent.postMessage({ source: SOURCE, type, payload, timestamp: new Date().toISOString() }, "*");
+  }
+  function applyMasterConfig(config) {
+    const logos = config?.brand?.assets?.logos || {};
+    const logoUrl = text(logos.altea || logos.alteaWhite || logos.skandiGroupWhite).trim();
+    if (!/^https:\/\//i.test(logoUrl)) return;
+    state.brandLogoUrl = logoUrl;
+    const logo = $("#alteaBrandLogo");
+    if (!logo) return;
+    logo.src = logoUrl;
+    logo.hidden = false;
+    $("#brandMark").hidden = true;
+  }
+  function requestFlightSearch() {
+    const query = text($("#flightQuery")?.value).trim();
+    const from = text($("#flightDateFrom")?.value).trim();
+    const to = text($("#flightDateTo")?.value).trim();
+    if (query.length < 2) return showToast("Enter at least two characters for a flight or airport search.", true);
+    if (!from || !to || from > to) return showToast("Choose a valid flight search date range.", true);
+    const button = $("#flightSearchButton");
+    state.flightRequestId = `FLIGHT-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    if (button) button.disabled = true;
+    $("#flightSearchStatus").textContent = "Searching canonical ALTEA flight data…";
+    $("#flightResultsBody").innerHTML = '<tr><td colspan="7"><div class="mr-empty"><span class="mr-spinner"></span><strong>Searching ALTEA records</strong><span>Personal roster assignments are not used as a filter.</span></div></td></tr>';
+    post("MYROSTER_FLIGHT_SEARCH_REQUEST", { query, from, to, requestId: state.flightRequestId });
+  }
+  function renderFlightResults(rows) {
+    const body = $("#flightResultsBody");
+    if (!body) return;
+    state.flights = Array.isArray(rows) ? rows : [];
+    if (!state.flights.length) {
+      body.innerHTML = '<tr><td colspan="7"><div class="mr-empty"><strong>No matching live flight or schedule records</strong><span>The search is independent of your roster. This result means the selected ALTEA data sources returned no matching flight records.</span></div></td></tr>';
+      return;
+    }
+    body.innerHTML = state.flights.map((flight) => {
+      const departure = flight.departureTime || flight.estimatedTime || flight.actualTime || flight.scheduledTime || "—";
+      const arrival = flight.arrivalTime || "";
+      const route = [flight.origin, flight.viaPoint, flight.destination].filter(Boolean).join(" → ") || "Route not supplied";
+      const status = [flight.status || "SCHEDULED", flight.gate ? `Gate ${flight.gate}` : ""].filter(Boolean).join(" · ");
+      return `<tr><td><span class="mr-date-main">${escapeHtml(flight.departureDate || "—")}</span></td><td><div class="mr-assignment-cell"><strong>${escapeHtml(flight.flightNumber || "Flight number unavailable")}</strong><span>${escapeHtml(flight.airlineName || flight.source || "ALTEA")}</span></div></td><td>${escapeHtml(route)}</td><td class="mr-time">${escapeHtml(departure)}${arrival ? `<span class="mr-date-sub">Arr ${escapeHtml(arrival)}</span>` : ""}</td><td>${statusPill(status)}${flight.terminal ? `<span class="mr-flight-meta">Terminal ${escapeHtml(flight.terminal)}</span>` : ""}</td><td>${escapeHtml([flight.aircraftType, flight.registration].filter(Boolean).join(" · ") || "—")}</td><td><button class="mr-row-action" type="button" data-brief-flight="${escapeHtml(flight.id)}">CARI / Print</button></td></tr>`;
+    }).join("");
+  }
+  function renderBriefing(flight = {}, assignment = null) {
+    const profile = state.boot?.profile || {};
+    const staffName = profile.displayName || profile.fullName || profile.preferredName || "Authenticated SKANDI staff member";
+    const staffId = profile.agentId || profile.skId || "—";
+    const flightNumber = flight.flightNumber || assignment?.flightNumber || assignment?.reference || assignment?.routeId || "—";
+    const origin = flight.origin || assignment?.origin || "—";
+    const destination = flight.destination || assignment?.destination || "—";
+    const viaPoint = flight.viaPoint || assignment?.viaPoint || "";
+    const date = flight.departureDate || (assignment?.startAt ? dateInputValue(assignment.startAt) : "—");
+    const source = flight.source || (assignment ? "MyRoster assignment record" : "ALTEA flight search");
+    const assignmentLabel = assignment ? assignmentTitle(assignment) : "No personal assignment linked to this search";
+    const time = flight.departureTime || flight.estimatedTime || flight.actualTime || flight.scheduledTime || "—";
+    const brandMark = state.brandLogoUrl ? `<img class="mr-cari-logo" src="${escapeHtml(state.brandLogoUrl)}" alt="ALTEA">` : "";
+    const paper = $("#briefingPaper");
+    if (!paper) return;
+    paper.innerHTML = `<div class="mr-cari-head">${brandMark}<div class="mr-cari-head-title"><strong>SKANDI ALTEA</strong><span>CREW ASSIGNMENT &amp; ROSTER INFORMATION</span></div><div class="mr-cari-stamp"><span>GENERATED</span><strong>${escapeHtml(new Date().toISOString().replace("T", " ").slice(0, 16))}Z</strong></div></div>
+      <h2>CARI OPERATIONAL BRIEFING CARD</h2><p class="mr-cari-subtitle">Operational details shown here are limited to the selected live flight or assignment record and your authenticated staff profile.</p>
+      <div class="mr-cari-rule"></div><h3>FLIGHT / ROUTE IDENTIFICATION</h3><div class="mr-cari-grid"><div><span>FLIGHT / REF</span><strong>${escapeHtml(flightNumber)}</strong></div><div><span>DATE</span><strong>${escapeHtml(date)}</strong></div><div><span>ORIGIN</span><strong>${escapeHtml(origin)}</strong></div><div><span>VIA</span><strong>${escapeHtml(viaPoint || "Not supplied")}</strong></div><div><span>DESTINATION</span><strong>${escapeHtml(destination)}</strong></div><div><span>STATUS</span><strong>${escapeHtml(flight.status || "Not supplied")}</strong></div><div><span>DATA SOURCE</span><strong>${escapeHtml(source)}</strong></div></div>
+      <div class="mr-cari-rule"></div><h3>SCHEDULE &amp; STATION DETAILS</h3><div class="mr-cari-grid"><div><span>SCHEDULED</span><strong>${escapeHtml(flight.scheduledTime || time)}</strong></div><div><span>ESTIMATED</span><strong>${escapeHtml(flight.estimatedTime || "Not supplied")}</strong></div><div><span>ACTUAL</span><strong>${escapeHtml(flight.actualTime || "Not supplied")}</strong></div><div><span>GATE / TERMINAL</span><strong>${escapeHtml([flight.gate, flight.terminal].filter(Boolean).join(" / ") || "Not supplied")}</strong></div><div><span>AIRCRAFT / REGISTRATION</span><strong>${escapeHtml([flight.aircraftType, flight.registration].filter(Boolean).join(" / ") || "Not supplied")}</strong></div><div><span>BAGGAGE BELT</span><strong>${escapeHtml(flight.belt || "Not supplied")}</strong></div></div>
+      <div class="mr-cari-rule"></div><h3>AUTHENTICATED STAFF ASSIGNMENT</h3><table class="mr-cari-table"><thead><tr><th>STAFF ID</th><th>STAFF MEMBER</th><th>ROLE</th><th>BASE</th><th>ASSIGNMENT</th></tr></thead><tbody><tr><td>${escapeHtml(staffId)}</td><td>${escapeHtml(staffName)}</td><td>${escapeHtml(profile.jobTitle || profile.position || "Not supplied")}</td><td>${escapeHtml(state.boot?.base?.code || profile.baseCode || "Not supplied")}</td><td>${escapeHtml(assignmentLabel)}</td></tr></tbody></table>
+      <div class="mr-cari-rule"></div><h3>BRIEFING CHECKLIST — COMPLETE WITH THE OPS TEAM</h3><div class="mr-cari-checks"><div>□ Review route and station information</div><div>□ Confirm current operational notices</div><div>□ Confirm local transfer / destination handover where applicable</div><div>□ Record safety briefing completion in the approved OPS workflow</div></div>
+      <p class="mr-cari-note">This printable card does not record checklist completion and does not include other staff, passenger, or booking data. Those records remain in their authorized ALTEA / OPS workflows.</p><div class="mr-cari-footer">SKANDI ALTEA · CARI PRINT VIEW · SOURCE RECORDS: ${escapeHtml(source)}</div>`;
+    openDialog($("#briefingDialog"));
   }
   function requestRefresh() {
     const from = $("#dateFrom")?.value || "";
@@ -159,6 +235,7 @@
     });
     if (panel === "time") renderClock();
     if (panel === "requests") renderRequests();
+    if (panel === "flights") $("#flightQuery")?.focus();
   }
   function renderProfile() {
     const profile = state.boot?.profile || {};
@@ -195,7 +272,9 @@
     return `<span class="mr-status ${statusClass(value)}">${escapeHtml(label)}</span>`;
   }
   function rowAction(assignment) {
-    return `<button class="mr-row-action" type="button" data-change="${escapeHtml(assignment.id)}" data-source-table="${escapeHtml(assignment.sourceTable)}">Request change</button>`;
+    const canBrief = assignment.flightNumber || assignment.origin || assignment.destination || assignment.routeId || assignment.reference;
+    const briefing = canBrief ? `<button class="mr-row-action" type="button" data-brief-assignment="${escapeHtml(assignment.id)}" data-source-table="${escapeHtml(assignment.sourceTable)}">CARI / Print</button>` : "";
+    return `<div class="mr-row-actions">${briefing}<button class="mr-row-action" type="button" data-change="${escapeHtml(assignment.id)}" data-source-table="${escapeHtml(assignment.sourceTable)}">Request change</button></div>`;
   }
   function assignmentRow(assignment) {
     const date = dateParts(assignment.startAt, assignment.timeZone);
@@ -335,7 +414,10 @@
       STAFF_ACCESS_DENIED: "Your SKANDI staff access could not be confirmed.",
       MYROSTER_ASSIGNMENT_NOT_FOUND: "That assignment is no longer available for your staff account.",
       MYROSTER_TIMEOFF_DATES_INVALID: "Enter a valid time-off date range.",
-      MYROSTER_REQUEST_REASON_REQUIRED: "Add a short note explaining your schedule-change request."
+      MYROSTER_REQUEST_REASON_REQUIRED: "Add a short note explaining your schedule-change request.",
+      MYROSTER_FLIGHT_SEARCH_TERM_REQUIRED: "Enter at least two characters for a flight or airport search.",
+      MYROSTER_FLIGHT_SEARCH_RANGE_INVALID: "Choose a flight search date range of up to 14 days.",
+      MYROSTER_FLIGHT_SEARCH_INVALID: "The flight search could not be completed."
     };
     return messages[text(code)] || text(code) || "The request could not be completed. Refresh and try again.";
   }
@@ -381,6 +463,20 @@
   }
 
   root.addEventListener("click", (event) => {
+    if (event.target.closest("#closeBriefing")) { closeDialog($("#briefingDialog")); return; }
+    if (event.target.closest("#printBriefing")) { window.print(); return; }
+    const flightBriefing = event.target.closest("[data-brief-flight]");
+    if (flightBriefing) {
+      const flight = state.flights.find((row) => row.id === flightBriefing.dataset.briefFlight);
+      if (flight) renderBriefing(flight);
+      return;
+    }
+    const assignmentBriefing = event.target.closest("[data-brief-assignment]");
+    if (assignmentBriefing) {
+      const assignment = state.assignments.find((row) => row.id === assignmentBriefing.dataset.briefAssignment && row.sourceTable === assignmentBriefing.dataset.sourceTable);
+      if (assignment) renderBriefing({}, assignment);
+      return;
+    }
     const groupTalk = event.target.closest("#groupTalkLink");
     if (groupTalk && groupTalk.href && groupTalk.getAttribute("href") !== "#") {
       event.preventDefault();
@@ -419,6 +515,10 @@
     if (selector === "#statusFilter") renderSchedule();
     else requestRefresh();
   }));
+  $("#flightSearchForm")?.addEventListener("submit", (event) => { event.preventDefault(); requestFlightSearch(); });
+  $("#briefingDialog")?.addEventListener("click", (event) => {
+    if (event.target === $("#briefingDialog")) closeDialog($("#briefingDialog"));
+  });
   $("#timeOffForm")?.addEventListener("submit", (event) => event.preventDefault());
   $("#shiftChangeForm")?.addEventListener("submit", (event) => event.preventDefault());
 
@@ -427,6 +527,22 @@
     const message = event.data || {};
     if (message.source !== PARENT_SOURCE) return;
     const payload = message.payload || {};
+    if (message.type === "SKANDI_MASTER_CONFIG") {
+      applyMasterConfig(payload);
+      return;
+    }
+    if (message.type === "MYROSTER_FLIGHT_SEARCH_RESULTS") {
+      if (payload.requestId && state.flightRequestId && payload.requestId !== state.flightRequestId) return;
+      const button = $("#flightSearchButton");
+      if (button) button.disabled = false;
+      state.flightRequestId = "";
+      renderFlightResults(payload.flights);
+      const count = Array.isArray(payload.flights) ? payload.flights.length : 0;
+      $("#flightSearchStatus").textContent = count
+        ? `${count} matching record${count === 1 ? "" : "s"} · ${payload.dateRange?.from || ""} to ${payload.dateRange?.to || ""} · ${payload.sources?.join(" + ") || "ALTEA"}`
+        : `No matching records · ${payload.dateRange?.from || ""} to ${payload.dateRange?.to || ""} · searched ${payload.sources?.join(" + ") || "ALTEA"}`;
+      return;
+    }
     if (message.type === "MYROSTER_BOOTSTRAP") {
       state.boot = payload;
       state.loading = false;
@@ -451,6 +567,11 @@
       return;
     }
     if (message.type === "MYROSTER_ERROR") {
+      if (state.flightRequestId && payload.requestId === state.flightRequestId) {
+        state.flightRequestId = "";
+        if ($("#flightSearchButton")) $("#flightSearchButton").disabled = false;
+        $("#flightSearchStatus").textContent = errorMessage(payload.code || payload.message);
+      }
       const pending = state.pending.get(payload.requestId);
       if (pending) {
         state.pending.delete(payload.requestId);
@@ -466,6 +587,9 @@
   const today = new Date();
   $("#dateFrom").value = dateInputValue(offsetDate(today, -14));
   $("#dateTo").value = dateInputValue(offsetDate(today, 60));
+  $("#flightDateFrom").value = dateInputValue(today);
+  $("#flightDateTo").value = dateInputValue(offsetDate(today, 6));
   setSync("Connecting to staff schedule", "loading");
+  post("MASTER_CONFIG_REQUEST", { purpose: "ALTEA_LOGO" });
   post("MYROSTER_READY", { from: $("#dateFrom").value, to: $("#dateTo").value });
 })();

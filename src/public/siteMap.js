@@ -27,7 +27,7 @@ export const APP_ROUTES = Object.freeze({
   country: "/destinations/country", bookingFlow: SITE_MAP.home, // Legacy route key; booking runs inside Home.
   myProfile: "/my-profile",
   myTrips: "/my-profile?tab=trips", careers: "/about/careers",
-  myRoster: "/riaintra/success-factors/my-roster", groupTalk: "/riaintra/success-factors/altea/grouptalk",
+  myRoster: "/riaintra/success-factors/altea/my-roster", groupTalk: "/riaintra/success-factors/altea/grouptalk",
   passportVisa: "/travel-info/passport-visa", baggageAllowance: "/travel-info/baggage-allowance",
   travelInsurance: "/travel-info/insurance", specialAssistance: "/travel-info/special-assistance",
   flightStatus: "/travel-info/flight-status"
@@ -396,7 +396,7 @@ export const PAGE_BUILD_INTEGRATIONS = Object.freeze({
     "sources": [
       "SKANDI_MYROSTER_EMBED"
     ],
-    "note": "Destination staff self-service embed; server access uses the authenticated SKANDI role and active field base. HQ and OCC roles are excluded."
+    "note": "ALTEA desktop staff embed; server access uses the authenticated SKANDI role and field base, using profile values when organization directories are unseeded. Flight search is independent of personal assignments. OPS Control owns MyRoster request review."
   },
   "legalInternal": {
     "controller": "src/pages/RIAINTRA Legal.xvi17.js",

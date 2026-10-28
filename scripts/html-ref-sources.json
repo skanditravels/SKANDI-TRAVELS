@@ -24,6 +24,12 @@
     "disposition": "IMPORTED"
   },
   {
+    "source": "HTML_REF/altea/MyRoster.md",
+    "directory": "skandi-embeds/my-roster",
+    "stem": "skandi-my-roster",
+    "disposition": "IMPORTED"
+  },
+  {
     "source": "HTML_REF/GLOBAL/alteaFooter.md",
     "directory": "skandi-embeds/altea-global",
     "stem": "altea-footer",
