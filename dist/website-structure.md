@@ -57,7 +57,7 @@ Route authority: `src/public/siteMap.js`. This file is generated evidence, not r
 | myProfile | /my-profile | skandi-embeds/my-profile/skandi-my-profile.{html,css,js} | public / public | src/pages/My Club Profile.u4k31.js | BUILT |
 | myTrips | /my-profile?tab=trips | Alias of myProfile | public / public | src/pages/My Club Profile.u4k31.js | ALIAS |
 | careers | /about/careers | skandi-embeds/careers/skandi-careers.{html,css,js} | public / public | src/pages/Work at SKANDI.dyodg.js | PENDING SOURCE |
-| myRoster | /riaintra/success-factors/altea/my-roster | skandi-embeds/my-roster/skandi-my-roster.{html,css,js} | altea / altea | src/pages/MyRoster.l8p5m.js | BUILT |
+| myRoster | /riaintra/success-factors/altea/my-roster | skandi-embeds/my-roster/skandi-my-roster.{html,css,js} | altea / altea | src/pages/MyRoster.l8p5m.js | BLOCKED INTEGRATION |
 | groupTalk | /riaintra/success-factors/altea/grouptalk | skandi-embeds/group-talk/skandi-group-talk.{html,css,js} | altea / none | src/pages/GroupTalk.wi4iw.js | BUILT |
 | passportVisa | /travel-info/passport-visa | skandi-embeds/passport-visa/skandi-passport-visa.{html,css,js} | public / public | src/pages/Passport & Visa.zohjw.js | BUILT |
 | baggageAllowance | /travel-info/baggage-allowance | skandi-embeds/baggage-allowance/skandi-baggage-allowance.{html,css,js} | public / public | src/pages/Baggage Allowance.tf8xc.js | BUILT |
@@ -126,4 +126,5 @@ These actual repository controllers are preserved. No new route or build is inve
 - **docunetAdmin**: NOT READY: [docunetAdmin / docunet-admin] skandi-embeds/docunet-admin/skandi-docunet-admin.html, skandi-embeds/docunet-admin/skandi-docunet-admin.css, skandi-embeds/docunet-admin/skandi-docunet-admin.js: skandi-embeds/docunet-admin/skandi-docunet-admin.html: nested iframe is not supported; retain the existing Wix integration
 - **serviceDesk**: NOT READY: No verified canonical controller mapping.
 - **careers**: NOT READY: PENDING SOURCE
+- **myRoster**: NOT READY: Controller no longer declares #myRosterEmbed
 - **specialAssistance**: NOT READY: src/backend/SKANDI_CORE/eos.web.js: imported export getEosBootstrap is absent; src/backend/SKANDI_CORE/eos.web.js: imported export searchEosFlights is absent; src/backend/SKANDI_CORE/eos.web.js: imported export searchEosStations is absent; src/backend/SKANDI_CORE/eos.web.js: imported export createEosClockEvent is absent; src/backend/SKANDI_CORE/eos.web.js: imported export submitEosOpsAction is absent
