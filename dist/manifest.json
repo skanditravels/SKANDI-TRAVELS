@@ -25,7 +25,7 @@
       "components": [],
       "binding": "explicit",
       "requiresStaff": false,
-      "status": "BUILT",
+      "status": "FAILED",
       "files": [
         "skandi-embeds/home/skandi-home.html",
         "skandi-embeds/home/skandi-home.css",
@@ -76,13 +76,12 @@
         "SKANDI_WIX_PARENT",
         "UNAVAILABLE"
       ],
-      "output": "dist/home/index.html",
+      "output": null,
       "dynamic": false,
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
-      "receiver": "skandi-embeds/home/skandi-home.receiver.html",
-      "sha256": "71932e3a836378b9c033c34fbd2d8c46cfc9882c5d4fe70a90b786ee3b95bc40",
-      "bytes": 433049
+      "error": "[home / home] skandi-embeds/home/skandi-home.html, skandi-embeds/home/skandi-home.css, skandi-embeds/home/skandi-home.js: duplicate id=\"skandi-home-content\" (also in compiler)",
+      "retainedArtifact": true
     },
     {
       "key": "search",
