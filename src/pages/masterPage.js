@@ -84,7 +84,7 @@ const MASTER_CONFIG = Object.freeze({
         voyWhiteBySkandi: "https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/logos/VOY-LIGHT-BY_SKANDI.svg",
         voyNavyBySkandi: "https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/logos/VOY-NAVY-BY_SKANDI.svg",
         skandiClub: "https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/logos/SKANDI_CLUB-LIGHT.svg",
-        signatureCollection: "https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/SIGNATURE_COLLECTION-BADGE.svg"
+        SKANDICollection: "https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/logos/SKANDI_COLLECTION-LIGHT.svg"
       }),
       images: Object.freeze({
         clubLoginHero: "https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/branding/skandi_club/SKANDI_MARKETING_CUSTOMER-LIFESTYLE_GREECE_SANTORINI_PREMIUM-TRAVEL_01.png"
