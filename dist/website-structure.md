@@ -83,6 +83,7 @@ These actual repository controllers are preserved. No new route or build is inve
 - `src/pages/Customer Service Desk.benbs.js`
 - `src/pages/Destination.u4y1p.js`
 - `src/pages/Document Viewer.hz1s8.js`
+- `src/pages/EOS.f6tx1.js`
 - `src/pages/Error404.yt0r0.js`
 - `src/pages/Event notifications.vs8dh.js`
 - `src/pages/Finance Control.gboi3.js`
