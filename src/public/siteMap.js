@@ -396,7 +396,7 @@ export const PAGE_BUILD_INTEGRATIONS = Object.freeze({
     "sources": [
       "SKANDI_MYROSTER_EMBED"
     ],
-    "note": "Existing controller imports backend/FINAL/internalChrome.web.js, which is absent. Preserve existing behavior; integration remains blocked."
+    "note": "Destination staff self-service embed; server access uses the authenticated SKANDI role and active field base. HQ and OCC roles are excluded."
   },
   "legalInternal": {
     "controller": "src/pages/RIAINTRA Legal.xvi17.js",
