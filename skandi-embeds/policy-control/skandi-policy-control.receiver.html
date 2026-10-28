@@ -391,7 +391,7 @@ body{min-height:100vh;min-height:100svh}
     }
 
     if (EXPECTED && (
-      page.receiver !== EXPECTED.receiver ||
+      page.receiver!==EXPECTED.receiver ||
       page.key !== EXPECTED.key ||
       page.route !== EXPECTED.route ||
       page.family !== EXPECTED.family ||
@@ -486,7 +486,7 @@ body{min-height:100vh;min-height:100svh}
     if (
       EXPECTED &&
       (
-        identity.key !== EXPECTED.key ||
+        identity.key!==EXPECTED.key ||
         identity.route !== EXPECTED.route ||
         identity.family !== EXPECTED.family ||
         identity.chrome !== EXPECTED.chrome ||
