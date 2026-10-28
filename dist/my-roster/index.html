@@ -1,0 +1,1382 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#022e64">
+<title>SKANDI MyRoster</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+
+
+<meta name="color-scheme" content="light dark">
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <meta name="theme-color" content="#082f5f">
+  
+  
+
+<style data-skandi-part="header">
+#riaintra-global-header-root {
+  --shell-h: 52px;
+  --shell: #354a5f;
+  --shell-hover: rgba(255, 255, 255, 0.14);
+  --blue: #106ebe;
+  --canvas: #ffffff;
+  --text: #323130;
+  --border: #edebe9;
+  --font: "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
+}
+
+#riaintra-global-header-root * { box-sizing: border-box; }
+#riaintra-global-header-root,#riaintra-global-header-root {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: var(--font);
+  color: var(--text);
+  background: transparent;
+  font-size: 14px;
+  user-select: none;
+}
+#riaintra-global-header-root button { font: inherit; border: 0; background: transparent; color: inherit; cursor: pointer; }
+
+/* Desktop Shellbar */
+#riaintra-global-header-root .shellbar {
+  position: fixed;
+  inset: 0 0 auto;
+  height: var(--shell-h);
+  background: var(--shell);
+  color: #fff;
+  z-index: 1000;
+  box-shadow: 0 1px 2px rgba(34, 54, 73, 0.12);
+}
+#riaintra-global-header-root .shellbar-inner {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12px;
+  gap: 12px;
+}
+#riaintra-global-header-root .shell-left, #riaintra-global-header-root .shell-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+/* Branding */
+#riaintra-global-header-root .product {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+#riaintra-global-header-root .product img {
+  height: 30px;
+  width: auto;
+  object-fit: contain;
+  border-radius: 3px;
+  display: none;
+}
+#riaintra-global-header-root .product img[src] {
+  display: block;
+}
+#riaintra-global-header-root .product-text strong {
+  display: block;
+  font-size: 13px;
+}
+#riaintra-global-header-root .product-text small {
+  display: block;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 10px;
+  margin-top: 2px;
+}
+
+/* Desktop Navigation */
+#riaintra-global-header-root .shell-nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 1 1 auto;
+  justify-content: flex-start;
+  padding-left: 24px;
+}
+#riaintra-global-header-root .shell-nav button {
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 10px;
+  border-radius: 4px;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+#riaintra-global-header-root .shell-nav button:hover, #riaintra-global-header-root .shell-nav button.active {
+  color: #fff;
+  background: var(--shell-hover);
+}
+
+/* Session / Dashboard Actions */
+#riaintra-global-header-root .utility-action {
+  min-height: 32px;
+  padding: 0 10px;
+  border: 1px solid rgba(255,255,255,.20);
+  border-radius: 4px;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+#riaintra-global-header-root .utility-action:hover { background: var(--shell-hover); }
+#riaintra-global-header-root .utility-action[hidden] { display: none !important; }
+
+/* Clock */
+#riaintra-global-header-root .clock {
+  min-width: 110px;
+  text-align: right;
+  border-inline: 1px solid rgba(255, 255, 255, 0.18);
+  padding: 4px 10px;
+  cursor: pointer;
+}
+#riaintra-global-header-root .clock strong {
+  display: block;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+#riaintra-global-header-root .clock small {
+  display: block;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 9px;
+  margin-top: 3px;
+  text-transform: uppercase;
+}
+
+/* User Profile */
+#riaintra-global-header-root .profile {
+  display: none;
+  grid-template-columns: minmax(150px, 230px) 38px;
+  grid-template-rows: repeat(3, auto);
+  column-gap: 9px;
+  row-gap: 1px;
+  align-items: center;
+  min-width: 0;
+}
+#riaintra-global-header-root .profile-name,
+#riaintra-global-header-root .profile-meta,
+#riaintra-global-header-root .profile-email {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: right;
+}
+#riaintra-global-header-root .profile-name {
+  grid-column: 1;
+  grid-row: 1;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+}
+#riaintra-global-header-root .profile-meta {
+  grid-column: 1;
+  grid-row: 2;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+}
+#riaintra-global-header-root .profile-email {
+  grid-column: 1;
+  grid-row: 3;
+  color: rgba(255,255,255,.70);
+  font-size: 9px;
+}
+#riaintra-global-header-root .profile-avatar {
+  grid-column: 2;
+  grid-row: 1 / span 3;
+  width: 38px;
+  height: 38px;
+  border-radius: 4px;
+  display: grid;
+  place-items: center;
+  background: #d1e8ff;
+  color: #073b69;
+  font-size: 11px;
+  font-weight: 800;
+  overflow: hidden;
+}
+#riaintra-global-header-root .profile-avatar img,
+#riaintra-global-header-root img.profile-avatar {
+  width: 38px;
+  height: 38px;
+  object-fit: cover;
+}
+
+/* Mobile Burger Icon */
+
+#riaintra-global-header-root .burger {
+  display: none;
+  width: 36px;
+  height: 36px;
+  color: #fff;
+  border-radius: 4px;
+}
+#riaintra-global-header-root .burger:hover {
+  background: var(--shell-hover);
+}
+
+/* Mobile Drawer (Horizontal Slider) */
+#riaintra-global-header-root .mobile-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  z-index: 1100;
+  width: 100%;
+  height: var(--shell-h);
+  background: var(--shell);
+  color: #fff;
+  box-shadow: -20px 0 45px rgba(13, 31, 48, 0.25);
+  transform: translateX(102%);
+  opacity: 0.98;
+  transition: transform 0.44s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.25s ease;
+  display: flex;
+  align-items: center;
+}
+#riaintra-global-header-root .mobile-drawer.open {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+/* Mobile Drawer Title Area */
+#riaintra-global-header-root .mobile-head {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 12px 0 18px;
+  border-right: 1px solid rgba(255, 255, 255, 0.18);
+  flex: 0 0 auto;
+}
+#riaintra-global-header-root .mobile-head strong { font-size: 13px; }
+#riaintra-global-header-root .mobile-head .close {
+  width: 28px;
+  height: 28px;
+  font-size: 22px;
+  display: grid;
+  place-items: center;
+}
+
+/* Mobile Drawer Nav List */
+#riaintra-global-header-root .mobile-nav {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  overflow-x: auto;
+  scrollbar-width: none;
+  flex: 1;
+  padding: 0 12px;
+  gap: 4px;
+}
+#riaintra-global-header-root .mobile-nav::-webkit-scrollbar { display: none; }
+#riaintra-global-header-root .mobile-nav button {
+  display: block;
+  width: auto;
+  white-space: nowrap;
+  padding: 8px 12px;
+  font-weight: 600;
+  border-radius: 4px;
+}
+#riaintra-global-header-root .mobile-nav button:hover, #riaintra-global-header-root .mobile-nav button.active {
+  background: var(--shell-hover);
+}
+
+/* Mobile Overlay */
+#riaintra-global-header-root .overlay {
+  position: fixed;
+  inset: var(--shell-h) 0 0 0;
+  background: rgba(7, 27, 68, 0.46);
+  z-index: 1090;
+  display: none;
+}
+#riaintra-global-header-root .overlay.show { display: block; }
+
+body[data-theme="dark"] #riaintra-global-header-root {
+  --canvas: #1f1f1f;
+  --border: #3a3a3a;
+  --text: #f3f2f1;
+}
+
+@media(max-width: 950px) {
+  #riaintra-global-header-root .shell-nav { display: none; }
+  #riaintra-global-header-root .burger { display: grid; place-items: center; }
+  #riaintra-global-header-root .profile-email { display: none; }
+}
+@media(max-width: 700px) {
+  #riaintra-global-header-root .profile { display: none !important; }
+  #riaintra-global-header-root .clock { display: none; }
+  #riaintra-global-header-root .utility-action { padding: 0 8px; font-size: 9px; }
+}
+</style>
+<style data-skandi-part="footer">
+#riaintra-global-footer-root * { box-sizing: border-box; }
+#riaintra-global-footer-root,#riaintra-global-footer-root {
+  margin: 0;
+  font-family: "72", Inter, Arial, sans-serif;
+  width: 100%;
+}
+
+#riaintra-global-footer-root footer {
+  width: 100%;
+  padding: 10px 24px;
+  margin-top: auto;
+  background: #354a5f;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+#riaintra-global-footer-root .wrap {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  width: 100%;
+}
+
+#riaintra-global-footer-root .footer-left {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  justify-self: flex-start;
+}
+
+#riaintra-global-footer-root .links {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+#riaintra-global-footer-root .meta {
+  font-size: 9px;
+  color: #ffffff;
+}
+
+#riaintra-global-footer-root .global-footer {
+  justify-self: center;
+  text-align: center;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+#riaintra-global-footer-root .footer-right {
+  justify-self: flex-end;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+#riaintra-global-footer-root #grouplogo img {
+  height: 16px;
+  border-radius: 0;
+  object-fit: contain;
+  background: transparent;
+  display: block;
+}
+
+#riaintra-global-footer-root button {
+  border: 0;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.75);
+  padding: 5px 7px;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+#riaintra-global-footer-root button:hover {
+  color: #ffffff;
+  text-decoration: underline;
+}
+</style>
+<style data-skandi-part="my-roster">#skandi-app-root #myRosterRoot{--mr-navy:#082f5f;--mr-navy-2:#124d83;--mr-blue:#1f6ba5;--mr-aqua:#54c4c3;--mr-canvas:#f2f6f8;--mr-surface:#fff;--mr-ink:#172b3d;--mr-muted:#617384;--mr-faint:#8795a3;--mr-border:#dce5eb;--mr-border-2:#c6d4de;--mr-good:#237b58;--mr-good-bg:#e9f6ef;--mr-warn:#9b6a0c;--mr-warn-bg:#fff5dd;--mr-bad:#a63d41;--mr-bad-bg:#fff0ef;--mr-radius:12px;--mr-shadow:0 2px 8px rgba(8,47,95,.045),0 12px 28px rgba(8,47,95,.035);box-sizing:border-box;min-height:560px;background:var(--mr-canvas);color:var(--mr-ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:14px;line-height:1.45}#skandi-app-root #myRosterRoot *{box-sizing:border-box}#skandi-app-root #myRosterRoot button,#skandi-app-root #myRosterRoot input,#skandi-app-root #myRosterRoot select,#skandi-app-root #myRosterRoot textarea{font:inherit}#skandi-app-root #myRosterRoot button{cursor:pointer}#skandi-app-root #myRosterRoot button:disabled{cursor:wait;opacity:.55}#skandi-app-root #myRosterRoot [hidden]{display:none!important}#skandi-app-root .mr-shell{min-height:560px}#skandi-app-root .mr-topbar{height:66px;position:sticky;top:0;z-index:30;display:flex;align-items:center;justify-content:space-between;gap:18px;padding:0 24px;background:var(--mr-navy);color:#fff;border-bottom:1px solid rgba(255,255,255,.12)}#skandi-app-root .mr-brand{display:flex;align-items:center;gap:11px;min-width:0}#skandi-app-root .mr-brand-mark{width:35px;height:35px;display:grid;place-items:center;border-radius:9px;background:#fff;color:var(--mr-navy);font-weight:950;font-size:20px;letter-spacing:-.07em}#skandi-app-root .mr-brand-name{font-size:13px;font-weight:900;letter-spacing:.09em;line-height:1.1}#skandi-app-root .mr-brand-name span{font-weight:650;color:#c8d9e8}#skandi-app-root .mr-brand-subtitle{margin-top:5px;font-size:9px;color:#c1d2e2;font-weight:800;letter-spacing:.12em}#skandi-app-root .mr-topbar-right{display:flex;align-items:center;gap:18px;min-width:0}#skandi-app-root .mr-sync{display:flex;align-items:center;gap:7px;color:#d4e2ee;font-size:10px;font-weight:700;white-space:nowrap}#skandi-app-root .mr-sync-dot,#skandi-app-root .mr-live-dot{width:7px;height:7px;border-radius:50%;background:#65d99b;box-shadow:0 0 0 3px rgba(101,217,155,.14)}#skandi-app-root .mr-sync[data-state="loading"] .mr-sync-dot{background:#ffc85c;box-shadow:0 0 0 3px rgba(255,200,92,.15)}#skandi-app-root .mr-sync[data-state="error"] .mr-sync-dot{background:#ff8e8e;box-shadow:0 0 0 3px rgba(255,142,142,.15)}#skandi-app-root .mr-profile{display:flex;align-items:center;gap:9px;min-width:0}#skandi-app-root .mr-avatar{width:34px;height:34px;display:grid;place-items:center;flex:0 0 34px;border:1px solid rgba(255,255,255,.24);border-radius:50%;background:#e6f0f6;color:var(--mr-navy);font-size:11px;font-weight:900}#skandi-app-root .mr-profile-copy{display:flex;flex-direction:column;min-width:0;line-height:1.2}#skandi-app-root .mr-profile-copy strong{max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;font-weight:800}#skandi-app-root .mr-profile-copy span{margin-top:4px;color:#c3d5e4;font-size:9px;white-space:nowrap}#skandi-app-root .mr-layout{display:grid;grid-template-columns:228px minmax(0,1fr);min-height:calc(100vh - 66px)}#skandi-app-root .mr-sidebar{position:sticky;top:66px;align-self:start;display:flex;flex-direction:column;min-height:calc(100vh - 66px);padding:18px 13px;background:#edf3f6;border-right:1px solid var(--mr-border)}#skandi-app-root .mr-base-card{padding:13px 13px 12px;margin-bottom:22px;border:1px solid #d4e1e8;border-radius:10px;background:#fff;box-shadow:0 2px 7px rgba(8,47,95,.035)}#skandi-app-root .mr-overline{display:block;color:#788897;font-size:8.5px;font-weight:850;letter-spacing:.115em}#skandi-app-root .mr-base-card strong{display:block;margin-top:7px;color:var(--mr-navy);font-size:17px;line-height:1.15;letter-spacing:.02em}#skandi-app-root .mr-base-card>span:last-child{display:block;margin-top:4px;color:var(--mr-muted);font-size:10px}#skandi-app-root .mr-nav-title{padding:0 9px 7px;color:#7e8e9a;font-size:8.5px;font-weight:900;letter-spacing:.12em}#skandi-app-root .mr-nav{display:flex;flex-direction:column;gap:3px}#skandi-app-root .mr-nav-item{width:100%;display:flex;align-items:center;gap:10px;padding:10px 10px;border:0;border-radius:8px;background:transparent;color:#435a6d;text-align:left;text-decoration:none;font-size:11px;font-weight:750;transition:background .15s,color .15s}#skandi-app-root .mr-nav-item:hover{background:#e1ebf0;color:var(--mr-navy)}#skandi-app-root .mr-nav-item.active{background:#d9e9f3;color:var(--mr-navy);box-shadow:inset 3px 0 0 var(--mr-blue)}#skandi-app-root .mr-nav-icon{width:18px;flex:0 0 18px;color:#5281a1;text-align:center;font-size:15px;line-height:1}#skandi-app-root .mr-link-arrow{margin-left:auto;color:#7390a4;font-size:12px}#skandi-app-root .mr-sidebar-note{display:flex;gap:8px;align-items:flex-start;margin-top:auto;padding:11px 9px;border-top:1px solid #d8e2e8;color:#748492;font-size:9px;line-height:1.45}#skandi-app-root .mr-note-icon{width:15px;height:15px;flex:0 0 15px;display:grid;place-items:center;border:1px solid #aab9c5;border-radius:50%;font-size:9px;font-weight:800}#skandi-app-root .mr-main{min-width:0;padding:22px 24px 30px}#skandi-app-root .mr-view{display:none;max-width:1420px;margin:0 auto}#skandi-app-root .mr-view.active{display:block}#skandi-app-root .mr-page-head{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;margin-bottom:17px}#skandi-app-root .mr-page-head h1{margin:3px 0 4px;color:#102f4b;font-size:25px;line-height:1.12;letter-spacing:-.025em}#skandi-app-root .mr-page-head p{margin:0;color:var(--mr-muted);font-size:11px}#skandi-app-root .mr-kicker{color:#3f779f;font-size:8px;font-weight:900;letter-spacing:.15em}#skandi-app-root .mr-head-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap}#skandi-app-root .mr-btn{min-height:35px;display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:8px 12px;border:1px solid transparent;border-radius:8px;font-size:10px;font-weight:850;white-space:nowrap;transition:background .16s,border-color .16s,transform .16s}#skandi-app-root .mr-btn:active{transform:translateY(1px)}#skandi-app-root .mr-btn-primary{background:var(--mr-navy);border-color:var(--mr-navy);color:#fff}#skandi-app-root .mr-btn-primary:hover{background:#104578;border-color:#104578}#skandi-app-root .mr-btn-secondary{background:#fff;border-color:var(--mr-border-2);color:#304b60}#skandi-app-root .mr-btn-secondary:hover{background:#f8fbfd;border-color:#a9bdca}#skandi-app-root .mr-text-btn{padding:3px 0;border:0;background:transparent;color:#28638f;font-size:9px;font-weight:800}#skandi-app-root .mr-text-btn span{margin-left:3px}#skandi-app-root .panel{border:1px solid var(--mr-border);border-radius:var(--mr-radius);background:var(--mr-surface);box-shadow:var(--mr-shadow)}#skandi-app-root .mr-alert{display:flex;align-items:center;gap:10px;margin-bottom:12px;padding:10px 12px;border:1px solid #f0d89e;border-radius:9px;background:var(--mr-warn-bg);color:#74520c;font-size:10px;font-weight:650}#skandi-app-root .mr-alert-mark{width:18px;height:18px;flex:0 0 18px;display:grid;place-items:center;border-radius:50%;background:#f4dfa9;color:#805909;font-size:11px;font-weight:900}#skandi-app-root .mr-next{display:grid;grid-template-columns:160px minmax(0,1fr) auto;align-items:center;gap:14px;margin-bottom:12px;padding:14px 16px}#skandi-app-root .mr-next-label{display:flex;align-items:center;gap:8px;color:#648093;font-size:8px;font-weight:900;letter-spacing:.13em;white-space:nowrap}#skandi-app-root .mr-next-label .mr-live-dot{width:6px;height:6px;box-shadow:0 0 0 3px rgba(101,217,155,.13)}#skandi-app-root .mr-next-content{min-width:0}#skandi-app-root .mr-next-empty{color:#768897;font-size:10px}#skandi-app-root .mr-next-main{display:flex;align-items:center;gap:11px;min-width:0}#skandi-app-root .mr-next-date{min-width:74px;padding-right:11px;border-right:1px solid var(--mr-border)}#skandi-app-root .mr-next-date strong{display:block;color:var(--mr-navy);font-size:18px;line-height:1.05}#skandi-app-root .mr-next-date span{display:block;margin-top:3px;color:#788a98;font-size:8px;font-weight:750}#skandi-app-root .mr-next-detail{min-width:0}#skandi-app-root .mr-next-detail strong{display:block;overflow:hidden;color:#203c54;font-size:12px;text-overflow:ellipsis;white-space:nowrap}#skandi-app-root .mr-next-detail span{display:block;margin-top:3px;overflow:hidden;color:var(--mr-muted);font-size:9px;text-overflow:ellipsis;white-space:nowrap}#skandi-app-root .mr-next-time{color:#254b69;font-variant-numeric:tabular-nums;font-size:10px;font-weight:850;white-space:nowrap}#skandi-app-root .mr-next-action{display:flex;gap:6px}#skandi-app-root .mr-next-action:empty{display:none}#skandi-app-root .mr-filter{margin-bottom:12px;padding:0 13px}#skandi-app-root .mr-filter-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid #e9eff3}#skandi-app-root .mr-filter-heading>div:first-child{display:flex;flex-direction:column;gap:3px}#skandi-app-root .mr-filter-heading strong{font-size:10px;color:#2c455b}#skandi-app-root .mr-filter-heading span{color:#84929d;font-size:8.5px}#skandi-app-root .mr-filter-controls{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap}#skandi-app-root .mr-field-inline{display:flex;align-items:center;gap:6px;color:#748492;font-size:9px;font-weight:750}#skandi-app-root .mr-field-inline input,#skandi-app-root .mr-select{height:30px;padding:5px 8px;border:1px solid var(--mr-border-2);border-radius:7px;background:#fff;color:#31495c;font-size:9px}#skandi-app-root .mr-field-inline input{width:132px}#skandi-app-root .mr-select{min-width:122px}#skandi-app-root .mr-filter-footer{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0;color:#748390;font-size:9px}#skandi-app-root .mr-filter-footer b{color:#304b60;font-variant-numeric:tabular-nums}#skandi-app-root .mr-filter-footer span:last-child{color:#467b9b;font-weight:750}#skandi-app-root .mr-table-panel{overflow:hidden;margin-bottom:12px}#skandi-app-root .mr-table-wrap{width:100%;overflow:auto}#skandi-app-root .mr-table{width:100%;border-collapse:collapse;min-width:720px;background:#fff}#skandi-app-root .mr-table thead th{position:sticky;top:66px;z-index:2;padding:9px 11px;border-bottom:1px solid #d6e0e7;background:#f0f5f8;color:#607483;text-align:left;font-size:8px;font-weight:900;letter-spacing:.085em;white-space:nowrap}#skandi-app-root .mr-table tbody td{padding:9px 11px;border-bottom:1px solid #e8eef2;color:#455c6e;font-size:9.5px;vertical-align:middle}#skandi-app-root .mr-table tbody tr:last-child td{border-bottom:0}#skandi-app-root .mr-table tbody tr:hover{background:#fafcfd}#skandi-app-root .mr-date-main{display:block;color:#233f57;font-size:9.5px;font-weight:850;white-space:nowrap}#skandi-app-root .mr-date-sub{display:block;margin-top:2px;color:#85939d;font-size:8px}#skandi-app-root .mr-assignment-cell strong{display:block;color:#274761;font-size:9.5px;font-weight:850}#skandi-app-root .mr-assignment-cell span{display:block;max-width:230px;margin-top:2px;overflow:hidden;color:#83909a;font-size:8px;text-overflow:ellipsis;white-space:nowrap}#skandi-app-root .mr-location{max-width:185px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}#skandi-app-root .mr-time{color:#304e67!important;font-variant-numeric:tabular-nums;font-weight:800;white-space:nowrap}#skandi-app-root .mr-status{display:inline-flex;align-items:center;gap:5px;padding:4px 7px;border-radius:999px;background:#e8f1f7;color:#355d79;font-size:8px;font-weight:900;white-space:nowrap}#skandi-app-root .mr-status::before{width:5px;height:5px;border-radius:50%;background:currentColor;content:""}#skandi-app-root .mr-status.good{background:var(--mr-good-bg);color:var(--mr-good)}#skandi-app-root .mr-status.warn{background:var(--mr-warn-bg);color:var(--mr-warn)}#skandi-app-root .mr-status.bad{background:var(--mr-bad-bg);color:var(--mr-bad)}#skandi-app-root .mr-row-action{padding:5px 7px;border:1px solid #d4e0e7;border-radius:6px;background:#fff;color:#31668a;font-size:8px;font-weight:800;white-space:nowrap}#skandi-app-root .mr-row-action:hover{border-color:#93b6cb;background:#f3f8fb}#skandi-app-root .mr-empty{text-align:center;padding:37px 16px;color:#71818d}#skandi-app-root .mr-empty strong,#skandi-app-root .mr-empty span{display:block}#skandi-app-root .mr-empty strong{margin-top:8px;color:#3b5568;font-size:10px}#skandi-app-root .mr-empty span{margin-top:4px;font-size:9px}#skandi-app-root .mr-spinner{display:inline-block;width:18px;height:18px;border:2px solid #dbe6ed;border-top-color:#347ca6;border-radius:50%;animation:skandi-app-root-mr-spin .8s linear infinite}@keyframes skandi-app-root-mr-spin{to{transform:rotate(360deg)}}#skandi-app-root .mr-summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}#skandi-app-root .mr-summary-card{min-width:0;padding:13px 15px}#skandi-app-root .mr-summary-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}#skandi-app-root .mr-summary-top h2{margin:3px 0 0;color:#29465d;font-size:12px}#skandi-app-root .mr-hours-value{display:flex;align-items:baseline;gap:7px;margin:14px 0 6px}#skandi-app-root .mr-hours-value strong{color:#103e69;font-size:26px;line-height:1;font-weight:900;letter-spacing:-.04em}#skandi-app-root .mr-hours-value span{color:#788793;font-size:9px}#skandi-app-root .mr-summary-foot{color:#82909b;font-size:8.5px}#skandi-app-root .mr-balance-list{display:flex;gap:9px;flex-wrap:wrap;margin-top:12px}#skandi-app-root .mr-balance-item{min-width:112px;padding:8px 9px;border:1px solid #e2eaef;border-radius:8px;background:#f8fbfc}#skandi-app-root .mr-balance-item strong{display:block;color:#254960;font-size:14px}#skandi-app-root .mr-balance-item span{display:block;margin-top:2px;color:#7c8b97;font-size:8px}#skandi-app-root .mr-mobile-list{display:none}#skandi-app-root .mr-metric-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:11px;margin-bottom:13px}#skandi-app-root .mr-metric{min-width:0;padding:13px 14px}#skandi-app-root .mr-metric strong{display:block;margin-top:6px;color:#103e69;font-size:22px;line-height:1.1;font-weight:900}#skandi-app-root .mr-metric>span:last-child{display:block;margin-top:4px;color:#82909b;font-size:8.5px}#skandi-app-root .mr-metric .mr-metric-text{overflow:hidden;font-size:14px;text-overflow:ellipsis;white-space:nowrap}#skandi-app-root .mr-section-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;padding:13px 14px;border-bottom:1px solid #e9eff3}#skandi-app-root .mr-section-head h2{margin:0;color:#29465d;font-size:12px}#skandi-app-root .mr-section-head p{margin:4px 0 0;color:#82909b;font-size:8.5px}#skandi-app-root .mr-policy-note{display:flex;gap:9px;align-items:flex-start;padding:10px 12px;border:1px solid #d9e6ed;border-radius:9px;background:#f8fbfc;color:#71828f;font-size:9px;line-height:1.5}#skandi-app-root .mr-policy-note strong{flex:0 0 auto;color:#37596f}#skandi-app-root .mr-dialog{width:min(510px,calc(100vw - 28px));max-width:none;padding:0;border:1px solid #d5e0e7;border-radius:14px;background:#fff;color:var(--mr-ink);box-shadow:0 25px 90px rgba(10,31,49,.25)}#skandi-app-root .mr-dialog::backdrop{background:rgba(7,31,52,.46);backdrop-filter:blur(2px)}#skandi-app-root .mr-dialog form{padding:18px}#skandi-app-root .mr-dialog-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}#skandi-app-root .mr-dialog-head h2{margin:4px 0 0;color:#163a58;font-size:19px}#skandi-app-root .mr-icon-btn{width:30px;height:30px;display:grid;place-items:center;border:1px solid var(--mr-border);border-radius:8px;background:#fff;color:#5e7282;font-size:20px;line-height:1}#skandi-app-root .mr-dialog-copy{margin:9px 0 14px;color:#728391;font-size:10px;line-height:1.5}#skandi-app-root .mr-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px}#skandi-app-root .mr-form-grid label{display:flex;flex-direction:column;gap:5px;color:#53697a;font-size:9px;font-weight:800}#skandi-app-root .mr-form-grid input,#skandi-app-root .mr-form-grid textarea{width:100%;padding:8px;border:1px solid #d3dfe6;border-radius:7px;background:#fff;color:#203b53;font-size:10px}#skandi-app-root .mr-form-grid textarea{resize:vertical}#skandi-app-root .mr-form-wide{grid-column:1/-1}#skandi-app-root .mr-dialog-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}#skandi-app-root .mr-toast{position:fixed;right:18px;bottom:18px;z-index:60;max-width:min(420px,calc(100vw - 36px));padding:11px 14px;border:1px solid rgba(255,255,255,.1);border-radius:9px;background:#173a59;color:#fff;box-shadow:0 12px 34px rgba(0,0,0,.2);font-size:10px;font-weight:750;opacity:0;transform:translateY(8px);pointer-events:none;transition:opacity .18s,transform .18s}#skandi-app-root .mr-toast.show{opacity:1;transform:translateY(0)}#skandi-app-root .mr-toast.error{background:#8b3034}#skandi-app-root .mr-error-screen{position:fixed;inset:0;z-index:100;display:grid;place-items:center;padding:20px;background:rgba(239,245,248,.96)}#skandi-app-root .mr-error-card{max-width:410px;padding:28px;border:1px solid var(--mr-border);border-radius:14px;background:#fff;box-shadow:var(--mr-shadow);text-align:center}#skandi-app-root .mr-error-mark{width:36px;height:36px;display:grid;place-items:center;margin:0 auto 11px;border-radius:50%;background:#fff0e6;color:#a35d27;font-weight:900}#skandi-app-root .mr-error-card h2{margin:0;color:#153e5f;font-size:17px}#skandi-app-root .mr-error-card p{margin:8px 0 15px;color:#71818d;font-size:10px;line-height:1.5}#skandi-app-root .mr-error-card a{color:#24668f;font-size:10px;font-weight:800}#skandi-app-root .mr-sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+@media(max-width:1080px){#skandi-app-root .mr-layout{grid-template-columns:188px minmax(0,1fr)}#skandi-app-root .mr-main{padding:18px}#skandi-app-root .mr-next{grid-template-columns:138px minmax(0,1fr) auto}#skandi-app-root .mr-filter-heading{align-items:flex-start;flex-direction:column}#skandi-app-root .mr-filter-controls{justify-content:flex-start;width:100%}}
+@media(max-width:760px){#skandi-app-root #myRosterRoot,#skandi-app-root .mr-shell{min-height:100vh}#skandi-app-root .mr-topbar{height:58px;padding:0 11px}#skandi-app-root .mr-brand{gap:8px}#skandi-app-root .mr-brand-mark{width:31px;height:31px;font-size:18px}#skandi-app-root .mr-brand-name{font-size:11px}#skandi-app-root .mr-brand-subtitle{font-size:7px;margin-top:4px}#skandi-app-root .mr-topbar-right{gap:8px}#skandi-app-root .mr-sync{font-size:0}#skandi-app-root .mr-sync-dot{width:7px;height:7px}#skandi-app-root .mr-profile{gap:6px}#skandi-app-root .mr-avatar{width:29px;height:29px;flex-basis:29px}#skandi-app-root .mr-profile-copy strong{max-width:128px;font-size:9px}#skandi-app-root .mr-profile-copy span{font-size:8px}#skandi-app-root .mr-layout{display:block;min-height:calc(100vh - 58px)}#skandi-app-root .mr-sidebar{position:sticky;top:58px;z-index:25;min-height:0;display:block;padding:6px 8px;border-right:0;border-bottom:1px solid var(--mr-border)}#skandi-app-root .mr-base-card,#skandi-app-root .mr-nav-title,#skandi-app-root .mr-sidebar-note{display:none}#skandi-app-root .mr-nav{flex-direction:row;gap:3px;overflow:auto;scrollbar-width:none}#skandi-app-root .mr-nav::-webkit-scrollbar{display:none}#skandi-app-root .mr-nav-item{width:auto;min-width:max-content;justify-content:center;gap:6px;padding:9px 10px;font-size:9px}#skandi-app-root .mr-nav-item.active{box-shadow:inset 0 -2px 0 var(--mr-blue)}#skandi-app-root .mr-nav-icon{width:auto;flex-basis:auto;font-size:12px}#skandi-app-root .mr-link-arrow{display:none}#skandi-app-root .mr-main{padding:14px 10px 24px}#skandi-app-root .mr-page-head{display:block;margin-bottom:12px}#skandi-app-root .mr-page-head h1{font-size:21px}#skandi-app-root .mr-page-head p{max-width:560px;font-size:10px}#skandi-app-root .mr-head-actions{justify-content:flex-start;margin-top:10px}#skandi-app-root .mr-btn{min-height:33px;padding:7px 10px;font-size:9px}#skandi-app-root .mr-next{grid-template-columns:1fr;gap:8px;padding:11px}#skandi-app-root .mr-next-label{font-size:7.5px}#skandi-app-root .mr-next-main{gap:8px}#skandi-app-root .mr-next-date{min-width:64px;padding-right:8px}#skandi-app-root .mr-next-date strong{font-size:16px}#skandi-app-root .mr-next-detail strong{font-size:10px}#skandi-app-root .mr-next-detail span{font-size:8px}#skandi-app-root .mr-next-time{font-size:9px}#skandi-app-root .mr-next-action{justify-content:flex-start}#skandi-app-root .mr-filter{padding:0 10px}#skandi-app-root .mr-filter-heading{gap:8px;padding:9px 0}#skandi-app-root .mr-filter-heading>div:first-child span{max-width:260px;line-height:1.35}#skandi-app-root .mr-filter-controls{display:grid;grid-template-columns:1fr 1fr;gap:6px}#skandi-app-root .mr-field-inline{justify-content:space-between;font-size:8px}#skandi-app-root .mr-field-inline input{width:calc(100% - 30px);min-width:95px;height:28px}#skandi-app-root .mr-select{grid-column:1/-1;width:100%;height:28px}#skandi-app-root .mr-filter-footer{font-size:8px}#skandi-app-root .mr-table-wrap{display:none}#skandi-app-root .mr-mobile-list{display:block}#skandi-app-root .mr-mobile-row{padding:10px;border-bottom:1px solid #e7edf1;background:#fff}#skandi-app-root .mr-mobile-row:last-child{border-bottom:0}#skandi-app-root .mr-mobile-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}#skandi-app-root .mr-mobile-date{color:#24445e;font-size:10px;font-weight:900}#skandi-app-root .mr-mobile-date span{display:block;margin-top:2px;color:#87939e;font-size:8px;font-weight:650}#skandi-app-root .mr-mobile-title{margin-top:5px;color:#31526a;font-size:9px;font-weight:850}#skandi-app-root .mr-mobile-location{margin-top:2px;color:#7f8d98;font-size:8px}#skandi-app-root .mr-mobile-times{display:flex;gap:12px;margin-top:7px;color:#61798b;font-size:8px}#skandi-app-root .mr-mobile-times b{color:#2e4b64}#skandi-app-root .mr-mobile-action{margin-top:8px}#skandi-app-root .mr-summary-grid{grid-template-columns:1fr;gap:8px}#skandi-app-root .mr-summary-card{padding:11px}#skandi-app-root .mr-hours-value{margin:10px 0 4px}#skandi-app-root .mr-hours-value strong{font-size:22px}#skandi-app-root .mr-metric-row{grid-template-columns:1fr;gap:7px}#skandi-app-root .mr-metric{padding:11px}#skandi-app-root .mr-metric strong{font-size:19px}#skandi-app-root .mr-section-head{padding:11px}#skandi-app-root .mr-policy-note{font-size:8px}#skandi-app-root .mr-table-panel{margin-bottom:9px}}
+@media(max-width:420px){#skandi-app-root .mr-brand-subtitle{display:none}#skandi-app-root .mr-profile-copy{display:none}#skandi-app-root .mr-topbar-right{margin-left:auto}#skandi-app-root .mr-main{padding-left:8px;padding-right:8px}#skandi-app-root .mr-nav-item{padding:8px 8px}#skandi-app-root .mr-mobile-date{font-size:9px}#skandi-app-root .mr-status{padding:3px 6px;font-size:7px}#skandi-app-root .mr-form-grid{grid-template-columns:1fr}#skandi-app-root .mr-form-wide{grid-column:auto}#skandi-app-root .mr-dialog form{padding:14px}}
+</style>
+<style data-skandi-part="shell">html,body{margin:0;width:100%;min-height:100%;}*,*::before,*::after{box-sizing:border-box}#skandi-shell-root{min-height:100vh;min-width:0;display:flex;flex-direction:column}#skandi-app-root{flex:1;min-width:0;position:relative}#riaintra-global-header-root,#riaintra-global-footer-root{flex:none}@media(max-width:767px){input:not([type=hidden]),select,textarea{font-size:16px!important}}html,body{height:100%;overflow:hidden}#skandi-shell-root{height:100vh;height:100dvh;min-height:0;overflow:hidden}#skandi-app-root{height:auto;min-height:0;overflow:auto}#riaintra-global-header-root{position:relative;height:52px;min-height:52px;overflow:visible;z-index:2000}#riaintra-global-footer-root{height:auto;overflow:visible;z-index:2000}#riaintra-global-header-root .shellbar{position:absolute}#altea-global-footer-root .status-bar{position:relative}@media(max-width:600px){#riaintra-global-footer-root .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px}#riaintra-global-footer-root .footer-left{flex-wrap:wrap;gap:6px}}</style>
+</head>
+<body>
+<div id="skandi-shell-root" data-skandi-page="my-roster" data-skandi-key="myRoster" data-skandi-family="riaintra" data-skandi-chrome="riaintra">
+<div id="riaintra-global-header-root">
+
+<!-- MAIN HEADER -->
+<header class="shellbar">
+  <div class="shellbar-inner">
+    
+    <div class="shell-left">
+      <button id="burger" class="burger" type="button" aria-label="Open menu">☰</button>
+      <div class="product">
+        <img id="logo" src="" alt="RIAINTRA">
+        <div class="product-text">
+          <strong id="riaintra-header-productName">RIAINTRA</strong>
+          <small id="productContext">Enterprise Workforce Suite</small>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Desktop Navigation -->
+    <nav id="riaintra-header-desktopNav" class="shell-nav" aria-label="Internal navigation"></nav>
+    
+    <div class="shell-right">
+      <button id="returnDashboardBtn" class="utility-action" type="button" hidden="">Return to Dashboard</button>
+      <button id="logoutBtn" class="utility-action" type="button">Logout</button>
+
+      <!-- Clock -->
+      <div id="sfClock" class="clock" title="Toggle local / UTC">
+        <strong id="sfClockTime">--:--:--</strong>
+        <small id="sfClockDate">LOCAL</small>
+      </div>
+      
+      <!-- Profile -->
+      <div class="profile" id="userProfile">
+        <div class="profile-name" id="userName">--</div>
+        <div class="profile-meta" id="userMeta">--</div>
+        <div class="profile-email" id="userEmail">--</div>
+        <img id="badge_photo_url" class="profile-avatar" alt="Staff badge photo" style="display:none">
+        <div id="avatarFallback" class="profile-avatar">--</div>
+      </div>
+    </div>
+
+  </div>
+</header>
+
+<!-- MOBILE DRAWER -->
+<div id="mobileDrawer" class="mobile-drawer">
+  <div class="mobile-head">
+    <strong>RIAINTRA</strong>
+    <button id="drawerClose" class="close" type="button" aria-label="Close menu">×</button>
+  </div>
+  <nav id="riaintra-header-mobileNav" class="mobile-nav"></nav>
+</div>
+<div id="drawerOverlay" class="overlay"></div>
+
+
+
+
+</div>
+<div id="skandi-app-root">
+  <div class="mr-shell" id="myRosterRoot">
+    <header class="mr-topbar">
+      <div class="mr-brand">
+        <div class="mr-brand-mark" aria-hidden="true">S</div>
+        <div>
+          <div class="mr-brand-name">SKANDI <span>TRAVELS</span></div>
+          <div class="mr-brand-subtitle">DESTINATION STAFF PORTAL</div>
+        </div>
+      </div>
+      <div class="mr-topbar-right">
+        <div class="mr-sync" id="syncState" data-state="loading"><span class="mr-sync-dot"></span><span id="syncLabel">Connecting to staff schedule</span></div>
+        <div class="mr-profile" aria-live="polite">
+          <div class="mr-avatar" id="staffInitials">S</div>
+          <div class="mr-profile-copy"><strong id="staffName">SKANDI staff</strong><span id="staffMeta">Loading your profile…</span></div>
+        </div>
+      </div>
+    </header>
+
+    <div class="mr-layout">
+      <aside class="mr-sidebar" aria-label="MyRoster navigation">
+        <div class="mr-base-card"><span class="mr-overline">ASSIGNED BASE</span><strong id="baseCode">Loading</strong><span id="staffRole">Destination staff</span></div>
+        <div class="mr-nav-title">MY WORK</div>
+        <nav class="mr-nav">
+          <button class="mr-nav-item active" data-nav="schedule" type="button"><span class="mr-nav-icon">▦</span><span>My schedule</span></button>
+          <button class="mr-nav-item" data-nav="time" type="button"><span class="mr-nav-icon">◷</span><span>Time &amp; attendance</span></button>
+          <button class="mr-nav-item" data-nav="requests" type="button"><span class="mr-nav-icon">↗</span><span>My requests</span></button>
+          <a class="mr-nav-item mr-nav-link" id="groupTalkLink" href="#" hidden=""><span class="mr-nav-icon">▤</span><span>GroupTalk</span><span class="mr-link-arrow">↗</span></a>
+        </nav>
+        <div class="mr-sidebar-note"><span class="mr-note-icon">i</span><span>Your schedule and requests are limited to your SKANDI staff profile and assigned destination.</span></div>
+      </aside>
+
+      <main class="mr-main">
+        <section class="mr-view active" id="schedulePanel" data-panel="schedule">
+          <div class="mr-page-head">
+            <div><div class="mr-kicker">DESTINATION OPERATIONS</div><h1>My schedule</h1><p>Shifts and local assignments published for your staff profile.</p></div>
+            <div class="mr-head-actions"><button class="mr-btn mr-btn-secondary" id="exportBtn" type="button">Export schedule</button><button class="mr-btn mr-btn-primary" id="refreshBtn" type="button"><span aria-hidden="true">↻</span> Refresh</button></div>
+          </div>
+
+          <div class="mr-alert" id="scheduleAlert" role="status" hidden=""><span class="mr-alert-mark">!</span><span id="scheduleAlertText"></span></div>
+
+          <section class="mr-next panel">
+            <div class="mr-next-label"><span class="mr-live-dot"></span><span>NEXT ASSIGNMENT</span></div>
+            <div class="mr-next-content" id="nextAssignment"><div class="mr-next-empty">Your upcoming SKANDI assignments will appear here when published.</div></div>
+            <div class="mr-next-action" id="nextAction"></div>
+          </section>
+
+          <section class="mr-filter panel" aria-label="Schedule filters">
+            <div class="mr-filter-heading"><div><strong>Roster view</strong><span>Personal schedule · destination local time when supplied</span></div><div class="mr-filter-controls">
+              <label class="mr-field-inline">From <input type="date" id="dateFrom" aria-label="Schedule from date"></label>
+              <label class="mr-field-inline">To <input type="date" id="dateTo" aria-label="Schedule to date"></label>
+              <select id="statusFilter" class="mr-select" aria-label="Filter by status"><option value="ALL">All statuses</option><option value="SCHEDULED">Scheduled</option><option value="CONFIRMED">Confirmed</option><option value="COMPLETED">Completed</option><option value="CANCELLED">Cancelled</option></select>
+            </div></div>
+            <div class="mr-filter-footer"><span><b id="assignmentCount">0</b> assignments in this date range</span><span id="rangeBase">Assigned destination</span></div>
+          </section>
+
+          <section class="mr-table-panel panel" aria-label="My assignments">
+            <div class="mr-table-wrap"><table class="mr-table">
+              <thead><tr><th>DATE</th><th>ASSIGNMENT</th><th>LOCATION</th><th>START</th><th>END</th><th>STATUS</th><th><span class="mr-sr-only">Actions</span></th></tr></thead>
+              <tbody id="scheduleBody"><tr><td colspan="7"><div class="mr-empty"><span class="mr-spinner"></span><strong>Loading your schedule</strong><span>Checking SKANDI assignment records…</span></div></td></tr></tbody>
+            </table></div>
+            <div class="mr-mobile-list" id="mobileSchedule"></div>
+          </section>
+
+          <div class="mr-summary-grid">
+            <section class="mr-summary-card panel"><div class="mr-summary-top"><div><span class="mr-overline">TIME &amp; ATTENDANCE</span><h2>Recorded hours</h2></div><button class="mr-text-btn" data-nav="time" type="button">View details <span>→</span></button></div><div class="mr-hours-value"><strong id="hoursValue">—</strong><span>hours · last 30 days</span></div><div class="mr-summary-foot" id="clockSummary">No attendance event recorded in this period.</div></section>
+            <section class="mr-summary-card panel"><div class="mr-summary-top"><div><span class="mr-overline">LEAVE</span><h2>Available balance</h2></div><button class="mr-text-btn" id="openTimeOff" type="button">Request time off <span>→</span></button></div><div class="mr-balance-list" id="balanceList"><span class="mr-summary-foot">No balance records are available.</span></div></section>
+          </div>
+        </section>
+
+        <section class="mr-view" id="timePanel" data-panel="time" hidden="">
+          <div class="mr-page-head"><div><div class="mr-kicker">PERSONAL RECORD</div><h1>Time &amp; attendance</h1><p>Attendance events recorded against your assigned destination shifts.</p></div><button class="mr-btn mr-btn-secondary" id="timeRefreshBtn" type="button">Refresh records</button></div>
+          <section class="mr-metric-row"><div class="mr-metric panel"><span class="mr-overline">RECORDED HOURS</span><strong id="timeHours">—</strong><span>Last 30 days</span></div><div class="mr-metric panel"><span class="mr-overline">LATEST EVENT</span><strong class="mr-metric-text" id="latestClock">No event recorded</strong><span id="latestClockTime">—</span></div><div class="mr-metric panel"><span class="mr-overline">ASSIGNED BASE</span><strong class="mr-metric-text" id="timeBase">—</strong><span id="timeRole">—</span></div></section>
+          <section class="mr-table-panel panel"><div class="mr-section-head"><div><h2>Attendance history</h2><p>Events are saved to the SKANDI time record.</p></div></div><div class="mr-table-wrap"><table class="mr-table"><thead><tr><th>DATE &amp; TIME</th><th>EVENT</th><th>ASSIGNMENT</th><th>LOCATION</th><th>STATUS</th></tr></thead><tbody id="clockBody"></tbody></table></div><div class="mr-mobile-list" id="mobileClock"></div></section>
+        </section>
+
+        <section class="mr-view" id="requestsPanel" data-panel="requests" hidden="">
+          <div class="mr-page-head"><div><div class="mr-kicker">STAFF SELF-SERVICE</div><h1>My requests</h1><p>Time-off and schedule-change requests submitted from this staff account.</p></div><div class="mr-head-actions"><button class="mr-btn mr-btn-secondary" id="openShiftChange" type="button">Request a schedule change</button><button class="mr-btn mr-btn-primary" id="requestsTimeOff" type="button">Request time off</button></div></div>
+          <section class="mr-table-panel panel"><div class="mr-section-head"><div><h2>Request history</h2><p>Requests remain pending until reviewed through SKANDI’s staff scheduling process.</p></div></div><div class="mr-table-wrap"><table class="mr-table"><thead><tr><th>SUBMITTED</th><th>REQUEST</th><th>DETAILS</th><th>STATUS</th><th>UPDATED</th></tr></thead><tbody id="requestsBody"></tbody></table></div><div class="mr-mobile-list" id="mobileRequests"></div></section>
+          <div class="mr-policy-note"><strong>Request handling</strong><span>MyRoster records requests under your authenticated staff ID. It does not approve leave or alter published assignments.</span></div>
+        </section>
+      </main>
+    </div>
+
+    <dialog class="mr-dialog" id="timeOffDialog" aria-labelledby="timeOffTitle"><form method="dialog" id="timeOffForm"><div class="mr-dialog-head"><div><span class="mr-kicker">STAFF REQUEST</span><h2 id="timeOffTitle">Request time off</h2></div><button class="mr-icon-btn" value="cancel" aria-label="Close">×</button></div><p class="mr-dialog-copy">Your request will be sent for review. It does not change your published schedule.</p><div class="mr-form-grid"><label>Start date<input name="startDate" type="date" required=""></label><label>End date<input name="endDate" type="date" required=""></label><label class="mr-form-wide">Note for your manager<textarea name="notes" maxlength="400" rows="3" placeholder="Add any details that will help with the review."></textarea></label></div><div class="mr-dialog-actions"><button class="mr-btn mr-btn-secondary" value="cancel">Cancel</button><button class="mr-btn mr-btn-primary" id="submitTimeOff" type="button">Send request</button></div></form></dialog>
+    <dialog class="mr-dialog" id="shiftChangeDialog" aria-labelledby="shiftChangeTitle"><form method="dialog" id="shiftChangeForm"><div class="mr-dialog-head"><div><span class="mr-kicker">STAFF REQUEST</span><h2 id="shiftChangeTitle">Request a schedule change</h2></div><button class="mr-icon-btn" value="cancel" aria-label="Close">×</button></div><p class="mr-dialog-copy" id="shiftChangeAssignment">Choose an assignment first, or describe the date you need reviewed.</p><div class="mr-form-grid"><label class="mr-form-wide">What needs to change?<textarea name="reason" maxlength="600" rows="4" required="" placeholder="Describe the requested change and your preferred outcome."></textarea></label></div><div class="mr-dialog-actions"><button class="mr-btn mr-btn-secondary" value="cancel">Cancel</button><button class="mr-btn mr-btn-primary" id="submitShiftChange" type="button">Send request</button></div></form></dialog>
+    <div class="mr-toast" id="toast" role="status" aria-live="polite"></div>
+    <div class="mr-error-screen" id="accessError" hidden=""><div class="mr-error-card"><div class="mr-error-mark">!</div><h2>MyRoster is unavailable for this account</h2><p id="accessErrorText">Your SKANDI destination staff profile could not be verified.</p><a href="/riaintra">Return to RIAINTRA sign in</a></div></div>
+  </div>
+  
+
+
+</div>
+<div id="riaintra-global-footer-root">
+<footer>
+  <div class="wrap">
+    <div class="footer-left">
+      <div id="links" class="links"></div>
+      <div class="meta">RIAINTRA</div>
+    </div>
+
+    <div id="grouplogo" class="global-footer">
+      <img src="https://static.wixstatic.com/media/394052_02ed0c030fea4f14b5e5677fdaeae197~mv2.png" alt="SKANDI GROUP MEMBER">
+    </div>
+
+    <div class="footer-right">
+      © 2026 SKANDI TRAVELS
+    </div>
+  </div>
+</footer>
+
+
+
+</div>
+
+</div>
+<script data-skandi-part="skandi-shell-runtime">/** SKANDI compiled public-shell runtime — no alternate backend, no local cart. */
+const SKANDI_SHELL_SOURCE = 'SKANDI_SHELL';
+const SKANDI_SHELL_PARENT = 'SKANDI_WIX_PARENT';
+const shellRoot = document.getElementById('skandi-shell-root');
+if (!shellRoot) throw new Error('SKANDI shell mount missing');
+window.__SKANDI_SHELL__ = Object.freeze({
+  mode:'compiled-single-embed',
+  page:shellRoot.dataset.skandiPage || '',
+  root:shellRoot
+});
+// A single iframe passes Home, Header, Footer and Mobile messages to the
+// same Wix Velo HtmlComponent. Existing message source/type values remain.
+// The Wix master controller supplies canonical route and session data.
+window.addEventListener('message', event => {
+  if (event.source !== window.parent) return;
+  let message = event.data;
+  if (typeof message === 'string') {
+    try { message = JSON.parse(message); } catch (_) { return; }
+  }
+  if (!message || message.source !== SKANDI_SHELL_PARENT) return;
+  if (message.type === 'SKANDI_MASTER_CONFIG') {
+    shellRoot.dataset.skandiPath = String(message.payload?.currentPath || '/');
+  }
+  if (message.type === 'SKANDI_SCROLL_TOP' || message.type === 'MASTER_SCROLL_TOP') {
+    document.getElementById('skandi-app-root')?.scrollTo({ top:0, behavior:'instant' });
+  }
+});
+window.parent?.postMessage({
+  source:SKANDI_SHELL_SOURCE,
+  type:'SKANDI_SHELL_READY',
+  payload:{page:shellRoot.dataset.skandiPage || ''},
+  timestamp:new Date().toISOString()
+}, '*');
+
+// The universal receiver supplies this context only after canonical parent,
+// manifest and digest validation. Legacy Home never opts into this handshake.
+let shellAttempts = 0;
+let shellConfigReceived = false;
+let shellTimer;
+function requestShellConfig() {
+  if (++shellAttempts > 40 || shellConfigReceived) { clearInterval(shellTimer); return; }
+  window.parent.postMessage({source:SKANDI_SHELL_SOURCE,type:'MASTER_CONFIG_REQUEST',payload:{context:'compiled-shell'}},'*');
+}
+window.addEventListener('message', event => {
+  if (event.source !== window.parent) return;
+  let message=event.data;
+  if(typeof message==='string'){try{message=JSON.parse(message);}catch(_){return;}}
+  if(message?.source===SKANDI_SHELL_PARENT && message.type==='SKANDI_MASTER_CONFIG') {
+    shellConfigReceived=true;clearInterval(shellTimer);
+  }
+});
+function startCompiledShell() {
+  const context=window.__SKANDI_RECEIVER_CONTEXT__;
+  if(context?.allowed===true && context.key===shellRoot.dataset.skandiKey) {
+    window.parent.postMessage({source:SKANDI_SHELL_SOURCE,type:'SKANDI_COMPILED_READY',payload:{key:context.key}},'*');
+  }
+  shellTimer=setInterval(requestShellConfig,500);requestShellConfig();
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',startCompiledShell,{once:true});
+else startCompiledShell();
+</script>
+<script data-skandi-part="header">(function(){
+const __root=window.document.getElementById("riaintra-global-header-root");
+const document=new Proxy(window.document,{get(target,key){if(key==='getElementById')return id=>{const el=target.getElementById(id);return el&&(__root===el||__root.contains(el))?el:null;};if(key==='querySelector'||key==='querySelectorAll')return selector=>{if(/^(?:html|body|head|meta|title|link)(?:[\s.#[:]|$)/i.test(selector)&&!selector.includes(' '))return target[key](selector);return __root[key](selector);};if(key==='getElementsByClassName'||key==='getElementsByTagName')return value=>__root[key](value);const value=Reflect.get(target,key,target);return typeof value==='function'?value.bind(target):value;},set(target,key,value){return Reflect.set(target,key,value,target);}});
+
+(()=>{
+  "use strict";
+  
+  const SOURCE = "SKANDI_RIAINTRA_HEADER";
+  const PARENT = "SKANDI_WIX_PARENT";
+
+  let config = null;
+  let staff = {};
+
+  const $ = id => document.getElementById(id);
+  const esc = v => String(v ?? "").replace(/[&<>"']/g, s => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;"
+  }[s]));
+
+  function post(type, payload = {}) {
+    if (window.parent && window.parent !== window) {
+      window.parent.postMessage({
+        source: SOURCE,
+        type,
+        payload,
+        timestamp: new Date().toISOString()
+      }, "*");
+    }
+  }
+
+  // Mobile Menu Logic
+  function closeMenu() {
+    $("mobileDrawer")?.classList.remove("open");
+    $("drawerOverlay")?.classList.remove("show");
+    /* Compiled shell owns internal chrome geometry. */
+  }
+
+  $("burger")?.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const menu = $("mobileDrawer");
+    const overlay = $("drawerOverlay");
+    
+    menu.classList.toggle("open");
+    overlay.classList.toggle("show");
+    
+    if (menu.classList.contains("open")) {
+      // Command Wix to expand iframe slightly so the dark overlay shows
+      /* Compiled shell owns internal chrome geometry. */ 
+    } else {
+      /* Compiled shell owns internal chrome geometry. */
+    }
+  });
+
+  $("drawerClose")?.addEventListener("click", closeMenu);
+  $("drawerOverlay")?.addEventListener("click", closeMenu);
+
+  // Render Data
+  function render() {
+    // 1. Branding
+    const header = config?.internal?.header || {};
+    const logo = config?.brand?.assets?.logos?.riaintra || config?.brand?.assets?.logos?.skandiPrimary || "";
+    
+    if (logo && $("logo")) $("logo").src = logo;
+    if (header.productName && $("riaintra-header-productName")) $("riaintra-header-productName").textContent = header.productName;
+    if (header.productContext && $("productContext")) $("productContext").textContent = header.productContext;
+
+    // 2. Navigation
+    const current = config?.currentPath || "";
+    const items = header.primaryNav || config?.nav || [];
+    
+    if (Array.isArray(items) && items.length > 0) {
+      const markup = items.map(i => {
+        const active = current === i.path || (i.path && current.startsWith(i.path + "/"));
+        return `<button type="button" class="${active ? "active" : ""}" data-path="${esc(i.path)}">${esc(i.label)}</button>`;
+      }).join("");
+      
+      if ($("riaintra-header-desktopNav")) $("riaintra-header-desktopNav").innerHTML = markup;
+      if ($("riaintra-header-mobileNav")) $("riaintra-header-mobileNav").innerHTML = markup;
+    }
+
+    // 3. Canonical staff profile from Wix parent -> SKANDI_CORE/staffAuth -> Supabase agent_users.
+    const p = staff.profile || config?.staff?.profile || {};
+    const full =
+      p.displayName || p.display_name || p.fullName || p.name ||
+      [p.firstName || p.first_name, p.lastName || p.last_name].filter(Boolean).join(" ") ||
+      "Employee";
+    const skId = String(p.skId || p.skID || p.sk_id || p.employeeId || p.employee_id || "").trim().toUpperCase();
+    const baseCode = String(p.baseCode || p.base_code || p.base || p.station || "").trim().toUpperCase();
+    const corporateEmail = String(
+      p.corporateEmail || p.corporate_email || p.corporateEmailAddress ||
+      p.corporate_email_address || p.workEmail || p.email || ""
+    ).trim();
+    const photo = String(
+      p.badgePhotoUrl || p.badge_photo_url || p.photoUrl ||
+      p.profilePhotoUrl || p.photo || ""
+    ).trim();
+    const hasData = Boolean(skId || full !== "Employee" || corporateEmail || photo);
+
+    if ($("userProfile")) $("userProfile").style.display = hasData ? "grid" : "none";
+
+    if (hasData) {
+      const initials = [p.firstName || p.first_name, p.lastName || p.last_name]
+        .filter(Boolean).map(v => String(v)[0]).join("").slice(0, 2).toUpperCase() ||
+        full.slice(0, 2).toUpperCase();
+
+      if ($("userName")) $("userName").textContent = full;
+      if ($("userMeta")) $("userMeta").textContent = [skId, baseCode].filter(Boolean).join(" • ") || "RIAINTRA";
+      if ($("userEmail")) $("userEmail").textContent = corporateEmail || "—";
+
+      if (photo) {
+        $("badge_photo_url").src = photo;
+        $("badge_photo_url").style.display = "block";
+        $("avatarFallback").style.display = "none";
+      } else {
+        $("badge_photo_url").style.display = "none";
+        $("avatarFallback").style.display = "grid";
+        $("avatarFallback").textContent = initials;
+      }
+    }
+
+    // Return to Dashboard is hidden only on the Success Factors dashboard itself.
+    const normalizedCurrent = String(current || "").split("?")[0].replace(/\/$/, "") || "/";
+    if ($("returnDashboardBtn")) {
+      $("returnDashboardBtn").hidden = normalizedCurrent === "/riaintra/success-factors";
+    }
+  }
+
+  // Navigation Logic
+  document.addEventListener("click", e => {
+    const btn = e.target.closest("[data-path]");
+    if (!btn) return;
+    
+    const path = btn.dataset.path;
+    
+    // Update local active state visually
+    document.querySelectorAll("[data-path]").forEach(b => b.classList.remove("active"));
+    document.querySelectorAll(`[data-path="${path}"]`).forEach(b => b.classList.add("active"));
+    
+    if (config) config.currentPath = path;
+
+    closeMenu();
+    post("RIAINTRA_NAVIGATE", { path });
+  });
+
+  $("returnDashboardBtn")?.addEventListener("click", () => {
+    post("RIAINTRA_NAVIGATE", {
+      path:config?.routes?.successFactors || "/riaintra/success-factors"
+    });
+  });
+
+  $("logoutBtn")?.addEventListener("click", () => {
+    post("RIAINTRA_LOGOUT", {});
+  });
+
+  // Clock Logic
+  let clockUsesUtc = false;
+  function updateClock() {
+    const now = new Date();
+    const opts = {
+      hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false,
+      ...(clockUsesUtc ? { timeZone: "UTC" } : {})
+    };
+    if ($("sfClockTime")) $("sfClockTime").textContent = new Intl.DateTimeFormat(undefined, opts).format(now);
+    if ($("sfClockDate")) $("sfClockDate").textContent = clockUsesUtc 
+      ? `${now.toISOString().slice(0, 10)} UTC` 
+      : new Intl.DateTimeFormat(undefined, { weekday: "short", day: "2-digit", month: "short" }).format(now).toUpperCase();
+  }
+
+  $("sfClock")?.addEventListener("click", () => {
+    clockUsesUtc = !clockUsesUtc;
+    updateClock();
+  });
+  
+  setInterval(updateClock, 1000);
+  updateClock();
+
+  // Listen for Wix Parent Messages
+  window.addEventListener("message", e => {
+    const m = e.data || {};
+    if (m.source !== PARENT) return;
+
+    if (m.type === "SKANDI_MASTER_CONFIG") {
+      config = m.payload || {};
+      render();
+    }
+
+    if ([
+      "RIAINTRA_HEADER_STATE",
+      "UPDATE_PROFILE",
+      "INTERNAL_CHROME_BOOTSTRAP",
+      "GLOBAL_HEADER_BOOTSTRAP"
+    ].includes(m.type)) {
+      const payloadProfile =
+        m.payload?.profile ||
+        m.payload?.session?.profile ||
+        m.payload?.session ||
+        m.payload ||
+        {};
+      staff.profile = { ...staff.profile, ...payloadProfile };
+      render();
+    }
+  });
+
+  // Signal Wix parent window that embed is ready
+  post("MASTER_CONFIG_REQUEST", { context: "riaintra-header" });
+  post("RIAINTRA_HEADER_READY", {});
+  /* Compiled shell owns internal chrome geometry. */
+
+})();
+
+
+})();</script>
+<script data-skandi-part="footer">(function(){
+const __root=window.document.getElementById("riaintra-global-footer-root");
+const document=new Proxy(window.document,{get(target,key){if(key==='getElementById')return id=>{const el=target.getElementById(id);return el&&(__root===el||__root.contains(el))?el:null;};if(key==='querySelector'||key==='querySelectorAll')return selector=>{if(/^(?:html|body|head|meta|title|link)(?:[\s.#[:]|$)/i.test(selector)&&!selector.includes(' '))return target[key](selector);return __root[key](selector);};if(key==='getElementsByClassName'||key==='getElementsByTagName')return value=>__root[key](value);const value=Reflect.get(target,key,target);return typeof value==='function'?value.bind(target):value;},set(target,key,value){return Reflect.set(target,key,value,target);}});
+
+(()=>{
+  const SOURCE="SKANDI_RIAINTRA_FOOTER",PARENT="SKANDI_WIX_PARENT";
+  const LEGAL_PATH="/riaintra/success-factors/legal-internal";
+  let config=null;
+  const $=id=>document.getElementById(id);
+  const esc=v=>String(v??"").replace(/[&<>"']/g,s=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[s]));
+  const post=(type,payload={})=>window.parent.postMessage({source:SOURCE,type,payload,timestamp:new Date().toISOString()},"*");
+
+  function render(){
+    const legalPath=String(config?.routes?.legalInternal||LEGAL_PATH);
+    const links=Array.isArray(config?.internal?.footer?.links)?[...config.internal.footer.links]:[];
+    if(!links.some(i=>String(i?.path||"")===legalPath)){
+      links.push({label:"Legal & Policies",path:legalPath});
+    }
+    $("links").innerHTML=links.map(i=>`<button data-path="${esc(i.path)}">${esc(i.label)}</button>`).join("");
+  }
+
+  document.addEventListener("click",e=>{
+    const path=e.target.closest("[data-path]")?.dataset.path;
+    if(path)post("MASTER_NAVIGATE",{path});
+  });
+
+  window.addEventListener("message",e=>{
+    const m=e.data||{};if(m.source!==PARENT)return;
+    if(m.type==="SKANDI_MASTER_CONFIG"){config=m.payload||{};render()}
+  });
+
+  post("MASTER_CONFIG_REQUEST",{context:"riaintra-footer"});
+})();
+
+
+})();</script>
+<script data-skandi-part="my-roster">(function(){
+const __root=window.document.getElementById("skandi-app-root");
+const document=new Proxy(window.document,{get(target,key){if(key==='getElementById')return id=>{const el=target.getElementById(id);return el&&(__root===el||__root.contains(el))?el:null;};if(key==='querySelector'||key==='querySelectorAll')return selector=>{if(/^(?:html|body|head|meta|title|link)(?:[\s.#[:]|$)/i.test(selector)&&!selector.includes(' '))return target[key](selector);return __root[key](selector);};if(key==='getElementsByClassName'||key==='getElementsByTagName')return value=>__root[key](value);const value=Reflect.get(target,key,target);return typeof value==='function'?value.bind(target):value;},set(target,key,value){return Reflect.set(target,key,value,target);}});
+(() => {
+  "use strict";
+
+  const SOURCE = "SKANDI_MYROSTER_EMBED";
+  const PARENT_SOURCE = "SKANDI_WIX_PARENT";
+  const root = document.getElementById("myRosterRoot");
+  if (!root) return;
+
+  const $ = (selector) => root.querySelector(selector);
+  const $$ = (selector) => [...root.querySelectorAll(selector)];
+  const state = {
+    boot: null,
+    assignments: [],
+    requests: [],
+    clocks: [],
+    timeOffBalances: [],
+    pending: new Map(),
+    selectedAssignment: null,
+    activePanel: "schedule",
+    lastSync: null,
+    loading: true
+  };
+
+  function text(value) { return String(value ?? ""); }
+  function escapeHtml(value) {
+    return text(value).replace(/[&<>"']/g, (character) => ({
+      "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+    })[character]);
+  }
+  function dateInputValue(value) {
+    const date = value instanceof Date ? value : new Date(value);
+    if (!Number.isFinite(date.getTime())) return "";
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+  }
+  function offsetDate(date, days) {
+    const result = new Date(date);
+    result.setDate(result.getDate() + days);
+    return result;
+  }
+  function setSync(label, status = "ready") {
+    const host = $("#syncState");
+    if (!host) return;
+    host.dataset.state = status;
+    $("#syncLabel").textContent = label;
+  }
+  function showToast(message, error = false) {
+    const toast = $("#toast");
+    if (!toast) return;
+    toast.textContent = message;
+    toast.classList.toggle("error", error);
+    toast.classList.add("show");
+    window.clearTimeout(showToast.timer);
+    showToast.timer = window.setTimeout(() => toast.classList.remove("show"), 3400);
+  }
+  function post(type, payload = {}) {
+    window.parent.postMessage({ source: SOURCE, type, payload, timestamp: new Date().toISOString() }, "*");
+  }
+  function requestRefresh() {
+    const from = $("#dateFrom")?.value || "";
+    const to = $("#dateTo")?.value || "";
+    state.loading = true;
+    setSync("Syncing your schedule", "loading");
+    post("MYROSTER_REFRESH_REQUEST", { from, to });
+  }
+  function action(type, payload, button, successText) {
+    const requestId = `MYROSTER-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    state.pending.set(requestId, { button, successText });
+    if (button) button.disabled = true;
+    setSync("Saving staff record", "loading");
+    post(type, { ...payload, requestId });
+  }
+  function toDate(value) {
+    const parsed = new Date(value);
+    return Number.isFinite(parsed.getTime()) ? parsed : null;
+  }
+  function dateParts(value, timeZone = "") {
+    const date = toDate(value);
+    if (!date) return { main: "Date not set", sub: "" };
+    const options = { weekday: "short", day: "2-digit", month: "short" };
+    if (timeZone) options.timeZone = timeZone;
+    try {
+      const parts = new Intl.DateTimeFormat(undefined, options).formatToParts(date);
+      const part = (key) => parts.find((item) => item.type === key)?.value || "";
+      return { main: `${part("day")} ${part("month")}`, sub: part("weekday") };
+    } catch (_) {
+      return { main: date.toLocaleDateString(undefined, { day: "2-digit", month: "short" }), sub: date.toLocaleDateString(undefined, { weekday: "short" }) };
+    }
+  }
+  function formatTime(value, timeZone = "") {
+    const date = toDate(value);
+    if (!date) return "—";
+    const options = { hour: "2-digit", minute: "2-digit", hour12: false };
+    if (timeZone) options.timeZone = timeZone;
+    try { return new Intl.DateTimeFormat(undefined, options).format(date); }
+    catch (_) { return date.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" }); }
+  }
+  function formatDateTime(value, timeZone = "") {
+    const date = toDate(value);
+    if (!date) return "—";
+    const options = { weekday: "short", day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit", hour12: false };
+    if (timeZone) options.timeZone = timeZone;
+    try { return new Intl.DateTimeFormat(undefined, options).format(date); }
+    catch (_) { return date.toLocaleString(undefined, { weekday: "short", day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }); }
+  }
+  function titleCase(value) {
+    const clean = text(value).replace(/[_-]+/g, " ").trim().toLowerCase();
+    return clean ? clean.replace(/\b\w/g, (letter) => letter.toUpperCase()) : "Scheduled";
+  }
+  function baseLabel() {
+    const base = state.boot?.base || {};
+    const profile = state.boot?.profile || {};
+    const name = text(base.name || profile.baseName || base.city || profile.base || profile.station || "Assigned destination");
+    const code = text(base.destinationCode || base.airportIata || profile.destinationCode || base.code || profile.baseCode || "");
+    return code && code.toLowerCase() !== name.toLowerCase() ? `${name} · ${code}` : name;
+  }
+  function statusClass(value) {
+    const status = text(value).toUpperCase();
+    if (["COMPLETED", "CONFIRMED", "APPROVED", "RECORDED", "CLOCKED IN", "CLOCKED_OUT", "CLOCKED OUT"].includes(status)) return "good";
+    if (["PENDING", "PENDING REVIEW", "REQUESTED", "IN REVIEW"].includes(status)) return "warn";
+    if (["CANCELLED", "CANCELED", "DECLINED", "REJECTED", "DISRUPTED"].includes(status)) return "bad";
+    return "";
+  }
+  function assignmentPeriod(assignment) {
+    const start = toDate(assignment.startAt);
+    const end = toDate(assignment.endAt);
+    if (!start) return "Schedule time not supplied";
+    const tz = assignment.timeZone || "";
+    const startText = `${formatDateTime(assignment.startAt, tz)}${tz ? ` · ${tz}` : ""}`;
+    if (!end) return startText;
+    const sameDay = dateInputValue(start) === dateInputValue(end);
+    return sameDay ? `${formatTime(assignment.startAt, tz)}–${formatTime(assignment.endAt, tz)}` : `${startText} – ${formatDateTime(assignment.endAt, tz)}`;
+  }
+  function visibleAssignments() {
+    const from = $("#dateFrom")?.value || "";
+    const to = $("#dateTo")?.value || "";
+    const status = $("#statusFilter")?.value || "ALL";
+    return state.assignments.filter((assignment) => {
+      const start = toDate(assignment.startAt);
+      const day = start ? dateInputValue(start) : "";
+      if (from && day && day < from) return false;
+      if (to && day && day > to) return false;
+      if (status !== "ALL" && text(assignment.status).toUpperCase() !== status) return false;
+      return true;
+    }).sort((a, b) => (Date.parse(a.startAt || "") || 0) - (Date.parse(b.startAt || "") || 0));
+  }
+  function clockedIn() {
+    const latest = state.clocks[0];
+    if (!latest) return false;
+    const type = text(latest.eventType).toUpperCase().replace(/[^A-Z]/g, "");
+    return type.includes("IN") && !type.includes("OUT");
+  }
+  function setActivePanel(panel) {
+    state.activePanel = panel;
+    $$("[data-nav]").forEach((item) => item.classList.toggle("active", item.dataset.nav === panel));
+    $$("[data-panel]").forEach((item) => {
+      const active = item.dataset.panel === panel;
+      item.classList.toggle("active", active);
+      item.hidden = !active;
+    });
+    if (panel === "time") renderClock();
+    if (panel === "requests") renderRequests();
+  }
+  function renderProfile() {
+    const profile = state.boot?.profile || {};
+    const name = profile.displayName || profile.fullName || profile.preferredName || "SKANDI staff";
+    const role = profile.jobTitle || profile.position || profile.accessRole || "Destination staff";
+    const base = baseLabel();
+    const initials = name.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]).join("").toUpperCase() || "S";
+    $("#staffName").textContent = name;
+    $("#staffMeta").textContent = role;
+    $("#staffInitials").textContent = initials;
+    $("#baseCode").textContent = base;
+    $("#staffRole").textContent = role;
+    $("#rangeBase").textContent = `Assigned destination · ${base}`;
+    $("#timeBase").textContent = base;
+    $("#timeRole").textContent = role;
+    const groupTalk = (state.boot?.apps || []).find((app) => /grouptalk/i.test(`${app.id || ""} ${app.title || ""}`) && app.available !== false && app.path);
+    const link = $("#groupTalkLink");
+    if (groupTalk && link) {
+      link.href = groupTalk.path;
+      link.hidden = false;
+    }
+  }
+  function assignmentTitle(assignment) {
+    const source = text(assignment.sourceTable);
+    if (assignment.label) return assignment.label;
+    if (source === "driver_assignments") return "Transfer duty";
+    if (source === "tour_assignments") return "Tour assignment";
+    if (source === "airport_duty_assignments") return "Airport duty";
+    if (source === "vehicle_assignments") return "Vehicle assignment";
+    return "Destination shift";
+  }
+  function statusPill(value) {
+    const label = titleCase(value || "Scheduled");
+    return `<span class="mr-status ${statusClass(value)}">${escapeHtml(label)}</span>`;
+  }
+  function rowAction(assignment) {
+    return `<button class="mr-row-action" type="button" data-change="${escapeHtml(assignment.id)}" data-source-table="${escapeHtml(assignment.sourceTable)}">Request change</button>`;
+  }
+  function assignmentRow(assignment) {
+    const date = dateParts(assignment.startAt, assignment.timeZone);
+    const location = assignment.location || assignment.baseCode || baseLabel();
+    const timeZone = assignment.timeZone || "";
+    return `<tr>
+      <td><span class="mr-date-main">${escapeHtml(date.main)}</span><span class="mr-date-sub">${escapeHtml(date.sub)}</span></td>
+      <td><div class="mr-assignment-cell"><strong>${escapeHtml(assignmentTitle(assignment))}</strong><span>${escapeHtml(assignment.details || assignment.notes || assignment.reference || "")}</span></div></td>
+      <td><span class="mr-location">${escapeHtml(location)}</span></td>
+      <td class="mr-time">${escapeHtml(formatTime(assignment.startAt, timeZone))}</td>
+      <td class="mr-time">${escapeHtml(formatTime(assignment.endAt, timeZone))}</td>
+      <td>${statusPill(assignment.status)}</td>
+      <td>${rowAction(assignment)}</td>
+    </tr>`;
+  }
+  function mobileAssignment(assignment) {
+    const date = dateParts(assignment.startAt, assignment.timeZone);
+    const location = assignment.location || assignment.baseCode || baseLabel();
+    const timeZone = assignment.timeZone || "";
+    return `<article class="mr-mobile-row">
+      <div class="mr-mobile-head"><div class="mr-mobile-date">${escapeHtml(date.main)}<span>${escapeHtml(date.sub)}</span></div>${statusPill(assignment.status)}</div>
+      <div class="mr-mobile-title">${escapeHtml(assignmentTitle(assignment))}</div>
+      <div class="mr-mobile-location">${escapeHtml(location)}${assignment.details ? ` · ${escapeHtml(assignment.details)}` : ""}</div>
+      <div class="mr-mobile-times"><span>Start <b>${escapeHtml(formatTime(assignment.startAt, timeZone))}</b></span><span>End <b>${escapeHtml(formatTime(assignment.endAt, timeZone))}</b></span></div>
+      <div class="mr-mobile-action">${rowAction(assignment)}</div>
+    </article>`;
+  }
+  function nextAssignment() {
+    const now = Date.now();
+    return state.assignments.filter((assignment) => {
+      const start = Date.parse(assignment.startAt || "");
+      const status = text(assignment.status).toUpperCase();
+      return Number.isFinite(start) && start >= now && !["CANCELLED", "CANCELED", "COMPLETED", "DECLINED"].includes(status);
+    }).sort((a, b) => Date.parse(a.startAt) - Date.parse(b.startAt))[0] || null;
+  }
+  function renderNext() {
+    const host = $("#nextAssignment");
+    const actionHost = $("#nextAction");
+    const next = nextAssignment();
+    if (!next) {
+      host.innerHTML = '<div class="mr-next-empty">Your upcoming SKANDI assignments will appear here when published.</div>';
+      actionHost.innerHTML = "";
+      return;
+    }
+    const date = dateParts(next.startAt, next.timeZone);
+    const location = next.location || next.baseCode || baseLabel();
+    host.innerHTML = `<div class="mr-next-main"><div class="mr-next-date"><strong>${escapeHtml(date.main)}</strong><span>${escapeHtml(date.sub)}</span></div><div class="mr-next-detail"><strong>${escapeHtml(assignmentTitle(next))}</strong><span>${escapeHtml(location)}${next.details ? ` · ${escapeHtml(next.details)}` : ""}</span></div><div class="mr-next-time">${escapeHtml(assignmentPeriod(next))}</div></div>`;
+    const type = clockedIn() ? "CLOCK_OUT" : "CLOCK_IN";
+    const label = type === "CLOCK_OUT" ? "Clock out" : "Clock in";
+    actionHost.innerHTML = `<button class="mr-btn mr-btn-primary" type="button" data-clock="${type}" data-assignment-id="${escapeHtml(next.id)}" data-source-table="${escapeHtml(next.sourceTable)}">${label}</button>`;
+  }
+  function renderSchedule() {
+    const rows = visibleAssignments();
+    $("#assignmentCount").textContent = String(rows.length);
+    const body = $("#scheduleBody");
+    const mobile = $("#mobileSchedule");
+    if (!rows.length) {
+      const message = '<div class="mr-empty"><strong>No published assignments in this date range</strong><span>When SKANDI publishes a shift or destination duty for you, it will appear here.</span></div>';
+      body.innerHTML = `<tr><td colspan="7">${message}</td></tr>`;
+      mobile.innerHTML = message;
+    } else {
+      body.innerHTML = rows.map(assignmentRow).join("");
+      mobile.innerHTML = rows.map(mobileAssignment).join("");
+    }
+    renderNext();
+    renderTimeSummary();
+  }
+  function renderTimeSummary() {
+    const hours = Number(state.boot?.hoursLast30Days);
+    const display = Number.isFinite(hours) ? new Intl.NumberFormat(undefined, { maximumFractionDigits: 1 }).format(hours) : "—";
+    $("#hoursValue").textContent = display;
+    $("#timeHours").textContent = display;
+    const latest = state.clocks[0];
+    if (latest) {
+      const status = clockedIn() ? "Clocked in" : titleCase(latest.eventType);
+      $("#clockSummary").textContent = `${status} · ${formatDateTime(latest.eventAt, latest.timeZone)}`;
+      $("#latestClock").textContent = status;
+      $("#latestClockTime").textContent = formatDateTime(latest.eventAt, latest.timeZone);
+    } else {
+      $("#clockSummary").textContent = "No attendance event recorded in this period.";
+      $("#latestClock").textContent = "No event recorded";
+      $("#latestClockTime").textContent = "—";
+    }
+    const balances = state.timeOffBalances;
+    $("#balanceList").innerHTML = balances.length ? balances.map((balance) => `<div class="mr-balance-item"><strong>${escapeHtml(balance.balanceHours ?? "—")} ${escapeHtml(balance.unit || "hrs")}</strong><span>${escapeHtml(titleCase(balance.type || "Time off"))}${balance.year ? ` · ${escapeHtml(balance.year)}` : ""}</span></div>`).join("") : '<span class="mr-summary-foot">No balance records are available for your profile.</span>';
+  }
+  function renderClock() {
+    const rows = state.clocks;
+    const body = $("#clockBody");
+    const mobile = $("#mobileClock");
+    if (!rows.length) {
+      body.innerHTML = '<tr><td colspan="5"><div class="mr-empty"><strong>No attendance events recorded</strong><span>Time events connected to your staff ID will appear here.</span></div></td></tr>';
+      mobile.innerHTML = '<div class="mr-empty"><strong>No attendance events recorded</strong><span>Time events connected to your staff ID will appear here.</span></div>';
+      return;
+    }
+    body.innerHTML = rows.map((row) => `<tr><td>${escapeHtml(formatDateTime(row.eventAt, row.timeZone))}</td><td>${escapeHtml(titleCase(row.eventType))}</td><td>${escapeHtml(row.assignmentLabel || "—")}</td><td>${escapeHtml(row.location || baseLabel())}</td><td>${statusPill(row.status)}</td></tr>`).join("");
+    mobile.innerHTML = rows.map((row) => `<article class="mr-mobile-row"><div class="mr-mobile-head"><strong>${escapeHtml(formatDateTime(row.eventAt, row.timeZone))}</strong>${statusPill(row.status)}</div><div class="mr-mobile-title">${escapeHtml(titleCase(row.eventType))}</div><div class="mr-mobile-location">${escapeHtml(row.assignmentLabel || row.location || "Assigned destination")}</div></article>`).join("");
+  }
+  function renderRequests() {
+    const rows = state.requests;
+    const body = $("#requestsBody");
+    const mobile = $("#mobileRequests");
+    if (!rows.length) {
+      body.innerHTML = '<tr><td colspan="5"><div class="mr-empty"><strong>No requests submitted</strong><span>Time-off or schedule-change requests you submit will appear here.</span></div></td></tr>';
+      mobile.innerHTML = '<div class="mr-empty"><strong>No requests submitted</strong><span>Time-off or schedule-change requests you submit will appear here.</span></div>';
+      return;
+    }
+    body.innerHTML = rows.map((row) => `<tr><td>${escapeHtml(formatDateTime(row.createdAt))}</td><td>${escapeHtml(titleCase(row.requestType))}</td><td>${escapeHtml(row.summary || "—")}</td><td>${statusPill(row.status)}</td><td>${escapeHtml(formatDateTime(row.updatedAt || row.createdAt))}</td></tr>`).join("");
+    mobile.innerHTML = rows.map((row) => `<article class="mr-mobile-row"><div class="mr-mobile-head"><strong>${escapeHtml(titleCase(row.requestType))}</strong>${statusPill(row.status)}</div><div class="mr-mobile-location">${escapeHtml(row.summary || "—")}</div><div class="mr-mobile-times"><span>Submitted <b>${escapeHtml(formatDateTime(row.createdAt))}</b></span></div></article>`).join("");
+  }
+  function render() {
+    if (!state.boot?.ok) return;
+    state.assignments = Array.isArray(state.boot.assignments) ? state.boot.assignments : [];
+    state.requests = Array.isArray(state.boot.requests) ? state.boot.requests : [];
+    state.clocks = Array.isArray(state.boot.clockEvents) ? state.boot.clockEvents : [];
+    state.timeOffBalances = Array.isArray(state.boot.timeOffBalances) ? state.boot.timeOffBalances : [];
+    renderProfile();
+    renderSchedule();
+    renderClock();
+    renderRequests();
+    const synced = state.boot.syncedAt ? formatDateTime(state.boot.syncedAt) : "";
+    setSync(synced ? `Synced ${synced}` : "Connected to SKANDI schedule", "ready");
+    state.loading = false;
+    state.lastSync = Date.now();
+  }
+  function showAccessError(message) {
+    const error = $("#accessError");
+    const detail = $("#accessErrorText");
+    if (detail) detail.textContent = message || "Your SKANDI destination staff profile could not be verified.";
+    if (error) error.hidden = false;
+  }
+  function errorMessage(code) {
+    const messages = {
+      MYROSTER_DESTINATION_ACCESS_REQUIRED: "MyRoster is limited to staff assigned to a SKANDI destination or airport team.",
+      MYROSTER_DESTINATION_BASE_REQUIRED: "Your SKANDI profile needs an assigned destination or base before this page can load.",
+      STAFF_AUTH_REQUIRED: "Sign in to RIAINTRA to view your staff schedule.",
+      STAFF_ACCESS_DENIED: "Your SKANDI staff access could not be confirmed.",
+      MYROSTER_ASSIGNMENT_NOT_FOUND: "That assignment is no longer available for your staff account.",
+      MYROSTER_TIMEOFF_DATES_INVALID: "Enter a valid time-off date range.",
+      MYROSTER_REQUEST_REASON_REQUIRED: "Add a short note explaining your schedule-change request."
+    };
+    return messages[text(code)] || text(code) || "The request could not be completed. Refresh and try again.";
+  }
+  function openDialog(dialog) {
+    if (!dialog) return;
+    if (typeof dialog.showModal === "function") dialog.showModal();
+    else dialog.setAttribute("open", "open");
+  }
+  function closeDialog(dialog) {
+    if (!dialog) return;
+    if (typeof dialog.close === "function") dialog.close();
+    else dialog.removeAttribute("open");
+  }
+  function submitTimeOff(button) {
+    const form = $("#timeOffForm");
+    const data = new FormData(form);
+    const startDate = text(data.get("startDate")).trim();
+    const endDate = text(data.get("endDate")).trim();
+    const notes = text(data.get("notes")).trim();
+    if (!startDate || !endDate || startDate > endDate) return showToast("Choose a valid start and end date.", true);
+    action("MYROSTER_TIMEOFF_REQUEST", { startDate, endDate, notes }, button, "Time-off request submitted for review.");
+  }
+  function submitShiftChange(button) {
+    const form = $("#shiftChangeForm");
+    const reason = text(new FormData(form).get("reason")).trim();
+    if (!reason) return showToast("Describe the schedule change you are requesting.", true);
+    action("MYROSTER_SHIFT_CHANGE_REQUEST", { reason, assignment: state.selectedAssignment || null }, button, "Schedule-change request submitted for review.");
+  }
+  function downloadCsv() {
+    const rows = visibleAssignments();
+    if (!rows.length) return showToast("There are no assignments in this date range to export.", true);
+    const columns = ["date", "assignment", "location", "start_at", "end_at", "status"];
+    const csv = [columns.join(","), ...rows.map((row) => [
+      row.startAt ? dateInputValue(row.startAt) : "",
+      assignmentTitle(row), row.location || row.baseCode || "", row.startAt || "", row.endAt || "", row.status || ""
+    ].map((value) => `"${text(value).replace(/"/g, '""')}"`).join(","))].join("\r\n");
+    const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = "skandi-my-schedule.csv";
+    anchor.click();
+    URL.revokeObjectURL(url);
+  }
+
+  root.addEventListener("click", (event) => {
+    const groupTalk = event.target.closest("#groupTalkLink");
+    if (groupTalk && groupTalk.href && groupTalk.getAttribute("href") !== "#") {
+      event.preventDefault();
+      post("MYROSTER_NAVIGATE", { path: groupTalk.pathname });
+      return;
+    }
+    const nav = event.target.closest("[data-nav]");
+    if (nav) { event.preventDefault(); setActivePanel(nav.dataset.nav); return; }
+    const refresh = event.target.closest("#refreshBtn, #timeRefreshBtn");
+    if (refresh) { requestRefresh(); return; }
+    if (event.target.closest("#exportBtn")) { downloadCsv(); return; }
+    if (event.target.closest("#openTimeOff, #requestsTimeOff")) { openDialog($("#timeOffDialog")); return; }
+    if (event.target.closest("#openShiftChange")) { state.selectedAssignment = null; $("#shiftChangeAssignment").textContent = "Describe the date or assignment you need your local schedule team to review."; openDialog($("#shiftChangeDialog")); return; }
+    const change = event.target.closest("[data-change]");
+    if (change) {
+      const assignment = state.assignments.find((row) => row.id === change.dataset.change && row.sourceTable === change.dataset.sourceTable);
+      state.selectedAssignment = assignment ? { id: assignment.id, sourceTable: assignment.sourceTable, label: assignmentTitle(assignment), startAt: assignment.startAt } : null;
+      const description = state.selectedAssignment ? `${state.selectedAssignment.label}${state.selectedAssignment.startAt ? ` · ${formatDateTime(state.selectedAssignment.startAt)}` : ""}` : "This assignment is no longer available.";
+      $("#shiftChangeAssignment").textContent = `Assignment under review: ${description}`;
+      openDialog($("#shiftChangeDialog"));
+      return;
+    }
+    const clock = event.target.closest("[data-clock]");
+    if (clock) {
+      const eventType = clock.dataset.clock;
+      const assignmentId = clock.dataset.assignmentId;
+      const sourceTable = clock.dataset.sourceTable;
+      if (!assignmentId || !sourceTable) return showToast("Select a published assignment before recording time.", true);
+      action("MYROSTER_CLOCK_EVENT_REQUEST", { eventType, assignmentId, sourceTable }, clock, `${titleCase(eventType)} recorded.`);
+      return;
+    }
+    if (event.target.closest("#submitTimeOff")) { submitTimeOff(event.target.closest("#submitTimeOff")); return; }
+    if (event.target.closest("#submitShiftChange")) { submitShiftChange(event.target.closest("#submitShiftChange")); }
+  });
+  ["#dateFrom", "#dateTo", "#statusFilter"].forEach((selector) => $(selector)?.addEventListener("change", () => {
+    if (selector === "#statusFilter") renderSchedule();
+    else requestRefresh();
+  }));
+  $("#timeOffForm")?.addEventListener("submit", (event) => event.preventDefault());
+  $("#shiftChangeForm")?.addEventListener("submit", (event) => event.preventDefault());
+
+  window.addEventListener("message", (event) => {
+    if (event.source !== window.parent) return;
+    const message = event.data || {};
+    if (message.source !== PARENT_SOURCE) return;
+    const payload = message.payload || {};
+    if (message.type === "MYROSTER_BOOTSTRAP") {
+      state.boot = payload;
+      state.loading = false;
+      if (payload.ok === false || payload.authorized === false) {
+        showAccessError(errorMessage(payload.reason || "STAFF_ACCESS_DENIED"));
+        setSync("Staff access required", "error");
+        return;
+      }
+      render();
+      return;
+    }
+    if (message.type === "MYROSTER_ACTION_OK") {
+      const pending = state.pending.get(payload.requestId);
+      if (pending) {
+        state.pending.delete(payload.requestId);
+        if (pending.button) pending.button.disabled = false;
+        if (pending.button?.id === "submitTimeOff") { closeDialog($("#timeOffDialog")); $("#timeOffForm").reset(); }
+        if (pending.button?.id === "submitShiftChange") { closeDialog($("#shiftChangeDialog")); $("#shiftChangeForm").reset(); state.selectedAssignment = null; }
+        showToast(pending.successText || "SKANDI staff record saved.");
+      }
+      setSync("Connected to SKANDI schedule", "ready");
+      return;
+    }
+    if (message.type === "MYROSTER_ERROR") {
+      const pending = state.pending.get(payload.requestId);
+      if (pending) {
+        state.pending.delete(payload.requestId);
+        if (pending.button) pending.button.disabled = false;
+      }
+      const messageText = errorMessage(payload.code || payload.message);
+      if (/DESTINATION_ACCESS_REQUIRED|DESTINATION_BASE_REQUIRED|STAFF_AUTH_REQUIRED|STAFF_ACCESS_DENIED/.test(text(payload.code || payload.message))) showAccessError(messageText);
+      showToast(messageText, true);
+      setSync("Could not save or refresh", "error");
+    }
+  });
+
+  const today = new Date();
+  $("#dateFrom").value = dateInputValue(offsetDate(today, -14));
+  $("#dateTo").value = dateInputValue(offsetDate(today, 60));
+  setSync("Connecting to staff schedule", "loading");
+  post("MYROSTER_READY", { from: $("#dateFrom").value, to: $("#dateTo").value });
+})();
+
+
+})();</script>
+
+</body>
+</html>

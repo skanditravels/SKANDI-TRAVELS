@@ -3069,7 +3069,7 @@
       "components": [],
       "binding": "explicit",
       "requiresStaff": true,
-      "status": "FAILED",
+      "status": "BUILT",
       "files": [
         "skandi-embeds/my-roster/skandi-my-roster.html",
         "skandi-embeds/my-roster/skandi-my-roster.css",
@@ -3082,6 +3082,12 @@
         "src/backend/SKANDI_CORE/myRoster.web.js"
       ],
       "messages": [
+        "INTERNAL_CHROME_BOOTSTRAP",
+        "INTERNAL_CHROME_READY",
+        "INTERNAL_GLOBAL_SEARCH",
+        "INTERNAL_LOGOUT",
+        "INTERNAL_NAVIGATE",
+        "INTERNAL_SEARCH_RESULTS",
         "MYROSTER_ACTION_OK",
         "MYROSTER_BOOTSTRAP",
         "MYROSTER_CLOCK_EVENT_REQUEST",
@@ -3093,15 +3099,17 @@
         "MYROSTER_REFRESH_REQUEST",
         "MYROSTER_SHIFT_CHANGE_REQUEST",
         "MYROSTER_TIMEOFF_REQUEST",
+        "SKANDI_INTERNAL_CHROME",
         "SKANDI_MYROSTER_EMBED",
         "SKANDI_WIX_PARENT"
       ],
-      "output": null,
+      "output": "dist/my-roster/index.html",
       "dynamic": false,
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
-      "error": "[myRoster / my-roster] skandi-embeds/my-roster/skandi-my-roster.html, skandi-embeds/my-roster/skandi-my-roster.css, skandi-embeds/my-roster/skandi-my-roster.js: duplicate id=\"logoutBtn\" (also in skandi-embeds/riaintra-global/riaintra-header.html)",
-      "retainedArtifact": false
+      "receiver": "skandi-embeds/my-roster/skandi-my-roster.receiver.html",
+      "sha256": "234b0cec299cf5916ce212ec7c4d68a6811833eea26ee8219d0c713eef153bf2",
+      "bytes": 87637
     },
     {
       "key": "groupTalk",
