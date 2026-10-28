@@ -1070,6 +1070,7 @@ let STOREFRONT_CONNECTED=false;
 let STOREFRONT_REQUEST_ATTEMPTS=0;
 let STOREFRONT_RETRY_TIMER=null;
 let ACTIVE="",ACTIVE_PRODUCT=null,ACTIVE_GIFT_STYLE="",FILTERS={stock:false,sale:false},VISIBLE_LIMIT=12;
+let INITIAL_CATEGORY_APPLIED=false;
 let SAVED=new Set(loadSaved());
 const $=id=>document.getElementById(id);
 const esc=v=>String(v??"").replace(/[&<>'"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[c]));
@@ -1926,7 +1927,12 @@ window.addEventListener("message",event=>{
     renderCategories();
     renderHomeProducts();
     renderHeaderCounts();
-    applyRoute();
+    if(!INITIAL_CATEGORY_APPLIED&&String(payload.initialCategory||"").trim().toLowerCase()==="gift cards"){
+      INITIAL_CATEGORY_APPLIED=true;
+      navigate("shop",{category:"Gift Cards"},true);
+    }else{
+      applyRoute();
+    }
 
     status(
       PRODUCTS.length

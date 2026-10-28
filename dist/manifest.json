@@ -1150,47 +1150,8 @@
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
       "receiver": "skandi-embeds/the-store/skandi-the-store.receiver.html",
-      "sha256": "acb00020127796391a64cea4da270aaba23a5a57054bbdaa81d478802c8dee78",
-      "bytes": 152646
-    },
-    {
-      "key": "giftCard",
-      "route": "/gift-card",
-      "slug": "gift-card",
-      "title": "Gift Card",
-      "family": "public",
-      "chrome": "public",
-      "sourceDirectory": "skandi-embeds/gift-card",
-      "stem": "skandi-gift-card",
-      "controller": null,
-      "embedIds": [],
-      "sources": [],
-      "components": [],
-      "binding": "explicit",
-      "requiresStaff": false,
-      "status": "PENDING SOURCE",
-      "files": [
-        "skandi-embeds/gift-card/skandi-gift-card.html",
-        "skandi-embeds/gift-card/skandi-gift-card.css",
-        "skandi-embeds/gift-card/skandi-gift-card.js"
-      ],
-      "missing": [
-        "skandi-embeds/gift-card/skandi-gift-card.html",
-        "skandi-embeds/gift-card/skandi-gift-card.css",
-        "skandi-embeds/gift-card/skandi-gift-card.js"
-      ],
-      "issues": [
-        "No verified canonical controller mapping."
-      ],
-      "backend": [],
-      "messages": [],
-      "output": null,
-      "dynamic": false,
-      "sourceStatus": "PENDING SOURCE",
-      "blockers": [
-        "No verified canonical controller mapping."
-      ],
-      "retainedArtifact": false
+      "sha256": "120a8717b29d30d7799221e3cf984b6a1a191d924c7857ecaa5fadc361c15248",
+      "bytes": 152899
     },
     {
       "key": "storeCheckout",

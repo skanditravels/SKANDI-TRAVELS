@@ -25,7 +25,6 @@ Route authority: `src/public/siteMap.js`. This file is generated evidence, not r
 | support | /about/support | skandi-embeds/support/skandi-support.{html,css,js} | public / public | src/pages/How can we help_.k0iqp.js | BLOCKED INTEGRATION |
 | newsroom | /about/news-room | skandi-embeds/newsroom/skandi-newsroom.{html,css,js} | public / public | src/pages/News Room.vn46g.js | BUILT |
 | theStore | /the-store | skandi-embeds/the-store/skandi-the-store.{html,css,js} | public / none | src/pages/The Store.iv8g6.js | BUILT |
-| giftCard | /gift-card | skandi-embeds/gift-card/skandi-gift-card.{html,css,js} | public / public | UNVERIFIED | PENDING SOURCE |
 | storeCheckout | /the-store/store-checkout | skandi-embeds/store-checkout/skandi-store-checkout.{html,css,js} | public / none | src/pages/Checkout.qofcb.js | BUILT |
 | storeConfirmation | /the-store/store-checkout/order-confirmation | skandi-embeds/store-confirmation/skandi-store-confirmation.{html,css,js} | public / none | src/pages/Order Confirmation.u5zzl.js | BUILT |
 | ourNetwork | /about/our-network | skandi-embeds/our-network/skandi-our-network.{html,css,js} | public / public | UNVERIFIED | PENDING SOURCE |
@@ -116,7 +115,6 @@ These actual repository controllers are preserved. No new route or build is inve
 - **transfers**: NOT READY: No verified canonical controller mapping.
 - **voy**: NOT READY: PENDING SOURCE
 - **support**: NOT READY: Help Center and support chat are separate HTML components; preserve them until a verified single-component migration.
-- **giftCard**: NOT READY: No verified canonical controller mapping.
 - **ourNetwork**: NOT READY: No verified canonical controller mapping.
 - **cookiePreferences**: NOT READY: src/backend/SKANDI_CORE/eos.web.js: imported export getEosBootstrap is absent; src/backend/SKANDI_CORE/eos.web.js: imported export searchEosFlights is absent; src/backend/SKANDI_CORE/eos.web.js: imported export searchEosStations is absent; src/backend/SKANDI_CORE/eos.web.js: imported export createEosClockEvent is absent; src/backend/SKANDI_CORE/eos.web.js: imported export submitEosOpsAction is absent
 - **eos**: NOT READY: src/backend/SKANDI_CORE/eos.web.js: imported export getEosBootstrap is absent; src/backend/SKANDI_CORE/eos.web.js: imported export searchEosFlights is absent; src/backend/SKANDI_CORE/eos.web.js: imported export searchEosStations is absent; src/backend/SKANDI_CORE/eos.web.js: imported export createEosClockEvent is absent; src/backend/SKANDI_CORE/eos.web.js: imported export submitEosOpsAction is absent
