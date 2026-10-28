@@ -17,6 +17,9 @@
 
 Earlier route, component, controller and status claims below are historical; the current INFO above and latest repair entry supersede conflicting metadata.
 
+
+- 2026-10-28 UTC — Updated `skandi-embeds/store-confirmation/skandi-store-confirmation.receiver.html` to follow the current shared receiver pattern with page-specific startup, progress and failure messages for **Order Confirmation** (`/the-store/store-checkout/order-confirmation`). The expected route matches `src/public/siteMap.js`; master-page handshake, staff authorization, manifest/SHA-256 checks and nested-iframe rejection remain intact.
+
 # The Store Order Confirmation
 
 STATUS: IN PROGRESS  

@@ -32,6 +32,9 @@ This is an additive read-only supplier flight explorer that does not replace the
 
 - 2026-10-19 — New additive premium responsive Duffel supplier flight explorer. Supports one-way/return search, traveler ages, infant validation, cabin and stops, provider carrier/segment/aircraft/terminal/baggage projections, fare-card filtering/sorting, bounded loaders and canonical `/booking` handoff. No checkout mutation, database change or new provider integration.
 
+
+- 2026-10-28 UTC — Updated `skandi-embeds/home/skandi-home.receiver.html` to follow the current shared receiver pattern with page-specific startup, progress and failure messages for **Home** (`/`). The expected route matches `src/public/siteMap.js`; master-page handshake, staff authorization, manifest/SHA-256 checks and nested-iframe rejection remain intact.
+
 ## Known limitations
 
 - No live deployment was performed. This is **not** the `/booking`-in-Home conversion; the Home Wix editor does not presently have the verified eight booking state elements.

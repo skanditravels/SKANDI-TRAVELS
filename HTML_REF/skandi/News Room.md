@@ -21,6 +21,9 @@ Source contracts and syntax are checked locally. Wix publication, Supabase/RLS, 
 
 ---
 
+
+- 2026-10-28 UTC — Updated `skandi-embeds/newsroom/skandi-newsroom.receiver.html` to follow the current shared receiver pattern with page-specific startup, progress and failure messages for **SKANDI Newsroom** (`/about/news-room`). The expected route matches `src/public/siteMap.js`; master-page handshake, staff authorization, manifest/SHA-256 checks and nested-iframe rejection remain intact.
+
 ## COMPLETE INTENDED LIVE HTML SOURCE
 
 ```html

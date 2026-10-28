@@ -367,3 +367,6 @@ button { color: inherit; }
 </body>
 </html>
 ```
+
+
+- 2026-10-28 UTC — Updated `skandi-embeds/club-login/skandi-club-login.receiver.html` to follow the current shared receiver pattern with page-specific startup, progress and failure messages for **SKANDI Club Login** (`/skandi-club/login`). The expected route matches `src/public/siteMap.js`; master-page handshake, staff authorization, manifest/SHA-256 checks and nested-iframe rejection remain intact.

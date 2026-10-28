@@ -29,6 +29,9 @@
 - 2026-10-14 — Added OPS Control to the global V12 page settings register at the confirmed `/riaintra/success-factors/altea/ops` route.
 - 2026-10-28 — Added the MyRoster staff-request queue. OPS can approve or decline time-off and schedule-change requests using the existing `schedule_change_requests` and `vacation_sick_leave_ledger` tables; schedule approvals do not mutate assignments. The in-app ALTEA logo now comes from `SKANDI_MASTER_CONFIG`.
 
+
+- 2026-10-28 UTC — Updated `skandi-embeds/ops-control/skandi-ops-control.receiver.html` to follow the current shared receiver pattern with page-specific startup, progress and failure messages for **OPS Control** (`/riaintra/success-factors/altea/ops`). The expected route matches `src/public/siteMap.js`; master-page handshake, staff authorization, manifest/SHA-256 checks and nested-iframe rejection remain intact.
+
 ## COMPLETE HTML / SOURCE IMPLEMENTATION
 
 ```html

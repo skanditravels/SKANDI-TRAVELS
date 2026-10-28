@@ -74,6 +74,9 @@ Media Control compilation preserves the complete script/style order, existing em
 Status: STATICALLY VERIFIED / REQUIRES LIVE TEST. See `docs/media-control-website-editor.md` for tests, API failures, deployment steps and incomplete page coverage. Existing images have not been bulk migrated. No live Wix deployment or Supabase content mutation was performed.
 
 - 2026-10-27 — Aligned the complete HTML_REF payload with the current linked website-editor CSS and JavaScript sidecars. Removed obsolete inline duplicates while preserving the complete active source in `skandi-website-editor.css` and `skandi-website-editor.js`, including the Home Card Media Manager controls.
+
+- 2026-10-28 UTC — Updated `skandi-embeds/media-control/skandi-media-control.receiver.html` to follow the current shared receiver pattern with page-specific startup, progress and failure messages for **Media Control** (`/riaintra/success-factors/media-control`). The expected route matches `src/public/siteMap.js`; master-page handshake, staff authorization, manifest/SHA-256 checks and nested-iframe rejection remain intact.
+
 ## COMPLETE INTENDED LIVE HTML SOURCE
 
 ```html

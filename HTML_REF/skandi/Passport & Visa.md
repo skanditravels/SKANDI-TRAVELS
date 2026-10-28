@@ -63,6 +63,9 @@
 
 ---
 
+
+- 2026-10-28 UTC — Updated `skandi-embeds/passport-visa/skandi-passport-visa.receiver.html` to follow the current shared receiver pattern with page-specific startup, progress and failure messages for **Passport & Visa** (`/travel-info/passport-visa`). The expected route matches `src/public/siteMap.js`; master-page handshake, staff authorization, manifest/SHA-256 checks and nested-iframe rejection remain intact.
+
 ## COMPLETE INTENDED LIVE HTML SOURCE
 
 ```html

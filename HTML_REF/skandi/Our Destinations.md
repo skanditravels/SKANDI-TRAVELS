@@ -34,6 +34,9 @@ LAST SYNCED: 2026-09-16
 - 2026-10-13 UTC — Preserved the supplied Our Network design/map/layout and merged destination discovery into the page. Added `See our full Destinations list`, an in-code full-screen directory grouped by country with alphabetical country/destination ordering, Country-route navigation and Destination-route navigation. Existing map payload, map modes, booking handoff, Collection, airline, search, panels and responsive behavior remain unchanged.
 - 2026-10-13 UTC — Bare `/destinations` is intended to redirect to this merged discovery page through the updated Our Destinations Wix controller; destination detail states remain on their existing destination-flow routes.
 
+
+- 2026-10-28 UTC — Updated `skandi-embeds/destinations/skandi-destinations.receiver.html` to follow the current shared receiver pattern with page-specific startup, progress and failure messages for **Our Destinations** (`/destinations`). The expected route matches `src/public/siteMap.js`; master-page handshake, staff authorization, manifest/SHA-256 checks and nested-iframe rejection remain intact.
+
 ## COMPLETE INTENDED HTML
 
 ```html

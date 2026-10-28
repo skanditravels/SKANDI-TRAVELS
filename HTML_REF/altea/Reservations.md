@@ -59,6 +59,9 @@
 
 - 2026-10-21 — Stage 15 (cumulative, read-only Duffel pending order-change servicing): wired the V12 `DUFFEL_GET_ORDER_CHANGE` facade action to a request-ID/order-ID/change-ID correlated recheck for existing staff pending-change records, without introducing any new backend or payment operation. The supplier change record can be rechecked following an unresolved POST when Duffel returned an attributable ID; stale, cross-order and structurally mismatched replies are ignored or rejected. A returned `confirmedAt` suppresses further payment authorization and duplicate change confirmation and retains the reconciliation safeguard until the airline order and Stripe outcome are separately verified. The new read-only supplier details never clear an existing reconciliation lock or infer payment settlement. Source parse and browser-mocked contracts verified; requires live Wix/Duffel/Stripe test.
 
+
+- 2026-10-28 UTC — Updated `skandi-embeds/altea-reservations/skandi-altea-reservations.receiver.html` to follow the current shared receiver pattern with page-specific startup, progress and failure messages for **ALTEA Reservations** (`/riaintra/success-factors/altea/reservations`). The expected route matches `src/public/siteMap.js`; master-page handshake, staff authorization, manifest/SHA-256 checks and nested-iframe rejection remain intact.
+
 ## COMPLETE INTENDED HTML
 
 ```html

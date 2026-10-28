@@ -130,6 +130,9 @@ It does not expose customer profiles, member points ledgers, private Club profil
 
 ---
 
+
+- 2026-10-28 UTC — Updated `skandi-embeds/club/skandi-club.receiver.html` to follow the current shared receiver pattern with page-specific startup, progress and failure messages for **SKANDI Club** (`/skandi-club`). The expected route matches `src/public/siteMap.js`; master-page handshake, staff authorization, manifest/SHA-256 checks and nested-iframe rejection remain intact.
+
 ## COMPLETE INTENDED LIVE HTML SOURCE
 
 ```html

@@ -25,6 +25,9 @@ STATICALLY VERIFIED: JavaScript syntax, core public export names, embed message 
 
 Earlier route, component, controller and status claims below are historical; the current INFO above supersedes conflicting metadata.
 
+
+- 2026-10-28 UTC — Updated `skandi-embeds/flight-status/flight-status.receiver.html` to follow the current shared receiver pattern with page-specific startup, progress and failure messages for **Flight Status** (`/travel-info/flight-status`). The expected route matches `src/public/siteMap.js`; master-page handshake, staff authorization, manifest/SHA-256 checks and nested-iframe rejection remain intact.
+
 # SKANDI Flight Status
 
 **STATUS:** NEEDS REVIEW  

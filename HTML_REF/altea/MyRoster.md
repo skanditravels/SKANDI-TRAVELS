@@ -28,6 +28,9 @@
 - 2026-10-28 — Routed MyRoster staff requests to the OPS Control review queue using existing request and leave-ledger tables. No Supabase schema change.
 - 2026-10-28 — Added a profile-based role/base fallback for empty organization directories, narrowed server-side flight search by the requested flight or airport code, and added MyRoster to ALTEA chrome navigation. The printable CARI logo uses the `masterPage.js` brand payload.
 
+
+- 2026-10-28 UTC — Updated `skandi-embeds/my-roster/skandi-my-roster.receiver.html` to follow the current shared receiver pattern with page-specific startup, progress and failure messages for **ALTEA MyRoster** (`/riaintra/success-factors/altea/my-roster`). The expected route matches `src/public/siteMap.js`; master-page handshake, staff authorization, manifest/SHA-256 checks and nested-iframe rejection remain intact.
+
 ## COMPLETE HTML / SOURCE IMPLEMENTATION
 
 ```html

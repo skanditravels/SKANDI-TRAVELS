@@ -24,6 +24,9 @@
 - 2026-10-11 — V12 dynamic Special Assistance convergence: rebuilt the page in the current Travel Info visual language, retained overall accessibility/mobility/medical planning information, and added a database-backed Accessibility Directory. The directory reads the existing canonical public Travel Info payload and surfaces assistance-related fields from published airlines, airports, hotels, transfers, tours, activities and ticket records. Relevant published assistance articles are also surfaced. No capability is fabricated when a field is absent. Because current `main` has no page-specific Special Assistance controller or canonical component ID, the existing global `masterPage.js` HTML wiring is minimally extended for this source only to load `getPublicTravelInfoPayload`, navigate safely and honor CONTENT_AUTO resize. No database/provider schema or data mutation is included. STATICALLY VERIFIED; REQUIRES LIVE TEST after Wix replacement/publication.
 - 2026-09-25 — B-011.3 design/style convergence: kept Special Assistance as a separate Travel Info page, applied shared customer palette, return rail, Travel Info hero/card/CTA/FAQ styling, preserved EN/SV static content and did not create a database/backend implementation at that time. Superseded by the 2026-10-11 V12 dynamic convergence for presentation and data loading; retained here as implementation history.
 
+
+- 2026-10-28 UTC — Updated `skandi-embeds/special-assistance/skandi-special-assistance.receiver.html` to follow the current shared receiver pattern with page-specific startup, progress and failure messages for **Special Assistance** (`/travel-info/special-assistance`). The expected route matches `src/public/siteMap.js`; master-page handshake, staff authorization, manifest/SHA-256 checks and nested-iframe rejection remain intact.
+
 ## COMPLETE INTENDED LIVE HTML SOURCE
 
 ```html

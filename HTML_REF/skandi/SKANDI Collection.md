@@ -168,6 +168,9 @@ NOT VERIFIED FROM UPLOADED SOURCE SET
 
 ---
 
+
+- 2026-10-28 UTC — Updated `skandi-embeds/skandi-collection/skandi-skandi-collection.receiver.html` to follow the current shared receiver pattern with page-specific startup, progress and failure messages for **SKANDI Collection** (`/skandi-collection`). The expected route matches `src/public/siteMap.js`; master-page handshake, staff authorization, manifest/SHA-256 checks and nested-iframe rejection remain intact.
+
 ## COMPLETE LIVE HTML / SOURCE IMPLEMENTATION
 
 **Primary payload source:** `SKANDI-Collection-B011.2/embed/SKANDI-Collection.html`

@@ -28,6 +28,9 @@
 - 2026-10-14 — Enabled server-side writes for the existing private `internal-mail-attachments` bucket in the canonical Supabase transport so the already-implemented attachment flow can function without exposing direct browser storage credentials.
 - 2026-10-14 — Added the V12 mobile 16px form-control guard while preserving the supplied Mail layout, folders, search, reading pane, compose flow, drafts, directory, settings and attachment behavior.
 
+
+- 2026-10-28 UTC — Updated `skandi-embeds/mail/skandi-mail.receiver.html` to follow the current shared receiver pattern with page-specific startup, progress and failure messages for **RIAINTRA Mail** (`/riaintra/success-factors/mail`). The expected route matches `src/public/siteMap.js`; master-page handshake, staff authorization, manifest/SHA-256 checks and nested-iframe rejection remain intact.
+
 ## COMPLETE HTML / SOURCE IMPLEMENTATION
 
 ```html

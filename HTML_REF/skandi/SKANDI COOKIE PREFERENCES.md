@@ -22,6 +22,9 @@ LAST SYNCED: 2026-10-17
 ## CHANGE LOG
 - 2026-10-17 — V12 initial implementation: dedicated SKANDI privacy preference center added.
 
+
+- 2026-10-28 UTC — Updated `skandi-embeds/cookie-preferences/skandi-cookie-preferences.receiver.html` to follow the current shared receiver pattern with page-specific startup, progress and failure messages for **Cookie Preferences** (`/about/legal/cookie-preferences`). The expected route matches `src/public/siteMap.js`; master-page handshake, staff authorization, manifest/SHA-256 checks and nested-iframe rejection remain intact.
+
 ## COMPLETE INTENDED LIVE HTML SOURCE
 
 ```html

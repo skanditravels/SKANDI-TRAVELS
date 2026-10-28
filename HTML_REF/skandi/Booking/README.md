@@ -21,6 +21,9 @@
 
 - **2026-10-26** — Corrected the active route integration to a single `/booking` page and Wix HTML element `#bookingFlowEmbed`. The split `skandi-booking-flow` triplet is the Git build input; previous per-step source files are superseded historical references, not separate live pages or embeds. `/offers` is retired as a separate route.
 
+
+- 2026-10-28 UTC — Updated `skandi-embeds/booking/skandi-booking-flow.receiver.html` to follow the current shared receiver pattern with page-specific startup, progress and failure messages for **SKANDI Booking** (`/booking`). The expected route matches `src/public/siteMap.js`; master-page handshake, staff authorization, manifest/SHA-256 checks and nested-iframe rejection remain intact.
+
 ## COMPLETE INTENDED LIVE HTML SOURCE
 
 ```html

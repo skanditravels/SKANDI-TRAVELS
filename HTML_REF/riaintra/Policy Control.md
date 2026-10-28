@@ -1,5 +1,10 @@
 # SKANDI INFO / LOG — V12 DOCUMENT SYSTEM CONVERGENCE
 
+## CHANGE LOG (append-only)
+
+- 2026-10-28 UTC — Updated `skandi-embeds/policy-control/skandi-policy-control.receiver.html` to follow the current shared receiver pattern with page-specific startup, progress and failure messages for **Policy Control** (`/riaintra/success-factors/policy-control`). The expected route matches `src/public/siteMap.js`; master-page handshake, staff authorization, manifest/SHA-256 checks and nested-iframe rejection remain intact.
+
+
 - Source identity: `/HTML_REF/riaintra/Policy Control.md`.
 - Display/page name: Policy Control.
 - System area: `RIAINTRA`.

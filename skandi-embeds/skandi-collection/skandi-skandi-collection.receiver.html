@@ -3,157 +3,551 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>SKANDI</title>
+<title>SKANDI Travels | SKANDI Collection</title>
 <style>
-:root{color-scheme:dark;--navy:#022e64;--deep:#041d3b;--aqua:#5fc7cf;--white:#f8fbff;--muted:#bfd0e2;--line:rgba(232,244,255,.14)}
+:root{
+  color-scheme:dark;
+  --navy:#022e64;
+  --deep:#041d3b;
+  --aqua:#5fc7cf;
+  --white:#f8fbff;
+  --muted:#bfd0e2;
+  --line:rgba(232,244,255,.14)
+}
 *{box-sizing:border-box}
-html,body{margin:0;width:100%;min-height:100%;background:var(--deep);color:var(--white);font:15px/1.55 Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+html,body{
+  margin:0;
+  width:100%;
+  min-height:100%;
+  background:var(--deep);
+  color:var(--white);
+  font:15px/1.55 Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif
+}
 body{min-height:100vh;min-height:100svh}
-#skandi-receiver-status{position:relative;isolation:isolate;display:grid;place-items:center;overflow:hidden;min-height:100vh;min-height:100svh;padding:24px;background:radial-gradient(ellipse at 14% 12%,rgba(40,92,168,.46),transparent 39%),radial-gradient(ellipse at 86% 84%,rgba(11,92,133,.38),transparent 37%),linear-gradient(145deg,#061a33 0%,#022e64 55%,#041d3b 100%)}
-#skandi-receiver-status:before,#skandi-receiver-status:after{content:"";position:absolute;z-index:-1;border:1px solid rgba(95,199,207,.12);border-radius:50%;pointer-events:none}
-#skandi-receiver-status:before{width:min(80vw,680px);aspect-ratio:1;right:-30%;top:-56%}
-#skandi-receiver-status:after{width:min(62vw,490px);aspect-ratio:1;left:-26%;bottom:-57%}
-.skandi-loader-card{width:min(100%,520px);padding:clamp(28px,6vw,48px);border:1px solid var(--line);border-radius:24px;background:rgba(2,27,57,.69);box-shadow:0 24px 80px rgba(0,0,0,.27);backdrop-filter:blur(18px);text-align:center}
-.skandi-brand{height:76px;display:flex;align-items:center;justify-content:center;margin:0 auto 26px}
-#skandi-loader-logo{display:block;max-width:min(260px,72vw);max-height:72px;width:auto;height:auto;object-fit:contain}
-#skandi-loader-fallback{font-family:Georgia,"Times New Roman",serif;font-size:clamp(26px,7vw,38px);font-weight:600;letter-spacing:.18em;color:#fff}
-.skandi-loader-eyebrow{margin:0 0 10px;color:var(--aqua);font-size:11px;font-weight:700;letter-spacing:.2em;text-transform:uppercase}
-#skandi-loader-title{margin:0;color:#fff;font-size:clamp(24px,5vw,32px);line-height:1.2;font-weight:650;letter-spacing:-.025em}
-#skandi-loader-copy{min-height:48px;margin:14px auto 26px;max-width:360px;color:var(--muted);font-size:14px}
-.skandi-progress{height:4px;overflow:hidden;border-radius:99px;background:rgba(235,245,255,.13)}
-.skandi-progress span{display:block;width:36%;height:100%;border-radius:inherit;background:linear-gradient(90deg,#5fc7cf,#a4e5e5);box-shadow:0 0 18px rgba(95,199,207,.55);animation:skandi-progress 1.65s cubic-bezier(.45,0,.55,1) infinite}
-.skandi-loader-foot{margin:20px 0 0;color:rgba(222,235,248,.68);font-size:11px;letter-spacing:.035em}
-#skandi-loader-error{margin:17px 0 0;padding:10px 12px;border:1px solid rgba(216,95,102,.38);border-radius:10px;background:rgba(216,95,102,.1);color:#ffe4e5;font-size:12px;overflow-wrap:anywhere;text-align:left}
-#skandi-loader-retry{margin-top:18px;padding:11px 20px;border:1px solid rgba(95,199,207,.66);border-radius:999px;background:#5fc7cf;color:#06264d;font:inherit;font-size:14px;font-weight:700;cursor:pointer}
+#skandi-receiver-status{
+  position:relative;
+  isolation:isolate;
+  display:grid;
+  place-items:center;
+  overflow:hidden;
+  min-height:100vh;
+  min-height:100svh;
+  padding:24px;
+  background:
+    radial-gradient(ellipse at 14% 12%, rgba(40,92,168,.46), transparent 39%),
+    radial-gradient(ellipse at 86% 84%, rgba(11,92,133,.38), transparent 37%),
+    linear-gradient(145deg,#061a33 0%,#022e64 55%,#041d3b 100%)
+}
+#skandi-receiver-status:before,#skandi-receiver-status:after{
+  content:"";
+  position:absolute;
+  z-index:-1;
+  border:1px solid rgba(95,199,207,.12);
+  border-radius:50%;
+  pointer-events:none
+}
+#skandi-receiver-status:before{
+  width:min(80vw,680px);
+  aspect-ratio:1;
+  right:-30%;
+  top:-56%
+}
+#skandi-receiver-status:after{
+  width:min(62vw,490px);
+  aspect-ratio:1;
+  left:-26%;
+  bottom:-57%
+}
+.skandi-loader-card{
+  width:min(100%,520px);
+  padding:clamp(28px,6vw,48px);
+  border:1px solid var(--line);
+  border-radius:24px;
+  background:rgba(2,27,57,.69);
+  box-shadow:0 24px 80px rgba(0,0,0,.27);
+  backdrop-filter:blur(18px);
+  text-align:center
+}
+.skandi-brand{
+  height:76px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  margin:0 auto 26px
+}
+#skandi-loader-logo{
+  display:block;
+  max-width:min(260px,72vw);
+  max-height:72px;
+  width:auto;
+  height:auto;
+  object-fit:contain
+}
+#skandi-loader-fallback{
+  font-family:Georgia,"Times New Roman",serif;
+  font-size:clamp(26px,7vw,38px);
+  font-weight:600;
+  letter-spacing:.18em;
+  color:#fff
+}
+.skandi-loader-eyebrow{
+  margin:0 0 10px;
+  color:var(--aqua);
+  font-size:11px;
+  font-weight:700;
+  letter-spacing:.2em;
+  text-transform:uppercase
+}
+#skandi-loader-title{
+  margin:0;
+  color:#fff;
+  font-size:clamp(24px,5vw,32px);
+  line-height:1.2;
+  font-weight:650;
+  letter-spacing:-.025em
+}
+#skandi-loader-copy{
+  min-height:48px;
+  margin:14px auto 26px;
+  max-width:360px;
+  color:var(--muted);
+  font-size:14px
+}
+.skandi-progress{
+  height:4px;
+  overflow:hidden;
+  border-radius:99px;
+  background:rgba(235,245,255,.13)
+}
+.skandi-progress span{
+  display:block;
+  width:36%;
+  height:100%;
+  border-radius:inherit;
+  background:linear-gradient(90deg,#5fc7cf,#a4e5e5);
+  box-shadow:0 0 18px rgba(95,199,207,.55);
+  animation:skandi-progress 1.65s cubic-bezier(.45,0,.55,1) infinite
+}
+.skandi-loader-foot{
+  margin:20px 0 0;
+  color:rgba(222,235,248,.68);
+  font-size:11px;
+  letter-spacing:.035em
+}
+#skandi-loader-error{
+  margin:17px 0 0;
+  padding:10px 12px;
+  border:1px solid rgba(216,95,102,.38);
+  border-radius:10px;
+  background:rgba(216,95,102,.1);
+  color:#ffe4e5;
+  font-size:12px;
+  overflow-wrap:anywhere;
+  text-align:left
+}
+#skandi-loader-retry{
+  margin-top:18px;
+  padding:11px 20px;
+  border:1px solid rgba(95,199,207,.66);
+  border-radius:999px;
+  background:#5fc7cf;
+  color:#06264d;
+  font:inherit;
+  font-size:14px;
+  font-weight:700;
+  cursor:pointer
+}
 #skandi-loader-retry:hover{background:#8adddf}
-#skandi-loader-retry:focus-visible{outline:3px solid #fff;outline-offset:3px}
+#skandi-loader-retry:focus-visible{
+  outline:3px solid #fff;
+  outline-offset:3px
+}
 [hidden]{display:none!important}
-@keyframes skandi-progress{0%{transform:translateX(-115%)}55%{transform:translateX(145%)}100%{transform:translateX(300%)}}
-@media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+@keyframes skandi-progress{
+  0%{transform:translateX(-115%)}
+  55%{transform:translateX(145%)}
+  100%{transform:translateX(300%)}
+}
+@media(prefers-reduced-motion:reduce){
+  *,*:before,*:after{
+    scroll-behavior:auto!important;
+    animation-duration:.01ms!important;
+    animation-iteration-count:1!important;
+    transition-duration:.01ms!important
+  }
+}
 </style>
 </head>
 <body>
 <main id="skandi-receiver-status" role="status" aria-live="polite" aria-busy="true">
   <section class="skandi-loader-card" aria-labelledby="skandi-loader-title">
     <div class="skandi-brand">
-      <img id="skandi-loader-logo" alt="" hidden>
+      <img id="skandi-loader-logo" alt="">
       <span id="skandi-loader-fallback" aria-label="SKANDI">SKANDI</span>
     </div>
-    <p id="skandi-loader-eyebrow" class="skandi-loader-eyebrow">SKANDI GROUP</p>
-    <h1 id="skandi-loader-title">Preparing your SKANDI page</h1>
-    <p id="skandi-loader-copy">Connecting securely to the latest page experience.</p>
+    <p id="skandi-loader-eyebrow" class="skandi-loader-eyebrow">STAYS WITH A STORY</p>
+    <h1 id="skandi-loader-title">Find a stay worth remembering</h1>
+    <p id="skandi-loader-copy">Explore curated hotels, resorts and signature travel experiences.</p>
     <div id="skandi-loader-progress" class="skandi-progress" aria-hidden="true"><span></span></div>
-    <p id="skandi-loader-foot" class="skandi-loader-foot">Loading the current published version</p>
+    <p id="skandi-loader-foot" class="skandi-loader-foot">Preparing curated stays</p>
     <p id="skandi-loader-error" hidden></p>
     <button id="skandi-loader-retry" type="button" hidden>Try again</button>
   </section>
 </main>
+
 <script>
 (() => {
   'use strict';
-  const SOURCE='SKANDI_UNIVERSAL_RECEIVER',PARENT='SKANDI_WIX_PARENT';
+
+  const SOURCE = 'SKANDI_UNIVERSAL_RECEIVER';
+  const PARENT = 'SKANDI_WIX_PARENT';
   const EXPECTED=Object.freeze({"key":"skandiCollection","route":"/skandi-collection","family":"public","chrome":"public","embedIds":["#skandiCollectionEmbed","#signatureCollectionEmbed","#skandiCollectionHtml","#signatureCollectionHtml","#html1"],"receiver":"skandi-embeds/skandi-collection/skandi-skandi-collection.receiver.html"});
-  const ORIGINS=new Set(['https://www.skanditravels.com','https://skanditravels.com','https://editor.wix.com','https://skanditravels-my-site-2.editor.wix.com']);
-  const ROOTS=['https://raw.githubusercontent.com/skanditravels/SKANDI-TRAVELS/main/','https://cdn.jsdelivr.net/gh/skanditravels/SKANDI-TRAVELS@main/'];
-  const nonce=Array.from(crypto.getRandomValues(new Uint32Array(4)),x=>x.toString(16)).join('-');
-  let attempts=0,loading=false,timer;
-  const screen=document.getElementById('skandi-receiver-status');
-  const brandEyebrow=document.getElementById('skandi-loader-eyebrow');
-  const logo=document.getElementById('skandi-loader-logo');
-  const logoFallback=document.getElementById('skandi-loader-fallback');
-  const title=document.getElementById('skandi-loader-title');
-  const copy=document.getElementById('skandi-loader-copy');
-  const foot=document.getElementById('skandi-loader-foot');
-  const progress=document.getElementById('skandi-loader-progress');
-  const errorDetail=document.getElementById('skandi-loader-error');
-  const retry=document.getElementById('skandi-loader-retry');
-  function setLoadingStage(heading,description,detail) {
-    title.textContent=heading;copy.textContent=description;
-    if(detail)foot.textContent=detail;
+
+    const PAGE_COPY = Object.freeze({"title":"SKANDI Collection","titlePrefix":"SKANDI Travels","eyebrow":"STAYS WITH A STORY","heading":"Find a stay worth remembering","description":"Explore curated hotels, resorts and signature travel experiences.","foot":"Preparing curated stays","subject":"SKANDI Collection hotel and resort discovery","stages":{"connection":{"heading":"Opening SKANDI Collection","description":"Connecting to SKANDI Collection and preparing SKANDI Collection hotel and resort discovery.","detail":"Connecting to SKANDI Collection"},"catalog":{"heading":"Checking SKANDI Collection","description":"Checking the route and published content for SKANDI Collection hotel and resort discovery.","detail":"Checking SKANDI Collection hotel and resort discovery"},"content":{"heading":"Preparing SKANDI Collection","description":"Loading the page content for SKANDI Collection hotel and resort discovery.","detail":"Loading SKANDI Collection hotel and resort discovery"},"final":{"heading":"Almost ready","description":"Finishing setup for SKANDI Collection.","detail":"Opening SKANDI Collection"}},"failure":{"title":"SKANDI Collection is taking a little longer","copy":"We couldn't open SKANDI Collection hotel and resort discovery right now.","foot":"Try again to reload SKANDI Collection hotel and resort discovery. If the issue continues, contact SKANDI Support."},"errors":{"generic":"We couldn't load SKANDI Collection hotel and resort discovery right now.","http":"We couldn't reach SKANDI Collection hotel and resort discovery (Status ","manifestInvalid":"Published details for SKANDI Collection hotel and resort discovery are being refreshed. Please try again shortly.","notFound":"We couldn't find this page in the published catalog for SKANDI Collection hotel and resort discovery.","stale":"Published SKANDI Collection hotel and resort discovery isn't ready yet. Please try again shortly.","routeUpdated":"The page link for SKANDI Collection has changed. Refresh to get the latest link.","locate":"We couldn't locate the published SKANDI Collection hotel and resort discovery page.","access":"Sign in with an authorized SKANDI staff account to access SKANDI Collection hotel and resort discovery.","updatePending":"The SKANDI Collection hotel and resort discovery page update is still finishing. Please refresh shortly.","checksum":"A new SKANDI Collection hotel and resort discovery version is going live now. Please refresh in a few seconds.","markup":"The SKANDI Collection hotel and resort discovery page did not pass its final setup check. Try again shortly.","handshake":"SKANDI Collection didn't finish connecting to the page controller. Please try again shortly.","invalidIdentity":"We couldn't verify the SKANDI Collection page route. Refresh and try again.","wrongEmbed":"The SKANDI Collection embed is connected to another page. Refresh and try again.","timeout":"The SKANDI Collection page could not load because its Wix startup handshake did not complete. Try again later or contact SKANDI Support.","unavailable":"The SKANDI Collection hotel and resort discovery page is temporarily unavailable. Please try again in a moment."}});
+
+  const ORIGINS = new Set([
+    'https://www.skanditravels.com',
+    'https://skanditravels.com',
+    'https://editor.wix.com',
+    'https://skanditravels-my-site-2.editor.wix.com'
+  ]);
+
+  const ROOTS = [
+    'https://raw.githubusercontent.com/skanditravels/SKANDI-TRAVELS/main/',
+    'https://cdn.jsdelivr.net/gh/skanditravels/SKANDI-TRAVELS@main/'
+  ];
+
+  const nonce = Array.from(crypto.getRandomValues(new Uint32Array(4)), x => x.toString(16)).join('-');
+  let attempts = 0;
+  let loading = false;
+  let timer;
+
+  const screen = document.getElementById('skandi-receiver-status');
+  const brandEyebrow = document.getElementById('skandi-loader-eyebrow');
+  const logo = document.getElementById('skandi-loader-logo');
+  const logoFallback = document.getElementById('skandi-loader-fallback');
+  const title = document.getElementById('skandi-loader-title');
+  const copy = document.getElementById('skandi-loader-copy');
+  const foot = document.getElementById('skandi-loader-foot');
+  const progress = document.getElementById('skandi-loader-progress');
+  const errorDetail = document.getElementById('skandi-loader-error');
+  const retry = document.getElementById('skandi-loader-retry');
+
+  function setLoadingStage(heading, description, detail) {
+    title.textContent = heading;
+    copy.textContent = description;
+    if (detail) foot.textContent = detail;
   }
-  function setBrand(identity,brand) {
-    const family=identity.family;
-    const labels={public:String(brand?.travelName||'SKANDI Travels'),riaintra:String(brand?.internalName||'RIAINTRA'),altea:String(brand?.alteaName||'ALTEA')};
-    const keys=family==='riaintra'?['riaintra']:family==='altea'?['altea','alteaWhite']:['customerFooter','skandiGroupWhite'];
-    const logos=brand?.assets?.logos||{};
-    brandEyebrow.textContent=labels[family]||String(brand?.groupName||'SKANDI Group');
-    logoFallback.textContent=family==='public'?'SKANDI':(labels[family]||'SKANDI');
-    logoFallback.setAttribute('aria-label',labels[family]||'SKANDI');
-    document.title=(labels[family]||'SKANDI')+' | Loading';
-    const candidate=keys.map(key=>logos[key]).find(value=>typeof value==='string'&&value);
-    if(!candidate)return;
+
+  function getPageSurfaceIsLight() {
+    const candidates = [
+      document.body,
+      document.documentElement,
+      document.querySelector('#skandi-shell-root'),
+      document.querySelector('main')
+    ];
+
+    for (const el of candidates) {
+      if (!el) continue;
+
+      try {
+        const style = getComputedStyle(el);
+        const bg = style.backgroundColor || style.background || '';
+        const match = bg.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/i);
+
+        if (match) {
+          const r = Number(match[1]);
+          const g = Number(match[2]);
+          const b = Number(match[3]);
+          const luminance = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+
+          if (luminance > 0.58) return true;
+          if (luminance < 0.42) return false;
+        }
+
+        const tone = (el.dataset?.surface || style.getPropertyValue('--surface-tone') || '').toLowerCase();
+        if (tone.includes('light')) return true;
+        if (tone.includes('dark')) return false;
+      } catch (_) {}
+    }
+
+    return false;
+  }
+
+  function resolveLogoKey(identity) {
+    const route = String(identity?.route || '').toLowerCase().replace(/\/+$/, '') || '/';
+    const isLight = getPageSurfaceIsLight();
+
+    if (route.startsWith('/riaintra/success-factors/altea')) return 'alteaWhite';
+    if (route.startsWith('/riaintra')) return 'riaintra';
+
+    if (route === '/the-store') return isLight ? 'storeHeader' : 'storeFooter';
+    if (route === '/voy') return 'voyWhiteBySkandi';
+    if (route === '/skandi-club') return 'skandiClub';
+    if (route === '/skandi-collection') return 'SKANDICollection';
+
+    return isLight ? 'customerHeader' : 'customerFooter';
+  }
+
+  function setBrand(identity, brand) {
+    const family = identity.family;
+    const labels = {
+      public: String(brand?.travelName || 'SKANDI Travels'),
+      riaintra: String(brand?.internalName || 'RIAINTRA'),
+      altea: String(brand?.alteaName || 'ALTEA')
+    };
+
+    const logoKey = resolveLogoKey(identity);
+    const logos = brand?.assets?.logos || {};
+    const logoUrl = logos[logoKey];
+
+    brandEyebrow.textContent = PAGE_COPY.eyebrow;
+    logoFallback.textContent = family === 'public' ? 'SKANDI' : (labels[family] || 'SKANDI');
+    logoFallback.setAttribute('aria-label', labels[family] || 'SKANDI');
+    document.title = (labels[family] || PAGE_COPY.titlePrefix) + ' | ' + PAGE_COPY.title;
+
+    if (!logoUrl) return;
+
     try {
-      const parsed=new URL(candidate);
-      if(parsed.protocol!=='https:'||parsed.hostname!=='muvpffdnugzxjbnbpgac.supabase.co'||!parsed.pathname.startsWith('/storage/v1/object/public/skandi-public-assets/')||! /\.(svg|png|webp)$/i.test(parsed.pathname))return;
-      logo.onload=()=>{logo.hidden=false;logoFallback.hidden=true;};
-      logo.onerror=()=>{logo.hidden=true;logoFallback.hidden=false;};
-      logo.alt=labels[family]+' logo';
-      logo.src=parsed.href;
-    } catch(_) {}
+      const parsed = new URL(logoUrl);
+      if (
+        parsed.protocol !== 'https:' ||
+        parsed.hostname !== 'muvpffdnugzxjbnbpgac.supabase.co' ||
+        !parsed.pathname.startsWith('/storage/v1/object/public/skandi-public-assets/') ||
+        !/\.(svg|png|webp)$/i.test(parsed.pathname)
+      ) {
+        return;
+      }
+
+      logo.onload = () => {
+        logo.hidden = false;
+        logoFallback.hidden = true;
+      };
+      logo.onerror = () => {
+        logo.hidden = true;
+        logoFallback.hidden = false;
+      };
+
+      logo.alt = (labels[family] || 'SKANDI') + ' logo';
+      logo.src = parsed.href;
+    } catch (_) {}
   }
+
   function fail(error) {
-    clearInterval(timer);window.removeEventListener('message',receive);
-    console.error('[SKANDI receiver]',error);
-    screen.setAttribute('role','alert');screen.setAttribute('aria-live','assertive');screen.setAttribute('aria-busy','false');
-    title.textContent='This page could not load';
-    copy.textContent='The secure page connection stopped before your page was ready.';
-    foot.textContent='Please try again. If the problem continues, contact SKANDI support.';
-    errorDetail.textContent=String(error?.message||error||'Unknown loading error').slice(0,360);errorDetail.hidden=false;
-    progress.hidden=true;retry.hidden=false;retry.onclick=()=>location.reload();
-    document.title='Page unavailable | SKANDI';
+    clearInterval(timer);
+    window.removeEventListener('message', receive);
+    console.error('[SKANDI receiver]', error);
+
+    screen.setAttribute('role', 'alert');
+    screen.setAttribute('aria-live', 'assertive');
+    screen.setAttribute('aria-busy', 'false');
+
+    title.textContent = PAGE_COPY.failure.title;
+    copy.textContent = PAGE_COPY.failure.copy;
+    foot.textContent = PAGE_COPY.failure.foot;
+    const detail = String(error?.message || error || PAGE_COPY.errors.generic);
+    const isPageMessage = Object.values(PAGE_COPY.errors).some(value => detail === value || (value === PAGE_COPY.errors.http && detail.startsWith(value)));
+    errorDetail.textContent = (isPageMessage ? detail : PAGE_COPY.errors.unavailable).slice(0, 360);
+    errorDetail.hidden = false;
+    progress.hidden = true;
+    retry.hidden = false;
+    retry.onclick = () => location.reload();
+    document.title = PAGE_COPY.title + ' unavailable | ' + PAGE_COPY.titlePrefix;
   }
+
   async function get(url) {
-    const abort=new AbortController(),timeout=setTimeout(()=>abort.abort(),12000);
-    try {const r=await fetch(url,{mode:'cors',credentials:'omit',cache:'no-store',signal:abort.signal});if(!r.ok)throw new Error('Git build returned HTTP '+r.status);return await r.text();}finally{clearTimeout(timeout);}
+    const abort = new AbortController();
+    const timeout = setTimeout(() => abort.abort(), 12000);
+
+    try {
+      const response = await fetch(url, {
+        mode: 'cors',
+        credentials: 'omit',
+        cache: 'no-store',
+        signal: abort.signal
+      });
+
+      if (!response.ok) throw new Error(PAGE_COPY.errors.http + response.status + ').');
+      return await response.text();
+    } finally {
+      clearTimeout(timeout);
+    }
   }
-  async function resolve(root,identity) {
-    setLoadingStage('Checking your page','Confirming the current published page and route.','Checking the latest verified build');
-    const manifest=JSON.parse(await get(root+'dist/manifest.json'));
-    if(manifest.schemaVersion!==2||!Array.isArray(manifest.pages))throw new Error('Unsupported build manifest.');
-    const matches=manifest.pages.filter(p=>p.key===identity.key);
-    if(matches.length!==1)throw new Error('Unknown or conflicting canonical page.');
-    const page=matches[0];
-    if(page.status!=='BUILT'||page.route!==identity.route||page.family!==identity.family||page.chrome!==identity.chrome)throw new Error('This page has no current verified build.');
-    if(EXPECTED&&(page.receiver!==EXPECTED.receiver||page.key!==EXPECTED.key||page.route!==EXPECTED.route||page.family!==EXPECTED.family||page.chrome!==EXPECTED.chrome))throw new Error('This page receiver is stale or assigned to another route.');
-    if(!/^[a-z0-9-]+$/.test(page.slug)||page.output!=='dist/'+page.slug+'/index.html')throw new Error('Invalid canonical build path.');
-    if(page.requiresStaff&&identity.staffAuthorized!==true)throw new Error('An authorized staff session is required.');
-    if(!/^[a-f0-9]{64}$/.test(page.sha256))throw new Error('Missing build integrity record.');
-    setLoadingStage('Loading your experience','Opening the page content from the verified site build.','Loading page content securely');
-    const html=await get(root+page.output);
-    setLoadingStage('Securing your page','Checking that the published content matches its integrity record.','Verifying page integrity');
-    const digest=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(html));
-    const actual=Array.from(new Uint8Array(digest),x=>x.toString(16).padStart(2,'0')).join('');
-    if(actual!==page.sha256)throw new Error('Git delivery is out of date; refresh after the build has propagated.');
-    const doc=new DOMParser().parseFromString(html,'text/html'),shell=doc.getElementById('skandi-shell-root');
-    if(!/^\s*<!doctype html>/i.test(html)||!shell||shell.dataset.skandiKey!==identity.key||shell.dataset.skandiFamily!==identity.family||shell.dataset.skandiChrome!==identity.chrome||doc.querySelector('iframe'))throw new Error('Unexpected compiled document.');
+
+  async function resolve(root, identity) {
+    setLoadingStage(PAGE_COPY.stages.catalog.heading, PAGE_COPY.stages.catalog.description, PAGE_COPY.stages.catalog.detail);
+
+    const manifest = JSON.parse(await get(root + 'dist/manifest.json'));
+    if (manifest.schemaVersion !== 2 || !Array.isArray(manifest.pages)) {
+      throw new Error(PAGE_COPY.errors.manifestInvalid);
+    }
+
+    const matches = manifest.pages.filter(p => p.key === identity.key);
+    if (matches.length !== 1) throw new Error(PAGE_COPY.errors.notFound);
+
+    const page = matches[0];
+    if (page.status !== 'BUILT' || page.route !== identity.route || page.family !== identity.family || page.chrome !== identity.chrome) {
+      throw new Error(PAGE_COPY.errors.stale);
+    }
+
+    if (EXPECTED && (
+      page.receiver !== EXPECTED.receiver ||
+      page.key !== EXPECTED.key ||
+      page.route !== EXPECTED.route ||
+      page.family !== EXPECTED.family ||
+      page.chrome !== EXPECTED.chrome
+    )) {
+      throw new Error(PAGE_COPY.errors.routeUpdated);
+    }
+
+    if (!/^[a-z0-9-]+$/.test(page.slug) || page.output !== 'dist/' + page.slug + '/index.html') {
+      throw new Error(PAGE_COPY.errors.locate);
+    }
+
+    if (page.requiresStaff && identity.staffAuthorized !== true) {
+      throw new Error(PAGE_COPY.errors.access);
+    }
+
+    if (!/^[a-f0-9]{64}$/.test(page.sha256)) {
+      throw new Error(PAGE_COPY.errors.updatePending);
+    }
+
+    setLoadingStage(PAGE_COPY.stages.content.heading, PAGE_COPY.stages.content.description, PAGE_COPY.stages.content.detail);
+
+    const html = await get(root + page.output);
+
+    setLoadingStage(PAGE_COPY.stages.final.heading, PAGE_COPY.stages.final.description, PAGE_COPY.stages.final.detail);
+
+    const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(html));
+    const actual = Array.from(new Uint8Array(digest), x => x.toString(16).padStart(2, '0')).join('');
+
+    if (actual !== page.sha256) {
+      throw new Error(PAGE_COPY.errors.checksum);
+    }
+
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    const shell = doc.getElementById('skandi-shell-root');
+
+    if (
+      !/^\s*<!doctype html>/i.test(html) ||
+      !shell ||
+      shell.dataset.skandiKey !== identity.key ||
+      shell.dataset.skandiFamily !== identity.family ||
+      shell.dataset.skandiChrome !== identity.chrome ||
+      doc.querySelector('iframe')
+    ) {
+      throw new Error(PAGE_COPY.errors.markup);
+    }
+
     return html;
   }
+
   async function receive(event) {
-    if(loading||event.source!==window.parent||!ORIGINS.has(event.origin))return;
-    let message=event.data; if(typeof message==='string'){try{message=JSON.parse(message);}catch{return;}}
-    if(message?.source!==PARENT||message.type!=='SKANDI_MASTER_CONFIG'||message.payload?.receiverRequestId!==nonce)return;
-    const identity=message.payload.compiledPage;
-    if(!identity||identity.allowed!==true){fail(new Error(identity?.reason||'The Wix page/controller mapping is not ready.'));return;}
-    setBrand(identity,message.payload.brand||{});
-    if(typeof identity.key!=='string'||typeof identity.route!=='string'||!['public','riaintra','altea'].includes(identity.family)||!['none','public','riaintra','altea'].includes(identity.chrome)){fail(new Error('Invalid parent page identity.'));return;}
-    if(EXPECTED&&(identity.key!==EXPECTED.key||identity.route!==EXPECTED.route||identity.family!==EXPECTED.family||identity.chrome!==EXPECTED.chrome||(EXPECTED.embedIds.length>0&&!EXPECTED.embedIds.includes(identity.embedId)))){fail(new Error('This receiver is assigned to a different page or Wix component.'));return;}
-    loading=true;clearInterval(timer);
-    screen.setAttribute('aria-busy','true');
-    setLoadingStage('Preparing your page','We have your page identity. Checking the latest approved experience.','Starting secure page delivery');
-    let html,last;
-    for(const root of ROOTS)try{html=await resolve(root,identity);break;}catch(e){last=e;}
-    if(!html){fail(last||new Error('Git build unavailable.'));return;}
-    window.removeEventListener('message',receive);
-    // Replace this document inside the original Wix HtmlComponent. The parent
-    // remains the owning Velo controller. No URL navigation or nested iframe.
-    window.__SKANDI_RECEIVER_CONTEXT__=Object.freeze(identity);
-    document.open();document.write(html);document.close();
+    if (loading || event.source !== window.parent || !ORIGINS.has(event.origin)) return;
+
+    let message = event.data;
+    if (typeof message === 'string') {
+      try {
+        message = JSON.parse(message);
+      } catch {
+        return;
+      }
+    }
+
+    if (message?.source !== PARENT || message.type !== 'SKANDI_MASTER_CONFIG' || message.payload?.receiverRequestId !== nonce) {
+      return;
+    }
+
+    const identity = message.payload.compiledPage;
+    if (!identity || identity.allowed !== true) {
+      const reason = String(identity?.reason || '');
+      if (reason) console.warn('[SKANDI receiver] page controller rejected startup:', reason);
+      const message = /authorized staff session/i.test(reason)
+        ? PAGE_COPY.errors.access
+        : /element ID|install the receiver/i.test(reason)
+          ? PAGE_COPY.errors.wrongEmbed
+          : PAGE_COPY.errors.handshake;
+      fail(new Error(message));
+      return;
+    }
+
+    setBrand(identity, message.payload.brand || {});
+
+    if (
+      typeof identity.key !== 'string' ||
+      typeof identity.route !== 'string' ||
+      !['public', 'riaintra', 'altea'].includes(identity.family) ||
+      !['none', 'public', 'riaintra', 'altea'].includes(identity.chrome)
+    ) {
+      fail(new Error(PAGE_COPY.errors.invalidIdentity));
+      return;
+    }
+
+    if (
+      EXPECTED &&
+      (
+        identity.key !== EXPECTED.key ||
+        identity.route !== EXPECTED.route ||
+        identity.family !== EXPECTED.family ||
+        identity.chrome !== EXPECTED.chrome ||
+        (EXPECTED.embedIds.length > 0 && !EXPECTED.embedIds.includes(identity.embedId))
+      )
+    ) {
+      fail(new Error(PAGE_COPY.errors.wrongEmbed));
+      return;
+    }
+
+    loading = true;
+    clearInterval(timer);
+    screen.setAttribute('aria-busy', 'true');
+
+    setLoadingStage(PAGE_COPY.stages.connection.heading, PAGE_COPY.stages.connection.description, PAGE_COPY.stages.connection.detail);
+
+    let html = null;
+    let lastError = null;
+
+    for (const root of ROOTS) {
+      try {
+        html = await resolve(root, identity);
+        break;
+      } catch (error) {
+        lastError = error;
+      }
+    }
+
+    if (!html) {
+      fail(lastError || new Error(PAGE_COPY.errors.unavailable));
+      return;
+    }
+
+    window.removeEventListener('message', receive);
+
+    window.__SKANDI_RECEIVER_CONTEXT__ = Object.freeze(identity);
+
+    document.open();
+    document.write(html);
+    document.close();
   }
+
   function request() {
-    if(++attempts>40){fail(new Error('The Wix controller did not complete the startup handshake.'));return;}
-    window.parent.postMessage({source:SOURCE,type:'MASTER_CONFIG_REQUEST',payload:{receiverProtocol:1,receiverRequestId:nonce}},'*');
+    if (++attempts > 40) {
+      fail(new Error(PAGE_COPY.errors.timeout));
+      return;
+    }
+
+    window.parent.postMessage({
+      source: SOURCE,
+      type: 'MASTER_CONFIG_REQUEST',
+      payload: {
+        receiverProtocol: 1,
+        receiverRequestId: nonce
+      }
+    }, '*');
   }
-  window.addEventListener('message',receive);timer=setInterval(request,500);request();
+
+  window.addEventListener('message', receive);
+  timer = setInterval(request, 500);
+  request();
 })();
 </script>
 </body>

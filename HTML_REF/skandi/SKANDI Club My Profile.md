@@ -35,6 +35,9 @@ Confirmed duplicate-load defect:
 - The prior controller independently invoked getCustomerProfileBootstrap for both messages.
 - The V12.1 controller single-flights and briefly caches the read-only bootstrap so those startup requests share one backend operation.
 
+
+- 2026-10-28 UTC — Updated `skandi-embeds/my-profile/skandi-my-profile.receiver.html` to follow the current shared receiver pattern with page-specific startup, progress and failure messages for **My Profile** (`/my-profile`). The expected route matches `src/public/siteMap.js`; master-page handshake, staff authorization, manifest/SHA-256 checks and nested-iframe rejection remain intact.
+
 ## CHANGE LOG
 ### - **2026-09-18 · B-011.31:** Replaced the horizontal account menu with hierarchical side navigation. Added My Club → Overview, Points Activity and Program Information; page-addressable account workspaces; time-aware greeting; live points/status/member-since summary; booking-specific document/action center under My Upcoming Trips; legacy document message compatibility retained; no database schema mutation.
 ### - **2026-09-18 · B-011.30:** Established the approved dark, premium, static My Profile visual direction inspired by SKANDI Our Network. Removed decorative motion and converted the account to dark architectural surfaces with ivory content planes.

@@ -83,6 +83,9 @@ LOG
 -->
 
 
+
+- 2026-10-28 UTC — Updated `skandi-embeds/store-checkout/skandi-store-checkout.receiver.html` to follow the current shared receiver pattern with page-specific startup, progress and failure messages for **Store Checkout** (`/the-store/store-checkout`). The expected route matches `src/public/siteMap.js`; master-page handshake, staff authorization, manifest/SHA-256 checks and nested-iframe rejection remain intact.
+
 ## APPROVED REPAIR LOG — 2026-10-03 UTC
 
 Checkout.lof54.js now imports the existing canonical SKANDI_CORE/storeCheckout.web facade. Confirmation routing reads SITE_MAP.storeConfirmation. Checkout HTML, payment/cart logic and message names remain unchanged. REQUIRES LIVE TEST for customer cart/payment and installed route parity. Source changes prepared; not deployed.

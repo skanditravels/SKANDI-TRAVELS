@@ -39,6 +39,9 @@ No backend change is included in B-011.3.
 
 ---
 
+
+- 2026-10-28 UTC — Updated `skandi-embeds/travel-insurance/skandi-travel-insurance.receiver.html` to follow the current shared receiver pattern with page-specific startup, progress and failure messages for **Travel Insurance** (`/travel-info/insurance`). The expected route matches `src/public/siteMap.js`; master-page handshake, staff authorization, manifest/SHA-256 checks and nested-iframe rejection remain intact.
+
 ## COMPLETE INTENDED LIVE HTML SOURCE
 
 ```html

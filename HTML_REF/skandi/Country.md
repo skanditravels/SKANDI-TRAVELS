@@ -42,6 +42,9 @@
 - Supplied baseline — standalone Country HTML retained the existing design and ten-language dictionary, but referenced removed footer elements during startup. The old Country controller imported getCountryPage/searchCountryOffers which do not exist in the canonical destinationFlow facade.
 - 2026-10-06 UTC — V12 repairs startup and the source handshake, routes the published Country page correctly, reuses canonical public-catalog projections, adds a country-scoped arrival-airport selector, and connects real package offers to the canonical booking cart. The old missing-method contract is superseded by getDestinationFlowCatalog + shared presentation and customerBooking. Our Destinations now imports the extracted shared functions; its complete HTML bytes remain unchanged.
 
+
+- 2026-10-28 UTC — Updated `skandi-embeds/country/skandi-country.receiver.html` to follow the current shared receiver pattern with page-specific startup, progress and failure messages for **Destinations** (`/destinations/country`). The expected route matches `src/public/siteMap.js`; master-page handshake, staff authorization, manifest/SHA-256 checks and nested-iframe rejection remain intact.
+
 ## COMPLETE HTML
 
 

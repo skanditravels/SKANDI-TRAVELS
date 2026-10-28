@@ -87,6 +87,9 @@ STATICALLY VERIFIED: Store message contracts, Cart V2 custom-item shape, paid-or
 
 ---
 
+
+- 2026-10-28 UTC — Updated `skandi-embeds/the-store/skandi-the-store.receiver.html` to follow the current shared receiver pattern with page-specific startup, progress and failure messages for **The Store** (`/the-store`). The expected route matches `src/public/siteMap.js`; master-page handshake, staff authorization, manifest/SHA-256 checks and nested-iframe rejection remain intact.
+
 ## COMPLETE INTENDED LIVE HTML SOURCE
 
 

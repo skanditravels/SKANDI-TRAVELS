@@ -1,5 +1,11 @@
 # INFO / LOG — ALTEA LAUNCHPAD
 
+## CHANGE LOG (append-only)
+
+- 2026-10-28 UTC — Updated `skandi-embeds/altea-launchpad/skandi-altea-launchpad.receiver.html` to follow the current shared receiver pattern with page-specific startup, progress and failure messages for **ALTEA Launchpad** (`/riaintra/success-factors/altea`). The expected route matches `src/public/siteMap.js`; master-page handshake, staff authorization, manifest/SHA-256 checks and nested-iframe rejection remain intact.
+- 2026-10-28 UTC — Updated `skandi-embeds/eos/skandi-eos.receiver.html` to follow the current shared receiver pattern with page-specific startup, progress and failure messages for **EOS Mobile Operations** (`/riaintra/success-factors/altea/eos`). The expected route matches `src/public/siteMap.js`; master-page handshake, staff authorization, manifest/SHA-256 checks and nested-iframe rejection remain intact.
+
+
 - Source file: `/HTML_REF/altea/ALTEA Launchpad.md`.
 - Display name/system: ALTEA Launchpad / ALTEA.
 - Wix page: `/src/pages/ALTEA Launchpad.ajs4y.js`.

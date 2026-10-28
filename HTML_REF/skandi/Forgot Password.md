@@ -19,6 +19,9 @@ LAST SYNCED: 2026-10-28
 ## CHANGE LOG
 - 2026-10-28 — Updated page identity and recovery copy to “Reset your Password”; improved button status and focus behavior; retained the existing Wix route, component ID, and message contract.
 
+
+- 2026-10-28 UTC — Updated `skandi-embeds/forgot-password/skandi-forgot-password.receiver.html` to follow the current shared receiver pattern with page-specific startup, progress and failure messages for **Reset your Password** (`/forgot-password`). The expected route matches `src/public/siteMap.js`; master-page handshake, staff authorization, manifest/SHA-256 checks and nested-iframe rejection remain intact.
+
 ## COMPLETE INTENDED LIVE HTML SOURCE
 
 ```html

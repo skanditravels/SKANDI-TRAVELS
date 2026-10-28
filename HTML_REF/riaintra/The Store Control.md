@@ -19,6 +19,9 @@ Earlier route, component, controller and status claims below are historical; the
 
 No prior Store Control HTML_REF exists in the inspected Git tree or approved V12 source. Created from the complete user-supplied Store Control HTML.
 
+
+- 2026-10-28 UTC — Updated `skandi-embeds/store-control/skandi-store-control.receiver.html` to follow the current shared receiver pattern with page-specific startup, progress and failure messages for **Store Control** (`/riaintra/success-factors/store-control`). The expected route matches `src/public/siteMap.js`; master-page handshake, staff authorization, manifest/SHA-256 checks and nested-iframe rejection remain intact.
+
 ## 2026-10-07 — V12 complete-chain repair
 
 Migrates the disconnected supplied SKANDI_STOREFRONT_ADMIN / flat-payload embed onto the existing SKANDI_STORE_CONTROL_V3 / nested-payload page contract. Existing V3 exports remain. Connects product/variant edits, stock by location and revision, bulk prices, orders, category assignment and persisted inactive coupon drafts. Success follows backend confirmation. Ready-to-ship is a merchant comment; fulfillment is the Wix fulfillment API. Session Activity is explicitly local, not a persistent audit database.

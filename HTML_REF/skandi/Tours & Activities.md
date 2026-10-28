@@ -22,6 +22,9 @@ CONTRACT: Embed emits `TOURS_READY`, `TOURS_SEARCH`, `TOURS_ACTIVITY_OPEN`, `TOU
 
 - 2026-10-23: Replaced legacy page imports with canonical `SKANDI_CORE` façade/core; preserved Wix HTML element and original message names. Removed fabricated destinations, availability and prices from runtime. Reads only published Inventory products and configured future dated departures. Localized content, category filtering, detail display and real price/currency are based on canonical Inventory. Optional customer favourites are member-owned and persisted to the existing table. Removed static fabricated times and unsupported exchange-rate assumptions. Fixed missing integrated shell DOM lookups. Checkout stays unavailable until an approved live tour fulfillment/payment integration exists. No external code, database or deployed site has been modified by this package.
 
+
+- 2026-10-28 UTC — Updated `skandi-embeds/tours/skandi-tours.receiver.html` to follow the current shared receiver pattern with page-specific startup, progress and failure messages for **Tours & Activities** (`/tours`). The expected route matches `src/public/siteMap.js`; master-page handshake, staff authorization, manifest/SHA-256 checks and nested-iframe rejection remain intact.
+
 ## Open issues / live verification
 
 - As checked 2026-10-23, one public `GUIDED_TOUR` exists; its only dated departure is 2026-10-03 and is in the past. The live page should therefore show the product but no bookable departure. No fabricated future schedule is added.

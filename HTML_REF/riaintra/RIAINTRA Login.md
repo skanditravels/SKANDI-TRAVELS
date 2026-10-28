@@ -1,5 +1,10 @@
 # RIAINTRA Staff Login — INFO / LOG
 
+## CHANGE LOG (append-only)
+
+- 2026-10-28 UTC — Updated `riaintra-embeds/riaintra/riaintra.receiver.html` to follow the current shared receiver pattern with page-specific startup, progress and failure messages for **RIAINTRA Staff Login** (`/riaintra`). The expected route matches `src/public/siteMap.js`; master-page handshake, staff authorization, manifest/SHA-256 checks and nested-iframe rejection remain intact.
+
+
 ## INFO
 - **System area:** RIAINTRA (SKANDI GROUP employee intranet)
 - **Page:** RIAINTRA staff login

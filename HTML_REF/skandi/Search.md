@@ -60,6 +60,9 @@ Parent → child:
 - **2026-09-17:** Owner note: page nearly styled; data functions required review.
 - **2026-09-25 — B-011.1:** Rebuilt Search into the current B-011 customer visual system; moved route authority out of HTML; activated controller-delivered search index; removed stale search paths; added category filtering, improved ranking, shareable `?q=` behavior, public/private route filtering, responsive result navigation and stable presentation hooks.
 
+
+- 2026-10-28 UTC — Updated `skandi-embeds/search/skandi-search.receiver.html` to follow the current shared receiver pattern with page-specific startup, progress and failure messages for **Flight Search** (`/search`). The expected route matches `src/public/siteMap.js`; master-page handshake, staff authorization, manifest/SHA-256 checks and nested-iframe rejection remain intact.
+
 ## COMPLETE INTENDED LIVE HTML SOURCE
 
 ```html
