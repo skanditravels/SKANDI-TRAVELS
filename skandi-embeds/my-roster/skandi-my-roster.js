@@ -381,7 +381,6 @@
   }
 
   root.addEventListener("click", (event) => {
-    if (event.target.closest("#logoutBtn")) { post("MYROSTER_LOGOUT"); return; }
     const groupTalk = event.target.closest("#groupTalkLink");
     if (groupTalk && groupTalk.href && groupTalk.getAttribute("href") !== "#") {
       event.preventDefault();
