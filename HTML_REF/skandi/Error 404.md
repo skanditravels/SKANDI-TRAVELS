@@ -25,6 +25,8 @@
 
 - **2026-10-29 — SKANDI visual redesign:** Replaced the generic navy-and-gold treatment with SKANDI navy, blue, aqua, and ice colors; added a responsive split layout, destination photography, accessible navigation actions, reduced-motion support, and a text fallback if the MasterPage logo cannot load. The page requests its current logo and hero image from MasterPage, with the same verified public assets as a fallback. Preserved the existing editable `SKANDI_404_*` settings and corrected them to be read through `window`; the old top-level constants were not available to the runtime script. Home, destinations, and support paths use the canonical site-map paths. No backend, page controller, route, authentication, or database changes.
 
+- **2026-10-29 — Workflow source mapping:** Added this native Wix 404 reference to the HTML_REF source map and split its embedded HTML into reference sidecars so the source-validation test can reconstruct it. The 404 remains outside the registered route inventory and receives no generated receiver. No Wix or Supabase deployment was changed.
+
 ## COMPLETE HTML SOURCE
 
 ```html
