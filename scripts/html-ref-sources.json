@@ -313,6 +313,13 @@
     "note": "Existing controller is preserved; this source is not assigned a new canonical route."
   },
   {
+    "source": "HTML_REF/skandi/Error 404.md",
+    "directory": "skandi-embeds/_unregistered/error-404",
+    "stem": "skandi-error-404-reference",
+    "disposition": "UNREGISTERED CONTROLLER",
+    "note": "Wix-managed native 404 with no canonical route or page controller. Split only for HTML_REF source validation; excluded from the website build and must not receive a page receiver."
+  },
+  {
     "source": "HTML_REF/skandi/Flight Status.md",
     "directory": "skandi-embeds/flight-status/html-ref",
     "stem": "flight-status-reference",
