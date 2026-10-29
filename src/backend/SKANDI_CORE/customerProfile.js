@@ -129,7 +129,6 @@ function publicProfile(profile, club) {
     preferredDepartureAirportId: profile?.preferred_departure_airport_id || null,
     customerType: profile?.customer_type || "CUSTOMER",
     accessibilityNeeds: profile?.accessibility_needs_general || "",
-    marketingConsent: profile?.marketing_consent === true,
     privacyAccepted: profile?.privacy_accepted === true,
     status: profile?.status || "Active",
     accountCreatedAt: profile?.created_at || null,
@@ -282,7 +281,6 @@ export async function updateCustomerProfileCore(context, input = {}) {
   const currentPayload = obj(profile.payload), changes = obj(input.profile || input);
   const body = { updated_at: now() };
   for (const [key, column, max] of [["firstName","first_name",160],["lastName","last_name",160],["displayName","display_name",300],["email","email",254],["phone","phone",40],["preferredCurrency","preferred_currency",3],["accessibilityNeeds","accessibility_needs_general",2000]]) if (Object.prototype.hasOwnProperty.call(changes,key)) body[column] = clean(changes[key],max) || null;
-  if (Object.prototype.hasOwnProperty.call(changes,"marketingConsent")) body.marketing_consent = changes.marketingConsent === true;
   for (const [key,column] of [["countryOfResidenceId","country_of_residence_id"],["preferredLanguageId","preferred_language_id"],["preferredDepartureAirportId","preferred_departure_airport_id"]]) if (Object.prototype.hasOwnProperty.call(changes,key)) body[column] = isUuid(changes[key]) ? changes[key] : null;
   const preferencePayload = { ...currentPayload };
   for (const [key,max] of [["seatPreference",100],["dietaryPrefs",1000]]) if (Object.prototype.hasOwnProperty.call(changes,key)) preferencePayload[key] = clean(changes[key],max);

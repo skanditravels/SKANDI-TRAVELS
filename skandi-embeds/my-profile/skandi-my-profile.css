@@ -276,6 +276,15 @@ textarea.control{min-height:100px;padding:12px;resize:vertical}
 .checkbox{display:flex;gap:10px;align-items:flex-start;color:var(--sk-muted);font-size:12px;line-height:1.5}
 .checkbox input{margin-top:3px}
 .provider-note{margin-top:16px;padding:13px 14px;border:1px solid #c5e1e3;border-radius:12px;background:#edf7f8;color:#31596a;font-size:10px;line-height:1.6}
+.email-preference-panel{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(260px,.9fr);gap:28px;align-items:center;margin-top:28px;padding-top:24px;border-top:1px solid rgba(2,46,100,.12)}
+.email-preference-copy h3{margin:8px 0;color:var(--sk-navy-deep);font-family:Montserrat,sans-serif;font-size:20px;font-weight:700;letter-spacing:-.025em}
+.email-preference-copy>p{margin:0;color:var(--sk-muted);font-size:12px;line-height:1.65}
+.email-preference-copy .email-preference-address{margin-top:11px;color:#31596a;font-size:11px;font-weight:700;overflow-wrap:anywhere}
+.email-preference-panel form{display:grid;gap:13px;padding:17px;border:1px solid rgba(2,46,100,.10);border-radius:14px;background:linear-gradient(145deg,#f9fbfc,#edf4f6)}
+.email-preference-choice{color:#34475a;font-size:12px}
+.email-preference-choice input{accent-color:var(--sk-navy)}
+.email-preference-status{min-height:34px;color:#526274;font-size:11px;line-height:1.5}
+.email-preference-panel .btn:disabled{cursor:not-allowed;opacity:.55}
 
 /* Drawer */
 .drawer-shade{position:fixed;inset:0;z-index:90;pointer-events:none;opacity:0;background:rgba(1,10,20,.68);backdrop-filter:blur(4px)}
@@ -348,6 +357,7 @@ textarea.control{min-height:100px;padding:12px;resize:vertical}
   .trip-card{grid-template-columns:100px 1fr}
   .trip-card>.button-row,.trip-card>div:last-child{grid-column:1/-1}
   .profile-form{grid-template-columns:1fr}
+  .email-preference-panel{grid-template-columns:1fr;gap:18px}
   .field.full{grid-column:auto}
 }
 @media(max-width:640px){

@@ -13,6 +13,7 @@
     "zod": "^4.1.8",
     "@wix/categories": "1.0.205",
     "@wix/data": "1.0.466",
+    "@wix/email-subscriptions": "^1.0.44",
     "@wix/members": "1.0.492",
     "@wix/members_authentication": "1.0.61",
     "@wix/members_authorization": "1.0.32",

@@ -1,9 +1,10 @@
 // /src/pages/My Club Profile.u4k31.js
-// B-011.31 / V12.1 — SKANDI customer My Profile + SKANDI Club page controller.
-// V12.1 repairs startup handshake loss and duplicate bootstrap pressure without changing the embed contract.
+// B-011.31 / V12.2 — SKANDI customer My Profile + SKANDI Club page controller.
+// V12.2 adds branded Wix email preference controls without changing the embed contract.
 
 import wixLocationFrontend from "wix-location-frontend";
 import { getCustomerSupportBootstrap, listCustomerSupportCases, getCustomerSupportCase, addCustomerSupportMessage, createCustomerSupportCase } from "backend/SKANDI_CORE/customerSupport.web";
+import { getCustomerEmailPreferences, updateCustomerEmailPreferences } from "backend/SKANDI_CORE/customerSession.web";
 import { authentication } from "wix-members-frontend";
 import {
   getCustomerProfileBootstrap,
@@ -33,7 +34,7 @@ import {
 const HTML_SOURCE = "SKANDI_MY_PROFILE";
 const DOCUMENT_SOURCE = "SKANDI_CUSTOMER_DOCUMENT_CENTER";
 const PARENT_SOURCE = "SKANDI_WIX_PARENT";
-const VERSION = "V12.1-MY-PROFILE-2026.10.14";
+const VERSION = "V12.2-MY-PROFILE-EMAIL-PREFERENCES-2026.10.29";
 const BOOTSTRAP_CACHE_MS = 5000;
 const BOOTSTRAP_TIMEOUT_MS = 22000;
 const STARTUP_BOOTSTRAP_DELAY_MS = 250;
@@ -246,6 +247,15 @@ async function run(type, payload = {}) {
         break;
       case "MY_PROFILE_SAVE_PROFILE":
         result = await updateCustomerProfile(payload);
+        break;
+      case "MY_PROFILE_EMAIL_PREFERENCES_LOAD":
+        result = await getCustomerEmailPreferences({});
+        break;
+      case "MY_PROFILE_EMAIL_PREFERENCES_SAVE":
+        result = await updateCustomerEmailPreferences({
+          subscribed: payload.subscribed,
+          consentConfirmed: payload.consentConfirmed === true
+        });
         break;
       case "MY_PROFILE_SAVE_TRAVELER":
         result = await saveCustomerTraveler(payload);
