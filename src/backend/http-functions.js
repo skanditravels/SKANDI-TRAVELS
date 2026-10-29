@@ -1,6 +1,6 @@
 // /src/backend/http-functions.js
-// V12 canonical Wix HTTP functions: preserve Alexandra gateway; add signed Duffel Assistant notifications.
-// Git main currently has the gateway content under https-functions.js, which Wix does not register.
+// V12 canonical Wix HTTP-function entry point: Alexandra, Travel Info, WhatsApp and Duffel endpoints.
+// Wix registers these endpoints from this exact filename.
 
 import { ok, badRequest, forbidden, serverError } from "wix-http-functions";
 import {
