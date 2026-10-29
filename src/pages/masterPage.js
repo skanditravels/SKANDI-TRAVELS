@@ -581,7 +581,7 @@ function wireRiaintraLifecycle() {
   if (riaintraLifecycleWired) return;
   riaintraLifecycleWired = true;
   try {
-    globalThis.addEventListener("pagehide", () => {
+    window.addEventListener("pagehide", () => {
       if (!isRiaintraPath()) return;
       manualRiaintraSessionActive = false;
       try { memory.removeItem(RIAINTRA_MANUAL_SESSION_KEY); } catch (_) {}
@@ -595,7 +595,7 @@ function wireRiaintraLifecycle() {
         console.warn("[MasterPage] RIAINTRA close logout could not be started.", error);
       }
     });
-    globalThis.addEventListener("pageshow", () => {
+    window.addEventListener("pageshow", () => {
       if (isRiaintraChildPath() && !hasManualRiaintraSession()) void requireManualRiaintraLogin();
     });
   } catch (error) {
