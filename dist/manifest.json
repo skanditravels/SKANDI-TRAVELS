@@ -3047,6 +3047,7 @@
       "issues": [],
       "backend": [
         "src/backend/SKANDI_CORE/customerSupport.web.js",
+        "src/backend/SKANDI_CORE/customerSession.web.js",
         "src/backend/SKANDI_CORE/customerProfile.web.js"
       ],
       "messages": [
@@ -3071,6 +3072,8 @@
         "MY_PROFILE_BOOTSTRAP_TIMEOUT",
         "MY_PROFILE_CAR_CANCEL",
         "MY_PROFILE_DATA",
+        "MY_PROFILE_EMAIL_PREFERENCES_LOAD",
+        "MY_PROFILE_EMAIL_PREFERENCES_SAVE",
         "MY_PROFILE_ERROR",
         "MY_PROFILE_FLIGHT_CANCEL_CONFIRM",
         "MY_PROFILE_FLIGHT_CANCEL_QUOTE",
@@ -3110,8 +3113,8 @@
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
       "receiver": "skandi-embeds/my-profile/skandi-my-profile.receiver.html",
-      "sha256": "ba35ee557c97ef881b7b97e29ae44380a437c496556c4c8c11036cc1cfdb6b20",
-      "bytes": 276456
+      "sha256": "8d6d43a8aed422420b4b60b70ee120aa58a50e829eab72de219bb1fec08ba50f",
+      "bytes": 281165
     },
     {
       "key": "myTrips",
