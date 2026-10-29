@@ -1,4 +1,5 @@
-
+import React from "react";
+import { createRoot } from "react-dom/client";
   const { useState, useEffect } = React;
 
   const FLIGHTS_DATA = [];
@@ -183,4 +184,4 @@ const App = () => {
     </div>
   </div></div>;
 };
-ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+createRoot(document.getElementById("root")).render(<App/>);
