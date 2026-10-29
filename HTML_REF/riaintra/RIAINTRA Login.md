@@ -31,6 +31,8 @@
 
 - **2026-10-26 — Typed-login and exit-session guard:** `STAFF_LOGIN_READY` now logs out any existing Wix member session and always leaves the user at the credential form. RIAINTRA no longer redirects based on an existing staff session. A Wix memory-storage marker is written only after typed SK-ID/password login completes the existing authorized-session check; it supports in-site route changes and clears when the page reloads or closes. The site master logs out and clears the marker when leaving `/riaintra`, and directs direct/reloaded RIAINTRA subroutes to `/riaintra` so credentials must be typed again. On `pagehide`, it starts logout and stores a non-sensitive pending-logout flag so the next SKANDI page retries logout if the browser cancels that request. The login HTML, staff-auth facade, core, permissions, and database are unchanged.
 
+- **2026-10-29 — Wix deployment lint repair:** The site master registers the existing RIAINTRA `pagehide` and `pageshow` lifecycle listeners on the browser `window` object instead of `globalThis`, which is not recognized by the Wix page-code lint environment. Logout and typed-login behavior is unchanged. STATICALLY VERIFIED; REQUIRES LIVE TEST in Wix.
+
 ## COMPLETE WIX HTML EMBED
 
 ~~~html
