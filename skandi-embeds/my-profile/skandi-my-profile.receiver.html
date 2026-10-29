@@ -182,7 +182,7 @@ body{min-height:100vh;min-height:100svh}
 <main id="skandi-receiver-status" role="status" aria-live="polite" aria-busy="true">
   <section class="skandi-loader-card" aria-labelledby="skandi-loader-title">
     <div class="skandi-brand">
-      <img id="skandi-loader-logo" alt="" hidden>
+      <img id="skandi-loader-logo" alt="">
       <span id="skandi-loader-fallback" aria-label="SKANDI">SKANDI</span>
     </div>
     <p id="skandi-loader-eyebrow" class="skandi-loader-eyebrow">YOUR SKANDI CLUB</p>
@@ -201,7 +201,7 @@ body{min-height:100vh;min-height:100svh}
 
   const SOURCE = 'SKANDI_UNIVERSAL_RECEIVER';
   const PARENT = 'SKANDI_WIX_PARENT';
-  const EXPECTED=Object.freeze({"key":"myProfile","route":"/my-profile","family":"public","chrome":"public","embedIds":["#htmlMyProfile"]});
+  const EXPECTED=Object.freeze({"key":"myProfile","route":"/my-profile","family":"public","chrome":"public","embedIds":["#htmlMyProfile"],"receiver":"skandi-embeds/my-profile/skandi-my-profile.receiver.html"});
 
     const PAGE_COPY = Object.freeze({"title":"My Profile","titlePrefix":"SKANDI Travels","eyebrow":"YOUR SKANDI CLUB","heading":"Your account, in one place","description":"View your member profile, points, upcoming trips, documents and account settings.","foot":"Preparing your SKANDI Club profile","subject":"member profile, points, and upcoming trips","stages":{"connection":{"heading":"Opening My Profile","description":"Connecting to My Profile and preparing member profile, points, and upcoming trips.","detail":"Connecting to My Profile"},"catalog":{"heading":"Checking My Profile","description":"Checking the route and published content for member profile, points, and upcoming trips.","detail":"Checking member profile, points, and upcoming trips"},"content":{"heading":"Preparing My Profile","description":"Loading the page content for member profile, points, and upcoming trips.","detail":"Loading member profile, points, and upcoming trips"},"final":{"heading":"Almost ready","description":"Finishing setup for My Profile.","detail":"Opening My Profile"}},"failure":{"title":"My Profile is taking a little longer","copy":"We couldn't open member profile, points, and upcoming trips right now.","foot":"Try again to reload member profile, points, and upcoming trips. If the issue continues, contact SKANDI Support."},"errors":{"generic":"We couldn't load member profile, points, and upcoming trips right now.","http":"We couldn't reach member profile, points, and upcoming trips (Status ","manifestInvalid":"Published details for member profile, points, and upcoming trips are being refreshed. Please try again shortly.","notFound":"We couldn't find this page in the published catalog for member profile, points, and upcoming trips.","stale":"Published member profile, points, and upcoming trips isn't ready yet. Please try again shortly.","routeUpdated":"The page link for My Profile has changed. Refresh to get the latest link.","locate":"We couldn't locate the published member profile, points, and upcoming trips page.","access":"Sign in with an authorized SKANDI staff account to access member profile, points, and upcoming trips.","updatePending":"The member profile, points, and upcoming trips page update is still finishing. Please refresh shortly.","checksum":"A new member profile, points, and upcoming trips version is going live now. Please refresh in a few seconds.","markup":"The member profile, points, and upcoming trips page did not pass its final setup check. Try again shortly.","handshake":"My Profile didn't finish connecting to the page controller. Please try again shortly.","invalidIdentity":"We couldn't verify the My Profile page route. Refresh and try again.","wrongEmbed":"The My Profile embed is connected to another page. Refresh and try again.","timeout":"The My Profile page could not load because its Wix startup handshake did not complete. Try again later or contact SKANDI Support.","unavailable":"The member profile, points, and upcoming trips page is temporarily unavailable. Please try again in a moment."}});
 
@@ -289,9 +289,7 @@ body{min-height:100vh;min-height:100svh}
     return isLight ? 'customerHeader' : 'customerFooter';
   }
 
-  let activeLogoController = null;
-
-  async function setBrand(identity, brand) {
+  function setBrand(identity, brand) {
     const family = identity.family;
     const labels = {
       public: String(brand?.travelName || 'SKANDI Travels'),
@@ -306,85 +304,37 @@ body{min-height:100vh;min-height:100svh}
     brandEyebrow.textContent = PAGE_COPY.eyebrow;
     logoFallback.textContent = family === 'public' ? 'SKANDI' : (labels[family] || 'SKANDI');
     logoFallback.setAttribute('aria-label', labels[family] || 'SKANDI');
-    logo.hidden = true;
-    logoFallback.hidden = false;
     document.title = (labels[family] || PAGE_COPY.titlePrefix) + ' | ' + PAGE_COPY.title;
 
-    if (!logoUrl) {
-      console.warn('[SKANDI receiver] Masterpage did not provide the configured logo.', { key:logoKey, route:identity.route });
-      return false;
-    }
-
-    let parsed;
-    try {
-      parsed = new URL(logoUrl);
-    } catch (error) {
-      console.warn('[SKANDI receiver] Masterpage provided an invalid logo URL.', { key:logoKey, error });
-      return false;
-    }
-
-    if (
-      parsed.protocol !== 'https:' ||
-      parsed.hostname !== 'muvpffdnugzxjbnbpgac.supabase.co' ||
-      !parsed.pathname.startsWith('/storage/v1/object/public/skandi-public-assets/') ||
-      !/\.(svg|png|webp)$/i.test(parsed.pathname)
-    ) {
-      console.warn('[SKANDI receiver] Masterpage logo URL failed the asset allowlist.', { key:logoKey, host:parsed.hostname, path:parsed.pathname });
-      return false;
-    }
-
-    const controller = new AbortController();
-    activeLogoController = controller;
-    const requestTimeout = setTimeout(() => controller.abort(), 6000);
-    let objectUrl = '';
+    if (!logoUrl) return;
 
     try {
-      const response = await fetch(parsed.href, {
-        mode:'cors',
-        credentials:'omit',
-        cache:'default',
-        signal:controller.signal
-      });
-      if (!response.ok) throw new Error('Logo request returned HTTP ' + response.status + '.');
-
-      const contentType = String(response.headers.get('content-type') || '').split(';')[0].trim().toLowerCase();
-      if (!['image/svg+xml','image/png','image/webp'].includes(contentType)) {
-        throw new Error('Logo response has unsupported content type ' + (contentType || '(missing)') + '.');
+      const parsed = new URL(logoUrl);
+      if (
+        parsed.protocol !== 'https:' ||
+        parsed.hostname !== 'muvpffdnugzxjbnbpgac.supabase.co' ||
+        !parsed.pathname.startsWith('/storage/v1/object/public/skandi-public-assets/') ||
+        !/\.(svg|png|webp)$/i.test(parsed.pathname)
+      ) {
+        return;
       }
 
-      const blob = await response.blob();
-      if (!blob.size || blob.size > 8 * 1024 * 1024) throw new Error('Logo response size is invalid.');
-      objectUrl = URL.createObjectURL(blob);
+      logo.onload = () => {
+        logo.hidden = false;
+        logoFallback.hidden = true;
+      };
+      logo.onerror = () => {
+        logo.hidden = true;
+        logoFallback.hidden = false;
+      };
+
       logo.alt = (labels[family] || 'SKANDI') + ' logo';
-
-      await new Promise((resolve, reject) => {
-        const loadTimeout = setTimeout(() => reject(new Error('Logo image did not finish decoding.')), 5000);
-        logo.onload = () => { clearTimeout(loadTimeout); resolve(); };
-        logo.onerror = () => { clearTimeout(loadTimeout); reject(new Error('Browser could not decode the logo image.')); };
-        logo.src = objectUrl;
-      });
-
-      if (!logo.naturalWidth || !logo.naturalHeight) throw new Error('Logo image decoded without visible dimensions.');
-      logo.hidden = false;
-      logoFallback.hidden = true;
-      return true;
-    } catch (error) {
-      logo.hidden = true;
-      logoFallback.hidden = false;
-      if (error?.name !== 'AbortError') console.warn('[SKANDI receiver] Logo load failed; retaining the text fallback.', { key:logoKey, error });
-      return false;
-    } finally {
-      clearTimeout(requestTimeout);
-      logo.onload = null;
-      logo.onerror = null;
-      if (objectUrl) URL.revokeObjectURL(objectUrl);
-      if (activeLogoController === controller) activeLogoController = null;
-    }
+      logo.src = parsed.href;
+    } catch (_) {}
   }
 
   function fail(error) {
     clearInterval(timer);
-    activeLogoController?.abort();
     window.removeEventListener('message', receive);
     console.error('[SKANDI receiver]', error);
 
@@ -441,6 +391,7 @@ body{min-height:100vh;min-height:100svh}
     }
 
     if (EXPECTED && (
+      page.receiver!==EXPECTED.receiver ||
       page.key !== EXPECTED.key ||
       page.route !== EXPECTED.route ||
       page.family !== EXPECTED.family ||
@@ -520,6 +471,8 @@ body{min-height:100vh;min-height:100svh}
       return;
     }
 
+    setBrand(identity, message.payload.brand || {});
+
     if (
       typeof identity.key !== 'string' ||
       typeof identity.route !== 'string' ||
@@ -547,7 +500,6 @@ body{min-height:100vh;min-height:100svh}
     loading = true;
     clearInterval(timer);
     screen.setAttribute('aria-busy', 'true');
-    const logoReady = setBrand(identity, message.payload.brand || {});
 
     setLoadingStage(PAGE_COPY.stages.connection.heading, PAGE_COPY.stages.connection.description, PAGE_COPY.stages.connection.detail);
 
@@ -566,17 +518,6 @@ body{min-height:100vh;min-height:100svh}
     if (!html) {
       fail(lastError || new Error(PAGE_COPY.errors.unavailable));
       return;
-    }
-
-    let logoDeadline;
-    const logoState = await Promise.race([
-      logoReady.then(() => 'complete'),
-      new Promise(resolve => { logoDeadline = setTimeout(() => resolve('deadline'), 1600); })
-    ]);
-    if (logoDeadline) clearTimeout(logoDeadline);
-    if (logoState === 'deadline') {
-      activeLogoController?.abort();
-      console.warn('[SKANDI receiver] Logo did not load before page content was ready; continuing with the page.');
     }
 
     window.removeEventListener('message', receive);
