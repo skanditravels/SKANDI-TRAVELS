@@ -2,8 +2,7 @@
   "devDependencies": {
     "@wix/cli": "^1.0.0",
     "@wix/eslint-plugin-cli": "^1.0.0",
-    "eslint": "^8.25.0",
-    "react": "16.14.0"
+    "eslint": "^8.25.0"
   },
   "dependencies": {
     "@duffel/api": "^4.31.0",
@@ -27,7 +26,9 @@
     "pdfkit": "0.19.1",
     "pusher": "5.3.4",
     "sanitize-html": "2.18.0",
-    "wix-data": "0.0.1-security"
+    "wix-data": "0.0.1-security",
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
   },
   "scripts": {
     "postinstall": "wix sync-types",
