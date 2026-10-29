@@ -4,6 +4,7 @@ Canonical HTML_REF: /HTML_REF/skandi/SKANDI Club My Profile.md
 Runtime page: /src/pages/My Club Profile.u4k31.js
 Route: /my-profile
 HTML element: #htmlMyProfile
+Receiver: /skandi-embeds/my-profile/skandi-my-profile.receiver.html
 LIVE HTML: YES
 STATUS: STATICALLY VERIFIED — REQUIRES LIVE TEST
 SLUG: `/my-profile`
@@ -15,9 +16,6 @@ SLUG: `/my-profile`
 - Supplier servicing: canonical SKANDI_CORE Duffel modules only; HTML never calls Duffel or Supabase directly.
 - Booking ownership: canonical `altea_bookings` ownership plus verified customer booking links.
 - Live supplier capabilities gate cancellation, flight changes, post-booking baggage, airline-initiated changes, stay cancellation and car cancellation.
-
-## DELIVERY LOG
-- 2026-10-26 V12 delivery repair: Re-synced the active split HTML/CSS/JS from this complete document, restoring the document wrapper and local sidecar links so the source compiles to `dist/my-profile/index.html`. Applied the latest My Profile change so unfinished booking carts continue directly to Home (`/?cartId=...`); the legacy `/booking` route remains a redirect for older links. Page data/controller/backend contracts are unchanged. STATICALLY VERIFIED; REQUIRES LIVE TEST.
 
 This is reference documentation for the controller-only repair. It does NOT replace the canonical HTML_REF file and it does NOT require replacing the live HTML embed.
 
@@ -34,9 +32,6 @@ Confirmed duplicate-load defect:
 - The HTML emits MY_PROFILE_READY and CUSTOMER_DOCUMENT_CENTER_READY at startup.
 - The prior controller independently invoked getCustomerProfileBootstrap for both messages.
 - The V12.1 controller single-flights and briefly caches the read-only bootstrap so those startup requests share one backend operation.
-
-
-- 2026-10-28 UTC — Updated `skandi-embeds/my-profile/skandi-my-profile.receiver.html` to follow the current shared receiver pattern with page-specific startup, progress and failure messages for **My Profile** (`/my-profile`). The expected route matches `src/public/siteMap.js`; master-page handshake, staff authorization, manifest/SHA-256 checks and nested-iframe rejection remain intact.
 
 ## CHANGE LOG
 ### - **2026-09-18 · B-011.31:** Replaced the horizontal account menu with hierarchical side navigation. Added My Club → Overview, Points Activity and Program Information; page-addressable account workspaces; time-aware greeting; live points/status/member-since summary; booking-specific document/action center under My Upcoming Trips; legacy document message compatibility retained; no database schema mutation.
@@ -86,6 +81,12 @@ Append this repair record to the INFO / CHANGE LOG in /HTML_REF/skandi/SKANDI Cl
 - Retained the existing `/my-profile/support` page and its live human-chat behavior as a legacy page; no page deletion or redirect was performed.
 - The profile HTML source is unchanged because it already implements the `support` workspace. Controller and link changes are included in the accompanying ZIP.
 - STATICALLY VERIFIED; REQUIRES LIVE TEST on published Wix with a signed-in customer.
+
+### 2026-10-29 — Dedicated My Profile receiver and logo loading repair
+- Added the page-specific receiver for `/my-profile`, bound to `myProfile`, public chrome, and `#htmlMyProfile`. Loading and failure messages describe My Profile and SKANDI Club functions.
+- The receiver reads the logo URL from the existing `MASTER_CONFIG.brand.assets.logos` payload. It fetches the allowlisted public Supabase image as a Blob and displays it through an object URL, avoiding direct `<img>` handling of the current `Content-Disposition: attachment` response. It logs missing, rejected, and failed logo loads and keeps the text fallback if an image cannot be decoded.
+- The Wix page controller, profile/document message contracts, backend facades, database ownership, and complete live HTML payload are unchanged. The current manifest has no receiver-path field, so the receiver validates its route identity against the manifest and its Wix element identity against the controller handshake.
+- STATICALLY VERIFIED against `masterPage.js`, `My Club Profile.u4k31.js`, the built manifest and the existing profile source. REQUIRES LIVE TEST in the published Wix page to confirm browser image decoding and profile startup.
 
 ## LIVE HTML
 ```html
@@ -903,7 +904,7 @@ function renderTrips(){
   const up=$("tripList"),past=$("tripHistoryList"),draft=$("tripDraftList");
   if(up)up.innerHTML=upcoming.map(b=>tripCard(b,false)).join("")||empty("No upcoming trips","Bookings linked to this account will appear here.","plane");
   if(past)past.innerHTML=history.map(b=>tripCard(b,true)).join("")||empty("No past trips yet","Completed and cancelled SKANDI bookings will appear here.","plane");
-  if(draft)draft.innerHTML=carts.map(c=>`<article class="trip-card"><div class="trip-datebox"><strong>${esc(friendly(c.status||"Draft"))}</strong><span>${esc(date(c.updatedAt||c.createdAt))}</span></div><div><h3>${esc(c.payload?.selectedOffer?.summary||c.payload?.productType||"Booking in progress")}</h3><p>${esc(c.cartId||"")}${c.total?` · ${esc(money(c.total,c.currency))}`:""}</p></div><div><button class="btn small primary" data-route="/?cartId=${encodeURIComponent(c.cartId||"")}">Continue</button></div></article>`).join("")||empty("No booking drafts","Unfinished SKANDI booking carts will appear here.","plane")
+  if(draft)draft.innerHTML=carts.map(c=>`<article class="trip-card"><div class="trip-datebox"><strong>${esc(friendly(c.status||"Draft"))}</strong><span>${esc(date(c.updatedAt||c.createdAt))}</span></div><div><h3>${esc(c.payload?.selectedOffer?.summary||c.payload?.productType||"Booking in progress")}</h3><p>${esc(c.cartId||"")}${c.total?` · ${esc(money(c.total,c.currency))}`:""}</p></div><div><button class="btn small primary" data-route="/booking?cartId=${encodeURIComponent(c.cartId||"")}">Continue</button></div></article>`).join("")||empty("No booking drafts","Unfinished SKANDI booking carts will appear here.","plane")
 }
 function renderClub(){
   const d=state.data,c=d?.club||{},tiers=arr(c.tiers),ledger=arr(c.ledger);
