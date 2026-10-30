@@ -945,8 +945,8 @@ html.mobile-menu-open #skandi-global-header-root,body.mobile-menu-open #skandi-g
 #skandi-global-footer-root .skf-main { max-width:1510px; margin:auto; display:grid; grid-template-columns:minmax(170px,.8fr) minmax(0,3fr); gap:clamp(22px,4vw,72px); padding:32px clamp(20px,4vw,68px); }
 #skandi-global-footer-root .skf-brand img { width:min(180px,100%); max-height:72px; object-fit:contain; object-position:left center; }
 #skandi-global-footer-root #skf-logo { width:min(240px,100%); max-height:98px; }
-#skandi-global-footer-root .skf-wave-row { display:flex; justify-content:center; padding:0 clamp(20px,4vw,68px) 20px; }
-#skandi-global-footer-root #skf-wave { display:block; width:min(180px,42vw); max-height:50px; object-fit:contain; object-position:center; }
+#skandi-global-footer-root .skf-wave-row { display:flex; justify-content:flex-start; margin-top:16px; }
+#skandi-global-footer-root #skf-wave { display:block; width:min(180px,100%); max-height:50px; object-fit:contain; object-position:left center; }
 #skandi-global-footer-root .skf-brand p { color:#c5dcea; line-height:1.6; font-size:12px; margin:14px 0; }
 #skandi-global-footer-root .skf-social { display:flex; flex-wrap:wrap; gap:12px; }
 #skandi-global-footer-root .skf-social a { color:#d7eff3; display:inline-flex; align-items:center; gap:5px; font-size:12px; text-decoration:none; }
@@ -964,7 +964,7 @@ html.mobile-menu-open #skandi-global-header-root,body.mobile-menu-open #skandi-g
 #skandi-global-footer-root #skf-group-mark { width:180px; max-height:36px; object-fit:contain; }
 #skandi-global-footer-root .skf-visually-hidden { clip-path:inset(50%); position:absolute; height:1px; width:1px; overflow:hidden; white-space:nowrap; }
 @media(max-width:1060px){#skandi-global-footer-root .skf-main{grid-template-columns:1fr}#skandi-global-footer-root .skf-columns{grid-template-columns:repeat(3,minmax(0,1fr))}}
-@media(max-width:660px){#skandi-global-footer-root .skf-newsletter{grid-template-columns:1fr}#skandi-global-footer-root .skf-newsletter-status{grid-column:1}#skandi-global-footer-root .skf-columns{grid-template-columns:repeat(2,minmax(0,1fr))}#skandi-global-footer-root .skf-bottom{flex-wrap:wrap}#skandi-global-footer-root #skf-logo{width:min(220px,100%);max-height:90px}#skandi-global-footer-root #skf-wave{width:min(160px,55vw);max-height:44px}#skandi-global-footer-root .skf-wave-row{padding-bottom:18px}}
+@media(max-width:660px){#skandi-global-footer-root .skf-newsletter{grid-template-columns:1fr}#skandi-global-footer-root .skf-newsletter-status{grid-column:1}#skandi-global-footer-root .skf-columns{grid-template-columns:repeat(2,minmax(0,1fr))}#skandi-global-footer-root .skf-bottom{flex-wrap:wrap}#skandi-global-footer-root #skf-logo{width:min(220px,100%);max-height:90px}#skandi-global-footer-root #skf-wave{width:min(160px,100%);max-height:44px}}
 </style>
 <style data-skandi-part="mobile-nav">#skandi-mobile-nav-container{--navy:#022e64;--cyan:#5fc7cf;--ice:#f6faff;--ink:#122744;--muted:#667991;--line:#dfebf3;--safe:env(safe-area-inset-bottom,0px)}
 #skandi-mobile-nav-container *{box-sizing:border-box}#skandi-mobile-nav-container,#skandi-mobile-nav-container{width:100%;height:100%;overflow:hidden;margin:0;background:transparent;overscroll-behavior:none;font-family:Montserrat,system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-text-size-adjust:100%}#skandi-mobile-nav-container{display:flex;align-items:flex-end;color:var(--ink)}#skandi-mobile-nav-container button,#skandi-mobile-nav-container input,#skandi-mobile-nav-container textarea{font:inherit}#skandi-mobile-nav-container button{cursor:pointer;-webkit-tap-highlight-color:transparent}#skandi-mobile-nav-container button:focus-visible,#skandi-mobile-nav-container input:focus-visible,#skandi-mobile-nav-container textarea:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}#skandi-mobile-nav-container svg{display:block;width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
@@ -1974,11 +1974,11 @@ body { min-height:100%; }
       <img id="skf-logo" data-master-logo="customerFooter" alt="SKANDI Travels" hidden="">
       <p id="skf-slogan"></p>
       <div id="skf-social-links" class="skf-social"></div>
+      <div class="skf-wave-row">
+        <img id="skf-wave" data-master-logo="skandiWave" alt="SKANDI Travels wave" hidden="">
+      </div>
     </div>
     <div id="skf-columns" class="skf-columns"></div>
-  </div>
-  <div class="skf-wave-row">
-    <img id="skf-wave" data-master-logo="skandiWave" alt="SKANDI Travels wave" hidden="">
   </div>
   <div class="skf-terms" id="skf-terms"></div>
   <div class="skf-bottom">
