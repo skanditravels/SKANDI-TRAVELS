@@ -28,16 +28,16 @@ function currentMasterSlogan(){
   return String(slogans[language]||slogans.en||"").trim();
 }
 function renderMasterBranding(){
-  const headerLogo=masterAsset("storeHeader");
-  const footerLogo=masterAsset("storeFooter");
+  const headerLogo=masterAsset("storeNavy");
+  const footerLogo=masterAsset("storeWhite");
   const slogan=currentMasterSlogan();
 
   if(headerLogo){
-    document.querySelectorAll('[data-master-logo="storeHeader"]').forEach(img=>{
+    document.querySelectorAll('[data-master-logo="storeNavy"]').forEach(img=>{
       img.src=headerLogo;
     });
   }
-  if(footerLogo&&$("storeFooter"))$("storeFooter").src=footerLogo;
+  if(footerLogo&&$("storeWhite"))$("storeWhite").src=footerLogo;
   if(slogan&&$("storeSlogan"))$("storeSlogan").textContent=slogan;
 }
 
@@ -48,8 +48,8 @@ function requestStorefront(reason="html-ready"){
 
   status(
     STOREFRONT_REQUEST_ATTEMPTS===1
-      ? "Connecting to Wix Stores…"
-      : `Connecting to Wix Stores… attempt ${STOREFRONT_REQUEST_ATTEMPTS}`
+      ? "Connecting to The Store…"
+      : `Connecting to The Store… attempt ${STOREFRONT_REQUEST_ATTEMPTS}`
   );
 
   post("STOREFRONT_READY",{
@@ -66,7 +66,7 @@ function requestStorefront(reason="html-ready"){
     );
   }else{
     status(
-      "The Wix Catalog V3 bridge did not answer. Check the page code and backend/skandiStorefront.web.",
+      "We apologize. The Store did not answer. Please try again later.",
       "error"
     );
   }
@@ -465,9 +465,9 @@ function renderGiftCardProductPage(p,host){
       <p class="product-page-description">${esc(p.description||p.summary||"")}</p>
       <div class="gift-card-selection-copy">Selected design: <strong id="giftCardSelectedStyle">${esc(selected.name||"")}</strong></div>
       <div class="gift-card-form" id="giftCardForm">
-        <div class="gift-card-field"><label for="giftRecipientName">Recipient name</label><input id="giftRecipientName" maxlength="200" autocomplete="name" placeholder="Recipient name"></div>
+        <div class="gift-card-field"><label for="giftRecipientName">Who is the Gift Card for?</label><input id="giftRecipientName" maxlength="200" autocomplete="name" placeholder="Recipient name"></div>
         <div class="gift-card-field"><label for="giftRecipientEmail">Recipient email</label><input id="giftRecipientEmail" type="email" maxlength="254" autocomplete="email" placeholder="recipient@example.com"></div>
-        <div class="gift-card-field"><label for="giftSenderName">From</label><input id="giftSenderName" maxlength="200" placeholder="Your name"></div>
+        <div class="gift-card-field"><label for="giftSenderName">From who should it be from?</label><input id="giftSenderName" maxlength="200" placeholder="Your name"></div>
         <div class="gift-card-field gift-card-field-wide"><label for="giftMessage">Personal message</label><textarea id="giftMessage" maxlength="500" rows="4" placeholder="Add an optional message"></textarea><small>Up to 500 characters.</small></div>
         <div class="gift-card-field"><label for="giftDeliveryDate">Delivery date</label><input id="giftDeliveryDate" type="date" min="${today}"><small>Leave blank to send after payment.</small></div>
       </div>
@@ -480,7 +480,7 @@ function renderGiftCardProductPage(p,host){
         <div><small>Delivery</small><strong>Digital</strong></div>
       </div>
       <div class="accordion">
-        <details open><summary>How it works</summary><p>Choose a design and recipient. After payment, SKANDI issues the stored value through Wix Gift Cards and sends the selected SKANDI design using the configured gift-card automation.</p></details>
+        <details open><summary>How it works</summary><p>Choose a design and recipient. After payment, SKANDI issues the Gift Card and sends the chosen design.</p></details>
         <details><summary>Using the gift card</summary><p>The recipient receives a redemption code that can be applied as a gift card payment method during SKANDI checkout.</p></details>
       </div>
     </div>
