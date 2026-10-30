@@ -68,14 +68,12 @@
     window.parent.postMessage({ source: SOURCE, type, payload, timestamp: new Date().toISOString() }, "*");
   }
   function applyMasterConfig(config) {
-    const logos = config?.brand?.assets?.logos || {};
-    const logoUrl = text(logos.altea || logos.alteaWhite || logos.skandiGroupWhite).trim();
-    if (!/^https:\/\//i.test(logoUrl)) return;
-    state.brandLogoUrl = logoUrl;
     const logo = $("#alteaBrandLogo");
     if (!logo) return;
-    logo.src = logoUrl;
-    logo.hidden = false;
+    logo.removeAttribute("src");
+    logo.dataset.masterLogo = "[LEAVE_PLACEHOLDER]";
+    logo.hidden = true;
+    state.brandLogoUrl = "";
     $("#brandMark").hidden = true;
   }
   function requestFlightSearch() {
@@ -119,7 +117,7 @@
     const source = flight.source || (assignment ? "MyRoster assignment record" : "ALTEA flight search");
     const assignmentLabel = assignment ? assignmentTitle(assignment) : "No personal assignment linked to this search";
     const time = flight.departureTime || flight.estimatedTime || flight.actualTime || flight.scheduledTime || "—";
-    const brandMark = state.brandLogoUrl ? `<img class="mr-cari-logo" src="${escapeHtml(state.brandLogoUrl)}" alt="ALTEA">` : "";
+    const brandMark = `<span class="mr-cari-logo" data-master-logo="[LEAVE_PLACEHOLDER]">[LEAVE_PLACEHOLDER]</span>`;
     const paper = $("#briefingPaper");
     if (!paper) return;
     paper.innerHTML = `<div class="mr-cari-head">${brandMark}<div class="mr-cari-head-title"><strong>SKANDI ALTEA</strong><span>CREW ASSIGNMENT &amp; ROSTER INFORMATION</span></div><div class="mr-cari-stamp"><span>GENERATED</span><strong>${escapeHtml(new Date().toISOString().replace("T", " ").slice(0, 16))}Z</strong></div></div>

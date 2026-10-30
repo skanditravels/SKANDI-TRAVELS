@@ -4183,7 +4183,7 @@
               <div class="staff-id-card-head">
                 <div class="staff-id-logo-wrap">
                   <span class="staff-id-logo-box">
-                    <img class="staff-id-logo-img" src="https://static.wixstatic.com/media/394052_69299cae98564a63b4a9bb7a8d037a33~mv2.png" alt="SKANDI">
+                    <img class="staff-id-logo-img" data-master-logo="[LEAVE_PLACEHOLDER]" alt="SKANDI">
                   </span>
                 </div>
                 <div class="staff-id-card-head-text">

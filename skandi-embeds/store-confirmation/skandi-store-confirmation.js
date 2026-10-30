@@ -12,18 +12,18 @@ const post=(type,payload={})=>window.parent.postMessage({source:SOURCE,type,payl
 function masterAsset(key){return String(MASTER_CONFIG_STATE?.brand?.assets?.logos?.[key]||"").trim()}
 function currentMasterSlogan(){
   const language=String(MASTER_CONFIG_STATE?.settings?.language||"EN").trim().toLowerCase();
-  const slogans=MASTER_CONFIG_STATE?.brand?.slogans||{};
-  return String(slogans[language]||slogans.en||"Unforgettable Moments.").trim();
+  const slogans=MASTER_CONFIG_STATE?.brand?.slogans?.store||{};
+  return String(slogans[language]||slogans.en||"").trim();
 }
 function masterRoute(key,fallback){
   const route=String(MASTER_CONFIG_STATE?.routes?.[key]||"").trim();
   return route||fallback;
 }
 function renderMasterBranding(){
-  const headerLogo=masterAsset("storeHeader");
-  const footerLogo=masterAsset("storeFooter");
-  if(headerLogo)document.querySelectorAll('[data-master-logo="storeHeader"]').forEach(img=>img.src=headerLogo);
-  if(footerLogo)document.querySelectorAll('[data-master-logo="storeFooter"]').forEach(img=>img.src=footerLogo);
+  const headerLogo=masterAsset("storeNavy");
+  const footerLogo=masterAsset("storeWhite");
+  if(headerLogo)document.querySelectorAll('[data-master-logo="storeNavy"]').forEach(img=>img.src=headerLogo);
+  if(footerLogo)document.querySelectorAll('[data-master-logo="storeWhite"]').forEach(img=>img.src=footerLogo);
   const slogan=$("storeConfirmationSlogan");if(slogan)slogan.textContent=currentMasterSlogan();
   const year=$("storeConfirmationFooterYear");if(year)year.textContent=String(new Date().getFullYear());
 }
@@ -62,7 +62,7 @@ function fallbackPdfBlob(){
     ["Review the latest payment and fulfillment status in My Orders.",10,false],
     ["A confirmation may also be sent using the email attached to your order.",10,false],
     ["",8,false],
-    [`SKANDI Travels - ${slogan}`,9,false]
+    [`THE STORE - ${slogan}`,9,false]
   ];
   let stream="0.97 0.98 1 rg\n46 690 520 62 re f\n0.008 0.18 0.39 rg\n";
   let y=726;
@@ -97,7 +97,7 @@ async function imageDataUrl(url){
 function addPdfFooter(doc,pageWidth,pageHeight){
   doc.setDrawColor(2,46,100);doc.setLineWidth(1.2);doc.line(46,pageHeight-56,pageWidth-46,pageHeight-56);
   doc.setFont("helvetica","normal");doc.setFontSize(8);doc.setTextColor(102,112,133);
-  doc.text(`SKANDI Travels - ${currentMasterSlogan()}`,46,pageHeight-38);
+  doc.text(`THE STORE - ${currentMasterSlogan()}`,46,pageHeight-38);
   doc.text(`Generated ${friendlyDate(CONFIRMATION.generatedAt)}`,pageWidth-46,pageHeight-38,{align:"right"});
 }
 async function downloadRichPdf(){
@@ -109,7 +109,7 @@ async function downloadRichPdf(){
   const doc=new jsPDF({orientation:"portrait",unit:"pt",format:"letter"});
   const w=doc.internal.pageSize.getWidth(),h=doc.internal.pageSize.getHeight();
   doc.setFillColor(246,250,255);doc.rect(0,0,w,112,"F");
-  const logo=await imageDataUrl(masterAsset("storeHeader"));
+  const logo=await imageDataUrl(masterAsset("[LEAVE_PLACEHOLDER]"));
   if(logo){
     try{doc.addImage(logo,"PNG",46,34,170,50,undefined,"FAST")}catch(_){
       doc.setFont("helvetica","bold");doc.setFontSize(17);doc.setTextColor(2,46,100);doc.text("SKANDI THE STORE",46,63);

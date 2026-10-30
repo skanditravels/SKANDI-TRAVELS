@@ -52,7 +52,8 @@
     if (typeof msg === "string") { try { msg = JSON.parse(msg); } catch (_) { return; } }
     if (!msg || msg.source !== PARENT) return;
     if (msg.type === "SKANDI_MASTER_CONFIG") {
-      const logo = msg.payload?.brand?.assets?.logos?.skandiPrimary || msg.payload?.brand?.assets?.logos?.skandiTravels;
+      const key = document.getElementById("logo")?.dataset?.masterLogo;
+      const logo = msg.payload?.brand?.assets?.logos?.[key];
       if (logo) document.getElementById("logo").src = logo;
       return;
     }

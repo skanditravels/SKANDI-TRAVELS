@@ -17,7 +17,8 @@ const SOURCE = "SKANDI_CUSTOMER_HEADER_EXPANDBAR";
     header.style.setProperty("--fx-y", "26%");
   }
 
-  const LANGUAGES = new Set(["EN","SV","NO","DA"]);
+  const LANGUAGES = new Set(["EN","SV","NO","DA","FI"]);
+  const LANGUAGE_ALIASES = Object.freeze({SE:"SV",DK:"DA"});
   const CURRENCIES = new Set(["USD","SEK","NOK","DKK","EUR"]);
   const HEADER_I18N = {
     EN:{
@@ -51,6 +52,14 @@ const SOURCE = "SKANDI_CUSTOMER_HEADER_EXPANDBAR";
       "nav.signIn":"Log ind",
       "settings.language":"Sprog",
       "settings.currency":"Valuta"
+    },
+    FI:{
+      "nav.search":"Haku",
+      "nav.clubBtn":"Kirjaudu",
+      "nav.menu":"VALIKKO",
+      "nav.signIn":"Kirjaudu sisään",
+      "settings.language":"Kieli",
+      "settings.currency":"Valuutta"
     }
   };
 
@@ -92,7 +101,8 @@ const SOURCE = "SKANDI_CUSTOMER_HEADER_EXPANDBAR";
         ? value.settings
         : value;
 
-    const language = String(source?.language || "").trim().toUpperCase();
+    const requestedLanguage = String(source?.language || "").trim().toUpperCase();
+    const language = LANGUAGE_ALIASES[requestedLanguage] || requestedLanguage;
     const currency = String(source?.currency || "").trim().toUpperCase();
 
     return {
@@ -125,7 +135,7 @@ const SOURCE = "SKANDI_CUSTOMER_HEADER_EXPANDBAR";
     });
 
     document.documentElement.lang =
-      ({EN:"en",SV:"sv",NO:"no",DA:"da"})[currentLanguage()] || "en";
+      ({EN:"en",SV:"sv",NO:"no",DA:"da",FI:"fi"})[currentLanguage()] || "en";
   }
   function getAsset(...keys) {
     const logos = master?.brand?.assets?.logos || {};
@@ -139,12 +149,7 @@ const SOURCE = "SKANDI_CUSTOMER_HEADER_EXPANDBAR";
     return "";
   }
   function applyBrandAssets() {
-    const headerLogo =
-      getAsset(
-        "customerHeader",
-        "skandiTravels",
-        "skandiPrimary"
-      );
+    const headerLogo = getAsset("customerHeader");
 
     if (headerLogo && $("headerLogo")) {
       $("headerLogo").src = headerLogo;
@@ -154,11 +159,12 @@ const SOURCE = "SKANDI_CUSTOMER_HEADER_EXPANDBAR";
     const target = $("masterSlogan");
     if (!target) return;
 
-    const slogans = master?.brand?.slogans || {};
+    const branch = String(master?.brand?.currentBranch || "travels");
+    const slogans = master?.brand?.slogans?.[branch] || {};
     const languageKey = currentLanguage().toLowerCase();
 
     // The slogan is intentionally NOT hard-coded in this header.
-    // masterPage.js / MASTER_CONFIG.brand.slogans is the single source of truth.
+    // masterPage.js owns language state and every branch slogan translation.
     const slogan =
       String(
         slogans[languageKey] ??

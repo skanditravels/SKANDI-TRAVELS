@@ -296,6 +296,12 @@ const SOURCE = "SKANDI_STAFF_LOGIN";
 
     if (event.source !== window.parent) return;
     if (data.source !== PARENT_SOURCE) return;
+    if (data.type === "SKANDI_MASTER_CONFIG") {
+      const logo = document.querySelector('[data-master-logo="riaHeader"]');
+      const logoUrl = String(payload?.brand?.assets?.logos?.riaHeader || "").trim();
+      if (logo && logoUrl) logo.src = logoUrl;
+      return;
+    }
     if (data.requestId && activeRequestId && data.requestId !== activeRequestId) return;
     if (refreshing && data.requestId === refreshRequestId &&
         (data.type === "STAFF_LOGIN_OK" || data.type === "STAFF_LOGIN_ERROR" || data.type === "STAFF_LOGIN_NOTICE")) {
@@ -345,4 +351,5 @@ const SOURCE = "SKANDI_STAFF_LOGIN";
   setBusy(false);
   syncMobileViewport();
   dropBtn.setAttribute("aria-controls", "login-card-wrap");
+  post("MASTER_CONFIG_REQUEST", { context:"riaintra-login" });
   post("STAFF_LOGIN_READY", {});

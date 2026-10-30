@@ -45,13 +45,16 @@
     const header = headerConfig();
     const altea = config?.altea || {};
     const p = profile();
-    const logo = config?.brand?.assets?.logos?.altea ||
-                 config?.brand?.assets?.logos?.riaintra ||
-                 config?.brand?.assets?.logos?.skandiPrimary || "";
+    const logos = config?.brand?.assets?.logos || {};
+    const logo = String(logos.alteaHeader || "");
+    const mobileLogo = String(logos.alteaIconLight || "");
 
     if (logo && $("logo")) $("logo").src = logo;
+    if (mobileLogo && $("mobileLogo")) $("mobileLogo").src = mobileLogo;
     if ($("productName")) $("productName").textContent = header.productName || altea.systemName || "ALTEA";
-    if ($("productContext")) $("productContext").textContent = header.productContext || altea.systemContext || "SKANDI SYSTEMS";
+    const language = String(config?.settings?.language || "EN").trim().toLowerCase();
+    const slogans = config?.brand?.slogans?.altea || {};
+    if ($("productContext")) $("productContext").textContent = slogans[language] || slogans.en || header.productContext || altea.systemContext || "SKANDI SYSTEMS";
 
     const env = runtime.env || altea.env || config?.env || "PRD";
     if ($("envBadge")) $("envBadge").textContent = String(env).trim().toUpperCase() || "PRD";

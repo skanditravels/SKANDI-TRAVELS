@@ -7,7 +7,7 @@ import {fileURLToPath} from 'node:url';
 import {createRequire} from 'node:module';
 import {execFileSync} from 'node:child_process';
 import {build} from '../scripts/build-skandi-app.mjs';
-import {compilePage,scopeSelector,cssFor,hash} from '../scripts/lib/compile.mjs';
+import {compilePage,scopeSelector,cssFor,hash,normalizeHTML} from '../scripts/lib/compile.mjs';
 import {inventory,scaffold} from '../scripts/lib/inventory.mjs';
 import {renderPageReceiver} from '../scripts/lib/page-receiver.mjs';
 import {publish} from '../scripts/publish-skandi-build.mjs';
@@ -95,6 +95,16 @@ test('legacy complete documents preserve styles, scripts, templates, SVG, datase
   assert.equal(dom.window.document.title,'Updated page title');assert.equal(dom.window.document.documentElement.lang,'sv');assert.equal(dom.window.document.body.className,'search-mode');
   dom.window.document.getElementById('tap').click();assert.equal(dom.window.clicked,1);assert.equal(dom.window.executions,1);assert.equal(dom.window.templateExecuted,undefined);
   assert.ok(dom.window.document.getElementById('template').content.querySelector('svg'));assert.equal(dom.window.document.getElementById('tap').dataset.item,'one');
+});
+
+
+test('VOY preserves only its blank PDF fallback iframe; other nested frames remain blocked',async()=>{
+  const voyFile=path.join(ROOT,'skandi-embeds/voy/skandi-voy.html');
+  const fallback='<iframe id="fallbackFrame" class="reader-fallback" title="VOY PDF fallback reader"></iframe>';
+  const allowed=await normalizeHTML(fallback,'','/* inline styles */',{root:ROOT,file:voyFile,mount:'voy'});
+  assert.match(allowed.html,/id="fallbackFrame"/);
+  await assert.rejects(normalizeHTML(fallback,'','',{root:ROOT,file:path.join(ROOT,'skandi-embeds/home/skandi-home.html'),mount:'home'}),/nested iframe/);
+  await assert.rejects(normalizeHTML(fallback.replace('</iframe>','<p>unexpected</p></iframe>'),'','',{root:ROOT,file:voyFile,mount:'voy'}),/nested iframe/);
 });
 
 test('overlapping legacy sidecars, invalid JavaScript, missing assets and duplicate IDs fail with page/file evidence',async t=>{

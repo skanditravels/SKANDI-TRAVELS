@@ -84,6 +84,9 @@
 
     if (message.type === "SKANDI_MASTER_CONFIG") {
       const payload = message.payload || {};
+      const logo = String(payload?.brand?.assets?.logos?.alteaFooter || "");
+      const logoElement = $("alteaFooterLogo");
+      if (logoElement && logo) { logoElement.src = logo; logoElement.hidden = false; }
       legalPath = String(payload?.routes?.legalInternal || LEGAL_PATH);
       renderState({
         env:payload?.altea?.env || payload?.env || "PRD",
