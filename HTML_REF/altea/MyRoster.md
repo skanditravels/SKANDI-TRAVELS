@@ -1,5 +1,7 @@
 # INFO / LOG — ALTEA MYROSTER
 
+- 2026-10-30 — Preserved unassigned app/PDF logo placements with [LEAVE_PLACEHOLDER]; no embedded logo URL remains.
+
 - Source file: `/HTML_REF/altea/MyRoster.md`.
 - Display name/system: MyRoster / ALTEA.
 - System area: `ALTEA`; operational owner: OPS.
@@ -7,7 +9,7 @@
 - Wix page controller: `/src/pages/MyRoster.l8p5m.js`.
 - Wix HTML element: `#myRosterEmbed`.
 - Page chrome: `APP_VIEWPORT_ALTEA`; ALTEA header and footer are selected by `masterPage.js` from the canonical route family.
-- Brand logo: the app reads `brand.assets.logos.altea` from the `SKANDI_MASTER_CONFIG` message sent by `masterPage.js`; no logo URL is embedded in the app.
+- Brand logo: app and CARI print logo placements remain unassigned and are retained as [LEAVE_PLACEHOLDER]; no logo URL is embedded in the app.
 - Canonical web-method facade: `/src/backend/SKANDI_CORE/myRoster.web.js`.
 - Canonical backend core: `/src/backend/SKANDI_CORE/myRoster.js`.
 - Authentication and authorization: Wix Site Member boundary plus `requireStaffPortalSessionCore`; the staff profile must have an eligible field/destination role and an assigned field base. Existing `org_job_roles` / `org_bases` rows are used when present; authenticated staff-profile fields provide the role/base when those directories have no row. The bootstrap and flight search do not require a personal flight/roster assignment.
@@ -154,7 +156,7 @@
     <header class="mr-topbar">
       <div class="mr-brand">
         <div class="mr-brand-mark" id="brandMark" aria-hidden="true">A</div>
-        <img class="mr-brand-logo" id="alteaBrandLogo" alt="ALTEA" hidden>
+        <img class="mr-brand-logo" id="alteaBrandLogo" data-master-logo="[LEAVE_PLACEHOLDER]" alt="ALTEA" hidden>
         <div>
           <div class="mr-brand-name">ALTEA <span>MYROSTER</span></div>
           <div class="mr-brand-subtitle">SKANDI OPERATIONS</div>
@@ -328,14 +330,12 @@
     window.parent.postMessage({ source: SOURCE, type, payload, timestamp: new Date().toISOString() }, "*");
   }
   function applyMasterConfig(config) {
-    const logos = config?.brand?.assets?.logos || {};
-    const logoUrl = text(logos.altea || logos.alteaWhite || logos.skandiGroupWhite).trim();
-    if (!/^https:\/\//i.test(logoUrl)) return;
-    state.brandLogoUrl = logoUrl;
     const logo = $("#alteaBrandLogo");
     if (!logo) return;
-    logo.src = logoUrl;
-    logo.hidden = false;
+    logo.removeAttribute("src");
+    logo.dataset.masterLogo = "[LEAVE_PLACEHOLDER]";
+    logo.hidden = true;
+    state.brandLogoUrl = "";
     $("#brandMark").hidden = true;
   }
   function requestFlightSearch() {
@@ -379,7 +379,7 @@
     const source = flight.source || (assignment ? "MyRoster assignment record" : "ALTEA flight search");
     const assignmentLabel = assignment ? assignmentTitle(assignment) : "No personal assignment linked to this search";
     const time = flight.departureTime || flight.estimatedTime || flight.actualTime || flight.scheduledTime || "—";
-    const brandMark = state.brandLogoUrl ? `<img class="mr-cari-logo" src="${escapeHtml(state.brandLogoUrl)}" alt="ALTEA">` : "";
+    const brandMark = '<span class="mr-cari-logo" data-master-logo="[LEAVE_PLACEHOLDER]">[LEAVE_PLACEHOLDER]</span>';
     const paper = $("#briefingPaper");
     if (!paper) return;
     paper.innerHTML = `<div class="mr-cari-head">${brandMark}<div class="mr-cari-head-title"><strong>SKANDI ALTEA</strong><span>CREW ASSIGNMENT &amp; ROSTER INFORMATION</span></div><div class="mr-cari-stamp"><span>GENERATED</span><strong>${escapeHtml(new Date().toISOString().replace("T", " ").slice(0, 16))}Z</strong></div></div>

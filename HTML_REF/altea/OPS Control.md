@@ -1,5 +1,7 @@
 # INFO / LOG — OPS CONTROL
 
+- 2026-10-30 — Preserved the unassigned ALTEA logo slot as [LEAVE_PLACEHOLDER].
+
 - Source file: `/HTML_REF/altea/OPS Control.md`.
 - Display name/system: OPS Control / ALTEA.
 - System area: `ALTEA`.
@@ -452,7 +454,7 @@
 
   <header class="topbar">
     <div class="brand">
-      <img class="brand-logo master-brand-logo" id="masterAlteaLogo" alt="ALTEA" hidden>
+      <img class="brand-logo master-brand-logo" id="masterAlteaLogo" data-master-logo="[LEAVE_PLACEHOLDER]" alt="ALTEA" hidden>
       <div class="brand-text">ALTEA Operations <span class="brand-sub">| SKANDI DESTINATION WORKFORCE</span></div>
     </div>
     
@@ -939,13 +941,11 @@
     }
 
     function applyMasterConfig(config) {
-      const logos = config?.brand?.assets?.logos || {};
-      const logoUrl = String(logos.altea || logos.alteaWhite || logos.skandiGroupWhite || '').trim();
-      if (!/^https:\/\//i.test(logoUrl)) return;
       const logo = document.getElementById('masterAlteaLogo');
       if (!logo) return;
-      logo.src = logoUrl;
-      logo.hidden = false;
+      logo.removeAttribute('src');
+      logo.dataset.masterLogo = '[LEAVE_PLACEHOLDER]';
+      logo.hidden = true;
     }
 
     function setSyncState(label, status = '') {
