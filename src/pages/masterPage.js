@@ -219,11 +219,11 @@ const MASTER_CONFIG = Object.freeze({
         placeholder:"Email address"
       }),
       socialLinks:Object.freeze([
-        Object.freeze({ label:"Instagram", url:"https://www.instagram.com/skanditravels", iconAssetKey:"[LEAVE_PLACEHOLDER]" }),
-        Object.freeze({ label:"Facebook", url:"https://www.facebook.com/skanditravels", iconAssetKey:"[LEAVE_PLACEHOLDER]" }),
+        Object.freeze({ label:"Instagram", url:"https://www.instagram.com/skanditravels", iconAssetKey:"https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/icons/social_icons/instagram-icon.png" }),
+        Object.freeze({ label:"Facebook", url:"https://www.facebook.com/skanditravels", iconAssetKey:"https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/icons/social_icons/facebook-icon.png" }),
         Object.freeze({ label:"TikTok", url:"https://www.tiktok.com/@skanditravels", iconAssetKey:"[LEAVE_PLACEHOLDER]" }),
         Object.freeze({ label:"Snapchat", url:"https://www.snapchat.com/@skanditravels", iconAssetKey:"[LEAVE_PLACEHOLDER]" }),
-        Object.freeze({ label:"LinkedIn", url:"https://www.linkedin.com/en/skanditravels", iconAssetKey:"[LEAVE_PLACEHOLDER]" })
+        Object.freeze({ label:"LinkedIn", url:"https://www.linkedin.com/en/skanditravels", iconAssetKey:"https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/icons/social_icons/linkedin-icon.png" })
       ]),
       bottomLinks:Object.freeze([
         Object.freeze({ label:"Legal", path:SITE_MAP.legal }),
