@@ -18,6 +18,7 @@ LAST SOURCE REVIEW: 2026-10-30
 - Static verification only. Responsive footer height and live newsletter/legal navigation require Wix smoke tests.
 
 ## CHANGE LOG
+- 2026-10-30 — Active Git footer: enlarged the customerFooter mark and added the master-config skandiWave mark centered below social and column links. The masterPage controller remains the asset authority; no page-controller change is included here.
 - 2026-10-30 — Shared master branding: customerFooter and groupFooter are resolved from masterPage.js, and footer slogans follow currentBranch and settings.language.
 - 2026-10-13 — Legal/footer V12 sync: canonical legal utility links, separate Staff Login, brand/legal copy, and masterPage navigation unchanged.
 - 2026-10-13 — Mobile focus guard added to newsletter text-entry field.

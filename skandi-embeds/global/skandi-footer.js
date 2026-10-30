@@ -34,6 +34,13 @@ function render() {
   const logos = master.brand?.assets?.logos || {};
   const mainLogo = logos.customerFooter;
   if (mainLogo && $('skf-logo')) { $('skf-logo').src = mainLogo; $('skf-logo').hidden = false; }
+  const wave = $('skf-wave');
+  const waveLogo = safeExternal(logos.skandiWave || '');
+  if (wave) {
+    wave.hidden = !waveLogo;
+    if (waveLogo) wave.src = waveLogo;
+    else wave.removeAttribute('src');
+  }
   if (logos.groupFooter && $('skf-group-mark')) {
     $('skf-group-mark').src = logos.groupFooter;
     $('skf-group-mark').hidden = false;
