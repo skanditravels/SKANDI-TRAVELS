@@ -1150,8 +1150,8 @@
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
       "receiver": "skandi-embeds/the-store/skandi-the-store.receiver.html",
-      "sha256": "bfd05cb5ca2b6afdd408c658cfc61c721b2e96069bb30bbb675dca1aed468ee6",
-      "bytes": 152590
+      "sha256": "15638559879778d09850056e9546e7744874fea7818db57672ebe05dd3eec6a2",
+      "bytes": 152506
     },
     {
       "key": "storeCheckout",
