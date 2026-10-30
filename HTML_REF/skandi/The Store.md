@@ -75,13 +75,14 @@ STATICALLY VERIFIED: Store message contracts, Cart V2 custom-item shape, paid-or
 - **External/API dependencies:** Wix Stores / Wix eCommerce; Wix Members/global master configuration.
 - **Authentication/authorization boundary:** Existing page/backend Store and customer-session boundaries; no frontend database authority added.
 - **Important message contracts:** `STOREFRONT_READY`, `STOREFRONT_PARENT_READY`, `STOREFRONT_PRODUCTS`, `STOREFRONT_CART`, `STOREFRONT_CART_REQUEST`, `STOREFRONT_ADD_TO_CART`, `STOREFRONT_CHECKOUT`, `STOREFRONT_ORDERS`, `STOREFRONT_NAVIGATE`, `PUBLIC_SUPPORT_CREATE_CASE`, `PUBLIC_SUPPORT_CASE_CREATED`, `PUBLIC_SUPPORT_ERROR`, `MASTER_CONFIG_REQUEST`, `SKANDI_MASTER_CONFIG`.
-- **Current architectural notes:** `storeHeader` and `storeFooter` are now read from `MASTER_CONFIG.brand.assets.logos`. The bottom-left Store slogan is read from `MASTER_CONFIG.brand.slogans` using the active customer language, with English fallback. Current Store logo URLs remain in HTML only as resilience fallbacks until master config arrives; masterPage is the runtime authority.
+- **Current architectural notes:** `storeNavy` and `storeWhite` are read from `MASTER_CONFIG.brand.assets.logos`. The bottom-left Store slogan is read from `MASTER_CONFIG.brand.slogans.store` using the active customer language, with English fallback. The Store header and footer use storeNavy and storeWhite from masterPage.js. HTML contains no logo URL fallback.
 - **Open issues / required migrations:** Live Wix runtime must be tested after installing both the Store embed and updated masterPage together.
 - **Last verified:** 2026-10-04 — source and controlled tests only; no live deployment.
 
 ## CHANGE LOG
+- 2026-10-30 — Store header/footer use storeNavy and storeWhite; Store slogan uses brand.slogans.store and the shared settings.language. Removed stale logo URL fallbacks and fixed footer selection to target every storeWhite slot.
 
-- **2026-09-21 — B-011.15:** Added `storeHeader` and `storeFooter` masterPage logo assets; Store desktop/mobile header and footer now consume those assets through `SKANDI_MASTER_CONFIG`; bottom-left Store slogan now consumes the localized masterPage slogan; settings changes broadcast refreshed master config to page embeds. Preserved Store commerce/support contracts.
+- **2026-09-21 — B-011.15:** Added `storeNavy` and `storeWhite` masterPage logo assets; Store desktop/mobile header and footer now consume those assets through `SKANDI_MASTER_CONFIG`; bottom-left Store slogan now consumes the localized masterPage slogan; settings changes broadcast refreshed master config to page embeds. Preserved Store commerce/support contracts.
 - **2026-09-21 — B-011.14:** Approved Store hero composition correction preserved: contained editorial hero panel, bounded responsive typography and spacing, and stable presentation hooks.
 - **2026-09-16 — B-011.13:** Store source connected to canonical Store bridge in the B011 convergence workspace.
 
@@ -676,7 +677,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
 <header class="site-header">
   <div class="header-main">
     <div class="brand-lockup" aria-label="SKANDI — The Store">
-      <div class="brand-mark"><img id="storeHeader" data-master-logo="storeHeader" src="https://static.wixstatic.com/media/394052_eaf2188b7f7e48468fa25d61f8881b10~mv2.png" alt="SKANDI The Store"></div><div class="brand-divider"></div>
+      <div class="brand-mark"><img id="storeHeader" data-master-logo="storeNavy" alt="SKANDI The Store"></div><div class="brand-divider"></div>
     </div>
     <nav class="primary-nav" id="mainNav" aria-label="Shop navigation">
       <button class="active" data-route="home">Home</button>
@@ -1065,18 +1066,18 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
 <footer class="footer">
   <div class="footer-main">
     <div>
-      <div class="footer-brand"><img id="storeFooter" data-master-logo="storeFooter" src="https://static.wixstatic.com/media/394052_cd31153a91694b14a27c5f756f8089bd~mv2.png" alt="SKANDI The Store"><span>The Store</span></div>
+      <div class="footer-brand"><img id="storeFooter" data-master-logo="storeWhite" alt="SKANDI The Store"><span>The Store</span></div>
       <p>Travel essentials, luggage, gifts and SKANDI products.</p>
     </div>
     <div><h4>Shop</h4><button data-route="shop">All products</button><button id="footerCategoriesBtn">Categories</button><button data-category="SKANDI">SKANDI collection</button><button data-category="Gift">Gifts</button><button data-category="Gift Cards">Gift Cards</button></div>
     <div><h4>Travel</h4><button data-category="Luggage">Luggage</button><button data-category="Travel Essentials">Travel essentials</button><button data-category="Beach">Beach</button><button data-category="Family">Family</button></div>
     <div><h4>Support</h4><button data-route="support">Customer service</button><button data-route="orders">My orders</button><button data-open-path="/terms">Terms</button><button data-open-path="/privacy">Privacy</button><button id="refreshStoreBtn">Refresh store</button></div>
   </div>
-  <div class="footer-bottom"><div class="footer-bottom-inner"><div class="default-bar" id="storeSlogan" data-content-id="store-footer-slogan">Unforgettable Moments.</div><span>© <span id="footerYear"></span> SKANDI Travels. All rights reserved.</span></div></div>
+  <div class="footer-bottom"><div class="footer-bottom-inner"><div class="default-bar" id="storeSlogan" data-content-id="store-footer-slogan"></div><span>© <span id="footerYear"></span> SKANDI Travels. All rights reserved.</span></div></div>
 </footer>
 
 <section class="mobile-nav" id="mobileNav" aria-hidden="true">
-  <div class="mobile-nav-head"><div class="brand-mark"><img data-master-logo="storeHeader" src="https://static.wixstatic.com/media/394052_eaf2188b7f7e48468fa25d61f8881b10~mv2.png" alt="SKANDI The Store"></div><div class="brand-divider"></div><button class="close-button" data-close="mobile">×</button></div>
+  <div class="mobile-nav-head"><div class="brand-mark"><img data-master-logo="storeNavy" alt="SKANDI The Store"></div><div class="brand-divider"></div><button class="close-button" data-close="mobile">×</button></div>
   <div class="mobile-nav-body" id="mobileNavList">
     <div class="mobile-nav-heading">Store</div>
     <button data-route="home">Home</button><button data-route="shop">All products</button><button id="mobileCategoriesBtn">Categories</button><button data-category="SKANDI">SKANDI collection</button><button data-category="Gift">Gifts</button><button data-category="Gift Cards">Gift Cards</button><button data-category="Sale">Offers</button>
@@ -1113,21 +1114,21 @@ function masterAsset(key){
   return String(logos[key]||root[key]||"").trim();
 }
 function currentMasterSlogan(){
-  const slogans=MASTER_CONFIG_STATE?.brand?.slogans||{};
+  const slogans=MASTER_CONFIG_STATE?.brand?.slogans?.store||{};
   const language=String(MASTER_CONFIG_STATE?.settings?.language||"EN").trim().toLowerCase();
   return String(slogans[language]||slogans.en||"").trim();
 }
 function renderMasterBranding(){
-  const headerLogo=masterAsset("storeHeader");
-  const footerLogo=masterAsset("storeFooter");
+  const headerLogo=masterAsset("storeNavy");
+  const footerLogo=masterAsset("storeWhite");
   const slogan=currentMasterSlogan();
 
   if(headerLogo){
-    document.querySelectorAll('[data-master-logo="storeHeader"]').forEach(img=>{
+    document.querySelectorAll('[data-master-logo="storeNavy"]').forEach(img=>{
       img.src=headerLogo;
     });
   }
-  if(footerLogo&&$("storeFooter"))$("storeFooter").src=footerLogo;
+  if(footerLogo)document.querySelectorAll('[data-master-logo="storeWhite"]').forEach(img=>{img.src=footerLogo});
   if(slogan&&$("storeSlogan"))$("storeSlogan").textContent=slogan;
 }
 

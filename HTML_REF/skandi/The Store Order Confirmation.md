@@ -32,6 +32,8 @@ LAST VERIFIED: 2026-09-24
 
 ## INFO / LOG
 
+- 2026-10-30 — Order confirmation uses storeNavy/storeWhite and localized brand.slogans.store; the PDF logo slot remains [LEAVE_PLACEHOLDER] because that placement was not specified.
+
 - **Source identity:** `/HTML_REF/skandi/The Store Order Confirmation.md`
 - **Display name:** The Store Order Confirmation
 - **Customer route (canonical site map):** `/the-store/store-checkout/order-confirmation`
@@ -39,7 +41,7 @@ LAST VERIFIED: 2026-09-24
 - **Wix HTML component ID:** `#storeOrderConfirmationEmbed`
 - **HTML source:** `SKANDI_STORE_CONFIRMATION`
 - **Parent source:** `SKANDI_WIX_PARENT`
-- **Brand source:** `masterPage.js` → `brand.assets.logos.storeHeader`, `brand.assets.logos.storeFooter`, localized `brand.slogans`.
+- **Brand source:** `masterPage.js` → `brand.assets.logos.storeNavy`, `brand.assets.logos.storeWhite`, localized `brand.slogans.store`.
 - **Confirmation data currently available to this page:** order ID and payment status from the confirmation page query string. No product-level/order-detail backend payload is currently exposed to this page.
 - **PDF behavior:** `Download Confirmation` creates a customer-downloadable PDF in the browser. The primary generator uses jsPDF; a native PDF fallback is included so the button still downloads a valid PDF if the external library is unavailable.
 - **PDF scope:** the PDF deliberately contains only fields actually supplied to this confirmation page. It does not invent cart items, delivery details, taxes, customer address, card data, or fulfillment information that the current page contract does not receive.
@@ -179,7 +181,7 @@ p{color:var(--muted);font-size:13px;line-height:1.7;margin:0 auto;max-width:600p
   <div class="store-confirmation-header-inner">
     <div class="store-confirmation-brand">
       <button class="store-confirmation-brand-logo" type="button" data-master-route="theStore" aria-label="Return to SKANDI The Store">
-        <img id="storeConfirmationHeaderLogo" data-master-logo="storeHeader" src="https://static.wixstatic.com/media/394052_eaf2188b7f7e48468fa25d61f8881b10~mv2.png" alt="SKANDI">
+        <img id="storeConfirmationHeaderLogo" data-master-logo="storeNavy" alt="SKANDI">
       </button>
       <span class="store-confirmation-brand-divider" aria-hidden="true"></span>
       <div class="store-confirmation-brand-context">The Store<span>Order confirmation</span></div>
@@ -217,14 +219,14 @@ p{color:var(--muted);font-size:13px;line-height:1.7;margin:0 auto;max-width:600p
 <footer class="store-confirmation-footer" aria-label="SKANDI The Store order confirmation footer">
   <div class="store-confirmation-footer-main">
     <div class="store-confirmation-footer-brand">
-      <img id="storeConfirmationFooterLogo" data-master-logo="storeFooter" src="https://static.wixstatic.com/media/394052_cd31153a91694b14a27c5f756f8089bd~mv2.png" alt="SKANDI">
+      <img id="storeConfirmationFooterLogo" data-master-logo="storeWhite" alt="SKANDI">
       <div class="store-confirmation-footer-copy"><strong>The Store</strong>Order confirmation powered by SKANDI.</div>
     </div>
     <button class="store-confirmation-footer-return" type="button" data-master-route="theStore">Return to The Store</button>
   </div>
   <div class="store-confirmation-footer-bottom">
     <div class="store-confirmation-footer-bottom-inner">
-      <div id="storeConfirmationSlogan" class="store-confirmation-slogan">Unforgettable Moments.</div>
+      <div id="storeConfirmationSlogan" class="store-confirmation-slogan"></div>
       <div class="store-confirmation-copyright">© <span id="storeConfirmationFooterYear"></span> SKANDI Travels. All rights reserved.</div>
     </div>
   </div>
@@ -244,18 +246,18 @@ const post=(type,payload={})=>window.parent.postMessage({source:SOURCE,type,payl
 function masterAsset(key){return String(MASTER_CONFIG_STATE?.brand?.assets?.logos?.[key]||"").trim()}
 function currentMasterSlogan(){
   const language=String(MASTER_CONFIG_STATE?.settings?.language||"EN").trim().toLowerCase();
-  const slogans=MASTER_CONFIG_STATE?.brand?.slogans||{};
-  return String(slogans[language]||slogans.en||"Unforgettable Moments.").trim();
+  const slogans=MASTER_CONFIG_STATE?.brand?.slogans?.store||{};
+  return String(slogans[language]||slogans.en||"").trim();
 }
 function masterRoute(key,fallback){
   const route=String(MASTER_CONFIG_STATE?.routes?.[key]||"").trim();
   return route||fallback;
 }
 function renderMasterBranding(){
-  const headerLogo=masterAsset("storeHeader");
-  const footerLogo=masterAsset("storeFooter");
-  if(headerLogo)document.querySelectorAll('[data-master-logo="storeHeader"]').forEach(img=>img.src=headerLogo);
-  if(footerLogo)document.querySelectorAll('[data-master-logo="storeFooter"]').forEach(img=>img.src=footerLogo);
+  const headerLogo=masterAsset("storeNavy");
+  const footerLogo=masterAsset("storeWhite");
+  if(headerLogo)document.querySelectorAll('[data-master-logo="storeNavy"]').forEach(img=>img.src=headerLogo);
+  if(footerLogo)document.querySelectorAll('[data-master-logo="storeWhite"]').forEach(img=>img.src=footerLogo);
   const slogan=$("storeConfirmationSlogan");if(slogan)slogan.textContent=currentMasterSlogan();
   const year=$("storeConfirmationFooterYear");if(year)year.textContent=String(new Date().getFullYear());
 }
@@ -341,13 +343,13 @@ async function downloadRichPdf(){
   const doc=new jsPDF({orientation:"portrait",unit:"pt",format:"letter"});
   const w=doc.internal.pageSize.getWidth(),h=doc.internal.pageSize.getHeight();
   doc.setFillColor(246,250,255);doc.rect(0,0,w,112,"F");
-  const logo=await imageDataUrl(masterAsset("storeHeader"));
+  const logo=await imageDataUrl(masterAsset("[LEAVE_PLACEHOLDER]"));
   if(logo){
     try{doc.addImage(logo,"PNG",46,34,170,50,undefined,"FAST")}catch(_){
-      doc.setFont("helvetica","bold");doc.setFontSize(17);doc.setTextColor(2,46,100);doc.text("SKANDI THE STORE",46,63);
+      doc.setFont("helvetica","bold");doc.setFontSize(17);doc.setTextColor(2,46,100);doc.text("[LEAVE_PLACEHOLDER]",46,63);
     }
   }else{
-    doc.setFont("helvetica","bold");doc.setFontSize(17);doc.setTextColor(2,46,100);doc.text("SKANDI THE STORE",46,63);
+    doc.setFont("helvetica","bold");doc.setFontSize(17);doc.setTextColor(2,46,100);doc.text("[LEAVE_PLACEHOLDER]",46,63);
   }
   doc.setFont("helvetica","bold");doc.setFontSize(22);doc.setTextColor(2,46,100);doc.text("Order Confirmation",w-46,55,{align:"right"});
   doc.setFont("helvetica","normal");doc.setFontSize(9);doc.setTextColor(102,112,133);doc.text("SKANDI The Store",w-46,72,{align:"right"});

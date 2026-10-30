@@ -1,5 +1,7 @@
 # SKANDI Collection
 
+- 2026-10-30 — Replaced Select, Signature and Excelsior tier text pills with the mapped master badge assets; the unassigned Collection page logo remains [LEAVE_PLACEHOLDER].
+
 **STATUS:** NEEDS REVIEW  
 **SLUG:** `/skandi-collection`  
 **WIX PAGE:** SKANDI Collection.lo9p5  
@@ -708,7 +710,7 @@ main::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none
 .card-body{position:relative;padding:23px;background:var(--card-surface);min-height:225px;display:flex;flex-direction:column}
 .card-body::before{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at var(--fx-x,85%) var(--fx-y,10%),rgba(255,255,255,.30),transparent 28%);opacity:.5}
 .tier-line{position:relative;display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px}
-.tier-tag,.tag{display:inline-flex;border-radius:999px;padding:6px 9px;font-size:8px;font-weight:800;letter-spacing:.10em;text-transform:uppercase}
+.collection-tier-badge{display:block;width:auto;height:24px;max-width:128px;object-fit:contain}.tier-tag,.tag{display:inline-flex;border-radius:999px;padding:6px 9px;font-size:8px;font-weight:800;letter-spacing:.10em;text-transform:uppercase}
 .tier-tag{background:#022e64;color:#fff}.tier-tag.select{background:#d9f1f1;color:#022e64;border:1px solid rgba(2,46,100,.08)}
 .tier-tag.signature{background:#022e64;color:#fff}.tier-tag.excelsior{background:#111827;color:#fff}.tier-tag.partner{background:#5FC7CF;color:#022e64}
 .tag{background:rgba(2,46,100,.065);color:var(--card-title)}.card:nth-child(5n+1) .tag{background:rgba(255,255,255,.12);color:#fff}
@@ -958,7 +960,7 @@ main::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none
   <div class="wrap hero-inner">
     <div class="hero-copy">
       <div class="collection-brand">
-        <img id="collectionLogo" alt="SKANDI Collection" hidden>
+        <img id="collectionLogo" data-master-logo="[LEAVE_PLACEHOLDER]" alt="SKANDI Collection" hidden>
         <div id="collectionLogoFallback" class="collection-wordmark">SKANDI <span>Collection</span></div>
       </div>
 
@@ -1510,7 +1512,7 @@ main::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none
   function applyMasterPayload(payload={}){
     MASTER={...MASTER,...payload,brand:payload.brand||MASTER.brand||{},routes:{...(MASTER.routes||{}),...(payload.routes||{})}};
     const logos=payload?.brand?.assets?.logos||payload?.assets?.logos||{};
-    applyCollectionLogo(logos.signatureCollection);
+    applyCollectionLogo("[LEAVE_PLACEHOLDER]");
     
     // Accept injected Destinations from Master Payload if available
     if(payload.destinations && Array.isArray(payload.destinations)) {
@@ -1647,13 +1649,22 @@ main::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none
     const defs=[{key:"all",label:"All types"},...present.filter((x,i,a)=>a.indexOf(x)===i).map(key=>({key,label:typeLabel(key)}))];
     $("tabs").innerHTML=defs.map(x=>`<button class="tab ${activeType===x.key?"active":""}" type="button" data-type="${esc(x.key)}">${esc(x.label)}</button>`).join("");
   }
+  function tierBadgeMarkup(tier){
+    const keys={SELECT:"collectionSelectBadge",SIGNATURE:"collectionSignatureBadge",EXCELSIOR:"collectionExcelsiorBadgeGold"};
+    const key=keys[String(tier||"").toUpperCase()];
+    const badges=MASTER?.brand?.assets?.badges||MASTER?.assets?.badges||{};
+    const label=tierLabel(tier),url=key?safeAssetUrl(badges[key]):"";
+    if(!url)return '<span class="tier-tag '+esc(String(tier||"").toLowerCase())+'" data-master-logo="[LEAVE_PLACEHOLDER]">'+esc(label)+'</span>';
+    return '<img class="collection-tier-badge" src="'+esc(url)+'" alt="'+esc(label)+'" title="'+esc(label)+'" loading="eager" decoding="async">';
+  }
+
   function card(item){
     const tier=itemTier(item),tierClass=tier.toLowerCase(),image=itemImage(item),title=String(item.title||"SKANDI Collection").trim();
     const initials=title.split(/\s+/).slice(0,2).map(x=>x[0]||"").join("").toUpperCase();
     const visual=image?`<div class="thumb" style="background-image:url('${esc(image)}')"></div>`:`<div class="thumb"><div class="thumb-fallback"><span>${esc(initials||"SK")}</span></div></div>`;
     const location=itemLocation(item),meta=[location,item.code,item.collectionLabel].filter(Boolean).join(" · ");
     const action=item.path?`<div class="card-actions"><button class="btn secondary" type="button" data-path="${esc(item.path)}">Explore ${esc(item.typeLabel||"selection")} <span class="icon-arrow">→</span></button></div>`:"";
-    return `<article class="card fx-card reveal">${visual}<div class="card-body"><div class="tier-line"><span class="tier-tag ${esc(tierClass)}">${esc(tierLabel(tier))}</span><span class="tag">${esc(item.typeLabel||item.type||"Selected")}</span></div><h3>${esc(title)}</h3><p>${esc(item.summary||"Selected by SKANDI.")}</p><div class="meta"><span class="live-dot"></span>${esc(meta||"Part of the SKANDI Collection")}</div>${action}</div></article>`;
+    return `<article class="card fx-card reveal">${visual}<div class="card-body"><div class="tier-line">${tierBadgeMarkup(tier)}<span class="tag">${esc(item.typeLabel||item.type||"Selected")}</span></div><h3>${esc(title)}</h3><p>${esc(item.summary||"Selected by SKANDI.")}</p><div class="meta"><span class="live-dot"></span>${esc(meta||"Part of the SKANDI Collection")}</div>${action}</div></article>`;
   }
   function renderCards(){
     const status=$("collectionStatus");

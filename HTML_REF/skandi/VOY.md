@@ -13,6 +13,8 @@ Upgraded the public reader toward a premium editorial reading experience with st
 Verification boundary
 Source contracts and syntax are checked locally. Wix publication, Supabase/RLS, staff/member session state and provider behavior require live testing after replacement and publication.
 
+- 2026-10-30 — VOY slogan uses brand.slogans.voy and the shared master language setting; its reader mark remains [LEAVE_PLACEHOLDER], while the receiver uses voyBySkWhite.
+
 COMPLETE INTENDED LIVE HTML SOURCE
 ```
 <!doctype html>
@@ -267,7 +269,7 @@ body{min-height:100vh}
 
 .voy-intro{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:32px;align-items:end;padding:54px 0 30px}
 .voy-intro-copy{max-width:800px}
-.voy-eyebrow{display:inline-flex;align-items:center;gap:10px;margin-bottom:13px;color:var(--skandi-navy);font-size:11px;font-weight:800;letter-spacing:.18em;text-transform:uppercase}
+.voy-master-slogan{display:block;margin-top:10px;color:var(--skandi-navy);font-size:12px;font-weight:700;letter-spacing:.06em}.voy-eyebrow{display:inline-flex;align-items:center;gap:10px;margin-bottom:13px;color:var(--skandi-navy);font-size:11px;font-weight:800;letter-spacing:.18em;text-transform:uppercase}
 .voy-eyebrow:before{content:"";width:38px;height:1px;background:var(--skandi-aqua)}
 .voy-intro h1{margin:0 0 13px;color:var(--skandi-navy);font-size:clamp(32px,4.2vw,48px);line-height:1.07;letter-spacing:-.035em;font-weight:800}
 .voy-intro p{max-width:760px;margin:0;color:#34465a;font-size:15px;line-height:1.7}
@@ -472,6 +474,7 @@ body.focus-reader .flip-stage{min-height:calc(100vh - 126px)}body.focus-reader #
     <section class="voy-intro" aria-labelledby="voyPageTitle">
       <div class="voy-intro-copy">
         <div class="voy-eyebrow">VOY Magazine</div>
+        <div class="voy-master-slogan" id="voyMasterSlogan"></div>
         <h1 id="voyPageTitle">Travel stories, guides and ideas.</h1>
         <p>Turn the pages of VOY for destination inspiration, selected hotels, local experiences and practical travel advice from SKANDI.</p>
       </div>
@@ -499,7 +502,7 @@ body.focus-reader .flip-stage{min-height:calc(100vh - 126px)}body.focus-reader #
       <main class="reader-panel">
         <div class="reader-head">
           <div class="reader-title-block">
-            <div class="reader-mark" aria-hidden="true">VOY</div>
+            <div class="reader-mark" data-master-logo="[LEAVE_PLACEHOLDER]" aria-hidden="true">[LEAVE_PLACEHOLDER]</div>
             <div><strong id="issueTitle">VOY Atelier</strong><span id="issueMeta">Select an issue to begin reading.</span></div>
           </div>
           <div class="reader-actions" aria-label="Reader controls">
@@ -589,6 +592,15 @@ body.focus-reader .flip-stage{min-height:calc(100vh - 126px)}body.focus-reader #
 <script>
 const SOURCE="SKANDI_VOY_MAGAZINE";
 const PARENT="SKANDI_WIX_PARENT";
+let MASTER_CONFIG_STATE=null;
+function renderMasterBranding(payload){
+  MASTER_CONFIG_STATE=payload||MASTER_CONFIG_STATE||{};
+  const language=String(MASTER_CONFIG_STATE.settings?.language||"EN").toLowerCase();
+  const slogans=MASTER_CONFIG_STATE.brand?.slogans?.voy||{};
+  const target=document.getElementById("voyMasterSlogan");
+  if(target)target.textContent=slogans[language]||slogans.en||"";
+  document.documentElement.lang=({en:"en",sv:"sv",no:"no",da:"da",fi:"fi"})[language]||"en";
+}
 let state={issues:[],structuredPages:[],categories:[],banners:[],travelCards:[],globalInteractions:[],activeInteractions:[],activeIssue:null,pdf:null,pages:[],totalPages:0,textIndex:[],flip:null,currentPage:0,pageInteractionCounts:{},showInteractiveHints:true};
 
 const $=id=>document.getElementById(id);
@@ -1121,12 +1133,14 @@ document.addEventListener("keydown",e=>{
 document.addEventListener("fullscreenchange",()=>{$("fullscreenBtn").textContent=document.fullscreenElement?"Exit full screen":"Full screen"});
 window.addEventListener("message",e=>{
   const m=e.data||{};if(m.source!==PARENT)return;
+  if(m.type==="SKANDI_MASTER_CONFIG"){renderMasterBranding(m.payload||{});return}
   if(m.type==="VOY_BOOTSTRAP_RESULT")renderBootstrap(m.payload||{});
   if(m.type==="VOY_INTERACTIONS_UPDATE"){state.globalInteractions=parseList(m.payload?.interactions||m.interactions);if(state.activeIssue){state.activeInteractions=getIssueInteractions(state.activeIssue);selectIssue(issueKey())}}
   if(m.type==="VOY_GO_TO_PAGE")goToPage(Number(m.page||m.payload?.page));
   if(m.type==="VOY_ISSUE_SAVED")status("Issue saved to your SKANDI profile.","ok");
   if(m.type==="VOY_ERROR")status(m.message||m.payload?.message||"VOY magazine error.","error");
 });
+post("MASTER_CONFIG_REQUEST",{context:"voy"});
 post("VOY_READY");
 </script>
 

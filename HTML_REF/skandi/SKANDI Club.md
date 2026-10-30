@@ -2,6 +2,8 @@
 
 ## INFO / LOG
 
+- 2026-10-30 — Club slogan now reads brand.slogans.club using the shared master language setting; no branch-local language selector was added.
+
 - **Current status:** `B-011.1 — STATICALLY VERIFIED / LIVE WIX + TIER MIGRATION TEST REQUIRED`
 - **System:** SKANDI customer website
 - **Route:** `/skandi-club`
@@ -885,12 +887,12 @@ a{color:inherit}
 
     <aside class="club-pass" aria-label="SKANDI Club program summary">
       <div class="pass-top">
-        <span class="club-word">SKANDI CLUB</span>
+        <span class="club-word" data-master-logo="[LEAVE_PLACEHOLDER]">[LEAVE_PLACEHOLDER]</span>
         <span class="pass-tag">Member programme</span>
       </div>
       <div class="pass-copy">
         <strong id="programName">SKANDI Club</strong>
-        <span id="programSub">Travel further, together.</span>
+        <span id="programSub"></span>
       </div>
       <div class="pass-stats">
         <div class="pass-stat">
@@ -922,28 +924,28 @@ a{color:inherit}
       <div class="tier-grid" id="tierGrid">
         <article class="tier-card member" data-tier-key="member">
           <div class="tier-frame"></div>
-          <div class="tier-top"><span class="tier-brand">SKANDI CLUB</span><span class="tier-name">Member</span></div>
+          <div class="tier-top"><span class="tier-brand" data-master-logo="[LEAVE_PLACEHOLDER]">[LEAVE_PLACEHOLDER]</span><span class="tier-name">Member</span></div>
           <div class="tier-body"><strong data-tier-range>0–24,999</strong><span>SKANDI Points</span></div>
           <div class="tier-foot"><span data-tier-multiplier>1× earn rate</span><strong>MEMBER</strong></div>
         </article>
 
         <article class="tier-card silver" data-tier-key="silver">
           <div class="tier-frame"></div>
-          <div class="tier-top"><span class="tier-brand">SKANDI CLUB</span><span class="tier-name">Silver</span></div>
+          <div class="tier-top"><span class="tier-brand" data-master-logo="[LEAVE_PLACEHOLDER]">[LEAVE_PLACEHOLDER]</span><span class="tier-name">Silver</span></div>
           <div class="tier-body"><strong data-tier-range>25,000–49,999</strong><span>SKANDI Points</span></div>
           <div class="tier-foot"><span data-tier-multiplier>1.25× earn rate</span><strong>SILVER</strong></div>
         </article>
 
         <article class="tier-card gold" data-tier-key="gold">
           <div class="tier-frame"></div>
-          <div class="tier-top"><span class="tier-brand">SKANDI CLUB</span><span class="tier-name">Gold</span></div>
+          <div class="tier-top"><span class="tier-brand" data-master-logo="[LEAVE_PLACEHOLDER]">[LEAVE_PLACEHOLDER]</span><span class="tier-name">Gold</span></div>
           <div class="tier-body"><strong data-tier-range>50,000–99,999</strong><span>SKANDI Points</span></div>
           <div class="tier-foot"><span data-tier-multiplier>1.5× earn rate</span><strong>GOLD</strong></div>
         </article>
 
         <article class="tier-card diamond" data-tier-key="diamond">
           <div class="tier-frame"></div>
-          <div class="tier-top"><span class="tier-brand">SKANDI CLUB</span><span class="tier-name">Diamond</span></div>
+          <div class="tier-top"><span class="tier-brand" data-master-logo="[LEAVE_PLACEHOLDER]">[LEAVE_PLACEHOLDER]</span><span class="tier-name">Diamond</span></div>
           <div class="tier-body"><strong data-tier-range>100,000+</strong><span>SKANDI Points</span></div>
           <div class="tier-foot"><span data-tier-multiplier>2× earn rate</span><strong>DIAMOND</strong></div>
         </article>
@@ -1061,10 +1063,17 @@ let DATA={
   tiers:DEFAULT_TIERS,
   rewards:[],
   faqs:[],
-  settings:{pointsToCreditRate:.01,creditExample:"$10",programSubtitle:"Travel further, together."}
+  settings:{pointsToCreditRate:.01,creditExample:"$10",programSubtitle:""}
 };
 
 let STATUS={loggedIn:false};
+let MASTER_CONFIG=null;
+function renderMasterBranding(){
+  const language=String(MASTER_CONFIG?.settings?.language||"EN").toLowerCase();
+  const slogans=MASTER_CONFIG?.brand?.slogans?.club||{};
+  const target=$("programSub");
+  if(target)target.textContent=slogans[language]||slogans.en||"";
+}
 
 function post(type,payload={}){
   window.parent.postMessage({
@@ -1189,7 +1198,8 @@ function render(){
   const settings=DATA.settings||{};
 
   $("programName").textContent=program.name||"SKANDI Club";
-  $("programSub").textContent=settings.programSubtitle||"Travel further, together.";
+  $("programSub").textContent=settings.programSubtitle||"";
+  renderMasterBranding();
   $("pointsName").textContent=program.pointsName||settings.pointsName||"SKANDI Points";
 
   $("memberStatus").textContent=STATUS.loggedIn
@@ -1237,6 +1247,12 @@ window.addEventListener("message",event=>{
   if(message.source&&message.source!==PARENT)return;
 
   const payload=message.payload||{};
+
+  if(message.type==="SKANDI_MASTER_CONFIG"){
+    MASTER_CONFIG=payload;
+    renderMasterBranding();
+    return;
+  }
 
   if(message.type==="SKANDI_CLUB_INFO_DATA"){
     DATA={

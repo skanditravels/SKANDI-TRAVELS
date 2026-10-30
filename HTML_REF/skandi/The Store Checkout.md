@@ -1,5 +1,7 @@
 # INFO / LOG — Checkout
 
+- 2026-10-30 — Checkout uses storeNavy/storeWhite and localized brand.slogans.store from the same masterPage.js settings controller.
+
 - Canonical source identity: `/HTML_REF/skandi/The Store Checkout.md`
 - System area: `SKANDI`
 - Wix page/controller: `/src/pages/Checkout.qofcb.js`
@@ -47,7 +49,7 @@ SOURCE OF TRUTH
 - This record is created from the user-provided current checkout HTML and preserves its checkout message/business contract.
 - Global presentation/config authority: /src/pages/masterPage.js
 - Canonical checkout backend facade: /src/backend/SKANDI_CORE/storeCheckout.web.js
-- The checkout brand shell consumes masterPage brand.assets.logos.storeHeader, brand.assets.logos.storeFooter, brand.slogans and routes.theStore.
+- The checkout brand shell consumes masterPage brand.assets.logos.storeNavy, brand.assets.logos.storeWhite, brand.slogans.store and routes.theStore.
 - No payment, cart, delivery, coupon, quantity, validation or Wix eCommerce behavior is moved into this HTML_REF document.
 
 MESSAGING CONTRACT
@@ -74,8 +76,8 @@ PARENT -> CHILD:
 
 LOG
 2026-09-24 — B011.16
-- Connected checkout header logo to masterPage brand.assets.logos.storeHeader.
-- Connected checkout footer logo to masterPage brand.assets.logos.storeFooter.
+- Connected checkout header logo to masterPage brand.assets.logos.storeNavy.
+- Connected checkout footer logo to masterPage brand.assets.logos.storeWhite.
 - Connected bottom-left checkout footer slogan to the active language in masterPage brand.slogans.
 - Added masterPage route consumption for return-to-store actions.
 - Preserved the complete existing checkout state and commerce message contract.
@@ -390,7 +392,7 @@ button:disabled{cursor:not-allowed;opacity:.55}
   <div class="store-checkout-header-inner">
     <div class="store-checkout-brand">
       <button class="store-checkout-brand-logo" type="button" data-master-route="theStore" aria-label="Return to SKANDI The Store">
-        <img id="storeCheckoutHeaderLogo" data-master-logo="storeHeader" src="https://static.wixstatic.com/media/394052_eaf2188b7f7e48468fa25d61f8881b10~mv2.png" alt="SKANDI">
+        <img id="storeCheckoutHeaderLogo" data-master-logo="storeNavy" alt="SKANDI">
       </button>
       <span class="store-checkout-brand-divider" aria-hidden="true"></span>
       <div class="store-checkout-brand-context">The Store<span>Secure checkout</span></div>
@@ -426,14 +428,14 @@ button:disabled{cursor:not-allowed;opacity:.55}
 <footer class="store-checkout-footer" aria-label="SKANDI The Store checkout footer">
   <div class="store-checkout-footer-main">
     <div class="store-checkout-footer-brand">
-      <img id="storeCheckoutFooterLogo" data-master-logo="storeFooter" src="https://static.wixstatic.com/media/394052_cd31153a91694b14a27c5f756f8089bd~mv2.png" alt="SKANDI">
+      <img id="storeCheckoutFooterLogo" data-master-logo="storeWhite" alt="SKANDI">
       <div class="store-checkout-footer-copy"><strong>The Store</strong>Secure checkout powered by SKANDI.</div>
     </div>
     <button class="store-checkout-footer-return" type="button" data-master-route="theStore">Return to The Store</button>
   </div>
   <div class="store-checkout-footer-bottom">
     <div class="store-checkout-footer-bottom-inner">
-      <div id="storeCheckoutSlogan" class="store-checkout-slogan">Unforgettable Moments.</div>
+      <div id="storeCheckoutSlogan" class="store-checkout-slogan"></div>
       <div class="store-checkout-copyright">© <span id="storeCheckoutFooterYear"></span> SKANDI Travels. All rights reserved.</div>
     </div>
   </div>
@@ -467,8 +469,8 @@ function masterAsset(key){
 
 function currentMasterSlogan(){
   const language=String(MASTER_CONFIG_STATE?.settings?.language||"EN").trim().toLowerCase();
-  const slogans=MASTER_CONFIG_STATE?.brand?.slogans||{};
-  return String(slogans[language]||slogans.en||"Unforgettable Moments.").trim();
+  const slogans=MASTER_CONFIG_STATE?.brand?.slogans?.store||{};
+  return String(slogans[language]||slogans.en||"").trim();
 }
 
 function masterRoute(key,fallback){
@@ -477,13 +479,13 @@ function masterRoute(key,fallback){
 }
 
 function renderMasterBranding(){
-  const headerLogo=masterAsset("storeHeader");
-  const footerLogo=masterAsset("storeFooter");
+  const headerLogo=masterAsset("storeNavy");
+  const footerLogo=masterAsset("storeWhite");
   if(headerLogo){
-    document.querySelectorAll('[data-master-logo="storeHeader"]').forEach(img=>img.src=headerLogo);
+    document.querySelectorAll('[data-master-logo="storeNavy"]').forEach(img=>img.src=headerLogo);
   }
   if(footerLogo){
-    document.querySelectorAll('[data-master-logo="storeFooter"]').forEach(img=>img.src=footerLogo);
+    document.querySelectorAll('[data-master-logo="storeWhite"]').forEach(img=>img.src=footerLogo);
   }
   const slogan=$("storeCheckoutSlogan");
   if(slogan)slogan.textContent=currentMasterSlogan();
