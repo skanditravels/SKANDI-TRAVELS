@@ -53,13 +53,11 @@
     }
 
     function applyMasterConfig(config) {
-      const logos = config?.brand?.assets?.logos || {};
-      const logoUrl = String(logos.altea || logos.alteaWhite || logos.skandiGroupWhite || '').trim();
-      if (!/^https:\/\//i.test(logoUrl)) return;
       const logo = document.getElementById('masterAlteaLogo');
       if (!logo) return;
-      logo.src = logoUrl;
-      logo.hidden = false;
+      logo.removeAttribute('src');
+      logo.dataset.masterLogo = '[LEAVE_PLACEHOLDER]';
+      logo.hidden = true;
     }
 
     function setSyncState(label, status = '') {

@@ -1164,3 +1164,7 @@ post("VOY_READY");
 </body>
 </html>
 ```
+
+
+## 2026-10-30 source restoration
+The complete intended HTML below is now the active `skandi-embeds/voy/skandi-voy.html` source. The builder compiles it with the shared public Media Control runtime. Its intentionally blank PDF fallback frame is the only static iframe allowlisted by the compiler; all other nested frames remain blocked.

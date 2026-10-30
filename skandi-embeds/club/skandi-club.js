@@ -27,6 +27,14 @@ let DATA={
 };
 
 let STATUS={loggedIn:false};
+let MASTER_CONFIG=null;
+
+function renderMasterBranding(){
+  const language=String(MASTER_CONFIG?.settings?.language||"EN").trim().toLowerCase();
+  const slogans=MASTER_CONFIG?.brand?.slogans?.club||{};
+  const target=$("programSub");
+  if(target)target.textContent=String(slogans[language]||slogans.en||"").trim();
+}
 
 function post(type,payload={}){
   window.parent.postMessage({
@@ -162,6 +170,7 @@ function render(){
   renderRewards();
   renderFaqs();
   calc();
+  renderMasterBranding();
   requestHeight();
 }
 
@@ -199,6 +208,12 @@ window.addEventListener("message",event=>{
   if(message.source&&message.source!==PARENT)return;
 
   const payload=message.payload||{};
+
+  if(message.type==="SKANDI_MASTER_CONFIG"){
+    MASTER_CONFIG=payload;
+    renderMasterBranding();
+    return;
+  }
 
   if(message.type==="SKANDI_CLUB_INFO_DATA"){
     DATA={
@@ -241,6 +256,7 @@ if("ResizeObserver"in window){
   window.addEventListener("resize",requestHeight);
 }
 
+post("MASTER_CONFIG_REQUEST",{context:"skandi-club"});
 post("SKANDI_CLUB_INFO_READY",{});
 render();
 })();

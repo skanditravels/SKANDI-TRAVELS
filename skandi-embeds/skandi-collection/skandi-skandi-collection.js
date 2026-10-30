@@ -279,13 +279,13 @@
   }
   function applyMasterPayload(payload={}){
     MASTER={...MASTER,...payload,brand:payload.brand||MASTER.brand||{},routes:{...(MASTER.routes||{}),...(payload.routes||{})}};
-    const logos=payload?.brand?.assets?.logos||payload?.assets?.logos||{};
-    applyCollectionLogo(logos.signatureCollection);
+    applyCollectionLogo("[LEAVE_PLACEHOLDER]");
     
     // Accept injected Destinations from Master Payload if available
     if(payload.destinations && Array.isArray(payload.destinations)) {
       DESTINATIONS = payload.destinations;
     }
+    renderCards();
   }
   function bindPathActions(root=document){
     root.querySelectorAll?.("[data-path]").forEach(btn=>{
@@ -417,13 +417,25 @@
     const defs=[{key:"all",label:"All types"},...present.filter((x,i,a)=>a.indexOf(x)===i).map(key=>({key,label:typeLabel(key)}))];
     $("tabs").innerHTML=defs.map(x=>`<button class="tab ${activeType===x.key?"active":""}" type="button" data-type="${esc(x.key)}">${esc(x.label)}</button>`).join("");
   }
+  function tierBadgeMarkup(tier){
+    const key={
+      SELECT:"collectionSelectBadge",
+      SIGNATURE:"collectionSignatureBadge",
+      EXCELSIOR:"collectionExcelsiorBadgeGold"
+    }[String(tier||"").toUpperCase()];
+    const badges=MASTER?.brand?.assets?.badges||MASTER?.assets?.badges||{};
+    const label=tierLabel(tier);
+    const url=key?safeAssetUrl(badges[key]):"";
+    if(!url)return `<span class="tier-tag ${esc(String(tier||"").toLowerCase())}" data-master-logo="[LEAVE_PLACEHOLDER]">${esc(label)}</span>`;
+    return `<img class="collection-tier-badge" src="${esc(url)}" alt="${esc(label)}" title="${esc(label)}" loading="eager" decoding="async">`;
+  }
   function card(item){
     const tier=itemTier(item),tierClass=tier.toLowerCase(),image=itemImage(item),title=String(item.title||"SKANDI Collection").trim();
     const initials=title.split(/\s+/).slice(0,2).map(x=>x[0]||"").join("").toUpperCase();
     const visual=image?`<div class="thumb" style="background-image:url('${esc(image)}')"></div>`:`<div class="thumb"><div class="thumb-fallback"><span>${esc(initials||"SK")}</span></div></div>`;
     const location=itemLocation(item),meta=[location,item.code,item.collectionLabel].filter(Boolean).join(" · ");
     const action=item.path?`<div class="card-actions"><button class="btn secondary" type="button" data-path="${esc(item.path)}">Explore ${esc(item.typeLabel||"selection")} <span class="icon-arrow">→</span></button></div>`:"";
-    return `<article class="card fx-card reveal">${visual}<div class="card-body"><div class="tier-line"><span class="tier-tag ${esc(tierClass)}">${esc(tierLabel(tier))}</span><span class="tag">${esc(item.typeLabel||item.type||"Selected")}</span></div><h3>${esc(title)}</h3><p>${esc(item.summary||"Selected by SKANDI.")}</p><div class="meta"><span class="live-dot"></span>${esc(meta||"Part of the SKANDI Collection")}</div>${action}</div></article>`;
+    return `<article class="card fx-card reveal">${visual}<div class="card-body"><div class="tier-line">${tierBadgeMarkup(tier)}<span class="tag">${esc(item.typeLabel||item.type||"Selected")}</span></div><h3>${esc(title)}</h3><p>${esc(item.summary||"Selected by SKANDI.")}</p><div class="meta"><span class="live-dot"></span>${esc(meta||"Part of the SKANDI Collection")}</div>${action}</div></article>`;
   }
   function renderCards(){
     const status=$("collectionStatus");

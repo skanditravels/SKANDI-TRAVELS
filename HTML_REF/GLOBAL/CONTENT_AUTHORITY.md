@@ -20,3 +20,9 @@
 - 
 ## 2026-10-14 Media Control transport rule
 Media Control Asset Library calls use the dedicated `backend/SKANDI_CORE/mediaControl.web.js` single dispatch boundary. The web method delegates to the canonical `backend/SKANDI_CORE/assets.js` core. Do not reintroduce a parallel asset implementation or bypass the canonical Asset Library core.
+
+
+## 2026-10-30 Media Control public-page coverage
+- The compiler injects the visual website-design runtime into every successfully built public route, so direct page text, image, alt text, links and safe presentation styles can be edited through Media Control.
+- Public route coverage is tracked in `dist/manifest.json`. On this revision, 27 routes build, eight lack authoritative sources, and Support is blocked by its multi-component integration.
+- Dynamic pricing, availability, policy bodies, bookings, customer records and provider data retain their existing source-of-truth owners.

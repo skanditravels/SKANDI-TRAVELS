@@ -32,14 +32,16 @@ function render() {
   if ($('skf-newsletter-button')) $('skf-newsletter-button').textContent = newsletter.buttonLabel || 'Sign up';
   if ($('skf-newsletter-email')) $('skf-newsletter-email').placeholder = newsletter.placeholder || 'Email address';
   const logos = master.brand?.assets?.logos || {};
-  const mainLogo = logos.customerFooter || logos.skandiWhite;
+  const mainLogo = logos.customerFooter;
   if (mainLogo && $('skf-logo')) { $('skf-logo').src = mainLogo; $('skf-logo').hidden = false; }
-  if (logos.skandiGroupWhite && $('skf-group-mark')) {
-    $('skf-group-mark').src = logos.skandiGroupWhite;
+  if (logos.groupFooter && $('skf-group-mark')) {
+    $('skf-group-mark').src = logos.groupFooter;
     $('skf-group-mark').hidden = false;
   }
   const language = String(master.settings?.language || 'EN').toLowerCase();
-  if ($('skf-slogan')) $('skf-slogan').textContent = master.brand?.slogans?.[language] || master.brand?.slogans?.en || '';
+  const branch = String(master.brand?.currentBranch || 'travels');
+  const slogans = master.brand?.slogans?.[branch] || {};
+  if ($('skf-slogan')) $('skf-slogan').textContent = slogans[language] || slogans.en || '';
   const columns = $('skf-columns');
   if (columns) {
     columns.replaceChildren();

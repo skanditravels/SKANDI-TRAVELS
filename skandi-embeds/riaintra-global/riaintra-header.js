@@ -54,11 +54,13 @@
   function render() {
     // 1. Branding
     const header = config?.internal?.header || {};
-    const logo = config?.brand?.assets?.logos?.riaintra || config?.brand?.assets?.logos?.skandiPrimary || "";
+    const logo = config?.brand?.assets?.logos?.riaHeader || "";
     
     if (logo && $("logo")) $("logo").src = logo;
     if (header.productName && $("productName")) $("productName").textContent = header.productName;
-    if (header.productContext && $("productContext")) $("productContext").textContent = header.productContext;
+    const language = String(config?.settings?.language || "EN").trim().toLowerCase();
+    const slogans = config?.brand?.slogans?.riaintra || {};
+    if ($("productContext")) $("productContext").textContent = slogans[language] || slogans.en || header.productContext || "";
 
     // 2. Navigation
     const current = config?.currentPath || "";

@@ -23,7 +23,13 @@
 
   window.addEventListener("message",e=>{
     const m=e.data||{};if(m.source!==PARENT)return;
-    if(m.type==="SKANDI_MASTER_CONFIG"){config=m.payload||{};render()}
+    if(m.type==="SKANDI_MASTER_CONFIG"){
+      config=m.payload||{};
+      const logo=String(config?.brand?.assets?.logos?.riaFooter||"");
+      const image=$("riaFooterLogo");
+      if(image&&logo){image.src=logo;image.hidden=false}
+      render();
+    }
   });
 
   post("MASTER_CONFIG_REQUEST",{context:"riaintra-footer"});

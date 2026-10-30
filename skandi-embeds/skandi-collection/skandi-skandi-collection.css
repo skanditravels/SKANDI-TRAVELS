@@ -516,7 +516,8 @@ main::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none
 .thumb-fallback span{font-size:30px;font-weight:600;letter-spacing:.08em;opacity:.45}
 .card-body{position:relative;padding:23px;background:var(--card-surface);min-height:225px;display:flex;flex-direction:column}
 .card-body::before{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at var(--fx-x,85%) var(--fx-y,10%),rgba(255,255,255,.30),transparent 28%);opacity:.5}
-.tier-line{position:relative;display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px}
+.tier-line{position:relative;display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:14px}
+.collection-tier-badge{display:block;width:auto;max-width:118px;height:27px;object-fit:contain;object-position:left center}
 .tier-tag,.tag{display:inline-flex;border-radius:999px;padding:6px 9px;font-size:8px;font-weight:800;letter-spacing:.10em;text-transform:uppercase}
 .tier-tag{background:#022e64;color:#fff}.tier-tag.select{background:#d9f1f1;color:#022e64;border:1px solid rgba(2,46,100,.08)}
 .tier-tag.signature{background:#022e64;color:#fff}.tier-tag.excelsior{background:#111827;color:#fff}.tier-tag.partner{background:#5FC7CF;color:#022e64}

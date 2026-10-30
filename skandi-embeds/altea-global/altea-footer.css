@@ -44,6 +44,8 @@ html, body {
   gap: 16px;
   white-space: nowrap;
 }
+.footer-brand-logo{display:block;width:auto;max-width:92px;height:16px;object-fit:contain}
+.footer-brand-logo[hidden]{display:none!important}
 .divider {
   width: 1px;
   height: 14px;

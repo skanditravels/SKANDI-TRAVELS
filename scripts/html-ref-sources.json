@@ -509,5 +509,12 @@
     "stem": "skandi-alexandra-launcher",
     "disposition": "DUPLICATE SOURCE",
     "note": "Byte-identical legacy launcher already mapped from HTML_REF/skandi/Alexandra Global Launcher.md; the active integrated widget has its own launcher."
+  },
+  {
+    "source": "HTML_REF/riaintra/EOS.md",
+    "directory": "skandi-embeds/eos",
+    "stem": "skandi-eos",
+    "disposition": "ACTIVE SOURCE",
+    "note": "Authoritative EOS single-component page source; Babel app uses the shared EOS Wix backend facade."
   }
 ]

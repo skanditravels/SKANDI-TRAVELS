@@ -23,7 +23,7 @@ function masterAsset(key){
   return String(logos[key]||root[key]||"").trim();
 }
 function currentMasterSlogan(){
-  const slogans=MASTER_CONFIG_STATE?.brand?.slogans||{};
+  const slogans=MASTER_CONFIG_STATE?.brand?.slogans?.store||{};
   const language=String(MASTER_CONFIG_STATE?.settings?.language||"EN").trim().toLowerCase();
   return String(slogans[language]||slogans.en||"").trim();
 }
@@ -37,7 +37,11 @@ function renderMasterBranding(){
       img.src=headerLogo;
     });
   }
-  if(footerLogo&&$("storeWhite"))$("storeWhite").src=footerLogo;
+  if(footerLogo){
+    document.querySelectorAll('[data-master-logo="storeWhite"]').forEach(img=>{
+      img.src=footerLogo;
+    });
+  }
   if(slogan&&$("storeSlogan"))$("storeSlogan").textContent=slogan;
 }
 

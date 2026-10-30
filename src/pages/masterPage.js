@@ -15,7 +15,7 @@ import { getEosBootstrap, searchEosFlights, searchEosStations, createEosClockEve
 import { SITE_MAP, APP_ROUTES, GLOBAL_CHROME, isSafeInternalRoute, PAGE_BUILD_INTEGRATIONS, INTERNAL_PATH_PREFIXES, CHROME_FREE_PATHS, getPageFamily, getPageChrome, resolveBuildRoute } from "public/siteMap";
 import { bindAlexandraGlobal } from "public/alexandraGlobalBridge.js";
 
-const MASTER_VERSION = "BACKEND-BASE-1.0-B011.19-BRANCH-BRANDING";
+const MASTER_VERSION = "BACKEND-BASE-1.0-B011.20-BRANCH-MEDIA-CONTROL";
 const MASTER_ENV = "PRD";
 const SETTINGS_STORAGE_KEY = "skandi_customer_settings_v1";
 const RIAINTRA_MANUAL_SESSION_KEY = "skandi_riaintra_manual_session_v1";
@@ -51,6 +51,7 @@ const CONTENT_RESIZE_MIN = 680;
 const CONTENT_RESIZE_MAX = 30000;
 const BRAND_ASSET_ROOT = "https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/";
 const brandLogo = file => `${BRAND_ASSET_ROOT}logos/${file}`;
+const CUSTOMER_FOOTER_LOGO = brandLogo("SKANDI_TRAVELS-LIGHT-STACKED-WAVE.svg");
 const brandBadge = file => `${BRAND_ASSET_ROOT}icons/${file}`;
 const LANGUAGE_ALIASES = Object.freeze({ SE:"SV", DK:"DA" });
 
@@ -92,9 +93,9 @@ const MASTER_CONFIG = Object.freeze({
         groupMemberNavy:brandLogo("SKANDI_GROUP-MEMBER-NAVY.svg"),
         skandiSoloNavy:brandLogo("SKANDI-NAVY.svg"),
         customerHeader:brandLogo("SKANDI_TRAVELS-NAVY-SIDE-WAVE.svg"),
-        customerFooter:brandLogo("SKANDI_TRAVELS-LIGHT-STACKED-WAVE.svg"),
+        customerFooter:CUSTOMER_FOOTER_LOGO,
         customerLoader:brandLogo("dark%20background%20logos/SKANDI_TRAVELS-LIGHT-SIDE.svg"),
-        skandiNavyStacked:"[LEAVE_PLACEHOLDER]",
+        skandiNavyStacked:CUSTOMER_FOOTER_LOGO,
         skandiWhiteStacked:brandLogo("SKANDI_TRAVELS-LIGHT-STACKED-WAVE.svg"),
         skandiNavySide:brandLogo("SKANDI_TRAVELS-NAVY-SIDE-WAVE.svg"),
         skandiWhiteSide:brandLogo("SKANDI_TRAVELS-LIGHT-SIDE-WAVE.svg"),

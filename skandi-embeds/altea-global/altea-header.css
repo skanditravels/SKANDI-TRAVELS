@@ -50,6 +50,7 @@ html, body {
 .logo[src] {
   display: block;
 }
+.mobile-logo { display:none !important; }
 .brand-title {
   display: flex;
   flex-direction: column;
@@ -191,4 +192,6 @@ html, body {
   .toolbar-nav button { font-size: 11px; padding: 8px; }
   .env-badge { display: none; }
   .utility-action { padding: 0 8px; font-size: 9px; }
+  .desktop-logo { display:none !important; }
+  .mobile-logo[src] { display:block !important; }
 }

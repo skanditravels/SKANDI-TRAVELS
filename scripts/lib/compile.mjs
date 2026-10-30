@@ -85,7 +85,19 @@ export async function normalizeHTML(html,css,js,{root,file,mount}) {
   const fatal=errors.filter(e=>e.code!=='missing-doctype');
   if(fatal.length) throw new Error(`${file}:${fatal[0].startLine}: invalid HTML (${fatal[0].code})`);
   const nodes=[],inertNodes=new Set();walk(tree,(n,inert)=>{nodes.push(n);if(inert)inertNodes.add(n);});
-  if(nodes.some(n=>n.tagName==='iframe')) throw new Error(`${file}: nested iframe is not supported; retain the existing Wix integration`);
+  // VOY's intentionally blank PDF fallback is populated at runtime only if PDF.js is unavailable.
+  // Keep this single audited placeholder; all other static nested frames remain unsupported.
+  const relativeFile=path.relative(root,file).replaceAll(path.sep,'/');
+  const unsupportedFrame=nodes.find(n=>n.tagName==='iframe'&&!(
+    relativeFile==='skandi-embeds/voy/skandi-voy.html' &&
+    attr(n,'id')==='fallbackFrame' &&
+    attr(n,'class')==='reader-fallback' &&
+    attr(n,'title')==='VOY PDF fallback reader' &&
+    !attr(n,'src') &&
+    !(n.attrs||[]).some(a=>['srcdoc','name'].includes(a.name)) &&
+    (n.childNodes||[]).length===0
+  ));
+  if(unsupportedFrame) throw new Error(`${file}: nested iframe is not supported; retain the existing Wix integration`);
   if(nodes.some(n=>n.tagName==='base')) throw new Error(`${file}: <base> changes receiver/navigation ownership; use explicit asset URLs`);
   const bodies=nodes.filter(n=>n.tagName==='body'),heads=nodes.filter(n=>n.tagName==='head');
   const head=heads[0],body=bodies[0];

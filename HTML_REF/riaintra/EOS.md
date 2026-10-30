@@ -390,3 +390,7 @@ const App = () => {
 ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
 
 ```
+
+
+## 2026-10-30 web-method export repair
+The Wix frontend facade `src/backend/SKANDI_CORE/eos.web.js` now exports the five `webMethod(Permissions.Anyone, ...Core)` methods imported by `masterPage.js`. Each core operation retains its staff-session authorization before protected actions, and the facade restores Media Control preview builds for Cookie Preferences and Special Assistance.

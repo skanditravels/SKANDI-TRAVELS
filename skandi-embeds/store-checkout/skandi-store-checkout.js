@@ -24,8 +24,8 @@ function masterAsset(key){
 
 function currentMasterSlogan(){
   const language=String(MASTER_CONFIG_STATE?.settings?.language||"EN").trim().toLowerCase();
-  const slogans=MASTER_CONFIG_STATE?.brand?.slogans||{};
-  return String(slogans[language]||slogans.en||"Unforgettable Moments.").trim();
+  const slogans=MASTER_CONFIG_STATE?.brand?.slogans?.store||{};
+  return String(slogans[language]||slogans.en||"").trim();
 }
 
 function masterRoute(key,fallback){
@@ -34,14 +34,10 @@ function masterRoute(key,fallback){
 }
 
 function renderMasterBranding(){
-  const headerLogo=masterAsset("storeHeader");
-  const footerLogo=masterAsset("storeFooter");
-  if(headerLogo){
-    document.querySelectorAll('[data-master-logo="storeHeader"]').forEach(img=>img.src=headerLogo);
-  }
-  if(footerLogo){
-    document.querySelectorAll('[data-master-logo="storeFooter"]').forEach(img=>img.src=footerLogo);
-  }
+  const headerLogo=masterAsset("storeNavy");
+  const footerLogo=masterAsset("storeWhite");
+  if(headerLogo)document.querySelectorAll('[data-master-logo="storeNavy"]').forEach(img=>img.src=headerLogo);
+  if(footerLogo)document.querySelectorAll('[data-master-logo="storeWhite"]').forEach(img=>img.src=footerLogo);
   const slogan=$("storeCheckoutSlogan");
   if(slogan)slogan.textContent=currentMasterSlogan();
   const year=$("storeCheckoutFooterYear");
