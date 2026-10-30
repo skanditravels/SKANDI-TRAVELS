@@ -62,7 +62,7 @@ const MASTER_CONFIG = Object.freeze({
       no: "Når du lengter bort",
       da: "Når du længes væk",
       fi: "Kun kaipaat pois",
-      
+      storeSlogan: "Your Holiday Starts Here",
       altea: "WE MAKE DOOR TO DOOR STAY IN SYNC"
     }),
     languages: Object.freeze(["EN", "SV", "NO", "DA"]),
