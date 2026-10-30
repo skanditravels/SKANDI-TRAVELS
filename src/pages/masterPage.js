@@ -15,7 +15,7 @@ import { getEosBootstrap, searchEosFlights, searchEosStations, createEosClockEve
 import { SITE_MAP, APP_ROUTES, GLOBAL_CHROME, isSafeInternalRoute, PAGE_BUILD_INTEGRATIONS, INTERNAL_PATH_PREFIXES, CHROME_FREE_PATHS, getPageFamily, getPageChrome, resolveBuildRoute } from "public/siteMap";
 import { bindAlexandraGlobal } from "public/alexandraGlobalBridge.js";
 
-const MASTER_VERSION = "BACKEND-BASE-1.0-B011.18-GLOBAL-CHROME";
+const MASTER_VERSION = "BACKEND-BASE-1.0-B011.19-BRANCH-BRANDING";
 const MASTER_ENV = "PRD";
 const SETTINGS_STORAGE_KEY = "skandi_customer_settings_v1";
 const RIAINTRA_MANUAL_SESSION_KEY = "skandi_riaintra_manual_session_v1";
@@ -49,6 +49,10 @@ const CONTENT_RESIZE_SOURCES = new Set([
 ]);
 const CONTENT_RESIZE_MIN = 680;
 const CONTENT_RESIZE_MAX = 30000;
+const BRAND_ASSET_ROOT = "https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/";
+const brandLogo = file => `${BRAND_ASSET_ROOT}logos/${file}`;
+const brandBadge = file => `${BRAND_ASSET_ROOT}icons/${file}`;
+const LANGUAGE_ALIASES = Object.freeze({ SE:"SV", DK:"DA" });
 
 const MASTER_CONFIG = Object.freeze({
   brand: Object.freeze({
@@ -57,44 +61,82 @@ const MASTER_CONFIG = Object.freeze({
     internalName: "RIAINTRA",
     alteaName: "ALTEA",
     slogans: Object.freeze({
-      en: "Unforgettable Holidays.",
-      sv: "När du längtar bort",
-      no: "Når du lengter bort",
-      da: "Når du længes væk",
-      fi: "Kun kaipaat pois",
-      storeSlogan: "Your Holiday Starts Here",
-      altea: "WE MAKE DOOR TO DOOR STAY IN SYNC"
+      travels:Object.freeze({
+        en:"Unforgettable Holidays", sv:"När du längtar bort", no:"Når du lengter bort", da:"Når du længes væk", fi:"Kun kaipaat pois"
+      }),
+      store:Object.freeze({
+        en:"Your Holiday Starts Here", sv:"Semestern börjar här", no:"Ferien starter her", da:"Når du længes væk", fi:"Lomasi alkaa tästä"
+      }),
+      club:Object.freeze({
+        en:"Travel. Earn. Repeat.", sv:"Mer av varje resa", no:"Mer ut av hver reise", da:"Mere ud af hver rejse", fi:"Enemmän irti jokaisesta matkasta"
+      }),
+      collection:Object.freeze({}),
+      voy:Object.freeze({
+        en:"More to Discover", sv:"Mer att upptäcka", no:"Mer å oppdage", da:"Mere at opdage", fi:"Aina uutta löydettävää"
+      }),
+      altea:Object.freeze({ en:"Excellence On Site" }),
+      eos:Object.freeze({}),
+      riaintra:Object.freeze({ en:"One Team. One Platform" }),
+      group:Object.freeze({})
     }),
-    languages: Object.freeze(["EN", "SV", "NO", "DA"]),
+    languages: Object.freeze(["EN", "SV", "NO", "DA", "FI"]),
     currencies: Object.freeze(["USD", "SEK", "NOK", "DKK", "EUR"]),
     assets: Object.freeze({
       logos: Object.freeze({
-        customerHeader: "https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/logos/SKANDI_TRAVELS-NAVY-SIDE-WAVE.svg",
-        customerFooter: "https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/logos/SKANDI_TRAVELS-LIGHT-STACKED-WAVE.svg",
-        storeWhite: "https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/logos/THE_STORE_LIGHT.svg",
-        storeNavy: "https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/logos/THE_STORE_NAVY.svg",
-        skandiWave: "https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/logos/SKANDI_TRAVELS_WAVE.svg",
-        skandiTravelsRound: "https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/logos/SKANDI_TRAVELS-ROUND.svg",
-        skandiGroupNavy: "https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/logos/SKANDI_GROUP-NAVY.svg",
-        skandiGroupMemberNavy: "https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/logos/SKANDI_GROUP-MEMBER-NAVY.svg",
-        skandiGroupMemberWhite: "https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/logos/SKANDI_GROUP-MEMBER-LIGHT.svg",
-        riaintra: "https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/logos/RIAINTRA-LIGHT.svg",
-        alteaWhite: "https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/logos/ALTEA_LOGO-LIGHT.svg",
-        alteaIconWhite: "https://static.wixstatic.com/media/394052_e551cf4d47a749248311125bce5846d7~mv2.png",
-        voyNavy: "https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/logos/VOY-NAVY-BY_SKANDI.svg",
-        voyWhiteBySkandi: "https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/logos/VOY-LIGHT-BY_SKANDI.svg",
-        voyNavyBySkandi: "https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/logos/VOY-NAVY-BY_SKANDI.svg",
-        skandiClub: "https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/logos/SKANDI_CLUB-LIGHT.svg",
-        SKANDICollection: "https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/logos/SKANDI_COLLECTION-LIGHT.svg"
+        groupMemberLoader:brandLogo("SKANDI_GROUP-MEMBER-LIGHT.svg"),
+        groupMemberHeader:brandLogo("SKANDI_GROUP-MEMBER-NAVY.svg"),
+        groupFooter:brandLogo("SKANDI_GROUP-WHITE.svg"),
+        groupNavy:brandLogo("SKANDI_GROUP-NAVY.svg"),
+        groupWhite:brandLogo("SKANDI_GROUP-WHITE.svg"),
+        groupMemberWhite:brandLogo("SKANDI_GROUP-MEMBER-LIGHT.svg"),
+        groupMemberNavy:brandLogo("SKANDI_GROUP-MEMBER-NAVY.svg"),
+        skandiSoloNavy:brandLogo("SKANDI-NAVY.svg"),
+        customerHeader:brandLogo("SKANDI_TRAVELS-NAVY-SIDE-WAVE.svg"),
+        customerFooter:brandLogo("SKANDI_TRAVELS-LIGHT-STACKED-WAVE.svg"),
+        customerLoader:brandLogo("dark%20background%20logos/SKANDI_TRAVELS-LIGHT-SIDE.svg"),
+        skandiNavyStacked:"[LEAVE_PLACEHOLDER]",
+        skandiWhiteStacked:brandLogo("SKANDI_TRAVELS-LIGHT-STACKED-WAVE.svg"),
+        skandiNavySide:brandLogo("SKANDI_TRAVELS-NAVY-SIDE-WAVE.svg"),
+        skandiWhiteSide:brandLogo("SKANDI_TRAVELS-LIGHT-SIDE-WAVE.svg"),
+        skandiNavyNoWave:brandLogo("SKANDI-NAVY.svg"),
+        skandiWhiteNoWave:brandLogo("SKANDI_TRAVELS_LIGHT.svg"),
+        skandiWave:brandLogo("SKANDI_TRAVELS_WAVE.svg"),
+        skandiBadgeRound:brandLogo("SKANDI_TRAVELS-ROUND.svg"),
+        storeNavy:brandLogo("THE_STORE_NAVY.svg"),
+        storeWhite:brandLogo("THE_STORE_LIGHT.svg"),
+        clubWhite:brandLogo("SKANDI_CLUB-LIGHT.svg"),
+        clubNavy:brandLogo("SKANDI_CLUB-NAVY-STACKED-SLOGAN.svg"),
+        clubWordmark:brandLogo("CLUB-TEXTMARK.svg"),
+        collectionWhite:brandLogo("SKANDI_COLLECTION-LIGHT.svg"),
+        collectionNavy:brandLogo("SKANDI_COLECTION-NAVY.svg"),
+        collectionWaveNavy:brandLogo("SKANDI_COLLECTION-NAV-WAVE.svg"),
+        collectionWaveLight:brandLogo("SKANDI_COLLECTION-WHITE.svg"),
+        voyBySkNavy:brandLogo("VOY-NAVY-BY_SKANDI.svg"),
+        voyBySkWhite:brandLogo("VOY-LIGHT-BY_SKANDI.svg"),
+        voyLightBlue:brandLogo("VOY-NAVY.svg"),
+        alteaNavy:brandLogo("ALTEA_LOGO-NAVY.svg"),
+        alteaLight:brandLogo("ALTEA_LOGO-LIGHT.svg"),
+        alteaHeader:brandLogo("ALTEA_LOGO-LIGHT.svg"),
+        alteaFooter:brandLogo("ALTEA_LOGO-LIGHT.svg"),
+        alteaIconNavy:brandLogo("ALTEAEOS_LOGO-NAVY.svg"),
+        alteaIconLight:brandLogo("ALTEAEOS_LOGO-LIGHT.svg"),
+        eosNavy:brandLogo("ALTEAEOS_LOGO-NAVY.svg"),
+        eosLight:brandLogo("ALTEAEOS_LOGO-LIGHT.svg"),
+        eosIconNavy:brandLogo("ALTEAEOS_LOGO-NAVY.svg"),
+        eosIconLight:brandLogo("ALTEAEOS_LOGO-LIGHT.svg"),
+        riaNavy:brandLogo("RIAINTRA-NAVY.svg"),
+        riaLight:brandLogo("RIAINTRA-LIGHT.svg"),
+        riaHeader:brandLogo("RIAINTRA-LIGHT.svg"),
+        riaFooter:brandLogo("RIAINTRA-LIGHT.svg")
       }),
       images: Object.freeze({
         clubLoginHero: "https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/branding/skandi_club/SKANDI_MARKETING_CUSTOMER-LIFESTYLE_GREECE_SANTORINI_PREMIUM-TRAVEL_01.png"
       }),
       badges: Object.freeze({
-        selectCollectionBadge: "https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/icons/SELECT_COLECTION-BADGE.svg",
-        signatureCollectionBadge: "https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/icons/SIGNATURE_COLLECTION-BADGE.svg",
-        excelsiorCollectionBadgeGold: "https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/icons/EXCELSIOR_COLLECTION-GOLD-BADGE.svg",
-        excelsiorCollectionBadgeCrystal: "https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/icons/EXCELSIOR_COLLECTION-CRYSTAL-BADGE.svg"
+        collectionSelectBadge:brandBadge("SELECT_COLECTION-BADGE.svg"),
+        collectionSignatureBadge:brandBadge("SIGNATURE_COLLECTION-BADGE.svg"),
+        collectionExcelsiorBadgeGold:brandBadge("EXCELSIOR_COLLECTION-GOLD-BADGE.svg"),
+        collectionExcelsiorBadgeCrystal:brandBadge("EXCELSIOR_COLLECTION-CRYSTAL-BADGE.svg")
       }),
       icons: Object.freeze({
         home: "", bookings: "", favorites: "", documents: "", travelers: "",
@@ -176,11 +218,11 @@ const MASTER_CONFIG = Object.freeze({
         placeholder:"Email address"
       }),
       socialLinks:Object.freeze([
-        Object.freeze({ label:"Instagram", url:"https://www.instagram.com/skanditravels", iconUrl:"https://static.wixstatic.com/media/394052_3140fd0b593e44bd993a64412b94011e~mv2.png" }),
-        Object.freeze({ label:"Facebook", url:"https://www.facebook.com/skanditravels", iconUrl:"https://static.wixstatic.com/media/394052_80ea7848b9a142ef9f5c3c0beb8a3230~mv2.png" }),
-        Object.freeze({ label:"TikTok", url:"https://www.tiktok.com/@skanditravels", iconUrl:"https://static.wixstatic.com/media/394052_74976eb394d14952af79f14988bb17b3~mv2.png" }),
-        Object.freeze({ label:"Snapchat", url:"https://www.snapchat.com/@skanditravels", iconUrl:"https://static.wixstatic.com/media/394052_1c961ca84c314ebc966444cb5449c618~mv2.png" }),
-        Object.freeze({ label:"LinkedIn", url:"https://www.linkedin.com/en/skanditravels", iconUrl:"https://static.wixstatic.com/media/394052_a7bf9a6382bc4b8785c1e4ebae385cda~mv2.png" })
+        Object.freeze({ label:"Instagram", url:"https://www.instagram.com/skanditravels", iconAssetKey:"[LEAVE_PLACEHOLDER]" }),
+        Object.freeze({ label:"Facebook", url:"https://www.facebook.com/skanditravels", iconAssetKey:"[LEAVE_PLACEHOLDER]" }),
+        Object.freeze({ label:"TikTok", url:"https://www.tiktok.com/@skanditravels", iconAssetKey:"[LEAVE_PLACEHOLDER]" }),
+        Object.freeze({ label:"Snapchat", url:"https://www.snapchat.com/@skanditravels", iconAssetKey:"[LEAVE_PLACEHOLDER]" }),
+        Object.freeze({ label:"LinkedIn", url:"https://www.linkedin.com/en/skanditravels", iconAssetKey:"[LEAVE_PLACEHOLDER]" })
       ]),
       bottomLinks:Object.freeze([
         Object.freeze({ label:"Legal", path:SITE_MAP.legal }),
@@ -324,7 +366,8 @@ const CHROME_BY_SOURCE = Object.freeze(Object.fromEntries(
 ));
 
 function normalizeCustomerSettings(value = {}) {
-  const language = String(value?.language || "").trim().toUpperCase();
+  const requestedLanguage = String(value?.language || "").trim().toUpperCase();
+  const language = LANGUAGE_ALIASES[requestedLanguage] || requestedLanguage;
   const currency = String(value?.currency || "").trim().toUpperCase();
   return {
     language:MASTER_CONFIG.brand.languages.includes(language) ? language : "EN",
@@ -681,10 +724,24 @@ function wireLocationChangeScroll() {
   } catch (_) {}
 }
 
+function resolveBrandBranch(path = currentPathString()) {
+  const value = normalizePath(path);
+  const under = route => Boolean(route) && (value === route || value.startsWith(route + "/"));
+  if (under(SITE_MAP.eos)) return "eos";
+  if (under(SITE_MAP.theStore)) return "store";
+  if (under(SITE_MAP.club)) return "club";
+  if (under(SITE_MAP.skandiCollection)) return "collection";
+  if (value === SITE_MAP.voy || value === "/voy") return "voy";
+  if (under(SITE_MAP.alteaLaunchpad) || isAlteaPath(value)) return "altea";
+  if (under(SITE_MAP.riaintra)) return "riaintra";
+  if (under(SITE_MAP.ourNetwork)) return "group";
+  return "travels";
+}
 function masterPayload(extra = {}) {
   const page = currentWixPageInfo();
   const path = currentPathString();
   const altea = isAlteaPath(path);
+  const branch = resolveBrandBranch(path);
   return {
     version:MASTER_VERSION,
     env:MASTER_ENV,
@@ -695,7 +752,7 @@ function masterPayload(extra = {}) {
     currentPath:path,
     currentPage:page,
     baseUrl:String(wixLocationFrontend.baseUrl || "").trim(),
-    brand:MASTER_CONFIG.brand,
+    brand:{ ...MASTER_CONFIG.brand, currentBranch:branch },
     routes:MASTER_CONFIG.routes,
     customer:MASTER_CONFIG.customer,
     internal:MASTER_CONFIG.internal,
