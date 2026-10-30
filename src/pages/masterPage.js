@@ -62,6 +62,7 @@ const MASTER_CONFIG = Object.freeze({
       no: "Når du lengter bort",
       da: "Når du længes væk",
       fi: "Kun kaipaat pois",
+      
       altea: "WE MAKE DOOR TO DOOR STAY IN SYNC"
     }),
     languages: Object.freeze(["EN", "SV", "NO", "DA"]),
@@ -70,8 +71,8 @@ const MASTER_CONFIG = Object.freeze({
       logos: Object.freeze({
         customerHeader: "https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/logos/SKANDI_TRAVELS-NAVY-SIDE-WAVE.svg",
         customerFooter: "https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/logos/SKANDI_TRAVELS-LIGHT-STACKED-WAVE.svg",
-        storeFooter: "https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/logos/THE_STORE_LIGHT.svg",
-        storeHeader: "https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/logos/THE_STORE_LIGHT%20(1).svg",
+        storeWhite: "https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/logos/THE_STORE_LIGHT.svg",
+        storeNavy: "https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/logos/THE_STORE_NAVY.svg",
         skandiWave: "https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/logos/SKANDI_TRAVELS_WAVE.svg",
         skandiTravelsRound: "https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/logos/SKANDI_TRAVELS-ROUND.svg",
         skandiGroupNavy: "https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/logos/SKANDI_GROUP-NAVY.svg",
