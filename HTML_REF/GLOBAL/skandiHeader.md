@@ -7,7 +7,7 @@ AREA: SKANDI
 LIVE HTML: INTENDED EMBED REPLACEMENT ONLY; NOT DEPLOYED BY THIS PACKAGE
 ELEMENT: `#skandiHeaderEmbed` / `#skandiCustomerHeaderEmbed`
 VERSION: B-011.18.5 / VISUAL-2026-10-22
-LAST SOURCE REVIEW: 2026-10-22
+LAST SOURCE REVIEW: 2026-10-30
 
 ## INFO
 - Source basis: `skanditravels/SKANDI-TRAVELS`, `main`, `HTML_REF/GLOBAL/skandiHeader.md`, canonical reference as reviewed on 2026-10-22.
@@ -20,6 +20,7 @@ LAST SOURCE REVIEW: 2026-10-22
 - Static verification only. Wix component height and dynamic interactions require a live smoke test after publication.
 
 ## CHANGE LOG
+- 2026-10-30 — Shared master language controller and branch slogans: added Finnish to the language selector; the header reads the current branch slogan from masterPage.js and uses only customerHeader for the public mark.
 - 2026-09-16 — B-011.18: Global customer header registered at 118px desktop/tablet/mobile.
 - 2026-09-18 — B-011.18.1: Intended 118px invariant; later cross-layer audit found parent growth could occur.
 - 2026-09-18 — B-011.18.2: Premium global-header convergence, profile routing and parent clamp.
@@ -928,6 +929,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{
                 <option value="SV">SV</option>
                 <option value="NO">NO</option>
                 <option value="DA">DA</option>
+                <option value="FI">FI</option>
               </select>
             </div>
 
@@ -1036,6 +1038,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{
           <option value="SV">SV</option>
           <option value="NO">NO</option>
           <option value="DA">DA</option>
+                <option value="FI">FI</option>
         </select>
 
         <select id="mobileCurrSelect" aria-label="Currency">
@@ -1089,7 +1092,8 @@ button:focus-visible,input:focus-visible,select:focus-visible{
     header.style.setProperty("--fx-y", "26%");
   }
 
-  const LANGUAGES = new Set(["EN","SV","NO","DA"]);
+  const LANGUAGES = new Set(["EN","SV","NO","DA","FI"]);
+  const LANGUAGE_ALIASES = Object.freeze({SE:"SV",DK:"DA"});
   const CURRENCIES = new Set(["USD","SEK","NOK","DKK","EUR"]);
 
   const HEADER_I18N = {
@@ -1124,6 +1128,14 @@ button:focus-visible,input:focus-visible,select:focus-visible{
       "nav.signIn":"Log ind",
       "settings.language":"Sprog",
       "settings.currency":"Valuta"
+    },
+    FI:{
+      "nav.search":"Haku",
+      "nav.clubBtn":"Kirjaudu",
+      "nav.menu":"VALIKKO",
+      "nav.signIn":"Kirjaudu sisään",
+      "settings.language":"Kieli",
+      "settings.currency":"Valuutta"
     }
   };
 
@@ -1166,7 +1178,8 @@ button:focus-visible,input:focus-visible,select:focus-visible{
         ? value.settings
         : value;
 
-    const language = String(source?.language || "").trim().toUpperCase();
+    const requestedLanguage = String(source?.language || "").trim().toUpperCase();
+    const language = LANGUAGE_ALIASES[requestedLanguage] || requestedLanguage;
     const currency = String(source?.currency || "").trim().toUpperCase();
 
     return {
@@ -1202,7 +1215,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{
     });
 
     document.documentElement.lang =
-      ({EN:"en",SV:"sv",NO:"no",DA:"da"})[currentLanguage()] || "en";
+      ({EN:"en",SV:"sv",NO:"no",DA:"da",FI:"fi"})[currentLanguage()] || "en";
   }
 
   function getAsset(...keys) {
@@ -1219,11 +1232,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{
 
   function applyBrandAssets() {
     const headerLogo =
-      getAsset(
-        "customerHeader",
-        "skandiTravels",
-        "skandiPrimary"
-      );
+      getAsset("customerHeader");
 
     if (headerLogo && $("headerLogo")) {
       $("headerLogo").src = headerLogo;
@@ -1234,7 +1243,8 @@ button:focus-visible,input:focus-visible,select:focus-visible{
     const target = $("masterSlogan");
     if (!target) return;
 
-    const slogans = master?.brand?.slogans || {};
+    const branch = String(master?.brand?.currentBranch || "travels");
+    const slogans = master?.brand?.slogans?.[branch] || {};
     const languageKey = currentLanguage().toLowerCase();
 
     // The slogan is intentionally NOT hard-coded in this header.

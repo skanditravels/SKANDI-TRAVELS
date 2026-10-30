@@ -5,7 +5,7 @@ ROUTE SCOPE: `/riaintra/success-factors/altea/` including the ALTEA Launchpad
 WIX PARENT: `/src/pages/masterPage.js`
 ELEMENTS: `#alteaHeaderEmbed`, `#alteaHeader`
 MESSAGE SOURCE: `SKANDI_ALTEA_HEADER`
-LAST SYNCED: 2026-10-13
+LAST SYNCED: 2026-10-30
 
 ## INFO
 - `Logout` is placed left of the clock and emits existing `RIAINTRA_LOGOUT`, preserving Wix Members as the session authority.
@@ -16,6 +16,7 @@ LAST SYNCED: 2026-10-13
 - STATICALLY VERIFIED; REQUIRES LIVE TEST on ALTEA launchpad and child routes.
 
 ## CHANGE LOG
+- 2026-10-30 — ALTEA header and mobile mark now use alteaHeader and alteaIconLight from masterPage.js; the ALTEA slogan reads the shared language setting.
 - 2026-10-13 — V12 ALTEA chrome sync: Wix Members logout and Return to Dashboard added; non-functional Area/Cryptic UI removed; Office made read-only and sourced from canonical staff/runtime data.
 
 - 2026-10-13 — Desktop chrome authority correction: ALTEA is the sole global header on ALTEA routes (RIAINTRA global header is suppressed by `masterPage.js`); GroupTalk navigation from the ALTEA header opens `/riaintra/success-factors/altea/grouptalk` in a new browser tab and leaves the current ALTEA page in place.
@@ -80,6 +81,11 @@ html, body {
 }
 .logo[src] {
   display: block;
+}
+.mobile-logo{display:none}
+@media(max-width:700px){
+  .desktop-logo{display:none}
+  .mobile-logo[src]{display:block}
 }
 .brand-title {
   display: flex;
@@ -229,7 +235,8 @@ html, body {
 
 <header class="altea-toolbar">
   <div class="toolbar-left">
-    <img id="logo" class="logo" alt="ALTEA">
+    <img id="logo" class="logo desktop-logo" data-master-logo="alteaHeader" alt="ALTEA">
+    <img id="mobileLogo" class="logo mobile-logo" data-master-logo="alteaIconLight" alt="ALTEA">
     <div class="brand-title">
       <strong id="productName">Loading...</strong>
       <span id="productContext">SKANDI SYSTEMS</span>
@@ -306,13 +313,16 @@ html, body {
     const header = headerConfig();
     const altea = config?.altea || {};
     const p = profile();
-    const logo = config?.brand?.assets?.logos?.altea ||
-                 config?.brand?.assets?.logos?.riaintra ||
-                 config?.brand?.assets?.logos?.skandiPrimary || "";
+    const logos = config?.brand?.assets?.logos || {};
+    const logo = String(logos.alteaHeader || "");
+    const mobileLogo = String(logos.alteaIconLight || "");
 
     if (logo && $("logo")) $("logo").src = logo;
+    if (mobileLogo && $("mobileLogo")) $("mobileLogo").src = mobileLogo;
     if ($("productName")) $("productName").textContent = header.productName || altea.systemName || "ALTEA";
-    if ($("productContext")) $("productContext").textContent = header.productContext || altea.systemContext || "SKANDI SYSTEMS";
+    const language = String(config?.settings?.language || "EN").trim().toLowerCase();
+    const slogans = config?.brand?.slogans?.altea || {};
+    if ($("productContext")) $("productContext").textContent = slogans[language] || slogans.en || header.productContext || altea.systemContext || "SKANDI SYSTEMS";
 
     const env = runtime.env || altea.env || config?.env || "PRD";
     if ($("envBadge")) $("envBadge").textContent = String(env).trim().toUpperCase() || "PRD";

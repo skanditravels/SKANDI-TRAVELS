@@ -5,7 +5,7 @@ ROUTE SCOPE: `/riaintra/` excluding the RIAINTRA login page by existing Wix/mast
 WIX PARENT: `/src/pages/masterPage.js`
 ELEMENTS: `#riaintraHeaderEmbed`, `#riaintraHeader`, legacy `#staffInternalChromeEmbed`
 MESSAGE SOURCE: `SKANDI_RIAINTRA_HEADER`
-LAST SYNCED: 2026-10-13
+LAST SYNCED: 2026-10-30
 
 ## INFO
 - Staff data authority remains Wix parent → `backend/SKANDI_CORE/staffAuth.web.js` → canonical staffAuth core → Supabase `agent_users`; the HTML never queries Supabase directly.
@@ -16,6 +16,7 @@ LAST SYNCED: 2026-10-13
 - STATICALLY VERIFIED; REQUIRES LIVE TEST with authenticated staff data.
 
 ## CHANGE LOG
+- 2026-10-30 — RIAINTRA header logo and slogan now use riaHeader and the shared master language payload.
 - 2026-10-13 — V12 staff-chrome sync: Wix Members logout and dashboard-return controls added; identity layout synchronized to canonical `agent_users` fields without adding direct database access.
 
 ## COMPLETE INTENDED LIVE HTML SOURCE
@@ -340,7 +341,7 @@ body[data-theme="dark"] {
     <div class="shell-left">
       <button id="burger" class="burger" type="button" aria-label="Open menu">☰</button>
       <div class="product">
-        <img id="logo" src="" alt="RIAINTRA">
+        <img id="logo" data-master-logo="riaHeader" alt="RIAINTRA">
         <div class="product-text">
           <strong id="productName">RIAINTRA</strong>
           <small id="productContext">Enterprise Workforce Suite</small>
@@ -440,11 +441,13 @@ body[data-theme="dark"] {
   function render() {
     // 1. Branding
     const header = config?.internal?.header || {};
-    const logo = config?.brand?.assets?.logos?.riaintra || config?.brand?.assets?.logos?.skandiPrimary || "";
+    const logo = config?.brand?.assets?.logos?.riaHeader || "";
     
     if (logo && $("logo")) $("logo").src = logo;
     if (header.productName && $("productName")) $("productName").textContent = header.productName;
-    if (header.productContext && $("productContext")) $("productContext").textContent = header.productContext;
+    const language = String(config?.settings?.language || "EN").trim().toLowerCase();
+    const slogans = config?.brand?.slogans?.riaintra || {};
+    if ($("productContext")) $("productContext").textContent = slogans[language] || slogans.en || header.productContext || "";
 
     // 2. Navigation
     const current = config?.currentPath || "";

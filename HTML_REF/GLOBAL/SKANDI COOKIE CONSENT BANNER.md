@@ -20,6 +20,7 @@ LAST SYNCED: 2026-10-17
 - No cookies, consent ledger, Supabase table or parallel consent authority is created inside this HTML.
 
 ## CHANGE LOG
+- 2026-10-30 — Removed the Wix logo URL and marked this unassigned logo position [LEAVE_PLACEHOLDER].
 - 2026-10-17 — V12 initial implementation: branded first-layer consent banner connected to Wix visitor consent policy state.
 
 ## COMPLETE INTENDED LIVE HTML SOURCE
@@ -87,7 +88,7 @@ p{margin:10px 0 0;max-width:760px;color:var(--muted);font-size:12px;line-height:
     <div class="inner">
       <div>
         <div class="brand-row">
-          <img id="logo" class="logo" src="https://static.wixstatic.com/media/394052_504704bd94f44f01a95f304bd19640e5~mv2.png" alt="SKANDI Travels" />
+          <img id="logo" class="logo" data-master-logo="[LEAVE_PLACEHOLDER]" alt="SKANDI Travels" />
           <div class="eyebrow">Privacy choices</div>
         </div>
         <h1 id="title">Your privacy at SKANDI</h1>
@@ -161,7 +162,8 @@ p{margin:10px 0 0;max-width:760px;color:var(--muted);font-size:12px;line-height:
     if (typeof msg === "string") { try { msg = JSON.parse(msg); } catch (_) { return; } }
     if (!msg || msg.source !== PARENT) return;
     if (msg.type === "SKANDI_MASTER_CONFIG") {
-      const logo = msg.payload?.brand?.assets?.logos?.skandiPrimary || msg.payload?.brand?.assets?.logos?.skandiTravels;
+      const key = document.getElementById("logo").dataset.masterLogo;
+      const logo = msg.payload?.brand?.assets?.logos?.[key];
       if (logo) document.getElementById("logo").src = logo;
       return;
     }

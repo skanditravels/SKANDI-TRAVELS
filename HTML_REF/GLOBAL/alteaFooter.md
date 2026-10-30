@@ -5,7 +5,7 @@ ROUTE SCOPE: `/riaintra/success-factors/altea/`
 WIX PARENT: `/src/pages/masterPage.js`
 ELEMENTS: `#alteaFooterEmbed`, `#alteaFooter`
 MESSAGE SOURCE: `SKANDI_ALTEA_FOOTER`
-LAST SYNCED: 2026-10-13
+LAST SYNCED: 2026-10-30
 
 ## INFO
 - User-supplied ALTEA status bar is retained.
@@ -14,6 +14,7 @@ LAST SYNCED: 2026-10-13
 - STATICALLY VERIFIED; REQUIRES LIVE TEST after replacing the ALTEA footer HTML.
 
 ## CHANGE LOG
+- 2026-10-30 — Added the master-controlled alteaFooter logo slot.
 - 2026-10-13 — V12 internal legal link sync prepared from the supplied ALTEA footer source.
 
 ## COMPLETE INTENDED LIVE HTML SOURCE
@@ -49,6 +50,7 @@ html, body {
   user-select: none;
 }
 
+.altea-footer-logo{height:16px;max-width:90px;object-fit:contain}
 .status-bar {
   position: fixed;
   bottom: 0;
@@ -162,6 +164,7 @@ html, body {
       <div class="network-dot" id="networkDot"></div>
       <span class="sys-text" id="sysMessage">READY</span>
     </div>
+    <img id="alteaFooterLogo" class="altea-footer-logo" data-master-logo="alteaFooter" alt="ALTEA" hidden>
   </div>
 
   <div class="context-area">
@@ -267,6 +270,9 @@ html, body {
 
     if (message.type === "SKANDI_MASTER_CONFIG") {
       const payload = message.payload || {};
+      const logo = String(payload?.brand?.assets?.logos?.alteaFooter || "");
+      const logoElement = $("alteaFooterLogo");
+      if (logoElement && logo) { logoElement.src = logo; logoElement.hidden = false; }
       legalPath = String(payload?.routes?.legalInternal || LEGAL_PATH);
       renderState({
         env:payload?.altea?.env || payload?.env || "PRD",

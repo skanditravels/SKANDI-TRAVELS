@@ -4,7 +4,7 @@ STATUS: V12 SYNC PREPARED — REQUIRES LIVE TEST
 ROUTE SCOPE: `/riaintra/` excluding the RIAINTRA login page by existing Wix/masterPage visibility rules
 WIX PARENT: `/src/pages/masterPage.js`
 MESSAGE SOURCE: `SKANDI_RIAINTRA_FOOTER`
-LAST SYNCED: 2026-10-13
+LAST SYNCED: 2026-10-30
 
 ## INFO
 - Existing footer config links are preserved.
@@ -13,6 +13,7 @@ LAST SYNCED: 2026-10-13
 - STATICALLY VERIFIED; REQUIRES LIVE TEST after replacing the RIAINTRA footer HTML.
 
 ## CHANGE LOG
+- 2026-10-30 — Removed the hardcoded Group PNG; the footer now uses the mapped riaFooter asset from masterPage.js.
 - 2026-10-13 — V12 internal legal link sync prepared from the supplied RIAINTRA footer source.
 
 ## COMPLETE INTENDED LIVE HTML SOURCE
@@ -114,7 +115,7 @@ button:hover {
     </div>
 
     <div id="grouplogo" class="global-footer">
-      <img src="https://static.wixstatic.com/media/394052_02ed0c030fea4f14b5e5677fdaeae197~mv2.png" alt="SKANDI GROUP MEMBER">
+      <img id="riaFooterLogo" data-master-logo="riaFooter" alt="RIAINTRA" hidden>
     </div>
 
     <div class="footer-right">
@@ -137,7 +138,10 @@ button:hover {
     if(!links.some(i=>String(i?.path||"")===legalPath)){
       links.push({label:"Legal & Policies",path:legalPath});
     }
-    $("links").innerHTML=links.map(i=>`<button data-path="${esc(i.path)}">${esc(i.label)}</button>`).join("");
+    $("links").innerHTML=links.map(i=>"<button data-path=\""+esc(i.path)+"\">"+esc(i.label)+"</button>").join("");
+    const logo=String(config?.brand?.assets?.logos?.riaFooter||"");
+    const image=$("riaFooterLogo");
+    if(image&&logo){image.src=logo;image.hidden=false}
   }
 
   document.addEventListener("click",e=>{

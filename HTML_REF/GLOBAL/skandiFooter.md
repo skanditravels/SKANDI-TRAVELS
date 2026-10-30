@@ -6,7 +6,7 @@ WIX PAGE: `masterPage.js`
 AREA: SKANDI
 LIVE HTML: INTENDED EMBED REPLACEMENT ONLY; NOT DEPLOYED BY THIS PACKAGE
 ELEMENT: `#skandiFooterEmbed` / `#skandiCustomerFooterEmbed`
-LAST SOURCE REVIEW: 2026-10-22
+LAST SOURCE REVIEW: 2026-10-30
 
 ## INFO
 - Source basis: `skanditravels/SKANDI-TRAVELS`, `main`, `HTML_REF/GLOBAL/skandiFooter.md`, canonical reference as reviewed on 2026-10-22.
@@ -18,6 +18,7 @@ LAST SOURCE REVIEW: 2026-10-22
 - Static verification only. Responsive footer height and live newsletter/legal navigation require Wix smoke tests.
 
 ## CHANGE LOG
+- 2026-10-30 — Shared master branding: customerFooter and groupFooter are resolved from masterPage.js, and footer slogans follow currentBranch and settings.language.
 - 2026-10-13 — Legal/footer V12 sync: canonical legal utility links, separate Staff Login, brand/legal copy, and masterPage navigation unchanged.
 - 2026-10-13 — Mobile focus guard added to newsletter text-entry field.
 - 2026-10-22 — Nordic Horizon visual redesign of newsletter, dark-blue main footer, four-column layout, cyan headings, social controls, legal and copyright bands. Previous behavior and routing preserved.
@@ -979,7 +980,8 @@ input:focus-visible{
 
   <section class="footer-main">
     <div class="brand">
-      <img id="footerLogo" class="logo" alt="SKANDI Travels">
+      <img id="footerLogo" class="logo" data-master-logo="customerFooter" alt="SKANDI Travels">
+      <p id="footerSlogan"></p>
       <div class="social-links" id="socialLinks" aria-label="Social media links"></div>
     </div>
     <div id="footerColumns"></div>
@@ -1000,7 +1002,7 @@ input:focus-visible{
       <div class="copyright-text">
         © <span id="year"></span> SKANDI GROUP Inc. (United States) &amp; SKANDI GROUP Aktiebolag (Sweden). All rights reserved. SKANDI TRAVELS™ is a trademark of the SKANDI GROUP.
       </div>
-      <img id="wordmarkLogo" class="wordmark-logo" alt="SKANDI GROUP" style="display:none;">
+      <img id="wordmarkLogo" class="wordmark-logo" data-master-logo="groupFooter" alt="SKANDI GROUP" style="display:none;">
     </div>
   </section>
 </footer>
@@ -1049,13 +1051,17 @@ input:focus-visible{
   }
 
   function renderAssets() {
-    const footerLogo = getAsset("skandiWhite") || getAsset("customerFooter");
+    const footerLogo = getAsset("customerFooter");
     if (footerLogo && $("footerLogo")) $("footerLogo").src = footerLogo;
-    const wordmark = getAsset("skandiGroupWhite");
+    const wordmark = getAsset("groupFooter");
     if (wordmark && $("wordmarkLogo")) {
       $("wordmarkLogo").src = wordmark;
       $("wordmarkLogo").style.display = "block";
     }
+    const branch = String(master?.brand?.currentBranch || "travels");
+    const slogans = master?.brand?.slogans?.[branch] || {};
+    const language = String(master?.settings?.language || "EN").toLowerCase();
+    if ($("footerSlogan")) $("footerSlogan").textContent = slogans[language] || slogans.en || "";
   }
 
   function renderNewsletter() {
