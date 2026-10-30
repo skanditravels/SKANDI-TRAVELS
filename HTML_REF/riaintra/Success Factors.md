@@ -1,5 +1,7 @@
 # INFO
 
+- 2026-10-30 — Removed the embedded Wix logo URL from the staff ID card and retained its unassigned asset slot as [LEAVE_PLACEHOLDER].
+
 ## CHANGE LOG (append-only)
 
 - 2026-10-28 UTC — Updated `riaintra-embeds/success-factors/success-factors.receiver.html` to follow the current shared receiver pattern with page-specific startup, progress and failure messages for **Success Factors** (`/riaintra/success-factors`). The expected route matches `src/public/siteMap.js`; master-page handshake, staff authorization, manifest/SHA-256 checks and nested-iframe rejection remain intact.
@@ -7741,7 +7743,7 @@ This reference is documentation, not a runtime import. Install the HTML below in
               <div class="staff-id-card-head">
                 <div class="staff-id-logo-wrap">
                   <span class="staff-id-logo-box">
-                    <img class="staff-id-logo-img" src="https://static.wixstatic.com/media/394052_69299cae98564a63b4a9bb7a8d037a33~mv2.png" alt="SKANDI">
+                    <img class="staff-id-logo-img" data-master-logo="[LEAVE_PLACEHOLDER]" alt="SKANDI">
                   </span>
                 </div>
                 <div class="staff-id-card-head-text">

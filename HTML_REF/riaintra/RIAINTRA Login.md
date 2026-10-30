@@ -1,5 +1,7 @@
 # RIAINTRA Staff Login — INFO / LOG
 
+- 2026-10-30 — RIAINTRA login uses riaHeader; its unassigned Group endorsement mark remains [LEAVE_PLACEHOLDER].
+
 ## CHANGE LOG (append-only)
 
 - 2026-10-28 UTC — Updated `riaintra-embeds/riaintra/riaintra.receiver.html` to follow the current shared receiver pattern with page-specific startup, progress and failure messages for **RIAINTRA Staff Login** (`/riaintra`). The expected route matches `src/public/siteMap.js`; master-page handshake, staff authorization, manifest/SHA-256 checks and nested-iframe rejection remain intact.
@@ -551,7 +553,7 @@
         <div id="login-left">
           <header id="app-header">
             <div id="SK-logo">
-              <img src="https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/logos/RIAINTRA-LIGHT.svg" alt="RIAINTRA logo">
+              <img data-master-logo="riaHeader" alt="RIAINTRA logo">
               <div id="SK-logo-text">
                 <span>SKANDI STAFF PORTAL</span>
               </div>
@@ -567,7 +569,7 @@
           <div class="brand-bottom">
             <div class="brand-bottom-copy">
               <div id="SK-logo">
-                <img src="https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/logos/RIAINTRA_LIGHT.svg" alt="A SKANDI GROUP MEMBER"><div id="SK-logo-text">· INTERNAL SYSTEMS</div></div>
+                <img data-master-logo="[LEAVE_PLACEHOLDER]" alt="A SKANDI GROUP MEMBER"><div id="SK-logo-text">· INTERNAL SYSTEMS</div></div>
               <div>For authorized staff use only.</div>
             </div>
             <div id="header-meta"><span id="clock">LOCAL TIME</span></div>
@@ -938,6 +940,12 @@
 
     if (event.source !== window.parent) return;
     if (data.source !== PARENT_SOURCE) return;
+    if (data.type === "SKANDI_MASTER_CONFIG") {
+      const logo = document.querySelector('[data-master-logo="riaHeader"]');
+      const logoUrl = String(payload?.brand?.assets?.logos?.riaHeader || "").trim();
+      if (logo && logoUrl) logo.src = logoUrl;
+      return;
+    }
     if (data.requestId && activeRequestId && data.requestId !== activeRequestId) return;
     if (refreshing && data.requestId === refreshRequestId &&
         (data.type === "STAFF_LOGIN_OK" || data.type === "STAFF_LOGIN_ERROR" || data.type === "STAFF_LOGIN_NOTICE")) {
@@ -987,6 +995,7 @@
   setBusy(false);
   syncMobileViewport();
   dropBtn.setAttribute("aria-controls", "login-card-wrap");
+  post("MASTER_CONFIG_REQUEST", { context:"riaintra-login" });
   post("STAFF_LOGIN_READY", {});
 })();
 </script>
