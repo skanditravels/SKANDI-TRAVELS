@@ -93,7 +93,7 @@ const MASTER_CONFIG = Object.freeze({
         groupMemberNavy:brandLogo("SKANDI_GROUP-MEMBER-NAVY.svg"),
         skandiSoloNavy:brandLogo("SKANDI-NAVY.svg"),
         customerHeader:brandLogo("SKANDI_TRAVELS-NAVY-SIDE-WAVE.svg"),
-        customerFooter:brandLogo("SKANDI_TRAVELS_LIGHT%20(1).svg"),
+        customerFooter:brandLogo("SKANDI_TRAVELS_LIGHT-WORDMARKK.svg"),
         customerLoader:brandLogo("dark%20background%20logos/SKANDI_TRAVELS-LIGHT-SIDE.svg"),
         skandiNavyStacked:brandLogo("SKANDI_TRAVELS_LIGHT.svg"),
         skandiWhiteStacked:brandLogo("SKANDI_TRAVELS-LIGHT-STACKED-WAVE.svg"),
