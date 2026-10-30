@@ -1888,6 +1888,7 @@ body { min-height:100%; }
                 <option value="SV">SV</option>
                 <option value="NO">NO</option>
                 <option value="DA">DA</option>
+                <option value="FI">FI</option>
               </select>
             </div>
 
@@ -1940,7 +1941,7 @@ body { min-height:100%; }
   <aside class="club-panel" id="clubPanel" aria-label="SKANDI Club sign in" aria-hidden="true">
     <form id="inlineLoginForm" class="club-login-strip">
       <div class="club-intro" aria-hidden="true">
-        <img class="club-brand-logo" src="https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/logos/SKANDI_CLUB-LIGHT.svg" alt="" decoding="async">
+        <img class="club-brand-logo" data-master-logo="[LEAVE_PLACEHOLDER]" alt="" decoding="async">
       </div>
 
       <div class="club-field email">
@@ -1989,6 +1990,7 @@ body { min-height:100%; }
           <option value="SV">SV</option>
           <option value="NO">NO</option>
           <option value="DA">DA</option>
+          <option value="FI">FI</option>
         </select>
 
         <select id="mobileCurrSelect" aria-label="Currency">
@@ -2045,12 +2047,12 @@ body { min-height:100%; }
 
     <aside class="club-pass" aria-label="SKANDI Club program summary">
       <div class="pass-top">
-        <span class="club-word">SKANDI CLUB</span>
+        <span class="club-word" data-master-logo="[LEAVE_PLACEHOLDER]">[LEAVE_PLACEHOLDER]</span>
         <span class="pass-tag">Member programme</span>
       </div>
       <div class="pass-copy">
         <strong id="programName">SKANDI Club</strong>
-        <span id="programSub">Travel further, together.</span>
+      <span id="programSub"></span>
       </div>
       <div class="pass-stats">
         <div class="pass-stat">
@@ -2111,7 +2113,7 @@ body { min-height:100%; }
               <circle cx="1232" cy="911" r="846" fill="none" stroke="url(#metal-member)" stroke-opacity="0.04" stroke-width="116"></circle>
               <circle cx="1232" cy="911" r="792" fill="none" stroke="url(#metal-member)" stroke-opacity="0.24" stroke-width="4.3"></circle>
             </g>
-            <image x="675" y="382" width="1270" height="312" opacity="0.46" preserveAspectRatio="xMidYMid meet" href="https://static.wixstatic.com/media/394052_3fb4912d85904d4a8a8af70a3147b73c~mv2.png"></image>
+            <image x="675" y="382" width="1270" height="312" opacity="0.46" preserveAspectRatio="xMidYMid meet" data-master-logo="[LEAVE_PLACEHOLDER]"></image>
              <!-- EMV SMART CHIP (Physical Element) -->
       <g transform="translate(180, 420)">
         <!-- Chip Base Bevel & Shadow -->
@@ -2123,7 +2125,7 @@ body { min-height:100%; }
         <ellipse cx="65" cy="50" rx="18" ry="26" stroke="#000" stroke-width="1" stroke-opacity="0.4" fill="none"></ellipse>
         <ellipse cx="66" cy="51" rx="18" ry="26" stroke="#fff" stroke-width="1" stroke-opacity="0.6" fill="none"></ellipse>
       </g>
-            <image x="928" y="164" width="560" height="186" preserveAspectRatio="xMaxYMin meet" filter="url(#sharedLogoShadow)" href="https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/logos/SKANDI_CLUB-LIGHT.svg"></image>
+            <image x="928" y="164" width="560" height="186" preserveAspectRatio="xMaxYMin meet" filter="url(#sharedLogoShadow)" data-master-logo="[LEAVE_PLACEHOLDER]"></image>
           </svg>
           
          
@@ -2167,7 +2169,7 @@ body { min-height:100%; }
               <circle cx="1232" cy="911" r="846" fill="none" stroke="url(#metal-silver)" stroke-opacity="0.04" stroke-width="116"></circle>
               <circle cx="1232" cy="911" r="792" fill="none" stroke="url(#metal-silver)" stroke-opacity="0.24" stroke-width="4.3"></circle>
             </g>
-            <image x="675" y="382" width="1270" height="312" opacity="0.46" preserveAspectRatio="xMidYMid meet" href="https://static.wixstatic.com/media/394052_3fb4912d85904d4a8a8af70a3147b73c~mv2.png"></image>
+            <image x="675" y="382" width="1270" height="312" opacity="0.46" preserveAspectRatio="xMidYMid meet" data-master-logo="[LEAVE_PLACEHOLDER]"></image>
             <g transform="translate(180, 420)">
               <rect x="-2" y="-2" width="134" height="104" rx="14" fill="#000" opacity="0.5"></rect>
               <rect x="0" y="0" width="130" height="100" rx="12" fill="url(#metal-silver)" stroke="#333" stroke-width="1.5"></rect>
@@ -2176,7 +2178,7 @@ body { min-height:100%; }
               <ellipse cx="65" cy="50" rx="18" ry="26" stroke="#000" stroke-width="1" stroke-opacity="0.4" fill="none"></ellipse>
               <ellipse cx="66" cy="51" rx="18" ry="26" stroke="#fff" stroke-width="1" stroke-opacity="0.6" fill="none"></ellipse>
             </g>
-            <image x="928" y="164" width="560" height="186" preserveAspectRatio="xMaxYMin meet" filter="url(#sharedLogoShadow)" href="https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/logos/SKANDI_CLUB-LIGHT.svg"></image>
+            <image x="928" y="164" width="560" height="186" preserveAspectRatio="xMaxYMin meet" filter="url(#sharedLogoShadow)" data-master-logo="[LEAVE_PLACEHOLDER]"></image>
           </svg>
           <div class="tier-overlay">
             <div class="tier-top"><span class="tier-name">Silver</span></div>
@@ -2212,7 +2214,7 @@ body { min-height:100%; }
               <circle cx="1232" cy="911" r="846" fill="none" stroke="url(#metal-gold)" stroke-opacity="0.04" stroke-width="116"></circle>
               <circle cx="1232" cy="911" r="792" fill="none" stroke="url(#metal-gold)" stroke-opacity="0.24" stroke-width="4.3"></circle>
             </g>
-            <image x="675" y="382" width="1270" height="312" opacity="0.46" preserveAspectRatio="xMidYMid meet" href="https://static.wixstatic.com/media/394052_3fb4912d85904d4a8a8af70a3147b73c~mv2.png"></image>
+            <image x="675" y="382" width="1270" height="312" opacity="0.46" preserveAspectRatio="xMidYMid meet" data-master-logo="[LEAVE_PLACEHOLDER]"></image>
             <g transform="translate(180, 420)">
               <rect x="-2" y="-2" width="134" height="104" rx="14" fill="#000" opacity="0.5"></rect>
               <rect x="0" y="0" width="130" height="100" rx="12" fill="url(#metal-gold)" stroke="#333" stroke-width="1.5"></rect>
@@ -2221,7 +2223,7 @@ body { min-height:100%; }
               <ellipse cx="65" cy="50" rx="18" ry="26" stroke="#000" stroke-width="1" stroke-opacity="0.4" fill="none"></ellipse>
               <ellipse cx="66" cy="51" rx="18" ry="26" stroke="#fff" stroke-width="1" stroke-opacity="0.6" fill="none"></ellipse>
             </g>
-            <image x="928" y="164" width="560" height="186" preserveAspectRatio="xMaxYMin meet" filter="url(#sharedLogoShadow)" href="https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/logos/SKANDI_CLUB-LIGHT.svg"></image>
+            <image x="928" y="164" width="560" height="186" preserveAspectRatio="xMaxYMin meet" filter="url(#sharedLogoShadow)" data-master-logo="[LEAVE_PLACEHOLDER]"></image>
           </svg>
           <div class="tier-overlay">
             <div class="tier-top"><span class="tier-name">Gold</span></div>
@@ -2257,7 +2259,7 @@ body { min-height:100%; }
               <circle cx="1232" cy="911" r="846" fill="none" stroke="url(#metal-diamond)" stroke-opacity="0.04" stroke-width="116"></circle>
               <circle cx="1232" cy="911" r="792" fill="none" stroke="url(#metal-diamond)" stroke-opacity="0.24" stroke-width="4.3"></circle>
             </g>
-            <image x="675" y="382" width="1270" height="312" opacity="0.46" preserveAspectRatio="xMidYMid meet" href="https://static.wixstatic.com/media/394052_3fb4912d85904d4a8a8af70a3147b73c~mv2.png"></image>
+            <image x="675" y="382" width="1270" height="312" opacity="0.46" preserveAspectRatio="xMidYMid meet" data-master-logo="[LEAVE_PLACEHOLDER]"></image>
             <g transform="translate(180, 420)">
               <rect x="-2" y="-2" width="134" height="104" rx="14" fill="#000" opacity="0.5"></rect>
               <rect x="0" y="0" width="130" height="100" rx="12" fill="url(#metal-diamond)" stroke="#333" stroke-width="1.5"></rect>
@@ -2266,7 +2268,7 @@ body { min-height:100%; }
               <ellipse cx="65" cy="50" rx="18" ry="26" stroke="#000" stroke-width="1" stroke-opacity="0.4" fill="none"></ellipse>
               <ellipse cx="66" cy="51" rx="18" ry="26" stroke="#fff" stroke-width="1" stroke-opacity="0.6" fill="none"></ellipse>
             </g>
-            <image x="928" y="164" width="560" height="186" preserveAspectRatio="xMaxYMin meet" filter="url(#sharedLogoShadow)" href="https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/logos/SKANDI_CLUB-LIGHT.svg"></image>
+            <image x="928" y="164" width="560" height="186" preserveAspectRatio="xMaxYMin meet" filter="url(#sharedLogoShadow)" data-master-logo="[LEAVE_PLACEHOLDER]"></image>
           </svg>
           <div class="tier-overlay">
             <div class="tier-top"><span class="tier-name">Diamond</span></div>
@@ -2391,7 +2393,7 @@ body { min-height:100%; }
   </div>
   <div class="skf-main">
     <div class="skf-brand">
-      <img id="skf-logo" alt="SKANDI Travels" hidden="">
+      <img id="skf-logo" data-master-logo="customerFooter" alt="SKANDI Travels" hidden="">
       <p id="skf-slogan"></p>
       <div id="skf-social-links" class="skf-social"></div>
     </div>
@@ -2401,7 +2403,7 @@ body { min-height:100%; }
   <div class="skf-bottom">
     <span>© <span id="skf-year"></span> SKANDI GROUP Inc. (United States) &amp; SKANDI GROUP Aktiebolag (Sweden). All rights reserved. SKANDI TRAVELS™ is a trademark of the SKANDI GROUP.</span>
     <div id="skf-legal-links" class="skf-legal-links"></div>
-    <img id="skf-group-mark" alt="A SKANDI GROUP MEMBER" hidden="">
+      <img id="skf-group-mark" data-master-logo="groupFooter" alt="SKANDI GROUP" hidden="">
   </div>
 </footer>
 </div>
@@ -2515,7 +2517,8 @@ const SOURCE = "SKANDI_CUSTOMER_HEADER_EXPANDBAR";
     header.style.setProperty("--fx-y", "26%");
   }
 
-  const LANGUAGES = new Set(["EN","SV","NO","DA"]);
+  const LANGUAGES = new Set(["EN","SV","NO","DA","FI"]);
+  const LANGUAGE_ALIASES = Object.freeze({SE:"SV",DK:"DA"});
   const CURRENCIES = new Set(["USD","SEK","NOK","DKK","EUR"]);
   const HEADER_I18N = {
     EN:{
@@ -2549,6 +2552,14 @@ const SOURCE = "SKANDI_CUSTOMER_HEADER_EXPANDBAR";
       "nav.signIn":"Log ind",
       "settings.language":"Sprog",
       "settings.currency":"Valuta"
+    },
+    FI:{
+      "nav.search":"Haku",
+      "nav.clubBtn":"Kirjaudu",
+      "nav.menu":"VALIKKO",
+      "nav.signIn":"Kirjaudu sisään",
+      "settings.language":"Kieli",
+      "settings.currency":"Valuutta"
     }
   };
 
@@ -2590,7 +2601,8 @@ const SOURCE = "SKANDI_CUSTOMER_HEADER_EXPANDBAR";
         ? value.settings
         : value;
 
-    const language = String(source?.language || "").trim().toUpperCase();
+    const requestedLanguage = String(source?.language || "").trim().toUpperCase();
+    const language = LANGUAGE_ALIASES[requestedLanguage] || requestedLanguage;
     const currency = String(source?.currency || "").trim().toUpperCase();
 
     return {
@@ -2623,7 +2635,7 @@ const SOURCE = "SKANDI_CUSTOMER_HEADER_EXPANDBAR";
     });
 
     document.documentElement.lang =
-      ({EN:"en",SV:"sv",NO:"no",DA:"da"})[currentLanguage()] || "en";
+      ({EN:"en",SV:"sv",NO:"no",DA:"da",FI:"fi"})[currentLanguage()] || "en";
   }
   function getAsset(...keys) {
     const logos = master?.brand?.assets?.logos || {};
@@ -2637,12 +2649,7 @@ const SOURCE = "SKANDI_CUSTOMER_HEADER_EXPANDBAR";
     return "";
   }
   function applyBrandAssets() {
-    const headerLogo =
-      getAsset(
-        "customerHeader",
-        "skandiTravels",
-        "skandiPrimary"
-      );
+    const headerLogo = getAsset("customerHeader");
 
     if (headerLogo && $("headerLogo")) {
       $("headerLogo").src = headerLogo;
@@ -2652,11 +2659,12 @@ const SOURCE = "SKANDI_CUSTOMER_HEADER_EXPANDBAR";
     const target = $("masterSlogan");
     if (!target) return;
 
-    const slogans = master?.brand?.slogans || {};
+    const branch = String(master?.brand?.currentBranch || "travels");
+    const slogans = master?.brand?.slogans?.[branch] || {};
     const languageKey = currentLanguage().toLowerCase();
 
     // The slogan is intentionally NOT hard-coded in this header.
-    // masterPage.js / MASTER_CONFIG.brand.slogans is the single source of truth.
+    // masterPage.js owns language state and every branch slogan translation.
     const slogan =
       String(
         slogans[languageKey] ??
@@ -3455,14 +3463,16 @@ function render() {
   if ($('skf-newsletter-button')) $('skf-newsletter-button').textContent = newsletter.buttonLabel || 'Sign up';
   if ($('skf-newsletter-email')) $('skf-newsletter-email').placeholder = newsletter.placeholder || 'Email address';
   const logos = master.brand?.assets?.logos || {};
-  const mainLogo = logos.customerFooter || logos.skandiWhite;
+  const mainLogo = logos.customerFooter;
   if (mainLogo && $('skf-logo')) { $('skf-logo').src = mainLogo; $('skf-logo').hidden = false; }
-  if (logos.skandiGroupWhite && $('skf-group-mark')) {
-    $('skf-group-mark').src = logos.skandiGroupWhite;
+  if (logos.groupFooter && $('skf-group-mark')) {
+    $('skf-group-mark').src = logos.groupFooter;
     $('skf-group-mark').hidden = false;
   }
   const language = String(master.settings?.language || 'EN').toLowerCase();
-  if ($('skf-slogan')) $('skf-slogan').textContent = master.brand?.slogans?.[language] || master.brand?.slogans?.en || '';
+  const branch = String(master.brand?.currentBranch || 'travels');
+  const slogans = master.brand?.slogans?.[branch] || {};
+  if ($('skf-slogan')) $('skf-slogan').textContent = slogans[language] || slogans.en || '';
   const columns = $('skf-columns');
   if (columns) {
     columns.replaceChildren();
@@ -3848,6 +3858,14 @@ let DATA={
 };
 
 let STATUS={loggedIn:false};
+let MASTER_CONFIG=null;
+
+function renderMasterBranding(){
+  const language=String(MASTER_CONFIG?.settings?.language||"EN").trim().toLowerCase();
+  const slogans=MASTER_CONFIG?.brand?.slogans?.club||{};
+  const target=$("programSub");
+  if(target)target.textContent=String(slogans[language]||slogans.en||"").trim();
+}
 
 function post(type,payload={}){
   window.parent.postMessage({
@@ -3983,6 +4001,7 @@ function render(){
   renderRewards();
   renderFaqs();
   calc();
+  renderMasterBranding();
   requestHeight();
 }
 
@@ -4020,6 +4039,12 @@ window.addEventListener("message",event=>{
   if(message.source&&message.source!==PARENT)return;
 
   const payload=message.payload||{};
+
+  if(message.type==="SKANDI_MASTER_CONFIG"){
+    MASTER_CONFIG=payload;
+    renderMasterBranding();
+    return;
+  }
 
   if(message.type==="SKANDI_CLUB_INFO_DATA"){
     DATA={
@@ -4062,6 +4087,7 @@ if("ResizeObserver"in window){
   window.addEventListener("resize",requestHeight);
 }
 
+post("MASTER_CONFIG_REQUEST",{context:"skandi-club"});
 post("SKANDI_CLUB_INFO_READY",{});
 render();
 })();

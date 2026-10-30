@@ -1608,7 +1608,8 @@ body.drawer-open #skandi-mobile-nav-container{min-height:100%;height:100%}
 #skandi-app-root .thumb-fallback span{font-size:30px;font-weight:600;letter-spacing:.08em;opacity:.45}
 #skandi-app-root .card-body{position:relative;padding:23px;background:var(--card-surface);min-height:225px;display:flex;flex-direction:column}
 #skandi-app-root .card-body::before{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at var(--fx-x,85%) var(--fx-y,10%),rgba(255,255,255,.30),transparent 28%);opacity:.5}
-#skandi-app-root .tier-line{position:relative;display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px}
+#skandi-app-root .tier-line{position:relative;display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:14px}
+#skandi-app-root .collection-tier-badge{display:block;width:auto;max-width:118px;height:27px;object-fit:contain;object-position:left center}
 #skandi-app-root .tier-tag,#skandi-app-root .tag{display:inline-flex;border-radius:999px;padding:6px 9px;font-size:8px;font-weight:800;letter-spacing:.10em;text-transform:uppercase}
 #skandi-app-root .tier-tag{background:#022e64;color:#fff}#skandi-app-root .tier-tag.select{background:#d9f1f1;color:#022e64;border:1px solid rgba(2,46,100,.08)}
 #skandi-app-root .tier-tag.signature{background:#022e64;color:#fff}#skandi-app-root .tier-tag.excelsior{background:#111827;color:#fff}#skandi-app-root .tier-tag.partner{background:#5FC7CF;color:#022e64}
@@ -1898,6 +1899,7 @@ body { min-height:100%; }
                 <option value="SV">SV</option>
                 <option value="NO">NO</option>
                 <option value="DA">DA</option>
+                <option value="FI">FI</option>
               </select>
             </div>
 
@@ -1950,7 +1952,7 @@ body { min-height:100%; }
   <aside class="club-panel" id="clubPanel" aria-label="SKANDI Club sign in" aria-hidden="true">
     <form id="inlineLoginForm" class="club-login-strip">
       <div class="club-intro" aria-hidden="true">
-        <img class="club-brand-logo" src="https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/logos/SKANDI_CLUB-LIGHT.svg" alt="" decoding="async">
+        <img class="club-brand-logo" data-master-logo="[LEAVE_PLACEHOLDER]" alt="" decoding="async">
       </div>
 
       <div class="club-field email">
@@ -1999,6 +2001,7 @@ body { min-height:100%; }
           <option value="SV">SV</option>
           <option value="NO">NO</option>
           <option value="DA">DA</option>
+          <option value="FI">FI</option>
         </select>
 
         <select id="mobileCurrSelect" aria-label="Currency">
@@ -2035,8 +2038,8 @@ body { min-height:100%; }
   <div class="wrap hero-inner">
     <div class="hero-copy">
       <div class="collection-brand">
-        <img id="collectionLogo" alt="SKANDI Collection" hidden="">
-        <div id="collectionLogoFallback" class="collection-wordmark">SKANDI <span>Collection</span></div>
+        <img id="collectionLogo" data-master-logo="[LEAVE_PLACEHOLDER]" alt="SKANDI Collection" hidden="">
+        <div id="collectionLogoFallback" class="collection-wordmark">[LEAVE_PLACEHOLDER]</div>
       </div>
 
       <div class="hero-kicker">The places we would choose ourselves</div>
@@ -2320,7 +2323,7 @@ body { min-height:100%; }
   </div>
   <div class="skf-main">
     <div class="skf-brand">
-      <img id="skf-logo" alt="SKANDI Travels" hidden="">
+      <img id="skf-logo" data-master-logo="customerFooter" alt="SKANDI Travels" hidden="">
       <p id="skf-slogan"></p>
       <div id="skf-social-links" class="skf-social"></div>
     </div>
@@ -2330,7 +2333,7 @@ body { min-height:100%; }
   <div class="skf-bottom">
     <span>© <span id="skf-year"></span> SKANDI GROUP Inc. (United States) &amp; SKANDI GROUP Aktiebolag (Sweden). All rights reserved. SKANDI TRAVELS™ is a trademark of the SKANDI GROUP.</span>
     <div id="skf-legal-links" class="skf-legal-links"></div>
-    <img id="skf-group-mark" alt="A SKANDI GROUP MEMBER" hidden="">
+      <img id="skf-group-mark" data-master-logo="groupFooter" alt="SKANDI GROUP" hidden="">
   </div>
 </footer>
 </div>
@@ -2444,7 +2447,8 @@ const SOURCE = "SKANDI_CUSTOMER_HEADER_EXPANDBAR";
     header.style.setProperty("--fx-y", "26%");
   }
 
-  const LANGUAGES = new Set(["EN","SV","NO","DA"]);
+  const LANGUAGES = new Set(["EN","SV","NO","DA","FI"]);
+  const LANGUAGE_ALIASES = Object.freeze({SE:"SV",DK:"DA"});
   const CURRENCIES = new Set(["USD","SEK","NOK","DKK","EUR"]);
   const HEADER_I18N = {
     EN:{
@@ -2478,6 +2482,14 @@ const SOURCE = "SKANDI_CUSTOMER_HEADER_EXPANDBAR";
       "nav.signIn":"Log ind",
       "settings.language":"Sprog",
       "settings.currency":"Valuta"
+    },
+    FI:{
+      "nav.search":"Haku",
+      "nav.clubBtn":"Kirjaudu",
+      "nav.menu":"VALIKKO",
+      "nav.signIn":"Kirjaudu sisään",
+      "settings.language":"Kieli",
+      "settings.currency":"Valuutta"
     }
   };
 
@@ -2519,7 +2531,8 @@ const SOURCE = "SKANDI_CUSTOMER_HEADER_EXPANDBAR";
         ? value.settings
         : value;
 
-    const language = String(source?.language || "").trim().toUpperCase();
+    const requestedLanguage = String(source?.language || "").trim().toUpperCase();
+    const language = LANGUAGE_ALIASES[requestedLanguage] || requestedLanguage;
     const currency = String(source?.currency || "").trim().toUpperCase();
 
     return {
@@ -2552,7 +2565,7 @@ const SOURCE = "SKANDI_CUSTOMER_HEADER_EXPANDBAR";
     });
 
     document.documentElement.lang =
-      ({EN:"en",SV:"sv",NO:"no",DA:"da"})[currentLanguage()] || "en";
+      ({EN:"en",SV:"sv",NO:"no",DA:"da",FI:"fi"})[currentLanguage()] || "en";
   }
   function getAsset(...keys) {
     const logos = master?.brand?.assets?.logos || {};
@@ -2566,12 +2579,7 @@ const SOURCE = "SKANDI_CUSTOMER_HEADER_EXPANDBAR";
     return "";
   }
   function applyBrandAssets() {
-    const headerLogo =
-      getAsset(
-        "customerHeader",
-        "skandiTravels",
-        "skandiPrimary"
-      );
+    const headerLogo = getAsset("customerHeader");
 
     if (headerLogo && $("headerLogo")) {
       $("headerLogo").src = headerLogo;
@@ -2581,11 +2589,12 @@ const SOURCE = "SKANDI_CUSTOMER_HEADER_EXPANDBAR";
     const target = $("masterSlogan");
     if (!target) return;
 
-    const slogans = master?.brand?.slogans || {};
+    const branch = String(master?.brand?.currentBranch || "travels");
+    const slogans = master?.brand?.slogans?.[branch] || {};
     const languageKey = currentLanguage().toLowerCase();
 
     // The slogan is intentionally NOT hard-coded in this header.
-    // masterPage.js / MASTER_CONFIG.brand.slogans is the single source of truth.
+    // masterPage.js owns language state and every branch slogan translation.
     const slogan =
       String(
         slogans[languageKey] ??
@@ -3384,14 +3393,16 @@ function render() {
   if ($('skf-newsletter-button')) $('skf-newsletter-button').textContent = newsletter.buttonLabel || 'Sign up';
   if ($('skf-newsletter-email')) $('skf-newsletter-email').placeholder = newsletter.placeholder || 'Email address';
   const logos = master.brand?.assets?.logos || {};
-  const mainLogo = logos.customerFooter || logos.skandiWhite;
+  const mainLogo = logos.customerFooter;
   if (mainLogo && $('skf-logo')) { $('skf-logo').src = mainLogo; $('skf-logo').hidden = false; }
-  if (logos.skandiGroupWhite && $('skf-group-mark')) {
-    $('skf-group-mark').src = logos.skandiGroupWhite;
+  if (logos.groupFooter && $('skf-group-mark')) {
+    $('skf-group-mark').src = logos.groupFooter;
     $('skf-group-mark').hidden = false;
   }
   const language = String(master.settings?.language || 'EN').toLowerCase();
-  if ($('skf-slogan')) $('skf-slogan').textContent = master.brand?.slogans?.[language] || master.brand?.slogans?.en || '';
+  const branch = String(master.brand?.currentBranch || 'travels');
+  const slogans = master.brand?.slogans?.[branch] || {};
+  if ($('skf-slogan')) $('skf-slogan').textContent = slogans[language] || slogans.en || '';
   const columns = $('skf-columns');
   if (columns) {
     columns.replaceChildren();
@@ -4029,13 +4040,13 @@ const document=new Proxy(window.document,{get(target,key){if(key==='getElementBy
   }
   function applyMasterPayload(payload={}){
     MASTER={...MASTER,...payload,brand:payload.brand||MASTER.brand||{},routes:{...(MASTER.routes||{}),...(payload.routes||{})}};
-    const logos=payload?.brand?.assets?.logos||payload?.assets?.logos||{};
-    applyCollectionLogo(logos.signatureCollection);
+    applyCollectionLogo("[LEAVE_PLACEHOLDER]");
     
     // Accept injected Destinations from Master Payload if available
     if(payload.destinations && Array.isArray(payload.destinations)) {
       DESTINATIONS = payload.destinations;
     }
+    renderCards();
   }
   function bindPathActions(root=document){
     root.querySelectorAll?.("[data-path]").forEach(btn=>{
@@ -4167,13 +4178,25 @@ const document=new Proxy(window.document,{get(target,key){if(key==='getElementBy
     const defs=[{key:"all",label:"All types"},...present.filter((x,i,a)=>a.indexOf(x)===i).map(key=>({key,label:typeLabel(key)}))];
     $("tabs").innerHTML=defs.map(x=>`<button class="tab ${activeType===x.key?"active":""}" type="button" data-type="${esc(x.key)}">${esc(x.label)}</button>`).join("");
   }
+  function tierBadgeMarkup(tier){
+    const key={
+      SELECT:"collectionSelectBadge",
+      SIGNATURE:"collectionSignatureBadge",
+      EXCELSIOR:"collectionExcelsiorBadgeGold"
+    }[String(tier||"").toUpperCase()];
+    const badges=MASTER?.brand?.assets?.badges||MASTER?.assets?.badges||{};
+    const label=tierLabel(tier);
+    const url=key?safeAssetUrl(badges[key]):"";
+    if(!url)return `<span class="tier-tag ${esc(String(tier||"").toLowerCase())}" data-master-logo="[LEAVE_PLACEHOLDER]">${esc(label)}</span>`;
+    return `<img class="collection-tier-badge" src="${esc(url)}" alt="${esc(label)}" title="${esc(label)}" loading="eager" decoding="async">`;
+  }
   function card(item){
     const tier=itemTier(item),tierClass=tier.toLowerCase(),image=itemImage(item),title=String(item.title||"SKANDI Collection").trim();
     const initials=title.split(/\s+/).slice(0,2).map(x=>x[0]||"").join("").toUpperCase();
     const visual=image?`<div class="thumb" style="background-image:url('${esc(image)}')"></div>`:`<div class="thumb"><div class="thumb-fallback"><span>${esc(initials||"SK")}</span></div></div>`;
     const location=itemLocation(item),meta=[location,item.code,item.collectionLabel].filter(Boolean).join(" · ");
     const action=item.path?`<div class="card-actions"><button class="btn secondary" type="button" data-path="${esc(item.path)}">Explore ${esc(item.typeLabel||"selection")} <span class="icon-arrow">→</span></button></div>`:"";
-    return `<article class="card fx-card reveal">${visual}<div class="card-body"><div class="tier-line"><span class="tier-tag ${esc(tierClass)}">${esc(tierLabel(tier))}</span><span class="tag">${esc(item.typeLabel||item.type||"Selected")}</span></div><h3>${esc(title)}</h3><p>${esc(item.summary||"Selected by SKANDI.")}</p><div class="meta"><span class="live-dot"></span>${esc(meta||"Part of the SKANDI Collection")}</div>${action}</div></article>`;
+    return `<article class="card fx-card reveal">${visual}<div class="card-body"><div class="tier-line">${tierBadgeMarkup(tier)}<span class="tag">${esc(item.typeLabel||item.type||"Selected")}</span></div><h3>${esc(title)}</h3><p>${esc(item.summary||"Selected by SKANDI.")}</p><div class="meta"><span class="live-dot"></span>${esc(meta||"Part of the SKANDI Collection")}</div>${action}</div></article>`;
   }
   function renderCards(){
     const status=$("collectionStatus");

@@ -516,7 +516,7 @@
         <div id="login-left">
           <header id="app-header">
             <div id="SK-logo">
-              <img src="https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/logos/RIAINTRA-LIGHT.svg" alt="RIAINTRA logo">
+               <img data-master-logo="riaHeader" alt="RIAINTRA logo">
               <div id="SK-logo-text">
                 <span>SKANDI STAFF PORTAL</span>
               </div>
@@ -532,7 +532,7 @@
           <div class="brand-bottom">
             <div class="brand-bottom-copy">
               <div id="SK-logo-endorsement">
-                <img src="https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/logos/RIAINTRA_LIGHT.svg" alt="A SKANDI GROUP MEMBER"><div id="SK-logo-text-endorsement">· INTERNAL SYSTEMS</div></div>
+                 <img data-master-logo="[LEAVE_PLACEHOLDER]" alt="A SKANDI GROUP MEMBER"><div id="SK-logo-text-endorsement">· INTERNAL SYSTEMS</div></div>
               <div>For authorized staff use only.</div>
             </div>
             <div id="header-meta"><span id="clock">LOCAL TIME</span></div>
@@ -961,6 +961,12 @@ const SOURCE = "SKANDI_STAFF_LOGIN";
 
     if (event.source !== window.parent) return;
     if (data.source !== PARENT_SOURCE) return;
+    if (data.type === "SKANDI_MASTER_CONFIG") {
+      const logo = document.querySelector('[data-master-logo="riaHeader"]');
+      const logoUrl = String(payload?.brand?.assets?.logos?.riaHeader || "").trim();
+      if (logo && logoUrl) logo.src = logoUrl;
+      return;
+    }
     if (data.requestId && activeRequestId && data.requestId !== activeRequestId) return;
     if (refreshing && data.requestId === refreshRequestId &&
         (data.type === "STAFF_LOGIN_OK" || data.type === "STAFF_LOGIN_ERROR" || data.type === "STAFF_LOGIN_NOTICE")) {
@@ -1010,6 +1016,7 @@ const SOURCE = "SKANDI_STAFF_LOGIN";
   setBusy(false);
   syncMobileViewport();
   dropBtn.setAttribute("aria-controls", "login-card-wrap");
+  post("MASTER_CONFIG_REQUEST", { context:"riaintra-login" });
   post("STAFF_LOGIN_READY", {});
 
 

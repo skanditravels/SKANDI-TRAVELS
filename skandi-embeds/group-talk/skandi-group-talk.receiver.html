@@ -183,7 +183,7 @@ body{min-height:100vh;min-height:100svh}
   <section class="skandi-loader-card" aria-labelledby="skandi-loader-title">
     <div class="skandi-brand">
       <img id="skandi-loader-logo" alt="">
-      <span id="skandi-loader-fallback" aria-label="SKANDI">SKANDI</span>
+      <span id="skandi-loader-fallback" aria-label="SKANDI">[LEAVE_PLACEHOLDER]</span>
     </div>
     <p id="skandi-loader-eyebrow" class="skandi-loader-eyebrow">ALTEA CREW COMMUNICATIONS</p>
     <h1 id="skandi-loader-title">Stay in sync with your crew</h1>
@@ -276,35 +276,38 @@ body{min-height:100vh;min-height:100svh}
 
   function resolveLogoKey(identity) {
     const route = String(identity?.route || '').toLowerCase().replace(/\/+$/, '') || '/';
-    const isLight = getPageSurfaceIsLight();
+    if (route === '/about/our-network') return 'groupMemberLoader';
+    if (route === '/the-store' || route.startsWith('/the-store/')) return 'storeWhite';
+    if (route === '/voy' || route === '/voy-magazine') return 'voyBySkWhite';
+    if (route === '/skandi-club' || route.startsWith('/skandi-club/')) return 'clubWhite';
+    if (route === '/skandi-collection') return 'collectionWaveLight';
 
-    if (route.startsWith('/riaintra/success-factors/altea')) return 'alteaWhite';
-    if (route.startsWith('/riaintra')) return 'riaintra';
-
-    if (route === '/the-store') return isLight ? 'storeHeader' : 'storeFooter';
-    if (route === '/voy') return 'voyWhiteBySkandi';
-    if (route === '/skandi-club') return 'skandiClub';
-    if (route === '/skandi-collection') return 'SKANDICollection';
-
-    return isLight ? 'customerHeader' : 'customerFooter';
+    // Keep the image slot in place until these loader placements are assigned.
+    if (route.startsWith('/riaintra')) return '[LEAVE_PLACEHOLDER]';
+    return 'customerLoader';
   }
 
   function setBrand(identity, brand) {
     const family = identity.family;
+    const route = String(identity?.route || '').toLowerCase().replace(/\/+$/, '') || '/';
+    const logoKey = resolveLogoKey(identity);
     const labels = {
-      public: String(brand?.travelName || 'SKANDI Travels'),
+      public: String(route === '/about/our-network' ? (brand?.groupName || 'SKANDI Group') : (brand?.travelName || 'SKANDI Travels')),
       riaintra: String(brand?.internalName || 'RIAINTRA'),
       altea: String(brand?.alteaName || 'ALTEA')
     };
-
-    const logoKey = resolveLogoKey(identity);
+    const brandLabel = route === '/the-store' || route.startsWith('/the-store/') ? 'THE STORE'
+      : route === '/skandi-club' || route.startsWith('/skandi-club/') ? 'SKANDI Club'
+      : route === '/skandi-collection' ? 'SKANDI Collection'
+      : route === '/voy' || route === '/voy-magazine' ? 'VOY'
+      : labels[family] || 'SKANDI';
     const logos = brand?.assets?.logos || {};
     const logoUrl = logos[logoKey];
 
     brandEyebrow.textContent = PAGE_COPY.eyebrow;
-    logoFallback.textContent = family === 'public' ? 'SKANDI' : (labels[family] || 'SKANDI');
-    logoFallback.setAttribute('aria-label', labels[family] || 'SKANDI');
-    document.title = (labels[family] || PAGE_COPY.titlePrefix) + ' | ' + PAGE_COPY.title;
+    logoFallback.textContent = '[LEAVE_PLACEHOLDER]';
+    logoFallback.setAttribute('aria-label', brandLabel);
+    document.title = brandLabel + ' | ' + PAGE_COPY.title;
 
     if (!logoUrl) return;
 
@@ -328,7 +331,7 @@ body{min-height:100vh;min-height:100svh}
         logoFallback.hidden = false;
       };
 
-      logo.alt = (labels[family] || 'SKANDI') + ' logo';
+    logo.alt = brandLabel + ' logo';
       logo.src = parsed.href;
     } catch (_) {}
   }

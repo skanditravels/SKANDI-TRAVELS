@@ -432,7 +432,7 @@ body[data-theme="dark"] #riaintra-global-header-root {
     <div class="shell-left">
       <button id="burger" class="burger" type="button" aria-label="Open menu">☰</button>
       <div class="product">
-        <img id="logo" src="" alt="RIAINTRA">
+        <img id="logo" data-master-logo="riaHeader" alt="RIAINTRA">
         <div class="product-text">
           <strong id="riaintra-header-productName">RIAINTRA</strong>
           <small id="productContext">Enterprise Workforce Suite</small>
@@ -500,7 +500,7 @@ body[data-theme="dark"] #riaintra-global-header-root {
     </div>
 
     <div id="grouplogo" class="global-footer">
-      <img src="https://static.wixstatic.com/media/394052_02ed0c030fea4f14b5e5677fdaeae197~mv2.png" alt="SKANDI GROUP MEMBER">
+      <img id="riaFooterLogo" data-master-logo="riaFooter" alt="RIAINTRA" hidden="">
     </div>
 
     <div class="footer-right">
@@ -634,11 +634,13 @@ const document=new Proxy(window.document,{get(target,key){if(key==='getElementBy
   function render() {
     // 1. Branding
     const header = config?.internal?.header || {};
-    const logo = config?.brand?.assets?.logos?.riaintra || config?.brand?.assets?.logos?.skandiPrimary || "";
+    const logo = config?.brand?.assets?.logos?.riaHeader || "";
     
     if (logo && $("logo")) $("logo").src = logo;
     if (header.productName && $("riaintra-header-productName")) $("riaintra-header-productName").textContent = header.productName;
-    if (header.productContext && $("productContext")) $("productContext").textContent = header.productContext;
+    const language = String(config?.settings?.language || "EN").trim().toLowerCase();
+    const slogans = config?.brand?.slogans?.riaintra || {};
+    if ($("productContext")) $("productContext").textContent = slogans[language] || slogans.en || header.productContext || "";
 
     // 2. Navigation
     const current = config?.currentPath || "";
@@ -814,7 +816,13 @@ const document=new Proxy(window.document,{get(target,key){if(key==='getElementBy
 
   window.addEventListener("message",e=>{
     const m=e.data||{};if(m.source!==PARENT)return;
-    if(m.type==="SKANDI_MASTER_CONFIG"){config=m.payload||{};render()}
+    if(m.type==="SKANDI_MASTER_CONFIG"){
+      config=m.payload||{};
+      const logo=String(config?.brand?.assets?.logos?.riaFooter||"");
+      const image=$("riaFooterLogo");
+      if(image&&logo){image.src=logo;image.hidden=false}
+      render();
+    }
   });
 
   post("MASTER_CONFIG_REQUEST",{context:"riaintra-footer"});

@@ -74,6 +74,7 @@
 #altea-global-header-root .logo[src] {
   display: block;
 }
+#altea-global-header-root .mobile-logo { display:none !important; }
 #altea-global-header-root .brand-title {
   display: flex;
   flex-direction: column;
@@ -215,6 +216,8 @@
   #altea-global-header-root .toolbar-nav button { font-size: 11px; padding: 8px; }
   #altea-global-header-root .env-badge { display: none; }
   #altea-global-header-root .utility-action { padding: 0 8px; font-size: 9px; }
+  #altea-global-header-root .desktop-logo { display:none !important; }
+  #altea-global-header-root .mobile-logo[src] { display:block !important; }
 }
 </style>
 <style data-skandi-part="footer">
@@ -263,6 +266,8 @@
   gap: 16px;
   white-space: nowrap;
 }
+#altea-global-footer-root .footer-brand-logo{display:block;width:auto;max-width:92px;height:16px;object-fit:contain}
+#altea-global-footer-root .footer-brand-logo[hidden]{display:none!important}
 #altea-global-footer-root .divider {
   width: 1px;
   height: 14px;
@@ -1166,7 +1171,8 @@
 
 <header class="altea-toolbar">
   <div class="toolbar-left">
-    <img id="logo" class="logo" alt="ALTEA">
+    <img id="logo" class="logo desktop-logo" data-master-logo="alteaHeader" alt="ALTEA">
+    <img id="mobileLogo" class="logo mobile-logo" data-master-logo="alteaIconLight" alt="ALTEA">
     <div class="brand-title">
       <strong id="productName">Loading...</strong>
       <span id="productContext">SKANDI SYSTEMS</span>
@@ -1275,6 +1281,7 @@
 
 <footer class="status-bar">
   <div class="section left-section">
+    <img id="alteaFooterLogo" class="footer-brand-logo" data-master-logo="alteaFooter" alt="ALTEA" hidden="">
     <div class="sys-message" title="Host Connection Status">
       <div class="network-dot" id="networkDot"></div>
       <span class="sys-text" id="sysMessage">READY</span>
@@ -1415,13 +1422,16 @@ const document=new Proxy(window.document,{get(target,key){if(key==='getElementBy
     const header = headerConfig();
     const altea = config?.altea || {};
     const p = profile();
-    const logo = config?.brand?.assets?.logos?.altea ||
-                 config?.brand?.assets?.logos?.riaintra ||
-                 config?.brand?.assets?.logos?.skandiPrimary || "";
+    const logos = config?.brand?.assets?.logos || {};
+    const logo = String(logos.alteaHeader || "");
+    const mobileLogo = String(logos.alteaIconLight || "");
 
     if (logo && $("logo")) $("logo").src = logo;
+    if (mobileLogo && $("mobileLogo")) $("mobileLogo").src = mobileLogo;
     if ($("productName")) $("productName").textContent = header.productName || altea.systemName || "ALTEA";
-    if ($("productContext")) $("productContext").textContent = header.productContext || altea.systemContext || "SKANDI SYSTEMS";
+    const language = String(config?.settings?.language || "EN").trim().toLowerCase();
+    const slogans = config?.brand?.slogans?.altea || {};
+    if ($("productContext")) $("productContext").textContent = slogans[language] || slogans.en || header.productContext || altea.systemContext || "SKANDI SYSTEMS";
 
     const env = runtime.env || altea.env || config?.env || "PRD";
     if ($("envBadge")) $("envBadge").textContent = String(env).trim().toUpperCase() || "PRD";
@@ -1640,6 +1650,9 @@ const document=new Proxy(window.document,{get(target,key){if(key==='getElementBy
 
     if (message.type === "SKANDI_MASTER_CONFIG") {
       const payload = message.payload || {};
+      const logo = String(payload?.brand?.assets?.logos?.alteaFooter || "");
+      const logoElement = $("alteaFooterLogo");
+      if (logoElement && logo) { logoElement.src = logo; logoElement.hidden = false; }
       legalPath = String(payload?.routes?.legalInternal || LEGAL_PATH);
       renderState({
         env:payload?.altea?.env || payload?.env || "PRD",
