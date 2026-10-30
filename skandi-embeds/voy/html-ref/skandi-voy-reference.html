@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>VOY Magazine | SKANDI Travels</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600&family=Montserrat:wght@400;500;600;700;800;900&family=Playfair+Display:wght@600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="skandi-voy-reference.css">
+
+<link rel="stylesheet" href="skandi-voy-reference.part-02.css" id="voy-structured-expanded-templates">
+</head>
+
+<body>
+<div class="skandi-shell">
+<div class="content-shell">
+
+    <section class="voy-intro" aria-labelledby="voyPageTitle">
+      <div class="voy-intro-copy">
+        <div class="voy-eyebrow">VOY Magazine</div>
+        <h1 id="voyPageTitle">Travel stories, guides and ideas.</h1>
+        <p>Turn the pages of VOY for destination inspiration, selected hotels, local experiences and practical travel advice from SKANDI.</p>
+      </div>
+      <div class="voy-intro-actions" aria-label="Magazine actions">
+        <button class="btn navy" id="openLatestBtn" type="button">Read latest issue</button>
+        <button class="btn outline" id="scrollIssuesBtn" type="button">View all issues</button>
+      </div>
+    </section>
+
+<div id="status" class="status show">Loading VOY magazine...</div>
+
+    <section class="search-shell" aria-label="Search VOY magazine">
+      <div class="search-topline"><span class="search-label">Search the magazine</span><span class="search-help">Find destinations, hotels, articles and words inside each issue</span></div>
+      <div class="mag-toolbar">
+        <input id="query" aria-label="Search VOY" placeholder="Search VOY...">
+        <select id="category" aria-label="Category"><option value="">All categories</option></select>
+        <select id="destination" aria-label="Destination"><option value="">All destinations</option></select>
+        <select id="issueSelect" aria-label="Issue"><option value="">Select issue</option></select>
+        <select id="sort" aria-label="Sort"><option value="latest">Latest first</option><option value="title">Title A–Z</option></select>
+        <button class="btn navy" id="searchBtn" type="button">Search VOY</button>
+      </div>
+    </section>
+
+    <section class="reader-layout">
+      <main class="reader-panel">
+        <div class="reader-head">
+          <div class="reader-title-block">
+            <div class="reader-mark" aria-hidden="true">VOY</div>
+            <div><strong id="issueTitle">VOY Atelier</strong><span id="issueMeta">Select an issue to begin reading.</span></div>
+          </div>
+          <div class="reader-actions" aria-label="Reader controls">
+            <button class="btn light" id="prevBtn" type="button">Previous</button>
+            <button class="btn light" id="nextBtn" type="button">Next</button>
+            <button class="btn light" id="interactiveToggleBtn" type="button" aria-pressed="true">Links visible</button>
+            <button class="btn light" id="focusModeBtn" type="button" aria-pressed="false">Focus mode</button>
+            <button class="btn light" id="shareBtn" type="button">Share</button>
+            <button class="btn navy" id="fullscreenBtn" type="button">Full screen</button>
+          </div>
+        </div>
+
+        <div class="flip-stage">
+          <div class="stage-watermark">VOY Magazine · SKANDI Travels</div>
+          <div id="flipBook"></div>
+          <iframe id="fallbackFrame" class="reader-fallback" title="VOY PDF fallback reader"></iframe>
+          <div id="placeholder" class="reader-placeholder">
+            <div class="placeholder-monogram">VOY</div>
+            <strong>Choose an issue</strong>
+            <p>The magazine opens here with cover-to-cover page turning. Drag a page corner, swipe, or use the reader controls.</p>
+          </div>
+          <div class="stage-hint">Drag, swipe or use the arrows</div>
+        </div>
+
+        <div class="reader-footer">
+          <div class="page-nav">
+            <div class="page-status-group">
+              <span id="pageInfo" class="page-count">Page —</span>
+              <span id="interactiveInfo" class="interactive-count">No interactive items</span>
+            </div>
+            <div class="page-scrubber"><input id="pageRange" type="range" min="1" max="1" value="1" aria-label="Magazine page"><span id="indexInfo">PDF index not loaded</span></div>
+            <div class="page-jump"><input id="pageJumpInput" type="number" min="1" value="1" aria-label="Go to page"><button id="pageJumpBtn" type="button">Go</button></div>
+          </div>
+          <div class="thumbnail-shell"><div id="thumbnailRail" class="thumbnail-rail" aria-label="Page thumbnails"></div></div>
+        </div>
+      </main>
+
+      <aside class="reader-sidebar">
+        <section class="side-card">
+          <div class="side-card-head"><div class="side-kicker">Reading now</div><h2>Inside this issue</h2></div>
+          <div class="reading-now">
+            <div id="activeIssueEdition" class="reading-edition">VOY Atelier</div>
+            <strong id="activeIssueTitle">Select an issue</strong>
+            <p id="activeIssueSummary">Destination stories, hotels and curated journeys will appear here.</p>
+            <div id="activeIssueTags" class="reading-tags"></div>
+            <div class="reading-actions">
+              <button class="btn navy" id="saveIssueBtn" type="button">Save issue</button>
+              <button class="btn light" id="openPdfBtn" type="button">Open PDF</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="side-card">
+          <div class="side-card-head"><div class="side-kicker">Search results</div><h2>Stories & pages</h2></div>
+          <div id="searchResults" class="search-results"><div class="result"><strong>Search VOY</strong><span>Results from issues and PDF text will appear here.</span></div></div>
+        </section>
+
+        <section class="journey-card" id="adTop"><div class="side-kicker">Featured by SKANDI</div><h2>Turn inspiration into a journey</h2><span>Open destinations, hotels, activities and curated packages featured in VOY.</span><button class="btn teal" data-banner="/destinations" type="button">Explore destinations</button></section>
+        <section class="journey-card" id="adSide"><div class="side-kicker">SKANDI Signature</div><h2>Travel, elevated</h2><span>Discover premium journeys created around memorable moments.</span><button class="btn gold" data-banner="/signature-collection" type="button">View Signature</button></section>
+      </aside>
+    </section>
+
+    <div class="below-reader">
+      <section id="issuesBlock">
+        <div class="section-heading"><div><div class="eyebrow" style="color:var(--skandi-teal-deep);margin-bottom:7px">VOY archive</div><h2>Latest issues</h2></div><p>Choose an edition and continue reading in the page-turn reader.</p></div>
+        <div id="issueList" class="wide-grid"></div>
+      </section>
+
+      <section style="margin-top:28px">
+        <div class="section-heading"><div><div class="eyebrow" style="color:var(--skandi-teal-deep);margin-bottom:7px">From story to journey</div><h2>Travel with SKANDI</h2></div><p>Continue from editorial inspiration to planning and booking.</p></div>
+        <div id="travelCards" class="wide-grid"></div>
+      </section>
+    </div>
+  </div>
+</div>
+
+<div id="readerModal" class="reader-modal" role="dialog" aria-modal="true" aria-labelledby="readerModalTitle">
+  <div class="reader-modal-card">
+    <div class="reader-modal-head"><strong id="readerModalTitle">VOY interactive content</strong><button id="readerModalClose" class="reader-modal-close" type="button" aria-label="Close">×</button></div>
+    <div id="readerModalBody" class="reader-modal-body"></div>
+  </div>
+</div>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/page-flip@2.0.7/dist/js/page-flip.browser.min.js"></script>
+<script src="skandi-voy-reference.js"></script>
+
+<script src="skandi-voy-reference.part-02.js"></script>
+
+</body>
+</html>

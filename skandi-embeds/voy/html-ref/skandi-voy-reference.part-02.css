@@ -1,0 +1,30 @@
+
+.voyp-partner-logos{height:46px;display:flex;align-items:center;justify-content:flex-start;gap:10px;margin-bottom:8px;overflow:hidden}
+.voyp-partner-logos img{display:block;max-width:78%;max-height:100%;width:auto;height:auto;object-fit:contain;object-position:left center}
+.voyp-partner-logos.dual img{max-width:44%;max-height:86%}
+.voyp-partner-logo-fallback{min-height:40px;display:flex;align-items:center;color:var(--p-text);font-size:12px;font-weight:900;letter-spacing:.08em;text-transform:uppercase}
+.voyp-airline-directory-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;padding:2px 34px 44px}
+.voyp-airline-directory-card{min-height:112px;border:1px solid rgba(16,49,84,.16);padding:10px;background:#fff;overflow:hidden}
+.voyp-airline-directory-card h3{font-size:12px;margin:2px 0 4px;color:var(--p-text)}
+.voyp-airline-directory-card p{font-size:8px;color:rgba(16,49,84,.68)}
+.voyp-airline-profile-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;padding:2px 34px 44px}
+.voyp-airline-profile-card{display:flex;flex-direction:column;min-height:440px;border:1px solid rgba(16,49,84,.16);background:#fff;overflow:hidden}
+.voyp-airline-profile-card>header{padding:13px;border-bottom:1px solid rgba(16,49,84,.14)}
+.voyp-airline-profile-card>header h3{font-size:19px;color:var(--p-text)}
+.voyp-airline-profile-card>header p{font-size:8px;color:rgba(16,49,84,.67)}
+.voyp-airline-facts{display:grid;grid-template-columns:1fr 1fr}
+.voyp-airline-facts>div{min-height:55px;padding:8px;border-right:1px solid rgba(16,49,84,.12);border-bottom:1px solid rgba(16,49,84,.12)}
+.voyp-airline-facts>div:nth-child(2n){border-right:0}
+.voyp-airline-facts b,.voyp-profile-tip b,.voyp-profile-booking b{display:block;margin-bottom:3px;color:var(--p-text);font-size:7px;text-transform:uppercase;letter-spacing:.08em}
+.voyp-airline-facts span,.voyp-profile-tip span,.voyp-profile-booking span{font-size:7.5px;line-height:1.35;color:rgba(16,49,84,.67)}
+.voyp-profile-tip{margin-top:auto;padding:9px 11px;background:var(--p-text)}
+.voyp-profile-tip b{color:var(--p-accent)}.voyp-profile-tip span{color:#fff}
+.voyp-profile-booking{padding:8px 11px;background:#f4f7fa}
+.voyp-airport-grid{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:repeat(3,1fr);gap:8px;padding:2px 34px 44px}
+.voyp-airport-card{display:grid;grid-template-columns:58px 1fr;gap:10px;min-height:122px;padding:9px;border:1px solid rgba(16,49,84,.16);background:#fff}
+.voyp-airport-code{display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--p-text);color:#fff}
+.voyp-airport-code strong{font-size:18px}.voyp-airport-code span{margin-top:4px;color:var(--p-accent);font-size:6px;text-transform:uppercase;text-align:center}
+.voyp-airport-content .voyp-partner-logos{height:29px;margin:0 0 4px}.voyp-airport-content h3{font-size:11px;margin:2px 0}.voyp-airport-content>small{font-size:6.5px}
+.voyp-airport-content dl{margin:6px 0 0;display:grid;gap:3px}.voyp-airport-content dl div{display:grid;grid-template-columns:43px 1fr;gap:4px}.voyp-airport-content dt{font-size:6px;font-weight:900;text-transform:uppercase;color:var(--p-text)}.voyp-airport-content dd{margin:0;font-size:6.5px;line-height:1.25;color:rgba(16,49,84,.67)}
+.voyp-transfer-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;padding:4px 34px}.voyp-transfer-grid article{display:grid;grid-template-columns:36px 1fr;gap:10px;min-height:105px;padding:12px;border:1px solid rgba(16,49,84,.16);background:#fff}.voyp-transfer-grid article>b{font-size:24px;color:var(--p-accent)}.voyp-transfer-grid h3{font-size:15px}.voyp-transfer-grid p{font-size:8px;color:rgba(16,49,84,.67)}
+.voyp-destination-card{min-height:190px}.voyp-destination-facts{display:grid;grid-template-columns:1fr 1fr;gap:5px 8px;margin:8px 0 0}.voyp-destination-facts div{min-width:0}.voyp-destination-facts dt{color:var(--p-accent);font-size:6px;font-weight:900;text-transform:uppercase;letter-spacing:.08em}.voyp-destination-facts dd{margin:2px 0 0;color:rgba(16,49,84,.68);font-size:6.5px;line-height:1.3}

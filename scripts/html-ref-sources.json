@@ -483,6 +483,13 @@
     "disposition": "IMPORTED"
   },
   {
+    "source": "HTML_REF/skandi/VOY.md",
+    "directory": "skandi-embeds/voy/html-ref",
+    "stem": "skandi-voy-reference",
+    "disposition": "SOURCE CONFLICT",
+    "note": "The complete HTML_REF reader is retained here for source validation. The active skandi-embeds/voy triplet remains PENDING SOURCE; this reference mirror does not activate /voy-magazine."
+  },
+  {
     "source": "HTML_REF/skandi/Booking/README.md",
     "directory": "skandi-embeds/booking/html-ref",
     "stem": "skandi-booking-merged-reference",
