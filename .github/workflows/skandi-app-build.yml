@@ -50,7 +50,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
           cache: npm
           cache-dependency-path: scripts/package-lock.json
       - name: Install deterministic compiler tooling
@@ -58,8 +58,9 @@ jobs:
       - name: Inspect Wix site CLI options (draft verification)
         if: github.event_name == 'pull_request'
         run: |
-          npm ci --ignore-scripts --no-audit --no-fund
-          npm exec --no -- wix publish --help
+          npm install --prefix "$RUNNER_TEMP/site-cli" --no-save --ignore-scripts --no-audit --no-fund @wix/cli@latest
+          "$RUNNER_TEMP/site-cli/node_modules/.bin/wix" --version
+          "$RUNNER_TEMP/site-cli/node_modules/.bin/wix" publish --help
       - name: Validate route inventory and integration evidence
         run: node scripts/build-skandi-app.mjs --inventory
       - name: Run compilation and regression tests
