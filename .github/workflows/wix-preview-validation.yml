@@ -38,7 +38,7 @@ jobs:
         run: |
           set -euo pipefail
           timeout 35s "$RUNNER_TEMP/site-cli/node_modules/.bin/wix" dev --tunnel > "$RUNNER_TEMP/wix-dev.log" 2>&1 || true
-          node -e 'const f=require("fs");const s=f.readFileSync(process.env.RUNNER_TEMP+"/wix-dev.log","utf8"); console.log("Wix editor sync messages:"); for(const line of s.split("\\n")) if(/syncing pages|ui version|revision.not.found|unable to|failed|error/i.test(line)) console.log(line.replace(/https?:\\/\\/\\S+/g,"[url]"));const c=JSON.parse(f.readFileSync("wix.config.json"));console.log("Resulting UI version:",c.uiVersion)'
+          node -e 'const f=require("fs");const s=f.readFileSync(process.env.RUNNER_TEMP+"/wix-dev.log","utf8"); console.log("Revision missing:",s.includes("REVISION_NOT_FOUND")); console.log("Tunnel error:",/error|failed/i.test(s)); console.log("Editor URL advertised:",/https?:/i.test(s));const c=JSON.parse(f.readFileSync("wix.config.json"));console.log("Resulting UI version:",c.uiVersion)'
       - name: Test the last published Wix history revision in an isolated preview
         run: |
           node -e 'const fs=require("fs");const p="wix.config.json";const c=JSON.parse(fs.readFileSync(p));c.uiVersion="1582";fs.writeFileSync(p,JSON.stringify(c,null,2))'
