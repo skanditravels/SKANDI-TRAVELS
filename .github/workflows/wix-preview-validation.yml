@@ -10,13 +10,13 @@ permissions:
 
 jobs:
   preview:
-    if: github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref == 'codex/wix-preview-validation'
+    if: github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref == 'codex/preview-current-main-20261103'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: be53d30218fcbd49e3b8bfbaa9e48a69bc79b1cf
+          ref: 1342ae3dd71a95539726c0066169ed24db5c0925
       - uses: actions/setup-node@v4
         with:
           node-version: 24
