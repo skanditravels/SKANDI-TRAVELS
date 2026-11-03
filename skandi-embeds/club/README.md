@@ -1305,3 +1305,7 @@ render();
 </body>
 </html>
 ```
+# 2026-11-03: Wix page name synchronization
+
+The published Wix UI identifies page `gsejz` as `SKANDI Club`. Its existing controller is now `src/pages/SKANDI Club.gsejz.js`; the controller body and component contract were preserved. Earlier references below retain their historical names.
+

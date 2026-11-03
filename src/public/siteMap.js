@@ -417,7 +417,7 @@ export const PAGE_BUILD_INTEGRATIONS = Object.freeze({
     ]
   },
   "club": {
-    "controller": "src/pages/SKANDI Signature Club.gsejz.js",
+    "controller": "src/pages/SKANDI Club.gsejz.js",
     "embedIds": [
       "#skandiClubInfoEmbed"
     ],
@@ -449,7 +449,7 @@ export const PAGE_BUILD_INTEGRATIONS = Object.freeze({
     ]
   },
   "newsroom": {
-    "controller": "src/pages/News Room.vn46g.js",
+    "controller": "src/pages/Newsroom.vn46g.js",
     "embedIds": [
       "#newsroomEmbed"
     ],
@@ -579,7 +579,7 @@ export const PAGE_BUILD_INTEGRATIONS = Object.freeze({
     ]
   },
   "support": {
-    "controller": "src/pages/How can we help_.k0iqp.js",
+    "controller": "src/pages/Support.k0iqp.js",
     "embedIds": [
       "#skandiHelpCenterEmbed",
       "#skandiSupportChatEmbed"

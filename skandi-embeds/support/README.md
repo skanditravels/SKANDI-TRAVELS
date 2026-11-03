@@ -1565,3 +1565,7 @@ post("PUBLIC_SUPPORT_READY",{page:"/about/support"});
 </html>
 
 ```
+# 2026-11-03: Wix page name synchronization
+
+The published Wix UI identifies page `k0iqp` as `Support`. Its existing controller is now `src/pages/Support.k0iqp.js`; the controller body and two-component contract were preserved. Earlier references below retain their historical names. This name synchronization does not resolve the existing blocked Support build.
+

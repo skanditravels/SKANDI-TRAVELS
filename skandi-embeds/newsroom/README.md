@@ -30,3 +30,7 @@ Source contracts and syntax are checked locally. Wix publication, Supabase/RLS, 
 ## COMPLETE INTENDED LIVE HTML SOURCE
 
 > The matching executable source is maintained in this page folder.
+# 2026-11-03: Wix page name synchronization
+
+The published Wix UI identifies page `vn46g` as `Newsroom`. Its existing controller is now `src/pages/Newsroom.vn46g.js`; the controller body and component contract were preserved. Earlier references below retain their historical names.
+
