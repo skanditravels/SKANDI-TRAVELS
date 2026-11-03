@@ -8,9 +8,7 @@ on:
       - 'skandi-embeds/**'
       - 'riaintra-embeds/**'
       - 'altea-embeds/**'
-      - 'src/pages/**'
-      - 'src/public/**'
-      - 'src/backend/SKANDI_CORE/**'
+      - 'src/**'
       - 'scripts/**'
       - 'tests/**'
       - 'HTML_REF/**'
@@ -47,7 +45,7 @@ jobs:
       - name: Checkout current source
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || 'main' }}
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.event_name == 'push' && github.sha || 'main' }}
           fetch-depth: 0
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -94,3 +92,43 @@ jobs:
       - name: Fail visibly when a public SKANDI page failed compilation
         if: steps.build.outcome == 'failure'
         run: exit 1
+
+      - name: Check whether Wix runtime code changed
+        if: github.event_name == 'push' && steps.build.outcome == 'success'
+        id: wix_changes
+        env:
+          BEFORE_SHA: ${{ github.event.before }}
+          AFTER_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          if [[ "$BEFORE_SHA" =~ ^0+$ ]] || ! git cat-file -e "$BEFORE_SHA^{commit}"; then
+            echo "::error::Cannot determine the previous commit. Wix publishing is stopped."
+            exit 1
+          fi
+          git diff --no-renames --name-only "$BEFORE_SHA" "$AFTER_SHA" -- src/ > /tmp/skandi-wix-changed-paths
+          if awk 'tolower($0) !~ /\.(md|txt)$/ {found=1} END {exit !found}' /tmp/skandi-wix-changed-paths; then
+            echo "needed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "needed=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Publish Wix after verified build
+        if: github.event_name == 'push' && steps.build.outcome == 'success' && steps.wix_changes.outputs.needed == 'true' && vars.SKANDI_WIX_AUTOPUBLISH == 'enabled'
+        env:
+          WIX_WEBHOOK_URL: ${{ secrets.SKANDI_WIX_PUBLISH_WEBHOOK }}
+        run: |
+          set -euo pipefail
+          if [ -z "$WIX_WEBHOOK_URL" ]; then
+            echo "::error::SKANDI_WIX_PUBLISH_WEBHOOK is not configured."
+            exit 1
+          fi
+          git fetch origin main
+          if [ "$(git rev-parse origin/main)" != "$(git rev-parse HEAD)" ]; then
+            echo "::error::main changed during the build. Wix was not published."
+            exit 1
+          fi
+          curl --silent --show-error --fail --max-time 30 \
+            --output /dev/null --request POST \
+            --header 'Content-Type: application/json' \
+            --data '{"source":"github-actions","event":"verified-src-update"}' \
+            "$WIX_WEBHOOK_URL"
+          echo "Wix accepted the publish trigger. Check its automation log and the live site to verify publication."
