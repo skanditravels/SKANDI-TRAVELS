@@ -210,7 +210,7 @@ const MASTER_CONFIG = Object.freeze({
           title:"ABOUT SKANDI",
           links:Object.freeze([
             { label:"About SKANDI", path:SITE_MAP.about },
-            { label:"Careers", path:SITE_MAP.careers" },
+            { label:"Careers", path:SITE_MAP.careers },
             { label:"Newsroom", path:SITE_MAP.newsroom },
             { label:"Our Network", path:SITE_MAP.ourNetwork }
           ])
