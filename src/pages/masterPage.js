@@ -53,6 +53,7 @@ const BRAND_ASSET_ROOT = "https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/ob
 const brandLogo = file => `${BRAND_ASSET_ROOT}logos/${file}`;
 const CUSTOMER_FOOTER_LOGO = brandLogo("SKANDI_TRAVELS-LIGHT-STACKED-WAVE.svg");
 const brandBadge = file => `${BRAND_ASSET_ROOT}icons/${file}`;
+const brandSocial = file => `${BRAND_ASSET_ROOT}icons/social_icons/${file}`;
 const LANGUAGE_ALIASES = Object.freeze({ SE:"SV", DK:"DA" });
 
 const MASTER_CONFIG = Object.freeze({
@@ -142,9 +143,9 @@ const MASTER_CONFIG = Object.freeze({
       icons: Object.freeze({
         home: "", bookings: "", favorites: "", documents: "", travelers: "",
         wallet: "", support: "", settings: "", notifications: "", snapchat: "", 
-        instagram: "https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/icons/social_icons/instagram-icon.png", 
-        facebook: "https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/icons/social_icons/facebook-icon.png", 
-        linkedin: "https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/icons/social_icons/linkedin-icon.png"
+        instagram:brandSocial("instagram-icon.png"), 
+        facebook:brandSocial("facebook-icon.png"), 
+        linkedin:brandSocial("linkedin-icon.png")
       })
     })
   }),
@@ -209,15 +210,15 @@ const MASTER_CONFIG = Object.freeze({
           title:"ABOUT SKANDI",
           links:Object.freeze([
             { label:"About SKANDI", path:SITE_MAP.about },
-            { label:"Careers", path:"/about/careers" },
+            { label:"Careers", path:SITE_MAP.careers" },
             { label:"Newsroom", path:SITE_MAP.newsroom },
             { label:"Our Network", path:SITE_MAP.ourNetwork }
           ])
         })
       ]),
       newsletter:Object.freeze({
-        title:"Get SKANDI offers and travel inspiration",
-        description:"Receive destination guides, SKANDI Collections updates and member offers.",
+        title:"Get SKANDI Travel offers and travel inspiration",
+        description:"Receive destination guides, SKANDI Collections updates.",
         buttonLabel:"Sign up",
         placeholder:"Email address"
       }),
@@ -249,7 +250,7 @@ const MASTER_CONFIG = Object.freeze({
         { id:"helpdesk", label:"HelpDesk", path:SITE_MAP.serviceDesk }
       ]),
       managementNav:Object.freeze([
-        { id:"magazine-manager", label:"Magazine Manager", path:SITE_MAP.mediaControl || SITE_MAP.magazineManager },
+        { id:"magazine-manager", label:"Media Control", path:SITE_MAP.mediaControl },
         { id:"payroll", label:"Payroll", path:SITE_MAP.payroll }
       ])
     }),
@@ -267,7 +268,6 @@ const MASTER_CONFIG = Object.freeze({
       productName:"ALTEA",
       productContext:"SKANDI SYSTEMS",
       primaryNav:Object.freeze([
-        Object.freeze({ id:"altea-home", label:"ALTEA Apps", path:SITE_MAP.alteaLaunchpad }),
         Object.freeze({ id:"reservations", label:"Reservations", path:SITE_MAP.alteaReservations }),
         Object.freeze({ id:"inventory", label:"Inventory", path:SITE_MAP.inventoryControl }),
         Object.freeze({ id:"my-roster", label:"MyRoster", path:APP_ROUTES.myRoster }),
