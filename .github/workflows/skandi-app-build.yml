@@ -133,14 +133,60 @@ jobs:
           fi
           node -e 'const c=require("./wix.config.json"); if(String(c.uiVersion)!==process.env.APPROVED_WIX_UI_VERSION){console.error("Wix UI version does not match the approved version.");process.exit(1)}'
           "$RUNNER_TEMP/site-cli/node_modules/.bin/wix" login --api-key "$WIX_CLI_API_KEY"
-      - name: Publish tested Wix source
+      - name: Guard the published Wix design
         if: steps.wix_changes.outputs.needed == 'true'
+        id: wix_live
+        env:
+          INITIAL_LIVE_REVISION: ${{ vars.SKANDI_WIX_INITIAL_LIVE_REVISION }}
         run: |
           set -euo pipefail
+          checkpoint=refs/remotes/origin/automation/wix-published
+          notes_ref=refs/notes/skandi-wix-published
+          if git show-ref --verify --quiet "$checkpoint"; then
+            git fetch origin "+$notes_ref:$notes_ref"
+            deployed=$(git rev-parse "$checkpoint^{commit}")
+            git notes --ref="$notes_ref" show "$deployed" > "$RUNNER_TEMP/wix-published-note.json"
+            expected=$(node scripts/wix-live-revision.mjs note-expected "$RUNNER_TEMP/wix-published-note.json" "$deployed")
+          else
+            if git ls-remote --exit-code origin "$notes_ref" >/dev/null; then
+              echo "::error::A Wix publication note exists without its source checkpoint; reconcile before publishing."
+              exit 1
+            else
+              status=$?
+              if [ "$status" -ne 2 ]; then
+                echo "::error::Could not inspect Wix publication notes."
+                exit "$status"
+              fi
+            fi
+            expected="$INITIAL_LIVE_REVISION"
+          fi
+          node scripts/wix-live-revision.mjs check "$expected"
+          echo "expected=$expected" >> "$GITHUB_OUTPUT"
+      - name: Publish tested Wix source
+        if: steps.wix_changes.outputs.needed == 'true'
+        env:
+          EXPECTED_LIVE_REVISION: ${{ steps.wix_live.outputs.expected }}
+        run: |
+          set -euo pipefail
+          current_main=$(git ls-remote --exit-code --heads origin refs/heads/main | cut -f1)
+          if [ "$current_main" != "$(git rev-parse HEAD)" ]; then
+            echo "::error::main changed after this build was tested; the next run will handle the new commit."
+            exit 1
+          fi
+          node scripts/wix-live-revision.mjs check "$EXPECTED_LIVE_REVISION"
           "$RUNNER_TEMP/site-cli/node_modules/.bin/wix" publish --source local --approve-preview
       - name: Record successful Wix source deployment
         if: steps.wix_changes.outputs.needed == 'true'
+        env:
+          GIT_AUTHOR_NAME: github-actions[bot]
+          GIT_AUTHOR_EMAIL: github-actions[bot]@users.noreply.github.com
+          GIT_COMMITTER_NAME: github-actions[bot]
+          GIT_COMMITTER_EMAIL: github-actions[bot]@users.noreply.github.com
         run: |
           set -euo pipefail
-          git push origin HEAD:refs/heads/automation/wix-published
+          revision=$(node scripts/wix-live-revision.mjs read)
+          source_commit=$(git rev-parse HEAD)
+          node scripts/wix-live-revision.mjs make-note "$source_commit" "$revision" > "$RUNNER_TEMP/wix-published-note.json"
+          git notes --ref=refs/notes/skandi-wix-published add -f -F "$RUNNER_TEMP/wix-published-note.json" "$source_commit"
+          git push --atomic origin HEAD:refs/heads/automation/wix-published refs/notes/skandi-wix-published:refs/notes/skandi-wix-published
           echo "Wix CLI reported successful publication of $(git rev-parse HEAD)." >> "$GITHUB_STEP_SUMMARY"
