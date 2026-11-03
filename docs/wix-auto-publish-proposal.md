@@ -1,15 +1,15 @@
-# Wix automatic publishing (proposed; disabled)
+# Wix automatic publishing
 
-The website builder monitors embed source and Wix runtime code. It compiles and validates eligible pages; a successfully installed receiver retrieves published generated output independently of Wix site publication.
+The website builder watches `src/`, `skandi-embeds/`, `riaintra-embeds/` and `altea-embeds/`. Existing validation triggers for compiler scripts and tests remain. Normal embed-only changes are delivered through a compatible installed receiver and do not trigger a Wix publication.
 
-The proposed Wix trigger only runs on a push to main that changes runtime files under `src/`, after builder tests and compilation succeed and generated output is pushed. It does not run for pull requests, manually dispatched workflows, documentation-only changes or an embed-only update. Existing builder triggers for scripts, tests and workflow changes remain for regression coverage.
+For Wix runtime changes, the workflow builds and tests the latest checkout, publishes its generated page output, then uses Wix CLI for Sites to publish the exact tested local checkout. It never uses the CLI flag that bypasses Wix build errors. Failed tests, failed public compilation, failed Git pushes, failed Wix builds, and failed publishing stop deployment.
 
-## Activation prerequisites
+GitHub queues up to 100 pending runs. The `automation/wix-published` branch records the checkout only after the Wix CLI reports success. The next run compares the entire `src/` tree with that checkpoint, so a source change is not lost when a later push only changes embeds or documentation. A guarded hourly reconciliation also retries pending changes. If history is rewritten or the checkpoint cannot be read, the workflow fails rather than guessing. A failed checkpoint push can cause a later retry of a publication Wix already completed.
 
-This feature is disabled unless repository variable `SKANDI_WIX_AUTOPUBLISH` equals `enabled` and repository secret `SKANDI_WIX_PUBLISH_WEBHOOK` contains the Wix Automation webhook URL. Never commit the webhook URL.
+## Activation and limits
 
-Before enabling, verify the site is connected to this GitHub repository and confirm the Wix automation publishes the intended synced code and editor UI. Confirm a successful Wix build and perform a controlled end-to-end test; an HTTP 2xx response only confirms acceptance of the webhook, not completion or success of publishing. Publishing can include other unpublished site design changes.
+Automatic publication is disabled unless repository variable `SKANDI_WIX_AUTOPUBLISH` is set to `enabled`. Configure repository secret `WIX_CLI_API_KEY` with a Wix API key restricted to the relevant site and Wix CLI for Sites Git Integration permission. The GitHub repository must permit Actions to push generated output and the dedicated checkpoint branch. Do not commit credentials.
 
-The Wix editor may sync after a delay. GitHub Actions concurrency may discard older pending runs; a source change in a superseded run may not be present in the next push's diff. This proposal does not yet have a verified Wix sync signal or durable deployment checkpoint. Do not enable it until those gaps are resolved.
+The CLI uses the UI version in `wix.config.json` (currently 566). Before activation, verify that UI version is the intended Wix design and configure repository variable `SKANDI_WIX_UI_VERSION` to the approved value. The workflow fails if it differs from the file. It cannot tell whether someone has made a newer unpublished design in the editor. The first enabled run without a checkpoint publishes the tested checkout.
 
-Wix HTML components do not update merely because a generated receiver changes. Install a replacement receiver separately when necessary.
+This is a production publish. Confirm a controlled end-to-end run, Wix publication status and the live site before considering it operational. Wix HTML components do not update when receiver files change; install a replacement receiver separately when necessary.
