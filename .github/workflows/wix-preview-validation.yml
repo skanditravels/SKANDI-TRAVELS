@@ -33,4 +33,5 @@ jobs:
           test -n "$WIX_CLI_API_KEY"
           "$RUNNER_TEMP/site-cli/node_modules/.bin/wix" login --api-key "$WIX_CLI_API_KEY"
       - name: Build a non-production preview
-        run: "$RUNNER_TEMP/site-cli/node_modules/.bin/wix" preview --source local
+        run: |
+          "$RUNNER_TEMP/site-cli/node_modules/.bin/wix" preview --source local
