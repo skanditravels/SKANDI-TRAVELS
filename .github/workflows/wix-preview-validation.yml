@@ -52,6 +52,19 @@ jobs:
             done < <(find src/pages -maxdepth 1 -name "*.$pair.js" -print0)
             printf '\\n'
           done
+          for mapping in \
+            'Document Viewer.hz1s8.js|Document Filler.hz1s8.js' \
+            'News Room.vn46g.js|Newsroom.vn46g.js' \
+            'How can we help_.k0iqp.js|Support.k0iqp.js' \
+            'SKANDI Signature Club.gsejz.js|SKANDI Club.gsejz.js'; do
+            old=${mapping%%|*}
+            new=${mapping#*|}
+            if git show "HEAD:src/pages/$old" | cmp -s - "src/pages/$new"; then
+              printf 'Preserved exactly: %s -> %s\\n' "$old" "$new"
+            else
+              printf 'Contents differ: %s -> %s\\n' "$old" "$new"
+            fi
+          done
       - name: Test the last published Wix history revision in an isolated preview
         run: |
           node -e 'const fs=require("fs");const p="wix.config.json";const c=JSON.parse(fs.readFileSync(p));c.uiVersion="1582";fs.writeFileSync(p,JSON.stringify(c,null,2))'
