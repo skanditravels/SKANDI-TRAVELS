@@ -10,16 +10,21 @@ permissions:
 
 jobs:
   preview:
-    if: github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref == 'codex/preview-current-main-20261103'
+    if: github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref == 'codex/verify-published-wix-design-20261103'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: 1342ae3dd71a95539726c0066169ed24db5c0925
+          ref: ${{ github.event.pull_request.head.sha }}
       - uses: actions/setup-node@v4
         with:
           node-version: 24
+      - name: Check the observed live design revision
+        run: node scripts/wix-live-revision.mjs check 1590
+      - name: Use the observed published snapshot for this preview only
+        run: |
+          node -e 'const fs=require("fs"); const p="wix.config.json"; const c=JSON.parse(fs.readFileSync(p,"utf8")); c.uiVersion="1590"; fs.writeFileSync(p,JSON.stringify(c,null,2)+"\n")'
       - name: Install dependencies and Wix CLI
         run: |
           npm ci --ignore-scripts --no-audit --no-fund
@@ -31,7 +36,6 @@ jobs:
           set -euo pipefail
           test -n "$WIX_CLI_API_KEY"
           "$RUNNER_TEMP/site-cli/node_modules/.bin/wix" login --api-key "$WIX_CLI_API_KEY"
-      - name: Preview exact candidate without publishing
+      - name: Preview without publishing
         run: |
-          git status --short
           "$RUNNER_TEMP/site-cli/node_modules/.bin/wix" preview --source local
