@@ -15,6 +15,7 @@ import { verifyAndRecordDuffelAssistantWebhookCore } from "backend/SKANDI_CORE/d
 import { verifyWhatsAppWebhookChallengeCore, receiveWhatsAppWebhookCore } from "backend/SKANDI_CORE/whatsAppCustomerCare";
 import { getPublicTravelInfoPayloadCore } from "backend/SKANDI_CORE/publicContent";
 import { applyInventoryAuthorityToTravelInfoCore } from "backend/SKANDI_CORE/publicContentInventoryProjection";
+import { getStoreEmailRecommendationsCore } from "backend/SKANDI_CORE/storefront";
 
 function header(request, name) {
   const lowerName = String(name || "").toLowerCase();
@@ -233,5 +234,25 @@ export async function post_skandiWhatsAppWebhook(request) {
     console.error("[WhatsApp Customer Care] Signed webhook processing failed", { code });
     // A transient failure must not be falsely acknowledged; Meta may retry.
     return serverError(responseBody({ ok: false, error: "WHATSAPP_WEBHOOK_RETRY_REQUIRED" }));
+  }
+}
+
+// Read-only public product suggestions for Wix's Send HTTP request automation action.
+// Only product_id and line_items are read. No recipient details or recovery URL are required.
+export async function post_skandiStoreEmailRecommendations(request) {
+  try {
+    const body = await jsonBody(request);
+    const result = await getStoreEmailRecommendationsCore({
+      product_id: body.product_id,
+      line_items: body.line_items === undefined ? [] : body.line_items
+    });
+    return ok(responseBody(result));
+  } catch (error) {
+    const code = String(error?.code || error?.message || "STORE_EMAIL_RECOMMENDATIONS_UNAVAILABLE");
+    if (/^STORE_EMAIL_(?:PRODUCT_ID|LINE_ITEMS)_INVALID$/.test(code)) {
+      return badRequest(responseBody({ ok: false, error: code }));
+    }
+    console.error("[Store email recommendations] Catalog/provider read failed");
+    return serverError(responseBody({ ok: false, error: "STORE_EMAIL_RECOMMENDATIONS_UNAVAILABLE" }));
   }
 }

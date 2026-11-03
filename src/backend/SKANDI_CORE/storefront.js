@@ -2,7 +2,7 @@
 // v.12 — one Catalog V3 owner for Store Control and the public Store.
 // Existing V3 administrator operations are preserved; public responses exclude merchant-only data.
 import { productsV3, inventoryItemsV3 } from "@wix/stores";
-import { orders, orderFulfillments } from "@wix/ecom";
+import { orders, orderFulfillments, recommendations } from "@wix/ecom";
 import { coupons } from "wix-marketing.v2";
 import { elevate } from "wix-auth";
 import { categories } from "@wix/categories";
@@ -802,3 +802,101 @@ export async function saveStoreControlPromotionCore({name,code,type,value,starts
   return {ok:true,couponId:coupon._id||coupon.id,message:"Promotion saved to Wix as an inactive draft."};
 }
 
+// Abandoned-cart email suggestions. Public DTO only; no cart/contact/order lookup or writes.
+// Algorithm identifiers are provider configuration, not hard-coded product selections.
+const STORE_EMAIL_ALGORITHM_ORDER = [
+  "d5aac1e1-2e53-4d11-85f7-7172710b4783", // Frequently bought together
+  "68ebce04-b96a-4c52-9329-08fc9d8c1253", // From similar categories
+  "5dd69f67-9ab9-478e-ba7c-10c6c6e7285f", // Frequently viewed together
+  "ba491fd2-b172-4552-9ea6-7202e01d1d3c"  // Best sellers
+];
+const storeEmailListAlgorithms = auth.elevate(recommendations.listAvailableAlgorithms);
+const storeEmailGetRecommendation = auth.elevate(recommendations.getRecommendation);
+const STORE_EMAIL_GUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function storeEmailHttps(value, productLink = false) {
+  try {
+    const url = new URL(String(value || "").trim());
+    if (url.protocol !== "https:" || url.username || url.password) return "";
+    if (productLink && !["www.skanditravels.com", "skanditravels.com"].includes(url.hostname.toLowerCase())) return "";
+    return url.href;
+  } catch (_) { return ""; }
+}
+function storeEmailName(value) {
+  return cleanText(value, 300).replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+}
+function storeEmailResult(cards = []) {
+  const result = { ok: true, recommendationCount: cards.length };
+  for (let i = 1; i <= 2; i += 1) {
+    const card = cards[i - 1];
+    result[`recommendation${i}Name`] = card?.name || "";
+    result[`recommendation${i}ImageUrl`] = card?.imageUrl || "";
+    result[`recommendation${i}Url`] = card?.url || "";
+  }
+  return result;
+}
+
+export async function getStoreEmailRecommendationsCore({ product_id, line_items = [] } = {}) {
+  const seedId = cleanText(product_id, 80).toLowerCase();
+  if (!STORE_EMAIL_GUID.test(seedId)) throw new Error("STORE_EMAIL_PRODUCT_ID_INVALID");
+  let lines = line_items;
+  if (typeof lines === "string") {
+    if (lines.length > 64000) throw new Error("STORE_EMAIL_LINE_ITEMS_INVALID");
+    try { lines = JSON.parse(lines); }
+    catch (_) { throw new Error("STORE_EMAIL_LINE_ITEMS_INVALID"); }
+  }
+  if (!Array.isArray(lines) || lines.length > 300) throw new Error("STORE_EMAIL_LINE_ITEMS_INVALID");
+  const excludedIds = new Set([seedId]);
+  const excludedNames = new Set();
+  for (const line of lines) {
+    if (!line || typeof line !== "object" || Array.isArray(line)) continue;
+    const id = cleanText(line.id, 80).toLowerCase();
+    // A line id is only useful as a catalog exclusion if it actually matches a product id.
+    if (STORE_EMAIL_GUID.test(id)) excludedIds.add(id);
+    const name = storeEmailName(line.item_name).toLocaleLowerCase("en");
+    if (name) excludedNames.add(name);
+  }
+  const available = await storeEmailListAlgorithms();
+  const rank = row => {
+    const index = STORE_EMAIL_ALGORITHM_ORDER.indexOf(row.config?.algorithmId);
+    return index < 0 ? STORE_EMAIL_ALGORITHM_ORDER.length : index;
+  };
+  const algorithms = (Array.isArray(available?.availableAlgorithms) ? available.availableAlgorithms : [])
+    .filter(row => Array.isArray(row.catalogAppIds) && row.catalogAppIds.includes(WIX_STORES_APP_ID) &&
+      STORE_EMAIL_GUID.test(row.config?.algorithmId || "") && row.appId)
+    .sort((a, b) => rank(a) - rank(b)).slice(0, 10)
+    .map(row => ({ _id: row.config.algorithmId, appId: row.appId }));
+  if (!algorithms.length) return storeEmailResult();
+
+  const response = await storeEmailGetRecommendation(algorithms, {
+    items: [{ catalogItemId: seedId, appId: WIX_STORES_APP_ID }],
+    minimumRecommendedItems: 1
+  });
+  const references = Array.isArray(response?.recommendation?.items) ? response.recommendation.items : [];
+  const ids = [...new Set(references.filter(item => item.appId === WIX_STORES_APP_ID)
+    .map(item => cleanText(item.catalogItemId, 80).toLowerCase())
+    .filter(id => STORE_EMAIL_GUID.test(id) && !excludedIds.has(id)))].slice(0, 8);
+  // Reuse this owner's existing elevated get; return only explicitly public fields below.
+  const checked = await Promise.allSettled(ids.map(id => elevatedGetProduct(id, {
+    fields: ["URL", "THUMBNAIL", "MEDIA_ITEMS_INFO"]
+  })));
+  const cards = [];
+  for (const result of checked) {
+    if (result.status === "rejected") {
+      const code = String(errorCode(result.reason) || "");
+      if (Number(errorStatus(result.reason)) === 404 || /(?:^|_)NOT_FOUND$/.test(code)) continue;
+      throw result.reason;
+    }
+    const product = result.value;
+    if (!product || product.visible !== true ||
+      !["IN_STOCK", "PARTIALLY_OUT_OF_STOCK"].includes(product.inventory?.availabilityStatus)) continue;
+    const name = storeEmailName(product.name);
+    if (!name || excludedNames.has(name.toLocaleLowerCase("en"))) continue;
+    const url = storeEmailHttps(product.url?.url, true);
+    const imageUrl = mediaUrlsFrom(product).map(value => storeEmailHttps(value)).find(Boolean) || "";
+    if (!url || !imageUrl) continue;
+    cards.push({ name, url, imageUrl });
+    if (cards.length === 2) break;
+  }
+  return storeEmailResult(cards);
+}
