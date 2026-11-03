@@ -6,7 +6,7 @@ Maintain the HTML, CSS and JavaScript source files listed for a page in [the web
 
 `src/public/siteMap.js` remains the only route authority. `PAGE_BUILD_INTEGRATIONS` in that same file records source-verified controller bindings without duplicating route paths. The existing master-page chrome rules are shared from this registry. A prepared page needs no workflow list or compiler-array edit when its HTML, CSS and JavaScript are completed.
 
-Most source triplets are `skandi-embeds/{kebab-route-key}/skandi-{kebab-route-key}.{html,css,js}`. Existing exceptions remain at their canonical paths: Flight Status uses `flight-status.{html,css,js}`, and RIAINTRA login remains in `riaintra-embeds/riaintra/riaintra.{html,css,js}`. Do not paste into the old `home/index.html` or `flight-status/index.html` preview scaffolds; those are not compiler inputs.
+Source triplets follow their verified route: public pages use `skandi-embeds/`, `/riaintra` pages use `riaintra-embeds/`, and `/riaintra/success-factors/altea` and its descendants use `altea-embeds/`. Existing stems and explicit source mappings remain intact. Flight Status uses `flight-status.{html,css,js}`, and RIAINTRA login uses `riaintra-embeds/riaintra/riaintra.{html,css,js}`. Do not paste into the old `home/index.html` or `flight-status/index.html` preview scaffolds; those are not compiler inputs.
 
 `staffLogin` aliases `riaintra`. `myTrips` is a query view of `myProfile`. They share builds rather than creating duplicate pages. Explicit nested/template routes are resolved from the registry. Controllers without verified routes have reserved slots in `skandi-embeds/_unregistered/`; filling those slots does not invent a route or activate a build.
 
@@ -22,8 +22,8 @@ When sources are removed or invalidated, the manifest stops advertising their ou
 | Family | Source | Presentation |
 | --- | --- | --- |
 | Public | `skandi-embeds/global/skandi-{header,footer,mobile-nav}.*` and shell | Desktop header/content/footer; mobile content and fixed bottom navigation |
-| RIAINTRA | `skandi-embeds/riaintra-global/riaintra-{header,footer}.*` | Independent internal chrome |
-| ALTEA | `skandi-embeds/altea-global/altea-{header,footer}.*` | Independent operational chrome |
+| RIAINTRA | `riaintra-embeds/global/riaintra-{header,footer}.*` | Independent internal chrome |
+| ALTEA | `altea-embeds/global/altea-{header,footer}.*` | Independent operational chrome |
 | Chrome-free | Canonical master rules | No injected global chrome |
 
 The separate RIAINTRA and ALTEA global components are now extracted from HTML_REF. Public components are never substituted. The [HTML_REF migration report](docs/html-ref-migration.md) maps all 75 HTML payloads to their split source folders and records source conflicts and pages that need additional integration work. RIAINTRA login and GroupTalk remain chrome-free, as do Booking and the existing store/checkout routes.
@@ -58,10 +58,12 @@ An invalid page never replaces its previous HTML. Every failed page remains visi
 
 See [the implementation and verification report](docs/website-builder-verification.md). No Wix receiver installation, production data flow or backend deployment is claimed by a successful compiler run.
 
-## HTML_REF source import
+## Page documentation and source history
 
-The page folders now contain extracted HTML_REF source. The original Markdown stays unchanged. A page with several inline blocks has additional `.part-NN.css` or `.part-NN.js` files linked in its HTML, preserving source order and script boundaries. Keep those companion files with the primary triplet. JSON, import maps, inert templates and external library references remain in HTML.
+Page reference documents now live alongside their associated embed as `README.md`. Where a folder has several distinct historical references, its README links to their individual `references/.../README.md` files. Documents without a verified page mapping remain under the appropriate global references. Historical HTML is retained when it differs from, or has not been proven equivalent to, the active source.
 
-Edit these developer files directly for normal work. `node scripts/import-html-ref.mjs` checks the original import; `--write` performs it and refuses to overwrite subsequently edited source. This importer is not part of the normal build workflow. The compiler includes linked local files automatically.
+An embedded HTML payload was removed only when its split files matched the active built page source byte for byte. Its original path and payload hash are recorded in `scripts/html-ref-sources.json`; the surrounding page information and history remain in the relocated README. Earlier import reports under `docs/` describe the original migration and are historical.
 
-Current authored Home, Flight Status, Travel Info, RIAINTRA login, Success Factors and public chrome were preserved. Their HTML_REF alternatives are under `html-ref/` subfolders. Source provenance and initial hashes are in [html-ref-import.json](docs/html-ref-import.json); the compact folder mapping is [html-ref-source-map.csv](docs/html-ref-source-map.csv). See the migration report before installing any newly built page.
+Edit the active developer source for normal work. `node scripts/import-html-ref.mjs` checks retained reference payloads and refuses to overwrite edited source; it is not part of the normal build.
+
+Previously generated receivers can already be installed in Wix. For moved internal pages the manifest retains their existing receiver identities while the regenerated receiver files are stored in their new source folders. The installation register points to the new file location. This preserves the existing handshake; live Wix verification is still required.

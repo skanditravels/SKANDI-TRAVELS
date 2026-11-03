@@ -34,30 +34,30 @@ Route authority: `src/public/siteMap.js`. This file is generated evidence, not r
 | riaintra | /riaintra | riaintra-embeds/riaintra/riaintra.{html,css,js} | riaintra / none | src/pages/RIAINTRA.rc14z.js | BUILT |
 | staffLogin | /riaintra | Alias of riaintra | riaintra / none | src/pages/RIAINTRA.rc14z.js | ALIAS |
 | successFactors | /riaintra/success-factors | riaintra-embeds/success-factors/success-factors.{html,css,js} | riaintra / riaintra | src/pages/Success Factors.sh6tw.js | BUILT |
-| legalInternal | /riaintra/success-factors/legal-internal | skandi-embeds/legal-internal/skandi-legal-internal.{html,css,js} | riaintra / riaintra | src/pages/RIAINTRA Legal.xvi17.js | BUILT |
-| alteaLaunchpad | /riaintra/success-factors/altea | skandi-embeds/altea-launchpad/skandi-altea-launchpad.{html,css,js} | altea / altea | src/pages/ALTEA Launchpad.ajs4y.js | BUILT |
-| alteaReservations | /riaintra/success-factors/altea/reservations | skandi-embeds/altea-reservations/skandi-altea-reservations.{html,css,js} | altea / altea | src/pages/Reservations.ly2n8.js | BUILT |
-| opsControl | /riaintra/success-factors/altea/ops | skandi-embeds/ops-control/skandi-ops-control.{html,css,js} | altea / altea | src/pages/OPS Control.uposx.js | BUILT |
-| eos | /riaintra/success-factors/altea/eos | skandi-embeds/eos/skandi-eos.{html,css,js} | altea / altea | src/pages/masterPage.js | BUILT |
-| inventoryControl | /riaintra/success-factors/altea/inventory-control | skandi-embeds/inventory-control/skandi-inventory-control.{html,css,js} | altea / altea | src/pages/Inventory Control.jsdik.js | FAILED |
-| uniformCenter | /riaintra/success-factors/uniform | skandi-embeds/uniform-center/skandi-uniform-center.{html,css,js} | riaintra / riaintra | src/pages/Uniform Center.lukfc.js | BUILT |
-| uniformControl | /riaintra/success-factors/uniform/admin-control | skandi-embeds/uniform-control/skandi-uniform-control.{html,css,js} | riaintra / riaintra | src/pages/Uniform Control.yx92b.js | PENDING SOURCE |
-| alteaTimatic | /riaintra/success-factors/altea/timatic | skandi-embeds/altea-timatic/skandi-altea-timatic.{html,css,js} | altea / altea | UNVERIFIED | PENDING SOURCE |
-| mail | /riaintra/success-factors/mail | skandi-embeds/mail/skandi-mail.{html,css,js} | riaintra / riaintra | src/pages/Mail.ecik8.js | BUILT |
-| docunet | /riaintra/success-factors/docunet | skandi-embeds/docunet/skandi-docunet.{html,css,js} | riaintra / riaintra | src/pages/DocuNet.twh13.js | BUILT |
-| docunetAdmin | /riaintra/success-factors/docunet/admin | skandi-embeds/docunet-admin/skandi-docunet-admin.{html,css,js} | riaintra / riaintra | src/pages/DocuNet Administration.u5a64.js | FAILED |
-| serviceDesk | /riaintra/success-factors/service-desk | skandi-embeds/service-desk/skandi-service-desk.{html,css,js} | riaintra / riaintra | UNVERIFIED | PENDING SOURCE |
-| policyControl | /riaintra/success-factors/policy-control | skandi-embeds/policy-control/skandi-policy-control.{html,css,js} | riaintra / riaintra | src/pages/Policy Control.ec9p4.js | BUILT |
-| mediaControl | /riaintra/success-factors/media-control | skandi-embeds/media-control/skandi-media-control.{html,css,js} | riaintra / riaintra | src/pages/Media Control.chm91.js | BUILT |
-| storeControl | /riaintra/success-factors/store-control | skandi-embeds/store-control/skandi-store-control.{html,css,js} | riaintra / riaintra | src/pages/The Store Control.y10le.js | BUILT |
-| payroll | /riaintra/success-factors/payroll | skandi-embeds/payroll/skandi-payroll.{html,css,js} | riaintra / riaintra | src/pages/Payroll.rzo0a.js | BUILT |
+| legalInternal | /riaintra/success-factors/legal-internal | riaintra-embeds/legal-internal/skandi-legal-internal.{html,css,js} | riaintra / riaintra | src/pages/RIAINTRA Legal.xvi17.js | BUILT |
+| alteaLaunchpad | /riaintra/success-factors/altea | altea-embeds/altea-launchpad/skandi-altea-launchpad.{html,css,js} | altea / altea | src/pages/ALTEA Launchpad.ajs4y.js | BUILT |
+| alteaReservations | /riaintra/success-factors/altea/reservations | altea-embeds/altea-reservations/skandi-altea-reservations.{html,css,js} | altea / altea | src/pages/Reservations.ly2n8.js | BUILT |
+| opsControl | /riaintra/success-factors/altea/ops | altea-embeds/ops-control/skandi-ops-control.{html,css,js} | altea / altea | src/pages/OPS Control.uposx.js | BUILT |
+| eos | /riaintra/success-factors/altea/eos | altea-embeds/eos/skandi-eos.{html,css,js} | altea / altea | src/pages/masterPage.js | BUILT |
+| inventoryControl | /riaintra/success-factors/altea/inventory-control | altea-embeds/inventory-control/skandi-inventory-control.{html,css,js} | altea / altea | src/pages/Inventory Control.jsdik.js | FAILED |
+| uniformCenter | /riaintra/success-factors/uniform | riaintra-embeds/uniform-center/skandi-uniform-center.{html,css,js} | riaintra / riaintra | src/pages/Uniform Center.lukfc.js | BUILT |
+| uniformControl | /riaintra/success-factors/uniform/admin-control | riaintra-embeds/uniform-control/skandi-uniform-control.{html,css,js} | riaintra / riaintra | src/pages/Uniform Control.yx92b.js | PENDING SOURCE |
+| alteaTimatic | /riaintra/success-factors/altea/timatic | altea-embeds/altea-timatic/skandi-altea-timatic.{html,css,js} | altea / altea | UNVERIFIED | PENDING SOURCE |
+| mail | /riaintra/success-factors/mail | riaintra-embeds/mail/skandi-mail.{html,css,js} | riaintra / riaintra | src/pages/Mail.ecik8.js | BUILT |
+| docunet | /riaintra/success-factors/docunet | riaintra-embeds/docunet/skandi-docunet.{html,css,js} | riaintra / riaintra | src/pages/DocuNet.twh13.js | BUILT |
+| docunetAdmin | /riaintra/success-factors/docunet/admin | riaintra-embeds/docunet-admin/skandi-docunet-admin.{html,css,js} | riaintra / riaintra | src/pages/DocuNet Administration.u5a64.js | FAILED |
+| serviceDesk | /riaintra/success-factors/service-desk | riaintra-embeds/service-desk/skandi-service-desk.{html,css,js} | riaintra / riaintra | UNVERIFIED | PENDING SOURCE |
+| policyControl | /riaintra/success-factors/policy-control | riaintra-embeds/policy-control/skandi-policy-control.{html,css,js} | riaintra / riaintra | src/pages/Policy Control.ec9p4.js | BUILT |
+| mediaControl | /riaintra/success-factors/media-control | riaintra-embeds/media-control/skandi-media-control.{html,css,js} | riaintra / riaintra | src/pages/Media Control.chm91.js | BUILT |
+| storeControl | /riaintra/success-factors/store-control | riaintra-embeds/store-control/skandi-store-control.{html,css,js} | riaintra / riaintra | src/pages/The Store Control.y10le.js | BUILT |
+| payroll | /riaintra/success-factors/payroll | riaintra-embeds/payroll/skandi-payroll.{html,css,js} | riaintra / riaintra | src/pages/Payroll.rzo0a.js | BUILT |
 | country | /destinations/country | skandi-embeds/country/skandi-country.{html,css,js} | public / public | src/pages/Country.nxtpn.js | BUILT |
 | bookingFlow | /booking | skandi-embeds/booking/skandi-booking-flow.{html,css,js} | public / none | src/pages/Booking.e8twe.js | BUILT |
 | myProfile | /my-profile | skandi-embeds/my-profile/skandi-my-profile.{html,css,js} | public / public | src/pages/My Club Profile.u4k31.js | BUILT |
 | myTrips | /my-profile?tab=trips | Alias of myProfile | public / public | src/pages/My Club Profile.u4k31.js | ALIAS |
 | careers | /about/careers | skandi-embeds/careers/skandi-careers.{html,css,js} | public / public | src/pages/Work at SKANDI.dyodg.js | PENDING SOURCE |
-| myRoster | /riaintra/success-factors/altea/my-roster | skandi-embeds/my-roster/skandi-my-roster.{html,css,js} | altea / altea | src/pages/MyRoster.l8p5m.js | BLOCKED INTEGRATION |
-| groupTalk | /riaintra/success-factors/altea/grouptalk | skandi-embeds/group-talk/skandi-group-talk.{html,css,js} | altea / none | src/pages/GroupTalk.wi4iw.js | BUILT |
+| myRoster | /riaintra/success-factors/altea/my-roster | altea-embeds/my-roster/skandi-my-roster.{html,css,js} | altea / altea | src/pages/MyRoster.l8p5m.js | BLOCKED INTEGRATION |
+| groupTalk | /riaintra/success-factors/altea/grouptalk | altea-embeds/group-talk/skandi-group-talk.{html,css,js} | altea / none | src/pages/GroupTalk.wi4iw.js | BUILT |
 | passportVisa | /travel-info/passport-visa | skandi-embeds/passport-visa/skandi-passport-visa.{html,css,js} | public / public | src/pages/Passport & Visa.zohjw.js | BUILT |
 | baggageAllowance | /travel-info/baggage-allowance | skandi-embeds/baggage-allowance/skandi-baggage-allowance.{html,css,js} | public / public | src/pages/Baggage Allowance.tf8xc.js | BUILT |
 | travelInsurance | /travel-info/insurance | skandi-embeds/travel-insurance/skandi-travel-insurance.{html,css,js} | public / public | src/pages/Insurance.ojo62.js | BUILT |
@@ -115,10 +115,10 @@ These actual repository controllers are preserved. No new route or build is inve
 - **transfers**: NOT READY: No verified canonical controller mapping.
 - **support**: NOT READY: Help Center and support chat are separate HTML components; preserve them until a verified single-component migration.
 - **ourNetwork**: NOT READY: No verified canonical controller mapping.
-- **inventoryControl**: NOT READY: [inventoryControl / inventory-control] skandi-embeds/inventory-control/skandi-inventory-control.html, skandi-embeds/inventory-control/skandi-inventory-control.css, skandi-embeds/inventory-control/skandi-inventory-control.js: Cannot use import statement outside a module
+- **inventoryControl**: NOT READY: [inventoryControl / inventory-control] altea-embeds/inventory-control/skandi-inventory-control.html, altea-embeds/inventory-control/skandi-inventory-control.css, altea-embeds/inventory-control/skandi-inventory-control.js: Cannot use import statement outside a module
 - **uniformControl**: NOT READY: PENDING SOURCE
 - **alteaTimatic**: NOT READY: No verified canonical controller mapping.
-- **docunetAdmin**: NOT READY: [docunetAdmin / docunet-admin] skandi-embeds/docunet-admin/skandi-docunet-admin.html, skandi-embeds/docunet-admin/skandi-docunet-admin.css, skandi-embeds/docunet-admin/skandi-docunet-admin.js: skandi-embeds/docunet-admin/skandi-docunet-admin.html: nested iframe is not supported; retain the existing Wix integration
+- **docunetAdmin**: NOT READY: [docunetAdmin / docunet-admin] riaintra-embeds/docunet-admin/skandi-docunet-admin.html, riaintra-embeds/docunet-admin/skandi-docunet-admin.css, riaintra-embeds/docunet-admin/skandi-docunet-admin.js: riaintra-embeds/docunet-admin/skandi-docunet-admin.html: nested iframe is not supported; retain the existing Wix integration
 - **serviceDesk**: NOT READY: No verified canonical controller mapping.
 - **careers**: NOT READY: PENDING SOURCE
 - **myRoster**: NOT READY: Controller no longer declares #myRosterEmbed

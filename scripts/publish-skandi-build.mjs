@@ -3,13 +3,14 @@ import {execFileSync,spawnSync} from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
+import {pageReceiverIdentity} from './lib/page-receiver.mjs';
 export function publish(cwd=process.cwd()) {
   const git=(...args)=>execFileSync('git',args,{cwd,encoding:'utf8',stdio:['ignore','pipe','pipe']}).trim();
   const manifest=JSON.parse(fs.readFileSync(path.join(cwd,'dist/manifest.json'),'utf8'));
   if(!Array.isArray(manifest.pages))throw new Error('Generated build manifest has no page list.');
   const receiverPaths=[...new Set(manifest.pages.filter(page=>page.status==='BUILT').map(page=>{
     const expected=path.posix.join(String(page.sourceDirectory||''),`${String(page.stem||'')}.receiver.html`);
-    if(page.receiver!==expected||!/^((skandi-embeds|riaintra-embeds)\/[a-z0-9/-]+)\/[a-z0-9-]+\.receiver\.html$/.test(expected)||expected.includes('..'))throw new Error(`Invalid generated receiver mapping for ${page.key||'unknown page'}.`);
+    if(page.receiver!==pageReceiverIdentity(page)||(page.receiverFile||expected)!==expected||!/^((skandi-embeds|riaintra-embeds|altea-embeds)\/[a-z0-9/-]+)\/[a-z0-9-]+\.receiver\.html$/.test(expected)||expected.includes('..'))throw new Error(`Invalid generated receiver mapping for ${page.key||'unknown page'}.`);
     if(!fs.existsSync(path.join(cwd,expected)))throw new Error(`Built page receiver is missing: ${expected}`);
     return expected;
   }))];

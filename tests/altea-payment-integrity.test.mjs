@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 import { test } from "node:test";
 
 const core = readFileSync(new URL("../src/backend/SKANDI_CORE/reservations.js", import.meta.url), "utf8");
-const embed = readFileSync(new URL("../HTML_REF/altea/Reservations.md", import.meta.url), "utf8");
+const embed = readFileSync(new URL("../altea-embeds/altea-reservations/README.md", import.meta.url), "utf8");
 
 test("ALTEA agent cannot create a booking as paid without Stripe", () => {
   assert.match(core, /if\(input\.paymentStatus!==undefined&&lower\(input\.paymentStatus,80\)!=="unpaid"\)throw new Error\("PAYMENT_STATUS_CONTROLLED_BY_STRIPE"\)/);

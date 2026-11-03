@@ -3,3 +3,7 @@
 Existing controller: src/pages/Customer Service Desk.benbs.js.
 
 Canonical route and HTML component mapping are unverified. These source slots cannot be compiled or installed until their route and integration are verified in the existing canonical registry. Preserve the installed Wix implementation.
+
+## Reference documents
+
+- [HTML_REF/riaintra/Customer Service Desk.md](references/riaintra-customer-service-desk-md/README.md)

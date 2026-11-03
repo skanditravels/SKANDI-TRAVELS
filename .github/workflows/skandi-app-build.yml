@@ -7,6 +7,7 @@ on:
     paths:
       - 'skandi-embeds/**'
       - 'riaintra-embeds/**'
+      - 'altea-embeds/**'
       - 'src/pages/**'
       - 'src/public/**'
       - 'src/backend/SKANDI_CORE/**'
@@ -16,11 +17,13 @@ on:
       - '.github/workflows/skandi-app-build.yml'
       - '!skandi-embeds/**/*.receiver.html'
       - '!riaintra-embeds/**/*.receiver.html'
+      - '!altea-embeds/**/*.receiver.html'
   pull_request:
     branches: [main]
     paths:
       - 'skandi-embeds/**'
       - 'riaintra-embeds/**'
+      - 'altea-embeds/**'
       - 'src/**'
       - 'scripts/**'
       - 'tests/**'
@@ -28,6 +31,7 @@ on:
       - '.github/workflows/skandi-app-build.yml'
       - '!skandi-embeds/**/*.receiver.html'
       - '!riaintra-embeds/**/*.receiver.html'
+      - '!altea-embeds/**/*.receiver.html'
 
 concurrency:
   group: skandi-website-builder-${{ github.event_name == 'pull_request' && github.event.pull_request.number || 'main' }}

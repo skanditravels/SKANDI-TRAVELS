@@ -1,520 +1,646 @@
 [
   {
-    "source": "HTML_REF/altea/ALTEA Launchpad.md",
-    "directory": "skandi-embeds/altea-launchpad",
+    "source": "altea-embeds/altea-launchpad/README.md",
+    "directory": "altea-embeds/altea-launchpad",
     "stem": "skandi-altea-launchpad",
-    "disposition": "IMPORTED"
+    "disposition": "IMPORTED",
+    "payloadRemoved": true,
+    "payloadSha256": "aaf3bb1caae1867494dfaede4d0d978cd9af06c9fd9b384f8d5795383bddfbb4",
+    "originalSource": "HTML_REF/altea/ALTEA Launchpad.md"
   },
   {
-    "source": "HTML_REF/altea/Inventory Control.md",
-    "directory": "skandi-embeds/inventory-control",
+    "source": "altea-embeds/inventory-control/README.md",
+    "directory": "altea-embeds/inventory-control",
     "stem": "skandi-inventory-control",
-    "disposition": "IMPORTED"
+    "disposition": "IMPORTED",
+    "originalSource": "HTML_REF/altea/Inventory Control.md"
   },
   {
-    "source": "HTML_REF/altea/OPS Control.md",
-    "directory": "skandi-embeds/ops-control",
+    "source": "altea-embeds/ops-control/README.md",
+    "directory": "altea-embeds/ops-control",
     "stem": "skandi-ops-control",
-    "disposition": "IMPORTED"
+    "disposition": "IMPORTED",
+    "originalSource": "HTML_REF/altea/OPS Control.md"
   },
   {
-    "source": "HTML_REF/altea/Reservations.md",
-    "directory": "skandi-embeds/altea-reservations",
+    "source": "altea-embeds/altea-reservations/README.md",
+    "directory": "altea-embeds/altea-reservations",
     "stem": "skandi-altea-reservations",
-    "disposition": "IMPORTED"
+    "disposition": "IMPORTED",
+    "originalSource": "HTML_REF/altea/Reservations.md"
   },
   {
-    "source": "HTML_REF/altea/MyRoster.md",
-    "directory": "skandi-embeds/my-roster",
+    "source": "altea-embeds/my-roster/README.md",
+    "directory": "altea-embeds/my-roster",
     "stem": "skandi-my-roster",
-    "disposition": "IMPORTED"
+    "disposition": "IMPORTED",
+    "originalSource": "HTML_REF/altea/MyRoster.md"
   },
   {
-    "source": "HTML_REF/GLOBAL/alteaFooter.md",
-    "directory": "skandi-embeds/altea-global",
+    "source": "altea-embeds/global/references/global-alteafooter-md/README.md",
+    "directory": "altea-embeds/global",
     "stem": "altea-footer",
-    "disposition": "IMPORTED"
+    "disposition": "IMPORTED",
+    "originalSource": "HTML_REF/GLOBAL/alteaFooter.md"
   },
   {
-    "source": "HTML_REF/GLOBAL/alteaHeader.md",
-    "directory": "skandi-embeds/altea-global",
+    "source": "altea-embeds/global/references/global-alteaheader-md/README.md",
+    "directory": "altea-embeds/global",
     "stem": "altea-header",
-    "disposition": "IMPORTED"
+    "disposition": "IMPORTED",
+    "originalSource": "HTML_REF/GLOBAL/alteaHeader.md"
   },
   {
-    "source": "HTML_REF/GLOBAL/riaintraFooter.md",
-    "directory": "skandi-embeds/riaintra-global",
+    "source": "riaintra-embeds/global/references/global-riaintrafooter-md/README.md",
+    "directory": "riaintra-embeds/global",
     "stem": "riaintra-footer",
-    "disposition": "IMPORTED"
+    "disposition": "IMPORTED",
+    "originalSource": "HTML_REF/GLOBAL/riaintraFooter.md"
   },
   {
-    "source": "HTML_REF/GLOBAL/riaintraHeader.md",
-    "directory": "skandi-embeds/riaintra-global",
+    "source": "riaintra-embeds/global/references/global-riaintraheader-md/README.md",
+    "directory": "riaintra-embeds/global",
     "stem": "riaintra-header",
-    "disposition": "IMPORTED"
+    "disposition": "IMPORTED",
+    "originalSource": "HTML_REF/GLOBAL/riaintraHeader.md"
   },
   {
-    "source": "HTML_REF/GLOBAL/SKANDI COOKIE CONSENT BANNER.md",
+    "source": "skandi-embeds/global/references/global-skandi-cookie-consent-banner-md/README.md",
     "directory": "skandi-embeds/global",
     "stem": "skandi-cookie-consent-banner",
     "disposition": "SEPARATE COMPONENT",
-    "note": "Cookie consent remains a separate Wix component owned by masterPage."
+    "note": "Cookie consent remains a separate Wix component owned by masterPage.",
+    "originalSource": "HTML_REF/GLOBAL/SKANDI COOKIE CONSENT BANNER.md"
   },
   {
-    "source": "HTML_REF/GLOBAL/skandiFooter.md",
+    "source": "skandi-embeds/global/references/global-skandifooter-md/README.md",
     "directory": "skandi-embeds/global/html-ref",
     "stem": "skandi-footer-reference",
     "disposition": "PRESERVED CURRENT SOURCE",
-    "note": "Current Git public chrome remains active."
+    "note": "Current Git public chrome remains active.",
+    "originalSource": "HTML_REF/GLOBAL/skandiFooter.md"
   },
   {
-    "source": "HTML_REF/GLOBAL/skandiHeader.md",
+    "source": "skandi-embeds/global/references/global-skandiheader-md/README.md",
     "directory": "skandi-embeds/global/html-ref",
     "stem": "skandi-header-reference",
     "disposition": "PRESERVED CURRENT SOURCE",
-    "note": "Current Git public chrome remains active."
+    "note": "Current Git public chrome remains active.",
+    "originalSource": "HTML_REF/GLOBAL/skandiHeader.md"
   },
   {
-    "source": "HTML_REF/riaintra/Automation Control.md",
+    "source": "skandi-embeds/_unregistered/automation-control/README.md",
     "directory": "skandi-embeds/_unregistered/automation-control",
     "stem": "automation-control",
     "disposition": "UNREGISTERED CONTROLLER",
-    "note": "Source specifies a new Wix admin page; no assigned controller or canonical route is available."
+    "note": "Source specifies a new Wix admin page; no assigned controller or canonical route is available.",
+    "originalSource": "HTML_REF/riaintra/Automation Control.md"
   },
   {
-    "source": "HTML_REF/riaintra/Customer Service Desk.md",
+    "source": "skandi-embeds/_unregistered/benbs/references/riaintra-customer-service-desk-md/README.md",
     "directory": "skandi-embeds/_unregistered/benbs/html-ref",
     "stem": "customer-service-desk-reference",
     "disposition": "SOURCE CONFLICT",
-    "note": "This document contains an ALTEA Reservations implementation and contract, not Customer Service Desk. Kept separate from both active controllers."
+    "note": "This document contains an ALTEA Reservations implementation and contract, not Customer Service Desk. Kept separate from both active controllers.",
+    "originalSource": "HTML_REF/riaintra/Customer Service Desk.md"
   },
   {
-    "source": "HTML_REF/riaintra/DocuNet Administration.md",
-    "directory": "skandi-embeds/docunet-admin",
+    "source": "riaintra-embeds/docunet-admin/README.md",
+    "directory": "riaintra-embeds/docunet-admin",
     "stem": "skandi-docunet-admin",
-    "disposition": "IMPORTED"
+    "disposition": "IMPORTED",
+    "originalSource": "HTML_REF/riaintra/DocuNet Administration.md"
   },
   {
-    "source": "HTML_REF/riaintra/DocuNet.md",
-    "directory": "skandi-embeds/docunet",
+    "source": "riaintra-embeds/docunet/README.md",
+    "directory": "riaintra-embeds/docunet",
     "stem": "skandi-docunet",
-    "disposition": "IMPORTED"
+    "disposition": "IMPORTED",
+    "payloadRemoved": true,
+    "payloadSha256": "33990629c8e652934f0b3a1376dfd604ac1ad808621228988543d3e089022290",
+    "originalSource": "HTML_REF/riaintra/DocuNet.md"
   },
   {
-    "source": "HTML_REF/riaintra/Finance Control.md",
+    "source": "skandi-embeds/_unregistered/gboi3/README.md",
     "directory": "skandi-embeds/_unregistered/gboi3",
     "stem": "gboi3",
     "disposition": "UNREGISTERED CONTROLLER",
-    "note": "Existing controller is preserved; this source is not assigned a new canonical route."
+    "note": "Existing controller is preserved; this source is not assigned a new canonical route.",
+    "originalSource": "HTML_REF/riaintra/Finance Control.md"
   },
   {
-    "source": "HTML_REF/riaintra/GroupTalk.md",
-    "directory": "skandi-embeds/group-talk",
+    "source": "altea-embeds/group-talk/README.md",
+    "directory": "altea-embeds/group-talk",
     "stem": "skandi-group-talk",
-    "disposition": "IMPORTED"
+    "disposition": "IMPORTED",
+    "payloadRemoved": true,
+    "payloadSha256": "391a76e369b6584f3a75fe5a694e4d5f25c3bcbf6106c2961dacc926dd735ca5",
+    "originalSource": "HTML_REF/riaintra/GroupTalk.md"
   },
   {
-    "source": "HTML_REF/riaintra/Mail.md",
-    "directory": "skandi-embeds/mail",
+    "source": "riaintra-embeds/mail/README.md",
+    "directory": "riaintra-embeds/mail",
     "stem": "skandi-mail",
-    "disposition": "IMPORTED"
+    "disposition": "IMPORTED",
+    "payloadRemoved": true,
+    "payloadSha256": "6c4ddc4f1be12c56feae7653effd8ddc32a8fdbab62d41869b19a9013254c532",
+    "originalSource": "HTML_REF/riaintra/Mail.md"
   },
   {
-    "source": "HTML_REF/riaintra/Media Control.md",
-    "directory": "skandi-embeds/media-control",
+    "source": "riaintra-embeds/media-control/references/riaintra-media-control-md/README.md",
+    "directory": "riaintra-embeds/media-control",
     "stem": "skandi-media-control",
-    "disposition": "IMPORTED"
+    "disposition": "IMPORTED",
+    "originalSource": "HTML_REF/riaintra/Media Control.md"
   },
   {
-    "source": "HTML_REF/riaintra/Payroll.md",
-    "directory": "skandi-embeds/payroll",
+    "source": "riaintra-embeds/payroll/README.md",
+    "directory": "riaintra-embeds/payroll",
     "stem": "skandi-payroll",
-    "disposition": "IMPORTED"
+    "disposition": "IMPORTED",
+    "payloadRemoved": true,
+    "payloadSha256": "e327f0bf74a7979ff9fd5597d5189e27050ffa8ff37b0ebae8d89056e15f2744",
+    "originalSource": "HTML_REF/riaintra/Payroll.md"
   },
   {
-    "source": "HTML_REF/riaintra/Policy Control.md",
-    "directory": "skandi-embeds/policy-control",
+    "source": "riaintra-embeds/policy-control/README.md",
+    "directory": "riaintra-embeds/policy-control",
     "stem": "skandi-policy-control",
-    "disposition": "IMPORTED"
+    "disposition": "IMPORTED",
+    "payloadRemoved": true,
+    "payloadSha256": "9405fb2722b5bd52b80784bd423480bf0daeacdea12dd41a2a1186d3910b7410",
+    "originalSource": "HTML_REF/riaintra/Policy Control.md"
   },
   {
-    "source": "HTML_REF/riaintra/RIAINTRA Legal.md",
-    "directory": "skandi-embeds/legal-internal",
+    "source": "riaintra-embeds/legal-internal/README.md",
+    "directory": "riaintra-embeds/legal-internal",
     "stem": "skandi-legal-internal",
-    "disposition": "IMPORTED"
+    "disposition": "IMPORTED",
+    "payloadRemoved": true,
+    "payloadSha256": "4c676311924641210bfa2ae34f66b7f1a8e98cca0acc86d08cdd4addb6d68257",
+    "originalSource": "HTML_REF/riaintra/RIAINTRA Legal.md"
   },
   {
-    "source": "HTML_REF/riaintra/RIAINTRA Login.md",
+    "source": "riaintra-embeds/riaintra/references/riaintra-riaintra-login-md/README.md",
     "directory": "riaintra-embeds/riaintra/html-ref",
     "stem": "riaintra-reference",
     "disposition": "PRESERVED CURRENT SOURCE",
-    "note": "Current Git source remains active; the HTML_REF version is extracted here for reference."
+    "note": "Current Git source remains active; the HTML_REF version is extracted here for reference.",
+    "originalSource": "HTML_REF/riaintra/RIAINTRA Login.md"
   },
   {
-    "source": "HTML_REF/riaintra/RIAINTRA Policies.md",
+    "source": "skandi-embeds/_unregistered/k053q/README.md",
     "directory": "skandi-embeds/_unregistered/k053q",
     "stem": "k053q",
     "disposition": "UNREGISTERED CONTROLLER",
-    "note": "Existing controller is preserved; this source is not assigned a new canonical route."
+    "note": "Existing controller is preserved; this source is not assigned a new canonical route.",
+    "originalSource": "HTML_REF/riaintra/RIAINTRA Policies.md"
   },
   {
-    "source": "HTML_REF/riaintra/Staff Document Control.md",
+    "source": "skandi-embeds/_unregistered/ycgof/README.md",
     "directory": "skandi-embeds/_unregistered/ycgof",
     "stem": "ycgof",
     "disposition": "UNREGISTERED CONTROLLER",
-    "note": "Existing controller is preserved; this source is not assigned a new canonical route."
+    "note": "Existing controller is preserved; this source is not assigned a new canonical route.",
+    "originalSource": "HTML_REF/riaintra/Staff Document Control.md"
   },
   {
-    "source": "HTML_REF/riaintra/Success Factors.md",
+    "source": "riaintra-embeds/success-factors/references/riaintra-success-factors-md/README.md",
     "directory": "riaintra-embeds/success-factors/html-ref",
     "stem": "success-factors-reference",
     "disposition": "PRESERVED CURRENT SOURCE",
-    "note": "Current Git source remains active; the HTML_REF version is extracted here for reference."
+    "note": "Current Git source remains active; the HTML_REF version is extracted here for reference.",
+    "originalSource": "HTML_REF/riaintra/Success Factors.md"
   },
   {
-    "source": "HTML_REF/riaintra/The Store Control.md",
-    "directory": "skandi-embeds/store-control",
+    "source": "riaintra-embeds/store-control/README.md",
+    "directory": "riaintra-embeds/store-control",
     "stem": "skandi-store-control",
-    "disposition": "IMPORTED"
+    "disposition": "IMPORTED",
+    "payloadRemoved": true,
+    "payloadSha256": "a6a8d0f5e80c1a7483e859f71314ce3b1d9c43174375505794b1541bf721d1d2",
+    "originalSource": "HTML_REF/riaintra/The Store Control.md"
   },
   {
-    "source": "HTML_REF/riaintra/Transport Compliance.md",
+    "source": "skandi-embeds/_unregistered/bsgb8/README.md",
     "directory": "skandi-embeds/_unregistered/bsgb8",
     "stem": "bsgb8",
     "disposition": "UNREGISTERED CONTROLLER",
-    "note": "Existing controller is preserved; this source is not assigned a new canonical route."
+    "note": "Existing controller is preserved; this source is not assigned a new canonical route.",
+    "originalSource": "HTML_REF/riaintra/Transport Compliance.md"
   },
   {
-    "source": "HTML_REF/riaintra/Uniform Center.md",
-    "directory": "skandi-embeds/uniform-center",
+    "source": "riaintra-embeds/uniform-center/README.md",
+    "directory": "riaintra-embeds/uniform-center",
     "stem": "skandi-uniform-center",
-    "disposition": "IMPORTED"
+    "disposition": "IMPORTED",
+    "payloadRemoved": true,
+    "payloadSha256": "c606ff4f0b6f0c5d94d14d74067bb55f2fee3135a1782a3561900379e6d398e2",
+    "originalSource": "HTML_REF/riaintra/Uniform Center.md"
   },
   {
-    "source": "HTML_REF/riaintra/Uniform Control.md",
-    "directory": "skandi-embeds/uniform-control/html-ref",
+    "source": "riaintra-embeds/uniform-control/references/riaintra-uniform-control-md/README.md",
+    "directory": "riaintra-embeds/uniform-control/html-ref",
     "stem": "uniform-control-reference",
     "disposition": "SOURCE CONFLICT",
-    "note": "Identical to Uniform Center and emits SKANDI_UNIFORM_EMPLOYEE; the admin controller requires SKANDI_UNIFORM_ADMIN. Admin slot remains pending."
+    "note": "Identical to Uniform Center and emits SKANDI_UNIFORM_EMPLOYEE; the admin controller requires SKANDI_UNIFORM_ADMIN. Admin slot remains pending.",
+    "originalSource": "HTML_REF/riaintra/Uniform Control.md"
   },
   {
-    "source": "HTML_REF/skandi/About.md",
+    "source": "skandi-embeds/about/README.md",
     "directory": "skandi-embeds/about",
     "stem": "skandi-about",
-    "disposition": "IMPORTED"
+    "disposition": "IMPORTED",
+    "payloadRemoved": true,
+    "payloadSha256": "638a5340ce857056c7c1fcabc668e2fcb4ecac4baf31787ef5552bb54a572cc7",
+    "originalSource": "HTML_REF/skandi/About.md"
   },
   {
-    "source": "HTML_REF/skandi/Alexandra Chat.md",
+    "source": "skandi-embeds/global/references/skandi-alexandra-chat-md/README.md",
     "directory": "skandi-embeds/global/html-ref",
     "stem": "skandi-alexandra-chat-v12-legacy",
     "disposition": "LEGACY REFERENCE",
-    "note": "Older standalone chat source; the 2026-10-26 integrated sitewide widget is the active component."
+    "note": "Older standalone chat source; the 2026-10-26 integrated sitewide widget is the active component.",
+    "originalSource": "HTML_REF/skandi/Alexandra Chat.md"
   },
   {
-    "source": "HTML_REF/skandi/Alexandra global chat.md",
+    "source": "skandi-embeds/global/references/skandi-alexandra-global-chat-md/README.md",
     "directory": "skandi-embeds/global/html-ref",
     "stem": "skandi-alexandra-chat-legacy",
     "disposition": "SEPARATE COMPONENT",
-    "note": "Older alternate chat source is retained separately."
+    "note": "Older alternate chat source is retained separately.",
+    "originalSource": "HTML_REF/skandi/Alexandra global chat.md"
   },
   {
-    "source": "HTML_REF/skandi/Alexandra Global Launcher.md",
+    "source": "skandi-embeds/global/alexandra/references/skandi-alexandra-global-launcher-md/README.md",
     "directory": "skandi-embeds/global/alexandra",
     "stem": "skandi-alexandra-launcher",
     "disposition": "SEPARATE COMPONENT",
-    "note": "Separate sitewide Wix chat component; not injected a second time into compiled chrome."
+    "note": "Separate sitewide Wix chat component; not injected a second time into compiled chrome.",
+    "originalSource": "HTML_REF/skandi/Alexandra Global Launcher.md"
   },
   {
-    "source": "HTML_REF/skandi/Baggage Allowance.md",
+    "source": "skandi-embeds/baggage-allowance/README.md",
     "directory": "skandi-embeds/baggage-allowance",
     "stem": "skandi-baggage-allowance",
-    "disposition": "IMPORTED"
+    "disposition": "IMPORTED",
+    "payloadRemoved": true,
+    "payloadSha256": "4197f36c668c9818276a8560162ad347275daea2332567f55bd06f6590ff4382",
+    "originalSource": "HTML_REF/skandi/Baggage Allowance.md"
   },
   {
-    "source": "HTML_REF/skandi/Booking/Booking.apis.md",
+    "source": "skandi-embeds/booking/components/apis/README.md",
     "directory": "skandi-embeds/booking/components/apis",
     "stem": "skandi-booking-apis",
     "disposition": "SEPARATE COMPONENT",
-    "note": "Preserves the existing eight-component Booking controller; no single-iframe migration is implied."
+    "note": "Preserves the existing eight-component Booking controller; no single-iframe migration is implied.",
+    "originalSource": "HTML_REF/skandi/Booking/Booking.apis.md"
   },
   {
-    "source": "HTML_REF/skandi/Booking/Booking.confirmation.md",
+    "source": "skandi-embeds/booking/components/confirmation/README.md",
     "directory": "skandi-embeds/booking/components/confirmation",
     "stem": "skandi-booking-confirmation",
     "disposition": "SEPARATE COMPONENT",
-    "note": "Preserves the existing eight-component Booking controller; no single-iframe migration is implied."
+    "note": "Preserves the existing eight-component Booking controller; no single-iframe migration is implied.",
+    "originalSource": "HTML_REF/skandi/Booking/Booking.confirmation.md"
   },
   {
-    "source": "HTML_REF/skandi/Booking/Booking.documents.md",
+    "source": "skandi-embeds/booking/components/documents/README.md",
     "directory": "skandi-embeds/booking/components/documents",
     "stem": "skandi-booking-documents",
     "disposition": "SEPARATE COMPONENT",
-    "note": "Preserves the existing eight-component Booking controller; no single-iframe migration is implied."
+    "note": "Preserves the existing eight-component Booking controller; no single-iframe migration is implied.",
+    "originalSource": "HTML_REF/skandi/Booking/Booking.documents.md"
   },
   {
-    "source": "HTML_REF/skandi/Booking/Booking.extras.md",
+    "source": "skandi-embeds/booking/components/extras/README.md",
     "directory": "skandi-embeds/booking/components/extras",
     "stem": "skandi-booking-extras",
     "disposition": "SEPARATE COMPONENT",
-    "note": "Preserves the existing eight-component Booking controller; no single-iframe migration is implied."
+    "note": "Preserves the existing eight-component Booking controller; no single-iframe migration is implied.",
+    "originalSource": "HTML_REF/skandi/Booking/Booking.extras.md"
   },
   {
-    "source": "HTML_REF/skandi/Booking/Booking.offer.md",
+    "source": "skandi-embeds/booking/components/offer/README.md",
     "directory": "skandi-embeds/booking/components/offer",
     "stem": "skandi-booking-offer",
     "disposition": "SEPARATE COMPONENT",
-    "note": "Preserves the existing eight-component Booking controller; no single-iframe migration is implied."
+    "note": "Preserves the existing eight-component Booking controller; no single-iframe migration is implied.",
+    "originalSource": "HTML_REF/skandi/Booking/Booking.offer.md"
   },
   {
-    "source": "HTML_REF/skandi/Booking/Booking.payment.md",
+    "source": "skandi-embeds/booking/components/payment/README.md",
     "directory": "skandi-embeds/booking/components/payment",
     "stem": "skandi-booking-payment",
     "disposition": "SEPARATE COMPONENT",
-    "note": "Preserves the existing eight-component Booking controller; no single-iframe migration is implied."
+    "note": "Preserves the existing eight-component Booking controller; no single-iframe migration is implied.",
+    "originalSource": "HTML_REF/skandi/Booking/Booking.payment.md"
   },
   {
-    "source": "HTML_REF/skandi/Booking/Booking.seats.md",
+    "source": "skandi-embeds/booking/components/seats/README.md",
     "directory": "skandi-embeds/booking/components/seats",
     "stem": "skandi-booking-seats",
     "disposition": "SEPARATE COMPONENT",
-    "note": "Preserves the existing eight-component Booking controller; no single-iframe migration is implied."
+    "note": "Preserves the existing eight-component Booking controller; no single-iframe migration is implied.",
+    "originalSource": "HTML_REF/skandi/Booking/Booking.seats.md"
   },
   {
-    "source": "HTML_REF/skandi/Booking/Booking.transfer.md",
+    "source": "skandi-embeds/booking/components/transfer/README.md",
     "directory": "skandi-embeds/booking/components/transfer",
     "stem": "skandi-booking-transfer",
     "disposition": "SEPARATE COMPONENT",
-    "note": "Preserves the existing eight-component Booking controller; no single-iframe migration is implied."
+    "note": "Preserves the existing eight-component Booking controller; no single-iframe migration is implied.",
+    "originalSource": "HTML_REF/skandi/Booking/Booking.transfer.md"
   },
   {
-    "source": "HTML_REF/skandi/Car Rental.md",
+    "source": "skandi-embeds/car-rental/README.md",
     "directory": "skandi-embeds/car-rental",
     "stem": "skandi-car-rental",
-    "disposition": "IMPORTED"
+    "disposition": "IMPORTED",
+    "payloadRemoved": true,
+    "payloadSha256": "6497e6996f5734fbf90b2a3ed09547ba0075daea2ee15d24275c420c1400a2e9",
+    "originalSource": "HTML_REF/skandi/Car Rental.md"
   },
   {
-    "source": "HTML_REF/skandi/Country.md",
+    "source": "skandi-embeds/country/README.md",
     "directory": "skandi-embeds/country",
     "stem": "skandi-country",
-    "disposition": "IMPORTED"
+    "disposition": "IMPORTED",
+    "payloadRemoved": true,
+    "payloadSha256": "36729d10d8d9ae84be14d88c727b11bdbea9b04840a58fa6c4be6735c39ec5ca",
+    "originalSource": "HTML_REF/skandi/Country.md"
   },
   {
-    "source": "HTML_REF/skandi/Customer Document Center.md",
+    "source": "skandi-embeds/_unregistered/jtp4b/README.md",
     "directory": "skandi-embeds/_unregistered/jtp4b",
     "stem": "jtp4b",
     "disposition": "UNREGISTERED CONTROLLER",
-    "note": "Existing controller is preserved; this source is not assigned a new canonical route."
+    "note": "Existing controller is preserved; this source is not assigned a new canonical route.",
+    "originalSource": "HTML_REF/skandi/Customer Document Center.md"
   },
   {
-    "source": "HTML_REF/skandi/Destination.md",
+    "source": "skandi-embeds/_unregistered/u4y1p/README.md",
     "directory": "skandi-embeds/_unregistered/u4y1p",
     "stem": "u4y1p",
     "disposition": "UNREGISTERED CONTROLLER",
-    "note": "Existing controller is preserved; this source is not assigned a new canonical route."
+    "note": "Existing controller is preserved; this source is not assigned a new canonical route.",
+    "originalSource": "HTML_REF/skandi/Destination.md"
   },
   {
-    "source": "HTML_REF/skandi/Error 404.md",
+    "source": "skandi-embeds/_unregistered/error-404/README.md",
     "directory": "skandi-embeds/_unregistered/error-404",
     "stem": "skandi-error-404-reference",
     "disposition": "UNREGISTERED CONTROLLER",
-    "note": "Wix-managed native 404 with no canonical route or page controller. Split only for HTML_REF source validation; excluded from the website build and must not receive a page receiver."
+    "note": "Wix-managed native 404 with no canonical route or page controller. Split only for HTML_REF source validation; excluded from the website build and must not receive a page receiver.",
+    "originalSource": "HTML_REF/skandi/Error 404.md"
   },
   {
-    "source": "HTML_REF/skandi/Flight Status.md",
+    "source": "skandi-embeds/flight-status/references/skandi-flight-status-md/README.md",
     "directory": "skandi-embeds/flight-status/html-ref",
     "stem": "flight-status-reference",
     "disposition": "PRESERVED CURRENT SOURCE",
-    "note": "Current Git source remains active; the HTML_REF version is extracted here for reference."
+    "note": "Current Git source remains active; the HTML_REF version is extracted here for reference.",
+    "originalSource": "HTML_REF/skandi/Flight Status.md"
   },
   {
-    "source": "HTML_REF/skandi/Forgot Password.md",
+    "source": "skandi-embeds/forgot-password/README.md",
     "directory": "skandi-embeds/forgot-password",
     "stem": "skandi-forgot-password",
-    "disposition": "IMPORTED"
+    "disposition": "IMPORTED",
+    "originalSource": "HTML_REF/skandi/Forgot Password.md"
   },
   {
-    "source": "HTML_REF/skandi/Home Mobile App Navigation.md",
+    "source": "skandi-embeds/global/references/skandi-home-mobile-app-navigation-md/README.md",
     "directory": "skandi-embeds/global/html-ref",
     "stem": "skandi-mobile-nav-reference",
     "disposition": "PRESERVED CURRENT SOURCE",
-    "note": "Current Git mobile navigation remains active."
+    "note": "Current Git mobile navigation remains active.",
+    "originalSource": "HTML_REF/skandi/Home Mobile App Navigation.md"
   },
   {
-    "source": "HTML_REF/skandi/Home.md",
+    "source": "skandi-embeds/home/references/skandi-home-md/README.md",
     "directory": "skandi-embeds/home/html-ref",
     "stem": "skandi-home-reference",
     "disposition": "PRESERVED CURRENT SOURCE",
-    "note": "Current Git source remains active; the HTML_REF version is extracted here for reference."
+    "note": "Current Git source remains active; the HTML_REF version is extracted here for reference.",
+    "originalSource": "HTML_REF/skandi/Home.md"
   },
   {
-    "source": "HTML_REF/skandi/How can we help.md",
+    "source": "skandi-embeds/support/README.md",
     "directory": "skandi-embeds/support",
     "stem": "skandi-support",
-    "disposition": "IMPORTED"
+    "disposition": "IMPORTED",
+    "originalSource": "HTML_REF/skandi/How can we help.md"
   },
   {
-    "source": "HTML_REF/skandi/Legal.md",
+    "source": "skandi-embeds/legal/README.md",
     "directory": "skandi-embeds/legal",
     "stem": "skandi-legal",
-    "disposition": "IMPORTED"
+    "disposition": "IMPORTED",
+    "payloadRemoved": true,
+    "payloadSha256": "67dd45e93c4aeb145470740ca07992e4483588006cf54c5031e802826f325d87",
+    "originalSource": "HTML_REF/skandi/Legal.md"
   },
   {
-    "source": "HTML_REF/skandi/Media Control.md",
-    "directory": "skandi-embeds/media-control",
+    "source": "riaintra-embeds/media-control/references/skandi-media-control-md/README.md",
+    "directory": "riaintra-embeds/media-control",
     "stem": "skandi-media-control",
     "disposition": "DUPLICATE SOURCE",
-    "note": "Byte-identical HTML to HTML_REF/riaintra/Media Control.md; one shared split target."
+    "note": "Byte-identical HTML to HTML_REF/riaintra/Media Control.md; one shared split target.",
+    "originalSource": "HTML_REF/skandi/Media Control.md"
   },
   {
-    "source": "HTML_REF/skandi/News Room.md",
+    "source": "skandi-embeds/newsroom/README.md",
     "directory": "skandi-embeds/newsroom",
     "stem": "skandi-newsroom",
-    "disposition": "IMPORTED"
+    "disposition": "IMPORTED",
+    "payloadRemoved": true,
+    "payloadSha256": "fe322a82cdd422a23759c86864dcd61797fdb41776c6e6b931db6ec603adf11e",
+    "originalSource": "HTML_REF/skandi/News Room.md"
   },
   {
-    "source": "HTML_REF/skandi/Our Destinations.md",
+    "source": "skandi-embeds/destinations/README.md",
     "directory": "skandi-embeds/destinations",
     "stem": "skandi-destinations",
-    "disposition": "IMPORTED"
+    "disposition": "IMPORTED",
+    "payloadRemoved": true,
+    "payloadSha256": "798a2a84846738cf4ceacef88cf40ebd35e8d2ba376a7ea34fbae4ea93f2d264",
+    "originalSource": "HTML_REF/skandi/Our Destinations.md"
   },
   {
-    "source": "HTML_REF/skandi/Passport & Visa.md",
+    "source": "skandi-embeds/passport-visa/README.md",
     "directory": "skandi-embeds/passport-visa",
     "stem": "skandi-passport-visa",
-    "disposition": "IMPORTED"
+    "disposition": "IMPORTED",
+    "payloadRemoved": true,
+    "payloadSha256": "cc0074dd63659a844880e125b9529485045d1c80f6dc12c66b5a4fff8c46a5bc",
+    "originalSource": "HTML_REF/skandi/Passport & Visa.md"
   },
   {
-    "source": "HTML_REF/skandi/Policies.md",
+    "source": "skandi-embeds/policies/README.md",
     "directory": "skandi-embeds/policies",
     "stem": "skandi-policies",
-    "disposition": "IMPORTED"
+    "disposition": "IMPORTED",
+    "payloadRemoved": true,
+    "payloadSha256": "ec868f993d577bb623eadb6a9a7a567612c1622a914e4e383396fc86678f3285",
+    "originalSource": "HTML_REF/skandi/Policies.md"
   },
   {
-    "source": "HTML_REF/skandi/Search.md",
+    "source": "skandi-embeds/search/README.md",
     "directory": "skandi-embeds/search",
     "stem": "skandi-search",
-    "disposition": "IMPORTED"
+    "disposition": "IMPORTED",
+    "originalSource": "HTML_REF/skandi/Search.md"
   },
   {
-    "source": "HTML_REF/skandi/SKANDI Club My Profile.md",
+    "source": "skandi-embeds/my-profile/README.md",
     "directory": "skandi-embeds/my-profile",
     "stem": "skandi-my-profile",
-    "disposition": "IMPORTED"
+    "disposition": "IMPORTED",
+    "originalSource": "HTML_REF/skandi/SKANDI Club My Profile.md"
   },
   {
-    "source": "HTML_REF/skandi/SKANDI Club Support.md",
+    "source": "skandi-embeds/_unregistered/yk7x3/README.md",
     "directory": "skandi-embeds/_unregistered/yk7x3",
     "stem": "yk7x3",
     "disposition": "UNREGISTERED CONTROLLER",
-    "note": "Existing controller is preserved; this source is not assigned a new canonical route."
+    "note": "Existing controller is preserved; this source is not assigned a new canonical route.",
+    "originalSource": "HTML_REF/skandi/SKANDI Club Support.md"
   },
   {
-    "source": "HTML_REF/skandi/SKANDI Club.md",
+    "source": "skandi-embeds/club/README.md",
     "directory": "skandi-embeds/club",
     "stem": "skandi-club",
-    "disposition": "IMPORTED"
+    "disposition": "IMPORTED",
+    "originalSource": "HTML_REF/skandi/SKANDI Club.md"
   },
   {
-    "source": "HTML_REF/skandi/SKANDI Club Login.md",
+    "source": "skandi-embeds/club-login/README.md",
     "directory": "skandi-embeds/club-login",
     "stem": "skandi-club-login",
-    "disposition": "IMPORTED"
+    "disposition": "IMPORTED",
+    "payloadRemoved": true,
+    "payloadSha256": "165c8a8f7af8bcdbd48cfc3109d42a4602f9efcf17235040a630e5d53e9ee68f",
+    "originalSource": "HTML_REF/skandi/SKANDI Club Login.md"
   },
   {
-    "source": "HTML_REF/skandi/SKANDI Collection.md",
+    "source": "skandi-embeds/skandi-collection/README.md",
     "directory": "skandi-embeds/skandi-collection",
     "stem": "skandi-skandi-collection",
-    "disposition": "IMPORTED"
+    "disposition": "IMPORTED",
+    "originalSource": "HTML_REF/skandi/SKANDI Collection.md"
   },
   {
-    "source": "HTML_REF/skandi/SKANDI COOKIE PREFERENCES.md",
+    "source": "skandi-embeds/cookie-preferences/README.md",
     "directory": "skandi-embeds/cookie-preferences",
     "stem": "skandi-cookie-preferences",
-    "disposition": "IMPORTED"
+    "disposition": "IMPORTED",
+    "payloadRemoved": true,
+    "payloadSha256": "c9e3c59ddf258a23f8438c09c8307e486e91404941b9d8b11dd607af882819bc",
+    "originalSource": "HTML_REF/skandi/SKANDI COOKIE PREFERENCES.md"
   },
   {
-    "source": "HTML_REF/skandi/SKANDI TRAVEL ASSISTANT.md",
+    "source": "skandi-embeds/_unregistered/elfkf/README.md",
     "directory": "skandi-embeds/_unregistered/elfkf",
     "stem": "elfkf",
     "disposition": "UNREGISTERED CONTROLLER",
-    "note": "Existing controller is preserved; this source is not assigned a new canonical route."
+    "note": "Existing controller is preserved; this source is not assigned a new canonical route.",
+    "originalSource": "HTML_REF/skandi/SKANDI TRAVEL ASSISTANT.md"
   },
   {
-    "source": "HTML_REF/skandi/Special Assistance.md",
+    "source": "skandi-embeds/special-assistance/README.md",
     "directory": "skandi-embeds/special-assistance",
     "stem": "skandi-special-assistance",
-    "disposition": "IMPORTED"
+    "disposition": "IMPORTED",
+    "payloadRemoved": true,
+    "payloadSha256": "12df76cd62a2038549ebc3ae09386a13ee1bacff30e7c2e602ea946e8c448a39",
+    "originalSource": "HTML_REF/skandi/Special Assistance.md"
   },
   {
-    "source": "HTML_REF/skandi/The Store Checkout.md",
+    "source": "skandi-embeds/store-checkout/README.md",
     "directory": "skandi-embeds/store-checkout",
     "stem": "skandi-store-checkout",
-    "disposition": "IMPORTED"
+    "disposition": "IMPORTED",
+    "originalSource": "HTML_REF/skandi/The Store Checkout.md"
   },
   {
-    "source": "HTML_REF/skandi/The Store Order Confirmation.md",
+    "source": "skandi-embeds/store-confirmation/README.md",
     "directory": "skandi-embeds/store-confirmation",
     "stem": "skandi-store-confirmation",
-    "disposition": "IMPORTED"
+    "disposition": "IMPORTED",
+    "originalSource": "HTML_REF/skandi/The Store Order Confirmation.md"
   },
   {
-    "source": "HTML_REF/skandi/The Store.md",
+    "source": "skandi-embeds/the-store/README.md",
     "directory": "skandi-embeds/the-store",
     "stem": "skandi-the-store",
-    "disposition": "IMPORTED"
+    "disposition": "IMPORTED",
+    "originalSource": "HTML_REF/skandi/The Store.md"
   },
   {
-    "source": "HTML_REF/skandi/Tours & Activities.md",
+    "source": "skandi-embeds/tours/README.md",
     "directory": "skandi-embeds/tours",
     "stem": "skandi-tours",
-    "disposition": "IMPORTED"
+    "disposition": "IMPORTED",
+    "payloadRemoved": true,
+    "payloadSha256": "91eefd85a1682641cc08409899beb378a4fed5c77c0d65bc8e765d881d81f907",
+    "originalSource": "HTML_REF/skandi/Tours & Activities.md"
   },
   {
-    "source": "HTML_REF/skandi/Travel Info.md",
+    "source": "skandi-embeds/travel-info/references/skandi-travel-info-md/README.md",
     "directory": "skandi-embeds/travel-info/html-ref",
     "stem": "skandi-travel-info-reference",
     "disposition": "PRESERVED CURRENT SOURCE",
-    "note": "Current Git source remains active; the HTML_REF version is extracted here for reference."
+    "note": "Current Git source remains active; the HTML_REF version is extracted here for reference.",
+    "originalSource": "HTML_REF/skandi/Travel Info.md"
   },
   {
-    "source": "HTML_REF/skandi/Travel Insurance.md",
+    "source": "skandi-embeds/travel-insurance/README.md",
     "directory": "skandi-embeds/travel-insurance",
     "stem": "skandi-travel-insurance",
-    "disposition": "IMPORTED"
+    "disposition": "IMPORTED",
+    "payloadRemoved": true,
+    "payloadSha256": "3809ae801bb2e2b80041e944f3c02709ecde92b7ae5f532f90881b023ebcfc33",
+    "originalSource": "HTML_REF/skandi/Travel Insurance.md"
   },
   {
-    "source": "HTML_REF/skandi/VOY.md",
+    "source": "skandi-embeds/voy/references/skandi-voy-md/README.md",
     "directory": "skandi-embeds/voy/html-ref",
     "stem": "skandi-voy-reference",
     "disposition": "SOURCE CONFLICT",
-    "note": "The complete HTML_REF reader is retained here for source validation. The active skandi-embeds/voy triplet remains PENDING SOURCE; this reference mirror does not activate /voy-magazine."
+    "note": "The complete HTML_REF reader is retained here for source validation. The active skandi-embeds/voy triplet remains PENDING SOURCE; this reference mirror does not activate /voy-magazine.",
+    "originalSource": "HTML_REF/skandi/VOY.md"
   },
   {
-    "source": "HTML_REF/skandi/Booking/README.md",
+    "source": "skandi-embeds/booking/references/skandi-booking-readme-md/README.md",
     "directory": "skandi-embeds/booking/html-ref",
     "stem": "skandi-booking-merged-reference",
     "disposition": "SOURCE CONFLICT",
-    "note": "Merged Booking reference retained for provenance; the active flow is the single /booking page with #bookingFlowEmbed."
+    "note": "Merged Booking reference retained for provenance; the active flow is the single /booking page with #bookingFlowEmbed.",
+    "originalSource": "HTML_REF/skandi/Booking/README.md"
   },
   {
-    "source": "HTML_REF/riaintra/Alexandra Chat.md",
+    "source": "skandi-embeds/global/alexandra/references/riaintra-alexandra-chat-md/README.md",
     "directory": "skandi-embeds/global/alexandra",
     "stem": "skandi-alexandra-chat",
     "disposition": "SEPARATE COMPONENT",
-    "note": "Current integrated sitewide SKANDI widget supplied 2026-10-26; the master bridge closes it on RIAINTRA, ALTEA and other internal routes."
+    "note": "Current integrated sitewide SKANDI widget supplied 2026-10-26; the master bridge closes it on RIAINTRA, ALTEA and other internal routes.",
+    "originalSource": "HTML_REF/riaintra/Alexandra Chat.md"
   },
   {
-    "source": "HTML_REF/riaintra/Alexandra Global Launcher.md",
+    "source": "skandi-embeds/global/alexandra/references/riaintra-alexandra-global-launcher-md/README.md",
     "directory": "skandi-embeds/global/alexandra",
     "stem": "skandi-alexandra-launcher",
     "disposition": "DUPLICATE SOURCE",
-    "note": "Byte-identical legacy launcher already mapped from HTML_REF/skandi/Alexandra Global Launcher.md; the active integrated widget has its own launcher."
+    "note": "Byte-identical legacy launcher already mapped from HTML_REF/skandi/Alexandra Global Launcher.md; the active integrated widget has its own launcher.",
+    "originalSource": "HTML_REF/riaintra/Alexandra Global Launcher.md"
   },
   {
-    "source": "HTML_REF/riaintra/EOS.md",
-    "directory": "skandi-embeds/eos",
+    "source": "altea-embeds/eos/README.md",
+    "directory": "altea-embeds/eos",
     "stem": "skandi-eos",
     "disposition": "ACTIVE SOURCE",
-    "note": "Authoritative EOS single-component page source; Babel app uses the shared EOS Wix backend facade."
+    "note": "Authoritative EOS single-component page source; Babel app uses the shared EOS Wix backend facade.",
+    "originalSource": "HTML_REF/riaintra/EOS.md"
   }
 ]
