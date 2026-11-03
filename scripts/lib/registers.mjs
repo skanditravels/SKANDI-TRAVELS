@@ -6,7 +6,7 @@ export async function writeRegisters(root,out,manifest) {
   const rows=manifest.pages;
   const records=rows.map(p=>({key:p.key,name:p.controller?.split('/').pop().replace(/\.[^.]+\.js$/,'')||'UNVERIFIED',route:p.route,controller:p.controller||'UNVERIFIED',components:p.embedIds?.join(' / ')||(p.binding==='handshake'?'Discovered by existing controller; exact Wix ID requires live inspection':'UNVERIFIED'),
     source:p.aliasOf?`Alias of ${p.aliasOf}`:`${p.sourceDirectory}/${p.stem}.{html,css,js}`,family:p.family,chrome:p.chrome,output:p.output||(p.aliasOf?`Alias of ${p.aliasOf}`:'No current output'),status:p.status,
-    receiver:p.status==='BUILT'?p.receiver:p.status==='ALIAS'?`Uses ${p.aliasOf} receiver`:'Not generated until a successful build',
+    receiver:p.status==='BUILT'?(p.receiverFile||p.receiver):p.status==='ALIAS'?`Uses ${p.aliasOf} receiver`:'Not generated until a successful build',
     geometry:p.chrome==='public'?'Full width; 100 viewport-height iframe on mobile; desktop approved full-height scrolling; verify Wix breakpoint geometry':p.chrome==='none'?'Preserve approved application viewport and scrolling; no injected chrome':'Full viewport with family-specific header/footer; page workspace owns scrolling; verify Wix breakpoints',
     readiness:p.status==='BUILT'?'STATICALLY VERIFIED; REQUIRES LIVE TEST before installation':p.status==='ALIAS'?`Uses ${p.aliasOf}; no separate installation`:`NOT READY: ${p.error||p.blockers?.join('; ')||p.status}`,
     backend:p.backend?.join('; ')||'See existing controller',publication:'Run SKANDI Website Builder; it publishes dist/ and this successful page receiver together. Install this page-specific receiver into its existing Wix HTML component, publish Wix, then verify live.'}));

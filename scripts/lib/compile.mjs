@@ -256,7 +256,7 @@ export const chromeParts = family => family==='none'?[]:family==='public'?[
   {key:'header',directory:'skandi-embeds/global',stem:'skandi-header',mount:'skandi-global-header-root'},
   {key:'footer',directory:'skandi-embeds/global',stem:'skandi-footer',mount:'skandi-global-footer-root'},
   {key:'mobile-nav',directory:'skandi-embeds/global',stem:'skandi-mobile-nav',mount:'skandi-mobile-nav-container'}
-]:['header','footer'].map(key=>({key,directory:`skandi-embeds/${family}-global`,stem:`${family}-${key}`,mount:`${family}-global-${key}-root`}));
+]:['header','footer'].map(key=>({key,directory:`${family}-embeds/global`,stem:`${family}-${key}`,mount:`${family}-global-${key}-root`}));
 export async function compilePage(root,page) {
   // Media Control is itself a complete application with an isolated email editor.
   // Preserve its document and execution positions instead of flattening it into

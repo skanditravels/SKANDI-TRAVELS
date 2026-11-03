@@ -28,10 +28,10 @@ async function fixture(t, extra={}) {
   for(const file of ['skandi-shell.css','skandi-shell.js','skandi-website-design.js'])await write(root,'skandi-embeds/global/'+file,await fs.readFile(path.join(ROOT,'skandi-embeds/global',file),'utf8'));
   for(const file of ['skandi-alexandra-chat.html','skandi-alexandra-chat.css','skandi-alexandra-chat.js'])await write(root,'skandi-embeds/global/alexandra/'+file,await fs.readFile(path.join(ROOT,'skandi-embeds/global/alexandra',file),'utf8'));
   for(const family of ['public','riaintra','altea'])for(const role of family==='public'?['header','footer','mobile-nav']:['header','footer']) {
-    const directory=family==='public'?'global':family+'-global',stem=(family==='public'?'skandi':family)+'-'+role;
-    await write(root,`skandi-embeds/${directory}/${stem}.html`,`<div id="${family}-${role}">${family} ${role}</div>`);
-    await write(root,`skandi-embeds/${directory}/${stem}.css`,':root{--brand:blue}html,body{margin:0}.content{color:blue}');
-    await write(root,`skandi-embeds/${directory}/${stem}.js`,`const SOURCE=${JSON.stringify(stem)};`);
+    const directory=family==='public'?'skandi-embeds/global':family+'-embeds/global',stem=(family==='public'?'skandi':family)+'-'+role;
+    await write(root,`${directory}/${stem}.html`,`<div id="${family}-${role}">${family} ${role}</div>`);
+    await write(root,`${directory}/${stem}.css`,':root{--brand:blue}html,body{margin:0}.content{color:blue}');
+    await write(root,`${directory}/${stem}.js`,`const SOURCE=${JSON.stringify(stem)};`);
   }
   await scaffold(root);return root;
 }
@@ -41,6 +41,29 @@ async function page(root,key,{html=`<section id="${key}-content">${key}</section
 }
 const run=root=>build({root,log:()=>{}});
 const htmlOf=(root,slug)=>fs.readFile(path.join(root,'dist',slug,'index.html'),'utf8');
+
+test('internal routes use their own source roots and generated receivers',async t=>{
+  const root=await fixture(t);
+  const {rows}=await inventory(root);
+  for(const [key,prefix] of [['home','skandi-embeds/'],['successFactors','riaintra-embeds/'],['alteaLaunchpad','altea-embeds/'],['alteaReservations','altea-embeds/']]){
+    const row=rows.find(item=>item.key===key);
+    assert.ok(row.sourceDirectory.startsWith(prefix),key+': '+row.sourceDirectory);
+    await page(root,key);
+  }
+  const result=await run(root);
+  assert.deepEqual(result.errors,[]);
+  for(const key of ['successFactors','alteaLaunchpad','alteaReservations']){
+    const row=result.manifest.pages.find(item=>item.key===key);
+    assert.equal(row.status,'BUILT');
+    assert.ok(row.receiverFile.startsWith(row.sourceDirectory+'/'));
+    const generated=await fs.readFile(path.join(root,row.receiverFile),'utf8');
+    assert.match(generated,/EXPECTED=Object\.freeze/);
+    assert.ok(generated.includes(JSON.stringify(row.receiver)));
+  }
+  const existing=result.manifest.pages.find(item=>item.key==='alteaReservations');
+  assert.equal(existing.receiver,'skandi-embeds/altea-reservations/skandi-altea-reservations.receiver.html');
+  assert.equal(existing.receiverFile,'altea-embeds/altea-reservations/skandi-altea-reservations.receiver.html');
+});
 
 test('page receiver generation fixes the route and registered Wix component into its own file',async()=>{
   const page={key:'search',route:'/search',family:'public',chrome:'public',sourceDirectory:'skandi-embeds/search',stem:'skandi-search',embedIds:['#searchResultsEmbed']};
@@ -155,7 +178,7 @@ test('pinned MapLibre styles and import-map module scripts survive compilation',
 });
 
 test('missing internal chrome blocks only that family; completed public pages still build',async t=>{
-  const root=await fixture(t);await page(root,'home');await page(root,'successFactors');await write(root,'skandi-embeds/riaintra-global/riaintra-header.html','<!-- SKANDI_PENDING_SOURCE -->');const result=await run(root);assert.deepEqual(result.errors,[]);assert.deepEqual(result.built,['home']);assert.equal(result.manifest.pages.find(p=>p.key==='successFactors').status,'BLOCKED INTEGRATION');
+  const root=await fixture(t);await page(root,'home');await page(root,'successFactors');await write(root,'riaintra-embeds/global/riaintra-header.html','<!-- SKANDI_PENDING_SOURCE -->');const result=await run(root);assert.deepEqual(result.errors,[]);assert.deepEqual(result.built,['home']);assert.equal(result.manifest.pages.find(p=>p.key==='successFactors').status,'BLOCKED INTEGRATION');
 });
 
 test('public workflow gate keeps internal compile failures visible without blocking SKANDI pages',async t=>{
@@ -175,8 +198,8 @@ test('repository outputs preserve IDs and contracts; failed sources are unadvert
   for(const row of result.manifest.pages) {
     if(!['BUILT','ALIAS'].includes(row.status)){assert.equal(row.output,null);assert.equal(row.receiver,undefined);}
     if(row.status==='BUILT') {
-      assert.equal(row.receiver,`${row.sourceDirectory}/${row.stem}.receiver.html`);
-      const pageReceiver=await fs.readFile(path.join(ROOT,row.receiver),'utf8');
+      assert.equal(row.receiverFile,`${row.sourceDirectory}/${row.stem}.receiver.html`);
+      const pageReceiver=await fs.readFile(path.join(ROOT,row.receiverFile),'utf8');
       assert.ok(pageReceiver.includes(`"key":${JSON.stringify(row.key)}`));
       assert.ok(pageReceiver.includes(`"route":${JSON.stringify(row.route)}`));
     }

@@ -71,9 +71,11 @@ export async function inventory(root) {
       continue;
     }
     if(/[?#]/.test(route)) throw new Error(`Query view ${key} has no canonical base route ${pathname}`);
-    const slug=meta.slug||kebab(key), directory=meta.sourceDirectory||`skandi-embeds/${slug}`;
+    const slug=meta.slug||kebab(key);
+    const sourceRoot=pathname==='/riaintra/success-factors/altea'||pathname.startsWith('/riaintra/success-factors/altea/')?'altea-embeds':pathname==='/riaintra'||pathname.startsWith('/riaintra/')?'riaintra-embeds':'skandi-embeds';
+    const directory=meta.sourceDirectory||`${sourceRoot}/${slug}`;
     const stem=meta.stem||`skandi-${slug}`;
-    if(!/^[a-z0-9-]+$/.test(slug) || !/^[a-z0-9-]+$/.test(stem) || !/^(?:skandi-embeds|riaintra-embeds)\/[a-z0-9/-]+$/.test(directory) || directory.includes('..')) throw new Error(`Unsafe source mapping: ${key}`);
+    if(!/^[a-z0-9-]+$/.test(slug) || !/^[a-z0-9-]+$/.test(stem) || !/^(?:skandi-embeds|riaintra-embeds|altea-embeds)\/[a-z0-9/-]+$/.test(directory) || directory.includes('..')) throw new Error(`Unsafe source mapping: ${key}`);
     const folderKey=directory+'/'+stem;
     if(folders.has(folderKey)) throw new Error(`Conflicting source mapping ${folderKey}`);
     folders.set(folderKey,key);
@@ -84,10 +86,10 @@ export async function inventory(root) {
     const componentFolders=new Set([folderKey]),componentKeys=new Set(),componentMounts=new Set(['skandi-shell-root','skandi-app-root','skandi-home-content']);
     for(const component of meta.components||[]) {
       const componentKey=String(component.key||'').trim();
-      const componentDirectory=component.sourceDirectory||`skandi-embeds/${slug}/${componentKey}`;
+      const componentDirectory=component.sourceDirectory||`${directory}/${componentKey}`;
       const componentStem=component.stem||`skandi-${slug}-${componentKey}`;
       const mount=component.mount||`skandi-${kebab(componentKey)}-root`;
-      if(!/^[a-z0-9-]+$/.test(componentKey) || !/^[a-z0-9-]+$/.test(componentStem) || !/^(?:skandi-embeds|riaintra-embeds)\/[a-z0-9/-]+$/.test(componentDirectory) || componentDirectory.includes('..') || !/^[A-Za-z][A-Za-z0-9_-]*$/.test(mount)) throw new Error(`Unsafe component source mapping: ${key}/${componentKey}`);
+      if(!/^[a-z0-9-]+$/.test(componentKey) || !/^[a-z0-9-]+$/.test(componentStem) || !/^(?:skandi-embeds|riaintra-embeds|altea-embeds)\/[a-z0-9/-]+$/.test(componentDirectory) || componentDirectory.includes('..') || !/^[A-Za-z][A-Za-z0-9_-]*$/.test(mount)) throw new Error(`Unsafe component source mapping: ${key}/${componentKey}`);
       if(componentKeys.has(componentKey)||componentMounts.has(mount)) throw new Error(`Conflicting component key or mount for ${key}: ${componentKey}/${mount}`);
       componentKeys.add(componentKey);componentMounts.add(mount);
       const componentFolder=componentDirectory+'/'+componentStem;
@@ -118,7 +120,7 @@ export async function scaffold(root) {
     }
   }
   for(const family of ['riaintra','altea']) for(const part of ['header','footer']) for(const ext of ['html','css','js']) {
-    const file=path.join(root,`skandi-embeds/${family}-global/${family}-${part}.${ext}`);
+    const file=path.join(root,`${family}-embeds/global/${family}-${part}.${ext}`);
     await fs.mkdir(path.dirname(file),{recursive:true});
     await fs.writeFile(file,ext==='html'?'<!-- SKANDI_PENDING_SOURCE: approved global component required. -->\n':'/* SKANDI_PENDING_SOURCE: approved global component required. */\n',{flag:'wx'}).catch(e=>{if(e.code!=='EEXIST')throw e;});
   }

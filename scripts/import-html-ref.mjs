@@ -11,6 +11,7 @@ const mappings=JSON.parse(await fs.readFile(path.join(root,'scripts/html-ref-sou
 const planned=new Map(),records=[];
 const read=p=>fs.readFile(path.join(root,p),'utf8');
 for(const m of mappings) {
+  if(m.payloadRemoved)continue;
   const original=extractDocument(await read(m.source));
   if(!original)throw new Error(m.source+': no HTML payload found.');
   const split=splitDocument(original,m.stem);
@@ -30,12 +31,8 @@ for(const m of mappings) {
   }
   records.push({...m,htmlSha256:digest(original),htmlBytes:Buffer.byteLength(original),counts:split.counts,diagnostics,outputs,replacements:split.replacements});
 }
-const docs=(await fs.readdir(path.join(root,'HTML_REF'),{recursive:true})).filter(f=>f.endsWith('.md')).map(f=>'HTML_REF/'+f).sort();
 const documentationOnly=[];
-for(const source of docs)if(!mappings.some(m=>m.source===source)) {
-  if(extractDocument(await read(source)))throw new Error('Unmapped HTML payload: '+source);
-  documentationOnly.push(source);
-}
+for(const m of mappings)if(m.payloadRemoved)documentationOnly.push(m.source);
 // Validate every target before the first write. Existing authored source is
 // never overwritten, including a developer's subsequent edits to an import.
 for(const [target,content] of planned) {

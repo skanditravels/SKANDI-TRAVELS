@@ -81,6 +81,7 @@
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
       "receiver": "skandi-embeds/home/skandi-home.receiver.html",
+      "receiverFile": "skandi-embeds/home/skandi-home.receiver.html",
       "sha256": "8655c5bb4eddf3ccf3c17c5c36b58e36e774579e1d1330c1cba84218bed8fc48",
       "bytes": 434423
     },
@@ -128,6 +129,7 @@
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
       "receiver": "skandi-embeds/search/skandi-search.receiver.html",
+      "receiverFile": "skandi-embeds/search/skandi-search.receiver.html",
       "sha256": "d254e9590ffee5c9d9084e283f443818398227c96ed2b2ee32bc19e2a5552de6",
       "bytes": 173065
     },
@@ -236,6 +238,7 @@
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
       "receiver": "skandi-embeds/car-rental/skandi-car-rental.receiver.html",
+      "receiverFile": "skandi-embeds/car-rental/skandi-car-rental.receiver.html",
       "sha256": "1667fd3489360c524e0ab2de8b89171cf9b8e1e40a6438b5e10beaed1c379e17",
       "bytes": 208609
     },
@@ -415,6 +418,7 @@
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
       "receiver": "skandi-embeds/tours/skandi-tours.receiver.html",
+      "receiverFile": "skandi-embeds/tours/skandi-tours.receiver.html",
       "sha256": "cc6d598a4011b93177d5b67223dc5957ab5bace2f35967a278155cccd70837a4",
       "bytes": 297325
     },
@@ -539,6 +543,7 @@
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
       "receiver": "skandi-embeds/destinations/skandi-destinations.receiver.html",
+      "receiverFile": "skandi-embeds/destinations/skandi-destinations.receiver.html",
       "sha256": "18ea51fcbf6f09e66ca1286dd39065675b34fa6d10ccd6cc89dbd4f5f9621d09",
       "bytes": 302311
     },
@@ -628,6 +633,7 @@
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
       "receiver": "skandi-embeds/travel-info/skandi-travel-info.receiver.html",
+      "receiverFile": "skandi-embeds/travel-info/skandi-travel-info.receiver.html",
       "sha256": "e57ee3ea70cf236107cca0bd2591411b1faa862f478e0a7d31c9748f7e3d3ca8",
       "bytes": 463309
     },
@@ -689,6 +695,7 @@
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
       "receiver": "skandi-embeds/skandi-collection/skandi-skandi-collection.receiver.html",
+      "receiverFile": "skandi-embeds/skandi-collection/skandi-skandi-collection.receiver.html",
       "sha256": "bdb9734e66ee480e509752dec2591c72ead2465f3b72736e3adbbf314bd8849b",
       "bytes": 236753
     },
@@ -747,6 +754,7 @@
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
       "receiver": "skandi-embeds/voy/skandi-voy.receiver.html",
+      "receiverFile": "skandi-embeds/voy/skandi-voy.receiver.html",
       "sha256": "80b5958eeaeafaa9a35cbc5029ca1eb5c1345db2744f559662c646eb3bfc716a",
       "bytes": 258558
     },
@@ -801,6 +809,7 @@
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
       "receiver": "skandi-embeds/club/skandi-club.receiver.html",
+      "receiverFile": "skandi-embeds/club/skandi-club.receiver.html",
       "sha256": "fff732df928b3e3cbf7cb571c7190a6cf4cbf0682eb0e25761496962f2afc56c",
       "bytes": 192175
     },
@@ -860,6 +869,7 @@
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
       "receiver": "skandi-embeds/club-login/skandi-club-login.receiver.html",
+      "receiverFile": "skandi-embeds/club-login/skandi-club-login.receiver.html",
       "sha256": "dc75e95c177fdcae45b3f85dd8451c7470f9f5c79881d95a034ab02d6fc0cf34",
       "bytes": 161386
     },
@@ -904,6 +914,7 @@
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
       "receiver": "skandi-embeds/forgot-password/skandi-forgot-password.receiver.html",
+      "receiverFile": "skandi-embeds/forgot-password/skandi-forgot-password.receiver.html",
       "sha256": "7f137337628e4631862725517366c7adb619e0833659888bdb393c86acc2a2c1",
       "bytes": 147617
     },
@@ -953,6 +964,7 @@
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
       "receiver": "skandi-embeds/about/skandi-about.receiver.html",
+      "receiverFile": "skandi-embeds/about/skandi-about.receiver.html",
       "sha256": "d8728826c6f07a8b994cbb60e8bfb4af00870d3c3cf1431feec669b1d0de2ebd",
       "bytes": 198368
     },
@@ -1083,6 +1095,7 @@
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
       "receiver": "skandi-embeds/newsroom/skandi-newsroom.receiver.html",
+      "receiverFile": "skandi-embeds/newsroom/skandi-newsroom.receiver.html",
       "sha256": "af1acdbdf7b714a2d267355447c334e1dba6a267287439528556ad0c2d244aca",
       "bytes": 178167
     },
@@ -1148,6 +1161,7 @@
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
       "receiver": "skandi-embeds/the-store/skandi-the-store.receiver.html",
+      "receiverFile": "skandi-embeds/the-store/skandi-the-store.receiver.html",
       "sha256": "db0a9b18e08774a5d5ac4c85afe2527e7e14a9f15659b69a191eea5ee91b6163",
       "bytes": 152562
     },
@@ -1211,6 +1225,7 @@
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
       "receiver": "skandi-embeds/store-checkout/skandi-store-checkout.receiver.html",
+      "receiverFile": "skandi-embeds/store-checkout/skandi-store-checkout.receiver.html",
       "sha256": "a2ef14058fb2bb7fe2e5e23b441080edb77cb2da6779b2529c6ef8a18ddf2b88",
       "bytes": 50618
     },
@@ -1263,6 +1278,7 @@
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
       "receiver": "skandi-embeds/store-confirmation/skandi-store-confirmation.receiver.html",
+      "receiverFile": "skandi-embeds/store-confirmation/skandi-store-confirmation.receiver.html",
       "sha256": "be8ccba763e055825477769daf71ef020f7ad7848778c836748d62c96d98bfff",
       "bytes": 36326
     },
@@ -1352,6 +1368,7 @@
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
       "receiver": "skandi-embeds/legal/skandi-legal.receiver.html",
+      "receiverFile": "skandi-embeds/legal/skandi-legal.receiver.html",
       "sha256": "3388bf8e55dc6eb357c328b19a4a5e17595a84b0f687e19c705fbfb66136c3c0",
       "bytes": 165985
     },
@@ -1409,6 +1426,7 @@
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
       "receiver": "skandi-embeds/policies/skandi-policies.receiver.html",
+      "receiverFile": "skandi-embeds/policies/skandi-policies.receiver.html",
       "sha256": "c4b1db656e5484226ef5fa6fd1da4d5b70d72f7999e5655f8132277f7fd65212",
       "bytes": 194625
     },
@@ -1564,6 +1582,7 @@
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
       "receiver": "skandi-embeds/cookie-preferences/skandi-cookie-preferences.receiver.html",
+      "receiverFile": "skandi-embeds/cookie-preferences/skandi-cookie-preferences.receiver.html",
       "sha256": "51fb3aef1f97fdeab752a05180968f121ed27a1e3f336f5babec2430094a7d51",
       "bytes": 152743
     },
@@ -1613,6 +1632,7 @@
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
       "receiver": "riaintra-embeds/riaintra/riaintra.receiver.html",
+      "receiverFile": "riaintra-embeds/riaintra/riaintra.receiver.html",
       "sha256": "de9383235d99df031f4a9359a29f8667813ebacf2cff6cf828438be1ee2871eb",
       "bytes": 41457
     },
@@ -1758,6 +1778,7 @@
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
       "receiver": "riaintra-embeds/success-factors/success-factors.receiver.html",
+      "receiverFile": "riaintra-embeds/success-factors/success-factors.receiver.html",
       "sha256": "11216d6afdf7f0ebbc6ae16ccbb1d15bff001a57bdf45b20adb8f5008f31839e",
       "bytes": 406948
     },
@@ -1768,7 +1789,7 @@
       "title": "RIAINTRA Legal",
       "family": "riaintra",
       "chrome": "riaintra",
-      "sourceDirectory": "skandi-embeds/legal-internal",
+      "sourceDirectory": "riaintra-embeds/legal-internal",
       "stem": "skandi-legal-internal",
       "controller": "src/pages/RIAINTRA Legal.xvi17.js",
       "embedIds": [
@@ -1780,9 +1801,9 @@
       "requiresStaff": true,
       "status": "BUILT",
       "files": [
-        "skandi-embeds/legal-internal/skandi-legal-internal.html",
-        "skandi-embeds/legal-internal/skandi-legal-internal.css",
-        "skandi-embeds/legal-internal/skandi-legal-internal.js"
+        "riaintra-embeds/legal-internal/skandi-legal-internal.html",
+        "riaintra-embeds/legal-internal/skandi-legal-internal.css",
+        "riaintra-embeds/legal-internal/skandi-legal-internal.js"
       ],
       "missing": [],
       "issues": [],
@@ -1804,6 +1825,7 @@
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
       "receiver": "skandi-embeds/legal-internal/skandi-legal-internal.receiver.html",
+      "receiverFile": "riaintra-embeds/legal-internal/skandi-legal-internal.receiver.html",
       "sha256": "6f08702d44d6090c93f078a83ab139ba253199282eee492f66c24de05e3802e4",
       "bytes": 41725
     },
@@ -1814,7 +1836,7 @@
       "title": "ALTEA Launchpad",
       "family": "altea",
       "chrome": "altea",
-      "sourceDirectory": "skandi-embeds/altea-launchpad",
+      "sourceDirectory": "altea-embeds/altea-launchpad",
       "stem": "skandi-altea-launchpad",
       "controller": "src/pages/ALTEA Launchpad.ajs4y.js",
       "embedIds": [],
@@ -1826,9 +1848,9 @@
       "requiresStaff": true,
       "status": "BUILT",
       "files": [
-        "skandi-embeds/altea-launchpad/skandi-altea-launchpad.html",
-        "skandi-embeds/altea-launchpad/skandi-altea-launchpad.css",
-        "skandi-embeds/altea-launchpad/skandi-altea-launchpad.js"
+        "altea-embeds/altea-launchpad/skandi-altea-launchpad.html",
+        "altea-embeds/altea-launchpad/skandi-altea-launchpad.css",
+        "altea-embeds/altea-launchpad/skandi-altea-launchpad.js"
       ],
       "missing": [],
       "issues": [],
@@ -1866,6 +1888,7 @@
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
       "receiver": "skandi-embeds/altea-launchpad/skandi-altea-launchpad.receiver.html",
+      "receiverFile": "altea-embeds/altea-launchpad/skandi-altea-launchpad.receiver.html",
       "sha256": "813878a8ab93984ebd720278d65e9aefe20b5a98ddb0625d6b8316f3c8753c0f",
       "bytes": 68900
     },
@@ -1876,7 +1899,7 @@
       "title": "Reservations",
       "family": "altea",
       "chrome": "altea",
-      "sourceDirectory": "skandi-embeds/altea-reservations",
+      "sourceDirectory": "altea-embeds/altea-reservations",
       "stem": "skandi-altea-reservations",
       "controller": "src/pages/Reservations.ly2n8.js",
       "embedIds": [
@@ -1890,9 +1913,9 @@
       "requiresStaff": true,
       "status": "BUILT",
       "files": [
-        "skandi-embeds/altea-reservations/skandi-altea-reservations.html",
-        "skandi-embeds/altea-reservations/skandi-altea-reservations.css",
-        "skandi-embeds/altea-reservations/skandi-altea-reservations.js"
+        "altea-embeds/altea-reservations/skandi-altea-reservations.html",
+        "altea-embeds/altea-reservations/skandi-altea-reservations.css",
+        "altea-embeds/altea-reservations/skandi-altea-reservations.js"
       ],
       "missing": [],
       "issues": [],
@@ -1917,6 +1940,7 @@
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
       "receiver": "skandi-embeds/altea-reservations/skandi-altea-reservations.receiver.html",
+      "receiverFile": "altea-embeds/altea-reservations/skandi-altea-reservations.receiver.html",
       "sha256": "ef6154f4fd864c2784043162cbd2d7dc07e4976966a0527b98d9ffdf53bc6254",
       "bytes": 593841
     },
@@ -1927,7 +1951,7 @@
       "title": "OPS Control",
       "family": "altea",
       "chrome": "altea",
-      "sourceDirectory": "skandi-embeds/ops-control",
+      "sourceDirectory": "altea-embeds/ops-control",
       "stem": "skandi-ops-control",
       "controller": "src/pages/OPS Control.uposx.js",
       "embedIds": [
@@ -1943,9 +1967,9 @@
       "requiresStaff": true,
       "status": "BUILT",
       "files": [
-        "skandi-embeds/ops-control/skandi-ops-control.html",
-        "skandi-embeds/ops-control/skandi-ops-control.css",
-        "skandi-embeds/ops-control/skandi-ops-control.js"
+        "altea-embeds/ops-control/skandi-ops-control.html",
+        "altea-embeds/ops-control/skandi-ops-control.css",
+        "altea-embeds/ops-control/skandi-ops-control.js"
       ],
       "missing": [],
       "issues": [],
@@ -1971,6 +1995,7 @@
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
       "receiver": "skandi-embeds/ops-control/skandi-ops-control.receiver.html",
+      "receiverFile": "altea-embeds/ops-control/skandi-ops-control.receiver.html",
       "sha256": "3c06ded31565ccba4dbc9c764e9fbb987d3f74af22782b811d843ba6d07db7d4",
       "bytes": 152385
     },
@@ -1981,7 +2006,7 @@
       "title": "EOS Mobile Operations",
       "family": "altea",
       "chrome": "altea",
-      "sourceDirectory": "skandi-embeds/eos",
+      "sourceDirectory": "altea-embeds/eos",
       "stem": "skandi-eos",
       "controller": "src/pages/masterPage.js",
       "embedIds": [
@@ -1995,9 +2020,9 @@
       "requiresStaff": true,
       "status": "BUILT",
       "files": [
-        "skandi-embeds/eos/skandi-eos.html",
-        "skandi-embeds/eos/skandi-eos.css",
-        "skandi-embeds/eos/skandi-eos.js"
+        "altea-embeds/eos/skandi-eos.html",
+        "altea-embeds/eos/skandi-eos.css",
+        "altea-embeds/eos/skandi-eos.js"
       ],
       "missing": [],
       "issues": [],
@@ -2126,6 +2151,7 @@
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
       "receiver": "skandi-embeds/eos/skandi-eos.receiver.html",
+      "receiverFile": "altea-embeds/eos/skandi-eos.receiver.html",
       "sha256": "57762abec41516d9e18507a3feaa99865c95b5bb5ee6a17dee9111407461cfdc",
       "bytes": 77504
     },
@@ -2136,7 +2162,7 @@
       "title": "Inventory Control",
       "family": "altea",
       "chrome": "altea",
-      "sourceDirectory": "skandi-embeds/inventory-control",
+      "sourceDirectory": "altea-embeds/inventory-control",
       "stem": "skandi-inventory-control",
       "controller": "src/pages/Inventory Control.jsdik.js",
       "embedIds": [
@@ -2150,9 +2176,9 @@
       "requiresStaff": true,
       "status": "FAILED",
       "files": [
-        "skandi-embeds/inventory-control/skandi-inventory-control.html",
-        "skandi-embeds/inventory-control/skandi-inventory-control.css",
-        "skandi-embeds/inventory-control/skandi-inventory-control.js"
+        "altea-embeds/inventory-control/skandi-inventory-control.html",
+        "altea-embeds/inventory-control/skandi-inventory-control.css",
+        "altea-embeds/inventory-control/skandi-inventory-control.js"
       ],
       "missing": [],
       "issues": [],
@@ -2177,7 +2203,7 @@
       "dynamic": false,
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
-      "error": "[inventoryControl / inventory-control] skandi-embeds/inventory-control/skandi-inventory-control.html, skandi-embeds/inventory-control/skandi-inventory-control.css, skandi-embeds/inventory-control/skandi-inventory-control.js: Cannot use import statement outside a module",
+      "error": "[inventoryControl / inventory-control] altea-embeds/inventory-control/skandi-inventory-control.html, altea-embeds/inventory-control/skandi-inventory-control.css, altea-embeds/inventory-control/skandi-inventory-control.js: Cannot use import statement outside a module",
       "retainedArtifact": false
     },
     {
@@ -2187,7 +2213,7 @@
       "title": "Uniform Center",
       "family": "riaintra",
       "chrome": "riaintra",
-      "sourceDirectory": "skandi-embeds/uniform-center",
+      "sourceDirectory": "riaintra-embeds/uniform-center",
       "stem": "skandi-uniform-center",
       "controller": "src/pages/Uniform Center.lukfc.js",
       "embedIds": [
@@ -2201,9 +2227,9 @@
       "requiresStaff": true,
       "status": "BUILT",
       "files": [
-        "skandi-embeds/uniform-center/skandi-uniform-center.html",
-        "skandi-embeds/uniform-center/skandi-uniform-center.css",
-        "skandi-embeds/uniform-center/skandi-uniform-center.js"
+        "riaintra-embeds/uniform-center/skandi-uniform-center.html",
+        "riaintra-embeds/uniform-center/skandi-uniform-center.css",
+        "riaintra-embeds/uniform-center/skandi-uniform-center.js"
       ],
       "missing": [],
       "issues": [],
@@ -2232,6 +2258,7 @@
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
       "receiver": "skandi-embeds/uniform-center/skandi-uniform-center.receiver.html",
+      "receiverFile": "riaintra-embeds/uniform-center/skandi-uniform-center.receiver.html",
       "sha256": "980d201e8d74e432e3d11db48d01c2e92dd2dcf32a108cdc2baa1aa310badd22",
       "bytes": 134682
     },
@@ -2242,7 +2269,7 @@
       "title": "Uniform Control",
       "family": "riaintra",
       "chrome": "riaintra",
-      "sourceDirectory": "skandi-embeds/uniform-control",
+      "sourceDirectory": "riaintra-embeds/uniform-control",
       "stem": "skandi-uniform-control",
       "controller": "src/pages/Uniform Control.yx92b.js",
       "embedIds": [
@@ -2254,14 +2281,14 @@
       "requiresStaff": true,
       "status": "PENDING SOURCE",
       "files": [
-        "skandi-embeds/uniform-control/skandi-uniform-control.html",
-        "skandi-embeds/uniform-control/skandi-uniform-control.css",
-        "skandi-embeds/uniform-control/skandi-uniform-control.js"
+        "riaintra-embeds/uniform-control/skandi-uniform-control.html",
+        "riaintra-embeds/uniform-control/skandi-uniform-control.css",
+        "riaintra-embeds/uniform-control/skandi-uniform-control.js"
       ],
       "missing": [
-        "skandi-embeds/uniform-control/skandi-uniform-control.html",
-        "skandi-embeds/uniform-control/skandi-uniform-control.css",
-        "skandi-embeds/uniform-control/skandi-uniform-control.js"
+        "riaintra-embeds/uniform-control/skandi-uniform-control.html",
+        "riaintra-embeds/uniform-control/skandi-uniform-control.css",
+        "riaintra-embeds/uniform-control/skandi-uniform-control.js"
       ],
       "issues": [],
       "backend": [
@@ -2297,7 +2324,7 @@
       "title": "alteaTimatic",
       "family": "altea",
       "chrome": "altea",
-      "sourceDirectory": "skandi-embeds/altea-timatic",
+      "sourceDirectory": "altea-embeds/altea-timatic",
       "stem": "skandi-altea-timatic",
       "controller": null,
       "embedIds": [],
@@ -2307,14 +2334,14 @@
       "requiresStaff": true,
       "status": "PENDING SOURCE",
       "files": [
-        "skandi-embeds/altea-timatic/skandi-altea-timatic.html",
-        "skandi-embeds/altea-timatic/skandi-altea-timatic.css",
-        "skandi-embeds/altea-timatic/skandi-altea-timatic.js"
+        "altea-embeds/altea-timatic/skandi-altea-timatic.html",
+        "altea-embeds/altea-timatic/skandi-altea-timatic.css",
+        "altea-embeds/altea-timatic/skandi-altea-timatic.js"
       ],
       "missing": [
-        "skandi-embeds/altea-timatic/skandi-altea-timatic.html",
-        "skandi-embeds/altea-timatic/skandi-altea-timatic.css",
-        "skandi-embeds/altea-timatic/skandi-altea-timatic.js"
+        "altea-embeds/altea-timatic/skandi-altea-timatic.html",
+        "altea-embeds/altea-timatic/skandi-altea-timatic.css",
+        "altea-embeds/altea-timatic/skandi-altea-timatic.js"
       ],
       "issues": [
         "No verified canonical controller mapping."
@@ -2336,7 +2363,7 @@
       "title": "Mail",
       "family": "riaintra",
       "chrome": "riaintra",
-      "sourceDirectory": "skandi-embeds/mail",
+      "sourceDirectory": "riaintra-embeds/mail",
       "stem": "skandi-mail",
       "controller": "src/pages/Mail.ecik8.js",
       "embedIds": [
@@ -2350,9 +2377,9 @@
       "requiresStaff": true,
       "status": "BUILT",
       "files": [
-        "skandi-embeds/mail/skandi-mail.html",
-        "skandi-embeds/mail/skandi-mail.css",
-        "skandi-embeds/mail/skandi-mail.js"
+        "riaintra-embeds/mail/skandi-mail.html",
+        "riaintra-embeds/mail/skandi-mail.css",
+        "riaintra-embeds/mail/skandi-mail.js"
       ],
       "missing": [],
       "issues": [],
@@ -2396,6 +2423,7 @@
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
       "receiver": "skandi-embeds/mail/skandi-mail.receiver.html",
+      "receiverFile": "riaintra-embeds/mail/skandi-mail.receiver.html",
       "sha256": "b3701509f9f677bf84ec6a1e296330c104740a930d5297c8baf4c85842695c9b",
       "bytes": 70393
     },
@@ -2406,7 +2434,7 @@
       "title": "DocuNet",
       "family": "riaintra",
       "chrome": "riaintra",
-      "sourceDirectory": "skandi-embeds/docunet",
+      "sourceDirectory": "riaintra-embeds/docunet",
       "stem": "skandi-docunet",
       "controller": "src/pages/DocuNet.twh13.js",
       "embedIds": [
@@ -2418,9 +2446,9 @@
       "requiresStaff": true,
       "status": "BUILT",
       "files": [
-        "skandi-embeds/docunet/skandi-docunet.html",
-        "skandi-embeds/docunet/skandi-docunet.css",
-        "skandi-embeds/docunet/skandi-docunet.js"
+        "riaintra-embeds/docunet/skandi-docunet.html",
+        "riaintra-embeds/docunet/skandi-docunet.css",
+        "riaintra-embeds/docunet/skandi-docunet.js"
       ],
       "missing": [],
       "issues": [],
@@ -2443,6 +2471,7 @@
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
       "receiver": "skandi-embeds/docunet/skandi-docunet.receiver.html",
+      "receiverFile": "riaintra-embeds/docunet/skandi-docunet.receiver.html",
       "sha256": "0c8de049f4be38101f748e18025527a1676e97b040dcd59ad381f29e584a00ee",
       "bytes": 137438
     },
@@ -2453,7 +2482,7 @@
       "title": "DocuNet Administration",
       "family": "riaintra",
       "chrome": "riaintra",
-      "sourceDirectory": "skandi-embeds/docunet-admin",
+      "sourceDirectory": "riaintra-embeds/docunet-admin",
       "stem": "skandi-docunet-admin",
       "controller": "src/pages/DocuNet Administration.u5a64.js",
       "embedIds": [
@@ -2467,9 +2496,9 @@
       "requiresStaff": true,
       "status": "FAILED",
       "files": [
-        "skandi-embeds/docunet-admin/skandi-docunet-admin.html",
-        "skandi-embeds/docunet-admin/skandi-docunet-admin.css",
-        "skandi-embeds/docunet-admin/skandi-docunet-admin.js"
+        "riaintra-embeds/docunet-admin/skandi-docunet-admin.html",
+        "riaintra-embeds/docunet-admin/skandi-docunet-admin.css",
+        "riaintra-embeds/docunet-admin/skandi-docunet-admin.js"
       ],
       "missing": [],
       "issues": [],
@@ -2516,7 +2545,7 @@
       "dynamic": false,
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
-      "error": "[docunetAdmin / docunet-admin] skandi-embeds/docunet-admin/skandi-docunet-admin.html, skandi-embeds/docunet-admin/skandi-docunet-admin.css, skandi-embeds/docunet-admin/skandi-docunet-admin.js: skandi-embeds/docunet-admin/skandi-docunet-admin.html: nested iframe is not supported; retain the existing Wix integration",
+      "error": "[docunetAdmin / docunet-admin] riaintra-embeds/docunet-admin/skandi-docunet-admin.html, riaintra-embeds/docunet-admin/skandi-docunet-admin.css, riaintra-embeds/docunet-admin/skandi-docunet-admin.js: riaintra-embeds/docunet-admin/skandi-docunet-admin.html: nested iframe is not supported; retain the existing Wix integration",
       "retainedArtifact": false
     },
     {
@@ -2526,7 +2555,7 @@
       "title": "serviceDesk",
       "family": "riaintra",
       "chrome": "riaintra",
-      "sourceDirectory": "skandi-embeds/service-desk",
+      "sourceDirectory": "riaintra-embeds/service-desk",
       "stem": "skandi-service-desk",
       "controller": null,
       "embedIds": [],
@@ -2536,14 +2565,14 @@
       "requiresStaff": true,
       "status": "PENDING SOURCE",
       "files": [
-        "skandi-embeds/service-desk/skandi-service-desk.html",
-        "skandi-embeds/service-desk/skandi-service-desk.css",
-        "skandi-embeds/service-desk/skandi-service-desk.js"
+        "riaintra-embeds/service-desk/skandi-service-desk.html",
+        "riaintra-embeds/service-desk/skandi-service-desk.css",
+        "riaintra-embeds/service-desk/skandi-service-desk.js"
       ],
       "missing": [
-        "skandi-embeds/service-desk/skandi-service-desk.html",
-        "skandi-embeds/service-desk/skandi-service-desk.css",
-        "skandi-embeds/service-desk/skandi-service-desk.js"
+        "riaintra-embeds/service-desk/skandi-service-desk.html",
+        "riaintra-embeds/service-desk/skandi-service-desk.css",
+        "riaintra-embeds/service-desk/skandi-service-desk.js"
       ],
       "issues": [
         "No verified canonical controller mapping."
@@ -2565,7 +2594,7 @@
       "title": "Policy Control",
       "family": "riaintra",
       "chrome": "riaintra",
-      "sourceDirectory": "skandi-embeds/policy-control",
+      "sourceDirectory": "riaintra-embeds/policy-control",
       "stem": "skandi-policy-control",
       "controller": "src/pages/Policy Control.ec9p4.js",
       "embedIds": [
@@ -2577,9 +2606,9 @@
       "requiresStaff": true,
       "status": "BUILT",
       "files": [
-        "skandi-embeds/policy-control/skandi-policy-control.html",
-        "skandi-embeds/policy-control/skandi-policy-control.css",
-        "skandi-embeds/policy-control/skandi-policy-control.js"
+        "riaintra-embeds/policy-control/skandi-policy-control.html",
+        "riaintra-embeds/policy-control/skandi-policy-control.css",
+        "riaintra-embeds/policy-control/skandi-policy-control.js"
       ],
       "missing": [],
       "issues": [],
@@ -2611,6 +2640,7 @@
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
       "receiver": "skandi-embeds/policy-control/skandi-policy-control.receiver.html",
+      "receiverFile": "riaintra-embeds/policy-control/skandi-policy-control.receiver.html",
       "sha256": "d78f46149ce00ce8a3a1d271ed58780515775f8847435effdccd3521b4f0d62f",
       "bytes": 117959
     },
@@ -2621,7 +2651,7 @@
       "title": "Media Control",
       "family": "riaintra",
       "chrome": "riaintra",
-      "sourceDirectory": "skandi-embeds/media-control",
+      "sourceDirectory": "riaintra-embeds/media-control",
       "stem": "skandi-media-control",
       "controller": "src/pages/Media Control.chm91.js",
       "embedIds": [
@@ -2633,9 +2663,9 @@
       "requiresStaff": true,
       "status": "BUILT",
       "files": [
-        "skandi-embeds/media-control/skandi-media-control.html",
-        "skandi-embeds/media-control/skandi-media-control.css",
-        "skandi-embeds/media-control/skandi-media-control.js"
+        "riaintra-embeds/media-control/skandi-media-control.html",
+        "riaintra-embeds/media-control/skandi-media-control.css",
+        "riaintra-embeds/media-control/skandi-media-control.js"
       ],
       "missing": [],
       "issues": [],
@@ -2757,6 +2787,7 @@
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
       "receiver": "skandi-embeds/media-control/skandi-media-control.receiver.html",
+      "receiverFile": "riaintra-embeds/media-control/skandi-media-control.receiver.html",
       "sha256": "311da6d5ec856b368ddf4fb0347cd340f54ae4270219592974b378b5c3671574",
       "bytes": 443112
     },
@@ -2767,7 +2798,7 @@
       "title": "The Store Control",
       "family": "riaintra",
       "chrome": "riaintra",
-      "sourceDirectory": "skandi-embeds/store-control",
+      "sourceDirectory": "riaintra-embeds/store-control",
       "stem": "skandi-store-control",
       "controller": "src/pages/The Store Control.y10le.js",
       "embedIds": [
@@ -2781,9 +2812,9 @@
       "requiresStaff": true,
       "status": "BUILT",
       "files": [
-        "skandi-embeds/store-control/skandi-store-control.html",
-        "skandi-embeds/store-control/skandi-store-control.css",
-        "skandi-embeds/store-control/skandi-store-control.js"
+        "riaintra-embeds/store-control/skandi-store-control.html",
+        "riaintra-embeds/store-control/skandi-store-control.css",
+        "riaintra-embeds/store-control/skandi-store-control.js"
       ],
       "missing": [],
       "issues": [],
@@ -2828,6 +2859,7 @@
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
       "receiver": "skandi-embeds/store-control/skandi-store-control.receiver.html",
+      "receiverFile": "riaintra-embeds/store-control/skandi-store-control.receiver.html",
       "sha256": "494cbbf0f6c6de9d0116d399c1d580240e564ce5731c8016ac4790d5451d4c81",
       "bytes": 94721
     },
@@ -2838,7 +2870,7 @@
       "title": "Payroll",
       "family": "riaintra",
       "chrome": "riaintra",
-      "sourceDirectory": "skandi-embeds/payroll",
+      "sourceDirectory": "riaintra-embeds/payroll",
       "stem": "skandi-payroll",
       "controller": "src/pages/Payroll.rzo0a.js",
       "embedIds": [
@@ -2850,9 +2882,9 @@
       "requiresStaff": true,
       "status": "BUILT",
       "files": [
-        "skandi-embeds/payroll/skandi-payroll.html",
-        "skandi-embeds/payroll/skandi-payroll.css",
-        "skandi-embeds/payroll/skandi-payroll.js"
+        "riaintra-embeds/payroll/skandi-payroll.html",
+        "riaintra-embeds/payroll/skandi-payroll.css",
+        "riaintra-embeds/payroll/skandi-payroll.js"
       ],
       "missing": [],
       "issues": [],
@@ -2880,6 +2912,7 @@
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
       "receiver": "skandi-embeds/payroll/skandi-payroll.receiver.html",
+      "receiverFile": "riaintra-embeds/payroll/skandi-payroll.receiver.html",
       "sha256": "851be5ee93bb2122fbadf1a3b7ef661a1ee5165446557acd92bb32b051b44231",
       "bytes": 63432
     },
@@ -2954,6 +2987,7 @@
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
       "receiver": "skandi-embeds/country/skandi-country.receiver.html",
+      "receiverFile": "skandi-embeds/country/skandi-country.receiver.html",
       "sha256": "bfb21a62727f6d178615020fc2f6f99a910850ed3732c2eee18e4babd74defcf",
       "bytes": 375897
     },
@@ -2993,6 +3027,7 @@
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
       "receiver": "skandi-embeds/booking/skandi-booking-flow.receiver.html",
+      "receiverFile": "skandi-embeds/booking/skandi-booking-flow.receiver.html",
       "sha256": "0b57e15a63b79f73856ab26dfc3ec9d9b8355924851efdf18bbe1bdbdd32633f",
       "bytes": 78619
     },
@@ -3091,6 +3126,7 @@
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
       "receiver": "skandi-embeds/my-profile/skandi-my-profile.receiver.html",
+      "receiverFile": "skandi-embeds/my-profile/skandi-my-profile.receiver.html",
       "sha256": "599fa00d2c4d725ccc63b9704ccf2ac3879d6ce036aa83d3ea75a33f9937602e",
       "bytes": 282503
     },
@@ -3190,7 +3226,7 @@
       "title": "MyRoster",
       "family": "altea",
       "chrome": "altea",
-      "sourceDirectory": "skandi-embeds/my-roster",
+      "sourceDirectory": "altea-embeds/my-roster",
       "stem": "skandi-my-roster",
       "controller": "src/pages/MyRoster.l8p5m.js",
       "embedIds": [
@@ -3204,9 +3240,9 @@
       "requiresStaff": true,
       "status": "BLOCKED INTEGRATION",
       "files": [
-        "skandi-embeds/my-roster/skandi-my-roster.html",
-        "skandi-embeds/my-roster/skandi-my-roster.css",
-        "skandi-embeds/my-roster/skandi-my-roster.js"
+        "altea-embeds/my-roster/skandi-my-roster.html",
+        "altea-embeds/my-roster/skandi-my-roster.css",
+        "altea-embeds/my-roster/skandi-my-roster.js"
       ],
       "missing": [],
       "issues": [
@@ -3263,7 +3299,7 @@
       "title": "GroupTalk",
       "family": "altea",
       "chrome": "none",
-      "sourceDirectory": "skandi-embeds/group-talk",
+      "sourceDirectory": "altea-embeds/group-talk",
       "stem": "skandi-group-talk",
       "controller": "src/pages/GroupTalk.wi4iw.js",
       "embedIds": [
@@ -3277,9 +3313,9 @@
       "requiresStaff": true,
       "status": "BUILT",
       "files": [
-        "skandi-embeds/group-talk/skandi-group-talk.html",
-        "skandi-embeds/group-talk/skandi-group-talk.css",
-        "skandi-embeds/group-talk/skandi-group-talk.js"
+        "altea-embeds/group-talk/skandi-group-talk.html",
+        "altea-embeds/group-talk/skandi-group-talk.css",
+        "altea-embeds/group-talk/skandi-group-talk.js"
       ],
       "missing": [],
       "issues": [],
@@ -3343,6 +3379,7 @@
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
       "receiver": "skandi-embeds/group-talk/skandi-group-talk.receiver.html",
+      "receiverFile": "altea-embeds/group-talk/skandi-group-talk.receiver.html",
       "sha256": "4ca8fc6a4026cb84796cf438788420e09f4e166acf8f5ca774d1fa00e9228c7e",
       "bytes": 101531
     },
@@ -3397,6 +3434,7 @@
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
       "receiver": "skandi-embeds/passport-visa/skandi-passport-visa.receiver.html",
+      "receiverFile": "skandi-embeds/passport-visa/skandi-passport-visa.receiver.html",
       "sha256": "b4457b5f3bb7e8e10904d30efe94576845755648ed57d0297789d28701ee7441",
       "bytes": 182794
     },
@@ -3446,6 +3484,7 @@
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
       "receiver": "skandi-embeds/baggage-allowance/skandi-baggage-allowance.receiver.html",
+      "receiverFile": "skandi-embeds/baggage-allowance/skandi-baggage-allowance.receiver.html",
       "sha256": "15e6533ce71d96a602e6f689a53a97754e7e3acc85e70232ea0a1bde32b73089",
       "bytes": 181066
     },
@@ -3497,6 +3536,7 @@
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
       "receiver": "skandi-embeds/travel-insurance/skandi-travel-insurance.receiver.html",
+      "receiverFile": "skandi-embeds/travel-insurance/skandi-travel-insurance.receiver.html",
       "sha256": "4764e61eb89278f64becd62a032a03a6e79d642b1106312ed73846cd26467aae",
       "bytes": 170870
     },
@@ -3650,6 +3690,7 @@
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
       "receiver": "skandi-embeds/special-assistance/skandi-special-assistance.receiver.html",
+      "receiverFile": "skandi-embeds/special-assistance/skandi-special-assistance.receiver.html",
       "sha256": "0637cc2969c60dce6ddea28f08cbbe3b421ee8a5f2d421564fa75b7cbe722247",
       "bytes": 177678
     },
@@ -3712,6 +3753,7 @@
       "sourceStatus": "COMPLETE SOURCE",
       "blockers": [],
       "receiver": "skandi-embeds/flight-status/flight-status.receiver.html",
+      "receiverFile": "skandi-embeds/flight-status/flight-status.receiver.html",
       "sha256": "591766b86625a1ddc45cac9b2907a98b341dd0663e281237788efe73d270ee1e",
       "bytes": 320760
     }

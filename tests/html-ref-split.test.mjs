@@ -10,29 +10,28 @@ const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 
 test('every HTML_REF payload is mapped and reconstructs exactly from its split files',async()=>{
   const map=JSON.parse(await fs.readFile(path.join(root,'scripts/html-ref-sources.json'),'utf8'));
-  const mergedBooking=map.find(m=>m.source==='HTML_REF/skandi/Booking/README.md');
+  const mergedBooking=map.find(m=>m.originalSource==='HTML_REF/skandi/Booking/README.md');
   assert.ok(mergedBooking,'Merged Booking reference must remain classified.');
   assert.equal(mergedBooking.disposition,'SOURCE CONFLICT');
   assert.equal(mergedBooking.directory,'skandi-embeds/booking/html-ref');
   assert.match(mergedBooking.note,/single \/booking page with #bookingFlowEmbed/);
-  const alexandra=map.find(m=>m.source==='HTML_REF/riaintra/Alexandra Chat.md');
+  const alexandra=map.find(m=>m.originalSource==='HTML_REF/riaintra/Alexandra Chat.md');
   assert.ok(alexandra,'The latest integrated Alexandra source must be mapped.');
   assert.equal(alexandra.disposition,'SEPARATE COMPONENT');
   assert.equal(alexandra.directory,'skandi-embeds/global/alexandra');
   assert.equal(alexandra.stem,'skandi-alexandra-chat');
   assert.match(alexandra.note,/sitewide/);
-  const legacyAlexandra=map.find(m=>m.source==='HTML_REF/skandi/Alexandra Chat.md');
+  const legacyAlexandra=map.find(m=>m.originalSource==='HTML_REF/skandi/Alexandra Chat.md');
   assert.equal(legacyAlexandra.disposition,'LEGACY REFERENCE');
   assert.equal(legacyAlexandra.directory,'skandi-embeds/global/html-ref');
-  const duplicateLauncher=map.find(m=>m.source==='HTML_REF/riaintra/Alexandra Global Launcher.md');
+  const duplicateLauncher=map.find(m=>m.originalSource==='HTML_REF/riaintra/Alexandra Global Launcher.md');
   assert.equal(duplicateLauncher.disposition,'DUPLICATE SOURCE');
   assert.equal(duplicateLauncher.directory,'skandi-embeds/global/alexandra');
-  const sources=new Set(map.map(m=>m.source));
-  for(const relative of (await fs.readdir(path.join(root,'HTML_REF'),{recursive:true})).filter(p=>p.endsWith('.md'))) {
-    const file='HTML_REF/'+relative,original=extractDocument(await fs.readFile(path.join(root,file),'utf8'));
-    if(original===null)continue;
-    assert.ok(sources.has(file),'Unmapped source: '+file);
-    const m=map.find(m=>m.source===file),split=splitDocument(original,m.stem);
+  for(const m of map) {
+    const file=m.source,original=extractDocument(await fs.readFile(path.join(root,file),'utf8'));
+    if(m.payloadRemoved){assert.equal(original,null,file);assert.match(m.payloadSha256,/^[a-f0-9]{64}$/);continue;}
+    assert.ok(original,'Missing retained source: '+file);
+    const split=splitDocument(original,m.stem);
     assert.equal(restoreDocument(split.files[m.stem+'.html'],split.files,split.replacements),original,file);
     const linkedHTML=await fs.readFile(path.join(root,m.directory,m.stem+'.html'),'utf8');
     for(const [name,content] of Object.entries(split.files)) {
@@ -49,18 +48,17 @@ test('every HTML_REF payload is mapped and reconstructs exactly from its split f
   }
 });
 
-test('HTML_REF changes trigger the source-validation workflow',async()=>{
+test('all embed roots trigger the source-validation workflow',async()=>{
   const workflow=await fs.readFile(path.join(root,'.github/workflows/skandi-app-build.yml'),'utf8');
   const push=workflow.slice(workflow.indexOf('  push:'),workflow.indexOf('  pull_request:'));
   const pull=workflow.slice(workflow.indexOf('  pull_request:'),workflow.indexOf('\n\nconcurrency:'));
-  assert.match(push,/HTML_REF\/\*\*/);
-  assert.match(pull,/HTML_REF\/\*\*/);
+  for(const section of [push,pull])for(const name of ['skandi-embeds','riaintra-embeds','altea-embeds'])assert.ok(section.includes(name+'/**'));
 });
 
 test('sitewide Alexandra sidecars match their authoritative payloads',async()=>{
   const map=JSON.parse(await fs.readFile(path.join(root,'scripts/html-ref-sources.json'),'utf8'));
   for(const source of ['HTML_REF/riaintra/Alexandra Chat.md']) {
-    const m=map.find(row=>row.source===source),original=extractDocument(await fs.readFile(path.join(root,source),'utf8'));
+    const m=map.find(row=>row.originalSource===source),original=extractDocument(await fs.readFile(path.join(root,m.source),'utf8'));
     assert.ok(m,source+' must be mapped');
     const split=splitDocument(original,m.stem);
     for(const [name,content] of Object.entries(split.files))
