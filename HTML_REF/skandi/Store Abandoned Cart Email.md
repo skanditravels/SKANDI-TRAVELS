@@ -13,11 +13,14 @@
 - Contract: input product_id and line_items; output recommendationCount and two flat name/image/URL slots.
 - Original email data: contact.name.first/contact.email, checkout_url, product_image_url, product_name, product_price, currency.
 - Assets: existing live URLs by default; optional public main-branch PNG assets in exact assets/email/store-abandoned-cart paths.
-- Deployment: prepared only; not written to GitHub or published to Wix.
+- Deployment: updated source reference prepared for a GitHub pull request; not published to Wix.
+- Footer status: DRAFT for EU use; registered Swedish seat and organisation number still required.
+- Language assets: complete EN/SV/NO/DA/FI HTML, with 0/1/2 recommendation variants and GitHub-image equivalents.
+- Language selection: explicit HTML-header choice is authoritative; browser-to-contact synchronization remains a separate required implementation.
 - Last checked: 2026-11-03, read-only live algorithms and recommendation/product API response.
 - Open requirements: backend installation/publication, HTTP/action-output bindings, actual recipient test,
-  approved Swedish registered address/organisation/VAT details, and optional GitHub asset commit.
-- Existing HTML_REF status: current main tree contained only HTML_REF/GLOBAL/PAGE_SETTINGS.csv;
+  verified Swedish registered seat and organisation number, confirmed sender/postal address, and recipient verification of image URLs.
+- Historical initial HTML_REF status: current main tree contained only HTML_REF/GLOBAL/PAGE_SETTINGS.csv;
   no existing email record was available to extend. Existing runtime Store owner was reused.
 
 ## Change log
@@ -27,9 +30,29 @@
   replace fixed recommendations with dynamic API response slots, and remove unsupported cart.* markup.
   Extend existing Store core/HTTP owner, add full 0/1-card variants and optional GitHub asset versions.
 
+- 2026-11-03: Compact footer revision: retain both brand marks at smaller dimensions;
+  remove fixed 112px company cells, duplicate social/navigation rows and recipient echo;
+  use two compact company lines, explicit marketing identification, privacy/terms/contact,
+  readable opt-out instructions and mandatory Wix-managed preferences footer. All footer
+  disclosure text is 12px with 17px line height and high contrast. Complete SV/NO/DA/FI
+  language/count/image variants generated from the same source. Swedish statutory seat/
+  organisation data remain missing and block EU release; no legal certification claimed.
+
+- 2026-11-03: User-directed footer styling correction supersedes the compact-footer
+  visual treatment above. Restore the original 150px THE STORE and 230px Group
+  endorsement logos, byline, social links, two company columns and footer navigation.
+  Company/reminder/opt-out copy is 11px/16px in muted #a2b4c5; copyright is 10px/15px
+  between subtle navy rules. Region labels are 10px. Remove bold white company names
+  and fixed company-cell heights. Preserve the current email body, recommendation
+  bindings, translated variants, genuine Wix-managed opt-out requirement and company
+  data release blockers. Current GitHub main a13f1ab was inspected: this reference
+  contains the email payload; the website compiler/receiver does not own this email.
+  Existing recommendation exports are present in the canonical backend files.
+  No Wix, Supabase, backend or global website-footer change is included.
+
 ## Installation and remaining configuration
 
-Read WIX_SETUP.txt. This record is a source reference, not an executable module.
+Read WIX_SETUP.txt and LEGAL-NOTES.txt. This record is a source reference, not an executable module.
 The complete intended TWO-recommendation email payload follows. One/zero variants
 are complete branch-specific files in variants/; GitHub-image equivalents are in github-images/.
 
@@ -124,11 +147,11 @@ are complete branch-specific files in variants/; GitHub-image equivalents are in
         display: block !important;
         width: 100% !important;
         height: auto !important;
-        padding: 0 0 20px !important;
+        padding: 0 0 8px !important;
       }
 
       .footer-group-cell {
-        padding: 0 0 20px !important;
+        padding: 0 0 14px !important;
       }
 
       .group-member-image {
@@ -188,7 +211,7 @@ are complete branch-specific files in variants/; GitHub-image equivalents are in
       }
 
       .footer-pad {
-        padding: 28px 22px !important;
+        padding: 24px 22px !important;
       }
 
       .main-button {
@@ -210,6 +233,11 @@ are complete branch-specific files in variants/; GitHub-image equivalents are in
     Subject: Your favourites are still in your SKANDI cart
     Preview: A little something for your next getaway. Pick up where you left off.
     Source: customer's Pasted text(20261103-140152).txt.
+    Footer update 2026-11-03: original navy branding restored; secondary 11px legal copy and 10px copyright; no fixed company-row height.
+    DRAFT FOR EU USE: Swedish registered seat and organisation number are missing.
+    Confirm the current US postal address and actual sender identity before release.
+    The live send MUST retain Wix's genuine managed unsubscribe/preferences footer.
+    Header-selected language requires the separate contact-language bridge; HTML does not auto-switch.
     The original first-item, contact and checkout fields are retained.
     cart.items, cart.subtotal and cart.total are not abandoned-checkout trigger fields.
     The optional first name is separate from the generic heading.
@@ -583,17 +611,17 @@ are complete branch-specific files in variants/; GitHub-image equivalents are in
             </td>
           </tr>
 
-          <!-- FOOTER -->
+          <!-- FOOTER: original branding; secondary legal copy; retain Wix's managed preferences footer -->
           <tr>
             <td
               class="footer-pad"
               align="left"
               bgcolor="#022e64"
-              style="padding:30px 36px;background-color:#022e64;"
+              style="padding:24px 36px;background-color:#022e64;"
             >
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
                 <tr>
-                  <td class="footer-brand-cell" width="180" valign="middle" align="left" style="width:180px;padding:0 0 20px;">
+                  <td class="footer-brand-cell" width="180" valign="middle" align="left" style="width:180px;padding:0 0 14px;">
                     <img
                       src="https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/logos/THE_STORE_LIGHT.svg"
                       width="150" height="38" alt="THE STORE"
@@ -601,7 +629,7 @@ are complete branch-specific files in variants/; GitHub-image equivalents are in
                     >
                     <p style="margin:5px 0 0;font-size:12px;line-height:20px;color:#8fa6bc;">by <b>SKANDI TRAVELS</b></p>
                   </td>
-                  <td class="footer-brand-cell footer-group-cell" valign="middle" align="right" style="padding:0 0 20px;">
+                  <td class="footer-brand-cell footer-group-cell" valign="middle" align="right" style="padding:0 0 14px;">
                     <img class="group-member-image"
                       src="https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/logos/SKANDI_GROUP-MEMBER-LIGHT.svg"
                       width="230" height="29" alt="A SKANDI GROUP MEMBER"
@@ -611,7 +639,7 @@ are complete branch-specific files in variants/; GitHub-image equivalents are in
                 </tr>
               </table>
 
-              <p style="margin:0 0 18px;font-size:12px;line-height:24px;">
+              <p style="margin:0 0 12px;font-size:12px;line-height:24px;">
                 <a
                   href="https://www.instagram.com/skanditravels"
                   target="_blank"
@@ -627,28 +655,32 @@ are complete branch-specific files in variants/; GitHub-image equivalents are in
                 >Facebook</a>
               </p>
 
-              <p style="margin:0 0 1px;font-size:11px;color:#8fa6bc;">You received this reminder because you added items to your SKANDI Store cart using <a href="mailto:${contact.email}" style="color:#8fa6bc;text-decoration:underline;">${contact.email}</a>.
-              </p>
+              <p style="margin:0 0 8px;font-size:11px;line-height:16px;color:#a2b4c5;">Advertisement. Cart reminder from THE STORE.</p>
 
-              <!-- Separate company-detail blocks; the Swedish registered address/IDs have not been supplied. -->
-              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin:18px 0 8px;table-layout:fixed;">
+              <!-- DRAFT: verified Swedish registered seat and organisation number are still required. -->
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin:0 0 4px;table-layout:fixed;">
                 <tr>
-                  <td class="company-details-cell" width="50%" height="112" valign="top" style="width:50%;height:112px;padding:0 18px 18px 0;">
-                    <p style="margin:0 0 7px;font-size:10px;line-height:16px;letter-spacing:1px;font-weight:bold;color:#b8d5e6;">EU / SWEDEN</p>
-                    <p style="margin:0 0 6px;font-size:12px;line-height:19px;font-weight:bold;color:#ffffff;">SKANDI GROUP Aktiebolag</p>
-                    <p style="margin:0 0 6px;font-size:11px;line-height:18px;color:#b8c9d8;">Sweden</p>
-                    <p style="margin:0;font-size:11px;line-height:18px;"><a href="https://www.skanditravels.com/about/legal" target="_blank" style="color:#f6faff;text-decoration:underline;">Company information</a></p>
+                  <td class="company-details-cell" width="50%" valign="top" style="width:50%;padding:0 18px 8px 0;">
+                    <p style="margin:0 0 3px;font-size:10px;line-height:14px;letter-spacing:0.5px;color:#a2b4c5;">EU / SWEDEN</p>
+                    <p style="margin:0 0 2px;font-size:11px;line-height:16px;font-weight:normal;color:#a2b4c5;">SKANDI GROUP Aktiebolag</p>
+                    <p style="margin:0 0 2px;font-size:11px;line-height:16px;color:#a2b4c5;">Sweden</p>
+                    <p style="margin:0;font-size:11px;line-height:16px;"><a href="https://www.skanditravels.com/about/legal" target="_blank" style="color:#a2b4c5;text-decoration:underline;">Company information</a></p>
                   </td>
-                  <td class="company-details-cell" width="50%" height="112" valign="top" style="width:50%;height:112px;padding:0 0 18px 12px;">
-                    <p style="margin:0 0 7px;font-size:10px;line-height:16px;letter-spacing:1px;font-weight:bold;color:#b8d5e6;">UNITED STATES</p>
-                    <p style="margin:0 0 6px;font-size:12px;line-height:19px;font-weight:bold;color:#ffffff;">SKANDI GROUP Inc.</p>
-                    <p style="margin:0;font-size:11px;line-height:18px;color:#b8c9d8;">450 Lexington Avenue<br>New York, NY 10163<br>United States</p>
+                  <td class="company-details-cell" width="50%" valign="top" style="width:50%;padding:0 0 8px 12px;">
+                    <p style="margin:0 0 3px;font-size:10px;line-height:14px;letter-spacing:0.5px;color:#a2b4c5;">UNITED STATES</p>
+                    <p style="margin:0 0 2px;font-size:11px;line-height:16px;font-weight:normal;color:#a2b4c5;">SKANDI GROUP Inc.</p>
+                    <p style="margin:0;font-size:11px;line-height:16px;color:#a2b4c5;">450 Lexington Avenue<br>New York, NY 10163<br>United States</p>
                   </td>
                 </tr>
               </table>
 
-              
-              <p style="margin:0 0 12px;font-size:11px;">
+              <p style="margin:0 0 10px;font-size:11px;line-height:16px;color:#a2b4c5;">Use the unsubscribe or email-preferences link below to stop marketing emails.</p>
+
+              <p style="margin:0 0 10px;font-size:11px;line-height:18px;">
+                <a href="https://www.skanditravels.com/about/legal/policies?slug=privacy-policy" target="_blank" style="color:#f6faff;text-decoration:underline;">Privacy</a>
+                <span style="color:#8fa6bc;"> &nbsp; | &nbsp; </span>
+                <a href="mailto:support@skanditravels.com" style="color:#f6faff;text-decoration:underline;">Contact</a>
+                <span style="color:#8fa6bc;"> &nbsp; | &nbsp; </span>
                 <a
                   href="https://www.skanditravels.com/about/legal" target="_blank" style="color:#f6faff;text-decoration:underline;">Terms &amp; Policies</a>
                 <span style="color:#8fa6bc;"> &nbsp; | &nbsp; </span>
@@ -656,7 +688,7 @@ are complete branch-specific files in variants/; GitHub-image equivalents are in
               <span style="color:#8fa6bc;"> &nbsp; | &nbsp; </span>
               <a href="https://www.skanditravels.com" style="color:#f6faff;text-decoration:underline;">SKANDI TRAVELS</a>
             </p>
-              <p style="border-bottom:1px solid #8fa6bc;border-top:1px solid #8fa6bc;padding:15px 0 10px 0;font-size:9px;line-height:14px;color:#8fa6bc;">© 2026 SKANDI GROUP Inc. (United States) &amp; SKANDI GROUP Aktiebolag (Sweden). All rights reserved. THE STORE™ &amp; SKANDI TRAVELS™ are trademarks of the SKANDI GROUP.
+              <p style="margin:0;border-bottom:1px solid #284d76;border-top:1px solid #284d76;padding:9px 0;font-size:10px;line-height:15px;color:#a2b4c5;">© 2026 SKANDI GROUP Inc. (United States) &amp; SKANDI GROUP Aktiebolag (Sweden). All rights reserved. THE STORE™ &amp; SKANDI TRAVELS™ are trademarks of the SKANDI GROUP.
               </p>
             </td>
           </tr>
