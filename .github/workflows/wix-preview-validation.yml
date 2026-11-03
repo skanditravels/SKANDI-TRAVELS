@@ -43,7 +43,15 @@ jobs:
           timeout 35s "$RUNNER_TEMP/site-cli/node_modules/.bin/wix" dev > "$RUNNER_TEMP/wix-dev.log" 2>&1 || true
           node -e 'const f=require("fs");const s=f.readFileSync(process.env.RUNNER_TEMP+"/wix-dev.log","utf8"); for(const line of s.split(String.fromCharCode(10))) if(/error|fail|syncing|revision|tunnel/i.test(line)) console.log(line.split("http")[0].slice(0,180));console.log("Resulting UI version:",JSON.parse(f.readFileSync("wix.config.json")).uiVersion)'
       - name: Inspect files affected by the isolated sync
-        run: git status --short
+        run: |
+          git status --short
+          for pair in 'hz1s8' 'vn46g' 'k0iqp' 'gsejz' 'noml8'; do
+            printf 'Page %s: ' "$pair"
+            while IFS= read -r -d '' file; do
+              printf '%s (%s bytes); ' "$file" "$(wc -c < "$file")"
+            done < <(find src/pages -maxdepth 1 -name "*.$pair.js" -print0)
+            printf '\\n'
+          done
       - name: Test the last published Wix history revision in an isolated preview
         run: |
           node -e 'const fs=require("fs");const p="wix.config.json";const c=JSON.parse(fs.readFileSync(p));c.uiVersion="1582";fs.writeFileSync(p,JSON.stringify(c,null,2))'
