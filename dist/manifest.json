@@ -767,7 +767,7 @@
       "chrome": "public",
       "sourceDirectory": "skandi-embeds/club",
       "stem": "skandi-club",
-      "controller": "src/pages/SKANDI Signature Club.gsejz.js",
+      "controller": "src/pages/SKANDI Club.gsejz.js",
       "embedIds": [
         "#skandiClubInfoEmbed"
       ],
@@ -977,7 +977,7 @@
       "chrome": "public",
       "sourceDirectory": "skandi-embeds/support",
       "stem": "skandi-support",
-      "controller": "src/pages/How can we help_.k0iqp.js",
+      "controller": "src/pages/Support.k0iqp.js",
       "embedIds": [
         "#skandiHelpCenterEmbed",
         "#skandiSupportChatEmbed"
@@ -1056,7 +1056,7 @@
       "chrome": "public",
       "sourceDirectory": "skandi-embeds/newsroom",
       "stem": "skandi-newsroom",
-      "controller": "src/pages/News Room.vn46g.js",
+      "controller": "src/pages/Newsroom.vn46g.js",
       "embedIds": [
         "#newsroomEmbed"
       ],

@@ -18,12 +18,12 @@ Route authority: `src/public/siteMap.js`. This file is generated evidence, not r
 | travelInfo | /travel-info | skandi-embeds/travel-info/skandi-travel-info.{html,css,js} | public / public | src/pages/Travel Info.m43d6.js | BUILT |
 | skandiCollection | /skandi-collection | skandi-embeds/skandi-collection/skandi-skandi-collection.{html,css,js} | public / public | src/pages/SKANDI Collection.lo9p5.js | BUILT |
 | voy | /voy-magazine | skandi-embeds/voy/skandi-voy.{html,css,js} | public / public | src/pages/VOY Magazine.gecp7.js | BUILT |
-| club | /skandi-club | skandi-embeds/club/skandi-club.{html,css,js} | public / public | src/pages/SKANDI Signature Club.gsejz.js | BUILT |
+| club | /skandi-club | skandi-embeds/club/skandi-club.{html,css,js} | public / public | src/pages/SKANDI Club.gsejz.js | BUILT |
 | clubLogin | /skandi-club/login | skandi-embeds/club-login/skandi-club-login.{html,css,js} | public / public | src/pages/SKANDI Club Log in.noml8.js | BUILT |
 | forgotPassword | /forgot-password | skandi-embeds/forgot-password/skandi-forgot-password.{html,css,js} | public / public | src/pages/Forgot Password.uagf0.js | BUILT |
 | about | /about | skandi-embeds/about/skandi-about.{html,css,js} | public / public | src/pages/About.xcftf.js | BUILT |
-| support | /about/support | skandi-embeds/support/skandi-support.{html,css,js} | public / public | src/pages/How can we help_.k0iqp.js | BLOCKED INTEGRATION |
-| newsroom | /about/news-room | skandi-embeds/newsroom/skandi-newsroom.{html,css,js} | public / public | src/pages/News Room.vn46g.js | BUILT |
+| support | /about/support | skandi-embeds/support/skandi-support.{html,css,js} | public / public | src/pages/Support.k0iqp.js | BLOCKED INTEGRATION |
+| newsroom | /about/news-room | skandi-embeds/newsroom/skandi-newsroom.{html,css,js} | public / public | src/pages/Newsroom.vn46g.js | BUILT |
 | theStore | /the-store | skandi-embeds/the-store/skandi-the-store.{html,css,js} | public / none | src/pages/The Store.iv8g6.js | BUILT |
 | storeCheckout | /the-store/store-checkout | skandi-embeds/store-checkout/skandi-store-checkout.{html,css,js} | public / none | src/pages/Checkout.qofcb.js | BUILT |
 | storeConfirmation | /the-store/store-checkout/order-confirmation | skandi-embeds/store-confirmation/skandi-store-confirmation.{html,css,js} | public / none | src/pages/Order Confirmation.u5zzl.js | BUILT |
@@ -81,7 +81,7 @@ These actual repository controllers are preserved. No new route or build is inve
 - `src/pages/Customer Document Center.jtp4b.js`
 - `src/pages/Customer Service Desk.benbs.js`
 - `src/pages/Destination.u4y1p.js`
-- `src/pages/Document Viewer.hz1s8.js`
+- `src/pages/Document Filler.hz1s8.js`
 - `src/pages/EOS.f6tx1.js`
 - `src/pages/Error404.yt0r0.js`
 - `src/pages/Event notifications.vs8dh.js`
