@@ -1,23 +1,18 @@
 # Modelling Customers in Duffel
-Introduction
+## Introduction
 When building a travel application with the Duffel API, you'll often need to represent your end users within our system. This is where Customer Users and Customer User Groups come in.
 These flexible constructs allow you to:
-Associate your users with bookings and orders
+- Associate your users with bookings and orders
+- Enable access to the Travel Support Assistant
+- Organise users into meaningful groups
+- Maintain consistent user information across the Duffel API
+- Allow Duffel to send confirmation and support emails if desired
 
-Enable access to the Travel Support Assistant
-
-Organise users into meaningful groups
-
-Maintain consistent user information across the Duffel API
-
-Allow Duffel to send confirmation and support emails if desired
-
-This guide will walk you through creating and managing Customer Users and Customer User Groups, and show you how to use them when creating orders and bookings.
-Understanding Customer Users
-A Customer User represents one of your application's end users within the Duffel API.
+***This guide will walk you through creating and managing **Customer Users** and **Customer User Groups**, and show you how to use them when creating orders and bookings.***
+## Understanding Customer Users
+*A Customer User represents one of your application's end users within the Duffel API.*
 JSON
-
-
+```
 {
   "data": {
     "id": "icu_0000AgZitpOnQtd3NQxjwO",
@@ -29,13 +24,13 @@ JSON
     "group": null
   }
 }
-
+```
 When you create a Customer User, the information is persisted within the Duffel API and can be referenced in future API calls.
-Understanding Customer User Groups
-A Customer User Group allows you to organise your Customer Users into logical collections.
+| ---- |
+## Understanding Customer User Groups
+*A Customer User Group allows you to organise your Customer Users into logical collections.*
 JSON
-
-
+```
 {
   "data": {
     "id": "usg_0000AgZitpOnQtd3NQxjwO",
@@ -43,8 +38,9 @@ JSON
     "created_at": "2023-06-01T12:00:00Z"
   }
 }
-
+```
 Groups can represent any meaningful segmentation in your application, such as organisations or companies.
+| ---- |
 Creating a Customer User
 Let's start by creating a simple Customer User without assigning them to a group:
 Shell
