@@ -6,7 +6,7 @@ on:
       - '.github/workflows/wix-preview-validation.yml'
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   preview:
@@ -36,6 +36,12 @@ jobs:
           set -euo pipefail
           test -n "$WIX_CLI_API_KEY"
           "$RUNNER_TEMP/site-cli/node_modules/.bin/wix" login --api-key "$WIX_CLI_API_KEY"
+      - name: Check checkpoint push permissions without changing any refs
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git notes --ref=refs/notes/skandi-wix-published add -m validation HEAD
+          git push --atomic --dry-run origin HEAD:refs/heads/automation/wix-published refs/notes/skandi-wix-published:refs/notes/skandi-wix-published
       - name: Preview without publishing
         run: |
           "$RUNNER_TEMP/site-cli/node_modules/.bin/wix" preview --source local
