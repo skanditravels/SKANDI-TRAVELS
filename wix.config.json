@@ -5,7 +5,7 @@
   "employeePortalUrl": "https://www.skanditravels.com/riaintra",
   "employeeEmailDomain": "@skanditravels.com",
   "employeeCompanyMarker": "SKANDI",
-  "skandiTravelsLogoUrl": "https://supabase.com/dashboard/project/muvpffdnugzxjbnbpgac/storage/files/buckets/skandi-public-assets?path=logos%2Fdark+background+logos&preview=SKANDI_TRAVELS_LIGHT.svg",
+  "skandiTravelsLogoUrl": "https://muvpffdnugzxjbnbpgac.supabase.co/storage/v1/object/public/skandi-public-assets/logos/SKANDI_TRAVELS-NAVY-TEXTMARK.svg",
   "skandiGroupLogoUrl": "https://supabase.com/dashboard/project/muvpffdnugzxjbnbpgac/storage/files/buckets/skandi-public-assets?path=logos%2Fdark+background+logos&preview=SKANDI_GROUP-White+-+source+%281%29.png",
   "customerSenderDetailsId": "",
   "employeeSenderDetailsId": ""
