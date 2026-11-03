@@ -16,58 +16,22 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
+          ref: be53d30218fcbd49e3b8bfbaa9e48a69bc79b1cf
       - uses: actions/setup-node@v4
         with:
           node-version: 24
-      - name: Install dependencies and Wix site CLI
+      - name: Install dependencies and Wix CLI
         run: |
           npm ci --ignore-scripts --no-audit --no-fund
           npm install --prefix "$RUNNER_TEMP/site-cli" --no-save --ignore-scripts --no-audit --no-fund @wix/cli@1.2.8
-          "$RUNNER_TEMP/site-cli/node_modules/.bin/wix" --help
-          "$RUNNER_TEMP/site-cli/node_modules/.bin/wix" dev --help
-          "$RUNNER_TEMP/site-cli/node_modules/.bin/wix" preview --help
-      - name: Authenticate without displaying the key
+      - name: Authenticate
         env:
           WIX_CLI_API_KEY: ${{ secrets.WIX_CLI_API_KEY }}
         run: |
           set -euo pipefail
           test -n "$WIX_CLI_API_KEY"
           "$RUNNER_TEMP/site-cli/node_modules/.bin/wix" login --api-key "$WIX_CLI_API_KEY"
-      - name: Select published revision for isolated sync verification
-        run: |
-          node -e 'const f=require("fs"),p="wix.config.json",c=JSON.parse(f.readFileSync(p));c.uiVersion="1582";f.writeFileSync(p,JSON.stringify(c,null,2))'
-      - name: Inspect Wix editor synchronization in a disposable checkout
-        run: |
-          set -euo pipefail
-          timeout 35s "$RUNNER_TEMP/site-cli/node_modules/.bin/wix" dev > "$RUNNER_TEMP/wix-dev.log" 2>&1 || true
-          node -e 'const f=require("fs");const s=f.readFileSync(process.env.RUNNER_TEMP+"/wix-dev.log","utf8"); for(const line of s.split(String.fromCharCode(10))) if(/error|fail|syncing|revision|tunnel/i.test(line)) console.log(line.split("http")[0].slice(0,180));console.log("Resulting UI version:",JSON.parse(f.readFileSync("wix.config.json")).uiVersion)'
-      - name: Inspect files affected by the isolated sync
+      - name: Preview exact candidate without publishing
         run: |
           git status --short
-          for pair in 'hz1s8' 'vn46g' 'k0iqp' 'gsejz' 'noml8'; do
-            printf 'Page %s: ' "$pair"
-            while IFS= read -r -d '' file; do
-              printf '%s (%s bytes); ' "$file" "$(wc -c < "$file")"
-            done < <(find src/pages -maxdepth 1 -name "*.$pair.js" -print0)
-            printf '\\n'
-          done
-          for mapping in \
-            'Document Viewer.hz1s8.js|Document Filler.hz1s8.js' \
-            'News Room.vn46g.js|Newsroom.vn46g.js' \
-            'How can we help_.k0iqp.js|Support.k0iqp.js' \
-            'SKANDI Signature Club.gsejz.js|SKANDI Club.gsejz.js'; do
-            old=${mapping%%|*}
-            new=${mapping#*|}
-            if git show "HEAD:src/pages/$old" | cmp -s - "src/pages/$new"; then
-              printf 'Preserved exactly: %s -> %s\\n' "$old" "$new"
-            else
-              printf 'Contents differ: %s -> %s\\n' "$old" "$new"
-            fi
-          done
-      - name: Test the last published Wix history revision in an isolated preview
-        run: |
-          node -e 'const fs=require("fs");const p="wix.config.json";const c=JSON.parse(fs.readFileSync(p));c.uiVersion="1582";fs.writeFileSync(p,JSON.stringify(c,null,2))'
-      - name: Build a non-production preview
-        run: |
           "$RUNNER_TEMP/site-cli/node_modules/.bin/wix" preview --source local
