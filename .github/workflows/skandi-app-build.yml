@@ -2,6 +2,8 @@ name: SKANDI Website Builder
 
 on:
   workflow_dispatch:
+  schedule:
+    - cron: '17 * * * *'
   push:
     branches: [main]
     paths:
@@ -37,6 +39,7 @@ concurrency:
 
 jobs:
   build:
+    if: github.event_name != 'schedule' || vars.SKANDI_WIX_AUTOPUBLISH == 'enabled'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
@@ -45,7 +48,7 @@ jobs:
       - name: Checkout current source
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.event_name == 'push' && github.sha || 'main' }}
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || 'main' }}
           fetch-depth: 0
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -55,12 +58,6 @@ jobs:
           cache-dependency-path: scripts/package-lock.json
       - name: Install deterministic compiler tooling
         run: npm ci --prefix scripts --ignore-scripts --no-audit --no-fund
-      - name: Inspect Wix site CLI options (draft verification)
-        if: github.event_name == 'pull_request'
-        run: |
-          npm install --prefix "$RUNNER_TEMP/site-cli" --no-save --ignore-scripts --no-audit --no-fund @wix/cli@latest
-          "$RUNNER_TEMP/site-cli/node_modules/.bin/wix" --version
-          "$RUNNER_TEMP/site-cli/node_modules/.bin/wix" publish --help
       - name: Validate route inventory and integration evidence
         run: node scripts/build-skandi-app.mjs --inventory
       - name: Run compilation and regression tests
@@ -99,42 +96,51 @@ jobs:
         if: steps.build.outcome == 'failure'
         run: exit 1
 
-      - name: Check whether Wix runtime code changed
-        if: github.event_name == 'push' && steps.build.outcome == 'success'
+      - name: Check pending Wix runtime changes
+        if: github.event_name != 'pull_request' && steps.build.outcome == 'success' && vars.SKANDI_WIX_AUTOPUBLISH == 'enabled'
         id: wix_changes
-        env:
-          BEFORE_SHA: ${{ github.event.before }}
-          AFTER_SHA: ${{ github.sha }}
         run: |
           set -euo pipefail
-          if [[ "$BEFORE_SHA" =~ ^0+$ ]] || ! git cat-file -e "$BEFORE_SHA^{commit}"; then
-            echo "::error::Cannot determine the previous commit. Wix publishing is stopped."
-            exit 1
-          fi
-          git diff --no-renames --name-only "$BEFORE_SHA" "$AFTER_SHA" -- src/ > /tmp/skandi-wix-changed-paths
-          if awk 'tolower($0) !~ /\.(md|txt)$/ {found=1} END {exit !found}' /tmp/skandi-wix-changed-paths; then
-            echo "needed=true" >> "$GITHUB_OUTPUT"
+          checkpoint_ref=refs/heads/automation/wix-published
+          if git ls-remote --exit-code --heads origin "$checkpoint_ref" >/dev/null; then
+            git fetch origin "+$checkpoint_ref:refs/remotes/origin/automation/wix-published"
+            checkpoint=refs/remotes/origin/automation/wix-published
           else
-            echo "needed=false" >> "$GITHUB_OUTPUT"
+            status=$?
+            if [ "$status" -ne 2 ]; then
+              echo "::error::Could not read the Wix deployment checkpoint."
+              exit "$status"
+            fi
+            checkpoint=""
           fi
-      - name: Publish Wix after verified build
-        if: github.event_name == 'push' && steps.build.outcome == 'success' && steps.wix_changes.outputs.needed == 'true' && vars.SKANDI_WIX_AUTOPUBLISH == 'enabled'
+          needed=$(node scripts/wix-publish-check.mjs "$checkpoint" HEAD)
+          echo "needed=$needed" >> "$GITHUB_OUTPUT"
+      - name: Install isolated Wix CLI and site dependencies
+        if: steps.wix_changes.outputs.needed == 'true'
+        run: |
+          npm ci --ignore-scripts --no-audit --no-fund
+          npm install --prefix "$RUNNER_TEMP/site-cli" --no-save --ignore-scripts --no-audit --no-fund @wix/cli@1.2.8
+      - name: Check Wix UI version and authenticate
+        if: steps.wix_changes.outputs.needed == 'true'
         env:
-          WIX_WEBHOOK_URL: ${{ secrets.SKANDI_WIX_PUBLISH_WEBHOOK }}
+          WIX_CLI_API_KEY: ${{ secrets.WIX_CLI_API_KEY }}
+          APPROVED_WIX_UI_VERSION: ${{ vars.SKANDI_WIX_UI_VERSION }}
         run: |
           set -euo pipefail
-          if [ -z "$WIX_WEBHOOK_URL" ]; then
-            echo "::error::SKANDI_WIX_PUBLISH_WEBHOOK is not configured."
+          if [ -z "$WIX_CLI_API_KEY" ] || [ -z "$APPROVED_WIX_UI_VERSION" ]; then
+            echo "::error::Wix API key or approved UI version is missing."
             exit 1
           fi
-          git fetch origin main
-          if [ "$(git rev-parse origin/main)" != "$(git rev-parse HEAD)" ]; then
-            echo "::error::main changed during the build. Wix was not published."
-            exit 1
-          fi
-          curl --silent --show-error --fail --max-time 30 \
-            --output /dev/null --request POST \
-            --header 'Content-Type: application/json' \
-            --data '{"source":"github-actions","event":"verified-src-update"}' \
-            "$WIX_WEBHOOK_URL"
-          echo "Wix accepted the publish trigger. Check its automation log and the live site to verify publication."
+          node -e 'const c=require("./wix.config.json"); if(String(c.uiVersion)!==process.env.APPROVED_WIX_UI_VERSION){console.error("Wix UI version does not match the approved version.");process.exit(1)}'
+          "$RUNNER_TEMP/site-cli/node_modules/.bin/wix" login --api-key "$WIX_CLI_API_KEY"
+      - name: Publish tested Wix source
+        if: steps.wix_changes.outputs.needed == 'true'
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/site-cli/node_modules/.bin/wix" publish --source local --approve-preview
+      - name: Record successful Wix source deployment
+        if: steps.wix_changes.outputs.needed == 'true'
+        run: |
+          set -euo pipefail
+          git push origin HEAD:refs/heads/automation/wix-published
+          echo "Wix CLI reported successful publication of $(git rev-parse HEAD)." >> "$GITHUB_STEP_SUMMARY"
