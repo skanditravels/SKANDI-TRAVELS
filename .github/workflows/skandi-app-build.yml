@@ -2,15 +2,15 @@ name: SKANDI Website Builder
 
 on:
   workflow_dispatch:
+  schedule:
+    - cron: '17 * * * *'
   push:
     branches: [main]
     paths:
       - 'skandi-embeds/**'
       - 'riaintra-embeds/**'
       - 'altea-embeds/**'
-      - 'src/pages/**'
-      - 'src/public/**'
-      - 'src/backend/SKANDI_CORE/**'
+      - 'src/**'
       - 'scripts/**'
       - 'tests/**'
       - 'HTML_REF/**'
@@ -35,10 +35,11 @@ on:
 
 concurrency:
   group: skandi-website-builder-${{ github.event_name == 'pull_request' && github.event.pull_request.number || 'main' }}
-  cancel-in-progress: false
+  queue: max
 
 jobs:
   build:
+    if: github.event_name != 'schedule' || vars.SKANDI_WIX_AUTOPUBLISH == 'enabled'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
@@ -52,7 +53,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
           cache: npm
           cache-dependency-path: scripts/package-lock.json
       - name: Install deterministic compiler tooling
@@ -94,3 +95,52 @@ jobs:
       - name: Fail visibly when a public SKANDI page failed compilation
         if: steps.build.outcome == 'failure'
         run: exit 1
+
+      - name: Check pending Wix runtime changes
+        if: github.event_name != 'pull_request' && steps.build.outcome == 'success' && vars.SKANDI_WIX_AUTOPUBLISH == 'enabled'
+        id: wix_changes
+        run: |
+          set -euo pipefail
+          checkpoint_ref=refs/heads/automation/wix-published
+          if git ls-remote --exit-code --heads origin "$checkpoint_ref" >/dev/null; then
+            git fetch origin "+$checkpoint_ref:refs/remotes/origin/automation/wix-published"
+            checkpoint=refs/remotes/origin/automation/wix-published
+          else
+            status=$?
+            if [ "$status" -ne 2 ]; then
+              echo "::error::Could not read the Wix deployment checkpoint."
+              exit "$status"
+            fi
+            checkpoint=""
+          fi
+          needed=$(node scripts/wix-publish-check.mjs "$checkpoint" HEAD)
+          echo "needed=$needed" >> "$GITHUB_OUTPUT"
+      - name: Install isolated Wix CLI and site dependencies
+        if: steps.wix_changes.outputs.needed == 'true'
+        run: |
+          npm ci --ignore-scripts --no-audit --no-fund
+          npm install --prefix "$RUNNER_TEMP/site-cli" --no-save --ignore-scripts --no-audit --no-fund @wix/cli@1.2.8
+      - name: Check Wix UI version and authenticate
+        if: steps.wix_changes.outputs.needed == 'true'
+        env:
+          WIX_CLI_API_KEY: ${{ secrets.WIX_CLI_API_KEY }}
+          APPROVED_WIX_UI_VERSION: ${{ vars.SKANDI_WIX_UI_VERSION }}
+        run: |
+          set -euo pipefail
+          if [ -z "$WIX_CLI_API_KEY" ] || [ -z "$APPROVED_WIX_UI_VERSION" ]; then
+            echo "::error::Wix API key or approved UI version is missing."
+            exit 1
+          fi
+          node -e 'const c=require("./wix.config.json"); if(String(c.uiVersion)!==process.env.APPROVED_WIX_UI_VERSION){console.error("Wix UI version does not match the approved version.");process.exit(1)}'
+          "$RUNNER_TEMP/site-cli/node_modules/.bin/wix" login --api-key "$WIX_CLI_API_KEY"
+      - name: Publish tested Wix source
+        if: steps.wix_changes.outputs.needed == 'true'
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/site-cli/node_modules/.bin/wix" publish --source local --approve-preview
+      - name: Record successful Wix source deployment
+        if: steps.wix_changes.outputs.needed == 'true'
+        run: |
+          set -euo pipefail
+          git push origin HEAD:refs/heads/automation/wix-published
+          echo "Wix CLI reported successful publication of $(git rev-parse HEAD)." >> "$GITHUB_STEP_SUMMARY"
