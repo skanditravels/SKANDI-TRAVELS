@@ -33,7 +33,7 @@ on:
 
 concurrency:
   group: skandi-website-builder-${{ github.event_name == 'pull_request' && github.event.pull_request.number || 'main' }}
-  cancel-in-progress: false
+  queue: max
 
 jobs:
   build:
@@ -55,6 +55,11 @@ jobs:
           cache-dependency-path: scripts/package-lock.json
       - name: Install deterministic compiler tooling
         run: npm ci --prefix scripts --ignore-scripts --no-audit --no-fund
+      - name: Inspect Wix site CLI options (draft verification)
+        if: github.event_name == 'pull_request'
+        run: |
+          npm ci --ignore-scripts --no-audit --no-fund
+          npm exec --no -- wix publish --help
       - name: Validate route inventory and integration evidence
         run: node scripts/build-skandi-app.mjs --inventory
       - name: Run compilation and regression tests
