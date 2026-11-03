@@ -1,0 +1,37 @@
+name: Wix preview validation
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/wix-preview-validation.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  preview:
+    if: github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref == 'codex/wix-preview-validation'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: be53d30218fcbd49e3b8bfbaa9e48a69bc79b1cf
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Install dependencies and Wix CLI
+        run: |
+          npm ci --ignore-scripts --no-audit --no-fund
+          npm install --prefix "$RUNNER_TEMP/site-cli" --no-save --ignore-scripts --no-audit --no-fund @wix/cli@1.2.8
+      - name: Authenticate
+        env:
+          WIX_CLI_API_KEY: ${{ secrets.WIX_CLI_API_KEY }}
+        run: |
+          set -euo pipefail
+          test -n "$WIX_CLI_API_KEY"
+          "$RUNNER_TEMP/site-cli/node_modules/.bin/wix" login --api-key "$WIX_CLI_API_KEY"
+      - name: Preview exact candidate without publishing
+        run: |
+          git status --short
+          "$RUNNER_TEMP/site-cli/node_modules/.bin/wix" preview --source local
