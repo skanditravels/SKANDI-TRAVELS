@@ -13,6 +13,7 @@
     "@wix/categories": "1.0.205",
     "@wix/data": "1.0.466",
     "@wix/email-subscriptions": "^1.0.44",
+    "@wix/email-transmissions": "^1.0.14",
     "@wix/members": "1.0.492",
     "@wix/members_authentication": "1.0.61",
     "@wix/members_authorization": "1.0.32",
@@ -25,7 +26,7 @@
     "livekit-server-sdk": "2.15.5",
     "pdfkit": "0.19.1",
     "pusher": "5.3.4",
-    "sanitize-html": "2.18.0",
+    "sanitize-html": "2.18.1",
     "wix-data": "0.0.1-security",
     "react": "18.3.1",
     "react-dom": "18.3.1"
