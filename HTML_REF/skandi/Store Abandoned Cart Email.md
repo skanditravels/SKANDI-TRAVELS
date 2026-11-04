@@ -709,3 +709,31 @@ are complete branch-specific files in variants/; GitHub-image equivalents are in
 </body>
 </html>
 ```
+
+## 2026-11-04 | Full-cart recovery backend
+
+Prepared against main d215ba6c3f03296bbd9760c276185c2823e235d0. This
+backend supersedes the historical single-item HTML payload above for the
+new recovery flow. The complete historic record remains intact.
+
+Wix abandoned-checkout trigger → two-hour delay → authenticated POST
+`/_functions/skandiStoreCartRecovery` → `storeCartRecovery.js` → Wix
+abandonment, current checkout, CRM and email subscription services →
+canonical SKANDI profile/language and Store recommendations → supplied
+full-cart HTML v8 compiled in `storeCartRecoveryTemplates.js` → Wix Email
+Transmissions, MARKETING, with a localized managed unsubscribe link.
+
+The endpoint accepts only checkout identifiers, mode and an automation
+credential. It returns status metadata only. It uses Wix's idempotency key
+for the original checkout, rejects recovered/closed checkouts and checks
+current email consent before dispatch. The supplied HTML design, localization,
+US/Sweden Business Info footer and recommendation options are retained.
+The Club offer requires a matched confirmed non-member and approved active
+offer configuration. The website header remains browser-local, with saved
+profile or checkout language used for this email.
+
+Installation requires the Wix email-transmissions package, site secrets,
+publication and a verified draft trigger mapping. See README.txt for the
+runtime destinations, consent checks and release conditions. Syntax and
+mocked tests passed. Site runtime and inbox delivery are pending validation.
+
