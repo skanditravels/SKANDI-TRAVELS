@@ -737,3 +737,20 @@ publication and a verified draft trigger mapping. See README.txt for the
 runtime destinations, consent checks and release conditions. Syntax and
 mocked tests passed. Site runtime and inbox delivery are pending validation.
 
+
+## 2026-11-04 | Recovery trigger without checkout ID
+
+Prepared against GitHub main 8c422a933db4691ded669051f26df1af7e40b3f4.
+The selected Wix trigger exposes contact_id, checkout_url and created_date.
+The authenticated endpoint now resolves those fields against Wix abandonment
+records for the contact and requires a full recovery URL match. Creation time
+can disambiguate duplicate matches. The identified record supplies the
+canonical checkout ID, fresh checkout values and the stable delivery key.
+Additional trigger snapshots, including line_items, coupon_code and currency,
+are excluded from the request. The provider remains the source of truth.
+
+This update replaces http-functions.js and storeCartRecovery.js. It reuses
+the previously installed template module and supports both earlier ID-based
+request shapes. Local tests passed for URL match and rejection, contact
+scoping, ambiguity, pagination and duplicate prevention. Run an authenticated
+preview on Wix after publication to verify the real trigger values.
