@@ -754,3 +754,19 @@ the previously installed template module and supports both earlier ID-based
 request shapes. Local tests passed for URL match and rejection, contact
 scoping, ambiguity, pagination and duplicate prevention. Run an authenticated
 preview on Wix after publication to verify the real trigger values.
+
+## 2026-11-04 | Wix HTTP recovery link compatibility
+
+Prepared against main 099f404bc359239a3ecd8ce70adf94ac57c8f750.
+Wix returned an HTTP URL for its own abandoned-checkout redirect. The
+backend now upgrades only the verified www.wixapis.com redirect route to
+HTTPS before matching, preserving the abandonment ID and query.
+Outgoing recovery links use HTTPS. A missing linked checkout returns a
+specific skip instead of an invalid-ID error. Existing email-sent and
+marketing consent guards still apply.
+
+Only storeCartRecovery.js needs replacement. Local verification covered
+HTTP and HTTPS matching, outgoing HTTPS, rejection of other HTTP URLs and
+missing checkout IDs. Wix confirmed that the supplied test record had
+already recorded a recovery send and lacked a linked checkout. A fresh
+eligible checkout is required for a live preview.

@@ -100,7 +100,11 @@ function imageUrl(value) {
 
 function recoveryUrl(value) {
   if (typeof value !== "string" || value.length > 4096) return "";
-  return httpsUrl(value, RECOVERY_DOMAINS);
+  const url = value.trim();
+  // Wix returns some of its own checkout redirect links with an HTTP scheme.
+  const legacy = /^http:\/\/www\.wixapis\.com\/ecom\/v1\/abandoned-checkout\/([^/?#]+)\/redirect-to-checkout(?:[?#]|$)/i.exec(url);
+  if (legacy && GUID.test(legacy[1])) return httpsUrl("https:" + url.slice(5), RECOVERY_DOMAINS);
+  return httpsUrl(url, RECOVERY_DOMAINS);
 }
 
 function queryContactAbandonments(contactId, cursor) {
@@ -315,6 +319,7 @@ export async function processStoreCartRecovery(input) {
   if (!abandonment) return skip("CHECKOUT_MATCH_NOT_FOUND");
   if (abandonment.status !== "ABANDONED" || abandonment.checkoutRecoveredDate) return skip("NOT_ABANDONED");
   if (abandonment.activities?.some(activity => activity.type === "EMAIL_SENT")) return skip("WIX_RECOVERY_ALREADY_SENT");
+  if (!GUID.test(abandonment.checkoutId || "")) return skip("CHECKOUT_ID_UNAVAILABLE");
   const checkoutId = assertGuid(abandonment.checkoutId);
   const abandonedAt = Date.parse(abandonment._createdDate || abandonment.createdDate);
   const now = Date.now();
