@@ -16,6 +16,7 @@ import { verifyWhatsAppWebhookChallengeCore, receiveWhatsAppWebhookCore } from "
 import { getPublicTravelInfoPayloadCore } from "backend/SKANDI_CORE/publicContent";
 import { applyInventoryAuthorityToTravelInfoCore } from "backend/SKANDI_CORE/publicContentInventoryProjection";
 import { getStoreEmailRecommendationsCore } from "backend/SKANDI_CORE/storefront";
+import { authorizeStoreCartRecovery, processStoreCartRecovery } from "backend/SKANDI_CORE/storeCartRecovery";
 
 function header(request, name) {
   const lowerName = String(name || "").toLowerCase();
@@ -43,6 +44,39 @@ function responseBody(value) {
     headers: { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" },
     body: JSON.stringify(value)
   };
+}
+
+// A Wix automation authenticates here after its delay. The endpoint never
+// returns customer information, checkout contents, links or rendered HTML.
+export async function post_skandiStoreCartRecovery(request) {
+  try {
+    const raw = await request.body.text();
+    if (raw.length > 2048) return badRequest(responseBody({ ok: false, error: "REQUEST_TOO_LARGE" }));
+    let input;
+    try { input = JSON.parse(raw); }
+    catch (_) { return badRequest(responseBody({ ok: false, error: "INVALID_JSON" })); }
+    if (!input || typeof input !== "object" || Array.isArray(input)) {
+      return badRequest(responseBody({ ok: false, error: "INVALID_REQUEST" }));
+    }
+    const token = bearer(request) || input.automationToken;
+    if (!await authorizeStoreCartRecovery(token)) {
+      return forbidden(responseBody({ ok: false, error: "UNAUTHORIZED" }));
+    }
+    const keys = new Set(["automationToken", "abandonedCheckoutId", "checkoutId", "contactId", "mode"]);
+    const direct = typeof input.abandonedCheckoutId === "string" && input.checkoutId === undefined && input.contactId === undefined;
+    const indirect = input.abandonedCheckoutId === undefined &&
+      typeof input.checkoutId === "string" && typeof input.contactId === "string";
+    if (Object.keys(input).some(key => !keys.has(key)) || !(direct || indirect) ||
+        (input.mode !== undefined && !["preview", "send"].includes(input.mode))) {
+      return badRequest(responseBody({ ok: false, error: "INVALID_REQUEST" }));
+    }
+    return ok(responseBody(await processStoreCartRecovery(input)));
+  } catch (error) {
+    const code = error?.recoveryCode || "CART_RECOVERY_SERVICE_UNAVAILABLE";
+    if (error?.status === 400 && error?.recoveryCode) return badRequest(responseBody({ ok: false, error: code }));
+    console.error("[SKANDI Cart Recovery]", { code });
+    return serverError(responseBody({ ok: false, error: code }));
+  }
 }
 async function authorized(request) {
   const token = bearer(request);
