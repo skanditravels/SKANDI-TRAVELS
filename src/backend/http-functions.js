@@ -51,7 +51,7 @@ function responseBody(value) {
 export async function post_skandiStoreCartRecovery(request) {
   try {
     const raw = await request.body.text();
-    if (raw.length > 2048) return badRequest(responseBody({ ok: false, error: "REQUEST_TOO_LARGE" }));
+    if (raw.length > 8192) return badRequest(responseBody({ ok: false, error: "REQUEST_TOO_LARGE" }));
     let input;
     try { input = JSON.parse(raw); }
     catch (_) { return badRequest(responseBody({ ok: false, error: "INVALID_JSON" })); }
@@ -62,11 +62,14 @@ export async function post_skandiStoreCartRecovery(request) {
     if (!await authorizeStoreCartRecovery(token)) {
       return forbidden(responseBody({ ok: false, error: "UNAUTHORIZED" }));
     }
-    const keys = new Set(["automationToken", "abandonedCheckoutId", "checkoutId", "contactId", "mode"]);
-    const direct = typeof input.abandonedCheckoutId === "string" && input.checkoutId === undefined && input.contactId === undefined;
-    const indirect = input.abandonedCheckoutId === undefined &&
-      typeof input.checkoutId === "string" && typeof input.contactId === "string";
-    if (Object.keys(input).some(key => !keys.has(key)) || !(direct || indirect) ||
+    const fields = Object.keys(input).filter(key => key !== "automationToken" && key !== "mode");
+    const supported = [
+      ["abandonedCheckoutId"],
+      ["checkoutId", "contactId"],
+      ["contact_id", "checkout_url", "created_date"]
+    ].some(expected => expected.length === fields.length &&
+      expected.every(key => fields.includes(key) && typeof input[key] === "string"));
+    if (!supported ||
         (input.mode !== undefined && !["preview", "send"].includes(input.mode))) {
       return badRequest(responseBody({ ok: false, error: "INVALID_REQUEST" }));
     }
