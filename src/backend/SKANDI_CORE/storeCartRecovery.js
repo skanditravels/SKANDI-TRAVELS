@@ -24,6 +24,7 @@ const TOKEN = /^[0-9a-f]{64}$/;
 const EMAIL = /^[^\s<>@]+@[^\s<>@]+\.[^\s<>@]+$/;
 const STORE_APP = "215238eb-22a5-4c36-9e7b-e7c08025e04e";
 const HOURS = 3600000;
+const RECOVERY_DOMAINS = ["skanditravels.com", "wix.com", "wixsite.com", "wixapis.com"];
 const LOCALES = Object.freeze({ en: "en-US", sv: "sv-SE", no: "nb-NO", da: "da-DK", fi: "fi-FI" });
 const DISCOUNT_LABELS = Object.freeze({
   en: ["Coupon", "Discount", "Shipping discount", "Item discount"],
@@ -97,7 +98,49 @@ function imageUrl(value) {
   return httpsUrl(input);
 }
 
+function recoveryUrl(value) {
+  if (typeof value !== "string" || value.length > 4096) return "";
+  return httpsUrl(value, RECOVERY_DOMAINS);
+}
+
+function queryContactAbandonments(contactId, cursor) {
+  if (cursor) return queryAbandoned({ cursorPaging: { cursor } });
+  return queryAbandoned({
+    filter: { "buyerInfo.contactId": { $eq: contactId } },
+    cursorPaging: { limit: 100 }
+  });
+}
+
+async function lookupAbandonedByUrl(input) {
+  const contactId = assertGuid(input.contact_id);
+  const url = recoveryUrl(input.checkout_url);
+  if (!url) throw recoveryError("CART_RECOVERY_INVALID_LOOKUP_URL", 400);
+  const date = Date.parse(clean(input.created_date, 100));
+  if (!Number.isFinite(date)) throw recoveryError("CART_RECOVERY_INVALID_LOOKUP_DATE", 400);
+
+  const matches = [];
+  let cursor;
+  // Scan only this contact's records. The input URL is compared, never fetched.
+  for (let page = 0; page < 3; page += 1) {
+    const result = await queryContactAbandonments(contactId, cursor);
+    const rows = result.abandonedCheckouts || result.results || [];
+    for (const row of rows) {
+      if (row.buyerInfo?.contactId === contactId && recoveryUrl(row.checkoutUrl) === url) matches.push(row);
+    }
+    cursor = result.metadata?.cursors?.next;
+    if (!cursor) break;
+  }
+  if (cursor) throw recoveryError("CART_RECOVERY_LOOKUP_LIMIT");
+  if (matches.length <= 1) return matches[0] || null;
+
+  // Wix trigger creation time may differ from abandonment creation time. Use it
+  // only to distinguish rows that already match both the contact and full URL.
+  const exact = matches.filter(row => new Date(row._createdDate || row.createdDate).getTime() === date);
+  return exact.length === 1 ? exact[0] : null;
+}
+
 async function lookupAbandoned(input) {
+  if (input.checkout_url !== undefined) return lookupAbandonedByUrl(input);
   if (input.abandonedCheckoutId !== undefined) {
     const requestedId = assertGuid(input.abandonedCheckoutId);
     const result = await getAbandoned(requestedId);
@@ -106,10 +149,7 @@ async function lookupAbandoned(input) {
   }
   const checkoutId = assertGuid(input.checkoutId);
   const contactId = assertGuid(input.contactId);
-  const result = await queryAbandoned({
-    filter: { "buyerInfo.contactId": { $eq: contactId } },
-    cursorPaging: { limit: 100 }
-  });
+  const result = await queryContactAbandonments(contactId);
   const rows = result.abandonedCheckouts || result.results || [];
   return rows.find(row => row.checkoutId === checkoutId && row.buyerInfo?.contactId === contactId) || null;
 }
@@ -272,7 +312,8 @@ export async function processStoreCartRecovery(input) {
   const preview = input.mode === "preview";
   if (!preview && !config.enabled) return skip("DISABLED");
   const abandonment = await lookupAbandoned(input);
-  if (!abandonment || abandonment.status !== "ABANDONED" || abandonment.checkoutRecoveredDate) return skip("NOT_ABANDONED");
+  if (!abandonment) return skip("CHECKOUT_MATCH_NOT_FOUND");
+  if (abandonment.status !== "ABANDONED" || abandonment.checkoutRecoveredDate) return skip("NOT_ABANDONED");
   if (abandonment.activities?.some(activity => activity.type === "EMAIL_SENT")) return skip("WIX_RECOVERY_ALREADY_SENT");
   const checkoutId = assertGuid(abandonment.checkoutId);
   const abandonedAt = Date.parse(abandonment._createdDate || abandonment.createdDate);
@@ -283,7 +324,7 @@ export async function processStoreCartRecovery(input) {
   if (!GUID.test(buyer?.contactId || "")) return skip("CONTACT_UNVERIFIED");
   const email = clean(buyer.email, 254).toLowerCase();
   if (!EMAIL.test(email)) return skip("CONTACT_UNVERIFIED");
-  const checkoutUrl = httpsUrl(abandonment.checkoutUrl, ["skanditravels.com", "wix.com", "wixsite.com", "wixapis.com"]);
+  const checkoutUrl = recoveryUrl(abandonment.checkoutUrl);
   if (!checkoutUrl) throw recoveryError("CART_RECOVERY_LINK_UNVERIFIED");
 
   const [current, contact, subscribed, profile] = await Promise.all([
