@@ -1,1 +1,57 @@
-<!-- SKANDI_PENDING_SOURCE: replace with complete page markup. -->
+<section class="flights-hero" data-section-id="flights-hero">
+  <div class="flights-hero-image" data-media-slot="flights-hero" data-media-slot-id="flights-hero" aria-hidden="true"></div>
+  <div class="hero-kicker" data-content-id="flights-hero-eyebrow">SKANDI TRAVELS</div>
+  <h1 data-content-id="flights-hero-title">Your next journey starts here.</h1>
+  <p class="hero-copy" data-content-id="flights-hero-copy">Find flights to the places you have been dreaming of.</p>
+  <div class="flight-search" aria-label="Search flights" data-section-id="flights-search">
+    <div class="search-heading" data-content-id="flights-search-heading">Search flights</div>
+    <div class="flight-mode" role="group" aria-label="Trip type">
+      <label><input type="radio" name="flight-trip" value="return" checked> <span>Round trip</span></label>
+      <label><input type="radio" name="flight-trip" value="oneway"> <span>One way</span></label>
+    </div>
+    <div class="field-row">
+      <div class="field airport-field"><label data-flight-i18n="home.fields.from" for="flight-from">From</label><input id="flight-from" type="text" autocomplete="off" data-flight-placeholder="home.placeholders.airport" placeholder="City, airport, IATA or ICAO" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="flight-from-list"><div class="airport-suggestions" id="flight-from-list" role="listbox"></div></div>
+      <div class="field airport-field"><label data-flight-i18n="home.fields.to" for="flight-to">To</label><input id="flight-to" type="text" autocomplete="off" data-flight-placeholder="home.placeholders.airport" placeholder="City, airport, IATA or ICAO" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="flight-to-list"><div class="airport-suggestions" id="flight-to-list" role="listbox"></div></div>
+    </div>
+    <div class="field-row"><div class="field date-field"><label data-flight-i18n="home.fields.travelDates" for="flight-dates-button">Travel Dates</label><button type="button" id="flight-dates-button" class="date-range-button" aria-expanded="false" aria-controls="flight-date-picker"><span id="flight-date-from">From</span><span class="date-line"></span><span id="flight-date-to">To</span></button>
+      <div id="flight-date-picker" class="date-overlay" hidden><div class="date-modal">
+        <div class="date-modal-head"><div><span data-flight-i18n="home.date.kicker">Select travel dates</span><h2 id="flight-date-heading">From → To</h2></div><button type="button" id="flight-date-close" aria-label="Close calendar">×</button></div>
+        <div class="date-picked-line"><span id="flight-picked-from">From</span><span></span><span id="flight-picked-to">To</span></div>
+        <div class="calendar-nav"><button type="button" id="flight-prev-month" aria-label="Previous month">‹</button><strong id="flight-calendar-title"></strong><button type="button" id="flight-next-month" aria-label="Next month">›</button></div>
+        <div id="flight-calendar" class="calendar-grid"></div>
+        <div class="date-actions"><button type="button" id="flight-clear-dates" data-flight-i18n="home.date.clear">Clear</button><button type="button" id="flight-apply-dates" data-flight-i18n="home.date.apply">Apply dates</button></div>
+      </div></div>
+    </div></div>
+    <div class="field-row pax-row">
+      <div class="field"><label data-flight-i18n="home.fields.adults">Adults</label><div class="counter"><button type="button" data-count="adults" data-step="-1" aria-label="Remove adult">−</button><span id="flight-adults">2</span><button type="button" data-count="adults" data-step="1" aria-label="Add adult">+</button></div><small data-flight-i18n="home.age.adults">12+ years</small></div>
+      <div class="field"><label data-flight-i18n="home.fields.children">Children</label><div class="counter"><button type="button" data-count="children" data-step="-1" aria-label="Remove child">−</button><span id="flight-children">0</span><button type="button" data-count="children" data-step="1" aria-label="Add child">+</button></div><small data-flight-i18n="home.age.children">2–11 years</small></div>
+      <div class="field"><label data-flight-i18n="home.fields.infants">Infants</label><div class="counter"><button type="button" data-count="infants" data-step="-1" aria-label="Remove infant">−</button><span id="flight-infants">0</span><button type="button" data-count="infants" data-step="1" aria-label="Add infant">+</button></div><small data-flight-i18n="home.age.infants">Under 2 years</small></div>
+    </div>
+    <div id="flight-ages"></div>
+    <div class="field-row"><div class="field"><label data-flight-i18n="home.fields.class" for="flight-class">Class</label><select id="flight-class"><option value="economy">Economy</option><option value="premium_economy">Premium Economy</option><option value="business">Business</option><option value="first">First</option></select></div></div>
+    <div id="flight-search-status" class="flight-status" role="status" aria-live="polite"></div>
+    <button type="button" id="flight-retry" class="flight-retry" hidden>Try loading flight information again</button>
+    <button type="button" id="flight-submit" data-flight-i18n="home.search.flights" class="search-submit">Search Flights</button>
+  </div>
+</section>
+<main class="flights-content">
+  <section class="content-section" data-section-id="flights-offers">
+    <div class="section-heading"><div><p class="eyebrow" data-content-id="flights-offers-eyebrow">GO SOMEWHERE NEW</p><h2 data-content-id="flights-offers-title">Flight offers right now</h2><p data-content-id="flights-offers-copy">Discover flights selected for your next journey.</p></div></div>
+    <div id="flight-offers" class="flight-card-grid" aria-live="polite"></div><p id="flight-offers-empty" class="empty-message">Flight offers are not available right now. Search above to see current availability.</p>
+  </section>
+  <section class="content-section last-minute" data-section-id="flights-last-minute">
+    <div class="section-heading"><div><p class="eyebrow" data-content-id="flights-last-minute-eyebrow">READY TO GO?</p><h2 data-content-id="flights-last-minute-title">Last minute flights</h2><p data-content-id="flights-last-minute-copy">A little spontaneity goes a long way. Explore flights leaving soon.</p></div></div>
+    <div id="flight-last-minute" class="flight-card-grid" aria-live="polite"></div><p id="flight-last-minute-empty" class="empty-message">There are no last minute flight offers available right now.</p>
+  </section>
+  <section class="content-section" data-section-id="flights-destinations">
+    <div class="section-heading"><div><p class="eyebrow" data-content-id="flights-destinations-eyebrow">A WORLD TO EXPLORE</p><h2 data-content-id="flights-destinations-title">Find your next destination</h2><p data-content-id="flights-destinations-copy">From city breaks to coastlines, there is always somewhere new to discover.</p></div><button type="button" class="text-link" data-route="destinations" data-content-id="flights-destinations-action">Explore destinations →</button></div>
+    <div id="flight-destinations" class="destination-grid"></div><p id="flight-destinations-empty" class="empty-message">Explore our destinations and find inspiration for your next trip.</p>
+  </section>
+  <section class="content-section" data-section-id="flights-discover">
+    <div class="section-heading"><div><p class="eyebrow" data-content-id="flights-discover-eyebrow">MORE FOR YOUR JOURNEY</p><h2 data-content-id="flights-discover-title">Travel a little better</h2></div></div>
+    <div class="discover-grid">
+      <article class="discover-card"><div class="discover-image store-image" data-media-slot="flights-store" data-media-slot-id="flights-store" aria-hidden="true"></div><div><h3 data-content-id="flights-store-title">The Store</h3><p data-content-id="flights-store-copy">Find travel essentials for wherever you are headed.</p><button type="button" data-route="theStore" data-content-id="flights-store-action">Explore The Store →</button></div></article>
+      <article class="discover-card"><div class="discover-image guide-image" data-media-slot="flights-info" data-media-slot-id="flights-info" aria-hidden="true"></div><div><h3 data-content-id="flights-info-title">Get ready to fly</h3><p data-content-id="flights-info-copy">Find practical information to help you prepare for your trip.</p><button type="button" data-route="travelInfo" data-content-id="flights-info-action">Travel information →</button></div></article>
+    </div>
+  </section>
+</main>

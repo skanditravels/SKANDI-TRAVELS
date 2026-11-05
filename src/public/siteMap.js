@@ -52,7 +52,14 @@ export const EDITORIAL_PAGE_CATALOG = Object.freeze([
   page("search", "Search", SITE_MAP.search, "PUBLIC_PRESENTATION", [
     section("search-hero", "Search hero", [field("search-hero-eyebrow","Eyebrow"),field("search-hero-h1","Headline"),field("search-hero-copy","Intro copy","LONG_TEXT")])
   ]),
-  page("flights", "Flights", SITE_MAP.flights, "OPERATIONAL"),
+  page("flights", "Flights", SITE_MAP.flights, "OPERATIONAL", [
+    section("flights-hero", "Hero", [field("flights-hero-eyebrow","Eyebrow"),field("flights-hero-title","Headline"),field("flights-hero-copy","Copy","LONG_TEXT")], [Object.freeze({id:"flights-hero",label:"Flights hero image"})]),
+    section("flights-search", "Flight search", [field("flights-search-heading","Search heading")]),
+    section("flights-offers", "Flight offers", [field("flights-offers-eyebrow","Eyebrow"),field("flights-offers-title","Headline"),field("flights-offers-copy","Copy","LONG_TEXT")]),
+    section("flights-last-minute", "Last minute flights", [field("flights-last-minute-eyebrow","Eyebrow"),field("flights-last-minute-title","Headline"),field("flights-last-minute-copy","Copy","LONG_TEXT")]),
+    section("flights-destinations", "Destinations", [field("flights-destinations-eyebrow","Eyebrow"),field("flights-destinations-title","Headline"),field("flights-destinations-copy","Copy","LONG_TEXT"),field("flights-destinations-action","Action")]),
+    section("flights-discover", "Discover more", [field("flights-discover-eyebrow","Eyebrow"),field("flights-discover-title","Headline"),field("flights-store-title","Store title"),field("flights-store-copy","Store copy","LONG_TEXT"),field("flights-store-action","Store action"),field("flights-info-title","Travel information title"),field("flights-info-copy","Travel information copy","LONG_TEXT"),field("flights-info-action","Travel information action")], [Object.freeze({id:"flights-store",label:"Store image"}),Object.freeze({id:"flights-info",label:"Travel information image"})])
+  ], { presentationRuntime:true }),
   page("carRental", "Car Rental", SITE_MAP.carRental, "PUBLIC_PRESENTATION", [
     section("car-rental-hero","Hero",[field("car-rental-hero-eyebrow","Eyebrow"),field("car-rental-hero-h1","Headline"),field("car-rental-hero-copy","Hero copy","LONG_TEXT")]),
     section("car-rental-search","Reservation desk",[field("car-rental-search-h2","Reservation headline"),field("car-rental-search-copy","Reservation copy","LONG_TEXT")]),
@@ -173,6 +180,12 @@ export function isSafeInternalRoute(value){const path=String(value||"").trim();c
 // Compiler integration bindings. No route strings are duplicated here.
 // Source-verified controller contracts; Wix element installation still requires live verification.
 export const PAGE_BUILD_INTEGRATIONS = Object.freeze({
+  "flights": {
+    "controller": "src/pages/masterPage.js",
+    "embedIds": ["#flightsEmbed"],
+    "sources": ["SKANDI_FLIGHTS_PAGE"],
+    "note": "New Flights page: create #flightsEmbed in Wix and install its generated receiver before publishing. The master controller owns its content and booking bridge."
+  },
   "destinations": {
     "controller": "src/pages/Our Destinations.wfe5g.js",
     "embedIds": ["#htmlSkandiMap"],
