@@ -11,6 +11,7 @@ import { getCustomerHeaderSession, subscribeCustomerNewsletter } from "backend/S
 import { getStaffPortalSession } from "backend/SKANDI_CORE/staffAuth.web";
 import { getPublicTravelInfoPayload } from "backend/SKANDI_CORE/publicContent.web";
 import { getPublicPagePresentation } from "backend/SKANDI_CORE/presentation.web";
+import { createFlightsPageHost } from "public/flightsPageHost";
 import { getEosBootstrap, searchEosFlights, searchEosStations, createEosClockEvent, submitEosOpsAction } from "backend/SKANDI_CORE/eos.web";
 import { SITE_MAP, APP_ROUTES, GLOBAL_CHROME, isSafeInternalRoute, PAGE_BUILD_INTEGRATIONS, INTERNAL_PATH_PREFIXES, CHROME_FREE_PATHS, getPageFamily, getPageChrome, resolveBuildRoute } from "public/siteMap";
 import { bindAlexandraGlobal } from "public/alexandraGlobalBridge.js";
@@ -21,6 +22,9 @@ const SETTINGS_STORAGE_KEY = "skandi_customer_settings_v1";
 const RIAINTRA_MANUAL_SESSION_KEY = "skandi_riaintra_manual_session_v1";
 const RIAINTRA_EXIT_LOGOUT_PENDING_KEY = "skandi_riaintra_exit_logout_pending_v1";
 const PARENT_SOURCE = "SKANDI_WIX_PARENT";
+const FLIGHTS_EMBED_ID = "#flightsEmbed";
+const FLIGHTS_SOURCE = "SKANDI_FLIGHTS_PAGE";
+const flightsHosts = new WeakMap();
 const CUSTOMER_HEADER_SOURCE = GLOBAL_CHROME.customerHeader.source;
 const CUSTOMER_FOOTER_SOURCE = GLOBAL_CHROME.customerFooter.source;
 const COOKIE_BANNER_SOURCE = GLOBAL_CHROME.cookieBanner?.source || "SKANDI_COOKIE_BANNER";
@@ -888,6 +892,23 @@ async function handleMasterMessage(embed, message = {}) {
   const type = String(message?.type || "");
   const source = String(message?.source || "");
   const payload = message?.payload && typeof message.payload === "object" ? message.payload : {};
+
+  if (source === FLIGHTS_SOURCE && ["FLIGHTS_READY", "FLIGHTS_REFRESH", "FLIGHTS_SEARCH"].includes(type)) {
+    if ("#" + String(embed.id || "").replace(/^#/, "") !== FLIGHTS_EMBED_ID) return true;
+    const identity = compiledIdentity(embed);
+    if (!identity.allowed || identity.key !== "flights") return true;
+    let host = flightsHosts.get(embed);
+    if (!host) {
+      host = createFlightsPageHost({
+        post:(eventType, data, requestId) => embed.postMessage({source:PARENT_SOURCE,type:eventType,payload:data,requestId,timestamp:new Date().toISOString()}),
+        navigate,
+        settings:() => customerSettings
+      });
+      flightsHosts.set(embed, host);
+    }
+    await host(message);
+    return true;
+  }
 
   if (source === EOS_SOURCE) {
     if (wixWindowFrontend.formFactor === "Desktop") { navigate(SITE_MAP.alteaLaunchpad); return true; }
