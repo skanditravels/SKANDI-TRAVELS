@@ -1,6 +1,5 @@
 # WIX Native Product page. (HIDDEN) Will not be used, skip this page in audits and dont include in compiled or installed checks.
 
-|----|
 | **Existing controller: src/pages/SKANDI Product.h0gju.js.** |
 |----|
 
