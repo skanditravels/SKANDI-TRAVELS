@@ -6,7 +6,7 @@ Route authority: `src/public/siteMap.js`. This file is generated evidence, not r
 | --- | --- | --- | --- | --- | --- |
 | home | / | skandi-embeds/home/skandi-home.{html,css,js} | public / public | src/pages/Home.n73w8.js | BUILT |
 | search | /search | skandi-embeds/search/skandi-search.{html,css,js} | public / public | src/pages/Search.b7zch.js | BUILT |
-| flights | /flights | skandi-embeds/flights/skandi-flights.{html,css,js} | public / public | UNVERIFIED | PENDING SOURCE |
+| flights | /flights | skandi-embeds/flights/skandi-flights.{html,css,js} | public / public | src/pages/masterPage.js | BUILT |
 | carRental | /car-rental | skandi-embeds/car-rental/skandi-car-rental.{html,css,js} | public / public | src/pages/Car Rental.i9rnb.js | BUILT |
 | hotels | /hotels | skandi-embeds/hotels/skandi-hotels.{html,css,js} | public / public | UNVERIFIED | PENDING SOURCE |
 | packages | /packages | skandi-embeds/packages/skandi-packages.{html,css,js} | public / public | UNVERIFIED | PENDING SOURCE |
@@ -107,7 +107,6 @@ These actual repository controllers are preserved. No new route or build is inve
 
 ## Readiness details
 
-- **flights**: NOT READY: No verified canonical controller mapping.
 - **hotels**: NOT READY: No verified canonical controller mapping.
 - **packages**: NOT READY: No verified canonical controller mapping.
 - **cruises**: NOT READY: No verified canonical controller mapping.
