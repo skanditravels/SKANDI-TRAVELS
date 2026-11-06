@@ -17,6 +17,16 @@
 - Last source verification: 2026-10-13 against `skanditravels/SKANDI-TRAVELS`, `main`, head `96e4b8598c5ab2c176f8b838fbc35e6ca9c2971c`, preserving the approved 2026-10-07 Store repair and 2026-10-08 image repair.
 - Delivery boundary: the legacy URL redirect is live. GitHub source and generated receiver output are updated; the Wix page controller and receiver still require installation/publication. Wix Gift Card/Loyalty settings, automation definitions and Supabase schema/data were not changed.
 
+## 2026-11-06 — Recover the product grid and Wix gift-card sales
+
+The published receiver renders the Store, and its Wix page proxy calls the expected Store methods. The live product view showed zero products and the Wix method returned a generic error. Read-only Wix API checks returned 25 visible products, 29 visible categories and one configured gift-card product with seven denominations. The failing live request did not expose a more specific exception.
+
+The catalog now reuses the existing Wix elevated readers with fixed visibility scopes and a public projection. The page reports catalog errors with a retry action, while independently keeping any healthy merchandise or gift-card results. The Gift Cards category is inside The Store, including legacy links that supply `category=Gift Cards`. The native Wix Gift Cards product, denominations, codes, balances and recipient delivery stay behind the storefront.
+
+The project directly declares the Store SDK dependencies. Gift-card sales require the Wix secret `SKANDI_GIFT_CARD_CODE_KEY` with at least 32 characters of secure randomness. The Store shows the configured denominations when purchasing is disabled. Cart prices and values are resolved from Wix and the paid-order handler validates each Store gift-card line before issuance. A Wix payment event and the existing confirmation lookup share idempotent native delivery. The Store retains its card designs for the product preview. Recipient emails use Wix Gift Cards' delivery template, replacing the earlier custom automation path.
+
+Source and mocks verify the read scopes, mixed catalog behavior, and paid issuance contract. Live storefront behavior and a controlled end-to-end gift-card purchase require Wix publication.
+
 ## 2026-10-28 — Gift Cards consolidated into The Store
 
 Removed the standalone `giftCard` page from the canonical route and Media Control catalogs and removed its pending placeholder embed. The Store continues to load Wix Gift Card preset denominations as Store products and render them with SKANDI product cards, design selection, recipient details, and the existing cart/paid-order fulfillment flow. `/gift-card` redirects to `/the-store?category=Gift%20Cards`; the Store page controller passes the category into the existing embed, which opens the in-store Gift Cards listing. Wix Gift Cards remains the stored-value and redemption authority. The controller/receiver source must be installed in Wix for the query-based category landing to take effect.

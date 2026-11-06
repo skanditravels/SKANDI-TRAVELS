@@ -621,7 +621,7 @@ export async function bulkUpdateStoreControlPricesCore({
   };
 }
 
-// Public reads run in the visitor's Wix context and never request merchant data.
+// Run fixed, visibility-scoped catalog reads on behalf of the visitor. Cart calls keep the shopper context.
 const PUBLIC_PRODUCT_FIELDS = ["CURRENCY", "THUMBNAIL", "MEDIA_ITEMS_INFO", "DESCRIPTION", "DIRECT_CATEGORIES_INFO"];
 function publicOptions(product = {}) {
   return (Array.isArray(product.options) ? product.options : []).map(option => ({
@@ -658,26 +658,34 @@ export async function listStorefrontProductsCore({ limit = 300 } = {}) {
   const rawProducts = [];
   let cursor = "";
   while (rawProducts.length < maximum) {
-    const result = await productsV3.queryProducts({ cursorPaging: { limit: Math.min(100, maximum - rawProducts.length), ...(cursor ? { cursor } : {}) } }, { fields: PUBLIC_PRODUCT_FIELDS });
-    const rows = Array.isArray(result?.products) ? result.products : [];
+    const result = await elevatedQueryProducts({
+      filter: { visible: { $eq: true } },
+      cursorPaging: { limit: Math.min(100, maximum - rawProducts.length), ...(cursor ? { cursor } : {}) }
+    }, { fields: PUBLIC_PRODUCT_FIELDS });
+    if (!Array.isArray(result?.products)) throw new Error("STOREFRONT_INVALID_PRODUCTS_RESPONSE");
+    const rows = result.products;
     rawProducts.push(...rows);
     const next = result?.pagingMetadata?.cursors?.next || "";
     if (!result?.pagingMetadata?.hasNext || !next || next === cursor) break;
     cursor = next;
   }
-  const categoryResult = await categories.queryCategories({ cursorPaging: { limit: 1000 } }, { treeReference: STORE_TREE, returnNonVisibleCategories: false });
-  const categoryRows = (Array.isArray(categoryResult?.categories) ? categoryResult.categories : [])
+  const categoryResult = await elevatedQueryCategories(
+    { cursorPaging: { limit: 1000 } },
+    { treeReference: STORE_TREE, returnNonVisibleCategories: false }
+  );
+  if (!Array.isArray(categoryResult?.categories)) throw new Error("STOREFRONT_INVALID_CATEGORIES_RESPONSE");
+  const categoryRows = categoryResult.categories
     .filter(category => category.visible !== false).map(normalizeCategory);
   const categoriesById = new Map(categoryRows.map(category => [category.id, category]));
-  const products = rawProducts.filter(product => product.visible !== false).map(product => publicProduct(product, categoriesById));
+  const products = rawProducts.filter(product => product.visible === true).map(product => publicProduct(product, categoriesById));
   return { ok: true, products, categories: categoryRows, banners: [], travelCards: [],
     meta: { source: "WIX_STORES", catalogVersion: "V3", productCount: products.length, collectionCount: categoryRows.length } };
 }
 export async function resolveStoreVariantCore({ productId, choices = {} } = {}) {
   const id = cleanText(productId, 80);
   if (!id) throw new Error("STORE_PRODUCT_ID_REQUIRED");
-  const product = await productsV3.getProduct(id, { fields: ["VARIANT_OPTION_CHOICE_NAMES"] });
-  if (!product || product.visible === false) throw new Error("STORE_PRODUCT_UNAVAILABLE");
+  const product = await elevatedGetProduct(id, { fields: ["VARIANT_OPTION_CHOICE_NAMES"] });
+  if (!product || product.visible !== true) throw new Error("STORE_PRODUCT_UNAVAILABLE");
   const selected = choices && typeof choices === "object" && !Array.isArray(choices) ? choices : {};
   const options = Array.isArray(product.options) ? product.options : [];
   if (Object.keys(selected).length !== options.length || options.some(option => !Object.prototype.hasOwnProperty.call(selected, option.name))) {
@@ -694,8 +702,9 @@ export async function resolveStoreVariantCore({ productId, choices = {} } = {}) 
   if (matches.length !== 1) throw new Error("The selected product option is unavailable.");
   const variant = matches[0];
   if (variant.inventoryStatus?.inStock === false && variant.inventoryStatus?.preorderEnabled !== true) throw new Error("The selected product option is sold out.");
-  if (!variant._id) throw new Error("STORE_VARIANT_ID_MISSING");
-  return { ok: true, productId: id, variantId: variant._id };
+  const variantId = variant._id || variant.id;
+  if (!variantId) throw new Error("STORE_VARIANT_ID_MISSING");
+  return { ok: true, productId: id, variantId };
 }
 
 
