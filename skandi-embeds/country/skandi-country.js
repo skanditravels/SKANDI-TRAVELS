@@ -108,7 +108,8 @@ function renderPage(data) {
           `<article class="region-card"><img src="${esc(imageUrl(r.image))}" alt="${esc(r.name)}"><div class="region-content"><h3>${esc(r.name)}</h3><p>${esc(r.description || "")}</p><div class="region-actions"><button class="c-btn light" data-nav="${esc(r.path || routes.destinations || "/destinations")}">${esc(t("country.explore"))}</button><button class="c-btn ghost" data-nav="${esc(r.hotelsPath || page.paths?.hotels || routes.destinations || "/destinations")}">${esc(t("country.allHotels"))}</button></div></div></article>`,
       )
       .join("");
-    $("mapTitle").textContent = `${data.name} · ${t("country.map")}`;
+    $("mapTitle").textContent = `Map of ${data.name}`;
+    renderCountryMap(data.map);
     $("weatherTitle").textContent =
       `${t("country.section.weather")} · ${data.name}`;
     $("weatherNoteTitle").textContent = t("country.nav.weather");
@@ -150,6 +151,69 @@ function renderPage(data) {
     offers = [];
     renderOffers([]);
   }
+  let countryMap, mapObserver;
+  function renderCountryMap(config = {}) {
+    mapObserver?.disconnect();
+    countryMap?.remove();
+    countryMap=null;
+    const canvas=$("countryMapCanvas"),status=$("countryMapStatus"),links=$("countryMapLinks");
+    const places=Array.isArray(config.places)?config.places:[];
+    const center=config.center||places[0];
+    links.innerHTML=places.map(place=>`<li><button class="text-link" type="button" data-nav="${esc(place.path)}">${esc(place.name)}</button></li>`).join("");
+    canvas.hidden=!center;
+    status.textContent=center?"":"A map is unavailable for this destination.";
+    if(!center)return;
+    function start(){
+      mapObserver?.disconnect();
+      try {
+        const library=window.maplibregl;
+        if(!library)throw new Error("Map unavailable");
+        const map=new library.Map({container:canvas,style:"https://tiles.openfreemap.org/styles/liberty",
+          center:[center.longitude,center.latitude],zoom:4.2,cooperativeGestures:true,dragRotate:false,
+          pitchWithRotate:false,maxPitch:0,renderWorldCopies:false});
+        countryMap=map;
+        map.addControl(new library.NavigationControl({showCompass:false}),"top-right");
+        let loaded=false;
+        map.on("error",()=>{if(!loaded)status.textContent="The map couldn’t load. You can still use the links below.";});
+        map.on("load",()=>{
+          if(countryMap!==map)return;
+          loaded=true;status.textContent="";
+          const bounds=new library.LngLatBounds();
+          for(const place of places){
+            const position=[place.longitude,place.latitude];
+            bounds.extend(position);
+            const marker=document.createElement("button");
+            marker.type="button";
+            marker.className="country-map-pin";
+            marker.setAttribute("aria-label",place.name);
+            const popup=document.createElement("div");
+            const name=document.createElement("strong");
+            name.textContent=place.name;
+            const link=document.createElement("button");
+            link.type="button";link.className="text-link";link.dataset.nav=place.path;
+            link.textContent="View location";
+            popup.append(name,link);
+            new library.Marker({element:marker}).setLngLat(position)
+              .setPopup(new library.Popup({offset:18}).setDOMContent(popup)).addTo(map);
+          }
+          if(places.length)map.fitBounds(bounds,{padding:54,maxZoom:7,duration:0});
+        });
+      }catch(_){
+        canvas.hidden=true;
+        status.textContent="The map couldn’t load. You can still use the links below.";
+      }
+    }
+    if("IntersectionObserver" in window){
+      mapObserver=new IntersectionObserver(entries=>{if(entries.some(entry=>entry.isIntersecting))start();},{rootMargin:"160px"});
+      mapObserver.observe(canvas);
+    }else start();
+  }
+  window.addEventListener("pagehide",event=>{
+    if(event.persisted)return;
+    mapObserver?.disconnect();
+    countryMap?.remove();
+  });
+
 function renderClimate(items) {
   const locale={EN:"en-US",SV:"sv-SE",NO:"nb-NO",DA:"da-DK",ES:"es-ES",FI:"fi-FI",DE:"de-DE","FR-FR":"fr-FR","FR-CA":"fr-CA",TH:"th-TH"}[settings.language]||"en-US";
   const fmt=new Intl.DateTimeFormat(locale,{month:"short"}), known=x=>x!==null&&x!==undefined&&x!==""&&Number.isFinite(Number(x));

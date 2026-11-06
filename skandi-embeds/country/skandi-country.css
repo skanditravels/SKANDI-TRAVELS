@@ -217,3 +217,16 @@ html.mobile-menu-open, body.mobile-menu-open { overflow: hidden; }
 .skandi-toast.error{background:#8a1f1f}
 
 
+
+.country-atlas{margin-top:32px;border:1px solid #dce7ef;border-radius:20px;background:#fff;overflow:hidden;box-shadow:0 16px 40px rgba(2,46,100,.08)}
+.country-atlas-heading{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:20px 24px}
+.country-atlas-heading h3{margin:0;color:#022e64;font-size:clamp(1.15rem,2vw,1.55rem)}
+.country-atlas-heading p{margin:6px 0 0;color:#53647b;font-size:.86rem}
+.country-atlas-heading p:empty{display:none}
+.country-map-canvas{height:clamp(320px,55vw,480px);background:#d9ebf1}
+.country-map-canvas[hidden],.country-atlas-links:empty{display:none}
+.country-map-pin{width:24px;height:24px;border:3px solid #fff;border-radius:50%;background:#022e64;box-shadow:0 2px 8px #022e6470;cursor:pointer}
+.country-map-pin:focus-visible{outline:3px solid #022e64;outline-offset:2px}
+.country-atlas-links{display:flex;flex-wrap:wrap;gap:8px 16px;list-style:none;margin:0;padding:15px 24px}
+.country-map-canvas .maplibregl-popup-content strong{display:block;margin:0 12px 4px 0}
+@media(max-width:600px){.country-atlas-heading{align-items:flex-start;flex-direction:column;padding:16px}.country-atlas-links{padding:12px 16px}}

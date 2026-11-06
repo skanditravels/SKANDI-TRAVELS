@@ -156,7 +156,6 @@ a{color:inherit}
   -webkit-backface-visibility:hidden;
 }
 #networkMap canvas{
-  filter:saturate(1.02) contrast(1.08) brightness(1.02);
   transform:translateZ(0);
   backface-visibility:hidden;
   -webkit-backface-visibility:hidden;
