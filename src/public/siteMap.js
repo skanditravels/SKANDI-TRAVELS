@@ -642,6 +642,10 @@ export function getPageFamily(route) {
 export function getPageChrome(route) {
   return CHROME_FREE_PATHS.includes(normalizeSitePath(route)) ? "none" : getPageFamily(route);
 }
+// The Store retains its own desktop chrome but uses the public mobile bar.
+export function hasPageMobileNavigation(route) {
+  return normalizeSitePath(route) === SITE_MAP.theStore || getPageChrome(route) !== "none";
+}
 export function resolveBuildRoute(value) {
   if (!isSafeInternalRoute(value)) return null;
   const pathname = normalizeSitePath(value);

@@ -12,7 +12,7 @@
 // - This core does not read or write staff_payroll_profiles. Payroll owns all payroll state.
 
 import { restRequest } from "backend/SKANDI_CORE/supabaseServer";
-import { requireStaffPortalSessionCore } from "backend/SKANDI_CORE/staffAuth";
+import { getSuccessFactorsApps, requireStaffPortalSessionCore } from "backend/SKANDI_CORE/staffAuth";
 import { members, authentication as memberAuthentication } from "@wix/members";
 import { auth } from "@wix/essentials";
 import { SkandiError, errorCode } from "backend/SKANDI_CORE/platformErrors";
@@ -524,7 +524,7 @@ function portalNotificationViews(agent, session) {
 
 function portalSelectionState(agent, session, taskRows) {
   const state = portalStateFor(agent);
-  const apps = new Set(rows(session.apps).map((app) => String(app.id)));
+  const apps = new Set(getSuccessFactorsApps(session).map((app) => String(app.id)));
   const notifications = new Set(portalNotificationViews(agent, session).map((item) => item.id));
   const tasks = new Set(taskRows.map((item) => String(item.id)));
   return {
@@ -540,7 +540,7 @@ async function buildSuccessFactorsPortal(session) {
   if (!id || session.authorized !== true) throw new SkandiError("STAFF_AUTH_REQUIRED", "Sign in to RIAINTRA to open SuccessFactors.");
   const [agent, news, taskRows] = await Promise.all([findAgent({ agentUserId: id }), loadPortalNews(session), loadPortalTasks(id)]);
   if (!agent) throw new SkandiError("HR_EMPLOYEE_NOT_FOUND", "Employee not found.");
-  const apps = rows(session.apps);
+  const apps = getSuccessFactorsApps(session);
   return {
     ok: true, version: "SKANDI-SUCCESSFACTORS-v12",
     profile: {
@@ -555,7 +555,7 @@ async function buildSuccessFactorsPortal(session) {
       }
     },
     apps, news, tasks: taskRows.map(portalTaskView),
-    quickActions: apps.filter((app) => app.path).slice(0, 6).map((app) => ({ id: app.id, target: app.id, title: app.title, subtitle: app.description || "", icon: app.icon || "apps", path: app.path })),
+    quickActions: apps.filter((app) => app.path).slice(0, 6).map((app) => ({ id: app.id, target: app.id, title: app.title, subtitle: app.subtitle || app.description || "", icon: app.icon || "apps", path: app.path })),
     notifications: portalNotificationViews(agent, session),
     ...portalSelectionState(agent, session, taskRows),
     stats: {},
@@ -599,7 +599,7 @@ export async function saveSuccessFactorsPortalStateCore(input = {}) {
     const state = { ...portalObject(sf.portal) };
     const ids = portalIds(input.ids);
     if (action === "INTRANET_FAVORITES_UPDATE") {
-      const allowed = new Set(rows(session.apps).map((app) => String(app.id)));
+      const allowed = new Set(getSuccessFactorsApps(session).map((app) => String(app.id)));
       if (ids.some((id) => !allowed.has(id))) throw new SkandiError("INTRANET_APP_ACCESS_DENIED", "An application is no longer available to your account.");
       state.favoriteApps = [...new Set([...portalIds(state.favoriteApps).filter((id) => !allowed.has(id)), ...ids])];
     } else if (action === "INTRANET_NOTIFICATIONS_READ") {

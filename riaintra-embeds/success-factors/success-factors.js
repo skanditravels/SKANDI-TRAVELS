@@ -2197,10 +2197,11 @@
 
     function renderAppTile(tile) {
       const favorite = favoriteApps.has(tile.id);
+      const wordmark = window.__SKANDI_SHELL__?.appWordmark('riaintra', tile.title);
       return `
         <article class="app-tile ${tile.wide ? "wide" : ""}" role="button" tabindex="0" data-action="open-app" data-id="${tile.id}" style="--tile-color:${tile.color};--tile-soft:${tile.soft}" aria-label="Open ${escapeHtml(tile.title)}">
           <div class="tile-head">
-            <span class="tile-icon">${icon(tile.icon, 24)}</span>
+            ${wordmark || `<span class="tile-icon">${icon(tile.icon, 24)}</span>`}
             <button class="favorite-button ${favorite ? "active" : ""}" type="button" data-action="toggle-favorite" data-id="${tile.id}" aria-label="${favorite ? "Remove" : "Add"} ${escapeHtml(tile.title)} ${favorite ? "from" : "to"} favorites" aria-pressed="${favorite}">
               ${icon("star", 17, favorite ? "filled" : "")}
             </button>

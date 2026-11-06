@@ -5,3 +5,13 @@
 .country-subnav,.destination-subnav,.area-subnav,.hotel-nav-wrap{top:0!important}
 .signature,.destination-signature,.area-signature{top:80px!important}
 .ta-collections:has(> :only-child){grid-template-columns:1fr}.ta-book-card button:disabled{opacity:.55;cursor:not-allowed}.ta-exp-img:empty{background:linear-gradient(135deg,#e9f0f9,#f5f8fc)}.ta-detail-gallery .ta-empty{grid-column:1/-1}
+
+@media (max-width: 760px) {
+  .ta-search-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ta-search-grid .ta-field { min-width: 0; }
+  .ta-section-head { flex-wrap: wrap; align-items: flex-start; }
+  .ta-link-button { white-space: normal; text-align: start; }
+}
+@media (max-width: 420px) {
+  .ta-search-grid { grid-template-columns: minmax(0, 1fr); }
+}

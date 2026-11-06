@@ -97,7 +97,15 @@ test('compiles Home and multiple pages with three distinct chrome families and c
   const homeReceiver=manifest.pages.find(p=>p.key==='home');
   assert.equal(homeReceiver.receiver,'skandi-embeds/home/skandi-home.receiver.html');
   assert.equal(await fs.readFile(path.join(root,homeReceiver.receiver),'utf8'),await fs.readFile(path.join(root,"skandi-embeds/receiver/skandi-wix-universal-receiver.html"),'utf8'));
-  const home=await htmlOf(root,'home');assert.match(home,/@media \(max-width:1020px\)/);assert.match(home,/#skandi-global-header-root,#skandi-global-footer-root \{ display:none!important/);assert.match(home,/env\(safe-area-inset-bottom/);assert.match(home,/font-size:16px!important/);
+  for (const slug of ['home','success-factors','altea-reservations']) {
+    const html = await htmlOf(root,slug);
+    assert.match(html, /<html[^>]*data-skandi-mobile-navigation/);
+    assert.match(html, /id="skandi-mobile-nav-container"/);
+    assert.match(html, /env\(safe-area-inset-bottom/);
+    assert.match(html, /touch-action:\s*manipulation/);
+    assert.match(html, /font-size: max\(16px, 1em\) !important/);
+  }
+  assert.doesNotMatch(await htmlOf(root,'booking-flow'), /id="skandi-mobile-nav-container"/);
 });
 
 test('scoping preserves body/html state, functional selectors, child combinators and keyframes',async()=>{
@@ -236,4 +244,35 @@ test('publisher stages generated dist and only successful page receivers, commit
   await write(repo,'dist/manifest.json',JSON.stringify({schemaVersion:2,pages}));await write(repo,'dist/home/index.html','home');await write(repo,'dist/search/index.html','search');await write(repo,pages[0].receiver,'home receiver');await write(repo,pages[1].receiver,'search receiver');await write(repo,'skandi-embeds/failed/skandi-failed.receiver.html','stale failed receiver');
   assert.equal(publish(repo),true);const sha=git('rev-parse','HEAD');assert.equal(publish(repo),false);assert.equal(git('rev-parse','HEAD'),sha);assert.equal(git('ls-tree','-r','--name-only','HEAD','dist/').split('\n').length,3);assert.ok(git('ls-tree','-r','--name-only','HEAD').includes(pages[0].receiver));assert.ok(git('ls-tree','-r','--name-only','HEAD').includes(pages[1].receiver));assert.ok(!git('ls-tree','-r','--name-only','HEAD').includes('skandi-embeds/failed/skandi-failed.receiver.html'));
   git('commit','--allow-empty','-m','unpublished local change');await write(repo,'dist/home/index.html','changed');assert.throws(()=>publish(repo),/main changed during compilation/);
+});
+
+test('shared mobile sizing preserves zoom, and the Store opts in without duplicating desktop chrome', async () => {
+  const css = await cssFor('.note{font-size:10px}.metric{font-size:clamp(9px,2vw,16px)}.icon{font-size:0px}.label{font:700 11px/1.4 Arial}', 'app', 'page.css', ROOT);
+  assert.match(css, /\.note\{font-size:13px\}/);
+  assert.match(css, /\.metric\{font-size:max\(13px, clamp\(9px,2vw,16px\)\)\}/);
+  assert.match(css, /\.icon\{font-size:0px\}/);
+  assert.match(css, /\.label\{font:700 13px\/1\.4 Arial\}/);
+  assert.equal(canonical.getPageChrome(canonical.SITE_MAP.theStore), 'none');
+  assert.equal(canonical.hasPageMobileNavigation(canonical.SITE_MAP.theStore), true);
+  assert.equal(canonical.hasPageMobileNavigation(canonical.SITE_MAP.storeCheckout), false);
+});
+
+test('Success Factors uses one authorized list for its tiles, shortcuts and favorites', async () => {
+  const staffAuth = await fs.readFile(path.join(ROOT,'src/backend/SKANDI_CORE/staffAuth.js'),'utf8');
+  const catalog = staffAuth.slice(staffAuth.indexOf('const ALTEA_APPS'), staffAuth.indexOf('function memberId'));
+  const getApps = new Function('SITE_MAP', 'APP_ROUTES', catalog.replace('export function','function')+'\nreturn getSuccessFactorsApps;')(canonical.SITE_MAP, canonical.APP_ROUTES);
+  const apps = [
+    { id:'altea',path:canonical.SITE_MAP.alteaLaunchpad },
+    { id:'grouptalk',path:canonical.APP_ROUTES.groupTalk },
+    { id:'inventory-control',path:canonical.SITE_MAP.inventoryControl },
+    { id:'uniform-control',path:canonical.SITE_MAP.uniformControl },
+    { id:'hr',path:canonical.SITE_MAP.successFactors },
+    { id:'mail',path:canonical.SITE_MAP.mail }
+  ];
+  assert.deepEqual(getApps({apps}).map(app=>app.id),['altea','hr','mail']);
+  assert.deepEqual(getApps({}),[]);
+  const core = await fs.readFile(path.join(ROOT,'src/backend/SKANDI_CORE/orgStructure.js'),'utf8');
+  assert.match(core,/const apps = getSuccessFactorsApps\(session\)/);
+  assert.match(core,/quickActions: apps\.filter/);
+  assert.match(core,/const allowed = new Set\(getSuccessFactorsApps\(session\)/);
 });

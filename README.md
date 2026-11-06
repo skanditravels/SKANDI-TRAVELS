@@ -22,11 +22,18 @@ When sources are removed or invalidated, the manifest stops advertising their ou
 | Family | Source | Presentation |
 | --- | --- | --- |
 | Public | `skandi-embeds/global/skandi-{header,footer,mobile-nav}.*` and shell | Desktop header/content/footer; mobile content and fixed bottom navigation |
-| RIAINTRA | `riaintra-embeds/global/riaintra-{header,footer}.*` | Independent internal chrome |
-| ALTEA | `altea-embeds/global/altea-{header,footer}.*` | Independent operational chrome |
+| RIAINTRA | `riaintra-embeds/global/riaintra-{header,footer}.*` and shared mobile navigation | Staff header and footer on desktop, RIAINTRA bottom bar and grouped menu at narrow widths |
+| ALTEA | `altea-embeds/global/altea-{header,footer}.*` and shared mobile navigation | Operational header and footer on desktop, ALTEA bottom bar with authorized tools at narrow widths |
 | Chrome-free | Canonical master rules | No injected global chrome |
 
-The separate RIAINTRA and ALTEA global components are now extracted from HTML_REF. Public components are never substituted. The [HTML_REF migration report](docs/html-ref-migration.md) maps all 75 HTML payloads to their split source folders and records source conflicts and pages that need additional integration work. RIAINTRA login and GroupTalk remain chrome-free, as do Booking and the existing store/checkout routes.
+The separate RIAINTRA and ALTEA global components are now extracted from HTML_REF. Public components are never substituted. The [HTML_REF migration report](docs/html-ref-migration.md) maps all 75 HTML payloads to their split source folders and records source conflicts and pages that need additional integration work. RIAINTRA login, GroupTalk, Booking and the Store checkout routes retain their task-specific layouts. The Store keeps its own desktop header and footer and adds the shared SKANDI bottom bar on mobile.
+
+
+### Mobile typography and navigation
+
+The compiler raises small authored interface text to 13px, and the shell and Wix host CSS apply a 16px minimum to editable controls. The viewport follows device width and safe areas. Touch manipulation suppresses double-tap magnification and keeps pinch zoom available. Narrow compiled pages share a fixed bottom bar, one scroll area and a right-side drawer with nested sections. Staff links come from the authenticated staff app projection. ALTEA links use its Launchpad permission check and respect the EOS phone boundary.
+
+The generated output covers registered single-component embeds. Check outer Wix iframe geometry and native/legacy routes in Wix Studio. The existing multi-component Help Center remains separately installed. Hotels, Packages and Timatic have pending embed sources. DocuNet Administration now builds with its existing signed-document preview; confirm its registered component and permission checks before installing the universal receiver.
 
 ## Local validation
 
