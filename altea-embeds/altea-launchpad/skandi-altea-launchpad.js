@@ -198,6 +198,8 @@
         sendBootstrap();
       }
 
+      const softwareLabels = { ardw:"ARDW", inventory:"Altéa Inventory", timatic:"IATA Timatic", occ:"OPS Control", grouptalk:"GroupTalk", eos:"EOS", "uniform-control":"Uniform Control" };
+
       function renderApplications() {
         const query = elements.appSearch.value.trim().toLocaleLowerCase();
         const filtered = state.applications.filter(app =>
@@ -224,8 +226,9 @@
           tile.dataset.appId = app.id;
           tile.style.setProperty("--tile-accent", app.accent);
           tile.setAttribute("aria-label", (app.available ? "Open " : "Unavailable: ") + app.title);
+          const wordmark = window.__SKANDI_SHELL__?.appWordmark('altea', softwareLabels[app.id] || app.title);
           tile.innerHTML =
-            '<span class="tile-visual"><span class="tile-icon">' + (icons[app.icon] || icons.arrow) + '</span>' +
+            '<span class="tile-visual">' + (wordmark || '<span class="tile-icon">' + (icons[app.icon] || icons.arrow) + '</span>') +
             '<span class="tile-code">' + esc(app.code) + '</span></span>' +
             '<span class="tile-content"><h3>' + esc(app.title) + '</h3><p>' + esc(app.description) + '</p>' +
             '<span class="tile-launch"><span>' + (app.available ? "Open Application" : esc(app.unavailableReason)) + '</span>' + (app.available ? icons.arrow : "") + '</span></span>';
@@ -364,6 +367,10 @@
           try { data = JSON.parse(data); } catch (_) { return; }
         }
         if (!isRecord(data) || data.source !== PARENT_SOURCE) return;
+        if (data.type === "SKANDI_MASTER_CONFIG") {
+          if (state.applications.length) renderApplications();
+          return;
+        }
         if (data.type === "ALTEA_LAUNCHPAD_HOST_READY") {
           sendBootstrap();
           return;

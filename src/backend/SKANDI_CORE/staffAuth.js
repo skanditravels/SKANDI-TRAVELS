@@ -41,7 +41,7 @@ const controlCache = new TtlCache({ ttlMs: 5 * 60 * 1000, maxEntries: 50 });
 const APP_CATALOG = Object.freeze({
   altea: Object.freeze({ id:"altea", title:"ALTEA Operations", subtitle:"Reservations, DCS and destination operations", path:SITE_MAP.alteaLaunchpad, group:"Operations", icon:"A" }),
   mail: Object.freeze({ id:"mail", title:"Mail", subtitle:"Internal messages and station notices", path:SITE_MAP.mail, group:"Communication", icon:"M" }),
-  grouptalk: Object.freeze({ id:"grouptalk", title:"GroupTalk", subtitle:"Operational communication and team channels", path:"/riaintra/success-factors/altea/grouptalk", group:"Communication", icon:"G" }),
+  grouptalk: Object.freeze({ id:"grouptalk", title:"GroupTalk", subtitle:"Operational communication and team channels", path:APP_ROUTES.groupTalk, group:"Communication", icon:"G" }),
   uniform: Object.freeze({ id:"uniform", title:"Uniform Center", subtitle:"Uniform orders and staff issue", path:SITE_MAP.uniformCenter, group:"MyProfile", icon:"U" }),
   myroster: Object.freeze({ id:"myroster", title:"MyRoster", subtitle:"Shifts, duties and assignments", path:APP_ROUTES.myRoster, group:"MyProfile", icon:"R" }),
   payroll: Object.freeze({ id:"payroll", title:"Pay & Time", subtitle:"Payroll and staff pay information", path:SITE_MAP.payroll, group:"MyProfile", icon:"P" }),
@@ -49,7 +49,7 @@ const APP_CATALOG = Object.freeze({
   "media-control": Object.freeze({ id:"media-control", title:"Media Control", subtitle:"Supabase asset library and controlled media uploads", path:SITE_MAP.mediaControl, group:"Administration", icon:"D" }),
   "store-control": Object.freeze({ id:"store-control", title:"Store Control", subtitle:"The Store catalog, inventory and order operations", path:SITE_MAP.storeControl, group:"Administration", icon:"S" }),
   hr: Object.freeze({ id:"hr", title:"SuccessFactors", subtitle:"Staff and organization management", path:SITE_MAP.successFactors, group:"Administration", icon:"H" }),
-  policies: Object.freeze({ id:"policies", title:"Policy Control", subtitle:"Internal policies and controlled documents", path:"/riaintra/success-factors/legal", group:"Administration", icon:"P" })
+  policies: Object.freeze({ id:"policies", title:"Policy Control", subtitle:"Internal policies and controlled documents", path:SITE_MAP.policyControl, group:"Administration", icon:"P" })
 });
 
 const ALTEA_APPS = Object.freeze([
@@ -58,11 +58,18 @@ const ALTEA_APPS = Object.freeze([
   Object.freeze({ id:"uniform-control", title:"SKANDI Uniform Control", description:"Administer Uniform products, employee orders, SK-Points, policy and apparel-ERP operations.", icon:"inventory", code:"UNIFORM CONTROL", accent:"#022e64", path:SITE_MAP.uniformControl, requiredApp:"uniform", groups:Object.freeze(["uniform-admin","system-admin"]) }),
   Object.freeze({ id:"ticketing", title:"Amadeus Ticketing Platform", description:"Issue, revalidate, exchange, refund and audit electronic tickets and EMD transactions.", icon:"barcode", code:"TICKETING", accent:"#3155a6", path:"/riaintra/success-factors/altea/ticketing", available:false, unavailableReason:"Application not yet published", groups:Object.freeze(["sales","operations","occ","system-admin"]) }),
   Object.freeze({ id:"pss-dcs", title:"Amadeus Altéa Passenger Service System (PSS / DCS)", description:"Run check-in, seating, baggage, boarding and departure-control workflows.", icon:"passenger", code:"PSS / DCS", accent:"#007a64", path:"/riaintra/success-factors/altea/departure-control", available:false, unavailableReason:"Application not yet published", groups:Object.freeze(["airport","operations","occ","system-admin"]) }),
-  Object.freeze({ id:"timatic", title:"IATA Timatic (Regulatory & Document Check)", description:"Validate passport, visa, health and destination entry requirements before passenger acceptance.", icon:"passport", code:"DOCUMENT CHECK", accent:"#6650a4", path:"/riaintra/success-factors/altea/timatic", groups:Object.freeze(["sales","airport","destination","operations","occ","system-admin"]) }),
-  Object.freeze({ id:"grouptalk", title:"GroupTalk", description:"Operational team communication, voice, field coordination and support channels.", icon:"communication", code:"GROUPTALK", accent:"#005eb8", path:"/riaintra/success-factors/altea/grouptalk", requiredApp:"grouptalk", requiresGroupTalk:true, groups:Object.freeze(["airport","sales","destination","operations","occ","managers","system-admin"]) }),
+  Object.freeze({ id:"timatic", title:"IATA Timatic (Regulatory & Document Check)", description:"Validate passport, visa, health and destination entry requirements before passenger acceptance.", icon:"passport", code:"DOCUMENT CHECK", accent:"#6650a4", path:SITE_MAP.alteaTimatic, groups:Object.freeze(["sales","airport","destination","operations","occ","system-admin"]) }),
+  Object.freeze({ id:"grouptalk", title:"GroupTalk", description:"Operational team communication, voice, field coordination and support channels.", icon:"communication", code:"GROUPTALK", accent:"#005eb8", path:APP_ROUTES.groupTalk, requiredApp:"grouptalk", requiresGroupTalk:true, groups:Object.freeze(["airport","sales","destination","operations","occ","managers","system-admin"]) }),
   Object.freeze({ id:"eos", title:"EOS", description:"Mobile and tablet flight operations, personal duties and live station information.", icon:"plane", code:"EOS OPERATIONS", accent:"#0066cc", path:SITE_MAP.eos, groups:Object.freeze(["airport","destination","operations","occ","managers","system-admin"]) }),
   Object.freeze({ id:"occ", title:"OPS Control", description:"Coordinate workforce duties, transfers, tours, standby, disruption recovery, vacation, TripTrade and bidding control.", icon:"arrow", code:"OPERATIONS CONTROL", accent:"#6650a4", path:SITE_MAP.opsControl, groups:Object.freeze(["operations","occ","system-admin"]) })
 ]);
+
+const ALTEA_LAUNCHPAD_PATHS = new Set(ALTEA_APPS.map(app => app.path));
+
+export function getSuccessFactorsApps(session = {}) {
+  const apps = Array.isArray(session.apps) ? session.apps : [];
+  return apps.filter(app => !ALTEA_LAUNCHPAD_PATHS.has(app.path));
+}
 
 function memberId(member = {}) { return text(member?._id || member?.id, 160); }
 function memberEmail(member = {}) {

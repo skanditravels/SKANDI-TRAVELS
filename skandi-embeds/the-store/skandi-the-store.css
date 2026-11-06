@@ -291,7 +291,7 @@ main{min-height:70vh}
 .toast{position:fixed;z-index:260;right:18px;bottom:18px;display:none;max-width:350px;padding:12px 15px;background:var(--navy);color:#fff;font-size:10px;box-shadow:var(--shadow)}
 
 /* Mobile menu */
-.mobile-nav{position:fixed;inset:0;z-index:210;background:#fff;display:none;overflow:auto}
+.mobile-nav{position:fixed;inset:0 0 0 auto;width:min(370px,100%);z-index:210;background:#fff;display:none;overflow:auto;box-shadow:-12px 0 32px rgba(2,46,100,.16);touch-action:manipulation}
 .mobile-nav.show{display:block}
 .mobile-nav-head{height:69px;border-bottom:1px solid var(--line);padding:0 18px;display:flex;align-items:center;justify-content:space-between}
 .mobile-nav-body{padding:15px 20px 40px}

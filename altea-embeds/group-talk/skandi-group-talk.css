@@ -97,8 +97,8 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .user-avatar { display: grid; width: 2rem; height: 2rem; place-items: center; border-radius: 999px; background: #d1e8ff; color: #073b69; font-size: 0.75rem; font-weight: 800; object-fit: cover; border: 1px solid rgba(255,255,255,0.38); }
 .mobile-burger { display: none; }
 
-.mobile-slideout { position: fixed; top: 0; left: -300px; width: 280px; height: 100vh; background-color: #ffffff; z-index: 10000; transition: left 0.3s ease; box-shadow: 2px 0 12px rgba(0,0,0,0.15); display: flex; flex-direction: column; font-family: "72", "Inter", sans-serif;}
-.mobile-slideout.open { left: 0; }
+.mobile-slideout { position: fixed; top: 0; right: -300px; width: 280px; height: 100vh; background-color: #ffffff; z-index: 10000; transition: right 0.3s ease; box-shadow: -2px 0 12px rgba(0,0,0,0.15); display: flex; flex-direction: column; font-family: "72", "Inter", sans-serif;}
+.mobile-slideout.open { right: 0; }
 .mobile-menu-header { display: flex; justify-content: space-between; align-items: center; padding: 20px; border-bottom: 1px solid #e6e9ee; }
 .close-btn { background: none; border: none; font-size: 28px; cursor: pointer; color: #071b44; padding: 0; }
 .mobile-nav-links { display: flex; flex-direction: column; }

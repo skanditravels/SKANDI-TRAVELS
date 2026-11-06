@@ -349,3 +349,8 @@
     .issue-cycle-card span{font-weight:800;color:var(--hm-black)}
     @media(max-width:760px){.pdp-thumbnails{grid-template-columns:repeat(3,minmax(0,1fr))}.issue-cycle-grid{grid-template-columns:1fr}}
 
+
+@media (max-width: 480px) {
+  .uniform-toolbar-main { grid-template-columns: minmax(0, 1fr); padding-block: 10px; }
+  .uniform-utilities { flex-wrap: wrap; gap: 8px; }
+}

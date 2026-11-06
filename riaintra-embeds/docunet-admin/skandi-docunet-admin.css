@@ -510,3 +510,17 @@ html,body{background:#d8dde2;font-size:13px}
   html,body,.app,.shell,.workspace,.content{height:auto;overflow:visible;background:#fff}
   .shell{display:block}.panel{display:block}
 }
+
+@media (max-width: 850px) {
+  .side-nav, .workspace, .content { min-width: 0; }
+  .side-nav .tabs { min-width: 0; width: 100%; overflow-x: auto; }
+  .side-nav .tabs button { flex: 0 0 auto; width: auto; }
+  .side-nav > .side-stat { display: none; }
+  .command-name { min-width: 0; }
+}
+
+@media (max-width: 850px) {
+  .register-head { display: none; }
+  .row { grid-template-columns: minmax(0, 1fr); }
+  .row > .actions { justify-content: flex-start; flex-wrap: wrap; }
+}

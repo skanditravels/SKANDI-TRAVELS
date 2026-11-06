@@ -5,6 +5,9 @@
 
 ## CHANGE LOG (append-only)
 
+- 2026-11-06 — The compiled shell adds the branded ALTEA mobile bottom bar and a right-side drawer. Navigation uses the existing Launchpad permission facade and excludes unavailable tools. Application tiles pair the approved raster ALTEA mark with the software name. Master Page now sends operational header and footer state to the active compiled receiver. Staff authentication and launch revalidation are preserved.
+
+
 - 2026-10-28 UTC — Updated `skandi-embeds/altea-launchpad/skandi-altea-launchpad.receiver.html` to follow the current shared receiver pattern with page-specific startup, progress and failure messages for **ALTEA Launchpad** (`/riaintra/success-factors/altea`). The expected route matches `src/public/siteMap.js`; master-page handshake, staff authorization, manifest/SHA-256 checks and nested-iframe rejection remain intact.
 - 2026-10-28 UTC — Updated `skandi-embeds/eos/skandi-eos.receiver.html` to follow the current shared receiver pattern with page-specific startup, progress and failure messages for **EOS Mobile Operations** (`/riaintra/success-factors/altea/eos`). The expected route matches `src/public/siteMap.js`; master-page handshake, staff authorization, manifest/SHA-256 checks and nested-iframe rejection remain intact.
 

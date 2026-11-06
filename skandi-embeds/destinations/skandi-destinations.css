@@ -514,11 +514,11 @@ a{color:inherit}
   backdrop-filter:blur(22px) saturate(1.15);
   box-shadow:var(--sk-panel-shadow);
   color:var(--sk-graphite);
-  transform:translateX(calc(100% + 56px));
-  opacity:0;pointer-events:none;
+  transform:translateX(12px);
+  opacity:0;visibility:hidden;pointer-events:none;
   transition:transform var(--panel) var(--ease),opacity .22s ease;
 }
-.detail-panel.open{transform:none;opacity:1;pointer-events:auto}
+.detail-panel.open{transform:none;opacity:1;visibility:visible;pointer-events:auto}
 .panel-media{
   position:relative;height:220px;overflow:hidden;border-radius:25px 25px 0 0;
   background:linear-gradient(135deg,#0d3255,#071a30 55%,#123f58);
@@ -1357,3 +1357,6 @@ body.destinations-directory-open{overflow:hidden}
   .fx-reveal{opacity:1!important;transform:none!important}
   .fx-surface{display:none!important}
 }
+
+/* Keep the decorative atlas field inside the page without constraining its scrollable rails. */
+.editorial { overflow: clip; }

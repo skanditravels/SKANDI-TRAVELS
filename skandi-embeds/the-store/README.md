@@ -17,6 +17,10 @@
 - Last source verification: 2026-10-13 against `skanditravels/SKANDI-TRAVELS`, `main`, head `96e4b8598c5ab2c176f8b838fbc35e6ca9c2971c`, preserving the approved 2026-10-07 Store repair and 2026-10-08 image repair.
 - Delivery boundary: the legacy URL redirect is live. GitHub source and generated receiver output are updated; the Wix page controller and receiver still require installation/publication. Wix Gift Card/Loyalty settings, automation definitions and Supabase schema/data were not changed.
 
+## 2026-11-06 — Shared mobile bottom navigation
+
+The Store keeps its existing commerce header, category menu and desktop footer. Its compiled mobile page uses the shared SKANDI bottom bar. The right-side Store menu remains available from its own header button. Forms use the shared 16px input sizing. Checkout and order confirmation keep their dedicated layouts.
+
 ## 2026-11-06 — Repair the Wix catalog runtime
 
 Wix site logs showed that the Catalog V3 SDK writes to `treeReference.appNamespace` while preparing the category request. The Store and Store Control now pass a fresh tree reference on each request. The regression test models that SDK write and checks that later requests still send the Wix Stores namespace.

@@ -60,8 +60,24 @@ export function scopeSelector(source,mount) {
     }
   })).processSync(source);
 }
+function raiseSmallText(ast) {
+  ast.walkDecls(/^font(?:-size)?$/i, declaration => {
+    if (declaration.prop.toLowerCase() === 'font-size') {
+      const value = declaration.value;
+      const pixels = value.match(/^([\d.]+)px$/i);
+      if (pixels && Number(pixels[1]) > 0 && Number(pixels[1]) < 13) declaration.value = '13px';
+      else if (/^(?:clamp|calc|min|max|var)\(|^(?:\d*\.)?\d+(?:rem|em|vw|vmin|%)$/i.test(value) && !/^0(?:\.0+)?(?:rem|em|vw|vmin|%)$/i.test(value)) {
+        declaration.value = `max(13px, ${value})`;
+      }
+      return;
+    }
+    declaration.value = declaration.value.replace(/(^|\s)([\d.]+)px(?=\s|\/)/i, (value, prefix, pixels) =>
+      Number(pixels) > 0 && Number(pixels) < 13 ? prefix+'13px' : value);
+  });
+  return ast;
+}
 export async function cssFor(source,mount,file,root) {
-  const ast=postcss.parse(source,{from:file}),animations=new Map();
+  const ast=raiseSmallText(postcss.parse(source,{from:file})),animations=new Map();
   ast.walkAtRules(rule=>{
     if(/keyframes$/i.test(rule.name)) {const old=rule.params;const next=mount+'-'+old;animations.set(old,next);rule.params=next;}
     if(rule.name.toLowerCase()==='import') throw new Error(`${file}: @import must be resolved into the CSS source or a font stylesheet link in HTML`);
@@ -99,6 +115,12 @@ export async function normalizeHTML(html,css,js,{root,file,mount}) {
     attr(n,'id')==='pdfViewer' && attr(n,'title')==='Applicant document viewer' &&
     attr(n,'src')==='about:blank' &&
     (n.attrs||[]).every(a=>['id','title','src'].includes(a.name)) &&
+    (n.childNodes||[]).length===0
+  ) || (
+    relativeFile==='riaintra-embeds/docunet-admin/skandi-docunet-admin.html' &&
+    attr(n,'id')==='pdfFrame' && attr(n,'class')==='pdf' &&
+    attr(n,'title')==='Document preview' && !attr(n,'src') &&
+    (n.attrs||[]).every(a=>['id','class','title'].includes(a.name)) &&
     (n.childNodes||[]).length===0
   )));
   if(unsupportedFrame) throw new Error(`${file}: nested iframe is not supported; retain the existing Wix integration`);
@@ -217,7 +239,7 @@ export async function normalizeHTML(html,css,js,{root,file,mount}) {
       }
       if((['src','poster'].includes(a.name) && n.tagName!=='script') || (a.name==='href' && n.tagName==='link' && attr(n,'rel')!=='stylesheet')) tasks.push(asset(root,file,a.value).then(v=>a.value=v));
       if(a.name==='srcset' && !a.value.startsWith('data:')) tasks.push((async()=>{a.value=(await Promise.all(a.value.split(',').map(async chunk=>{const [url,...size]=chunk.trim().split(/\s+/);return [await asset(root,file,url),...size].join(' ');}))).join(', ');})());
-      if(a.name==='style') tasks.push((async()=>{const parsed=postcss.parse(`a{${a.value}}`);const d=[];parsed.walkDecls(x=>d.push(x));for(const x of d)for(const m of [...x.value.matchAll(/url\(\s*(["']?)(.*?)\1\s*\)/gi)])x.value=x.value.replace(m[0],`url("${await asset(root,file,m[2])}")`);a.value=parsed.first.nodes.map(x=>x.toString()).join(';');})());
+      if(a.name==='style') tasks.push((async()=>{const parsed=raiseSmallText(postcss.parse(`a{${a.value}}`));const d=[];parsed.walkDecls(x=>d.push(x));for(const x of d)for(const m of [...x.value.matchAll(/url\(\s*(["']?)(.*?)\1\s*\)/gi)])x.value=x.value.replace(m[0],`url("${await asset(root,file,m[2])}")`);a.value=parsed.first.nodes.map(x=>x.toString()).join(';');})());
       if(a.name==='href' && ['image','use'].includes(n.tagName) && !a.value.startsWith('#')) tasks.push(asset(root,file,a.value).then(v=>a.value=v));
     }
   }
@@ -263,17 +285,23 @@ function privateIds(part,prefix,names) {
     part.js=part.js.replace(new RegExp('(\\$\\(\\s*)(["\\\'])'+id+'\\2(\\s*\\))','g'),'$1"'+next+'"$3');
   }
 }
+const mobileNavigationPart = {
+  key:'mobile-nav',directory:'skandi-embeds/global',stem:'skandi-mobile-nav',mount:'skandi-mobile-nav-container'
+};
 export const chromeParts = family => family==='none'?[]:family==='public'?[
   {key:'header',directory:'skandi-embeds/global',stem:'skandi-header',mount:'skandi-global-header-root'},
   {key:'footer',directory:'skandi-embeds/global',stem:'skandi-footer',mount:'skandi-global-footer-root'},
-  {key:'mobile-nav',directory:'skandi-embeds/global',stem:'skandi-mobile-nav',mount:'skandi-mobile-nav-container'}
-]:['header','footer'].map(key=>({key,directory:`${family}-embeds/global`,stem:`${family}-${key}`,mount:`${family}-global-${key}-root`}));
+  mobileNavigationPart
+]:[
+  ...['header','footer'].map(key=>({key,directory:`${family}-embeds/global`,stem:`${family}-${key}`,mount:`${family}-global-${key}-root`})),
+  mobileNavigationPart
+];
 export async function compilePage(root,page) {
-  // Media Control is itself a complete application with an isolated email editor.
-  // Preserve its document and execution positions instead of flattening it into
-  // another application's DOM. The receiver still enforces the staff boundary.
+  // Media Control preserves its script order and isolated email editor.
   if(page.key==='mediaControl')return compileMediaControl(root,page);
-  const descriptors=[...chromeParts(page.chrome),{key:page.slug,directory:page.sourceDirectory,stem:page.stem,mount:'skandi-app-root'},
+  const chrome = chromeParts(page.chrome);
+  if(page.chrome==='none' && page.mobileNavigation) chrome.push(mobileNavigationPart);
+  const descriptors=[...chrome,{key:page.slug,directory:page.sourceDirectory,stem:page.stem,mount:'skandi-app-root'},
     ...(page.components||[]).map(component=>({key:component.key,directory:component.sourceDirectory,stem:component.stem,mount:component.mount}))];
   const mountIds=['skandi-shell-root',...(page.key==='home'?['skandi-home-content']:[]),...descriptors.map(d=>d.mount)];
   if(new Set(mountIds).size!==mountIds.length)throw new Error(`[${page.key}] Duplicate component mount ID.`);
@@ -309,12 +337,7 @@ export async function compilePage(root,page) {
     } catch(e) {throw new Error(`[${page.key} / ${d.key}] ${input.files.join(', ')}: ${e.message.replaceAll(root+path.sep,'')}`);}
   }
   const pagePart=parts.find(p=>p.key===page.slug);if(!pagePart)throw new Error(`[${page.key}] Main page source did not compile.`);const style=parts.map(p=>`<style data-skandi-part="${p.key}">${safeCSS(p.css)}</style>`);
-  let shellCSS=page.chrome==='public'?(await read(root,'skandi-embeds/global/skandi-shell.css')).replaceAll('#skandi-mobile-nav-root','#skandi-mobile-nav-container'):
-    `html,body{margin:0;width:100%;min-height:100%;}*,*::before,*::after{box-sizing:border-box}#skandi-shell-root{min-height:100vh;min-width:0;display:flex;flex-direction:column}#skandi-app-root{flex:1;min-width:0;position:relative}${page.chrome==='none'?'':`#${page.chrome}-global-header-root,#${page.chrome}-global-footer-root{flex:none}`}@media(max-width:767px){input:not([type=hidden]),select,textarea{font-size:16px!important}}`;
-  if(['riaintra','altea'].includes(page.chrome)) {
-    const family=page.chrome,height=family==='riaintra'?52:48;
-    shellCSS+=`html,body{height:100%;overflow:hidden}#skandi-shell-root{height:100vh;height:100dvh;min-height:0;overflow:hidden}#skandi-app-root{height:auto;min-height:0;overflow:auto}#${family}-global-header-root{position:relative;height:${height}px;min-height:${height}px;overflow:visible;z-index:2000}#${family}-global-footer-root{height:auto;overflow:visible;z-index:2000}#riaintra-global-header-root .shellbar{position:absolute}#altea-global-footer-root .status-bar{position:relative}@media(max-width:600px){#riaintra-global-footer-root .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px}#riaintra-global-footer-root .footer-left{flex-wrap:wrap;gap:6px}}`;
-  }
+  const shellCSS=await read(root,'skandi-embeds/global/skandi-shell.css');
   const shellJS=await read(root,'skandi-embeds/global/skandi-shell.js');new Script(shellJS,{filename:'skandi-shell.js'});
   const render=p=>{
     if(!p)return '';
@@ -336,7 +359,7 @@ export async function compilePage(root,page) {
     new Script(runtime,{filename:'skandi-website-design.js'});
     scripts.push(`<script data-skandi-part="website-design">window.SKANDI_WEBSITE_DESIGN_CONFIG=${safeJS(JSON.stringify({pageKey:page.key,path:page.route}))};${safeJS(runtime)}</script>`);
   }
-  const html=`<!doctype html>\n<html lang="${escapeHTML(lang)}"${dir?` dir="${escapeHTML(dir)}"`:''}${pageHTMLAttrs}>\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">\n<meta name="theme-color" content="#022e64">\n<title>${escapeHTML(pagePart.title || page.title+' | SKANDI')}</title>\n<link rel="preconnect" href="https://fonts.googleapis.com">\n<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">\n${[...new Set(parts.flatMap(p=>[p.headHTML,...p.external]).filter(Boolean))].join('\n')}\n${style.join('\n')}\n<style data-skandi-part="shell">${safeCSS(shellCSS)}</style>\n</head>\n<body${pageBodyAttrs}>\n<div id="skandi-shell-root" data-skandi-page="${page.slug}" data-skandi-key="${page.key}" data-skandi-family="${page.family}" data-skandi-chrome="${page.chrome}">\n${render(header)}\n${render(pagePart)}\n${render(footer)}\n${render(mobile)}\n</div>\n<script data-skandi-part="skandi-shell-runtime">${safeJS(shellJS)}</script>\n${scripts.join('\n')}\n${babelScripts.length?`${babelScripts.join('\n')}\n`:''}${moduleScripts.join('\n')}\n</body>\n</html>\n`;
+  const html=`<!doctype html>\n<html lang="${escapeHTML(lang)}"${mobile?' data-skandi-mobile-navigation':''}${dir?` dir="${escapeHTML(dir)}"`:''}${pageHTMLAttrs}>\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">\n<meta name="theme-color" content="#022e64">\n<title>${escapeHTML(pagePart.title || page.title+' | SKANDI')}</title>\n<link rel="preconnect" href="https://fonts.googleapis.com">\n<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">\n${[...new Set(parts.flatMap(p=>[p.headHTML,...p.external]).filter(Boolean))].join('\n')}\n${style.join('\n')}\n<style data-skandi-part="shell">${safeCSS(shellCSS)}</style>\n</head>\n<body${pageBodyAttrs}>\n<div id="skandi-shell-root" data-skandi-page="${page.slug}" data-skandi-key="${page.key}" data-skandi-family="${page.family}" data-skandi-chrome="${page.chrome}">\n${render(header)}\n${render(pagePart)}\n${render(footer)}\n${render(mobile)}\n</div>\n<script data-skandi-part="skandi-shell-runtime">${safeJS(shellJS)}</script>\n${scripts.join('\n')}\n${babelScripts.length?`${babelScripts.join('\n')}\n`:''}${moduleScripts.join('\n')}\n</body>\n</html>\n`;
   // Validate serialized scripts too: HTML escaping must never publish invalid JS.
   walk(parse(html),n=>{if(n.tagName==='script'&&!attr(n,'src')){const type=(attr(n,'type')||'').toLowerCase(),code=(n.childNodes||[]).map(c=>c.value||'').join('');if(type==='module')parseJS(code,{ecmaVersion:'latest',sourceType:'module'});else if(!type||['text/javascript','application/javascript'].includes(type))new Script(code,{filename:page.output});}});
   return html;
@@ -355,9 +378,10 @@ async function compileMediaControl(root,page) {
     if(!url||/^(?:[a-z]+:|\/)/i.test(url))continue;
     const location=node.sourceCodeLocation;
     if(!location)continue;
-    const target=await localFile(root,input.files[0],url),content=await fs.readFile(target.file,'utf8');
+    const target=await localFile(root,input.files[0],url);
+    let content=await fs.readFile(target.file,'utf8');
     if(script)new Script(content,{filename:target.rel});
-    if(stylesheet)postcss.parse(content,{from:target.rel});
+    if(stylesheet)content=raiseSmallText(postcss.parse(content,{from:target.rel})).toString();
     const attributes=(node.attrs||[]).filter(a=>!['src','href','rel'].includes(a.name)).map(a=>` ${a.name}="${escapeHTML(a.value)}"`).join('');
     replacements.push({start:location.startOffset,end:location.endOffset,value:stylesheet?`<style${attributes}>${safeCSS(content)}</style>`:`<script${attributes}>${safeJS(content)}</script>`});
   }
@@ -366,7 +390,28 @@ async function compileMediaControl(root,page) {
   let body;walk(parse(html,{sourceCodeLocationInfo:true}),n=>{if(n.tagName==='body')body=n;});
   const start=body?.sourceCodeLocation?.startTag?.endOffset,end=body?.sourceCodeLocation?.endTag?.startOffset;
   if(!start||!end)throw new Error('Media Control requires a complete body element');
-  html=html.slice(0,start)+`<div id="skandi-shell-root" data-skandi-key="${escapeHTML(page.key)}" data-skandi-page="${escapeHTML(page.slug)}" data-skandi-family="riaintra" style="height:100%;min-height:0"><div id="skandi-app-root" style="height:100%;min-height:0">`+html.slice(start,end)+`</div></div><script>${safeJS(shellJS)}</script>`+html.slice(end);
+  const parts=await Promise.all(chromeParts(page.chrome).map(async descriptor=>{
+    const input=await triplet(root,descriptor.directory,descriptor.stem);
+    if(input.status!=='COMPLETE SOURCE')throw new Error(`[mediaControl / ${descriptor.key}] ${input.status}`);
+    const part=await normalizeHTML(...input.contents,{root,file:input.files[0],mount:descriptor.mount});
+    if(descriptor.key==='mobile-nav')privateIds(part,'skandi-mobile',['status','closeBtn']);
+    if(descriptor.key==='header')privateIds(part,'riaintra-header',['mobileNav','desktopNav','productName']);
+    const css=await cssFor(part.css,descriptor.mount,input.files[1],root);
+    const js=part.js.replace(/post\(\s*["']SKANDI_EMBED_RESIZE["']\s*,\s*\{\s*height\s*:\s*\d+\s*\}\s*\)\s*;/g,'');
+    return {
+      key:descriptor.key,
+      markup:`<div id="${descriptor.mount}">${part.html}</div>`,
+      style:`<style data-skandi-part="${descriptor.key}">${safeCSS(css)}</style>`,
+      script:`<script data-skandi-part="${descriptor.key}">${safeJS(scopedScript(adapt(js,descriptor.key),descriptor.mount,part.handlers))}</script>`
+    };
+  }));
+  const header=parts.find(part=>part.key==='header');
+  const footer=parts.find(part=>part.key==='footer');
+  const mobile=parts.find(part=>part.key==='mobile-nav');
+  const shellCSS=await read(root,'skandi-embeds/global/skandi-shell.css');
+  html=html.slice(0,start)+`<div id="skandi-shell-root" data-skandi-key="${escapeHTML(page.key)}" data-skandi-page="${escapeHTML(page.slug)}" data-skandi-family="riaintra" data-skandi-chrome="${page.chrome}">${header?.markup||''}<div id="skandi-app-root">`+html.slice(start,end)+`</div>${footer?.markup||''}${mobile?.markup||''}</div><script>${safeJS(shellJS)}</script>${parts.map(part=>part.script).join('')}`+html.slice(end);
+  html=html.replace(/<\/head>/i,`${parts.map(part=>part.style).join('')}<style data-skandi-part="shell">${safeCSS(shellCSS)}</style></head>`);
+  if(mobile)html=html.replace(/<html(?=\s|>)/i,'<html data-skandi-mobile-navigation');
   walk(parse(html),n=>{if(n.tagName==='script'&&!attr(n,'src')&&(!attr(n,'type')||/javascript/.test(attr(n,'type'))))new Script(serialize(n),{filename:page.output});});
   return html;
 }

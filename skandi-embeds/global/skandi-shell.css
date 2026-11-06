@@ -1,22 +1,105 @@
-/* SKANDI V12 responsive application shell. Loaded last in compiled pages. */
-:root { --sk-shell-navy:#022e64; --sk-shell-aqua:#5FC7CF; --sk-shell-nav:68px; }
-*,*::before,*::after { box-sizing:border-box; }
-html,body { width:100%!important; margin:0!important; padding:0!important; max-width:none!important; background:#fff; }
-body { min-height:100%; }
-#skandi-shell-root { display:grid; grid-template-rows:118px minmax(0,1fr) auto; width:100%; min-height:100vh; min-height:100dvh; background:#fff; }
-#skandi-global-header-root { grid-row:1; position:relative; height:118px; overflow:hidden; z-index:20; }
-#skandi-global-header-root #skandi-site-header { height:118px!important; max-height:118px!important; }
-#skandi-app-root { grid-row:2; position:relative; min-height:0; max-height:none!important; height:auto!important; overflow:visible; background:#fff; }
-#skandi-global-footer-root { grid-row:3; min-width:0; min-height:0; overflow:visible; }
-#skandi-mobile-nav-root { display:none; }
-/* Desktop remains natural document scrolling, including the complete footer. */
-@media (max-width:1020px) {
-  html,body { height:100%!important; min-height:0!important; max-height:none!important; overflow:hidden!important; overscroll-behavior:none; }
-  #skandi-shell-root { position:fixed!important; inset:0; width:100%; height:100vh!important; height:100dvh!important; min-height:0!important; max-height:none!important; overflow:hidden!important; overscroll-behavior:none; display:grid; grid-template-rows:minmax(0,1fr) auto; }
-  #skandi-global-header-root,#skandi-global-footer-root { display:none!important; }
-  #skandi-app-root { grid-row:1; min-height:0!important; height:100%!important; overflow-x:hidden!important; overflow-y:auto!important; -webkit-overflow-scrolling:touch; overscroll-behavior:none; scrollbar-gutter:auto; padding-bottom:0; }
-  #skandi-mobile-nav-root { grid-row:2; display:block!important; width:100%; min-height:var(--sk-shell-nav); padding:0 0 env(safe-area-inset-bottom,0px); background:var(--sk-shell-navy); z-index:50; overflow:hidden; }
-  #skandi-app-root input:not([type="hidden"]),#skandi-app-root select,#skandi-app-root textarea { font-size:16px!important; }
-  #skandi-app-root button,#skandi-app-root a,#skandi-mobile-nav-root button { touch-action:manipulation; }
+/* Shared compiled shell. Every family uses the same mobile scroll area and tab bar. */
+:root {
+  --sk-shell-navy: #022e64;
+  --sk-shell-nav: 68px;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  touch-action: manipulation;
 }
-@media (prefers-reduced-motion:reduce) { #skandi-app-root { scroll-behavior:auto!important; } }
+*, *::before, *::after { box-sizing: border-box; }
+html, body { width: 100% !important; margin: 0 !important; max-width: none !important; }
+#skandi-shell-root { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; width: 100%; min-height: 100vh; min-height: 100dvh; }
+#skandi-app-root { grid-row: 2; position: relative; min-width: 0; min-height: 0; touch-action: manipulation; }
+#skandi-mobile-nav-container { display: none; }
+#skandi-global-header-root,
+#riaintra-global-header-root,
+#altea-global-header-root { grid-row: 1; position: relative; min-width: 0; }
+#skandi-global-footer-root,
+#riaintra-global-footer-root,
+#altea-global-footer-root { grid-row: 3; min-width: 0; }
+#skandi-global-header-root { height: 118px; overflow: hidden; z-index: 20; }
+#skandi-global-header-root #skandi-site-header { height: 118px !important; max-height: 118px !important; }
+[data-skandi-chrome="public"] #skandi-app-root { height: auto !important; max-height: none !important; overflow: visible; }
+
+[data-skandi-chrome="riaintra"],
+[data-skandi-chrome="altea"] { height: 100vh; height: 100dvh; min-height: 0; overflow: hidden; }
+[data-skandi-chrome="riaintra"] #skandi-app-root,
+[data-skandi-chrome="altea"] #skandi-app-root { overflow: auto; }
+#riaintra-global-header-root { height: 52px; z-index: 20; }
+#altea-global-header-root { height: 48px; z-index: 20; }
+#riaintra-global-header-root .shellbar { position: absolute; }
+#altea-global-footer-root .status-bar { position: relative; }
+
+/* Important declarations in this layer also override important page-specific control styles. */
+@layer skandi-form-size {
+  input:not([type="hidden"]), select, textarea, [role="textbox"][contenteditable="true"] {
+    font-size: max(16px, 1em) !important;
+  }
+}
+#skandi-shell-root :is(input:not([type="hidden"]), select, textarea, [role="textbox"][contenteditable="true"]) {
+  font-size: max(16px, 1em) !important;
+}
+
+@media (max-width: 1020px) {
+  html[data-skandi-mobile-navigation], html[data-skandi-mobile-navigation] body {
+    height: 100% !important; min-height: 0 !important; max-height: none !important; overflow: hidden !important;
+  }
+  html[data-skandi-mobile-navigation] #skandi-shell-root {
+    position: fixed !important; inset: 0; height: 100vh !important; height: 100dvh !important;
+    min-height: 0 !important; max-height: none !important; overflow: hidden !important;
+    grid-template-rows: minmax(0, 1fr) auto;
+  }
+  #skandi-global-header-root, #skandi-global-footer-root,
+  #riaintra-global-header-root, #riaintra-global-footer-root,
+  #altea-global-header-root, #altea-global-footer-root { display: none !important; }
+  html[data-skandi-mobile-navigation] #skandi-app-root {
+    grid-row: 1; height: 100% !important; min-height: 0 !important;
+    overflow-x: hidden !important; overflow-y: auto !important; overscroll-behavior-y: contain;
+  }
+  #skandi-mobile-nav-container {
+    grid-row: 2; display: block; width: 100%; min-height: var(--sk-shell-nav);
+    padding-bottom: env(safe-area-inset-bottom, 0px); background: var(--sk-shell-navy);
+    z-index: 2100;
+  }
+  [data-skandi-family="riaintra"] { --sk-shell-navy: #173451; }
+  [data-skandi-family="altea"] { --sk-shell-navy: #142640; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #skandi-app-root { scroll-behavior: auto !important; }
+}
+
+[data-skandi-family="riaintra"] #skandi-mobile-nav-container { --staff-nav-heading: #244b6d; }
+[data-skandi-family="altea"] #skandi-mobile-nav-container { --staff-nav-heading: #163e72; }
+[data-skandi-family="riaintra"] .skmn { background: #173451; }
+[data-skandi-family="altea"] .skmn { background: #142640; }
+[data-skandi-family="riaintra"] .skmn-btn[aria-current="page"] { color: #add6ff; }
+[data-skandi-family="altea"] .skmn-btn[aria-current="page"] { color: #90c8ff; }
+
+.skandi-app-wordmark {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  max-width: 100%;
+  padding: 8px 10px;
+  border-radius: 9px;
+  background: linear-gradient(110deg, #112c48, #224b70);
+  color: #f2f7ff;
+  font-size: 14px;
+  line-height: 1.25;
+}
+.skandi-app-wordmark img {
+  display: block;
+  width: auto;
+  max-width: min(35%, 92px);
+  height: 18px;
+  object-fit: contain;
+}
+.skandi-app-software {
+  min-width: 0;
+  padding-inline-start: 9px;
+  border-inline-start: 1px solid #7692af;
+  overflow-wrap: anywhere;
+}
+.skandi-app-software span { color: #ffb454; }
+
+#skandi-shell-root small { font-size: max(13px, .875em); }

@@ -6,7 +6,7 @@
 
 import wixLocation from "wix-location";
 import { authentication } from "wix-members-frontend";
-import { APP_ROUTES, SITE_MAP, isSafeInternalRoute } from "public/siteMap";
+import { APP_ROUTES, SITE_MAP } from "public/siteMap";
 import {
   createEmployee,
   createRecruitingDocumentPacket,
@@ -266,16 +266,8 @@ async function saveEmployeeFromV9(payload = {}) {
 
 async function handleMessage(type, payload) {
   switch (type) {
-    case "SKANDI_MASTER_CONFIG_REQUEST":
-      send("SKANDI_MASTER_CONFIG", { routes: SITE_MAP, internal: APP_ROUTES, brand: { product: "SuccessFactors", version: "v12" } });
-      return;
-    case "MASTER_NAVIGATION_REQUEST":
-      send("SKANDI_MASTER_NAVIGATION", { routes: SITE_MAP, internal: APP_ROUTES });
-      return;
-    case "MASTER_NAVIGATE":
-      if (isSafeInternalRoute(payload.path)) wixLocation.to(payload.path);
-      return;
-
+    // Global configuration and navigation belong to masterPage. Sending a
+    // second configuration here would overwrite the shared brand and routes.
     case "INTRANET_READY":
       await sendPortalBootstrap();
       return;
