@@ -624,6 +624,9 @@ body.page-product #skandi-app-root .search-dock{display:none}
 
 
 <main id="pageHost">
+  <div class="content-shell" id="storeCatalogError" role="status" hidden="">
+    <p>We couldn’t load the store catalog. <button type="button" id="retryStoreCatalogBtn" class="text-link">Try again</button></p>
+  </div>
   <!-- HOME -->
   <section class="page-view active" id="page-home" data-page="home">
     <section class="hero-wrap" data-section-id="store-hero">
@@ -1067,6 +1070,7 @@ const document=new Proxy(window.document,{get(target,key){if(key==='getElementBy
   const PARENT_SOURCE = "SKANDI_WIX_PARENT";
 let PRODUCTS=[],CATEGORIES=[],CART={lineItems:[]},BANNERS=[],TRAVEL_CARDS=[];
 let STOREFRONT_CONNECTED=false;
+let CATALOG_ERROR=false;
 let STOREFRONT_REQUEST_ATTEMPTS=0;
 let STOREFRONT_RETRY_TIMER=null;
 let ACTIVE="",ACTIVE_PRODUCT=null,ACTIVE_GIFT_STYLE="",FILTERS={stock:false,sale:false},VISIBLE_LIMIT=12;
@@ -1107,7 +1111,7 @@ function renderMasterBranding(){
 }
 
 function requestStorefront(reason="html-ready"){
-  if(STOREFRONT_CONNECTED)return;
+  if(STOREFRONT_CONNECTED||CATALOG_ERROR)return;
 
   STOREFRONT_REQUEST_ATTEMPTS+=1;
 
@@ -1130,13 +1134,18 @@ function requestStorefront(reason="html-ready"){
       1500
     );
   }else{
-    status(
-      "We apologize. The Store did not answer. Please try again later.",
-      "error"
-    );
+    showCatalogError();
   }
 }
 
+
+function showCatalogError(){
+  CATALOG_ERROR=true;
+  clearTimeout(STOREFRONT_RETRY_TIMER);
+  $("storeCatalogError").hidden=false;
+  renderHomeProducts();
+  if(parseRoute().page==="shop")renderShop();
+}
 
 function loadSaved(){
   try{return JSON.parse(localStorage.getItem("skandiStoreSaved")||"[]")}catch(_){return[]}
@@ -1479,15 +1488,15 @@ function productCard(p){
 }
 function renderHomeProducts(){
   const rows=[...PRODUCTS].sort((a,b)=>Number(b.recommendationScore||0)-Number(a.recommendationScore||0)).slice(0,8);
-  $("homeProductGrid").innerHTML=rows.length?rows.map(productCard).join(""):`<div class="empty-state">Products will appear here when they become available.</div>`;
+  $("homeProductGrid").innerHTML=rows.length?rows.map(productCard).join(""):CATALOG_ERROR?"":`<div class="empty-state">${STOREFRONT_CONNECTED?"Products will appear here when they become available.":"Loading products…"}</div>`;
 }
 function renderShop(){
   const rows=filtered(),shown=rows.slice(0,VISIBLE_LIMIT);
   $("categoryTitle").textContent=ACTIVE||($("query").value.trim()?`Search results`:"All products");
   $("categoryDescription").textContent=ACTIVE?`Browse ${ACTIVE} products.`:$("query").value.trim()?`Results for “${$("query").value.trim()}”.`:"Browse all products available from SKANDI The Store.";
   $("shopBreadcrumb").textContent=ACTIVE||"Shop";
-  $("productGrid").innerHTML=shown.length?shown.map(productCard).join(""):`<div class="empty-state">No products match the selected filters.<div class="shop-empty-actions"><button class="cta ghost" data-clear-shop>Clear filters</button></div></div>`;
-  $("productCount").textContent=`${rows.length} product${rows.length===1?"":"s"}`;
+  $("productGrid").innerHTML=shown.length?shown.map(productCard).join(""):CATALOG_ERROR?"":!STOREFRONT_CONNECTED?`<div class="empty-state">Loading products…</div>`:`<div class="empty-state">No products match the selected filters.<div class="shop-empty-actions"><button class="cta ghost" data-clear-shop>Clear filters</button></div></div>`;
+  $("productCount").textContent=STOREFRONT_CONNECTED&&(!CATALOG_ERROR||rows.length)?`${rows.length} product${rows.length===1?"":"s"}`:"";
   $("loadMoreBtn").classList.toggle("hidden",shown.length>=rows.length||rows.length===0);
   document.querySelectorAll('[data-filter="stock"]').forEach(b=>b.classList.toggle("active",FILTERS.stock));
   document.querySelectorAll('[data-filter="sale"]').forEach(b=>b.classList.toggle("active",FILTERS.sale));
@@ -1537,7 +1546,7 @@ function renderGiftCardProductPage(p,host){
         <div class="gift-card-field"><label for="giftDeliveryDate">Delivery date</label><input id="giftDeliveryDate" type="date" min="${today}"><small>Leave blank to send after payment.</small></div>
       </div>
       <div class="product-page-actions gift-card-actions">
-        <button class="cta navy" data-gift-card-add="${esc(p.id)}">Add gift card to bag</button>
+        <button class="cta navy" data-gift-card-add="${esc(p.id)}" ${p.canAddToCart===false?"disabled":""}>${p.canAddToCart===false?"Gift card purchase unavailable":"Add gift card to bag"}</button>
         <button class="icon-square" data-save="${esc(p.id)}" aria-label="Save gift card">${SAVED.has(String(p.id))?"♥":"♡"}</button>
       </div>
       <div class="product-page-meta">
@@ -1545,7 +1554,7 @@ function renderGiftCardProductPage(p,host){
         <div><small>Delivery</small><strong>Digital</strong></div>
       </div>
       <div class="accordion">
-        <details open><summary>How it works</summary><p>Choose a design and recipient. After payment, SKANDI issues the Gift Card and sends the chosen design.</p></details>
+        <details open><summary>How it works</summary><p>Choose a design and recipient. After payment, the gift card is sent to the recipient you choose.</p></details>
         <details><summary>Using the gift card</summary><p>The recipient receives a redemption code that can be applied as a gift card payment method during SKANDI checkout.</p></details>
       </div>
     </div>
@@ -1687,7 +1696,11 @@ function openOrders(){
   post("STOREFRONT_ORDERS",{});
 }
 function refresh(){
-  toast("Refreshing store…");status("Refreshing store…");post("STOREFRONT_REFRESH",{});
+  CATALOG_ERROR=false;
+  $("storeCatalogError").hidden=true;
+  clearTimeout(STOREFRONT_RETRY_TIMER);
+  toast("Refreshing store…");post("STOREFRONT_REFRESH",{});
+  STOREFRONT_RETRY_TIMER=setTimeout(showCatalogError,16000);
 }
 function clearShop(){
   ACTIVE="";FILTERS={stock:false,sale:false};$("query").value="";$("sort").value="recommended";VISIBLE_LIMIT=12;
@@ -1813,7 +1826,7 @@ function handleClick(event){
   const giftAdd=event.target.closest("[data-gift-card-add]");
   if(giftAdd){
     const p=PRODUCTS.find(x=>String(x.id)===String(giftAdd.dataset.giftCardAdd));
-    if(!p)return;
+    if(!p||p.canAddToCart===false)return;
     const payload=giftCardPurchasePayload(p);if(!payload)return;
     if(ADDING)return;ADDING=true;toast("Adding gift card to bag…");post("STOREFRONT_ADD_GIFT_CARD",payload);return;
   }
@@ -1865,6 +1878,7 @@ $("savedBtn").onclick=()=>navigate("saved");
 $("ordersBtn").onclick=()=>{navigate("orders");openOrders()};
 $("ordersPageBtn").onclick=openOrders;
 $("refreshStoreBtn").onclick=refresh;
+$("retryStoreCatalogBtn").onclick=refresh;
 $("checkoutBtn").onclick=()=>{toast("Opening checkout…");post("STOREFRONT_CHECKOUT",{})};
 $("mobileMenuBtn").onclick=()=>{$("mobileNav").classList.add("show");$("mobileNav").setAttribute("aria-hidden","false");document.body.classList.add("locked")};
 $("loadMoreBtn").onclick=()=>{VISIBLE_LIMIT+=12;renderShop()};
@@ -1907,6 +1921,8 @@ window.addEventListener("message",event=>{
 
   if(message.type==="STOREFRONT_PRODUCTS"){
     STOREFRONT_CONNECTED=true;
+    CATALOG_ERROR=payload.catalogUnavailable===true;
+    $("storeCatalogError").hidden=!CATALOG_ERROR;
     clearTimeout(STOREFRONT_RETRY_TIMER);
     const storeProducts=(payload.products||[]).map(normalizeProductImage);
     const giftCardProducts=(payload.giftCardProducts||[]).map(hydrateGiftCardProduct);
@@ -1971,6 +1987,7 @@ window.addEventListener("message",event=>{
   if(message.type==="STOREFRONT_ERROR"){
     ADDING=false;
     console.error("[SKANDI Storefront] Parent error:",payload);
+    if(["catalog","STOREFRONT_READY","STOREFRONT_REFRESH"].includes(payload.stage))showCatalogError();
     status(payload.message||"Store action failed.","error");
     toast(payload.message||"Store action failed.");
     return
