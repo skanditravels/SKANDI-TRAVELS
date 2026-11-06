@@ -21,6 +21,10 @@ test('public Store uses fixed Wix visibility scopes and suppresses unpublished p
   };
   const categoryQuery = async (_, options) => {
     assert.equal(options.returnNonVisibleCategories, false);
+    assert.equal(options.treeReference.appNamespace, '@wix/stores');
+    assert.equal(options.treeReference.treeKey, null);
+    // Wix writes to the tree reference while normalizing the request.
+    options.treeReference.appNamespace = 'normalized-namespace';
     return { categories:[{ _id:'travel', name:'Travel', visible:true },{ _id:'hidden', name:'Internal', visible:false }] };
   };
   const elevate = fn => fn === productQuery || fn === categoryQuery ? fn : async () => {};
@@ -30,6 +34,8 @@ test('public Store uses fixed Wix visibility scopes and suppresses unpublished p
   const result = await context.listStorefrontProductsCore();
   assert.deepEqual(Array.from(result.products, p=>p.id), ['visible']);
   assert.deepEqual(Array.from(result.categories, p=>p.id), ['travel']);
+  const repeated = await context.listStorefrontProductsCore();
+  assert.deepEqual(Array.from(repeated.categories, p=>p.id), ['travel']);
 });
 
 async function giftFixture({key='x'.repeat(64)}={}) {
