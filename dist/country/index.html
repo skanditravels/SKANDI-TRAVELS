@@ -10,7 +10,11 @@
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <meta content="#022e64" name="theme-color"><link href="https://fonts.googleapis.com" rel="preconnect"><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
 
+
+
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&amp;family=Playfair+Display:wght@600;700;800&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.css">
+<script defer="" src="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.js"></script>
 <style data-skandi-part="header">#skandi-global-header-root{
   --sk-navy:#022e64;
   --sk-blue:#0b3a7a;
@@ -1315,6 +1319,19 @@ html.mobile-menu-open #skandi-app-root, body.mobile-menu-open #skandi-app-root {
 
 
 
+#skandi-app-root .country-atlas{margin-top:32px;border:1px solid #dce7ef;border-radius:20px;background:#fff;overflow:hidden;box-shadow:0 16px 40px rgba(2,46,100,.08)}
+#skandi-app-root .country-atlas-heading{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:20px 24px}
+#skandi-app-root .country-atlas-heading h3{margin:0;color:#022e64;font-size:clamp(1.15rem,2vw,1.55rem)}
+#skandi-app-root .country-atlas-heading p{margin:6px 0 0;color:#53647b;font-size:.86rem}
+#skandi-app-root .country-atlas-heading p:empty{display:none}
+#skandi-app-root .country-map-canvas{height:clamp(320px,55vw,480px);background:#d9ebf1}
+#skandi-app-root .country-map-canvas[hidden],#skandi-app-root .country-atlas-links:empty{display:none}
+#skandi-app-root .country-map-pin{width:24px;height:24px;border:3px solid #fff;border-radius:50%;background:#022e64;box-shadow:0 2px 8px #022e6470;cursor:pointer}
+#skandi-app-root .country-map-pin:focus-visible{outline:3px solid #022e64;outline-offset:2px}
+#skandi-app-root .country-atlas-links{display:flex;flex-wrap:wrap;gap:8px 16px;list-style:none;margin:0;padding:15px 24px}
+#skandi-app-root .country-map-canvas .maplibregl-popup-content strong{display:block;margin:0 12px 4px 0}
+@media(max-width:600px){#skandi-app-root .country-atlas-heading{align-items:flex-start;flex-direction:column;padding:16px}#skandi-app-root .country-atlas-links{padding:12px 16px}}
+
 
 /* Dynamic page is embedded below the site-level Wix header and above the site-level footer. */
 #skandi-app-root{--header-total:0px!important;--header-h:0px!important;--bar-height:0px!important}
@@ -1573,7 +1590,11 @@ body { min-height:100%; }
 <section class="c-section dark" id="deals"><div class="country-shell"><div class="section-head"><div><div class="eyebrow" data-i18n="country.section.find">Find your trip</div><h2 id="dealsTitle">—</h2></div><p data-i18n="country.section.findCopy">Search current flights, hotels and packages.</p></div>
 <form class="search-panel" id="searchForm"><div class="search-grid"><div class="search-field"><label data-i18n="country.search.from">Flying from</label><input data-i18n-placeholder="country.search.fromPh" id="origin" list="countryOrigins" required="" autocomplete="off" placeholder="City or airport"></div><datalist id="countryOrigins"></datalist><div class="search-field"><label for="arrival" id="arrivalLabel">Flying to</label><select id="arrival" required=""><option value="">Choose an arrival airport</option></select></div><div class="search-field"><label data-i18n="country.search.depart">Departure</label><input id="depart" type="date" required=""></div><div class="search-field"><label data-i18n="country.search.return">Return</label><input id="return" type="date" required=""></div><div class="search-field"><label data-i18n="country.search.travelers">Travellers</label><select id="travelers"><option>1</option><option selected="">2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option></select></div><button class="c-btn" id="searchButton" type="submit" data-i18n="country.search.button">Search trips</button></div></form>
 <div class="offer-status" data-i18n="country.search.empty" id="offerStatus">Start a search to see current SKANDI options.</div><div class="offer-grid" id="offerGrid"></div></div></section>
-<section class="c-section alt" id="regions"><div class="country-shell"><div class="section-head"><div><div class="eyebrow" data-i18n="country.section.stay">Discover where to stay</div><h2 id="regionsTitle">—</h2></div><p data-i18n="country.section.stayCopy">Explore regions, islands and cities before choosing your base.</p></div><div class="region-grid" id="regionGrid"></div><div class="map-card"><div><h3 id="mapTitle">—</h3><p data-i18n="country.section.stayCopy">Explore regions, islands and cities before choosing your base.</p><button class="c-btn" data-i18n="country.map" id="mapBtn">View destination map</button></div></div></div></section>
+<section class="c-section alt" id="regions"><div class="country-shell"><div class="section-head"><div><div class="eyebrow" data-i18n="country.section.stay">Discover where to stay</div><h2 id="regionsTitle">—</h2></div><p data-i18n="country.section.stayCopy">Explore regions, islands and cities before choosing your base.</p></div><div class="region-grid" id="regionGrid"></div><div class="country-atlas" aria-labelledby="mapTitle">
+<div class="country-atlas-heading"><div><h3 id="mapTitle">—</h3><p id="countryMapStatus" role="status"></p></div><button class="c-btn" id="mapBtn">Open full map</button></div>
+<div id="countryMapCanvas" class="country-map-canvas" aria-label="Map of published places" hidden=""></div>
+<ul class="country-atlas-links" id="countryMapLinks"></ul>
+</div></div></section>
 <section class="c-section" id="weather"><div class="country-shell"><div class="section-head"><div><div class="eyebrow" data-i18n="country.section.weather">Weather &amp; best time to travel</div><h2 id="weatherTitle">—</h2></div><p data-i18n="country.section.weatherCopy">Compare monthly temperature and rainfall before choosing dates.</p></div><div class="climate-layout"><div class="climate" id="climate"></div><aside class="weather-note"><h3 id="weatherNoteTitle">—</h3><p id="weatherCopy"></p><button class="c-btn light" data-i18n="country.read" id="weatherBtn">Read more</button></aside></div></div></section>
 <section class="c-section alt" id="travelInfo"><div class="country-shell"><div class="section-head"><div><div class="eyebrow" data-i18n="country.section.good">Good to know before you travel</div><h2 id="infoTitle">—</h2></div><p data-i18n="country.section.goodCopy">Entry, health, money, transport and practical information.</p></div><div class="info-grid" id="infoGrid"></div></div></section>
 <section class="c-section" id="inspiration"><div class="country-shell"><div class="section-head"><div><div class="eyebrow" data-i18n="country.section.inspire">Travel ideas &amp; inspiration</div><h2 id="inspireTitle">—</h2></div><p data-i18n="country.section.guideCopy">Places, flavours and experiences worth travelling for.</p></div><div class="inspire-grid" id="inspireGrid"></div></div></section>
@@ -3157,7 +3178,8 @@ function renderPage(data) {
           `<article class="region-card"><img src="${esc(imageUrl(r.image))}" alt="${esc(r.name)}"><div class="region-content"><h3>${esc(r.name)}</h3><p>${esc(r.description || "")}</p><div class="region-actions"><button class="c-btn light" data-nav="${esc(r.path || routes.destinations || "/destinations")}">${esc(t("country.explore"))}</button><button class="c-btn ghost" data-nav="${esc(r.hotelsPath || page.paths?.hotels || routes.destinations || "/destinations")}">${esc(t("country.allHotels"))}</button></div></div></article>`,
       )
       .join("");
-    $("mapTitle").textContent = `${data.name} · ${t("country.map")}`;
+    $("mapTitle").textContent = `Map of ${data.name}`;
+    renderCountryMap(data.map);
     $("weatherTitle").textContent =
       `${t("country.section.weather")} · ${data.name}`;
     $("weatherNoteTitle").textContent = t("country.nav.weather");
@@ -3199,6 +3221,69 @@ function renderPage(data) {
     offers = [];
     renderOffers([]);
   }
+  let countryMap, mapObserver;
+  function renderCountryMap(config = {}) {
+    mapObserver?.disconnect();
+    countryMap?.remove();
+    countryMap=null;
+    const canvas=$("countryMapCanvas"),status=$("countryMapStatus"),links=$("countryMapLinks");
+    const places=Array.isArray(config.places)?config.places:[];
+    const center=config.center||places[0];
+    links.innerHTML=places.map(place=>`<li><button class="text-link" type="button" data-nav="${esc(place.path)}">${esc(place.name)}</button></li>`).join("");
+    canvas.hidden=!center;
+    status.textContent=center?"":"A map is unavailable for this destination.";
+    if(!center)return;
+    function start(){
+      mapObserver?.disconnect();
+      try {
+        const library=window.maplibregl;
+        if(!library)throw new Error("Map unavailable");
+        const map=new library.Map({container:canvas,style:"https://tiles.openfreemap.org/styles/liberty",
+          center:[center.longitude,center.latitude],zoom:4.2,cooperativeGestures:true,dragRotate:false,
+          pitchWithRotate:false,maxPitch:0,renderWorldCopies:false});
+        countryMap=map;
+        map.addControl(new library.NavigationControl({showCompass:false}),"top-right");
+        let loaded=false;
+        map.on("error",()=>{if(!loaded)status.textContent="The map couldn’t load. You can still use the links below.";});
+        map.on("load",()=>{
+          if(countryMap!==map)return;
+          loaded=true;status.textContent="";
+          const bounds=new library.LngLatBounds();
+          for(const place of places){
+            const position=[place.longitude,place.latitude];
+            bounds.extend(position);
+            const marker=document.createElement("button");
+            marker.type="button";
+            marker.className="country-map-pin";
+            marker.setAttribute("aria-label",place.name);
+            const popup=document.createElement("div");
+            const name=document.createElement("strong");
+            name.textContent=place.name;
+            const link=document.createElement("button");
+            link.type="button";link.className="text-link";link.dataset.nav=place.path;
+            link.textContent="View location";
+            popup.append(name,link);
+            new library.Marker({element:marker}).setLngLat(position)
+              .setPopup(new library.Popup({offset:18}).setDOMContent(popup)).addTo(map);
+          }
+          if(places.length)map.fitBounds(bounds,{padding:54,maxZoom:7,duration:0});
+        });
+      }catch(_){
+        canvas.hidden=true;
+        status.textContent="The map couldn’t load. You can still use the links below.";
+      }
+    }
+    if("IntersectionObserver" in window){
+      mapObserver=new IntersectionObserver(entries=>{if(entries.some(entry=>entry.isIntersecting))start();},{rootMargin:"160px"});
+      mapObserver.observe(canvas);
+    }else start();
+  }
+  window.addEventListener("pagehide",event=>{
+    if(event.persisted)return;
+    mapObserver?.disconnect();
+    countryMap?.remove();
+  });
+
 function renderClimate(items) {
   const locale={EN:"en-US",SV:"sv-SE",NO:"nb-NO",DA:"da-DK",ES:"es-ES",FI:"fi-FI",DE:"de-DE","FR-FR":"fr-FR","FR-CA":"fr-CA",TH:"th-TH"}[settings.language]||"en-US";
   const fmt=new Intl.DateTimeFormat(locale,{month:"short"}), known=x=>x!==null&&x!==undefined&&x!==""&&Number.isFinite(Number(x));

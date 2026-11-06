@@ -734,8 +734,11 @@
       "messages": [
         "SKANDI_MAP_DATA",
         "SKANDI_MAP_ERROR",
+        "SKANDI_MAP_NAVIGATE",
         "SKANDI_MAP_READY",
         "SKANDI_MAP_REFRESH",
+        "SKANDI_MAP_SELECTION",
+        "SKANDI_MAP_STATE",
         "SKANDI_PUBLIC_NETWORK_MAP",
         "SKANDI_WIX_PARENT"
       ],
@@ -745,8 +748,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/destinations/skandi-destinations.receiver.html",
       "receiverFile": "skandi-embeds/destinations/skandi-destinations.receiver.html",
-      "sha256": "5e5f4871a421e7946d6e791cea413758550b02c655548aa1a4af1aa56c2dcc94",
-      "bytes": 302342
+      "sha256": "75158eb9b10942e176a607628dfb31d98e9bdf026391032e314ad625b4026a39",
+      "bytes": 296828
     },
     {
       "key": "travelInfo",
@@ -3267,8 +3270,50 @@
       "blockers": [],
       "receiver": "skandi-embeds/country/skandi-country.receiver.html",
       "receiverFile": "skandi-embeds/country/skandi-country.receiver.html",
-      "sha256": "36b116405023f59fb8e5fcf1573aca77f024e828a1845ab2fad633e350aa2657",
-      "bytes": 375972
+      "sha256": "d6f6a3f62a6b19ab42fe4a63dd1c92ae18014f88c3cb91be78e4eb512b57671c",
+      "bytes": 380738
+    },
+    {
+      "key": "hotelList",
+      "route": "/destinations/explore/hotel-list",
+      "slug": "hotel-list",
+      "title": "Hotel List",
+      "family": "public",
+      "chrome": "public",
+      "sourceDirectory": "skandi-embeds/hotel-list",
+      "stem": "skandi-hotel-list",
+      "controller": "src/pages/Hotel List.iqhpp.js",
+      "embedIds": [
+        "#areaHotelsHtml"
+      ],
+      "sources": [
+        "SKANDI_AREA_HOTEL_SEARCH",
+        "SKANDI_HOTEL_DETAIL"
+      ],
+      "components": [],
+      "binding": "explicit",
+      "requiresStaff": false,
+      "status": "BUILT",
+      "files": [
+        "skandi-embeds/hotel-list/skandi-hotel-list.html",
+        "skandi-embeds/hotel-list/skandi-hotel-list.css",
+        "skandi-embeds/hotel-list/skandi-hotel-list.js"
+      ],
+      "missing": [],
+      "issues": [],
+      "backend": [],
+      "messages": [
+        "SKANDI_AREA_HOTEL_SEARCH",
+        "SKANDI_HOTEL_DETAIL"
+      ],
+      "output": "dist/hotel-list/index.html",
+      "dynamic": false,
+      "sourceStatus": "COMPLETE SOURCE",
+      "blockers": [],
+      "receiver": "skandi-embeds/hotel-list/skandi-hotel-list.receiver.html",
+      "receiverFile": "skandi-embeds/hotel-list/skandi-hotel-list.receiver.html",
+      "sha256": "44cc23462f3218de98deb1c7c84530a72c9bed0c510dafa3cb7ce13f17c28be1",
+      "bytes": 158854
     },
     {
       "key": "bookingFlow",

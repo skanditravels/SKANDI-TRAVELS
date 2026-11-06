@@ -52,6 +52,7 @@ Route authority: `src/public/siteMap.js`. This file is generated evidence, not r
 | storeControl | /riaintra/success-factors/store-control | riaintra-embeds/store-control/skandi-store-control.{html,css,js} | riaintra / riaintra | src/pages/The Store Control.y10le.js | BUILT |
 | payroll | /riaintra/success-factors/payroll | riaintra-embeds/payroll/skandi-payroll.{html,css,js} | riaintra / riaintra | src/pages/Payroll.rzo0a.js | BUILT |
 | country | /destinations/explore | skandi-embeds/country/skandi-country.{html,css,js} | public / public | src/pages/Explore.nxtpn.js | BUILT |
+| hotelList | /destinations/explore/hotel-list | skandi-embeds/hotel-list/skandi-hotel-list.{html,css,js} | public / public | src/pages/Hotel List.iqhpp.js | BUILT |
 | bookingFlow | /booking | skandi-embeds/booking/skandi-booking-flow.{html,css,js} | public / none | src/pages/Booking.e8twe.js | BUILT |
 | myProfile | /my-profile | skandi-embeds/my-profile/skandi-my-profile.{html,css,js} | public / public | src/pages/My Club Profile.u4k31.js | BUILT |
 | myTrips | /my-profile?tab=trips | Alias of myProfile | public / public | src/pages/My Club Profile.u4k31.js | ALIAS |
