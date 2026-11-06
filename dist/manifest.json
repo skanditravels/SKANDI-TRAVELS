@@ -2378,8 +2378,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/eos/skandi-eos.receiver.html",
       "receiverFile": "altea-embeds/eos/skandi-eos.receiver.html",
-      "sha256": "7b180571443f264fb75c4a47d069da4b01a744ecf5db66da5ed1d2dacde37a56",
-      "bytes": 77683
+      "sha256": "c9ebc3089d873b4957ca102033566f94b5a06281c1c980c7842fd117d50bc4b3",
+      "bytes": 78239
     },
     {
       "key": "inventoryControl",
@@ -3558,8 +3558,8 @@
       "blockers": [],
       "receiver": "altea-embeds/my-roster/skandi-my-roster.receiver.html",
       "receiverFile": "altea-embeds/my-roster/skandi-my-roster.receiver.html",
-      "sha256": "8c3c129f7c917e2e1a8477eea45651d0221eba00da509bbd8cff2a876527b983",
-      "bytes": 112474
+      "sha256": "5df4b63bfc162a21ac6236b35801e6b2479b8d61e2d280805403869b86c2986a",
+      "bytes": 114485
     },
     {
       "key": "groupTalk",
