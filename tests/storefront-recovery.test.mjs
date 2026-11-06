@@ -117,3 +117,24 @@ test('a failed storefront load offers retry and a Wix gift card renders as a Sto
   assert.match(window.document.getElementById('productGrid').textContent,/SKANDI Gift Card/);
   assert.match(window.location.hash,/Gift(%20|\+)Cards/);
 });
+
+test('the shared mobile menu leaves the Store product route intact', async t => {
+  const store = 'skandi-embeds/the-store/skandi-the-store';
+  const mobile = 'skandi-embeds/global/skandi-mobile-nav';
+  const { window } = new JSDOM(await read(store + '.html'), {
+    runScripts: 'outside-only', url: 'https://example.test/#/shop'
+  });
+  t.after(() => window.close());
+  window.scrollTo = () => {};
+  window.document.body.insertAdjacentHTML('beforeend', await read(mobile + '.html'));
+  window.eval(await read(store + '.js'));
+  window.eval(`(() => {\n${await read(mobile + '.js')}\n})();`);
+
+  const menu = window.document.querySelector('#skandi-mobile-nav-root button[aria-controls="drawer"]');
+  menu.click();
+  assert.equal(menu.getAttribute('aria-expanded'), 'true');
+  assert.equal(window.location.hash, '#/shop');
+  window.document.getElementById('closeBtn').click();
+  assert.equal(menu.getAttribute('aria-expanded'), 'false');
+  assert.equal(window.location.hash, '#/shop');
+});

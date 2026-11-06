@@ -21,6 +21,8 @@
 
 The Store keeps its existing commerce header, category menu and desktop footer. Its compiled mobile page uses the shared SKANDI bottom bar. The right-side Store menu remains available from its own header button. Forms use the shared 16px input sizing. Checkout and order confirmation keep their dedicated layouts.
 
+The shared bar uses its own route attribute. Opening the shared menu preserves the current Store view because the Store's delegated click handler no longer interprets the bar's buttons as commerce routes.
+
 ## 2026-11-06 — Repair the Wix catalog runtime
 
 Wix site logs showed that the Catalog V3 SDK writes to `treeReference.appNamespace` while preparing the category request. The Store and Store Control now pass a fresh tree reference on each request. The regression test models that SDK write and checks that later requests still send the Wix Stores namespace.
