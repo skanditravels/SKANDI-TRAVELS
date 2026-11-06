@@ -1,0 +1,51 @@
+name: Generate Store Wix dependency lock
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/store-gift-card-install-once.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  install:
+    if: github.event.pull_request.head.repo.full_name == github.repository && github.head_ref == 'codex/wix-gift-card-install-20261106'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: d9555cea988180e059a9bbd77b2bbf6cf5612402
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Install the pinned Wix CLI
+        run: npm install --prefix "$RUNNER_TEMP/site-cli" --no-save --ignore-scripts --no-audit --no-fund @wix/cli@1.2.8
+      - name: Authenticate the Wix CLI
+        env:
+          WIX_CLI_API_KEY: ${{ secrets.WIX_CLI_API_KEY }}
+        run: |
+          set -euo pipefail
+          test -n "$WIX_CLI_API_KEY"
+          "$RUNNER_TEMP/site-cli/node_modules/.bin/wix" login --api-key "$WIX_CLI_API_KEY"
+      - name: Resolve the declared Wix backend packages
+        env:
+          npm_config_ignore_scripts: 'true'
+        run: |
+          set -euo pipefail
+          test "$(node -p 'require("./wix.config.json").siteUrl')" = 'https://www.skanditravels.com/'
+          "$RUNNER_TEMP/site-cli/node_modules/.bin/wix" install --npm
+          grep -qF '"@wix/gift-vouchers"' wix.lock
+          git diff --stat
+      - name: Save only the generated Wix dependency files
+        uses: actions/upload-artifact@v4
+        with:
+          name: store-wix-dependency-lock
+          path: |
+            wix.lock
+            dependencies-metadata.json
+          if-no-files-found: error
+          retention-days: 1
