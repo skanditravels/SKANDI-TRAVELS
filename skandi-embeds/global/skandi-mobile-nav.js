@@ -20,8 +20,8 @@ const SOURCE='SKANDI_HOME_MOBILE_APP';
   ];
   const $=id=>document.getElementById(id);
   const bar=$('skandi-mobile-nav-root');
-  const BUTTONS=Array.from(bar.querySelectorAll('[data-route]'));
-  const menuButton=BUTTONS.find(btn=>btn.dataset.route==='menu');
+  const BUTTONS=Array.from(bar.querySelectorAll('[data-skandi-mobile-route]'));
+  const menuButton=BUTTONS.find(btn=>btn.dataset.skandiMobileRoute==='menu');
   const drawer=$('drawer');
   const status=$('status');
   const shell=window.__SKANDI_SHELL__?.root;
@@ -61,7 +61,7 @@ const SOURCE='SKANDI_HOME_MOBILE_APP';
     const current=safePath(state.currentPath)||'/';
     const normalized=current.split('?')[0];
     for(const button of BUTTONS){
-      const key=button.dataset.route;
+      const key=button.dataset.skandiMobileRoute;
       const path=isStaff?safePath(button.dataset.path):pathFor(key);
       const active=path&&(path.includes('?')?current===path:normalized===path || key==='destinations'&&normalized.startsWith('/destinations/'));
       if(active)button.setAttribute('aria-current','page');
@@ -231,10 +231,10 @@ const SOURCE='SKANDI_HOME_MOBILE_APP';
   }
   for(const button of BUTTONS){
     button.addEventListener('click',()=>{
-      if(button.dataset.route==='menu'){
+      if(button.dataset.skandiMobileRoute==='menu'){
         if(state.drawerOpen)closeDrawer();else openDrawer();
       } else if(isStaff)navigatePath(button.dataset.path);
-      else navigate(button.dataset.route);
+      else navigate(button.dataset.skandiMobileRoute);
     });
   }
   $('overlay').addEventListener('click',closeDrawer);
