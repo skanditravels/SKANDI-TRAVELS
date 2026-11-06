@@ -67,3 +67,5 @@ An embedded HTML payload was removed only when its split files matched the activ
 Edit the active developer source for normal work. `node scripts/import-html-ref.mjs` checks retained reference payloads and refuses to overwrite edited source; it is not part of the normal build.
 
 Previously generated receivers can already be installed in Wix. For moved internal pages the manifest retains their existing receiver identities while the regenerated receiver files are stored in their new source folders. The installation register points to the new file location. This preserves the existing handshake; live Wix verification is still required.
+
+The generated receiver now uses the same approved wave and generic customer-facing error for every generated page while preserving the existing manifest identities for installed receivers. Error IDs are currently recorded in the browser console; a central, searchable incident log has not been implemented. Other SKANDI sites and additional preview origins require explicit origin verification before rollout.

@@ -17,3 +17,5 @@
 - [HTML_REF/GLOBAL/SKANDI TRAVEL LOYALTY POINTS.md](references/global-skandi-travel-loyalty-points-md/README.md)
 - [HTML_REF/GLOBAL/WIX_EDITOR_CHECKLIST.md](references/global-wix-editor-checklist-md/README.md)
 - [HTML_REF/GLOBAL/Wix Automations Integration.md](references/global-wix-automations-integration-md/README.md)
+
+- 2026-11-05 — Mobile navigation fallback routes use `/tours-activities` and the Transfer Information section in Travel Info; master-page route configuration remains authoritative. Wix publication and live navigation remain unverified.

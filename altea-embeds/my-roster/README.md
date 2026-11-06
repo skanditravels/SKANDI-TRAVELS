@@ -36,6 +36,8 @@
 
 - 2026-10-28 UTC — Updated `skandi-embeds/my-roster/skandi-my-roster.receiver.html` to follow the current shared receiver pattern with page-specific startup, progress and failure messages for **ALTEA MyRoster** (`/riaintra/success-factors/altea/my-roster`). The expected route matches `src/public/siteMap.js`; master-page handshake, staff authorization, manifest/SHA-256 checks and nested-iframe rejection remain intact.
 
+- 2026-11-05 — Restored the last repository page controller after verifying that the current page-controller file contained browser-side application code. The existing newer MyRoster embed source and its approved logo treatment are retained. The authenticated facade and event contract are unchanged. Wix publishing and live staff testing remain required.
+
 ## COMPLETE HTML / SOURCE IMPLEMENTATION
 
 ```html

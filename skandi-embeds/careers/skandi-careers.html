@@ -1,1 +1,276 @@
-<!-- SKANDI_PENDING_SOURCE: replace with complete page markup. -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#03111f">
+<title>Careers at SKANDI · B-011.1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="skandi-careers.css">
+</head>
+<body>
+
+<header class="hero" data-section-id="careers-hero">
+  <div class="wrap hero-inner">
+    <div class="hero-copy">
+      <div class="eyebrow" data-content-id="careers-hero-eyebrow">CAREERS AT SKANDI</div>
+      <h1 data-content-id="careers-hero-h1">Build the journeys<br><strong>people remember.</strong></h1>
+      <p data-content-id="careers-hero-copy">Join teams working across destinations, airports, guest service, operations and digital travel. Search current opportunities, apply securely, then return to the same Careers hub to follow your application and complete requested documents.</p>
+      <div class="hero-actions">
+        <button class="btn aqua" type="button" data-open-view="jobs">Explore opportunities</button>
+        <button class="btn light" type="button" data-open-view="portal">Applicant portal</button>
+      </div>
+      <div class="hero-notes">
+        <div class="hero-note"><strong>One careers hub</strong>Jobs, applications and applicant documents in one public experience.</div>
+        <div class="hero-note"><strong>Separate identity</strong>Applicant access does not create customer, Club or staff access.</div>
+        <div class="hero-note"><strong>Connected recruiting</strong>Applications use the same recruiting domain as SKANDI SuccessFactors.</div>
+      </div>
+    </div>
+    <aside class="career-pass" aria-label="SKANDI Careers summary">
+      <div class="pass-top"><span class="pass-brand">SKANDI CAREERS</span><span class="pass-status">Recruiting hub</span></div>
+      <div class="pass-copy"><strong>Operational, international and human.</strong><span>From destination teams and airport operations to customer care and digital systems.</span></div>
+      <div class="pass-stats">
+        <div class="pass-stat"><strong id="statOpen">0</strong><span>Open roles</span></div>
+        <div class="pass-stat"><strong id="statBases">0</strong><span>Bases</span></div>
+        <div class="pass-stat"><strong id="statAreas">0</strong><span>Areas</span></div>
+      </div>
+    </aside>
+  </div>
+</header>
+
+<div class="wrap switcher-shell">
+  <nav class="hub-switcher" aria-label="Careers hub">
+    <button class="hub-switch active" type="button" data-open-view="jobs"><span>01</span>Opportunities</button>
+    <button class="hub-switch" type="button" data-open-view="portal"><span>02</span>Applicant portal</button>
+    <button class="hub-switch" type="button" data-open-view="documents"><span>03</span>Documents</button>
+  </nav>
+</div>
+
+<main class="page-main">
+<div class="wrap">
+
+<section class="hub-view active" id="jobsView" data-hub-view="jobs">
+  <section class="section" data-section-id="careers-jobs">
+    <div class="section-head">
+      <div><div class="eyebrow dark">OPEN OPPORTUNITIES</div><h2>Find your place at SKANDI.</h2></div>
+      <p>Search the positions currently published by SKANDI Recruiting. Open a role for the complete responsibilities, requirements and application flow.</p>
+    </div>
+    <div class="jobs-shell">
+      <div>
+        <div class="job-search" id="jobsAnchor">
+          <div class="job-search-top">
+            <div class="field"><label for="keyword">Keyword</label><input id="keyword" class="input" placeholder="Role, area, base or keyword"></div>
+            <div class="field"><label for="locationFilter">Location / base</label><select id="locationFilter"></select></div>
+          </div>
+          <div class="job-filter-row">
+            <div class="field"><label for="categoryFilter">Area</label><select id="categoryFilter"></select></div>
+            <div class="field"><label for="typeFilter">Contract</label><select id="typeFilter"></select></div>
+            <div class="field"><label for="levelFilter">Level</label><select id="levelFilter"></select></div>
+          </div>
+          <div class="job-search-foot"><span class="meta" id="searchMeta">Loading current positions…</span><button class="btn" id="searchBtn" type="button">Search jobs</button></div>
+        </div>
+        <div class="job-list" id="jobList"></div>
+      </div>
+      <aside class="jobs-aside">
+        <section class="aside-card dark"><div class="label">Already applied?</div><h3>Continue in Applicant Portal.</h3><p>See application status, applicant-facing messages and document requests without creating a customer account.</p><button class="btn light" type="button" data-open-view="portal">Open portal</button></section>
+        <section class="aside-card"><div class="label">Talent pool</div><h3>Future destination teams.</h3><p>When a role is not yet open for your preferred base, published talent-pool opportunities appear alongside current positions.</p></section>
+      </aside>
+    </div>
+  </section>
+
+  <section class="section" data-section-id="careers-life">
+    <div class="section-head">
+      <div><div class="eyebrow dark">LIFE AT SKANDI</div><h2>Travel needs calm people behind it.</h2></div>
+      <p>We value practical service, clear responsibility and teams that stay composed when the operation changes.</p>
+    </div>
+    <div class="culture-grid">
+      <article class="culture-panel"><div class="eyebrow">THE OPERATION</div><h3>Work close to the journey.</h3><p>Roles can sit at airports, destinations, customer-service desks, operational control or the digital systems connecting those teams.</p></article>
+      <article class="culture-panel"><div class="eyebrow dark">THE STANDARD</div><h3>Service without theatre.</h3><p>Good service is clear information, thoughtful judgement and doing the practical thing well.</p></article>
+      <article class="culture-panel"><div class="eyebrow dark">THE TEAM</div><h3>International by default.</h3><p>SKANDI works across markets and destinations, with local knowledge connected to one operating standard.</p></article>
+    </div>
+  </section>
+</section>
+
+<section class="hub-view" id="portalView" data-hub-view="portal">
+  <section id="portalLoginState">
+    <div class="portal-login">
+      <div class="portal-intro">
+        <div class="eyebrow">APPLICANT ACCESS</div>
+        <h2>Your application,<br>in one place.</h2>
+        <p>Use the email from your application and a SKANDI Careers access code. Applicant access is independent from SKANDI Club, customer accounts and staff systems.</p>
+        <div class="portal-points">
+          <div class="portal-point"><strong>Applications</strong><span>See the current stage for applications linked to your verified applicant email.</span></div>
+          <div class="portal-point"><strong>Messages</strong><span>Applicant-visible recruiting messages appear here when explicitly published by Careers.</span></div>
+          <div class="portal-point"><strong>Documents</strong><span>Open assigned applicant documents without leaving the Careers hub.</span></div>
+        </div>
+      </div>
+      <section class="card">
+        <div class="card-head"><h3>Applicant portal sign-in</h3><p>Enter the email used in your application and the six-digit access code provided by SKANDI Careers.</p></div>
+        <div class="card-body">
+          <div class="field"><label for="careerApplicantLoginEmail">Applicant email</label><input id="careerApplicantLoginEmail" class="input" type="email" autocomplete="email"></div>
+          <div class="field" style="margin-top:12px"><label for="loginCode">Access code</label><input id="loginCode" class="input" inputmode="numeric" maxlength="6" autocomplete="one-time-code"></div>
+          <div class="login-actions"><button class="btn" id="loginBtn" type="button">Open portal</button><button class="btn secondary" id="requestCodeBtn" type="button">Request code</button></div>
+          <div id="portalLoginStatus" class="status hidden" role="status" aria-live="polite"></div>
+        </div>
+      </section>
+    </div>
+  </section>
+
+  <section id="portalDashboard" class="hidden">
+    <div class="portal-header">
+      <div><div class="eyebrow dark">APPLICANT PORTAL</div><h2 id="welcome">Welcome</h2><div class="meta" style="margin-top:7px">Your SKANDI Careers application workspace</div></div>
+      <button class="btn secondary" id="logoutBtn" type="button">Sign out</button>
+    </div>
+    <div class="portal-tabs">
+      <button class="portal-tab active" type="button" data-portal-tab="applications">Applications</button>
+      <button class="portal-tab" type="button" data-portal-tab="messages">Messages</button>
+      <button class="portal-tab" type="button" data-portal-tab="documents">Documents</button>
+      <button class="portal-tab" type="button" data-portal-tab="profile">Profile</button>
+    </div>
+    <div id="applicationsPortalView"></div>
+    <div id="messagesPortalView" class="hidden"></div>
+    <div id="documentsPortalView" class="hidden"></div>
+    <div id="profilePortalView" class="hidden"></div>
+  </section>
+</section>
+
+<section class="hub-view" id="documentsView" data-hub-view="documents">
+  <section class="section" data-section-id="careers-documents">
+    <div class="section-head">
+      <div><div class="eyebrow dark">APPLICANT DOCUMENTS</div><h2>Review. Acknowledge. Continue.</h2></div>
+      <p>Applicant document requests can be opened from Applicant Portal or directly with the email and access token provided for the request.</p>
+    </div>
+
+    <div class="documents-entry">
+      <section class="card">
+        <div class="card-head"><h3>Direct document access</h3><p>If SKANDI Careers sent a document-specific link or token, enter those details below.</p></div>
+        <div class="card-body">
+          <div class="grid2">
+            <div class="field"><label for="inviteEmail">Email</label><input id="inviteEmail" class="input" type="email" autocomplete="email"></div>
+            <div class="field"><label for="inviteToken">Document access token</label><input id="inviteToken" class="input" autocomplete="off"></div>
+          </div>
+          <div class="document-actions"><button class="btn" id="loadDocumentBtn" type="button">Load documents</button><button class="btn secondary" id="documentSupportBtn" type="button">Careers support</button></div>
+          <div id="documentAccessStatus" class="status hidden"></div>
+        </div>
+      </section>
+      <aside class="document-note"><div class="eyebrow">SECURE WORKFLOW</div><h3>Applicant documents stay separate.</h3><p>These documents belong to the recruiting process. Completing them does not create SKANDI Club membership or internal staff access.</p></aside>
+    </div>
+
+    <section class="section" style="margin-top:30px" data-section-id="careers-public-forms">
+      <div class="section-head" style="margin-bottom:16px">
+        <div><div class="eyebrow dark">FORMS & DOWNLOADS</div><h2 style="font-size:32px">Published Careers forms.</h2></div>
+        <p>Only document templates explicitly marked for Careers / Recruiting public use are shown here.</p>
+      </div>
+      <div id="publicFormsGrid" class="forms-grid"><div class="status">Loading published Careers forms…</div></div>
+    </section>
+
+    <section id="documentWorkspace" class="doc-workspace hidden">
+      <div class="doc-grid">
+        <div>
+          <div class="card" style="margin-bottom:12px">
+            <div class="card-head"><h3 id="documentPacketTitle">Applicant document review</h3><p id="documentPacketInstructions">Review the assigned document before completing the acknowledgement.</p></div>
+            <div class="card-body"><div id="docChooser" class="doc-chooser"></div></div>
+          </div>
+          <div class="viewer">
+            <div class="viewer-bar"><strong id="viewerTitle">Document</strong><span class="meta" id="viewerStatus">Review before signing</span></div>
+            <iframe id="pdfViewer" title="Applicant document viewer" src="about:blank"></iframe>
+            <div id="bodyViewer" class="doc-body hidden"></div>
+          </div>
+        </div>
+
+        <aside class="doc-side">
+          <section class="card">
+            <div class="card-head"><h3>Identity</h3><p>Confirm the person completing this applicant document.</p></div>
+            <div class="card-body">
+              <div class="field"><label for="relationship">Relationship</label><select id="relationship"><option>Applicant</option><option>Parent / Guardian</option><option>Authorized representative</option><option>Other</option></select></div>
+              <div class="grid2" style="margin-top:11px">
+                <div class="field"><label for="docFirstName">Legal first name</label><input id="docFirstName" class="input"></div>
+                <div class="field"><label for="docLastName">Legal last name</label><input id="docLastName" class="input"></div>
+              </div>
+              <div class="field" style="margin-top:11px"><label for="docEmail">Email</label><input id="docEmail" class="input" type="email"></div>
+              <div class="field" style="margin-top:11px"><label for="docPhone">Phone</label><input id="docPhone" class="input"></div>
+            </div>
+          </section>
+
+          <section class="card">
+            <div class="card-head"><h3>Decision & sign-off</h3><p>Complete this only after reviewing the selected document.</p></div>
+            <div class="card-body">
+              <div class="choice-group">
+                <label class="choice"><input type="radio" name="decision" value="approved" checked><span>Acknowledge / approve</span></label>
+                <label class="choice"><input type="radio" name="decision" value="notApproved"><span>Do not approve</span></label>
+              </div>
+              <div class="field" style="margin-top:11px"><label for="comment">Comment if not approving</label><textarea id="comment" class="input"></textarea></div>
+              <div class="legal-box" style="margin-top:11px">By submitting, I confirm that I have been given access to the selected applicant document and had the opportunity to review it. I agree that my typed name, server timestamp, electronic consent and drawn signature may be recorded as evidence of my acknowledgement or decision.</div>
+              <label class="consent-row"><input id="documentConsent" type="checkbox"><span>I consent to complete this applicant document transaction electronically.</span></label>
+              <div class="field" style="margin-top:11px"><label for="signatureName">Typed legal signature</label><input id="signatureName" class="input"></div>
+              <div class="field" style="margin-top:11px"><label>Draw signature</label><canvas id="signaturePad" class="sig-pad" width="1000" height="320"></canvas></div>
+              <div class="doc-submit-row"><button class="btn secondary small" id="clearSignatureBtn" type="button">Clear signature</button><button class="btn" id="submitDocumentBtn" type="button">Submit document</button></div>
+              <div id="documentSubmitStatus" class="status hidden"></div>
+            </div>
+          </section>
+        </aside>
+      </div>
+    </section>
+  </section>
+</section>
+
+</div>
+</main>
+
+<div class="overlay" id="jobDrawer" aria-hidden="true">
+  <aside class="drawer" role="dialog" aria-modal="true" aria-labelledby="detailTitle">
+    <div class="drawer-head"><div><h3 id="detailTitle">Position</h3><div id="detailMeta" class="meta" style="margin-top:6px"></div></div><button class="icon-btn" type="button" data-close-drawer aria-label="Close">&times;</button></div>
+    <div class="drawer-body"><p id="detailIntro"></p><h4>What you’ll do</h4><ul id="detailResp"></ul><h4>What you bring</h4><ul id="detailReq"></ul><h4>Why SKANDI</h4><ul id="detailBenefits"></ul></div>
+    <div class="drawer-foot"><span id="detailDeadline" class="meta"></span><button class="btn" id="detailApply" type="button">Apply for this role</button></div>
+  </aside>
+</div>
+
+<div class="modal" id="applyModal" aria-hidden="true">
+  <section class="modal-inner" role="dialog" aria-modal="true" aria-labelledby="applyTitle">
+    <div class="modal-head"><div><h3 id="applyTitle">Apply</h3><div id="applyMeta" class="meta" style="margin-top:5px"></div></div><button class="icon-btn" type="button" data-close-apply aria-label="Close">&times;</button></div>
+    <div class="modal-body">
+      <div id="stepLabel" class="progress-label">Step 1 of 3</div>
+      <div class="steps"><div class="step-pill"></div><div class="step-pill"></div><div class="step-pill"></div></div>
+      <div id="applyError" class="apply-error"></div>
+
+      <div class="apply-step active" data-apply-step="1">
+        <div class="grid2">
+          <div class="field"><label for="firstName">First name *</label><input id="firstName" class="input" autocomplete="given-name"></div>
+          <div class="field"><label for="lastName">Last name *</label><input id="lastName" class="input" autocomplete="family-name"></div>
+          <div class="field"><label for="email">Email *</label><input id="email" class="input" type="email" autocomplete="email"></div>
+          <div class="field"><label for="phone">Phone *</label><input id="phone" class="input" type="tel" autocomplete="tel"></div>
+          <div class="field"><label for="preferredBase">Preferred base</label><input id="preferredBase" class="input"></div>
+          <div class="field"><label for="startDate">Earliest start date</label><input id="startDate" class="input" type="date"></div>
+        </div>
+      </div>
+
+      <div class="apply-step" data-apply-step="2">
+        <div class="grid2">
+          <div class="field"><label for="cvFile">Resume / CV *</label><input id="cvFile" class="input" type="file" accept=".pdf,.doc,.docx"></div>
+          <div class="field"><label for="coverFile">Cover letter / extra document</label><input id="coverFile" class="input" type="file" accept=".pdf,.doc,.docx"></div>
+        </div>
+        <div class="field" style="margin-top:12px"><label for="motivation">Why SKANDI and this role?</label><textarea id="motivation" class="input"></textarea></div>
+        <div class="field" style="margin-top:12px"><label for="source">How did you hear about this opportunity?</label><select id="source"><option value=""></option><option>SKANDI website</option><option>Employee referral</option><option>LinkedIn</option><option>Job board</option><option>Social media</option><option>Other</option></select></div>
+      </div>
+
+      <div class="apply-step" data-apply-step="3">
+        <section class="card" style="box-shadow:none"><div class="card-head"><h3>Application summary</h3></div><div class="card-body"><p id="applicationSummary" class="meta"></p></div></section>
+        <label class="consent-row"><input id="applicationConsent" type="checkbox"><span>I consent to SKANDI processing my application data and uploaded documents for recruitment purposes.</span></label>
+        <div class="status" style="margin-top:14px">Applicant Portal is separate from SKANDI Club, customer accounts and internal staff systems.</div>
+      </div>
+    </div>
+    <div class="modal-foot"><span class="meta">Fields marked * are required.</span><div class="modal-actions"><button class="btn secondary" id="applyBackBtn" type="button">Back</button><button class="btn" id="applyNextBtn" type="button">Next</button></div></div>
+  </section>
+</div>
+
+<div class="loading" id="loading" aria-hidden="true">
+  <div class="loading-card"><div class="spinner"></div><strong id="loadingTitle">Working</strong><p id="loadingCopy">Please wait.</p></div>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="skandi-careers.js"></script>
+</body>
+</html>

@@ -1,1 +1,1 @@
-/* SKANDI_PENDING_SOURCE: replace with complete page source. */
+/* This HTML_REF payload contains no inline JavaScript to extract. */

@@ -11,18 +11,18 @@ const {JSDOM,VirtualConsole}=require('jsdom');
 const {parse}=require('acorn');
 const receiver=await fs.readFile(new URL('../skandi-embeds/receiver/skandi-wix-universal-receiver.html',import.meta.url),'utf8');
 const tick=()=>new Promise(resolve=>setImmediate(resolve));
-async function settled(h){for(let i=0;i<200;i++){if(h.writes.length||h.w.document.getElementById('skandi-receiver-status')?.getAttribute('role')==='alert')return;await new Promise(r=>setTimeout(r,5));}throw new Error('Receiver did not settle');}
-async function harness(t,{internal=false,unknown=false,stale=false,receiverSource=receiver,receiverPath='',identityChanges={}}={}) {
+async function settled(h){for(let i=0;i<200;i++){if(h.writes.length||!h.w.document.getElementById('skandi-loader-error')?.hidden)return;await new Promise(r=>setTimeout(r,5));}throw new Error('Receiver did not settle');}
+async function harness(t,{internal=false,unknown=false,stale=false,receiverSource=receiver,receiverPath='',identityChanges={},specialPage='',frame=''}={}) {
   const dom=new JSDOM(receiverSource,{runScripts:'outside-only',url:'https://html-component.example',virtualConsole:new VirtualConsole()});t.after(()=>dom.window.close());
   const w=dom.window,messages=[],calls=[],writes=[];let interval;
   const parent={postMessage:m=>messages.push(m)};Object.defineProperty(w,'parent',{value:parent});Object.defineProperty(w,'crypto',{value:webcrypto});w.TextEncoder=TextEncoder;w.AbortController=AbortController;
   w.setInterval=fn=>{interval=fn;return 1;};w.clearInterval=()=>{};
   w.document.open=()=>{};w.document.close=()=>{};w.document.write=x=>writes.push(x);
-  const key=internal?'alteaReservations':'search',slug=internal?'altea-reservations':'search',route=internal?'/riaintra/success-factors/altea/reservations':'/search',family=internal?'altea':'public';
-  const html=`<!doctype html><html><body><div id="skandi-shell-root" data-skandi-key="${key}" data-skandi-family="${family}" data-skandi-chrome="${family}"></div></body></html>`;
+  const key=specialPage|| (internal?'alteaReservations':'search'),slug=specialPage|| (internal?'altea-reservations':'search'),route=specialPage==='careers'?'/about/careers':specialPage==='voy'?'/voy-magazine':internal?'/riaintra/success-factors/altea/reservations':'/search',family=internal?'altea':'public';
+  const html=`<!doctype html><html><body><div id="skandi-shell-root" data-skandi-key="${key}" data-skandi-family="${family}" data-skandi-chrome="${family}">${frame}</div></body></html>`;
   const page={key,slug,route,family,chrome:family,status:'BUILT',output:`dist/${slug}/index.html`,receiver:receiverPath||`skandi-embeds/${slug}/skandi-${slug}.receiver.html`,requiresStaff:internal,sha256:stale?'0'.repeat(64):createHash('sha256').update(html).digest('hex')};
   w.fetch=async url=>{calls.push(url);return{ok:true,text:async()=>url.endsWith('manifest.json')?JSON.stringify({schemaVersion:2,pages:unknown?[]:[page]}):html};};
-  w.eval(w.document.querySelector('script').textContent);
+  w.eval([...w.document.querySelectorAll('script')].at(-1).textContent);
   const nonce=messages[0].payload.receiverRequestId;
   const identity={allowed:true,key,route,family,chrome:family,embedId:internal?'#alteaReservationsEmbed':'#searchResultsEmbed',staffAuthorized:!internal,...identityChanges};
   const message=(changes={})=>({source:'SKANDI_WIX_PARENT',type:'SKANDI_MASTER_CONFIG',payload:{receiverRequestId:nonce,compiledPage:{...identity,...changes}}});
@@ -43,17 +43,26 @@ test('receiver resolves the parent canonical page, verifies integrity and replac
   const h=await harness(t);h.send();await settled(h);assert.equal(h.writes[0],h.html);assert.equal(h.w.__SKANDI_RECEIVER_CONTEXT__.key,'search');assert.ok(h.calls.some(u=>u.endsWith('/dist/search/index.html')));assert.ok(h.calls.every(u=>!u.includes('/dist/home/')));
 });
 
-test('generated receiver accepts only its registered route and Wix component',async t=>{
-  const page={key:'search',route:'/search',family:'public',chrome:'public',sourceDirectory:'skandi-embeds/search',stem:'skandi-search',embedIds:['#searchResultsEmbed']};
-  const receiverSource=await renderPageReceiver(new URL('..',import.meta.url).pathname,page),receiverPath='skandi-embeds/search/skandi-search.receiver.html';
-  const valid=await harness(t,{receiverSource,receiverPath});valid.send();await settled(valid);assert.equal(valid.writes[0],valid.html);
-  const wrongRoute=await harness(t,{receiverSource,receiverPath,identityChanges:{route:'/home'}});wrongRoute.send();await settled(wrongRoute);assert.equal(wrongRoute.calls.length,0);assert.equal(wrongRoute.writes.length,0);
-  const wrongElement=await harness(t,{receiverSource,receiverPath,identityChanges:{embedId:'#otherEmbed'}});wrongElement.send();await settled(wrongElement);assert.equal(wrongElement.calls.length,0);assert.equal(wrongElement.writes.length,0);
+test('generated receivers are identical and use parent identity with manifest validation',async t=>{
+  const search=await renderPageReceiver(new URL('..',import.meta.url).pathname,{key:'search'});
+  const home=await renderPageReceiver(new URL('..',import.meta.url).pathname,{key:'home'});
+  assert.equal(search,home);
+  const h=await harness(t,{receiverSource:search,identityChanges:{route:'/wrong'}});h.send();await settled(h);
+  assert.equal(h.writes.length,0);
+});
+
+test('receiver allows only the two audited blank document viewers',async t=>{
+  const cases=[['voy','<iframe id="fallbackFrame" class="reader-fallback" title="VOY PDF fallback reader"></iframe>'],['careers','<iframe id="pdfViewer" title="Applicant document viewer" src="about:blank"></iframe>']];
+  for(const [specialPage,frame] of cases) {
+    const valid=await harness(t,{specialPage,frame});valid.send();await settled(valid);assert.equal(valid.writes.length,1);
+    const bad=await harness(t,{specialPage,frame:frame.replace('<iframe ','<iframe srcdoc="x" ')});bad.send();await settled(bad);assert.equal(bad.writes.length,0);
+    const other=await harness(t,{frame});other.send();await settled(other);assert.equal(other.writes.length,0);
+  }
 });
 
 test('unknown pages never default to Home, failed integrity never executes, startup retries are bounded',async t=>{
-  for(const options of [{unknown:true},{stale:true}]){const h=await harness(t,options);h.send();await settled(h);assert.equal(h.writes.length,0);assert.equal(h.w.document.getElementById('skandi-receiver-status').getAttribute('role'),'alert');assert.ok(h.calls.every(u=>!u.includes('/dist/home/')));}
-  const h=await harness(t);for(let i=0;i<41;i++)h.interval();assert.equal(h.messages.length,40);assert.match(h.w.document.getElementById('skandi-receiver-status').textContent,/startup handshake/);
+  for(const options of [{unknown:true},{stale:true}]){const h=await harness(t,options);h.send();await settled(h);assert.equal(h.writes.length,0);assert.equal(h.w.document.getElementById('skandi-loader-error').hidden,false);assert.ok(h.calls.every(u=>!u.includes('/dist/home/')));}
+  const h=await harness(t);for(let i=0;i<41;i++)h.interval();assert.equal(h.messages.length,40);assert.match(h.w.document.getElementById('skandi-loader-reference').textContent,/Error ID: SK-02-/);assert.doesNotMatch(h.w.document.getElementById('skandi-receiver-status').textContent,/handshake|backend|wix/i);
 });
 
 test('internal build requires parent staff authorization before requesting HTML',async t=>{
@@ -79,4 +88,15 @@ test('master derives page identity from canonical route and owning component, an
   const bookingIdentity=context.getIdentity({id:'bookingFlowEmbed'});
   assert.equal(bookingIdentity.allowed,true);assert.equal(bookingIdentity.key,'bookingFlow');assert.equal(bookingIdentity.route,'/booking');
   assert.equal(context.getIdentity({id:'bookingOfferEmbed'}).allowed,false);
+  context.wixSiteFrontend.currentPage.url=registry.APP_ROUTES.myRoster;
+  context.wixWindowFrontend.formFactor='Desktop';
+  assert.equal(context.getIdentity({id:'myRosterEmbed'},{authorized:true}).allowed,true);
+  context.wixWindowFrontend.formFactor='Mobile';
+  assert.equal(context.getIdentity({id:'myRosterEmbed'},{authorized:true}).allowed,false);
+  context.wixSiteFrontend.currentPage.url=registry.SITE_MAP.eos;
+  assert.equal(context.getIdentity({id:'eosEmbed'},{authorized:true}).allowed,true);
+  context.wixWindowFrontend.formFactor='Tablet';
+  assert.equal(context.getIdentity({id:'eosEmbed'},{authorized:true}).allowed,false);
+  context.wixWindowFrontend.formFactor='Desktop';
+  assert.equal(context.getIdentity({id:'eosEmbed'},{authorized:true}).allowed,false);
 });

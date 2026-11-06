@@ -4,13 +4,13 @@
 
 export const SITE_MAP = Object.freeze({
   home: "/", search: "/search", flights: "/flights", carRental: "/car-rental",
-  hotels: "/hotels", packages: "/packages", cruises: "/cruises", tours: "/tours",
-  activities: "/activities", transfers: "/transfers", destinations: "/destinations",
-  travelInfo: "/travel-info", skandiCollection: "/skandi-collection",
+  hotels: "/hotels", packages: "/packages", cruises: "/cruises", tours: "/tours-activities",
+  activities: "/tours-activities", destinations: "/destinations",
+  travelInfo: "/travel-info", transfers: "/travel-info?section=transfers", skandiCollection: "/skandi-collection",
   voy: "/voy-magazine", club: "/skandi-club", clubLogin: "/skandi-club/login", forgotPassword: "/forgot-password",
   about: "/about", support: "/about/support", newsroom: "/about/news-room",
   theStore: "/the-store", storeCheckout: "/the-store/store-checkout",
-  storeConfirmation: "/the-store/store-checkout/order-confirmation", ourNetwork: "/about/our-network",
+  storeConfirmation: "/the-store/store-checkout/order-confirmation", ourNetwork: "/destinations",
   legal: "/about/legal", policies: "/about/legal/policies", cookiePreferences: "/about/legal/cookie-preferences", riaintra: "/riaintra",
   staffLogin: "/riaintra", successFactors: "/riaintra/success-factors",
   legalInternal: "/riaintra/success-factors/legal-internal", alteaLaunchpad: "/riaintra/success-factors/altea",
@@ -308,6 +308,11 @@ export const PAGE_BUILD_INTEGRATIONS = Object.freeze({
       "SKANDI_OPS_CONTROL"
     ]
   },
+  "serviceDesk": {
+    "controller": "src/pages/Customer Service Desk.benbs.js",
+    "embedIds": ["#customerServiceDeskEmbed"],
+    "sources": ["SKANDI_SUPPORT_AGENT"]
+  },
   "inventoryControl": {
     "controller": "src/pages/Inventory Control.jsdik.js",
     "embedIds": [
@@ -411,7 +416,7 @@ export const PAGE_BUILD_INTEGRATIONS = Object.freeze({
     "controller": "src/pages/masterPage.js",
     "embedIds": ["#eosEmbed"],
     "sources": ["SKANDI_EOS_EMBED"],
-    "note": "ALTEA mobile/tablet operations app; authenticated workforce data is supplied by SKANDI EOS services and reviewed in OPS Control."
+    "note": "ALTEA mobile-only operations app; authenticated workforce data is supplied by SKANDI EOS services and reviewed in OPS Control."
   },
   "legalInternal": {
     "controller": "src/pages/RIAINTRA Legal.xvi17.js",

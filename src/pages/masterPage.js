@@ -301,9 +301,8 @@ const MOBILE_FOOTER_GATE_PATHS = Object.freeze(new Set([
   "/car-rental",
   "/hotels",
   "/packages",
-  "/tours",
+  "/tours-activities",
   "/activities",
-  "/transfers",
   "/my-profile/support",
   "/riaintra/success-factors",
   "/riaintra/success-factors/legal-internal",
@@ -351,6 +350,8 @@ function compiledIdentity(embed, staff = {}) {
   const match = resolveBuildRoute(currentPathString());
   const binding = match && PAGE_BUILD_INTEGRATIONS[match.key];
   if (!binding || binding.binding === "multi-component") return { allowed:false, reason:"No verified single-component integration for this route." };
+  if (match.key === "eos" && wixWindowFrontend.formFactor !== "Mobile") return { allowed:false, reason:"This app is available on phones." };
+  if (match.key === "myRoster" && wixWindowFrontend.formFactor !== "Desktop") return { allowed:false, reason:"This page is available on desktop." };
   const id = "#" + String(embed.id || "").replace(/^#/, "");
   let correct = binding.embedIds.includes(id);
   if (binding.binding === "handshake") {
@@ -911,7 +912,7 @@ async function handleMasterMessage(embed, message = {}) {
   }
 
   if (source === EOS_SOURCE) {
-    if (wixWindowFrontend.formFactor === "Desktop") { navigate(SITE_MAP.alteaLaunchpad); return true; }
+    if (wixWindowFrontend.formFactor !== "Mobile") { navigate(SITE_MAP.alteaLaunchpad); return true; }
     if ("#" + String(embed.id || "").replace(/^#/, "") !== EOS_EMBED_ID) return true;
     const identity=compiledIdentity(embed,await getStaffState());
     if (!identity.allowed || identity.key !== "eos") return true;
@@ -973,7 +974,7 @@ async function handleMasterMessage(embed, message = {}) {
   }
 
   if (source === "SKANDI_SHELL" && type === "SKANDI_COMPILED_READY") {
-    if (payload.key === "eos" && wixWindowFrontend.formFactor === "Desktop") {
+    if (payload.key === "eos" && wixWindowFrontend.formFactor !== "Mobile") {
       navigate(SITE_MAP.alteaLaunchpad);
       return true;
     }
@@ -1403,6 +1404,14 @@ $w.onReady(async function () {
     catch (error) { console.warn("[MasterPage] Pending RIAINTRA logout could not be confirmed.", error); }
   }
   observedPath = currentPathString();
+  if (normalizePath(observedPath) === normalizePath(SITE_MAP.eos) && wixWindowFrontend.formFactor !== "Mobile") {
+    navigate(SITE_MAP.alteaLaunchpad);
+    return;
+  }
+  if (normalizePath(observedPath) === normalizePath(APP_ROUTES.myRoster) && wixWindowFrontend.formFactor !== "Desktop") {
+    navigate(wixWindowFrontend.formFactor === "Mobile" ? SITE_MAP.eos : SITE_MAP.alteaLaunchpad);
+    return;
+  }
   wireRiaintraLifecycle();
   manualRiaintraSessionActive = hasManualRiaintraSession();
   if (isRiaintraChildPath(observedPath) && !manualRiaintraSessionActive) {

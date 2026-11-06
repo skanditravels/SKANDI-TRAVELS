@@ -7,7 +7,11 @@ import {
   createCustomerDuffelAssistantSessionCore,
   recordCustomerDuffelAssistantEventCore,
   getCustomerDuffelAssistantActivityCore,
-  verifyCustomerDuffelAssistantBookingCore
+  verifyCustomerDuffelAssistantBookingCore,
+  getAgentDuffelSupportContextCore,
+  verifyAgentDuffelSupportBookingCore,
+  routeAgentDuffelSupportCaseCore,
+  prepareAgentDuffelSupportHandoffCore
 } from "backend/SKANDI_CORE/duffelAssistant";
 
 async function currentCustomerContext() {
@@ -48,3 +52,14 @@ export const getCustomerDuffelAssistantActivity = webMethod(Permissions.SiteMemb
 
 export const verifyCustomerDuffelAssistantBooking = webMethod(Permissions.SiteMember,
   input => memberCall(verifyCustomerDuffelAssistantBookingCore, input));
+
+// Each agent core method resolves the case through the existing support-agent
+// authorization boundary before accessing or modifying support information.
+export const getAgentDuffelSupportContext = webMethod(Permissions.SiteMember,
+  input => getAgentDuffelSupportContextCore(input || {}));
+export const verifyAgentDuffelSupportBooking = webMethod(Permissions.SiteMember,
+  input => verifyAgentDuffelSupportBookingCore(input || {}));
+export const routeAgentDuffelSupportCase = webMethod(Permissions.SiteMember,
+  input => routeAgentDuffelSupportCaseCore(input || {}));
+export const prepareAgentDuffelSupportHandoff = webMethod(Permissions.SiteMember,
+  input => prepareAgentDuffelSupportHandoffCore(input || {}));

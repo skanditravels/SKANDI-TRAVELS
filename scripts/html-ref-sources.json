@@ -642,5 +642,33 @@
     "disposition": "ACTIVE SOURCE",
     "note": "Authoritative EOS single-component page source; Babel app uses the shared EOS Wix backend facade.",
     "originalSource": "HTML_REF/riaintra/EOS.md"
+  },
+  {
+    "source": "skandi-embeds/careers/README.md",
+    "directory": "skandi-embeds/careers",
+    "stem": "skandi-careers",
+    "disposition": "IMPORTED",
+    "originalSource": "User-supplied Careers HTML 2026-11-05"
+  },
+  {
+    "source": "riaintra-embeds/service-desk/README.md",
+    "directory": "riaintra-embeds/service-desk",
+    "stem": "skandi-service-desk",
+    "disposition": "IMPORTED",
+    "originalSource": "User-supplied Customer Service Desk HTML 2026-11-05"
+  },
+  {
+    "source": "skandi-embeds/cruises/README.md",
+    "directory": "skandi-embeds/cruises",
+    "stem": "skandi-cruises",
+    "disposition": "IMPORTED",
+    "originalSource": "User-supplied Cruises HTML 2026-11-05"
+  },
+  {
+    "source": "riaintra-embeds/uniform-control/README.md",
+    "directory": "riaintra-embeds/uniform-control",
+    "stem": "skandi-uniform-control",
+    "disposition": "IMPORTED",
+    "originalSource": "Wix Studio editor HTML component #uniformControlEmbed, 2026-11-05"
   }
 ]

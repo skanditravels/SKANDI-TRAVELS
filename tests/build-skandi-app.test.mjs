@@ -57,20 +57,19 @@ test('internal routes use their own source roots and generated receivers',async 
     assert.equal(row.status,'BUILT');
     assert.ok(row.receiverFile.startsWith(row.sourceDirectory+'/'));
     const generated=await fs.readFile(path.join(root,row.receiverFile),'utf8');
-    assert.match(generated,/EXPECTED=Object\.freeze/);
-    assert.ok(generated.includes(JSON.stringify(row.receiver)));
+    assert.equal(generated,await fs.readFile(path.join(ROOT,'skandi-embeds/receiver/skandi-wix-universal-receiver.html'),'utf8'));
   }
   const existing=result.manifest.pages.find(item=>item.key==='alteaReservations');
   assert.equal(existing.receiver,'skandi-embeds/altea-reservations/skandi-altea-reservations.receiver.html');
   assert.equal(existing.receiverFile,'altea-embeds/altea-reservations/skandi-altea-reservations.receiver.html');
 });
 
-test('page receiver generation fixes the route and registered Wix component into its own file',async()=>{
-  const page={key:'search',route:'/search',family:'public',chrome:'public',sourceDirectory:'skandi-embeds/search',stem:'skandi-search',embedIds:['#searchResultsEmbed']};
-  const html=await renderPageReceiver(ROOT,page);
-  assert.ok(html.includes('"key":"search","route":"/search","family":"public","chrome":"public","embedIds":["#searchResultsEmbed"],"receiver":"skandi-embeds/search/skandi-search.receiver.html"'));
-  assert.match(html,/identity\.key!==EXPECTED\.key/);
-  assert.match(html,/page\.receiver!==EXPECTED\.receiver/);
+test('page receiver generation returns the same universal receiver for every page',async()=>{
+  const home=await renderPageReceiver(ROOT,{key:'home',route:'/'});
+  const search=await renderPageReceiver(ROOT,{key:'search',route:'/search'});
+  assert.equal(home,search);
+  assert.match(home,/SKANDI_UNIVERSAL_RECEIVER/);
+  assert.doesNotMatch(home,/EXPECTED=Object\.freeze/);
 });
 
 test('Media Control retains interleaved execution, stylesheet attributes and inert email payload',async t=>{
@@ -97,7 +96,7 @@ test('compiles Home and multiple pages with three distinct chrome families and c
   assert.equal(manifest.pages.find(p=>p.key==='home').sha256,hash(await htmlOf(root,'home')));
   const homeReceiver=manifest.pages.find(p=>p.key==='home');
   assert.equal(homeReceiver.receiver,'skandi-embeds/home/skandi-home.receiver.html');
-  assert.match(await fs.readFile(path.join(root,homeReceiver.receiver),'utf8'),/"key":"home","route":"\/","family":"public","chrome":"public"/);
+  assert.equal(await fs.readFile(path.join(root,homeReceiver.receiver),'utf8'),await fs.readFile(path.join(root,"skandi-embeds/receiver/skandi-wix-universal-receiver.html"),'utf8'));
   const home=await htmlOf(root,'home');assert.match(home,/@media \(max-width:1020px\)/);assert.match(home,/#skandi-global-header-root,#skandi-global-footer-root \{ display:none!important/);assert.match(home,/env\(safe-area-inset-bottom/);assert.match(home,/font-size:16px!important/);
 });
 
@@ -177,6 +176,18 @@ test('pinned MapLibre styles and import-map module scripts survive compilation',
   const html=await htmlOf(root,'home');assert.match(html,/https:\/\/unpkg\.com\/maplibre-gl@5\.24\.0\/dist\/maplibre-gl\.css/);assert.match(html,/<script type="importmap">\{"imports":\{"sample":"https:\/\/example\.com\/sample\.js"\}\}<\/script>/);assert.match(html,/<script defer(?:="")? src="https:\/\/unpkg\.com\/maplibre-gl@5\.24\.0\/dist\/maplibre-gl\.js"><\/script>/);assert.match(html,/<script type="module">import \{value\} from "sample"; window\.moduleValue=value;<\/script>/);assert.doesNotMatch(html,/skandi-home\.module\.js/);
 });
 
+test('a primary module sidecar is emitted once as a module, never as a classic script',async t=>{
+  const root=await fixture(t);
+  const code='import {value} from "sample"; window.moduleValue=value;';
+  await page(root,'home',{html:'<!doctype html><html><head><script type="importmap">{"imports":{"sample":"https://example.com/sample.js"}}</script></head><body><main>Home</main><script type="module" src="skandi-home.js"></script></body></html>',js:code});
+  const result=await run(root);
+  assert.deepEqual(result.errors,[]);
+  const html=await htmlOf(root,'home');
+  assert.equal(html.split(code).length-1,1);
+  assert.ok(html.includes('<script type="module">'+code+'</script>'));
+  await assert.rejects(normalizeHTML('<script type="module" src="skandi-home.js"></script>','',code+' changed',{root,file:'skandi-embeds/home/skandi-home.html',mount:'home'}),/differs from sidecar/);
+});
+
 test('missing internal chrome blocks only that family; completed public pages still build',async t=>{
   const root=await fixture(t);await page(root,'home');await page(root,'successFactors');await write(root,'riaintra-embeds/global/riaintra-header.html','<!-- SKANDI_PENDING_SOURCE -->');const result=await run(root);assert.deepEqual(result.errors,[]);assert.deepEqual(result.built,['home']);assert.equal(result.manifest.pages.find(p=>p.key==='successFactors').status,'BLOCKED INTEGRATION');
 });
@@ -200,8 +211,7 @@ test('repository outputs preserve IDs and contracts; failed sources are unadvert
     if(row.status==='BUILT') {
       assert.equal(row.receiverFile,`${row.sourceDirectory}/${row.stem}.receiver.html`);
       const pageReceiver=await fs.readFile(path.join(ROOT,row.receiverFile),'utf8');
-      assert.ok(pageReceiver.includes(`"key":${JSON.stringify(row.key)}`));
-      assert.ok(pageReceiver.includes(`"route":${JSON.stringify(row.route)}`));
+      assert.equal(pageReceiver,await fs.readFile(path.join(ROOT,'skandi-embeds/receiver/skandi-wix-universal-receiver.html'),'utf8'));
     }
   }
   for(const [key,slug,source] of [['home','home','SKANDI_HOME'],['flightStatus','flight-status','SKANDI_FLIGHT_STATUS'],['riaintra','riaintra','SKANDI_STAFF_LOGIN']]) {

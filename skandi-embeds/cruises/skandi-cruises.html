@@ -1,1 +1,75 @@
-<!-- SKANDI_PENDING_SOURCE: replace with complete page markup. -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#03111f">
+<title>Cruises | SKANDI Travels · B-011.44</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="skandi-cruises.css">
+</head>
+<body>
+<section class="hero" aria-labelledby="heroTitle">
+  <div class="hero-image" id="heroImage"></div><div class="hero-veil"></div><div class="hero-gridline"></div><div class="hero-wave"></div>
+  <div class="wrap hero-inner">
+    <div class="hero-copy">
+      <div class="eyebrow gold" data-i18n="hero.kicker">SKANDI Cruises</div>
+      <h1 id="heroTitle"><span data-i18n="hero.line1">Open water.</span> <span data-i18n="hero.line2">Unforgettable places.</span></h1>
+      <p class="hero-lede" data-i18n="hero.copy">Explore itineraries, sailing dates and destinations for your next journey.</p>
+      <div class="hero-actions"><button class="btn soft" type="button" id="exploreBtn" data-i18n="hero.explore">Explore cruises</button><button class="btn ghost" type="button" id="supportBtn" data-i18n="hero.support">Cruise planning help</button></div>
+    </div>
+    <aside class="hero-aside">
+      <div class="hero-aside-kicker" data-i18n="hero.aside.kicker">Cruise collection</div>
+      <h2 data-i18n="hero.aside.title">A voyage built around the whole trip.</h2>
+      <p data-i18n="hero.aside.copy">Explore available voyages and ask our team for help planning the rest of your trip.</p>
+      <div class="hero-stats"><div class="hero-stat"><strong id="cruiseCount">—</strong><span data-i18n="stats.cruises">Cruises</span></div><div class="hero-stat"><strong id="sailingCount">—</strong><span data-i18n="stats.sailings">Sailings</span></div><div class="hero-stat"><strong id="destinationCount">—</strong><span data-i18n="stats.destinations">Destinations</span></div><div class="hero-stat"><strong id="currencyStat">—</strong><span data-i18n="stats.currency">Display currency</span></div></div>
+      <div class="live-row"><span class="live-dot"></span><span id="liveState" aria-live="polite" data-i18n="stats.loading">Connecting to Travel Info</span></div>
+    </aside>
+  </div>
+</section>
+
+<section class="search-shell" id="searchSection">
+  <div class="wrap">
+    <div class="search-card">
+      <div class="search-head"><div><div class="eyebrow" data-i18n="search.kicker">Find your voyage</div><h2 data-i18n="search.title">Where should the sea take you?</h2></div><p data-i18n="search.copy">Filter the current published cruise catalogue. Dates, availability and prices are shown only when present in Travel Info.</p></div>
+      <div class="search-grid">
+        <div class="field c3"><label for="destination" data-i18n="search.destination">Destination</label><select id="destination"><option value="" data-i18n="search.anyDestination">Any destination</option></select></div>
+        <div class="field c3"><label for="port" data-i18n="search.port">Departure port</label><select id="port"><option value="" data-i18n="search.anyPort">Any port</option></select></div>
+        <div class="field c2"><label for="month" data-i18n="search.month">Departure month</label><select id="month"><option value="" data-i18n="search.anyMonth">Any month</option></select></div>
+        <div class="field c2"><label for="nights" data-i18n="search.nights">Length</label><select id="nights"><option value="" data-i18n="search.anyLength">Any length</option></select></div>
+        <div class="field c2 guest-wrap"><label data-i18n="search.guests">Guests</label><button class="field-button" type="button" id="guestBtn"><span id="guestLabel">2 adults</span><small>⌄</small></button><div class="guest-pop hidden" id="guestPop"><div class="guest-row"><div><strong data-i18n="guests.adults">Adults</strong><small data-i18n="guests.adultsAge">12+ years</small></div><div class="counter"><button type="button" data-counter="adults" data-delta="-1" aria-label="Decrease adults">−</button><span id="adultCount">2</span><button type="button" data-counter="adults" data-delta="1" aria-label="Increase adults">+</button></div></div><div class="guest-row"><div><strong data-i18n="guests.children">Children</strong><small data-i18n="guests.childrenAge">2–11 years</small></div><div class="counter"><button type="button" data-counter="children" data-delta="-1" aria-label="Decrease children">−</button><span id="childCount">0</span><button type="button" data-counter="children" data-delta="1" aria-label="Increase children">+</button></div></div><button class="btn guest-done" type="button" id="guestDone" data-i18n="guests.done">Done</button></div></div>
+        <div class="search-action"><button class="btn" type="button" id="searchBtn" data-i18n="search.button">Show cruises</button></div>
+      </div>
+      <div class="search-note"><span><strong data-i18n="search.noteStrong">Travel Info-backed results.</strong> <span data-i18n="search.note">Availability and public prices reflect current published Travel Info data.</span></span><span id="generatedAt"></span></div>
+    </div>
+  </div>
+</section>
+
+<main class="page">
+  <section class="section" id="featuredSection">
+    <div class="wrap"><div class="section-head"><div><div class="eyebrow" data-i18n="featured.kicker">Featured voyages</div><h2 data-i18n="featured.title">Start with what is sailing now.</h2></div><p data-i18n="featured.copy">Featured cruises are selected only from current published, customer-visible Travel Info records.</p></div><div id="featuredGrid" class="feature-grid"></div></div>
+  </section>
+
+  <section class="section soft" id="resultsSection">
+    <div class="wrap"><div class="section-head"><div><div class="eyebrow" data-i18n="results.kicker">Cruise catalogue</div><h2 data-i18n="results.title">Explore every published cruise.</h2></div><p id="resultsCopy" data-i18n="results.copy">Use the filters above or browse the complete current catalogue.</p></div><div id="pageNotice" class="notice info hidden" aria-live="polite"></div></div>
+    <div class="results-toolbar"><div class="wrap toolbar-inner"><div class="result-count" id="resultCount" aria-live="polite">0 cruises</div><div class="toolbar-actions"><select id="sort"><option value="recommended" data-i18n="sort.recommended">Featured first</option><option value="soonest" data-i18n="sort.soonest">Soonest departure</option><option value="price" data-i18n="sort.price">Lowest price</option><option value="nights" data-i18n="sort.nights">Shortest voyage</option></select><button class="clear-btn" type="button" id="clearBtn" data-i18n="results.clear">Clear filters</button></div></div></div>
+    <div class="wrap"><div id="loading" class="loading"><div class="skeleton-grid"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div></div><div id="results" class="results hidden"></div></div>
+  </section>
+
+  <section class="section">
+    <div class="wrap"><div class="section-head"><div><div class="eyebrow gold" data-i18n="promise.kicker">The SKANDI approach</div><h2 data-i18n="promise.title">Cruise planning without the noise.</h2></div><p data-i18n="promise.copy">Clear information at every step, with SKANDI Support available when a sailing requires personal planning.</p></div><div class="promise-grid"><article class="promise"><div class="promise-no">01</div><h3 data-i18n="promise.one.title">Published Travel Info only</h3><p data-i18n="promise.one.copy">Cruises are served from the canonical Travel Info cruise catalogue and synchronized server-side from approved cruise providers.</p></article><article class="promise"><div class="promise-no">02</div><h3 data-i18n="promise.two.title">Real sailing dates</h3><p data-i18n="promise.two.copy">Sailing dates, provider status and public prices come from canonical Travel Info sailing records.</p></article><article class="promise"><div class="promise-no">03</div><h3 data-i18n="promise.three.title">Human help when needed</h3><p data-i18n="promise.three.copy">For sailings not yet available for online checkout, SKANDI Support helps you continue with the cruise details already selected.</p></article></div></div>
+  </section>
+</main>
+
+<div class="drawer-backdrop" id="drawerBackdrop"></div>
+<aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="detailTitle">
+  <div class="drawer-top"><strong data-i18n="detail.heading">Cruise details</strong><button class="close" type="button" id="closeDrawer" aria-label="Close">×</button></div>
+  <div class="drawer-scroll" id="drawerScroll"><div class="detail-hero"><div class="detail-hero-image" id="detailImage"></div><div class="detail-copy"><div class="eyebrow" id="detailKicker">SKANDI Cruise</div><h2 id="detailTitle">Cruise</h2><p id="detailRoute"></p></div></div><div class="detail-body"><div class="detail-facts" id="detailFacts"></div><div class="detail-section"><h3 data-i18n="detail.overview">Overview</h3><p id="detailDescription"></p></div><div class="detail-section hidden" id="highlightSection"><h3 data-i18n="detail.highlights">Highlights</h3><div class="chips" id="detailHighlights"></div></div><div class="detail-section hidden" id="itinerarySection"><h3 data-i18n="detail.itinerary">Itinerary</h3><div class="itinerary" id="detailItinerary"></div></div><div class="detail-section hidden" id="inclusionSection"><h3 data-i18n="detail.included">Included</h3><div class="chips" id="detailInclusions"></div></div><div class="detail-section"><h3 data-i18n="detail.sailings">Available sailings</h3><div class="sailings" id="detailSailings"></div><div class="support-note" id="bookingNotice"></div></div></div></div>
+  <div class="drawer-cta"><div class="drawer-total"><span data-i18n="detail.from">Selected sailing</span><strong id="drawerPrice">—</strong><small id="drawerPriceBasis"></small></div><button class="btn" type="button" id="planBtn" data-i18n="detail.plan">Plan with SKANDI</button></div>
+</aside>
+
+<script src="skandi-cruises.js"></script>
+</body>
+</html>

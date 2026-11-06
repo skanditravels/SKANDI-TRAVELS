@@ -88,15 +88,19 @@ export async function normalizeHTML(html,css,js,{root,file,mount}) {
   // VOY's intentionally blank PDF fallback is populated at runtime only if PDF.js is unavailable.
   // Keep this single audited placeholder; all other static nested frames remain unsupported.
   const relativeFile=path.relative(root,file).replaceAll(path.sep,'/');
-  const unsupportedFrame=nodes.find(n=>n.tagName==='iframe'&&!(
+  const unsupportedFrame=nodes.find(n=>n.tagName==='iframe'&&!((
     relativeFile==='skandi-embeds/voy/skandi-voy.html' &&
-    attr(n,'id')==='fallbackFrame' &&
-    attr(n,'class')==='reader-fallback' &&
-    attr(n,'title')==='VOY PDF fallback reader' &&
-    !attr(n,'src') &&
+    attr(n,'id')==='fallbackFrame' && attr(n,'class')==='reader-fallback' &&
+    attr(n,'title')==='VOY PDF fallback reader' && !attr(n,'src') &&
     !(n.attrs||[]).some(a=>['srcdoc','name'].includes(a.name)) &&
     (n.childNodes||[]).length===0
-  ));
+  ) || (
+    relativeFile==='skandi-embeds/careers/skandi-careers.html' &&
+    attr(n,'id')==='pdfViewer' && attr(n,'title')==='Applicant document viewer' &&
+    attr(n,'src')==='about:blank' &&
+    (n.attrs||[]).every(a=>['id','title','src'].includes(a.name)) &&
+    (n.childNodes||[]).length===0
+  )));
   if(unsupportedFrame) throw new Error(`${file}: nested iframe is not supported; retain the existing Wix integration`);
   if(nodes.some(n=>n.tagName==='base')) throw new Error(`${file}: <base> changes receiver/navigation ownership; use explicit asset URLs`);
   const bodies=nodes.filter(n=>n.tagName==='body'),heads=nodes.filter(n=>n.tagName==='head');
@@ -152,11 +156,18 @@ export async function normalizeHTML(html,css,js,{root,file,mount}) {
             moduleScripts.push(serializeOuter(n));remove(n);
             continue;
           }
-          const code=src
-            ?await fs.readFile((await localFile(root,file,src)).file,'utf8')
+          const target=src ? (await localFile(root,file,src)).file : null;
+          const code=target
+            ?await fs.readFile(target,'utf8')
             :n.sourceCodeLocation?.startTag&&n.sourceCodeLocation?.endTag
               ?html.slice(n.sourceCodeLocation.startTag.endOffset,n.sourceCodeLocation.endTag.startOffset)
               :(n.childNodes||[]).map(c=>c.value||'').join('');
+          // The primary sidecar is already represented by this module tag.
+          // Do not also place it in the classic scoped script below.
+          if(target===path.resolve(root,file.replace(/\.html$/,'.js'))) {
+            if(code!==js)throw new Error(`${file}: linked primary module JavaScript differs from sidecar`);
+            linkedJS=true;
+          }
           parseJS(code,{ecmaVersion:'latest',sourceType:'module'});
           const attrs=(n.attrs||[]).filter(a=>!(src&&a.name==='src')).map(a=>` ${a.name}="${escapeHTML(a.value)}"`).join('');
           moduleScripts.push(`<script${attrs}>${safeJS(code)}</script>`);remove(n);
