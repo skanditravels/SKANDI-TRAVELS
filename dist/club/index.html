@@ -2525,19 +2525,19 @@ html, body { width: 100% !important; margin: 0 !important; max-width: none !impo
   <section id="chat" aria-label="Alexandra customer support"><div class="chat-log" id="chatLog" role="log" aria-live="polite"><div class="bubble">How can I help with your trip?</div></div><div id="chatStatus" role="status">SKANDI Customer Service</div><form class="chat-compose" id="chatForm"><input id="chatInput" type="text" maxlength="1000" autocomplete="off" placeholder="Write your message" aria-label="Message to Alexandra"><button type="submit">Send</button></form></section>
 </aside>
 <nav id="skandi-mobile-nav-root" class="skmn" role="group" aria-label="SKANDI mobile navigation">
-  <button type="button" class="skmn-btn" data-route="home" aria-label="Home" aria-current="page">
+  <button type="button" class="skmn-btn" data-skandi-mobile-route="home" aria-label="Home" aria-current="page">
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 11 9-8 9 8v9a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"></path></svg><span>Home</span>
   </button>
-  <button type="button" class="skmn-btn" data-route="destinations" aria-label="Destinations">
+  <button type="button" class="skmn-btn" data-skandi-mobile-route="destinations" aria-label="Destinations">
     <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="m9 15 3-8 3 5-6 3z"></path></svg><span>Explore</span>
   </button>
-  <button type="button" class="skmn-btn skmn-primary" data-route="bookingFlow" aria-label="Book a trip">
+  <button type="button" class="skmn-btn skmn-primary" data-skandi-mobile-route="bookingFlow" aria-label="Book a trip">
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m2 16 20-9-3 13-6-6-5 6-1-8-5-1z"></path></svg><span>Book</span>
   </button>
-  <button type="button" class="skmn-btn" data-route="myTrips" aria-label="My Trips">
+  <button type="button" class="skmn-btn" data-skandi-mobile-route="myTrips" aria-label="My Trips">
     <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="15" rx="2"></rect><path d="M9 6V4a3 3 0 0 1 6 0v2M3 13h18"></path></svg><span>Trips</span>
   </button>
-  <button type="button" class="skmn-btn" data-route="menu" aria-label="Open menu" aria-expanded="false" aria-controls="drawer" aria-haspopup="dialog">
+  <button type="button" class="skmn-btn" data-skandi-mobile-route="menu" aria-label="Open menu" aria-expanded="false" aria-controls="drawer" aria-haspopup="dialog">
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"></path></svg><span>Menu</span>
   </button>
 </nav>
@@ -3737,8 +3737,8 @@ const SOURCE='SKANDI_HOME_MOBILE_APP';
   ];
   const $=id=>document.getElementById(id);
   const bar=$('skandi-mobile-nav-root');
-  const BUTTONS=Array.from(bar.querySelectorAll('[data-route]'));
-  const menuButton=BUTTONS.find(btn=>btn.dataset.route==='menu');
+  const BUTTONS=Array.from(bar.querySelectorAll('[data-skandi-mobile-route]'));
+  const menuButton=BUTTONS.find(btn=>btn.dataset.skandiMobileRoute==='menu');
   const drawer=$('drawer');
   const status=$("skandi-mobile-status");
   const shell=window.__SKANDI_SHELL__?.root;
@@ -3778,7 +3778,7 @@ const SOURCE='SKANDI_HOME_MOBILE_APP';
     const current=safePath(state.currentPath)||'/';
     const normalized=current.split('?')[0];
     for(const button of BUTTONS){
-      const key=button.dataset.route;
+      const key=button.dataset.skandiMobileRoute;
       const path=isStaff?safePath(button.dataset.path):pathFor(key);
       const active=path&&(path.includes('?')?current===path:normalized===path || key==='destinations'&&normalized.startsWith('/destinations/'));
       if(active)button.setAttribute('aria-current','page');
@@ -3948,10 +3948,10 @@ const SOURCE='SKANDI_HOME_MOBILE_APP';
   }
   for(const button of BUTTONS){
     button.addEventListener('click',()=>{
-      if(button.dataset.route==='menu'){
+      if(button.dataset.skandiMobileRoute==='menu'){
         if(state.drawerOpen)closeDrawer();else openDrawer();
       } else if(isStaff)navigatePath(button.dataset.path);
-      else navigate(button.dataset.route);
+      else navigate(button.dataset.skandiMobileRoute);
     });
   }
   $('overlay').addEventListener('click',closeDrawer);
