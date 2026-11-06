@@ -11,7 +11,6 @@ import { SkandiError, errorCode, errorStatus } from "backend/SKANDI_CORE/platfor
 import { requireStaffPortalSessionCore } from "backend/SKANDI_CORE/staffAuth";
 
 const WIX_STORES_APP_ID = "215238eb-22a5-4c36-9e7b-e7c08025e04e";
-const STORE_TREE = Object.freeze({ appNamespace: "@wix/stores", treeKey: null });
 const PRODUCT_FIELDS = [
   "VARIANT_OPTION_CHOICE_NAMES","MERCHANT_DATA","INFO_SECTION","URL","CURRENCY",
   "WEIGHT_MEASUREMENT_UNIT_INFO","BREADCRUMBS_INFO","MEDIA_ITEMS_INFO","DESCRIPTION",
@@ -185,10 +184,14 @@ async function queryAllProducts() {
   }
   return products;
 }
+// Wix normalizes the category tree reference in place.
+function storeTreeReference() {
+  return { appNamespace: "@wix/stores", treeKey: null };
+}
 async function queryAllCategories() {
   const response = await elevatedQueryCategories(
     { cursorPaging: { limit: 1000 } },
-    { treeReference: STORE_TREE, returnNonVisibleCategories: true, fields: ["BREADCRUMBS_INFO","DESCRIPTION"] }
+    { treeReference: storeTreeReference(), returnNonVisibleCategories: true, fields: ["BREADCRUMBS_INFO","DESCRIPTION"] }
   );
   if (!Array.isArray(response?.categories)) throw new Error("STORE_CONTROL_INVALID_CATEGORIES_RESPONSE");
   return response.categories;
@@ -371,8 +374,8 @@ async function syncProductCategories(productId, desiredIds = []) {
   const add = [...desired].filter((id) => !current.has(id));
   const remove = [...current].filter((id) => !desired.has(id));
   const item = { catalogItemId: productId, appId: WIX_STORES_APP_ID };
-  if (add.length) await elevatedAddItemToCategories(item, { categoryIds: add, treeReference: STORE_TREE });
-  if (remove.length) await elevatedRemoveItemFromCategories(item, { categoryIds: remove, treeReference: STORE_TREE });
+  if (add.length) await elevatedAddItemToCategories(item, { categoryIds: add, treeReference: storeTreeReference() });
+  if (remove.length) await elevatedRemoveItemFromCategories(item, { categoryIds: remove, treeReference: storeTreeReference() });
   return { added: add, removed: remove };
 }
 
@@ -671,7 +674,7 @@ export async function listStorefrontProductsCore({ limit = 300 } = {}) {
   }
   const categoryResult = await elevatedQueryCategories(
     { cursorPaging: { limit: 1000 } },
-    { treeReference: STORE_TREE, returnNonVisibleCategories: false }
+    { treeReference: storeTreeReference(), returnNonVisibleCategories: false }
   );
   if (!Array.isArray(categoryResult?.categories)) throw new Error("STOREFRONT_INVALID_CATEGORIES_RESPONSE");
   const categoryRows = categoryResult.categories
@@ -781,14 +784,14 @@ export async function saveStoreControlCollectionCore({categoryId="",name="",slug
   let id=cleanText(categoryId,80);
   if(!assignOnly){
     if(!cleanText(name,300))throw new Error("Collection name is required.");
-    const result=await adminCreateCategory({name:cleanText(name,300),description:cleanText(description,5000),...(slug?{slug:cleanText(slug,300)}:{}),visible:true},{treeReference:STORE_TREE});
+    const result=await adminCreateCategory({name:cleanText(name,300),description:cleanText(description,5000),...(slug?{slug:cleanText(slug,300)}:{}),visible:true},{treeReference:storeTreeReference()});
     const category=result?.category||result;id=category?._id||category?.id||"";
     if(!id)throw new Error("Collection creation was not confirmed. Refresh before retrying.");
   }
   if(!id)throw new Error("Select a collection for assignment.");
   const results=[];
   for(const productId of [...new Set(productIds)].slice(0,100)){
-    try{await elevatedAddItemToCategories({catalogItemId:cleanText(productId,80),appId:WIX_STORES_APP_ID},{categoryIds:[id],treeReference:STORE_TREE});results.push({productId,ok:true})}
+    try{await elevatedAddItemToCategories({catalogItemId:cleanText(productId,80),appId:WIX_STORES_APP_ID},{categoryIds:[id],treeReference:storeTreeReference()});results.push({productId,ok:true})}
     catch(_){results.push({productId,ok:false})}
   }
   return {ok:true,categoryId:id,results,message:results.some(x=>!x.ok)?"Collection saved; some product assignments failed. Review the listed products before retrying.":"Collection saved."};
