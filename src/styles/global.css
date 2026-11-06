@@ -18,6 +18,18 @@
   bottom: 0 !important;
 }
 
+/* The compiled shell scrolls internally and anchors its bar to the iframe viewport. */
+@media (max-width: 1020px) {
+  .skandi-compiled-mobile-host,
+  .skandi-compiled-mobile-host iframe {
+    height: 100vh !important;
+    height: 100dvh !important;
+    min-height: 0 !important;
+    max-height: 100vh !important;
+    max-height: 100dvh !important;
+  }
+}
+
 /* Keep editable controls legible on the Wix host as well as in compiled embeds. */
 html {
   -webkit-text-size-adjust: 100%;

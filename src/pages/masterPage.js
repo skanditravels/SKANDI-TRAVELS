@@ -14,7 +14,7 @@ import { getPublicPagePresentation } from "backend/SKANDI_CORE/presentation.web"
 import { createFlightsPageHost } from "public/flightsPageHost";
 import { getCruisesBootstrap, refreshCruises } from "backend/SKANDI_CORE/cruises.web";
 import { getEosBootstrap, searchEosFlights, searchEosStations, createEosClockEvent, submitEosOpsAction } from "backend/SKANDI_CORE/eos.web";
-import { SITE_MAP, APP_ROUTES, GLOBAL_CHROME, isSafeInternalRoute, PAGE_BUILD_INTEGRATIONS, INTERNAL_PATH_PREFIXES, CHROME_FREE_PATHS, getPageFamily, getPageChrome, resolveBuildRoute } from "public/siteMap";
+import { SITE_MAP, APP_ROUTES, GLOBAL_CHROME, isSafeInternalRoute, PAGE_BUILD_INTEGRATIONS, INTERNAL_PATH_PREFIXES, CHROME_FREE_PATHS, getPageFamily, getPageChrome, hasPageMobileNavigation, resolveBuildRoute } from "public/siteMap";
 import { bindAlexandraGlobal } from "public/alexandraGlobalBridge.js";
 
 const MASTER_VERSION = "BACKEND-BASE-1.0-B011.20-BRANCH-MEDIA-CONTROL";
@@ -1080,6 +1080,10 @@ async function handleMasterMessage(embed, message = {}) {
     const identity = compiledIdentity(embed, isInternalPath() ? await getStaffState() : {});
     if (identity.allowed && identity.key === payload.key) {
       compiledEmbeds.set(embed.id, identity);
+      if (hasPageMobileNavigation(identity.route)) {
+        try { embed.customClassList?.add("skandi-compiled-mobile-host"); }
+        catch (error) { console.warn("[MasterPage] Could not size the compiled mobile host.", error); }
+      }
       stopMobileFooterGate();
       await applyChromeVisibility();
       pushMasterConfig(embed);
