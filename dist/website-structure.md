@@ -86,6 +86,7 @@ These actual repository controllers are preserved. No new route or build is inve
 - `src/pages/Error404.yt0r0.js`
 - `src/pages/Event notifications.vs8dh.js`
 - `src/pages/Finance Control.gboi3.js`
+- `src/pages/Flights.z1pw9.js`
 - `src/pages/HelpDesk.j0pq3.js`
 - `src/pages/Info Center Control.gi072.js`
 - `src/pages/Info Control.acd1l.js`
