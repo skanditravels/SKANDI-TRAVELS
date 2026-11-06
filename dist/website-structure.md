@@ -10,12 +10,12 @@ Route authority: `src/public/siteMap.js`. This file is generated evidence, not r
 | carRental | /car-rental | skandi-embeds/car-rental/skandi-car-rental.{html,css,js} | public / public | src/pages/Car Rental.i9rnb.js | BUILT |
 | hotels | /hotels | skandi-embeds/hotels/skandi-hotels.{html,css,js} | public / public | UNVERIFIED | PENDING SOURCE |
 | packages | /packages | skandi-embeds/packages/skandi-packages.{html,css,js} | public / public | UNVERIFIED | PENDING SOURCE |
-| cruises | /cruises | skandi-embeds/cruises/skandi-cruises.{html,css,js} | public / public | UNVERIFIED | PENDING SOURCE |
-| tours | /tours | skandi-embeds/tours/skandi-tours.{html,css,js} | public / public | src/pages/Tours & Activities.jxipw.js | BUILT |
-| activities | /activities | skandi-embeds/activities/skandi-activities.{html,css,js} | public / public | UNVERIFIED | PENDING SOURCE |
-| transfers | /transfers | skandi-embeds/transfers/skandi-transfers.{html,css,js} | public / public | UNVERIFIED | PENDING SOURCE |
+| cruises | /cruises | skandi-embeds/cruises/skandi-cruises.{html,css,js} | public / public | src/pages/masterPage.js | BUILT |
+| tours | /tours-activities | skandi-embeds/tours/skandi-tours.{html,css,js} | public / public | src/pages/Tours & Activities.jxipw.js | BUILT |
+| activities | /tours-activities | Alias of tours | public / public | src/pages/Tours & Activities.jxipw.js | ALIAS |
 | destinations | /destinations | skandi-embeds/destinations/skandi-destinations.{html,css,js} | public / public | src/pages/Our Destinations.wfe5g.js | BUILT |
 | travelInfo | /travel-info | skandi-embeds/travel-info/skandi-travel-info.{html,css,js} | public / public | src/pages/Travel Info.m43d6.js | BUILT |
+| transfers | /travel-info?section=transfers | Alias of travelInfo | public / public | src/pages/Travel Info.m43d6.js | ALIAS |
 | skandiCollection | /skandi-collection | skandi-embeds/skandi-collection/skandi-skandi-collection.{html,css,js} | public / public | src/pages/SKANDI Collection.lo9p5.js | BUILT |
 | voy | /voy-magazine | skandi-embeds/voy/skandi-voy.{html,css,js} | public / public | src/pages/VOY Magazine.gecp7.js | BUILT |
 | club | /skandi-club | skandi-embeds/club/skandi-club.{html,css,js} | public / public | src/pages/SKANDI Club.gsejz.js | BUILT |
@@ -27,7 +27,7 @@ Route authority: `src/public/siteMap.js`. This file is generated evidence, not r
 | theStore | /the-store | skandi-embeds/the-store/skandi-the-store.{html,css,js} | public / none | src/pages/The Store.iv8g6.js | BUILT |
 | storeCheckout | /the-store/store-checkout | skandi-embeds/store-checkout/skandi-store-checkout.{html,css,js} | public / none | src/pages/Checkout.qofcb.js | BUILT |
 | storeConfirmation | /the-store/store-checkout/order-confirmation | skandi-embeds/store-confirmation/skandi-store-confirmation.{html,css,js} | public / none | src/pages/Order Confirmation.u5zzl.js | BUILT |
-| ourNetwork | /about/our-network | skandi-embeds/our-network/skandi-our-network.{html,css,js} | public / public | UNVERIFIED | PENDING SOURCE |
+| ourNetwork | /destinations | Alias of destinations | public / public | src/pages/Our Destinations.wfe5g.js | ALIAS |
 | legal | /about/legal | skandi-embeds/legal/skandi-legal.{html,css,js} | public / public | src/pages/Legal.nvnld.js | BUILT |
 | policies | /about/legal/policies | skandi-embeds/policies/skandi-policies.{html,css,js} | public / public | src/pages/Policies.sgcey.js | BUILT |
 | cookiePreferences | /about/legal/cookie-preferences | skandi-embeds/cookie-preferences/skandi-cookie-preferences.{html,css,js} | public / public | src/pages/masterPage.js | BUILT |
@@ -39,24 +39,24 @@ Route authority: `src/public/siteMap.js`. This file is generated evidence, not r
 | alteaReservations | /riaintra/success-factors/altea/reservations | altea-embeds/altea-reservations/skandi-altea-reservations.{html,css,js} | altea / altea | src/pages/Reservations.ly2n8.js | BUILT |
 | opsControl | /riaintra/success-factors/altea/ops | altea-embeds/ops-control/skandi-ops-control.{html,css,js} | altea / altea | src/pages/OPS Control.uposx.js | BUILT |
 | eos | /riaintra/success-factors/altea/eos | altea-embeds/eos/skandi-eos.{html,css,js} | altea / altea | src/pages/masterPage.js | BUILT |
-| inventoryControl | /riaintra/success-factors/altea/inventory-control | altea-embeds/inventory-control/skandi-inventory-control.{html,css,js} | altea / altea | src/pages/Inventory Control.jsdik.js | FAILED |
+| inventoryControl | /riaintra/success-factors/altea/inventory-control | altea-embeds/inventory-control/skandi-inventory-control.{html,css,js} | altea / altea | src/pages/Inventory Control.jsdik.js | BUILT |
 | uniformCenter | /riaintra/success-factors/uniform | riaintra-embeds/uniform-center/skandi-uniform-center.{html,css,js} | riaintra / riaintra | src/pages/Uniform Center.lukfc.js | BUILT |
-| uniformControl | /riaintra/success-factors/uniform/admin-control | riaintra-embeds/uniform-control/skandi-uniform-control.{html,css,js} | riaintra / riaintra | src/pages/Uniform Control.yx92b.js | PENDING SOURCE |
+| uniformControl | /riaintra/success-factors/uniform/admin-control | riaintra-embeds/uniform-control/skandi-uniform-control.{html,css,js} | riaintra / riaintra | src/pages/Uniform Control.yx92b.js | BUILT |
 | alteaTimatic | /riaintra/success-factors/altea/timatic | altea-embeds/altea-timatic/skandi-altea-timatic.{html,css,js} | altea / altea | UNVERIFIED | PENDING SOURCE |
 | mail | /riaintra/success-factors/mail | riaintra-embeds/mail/skandi-mail.{html,css,js} | riaintra / riaintra | src/pages/Mail.ecik8.js | BUILT |
 | docunet | /riaintra/success-factors/docunet | riaintra-embeds/docunet/skandi-docunet.{html,css,js} | riaintra / riaintra | src/pages/DocuNet.twh13.js | BUILT |
 | docunetAdmin | /riaintra/success-factors/docunet/admin | riaintra-embeds/docunet-admin/skandi-docunet-admin.{html,css,js} | riaintra / riaintra | src/pages/DocuNet Administration.u5a64.js | FAILED |
-| serviceDesk | /riaintra/success-factors/service-desk | riaintra-embeds/service-desk/skandi-service-desk.{html,css,js} | riaintra / riaintra | UNVERIFIED | PENDING SOURCE |
+| serviceDesk | /riaintra/success-factors/service-desk | riaintra-embeds/service-desk/skandi-service-desk.{html,css,js} | riaintra / riaintra | src/pages/Customer Service Desk.benbs.js | BUILT |
 | policyControl | /riaintra/success-factors/policy-control | riaintra-embeds/policy-control/skandi-policy-control.{html,css,js} | riaintra / riaintra | src/pages/Policy Control.ec9p4.js | BUILT |
 | mediaControl | /riaintra/success-factors/media-control | riaintra-embeds/media-control/skandi-media-control.{html,css,js} | riaintra / riaintra | src/pages/Media Control.chm91.js | BUILT |
 | storeControl | /riaintra/success-factors/store-control | riaintra-embeds/store-control/skandi-store-control.{html,css,js} | riaintra / riaintra | src/pages/The Store Control.y10le.js | BUILT |
 | payroll | /riaintra/success-factors/payroll | riaintra-embeds/payroll/skandi-payroll.{html,css,js} | riaintra / riaintra | src/pages/Payroll.rzo0a.js | BUILT |
-| country | /destinations/country | skandi-embeds/country/skandi-country.{html,css,js} | public / public | src/pages/Country.nxtpn.js | BUILT |
+| country | /destinations/explore | skandi-embeds/country/skandi-country.{html,css,js} | public / public | src/pages/Explore.nxtpn.js | BUILT |
 | bookingFlow | /booking | skandi-embeds/booking/skandi-booking-flow.{html,css,js} | public / none | src/pages/Booking.e8twe.js | BUILT |
 | myProfile | /my-profile | skandi-embeds/my-profile/skandi-my-profile.{html,css,js} | public / public | src/pages/My Club Profile.u4k31.js | BUILT |
 | myTrips | /my-profile?tab=trips | Alias of myProfile | public / public | src/pages/My Club Profile.u4k31.js | ALIAS |
-| careers | /about/careers | skandi-embeds/careers/skandi-careers.{html,css,js} | public / public | src/pages/Work at SKANDI.dyodg.js | PENDING SOURCE |
-| myRoster | /riaintra/success-factors/altea/my-roster | altea-embeds/my-roster/skandi-my-roster.{html,css,js} | altea / altea | src/pages/MyRoster.l8p5m.js | BLOCKED INTEGRATION |
+| careers | /about/careers | skandi-embeds/careers/skandi-careers.{html,css,js} | public / public | src/pages/Work at SKANDI.dyodg.js | BUILT |
+| myRoster | /riaintra/success-factors/altea/my-roster | altea-embeds/my-roster/skandi-my-roster.{html,css,js} | altea / altea | src/pages/MyRoster.l8p5m.js | BUILT |
 | groupTalk | /riaintra/success-factors/altea/grouptalk | altea-embeds/group-talk/skandi-group-talk.{html,css,js} | altea / none | src/pages/GroupTalk.wi4iw.js | BUILT |
 | passportVisa | /travel-info/passport-visa | skandi-embeds/passport-visa/skandi-passport-visa.{html,css,js} | public / public | src/pages/Passport & Visa.zohjw.js | BUILT |
 | baggageAllowance | /travel-info/baggage-allowance | skandi-embeds/baggage-allowance/skandi-baggage-allowance.{html,css,js} | public / public | src/pages/Baggage Allowance.tf8xc.js | BUILT |
@@ -79,7 +79,6 @@ These actual repository controllers are preserved. No new route or build is inve
 - `src/pages/Category Page.agxr7.js`
 - `src/pages/Checkout.lof54.js`
 - `src/pages/Customer Document Center.jtp4b.js`
-- `src/pages/Customer Service Desk.benbs.js`
 - `src/pages/Destination.u4y1p.js`
 - `src/pages/Document Filler.hz1s8.js`
 - `src/pages/EOS.f6tx1.js`
@@ -110,15 +109,6 @@ These actual repository controllers are preserved. No new route or build is inve
 
 - **hotels**: NOT READY: No verified canonical controller mapping.
 - **packages**: NOT READY: No verified canonical controller mapping.
-- **cruises**: NOT READY: No verified canonical controller mapping.
-- **activities**: NOT READY: No verified canonical controller mapping.
-- **transfers**: NOT READY: No verified canonical controller mapping.
 - **support**: NOT READY: Help Center and support chat are separate HTML components; preserve them until a verified single-component migration.
-- **ourNetwork**: NOT READY: No verified canonical controller mapping.
-- **inventoryControl**: NOT READY: [inventoryControl / inventory-control] altea-embeds/inventory-control/skandi-inventory-control.html, altea-embeds/inventory-control/skandi-inventory-control.css, altea-embeds/inventory-control/skandi-inventory-control.js: Cannot use import statement outside a module
-- **uniformControl**: NOT READY: PENDING SOURCE
 - **alteaTimatic**: NOT READY: No verified canonical controller mapping.
 - **docunetAdmin**: NOT READY: [docunetAdmin / docunet-admin] riaintra-embeds/docunet-admin/skandi-docunet-admin.html, riaintra-embeds/docunet-admin/skandi-docunet-admin.css, riaintra-embeds/docunet-admin/skandi-docunet-admin.js: riaintra-embeds/docunet-admin/skandi-docunet-admin.html: nested iframe is not supported; retain the existing Wix integration
-- **serviceDesk**: NOT READY: No verified canonical controller mapping.
-- **careers**: NOT READY: PENDING SOURCE
-- **myRoster**: NOT READY: Controller no longer declares #myRosterEmbed

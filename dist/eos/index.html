@@ -521,6 +521,8 @@
       border-bottom: 1px solid #111827;
       padding: 4px 6px;
     }
+/* The EOS phone view fills its host rather than drawing a device frame. */
+#skandi-app-root .device-iphone { max-width:none; max-height:none; border-radius:0; box-shadow:none; }
 </style>
 <style data-skandi-part="shell">html,body{margin:0;width:100%;min-height:100%;}*,*::before,*::after{box-sizing:border-box}#skandi-shell-root{min-height:100vh;min-width:0;display:flex;flex-direction:column}#skandi-app-root{flex:1;min-width:0;position:relative}#altea-global-header-root,#altea-global-footer-root{flex:none}@media(max-width:767px){input:not([type=hidden]),select,textarea{font-size:16px!important}}html,body{height:100%;overflow:hidden}#skandi-shell-root{height:100vh;height:100dvh;min-height:0;overflow:hidden}#skandi-app-root{height:auto;min-height:0;overflow:auto}#altea-global-header-root{position:relative;height:48px;min-height:48px;overflow:visible;z-index:2000}#altea-global-footer-root{height:auto;overflow:visible;z-index:2000}#riaintra-global-header-root .shellbar{position:absolute}#altea-global-footer-root .status-bar{position:relative}@media(max-width:600px){#riaintra-global-footer-root .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px}#riaintra-global-footer-root .footer-left{flex-wrap:wrap;gap:6px}}</style>
 </head>

@@ -3064,7 +3064,7 @@ const SOURCE='SKANDI_HOME_MOBILE_APP';
   const defaults={
     ...ROUTE_FALLBACKS,
     travelInfo:'/travel-info',flights:'/flights',hotels:'/hotels',packages:'/packages',
-    cruises:'/cruises',tours:'/tours',carRental:'/car-rental',transfers:'/transfers',
+    cruises:'/cruises',tours:'/tours-activities',carRental:'/car-rental',transfers:'/travel-info?section=transfers',
     skandiCollection:'/skandi-collection',voy:'/voy-magazine',club:'/skandi-club',
     support:'/about/support',theStore:'/the-store',about:'/about'
   };
@@ -3560,7 +3560,7 @@ function fallbackTravelCards(){
     {title:"Signature Collection",summary:"Curated SKANDI journeys and premium escapes.",path:"/signature-collection"},
     {title:"Our destinations",summary:"Explore places featured in VOY Atelier.",path:"/destinations"},
     {title:"Hotels",summary:"Handpicked stays and destination hotels.",path:"/hotels"},
-    {title:"Tours & Activities",summary:"Local experiences and excursions.",path:"/tours"}
+    {title:"Tours & Activities",summary:"Local experiences and excursions.",path:"/tours-activities"}
   ].map(c=>`<button class="travel-card" data-path="${c.path}"><div class="travel-img"></div><div class="travel-body"><strong>${c.title}</strong><span>${c.summary}</span></div></button>`).join("");
 }
 function renderBanners(){

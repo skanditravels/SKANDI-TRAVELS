@@ -5839,7 +5839,7 @@ const SOURCE='SKANDI_HOME_MOBILE_APP';
   const defaults={
     ...ROUTE_FALLBACKS,
     travelInfo:'/travel-info',flights:'/flights',hotels:'/hotels',packages:'/packages',
-    cruises:'/cruises',tours:'/tours',carRental:'/car-rental',transfers:'/transfers',
+    cruises:'/cruises',tours:'/tours-activities',carRental:'/car-rental',transfers:'/travel-info?section=transfers',
     skandiCollection:'/skandi-collection',voy:'/voy-magazine',club:'/skandi-club',
     support:'/about/support',theStore:'/the-store',about:'/about'
   };
@@ -6105,6 +6105,7 @@ let DATA={
 /* UI STATE */
 const STATE={
   dataState:"idle",
+  initialSectionApplied:false,
   activeLibrary:"all",
   activeJourneyGroup:"",
   activeDetail:null,
@@ -7007,6 +7008,7 @@ function findUpdatedDetail(current){
 }
 function loadData(payload){
   clearBootstrapWatchdog();DATA={...DATA,...obj(payload),helpCenter:{...DATA.helpCenter,...obj(payload?.helpCenter)}};STATE.dataState="ready";setStatus("");renderAll();
+  if(!STATE.initialSectionApplied && payload?.initialSection === "transfers") {STATE.initialSectionApplied=true;setLibrary("transfers",true)}
   if(STATE.activeDetail){const updated=findUpdatedDetail(STATE.activeDetail);if(updated){STATE.activeDetail=updated;renderDetail(updated)}else closeDetail()}
 }
 function retryData(){STATE.dataState="loading";setStatus("Refreshing Travel Info…");armBootstrapWatchdog();post("TRAVEL_INFO_REFRESH",{settings:{language:"EN"}})}
