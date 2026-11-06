@@ -3,7 +3,7 @@
 import wixLocation from "wix-location";
 import { getVoyPublicBootstrap,trackVoyInteraction,saveVoyIssueForMember } from "backend/SKANDI_CORE/voyMagazine.web";
 const EMBED_ID="#voyMagazineEmbed",CHILD_SOURCE="SKANDI_VOY_MAGAZINE",PARENT_SOURCE="SKANDI_WIX_PARENT";
-const ALLOWED=["/destinations","/skandi-collection","/signature-collection","/hotels","/flights","/tours","/activities","/transfers","/packages","/my-profile","/voy-magazine","/about/contact","/about/support","/contact","/support"];
+const ALLOWED=["/destinations","/skandi-collection","/signature-collection","/hotels","/flights","/tours-activities","/travel-info","/packages","/my-profile","/voy-magazine","/about/contact","/about/support","/contact","/support"];
 let embed=null,bootstrapPromise=null;
 function send(type,payload={}){embed?.postMessage({source:PARENT_SOURCE,type,payload,timestamp:new Date().toISOString()});}
 function allowed(path){const v=String(path||"").trim();return v.startsWith("/")&&!v.startsWith("//")&&ALLOWED.some(p=>v===p||v.startsWith(`${p}/`)||v.startsWith(`${p}?`));}

@@ -1,4 +1,4 @@
-// /src/pages/Country.nxtpn.js
+// /src/pages/Explore.nxtpn.js — /destinations/explore, #exploreEmbed.
 // Country V12 — public Inventory content and canonical customer booking.
 // Shared header/footer/session/settings remain owned by masterPage.js.
 import wixLocationFrontend from "wix-location-frontend";
@@ -228,8 +228,8 @@ function discover() {
   discoveryCount++;
   let elements=[];
   try {
-    const found=$w("HtmlComponent");
-    elements=Array.isArray(found)?found:found&&(typeof found[Symbol.iterator]==="function"||typeof found.length==="number")?Array.from(found):found?[found]:[];
+    const found=$w("#exploreEmbed");
+    elements=found?[found]:[];
   } catch(_) {}
   for(const embed of elements) {
     if(!embed||typeof embed.onMessage!=="function"||typeof embed.postMessage!=="function")continue;
@@ -239,6 +239,6 @@ function discover() {
     if(html)return;
   }
   if(discoveryCount<40)discoveryTimer=setTimeout(discover,500);
-  else console.error("[Country V12] No Country READY handshake received. Check the published Country HTML component.");
+  else console.error("[Explore] No page response from #exploreEmbed.");
 }
 $w.onReady(discover);

@@ -1,1 +1,79 @@
-<!-- SKANDI_PENDING_SOURCE: replace with complete page markup. -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SKANDI Support Center · Agent Workspace</title>
+<link rel="stylesheet" href="skandi-service-desk.css">
+</head>
+<body>
+<div class="app">
+<aside class="rail">
+    <div class="logo"><b>Z</b>
+  </div>
+  <div class="nav" id="nav">
+    <button class="active" data-nav="views">
+        <svg viewBox="0 0 24 24">
+          <path d="M3 11.5 12 4l9 7.5"></path>
+          <path d="M5 10.5V20h5v-5h4v5h5v-9.5"></path>
+        </svg><small>Home</small>
+      </button>
+      
+    <button data-nav="customers"><svg viewBox="0 0 24 24">
+          <path d="M16 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"></path>
+          <circle cx="9.5" cy="7" r="4"></circle>
+          <path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"></path>
+        </svg><small>Customers</small></button>
+    <button data-nav="reporting"><svg viewBox="0 0 24 24">
+          <path d="M4 19V5"></path>
+          <path d="M4 19h16"></path>
+          <path d="M8 16v-5M12 16V8M16 16v-9"></path>
+        </svg><small>Explore</small></button>
+    <button data-nav="guide"><svg viewBox="0 0 24 24">
+          <path d="M4 5h16v14H4z"></path>
+          <path d="M8 9h8M8 13h8M8 17h5"></path>
+        </svg><small>Guide</small></button>
+    <button data-nav="settings"><svg viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .6 1.7 1.7 0 0 0-.4 1.1V21a2 2 0 1 1-4 0v-.09A1.7 1.7 0 0 0 8.6 19.4a1.7 1.7 0 0 0-1.88.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-.6-1 1.7 1.7 0 0 0-1.1-.4H3a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.6 8.6a1.7 1.7 0 0 0-.34-1.88l-.06-.06A2 2 0 1 1 7.03 3.83l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-.6 1.7 1.7 0 0 0 .4-1.1V3a2 2 0 1 1 4 0v.09A1.7 1.7 0 0 0 15.4 4.6a1.7 1.7 0 0 0 1.88-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9c.16.36.39.7.6 1 .3.3.69.45 1.1.45H21a2 2 0 1 1 0 4h-.09A1.7 1.7 0 0 0 19.4 15z"></path>
+        </svg><small>Admin</small></button>
+  </div>
+  <div class="rail-foot"><div class="avatar">?</div></div>
+</aside>
+
+<header class="top">
+  <div class="qtop"><button class="icon" id="dashboardBtn">☰</button><div class="title"><b id="topView">Open cases</b><small id="topSub">Loading support workspace…</small></div></div>
+  <div><div class="search"><span>⌕</span><input id="globalSearch" placeholder="Search ticket, PNR, traveler, vendor…"><kbd>⌘K</kbd></div><div class="grow"></div><span class="pill"><i class="dot"></i><span id="capacity">0 open · 0 messaging</span></span><button class="presence" id="presenceBtn"><i class="dot" id="pDot"></i><span id="pLabel">Online</span> ▾</button><button class="talk" id="talkBtn">☎ Talk</button></div>
+  <div class="ctop"><div class="title"><b>Context panel</b><small>Traveler, knowledge and apps</small></div></div>
+</header>
+
+<aside class="queue">
+  <div class="qcontrols"><div class="qhead"><h2 id="viewName"></h2><span class="count" id="viewCount"></span></div><select id="viewSelect"></select><input id="queueSearch" placeholder="Filter current view"></div>
+  <div class="qlist" id="queueList"></div>
+</aside>
+
+<main class="work"><div class="tabs" id="tabs"></div><div class="body" id="workspace"></div></main>
+
+<aside class="ctx"><div class="ctabs"><button class="active" data-ctx="customer">Customer</button><button data-ctx="knowledge">Knowledge</button><button data-ctx="apps">Apps</button></div><div class="ccontent" id="context"></div></aside>
+</div>
+
+<div class="menu presence-menu" id="presenceMenu">
+  <button class="mi" data-presence="online"><i class="dot"></i><span><b>Online</b><small>Receive new work</small></span></button>
+  <button class="mi" data-presence="away"><i class="dot away"></i><span><b>Away</b><small>Pause assignments</small></span></button>
+  <button class="mi" data-presence="off"><i class="dot off"></i><span><b>Invisible</b><small>No new assignments</small></span></button>
+</div>
+
+<section class="call" id="callPanel">
+  <div class="callhead"><b>LiveKit Talk</b><button class="x" id="closeCall">×</button></div>
+  <div class="callbody"><div class="avatar lg" id="callAvatar">?</div><b id="callName">No traveler selected</b><div class="muted" id="callPhone">No phone number</div><div id="callStatus">Ready to call</div><div class="timer" id="callTimer">00:00</div><div><button class="round" id="muteBtn">M</button> <button class="round" id="holdBtn">Ⅱ</button> <button class="round end" id="callMain">☎</button></div><div class="disposition hidden" id="disposition"><select id="outcome"><option>Issue resolved</option><option>Follow-up required</option><option>Voicemail left</option><option>No answer</option></select><textarea id="callNotes" placeholder="Add call notes…"></textarea><button class="btn primary" id="saveCall">Save call to ticket</button></div></div>
+</section>
+
+<div class="modalbg" id="modalbg"><div class="modal"><div class="mhead"><h2 id="modalTitle"></h2><button class="x" id="closeModal">×</button></div><div class="mbody" id="modalBody"></div><div class="mfoot" id="modalFoot"></div></div></div>
+<div class="toasts" id="toasts"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/livekit-client@2.22.3/dist/livekit-client.umd.min.js"></script>
+<script src="skandi-service-desk.js"></script>
+
+<script src="skandi-service-desk.part-02.js"></script>
+</body>
+</html>

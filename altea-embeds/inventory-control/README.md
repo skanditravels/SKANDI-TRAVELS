@@ -42,6 +42,8 @@
 - 2026-10-19 — CORRECTION: inspected the newly supplied complete 820-line Property Director reference. Replaced Inventory Control's prior approximate shell with the exact Property Director global header, typography, 220px sidebar, body placement, table/control dimensions, and five-tab Hotel workspace design. The sole header Context dropdown becomes the session-lived Master Filter. Property Directory and full five modules (Master & Geo, Inventory Models, Channel Matrix, Content & Media, Audit Gate) now use current canonical HOTEL bundles rather than mocked properties and fake success. Room definitions reuse HOTEL `details.rooms`; further property configuration stays inside its canonical details JSONB, with no new independent data store. Shared localized content/media use existing child resources and Asset Library. Audit is read-only from the existing audited backend; no unverified verification logging. The baseline page controller, backend facade, core, message contracts and element ID remain unchanged. STATICALLY VERIFIED locally; REQUIRES LIVE TEST in Wix, including user permissions, saved hotel properties and provider distribution support.
 
 
+- 2026-11-05 — Builder repair: the linked primary ES-module sidecar is now emitted once as a module instead of also being inserted into a classic script. The attached Inventory Control module matches the current source; its UI, controller, facade and security boundaries remain unchanged. Local compilation and regression checks are required; Wix deployment and live data flows remain unverified.
+
 ## COMPLETE INTENDED HTML
 {% raw %}
 ```html

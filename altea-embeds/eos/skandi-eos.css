@@ -172,3 +172,5 @@
       border-bottom: 1px solid #111827;
       padding: 4px 6px;
     }
+/* The EOS phone view fills its host rather than drawing a device frame. */
+.device-iphone { max-width:none; max-height:none; border-radius:0; box-shadow:none; }

@@ -4,7 +4,7 @@
 
 
 STATUS: REQUIRES LIVE TEST
-SLUG: /tours
+SLUG: /tours-activities
 WIX PAGE: Tours & Activities.jxipw
 AREA: SKANDI
 LIVE HTML: Replacement required in `#toursActivitiesHtml` (this reference contains the complete replacement)
@@ -27,6 +27,8 @@ CONTRACT: Embed emits `TOURS_READY`, `TOURS_SEARCH`, `TOURS_ACTIVITY_OPEN`, `TOU
 
 
 - 2026-10-28 UTC — Updated `skandi-embeds/tours/skandi-tours.receiver.html` to follow the current shared receiver pattern with page-specific startup, progress and failure messages for **Tours & Activities** (`/tours`). The expected route matches `src/public/siteMap.js`; master-page handshake, staff authorization, manifest/SHA-256 checks and nested-iframe rejection remain intact.
+
+- 2026-11-05 — Canonical route changed to /tours-activities; activities shares that route. Existing historical entries describe the superseded /tours route. Wix path and live links still require verification.
 
 ## Open issues / live verification
 

@@ -464,7 +464,11 @@ async function runRoyalCaribbeanActor(region, input = {}) {
     body: JSON.stringify(providerActorInput(region, input))
   });
   let payload = null;
-  try { payload = await response.On(); } catch (_) { payload = null; }
+  try {
+    payload = await response.json();
+  } catch (_) {
+    if (response.ok) throw publicError("CRUISES_PROVIDER_INVALID_RESPONSE", "Cruise information could not be read right now.");
+  }
   if (!response.ok) {
     const providerMessage = clean(payload?.error?.message || payload?.message || payload?.error, 600);
     const code = response.status === 408 ? "CRUISES_PROVIDER_TIMEOUT"
@@ -473,7 +477,9 @@ async function runRoyalCaribbeanActor(region, input = {}) {
       : "CRUISES_PROVIDER_ERROR";
     throw publicError(code, providerMessage || "Royal Caribbean cruise data could not be synchronized right now.");
   }
-  return Array.isArray(payload) ? payload : arr(payload?.data?.items || payload?.items);
+  const items = Array.isArray(payload) ? payload : payload?.data?.items || payload?.items;
+  if (!Array.isArray(items)) throw publicError("CRUISES_PROVIDER_INVALID_RESPONSE", "Cruise information could not be read right now.");
+  return items;
 }
 
 function cruiseDbRow(cruise, region, syncedAt) {
@@ -807,7 +813,9 @@ async function buildBootstrap(input = {}) {
   const displayCurrency = REGION_CURRENCY[region] || requestedCurrency;
   let cruises;
   try {
-    cruises = await seedIfEmpty(region, input);
+    // Public page requests must never start a paid provider run. Catalogue
+    // synchronization is a separate internal operation with its own controls.
+    cruises = await readCatalogue(region);
   } catch (error) {
     const existing = await readCatalogue(region).catch(() => []);
     if (existing.length) cruises = existing;

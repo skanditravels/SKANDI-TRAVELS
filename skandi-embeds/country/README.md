@@ -1,5 +1,7 @@
 # SKANDI INFO / LOG — V12 journey integration
 
+2026-11-06 — The requested Wix controller, component and canonical route are `Explore.nxtpn.js`, `#exploreEmbed` and `/destinations/explore`. The existing country experience is retained; its combined destination/hotel journey and Wix publication still require implementation and verification. The earlier names below are historical.
+
 > Current document: `skandi-embeds/country/README.md`. Original reference: `HTML_REF/skandi/Country.md`.
 
 

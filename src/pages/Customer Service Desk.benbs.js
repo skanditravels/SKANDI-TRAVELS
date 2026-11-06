@@ -1,5 +1,5 @@
 // /src/pages/Customer Service Desk.benbs.js
-// Route: /riaintra/customer-service
+// Route: /riaintra/success-factors/service-desk
 // R-007.4 canonical Customer Service Center bridge with parent-owned Supabase synchronization.
 // Supabase remains the persistent Support source of truth through customerSupport.web.js.
 // V12 Wix Automations connection: authorized Admin Center bootstrap metadata comes from automationControl.web.js.
@@ -23,8 +23,9 @@ import {
   prepareAgentDuffelSupportHandoff
 } from "backend/SKANDI_CORE/duffelAssistant.web";
 
-const PRIMARY_HTML_ID = "#customerServiceCenterEmbed";
-const LEGACY_HTML_ID = "#customerServiceAgentEmbed";
+const PRIMARY_HTML_ID = "#customerServiceDeskEmbed";
+const LEGACY_HTML_ID = "#customerServiceCenterEmbed";
+const OLDER_HTML_ID = "#customerServiceAgentEmbed";
 const CHILD_SOURCE = "SKANDI_SUPPORT_AGENT";
 const PARENT_SOURCE = "SKANDI_WIX_PARENT";
 const MAX_REPLY_LENGTH = 20000;
@@ -40,7 +41,7 @@ let agentReady = false;
 function objectOf(value) { return value && typeof value === "object" && !Array.isArray(value) ? value : {}; }
 function payloadOf(message) { return { ...objectOf(message), ...objectOf(message?.payload) }; }
 function findHtml() {
-  for (const id of [PRIMARY_HTML_ID, LEGACY_HTML_ID]) {
+  for (const id of [PRIMARY_HTML_ID, LEGACY_HTML_ID, OLDER_HTML_ID]) {
     try { const html = $w(id); if (html) return html; } catch (_) {}
   }
   return null;

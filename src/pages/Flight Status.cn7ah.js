@@ -48,7 +48,8 @@ function send(embed, type, payload = {}) {
 }
 
 function routeWithQuery(base, params = {}) {
-  const query = new URLSearchParams();
+  const [pathname, existing = ""] = base.split("?", 2);
+  const query = new URLSearchParams(existing);
 
   for (const [key, value] of Object.entries(params)) {
     const next = clean(value, 240);
@@ -56,7 +57,7 @@ function routeWithQuery(base, params = {}) {
   }
 
   const suffix = query.toString();
-  return suffix ? `${base}?${suffix}` : base;
+  return suffix ? `${pathname}?${suffix}` : pathname;
 }
 
 function handleAirportAction(payload = {}) {

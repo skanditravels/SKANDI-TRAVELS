@@ -1,0 +1,12 @@
+
+/* V12 realtime rule: customer text reaches this room only after the canonical Customer Support backend has persisted it to Supabase. Agent replies publish to LiveKit only after AGENT_REPLY_SENT confirms canonical persistence. */
+(function(){
+  "use strict";
+  const SKANDI_R0071_LIVEKIT_AGENT_SUPPORT=true;
+  const PARENT="SKANDI_WIX_PARENT";const DEFAULT_TOPIC="skandi.support.chat";let room=null,session=null,connecting=null,activeCaseId="";
+  const escLK=v=>String(v??"").replace(/[&<>\"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'\"':"&quot;","'":"&#39;"}[c]));
+  async function disconnect(){try{if(room)await room.disconnect();}catch(_){}room=null;session=null;connecting=null;}
+  async function connect(s){if(!s?.url||!s?.token||!window.LivekitClient)return null;if(room&&session?.roomName===s.roomName&&room.state==="connected")return room;if(connecting)return connecting;connecting=(async()=>{await disconnect();const r=new window.LivekitClient.Room({adaptiveStream:true,dynacast:true});const topic=s.textTopic||DEFAULT_TOPIC;r.registerTextStreamHandler(topic,async(reader,participant)=>{if(participant?.identity===r.localParticipant?.identity)return;const text=await reader.readAll();const box=document.getElementById("conversation");if(!box||!text)return;const article=document.createElement("article");article.className="msg customer";article.innerHTML=`<div class="avatar">T</div><div class="bubble"><div class="mmeta"><b>Traveler</b><span>now</span><span class="mkind">LiveKit</span></div><div class="mtext">${escLK(text)}</div></div>`;box.appendChild(article);box.scrollTop=box.scrollHeight;});await r.connect(s.url,s.token);room=r;session=s;return r;})().finally(()=>connecting=null);return connecting;}
+  async function publish(sent,s){const text=String(sent?.message||sent?.content||"").trim();if(!text||!s)return;const r=await connect(s);if(!r)return;await r.localParticipant.sendText(text,{topic:s.textTopic||DEFAULT_TOPIC,attributes:{caseId:activeCaseId,messageId:String(sent?.messageId||sent?.message_id||""),senderType:"agent"}});}
+  window.addEventListener("message",e=>{const m=e.data||{};if(m.source!==PARENT)return;const p=m.payload||{};if(m.type==="AGENT_CASE_DETAIL"||m.type==="AGENT_LIVEKIT_SESSION"){activeCaseId=String(p.case?.caseId||p.case?.case_id||activeCaseId);connect(p.livekitSession).catch(()=>{});}if(m.type==="AGENT_REPLY_SENT"&&p.privateNote!==true&&p.livekitSession){activeCaseId=String(p.case?.caseId||p.case?.case_id||activeCaseId);publish(p.sentMessage,p.livekitSession).catch(()=>{});}});
+})();

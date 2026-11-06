@@ -47,6 +47,10 @@ function post(html, type, payload = {}) {
 function postError(html, error) {
   post(html, "TRAVEL_INFO_ERROR", { message: clean(error?.publicMessage || error?.message || "Travel information is temporarily unavailable.", 500) });
 }
+function travelInfoView(payload) {
+  const section = clean(wixLocationFrontend.query?.section, 40).toLowerCase();
+  return { ...payload, initialSection: section === "transfers" ? section : "" };
+}
 function withTimeout(promise, timeoutMs, message) {
   let timer;
   const timeout = new Promise((_, reject) => {
@@ -61,7 +65,7 @@ function withTimeout(promise, timeoutMs, message) {
 }
 async function loadData(html, force = false, settings = {}) {
   if (loadPromise && !force) return loadPromise;
-  if (lastPayload && !force) { post(html, "TRAVEL_INFO_DATA", lastPayload); return lastPayload; }
+  if (lastPayload && !force) { post(html, "TRAVEL_INFO_DATA", travelInfoView(lastPayload)); return lastPayload; }
   const generation = ++loadGeneration;
   let currentLoad;
   currentLoad = (async () => {
@@ -75,7 +79,7 @@ async function loadData(html, force = false, settings = {}) {
       if (generation !== loadGeneration) return null;
       if (!payload || typeof payload !== "object" || Array.isArray(payload) || payload.ok === false) throw new Error("Travel information could not be loaded. Please try again.");
       lastPayload = payload;
-      post(html, "TRAVEL_INFO_DATA", payload);
+      post(html, "TRAVEL_INFO_DATA", travelInfoView(payload));
       return payload;
     } catch (error) {
       if (generation === loadGeneration) postError(html, error);
@@ -101,10 +105,11 @@ function navigate(path) {
   wixLocationFrontend.to(target);
 }
 function routeWithQuery(base, params = {}) {
-  const query = new URLSearchParams();
+  const [pathname, existing = ""] = base.split("?", 2);
+  const query = new URLSearchParams(existing);
   for (const [key, value] of Object.entries(params)) { const next = clean(value, 240); if (next) query.set(key, next); }
   const suffix = query.toString();
-  return suffix ? `${base}?${suffix}` : base;
+  return suffix ? `${pathname}?${suffix}` : pathname;
 }
 function handleAirportAction(payload = {}) {
   const kind = clean(payload.kind, 40).toUpperCase();

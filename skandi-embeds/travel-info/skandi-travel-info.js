@@ -17,6 +17,7 @@ let DATA={
 /* UI STATE */
 const STATE={
   dataState:"idle",
+  initialSectionApplied:false,
   activeLibrary:"all",
   activeJourneyGroup:"",
   activeDetail:null,
@@ -919,6 +920,7 @@ function findUpdatedDetail(current){
 }
 function loadData(payload){
   clearBootstrapWatchdog();DATA={...DATA,...obj(payload),helpCenter:{...DATA.helpCenter,...obj(payload?.helpCenter)}};STATE.dataState="ready";setStatus("");renderAll();
+  if(!STATE.initialSectionApplied && payload?.initialSection === "transfers") {STATE.initialSectionApplied=true;setLibrary("transfers",true)}
   if(STATE.activeDetail){const updated=findUpdatedDetail(STATE.activeDetail);if(updated){STATE.activeDetail=updated;renderDetail(updated)}else closeDetail()}
 }
 function retryData(){STATE.dataState="loading";setStatus("Refreshing Travel Info…");armBootstrapWatchdog();post("TRAVEL_INFO_REFRESH",{settings:{language:"EN"}})}

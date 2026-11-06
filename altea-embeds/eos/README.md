@@ -4,6 +4,7 @@
 
 
 STATUS: STATICALLY VERIFIED / REQUIRES LIVE TEST
+2026-11-05: EOS is restricted to Wix Mobile; its phone view fills the host. Desktop and tablet routes redirect to ALTEA. Wix device layout and runtime remain unverified.
 ROUTE: /riaintra/success-factors/altea/eos
 AREA: RIAINTRA / ALTEA
 SOURCE OF BRAND ASSETS: src/pages/masterPage.js
@@ -198,6 +199,8 @@ The wide side-rail EOS mark uses brand.assets.logos.eosLight. The compact mobile
       border-bottom: 1px solid #111827;
       padding: 4px 6px;
     }
+/* The EOS phone view fills its host rather than drawing a device frame. */
+.device-iphone { max-width:none; max-height:none; border-radius:0; box-shadow:none; }
 
 ```
 

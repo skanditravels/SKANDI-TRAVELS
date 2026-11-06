@@ -179,7 +179,7 @@ export async function saveTourFavoriteCore(input = {}) {
   }));
   const body = { member_id: customerMemberId, wix_member_id: memberId, item_type: 'Tour', item_id: activity.id,
     item_slug: activity.slug, item_title: activity.title, item_image_url: activity.image || null,
-    item_url: `/tours?activity=${encodeURIComponent(activity.slug)}`, source_page: '/tours', active: true,
+    item_url: `/tours-activities?activity=${encodeURIComponent(activity.slug)}`, source_page: '/tours-activities', active: true,
     updated_at: new Date().toISOString() };
   const saved = await restRequest({ table: 'customer_favorites', method: existing ? 'PATCH' : 'POST',
     ...(existing ? { query: { id: `eq.${existing.id}`, member_id: `eq.${customerMemberId}` } } : {}), body });
