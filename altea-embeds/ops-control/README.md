@@ -37,6 +37,8 @@
 
 - 2026-10-28 UTC — Updated `skandi-embeds/ops-control/skandi-ops-control.receiver.html` to follow the current shared receiver pattern with page-specific startup, progress and failure messages for **OPS Control** (`/riaintra/success-factors/altea/ops`). The expected route matches `src/public/siteMap.js`; master-page handshake, staff authorization, manifest/SHA-256 checks and nested-iframe rejection remain intact.
 
+- 2026-11-06 — OPS Control uses the same staff assignment sources and label/time precedence as MyRoster and EOS. OPS edits are read by both staff views from the existing SKANDI records. Wix Bookings availability is independent of this roster.
+
 ## COMPLETE HTML / SOURCE IMPLEMENTATION
 
 ```html

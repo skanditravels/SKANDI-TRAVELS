@@ -3,6 +3,9 @@
 
   const SOURCE = "SKANDI_MYROSTER_EMBED";
   const PARENT_SOURCE = "SKANDI_WIX_PARENT";
+  const REFRESH_INTERVAL_MS = 60000;
+  const REFRESH_TIMEOUT_MS = 30000;
+  const BACKGROUND_REQUEST_PREFIX = "MYROSTER-BACKGROUND-";
   const root = document.getElementById("myRosterRoot");
   if (!root) return;
   const desktopOnlyNotice = document.getElementById("desktopOnlyNotice");
@@ -29,6 +32,7 @@
     selectedAssignment: null,
     activePanel: "schedule",
     lastSync: null,
+    backgroundRefresh: null,
     brandLogoUrl: "",
     loading: true
   };
@@ -132,11 +136,31 @@
   function requestRefresh() {
     const from = $("#dateFrom")?.value || "";
     const to = $("#dateTo")?.value || "";
+    clearBackgroundRefresh();
     state.loading = true;
     setSync("Syncing your schedule", "loading");
     post("MYROSTER_REFRESH_REQUEST", { from, to });
   }
+  function clearBackgroundRefresh() {
+    if (!state.backgroundRefresh) return;
+    window.clearTimeout(state.backgroundRefresh.timeout);
+    state.backgroundRefresh = null;
+  }
+  function refreshWhileVisible() {
+    if (state.boot?.supportsBackgroundRefresh !== true || state.loading || state.pending.size || state.backgroundRefresh ||
+        document.visibilityState !== "visible" || !navigator.onLine || $("dialog[open]")) return;
+
+    const { from, to } = state.boot.dateRange || {};
+    const requestId = BACKGROUND_REQUEST_PREFIX + Date.now() + "-" + Math.random().toString(36).slice(2, 8);
+    const timeout = window.setTimeout(() => {
+      clearBackgroundRefresh();
+      setSync("Schedule refresh delayed", "error");
+    }, REFRESH_TIMEOUT_MS);
+    state.backgroundRefresh = { requestId, timeout };
+    post("MYROSTER_REFRESH_REQUEST", { from, to, requestId });
+  }
   function action(type, payload, button, successText) {
+    clearBackgroundRefresh();
     const requestId = `MYROSTER-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     state.pending.set(requestId, { button, successText });
     if (button) button.disabled = true;
@@ -525,6 +549,16 @@
     const message = event.data || {};
     if (message.source !== PARENT_SOURCE) return;
     const payload = message.payload || {};
+    if (text(payload.requestId).startsWith(BACKGROUND_REQUEST_PREFIX) &&
+        (message.type === "MYROSTER_BOOTSTRAP" || message.type === "MYROSTER_ERROR")) {
+      if (payload.requestId !== state.backgroundRefresh?.requestId) return;
+      clearBackgroundRefresh();
+      if ($("dialog[open]")) return;
+      if (message.type === "MYROSTER_ERROR") {
+        setSync("Schedule refresh delayed", "error");
+        return;
+      }
+    }
     if (message.type === "SKANDI_MASTER_CONFIG") {
       applyMasterConfig(payload);
       return;
@@ -565,6 +599,7 @@
       return;
     }
     if (message.type === "MYROSTER_ERROR") {
+      if (!payload.requestId) state.loading = false;
       if (state.flightRequestId && payload.requestId === state.flightRequestId) {
         state.flightRequestId = "";
         if ($("#flightSearchButton")) $("#flightSearchButton").disabled = false;
@@ -588,6 +623,14 @@
   $("#flightDateFrom").value = dateInputValue(today);
   $("#flightDateTo").value = dateInputValue(offsetDate(today, 6));
   setSync("Connecting to staff schedule", "loading");
+  const refreshTimer = window.setInterval(refreshWhileVisible, REFRESH_INTERVAL_MS);
+  document.addEventListener("visibilitychange", refreshWhileVisible);
+  window.addEventListener("online", refreshWhileVisible);
+  window.addEventListener("pageshow", refreshWhileVisible);
+  window.addEventListener("pagehide", (event) => {
+    clearBackgroundRefresh();
+    if (!event.persisted) window.clearInterval(refreshTimer);
+  });
   post("MASTER_CONFIG_REQUEST", { purpose: "ALTEA_LOGO" });
   post("MYROSTER_READY", { from: $("#dateFrom").value, to: $("#dateTo").value });
 })();

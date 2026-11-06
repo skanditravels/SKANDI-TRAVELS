@@ -41,7 +41,11 @@ async function bootstrap(html, filters) {
   const data = await getMyRosterBootstrap(filters || {});
   authorizedApps = Array.isArray(data.apps) ? data.apps : (Array.isArray(session.apps) ? session.apps : []);
   allowedAppPaths = appPaths(authorizedApps);
-  send(html, "MYROSTER_BOOTSTRAP", data);
+  send(html, "MYROSTER_BOOTSTRAP", {
+    ...data,
+    requestId: String(filters?.requestId || "").slice(0, 160),
+    supportsBackgroundRefresh: true
+  });
   send(html, "INTERNAL_CHROME_BOOTSTRAP", {
     pageName: "MyRoster",
     pagePath: currentPath(),
