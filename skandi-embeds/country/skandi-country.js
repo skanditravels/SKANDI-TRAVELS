@@ -271,14 +271,14 @@ function closeGallery() {
     },ms);
     controls();post(type,payload,id);return job;
   }
-  function requestPage(type="COUNTRY_READY",force=false) {
+  function requestPage(type="COUNTRY_READY",force=false,selectedSlug="") {
     if(pending.selection)return;
     clearInterval(readyTimer);
     if(pending.search)release("search",pending.search.id);
     offers=[];renderOffers([]);
     $("countryPage").setAttribute("aria-busy","true");state("Loading country information…");
     const query=new URLSearchParams(window.__SKANDI_FLOW_QUERY||location.search).get("country");
-    const job=request("page",type,{slug:query||page?.slug||"",settings:{...settings},force},30000);
+    const job=request("page",type,{slug:selectedSlug||page?.slug||query||"",settings:{...settings},force},30000);
     if(pending.page===job) readyTimer=setInterval(()=>{if(pending.page===job)post(job.type,job.payload,job.id);},1500);
   }
   function nav(path) {if(path)post("COUNTRY_NAVIGATE",{path});}
@@ -350,7 +350,9 @@ function closeGallery() {
     const o=e.target.closest("[data-offer]");
     if(o&&!pending.selection){const selected=offers[+o.dataset.offer];if(!selected)return;setSearchState("Confirming this offer…");request("selection","COUNTRY_SELECT_OFFER",{offer:{id:selected.id}},90000);}
   });
-  $("countrySelector").onchange=e=>{if(e.target.value)post("COUNTRY_SELECT_COUNTRY",{slug:e.target.value});};
+  $("countrySelector").onchange=e=>{
+    if(e.target.value)requestPage("COUNTRY_SELECT_COUNTRY",false,e.target.value);
+  };
   $("countryRetry").onclick=()=>requestPage("COUNTRY_READY",true);
   $("searchForm").onsubmit=e=>{
     e.preventDefault();if(!page||pending.search||pending.selection||pending.page)return;

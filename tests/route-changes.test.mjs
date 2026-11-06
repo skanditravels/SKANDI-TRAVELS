@@ -36,3 +36,28 @@ test('travel information opens the transfer directory when the page controller r
   assert.match(w.document.getElementById('tiDirectoryHeading').textContent,/Transfer Information/);
   assert.equal(w.document.querySelector('[data-filter="transfers"]').getAttribute('aria-pressed'),'true');
 });
+
+test('Explore renders the selected country even when Wix keeps the current page mounted',async()=>{
+  let source=await fs.readFile(new URL('../src/pages/Explore.nxtpn.js',import.meta.url),'utf8');
+  for(const node of parse(source,{ecmaVersion:'latest',sourceType:'module'}).body.filter(n=>n.type==='ImportDeclaration').reverse()) {
+    source=source.slice(0,node.start)+source.slice(node.end);
+  }
+  const records=[{id:'gr',slug:'greece',name:'Greece'},{id:'se',slug:'sweden',name:'Sweden'}];
+  const posted=[],navigated=[];
+  const context={
+    ...routes,console,setTimeout,clearTimeout,$w:{onReady:()=>{}},
+    wixLocationFrontend:{query:{country:'greece'},to:path=>navigated.push(path)},
+    getDestinationFlowCatalog:async()=>({ok:true,records}),
+    createDestinationContent:()=>({
+      records:()=>records,byTypeSlug:(_,slug)=>records.find(row=>row.slug===slug),
+      countryPage:record=>({...record}),isUnder:()=>false,airportDirectory:()=>[]
+    })
+  };
+  vm.createContext(context);vm.runInContext(source,context);
+  const embed={id:'exploreEmbed',postMessage:message=>posted.push(message)};
+  await context.receive({data:{source:'SKANDI_DYNAMIC_COUNTRY_PAGE',type:'COUNTRY_READY',requestId:'ready'}},embed);
+  await context.receive({data:{source:'SKANDI_DYNAMIC_COUNTRY_PAGE',type:'COUNTRY_SELECT_COUNTRY',requestId:'select',payload:{slug:'sweden'}}},embed);
+  assert.equal(posted.at(-1).requestId,'select');
+  assert.equal(posted.at(-1).payload.page.name,'Sweden');
+  assert.deepEqual(navigated,['/destinations/explore?country=sweden']);
+});

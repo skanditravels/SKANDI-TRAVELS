@@ -65,8 +65,9 @@ async function ensureCatalog(force = false) {
   }
   await catalogJob;
 }
-function requestedCountry(payload = {}) {
+function requestedCountry(payload = {}, selection = false) {
   // An iframe URL does not inherit the Wix page's query string.
+  if (selection) return slug(payload.slug);
   return slug(wixLocationFrontend.query?.country || payload.slug || currentCountry?.slug);
 }
 function arrivals(record) {
@@ -84,7 +85,8 @@ function arrivals(record) {
 async function loadCountry(message) {
   if (selectionJob) throw fail("COUNTRY_SELECTION_PENDING","Please finish the current offer selection first.");
   const payload=obj(message.payload), nextSettings=normalizeSettings(payload.settings || (message.type==="UPDATE_SETTINGS"?payload:settings));
-  const countrySlug=requestedCountry(payload), key=JSON.stringify({countrySlug,...nextSettings});
+  const countrySlug=requestedCountry(payload,message.type==="COUNTRY_SELECT_COUNTRY");
+  const key=JSON.stringify({countrySlug,...nextSettings});
   settings=nextSettings;
   if (pageJob?.key===key && (!pageJob.complete || (!payload.force && Date.now()-pageJob.completedAt<60000))) {
     pageJob.requestId=message.requestId;
@@ -210,9 +212,14 @@ async function receive(event,embed) {
       case "COUNTRY_SEARCH_OFFERS": await search(message); break;
       case "COUNTRY_SELECT_OFFER": await selectOffer(message); break;
       case "COUNTRY_SELECT_COUNTRY": {
-        const target=content.byTypeSlug("COUNTRY",message.payload.slug);
-        if(!target) throw fail("COUNTRY_NOT_FOUND","Choose a published country.");
-        navigate(APP_ROUTES.country+"?country="+encodeURIComponent(slug(target.slug||target.name)));break;
+        const selectedSlug=slug(message.payload.slug);
+        if(!selectedSlug) throw fail("COUNTRY_REQUIRED","Choose a published country.");
+        await loadCountry(message);
+        const loadedSlug=slug(currentCountry?.slug||currentCountry?.name);
+        if(loadedSlug===selectedSlug&&slug(wixLocationFrontend.query?.country)!==loadedSlug) {
+          navigate(APP_ROUTES.country+"?country="+encodeURIComponent(loadedSlug));
+        }
+        break;
       }
       case "COUNTRY_NAVIGATE": navigate(message.payload.path);break;
       case "RESIZE_IFRAME": {
