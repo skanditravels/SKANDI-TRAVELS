@@ -3,14 +3,8 @@
 // from the live ALTEA FIDS and inventory schedule, never embedded examples.
 import { requireStaffPortalSessionCore } from "backend/SKANDI_CORE/staffAuth";
 import { restRequest } from "backend/SKANDI_CORE/supabaseServer";
+import { ROSTER_ASSIGNMENT_SOURCES, rosterAssignmentLabel, rosterAssignmentTimes } from "backend/SKANDI_CORE/rosterAssignments";
 
-const OWNED_TABLES = Object.freeze({
-  roster_shifts: { select:"id,employee_id,employee_ref,start_at,end_at,start_time,end_time,location,assignment_type,status,payload,route_id,booking_reference,notes,created_at,updated_at", ownerColumns:["employee_id","employee_ref"] },
-  crew_assignments: { select:"id,employee_id,employee_ref,assignment,route,start_at,end_at,start_time,end_time,status,notes,booking_reference,route_id,payload,created_at,updated_at", ownerColumns:["employee_id","employee_ref"] },
-  airport_duty_assignments: { select:"id,employee_id,start_time,end_time,status,payload,route_id,booking_reference,notes,created_at,updated_at", ownerColumns:["employee_id"] },
-  driver_assignments: { select:"id,employee_id,start_time,end_time,status,payload,route_id,booking_reference,notes,created_at,updated_at", ownerColumns:["employee_id"] },
-  tour_assignments: { select:"id,employee_id,start_time,end_time,status,payload,route_id,booking_reference,notes,created_at,updated_at", ownerColumns:["employee_id"] }
-});
 const ACTIONS = new Set(["SAFETY_REPORT", "FLIGHT_ISSUE", "STATION_UPDATE", "CREW_SUPPORT", "DUTY_NOTE"]);
 const MAX_ROWS = "300";
 
@@ -53,8 +47,8 @@ function owns(row, identifiers) {
   return [row.employee_id,row.employee_ref].some(v=>v && allowed.has(String(v).toLowerCase()));
 }
 async function queryOwned(table, context) {
-  const definition=OWNED_TABLES[table];
-  if (!definition) return [];
+  const definition=ROSTER_ASSIGNMENT_SOURCES[table];
+  if (!Object.hasOwn(ROSTER_ASSIGNMENT_SOURCES, table)) return [];
   const found=[];
   for (const column of definition.ownerColumns) for (const identifier of context.identifiers) {
     const result=await restRequest({table,method:"GET",query:{select:definition.select,[column]:"eq."+identifier,limit:MAX_ROWS}});
@@ -65,15 +59,14 @@ async function queryOwned(table, context) {
 }
 function normalizeAssignment(row,table) {
   const p=obj(row.payload);
-  const start=clean(row.start_at||row.start_time||p.startAt||p.start_time,80);
-  const end=clean(row.end_at||row.end_time||p.endAt||p.end_time,80);
+  const {start,end}=rosterAssignmentTimes(row,p);
   return {
     id:clean(row.id,160), sourceTable:table,
-    label:clean(row.assignment||row.assignment_type||p.label||p.assignment||p.title||row.route||"Operational duty",180),
-    type:clean(p.activityType||p.type||row.assignment_type||"duty",80),
+    label:clean(rosterAssignmentLabel(row,p)||"Operational duty",180),
+    type:clean(p.activityType||row.assignment_type||p.assignmentType||p.type||"duty",80),
     route:clean(row.route||p.route||"",120), routeId:clean(row.route_id||p.routeId||"",120),
     reference:clean(row.booking_reference||p.bookingReference||"",80),
-    location:clean(row.location||p.location||"",160), startAt:start, endAt:end,
+    location:clean(row.location||p.location||"",160), startAt:clean(start,80), endAt:clean(end,80),
     status:clean(row.status||p.status||"SCHEDULED",60), notes:clean(row.notes||p.notes||"",300), payload:p
   };
 }
@@ -155,7 +148,7 @@ export async function getEosBootstrapCore(input={}) {
   const context=await authorizedSession();
   const from=validDate(input.from)?input.from:new Date().toISOString().slice(0,10);
   const to=validDate(input.to)?input.to:new Date(Date.now()+2*86400000).toISOString().slice(0,10);
-  const tables=Object.keys(OWNED_TABLES);
+  const tables=Object.keys(ROSTER_ASSIGNMENT_SOURCES);
   const code=stationCode(context);
   const [sets,clockEvents,flights,stationResult]=await Promise.all([
     Promise.all(tables.map(table=>queryOwned(table,context))),clockRows(context),flightsForStation(context,{from,to}),
@@ -192,12 +185,12 @@ export async function searchEosStationsCore(input={}) {
 export async function createEosClockEventCore(input={}) {
   const context=await authorizedSession();
   const eventType=upper(input.eventType,24),assignmentId=clean(input.assignmentId,160),sourceTable=clean(input.sourceTable,80);
-  if (!(["CLOCK_IN","CLOCK_OUT"].includes(eventType)) || !assignmentId || !OWNED_TABLES[sourceTable]) fail("EOS_CLOCK_EVENT_INVALID");
+  if (!(["CLOCK_IN","CLOCK_OUT"].includes(eventType)) || !assignmentId || !Object.hasOwn(ROSTER_ASSIGNMENT_SOURCES, sourceTable)) fail("EOS_CLOCK_EVENT_INVALID");
   const rows=await queryOwned(sourceTable,context);
   const assignment=rows.find(row=>String(row.id)===assignmentId);
   if (!assignment) fail("EOS_ASSIGNMENT_NOT_FOUND");
   const at=new Date().toISOString(),location=clean(assignment.location||context.profile.baseName||context.profile.station||"",160);
-  const response=await restRequest({table:"roster_clock_events",method:"POST",body:{employee_id:context.staffId||context.employeeId,employee_ref:context.staffId||null,event_type:eventType,event_at:at,event_time:at,location,status:"RECORDED",payload:{requestType:"ATTENDANCE_EVENT",eventType,assignmentId,sourceTable,assignmentLabel:clean(assignment.assignment||assignment.assignment_type||"Operational duty",180),actorStaffId:context.staffId},created_at:at},prefer:"return=representation"});
+  const response=await restRequest({table:"roster_clock_events",method:"POST",body:{employee_id:context.staffId||context.employeeId,employee_ref:context.staffId||null,event_type:eventType,event_at:at,event_time:at,location,status:"RECORDED",payload:{requestType:"ATTENDANCE_EVENT",eventType,assignmentId,sourceTable,assignmentLabel:clean(rosterAssignmentLabel(assignment,obj(assignment.payload))||"Operational duty",180),actorStaffId:context.staffId},created_at:at},prefer:"return=representation"});
   return {ok:true,eventId:clean(rowsOf(response)[0]?.id||"",160),eventType,eventAt:at};
 }
 export async function submitEosOpsActionCore(input={}) {
@@ -206,7 +199,7 @@ export async function submitEosOpsActionCore(input={}) {
   if (!ACTIONS.has(action) || summary.length<4) fail("EOS_ACTION_INVALID");
   let assignment=null;
   if (assignmentId||sourceTable) {
-    if (!assignmentId||!OWNED_TABLES[sourceTable]) fail("EOS_ASSIGNMENT_NOT_FOUND");
+    if (!assignmentId||!Object.hasOwn(ROSTER_ASSIGNMENT_SOURCES, sourceTable)) fail("EOS_ASSIGNMENT_NOT_FOUND");
     assignment=(await queryOwned(sourceTable,context)).find(row=>String(row.id)===assignmentId)||null;
     if (!assignment) fail("EOS_ASSIGNMENT_NOT_FOUND");
   }

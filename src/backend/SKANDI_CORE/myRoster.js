@@ -2,31 +2,14 @@
 // Each read/write is scoped to the authenticated staff identity from staffAuth.
 import { requireStaffPortalSessionCore } from "backend/SKANDI_CORE/staffAuth";
 import { restRequest } from "backend/SKANDI_CORE/supabaseServer";
+import { ROSTER_ASSIGNMENT_SOURCES, rosterAssignmentLabel, rosterAssignmentTimes } from "backend/SKANDI_CORE/rosterAssignments";
 
-const ASSIGNMENT_TABLES = Object.freeze([
-  "roster_shifts",
-  "driver_assignments",
-  "tour_assignments",
-  "airport_duty_assignments",
-  "vehicle_assignments"
-]);
+const ASSIGNMENT_TABLES = Object.keys(ROSTER_ASSIGNMENT_SOURCES);
 const OWNER_COLUMNS = Object.freeze({
-  roster_shifts: ["employee_id", "employee_ref"],
   roster_clock_events: ["employee_id", "employee_ref"],
   roster_time_ledger: ["employee_id"],
   schedule_change_requests: ["employee_id"],
-  time_off_balances: ["employee_id"],
-  driver_assignments: ["employee_id"],
-  tour_assignments: ["employee_id"],
-  airport_duty_assignments: ["employee_id"],
-  vehicle_assignments: ["employee_id"]
-});
-const ASSIGNMENT_SELECT = Object.freeze({
-  roster_shifts: "id,employee_id,employee_ref,start_at,end_at,start_time,end_time,location,assignment_type,status,payload,route_id,booking_reference,notes,created_at,updated_at",
-  driver_assignments: "id,employee_id,start_time,end_time,status,payload,route_id,booking_reference,notes,created_at,updated_at",
-  tour_assignments: "id,employee_id,start_time,end_time,status,payload,route_id,booking_reference,notes,created_at,updated_at",
-  airport_duty_assignments: "id,employee_id,start_time,end_time,status,payload,route_id,booking_reference,notes,created_at,updated_at",
-  vehicle_assignments: "id,employee_id,start_time,end_time,status,payload,route_id,booking_reference,notes,created_at,updated_at"
+  time_off_balances: ["employee_id"]
 });
 const MAX_ROWS = "500";
 
@@ -150,7 +133,7 @@ function owns(row, ids) {
 }
 async function queryOwned(table, select, options = {}) {
   const ids = options.ids || [];
-  const columns = OWNER_COLUMNS[table];
+  const columns = ROSTER_ASSIGNMENT_SOURCES[table]?.ownerColumns || OWNER_COLUMNS[table];
   if (!columns) return [];
   const collected = [];
   for (const column of columns) {
@@ -172,26 +155,19 @@ async function queryOwned(table, select, options = {}) {
     return true;
   });
 }
-function assignmentTime(row, payload) {
-  return row.start_at || row.start_time || payload.start_at || payload.startAt || payload.start_time || "";
-}
-function assignmentEnd(row, payload) {
-  return row.end_at || row.end_time || payload.end_at || payload.endAt || payload.end_time || "";
-}
 function normalizeAssignment(row, table) {
   const payload = obj(row.payload);
-  const startAt = clean(assignmentTime(row, payload), 100);
-  const endAt = clean(assignmentEnd(row, payload), 100);
+  const { start, end } = rosterAssignmentTimes(row, payload);
   return {
     id: clean(row.id, 160),
     sourceTable: table,
-    startAt,
-    endAt,
+    startAt: clean(start, 100),
+    endAt: clean(end, 100),
     status: clean(row.status || payload.status || "SCHEDULED", 60),
     location: clean(row.location || row.base_code || payload.location || payload.baseCode || "", 180),
     baseCode: clean(row.base_code || payload.baseCode || "", 120),
-    label: clean(payload.title || payload.label || payload.assignmentName || row.assignment_type || "", 160),
-    assignmentType: clean(row.assignment_type || payload.assignmentType || payload.type || "", 120),
+    label: clean(rosterAssignmentLabel(row, payload), 160),
+    assignmentType: clean(payload.activityType || row.assignment_type || payload.assignmentType || payload.type || "", 120),
     details: clean(payload.details || payload.description || row.notes || "", 400),
     notes: clean(row.notes || payload.notes || "", 400),
     routeId: clean(row.route_id || payload.routeId || "", 160),
@@ -257,7 +233,7 @@ function totalHours(rows) {
   }, 0);
 }
 async function allAssignments(ctx) {
-  const sets = await Promise.all(ASSIGNMENT_TABLES.map(table => queryOwned(table, ASSIGNMENT_SELECT[table], { ids: ctx.identifiers })));
+  const sets = await Promise.all(ASSIGNMENT_TABLES.map(table => queryOwned(table, ROSTER_ASSIGNMENT_SOURCES[table].select, { ids: ctx.identifiers })));
   return sets.flatMap((rows, index) => rows.map(row => {
     const assignment = normalizeAssignment(row, ASSIGNMENT_TABLES[index]);
     assignment.timeZone = assignment.timeZone || ctx.base.timezone;

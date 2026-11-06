@@ -1,5 +1,5 @@
 
-  const { useState, useEffect } = React;
+  const { useState, useEffect, useRef } = React;
 
   const FLIGHTS_DATA = [];
 
@@ -116,17 +116,29 @@ const App = () => {
   const [online,setOnline]=useState(navigator.onLine);
   const [syncedAt,setSyncedAt]=useState("");
 
-  const refresh=()=>{setLoading(true);eosRequest("EOS_BOOTSTRAP_REQUEST",{});};
+  const rosterRequest=useRef(null);
+  const requestRoster=()=>{
+    const id=eosRequest("EOS_BOOTSTRAP_REQUEST",{});
+    rosterRequest.current={id,requestedAt:Date.now()};
+  };
+  const refresh=()=>{setLoading(true);requestRoster();};
   const banner=(title,subtitle="")=>{setToast([title,subtitle].filter(Boolean).join(" · "));setTimeout(()=>setToast(""),4200);};
   useEffect(()=>{
     const syncDevice=()=>setIsIpad(/iPad|Tablet|Android(?!.*Mobile)/i.test(navigator.userAgent)||(navigator.maxTouchPoints>1&&window.innerWidth>=700));
     const syncOnline=()=>setOnline(navigator.onLine);
-    const refreshVisible=()=>{if(document.visibilityState==="visible"&&navigator.onLine)eosRequest("EOS_BOOTSTRAP_REQUEST",{});};
+    const refreshVisible=()=>{
+      if(document.visibilityState!=="visible"||!navigator.onLine) return;
+      if(rosterRequest.current&&Date.now()-rosterRequest.current.requestedAt<30000) return;
+      requestRoster();
+    };
+    const reconnect=()=>{syncOnline();refreshVisible();};
     const listener=event=>{
       const msg=event?.data;
-      if(!msg||msg.source!=="SKANDI_WIX_PARENT")return;
+      if(event.source!==window.parent||!msg||msg.source!=="SKANDI_WIX_PARENT")return;
       const p=msg.payload&&typeof msg.payload==="object"?msg.payload:{};
       if(msg.type==="SKANDI_MASTER_CONFIG") {const logos=p.brand?.assets?.logos||{};setLogoUrl(logos.eosLight||"");setIconLogoUrl(logos.eosIconLight||"");return;}
+      if(msg.type==="EOS_BOOTSTRAP_RESPONSE"&&p.requestId!==rosterRequest.current?.id) return;
+      if(msg.type==="EOS_BOOTSTRAP_RESPONSE"||msg.type==="EOS_ERROR"&&p.requestId===rosterRequest.current?.id) rosterRequest.current=null;
       if(msg.type==="EOS_BOOTSTRAP_RESPONSE") {setProfile(p.profile||{});setStation(p.station||null);setAssignments(Array.isArray(p.assignments)?p.assignments:[]);setClockEvents(Array.isArray(p.clockEvents)?p.clockEvents:[]);setLiveFlights((p.flights||[]).map(eosFlight));setCrewList([]);setSyncedAt(p.syncedAt||new Date().toISOString());setLoading(false);setError("");return;}
       if(msg.type==="EOS_FLIGHT_SEARCH_RESULT") {setSearchResults((p.flights||[]).map(eosFlight));setBusy(false);return;}
       if(msg.type==="EOS_STATION_SEARCH_RESULT") {setStationResults(Array.isArray(p.stations)?p.stations:[]);setBusy(false);return;}
@@ -134,9 +146,9 @@ const App = () => {
       if(msg.type==="EOS_OPS_ACTION_RESULT") {setBusy(false);setActionText("");setSubScreen(null);banner(p.message||"Sent to OPS Control for review");return;}
       if(msg.type==="EOS_ERROR") {setBusy(false);setLoading(false);setError(p.message||"EOS could not synchronize with ALTEA.");banner(p.message||"EOS sync failed");}
     };
-    syncDevice();window.addEventListener("resize",syncDevice);window.addEventListener("online",syncOnline);window.addEventListener("offline",syncOnline);window.addEventListener("message",listener);document.addEventListener("visibilitychange",refreshVisible);const poll=setInterval(refreshVisible,120000);
-    eosRequest("SKANDI_MASTER_CONFIG_REQUEST",{});eosRequest("EOS_BOOTSTRAP_REQUEST",{});
-    return ()=>{clearInterval(poll);window.removeEventListener("resize",syncDevice);window.removeEventListener("online",syncOnline);window.removeEventListener("offline",syncOnline);window.removeEventListener("message",listener);document.removeEventListener("visibilitychange",refreshVisible);};
+    syncDevice();window.addEventListener("resize",syncDevice);window.addEventListener("online",reconnect);window.addEventListener("offline",syncOnline);window.addEventListener("message",listener);document.addEventListener("visibilitychange",refreshVisible);const poll=setInterval(refreshVisible,60000);
+    eosRequest("SKANDI_MASTER_CONFIG_REQUEST",{});refreshVisible();
+    return ()=>{clearInterval(poll);window.removeEventListener("resize",syncDevice);window.removeEventListener("online",reconnect);window.removeEventListener("offline",syncOnline);window.removeEventListener("message",listener);document.removeEventListener("visibilitychange",refreshVisible);};
   },[]);
   const flights=searchResults||liveFlights;
   const currentStation=selectedStation||station;

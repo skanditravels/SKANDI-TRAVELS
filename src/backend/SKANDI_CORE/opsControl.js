@@ -4,6 +4,7 @@
 
 import { requireStaffPortalSessionCore } from "backend/SKANDI_CORE/staffAuth";
 import { restRequest } from "backend/SKANDI_CORE/supabaseServer";
+import { ROSTER_ASSIGNMENT_SOURCES, rosterAssignmentLabel, rosterAssignmentTimes } from "backend/SKANDI_CORE/rosterAssignments";
 
 const TABLES = Object.freeze({
   agents: "agent_users",
@@ -22,14 +23,7 @@ const TABLES = Object.freeze({
   alteaSync: "altea_sync_events"
 });
 
-const ASSIGNMENT_TABLES = new Set([
-  TABLES.shifts,
-  TABLES.crew,
-  TABLES.drivers,
-  TABLES.tours,
-  TABLES.airport,
-  TABLES.vehicles
-]);
+const ASSIGNMENT_TABLES = new Set(Object.keys(ROSTER_ASSIGNMENT_SOURCES));
 const OPS_GROUPS = new Set(["operations", "occ", "managers", "system-admin"]);
 const PROTOCOL_VERSION = "V12-OPS-CONTROL-2026.10.14";
 const MAX_ROWS = 10000;
@@ -117,16 +111,12 @@ function activityType(row={}){
 }
 
 function sourceTimes(row={}){
-  const p=obj(row.payload);
-  return {
-    start: row.start_time || row.start_at || p.startTime || p.start_at || "",
-    end: row.end_time || row.end_at || p.endTime || p.end_at || ""
-  };
+  return rosterAssignmentTimes(row, obj(row.payload));
 }
 
 function activityLabel(row={}){
   const p=obj(row.payload);
-  return clean(p.label || row.assignment || row.route_id || row.booking_reference || p.routeLabel || p.reference || "ASSIGNMENT",80);
+  return clean(rosterAssignmentLabel(row, p) || "ASSIGNMENT",80);
 }
 
 function employeeKey(row={}){
@@ -284,23 +274,26 @@ async function loadBootstrap(session, {jurisdiction="US-NY",windowStart:windowSt
     ...vehicles.filter(r=>shiftWithin(r,startMs,endMs)).map(r=>({row:r,table:TABLES.vehicles}))
   ];
 
-  const assignedByEmployee=new Map(), openTime=[], seen=new Set();
-  for(const item of assignmentRows){
-    const dedupe=`${item.table}:${item.row.id}`; if(seen.has(dedupe)) continue; seen.add(dedupe);
-    const mapped=mapAssignment(item.row,item.table,windowStart), key=employeeKey(item.row);
-    if(!key){openTime.push(mapped);continue;}
-    if(!assignedByEmployee.has(key)) assignedByEmployee.set(key,[]);
-    assignedByEmployee.get(key).push(mapped);
-  }
-
-  const clocks=latestClockByEmployee(clock);
   const staffMap=new Map();
   for(const agent of agents){
     const projected=staffProjection(agent);
-    for(const identifier of [agent.sk_id,agent.agent_id,projected.agentId].map(value=>upper(value,80)).filter(Boolean)){
+    for(const identifier of [agent.id,agent.sk_id,agent.agent_id,projected.agentId].map(value=>upper(value,80)).filter(Boolean)){
       staffMap.set(identifier,projected);
     }
   }
+  const assignedByEmployee=new Map(), openTime=[], seen=new Set();
+  for(const item of assignmentRows){
+    const dedupe=`${item.table}:${item.row.id}`; if(seen.has(dedupe)) continue; seen.add(dedupe);
+    const mapped=mapAssignment(item.row,item.table,windowStart);
+    const key=employeeKey(item.row);
+    const owner=staffMap.get(key) || staffMap.get(upper(item.row.employee_ref,80));
+    const staffId=owner?.agentId || key;
+    if(!key){openTime.push(mapped);continue;}
+    if(!assignedByEmployee.has(staffId)) assignedByEmployee.set(staffId,[]);
+    assignedByEmployee.get(staffId).push(mapped);
+  }
+
+  const clocks=latestClockByEmployee(clock);
   const crewData=agents.map((a,index)=>{
     const skId=upper(a.sk_id||a.agent_id,80), acts=(assignedByEmployee.get(skId)||[]).sort((x,y)=>x.startH-y.startH);
     const current=acts.find(x=>!["rest","vacation"].includes(x.type)) || acts[0];

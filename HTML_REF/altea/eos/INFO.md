@@ -12,3 +12,8 @@ historical reference, not an active source or a replacement for the embed.
 Wix preview compilation and homepage rendering were checked after the repair.
 EOS staff authorization and device-specific behavior still need a live or
 authorized staff-session check.
+
+EOS reads the same staff assignment sources as MyRoster and OPS Control under
+the existing staff authorization boundary. It refreshes every minute while open
+and online, and when the app returns to the foreground or reconnects. Wix
+Bookings availability is independent of the SKANDI staff roster.

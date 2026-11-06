@@ -38,6 +38,8 @@
 
 - 2026-11-05 — Restored the last repository page controller after verifying that the current page-controller file contained browser-side application code. The existing newer MyRoster embed source and its approved logo treatment are retained. The authenticated facade and event contract are unchanged. Wix publishing and live staff testing remain required.
 
+- 2026-11-06 — MyRoster, mobile EOS, and OPS Control share the staff-only assignment source list and assignment label/time precedence. MyRoster reads owned shifts and assignments on load and refreshes every minute while visible and online. Returning to the page or reconnecting also refreshes the schedule. Background refreshes preserve the applied date range and avoid interrupting staff edits. The active split files and Wix controller supersede the refresh logic in the retained source below.
+
 ## COMPLETE HTML / SOURCE IMPLEMENTATION
 
 ```html
