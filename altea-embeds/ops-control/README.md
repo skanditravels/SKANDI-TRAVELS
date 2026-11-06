@@ -39,6 +39,8 @@
 
 - 2026-11-06 — OPS Control uses the same staff assignment sources and label/time precedence as MyRoster and EOS. OPS edits are read by both staff views from the existing SKANDI records. Wix Bookings availability is independent of this roster.
 
+- 2026-11-06 — Added an opt-in server-only Wix Bookings working-hours reconciliation. The SKANDI roster remains private. Wix receives only eligible working intervals for explicitly paired service providers, with its normal service, location and existing booking checks still applied. The hourly job is dormant until configured. It defers an empty first rollout and refuses to replace unrelated custom working hours. See `src/backend/SKANDI_CORE/wixRosterAvailability.js` and `src/backend/jobs.config`.
+
 ## COMPLETE HTML / SOURCE IMPLEMENTATION
 
 ```html

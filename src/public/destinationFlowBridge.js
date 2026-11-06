@@ -19,7 +19,7 @@ function bounded(promise) {
   let timer;
   return Promise.race([promise,new Promise((_,reject)=>{timer=setTimeout(()=>reject(fail("DESTINATION_TIMEOUT","Destination information took too long to load. Select Retry.")),25000);})]).finally(()=>clearTimeout(timer));
 }
-export function bindDestinationFlow($w, entry = "index") {
+export function bindDestinationFlow($w, entry = "index", {embedId="",sources=[]} = {}) {
   let html = null, merged = false, catalog = [], catalogJob = null, loadedAt = 0, discoveryTimer = null;
   let flowState = initialState(), settings = {language:"EN",currency:"USD"};
   const bound = new Set(), jobs = new Map();
@@ -47,7 +47,7 @@ export function bindDestinationFlow($w, entry = "index") {
     if (path==="/home") path=SITE_MAP.home;
     if (!isSafeInternalRoute(path)||/[\\\u0000-\u0020]/.test(path)||/%5c|%0[0-9a-f]|%1[0-9a-f]/i.test(path)) throw fail("DESTINATION_INVALID_ROUTE","This link is unavailable.");
     const u=new URL(path,"https://www.skanditravels.com"),parts=u.pathname.split("/").filter(Boolean);
-    if(["destinations","our-destinations","hotels"].includes(parts[0])&&parts.length>1&&!u.search&&!parts.includes("map")&&parts[1]!=="country"){
+    if(u.pathname!==APP_ROUTES.hotelList&&["destinations","our-destinations","hotels"].includes(parts[0])&&parts.length>1&&!u.search&&!parts.includes("map")&&parts[1]!=="country"){
       const hotels=parts[0]==="hotels"||parts[parts.length-1]==="hotels";
       if(parts[parts.length-1]==="hotels")parts.pop();
       path=content.customPath(hotels?"hotels":"destination",{countrySlug:slug(decodeURIComponent(parts[1]||"")),destinationSlug:slug(decodeURIComponent(parts[2]||"")),areaSlug:slug(decodeURIComponent(parts[3]||""))});
@@ -62,7 +62,7 @@ export function bindDestinationFlow($w, entry = "index") {
   }
   function context(p={}) {
     const q=obj(p.query), outer=merged?flowState:initialState();
-    return {...outer,countrySlug:slug(p.countrySlug||q.country||outer.countrySlug),destinationSlug:slug(p.destinationSlug||q.destination||outer.destinationSlug),areaSlug:slug(p.areaSlug||q.area||outer.areaSlug),hotelSlug:slug(p.hotelSlug||q.hotel||outer.hotelSlug),hotelId:clean(p.hotelId||q.hotelId||outer.hotelId,160)};
+    return {...outer,countrySlug:slug(p.countrySlug||q.country||outer.countrySlug),destinationSlug:slug(p.destinationSlug||q.destination||outer.destinationSlug),areaSlug:slug(p.areaSlug||q.area||outer.areaSlug),hotelSlug:slug(p.hotelSlug||q.hotel||outer.hotelSlug),hotelId:clean((embedId&&outer.hotelId)||p.hotelId||q.hotelId||outer.hotelId,160)};
   }
   function recordFor(kind,p={}) {
     const c=context(p),key=kind==="country"?p.slug||c.countrySlug:kind==="destination"?p.slug||c.destinationSlug:kind==="area"?p.slug||c.areaSlug:c.hotelSlug;
@@ -125,6 +125,7 @@ export function bindDestinationFlow($w, entry = "index") {
   }
   async function search(kind,m) {
     await ensureCatalog();const p=obj(m.payload),raw=obj(p.search||p.searchContext||p.offer?.searchContext),c=context(p);
+    if(embedId&&kind==="hotels"&&p.hotelId)kind="hotel";
     let scope=kind==="hotels"?(c.areaSlug?recordFor("area",p):c.destinationSlug?recordFor("destination",p):c.countrySlug?recordFor("country",p):null):recordFor(kind,p);
     if(kind==="hotels"&&(!scope||scope.entityType==="COUNTRY")){
       const arrival=scope&&arrivals(scope).find(a=>a.iata===clean(raw.destinationIata,3).toUpperCase());
@@ -141,14 +142,33 @@ export function bindDestinationFlow($w, entry = "index") {
     search={...search,tripType:hotelOnly?"hotelOnly":"package",productType:hotelOnly?"hotel":"holiday",...settings,locale:settings.language};
     if(hotelOnly){const d=scope?.details||{},lat=d.latitude,lon=d.longitude;if(lat!==null&&lat!==undefined&&lat!==""&&lon!==null&&lon!==undefined&&lon!==""&&Number.isFinite(Number(lat))&&Number.isFinite(Number(lon))&&Math.abs(Number(lat))<=90&&Math.abs(Number(lon))<=180)search.location={latitude:Number(lat),longitude:Number(lon),label:scope.name};}
     if(kind==="hotel") {
+      if(embedId&&c.hotelId&&p.hotelId&&c.hotelId!==p.hotelId)throw fail("HOTEL_NOT_FOUND","Select a published hotel.");
       const d=scope.details||{},id=clean(d.duffelAccommodationId||d.providerAccommodationId,180);
-      if(!id)throw fail("HOTEL_MAPPING_REQUIRED","Live booking is not configured for this hotel yet. Contact SKANDI for availability.");
+      if(!/^acc_[a-z0-9]+$/i.test(id))throw fail("HOTEL_MAPPING_REQUIRED","Booking not available.");
       search.accommodationId=id;
+      if(embedId&&raw.addFlights===true) {
+        const origin=content.airportDirectory().find(a=>a.iata===raw.originIata);
+        const destination=content.airportFor(scope);
+        const destinationIata=clean(destination?.details?.iata||destination?.code,3).toUpperCase();
+        if(!origin||!destinationIata||origin.iata===destinationIata)throw fail("DESTINATION_AIRPORTS_REQUIRED","Choose a different departure airport.");
+        search={...search,tripType:"package",productType:"holiday",origin:origin.iata,originIata:origin.iata,
+          destination:destinationIata,destinationIata,destinationLabel:destination.details?.city||destination.name};
+      }
     }
     const from=search.departureDate,to=search.returnDate;
     const date=v=>/^\d{4}-\d{2}-\d{2}$/.test(v||"")&&Number.isFinite(Date.parse(v+"T00:00:00Z"))&&new Date(v+"T00:00:00Z").toISOString().slice(0,10)===v;
     if(!date(from)||!date(to)||from<new Date().toISOString().slice(0,10)||to<=from)throw fail("DESTINATION_INVALID_DATES","Choose valid future travel dates.");
     if(!hotelOnly&&!/^[A-Z]{3}$/.test(search.origin||""))throw fail("DESTINATION_ORIGIN_REQUIRED","Choose a departure airport from the list.");
+    if(embedId&&hotelOnly) {
+      const adults=Number(raw.adults), rooms=Number(raw.rooms);
+      const ages=Array.isArray(raw.childAges)?raw.childAges.map(Number):[];
+      if(!Number.isInteger(adults)||adults<1||adults>9||!Number.isInteger(rooms)||rooms<1||rooms>adults||
+         ages.length+adults>9||ages.some(age=>!Number.isInteger(age)||age<0||age>17))
+        throw fail("HOTEL_TRAVELERS_INVALID","Choose up to nine guests and one adult per room.");
+      const infantAges=ages.filter(age=>age<2),childAges=ages.filter(age=>age>=2);
+      search={...search,adults,rooms,children:childAges.length,infants:infantAges.length,childAges,infantAges,
+        guests:[...Array.from({length:adults},()=>({type:"adult"})),...ages.map(age=>({type:"child",age}))]};
+    }
     const path=startBookingSearch(search,"DESTINATIONS");
     post("BOOKING_SEARCH_NAVIGATING",{path},m.requestId||"",m.flowEpoch||"");navigate(path);
   }
@@ -156,7 +176,7 @@ export function bindDestinationFlow($w, entry = "index") {
     let m=event?.data;if(typeof m==="string"){try{m=JSON.parse(m);}catch(_){return;}}
     if(!m||typeof m!=="object")return;
     const kind=Object.keys(SOURCES).find(k=>SOURCES[k]===m.source)||(m.source==="SKANDI_HOTEL_SEARCH"?"hotels":"");
-    if(!kind||(html&&html!==embed))return;
+    if(!kind||(html&&html!==embed)||(embedId&&!sources.includes(m.source)))return;
     if(!html) {
       if(m.type!=="DESTINATION_FLOW_READY"&&!Object.values(READY).includes(m.type))return;
       html=embed;merged=kind==="flow";clearTimeout(discoveryTimer);
@@ -179,7 +199,9 @@ export function bindDestinationFlow($w, entry = "index") {
         if(m.type==="DESTINATION_FLOW_NAVIGATE_EXTERNAL"){navigate(p.path);return;}
         if(m.type==="DESTINATION_FLOW_RESIZE"){const h=Number(p.height);if(Number.isFinite(h)&&"height" in html){try{html.height=Math.max(680,Math.min(30000,h));}catch(_){}}return;}
       }
-      if(m.type===READY[kind]||m.type==="DESTINATION_REFRESH"||kind==="country"&&m.type==="UPDATE_SETTINGS")return pageResult(kind,m);
+      if(m.type===READY[kind]||m.type==="DESTINATION_REFRESH"||kind==="country"&&m.type==="UPDATE_SETTINGS"){
+        return pageResult(embedId&&kind==="hotels"&&initialState().level==="hotel"?"hotel":kind,m);
+      }
       if(m.type==="RESIZE_IFRAME"||m.type==="SKANDI_EMBED_RESIZE"){const h=Number(p.height||m.height);if(Number.isFinite(h)&&"height" in html){try{html.height=Math.max(680,Math.min(30000,h));}catch(_){}}return;}
       if(["COUNTRY_SEARCH_OFFERS","DESTINATION_SEARCH_OFFERS","AREA_SEARCH_OFFERS","COUNTRY_SELECT_OFFER","DESTINATION_SELECT_OFFER","AREA_SELECT_OFFER","HOTEL_SEARCH_RUN","HOTEL_DETAIL_CHECK_AVAILABILITY","HOTEL_SEARCH_SELECT","HOTEL_DETAIL_SELECT_OFFER"].includes(m.type))return await search(kind,m);
       if(m.type==="COUNTRY_SELECT_COUNTRY") {const r=content.byTypeSlug("COUNTRY",p.slug);if(!r)throw fail("COUNTRY_NOT_FOUND","Choose a published country.");navigate(APP_ROUTES.country+"?country="+encodeURIComponent(slug(r.slug||r.name)));return;}
@@ -192,8 +214,8 @@ export function bindDestinationFlow($w, entry = "index") {
   function discover() {
     if(html)return;attempts++;
     const found=[];
-    for(const id of ["#countryDestinationHtml","#destinationDetailHtml","#htmlDestinations","#destinationFlowEmbed","#htmlDestination","#destinationsEmbed"]){try{const e=$w(id);if(e)found.push(e);}catch(_){}}
-    try{const list=$w("HtmlComponent");if(Array.isArray(list))found.push(...list);else if(list&&typeof list.forEach==="function")list.forEach(e=>found.push(e));else if(list&&typeof list[Symbol.iterator]==="function")found.push(...list);}catch(_){}
+    for(const id of embedId?[embedId]:["#countryDestinationHtml","#destinationDetailHtml","#htmlDestinations","#destinationFlowEmbed","#htmlDestination","#destinationsEmbed"]){try{const e=$w(id);if(e)found.push(e);}catch(_){}}
+    if(!embedId)try{const list=$w("HtmlComponent");if(Array.isArray(list))found.push(...list);else if(list&&typeof list.forEach==="function")list.forEach(e=>found.push(e));else if(list&&typeof list[Symbol.iterator]==="function")found.push(...list);}catch(_){}
     for(const embed of found){if(!embed||typeof embed.onMessage!=="function"||typeof embed.postMessage!=="function")continue;const key=embed.id||embed;if(bound.has(key))continue;bound.add(key);embed.onMessage(e=>receive(e,embed));embed.postMessage({source:PARENT,type:"DESTINATION_BRIDGE_READY",payload:{version:"V12"}});embed.postMessage({source:PARENT,type:"COUNTRY_HOST_READY",payload:{version:"V12"}});}
     if(attempts<60)discoveryTimer=setTimeout(discover,500);
     else console.error("[Destinations V12] No destination embed handshake received.");

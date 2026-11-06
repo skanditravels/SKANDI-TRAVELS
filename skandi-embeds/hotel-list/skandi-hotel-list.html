@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hotels | SKANDI Travels</title>
+  <link rel="stylesheet" href="skandi-hotel-list.css">
+</head>
+<body>
+  <main class="hs-page" id="hotelListApp">
+    <header class="hs-hero">
+      <img id="hotelHeroImage" alt="" hidden>
+      <div class="hs-shell">
+        <nav id="hotelBreadcrumb" aria-label="Breadcrumb"></nav>
+        <p class="hs-eyebrow">SKANDI Travels</p>
+        <h1 id="hotelTitle">Hotels</h1>
+        <p id="hotelIntro"></p>
+      </div>
+    </header>
+    <div class="hs-shell">
+      <div class="hs-state" role="status" id="hotelStatus">Loading hotels…</div>
+      <button class="hs-button" id="hotelRetry" type="button" hidden>Try again</button>
+      <section id="hotelContent" hidden>
+        <details class="hs-booking" id="hotelBooking">
+          <summary>Find your stay</summary>
+          <form id="hotelBookingForm">
+            <div class="hs-fields">
+              <label id="hotelPropertyField">Hotel<select id="hotelProperty"></select></label>
+              <label>Check-in<input type="date" name="checkInDate" required></label>
+              <label>Check-out<input type="date" name="checkOutDate" required></label>
+              <label>Adults<input type="number" name="adults" min="1" max="9" value="2" required></label>
+              <label>Children &amp; infants<input type="number" name="children" min="0" max="8" value="0" required></label>
+              <label>Rooms<input type="number" name="rooms" min="1" max="9" value="1" required></label>
+            </div>
+            <div class="hs-fields" id="hotelChildAges"></div>
+            <label class="hs-check" id="hotelFlightsField"><input type="checkbox" name="addFlights"> Add flights</label>
+            <label id="hotelOriginField" hidden>Flying from<select name="originIata"></select></label>
+            <button class="hs-button" id="hotelBook" type="submit">Check availability</button>
+          </form>
+        </details>
+        <button class="hs-button hs-unavailable" id="hotelUnavailable" type="button" disabled hidden>Booking not available</button>
+        <div id="hotelDirectory">
+          <div class="hs-filters">
+            <label>Find a hotel<input id="hotelFilter" type="search" placeholder="Hotel or location"></label>
+            <label>Sort by<select id="hotelSort"><option value="recommended">Recommended</option><option value="name">Hotel name</option><option value="rating">Guest rating</option></select></label>
+          </div>
+          <p id="hotelCount" role="status"></p>
+          <div class="hs-grid" id="hotelCards"></div>
+        </div>
+        <article id="hotelDetail" class="hs-detail" hidden></article>
+      </section>
+    </div>
+  </main>
+  <script src="skandi-hotel-list.js"></script>
+</body>
+</html>

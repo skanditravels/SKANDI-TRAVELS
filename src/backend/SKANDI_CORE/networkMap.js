@@ -17,6 +17,8 @@ export async function getPublicNetworkMapDataCore() {
     destinations: Array.isArray(payload.destinations) ? payload.destinations : [],
     routes: Array.isArray(payload.routes) ? payload.routes : [],
     hotels: Array.isArray(payload.hotels) ? payload.hotels : [],
+    airports: Array.isArray(payload.airports) ? payload.airports : [],
+    airlines: Array.isArray(payload.airlines) ? payload.airlines : [],
     stats: payload.stats || { destinations: 0, routes: 0, hotels: 0 },
     publicNote: payload.publicNote || "Only published, customer-visible network records are shown."
   };

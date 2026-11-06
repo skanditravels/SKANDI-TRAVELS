@@ -1,5 +1,11 @@
 # SKANDI INFO / LOG — OUR NETWORK + DESTINATIONS MERGED DISCOVERY
 
+## 2026-11-06 — Current atlas and public links
+
+The live catalog includes airports and airlines in addition to destinations, hotels and routes. The Wix facade now passes all five collections through. The map uses a lighter OpenFreeMap base, retains readable geographic labels and resolves overlapping map features in one click handler. Desktop detail actions retain their handlers and hotel clusters expand with the current MapLibre API.
+
+Selecting a pin sets `/destinations?pin=<type>:<public-key>` in the top-level Wix URL. A fresh page load restores the selection from Wix. Directory links use the same contract. Collection cards open their specific hotel at `/destinations/explore/hotel-list` using the published hotel ID. The earlier paths below are retained as history.
+
 > Current document: `skandi-embeds/destinations/README.md`. Original reference: `HTML_REF/skandi/Our Destinations.md`.
 
 

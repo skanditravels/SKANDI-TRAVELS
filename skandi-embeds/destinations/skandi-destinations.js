@@ -4,11 +4,8 @@
    ========================================================= */
 const HTML_SOURCE = "SKANDI_PUBLIC_NETWORK_MAP";
 const PARENT_SOURCE = "SKANDI_WIX_PARENT";
-const MAP_STYLE_URL = "https://tiles.openfreemap.org/styles/dark";
-const BOOKING_ROUTE = "/booking";
-const HOTEL_SEARCH_ROUTE = "/hotels";
-const COUNTRY_ROUTE = "/destinations/country";
-const DESTINATION_ROUTE = "/destinations/country/destination";
+const MAP_STYLE_URL = "https://tiles.openfreemap.org/styles/liberty";
+let paths = { atlas:"/destinations", explore:"/destinations/explore", hotels:"/destinations/explore/hotel-list", booking:"/booking" };
 const SAFE_PROTOCOLS = new Set(["http:","https:"]);
 const REDUCED_MOTION = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 const SAVE_DATA = Boolean(navigator.connection && navigator.connection.saveData);
@@ -37,6 +34,8 @@ const state = {
   map:null,
   mapInitialized:false,
   pendingPayload:null,
+  linkedSelection:null,
+  siteBridge:false,
   routeAnimationFrame:0,
   resizeObserver:null
 };
@@ -372,12 +371,15 @@ function initMap(){
       cooperativeGestures:true,
       dragRotate:false,
       pitchWithRotate:false,
-      maxPitch:48,
+      maxPitch:0,
       fadeDuration:REDUCED_MOTION?0:220
     });
     state.map.addControl(new maplibregl.AttributionControl({compact:true}),"bottom-right");
     state.map.on("load",onMapLoad);
-    state.map.on("error",event=>logger("map_error",{message:event?.error?.message||"unknown"}));
+    state.map.on("error",event=>{
+      logger("map_error",{message:event?.error?.message||"unknown"});
+      if(!state.mapReady) showMapFailure("The map couldn’t load. You can still browse destinations below.");
+    });
     let lastObservedWidth=0;
     let lastObservedHeight=0;
     let resizeRaf=0;
@@ -401,298 +403,26 @@ function onMapLoad(){
   const loadingVeil=document.getElementById("mapLoading");
   if(loadingVeil)loadingVeil.remove();
   rethemeBaseMap();
-  if(!IS_MOBILE()&&typeof state.map.setProjection==="function"){
-    try{state.map.setProjection({type:"globe"})}catch(error){logger("globe_unavailable",{message:error.message})}
-  }
   installNetworkSourcesAndLayers();
   installMapInteractions();
-  if(state.pendingPayload){const payload=state.pendingPayload;state.pendingPayload=null;applyPayload(payload)}else{renderModel()}
+  if(state.pendingPayload){
+    const payload=state.pendingPayload;
+    state.pendingPayload=null;
+    applyPayload(payload);
+  }else{renderModel()}
+  if(state.selectionId)focusSelection(state.selectionType,getObject(state.selectionType,state.selectionId));
   logger("map_ready");
 }
 function rethemeBaseMap(){
-  const map = state.map;
-  if(!map) return;
-
-  const layers = map.getStyle()?.layers || [];
-
-  layers.forEach(layer => {
-    const id = String(layer.id || "").toLowerCase();
-
-    try{
-      /* -----------------------------------------------------
-         REMOVE VISUAL NOISE
-         ----------------------------------------------------- */
-      if(
-        id.includes("poi") ||
-        id.includes("transit") ||
-        id.includes("road") ||
-        id.includes("motorway") ||
-        id.includes("highway") ||
-        id.includes("street") ||
-        id.includes("building") ||
-        id.includes("housenumber") ||
-        id.includes("aeroway")
-      ){
-        map.setLayoutProperty(layer.id, "visibility", "none");
-        return;
-      }
-
-      /* -----------------------------------------------------
-         LAND / WORLD CANVAS
-
-         OpenFreeMap Dark primarily uses the background layer
-         as the visible land/world base.
-         ----------------------------------------------------- */
-      if(layer.type === "background"){
-        map.setPaintProperty(
-          layer.id,
-          "background-color",
-          "#D4DEDC"
-        );
-        return;
-      }
-
-      /* -----------------------------------------------------
-         FILLS
-         ----------------------------------------------------- */
-      if(layer.type === "fill"){
-
-        /* Ocean, lakes and rivers */
-        if(
-          id.includes("water") ||
-          id.includes("ocean") ||
-          id.includes("lake") ||
-          id.includes("river")
-        ){
-          map.setPaintProperty(
-            layer.id,
-            "fill-color",
-            "#F7F8F5"
-          );
-
-          map.setPaintProperty(
-            layer.id,
-            "fill-opacity",
-            1
-          );
-
-          return;
-        }
-
-        /* Parks / forests / nature */
-        if(
-          id.includes("park") ||
-          id.includes("wood") ||
-          id.includes("forest") ||
-          id.includes("grass") ||
-          id.includes("vegetation")
-        ){
-          map.setPaintProperty(
-            layer.id,
-            "fill-color",
-            "#C3D2CF"
-          );
-
-          map.setPaintProperty(
-            layer.id,
-            "fill-opacity",
-            0.78
-          );
-
-          return;
-        }
-
-        /* Ice / glaciers */
-        if(
-          id.includes("glacier") ||
-          id.includes("ice") ||
-          id.includes("snow")
-        ){
-          map.setPaintProperty(
-            layer.id,
-            "fill-color",
-            "#F7FAFA"
-          );
-
-          map.setPaintProperty(
-            layer.id,
-            "fill-opacity",
-            0.92
-          );
-
-          return;
-        }
-
-        /* Remaining terrain / land cover */
-        if(
-          id.includes("land") ||
-          id.includes("landcover") ||
-          id.includes("earth") ||
-          id.includes("natural")
-        ){
-          map.setPaintProperty(
-            layer.id,
-            "fill-color",
-            "#D4DEDC"
-          );
-
-          map.setPaintProperty(
-            layer.id,
-            "fill-opacity",
-            0.9
-          );
-
-          return;
-        }
-      }
-
-      /* -----------------------------------------------------
-         BORDERS / COASTLINES
-         ----------------------------------------------------- */
-      if(layer.type === "line"){
-
-        if(
-          id.includes("boundary") ||
-          id.includes("admin") ||
-          id.includes("border")
-        ){
-          map.setPaintProperty(
-            layer.id,
-            "line-color",
-            "rgba(2,46,100,.25)"
-          );
-
-          map.setPaintProperty(
-            layer.id,
-            "line-width",
-            [
-              "interpolate",
-              ["linear"],
-              ["zoom"],
-              1, 0.45,
-              5, 0.75,
-              9, 1
-            ]
-          );
-
-          map.setPaintProperty(
-            layer.id,
-            "line-opacity",
-            0.8
-          );
-
-          return;
-        }
-
-        if(
-          id.includes("water") ||
-          id.includes("river")
-        ){
-          map.setPaintProperty(
-            layer.id,
-            "line-color",
-            "rgba(31,107,163,.22)"
-          );
-
-          map.setPaintProperty(
-            layer.id,
-            "line-opacity",
-            0.72
-          );
-
-          return;
-        }
-      }
-
-      /* -----------------------------------------------------
-         LABELS
-         ----------------------------------------------------- */
-      if(layer.type === "symbol"){
-
-        /* Countries */
-        if(
-          id.includes("country") ||
-          id.includes("state")
-        ){
-          map.setPaintProperty(
-            layer.id,
-            "text-color",
-            "rgba(2,46,100,.80)"
-          );
-
-          map.setPaintProperty(
-            layer.id,
-            "text-halo-color",
-            "rgba(251,250,246,.92)"
-          );
-
-          map.setPaintProperty(
-            layer.id,
-            "text-halo-width",
-            1.35
-          );
-
-          return;
-        }
-
-        /* Cities / settlements */
-        if(
-          id.includes("city") ||
-          id.includes("place") ||
-          id.includes("settlement") ||
-          id.includes("town") ||
-          id.includes("village")
-        ){
-          map.setPaintProperty(
-            layer.id,
-            "text-color",
-            "rgba(83,109,121,.82)"
-          );
-
-          map.setPaintProperty(
-            layer.id,
-            "text-halo-color",
-            "rgba(251,250,246,.90)"
-          );
-
-          map.setPaintProperty(
-            layer.id,
-            "text-halo-width",
-            1.25
-          );
-
-          return;
-        }
-
-        /* Hide unrelated labels */
-        map.setLayoutProperty(
-          layer.id,
-          "visibility",
-          "none"
-        );
-      }
-    }catch(error){
-      logger("map_retheme_layer_skip",{
-        layer:layer.id,
-        message:error?.message || "unsupported paint property"
-      });
-    }
-  });
-
-  /* -------------------------------------------------------
-     LIGHT NORDIC ATMOSPHERE
-
-     This replaces the current dark globe fog with a
-     porcelain / smoke atmosphere.
-     ------------------------------------------------------- */
-  try{
-    map.setFog?.({color:"rgba(245,241,234,.08)","high-color":"rgba(95,199,207,.06)","space-color":"#D4DEDC","horizon-blend":.05,"star-intensity":0});
-  }catch(error){
-    logger("map_fog_retheme_skip",{
-      message:error?.message || "fog unavailable"
-    });
+  const map=state.map;
+  for(const layer of map.getStyle()?.layers||[]){
+    const id=layer.id.toLowerCase();
+    if(layer.type==="background") map.setPaintProperty(layer.id,"background-color","#f6f5ef");
+    if(layer.type==="fill"&&/^water/.test(id)) map.setPaintProperty(layer.id,"fill-color","#c3dce8");
+    if(layer.type==="symbol"&&/poi|transportation|road|housenumber/.test(id)) map.setLayoutProperty(layer.id,"visibility","none");
   }
 }
+
 function addGeoSource(id,options={}){if(!state.map.getSource(id))state.map.addSource(id,{type:"geojson",data:emptyFC(),...options})}
 function installNetworkSourcesAndLayers(){
   const map=state.map;
@@ -791,21 +521,38 @@ function renderModes(){
 function installMapInteractions(){
   const map=state.map;
   const layers=[
-    {layer:"sk-destinations",type:"destination"},
     {layer:"sk-hotels",type:"hotel"},
+    {layer:"sk-destinations",type:"destination"},
     {layer:"sk-airports",type:"airport"},
     {layer:"sk-routes-hit",type:"route"}
   ];
-  layers.forEach(({layer,type})=>{
-    map.on("mousemove",layer,event=>handleHover(type,event));
-    map.on("mouseleave",layer,()=>clearHover());
-    map.on("click",layer,event=>handleMapClick(type,event));
+  map.on("mousemove",event=>{
+    const hit=mapHit(event.point);
+    if(hit?.layer!=="sk-hotel-clusters"&&hit)handleHover(hit.type,{features:[hit.feature],point:event.point});
+    else clearHover();
   });
-  map.on("click","sk-hotel-clusters",event=>{
-    const feature=event.features?.[0];if(!feature)return;
-    const clusterId=feature.properties.cluster_id;
-    state.map.getSource("sk-hotels").getClusterExpansionZoom(clusterId,(err,zoom)=>{if(err)return;state.map.easeTo({center:feature.geometry.coordinates,zoom:Math.min(zoom,11),duration:cameraDuration(650)})});
+  map.getCanvas().addEventListener("mouseleave",clearHover);
+  map.on("click",event=>{
+    const hit=mapHit(event.point);
+    if(!hit)return;
+    if(hit.layer!=="sk-hotel-clusters"){handleMapClick(hit.type,{features:[hit.feature]});return;}
+    const {properties,geometry}=hit.feature;
+    map.getSource("sk-hotels").getClusterExpansionZoom(properties.cluster_id).then(zoom=>{
+      map.easeTo({center:geometry.coordinates,zoom:Math.min(zoom,11),duration:cameraDuration(650)});
+    }).catch(()=>{});
   });
+  function mapHit(point){
+    const picks=[{layer:"sk-hotel-clusters"},...layers];
+    if(state.mode==="airlines"){
+      picks.sort((a,b)=>Number(b.type==="airport")-Number(a.type==="airport"));
+    }
+    const features=map.queryRenderedFeatures(point,{layers:picks.map(p=>p.layer)});
+    for(const pick of picks){
+      const feature=features.find(f=>f.layer.id===pick.layer);
+      if(feature)return {...pick,feature};
+    }
+    return null;
+  }
 }
 function handleHover(type,event){
   const feature=event.features?.[0];if(!feature)return;
@@ -849,7 +596,9 @@ function countsForDestination(dest){
    ========================================================= */
 function getObject(type,id){
   const list={destination:state.model.destinations,hotel:state.model.hotels,airport:state.model.airports,airline:state.model.airlines,route:state.model.routes}[type]||[];
-  const key=cleanId(id).toLowerCase();return list.find(x=>cleanId(x.id).toLowerCase()===key||cleanId(x.iata).toLowerCase()===key||cleanId(x.slug).toLowerCase()===key)||null;
+  const key=cleanId(id).toLowerCase();
+  return list.find(x=>cleanId(x.id).toLowerCase()===key)||
+    list.find(x=>cleanId(x.iata).toLowerCase()===key||cleanId(x.slug).toLowerCase()===key)||null;
 }
 function selectObject(type,id,options={}){
   const obj=getObject(type,id);if(!obj)return;
@@ -910,7 +659,7 @@ function setMode(mode,track=true){
 function syncModeButtons(){el.modeRail.querySelectorAll("[data-mode]").forEach(b=>{const active=b.dataset.mode===state.mode;b.classList.toggle("active",active);b.setAttribute("aria-pressed",String(active))})}
 function setRegion(region){state.selectedRegion=region;renderRegions();applyFeatureStates();const items=region?state.model.destinations.filter(d=>d.region===region||d.country===region):state.model.destinations;fitBoundsFor(items,true);analytics("network_region_change",{region:region||"all"})}
 function focusSelection(type,obj){
-  if(!state.mapReady)return;
+  if(!state.mapReady||!obj)return;
   const duration=cameraDuration(type==="route"?950:720);
   if(type==="route"){const nodes=[obj.fromNode,obj.toNode].filter(Boolean);fitBoundsFor(nodes,true,{duration,padding:panelPadding()});return}
   if(type==="airline"){const routes=state.model.routes.filter(r=>routeHasAirline(r,obj.id));fitBoundsFor(routes.flatMap(r=>[r.fromNode,r.toNode]).filter(Boolean),true,{duration,padding:panelPadding()});return}
@@ -929,7 +678,7 @@ function fitDefaultBounds(animate=true){
    ========================================================= */
 function renderSelection(obj,type){
   const fragment=buildPanelFragment(obj,type);
-  el.panelBody.replaceChildren(fragment.cloneNode(true));
+  el.panelBody.replaceChildren(fragment);
   renderPanelImage(obj,type);
   el.detailPanel.classList.add("open");el.detailPanel.setAttribute("aria-hidden","false");
 
@@ -979,12 +728,11 @@ function relatedTitle(type){return {destination:"In this destination",airport:"P
 function panelActions(type,obj){
   const actions=[];
   if(type==="destination"){
-    if(obj.pageUrl)actions.push({label:`Explore ${obj.name}`,onClick:()=>navigate(obj.pageUrl,{type:"destination",id:publicSelectionId(type,obj)})});
+    if(obj.country)actions.push({label:`Explore ${obj.country}`,onClick:()=>navigate(countryRoute(obj.country))});
     actions.push({label:"Plan a trip",onClick:()=>bookDestination(obj)});
   }
   if(type==="hotel"){
-    if(obj.pageUrl)actions.push({label:"View hotel",onClick:()=>navigate(obj.pageUrl,{type:"hotel",id:publicSelectionId(type,obj)})});
-    actions.push({label:"Check availability",onClick:()=>bookHotel(obj)});
+    actions.push({label:"View hotel",onClick:()=>bookHotel(obj)});
   }
   if(type==="airport"){
     if(obj.pageUrl)actions.push({label:"View airport guide",onClick:()=>navigate(obj.pageUrl,{type:"airport",id:obj.iata})});
@@ -998,6 +746,7 @@ function panelActions(type,obj){
     const destination=findDestinationForNode(obj.toNode);if(destination?.pageUrl)actions.push({label:"Explore destination",onClick:()=>navigate(destination.pageUrl,{type:"destination",id:publicSelectionId("destination",destination)})});
     actions.push({label:"Search this route",onClick:()=>bookRoute(obj)});
   }
+  actions.push({label:"Share map link",onClick:()=>shareMapLink(type,obj)});
   return actions;
 }
 function renderPanelImage(obj,type){loadImage(el.panelImage,selectionImage(obj,type))}
@@ -1097,13 +846,10 @@ function renderAirlines(){
 
 function countryRoute(countryName){
   const slug=slugify(countryName);
-  return slug?`${COUNTRY_ROUTE}?country=${encodeURIComponent(slug)}`:"";
+  return slug?`${paths.explore}?country=${encodeURIComponent(slug)}`:"";
 }
 function destinationRoute(destination){
-  const countrySlug=slugify(destination?.country||"");
-  const destinationSlug=cleanString(destination?.slug||slugify(destination?.name||""),160);
-  if(!countrySlug||!destinationSlug)return destination?.pageUrl||"";
-  return `${DESTINATION_ROUTE}?country=${encodeURIComponent(countrySlug)}&destination=${encodeURIComponent(destinationSlug)}`;
+  return destination ? mapLink("destination",destination) : "";
 }
 function renderDestinationsList(){
   if(!el.destinationsListContent||!el.destinationsAlphabet)return;
@@ -1236,25 +982,52 @@ function scrollToMap(){document.getElementById("networkApp").scrollIntoView({beh
 function navigate(url,context={}){
   const safe=safeUrl(url);if(!safe)return;
   analytics("network_navigation",context);
-  try{window.parent?.postMessage({source:HTML_SOURCE,type:"SKANDI_MAP_NAVIGATE",url:safe,context},"*")}catch{}
-  try{window.open(safe,"_top")}catch{}
+  if(!state.siteBridge || window.parent===window || /^https?:\/\//i.test(safe)){
+    window.open(new URL(safe,"https://www.skanditravels.com").href,"_top");
+    return;
+  }
+  window.parent.postMessage({source:HTML_SOURCE,type:"SKANDI_MAP_NAVIGATE",url:safe,context},"*");
 }
-function bookingUrl(params={}){const url=new URL(BOOKING_ROUTE,window.location.origin);Object.entries(params).forEach(([k,v])=>{if(v!==undefined&&v!==null&&String(v)!=="")url.searchParams.set(k,String(v))});return url.pathname+url.search}
+function bookingUrl(params={}){const url=new URL(paths.booking,"https://www.skanditravels.com");Object.entries(params).forEach(([k,v])=>{if(v!==undefined&&v!==null&&String(v)!=="")url.searchParams.set(k,String(v))});return url.pathname+url.search}
 function bookRoute(route){analytics("network_booking_click",{kind:"route",origin:route.fromId,destination:route.toId});navigate(bookingUrl({origin:route.fromId,destination:route.toId}),{kind:"route",origin:route.fromId,destination:route.toId})}
 function bookDestination(dest){const airport=airportsForDestination(dest)[0];const destination=airport?.iata||dest.iata||dest.slug||dest.name;analytics("network_booking_click",{kind:"destination",destination});navigate(bookingUrl({destination}),{kind:"destination",destination})}
-function bookHotel(hotel){const dest=getObject("destination",hotel.destinationId);const destination=dest?.slug||dest?.name||hotel.city||hotel.destinationId;const url=new URL(HOTEL_SEARCH_ROUTE,window.location.origin);if(destination)url.searchParams.set("destination",destination);if(hotel.slug)url.searchParams.set("hotel",hotel.slug);analytics("network_booking_click",{kind:"hotel",hotel:hotel.slug||hotel.id,destination});navigate(url.pathname+url.search,{kind:"hotel",hotel:hotel.slug||hotel.id,destination})}
-function bookFromAirport(airport){analytics("network_booking_click",{kind:"airport",origin:airport.iata});navigate(bookingUrl({origin:airport.iata}),{kind:"airport",origin:airport.iata})}
-function publicSelectionId(type,obj){return type==="airport"?obj.iata:type==="airline"?(obj.iata||obj.id):type==="destination"?(obj.slug||obj.id):type==="hotel"?(obj.slug||obj.id):type==="route"?`${obj.fromId}-${obj.toId}`:obj.id}
-function writeDeepLink(type,obj){
-  const params=new URLSearchParams();params.set(type,publicSelectionId(type,obj));if(state.selectedRegion)params.set("region",state.selectedRegion);
-  const next=`${location.pathname}?${params.toString()}`;try{history.replaceState({type,id:publicSelectionId(type,obj)},"",next)}catch{}
-  try{window.parent?.postMessage({source:HTML_SOURCE,type:"SKANDI_MAP_STATE",state:{type,id:publicSelectionId(type,obj),region:state.selectedRegion||""}},"*")}catch{}
+function bookHotel(hotel){
+  const query=new URLSearchParams({hotelId:hotel.id});
+  if(hotel.slug) query.set("hotel",hotel.slug);
+  navigate(paths.hotels+"?"+query.toString(),{kind:"hotel",hotel:hotel.id});
 }
-function clearDeepLink(){try{history.replaceState({},"",location.pathname)}catch{};try{window.parent?.postMessage({source:HTML_SOURCE,type:"SKANDI_MAP_STATE",state:{}},"*")}catch{}}
-function applyDeepLink(){
-  const p=new URLSearchParams(location.search);const types=["destination","hotel","airport","airline","route"];for(const type of types){const value=p.get(type);if(!value)continue;if(type==="route"){const key=value.replace("-","↔");const route=state.model.routes.find(r=>r.id===key||`${r.fromId}-${r.toId}`===value||`${r.toId}-${r.fromId}`===value);if(route){selectObject("route",route.id,{camera:true,history:false});return}}
-    const obj=getObject(type,value);if(obj){selectObject(type,obj.id,{camera:true,history:false});return}
+function bookFromAirport(airport){analytics("network_booking_click",{kind:"airport",origin:airport.iata});navigate(bookingUrl({origin:airport.iata}),{kind:"airport",origin:airport.iata})}
+function publicSelectionId(type,obj){
+  return type==="route"?`${obj.fromId}-${obj.toId}`:type==="airport"?(obj.iata||obj.id):obj.id;
+}
+function mapLink(type,obj){
+  const query=new URLSearchParams({pin:type+":"+publicSelectionId(type,obj)});
+  return paths.atlas+"?"+query.toString();
+}
+async function shareMapLink(type,obj){
+  const url=new URL(mapLink(type,obj),"https://www.skanditravels.com").href;
+  try {
+    if(navigator.share) await navigator.share({title:panelTitle(type,obj),url});
+    else await navigator.clipboard.writeText(url);
+    el.selectionLive.textContent="Map link ready";
+  } catch(error){
+    if(error?.name!=="AbortError") el.selectionLive.textContent="Copy the map link from the address bar.";
   }
+}
+function writeDeepLink(type,obj){
+  const id=publicSelectionId(type,obj);
+  if(window.parent===window) history.replaceState({type,id},"",mapLink(type,obj));
+  else window.parent.postMessage({source:HTML_SOURCE,type:"SKANDI_MAP_STATE",state:{type,id}},"*");
+}
+function clearDeepLink(){
+  if(window.parent===window) history.replaceState({},"",paths.atlas);
+  else window.parent.postMessage({source:HTML_SOURCE,type:"SKANDI_MAP_STATE",state:{}},"*");
+}
+function applyDeepLink(selection){
+  const {type,id}=selection||{};
+  if(!["destination","hotel","airport","airline","route"].includes(type)||!id)return;
+  const obj=type==="route"?state.model.routes.find(r=>publicSelectionId(type,r)===id||`${r.toId}-${r.fromId}`===id):getObject(type,id);
+  if(obj && (state.selectionId!==obj.id || state.selectionType!==type || !state.mapReady)) selectObject(type,obj.id,{camera:true,history:false});
 }
 
 /* =========================================================
@@ -1377,11 +1150,13 @@ function requestRefresh(){try{window.parent?.postMessage({source:HTML_SOURCE,typ
 function notifyReady(){try{window.parent?.postMessage({source:HTML_SOURCE,type:"SKANDI_MAP_READY"},"*")}catch{}}
 function applyPayload(payload){
   try{
+    if(payload.paths){paths={...paths,...payload.paths};state.siteBridge=true;}
+    if(payload.selection)state.linkedSelection=payload.selection;
     const previousSelection={type:state.selectionType,id:state.selectionId};state.payload=payload;state.model=normalizePayload(payload);state.dataReceived=true;state.dataState="ready";if(state.destinationDirectoryOpen)renderDestinationsList();
     if(state.mapReady)renderModel();else state.pendingPayload=payload;
     setStatus("");
     if(previousSelection.id&&getObject(previousSelection.type,previousSelection.id))selectObject(previousSelection.type,previousSelection.id,{camera:false,history:false});else if(previousSelection.id)clearSelection({camera:false,history:false});
-    else applyDeepLink();
+    else applyDeepLink(state.linkedSelection);
     analytics("network_view",state.model.stats);
   }catch(error){logger("payload_render_failed",{message:error.message});setStatus("We couldn't load the network right now.",{tone:"error",retry:true})}
 }
@@ -1390,9 +1165,15 @@ window.loadMapData=applyPayload;
 /* Listener-first bridge: attached before READY is ever sent. */
 window.addEventListener("message",event=>{
   let data=event.data;if(typeof data==="string"){try{data=JSON.parse(data)}catch{return}}
-  if(!data||typeof data!=="object")return;
+  if(event.source!==window.parent||!data||typeof data!=="object")return;
   if(data.source&&data.source!==PARENT_SOURCE)return;
   const type=cleanString(data.type).toUpperCase();
+  if(type==="SKANDI_MAP_SELECTION"){
+    state.linkedSelection=data.payload;
+    if(!state.linkedSelection?.id && state.panelOpen)clearSelection({history:false});
+    else applyDeepLink(state.linkedSelection);
+    return;
+  }
   if(type==="SKANDI_MAP_ERROR"){
     logger("parent_error",{message:cleanString(data.message||data.payload?.message)});
     if(state.retryCount<1){state.retryCount++;setTimeout(requestRefresh,900);return}
@@ -1420,7 +1201,7 @@ document.addEventListener("DOMContentLoaded",()=>{
   el.sheetSnap.addEventListener("click",cycleSheet);installSheetGestures();
   el.zoomIn.addEventListener("click",()=>state.map?.zoomIn({duration:cameraDuration(250)}));el.zoomOut.addEventListener("click",()=>state.map?.zoomOut({duration:cameraDuration(250)}));el.resetMap.addEventListener("click",()=>{clearSelection({camera:false,history:true});state.selectedRegion=null;state.selectedAirlineId=null;state.mode="explore";syncModeButtons();renderRegions();applyMode();fitDefaultBounds(true)});
   el.mapRetry.addEventListener("click",requestRefresh);
-  el.planJourney.addEventListener("click",()=>{const selected=getObject(state.selectionType,state.selectionId);if(state.selectionType==="route")bookRoute(selected);else if(state.selectionType==="destination")bookDestination(selected);else navigate(BOOKING_ROUTE,{kind:"general"})});
+  el.planJourney.addEventListener("click",()=>{const selected=getObject(state.selectionType,state.selectionId);if(state.selectionType==="route")bookRoute(selected);else if(state.selectionType==="destination")bookDestination(selected);else navigate(paths.booking,{kind:"general"})});
   document.addEventListener("keydown",e=>{if(e.key==="Escape"){if(state.destinationDirectoryOpen)closeDestinationsList();else if(state.searchOpen)closeSearch();else if(state.panelOpen)clearSelection({camera:false,history:true})}if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==="k"){e.preventDefault();openSearch()}});
 
   initMap();

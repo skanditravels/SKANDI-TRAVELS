@@ -25,7 +25,7 @@ export const SITE_MAP = Object.freeze({
 });
 
 export const APP_ROUTES = Object.freeze({
-  country: "/destinations/explore", bookingFlow: "/booking",
+  country: "/destinations/explore", hotelList: "/destinations/explore/hotel-list", bookingFlow: "/booking",
   myProfile: "/my-profile",
   myTrips: "/my-profile?tab=trips", careers: "/about/careers",
   myRoster: "/riaintra/success-factors/altea/my-roster", groupTalk: "/riaintra/success-factors/altea/grouptalk",
@@ -73,6 +73,7 @@ export const EDITORIAL_PAGE_CATALOG = Object.freeze([
   page("transfers", "Transfers", SITE_MAP.transfers, "OPERATIONAL"),
   page("destinations", "Destinations", SITE_MAP.destinations, "INVENTORY"),
   page("country", "Explore", APP_ROUTES.country, "INVENTORY"),
+  page("hotelList", "Hotel List", APP_ROUTES.hotelList, "INVENTORY"),
   page("travelInfo", "Travel Info", SITE_MAP.travelInfo, "INVENTORY"),
   page("passportVisa", "Passport & Visa", APP_ROUTES.passportVisa, "PUBLIC_PRESENTATION", [
     section("passport-hero","Hero",[field("passport-hero-kicker","Kicker"),field("passport-hero-title","Headline"),field("passport-hero-copy","Hero copy","LONG_TEXT")])
@@ -246,6 +247,11 @@ export const PAGE_BUILD_INTEGRATIONS = Object.freeze({
     "sources": [
       "SKANDI_CAR_RENTAL"
     ]
+  },
+  "hotelList": {
+    "controller": "src/pages/Hotel List.iqhpp.js",
+    "embedIds": ["#areaHotelsHtml"],
+    "sources": ["SKANDI_AREA_HOTEL_SEARCH", "SKANDI_HOTEL_DETAIL"]
   },
   "country": {
     "controller": "src/pages/Explore.nxtpn.js",

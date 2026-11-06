@@ -107,7 +107,16 @@ async function loadCountry(message) {
       const page=record?content.countryPage(record,job.settings.language):null;
       if (page) {
         page.arrivalAirports=arrivals(record);
-        page.paths={hotels:SITE_MAP.destinations+"?country="+encodeURIComponent(page.slug)+"&view=hotels",
+        if (page.map && !page.map.places.length) {
+          page.map.places=page.arrivalAirports.map(airport=>{
+            const item=catalog.find(row=>row.id===airport.id);
+            const lat=item?.details?.latitude, lon=item?.details?.longitude;
+            if(lat==null||lon==null||lat===""||lon===""||!Number.isFinite(Number(lat))||!Number.isFinite(Number(lon))||
+               Math.abs(Number(lat))>85.05||Math.abs(Number(lon))>180||(!Number(lat)&&!Number(lon)))return null;
+            return {name:airport.name,latitude:Number(lat),longitude:Number(lon),path:SITE_MAP.destinations+"?pin="+encodeURIComponent("airport:"+airport.iata)};
+          }).filter(Boolean);
+        }
+        page.paths={hotels:APP_ROUTES.hotelList+"?country="+encodeURIComponent(page.slug),
           packages:SITE_MAP.packages+"?country="+encodeURIComponent(page.slug),map:SITE_MAP.ourNetwork};
       }
       job.result={page,directory,settings:job.settings,routes:{...SITE_MAP,...APP_ROUTES},source:"SUPABASE_PUBLIC_INVENTORY"};
