@@ -90,26 +90,29 @@ async function loadCatalog(force = false) {
     send("STOREFRONT_PRODUCTS", cachedCatalog);
     return cachedCatalog;
   }
-  if (loadingPromise && !force) return loadingPromise;
+  if (loadingPromise) return loadingPromise;
 
   loadingPromise = (async () => {
-    const [storeResult, giftCardResult] = await Promise.all([
+    const [store, gift] = await Promise.allSettled([
       listStorefrontProducts({ limit: 300 }),
-      getStoreGiftCardCatalog().catch(() => null)
+      getStoreGiftCardCatalog()
     ]);
+    const storeResult = store.status === "fulfilled" && store.value?.ok !== false ? store.value : null;
+    const giftResult = gift.status === "fulfilled" && gift.value?.ok !== false ? gift.value : null;
+    const giftProducts = Array.isArray(giftResult?.products) ? giftResult.products : [];
+    if (!storeResult) console.error("[Store Page] Product catalog failed.", store.status === "rejected" ? store.reason : store.value);
+    if (!giftResult) console.warn("[Store Page] Gift card catalog failed.", gift.status === "rejected" ? gift.reason : gift.value);
+    if (!storeResult && !giftProducts.length) throw new Error("We couldn’t load the store. Please try again.");
 
-    if (!storeResult || storeResult.ok === false) {
-      throw new Error(storeResult?.message || "The Wix Store catalog could not be loaded.");
-    }
-
-    catalogLoadedAt = Date.now();
+    catalogLoadedAt = storeResult && giftResult ? Date.now() : 0;
     cachedCatalog = {
       ...storeResult,
-      products: Array.isArray(storeResult.products) ? storeResult.products : [],
-      categories: Array.isArray(storeResult.categories) ? storeResult.categories : [],
-      giftCardCatalog: giftCardResult?.ok === false ? null : giftCardResult,
-      giftCardProducts: Array.isArray(giftCardResult?.products) ? giftCardResult.products : [],
-      giftCardAvailable: Boolean(giftCardResult && giftCardResult.ok !== false && giftCardResult.products?.length),
+      products: Array.isArray(storeResult?.products) ? storeResult.products : [],
+      categories: Array.isArray(storeResult?.categories) ? storeResult.categories : [],
+      catalogUnavailable: !storeResult,
+      giftCardCatalog: giftResult || null,
+      giftCardProducts: giftProducts,
+      giftCardAvailable: giftProducts.length > 0,
       initialCategory
     };
 
@@ -233,7 +236,7 @@ async function handleMessage(message) {
 
 $w.onReady(function () {
   try {
-    const requestedCategory = new URL(window.location.href).searchParams.get("category") || "";
+    const requestedCategory = String(wixLocationFrontend.query?.category || "");
     initialCategory = requestedCategory.trim().toLowerCase() === "gift cards" ? "Gift Cards" : "";
   } catch (_) {
     initialCategory = "";
@@ -256,7 +259,9 @@ $w.onReady(function () {
       console.error(`[Store Page] ${message.type} failed.`, error);
       send(
         message.source === "SKANDI_SUPPORT_PUBLIC" ? "PUBLIC_SUPPORT_ERROR" : "STOREFRONT_ERROR",
-        { stage: message.type, message: error?.message || "The store action could not be completed." }
+        { stage: message.type, message: ["STOREFRONT_READY", "STOREFRONT_REFRESH"].includes(message.type)
+          ? "We couldn’t load the store. Please try again."
+          : error?.message || "The store action could not be completed." }
       );
     }
   });
