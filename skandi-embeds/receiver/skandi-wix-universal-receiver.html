@@ -165,8 +165,7 @@ body { font:15px/1.5 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans
     clearInterval(interval);
     window.removeEventListener('message', receive);
     screen.setAttribute('aria-busy', 'false');
-    // Keep customer-facing copy free of technical details. The code and UTC
-    // date support diagnosis; central log correlation still needs integration.
+    // Send only the reference and bounded category to the owning page.
     screen.dataset.state = 'error';
     spinner.classList.remove('is-animated');
     label.hidden = true;
@@ -176,6 +175,8 @@ body { font:15px/1.5 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans
     reference.textContent = 'Error ID: ' + referenceId;
     errorPanel.hidden = false;
     console.error('[SKANDI page error]', {referenceId, code, occurredAt: new Date().toISOString()});
+    window.parent.postMessage({source: SOURCE, type: 'SKANDI_RECEIVER_ERROR',
+      payload: {referenceId, code, receiverRequestId: nonce}}, '*');
     document.title = 'SKANDI | Page unavailable';
   }
 

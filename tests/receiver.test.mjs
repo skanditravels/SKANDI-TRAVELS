@@ -62,7 +62,10 @@ test('receiver allows only the two audited blank document viewers',async t=>{
 
 test('unknown pages never default to Home, failed integrity never executes, startup retries are bounded',async t=>{
   for(const options of [{unknown:true},{stale:true}]){const h=await harness(t,options);h.send();await settled(h);assert.equal(h.writes.length,0);assert.equal(h.w.document.getElementById('skandi-loader-error').hidden,false);assert.ok(h.calls.every(u=>!u.includes('/dist/home/')));}
-  const h=await harness(t);for(let i=0;i<41;i++)h.interval();assert.equal(h.messages.length,40);assert.match(h.w.document.getElementById('skandi-loader-reference').textContent,/Error ID: SK-02-/);assert.doesNotMatch(h.w.document.getElementById('skandi-receiver-status').textContent,/handshake|backend|wix/i);
+  const h=await harness(t);for(let i=0;i<41;i++)h.interval();assert.equal(h.messages.filter(m=>m.type==='MASTER_CONFIG_REQUEST').length,40);assert.match(h.w.document.getElementById('skandi-loader-reference').textContent,/Error ID: SK-02-/);assert.doesNotMatch(h.w.document.getElementById('skandi-receiver-status').textContent,/handshake|backend|wix/i);
+  const error=h.messages.find(m=>m.type==='SKANDI_RECEIVER_ERROR');
+  assert.equal(error.payload.referenceId,h.w.document.getElementById('skandi-loader-reference').textContent.replace('Error ID: ',''));
+  assert.equal(error.payload.receiverRequestId,h.messages[0].payload.receiverRequestId);
 });
 
 test('internal build requires parent staff authorization before requesting HTML',async t=>{
@@ -76,7 +79,7 @@ test('master derives page identity from canonical route and owning component, an
   for(const n of imports.reverse())source=source.slice(0,n.start)+source.slice(n.end);
   const context={...registry,console,setTimeout,clearTimeout,setInterval,clearInterval,URL,URLSearchParams,
     wixWindowFrontend:{viewMode:'Site',formFactor:'Desktop'},wixLocationFrontend:{baseUrl:'https://www.skanditravels.com',path:[]},wixSiteFrontend:{currentPage:{url:'/search',name:'Search'}},local:{getItem:()=>null},session:{getItem:()=>null},consentPolicy:{getCurrentConsentPolicy:()=>({policy:{}})},$w:Object.assign(()=>[],{onReady:()=>{}})};
-  vm.createContext(context);vm.runInContext(source+'\nglobalThis.getIdentity=compiledIdentity;',context);
+  vm.createContext(context);vm.runInContext(source+'\nglobalThis.getIdentity=compiledIdentity;globalThis.masterMessage=handleMasterMessage;globalThis.setReceiverRequest=(e,id)=>receiverRequests.set(e,id);',context);
   assert.equal(context.getIdentity({id:'searchResultsEmbed'}).key,'search');assert.equal(context.getIdentity({id:'skandiHeaderEmbed'}).allowed,false);
   context.wixSiteFrontend.currentPage={url:'/home',name:'Home',type:'static',isHomePage:true};
   const homeIdentity=context.getIdentity({id:'htmlHome'});
@@ -99,4 +102,21 @@ test('master derives page identity from canonical route and owning component, an
   assert.equal(context.getIdentity({id:'eosEmbed'},{authorized:true}).allowed,false);
   context.wixWindowFrontend.formFactor='Desktop';
   assert.equal(context.getIdentity({id:'eosEmbed'},{authorized:true}).allowed,false);
+});
+
+test('receiver error references are logged only for the component and request that initiated them',async()=>{
+  let source=await fs.readFile(new URL('../src/pages/masterPage.js',import.meta.url),'utf8');
+  for(const n of parse(source,{ecmaVersion:'latest',sourceType:'module'}).body.filter(n=>n.type==='ImportDeclaration').reverse())source=source.slice(0,n.start)+source.slice(n.end);
+  const logged=[];const ctx={...registry,console:{error:(...args)=>logged.push(args)},setTimeout,clearTimeout,setInterval,clearInterval,URL,URLSearchParams,
+    wixWindowFrontend:{viewMode:'Site',formFactor:'Desktop'},wixLocationFrontend:{baseUrl:'https://www.skanditravels.com',path:[]},wixSiteFrontend:{currentPage:{url:'/search',name:'Search'}},local:{getItem:()=>null},session:{getItem:()=>null},consentPolicy:{getCurrentConsentPolicy:()=>({policy:{}})},$w:Object.assign(()=>[],{onReady:()=>{}})};
+  vm.createContext(ctx);vm.runInContext(source+'\nglobalThis.masterMessage=handleMasterMessage;globalThis.track=(e,id)=>receiverRequests.set(e,id);',ctx);
+  const embed={id:'searchResultsEmbed'},other={id:'other'},payload={receiverRequestId:'abcd-1234',referenceId:'SK-02-20261106-ABCDEF123456',code:'CONNECTION'};
+  ctx.track(embed,payload.receiverRequestId);
+  await ctx.masterMessage(other,{source:'SKANDI_UNIVERSAL_RECEIVER',type:'SKANDI_RECEIVER_ERROR',payload});
+  await ctx.masterMessage(embed,{source:'SKANDI_UNIVERSAL_RECEIVER',type:'SKANDI_RECEIVER_ERROR',payload:{...payload,receiverRequestId:'other'}});
+  assert.equal(logged.length,0);
+  await ctx.masterMessage(embed,{source:'SKANDI_UNIVERSAL_RECEIVER',type:'SKANDI_RECEIVER_ERROR',payload});
+  assert.equal(logged.length,1);assert.equal(logged[0][1].referenceId,payload.referenceId);
+  await ctx.masterMessage(embed,{source:'SKANDI_UNIVERSAL_RECEIVER',type:'SKANDI_RECEIVER_ERROR',payload});
+  assert.equal(logged.length,1);
 });

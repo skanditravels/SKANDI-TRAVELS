@@ -813,7 +813,9 @@ async function buildBootstrap(input = {}) {
   const displayCurrency = REGION_CURRENCY[region] || requestedCurrency;
   let cruises;
   try {
-    cruises = await seedIfEmpty(region, input);
+    // Public page requests must never start a paid provider run. Catalogue
+    // synchronization is a separate internal operation with its own controls.
+    cruises = await readCatalogue(region);
   } catch (error) {
     const existing = await readCatalogue(region).catch(() => []);
     if (existing.length) cruises = existing;

@@ -12,6 +12,7 @@ import { getStaffPortalSession } from "backend/SKANDI_CORE/staffAuth.web";
 import { getPublicTravelInfoPayload } from "backend/SKANDI_CORE/publicContent.web";
 import { getPublicPagePresentation } from "backend/SKANDI_CORE/presentation.web";
 import { createFlightsPageHost } from "public/flightsPageHost";
+import { getCruisesBootstrap, refreshCruises } from "backend/SKANDI_CORE/cruises.web";
 import { getEosBootstrap, searchEosFlights, searchEosStations, createEosClockEvent, submitEosOpsAction } from "backend/SKANDI_CORE/eos.web";
 import { SITE_MAP, APP_ROUTES, GLOBAL_CHROME, isSafeInternalRoute, PAGE_BUILD_INTEGRATIONS, INTERNAL_PATH_PREFIXES, CHROME_FREE_PATHS, getPageFamily, getPageChrome, resolveBuildRoute } from "public/siteMap";
 import { bindAlexandraGlobal } from "public/alexandraGlobalBridge.js";
@@ -330,6 +331,7 @@ const MOBILE_FOOTER_GATE_SCROLL_THRESHOLD = 1;
 let alteaRuntimeContext = { workArea:"A", crypticActive:false, officeId:"", lmcMode:false };
 let customerSettings = readCustomerSettings();
 const wiredEmbeds = new WeakSet();
+const receiverRequests = new WeakMap();
 let locationChangeWired = false;
 let presentationState = { path:"", value:null, promise:null };
 let mobileFooterGateTimer = null;
@@ -894,6 +896,40 @@ async function handleMasterMessage(embed, message = {}) {
   const source = String(message?.source || "");
   const payload = message?.payload && typeof message.payload === "object" ? message.payload : {};
 
+  if (source === "SKANDI_CRUISES") {
+    if ("#" + String(embed.id || "").replace(/^#/, "") !== "#cruisesEmbed") return true;
+    const identity = compiledIdentity(embed);
+    if (!identity.allowed || identity.key !== "cruises") return true;
+    if (type === "CRUISES_READY" || type === "CRUISES_REFRESH") {
+      postToEmbed(embed, "CRUISES_LOADING", {});
+      try {
+        const method = type === "CRUISES_REFRESH" ? refreshCruises : getCruisesBootstrap;
+        const response = await method({settings:customerSettings});
+        if (!response?.ok || !response.data) throw new Error("Cruise information could not be loaded.");
+        postToEmbed(embed, "CRUISES_BOOTSTRAP", response.data);
+      } catch (_) { postToEmbed(embed, "CRUISES_ERROR", {message:"Cruise information could not be loaded. Please try again."}); }
+    } else if (type === "CRUISES_RESIZE") {
+      const height=Number(payload.height);
+      if (Number.isFinite(height) && height > 0 && "height" in embed) embed.height=Math.min(20000,Math.max(680,Math.round(height)));
+    } else if (type === "CRUISES_PLAN") {
+      navigate(SITE_MAP.support);
+    }
+    return true;
+  }
+
+  if (source === "SKANDI_UNIVERSAL_RECEIVER" && type === "SKANDI_RECEIVER_ERROR") {
+    const requestId = String(payload.receiverRequestId || "");
+    const referenceId = String(payload.referenceId || "");
+    const categories = {STAFF_ACCESS:"01", CONNECTION:"02", PUBLISH:"03", LOADING:"04"};
+    const category = categories[String(payload.code || "")];
+    if (category && requestId === receiverRequests.get(embed) &&
+        new RegExp(`^SK-${category}-[0-9]{8}-[A-F0-9]{12}$`).test(referenceId)) {
+      receiverRequests.delete(embed);
+      console.error("[SKANDI receiver error]", { referenceId, category:payload.code, page:resolveBuildRoute(currentPathString())?.key || "unknown" });
+    }
+    return true;
+  }
+
   if (source === FLIGHTS_SOURCE && ["FLIGHTS_READY", "FLIGHTS_REFRESH", "FLIGHTS_SEARCH"].includes(type)) {
     if ("#" + String(embed.id || "").replace(/^#/, "") !== FLIGHTS_EMBED_ID) return true;
     const identity = compiledIdentity(embed);
@@ -1011,6 +1047,7 @@ async function handleMasterMessage(embed, message = {}) {
     const extra = isInternalPath() ? { staff:await getStaffState() } : { customerSession:await getCustomerState() };
     if (source === "SKANDI_UNIVERSAL_RECEIVER" && payload.receiverProtocol === 1) {
       extra.receiverRequestId = String(payload.receiverRequestId || "").slice(0,160);
+      if (/^[0-9a-f-]{4,80}$/.test(extra.receiverRequestId)) receiverRequests.set(embed, extra.receiverRequestId);
       extra.compiledPage = compiledIdentity(embed, extra.staff);
     }
     pushMasterConfig(embed, extra);
