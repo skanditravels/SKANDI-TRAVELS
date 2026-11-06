@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-skandi-mobile-navigation>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
@@ -103,7 +103,7 @@
 #riaintra-global-header-root .product-text small {
   display: block;
   color: rgba(255, 255, 255, 0.7);
-  font-size: 10px;
+  font-size: 13px;
   margin-top: 2px;
 }
 
@@ -137,7 +137,7 @@
   border: 1px solid rgba(255,255,255,.20);
   border-radius: 4px;
   color: #fff;
-  font-size: 10px;
+  font-size: 13px;
   font-weight: 700;
   white-space: nowrap;
 }
@@ -154,13 +154,13 @@
 }
 #riaintra-global-header-root .clock strong {
   display: block;
-  font-size: 12px;
+  font-size: 13px;
   font-variant-numeric: tabular-nums;
 }
 #riaintra-global-header-root .clock small {
   display: block;
   color: rgba(255, 255, 255, 0.7);
-  font-size: 9px;
+  font-size: 13px;
   margin-top: 3px;
   text-transform: uppercase;
 }
@@ -188,21 +188,21 @@
   grid-column: 1;
   grid-row: 1;
   color: #fff;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 700;
 }
 #riaintra-global-header-root .profile-meta {
   grid-column: 1;
   grid-row: 2;
   color: #fff;
-  font-size: 10px;
+  font-size: 13px;
   font-weight: 800;
 }
 #riaintra-global-header-root .profile-email {
   grid-column: 1;
   grid-row: 3;
   color: rgba(255,255,255,.70);
-  font-size: 9px;
+  font-size: 13px;
 }
 #riaintra-global-header-root .profile-avatar {
   grid-column: 2;
@@ -214,7 +214,7 @@
   place-items: center;
   background: #d1e8ff;
   color: #073b69;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 800;
   overflow: hidden;
 }
@@ -327,7 +327,7 @@ body[data-theme="dark"] #riaintra-global-header-root {
 @media(max-width: 700px) {
   #riaintra-global-header-root .profile { display: none !important; }
   #riaintra-global-header-root .clock { display: none; }
-  #riaintra-global-header-root .utility-action { padding: 0 8px; font-size: 9px; }
+  #riaintra-global-header-root .utility-action { padding: 0 8px; font-size: 13px; }
 }
 </style>
 <style data-skandi-part="footer">
@@ -367,7 +367,7 @@ body[data-theme="dark"] #riaintra-global-header-root {
 }
 
 #riaintra-global-footer-root .meta {
-  font-size: 9px;
+  font-size: 13px;
   color: #ffffff;
 }
 
@@ -375,14 +375,14 @@ body[data-theme="dark"] #riaintra-global-header-root {
   justify-self: center;
   text-align: center;
   color: #fff;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 700;
 }
 
 #riaintra-global-footer-root .footer-right {
   justify-self: flex-end;
   color: #fff;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 700;
 }
 
@@ -399,7 +399,7 @@ body[data-theme="dark"] #riaintra-global-header-root {
   background: transparent;
   color: rgba(255, 255, 255, 0.75);
   padding: 5px 7px;
-  font-size: 10px;
+  font-size: 13px;
   font-weight: 700;
   cursor: pointer;
   transition: color 0.2s ease;
@@ -410,17 +410,276 @@ body[data-theme="dark"] #riaintra-global-header-root {
   text-decoration: underline;
 }
 </style>
+<style data-skandi-part="mobile-nav">#skandi-mobile-nav-container{--navy:#022e64;--cyan:#5fc7cf;--ice:#f6faff;--ink:#122744;--muted:#667991;--line:#dfebf3;--safe:env(safe-area-inset-bottom,0px)}
+#skandi-mobile-nav-container *{box-sizing:border-box}#skandi-mobile-nav-container,#skandi-mobile-nav-container{width:100%;height:100%;overflow:hidden;margin:0;background:transparent;overscroll-behavior:none;font-family:Montserrat,system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-text-size-adjust:100%}#skandi-mobile-nav-container{display:flex;align-items:flex-end;color:var(--ink)}#skandi-mobile-nav-container button,#skandi-mobile-nav-container input,#skandi-mobile-nav-container textarea{font:inherit}#skandi-mobile-nav-container button{cursor:pointer;-webkit-tap-highlight-color:transparent}#skandi-mobile-nav-container button:focus-visible,#skandi-mobile-nav-container input:focus-visible,#skandi-mobile-nav-container textarea:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}#skandi-mobile-nav-container svg{display:block;width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+#skandi-mobile-nav-container #app-nav{position:relative;z-index:3;width:100%;min-height:88px;display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:2px;align-items:center;padding:7px 7px max(10px,var(--safe));background:rgba(255,255,255,.98);border-top:1px solid #d5e5f0;box-shadow:0 -9px 30px rgba(2,46,100,.08);backdrop-filter:blur(14px)}
+#skandi-mobile-nav-container .nav-item{min-height:62px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;border:1px solid transparent;border-radius:13px;background:transparent;color:#58718b;font-weight:700;font-size:13px;letter-spacing:.005em;white-space:nowrap;transition:color .18s,background .18s,border-color .18s,transform .18s}#skandi-mobile-nav-container .nav-item:hover{background:#f3f9fc;color:var(--navy)}#skandi-mobile-nav-container .nav-item.active{background:linear-gradient(180deg,#edf8fc,#f5faff);border-color:rgba(95,199,207,.25);color:var(--navy)}#skandi-mobile-nav-container .nav-item.active svg{stroke-width:2.15}#skandi-mobile-nav-container .nav-item:active{transform:scale(.97)}
+#skandi-mobile-nav-container #overlay{position:fixed;inset:0;z-index:5;background:rgba(3,21,42,.36);opacity:0;visibility:hidden;pointer-events:none;transition:opacity .2s,visibility .2s}#skandi-mobile-nav-container #drawer{position:fixed;z-index:6;top:0;bottom:0;right:0;width:min(360px,calc(100% - 20px));display:flex;flex-direction:column;background:#fff;box-shadow:18px 0 60px rgba(2,46,100,.16);border-left:1px solid #e0edf3;transform:translateX(105%);visibility:hidden;pointer-events:none;transition:transform .27s cubic-bezier(.22,1,.36,1),visibility .27s}body.drawer-open #skandi-mobile-nav-container #overlay{opacity:1;visibility:visible;pointer-events:auto}body.drawer-open #skandi-mobile-nav-container #drawer{transform:translateX(0);visibility:visible;pointer-events:auto}
+#skandi-mobile-nav-container .drawer-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:21px 19px 18px;background:linear-gradient(135deg,#fff,#eef8fd);border-bottom:1px solid var(--line)}#skandi-mobile-nav-container .eyebrow{font-size:13px;font-weight:800;color:#428892;letter-spacing:.18em}#skandi-mobile-nav-container .drawer-head h2{margin:5px 0 0;font-size:20px;letter-spacing:-.04em;color:var(--navy);font-weight:800}#skandi-mobile-nav-container #skandi-mobile-closeBtn,#skandi-mobile-nav-container #chatBack{display:grid;place-items:center;width:38px;height:38px;flex:0 0 38px;background:#fff;border:1px solid #d9e6ef;border-radius:11px;color:var(--navy)}#skandi-mobile-nav-container .drawer-scroll{flex:1;overflow:auto;overscroll-behavior:contain;padding:15px 13px 20px}#skandi-mobile-nav-container .group-heading{padding:13px 9px 7px;color:#6a7c8e;font-size:13px;font-weight:800;letter-spacing:.1em;text-transform:uppercase}#skandi-mobile-nav-container .drawer-link{width:100%;display:flex;justify-content:space-between;align-items:center;text-align:left;min-height:44px;padding:10px 12px;border:1px solid transparent;border-radius:10px;background:transparent;color:var(--ink);font-size:13px;font-weight:650;transition:background .18s,border .18s,color .18s}#skandi-mobile-nav-container .drawer-link:hover,#skandi-mobile-nav-container .drawer-link:focus-visible{background:var(--ice);border-color:#dceef6;color:var(--navy)}#skandi-mobile-nav-container .drawer-link b{font-size:19px;color:#70aeb7;font-weight:500}#skandi-mobile-nav-container .drawer-foot{border-top:1px solid var(--line);padding:12px 16px max(17px,var(--safe));background:#f9fcfe;display:grid;gap:9px}#skandi-mobile-nav-container .drawer-cta{min-height:43px;border-radius:10px;border:1px solid #022e64;background:var(--navy);color:#fff;font-size:13px;font-weight:800}#skandi-mobile-nav-container .drawer-cta:hover{background:#08457e}#skandi-mobile-nav-container .drawer-cta.secondary{color:var(--navy);background:#fff;border-color:#d4e4ee}
+#skandi-mobile-nav-container #chat{display:none;flex:1;min-height:0;flex-direction:column}#skandi-mobile-nav-container .chat-mode .drawer-scroll,#skandi-mobile-nav-container .chat-mode .drawer-foot{display:none}#skandi-mobile-nav-container .chat-mode #chat{display:flex}#skandi-mobile-nav-container .chat-log{flex:1;overflow-y:auto;padding:17px 13px;display:flex;flex-direction:column;gap:11px;background:#f6faff}#skandi-mobile-nav-container .bubble{max-width:90%;padding:11px 13px;border-radius:14px 14px 14px 4px;font-size:13px;line-height:1.5;background:#fff;border:1px solid #e2edf3;color:#1a3350;white-space:pre-wrap;overflow-wrap:anywhere}#skandi-mobile-nav-container .bubble.mine{align-self:flex-end;border-color:var(--navy);background:var(--navy);color:#fff;border-radius:14px 14px 4px 14px}#skandi-mobile-nav-container .chat-compose{display:flex;gap:7px;padding:10px;background:#fff;border-top:1px solid var(--line)}#skandi-mobile-nav-container .chat-compose input{flex:1;min-width:0;min-height:43px;padding:0 12px;border-radius:9px;border:1px solid #d8e6ef;font-size:16px}#skandi-mobile-nav-container .chat-compose button{border:0;border-radius:9px;padding:0 13px;background:var(--navy);color:#fff;font-weight:800;font-size:13px}#skandi-mobile-nav-container #skandi-mobile-status{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0 0 0 0)!important;white-space:nowrap!important}#skandi-mobile-nav-container #chatStatus{font-size:13px;color:#61788d;padding:0 12px 9px}
+@media(max-width:360px){#skandi-mobile-nav-container .nav-item{font-size:13px}#skandi-mobile-nav-container .nav-item svg{width:20px;height:20px}#skandi-mobile-nav-container #app-nav{padding-left:3px;padding-right:3px}}
+@media(prefers-reduced-motion:reduce){#skandi-mobile-nav-container *,#skandi-mobile-nav-container *::before,#skandi-mobile-nav-container *::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+
+/* GRAPHITE / RADIANT BLUE — CONSOLIDATED MOBILE NAV 2026-10-23
+   Preserves canonical drawer/resize and Alexandra message flow. */
+#skandi-mobile-nav-container{--navy:#022e64;--cyan:#8fbddd;--ice:#20384e;--ink:#f0f6fc;--muted:#b2c5d5;--line:rgba(189,213,236,.20)}
+#skandi-mobile-nav-container,#skandi-mobile-nav-container{color:#f3f7fb;font-family:Montserrat,system-ui,-apple-system,"Segoe UI",sans-serif}
+#skandi-mobile-nav-container #app-nav{
+  min-height:88px;gap:3px;padding:7px 6px max(10px,var(--safe));
+  border-top:1px solid rgba(167,202,232,.25);
+  background:linear-gradient(112deg,#17212e 0%,#1a2e42 63%,#174978 100%);
+  box-shadow:0 -5px 20px rgba(9,24,40,.18);
+  backdrop-filter:none;-webkit-backdrop-filter:none;
+}
+#skandi-mobile-nav-container .nav-item{position:relative;min-height:62px;gap:5px;
+  color:#c6d7e7;font-size:13px;font-weight:680;letter-spacing:0;
+  background:transparent;border:1px solid transparent;border-radius:14px;
+  transform:none!important;transition:background .16s ease,color .16s ease,border-color .16s ease}
+#skandi-mobile-nav-container .nav-item svg{color:inherit}
+#skandi-mobile-nav-container .nav-item:hover{color:#fff;background:rgba(87,142,192,.22)}
+#skandi-mobile-nav-container .nav-item.active{
+  color:#fff;background:rgba(51,109,169,.52);
+  border:1px solid rgba(164,205,240,.28);
+  box-shadow:none;border-radius:14px;
+}
+#skandi-mobile-nav-container .nav-item.active::before{content:"";position:absolute;bottom:6px;left:50%;height:2px;width:19px;
+  transform:translateX(-50%);border-radius:3px;background:#a7d1ed;top:auto}
+#skandi-mobile-nav-container .nav-item.active svg{stroke-width:2.05}
+#skandi-mobile-nav-container #overlay{background:rgba(7,16,26,.66)}
+#skandi-mobile-nav-container #drawer{
+  background:linear-gradient(120deg,#182431 0%,#1d3851 100%);
+  border-left:1px solid rgba(196,221,239,.19);
+  box-shadow:-12px 0 40px rgba(0,12,25,.28);
+  border-radius:21px 0 0 21px;
+}
+#skandi-mobile-nav-container .drawer-head{
+  padding:22px 19px 18px;
+  background:linear-gradient(120deg,#1c2a3a,#234b70);
+  border-bottom:1px solid rgba(199,220,239,.19);
+  border-radius:20px 0 0 0;
+}
+#skandi-mobile-nav-container .eyebrow{color:#aacde7;letter-spacing:.12em;font-size:13px;font-weight:780}
+#skandi-mobile-nav-container .drawer-head h2{color:#fff;font-size:21px;letter-spacing:-.027em;font-weight:735}
+#skandi-mobile-nav-container #skandi-mobile-closeBtn,#skandi-mobile-nav-container #chatBack{background:rgba(51,103,151,.31);color:#fff;
+  border:1px solid rgba(199,220,243,.32);border-radius:12px}
+#skandi-mobile-nav-container .drawer-scroll{background:transparent;padding:16px 13px 20px}
+#skandi-mobile-nav-container .group-heading{color:#a5c7e1;font-size:13px;letter-spacing:.09em;font-weight:760;padding:15px 10px 8px}
+#skandi-mobile-nav-container .drawer-link{min-height:46px;padding:10px 12px;border:1px solid transparent;border-radius:11px;
+  background:transparent;color:#e4eef8;font-size:13.5px;line-height:1.4;font-weight:570}
+#skandi-mobile-nav-container .drawer-link:hover,#skandi-mobile-nav-container .drawer-link:focus-visible{background:rgba(64,122,177,.37);border-color:rgba(168,207,239,.23);color:#fff}
+#skandi-mobile-nav-container .drawer-link b{color:#a7c8e4}
+#skandi-mobile-nav-container .drawer-foot{background:rgba(10,23,36,.26);border-top:1px solid rgba(192,215,236,.18);padding:13px 16px max(17px,var(--safe));gap:9px}
+#skandi-mobile-nav-container .drawer-cta{min-height:44px;background:linear-gradient(118deg,#3679b9,#285f9c);border:1px solid rgba(164,205,235,.48);
+  border-radius:12px;color:#fff;font-size:13px;font-weight:720;box-shadow:none}
+#skandi-mobile-nav-container .drawer-cta:hover{background:linear-gradient(118deg,#4689c7,#3071b0)}
+#skandi-mobile-nav-container .drawer-cta.secondary{color:#edf7ff;background:rgba(60,111,159,.25);border-color:rgba(182,213,240,.3)}
+#skandi-mobile-nav-container .chat-log{background:rgba(12,29,45,.24)}
+#skandi-mobile-nav-container .bubble{background:#203c55;border:1px solid rgba(191,215,239,.22);color:#f0f6fc;
+  border-radius:13px 13px 13px 5px;font-size:13px;line-height:1.53}
+#skandi-mobile-nav-container .bubble.mine{background:#2f6ca6;border-color:rgba(192,216,237,.24);color:#fff;border-radius:13px 13px 5px 13px}
+#skandi-mobile-nav-container .chat-compose{background:#1a2d3f;border-top:1px solid rgba(192,215,238,.22)}
+#skandi-mobile-nav-container .chat-compose input{background:#233d53;border-color:rgba(183,209,233,.4);color:#fff;border-radius:11px;font-size:16px}
+#skandi-mobile-nav-container .chat-compose input::placeholder{color:#b7cbdc}
+#skandi-mobile-nav-container .chat-compose button{background:#3679b9;border:1px solid rgba(178,213,243,.38);border-radius:10px;color:#fff;font-size:13px}
+#skandi-mobile-nav-container #chatStatus{color:#c1d7e8;font-size:13px}
+#skandi-mobile-nav-container button:focus-visible,#skandi-mobile-nav-container input:focus-visible,#skandi-mobile-nav-container textarea:focus-visible{outline:2px solid #a4cce8;outline-offset:2px}
+@media(max-width:360px){#skandi-mobile-nav-container .nav-item{font-size:13px}#skandi-mobile-nav-container .nav-item svg{width:20px;height:20px}}
+@media(prefers-reduced-motion:reduce){#skandi-mobile-nav-container .nav-item,#skandi-mobile-nav-container .drawer-link{transition:none!important}}
+/* V12 parent-coordinated mobile embed sizing. Wix host has final geometry authority. */
+#skandi-mobile-nav-container,#skandi-mobile-nav-container{min-height:0}
+body.drawer-open #skandi-mobile-nav-container{min-height:100%;height:100%}
+#skandi-mobile-nav-container #overlay,#skandi-mobile-nav-container #drawer{height:100%;max-height:100%;min-height:0}
+#skandi-mobile-nav-container #app-nav{flex:0 0 auto}
+
+/* Five-tab bar (SKANDI mobile navigation, approved replacement layout). */
+#skandi-mobile-nav-container .skmn {
+  display:grid;
+  grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);
+  width:100%;
+  height:68px;
+  min-height:68px;
+  flex:0 0 68px;
+  gap:0;
+  padding:2px 6px 0;
+  background:#022e64;
+  font-family:Montserrat,system-ui,sans-serif;
+}
+#skandi-mobile-nav-container .skmn-btn {
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:4px;
+  border:0;
+  background:transparent;
+  color:#d0e5f2;
+  padding:5px 2px;
+  min-width:0;
+  font:700 13px/1.15 Montserrat,system-ui,sans-serif;
+  cursor:pointer;
+  touch-action:manipulation;
+  border-radius:6px;
+}
+#skandi-mobile-nav-container .skmn-btn svg {
+  width:21px;height:21px;fill:none;stroke:currentColor;
+  stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;
+}
+#skandi-mobile-nav-container .skmn-btn[aria-current="page"] { color:#81dde5; }
+#skandi-mobile-nav-container .skmn-btn:focus-visible {
+  outline:2px solid #5fc7cf;
+  outline-offset:-2px;
+  border-radius:6px;
+}
+#skandi-mobile-nav-container .skmn-primary svg { color:#81dde5; }
+#skandi-mobile-nav-container .skmn-btn[aria-expanded="true"] { background:rgba(255,255,255,.12);color:#ffffff; }
+#skandi-mobile-nav-container .skmn-btn[aria-expanded="true"] svg { color:#81dde5; }
+@media(min-width:1021px) { #skandi-mobile-nav-container .skmn { display:none!important; } }
+/* The V12 masterPage and global.css own the iframe itself: 88px closed,
+   expandable above the tab bar through HOME_APP_DRAWER_RESIZE. */
+#skandi-mobile-nav-container #overlay{cursor:pointer}
+#skandi-mobile-nav-container #drawer{overflow:hidden}
+#skandi-mobile-nav-container #drawer[aria-hidden="true"]{visibility:hidden}
+#skandi-mobile-nav-container #drawer:focus-visible{outline:none}
+#skandi-mobile-nav-container .drawer-link[aria-current="page"]{background:rgba(64,122,177,.25);border-color:rgba(168,207,239,.24)}
+@media(prefers-reduced-motion:reduce){#skandi-mobile-nav-container .skmn-btn{transition:none!important}}
+
+
+#skandi-mobile-nav-container .drawer-group { border-bottom: 1px solid var(--line); }
+#skandi-mobile-nav-container .drawer-group .group-heading {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  min-height: 46px; padding: 9px 11px; cursor: pointer; list-style: none;
+  font-size: 14px; letter-spacing: 0; text-transform: none;
+}
+#skandi-mobile-nav-container .drawer-group .group-heading::-webkit-details-marker { display: none; }
+#skandi-mobile-nav-container .drawer-group .group-heading::after { content: "›"; font-size: 21px; }
+#skandi-mobile-nav-container .drawer-group[open] .group-heading::after { transform: rotate(90deg); }
+#skandi-mobile-nav-container .drawer-group .drawer-link { padding-inline-start: 19px; font-size: 15px; }
+#skandi-mobile-nav-container .drawer-foot[hidden], #skandi-mobile-nav-container .skmn-btn[hidden] { display: none; }
+#skandi-mobile-nav-container #drawer[data-staff-menu] .drawer-head { background: var(--staff-nav-heading, #234b70); }
+#skandi-mobile-nav-container .skmn-btn { font-size: 13px; }
+#skandi-mobile-nav-container #skandi-mobile-closeBtn { min-width: 44px; min-height: 44px; }
+
+#skandi-mobile-nav-container .drawer-scroll, #skandi-mobile-nav-container .chat-log { touch-action: manipulation; }
+
+#skandi-mobile-nav-container .drawer-logo { display: block; height: 19px; max-width: 145px; width: auto; }
+#skandi-mobile-nav-container .drawer-logo[hidden] { display: none; }
+</style>
 <style data-skandi-part="policy-control">
 #skandi-app-root{--navy:#354a5f;--blue:#005eb8;--blue-dark:#003e77;--blue-soft:#eaf4fe;--canvas:#f3f5f7;--surface:#fff;--panel:#f8fafc;--ink:#1d2a35;--muted:#536474;--border:#d8e0e7;--danger:#9c2828;--success:#196942;--warning:#8e5800;--r:8px;--shadow:0 2px 10px rgba(20,40,65,.06)}
-#skandi-app-root *{box-sizing:border-box}#skandi-app-root{height:100%;scroll-behavior:smooth}#skandi-app-root{margin:0;min-width:320px;min-height:100%;background:var(--canvas);color:var(--ink);font:13px/1.5 "72",Inter,"Segoe UI",Arial,sans-serif}#skandi-app-root button,#skandi-app-root input,#skandi-app-root select,#skandi-app-root textarea{font:inherit}#skandi-app-root button{cursor:pointer}#skandi-app-root button:disabled{opacity:.5;cursor:not-allowed}#skandi-app-root button:focus-visible,#skandi-app-root input:focus-visible,#skandi-app-root select:focus-visible,#skandi-app-root textarea:focus-visible,#skandi-app-root [contenteditable]:focus-visible{outline:3px solid #78b6f1;outline-offset:2px}#skandi-app-root a{color:var(--blue)}#skandi-app-root h1,#skandi-app-root h2,#skandi-app-root h3,#skandi-app-root p{margin-top:0}#skandi-app-root .hidden{display:none!important}#skandi-app-root .app{min-height:100dvh;display:flex;flex-direction:column}#skandi-app-root .toolbar{display:flex;flex-wrap:wrap;gap:7px;align-items:center;padding:12px 16px;background:#fff;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:35}#skandi-app-root .button{display:inline-flex;align-items:center;justify-content:center;gap:5px;min-height:38px;padding:8px 13px;background:#fff;border:1px solid #bac8d2;border-radius:5px;color:#263c4d;font-weight:700;font-size:12px;text-align:center;white-space:nowrap}#skandi-app-root .button:hover:not(:disabled){background:#edf5fb}#skandi-app-root .button.primary{background:var(--blue);color:white;border-color:var(--blue)}#skandi-app-root .button.primary:hover:not(:disabled){background:var(--blue-dark)}#skandi-app-root .button.danger{color:var(--danger);border-color:#d5a9a7}#skandi-app-root .button.ghost{border-color:transparent;background:transparent}#skandi-app-root .toolbar .grow{flex:1}#skandi-app-root .state-text{font-size:11px;color:var(--muted);padding:0 5px}#skandi-app-root .workspace{flex:1;display:grid;grid-template-columns:224px minmax(0,1fr);min-height:0;max-width:1800px;width:100%;margin:0 auto}#skandi-app-root .sidebar{padding:15px 10px;background:#f8fafc;border-right:1px solid var(--border)}#skandi-app-root .sidebar h2{font-size:10px;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;padding:5px 13px}#skandi-app-root .nav{display:flex;align-items:center;gap:8px;width:100%;text-align:left;padding:12px 13px;background:transparent;border:0;border-left:3px solid transparent;border-radius:4px;font-weight:700;font-size:12px;color:#344b60}#skandi-app-root .nav.active{border-left-color:var(--blue);background:var(--blue-soft);color:var(--blue-dark)}#skandi-app-root .nav:hover{background:#e7f0f7}#skandi-app-root .main{padding:18px;min-width:0}#skandi-app-root .intro{display:flex;justify-content:space-between;align-items:start;gap:12px;margin-bottom:14px}#skandi-app-root .intro h1{font-size:clamp(21px,2vw,29px);line-height:1.18;letter-spacing:-.02em;margin:0 0 6px}#skandi-app-root .intro p{color:var(--muted);font-size:12px;margin:0}#skandi-app-root .card{background:#fff;border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow);margin-bottom:13px}#skandi-app-root .card-head{padding:12px 15px;background:#f9fbfc;border-bottom:1px solid var(--border);display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}#skandi-app-root .card-head h2{font-size:13px;margin:0;font-weight:800}#skandi-app-root .card-body{padding:17px}#skandi-app-root .notice{border:1px solid #aac9e7;background:#ecf5fc;color:#143c61;border-radius:5px;padding:11px 13px;font-size:12px;margin-bottom:14px}#skandi-app-root .notice.error{border-color:#e2a6a4;background:#fff2f1;color:#882520}#skandi-app-root .notice.warning{border-color:#e5c58b;background:#fff9ed;color:#775100}#skandi-app-root .notice.success{border-color:#abd3b7;background:#eef8f0;color:#235b37}#skandi-app-root .filters{display:flex;gap:9px;flex-wrap:wrap;padding:14px}#skandi-app-root .filters>*{flex:1;min-width:145px}#skandi-app-root .field{display:flex;flex-direction:column;gap:5px;min-width:0}#skandi-app-root .field label,#skandi-app-root .field-title{font-size:11px;font-weight:800;color:#40576b}#skandi-app-root .field small{font-size:10px;color:var(--muted)}#skandi-app-root .input,#skandi-app-root .select,#skandi-app-root .textarea{width:100%;min-width:0;min-height:39px;padding:9px 10px;border:1px solid #b8c6d1;border-radius:5px;background:#fff;color:var(--ink)}#skandi-app-root .textarea{min-height:84px;resize:vertical}#skandi-app-root .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}#skandi-app-root .grid.two{grid-template-columns:repeat(2,minmax(0,1fr))}#skandi-app-root .field.full,#skandi-app-root .full{grid-column:1/-1}#skandi-app-root .check{display:inline-flex;align-items:center;gap:9px;font-weight:600;min-height:36px}#skandi-app-root .check input{width:17px;height:17px;accent-color:var(--blue)}#skandi-app-root .table-scroll{overflow:auto;width:100%}#skandi-app-root table{border-collapse:collapse;width:100%}#skandi-app-root th,#skandi-app-root td{padding:11px 12px;border-bottom:1px solid #e7ecf0;text-align:left;vertical-align:top}#skandi-app-root th{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:#546779;background:#f3f7fa}#skandi-app-root tr:last-child td{border-bottom:0}#skandi-app-root tr[data-id]{cursor:pointer}#skandi-app-root tr[data-id]:hover td{background:#f0f7fc}#skandi-app-root .muted{color:var(--muted)}#skandi-app-root .small{font-size:11px}#skandi-app-root .tag{font-weight:700;font-size:10px;white-space:nowrap}#skandi-app-root .split{display:grid;grid-template-columns:minmax(0,1fr) minmax(250px,380px);gap:14px}#skandi-app-root .flex{display:flex;gap:8px;align-items:center;flex-wrap:wrap}#skandi-app-root .flex.end{justify-content:flex-end}#skandi-app-root .section{border:1px solid var(--border);border-radius:6px;background:#fff;margin-bottom:11px;overflow:hidden}#skandi-app-root .section-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:space-between;padding:11px;background:#f8fafc}#skandi-app-root .section-title{font-weight:700;flex:1;min-width:170px}#skandi-app-root .section-actions{display:flex;gap:4px;flex-wrap:wrap}#skandi-app-root .micro{font-size:11px;padding:5px 8px;min-height:30px;border:1px solid var(--border);background:white;border-radius:4px;color:#35506a}#skandi-app-root .micro:hover{background:#edf5fb}#skandi-app-root .section-body{padding:13px}#skandi-app-root .rich-toolbar{display:flex;flex-wrap:wrap;gap:4px;padding:7px;border:1px solid #bac8d2;border-radius:5px 5px 0 0;background:#f8fafc}#skandi-app-root .rich-toolbar button{min-width:30px;min-height:30px;border:1px solid transparent;background:transparent;border-radius:4px;color:#27425c;font-size:12px;padding:3px 7px}#skandi-app-root .rich-toolbar button:hover{border-color:#b8c9d8;background:#fff}#skandi-app-root .rich{min-height:130px;max-height:70vh;overflow:auto;background:#fff;border:1px solid #bac8d2;border-top:0;border-radius:0 0 5px 5px;padding:13px;font:14px/1.65 Inter,"Segoe UI",Arial,sans-serif;overflow-wrap:anywhere}#skandi-app-root .rich:empty:before{content:attr(data-placeholder);color:#91a0ae}#skandi-app-root .rich table{border:1px solid #d0d9e1}#skandi-app-root .rich td,#skandi-app-root .rich th{border:1px solid #d0d9e1}#skandi-app-root .section .section{margin:11px 0 0 14px;border-left:3px solid #bbd3e8}#skandi-app-root .preview{padding:25px;max-width:900px;margin:auto;line-height:1.75;font-size:14px;overflow-wrap:anywhere}#skandi-app-root .preview h1{font-size:27px}#skandi-app-root .preview h2{font-size:20px;color:var(--blue-dark);border-bottom:1px solid var(--border);padding-bottom:6px}#skandi-app-root .preview h3{font-size:16px;color:#31506c}#skandi-app-root .toc{border:1px solid var(--border);background:#f9fbfc;padding:16px;border-radius:6px;margin:14px 0}#skandi-app-root .toc a{display:block;padding:3px 0}#skandi-app-root .drop{display:flex;flex-direction:column;gap:10px;padding:28px;border:2px dashed #a5bbcc;border-radius:10px;text-align:center;align-items:center;background:#f9fbfe;cursor:pointer}#skandi-app-root .drop.over{border-color:var(--blue);background:#eaf5ff}#skandi-app-root .drop strong{font-size:16px}#skandi-app-root .drop span{font-size:12px;color:var(--muted)}#skandi-app-root .drop input{max-width:100%;font-size:12px}#skandi-app-root .review-list{display:grid;gap:9px}#skandi-app-root .review-row{display:grid;grid-template-columns:24px minmax(130px,170px) minmax(0,1fr);gap:10px;align-items:start;border-bottom:1px solid var(--border);padding:11px 0}#skandi-app-root .review-row input[type=checkbox]{width:18px;height:18px;accent-color:var(--blue)}#skandi-app-root .review-row strong{font-size:11px}#skandi-app-root .review-row small{display:block;color:var(--muted);font-size:10px;font-weight:400}#skandi-app-root .review-value{border:1px solid #cbd7e0;border-radius:4px;padding:8px;min-width:0;background:white;overflow-wrap:anywhere}#skandi-app-root .review-value input,#skandi-app-root .review-value textarea,#skandi-app-root .review-value select{width:100%;background:transparent;border:0;outline:0;font:12px inherit;color:var(--ink)}#skandi-app-root .review-value input,#skandi-app-root .review-value select{min-height:24px}#skandi-app-root .review-value textarea{resize:vertical;min-height:65px}#skandi-app-root .review-row.warn{background:#fffaf0}#skandi-app-root .review-row .source{font-size:10px;color:#586b7c;line-height:1.4;margin-top:6px}#skandi-app-root .progress{height:8px;background:#e5edf4;overflow:hidden;border-radius:5px}#skandi-app-root .progress>div{height:100%;width:0;background:#005eb8;transition:width .15s}#skandi-app-root .source-view{white-space:pre-wrap;overflow-wrap:anywhere;padding:14px;border:1px solid var(--border);border-radius:6px;background:#fafbfd;max-height:330px;overflow:auto;font:12px/1.55 ui-monospace,Consolas,monospace}#skandi-app-root .import-tabs{display:flex;gap:5px;flex-wrap:wrap}#skandi-app-root .empty{padding:25px;text-align:center;color:var(--muted)}#skandi-app-root .shortcut{border:1px solid #d9e0e6;border-radius:4px;padding:1px 4px;font-size:10px}#skandi-app-root .toast{position:fixed;bottom:16px;right:16px;max-width:min(400px,calc(100vw - 32px));padding:11px 15px;border-radius:6px;background:#23415b;color:white;box-shadow:0 10px 40px #1e35464d;z-index:100;display:none}#skandi-app-root .toast.show{display:block}#skandi-app-root .modal{position:fixed;inset:0;background:#1128399c;z-index:60;display:flex;align-items:center;justify-content:center;padding:18px}#skandi-app-root .modal-window{background:#fff;border-radius:8px;width:min(740px,100%);max-height:90dvh;overflow:auto;box-shadow:0 16px 60px #001e3666}#skandi-app-root .modal-title{padding:16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border)}#skandi-app-root .modal-title h2{font-size:17px;margin:0}#skandi-app-root .modal-body{padding:17px}#skandi-app-root .modal-footer{padding:14px 17px;display:flex;justify-content:flex-end;gap:8px;border-top:1px solid var(--border)}#skandi-app-root .status-count{color:#57718b;font-size:12px}#skandi-app-root .mobile-nav{display:none}#skandi-app-root .pdf-box{display:flex;gap:14px;align-items:center;flex-wrap:wrap}#skandi-app-root .pdf-box a{word-break:break-word}#skandi-app-root .tip{background:#f7f9fb;border-left:3px solid #9abbdb;padding:10px 13px;font-size:11px;line-height:1.5}#skandi-app-root .sticky-actions{position:sticky;bottom:0;padding:10px 12px;background:#fff;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;z-index:20}#skandi-app-root .summary-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}#skandi-app-root .summary-cards>div{padding:13px;border:1px solid var(--border);border-radius:6px;background:#fff}#skandi-app-root .summary-cards strong{display:block;font-size:22px;color:var(--blue-dark)}#skandi-app-root .summary-cards small{color:var(--muted)}
+#skandi-app-root *{box-sizing:border-box}#skandi-app-root{height:100%;scroll-behavior:smooth}#skandi-app-root{margin:0;min-width:320px;min-height:100%;background:var(--canvas);color:var(--ink);font:13px/1.5 "72",Inter,"Segoe UI",Arial,sans-serif}#skandi-app-root button,#skandi-app-root input,#skandi-app-root select,#skandi-app-root textarea{font:inherit}#skandi-app-root button{cursor:pointer}#skandi-app-root button:disabled{opacity:.5;cursor:not-allowed}#skandi-app-root button:focus-visible,#skandi-app-root input:focus-visible,#skandi-app-root select:focus-visible,#skandi-app-root textarea:focus-visible,#skandi-app-root [contenteditable]:focus-visible{outline:3px solid #78b6f1;outline-offset:2px}#skandi-app-root a{color:var(--blue)}#skandi-app-root h1,#skandi-app-root h2,#skandi-app-root h3,#skandi-app-root p{margin-top:0}#skandi-app-root .hidden{display:none!important}#skandi-app-root .app{min-height:100dvh;display:flex;flex-direction:column}#skandi-app-root .toolbar{display:flex;flex-wrap:wrap;gap:7px;align-items:center;padding:12px 16px;background:#fff;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:35}#skandi-app-root .button{display:inline-flex;align-items:center;justify-content:center;gap:5px;min-height:38px;padding:8px 13px;background:#fff;border:1px solid #bac8d2;border-radius:5px;color:#263c4d;font-weight:700;font-size:13px;text-align:center;white-space:nowrap}#skandi-app-root .button:hover:not(:disabled){background:#edf5fb}#skandi-app-root .button.primary{background:var(--blue);color:white;border-color:var(--blue)}#skandi-app-root .button.primary:hover:not(:disabled){background:var(--blue-dark)}#skandi-app-root .button.danger{color:var(--danger);border-color:#d5a9a7}#skandi-app-root .button.ghost{border-color:transparent;background:transparent}#skandi-app-root .toolbar .grow{flex:1}#skandi-app-root .state-text{font-size:13px;color:var(--muted);padding:0 5px}#skandi-app-root .workspace{flex:1;display:grid;grid-template-columns:224px minmax(0,1fr);min-height:0;max-width:1800px;width:100%;margin:0 auto}#skandi-app-root .sidebar{padding:15px 10px;background:#f8fafc;border-right:1px solid var(--border)}#skandi-app-root .sidebar h2{font-size:13px;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;padding:5px 13px}#skandi-app-root .nav{display:flex;align-items:center;gap:8px;width:100%;text-align:left;padding:12px 13px;background:transparent;border:0;border-left:3px solid transparent;border-radius:4px;font-weight:700;font-size:13px;color:#344b60}#skandi-app-root .nav.active{border-left-color:var(--blue);background:var(--blue-soft);color:var(--blue-dark)}#skandi-app-root .nav:hover{background:#e7f0f7}#skandi-app-root .main{padding:18px;min-width:0}#skandi-app-root .intro{display:flex;justify-content:space-between;align-items:start;gap:12px;margin-bottom:14px}#skandi-app-root .intro h1{font-size:max(13px, clamp(21px,2vw,29px));line-height:1.18;letter-spacing:-.02em;margin:0 0 6px}#skandi-app-root .intro p{color:var(--muted);font-size:13px;margin:0}#skandi-app-root .card{background:#fff;border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow);margin-bottom:13px}#skandi-app-root .card-head{padding:12px 15px;background:#f9fbfc;border-bottom:1px solid var(--border);display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}#skandi-app-root .card-head h2{font-size:13px;margin:0;font-weight:800}#skandi-app-root .card-body{padding:17px}#skandi-app-root .notice{border:1px solid #aac9e7;background:#ecf5fc;color:#143c61;border-radius:5px;padding:11px 13px;font-size:13px;margin-bottom:14px}#skandi-app-root .notice.error{border-color:#e2a6a4;background:#fff2f1;color:#882520}#skandi-app-root .notice.warning{border-color:#e5c58b;background:#fff9ed;color:#775100}#skandi-app-root .notice.success{border-color:#abd3b7;background:#eef8f0;color:#235b37}#skandi-app-root .filters{display:flex;gap:9px;flex-wrap:wrap;padding:14px}#skandi-app-root .filters>*{flex:1;min-width:145px}#skandi-app-root .field{display:flex;flex-direction:column;gap:5px;min-width:0}#skandi-app-root .field label,#skandi-app-root .field-title{font-size:13px;font-weight:800;color:#40576b}#skandi-app-root .field small{font-size:13px;color:var(--muted)}#skandi-app-root .input,#skandi-app-root .select,#skandi-app-root .textarea{width:100%;min-width:0;min-height:39px;padding:9px 10px;border:1px solid #b8c6d1;border-radius:5px;background:#fff;color:var(--ink)}#skandi-app-root .textarea{min-height:84px;resize:vertical}#skandi-app-root .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}#skandi-app-root .grid.two{grid-template-columns:repeat(2,minmax(0,1fr))}#skandi-app-root .field.full,#skandi-app-root .full{grid-column:1/-1}#skandi-app-root .check{display:inline-flex;align-items:center;gap:9px;font-weight:600;min-height:36px}#skandi-app-root .check input{width:17px;height:17px;accent-color:var(--blue)}#skandi-app-root .table-scroll{overflow:auto;width:100%}#skandi-app-root table{border-collapse:collapse;width:100%}#skandi-app-root th,#skandi-app-root td{padding:11px 12px;border-bottom:1px solid #e7ecf0;text-align:left;vertical-align:top}#skandi-app-root th{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:#546779;background:#f3f7fa}#skandi-app-root tr:last-child td{border-bottom:0}#skandi-app-root tr[data-id]{cursor:pointer}#skandi-app-root tr[data-id]:hover td{background:#f0f7fc}#skandi-app-root .muted{color:var(--muted)}#skandi-app-root .small{font-size:13px}#skandi-app-root .tag{font-weight:700;font-size:13px;white-space:nowrap}#skandi-app-root .split{display:grid;grid-template-columns:minmax(0,1fr) minmax(250px,380px);gap:14px}#skandi-app-root .flex{display:flex;gap:8px;align-items:center;flex-wrap:wrap}#skandi-app-root .flex.end{justify-content:flex-end}#skandi-app-root .section{border:1px solid var(--border);border-radius:6px;background:#fff;margin-bottom:11px;overflow:hidden}#skandi-app-root .section-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:space-between;padding:11px;background:#f8fafc}#skandi-app-root .section-title{font-weight:700;flex:1;min-width:170px}#skandi-app-root .section-actions{display:flex;gap:4px;flex-wrap:wrap}#skandi-app-root .micro{font-size:13px;padding:5px 8px;min-height:30px;border:1px solid var(--border);background:white;border-radius:4px;color:#35506a}#skandi-app-root .micro:hover{background:#edf5fb}#skandi-app-root .section-body{padding:13px}#skandi-app-root .rich-toolbar{display:flex;flex-wrap:wrap;gap:4px;padding:7px;border:1px solid #bac8d2;border-radius:5px 5px 0 0;background:#f8fafc}#skandi-app-root .rich-toolbar button{min-width:30px;min-height:30px;border:1px solid transparent;background:transparent;border-radius:4px;color:#27425c;font-size:13px;padding:3px 7px}#skandi-app-root .rich-toolbar button:hover{border-color:#b8c9d8;background:#fff}#skandi-app-root .rich{min-height:130px;max-height:70vh;overflow:auto;background:#fff;border:1px solid #bac8d2;border-top:0;border-radius:0 0 5px 5px;padding:13px;font:14px/1.65 Inter,"Segoe UI",Arial,sans-serif;overflow-wrap:anywhere}#skandi-app-root .rich:empty:before{content:attr(data-placeholder);color:#91a0ae}#skandi-app-root .rich table{border:1px solid #d0d9e1}#skandi-app-root .rich td,#skandi-app-root .rich th{border:1px solid #d0d9e1}#skandi-app-root .section .section{margin:11px 0 0 14px;border-left:3px solid #bbd3e8}#skandi-app-root .preview{padding:25px;max-width:900px;margin:auto;line-height:1.75;font-size:14px;overflow-wrap:anywhere}#skandi-app-root .preview h1{font-size:27px}#skandi-app-root .preview h2{font-size:20px;color:var(--blue-dark);border-bottom:1px solid var(--border);padding-bottom:6px}#skandi-app-root .preview h3{font-size:16px;color:#31506c}#skandi-app-root .toc{border:1px solid var(--border);background:#f9fbfc;padding:16px;border-radius:6px;margin:14px 0}#skandi-app-root .toc a{display:block;padding:3px 0}#skandi-app-root .drop{display:flex;flex-direction:column;gap:10px;padding:28px;border:2px dashed #a5bbcc;border-radius:10px;text-align:center;align-items:center;background:#f9fbfe;cursor:pointer}#skandi-app-root .drop.over{border-color:var(--blue);background:#eaf5ff}#skandi-app-root .drop strong{font-size:16px}#skandi-app-root .drop span{font-size:13px;color:var(--muted)}#skandi-app-root .drop input{max-width:100%;font-size:13px}#skandi-app-root .review-list{display:grid;gap:9px}#skandi-app-root .review-row{display:grid;grid-template-columns:24px minmax(130px,170px) minmax(0,1fr);gap:10px;align-items:start;border-bottom:1px solid var(--border);padding:11px 0}#skandi-app-root .review-row input[type=checkbox]{width:18px;height:18px;accent-color:var(--blue)}#skandi-app-root .review-row strong{font-size:13px}#skandi-app-root .review-row small{display:block;color:var(--muted);font-size:13px;font-weight:400}#skandi-app-root .review-value{border:1px solid #cbd7e0;border-radius:4px;padding:8px;min-width:0;background:white;overflow-wrap:anywhere}#skandi-app-root .review-value input,#skandi-app-root .review-value textarea,#skandi-app-root .review-value select{width:100%;background:transparent;border:0;outline:0;font:13px inherit;color:var(--ink)}#skandi-app-root .review-value input,#skandi-app-root .review-value select{min-height:24px}#skandi-app-root .review-value textarea{resize:vertical;min-height:65px}#skandi-app-root .review-row.warn{background:#fffaf0}#skandi-app-root .review-row .source{font-size:13px;color:#586b7c;line-height:1.4;margin-top:6px}#skandi-app-root .progress{height:8px;background:#e5edf4;overflow:hidden;border-radius:5px}#skandi-app-root .progress>div{height:100%;width:0;background:#005eb8;transition:width .15s}#skandi-app-root .source-view{white-space:pre-wrap;overflow-wrap:anywhere;padding:14px;border:1px solid var(--border);border-radius:6px;background:#fafbfd;max-height:330px;overflow:auto;font:13px/1.55 ui-monospace,Consolas,monospace}#skandi-app-root .import-tabs{display:flex;gap:5px;flex-wrap:wrap}#skandi-app-root .empty{padding:25px;text-align:center;color:var(--muted)}#skandi-app-root .shortcut{border:1px solid #d9e0e6;border-radius:4px;padding:1px 4px;font-size:13px}#skandi-app-root .toast{position:fixed;bottom:16px;right:16px;max-width:min(400px,calc(100vw - 32px));padding:11px 15px;border-radius:6px;background:#23415b;color:white;box-shadow:0 10px 40px #1e35464d;z-index:100;display:none}#skandi-app-root .toast.show{display:block}#skandi-app-root .modal{position:fixed;inset:0;background:#1128399c;z-index:60;display:flex;align-items:center;justify-content:center;padding:18px}#skandi-app-root .modal-window{background:#fff;border-radius:8px;width:min(740px,100%);max-height:90dvh;overflow:auto;box-shadow:0 16px 60px #001e3666}#skandi-app-root .modal-title{padding:16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border)}#skandi-app-root .modal-title h2{font-size:17px;margin:0}#skandi-app-root .modal-body{padding:17px}#skandi-app-root .modal-footer{padding:14px 17px;display:flex;justify-content:flex-end;gap:8px;border-top:1px solid var(--border)}#skandi-app-root .status-count{color:#57718b;font-size:13px}#skandi-app-root .mobile-nav{display:none}#skandi-app-root .pdf-box{display:flex;gap:14px;align-items:center;flex-wrap:wrap}#skandi-app-root .pdf-box a{word-break:break-word}#skandi-app-root .tip{background:#f7f9fb;border-left:3px solid #9abbdb;padding:10px 13px;font-size:13px;line-height:1.5}#skandi-app-root .sticky-actions{position:sticky;bottom:0;padding:10px 12px;background:#fff;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;z-index:20}#skandi-app-root .summary-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}#skandi-app-root .summary-cards>div{padding:13px;border:1px solid var(--border);border-radius:6px;background:#fff}#skandi-app-root .summary-cards strong{display:block;font-size:22px;color:var(--blue-dark)}#skandi-app-root .summary-cards small{color:var(--muted)}
 @media(max-width:1090px){#skandi-app-root .workspace{grid-template-columns:190px minmax(0,1fr)}#skandi-app-root .split{grid-template-columns:1fr}#skandi-app-root .grid{grid-template-columns:repeat(2,minmax(0,1fr))}#skandi-app-root .main{padding:13px}}
 @media(max-width:740px){#skandi-app-root .toolbar{top:0;padding:8px;gap:5px}#skandi-app-root .toolbar .button{min-height:37px;padding:7px 10px}#skandi-app-root .toolbar .grow{display:none}#skandi-app-root .workspace{display:block}#skandi-app-root .sidebar{display:none}#skandi-app-root .mobile-nav{display:flex;align-items:center;gap:5px;overflow:auto;position:sticky;top:var(--policy-toolbar-height,70px);z-index:30;background:#fff;padding:6px 9px;border-bottom:1px solid var(--border)}#skandi-app-root .mobile-nav .nav{width:auto;min-width:max-content;border-left:0;border-bottom:3px solid transparent;padding:9px 12px}#skandi-app-root .mobile-nav .nav.active{border-bottom-color:var(--blue)}#skandi-app-root .main{padding:12px}#skandi-app-root .grid,#skandi-app-root .grid.two{grid-template-columns:1fr}#skandi-app-root .card-body{padding:12px}#skandi-app-root .filters{padding:10px}#skandi-app-root .review-row{grid-template-columns:20px minmax(0,1fr)}#skandi-app-root .review-row>div:nth-child(3){grid-column:2}#skandi-app-root .section-head{align-items:stretch}#skandi-app-root .section-title{flex-basis:100%}#skandi-app-root .section-actions{width:100%}#skandi-app-root .section .section{margin-left:7px}#skandi-app-root .preview{padding:14px}#skandi-app-root .intro h1{font-size:22px}#skandi-app-root .rich{min-height:170px}#skandi-app-root .button{min-height:42px}#skandi-app-root .input,#skandi-app-root .select,#skandi-app-root .textarea,#skandi-app-root input[type=date]{font-size:16px}#skandi-app-root .modal{padding:8px}#skandi-app-root .modal-window{max-height:96dvh}#skandi-app-root .summary-cards{grid-template-columns:1fr 1fr}}
-@media(max-width:410px){#skandi-app-root .toolbar .button{font-size:11px;padding:6px 8px}#skandi-app-root .main{padding:9px}#skandi-app-root .summary-cards{grid-template-columns:1fr}}
+@media(max-width:410px){#skandi-app-root .toolbar .button{font-size:13px;padding:6px 8px}#skandi-app-root .main{padding:9px}#skandi-app-root .summary-cards{grid-template-columns:1fr}}
 @media(prefers-reduced-motion:reduce){#skandi-app-root *,#skandi-app-root *:before,#skandi-app-root *:after{scroll-behavior:auto!important;transition:none!important}}
 @media print{#skandi-app-root .toolbar,#skandi-app-root .sidebar,#skandi-app-root .mobile-nav,#skandi-app-root .intro,#skandi-app-root .no-print,#skandi-app-root .sticky-actions,#skandi-app-root .toast{display:none!important}#skandi-app-root .workspace{display:block}#skandi-app-root .main{padding:0}#skandi-app-root .card{border:0;box-shadow:none}#skandi-app-root .preview{max-width:none}}
-#skandi-app-root .policy-guard{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;padding:18px;background:rgba(17,36,56,.55)}#skandi-app-root .policy-guard-dialog{width:min(100%,480px);background:#fff;border-radius:10px;padding:25px;box-shadow:0 25px 75px rgba(0,0,0,.24)}#skandi-app-root .policy-guard-dialog h2{margin:0 0 9px;font-size:19px}#skandi-app-root .policy-guard-dialog p{color:#536474;line-height:1.55}#skandi-app-root .policy-guard-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px;margin-top:23px}#skandi-app-root #documentState{padding:8px 18px;font-size:12px;background:#eaf4fe;border-bottom:1px solid #d8e0e7;color:#224663;font-weight:600}#skandi-app-root #documentState[data-state="unsaved"]{background:#fff5e7;color:#78500b}#skandi-app-root #documentState[data-state="saved"]{background:#ebf7f0;color:#195e3c}#skandi-app-root #documentState[data-state="published"]{background:#e5f4eb;color:#16593a}#skandi-app-root #documentState[data-state="saving"]{background:#eaf4fe;color:#224663}
+#skandi-app-root .policy-guard{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;padding:18px;background:rgba(17,36,56,.55)}#skandi-app-root .policy-guard-dialog{width:min(100%,480px);background:#fff;border-radius:10px;padding:25px;box-shadow:0 25px 75px rgba(0,0,0,.24)}#skandi-app-root .policy-guard-dialog h2{margin:0 0 9px;font-size:19px}#skandi-app-root .policy-guard-dialog p{color:#536474;line-height:1.55}#skandi-app-root .policy-guard-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px;margin-top:23px}#skandi-app-root #documentState{padding:8px 18px;font-size:13px;background:#eaf4fe;border-bottom:1px solid #d8e0e7;color:#224663;font-weight:600}#skandi-app-root #documentState[data-state="unsaved"]{background:#fff5e7;color:#78500b}#skandi-app-root #documentState[data-state="saved"]{background:#ebf7f0;color:#195e3c}#skandi-app-root #documentState[data-state="published"]{background:#e5f4eb;color:#16593a}#skandi-app-root #documentState[data-state="saving"]{background:#eaf4fe;color:#224663}
 </style>
-<style data-skandi-part="shell">html,body{margin:0;width:100%;min-height:100%;}*,*::before,*::after{box-sizing:border-box}#skandi-shell-root{min-height:100vh;min-width:0;display:flex;flex-direction:column}#skandi-app-root{flex:1;min-width:0;position:relative}#riaintra-global-header-root,#riaintra-global-footer-root{flex:none}@media(max-width:767px){input:not([type=hidden]),select,textarea{font-size:16px!important}}html,body{height:100%;overflow:hidden}#skandi-shell-root{height:100vh;height:100dvh;min-height:0;overflow:hidden}#skandi-app-root{height:auto;min-height:0;overflow:auto}#riaintra-global-header-root{position:relative;height:52px;min-height:52px;overflow:visible;z-index:2000}#riaintra-global-footer-root{height:auto;overflow:visible;z-index:2000}#riaintra-global-header-root .shellbar{position:absolute}#altea-global-footer-root .status-bar{position:relative}@media(max-width:600px){#riaintra-global-footer-root .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px}#riaintra-global-footer-root .footer-left{flex-wrap:wrap;gap:6px}}</style>
+<style data-skandi-part="shell">/* Shared compiled shell. Every family uses the same mobile scroll area and tab bar. */
+:root {
+  --sk-shell-navy: #022e64;
+  --sk-shell-nav: 68px;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  touch-action: manipulation;
+}
+*, *::before, *::after { box-sizing: border-box; }
+html, body { width: 100% !important; margin: 0 !important; max-width: none !important; }
+#skandi-shell-root { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; width: 100%; min-height: 100vh; min-height: 100dvh; }
+#skandi-app-root { grid-row: 2; position: relative; min-width: 0; min-height: 0; touch-action: manipulation; }
+#skandi-mobile-nav-container { display: none; }
+#skandi-global-header-root,
+#riaintra-global-header-root,
+#altea-global-header-root { grid-row: 1; position: relative; min-width: 0; }
+#skandi-global-footer-root,
+#riaintra-global-footer-root,
+#altea-global-footer-root { grid-row: 3; min-width: 0; }
+#skandi-global-header-root { height: 118px; overflow: hidden; z-index: 20; }
+#skandi-global-header-root #skandi-site-header { height: 118px !important; max-height: 118px !important; }
+[data-skandi-chrome="public"] #skandi-app-root { height: auto !important; max-height: none !important; overflow: visible; }
+
+[data-skandi-chrome="riaintra"],
+[data-skandi-chrome="altea"] { height: 100vh; height: 100dvh; min-height: 0; overflow: hidden; }
+[data-skandi-chrome="riaintra"] #skandi-app-root,
+[data-skandi-chrome="altea"] #skandi-app-root { overflow: auto; }
+#riaintra-global-header-root { height: 52px; z-index: 20; }
+#altea-global-header-root { height: 48px; z-index: 20; }
+#riaintra-global-header-root .shellbar { position: absolute; }
+#altea-global-footer-root .status-bar { position: relative; }
+
+/* Important declarations in this layer also override important page-specific control styles. */
+@layer skandi-form-size {
+  input:not([type="hidden"]), select, textarea, [role="textbox"][contenteditable="true"] {
+    font-size: max(16px, 1em) !important;
+  }
+}
+#skandi-shell-root :is(input:not([type="hidden"]), select, textarea, [role="textbox"][contenteditable="true"]) {
+  font-size: max(16px, 1em) !important;
+}
+
+@media (max-width: 1020px) {
+  html[data-skandi-mobile-navigation], html[data-skandi-mobile-navigation] body {
+    height: 100% !important; min-height: 0 !important; max-height: none !important; overflow: hidden !important;
+  }
+  html[data-skandi-mobile-navigation] #skandi-shell-root {
+    position: fixed !important; inset: 0; height: 100vh !important; height: 100dvh !important;
+    min-height: 0 !important; max-height: none !important; overflow: hidden !important;
+    grid-template-rows: minmax(0, 1fr) auto;
+  }
+  #skandi-global-header-root, #skandi-global-footer-root,
+  #riaintra-global-header-root, #riaintra-global-footer-root,
+  #altea-global-header-root, #altea-global-footer-root { display: none !important; }
+  html[data-skandi-mobile-navigation] #skandi-app-root {
+    grid-row: 1; height: 100% !important; min-height: 0 !important;
+    overflow-x: hidden !important; overflow-y: auto !important; overscroll-behavior-y: contain;
+  }
+  #skandi-mobile-nav-container {
+    grid-row: 2; display: block; width: 100%; min-height: var(--sk-shell-nav);
+    padding-bottom: env(safe-area-inset-bottom, 0px); background: var(--sk-shell-navy);
+    z-index: 2100;
+  }
+  [data-skandi-family="riaintra"] { --sk-shell-navy: #173451; }
+  [data-skandi-family="altea"] { --sk-shell-navy: #142640; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #skandi-app-root { scroll-behavior: auto !important; }
+}
+
+[data-skandi-family="riaintra"] #skandi-mobile-nav-container { --staff-nav-heading: #244b6d; }
+[data-skandi-family="altea"] #skandi-mobile-nav-container { --staff-nav-heading: #163e72; }
+[data-skandi-family="riaintra"] .skmn { background: #173451; }
+[data-skandi-family="altea"] .skmn { background: #142640; }
+[data-skandi-family="riaintra"] .skmn-btn[aria-current="page"] { color: #add6ff; }
+[data-skandi-family="altea"] .skmn-btn[aria-current="page"] { color: #90c8ff; }
+
+.skandi-app-wordmark {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  max-width: 100%;
+  padding: 8px 10px;
+  border-radius: 9px;
+  background: linear-gradient(110deg, #112c48, #224b70);
+  color: #f2f7ff;
+  font-size: 14px;
+  line-height: 1.25;
+}
+.skandi-app-wordmark img {
+  display: block;
+  width: auto;
+  max-width: min(35%, 92px);
+  height: 18px;
+  object-fit: contain;
+}
+.skandi-app-software {
+  min-width: 0;
+  padding-inline-start: 9px;
+  border-inline-start: 1px solid #7692af;
+  overflow-wrap: anywhere;
+}
+.skandi-app-software span { color: #ffb454; }
+
+#skandi-shell-root small { font-size: max(13px, .875em); }
+</style>
 </head>
 <body>
 <div id="skandi-shell-root" data-skandi-page="policy-control" data-skandi-key="policyControl" data-skandi-family="riaintra" data-skandi-chrome="riaintra">
@@ -515,17 +774,66 @@ body[data-theme="dark"] #riaintra-global-header-root {
 
 
 </div>
-
+<div id="skandi-mobile-nav-container"><div id="overlay" aria-hidden="true"></div>
+<aside id="drawer" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="drawer-title" aria-hidden="true">
+  <div class="drawer-head"><div><img id="drawer-logo" class="drawer-logo" alt="" hidden=""><div class="eyebrow" id="drawer-brand">SKANDI TRAVELS</div><h2 id="drawer-title">Explore SKANDI</h2></div><button id="skandi-mobile-closeBtn" aria-label="Close menu" type="button"><svg viewBox="0 0 24 24"><path d="M5 5l14 14M19 5L5 19"></path></svg></button></div>
+  <div class="drawer-scroll" id="drawerLinks"></div>
+  <div class="drawer-foot" id="drawer-actions"><button type="button" class="drawer-cta secondary" id="profileLink">My Profile</button><button type="button" class="drawer-cta" id="searchLink">Search trips</button><button type="button" class="drawer-cta secondary" id="alexandraLink">Chat with Alexandra</button></div>
+  <div class="drawer-foot" id="staff-drawer-actions" hidden=""><button type="button" class="drawer-cta secondary" id="staffSignOut">Sign out</button></div>
+  <section id="chat" aria-label="Alexandra customer support"><div class="chat-log" id="chatLog" role="log" aria-live="polite"><div class="bubble">How can I help with your trip?</div></div><div id="chatStatus" role="status">SKANDI Customer Service</div><form class="chat-compose" id="chatForm"><input id="chatInput" type="text" maxlength="1000" autocomplete="off" placeholder="Write your message" aria-label="Message to Alexandra"><button type="submit">Send</button></form></section>
+</aside>
+<nav id="skandi-mobile-nav-root" class="skmn" role="group" aria-label="SKANDI mobile navigation">
+  <button type="button" class="skmn-btn" data-route="home" aria-label="Home" aria-current="page">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 11 9-8 9 8v9a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"></path></svg><span>Home</span>
+  </button>
+  <button type="button" class="skmn-btn" data-route="destinations" aria-label="Destinations">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="m9 15 3-8 3 5-6 3z"></path></svg><span>Explore</span>
+  </button>
+  <button type="button" class="skmn-btn skmn-primary" data-route="bookingFlow" aria-label="Book a trip">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m2 16 20-9-3 13-6-6-5 6-1-8-5-1z"></path></svg><span>Book</span>
+  </button>
+  <button type="button" class="skmn-btn" data-route="myTrips" aria-label="My Trips">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="15" rx="2"></rect><path d="M9 6V4a3 3 0 0 1 6 0v2M3 13h18"></path></svg><span>Trips</span>
+  </button>
+  <button type="button" class="skmn-btn" data-route="menu" aria-label="Open menu" aria-expanded="false" aria-controls="drawer" aria-haspopup="dialog">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"></path></svg><span>Menu</span>
+  </button>
+</nav>
+<div id="skandi-mobile-status" role="status" aria-live="polite"></div>
+</div>
 </div>
 <script data-skandi-part="skandi-shell-runtime">/** SKANDI compiled public-shell runtime — no alternate backend, no local cart. */
 const SKANDI_SHELL_SOURCE = 'SKANDI_SHELL';
 const SKANDI_SHELL_PARENT = 'SKANDI_WIX_PARENT';
 const shellRoot = document.getElementById('skandi-shell-root');
 if (!shellRoot) throw new Error('SKANDI shell mount missing');
+let toolWordmarks = {};
+function appWordmark(system, label) {
+  const logo = Object.hasOwn(toolWordmarks, system) ? toolWordmarks[system] : '';
+  if (!/^data:image\/png;base64,[a-z0-9+/=]+$/i.test(logo || '')) return '';
+  const mark = document.createElement('span');
+  mark.className = 'skandi-app-wordmark';
+  mark.setAttribute('aria-hidden','true');
+  const systemLogo = document.createElement('img');
+  systemLogo.src = logo;
+  systemLogo.alt = '';
+  const software = document.createElement('strong');
+  software.className = 'skandi-app-software';
+  if (label === 'GroupTalk') {
+    const accent = document.createElement('span');
+    accent.textContent = 'talk';
+    software.append('group', accent);
+  } else {
+    software.textContent = label;
+  }
+  mark.append(systemLogo,software);
+  return mark.outerHTML;
+}
 window.__SKANDI_SHELL__ = Object.freeze({
   mode:'compiled-single-embed',
   page:shellRoot.dataset.skandiPage || '',
-  root:shellRoot
+  root:shellRoot,
+  appWordmark
 });
 // A single iframe passes Home, Header, Footer and Mobile messages to the
 // same Wix Velo HtmlComponent. Existing message source/type values remain.
@@ -539,6 +847,8 @@ window.addEventListener('message', event => {
   if (!message || message.source !== SKANDI_SHELL_PARENT) return;
   if (message.type === 'SKANDI_MASTER_CONFIG') {
     shellRoot.dataset.skandiPath = String(message.payload?.currentPath || '/');
+    const marks = message.payload?.brand?.assets?.toolWordmarks;
+    if (marks && typeof marks === 'object') toolWordmarks = marks;
   }
   if (message.type === 'SKANDI_SCROLL_TOP' || message.type === 'MASTER_SCROLL_TOP') {
     document.getElementById('skandi-app-root')?.scrollTo({ top:0, behavior:'instant' });
@@ -830,6 +1140,343 @@ const document=new Proxy(window.document,{get(target,key){if(key==='getElementBy
 
   post("MASTER_CONFIG_REQUEST",{context:"riaintra-footer"});
 })();
+
+
+})();</script>
+<script data-skandi-part="mobile-nav">(function(){
+const __root=window.document.getElementById("skandi-mobile-nav-container");
+const document=new Proxy(window.document,{get(target,key){if(key==='getElementById')return id=>{const el=target.getElementById(id);return el&&(__root===el||__root.contains(el))?el:null;};if(key==='querySelector'||key==='querySelectorAll')return selector=>{if(/^(?:html|body|head|meta|title|link)(?:[\s.#[:]|$)/i.test(selector)&&!selector.includes(' '))return target[key](selector);return __root[key](selector);};if(key==='getElementsByClassName'||key==='getElementsByTagName')return value=>__root[key](value);const value=Reflect.get(target,key,target);return typeof value==='function'?value.bind(target):value;},set(target,key,value){return Reflect.set(target,key,value,target);}});
+const SOURCE='SKANDI_HOME_MOBILE_APP';
+  const PARENT='SKANDI_WIX_PARENT';
+  const ROUTE_FALLBACKS=Object.freeze({
+    home:'/', destinations:'/destinations',
+    myTrips:'/my-profile?tab=trips', myProfile:'/my-profile', bookingFlow:'/booking'
+  });
+  const defaults={
+    ...ROUTE_FALLBACKS,
+    travelInfo:'/travel-info',flights:'/flights',hotels:'/hotels',packages:'/packages',
+    cruises:'/cruises',tours:'/tours-activities',carRental:'/car-rental',transfers:'/travel-info?section=transfers',
+    skandiCollection:'/skandi-collection',voy:'/voy-magazine',club:'/skandi-club',
+    support:'/about/support',theStore:'/the-store',about:'/about'
+  };
+  const publicGroups=[
+    {title:'Book & travel',keys:[['Book a trip','home'],['Flights','flights'],['Hotels','hotels'],['Packages','packages'],['Cruises','cruises'],['Tours & Activities','tours'],['Car rental','carRental'],['Transfers','transfers']]},
+    {title:'Explore',keys:[['Destinations','destinations'],['SKANDI Collection','skandiCollection'],['VOY Magazine','voy']]},
+    {title:'Travel help',keys:[['Travel information','travelInfo'],['Flight status','flightStatus'],['Passport & visa','passportVisa'],['Baggage allowance','baggageAllowance'],['Travel insurance','travelInsurance'],['Special assistance','specialAssistance'],['Help Center','support']]},
+    {title:'Your SKANDI',keys:[['My Trips','myTrips'],['SKANDI Club','club'],['My Profile','myProfile'],['The Store','theStore']]},
+    {title:'About SKANDI',keys:[['About','about'],['Newsroom','newsroom'],['Careers','careers'],['Legal','legal'],['Policies','policies'],['Cookie preferences','cookiePreferences'],['Staff login','riaintra']]}
+  ];
+  const $=id=>document.getElementById(id);
+  const bar=$('skandi-mobile-nav-root');
+  const BUTTONS=Array.from(bar.querySelectorAll('[data-route]'));
+  const menuButton=BUTTONS.find(btn=>btn.dataset.route==='menu');
+  const drawer=$('drawer');
+  const status=$("skandi-mobile-status");
+  const shell=window.__SKANDI_SHELL__?.root;
+  const family=shell?.dataset.skandiFamily||'public';
+  const isStaff=family==='riaintra'||family==='altea';
+  const brand=family==='altea'?'ALTEA':family==='riaintra'?'RIAINTRA':'SKANDI TRAVELS';
+  const staffIcons={
+    workspace:'M3 9l9-6 9 6v11H3z M9 20v-7h6v7',
+    mail:'M3 5h18v14H3z M3 6l9 7 9-7',
+    docs:'M5 3h10l4 4v14H5z M14 3v5h5 M8 12h8 M8 16h8',
+    altea:'M4 4h6v6H4z M14 4h6v6h-6z M4 14h6v6H4z M14 14h6v6h-6z',
+    reservations:'M3 7h18v10H3z M8 7v10 M13 11h5',
+    eos:'M7 3h10v18H7z M10 17h4'
+  };
+  const drawerTitle=isStaff?brand+' menu':'Explore SKANDI';
+  const state={routes:{...defaults},currentPath:'/',request:0,drawerOpen:false,drawerPending:'',drawerTimer:null,chatOpen:false,lastFocused:null,staffNavigation:null};
+  bar.setAttribute('aria-label',brand+' mobile navigation');
+  $('drawer-brand').textContent=brand;
+  $('drawer-title').textContent=drawerTitle;
+  if(isStaff) {
+    drawer.dataset.staffMenu='';
+    $('drawer-actions').hidden=true;
+  }
+  let focusTransitionToken=0;
+  const safePath=value=>{
+    const path=String(value||'').trim();
+    return /^\/(?!\/)/.test(path) && !/[\\\u0000-\u0020]/.test(path) && !/%5c|%0[0-9a-f]|%1[0-9a-f]/i.test(path)?path:'';
+  };
+  const nextId=key=>key+'-'+Date.now()+'-'+(++state.request);
+  function post(type,payload={},requestId=''){
+    const message={source:SOURCE,type,payload,timestamp:new Date().toISOString()};
+    if(requestId)message.requestId=requestId;
+    window.parent.postMessage(message,'*');
+  }
+  function pathFor(key){return safePath(state.routes[key])||safePath(defaults[key]);}
+  function updateActive(){
+    const current=safePath(state.currentPath)||'/';
+    const normalized=current.split('?')[0];
+    for(const button of BUTTONS){
+      const key=button.dataset.route;
+      const path=isStaff?safePath(button.dataset.path):pathFor(key);
+      const active=path&&(path.includes('?')?current===path:normalized===path || key==='destinations'&&normalized.startsWith('/destinations/'));
+      if(active)button.setAttribute('aria-current','page');
+      else button.removeAttribute('aria-current');
+    }
+  }
+  function navigatePath(path){
+    if(!safePath(path))return;
+    closeDrawer();
+    post('MASTER_NAVIGATE',{path},nextId('nav'));
+  }
+  function navigate(key){navigatePath(pathFor(key));}
+  function renderMenu(){
+    const root=$('drawerLinks');
+    const openTitles=new Set(Array.from(root.querySelectorAll('details[open] summary'),item=>item.textContent));
+    const focused=document.activeElement;
+    const focusedKey=root.contains(focused)?focused.dataset.menuKey:'';
+    const renderedItems=new Map();
+    const groups=isStaff?(state.staffNavigation?.groups||[]):publicGroups.map(group=>({
+      title:group.title, links:group.keys.map(([label,key])=>({label,path:pathFor(key)}))
+    }));
+    root.replaceChildren();
+    for(const group of groups){
+      const links=(group.links||[]).filter(link=>safePath(link.path));
+      if(!links.length)continue;
+      const section=document.createElement('details');
+      section.className='drawer-group';
+      section.open=openTitles.has(group.title)||(!openTitles.size&&links.some(link=>link.path===state.currentPath));
+      const heading=document.createElement('summary');
+      heading.className='group-heading';heading.textContent=group.title;
+      heading.dataset.menuKey=group.title;renderedItems.set(group.title,heading);
+      section.appendChild(heading);
+      for(const link of links){
+        const button=document.createElement('button');
+        button.type='button';button.className='drawer-link';
+        button.dataset.menuKey=link.path;renderedItems.set(link.path,button);
+        const text=document.createElement('span');text.textContent=link.label;
+        const chevron=document.createElement('b');chevron.textContent='›';chevron.setAttribute('aria-hidden','true');
+        button.append(text,chevron);
+        button.addEventListener('click',()=>navigatePath(link.path));
+        section.appendChild(button);
+      }
+      root.appendChild(section);
+    }
+    if(isStaff&&!root.childElementCount){
+      const notice=document.createElement('p');
+      notice.textContent=state.staffNavigation?'No navigation is available for this session.':'Loading navigation…';
+      root.appendChild(notice);
+    }
+    if(isStaff){
+      const tabs=state.staffNavigation?.tabs||[];
+      BUTTONS.filter(button=>button!==menuButton).forEach((button,index)=>{
+        const tab=tabs[index];
+        button.hidden=!safePath(tab?.path);
+        button.dataset.path=safePath(tab?.path);
+        button.querySelector('span').textContent=tab?.shortLabel||tab?.label||'';
+        const icon=staffIcons[tab?.icon];
+        const svg=button.querySelector('svg');
+        if(icon){
+          const path=document.createElementNS('http://www.w3.org/2000/svg','path');
+          path.setAttribute('d',icon);
+          svg.replaceChildren(path);
+        }
+        button.setAttribute('aria-label',tab?.label||'Navigation');
+      });
+    }
+    if(focusedKey)renderedItems.get(focusedKey)?.focus({preventScroll:true});
+    updateActive();
+  }
+  function preferredHeight(open){
+    if(!open)return 88; // Canonical V12 host closed geometry: 88px; visual bar is 68px.
+    return Math.max(220,Math.round(window.visualViewport?.height||window.innerHeight||844)-52);
+  }
+  function requestSize(open,requestId){
+    post('HOME_APP_DRAWER_RESIZE',{open,height:preferredHeight(open)},requestId);
+  }
+  function announce(message){status.textContent=String(message||'');}
+  function setDrawerVisible(open){
+    state.drawerOpen=Boolean(open);
+    document.body.classList.toggle('drawer-open',state.drawerOpen);
+    drawer.setAttribute('aria-hidden',String(!state.drawerOpen));
+    menuButton.setAttribute('aria-expanded',String(state.drawerOpen));
+    $('overlay').setAttribute('aria-hidden',String(!state.drawerOpen));
+    // The drawer is modal inside a compiled embed. Keep page controls out of its focus order.
+    const app=shell?.querySelector('#skandi-app-root');
+    if(app)app.inert=state.drawerOpen;
+    if(!state.drawerOpen)stopChat();
+  }
+  function openDrawer(){
+    if(state.drawerOpen||state.drawerPending)return;
+    state.lastFocused=document.activeElement;
+    announce('');
+    if((window.parent===window||Boolean(window.__SKANDI_SHELL__))){setDrawerVisible(true);$("skandi-mobile-closeBtn").focus({preventScroll:true});return;}
+    const requestId=nextId('drawer-open');
+    state.drawerPending=requestId;
+    requestSize(true,requestId);
+    clearTimeout(state.drawerTimer);
+    state.drawerTimer=setTimeout(()=>{
+      if(state.drawerPending!==requestId)return;
+      state.drawerPending='';
+      announce('The menu could not open. Please try again.');
+    },5000);
+  }
+  function closeDrawer(){
+    const wasOpen=state.drawerOpen||Boolean(state.drawerPending);
+    if(!wasOpen)return;
+    ++focusTransitionToken;
+    clearTimeout(state.drawerTimer);
+    state.drawerPending='';
+    setDrawerVisible(false);
+    if((window.parent!==window&&!window.__SKANDI_SHELL__))requestSize(false,nextId('drawer-close'));
+    const target=state.lastFocused instanceof HTMLElement?state.lastFocused:menuButton;
+    target.focus({preventScroll:true});
+    state.lastFocused=null;
+  }
+  function forceCloseDrawer(){
+    ++focusTransitionToken;
+    clearTimeout(state.drawerTimer);
+    state.drawerPending='';
+    setDrawerVisible(false);
+  }
+  function acceptOpenWhenResized(requestId){
+    const token=++focusTransitionToken;
+    const started=Date.now();
+    function check(){
+      if(token!==focusTransitionToken||state.drawerPending!==requestId)return;
+      if(window.innerHeight>=220){
+        clearTimeout(state.drawerTimer);
+        state.drawerPending='';
+        setDrawerVisible(true);
+        $("skandi-mobile-closeBtn").focus({preventScroll:true});
+        return;
+      }
+      if(Date.now()-started>=1100){
+        state.drawerPending='';
+        clearTimeout(state.drawerTimer);
+        announce('The menu needs a page-level mobile embed that can expand.');
+        requestSize(false,nextId('drawer-recover'));
+        return;
+      }
+      requestAnimationFrame(check);
+    }
+    requestAnimationFrame(check);
+  }
+  function chatSend(type,payload={}){post('SKANDI_SUPPORT_CHAT',{type,payload},nextId('chat'));}
+  function stopChat(){
+    if(!state.chatOpen)return;
+    chatSend('SUPPORT_CHAT_PANEL_CLOSE');
+    state.chatOpen=false;
+    drawer.classList.remove('chat-mode');
+    $('drawer-title').textContent=drawerTitle;
+  }
+  function openChat(){
+    state.chatOpen=true;
+    drawer.classList.add('chat-mode');
+    $('drawer-title').textContent='Alexandra';
+    $('chatStatus').textContent='Connecting to Alexandra…';
+    chatSend('SUPPORT_CHAT_START_ALEXANDRA',{requestId:nextId('alexandra-open')});
+    $('chatInput').focus({preventScroll:true});
+  }
+  function bubble(message,mine=false){
+    const div=document.createElement('div');
+    div.className='bubble'+(mine?' mine':'');
+    div.textContent=String(message||'').slice(0,4000);
+    $('chatLog').appendChild(div);
+    div.scrollIntoView({block:'end'});
+  }
+  for(const button of BUTTONS){
+    button.addEventListener('click',()=>{
+      if(button.dataset.route==='menu'){
+        if(state.drawerOpen)closeDrawer();else openDrawer();
+      } else if(isStaff)navigatePath(button.dataset.path);
+      else navigate(button.dataset.route);
+    });
+  }
+  $('overlay').addEventListener('click',closeDrawer);
+  $("skandi-mobile-closeBtn").addEventListener('click',()=>state.chatOpen?stopChat():closeDrawer());
+  $('staffSignOut').addEventListener('click',()=>{
+    closeDrawer();
+    post('RIAINTRA_LOGOUT',{},nextId('sign-out'));
+  });
+  $('profileLink').addEventListener('click',()=>navigate('myProfile'));
+  $('searchLink').addEventListener('click',()=>{
+    closeDrawer();
+    post('HOME_APP_FOCUS_SEARCH',{},nextId('focus'));
+  });
+  $('alexandraLink').addEventListener('click',openChat);
+  $('chatForm').addEventListener('submit',event=>{
+    event.preventDefault();
+    const input=$('chatInput');
+    const message=input.value.trim();
+    if(!message)return;
+    bubble(message,true);
+    input.value='';
+    chatSend('SUPPORT_CHAT_SUBMIT_FORM',{message,text:message});
+  });
+  document.addEventListener('keydown',event=>{
+    if(event.key==='Escape'){
+      if(state.chatOpen)stopChat();else closeDrawer();
+    }
+    if(event.key==='Tab'&&state.drawerOpen){
+      const visible=Array.from(drawer.querySelectorAll('summary,button:not([disabled]),input:not([disabled]),textarea:not([disabled])'))
+        .filter(el=>el.getClientRects().length>0);
+      if(!visible.length){event.preventDefault();drawer.focus();return;}
+      const first=visible[0],last=visible[visible.length-1];
+      if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}
+      else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}
+    }
+  });
+  window.addEventListener('message',event=>{
+    if(event.source!==window.parent)return;
+    let message=event.data;
+    if(typeof message==='string'){try{message=JSON.parse(message);}catch(_){return;}}
+    if(!message||typeof message!=='object'||message.source!==PARENT)return;
+    if(message.type==='SKANDI_MASTER_CONFIG'){
+      const config=message.payload||{};
+      for(const key of Object.keys(config.routes||{})){
+        const candidate=safePath(config.routes?.[key]);
+        if(candidate)state.routes[key]=candidate;
+      }
+      state.currentPath=safePath(config.currentPath)||state.currentPath;
+      if(isStaff&&config.mobileNavigation?.family===family){
+        state.staffNavigation=config.mobileNavigation;
+        $('staff-drawer-actions').hidden=!state.staffNavigation.groups?.length;
+      }
+      if(isStaff){
+        const logo=config.brand?.assets?.toolWordmarks?.[family];
+        if(/^data:image\/png;base64,[a-z0-9+/=]+$/i.test(logo||'')){
+          $('drawer-logo').src=logo;
+          $('drawer-logo').hidden=false;
+          $('drawer-brand').hidden=true;
+        }
+      }
+      renderMenu();
+      return;
+    }
+    if(message.type==='HOME_APP_DRAWER_RESIZE_ACK'){
+      const requestId=String(message.requestId||'');
+      if(message.payload?.open===true){
+        if(state.drawerPending&&requestId===state.drawerPending)acceptOpenWhenResized(requestId);
+        else requestSize(false,nextId('drawer-stale-ack'));
+      }
+      return;
+    }
+    if(message.type==='HOME_APP_DRAWER_FORCE_CLOSE'){forceCloseDrawer();return;}
+    if(message.type==='HOME_APP_DRAWER_RESIZE_ERROR'){
+      clearTimeout(state.drawerTimer);
+      state.drawerPending='';
+      announce(message.payload?.message||'The menu could not open.');
+      return;
+    }
+    if(message.type==='SUPPORT_CHAT_OPEN'){if(state.chatOpen)$('chatStatus').textContent='Connected to Alexandra';return;}
+    if(message.type==='SUPPORT_CHAT_ERROR'){if(state.chatOpen)$('chatStatus').textContent=message.payload?.message||'Chat connection unavailable';return;}
+    if(message.type==='SUPPORT_CHAT_SNAPSHOT'&&state.chatOpen){
+      const data=message.payload||{};
+      if(Array.isArray(data.messages))for(const item of data.messages.slice(-15))if(item?.text||item?.message)bubble(item.text||item.message,Boolean(item.mine));
+      return;
+    }
+    if(message.type==='SUPPORT_CHAT_CASE_CREATED'&&state.chatOpen){$('chatStatus').textContent='Case created';return;}
+  });
+  window.addEventListener('resize',()=>{
+    if(state.drawerOpen&&shell&&window.innerWidth>1020)closeDrawer();
+    else if(state.drawerOpen&&(window.parent!==window&&!window.__SKANDI_SHELL__))requestSize(true,nextId('viewport-resize'));
+  });
+  renderMenu();
+  post('MASTER_CONFIG_REQUEST',{context:'mobile-navigation'});
+  post('HOME_APP_READY',{},nextId('ready'));
 
 
 })();</script>

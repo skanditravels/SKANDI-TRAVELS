@@ -102,31 +102,31 @@
 }
 #skandi-app-root .shellbar-inner { display: flex; height: 100%; align-items: center; justify-content: space-between; gap: 0.75rem; padding: 0 0.75rem; }
 #skandi-app-root .shellbar-left, #skandi-app-root .shellbar-right { display: flex; align-items: center; gap: 0.375rem; }
-#skandi-app-root .icon-button { display: inline-grid; width: 2.25rem; height: 2.25rem; place-items: center; border: 0; border-radius: var(--radius-sm); background: transparent; color: inherit; cursor: pointer; transition: background 120ms ease; font: inherit; font-size: 0.75rem; }
+#skandi-app-root .icon-button { display: inline-grid; width: 2.25rem; height: 2.25rem; place-items: center; border: 0; border-radius: var(--radius-sm); background: transparent; color: inherit; cursor: pointer; transition: background 120ms ease; font: inherit; font-size: max(13px, 0.75rem); }
 #skandi-app-root .icon-button:hover { background: rgba(255, 255, 255, 0.13); }
 #skandi-app-root .product-title { display: flex; align-items: center; gap: 0.625rem; padding-inline: 0.375rem; }
 #skandi-app-root .product-logo { height: 40px; width: auto; object-fit: contain; border-radius: 3px; }
-#skandi-app-root .product-name { margin: 0; color: white; font-size: 0.875rem; font-weight: 700; line-height: 1.1; font-family: "72", "Inter", sans-serif; }
-#skandi-app-root .product-context { margin: 0; color: rgba(255, 255, 255, 0.7); font-size: 0.6875rem; line-height: 1.1; font-family: "72", "Inter", sans-serif; }
+#skandi-app-root .product-name { margin: 0; color: white; font-size: max(13px, 0.875rem); font-weight: 700; line-height: 1.1; font-family: "72", "Inter", sans-serif; }
+#skandi-app-root .product-context { margin: 0; color: rgba(255, 255, 255, 0.7); font-size: max(13px, 0.6875rem); line-height: 1.1; font-family: "72", "Inter", sans-serif; }
 
 #skandi-app-root .shell-nav { display: flex; gap: 0.5rem; align-items: center; font-family: "72", "Inter", sans-serif;}
-#skandi-app-root .nav-item-amadeus { color: rgba(255, 255, 255, 0.8); font-size: 0.875rem; font-weight: 600; padding: 0.4rem 0.75rem; text-decoration: none; cursor: pointer; transition: all 0.2s; background: transparent; border: none; font-family: inherit;}
+#skandi-app-root .nav-item-amadeus { color: rgba(255, 255, 255, 0.8); font-size: max(13px, 0.875rem); font-weight: 600; padding: 0.4rem 0.75rem; text-decoration: none; cursor: pointer; transition: all 0.2s; background: transparent; border: none; font-family: inherit;}
 #skandi-app-root .nav-item-amadeus:hover { color: white; background: rgba(255, 255, 255, 0.15); border-radius: var(--radius-sm); }
 
 #skandi-app-root .sf-clock { display: grid; grid-template-rows: 1fr 1fr; justify-content: end; align-content: center; min-width: 6.7rem; height: 2.25rem; padding: 0.15rem 0.55rem; border-left: 1px solid rgba(255,255,255,0.18); border-right: 1px solid rgba(255,255,255,0.18); color: #ffffff; line-height: 1; cursor: pointer; font-family: "72", "Inter", sans-serif;}
-#skandi-app-root .sf-clock-time { font-size: 0.8rem; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: 0.02em; text-align: right; }
-#skandi-app-root .sf-clock-date { margin-top: 0.15rem; color: rgba(255,255,255,0.68); font-size: 0.62rem; font-weight: 700; text-align: right; text-transform: uppercase; letter-spacing: 0.04em; }
+#skandi-app-root .sf-clock-time { font-size: max(13px, 0.8rem); font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: 0.02em; text-align: right; }
+#skandi-app-root .sf-clock-date { margin-top: 0.15rem; color: rgba(255,255,255,0.68); font-size: max(13px, 0.62rem); font-weight: 700; text-align: right; text-transform: uppercase; letter-spacing: 0.04em; }
 #skandi-app-root .user-profile-wrap { display: flex; align-items: center; gap: 0.45rem; padding: 0.2rem 0.25rem 0.2rem 0.45rem; border-radius: var(--radius-sm); cursor: default; font-family: "72", "Inter", sans-serif;}
 #skandi-app-root .user-profile-wrap:hover { background: rgba(255,255,255,0.1); }
 #skandi-app-root .user-profile-text { text-align: right; line-height: 1.12; max-width: 15rem; }
-#skandi-app-root .user-profile-name { font-size: 0.75rem; font-weight: 800; color: #ffffff; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-#skandi-app-root .user-profile-id { font-size: 0.62rem; font-weight: 700; color: #91c8ff; margin: 0.08rem 0 0; letter-spacing: 0.05em; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-#skandi-app-root .user-profile-role { font-size: 0.6rem; font-weight: 600; color: rgba(255,255,255,0.7); margin: 0.08rem 0 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-#skandi-app-root .user-avatar { display: grid; width: 2rem; height: 2rem; place-items: center; border-radius: 999px; background: #d1e8ff; color: #073b69; font-size: 0.75rem; font-weight: 800; object-fit: cover; border: 1px solid rgba(255,255,255,0.38); }
+#skandi-app-root .user-profile-name { font-size: max(13px, 0.75rem); font-weight: 800; color: #ffffff; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#skandi-app-root .user-profile-id { font-size: max(13px, 0.62rem); font-weight: 700; color: #91c8ff; margin: 0.08rem 0 0; letter-spacing: 0.05em; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#skandi-app-root .user-profile-role { font-size: max(13px, 0.6rem); font-weight: 600; color: rgba(255,255,255,0.7); margin: 0.08rem 0 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#skandi-app-root .user-avatar { display: grid; width: 2rem; height: 2rem; place-items: center; border-radius: 999px; background: #d1e8ff; color: #073b69; font-size: max(13px, 0.75rem); font-weight: 800; object-fit: cover; border: 1px solid rgba(255,255,255,0.38); }
 #skandi-app-root .mobile-burger { display: none; }
 
-#skandi-app-root .mobile-slideout { position: fixed; top: 0; left: -300px; width: 280px; height: 100vh; background-color: #ffffff; z-index: 10000; transition: left 0.3s ease; box-shadow: 2px 0 12px rgba(0,0,0,0.15); display: flex; flex-direction: column; font-family: "72", "Inter", sans-serif;}
-#skandi-app-root .mobile-slideout.open { left: 0; }
+#skandi-app-root .mobile-slideout { position: fixed; top: 0; right: -300px; width: 280px; height: 100vh; background-color: #ffffff; z-index: 10000; transition: right 0.3s ease; box-shadow: -2px 0 12px rgba(0,0,0,0.15); display: flex; flex-direction: column; font-family: "72", "Inter", sans-serif;}
+#skandi-app-root .mobile-slideout.open { right: 0; }
 #skandi-app-root .mobile-menu-header { display: flex; justify-content: space-between; align-items: center; padding: 20px; border-bottom: 1px solid #e6e9ee; }
 #skandi-app-root .close-btn { background: none; border: none; font-size: 28px; cursor: pointer; color: #071b44; padding: 0; }
 #skandi-app-root .mobile-nav-links { display: flex; flex-direction: column; }
@@ -197,7 +197,7 @@ body.mode-desktop #skandi-app-root .app {
 }
 #skandi-app-root .sk-chrome-subtitle{
   margin-top:3px;
-  font-size:11px;
+  font-size:13px;
   opacity:.86;
   white-space:nowrap;
   overflow:hidden;
@@ -219,14 +219,14 @@ body.mode-desktop #skandi-app-root .app {
   width:100%;
   max-width:300px;
   font-family:var(--mono);
-  font-size:10px;
+  font-size:13px;
   line-height:1.22;
   text-align:left;
 }
 #skandi-app-root .sk-chrome-user>b{
   display:block;
   font-family:var(--font);
-  font-size:12px;
+  font-size:13px;
   font-weight:800;
   text-align:right;
   margin-bottom:3px;
@@ -244,7 +244,7 @@ body.mode-desktop #skandi-app-root .app {
   color:rgba(255,255,255,.68);
   text-transform:uppercase;
   letter-spacing:.08em;
-  font-size:9px;
+  font-size:13px;
 }
 #skandi-app-root .sk-chrome-user-grid span:nth-child(even){
   text-align:right;
@@ -273,7 +273,7 @@ body.mode-desktop #skandi-app-root .app {
 }
 #skandi-app-root .sk-chrome-clock-date{
   margin-top:4px;
-  font-size:9px;
+  font-size:13px;
   letter-spacing:.12em;
   opacity:.8;
 }
@@ -301,7 +301,7 @@ body.mode-desktop #skandi-app-root .app {
   background:transparent;
   color:#111827;
   padding:0 13px;
-  font-size:12px;
+  font-size:13px;
   font-weight:600;
   letter-spacing:.02em;
 }
@@ -340,7 +340,7 @@ body.mode-desktop #skandi-app-root .app {
   color:#111827;
   text-align:left;
   padding:6px 10px;
-  font-size:12px;
+  font-size:13px;
 }
 #skandi-app-root .sk-menu-item:hover,
 #skandi-app-root .sk-menu-item:focus-visible{
@@ -352,7 +352,7 @@ body.mode-desktop #skandi-app-root .app {
   margin-left:auto;
   color:#6b7280;
   font-family:var(--mono);
-  font-size:10px;
+  font-size:13px;
 }
 #skandi-app-root .sk-menu-item:hover .sk-menu-shortcut,
 #skandi-app-root .sk-menu-item:focus-visible .sk-menu-shortcut{
@@ -375,13 +375,13 @@ body.mode-desktop #skandi-app-root .app {
   background:#fff;
   color:#111827;
   padding:4px 7px;
-  font-size:12px;
+  font-size:13px;
 }
 #skandi-app-root .sk-search-results{
   margin-top:6px;
   max-height:220px;
   overflow:auto;
-  font-size:12px;
+  font-size:13px;
   color:#374151;
 }
 
@@ -434,7 +434,7 @@ body.mode-desktop #skandi-app-root .desktopApp{display:grid}
   vertical-align:middle;
 }
 #skandi-app-root .dot.on{background:#22c55e;box-shadow:0 0 12px #22c55e}
-#skandi-app-root #mStatus{font-size:12px;color:var(--gt-dim)}
+#skandi-app-root #mStatus{font-size:13px;color:var(--gt-dim)}
 
 #skandi-app-root .groupBar{
   background:#1a1d24;
@@ -444,7 +444,7 @@ body.mode-desktop #skandi-app-root .desktopApp{display:grid}
   margin:6px 0 10px;
 }
 #skandi-app-root .groupName{font-size:15px;font-weight:700;color:#fff}
-#skandi-app-root .groupSub,#skandi-app-root .small{font-size:11px;color:var(--gt-dim)}
+#skandi-app-root .groupSub,#skandi-app-root .small{font-size:13px;color:var(--gt-dim)}
 #skandi-app-root .groupSub{margin-top:2px}
 
 #skandi-app-root .grid{
@@ -472,8 +472,8 @@ body.mode-desktop #skandi-app-root .desktopApp{display:grid}
 #skandi-app-root .tile:active{transform:translateY(1px)}
 #skandi-app-root .tile:hover{background:#444954;border-color:#5a606d}
 #skandi-app-root .tile .ico{font-size:22px;line-height:1.1}
-#skandi-app-root .tile .main{font-size:12px;font-weight:600}
-#skandi-app-root .tile .sub{font-size:10px;color:var(--gt-dim);line-height:1.2}
+#skandi-app-root .tile .main{font-size:13px;font-weight:600}
+#skandi-app-root .tile .sub{font-size:13px;color:var(--gt-dim);line-height:1.2}
 #skandi-app-root .tile.red{
   background:linear-gradient(135deg,#86161f,#b3262e);
   border-color:#f87171;
@@ -606,7 +606,7 @@ body.mode-desktop #skandi-app-root .desktopApp{display:grid}
   color:#f9fafb;
   border-radius:999px;
   padding:6px 10px;
-  font-size:11px;
+  font-size:13px;
   white-space:nowrap;
 }
 #skandi-app-root .form{display:grid;gap:8px}
@@ -692,7 +692,7 @@ body.mode-desktop #skandi-app-root .desktopApp{display:grid}
   align-items:center;
   justify-content:space-between;
   padding:0 8px;
-  font-size:11px;
+  font-size:13px;
   font-weight:700;
   text-transform:uppercase;
   letter-spacing:.08em;
@@ -712,7 +712,7 @@ body.mode-desktop #skandi-app-root .desktopApp{display:grid}
   border-radius:999px;
   padding:2px 8px;
   min-height:18px;
-  font-size:10px;
+  font-size:13px;
   background:#111827;
   color:#e5e7eb;
   text-transform:none;
@@ -733,7 +733,7 @@ body.mode-desktop #skandi-app-root .desktopApp{display:grid}
   background:#1f2937;
   box-shadow:inset 3px 0 0 var(--accent);
 }
-#skandi-app-root .groupItem b{font-size:12px}
+#skandi-app-root .groupItem b{font-size:13px}
 #skandi-app-root .groupItem .small{color:#b2b5bd;margin:3px 0 6px}
 
 #skandi-app-root .dispatch{
@@ -760,7 +760,7 @@ body.mode-desktop #skandi-app-root .desktopApp{display:grid}
   color:#9ca3af;
   text-align:center;
   padding:18px;
-  font-size:12px;
+  font-size:13px;
 }
 #skandi-app-root .tables{
   display:grid;
@@ -771,7 +771,7 @@ body.mode-desktop #skandi-app-root .desktopApp{display:grid}
 #skandi-app-root table{
   width:100%;
   border-collapse:collapse;
-  font-size:11px;
+  font-size:13px;
   color:#f3f4f6;
 }
 #skandi-app-root th,#skandi-app-root td{
@@ -783,13 +783,13 @@ body.mode-desktop #skandi-app-root .desktopApp{display:grid}
 #skandi-app-root th{
   color:#d1d5db;
   font-weight:700;
-  font-size:10px;
+  font-size:13px;
   text-transform:uppercase;
   letter-spacing:.06em;
 }
 #skandi-app-root tr.click{cursor:pointer}
 #skandi-app-root tr.click:hover{background:#30343b}
-#skandi-app-root td .small{font-size:10px;color:#b2b5bd}
+#skandi-app-root td .small{font-size:13px;color:#b2b5bd}
 
 #skandi-app-root .dPtt{
   min-height:64px;
@@ -819,7 +819,7 @@ body.mode-desktop #skandi-app-root .desktopApp{display:grid}
 }
 #skandi-app-root .detail{
   white-space:pre-wrap;
-  font-size:12px;
+  font-size:13px;
   line-height:1.5;
   color:#f3f4f6;
 }
@@ -833,7 +833,7 @@ body.mode-desktop #skandi-app-root .desktopApp{display:grid}
   border:1px solid #4b4f59;
   border-radius:6px;
   padding:7px;
-  font-size:12px;
+  font-size:13px;
   min-height:34px;
   background:#111827;
   color:#f9fafb;
@@ -858,7 +858,7 @@ body.can-manage #skandi-app-root .adminOnly{display:block}
   border:1px solid #30343b;
   border-radius:8px;
   padding:10px 12px;
-  font-size:12px;
+  font-size:13px;
   display:none;
   z-index:9800;
   box-shadow:0 18px 40px rgba(0,0,0,.35);
@@ -888,7 +888,7 @@ body.can-manage #skandi-app-root .adminOnly{display:block}
   border-radius:999px;
   background:#111827;
   color:#f9fafb;
-  font-size:10px;
+  font-size:13px;
   line-height:1;
   padding:4px 8px;
 }
@@ -899,7 +899,7 @@ body.can-manage #skandi-app-root .adminOnly{display:block}
 }
 #skandi-app-root .desktopPhoneList.empty,#skandi-app-root .caseEmployeeList.empty,#skandi-app-root .categoryList.empty{
   color:#b2b5bd;
-  font-size:12px;
+  font-size:13px;
 }
 #skandi-app-root .phoneCard,#skandi-app-root .caseEmployee,#skandi-app-root .categoryRow{
   border:1px solid #4b4f59;
@@ -916,7 +916,7 @@ body.can-manage #skandi-app-root .adminOnly{display:block}
 }
 #skandi-app-root .phoneCard b,#skandi-app-root .caseEmployee b,#skandi-app-root .categoryRow b{
   display:block;
-  font-size:12px;
+  font-size:13px;
   color:#fff;
   overflow:hidden;
   text-overflow:ellipsis;
@@ -951,7 +951,7 @@ body.can-manage #skandi-app-root .adminOnly{display:block}
 }
 #skandi-app-root .categoryRow.hiddenCat{opacity:.55}
 #skandi-app-root .categoryMeta{
-  font-size:10px;
+  font-size:13px;
   color:#b2b5bd;
   margin-top:3px;
 }
@@ -985,7 +985,7 @@ body.can-manage #skandi-app-root .adminOnly{display:block}
   #skandi-app-root .sk-chrome-logo-left{height:32px}
   #skandi-app-root .sk-chrome-logo-altea{height:28px}
   #skandi-app-root .sk-chrome-altea-wrap{display:none}
-  #skandi-app-root .sk-chrome-title{font-size:11px}
+  #skandi-app-root .sk-chrome-title{font-size:13px}
   #skandi-app-root .sk-chrome-subtitle{display:none}
   #skandi-app-root .sk-chrome-user{display:none}
   #skandi-app-root .sk-chrome-clock{
@@ -993,8 +993,8 @@ body.can-manage #skandi-app-root .adminOnly{display:block}
     height:44px;
     padding:5px 7px;
   }
-  #skandi-app-root .sk-chrome-clock-time{font-size:12px}
-  #skandi-app-root .sk-menu-button{padding:0 10px;font-size:11px}
+  #skandi-app-root .sk-chrome-clock-time{font-size:13px}
+  #skandi-app-root .sk-menu-button{padding:0 10px;font-size:13px}
   #skandi-app-root .sk-search-wrap{width:260px}
   #skandi-app-root .app{background:#05060a}
 }
@@ -1179,7 +1179,7 @@ body.ptt-lock #skandi-app-root *{
     right:0;
     bottom:2px;
     text-align:center;
-    font-size:7px;
+    font-size:13px;
     line-height:1;
     color:#fff;
     font-weight:700;
@@ -1222,7 +1222,7 @@ body.ptt-lock #skandi-app-root *{
 
   #skandi-app-root .gtShortcutTitle{
     color:#fff;
-    font-size:9px;
+    font-size:13px;
     font-weight:700;
     line-height:11px;
     white-space:nowrap;
@@ -1232,7 +1232,7 @@ body.ptt-lock #skandi-app-root *{
 
   #skandi-app-root .gtShortcutSub{
     color:#d9d8df;
-    font-size:7px;
+    font-size:13px;
     line-height:9px;
   }
 
@@ -1301,7 +1301,7 @@ body.ptt-lock #skandi-app-root *{
   }
 
   #skandi-app-root .gtRefLabel{
-    font-size:8px;
+    font-size:13px;
     line-height:9px;
     color:#fff;
     text-align:center;
@@ -1404,7 +1404,7 @@ body.ptt-lock #skandi-app-root *{
 
   #skandi-app-root .gtPttText strong{
     color:#fff;
-    font-size:10px;
+    font-size:13px;
     line-height:12px;
     font-weight:700;
     white-space:nowrap;
@@ -1414,7 +1414,7 @@ body.ptt-lock #skandi-app-root *{
 
   #skandi-app-root .gtPttText span{
     color:#9b9ca6;
-    font-size:8px;
+    font-size:13px;
     line-height:10px;
     white-space:nowrap;
     overflow:hidden;
@@ -1466,9 +1466,9 @@ body.ptt-lock #skandi-app-root *{
     #skandi-app-root .gtReferencePtt{flex-basis:clamp(72px,15.5dvh,92px)}
     #skandi-app-root .gtRefIcon{width:25px;height:25px}
     #skandi-app-root .gtRefIcon svg{width:24px;height:24px}
-    #skandi-app-root .gtRefLabel{font-size:9px;line-height:10px}
-    #skandi-app-root .gtPttText strong{font-size:11px}
-    #skandi-app-root .gtPttText span{font-size:9px}
+    #skandi-app-root .gtRefLabel{font-size:13px;line-height:10px}
+    #skandi-app-root .gtPttText strong{font-size:13px}
+    #skandi-app-root .gtPttText span{font-size:13px}
   }
 }
 
@@ -1499,7 +1499,112 @@ body.mode-desktop #skandi-app-root .dPtt .ptt{
 }
 
 </style>
-<style data-skandi-part="shell">html,body{margin:0;width:100%;min-height:100%;}*,*::before,*::after{box-sizing:border-box}#skandi-shell-root{min-height:100vh;min-width:0;display:flex;flex-direction:column}#skandi-app-root{flex:1;min-width:0;position:relative}@media(max-width:767px){input:not([type=hidden]),select,textarea{font-size:16px!important}}</style>
+<style data-skandi-part="shell">/* Shared compiled shell. Every family uses the same mobile scroll area and tab bar. */
+:root {
+  --sk-shell-navy: #022e64;
+  --sk-shell-nav: 68px;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  touch-action: manipulation;
+}
+*, *::before, *::after { box-sizing: border-box; }
+html, body { width: 100% !important; margin: 0 !important; max-width: none !important; }
+#skandi-shell-root { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; width: 100%; min-height: 100vh; min-height: 100dvh; }
+#skandi-app-root { grid-row: 2; position: relative; min-width: 0; min-height: 0; touch-action: manipulation; }
+#skandi-mobile-nav-container { display: none; }
+#skandi-global-header-root,
+#riaintra-global-header-root,
+#altea-global-header-root { grid-row: 1; position: relative; min-width: 0; }
+#skandi-global-footer-root,
+#riaintra-global-footer-root,
+#altea-global-footer-root { grid-row: 3; min-width: 0; }
+#skandi-global-header-root { height: 118px; overflow: hidden; z-index: 20; }
+#skandi-global-header-root #skandi-site-header { height: 118px !important; max-height: 118px !important; }
+[data-skandi-chrome="public"] #skandi-app-root { height: auto !important; max-height: none !important; overflow: visible; }
+
+[data-skandi-chrome="riaintra"],
+[data-skandi-chrome="altea"] { height: 100vh; height: 100dvh; min-height: 0; overflow: hidden; }
+[data-skandi-chrome="riaintra"] #skandi-app-root,
+[data-skandi-chrome="altea"] #skandi-app-root { overflow: auto; }
+#riaintra-global-header-root { height: 52px; z-index: 20; }
+#altea-global-header-root { height: 48px; z-index: 20; }
+#riaintra-global-header-root .shellbar { position: absolute; }
+#altea-global-footer-root .status-bar { position: relative; }
+
+/* Important declarations in this layer also override important page-specific control styles. */
+@layer skandi-form-size {
+  input:not([type="hidden"]), select, textarea, [role="textbox"][contenteditable="true"] {
+    font-size: max(16px, 1em) !important;
+  }
+}
+#skandi-shell-root :is(input:not([type="hidden"]), select, textarea, [role="textbox"][contenteditable="true"]) {
+  font-size: max(16px, 1em) !important;
+}
+
+@media (max-width: 1020px) {
+  html[data-skandi-mobile-navigation], html[data-skandi-mobile-navigation] body {
+    height: 100% !important; min-height: 0 !important; max-height: none !important; overflow: hidden !important;
+  }
+  html[data-skandi-mobile-navigation] #skandi-shell-root {
+    position: fixed !important; inset: 0; height: 100vh !important; height: 100dvh !important;
+    min-height: 0 !important; max-height: none !important; overflow: hidden !important;
+    grid-template-rows: minmax(0, 1fr) auto;
+  }
+  #skandi-global-header-root, #skandi-global-footer-root,
+  #riaintra-global-header-root, #riaintra-global-footer-root,
+  #altea-global-header-root, #altea-global-footer-root { display: none !important; }
+  html[data-skandi-mobile-navigation] #skandi-app-root {
+    grid-row: 1; height: 100% !important; min-height: 0 !important;
+    overflow-x: hidden !important; overflow-y: auto !important; overscroll-behavior-y: contain;
+  }
+  #skandi-mobile-nav-container {
+    grid-row: 2; display: block; width: 100%; min-height: var(--sk-shell-nav);
+    padding-bottom: env(safe-area-inset-bottom, 0px); background: var(--sk-shell-navy);
+    z-index: 2100;
+  }
+  [data-skandi-family="riaintra"] { --sk-shell-navy: #173451; }
+  [data-skandi-family="altea"] { --sk-shell-navy: #142640; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #skandi-app-root { scroll-behavior: auto !important; }
+}
+
+[data-skandi-family="riaintra"] #skandi-mobile-nav-container { --staff-nav-heading: #244b6d; }
+[data-skandi-family="altea"] #skandi-mobile-nav-container { --staff-nav-heading: #163e72; }
+[data-skandi-family="riaintra"] .skmn { background: #173451; }
+[data-skandi-family="altea"] .skmn { background: #142640; }
+[data-skandi-family="riaintra"] .skmn-btn[aria-current="page"] { color: #add6ff; }
+[data-skandi-family="altea"] .skmn-btn[aria-current="page"] { color: #90c8ff; }
+
+.skandi-app-wordmark {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  max-width: 100%;
+  padding: 8px 10px;
+  border-radius: 9px;
+  background: linear-gradient(110deg, #112c48, #224b70);
+  color: #f2f7ff;
+  font-size: 14px;
+  line-height: 1.25;
+}
+.skandi-app-wordmark img {
+  display: block;
+  width: auto;
+  max-width: min(35%, 92px);
+  height: 18px;
+  object-fit: contain;
+}
+.skandi-app-software {
+  min-width: 0;
+  padding-inline-start: 9px;
+  border-inline-start: 1px solid #7692af;
+  overflow-wrap: anywhere;
+}
+.skandi-app-software span { color: #ffb454; }
+
+#skandi-shell-root small { font-size: max(13px, .875em); }
+</style>
 </head>
 <body>
 <div id="skandi-shell-root" data-skandi-page="group-talk" data-skandi-key="groupTalk" data-skandi-family="altea" data-skandi-chrome="none">
@@ -1572,7 +1677,7 @@ body.mode-desktop #skandi-app-root .dPtt .ptt{
 
   <div class="vu gtMobileVu" id="mVu" aria-hidden="true"><div id="mVuInner"></div></div>
 </section>
-<section class="desktopApp"><div class="dTop"><div><div class="dTitle">GroupTalk Dispatch Console</div><div style="font-size:11px;opacity:.88">Live voice · locations · destination helpdesk</div></div><div class="dMeta"><div id="dUser">—</div><div id="dMeta">—</div></div></div><div class="dMain"><aside class="desktopStack leftStack"><section class="panel groupPanel"><div class="panelHead"><span>Groups</span><span id="realtimeState" class="badge">offline</span></div><div class="panelBody" id="groupList"></div><div class="panelBody adminOnly compactAdmin"><b style="font-size:12px">Admin group config</b><div class="reply"><input id="adminGroupTitle" class="lightInput" placeholder="Group name"><input id="adminGroupBase" class="lightInput" placeholder="Base, e.g. JFK.OPS"><button id="btnSaveGroup" class="primary">Save Group</button></div></div></section><section class="panel phonePanel"><div class="panelHead"><span>Phonebook</span><button id="btnDesktopPhonebook" class="headMini" type="button">Open</button></div><div class="panelBody"><div id="desktopPhoneList" class="desktopPhoneList">Loading…</div></div></section><section class="panel adminOnly categoryPanel"><div class="panelHead"><span>Ticket Categories</span><button id="btnNewCategory" class="headMini" type="button">New</button></div><div class="panelBody"><div id="categoryList" class="categoryList"></div><div class="reply categoryEditor"><input id="catId" type="hidden"><input id="catTitle" class="lightInput" placeholder="Category name"><input id="catSort" class="lightInput" type="number" min="1" placeholder="Sort order"><select id="catActive" class="lightInput"><option value="true">Active</option><option value="false">Hidden</option></select><div class="inlineActions"><button id="btnSaveCategory" class="primary" type="button">Save Category</button><button id="btnDeleteCategory" class="mini" type="button">Delete</button></div></div></div></section></aside><main class="dispatch"><div class="mapWrap"><div id="map"></div><div id="mapMissing" class="mapMissing">Loading live operations map…</div></div><div class="tables"><section class="panel"><div class="panelHead"><span>Online / Active</span><span id="onlineCount" class="badge">0</span></div><div class="panelBody"><table><thead><tr><th>User</th><th>State</th></tr></thead><tbody id="onlineTable"></tbody></table></div></section><section class="panel"><div class="panelHead"><span>Tickets</span><span id="ticketCount" class="badge">0</span></div><div class="panelBody"><table><thead><tr><th>Priority</th><th>Subject</th><th>Status</th></tr></thead><tbody id="ticketTable"></tbody></table></div></section></div><div class="dPtt"><div><b id="dActiveGroup">—</b><div class="small" id="dActiveSub">—</div></div><div class="vu" id="dVu"><div id="dVuInner"></div></div><button id="dPtt" class="ptt">🎙 PRESS &amp; HOLD</button></div></main><aside class="desktopStack rightStack"><section class="panel detailPanel"><div class="panelHead"><span>Ticket detail</span><span id="detailStatus" class="badge">—</span></div><div class="panelBody"><div id="ticketDetail" class="detail">Select a ticket.</div><div class="reply adminOnly"><textarea id="replyBody" class="lightInput" placeholder="Reply to staff…"></textarea><textarea id="manifestText" class="lightInput" placeholder="Paste bus manifest or route list here…"></textarea><select id="replyDelivery" class="lightInput"><option>Internal Chat</option><option>Email</option><option>Manual</option></select><input id="replyEmail" class="lightInput" placeholder="Email recipient if needed"><button id="btnReply" class="primary">Send Reply</button><button id="btnResolve" class="mini" style="color:#111;background:#ecfdf5;border-color:#86efac">Mark Resolved</button></div></div></section><section class="panel casePanel"><div class="panelHead"><span>Start Case</span><span id="caseTargetCount" class="badge">0 selected</span></div><div class="panelBody"><div class="small caseHint">Select one or more employees, then start a helpdesk case tied to them.</div><div id="caseEmployeeList" class="caseEmployeeList"></div><div class="reply"><select id="caseCategory" class="lightInput"></select><select id="casePriority" class="lightInput"><option>Normal</option><option>High</option><option>Urgent</option><option>Critical</option><option>Low</option></select><input id="caseRoute" class="lightInput" placeholder="Route/ref or case reference"><input id="caseSubject" class="lightInput" placeholder="Case subject"><textarea id="caseMessage" class="lightInput" placeholder="Case notes / request details"></textarea><div class="inlineActions"><button id="btnStartCase" class="primary" type="button">Start Case</button><button id="btnClearCaseTargets" class="mini" type="button">Clear Employees</button></div></div></div></section></aside></div></section>
+<section class="desktopApp"><div class="dTop"><div><div class="dTitle">GroupTalk Dispatch Console</div><div style="font-size:13px;opacity:.88">Live voice · locations · destination helpdesk</div></div><div class="dMeta"><div id="dUser">—</div><div id="dMeta">—</div></div></div><div class="dMain"><aside class="desktopStack leftStack"><section class="panel groupPanel"><div class="panelHead"><span>Groups</span><span id="realtimeState" class="badge">offline</span></div><div class="panelBody" id="groupList"></div><div class="panelBody adminOnly compactAdmin"><b style="font-size:13px">Admin group config</b><div class="reply"><input id="adminGroupTitle" class="lightInput" placeholder="Group name"><input id="adminGroupBase" class="lightInput" placeholder="Base, e.g. JFK.OPS"><button id="btnSaveGroup" class="primary">Save Group</button></div></div></section><section class="panel phonePanel"><div class="panelHead"><span>Phonebook</span><button id="btnDesktopPhonebook" class="headMini" type="button">Open</button></div><div class="panelBody"><div id="desktopPhoneList" class="desktopPhoneList">Loading…</div></div></section><section class="panel adminOnly categoryPanel"><div class="panelHead"><span>Ticket Categories</span><button id="btnNewCategory" class="headMini" type="button">New</button></div><div class="panelBody"><div id="categoryList" class="categoryList"></div><div class="reply categoryEditor"><input id="catId" type="hidden"><input id="catTitle" class="lightInput" placeholder="Category name"><input id="catSort" class="lightInput" type="number" min="1" placeholder="Sort order"><select id="catActive" class="lightInput"><option value="true">Active</option><option value="false">Hidden</option></select><div class="inlineActions"><button id="btnSaveCategory" class="primary" type="button">Save Category</button><button id="btnDeleteCategory" class="mini" type="button">Delete</button></div></div></div></section></aside><main class="dispatch"><div class="mapWrap"><div id="map"></div><div id="mapMissing" class="mapMissing">Loading live operations map…</div></div><div class="tables"><section class="panel"><div class="panelHead"><span>Online / Active</span><span id="onlineCount" class="badge">0</span></div><div class="panelBody"><table><thead><tr><th>User</th><th>State</th></tr></thead><tbody id="onlineTable"></tbody></table></div></section><section class="panel"><div class="panelHead"><span>Tickets</span><span id="ticketCount" class="badge">0</span></div><div class="panelBody"><table><thead><tr><th>Priority</th><th>Subject</th><th>Status</th></tr></thead><tbody id="ticketTable"></tbody></table></div></section></div><div class="dPtt"><div><b id="dActiveGroup">—</b><div class="small" id="dActiveSub">—</div></div><div class="vu" id="dVu"><div id="dVuInner"></div></div><button id="dPtt" class="ptt">🎙 PRESS &amp; HOLD</button></div></main><aside class="desktopStack rightStack"><section class="panel detailPanel"><div class="panelHead"><span>Ticket detail</span><span id="detailStatus" class="badge">—</span></div><div class="panelBody"><div id="ticketDetail" class="detail">Select a ticket.</div><div class="reply adminOnly"><textarea id="replyBody" class="lightInput" placeholder="Reply to staff…"></textarea><textarea id="manifestText" class="lightInput" placeholder="Paste bus manifest or route list here…"></textarea><select id="replyDelivery" class="lightInput"><option>Internal Chat</option><option>Email</option><option>Manual</option></select><input id="replyEmail" class="lightInput" placeholder="Email recipient if needed"><button id="btnReply" class="primary">Send Reply</button><button id="btnResolve" class="mini" style="color:#111;background:#ecfdf5;border-color:#86efac">Mark Resolved</button></div></div></section><section class="panel casePanel"><div class="panelHead"><span>Start Case</span><span id="caseTargetCount" class="badge">0 selected</span></div><div class="panelBody"><div class="small caseHint">Select one or more employees, then start a helpdesk case tied to them.</div><div id="caseEmployeeList" class="caseEmployeeList"></div><div class="reply"><select id="caseCategory" class="lightInput"></select><select id="casePriority" class="lightInput"><option>Normal</option><option>High</option><option>Urgent</option><option>Critical</option><option>Low</option></select><input id="caseRoute" class="lightInput" placeholder="Route/ref or case reference"><input id="caseSubject" class="lightInput" placeholder="Case subject"><textarea id="caseMessage" class="lightInput" placeholder="Case notes / request details"></textarea><div class="inlineActions"><button id="btnStartCase" class="primary" type="button">Start Case</button><button id="btnClearCaseTargets" class="mini" type="button">Clear Employees</button></div></div></div></section></aside></div></section>
 </div>
 <div id="phoneSheet" class="sheet"><div class="sheetHead"><button class="mini" data-close="phoneSheet">← Back</button><span>Phone Book</span><span></span></div><div class="sheetBody" id="phoneList">Loading…</div></div>
 <div id="groupSheet" class="sheet"><div class="sheetHead"><button class="mini" data-close="groupSheet">← Back</button><span>Select Group</span><span></span></div><div class="sheetBody" id="mobileGroupList"></div></div>
@@ -1618,10 +1723,33 @@ const SKANDI_SHELL_SOURCE = 'SKANDI_SHELL';
 const SKANDI_SHELL_PARENT = 'SKANDI_WIX_PARENT';
 const shellRoot = document.getElementById('skandi-shell-root');
 if (!shellRoot) throw new Error('SKANDI shell mount missing');
+let toolWordmarks = {};
+function appWordmark(system, label) {
+  const logo = Object.hasOwn(toolWordmarks, system) ? toolWordmarks[system] : '';
+  if (!/^data:image\/png;base64,[a-z0-9+/=]+$/i.test(logo || '')) return '';
+  const mark = document.createElement('span');
+  mark.className = 'skandi-app-wordmark';
+  mark.setAttribute('aria-hidden','true');
+  const systemLogo = document.createElement('img');
+  systemLogo.src = logo;
+  systemLogo.alt = '';
+  const software = document.createElement('strong');
+  software.className = 'skandi-app-software';
+  if (label === 'GroupTalk') {
+    const accent = document.createElement('span');
+    accent.textContent = 'talk';
+    software.append('group', accent);
+  } else {
+    software.textContent = label;
+  }
+  mark.append(systemLogo,software);
+  return mark.outerHTML;
+}
 window.__SKANDI_SHELL__ = Object.freeze({
   mode:'compiled-single-embed',
   page:shellRoot.dataset.skandiPage || '',
-  root:shellRoot
+  root:shellRoot,
+  appWordmark
 });
 // A single iframe passes Home, Header, Footer and Mobile messages to the
 // same Wix Velo HtmlComponent. Existing message source/type values remain.
@@ -1635,6 +1763,8 @@ window.addEventListener('message', event => {
   if (!message || message.source !== SKANDI_SHELL_PARENT) return;
   if (message.type === 'SKANDI_MASTER_CONFIG') {
     shellRoot.dataset.skandiPath = String(message.payload?.currentPath || '/');
+    const marks = message.payload?.brand?.assets?.toolWordmarks;
+    if (marks && typeof marks === 'object') toolWordmarks = marks;
   }
   if (message.type === 'SKANDI_SCROLL_TOP' || message.type === 'MASTER_SCROLL_TOP') {
     document.getElementById('skandi-app-root')?.scrollTo({ top:0, behavior:'instant' });

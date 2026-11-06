@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-skandi-mobile-navigation>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
@@ -19,6 +19,160 @@
 
 
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<style data-skandi-part="mobile-nav">#skandi-mobile-nav-container{--navy:#022e64;--cyan:#5fc7cf;--ice:#f6faff;--ink:#122744;--muted:#667991;--line:#dfebf3;--safe:env(safe-area-inset-bottom,0px)}
+#skandi-mobile-nav-container *{box-sizing:border-box}#skandi-mobile-nav-container,#skandi-mobile-nav-container{width:100%;height:100%;overflow:hidden;margin:0;background:transparent;overscroll-behavior:none;font-family:Montserrat,system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-text-size-adjust:100%}#skandi-mobile-nav-container{display:flex;align-items:flex-end;color:var(--ink)}#skandi-mobile-nav-container button,#skandi-mobile-nav-container input,#skandi-mobile-nav-container textarea{font:inherit}#skandi-mobile-nav-container button{cursor:pointer;-webkit-tap-highlight-color:transparent}#skandi-mobile-nav-container button:focus-visible,#skandi-mobile-nav-container input:focus-visible,#skandi-mobile-nav-container textarea:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}#skandi-mobile-nav-container svg{display:block;width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+#skandi-mobile-nav-container #app-nav{position:relative;z-index:3;width:100%;min-height:88px;display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:2px;align-items:center;padding:7px 7px max(10px,var(--safe));background:rgba(255,255,255,.98);border-top:1px solid #d5e5f0;box-shadow:0 -9px 30px rgba(2,46,100,.08);backdrop-filter:blur(14px)}
+#skandi-mobile-nav-container .nav-item{min-height:62px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;border:1px solid transparent;border-radius:13px;background:transparent;color:#58718b;font-weight:700;font-size:13px;letter-spacing:.005em;white-space:nowrap;transition:color .18s,background .18s,border-color .18s,transform .18s}#skandi-mobile-nav-container .nav-item:hover{background:#f3f9fc;color:var(--navy)}#skandi-mobile-nav-container .nav-item.active{background:linear-gradient(180deg,#edf8fc,#f5faff);border-color:rgba(95,199,207,.25);color:var(--navy)}#skandi-mobile-nav-container .nav-item.active svg{stroke-width:2.15}#skandi-mobile-nav-container .nav-item:active{transform:scale(.97)}
+#skandi-mobile-nav-container #overlay{position:fixed;inset:0;z-index:5;background:rgba(3,21,42,.36);opacity:0;visibility:hidden;pointer-events:none;transition:opacity .2s,visibility .2s}#skandi-mobile-nav-container #drawer{position:fixed;z-index:6;top:0;bottom:0;right:0;width:min(360px,calc(100% - 20px));display:flex;flex-direction:column;background:#fff;box-shadow:18px 0 60px rgba(2,46,100,.16);border-left:1px solid #e0edf3;transform:translateX(105%);visibility:hidden;pointer-events:none;transition:transform .27s cubic-bezier(.22,1,.36,1),visibility .27s}body.drawer-open #skandi-mobile-nav-container #overlay{opacity:1;visibility:visible;pointer-events:auto}body.drawer-open #skandi-mobile-nav-container #drawer{transform:translateX(0);visibility:visible;pointer-events:auto}
+#skandi-mobile-nav-container .drawer-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:21px 19px 18px;background:linear-gradient(135deg,#fff,#eef8fd);border-bottom:1px solid var(--line)}#skandi-mobile-nav-container .eyebrow{font-size:13px;font-weight:800;color:#428892;letter-spacing:.18em}#skandi-mobile-nav-container .drawer-head h2{margin:5px 0 0;font-size:20px;letter-spacing:-.04em;color:var(--navy);font-weight:800}#skandi-mobile-nav-container #skandi-mobile-closeBtn,#skandi-mobile-nav-container #chatBack{display:grid;place-items:center;width:38px;height:38px;flex:0 0 38px;background:#fff;border:1px solid #d9e6ef;border-radius:11px;color:var(--navy)}#skandi-mobile-nav-container .drawer-scroll{flex:1;overflow:auto;overscroll-behavior:contain;padding:15px 13px 20px}#skandi-mobile-nav-container .group-heading{padding:13px 9px 7px;color:#6a7c8e;font-size:13px;font-weight:800;letter-spacing:.1em;text-transform:uppercase}#skandi-mobile-nav-container .drawer-link{width:100%;display:flex;justify-content:space-between;align-items:center;text-align:left;min-height:44px;padding:10px 12px;border:1px solid transparent;border-radius:10px;background:transparent;color:var(--ink);font-size:13px;font-weight:650;transition:background .18s,border .18s,color .18s}#skandi-mobile-nav-container .drawer-link:hover,#skandi-mobile-nav-container .drawer-link:focus-visible{background:var(--ice);border-color:#dceef6;color:var(--navy)}#skandi-mobile-nav-container .drawer-link b{font-size:19px;color:#70aeb7;font-weight:500}#skandi-mobile-nav-container .drawer-foot{border-top:1px solid var(--line);padding:12px 16px max(17px,var(--safe));background:#f9fcfe;display:grid;gap:9px}#skandi-mobile-nav-container .drawer-cta{min-height:43px;border-radius:10px;border:1px solid #022e64;background:var(--navy);color:#fff;font-size:13px;font-weight:800}#skandi-mobile-nav-container .drawer-cta:hover{background:#08457e}#skandi-mobile-nav-container .drawer-cta.secondary{color:var(--navy);background:#fff;border-color:#d4e4ee}
+#skandi-mobile-nav-container #chat{display:none;flex:1;min-height:0;flex-direction:column}#skandi-mobile-nav-container .chat-mode .drawer-scroll,#skandi-mobile-nav-container .chat-mode .drawer-foot{display:none}#skandi-mobile-nav-container .chat-mode #chat{display:flex}#skandi-mobile-nav-container .chat-log{flex:1;overflow-y:auto;padding:17px 13px;display:flex;flex-direction:column;gap:11px;background:#f6faff}#skandi-mobile-nav-container .bubble{max-width:90%;padding:11px 13px;border-radius:14px 14px 14px 4px;font-size:13px;line-height:1.5;background:#fff;border:1px solid #e2edf3;color:#1a3350;white-space:pre-wrap;overflow-wrap:anywhere}#skandi-mobile-nav-container .bubble.mine{align-self:flex-end;border-color:var(--navy);background:var(--navy);color:#fff;border-radius:14px 14px 4px 14px}#skandi-mobile-nav-container .chat-compose{display:flex;gap:7px;padding:10px;background:#fff;border-top:1px solid var(--line)}#skandi-mobile-nav-container .chat-compose input{flex:1;min-width:0;min-height:43px;padding:0 12px;border-radius:9px;border:1px solid #d8e6ef;font-size:16px}#skandi-mobile-nav-container .chat-compose button{border:0;border-radius:9px;padding:0 13px;background:var(--navy);color:#fff;font-weight:800;font-size:13px}#skandi-mobile-nav-container #skandi-mobile-status{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0 0 0 0)!important;white-space:nowrap!important}#skandi-mobile-nav-container #chatStatus{font-size:13px;color:#61788d;padding:0 12px 9px}
+@media(max-width:360px){#skandi-mobile-nav-container .nav-item{font-size:13px}#skandi-mobile-nav-container .nav-item svg{width:20px;height:20px}#skandi-mobile-nav-container #app-nav{padding-left:3px;padding-right:3px}}
+@media(prefers-reduced-motion:reduce){#skandi-mobile-nav-container *,#skandi-mobile-nav-container *::before,#skandi-mobile-nav-container *::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+
+/* GRAPHITE / RADIANT BLUE — CONSOLIDATED MOBILE NAV 2026-10-23
+   Preserves canonical drawer/resize and Alexandra message flow. */
+#skandi-mobile-nav-container{--navy:#022e64;--cyan:#8fbddd;--ice:#20384e;--ink:#f0f6fc;--muted:#b2c5d5;--line:rgba(189,213,236,.20)}
+#skandi-mobile-nav-container,#skandi-mobile-nav-container{color:#f3f7fb;font-family:Montserrat,system-ui,-apple-system,"Segoe UI",sans-serif}
+#skandi-mobile-nav-container #app-nav{
+  min-height:88px;gap:3px;padding:7px 6px max(10px,var(--safe));
+  border-top:1px solid rgba(167,202,232,.25);
+  background:linear-gradient(112deg,#17212e 0%,#1a2e42 63%,#174978 100%);
+  box-shadow:0 -5px 20px rgba(9,24,40,.18);
+  backdrop-filter:none;-webkit-backdrop-filter:none;
+}
+#skandi-mobile-nav-container .nav-item{position:relative;min-height:62px;gap:5px;
+  color:#c6d7e7;font-size:13px;font-weight:680;letter-spacing:0;
+  background:transparent;border:1px solid transparent;border-radius:14px;
+  transform:none!important;transition:background .16s ease,color .16s ease,border-color .16s ease}
+#skandi-mobile-nav-container .nav-item svg{color:inherit}
+#skandi-mobile-nav-container .nav-item:hover{color:#fff;background:rgba(87,142,192,.22)}
+#skandi-mobile-nav-container .nav-item.active{
+  color:#fff;background:rgba(51,109,169,.52);
+  border:1px solid rgba(164,205,240,.28);
+  box-shadow:none;border-radius:14px;
+}
+#skandi-mobile-nav-container .nav-item.active::before{content:"";position:absolute;bottom:6px;left:50%;height:2px;width:19px;
+  transform:translateX(-50%);border-radius:3px;background:#a7d1ed;top:auto}
+#skandi-mobile-nav-container .nav-item.active svg{stroke-width:2.05}
+#skandi-mobile-nav-container #overlay{background:rgba(7,16,26,.66)}
+#skandi-mobile-nav-container #drawer{
+  background:linear-gradient(120deg,#182431 0%,#1d3851 100%);
+  border-left:1px solid rgba(196,221,239,.19);
+  box-shadow:-12px 0 40px rgba(0,12,25,.28);
+  border-radius:21px 0 0 21px;
+}
+#skandi-mobile-nav-container .drawer-head{
+  padding:22px 19px 18px;
+  background:linear-gradient(120deg,#1c2a3a,#234b70);
+  border-bottom:1px solid rgba(199,220,239,.19);
+  border-radius:20px 0 0 0;
+}
+#skandi-mobile-nav-container .eyebrow{color:#aacde7;letter-spacing:.12em;font-size:13px;font-weight:780}
+#skandi-mobile-nav-container .drawer-head h2{color:#fff;font-size:21px;letter-spacing:-.027em;font-weight:735}
+#skandi-mobile-nav-container #skandi-mobile-closeBtn,#skandi-mobile-nav-container #chatBack{background:rgba(51,103,151,.31);color:#fff;
+  border:1px solid rgba(199,220,243,.32);border-radius:12px}
+#skandi-mobile-nav-container .drawer-scroll{background:transparent;padding:16px 13px 20px}
+#skandi-mobile-nav-container .group-heading{color:#a5c7e1;font-size:13px;letter-spacing:.09em;font-weight:760;padding:15px 10px 8px}
+#skandi-mobile-nav-container .drawer-link{min-height:46px;padding:10px 12px;border:1px solid transparent;border-radius:11px;
+  background:transparent;color:#e4eef8;font-size:13.5px;line-height:1.4;font-weight:570}
+#skandi-mobile-nav-container .drawer-link:hover,#skandi-mobile-nav-container .drawer-link:focus-visible{background:rgba(64,122,177,.37);border-color:rgba(168,207,239,.23);color:#fff}
+#skandi-mobile-nav-container .drawer-link b{color:#a7c8e4}
+#skandi-mobile-nav-container .drawer-foot{background:rgba(10,23,36,.26);border-top:1px solid rgba(192,215,236,.18);padding:13px 16px max(17px,var(--safe));gap:9px}
+#skandi-mobile-nav-container .drawer-cta{min-height:44px;background:linear-gradient(118deg,#3679b9,#285f9c);border:1px solid rgba(164,205,235,.48);
+  border-radius:12px;color:#fff;font-size:13px;font-weight:720;box-shadow:none}
+#skandi-mobile-nav-container .drawer-cta:hover{background:linear-gradient(118deg,#4689c7,#3071b0)}
+#skandi-mobile-nav-container .drawer-cta.secondary{color:#edf7ff;background:rgba(60,111,159,.25);border-color:rgba(182,213,240,.3)}
+#skandi-mobile-nav-container .chat-log{background:rgba(12,29,45,.24)}
+#skandi-mobile-nav-container .bubble{background:#203c55;border:1px solid rgba(191,215,239,.22);color:#f0f6fc;
+  border-radius:13px 13px 13px 5px;font-size:13px;line-height:1.53}
+#skandi-mobile-nav-container .bubble.mine{background:#2f6ca6;border-color:rgba(192,216,237,.24);color:#fff;border-radius:13px 13px 5px 13px}
+#skandi-mobile-nav-container .chat-compose{background:#1a2d3f;border-top:1px solid rgba(192,215,238,.22)}
+#skandi-mobile-nav-container .chat-compose input{background:#233d53;border-color:rgba(183,209,233,.4);color:#fff;border-radius:11px;font-size:16px}
+#skandi-mobile-nav-container .chat-compose input::placeholder{color:#b7cbdc}
+#skandi-mobile-nav-container .chat-compose button{background:#3679b9;border:1px solid rgba(178,213,243,.38);border-radius:10px;color:#fff;font-size:13px}
+#skandi-mobile-nav-container #chatStatus{color:#c1d7e8;font-size:13px}
+#skandi-mobile-nav-container button:focus-visible,#skandi-mobile-nav-container input:focus-visible,#skandi-mobile-nav-container textarea:focus-visible{outline:2px solid #a4cce8;outline-offset:2px}
+@media(max-width:360px){#skandi-mobile-nav-container .nav-item{font-size:13px}#skandi-mobile-nav-container .nav-item svg{width:20px;height:20px}}
+@media(prefers-reduced-motion:reduce){#skandi-mobile-nav-container .nav-item,#skandi-mobile-nav-container .drawer-link{transition:none!important}}
+/* V12 parent-coordinated mobile embed sizing. Wix host has final geometry authority. */
+#skandi-mobile-nav-container,#skandi-mobile-nav-container{min-height:0}
+body.drawer-open #skandi-mobile-nav-container{min-height:100%;height:100%}
+#skandi-mobile-nav-container #overlay,#skandi-mobile-nav-container #drawer{height:100%;max-height:100%;min-height:0}
+#skandi-mobile-nav-container #app-nav{flex:0 0 auto}
+
+/* Five-tab bar (SKANDI mobile navigation, approved replacement layout). */
+#skandi-mobile-nav-container .skmn {
+  display:grid;
+  grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);
+  width:100%;
+  height:68px;
+  min-height:68px;
+  flex:0 0 68px;
+  gap:0;
+  padding:2px 6px 0;
+  background:#022e64;
+  font-family:Montserrat,system-ui,sans-serif;
+}
+#skandi-mobile-nav-container .skmn-btn {
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:4px;
+  border:0;
+  background:transparent;
+  color:#d0e5f2;
+  padding:5px 2px;
+  min-width:0;
+  font:700 13px/1.15 Montserrat,system-ui,sans-serif;
+  cursor:pointer;
+  touch-action:manipulation;
+  border-radius:6px;
+}
+#skandi-mobile-nav-container .skmn-btn svg {
+  width:21px;height:21px;fill:none;stroke:currentColor;
+  stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;
+}
+#skandi-mobile-nav-container .skmn-btn[aria-current="page"] { color:#81dde5; }
+#skandi-mobile-nav-container .skmn-btn:focus-visible {
+  outline:2px solid #5fc7cf;
+  outline-offset:-2px;
+  border-radius:6px;
+}
+#skandi-mobile-nav-container .skmn-primary svg { color:#81dde5; }
+#skandi-mobile-nav-container .skmn-btn[aria-expanded="true"] { background:rgba(255,255,255,.12);color:#ffffff; }
+#skandi-mobile-nav-container .skmn-btn[aria-expanded="true"] svg { color:#81dde5; }
+@media(min-width:1021px) { #skandi-mobile-nav-container .skmn { display:none!important; } }
+/* The V12 masterPage and global.css own the iframe itself: 88px closed,
+   expandable above the tab bar through HOME_APP_DRAWER_RESIZE. */
+#skandi-mobile-nav-container #overlay{cursor:pointer}
+#skandi-mobile-nav-container #drawer{overflow:hidden}
+#skandi-mobile-nav-container #drawer[aria-hidden="true"]{visibility:hidden}
+#skandi-mobile-nav-container #drawer:focus-visible{outline:none}
+#skandi-mobile-nav-container .drawer-link[aria-current="page"]{background:rgba(64,122,177,.25);border-color:rgba(168,207,239,.24)}
+@media(prefers-reduced-motion:reduce){#skandi-mobile-nav-container .skmn-btn{transition:none!important}}
+
+
+#skandi-mobile-nav-container .drawer-group { border-bottom: 1px solid var(--line); }
+#skandi-mobile-nav-container .drawer-group .group-heading {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  min-height: 46px; padding: 9px 11px; cursor: pointer; list-style: none;
+  font-size: 14px; letter-spacing: 0; text-transform: none;
+}
+#skandi-mobile-nav-container .drawer-group .group-heading::-webkit-details-marker { display: none; }
+#skandi-mobile-nav-container .drawer-group .group-heading::after { content: "›"; font-size: 21px; }
+#skandi-mobile-nav-container .drawer-group[open] .group-heading::after { transform: rotate(90deg); }
+#skandi-mobile-nav-container .drawer-group .drawer-link { padding-inline-start: 19px; font-size: 15px; }
+#skandi-mobile-nav-container .drawer-foot[hidden], #skandi-mobile-nav-container .skmn-btn[hidden] { display: none; }
+#skandi-mobile-nav-container #drawer[data-staff-menu] .drawer-head { background: var(--staff-nav-heading, #234b70); }
+#skandi-mobile-nav-container .skmn-btn { font-size: 13px; }
+#skandi-mobile-nav-container #skandi-mobile-closeBtn { min-width: 44px; min-height: 44px; }
+
+#skandi-mobile-nav-container .drawer-scroll, #skandi-mobile-nav-container .chat-log { touch-action: manipulation; }
+
+#skandi-mobile-nav-container .drawer-logo { display: block; height: 19px; max-width: 145px; width: auto; }
+#skandi-mobile-nav-container .drawer-logo[hidden] { display: none; }
+</style>
 <style data-skandi-part="the-store">
 #skandi-app-root{
   --navy:#071b44;
@@ -50,9 +204,9 @@ body.locked #skandi-app-root{overflow:hidden}
 
 /* Header */
 #skandi-app-root .utility-bar{background:var(--navy);color:#fff}
-#skandi-app-root .utility-inner{max-width:var(--max);height:38px;margin:auto;padding:0 24px;display:flex;align-items:center;justify-content:space-between;font-size:10px;font-weight:600;letter-spacing:.035em}
+#skandi-app-root .utility-inner{max-width:var(--max);height:38px;margin:auto;padding:0 24px;display:flex;align-items:center;justify-content:space-between;font-size:13px;font-weight:600;letter-spacing:.035em}
 #skandi-app-root .utility-links,#skandi-app-root .utility-account{display:flex;align-items:center;gap:24px}
-#skandi-app-root .utility-inner button{border:0;background:none;color:inherit;padding:0;font-size:10px;font-weight:600}
+#skandi-app-root .utility-inner button{border:0;background:none;color:inherit;padding:0;font-size:13px;font-weight:600}
 #skandi-app-root .utility-dot{width:4px;height:4px;border-radius:50%;background:var(--teal)}
 #skandi-app-root .site-header{position:sticky;top:0;z-index:80;background:#fff;border-bottom:1px solid var(--line)}
 #skandi-app-root .header-main{max-width:var(--max);height:80px;margin:auto;padding:0 24px;display:grid;grid-template-columns:245px 1fr auto;gap:28px;align-items:center}
@@ -60,23 +214,23 @@ body.locked #skandi-app-root{overflow:hidden}
 #skandi-app-root .brand-mark{width:auto;height:60px;display:flex;align-items:center;flex:0 0 auto}
 #skandi-app-root .brand-mark img{display:block;width:auto;height:70px;max-width:100%;max-height:100%;object-fit:contain;object-position:left center}
 #skandi-app-root .brand-divider{width:1px;height:30px;background:#cfd5dc}
-#skandi-app-root .brand-shop{font-size:12px;font-weight:700;line-height:1.25;color:var(--navy);text-transform:uppercase;letter-spacing:.075em}
+#skandi-app-root .brand-shop{font-size:13px;font-weight:700;line-height:1.25;color:var(--navy);text-transform:uppercase;letter-spacing:.075em}
 #skandi-app-root .primary-nav{height:100%;display:flex;justify-content:center;align-items:center;gap:24px}
-#skandi-app-root .primary-nav button{height:100%;border:0;border-bottom:3px solid transparent;background:transparent;padding:3px 0 0;color:var(--navy);font-size:12px;font-weight:600;white-space:nowrap}
+#skandi-app-root .primary-nav button{height:100%;border:0;border-bottom:3px solid transparent;background:transparent;padding:3px 0 0;color:var(--navy);font-size:13px;font-weight:600;white-space:nowrap}
 #skandi-app-root .primary-nav button:hover,#skandi-app-root .primary-nav button.active{border-bottom-color:var(--teal)}
 #skandi-app-root .header-actions{display:flex;align-items:center;gap:6px}
-#skandi-app-root .action-button{min-width:45px;height:48px;border:0;background:#fff;color:var(--navy);display:grid;place-items:center;gap:1px;padding:3px 7px;font-size:9px;font-weight:600}
+#skandi-app-root .action-button{min-width:45px;height:48px;border:0;background:#fff;color:var(--navy);display:grid;place-items:center;gap:1px;padding:3px 7px;font-size:13px;font-weight:600}
 #skandi-app-root .action-button svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.7}
-#skandi-app-root .action-button .badge{position:absolute;top:-4px;right:-5px;min-width:17px;height:17px;padding:0 4px;border-radius:20px;background:var(--teal);color:var(--navy);display:grid;place-items:center;font-size:9px;font-weight:800;border:2px solid #fff}
+#skandi-app-root .action-button .badge{position:absolute;top:-4px;right:-5px;min-width:17px;height:17px;padding:0 4px;border-radius:20px;background:var(--teal);color:var(--navy);display:grid;place-items:center;font-size:13px;font-weight:800;border:2px solid #fff}
 #skandi-app-root .action-icon{position:relative;display:block}
 #skandi-app-root .mobile-menu-button{display:none}
 #skandi-app-root .search-dock{border-top:1px solid #eef0f3;background:#fff}
 #skandi-app-root .search-inner{max-width:var(--max);margin:auto;padding:12px 24px;display:grid;grid-template-columns:minmax(260px,540px) 1fr;gap:22px;align-items:center}
 #skandi-app-root .search-box{height:44px;border:1px solid #cfd5dc;display:flex;align-items:center;background:#fff}
 #skandi-app-root .search-box svg{width:18px;height:18px;margin:0 12px;color:var(--navy);stroke:currentColor;fill:none;stroke-width:1.7}
-#skandi-app-root .search-box input{width:100%;height:100%;border:0;outline:0;padding:0 13px 0 0;color:var(--ink);font-size:12px}
+#skandi-app-root .search-box input{width:100%;height:100%;border:0;outline:0;padding:0 13px 0 0;color:var(--ink);font-size:13px}
 #skandi-app-root .search-box input::placeholder{color:#8a94a3}
-#skandi-app-root .quick-links{display:flex;justify-content:flex-end;gap:25px;overflow:auto;white-space:nowrap;color:#475467;font-size:10px;font-weight:600}
+#skandi-app-root .quick-links{display:flex;justify-content:flex-end;gap:25px;overflow:auto;white-space:nowrap;color:#475467;font-size:13px;font-weight:600}
 #skandi-app-root .quick-links button{border:0;background:transparent;color:inherit;padding:0}
 #skandi-app-root .quick-links button:hover{color:var(--navy-2);text-decoration:underline}
 
@@ -85,9 +239,9 @@ body.locked #skandi-app-root{overflow:hidden}
 #skandi-app-root .category-menu.show{display:block}
 #skandi-app-root .category-menu-inner{max-width:var(--max);margin:auto;padding:30px 24px 34px;display:grid;grid-template-columns:230px 1fr;gap:44px}
 #skandi-app-root .category-menu-intro h3{margin:0 0 10px;color:var(--navy);font-size:25px;letter-spacing:-.04em}
-#skandi-app-root .category-menu-intro p{margin:0;color:var(--muted);font-size:11px;line-height:1.65}
+#skandi-app-root .category-menu-intro p{margin:0;color:var(--muted);font-size:13px;line-height:1.65}
 #skandi-app-root .category-menu-list{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px 26px}
-#skandi-app-root .category-menu-list button{border:0;border-bottom:1px solid #edf0f3;background:#fff;text-align:left;padding:11px 0;color:var(--navy);font-size:11px;font-weight:600}
+#skandi-app-root .category-menu-list button{border:0;border-bottom:1px solid #edf0f3;background:#fff;text-align:left;padding:11px 0;color:var(--navy);font-size:13px;font-weight:600}
 #skandi-app-root .category-menu-list button:hover{color:var(--blue)}
 
 /* Main */
@@ -141,7 +295,7 @@ body.locked #skandi-app-root{overflow:hidden}
   gap:9px;
   margin-bottom:12px;
   color:#c7f4f5;
-  font-size:9px;
+  font-size:13px;
   font-weight:700;
   text-transform:uppercase;
   letter-spacing:.13em;
@@ -150,7 +304,7 @@ body.locked #skandi-app-root{overflow:hidden}
 #skandi-app-root .hero h1{
   margin:0;
   max-width:100%;
-  font-size:clamp(36px,3.3vw,46px);
+  font-size:max(13px, clamp(36px,3.3vw,46px));
   line-height:.98;
   letter-spacing:-.052em;
   font-weight:700;
@@ -160,10 +314,10 @@ body.locked #skandi-app-root{overflow:hidden}
   margin:13px 0 20px;
   max-width:370px;
   color:#e8edf6;
-  font-size:11px;
+  font-size:13px;
   line-height:1.62;
 }
-#skandi-app-root .cta{min-height:44px;border:1px solid transparent;padding:0 18px;display:inline-flex;align-items:center;justify-content:center;gap:9px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.045em}
+#skandi-app-root .cta{min-height:44px;border:1px solid transparent;padding:0 18px;display:inline-flex;align-items:center;justify-content:center;gap:9px;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.045em}
 #skandi-app-root .cta.teal{background:var(--teal);color:var(--navy)}
 #skandi-app-root .cta.navy{background:var(--navy);color:#fff}
 #skandi-app-root .cta.white{background:#fff;color:var(--navy);border-color:#d5dae0}
@@ -174,15 +328,15 @@ body.locked #skandi-app-root{overflow:hidden}
 #skandi-app-root .customer-assurance article{min-height:86px;padding:20px 24px;display:grid;grid-template-columns:34px 1fr;gap:13px;align-items:center;border-right:1px solid var(--line)}
 #skandi-app-root .customer-assurance article:last-child{border-right:0}
 #skandi-app-root .customer-assurance-icon{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:#e9f7f7;color:var(--navy);font-size:15px;font-weight:800}
-#skandi-app-root .customer-assurance strong{display:block;color:var(--navy);font-size:10px;text-transform:uppercase;letter-spacing:.055em}
-#skandi-app-root .customer-assurance span{display:block;margin-top:4px;color:var(--muted);font-size:9px;line-height:1.5}
+#skandi-app-root .customer-assurance strong{display:block;color:var(--navy);font-size:13px;text-transform:uppercase;letter-spacing:.055em}
+#skandi-app-root .customer-assurance span{display:block;margin-top:4px;color:var(--muted);font-size:13px;line-height:1.5}
 
 #skandi-app-root .content-shell{max-width:var(--max);margin:auto;padding:0 24px 84px}
 #skandi-app-root .section{padding-top:55px}
 #skandi-app-root .section-head{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;margin-bottom:22px}
 #skandi-app-root .section-head h2{margin:0;color:var(--navy);font-size:27px;line-height:1.1;letter-spacing:-.045em}
-#skandi-app-root .section-head p{margin:8px 0 0;color:var(--muted);font-size:11px;line-height:1.6}
-#skandi-app-root .text-link{border:0;border-bottom:1px solid var(--navy);background:none;color:var(--navy);padding:0 0 4px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.055em;white-space:nowrap}
+#skandi-app-root .section-head p{margin:8px 0 0;color:var(--muted);font-size:13px;line-height:1.6}
+#skandi-app-root .text-link{border:0;border-bottom:1px solid var(--navy);background:none;color:var(--navy);padding:0 0 4px;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.055em;white-space:nowrap}
 
 /* Popular categories */
 #skandi-app-root .category-strip{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:23px}
@@ -190,7 +344,7 @@ body.locked #skandi-app-root{overflow:hidden}
 #skandi-app-root .category-orb-media{display:block;aspect-ratio:1;border-radius:50%;overflow:hidden;background:linear-gradient(145deg,#e8edf2,#f8fafb);background-position:center;background-size:cover;position:relative;transition:.25s ease}
 #skandi-app-root .category-orb-media::after{content:"";position:absolute;inset:0;border-radius:inherit;border:1px solid rgba(7,27,68,.07)}
 #skandi-app-root .category-orb:hover .category-orb-media{transform:translateY(-4px);box-shadow:0 14px 28px rgba(7,27,68,.13)}
-#skandi-app-root .category-orb-label{display:block;margin-top:13px;font-size:10px;font-weight:600;line-height:1.35}
+#skandi-app-root .category-orb-label{display:block;margin-top:13px;font-size:13px;font-weight:600;line-height:1.35}
 #skandi-app-root .category-initials{position:absolute;inset:0;display:grid;place-items:center;color:var(--navy-2);font-size:23px;font-weight:700;letter-spacing:-.05em}
 
 /* Campaign tiles */
@@ -199,23 +353,23 @@ body.locked #skandi-app-root{overflow:hidden}
 #skandi-app-root .campaign-card::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(7,27,68,.04) 25%,rgba(7,27,68,.75) 100%)}
 #skandi-app-root .campaign-card:first-child{grid-row:span 1}
 #skandi-app-root .campaign-copy{position:absolute;z-index:2;left:25px;right:25px;bottom:24px;color:#fff}
-#skandi-app-root .campaign-copy small{display:block;margin-bottom:8px;font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#d8fbfc}
+#skandi-app-root .campaign-copy small{display:block;margin-bottom:8px;font-size:13px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#d8fbfc}
 #skandi-app-root .campaign-copy h3{margin:0 0 8px;font-size:24px;line-height:1.05;letter-spacing:-.045em}
-#skandi-app-root .campaign-copy p{margin:0 0 15px;max-width:430px;font-size:10px;line-height:1.55;color:#eef3f8}
+#skandi-app-root .campaign-copy p{margin:0 0 15px;max-width:430px;font-size:13px;line-height:1.55;color:#eef3f8}
 #skandi-app-root .campaign-card.no-image::before{background:linear-gradient(135deg,rgba(31,107,163,.25),rgba(7,27,68,.88))}
 
 /* Product controls */
 #skandi-app-root .product-section{scroll-margin-top:160px}
 #skandi-app-root .product-toolbar{border-top:1px solid var(--line);border-bottom:1px solid var(--line);min-height:58px;margin-bottom:24px;display:flex;align-items:center;justify-content:space-between;gap:20px}
 #skandi-app-root .toolbar-left,#skandi-app-root .toolbar-right{display:flex;align-items:center;gap:22px}
-#skandi-app-root .toolbar-count{font-size:10px;color:var(--muted);font-weight:600}
-#skandi-app-root .filter-button{border:0;background:transparent;color:var(--navy);padding:20px 0;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.045em}
+#skandi-app-root .toolbar-count{font-size:13px;color:var(--muted);font-weight:600}
+#skandi-app-root .filter-button{border:0;background:transparent;color:var(--navy);padding:20px 0;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.045em}
 #skandi-app-root .filter-button.active{color:var(--blue)}
 #skandi-app-root .filter-button::after{content:" +";color:#8b94a1}
 #skandi-app-root .filter-button.active::after{content:" −"}
-#skandi-app-root .sort-select{height:40px;border:0;background:#fff;color:var(--navy);outline:0;font-size:10px;font-weight:700;text-transform:uppercase}
-#skandi-app-root .clear-button{border:0;background:none;color:#7a8492;padding:0;font-size:10px;text-decoration:underline}
-#skandi-app-root .status{display:none;margin:0 0 18px;padding:13px 15px;border:1px solid #d7dce2;background:#f8fafc;color:var(--muted);font-size:11px;line-height:1.5;white-space:pre-line}
+#skandi-app-root .sort-select{height:40px;border:0;background:#fff;color:var(--navy);outline:0;font-size:13px;font-weight:700;text-transform:uppercase}
+#skandi-app-root .clear-button{border:0;background:none;color:#7a8492;padding:0;font-size:13px;text-decoration:underline}
+#skandi-app-root .status{display:none;margin:0 0 18px;padding:13px 15px;border:1px solid #d7dce2;background:#f8fafc;color:var(--muted);font-size:13px;line-height:1.5;white-space:pre-line}
 #skandi-app-root .status.show{display:block}
 #skandi-app-root .status.ok{background:#ecfdf3;border-color:#abefc6;color:var(--success)}
 #skandi-app-root .status.warn{background:#fff7ed;border-color:#fed7aa;color:#a15c00}
@@ -228,22 +382,22 @@ body.locked #skandi-app-root{overflow:hidden}
 #skandi-app-root .product-media>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
 #skandi-app-root .product-media::after{content:"";position:absolute;inset:0;border:1px solid rgba(7,27,68,.04);pointer-events:none}
 #skandi-app-root .product-placeholder{position:absolute;inset:0;display:grid;place-items:center;color:#a3abb7;font-size:13px;font-weight:700;letter-spacing:.1em}
-#skandi-app-root .product-ribbon{position:absolute;z-index:2;left:10px;top:10px;background:#fff;color:var(--navy);padding:6px 8px;font-size:8px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;box-shadow:0 3px 12px rgba(7,27,68,.08)}
+#skandi-app-root .product-ribbon{position:absolute;z-index:2;left:10px;top:10px;background:#fff;color:var(--navy);padding:6px 8px;font-size:13px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;box-shadow:0 3px 12px rgba(7,27,68,.08)}
 #skandi-app-root .save-button{position:absolute;z-index:3;right:10px;top:10px;width:34px;height:34px;border:0;border-radius:50%;background:rgba(255,255,255,.94);color:var(--navy);font-size:18px;display:grid;place-items:center;box-shadow:0 3px 12px rgba(7,27,68,.08)}
 #skandi-app-root .product-overlay{position:absolute;z-index:4;left:0;right:0;bottom:0;display:grid;grid-template-columns:1fr 1fr;transform:translateY(105%);transition:.2s ease;background:#fff;border-top:1px solid #e3e6ea}
 #skandi-app-root .product-card:hover .product-overlay{transform:translateY(0)}
-#skandi-app-root .product-overlay button{height:44px;border:0;background:#fff;color:var(--navy);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+#skandi-app-root .product-overlay button{height:44px;border:0;background:#fff;color:var(--navy);font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
 #skandi-app-root .product-overlay button+button{background:var(--navy);color:#fff}
 #skandi-app-root .product-overlay button:disabled{opacity:.45}
 #skandi-app-root .product-content{padding:13px 2px 0}
-#skandi-app-root .product-brand{min-height:14px;color:#7a8492;font-size:8px;font-weight:700;letter-spacing:.105em;text-transform:uppercase}
-#skandi-app-root .product-name{display:block;margin-top:3px;color:var(--navy);font-size:11px;font-weight:600;line-height:1.42}
-#skandi-app-root .product-summary{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:30px;margin-top:4px;color:var(--muted);font-size:9px;line-height:1.55}
-#skandi-app-root .customer-access{margin-top:8px;color:var(--blue);font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.045em}
-#skandi-app-root .price-row{display:flex;align-items:center;gap:8px;margin-top:5px;color:var(--navy);font-size:11px;font-weight:700}
+#skandi-app-root .product-brand{min-height:14px;color:#7a8492;font-size:13px;font-weight:700;letter-spacing:.105em;text-transform:uppercase}
+#skandi-app-root .product-name{display:block;margin-top:3px;color:var(--navy);font-size:13px;font-weight:600;line-height:1.42}
+#skandi-app-root .product-summary{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:30px;margin-top:4px;color:var(--muted);font-size:13px;line-height:1.55}
+#skandi-app-root .customer-access{margin-top:8px;color:var(--blue);font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.045em}
+#skandi-app-root .price-row{display:flex;align-items:center;gap:8px;margin-top:5px;color:var(--navy);font-size:13px;font-weight:700}
 #skandi-app-root .old-price{color:#9aa2ad;text-decoration:line-through;font-weight:500}
-#skandi-app-root .stock-note{margin-top:5px;color:var(--danger);font-size:8px;font-weight:600}
-#skandi-app-root .empty-state{grid-column:1/-1;padding:55px 20px;border:1px solid var(--line);text-align:center;color:var(--muted);font-size:11px}
+#skandi-app-root .stock-note{margin-top:5px;color:var(--danger);font-size:13px;font-weight:600}
+#skandi-app-root .empty-state{grid-column:1/-1;padding:55px 20px;border:1px solid var(--line);text-align:center;color:var(--muted);font-size:13px}
 #skandi-app-root .load-more-wrap{display:flex;justify-content:center;margin-top:42px}
 
 /* Travel/editorial cards */
@@ -251,22 +405,22 @@ body.locked #skandi-app-root{overflow:hidden}
 #skandi-app-root .editorial-card{min-height:270px;background:#eef2f5 center/cover;position:relative;overflow:hidden}
 #skandi-app-root .editorial-card::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(7,27,68,.02),rgba(7,27,68,.78))}
 #skandi-app-root .editorial-content{position:absolute;z-index:2;left:24px;right:24px;bottom:22px;color:#fff}
-#skandi-app-root .editorial-content small{font-size:8px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#d1f8fa}
+#skandi-app-root .editorial-content small{font-size:13px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#d1f8fa}
 #skandi-app-root .editorial-content h3{margin:8px 0 8px;font-size:21px;line-height:1.08;letter-spacing:-.035em}
-#skandi-app-root .editorial-content p{margin:0 0 14px;color:#ecf1f7;font-size:9px;line-height:1.6}
+#skandi-app-root .editorial-content p{margin:0 0 14px;color:#ecf1f7;font-size:13px;line-height:1.6}
 
 /* Footer */
 #skandi-app-root .footer{margin-top:70px;background:var(--navy);color:#fff}
 #skandi-app-root .footer-main{max-width:var(--max);margin:auto;padding:52px 24px 45px;display:grid;grid-template-columns:1.25fr repeat(3,1fr);gap:54px}
 #skandi-app-root .footer-brand{display:flex;flex-direction:column;align-items:flex-start}
 #skandi-app-root .footer-brand img{display:block;width:auto;height:34px;max-width:190px;object-fit:contain;object-position:left center}
-#skandi-app-root .footer-brand span{display:block;margin-top:9px;font-size:9px;font-weight:600;letter-spacing:.12em;color:#c7d1df;text-transform:uppercase}
-#skandi-app-root .footer p{max-width:320px;color:#c9d2df;font-size:9px;line-height:1.7}
-#skandi-app-root .footer h4{margin:0 0 15px;font-size:10px;text-transform:uppercase;letter-spacing:.08em}
-#skandi-app-root .footer button{display:block;border:0;background:none;color:#cbd4df;padding:5px 0;font-size:9px;text-align:left}
+#skandi-app-root .footer-brand span{display:block;margin-top:9px;font-size:13px;font-weight:600;letter-spacing:.12em;color:#c7d1df;text-transform:uppercase}
+#skandi-app-root .footer p{max-width:320px;color:#c9d2df;font-size:13px;line-height:1.7}
+#skandi-app-root .footer h4{margin:0 0 15px;font-size:13px;text-transform:uppercase;letter-spacing:.08em}
+#skandi-app-root .footer button{display:block;border:0;background:none;color:#cbd4df;padding:5px 0;font-size:13px;text-align:left}
 #skandi-app-root .footer-bottom{border-top:1px solid rgba(255,255,255,.15)}
-#skandi-app-root .footer-bottom-inner{max-width:var(--max);min-height:55px;margin:auto;padding:0 24px;display:flex;align-items:center;justify-content:space-between;gap:20px;color:#aeb9c8;font-size:8px}
-#skandi-app-root .default-bar {color:rgba(255,255,255,.88);font-size:9px;font-weight:700;letter-spacing:.09em;font-style: italic;text-transform:uppercase}
+#skandi-app-root .footer-bottom-inner{max-width:var(--max);min-height:55px;margin:auto;padding:0 24px;display:flex;align-items:center;justify-content:space-between;gap:20px;color:#aeb9c8;font-size:13px}
+#skandi-app-root .default-bar {color:rgba(255,255,255,.88);font-size:13px;font-weight:700;letter-spacing:.09em;font-style: italic;text-transform:uppercase}
 #skandi-app-root .default-bar span{font-weight:900;font-style:normal;color:var(--sk-cyan)
 }
 
@@ -282,13 +436,13 @@ body.locked #skandi-app-root{overflow:hidden}
 #skandi-app-root .drawer-footer{border-top:1px solid var(--line);padding:18px 22px 22px;display:grid;gap:11px}
 #skandi-app-root .cart-item{display:grid;grid-template-columns:76px 1fr auto;gap:12px;padding:15px 0;border-bottom:1px solid #edf0f3}
 #skandi-app-root .cart-thumb{width:76px;height:91px;background:#f1f3f5 center/cover}
-#skandi-app-root .cart-copy strong{display:block;color:var(--navy);font-size:10px;line-height:1.4}
-#skandi-app-root .cart-copy span{display:block;margin-top:3px;color:var(--muted);font-size:8px;line-height:1.45}
-#skandi-app-root .cart-price{color:var(--navy);font-size:9px;font-weight:700;text-align:right}
-#skandi-app-root .cart-total{display:flex;justify-content:space-between;color:var(--navy);font-size:12px;font-weight:700}
+#skandi-app-root .cart-copy strong{display:block;color:var(--navy);font-size:13px;line-height:1.4}
+#skandi-app-root .cart-copy span{display:block;margin-top:3px;color:var(--muted);font-size:13px;line-height:1.45}
+#skandi-app-root .cart-price{color:var(--navy);font-size:13px;font-weight:700;text-align:right}
+#skandi-app-root .cart-total{display:flex;justify-content:space-between;color:var(--navy);font-size:13px;font-weight:700}
 #skandi-app-root .drawer-footer .cta{width:100%}
 #skandi-app-root .saved-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;padding-top:14px}
-#skandi-app-root .saved-item{font-size:9px;color:var(--navy)}
+#skandi-app-root .saved-item{font-size:13px;color:var(--navy)}
 #skandi-app-root .saved-thumb{aspect-ratio:1;background:#f1f3f5 center/cover;margin-bottom:7px}
 
 #skandi-app-root .modal{position:fixed;inset:0;z-index:190;display:none}
@@ -297,26 +451,26 @@ body.locked #skandi-app-root{overflow:hidden}
 #skandi-app-root .modal-image{min-height:620px;background:#f2f3f5 center/cover no-repeat;position:relative;display:grid;place-items:center;color:#a3abb7;font-size:15px;font-weight:700;letter-spacing:.1em}
 #skandi-app-root .modal-info{padding:39px 39px 34px;position:relative}
 #skandi-app-root .modal-info>.close-button{position:absolute;right:15px;top:12px}
-#skandi-app-root .modal-kicker{color:var(--blue);font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.12em}
+#skandi-app-root .modal-kicker{color:var(--blue);font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.12em}
 #skandi-app-root .modal-info h2{margin:12px 35px 8px 0;color:var(--navy);font-size:31px;line-height:1.08;letter-spacing:-.045em}
 #skandi-app-root .modal-price{margin:12px 0 16px;color:var(--navy);font-size:15px;font-weight:700}
-#skandi-app-root .modal-description{color:var(--muted);font-size:10px;line-height:1.7;margin:0 0 22px}
+#skandi-app-root .modal-description{color:var(--muted);font-size:13px;line-height:1.7;margin:0 0 22px}
 #skandi-app-root .option-row{display:grid;gap:7px;margin-bottom:13px}
-#skandi-app-root .option-row label{color:var(--navy);font-size:8px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
-#skandi-app-root .option-row select,#skandi-app-root .option-row input{height:43px;border:1px solid #cfd5dc;background:#fff;padding:0 11px;color:var(--ink);font-size:10px}
+#skandi-app-root .option-row label{color:var(--navy);font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+#skandi-app-root .option-row select,#skandi-app-root .option-row input{height:43px;border:1px solid #cfd5dc;background:#fff;padding:0 11px;color:var(--ink);font-size:13px}
 #skandi-app-root .modal-add{width:100%;margin-top:4px}
 #skandi-app-root .accordion{margin-top:25px;border-top:1px solid var(--line)}
 #skandi-app-root .accordion details{border-bottom:1px solid var(--line);padding:14px 0}
-#skandi-app-root .accordion summary{cursor:pointer;color:var(--navy);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.045em}
-#skandi-app-root .accordion p{color:var(--muted);font-size:9px;line-height:1.7}
-#skandi-app-root .toast{position:fixed;z-index:260;right:18px;bottom:18px;display:none;max-width:350px;padding:12px 15px;background:var(--navy);color:#fff;font-size:10px;box-shadow:var(--shadow)}
+#skandi-app-root .accordion summary{cursor:pointer;color:var(--navy);font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.045em}
+#skandi-app-root .accordion p{color:var(--muted);font-size:13px;line-height:1.7}
+#skandi-app-root .toast{position:fixed;z-index:260;right:18px;bottom:18px;display:none;max-width:350px;padding:12px 15px;background:var(--navy);color:#fff;font-size:13px;box-shadow:var(--shadow)}
 
 /* Mobile menu */
-#skandi-app-root .mobile-nav{position:fixed;inset:0;z-index:210;background:#fff;display:none;overflow:auto}
+#skandi-app-root .mobile-nav{position:fixed;inset:0 0 0 auto;width:min(370px,100%);z-index:210;background:#fff;display:none;overflow:auto;box-shadow:-12px 0 32px rgba(2,46,100,.16);touch-action:manipulation}
 #skandi-app-root .mobile-nav.show{display:block}
 #skandi-app-root .mobile-nav-head{height:69px;border-bottom:1px solid var(--line);padding:0 18px;display:flex;align-items:center;justify-content:space-between}
 #skandi-app-root .mobile-nav-body{padding:15px 20px 40px}
-#skandi-app-root .mobile-nav-body button{width:100%;border:0;border-bottom:1px solid #edf0f3;background:#fff;padding:16px 0;text-align:left;color:var(--navy);font-size:12px;font-weight:600}
+#skandi-app-root .mobile-nav-body button{width:100%;border:0;border-bottom:1px solid #edf0f3;background:#fff;padding:16px 0;text-align:left;color:var(--navy);font-size:13px;font-weight:600}
 
 @media(max-width:1120px){
   #skandi-app-root .header-main{grid-template-columns:220px 1fr auto}#skandi-app-root .primary-nav{gap:20px}
@@ -326,7 +480,7 @@ body.locked #skandi-app-root{overflow:hidden}
 }
 @media(max-width:880px){
   #skandi-app-root .utility-links span:nth-child(n+2),#skandi-app-root .primary-nav,#skandi-app-root .quick-links{display:none}
-  #skandi-app-root .utility-inner{padding:0 16px}#skandi-app-root .header-main{height:68px;padding:0 16px;grid-template-columns:1fr auto}#skandi-app-root .brand-lockup{gap:11px}#skandi-app-root .brand-mark{width:102px;height:30px}#skandi-app-root .brand-mark img{max-height:26px}#skandi-app-root .brand-divider{height:25px}#skandi-app-root .brand-shop{font-size:10px}
+  #skandi-app-root .utility-inner{padding:0 16px}#skandi-app-root .header-main{height:68px;padding:0 16px;grid-template-columns:1fr auto}#skandi-app-root .brand-lockup{gap:11px}#skandi-app-root .brand-mark{width:102px;height:30px}#skandi-app-root .brand-mark img{max-height:26px}#skandi-app-root .brand-divider{height:25px}#skandi-app-root .brand-shop{font-size:13px}
   #skandi-app-root .header-actions .desktop-only{display:none}#skandi-app-root .mobile-menu-button{display:grid}
   #skandi-app-root .search-inner{padding:10px 16px;grid-template-columns:1fr}
   #skandi-app-root .category-menu{display:none!important}
@@ -346,12 +500,12 @@ body.locked #skandi-app-root{overflow:hidden}
 @media(max-width:560px){
   #skandi-app-root .utility-account span{display:none}#skandi-app-root .utility-inner{height:34px}
   #skandi-app-root .brand-divider,#skandi-app-root .brand-shop{display:none}#skandi-app-root .action-button{min-width:40px}#skandi-app-root .action-button span:last-child{display:none}
-  #skandi-app-root .hero{min-height:470px}#skandi-app-root .hero-panel{left:14px;right:14px;width:auto;max-height:calc(100% - 28px);bottom:14px;padding:25px 23px 27px}#skandi-app-root .hero h1{font-size:30px;line-height:1}#skandi-app-root .hero p{font-size:10px;margin:11px 0 17px}
-  #skandi-app-root .section-head{align-items:flex-start}#skandi-app-root .section-head h2{font-size:24px}#skandi-app-root .section-head p{font-size:10px}#skandi-app-root .section-head .text-link{display:none}
-  #skandi-app-root .category-strip{grid-template-columns:repeat(6,118px);gap:16px;margin-right:-16px}#skandi-app-root .category-orb-label{font-size:9px}
+  #skandi-app-root .hero{min-height:470px}#skandi-app-root .hero-panel{left:14px;right:14px;width:auto;max-height:calc(100% - 28px);bottom:14px;padding:25px 23px 27px}#skandi-app-root .hero h1{font-size:30px;line-height:1}#skandi-app-root .hero p{font-size:13px;margin:11px 0 17px}
+  #skandi-app-root .section-head{align-items:flex-start}#skandi-app-root .section-head h2{font-size:24px}#skandi-app-root .section-head p{font-size:13px}#skandi-app-root .section-head .text-link{display:none}
+  #skandi-app-root .category-strip{grid-template-columns:repeat(6,118px);gap:16px;margin-right:-16px}#skandi-app-root .category-orb-label{font-size:13px}
   #skandi-app-root .campaign-grid{display:grid;grid-template-columns:1fr;grid-auto-rows:255px}#skandi-app-root .campaign-card:first-child{grid-column:auto}#skandi-app-root .campaign-card:nth-child(3){display:none}
   #skandi-app-root .product-toolbar{align-items:flex-start;flex-direction:column;padding:10px 0}#skandi-app-root .toolbar-left,#skandi-app-root .toolbar-right{width:100%;justify-content:space-between;gap:10px}#skandi-app-root .filter-button{padding:8px 0}#skandi-app-root .toolbar-count{display:none}
-  #skandi-app-root .product-grid{gap:27px 10px}#skandi-app-root .product-content{padding-top:10px}#skandi-app-root .product-summary{display:none}#skandi-app-root .product-name{font-size:10px}#skandi-app-root .price-row{font-size:10px}#skandi-app-root .product-overlay button{font-size:8px}
+  #skandi-app-root .product-grid{gap:27px 10px}#skandi-app-root .product-content{padding-top:10px}#skandi-app-root .product-summary{display:none}#skandi-app-root .product-name{font-size:13px}#skandi-app-root .price-row{font-size:13px}#skandi-app-root .product-overlay button{font-size:13px}
   #skandi-app-root .editorial-grid{grid-template-columns:1fr}#skandi-app-root .editorial-card:last-child{display:block}
   #skandi-app-root .footer-main{grid-template-columns:1fr;padding-top:40px}#skandi-app-root .footer-main>div:first-child{grid-column:auto}#skandi-app-root .footer-bottom-inner{align-items:flex-start;flex-direction:column;padding-top:17px;padding-bottom:17px}
   #skandi-app-root .saved-grid{grid-template-columns:1fr 1fr}
@@ -365,12 +519,12 @@ body.locked #skandi-app-root{overflow:hidden}
 #skandi-app-root .page-shell{max-width:var(--max);margin:auto;padding:34px 24px 88px}
 #skandi-app-root .page-shell.narrow{max-width:980px}
 #skandi-app-root .page-topline{display:flex;align-items:center;justify-content:space-between;gap:20px;margin-bottom:25px}
-#skandi-app-root .breadcrumb{display:flex;align-items:center;gap:8px;flex-wrap:wrap;color:#7a8492;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.06em}
+#skandi-app-root .breadcrumb{display:flex;align-items:center;gap:8px;flex-wrap:wrap;color:#7a8492;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.06em}
 #skandi-app-root .breadcrumb button{border:0;background:none;padding:0;color:var(--navy);font:inherit}
 #skandi-app-root .breadcrumb span[aria-hidden="true"]{color:#aab1ba}
 #skandi-app-root .page-heading{margin:0;color:var(--navy);font-size:38px;line-height:1.04;letter-spacing:-.055em}
-#skandi-app-root .page-intro{max-width:700px;margin:10px 0 0;color:var(--muted);font-size:11px;line-height:1.7}
-#skandi-app-root .route-back{border:0;border-bottom:1px solid var(--navy);background:transparent;padding:0 0 4px;color:var(--navy);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+#skandi-app-root .page-intro{max-width:700px;margin:10px 0 0;color:var(--muted);font-size:13px;line-height:1.7}
+#skandi-app-root .route-back{border:0;border-bottom:1px solid var(--navy);background:transparent;padding:0 0 4px;color:var(--navy);font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
 #skandi-app-root .page-status-wrap{max-width:var(--max);margin:0 auto;padding:16px 24px 0}
 #skandi-app-root .page-status-wrap .status{margin:0}
 #skandi-app-root .home-featured-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:38px 18px}
@@ -386,17 +540,17 @@ body.locked #skandi-app-root{overflow:hidden}
 #skandi-app-root .product-gallery-main>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
 #skandi-app-root .product-gallery-main::after{content:"";position:absolute;inset:0;border:1px solid rgba(7,27,68,.05);pointer-events:none}
 #skandi-app-root .product-page-info{position:sticky;top:176px}
-#skandi-app-root .product-page-kicker{color:var(--blue);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.12em}
+#skandi-app-root .product-page-kicker{color:var(--blue);font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.12em}
 #skandi-app-root .product-page-title{margin:13px 0 7px;color:var(--navy);font-size:36px;line-height:1.06;letter-spacing:-.05em}
 #skandi-app-root .product-page-price{margin:15px 0 18px;color:var(--navy);font-size:17px;font-weight:700}
-#skandi-app-root .product-page-description{margin:0 0 24px;color:var(--muted);font-size:10px;line-height:1.75}
+#skandi-app-root .product-page-description{margin:0 0 24px;color:var(--muted);font-size:13px;line-height:1.75}
 #skandi-app-root .product-page-actions{display:grid;grid-template-columns:1fr 50px;gap:10px;margin-top:6px}
 #skandi-app-root .product-page-actions .cta{width:100%}
 #skandi-app-root .icon-square{height:44px;border:1px solid var(--navy);background:#fff;color:var(--navy);font-size:21px;display:grid;place-items:center}
 #skandi-app-root .product-page-meta{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;margin:24px 0;background:var(--line);border:1px solid var(--line)}
 #skandi-app-root .product-page-meta div{background:#fff;padding:14px}
-#skandi-app-root .product-page-meta small{display:block;color:#7a8492;font-size:7px;font-weight:700;text-transform:uppercase;letter-spacing:.1em}
-#skandi-app-root .product-page-meta strong{display:block;margin-top:5px;color:var(--navy);font-size:9px}
+#skandi-app-root .product-page-meta small{display:block;color:#7a8492;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.1em}
+#skandi-app-root .product-page-meta strong{display:block;margin-top:5px;color:var(--navy);font-size:13px}
 #skandi-app-root .related-section{padding-top:64px}
 #skandi-app-root .saved-page-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:38px 18px}
 #skandi-app-root .bag-page-layout{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:48px;align-items:start}
@@ -404,27 +558,27 @@ body.locked #skandi-app-root{overflow:hidden}
 #skandi-app-root .bag-page-item{display:grid;grid-template-columns:116px 1fr auto;gap:18px;padding:22px 0;border-bottom:1px solid var(--line)}
 #skandi-app-root .bag-page-thumb{width:116px;aspect-ratio:1/1.18;background:#f1f3f5;overflow:hidden}
 #skandi-app-root .bag-page-thumb>img{width:100%;height:100%;object-fit:cover;display:block}
-#skandi-app-root .bag-page-copy strong{display:block;color:var(--navy);font-size:12px;line-height:1.4}
-#skandi-app-root .bag-page-copy span{display:block;margin-top:6px;color:var(--muted);font-size:9px;line-height:1.5}
-#skandi-app-root .bag-page-price{color:var(--navy);font-size:11px;font-weight:700;text-align:right}
+#skandi-app-root .bag-page-copy strong{display:block;color:var(--navy);font-size:13px;line-height:1.4}
+#skandi-app-root .bag-page-copy span{display:block;margin-top:6px;color:var(--muted);font-size:13px;line-height:1.5}
+#skandi-app-root .bag-page-price{color:var(--navy);font-size:13px;font-weight:700;text-align:right}
 #skandi-app-root .order-summary{position:sticky;top:176px;border:1px solid var(--line);padding:25px;background:#fff}
 #skandi-app-root .order-summary h2{margin:0 0 20px;color:var(--navy);font-size:20px;letter-spacing:-.035em}
-#skandi-app-root .order-summary-line{display:flex;justify-content:space-between;gap:18px;padding:10px 0;color:var(--muted);font-size:9px;border-bottom:1px solid #edf0f3}
+#skandi-app-root .order-summary-line{display:flex;justify-content:space-between;gap:18px;padding:10px 0;color:var(--muted);font-size:13px;border-bottom:1px solid #edf0f3}
 #skandi-app-root .order-summary-total{display:flex;justify-content:space-between;gap:18px;margin:17px 0;color:var(--navy);font-size:13px;font-weight:700}
 #skandi-app-root .order-summary .cta{width:100%;margin-top:8px}
 #skandi-app-root .info-card-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:34px}
 #skandi-app-root .info-card{border:1px solid var(--line);padding:25px;background:#fff}
 #skandi-app-root .info-card-icon{width:38px;height:38px;border-radius:50%;background:#e9f7f7;color:var(--navy);display:grid;place-items:center;font-weight:800;margin-bottom:17px}
 #skandi-app-root .info-card h2{margin:0 0 8px;color:var(--navy);font-size:17px;letter-spacing:-.03em}
-#skandi-app-root .info-card p{margin:0 0 16px;color:var(--muted);font-size:9px;line-height:1.7}
-#skandi-app-root .info-card button{border:0;border-bottom:1px solid var(--navy);background:none;padding:0 0 4px;color:var(--navy);font-size:9px;font-weight:700;text-transform:uppercase}
+#skandi-app-root .info-card p{margin:0 0 16px;color:var(--muted);font-size:13px;line-height:1.7}
+#skandi-app-root .info-card button{border:0;border-bottom:1px solid var(--navy);background:none;padding:0 0 4px;color:var(--navy);font-size:13px;font-weight:700;text-transform:uppercase}
 #skandi-app-root .orders-panel{margin-top:32px;border:1px solid var(--line);padding:34px;background:linear-gradient(135deg,#f7fafc,#eef5f8)}
 #skandi-app-root .orders-panel h2{margin:0 0 10px;color:var(--navy);font-size:22px}
-#skandi-app-root .orders-panel p{max-width:650px;margin:0 0 22px;color:var(--muted);font-size:10px;line-height:1.7}
+#skandi-app-root .orders-panel p{max-width:650px;margin:0 0 22px;color:var(--muted);font-size:13px;line-height:1.7}
 #skandi-app-root .not-found{text-align:center;padding:80px 20px}
 #skandi-app-root .not-found h1{margin:0;color:var(--navy);font-size:44px}
-#skandi-app-root .not-found p{color:var(--muted);font-size:11px;margin:13px 0 24px}
-#skandi-app-root .mobile-nav-body .mobile-nav-heading{padding:18px 0 7px;border:0;color:#8a94a3;font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.1em}
+#skandi-app-root .not-found p{color:var(--muted);font-size:13px;margin:13px 0 24px}
+#skandi-app-root .mobile-nav-body .mobile-nav-heading{padding:18px 0 7px;border:0;color:#8a94a3;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.1em}
 body.page-product #skandi-app-root .search-dock{display:none}
 @media(max-width:1120px){
   #skandi-app-root .home-featured-grid,#skandi-app-root .saved-page-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
@@ -460,65 +614,65 @@ body.page-product #skandi-app-root .search-dock{display:none}
 
 /* Integrated customer service */
 #skandi-app-root .support-hero{background:linear-gradient(135deg,#e8f2f8,#f8fbfd);border:1px solid var(--line);padding:52px 42px;text-align:center}
-#skandi-app-root .support-eyebrow{display:inline-flex;align-items:center;gap:10px;margin-bottom:14px;color:var(--blue);font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.16em}
+#skandi-app-root .support-eyebrow{display:inline-flex;align-items:center;gap:10px;margin-bottom:14px;color:var(--blue);font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.16em}
 #skandi-app-root .support-eyebrow::before{content:"";width:24px;height:2px;background:var(--teal)}
 #skandi-app-root .support-hero h1{margin:0;color:var(--navy);font-size:42px;line-height:1.04;letter-spacing:-.055em}
-#skandi-app-root .support-hero p{max-width:650px;margin:15px auto 25px;color:var(--muted);font-size:11px;line-height:1.75}
+#skandi-app-root .support-hero p{max-width:650px;margin:15px auto 25px;color:var(--muted);font-size:13px;line-height:1.75}
 #skandi-app-root .support-search{max-width:660px;height:48px;margin:auto;display:grid;grid-template-columns:1fr auto;background:#fff;border:1px solid #cfd5dc;box-shadow:0 8px 24px rgba(7,27,68,.06)}
-#skandi-app-root .support-search input{min-width:0;border:0;outline:0;padding:0 16px;color:var(--ink);font-size:11px}
-#skandi-app-root .support-search button{border:0;background:var(--navy);color:#fff;padding:0 22px;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.06em}
+#skandi-app-root .support-search input{min-width:0;border:0;outline:0;padding:0 16px;color:var(--ink);font-size:13px}
+#skandi-app-root .support-search button{border:0;background:var(--navy);color:#fff;padding:0 22px;font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.06em}
 #skandi-app-root .support-channel-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:24px}
 #skandi-app-root .support-channel{border:1px solid var(--line);background:#fff;padding:24px;display:flex;flex-direction:column;align-items:flex-start}
 #skandi-app-root .support-channel-icon{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:#e9f7f7;color:var(--navy);font-size:15px;font-weight:800;margin-bottom:16px}
 #skandi-app-root .support-channel h2{margin:0 0 7px;color:var(--navy);font-size:17px;letter-spacing:-.03em}
-#skandi-app-root .support-channel p{flex:1;margin:0 0 16px;color:var(--muted);font-size:9px;line-height:1.7}
-#skandi-app-root .support-channel button{border:0;border-bottom:1px solid var(--navy);background:transparent;padding:0 0 4px;color:var(--navy);font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.045em}
+#skandi-app-root .support-channel p{flex:1;margin:0 0 16px;color:var(--muted);font-size:13px;line-height:1.7}
+#skandi-app-root .support-channel button{border:0;border-bottom:1px solid var(--navy);background:transparent;padding:0 0 4px;color:var(--navy);font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.045em}
 #skandi-app-root .support-layout{display:grid;grid-template-columns:320px minmax(0,1fr);gap:32px;margin-top:42px;align-items:start}
 #skandi-app-root .support-sidebar{display:grid;gap:18px;position:sticky;top:176px}
 #skandi-app-root .support-side-card{border:1px solid var(--line);background:#fff;padding:24px}
 #skandi-app-root .support-side-card.navy{background:var(--navy);border-color:var(--navy);color:#fff}
 #skandi-app-root .support-side-card h3{margin:0 0 13px;color:var(--navy);font-size:16px;letter-spacing:-.03em}
 #skandi-app-root .support-side-card.navy h3{color:#fff}
-#skandi-app-root .support-side-card p{margin:0 0 15px;color:var(--muted);font-size:9px;line-height:1.7}
+#skandi-app-root .support-side-card p{margin:0 0 15px;color:var(--muted);font-size:13px;line-height:1.7}
 #skandi-app-root .support-side-card.navy p{color:#d4deea}
 #skandi-app-root .support-topic-list{display:grid;gap:0}
-#skandi-app-root .support-topic{width:100%;border:0;border-bottom:1px solid #edf0f3;background:#fff;padding:12px 0;text-align:left;color:var(--navy);font-size:9px;font-weight:650;line-height:1.45}
+#skandi-app-root .support-topic{width:100%;border:0;border-bottom:1px solid #edf0f3;background:#fff;padding:12px 0;text-align:left;color:var(--navy);font-size:13px;font-weight:650;line-height:1.45}
 #skandi-app-root .support-topic:hover{color:var(--blue)}
 #skandi-app-root .support-topic.hidden{display:none}
-#skandi-app-root .support-no-results{display:none;padding:15px 0;color:var(--muted);font-size:9px;line-height:1.6}
+#skandi-app-root .support-no-results{display:none;padding:15px 0;color:var(--muted);font-size:13px;line-height:1.6}
 #skandi-app-root .support-form-card{border:1px solid var(--line);background:#fff;padding:38px;box-shadow:0 10px 28px rgba(7,27,68,.05)}
 #skandi-app-root .support-priority{display:grid;grid-template-columns:35px 1fr;gap:13px;margin-bottom:28px;padding:18px;background:#fff8e7;border:1px solid #f4dfae;border-left:4px solid var(--gold)}
 #skandi-app-root .support-priority-icon{font-size:22px}
-#skandi-app-root .support-priority strong{display:block;margin-bottom:4px;color:#8a5a00;font-size:9px;text-transform:uppercase;letter-spacing:.07em}
-#skandi-app-root .support-priority p{margin:0;color:#765a1e;font-size:9px;line-height:1.65}
-#skandi-app-root .support-status{display:none;margin-bottom:20px;padding:14px 16px;border:1px solid var(--line);font-size:10px;line-height:1.55}
+#skandi-app-root .support-priority strong{display:block;margin-bottom:4px;color:#8a5a00;font-size:13px;text-transform:uppercase;letter-spacing:.07em}
+#skandi-app-root .support-priority p{margin:0;color:#765a1e;font-size:13px;line-height:1.65}
+#skandi-app-root .support-status{display:none;margin-bottom:20px;padding:14px 16px;border:1px solid var(--line);font-size:13px;line-height:1.55}
 #skandi-app-root .support-status.show{display:block}#skandi-app-root .support-status.ok{background:#ecfdf3;border-color:#abefc6;color:#087443}#skandi-app-root .support-status.error{background:#fff1f0;border-color:#ffd5d2;color:#b42318}
 #skandi-app-root .support-form-section{margin:30px 0 18px;padding-bottom:10px;border-bottom:2px solid var(--soft);color:var(--navy);font-size:15px;font-weight:800;letter-spacing:-.025em}
 #skandi-app-root .support-form-section:first-of-type{margin-top:0}
 #skandi-app-root .support-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
 #skandi-app-root .support-field{margin-bottom:17px}
-#skandi-app-root .support-field label{display:block;margin-bottom:7px;color:var(--muted);font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:.09em}
-#skandi-app-root .support-field input,#skandi-app-root .support-field select,#skandi-app-root .support-field textarea{width:100%;border:1px solid #cfd5dc;background:#fafbfc;padding:12px 13px;color:var(--ink);font-size:10px;outline:0}
+#skandi-app-root .support-field label{display:block;margin-bottom:7px;color:var(--muted);font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.09em}
+#skandi-app-root .support-field input,#skandi-app-root .support-field select,#skandi-app-root .support-field textarea{width:100%;border:1px solid #cfd5dc;background:#fafbfc;padding:12px 13px;color:var(--ink);font-size:13px;outline:0}
 #skandi-app-root .support-field input,#skandi-app-root .support-field select{height:43px}
 #skandi-app-root .support-field textarea{min-height:135px;resize:vertical;line-height:1.6}
 #skandi-app-root .support-field input:focus,#skandi-app-root .support-field select:focus,#skandi-app-root .support-field textarea:focus{border-color:var(--teal);background:#fff;box-shadow:0 0 0 3px rgba(78,185,193,.12)}
 #skandi-app-root .support-required{color:var(--danger)}
 #skandi-app-root .support-dynamic-module{display:none;margin-bottom:20px;padding:21px;border:1px dashed #cfd5dc;background:#f8fafc}
 #skandi-app-root .support-dynamic-module.show{display:block}
-#skandi-app-root .support-dynamic-module h4{margin:0 0 16px;color:var(--navy);font-size:10px;text-transform:uppercase;letter-spacing:.055em}
+#skandi-app-root .support-dynamic-module h4{margin:0 0 16px;color:var(--navy);font-size:13px;text-transform:uppercase;letter-spacing:.055em}
 #skandi-app-root .support-file-drop{border:2px dashed #cfd5dc;background:#fafbfc;padding:29px 18px;text-align:center;cursor:pointer}
 #skandi-app-root .support-file-drop:hover,#skandi-app-root .support-file-drop.dragging{border-color:var(--blue);background:#f0f7ff}
-#skandi-app-root .support-file-drop strong{display:block;color:var(--navy);font-size:10px}
-#skandi-app-root .support-file-drop span{display:block;margin-top:6px;color:var(--muted);font-size:8px;line-height:1.6}
-#skandi-app-root .support-file-list{display:grid;gap:6px;margin-top:10px;color:var(--muted);font-size:8px}
+#skandi-app-root .support-file-drop strong{display:block;color:var(--navy);font-size:13px}
+#skandi-app-root .support-file-drop span{display:block;margin-top:6px;color:var(--muted);font-size:13px;line-height:1.6}
+#skandi-app-root .support-file-list{display:grid;gap:6px;margin-top:10px;color:var(--muted);font-size:13px}
 #skandi-app-root .support-checkbox{display:flex;align-items:flex-start;gap:10px;margin-top:17px}
 #skandi-app-root .support-checkbox input{width:16px;height:16px;margin-top:1px;flex:0 0 auto}
-#skandi-app-root .support-checkbox label{color:var(--muted);font-size:8px;line-height:1.65}
+#skandi-app-root .support-checkbox label{color:var(--muted);font-size:13px;line-height:1.65}
 #skandi-app-root .support-submit{width:100%;margin-top:25px}
 #skandi-app-root .support-confirmation{display:none;border:1px solid #abefc6;background:#ecfdf3;padding:28px;text-align:center}
 #skandi-app-root .support-confirmation.show{display:block}
 #skandi-app-root .support-confirmation strong{display:block;color:#087443;font-size:20px;letter-spacing:-.03em}
-#skandi-app-root .support-confirmation p{max-width:520px;margin:9px auto 0;color:#176b49;font-size:9px;line-height:1.7}
+#skandi-app-root .support-confirmation p{max-width:520px;margin:9px auto 0;color:#176b49;font-size:13px;line-height:1.7}
 @media(max-width:880px){#skandi-app-root .support-channel-grid{grid-template-columns:1fr}#skandi-app-root .support-layout{grid-template-columns:1fr}#skandi-app-root .support-sidebar{position:static;grid-template-columns:1fr 1fr}#skandi-app-root .support-form-card{padding:28px}#skandi-app-root .support-hero{padding:40px 24px}#skandi-app-root .support-hero h1{font-size:34px}}
 @media(max-width:560px){#skandi-app-root .support-sidebar{grid-template-columns:1fr}#skandi-app-root .support-grid-2{grid-template-columns:1fr;gap:0}#skandi-app-root .support-form-card{padding:22px 16px}#skandi-app-root .support-hero{padding:34px 16px}#skandi-app-root .support-hero h1{font-size:29px}#skandi-app-root .support-search{grid-template-columns:1fr}#skandi-app-root .support-search button{height:42px}#skandi-app-root .support-channel{padding:20px}}
 
@@ -541,20 +695,125 @@ body.page-product #skandi-app-root .search-dock{display:none}
 #skandi-app-root .gift-card-style:hover{transform:translateY(-1px);border-color:#8ca4bf}
 #skandi-app-root .gift-card-style.active{border-color:#022e64;box-shadow:0 0 0 2px rgba(2,46,100,.12)}
 #skandi-app-root .gift-card-style img{display:block;width:100%;aspect-ratio:1.58/1;object-fit:cover;border-radius:7px;margin-bottom:7px}
-#skandi-app-root .gift-card-style span{display:block;font-size:12px;font-weight:700;color:#1b2a3a}
+#skandi-app-root .gift-card-style span{display:block;font-size:13px;font-weight:700;color:#1b2a3a}
 #skandi-app-root .gift-card-selection-copy{margin:18px 0 10px;font-size:13px;color:#526170}
 #skandi-app-root .gift-card-form{display:grid;grid-template-columns:1fr 1fr;gap:14px 16px;margin:12px 0 20px;padding:18px;background:#f8fafc;border:1px solid var(--border,#d9e0e8)}
 #skandi-app-root .gift-card-field{display:flex;flex-direction:column;gap:7px}
 #skandi-app-root .gift-card-field-wide{grid-column:1/-1}
-#skandi-app-root .gift-card-field label{font-size:12px;font-weight:800;color:#1c2938}
+#skandi-app-root .gift-card-field label{font-size:13px;font-weight:800;color:#1c2938}
 #skandi-app-root .gift-card-field input,#skandi-app-root .gift-card-field textarea{width:100%;border:1px solid #cbd5df;background:#fff;color:#142033;padding:12px 13px;font:inherit;border-radius:0;outline:none}
 #skandi-app-root .gift-card-field input:focus,#skandi-app-root .gift-card-field textarea:focus{border-color:#022e64;box-shadow:0 0 0 2px rgba(2,46,100,.08)}
 #skandi-app-root .gift-card-field textarea{resize:vertical;min-height:92px}
-#skandi-app-root .gift-card-field small{font-size:11px;color:#6d7884}
+#skandi-app-root .gift-card-field small{font-size:13px;color:#6d7884}
 #skandi-app-root .gift-card-actions{margin-top:4px}
 @media(max-width:800px){#skandi-app-root .gift-card-main{min-height:280px;padding:12px}#skandi-app-root .gift-card-thumbnails{grid-template-columns:repeat(2,minmax(0,1fr))}#skandi-app-root .gift-card-form{grid-template-columns:1fr}#skandi-app-root .gift-card-field-wide{grid-column:auto}}
 </style>
-<style data-skandi-part="shell">html,body{margin:0;width:100%;min-height:100%;}*,*::before,*::after{box-sizing:border-box}#skandi-shell-root{min-height:100vh;min-width:0;display:flex;flex-direction:column}#skandi-app-root{flex:1;min-width:0;position:relative}@media(max-width:767px){input:not([type=hidden]),select,textarea{font-size:16px!important}}</style>
+<style data-skandi-part="shell">/* Shared compiled shell. Every family uses the same mobile scroll area and tab bar. */
+:root {
+  --sk-shell-navy: #022e64;
+  --sk-shell-nav: 68px;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  touch-action: manipulation;
+}
+*, *::before, *::after { box-sizing: border-box; }
+html, body { width: 100% !important; margin: 0 !important; max-width: none !important; }
+#skandi-shell-root { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; width: 100%; min-height: 100vh; min-height: 100dvh; }
+#skandi-app-root { grid-row: 2; position: relative; min-width: 0; min-height: 0; touch-action: manipulation; }
+#skandi-mobile-nav-container { display: none; }
+#skandi-global-header-root,
+#riaintra-global-header-root,
+#altea-global-header-root { grid-row: 1; position: relative; min-width: 0; }
+#skandi-global-footer-root,
+#riaintra-global-footer-root,
+#altea-global-footer-root { grid-row: 3; min-width: 0; }
+#skandi-global-header-root { height: 118px; overflow: hidden; z-index: 20; }
+#skandi-global-header-root #skandi-site-header { height: 118px !important; max-height: 118px !important; }
+[data-skandi-chrome="public"] #skandi-app-root { height: auto !important; max-height: none !important; overflow: visible; }
+
+[data-skandi-chrome="riaintra"],
+[data-skandi-chrome="altea"] { height: 100vh; height: 100dvh; min-height: 0; overflow: hidden; }
+[data-skandi-chrome="riaintra"] #skandi-app-root,
+[data-skandi-chrome="altea"] #skandi-app-root { overflow: auto; }
+#riaintra-global-header-root { height: 52px; z-index: 20; }
+#altea-global-header-root { height: 48px; z-index: 20; }
+#riaintra-global-header-root .shellbar { position: absolute; }
+#altea-global-footer-root .status-bar { position: relative; }
+
+/* Important declarations in this layer also override important page-specific control styles. */
+@layer skandi-form-size {
+  input:not([type="hidden"]), select, textarea, [role="textbox"][contenteditable="true"] {
+    font-size: max(16px, 1em) !important;
+  }
+}
+#skandi-shell-root :is(input:not([type="hidden"]), select, textarea, [role="textbox"][contenteditable="true"]) {
+  font-size: max(16px, 1em) !important;
+}
+
+@media (max-width: 1020px) {
+  html[data-skandi-mobile-navigation], html[data-skandi-mobile-navigation] body {
+    height: 100% !important; min-height: 0 !important; max-height: none !important; overflow: hidden !important;
+  }
+  html[data-skandi-mobile-navigation] #skandi-shell-root {
+    position: fixed !important; inset: 0; height: 100vh !important; height: 100dvh !important;
+    min-height: 0 !important; max-height: none !important; overflow: hidden !important;
+    grid-template-rows: minmax(0, 1fr) auto;
+  }
+  #skandi-global-header-root, #skandi-global-footer-root,
+  #riaintra-global-header-root, #riaintra-global-footer-root,
+  #altea-global-header-root, #altea-global-footer-root { display: none !important; }
+  html[data-skandi-mobile-navigation] #skandi-app-root {
+    grid-row: 1; height: 100% !important; min-height: 0 !important;
+    overflow-x: hidden !important; overflow-y: auto !important; overscroll-behavior-y: contain;
+  }
+  #skandi-mobile-nav-container {
+    grid-row: 2; display: block; width: 100%; min-height: var(--sk-shell-nav);
+    padding-bottom: env(safe-area-inset-bottom, 0px); background: var(--sk-shell-navy);
+    z-index: 2100;
+  }
+  [data-skandi-family="riaintra"] { --sk-shell-navy: #173451; }
+  [data-skandi-family="altea"] { --sk-shell-navy: #142640; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #skandi-app-root { scroll-behavior: auto !important; }
+}
+
+[data-skandi-family="riaintra"] #skandi-mobile-nav-container { --staff-nav-heading: #244b6d; }
+[data-skandi-family="altea"] #skandi-mobile-nav-container { --staff-nav-heading: #163e72; }
+[data-skandi-family="riaintra"] .skmn { background: #173451; }
+[data-skandi-family="altea"] .skmn { background: #142640; }
+[data-skandi-family="riaintra"] .skmn-btn[aria-current="page"] { color: #add6ff; }
+[data-skandi-family="altea"] .skmn-btn[aria-current="page"] { color: #90c8ff; }
+
+.skandi-app-wordmark {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  max-width: 100%;
+  padding: 8px 10px;
+  border-radius: 9px;
+  background: linear-gradient(110deg, #112c48, #224b70);
+  color: #f2f7ff;
+  font-size: 14px;
+  line-height: 1.25;
+}
+.skandi-app-wordmark img {
+  display: block;
+  width: auto;
+  max-width: min(35%, 92px);
+  height: 18px;
+  object-fit: contain;
+}
+.skandi-app-software {
+  min-width: 0;
+  padding-inline-start: 9px;
+  border-inline-start: 1px solid #7692af;
+  overflow-wrap: anywhere;
+}
+.skandi-app-software span { color: #ffb454; }
+
+#skandi-shell-root small { font-size: max(13px, .875em); }
+</style>
 </head>
 <body>
 <div id="skandi-shell-root" data-skandi-page="the-store" data-skandi-key="theStore" data-skandi-family="public" data-skandi-chrome="none">
@@ -596,7 +855,7 @@ body.page-product #skandi-app-root .search-dock{display:none}
       <button class="action-button" id="bagBtn" aria-label="Shopping bag">
         <span class="action-icon"><svg viewBox="0 0 24 24"><path d="M5 8h14l-1 12H6L5 8Z"></path><path d="M9 9V6a3 3 0 0 1 6 0v3"></path></svg><b class="badge" id="bagCount">0</b></span><span>Bag</span>
       </button>
-      <button class="action-button mobile-menu-button" id="mobileMenuBtn" aria-label="Open menu">
+      <button class="action-button mobile-menu-button" id="mobileMenuBtn" aria-label="Open Store menu">
         <span class="action-icon"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"></path></svg></span><span>Menu</span>
       </button>
     </div>
@@ -996,17 +1255,66 @@ body.page-product #skandi-app-root .search-dock{display:none}
 
 </div>
 
-
+<div id="skandi-mobile-nav-container"><div id="overlay" aria-hidden="true"></div>
+<aside id="drawer" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="drawer-title" aria-hidden="true">
+  <div class="drawer-head"><div><img id="drawer-logo" class="drawer-logo" alt="" hidden=""><div class="eyebrow" id="drawer-brand">SKANDI TRAVELS</div><h2 id="drawer-title">Explore SKANDI</h2></div><button id="skandi-mobile-closeBtn" aria-label="Close menu" type="button"><svg viewBox="0 0 24 24"><path d="M5 5l14 14M19 5L5 19"></path></svg></button></div>
+  <div class="drawer-scroll" id="drawerLinks"></div>
+  <div class="drawer-foot" id="drawer-actions"><button type="button" class="drawer-cta secondary" id="profileLink">My Profile</button><button type="button" class="drawer-cta" id="searchLink">Search trips</button><button type="button" class="drawer-cta secondary" id="alexandraLink">Chat with Alexandra</button></div>
+  <div class="drawer-foot" id="staff-drawer-actions" hidden=""><button type="button" class="drawer-cta secondary" id="staffSignOut">Sign out</button></div>
+  <section id="chat" aria-label="Alexandra customer support"><div class="chat-log" id="chatLog" role="log" aria-live="polite"><div class="bubble">How can I help with your trip?</div></div><div id="chatStatus" role="status">SKANDI Customer Service</div><form class="chat-compose" id="chatForm"><input id="chatInput" type="text" maxlength="1000" autocomplete="off" placeholder="Write your message" aria-label="Message to Alexandra"><button type="submit">Send</button></form></section>
+</aside>
+<nav id="skandi-mobile-nav-root" class="skmn" role="group" aria-label="SKANDI mobile navigation">
+  <button type="button" class="skmn-btn" data-route="home" aria-label="Home" aria-current="page">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 11 9-8 9 8v9a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"></path></svg><span>Home</span>
+  </button>
+  <button type="button" class="skmn-btn" data-route="destinations" aria-label="Destinations">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="m9 15 3-8 3 5-6 3z"></path></svg><span>Explore</span>
+  </button>
+  <button type="button" class="skmn-btn skmn-primary" data-route="bookingFlow" aria-label="Book a trip">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m2 16 20-9-3 13-6-6-5 6-1-8-5-1z"></path></svg><span>Book</span>
+  </button>
+  <button type="button" class="skmn-btn" data-route="myTrips" aria-label="My Trips">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="15" rx="2"></rect><path d="M9 6V4a3 3 0 0 1 6 0v2M3 13h18"></path></svg><span>Trips</span>
+  </button>
+  <button type="button" class="skmn-btn" data-route="menu" aria-label="Open menu" aria-expanded="false" aria-controls="drawer" aria-haspopup="dialog">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"></path></svg><span>Menu</span>
+  </button>
+</nav>
+<div id="skandi-mobile-status" role="status" aria-live="polite"></div>
+</div>
 </div>
 <script data-skandi-part="skandi-shell-runtime">/** SKANDI compiled public-shell runtime — no alternate backend, no local cart. */
 const SKANDI_SHELL_SOURCE = 'SKANDI_SHELL';
 const SKANDI_SHELL_PARENT = 'SKANDI_WIX_PARENT';
 const shellRoot = document.getElementById('skandi-shell-root');
 if (!shellRoot) throw new Error('SKANDI shell mount missing');
+let toolWordmarks = {};
+function appWordmark(system, label) {
+  const logo = Object.hasOwn(toolWordmarks, system) ? toolWordmarks[system] : '';
+  if (!/^data:image\/png;base64,[a-z0-9+/=]+$/i.test(logo || '')) return '';
+  const mark = document.createElement('span');
+  mark.className = 'skandi-app-wordmark';
+  mark.setAttribute('aria-hidden','true');
+  const systemLogo = document.createElement('img');
+  systemLogo.src = logo;
+  systemLogo.alt = '';
+  const software = document.createElement('strong');
+  software.className = 'skandi-app-software';
+  if (label === 'GroupTalk') {
+    const accent = document.createElement('span');
+    accent.textContent = 'talk';
+    software.append('group', accent);
+  } else {
+    software.textContent = label;
+  }
+  mark.append(systemLogo,software);
+  return mark.outerHTML;
+}
 window.__SKANDI_SHELL__ = Object.freeze({
   mode:'compiled-single-embed',
   page:shellRoot.dataset.skandiPage || '',
-  root:shellRoot
+  root:shellRoot,
+  appWordmark
 });
 // A single iframe passes Home, Header, Footer and Mobile messages to the
 // same Wix Velo HtmlComponent. Existing message source/type values remain.
@@ -1020,6 +1328,8 @@ window.addEventListener('message', event => {
   if (!message || message.source !== SKANDI_SHELL_PARENT) return;
   if (message.type === 'SKANDI_MASTER_CONFIG') {
     shellRoot.dataset.skandiPath = String(message.payload?.currentPath || '/');
+    const marks = message.payload?.brand?.assets?.toolWordmarks;
+    if (marks && typeof marks === 'object') toolWordmarks = marks;
   }
   if (message.type === 'SKANDI_SCROLL_TOP' || message.type === 'MASTER_SCROLL_TOP') {
     document.getElementById('skandi-app-root')?.scrollTo({ top:0, behavior:'instant' });
@@ -1059,6 +1369,343 @@ function startCompiledShell() {
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',startCompiledShell,{once:true});
 else startCompiledShell();
 </script>
+<script data-skandi-part="mobile-nav">(function(){
+const __root=window.document.getElementById("skandi-mobile-nav-container");
+const document=new Proxy(window.document,{get(target,key){if(key==='getElementById')return id=>{const el=target.getElementById(id);return el&&(__root===el||__root.contains(el))?el:null;};if(key==='querySelector'||key==='querySelectorAll')return selector=>{if(/^(?:html|body|head|meta|title|link)(?:[\s.#[:]|$)/i.test(selector)&&!selector.includes(' '))return target[key](selector);return __root[key](selector);};if(key==='getElementsByClassName'||key==='getElementsByTagName')return value=>__root[key](value);const value=Reflect.get(target,key,target);return typeof value==='function'?value.bind(target):value;},set(target,key,value){return Reflect.set(target,key,value,target);}});
+const SOURCE='SKANDI_HOME_MOBILE_APP';
+  const PARENT='SKANDI_WIX_PARENT';
+  const ROUTE_FALLBACKS=Object.freeze({
+    home:'/', destinations:'/destinations',
+    myTrips:'/my-profile?tab=trips', myProfile:'/my-profile', bookingFlow:'/booking'
+  });
+  const defaults={
+    ...ROUTE_FALLBACKS,
+    travelInfo:'/travel-info',flights:'/flights',hotels:'/hotels',packages:'/packages',
+    cruises:'/cruises',tours:'/tours-activities',carRental:'/car-rental',transfers:'/travel-info?section=transfers',
+    skandiCollection:'/skandi-collection',voy:'/voy-magazine',club:'/skandi-club',
+    support:'/about/support',theStore:'/the-store',about:'/about'
+  };
+  const publicGroups=[
+    {title:'Book & travel',keys:[['Book a trip','home'],['Flights','flights'],['Hotels','hotels'],['Packages','packages'],['Cruises','cruises'],['Tours & Activities','tours'],['Car rental','carRental'],['Transfers','transfers']]},
+    {title:'Explore',keys:[['Destinations','destinations'],['SKANDI Collection','skandiCollection'],['VOY Magazine','voy']]},
+    {title:'Travel help',keys:[['Travel information','travelInfo'],['Flight status','flightStatus'],['Passport & visa','passportVisa'],['Baggage allowance','baggageAllowance'],['Travel insurance','travelInsurance'],['Special assistance','specialAssistance'],['Help Center','support']]},
+    {title:'Your SKANDI',keys:[['My Trips','myTrips'],['SKANDI Club','club'],['My Profile','myProfile'],['The Store','theStore']]},
+    {title:'About SKANDI',keys:[['About','about'],['Newsroom','newsroom'],['Careers','careers'],['Legal','legal'],['Policies','policies'],['Cookie preferences','cookiePreferences'],['Staff login','riaintra']]}
+  ];
+  const $=id=>document.getElementById(id);
+  const bar=$('skandi-mobile-nav-root');
+  const BUTTONS=Array.from(bar.querySelectorAll('[data-route]'));
+  const menuButton=BUTTONS.find(btn=>btn.dataset.route==='menu');
+  const drawer=$('drawer');
+  const status=$("skandi-mobile-status");
+  const shell=window.__SKANDI_SHELL__?.root;
+  const family=shell?.dataset.skandiFamily||'public';
+  const isStaff=family==='riaintra'||family==='altea';
+  const brand=family==='altea'?'ALTEA':family==='riaintra'?'RIAINTRA':'SKANDI TRAVELS';
+  const staffIcons={
+    workspace:'M3 9l9-6 9 6v11H3z M9 20v-7h6v7',
+    mail:'M3 5h18v14H3z M3 6l9 7 9-7',
+    docs:'M5 3h10l4 4v14H5z M14 3v5h5 M8 12h8 M8 16h8',
+    altea:'M4 4h6v6H4z M14 4h6v6h-6z M4 14h6v6H4z M14 14h6v6h-6z',
+    reservations:'M3 7h18v10H3z M8 7v10 M13 11h5',
+    eos:'M7 3h10v18H7z M10 17h4'
+  };
+  const drawerTitle=isStaff?brand+' menu':'Explore SKANDI';
+  const state={routes:{...defaults},currentPath:'/',request:0,drawerOpen:false,drawerPending:'',drawerTimer:null,chatOpen:false,lastFocused:null,staffNavigation:null};
+  bar.setAttribute('aria-label',brand+' mobile navigation');
+  $('drawer-brand').textContent=brand;
+  $('drawer-title').textContent=drawerTitle;
+  if(isStaff) {
+    drawer.dataset.staffMenu='';
+    $('drawer-actions').hidden=true;
+  }
+  let focusTransitionToken=0;
+  const safePath=value=>{
+    const path=String(value||'').trim();
+    return /^\/(?!\/)/.test(path) && !/[\\\u0000-\u0020]/.test(path) && !/%5c|%0[0-9a-f]|%1[0-9a-f]/i.test(path)?path:'';
+  };
+  const nextId=key=>key+'-'+Date.now()+'-'+(++state.request);
+  function post(type,payload={},requestId=''){
+    const message={source:SOURCE,type,payload,timestamp:new Date().toISOString()};
+    if(requestId)message.requestId=requestId;
+    window.parent.postMessage(message,'*');
+  }
+  function pathFor(key){return safePath(state.routes[key])||safePath(defaults[key]);}
+  function updateActive(){
+    const current=safePath(state.currentPath)||'/';
+    const normalized=current.split('?')[0];
+    for(const button of BUTTONS){
+      const key=button.dataset.route;
+      const path=isStaff?safePath(button.dataset.path):pathFor(key);
+      const active=path&&(path.includes('?')?current===path:normalized===path || key==='destinations'&&normalized.startsWith('/destinations/'));
+      if(active)button.setAttribute('aria-current','page');
+      else button.removeAttribute('aria-current');
+    }
+  }
+  function navigatePath(path){
+    if(!safePath(path))return;
+    closeDrawer();
+    post('MASTER_NAVIGATE',{path},nextId('nav'));
+  }
+  function navigate(key){navigatePath(pathFor(key));}
+  function renderMenu(){
+    const root=$('drawerLinks');
+    const openTitles=new Set(Array.from(root.querySelectorAll('details[open] summary'),item=>item.textContent));
+    const focused=document.activeElement;
+    const focusedKey=root.contains(focused)?focused.dataset.menuKey:'';
+    const renderedItems=new Map();
+    const groups=isStaff?(state.staffNavigation?.groups||[]):publicGroups.map(group=>({
+      title:group.title, links:group.keys.map(([label,key])=>({label,path:pathFor(key)}))
+    }));
+    root.replaceChildren();
+    for(const group of groups){
+      const links=(group.links||[]).filter(link=>safePath(link.path));
+      if(!links.length)continue;
+      const section=document.createElement('details');
+      section.className='drawer-group';
+      section.open=openTitles.has(group.title)||(!openTitles.size&&links.some(link=>link.path===state.currentPath));
+      const heading=document.createElement('summary');
+      heading.className='group-heading';heading.textContent=group.title;
+      heading.dataset.menuKey=group.title;renderedItems.set(group.title,heading);
+      section.appendChild(heading);
+      for(const link of links){
+        const button=document.createElement('button');
+        button.type='button';button.className='drawer-link';
+        button.dataset.menuKey=link.path;renderedItems.set(link.path,button);
+        const text=document.createElement('span');text.textContent=link.label;
+        const chevron=document.createElement('b');chevron.textContent='›';chevron.setAttribute('aria-hidden','true');
+        button.append(text,chevron);
+        button.addEventListener('click',()=>navigatePath(link.path));
+        section.appendChild(button);
+      }
+      root.appendChild(section);
+    }
+    if(isStaff&&!root.childElementCount){
+      const notice=document.createElement('p');
+      notice.textContent=state.staffNavigation?'No navigation is available for this session.':'Loading navigation…';
+      root.appendChild(notice);
+    }
+    if(isStaff){
+      const tabs=state.staffNavigation?.tabs||[];
+      BUTTONS.filter(button=>button!==menuButton).forEach((button,index)=>{
+        const tab=tabs[index];
+        button.hidden=!safePath(tab?.path);
+        button.dataset.path=safePath(tab?.path);
+        button.querySelector('span').textContent=tab?.shortLabel||tab?.label||'';
+        const icon=staffIcons[tab?.icon];
+        const svg=button.querySelector('svg');
+        if(icon){
+          const path=document.createElementNS('http://www.w3.org/2000/svg','path');
+          path.setAttribute('d',icon);
+          svg.replaceChildren(path);
+        }
+        button.setAttribute('aria-label',tab?.label||'Navigation');
+      });
+    }
+    if(focusedKey)renderedItems.get(focusedKey)?.focus({preventScroll:true});
+    updateActive();
+  }
+  function preferredHeight(open){
+    if(!open)return 88; // Canonical V12 host closed geometry: 88px; visual bar is 68px.
+    return Math.max(220,Math.round(window.visualViewport?.height||window.innerHeight||844)-52);
+  }
+  function requestSize(open,requestId){
+    post('HOME_APP_DRAWER_RESIZE',{open,height:preferredHeight(open)},requestId);
+  }
+  function announce(message){status.textContent=String(message||'');}
+  function setDrawerVisible(open){
+    state.drawerOpen=Boolean(open);
+    document.body.classList.toggle('drawer-open',state.drawerOpen);
+    drawer.setAttribute('aria-hidden',String(!state.drawerOpen));
+    menuButton.setAttribute('aria-expanded',String(state.drawerOpen));
+    $('overlay').setAttribute('aria-hidden',String(!state.drawerOpen));
+    // The drawer is modal inside a compiled embed. Keep page controls out of its focus order.
+    const app=shell?.querySelector('#skandi-app-root');
+    if(app)app.inert=state.drawerOpen;
+    if(!state.drawerOpen)stopChat();
+  }
+  function openDrawer(){
+    if(state.drawerOpen||state.drawerPending)return;
+    state.lastFocused=document.activeElement;
+    announce('');
+    if((window.parent===window||Boolean(window.__SKANDI_SHELL__))){setDrawerVisible(true);$("skandi-mobile-closeBtn").focus({preventScroll:true});return;}
+    const requestId=nextId('drawer-open');
+    state.drawerPending=requestId;
+    requestSize(true,requestId);
+    clearTimeout(state.drawerTimer);
+    state.drawerTimer=setTimeout(()=>{
+      if(state.drawerPending!==requestId)return;
+      state.drawerPending='';
+      announce('The menu could not open. Please try again.');
+    },5000);
+  }
+  function closeDrawer(){
+    const wasOpen=state.drawerOpen||Boolean(state.drawerPending);
+    if(!wasOpen)return;
+    ++focusTransitionToken;
+    clearTimeout(state.drawerTimer);
+    state.drawerPending='';
+    setDrawerVisible(false);
+    if((window.parent!==window&&!window.__SKANDI_SHELL__))requestSize(false,nextId('drawer-close'));
+    const target=state.lastFocused instanceof HTMLElement?state.lastFocused:menuButton;
+    target.focus({preventScroll:true});
+    state.lastFocused=null;
+  }
+  function forceCloseDrawer(){
+    ++focusTransitionToken;
+    clearTimeout(state.drawerTimer);
+    state.drawerPending='';
+    setDrawerVisible(false);
+  }
+  function acceptOpenWhenResized(requestId){
+    const token=++focusTransitionToken;
+    const started=Date.now();
+    function check(){
+      if(token!==focusTransitionToken||state.drawerPending!==requestId)return;
+      if(window.innerHeight>=220){
+        clearTimeout(state.drawerTimer);
+        state.drawerPending='';
+        setDrawerVisible(true);
+        $("skandi-mobile-closeBtn").focus({preventScroll:true});
+        return;
+      }
+      if(Date.now()-started>=1100){
+        state.drawerPending='';
+        clearTimeout(state.drawerTimer);
+        announce('The menu needs a page-level mobile embed that can expand.');
+        requestSize(false,nextId('drawer-recover'));
+        return;
+      }
+      requestAnimationFrame(check);
+    }
+    requestAnimationFrame(check);
+  }
+  function chatSend(type,payload={}){post('SKANDI_SUPPORT_CHAT',{type,payload},nextId('chat'));}
+  function stopChat(){
+    if(!state.chatOpen)return;
+    chatSend('SUPPORT_CHAT_PANEL_CLOSE');
+    state.chatOpen=false;
+    drawer.classList.remove('chat-mode');
+    $('drawer-title').textContent=drawerTitle;
+  }
+  function openChat(){
+    state.chatOpen=true;
+    drawer.classList.add('chat-mode');
+    $('drawer-title').textContent='Alexandra';
+    $('chatStatus').textContent='Connecting to Alexandra…';
+    chatSend('SUPPORT_CHAT_START_ALEXANDRA',{requestId:nextId('alexandra-open')});
+    $('chatInput').focus({preventScroll:true});
+  }
+  function bubble(message,mine=false){
+    const div=document.createElement('div');
+    div.className='bubble'+(mine?' mine':'');
+    div.textContent=String(message||'').slice(0,4000);
+    $('chatLog').appendChild(div);
+    div.scrollIntoView({block:'end'});
+  }
+  for(const button of BUTTONS){
+    button.addEventListener('click',()=>{
+      if(button.dataset.route==='menu'){
+        if(state.drawerOpen)closeDrawer();else openDrawer();
+      } else if(isStaff)navigatePath(button.dataset.path);
+      else navigate(button.dataset.route);
+    });
+  }
+  $('overlay').addEventListener('click',closeDrawer);
+  $("skandi-mobile-closeBtn").addEventListener('click',()=>state.chatOpen?stopChat():closeDrawer());
+  $('staffSignOut').addEventListener('click',()=>{
+    closeDrawer();
+    post('RIAINTRA_LOGOUT',{},nextId('sign-out'));
+  });
+  $('profileLink').addEventListener('click',()=>navigate('myProfile'));
+  $('searchLink').addEventListener('click',()=>{
+    closeDrawer();
+    post('HOME_APP_FOCUS_SEARCH',{},nextId('focus'));
+  });
+  $('alexandraLink').addEventListener('click',openChat);
+  $('chatForm').addEventListener('submit',event=>{
+    event.preventDefault();
+    const input=$('chatInput');
+    const message=input.value.trim();
+    if(!message)return;
+    bubble(message,true);
+    input.value='';
+    chatSend('SUPPORT_CHAT_SUBMIT_FORM',{message,text:message});
+  });
+  document.addEventListener('keydown',event=>{
+    if(event.key==='Escape'){
+      if(state.chatOpen)stopChat();else closeDrawer();
+    }
+    if(event.key==='Tab'&&state.drawerOpen){
+      const visible=Array.from(drawer.querySelectorAll('summary,button:not([disabled]),input:not([disabled]),textarea:not([disabled])'))
+        .filter(el=>el.getClientRects().length>0);
+      if(!visible.length){event.preventDefault();drawer.focus();return;}
+      const first=visible[0],last=visible[visible.length-1];
+      if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}
+      else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}
+    }
+  });
+  window.addEventListener('message',event=>{
+    if(event.source!==window.parent)return;
+    let message=event.data;
+    if(typeof message==='string'){try{message=JSON.parse(message);}catch(_){return;}}
+    if(!message||typeof message!=='object'||message.source!==PARENT)return;
+    if(message.type==='SKANDI_MASTER_CONFIG'){
+      const config=message.payload||{};
+      for(const key of Object.keys(config.routes||{})){
+        const candidate=safePath(config.routes?.[key]);
+        if(candidate)state.routes[key]=candidate;
+      }
+      state.currentPath=safePath(config.currentPath)||state.currentPath;
+      if(isStaff&&config.mobileNavigation?.family===family){
+        state.staffNavigation=config.mobileNavigation;
+        $('staff-drawer-actions').hidden=!state.staffNavigation.groups?.length;
+      }
+      if(isStaff){
+        const logo=config.brand?.assets?.toolWordmarks?.[family];
+        if(/^data:image\/png;base64,[a-z0-9+/=]+$/i.test(logo||'')){
+          $('drawer-logo').src=logo;
+          $('drawer-logo').hidden=false;
+          $('drawer-brand').hidden=true;
+        }
+      }
+      renderMenu();
+      return;
+    }
+    if(message.type==='HOME_APP_DRAWER_RESIZE_ACK'){
+      const requestId=String(message.requestId||'');
+      if(message.payload?.open===true){
+        if(state.drawerPending&&requestId===state.drawerPending)acceptOpenWhenResized(requestId);
+        else requestSize(false,nextId('drawer-stale-ack'));
+      }
+      return;
+    }
+    if(message.type==='HOME_APP_DRAWER_FORCE_CLOSE'){forceCloseDrawer();return;}
+    if(message.type==='HOME_APP_DRAWER_RESIZE_ERROR'){
+      clearTimeout(state.drawerTimer);
+      state.drawerPending='';
+      announce(message.payload?.message||'The menu could not open.');
+      return;
+    }
+    if(message.type==='SUPPORT_CHAT_OPEN'){if(state.chatOpen)$('chatStatus').textContent='Connected to Alexandra';return;}
+    if(message.type==='SUPPORT_CHAT_ERROR'){if(state.chatOpen)$('chatStatus').textContent=message.payload?.message||'Chat connection unavailable';return;}
+    if(message.type==='SUPPORT_CHAT_SNAPSHOT'&&state.chatOpen){
+      const data=message.payload||{};
+      if(Array.isArray(data.messages))for(const item of data.messages.slice(-15))if(item?.text||item?.message)bubble(item.text||item.message,Boolean(item.mine));
+      return;
+    }
+    if(message.type==='SUPPORT_CHAT_CASE_CREATED'&&state.chatOpen){$('chatStatus').textContent='Case created';return;}
+  });
+  window.addEventListener('resize',()=>{
+    if(state.drawerOpen&&shell&&window.innerWidth>1020)closeDrawer();
+    else if(state.drawerOpen&&(window.parent!==window&&!window.__SKANDI_SHELL__))requestSize(true,nextId('viewport-resize'));
+  });
+  renderMenu();
+  post('MASTER_CONFIG_REQUEST',{context:'mobile-navigation'});
+  post('HOME_APP_READY',{},nextId('ready'));
+
+
+})();</script>
 <script data-skandi-part="the-store">(function(){
 const __root=window.document.getElementById("skandi-app-root");
 const document=new Proxy(window.document,{get(target,key){if(key==='getElementById')return id=>{const el=target.getElementById(id);return el&&(__root===el||__root.contains(el))?el:null;};if(key==='querySelector'||key==='querySelectorAll')return selector=>{if(/^(?:html|body|head|meta|title|link)(?:[\s.#[:]|$)/i.test(selector)&&!selector.includes(' '))return target[key](selector);return __root[key](selector);};if(key==='getElementsByClassName'||key==='getElementsByTagName')return value=>__root[key](value);const value=Reflect.get(target,key,target);return typeof value==='function'?value.bind(target):value;},set(target,key,value){return Reflect.set(target,key,value,target);}});

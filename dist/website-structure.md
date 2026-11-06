@@ -45,7 +45,7 @@ Route authority: `src/public/siteMap.js`. This file is generated evidence, not r
 | alteaTimatic | /riaintra/success-factors/altea/timatic | altea-embeds/altea-timatic/skandi-altea-timatic.{html,css,js} | altea / altea | UNVERIFIED | PENDING SOURCE |
 | mail | /riaintra/success-factors/mail | riaintra-embeds/mail/skandi-mail.{html,css,js} | riaintra / riaintra | src/pages/Mail.ecik8.js | BUILT |
 | docunet | /riaintra/success-factors/docunet | riaintra-embeds/docunet/skandi-docunet.{html,css,js} | riaintra / riaintra | src/pages/DocuNet.twh13.js | BUILT |
-| docunetAdmin | /riaintra/success-factors/docunet/admin | riaintra-embeds/docunet-admin/skandi-docunet-admin.{html,css,js} | riaintra / riaintra | src/pages/DocuNet Administration.u5a64.js | FAILED |
+| docunetAdmin | /riaintra/success-factors/docunet/admin | riaintra-embeds/docunet-admin/skandi-docunet-admin.{html,css,js} | riaintra / riaintra | src/pages/DocuNet Administration.u5a64.js | BUILT |
 | serviceDesk | /riaintra/success-factors/service-desk | riaintra-embeds/service-desk/skandi-service-desk.{html,css,js} | riaintra / riaintra | src/pages/Customer Service Desk.benbs.js | BUILT |
 | policyControl | /riaintra/success-factors/policy-control | riaintra-embeds/policy-control/skandi-policy-control.{html,css,js} | riaintra / riaintra | src/pages/Policy Control.ec9p4.js | BUILT |
 | mediaControl | /riaintra/success-factors/media-control | riaintra-embeds/media-control/skandi-media-control.{html,css,js} | riaintra / riaintra | src/pages/Media Control.chm91.js | BUILT |
@@ -112,4 +112,3 @@ These actual repository controllers are preserved. No new route or build is inve
 - **packages**: NOT READY: No verified canonical controller mapping.
 - **support**: NOT READY: Help Center and support chat are separate HTML components; preserve them until a verified single-component migration.
 - **alteaTimatic**: NOT READY: No verified canonical controller mapping.
-- **docunetAdmin**: NOT READY: [docunetAdmin / docunet-admin] riaintra-embeds/docunet-admin/skandi-docunet-admin.html, riaintra-embeds/docunet-admin/skandi-docunet-admin.css, riaintra-embeds/docunet-admin/skandi-docunet-admin.js: riaintra-embeds/docunet-admin/skandi-docunet-admin.html: nested iframe is not supported; retain the existing Wix integration
