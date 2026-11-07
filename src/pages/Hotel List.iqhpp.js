@@ -3,7 +3,7 @@ import { bindDestinationFlow } from "public/destinationFlowBridge";
 
 $w.onReady(() => {
   bindDestinationFlow($w, "hotels", {
-    embedId:"#areaHotelsHtml",
+    embedId:"#hotelsEmbed",
     sources:["SKANDI_AREA_HOTEL_SEARCH", "SKANDI_HOTEL_DETAIL"]
   });
 });

@@ -43,23 +43,48 @@
     }).join("");
   }
   function section(title,body){return body?`<section><h2>${escape(title)}</h2>${body}</section>`:"";}
-  function paragraph(value){return value?`<p>${escape(value)}</p>`:"";}
+  function display(value,depth=0){
+    if(depth>6||value===null||value===undefined||value==="")return "";
+    if(typeof value==="string"){
+      const raw=value.trim();
+      if((raw.startsWith("{")&&raw.endsWith("}"))||(raw.startsWith("[")&&raw.endsWith("]"))){try{return display(JSON.parse(raw),depth+1)}catch(_){}}
+      return raw;
+    }
+    if(typeof value==="boolean")return value?"Yes":"No";
+    if(typeof value==="number")return String(value);
+    if(Array.isArray(value))return value.map(v=>display(v,depth+1)).filter(Boolean).join(" · ");
+    if(typeof value==="object")return Object.values(value).map(v=>display(v,depth+1)).filter(Boolean).join(" · ");
+    return "";
+  }
+  function paragraph(value){const result=display(value);return result?result.split(/\n\s*\n/).map(part=>`<p>${escape(part).replace(/\n/g,"<br>")}</p>`).join(""):"";}
+  function bullets(values){const items=rows(values).map(v=>display(v)).filter(Boolean);return items.length?`<ul>${items.map(value=>`<li>${escape(value)}</li>`).join("")}</ul>`:"";}
+  function fieldLabel(key){return key.replace(/[_-]+/g," ").replace(/([a-z])([A-Z])/g,"$1 $2").replace(/^./,c=>c.toUpperCase());}
+  function contentFacts(value){
+    if(typeof value==="string"){const str=value.trim();if((str.startsWith("{")&&str.endsWith("}"))||(str.startsWith("[")&&str.endsWith("]"))){try{return contentFacts(JSON.parse(str))}catch(_){}}return paragraph(str)}
+    if(Array.isArray(value))return bullets(value);
+    if(value&&typeof value==="object")return facts(Object.entries(value).map(([key,item])=>[fieldLabel(key),display(item)]));
+    return paragraph(value);
+  }
   function facts(entries){
-    const items=entries.filter(([,value])=>value);
+    const items=entries.map(([label,value])=>[display(label),display(value)]).filter(([label,value])=>label&&value);
     return items.length?`<dl>${items.map(([label,value])=>`<div><dt>${escape(label)}</dt><dd>${escape(value)}</dd></div>`).join("")}</dl>`:"";
   }
   function renderDetail(page){
-    const gallery=rows(page.gallery).map(safeImage).filter(Boolean);
-    const roomInfo=rows(page.rooms).map(room=>`<h3>${escape(room.name)}</h3>${paragraph(room.description)}${paragraph([room.bedType,room.size,room.capacity?`Sleeps ${room.capacity}`:""].filter(Boolean).join(" · "))}`).join("");
+    const metadata=rows(page.galleryMedia);
+    const gallery=rows(page.gallery).map(url=>({url:safeImage(url),meta:metadata.find(item=>item.url===url)||{}})).filter(item=>item.url);
+    const roomInfo=rows(page.rooms).map(room=>`<details class="hs-room"><summary><span>${escape(display(room.name)||"Room")}</span><small>${escape([display(room.roomType),display(room.bedType),display(room.size),room.capacity?`Sleeps ${room.capacity}`:""].filter(Boolean).join(" · "))}</small></summary><div>${paragraph(room.description)}${bullets(room.features)}</div></details>`).join("");
     const place=page.locationTransfer||{};
-    const highlights=rows(page.highlights);
+    const policies=page.policies||{};
     find("hotelDetail").innerHTML=[
       section("About the hotel",paragraph(page.about)+paragraph(page.important)+facts(rows(page.facts).map(f=>[f.label,f.value]))),
-      section("Photos",gallery.length?`<div class="hs-gallery">${gallery.map(image=>`<img src="${image}" alt="" loading="lazy">`).join("")}</div>`:""),
-      section("Highlights",highlights.length?`<ul>${highlights.map(text=>`<li>${escape(text)}</li>`).join("")}</ul>`:""),
+      section("Photos",gallery.length?`<div class="hs-gallery">${gallery.map(image=>`<figure><img src="${image.url}" alt="${escape(display(image.meta.alt)||page.name)}" loading="lazy">${image.meta.caption?`<figcaption>${escape(display(image.meta.caption))}</figcaption>`:""}</figure>`).join("")}</div>`:""),
+      section("Highlights",bullets(page.highlights)),
+      section("Facilities",bullets(rows(page.facilities).map(value=>typeof value==="string"?value.replace(/_/g," "):value))),
       section("Rooms",paragraph(page.roomsIntro)+roomInfo),
       ...[["Food and drink",page.food],["Pool and beach",page.poolBeach],["Activities",page.activities],["Accessibility",page.accessibility]].map(([title,value])=>
-        section(title,facts(Object.entries(value||{}).filter(([,text])=>typeof text==="string"&&text).map(([key,text])=>[key.replace(/([a-z])([A-Z])/g,"$1 $2"),text])))),
+        section(title,contentFacts(value))),
+      section("Board options",bullets(page.boardOptions)),
+      section("Good to know",facts([["Check-in",policies.checkIn],["Check-out",policies.checkOut],["Minimum check-in age",policies.minimumAge],["Pets allowed",policies.petsAllowed],["Smoking",policies.smoking]])+(rows(page.included).length?`<h3>Included</h3>${bullets(page.included)}`:"")+(rows(page.notIncluded).length?`<h3>Not included</h3>${bullets(page.notIncluded)}`:"")),
       section("Location",paragraph(place.text)+facts([["Address",place.address],["Airport",place.airportDistance],["Transfer",place.transferTime],["City centre",place.centerDistance],["Beach",place.beachDistance],["Phone",place.phone],["Email",place.email]]))
     ].join("");
   }

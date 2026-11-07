@@ -36,6 +36,11 @@
 .hs-detail{display:grid;gap:16px;margin-top:20px}
 .hs-gallery{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
 .hs-gallery img{width:100%;aspect-ratio:16/10;object-fit:cover;border-radius:8px}
+.hs-gallery figure{margin:0;min-width:0}.hs-gallery figcaption{margin-top:6px;color:var(--hs-muted);font-size:.85rem}
+.hs-room{margin-top:10px;border:1px solid var(--hs-line);border-radius:12px;background:#f9fbfe;overflow:hidden}
+.hs-room summary{display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px 18px;padding:16px;cursor:pointer;color:var(--hs-navy);font-weight:700}
+.hs-room summary small{color:var(--hs-muted);font-weight:500;font-size:.9rem}.hs-room>div{padding:0 16px 16px}
+.hs-detail ul{padding-left:1.3rem}.hs-detail li+li{margin-top:6px}
 .hs-detail dl{display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:12px}
 .hs-detail dt{font-weight:750}
 .hs-detail dd{margin:4px 0 0;color:var(--hs-muted)}
