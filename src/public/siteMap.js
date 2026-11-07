@@ -250,7 +250,7 @@ export const PAGE_BUILD_INTEGRATIONS = Object.freeze({
   },
   "hotelList": {
     "controller": "src/pages/Hotel List.iqhpp.js",
-    "embedIds": ["#areaHotelsHtml"],
+    "embedIds": ["#hotelsEmbed"],
     "sources": ["SKANDI_AREA_HOTEL_SEARCH", "SKANDI_HOTEL_DETAIL"]
   },
   "country": {

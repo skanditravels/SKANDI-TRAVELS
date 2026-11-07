@@ -316,11 +316,13 @@ function projectAirport(item = {}, row = {}) {
 function localizedMaster(row = {}, language = "EN") {
   const wanted = upper(language, 8) || "EN";
   const localized = arr(structured(row.localized, []));
-  return obj(
-    localized.find(item => upper(item?.language, 8) === wanted) ||
-    localized.find(item => upper(item?.language, 8) === "EN") ||
-    localized[0]
-  );
+  const fallback=obj(localized.find(item=>upper(item?.language,8)==="EN")||localized[0]);
+  const selected=obj(localized.find(item=>upper(item?.language,8)===wanted)||fallback);
+  return Object.fromEntries([...new Set([...Object.keys(fallback),...Object.keys(selected)])].map(key=>{
+    const value=selected[key];
+    const empty=value==null||(typeof value==="string"&&!value.trim())||(Array.isArray(value)&&!value.length);
+    return [key,empty?fallback[key]:value];
+  }));
 }
 
 function masterMediaUrl(row = {}) {
@@ -332,9 +334,41 @@ function masterMediaUrl(row = {}) {
   return clean(first(preferred.publicUrl, preferred.public_url, preferred.url, preferred.imageUrl, preferred.image_url), 3000);
 }
 
+function masterPublicSections(type, details, localized) {
+  const raw=structured(first(details.sections, details.sectionsJson), {});
+  const sections=raw&&typeof raw==="object"&&!Array.isArray(raw)?{...raw}:{};
+  const present=value=>value!==undefined&&value!==null&&value!==""&&(!Array.isArray(value)||value.length>0)&&(!(typeof value==="object"&&!Array.isArray(value))||Object.keys(value).length>0);
+  const add=(key,title,body)=>{if(present(body)&&!present(sections[key]))sections[key]={title,body}};
+  add("highlights","Highlights",localized.highlights);
+  add("important","Important information",first(localized.importantInformation,localized.important_information,details.importantInformation));
+  if(type==="HOTEL"){
+    add("facilities","Facilities",details.facilities);
+    add("rooms","Rooms",arr(details.rooms).map(room=>({name:publicText(first(room.name,room.code),500),description:publicText(room.description,6000),bedType:publicText(room.bedType,300),size:room.sizeSqm?`${room.sizeSqm} m²`:"",capacity:room.maxGuests?`${room.maxGuests} guests`:"",roomType:publicText(room.roomType,300)})).filter(room=>room.name||room.description));
+    add("board","Board options",details.boardOptions);
+    const policy={};
+    for(const [name,value] of [["Check-in",details.checkinTime],["Check-out",details.checkoutTime],["Minimum check-in age",details.minimumCheckinAge],["Pets allowed",details.petsAllowed],["Smoking",details.smokingPolicy]])if(present(value))policy[name]=value;
+    add("policies","Hotel policies",policy);
+    add("facts","Property facts",details.facts);
+    add("included","Included",localized.included);
+    add("notIncluded","Not included",first(localized.notIncluded,localized.not_included));
+  }else if(type==="TRANSFER"){
+    const meeting={};
+    for(const [name,value] of [["Meeting point",details.meetingPoint],["Meeting instructions",details.meetingPointDescription],["Terminal",details.terminal],["Arrival hall",details.arrivalHall],["Waiting area",details.waitingArea],["Transfer type",details.transferType],["Vehicle",details.vehicleType],["Published minimum minutes",details.publishedTimeMin],["Published maximum minutes",details.publishedTimeMax],["Accessibility",details.accessibilityNotes]])if(present(value))meeting[name]=value;
+    add("transferDetails","Transfer details",meeting);
+  }else if(["GUIDED_TOUR","ACTIVITY","PARTNER_TICKET"].includes(type)){
+    const practical={};
+    for(const [name,value] of [["Duration",details.duration],["Duration minutes",details.durationMinutes],["Meeting point",first(details.meetingPoint,details.meetingLocation)],["Languages",details.languages],["Minimum age",details.minimumAge],["Accessibility",details.accessibility],["Restrictions",details.restrictions]])if(present(value))practical[name]=value;
+    add("practical","Practical information",practical);
+    add("included","Included",localized.included);
+    add("notIncluded","Not included",first(localized.notIncluded,localized.not_included));
+  }
+  return sections;
+}
+
 function projectMaster(row = {}, language = "EN") {
   const d = obj(structured(row.details, {}));
   const localized = localizedMaster(row, language);
+  const type=upper(row.entity_type,80);
   const image = masterMediaUrl(row);
   const title = publicText(first(localized.pageTitle, localized.title, row.name, row.code), 500);
   const rawBody = first(
@@ -350,10 +384,9 @@ function projectMaster(row = {}, language = "EN") {
   const body = publicText(rawBody, 16000);
   const summary = publicText(first(localized.shortDescription, localized.short_description, d.summary, body), 3000);
   return {
-    ...d,
     id: clean(row.id, 180),
     code: clean(row.code, 180),
-    entityType: upper(row.entity_type, 80),
+    entityType: type,
     title,
     name: title,
     slug: clean(row.slug, 300),
@@ -361,10 +394,21 @@ function projectMaster(row = {}, language = "EN") {
     body,
     description: body,
     summary,
+    city:publicText(first(d.city,d.locationCity),250),
+    country:publicText(first(d.countryName,d.country),250),
+    timezone:publicText(d.timezone,160),
+    durationText:publicText(first(d.duration,d.durationMinutes?`${d.durationMinutes} min`:""),250),
+    meetingPoint:publicText(first(d.meetingPoint,d.meetingLocation),2000),
+    fromLocation:publicText(first(d.fromLocation,d.origin),500),
+    toLocation:publicText(first(d.toLocation,d.destination),500),
+    starRating:finite(d.officialStarRating,null),
+    website:clean(d.website,2000),
+    contactUrl:clean(d.contactUrl,2000),
     image,
     image_url: image,
     heroImage: image,
-    sections: structured(first(d.sections, d.sectionsJson), {}),
+    sections: masterPublicSections(type,d,localized),
+    path: type==="HOTEL"?`/destinations/explore/hotel-list?view=hotel&hotelId=${encodeURIComponent(clean(row.id,180))}`:clean(d.path,1000),
     sortOrder: finite(row.sort_priority, 100),
     canonicalSource: "INVENTORY_CONTROL_SUPABASE"
   };
