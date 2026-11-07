@@ -7,6 +7,8 @@
 
 ## CHANGE LOG (append-only)
 
+- 2026-11-07 — The current V12 SuccessFactors source triplet adds Recruiting → Onboarding → Complete onboarding and editing existing task status. The page forwards `CAREERS_COMPLETE_ONBOARDING` to `orgStructure.web`. HR confirmation and the effective assignment control staff activation. The embedded historical HTML below predates this action and is retained as a reference.
+
 - 2026-10-28 UTC — Updated `riaintra-embeds/success-factors/success-factors.receiver.html` to follow the current shared receiver pattern with page-specific startup, progress and failure messages for **Success Factors** (`/riaintra/success-factors`). The expected route matches `src/public/siteMap.js`; master-page handshake, staff authorization, manifest/SHA-256 checks and nested-iframe rejection remain intact.
 
 
