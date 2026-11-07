@@ -21,6 +21,8 @@
 
 - 2026-10-28 UTC — Updated `skandi-embeds/group-talk/skandi-group-talk.receiver.html` to follow the current shared receiver pattern with page-specific startup, progress and failure messages for **ALTEA GroupTalk** (`/riaintra/success-factors/altea/grouptalk`). The expected route matches `src/public/siteMap.js`; master-page handshake, staff authorization, manifest/SHA-256 checks and nested-iframe rejection remain intact.
 
+- 2026-11-07 UTC — Live GroupTalk loaded but remained offline, and Wix Logs showed `PHONEBOOK_REQUEST` failing with `TypeError: n is not a function` at the page boundary. The facade now exports each existing Wix web method directly through `webMethod`, retaining the same names, permission settings and core authorization. The indirect registration pattern was a likely cause; Wix publication and an authenticated live retest are required to confirm it. Multi-user voice and realtime sync still require separate live testing.
+
 ## COMPLETE INTENDED HTML
 
 > The matching executable source is maintained in this page folder.
