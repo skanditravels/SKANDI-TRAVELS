@@ -55,12 +55,12 @@ test('hotel page renders structured content as readable labelled details',async 
 });
 
 test('Travel Info receives public hotel details and omits operational fields',async()=>{
-  const master={id:'h-1',entity_type:'HOTEL',name:'Hotel One',details:{facilities:['Pool'],rooms:[{name:'Standard',description:'Comfortable',internalNotes:'private'}],checkinTime:'15:00',petsAllowed:false,internalNotes:'private'},localized:[{language:'EN',shortDescription:'A stay',highlights:['Central'],included:['Breakfast']},{language:'SV',shortDescription:''}],media:[]};
+  const master={id:'h-1',entity_type:'HOTEL',name:'Hotel One',details:{facilities:['Pool','FREE_WIFI'],rooms:[{name:'Standard',description:'Comfortable',internalNotes:'private'}],checkinTime:'15:00',petsAllowed:false,internalNotes:'private'},localized:[{language:'EN',shortDescription:'A stay',highlights:['Central'],included:['Breakfast']},{language:'SV',shortDescription:''}],media:[]};
   const restRequest=async({table})=>table==='inventory_public_entities_v'?[master]:[];
   const ctx=vm.createContext({restRequest,URLSearchParams});vm.runInContext(withoutImports(await source('src/backend/SKANDI_CORE/publicContentInventoryProjection.js')),ctx);
   const out=await ctx.applyInventoryAuthorityToTravelInfoCore({language:'SV',airlines:[],airports:[]});
   const hotel=out.hotels[0];
-  assert.equal(hotel.summary,'A stay');assert.equal(hotel.sections.facilities.body[0],'Pool');
+  assert.equal(hotel.summary,'A stay');assert.equal(hotel.sections.facilities.body[0],'Pool');assert.equal(hotel.sections.facilities.body[1],'FREE WIFI');
   assert.equal(hotel.sections.policies.body['Pets allowed'],false);
   assert.equal(hotel.sections.rooms.body[0].name,'Standard');
   assert.equal(hotel.sections.rooms.body[0].internalNotes,undefined);

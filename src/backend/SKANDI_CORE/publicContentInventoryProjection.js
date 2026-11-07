@@ -342,7 +342,7 @@ function masterPublicSections(type, details, localized) {
   add("highlights","Highlights",localized.highlights);
   add("important","Important information",first(localized.importantInformation,localized.important_information,details.importantInformation));
   if(type==="HOTEL"){
-    add("facilities","Facilities",details.facilities);
+    add("facilities","Facilities",arr(structured(details.facilities,[])).map(value=>typeof value==="string"?value.replace(/[_-]+/g," "):value));
     add("rooms","Rooms",arr(details.rooms).map(room=>({name:publicText(first(room.name,room.code),500),description:publicText(room.description,6000),bedType:publicText(room.bedType,300),size:room.sizeSqm?`${room.sizeSqm} m²`:"",capacity:room.maxGuests?`${room.maxGuests} guests`:"",roomType:publicText(room.roomType,300)})).filter(room=>room.name||room.description));
     add("board","Board options",details.boardOptions);
     const policy={};
