@@ -50,3 +50,12 @@ Public build coverage: 27 BUILT, 8 PENDING SOURCE, 1 BLOCKED INTEGRATION and 1 A
 4. In a staff session, verify an unauthorized user cannot save, then save an unpublished draft and confirm anonymous visitors see the previous version. Publish a harmless change, verify desktop/mobile rendering and approximately one-minute refresh, and roll it back.
 5. Test a real Asset Library upload, current-image copy, attribution display and provider import through Wix. Verify font API availability. Confirm private images cannot be selected or published.
 6. Supply the missing approved page sources, resolve the listed public build/integration defects, and add explicit editors for data-driven components and remaining content types before claiming complete no-code coverage.
+
+
+## 2026-11-07: editorial and image improvements
+
+The visual editor accepts active, PUBLIC image records from the existing `skandi-public-assets`, `inventory-media`, `aircraft-assets` and `uniform-assets` public buckets. The existing server storage allowlist rejects private or unknown buckets; public site image URLs are limited to these buckets on Supabase domains. This changes selection of existing media only and does not move images or change permissions. The Home card manager retains its existing image ownership rules.
+
+VOY Brand Guard now checks configured blocked and required phrases against the selected issue's available issue, page and article text, showing each finding and its location. It does not score brand quality or claim fact, tone or legal verification. This replaces the previous fixed score of 100.
+
+Current builder result: 51 built, 3 pending source (hotels, packages and Timatic), 1 blocked integration (Support), and 5 aliases. These counts cover public and internal routes. The preview remains a script-free layout preview; data-driven components still require their existing content owners. Live save, publish, upload, image replacement and staff-session behavior remain to be verified with an authorized session.

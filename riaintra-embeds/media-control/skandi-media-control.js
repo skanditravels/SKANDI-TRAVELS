@@ -762,7 +762,7 @@ function renderBrandKit(){
       <div class="row" style="margin-top:10px"><button class="btn primary" data-action="save-brand-kit">Save brand kit</button><button class="btn ok" data-action="run-brand-guard">Run brand guard</button></div>
     </div>
     <div class="panel scroll"><h3>Brand guard result</h3>
-      ${state.brandGuardResult?.summary?`<div class="notice">${esc(state.brandGuardResult.summary)}</div>`:`<div class="empty">Run Brand Guard to check all active issue copy against voice, terms and legal risk wording.</div>`}
+      ${state.brandGuardResult?.summary?`<div class="notice">${esc(state.brandGuardResult.summary)}<br>${esc(state.brandGuardResult.scope||"")}</div>${(state.brandGuardResult.findings||[]).map(f=>`<div class="qa-card"><b>${f.type==="blocked"?"Blocked phrase":"Required phrase missing"}: ${esc(f.phrase)}</b><span>${esc(f.location)}</span></div>`).join("")}`:`<div class="empty">Run Brand Guard to check configured phrases in the selected issue.</div>`}
       <h3 style="margin-top:12px">Professional additions</h3>
       <div class="qa-list">
         <div class="qa-card"><b>Design token lock</b><span>Keep VOY colors, typography, logo clearspace and CTA style synchronized with editor and public pages.</span></div>
@@ -1058,7 +1058,7 @@ function handleAction(action){
   if(action==="accessibility-seo-check"){post("VOY_ACCESSIBILITY_SEO_REQUEST",{issue:currentIssue(),page:currentPage(),article:currentArticle()});toast("Accessibility and SEO check requested.");return}
   if(action==="translate-package"){post("VOY_TRANSLATION_PACKAGE_REQUEST",{issue:currentIssue(),pages:issuePages(),languages:arr($("qualityLangs")?.value||"sv,no,da,fi,de"),brandKit:state.brandKit});toast("Translation package requested.");return}
   if(action==="save-brand-kit"){state.brandKit=collectBrandKit();post("VOY_BRAND_KIT_SAVE",{brandKit:state.brandKit});toast("Brand kit saved locally and sent to backend.","ok");refreshAfterSave("save-brand-kit");renderAll();return}
-  if(action==="run-brand-guard"){const kit=document.getElementById("brandName")?collectBrandKit():state.brandKit;post("VOY_BRAND_GUARD_REQUEST",{brandKit:kit,issue:currentIssue(),pages:issuePages(),articles:state.articles});toast("Brand guard requested.");return}
+  if(action==="run-brand-guard"){const kit=document.getElementById("brandName")?collectBrandKit():state.brandKit;post("VOY_BRAND_GUARD_REQUEST",{brandKit:kit,issue:currentIssue(),pages:issuePages(),articles:state.articles.filter(a=>String(a.issueId||a.issueRef||"")===String(currentIssueId()))});toast("Brand guard requested.");return}
   if(action==="run-print-qa"){state.printQa=printQaData();post("VOY_PRINT_QA_REQUEST",{qa:state.printQa,issue:currentIssue(),pages:issuePages(),assets:state.assets});toast("Print QA requested.");renderPrintQa();return}
   if(action==="prepare-print-export"){state.printQa=printQaData();post("VOY_PREPARE_PRINT_PACKAGE_REQUEST",{issue:currentIssue(),pages:issuePages(),assets:state.assets,qa:state.printQa,format:"press-ready-pdf"});toast("Press package preparation requested.");renderPrintQa();return}
   if(action==="generate-distribution-kit"){

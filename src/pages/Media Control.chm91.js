@@ -16,6 +16,7 @@ import { handleMediaControlAssetAction } from "backend/SKANDI_CORE/mediaControl.
 import { SITE_MAP, EDITORIAL_PAGE_CATALOG, isSafeInternalRoute } from "public/siteMap";
 
 import { WEBSITE_STYLE_PROPERTIES } from "public/websiteDesign";
+import { checkVoyBrandCopy } from "public/brandGuard.js";
 
 const EMBED_ID = "#mediaControlEmbed";
 const CHILD_SOURCES = new Set(["SKANDI_MEDIA_CONTROL", "SKANDI_NEWSROOM_CONTROL", "SKANDI_INTERNAL_CHROME"]);
@@ -108,7 +109,7 @@ async function saveEntity(type, item = {}) {
 function localTool(type, payload = {}) {
   if (type === "VOY_QUALITY_LAB_REQUEST") return ["VOY_QUALITY_LAB_RESULT", { result:{ readinessScore:payload.readiness?.score || 0, pageWarnings:payload.localChecks?.pageWarnings || 0, assetWarnings:payload.localChecks?.assetWarnings || 0, articleDrafts:payload.localChecks?.articleDrafts || 0, checks:payload.localChecks || {}, pages:payload.pages || [] } }];
   if (type === "VOY_PRINT_QA_REQUEST") return ["VOY_PRINT_QA_RESULT", { result:payload.qa || {} }];
-  if (type === "VOY_BRAND_GUARD_REQUEST") return ["VOY_BRAND_GUARD_RESULT", { result:{ score:100, status:"LOCAL_RULES_CHECKED", notes:"Configured local brand rules were checked." } }];
+  if (type === "VOY_BRAND_GUARD_REQUEST") return ["VOY_BRAND_GUARD_RESULT", { result:checkVoyBrandCopy(payload) }];
   if (type === "VOY_DISTRIBUTION_KIT_REQUEST") return ["VOY_DISTRIBUTION_KIT_RESULT", { result:{ ...(payload.kit || {}), summary:"Distribution kit prepared from the active issue, page plan and campaign settings." } }];
   if (type === "VOY_TRANSLATION_PACKAGE_REQUEST") return ["VOY_TRANSLATION_PACKAGE_RESULT", { result:{ issueId:payload.issue?.issueId || "", languages:Array.isArray(payload.languages) ? payload.languages : [], pageCount:Array.isArray(payload.pages) ? payload.pages.length : 0, status:"PACKAGE_PREPARED" } }];
   return null;

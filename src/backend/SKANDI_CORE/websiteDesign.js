@@ -15,12 +15,13 @@ async function read(context,page) {
 export async function resolveWebsiteAssets(design,{published=false}={}) {
   const safe=validateWebsiteDesign(design),ids=[...new Set(safe.elements.map(e=>e.assetId).filter(Boolean))],assets=new Map();
   for(let i=0;i<ids.length;i+=50) {
-    const rows=await restRequest({table:'platform_assets',method:'GET',query:{select:'id,bucket,storage_path,alt_text,credit',id:`in.(${ids.slice(i,i+50).join(',')})`,status:'eq.ACTIVE',visibility:'eq.PUBLIC',asset_type:'eq.IMAGE',bucket:'eq.skandi-public-assets',limit:'50'}});
+    const rows=await restRequest({table:'platform_assets',method:'GET',query:{select:'id,bucket,storage_path,alt_text,credit',id:`in.(${ids.slice(i,i+50).join(',')})`,status:'eq.ACTIVE',visibility:'eq.PUBLIC',asset_type:'eq.IMAGE',limit:'50'}});
     for(const asset of rows||[]) assets.set(asset.id,asset);
   }
   for(const element of safe.elements) if(element.assetId) {
     const asset=assets.get(element.assetId);if(!asset)throw new Error('WEBSITE_PUBLIC_ASSET_REQUIRED');
-    element.assetUrl=(await storageGetPublicUrl({bucket:asset.bucket,path:asset.storage_path})).publicUrl;
+    try { element.assetUrl=(await storageGetPublicUrl({bucket:asset.bucket,path:asset.storage_path})).publicUrl; }
+    catch (_) { throw new Error('WEBSITE_PUBLIC_ASSET_REQUIRED'); }
     element.credit=String(asset.credit||'');
     if(!Object.hasOwn(element,'alt'))element.alt=String(asset.alt_text||'');
   }
