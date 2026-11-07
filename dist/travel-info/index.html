@@ -6355,7 +6355,7 @@ const text=v=>String(v??"").trim();
 const lower=v=>text(v).toLowerCase();
 const num=v=>Number.isFinite(Number(v))?Number(v):null;
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const human=v=>text(v).replace(/[_-]+/g," ").replace(/\b\w/g,c=>c.toUpperCase());
+const human=v=>text(v).replace(/([a-z0-9])([A-Z])/g,"$1 $2").replace(/[_-]+/g," ").replace(/\b\w/g,c=>c.toUpperCase());
 const uniq=a=>[...new Set(arr(a).map(text).filter(Boolean))];
 const safeInternal=p=>/^\/(?!\/)[^\s]*$/.test(text(p));
 const safeExternal=u=>{try{const x=new URL(text(u));return x.protocol==="https:"?x.href:""}catch(_){return""}};
