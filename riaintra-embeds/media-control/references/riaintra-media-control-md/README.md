@@ -5,6 +5,8 @@
 
 ## INFO / LOG
 
+- 2026-11-07 — VOY launch kits prepare editable newsletter, social and agency drafts from supplied issue details and track campaign links. Saved kits use the existing editorial store; generation is deterministic and requires human review.
+
 - 2026-11-07 — Historical reference retained. The active sidecars now check configured VOY Brand Guard phrases and accept eligible public images from the approved public storage buckets. See `docs/media-control-website-editor.md` for current behavior and live-test limits.
 
 - 2026-10-30 — Removed hardcoded company marks and airline/airport logo URLs from unassigned Media Control placements. Kept logo fields with [LEAVE_PLACEHOLDER] and suppressed unresolved placeholders in previews.
@@ -2533,11 +2535,11 @@ function renderBrandKit(){
     </div>
     <div class="panel scroll"><h3>Brand guard result</h3>
       ${state.brandGuardResult?.summary?`<div class="notice">${esc(state.brandGuardResult.summary)}<br>${esc(state.brandGuardResult.scope||"")}</div>${(state.brandGuardResult.findings||[]).map(f=>`<div class="qa-card"><b>${f.type==="blocked"?"Blocked phrase":"Required phrase missing"}: ${esc(f.phrase)}</b><span>${esc(f.location)}</span></div>`).join("")}`:`<div class="empty">Run Brand Guard to check configured phrases in the selected issue.</div>`}
-      <h3 style="margin-top:12px">Professional additions</h3>
+      <h3 style="margin-top:12px">Review guidance</h3>
       <div class="qa-list">
-        <div class="qa-card"><b>Design token lock</b><span>Keep VOY colors, typography, logo clearspace and CTA style synchronized with editor and public pages.</span></div>
-        <div class="qa-card"><b>Legal phrase guard</b><span>Flags absolute claims, unapproved hotel guarantees, outdated price claims and package terms requiring review.</span></div>
-        <div class="qa-card"><b>Market localization</b><span>Adapts copy to Nordic, US and EU markets without changing brand tone.</span></div>
+        <div class="qa-card"><b>Design token lock</b><span>Check colors, typography, logo clearspace and CTA style against the approved brand kit.</span></div>
+        <div class="qa-card"><b>Legal phrase guard</b><span>Configured blocked phrases are flagged for review; factual and legal checks still need an editor.</span></div>
+        <div class="qa-card"><b>Market localization</b><span>Review language, local terms and brand tone for each market.</span></div>
       </div>
     </div>
   </div>`;
@@ -2593,11 +2595,12 @@ function renderDistribution(){
       </div>
       <div class="row" style="margin-top:8px"><button class="btn primary" data-action="generate-distribution-kit">Generate launch kit</button><button class="btn ok" data-action="save-distribution-kit">Save kit</button></div>
       <div class="channel-grid" style="margin-top:10px">
-        ${["Press release","Newsletter","Social captions","Paid ads","Agency brief","Public web issue","PDF download","Sales CTA"].map(x=>`<div class="channel-card"><b>${x}</b><span>Generated from issue, pages, campaigns and brand kit.</span></div>`).join("")}
+        ${["Newsletter","Social caption","Agency brief"].map(x=>`<div class="channel-card"><b>${x}</b><span>Editable starting draft for your review.</span></div>`).join("")}
       </div>
     </div>
     <div class="panel scroll"><h3>Generated kit</h3>
-      ${d.summary?`<div class="notice">${esc(d.summary)}</div><div class="manifest" style="margin-top:8px">${esc(d.copy||JSON.stringify(d,null,2))}</div>`:`<div class="empty">No distribution kit yet.</div>`}
+      ${d.summary?`<div class="notice">${esc(d.summary)}</div>${(d.drafts||[]).map(x=>`<div class="qa-card"><b>${esc(x.channel)}</b><textarea class="input" rows="7" data-kit-draft="${esc(x.channel)}" aria-label="${esc(x.channel)} draft">${esc(x.copy)}</textarea></div>`).join("")}`:`<div class="empty">No distribution kit yet.</div>`}
+      <h3>Saved kits</h3>${(state.distributionKits||[]).map(x=>`<button class="btn" data-open-distribution-kit="${esc(x.kitId||x._id||"")}">${esc(x.name||"Untitled kit")}</button>`).join("")||`<div class="empty">No saved kits.</div>`}
     </div>
   </div>`;
 }
@@ -2835,8 +2838,9 @@ function handleAction(action){
     const kit={kitId:uid("DIST"),issueId:currentIssueId(),name:$("distName").value.trim(),market:$("distMarket").value.trim(),channel:$("distChannel").value,ctaPath:$("distCta").value.trim(),utmCampaign:$("distUtm").value.trim(),angle:$("distAngle").value.trim(),createdAt:new Date().toISOString()};
     post("VOY_DISTRIBUTION_KIT_REQUEST",{kit,issue:currentIssue(),pages:issuePages(),campaigns:state.campaigns,brandKit:state.brandKit});toast("Distribution kit requested.");return}
   if(action==="save-distribution-kit"){
-    const kit=state.distributionKit||{kitId:uid("DIST"),issueId:currentIssueId(),summary:"Manual distribution kit placeholder",createdAt:new Date().toISOString()};
-    state.distributionKits.unshift(kit);post("VOY_DISTRIBUTION_KIT_SAVE",{kit});toast("Distribution kit saved.","ok");refreshAfterSave("save-distribution-kit");renderAll();return}
+    if(!state.distributionKit){toast("Prepare a launch kit before saving.","bad");return}
+    const kit=state.distributionKit;
+    post("VOY_DISTRIBUTION_KIT_SAVE",{kit});toast("Saving distribution kit…");refreshAfterSave("save-distribution-kit");renderAll();return}
   if(action==="image-enhance"){post("VOY_MEDIA_ENHANCE_REQUEST",{issueId:currentIssueId(),assets:state.assets,mode:"editorial-quality"});toast("Media enhancement request sent.");return}
   if(action==="save-api-config"){post("VOY_CONNECTOR_CONFIG_SAVE",{aliases:{asset:$("apiAssetAlias").value,research:$("apiResearchAlias").value,export:$("apiExportAlias").value},enabled:$("apiEnabled").value==="true"});toast("Connector aliases sent to backend.");refreshAfterSave("save-connector-config");return}
   if(action==="refresh-newsroom"){post("NEWSROOM_ADMIN_REFRESH",{});status("Refreshing newsroom data…");return}
@@ -2854,6 +2858,7 @@ function handleAction(action){
   }
 }
 document.addEventListener("click",e=>{
+  const openKit=e.target.closest("[data-open-distribution-kit]");if(openKit){const kit=state.distributionKits.find(x=>String(x.kitId||x._id||"")===openKit.dataset.openDistributionKit);if(kit){state.distributionKit=JSON.parse(JSON.stringify(kit));renderDistribution()}return}
   const module=e.target.closest("[data-module]");if(module){setModule(module.dataset.module);return}
   const nav=e.target.closest("[data-panel]");if(nav){setPanel(nav.dataset.panel);return}
   const act=e.target.closest("[data-action]");if(act){handleAction(act.dataset.action);return}
@@ -2912,6 +2917,7 @@ document.addEventListener("change",e=>{
   if(e.target.id==="releasePage"){state.editorialSelection.releasePageKey=e.target.value;renderReleaseCenter()}
 });
 document.addEventListener("input",e=>{
+  if(e.target.matches("[data-kit-draft]")){const draft=(state.distributionKit?.drafts||[]).find(x=>x.channel===e.target.dataset.kitDraft);if(draft)draft.copy=e.target.value}
   if(e.target.matches("[data-block-field]")){const box=$("pageBlocks");if(box){const blocks=collectVisualBlocks();if(blocks)box.value=JSON.stringify(blocks,null,2)}}
   if(e.target.id==="webContentValue"&&$("webContentCount"))$("webContentCount").textContent=String(e.target.value||"").length;
 });
