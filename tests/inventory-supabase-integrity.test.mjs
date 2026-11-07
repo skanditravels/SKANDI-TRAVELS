@@ -51,3 +51,19 @@ test('tour text renders structured entries as readable labels',async()=>{
  assert.equal(ctx.lists([{name:'Breakfast'},'Central'])[1],'Central');
  assert.equal(ctx.lists([{unknown:'Private'}]).length,0);
 });
+
+test('catalog owns merchandising and recognized collection tier remains aligned',async()=>{
+ const writes=[];let catalog={catalogType:'SKANDI_COLLECTION',partnerTier:'SIGNATURE COLLECTION',featured:true};
+ const ctx=vm.createContext({...base,qeq:x=>'eq.'+x,select:async()=>[],restRequest:async args=>{writes.push(args);return[]},saveCatalog:async()=>catalog,actorId:()=>null});
+ vm.runInContext([functionCode('canonicalCollectionTier'),functionCode('syncMasterChildren'),'this.sync=syncMasterChildren'].join('\n'),ctx);
+ const record={id:'product',details:{skandiTier:'CLASSIC',unchanged:'kept'}};
+ await ctx.sync({},record,{});
+ assert.equal(writes[0].body.details.skandiTier,'SIGNATURE');
+ assert.equal(writes[0].body.details.unchanged,'kept');
+ assert.equal(writes[0].body.featured,true);
+ assert.equal('partner_tier' in writes[0].body,false);
+ assert.equal('collection_type' in writes[0].body,false);
+ writes.length=0;catalog={catalogType:'SKANDI_PARTNER',partnerTier:'SIGNATURE'};
+ await ctx.sync({},record,{});
+ assert.equal('details' in writes[0].body,false);
+});
