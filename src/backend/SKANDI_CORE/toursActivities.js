@@ -24,7 +24,13 @@ function localized(row, lang) {
   const list = arr(row.localized);
   return obj(list.find(x => clean(x.language, 4).toUpperCase() === lang && x.title) || list.find(x => x.language === 'EN') || list.find(x => x.title));
 }
-function lists(v) { return arr(v).map(x => clean(x, 3000).replace(/^\\?"|\\?"$/g, '').trim()).filter(Boolean); }
+function lists(v) {
+  return arr(v).map(item => {
+    const value=item&&typeof item==='object'&&!Array.isArray(item)
+      ? item.text??item.label??item.title??item.name??item.description??item.value??'' : item;
+    return typeof value==='object'?'':clean(value,3000).replace(/^\\?"|\\?"$/g,'').trim();
+  }).filter(Boolean);
+}
 function nameOf(record) { return clean(record?.name, 240); }
 function countryName(code, entities) { return nameOf(entities.find(x => x.entity_type === 'COUNTRY' && clean(x.code).toUpperCase() === code)) || code; }
 function mediaOf(entry) {

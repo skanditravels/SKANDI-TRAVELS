@@ -1297,6 +1297,10 @@ function roomWindow(room){
   if(typeof room.window==="boolean")return room.window;
   return /\b(no window|windowless)\b/i.test(String(room.roomType||""))?false:null;
 }
+function hotelTierForDisplay(detailsTier,catalogTier){
+  const value=text(detailsTier||catalogTier).trim().toUpperCase();
+  return value==="SIGNATURE COLLECTION"?"SIGNATURE":value;
+}
 function PDSection({children,title,actions=null,first=false}){
   return html`<div className=${first?"sectiontitle":"sectiontitle pd-module-title"}>${title}${actions?html`<span>${actions}</span>`:null}</div>${children}`;
 }
@@ -1551,7 +1555,7 @@ function PDPropertyWorkspace({bundle,boot,onClose,onSaved,setBusy,setToast}){
         <${PDField} label="Master Name" value=${rec.name} onChange=${v=>update("name",v)}/>
         <${PDField} label="Brand / Chain" value=${d.brand||""} onChange=${v=>setDetails("brand",v)} help="Supplier details may change after refresh"/>
         <${PDField} label="Property Type" type="select" options=${ENUM.propertyType} value=${d.propertyType||""} onChange=${v=>setDetails("propertyType",v)}/>
-        <${PDField} label="SKANDI Tier" type="select" options=${["SIGNATURE","SELECT","ESSENTIAL","CLASSIC"]} value=${catalog.partnerTier||d.skandiTier||""} onChange=${v=>setCatalog("partnerTier",v)}/>
+        <${PDField} label="SKANDI Tier" type="select" options=${optionList(["SIGNATURE","SELECT","ESSENTIAL","CLASSIC"],hotelTierForDisplay(d.skandiTier,catalog.partnerTier))} value=${hotelTierForDisplay(d.skandiTier,catalog.partnerTier)} onChange=${v=>setCatalog("partnerTier",v)}/>
         <${PDField} label="Settlement Currency" type="select" options=${ENUM.currency} value=${rec.commercial?.currency||"USD"} onChange=${v=>update("commercial.currency",v)}/>
         <${PDField} label="URL Slug" value=${rec.slug||""} onChange=${v=>update("slug",v)} help="Blank = generated from Master Name"/>
         <${PDField} label="Public ID" value=${rec.publicId||""} disabled=${true} help="Assigned by SKANDI TRAVELS"/>
