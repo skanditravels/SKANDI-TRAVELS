@@ -3741,8 +3741,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/group-talk/skandi-group-talk.receiver.html",
       "receiverFile": "altea-embeds/group-talk/skandi-group-talk.receiver.html",
-      "sha256": "661479334ea3e326ee4d2d06b6d474130093e3d9cfa990defcf4a38533152f82",
-      "bytes": 106952
+      "sha256": "0ef86b4df67a92cb4589d313de48d4973cbb0a6f42b452e73f80c3c2d1ed3441",
+      "bytes": 107782
     },
     {
       "key": "passportVisa",
