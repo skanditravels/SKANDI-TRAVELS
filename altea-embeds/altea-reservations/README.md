@@ -67,6 +67,8 @@
 
 - 2026-11-07 UTC — Corrected the Wix page element IDs after the live receiver failed to start. The section held `#alteaReservationsEmbed` while the actual HTML component was `#html1`; the page controller consequently failed with `embed.onMessage is not a function`. Renamed the section to `#alteaReservationsSection` and the existing HTML component to `#alteaReservationsEmbed`, matching the established controller and route binding. Wix preview no longer showed that controller error, and the site was published. Authenticated live search and supplier actions still require verification.
 
+- 2026-11-07 UTC — Authenticated live verification after Wix publication: the ALTEA Launchpad opened Reservations, and a one-way JFK–ARN search for 2026-12-15 returned 211 supplier offers. Offer selection, booking, payment and servicing were not exercised.
+
 ## COMPLETE INTENDED HTML
 
 ```html
