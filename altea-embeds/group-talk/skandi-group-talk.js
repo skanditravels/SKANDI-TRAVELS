@@ -10,7 +10,7 @@ const state={
   realtimeHeartbeat:null,realtimePresenceRefresh:null,realtimeAuthRefresh:null,databaseRefreshTimer:null,syncTimer:null,
   members:new Map(),phonebook:[],tickets:[],ticketCategories:[],caseTargets:new Set(),selectedTicket:null,
   outputDeviceId:"",map:null,mapLoaded:false,mapResizeObserver:null,mapRefreshTimer:null,
-  mapFitPending:true,markers:new Map(),watch:null,speaking:false,pttHeld:false,pttSequence:0
+  mapFitPending:true,markers:new Map(),watch:null,speaking:false,pttHeld:false,pttSequence:0,micQueue:Promise.resolve()
 };
 function $(id){return document.getElementById(id)}function post(type,payload={}){parent.postMessage({source:SOURCE,type,payload,timestamp:new Date().toISOString()},"*")}function req(p="REQ"){return p+"-"+Date.now()+"-"+Math.random().toString(36).slice(2,8)}function text(id,v){const e=$(id);if(e)e.textContent=v}function toast(m){const t=$("toast");t.textContent=m;t.style.display="block";setTimeout(()=>t.style.display="none",2500)}function gid(){return state.activeGroup?.groupId||""}function mobile(){return innerWidth<=767}
 let chromeClockUtc=false;
@@ -66,6 +66,7 @@ function switchGroup(id){
   const g=state.groups.find(x=>(x.groupId||x.id)===id);if(!g)return;
   const previous=gid();
   if(previous&&previous!==id){
+    if(state.pttHeld||state.speaking)stopPtt();
     if(state.watch){try{navigator.geolocation.clearWatch(state.watch)}catch(_){ } state.watch=null}
     disconnectSupabaseRealtime(true);
     disconnectVoiceRoom().catch(()=>{});
@@ -252,10 +253,18 @@ async function connectLiveKit(mic=false){
 async function ensureVoiceConnected(){return connectLiveKit(false)}
 async function connectVoice(mic=false){return connectLiveKit(mic)}
 
-async function setMic(on){
-  if(!state.room)return;
-  const lp=state.room.localParticipant;
-  if(lp&&typeof lp.setMicrophoneEnabled==="function")await lp.setMicrophoneEnabled(!!on)
+async function setMic(on,pttSequence=null){
+  const room=state.room;
+  if(!room)return false;
+  const operation=state.micQueue.catch(()=>{}).then(async()=>{
+    if(on&&(state.room!==room||(pttSequence!==null&&(!state.pttHeld||pttSequence!==state.pttSequence))))return false;
+    const lp=room.localParticipant;
+    if(!lp||typeof lp.setMicrophoneEnabled!=="function")throw new Error("Microphone is unavailable.");
+    await lp.setMicrophoneEnabled(!!on);
+    return true
+  });
+  state.micQueue=operation;
+  return operation
 }
 
 function micLevelStart(){
@@ -273,15 +282,19 @@ async function startPtt(){
   if(state.speaking||state.pttHeld)return;
   const canTalk=state.activeGroup?.capabilities?.canTalk!==false;
   if(!canTalk){toast("You do not have talk permission in this group.");return}
+  const sequence=++state.pttSequence,groupId=gid();
   state.pttHeld=true;state.speaking=true;
   document.body.classList.add("ptt-lock");
   $("mPtt")?.classList.add("pressed");$("dPtt")?.classList.add("pressed");
   try{
-    await connectLiveKit(true);
-    await setMic(true);
+    const room=await connectLiveKit(false);
+    if(sequence!==state.pttSequence||!state.pttHeld||gid()!==groupId||state.room!==room)return;
+    const enabled=await setMic(true,sequence);
+    if(!enabled||sequence!==state.pttSequence||!state.pttHeld)return;
     micLevelStart();
     sendPtt(state.mode==="desktop"?"PTT_DOWN_DESKTOP":"PTT_DOWN",{groupId:gid()})
   }catch(e){
+    if(sequence!==state.pttSequence)return;
     state.speaking=false;state.pttHeld=false;
     $("mPtt")?.classList.remove("pressed");$("dPtt")?.classList.remove("pressed");
     document.body.classList.remove("ptt-lock");
@@ -291,6 +304,7 @@ async function startPtt(){
 }
 async function stopPtt(){
   if(!state.speaking&&!state.pttHeld)return;
+  state.pttSequence++;
   state.speaking=false;state.pttHeld=false;
   document.body.classList.remove("ptt-lock");
   $("mPtt")?.classList.remove("pressed");$("dPtt")?.classList.remove("pressed");
@@ -557,6 +571,7 @@ $("btnSettingsLocation")?.addEventListener("click",()=>{close("mobileSettingsShe
 $("btnSettingsHelpdesk")?.addEventListener("click",()=>{close("mobileSettingsSheet");open("ticketSheet")});
 $("btnSettingsTickets")?.addEventListener("click",()=>{close("mobileSettingsSheet");open("myTicketsSheet");post("TICKET_LIST_REQUEST",{mineOnly:true})});
 $("btnGoOffline")?.addEventListener("click",()=>{
+  if(state.pttHeld||state.speaking)stopPtt();
   if(state.watch){try{navigator.geolocation.clearWatch(state.watch)}catch(_){ }state.watch=null}
   disconnectSupabaseRealtime(true);
   disconnectVoiceRoom().catch(()=>{});
@@ -640,6 +655,7 @@ let emergencyTimer=null;{
 addEventListener("blur",()=>{if(state.pttHeld||state.speaking)stopPtt()});
 document.addEventListener("visibilitychange",()=>{if(document.hidden&&(state.pttHeld||state.speaking))stopPtt()});
 addEventListener("pagehide",()=>{
+  if(state.pttHeld||state.speaking)stopPtt();
   stopLightweightSync();
   if(state.watch){try{navigator.geolocation.clearWatch(state.watch)}catch(_){ }}
   disconnectSupabaseRealtime(true);
