@@ -1655,6 +1655,21 @@ window.parent?.postMessage({
   timestamp:new Date().toISOString()
 }, '*');
 
+// Renew staff sessions only in response to real interactions, never a timer.
+if (shellRoot.dataset.skandiFamily === 'riaintra' || shellRoot.dataset.skandiFamily === 'altea') {
+  let lastStaffActivity = 0;
+  const reportStaffActivity = event => {
+    if (!event.isTrusted || Date.now() - lastStaffActivity < 5000) return;
+    const context = window.__SKANDI_RECEIVER_CONTEXT__;
+    if (!context?.allowed || context.key !== shellRoot.dataset.skandiKey) return;
+    lastStaffActivity = Date.now();
+    window.parent.postMessage({source:SKANDI_SHELL_SOURCE,type:'SKANDI_STAFF_ACTIVITY',payload:{key:context.key}}, '*');
+  };
+  for (const type of ['pointerdown', 'pointermove', 'keydown', 'wheel', 'touchstart']) {
+    window.addEventListener(type, reportStaffActivity, {passive:true});
+  }
+}
+
 // The universal receiver supplies this context only after canonical parent,
 // manifest and digest validation. Legacy Home never opts into this handshake.
 let shellAttempts = 0;
