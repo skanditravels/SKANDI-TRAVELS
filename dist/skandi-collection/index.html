@@ -4715,7 +4715,7 @@ let activeCard=null;
         if(Object.hasOwn(item,'text')){const node=textNode(el);if(node&&node.nodeValue!==item.text)node.nodeValue=item.text;}
         if(Object.hasOwn(item,'href')&&el.tagName==='A')el.setAttribute('href',item.href);
         if(Object.hasOwn(item,'alt')&&el.tagName==='IMG')el.setAttribute('alt',item.alt);
-        if(item.assetUrl&&/^https:\/\/[a-z0-9.-]+\/storage\/v1\/object\/public\/skandi-public-assets\//i.test(item.assetUrl)) {
+        if(item.assetUrl&&/^https:\/\/[a-z0-9-]+\.supabase\.co\/storage\/v1\/object\/public\/(?:skandi-public-assets|inventory-media|aircraft-assets|uniform-assets)\//i.test(item.assetUrl)) {
           if(item.imageMode==='background')el.style.setProperty('background-image','url("'+item.assetUrl.replace(/["\\\n\r]/g,'')+'")','important');
           else if(el.tagName==='IMG'){el.removeAttribute('srcset');el.src=item.assetUrl;}
         }
@@ -4758,6 +4758,9 @@ let activeCard=null;
     else if(message.source==='SKANDI_WIX_PARENT'&&message.type==='SKANDI_PRESENTATION_DATA'&&(!message.payload?.path||message.payload.path===config.path))update(message.payload?.websiteDesign);
   });
   if(preview){
+    let lastPreviewActivity=0;
+    const reportActivity=event=>{if(!event.isTrusted||Date.now()-lastPreviewActivity<5000)return;lastPreviewActivity=Date.now();send('WEBSITE_PREVIEW_ACTIVITY',{});};
+    for(const type of ['pointerdown','pointermove','keydown','wheel','touchstart'])document.addEventListener(type,reportActivity,{passive:true});
     document.addEventListener('click',event=>{event.preventDefault();event.stopImmediatePropagation();const el=event.target;if(el.matches(blocked))return;if(selected)selected.style.outline='';selected=el;selected.style.outline='2px solid #285ca8';send('WEBSITE_PREVIEW_SELECTED',describe(el));},true);
     document.addEventListener('submit',event=>{event.preventDefault();event.stopImmediatePropagation();},true);
     send('WEBSITE_PREVIEW_READY',{});
