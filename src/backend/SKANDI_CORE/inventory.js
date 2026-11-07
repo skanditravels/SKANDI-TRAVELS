@@ -121,6 +121,18 @@ function slugify(v){
 function uniqueStrings(v){
   return [...new Set(array(v).map(x=>clean(x,500)).filter(Boolean))];
 }
+// JSONB content can include structured entries. Do not coerce them to "[object Object]".
+function localizedList(v){
+  const seen=new Set(),out=[];
+  for(const item of array(v)){
+    if(item===null||item===undefined)continue;
+    const value=typeof item==="object"?item:clean(item,500);
+    if(value==="")continue;
+    const key=typeof value==="object"?JSON.stringify(value):value;
+    if(!seen.has(key)){seen.add(key);out.push(value)}
+  }
+  return out;
+}
 function parseJson(v,fallback={}){
   if(v===undefined||v===null||v==="") return fallback;
   if(typeof v==="object") return v;
@@ -832,8 +844,8 @@ function localizedBody(entityId,row={}){
     title:clean(row.title,500)||null,eyebrow:clean(row.eyebrow,300)||null,
     short_description:clean(row.shortDescription??row.short_description,8000)||null,
     full_description:clean(row.fullDescription??row.full_description,30000)||null,
-    highlights:uniqueStrings(row.highlights),included:uniqueStrings(row.included),
-    not_included:uniqueStrings(row.notIncluded??row.not_included),
+    highlights:localizedList(row.highlights),included:localizedList(row.included),
+    not_included:localizedList(row.notIncluded??row.not_included),
     important_information:clean(row.importantInformation??row.important_information,16000)||null,
     seo_title:clean(row.seoTitle??row.seo_title,500)||null,
     seo_description:clean(row.seoDescription??row.seo_description,1000)||null,
@@ -874,6 +886,7 @@ async function resolveAssetBackedMedia(entityId,row={},index=0){
     const asset=(await select("platform_assets",{select:"*",id:qeq(assetId),status:"eq.ACTIVE",limit:"1"}))[0];
     if(!asset)throw new Error("INVENTORY_ASSET_NOT_FOUND");
     if(upper(asset.visibility,20)!=="PUBLIC")throw new Error("INVENTORY_PUBLIC_ASSET_REQUIRED");
+    if(upper(row.mediaType??row.media_type??"IMAGE",40)==="IMAGE"&&upper(asset.asset_type,40)!=="IMAGE")throw new Error("INVENTORY_IMAGE_ASSET_REQUIRED");
     const url=clean(asset.public_url,3000);
     if(!url)throw new Error("INVENTORY_ASSET_PUBLIC_URL_MISSING");
     const body=mediaBody(entityId,{...row,
@@ -903,6 +916,8 @@ async function resolveReferenceMediaRows(type,id,rows=[]){
       const asset=(await select("platform_assets",{select:"*",id:qeq(assetId),status:"eq.ACTIVE",limit:"1"}))[0];
       if(!asset)throw new Error("INVENTORY_ASSET_NOT_FOUND");
       if(upper(asset.visibility,20)!=="PUBLIC")throw new Error("INVENTORY_PUBLIC_ASSET_REQUIRED");
+      if(upper(row.mediaType??row.media_type??"IMAGE",40)==="IMAGE"&&upper(asset.asset_type,40)!=="IMAGE")throw new Error("INVENTORY_IMAGE_ASSET_REQUIRED");
+      if(!clean(asset.public_url,3000))throw new Error("INVENTORY_ASSET_PUBLIC_URL_MISSING");
       resolved.push({
         ...row,url:clean(asset.public_url,3000),storageBucket:clean(asset.bucket,180),
         storagePath:clean(asset.storage_path,1000),mimeType:clean(asset.mime_type,160),
@@ -1056,12 +1071,17 @@ async function syncMasterChildren(session,record,bundle){
     }
   }
   if(Array.isArray(bundle.media)){
-    const existing=await select("inventory_media_assets",{select:"id",entity_id:qeq(entityId),limit:"500"});
+    const existing=await select("inventory_media_assets",{select:"id,url",entity_id:qeq(entityId),limit:"500"});
+    const existingById=new Map(existing.map(item=>[clean(item.id,80),item]));
     const keep=new Set();
     for(let i=0;i<bundle.media.length;i++){
-      const item=bundle.media[i],body=await resolveAssetBackedMedia(entityId,item,i);
-      if(!body.url)continue;
+      const item=bundle.media[i];
       const id=clean(item.id,80);
+      if(id&&!existingById.has(id))throw new Error("INVENTORY_MEDIA_RECORD_MISMATCH");
+      const assetId=clean(item.assetId??item.platformAssetId??item.payload?.assetId,80);
+      if(id&&!assetId&&clean(item.url,3000)!==clean(existingById.get(id)?.url,3000))throw new Error("INVENTORY_ASSET_LIBRARY_REQUIRED");
+      const body=await resolveAssetBackedMedia(entityId,item,i);
+      if(!body.url)throw new Error("INVENTORY_ASSET_PUBLIC_URL_MISSING");
       if(id){
         keep.add(id);
         await restRequest({table:"inventory_media_assets",method:"PATCH",query:{id:qeq(id)},body,prefer:"return=representation"});
@@ -1168,18 +1188,18 @@ async function compensateBundleSave(snapshot,savedRecord=null){
     const newId=clean(savedRecord?.id,100);
 
     if(snapshot?.created){
-      if(!newId)return;
+      if(!newId)return true;
       if(MASTER_TYPES.has(type)){
         await restRequest({table:"inventory_master_entities",method:"DELETE",query:{id:qeq(newId)},prefer:"return=minimal"});
       }else if(REFERENCE_TYPES.has(type)){
         const table=type==="AIRLINE"?"travel_info_airlines":"travel_info_airports";
         await restRequest({table,method:"DELETE",query:{ID:qeq(newId)},prefer:"return=minimal"});
       }
-      return;
+      return true;
     }
 
     const id=clean(snapshot?.id,100);
-    if(!id||!snapshot?.primary)return;
+    if(!id||!snapshot?.primary)return false;
 
     if(MASTER_TYPES.has(type)){
       const primary=stripImmutable(snapshot.primary);
@@ -1188,7 +1208,7 @@ async function compensateBundleSave(snapshot,savedRecord=null){
       await restoreRows("inventory_media_assets",{entity_id:qeq(id)},array(snapshot.media));
       await restoreRows("inventory_entity_relations",{source_entity_id:qeq(id)},array(snapshot.relations));
       await restoreRows("inventory_catalog_entries",{target_entity_id:qeq(id)},array(snapshot.catalog));
-      return;
+      return true;
     }
 
     if(REFERENCE_TYPES.has(type)){
@@ -1202,9 +1222,12 @@ async function compensateBundleSave(snapshot,savedRecord=null){
       await restRequest({table,method:"PATCH",query:{ID:qeq(id)},body:primary,prefer:"return=minimal"});
       await restoreRows("inventory_entity_relations",{source_record_type:qeq(type),source_record_id:qeq(id)},array(snapshot.relations));
       await restoreRows("inventory_catalog_entries",{target_record_type:qeq(type),target_record_id:qeq(id)},array(snapshot.catalog));
+      return true;
     }
+    return false;
   }catch(error){
     console.error("[SKANDI Inventory] Compensating rollback failed.",error);
+    return false;
   }
 }
 
@@ -1268,9 +1291,10 @@ export async function saveInventoryBundleCore(input={}){
 
     return{ok:true,bundle:{...(await getInventoryRecordCore({id:record.id,entityType:type})),catalog}};
   }catch(error){
-    await compensateBundleSave(rollback,record);
-    await audit(session,"INVENTORY_BUNDLE_ROLLED_BACK",record?.sourceTable||type,record?.id||rollback?.id||null,
-      `Inventory save was rolled back: ${clean(error?.message||error,500)}`,{type});
+    const restored=await compensateBundleSave(rollback,record);
+    await audit(session,restored?"INVENTORY_BUNDLE_ROLLED_BACK":"INVENTORY_BUNDLE_RESTORE_FAILED",record?.sourceTable||type,record?.id||rollback?.id||null,
+      restored?`Inventory save was rolled back: ${clean(error?.message||error,500)}`:"Inventory save failed and restoration could not be confirmed.",{type});
+    if(!restored){const restoreError=new Error("INVENTORY_BUNDLE_RESTORE_FAILED");restoreError.publicMessage="The changes could not be fully restored. Refresh this record and contact support before editing it again.";throw restoreError}
     throw error;
   }
 }
