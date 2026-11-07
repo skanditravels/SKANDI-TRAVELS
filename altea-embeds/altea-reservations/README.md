@@ -65,6 +65,8 @@
 
 - 2026-10-28 UTC — Updated `skandi-embeds/altea-reservations/skandi-altea-reservations.receiver.html` to follow the current shared receiver pattern with page-specific startup, progress and failure messages for **ALTEA Reservations** (`/riaintra/success-factors/altea/reservations`). The expected route matches `src/public/siteMap.js`; master-page handshake, staff authorization, manifest/SHA-256 checks and nested-iframe rejection remain intact.
 
+- 2026-11-07 UTC — Corrected the Wix page element IDs after the live receiver failed to start. The section held `#alteaReservationsEmbed` while the actual HTML component was `#html1`; the page controller consequently failed with `embed.onMessage is not a function`. Renamed the section to `#alteaReservationsSection` and the existing HTML component to `#alteaReservationsEmbed`, matching the established controller and route binding. Wix preview no longer showed that controller error, and the site was published. Authenticated live search and supplier actions still require verification.
+
 ## COMPLETE INTENDED HTML
 
 ```html
