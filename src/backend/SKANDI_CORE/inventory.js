@@ -1059,6 +1059,13 @@ async function saveCatalog(session,record,catalogInput){
   return saved?normalizeCatalog(saved):normalizeCatalog(body);
 }
 
+function canonicalCollectionTier(catalog={}){
+  if(upper(catalog?.catalogType,80)!=="SKANDI_COLLECTION")return "";
+  const value=upper(catalog?.partnerTier,80);
+  const normalized=value==="SIGNATURE COLLECTION"?"SIGNATURE":value;
+  return ["SIGNATURE","SELECT","ESSENTIAL","CLASSIC"].includes(normalized)?normalized:"";
+}
+
 async function syncMasterChildren(session,record,bundle){
   const entityId=clean(record.id,80);
   if(Array.isArray(bundle.localizedContent)){
@@ -1101,16 +1108,14 @@ async function syncMasterChildren(session,record,bundle){
     if(rows.length)await restRequest({table:"inventory_entity_relations",method:"POST",body:rows,prefer:"return=representation"});
   }
   const catalog=await saveCatalog(session,record,bundle.catalog);
-  // Catalog entry is the merchandising child record; canonical search/collection columns on
-  // inventory_master_entities mirror it so all consumers read a synchronized projection.
+  // The catalog owns merchandising; the master trigger intentionally clears the
+  // legacy merchandising columns. Preserve the customer-facing tier in details.
   const featured=catalog?.featured===true||catalog?.homepageFeatured===true;
   const home=catalog?.homepageFeatured===true;
-  await restRequest({table:"inventory_master_entities",method:"PATCH",query:{id:qeq(entityId)},body:{
-    featured,homepage_featured:home,searchable:catalog?.searchable===true,
-    collection_type:catalog?.catalogType&&catalog.catalogType!=="NONE"?catalog.catalogType:"NONE",
-    partner_tier:catalog?.partnerTier||null,search_priority:catalog?.searchPriority??100,
-    search_keywords:array(catalog?.searchKeywords),updated_by_agent_user_id:actorId(session)
-  },prefer:"return=minimal"});
+  const tier=canonicalCollectionTier(catalog);
+  const patch={featured,homepage_featured:home,updated_by_agent_user_id:actorId(session)};
+  if(tier&&upper(object(record.details).skandiTier,80)!==tier)patch.details={...object(record.details),skandiTier:tier};
+  await restRequest({table:"inventory_master_entities",method:"PATCH",query:{id:qeq(entityId)},body:patch,prefer:"return=minimal"});
   return catalog;
 }
 
