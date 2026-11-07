@@ -6,7 +6,8 @@
 
 import wixLocationFrontend from "wix-location-frontend";
 import { authentication } from "wix-members-frontend";
-import { memory } from "wix-storage-frontend";
+import { local } from "wix-storage-frontend";
+import { createStaffActivitySession } from "public/riaintraSession.js";
 import {
   loginStaffWithSkId,
   getStaffPortalSession
@@ -17,7 +18,7 @@ const EMBED_ID = "#staffLoginEmbed";
 const CHILD_SOURCE = "SKANDI_STAFF_LOGIN";
 const PARENT_SOURCE = "SKANDI_WIX_PARENT";
 const STAFF_DASHBOARD_PATH = "/riaintra/success-factors";
-const MANUAL_STAFF_SESSION_KEY = "skandi_riaintra_manual_session_v1";
+const staffActivitySession = createStaffActivitySession(local);
 const SK_ID_PATTERN = /^[A-Z]{2}[0-9]{4}$/;
 
 
@@ -67,13 +68,21 @@ async function handleEmbedMessage(event) {
 async function handleReady(requestId) {
   actionInProgress = false;
   redirecting = false;
-  clearManualStaffSession();
+  if (staffActivitySession.active()) {
+    try {
+      const session = unwrapResult(await getStaffPortalSession());
+      if (session?.loggedIn && session?.authorized && staffActivitySession.active()) {
+        redirectToDashboard();
+        return;
+      }
+    } catch (_) { /* Require a fresh sign-in if authorization cannot be verified. */ }
+  }
+  staffActivitySession.clear();
   try { await authentication.logout(); } catch (_) {}
   postToEmbed("STAFF_LOGIN_NOTICE", {
-    message: "For your security, enter your SK-ID and password to sign in. Existing sessions are not restored automatically."
+    message: "Enter your SK-ID and password to sign in. Your session ends after 30 minutes of inactivity."
   }, requestId);
 }
-
 
 async function handleLoginRequest(payload, requestId) {
   if (actionInProgress) {
@@ -139,7 +148,7 @@ async function handleLoginRequest(payload, requestId) {
     }
 
 
-    try { memoryStoreSetManual(); }
+    try { staffActivitySession.start(); }
     catch (error) {
       try { await authentication.logout(); } catch (_) {}
       throw new PublicError("Secure staff session could not be established. Please try signing in again.");
@@ -239,16 +248,6 @@ function cleanSkId(value) {
     .toUpperCase()
     .replace(/[^A-Z0-9]/g, "")
     .slice(0, 6);
-}
-
-
-function memoryStoreSetManual() {
-  memory.setItem(MANUAL_STAFF_SESSION_KEY, "typed");
-}
-
-
-function clearManualStaffSession() {
-  try { memory.removeItem(MANUAL_STAFF_SESSION_KEY); } catch (_) {}
 }
 
 

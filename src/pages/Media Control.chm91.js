@@ -2,6 +2,8 @@
 // V12 Media Control — VOY, Newsroom, Website Studio and shared Asset Library.
 import wixLocation from "wix-location";
 import { authentication } from "wix-members-frontend";
+import { local } from "wix-storage-frontend";
+import { createStaffActivitySession } from "public/riaintraSession.js";
 import { getStaffPortalSession } from "backend/SKANDI_CORE/staffAuth.web";
 import {
   getVoyAdminBootstrap, saveVoyIssue, saveVoyIssuePackage, saveVoyPage, saveVoyPages,
@@ -54,7 +56,7 @@ function chromePayload(session = {}) {
     profile:{ ...profile, name:profileName(profile) }, apps:session.apps || [], isAltea:false
   };
 }
-async function logout() { try { await authentication.logout(); } catch (_) {} wixLocation.to("/"); }
+async function logout() { createStaffActivitySession(local).clear(); try { await authentication.logout(); } catch (_) {} wixLocation.to("/"); }
 async function assetAction(action, payload = {}) {
   return handleMediaControlAssetAction({ action, payload:obj(payload) });
 }

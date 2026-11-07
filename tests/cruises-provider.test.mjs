@@ -1,3 +1,4 @@
+import { createStaffActivitySession } from '../src/public/riaintraSession.js';
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import fs from 'node:fs/promises';
@@ -53,7 +54,7 @@ test('cruise bridge uses only its registered component and reports a catalogue f
   let source = await fs.readFile(new URL('../src/pages/masterPage.js',import.meta.url),'utf8');
   for (const n of parse(source,{ecmaVersion:'latest',sourceType:'module'}).body.filter(n=>n.type==='ImportDeclaration').reverse()) source=source.slice(0,n.start)+source.slice(n.end);
   let calls=0;const posts=[];
-  const context={...registry,console,setTimeout,clearTimeout,setInterval,clearInterval,URL,URLSearchParams,
+  const context={...registry,createStaffActivitySession,console,setTimeout,clearTimeout,setInterval,clearInterval,URL,URLSearchParams,
     wixWindowFrontend:{viewMode:'Site',formFactor:'Desktop'},wixLocationFrontend:{baseUrl:'https://www.skanditravels.com',path:[]},wixSiteFrontend:{currentPage:{url:'/cruises',name:'Cruises'}},
     local:{getItem:()=>null},session:{getItem:()=>null},consentPolicy:{getCurrentConsentPolicy:()=>({policy:{}})},$w:Object.assign(()=>[],{onReady:()=>{}}),
     getCruisesBootstrap:async()=>{calls++;return {ok:false,error:{message:'private upstream details'}}},refreshCruises:async()=>({ok:true,data:{cruises:[]}})};
