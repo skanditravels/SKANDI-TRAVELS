@@ -2017,10 +2017,22 @@ function Field({label,value,onChange,type="text",options=[],help,disabled=false,
     ${help?html`<small>${help}</small>`:null}
   </div>`
 }
-function ListField({label,value,onChange,separator="\n",splitPattern,parseItem,help,full=false,placeholder=""}){
+function parseStructuredInput(value){
+  if(typeof value!=="string")return value;
+  const raw=value.trim();
+  if(!((raw.startsWith("{")&&raw.endsWith("}"))||(raw.startsWith("[")&&raw.endsWith("]"))))return value;
+  try{return JSON.parse(raw)}catch(_){return value}
+}
+function ListField(props){
+  const parsed=parseStructuredInput(props.value);
+  if(parsed&&typeof parsed==="object"&&(!Array.isArray(parsed)||parsed.some(v=>parseStructuredInput(v)&&typeof parseStructuredInput(v)==="object")))
+    return html`<${SmartValueEditor} label=${props.label} path=${props.label} value=${parsed} onChange=${props.onChange} full=${props.full}/>`;
+  return html`<${PlainListField} ...${{...props,value:Array.isArray(parsed)?parsed:props.value}}/>`;
+}
+function PlainListField({label,value,onChange,separator="\n",splitPattern,parseItem,help,full=false,placeholder=""}){
   const values=Array.isArray(value)?value:[];
   const signature=JSON.stringify(values);
-  const formatted=values.map(v=>typeof v==="string"?v:JSON.stringify(v)).join(separator);
+  const formatted=values.map(v=>text(v)).join(separator);
   const [draft,setDraft]=useState(formatted);
   const emittedSignature=useRef(signature);
   useEffect(()=>{
@@ -2212,6 +2224,9 @@ function parseSchemaListLine(value){
   return line
 }
 function SchemaScalar({field,value,onChange,records}){
+  const structured=parseStructuredInput(value);
+  if(structured&&typeof structured==="object"&&(field.type!=="list"||!Array.isArray(structured)||structured.some(v=>parseStructuredInput(v)&&typeof parseStructuredInput(v)==="object")))
+    return html`<${SmartValueEditor} label=${field.label} path=${field.path} value=${structured} onChange=${onChange} full=${true}/>`;
   if(field.type==="boolean")return html`<${Toggle} label=${field.label} value=${value===true} onChange=${onChange}/>`;
   if(field.type==="list")return html`<${ListField} label=${field.label+" — one per line"} value=${value} onChange=${onChange} parseItem=${parseSchemaListLine} help=${field.help}/>`;
   if(field.type==="reference")return html`<${Field} label=${field.label} type="select" options=${referenceList(records,field.refTypes,value)} value=${value||""} onChange=${onChange} help=${field.help}/>`;
@@ -2222,10 +2237,10 @@ function normalizeStructuredRows(value,fields=[]){
   const first=fields[0]?.path||"value", second=fields[1]?.path||"description";
   let parsed=value;
   if(typeof parsed==="string"){const raw=parsed.trim();if(!raw)return[];try{parsed=JSON.parse(raw)}catch(_){return[{[first]:raw}]}}
-  if(Array.isArray(parsed))return parsed.filter(v=>v!==null&&v!==undefined&&v!=="").map(v=>v&&typeof v==="object"&&!Array.isArray(v)?v:{[first]:String(v)});
+  if(Array.isArray(parsed))return parsed.filter(v=>v!==null&&v!==undefined&&v!=="").map(v=>v&&typeof v==="object"&&!Array.isArray(v)?v:{[first]:v});
   if(parsed&&typeof parsed==="object"){
     if(fields.some(f=>Object.prototype.hasOwnProperty.call(parsed,f.path)))return[parsed];
-    return Object.entries(parsed).map(([k,v])=>({[first]:k,[second]:v&&typeof v==="object"?JSON.stringify(v):String(v??"")}));
+    return Object.entries(parsed).map(([k,v])=>({[first]:k,[second]:v}));
   }
   return parsed===null||parsed===undefined?[]:[{[first]:String(parsed)}];
 }
@@ -2267,13 +2282,15 @@ function smartTextType(path,value){
   return"text";
 }
 function SmartValueEditor({label,path,value,onChange,full=false}){
+  const parsed=parseStructuredInput(value);
+  if(parsed!==value)return html`<${SmartValueEditor} label=${label} path=${path} value=${parsed} onChange=${onChange} full=${full}/>`;
   if(Array.isArray(value)){
-    const objects=value.some(v=>v&&typeof v==="object"&&!Array.isArray(v));
+    const objects=value.some(v=>parseStructuredInput(v)&&typeof parseStructuredInput(v)==="object");
     if(!objects){
       return html`<${ListField} label=${label+" — one per line"} value=${value} onChange=${onChange} full=${full}/>`
     }
     return html`<div className="smartgroup"><div className="smarttitle">${label}</div>
-      ${value.length?value.map((item,i)=>html`<div className="smartobject"><div className="paneltitle"><span>Item ${i+1}</span><button className="btn small danger" onClick=${()=>onChange(value.filter((_,x)=>x!==i))}>Remove</button></div><${SmartObjectEditor} value=${item||{}} onChange=${next=>onChange(value.map((x,idx)=>idx===i?next:x))}/></div>`):html`<div className="smartempty">No list items.</div>`}
+      ${value.length?value.map((item,i)=>html`<div className="smartobject"><div className="paneltitle"><span>Item ${i+1}</span><button className="btn small danger" onClick=${()=>onChange(value.filter((_,x)=>x!==i))}>Remove</button></div><${SmartValueEditor} label=${`Item ${i+1}`} path=${path} value=${item} onChange=${next=>onChange(value.map((x,idx)=>idx===i?next:x))} full=${true}/></div>`):html`<div className="smartempty">No list items.</div>`}
     </div>`
   }
   if(value&&typeof value==="object"){
@@ -2397,17 +2414,25 @@ function AssetLibraryModal({context,onClose,onSelect,manageOnly=false,setBusy,se
   const [root,setRoot]=useState(context?.libraryRoot||"SKANDI"),[folder,setFolder]=useState(context?.libraryFolder||""),[subfolder,setSubfolder]=useState(context?.librarySubfolder||""),[category,setCategory]=useState(context?.category||"");
   const [visibility,setVisibility]=useState(context?.visibility||"PUBLIC"),[assetType,setAssetType]=useState(context?.assetType||"");
   const [file,setFile]=useState(null),[hash,setHash]=useState(""),[dup,setDup]=useState(null),[uploading,setUploading]=useState(false),[page,setPage]=useState(1);
+  const fileSelection=useRef(0);
   const locked=!!context?.lockedContext;
+  function selectAsset(asset){
+    if(context?.visibility==="PUBLIC"&&(asset.visibility!=="PUBLIC"||!asset.publicUrl)){setToast("This file is private and cannot be used on a public page. Choose a public asset.",true);return false}
+    if(context?.assetType==="IMAGE"&&asset.assetType!=="IMAGE"){setToast("Choose an image for this field.",true);return false}
+    if(onSelect)onSelect(asset);
+    return true
+  }
   async function load(){
     try{const r=await request("INVENTORY_ASSET_LIST",{visibility:visibility||undefined,assetType:assetType||undefined,libraryRoot:root||undefined,...(locked&&folder?{libraryFolder:folder}:{} )});setAssets(r.assets||[]);setPage(1)}
     catch(e){setToast(e.message,true)}
   }
   useEffect(()=>{load()},[root,visibility,assetType]);
   async function chooseFile(f){
-    setFile(f||null);setDup(null);setHash("");if(!f)return;
-    try{setUploading(true);const digest=await sha256File(f);setHash(digest);const r=await request("INVENTORY_ASSET_CHECK_DUPLICATE",{sha256:digest,sizeBytes:f.size,mimeType:f.type,originalName:f.name});
+    const selection=++fileSelection.current;setFile(f||null);setDup(null);setHash("");if(!f){setUploading(false);return}
+    try{setUploading(true);const digest=await sha256File(f);if(selection!==fileSelection.current)return;setHash(digest);const r=await request("INVENTORY_ASSET_CHECK_DUPLICATE",{sha256:digest,sizeBytes:f.size,mimeType:f.type,originalName:f.name});
+      if(selection!==fileSelection.current)return;
       if((r.exactDuplicates||[]).length)setDup({exact:r.exactDuplicates,possible:[]});else if((r.possibleLegacyDuplicates||[]).length)setDup({exact:[],possible:r.possibleLegacyDuplicates})}
-    catch(e){setToast(e.message,true)}finally{setUploading(false)}
+    catch(e){if(selection===fileSelection.current)setToast(e.message,true)}finally{if(selection===fileSelection.current)setUploading(false)}
   }
   async function openAsset(asset){
     try{
@@ -2418,14 +2443,14 @@ function AssetLibraryModal({context,onClose,onSelect,manageOnly=false,setBusy,se
   }
   async function upload(allowPossibleDuplicate=false){
     if(!file)return setToast("Choose a file first.",true);if(!root||!folder)return setToast("Choose an Asset Library root and folder.",true);
-    try{setUploading(true);setBusy("Uploading to SKANDI Asset Library…");const digest=hash||await sha256File(file);
+    try{setUploading(true);setBusy("Uploading to SKANDI Asset Library…");const digest=await sha256File(file);
       const prep=await request("INVENTORY_ASSET_PREPARE_UPLOAD",{file:{name:file.name,type:file.type,size:file.size},sha256:digest,visibility,assetType:assetType||undefined,libraryRoot:root,libraryFolder:folder,librarySubfolder:subfolder,category,brand:context?.brand||"SKANDI",system:context?.system||"Inventory Control",contextSystem:context?.contextSystem||"Inventory Control",contextRecordType:context?.contextRecordType||"",contextRecordId:context?.contextRecordId||"",fieldName:context?.fieldName||"",role:context?.role||category,allowPossibleDuplicate});
       if(prep.duplicate){setDup({exact:prep.exactDuplicates||[],possible:[]});return}if(prep.needsReview){setDup({exact:[],possible:prep.possibleLegacyDuplicates||[]});return}
       const response=await fetch(prep.upload.signedUrl,{method:"PUT",headers:{"content-type":file.type,"cache-control":`max-age=${prep.upload.cacheControl||3600}`,"x-upsert":"false"},body:file});
       if(!response.ok)throw new Error(`Asset upload failed (${response.status}).`);
       const done=await request("INVENTORY_ASSET_FINALIZE_UPLOAD",{requestId:prep.requestId});if(!done.asset)throw new Error("Asset uploaded but could not be registered.");
       setToast(done.duplicate?"That file already existed. Reusing the existing asset.":"Asset uploaded and registered.");await load();
-      if(!manageOnly&&onSelect){onSelect(done.asset);onClose()}else{setFile(null);setHash("");setDup(null)}
+      if(!manageOnly&&onSelect){if(selectAsset(done.asset))onClose()}else{setFile(null);setHash("");setDup(null)}
     }catch(e){setToast(e.message,true)}finally{setBusy("");setUploading(false)}
   }
   const folders=[...new Set(assets.map(a=>text(a.libraryFolder).trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
@@ -2447,14 +2472,14 @@ function AssetLibraryModal({context,onClose,onSelect,manageOnly=false,setBusy,se
     </div>
     <div className="paneltitle"><span>Available Assets · ${filtered.length}</span><span className="assetfolder">${root}${folder?` → ${folder}`:""}${subfolder?` → ${subfolder}`:""}</span></div>
     <${Pagination} page=${safePage} totalPages=${totalPages} total=${filtered.length} pageSize=${pageSize} onPage=${setPage}/>
-    ${pageAssets.length?html`<div className="assetgrid">${pageAssets.map(a=>html`<${AssetCard} asset=${a} onUse=${onSelect} onOpen=${openAsset} manageOnly=${manageOnly}/>` )}</div>`:html`<div className="empty">No existing assets match these filters.</div>`}
+    ${pageAssets.length?html`<div className="assetgrid">${pageAssets.map(a=>html`<${AssetCard} asset=${a} onUse=${selectAsset} onOpen=${openAsset} manageOnly=${manageOnly}/>` )}</div>`:html`<div className="empty">No existing assets match these filters.</div>`}
     <${Pagination} page=${safePage} totalPages=${totalPages} total=${filtered.length} pageSize=${pageSize} onPage=${setPage}/>
     <div className="assetsection"><div className="uploadzone"><strong>Upload only if the file is not already available</strong>
       ${manageOnly&&!locked?html`<div className="notice">Choose the business folder above, e.g. AIRLINES → British Airways or SKANDI → Marketing.</div>`:null}
       <input className="fileinput" type="file" accept=${assetType==="IMAGE"?"image/*":undefined} onChange=${e=>chooseFile(e.target.files?.[0]||null)}/>
       ${file?html`<div><b>${file.name}</b> · ${humanBytes(file.size)} · ${file.type||"unknown type"}</div>`:null}${uploading?html`<div className="sub">Checking file and Asset Library…</div>`:null}
-      ${dup?.exact?.length?html`<div className="dupbox"><b>Exact file already exists.</b><div className="sub">Upload is disabled. Use the existing asset.</div><div className="assetgrid" style=${{marginTop:"8px"}}>${dup.exact.map(a=>html`<${AssetCard} asset=${a} onUse=${onSelect} onOpen=${openAsset} manageOnly=${manageOnly}/>` )}</div></div>`:null}
-      ${dup?.possible?.length?html`<div className="dupbox"><b>Possible legacy duplicate found.</b><div className="sub">Check these older files before creating another copy.</div><div className="assetgrid" style=${{marginTop:"8px"}}>${dup.possible.map(a=>html`<${AssetCard} asset=${a} onUse=${onSelect} onOpen=${openAsset} manageOnly=${manageOnly}/>` )}</div><div className="assetactions"><button className="btn" onClick=${()=>upload(true)}>I checked — upload as new anyway</button></div></div>`:null}
+      ${dup?.exact?.length?html`<div className="dupbox"><b>Exact file already exists.</b><div className="sub">Upload is disabled. Use an existing asset with the required visibility.</div><div className="assetgrid" style=${{marginTop:"8px"}}>${dup.exact.map(a=>html`<${AssetCard} asset=${a} onUse=${selectAsset} onOpen=${openAsset} manageOnly=${manageOnly}/>` )}</div></div>`:null}
+      ${dup?.possible?.length?html`<div className="dupbox"><b>Possible legacy duplicate found.</b><div className="sub">Check these older files before creating another copy.</div><div className="assetgrid" style=${{marginTop:"8px"}}>${dup.possible.map(a=>html`<${AssetCard} asset=${a} onUse=${selectAsset} onOpen=${openAsset} manageOnly=${manageOnly}/>` )}</div><div className="assetactions"><button className="btn" onClick=${()=>upload(true)}>I checked — upload as new anyway</button></div></div>`:null}
       ${file&&!dup?.exact?.length&&!dup?.possible?.length?html`<button className="btn cyan" disabled=${uploading} onClick=${()=>upload(false)}>Upload to ${visibility==="PRIVATE"?"Private":"Public"} Asset Library</button>`:null}
     </div></div>
   <//>`
@@ -2463,7 +2488,7 @@ function AssetField({label,value,assetId,context,onSelect,setBusy,setToast,help=
   const [open,setOpen]=useState(false);
   return html`<div className="field full"><label>${label}</label><div className="assetcurrent">${value?html`<div className="preview"><img src=${value} alt=${label}/></div>`:html`<div className="preview">No asset selected</div>`}
     <div className="toolbar"><button className="btn" onClick=${()=>setOpen(true)}>${value?"Replace / Browse Asset Library":"Browse Asset Library / Upload"}</button>${value?html`<span className="sub">${assetId?"Managed Asset Library file":"Legacy linked image — replace through Asset Library when edited"}</span>`:null}</div>${help?html`<small>${help}</small>`:null}</div>
-    ${open?html`<${AssetLibraryModal} context=${{...context,lockedContext:true}} onClose=${()=>setOpen(false)} onSelect=${a=>{onSelect(a);setOpen(false)}} setBusy=${setBusy} setToast=${setToast}/>`:null}
+    ${open?html`<${AssetLibraryModal} context=${context} onClose=${()=>setOpen(false)} onSelect=${a=>{onSelect(a);setOpen(false)}} setBusy=${setBusy} setToast=${setToast}/>`:null}
   </div>`
 }
 function AssetLibraryPanel({setBusy,setToast}){
@@ -2484,13 +2509,13 @@ function RecordEditor({bundle,languages,records,onClose,onSaved,setBusy,setToast
   const [tab,setTab]=useState("identity");
   const [lang,setLang]=useState(languages?.[0]||"EN");
   const [assetPicker,setAssetPicker]=useState(null);
-  const [assetUrl,setAssetUrl]=useState("");const [assetRole,setAssetRole]=useState("GALLERY");const [assetAlt,setAssetAlt]=useState("");
   const rec=draft.record;
   const refs=records||[];
   const update=(path,value)=>setDraft(d=>{const n=clone(d);setPath(n.record,path,value);return n});
   const localized=useMemo(()=>{const a=(draft.localizedContent||[]).map(normalizeLocalized);for(const l of languages||[])if(!a.some(x=>x.language===l))a.push(normalizeLocalized({language:l}));return a},[draft.localizedContent,languages]);
   const currentLang=localized.find(x=>x.language===lang)||localized[0]||normalizeLocalized({language:lang});
   const updateLang=(key,value)=>setDraft(d=>{const rows=(d.localizedContent||[]).map(normalizeLocalized);let i=rows.findIndex(x=>x.language===lang);if(i<0){rows.push(normalizeLocalized({language:lang}));i=rows.length-1}rows[i]={...rows[i],[key]:value};return{...d,localizedContent:rows}});
+  const updateLocalizedSeo=(key,value)=>setDraft(d=>{const rows=(d.localizedContent||[]).map(normalizeLocalized);let i=rows.findIndex(x=>x.language===lang);if(i<0){rows.push(normalizeLocalized({language:lang}));i=rows.length-1}rows[i]={...rows[i],[key]:value};const record=lang==="EN"?{...d.record,seo:{...(d.record.seo||{}),[key==="seoTitle"?"title":"description"]:value}}:d.record;return{...d,record,localizedContent:rows}});
   const media=(draft.media||[]).map(normalizeMedia);
   const relations=(draft.relations||[]).map(normalizeRelation);
   const catalog=draft.catalog||{catalogType:"NONE",partnerTier:"",searchable:false,featured:false,homepageFeatured:false,searchPriority:rec.sortPriority||100,searchKeywords:[],marketCodes:["ALL"],salesChannels:["WEB"],publicLabel:"",badge:"",validFrom:"",validTo:"",notes:"",active:true};
@@ -2503,13 +2528,8 @@ function RecordEditor({bundle,languages,records,onClose,onSaved,setBusy,setToast
   const commercialKnown=knownSectionKeys(rec.entityType,"commercial");
   const operationsKnown=knownSectionKeys(rec.entityType,"operations");
   const setSection=(key,next)=>setDraft(d=>({...d,record:{...d.record,[key]:next}}));
-  function addUrlAsset(){
-    const url=text(assetUrl).trim();
-    if(!/^https?:\/\//i.test(url)){setToast("Enter a valid https:// or http:// asset URL.",true);return}
-    const next=normalizeMedia({role:assetRole||"GALLERY",url,altText:text(assetAlt).trim(),sourceKind:"URL",active:true,sortOrder:(media.length+1)*10,payload:{source:"MANUAL_URL"}});
-    setDraft(d=>({...d,media:[...(d.media||[]),next]}));setAssetUrl("");setAssetAlt("");setToast("Asset URL added. Save the record to persist it.");
-  }
   function useRecordAsset(index,asset,isNew=false){
+    if(asset.visibility!=="PUBLIC"||asset.assetType!=="IMAGE"||!asset.publicUrl){setToast("Choose a public image from the Asset Library.",true);return}
     setDraft(d=>{
       const rows=(d.media||[]).map(normalizeMedia);
       const prior=isNew?normalizeMedia({role:"GALLERY",sortOrder:(rows.length+1)*10}):rows[index];
@@ -2583,14 +2603,13 @@ function RecordEditor({bundle,languages,records,onClose,onSaved,setBusy,setToast
         <${Field} label="Full Description" type="textarea" value=${currentLang.fullDescription} onChange=${v=>updateLang("fullDescription",v)} full=${true}/>
         <${ListField} key=${lang} label="Highlights — one per line" value=${currentLang.highlights} onChange=${v=>updateLang("highlights",v)}/>
         <${Field} label="Important Information" type="textarea" value=${currentLang.importantInformation} onChange=${v=>updateLang("importantInformation",v)}/>
-        <${Field} label="SEO Title" value=${currentLang.seoTitle} onChange=${v=>updateLang("seoTitle",v)}/>
-        <${Field} label="SEO Description" type="textarea" value=${currentLang.seoDescription} onChange=${v=>updateLang("seoDescription",v)}/>
+        <${Field} label="SEO Title" value=${currentLang.seoTitle||(lang==="EN"?(rec.seo?.title??rec.seo?.seoTitle??""):"")} onChange=${v=>updateLocalizedSeo("seoTitle",v)}/>
+        <${Field} label="SEO Description" type="textarea" value=${currentLang.seoDescription||(lang==="EN"?(rec.seo?.description??rec.seo?.seoDescription??""):"")} onChange=${v=>updateLocalizedSeo("seoDescription",v)}/>
       </div>
     </div>`:null}
     ${tab==="media"?html`<div>
       <div className="paneltitle"><span>Assets</span><button className="btn small" onClick=${()=>setAssetPicker({index:-1,isNew:true,context:assetContextForRecord(rec,"GALLERY")})}>+ Browse / Upload Asset</button></div>
-      <div className="notice">Choose an image from Asset Library or add an image link. Supplier-managed images are updated during refresh.</div>
-      <div className="asseturladd"><${Field} label="Asset URL" type="url" value=${assetUrl} onChange=${setAssetUrl}/><${Field} label="Role" type="select" options=${["PRIMARY","HERO","CARD","MOBILE","GALLERY","OG","LOGO","MAP","ROOM","THUMBNAIL"]} value=${assetRole} onChange=${setAssetRole}/><${Field} label="Alt Text" value=${assetAlt} onChange=${setAssetAlt}/><button className="btn primary" onClick=${addUrlAsset}>Add URL Asset</button></div>
+      <div className="notice">Choose a public image from Asset Library. Existing linked images remain available; supplier-managed images are updated during refresh.</div>
       ${media.length?media.map((m,i)=>{const providerOwned=(m.payload?.provider||m.source)==="DUFFEL";return html`<div className=${`mediaitem ${providerOwned?"providerowned":""}`}><div className="formgrid three">
         <${Field} label="Role" type="select" options=${["PRIMARY","HERO","CARD","MOBILE","GALLERY","OG","LOGO","MAP","ROOM","THUMBNAIL"]} value=${m.role} disabled=${providerOwned} onChange=${v=>setDraft(d=>{const x=[...(d.media||[])];x[i]={...x[i],role:v};return{...d,media:x}})}/>
         <${Field} label="Alt Text" value=${m.altText} onChange=${v=>setDraft(d=>{const x=[...(d.media||[])];x[i]={...x[i],altText:v};return{...d,media:x}})}/>
@@ -2598,8 +2617,8 @@ function RecordEditor({bundle,languages,records,onClose,onSaved,setBusy,setToast
         <${Field} label="Credit" value=${m.credit||""} onChange=${v=>setDraft(d=>{const x=[...(d.media||[])];x[i]={...x[i],credit:v};return{...d,media:x}})}/>
         <${Field} label="Focal X %" type="number" value=${m.focalX??""} onChange=${v=>setDraft(d=>{const x=[...(d.media||[])];x[i]={...x[i],focalX:v};return{...d,media:x}})}/>
         <${Field} label="Focal Y %" type="number" value=${m.focalY??""} onChange=${v=>setDraft(d=>{const x=[...(d.media||[])];x[i]={...x[i],focalY:v};return{...d,media:x}})}/>
-      </div><div className="assetcurrent" style=${{marginTop:"8px"}}>${m.url?html`<div className="preview"><img src=${m.url} alt=${m.altText||""}/></div>`:html`<div className="preview">No asset selected</div>`}<div className="toolbar">${providerOwned?html`<span className="providersource">${catalog.catalogType==="SKANDI_PARTNER"?"SKANDI Partner-managed image":"Supplier-managed image"}</span>`:html`<button className="btn small" onClick=${()=>setAssetPicker({index:i,isNew:false,context:assetContextForRecord(rec,m.role||"GALLERY")})}>Replace / Browse Asset Library</button>`}<span className="sub">${m.assetId||m.sourceKind==="ASSET_LIBRARY"?"Managed Asset Library file":m.sourceKind==="URL"?"URL asset":"Linked image"}</span>${providerOwned?null:html`<button className="btn small danger" onClick=${()=>setDraft(d=>({...d,media:(d.media||[]).filter((_,x)=>x!==i)}))}>Remove from record</button>`}</div></div></div>`}):html`<div className="empty">No assets attached. Add a URL or browse the Asset Library.</div>`}
-      ${assetPicker?html`<${AssetLibraryModal} context=${{...assetPicker.context,lockedContext:true}} onClose=${()=>setAssetPicker(null)} onSelect=${asset=>useRecordAsset(assetPicker.index,asset,assetPicker.isNew)} setBusy=${setBusy} setToast=${setToast}/>`:null}
+      </div><div className="assetcurrent" style=${{marginTop:"8px"}}>${m.url?html`<div className="preview"><img src=${m.url} alt=${m.altText||""}/></div>`:html`<div className="preview">No asset selected</div>`}<div className="toolbar">${providerOwned?html`<span className="providersource">${catalog.catalogType==="SKANDI_PARTNER"?"SKANDI Partner-managed image":"Supplier-managed image"}</span>`:html`<button className="btn small" onClick=${()=>setAssetPicker({index:i,isNew:false,context:assetContextForRecord(rec,m.role||"GALLERY")})}>Replace / Browse Asset Library</button>`}<span className="sub">${m.assetId||m.sourceKind==="ASSET_LIBRARY"?"Managed Asset Library file":m.sourceKind==="URL"?"URL asset":"Linked image"}</span>${providerOwned?null:html`<button className="btn small danger" onClick=${()=>setDraft(d=>({...d,media:(d.media||[]).filter((_,x)=>x!==i)}))}>Remove from record</button>`}</div></div></div>`}):html`<div className="empty">No assets attached. Browse the Asset Library to add one.</div>`}
+      ${assetPicker?html`<${AssetLibraryModal} context=${assetPicker.context} onClose=${()=>setAssetPicker(null)} onSelect=${asset=>useRecordAsset(assetPicker.index,asset,assetPicker.isNew)} setBusy=${setBusy} setToast=${setToast}/>`:null}
     </div>`:null}
     ${tab==="relations"?html`<div>
       <div className="paneltitle"><span>Relations</span><button className="btn small" onClick=${()=>setDraft(d=>({...d,relations:[...(d.relations||[]),normalizeRelation({})]}))}>+ Add Relation</button></div>
@@ -2625,10 +2644,8 @@ function RecordEditor({bundle,languages,records,onClose,onSaved,setBusy,setToast
     </div>`:null}
     ${tab==="publishing"?html`<div>
       <div className="formgrid three">
-        <${Field} label="SEO Title" value=${rec.seo?.title||rec.seo?.seoTitle||""} onChange=${v=>update("seo.title",v)}/>
         <${Field} label="Website Address" type="url" value=${rec.seo?.canonicalUrl||""} onChange=${v=>update("seo.canonicalUrl",v)}/>
         <${Toggle} label="Exclude from Search Engines" value=${rec.seo?.noIndex===true} onChange=${v=>update("seo.noIndex",v)}/>
-        <${Field} label="SEO Description" type="textarea" value=${rec.seo?.description||rec.seo?.seoDescription||""} onChange=${v=>update("seo.description",v)} full=${true}/>
         <${ListField} label="SEO Keywords — one per line" value=${rec.seo?.keywords} onChange=${v=>update("seo.keywords",v)}/>
         <${Field} label="Review Status" type="select" options=${SMART_ENUMS.reviewstatus} value=${rec.publication?.reviewStatus||"NOT_REVIEWED"} onChange=${v=>update("publication.reviewStatus",v)}/>
         <${Field} label="Publish Date" type="date" value=${rec.publication?.publishAt||""} onChange=${v=>update("publication.publishAt",v)}/>
@@ -3184,7 +3201,14 @@ function Audit({setBusy,setToast}){
 
 /* Property Director — original five-module reference layout, canonical V12 HOTEL record bundles. */
 function PDField({label,value,onChange,type="text",options=[],disabled=false,help="",placeholder="",full=false}){
+  const parsed=parseStructuredInput(value);
+  if(parsed&&typeof parsed==="object"&&!disabled)return html`<${SmartValueEditor} label=${label} path=${label} value=${parsed} onChange=${onChange||(()=>{})} full=${full}/>`;
+  if(parsed&&typeof parsed==="object"&&disabled){const flatten=v=>Array.isArray(v)?v.map(flatten).filter(Boolean).join(" · "):v&&typeof v==="object"?Object.values(v).map(flatten).filter(Boolean).join(" · "):String(v??"");value=flatten(parsed)}
   return html`<${Field} label=${label} value=${value??""} onChange=${onChange||(()=>{})} type=${type} options=${options} disabled=${disabled} help=${help} placeholder=${placeholder} full=${full}/>`;
+}
+function roomWindow(room){
+  if(typeof room.window==="boolean")return room.window;
+  return /\b(no window|windowless)\b/i.test(String(room.roomType||""))?false:null;
 }
 function PDSection({children,title,actions=null,first=false}){
   return html`<div className=${first?"sectiontitle":"sectiontitle pd-module-title"}>${title}${actions?html`<span>${actions}</span>`:null}</div>${children}`;
@@ -3324,8 +3348,8 @@ function PDPropertyWorkspace({bundle,boot,onClose,onSaved,setBusy,setToast}){
   const airportOptions=[{value:"",label:"Choose..."},...airports.map(x=>({value:x.id,label:`${x.code||""} ${x.name}`}))];
   function update(path,value){setDraft(old=>{const next=clone(old);setPath(next.record,path,value);return next})}
   function setDetails(name,val){update(`details.${name}`,val)}
-  function setCatalog(name,val){setDraft(old=>({...old,catalog:{...(old.catalog||{}),[name]:val}}))}
-  function setLangValue(name,val){setDraft(old=>{const next=clone(old);if(!Array.isArray(next.localizedContent))next.localizedContent=[];let i=next.localizedContent.findIndex(x=>String(x.language).toUpperCase()===lang);if(i<0){next.localizedContent.push(normalizeLocalized({language:lang}));i=next.localizedContent.length-1;}next.localizedContent[i]={...next.localizedContent[i],[name]:val};return next});if(lang==="EN")setTranslationReview(old=>Object.fromEntries(Object.keys(old).map(code=>[code,true])))}
+  function setCatalog(name,val){setDraft(old=>({...old,record:name==="partnerTier"?{...old.record,details:{...(old.record.details||{}),skandiTier:val}}:old.record,catalog:{...(old.catalog||{}),[name]:val}}))}
+  function setLangValue(name,val){setDraft(old=>{const next=clone(old);if(!Array.isArray(next.localizedContent))next.localizedContent=[];let i=next.localizedContent.findIndex(x=>String(x.language).toUpperCase()===lang);if(i<0){next.localizedContent.push(normalizeLocalized({language:lang}));i=next.localizedContent.length-1;}next.localizedContent[i]={...next.localizedContent[i],[name]:val};if(lang==="EN"&&(name==="seoTitle"||name==="seoDescription"))next.record.seo={...(next.record.seo||{}),[name==="seoTitle"?"title":"description"]:val};return next});if(lang==="EN")setTranslationReview(old=>Object.fromEntries(Object.keys(old).map(code=>[code,true])))}
   function setLangArray(name,position,value,action="set"){
     setDraft(old=>{const next=clone(old);if(!Array.isArray(next.localizedContent))next.localizedContent=[];
       let i=next.localizedContent.findIndex(x=>String(x.language).toUpperCase()===lang);
@@ -3344,7 +3368,7 @@ function PDPropertyWorkspace({bundle,boot,onClose,onSaved,setBusy,setToast}){
     const base=location?`${hotelName} is located in ${location}.`:`${hotelName} is a hotel.`;
     const amenities=featureList.length?` Facilities include ${featureList.join(", ")}.`:"";
     const shortDescription=base+amenities;
-    const operations=[d.checkIn?`Check-in: ${d.checkIn}.`:"",d.checkOut?`Check-out: ${d.checkOut}.`:""].filter(Boolean).join(" ");
+    const operations=[d.checkinTime?`Check-in: ${d.checkinTime}.`:"",d.checkoutTime?`Check-out: ${d.checkoutTime}.`:""].filter(Boolean).join(" ");
     const title=hotelName;
     const seoTitle=location?`${hotelName} | ${text(d.city).trim()}`:hotelName;
     const seoDescription=`${hotelName}${location?` in ${location}`:""}. ${featureList.length?`Facilities: ${featureList.join(", ")}.`:"View property details with SKANDI TRAVELS."}`.slice(0,160);
@@ -3379,7 +3403,7 @@ function PDPropertyWorkspace({bundle,boot,onClose,onSaved,setBusy,setToast}){
     }catch(error){setToast(error?.message||"Language generation could not be completed.",true)}
     finally{setBusy("");setTranslationBusy(false)}
   }
-  function editRoomOccupancy(index,field,value){setDraft(old=>{const next=clone(old);const rows=Array.isArray(next.record.details.rooms)?next.record.details.rooms:[];next.record.details.rooms=rows.map((r,i)=>{if(i!==index)return r;const updated={...r,[field]:value};updated.maxGuests=(Number(updated.adults)||0)+(Number(updated.children)||0);return updated});return next})}
+  function editRoomOccupancy(index,field,value){setDraft(old=>{const next=clone(old);const rows=Array.isArray(next.record.details.rooms)?next.record.details.rooms:[];next.record.details.rooms=rows.map((r,i)=>{if(i!==index)return r;const updated={...r,adults:r.adults??r.maxGuests??0,children:r.children??0,[field]:value};updated.maxGuests=(Number(updated.adults)||0)+(Number(updated.children)||0);return updated});return next})}
   function editDetailRow(key,index,name,value){setDraft(old=>{const next=clone(old);const rows=Array.isArray(next.record.details?.[key])?next.record.details[key]:[];next.record.details[key]=rows.map((v,i)=>i===index?{...v,[name]:value}:v);return next})}
   function appendDetailRow(key,row){setDetails(key,[...(Array.isArray(d[key])?d[key]:[]),row])}
   function dropDetailRow(key,index){setDetails(key,(Array.isArray(d[key])?d[key]:[]).filter((_,i)=>i!==index))}
@@ -3405,6 +3429,8 @@ function PDPropertyWorkspace({bundle,boot,onClose,onSaved,setBusy,setToast}){
     try{
       setBusy("Saving property…");
       const payload=clone(draft);
+      const english=(payload.localizedContent||[]).map(normalizeLocalized).find(row=>row.language==="EN");
+      if(english){payload.record.seo={...(payload.record.seo||{}),...(english.seoTitle?{title:english.seoTitle}:{}),...(english.seoDescription?{description:english.seoDescription}:{})};}
       payload.record.details={...(payload.record.details||{})};
       for(const key of ["logoLockupUrl","logoSymbolUrl","logoUrl","logoIconUrl","heroImageUrl","imageUrl","mediaAssets","media_assets"])delete payload.record.details[key];
       if(!payload.catalog)payload.catalog={catalogType:"NONE",partnerTier:"",searchable:false,featured:false,homepageFeatured:false,searchPriority:100,searchKeywords:[],marketCodes:["ALL"],salesChannels:["WEB"],active:true};
@@ -3426,6 +3452,9 @@ function PDPropertyWorkspace({bundle,boot,onClose,onSaved,setBusy,setToast}){
   const miles=distKm===""?"":Number.isFinite(Number(distKm))?(Number(distKm)*0.621371).toFixed(2):"";
   const status=rec.status||"DRAFT";
   const facilityGroups=[{name:"Wellness",items:["Pool","Spa","Gym","Sauna"]},{name:"Business",items:["Meeting Rooms","Co-working Space"]},{name:"Logistics",items:["EV Charging","Parking","Free Wi-Fi","Restaurant","Pet Friendly"]}];
+  const facilityKey=value=>{const key=text(value).toLowerCase().replace(/[^a-z0-9]/g,"");return key==="freewifi"?"wifi":key};
+  const hasFacility=name=>facilities.some(value=>facilityKey(value)===facilityKey(name));
+  const knownFacility=value=>facilityGroups.some(group=>group.items.some(name=>facilityKey(name)===facilityKey(value)));
   const published=rec.status==="PUBLISHED";
   const locName=(id)=>((boot.records||[]).find(x=>x.id===id)?.name)||"";
   const renderMaster=()=>html`<div className="card panel">
@@ -3435,7 +3464,7 @@ function PDPropertyWorkspace({bundle,boot,onClose,onSaved,setBusy,setToast}){
         <${PDField} label="Master Name" value=${rec.name} onChange=${v=>update("name",v)}/>
         <${PDField} label="Brand / Chain" value=${d.brand||""} onChange=${v=>setDetails("brand",v)} help="Supplier details may change after refresh"/>
         <${PDField} label="Property Type" type="select" options=${ENUM.propertyType} value=${d.propertyType||""} onChange=${v=>setDetails("propertyType",v)}/>
-        <${PDField} label="SKANDI Tier" type="select" options=${["SIGNATURE","SELECT","ESSENTIAL","CLASSIC"]} value=${catalog.partnerTier||""} onChange=${v=>setCatalog("partnerTier",v)}/>
+        <${PDField} label="SKANDI Tier" type="select" options=${["SIGNATURE","SELECT","ESSENTIAL","CLASSIC"]} value=${catalog.partnerTier||d.skandiTier||""} onChange=${v=>setCatalog("partnerTier",v)}/>
         <${PDField} label="Settlement Currency" type="select" options=${ENUM.currency} value=${rec.commercial?.currency||"USD"} onChange=${v=>update("commercial.currency",v)}/>
         <${PDField} label="URL Slug" value=${rec.slug||""} onChange=${v=>update("slug",v)} help="Blank = generated from Master Name"/>
         <${PDField} label="Public ID" value=${rec.publicId||""} disabled=${true} help="Assigned by SKANDI TRAVELS"/>
@@ -3458,11 +3487,12 @@ function PDPropertyWorkspace({bundle,boot,onClose,onSaved,setBusy,setToast}){
     <${PDSection} title="Facilities & Ratings">
       <div className="formgrid four"><${PDField} label="Star Rating" type="number" value=${d.officialStarRating??""} onChange=${v=>setDetails("officialStarRating",v)}/><${PDField} label="Editorial Rating" type="number" value=${d.skandiRating??""} onChange=${v=>setDetails("skandiRating",v)}/><${PDField} label="Guest Rating" type="number" value=${d.guestRating??""} onChange=${v=>setDetails("guestRating",v)}/><${PDField} label="Review Count" type="number" value=${d.reviewCount??""} onChange=${v=>setDetails("reviewCount",v)}/></div>
       <div className="notice" style=${{marginTop:"12px"}}>Enable facilities. Assign one HERO facility for primary display.</div>
-      <div className="formgrid three">${facilityGroups.map(group=>html`<div><div className="sectiontitle">${group.name}</div>${group.items.map(name=>html`<label className="pd-check-row"><input type="checkbox" checked=${facilities.includes(name)} onChange=${()=>{const active=facilities.includes(name);setDetails("facilities",active?facilities.filter(x=>x!==name):[...facilities,name]);if(active&&d.heroFacility===name)setDetails("heroFacility","")}}/><span>${name}</span>${facilities.includes(name)?html`<button className=${`btn small ${d.heroFacility===name?"cyan":""}`} type="button" onClick=${e=>{e.preventDefault();setDetails("heroFacility",name)}}>HERO</button>`:null}</label>`)}</div>`)}</div>
-      <${ListField} label="Other Facilities — one per line" value=${facilities.filter(x=>!facilityGroups.some(group=>group.items.includes(x)))} onChange=${v=>setDetails("facilities",[...facilities.filter(x=>facilityGroups.some(group=>group.items.includes(x))),...v])}/>
+      <div className="formgrid three">${facilityGroups.map(group=>html`<div><div className="sectiontitle">${group.name}</div>${group.items.map(name=>html`<label className="pd-check-row"><input type="checkbox" checked=${hasFacility(name)} onChange=${()=>{const active=hasFacility(name);setDetails("facilities",active?facilities.filter(x=>facilityKey(x)!==facilityKey(name)):[...facilities,name]);if(active&&facilityKey(d.heroFacility)===facilityKey(name))setDetails("heroFacility","")}}/><span>${name}</span>${hasFacility(name)?html`<button className=${`btn small ${facilityKey(d.heroFacility)===facilityKey(name)?"cyan":""}`} type="button" onClick=${e=>{e.preventDefault();setDetails("heroFacility",name)}}>HERO</button>`:null}</label>`)}</div>`)}</div>
+      <${ListField} label="Other Facilities — one per line" value=${facilities.filter(x=>!knownFacility(x))} onChange=${v=>setDetails("facilities",[...facilities.filter(knownFacility),...v])}/>
     </${PDSection}>
     <${PDSection} title="Policies & Operational Facts">
       <div className="formgrid three"><${PDField} label="Check-in Time" type="time" value=${d.checkinTime||""} onChange=${v=>setDetails("checkinTime",v)}/><${PDField} label="Check-out Time" type="time" value=${d.checkoutTime||""} onChange=${v=>setDetails("checkoutTime",v)}/><${PDField} label="Min Age" type="number" value=${d.minimumCheckinAge??""} onChange=${v=>setDetails("minimumCheckinAge",v)}/></div>
+      <div className="formgrid three"><${ListField} label="Board Options — one per line" value=${d.boardOptions} onChange=${v=>setDetails("boardOptions",v)}/><${PDField} label="Pets Allowed" type="select" options=${[{value:"",label:"Not specified"},{value:"true",label:"Yes"},{value:"false",label:"No"}]} value=${typeof d.petsAllowed==="boolean"?String(d.petsAllowed):""} onChange=${v=>setDetails("petsAllowed",v===""?null:v==="true")}/><${PDField} label="Smoking Policy" type="select" options=${ENUM.smokingPolicy} value=${d.smokingPolicy||""} onChange=${v=>setDetails("smokingPolicy",v)}/></div>
       <div className="smartgroup" style=${{marginTop:"12px"}}><div className="smarttitle"><span>Hotel Facts</span><button className="btn small" onClick=${()=>appendDetailRow("facts",{label:"",value:""})}>+ APPEND FACT</button></div>
         ${facts.length?html`<div className="smartlist">${facts.map((f,i)=>html`<div className="smartrow"><div className="formgrid"><${PDField} label="Label" value=${f.label||""} onChange=${v=>editDetailRow("facts",i,"label",v)}/><${PDField} label="Value" value=${f.value||""} onChange=${v=>editDetailRow("facts",i,"value",v)}/></div><button className="btn small danger" onClick=${()=>dropDetailRow("facts",i)}>DROP</button></div>`)}</div>`:html`<div className="empty">No operational facts assigned.</div>`}
       </div>
@@ -3474,9 +3504,10 @@ function PDPropertyWorkspace({bundle,boot,onClose,onSaved,setBusy,setToast}){
   const renderRooms=()=>html`<div className="card panel">
     <div className="paneltitle"><span>Physical Inventory (Constraints)</span><button className="btn primary small" onClick=${()=>appendDetailRow("rooms",{code:"",name:"",roomType:"",bedType:"",adults:2,children:0,maxGuests:2,sizeSqm:"",window:true})}>+ NEW PHY ROOM</button></div>
     <div className="tablewrap"><table className="table"><thead><tr><th>INT Code</th><th>Bedding</th><th>ADT</th><th>CHD</th><th>CAP</th><th>SQM</th><th>WIN</th><th>Actions</th></tr></thead><tbody>
-      ${rooms.length?rooms.map((r,i)=>html`<tr><td><input className="input" value=${r.code||""} onInput=${e=>editDetailRow("rooms",i,"code",e.target.value)} placeholder="STD-TWN"/></td><td><input className="input" value=${r.bedType||""} onInput=${e=>editDetailRow("rooms",i,"bedType",e.target.value)} placeholder="2 TWIN"/></td><td><input className="input" type="number" style=${{width:"56px"}} value=${r.adults??r.maxGuests??0} onInput=${e=>editRoomOccupancy(i,"adults",numOrNull(e.target.value))}/></td><td><input className="input" type="number" style=${{width:"56px"}} value=${r.children??0} onInput=${e=>editRoomOccupancy(i,"children",numOrNull(e.target.value))}/></td><td><b>${r.maxGuests??((Number(r.adults)||0)+(Number(r.children)||0))}</b></td><td><input className="input" style=${{width:"80px"}} value=${r.sizeSqm??""} onInput=${e=>editDetailRow("rooms",i,"sizeSqm",e.target.value)}/></td><td><select className="select" value=${r.window===false?"NO":"YES"} onChange=${e=>editDetailRow("rooms",i,"window",e.target.value==="YES")}><option value="YES">YES</option><option value="NO">NO</option></select></td><td><div className="pd-flex"><button className="btn small" onClick=${()=>appendDetailRow("rooms",{...r,code:`${r.code||"ROOM"}-COPY`})}>CLONE</button><button className="btn small danger" onClick=${()=>dropDetailRow("rooms",i)}>DROP</button></div></td></tr>`):html`<tr><td colSpan="8"><div className="empty">No physical room definitions.</div></td></tr>`}
+      ${rooms.length?rooms.map((r,i)=>html`<tr><td><input className="input" value=${r.code||""} onInput=${e=>editDetailRow("rooms",i,"code",e.target.value)} placeholder="STD-TWN"/></td><td><input className="input" value=${r.bedType||""} onInput=${e=>editDetailRow("rooms",i,"bedType",e.target.value)} placeholder="2 TWIN"/></td><td><input className="input" type="number" style=${{width:"56px"}} value=${r.adults??r.maxGuests??0} onInput=${e=>editRoomOccupancy(i,"adults",numOrNull(e.target.value))}/></td><td><input className="input" type="number" style=${{width:"56px"}} value=${r.children??0} onInput=${e=>editRoomOccupancy(i,"children",numOrNull(e.target.value))}/></td><td><b>${r.maxGuests??((Number(r.adults)||0)+(Number(r.children)||0))}</b></td><td><input className="input" style=${{width:"80px"}} value=${r.sizeSqm??""} onInput=${e=>editDetailRow("rooms",i,"sizeSqm",e.target.value)}/></td><td><select className="select" value=${roomWindow(r)===null?"":roomWindow(r)?"YES":"NO"} onChange=${e=>editDetailRow("rooms",i,"window",e.target.value===""?null:e.target.value==="YES")}><option value="">—</option><option value="YES">YES</option><option value="NO">NO</option></select></td><td><div className="pd-flex"><button className="btn small" onClick=${()=>appendDetailRow("rooms",{...r,code:`${r.code||"ROOM"}-COPY`})}>CLONE</button><button className="btn small danger" onClick=${()=>dropDetailRow("rooms",i)}>DROP</button></div></td></tr>`):html`<tr><td colSpan="8"><div className="empty">No physical room definitions.</div></td></tr>`}
     </tbody></table></div>
-    ${rooms.some(r=>r.window===false)?html`<div className="notice warn">Windowless rooms require accurate customer-facing description. Check the stored room descriptions before publishing.</div>`:null}
+    ${rooms.map((room,i)=>html`<div className="smartobject" style=${{marginTop:"10px"}}><div className="sectiontitle">${room.code||`Room ${i+1}`} · Guest-facing details</div><div className="formgrid"><${PDField} label="Room Name" value=${room.name||""} onChange=${v=>editDetailRow("rooms",i,"name",v)}/><${PDField} label="Room Type" value=${room.roomType||""} onChange=${v=>editDetailRow("rooms",i,"roomType",v)}/><${PDField} label="Room Description" type="textarea" value=${room.description||""} onChange=${v=>editDetailRow("rooms",i,"description",v)}/></div></div>`)}
+    ${rooms.some(r=>roomWindow(r)===false)?html`<div className="notice warn">Windowless rooms require accurate customer-facing description. Check the stored room descriptions before publishing.</div>`:null}
     <div className="paneltitle pd-module-title"><span>Selling Configurations (Marketing)</span><button className="btn primary small" onClick=${()=>appendDetailRow("sellingRooms",{id:newId(),physId:"",name:"",priority:100,active:true})}>+ NEW SELL PKG</button></div>
     <div className="tablewrap"><table className="table"><thead><tr><th>Physical Link</th><th>Display Name</th><th>Priority</th><th>Active</th><th>Action</th></tr></thead><tbody>
       ${sells.length?sells.map((r,i)=>html`<tr><td><select className="select" value=${r.physId||""} onChange=${e=>editDetailRow("sellingRooms",i,"physId",e.target.value)}><option value="">Select PHY...</option>${rooms.map(p=>html`<option value=${p.code}>${p.code||"New room"}</option>`)}</select></td><td><input className="input" value=${r.name||""} onInput=${e=>editDetailRow("sellingRooms",i,"name",e.target.value)}/></td><td><input className="input" type="number" style=${{width:"76px"}} value=${r.priority??100} onInput=${e=>editDetailRow("sellingRooms",i,"priority",numOrNull(e.target.value))}/></td><td><select className="select" value=${r.active!==false?"YES":"NO"} onChange=${e=>editDetailRow("sellingRooms",i,"active",e.target.value==="YES")}><option>YES</option><option>NO</option></select></td><td><button className="btn small danger" onClick=${()=>{dropDetailRow("sellingRooms",i);setDetails("mappings",mappings.filter(x=>x.roomId!==r.id))}}>DROP</button></td></tr>`):html`<tr><td colSpan="5"><div className="empty">No selling packages defined.</div></td></tr>`}
@@ -3516,7 +3547,7 @@ function PDPropertyWorkspace({bundle,boot,onClose,onSaved,setBusy,setToast}){
         <${PDField} label="Short Description" type="textarea" value=${current.shortDescription||""} onChange=${v=>setLangValue("shortDescription",v)}/>
         <${PDField} label="Full Description" type="textarea" value=${current.fullDescription||""} onChange=${v=>setLangValue("fullDescription",v)}/>
         <${PDField} label="Section Heading" value=${current.eyebrow||""} onChange=${v=>setLangValue("eyebrow",v)}/>
-        ${["highlights","included","notIncluded"].map((name)=>html`<div className="smartgroup"><div className="smarttitle"><span>${({highlights:"Highlights",included:"Included",notIncluded:"Not Included"})[name]}</span><button className="btn small" onClick=${()=>setLangArray(name,0,"","add")}>+ ADD</button></div>${(current[name]||[]).map((item,index)=>html`<div className="pd-flex" style=${{alignItems:"flex-start",marginBottom:"6px"}}><input className="input" aria-label=${`${name} item ${index+1}`} value=${item} onInput=${e=>setLangArray(name,index,e.target.value)}/><button className="btn small danger" onClick=${()=>setLangArray(name,index,"","drop")}>REMOVE</button></div>`)}</div>`)}
+        ${["highlights","included","notIncluded"].map((name)=>html`<div className="smartgroup"><div className="smarttitle"><span>${({highlights:"Highlights",included:"Included",notIncluded:"Not Included"})[name]}</span><button className="btn small" onClick=${()=>setLangArray(name,0,"","add")}>+ ADD</button></div>${(current[name]||[]).map((item,index)=>html`<div className="pd-flex" style=${{alignItems:"flex-start",marginBottom:"6px"}}><${PDField} label=${`${name} item ${index+1}`} value=${item} onChange=${v=>setLangArray(name,index,v)}/><button className="btn small danger" onClick=${()=>setLangArray(name,index,"","drop")}>REMOVE</button></div>`)}</div>`)}
         <${PDField} label="Important Information" type="textarea" value=${current.importantInformation||""} onChange=${v=>setLangValue("importantInformation",v)}/>
         <div className="sectiontitle">Website Search Details</div>
         <${PDField} label="SEO Title" value=${current.seoTitle||""} onChange=${v=>setLangValue("seoTitle",v)}/>

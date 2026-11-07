@@ -2461,8 +2461,8 @@
       "blockers": [],
       "receiver": "altea-embeds/inventory-control/skandi-inventory-control.receiver.html",
       "receiverFile": "altea-embeds/inventory-control/skandi-inventory-control.receiver.html",
-      "sha256": "9390b149ad27e39acc9d8a3373c7ca93a74d391c948b926709510848e83f3c4e",
-      "bytes": 316769
+      "sha256": "94af267a0d92b0f72aa4471507a489b714c799fcca6908c0ac17af8d0dbc4a3d",
+      "bytes": 320869
     },
     {
       "key": "uniformCenter",
@@ -3326,7 +3326,7 @@
       "stem": "skandi-hotel-list",
       "controller": "src/pages/Hotel List.iqhpp.js",
       "embedIds": [
-        "#areaHotelsHtml"
+        "#hotelsEmbed"
       ],
       "sources": [
         "SKANDI_AREA_HOTEL_SEARCH",
@@ -3354,8 +3354,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/hotel-list/skandi-hotel-list.receiver.html",
       "receiverFile": "skandi-embeds/hotel-list/skandi-hotel-list.receiver.html",
-      "sha256": "3b234c39bab1f1386dfc38a0a2d21bbe03f5affa74584d6379205102a8a15d2b",
-      "bytes": 168367
+      "sha256": "2bc116085c5b0c7fb334fc307d97b4acaefdad640ec4759aff2d2acc0ba83001",
+      "bytes": 171499
     },
     {
       "key": "bookingFlow",
