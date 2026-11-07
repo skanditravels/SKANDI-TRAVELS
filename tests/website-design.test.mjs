@@ -32,7 +32,7 @@ test('drafts do not leak; publication is explicit and concurrent saves are rejec
   let row=null,authorized=true;
   const context={organizationId:'org',wixMemberId:'staff'};
   const restRequest=async request=>{
-    if(request.table==='platform_assets'){assert.equal(request.query.visibility,'eq.PUBLIC');assert.equal(request.query.bucket,'eq.skandi-public-assets');return [];}
+    if(request.table==='platform_assets'){assert.equal(request.query.visibility,'eq.PUBLIC');assert.equal(request.query.asset_type,'eq.IMAGE');return [];}
     assert.equal(request.table,'voy_entities');
     if(request.method==='GET')return row?[structuredClone(row)]:[];
     if(request.method==='POST'){if(row)throw new Error('duplicate');row={...request.body,id:1};return [structuredClone(row)];}
@@ -63,4 +63,22 @@ test('preview selection prefers stable editorial hooks over sibling positions',t
   w.document.querySelector('h2').click();
   const selection=sent.find(m=>m.type==='WEBSITE_PREVIEW_SELECTED');
   assert.ok(selection,JSON.stringify(sent));assert.equal(selection.payload.selector,'[data-content-id="hero-title"]');
+});
+test('website images resolve only through public storage and render allowed public buckets',async t=>{
+  const id='00000000-0000-0000-0000-000000000001';
+  let bucket='inventory-media';
+  let source=await fs.readFile(new URL('../src/backend/SKANDI_CORE/websiteDesign.js',import.meta.url),'utf8');
+  source=source.replace(/^import .*;\n/gm,'').replace(/export /g,'');
+  const factory=vm.runInNewContext('(function(restRequest,validateWebsiteDesign,storageGetPublicUrl,resolveWebsiteFont){'+source+';return resolveWebsiteAssets;})');
+  const resolve=factory(async req=>{assert.equal(req.query.visibility,'eq.PUBLIC');assert.equal(req.query.status,'eq.ACTIVE');return [{id,bucket,storage_path:'hotel/photo.jpg'}]},validateWebsiteDesign,async ({bucket,path})=>{if(bucket==='skandi-private-assets')throw new Error('not public');return {publicUrl:`https://example.supabase.co/storage/v1/object/public/${bucket}/${path}`}},()=>{});
+  const design={elements:[{selector:'#photo',assetId:id}]};
+  const result=await resolve(design);
+  assert.match(result.elements[0].assetUrl,/inventory-media/);
+  bucket='skandi-private-assets';await assert.rejects(resolve(design),/WEBSITE_PUBLIC_ASSET_REQUIRED/);
+  const dom=new JSDOM('<div id="skandi-shell-root" data-skandi-family="public"><img id="photo" src="old.jpg"></div>',{runScripts:'dangerously',pretendToBeVisual:true,beforeParse:w=>{w.postMessage=()=>{}}});
+  t.after(()=>{dom.window.__skandiWebsiteDesign?.destroy?.();dom.window.close()});
+  const w=dom.window;w.SKANDI_WEBSITE_DESIGN_CONFIG={path:'/'};w.eval(runtime);
+  const deliver=url=>w.dispatchEvent(new w.MessageEvent('message',{source:w,data:{source:'SKANDI_WIX_PARENT',type:'SKANDI_PRESENTATION_DATA',payload:{path:'/',websiteDesign:{elements:[{selector:'#photo',assetUrl:url}]}}}}));
+  deliver(result.elements[0].assetUrl);assert.equal(w.document.getElementById('photo').src,result.elements[0].assetUrl);
+  deliver('https://untrusted.example/storage/v1/object/public/inventory-media/a.jpg');assert.notEqual(w.document.getElementById('photo').src,'https://untrusted.example/storage/v1/object/public/inventory-media/a.jpg');
 });

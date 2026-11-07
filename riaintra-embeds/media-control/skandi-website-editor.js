@@ -36,7 +36,7 @@
     el('inspector').innerHTML='<h3>'+esc(names[selected.tag]||'Element')+'</h3><button class="btn" data-we-action="parent">Select parent</button><button class="btn" data-we-action="reset">Reset element</button>'+
       (selected.text!==null?'<label>Text<textarea data-we="text">'+esc(Object.hasOwn(item,'text')?item.text:selected.text)+'</textarea></label>':'')+
       (selected.tag==='a'?'<label>Link<input data-we="href" value="'+esc(item.href??selected.href)+'"></label>':'')+
-      '<label>Image from Supabase<select data-we="asset"><option value="">Keep existing image</option>'+assets.filter(a=>a.visibility==='PUBLIC'&&a.assetType==='IMAGE'&&a.bucket==='skandi-public-assets').map(a=>'<option value="'+esc(a.id)+'" '+(a.id===item.assetId?'selected':'')+'>'+esc(a.displayName||a.originalName)+'</option>').join('')+'</select></label>'+
+      '<label>Image from Supabase<select data-we="asset"><option value="">Keep existing image</option>'+assets.filter(a=>a.visibility==='PUBLIC'&&a.status==='ACTIVE'&&a.assetType==='IMAGE'&&['skandi-public-assets','inventory-media','aircraft-assets','uniform-assets'].includes(a.bucket)).map(a=>'<option value="'+esc(a.id)+'" '+(a.id===item.assetId?'selected':'')+'>'+esc(a.displayName||a.originalName)+'</option>').join('')+'</select></label>'+
       '<label>Image placement<select data-we="imageMode"><option value="image" '+(selected.image?'selected':'')+'>Image element</option><option value="background" '+(!selected.image?'selected':'')+'>Background</option></select></label>'+
       '<label>Image description<input data-we="alt" value="'+esc(item.alt??selected.alt)+'"></label><p class="we-note">Upload images in Assets / Media, then reload this page’s assets. Existing images stay unchanged until you select a replacement.</p>'+
       (selected.currentImage?'<button class="btn" data-we-action="import-existing">Copy current image to Supabase</button>':'')+
@@ -185,7 +185,7 @@
       if(m.type==='MEDIA_CONTROL_LIBRARY'){assets=m.payload?.assets||assets;if(root)inspector();}
       if(m.type==='MEDIA_CONTROL_WEBSITE_RESULT'||m.type==='MEDIA_CONTROL_ERROR'){const pending=requests.get(m.payload?.requestId);if(pending){clearTimeout(pending.timer);requests.delete(m.payload.requestId);m.type==='MEDIA_CONTROL_ERROR'?pending.reject(new Error(m.payload.message)):pending.resolve(m.payload.result);}}
     }
-    if(event.source===frame?.contentWindow&&m.source==='SKANDI_WEBSITE_PREVIEW'&&m.nonce===nonce){if(m.type==='WEBSITE_PREVIEW_READY')sendPreview();if(m.type==='WEBSITE_PREVIEW_SELECTED'){selected=m.payload;inspector();}}
+    if(event.source===frame?.contentWindow&&m.source==='SKANDI_WEBSITE_PREVIEW'&&m.nonce===nonce){if(m.type==='WEBSITE_PREVIEW_READY')sendPreview();if(m.type==='WEBSITE_PREVIEW_ACTIVITY')parent.postMessage({source:'SKANDI_SHELL',type:'SKANDI_STAFF_ACTIVITY',payload:{key:'mediaControl'}},'*');if(m.type==='WEBSITE_PREVIEW_SELECTED'){selected=m.payload;inspector();}}
   });
   window.addEventListener('beforeunload',event=>{if(dirty){event.preventDefault();event.returnValue='';}});
   window.SKANDIWebsiteStudioMount();
