@@ -177,20 +177,24 @@ async function loadPreset(id) {
 async function resolveAuthorization(agent) {
   assertIdentity(agent);
   const assignment = await loadAssignment(agent.id);
-  const accessRoleCode = upper(assignment?.access_role || agent.access_role || agent.role, 80);
+  const onboarding = upper(agent.employment_status || agent.status, 80) === "ONBOARDING";
+  const accessRoleCode = onboarding ? "READ_ONLY" : upper(assignment?.access_role || agent.access_role || agent.role, 80);
   if (!accessRoleCode) throw new SkandiError("STAFF_ACCESS_ROLE_MISSING");
   const accessRole = await loadAccessRole(accessRoleCode);
   if (!accessRole || accessRole.active !== true) throw new SkandiError("STAFF_ACCESS_ROLE_INVALID");
-  const presetId = text(assignment?.permission_preset_id || accessRole.preset_id || agent.permission_preset, 100);
+  const presetId = text((!onboarding && assignment?.permission_preset_id) || accessRole.preset_id || (!onboarding && agent.permission_preset), 100);
   if (!presetId) throw new SkandiError("STAFF_PERMISSION_PRESET_MISSING");
   const preset = await loadPreset(presetId);
   if (!preset || preset.active !== true) throw new SkandiError("STAFF_PERMISSION_PRESET_INVALID");
   return {
     assignment, accessRole, preset, accessRoleCode, presetId,
-    permissionKeys: stringArray(preset.permission_keys), allowedApps: stringArray(preset.allowed_apps), permissionGroups: stringArray(preset.permission_groups),
-    groupTalkGroupKeys: stringArray(preset.grouptalk_group_keys), canManage: preset.can_manage === true, canAccessPayroll: preset.can_access_payroll === true,
-    canAccessGroupTalk: preset.can_access_grouptalk === true, isHr: preset.is_hr === true, isPayrollAdmin: preset.is_payroll_admin === true,
-    isSystemAdmin: preset.is_system_admin === true
+    permissionKeys: onboarding ? [] : stringArray(preset.permission_keys),
+    allowedApps: onboarding ? [] : stringArray(preset.allowed_apps),
+    permissionGroups: onboarding ? [] : stringArray(preset.permission_groups),
+    groupTalkGroupKeys: onboarding ? [] : stringArray(preset.grouptalk_group_keys),
+    canManage: !onboarding && preset.can_manage === true, canAccessPayroll: !onboarding && preset.can_access_payroll === true,
+    canAccessGroupTalk: !onboarding && preset.can_access_grouptalk === true, isHr: !onboarding && preset.is_hr === true,
+    isPayrollAdmin: !onboarding && preset.is_payroll_admin === true, isSystemAdmin: !onboarding && preset.is_system_admin === true
   };
 }
 function displayName(agent = {}) {
@@ -232,7 +236,7 @@ function alteaApps(session) {
   const alteaAllowed = privileged || allowedApps.has("altea") || keys.has("altea");
   return ALTEA_APPS.filter(app => {
     if (privileged) return true;
-    if (!alteaAllowed) return false;
+    if (!alteaAllowed && !app.requiredApp) return false;
     if (app.requiredApp) {
       const required = lower(app.requiredApp, 100);
       if (!allowedApps.has(required) && !keys.has(required)) return false;
@@ -292,11 +296,21 @@ export async function loginStaffWithSkIdCore({ skId, password } = {}) {
     throw new SkandiError("STAFF_CREDENTIALS_INVALID", "Credentials could not be verified.", { publicMessage:"The SK-ID or password could not be verified." });
   }
 }
+function staffApplicationAccess(session = {}) {
+  const managed = [...Object.values(APP_CATALOG), ...ALTEA_APPS]
+    .map(app => app.path).filter(path => path !== SITE_MAP.successFactors);
+  const allowed = [...(session.apps || []), ...alteaApps(session).filter(app => app.available)].map(app => app.path);
+  return { managed: [...new Set(managed)], allowed: [...new Set(allowed)] };
+}
+
 export async function getStaffPortalSessionCore() {
   const member = await currentWixMember(); if (!member) return unauthorized({ loggedIn:false, reason:"STAFF_AUTH_REQUIRED" });
   try {
     let agent = await findAgentByMember(member); if (!agent) return unauthorized({ loggedIn:true, reason:"STAFF_PROFILE_NOT_FOUND" });
-    assertIdentity(agent); agent = await syncMemberLink(agent, member); return authorized(agent, await resolveAuthorization(agent));
+    assertIdentity(agent);
+    agent = await syncMemberLink(agent, member);
+    const session = authorized(agent, await resolveAuthorization(agent));
+    return { ...session, pageAccess: staffApplicationAccess(session) };
   } catch (error) { return unauthorized({ loggedIn:true, reason:errorCode(error, "STAFF_ACCESS_DENIED") }); }
 }
 export async function requireStaffPortalSessionCore() {

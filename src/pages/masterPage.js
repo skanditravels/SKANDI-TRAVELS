@@ -372,6 +372,9 @@ function compiledIdentity(embed, staff = {}) {
   const family = getPageFamily(match.route);
   const requiresStaff = family !== "public" && binding.publicEntry !== true;
   if (requiresStaff && staff.authorized !== true) return { allowed:false, reason:"An authorized staff session is required." };
+  if (requiresStaff && staff.pageAccess?.managed.includes(match.route) && !staff.pageAccess.allowed.includes(match.route)) {
+    return { allowed:false, reason:"Your staff role does not grant access to this application." };
+  }
   return { allowed:true, key:match.key, route:match.route, family, chrome:getPageChrome(match.route), embedId:id, staffAuthorized:staff.authorized === true };
 }
 function activeCompiledPage() {
@@ -822,7 +825,8 @@ async function getStaffState() {
       authorized:true,
       profile:result.profile || {},
       permissions:result.permissions || [],
-      apps:result.apps || []
+      apps:result.apps || [],
+      pageAccess:result.pageAccess
     };
   } catch (error) {
     console.warn("[MasterPage] Staff session unavailable.", error);
