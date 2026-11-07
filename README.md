@@ -33,7 +33,7 @@ The separate RIAINTRA and ALTEA global components are now extracted from HTML_RE
 
 The compiler raises small authored interface text to 13px, and the shell and Wix host CSS apply a 16px minimum to editable controls. The viewport follows device width and safe areas. Touch manipulation suppresses double-tap magnification and keeps pinch zoom available. Narrow compiled pages share a fixed bottom bar, one scroll area and a right-side drawer with nested sections. Staff links come from the authenticated staff app projection. ALTEA links use its Launchpad permission check and respect the EOS phone boundary.
 
-The generated output covers registered single-component embeds. Check outer Wix iframe geometry and native/legacy routes in Wix Studio. The existing multi-component Help Center remains separately installed. Hotels, Packages and Timatic have pending embed sources. DocuNet Administration now builds with its existing signed-document preview; confirm its registered component and permission checks before installing the universal receiver.
+The generated output covers registered single-component embeds. After the receiver identifies its page, the master controller applies a mobile height class to the owning Wix component so its bottom bar aligns to the browser viewport. Check native and legacy layouts in Wix Studio. The existing multi-component Help Center remains separately installed. Hotels, Packages and Timatic have pending embed sources. DocuNet Administration now builds with its existing signed-document preview. Confirm its registered component and permission checks before installing the universal receiver.
 
 ## Local validation
 
