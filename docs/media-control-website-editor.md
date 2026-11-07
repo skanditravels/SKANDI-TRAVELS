@@ -59,3 +59,6 @@ The visual editor accepts active, PUBLIC image records from the existing `skandi
 VOY Brand Guard now checks configured blocked and required phrases against the selected issue's available issue, page and article text, showing each finding and its location. It does not score brand quality or claim fact, tone or legal verification. This replaces the previous fixed score of 100.
 
 Current builder result: 51 built, 3 pending source (hotels, packages and Timatic), 1 blocked integration (Support), and 5 aliases. These counts cover public and internal routes. The preview remains a script-free layout preview; data-driven components still require their existing content owners. Live save, publish, upload, image replacement and staff-session behavior remain to be verified with an authorized session.
+
+
+The VOY launch kit now prepares editable newsletter, social and agency starting drafts from the supplied launch name, angle, page titles and booking link. A campaign parameter is added without dropping existing query parameters or anchors. Staff can edit and save kits through the existing editorial store, then reopen them. These are deterministic starting drafts, not AI-generated campaigns, sent messages, verified claims or finished press and advertising packages.

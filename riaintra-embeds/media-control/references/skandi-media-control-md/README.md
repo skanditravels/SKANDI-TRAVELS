@@ -5,6 +5,8 @@
 
 ## INFO / LOG
 
+- 2026-11-07 — The active Media Control sidecars support editable launch drafts and campaign tracking; this retained duplicate is historical. See `docs/media-control-website-editor.md`.
+
 - 2026-11-07 — Historical reference retained. The active sidecars now check configured VOY Brand Guard phrases and accept eligible public images from the approved public storage buckets. See `docs/media-control-website-editor.md` for current behavior and live-test limits.
 
 - **Status:** STATICALLY VERIFIED / REQUIRES LIVE TEST
