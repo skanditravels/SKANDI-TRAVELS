@@ -1,3 +1,4 @@
+import { createStaffActivitySession } from '../src/public/riaintraSession.js';
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import fs from 'node:fs/promises';
@@ -77,7 +78,7 @@ test('master derives page identity from canonical route and owning component, an
   let source=await fs.readFile(new URL('../src/pages/masterPage.js',import.meta.url),'utf8');
   const ast=parse(source,{ecmaVersion:'latest',sourceType:'module'}),imports=ast.body.filter(n=>n.type==='ImportDeclaration');
   for(const n of imports.reverse())source=source.slice(0,n.start)+source.slice(n.end);
-  const context={...registry,console,setTimeout,clearTimeout,setInterval,clearInterval,URL,URLSearchParams,
+  const context={...registry,createStaffActivitySession,console,setTimeout,clearTimeout,setInterval,clearInterval,URL,URLSearchParams,
     wixWindowFrontend:{viewMode:'Site',formFactor:'Desktop'},wixLocationFrontend:{baseUrl:'https://www.skanditravels.com',path:[]},wixSiteFrontend:{currentPage:{url:'/search',name:'Search'}},local:{getItem:()=>null},session:{getItem:()=>null},consentPolicy:{getCurrentConsentPolicy:()=>({policy:{}})},$w:Object.assign(()=>[],{onReady:()=>{}})};
   vm.createContext(context);vm.runInContext(source+'\nglobalThis.getIdentity=compiledIdentity;globalThis.masterMessage=handleMasterMessage;globalThis.setReceiverRequest=(e,id)=>receiverRequests.set(e,id);',context);
   assert.equal(context.getIdentity({id:'searchResultsEmbed'}).key,'search');assert.equal(context.getIdentity({id:'skandiHeaderEmbed'}).allowed,false);
@@ -107,7 +108,7 @@ test('master derives page identity from canonical route and owning component, an
 test('receiver error references are logged only for the component and request that initiated them',async()=>{
   let source=await fs.readFile(new URL('../src/pages/masterPage.js',import.meta.url),'utf8');
   for(const n of parse(source,{ecmaVersion:'latest',sourceType:'module'}).body.filter(n=>n.type==='ImportDeclaration').reverse())source=source.slice(0,n.start)+source.slice(n.end);
-  const logged=[];const ctx={...registry,console:{error:(...args)=>logged.push(args)},setTimeout,clearTimeout,setInterval,clearInterval,URL,URLSearchParams,
+  const logged=[];const ctx={...registry,createStaffActivitySession,console:{error:(...args)=>logged.push(args)},setTimeout,clearTimeout,setInterval,clearInterval,URL,URLSearchParams,
     wixWindowFrontend:{viewMode:'Site',formFactor:'Desktop'},wixLocationFrontend:{baseUrl:'https://www.skanditravels.com',path:[]},wixSiteFrontend:{currentPage:{url:'/search',name:'Search'}},local:{getItem:()=>null},session:{getItem:()=>null},consentPolicy:{getCurrentConsentPolicy:()=>({policy:{}})},$w:Object.assign(()=>[],{onReady:()=>{}})};
   vm.createContext(ctx);vm.runInContext(source+'\nglobalThis.masterMessage=handleMasterMessage;globalThis.track=(e,id)=>receiverRequests.set(e,id);',ctx);
   const embed={id:'searchResultsEmbed'},other={id:'other'},payload={receiverRequestId:'abcd-1234',referenceId:'SK-02-20261106-ABCDEF123456',code:'CONNECTION'};

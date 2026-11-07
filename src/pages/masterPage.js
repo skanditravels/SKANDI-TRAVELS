@@ -7,6 +7,7 @@ import wixSiteFrontend from "wix-site-frontend";
 import wixWindowFrontend, { consentPolicy } from "wix-window-frontend";
 import { currentMember, authentication } from "wix-members-frontend";
 import { local, memory } from "wix-storage-frontend";
+import { createStaffActivitySession } from "public/riaintraSession.js";
 import { getCustomerHeaderSession, subscribeCustomerNewsletter } from "backend/SKANDI_CORE/customerSession.web";
 import { getAlteaLaunchpadApps, getStaffPortalSession } from "backend/SKANDI_CORE/staffAuth.web";
 import { getPublicTravelInfoPayload } from "backend/SKANDI_CORE/publicContent.web";
@@ -345,6 +346,7 @@ let mobileFooterGateRevealed = false;
 let mobileFooterGateBusy = false;
 let mobileDrawerResizeEpoch = 0;
 let alexandraGlobal = null;
+const staffActivitySession = createStaffActivitySession(local);
 let manualRiaintraSessionActive = false;
 let observedPath = "";
 let riaintraLogoutPromise = null;
@@ -614,6 +616,7 @@ function isRiaintraChildPath(path = currentPathString()) {
 }
 async function logoutRiaintraSession() {
   manualRiaintraSessionActive = false;
+  staffActivitySession.clear();
   try { memory.removeItem(RIAINTRA_MANUAL_SESSION_KEY); } catch (_) {}
   try { local.removeItem(RIAINTRA_EXIT_LOGOUT_PENDING_KEY); } catch (_) {}
   if (riaintraLogoutPromise) return riaintraLogoutPromise;
@@ -625,10 +628,7 @@ async function logoutRiaintraSession() {
   finally { riaintraLogoutPromise = null; }
 }
 function hasManualRiaintraSession() {
-  if (manualRiaintraSessionActive) return true;
-  try {
-    manualRiaintraSessionActive = memory.getItem(RIAINTRA_MANUAL_SESSION_KEY) === "typed";
-  } catch (_) { manualRiaintraSessionActive = false; }
+  manualRiaintraSessionActive = staffActivitySession.active();
   return manualRiaintraSessionActive;
 }
 async function requireManualRiaintraLogin() {
@@ -640,27 +640,21 @@ async function requireManualRiaintraLogin() {
 function wireRiaintraLifecycle() {
   if (riaintraLifecycleWired) return;
   riaintraLifecycleWired = true;
+  // No heartbeat: only actual user interaction renews the inactivity deadline.
+  setInterval(() => {
+    if (isRiaintraChildPath() && !hasManualRiaintraSession()) void requireManualRiaintraLogin();
+  }, 10000);
   try {
-    window.addEventListener("pagehide", () => {
-      if (!isRiaintraPath()) return;
-      manualRiaintraSessionActive = false;
-      try { memory.removeItem(RIAINTRA_MANUAL_SESSION_KEY); } catch (_) {}
-      try { local.setItem(RIAINTRA_EXIT_LOGOUT_PENDING_KEY, "yes"); } catch (_) {}
-      try {
-        const pendingLogout = authentication.logout();
-        if (pendingLogout && typeof pendingLogout.catch === "function") {
-          pendingLogout.catch(error => console.warn("[MasterPage] RIAINTRA close logout could not be confirmed.", error));
-        }
-      } catch (error) {
-        console.warn("[MasterPage] RIAINTRA close logout could not be started.", error);
-      }
-    });
-    window.addEventListener("pageshow", () => {
-      if (isRiaintraChildPath() && !hasManualRiaintraSession()) void requireManualRiaintraLogin();
-    });
-  } catch (error) {
-    console.warn("[MasterPage] RIAINTRA page lifecycle logout hooks are unavailable.", error);
-  }
+    let lastWrite = 0;
+    const onActivity = event => {
+      if (!event.isTrusted || !isRiaintraChildPath() || Date.now() - lastWrite < 5000) return;
+      lastWrite = Date.now();
+      if (!staffActivitySession.touch()) void requireManualRiaintraLogin();
+    };
+    for (const type of ["pointerdown", "pointermove", "keydown", "wheel", "touchstart"]) {
+      window.addEventListener(type, onActivity, { passive:true });
+    }
+  } catch (_) { /* The compiled application reports its own user interaction. */ }
 }
 function isInternalPath(path = currentPathString()) {
   const value = normalizePath(path);
@@ -718,11 +712,7 @@ function wireLocationChangeScroll() {
   try {
     wixLocationFrontend.onChange(async () => {
       const nextPath = currentPathString();
-      const previousPath = observedPath || nextPath;
-      if (isRiaintraPath(previousPath) && !isRiaintraPath(nextPath)) {
-        await logoutRiaintraSession();
-        try { await alexandraGlobal?.refreshIdentity?.(); } catch (_) {}
-      } else if (isRiaintraChildPath(nextPath) && !hasManualRiaintraSession()) {
+      if (isRiaintraChildPath(nextPath) && !hasManualRiaintraSession()) {
         observedPath = nextPath;
         await requireManualRiaintraLogin();
         return;
@@ -1070,6 +1060,16 @@ async function handleMasterMessage(embed, message = {}) {
     }
     // On Home, its existing V12 page controller still owns focus-search and refresh.
     // Other navigation intents retain the canonical MASTER_NAVIGATE contract below.
+  }
+
+  if (source === "SKANDI_SHELL" && type === "SKANDI_STAFF_ACTIVITY") {
+    const identity = compiledEmbeds.get(embed.id);
+    const current = resolveBuildRoute(currentPathString());
+    if (identity?.allowed && identity.staffAuthorized && identity.key === current?.key &&
+        identity.key === payload.key && isRiaintraChildPath()) {
+      if (!staffActivitySession.touch()) await requireManualRiaintraLogin();
+    }
+    return true;
   }
 
   if (source === "SKANDI_SHELL" && type === "SKANDI_COMPILED_READY") {
@@ -1508,7 +1508,7 @@ $w.onReady(async function () {
     closeLogoutPending = local.getItem(RIAINTRA_EXIT_LOGOUT_PENDING_KEY) === "yes";
     local.removeItem(RIAINTRA_EXIT_LOGOUT_PENDING_KEY);
   } catch (_) {}
-  if (closeLogoutPending) {
+  if (closeLogoutPending && !staffActivitySession.active()) {
     try { await authentication.logout(); }
     catch (error) { console.warn("[MasterPage] Pending RIAINTRA logout could not be confirmed.", error); }
   }
