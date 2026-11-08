@@ -1323,8 +1323,7 @@
           ["Country", ["homeAddressCountry", "country", "mailingCountry"]],
           ["Personal Mobile", ["phone", "personalMobile", "mobilePhone", "personalPhone"]],
           ["Primary Contact Email", ["primaryContactEmail", "personalEmail", "email", "wixMemberEmail"]],
-          ["Corporate Email", ["corporateEmailAddress", "workEmail", "companyEmail"]],
-          ["Wix Member ID", ["wixMemberId", "memberId"]]
+          ["Corporate Email", ["corporateEmailAddress", "workEmail", "companyEmail"]]
         ]
       },
       {
@@ -3596,7 +3595,7 @@
       const nextIndex = Math.min(Math.max(RECRUITING_STAGES.findIndex(([value]) => value === slugify(stage, stage)), 0) + 1, RECRUITING_STAGES.length - 1);
       const nextStage = RECRUITING_STAGES[nextIndex]?.[0] || "screening";
       const fields = Object.entries(candidate)
-        .filter(([key, value]) => !/password|secret|token|credential/i.test(key) && (value === null || typeof value !== "object"))
+        .filter(([key, value]) => !/password|secret|token|credential|wix.?member|^member_?id$|^contact_?id$/i.test(key) && (value === null || typeof value !== "object"))
         .slice(0, 24);
       return `
         <div class="hr-object-header">
@@ -3909,7 +3908,7 @@
       if (!candidate) return;
       hrSelectedCandidateId = String(id);
       const fields = Object.entries(candidate)
-        .filter(([key, value]) => !/password|secret|token|credential/i.test(key) && (value === null || typeof value !== "object"))
+        .filter(([key, value]) => !/password|secret|token|credential|wix.?member|^member_?id$|^contact_?id$/i.test(key) && (value === null || typeof value !== "object"))
         .slice(0, 18);
       const currentStage = slugify(String(firstRecordValue(candidate, ["stage", "status"], "applied")), "applied");
       const index = Math.max(0, RECRUITING_STAGES.findIndex(([stage]) => stage === currentStage));
@@ -3936,6 +3935,16 @@
       });
     }
 
+    function openHireCandidateDialog(id) {
+      const candidate = portalState.hr.recruiting.candidates.find(item => recruitingCandidateId(item) === String(id));
+      if (!candidate) return;
+      openDialog({
+        id:"candidate-hire", title:"Hire candidate", subtitle:recordName(candidate),
+        body:`<form id="careerHireForm"><input type="hidden" name="candidateId" value="${escapeHtml(String(id))}"><div class="hr-form-grid"><label class="hr-field wide"><span>Staff login email</span><input class="hr-input" type="email" name="staffEmail" required></label><p>Enter the staff login email. If the candidate already has a member account, use the email connected to that account.</p></div></form>`,
+        footer:`<button class="ghost-button" type="button" data-action="close-dialog">Cancel</button><button class="primary-button" type="submit" form="careerHireForm">Hire and create staff account</button>`
+      });
+    }
+
     function openNewCandidateDialog() {
       openDialog({
         id: "candidate-new",
@@ -3952,6 +3961,7 @@
                 ["positionApplied", "Position applied"],
                 ["location", "Location / base"]
               ].map(([name, label]) => `<label class="hr-field"><span>${label}</span><input class="hr-input" name="${name}" ${["firstName", "lastName", "email"].includes(name) ? "required" : ""}></label>`).join("")}
+              <label class="hr-field"><span>Staff login email (required for Hired)</span><input class="hr-input" name="staffEmail" type="email"></label>
               <label class="hr-field">
                 <span>Stage</span>
                 <select class="hr-select" name="stage">${RECRUITING_STAGES.map(([id, label]) => `<option value="${id}">${label}</option>`).join("")}</select>
@@ -4809,10 +4819,10 @@
         renderPortal();
       } else if (action === "careers-move-stage") {
         if (!hasRecruitingAccess()) return;
-        post("CAREERS_MOVE_CANDIDATE_STAGE", {
-          candidateId: id || hrSelectedCandidateId,
-          targetStage: element.dataset.stage || "screening"
-        });
+        const candidateId = id || hrSelectedCandidateId;
+        const targetStage = element.dataset.stage || "screening";
+        if (targetStage === "hired") { openHireCandidateDialog(candidateId); return; }
+        post("CAREERS_MOVE_CANDIDATE_STAGE", { candidateId, targetStage });
         closeDialog();
       } else if (action === "careers-detect-gaps") {
         if (!hasRecruitingAccess()) return;
@@ -4994,9 +5004,20 @@
         delete item.recordId;
         post("HR_STAFF_SAVE", { item: { ...item, ...(recordId ? { id: recordId } : {}) }, isNew: hrEmployeeDraftMode });
         showToast("Saving employee", "The employee record was sent to the HR backend.");
+      } else if (form.id === "careerHireForm") {
+        if (!hasRecruitingAccess()) return;
+        const hire = serializeForm(form);
+        post("CAREERS_MOVE_CANDIDATE_STAGE", { candidateId:hire.candidateId, targetStage:"hired", staffEmail:hire.staffEmail });
+        closeDialog();
+        showToast("Creating staff account", "The hire is being processed.");
       } else if (form.id === "candidateForm") {
         if (!hasRecruitingAccess()) return;
-        post("CAREERS_SAVE_CANDIDATE", { item: serializeForm(form) });
+        const candidate = serializeForm(form);
+        if (String(candidate.stage || "").toLowerCase() === "hired" && !String(candidate.staffEmail || "").trim()) {
+          showToast("Staff email required", "Enter the staff login email before selecting Hired.", "warning");
+          return;
+        }
+        post("CAREERS_SAVE_CANDIDATE", { item: candidate });
         closeDialog();
         showToast("Saving candidate", "The candidate record was sent to the recruiting backend.");
       } else if (form.id === "careerJobForm") {
