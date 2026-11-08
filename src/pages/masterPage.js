@@ -129,7 +129,7 @@ const MASTER_CONFIG = Object.freeze({
         voyLightBlue:brandLogo("VOY-NAVY.svg"),
         alteaNavy:brandLogo("ALTEA_LOGO-NAVY.svg"),
         alteaLight:brandLogo("ALTEA_LOGO-LIGHT.svg"),
-        alteaHeader:brandLogo("ALTEA_LOGO-LIGHT.svg"),
+        alteaHeader:brandLogo("app-logos/header-logos/altea.svg"),
         alteaFooter:brandLogo("ALTEA_LOGO-LIGHT.svg"),
         alteaIconNavy:brandLogo("ALTEAEOS_LOGO-NAVY.svg"),
         alteaIconLight:brandLogo("ALTEAEOS_LOGO-LIGHT.svg"),
