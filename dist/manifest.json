@@ -1299,8 +1299,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/support/skandi-support.receiver.html",
       "receiverFile": "skandi-embeds/support/skandi-support.receiver.html",
-      "sha256": "fa54786ec351c05a99db504c564bfd56e624bdcf9d14eefaeed24d06f68349c2",
-      "bytes": 229343
+      "sha256": "b13c0e88964903677a5007508399bd449afc6fdde702d730419ac3c715d19de7",
+      "bytes": 229867
     },
     {
       "key": "newsroom",
@@ -2917,8 +2917,8 @@
       "blockers": [],
       "receiver": "riaintra-embeds/service-desk/skandi-service-desk.receiver.html",
       "receiverFile": "riaintra-embeds/service-desk/skandi-service-desk.receiver.html",
-      "sha256": "c8a245ec5ec988dc925f3b1daaf8415cf119cd1b593e00135a46ef48d89504dd",
-      "bytes": 182256
+      "sha256": "96abc566d86944834b3d87b5b897c4ef471a33619d88fd1e42aa0b34c2636c37",
+      "bytes": 185726
     },
     {
       "key": "policyControl",

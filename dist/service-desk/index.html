@@ -817,7 +817,7 @@ html, body { width: 100% !important; margin: 0 !important; max-width: none !impo
 
 <section class="call" id="callPanel">
   <div class="callhead"><b>LiveKit Talk</b><button class="x" id="closeCall">×</button></div>
-  <div class="callbody"><div class="avatar lg" id="callAvatar">?</div><b id="callName">No traveler selected</b><div class="muted" id="callPhone">No phone number</div><div id="callStatus">Ready to call</div><div class="timer" id="callTimer">00:00</div><div><button class="round" id="muteBtn">M</button> <button class="round" id="holdBtn">Ⅱ</button> <button class="round end" id="callMain">☎</button></div><div class="disposition hidden" id="disposition"><select id="outcome"><option>Issue resolved</option><option>Follow-up required</option><option>Voicemail left</option><option>No answer</option></select><textarea id="callNotes" placeholder="Add call notes…"></textarea><button class="btn primary" id="saveCall">Save call to ticket</button></div></div>
+  <div class="callbody"><div class="avatar lg" id="callAvatar">?</div><b id="callName">No traveler selected</b><div class="muted" id="callPhone">No phone number</div><div id="callStatus">Ready to join support audio</div><div class="timer" id="callTimer">00:00</div><div><button class="round" id="muteBtn">M</button> <button class="round" id="holdBtn">Ⅱ</button> <button class="round end" id="callMain">☎</button></div><div class="disposition hidden" id="disposition"><select id="outcome"><option>Issue resolved</option><option>Follow-up required</option><option>Voicemail left</option><option>No answer</option></select><textarea id="callNotes" placeholder="Add call notes…"></textarea><button class="btn primary" id="saveCall">Save call to ticket</button></div></div>
 </section>
 
 <div class="modalbg" id="modalbg"><div class="modal"><div class="mhead"><h2 id="modalTitle"></h2><button class="x" id="closeModal">×</button></div><div class="mbody" id="modalBody"></div><div class="mfoot" id="modalFoot"></div></div></div>
@@ -2705,46 +2705,69 @@ $("#talkBtn").onclick = () => {
   $("#callAvatar").textContent = u?.initials || "?";
   $("#callName").textContent = u?.name || "Unknown traveler";
   $("#callPhone").textContent = u?.phone || "No phone number";
-  $("#callStatus").textContent = "Ready to call";
+  $("#callStatus").textContent = "Ready to join support audio";
   $("#callTimer").textContent = "00:00";
   $("#disposition").classList.add("hidden");
   $("#callPanel").classList.add("open");
 };
 
-$("#closeCall").onclick = () => $("#callPanel").classList.remove("open");
+$("#closeCall").onclick = () => {
+  window.dispatchEvent(new CustomEvent("skandi-support-audio-end"));
+  if (S.call.active) {
+    const t = ticket(S.call.ticketId);
+    post("AGENT_CALL_END", { ticketId: t?.externalId || t?.id, caseId: t?.caseId, duration: S.call.seconds });
+  }
+  S.call.active = false;
+  clearInterval(S.call.timer);
+  $("#callMain").disabled = false;
+  $("#callPanel").classList.remove("open");
+};
 
+// A support-room connection is not a telephone call. Do not show a
+// connected state until the LiveKit client has joined and enabled audio.
 $("#callMain").onclick = () => {
   const t = ticket(S.call.ticketId);
   if (!S.call.active) {
-    S.call.active = true;
-    S.call.seconds = 0;
-    $("#callStatus").textContent = "Connected";
-    S.call.timer = setInterval(() => {
-      S.call.seconds += 1;
-      $("#callTimer").textContent = `${String(Math.floor(S.call.seconds / 60)).padStart(2, "0")}:${String(S.call.seconds % 60).padStart(2, "0")}`;
-    }, 1000);
-    toast("Call connected", user(t?.requesterId)?.name || "Traveler");
-    post("AGENT_CALL_START", { ticketId: t?.externalId || t?.id, caseId: t?.caseId, phone: user(t?.requesterId)?.phone });
+    if (!t) return;
+    $("#callStatus").textContent = "Connecting to support audio…";
+    $("#callMain").disabled = true;
+    window.dispatchEvent(new CustomEvent("skandi-support-audio-start"));
+    post("AGENT_CALL_START", { ticketId: t.externalId || t.id, caseId: t.caseId });
   } else {
+    window.dispatchEvent(new CustomEvent("skandi-support-audio-end"));
     S.call.active = false;
     clearInterval(S.call.timer);
-    $("#callStatus").textContent = "Call ended";
+    $("#callStatus").textContent = "Audio ended";
     $("#disposition").classList.remove("hidden");
-    toast("Call ended", $("#callTimer").textContent);
     post("AGENT_CALL_END", { ticketId: t?.externalId || t?.id, caseId: t?.caseId, duration: S.call.seconds });
   }
 };
-
-$("#muteBtn").onclick = e => e.target.classList.toggle("primary");
-$("#holdBtn").onclick = e => {
-  e.target.classList.toggle("primary");
-  $("#callStatus").textContent = e.target.classList.contains("primary") ? "On hold" : "Connected";
-};
+window.addEventListener("skandi-support-audio-ready", () => {
+  if (S.call.active) return;
+  S.call.active = true;
+  S.call.seconds = 0;
+  $("#callMain").disabled = false;
+  $("#callStatus").textContent = "Connected to support audio";
+  S.call.timer = setInterval(() => {
+    S.call.seconds += 1;
+    $("#callTimer").textContent = `${String(Math.floor(S.call.seconds / 60)).padStart(2, "0")}:${String(S.call.seconds % 60).padStart(2, "0")}`;
+  }, 1000);
+});
+window.addEventListener("skandi-support-audio-failed", () => {
+  S.call.active = false;
+  clearInterval(S.call.timer);
+  $("#callMain").disabled = false;
+  $("#callStatus").textContent = "Couldn’t connect support audio. Try again.";
+});
+$("#muteBtn").onclick = () => window.dispatchEvent(new CustomEvent("skandi-support-audio-mute"));
+window.addEventListener("skandi-support-audio-mute-changed", e => $("#muteBtn").classList.toggle("primary", e.detail?.muted === true));
+$("#holdBtn").disabled = true;
+$("#holdBtn").title = "Hold is unavailable for support audio";
 
 $("#saveCall").onclick = () => {
   const t = ticket(S.call.ticketId);
   if (!t) return;
-  const message = { id: "call" + Date.now(), authorId: ensureSessionAgent(), authorName: S.session.agentName || "Support Agent", authorInitials: S.session.agentInitials || initials(S.session.agentName), kind: "public", channel: "voice", at: new Date().toISOString(), body: `Call recording · ${$("#callTimer").textContent}\nOutcome: ${$("#outcome").value}\n${$("#callNotes").value}` };
+  const message = { id: "call" + Date.now(), authorId: ensureSessionAgent(), authorName: S.session.agentName || "Support Agent", authorInitials: S.session.agentInitials || initials(S.session.agentName), kind: "public", channel: "voice", at: new Date().toISOString(), body: `Support audio · ${$("#callTimer").textContent}\nOutcome: ${$("#outcome").value}\n${$("#callNotes").value}` };
   t.history.push(message);
   t.updatedAt = new Date().toISOString();
   $("#callPanel").classList.remove("open");
@@ -2984,6 +3007,7 @@ window.addEventListener("message", event => {
 
   if (message.type === "AGENT_ERROR") {
     const failedAction = String(envelope.action || "");
+    if (failedAction === "AGENT_CALL_START") window.dispatchEvent(new CustomEvent("skandi-support-audio-failed"));
     if (["AGENT_READY", "AGENT_REQUEST_BOOTSTRAP", "AGENT_LIST_CASES", "AGENT_REFRESH_CASES"].includes(failedAction)) bootstrapSettled = true;
     if (String(envelope.action || "").startsWith("AGENT_DUFFEL_")) {
       toast("Booking / Duffel action failed", envelope.message || "The backend did not complete this action.");
@@ -3076,12 +3100,26 @@ setTimeout(() => {
 (function(){
   "use strict";
   const SKANDI_R0071_LIVEKIT_AGENT_SUPPORT=true;
-  const PARENT="SKANDI_WIX_PARENT";const DEFAULT_TOPIC="skandi.support.chat";let room=null,session=null,connecting=null,activeCaseId="";
+  const PARENT="SKANDI_WIX_PARENT";const DEFAULT_TOPIC="skandi.support.chat";let room=null,session=null,connecting=null,activeCaseId="",audioEnabled=false,audioRequest=0,audioRequested=false;const audioElements=new Set();
   const escLK=v=>String(v??"").replace(/[&<>\"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'\"':"&quot;","'":"&#39;"}[c]));
-  async function disconnect(){try{if(room)await room.disconnect();}catch(_){}room=null;session=null;connecting=null;}
-  async function connect(s){if(!s?.url||!s?.token||!window.LivekitClient)return null;if(room&&session?.roomName===s.roomName&&room.state==="connected")return room;if(connecting)return connecting;connecting=(async()=>{await disconnect();const r=new window.LivekitClient.Room({adaptiveStream:true,dynacast:true});const topic=s.textTopic||DEFAULT_TOPIC;r.registerTextStreamHandler(topic,async(reader,participant)=>{if(participant?.identity===r.localParticipant?.identity)return;const text=await reader.readAll();const box=document.getElementById("conversation");if(!box||!text)return;const article=document.createElement("article");article.className="msg customer";article.innerHTML=`<div class="avatar">T</div><div class="bubble"><div class="mmeta"><b>Traveler</b><span>now</span><span class="mkind">LiveKit</span></div><div class="mtext">${escLK(text)}</div></div>`;box.appendChild(article);box.scrollTop=box.scrollHeight;});await r.connect(s.url,s.token);room=r;session=s;return r;})().finally(()=>connecting=null);return connecting;}
+  function clearAudio(){for(const el of audioElements)el.remove();audioElements.clear()}
+  function attachAudio(track){if(!audioEnabled||track?.kind!=="audio")return;const el=track.attach();el.autoplay=true;document.body.appendChild(el);audioElements.add(el)}
+  async function disconnect(){audioEnabled=false;clearAudio();try{if(room)await room.disconnect();}catch(_){}room=null;session=null;connecting=null;}
+  async function connect(s){if(!s?.url||!s?.token||!window.LivekitClient)return null;if(room&&session?.roomName===s.roomName&&room.state==="connected")return room;if(connecting)return connecting;connecting=(async()=>{await disconnect();const r=new window.LivekitClient.Room({adaptiveStream:true,dynacast:true});const topic=s.textTopic||DEFAULT_TOPIC;r.on(window.LivekitClient.RoomEvent.TrackSubscribed,attachAudio);r.on(window.LivekitClient.RoomEvent.Disconnected,()=>{if(audioEnabled){audioEnabled=false;clearAudio();window.dispatchEvent(new CustomEvent("skandi-support-audio-failed"))}});r.registerTextStreamHandler(topic,async(reader,participant)=>{if(participant?.identity===r.localParticipant?.identity)return;const text=await reader.readAll();const box=document.getElementById("conversation");if(!box||!text)return;const article=document.createElement("article");article.className="msg customer";article.innerHTML=`<div class="avatar">T</div><div class="bubble"><div class="mmeta"><b>Traveler</b><span>now</span><span class="mkind">LiveKit</span></div><div class="mtext">${escLK(text)}</div></div>`;box.appendChild(article);box.scrollTop=box.scrollHeight;});await r.connect(s.url,s.token);room=r;session=s;return r;})().finally(()=>connecting=null);return connecting;}
   async function publish(sent,s){const text=String(sent?.message||sent?.content||"").trim();if(!text||!s)return;const r=await connect(s);if(!r)return;await r.localParticipant.sendText(text,{topic:s.textTopic||DEFAULT_TOPIC,attributes:{caseId:activeCaseId,messageId:String(sent?.messageId||sent?.message_id||""),senderType:"agent"}});}
-  window.addEventListener("message",e=>{const m=e.data||{};if(m.source!==PARENT)return;const p=m.payload||{};if(m.type==="AGENT_CASE_DETAIL"||m.type==="AGENT_LIVEKIT_SESSION"){activeCaseId=String(p.case?.caseId||p.case?.case_id||activeCaseId);connect(p.livekitSession).catch(()=>{});}if(m.type==="AGENT_REPLY_SENT"&&p.privateNote!==true&&p.livekitSession){activeCaseId=String(p.case?.caseId||p.case?.case_id||activeCaseId);publish(p.sentMessage,p.livekitSession).catch(()=>{});}});
+  window.addEventListener("message",e=>{const m=e.data||{};if(m.source!==PARENT)return;const p=m.payload||{};
+    if(m.type==="AGENT_CASE_DETAIL"){activeCaseId=String(p.case?.caseId||p.case?.case_id||activeCaseId);connect(p.livekitSession).catch(()=>{});}
+    if(m.type==="AGENT_LIVEKIT_SESSION"){
+      activeCaseId=String(p.case?.caseId||p.case?.case_id||activeCaseId);
+      if(!audioRequested)return;
+      const request=audioRequest;
+      (async()=>{const r=await connect(p.livekitSession);if(!r)throw new Error("Support audio unavailable");if(!audioRequested||request!==audioRequest)return;audioEnabled=true;await r.startAudio();await r.localParticipant.setMicrophoneEnabled(true);if(!audioRequested||request!==audioRequest){await r.localParticipant.setMicrophoneEnabled(false);return}for(const participant of r.remoteParticipants.values())for(const publication of participant.trackPublications.values())if(publication.track)attachAudio(publication.track);window.dispatchEvent(new CustomEvent("skandi-support-audio-ready"));})().catch(async()=>{audioEnabled=false;clearAudio();try{await room?.localParticipant?.setMicrophoneEnabled(false)}catch(_){}if(request===audioRequest)window.dispatchEvent(new CustomEvent("skandi-support-audio-failed"))});
+    }
+    if(m.type==="AGENT_REPLY_SENT"&&p.privateNote!==true&&p.livekitSession){activeCaseId=String(p.case?.caseId||p.case?.case_id||activeCaseId);publish(p.sentMessage,p.livekitSession).catch(()=>{});}
+  });
+  window.addEventListener("skandi-support-audio-start",()=>{audioRequest++;audioRequested=true});
+  window.addEventListener("skandi-support-audio-end",()=>{audioRequest++;audioRequested=false;audioEnabled=false;clearAudio();room?.localParticipant?.setMicrophoneEnabled(false).catch(()=>{})});
+  window.addEventListener("skandi-support-audio-mute",async()=>{if(!audioEnabled||!room)return;try{const muted=room.localParticipant.isMicrophoneEnabled;await room.localParticipant.setMicrophoneEnabled(!muted);window.dispatchEvent(new CustomEvent("skandi-support-audio-mute-changed",{detail:{muted}}))}catch(_){window.dispatchEvent(new CustomEvent("skandi-support-audio-failed"))}});
 })();
 
 
