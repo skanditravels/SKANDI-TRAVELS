@@ -357,7 +357,7 @@ function upsertCase(raw, openAfter = false) {
     const oldHistory = existing.history || [];
     Object.assign(existing, normalized);
     if (!includesHistory) existing.history = oldHistory;
-    if (typeof normalized.slaMinutes === "number") due.set(existing.id, Date.now() + normalized.slaMinutes * 60000);
+    if (typeof normalized.slaMinutes === "number" && !due.has(existing.id)) due.set(existing.id, Date.now() + normalized.slaMinutes * 60000);
     if (openAfter) openTicket(existing.id, false);
     return existing;
   }
@@ -395,11 +395,11 @@ function extractSingleCase(value, depth = 0) {
   return hasIdentity && hasCaseFields ? value : null;
 }
 
-function importCases(payload = {}, openFirst = false) {
+function importCases(payload = {}, openFirst = false, render = true) {
   const list = extractCaseList(payload);
   const imported = list.map(item => upsertCase(item, false)).filter(Boolean);
   if (openFirst && imported[0]) openTicket(imported[0].id, false);
-  else renderAll();
+  else if (render) renderAll();
   return imported;
 }
 
@@ -1028,7 +1028,7 @@ function wireModule() {
     toast("Guide article opened", article.title);
     post("AGENT_OPEN_ARTICLE", { articleId: article.id, url: article.url });
   });
-  if ($("#newArticle")) $("#newArticle").onclick = () => toast("Article editor opened");
+  if ($("#newArticle")) $("#newArticle").onclick = () => toast("Article editing unavailable", "Help Center content editing is not connected yet.");
   if ($("#newRule")) $("#newRule").onclick = () => toast("Business rule builder opened");
   if ($("#requestBootstrap")) $("#requestBootstrap").onclick = () => { post("AGENT_REQUEST_BOOTSTRAP", {}); toast("Bootstrap requested"); };
   $$('[data-rule]').forEach(b => b.onclick = () => {
@@ -1398,12 +1398,43 @@ window.addEventListener("message", event => {
   if (message.type === "AGENT_CASE_DETAIL") {
     const caseData = extractSingleCase(payload);
     if (!caseData) return toast("Case unavailable", "The backend returned no case record.");
+    if (payload.backgroundSync === true) {
+      const before = ticket(S.active);
+      const beforeHistory = JSON.stringify(before?.history || []);
+      const updated = upsertCase(caseData, false);
+      if (updated && updated.id === S.active && !S.dashboard) {
+        $$('#workspace select[data-field]').forEach(field => {
+          if (field === document.activeElement) return;
+          const value = updated[field.dataset.field];
+          if (value != null && [...field.options].some(option => option.value === String(value))) field.value = String(value);
+        });
+        const conversation = $("#conversation");
+        if (conversation && beforeHistory !== JSON.stringify(updated.history || [])) {
+          const previousTop = conversation.scrollTop;
+          const atBottom = conversation.scrollHeight - conversation.clientHeight - previousTop < 40;
+          conversation.innerHTML = updated.history.map(messageHtml).join("") + (updated.typing ? `<div class="typing"><i></i><i></i><i></i></div>` : "");
+          conversation.scrollTop = atBottom ? conversation.scrollHeight : previousTop;
+        }
+      }
+      return;
+    }
     const updated = upsertCase(caseData, true);
     toast("Case loaded", tid(updated));
     return;
   }
 
   if (["AGENT_CASE_LIST", "AGENT_CASES_IMPORT", "AGENT_IMPORT_CASES"].includes(message.type)) {
+    if (payload.backgroundSync === true) {
+      const before = JSON.stringify(db.tickets);
+      importCases(payload, false, false);
+      if (before !== JSON.stringify(db.tickets)) {
+        const queue = $("#queueList");
+        const top = queue?.scrollTop || 0;
+        renderTop(); renderQueue(); renderTabs();
+        if (queue) queue.scrollTop = top;
+      }
+      return;
+    }
     applyBootstrapData(payload);
     const imported = importCases(payload, Boolean(envelope.openFirst));
     rebuildDue();
