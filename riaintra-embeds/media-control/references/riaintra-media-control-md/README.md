@@ -5,6 +5,8 @@
 
 ## INFO / LOG
 
+- 2026-11-08 — The active Media Control sidecars remove the unused toolbar counters; this historical reference retains its original markup.
+
 - 2026-11-07 — VOY launch kits prepare editable newsletter, social and agency drafts from supplied issue details and track campaign links. Saved kits use the existing editorial store; generation is deterministic and requires human review.
 
 - 2026-11-07 — Historical reference retained. The active sidecars now check configured VOY Brand Guard phrases and accept eligible public images from the approved public storage buckets. See `docs/media-control-website-editor.md` for current behavior and live-test limits.
