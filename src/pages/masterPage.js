@@ -211,7 +211,7 @@ const MASTER_CONFIG = Object.freeze({
           title:"SKANDI",
           links:Object.freeze([
             { label:"Join SKANDI Club", path:SITE_MAP.club },
-            { label:"Log In to My Club", path:"/my-profile" },
+            { label:"Log In to My Club", path:SITE_MAP.myProfile },
             { label:"SKANDI Collection", path:SITE_MAP.skandiCollection },
             { label:"THE STORE", path:SITE_MAP.theStore },
             { label:"VOY Magazine", path:SITE_MAP.voy }
