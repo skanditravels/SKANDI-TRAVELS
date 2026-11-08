@@ -124,10 +124,10 @@ async function refreshAgentState(html, { includeDetail = true, requestId = "", s
   syncInFlight = true;
   try {
     const list = await listAgentSupportCases({ ...currentFilters, silentSync: true });
-    post(html, "AGENT_CASE_LIST", list, requestId);
+    post(html, "AGENT_CASE_LIST", { ...objectOf(list), backgroundSync: true }, requestId);
     if (includeDetail && activeCaseId) {
       const detail = await getAgentSupportCase({ caseId: activeCaseId, includeLiveKit: false, silentSync: true });
-      post(html, "AGENT_CASE_DETAIL", detail, requestId);
+      post(html, "AGENT_CASE_DETAIL", { ...objectOf(detail), backgroundSync: true }, requestId);
     }
     post(html, "AGENT_SYNC_STATUS", { ok: true, syncedAt: new Date().toISOString() }, requestId);
   } catch (error) {

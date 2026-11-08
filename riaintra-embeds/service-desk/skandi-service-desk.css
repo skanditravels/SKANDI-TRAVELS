@@ -31,3 +31,15 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.app{height:100v
   .top { min-width: 0; grid-template-columns: minmax(0, 1fr); }
   .top > div { min-width: 0; overflow-x: auto; }
 }
+
+/* Explicit light-surface colors avoid inherited white text from internal chrome. */
+.app { color: #17212b; }
+.app :is(.top,.queue,.work,.ctx,.menu,.modal,.callbody,.page,.empty) { color: #17212b; }
+.app :is(.btn,.icon,.qitem,.tab,.mi,.recent,.round,input,select,textarea) { color: #17212b; }
+.app :is(.primary,.talk,.round.end) { color: #fff; }
+@media (min-width: 1021px) {
+  .app { font-size: 13px; }
+  .pagehead h1 { font-size: 20px; }
+  .summary b { font-size: 21px; }
+  .tmain h1 { font-size: 17px; }
+}

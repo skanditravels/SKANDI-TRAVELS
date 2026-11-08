@@ -1,5 +1,9 @@
 # global
 
+## INFO / LOG
+
+- 2026-11-08 — The shared compiled shell lets RIAINTRA and ALTEA desktop pages scroll as a document, so their header and footer are not pinned around the workspace. Mobile navigation is unchanged. Requires live Wix verification across internal applications.
+
 ## Reference documents
 
 - [HTML_REF/GLOBAL/SKANDI COOKIE CONSENT BANNER.md](references/global-skandi-cookie-consent-banner-md/README.md)
