@@ -7,6 +7,8 @@
 
 ## CHANGE LOG (append-only)
 
+- 2026-11-08 — The active recruiting tables also suppress Wix member and contact IDs when older backend responses contain them.
+
 - 2026-11-08 — The active SuccessFactors sidecar and canonical recruiting backend now start staff account provisioning when an authorized HR manager marks a candidate Hired, using an explicitly supplied staff login email. Existing candidate accounts are checked before linking. Wix member identifiers remain backend-only; the employee form exposes SK-ID. The older HTML payload below is retained as historical reference; see the active `riaintra-embeds/success-factors/success-factors.js` and `src/backend/SKANDI_CORE/orgStructure.js`. Live hire and password setup remain unverified.
 
 - 2026-10-28 UTC — Updated `riaintra-embeds/success-factors/success-factors.receiver.html` to follow the current shared receiver pattern with page-specific startup, progress and failure messages for **Success Factors** (`/riaintra/success-factors`). The expected route matches `src/public/siteMap.js`; master-page handshake, staff authorization, manifest/SHA-256 checks and nested-iframe rejection remain intact.

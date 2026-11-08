@@ -2562,7 +2562,7 @@
     }
 
     function genericColumns(records) {
-      const blocked = /password|secret|token|credential|nationalid|passportnumber|accountnumber|routingnumber|iban/i;
+      const blocked = /password|secret|token|credential|nationalid|passportnumber|accountnumber|routingnumber|iban|wix.?member|^member_?id$|^contact_?id$/i;
       const preferred = [
         "name", "title", "status", "type", "category", "employeeId", "skId",
         "period", "date", "createdAt", "updatedAt", "amount", "currency", "owner"
