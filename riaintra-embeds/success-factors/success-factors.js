@@ -3940,7 +3940,7 @@
       if (!candidate) return;
       openDialog({
         id:"candidate-hire", title:"Hire candidate", subtitle:recordName(candidate),
-        body:`<form id="careerHireForm"><input type="hidden" name="candidateId" value="${escapeHtml(String(id))}"><div class="hr-form-grid"><label class="hr-field wide"><span>Staff login email</span><input class="hr-input" type="email" name="staffEmail" required></label><p>Enter the staff login email. If the candidate already has a member account, use the email connected to that account.</p></div></form>`,
+        body:`<form id="careerHireForm"><input type="hidden" name="candidateId" value="${escapeHtml(String(id))}"><p>The corporate email address will be generated automatically. The existing candidate email will be used for the Wix account while the corporate mailbox is awaiting setup.</p></form>`,
         footer:`<button class="ghost-button" type="button" data-action="close-dialog">Cancel</button><button class="primary-button" type="submit" form="careerHireForm">Hire and create staff account</button>`
       });
     }
@@ -3961,7 +3961,6 @@
                 ["positionApplied", "Position applied"],
                 ["location", "Location / base"]
               ].map(([name, label]) => `<label class="hr-field"><span>${label}</span><input class="hr-input" name="${name}" ${["firstName", "lastName", "email"].includes(name) ? "required" : ""}></label>`).join("")}
-              <label class="hr-field"><span>Staff login email (required for Hired)</span><input class="hr-input" name="staffEmail" type="email"></label>
               <label class="hr-field">
                 <span>Stage</span>
                 <select class="hr-select" name="stage">${RECRUITING_STAGES.map(([id, label]) => `<option value="${id}">${label}</option>`).join("")}</select>
@@ -5007,16 +5006,12 @@
       } else if (form.id === "careerHireForm") {
         if (!hasRecruitingAccess()) return;
         const hire = serializeForm(form);
-        post("CAREERS_MOVE_CANDIDATE_STAGE", { candidateId:hire.candidateId, targetStage:"hired", staffEmail:hire.staffEmail });
+        post("CAREERS_MOVE_CANDIDATE_STAGE", { candidateId:hire.candidateId, targetStage:"hired" });
         closeDialog();
         showToast("Creating staff account", "The hire is being processed.");
       } else if (form.id === "candidateForm") {
         if (!hasRecruitingAccess()) return;
         const candidate = serializeForm(form);
-        if (String(candidate.stage || "").toLowerCase() === "hired" && !String(candidate.staffEmail || "").trim()) {
-          showToast("Staff email required", "Enter the staff login email before selecting Hired.", "warning");
-          return;
-        }
         post("CAREERS_SAVE_CANDIDATE", { item: candidate });
         closeDialog();
         showToast("Saving candidate", "The candidate record was sent to the recruiting backend.");

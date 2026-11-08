@@ -86,7 +86,7 @@ function agentSelect() {
     "role_id","job_code","job_level","department_id","department_code","base_code","destination_code",
     "country_code","manager_agent_user_id","manager_role_id","manager_sk_id","manager_email","access_role",
     "permission_preset","permission_keys","allowed_apps","permission_groups","org_assignment_version",
-    "org_assignment_source","role"
+    "org_assignment_source","role","payload"
   ].join(",");
 }
 function safeOrValue(value) { const cleanValue = text(value, 320); return /[(),]/.test(cleanValue) ? "" : cleanValue; }
@@ -280,7 +280,7 @@ export async function loginStaffWithSkIdCore({ skId, password } = {}) {
   let agent = null, loginEmail = "";
   try {
     agent = await findAgentBySkId(cleanSkId); assertIdentity(agent); const auth = await resolveAuthorization(agent);
-    loginEmail = email(agent.corporate_email_address || agent.email); if (!loginEmail) throw new SkandiError("STAFF_LOGIN_EMAIL_MISSING");
+    loginEmail = email(agent.payload?.successFactors?.wixLoginEmail || agent.corporate_email_address || agent.email); if (!loginEmail) throw new SkandiError("STAFF_LOGIN_EMAIL_MISSING");
     const token = loginToken(await authentication.login(loginEmail, cleanPassword)); if (!token) throw new SkandiError("WIX_SESSION_TOKEN_MISSING");
     await tryWriteStaffLoginAudit({ agentUserId: agent.id, skId: cleanSkId, emailAddress: loginEmail, eventType: "STAFF_LOGIN_OK", success: true });
     const session = authorized(agent, auth);

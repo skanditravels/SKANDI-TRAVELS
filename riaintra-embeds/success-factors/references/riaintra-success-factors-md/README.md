@@ -7,6 +7,8 @@
 
 ## CHANGE LOG (append-only)
 
+- 2026-11-08 — New recruiting hires receive a normalized `firstname.lastname@skanditravels.com` planned corporate address. The existing case-insensitive unique staff-email index guards concurrent reservations; conflicts require HR review. Google Workspace provisioning remains planned and inactive, and no Google request is sent. The candidate's personal email remains separate, and their existing candidate email is used for Wix sign-in and password setup until a future verified mailbox transition. Existing staff login behavior is retained. Actual mailbox availability and end-to-end live onboarding require verification; country-specific onboarding and activation gates remain incomplete.
+
 - 2026-11-08 — New employee SK-IDs are created by the canonical backend from first and last initials and four random digits. Nordic/European initials are normalized; the database uniqueness constraint remains authoritative and concurrent collisions are retried. Existing identifiers are unchanged. The active employee form shows the SK-ID as read-only. The broader country-specific hiring and compliance pipeline remains incomplete.
 
 - 2026-11-08 — The active recruiting tables also suppress Wix member and contact IDs when older backend responses contain them, and candidate names recognize the existing database field names.

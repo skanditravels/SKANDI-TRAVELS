@@ -172,7 +172,7 @@ const EXTERNAL_OWNED_PROFILE_KEYS = new Set([
 
 const CORE_PROFILE_KEYS = new Set([
   "recordId","id","agentUserId","skId","skID","staffId","employeeId","employeeNumber","firstName","lastName","preferredName",
-  "displayName","fullName","corporateEmail","corporateEmailAddress","email","workEmail","companyEmail","badgePhotoUrl","photoUrl","active",
+  "displayName","fullName","corporateEmail","corporateEmailAddress","email","personalEmail","wixLoginEmail","workEmail","companyEmail","badgePhotoUrl","photoUrl","active",
   "status","employmentStatus","recruitingApplicantId","passwordEmailForNewMemberOnly","companyCode","roleId","jobCode","jobTitle","departmentId","departmentCode","assignedDepartment","department",
   "baseCode","assignedBase","base","station","countryCode","managerAgentUserId","managerRoleId","managerSkId","managerName","managerEmail",
   "accessRole","permissionPreset","permissionPresetId","effectiveFrom","reason","sendPasswordEmail"
@@ -249,6 +249,7 @@ function safeAgent(row = {}) {
     displayName: text(row.preferred_name || row.display_name || [row.first_name, row.last_name].filter(Boolean).join(" ") || row.sk_id, 180),
     fullName: text(row.preferred_name || row.display_name || [row.first_name, row.last_name].filter(Boolean).join(" ") || row.sk_id, 180),
     email: text(row.corporate_email_address || row.email, 320),
+    personalEmail: text(row.payload?.successFactors?.personalEmail || row.email, 320),
     corporateEmail: text(row.corporate_email_address || row.email, 320),
     corporateEmailAddress: text(row.corporate_email_address || row.email, 320),
     badgePhotoUrl: text(row.badge_photo_url, 1500),
@@ -1013,6 +1014,20 @@ function normalizeCorporateEmail(value) {
   return email;
 }
 
+function plannedCorporateEmail(firstName, lastName) {
+  const component = value => text(value, 120).normalize("NFKD")
+    .replace(/[Øø]/g, "o").replace(/[Ææ]/g, "ae").replace(/[Œœ]/g, "oe")
+    .replace(/[Łł]/g, "l").replace(/[ĐđÐð]/g, "d").replace(/[Þþ]/g, "th")
+    .replace(/ß/g, "ss").replace(/[\u0300-\u036f]/g, "").toLowerCase()
+    .replace(/[^a-z0-9]/g, "");
+  const first = component(firstName), last = component(lastName);
+  const local = `${first}.${last}`;
+  if (!first || !last || local.length > 64) {
+    throw new SkandiError("HR_CORPORATE_EMAIL_NAME_INVALID", "Unable to generate a corporate address from the name.", { publicMessage: "The name needs review before a corporate email can be generated." });
+  }
+  return `${local}@skanditravels.com`;
+}
+
 function memberItem(result) {
   return result?.member || result?.item || result || null;
 }
@@ -1073,7 +1088,7 @@ async function patchAgentMemberLink(agentUserId, member) {
 }
 
 async function provisionWixMemberForAgent(agent, { sendPasswordEmail = true, onlyIfCreated = false } = {}) {
-  const email = normalizeCorporateEmail(agent.corporate_email_address || agent.email);
+  const email = normalizeCorporateEmail(agent.payload?.successFactors?.wixLoginEmail || agent.corporate_email_address || agent.email);
   let member = await findWixMemberByCorporateEmail(email);
   let created = false;
   let memberRecord = memberItem(member);
@@ -1192,13 +1207,15 @@ export async function createEmployeeCore(input = {}) {
   const lastName = text(input.lastName, 120);
   const preferredName = text(input.preferredName, 120);
   const email = normalizeCorporateEmail(input.corporateEmail || input.corporateEmailAddress || input.workEmail || input.companyEmail || input.email);
+  const personalEmail = input.personalEmail ? normalizeCorporateEmail(input.personalEmail) : email;
+  const wixLoginEmail = input.wixLoginEmail ? normalizeCorporateEmail(input.wixLoginEmail) : email;
   if (!firstName || !lastName) {
     throw new SkandiError("HR_EMPLOYEE_NAME_REQUIRED", "First and last name are required.", { publicMessage: "First name and last name are required." });
   }
 
   const duplicate = firstRow(await select("agent_users", {
     select: "id,sk_id,corporate_email_address,email",
-    or: `(corporate_email_address.ilike.${email},email.ilike.${email})`,
+    or: `(corporate_email_address.ilike.${email},email.ilike.${email},corporate_email_address.ilike.${wixLoginEmail},email.ilike.${wixLoginEmail})`,
     limit: 1
   }));
   if (duplicate) {
@@ -1222,6 +1239,8 @@ export async function createEmployeeCore(input = {}) {
       preferred_name: preferredName || null,
       display_name: preferredName || `${firstName} ${lastName}`,
       corporate_email_address: email,
+      // Keep the planned corporate address in the existing case-insensitive
+      // unique email index, so concurrent hires cannot reserve it twice.
       email,
       active: true,
       status: "ONBOARDING",
@@ -1243,6 +1262,7 @@ export async function createEmployeeCore(input = {}) {
           createdByAgentUserId: actorId,
           createdAt: now,
           source: "SUCCESSFACTORS",
+          ...(input.wixLoginEmail ? { wixLoginEmail, personalEmail, workspaceProvisioningStatus: "PLANNED" } : {}),
           recruitingApplicantId: text(input.recruitingApplicantId, 80) || undefined,
           badge: { staffId: skId, template: "SKANDI_STANDARD", status: "NOT_REQUESTED", photoUrl: text(input.badgePhotoUrl || input.photoUrl, 1500), updatedAt: now },
           profile: hrProfilePatch(input)
@@ -1329,7 +1349,8 @@ export async function updateEmployeeCore(input = {}) {
     const duplicate = firstRow(await select("agent_users", { select: "id", or: `(corporate_email_address.ilike.${email},email.ilike.${email})`, limit: 2 }));
     if (duplicate && text(duplicate.id, 80) !== text(target.id, 80)) throw new SkandiError("HR_EMPLOYEE_EMAIL_EXISTS", "Corporate email already exists.");
     body.corporate_email_address = email;
-    body.email = email;
+    // Keep the unique planned address separate from the candidate's Wix login.
+    body.email = target.payload?.successFactors?.wixLoginEmail ? target.email : email;
   }
   const first = body.first_name ?? target.first_name;
   const last = body.last_name ?? target.last_name;
@@ -1531,7 +1552,7 @@ export async function saveRecruitingCandidateCore(input = {}) {
   const applicantId = text(input.applicantId || input.candidateId, 120) || generateBusinessKey("CAND");
   const firstName = text(input.firstName, 120), lastName = text(input.lastName, 120), email = normalizeCorporateEmail(input.email);
   const wantsHire = upper(input.status || input.stage, 80) === "HIRED";
-  if (wantsHire) { await requireHr({ manage: true }); normalizeCorporateEmail(input.staffEmail); }
+  if (wantsHire) { await requireHr({ manage: true }); normalizeCorporateEmail(input.staffEmail || email); }
   if (!firstName || !lastName) throw new SkandiError("RECRUITING_CANDIDATE_NAME_REQUIRED", "Candidate name is required.");
   const body = {
     applicant_id: applicantId,
@@ -1571,7 +1592,9 @@ export async function updateRecruitingCandidateStageCore({ id = "", status = "",
     return {ok:true,candidate:safeRecruitingCandidate(saved)};
   }
   await requireHr({ manage:true });
-  const loginEmail = normalizeCorporateEmail(staffEmail);
+  const loginEmail = normalizeCorporateEmail(staffEmail || candidate.email);
+  const personalEmail = normalizeCorporateEmail(candidate.email);
+  const corporateEmail = plannedCorporateEmail(candidate.first_name, candidate.last_name);
   const existingCandidateMember = text(candidate.wix_member_id, 120);
   if (existingCandidateMember) {
     const found = memberSummary(await findWixMemberByCorporateEmail(loginEmail));
@@ -1581,7 +1604,7 @@ export async function updateRecruitingCandidateStageCore({ id = "", status = "",
     const applicantAccount = memberSummary(await findWixMemberByCorporateEmail(candidate.email));
     if (applicantAccount?.id) throw new SkandiError("HR_CANDIDATE_MEMBER_REVIEW_REQUIRED", "The candidate has an existing account with a different login.", {publicMessage:"The candidate already has an account under a different email. Review the account before continuing."});
   }
-  const matches = await select("agent_users", {select:"*",or:`(corporate_email_address.ilike.${loginEmail},email.ilike.${loginEmail})`,limit:2});
+  const matches = await select("agent_users", {select:"*",or:`(corporate_email_address.ilike.${loginEmail},email.ilike.${loginEmail},corporate_email_address.ilike.${corporateEmail},email.ilike.${corporateEmail})`,limit:2});
   if (matches.length > 1) throw new SkandiError("HR_EMPLOYEE_EMAIL_AMBIGUOUS", "Staff email matches multiple employees.", {publicMessage:"That email matches more than one employee. Review the records before continuing."});
   const matched = firstRow(matches);
   const linkedCandidate = text(matched?.payload?.successFactors?.recruitingApplicantId, 80);
@@ -1596,14 +1619,14 @@ export async function updateRecruitingCandidateStageCore({ id = "", status = "",
     passwordSetupPending = recovered.created === true && recovered.passwordEmailSent !== true;
   }
   if (!matched) {
-    const created = await createEmployeeCore({firstName:candidate.first_name,lastName:candidate.last_name,corporateEmail:loginEmail,recruitingApplicantId:cleanId,passwordEmailForNewMemberOnly:true});
+    const created = await createEmployeeCore({firstName:candidate.first_name,lastName:candidate.last_name,corporateEmail,personalEmail,wixLoginEmail:loginEmail,recruitingApplicantId:cleanId,passwordEmailForNewMemberOnly:true});
     memberId = created.wixMember?.member?.id || "";
     employee = created.employee;
     passwordSetupPending = created.wixMember?.created === true && created.wixMember?.passwordEmailSent !== true;
   }
   if (!memberId || (existingCandidateMember && memberId !== existingCandidateMember)) throw new SkandiError("HR_WIX_MEMBER_PROVISION_INCOMPLETE", "Staff account could not be verified.");
   const payload = candidate.payload && typeof candidate.payload === "object" ? {...candidate.payload} : {};
-  payload.staffOnboarding = {agentUserId:employee?.id || matched?.id,skId:employee?.skId || matched?.sk_id,passwordSetupPending};
+  payload.staffOnboarding = {...(payload.staffOnboarding || {}),agentUserId:employee?.id || matched?.id,skId:employee?.skId || matched?.sk_id,corporateEmail:matched?.corporate_email_address || corporateEmail,workspaceProvisioningStatus:"PLANNED",passwordSetupPending};
   const saved = firstRow(await restRequest({table:"career_applicant_accounts",method:"PATCH",query:{id:`eq.${cleanId}`,status:`eq.${candidate.status}`},body:{status:"hired",wix_member_id:memberId,payload,updated_at:new Date().toISOString()}}));
   if (!saved) throw new SkandiError("RECRUITING_HIRE_RETRY", "Candidate changed during staff provisioning.", {publicMessage:"The staff account was created, but the candidate changed. Refresh and retry."});
   await recruitingAudit(actorId,"CANDIDATE_HIRED","candidate",saved.applicant_id || cleanId,{status:"hired",skId:employee?.skId || ""});
