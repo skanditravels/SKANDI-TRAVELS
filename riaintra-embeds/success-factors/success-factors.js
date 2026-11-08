@@ -3334,7 +3334,6 @@
             <p>${hrEmployeeDraftMode ? "Create an Employee Central record" : `${escapeHtml(displayPortalValue(firstRecordValue(record, ["jobTitle", "position", "role"])))} · ${escapeHtml(displayPortalValue(firstRecordValue(record, ["skId", "employeeId"])))}`}</p>
           </div>
           <div class="hr-object-actions hr-action-row">
-            <button class="secondary-button" type="button" data-action="hr-generate-skid">${icon("settings", 15)} Generate SK-ID</button>
             ${!hrEmployeeDraftMode ? `<button class="semantic-button danger" type="button" data-action="hr-archive-employee">${icon("warning", 15)} Archive</button>` : ""}
             <button class="primary-button" type="submit" form="hrEmployeeForm">${icon("check", 15)} Save employee</button>
           </div>
@@ -3376,6 +3375,7 @@
       if (currentHrEmployeeTab === "employment" && orgManaged) return renderOrgManagedField(label,name,record);
       const raw = firstRecordValue(record, keys, "");
       const value = raw === undefined || raw === null ? "" : displayPortalValue(raw);
+      if (label === "SK-ID") return `<label class="hr-field"><span>SK-ID</span><input class="hr-input" readonly value="${escapeHtml(value === "—" ? "" : value)}"><small style="color:var(--sap-text-muted)">Assigned automatically when the employee is created.</small></label>`;
       const multiline = /notes|goals|records|checks|timestamps|skills|languages|certifications|plan|feedback|permissions|groups|apps/i.test(name) || value.length > 90;
       const externalSystemOwned = currentHrEmployeeTab === "time" || currentHrEmployeeTab === "compensation" || label === "Roster Group";
       return `
