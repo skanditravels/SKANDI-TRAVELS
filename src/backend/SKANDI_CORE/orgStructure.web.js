@@ -45,6 +45,16 @@ import {
 } from "backend/SKANDI_CORE/orgStructure";
 
 const input = (value) => value && typeof value === "object" ? value : {};
+function withoutMemberIdentity(result) {
+  if (!result || typeof result !== "object") return result;
+  const clean = { ...result };
+  for (const key of ["wixMember", "wixMemberSync"]) if (clean[key]) {
+    const { member, ...rest } = clean[key];
+    clean[key] = rest;
+  }
+  if (clean.member) delete clean.member;
+  return clean;
+}
 
 export const getSuccessFactorsPortalBootstrap = webMethod(Permissions.SiteMember, async () => {
   return getSuccessFactorsPortalBootstrapCore();
@@ -79,11 +89,11 @@ export const generateEmployeeSkId = webMethod(Permissions.SiteMember, async (pay
 });
 
 export const createEmployee = webMethod(Permissions.SiteMember, async (payload) => {
-  return createEmployeeCore(input(payload));
+  return withoutMemberIdentity(await createEmployeeCore(input(payload)));
 });
 
 export const updateEmployee = webMethod(Permissions.SiteMember, async (payload) => {
-  return updateEmployeeCore(input(payload));
+  return withoutMemberIdentity(await updateEmployeeCore(input(payload)));
 });
 
 export const setEmployeeActive = webMethod(Permissions.SiteMember, async (payload) => {
@@ -91,7 +101,7 @@ export const setEmployeeActive = webMethod(Permissions.SiteMember, async (payloa
 });
 
 export const provisionEmployeeWixMember = webMethod(Permissions.SiteMember, async (payload) => {
-  return provisionEmployeeWixMemberCore(input(payload));
+  return withoutMemberIdentity(await provisionEmployeeWixMemberCore(input(payload)));
 });
 
 export const getBadgeControl = webMethod(Permissions.SiteMember, async (payload) => {

@@ -179,8 +179,8 @@ const EXTERNAL_OWNED_PROFILE_KEYS = new Set([
 
 const CORE_PROFILE_KEYS = new Set([
   "recordId","id","agentUserId","skId","skID","staffId","employeeId","employeeNumber","firstName","lastName","preferredName",
-  "displayName","fullName","corporateEmail","corporateEmailAddress","email","workEmail","companyEmail","badgePhotoUrl","photoUrl","active",
-  "status","employmentStatus","companyCode","roleId","jobCode","jobTitle","departmentId","departmentCode","assignedDepartment","department",
+  "displayName","fullName","corporateEmail","corporateEmailAddress","email","personalEmail","wixLoginEmail","workEmail","companyEmail","badgePhotoUrl","photoUrl","active",
+  "status","employmentStatus","recruitingApplicantId","passwordEmailForNewMemberOnly","companyCode","roleId","jobCode","jobTitle","departmentId","departmentCode","assignedDepartment","department",
   "baseCode","assignedBase","base","station","countryCode","managerAgentUserId","managerRoleId","managerSkId","managerName","managerEmail",
   "accessRole","permissionPreset","permissionPresetId","effectiveFrom","reason","sendPasswordEmail"
 ]);
@@ -239,7 +239,8 @@ function safeBadge(row = {}) {
 }
 
 function safeAgent(row = {}) {
-  const stored = storedHrProfile(row);
+  const stored = { ...storedHrProfile(row) };
+  for (const key of ["wixMemberId", "wix_member_id", "memberId", "member_id", "contactId", "contact_id"]) delete stored[key];
   const agentUserUuid = text(row.id, 80);
   const agentId = normalizeSkId(row.agent_id || row.sk_id);
   return {
@@ -255,11 +256,9 @@ function safeAgent(row = {}) {
     displayName: text(row.preferred_name || row.display_name || [row.first_name, row.last_name].filter(Boolean).join(" ") || row.sk_id, 180),
     fullName: text(row.preferred_name || row.display_name || [row.first_name, row.last_name].filter(Boolean).join(" ") || row.sk_id, 180),
     email: text(row.corporate_email_address || row.email, 320),
+    personalEmail: text(row.payload?.successFactors?.personalEmail || row.email, 320),
     corporateEmail: text(row.corporate_email_address || row.email, 320),
     corporateEmailAddress: text(row.corporate_email_address || row.email, 320),
-    wixMemberId: text(row.wix_member_id, 120),
-    memberId: text(row.member_id, 120),
-    contactId: text(row.contact_id, 120),
     badgePhotoUrl: text(row.badge_photo_url, 1500),
     badge: safeBadge(row),
     badgeStatus: safeBadge(row).status,
@@ -1014,12 +1013,26 @@ export async function provisionStaffOrganizationCore(input = {}) {
 
 function normalizeCorporateEmail(value) {
   const email = text(value, CORPORATE_EMAIL_MAX).toLowerCase();
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+  if (!/^[^\s@,()%*"\\]+@[^\s@,()%*"\\]+\.[^\s@,()%*"\\]+$/.test(email)) {
     throw new SkandiError("HR_CORPORATE_EMAIL_INVALID", "Corporate email is invalid.", {
       publicMessage: "Enter a valid corporate email address."
     });
   }
   return email;
+}
+
+function plannedCorporateEmail(firstName, lastName) {
+  const component = value => text(value, 120).normalize("NFKD")
+    .replace(/[Øø]/g, "o").replace(/[Ææ]/g, "ae").replace(/[Œœ]/g, "oe")
+    .replace(/[Łł]/g, "l").replace(/[ĐđÐð]/g, "d").replace(/[Þþ]/g, "th")
+    .replace(/ß/g, "ss").replace(/[\u0300-\u036f]/g, "").toLowerCase()
+    .replace(/[^a-z0-9]/g, "");
+  const first = component(firstName), last = component(lastName);
+  const local = `${first}.${last}`;
+  if (!first || !last || local.length > 64) {
+    throw new SkandiError("HR_CORPORATE_EMAIL_NAME_INVALID", "Unable to generate a corporate address from the name.", { publicMessage: "The name needs review before a corporate email can be generated." });
+  }
+  return `${local}@skanditravels.com`;
 }
 
 function memberItem(result) {
@@ -1039,7 +1052,7 @@ function memberSummary(result) {
   };
 }
 
-async function findWixMemberByCorporateEmail(email) {
+export async function findWixMemberByCorporateEmail(email) {
   const cleanEmail = normalizeCorporateEmail(email);
   const pageSize = 100;
   let offset = 0;
@@ -1081,8 +1094,8 @@ async function patchAgentMemberLink(agentUserId, member) {
   return updated;
 }
 
-async function provisionWixMemberForAgent(agent, { sendPasswordEmail = true } = {}) {
-  const email = normalizeCorporateEmail(agent.corporate_email_address || agent.email);
+async function provisionWixMemberForAgent(agent, { sendPasswordEmail = true, onlyIfCreated = false } = {}) {
+  const email = normalizeCorporateEmail(agent.payload?.successFactors?.wixLoginEmail || agent.corporate_email_address || agent.email);
   let member = await findWixMemberByCorporateEmail(email);
   let created = false;
   let memberRecord = memberItem(member);
@@ -1145,7 +1158,7 @@ async function provisionWixMemberForAgent(agent, { sendPasswordEmail = true } = 
 
   let passwordEmailSent = false;
   let passwordEmailError = "";
-  if (sendPasswordEmail) {
+  if (sendPasswordEmail && (!onlyIfCreated || created)) {
     try {
       const response = await elevatedSendSetPasswordEmail(email, { hideIgnoreMessage: false });
       passwordEmailSent = response?.accepted !== false;
@@ -1166,19 +1179,32 @@ async function provisionWixMemberForAgent(agent, { sendPasswordEmail = true } = 
   };
 }
 
-async function uniqueSkId(prefix = "SK") {
-  const cleanPrefix = upper(prefix, 2).replace(/[^A-Z]/g, "").padEnd(2, "S").slice(0, 2);
+function skIdInitials(firstName, lastName) {
+  const initial = (value) => {
+    const normalized = text(value, 120).trim().normalize("NFKD")
+      .replace(/[Øø]/g, "O").replace(/[Ææ]/g, "A").replace(/[Œœ]/g, "O")
+      .replace(/[Łł]/g, "L").replace(/[ĐđÐð]/g, "D").replace(/[Þþ]/g, "T")
+      .replace(/[ß]/g, "S").replace(/[\u0300-\u036f]/g, "").toUpperCase();
+    return /^[A-Z]/.test(normalized) ? normalized[0] : "";
+  };
+  const prefix = initial(firstName) + initial(lastName);
+  if (prefix.length !== 2) throw new SkandiError("HR_SKID_NAME_INITIAL_INVALID", "A Latin initial is required for each name.", { publicMessage: "First and last name must each begin with a supported letter to generate an SK-ID." });
+  return prefix;
+}
+
+async function uniqueSkId(firstName, lastName) {
+  const cleanPrefix = skIdInitials(firstName, lastName);
   for (let attempt = 0; attempt < 60; attempt += 1) {
-    const candidate = `${cleanPrefix}${String(Math.floor(1000 + Math.random() * 9000))}`;
+    const candidate = `${cleanPrefix}${String(randomInt(0, 10000)).padStart(4, "0")}`;
     const exists = firstRow(await select("agent_users", { select: "id", sk_id: `eq.${candidate}`, limit: 1 }));
     if (!exists) return candidate;
   }
   throw new SkandiError("HR_SKID_GENERATION_FAILED", "Could not generate a unique SK-ID.", { publicMessage: "Could not generate a unique SK-ID. Try again." });
 }
 
-export async function generateEmployeeSkIdCore({ prefix = "SK" } = {}) {
+export async function generateEmployeeSkIdCore({ firstName = "", lastName = "" } = {}) {
   await requireHr({ manage: true });
-  return { ok: true, skId: await uniqueSkId(prefix) };
+  return { ok: true, skId: await uniqueSkId(firstName, lastName) };
 }
 
 export async function createEmployeeCore(input = {}) {
@@ -1188,29 +1214,28 @@ export async function createEmployeeCore(input = {}) {
   const lastName = text(input.lastName, 120);
   const preferredName = text(input.preferredName, 120);
   const email = normalizeCorporateEmail(input.corporateEmail || input.corporateEmailAddress || input.workEmail || input.companyEmail || input.email);
+  const personalEmail = input.personalEmail ? normalizeCorporateEmail(input.personalEmail) : email;
+  const wixLoginEmail = input.wixLoginEmail ? normalizeCorporateEmail(input.wixLoginEmail) : email;
   if (!firstName || !lastName) {
     throw new SkandiError("HR_EMPLOYEE_NAME_REQUIRED", "First and last name are required.", { publicMessage: "First name and last name are required." });
   }
 
   const duplicate = firstRow(await select("agent_users", {
     select: "id,sk_id,corporate_email_address,email",
-    or: `(corporate_email_address.ilike.${email},email.ilike.${email})`,
+    or: `(corporate_email_address.ilike.${email},email.ilike.${email},corporate_email_address.ilike.${wixLoginEmail},email.ilike.${wixLoginEmail})`,
     limit: 1
   }));
   if (duplicate) {
     throw new SkandiError("HR_EMPLOYEE_EMAIL_EXISTS", "Employee email already exists.", { publicMessage: "An employee already uses that corporate email." });
   }
 
-  let skId = normalizeSkId(input.skId);
-  if (skId && !/^[A-Z]{2}\d{4}$/.test(skId)) {
-    throw new SkandiError("HR_SKID_INVALID", "SK-ID must use AA0000 format.", { publicMessage: "SK-ID must use the format AA0000." });
-  }
-  if (!skId) skId = await uniqueSkId(input.skIdPrefix || "SK");
-  const skidDuplicate = firstRow(await select("agent_users", { select: "id", sk_id: `eq.${skId}`, limit: 1 }));
-  if (skidDuplicate) throw new SkandiError("HR_SKID_EXISTS", "SK-ID already exists.", { publicMessage: "That SK-ID is already assigned." });
-
   const now = new Date().toISOString();
-  const inserted = firstRow(await restRequest({
+  let skId = "";
+  let inserted = null;
+  for (let attempt = 0; attempt < 5 && !inserted; attempt += 1) {
+    skId = await uniqueSkId(firstName, lastName);
+    try {
+      inserted = firstRow(await restRequest({
     table: "agent_users",
     method: "POST",
     body: {
@@ -1221,6 +1246,8 @@ export async function createEmployeeCore(input = {}) {
       preferred_name: preferredName || null,
       display_name: preferredName || `${firstName} ${lastName}`,
       corporate_email_address: email,
+      // Keep the planned corporate address in the existing case-insensitive
+      // unique email index, so concurrent hires cannot reserve it twice.
       email,
       active: true,
       status: "ONBOARDING",
@@ -1242,18 +1269,26 @@ export async function createEmployeeCore(input = {}) {
           createdByAgentUserId: actorId,
           createdAt: now,
           source: "SUCCESSFACTORS",
+          ...(input.wixLoginEmail ? { wixLoginEmail, personalEmail, workspaceProvisioningStatus: "PLANNED" } : {}),
+          recruitingApplicantId: text(input.recruitingApplicantId, 80) || undefined,
           badge: { staffId: skId, template: "SKANDI_STANDARD", status: "NOT_REQUESTED", photoUrl: text(input.badgePhotoUrl || input.photoUrl, 1500), updatedAt: now },
           profile: hrProfilePatch(input)
         }
       },
       updated_at: now
     }
-  }));
+      }));
+    } catch (error) {
+      // A concurrent hire can claim the same ID after the availability check.
+      // Retry only when the unique violation is specifically for that SK-ID.
+      if (error?.supabase?.code !== "23505" || !firstRow(await select("agent_users", { select: "id", sk_id: `eq.${skId}`, limit: 1 }))) throw error;
+    }
+  }
   if (!inserted?.id) throw new SkandiError("HR_EMPLOYEE_CREATE_FAILED", "Employee row was not created.");
 
   let wixMember;
   try {
-    wixMember = await provisionWixMemberForAgent(inserted, { sendPasswordEmail: input.sendPasswordEmail !== false });
+    wixMember = await provisionWixMemberForAgent(inserted, { sendPasswordEmail: input.sendPasswordEmail !== false, onlyIfCreated: input.passwordEmailForNewMemberOnly === true });
     if (wixMember?.ok !== true || wixMember?.linked !== true || !wixMember?.member?.id) {
       throw new SkandiError("HR_WIX_MEMBER_PROVISION_INCOMPLETE", "Wix Member provisioning did not complete.");
     }
@@ -1321,7 +1356,8 @@ export async function updateEmployeeCore(input = {}) {
     const duplicate = firstRow(await select("agent_users", { select: "id", or: `(corporate_email_address.ilike.${email},email.ilike.${email})`, limit: 2 }));
     if (duplicate && text(duplicate.id, 80) !== text(target.id, 80)) throw new SkandiError("HR_EMPLOYEE_EMAIL_EXISTS", "Corporate email already exists.");
     body.corporate_email_address = email;
-    body.email = email;
+    // Keep the unique planned address separate from the candidate's Wix login.
+    body.email = target.payload?.successFactors?.wixLoginEmail ? target.email : email;
   }
   const first = body.first_name ?? target.first_name;
   const last = body.last_name ?? target.last_name;
@@ -1496,8 +1532,8 @@ export async function getRecruitingBootstrapCore() {
   return {
     ok: true,
     canManage,
-    candidates,
-    applicants: candidates,
+    candidates: candidates.map(safeRecruitingCandidate),
+    applicants: candidates.map(safeRecruitingCandidate),
     positions,
     jobPostings: positions,
     interviews,
@@ -1534,6 +1570,16 @@ function generateBusinessKey(prefix) {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
 }
 
+function safeRecruitingCandidate(row = {}) {
+  const hidden = new Set(["wix_member_id", "wixMemberId", "member_id", "memberId", "contact_id", "contactId"]);
+  function scrub(value) {
+    if (Array.isArray(value)) return value.map(scrub);
+    if (!value || typeof value !== "object") return value;
+    return Object.fromEntries(Object.entries(value).filter(([key]) => !hidden.has(key)).map(([key, item]) => [key, scrub(item)]));
+  }
+  return scrub(row);
+}
+
 export async function saveRecruitingCandidateCore(input = {}) {
   const session = await requireRecruiting({ manage: true });
   const actorId = text(session.profile?.agentUserId || session.profile?.id, 80) || null;
@@ -1542,6 +1588,8 @@ export async function saveRecruitingCandidateCore(input = {}) {
   if (id && !previous) throw new SkandiError("RECRUITING_CANDIDATE_NOT_FOUND", "Candidate not found.");
   const applicantId = text(input.applicantId || input.candidateId, 120) || generateBusinessKey("CAND");
   const firstName = text(input.firstName, 120), lastName = text(input.lastName, 120), email = normalizeCorporateEmail(input.email);
+  const wantsHire = upper(input.status || input.stage, 80) === "HIRED";
+  if (wantsHire) { await requireHr({ manage: true }); normalizeCorporateEmail(input.staffEmail || email); }
   if (!firstName || !lastName) throw new SkandiError("RECRUITING_CANDIDATE_NAME_REQUIRED", "Candidate name is required.");
   const candidatePayload = { ...portalObject(input.payload) };
   delete candidatePayload.staffOnboarding;
@@ -1552,7 +1600,7 @@ export async function saveRecruitingCandidateCore(input = {}) {
     last_name: lastName,
     email,
     phone: text(input.phone, 80) || null,
-    status: text(input.status || input.stage, 80) || "applied",
+    status: wantsHire ? (id ? undefined : "applied") : (text(input.status || input.stage, 80) || "applied"),
     resume_url: text(input.resumeUrl, 1500) || null,
     cover_letter_url: text(input.coverLetterUrl, 1500) || null,
     payload: { ...portalObject(previous?.payload), ...candidatePayload, positionApplied: text(input.positionApplied, 180) || undefined, location: text(input.location, 180) || undefined },
@@ -1563,17 +1611,66 @@ export async function saveRecruitingCandidateCore(input = {}) {
     : firstRow(await restRequest({ table: "career_applicant_accounts", method: "POST", body }));
   if (!saved) throw new SkandiError("RECRUITING_CANDIDATE_CHANGED", "The candidate changed. Refresh before retrying.");
   await recruitingAudit(actorId, id ? "CANDIDATE_UPDATED" : "CANDIDATE_CREATED", "candidate", saved?.applicant_id || applicantId, { status: body.status, positionId: body.position_id });
-  return { ok: true, candidate: saved || { id, ...body } };
+  if (wantsHire) {
+    if (!saved?.id) throw new SkandiError("RECRUITING_CANDIDATE_SAVE_FAILED", "Candidate could not be saved.");
+    return updateRecruitingCandidateStageCore({ id:saved.id, status:"hired", staffEmail:input.staffEmail });
+  }
+  return { ok: true, candidate: safeRecruitingCandidate(saved || { id, ...body }) };
 }
 
-export async function updateRecruitingCandidateStageCore({ id = "", status = "" } = {}) {
+export async function updateRecruitingCandidateStageCore({ id = "", status = "", staffEmail = "" } = {}) {
   const session = await requireRecruiting({ manage: true });
   const actorId = text(session.profile?.agentUserId || session.profile?.id, 80) || null;
-  const cleanStatus = text(status, 80);
-  if (!id || !cleanStatus) throw new SkandiError("RECRUITING_STAGE_INPUT_REQUIRED", "Candidate and status are required.");
-  const saved = firstRow(await restRequest({ table: "career_applicant_accounts", method: "PATCH", query: { id: `eq.${text(id, 80)}` }, body: { status: cleanStatus, updated_at: new Date().toISOString() } }));
-  await recruitingAudit(actorId, "CANDIDATE_STAGE_CHANGED", "candidate", saved?.applicant_id || id, { status: cleanStatus });
-  return { ok: true, candidate: saved };
+  const cleanId = text(id, 80), cleanStatus = text(status, 80);
+  if (!cleanId || !cleanStatus) throw new SkandiError("RECRUITING_STAGE_INPUT_REQUIRED", "Candidate and status are required.");
+  const candidate = firstRow(await select("career_applicant_accounts", { select:"*", id:`eq.${cleanId}`, limit:1 }));
+  if (!candidate) throw new SkandiError("RECRUITING_CANDIDATE_NOT_FOUND", "Candidate not found.");
+  if (upper(cleanStatus, 80) !== "HIRED") {
+    const saved = firstRow(await restRequest({ table:"career_applicant_accounts", method:"PATCH", query:{id:`eq.${cleanId}`}, body:{status:cleanStatus,updated_at:new Date().toISOString()} }));
+    if (!saved) throw new SkandiError("RECRUITING_STAGE_SAVE_FAILED", "Candidate stage could not be saved.");
+    await recruitingAudit(actorId,"CANDIDATE_STAGE_CHANGED","candidate",saved.applicant_id || cleanId,{status:cleanStatus});
+    return {ok:true,candidate:safeRecruitingCandidate(saved)};
+  }
+  await requireHr({ manage:true });
+  const loginEmail = normalizeCorporateEmail(staffEmail || candidate.email);
+  const personalEmail = normalizeCorporateEmail(candidate.email);
+  const corporateEmail = plannedCorporateEmail(candidate.first_name, candidate.last_name);
+  const existingCandidateMember = text(candidate.wix_member_id, 120);
+  if (existingCandidateMember) {
+    const found = memberSummary(await findWixMemberByCorporateEmail(loginEmail));
+    if (!found?.id || found.id !== existingCandidateMember) throw new SkandiError("HR_CANDIDATE_MEMBER_MISMATCH", "The candidate member does not match the staff login email.", {publicMessage:"The candidate's existing account does not match that email. Check the account before continuing."});
+  }
+  if (!existingCandidateMember && candidate.email && normalizeCorporateEmail(candidate.email) !== loginEmail) {
+    const applicantAccount = memberSummary(await findWixMemberByCorporateEmail(candidate.email));
+    if (applicantAccount?.id) throw new SkandiError("HR_CANDIDATE_MEMBER_REVIEW_REQUIRED", "The candidate has an existing account with a different login.", {publicMessage:"The candidate already has an account under a different email. Review the account before continuing."});
+  }
+  const matches = await select("agent_users", {select:"*",or:`(corporate_email_address.ilike.${loginEmail},email.ilike.${loginEmail},corporate_email_address.ilike.${corporateEmail},email.ilike.${corporateEmail})`,limit:2});
+  if (matches.length > 1) throw new SkandiError("HR_EMPLOYEE_EMAIL_AMBIGUOUS", "Staff email matches multiple employees.", {publicMessage:"That email matches more than one employee. Review the records before continuing."});
+  const matched = firstRow(matches);
+  const linkedCandidate = text(matched?.payload?.successFactors?.recruitingApplicantId, 80);
+  if (matched && linkedCandidate !== cleanId) throw new SkandiError("HR_EMPLOYEE_EMAIL_EXISTS", "Staff email belongs to an existing employee.", {publicMessage:"That staff email is already assigned. Review the existing employee before continuing."});
+  let memberId = text(matched?.wix_member_id || matched?.member_id, 120);
+  let employee = matched ? safeAgent(matched) : null;
+  let passwordSetupPending = candidate.payload?.staffOnboarding?.passwordSetupPending === true;
+  if (matched && !memberId) {
+    const recovered = await provisionWixMemberForAgent(matched, {onlyIfCreated:true});
+    memberId = recovered.member?.id || "";
+    employee = recovered.employee;
+    passwordSetupPending = recovered.created === true && recovered.passwordEmailSent !== true;
+  }
+  if (!matched) {
+    const created = await createEmployeeCore({firstName:candidate.first_name,lastName:candidate.last_name,corporateEmail,personalEmail,wixLoginEmail:loginEmail,recruitingApplicantId:cleanId,passwordEmailForNewMemberOnly:true});
+    memberId = created.wixMember?.member?.id || "";
+    employee = created.employee;
+    passwordSetupPending = created.wixMember?.created === true && created.wixMember?.passwordEmailSent !== true;
+  }
+  if (!memberId || (existingCandidateMember && memberId !== existingCandidateMember)) throw new SkandiError("HR_WIX_MEMBER_PROVISION_INCOMPLETE", "Staff account could not be verified.");
+  const payload = candidate.payload && typeof candidate.payload === "object" ? {...candidate.payload} : {};
+  payload.staffOnboarding = {...(payload.staffOnboarding || {}),agentUserId:employee?.id || matched?.id,skId:employee?.skId || matched?.sk_id,corporateEmail:matched?.corporate_email_address || corporateEmail,workspaceProvisioningStatus:"PLANNED",passwordSetupPending};
+  const saved = firstRow(await restRequest({table:"career_applicant_accounts",method:"PATCH",query:{id:`eq.${cleanId}`,status:`eq.${candidate.status}`},body:{status:"hired",wix_member_id:memberId,payload,updated_at:new Date().toISOString()}}));
+  if (!saved) throw new SkandiError("RECRUITING_HIRE_RETRY", "Candidate changed during staff provisioning.", {publicMessage:"The staff account was created, but the candidate changed. Refresh and retry."});
+  await recruitingAudit(actorId,"CANDIDATE_HIRED","candidate",saved.applicant_id || cleanId,{status:"hired",skId:employee?.skId || ""});
+  return {ok:true,candidate:safeRecruitingCandidate(saved),employee,passwordSetupPending};
 }
 
 export async function saveRecruitingPositionCore(input = {}) {

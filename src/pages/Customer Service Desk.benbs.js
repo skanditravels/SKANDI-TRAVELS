@@ -124,10 +124,10 @@ async function refreshAgentState(html, { includeDetail = true, requestId = "", s
   syncInFlight = true;
   try {
     const list = await listAgentSupportCases({ ...currentFilters, silentSync: true });
-    post(html, "AGENT_CASE_LIST", list, requestId);
+    post(html, "AGENT_CASE_LIST", { ...objectOf(list), backgroundSync: true }, requestId);
     if (includeDetail && activeCaseId) {
       const detail = await getAgentSupportCase({ caseId: activeCaseId, includeLiveKit: false, silentSync: true });
-      post(html, "AGENT_CASE_DETAIL", detail, requestId);
+      post(html, "AGENT_CASE_DETAIL", { ...objectOf(detail), backgroundSync: true }, requestId);
     }
     post(html, "AGENT_SYNC_STATUS", { ok: true, syncedAt: new Date().toISOString() }, requestId);
   } catch (error) {
@@ -203,6 +203,7 @@ $w.onReady(function () {
           const caseId = caseIdOf(payload);
           activeCaseId = caseId;
           const result = await getAgentSupportCase({ caseId });
+          if (message.type === "AGENT_CALL_START" && (!result?.livekitSession?.url || !result?.livekitSession?.token)) throw new Error("Support audio could not be started.");
           post(html, message.type === "AGENT_CALL_START" ? "AGENT_LIVEKIT_SESSION" : "AGENT_CASE_DETAIL", result, requestId);
           return;
         }

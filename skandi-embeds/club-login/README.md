@@ -5,6 +5,8 @@
 
 ## INFO / LOG
 
+- 2026-11-08 — A separate Wix lightbox implementation is being prepared in `skandi-embeds/club-login-popup/`; the `/skandi-club/login` page documented below is preserved. The popup requires its own Wix HTML component and native CAPTCHA. Its authentication and layout require a live Wix test before publication.
+
 - **Current status:** `SOURCE COMPLETE — WIX PAGE/ELEMENT INSTALLATION REQUIRED`
 - **System:** SKANDI customer website
 - **Route:** `/skandi-club/login`

@@ -1323,8 +1323,7 @@
           ["Country", ["homeAddressCountry", "country", "mailingCountry"]],
           ["Personal Mobile", ["phone", "personalMobile", "mobilePhone", "personalPhone"]],
           ["Primary Contact Email", ["primaryContactEmail", "personalEmail", "email", "wixMemberEmail"]],
-          ["Corporate Email", ["corporateEmailAddress", "workEmail", "companyEmail"]],
-          ["Wix Member ID", ["wixMemberId", "memberId"]]
+          ["Corporate Email", ["corporateEmailAddress", "workEmail", "companyEmail"]]
         ]
       },
       {
@@ -2454,13 +2453,13 @@
     function recordName(record = {}) {
       return String(firstRecordValue(
         record,
-        ["displayName", "fullName", "name", "formalName"],
-        [record.firstName, record.lastName].filter(Boolean).join(" ")
+        ["displayName", "display_name", "fullName", "full_name", "name", "formalName"],
+        [record.firstName || record.first_name, record.lastName || record.last_name].filter(Boolean).join(" ")
       ) || "Unnamed employee");
     }
 
     function recordInitials(record = {}) {
-      const parts = [record.firstName, record.lastName].filter(Boolean);
+      const parts = [record.firstName || record.first_name, record.lastName || record.last_name].filter(Boolean);
       if (parts.length) return parts.map(value => String(value).charAt(0)).join("").slice(0, 2).toUpperCase();
       return recordName(record).split(/\s+/).filter(Boolean).slice(0, 2).map(value => value.charAt(0)).join("").toUpperCase() || "—";
     }
@@ -2563,7 +2562,7 @@
     }
 
     function genericColumns(records) {
-      const blocked = /password|secret|token|credential|nationalid|passportnumber|accountnumber|routingnumber|iban/i;
+      const blocked = /password|secret|token|credential|nationalid|passportnumber|accountnumber|routingnumber|iban|wix.?member|^member_?id$|^contact_?id$|^_?id$/i;
       const preferred = [
         "name", "title", "status", "type", "category", "employeeId", "skId",
         "period", "date", "createdAt", "updatedAt", "amount", "currency", "owner"
@@ -3335,7 +3334,6 @@
             <p>${hrEmployeeDraftMode ? "Create an Employee Central record" : `${escapeHtml(displayPortalValue(firstRecordValue(record, ["jobTitle", "position", "role"])))} · ${escapeHtml(displayPortalValue(firstRecordValue(record, ["skId", "employeeId"])))}`}</p>
           </div>
           <div class="hr-object-actions hr-action-row">
-            <button class="secondary-button" type="button" data-action="hr-generate-skid">${icon("settings", 15)} Generate SK-ID</button>
             ${!hrEmployeeDraftMode ? `<button class="semantic-button danger" type="button" data-action="hr-archive-employee">${icon("warning", 15)} Archive</button>` : ""}
             <button class="primary-button" type="submit" form="hrEmployeeForm">${icon("check", 15)} Save employee</button>
           </div>
@@ -3377,6 +3375,7 @@
       if (currentHrEmployeeTab === "employment" && orgManaged) return renderOrgManagedField(label,name,record);
       const raw = firstRecordValue(record, keys, "");
       const value = raw === undefined || raw === null ? "" : displayPortalValue(raw);
+      if (label === "SK-ID") return `<label class="hr-field"><span>SK-ID</span><input class="hr-input" readonly value="${escapeHtml(value === "—" ? "" : value)}"><small style="color:var(--sap-text-muted)">Assigned automatically when the employee is created.</small></label>`;
       const multiline = /notes|goals|records|checks|timestamps|skills|languages|certifications|plan|feedback|permissions|groups|apps/i.test(name) || value.length > 90;
       const externalSystemOwned = currentHrEmployeeTab === "time" || currentHrEmployeeTab === "compensation" || label === "Roster Group";
       return `
@@ -3596,7 +3595,7 @@
       const nextIndex = Math.min(Math.max(RECRUITING_STAGES.findIndex(([value]) => value === slugify(stage, stage)), 0) + 1, RECRUITING_STAGES.length - 1);
       const nextStage = RECRUITING_STAGES[nextIndex]?.[0] || "screening";
       const fields = Object.entries(candidate)
-        .filter(([key, value]) => !/password|secret|token|credential/i.test(key) && (value === null || typeof value !== "object"))
+        .filter(([key, value]) => !/password|secret|token|credential|wix.?member|^member_?id$|^contact_?id$|^_?id$/i.test(key) && (value === null || typeof value !== "object"))
         .slice(0, 24);
       return `
         <div class="hr-object-header">
@@ -3912,7 +3911,7 @@
       if (!candidate) return;
       hrSelectedCandidateId = String(id);
       const fields = Object.entries(candidate)
-        .filter(([key, value]) => !/password|secret|token|credential/i.test(key) && (value === null || typeof value !== "object"))
+        .filter(([key, value]) => !/password|secret|token|credential|wix.?member|^member_?id$|^contact_?id$|^_?id$/i.test(key) && (value === null || typeof value !== "object"))
         .slice(0, 18);
       const currentStage = slugify(String(firstRecordValue(candidate, ["stage", "status"], "applied")), "applied");
       const index = Math.max(0, RECRUITING_STAGES.findIndex(([stage]) => stage === currentStage));
@@ -3936,6 +3935,16 @@
           <button class="secondary-button" type="button" data-action="careers-open-profile" data-id="${escapeHtml(String(id))}">Full profile</button>
           <button class="primary-button" type="button" data-action="careers-move-stage" data-id="${escapeHtml(String(id))}" data-stage="${escapeHtml(next)}">${icon("arrowRight", 15)} Advance stage</button>
         `
+      });
+    }
+
+    function openHireCandidateDialog(id) {
+      const candidate = portalState.hr.recruiting.candidates.find(item => recruitingCandidateId(item) === String(id));
+      if (!candidate) return;
+      openDialog({
+        id:"candidate-hire", title:"Hire candidate", subtitle:recordName(candidate),
+        body:`<form id="careerHireForm"><input type="hidden" name="candidateId" value="${escapeHtml(String(id))}"><p>The corporate email address will be generated automatically. The existing candidate email will be used for the Wix account while the corporate mailbox is awaiting setup.</p></form>`,
+        footer:`<button class="ghost-button" type="button" data-action="close-dialog">Cancel</button><button class="primary-button" type="submit" form="careerHireForm">Hire and create staff account</button>`
       });
     }
 
@@ -4812,10 +4821,10 @@
         renderPortal();
       } else if (action === "careers-move-stage") {
         if (!hasRecruitingAccess()) return;
-        post("CAREERS_MOVE_CANDIDATE_STAGE", {
-          candidateId: id || hrSelectedCandidateId,
-          targetStage: element.dataset.stage || "screening"
-        });
+        const candidateId = id || hrSelectedCandidateId;
+        const targetStage = element.dataset.stage || "screening";
+        if (targetStage === "hired") { openHireCandidateDialog(candidateId); return; }
+        post("CAREERS_MOVE_CANDIDATE_STAGE", { candidateId, targetStage });
         closeDialog();
       } else if (action === "careers-detect-gaps") {
         if (!hasRecruitingAccess()) return;
@@ -5027,9 +5036,16 @@
         delete item.recordId;
         post("HR_STAFF_SAVE", { item: { ...item, ...(recordId ? { id: recordId } : {}) }, isNew: hrEmployeeDraftMode });
         showToast("Saving employee", "The employee record was sent to the HR backend.");
+      } else if (form.id === "careerHireForm") {
+        if (!hasRecruitingAccess()) return;
+        const hire = serializeForm(form);
+        post("CAREERS_MOVE_CANDIDATE_STAGE", { candidateId:hire.candidateId, targetStage:"hired" });
+        closeDialog();
+        showToast("Creating staff account", "The hire is being processed.");
       } else if (form.id === "candidateForm") {
         if (!hasRecruitingAccess()) return;
-        post("CAREERS_SAVE_CANDIDATE", { item: serializeForm(form) });
+        const candidate = serializeForm(form);
+        post("CAREERS_SAVE_CANDIDATE", { item: candidate });
         closeDialog();
         showToast("Saving candidate", "The candidate record was sent to the recruiting backend.");
       } else if (form.id === "careerJobForm") {

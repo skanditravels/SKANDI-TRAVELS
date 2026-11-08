@@ -7,6 +7,7 @@
 const SOURCE = "SKANDI_SUPPORT_AGENT";
 const PARENT = "SKANDI_WIX_PARENT";
 const DEFAULT_AGENT_ID = null;
+let bootstrapSettled = false;
 
 const db = {
   views: [
@@ -356,7 +357,7 @@ function upsertCase(raw, openAfter = false) {
     const oldHistory = existing.history || [];
     Object.assign(existing, normalized);
     if (!includesHistory) existing.history = oldHistory;
-    if (typeof normalized.slaMinutes === "number") due.set(existing.id, Date.now() + normalized.slaMinutes * 60000);
+    if (typeof normalized.slaMinutes === "number" && !due.has(existing.id)) due.set(existing.id, Date.now() + normalized.slaMinutes * 60000);
     if (openAfter) openTicket(existing.id, false);
     return existing;
   }
@@ -394,11 +395,11 @@ function extractSingleCase(value, depth = 0) {
   return hasIdentity && hasCaseFields ? value : null;
 }
 
-function importCases(payload = {}, openFirst = false) {
+function importCases(payload = {}, openFirst = false, render = true) {
   const list = extractCaseList(payload);
   const imported = list.map(item => upsertCase(item, false)).filter(Boolean);
   if (openFirst && imported[0]) openTicket(imported[0].id, false);
-  else renderAll();
+  else if (render) renderAll();
   return imported;
 }
 
@@ -1027,7 +1028,7 @@ function wireModule() {
     toast("Guide article opened", article.title);
     post("AGENT_OPEN_ARTICLE", { articleId: article.id, url: article.url });
   });
-  if ($("#newArticle")) $("#newArticle").onclick = () => toast("Article editor opened");
+  if ($("#newArticle")) $("#newArticle").onclick = () => toast("Article editing unavailable", "Help Center content editing is not connected yet.");
   if ($("#newRule")) $("#newRule").onclick = () => toast("Business rule builder opened");
   if ($("#requestBootstrap")) $("#requestBootstrap").onclick = () => { post("AGENT_REQUEST_BOOTSTRAP", {}); toast("Bootstrap requested"); };
   $$('[data-rule]').forEach(b => b.onclick = () => {
@@ -1127,46 +1128,69 @@ $("#talkBtn").onclick = () => {
   $("#callAvatar").textContent = u?.initials || "?";
   $("#callName").textContent = u?.name || "Unknown traveler";
   $("#callPhone").textContent = u?.phone || "No phone number";
-  $("#callStatus").textContent = "Ready to call";
+  $("#callStatus").textContent = "Ready to join support audio";
   $("#callTimer").textContent = "00:00";
   $("#disposition").classList.add("hidden");
   $("#callPanel").classList.add("open");
 };
 
-$("#closeCall").onclick = () => $("#callPanel").classList.remove("open");
+$("#closeCall").onclick = () => {
+  window.dispatchEvent(new CustomEvent("skandi-support-audio-end"));
+  if (S.call.active) {
+    const t = ticket(S.call.ticketId);
+    post("AGENT_CALL_END", { ticketId: t?.externalId || t?.id, caseId: t?.caseId, duration: S.call.seconds });
+  }
+  S.call.active = false;
+  clearInterval(S.call.timer);
+  $("#callMain").disabled = false;
+  $("#callPanel").classList.remove("open");
+};
 
+// A support-room connection is not a telephone call. Do not show a
+// connected state until the LiveKit client has joined and enabled audio.
 $("#callMain").onclick = () => {
   const t = ticket(S.call.ticketId);
   if (!S.call.active) {
-    S.call.active = true;
-    S.call.seconds = 0;
-    $("#callStatus").textContent = "Connected";
-    S.call.timer = setInterval(() => {
-      S.call.seconds += 1;
-      $("#callTimer").textContent = `${String(Math.floor(S.call.seconds / 60)).padStart(2, "0")}:${String(S.call.seconds % 60).padStart(2, "0")}`;
-    }, 1000);
-    toast("Call connected", user(t?.requesterId)?.name || "Traveler");
-    post("AGENT_CALL_START", { ticketId: t?.externalId || t?.id, caseId: t?.caseId, phone: user(t?.requesterId)?.phone });
+    if (!t) return;
+    $("#callStatus").textContent = "Connecting to support audio…";
+    $("#callMain").disabled = true;
+    window.dispatchEvent(new CustomEvent("skandi-support-audio-start"));
+    post("AGENT_CALL_START", { ticketId: t.externalId || t.id, caseId: t.caseId });
   } else {
+    window.dispatchEvent(new CustomEvent("skandi-support-audio-end"));
     S.call.active = false;
     clearInterval(S.call.timer);
-    $("#callStatus").textContent = "Call ended";
+    $("#callStatus").textContent = "Audio ended";
     $("#disposition").classList.remove("hidden");
-    toast("Call ended", $("#callTimer").textContent);
     post("AGENT_CALL_END", { ticketId: t?.externalId || t?.id, caseId: t?.caseId, duration: S.call.seconds });
   }
 };
-
-$("#muteBtn").onclick = e => e.target.classList.toggle("primary");
-$("#holdBtn").onclick = e => {
-  e.target.classList.toggle("primary");
-  $("#callStatus").textContent = e.target.classList.contains("primary") ? "On hold" : "Connected";
-};
+window.addEventListener("skandi-support-audio-ready", () => {
+  if (S.call.active) return;
+  S.call.active = true;
+  S.call.seconds = 0;
+  $("#callMain").disabled = false;
+  $("#callStatus").textContent = "Connected to support audio";
+  S.call.timer = setInterval(() => {
+    S.call.seconds += 1;
+    $("#callTimer").textContent = `${String(Math.floor(S.call.seconds / 60)).padStart(2, "0")}:${String(S.call.seconds % 60).padStart(2, "0")}`;
+  }, 1000);
+});
+window.addEventListener("skandi-support-audio-failed", () => {
+  S.call.active = false;
+  clearInterval(S.call.timer);
+  $("#callMain").disabled = false;
+  $("#callStatus").textContent = "Couldn’t connect support audio. Try again.";
+});
+$("#muteBtn").onclick = () => window.dispatchEvent(new CustomEvent("skandi-support-audio-mute"));
+window.addEventListener("skandi-support-audio-mute-changed", e => $("#muteBtn").classList.toggle("primary", e.detail?.muted === true));
+$("#holdBtn").disabled = true;
+$("#holdBtn").title = "Hold is unavailable for support audio";
 
 $("#saveCall").onclick = () => {
   const t = ticket(S.call.ticketId);
   if (!t) return;
-  const message = { id: "call" + Date.now(), authorId: ensureSessionAgent(), authorName: S.session.agentName || "Support Agent", authorInitials: S.session.agentInitials || initials(S.session.agentName), kind: "public", channel: "voice", at: new Date().toISOString(), body: `Call recording · ${$("#callTimer").textContent}\nOutcome: ${$("#outcome").value}\n${$("#callNotes").value}` };
+  const message = { id: "call" + Date.now(), authorId: ensureSessionAgent(), authorName: S.session.agentName || "Support Agent", authorInitials: S.session.agentInitials || initials(S.session.agentName), kind: "public", channel: "voice", at: new Date().toISOString(), body: `Support audio · ${$("#callTimer").textContent}\nOutcome: ${$("#outcome").value}\n${$("#callNotes").value}` };
   t.history.push(message);
   t.updatedAt = new Date().toISOString();
   $("#callPanel").classList.remove("open");
@@ -1362,6 +1386,7 @@ window.addEventListener("message", event => {
     return;
   }
   if (message.type === "AGENT_BOOTSTRAP") {
+    bootstrapSettled = true;
     applyBootstrapData(payload);
     importCases(payload, false);
     rebuildDue();
@@ -1373,12 +1398,43 @@ window.addEventListener("message", event => {
   if (message.type === "AGENT_CASE_DETAIL") {
     const caseData = extractSingleCase(payload);
     if (!caseData) return toast("Case unavailable", "The backend returned no case record.");
+    if (payload.backgroundSync === true) {
+      const before = ticket(S.active);
+      const beforeHistory = JSON.stringify(before?.history || []);
+      const updated = upsertCase(caseData, false);
+      if (updated && updated.id === S.active && !S.dashboard) {
+        $$('#workspace select[data-field]').forEach(field => {
+          if (field === document.activeElement) return;
+          const value = updated[field.dataset.field];
+          if (value != null && [...field.options].some(option => option.value === String(value))) field.value = String(value);
+        });
+        const conversation = $("#conversation");
+        if (conversation && beforeHistory !== JSON.stringify(updated.history || [])) {
+          const previousTop = conversation.scrollTop;
+          const atBottom = conversation.scrollHeight - conversation.clientHeight - previousTop < 40;
+          conversation.innerHTML = updated.history.map(messageHtml).join("") + (updated.typing ? `<div class="typing"><i></i><i></i><i></i></div>` : "");
+          conversation.scrollTop = atBottom ? conversation.scrollHeight : previousTop;
+        }
+      }
+      return;
+    }
     const updated = upsertCase(caseData, true);
     toast("Case loaded", tid(updated));
     return;
   }
 
   if (["AGENT_CASE_LIST", "AGENT_CASES_IMPORT", "AGENT_IMPORT_CASES"].includes(message.type)) {
+    if (payload.backgroundSync === true) {
+      const before = JSON.stringify(db.tickets);
+      importCases(payload, false, false);
+      if (before !== JSON.stringify(db.tickets)) {
+        const queue = $("#queueList");
+        const top = queue?.scrollTop || 0;
+        renderTop(); renderQueue(); renderTabs();
+        if (queue) queue.scrollTop = top;
+      }
+      return;
+    }
     applyBootstrapData(payload);
     const imported = importCases(payload, Boolean(envelope.openFirst));
     rebuildDue();
@@ -1404,14 +1460,18 @@ window.addEventListener("message", event => {
   }
 
   if (message.type === "AGENT_ERROR") {
+    const failedAction = String(envelope.action || "");
+    if (failedAction === "AGENT_CALL_START") window.dispatchEvent(new CustomEvent("skandi-support-audio-failed"));
+    if (["AGENT_READY", "AGENT_REQUEST_BOOTSTRAP", "AGENT_LIST_CASES", "AGENT_REFRESH_CASES"].includes(failedAction)) bootstrapSettled = true;
     if (String(envelope.action || "").startsWith("AGENT_DUFFEL_")) {
       toast("Booking / Duffel action failed", envelope.message || "The backend did not complete this action.");
       return;
     }
     settlePendingRequest(String(message.requestId || envelope.requestId || ""), false);
     renderAll();
+    if (["AGENT_READY", "AGENT_REQUEST_BOOTSTRAP", "AGENT_LIST_CASES", "AGENT_REFRESH_CASES"].includes(failedAction)) $("#topSub").textContent = "Couldn’t load support cases. Reload to try again.";
     toast("Customer service action failed", envelope.message || message.message || "The backend did not complete the request.");
-    post("AGENT_REFRESH_CASES", { queue: S.view });
+    if (!["AGENT_READY", "AGENT_REQUEST_BOOTSTRAP", "AGENT_LIST_CASES", "AGENT_REFRESH_CASES", "AGENT_SYNC"].includes(failedAction)) post("AGENT_REFRESH_CASES", { queue: S.view });
     return;
   }
 
@@ -1474,5 +1534,17 @@ requestAnimationFrame(() => {
   const c = $("#conversation");
   if (c) c.scrollTop = c.scrollHeight;
 });
-post("AGENT_READY", { tickets: db.tickets.length, activeQueue: S.view, session: S.session });
+function requestInitialBootstrap() {
+  if (!bootstrapSettled) post("AGENT_READY", { tickets: db.tickets.length, activeQueue: S.view, session: S.session });
+}
+requestInitialBootstrap();
+setTimeout(requestInitialBootstrap, 1000);
+setTimeout(requestInitialBootstrap, 3000);
+setTimeout(() => {
+  if (!bootstrapSettled) {
+    bootstrapSettled = true;
+    $("#topSub").textContent = "Couldn’t load support cases. Reload to try again.";
+    toast("Support workspace unavailable", "Reload the page to try again.");
+  }
+}, 12000);
 

@@ -6,7 +6,7 @@ import wixLocationFrontend from "wix-location-frontend";
 import wixSiteFrontend from "wix-site-frontend";
 import wixWindowFrontend, { consentPolicy } from "wix-window-frontend";
 import { currentMember, authentication } from "wix-members-frontend";
-import { local, memory } from "wix-storage-frontend";
+import { local, memory, session } from "wix-storage-frontend";
 import { createStaffActivitySession } from "public/riaintraSession.js";
 import { getCustomerHeaderSession, subscribeCustomerNewsletter } from "backend/SKANDI_CORE/customerSession.web";
 import { getAlteaLaunchpadApps, getStaffPortalSession } from "backend/SKANDI_CORE/staffAuth.web";
@@ -129,7 +129,7 @@ const MASTER_CONFIG = Object.freeze({
         voyLightBlue:brandLogo("VOY-NAVY.svg"),
         alteaNavy:brandLogo("ALTEA_LOGO-NAVY.svg"),
         alteaLight:brandLogo("ALTEA_LOGO-LIGHT.svg"),
-        alteaHeader:brandLogo("ALTEA_LOGO-LIGHT.svg"),
+        alteaHeader:brandLogo("app-logos/header-logos/altea.svg"),
         alteaFooter:brandLogo("ALTEA_LOGO-LIGHT.svg"),
         alteaIconNavy:brandLogo("ALTEAEOS_LOGO-NAVY.svg"),
         alteaIconLight:brandLogo("ALTEAEOS_LOGO-LIGHT.svg"),
@@ -211,7 +211,7 @@ const MASTER_CONFIG = Object.freeze({
           title:"SKANDI",
           links:Object.freeze([
             { label:"Join SKANDI Club", path:SITE_MAP.club },
-            { label:"Log In to My Club", path:"/my-profile" },
+            { label:"Log In to My Club", path:SITE_MAP.myProfile },
             { label:"SKANDI Collection", path:SITE_MAP.skandiCollection },
             { label:"THE STORE", path:SITE_MAP.theStore },
             { label:"VOY Magazine", path:SITE_MAP.voy }
@@ -1507,6 +1507,8 @@ function pushConfigToAll() {
   for (const embed of allHtmlComponents()) pushMasterConfig(embed);
 }
 $w.onReady(async function () {
+  // Non-sensitive presentation assets for the Club login lightbox.
+  try { session.setItem("SKANDI_CLUB_BRAND", JSON.stringify({ white:MASTER_CONFIG.brand.assets.logos.clubWhite, navy:MASTER_CONFIG.brand.assets.logos.clubNavy, hero:MASTER_CONFIG.brand.assets.images.clubLoginHero })); } catch (_) {}
   let closeLogoutPending = false;
   try {
     closeLogoutPending = local.getItem(RIAINTRA_EXIT_LOGOUT_PENDING_KEY) === "yes";

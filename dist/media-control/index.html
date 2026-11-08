@@ -2114,6 +2114,16 @@ html, body { width: 100% !important; margin: 0 !important; max-width: none !impo
 #riaintra-global-header-root .shellbar { position: absolute; }
 #altea-global-footer-root .status-bar { position: relative; }
 
+/* Desktop internal chrome follows the document instead of framing a fixed viewport. */
+@media (min-width: 1021px) {
+  [data-skandi-chrome="riaintra"], [data-skandi-chrome="altea"] {
+    height: auto; min-height: 100vh; min-height: 100dvh; overflow: visible;
+  }
+  [data-skandi-chrome="riaintra"] #skandi-app-root,
+  [data-skandi-chrome="altea"] #skandi-app-root { height: auto; overflow: visible; }
+}
+
+
 /* Important declarations in this layer also override important page-specific control styles. */
 @layer skandi-form-size {
   input:not([type="hidden"]), select, textarea, [role="textbox"][contenteditable="true"] {
@@ -2357,11 +2367,11 @@ html, body { width: 100% !important; margin: 0 !important; max-width: none !impo
     <aside class="sidebar" id="nav"></aside>
       <div class="toolbar">
         <button class="btn dark mobile-menu-btn toolbar-menu-btn" id="mobileMenuBtn" type="button" aria-label="Open VOY menu">☰ Menu</button>
-        <span class="badge">Issues <b id="statIssues">0</b></span>
-        <span class="badge">Pages <b id="statPages">0</b></span>
-        <span class="badge">Articles <b id="statArticles">0</b></span>
-        <span class="badge">Assets <b id="statAssets">0</b></span>
-        <span class="badge">Ready <b id="statReady">0</b></span>
+
+
+
+
+
         <input class="input search" id="globalQuery" placeholder="Search issue, article, destination, campaign, asset..." />
         <button class="btn primary" data-action="save-current">Save</button>
         <button class="btn dark" data-action="public-preview">Public preview</button>
@@ -2611,7 +2621,6 @@ function renderShell(){
 }
 function renderAll(){
   renderNav();
-  updateStats();
   renderDashboard();
   renderIssues();
   renderBuilder();
@@ -2658,13 +2667,6 @@ function setModule(moduleId){
   document.querySelectorAll(".panel-view").forEach(v=>v.classList.toggle("active",v.id===`panel-${state.activePanel}`));
   renderAll();
   post("VOY_ADMIN_PANEL_CHANGED",{module:module.id,panel:state.activePanel});
-}
-function updateStats(){
-  $("statIssues").textContent=state.issues.length;
-  $("statPages").textContent=state.pages.length;
-  $("statArticles").textContent=state.articles.length;
-  $("statAssets").textContent=state.assets.length;
-  $("statReady").textContent=state.articles.filter(a=>["APPROVED","READY","PUBLISHED"].includes(String(a.status||"").toUpperCase())).length;
 }
 function currentIssue(){
   return state.issues.find(i=>i.issueId===state.selectedIssueId||i._id===state.selectedIssueId) || state.issues[0] || null;

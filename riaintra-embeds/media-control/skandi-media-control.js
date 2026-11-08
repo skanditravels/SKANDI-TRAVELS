@@ -227,7 +227,6 @@ function renderShell(){
 }
 function renderAll(){
   renderNav();
-  updateStats();
   renderDashboard();
   renderIssues();
   renderBuilder();
@@ -274,13 +273,6 @@ function setModule(moduleId){
   document.querySelectorAll(".panel-view").forEach(v=>v.classList.toggle("active",v.id===`panel-${state.activePanel}`));
   renderAll();
   post("VOY_ADMIN_PANEL_CHANGED",{module:module.id,panel:state.activePanel});
-}
-function updateStats(){
-  $("statIssues").textContent=state.issues.length;
-  $("statPages").textContent=state.pages.length;
-  $("statArticles").textContent=state.articles.length;
-  $("statAssets").textContent=state.assets.length;
-  $("statReady").textContent=state.articles.filter(a=>["APPROVED","READY","PUBLISHED"].includes(String(a.status||"").toUpperCase())).length;
 }
 function currentIssue(){
   return state.issues.find(i=>i.issueId===state.selectedIssueId||i._id===state.selectedIssueId) || state.issues[0] || null;

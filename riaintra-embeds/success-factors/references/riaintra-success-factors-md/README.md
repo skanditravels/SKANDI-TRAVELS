@@ -3,13 +3,14 @@
 > Current document: `riaintra-embeds/success-factors/references/riaintra-success-factors-md/README.md`. Original reference: `HTML_REF/riaintra/Success Factors.md`.
 
 
-- 2026-10-30 — Removed the embedded Wix logo URL from the staff ID card and retained its unassigned asset slot as [LEAVE_PLACEHOLDER].
 
 ## CHANGE LOG (append-only)
 
-- 2026-11-07 — The current V12 SuccessFactors source triplet adds Recruiting → Onboarding → Complete onboarding and editing existing task status. The page forwards `CAREERS_COMPLETE_ONBOARDING` to `orgStructure.web`. HR confirmation and the effective assignment control staff activation. The embedded historical HTML below predates this action and is retained as a reference.
+- 2026-10-30 — Removed the embedded Wix logo URL from the staff ID card and retained its unassigned asset slot as [LEAVE_PLACEHOLDER].
 
 - 2026-10-28 UTC — Updated `riaintra-embeds/success-factors/success-factors.receiver.html` to follow the current shared receiver pattern with page-specific startup, progress and failure messages for **Success Factors** (`/riaintra/success-factors`). The expected route matches `src/public/siteMap.js`; master-page handshake, staff authorization, manifest/SHA-256 checks and nested-iframe rejection remain intact.
+
+- 2026-11-07 — The current V12 SuccessFactors source triplet adds Recruiting → Onboarding → Complete onboarding and editing existing task status. The page forwards `CAREERS_COMPLETE_ONBOARDING` to `orgStructure.web`. HR confirmation and the effective assignment control staff activation. The embedded historical HTML below predates this action and is retained as a reference.
 
 
 | Field | Value |

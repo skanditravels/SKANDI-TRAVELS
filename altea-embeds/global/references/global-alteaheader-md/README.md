@@ -1,5 +1,9 @@
 # ALTEA GLOBAL HEADER
 
+## INFO / LOG
+
+- 2026-11-08 — The active shared shell uses normal document scrolling for desktop RIAINTRA and ALTEA headers and footers. This reference retains its historical markup.
+
 > Current document: `altea-embeds/global/references/global-alteaheader-md/README.md`. Original reference: `HTML_REF/GLOBAL/alteaHeader.md`.
 
 

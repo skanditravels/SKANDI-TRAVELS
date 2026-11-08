@@ -3,7 +3,8 @@
 // Single source of truth for public/internal routes, global chrome and Media Control page/section registration.
 
 export const SITE_MAP = Object.freeze({
-  home: "/", search: "/search", flights: "/flights", carRental: "/car-rental",
+  home: "/",
+  search: "/search", flights: "/flights", carRental: "/car-rental",
   hotels: "/hotels", packages: "/packages", cruises: "/cruises", tours: "/tours-activities",
   activities: "/tours-activities", destinations: "/destinations",
   travelInfo: "/travel-info", transfers: "/travel-info?section=transfers", skandiCollection: "/skandi-collection",
@@ -185,7 +186,7 @@ export const PAGE_BUILD_INTEGRATIONS = Object.freeze({
     "controller": "src/pages/masterPage.js",
     "embedIds": ["#cruisesEmbed"],
     "sources": ["SKANDI_CRUISES"],
-    "note": "Wix page, cruise catalogue tables and the approved provider sync must be configured before publication."
+    "note": "SKANDI Cruises page, cruise catalogue tables and the approved provider sync must be configured before publication."
   },
   "flights": {
     "controller": "src/pages/masterPage.js",
@@ -610,16 +611,15 @@ export const PAGE_BUILD_INTEGRATIONS = Object.freeze({
   "support": {
     "controller": "src/pages/Support.k0iqp.js",
     "embedIds": [
-      "#skandiHelpCenterEmbed",
-      "#skandiSupportChatEmbed"
+      "#skandiHelpCenterEmbed"
     ],
     "sources": [
       "HELP_CENTER",
       "help-center",
       "SKANDI_SUPPORT_PUBLIC"
     ],
-    "binding": "multi-component",
-    "note": "Help Center and support chat are separate HTML components; preserve them until a verified single-component migration."
+    "components": [{ "key": "support-chat", "sourceDirectory": "skandi-embeds/global/alexandra", "stem": "skandi-alexandra-chat", "mount": "skandi-support-chat-root" }],
+    "note": "The shared support chat is compiled into the Help Center component."
   }
 });
 

@@ -244,17 +244,16 @@ async function saveEmployeeFromV9(payload = {}) {
       send("HR_WIX_RESULT", {
         ok: true,
         item: employee || result.employee,
-        member: result.wixMember.member || null,
         created: result.wixMember.created === true,
         linked: result.wixMember.linked === true,
         passwordEmailSent: result.wixMember.passwordEmailSent === true,
-        message: result.wixMember.created ? "Wix Member created from the corporate email." : "Existing Wix Member linked to the employee."
+        message: result.wixMember.created ? "Staff account created." : "Existing staff account linked."
       });
     } else {
       send("HR_ERROR", {
         action: "HR_WIX_MEMBER_PROVISION",
         code: result.wixMember.code || "WIX_MEMBER_PROVISION_PENDING",
-        message: result.wixMember.message || "Employee saved, but Wix Member provisioning needs retry."
+        message: result.wixMember.message || "Employee saved, but the staff account needs a retry."
       });
     }
   }
@@ -398,12 +397,16 @@ async function handleMessage(type, payload) {
     case "CAREERS_REFRESH":
       await sendRecruitingBootstrap("CAREERS_REFRESH_RESULT");
       return;
-    case "CAREERS_SAVE_CANDIDATE":
-      careerOk("Candidate saved.", await saveRecruitingCandidate(payload.item || payload));
+    case "CAREERS_SAVE_CANDIDATE": {
+      const result = await saveRecruitingCandidate(payload.item || payload);
+      careerOk(result.passwordSetupPending ? `Staff account created. SK-ID: ${result.employee?.skId || ""}. Password setup email failed; use Forgot password.` : result.employee?.skId ? `Staff account linked. SK-ID: ${result.employee.skId}` : "Candidate saved.", result);
       return;
-    case "CAREERS_MOVE_CANDIDATE_STAGE":
-      careerOk("Candidate stage updated.", await updateRecruitingCandidateStage({ id: payload.candidateId, status: payload.targetStage }));
+    }
+    case "CAREERS_MOVE_CANDIDATE_STAGE": {
+      const result = await updateRecruitingCandidateStage({ id: payload.candidateId, status: payload.targetStage, staffEmail: payload.staffEmail });
+      careerOk(result.passwordSetupPending ? `Staff account created. SK-ID: ${result.employee?.skId || ""}. Password setup email failed; use Forgot password.` : result.employee?.skId ? `Staff account linked. SK-ID: ${result.employee.skId}` : "Candidate stage updated.", result);
       return;
+    }
     case "CAREERS_SAVE_JOB_POSTING":
       careerOk("Job posting saved.", await saveRecruitingPosition(payload.item || payload));
       return;

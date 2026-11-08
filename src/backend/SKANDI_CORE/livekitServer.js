@@ -4,8 +4,7 @@
 // LiveKit Agents owns Alexandra runtime; Supabase customer_support_* owns durable Support cases/messages.
 // GroupTalk remains a separate operational domain.
 
-import { AccessToken, AgentDispatchClient } from "livekit-server-sdk";
-import { createHash, randomUUID } from "crypto";
+import { createHash, createHmac, randomUUID } from "crypto";
 import { secrets } from "wix-secrets-backend.v2";
 import { elevate } from "wix-auth";
 
@@ -14,6 +13,36 @@ const DEFAULT_TTL = "15m";
 const SUPPORT_TEXT_TOPIC = "skandi.support.chat";
 const ALEXANDRA_TEXT_TOPIC = "lk.chat";
 const ALEXANDRA_AGENT_NAME = "alexandra-prod";
+
+// Wix's package runtime cannot load the SDK's ESM dependency tree. LiveKit
+// documents its JWT grants and Twirp API, so keep the existing service and
+// authorization boundaries while using the native backend primitives.
+export function signLiveKitAccessTokenCore({ apiKey, apiSecret, identity = "", name = "", metadata = "", video, ttlSeconds = 900 } = {}) {
+  if (!apiKey || !apiSecret || !video || !Number.isInteger(ttlSeconds) || ttlSeconds < 1 || ttlSeconds > 3600) {
+    throw new Error("LIVEKIT_TOKEN_PARAMETERS_INVALID");
+  }
+  const timestamp = Math.floor(Date.now() / 1000);
+  const encode = value => Buffer.from(JSON.stringify(value), "utf8").toString("base64url");
+  const claims = { iss: apiKey, nbf: timestamp, iat: timestamp, exp: timestamp + ttlSeconds, video };
+  if (identity) claims.sub = identity;
+  if (name) claims.name = name;
+  if (metadata) claims.metadata = metadata;
+  const unsigned = `${encode({ alg: "HS256", typ: "JWT" })}.${encode(claims)}`;
+  return `${unsigned}.${createHmac("sha256", apiSecret).update(unsigned, "utf8").digest("base64url")}`;
+}
+
+async function dispatchAlexandra({ apiHost, apiKey, apiSecret, roomName, jobMetadata }) {
+  if (!/^https:\/\//i.test(apiHost)) throw new Error("LIVEKIT_URL_INVALID");
+  const authorization = signLiveKitAccessTokenCore({ apiKey, apiSecret, video: { roomAdmin: true, room: roomName }, ttlSeconds: 60 });
+  const response = await fetch(`${apiHost}/twirp/livekit.AgentDispatchService/CreateDispatch`, {
+    method: "POST",
+    redirect: "error",
+    headers: { Authorization: `Bearer ${authorization}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ agent_name: ALEXANDRA_AGENT_NAME, room: roomName, metadata: JSON.stringify(jobMetadata) })
+  });
+  if (!response.ok) throw new Error(`ALEXANDRA_DISPATCH_HTTP_${response.status}`);
+  return response.json();
+}
 
 function clean(value, max = 240) {
   return String(value ?? "").trim().slice(0, max);
@@ -87,10 +116,10 @@ export async function issueLiveKitRoomTokenCore({
   if (!room || !participant) throw new Error("LIVEKIT_ROOM_IDENTITY_REQUIRED");
 
   const { apiKey, apiSecret, livekitUrl } = await liveKitCredentials();
-  const token = new AccessToken(apiKey, apiSecret, {
+  if (ttl !== DEFAULT_TTL) throw new Error("LIVEKIT_TOKEN_TTL_UNSUPPORTED");
+  const token = signLiveKitAccessTokenCore({ apiKey, apiSecret,
     identity: participant,
     name: clean(participantName, 120) || "SKANDI Support",
-    ttl,
     metadata: JSON.stringify({
       system: "skandi-support",
       role: role === "agent" ? "agent" : "customer",
@@ -98,20 +127,19 @@ export async function issueLiveKitRoomTokenCore({
       realtimeProvider: "livekit",
       caseStore: "supabase",
       ...participantMetadata
-    })
-  });
-
-  token.addGrant({
+    }),
+    video: {
     roomJoin: true,
     room,
     canSubscribe: canSubscribe === true,
     canPublish: canPublish === true,
     canPublishData: canPublish === true
+    }
   });
 
   return {
     url: livekitUrl,
-    token: await token.toJwt(),
+    token,
     roomName: room,
     identity: participant,
     role: role === "agent" ? "agent" : "customer",
@@ -171,40 +199,34 @@ export async function issueAlexandraLiveKitSessionCore({
     support_message_table: "customer_support_messages"
   };
 
-  // livekit-server-sdk 2.15.5 (the pinned SKANDI version) exposes AgentDispatchClient.
-  // LiveKitAPI is only available from 2.17.0; importing it breaks session startup.
-  const dispatcher = new AgentDispatchClient(apiHost, apiKey, apiSecret);
-  const dispatch = await dispatcher.createDispatch(roomName, ALEXANDRA_AGENT_NAME, {
-    metadata: JSON.stringify(jobMetadata)
-  });
+  const dispatch = await dispatchAlexandra({ apiHost, apiKey, apiSecret, roomName, jobMetadata });
   if (!dispatch?.id) {
     const error = new Error("ALEXANDRA_DISPATCH_UNCONFIRMED");
     error.code = "ALEXANDRA_DISPATCH_UNCONFIRMED";
     throw error;
   }
 
-  const token = new AccessToken(apiKey, apiSecret, {
+  const token = signLiveKitAccessTokenCore({ apiKey, apiSecret,
     identity,
     name: "SKANDI Traveler",
-    ttl: DEFAULT_TTL,
     metadata: JSON.stringify({
       system: "skandi-alexandra",
       channel: jobMetadata.channel,
       locale: jobMetadata.locale,
       sessionId
-    })
-  });
-  token.addGrant({
+    }),
+    video: {
     roomJoin: true,
     room: roomName,
     canSubscribe: true,
     canPublish: true,
     canPublishData: true
+    }
   });
 
   return {
     url: livekitUrl,
-    token: await token.toJwt(),
+    token,
     roomName,
     identity,
     sessionId,

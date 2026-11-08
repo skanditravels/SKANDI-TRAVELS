@@ -393,11 +393,11 @@ function validateFiles(files){
   return selected;
 }
 
-function updateFiles(files){
-  const valid=validateFiles(files);
-  if(!valid)return;
-  selectedFiles=valid;
-  $("fileSummary").textContent=selectedFileSummary();
+function updateFiles(){
+  // File names alone do not upload the files. Keep the form honest until the
+  // existing Support service has a verified private attachment destination.
+  selectedFiles=[];
+  $("fileSummary").textContent="File uploads are currently unavailable. Please send your request without attachments.";
 }
 
 $("hasBooking").addEventListener("change",toggleBookingFields);
@@ -559,7 +559,7 @@ window.addEventListener("message",event=>{
     );
     $("publicSupportForm").reset();
     selectedFiles=[];
-    $("fileSummary").textContent="No files selected.";
+    $("fileSummary").textContent="File uploads are currently unavailable. Please send your request without attachments.";
     $("submitBtn").disabled=false;
     toggleBookingFields();
     renderWorkflowOptions();
