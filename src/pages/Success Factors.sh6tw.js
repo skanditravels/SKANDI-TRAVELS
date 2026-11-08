@@ -8,6 +8,7 @@ import wixLocation from "wix-location";
 import { authentication } from "wix-members-frontend";
 import { APP_ROUTES, SITE_MAP } from "public/siteMap";
 import {
+  completeRecruitingOnboarding,
   createEmployee,
   createRecruitingDocumentPacket,
   detectRecruitingHistoryGaps,
@@ -424,6 +425,11 @@ async function handleMessage(type, payload) {
     case "CAREERS_SAVE_TRAINING_RECORD":
       careerOk("Training record saved.", await saveRecruitingTraining(payload.item || payload));
       return;
+    case "CAREERS_COMPLETE_ONBOARDING": {
+      const result = await completeRecruitingOnboarding(payload);
+      careerOk(`Onboarding complete. Staff access role: ${result.accessRole}.`, result);
+      return;
+    }
     case "CAREERS_SAVE_ONBOARDING_TASK":
       careerOk("Onboarding task saved.", await saveRecruitingOnboardingTask(payload.item || payload));
       return;

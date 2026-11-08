@@ -4,6 +4,7 @@
 
 import { Permissions, webMethod } from "@wix/web-methods";
 import {
+  completeRecruitingOnboardingCore,
   createEmployeeCore,
   createRecruitingDocumentPacketCore,
   detectRecruitingHistoryGapsCore,
@@ -141,6 +142,10 @@ export const saveRecruitingInterview = webMethod(Permissions.SiteMember, async (
 
 export const saveRecruitingVetting = webMethod(Permissions.SiteMember, async (payload) => {
   return saveRecruitingVettingCore(input(payload));
+});
+
+export const completeRecruitingOnboarding = webMethod(Permissions.SiteMember, async (payload) => {
+  return completeRecruitingOnboardingCore(input(payload));
 });
 
 export const saveRecruitingOnboardingTask = webMethod(Permissions.SiteMember, async (payload) => {

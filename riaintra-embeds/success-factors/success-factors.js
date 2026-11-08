@@ -3436,7 +3436,7 @@
 
     function careerRowsForCandidate(rows = [], candidate = selectedRecruitingCandidate()) {
       const id = recruitingCandidateId(candidate || {});
-      const applicantId = String(candidate?.applicantId || candidate?.candidateId || candidate?.id || "");
+      const applicantId = String(candidate?.applicantId || candidate?.applicant_id || candidate?.candidateId || candidate?.id || "");
       if (!id && !applicantId) return rows;
       return rows.filter(row => {
         const value = String(row.candidateId || row.candidate_id || row.applicantId || row.applicant_id || "");
@@ -3808,11 +3808,14 @@
     }
 
     function renderRecruitingOnboarding(recruiting) {
+      const candidate = selectedRecruitingCandidate();
+      const canComplete = canManageHrRecords() && String(candidate?.status || "").toUpperCase() === "HIRED";
       return `
         <div class="hr-action-row" style="margin-bottom:12px">
           <button class="primary-button" type="button" data-action="careers-new-onboarding" ${selectedRecruitingCandidate() ? "" : "disabled"}>Add onboarding task</button>
+          ${canComplete ? '<button class="secondary-button" type="button" data-action="careers-complete-onboarding">Complete onboarding</button>' : ""}
         </div>
-        ${renderRecruitingRecords("Onboarding Tasks", recruiting.onboardingTasks, "task")}
+        ${renderRecruitingPanel("Onboarding Tasks", careerRowsForCandidate(recruiting.onboardingTasks, candidate), getProfile()?.successFactorsAccess?.manageRecruiting === true ? "careers-edit-onboarding-task" : "")}
       `;
     }
 
@@ -4880,6 +4883,36 @@
       } else if (action === "careers-new-training") {
         if (!hasRecruitingAccess()) return;
         openRecruitingRecordDialog("training");
+      } else if (action === "careers-complete-onboarding") {
+        const candidate = selectedRecruitingCandidate();
+        if (!canManageHrRecords() || String(candidate?.status || "").toUpperCase() !== "HIRED") return;
+        openDialog({
+          id: "career-complete-onboarding",
+          title: "Complete onboarding",
+          subtitle: recordName(candidate),
+          body: `<form id="careerCompleteOnboardingForm">
+            <input type="hidden" name="candidateId" value="${escapeHtml(recruitingCandidateId(candidate))}">
+            <p>Enter the SK-ID from this hire’s SuccessFactors employee record. Completing onboarding grants the assigned staff access role to their Wix work account.</p>
+            <label class="hr-field"><span>Employee SK-ID</span><input class="hr-input" name="skId" pattern="[A-Za-z]{2}[0-9]{4}" maxlength="6" required></label>
+          </form>`,
+          footer: '<button class="ghost-button" type="button" data-action="close-dialog">Cancel</button><button class="primary-button" type="submit" form="careerCompleteOnboardingForm">Complete onboarding</button>'
+        });
+      } else if (action === "careers-edit-onboarding-task") {
+        if (!hasRecruitingAccess() || getProfile()?.successFactorsAccess?.manageRecruiting !== true) return;
+        const task = portalState.hr.recruiting.onboardingTasks.find(item => String(item.id) === id);
+        if (!task) return;
+        const current = String(task.status || "OPEN").toUpperCase();
+        const statuses = [...new Set([current, "OPEN", "IN_PROGRESS", "COMPLETE", "CANCELLED"])];
+        openDialog({
+          id: "career-edit-onboarding-task",
+          title: "Update onboarding task",
+          subtitle: task.task_name || "Onboarding task",
+          body: `<form id="careerOnboardingForm">
+            <input type="hidden" name="id" value="${escapeHtml(task.id)}">
+            <label class="hr-field"><span>Status</span><select class="hr-select" name="status">${statuses.map(status => `<option value="${escapeHtml(status)}">${escapeHtml(status.replaceAll("_", " "))}</option>`).join("")}</select></label>
+          </form>`,
+          footer: '<button class="ghost-button" type="button" data-action="close-dialog">Cancel</button><button class="primary-button" type="submit" form="careerOnboardingForm">Save</button>'
+        });
       } else if (action === "careers-new-onboarding") {
         if (!hasRecruitingAccess()) return;
         openRecruitingRecordDialog("onboarding");
@@ -5033,6 +5066,11 @@
       } else if (form.id === "careerTrainingForm") {
         if (!hasRecruitingAccess()) return;
         post("CAREERS_SAVE_TRAINING_RECORD", { item: serializeForm(form) });
+        closeDialog();
+      } else if (form.id === "careerCompleteOnboardingForm") {
+        if (!canManageHrRecords()) return;
+        const item = serializeForm(form);
+        post("CAREERS_COMPLETE_ONBOARDING", { candidateId: item.candidateId, skId: item.skId.toUpperCase() });
         closeDialog();
       } else if (form.id === "careerOnboardingForm") {
         if (!hasRecruitingAccess()) return;

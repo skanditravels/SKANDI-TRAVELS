@@ -15,7 +15,8 @@ import { restRequest } from "backend/SKANDI_CORE/supabaseServer";
 import { getSuccessFactorsApps, requireStaffPortalSessionCore } from "backend/SKANDI_CORE/staffAuth";
 import { members, authentication as memberAuthentication } from "@wix/members";
 import { auth } from "@wix/essentials";
-import { randomInt } from "crypto";
+import { authorization } from "wix-members-backend";
+import { secrets } from "wix-secrets-backend.v2";
 import { SkandiError, errorCode } from "backend/SKANDI_CORE/platformErrors";
 import {
   firstRow,
@@ -36,6 +37,12 @@ const CORPORATE_EMAIL_MAX = 320;
 
 const elevatedCreateMember = auth.elevate(members.createMember);
 const elevatedListMembers = auth.elevate(members.listMembers);
+const elevatedGetMember = auth.elevate(members.getMember);
+const elevatedGetSecret = auth.elevate(secrets.getSecretValue);
+const WIX_STAFF_ROLE_SECRET = "SKANDI_WIX_STAFF_ROLE_IDS";
+const COMPLETE_ONBOARDING_TASK = new Set(["COMPLETE", "COMPLETED", "DONE"]);
+const CANCELED_ONBOARDING_TASK = new Set(["CANCELLED", "CANCELED", "ARCHIVED"]);
+const UUID = /^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i;
 const elevatedUpdateMember = auth.elevate(members.updateMember);
 const elevatedDeleteMember = auth.elevate(members.deleteMember);
 const elevatedSendSetPasswordEmail = auth.elevate(memberAuthentication.sendSetPasswordEmail);
@@ -531,7 +538,7 @@ function portalSelectionState(agent, session, taskRows) {
     favoriteApps: portalIds(state.favoriteApps).filter((id) => apps.has(id)),
     readNotificationIds: portalIds(state.readNotificationIds).filter((id) => notifications.has(id)),
     dismissedTaskIds: portalIds(state.dismissedTaskIds).filter((id) => tasks.has(id)),
-    completedTaskIds: taskRows.filter((item) => ["COMPLETED", "DONE"].includes(upper(item.status, 40))).map((item) => String(item.id))
+    completedTaskIds: taskRows.filter((item) => COMPLETE_ONBOARDING_TASK.has(upper(item.status, 40))).map((item) => String(item.id))
   };
 }
 
@@ -575,8 +582,8 @@ export async function saveSuccessFactorsPortalStateCore(input = {}) {
   const task = taskRows.find((row) => String(row.id) === String(input.id || ""));
   if (action.startsWith("INTRANET_TASK_") && !task) throw new SkandiError("INTRANET_TASK_NOT_FOUND", "This task is not assigned to you.");
   if (action === "INTRANET_TASK_COMPLETE") {
-    if (["CANCELLED", "CANCELED", "ARCHIVED"].includes(upper(task.status, 40))) throw new SkandiError("INTRANET_TASK_CLOSED", "This task is closed and cannot be completed.");
-    if (!["COMPLETED", "DONE"].includes(upper(task.status, 40))) {
+    if (CANCELED_ONBOARDING_TASK.has(upper(task.status, 40))) throw new SkandiError("INTRANET_TASK_CLOSED", "This task is closed and cannot be completed.");
+    if (!COMPLETE_ONBOARDING_TASK.has(upper(task.status, 40))) {
       const saved = firstRow(await restRequest({
         table: "career_onboarding_tasks", method: "PATCH",
         query: { id: `eq.${task.id}`, owner_agent_user_id: `eq.${agentUserId}`, status: task.status === null ? "is.null" : `eq.${task.status}` },
@@ -1391,6 +1398,22 @@ export async function setEmployeeActiveCore({ agentId = "", agentUserUuid = "", 
   const session = await requireHr({ manage: true });
   const target = await findAgent({ agentId, agentUserUuid, agentUserId, skId });
   if (!target) throw new SkandiError("HR_EMPLOYEE_NOT_FOUND", "Employee not found.");
+  const managed = portalObject(portalObject(target.payload).successFactors).wixStaffOnboarding;
+  const employmentState = upper(target.employment_status || target.status, 40);
+  if (active && managed?.candidateId && employmentState !== "ACTIVE") {
+    const assignment = await currentAssignment(target.id);
+    const memberId = text(target.wix_member_id || target.member_id, 80);
+    if (!managed.completed || assignment?.id !== managed.assignmentId || !UUID.test(memberId)) {
+      throw new SkandiError("HR_WIX_STAFF_REACTIVATION_REQUIRED", "Verify completed onboarding and the current assignment before restoring this staff account.");
+    }
+    const roleIds = await staffOnboardingRoles(upper(assignment.access_role, 80));
+    if (roleIds.some(id => !stringArray(managed.roleIds).includes(id))) {
+      throw new SkandiError("HR_WIX_STAFF_REACTIVATION_REQUIRED", "The configured Wix roles changed. Review the staff account before reactivating it.");
+    }
+    for (const roleId of roleIds) {
+      await authorization.assignRole(roleId, memberId, { suppressAuth: true });
+    }
+  }
   const selfId = text(session.profile?.agentUserId || session.profile?.id, 80);
   if (!active && selfId === text(target.id, 80)) throw new SkandiError("HR_SELF_DEACTIVATE_FORBIDDEN", "You cannot deactivate your own HR account.");
   const body = {
@@ -1402,6 +1425,18 @@ export async function setEmployeeActiveCore({ agentId = "", agentUserUuid = "", 
     updated_at: new Date().toISOString()
   };
   const saved = firstRow(await restRequest({ table: "agent_users", method: "PATCH", query: { id: `eq.${target.id}` }, body }));
+  if (!active) {
+    const memberId = text(target.wix_member_id || target.member_id, 80);
+    if (UUID.test(memberId)) {
+      for (const roleId of stringArray(managed?.roleIds).filter(id => UUID.test(id))) {
+        try {
+          await authorization.removeRole(roleId, memberId, { suppressAuth: true });
+        } catch (_) {
+          throw new SkandiError("HR_WIX_STAFF_REVOKE_FAILED", "The staff account was disabled. Wix role removal failed. Retry deactivation.");
+        }
+      }
+    }
+  }
   return { ok: true, employee: safeAgent(saved || { ...target, ...body }) };
 }
 
@@ -1526,7 +1561,7 @@ export async function getRecruitingBootstrapCore() {
       candidates: candidates.length,
       activePositions: positions.filter((x) => x.active !== false).length,
       interviews: interviews.filter((x) => upper(x.status, 40) === "SCHEDULED").length,
-      onboardingOpen: onboarding.filter((x) => upper(x.status, 40) !== "COMPLETE").length
+      onboardingOpen: onboarding.filter((x) => !COMPLETE_ONBOARDING_TASK.has(upper(x.status, 40)) && !CANCELED_ONBOARDING_TASK.has(upper(x.status, 40))).length
     }
   };
 }
@@ -1549,13 +1584,17 @@ export async function saveRecruitingCandidateCore(input = {}) {
   const session = await requireRecruiting({ manage: true });
   const actorId = text(session.profile?.agentUserId || session.profile?.id, 80) || null;
   const id = text(input.id, 80);
+  const previous = id && UUID.test(id) ? firstRow(await select("career_applicant_accounts", { select: "id,applicant_id,payload,updated_at", id: `eq.${id}`, limit: 1 })) : null;
+  if (id && !previous) throw new SkandiError("RECRUITING_CANDIDATE_NOT_FOUND", "Candidate not found.");
   const applicantId = text(input.applicantId || input.candidateId, 120) || generateBusinessKey("CAND");
   const firstName = text(input.firstName, 120), lastName = text(input.lastName, 120), email = normalizeCorporateEmail(input.email);
   const wantsHire = upper(input.status || input.stage, 80) === "HIRED";
   if (wantsHire) { await requireHr({ manage: true }); normalizeCorporateEmail(input.staffEmail || email); }
   if (!firstName || !lastName) throw new SkandiError("RECRUITING_CANDIDATE_NAME_REQUIRED", "Candidate name is required.");
+  const candidatePayload = { ...portalObject(input.payload) };
+  delete candidatePayload.staffOnboarding;
   const body = {
-    applicant_id: applicantId,
+    ...(!id ? { applicant_id: applicantId } : {}),
     position_id: text(input.positionId || input.positionApplied, 120) || null,
     first_name: firstName,
     last_name: lastName,
@@ -1564,12 +1603,13 @@ export async function saveRecruitingCandidateCore(input = {}) {
     status: wantsHire ? (id ? undefined : "applied") : (text(input.status || input.stage, 80) || "applied"),
     resume_url: text(input.resumeUrl, 1500) || null,
     cover_letter_url: text(input.coverLetterUrl, 1500) || null,
-    payload: { ...(input.payload && typeof input.payload === "object" ? input.payload : {}), positionApplied: text(input.positionApplied, 180) || undefined, location: text(input.location, 180) || undefined },
+    payload: { ...portalObject(previous?.payload), ...candidatePayload, positionApplied: text(input.positionApplied, 180) || undefined, location: text(input.location, 180) || undefined },
     updated_at: new Date().toISOString()
   };
   const saved = id
-    ? firstRow(await restRequest({ table: "career_applicant_accounts", method: "PATCH", query: { id: `eq.${id}` }, body }))
+    ? firstRow(await restRequest({ table: "career_applicant_accounts", method: "PATCH", query: { id: `eq.${id}`, updated_at: previous.updated_at ? `eq.${previous.updated_at}` : "is.null" }, body }))
     : firstRow(await restRequest({ table: "career_applicant_accounts", method: "POST", body }));
+  if (!saved) throw new SkandiError("RECRUITING_CANDIDATE_CHANGED", "The candidate changed. Refresh before retrying.");
   await recruitingAudit(actorId, id ? "CANDIDATE_UPDATED" : "CANDIDATE_CREATED", "candidate", saved?.applicant_id || applicantId, { status: body.status, positionId: body.position_id });
   if (wantsHire) {
     if (!saved?.id) throw new SkandiError("RECRUITING_CANDIDATE_SAVE_FAILED", "Candidate could not be saved.");
@@ -1709,26 +1749,200 @@ export async function saveRecruitingOnboardingTaskCore(input = {}) {
   const session = await requireRecruiting({ manage: true });
   const actorId = text(session.profile?.agentUserId || session.profile?.id, 80) || null;
   const id = text(input.id, 80);
-  const taskId = text(input.taskId, 120) || generateBusinessKey("ONB");
-  const candidateId = text(input.candidateId, 120), taskName = text(input.taskName, 180);
+  const previous = id && UUID.test(id)
+    ? firstRow(await select("career_onboarding_tasks", { id: `eq.${id}`, limit: 1 }))
+    : null;
+  if (id && !previous) throw new SkandiError("RECRUITING_ONBOARDING_TASK_NOT_FOUND", "Onboarding task not found.");
+  const taskId = previous?.task_id || text(input.taskId, 120) || generateBusinessKey("ONB");
+  const candidateId = previous?.candidate_id || text(input.candidateId, 120);
+  const taskName = text(input.taskName ?? previous?.task_name, 180);
   if (!candidateId || !taskName) throw new SkandiError("RECRUITING_ONBOARDING_INPUT_REQUIRED", "Candidate and task name are required.");
-  const status = text(input.status, 80) || "OPEN";
+  const status = upper(input.status || previous?.status || "OPEN", 80);
   const body = {
     task_id: taskId,
     candidate_id: candidateId,
     task_name: taskName,
     status,
-    due_at: text(input.dueAt, 80) || null,
-    completed_at: upper(status, 40) === "COMPLETE" ? (text(input.completedAt, 80) || new Date().toISOString()) : null,
-    owner_agent_user_id: actorId,
-    payload: input.payload && typeof input.payload === "object" ? input.payload : {},
+    due_at: input.dueAt === undefined ? previous?.due_at || null : text(input.dueAt, 80) || null,
+    completed_at: COMPLETE_ONBOARDING_TASK.has(status) ? (previous?.completed_at || text(input.completedAt, 80) || new Date().toISOString()) : null,
+    owner_agent_user_id: previous ? previous.owner_agent_user_id : actorId,
+    payload: { ...portalObject(previous?.payload), ...portalObject(input.payload) },
     updated_at: new Date().toISOString()
   };
-  const saved = id
-    ? firstRow(await restRequest({ table: "career_onboarding_tasks", method: "PATCH", query: { id: `eq.${id}` }, body }))
+  const saved = previous
+    ? firstRow(await restRequest({
+      table: "career_onboarding_tasks",
+      method: "PATCH",
+      query: { id: `eq.${id}`, updated_at: previous.updated_at ? `eq.${previous.updated_at}` : "is.null" },
+      body
+    }))
     : firstRow(await restRequest({ table: "career_onboarding_tasks", method: "POST", body }));
+  if (!saved) throw new SkandiError("RECRUITING_ONBOARDING_TASK_CHANGED", "The onboarding task changed. Refresh before retrying.");
   await recruitingAudit(actorId, id ? "ONBOARDING_TASK_UPDATED" : "ONBOARDING_TASK_CREATED", "onboarding", saved?.task_id || taskId, { candidateId, status });
   return { ok: true, task: saved || { id, ...body } };
+}
+
+async function staffOnboardingRoles(accessRole) {
+  let configured;
+  try {
+    const secret = await elevatedGetSecret(WIX_STAFF_ROLE_SECRET);
+    configured = JSON.parse(typeof secret === "string" ? secret : secret.value);
+  } catch (_) {
+    throw new SkandiError("HR_WIX_STAFF_ROLES_NOT_CONFIGURED", "Configure the Wix staff role IDs before completing onboarding.");
+  }
+  const baseRole = text(configured?.SKANDI_STAFF, 80);
+  const hiredRole = text(configured?.[accessRole], 80);
+  if (!UUID.test(baseRole) || !UUID.test(hiredRole) || baseRole.toLowerCase() === hiredRole.toLowerCase()) {
+    throw new SkandiError("HR_WIX_STAFF_ROLE_NOT_MAPPED", "The Wix Staff role and the employee’s assigned access role need distinct role IDs.");
+  }
+  return [baseRole, hiredRole];
+}
+
+async function requireCompletedOnboardingTasks(candidate) {
+  const candidateKeys = [...new Set([candidate.id, candidate.applicant_id])].filter(Boolean);
+  if (candidateKeys.some(key => !/^[A-Za-z0-9_-]+$/.test(key))) {
+    throw new SkandiError("HR_ONBOARDING_CANDIDATE_ID_INVALID", "This candidate’s recruiting reference needs review.");
+  }
+  const tasks = await selectAllPaged("career_onboarding_tasks", {
+    select: "id,status",
+    candidate_id: `in.(${candidateKeys.join(",")})`,
+    order: "id.asc"
+  });
+  const required = tasks.filter(task => !CANCELED_ONBOARDING_TASK.has(upper(task.status, 40)));
+  if (!required.length || required.some(task => !COMPLETE_ONBOARDING_TASK.has(upper(task.status, 40)))) {
+    throw new SkandiError("HR_ONBOARDING_TASKS_INCOMPLETE", "Complete all required onboarding tasks before granting staff access.");
+  }
+}
+
+export async function completeRecruitingOnboardingCore({ candidateId = "", skId = "" } = {}) {
+  const session = await requireHr({ manage: true });
+  const actorId = text(session.profile?.agentUserId || session.profile?.id, 80);
+  if (!UUID.test(candidateId) || !/^[A-Z]{2}\d{4}$/.test(skId)) {
+    throw new SkandiError("HR_ONBOARDING_LINK_REQUIRED", "Select a hired candidate and enter their employee SK-ID.");
+  }
+
+  const [candidate, employee] = await Promise.all([
+    select("career_applicant_accounts", { select: "id,applicant_id,status,wix_member_id,first_name,last_name,payload,updated_at", id: `eq.${candidateId}`, limit: 1 }).then(firstRow),
+    findAgent({ skId })
+  ]);
+  if (upper(candidate?.status, 40) !== "HIRED" || employee?.active !== true || employee.authorized !== true || employee.portal_access !== true) {
+    throw new SkandiError("HR_ONBOARDING_HIRE_REQUIRED", "The candidate must be hired and linked to an enabled employee record.");
+  }
+
+  const payload = portalObject(candidate.payload);
+  const binding = portalObject(payload.staffOnboarding);
+  const staffState = upper(employee.employment_status || employee.status, 40);
+  const memberId = text(employee.wix_member_id || employee.member_id, 80);
+  if (!UUID.test(memberId) ||
+      (employee.wix_member_id && employee.member_id && employee.wix_member_id !== employee.member_id) ||
+      (candidate.wix_member_id && candidate.wix_member_id !== memberId) ||
+      (binding.agentUserId && binding.agentUserId !== employee.id)) {
+    throw new SkandiError("HR_ONBOARDING_MEMBER_MISMATCH", "The candidate and employee must use the same approved Wix work account.");
+  }
+  if (staffState !== "ONBOARDING" && !(staffState === "ACTIVE" && binding.agentUserId === employee.id)) {
+    throw new SkandiError("HR_ONBOARDING_EMPLOYEE_STATE_INVALID", "The selected employee is not in onboarding.");
+  }
+  const staffPayload = portalObject(employee.payload);
+  const sf = portalObject(staffPayload.successFactors);
+  const previousGrant = portalObject(sf.wixStaffOnboarding);
+  if (previousGrant.candidateId && previousGrant.candidateId !== candidateId) {
+    throw new SkandiError("HR_ONBOARDING_EMPLOYEE_ALREADY_LINKED", "This employee is linked to another onboarding record.");
+  }
+  const normalizedName = value => text(value, 120).normalize("NFKC").replace(/\s+/g, " ").toLowerCase();
+  if (!candidate.wix_member_id && (
+    normalizedName(candidate.first_name) !== normalizedName(employee.first_name) ||
+    normalizedName(candidate.last_name) !== normalizedName(employee.last_name)
+  )) {
+    throw new SkandiError("HR_ONBOARDING_EMPLOYEE_NAME_MISMATCH", "Verify that the candidate and employee records belong to the same hire.");
+  }
+  await requireCompletedOnboardingTasks(candidate);
+
+  const assignment = await currentAssignment(employee.id);
+  const accessCode = upper(assignment?.access_role, 80);
+  if (!assignment?.role_id || !/^[A-Z][A-Z_0-9]*$/.test(accessCode) || RESTRICTED_ACCESS_ROLES.has(accessCode)) {
+    throw new SkandiError("HR_ONBOARDING_ASSIGNMENT_REQUIRED", "Save an effective, non-restricted organization assignment before completing onboarding.");
+  }
+  const [accessRole, role, member, otherCandidate] = await Promise.all([
+    select("org_access_roles", { select: "restricted,preset_id", access_role_code: `eq.${accessCode}`, active: "eq.true", limit: 1 }).then(firstRow),
+    select("org_job_roles", { select: "role_id", role_id: `eq.${assignment.role_id}`, active: "eq.true", limit: 1 }).then(firstRow),
+    elevatedGetMember(memberId, { fieldsets: ["FULL"] }).then(memberSummary),
+    select("career_applicant_accounts", { select: "id", wix_member_id: `eq.${memberId}`, id: `neq.${candidate.id}`, limit: 1 }).then(firstRow)
+  ]);
+  if (!role || !accessRole || accessRole.restricted !== false || assignment.permission_preset_id !== accessRole.preset_id) {
+    throw new SkandiError("HR_ONBOARDING_ASSIGNMENT_NOT_APPROVED", "The hired role must use its approved access preset before onboarding can finish.");
+  }
+  if (otherCandidate || member?.id !== memberId || !employee.corporate_email_address ||
+      member.loginEmail !== normalizeCorporateEmail(employee.corporate_email_address) ||
+      !["APPROVED", "PENDING"].includes(upper(member.status, 40))) {
+    throw new SkandiError("HR_ONBOARDING_WORK_ACCOUNT_INVALID", "Verify the unique Wix work account and its member status before completing onboarding.");
+  }
+  const [staffRoleId, hiredRoleId] = await staffOnboardingRoles(accessCode);
+  const managedRoleIds = [staffRoleId, hiredRoleId];
+
+  if (staffState === "ACTIVE") {
+    if (previousGrant.assignmentId !== assignment.id) {
+      throw new SkandiError("HR_ONBOARDING_ALREADY_COMPLETE", "Onboarding is complete. Use the employee access workflow for a later assignment change.");
+    }
+    return { ok: true, accessRole: accessCode, alreadyComplete: true };
+  }
+
+  const grant = { candidateId, assignmentId: assignment.id, roleIds: [...new Set([...managedRoleIds, ...stringArray(previousGrant.roleIds)])] };
+  const saveEmployee = async (current, patch) => firstRow(await restRequest({
+    table: "agent_users",
+    method: "PATCH",
+    query: { id: `eq.${current.id}`, updated_at: current.updated_at ? `eq.${current.updated_at}` : "is.null" },
+    body: { ...patch, updated_at: new Date().toISOString() }
+  }));
+  const reserved = await saveEmployee(employee, {
+    payload: { ...staffPayload, successFactors: { ...sf, wixStaffOnboarding: grant } }
+  });
+  if (!reserved) {
+    throw new SkandiError("HR_ONBOARDING_EMPLOYEE_CHANGED", "The employee changed while onboarding was finishing. Refresh and retry.");
+  }
+
+  if (!binding.agentUserId) {
+    const saved = firstRow(await restRequest({
+      table: "career_applicant_accounts",
+      method: "PATCH",
+      query: { id: `eq.${candidate.id}`, updated_at: candidate.updated_at ? `eq.${candidate.updated_at}` : "is.null" },
+      body: { wix_member_id: memberId, payload: { ...payload, staffOnboarding: { agentUserId: employee.id } }, updated_at: new Date().toISOString() }
+    }));
+    if (!saved) throw new SkandiError("HR_ONBOARDING_CANDIDATE_CHANGED", "The candidate changed. Refresh before retrying onboarding.");
+  }
+
+  try {
+    for (const roleId of stringArray(previousGrant.roleIds).filter(id => UUID.test(id) && !managedRoleIds.includes(id))) {
+      await authorization.removeRole(roleId, memberId, { suppressAuth: true });
+    }
+    for (const roleId of managedRoleIds) {
+      await authorization.assignRole(roleId, memberId, { suppressAuth: true });
+    }
+  } catch (error) {
+    await recruitingAudit(actorId, "ONBOARDING_WIX_ROLE_FAILED", "candidate", candidate.applicant_id || candidate.id, { accessRole: accessCode, code: errorCode(error) });
+    throw new SkandiError("HR_ONBOARDING_WIX_ROLE_FAILED", "Wix did not finish assigning staff roles. Check the configured roles and retry onboarding.");
+  }
+
+  const active = await saveEmployee(reserved, {
+    status: "ACTIVE", employment_status: "ACTIVE",
+    payload: { ...staffPayload, successFactors: { ...sf, wixStaffOnboarding: { ...grant, completed: true, roleIds: managedRoleIds } } }
+  });
+  if (!active) {
+    const latest = await findAgent({ agentUserUuid: employee.id });
+    const latestGrant = portalObject(portalObject(latest?.payload).successFactors).wixStaffOnboarding;
+    if (upper(latest?.employment_status, 40) === "ACTIVE" && latestGrant?.candidateId === candidateId && latestGrant?.assignmentId === assignment.id) {
+      return { ok: true, accessRole: accessCode, alreadyComplete: true };
+    }
+    if (latest?.active !== true || latest?.authorized !== true || latest?.portal_access !== true) {
+      for (const roleId of managedRoleIds) {
+        await authorization.removeRole(roleId, memberId, { suppressAuth: true });
+      }
+    }
+    throw new SkandiError("HR_ONBOARDING_EMPLOYEE_CHANGED", "The employee changed while onboarding was finishing. Refresh and retry to reconcile access.");
+  }
+  await recruitingAudit(actorId, "ONBOARDING_STAFF_ACCESS_GRANTED", "candidate", candidate.applicant_id || candidate.id, {
+    agentUserId: employee.id, jobRoleId: assignment.role_id, accessRole: accessCode
+  });
+  return { ok: true, accessRole: accessCode };
 }
 
 export async function saveRecruitingHistoryCore(input = {}) {

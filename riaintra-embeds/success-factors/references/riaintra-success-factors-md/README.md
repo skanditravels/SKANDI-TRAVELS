@@ -3,19 +3,14 @@
 > Current document: `riaintra-embeds/success-factors/references/riaintra-success-factors-md/README.md`. Original reference: `HTML_REF/riaintra/Success Factors.md`.
 
 
-- 2026-10-30 — Removed the embedded Wix logo URL from the staff ID card and retained its unassigned asset slot as [LEAVE_PLACEHOLDER].
 
 ## CHANGE LOG (append-only)
 
-- 2026-11-08 — New recruiting hires receive a normalized `firstname.lastname@skanditravels.com` planned corporate address. The existing case-insensitive unique staff-email index guards concurrent reservations; conflicts require HR review. Google Workspace provisioning remains planned and inactive, and no Google request is sent. The candidate's personal email remains separate, and their existing candidate email is used for Wix sign-in and password setup until a future verified mailbox transition. Existing staff login behavior is retained. Actual mailbox availability and end-to-end live onboarding require verification; country-specific onboarding and activation gates remain incomplete.
-
-- 2026-11-08 — New employee SK-IDs are created by the canonical backend from first and last initials and four random digits. Nordic/European initials are normalized; the database uniqueness constraint remains authoritative and concurrent collisions are retried. Existing identifiers are unchanged. The active employee form shows the SK-ID as read-only. The broader country-specific hiring and compliance pipeline remains incomplete.
-
-- 2026-11-08 — The active recruiting tables also suppress Wix member and contact IDs when older backend responses contain them, and candidate names recognize the existing database field names.
-
-- 2026-11-08 — The active SuccessFactors sidecar and canonical recruiting backend now start staff account provisioning when an authorized HR manager marks a candidate Hired, using an explicitly supplied staff login email. Existing candidate accounts are checked before linking. Wix member identifiers remain backend-only; the employee form exposes SK-ID. The older HTML payload below is retained as historical reference; see the active `riaintra-embeds/success-factors/success-factors.js` and `src/backend/SKANDI_CORE/orgStructure.js`. Live hire and password setup remain unverified.
+- 2026-10-30 — Removed the embedded Wix logo URL from the staff ID card and retained its unassigned asset slot as [LEAVE_PLACEHOLDER].
 
 - 2026-10-28 UTC — Updated `riaintra-embeds/success-factors/success-factors.receiver.html` to follow the current shared receiver pattern with page-specific startup, progress and failure messages for **Success Factors** (`/riaintra/success-factors`). The expected route matches `src/public/siteMap.js`; master-page handshake, staff authorization, manifest/SHA-256 checks and nested-iframe rejection remain intact.
+
+- 2026-11-07 — The current V12 SuccessFactors source triplet adds Recruiting → Onboarding → Complete onboarding and editing existing task status. The page forwards `CAREERS_COMPLETE_ONBOARDING` to `orgStructure.web`. HR confirmation and the effective assignment control staff activation. The embedded historical HTML below predates this action and is retained as a reference.
 
 
 | Field | Value |
