@@ -15,6 +15,7 @@ import { restRequest } from "backend/SKANDI_CORE/supabaseServer";
 import { getSuccessFactorsApps, requireStaffPortalSessionCore } from "backend/SKANDI_CORE/staffAuth";
 import { members, authentication as memberAuthentication } from "@wix/members";
 import { auth } from "@wix/essentials";
+import { randomInt } from "crypto";
 import { SkandiError, errorCode } from "backend/SKANDI_CORE/platformErrors";
 import {
   firstRow,
@@ -1156,19 +1157,32 @@ async function provisionWixMemberForAgent(agent, { sendPasswordEmail = true, onl
   };
 }
 
-async function uniqueSkId(prefix = "SK") {
-  const cleanPrefix = upper(prefix, 2).replace(/[^A-Z]/g, "").padEnd(2, "S").slice(0, 2);
+function skIdInitials(firstName, lastName) {
+  const initial = (value) => {
+    const normalized = text(value, 120).trim().normalize("NFKD")
+      .replace(/[Øø]/g, "O").replace(/[Ææ]/g, "A").replace(/[Œœ]/g, "O")
+      .replace(/[Łł]/g, "L").replace(/[ĐđÐð]/g, "D").replace(/[Þþ]/g, "T")
+      .replace(/[ß]/g, "S").replace(/[\u0300-\u036f]/g, "").toUpperCase();
+    return /^[A-Z]/.test(normalized) ? normalized[0] : "";
+  };
+  const prefix = initial(firstName) + initial(lastName);
+  if (prefix.length !== 2) throw new SkandiError("HR_SKID_NAME_INITIAL_INVALID", "A Latin initial is required for each name.", { publicMessage: "First and last name must each begin with a supported letter to generate an SK-ID." });
+  return prefix;
+}
+
+async function uniqueSkId(firstName, lastName) {
+  const cleanPrefix = skIdInitials(firstName, lastName);
   for (let attempt = 0; attempt < 60; attempt += 1) {
-    const candidate = `${cleanPrefix}${String(Math.floor(1000 + Math.random() * 9000))}`;
+    const candidate = `${cleanPrefix}${String(randomInt(0, 10000)).padStart(4, "0")}`;
     const exists = firstRow(await select("agent_users", { select: "id", sk_id: `eq.${candidate}`, limit: 1 }));
     if (!exists) return candidate;
   }
   throw new SkandiError("HR_SKID_GENERATION_FAILED", "Could not generate a unique SK-ID.", { publicMessage: "Could not generate a unique SK-ID. Try again." });
 }
 
-export async function generateEmployeeSkIdCore({ prefix = "SK" } = {}) {
+export async function generateEmployeeSkIdCore({ firstName = "", lastName = "" } = {}) {
   await requireHr({ manage: true });
-  return { ok: true, skId: await uniqueSkId(prefix) };
+  return { ok: true, skId: await uniqueSkId(firstName, lastName) };
 }
 
 export async function createEmployeeCore(input = {}) {
@@ -1191,16 +1205,13 @@ export async function createEmployeeCore(input = {}) {
     throw new SkandiError("HR_EMPLOYEE_EMAIL_EXISTS", "Employee email already exists.", { publicMessage: "An employee already uses that corporate email." });
   }
 
-  let skId = normalizeSkId(input.skId);
-  if (skId && !/^[A-Z]{2}\d{4}$/.test(skId)) {
-    throw new SkandiError("HR_SKID_INVALID", "SK-ID must use AA0000 format.", { publicMessage: "SK-ID must use the format AA0000." });
-  }
-  if (!skId) skId = await uniqueSkId(input.skIdPrefix || "SK");
-  const skidDuplicate = firstRow(await select("agent_users", { select: "id", sk_id: `eq.${skId}`, limit: 1 }));
-  if (skidDuplicate) throw new SkandiError("HR_SKID_EXISTS", "SK-ID already exists.", { publicMessage: "That SK-ID is already assigned." });
-
   const now = new Date().toISOString();
-  const inserted = firstRow(await restRequest({
+  let skId = "";
+  let inserted = null;
+  for (let attempt = 0; attempt < 5 && !inserted; attempt += 1) {
+    skId = await uniqueSkId(firstName, lastName);
+    try {
+      inserted = firstRow(await restRequest({
     table: "agent_users",
     method: "POST",
     body: {
@@ -1239,7 +1250,13 @@ export async function createEmployeeCore(input = {}) {
       },
       updated_at: now
     }
-  }));
+      }));
+    } catch (error) {
+      // A concurrent hire can claim the same ID after the availability check.
+      // Retry only when the unique violation is specifically for that SK-ID.
+      if (error?.supabase?.code !== "23505" || !firstRow(await select("agent_users", { select: "id", sk_id: `eq.${skId}`, limit: 1 }))) throw error;
+    }
+  }
   if (!inserted?.id) throw new SkandiError("HR_EMPLOYEE_CREATE_FAILED", "Employee row was not created.");
 
   let wixMember;
