@@ -95,6 +95,7 @@ These actual repository controllers are preserved. No new route or build is inve
 - `src/pages/Notifications.blgc5.js`
 - `src/pages/Policy Documents.bd8ok.js`
 - `src/pages/RIAINTRA Policies.k053q.js`
+- `src/pages/SKANDI Club Log In.bytg4.js`
 - `src/pages/SKANDI Club Support.yk7x3.js`
 - `src/pages/SKANDI Language & Currency.m4h84.js`
 - `src/pages/SKANDI Product.h0gju.js`
