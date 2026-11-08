@@ -952,6 +952,16 @@ html, body { width: 100% !important; margin: 0 !important; max-width: none !impo
 #riaintra-global-header-root .shellbar { position: absolute; }
 #altea-global-footer-root .status-bar { position: relative; }
 
+/* Desktop internal chrome follows the document instead of framing a fixed viewport. */
+@media (min-width: 1021px) {
+  [data-skandi-chrome="riaintra"], [data-skandi-chrome="altea"] {
+    height: auto; min-height: 100vh; min-height: 100dvh; overflow: visible;
+  }
+  [data-skandi-chrome="riaintra"] #skandi-app-root,
+  [data-skandi-chrome="altea"] #skandi-app-root { height: auto; overflow: visible; }
+}
+
+
 /* Important declarations in this layer also override important page-specific control styles. */
 @layer skandi-form-size {
   input:not([type="hidden"]), select, textarea, [role="textbox"][contenteditable="true"] {
