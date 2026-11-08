@@ -1045,7 +1045,7 @@ function memberSummary(result) {
   };
 }
 
-async function findWixMemberByCorporateEmail(email) {
+export async function findWixMemberByCorporateEmail(email) {
   const cleanEmail = normalizeCorporateEmail(email);
   const pageSize = 100;
   let offset = 0;
