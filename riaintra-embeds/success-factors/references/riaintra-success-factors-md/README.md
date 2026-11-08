@@ -7,7 +7,7 @@
 
 ## CHANGE LOG (append-only)
 
-- 2026-11-08 — The active recruiting tables also suppress Wix member and contact IDs when older backend responses contain them.
+- 2026-11-08 — The active recruiting tables also suppress Wix member and contact IDs when older backend responses contain them, and candidate names recognize the existing database field names.
 
 - 2026-11-08 — The active SuccessFactors sidecar and canonical recruiting backend now start staff account provisioning when an authorized HR manager marks a candidate Hired, using an explicitly supplied staff login email. Existing candidate accounts are checked before linking. Wix member identifiers remain backend-only; the employee form exposes SK-ID. The older HTML payload below is retained as historical reference; see the active `riaintra-embeds/success-factors/success-factors.js` and `src/backend/SKANDI_CORE/orgStructure.js`. Live hire and password setup remain unverified.
 

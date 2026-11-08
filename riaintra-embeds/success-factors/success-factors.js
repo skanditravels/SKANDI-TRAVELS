@@ -2453,13 +2453,13 @@
     function recordName(record = {}) {
       return String(firstRecordValue(
         record,
-        ["displayName", "fullName", "name", "formalName"],
-        [record.firstName, record.lastName].filter(Boolean).join(" ")
+        ["displayName", "display_name", "fullName", "full_name", "name", "formalName"],
+        [record.firstName || record.first_name, record.lastName || record.last_name].filter(Boolean).join(" ")
       ) || "Unnamed employee");
     }
 
     function recordInitials(record = {}) {
-      const parts = [record.firstName, record.lastName].filter(Boolean);
+      const parts = [record.firstName || record.first_name, record.lastName || record.last_name].filter(Boolean);
       if (parts.length) return parts.map(value => String(value).charAt(0)).join("").slice(0, 2).toUpperCase();
       return recordName(record).split(/\s+/).filter(Boolean).slice(0, 2).map(value => value.charAt(0)).join("").toUpperCase() || "—";
     }
