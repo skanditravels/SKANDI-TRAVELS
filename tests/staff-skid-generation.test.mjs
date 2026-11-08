@@ -54,3 +54,12 @@ test('other uniqueness errors are not retried or hidden',async()=>{
   await assert.rejects(h.create({firstName:'Samuel',lastName:'Higberg',corporateEmail:'samuel@example.test'}),/other unique constraint/);
   assert.equal(h.posts(),1);
 });
+test('the planned corporate address uses the unique email field while Wix sign-in and personal email remain separate',async()=>{
+  const h=harness();
+  await h.create({firstName:'Ada',lastName:'Jones',corporateEmail:'ada.jones@skanditravels.com',personalEmail:'ada@example.test',wixLoginEmail:'ada@example.test'});
+  assert.equal(h.inserted[0].corporate_email_address,'ada.jones@skanditravels.com');
+  assert.equal(h.inserted[0].email,'ada.jones@skanditravels.com');
+  assert.equal(h.inserted[0].payload.successFactors.personalEmail,'ada@example.test');
+  assert.equal(h.inserted[0].payload.successFactors.wixLoginEmail,'ada@example.test');
+  assert.equal(h.inserted[0].payload.successFactors.workspaceProvisioningStatus,'PLANNED');
+});
