@@ -23,7 +23,8 @@ const obj = x => x && typeof x==='object' && !Array.isArray(x) ? x : {};
 const payloadOf = msg => ({...obj(msg),...obj(msg.payload)});
 const clean = (value,max=5000) => String(value??'').trim().slice(0,max);
 const safePath = value => { const path=clean(value,1000);return path.startsWith('/')&&!path.startsWith('//')&&!/[\\\x00-\x1f]/.test(path)?path:''; };
-function err(error){return clean(error?.publicMessage||error?.message||'Support action failed.',500)}
+function errorReference(){return `SK-SUP-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2,8).toUpperCase()}`}
+function err(reference){return `Sorry, we couldn’t complete your request. Please try again. Error ID: ${reference}`}
 function standardInput(value={}){return {...obj(value),source:HELP_SOURCE_TAG,sourceChannel:HELP_SOURCE_CHANNEL,sourcePage:'/about/support'};}
 function post(html,type,payload={},requestId='') { if(html)html.postMessage({source:PARENT_SOURCE,type,requestId,payload:{...obj(payload),requestId}}); }
 
@@ -67,7 +68,7 @@ $w.onReady(function(){
         case 'PUBLIC_SUPPORT_NAVIGATE':{const path=safePath(payload.path||message.path);if(path)wixLocationFrontend.to(path);return}
         default:return;
       }
-    }catch(e){console.error('[SKANDI Help] action failed',clean(message.type,90));post(help,'PUBLIC_SUPPORT_ERROR',{action:clean(message.type,120),message:err(e)},requestId);post(chat,'SUPPORT_CHAT_ERROR',{action:clean(message.type,120),message:err(e)},requestId)}
+    }catch(e){const reference=errorReference();console.error('[SKANDI Help] action failed',clean(message.type,90),reference);post(help,'PUBLIC_SUPPORT_ERROR',{action:clean(message.type,120),message:err(reference)},requestId);post(chat,'SUPPORT_CHAT_ERROR',{action:clean(message.type,120),message:err(reference)},requestId)}
   }
   async function handleChat(event){
     const message=obj(event?.data);if(message.source!==CHAT_SOURCE)return;
@@ -86,7 +87,7 @@ $w.onReady(function(){
         case 'SUPPORT_CHAT_NAVIGATE':{const path=safePath(payload.path||message.path);if(path)wixLocationFrontend.to(path);return}
         default:return;
       }
-    }catch(e){console.error('[SKANDI Alexandra] action failed',clean(message.type,90));post(chat,'SUPPORT_CHAT_ERROR',{action:clean(message.type,120),message:err(e)},requestId)}
+    }catch(e){const reference=errorReference();console.error('[SKANDI Alexandra] action failed',clean(message.type,90),reference);post(chat,'SUPPORT_CHAT_ERROR',{action:clean(message.type,120),message:err(reference)},requestId)}
   }
   help.onMessage(event=>{
     const source=obj(event?.data).source;

@@ -1,6 +1,7 @@
 # Customer Service Desk — INFO / LOG
 
 - Canonical route: `/riaintra/success-factors/service-desk`; supplied component: `#customerServiceDeskEmbed`.
+- 2026-11-08 — The LiveKit session uses the canonical backend’s Wix-compatible signed-token and explicit-dispatch transport. Support audio now displays connected only after the room joins and microphone access succeeds; ending audio mutes the microphone. Hold is unavailable, and this room audio does not place telephone calls. The active JS sidecars supersede the historical complete HTML below. Automated tests cover permission failure; authenticated, two-party live audio and staff authorization remain to be verified.
 - 2026-11-08 — The active service-desk sidecar retries initial startup a limited number of times and stops the automatic case-refresh loop when bootstrap or list operations fail. The complete HTML below is the earlier reference; the active source is `skandi-service-desk.html` plus its CSS and JS sidecars. Staff authorization is unchanged. Live staff verification remains required.
 - 2026-11-06 — Imported the supplied agent workspace without removing its LiveKit and canonical support bridge behaviors. Wix editor inspection confirmed page code `Customer Service Desk.benbs.js` and component `#customerServiceDeskEmbed`; published status, staff authorization, LiveKit and messaging require live verification. The earlier reference at `skandi-embeds/_unregistered/benbs` remains historical.
 

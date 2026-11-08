@@ -203,6 +203,7 @@ $w.onReady(function () {
           const caseId = caseIdOf(payload);
           activeCaseId = caseId;
           const result = await getAgentSupportCase({ caseId });
+          if (message.type === "AGENT_CALL_START" && (!result?.livekitSession?.url || !result?.livekitSession?.token)) throw new Error("Support audio could not be started.");
           post(html, message.type === "AGENT_CALL_START" ? "AGENT_LIVEKIT_SESSION" : "AGENT_CASE_DETAIL", result, requestId);
           return;
         }

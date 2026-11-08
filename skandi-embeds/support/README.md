@@ -10,7 +10,7 @@
 - **Route:** `/about/support`
 - **Wix page:** `How can we help_.k0iqp`
 - **Primary HTML component:** `#skandiHelpCenterEmbed`
-- **Support chat HTML component:** `#skandiSupportChatEmbed`
+- **Support chat HTML component:** shared `#skandiHelpCenterEmbed` (the former separate `#skandiSupportChatEmbed` binding is superseded).
 - **Primary child source:** `SKANDI_SUPPORT_PUBLIC`
 - **Chat child source:** `SKANDI_SUPPORT_CHAT`
 - **Canonical backend:** `/src/backend/SKANDI_CORE/customerSupport.web.js` → `/src/backend/SKANDI_CORE/customerSupport.js`
@@ -18,6 +18,7 @@
 - **Live support provider:** LiveKit / LiveKit Agents
 
 ### Change log
+- 2026-11-08 — Replaced the Wix-incompatible LiveKit SDK dependency within the canonical backend with short-lived room-scoped signed tokens and the documented explicit dispatch API. The chat now reports connection failure without displaying a false greeting and retains unsent text. The page controller emits a branded error and trace reference. Supporting file selection is disabled because the prior form sent filenames only; no private attachment upload has been verified. The historical HTML below is unchanged. Requires published Wix and live provider verification; Wix currently reports missing `SupportCategories` and `SupportHelpArticles` collections.
 - 2026-11-08 — The active compiler now mounts the existing shared Alexandra chat inside the Help Center's primary `#skandiHelpCenterEmbed`. The current Wix controller dispatches both message sources on that component and uses the canonical LiveKit session for the integrated chat. This supersedes the two-component build blocker; the historical complete HTML below remains a reference. Automated bridge/build tests passed; live chat and provider verification are required.
 - 2026-09-24 — B-011.1: Restyled the supplied Help Center into the shared customer B-011 palette; preserved public support fields/contracts; moved category/topic ownership to canonical Support bootstrap; retained local workflow fallbacks; connected Popular Help Topics/search to canonical Support articles; preserved profile prefill, Alexandra launch, signed-in human handoff, My Support Cases, SKANDI Club login and parent-routed Privacy navigation; no second backend/provider/schema was introduced.
 - 2026-10-12 — Standard Help Center cases now carry explicit durable `help-center` / `HELP_CENTER` source identity through form, shared-chat form and human-handoff creation paths. This lets the master Support Center rank signed-in Member HelpDesk work above standard public cases without reclassifying it as an emergency. STATICALLY VERIFIED; REQUIRES LIVE TEST.

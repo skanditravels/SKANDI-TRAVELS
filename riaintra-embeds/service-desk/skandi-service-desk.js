@@ -1128,46 +1128,69 @@ $("#talkBtn").onclick = () => {
   $("#callAvatar").textContent = u?.initials || "?";
   $("#callName").textContent = u?.name || "Unknown traveler";
   $("#callPhone").textContent = u?.phone || "No phone number";
-  $("#callStatus").textContent = "Ready to call";
+  $("#callStatus").textContent = "Ready to join support audio";
   $("#callTimer").textContent = "00:00";
   $("#disposition").classList.add("hidden");
   $("#callPanel").classList.add("open");
 };
 
-$("#closeCall").onclick = () => $("#callPanel").classList.remove("open");
+$("#closeCall").onclick = () => {
+  window.dispatchEvent(new CustomEvent("skandi-support-audio-end"));
+  if (S.call.active) {
+    const t = ticket(S.call.ticketId);
+    post("AGENT_CALL_END", { ticketId: t?.externalId || t?.id, caseId: t?.caseId, duration: S.call.seconds });
+  }
+  S.call.active = false;
+  clearInterval(S.call.timer);
+  $("#callMain").disabled = false;
+  $("#callPanel").classList.remove("open");
+};
 
+// A support-room connection is not a telephone call. Do not show a
+// connected state until the LiveKit client has joined and enabled audio.
 $("#callMain").onclick = () => {
   const t = ticket(S.call.ticketId);
   if (!S.call.active) {
-    S.call.active = true;
-    S.call.seconds = 0;
-    $("#callStatus").textContent = "Connected";
-    S.call.timer = setInterval(() => {
-      S.call.seconds += 1;
-      $("#callTimer").textContent = `${String(Math.floor(S.call.seconds / 60)).padStart(2, "0")}:${String(S.call.seconds % 60).padStart(2, "0")}`;
-    }, 1000);
-    toast("Call connected", user(t?.requesterId)?.name || "Traveler");
-    post("AGENT_CALL_START", { ticketId: t?.externalId || t?.id, caseId: t?.caseId, phone: user(t?.requesterId)?.phone });
+    if (!t) return;
+    $("#callStatus").textContent = "Connecting to support audio…";
+    $("#callMain").disabled = true;
+    window.dispatchEvent(new CustomEvent("skandi-support-audio-start"));
+    post("AGENT_CALL_START", { ticketId: t.externalId || t.id, caseId: t.caseId });
   } else {
+    window.dispatchEvent(new CustomEvent("skandi-support-audio-end"));
     S.call.active = false;
     clearInterval(S.call.timer);
-    $("#callStatus").textContent = "Call ended";
+    $("#callStatus").textContent = "Audio ended";
     $("#disposition").classList.remove("hidden");
-    toast("Call ended", $("#callTimer").textContent);
     post("AGENT_CALL_END", { ticketId: t?.externalId || t?.id, caseId: t?.caseId, duration: S.call.seconds });
   }
 };
-
-$("#muteBtn").onclick = e => e.target.classList.toggle("primary");
-$("#holdBtn").onclick = e => {
-  e.target.classList.toggle("primary");
-  $("#callStatus").textContent = e.target.classList.contains("primary") ? "On hold" : "Connected";
-};
+window.addEventListener("skandi-support-audio-ready", () => {
+  if (S.call.active) return;
+  S.call.active = true;
+  S.call.seconds = 0;
+  $("#callMain").disabled = false;
+  $("#callStatus").textContent = "Connected to support audio";
+  S.call.timer = setInterval(() => {
+    S.call.seconds += 1;
+    $("#callTimer").textContent = `${String(Math.floor(S.call.seconds / 60)).padStart(2, "0")}:${String(S.call.seconds % 60).padStart(2, "0")}`;
+  }, 1000);
+});
+window.addEventListener("skandi-support-audio-failed", () => {
+  S.call.active = false;
+  clearInterval(S.call.timer);
+  $("#callMain").disabled = false;
+  $("#callStatus").textContent = "Couldn’t connect support audio. Try again.";
+});
+$("#muteBtn").onclick = () => window.dispatchEvent(new CustomEvent("skandi-support-audio-mute"));
+window.addEventListener("skandi-support-audio-mute-changed", e => $("#muteBtn").classList.toggle("primary", e.detail?.muted === true));
+$("#holdBtn").disabled = true;
+$("#holdBtn").title = "Hold is unavailable for support audio";
 
 $("#saveCall").onclick = () => {
   const t = ticket(S.call.ticketId);
   if (!t) return;
-  const message = { id: "call" + Date.now(), authorId: ensureSessionAgent(), authorName: S.session.agentName || "Support Agent", authorInitials: S.session.agentInitials || initials(S.session.agentName), kind: "public", channel: "voice", at: new Date().toISOString(), body: `Call recording · ${$("#callTimer").textContent}\nOutcome: ${$("#outcome").value}\n${$("#callNotes").value}` };
+  const message = { id: "call" + Date.now(), authorId: ensureSessionAgent(), authorName: S.session.agentName || "Support Agent", authorInitials: S.session.agentInitials || initials(S.session.agentName), kind: "public", channel: "voice", at: new Date().toISOString(), body: `Support audio · ${$("#callTimer").textContent}\nOutcome: ${$("#outcome").value}\n${$("#callNotes").value}` };
   t.history.push(message);
   t.updatedAt = new Date().toISOString();
   $("#callPanel").classList.remove("open");
@@ -1407,6 +1430,7 @@ window.addEventListener("message", event => {
 
   if (message.type === "AGENT_ERROR") {
     const failedAction = String(envelope.action || "");
+    if (failedAction === "AGENT_CALL_START") window.dispatchEvent(new CustomEvent("skandi-support-audio-failed"));
     if (["AGENT_READY", "AGENT_REQUEST_BOOTSTRAP", "AGENT_LIST_CASES", "AGENT_REFRESH_CASES"].includes(failedAction)) bootstrapSettled = true;
     if (String(envelope.action || "").startsWith("AGENT_DUFFEL_")) {
       toast("Booking / Duffel action failed", envelope.message || "The backend did not complete this action.");
