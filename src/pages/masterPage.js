@@ -6,7 +6,7 @@ import wixLocationFrontend from "wix-location-frontend";
 import wixSiteFrontend from "wix-site-frontend";
 import wixWindowFrontend, { consentPolicy } from "wix-window-frontend";
 import { currentMember, authentication } from "wix-members-frontend";
-import { local, memory } from "wix-storage-frontend";
+import { local, memory, session } from "wix-storage-frontend";
 import { createStaffActivitySession } from "public/riaintraSession.js";
 import { getCustomerHeaderSession, subscribeCustomerNewsletter } from "backend/SKANDI_CORE/customerSession.web";
 import { getAlteaLaunchpadApps, getStaffPortalSession } from "backend/SKANDI_CORE/staffAuth.web";
@@ -1503,6 +1503,8 @@ function pushConfigToAll() {
   for (const embed of allHtmlComponents()) pushMasterConfig(embed);
 }
 $w.onReady(async function () {
+  // Non-sensitive presentation assets for the Club login lightbox.
+  try { session.setItem("SKANDI_CLUB_BRAND", JSON.stringify({ white:MASTER_CONFIG.brand.assets.logos.clubWhite, navy:MASTER_CONFIG.brand.assets.logos.clubNavy, hero:MASTER_CONFIG.brand.assets.images.clubLoginHero })); } catch (_) {}
   let closeLogoutPending = false;
   try {
     closeLogoutPending = local.getItem(RIAINTRA_EXIT_LOGOUT_PENDING_KEY) === "yes";
