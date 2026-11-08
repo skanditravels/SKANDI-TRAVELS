@@ -3,7 +3,8 @@
 // Single source of truth for public/internal routes, global chrome and Media Control page/section registration.
 
 export const SITE_MAP = Object.freeze({
-  home: "/", search: "/search", flights: "/flights", carRental: "/car-rental",
+  home: "/",
+  search: "/search", flights: "/flights", carRental: "/car-rental",
   hotels: "/hotels", packages: "/packages", cruises: "/cruises", tours: "/tours-activities",
   activities: "/tours-activities", destinations: "/destinations",
   travelInfo: "/travel-info", transfers: "/travel-info?section=transfers", skandiCollection: "/skandi-collection",
@@ -185,7 +186,7 @@ export const PAGE_BUILD_INTEGRATIONS = Object.freeze({
     "controller": "src/pages/masterPage.js",
     "embedIds": ["#cruisesEmbed"],
     "sources": ["SKANDI_CRUISES"],
-    "note": "Wix page, cruise catalogue tables and the approved provider sync must be configured before publication."
+    "note": "SKANDI Cruises page, cruise catalogue tables and the approved provider sync must be configured before publication."
   },
   "flights": {
     "controller": "src/pages/masterPage.js",
