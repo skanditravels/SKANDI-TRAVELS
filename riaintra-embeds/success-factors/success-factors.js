@@ -2453,13 +2453,13 @@
     function recordName(record = {}) {
       return String(firstRecordValue(
         record,
-        ["displayName", "fullName", "name", "formalName"],
-        [record.firstName, record.lastName].filter(Boolean).join(" ")
+        ["displayName", "display_name", "fullName", "full_name", "name", "formalName"],
+        [record.firstName || record.first_name, record.lastName || record.last_name].filter(Boolean).join(" ")
       ) || "Unnamed employee");
     }
 
     function recordInitials(record = {}) {
-      const parts = [record.firstName, record.lastName].filter(Boolean);
+      const parts = [record.firstName || record.first_name, record.lastName || record.last_name].filter(Boolean);
       if (parts.length) return parts.map(value => String(value).charAt(0)).join("").slice(0, 2).toUpperCase();
       return recordName(record).split(/\s+/).filter(Boolean).slice(0, 2).map(value => value.charAt(0)).join("").toUpperCase() || "—";
     }
@@ -2562,7 +2562,7 @@
     }
 
     function genericColumns(records) {
-      const blocked = /password|secret|token|credential|nationalid|passportnumber|accountnumber|routingnumber|iban/i;
+      const blocked = /password|secret|token|credential|nationalid|passportnumber|accountnumber|routingnumber|iban|wix.?member|^member_?id$|^contact_?id$|^_?id$/i;
       const preferred = [
         "name", "title", "status", "type", "category", "employeeId", "skId",
         "period", "date", "createdAt", "updatedAt", "amount", "currency", "owner"
@@ -3595,7 +3595,7 @@
       const nextIndex = Math.min(Math.max(RECRUITING_STAGES.findIndex(([value]) => value === slugify(stage, stage)), 0) + 1, RECRUITING_STAGES.length - 1);
       const nextStage = RECRUITING_STAGES[nextIndex]?.[0] || "screening";
       const fields = Object.entries(candidate)
-        .filter(([key, value]) => !/password|secret|token|credential|wix.?member|^member_?id$|^contact_?id$/i.test(key) && (value === null || typeof value !== "object"))
+        .filter(([key, value]) => !/password|secret|token|credential|wix.?member|^member_?id$|^contact_?id$|^_?id$/i.test(key) && (value === null || typeof value !== "object"))
         .slice(0, 24);
       return `
         <div class="hr-object-header">
@@ -3908,7 +3908,7 @@
       if (!candidate) return;
       hrSelectedCandidateId = String(id);
       const fields = Object.entries(candidate)
-        .filter(([key, value]) => !/password|secret|token|credential|wix.?member|^member_?id$|^contact_?id$/i.test(key) && (value === null || typeof value !== "object"))
+        .filter(([key, value]) => !/password|secret|token|credential|wix.?member|^member_?id$|^contact_?id$|^_?id$/i.test(key) && (value === null || typeof value !== "object"))
         .slice(0, 18);
       const currentStage = slugify(String(firstRecordValue(candidate, ["stage", "status"], "applied")), "applied");
       const index = Math.max(0, RECRUITING_STAGES.findIndex(([stage]) => stage === currentStage));
