@@ -115,7 +115,7 @@ async function findAgentBySkId(skId) {
   if (!value) return null;
   return firstRow(await select(AGENT_TABLE, { select: agentSelect(), sk_id: `eq.${value}`, limit: 1 }));
 }
-async function findAgentByMember(member = {}) {
+export async function findAgentByMember(member = {}) {
   const wixId = safeOrValue(memberId(member));
   const wixEmail = safeOrValue(memberEmail(member));
   const filters = [];
