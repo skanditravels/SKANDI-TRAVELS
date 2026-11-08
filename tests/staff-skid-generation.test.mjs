@@ -8,6 +8,10 @@ const require = createRequire(new URL('../scripts/package.json', import.meta.url
 const { parse } = require('acorn');
 const source = await fs.readFile(new URL('../src/backend/SKANDI_CORE/orgStructure.js', import.meta.url), 'utf8');
 const nodes = parse(source, { ecmaVersion: 'latest', sourceType: 'module' }).body.map(n => n.type === 'ExportNamedDeclaration' ? n.declaration : n);
+test('SK-ID generator imports randomInt from Node crypto', () => {
+  assert.ok(nodes.some(node => node.type === 'ImportDeclaration' && node.source.value === 'crypto' &&
+    node.specifiers.some(specifier => specifier.type === 'ImportSpecifier' && specifier.imported.name === 'randomInt' && specifier.local.name === 'randomInt')));
+});
 function fn(name) { const n = nodes.find(x => x.type === 'FunctionDeclaration' && x.id.name === name); assert.ok(n, name); return source.slice(n.start,n.end); }
 
 function harness({ race = false, otherConflict = false } = {}) {
