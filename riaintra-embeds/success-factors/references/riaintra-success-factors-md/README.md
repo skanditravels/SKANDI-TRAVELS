@@ -6,6 +6,8 @@
 
 ## CHANGE LOG (append-only)
 
+- 2026-11-08 — Restored the Node crypto `randomInt` import used by SK-ID allocation after the staff-onboarding merge. SK-ID format, collision handling and the historical embed remain unchanged. Source verification only; Wix rebuild and live onboarding verification are required.
+
 - 2026-10-30 — Removed the embedded Wix logo URL from the staff ID card and retained its unassigned asset slot as [LEAVE_PLACEHOLDER].
 
 - 2026-10-28 UTC — Updated `riaintra-embeds/success-factors/success-factors.receiver.html` to follow the current shared receiver pattern with page-specific startup, progress and failure messages for **Success Factors** (`/riaintra/success-factors`). The expected route matches `src/public/siteMap.js`; master-page handshake, staff authorization, manifest/SHA-256 checks and nested-iframe rejection remain intact.

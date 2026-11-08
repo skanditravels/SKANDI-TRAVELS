@@ -11,6 +11,7 @@
 // - Recruiting, performance/learning profile data, badge control and employee/member onboarding are HR-owned here.
 // - This core does not read or write staff_payroll_profiles. Payroll owns all payroll state.
 
+import { randomInt } from "crypto";
 import { restRequest } from "backend/SKANDI_CORE/supabaseServer";
 import { getSuccessFactorsApps, requireStaffPortalSessionCore } from "backend/SKANDI_CORE/staffAuth";
 import { members, authentication as memberAuthentication } from "@wix/members";
