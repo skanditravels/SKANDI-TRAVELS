@@ -7,6 +7,7 @@
 const SOURCE = "SKANDI_SUPPORT_AGENT";
 const PARENT = "SKANDI_WIX_PARENT";
 const DEFAULT_AGENT_ID = null;
+let bootstrapSettled = false;
 
 const db = {
   views: [
@@ -1362,6 +1363,7 @@ window.addEventListener("message", event => {
     return;
   }
   if (message.type === "AGENT_BOOTSTRAP") {
+    bootstrapSettled = true;
     applyBootstrapData(payload);
     importCases(payload, false);
     rebuildDue();
@@ -1404,14 +1406,17 @@ window.addEventListener("message", event => {
   }
 
   if (message.type === "AGENT_ERROR") {
+    const failedAction = String(envelope.action || "");
+    if (["AGENT_READY", "AGENT_REQUEST_BOOTSTRAP", "AGENT_LIST_CASES", "AGENT_REFRESH_CASES"].includes(failedAction)) bootstrapSettled = true;
     if (String(envelope.action || "").startsWith("AGENT_DUFFEL_")) {
       toast("Booking / Duffel action failed", envelope.message || "The backend did not complete this action.");
       return;
     }
     settlePendingRequest(String(message.requestId || envelope.requestId || ""), false);
     renderAll();
+    if (["AGENT_READY", "AGENT_REQUEST_BOOTSTRAP", "AGENT_LIST_CASES", "AGENT_REFRESH_CASES"].includes(failedAction)) $("#topSub").textContent = "Couldn’t load support cases. Reload to try again.";
     toast("Customer service action failed", envelope.message || message.message || "The backend did not complete the request.");
-    post("AGENT_REFRESH_CASES", { queue: S.view });
+    if (!["AGENT_READY", "AGENT_REQUEST_BOOTSTRAP", "AGENT_LIST_CASES", "AGENT_REFRESH_CASES", "AGENT_SYNC"].includes(failedAction)) post("AGENT_REFRESH_CASES", { queue: S.view });
     return;
   }
 
@@ -1474,5 +1479,17 @@ requestAnimationFrame(() => {
   const c = $("#conversation");
   if (c) c.scrollTop = c.scrollHeight;
 });
-post("AGENT_READY", { tickets: db.tickets.length, activeQueue: S.view, session: S.session });
+function requestInitialBootstrap() {
+  if (!bootstrapSettled) post("AGENT_READY", { tickets: db.tickets.length, activeQueue: S.view, session: S.session });
+}
+requestInitialBootstrap();
+setTimeout(requestInitialBootstrap, 1000);
+setTimeout(requestInitialBootstrap, 3000);
+setTimeout(() => {
+  if (!bootstrapSettled) {
+    bootstrapSettled = true;
+    $("#topSub").textContent = "Couldn’t load support cases. Reload to try again.";
+    toast("Support workspace unavailable", "Reload the page to try again.");
+  }
+}, 12000);
 

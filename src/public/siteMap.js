@@ -611,16 +611,15 @@ export const PAGE_BUILD_INTEGRATIONS = Object.freeze({
   "support": {
     "controller": "src/pages/Support.k0iqp.js",
     "embedIds": [
-      "#skandiHelpCenterEmbed",
-      "#skandiSupportChatEmbed"
+      "#skandiHelpCenterEmbed"
     ],
     "sources": [
       "HELP_CENTER",
       "help-center",
       "SKANDI_SUPPORT_PUBLIC"
     ],
-    "binding": "multi-component",
-    "note": "Help Center and support chat are separate HTML components; preserve them until a verified single-component migration."
+    "components": [{ "key": "support-chat", "sourceDirectory": "skandi-embeds/global/alexandra", "stem": "skandi-alexandra-chat", "mount": "skandi-support-chat-root" }],
+    "note": "The shared support chat is compiled into the Help Center component."
   }
 });
 

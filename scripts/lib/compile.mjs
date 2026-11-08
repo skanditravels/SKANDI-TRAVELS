@@ -321,6 +321,10 @@ export async function compilePage(root,page) {
     try {
       const part=await normalizeHTML(html,css,js,{root,file:input.files[0],mount:d.mount});
       if(d.key==='mobile-nav')privateIds(part,'skandi-mobile',['status','closeBtn']);
+      if(page.key==='support'&&d.key==='support-chat') {
+        privateIds(part,'support-chat',['bagBrand','bagColor','bagTag','bagType','hasPir','pirNumber','closeBtn']);
+        part.html=part.html.replace(/(<main class="messages" id="messages" aria-live="polite">)[\s\S]*?(<\/main>)/,'$1$2');
+      }
       if(d.stem==='riaintra-header')privateIds(part,'riaintra-header',['mobileNav','desktopNav','productName']);
       if(d.stem==='altea-footer')privateIds(part,'altea-footer',['sysClock','clockTime','clockDate']);
       walk(parseFragment(part.html),n=>{const id=attr(n,'id');if(id){if(ids.has(id))throw new Error(`duplicate id="${id}" (also in ${ids.get(id)})`);ids.set(id,input.files[0]);}});
@@ -337,7 +341,8 @@ export async function compilePage(root,page) {
     } catch(e) {throw new Error(`[${page.key} / ${d.key}] ${input.files.join(', ')}: ${e.message.replaceAll(root+path.sep,'')}`);}
   }
   const pagePart=parts.find(p=>p.key===page.slug);if(!pagePart)throw new Error(`[${page.key}] Main page source did not compile.`);const style=parts.map(p=>`<style data-skandi-part="${p.key}">${safeCSS(p.css)}</style>`);
-  const shellCSS=await read(root,'skandi-embeds/global/skandi-shell.css');
+  let shellCSS=await read(root,'skandi-embeds/global/skandi-shell.css');
+  if(page.key==='support')shellCSS+='\n#skandi-support-chat-root{position:fixed;inset:0;z-index:999;pointer-events:none}\n';
   const shellJS=await read(root,'skandi-embeds/global/skandi-shell.js');new Script(shellJS,{filename:'skandi-shell.js'});
   const render=p=>{
     if(!p)return '';
@@ -347,6 +352,7 @@ export async function compilePage(root,page) {
     return `<div id="${p.mount}">${content}</div>`;
   };
   const header=parts.find(p=>p.key==='header'),footer=parts.find(p=>p.key==='footer'),mobile=parts.find(p=>p.key==='mobile-nav');
+  const pageComponents=parts.filter(p=>(page.components||[]).some(c=>c.key===p.key));
   const attrs=(list,omitLanguage=false)=>list.filter(a=>!omitLanguage||!['lang','dir'].includes(a.name)).map(a=>` ${a.name}="${escapeHTML(a.value)}"`).join('');
   const pageBodyAttrs=attrs(pagePart.documentAttrs.body),pageHTMLAttrs=attrs(pagePart.documentAttrs.html,true);
   const lang=pagePart.documentAttrs.html.find(a=>a.name==='lang')?.value||'en';
@@ -359,7 +365,7 @@ export async function compilePage(root,page) {
     new Script(runtime,{filename:'skandi-website-design.js'});
     scripts.push(`<script data-skandi-part="website-design">window.SKANDI_WEBSITE_DESIGN_CONFIG=${safeJS(JSON.stringify({pageKey:page.key,path:page.route}))};${safeJS(runtime)}</script>`);
   }
-  const html=`<!doctype html>\n<html lang="${escapeHTML(lang)}"${mobile?' data-skandi-mobile-navigation':''}${dir?` dir="${escapeHTML(dir)}"`:''}${pageHTMLAttrs}>\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">\n<meta name="theme-color" content="#022e64">\n<title>${escapeHTML(pagePart.title || page.title+' | SKANDI')}</title>\n<link rel="preconnect" href="https://fonts.googleapis.com">\n<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">\n${[...new Set(parts.flatMap(p=>[p.headHTML,...p.external]).filter(Boolean))].join('\n')}\n${style.join('\n')}\n<style data-skandi-part="shell">${safeCSS(shellCSS)}</style>\n</head>\n<body${pageBodyAttrs}>\n<div id="skandi-shell-root" data-skandi-page="${page.slug}" data-skandi-key="${page.key}" data-skandi-family="${page.family}" data-skandi-chrome="${page.chrome}">\n${render(header)}\n${render(pagePart)}\n${render(footer)}\n${render(mobile)}\n</div>\n<script data-skandi-part="skandi-shell-runtime">${safeJS(shellJS)}</script>\n${scripts.join('\n')}\n${babelScripts.length?`${babelScripts.join('\n')}\n`:''}${moduleScripts.join('\n')}\n</body>\n</html>\n`;
+  const html=`<!doctype html>\n<html lang="${escapeHTML(lang)}"${mobile?' data-skandi-mobile-navigation':''}${dir?` dir="${escapeHTML(dir)}"`:''}${pageHTMLAttrs}>\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">\n<meta name="theme-color" content="#022e64">\n<title>${escapeHTML(pagePart.title || page.title+' | SKANDI')}</title>\n<link rel="preconnect" href="https://fonts.googleapis.com">\n<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">\n${[...new Set(parts.flatMap(p=>[p.headHTML,...p.external]).filter(Boolean))].join('\n')}\n${style.join('\n')}\n<style data-skandi-part="shell">${safeCSS(shellCSS)}</style>\n</head>\n<body${pageBodyAttrs}>\n<div id="skandi-shell-root" data-skandi-page="${page.slug}" data-skandi-key="${page.key}" data-skandi-family="${page.family}" data-skandi-chrome="${page.chrome}">\n${render(header)}\n${render(pagePart)}\n${render(footer)}\n${render(mobile)}\n${pageComponents.map(render).join("\n")}\n</div>\n<script data-skandi-part="skandi-shell-runtime">${safeJS(shellJS)}</script>\n${scripts.join('\n')}\n${babelScripts.length?`${babelScripts.join('\n')}\n`:''}${moduleScripts.join('\n')}\n</body>\n</html>\n`;
   // Validate serialized scripts too: HTML escaping must never publish invalid JS.
   walk(parse(html),n=>{if(n.tagName==='script'&&!attr(n,'src')){const type=(attr(n,'type')||'').toLowerCase(),code=(n.childNodes||[]).map(c=>c.value||'').join('');if(type==='module')parseJS(code,{ecmaVersion:'latest',sourceType:'module'});else if(!type||['text/javascript','application/javascript'].includes(type))new Script(code,{filename:page.output});}});
   return html;

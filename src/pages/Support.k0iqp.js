@@ -6,14 +6,13 @@ import { openCustomerLogin } from 'public/customerAuthUi';
 import {
   getCustomerSupportBootstrap,
   createCustomerSupportCase,
-  startAlexandraSupportSession,
+  startAlexandraLiveKitSession,
   sendAlexandraAiMessage,
   requestCustomerHumanHandoff,
   addCustomerLiveSupportMessage
 } from 'backend/SKANDI_CORE/customerSupport.web';
 
 const HELP_EMBED_ID='#skandiHelpCenterEmbed';
-const CHAT_EMBED_ID='#skandiSupportChatEmbed';
 const HELP_SOURCE='SKANDI_SUPPORT_PUBLIC';
 const CHAT_SOURCE='SKANDI_SUPPORT_CHAT';
 const PARENT_SOURCE='SKANDI_WIX_PARENT';
@@ -29,10 +28,10 @@ function standardInput(value={}){return {...obj(value),source:HELP_SOURCE_TAG,so
 function post(html,type,payload={},requestId='') { if(html)html.postMessage({source:PARENT_SOURCE,type,requestId,payload:{...obj(payload),requestId}}); }
 
 $w.onReady(function(){
-  let help=null,chat=null;
+  let help=null;
   try{help=$w(HELP_EMBED_ID)}catch(_){}
-  try{chat=$w(CHAT_EMBED_ID)}catch(_){}
-  if(!help||!chat){console.error('[SKANDI Help] Both canonical Support embeds are required.');return}
+  if(!help){console.error('[SKANDI Help] Help Center embed is required.');return}
+  const chat=help;
   let bootstrap=null;
   async function ensureBootstrap(){if(!bootstrap)bootstrap=await getCustomerSupportBootstrap();return bootstrap}
   async function pushHelpBootstrap(requestId=''){
@@ -45,8 +44,8 @@ $w.onReady(function(){
   }
   async function openAlexandra(requestId=''){
     await pushChatBootstrap(requestId);
-    const result=await startAlexandraSupportSession({locale:clean(wixLocationFrontend.query?.lang||'en-US',40),currency:clean(wixLocationFrontend.query?.currency||'USD',12),pagePath:'/about/support'});
-    if(!result?.ok||!result?.session?.sessionId)throw new Error('Alexandra could not start.');
+    const result=await startAlexandraLiveKitSession({locale:clean(wixLocationFrontend.query?.lang||'en-US',40),currency:clean(wixLocationFrontend.query?.currency||'USD',12),pagePath:'/about/support'});
+    if(!result?.ok||!result?.session?.sessionId||!result.session.url||!result.session.token)throw new Error('Alexandra could not start.');
     post(chat,'SUPPORT_CHAT_OPEN',{mode:'ALEXANDRA',alexandraSession:result.session,loggedIn:result.loggedIn===true},requestId);
   }
   async function requestHuman(payload={},requestId=''){
@@ -54,7 +53,7 @@ $w.onReady(function(){
     const result=await requestCustomerHumanHandoff({caseId:clean(payload.caseId,160),input,reason:clean(payload.reason||'Customer requested a Human SKANDI Customer Service Agent.',2000),summary:clean(payload.summary,6000),collectedFields:obj(payload.collectedFields),transcript:clean(payload.transcript,10000)});
     post(chat,'SUPPORT_CHAT_HUMAN_HANDOFF',result,requestId);
   }
-  help.onMessage(async event=>{
+  async function handleHelp(event){
     const message=obj(event?.data);if(message.source!==HELP_SOURCE)return;
     const payload=payloadOf(message),requestId=clean(message.requestId||payload.requestId,160);
     try{
@@ -69,8 +68,8 @@ $w.onReady(function(){
         default:return;
       }
     }catch(e){console.error('[SKANDI Help] action failed',clean(message.type,90));post(help,'PUBLIC_SUPPORT_ERROR',{action:clean(message.type,120),message:err(e)},requestId);post(chat,'SUPPORT_CHAT_ERROR',{action:clean(message.type,120),message:err(e)},requestId)}
-  });
-  chat.onMessage(async event=>{
+  }
+  async function handleChat(event){
     const message=obj(event?.data);if(message.source!==CHAT_SOURCE)return;
     const payload=payloadOf(message),requestId=clean(message.requestId||payload.requestId,160);
     try{
@@ -88,5 +87,10 @@ $w.onReady(function(){
         default:return;
       }
     }catch(e){console.error('[SKANDI Alexandra] action failed',clean(message.type,90));post(chat,'SUPPORT_CHAT_ERROR',{action:clean(message.type,120),message:err(e)},requestId)}
+  }
+  help.onMessage(event=>{
+    const source=obj(event?.data).source;
+    if(source===HELP_SOURCE)return handleHelp(event);
+    if(source===CHAT_SOURCE)return handleChat(event);
   });
 });
