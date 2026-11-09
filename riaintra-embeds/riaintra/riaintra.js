@@ -2,7 +2,6 @@ const SOURCE = "SKANDI_STAFF_LOGIN";
   const PARENT_SOURCE = "SKANDI_WIX_PARENT";
 
   const cardWrap = document.getElementById("login-card-wrap");
-  const dropBtn = document.getElementById("login-drop-btn");
   const loginForm = document.getElementById("login-form");
   const loginError = document.getElementById("login-error");
   const loginNotice = document.getElementById("login-notice");
@@ -78,21 +77,12 @@ const SOURCE = "SKANDI_STAFF_LOGIN";
     usernameInput.disabled = busy;
     passwordInput.disabled = busy;
     forgotBtn.disabled = busy;
-    dropBtn.disabled = busy;
   }
 
   function showLoginCard() {
     cardWrap.style.display = "flex";
     // A parent response must not open the mobile keyboard and resize the app unprompted.
     if (!mobileView.matches) setTimeout(() => usernameInput.focus(), 80);
-  }
-
-  function toggleLoginCard() {
-    cardWrap.scrollIntoView({
-      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
-      block: "nearest"
-    });
-    setTimeout(() => usernameInput.focus(), 80);
   }
 
   function updateClock() {
@@ -224,14 +214,33 @@ const SOURCE = "SKANDI_STAFF_LOGIN";
     });
   }
 
-  dropBtn.addEventListener("click", toggleLoginCard);
-
   const passwordVisibilityBtn = document.getElementById("password-visibility");
-  const brandLogo = document.querySelector("#SK-logo img");
-  if (brandLogo) {
-    const hideMissingBrandLogo = () => { brandLogo.style.display = "none"; };
-    brandLogo.addEventListener("error", hideMissingBrandLogo);
-    if (brandLogo.complete && !brandLogo.naturalWidth) hideMissingBrandLogo();
+  const brandLogos = Array.from(document.querySelectorAll("[data-master-logo]"));
+  function setBrandLogoVisible(logo, visible) {
+    logo.hidden = !visible;
+    const fallback = document.querySelector('[data-logo-fallback="' + logo.dataset.masterLogo + '"]');
+    if (fallback) fallback.hidden = visible;
+  }
+  for (const logo of brandLogos) {
+    logo.addEventListener("load", () => setBrandLogoVisible(logo, true));
+    logo.addEventListener("error", () => setBrandLogoVisible(logo, false));
+    setBrandLogoVisible(logo, false);
+  }
+  function applyMasterLogos(brand) {
+    const logos = brand?.assets?.logos || {};
+    for (const logo of brandLogos) {
+      const url = typeof logos[logo.dataset.masterLogo] === "string" ? logos[logo.dataset.masterLogo].trim() : "";
+      if (!url) {
+        logo.removeAttribute("src");
+        setBrandLogoVisible(logo, false);
+        continue;
+      }
+      if (logo.getAttribute("src") !== url || (logo.complete && logo.naturalWidth === 0)) {
+        setBrandLogoVisible(logo, false);
+        logo.src = url;
+      }
+      if (logo.complete && logo.naturalWidth > 0) setBrandLogoVisible(logo, true);
+    }
   }
   passwordVisibilityBtn.addEventListener("click", function() {
     const visible = passwordInput.type === "text";
@@ -297,9 +306,7 @@ const SOURCE = "SKANDI_STAFF_LOGIN";
     if (event.source !== window.parent) return;
     if (data.source !== PARENT_SOURCE) return;
     if (data.type === "SKANDI_MASTER_CONFIG") {
-      const logo = document.querySelector('[data-master-logo="riaHeader"]');
-      const logoUrl = String(payload?.brand?.assets?.logos?.riaHeader || "").trim();
-      if (logo && logoUrl) logo.src = logoUrl;
+      applyMasterLogos(payload.brand);
       return;
     }
     if (data.requestId && activeRequestId && data.requestId !== activeRequestId) return;
@@ -338,7 +345,9 @@ const SOURCE = "SKANDI_STAFF_LOGIN";
     if (data.type === "STAFF_LOGIN_NOTICE") {
       showLoginCard();
       setError("");
-      setNotice(payload.message === "Secure staff login ready." ? "" : (payload.message || ""));
+      const message = payload.message || "";
+      const initialNotice = "Enter your SK-ID and password to sign in. Your session ends after 30 minutes of inactivity.";
+      setNotice(message === "Secure staff login ready." || message === initialNotice ? "" : message);
       setBusy(false);
       activeRequestId = "";
       return;
@@ -350,6 +359,5 @@ const SOURCE = "SKANDI_STAFF_LOGIN";
 
   setBusy(false);
   syncMobileViewport();
-  dropBtn.setAttribute("aria-controls", "login-card-wrap");
   post("MASTER_CONFIG_REQUEST", { context:"riaintra-login" });
   post("STAFF_LOGIN_READY", {});
