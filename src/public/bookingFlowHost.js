@@ -91,7 +91,7 @@ function allowedStep(requested,c){
 }
 function updateUrl(){
   if(!locationApi.queryParams?.add)return;
-  try{locationApi.queryParams?.remove(['cartToken']);const params={step};if(cartId)params.cartId=cartId;locationApi.queryParams.add(params)}catch(_){/* URL sync is optional; the backend cart remains authoritative. */}
+  try{locationApi.queryParams?.remove(['cartToken','payment_intent_client_secret']);const params={step};if(cartId)params.cartId=cartId;locationApi.queryParams.add(params)}catch(_){/* URL sync is optional; the backend cart remains authoritative. */}
 }
 async function goStep(next,{silentUrl=false}={}){
   step=normalStep(next);
@@ -296,7 +296,7 @@ async function startFromLocation(){
   const searchId=text(query.searchId),queryCart=text(query.cartId),queryStep=text(query.step);
   try{
     searchContext=searchId?readBookingSearch(searchId):null;
-    try{locationApi.queryParams?.remove(['cartToken'])}catch(_){}
+    try{locationApi.queryParams?.remove(['cartToken','payment_intent_client_secret'])}catch(_){}
     const restoredCart=session.getItem('SKANDI_BOOKING_CART_ID')||'';
     const restoredToken=session.getItem('SKANDI_BOOKING_CART_TOKEN')||'';
     if(queryCart){

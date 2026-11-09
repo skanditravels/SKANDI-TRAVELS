@@ -410,13 +410,14 @@ test('guest payment fails closed when confirmation delivery has not been enabled
 
 test('a card verification return restores the cart only with its same-tab capability', async () => {
   const store=new Map([['SKANDI_BOOKING_CART_ID','cart-1'],['SKANDI_BOOKING_CART_TOKEN','a'.repeat(64)]]);
-  const page=await hostHarness({cartId:'cart-1',step:'payment',payment_intent:'pi_1'},store,{
+  const page=await hostHarness({cartId:'cart-1',step:'payment',payment_intent:'pi_1',payment_intent_client_secret:'pi_1_secret_fake'},store,{
     loadBookingCart:async input=>({cartId:input.cartId,status:'PaymentPending',productType:'FLIGHT_ONLY',flow:{currentStep:'payment'}}),
     prepareBookingPayment:async input=>({cart:{cartId:input.cartId},payment:{paymentIntentId:'pi_1'}})
   });
   await page.host.startFromLocation();
   await page.host.handleMessage({source:'SKANDI_BOOKING_OFFER',type:'BOOKING_OFFER_READY'});
   assert.ok(page.messages.some(m=>m.type==='PAYMENT_SESSION_LOADED'));
+  assert.equal(page.current.payment_intent_client_secret,undefined);
   assert.equal(store.get('SKANDI_BOOKING_CART_TOKEN'),'a'.repeat(64));
 });
 
