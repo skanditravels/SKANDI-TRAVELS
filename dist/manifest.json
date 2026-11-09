@@ -35,7 +35,8 @@
       "missing": [],
       "issues": [],
       "backend": [
-        "src/backend/SKANDI_CORE/homeContent.web.js"
+        "src/backend/SKANDI_CORE/homeContent.web.js",
+        "src/backend/SKANDI_CORE/travelReference.web.js"
       ],
       "messages": [
         "BOOKING_SEARCH_UNAVAILABLE",
@@ -52,6 +53,8 @@
         "HOME_APP_REFRESH_RESULT",
         "HOME_BOOTSTRAP_RESULT",
         "HOME_ERROR",
+        "HOME_FLIGHT_PLACES_QUERY",
+        "HOME_FLIGHT_PLACES_RESULT",
         "HOME_FOCUS_SEARCH",
         "HOME_HOST_READY",
         "HOME_INVALID_CONTENT",
@@ -83,8 +86,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/home/skandi-home.receiver.html",
       "receiverFile": "skandi-embeds/home/skandi-home.receiver.html",
-      "sha256": "043a30d6333716dad81d0d1d727a54ec3351a2f35fe659cdb1ff1f85e8f711b9",
-      "bytes": 445602
+      "sha256": "617d4a46ab439da957591c9b5935498828d5d221d65bd4dc5fc9251bc35321b3",
+      "bytes": 448101
     },
     {
       "key": "search",
@@ -212,6 +215,7 @@
         "EOS_OPS_ACTION_RESULT",
         "EOS_STATION_SEARCH",
         "EOS_STATION_SEARCH_RESULT",
+        "FLIGHTS_PLACES_QUERY",
         "FLIGHTS_READY",
         "FLIGHTS_REFRESH",
         "FLIGHTS_SEARCH",
@@ -305,8 +309,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/flights/skandi-flights.receiver.html",
       "receiverFile": "skandi-embeds/flights/skandi-flights.receiver.html",
-      "sha256": "b78597c7ed11c8d9fb1b19407387f0e0a978cd6ba2ab4b0bc9d3cb468b8f7a58",
-      "bytes": 200261
+      "sha256": "3bc8d593f5532c349252b295abfeae9129f214803d3e253007a56a7787b717b9",
+      "bytes": 202183
     },
     {
       "key": "carRental",
@@ -536,6 +540,7 @@
         "EOS_OPS_ACTION_RESULT",
         "EOS_STATION_SEARCH",
         "EOS_STATION_SEARCH_RESULT",
+        "FLIGHTS_PLACES_QUERY",
         "FLIGHTS_READY",
         "FLIGHTS_REFRESH",
         "FLIGHTS_SEARCH",
@@ -1841,6 +1846,7 @@
         "EOS_OPS_ACTION_RESULT",
         "EOS_STATION_SEARCH",
         "EOS_STATION_SEARCH_RESULT",
+        "FLIGHTS_PLACES_QUERY",
         "FLIGHTS_READY",
         "FLIGHTS_REFRESH",
         "FLIGHTS_SEARCH",
@@ -2432,6 +2438,7 @@
         "EOS_OPS_ACTION_RESULT",
         "EOS_STATION_SEARCH",
         "EOS_STATION_SEARCH_RESULT",
+        "FLIGHTS_PLACES_QUERY",
         "FLIGHTS_READY",
         "FLIGHTS_REFRESH",
         "FLIGHTS_SEARCH",
@@ -3512,8 +3519,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/booking/skandi-booking-flow.receiver.html",
       "receiverFile": "skandi-embeds/booking/skandi-booking-flow.receiver.html",
-      "sha256": "173b2bca91bf3425c8e882eeb03697abd1c290392bc5683d47f5afa53001394d",
-      "bytes": 86505
+      "sha256": "e8101ed1076597832001603dd4d4f1ffd3a9185706897e4c30e83319ed516201",
+      "bytes": 109240
     },
     {
       "key": "myProfile",
@@ -4096,6 +4103,7 @@
         "EOS_OPS_ACTION_RESULT",
         "EOS_STATION_SEARCH",
         "EOS_STATION_SEARCH_RESULT",
+        "FLIGHTS_PLACES_QUERY",
         "FLIGHTS_READY",
         "FLIGHTS_REFRESH",
         "FLIGHTS_SEARCH",
