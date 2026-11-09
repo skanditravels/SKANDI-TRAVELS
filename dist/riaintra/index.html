@@ -88,7 +88,11 @@
 
     #skandi-app-root #app-header { display: flex; justify-content: space-between; align-items: center; }
     #skandi-app-root :is(#SK-logo,#SK-logo-endorsement) { display: flex; align-items: center; gap: 17px; min-width: 0; }
-    #skandi-app-root :is(#SK-logo,#SK-logo-endorsement) img { display: block; width: auto; max-width: 150px; height: 53px; object-fit: contain; }
+    #skandi-app-root #SK-logo img { display: block; width: auto; max-width: min(190px, 55%); height: 53px; object-fit: contain; object-position: left center; }
+    #skandi-app-root #SK-logo-endorsement img { display: block; width: auto; max-width: 155px; height: 35px; object-fit: contain; object-position: left center; }
+    #skandi-app-root #SK-logo [hidden], #skandi-app-root #SK-logo-endorsement [hidden] { display: none !important; }
+    #skandi-app-root .brand-wordmark-fallback { color: #fff; font-size: 22px; font-weight: 800; letter-spacing: -.04em; }
+    #skandi-app-root .brand-endorsement-fallback { color: rgba(255,255,255,.88); font-size: 13px; font-weight: 700; letter-spacing: .08em; }
     #skandi-app-root :is(#SK-logo-text,#SK-logo-text-endorsement) { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
     #skandi-app-root :is(#SK-logo-text,#SK-logo-text-endorsement) strong {
       font-size: 13px;
@@ -138,26 +142,6 @@
       font-weight: 400;
       line-height: 1.95;
     }
-    #skandi-app-root #login-drop-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 13px;
-      margin-top: 36px;
-      padding: 0;
-      color: #fff;
-      background: transparent;
-      border: 0;
-      border-bottom: 1px solid rgba(255,255,255,.55);
-      border-radius: 0;
-      padding-bottom: 12px;
-      font-size: 13px;
-      font-weight: 700;
-      letter-spacing: .1em;
-      text-transform: uppercase;
-    }
-    #skandi-app-root #login-drop-btn:hover { color: #9be6eb; border-bottom-color: #9be6eb; }
-    #skandi-app-root #login-drop-btn:disabled { cursor: not-allowed; opacity: .55; }
-    #skandi-app-root #login-drop-btn .arrow { font-size: 17px; line-height: 1; }
     #skandi-app-root .brand-bottom {
       display: flex;
       align-items: end;
@@ -215,7 +199,8 @@
       letter-spacing: -.045em;
       line-height: 1.18;
     }
-    #skandi-app-root .login-intro { margin: 0 0 42px; color: var(--sk-text-muted); font-size: 13px; line-height: 1.9; }
+    #skandi-app-root .login-intro { margin: 0 0 36px; color: var(--sk-text-muted); font-size: 13px; line-height: 1.9; }
+    #skandi-app-root .login-security { margin: 14px 0 0; color: var(--sk-text-muted); font-size: 13px; line-height: 1.7; text-align: center; }
     #skandi-app-root .field-group { margin: 0 0 24px; }
     #skandi-app-root .field-label-row { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
     #skandi-app-root .field-label-row label {
@@ -387,7 +372,8 @@
       }
       #skandi-app-root #login-left::after { width: 420px; height: 420px; right: -295px; top: -105px; }
       #skandi-app-root :is(#SK-logo,#SK-logo-endorsement) { gap: 12px; }
-      #skandi-app-root :is(#SK-logo,#SK-logo-endorsement) img { height: 41px; max-width: 125px; }
+      #skandi-app-root #SK-logo img { height: 41px; max-width: min(165px, 55%); }
+      #skandi-app-root #SK-logo-endorsement img { height: 30px; max-width: 135px; }
       #skandi-app-root :is(#SK-logo-text,#SK-logo-text-endorsement) strong { font-size: 13px; }
       #skandi-app-root :is(#SK-logo-text,#SK-logo-text-endorsement) span { font-size: 13px; }
       #skandi-app-root .brand-center { max-width: none; padding: 0; }
@@ -395,7 +381,7 @@
       #skandi-app-root .brand-eyebrow { margin: 0 0 9px; font-size: 13px; letter-spacing: .19em; }
       #skandi-app-root #login-tagline { max-width: 450px; font-size: max(13px, clamp(28px, 6.7vw, 37px)); line-height: 1.14; }
       #skandi-app-root #login-sub { max-width: 450px; margin: 11px 0 0; font-size: 13px; line-height: 1.65; }
-      #skandi-app-root #login-drop-btn, #skandi-app-root .brand-bottom { display: none; }
+      #skandi-app-root .brand-bottom { display: none; }
       #skandi-app-root #login-card-wrap {
         display: flex;
         flex: 1 0 auto;
@@ -493,7 +479,7 @@
     }
     @media (max-width: 360px) and (max-height: 640px) {
       #skandi-app-root #login-left { gap: 13px; padding-top: calc(15px + env(safe-area-inset-top, 0px)); padding-bottom: 31px; }
-      #skandi-app-root :is(#SK-logo,#SK-logo-endorsement) img { height: 36px; }
+      #skandi-app-root #SK-logo img { height: 36px; }
       #skandi-app-root .brand-rule { margin-bottom: 9px; }
       #skandi-app-root #login-sub { margin-top: 7px; }
       #skandi-app-root #login-right { padding-top: 24px; }
@@ -631,7 +617,8 @@ html, body { width: 100% !important; margin: 0 !important; max-width: none !impo
         <div id="login-left">
           <header id="app-header">
             <div id="SK-logo">
-               <img data-master-logo="riaHeader" alt="RIAINTRA logo">
+              <img data-master-logo="riaHeader" alt="RIAINTRA" hidden="">
+              <span class="brand-wordmark-fallback" data-logo-fallback="riaHeader">RIAINTRA</span>
               <div id="SK-logo-text">
                 <span>SKANDI STAFF PORTAL</span>
               </div>
@@ -642,12 +629,14 @@ html, body { width: 100% !important; margin: 0 !important; max-width: none !impo
             <p class="brand-eyebrow">The SKANDI internal network</p>
             <h1 id="login-tagline">One team.<br>One connected <em>workspace.</em></h1>
             <p id="login-sub">Your gateway to the tools, people and operations that keep SKANDI moving—across every team and destination.</p>
-            <button type="button" id="login-drop-btn">Go to staff sign in <span class="arrow" aria-hidden="true">→</span></button>
           </div>
           <div class="brand-bottom">
             <div class="brand-bottom-copy">
               <div id="SK-logo-endorsement">
-                 <img data-master-logo="[LEAVE_PLACEHOLDER]" alt="A SKANDI GROUP MEMBER"><div id="SK-logo-text-endorsement">· INTERNAL SYSTEMS</div></div>
+                <img data-master-logo="groupMemberWhite" alt="A SKANDI Group member" hidden="">
+                <span class="brand-endorsement-fallback" data-logo-fallback="groupMemberWhite">A SKANDI Group member</span>
+                <div id="SK-logo-text-endorsement">· INTERNAL SYSTEMS</div>
+              </div>
               <div>For authorized staff use only.</div>
             </div>
             <div id="header-meta"><span id="clock">LOCAL TIME</span></div>
@@ -686,6 +675,7 @@ html, body { width: 100% !important; margin: 0 !important; max-width: none !impo
                   </div>
 
                   <button type="submit" id="login-submit">Sign in to RIAINTRA</button>
+                  <p class="login-security">For your security, your session ends after 30 minutes of inactivity.</p>
                   <div class="login-actions">
                     <button type="button" id="forgot-password" class="link-button">Forgot your password?</button>
                   </div>
@@ -823,7 +813,6 @@ const SOURCE = "SKANDI_STAFF_LOGIN";
   const PARENT_SOURCE = "SKANDI_WIX_PARENT";
 
   const cardWrap = document.getElementById("login-card-wrap");
-  const dropBtn = document.getElementById("login-drop-btn");
   const loginForm = document.getElementById("login-form");
   const loginError = document.getElementById("login-error");
   const loginNotice = document.getElementById("login-notice");
@@ -899,21 +888,12 @@ const SOURCE = "SKANDI_STAFF_LOGIN";
     usernameInput.disabled = busy;
     passwordInput.disabled = busy;
     forgotBtn.disabled = busy;
-    dropBtn.disabled = busy;
   }
 
   function showLoginCard() {
     cardWrap.style.display = "flex";
     // A parent response must not open the mobile keyboard and resize the app unprompted.
     if (!mobileView.matches) setTimeout(() => usernameInput.focus(), 80);
-  }
-
-  function toggleLoginCard() {
-    cardWrap.scrollIntoView({
-      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
-      block: "nearest"
-    });
-    setTimeout(() => usernameInput.focus(), 80);
   }
 
   function updateClock() {
@@ -1045,14 +1025,33 @@ const SOURCE = "SKANDI_STAFF_LOGIN";
     });
   }
 
-  dropBtn.addEventListener("click", toggleLoginCard);
-
   const passwordVisibilityBtn = document.getElementById("password-visibility");
-  const brandLogo = document.querySelector("#SK-logo img");
-  if (brandLogo) {
-    const hideMissingBrandLogo = () => { brandLogo.style.display = "none"; };
-    brandLogo.addEventListener("error", hideMissingBrandLogo);
-    if (brandLogo.complete && !brandLogo.naturalWidth) hideMissingBrandLogo();
+  const brandLogos = Array.from(document.querySelectorAll("[data-master-logo]"));
+  function setBrandLogoVisible(logo, visible) {
+    logo.hidden = !visible;
+    const fallback = document.querySelector('[data-logo-fallback="' + logo.dataset.masterLogo + '"]');
+    if (fallback) fallback.hidden = visible;
+  }
+  for (const logo of brandLogos) {
+    logo.addEventListener("load", () => setBrandLogoVisible(logo, true));
+    logo.addEventListener("error", () => setBrandLogoVisible(logo, false));
+    setBrandLogoVisible(logo, false);
+  }
+  function applyMasterLogos(brand) {
+    const logos = brand?.assets?.logos || {};
+    for (const logo of brandLogos) {
+      const url = typeof logos[logo.dataset.masterLogo] === "string" ? logos[logo.dataset.masterLogo].trim() : "";
+      if (!url) {
+        logo.removeAttribute("src");
+        setBrandLogoVisible(logo, false);
+        continue;
+      }
+      if (logo.getAttribute("src") !== url || (logo.complete && logo.naturalWidth === 0)) {
+        setBrandLogoVisible(logo, false);
+        logo.src = url;
+      }
+      if (logo.complete && logo.naturalWidth > 0) setBrandLogoVisible(logo, true);
+    }
   }
   passwordVisibilityBtn.addEventListener("click", function() {
     const visible = passwordInput.type === "text";
@@ -1118,9 +1117,7 @@ const SOURCE = "SKANDI_STAFF_LOGIN";
     if (event.source !== window.parent) return;
     if (data.source !== PARENT_SOURCE) return;
     if (data.type === "SKANDI_MASTER_CONFIG") {
-      const logo = document.querySelector('[data-master-logo="riaHeader"]');
-      const logoUrl = String(payload?.brand?.assets?.logos?.riaHeader || "").trim();
-      if (logo && logoUrl) logo.src = logoUrl;
+      applyMasterLogos(payload.brand);
       return;
     }
     if (data.requestId && activeRequestId && data.requestId !== activeRequestId) return;
@@ -1159,7 +1156,9 @@ const SOURCE = "SKANDI_STAFF_LOGIN";
     if (data.type === "STAFF_LOGIN_NOTICE") {
       showLoginCard();
       setError("");
-      setNotice(payload.message === "Secure staff login ready." ? "" : (payload.message || ""));
+      const message = payload.message || "";
+      const initialNotice = "Enter your SK-ID and password to sign in. Your session ends after 30 minutes of inactivity.";
+      setNotice(message === "Secure staff login ready." || message === initialNotice ? "" : message);
       setBusy(false);
       activeRequestId = "";
       return;
@@ -1171,7 +1170,6 @@ const SOURCE = "SKANDI_STAFF_LOGIN";
 
   setBusy(false);
   syncMobileViewport();
-  dropBtn.setAttribute("aria-controls", "login-card-wrap");
   post("MASTER_CONFIG_REQUEST", { context:"riaintra-login" });
   post("STAFF_LOGIN_READY", {});
 
