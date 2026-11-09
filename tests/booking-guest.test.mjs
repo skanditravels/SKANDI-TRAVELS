@@ -437,3 +437,28 @@ test('choosing a different offer creates a different guest capability', async ()
   await page.host.handleMessage({source:'SKANDI_BOOKING_OFFER',type:'BOOKING_SEARCH_SELECT',offerId:'off_2'});
   assert.deepEqual(tokens,['a'.repeat(64),'b'.repeat(64)]);
 });
+
+test('a verified pending payment session can be resumed after a failed request', async t => {
+  const {JSDOM}=require('jsdom');
+  const outer=new JSDOM('<!doctype html><iframe></iframe>',{runScripts:'outside-only',url:'https://www.skanditravels.com/'});
+  t.after(()=>outer.window.close());
+  const frame=outer.window.document.querySelector('iframe').contentWindow;
+  frame.scrollTo=()=>{};
+  frame.Stripe=()=>({elements:()=>({create:()=>({mount(){},on(){},destroy(){}})})});
+  frame.document.body.innerHTML=await read('skandi-embeds/booking/skandi-booking-flow.html');
+  const sent=[];outer.window.postMessage=m=>sent.push(m);
+  frame.eval(await read('skandi-embeds/booking/skandi-booking-flow.js'));
+  const host=(type,payload={},extra={})=>frame.dispatchEvent(new frame.MessageEvent('message',{source:outer.window,data:{source:'SKANDI_WIX_PARENT',type,payload,...extra}}));
+  const payload={cart:{cartId:'cart-1',productType:'FLIGHT_ONLY',currency:'USD'},payment:{clientSecret:'fake',publishableKey:'pk_test_fake',paymentIntentId:'pi_1',status:'requires_capture',amount:100,currency:'USD'}};
+  host('PAYMENT_SESSION_LOADED',payload);
+  frame.document.querySelector('#payTerms').checked=true;
+  frame.document.querySelector('[data-action="payment-submit"]').click();
+  await new Promise(resolve=>setTimeout(resolve,0));
+  assert.equal(sent.filter(x=>x.type==='PAYMENT_COMMIT').length,1);
+  host('BOOKING_ERROR',{}, {message:'Please check your booking status.'});
+  host('PAYMENT_SESSION_LOADED',payload);
+  frame.document.querySelector('#payTerms').checked=true;
+  frame.document.querySelector('[data-action="payment-submit"]').click();
+  await new Promise(resolve=>setTimeout(resolve,0));
+  assert.equal(sent.filter(x=>x.type==='PAYMENT_COMMIT').length,2);
+});
