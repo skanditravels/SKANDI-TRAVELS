@@ -25,6 +25,8 @@
     let badgeManualOpen = false;
     let badgeShowBack = false;
     let badgeOverride = {};
+    const recruitingOfferDrafts = new Map();
+    let activeOfferComposer = null;
     const $ = id => document.getElementById(id);
 
     const completedTasks = new Set();
@@ -846,6 +848,8 @@
     }
 
     function clearPortalData(status = "waiting", error = null) {
+      recruitingOfferDrafts.clear();
+      activeOfferComposer = null;
       currentUserRole = null;
       currentView = "home";
       currentAppId = null;
@@ -1019,9 +1023,12 @@
         payload,
         timestamp: new Date().toISOString()
       };
-      portalState.lastOutbound = message;
+      const diagnostic = type === "CAREERS_MOVE_CANDIDATE_STAGE" && payload.offerDetails
+        ? { ...message, payload:{ ...payload, offerDetails:"[redacted]" } }
+        : message;
+      portalState.lastOutbound = diagnostic;
       window.parent.postMessage(message, "*");
-      window.dispatchEvent(new CustomEvent("skandi:outbound", { detail: message }));
+      window.dispatchEvent(new CustomEvent("skandi:outbound", { detail: diagnostic }));
       return message;
     }
 
@@ -1204,7 +1211,8 @@
           }
           hrEmployeeDraftMode = false;
         }
-        showToast("HR action completed", payload.message || "The backend confirmed the update.");
+        const automationWarning = payload.hireAutomation && (payload.hireAutomation.state !== "accepted" || payload.hireAutomation.contactLinked !== true);
+        showToast(automationWarning ? "Hire automation needs attention" : "HR action completed", payload.message || "The backend confirmed the update.", automationWarning ? "warning" : "info");
         post(data.type.startsWith("CAREERS_") ? "CAREERS_REFRESH" : "HR_REFRESH", {
           selectedId: hrSelectedEmployeeId || ""
         });
@@ -3594,6 +3602,8 @@
       const stage = String(firstRecordValue(candidate, ["stage", "status"], "applied")).toLowerCase();
       const nextIndex = Math.min(Math.max(RECRUITING_STAGES.findIndex(([value]) => value === slugify(stage, stage)), 0) + 1, RECRUITING_STAGES.length - 1);
       const nextStage = RECRUITING_STAGES[nextIndex]?.[0] || "screening";
+      const hireEvent = candidate.payload?.staffOnboarding?.hireAutomation;
+      const canRetryHire = canManageHrRecords() && stage === "hired" && hireEvent?.eventId && hireEvent.state !== "accepted";
       const fields = Object.entries(candidate)
         .filter(([key, value]) => !/password|secret|token|credential|wix.?member|^member_?id$|^contact_?id$|^_?id$/i.test(key) && (value === null || typeof value !== "object"))
         .slice(0, 24);
@@ -3607,6 +3617,8 @@
           <div class="hr-object-actions hr-action-row">
             <button class="secondary-button" type="button" data-action="careers-history" data-id="${escapeHtml(id)}">5-Year History</button>
             <button class="secondary-button" type="button" data-action="careers-documents" data-id="${escapeHtml(id)}">Documents</button>
+            ${canManageHrRecords() ? `<button class="secondary-button" type="button" data-action="careers-prepare-offer" data-id="${escapeHtml(id)}">Offer letter</button>` : ""}
+            ${canRetryHire ? `<button class="secondary-button" type="button" data-action="careers-retry-hire-automation" data-id="${escapeHtml(id)}">Retry hire automation</button>` : ""}
             <button class="secondary-button" type="button" data-action="careers-start-sra" data-id="${escapeHtml(id)}">Start SRA</button>
             <button class="primary-button" type="button" data-action="careers-move-stage" data-id="${escapeHtml(id)}" data-stage="${escapeHtml(nextStage)}">Move to ${escapeHtml(RECRUITING_STAGES[nextIndex]?.[1] || "next stage")}</button>
           </div>
@@ -3938,12 +3950,113 @@
       });
     }
 
+    function offerCandidateDefaults(candidate) {
+      const positionId = String(candidate.position_id || candidate.positionId || "");
+      const position = (portalState.hr.recruiting.jobPostings || []).find(item =>
+        [item.id, item.position_id, item.positionId].some(value => value && String(value) === positionId)
+      ) || {};
+      const first = String(candidate.first_name || candidate.firstName || "");
+      const last = String(candidate.last_name || candidate.lastName || "");
+      return {
+        candidate_first_name: first,
+        candidate_full_name: [first, last].filter(Boolean).join(" "),
+        job_title: String(position.title || candidate.jobTitle || candidate.payload?.positionApplied || ""),
+        department: String(position.department || ""),
+        work_location: String(position.location || candidate.payload?.location || ""),
+        employment_type: String(position.employment_type || "")
+      };
+    }
+
+    function openRecruitingOfferComposer(id, returnToHire = false) {
+      if (!hasRecruitingAccess() || !canManageHrRecords()) return;
+      const candidate = portalState.hr.recruiting.candidates.find(item => recruitingCandidateId(item) === String(id));
+      const template = $("sfOfferComposerTemplate");
+      if (!candidate || !template?.content || !Element.prototype.attachShadow) {
+        showToast("Offer editor unavailable", "The offer letter editor could not be opened.", "warning");
+        return;
+      }
+      openDialog({
+        id: "recruiting-offer", title: "Prepare New York offer letter", subtitle: recordName(candidate),
+        body: `<p class="hr-note">Drafts remain in this session. Download a copy before closing or refreshing. Review the terms for the employment location.</p><div id="sfOfferComposerMount"></div>`,
+        footer: `<button class="ghost-button" type="button" data-action="close-dialog">Cancel</button><button class="primary-button" type="button" data-action="careers-use-offer">Use offer details</button>`
+      });
+      $("modalRoot")?.querySelector(".dialog")?.classList.add("sf-offer-dialog");
+      const mount = $("sfOfferComposerMount");
+      const root = mount.attachShadow({ mode: "open" });
+      root.appendChild(template.content.cloneNode(true));
+      const byId = name => root.getElementById(`sfo-${name}`);
+      const form = byId("offer-form"), status = byId("form-status"), letter = byId("letter");
+      const controls = Array.from(form.querySelectorAll("input, select, textarea"));
+      const inputs = Object.fromEntries(controls.map(control => [control.name, control]));
+      const dateFields = new Set(["offer_date", "start_date", "acceptance_deadline"]);
+      const getData = () => Object.fromEntries(controls.map(control => [control.name, String(control.value || "").trim()]));
+      const formatDate = value => {
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
+        const parsed = new Date(value + "T12:00:00Z");
+        return Number.isNaN(parsed.getTime()) ? value : new Intl.DateTimeFormat("en-US", { year:"numeric", month:"long", day:"numeric", timeZone:"UTC" }).format(parsed);
+      };
+      function renderOffer() {
+        const data = getData();
+        letter.querySelectorAll("[data-slot]").forEach(node => {
+          const value = data[node.dataset.slot] || "";
+          node.textContent = value ? (dateFields.has(node.dataset.slot) ? formatDate(value) : value) : node.dataset.placeholder;
+          node.classList.toggle("placeholder", !value);
+        });
+        byId("brand-clause").textContent = data.operating_brand ? `, operating as ${data.operating_brand}` : "";
+        byId("phone-clause").textContent = data.contact_phone ? ` or ${data.contact_phone}` : "";
+        controls.forEach(control => { if (control.checkValidity()) control.removeAttribute("aria-invalid"); });
+      }
+      function validateOffer() {
+        const invalid = controls.filter(control => !control.checkValidity() || (control.required && !String(control.value || "").trim()));
+        controls.forEach(control => invalid.includes(control) ? control.setAttribute("aria-invalid", "true") : control.removeAttribute("aria-invalid"));
+        status.textContent = invalid.length ? `Complete or correct ${invalid.length} required ${invalid.length === 1 ? "field" : "fields"} before continuing.` : "";
+        if (invalid.length) invalid[0].focus();
+        return invalid.length === 0;
+      }
+      function completedOfferHtml() {
+        renderOffer();
+        const output = document.implementation.createHTMLDocument("SKANDI | Offer of Employment");
+        output.documentElement.lang = "en";
+        const charset = output.createElement("meta"); charset.setAttribute("charset", "utf-8"); output.head.insertBefore(charset, output.head.firstChild);
+        const viewport = output.createElement("meta"); viewport.name = "viewport"; viewport.content = "width=device-width, initial-scale=1"; output.head.appendChild(viewport);
+        output.head.appendChild(byId("offer-styles").cloneNode(true));
+        output.body.className = "exported"; output.body.appendChild(letter.cloneNode(true));
+        return "<!doctype html>\n" + output.documentElement.outerHTML;
+      }
+      function offerBlob() { return new Blob([completedOfferHtml()], { type:"text/html;charset=utf-8" }); }
+      byId("download-button").addEventListener("click", () => {
+        if (!validateOffer()) return;
+        const url = URL.createObjectURL(offerBlob()), link = document.createElement("a");
+        link.href = url; link.download = "SKANDI_Employment_Offer_Letter.html"; document.body.appendChild(link); link.click(); link.remove();
+        window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+      });
+      byId("print-button").addEventListener("click", () => {
+        if (!validateOffer()) return;
+        const printStyle = document.createElement("style");
+        printStyle.textContent = '@page{size:letter;margin:.38in .42in .48in}@media print{body.sf-offer-printing #skandi-shell-root> :not(#skandi-app-root),body.sf-offer-printing #skandi-app-root> :not(#modalRoot),body.sf-offer-printing #modalRoot .dialog-header,body.sf-offer-printing #modalRoot .dialog-footer,body.sf-offer-printing #modalRoot .hr-note{display:none!important}body.sf-offer-printing #modalRoot .modal-backdrop,body.sf-offer-printing #modalRoot .dialog,body.sf-offer-printing #modalRoot .dialog-body{position:static!important;display:block!important;max-height:none!important;width:auto!important;overflow:visible!important;box-shadow:none!important;background:white!important;border:0!important;padding:0!important;margin:0!important}}';
+        document.head.appendChild(printStyle); document.body.classList.add("sf-offer-printing");
+        const clean = () => { document.body.classList.remove("sf-offer-printing"); printStyle.remove(); };
+        window.addEventListener("afterprint", clean, { once:true }); window.setTimeout(clean, 300000);
+        window.print();
+      });
+      form.addEventListener("input", renderOffer); form.addEventListener("change", renderOffer); form.addEventListener("submit", event => event.preventDefault());
+      const now = new Date();
+      inputs.offer_date.value = [now.getFullYear(), String(now.getMonth()+1).padStart(2,"0"), String(now.getDate()).padStart(2,"0")].join("-");
+      const savedOffer = candidate.payload?.staffOnboarding?.offerDetails;
+      for (const [name, value] of Object.entries(recruitingOfferDrafts.get(String(id)) || savedOffer || offerCandidateDefaults(candidate))) {
+        if (inputs[name]) inputs[name].value = value == null ? "" : String(value);
+      }
+      renderOffer();
+      activeOfferComposer = { candidateId:String(id), returnToHire, getData, validate:validateOffer };
+    }
+
     function openHireCandidateDialog(id) {
       const candidate = portalState.hr.recruiting.candidates.find(item => recruitingCandidateId(item) === String(id));
       if (!candidate) return;
+      const prepared = recruitingOfferDrafts.has(String(id));
       openDialog({
         id:"candidate-hire", title:"Hire candidate", subtitle:recordName(candidate),
-        body:`<form id="careerHireForm"><input type="hidden" name="candidateId" value="${escapeHtml(String(id))}"><p>The corporate email address will be generated automatically. The existing candidate email will be used for the Wix account while the corporate mailbox is awaiting setup.</p></form>`,
+        body:`<form id="careerHireForm"><input type="hidden" name="candidateId" value="${escapeHtml(String(id))}"><p>The corporate email address will be generated automatically. The existing candidate email will be used for the Wix account while the corporate mailbox is awaiting setup.</p><p>${prepared ? "New York offer details are prepared for this session." : "You may prepare a New York offer letter before hiring."}</p><button class="secondary-button" type="button" data-action="careers-prepare-hire-offer" data-id="${escapeHtml(String(id))}">${prepared ? "Edit offer letter" : "Prepare offer letter"}</button></form>`,
         footer:`<button class="ghost-button" type="button" data-action="close-dialog">Cancel</button><button class="primary-button" type="submit" form="careerHireForm">Hire and create staff account</button>`
       });
     }
@@ -4356,6 +4469,7 @@
 
     function closeDialog() {
       activeDialogId = null;
+      activeOfferComposer = null;
       document.body.classList.remove("modal-open");
       const root = $("modalRoot");
       if (root) root.innerHTML = "";
@@ -4819,6 +4933,26 @@
         hrSelectedCandidateId = id || hrSelectedCandidateId;
         currentRecruitingView = "documents";
         renderPortal();
+      } else if (action === "careers-prepare-offer" || action === "careers-prepare-hire-offer") {
+        openRecruitingOfferComposer(id || hrSelectedCandidateId, action === "careers-prepare-hire-offer");
+      } else if (action === "careers-use-offer") {
+        if (!activeOfferComposer || !hasRecruitingAccess() || !canManageHrRecords() || !activeOfferComposer.validate()) return;
+        const { candidateId, returnToHire } = activeOfferComposer;
+        recruitingOfferDrafts.set(candidateId, activeOfferComposer.getData());
+        closeDialog();
+        if (returnToHire) openHireCandidateDialog(candidateId);
+        else showToast("Offer details prepared", "The offer is available for this candidate while this session remains open.");
+      } else if (action === "careers-retry-hire-automation") {
+        if (!hasRecruitingAccess() || !canManageHrRecords()) return;
+        openDialog({
+          id:"retry-hire-automation", title:"Retry hire automation", subtitle:"Review the previous attempt first",
+          body:"<p>Check Wix Automation history before retrying. A previous attempt may have reached Wix even if it was not confirmed. Retrying can run the automation twice. The retry uses the offer saved when the candidate was hired.</p>",
+          footer:`<button class="ghost-button" type="button" data-action="close-dialog">Cancel</button><button class="primary-button" type="button" data-action="careers-confirm-hire-retry" data-id="${escapeHtml(id)}">Retry automation</button>`
+        });
+      } else if (action === "careers-confirm-hire-retry") {
+        if (!hasRecruitingAccess() || !canManageHrRecords()) return;
+        post("CAREERS_RETRY_HIRE_AUTOMATION", { candidateId:id });
+        closeDialog();
       } else if (action === "careers-move-stage") {
         if (!hasRecruitingAccess()) return;
         const candidateId = id || hrSelectedCandidateId;
@@ -5037,9 +5171,9 @@
         post("HR_STAFF_SAVE", { item: { ...item, ...(recordId ? { id: recordId } : {}) }, isNew: hrEmployeeDraftMode });
         showToast("Saving employee", "The employee record was sent to the HR backend.");
       } else if (form.id === "careerHireForm") {
-        if (!hasRecruitingAccess()) return;
+        if (!hasRecruitingAccess() || !canManageHrRecords()) return;
         const hire = serializeForm(form);
-        post("CAREERS_MOVE_CANDIDATE_STAGE", { candidateId:hire.candidateId, targetStage:"hired" });
+        post("CAREERS_MOVE_CANDIDATE_STAGE", { candidateId:hire.candidateId, targetStage:"hired", offerDetails:recruitingOfferDrafts.get(String(hire.candidateId)) || null });
         closeDialog();
         showToast("Creating staff account", "The hire is being processed.");
       } else if (form.id === "candidateForm") {
@@ -5157,3 +5291,4 @@
     }
 
     initializePortal();
+

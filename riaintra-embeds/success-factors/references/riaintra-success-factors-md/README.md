@@ -14,6 +14,8 @@
 
 - 2026-11-07 — The current V12 SuccessFactors source triplet adds Recruiting → Onboarding → Complete onboarding and editing existing task status. The page forwards `CAREERS_COMPLETE_ONBOARDING` to `orgStructure.web`. HR confirmation and the effective assignment control staff activation. The embedded historical HTML below predates this action and is retained as a reference.
 
+- 2026-11-09 — The active SuccessFactors source triplet integrates the supplied New York offer editor into Recruiting and the hire dialog. `CAREERS_MOVE_CANDIDATE_STAGE` may include validated offer details; after the existing candidate and staff-account hire succeeds, `orgStructure` records the event and calls the backend-only Wix custom-trigger helper. `CAREERS_RETRY_HIRE_AUTOMATION` is restricted by both Recruiting and HR management checks and retries the recorded event only when explicitly requested. Offer details remain restricted to authorized HR managers; event acceptance does not establish email or document delivery. Setup, payload fields and retry limitations are documented in the active page README. The full historical HTML below remains superseded and was not used to replace the newer active sources. STATICALLY VERIFIED and controlled tests; REQUIRES LIVE TEST after the builder, Wix code publication, secret and automation setup.
+
 
 | Field | Value |
 | --- | --- |
@@ -8674,3 +8676,4 @@ This reference is documentation, not a runtime import. Install the HTML below in
 </body>
 </html>
 ```
+

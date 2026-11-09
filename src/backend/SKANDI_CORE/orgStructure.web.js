@@ -23,6 +23,7 @@ import {
   publishRecruitingPositionCore,
   requestRecruitingDocumentCore,
   resendRecruitingDocumentPacketCore,
+  retryRecruitingHireAutomationCore,
   resolveRecruitingGapCore,
   saveBadgeControlCore,
   saveRecruitingCandidateCore,
@@ -124,6 +125,10 @@ export const updateRecruitingCandidateStage = webMethod(Permissions.SiteMember, 
   return updateRecruitingCandidateStageCore(input(payload));
 });
 
+export const retryRecruitingHireAutomation = webMethod(Permissions.SiteMember, async (payload) => {
+  return retryRecruitingHireAutomationCore(input(payload));
+});
+
 export const saveRecruitingPosition = webMethod(Permissions.SiteMember, async (payload) => {
   return saveRecruitingPositionCore(input(payload));
 });
@@ -207,4 +212,5 @@ export const exportRecruitingAudit = webMethod(Permissions.SiteMember, async (pa
 export const saveSuccessFactorsPortalState = webMethod(Permissions.SiteMember, async (payload) => {
   return saveSuccessFactorsPortalStateCore(input(payload));
 });
+
 
