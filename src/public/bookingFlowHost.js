@@ -3,10 +3,9 @@
 // The complete offer-to-confirmation journey is mounted inside the Home embed.
 import { session } from 'wix-storage';
 import { readBookingSearch } from 'public/bookingSearch';
-import { openCustomerLogin } from 'public/customerAuthUi';
 import { SITE_MAP, APP_ROUTES, isSafeInternalRoute } from 'public/siteMap';
 import {
-  searchUnifiedOffers, getFlightUpsells, createBookingCartFromOffer, loadBookingCart,
+  searchUnifiedOffers, getFlightUpsells, beginGuestBookingSession, createBookingCartFromOffer, loadBookingCart,
   acceptBookingOffer, loadBookingExtras, storeBookingExtras,
   loadSignatureTransfers, storeSignatureTransfer, saveBookingTravelers,
   saveHotelGuests, loadBookingRequirements, refreshBookingRequirements,
@@ -27,11 +26,15 @@ const text=(x='')=>String(x??'');
 function bookingError(error){
   const code=text(error?.code).toUpperCase();
   const translations={
-    LOGIN_REQUIRED:'Sign in to continue your booking.',
+    LOGIN_REQUIRED:'Your secure booking session has expired. Start a new search or contact SKANDI for help.',
+    BOOKING_SESSION_EXPIRED:'Your secure booking session has expired. Start a new search or contact SKANDI for help.',
+    CART_NOT_FOUND:'Your booking could not be found in this session. Start a new search or contact SKANDI for help.',
     BOOKING_OFFER_EXPIRED:'The selected offer has expired. Search again.',
     BOOKING_CART_NOT_FOUND:'Your secure booking session could not be found.',
     BOOKING_CART_ACCESS_DENIED:'You do not have access to this booking.',
     BOOKING_RECONCILIATION_REQUIRED:'Your supplier booking is being reconciled. Do not pay again; contact SKANDI.',
+    BOOKING_COMMIT_IN_PROGRESS:'Your booking is being processed. Do not pay again; check its status or contact SKANDI.',
+    BOOKING_CONFIRMATION_UNAVAILABLE:'Booking confirmation is temporarily unavailable. Please try again or contact SKANDI before paying.',
     PAYMENT_NOT_AUTHORIZED:'Payment authorization is not ready.',
     PAYMENT_AMOUNT_MISMATCH:'Your booking price changed. Verify your total before paying.',
     SERVICE_UNAVAILABLE:'A selected service is no longer available.',
@@ -75,7 +78,7 @@ function lastServerStep(cart={}){
 function normalStep(requested){let v=text(requested).toLowerCase();return STEP_ORDER.includes(v)?v:'offer'}
 async function cart(){return bounded(loadBookingCart(access()),30000)}
 async function withLoginCart(read){
-  try{return await read()}catch(e){if(/LOGIN_REQUIRED|sign in|login required|forbidden/i.test(`${e?.code||''} ${e?.message||''}`)){await openCustomerLogin({sourcePage:'BOOKING',reason:'BOOKING_CART_AUTH'});return read()}throw e}
+  return read();
 }
 function allowedStep(requested,c){
   const want=normalStep(requested),resume=lastServerStep(c);
@@ -88,7 +91,7 @@ function allowedStep(requested,c){
 }
 function updateUrl(){
   if(!locationApi.queryParams?.add)return;
-  try{const params={step};if(cartId)params.cartId=cartId;locationApi.queryParams.add(params)}catch(_){/* URL sync is optional; the backend cart remains authoritative. */}
+  try{locationApi.queryParams?.remove(['cartToken']);const params={step};if(cartId)params.cartId=cartId;locationApi.queryParams.add(params)}catch(_){/* URL sync is optional; the backend cart remains authoritative. */}
 }
 async function goStep(next,{silentUrl=false}={}){
   step=normalStep(next);
@@ -149,10 +152,12 @@ async function selectOffer(msg){
   const id=text(msg.offerId||msg.payload?.offerId);
   const item=currentSearch?.items?.find(x=>text(x.id||x.staySearchResultId)===id);
   if(!item)throw Object.assign(new Error('That offer is no longer available. Refresh the search.'),{code:'BOOKING_LIVE_OFFER_INVALID'});
-  const select=()=>createBookingCartFromOffer({offer:item,search:searchContext.search});
-  let result=await bounded(select(),80000);
-  if(result?.requiresLogin){await openCustomerLogin({sourcePage:'BOOKING',reason:'BOOKING_CART_AUTH'});result=await bounded(select(),80000)}
-  if(result?.requiresLogin)throw Object.assign(new Error('Sign in to continue.'),{code:'LOGIN_REQUIRED'});
+  if(!cartToken){
+    const started=await bounded(beginGuestBookingSession());
+    if(!/^[a-f0-9]{64}$/.test(text(started?.cartToken)))throw new Error('Your secure booking session could not be started. Please try again.');
+    persistCart('',started.cartToken);
+  }
+  const result=await bounded(createBookingCartFromOffer({offer:item,search:searchContext.search,cartToken}),80000);
   if(!result?.cartId)throw new Error('A booking could not be created. Verify My Booking before selecting another offer.');
   persistCart(result.cartId,result.cartToken||'');selectedSearchItem=item;
   await goStep('offer');
@@ -214,7 +219,7 @@ async function processMessage(msg){
     return;
   }
   if(t==='BOOKING_BACK_TO_RESULTS'&&searchContext){
-    persistCart('');selectedSearchItem=null;
+    persistCart('',cartToken);selectedSearchItem=null;
     try{locationApi.queryParams?.remove(['cartId','cartToken'])}catch(_){}
     return goStep('offer');
   }
@@ -227,13 +232,14 @@ async function processMessage(msg){
   if(t==='BOOKING_EXTRAS_SAVE'&&step==='extras'){
     const selections=Array.isArray(msg.selectedExtras)?msg.selectedExtras:[];
     await bounded(storeBookingExtras({...access(msg),selectedExtras:selections}),45000);
-    return goStep('hotels');
+    const c=await withLoginCart(cart);
+    return goStep(isHotelCart(c)||isPackageCart(c)?'hotels':'transfer');
   }
   if(t==='BOOKING_HOTEL_CONTINUE'&&step==='hotels')return goStep('transfer');
   if((t==='SIGNATURE_TRANSFER_SELECT'||t==='SIGNATURE_TRANSFER_SKIP')&&step==='transfer'){
     await bounded(storeSignatureTransfer({...access(msg),transfer:t==='SIGNATURE_TRANSFER_SKIP'?null:msg.transfer||null}),45000);
     const c=await withLoginCart(cart);
-    return goStep(isPackageCart(c)?'upsell':'apis');
+    return goStep('apis');
   }
   if(t==='BOOKING_UPSELL_CONTINUE'&&step==='upsell')return goStep('apis');
   if(t==='APIS_RULES_REFRESH'&&step==='apis'){
@@ -288,12 +294,17 @@ async function startFromLocation(){
   const searchId=text(query.searchId),queryCart=text(query.cartId),queryStep=text(query.step);
   try{
     searchContext=searchId?readBookingSearch(searchId):null;
-    if(searchContext)persistCart('');
-    else if(searchId&&!queryCart)persistCart('');
-    else {
-      const restoredCart=session.getItem('SKANDI_BOOKING_CART_ID')||'';
-      persistCart(queryCart||restoredCart,text(query.cartToken)||session.getItem('SKANDI_BOOKING_CART_TOKEN')||'');
-    }
+    try{locationApi.queryParams?.remove(['cartToken'])}catch(_){}
+    const restoredCart=session.getItem('SKANDI_BOOKING_CART_ID')||'';
+    const restoredToken=session.getItem('SKANDI_BOOKING_CART_TOKEN')||'';
+    if(queryCart){
+      if(queryCart===restoredCart)persistCart(queryCart,restoredToken);
+      else {cartId=queryCart;cartToken=''}
+    }else if(searchId){
+      // Keep an unclaimed capability so retry after a lost response can recover
+      // the same cart. A new search with an old cart starts a fresh session.
+      persistCart('',restoredCart?'':restoredToken);
+    }else persistCart(restoredCart,restoredToken);
     if(cartId){
       const c=await withLoginCart(cart);
       if(c.productType==='CAR_RENTAL_ONLY'){locationApi.to(SITE_MAP.carRental+'?cartId='+encodeURIComponent(cartId));return true}

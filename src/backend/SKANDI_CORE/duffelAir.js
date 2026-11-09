@@ -633,7 +633,7 @@ export async function prepareDuffelPaymentCore(input = {}) {
     currency: offer.totalCurrency,
     captureMethod: "manual",
     idempotencyContext,
-    idempotencyKey: `skandi_auth_${idempotencyContext}_${amount}_${lower(offer.totalCurrency, 3)}`.slice(0, 255),
+    idempotencyKey: `skandi_auth_${idempotencyContext}_${amount}_${lower(offer.totalCurrency, 3)}${/^_pi_[A-Za-z0-9_]+$/.test(clean(input.idempotencySuffix, 200)) ? clean(input.idempotencySuffix, 200) : ""}`.slice(0, 255),
     metadata: {
       integration: "skandi_duffel_air",
       offer_id: offer.id,
@@ -687,6 +687,16 @@ export async function getDuffelOrderByOfferCore({ offerId } = {}) {
   return { order: order ? normalizeOrder(order) : null };
 }
 
+// Offer IDs locate an order; they do not establish who owns it. Recovery and
+// payment capture require the cart and payment references written at creation.
+export function orderMatchesCheckout(order = {}, {cartId, paymentIntentId, offerId} = {}) {
+  const metadata = object(order.metadata);
+  return Boolean(order.id && order.status === "confirmed" && cartId && paymentIntentId && offerId &&
+    clean(order.offerId, 220) === clean(offerId, 220) &&
+    clean(metadata.internal_reference, 100) === clean(cartId, 100) &&
+    clean(metadata.payment_intent_id, 220) === clean(paymentIntentId, 220));
+}
+
 export async function createDuffelOrderCore(input = {}) {
   const offerId = resourceId(input.offerId, "off_", "offer");
   const orderType = lower(input.orderType || "instant", 20);
@@ -696,7 +706,18 @@ export async function createDuffelOrderCore(input = {}) {
   const offer = normalizeOffer(rawOffer);
 
   const existing = await getDuffelOrderByOfferCore({ offerId });
-  if (existing.order?.id) return { order: existing.order, offer, recoveredExistingOrder: true };
+  if (existing.order?.id) {
+    const cartId = clean(input.internalReference, 100);
+    const paymentIntentId = clean(input.paymentIntentId, 220);
+    if (orderType !== "instant" || !orderMatchesCheckout(existing.order, {cartId, paymentIntentId, offerId})) {
+      return {order:null, offer, recoveredExistingOrder:false, reconciliationRequired:true};
+    }
+    const intent = await retrieveStripePaymentIntent(resourceId(paymentIntentId, "pi_", "payment"));
+    const amount = Number.isFinite(Number(input.customerAuthorizationAmountMinor))
+      ? Number(input.customerAuthorizationAmountMinor) : duffelAmountToMinor(offer.totalAmount, offer.totalCurrency);
+    assertStripeAuthorization(intent, {amount, currency:offer.totalCurrency, metadata:{idempotency_context:cartId}, allowCaptured:false});
+    return { order: existing.order, offer, recoveredExistingOrder: true };
+  }
 
   const data = {
     type: orderType,

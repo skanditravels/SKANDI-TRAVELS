@@ -4,7 +4,8 @@
 
 import {
   getDuffelOrderByOfferCore,
-  getDuffelOrderCore
+  getDuffelOrderCore,
+  orderMatchesCheckout
 } from "backend/SKANDI_CORE/duffelAir";
 import {
   retrieveStripePaymentIntent,
@@ -48,7 +49,7 @@ export async function voidUnusedAuthorization(row) {
   try {
     const intent = await retrieveStripePaymentIntent(paymentIntentId);
     if (["requires_capture", "requires_payment_method", "requires_confirmation", "requires_action"].includes(String(intent?.status || ""))) {
-      return cancelStripePaymentIntent(paymentIntentId, `skandi_void_${row.cart_id}`.slice(0, 255));
+      return cancelStripePaymentIntent(paymentIntentId, `skandi_void_${row.cart_id}_${paymentIntentId}`.slice(0, 255));
     }
     return intent;
   } catch (_) {
@@ -66,6 +67,9 @@ export async function reconcileFlightCart(context, row) {
 
   const payment = row.payload?.payment || {};
   if (!payment.paymentIntentId) throw bookingError("PAYMENT_REFERENCE_MISSING", "The customer payment authorization is missing from this booking.", 409);
+  if (!orderMatchesCheckout(result.order, {cartId:row.cart_id, paymentIntentId:payment.paymentIntentId, offerId})) {
+    return {resolved:false, cart:row, message:"The booking needs further review before payment can be finalized."};
+  }
   const intent = await retrieveStripePaymentIntent(payment.paymentIntentId);
   assertStripeAuthorization(intent, {
     amount: payment.amountMinor,
