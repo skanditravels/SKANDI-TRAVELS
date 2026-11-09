@@ -354,3 +354,7 @@
   .uniform-toolbar-main { grid-template-columns: minmax(0, 1fr); padding-block: 10px; }
   .uniform-utilities { flex-wrap: wrap; gap: 8px; }
 }
+
+@media(max-width:760px){
+ .uniform-toolbar-main{min-width:0}.nav-rail{scrollbar-width:thin}.nav-rail a,.nav-rail button{min-height:44px;display:inline-flex;align-items:center}.pdp-thumbnails{gap:7px}.pdp-thumb{min-height:44px}.form-grid input,.form-grid select,.form-grid textarea{font-size:16px}.regulations-layout,.regulations-hero{min-width:0}.eligibility-chip,.issue-cycle-card{border-radius:8px}
+}

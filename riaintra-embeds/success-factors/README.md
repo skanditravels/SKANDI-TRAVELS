@@ -73,3 +73,5 @@ A confirmed trigger is not retried automatically. If Wix does not confirm an att
 - Media Control's existing presentation catalog registers `riaintra-welcome` and `riaintra-team` for `/riaintra/success-factors`. Upload the approved images and publish each slot in Media Control. These are presentation assets only; employee and organization data remain in their established systems. The existing universal receiver remains in use.
 - `tests/success-factors-workspace.test.mjs` exercises the compiled page's assignment, drafts, refresh, identity, image, address and error contracts. Live authenticated verification is still required after publishing.
 
+
+- 2026-11-09 — The phone workspace uses a compact welcome with expandable organization details. The last allowlisted non-sensitive workspace view is stored under a hashed employee-specific browser key only after authenticated bootstrap; explicit links and server authorization take precedence. HR pages, employee records and drafts are not stored as these preferences.

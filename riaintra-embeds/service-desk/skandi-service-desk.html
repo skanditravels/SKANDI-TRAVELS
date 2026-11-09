@@ -43,18 +43,18 @@
 
 <header class="top">
   <div class="qtop"><button class="icon" id="dashboardBtn">☰</button><div class="title"><b id="topView">Open cases</b><small id="topSub">Loading support workspace…</small></div></div>
-  <div><div class="search"><span>⌕</span><input id="globalSearch" placeholder="Search ticket, PNR, traveler, vendor…"><kbd>⌘K</kbd></div><div class="grow"></div><span class="pill"><i class="dot"></i><span id="capacity">0 open · 0 messaging</span></span><button class="presence" id="presenceBtn"><i class="dot" id="pDot"></i><span id="pLabel">Online</span> ▾</button><button class="talk" id="talkBtn">☎ Talk</button></div>
+  <div><button id="mobileDashboardBtn" class="mobile-desk-btn" type="button">Home</button><button id="mobileQueueBtn" class="mobile-desk-btn" type="button" aria-controls="mobileCaseQueue" aria-expanded="false">Cases</button><button id="mobileContextBtn" class="mobile-desk-btn" type="button" aria-controls="mobileCaseContext" aria-expanded="false">Details</button><div class="search"><span>⌕</span><input id="globalSearch" placeholder="Search ticket, PNR, traveler, vendor…"><kbd>⌘K</kbd></div><div class="grow"></div><span class="pill"><i class="dot"></i><span id="capacity">0 open · 0 messaging</span></span><button class="presence" id="presenceBtn"><i class="dot" id="pDot"></i><span id="pLabel">Online</span> ▾</button><button class="talk" id="talkBtn">☎ Talk</button></div>
   <div class="ctop"><div class="title"><b>Context panel</b><small>Traveler, knowledge and apps</small></div></div>
 </header>
 
-<aside class="queue">
-  <div class="qcontrols"><div class="qhead"><h2 id="viewName"></h2><span class="count" id="viewCount"></span></div><select id="viewSelect"></select><input id="queueSearch" placeholder="Filter current view"></div>
+<aside class="queue" id="mobileCaseQueue">
+  <button id="mobileQueueClose" class="mobile-desk-close" type="button">Close cases</button><div class="qcontrols"><div class="qhead"><h2 id="viewName"></h2><span class="count" id="viewCount"></span></div><select id="viewSelect"></select><input id="queueSearch" placeholder="Filter current view"></div>
   <div class="qlist" id="queueList"></div>
 </aside>
 
 <main class="work"><div class="tabs" id="tabs"></div><div class="body" id="workspace"></div></main>
 
-<aside class="ctx"><div class="ctabs"><button class="active" data-ctx="customer">Customer</button><button data-ctx="knowledge">Knowledge</button><button data-ctx="apps">Apps</button></div><div class="ccontent" id="context"></div></aside>
+<aside class="ctx" id="mobileCaseContext"><button id="mobileContextClose" class="mobile-desk-close" type="button">Close details</button><div class="ctabs"><button class="active" data-ctx="customer">Customer</button><button data-ctx="knowledge">Knowledge</button><button data-ctx="apps">Apps</button></div><div class="ccontent" id="context"></div></aside>
 </div>
 
 <div class="menu presence-menu" id="presenceMenu">

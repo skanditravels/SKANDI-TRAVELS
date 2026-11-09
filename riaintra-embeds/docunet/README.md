@@ -28,3 +28,5 @@
 ## COMPLETE INTENDED HTML
 
 > The matching executable source is maintained in this page folder.
+
+- 2026-11-09 — Phone DocuNet starts with the information inspector closed and opens it as a drawer; library, history, document tools and applicability filters remain reachable in the horizontal toolbar. Desktop defaults and document authorization are unchanged.

@@ -524,3 +524,7 @@ html,body{background:#d8dde2;font-size:13px}
   .row { grid-template-columns: minmax(0, 1fr); }
   .row > .actions { justify-content: flex-start; flex-wrap: wrap; }
 }
+
+@media(max-width:850px){
+ .command-strip{overflow-x:auto;scrollbar-width:thin}.command-item:nth-child(n+3){display:flex}.command-item,.side-nav .tabs button{min-height:44px;flex-shrink:0}.workspace-head{gap:8px;flex-wrap:wrap}.content{padding:12px}.panel{min-width:0}.actions .btn{min-height:44px}.field input,.field select,.field textarea{font-size:16px}
+}

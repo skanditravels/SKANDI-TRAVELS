@@ -1132,7 +1132,7 @@
         const incomingId=String(payload.profile?.agentUserId || payload.profile?.id || "");
         const continuing=portalState.connected && previousId && previousId===incomingId;
         importBootstrap(payload, incomingOrigin);
-        if (!continuing) parseRoute();
+        if (!continuing && portalState.connected) { restoreWorkspaceView(); parseRoute(); }
         renderPortal({ background:true });
         if (portalState.connected) {
           // HR_READY and INTRANET_READY share one backend request. The HR
@@ -1933,6 +1933,27 @@
       return "#/" + view;
     }
 
+    const rememberedWorkspaceViews = new Set(["home", "tasks", "apps", "news", "directory"]);
+    function workspacePreferenceKey() {
+      const id = String(portalState.profile?.agentUserId || portalState.profile?.id || "");
+      if (!portalState.connected || !id) return "";
+      // Two independent hashes keep employee identifiers and content out of storage.
+      let a = 2166136261, b = 2246822519;
+      for (let i = 0; i < id.length; i++) { a = Math.imul(a ^ id.charCodeAt(i), 16777619); b = Math.imul(b ^ id.charCodeAt(i), 3266489917); }
+      return "ria.workspace.view." + (a >>> 0).toString(36) + "." + (b >>> 0).toString(36);
+    }
+    function rememberWorkspaceView(view) {
+      if (!rememberedWorkspaceViews.has(view)) return;
+      const key = workspacePreferenceKey();
+      if (key) { try { localStorage.setItem(key, view); } catch (_) {} }
+    }
+    function restoreWorkspaceView() {
+      if (window.location.hash && window.location.hash !== "#/") return;
+      const key = workspacePreferenceKey();
+      if (!key) return;
+      try { const view = localStorage.getItem(key); if (rememberedWorkspaceViews.has(view)) history.replaceState(null, "", routeHash(view)); } catch (_) {}
+    }
+
     function setRoute(view, appId = null, replace = false) {
       if (!portalState.connected && view !== "home") {
         view = "home";
@@ -1949,6 +1970,7 @@
       }
       currentView = view;
       currentAppId = appId;
+      rememberWorkspaceView(view);
       const nextHash = routeHash(view, appId);
       if (window.location.hash !== nextHash) {
         if (replace) {
@@ -2209,13 +2231,13 @@
               <p>${escapeHtml(today)} · Welcome to your personalized SKANDI workspace. Find your news, colleagues and tools in one place.</p>
               <div class="identity-chips">${chips.map(value=>`<span class="identity-chip">${icon("check",12)} ${escapeHtml(value)}</span>`).join("")}</div>
             </div>
-            <aside class="welcome-profile" aria-label="Your organization context">
+            <details class="welcome-profile-details" ${window.matchMedia && window.matchMedia("(max-width: 680px)").matches ? "" : "open"}><summary>My organization</summary><aside class="welcome-profile" aria-label="Your organization context">
               <div class="profile-line"><span>Job title</span><strong>${escapeHtml(ctx.jobTitle||role.title)}</strong></div>
               <div class="profile-line"><span>Department</span><strong>${escapeHtml(ctx.departmentName||"—")}</strong></div>
               <div class="profile-line"><span>Base / market</span><strong>${escapeHtml(ctx.baseName||"—")}</strong></div>
               <div class="profile-line"><span>SK-ID</span><strong>${escapeHtml(role.employeeId)}</strong></div>
               <div class="profile-line"><span>Access profile</span><strong>${escapeHtml(ctx.accessRole||"Assigned access")}</strong></div>
-            </aside>
+            </aside></details>
           </section>
 
           <div class="intranet-columns">

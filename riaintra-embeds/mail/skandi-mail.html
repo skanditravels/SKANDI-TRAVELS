@@ -22,7 +22,8 @@
   </header>
   <main class="workspace">
     <aside class="rail"><button class="rail-btn active" type="button" title="Mail">✉</button><button id="directoryRail" class="rail-btn" type="button" title="People">◎</button></aside>
-    <aside class="folder-pane">
+    <aside class="folder-pane" id="mobileMailFolders">
+      <button id="mobileFoldersClose" class="mobile-mail-close" type="button" aria-label="Close folders">Close folders</button>
       <div class="folder-actions"><button id="newMessageBtn" class="new-btn" type="button">✎ &nbsp;New message</button></div>
       <div class="folder-scroll">
         <section class="folder-section"><button class="folder-title" type="button">Favorites</button>
@@ -40,12 +41,12 @@
       </div>
     </aside>
     <section class="message-pane">
-      <div class="command"><h1 id="folderHeading">Inbox</h1><div class="tools"><span id="connectionStatus" class="connection">Mail: connecting</span><button id="refreshBtn" class="tool" type="button" title="Refresh">↻</button><button id="directoryBtn" class="tool" type="button" title="People">◎</button></div></div>
+      <div class="command"><button id="mobileFoldersBtn" class="mobile-mail-control" type="button" aria-expanded="false" aria-controls="mobileMailFolders">Folders</button><h1 id="folderHeading">Inbox</h1><button id="mobileComposeBtn" class="mobile-mail-control" type="button">Compose</button><div class="tools"><span id="connectionStatus" class="connection">Mail: connecting</span><button id="refreshBtn" class="tool" type="button" title="Refresh">↻</button><button id="directoryBtn" class="tool" type="button" title="People">◎</button></div></div>
       <div class="tabs"><button class="tab active" data-list-filter="all">All</button><button class="tab" data-list-filter="unread">Unread</button><button class="tab" data-list-filter="flagged">Flagged</button></div>
       <div class="list-wrap"><div id="searchStatus" class="status">Connecting to mail services…</div><div id="messageList" class="message-list"></div></div>
     </section>
     <section class="reading">
-      <div class="reading-toolbar"><div class="reading-actions"><button class="action primary" data-compose="reply">↩ Reply</button><button class="action" data-compose="replyAll">↶ Reply all</button><button class="action" data-compose="forward">↪ Forward</button></div><div class="reading-actions"><button class="tool" data-state="archive" title="Archive">▥</button><button class="tool" data-state="deleteForMe" title="Delete">⌫</button><button class="tool" data-state="flag" title="Flag">⚑</button><button class="tool" data-state="markUnread" title="Mark unread">○</button></div></div>
+      <div class="reading-toolbar"><span id="mailActionError" class="mail-action-error" role="alert" hidden></span><button id="mobileMailBack" class="mobile-mail-control" type="button" aria-label="Back to messages">← Inbox</button><div class="reading-actions"><button class="action primary" data-compose="reply">↩ Reply</button><button class="action" data-compose="replyAll">↶ Reply all</button><button class="action" data-compose="forward">↪ Forward</button></div><div class="reading-actions"><button class="tool" data-state="archive" title="Archive">▥</button><button class="tool" data-state="deleteForMe" title="Delete">⌫</button><button class="tool" data-state="flag" title="Flag">⚑</button><button class="tool" data-state="markUnread" title="Mark unread">○</button></div></div>
       <article id="readingContent" class="reading-content"></article>
     </section>
   </main>
@@ -61,7 +62,7 @@
       <div class="compose-field"><label>Priority</label><select id="composePriority"><option>Normal</option><option>High</option><option>Urgent</option><option>Low</option></select></div>
     </div>
     <div class="editor"><textarea id="composeBody" class="body" required placeholder="Write your message…"></textarea><div id="composeSignature" class="signature"></div><div id="composeQuote" class="quote" hidden></div><div class="upload"><input id="composeFiles" type="file" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.webp,.txt"><div id="attachList" class="attach-list"></div></div></div>
-    <div class="compose-footer"><span id="composeMessage">Internal company mail only.</span><span><button id="saveDraftBtn" class="action" type="button">Save draft</button> <button class="send" type="submit">Send</button></span></div>
+    <div class="compose-footer"><span id="composeMessage" role="status" aria-live="polite">Internal company mail only.</span><span><button id="saveDraftBtn" class="action" type="button">Save draft</button> <button class="send" type="submit">Send</button></span></div>
   </form>
 </div>
 <div id="directoryPanel" class="directory"><div class="directory-head"><span>Company directory</span><button id="directoryClose" type="button">×</button></div><div id="directoryBody" class="directory-body"></div></div>

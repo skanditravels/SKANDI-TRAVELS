@@ -192,7 +192,7 @@
     market:"USNYC",
     audience:"OPERATIONS",
     zoom:100,
-    inspectorOpen:true,
+    inspectorOpen: !(window.matchMedia && window.matchMedia("(max-width: 920px)").matches),
     searchQuery:"",
     commandSelection:0
   };
@@ -530,7 +530,7 @@
   function closeCommand(){ $("commandBackdrop").classList.remove("open"); }
 
   function init(){
-    assignIcons(); bindEvents();
+    assignIcons(); bindEvents(); showInspector(state.inspectorOpen);
     manuals=[]; allSections=[]; state.openTabs=[]; state.activeManualId=""; state.activeSectionId="";
     $("documentTabs").innerHTML=""; $("libraryTree").innerHTML='<div class="result-empty">Loading assigned publications…</div>';
     $("documentPage").innerHTML='<h1>Loading DocuNet…</h1><p>Your assigned controlled documents are being synchronized.</p>';

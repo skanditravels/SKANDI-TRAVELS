@@ -3494,3 +3494,10 @@
     .app-group-section[hidden] { display:none!important; }
   
 
+
+/* Mobile workspace */
+.welcome-profile-details{position:relative;z-index:2;min-width:0}.welcome-profile-details>summary{cursor:pointer;color:#fff;font-size:12px;font-weight:700;padding:8px 0}.welcome-profile-details:not([open])>summary{min-height:44px;display:flex;align-items:center}.welcome-profile-details>summary::marker{color:#a9e8eb}
+@media(max-width:680px){
+ .intranet-home{padding:12px 12px 24px}.welcome-band{gap:4px;padding:19px 17px 10px;border-radius:16px}.welcome-band h1{font-size:27px}.welcome-band p{font-size:13px;line-height:1.45;margin-top:7px}.welcome-kicker{font-size:10px}.identity-chips{display:flex;flex-wrap:wrap;gap:5px}.identity-chip{font-size:10px}.welcome-profile{margin-bottom:8px}.welcome-profile-details>summary{padding:10px 0}.intranet-columns{gap:14px;margin-top:14px}.section-header{gap:8px}.section-title-group h2{font-size:18px}.tool-section .launchpad-grid,.launchpad-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.app-tile,.tool-section .app-tile{min-height:132px}.filter-chip{min-height:40px}.top-nav{overflow-x:auto;overscroll-behavior-inline:contain;scrollbar-width:thin}
+}
+@media(max-width:330px){.tool-section .launchpad-grid,.launchpad-grid{grid-template-columns:1fr}}

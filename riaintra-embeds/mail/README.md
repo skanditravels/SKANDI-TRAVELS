@@ -37,3 +37,5 @@
 ## COMPLETE HTML / SOURCE IMPLEMENTATION
 
 > The matching executable source is maintained in this page folder.
+
+- 2026-11-09 — Phone and narrow-tablet Mail exposes folders, compose, a message reader and return-to-list navigation. A send keeps the composer and text until a server response; failures appear in the composer and an unconfirmed timeout asks the user to check Sent Items before retrying. Oversize attachments block sending instead of being silently omitted. Message contracts and authorization are unchanged.

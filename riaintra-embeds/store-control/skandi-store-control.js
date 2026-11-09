@@ -25,7 +25,7 @@ const $=id=>document.getElementById(id);
 const money=(v,c="USD")=>{const n=Number(v||0);try{return new Intl.NumberFormat("en-US",{style:"currency",currency:c||"USD"}).format(n)}catch(e){return "$"+n.toFixed(2)}}
 function esc(v=""){return String(v??"").replace(/[&<>"']/g,s=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[s]))}
 function post(type,payload={}){
-  if(/^STORE_CONTROL_(CREATE_|SAVE_|SET_|BULK_|DELETE_|UPDATE_)/.test(type)){if(BUSY)return;lastMutation={type,payload};busy(true);status("Saving to Wix…")}
+  if(/^STORE_CONTROL_(CREATE_|SAVE_|SET_|BULK_|DELETE_|UPDATE_)/.test(type)){if(BUSY)return;lastMutation={type,payload};busy(true);status("Saving…")}
   window.parent.postMessage({source:SOURCE,type,payload,timestamp:new Date().toISOString()},"*")
 }
 function audit(action,detail,mode=""){state.audit.unshift({time:new Date().toISOString(),action,detail,mode});renderAudit()}
@@ -274,7 +274,7 @@ function sendFulfillment(){
   if(!payload.orderId){status("Order ID is required.","error");return}
   if(["CANCELED","FULFILLED"].includes(payload.action)){
     const verb=payload.action==="CANCELED"?"CANCEL":"FULFILL";
-    const detail=verb==="CANCEL"?"Cancellation does not refund or restock the order.":"This fulfills all remaining items. Wix may send its configured shipping notification.";
+    const detail=verb==="CANCEL"?"Cancellation does not refund or restock the order.":"This fulfills all remaining items. A shipping notification may be sent.";
     if(!window.confirm(detail+" Continue?"))return;
     payload.confirmation=verb+" "+payload.orderId;
   }
@@ -307,7 +307,7 @@ function savePromo(){
   post("STORE_CONTROL_SAVE_PROMOTION",payload);
 }
 function load(){post("STORE_CONTROL_READY",{})}
-function refresh(){status("Refreshing Wix data…");post("STORE_CONTROL_REFRESH",{query:$("query").value})}
+function refresh(){status("Refreshing store data…");post("STORE_CONTROL_REFRESH",{query:$("query").value})}
 window.addEventListener("message",event=>{
   if(event.source!==window.parent)return;const m=event.data||{};if(m.source!==PARENT)return;const p=m.payload||{};
   if(m.type==="STORE_CONTROL_PARENT_READY"){load();return}
@@ -315,14 +315,14 @@ window.addEventListener("message",event=>{
     backendResponded=true;
     const inventory=(p.inventory||[]).map(i=>({...i,tracked:i.trackQuantity,name:p.products?.find(x=>x.id===i.productId)?.name||i.productId}));
     render({...p,inventory,products:(p.products||[]).map(x=>({...x,price:x.minPrice,stock:!p.serviceErrors?.inventory && inventory.some(i=>i.productId===x.id&&i.tracked)?inventory.filter(i=>i.productId===x.id&&i.tracked).reduce((n,i)=>n+Number(i.quantity||0),0):null})),collections:(p.categories||[]).map(c=>({...c,products:c.itemCounter}))});
-    const errors=Object.values(p.serviceErrors||{});status(errors.length?errors.join(" "):p.scope||"Wix data refreshed.",errors.length?"warn":"");return;
+    const errors=Object.values(p.serviceErrors||{});status(errors.length?errors.join(" "):p.scope||"Store data refreshed.",errors.length?"warn":"");return;
   }
   if(m.type==="STORE_CONTROL_PRODUCT"){fillProduct(p.product);status("Product loaded.");return}
   if(m.type==="STORE_CONTROL_PROGRESS"){busy(true);status(p.message||"Working…");return}
   if(m.type==="STORE_CONTROL_IDLE"){busy(false);return}
   if(m.type==="STORE_CONTROL_MUTATION_OK"){
     if(p.product)fillProduct(p.product);
-    status(p.message||"Saved to Wix.","ok");audit(p.action||"SAVE",(p.message||"Wix confirmed the update.")+(lastMutation?.payload?.reason?" Session note: "+lastMutation.payload.reason:""),"ok");
+    status(p.message||"Saved.","ok");audit(p.action||"SAVE",(p.message||"The update was confirmed.")+(lastMutation?.payload?.reason?" Session note: "+lastMutation.payload.reason:""),"ok");
     (p.results||[]).filter(x=>!x.ok).forEach(x=>audit("ASSIGNMENT_FAILED",x.productId,"error"));return;
   }
   if(m.type==="STORE_CONTROL_BULK_RESULT"){status(`${p.succeeded||0} updated; ${p.failed||0} failed.`,p.failed?"warn":"ok");(p.results||[]).forEach(x=>audit("BULK_PRICE",x.productId+": "+(x.ok?"Saved":x.message),x.ok?"ok":"error"));return}

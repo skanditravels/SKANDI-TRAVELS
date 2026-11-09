@@ -489,6 +489,7 @@ function openTicket(id, notifyParent = true) {
   id = Number(id);
   const t = ticket(id);
   if (!t) return;
+  closeMobileDeskPanels();
   if (!S.open.includes(id)) S.open.push(id);
   S.active = id;
   S.dashboard = false;
@@ -1548,3 +1549,13 @@ setTimeout(() => {
   }
 }, 12000);
 
+
+/* The mobile queue and context are views of the existing workspace. */
+function closeMobileDeskPanels(){const app=document.querySelector(".app");app.classList.remove("mobile-queue-open","mobile-context-open");$("#mobileQueueBtn").setAttribute("aria-expanded","false");$("#mobileContextBtn").setAttribute("aria-expanded","false")}
+function toggleMobileDeskPanel(name){const app=document.querySelector(".app"),cls="mobile-"+name+"-open",open=!app.classList.contains(cls);closeMobileDeskPanels();app.classList.toggle(cls,open);$(name==="queue"?"#mobileQueueBtn":"#mobileContextBtn").setAttribute("aria-expanded",String(open))}
+$("#mobileDashboardBtn").addEventListener("click",()=>{closeMobileDeskPanels();$("#dashboardBtn").click()});
+$("#mobileQueueBtn").addEventListener("click",()=>toggleMobileDeskPanel("queue"));
+$("#mobileContextBtn").addEventListener("click",()=>toggleMobileDeskPanel("context"));
+$("#mobileQueueClose").addEventListener("click",closeMobileDeskPanels);
+$("#mobileContextClose").addEventListener("click",closeMobileDeskPanels);
+document.addEventListener("keydown",event=>{if(event.key==="Escape")closeMobileDeskPanels()});
