@@ -10,6 +10,7 @@ export const SITE_MAP = Object.freeze({
   travelInfo: "/travel-info", transfers: "/travel-info?section=transfers", skandiCollection: "/skandi-collection",
   voy: "/voy-magazine", club: "/skandi-club", clubLogin: "/skandi-club/login", forgotPassword: "/forgot-password",
   about: "/about", support: "/about/support", newsroom: "/about/news-room",
+  accessRestricted: "/auth/access-restricted",
   theStore: "/the-store", storeCheckout: "/the-store/store-checkout",
   storeConfirmation: "/the-store/store-checkout/order-confirmation", ourNetwork: "/destinations",
   legal: "/about/legal", policies: "/about/legal/policies", cookiePreferences: "/about/legal/cookie-preferences", riaintra: "/riaintra",
@@ -89,6 +90,16 @@ export const EDITORIAL_PAGE_CATALOG = Object.freeze([
   page("skandiCollection", "SKANDI Collection", SITE_MAP.skandiCollection, "INVENTORY"),
   page("voy", "VOY Magazine", SITE_MAP.voy, "VOY", [], { presentationRuntime:true }),
   page("forgotPassword", "Reset your Password", SITE_MAP.forgotPassword, "CUSTOMER_AUTH"),
+  page("accessRestricted", "Access Restricted", SITE_MAP.accessRestricted, "PUBLIC_PRESENTATION", [
+    section("access-restricted-main", "Access message", [
+      field("access-restricted-eyebrow", "Eyebrow"),
+      field("access-restricted-title", "Headline"),
+      field("access-restricted-intro", "Intro"),
+      field("access-restricted-detail", "Explanation", "LONG_TEXT"),
+      field("access-restricted-home", "Homepage button"),
+      field("access-restricted-support", "Support button")
+    ])
+  ], { presentationRuntime:true }),
   page("myProfile", "My Profile", APP_ROUTES.myProfile, "CUSTOMER_PROFILE"),
   page("bookingFlow", "Booking", APP_ROUTES.bookingFlow, "CUSTOMER_BOOKING"),
   page("myTrips", "My Trips", APP_ROUTES.myTrips, "CUSTOMER_PROFILE"),
@@ -182,6 +193,12 @@ export function isSafeInternalRoute(value){const path=String(value||"").trim();c
 // Compiler integration bindings. No route strings are duplicated here.
 // Source-verified controller contracts; Wix element installation still requires live verification.
 export const PAGE_BUILD_INTEGRATIONS = Object.freeze({
+  "accessRestricted": {
+    "controller": "src/pages/Access Restricted.m6vln.js",
+    "embedIds": ["#html1"],
+    "sources": ["SKANDI_ACCESS_RESTRICTED"],
+    "note": "Wix authentication-system page: retain its existing #html1 component and install the universal receiver."
+  },
   "cruises": {
     "controller": "src/pages/masterPage.js",
     "embedIds": ["#cruisesEmbed"],
