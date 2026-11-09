@@ -184,7 +184,9 @@ export function flightJourneyKey(offer = {}) {
       const origin = upper(segment.origin?.iataCode, 3), destination = upper(segment.destination?.iataCode, 3);
       const departure = text(segment.departingAt, 50), arrival = text(segment.arrivingAt, 50);
       if (!carrier || !number || !origin || !destination || !departure || !arrival) return null;
-      return [carrier,number,origin,destination,departure,arrival];
+      const stops = arr(segment.stops).map(stop => [upper(stop.airport?.iataCode,3),text(stop.arrivingAt,50),text(stop.departingAt,50),text(stop.duration,30)]);
+      if (stops.some(stop => !stop[0])) return null;
+      return [carrier,number,origin,destination,departure,arrival,upper(segment.operatingCarrier?.iataCode,3),text(segment.operatingFlightNumber,20),stops];
     });
     return values.some(value => !value) ? null : values;
   });

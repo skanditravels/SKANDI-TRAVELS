@@ -134,6 +134,13 @@ test('upsell cabins are selectable only when returned and missing details are no
   doc.querySelector('[data-action="select-offer"][data-id="off_business"]').click();assert.equal(sent.at(-1).offerId,'off_business');
 });
 
+test('flights with a different technical stop are not merged into the same itinerary',async t=>{
+  const {doc,host}=await bookingFrame(t),first=sampleOffer('off_direct'),different=sampleOffer('off_stop');
+  different.slices[0].segments[0].stops=[{airport:{iataCode:'GOT'},duration:'PT35M'}];
+  host('BOOKING_SEARCH_RESULTS',{search:{origin:'ARN',destination:'JFK',tripType:'flightOnly'},items:[first,different],errors:[]});
+  assert.equal(doc.querySelectorAll('.flight-result').length,2);
+});
+
 test('flight-and-hotel packages retain their original selectable ID and show each direction',async t=>{
   const {doc,sent,host}=await bookingFrame(t),flight=sampleOffer('off_package');
   const pack={id:'PKG-off_package-stay_1',itemType:'PACKAGE',price:{amount:1400,currency:'USD'},flight,stay:{title:'Hotel Example'}};
