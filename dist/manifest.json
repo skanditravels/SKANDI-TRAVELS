@@ -1358,6 +1358,50 @@
       "bytes": 189360
     },
     {
+      "key": "accessRestricted",
+      "route": "/auth/access-restricted",
+      "slug": "access-restricted",
+      "title": "Access Restricted",
+      "family": "public",
+      "chrome": "public",
+      "mobileNavigation": true,
+      "sourceDirectory": "skandi-embeds/access-restricted",
+      "stem": "skandi-access-restricted",
+      "controller": "src/pages/Access Restricted.m6vln.js",
+      "embedIds": [
+        "#html1"
+      ],
+      "sources": [
+        "SKANDI_ACCESS_RESTRICTED"
+      ],
+      "components": [],
+      "binding": "explicit",
+      "requiresStaff": false,
+      "status": "BUILT",
+      "files": [
+        "skandi-embeds/access-restricted/skandi-access-restricted.html",
+        "skandi-embeds/access-restricted/skandi-access-restricted.css",
+        "skandi-embeds/access-restricted/skandi-access-restricted.js"
+      ],
+      "missing": [],
+      "issues": [],
+      "backend": [],
+      "messages": [
+        "ACCESS_RESTRICTED_NAVIGATE",
+        "ACCESS_RESTRICTED_NAVIGATION_ERROR",
+        "SKANDI_ACCESS_RESTRICTED",
+        "SKANDI_WIX_PARENT"
+      ],
+      "output": "dist/access-restricted/index.html",
+      "dynamic": false,
+      "sourceStatus": "COMPLETE SOURCE",
+      "blockers": [],
+      "receiver": "skandi-embeds/access-restricted/skandi-access-restricted.receiver.html",
+      "receiverFile": "skandi-embeds/access-restricted/skandi-access-restricted.receiver.html",
+      "sha256": "a122583f81ca5e457529600d56e13f5752da8f8f5fe5ce5e71075ac3d677b923",
+      "bytes": 161327
+    },
+    {
       "key": "theStore",
       "route": "/the-store",
       "slug": "the-store",
