@@ -387,13 +387,24 @@ test('guest confirmation payload includes only verified itinerary and fare data'
     airOrder:{slices:[{segments:[{marketingCarrier:{iataCode:'SK',name:'SAS'},operatingCarrier:{name:'SAS'},marketingFlightNumber:'904',origin:{iataCode:'JFK'},destination:{iataCode:'ARN'},departingAt:'2027-02-14T17:25:00',arrivingAt:'2027-02-15T07:35:00'}]}]}};
   const data=api.confirmedPayload(row,cart,'','');
   assert.equal(data.customerEmail,'guest@example.com');
-  assert.equal(data.bookingDate,'2026-11-09T10:00:00Z');
+  assert.equal(data.bookingDate,'2026-11-09');
+  assert.equal(data.confirmationDate,'2026-11-09T10:10:00Z');
   assert.match(data.flightDetails,/JFK → ARN/);
   assert.match(data.cancellationTerms,/Refund before departure: not allowed/);
   assert.match(data.cancellationTerms,/USD 30.00/);
   assert.equal(data.manageBookingUrl,'https://www.skanditravels.com/about/support');
   assert.equal('contactId' in data,false);
   assert.equal('memberId' in data,false);
+  row.created_at='2026-11-09T23:30:00.987-05:00';
+  row.payload.flow.confirmedAt='2026-11-10T04:35:12.123Z';
+  const normalized=api.confirmedPayload(row,cart,'','');
+  assert.equal(normalized.bookingDate,'2026-11-10');
+  assert.equal(normalized.confirmationDate,'2026-11-10T04:35:12Z');
+  row.created_at='invalid';
+  row.payload.flow.confirmedAt='invalid';
+  const missingDates=api.confirmedPayload(row,cart,'','');
+  assert.equal('bookingDate' in missingDates,false);
+  assert.equal('confirmationDate' in missingDates,false);
 });
 
 test('guest payment fails closed when confirmation delivery has not been enabled', async () => {
