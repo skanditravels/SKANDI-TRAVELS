@@ -8,6 +8,7 @@ import { auth } from "@wix/essentials";
 import { secrets } from "wix-secrets-backend.v2";
 import { elevate } from "wix-auth";
 import { loadBookingCartCore } from "backend/SKANDI_CORE/customerBooking";
+import { updateOwnedCart } from "backend/SKANDI_CORE/bookingCart";
 import { restRequest } from "backend/SKANDI_CORE/supabaseServer";
 import { text } from "backend/SKANDI_CORE/platformValidation";
 
@@ -15,8 +16,10 @@ const runTrigger = auth.elevate(customTrigger.runTrigger);
 const getSecretValue = elevate(secrets.getSecretValue);
 const DELIVERY_TABLE = "customer_notifications";
 const SECRET_NAME = "SKANDI_BOOKING_CONFIRMATION_TRIGGER_ID";
+const GUEST_READY_SECRET = "SKANDI_GUEST_BOOKING_CONFIRMATION_READY";
 const GUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const MANAGE_BOOKING_URL = "https://www.skanditravels.com/my-profile?section=trips&view=upcoming";
+const GUEST_HELP_URL = "https://www.skanditravels.com/about/support";
 
 const array = value => Array.isArray(value) ? value : [];
 const object = value => value && typeof value === "object" && !Array.isArray(value) ? value : {};
@@ -98,6 +101,24 @@ function carSummary(cart = {}) {
     sourceValue(car.reference) && `Rental reference: ${sourceValue(car.reference)}`
   ]);
 }
+function cancellationSummary(row) {
+  const payload = object(row.payload);
+  const confirmedConditions = object(payload.airOrder?.conditions);
+  const conditions = Object.keys(confirmedConditions).length ? confirmedConditions : object(payload.selectedOffer?.conditions);
+  const lines = [["refund_before_departure", "Refund before departure"], ["change_before_departure", "Changes before departure"]].map(([key,label]) => {
+    const rule = object(conditions[key]);
+    if (typeof rule.allowed !== "boolean") return "";
+    let result = `${label}: ${rule.allowed ? "allowed" : "not allowed"}`;
+    if (rule.allowed && rule.penalty_amount != null && rule.penalty_currency) {
+      try { result += `; fee ${price(rule.penalty_amount, rule.penalty_currency)}`; }
+      catch (_) { result += "; fee details are unavailable"; }
+    }
+    return result;
+  }).filter(Boolean);
+  if (!lines.length) return "The provider did not return complete cancellation or change conditions. Contact SKANDI for details.";
+  if (String(payload.productType || "").toUpperCase().includes("PACKAGE")) lines.push("Hotel conditions may differ; contact SKANDI for the confirmed rate terms.");
+  return lines.join(" | ");
+}
 function confirmedPayload(row, cart, contactId, memberId) {
   const payload = object(row.payload);
   const air = object(payload.airOrder);
@@ -119,7 +140,7 @@ function confirmedPayload(row, cart, contactId, memberId) {
   if (status !== "Confirmed" || !email || !reference || !paymentStatus) {
     throw error("BOOKING_EMAIL_SOURCE_INCOMPLETE", "Confirmed booking requires a verified email and reference.");
   }
-  if (!GUID.test(contactId)) throw error("BOOKING_EMAIL_CONTACT_MISSING", "Wix contact ID is not available.");
+  if (contactId && !GUID.test(contactId)) throw error("BOOKING_EMAIL_CONTACT_INVALID", "The Wix contact ID is invalid.");
   if ((productType === "HOTEL_ONLY" || productType.includes("PACKAGE")) && !stay.id) {
     throw error("BOOKING_EMAIL_HOTEL_UNCONFIRMED", "A booked hotel is missing from the confirmed cart.");
   }
@@ -133,16 +154,17 @@ function confirmedPayload(row, cart, contactId, memberId) {
     throw error("BOOKING_EMAIL_TRAVELERS_UNAVAILABLE", "Confirmed traveler names could not be verified.");
   }
   return {
-    contactId,
-    memberId,
+    ...(contactId ? {contactId} : {}),
+    ...(memberId ? {memberId} : {}),
     bookingId: str(row.cart_id, 50),
     bookingReference: reference,
     supplierReference: providerRef,
     customerEmail: email,
     productType: sourceValue(payload.productType, "SKANDI booking"),
     confirmationDate: safeIso(payload.flow?.confirmedAt || row.updated_at),
+    bookingDate: safeIso(row.created_at || payload.flow?.createdAt || row.updated_at),
     flightDetails: segments.length ? segments.join(" | ") : "Not part of this booking",
-    travelerDetails: travelers.length ? travelers.join(" | ") : "See My Profile for registered traveler details",
+    travelerDetails: travelers.length ? travelers.join(" | ") : "Contact SKANDI for traveler details",
     hotelDetails: hotelSummary(cart) || "Not part of this booking",
     carDetails: carSummary(cart) || "Not part of this booking",
     seatDetails: seats.length ? seats.join(", ") : "No confirmed seat assignment recorded",
@@ -151,8 +173,9 @@ function confirmedPayload(row, cart, contactId, memberId) {
     totalAmount: amount,
     currency: str(row.currency, 3).toUpperCase(),
     paymentStatus,
-    manageBookingUrl: MANAGE_BOOKING_URL,
-    documentCenterUrl: MANAGE_BOOKING_URL,
+    cancellationTerms: cancellationSummary(row),
+    manageBookingUrl: memberId ? MANAGE_BOOKING_URL : GUEST_HELP_URL,
+    documentCenterUrl: memberId ? MANAGE_BOOKING_URL : GUEST_HELP_URL,
     confirmationSource: "SKANDI_V12_CUSTOMER_CHECKOUT"
   };
 }
@@ -162,6 +185,29 @@ async function triggerId() {
   if (!GUID.test(id)) throw error("BOOKING_EMAIL_TRIGGER_NOT_CONFIGURED", `Configure Wix secret ${SECRET_NAME} with the actual Wix custom-trigger ID.`);
   return id;
 }
+function guestEmailError() {
+  const value = error("BOOKING_CONFIRMATION_UNAVAILABLE", "Booking confirmation is temporarily unavailable. Please try again or contact SKANDI before paying.");
+  value.publicMessage = value.message;
+  return value;
+}
+// The existing Wix draft addresses its message to the customerEmail trigger
+// field. Use the email saved on the owned cart; never trust an input contact ID.
+export async function prepareGuestConfirmationCore(context, cartId) {
+  if (!context?.guestHash) return;
+  const loaded = await loadBookingCartCore(context, {cartId});
+  const row = loaded.row;
+  const email = str(row.email,254).toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw guestEmailError();
+  try {
+    await triggerId();
+    // A trigger ID alone does not prove its automation is active or correctly
+    // configured. Fail closed until the published confirmation is verified.
+    const ready = await getSecretValue(GUEST_READY_SECRET);
+    const value = str(typeof ready === "string" ? ready : ready?.value ?? ready?.secretValue ?? ready?.secret?.value, 20).toLowerCase();
+    if (value !== "true") throw guestEmailError();
+    await updateOwnedCart(context, row.cart_id, {payload:{...object(row.payload), guestReceiptEmail:email}});
+  } catch (_) { throw guestEmailError(); }
+}
 async function claimed(id) {
   const records = await restRequest({table:DELIVERY_TABLE,query:{select:"id,notification_id,payload",notification_id:eq(id),limit:1}});
   return array(records)[0] || null;
@@ -169,14 +215,14 @@ async function claimed(id) {
 async function claim(id, context, row, bookingRef) {
   const body = {
     notification_id: id,
-    member_id: str(context.memberId, 180),
-    wix_member_id: str(context.memberId, 180),
+    member_id: str(context.memberId, 180) || null,
+    wix_member_id: str(context.memberId, 180) || null,
     type: "BOOKING_CONFIRMATION_EMAIL",
     title: "Booking confirmation email",
     message: "Booking confirmation delivery was requested.",
     entity_type: "BOOKING_CART",
     entity_id: str(row.cart_id, 50),
-    action_path: "/my-profile?section=trips&view=upcoming",
+    action_path: context.memberId ? "/my-profile?section=trips&view=upcoming" : "/about/support",
     read: true,
     payload: { deliveryState:"DISPATCHING", reference:bookingRef, startedAt:new Date().toISOString() }
   };
@@ -200,15 +246,17 @@ async function recordOutcome(id, current, state, description) {
 // Call only from customerBooking.web.js AFTER a canonical booking core has returned Confirmed.
 // Neither a frontend booking ID nor a page claim can authorize this action.
 export async function dispatchConfirmedBookingEmailCore(context, bookingId) {
-  if (!context?.memberId || !context?.contactId) throw error("BOOKING_EMAIL_AUTH_REQUIRED", "Authenticated member and contact ID required.");
+  if (!context?.memberId && !context?.guestHash) throw error("BOOKING_EMAIL_AUTH_REQUIRED", "A verified booking session is required.");
   const cartId = str(bookingId, 50);
   const loaded = await loadBookingCartCore(context, {cartId}, {includeTravelers:true});
   const row = loaded.row;
   if (!row || row.status !== "Confirmed" || !row.cart_id) {
     throw error("BOOKING_EMAIL_NOT_CONFIRMED", "The booking has not reached Confirmed state.");
   }
-  if (str(row.email,254).toLowerCase() !== str(context.email,254).toLowerCase()) {
-    throw error("BOOKING_EMAIL_RECIPIENT_MISMATCH", "Booking contact differs from authenticated Wix contact; resolve recipient before emailing.");
+  if (context.guestHash) {
+    if (str(row.payload?.guestReceiptEmail,254).toLowerCase() !== str(row.email,254).toLowerCase()) {
+      throw error("BOOKING_EMAIL_RECIPIENT_MISMATCH", "The guest booking recipient could not be verified.");
+    }
   }
   const data = confirmedPayload(row, loaded.cart, str(context.contactId,100), str(context.memberId,180));
   const configuredTrigger = await triggerId();

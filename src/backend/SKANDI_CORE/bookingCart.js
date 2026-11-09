@@ -31,6 +31,26 @@ function contextMember(context = {}) {
   }
   return memberId;
 }
+// Guest capabilities are hashed at the web-method boundary. The raw capability
+// never reaches this repository or the stored cart. Guest access expires after
+// seven days and is always scoped to a single cart (or its selected offer).
+function ownerScope(context = {}) {
+  const guestHash = String(context.guestHash || "");
+  if (/^[a-f0-9]{64}$/.test(guestHash)) return {
+    member_id: "is.null",
+    "payload->>guestAccessHash": eq(guestHash),
+    "payload->>guestAccessExpiresAt": `gte.${nowIso()}`
+  };
+  return { member_id: eq(contextMember(context)) };
+}
+async function preserveGuestAccess(context, cartId, patch) {
+  if (!context.guestHash || !("payload" in patch)) return patch;
+  const existing = await getOwnedCart(context, cartId);
+  if (!existing) throw new Error("BOOKING_CART_ACCESS_DENIED");
+  return { ...patch, payload: { ...patch.payload,
+    guestAccessHash: existing.payload.guestAccessHash,
+    guestAccessExpiresAt: existing.payload.guestAccessExpiresAt } };
+}
 function normalizeCartPatch(input = {}) {
   const patch = {};
   const map = {
@@ -60,7 +80,8 @@ function normalizeCartPatch(input = {}) {
 }
 
 export async function createOwnedCart(context = {}, input = {}) {
-  const memberId = contextMember(context);
+  ownerScope(context);
+  const memberId = context.guestHash ? null : contextMember(context);
   const cartId = text(input.cartId, 36) || randomUUID();
   const body = {
     cart_id: cartId,
@@ -73,7 +94,10 @@ export async function createOwnedCart(context = {}, input = {}) {
     total: money(input.total),
     selected_offer_id: text(input.selectedOfferId, 180) || null,
     expires_at: input.expiresAt || null,
-    payload: record(input.payload),
+    payload: context.guestHash ? { ...record(input.payload),
+      guestAccessHash: context.guestHash,
+      guestAccessExpiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+    } : record(input.payload),
     source: text(input.source || "customer", 80)
   };
   const created = await restRequest({ table: CARTS, method: "POST", body });
@@ -83,7 +107,7 @@ export async function createOwnedCart(context = {}, input = {}) {
 }
 
 export async function getOwnedCart(context = {}, rawCartId) {
-  const memberId = contextMember(context);
+  const scope = ownerScope(context);
   const cartId = text(rawCartId, 36);
   if (!cartId) return null;
   return row(await restRequest({
@@ -91,21 +115,21 @@ export async function getOwnedCart(context = {}, rawCartId) {
     query: {
       select: "*",
       cart_id: eq(cartId),
-      member_id: eq(memberId),
+      ...scope,
       limit: 1
     }
   }));
 }
 
 export async function getOwnedCartByOffer(context = {}, rawOfferId) {
-  const memberId = contextMember(context);
+  const scope = ownerScope(context);
   const offerId = text(rawOfferId, 180);
   if (!offerId) return null;
   return row(await restRequest({
     table: CARTS,
     query: {
       select: "*",
-      member_id: eq(memberId),
+      ...scope,
       selected_offer_id: eq(offerId),
       order: desc("created_at"),
       limit: 1
@@ -126,30 +150,31 @@ export async function listOwnedCarts(context = {}, { limit = 20, status = "" } =
 }
 
 export async function updateOwnedCart(context = {}, rawCartId, input = {}) {
-  const memberId = contextMember(context);
+  const scope = ownerScope(context);
   const cartId = text(rawCartId, 36);
-  const patch = normalizeCartPatch(input);
+  let patch = normalizeCartPatch(input);
   if (!cartId || !Object.keys(patch).length) return getOwnedCart(context, cartId);
+  patch = await preserveGuestAccess(context, cartId, patch);
   const updated = await restRequest({
     table: CARTS,
     method: "PATCH",
-    query: { cart_id: eq(cartId), member_id: eq(memberId) },
+    query: { cart_id: eq(cartId), ...scope },
     body: patch
   });
   return row(updated) || getOwnedCart(context, cartId);
 }
 
 export async function transitionOwnedCart(context = {}, rawCartId, fromStatus, toStatus, extra = {}) {
-  const memberId = contextMember(context);
+  const scope = ownerScope(context);
   const cartId = text(rawCartId, 36);
   const from = text(fromStatus, 60);
   const to = text(toStatus, 60);
   if (!cartId || !from || !to) return null;
-  const body = { ...normalizeCartPatch(extra), status: to };
+  const body = await preserveGuestAccess(context, cartId, { ...normalizeCartPatch(extra), status: to });
   const updated = await restRequest({
     table: CARTS,
     method: "PATCH",
-    query: { cart_id: eq(cartId), member_id: eq(memberId), status: eq(from) },
+    query: { cart_id: eq(cartId), ...scope, status: eq(from) },
     body
   });
   return row(updated);

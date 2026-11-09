@@ -376,3 +376,10 @@ input,select,textarea,.field input,.field select,.qty{
 @media(max-width:1024px){.offer-workspace.results-workspace{grid-template-columns:1fr}.results-workspace>.travel-planner{grid-row:1}.travel-planner{position:static}}
 @media(max-width:800px){.flight-result-main{grid-template-columns:85px minmax(0,1fr)}.flight-result-actions{grid-column:1/-1}.booking-filters>label,.airline-filter{flex:1 1 42%}}
 @media(max-width:520px){.flight-result-main{grid-template-columns:1fr}.itinerary-leg{grid-template-columns:repeat(3,minmax(0,1fr))}.flight-results-heading{align-items:flex-start}.flight-results-heading h2{font-size:19px}.booking-filters{gap:10px}.booking-filters>label,.airline-filter{flex:1 1 100%}.airline-options{width:100%}.detail-route{gap:8px}.detail-facts{grid-template-columns:1fr}.fare-options{grid-template-columns:1fr}.fare-price{justify-items:start}.fare-price .btn{width:100%;grid-column:auto;grid-row:auto}}
+
+/* Checkout feedback stays close to the action it relates to. */
+.actions-right{flex-wrap:wrap}
+.action-error{flex-basis:100%;margin:0 0 2px;color:#a32d25;font-size:13px;font-weight:600;line-height:1.45}
+.checkline a{color:var(--sk-blue);font-weight:700;text-decoration:underline;text-underline-offset:2px}
+.route-operator{display:block;margin-top:4px;color:var(--sk-muted);font-size:12px;font-weight:500}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #1f6ba3;outline-offset:2px}

@@ -34,7 +34,6 @@ import {
   createStripePaymentIntent,
   retrieveStripePaymentIntent,
   captureStripePaymentIntent,
-  cancelStripePaymentIntent,
   getStripePublishableKey,
   assertStripeAuthorization
 } from "backend/SKANDI_CORE/stripeClient";
@@ -252,13 +251,25 @@ function requireMemberContext(context = {}) {
   if (!text(context.memberId, 180)) throw bookingError("LOGIN_REQUIRED", "Sign in to continue with this booking.", 401);
   return context;
 }
+function requireBookingContext(context = {}) {
+  if (!text(context?.memberId, 180) && !/^[a-f0-9]{64}$/.test(String(context?.guestHash || ""))) {
+    throw bookingError("BOOKING_SESSION_EXPIRED", "Your secure booking session has expired. Start a new search or contact SKANDI for help.", 401);
+  }
+  return context;
+}
 async function requireOwnedCart(context, cartId) {
-  const row = await getOwnedCart(requireMemberContext(context), text(cartId, 36));
-  if (!row) throw bookingError("CART_NOT_FOUND", "This booking cart was not found or belongs to another account.", 404);
+  const row = await getOwnedCart(requireBookingContext(context), text(cartId, 36));
+  if (!row) throw bookingError("CART_NOT_FOUND", "Your booking could not be found in this session. Start a new search or contact SKANDI for help.", 404);
   return row;
 }
 function assertEditable(row) {
+  if (row?.status === "PaymentPending") throw bookingError("BOOKING_PAYMENT_IN_PROGRESS", "Your payment session is active. Check your booking status or contact SKANDI before changing your trip.", 409);
   if (LOCKED_STATUSES.has(String(row?.status || ""))) throw bookingError("BOOKING_LOCKED", "This booking can no longer be changed from checkout.", 409);
+}
+function releasedPaymentSuffix(row) {
+  const payment = row?.payload?.payment || {};
+  const id = text(payment.paymentIntentId, 180);
+  return payment.status === "authorization_released" && /^pi_[A-Za-z0-9_]+$/.test(id) ? `_${id}` : "";
 }
 function resumeStepForStatus(status) {
   return ({
@@ -414,7 +425,7 @@ export async function searchUnifiedOffersCore(input = {}) {
 
 
 export async function createBookingCartFromOfferCore(context = null, input = {}) {
-  if (!text(context?.memberId, 180)) return { requiresLogin: true, message: "Sign in to continue with this offer." };
+  requireBookingContext(context);
 
 
   const offer = record(input.offer);
@@ -446,6 +457,7 @@ export async function createBookingCartFromOfferCore(context = null, input = {})
     return createHotelCartCore(context, { ...search, quoteId });
   }
   if (type.includes("CAR") || text(offer.rateId, 180).startsWith("rae_")) {
+    requireMemberContext(context);
     let quoteId = text(offer.quoteId, 180);
     if (!quoteId) {
       const quoted = await quoteCarCore({ rateId: offer.rateId || offer.id });
@@ -459,7 +471,7 @@ export async function createBookingCartFromOfferCore(context = null, input = {})
 
 
 export async function createPackageCartCore(context, input = {}) {
-  requireMemberContext(context);
+  requireBookingContext(context);
   const offer = record(input.offer);
   const search = record(input.search || offer.searchContext);
   const flightOfferId = text(offer.flightOfferId || offer.flight?.id || offer.flight?.offerId, 180);
@@ -542,7 +554,7 @@ export async function createPackageCartCore(context, input = {}) {
 
 
 export async function createFlightCartCore(context, input = {}) {
-  requireMemberContext(context);
+  requireBookingContext(context);
   const offerId = text(input.offer?.id || input.offerId, 180);
   if (!/^off_[A-Za-z0-9_]+$/.test(offerId)) throw bookingError("INVALID_OFFER_ID", "The selected flight offer is invalid.");
   const existing = await getOwnedCartByOffer(context, offerId);
@@ -852,7 +864,7 @@ export async function prepareBookingPaymentCore(context, input = {}) {
       currency: pricing.currency,
       captureMethod: "manual",
       idempotencyContext: row.cart_id,
-      idempotencyKey: `skandi_package_${row.cart_id}_${amountMinor}_${lower(pricing.currency, 3)}`.slice(0, 255),
+      idempotencyKey: `skandi_package_${row.cart_id}_${amountMinor}_${lower(pricing.currency, 3)}${releasedPaymentSuffix(row)}`.slice(0, 255),
       description: `SKANDI Flight + Hotel ${row.cart_id}`,
       metadata: {
         integration: "skandi_package",
@@ -903,7 +915,7 @@ export async function prepareBookingPaymentCore(context, input = {}) {
   }
 
 
-  const result = await prepareDuffelPaymentCore({ offerId: airOfferIdForCart(row), services, idempotencyContext: row.cart_id, manualCapture: true });
+  const result = await prepareDuffelPaymentCore({ offerId: airOfferIdForCart(row), services, idempotencyContext: row.cart_id, idempotencySuffix:releasedPaymentSuffix(row), manualCapture: true });
   const amountMinor = duffelAmountToMinor(result.offer.totalAmount, result.offer.totalCurrency);
   const payload = {
     ...(row.payload || {}),
@@ -933,13 +945,14 @@ async function commitPackageBookingCore(context, input = {}) {
   const payment = loaded.row.payload?.payment || {};
   const paymentIntentId = text(input.paymentIntentId, 180);
   if (!payment.paymentIntentId || payment.paymentIntentId !== paymentIntentId) throw bookingError("PAYMENT_REFERENCE_MISMATCH", "The completed payment authorization does not match this package.", 409);
-  if (loaded.row.status === "PaymentPending") {
-    const claimed = await transitionOwnedCart(context, loaded.row.cart_id, "PaymentPending", "Committing");
-    loaded = await loadBookingCartCore(context, input, { includeTravelers: true });
-    if (!claimed && loaded.row.status !== "Committing") throw bookingError("BOOKING_COMMIT_CONFLICT", "This package is already being processed.", 409);
-  }
-  if (loaded.row.status !== "Committing") throw bookingError("BOOKING_NOT_READY", "This package is not ready to be committed.", 409);
   if (!loaded.sensitive?.passengers?.length) throw bookingError("TRAVELERS_REQUIRED", "Traveler details are missing from this package.");
+  if (loaded.row.status !== "PaymentPending") throw bookingError("BOOKING_COMMIT_IN_PROGRESS", "Your booking is being processed. Do not pay again; check its status or contact SKANDI.", 409);
+  const claimed = await transitionOwnedCart(context, loaded.row.cart_id, "PaymentPending", "Committing");
+  loaded = await loadBookingCartCore(context, input, { includeTravelers: true });
+  if (!claimed) {
+    if (loaded.row.status === "Confirmed") return confirmedResult(loaded.row);
+    throw bookingError("BOOKING_COMMIT_IN_PROGRESS", "Your booking is being processed. Do not pay again; check its status or contact SKANDI.", 409);
+  }
 
 
   const intent = await retrieveStripePaymentIntent(paymentIntentId);
@@ -972,11 +985,15 @@ async function commitPackageBookingCore(context, input = {}) {
         integration: "skandi_customer_package"
       });
     } catch (error) {
-      if (["DUFFEL_TIMEOUT", "DUFFEL_HTTP_500", "DUFFEL_HTTP_502", "DUFFEL_HTTP_503", "DUFFEL_HTTP_504"].includes(String(error?.code || ""))) {
+      if (error?.outcomeUnknown || ["DUFFEL_TIMEOUT", "DUFFEL_HTTP_500", "DUFFEL_HTTP_502", "DUFFEL_HTTP_503", "DUFFEL_HTTP_504"].includes(String(error?.code || ""))) {
         const updated = await markBookingReconciliationRequired(context, row, { kind: "PACKAGE_STAY_OUTCOME_UNKNOWN", code: safeCode(error.code), providerRequestId: error.providerRequestId, correlationId: error.correlationId });
         throw bookingError("BOOKING_RECONCILIATION_REQUIRED", `The hotel portion of this package is being reconciled. Do not retry. Cart: ${updated.cart_id}`, 409);
       }
-      await voidUnusedAuthorization(row);
+      const released = await voidUnusedAuthorization(row);
+      if (released?.status !== "canceled") {
+        await markBookingReconciliationRequired(context, row, {kind:"PAYMENT_RELEASE_UNVERIFIED",code:"PAYMENT_RELEASE_UNVERIFIED",paymentStatus:"release_unverified"});
+        throw bookingError("BOOKING_RECONCILIATION_REQUIRED", "The payment status needs review. Do not pay again; contact SKANDI.", 409);
+      }
       await updateOwnedCart(context, row.cart_id, { status: "PaymentReady", payload: { ...(row.payload || {}), payment: { ...payment, status: "authorization_released" } } });
       throw error;
     }
@@ -1088,13 +1105,14 @@ export async function commitBookingCore(context, input = {}) {
   if (!payment.paymentIntentId || payment.paymentIntentId !== submittedPaymentId) throw bookingError("PAYMENT_REFERENCE_MISMATCH", "The completed payment authorization does not match this booking.", 409);
 
 
-  if (loaded.row.status === "PaymentPending") {
-    const claimed = await transitionOwnedCart(context, loaded.row.cart_id, "PaymentPending", "Committing");
-    loaded = await loadBookingCartCore(context, input, { includeTravelers: true });
-    if (!claimed && loaded.row.status !== "Committing") throw bookingError("BOOKING_COMMIT_CONFLICT", "This booking is already being processed.", 409);
-  }
-  if (loaded.row.status !== "Committing") throw bookingError("BOOKING_NOT_READY", "This booking is not ready to be committed.", 409);
   if (!loaded.sensitive?.passengers?.length) throw bookingError("TRAVELERS_REQUIRED", "Traveler details are missing from this booking.");
+  if (loaded.row.status !== "PaymentPending") throw bookingError("BOOKING_COMMIT_IN_PROGRESS", "Your booking is being processed. Do not pay again; check its status or contact SKANDI.", 409);
+  const claimed = await transitionOwnedCart(context, loaded.row.cart_id, "PaymentPending", "Committing");
+  loaded = await loadBookingCartCore(context, input, { includeTravelers: true });
+  if (!claimed) {
+    if (loaded.row.status === "Confirmed") return confirmedResult(loaded.row);
+    throw bookingError("BOOKING_COMMIT_IN_PROGRESS", "Your booking is being processed. Do not pay again; check its status or contact SKANDI.", 409);
+  }
 
 
   const services = combineServiceSelections(loaded.row.payload || {});
@@ -1111,7 +1129,7 @@ export async function commitBookingCore(context, input = {}) {
     });
   } catch (error) {
     // A provider error may still represent an outcome-unknown mutation. Never recreate here.
-    if (["DUFFEL_TIMEOUT", "DUFFEL_HTTP_500", "DUFFEL_HTTP_502", "DUFFEL_HTTP_503", "DUFFEL_HTTP_504"].includes(String(error?.code || ""))) {
+    if (error?.outcomeUnknown || ["DUFFEL_TIMEOUT", "DUFFEL_HTTP_500", "DUFFEL_HTTP_502", "DUFFEL_HTTP_503", "DUFFEL_HTTP_504"].includes(String(error?.code || ""))) {
       const updated = await markBookingReconciliationRequired(context, loaded.row, {
         kind: "AIR_ORDER_OUTCOME_UNKNOWN",
         code: safeCode(error.code),
@@ -1121,7 +1139,11 @@ export async function commitBookingCore(context, input = {}) {
       });
       throw bookingError("BOOKING_RECONCILIATION_REQUIRED", `The airline booking outcome is being reconciled. Do not retry. Cart: ${updated.cart_id}`, 409);
     }
-    await voidUnusedAuthorization(loaded.row);
+    const released = await voidUnusedAuthorization(loaded.row);
+    if (released?.status !== "canceled") {
+      await markBookingReconciliationRequired(context, loaded.row, {kind:"PAYMENT_RELEASE_UNVERIFIED",code:"PAYMENT_RELEASE_UNVERIFIED",paymentStatus:"release_unverified"});
+      throw bookingError("BOOKING_RECONCILIATION_REQUIRED", "The payment status needs review. Do not pay again; contact SKANDI.", 409);
+    }
     await updateOwnedCart(context, loaded.row.cart_id, {
       status: "PaymentReady",
       payload: { ...(loaded.row.payload || {}), payment: { ...payment, status: "authorization_released" }, flow: { ...(loaded.row.payload?.flow || {}), currentStep: "payment" } }
@@ -1199,7 +1221,10 @@ export async function reconcileBookingCore(context, input = {}) {
   const row = await requireOwnedCart(context, input.cartId);
   if (row.status === "Confirmed") return { resolved: true, cart: toPublicCart(row) };
   if (row.status !== "ReconciliationRequired") throw bookingError("RECONCILIATION_NOT_REQUIRED", "This booking is not awaiting reconciliation.", 409);
-  if (upper(row.payload?.productType, 40).includes("FLIGHT") || isPackageCart(row)) {
+  // A package has independent hotel and flight outcomes. Reconciling only the
+  // flight could capture the whole amount while leaving the hotel unbooked.
+  if (isPackageCart(row)) return {resolved:false, cart:toPublicCart(row), message:"Your package is being reviewed. Please contact SKANDI for assistance."};
+  if (upper(row.payload?.productType, 40).includes("FLIGHT")) {
     const result = await reconcileFlightCart(context, row);
     return { ...result, cart: toPublicCart(result.cart) };
   }
@@ -1331,7 +1356,7 @@ export async function quoteStayCore(input = {}) { return quoteDuffelStayCore(inp
 
 
 export async function createHotelCartCore(context, input = {}) {
-  requireMemberContext(context);
+  requireBookingContext(context);
   const quoted = await getDuffelStayQuoteCore({ quoteId: input.quoteId });
   const quote = quoted.quote;
   if (!quote?.id) throw bookingError("STAY_QUOTE_REQUIRED", "The hotel quote could not be found.");
@@ -1409,7 +1434,7 @@ export async function prepareHotelPaymentCore(context, input = {}) {
     amount: amountMinor,
     currency: quote.totalCurrency,
     manualCapture: true,
-    idempotencyKey: `skandi_hotel_${row.cart_id}_${amountMinor}`.slice(0, 255),
+    idempotencyKey: `skandi_hotel_${row.cart_id}_${amountMinor}${releasedPaymentSuffix(row)}`.slice(0, 255),
     description: `SKANDI hotel ${quote.id}`,
     metadata: { integration: "skandi_duffel_stays", cart_id: row.cart_id, quote_id: quote.id }
   });
@@ -1435,10 +1460,12 @@ export async function commitHotelBookingCore(context, input = {}) {
   const payment = row.payload?.payment || {};
   const paymentIntentId = text(input.paymentIntentId, 180);
   if (!payment.paymentIntentId || payment.paymentIntentId !== paymentIntentId) throw bookingError("PAYMENT_REFERENCE_MISMATCH", "The payment authorization does not match this hotel booking.", 409);
-  if (row.status === "PaymentPending") {
-    const claimed = await transitionOwnedCart(context, row.cart_id, "PaymentPending", "Committing");
-    row = await requireOwnedCart(context, row.cart_id);
-    if (!claimed && row.status !== "Committing") throw bookingError("BOOKING_COMMIT_CONFLICT", "This booking is already being processed.", 409);
+  if (row.status !== "PaymentPending") throw bookingError("BOOKING_COMMIT_IN_PROGRESS", "Your booking is being processed. Do not pay again; check its status or contact SKANDI.", 409);
+  const claimed = await transitionOwnedCart(context, row.cart_id, "PaymentPending", "Committing");
+  row = await requireOwnedCart(context, row.cart_id);
+  if (!claimed) {
+    if (row.status === "Confirmed") return confirmedResult(row);
+    throw bookingError("BOOKING_COMMIT_IN_PROGRESS", "Your booking is being processed. Do not pay again; check its status or contact SKANDI.", 409);
   }
   const intent = await retrieveStripePaymentIntent(paymentIntentId);
   assertStripeAuthorization(intent, { amount: payment.amountMinor, currency: payment.currency, metadata: { cart_id: row.cart_id }, allowCaptured: true });
@@ -1458,11 +1485,15 @@ try {
       integration: "skandi_customer"
     });
   } catch (error) {
-    if (["DUFFEL_TIMEOUT", "DUFFEL_HTTP_500", "DUFFEL_HTTP_502", "DUFFEL_HTTP_503", "DUFFEL_HTTP_504"].includes(String(error?.code || ""))) {
+    if (error?.outcomeUnknown || ["DUFFEL_TIMEOUT", "DUFFEL_HTTP_500", "DUFFEL_HTTP_502", "DUFFEL_HTTP_503", "DUFFEL_HTTP_504"].includes(String(error?.code || ""))) {
       const updated = await markBookingReconciliationRequired(context, row, { kind: "STAY_BOOKING_OUTCOME_UNKNOWN", code: safeCode(error.code), providerRequestId: error.providerRequestId, correlationId: error.correlationId });
       throw bookingError("BOOKING_RECONCILIATION_REQUIRED", `The hotel booking outcome is being reconciled. Do not retry. Cart: ${updated.cart_id}`, 409);
     }
-    try { await cancelStripePaymentIntent(paymentIntentId, `skandi_hotel_void_${row.cart_id}`.slice(0, 255)); } catch (_) {}
+    const released = await voidUnusedAuthorization(row);
+    if (released?.status !== "canceled") {
+      await markBookingReconciliationRequired(context, row, {kind:"PAYMENT_RELEASE_UNVERIFIED",code:"PAYMENT_RELEASE_UNVERIFIED",paymentStatus:"release_unverified"});
+      throw bookingError("BOOKING_RECONCILIATION_REQUIRED", "The payment status needs review. Do not pay again; contact SKANDI.", 409);
+    }
     await updateOwnedCart(context, row.cart_id, { status: "PaymentReady", payload: { ...(row.payload || {}), payment: { ...payment, status: "authorization_released" } } });
     throw error;
   }
