@@ -27,6 +27,20 @@
     let badgeOverride = {};
     const recruitingOfferDrafts = new Map();
     let activeOfferComposer = null;
+    let addressLookupTimer = null;
+    let addressLookupSequence = 0;
+    let addressLookupInput = null;
+    let addressLookupItems = [];
+    let directoryAutoloadScheduled = false;
+    let lastPortalMarkup = "";
+    let currentActionElement = null;
+    let lastActionOrigin = null;
+    const actionOrigins = new Map();
+    const hrEmployeeDrafts = new Map();
+    let pendingEmployeeSave = null;
+    let regionCountryOptions = null;
+    let intranetMedia = { welcome:"", team:"" };
+    let hrReadyScheduled = false;
     const $ = id => document.getElementById(id);
 
     const completedTasks = new Set();
@@ -260,6 +274,7 @@
       stats: {},
       colleagues: [],
       colleaguesLoaded: false,
+      directoryError: "",
       selectedColleague: null,
       payroll: normalizePayroll({}),
       payrollTab: "paystubs",
@@ -849,6 +864,11 @@
 
     function clearPortalData(status = "waiting", error = null) {
       recruitingOfferDrafts.clear();
+      hrEmployeeDrafts.clear();
+      actionOrigins.clear();
+      pendingEmployeeSave = null;
+      directoryAutoloadScheduled = false;
+      lastPortalMarkup = "";
       activeOfferComposer = null;
       currentUserRole = null;
       currentView = "home";
@@ -888,6 +908,7 @@
       portalState.stats = {};
       portalState.colleagues = [];
       portalState.colleaguesLoaded = false;
+      portalState.directoryError = "";
       portalState.selectedColleague = null;
       portalState.payroll = normalizePayroll({});
       portalState.hr = normalizeHrData({});
@@ -903,12 +924,17 @@
     function importBootstrap(payload = {}, origin = "") {
       const profile = payload.profile && typeof payload.profile === "object" ? payload.profile : null;
       const importedRole = mapRoleName(payload.currentUserRole || payload.role) || inferRole(profile || {});
+      const previousId = String(portalState.profile?.agentUserId || portalState.profile?.id || "");
+      const incomingId = String(profile?.agentUserId || profile?.id || "");
+      const continuing = portalState.connected && previousId && previousId === incomingId;
       portalState.lastInboundAt = new Date().toISOString();
 
       if (!profile || !importedRole) {
         clearPortalData("error", "The bootstrap response did not include an authenticated employee profile and supported role.");
         return portalState;
       }
+
+      if (portalState.connected && !continuing) clearPortalData();
 
       currentUserRole = importedRole;
       portalState.status = "ready";
@@ -963,16 +989,19 @@
       );
       portalState.stats = payload.stats || {};
       portalState.payroll = normalizePayroll(payload);
-      portalState.hr = hasHrAccess(profile) ? normalizeHrData(payload) : normalizeHrData({});
+      portalState.hr = hasHrAccess(profile) ? (continuing ? portalState.hr : normalizeHrData(payload)) : normalizeHrData({});
       if (!hasHrAccess(profile) && currentView === "hr") {
         currentView = "home";
         currentAppId = null;
         history.replaceState(null, "", routeHash("home"));
       }
-      portalState.colleagues = Array.isArray(payload.colleagues)
-        ? payload.colleagues.map(sanitizeColleague).filter(Boolean)
-        : [];
-      portalState.colleaguesLoaded = Array.isArray(payload.colleagues);
+      if (Array.isArray(payload.colleagues)) {
+        portalState.colleagues = payload.colleagues.map(sanitizeColleague).filter(Boolean);
+        portalState.colleaguesLoaded = true;
+      } else if (!continuing) {
+        portalState.colleagues = [];
+        portalState.colleaguesLoaded = false;
+      }
       if (origin && origin !== "null") parentOrigin = origin;
       completedTasks.clear();
       dismissedTasks.clear();
@@ -994,6 +1023,7 @@
         confirmedPortalSelections[key] = Array.isArray(payload[key]) ? payload[key].map(String) : [];
       });
       restorePortalSelections();
+      if (!continuing) {
       currentNewsIndex = 0;
       taskFilter = "open";
       appGroupFilter = "All";
@@ -1009,6 +1039,7 @@
       badgeSelectedId = "";
       badgeOverride = {};
       badgeShowBack = false;
+      }
       return portalState;
     }
 
@@ -1023,7 +1054,17 @@
         payload,
         timestamp: new Date().toISOString()
       };
-      const diagnostic = type === "CAREERS_MOVE_CANDIDATE_STAGE" && payload.offerDetails
+      if (currentActionElement && type !== "HR_ADDRESS_SUGGEST") {
+        const node=currentActionElement, form=node.form || node.closest?.("form");
+        const origin={ node, formId:form?.id || node.getAttribute?.("form") || "", action:node.dataset?.action || "", id:node.dataset?.id || "", modal:Boolean(node.closest?.("#modalRoot")) };
+        actionOrigins.set(type, origin); lastActionOrigin=origin;
+        node.parentElement?.querySelector(":scope > .sf-inline-error")?.remove();
+      }
+      const diagnostic = type === "HR_ADDRESS_SUGGEST"
+        ? { ...message, payload:{ requestId:payload.requestId, query:"[redacted]" } }
+        : ["HR_STAFF_SAVE", "INTRANET_PROFILE_SAVE", "CAREERS_SAVE_CANDIDATE"].includes(type)
+        ? { ...message, payload:{ ...payload, ...(payload.item ? {item:"[redacted]"} : {}), ...(payload.profile ? {profile:"[redacted]"} : {}) } }
+        : type === "CAREERS_MOVE_CANDIDATE_STAGE" && payload.offerDetails
         ? { ...message, payload:{ ...payload, offerDetails:"[redacted]" } }
         : message;
       portalState.lastOutbound = diagnostic;
@@ -1053,12 +1094,20 @@
 
       if (data.type === "SKANDI_MASTER_CONFIG") {
         masterConfig = payload && typeof payload === "object" ? payload : { routes: {}, internal: {}, brand: {} };
-        renderPortal();
+        renderPortal({ background:true });
         return;
       }
 
       if (data.type === "SKANDI_MASTER_NAVIGATION") {
         masterNavigation = payload && typeof payload === "object" ? payload : { routes: {}, internal: {} };
+        return;
+      }
+
+      if (data.type === "SKANDI_PRESENTATION_DATA") {
+        const slots=Array.isArray(payload.mediaSlots)?payload.mediaSlots:[];
+        const find=id=>safeImageSource(slots.find(slot=>slot.slotId===id)?.assetUrl || "");
+        intranetMedia={welcome:find("riaintra-welcome"),team:find("riaintra-team")};
+        renderPortal({background:true});
         return;
       }
 
@@ -1070,7 +1119,7 @@
         post("SKANDI_MASTER_CONFIG_REQUEST", { requestedAt: new Date().toISOString(), component: "SUCCESSFACTORS" });
         post("MASTER_NAVIGATION_REQUEST", { requestedAt: new Date().toISOString(), component: "SUCCESSFACTORS" });
         post("INTRANET_READY", { requestedAt: new Date().toISOString(), reason: "HOST_READY" });
-        post("HR_READY", { requestedAt: new Date().toISOString(), reason: "HOST_READY" });
+        scheduleHrReady();
         return;
       }
 
@@ -1079,21 +1128,22 @@
           if (portalState.connected) confirmPortalSelections(payload);
           return;
         }
+        const previousId=String(portalState.profile?.agentUserId || portalState.profile?.id || "");
+        const incomingId=String(payload.profile?.agentUserId || payload.profile?.id || "");
+        const continuing=portalState.connected && previousId && previousId===incomingId;
         importBootstrap(payload, incomingOrigin);
-        parseRoute();
-        renderPortal();
+        if (!continuing) parseRoute();
+        renderPortal({ background:true });
         if (portalState.connected) {
           // HR_READY and INTRANET_READY share one backend request. The HR
           // responses may have arrived first; apply them now that profile and
           // permissions are known instead of silently dropping them.
           replayPreconnectMessages();
-          if (hasRecruitingAccess()) {
-            post("CAREERS_READY", {
-              embeddedIn: "SKANDI_SUCCESSFACTORS",
-              requestedAt: new Date().toISOString()
-            });
+          if (!directoryAutoloadScheduled) {
+            directoryAutoloadScheduled = true;
+            window.setTimeout(() => { if (portalState.connected) post("INTRANET_COLLEAGUES_REQUEST", { background:true }); }, 1200);
+            window.setTimeout(() => { if (portalState.connected && hasRecruitingAccess()) post("CAREERS_READY", { embeddedIn:"SKANDI_SUCCESSFACTORS", requestedAt:new Date().toISOString() }); }, 2400);
           }
-          showToast("Employee data loaded", "RIAINTRA content and role permissions are current.", "info");
         }
         return;
       }
@@ -1114,13 +1164,18 @@
       // A portal/bootstrap failure is fatal. Module-level failures are not:
       // a recruiter error must never take the rest of SuccessFactors offline.
       if (data.type === "INTRANET_ERROR") {
+        if (portalState.connected && payload.action === "INTRANET_COLLEAGUES_REQUEST" && payload.background === true) {
+          portalState.directoryError = payload.message || "The directory could not be loaded.";
+          renderPortal({background:true});
+          return;
+        }
         if (portalState.connected && payload.action && !["INTRANET_READY", "INTRANET_REFRESH"].includes(payload.action)) {
           if (portalMutationTypes.has(payload.action)) {
             settlePortalMutation(payload.requestId);
             restorePortalSelections();
           }
-          renderPortal();
-          showToast("Update failed", payload.message || "The backend did not confirm this action.", "warning");
+          renderPortal({ background:true });
+          showActionError(payload.action, payload.message || "The update could not be confirmed.");
           return;
         }
         clearPortalData(
@@ -1140,14 +1195,28 @@
 
       if (data.type === "CAREERS_ERROR") {
         if (hasRecruitingAccess()) {
-          showToast("Recruiting action failed", payload.message || "The recruiting backend rejected the request.", "warning");
+          showActionError(payload.action, payload.message || "The recruiting action could not be completed.");
         }
         return;
       }
 
+      if (data.type === "HR_ADDRESS_SUGGESTIONS") {
+        if (String(payload.requestId || "") !== String(addressLookupSequence) || !addressLookupInput?.isConnected) return;
+        addressLookupItems = Array.isArray(payload.items) ? payload.items : [];
+        const results = addressLookupInput.closest("label")?.querySelector(".sf-address-results");
+        if (results) results.innerHTML = addressLookupItems.map((item,index)=>`<button class="sf-address-option" type="button" role="option" data-action="select-address" data-index="${index}">${escapeHtml(item.label || "")}</button>`).join("");
+        return;
+      }
 
       if (data.type === "HR_ERROR") {
-        if (hasHrAccess()) showToast("HR action failed", payload.message || "HR Administration rejected the request.", "warning");
+        if (payload.action === "HR_ADDRESS_SUGGEST") {
+          if (String(payload.requestId || "") === String(addressLookupSequence) && addressLookupInput?.isConnected) {
+            const results = addressLookupInput.closest("label")?.querySelector(".sf-address-results");
+            if (results) results.innerHTML = `<span class="sf-inline-error" role="alert">${escapeHtml(payload.message || "Address search is unavailable. Enter the address manually.")}</span>`;
+          }
+          return;
+        }
+        if (hasHrAccess()) showActionError(payload.action, payload.message || "The HR action could not be completed.");
         return;
       }
 
@@ -1162,7 +1231,7 @@
           }
           showToast("HR access unavailable", payload.message || "Your current permission set does not authorize HR Administration.", "warning");
         }
-        renderPortal();
+        renderPortal({ background:payload.authorized !== false });
         return;
       }
 
@@ -1170,14 +1239,14 @@
         if (!hasHrAccess()) return;
         portalState.hr = mergeHrData(portalState.hr, payload);
         if (!hrSelectedEmployeeId && portalState.hr.selectedId) hrSelectedEmployeeId = portalState.hr.selectedId;
-        renderPortal();
+        renderPortal({ background:true });
         return;
       }
 
       if (data.type === "HR_ORG_CATALOG") {
         if (!hasHrAccess()) return;
         portalState.hr = { ...portalState.hr, orgCatalog: payload || {} };
-        renderPortal();
+        renderPortal({ background:true });
         return;
       }
 
@@ -1187,14 +1256,14 @@
           ...portalState.hr,
           reports: normalizeHrData({ reports: payload }).reports
         };
-        renderPortal();
+        renderPortal({ background:true });
         return;
       }
 
       if (["CAREERS_BOOTSTRAP", "CAREERS_DATA", "CAREERS_REFRESH_RESULT"].includes(data.type)) {
         if (!hasRecruitingAccess()) return;
         portalState.hr = mergeHrData(portalState.hr, { careers: payload });
-        renderPortal();
+        renderPortal({ background:true });
         return;
       }
 
@@ -1211,7 +1280,18 @@
           }
           hrEmployeeDraftMode = false;
         }
+        if (data.type === "HR_STAFF_SAVED" && pendingEmployeeSave) {
+          const draft=hrEmployeeDrafts.get(pendingEmployeeSave.key) || {};
+          for(const [key,value] of Object.entries(pendingEmployeeSave.values)) if(draft[key]===value) delete draft[key];
+          if(Object.keys(draft).length) hrEmployeeDrafts.set(pendingEmployeeSave.key,draft); else hrEmployeeDrafts.delete(pendingEmployeeSave.key);
+          pendingEmployeeSave=null;
+          const form=$("hrEmployeeForm"); if(form) delete form.dataset.sfDirty;
+        }
         const automationWarning = payload.hireAutomation && (payload.hireAutomation.state !== "accepted" || payload.hireAutomation.contactLinked !== true);
+        if (activeDialogId && lastActionOrigin?.modal && !automationWarning) closeDialog();
+        if (automationWarning && activeDialogId === "candidate-hire") {
+          const button=document.querySelector('[form="careerHireForm"]'); if(button){button.disabled=true;button.textContent="Hired";}
+        }
         showToast(automationWarning ? "Hire automation needs attention" : "HR action completed", payload.message || "The backend confirmed the update.", automationWarning ? "warning" : "info");
         post(data.type.startsWith("CAREERS_") ? "CAREERS_REFRESH" : "HR_REFRESH", {
           selectedId: hrSelectedEmployeeId || ""
@@ -1242,11 +1322,14 @@
             : [];
         portalState.colleagues = colleagues.map(sanitizeColleague).filter(Boolean);
         portalState.colleaguesLoaded = true;
-        portalState.selectedColleague = null;
-        currentView = "directory";
-        currentAppId = null;
-        history.replaceState(null, "", routeHash("directory"));
-        renderPortal();
+        portalState.directoryError = "";
+        if (payload.background !== true) {
+          portalState.selectedColleague = null;
+          currentView = "directory";
+          currentAppId = null;
+          history.replaceState(null, "", routeHash("directory"));
+        }
+        renderPortal({ background:payload.background === true });
         return;
       }
 
@@ -1259,6 +1342,7 @@
             history.replaceState(null, "", routeHash("home"));
           }
         }
+        if (activeDialogId === "profile-editor") closeDialog();
         showToast("Profile saved", "Your self-service details were saved successfully.");
         post("INTRANET_REFRESH");
         renderPortal();
@@ -1330,7 +1414,7 @@
           ["Postal / ZIP", ["homeAddressPostalCode", "postalCode", "zip", "mailingPostalCode"]],
           ["Country", ["homeAddressCountry", "country", "mailingCountry"]],
           ["Personal Mobile", ["phone", "personalMobile", "mobilePhone", "personalPhone"]],
-          ["Primary Contact Email", ["primaryContactEmail", "personalEmail", "email", "wixMemberEmail"]],
+          ["Personal Email", ["personalEmail", "primaryContactEmail"]],
           ["Corporate Email", ["corporateEmailAddress", "workEmail", "companyEmail"]]
         ]
       },
@@ -1359,8 +1443,6 @@
         control: "HR controlled",
         fields: [
           ["SK-ID", ["skId", "skID", "staffId"]],
-          ["Employee ID", ["employeeId", "employeeNumber", "_id"]],
-          ["Agent ID", ["agentId", "cmsAgentId"]],
           ["Role", ["role", "position", "systemRole"]],
           ["Job Title", ["jobTitle", "positionTitle", "title"]],
           ["Job Code", ["jobCode", "roleId"]],
@@ -1369,10 +1451,10 @@
           ["Assigned Base", ["assignedBase", "station", "base", "baseAirportIata"]],
           ["Base Code", ["baseCode", "assignedBaseId"]],
           ["Base Airport IATA", ["baseAirportIata", "stationIata"]],
-          ["Current Base Seniority Date", ["currentBaseSeniorityDate", "baseSeniorityDate", "hireDate"]],
+          ["Current Base Seniority Date", ["currentBaseSeniorityDate", "baseSeniorityDate"]],
           ["Date of Hire", ["hireDate", "startDate", "employmentStartDate"]],
           ["Employment Status", ["employmentStatus", "status", "activeStatus"]],
-          ["Classification Status", ["classificationStatus", "employmentType", "contractType", "workerType"]],
+          ["Classification Status", ["classificationStatus"]],
           ["Manager Name", ["managerName", "reportsToName"]],
           ["Manager SK-ID", ["managerSkId", "managerEmployeeId"]],
           ["Manager Email", ["managerEmail", "reportsTo"]],
@@ -1566,6 +1648,7 @@
 
     const editableProfileFields = [
       { key: "preferredName", label: "Preferred name", autocomplete: "nickname" },
+      { key: "personalEmail", label: "Personal email", type: "email", autocomplete: "email" },
       { key: "phone", label: "Mobile phone", autocomplete: "tel" },
       { key: "homeAddressStreet", label: "Home address street", autocomplete: "street-address" },
       { key: "homeAddressCity", label: "City", autocomplete: "address-level2" },
@@ -1958,7 +2041,7 @@
                 </div>
                 <span class="notification-time">${escapeHtml(item.time)}</span>
               </article>
-            `).join("") : '<div class="search-empty">No notifications were returned by the backend.</div>'}
+            `).join("") : '<div class="search-empty">You have no new notifications.</div>'}
           </div>
         </section>
       `;
@@ -1992,7 +2075,7 @@
             <div class="page-header-copy">
               <p class="eyebrow">${icon(failed ? "warning" : "lock", 14)} Secure Employee Portal</p>
               <h1 class="page-title">${failed ? "Employee portal unavailable" : "Connecting to RIAINTRA"}</h1>
-              <p class="page-subtitle">${failed ? escapeHtml(portalState.error || "The employee session could not be verified.") : "Waiting for authenticated profile, permissions, applications, announcements, and workflow data."}</p>
+              <p class="page-subtitle">${failed ? escapeHtml(portalState.error || "The employee session could not be verified.") : "Loading your workspace and employee information."}</p>
             </div>
             <div class="page-actions">
               <span class="role-pill">${icon(failed ? "warning" : "clock", 14)} ${failed ? "Authentication required" : "Waiting for data"}</span>
@@ -2002,7 +2085,7 @@
           <div class="empty-card">
             <span class="empty-icon">${icon(failed ? "warning" : "shield", 24)}</span>
             <strong>${failed ? "A valid employee profile and role are required" : "No local or sample data is stored in this portal"}</strong>
-            <span>${failed ? "Return to the authenticated RIAINTRA session and try again." : "Content will render only after the parent application sends an authorized bootstrap response."}</span>
+            <span>${failed ? "Sign in again to access your workspace." : "Your workspace will appear when your information is ready."}</span>
             <button class="primary-button" type="button" data-action="request-bootstrap">${icon("clock", 16)} Request data again</button>
           </div>
 
@@ -2094,8 +2177,8 @@
 
     function renderTeamStrip(ctx) {
       const people = sameTeamColleagues(ctx);
-      if (!portalState.colleaguesLoaded) return `<div class="empty-card" style="min-height:150px"><span class="empty-icon">${icon("directory",22)}</span><strong>Find your colleagues</strong><span>Load the employee directory to see teammates from ${escapeHtml(ctx.departmentCode||ctx.baseCode||"your organization")}.</span><button class="primary-button" type="button" data-action="refresh-directory">${icon("directory",15)} Load directory</button></div>`;
-      if (!people.length) return `<div class="empty-card" style="min-height:150px"><span class="empty-icon">${icon("users",22)}</span><strong>Your organization is connected</strong><span>No additional colleagues matched your current department/base scope in the returned directory data.</span></div>`;
+      if (!portalState.colleaguesLoaded) return `<div class="empty-card" style="min-height:150px"><span class="empty-icon">${icon("directory",22)}</span><strong>Find your colleagues</strong><span>Load the employee directory to see teammates from ${escapeHtml(ctx.departmentCode||ctx.baseCode||"your organization")}.</span><button class="primary-button" type="button" data-action="refresh-directory">${icon("directory",15)} Load directory</button>${portalState.directoryError ? `<span class="sf-inline-error" role="alert">${escapeHtml(portalState.directoryError)}</span>` : ""}</div>`;
+      if (!people.length) return `<div class="empty-card" style="min-height:150px"><span class="empty-icon">${icon("users",22)}</span><strong>Your organization is connected</strong><span>No colleagues matched your department or work location.</span></div>`;
       return `<div class="team-strip">${people.map(person=>`<button class="team-person" type="button" data-action="open-colleague" data-id="${escapeHtml(String(person.skId||person.corporateEmailAddress||person.displayName))}"><span class="avatar">${escapeHtml(recordInitials(person))}</span><strong>${escapeHtml(recordName(person))}</strong><span>${escapeHtml(person.jobTitle||person.department||"")}</span><span>${escapeHtml(person.station||"")}</span></button>`).join("")}</div>`;
     }
 
@@ -2119,10 +2202,11 @@
       return `
         <main class="page intranet-home" id="mainContent">
           <section class="welcome-band">
+            ${intranetMedia.welcome ? `<img class="sf-welcome-image" src="${escapeHtml(intranetMedia.welcome)}" alt="">` : ""}
             <div>
               <div class="welcome-kicker">${icon("home",15)} RIA INTRA · SKANDI Employee Intranet</div>
               <h1>${escapeHtml(greetingForNow())}${role.firstName ? ", " + escapeHtml(role.firstName) : ""}</h1>
-              <p>${escapeHtml(today)} · Welcome to your personalized SKANDI workspace. News, tools and operational information below are filtered to the profile and access scope returned for you.</p>
+              <p>${escapeHtml(today)} · Welcome to your personalized SKANDI workspace. Find your news, colleagues and tools in one place.</p>
               <div class="identity-chips">${chips.map(value=>`<span class="identity-chip">${icon("check",12)} ${escapeHtml(value)}</span>`).join("")}</div>
             </div>
             <aside class="welcome-profile" aria-label="Your organization context">
@@ -2130,7 +2214,7 @@
               <div class="profile-line"><span>Department</span><strong>${escapeHtml(ctx.departmentName||"—")}</strong></div>
               <div class="profile-line"><span>Base / market</span><strong>${escapeHtml(ctx.baseName||"—")}</strong></div>
               <div class="profile-line"><span>SK-ID</span><strong>${escapeHtml(role.employeeId)}</strong></div>
-              <div class="profile-line"><span>Access profile</span><strong>${escapeHtml(ctx.accessRole||"Backend entitlements")}</strong></div>
+              <div class="profile-line"><span>Access profile</span><strong>${escapeHtml(ctx.accessRole||"Assigned access")}</strong></div>
             </aside>
           </section>
 
@@ -2141,19 +2225,19 @@
               <section class="section tool-section" aria-labelledby="workspaceHeading">
                 <div class="section-header"><div class="section-title-group"><h2 id="workspaceHeading">Your workspace</h2><p>Applications you already have access to, prioritized for ${escapeHtml(ctx.departmentCode||ctx.jobTitle||"your role")}.</p></div><button class="text-button" type="button" data-route="apps">Application library ${icon("arrowRight",14)}</button></div>
                 ${quickActions.length ? `<div class="quick-actions-card" style="margin-bottom:11px">${quickActions.map(action=>`<button class="quick-action" type="button" data-action="${action.path?"navigate-parent":"open-app"}" data-id="${escapeHtml(action.target)}" data-path="${escapeHtml(action.path||"")}"><span class="quick-action-icon">${icon(action.icon,20)}</span><span><strong>${escapeHtml(action.title)}</strong><span>${escapeHtml(action.subtitle)}</span></span></button>`).join("")}</div>` : ""}
-                ${apps.length ? `<div class="launchpad-grid">${apps.map(renderAppTile).join("")}</div>` : `<div class="empty-card"><span class="empty-icon">${icon("apps",24)}</span><strong>No applications assigned</strong><span>Your application access is determined by the authenticated backend permission set.</span></div>`}
-                <div class="scope-access-note">${icon("lock",12)} The role catalog is used to personalize this page, not to grant permissions. Restricted roles such as OWNER/SUPER_ADMIN are never derived from job seniority.</div>
+                ${apps.length ? `<div class="launchpad-grid">${apps.map(renderAppTile).join("")}</div>` : `<div class="empty-card"><span class="empty-icon">${icon("apps",24)}</span><strong>No applications assigned</strong><span>Your available applications will appear here.</span></div>`}
+                <div class="scope-access-note">${icon("lock",12)} Applications shown are based on your assigned access.</div>
               </section>
 
               <section class="section" aria-labelledby="aroundHeading"><div class="section-header"><div class="section-title-group"><h2 id="aroundHeading">Around SKANDI</h2><p>More updates across the company and your organization.</p></div></div>${renderMiniNews(secondaryNews)}</section>
 
-              <section class="section" aria-labelledby="teamHeading"><div class="section-header"><div class="section-title-group"><h2 id="teamHeading">People & Organization</h2><p>Colleagues connected to your department or work location.</p></div><button class="text-button" type="button" data-route="directory">Directory ${icon("arrowRight",14)}</button></div>${renderTeamStrip(ctx)}</section>
+              <section class="section" aria-labelledby="teamHeading"><div class="section-header"><div class="section-title-group"><h2 id="teamHeading">People & Organization</h2><p>Colleagues connected to your department or work location.</p></div><button class="text-button" type="button" data-route="directory">Directory ${icon("arrowRight",14)}</button></div>${intranetMedia.team ? `<img class="sf-team-image" src="${escapeHtml(intranetMedia.team)}" alt="">` : ""}${renderTeamStrip(ctx)}</section>
             </div>
 
             <aside class="intranet-stack">
               ${renderFocusPanel(tasks,notifications)}
-              <section class="intranet-panel"><div class="intranet-panel-head"><div><h2>Your SKANDI context</h2><p>Canonical organization and base information.</p></div></div><div class="intranet-panel-body">${renderContextCards(ctx)}</div></section>
-              <section class="intranet-panel"><div class="intranet-panel-head"><div><h2>Useful links</h2><p>Services available within your returned access scope.</p></div></div><div class="side-list">${links.length?links.map(link=>`<button class="side-action" type="button" data-action="navigate-parent" data-path="${escapeHtml(link.path)}"><span class="side-action-icon">${icon(link.icon,18)}</span><span><strong>${escapeHtml(link.title)}</strong><span>${escapeHtml(link.subtitle)}</span></span></button>`).join(""):`<div class="search-empty">No additional links were returned for this profile.</div>`}</div></section>
+              <section class="intranet-panel"><div class="intranet-panel-head"><div><h2>Your SKANDI context</h2><p>Your team and work location.</p></div></div><div class="intranet-panel-body">${renderContextCards(ctx)}</div></section>
+              <section class="intranet-panel"><div class="intranet-panel-head"><div><h2>Useful links</h2><p>Quick access to your services.</p></div></div><div class="side-list">${links.length?links.map(link=>`<button class="side-action" type="button" data-action="navigate-parent" data-path="${escapeHtml(link.path)}"><span class="side-action-icon">${icon(link.icon,18)}</span><span><strong>${escapeHtml(link.title)}</strong><span>${escapeHtml(link.subtitle)}</span></span></button>`).join(""):`<div class="search-empty">No additional links were returned for this profile.</div>`}</div></section>
               <section class="intranet-panel"><div class="intranet-panel-head"><div><h2>My profile</h2><p>Employment and organization details.</p></div><button class="text-button" type="button" data-route="profile">Open ${icon("arrowRight",13)}</button></div><div class="intranet-panel-body"><div class="scope-pills">${chips.map(value=>`<span class="scope-pill">${icon("check",10)} ${escapeHtml(value)}</span>`).join("")||'<span class="scope-pill">Authenticated employee</span>'}</div></div></section>
             </aside>
           </div>
@@ -2205,10 +2289,11 @@
     function renderAppTile(tile) {
       const favorite = favoriteApps.has(tile.id);
       const wordmark = window.__SKANDI_SHELL__?.appWordmark('riaintra', tile.title);
+      const appArt = safeImageSource(tile.imageUrl || tile.logoUrl || tile.image || masterConfig?.brand?.assets?.appLogos?.[String(tile.id).toLowerCase()] || "");
       return `
-        <article class="app-tile ${tile.wide ? "wide" : ""}" role="button" tabindex="0" data-action="open-app" data-id="${tile.id}" style="--tile-color:${tile.color};--tile-soft:${tile.soft}" aria-label="Open ${escapeHtml(tile.title)}">
+        <article class="app-tile ${tile.wide ? "wide" : ""} ${appArt ? "has-app-art" : ""}" role="button" tabindex="0" data-action="open-app" data-id="${escapeHtml(tile.id)}" style="--tile-color:${escapeHtml(tile.color)};--tile-soft:${escapeHtml(tile.soft)}" aria-label="Open ${escapeHtml(tile.title)}">
           <div class="tile-head">
-            ${wordmark || `<span class="tile-icon">${icon(tile.icon, 24)}</span>`}
+            ${appArt ? `<span class="sf-app-art"><img src="${escapeHtml(appArt)}" alt="" loading="lazy"></span>` : (wordmark || `<span class="tile-icon">${icon(tile.icon, 24)}</span>`)}
             <button class="favorite-button ${favorite ? "active" : ""}" type="button" data-action="toggle-favorite" data-id="${tile.id}" aria-label="${favorite ? "Remove" : "Add"} ${escapeHtml(tile.title)} ${favorite ? "from" : "to"} favorites" aria-pressed="${favorite}">
               ${icon("star", 17, favorite ? "filled" : "")}
             </button>
@@ -2381,7 +2466,7 @@
             <div class="page-header-copy">
               <p class="eyebrow">${icon("news", 14)} Company News</p>
               <h1 class="page-title">News & Announcements</h1>
-              <p class="page-subtitle">Updates published for your company, canonical role, department, base/market, destination and permission scope.</p>
+              <p class="page-subtitle">Updates for your company, team and location.</p>
             </div>
             <div class="page-actions">
               <span class="role-pill">${icon("lock", 14)} ${news.length} available</span>
@@ -2414,7 +2499,7 @@
             <div class="empty-card">
               <span class="empty-icon">${icon("news", 24)}</span>
               <strong>No announcements available</strong>
-              <span>The backend did not return any news for your role.</span>
+              <span>There are no updates for your team right now.</span>
             </div>
           `}
 
@@ -2532,7 +2617,7 @@
       if (!items.length) {
         return renderEmptyState(
           options.emptyTitle || "No records available",
-          options.emptyMessage || "The backend did not return records for this section.",
+          options.emptyMessage || "There are no records to show.",
           options.emptyIcon || "document"
         );
       }
@@ -2659,12 +2744,18 @@
             ${group.fields.map(([label, keys]) => `
               <div class="detail-field">
                 <span>${escapeHtml(label)}</span>
-                <strong>${escapeHtml(displayPortalValue(firstRecordValue(record, keys)))}</strong>
+                <strong>${escapeHtml(profileFieldDisplay(label, firstRecordValue(record, keys)))}</strong>
               </div>
             `).join("")}
           </div>
         </section>
       `;
+    }
+
+    function profileFieldDisplay(label, raw) {
+      const value=displayPortalValue(raw);
+      if (/national id \/ last 4|passport number \/ last 4|work permit \/ visa number/i.test(label) && value !== "—") return value.slice(-4);
+      return value;
     }
 
     function openProfileEditor() {
@@ -2678,6 +2769,9 @@
             <div class="hr-form-grid">
               ${editableProfileFields.map(field => {
                 const value = field.sensitive ? "" : displayPortalValue(profile[field.key] === undefined ? "" : profile[field.key]);
+                if (field.key === "homeAddressCountry") {
+                  return `<label class="hr-field"><span>${escapeHtml(field.label)}</span><select class="hr-select" name="homeAddressCountry" autocomplete="country-name">${countryOptions(value === "—" ? "" : value)}</select></label>`;
+                }
                 if (field.type === "select") {
                   return `
                     <label class="hr-field">
@@ -2691,7 +2785,8 @@
                 return `
                   <label class="hr-field">
                     <span>${escapeHtml(field.label)}</span>
-                    <input class="hr-input" name="${escapeHtml(field.key)}" value="${value === "—" ? "" : escapeHtml(value)}" autocomplete="${escapeHtml(field.autocomplete || "off")}" ${field.sensitive ? 'placeholder="Leave blank to keep current value"' : ""}>
+                    <input class="hr-input" type="${escapeHtml(field.type || (field.autocomplete === "tel" ? "tel" : "text"))}" name="${escapeHtml(field.key)}" value="${value === "—" ? "" : escapeHtml(value)}" autocomplete="${escapeHtml(field.key === "homeAddressStreet" ? "address-line1" : field.autocomplete || "off")}" ${field.key === "homeAddressStreet" ? 'data-address-lookup="true"' : ""} ${field.sensitive ? 'placeholder="Leave blank to keep current value"' : ""}>
+                    ${field.key === "homeAddressStreet" ? '<span class="sf-address-results" role="listbox" aria-label="Address suggestions"></span><small>Address search powered by Mapbox. You can also enter an address manually.</small>' : ""}
                   </label>
                 `;
               }).join("")}
@@ -2714,7 +2809,7 @@
             <div class="page-header-copy">
               <p class="eyebrow">${icon("directory", 14)} People Directory</p>
               <h1 class="page-title">Colleagues</h1>
-              <p class="page-subtitle">Search authenticated employee directory records.</p>
+              <p class="page-subtitle">Find people across SKANDI.</p>
             </div>
             <div class="page-actions">
               <button class="secondary-button" type="button" data-action="refresh-directory">${icon("clock", 16)} Refresh directory</button>
@@ -2734,7 +2829,7 @@
             <div class="hr-panel-body flush">
               ${!portalState.colleaguesLoaded ? renderEmptyState(
                 "Directory not loaded",
-                "Request directory data from the authenticated parent application.",
+                "Your colleagues will appear here when the directory is available.",
                 "directory",
                 `<button class="primary-button" type="button" data-action="refresh-directory">${icon("directory", 16)} Load directory</button>`
               ) : renderRecordTable(colleagues, [
@@ -2885,7 +2980,7 @@
             <div>
               <span class="hr-admin-kicker">${icon("lock", 14)} Role protected workspace</span>
               <h1>HR Administration</h1>
-              <p>SuccessFactors modules are exposed from the authenticated employee's role and explicit access grants.</p>
+              <p>Your available modules are based on your assigned access.</p>
             </div>
             <div class="hr-admin-header-actions">
               <button class="secondary-button" type="button" data-action="hr-refresh">${icon("clock", 16)} Refresh</button>
@@ -3117,6 +3212,11 @@
       const rows=roleIds.size?c.roles.filter(r=>r.active!==false&&roleIds.has(String(r.role_id))):[];
       return rows.sort((a,b)=>String(a.title||"").localeCompare(String(b.title||"")));
     }
+    function orgDepartmentsForBase(baseCode, countryCode) {
+      const departmentIds = new Set(orgRolesForBase(baseCode, countryCode).map(role => String(role.department_id || "")));
+      return orgCatalog().departments.filter(dept => dept.active !== false && departmentIds.has(String(dept.id)))
+        .sort((a,b) => String(a.name || a.code).localeCompare(String(b.name || b.code)));
+    }
     function orgManagerCandidates(role,baseCode,record={}){
       if(!role?.reports_to_role_id)return[];
       const currentId=hrRecordId(record);
@@ -3210,12 +3310,15 @@
 
     function renderOrgProvisionCard(record={}){
       if (!orgCatalogReady()) {
-        return `<div class="org-provision-card" id="orgProvisionCard"><div class="org-provision-head"><div><h3>Smart Employment Assignment</h3><p>The live organization catalog is not available. No fallback codebook is used in V9.</p></div></div><div class="org-warning">Departments, bases, positions, access roles and payroll rules must load from the System before an assignment can be changed.</div><div style="margin-top:10px"><button class="secondary-button" type="button" data-action="hr-org-refresh">Reload organization data</button></div></div>`;
+        return `<div class="org-provision-card" id="orgProvisionCard"><div class="org-provision-head"><div><h3>Employment Assignment</h3><p>Organization data is temporarily unavailable.</p></div></div><div class="org-warning">Reload departments, bases and positions before changing an assignment.</div><div style="margin-top:10px"><button class="secondary-button" type="button" data-action="hr-org-refresh">Reload organization data</button></div></div>`;
       }
       const c=orgCatalog(),countryCode=orgRecordCountryCode(record),baseCode=orgRecordBaseCode(record),roleId=orgRecordRoleId(record);
-      const countries=orgEmploymentCountries(record),baseChoices=orgBasesForCountry(countryCode),roleChoices=orgRolesForBase(baseCode,countryCode);
-      const role=roleChoices.find(r=>r.role_id===roleId)||c.roles.find(r=>r.role_id===roleId)||null;
-      const departmentId=role?.department_id||orgRecordDepartmentId(record),dept=c.departments.find(d=>d.id===departmentId);
+      const countries=orgEmploymentCountries(record),baseChoices=orgBasesForCountry(countryCode);
+      const currentRole=c.roles.find(r=>r.role_id===roleId)||null;
+      const departmentId=currentRole?.department_id||orgRecordDepartmentId(record);
+      const departmentChoices=orgDepartmentsForBase(baseCode,countryCode);
+      const roleChoices=orgRolesForBase(baseCode,countryCode).filter(r=>String(r.department_id)===String(departmentId));
+      const role=roleChoices.find(r=>r.role_id===roleId)||null,dept=c.departments.find(d=>d.id===departmentId);
       const managers=orgManagerCandidates(role,baseCode,record),preset=orgPreset(role?.permission_preset_id),permissions=Array.isArray(preset?.permission_keys)?preset.permission_keys:[];
       const currentManager=String(firstRecordValue(record,["managerAgentUserId","manager_agent_user_id"],"")||"");
       const base=c.bases.find(b=>String(b.code)===String(baseCode));
@@ -3224,8 +3327,9 @@
         <div class="org-provision-grid">
           <label class="hr-field"><span>1. Country of Employment</span><select class="hr-select" id="orgCountrySelect" name="employmentCountry" required><option value="">Select country first</option>${countries.map(r=>orgOption(`${r.country_code} · ${r.country_name}`,r.country_code,countryCode,r.employment_enabled===false)).join("")}</select></label>
           <label class="hr-field"><span>2. Base / Work Location</span><select class="hr-select" id="orgBaseSelect" name="baseCode" ${countryCode?"":"disabled"} required><option value="">${countryCode?"Select eligible base":"Select country first"}</option>${baseChoices.map(b=>orgOption(`${b.code} · ${b.name}`,b.code,baseCode)).join("")}</select></label>
-          <label class="hr-field"><span>3. Position / Job Title</span><select class="hr-select" id="orgRoleSelect" name="roleId" ${baseCode?"":"disabled"} required><option value="">${baseCode?"Select eligible position":"Select base first"}</option>${roleChoices.map(r=>orgOption(r.title,r.role_id,roleId)).join("")}</select></label>
-          <label class="hr-field"><span>4. Manager</span><select class="hr-select" id="orgManagerSelect" name="managerAgentUserId" ${role?.reports_to_role_id?"":"disabled"}><option value="">${role?.reports_to_role_id?(managers.length?"Auto / select valid manager":`No active ${escapeHtml(role.reports_to_title||role.reports_to_role_id)} found`):"No manager required"}</option>${managers.map(m=>orgOption(orgManagerOptionLabel(m),hrRecordId(m),currentManager)).join("")}</select></label>
+          <label class="hr-field"><span>3. Department</span><select class="hr-select" id="orgDepartmentSelect" ${baseCode?"":"disabled"} required><option value="">${baseCode?"Select department":"Select base first"}</option>${departmentChoices.map(d=>orgOption(d.name||d.code,d.id,departmentId)).join("")}</select></label>
+          <label class="hr-field"><span>4. Position / Job Title</span><select class="hr-select" id="orgRoleSelect" name="roleId" ${departmentId?"":"disabled"} required><option value="">${departmentId?"Select position":"Select department first"}</option>${roleChoices.map(r=>orgOption(r.title,r.role_id,roleId)).join("")}</select></label>
+          <label class="hr-field"><span>5. Manager</span><select class="hr-select" id="orgManagerSelect" name="managerAgentUserId" ${role?.reports_to_role_id?"":"disabled"}><option value="">${role?.reports_to_role_id?(managers.length?"Auto / select valid manager":`No active ${escapeHtml(role.reports_to_title||role.reports_to_role_id)} found`):"No manager required"}</option>${managers.map(m=>orgOption(orgManagerOptionLabel(m),hrRecordId(m),currentManager)).join("")}</select></label>
           <label class="hr-field"><span>Effective From</span><input class="hr-input" type="date" name="effectiveFrom" value="${escapeHtml(String(firstRecordValue(record,["orgEffectiveFrom","effectiveFrom"],new Date().toISOString().slice(0,10))).slice(0,10))}" required></label>
           <label class="hr-field"><span>Job Code</span><input class="hr-input org-system-field" id="orgJobCodeDisplay" value="${escapeHtml(role?.job_code||role?.role_id||"")}" readonly></label>
         </div>
@@ -3254,7 +3358,7 @@
           <div class="org-derived" style="grid-column:span 2"><span>Permission Preview</span><div class="org-permission-chips" id="orgPermissionPreview">${permissions.length?permissions.map(x=>`<span class="org-permission-chip">${escapeHtml(x)}</span>`).join(""):'<strong>—</strong>'}</div></div>
         </div>
         <div id="orgSmartRequirementsHost">${renderSmartRequirements(record,countryCode,role?.role_id||"",baseCode)}</div>
-        ${role?.reports_to_role_id&&!managers.length?`<div class="org-warning">This position reports to <b>${escapeHtml(role.reports_to_title||role.reports_to_role_id)}</b>, but no active employee currently holds that reporting role. The backend will never guess a manager.</div>`:""}
+        ${role?.reports_to_role_id&&!managers.length?`<div class="org-warning">This position reports to <b>${escapeHtml(role.reports_to_title||role.reports_to_role_id)}</b>, but no active employee currently holds that reporting role.</div>`:""}
       </div>`;
     }
 
@@ -3282,9 +3386,10 @@
 
     function syncOrgProvisionForm(changed=""){
       const card=document.getElementById("orgProvisionCard");if(!card)return;
-      const c=orgCatalog(),countrySel=document.getElementById("orgCountrySelect"),baseSel=document.getElementById("orgBaseSelect"),roleSel=document.getElementById("orgRoleSelect"),managerSel=document.getElementById("orgManagerSelect");
-      if(changed==="country"){if(baseSel)baseSel.value="";if(roleSel)roleSel.value="";if(managerSel)managerSel.value=""}
-      if(changed==="base"){if(roleSel)roleSel.value="";if(managerSel)managerSel.value=""}
+      const c=orgCatalog(),countrySel=document.getElementById("orgCountrySelect"),baseSel=document.getElementById("orgBaseSelect"),deptSel=document.getElementById("orgDepartmentSelect"),roleSel=document.getElementById("orgRoleSelect"),managerSel=document.getElementById("orgManagerSelect");
+      if(changed==="country"){if(baseSel)baseSel.value="";if(deptSel)deptSel.value="";if(roleSel)roleSel.value="";if(managerSel)managerSel.value=""}
+      if(changed==="base"){if(deptSel)deptSel.value="";if(roleSel)roleSel.value="";if(managerSel)managerSel.value=""}
+      if(changed==="department"){if(roleSel)roleSel.value="";if(managerSel)managerSel.value=""}
       const countryCode=String(countrySel?.value||"").toUpperCase();
       const baseChoices=orgBasesForCountry(countryCode);
       let baseCode=baseSel?.value||"";
@@ -3294,15 +3399,23 @@
         if(!baseChoices.some(b=>String(b.code)===String(baseCode)))baseCode="";
         baseSel.value=baseCode;
       }
-      const roleChoices=orgRolesForBase(baseCode,countryCode);
+      const departments=orgDepartmentsForBase(baseCode,countryCode);
+      let departmentId=deptSel?.value||"";
+      if(deptSel){
+        deptSel.disabled=!baseCode;
+        deptSel.innerHTML=`<option value="">${baseCode?"Select department":"Select base first"}</option>`+departments.map(d=>orgOption(d.name||d.code,d.id,departmentId)).join("");
+        if(!departments.some(d=>String(d.id)===String(departmentId)))departmentId="";
+        deptSel.value=departmentId;
+      }
+      const roleChoices=orgRolesForBase(baseCode,countryCode).filter(r=>String(r.department_id)===String(departmentId));
       let roleId=roleSel?.value||"",role=roleChoices.find(r=>String(r.role_id)===String(roleId))||null;
       if(roleSel){
-        roleSel.disabled=!baseCode;
-        roleSel.innerHTML=`<option value="">${baseCode?"Select eligible position":"Select base first"}</option>`+roleChoices.map(r=>orgOption(r.title,r.role_id,roleId)).join("");
+        roleSel.disabled=!departmentId;
+        roleSel.innerHTML=`<option value="">${departmentId?"Select position":"Select department first"}</option>`+roleChoices.map(r=>orgOption(r.title,r.role_id,roleId)).join("");
         if(!role)roleId="";
         roleSel.value=roleId;
       }
-      const dept=c.departments.find(d=>String(d.id)===String(role?.department_id)),base=c.bases.find(b=>String(b.code)===String(baseCode));
+      const dept=c.departments.find(d=>String(d.id)===String(departmentId)),base=c.bases.find(b=>String(b.code)===String(baseCode));
       const managers=orgManagerCandidates(role,baseCode,selectedHrEmployee()||{}),managerCurrent=managerSel?.value||"";
       if(managerSel){
         managerSel.disabled=!role?.reports_to_role_id;
@@ -3315,12 +3428,15 @@
       const txt=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v||"—"};
       txt("orgDerivedDepartment",dept?.name);txt("orgDerivedReportsTo",role?.reports_to_title);txt("orgDerivedAccessRole",role?.default_access_role);txt("orgDerivedPreset",role?.permission_preset_id);
       const pp=document.getElementById("orgPermissionPreview");if(pp)pp.innerHTML=permissions.length?permissions.map(x=>`<span class="org-permission-chip">${escapeHtml(x)}</span>`).join(""):"<strong>—</strong>";
-      const host=document.getElementById("orgSmartRequirementsHost");if(host)host.innerHTML=renderSmartRequirements(selectedHrEmployee()||{},countryCode,role?.role_id||"",baseCode);
+      const host=document.getElementById("orgSmartRequirementsHost");
+      const draftKey=hrEmployeeDraftMode?"__new__":hrSelectedEmployeeId;
+      const values={...(selectedHrEmployee()||{}),...(hrEmployeeDrafts.get(draftKey)||{}),...serializeForm(card.closest("form"))};
+      if(host)host.innerHTML=renderSmartRequirements(values,countryCode,role?.role_id||"",baseCode);
     }
 
     function renderHrEmployee() {
-      const record = hrEmployeeDraftMode ? {} : selectedHrEmployee();
-      if (!record && !hrEmployeeDraftMode) {
+      const selected = hrEmployeeDraftMode ? {} : selectedHrEmployee();
+      if (!selected && !hrEmployeeDraftMode) {
         return `
           <section class="hr-panel">
             ${renderEmptyState(
@@ -3332,6 +3448,8 @@
           </section>
         `;
       }
+      const draftKey=hrEmployeeDraftMode?"__new__":hrRecordId(selected);
+      const record={...(selected || {}), ...(hrEmployeeDrafts.get(draftKey) || {})};
       const groups = profileFieldGroups.filter(group => group.tab === currentHrEmployeeTab);
       const title = hrEmployeeDraftMode ? "New Employee" : recordName(record);
       return `
@@ -3359,7 +3477,7 @@
 
             <form id="hrEmployeeForm">
               <input type="hidden" name="recordId" value="${escapeHtml(hrRecordId(record))}">
-              <div class="hr-note" style="margin-bottom:14px">Changes are submitted to the parent application. This embed does not store employee records locally.</div>
+              <div class="hr-note" style="margin-bottom:14px">Changes are saved to the employee record.</div>
               ${currentHrEmployeeTab === "employment" ? renderOrgProvisionCard(record || {}) : ""}
               ${groups.map(group => `
                 <section class="section">
@@ -3384,18 +3502,59 @@
       const raw = firstRecordValue(record, keys, "");
       const value = raw === undefined || raw === null ? "" : displayPortalValue(raw);
       if (label === "SK-ID") return `<label class="hr-field"><span>SK-ID</span><input class="hr-input" readonly value="${escapeHtml(value === "—" ? "" : value)}"><small style="color:var(--sap-text-muted)">Assigned automatically when the employee is created.</small></label>`;
+      if (["Full Name", "Employment Status", "Active"].includes(label)) {
+        return `<label class="hr-field"><span>${escapeHtml(label)}</span><input class="hr-input org-system-field" ${label === "Full Name" ? 'data-derived-full-name="true"' : ""} value="${escapeHtml(value === "—" ? "" : value)}" readonly><small>${label === "Full Name" ? "Based on the employee's name." : "Managed through the employee lifecycle."}</small></label>`;
+      }
       const multiline = /notes|goals|records|checks|timestamps|skills|languages|certifications|plan|feedback|permissions|groups|apps/i.test(name) || value.length > 90;
       const externalSystemOwned = currentHrEmployeeTab === "time" || currentHrEmployeeTab === "compensation" || label === "Roster Group";
+      const cleanValue = value === "—" ? "" : value;
+      const countryField = ["nationalIdCountry", "passportCountry", "homeAddressCountry"].includes(name);
+      const options = {
+        nationalIdType: ["National ID", "Social Security number", "Tax identification number", "Other"],
+        workEligibilityStatus: ["Pending", "Verified", "Reverification required", "Not applicable"],
+        addressType: ["Home", "Mailing", "Other"]
+      }[name];
+      if (!externalSystemOwned && countryField) return `<label class="hr-field"><span>${escapeHtml(label)}</span><select class="hr-select" name="${escapeHtml(name)}">${countryOptions(cleanValue)}</select></label>`;
+      if (!externalSystemOwned && options) {
+        const choices = cleanValue && !options.includes(cleanValue) ? [cleanValue, ...options] : options;
+        return `<label class="hr-field"><span>${escapeHtml(label)}</span><select class="hr-select" name="${escapeHtml(name)}"><option value="">Select</option>${choices.map(option => orgOption(option, option, cleanValue)).join("")}</select></label>`;
+      }
+      const lastFour = ["nationalIdLast4", "passportNumberLast4", "workPermitNumberLast4"].includes(name);
+      const invalidLegacy = lastFour && cleanValue && !/^[a-z0-9]{4}$/i.test(cleanValue);
+      const dateField = !externalSystemOwned && (/Date$/.test(name) || /Expiry$/.test(name));
+      const invalidLegacyDate = dateField && cleanValue && !/^\d{4}-\d{2}-\d{2}/.test(cleanValue);
+      const inputName = invalidLegacy || invalidLegacyDate ? `data-field-name="${escapeHtml(name)}"` : `name="${escapeHtml(name)}"`;
+      const inputType = dateField ? "date" : /email/i.test(name) ? "email" : /phone|mobile/i.test(name) ? "tel" : "text";
+      const addressAttrs = name === "homeAddressStreet" ? ' autocomplete="address-line1" data-address-lookup="true"' : name === "homeAddressCity" ? ' autocomplete="address-level2"' : name === "homeAddressState" ? ' autocomplete="address-level1"' : name === "homeAddressPostalCode" ? ' autocomplete="postal-code"' : "";
       return `
         <label class="hr-field ${multiline ? "wide" : ""}">
           <span>${escapeHtml(label)}</span>
           ${multiline
-            ? `<textarea class="hr-textarea" ${externalSystemOwned ? "readonly" : `name="${escapeHtml(name)}"`}>${escapeHtml(value === "—" ? "" : value)}</textarea>`
-            : `<input class="hr-input" ${externalSystemOwned ? "readonly" : `name="${escapeHtml(name)}"`} value="${escapeHtml(value === "—" ? "" : value)}">`
+            ? `<textarea class="hr-textarea" ${externalSystemOwned ? "readonly" : inputName}>${escapeHtml(cleanValue)}</textarea>`
+            : `<input class="hr-input" type="${inputType}" ${externalSystemOwned ? "readonly" : inputName} value="${escapeHtml(invalidLegacy || invalidLegacyDate ? "" : dateField ? cleanValue.slice(0,10) : cleanValue)}" ${lastFour ? 'maxlength="4" pattern="[A-Za-z0-9]{4}" title="Enter the last four letters or digits" autocomplete="off"' : ""}${addressAttrs}>`
           }
+          ${invalidLegacy || invalidLegacyDate ? '<small>Existing information is retained. Enter a new value to update it.</small>' : ""}
+          ${name === "homeAddressStreet" ? '<span class="sf-address-results" role="listbox" aria-label="Address suggestions"></span><small>Address search powered by Mapbox. You can also enter an address manually.</small>' : ""}
           ${externalSystemOwned ? `<small style="color:var(--sap-text-muted)">${currentHrEmployeeTab === "compensation" ? "Controlled by Payroll." : "Controlled by MyRoster / scheduling."}</small>` : ""}
         </label>
       `;
+    }
+
+    function countryOptions(selected = "") {
+      const value = String(selected || "").trim();
+      if (!regionCountryOptions) {
+        const names = new Intl.DisplayNames(["en"], { type:"region" });
+        regionCountryOptions = [];
+        for (let a=65;a<=90;a++) for (let b=65;b<=90;b++) {
+          const code=String.fromCharCode(a,b), name=names.of(code);
+          if (name && name !== code && code !== "ZZ") regionCountryOptions.push({code,name});
+        }
+        regionCountryOptions.sort((a,b)=>a.name.localeCompare(b.name));
+      }
+      const countries=regionCountryOptions;
+      const match=countries.find(c=>c.name.toLowerCase()===value.toLowerCase() || c.code===value.toUpperCase());
+      const legacy=value&&!match?`<option value="${escapeHtml(value)}" selected>${escapeHtml(value)}</option>`:"";
+      return '<option value="">Select country</option>'+legacy+countries.map(c=>orgOption(c.name,c.name,match?.name||"")).join("");
     }
 
     function renderHrOrganization() {
@@ -3403,23 +3562,23 @@
       const unassigned=portalState.hr.staff.filter(item=>!orgRecordRoleId(item)).length;
       return `
         ${renderHrKpis([
-          ["Departments", c.departments.length, "Canonical company units"],
+          ["Departments", c.departments.length, "Company units"],
           ["Bases", c.bases.length, "HQ, market and field bases"],
           ["Job roles", c.roles.length, "Job codes with reporting lines"],
-          ["Unassigned", unassigned, "Employees needing canonical mapping"]
+          ["Unassigned", unassigned, "Employees who need an assignment"]
         ])}
         <div class="hr-workbench-grid one">
           <section class="hr-panel">
             <div class="hr-panel-header"><div><h2>Company Structure</h2><p>Live organization catalog used by Employee Central dropdowns and automatic access provisioning.</p></div><div class="hr-panel-actions"><button class="secondary-button" type="button" data-action="hr-org-refresh">Refresh structure</button></div></div>
-            <div class="org-table-note">Job Title and Job Code are the same canonical role record. A role fixes its department, reporting role and default permission preset. Base choices are constrained by role/base rules.</div>
+            <div class="org-table-note">Each position has a job code, department, reporting role and default access. Available positions depend on the selected base.</div>
             <div class="hr-panel-body flush">${renderRecordTable(c.departments,[["Code",["code"]],["Department",["name"]],["Division",["division"]],["Footprint",["footprint"]]],{emptyTitle:"No departments",emptyMessage:"Apply the organization seed migration.",emptyIcon:"apps"})}</div>
           </section>
           <div class="hr-workbench-grid equal">
-            <section class="hr-panel"><div class="hr-panel-header"><div><h2>Bases</h2><p>Selectable work locations</p></div></div><div class="hr-panel-body flush">${renderRecordTable(c.bases,[["Code",["code"]],["Base",["name"]],["Country",["country_code"]],["IATA",["airport_iata"]],["Type",["base_type"]]],{emptyTitle:"No bases",emptyMessage:"No canonical bases loaded.",emptyIcon:"apps"})}</div></section>
-            <section class="hr-panel"><div class="hr-panel-header"><div><h2>Permission Presets</h2><p>Backend-derived access bundles</p></div></div><div class="hr-panel-body flush">${renderRecordTable(c.permissionPresets,[["Preset",["preset_id"]],["Name",["name"]],["Permissions",r=>displayPortalValue(r.permission_keys)],["Manage",r=>r.can_manage?"Yes":"No"]],{emptyTitle:"No presets",emptyMessage:"No permission presets loaded.",emptyIcon:"lock"})}</div></section>
+            <section class="hr-panel"><div class="hr-panel-header"><div><h2>Bases</h2><p>Selectable work locations</p></div></div><div class="hr-panel-body flush">${renderRecordTable(c.bases,[["Code",["code"]],["Base",["name"]],["Country",["country_code"]],["IATA",["airport_iata"]],["Type",["base_type"]]],{emptyTitle:"No bases",emptyMessage:"No bases loaded.",emptyIcon:"apps"})}</div></section>
+            <section class="hr-panel"><div class="hr-panel-header"><div><h2>Permission Presets</h2><p>Available access bundles</p></div></div><div class="hr-panel-body flush">${renderRecordTable(c.permissionPresets,[["Preset",["preset_id"]],["Name",["name"]],["Permissions",r=>displayPortalValue(r.permission_keys)],["Manage",r=>r.can_manage?"Yes":"No"]],{emptyTitle:"No presets",emptyMessage:"No permission presets loaded.",emptyIcon:"lock"})}</div></section>
           </div>
-          <section class="hr-panel"><div class="hr-panel-header"><div><h2>Job Codes & Reporting Lines</h2><p>${c.roles.length} canonical roles</p></div></div><div class="hr-panel-body flush">${renderRecordTable(c.roles,[["Job Code",["job_code"]],["Job Title",["title"]],["Department",["department_code"]],["Level",["level"]],["Reports To",["reports_to_title"]],["Access Role",["default_access_role"]],["Preset",["permission_preset_id"]]],{emptyTitle:"No job roles",emptyMessage:"No company codebook roles loaded.",emptyIcon:"users"})}</div></section>
-          <section class="hr-panel"><div class="hr-panel-header"><div><h2>Assignment Audit</h2><p>Latest organization changes</p></div></div><div class="hr-panel-body flush">${renderRecordTable(audit,[["Time",["created_at"]],["Action",["action"]],["Employee",["agent_user_id"]],["Reason",["reason"]]],{emptyTitle:"No assignment changes",emptyMessage:"Audit entries appear after canonical assignments are saved.",emptyIcon:"task"})}</div></section>
+          <section class="hr-panel"><div class="hr-panel-header"><div><h2>Job Codes & Reporting Lines</h2><p>${c.roles.length} positions</p></div></div><div class="hr-panel-body flush">${renderRecordTable(c.roles,[["Job Code",["job_code"]],["Job Title",["title"]],["Department",["department_code"]],["Level",["level"]],["Reports To",["reports_to_title"]],["Access Role",["default_access_role"]],["Preset",["permission_preset_id"]]],{emptyTitle:"No job roles",emptyMessage:"No positions loaded.",emptyIcon:"users"})}</div></section>
+          <section class="hr-panel"><div class="hr-panel-header"><div><h2>Assignment Audit</h2><p>Latest organization changes</p></div></div><div class="hr-panel-body flush">${renderRecordTable(audit,[["Time",["created_at"]],["Action",["action"]],["Employee",["agent_user_id"]],["Reason",["reason"]]],{emptyTitle:"No assignment changes",emptyMessage:"Assignment changes appear here after they are saved.",emptyIcon:"task"})}</div></section>
         </div>
       `;
     }
@@ -3624,7 +3783,7 @@
           </div>
         </div>
         <section class="hr-panel" style="box-shadow:none">
-          <div class="hr-panel-header"><div><h3>Candidate Record</h3><p>Backend candidate master data</p></div></div>
+          <div class="hr-panel-header"><div><h3>Candidate Record</h3><p>Candidate information</p></div></div>
           <div class="hr-panel-body">
             <div class="detail-grid">
               ${fields.map(([key, value]) => `
@@ -3859,7 +4018,7 @@
       return `
         <div class="hr-workbench-grid equal">
           <section class="hr-panel" style="box-shadow:none">
-            <div class="hr-panel-header"><div><h3>Recruiting Settings</h3><p>Backend-controlled careers configuration</p></div></div>
+            <div class="hr-panel-header"><div><h3>Recruiting Settings</h3><p>Recruiting settings</p></div></div>
             <div class="hr-panel-body">
               <form id="careerSettingsForm">
                 <div class="hr-form-grid">
@@ -4056,7 +4215,7 @@
       const prepared = recruitingOfferDrafts.has(String(id));
       openDialog({
         id:"candidate-hire", title:"Hire candidate", subtitle:recordName(candidate),
-        body:`<form id="careerHireForm"><input type="hidden" name="candidateId" value="${escapeHtml(String(id))}"><p>The corporate email address will be generated automatically. The existing candidate email will be used for the Wix account while the corporate mailbox is awaiting setup.</p><p>${prepared ? "New York offer details are prepared for this session." : "You may prepare a New York offer letter before hiring."}</p><button class="secondary-button" type="button" data-action="careers-prepare-hire-offer" data-id="${escapeHtml(String(id))}">${prepared ? "Edit offer letter" : "Prepare offer letter"}</button></form>`,
+        body:`<form id="careerHireForm"><input type="hidden" name="candidateId" value="${escapeHtml(String(id))}"><p>The corporate email address will be generated automatically. The candidate’s existing email will be used for their staff sign-in while the corporate mailbox is being set up.</p><p>${prepared ? "New York offer details are prepared for this session." : "You may prepare a New York offer letter before hiring."}</p><button class="secondary-button" type="button" data-action="careers-prepare-hire-offer" data-id="${escapeHtml(String(id))}">${prepared ? "Edit offer letter" : "Prepare offer letter"}</button></form>`,
         footer:`<button class="ghost-button" type="button" data-action="close-dialog">Cancel</button><button class="primary-button" type="submit" form="careerHireForm">Hire and create staff account</button>`
       });
     }
@@ -4397,7 +4556,7 @@
         <div class="hr-workbench-grid">
           <section class="hr-panel">
             <div class="hr-panel-header">
-              <div><h2>Access & Portal Permissions</h2><p>Effective permissions from the employee's canonical access role and permission preset</p></div>
+              <div><h2>Access & Portal Permissions</h2><p>Permissions from the employee's access role and permission preset</p></div>
             </div>
             <div class="hr-panel-body">
               <label class="hr-field" style="margin-bottom:14px">
@@ -4411,7 +4570,7 @@
                 </select>
               </label>
               ${record ? `
-                <div class="hr-note" style="margin-bottom:12px">Access is assigned by the canonical Organization role/access-role/permission-preset mapping. Change the employee's assignment in <b>Employee Central → Employment Information</b>; this screen does not create ad-hoc permission overrides.</div>
+                <div class="hr-note" style="margin-bottom:12px">Access follows the employee's position and permission preset. Change the assignment in <b>Employee Central → Employment Information</b>.</div>
                 <div class="hr-permission-grid">
                   ${HR_PERMISSIONS.map(([key, label, description]) => {
                     const enabled = tokens.includes(key.toLowerCase()) || record.permissions?.[key] === true || record.access?.[key] === true;
@@ -4427,7 +4586,7 @@
             </div>
           </section>
           <aside class="hr-panel">
-            <div class="hr-panel-header"><div><h2>Portal Diagnostics</h2><p>Current backend access checks</p></div></div>
+            <div class="hr-panel-header"><div><h2>Portal Diagnostics</h2><p>Current access checks</p></div></div>
             <div class="hr-panel-body flush">
               ${portalResults.length
                 ? renderRecordTable(portalResults, genericColumns(portalResults), { emptyIcon: "lock" })
@@ -4475,18 +4634,21 @@
       if (root) root.innerHTML = "";
     }
 
+    function showActionError(action, message) {
+      const origin = actionOrigins.get(action) || lastActionOrigin;
+      let anchor = origin?.node?.isConnected ? origin.node : null;
+      if (!anchor && origin?.formId) anchor = [...document.querySelectorAll("[form]")].find(node=>node.getAttribute("form")===origin.formId) || document.getElementById(origin.formId)?.querySelector('button[type="submit"]');
+      if (!anchor && origin?.action) anchor = [...document.querySelectorAll("[data-action]")].find(node => node.dataset.action === origin.action && (!origin.id || node.dataset.id === origin.id));
+      if (!anchor) anchor = document.querySelector("#mainContent .page-actions button, #mainContent button, #portal button");
+      if (!anchor?.parentElement) return;
+      anchor.parentElement.querySelector(":scope > .sf-inline-error")?.remove();
+      const error = document.createElement("span"); error.className="sf-inline-error"; error.setAttribute("role","alert");
+      error.textContent = String(message || "This action could not be completed. Try again.").replace(/Wix Member|Wix account|Wix/gi, "staff account").replace(/backend/gi, "system");
+      anchor.insertAdjacentElement("afterend", error);
+    }
+
     function showToast(title, message, type = "info") {
-      const region = $("toastRegion");
-      if (!region) return;
-      const toast = document.createElement("div");
-      toast.className = `toast ${type === "warning" ? "warning" : "info"}`;
-      toast.innerHTML = `
-        <span class="toast-icon">${icon(type === "warning" ? "warning" : "check", 18)}</span>
-        <span><strong>${escapeHtml(title)}</strong><span>${escapeHtml(message)}</span></span>
-        <button class="icon-button" type="button" data-action="dismiss-toast" aria-label="Dismiss">${icon("close", 15)}</button>
-      `;
-      region.appendChild(toast);
-      window.setTimeout(() => toast.remove(), 5000);
+      if (type === "warning" && title !== "Archive requested") showActionError("", message);
     }
 
     function renderDevTools() {
@@ -4507,9 +4669,11 @@
       `;
     }
 
-    function renderPortal() {
+    function renderPortal({ background = false } = {}) {
       const portal = $("portal");
       if (!portal) return;
+      const editing = portal.querySelector('form[data-sf-dirty="true"]') || (portal.contains(document.activeElement) && document.activeElement?.matches("input, select, textarea"));
+      if (background && editing) return;
       let page;
       if (!portalState.connected) {
         page = renderConnectionState();
@@ -4526,7 +4690,10 @@
         };
         page = (renderers[currentView] || renderHome)();
       }
-      portal.innerHTML = renderShell() + page + renderDevTools();
+      const markup = renderShell() + page + renderDevTools();
+      if (markup === lastPortalMarkup && portal.childNodes.length) return;
+      lastPortalMarkup = markup;
+      portal.innerHTML = markup;
       applyHrReadOnlyControls();
 
     }
@@ -4624,7 +4791,7 @@
         title: "SuccessFactors Portal Help",
         subtitle: "RIAINTRA employee and HR support",
         body: `
-          <div class="dialog-summary">This interface receives authenticated employee data from the Wix parent page. If content does not load, confirm the staff session first and then request the bootstrap again.</div>
+          <div class="dialog-summary">If your information does not load, check your staff session and try refreshing your workspace.</div>
           <div class="detail-grid">
             <div class="detail-field"><span>Connection</span><strong>${escapeHtml(portalState.status)}</strong></div>
             <div class="detail-field"><span>Role</span><strong>${escapeHtml(currentUserRole || "Not loaded")}</strong></div>
@@ -4647,17 +4814,17 @@
       openDialog({
         id: "rbac-detail",
         title: "My Access & Organization Scope",
-        subtitle: "Authenticated profile + SKANDI canonical organization context",
+        subtitle: "Your SKANDI profile and organization",
         body: `
           <div class="detail-grid">
-            <div class="detail-field"><span>Canonical job role</span><strong>${escapeHtml([ctx.roleId,ctx.jobTitle].filter(Boolean).join(" · ")||"Not returned")}</strong></div>
+            <div class="detail-field"><span>Job role</span><strong>${escapeHtml([ctx.roleId,ctx.jobTitle].filter(Boolean).join(" · ")||"Not available")}</strong></div>
             <div class="detail-field"><span>Department</span><strong>${escapeHtml([ctx.departmentId,ctx.departmentName].filter(Boolean).join(" · ")||"Not returned")}</strong></div>
             <div class="detail-field"><span>Base / market</span><strong>${escapeHtml([ctx.baseCode,ctx.baseName].filter(Boolean).join(" · ")||"Not returned")}</strong></div>
             <div class="detail-field"><span>ALTEA access role</span><strong>${escapeHtml(ctx.accessRole||"Not explicitly returned")}</strong></div>
             <div class="detail-field"><span>Access purpose</span><strong>${escapeHtml(accessPurpose)}</strong></div>
             <div class="detail-field"><span>Suggested catalog mapping</span><strong>${escapeHtml(ctx.suggestedAccessRole||"—")} · ${escapeHtml(ctx.suggestedPermissionPreset||"—")}</strong></div>
           </div>
-          <div class="scope-access-note">Catalog suggestions do not grant access. Application authorization must be confirmed by the authenticated backend and explicit permission/entitlement data.</div>
+          <div class="scope-access-note">Access is based on the employee's approved assignments.</div>
           ${tokens.length ? `<div class="filter-chips" style="margin-top:12px">${tokens.map(token=>`<span class="role-pill">${icon("lock",12)} ${escapeHtml(token)}</span>`).join("")}</div>` : '<div class="dialog-summary" style="margin-top:12px">No explicit permission tokens were returned.</div>'}
         `,
         footer: '<button class="primary-button" type="button" data-action="close-dialog">Close</button>'
@@ -4718,6 +4885,21 @@
       return payload;
     }
 
+    function captureEmployeeDraft() {
+      const form=$("hrEmployeeForm");
+      if (!form || form.dataset.sfDirty !== "true") return;
+      const key=hrEmployeeDraftMode?"__new__":String(form.elements.namedItem("recordId")?.value || hrSelectedEmployeeId);
+      if(!key)return;
+      const draft={...(hrEmployeeDrafts.get(key)||{})};
+      for(const field of form.querySelectorAll('[data-sf-dirty="true"][name]')) {
+        if(!field.disabled && field.type!=="button" && field.type!=="submit") draft[field.name]=field.value;
+      }
+      if(form.querySelector('#orgProvisionCard [data-sf-dirty="true"]')) {
+        for(const field of form.querySelectorAll('#orgProvisionCard [name]')) if(!field.disabled) draft[field.name]=field.value;
+      }
+      hrEmployeeDrafts.set(key,draft);
+    }
+
     function requestPortalBootstrap() {
       portalState.status = "waiting";
       portalState.error = null;
@@ -4727,6 +4909,12 @@
       });
       post("HR_READY", { requestedAt: new Date().toISOString() });
       renderPortal();
+    }
+
+    function scheduleHrReady() {
+      if(hrReadyScheduled) return;
+      hrReadyScheduled=true;
+      window.setTimeout(()=>post("HR_READY", { requestedAt:new Date().toISOString() }),1200);
     }
 
     function refreshHrData() {
@@ -4746,7 +4934,7 @@
         id: "archive-employee",
         title: "Archive employee record",
         subtitle: recordName(record),
-        body: '<div class="dialog-summary">This requests an archive operation from the parent backend. The embed will not remove the employee until the backend confirms the change.</div>',
+        body: '<div class="dialog-summary">The employee will be archived after you confirm.</div>',
         footer: `
           <button class="ghost-button" type="button" data-action="close-dialog">Cancel</button>
           <button class="semantic-button danger" type="button" data-action="hr-confirm-archive" data-id="${escapeHtml(hrRecordId(record))}">${icon("warning", 15)} Archive employee</button>
@@ -4756,7 +4944,24 @@
 
     function handleAction(action, element, event) {
       const id = element.dataset.id || "";
-      if (action === "close-dialog") {
+      if (action === "select-address") {
+        event.preventDefault();
+        const selected=addressLookupItems[Number(element.dataset.index)], form=addressLookupInput?.form;
+        if (!selected || !form) return;
+        const values={homeAddressStreet:selected.street,homeAddressCity:selected.city,homeAddressState:selected.state,homeAddressPostalCode:selected.postalCode,homeAddressCountry:selected.country};
+        for (const [name,value] of Object.entries(values)) {
+          const input=form.elements.namedItem(name);
+          if (input && typeof value === "string") {
+            if (input.tagName === "SELECT" && value && ![...input.options].some(option=>option.value===value)) {
+              const option=document.createElement("option"); option.value=value; option.textContent=value; input.appendChild(option);
+            }
+            input.value=value; input.dispatchEvent(new Event("change", { bubbles:true }));
+          }
+        }
+        const results=addressLookupInput.closest("label")?.querySelector(".sf-address-results");
+        if(results)results.innerHTML="";
+        addressLookupItems=[];
+      } else if (action === "close-dialog") {
         if (event.target.closest("[data-dialog-panel]") && element.classList.contains("modal-backdrop")) return;
         closeDialog();
       } else if (action === "dismiss-toast") {
@@ -4895,7 +5100,6 @@
         openArchiveConfirmation();
       } else if (action === "hr-confirm-archive") {
         post("HR_STAFF_ARCHIVE", { id });
-        closeDialog();
         showToast("Archive requested", "Waiting for backend confirmation.", "warning");
       } else if (action === "hr-use-badge") {
         badgeSelectedId = hrSelectedEmployeeId;
@@ -4946,7 +5150,7 @@
         if (!hasRecruitingAccess() || !canManageHrRecords()) return;
         openDialog({
           id:"retry-hire-automation", title:"Retry hire automation", subtitle:"Review the previous attempt first",
-          body:"<p>Check Wix Automation history before retrying. A previous attempt may have reached Wix even if it was not confirmed. Retrying can run the automation twice. The retry uses the offer saved when the candidate was hired.</p>",
+          body:"<p>Check the automation history before retrying. The previous attempt may have completed even if it was not confirmed. Retrying can run it twice. The saved offer will be used.</p>",
           footer:`<button class="ghost-button" type="button" data-action="close-dialog">Cancel</button><button class="primary-button" type="button" data-action="careers-confirm-hire-retry" data-id="${escapeHtml(id)}">Retry automation</button>`
         });
       } else if (action === "careers-confirm-hire-retry") {
@@ -5026,7 +5230,7 @@
           subtitle: recordName(candidate),
           body: `<form id="careerCompleteOnboardingForm">
             <input type="hidden" name="candidateId" value="${escapeHtml(recruitingCandidateId(candidate))}">
-            <p>Enter the SK-ID from this hire’s SuccessFactors employee record. Completing onboarding grants the assigned staff access role to their Wix work account.</p>
+            <p>Enter the SK-ID from this hire’s SuccessFactors employee record. Completing onboarding grants their assigned staff access.</p>
             <label class="hr-field"><span>Employee SK-ID</span><input class="hr-input" name="skId" pattern="[A-Za-z]{2}[0-9]{4}" maxlength="6" required></label>
           </form>`,
           footer: '<button class="ghost-button" type="button" data-action="close-dialog">Cancel</button><button class="primary-button" type="submit" form="careerCompleteOnboardingForm">Complete onboarding</button>'
@@ -5088,6 +5292,11 @@
     }
 
     function onDocumentClick(event) {
+      const destination=event.target.closest("[data-route], [data-action]");
+      if(destination && destination.dataset.action !== "select-address") captureEmployeeDraft();
+      currentActionElement = event.target.closest("button, [role='button']");
+      const actionElement=currentActionElement;
+      window.setTimeout(()=>{if(currentActionElement===actionElement) currentActionElement=null;},0);
       const routeTarget = event.target.closest("[data-route]");
       if (routeTarget) {
         const route = routeTarget.dataset.route;
@@ -5107,6 +5316,28 @@
     }
 
     function onDocumentInput(event) {
+      const editingForm=event.target.closest("form"); if(editingForm) editingForm.dataset.sfDirty="true";
+      if(editingForm) event.target.dataset.sfDirty="true";
+      if (editingForm?.id === "hrEmployeeForm" && ["firstName","lastName","preferredName"].includes(event.target.name)) {
+        const display=editingForm.querySelector('[data-derived-full-name="true"]');
+        if(display) display.value=editingForm.elements.namedItem("preferredName")?.value || [editingForm.elements.namedItem("firstName")?.value,editingForm.elements.namedItem("lastName")?.value].filter(Boolean).join(" ");
+      }
+      if (event.target.dataset.fieldName) event.target.name = event.target.dataset.fieldName;
+      if (event.target.matches('[data-address-lookup="true"]')) {
+        window.clearTimeout(addressLookupTimer);
+        const input=event.target, query=String(input.value || "").trim(), results=input.closest("label")?.querySelector(".sf-address-results");
+        addressLookupInput=input; addressLookupItems=[]; ++addressLookupSequence;
+        if(results)results.innerHTML="";
+        if(query.length>=4) {
+          const requestId=String(addressLookupSequence);
+          addressLookupTimer=window.setTimeout(()=>{
+            if (!input.isConnected || requestId !== String(addressLookupSequence)) return;
+            const countryName=input.form?.elements.namedItem("homeAddressCountry")?.value || "";
+            const country=regionCountryOptions?.find(item=>item.name.toLowerCase()===String(countryName).toLowerCase())?.code || countryName;
+            post("HR_ADDRESS_SUGGEST", {query,country,requestId});
+          },800);
+        }
+      }
       if (event.target.id === "globalSearch") {
         updateGlobalSearch(event.target.value);
       } else if (event.target.id === "appSearch") {
@@ -5133,6 +5364,10 @@
     }
 
     function onDocumentChange(event) {
+      const editingForm=event.target.closest("form"); if(editingForm) editingForm.dataset.sfDirty="true";
+      if(editingForm) event.target.dataset.sfDirty="true";
+      if (event.target.dataset.fieldName) event.target.name = event.target.dataset.fieldName;
+      if (editingForm?.id === "hrEmployeeForm" && event.target.closest("#orgProvisionCard")) captureEmployeeDraft();
       if (event.target.id === "badgeEmployeeSelect") {
         badgeSelectedId = event.target.value;
         hrSelectedEmployeeId = event.target.value || hrSelectedEmployeeId;
@@ -5146,6 +5381,8 @@
         syncOrgProvisionForm("country");
       } else if (event.target.id === "orgBaseSelect") {
         syncOrgProvisionForm("base");
+      } else if (event.target.id === "orgDepartmentSelect") {
+        syncOrgProvisionForm("department");
       } else if (event.target.id === "orgRoleSelect") {
         syncOrgProvisionForm("role");
       } else if (event.target.id === "orgManagerSelect") {
@@ -5157,30 +5394,34 @@
       const form = event.target;
       if (!(form instanceof HTMLFormElement)) return;
       event.preventDefault();
+      currentActionElement = event.submitter || [...document.querySelectorAll("[form]")].find(node=>node.getAttribute("form")===form.id) || form.querySelector('button[type="submit"]');
+      const actionElement=currentActionElement;
+      window.setTimeout(()=>{if(currentActionElement===actionElement) currentActionElement=null;},0);
       if (form.id === "profileSelfServiceForm") {
         const payload = serializeForm(form);
         editableProfileFields.filter(field => field.sensitive && !payload[field.key]).forEach(field => delete payload[field.key]);
         post("INTRANET_PROFILE_SAVE", { profile: payload });
-        closeDialog();
         showToast("Saving profile", "Your changes were sent for validation.");
       } else if (form.id === "hrEmployeeForm") {
         if (!canManageHrRecords()) return;
-        const item = serializeForm(form);
-        const recordId = item.recordId || hrSelectedEmployeeId || "";
+        captureEmployeeDraft();
+        const draftKey=hrEmployeeDraftMode?"__new__":String(form.elements.namedItem("recordId")?.value || hrSelectedEmployeeId);
+        const item = { ...(hrEmployeeDrafts.get(draftKey) || {}), ...(hrEmployeeDraftMode ? serializeForm(form) : {}) };
+        const recordId = form.elements.namedItem("recordId")?.value || hrSelectedEmployeeId || "";
         delete item.recordId;
+        if (!hrEmployeeDraftMode && !Object.keys(item).length) return;
+        pendingEmployeeSave={key:draftKey,values:{...item}};
         post("HR_STAFF_SAVE", { item: { ...item, ...(recordId ? { id: recordId } : {}) }, isNew: hrEmployeeDraftMode });
         showToast("Saving employee", "The employee record was sent to the HR backend.");
       } else if (form.id === "careerHireForm") {
         if (!hasRecruitingAccess() || !canManageHrRecords()) return;
         const hire = serializeForm(form);
         post("CAREERS_MOVE_CANDIDATE_STAGE", { candidateId:hire.candidateId, targetStage:"hired", offerDetails:recruitingOfferDrafts.get(String(hire.candidateId)) || null });
-        closeDialog();
         showToast("Creating staff account", "The hire is being processed.");
       } else if (form.id === "candidateForm") {
         if (!hasRecruitingAccess()) return;
         const candidate = serializeForm(form);
         post("CAREERS_SAVE_CANDIDATE", { item: candidate });
-        closeDialog();
         showToast("Saving candidate", "The candidate record was sent to the recruiting backend.");
       } else if (form.id === "careerJobForm") {
         if (!hasRecruitingAccess()) return;
@@ -5191,25 +5432,20 @@
       } else if (form.id === "careerHistoryForm") {
         if (!hasRecruitingAccess()) return;
         post("CAREERS_SAVE_HISTORY_SEGMENT", { item: serializeForm(form) });
-        closeDialog();
         showToast("Saving history", "The 5-year history segment was sent for validation.");
       } else if (form.id === "careerInterviewForm") {
         if (!hasRecruitingAccess()) return;
         post("CAREERS_SAVE_INTERVIEW", { item: serializeForm(form) });
-        closeDialog();
       } else if (form.id === "careerTrainingForm") {
         if (!hasRecruitingAccess()) return;
         post("CAREERS_SAVE_TRAINING_RECORD", { item: serializeForm(form) });
-        closeDialog();
       } else if (form.id === "careerCompleteOnboardingForm") {
         if (!canManageHrRecords()) return;
         const item = serializeForm(form);
         post("CAREERS_COMPLETE_ONBOARDING", { candidateId: item.candidateId, skId: item.skId.toUpperCase() });
-        closeDialog();
       } else if (form.id === "careerOnboardingForm") {
         if (!hasRecruitingAccess()) return;
         post("CAREERS_SAVE_ONBOARDING_TASK", { item: serializeForm(form) });
-        closeDialog();
       } else if (form.id === "careerSettingsForm") {
         if (!hasRecruitingAccess()) return;
         post("CAREERS_SAVE_SETTINGS", { item: serializeForm(form) });
@@ -5271,6 +5507,7 @@
 
       post("SKANDI_MASTER_CONFIG_REQUEST", { requestedAt: new Date().toISOString(), component: "SUCCESSFACTORS" });
       post("MASTER_NAVIGATION_REQUEST", { requestedAt: new Date().toISOString(), component: "SUCCESSFACTORS" });
+      post("SKANDI_PRESENTATION_READY", { requestedAt: new Date().toISOString(), component: "SUCCESSFACTORS" });
 
       post("INTRANET_READY", {
         requestedAt: new Date().toISOString(),
@@ -5285,9 +5522,7 @@
       });
 
       // Compatibility with the full SuccessFactors HR page-code contract.
-      post("HR_READY", {
-        requestedAt: new Date().toISOString()
-      });
+      scheduleHrReady();
     }
 
     initializePortal();

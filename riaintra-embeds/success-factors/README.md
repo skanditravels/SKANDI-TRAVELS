@@ -64,3 +64,12 @@ The example contains fictional data. `contactId` is sent only when the linked em
 
 A confirmed trigger is not retried automatically. If Wix does not confirm an attempt, check the automation history before using **Retry hire automation** on the candidate profile: a timeout may occur after Wix accepted the event. The same `eventId` is retained for the retry; configure downstream actions to deduplicate by that ID where supported. No Wix Automation, secret, database schema or live site is changed by this repository update.
 
+## SuccessFactors workspace update — 2026-11-09
+
+- Employment assignment uses the existing organization catalog in country, base, department, position and manager order. A base or department change clears dependent selections; assignment and authorization remain subject to the existing server-side rules.
+- Existing employee saves submit changed fields only. Drafts survive tab switches and background updates, and personal email is projected consistently in employee and self-service views. Identity document last-four values and dates are validated without replacing legacy full document values.
+- The employee directory and recruiting bootstrap are staggered after sign-in. Repeated bootstrap responses preserve the current workspace; background updates do not replace an edited form. Action failures are shown beside their originating control.
+- Address suggestions use Mapbox Geocoding v6 through a staff-authorized backend method. Configure the backend secret `SKANDI_MAPBOX_ADDRESS_TOKEN` with a valid Mapbox token; suggestions may still be entered manually. The API request uses permanent geocoding because a selected address can be stored. The Mapbox account must support permanent geocoding, including any applicable billing requirements and charges. This repository change alone does not verify the account, API response or live Wix deployment.
+- Media Control's existing presentation catalog registers `riaintra-welcome` and `riaintra-team` for `/riaintra/success-factors`. Upload the approved images and publish each slot in Media Control. These are presentation assets only; employee and organization data remain in their established systems. The existing universal receiver remains in use.
+- `tests/success-factors-workspace.test.mjs` exercises the compiled page's assignment, drafts, refresh, identity, image, address and error contracts. Live authenticated verification is still required after publishing.
+
