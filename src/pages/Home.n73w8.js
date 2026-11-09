@@ -228,7 +228,12 @@ async function handleHomeMessage(html, message) {
       try {
         const result = await boundedRead(searchDuffelPlaces({query,limit:30}), 15000);
         postToHtml(html, "HOME_FLIGHT_PLACES_RESULT", {inputId,query,items:formatFlightPlaces(result?.items)}, clean(message.requestId,160));
-      } catch (_) {
+      } catch (error) {
+        console.warn("[Flight place lookup unavailable]", {
+          name: clean(error?.name || "Error", 80),
+          code: clean(error?.code || "", 80),
+          message: clean(error?.message || "", 200)
+        });
         postToHtml(html, "HOME_FLIGHT_PLACES_RESULT", {inputId,query,items:[],unavailable:true}, clean(message.requestId,160));
       }
       return;
