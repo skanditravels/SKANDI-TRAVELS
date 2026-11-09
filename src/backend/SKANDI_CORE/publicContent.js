@@ -132,6 +132,34 @@ function collectionItem(row = {}, language = "EN") {
   };
 }
 
+// Booking recommendations use the same published Inventory ownership boundary.
+// Airline visibility is distinct from the searchable flag used by the editorial catalog.
+export async function getPublicAirlineRecommendationTiersCore() {
+  const rows = await select("inventory_canonical_entities_v", {
+    select: "code,collection_type,partner_tier,details",
+    entity_type: "eq.AIRLINE",
+    status: PUBLISHED,
+    active: ACTIVE,
+    customer_visible: ACTIVE,
+    collection_type: COLLECTION_TYPES,
+    limit: MAX_PUBLIC_ROWS
+  });
+  const tierNames = {
+    PARTNER: "PARTNER", SKANDI_PARTNER: "PARTNER",
+    SELECT: "SELECT", SELECT_COLLECTION: "SELECT", SKANDI_SELECT: "SELECT", SKANDI_SELECT_COLLECTION: "SELECT",
+    SIGNATURE: "SIGNATURE", SIGNATURE_COLLECTION: "SIGNATURE", SKANDI_SIGNATURE: "SIGNATURE", SKANDI_SIGNATURE_COLLECTION: "SIGNATURE",
+    EXCELSIOR: "EXCELSIOR", EXCELSIOR_COLLECTION: "EXCELSIOR", SKANDI_EXCELSIOR: "EXCELSIOR", SKANDI_EXCELSIOR_COLLECTION: "EXCELSIOR"
+  };
+  return rows.map(row => {
+    const code = upper(row.code, 80);
+    const details = obj(row.details);
+    const catalog = upper(row.collection_type, 80);
+    const raw = catalog === "SKANDI_PARTNER" ? "PARTNER" : first(details.skandiTier, details.partnerTier, row.partner_tier);
+    const key = upper(raw, 80).replace(/[^A-Z0-9]+/g, "_").replace(/^_+|_+$/g, "");
+    return {code, tier:tierNames[key] || ""};
+  }).filter(item => /^[A-Z0-9]{2}$/.test(item.code) && item.tier);
+}
+
 export async function getPublicSkandiCollectionCore(input = {}) {
   const language = upper(input.language || "EN", 5) || "EN";
   const rows = await select("inventory_searchable_catalog_v", {

@@ -39,6 +39,7 @@ import {
   assertStripeAuthorization
 } from "backend/SKANDI_CORE/stripeClient";
 import { restRequest } from "backend/SKANDI_CORE/supabaseServer";
+import { getPublicAirlineRecommendationTiersCore } from "backend/SKANDI_CORE/publicContent";
 import {
   createOwnedCart,
   getOwnedCart,
@@ -371,9 +372,17 @@ export async function searchUnifiedOffersCore(input = {}) {
 
 
   const items = [];
+  let recommendation = null;
   if (tripType === "flightOnly") {
-    try { items.push(...publicFlightItems(await searchLiveFlightOffersCore({ search }), search)); }
-    catch (error) { errors.push({ source: "flight", code: safeCode(error?.code || "FLIGHT_SEARCH_FAILED"), message: text(error?.publicMessage || error?.message || "Live flight search is unavailable.", 300) }); }
+    const [flights, tiers] = await Promise.allSettled([
+      searchLiveFlightOffersCore({ search }),
+      getPublicAirlineRecommendationTiersCore()
+    ]);
+    if (flights.status === "fulfilled") items.push(...publicFlightItems(flights.value, search));
+    else errors.push({ source: "flight", code: safeCode(flights.reason?.code || "FLIGHT_SEARCH_FAILED"), message: text(flights.reason?.publicMessage || flights.reason?.message || "Live flight search is unavailable.", 300) });
+    recommendation = tiers.status === "fulfilled"
+      ? { available: true, airlines: tiers.value }
+      : { available: false, airlines: [] };
   } else if (tripType === "hotelOnly") {
     try {
       items.push(...publicStayItems(await searchLiveStaysCore({
@@ -399,7 +408,7 @@ export async function searchUnifiedOffersCore(input = {}) {
   }
 
 
-  return { items, errors, provider: "Duffel", generatedAt: nowIso(), tripType };
+  return { items, errors, recommendation, provider: "Duffel", generatedAt: nowIso(), tripType };
 }
 
 

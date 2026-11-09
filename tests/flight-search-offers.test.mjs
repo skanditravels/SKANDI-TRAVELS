@@ -115,36 +115,74 @@ function sampleOffer(id,cabin='economy',fare='Light',amount=400){
   return {id,itemType:'flight',totalAmount:String(amount),totalCurrency:'USD',price:{amount,currency:'USD'},totalEmissionsKg:'390',owner:carrier,conditions:{change_before_departure:{allowed:true,penalty_amount:'50',penalty_currency:'USD'}},slices:[{origin:arn,destination:jfk,duration:'PT10H10M',fareBrandName:fare,segments:[segment(arn,cph,'2027-03-01T08:00:00','2027-03-01T09:20:00','400'),segment(cph,jfk,'2027-03-01T10:50:00','2027-03-01T14:10:00','900')]},{origin:jfk,destination:arn,duration:'PT8H',fareBrandName:fare,segments:[segment(jfk,arn,'2027-03-08T18:00:00','2027-03-09T08:00:00','901')]}]};
 }
 
-test('one itinerary groups bookable fares, preserves return routing and shows verified segment details',async t=>{
-  const {doc,sent,host}=await bookingFrame(t),first=sampleOffer('off_light'),second=sampleOffer('off_standard','economy','Standard',500);
-  for(const item of [first,second])item.slices[0].segments[0].operatingCarrier={iataCode:'D8',name:'SAS Connect'};
-  host('BOOKING_SEARCH_RESULTS',{search:{origin:'STO',destination:'NYC',tripType:'flightOnly'},items:[first,second],errors:[]});
-  assert.equal(doc.querySelectorAll('.flight-result').length,1);
-  const rows=[...doc.querySelectorAll('.itinerary-leg')];assert.equal(rows.length,2);
-  assert.match(rows[0].textContent,/ARN/);assert.match(rows[0].textContent,/JFK/);assert.match(rows[1].textContent,/JFK/);assert.match(rows[1].textContent,/ARN/);
+test('outbound selection is a draft and only compatible complete return offers can reach the host',async t=>{
+  const {doc,sent,host}=await bookingFrame(t),first=sampleOffer('off_light'),second=sampleOffer('off_standard','economy','Standard',500),later=sampleOffer('off_later','economy','Light',450);
+  later.slices[1].segments[0].marketingFlightNumber='905';later.slices[1].segments[0].departingAt='2027-03-08T20:00:00';
+  for(const item of [first,second,later])item.slices[0].segments[0].operatingCarrier={iataCode:'D8',name:'SAS Connect'};
+  host('BOOKING_SEARCH_RESULTS',{search:{origin:'STO',destination:'NYC',tripType:'flightOnly'},items:[first,second,later],errors:[]});
+  assert.equal(doc.querySelectorAll('.flight-result').length,1);assert.equal(doc.querySelectorAll('.itinerary-leg').length,1);
+  assert.match(doc.querySelector('#flight-stage-heading').textContent,/outbound/i);
   doc.querySelector('[data-action="flight-details"]').click();
-  assert.match(doc.querySelector('.flight-details').textContent,/Airbus A320neo/);
-  assert.match(doc.querySelector('.flight-details').textContent,/Operated by SAS Connect/);
-  assert.match(doc.querySelector('.flight-details').textContent,/1h 30m transfer/);
-  assert.match(doc.querySelector('.flight-details').textContent,/Meal included/);
-  assert.match(doc.querySelector('.flight-details').textContent,/390 kg for all travelers/);
-  doc.querySelector('[data-action="flight-classes"]').click();assert.equal(sent.at(-1).type,'BOOKING_UPSELL_REQUEST');
-  assert.equal(doc.querySelectorAll('.fare-option').length,2);
-  doc.querySelector('[data-action="select-offer"][data-id="off_standard"]').click();
-  assert.equal(sent.at(-1).type,'BOOKING_SEARCH_SELECT');assert.equal(sent.at(-1).offerId,'off_standard');
+  for(const detail of [/Airbus A320neo/,/Operated by SAS Connect/,/1h 30m transfer/,/Meal included/,/390 kg for all travelers/])assert.match(doc.querySelector('.flight-details').textContent,detail);
+  assert.match(doc.querySelector('[data-action="flight-classes"]').textContent,/Select Flights/);
+  doc.querySelector('[data-action="flight-classes"]').click();assert.equal(sent.at(-1).type,'BOOKING_UPSELL_REQUEST');assert.equal(doc.querySelectorAll('.fare-option').length,2);
+  doc.querySelector('[data-action="choose-flight-ticket"][data-id="off_light"]').click();
+  assert.equal(sent.some(x=>x.type==='BOOKING_SEARCH_SELECT'),false);assert.match(doc.querySelector('.travel-planner').textContent,/Outbound/);assert.match(doc.querySelector('.travel-planner').textContent,/Round trip from/);
+  assert.match(doc.querySelector('#flight-stage-heading').textContent,/return/i);assert.equal(doc.querySelectorAll('.flight-result').length,2);
+  assert.equal(doc.querySelectorAll('.itinerary-leg').length,2);assert([...doc.querySelectorAll('.itinerary-leg')].every(row=>row.textContent.includes('JFK')));
+  [...doc.querySelectorAll('[data-action="flight-classes"]')].at(1).click();
+  assert.equal(doc.querySelector('[data-action="choose-flight-ticket"][data-id="off_standard"]'),null);
+  doc.querySelector('[data-action="choose-flight-ticket"][data-id="off_later"]').click();
+  assert.equal(sent.at(-1).type,'BOOKING_SEARCH_SELECT');assert.equal(sent.at(-1).offerId,'off_later');
 });
 
-test('upsell cabins are selectable only when returned and missing details are not invented',async t=>{
-  const {doc,sent,host}=await bookingFrame(t),base=sampleOffer('off_base');
+test('upsell cabins are ordered, default to the searched class and never invent missing details',async t=>{
+  const {doc,sent,host}=await bookingFrame(t),base=sampleOffer('off_base');base.slices=base.slices.slice(0,1);
   delete base.totalEmissionsKg;delete base.slices[0].segments[0].passengers[0].cabinAmenities;
-  host('BOOKING_SEARCH_RESULTS',{search:{origin:'ARN',destination:'JFK',tripType:'flightOnly'},items:[base],errors:[]});
+  const business=sampleOffer('off_business','business','Business Flex',1200);business.slices=business.slices.slice(0,1);business.totalEmissionsKg='550';
+  host('BOOKING_SEARCH_RESULTS',{search:{origin:'ARN',destination:'JFK',tripType:'flightOnly',cabinClass:'business'},items:[base,business],errors:[]});
   doc.querySelector('[data-action="flight-details"]').click();assert.match(doc.querySelector('.flight-details').textContent,/Meal information not provided/);assert.match(doc.querySelector('.flight-details').textContent,/CO₂ estimate not provided/);
-  doc.querySelector('[data-action="flight-classes"]').click();assert.equal(doc.querySelectorAll('[data-action="choose-cabin"]').length,1);
-  const business=sampleOffer('off_business','business','Business Flex',1200);business.totalEmissionsKg='550';
-  host('BOOKING_UPSELL_RESULT',{offerId:'off_base',available:true,items:[business]});
-  assert.equal(doc.querySelectorAll('[data-action="choose-cabin"]').length,2);
-  doc.querySelector('[data-cabin="business"]').click();assert.match(doc.querySelector('.fare-options').textContent,/Business Flex/);assert.match(doc.querySelector('.flight-details').textContent,/550 kg for all travelers/);
-  doc.querySelector('[data-action="select-offer"][data-id="off_business"]').click();assert.equal(sent.at(-1).offerId,'off_business');
+  doc.querySelector('[data-action="flight-classes"]').click();
+  const tabs=[...doc.querySelectorAll('[data-action="choose-cabin"]')];assert.deepEqual(tabs.map(x=>x.dataset.cabin),['economy','business']);assert.equal(tabs[1].getAttribute('aria-pressed'),'true');
+  assert.match(doc.querySelector('.fare-options').textContent,/Business Flex/);assert.match(doc.querySelector('.flight-details').textContent,/550 kg for all travelers/);
+  doc.querySelector('[data-action="choose-flight-ticket"][data-id="off_business"]').click();assert.equal(sent.at(-1).offerId,'off_business');
+});
+
+test('stops, available airlines, class and price sorting use the actual matching offers',async t=>{
+  const {w,doc,host}=await bookingFrame(t),sas=sampleOffer('sas'),sasBusiness=sampleOffer('sas_biz','business','Business',900),ay=sampleOffer('ay','economy','Light',300);
+  for(const x of [sas,sasBusiness,ay])x.slices=x.slices.slice(0,1);
+  ay.owner={name:'Finnair',iataCode:'AY'};ay.slices[0].segments=ay.slices[0].segments.slice(0,1);ay.slices[0].segments[0].marketingCarrier=ay.owner;ay.slices[0].segments[0].marketingFlightNumber='1';
+  host('BOOKING_SEARCH_RESULTS',{search:{origin:'ARN',destination:'JFK',tripType:'flightOnly',currency:'USD'},items:[sas,sasBusiness,ay],errors:[]});
+  assert.deepEqual([...doc.querySelectorAll('input[name="filter-airline"]')].map(x=>x.value).sort(),['AY','SK']);
+  const change=(id,value)=>{const e=doc.getElementById(id);e.value=value;e.dispatchEvent(new w.Event('change',{bubbles:true}))};
+  change('filter-stops','0');assert.equal(doc.querySelectorAll('.flight-result').length,1);assert.match(doc.querySelector('.flight-result').textContent,/Finnair/);
+  change('filter-stops','any');const airline=doc.querySelector('input[value="SK"]');airline.checked=true;airline.dispatchEvent(new w.Event('change',{bubbles:true}));assert.equal(doc.querySelectorAll('.flight-result').length,1);assert.match(doc.querySelector('.flight-result').textContent,/SAS/);
+  change('filter-cabin','business');assert.match(doc.querySelector('.flight-result-actions').textContent,/900/);doc.querySelector('[data-action="flight-classes"]').click();assert.equal(doc.querySelector('[data-cabin="business"]').getAttribute('aria-pressed'),'true');assert.match(doc.querySelector('.fare-options').textContent,/Business/);
+  doc.querySelector('[data-action="clear-flight-filters"]')?.click();
+});
+
+test('SKANDI suggestions require both top-ten-percent thresholds and rank the actual collection tier',async t=>{
+  const {doc,host}=await bookingFrame(t),offers=[];
+  for(let i=0;i<20;i++){
+    const offer=sampleOffer('off_'+i,'economy','Light',i<2?100:500+i);offer.slices=offer.slices.slice(0,1);offer.slices[0].duration=i<2?'PT2H':'PT5H';
+    offer.slices[0].segments[0].marketingFlightNumber=String(100+i);
+    if(i===1){offer.owner={name:'Finnair',iataCode:'AY'};offer.slices[0].segments.forEach(s=>s.marketingCarrier=offer.owner)}
+    offers.push(offer);
+  }
+  const search={origin:'ARN',destination:'JFK',tripType:'flightOnly',currency:'USD'};
+  host('BOOKING_SEARCH_RESULTS',{search,items:offers,errors:[],recommendation:{available:true,airlines:[{code:'SK',tier:'PARTNER'},{code:'AY',tier:'EXCELSIOR'}]}});
+  const rows=[...doc.querySelectorAll('.flight-result')];assert.equal(rows.length,20);assert.match(rows[0].textContent,/SKANDI Excelsior Collection/);assert.match(rows[1].textContent,/SKANDI Partner/);assert.equal(doc.querySelectorAll('.suggestion-label').length,2);
+  const noQualifiers=offers.map(x=>({...x,price:{...x.price},slices:x.slices.map(y=>({...y}))}));noQualifiers[0].price.amount=50;noQualifiers[0].slices[0].duration='PT9H';noQualifiers[1].price.amount=900;noQualifiers[1].slices[0].duration='PT1H';noQualifiers[2].slices[0].duration='PT8H';noQualifiers[3].slices[0].duration='PT2H';
+  host('BOOKING_SEARCH_RESULTS',{search,items:noQualifiers,errors:[],recommendation:{available:true,airlines:[{code:'SK',tier:'PARTNER'},{code:'AY',tier:'EXCELSIOR'}]}});assert.equal(doc.querySelectorAll('.suggestion-label').length,0);assert.match(doc.querySelector('.recommendation-note').textContent,/No flight meets/);
+  host('BOOKING_SEARCH_RESULTS',{search,items:offers,errors:[],recommendation:{available:false,airlines:[]}});
+  assert.equal(doc.querySelectorAll('.suggestion-label').length,0);assert.match(doc.querySelector('.recommendation-note').textContent,/temporarily unavailable/);
+});
+
+test('planner shows selected extras without presenting an unconfirmed total as final',async t=>{
+  const {doc,host}=await bookingFrame(t),offer=sampleOffer('off_cart'),cart={status:'Open',productType:'FLIGHT_ONLY',currency:'USD',total:400,taxes:30,selectedOffer:offer,extras:[]};
+  host('BOOKING_EXTRAS_LOADED',{cart,items:[{id:'bag',title:'Extra bag',price:{amount:35,currency:'USD'},maximumQuantity:1}],selectedExtras:[]});
+  const input=doc.querySelector('[data-extra="bag"]');input.checked=true;input.dispatchEvent(new doc.defaultView.Event('change',{bubbles:true}));
+  const planner=doc.querySelector('.travel-planner').textContent;assert.match(planner,/Extra bag/);assert.match(planner,/35/);assert.match(planner,/Current trip quote/);assert.match(planner,/confirmed in the total during checkout/);assert.match(planner,/Taxes and charges included/);
 });
 
 test('flights with a different technical stop are not merged into the same itinerary',async t=>{
@@ -183,10 +221,39 @@ test('booking host requests upsells only for a current search offer and selects 
   code=code.replace(/export function /g,'function ');
   const sent=[],upsellCalls=[],selected=[],base=sampleOffer('off_base'),upgrade=sampleOffer('off_upgrade','business','Business Flex',1200);
   const search={origin:'ARN',destination:'JFK',departureDate:'2027-03-01',tripType:'flightOnly'};
-  const ctx=vm.createContext({console,setTimeout,clearTimeout,URLSearchParams,session:{setItem(){},removeItem(){}},readBookingSearch:()=>({search}),searchUnifiedOffers:async()=>({items:[base],errors:[]}),getFlightUpsells:async input=>{upsellCalls.push(input);return {items:[upgrade],available:true}},createBookingCartFromOffer:async input=>{selected.push(input.offer.id);return {cartId:'cart-1'}},loadBookingCart:async()=>({status:'Open',productType:'FLIGHT_ONLY'}),SITE_MAP:{home:'/'},APP_ROUTES:{bookingFlow:'/booking'},isSafeInternalRoute:()=>true});
+  const ctx=vm.createContext({console,setTimeout,clearTimeout,URLSearchParams,session:{setItem(){},removeItem(){}},readBookingSearch:()=>({search}),searchUnifiedOffers:async()=>({items:[base],errors:[],recommendation:{available:true,airlines:[{code:'SK',tier:'PARTNER'}]}}),getFlightUpsells:async input=>{upsellCalls.push(input);return {items:[upgrade],available:true}},createBookingCartFromOffer:async input=>{selected.push(input.offer.id);return {cartId:'cart-1'}},loadBookingCart:async()=>({status:'Open',productType:'FLIGHT_ONLY'}),SITE_MAP:{home:'/'},APP_ROUTES:{bookingFlow:'/booking'},isSafeInternalRoute:()=>true});
   vm.runInContext(code+';this.factory=createBookingFlowHost;',ctx);const host=ctx.factory({html:{postMessage:m=>sent.push(m)},location:{queryParams:{add(){},remove(){}}}});
   await host.startSearch('search-1');await host.handleMessage({source:'SKANDI_BOOKING_OFFER',type:'BOOKING_OFFER_READY'});
+  assert.equal(sent.find(m=>m.type==='BOOKING_SEARCH_RESULTS').payload.recommendation.airlines[0].tier,'PARTNER');
   await host.handleMessage({source:'SKANDI_BOOKING_OFFER',type:'BOOKING_UPSELL_REQUEST',offerId:'off_forged'});assert.equal(upsellCalls.length,0);
   await host.handleMessage({source:'SKANDI_BOOKING_OFFER',type:'BOOKING_UPSELL_REQUEST',offerId:'off_base'});assert.equal(upsellCalls.length,1);assert.equal(sent.at(-1).type,'BOOKING_UPSELL_RESULT');
   await host.handleMessage({source:'SKANDI_BOOKING_OFFER',type:'BOOKING_SEARCH_SELECT',offerId:'off_upgrade'});assert.deepEqual(selected,['off_upgrade']);
+});
+
+test('airline tier metadata uses published, visible canonical inventory and returns only safe codes and tiers',async()=>{
+  const source=await read('src/backend/SKANDI_CORE/publicContent.js');let request;
+  const upper=(v,n)=>String(v??'').trim().slice(0,n).toUpperCase(),first=(...v)=>v.find(x=>x!==undefined&&x!==null&&x!=='')||'';
+  const ctx=vm.createContext({upper,first,obj:v=>v&&typeof v==='object'?v:{},PUBLISHED:'eq.PUBLISHED',ACTIVE:'eq.true',COLLECTION_TYPES:'in.(SKANDI_COLLECTION,SKANDI_PARTNER)',MAX_PUBLIC_ROWS:'1000',select:async(table,query)=>{request={table,query};return [{code:'SK',collection_type:'SKANDI_PARTNER',details:{secret:'not returned'}},{code:'AY',collection_type:'SKANDI_COLLECTION',partner_tier:'Signature Collection'},{code:'SAS',collection_type:'SKANDI_PARTNER'},{code:'AA',collection_type:'SKANDI_COLLECTION',partner_tier:'unknown'}]}});
+  vm.runInContext(functionSource(source,'getPublicAirlineRecommendationTiersCore')+';this.run=getPublicAirlineRecommendationTiersCore;',ctx);
+  const rows=await ctx.run();assert.equal(request.table,'inventory_canonical_entities_v');assert.equal(request.query.entity_type,'eq.AIRLINE');assert.equal(request.query.status,'eq.PUBLISHED');assert.equal(request.query.active,'eq.true');assert.equal(request.query.customer_visible,'eq.true');
+  assert.deepEqual(JSON.parse(JSON.stringify(rows)),[{code:'SK',tier:'PARTNER'},{code:'AY',tier:'SIGNATURE'}]);
+});
+
+test('a recommendation metadata failure never suppresses live flight offers',async()=>{
+  const source=await read('src/backend/SKANDI_CORE/customerBooking.js');
+  const ctx=vm.createContext({record:x=>x||{},unifiedTripType:()=> 'flightOnly',searchLiveFlightOffersCore:async()=>({items:[{id:'off_live'}]}),getPublicAirlineRecommendationTiersCore:async()=>{throw new Error('inventory unavailable')},publicFlightItems:x=>x.items,nowIso:()=> '2027-01-01',safeCode:x=>x,text:x=>String(x||'')});
+  vm.runInContext(functionSource(source,'searchUnifiedOffersCore')+';this.run=searchUnifiedOffersCore;',ctx);
+  const out=await ctx.run({search:{}});assert.equal(out.items[0].id,'off_live');assert.equal(out.errors.length,0);assert.equal(out.recommendation.available,false);
+  ctx.getPublicAirlineRecommendationTiersCore=async()=>[{code:'SK',tier:'PARTNER'}];const available=await ctx.run({search:{}});assert.equal(available.recommendation.available,true);assert.equal(available.recommendation.airlines[0].tier,'PARTNER');
+});
+
+
+test('compiled Booking page initializes and renders the new planner and filters',async t=>{
+  const {inventory}=await import('../scripts/lib/inventory.mjs'),{compilePage}=await import('../scripts/lib/compile.mjs');
+  const root=new URL('..',import.meta.url).pathname,row=(await inventory(root)).rows.find(x=>x.key==='bookingFlow');assert.deepEqual(row.issues,[]);
+  const built=await compilePage(root,row),sent=[],errors=[],{VirtualConsole}=require('jsdom'),log=new VirtualConsole();log.on('jsdomError',e=>errors.push(e));
+  const dom=new JSDOM(built,{url:'https://embed.example/',runScripts:'dangerously',pretendToBeVisual:true,virtualConsole:log,beforeParse:w=>{w.postMessage=m=>sent.push(m);w.scrollTo=()=>{}}});t.after(()=>dom.window.close());
+  assert(sent.some(m=>m.type==='BOOKING_OFFER_READY'));
+  dom.window.dispatchEvent(new dom.window.MessageEvent('message',{source:dom.window,data:{source:'SKANDI_WIX_PARENT',type:'BOOKING_SEARCH_RESULTS',payload:{search:{origin:'ARN',destination:'JFK',tripType:'flightOnly'},items:[sampleOffer('off_build')],errors:[]}}}));
+  assert.match(dom.window.document.querySelector('.travel-planner').textContent,/Travel Planner/);assert(dom.window.document.querySelector('#filter-stops'));assert(dom.window.document.querySelector('[data-action="flight-classes"]'));assert.deepEqual(errors,[]);
 });

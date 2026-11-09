@@ -111,7 +111,7 @@ async function initialize(){
   if(['Committing','ReconciliationRequired'].includes(c.status)&&step!=='payment'){await goStep('payment');return}
   if(step==='extras')send('BOOKING_EXTRAS_LOADED',await bounded(loadBookingExtras(access())));
   else if(step==='hotels'||step==='upsell')send('BOOKING_STEP_ACTIVE',{step,cart:c});
-  else if(step==='transfer')send('SIGNATURE_TRANSFER_OPTIONS',await bounded(loadSignatureTransfers(access())));
+  else if(step==='transfer')send('SIGNATURE_TRANSFER_OPTIONS',{...(await bounded(loadSignatureTransfers(access()))),cart:c});
   else if(step==='apis'){
     const [view,rules]=await bounded(Promise.all([loadBookingCart({...access(),view:'apis'}),loadBookingRequirements(access())]));
     send('APIS_CART_RULES_LOADED',{cart:view,rules});
@@ -140,7 +140,7 @@ async function searchOffers(force=false){
     const result=await promise;
     if(searchJob!==promise)return;
     if(!Array.isArray(result?.items))throw new Error('No valid live search result was returned.');
-    currentSearch={items:result.items,search:searchContext.search,errors:result.errors||[]};
+    currentSearch={items:result.items,search:searchContext.search,errors:result.errors||[],recommendation:result.recommendation||null};
     upsellJobs.clear();
     send('BOOKING_SEARCH_RESULTS',currentSearch);
   }finally{if(searchJob===promise)searchJob=null}
