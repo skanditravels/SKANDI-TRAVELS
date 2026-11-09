@@ -14,10 +14,16 @@ The Stripe.js dependency stays as a direct script include in the HTML source. Th
 
 ## Historical source
 
-The former per-step files under `components/` and the duplicate merged copies under `html-ref/` are retained for provenance only. They are superseded by the canonical triplet above and are not individual routes, active Wix components or build inputs. The complete intended Wix HTML remains documented in `HTML_REF/skandi/Booking/README.md`.
+The former per-step files under `components/` and the duplicate merged copies under `html-ref/` are retained for provenance only. They are superseded by the canonical triplet above and are not individual routes, active Wix components or build inputs. The historical consolidated HTML is retained in the reference document below; it is superseded by the active triplet above.
 
 The old `/offers` landing route is retired. Passengers now start or resume the complete booking journey at `/booking`.
 
 ## Reference documents
 
 - [HTML_REF/skandi/Booking/README.md](references/skandi-booking-readme-md/README.md)
+
+## Backend dependency and recovery
+
+The booking web module loads the confirmation email service, which requires `@wix/automations`. The dependency, npm lockfile and Wix-generated dependency lock and metadata are kept at the repository root. The connected Wix runtime must resolve the dependency when the site is published; a Git build alone does not verify the published runtime.
+
+When a search expires, the booking view provides a route back to Home. Provider failures are shown as unavailable rather than as an empty set of offers; partial results remain selectable and the search can be retried. The page keeps its existing `#bookingFlowEmbed` receiver and booking message contracts.
