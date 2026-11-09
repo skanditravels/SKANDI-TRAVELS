@@ -70,6 +70,8 @@
         "HOME_SEARCH",
         "HOME_SELECT_OFFER",
         "HOME_TIMEOUT",
+        "LOOKUP_FAILED",
+        "METHOD_UNAVAILABLE",
         "PENDING",
         "RESIZE_IFRAME",
         "SEARCH_FAILED",
