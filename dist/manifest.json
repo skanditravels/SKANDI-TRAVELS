@@ -1402,6 +1402,55 @@
       "bytes": 161327
     },
     {
+      "key": "expiredResetLink",
+      "route": "/auth/expired-reset-link",
+      "slug": "expired-reset-link",
+      "title": "Expired Reset Link",
+      "family": "public",
+      "chrome": "public",
+      "mobileNavigation": true,
+      "sourceDirectory": "skandi-embeds/expired-reset-link",
+      "stem": "skandi-expired-reset-link",
+      "controller": "src/pages/Expired Reset Link.anxhe.js",
+      "embedIds": [
+        "#expiredResetEmbed"
+      ],
+      "sources": [
+        "SKANDI_EXPIRED_RESET_LINK"
+      ],
+      "components": [],
+      "binding": "explicit",
+      "requiresStaff": false,
+      "status": "BUILT",
+      "files": [
+        "skandi-embeds/expired-reset-link/skandi-expired-reset-link.html",
+        "skandi-embeds/expired-reset-link/skandi-expired-reset-link.css",
+        "skandi-embeds/expired-reset-link/skandi-expired-reset-link.js"
+      ],
+      "missing": [],
+      "issues": [],
+      "backend": [],
+      "messages": [
+        "EXPIRED_RESET_AUTH",
+        "EXPIRED_RESET_AUTH_OPENING",
+        "EXPIRED_RESET_AUTH_RESULT",
+        "EXPIRED_RESET_BACK",
+        "EXPIRED_RESET_BACK_ERROR",
+        "EXPIRED_RESET_LINK",
+        "SIGNED_IN",
+        "SKANDI_EXPIRED_RESET_LINK",
+        "SKANDI_WIX_PARENT"
+      ],
+      "output": "dist/expired-reset-link/index.html",
+      "dynamic": false,
+      "sourceStatus": "COMPLETE SOURCE",
+      "blockers": [],
+      "receiver": "skandi-embeds/expired-reset-link/skandi-expired-reset-link.receiver.html",
+      "receiverFile": "skandi-embeds/expired-reset-link/skandi-expired-reset-link.receiver.html",
+      "sha256": "ad33a63c1064c9f1d7c8045ba23caf16d20a49aed9b37fc09cc2f7fbe18473c8",
+      "bytes": 162875
+    },
+    {
       "key": "theStore",
       "route": "/the-store",
       "slug": "the-store",

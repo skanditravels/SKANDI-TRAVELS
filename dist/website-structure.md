@@ -25,6 +25,7 @@ Route authority: `src/public/siteMap.js`. This file is generated evidence, not r
 | support | /about/support | skandi-embeds/support/skandi-support.{html,css,js} | public / public | src/pages/Support.k0iqp.js | BUILT |
 | newsroom | /about/news-room | skandi-embeds/newsroom/skandi-newsroom.{html,css,js} | public / public | src/pages/Newsroom.vn46g.js | BUILT |
 | accessRestricted | /auth/access-restricted | skandi-embeds/access-restricted/skandi-access-restricted.{html,css,js} | public / public | src/pages/Access Restricted.m6vln.js | BUILT |
+| expiredResetLink | /auth/expired-reset-link | skandi-embeds/expired-reset-link/skandi-expired-reset-link.{html,css,js} | public / public | src/pages/Expired Reset Link.anxhe.js | BUILT |
 | theStore | /the-store | skandi-embeds/the-store/skandi-the-store.{html,css,js} | public / none | src/pages/The Store.iv8g6.js | BUILT |
 | storeCheckout | /the-store/store-checkout | skandi-embeds/store-checkout/skandi-store-checkout.{html,css,js} | public / none | src/pages/Checkout.qofcb.js | BUILT |
 | storeConfirmation | /the-store/store-checkout/order-confirmation | skandi-embeds/store-confirmation/skandi-store-confirmation.{html,css,js} | public / none | src/pages/Order Confirmation.u5zzl.js | BUILT |
