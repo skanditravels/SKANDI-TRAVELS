@@ -232,7 +232,7 @@ async function handleHomeMessage(html, message) {
         console.warn("[Flight place lookup unavailable]", {
           name: clean(error?.name || "Error", 80),
           code: clean(error?.code || "", 80),
-          message: clean(error?.message || "", 200)
+          reason: /is not a function/i.test(String(error?.message || "")) ? "METHOD_UNAVAILABLE" : "LOOKUP_FAILED"
         });
         postToHtml(html, "HOME_FLIGHT_PLACES_RESULT", {inputId,query,items:[],unavailable:true}, clean(message.requestId,160));
       }

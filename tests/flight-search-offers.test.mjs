@@ -21,6 +21,16 @@ test('city and airport suggestions show distinct provider codes and helpful sear
   assert.equal(formatFlightPlaces([{...city,airports:city.airports.slice(0,1)}]).length,0);
 });
 
+test('place lookup is directly registered as a public Wix web method',async()=>{
+  const source=await read('src/backend/SKANDI_CORE/travelReference.web.js');
+  const ast=parse(source,{ecmaVersion:'latest',sourceType:'module'});
+  const exportNode=ast.body.find(n=>n.type==='ExportNamedDeclaration'&&n.declaration?.declarations?.some(d=>d.id?.name==='searchDuffelPlaces'));
+  const declaration=exportNode?.declaration?.declarations?.find(d=>d.id.name==='searchDuffelPlaces');
+  assert.equal(declaration?.init?.callee?.name,'webMethod');
+  assert.equal(declaration?.init?.arguments?.[0]?.object?.name,'Permissions');
+  assert.equal(declaration?.init?.arguments?.[0]?.property?.name,'Anyone');
+});
+
 test('existing airport metadata preserves verified city and ICAO codes in Home content',async()=>{
   const source=await read('src/backend/SKANDI_CORE/homeContent.js');const ctx=vm.createContext({obj:x=>x||{},upper:(x,n)=>String(x||'').toUpperCase().slice(0,n),clean:(x,n)=>String(x||'').slice(0,n)});
   vm.runInContext(functionSource(source,'airportDto')+';this.run=airportDto;',ctx);

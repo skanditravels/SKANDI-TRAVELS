@@ -39,7 +39,7 @@ export const getDuffelCity = publicMethod(getDuffelCityCore);
 // Keep this export as a direct webMethod declaration so Wix can register it
 // for the public flight-search host. The input remains filtered by the same
 // public-safe boundary used for the other reference-data methods.
-export const searchDuffelPlaces = webMethod(ANYONE, async value => {
+export const searchDuffelPlaces = webMethod(Permissions.Anyone, async value => {
   try {
     return await searchDuffelPlacesCore(input(value));
   } catch (error) {
