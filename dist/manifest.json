@@ -2009,7 +2009,7 @@
       "key": "successFactors",
       "route": "/riaintra/success-factors",
       "slug": "success-factors",
-      "title": "Success Factors",
+      "title": "RIAINTRA · SuccessFactors",
       "family": "riaintra",
       "chrome": "riaintra",
       "mobileNavigation": true,
@@ -2070,6 +2070,8 @@
         "CAREERS_VERIFY_DOCUMENT",
         "CAREERS_VERIFY_HISTORY_SEGMENT",
         "HR_ACTION_FAILED",
+        "HR_ADDRESS_SUGGEST",
+        "HR_ADDRESS_SUGGESTIONS",
         "HR_BADGE_CONTROL_DATA",
         "HR_BADGE_CONTROL_REFRESH",
         "HR_BADGE_CONTROL_SAVE",
@@ -2129,8 +2131,8 @@
       "blockers": [],
       "receiver": "riaintra-embeds/success-factors/success-factors.receiver.html",
       "receiverFile": "riaintra-embeds/success-factors/success-factors.receiver.html",
-      "sha256": "bf409eb996859bffba882bd1aec50c7e0f27628ae1938776b8b3fb5c759d2d41",
-      "bytes": 493668
+      "sha256": "41a925bd7aaaf104db29e739ce92910f5de9db8ee992ac6214404c8c2e69a8ee",
+      "bytes": 514183
     },
     {
       "key": "legalInternal",
