@@ -2,6 +2,10 @@
 
 > Current document: `skandi-embeds/booking/references/skandi-booking-readme-md/README.md`. Original reference: `HTML_REF/skandi/Booking/README.md`.
 
+## INFO / LOG — 2026-11-09, Travel Planner update
+
+The active booking triplet and the existing host now present filters, structured flight details, class/ticket comparisons and a staged outbound-then-return selection. An outbound choice is an unreserved client-side draft; a real complete, compatible provider offer is submitted to the existing owned-cart flow only after the return is chosen. The Travel Planner displays provider prices, selected extras and seat information without double-counting taxes. SKANDI suggestions use published, customer-visible canonical airline classifications and require both the price and duration top-ten-percent thresholds. Catalog errors do not suppress flight results. The previous complete-itinerary row description below is historical; the active Booking README contains the updated behavior and verification requirements. No receiver, route or cart authorization contract was changed.
+
 ## INFO / LOG — 2026-11-09
 
 The embedded historical code and its earlier `booking-flow` path below are superseded by `skandi-embeds/booking/skandi-booking-flow.{html,css,js}`. Flight-only results now group complete provider itineraries and their available class/fare offers. The existing booking host validates selected IDs; new Duffel upsell requests are matched to the original full itinerary and search. A selected city code is distinguished from a selected airport throughout the cart validation. Flight details, connection times and total estimated CO₂ use provider data; missing meals and other facts are identified as unavailable. See the active Booking README for current behavior and live-verification requirements.
