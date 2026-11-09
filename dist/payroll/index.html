@@ -563,6 +563,13 @@ body.drawer-open #skandi-mobile-nav-container{min-height:100%;height:100%}
 
 #skandi-mobile-nav-container .drawer-logo { display: block; height: 19px; max-width: 145px; width: auto; }
 #skandi-mobile-nav-container .drawer-logo[hidden] { display: none; }
+
+/* Staff-only home screen guidance */
+#skandi-mobile-nav-container #staff-drawer-actions .staff-home-guide{color:#dceaf5;font-size:13px;line-height:1.45}
+#skandi-mobile-nav-container #staff-drawer-actions .staff-home-guide summary{min-height:44px;display:flex;align-items:center;cursor:pointer;font-weight:700;color:#f1f8ff}
+#skandi-mobile-nav-container #staff-drawer-actions .staff-home-guide summary::after{content:"+";margin-left:auto;font-size:20px}
+#skandi-mobile-nav-container #staff-drawer-actions .staff-home-guide[open] summary::after{content:"−"}
+#skandi-mobile-nav-container #staff-drawer-actions .staff-home-guide p{margin:0 0 10px}
 </style>
 <style data-skandi-part="payroll">
 #skandi-app-root{--navy:#003366;--navy2:#00264d;--blue:#0a6ed1;--blue2:#085caf;--cyan:#00a6c7;--canvas:#f3f4f5;--surface:#fff;--surface2:#f7f8f9;--line:#d9dfe3;--line2:#b9c3ca;--text:#1d2d3e;--muted:#5b6b7a;--green:#188918;--orange:#e76500;--red:#bb0000;--info:#eaf3fc;--radius:7px;--shadow:0 2px 8px rgba(0,35,70,.10);--shell:54px;--side:246px;font-family:"72",Arial,sans-serif}
@@ -572,6 +579,10 @@ body.drawer-open #skandi-mobile-nav-container{min-height:100%;height:100%}
 #skandi-app-root .grid{display:grid;gap:14px}#skandi-app-root .grid4{grid-template-columns:repeat(4,minmax(0,1fr))}#skandi-app-root .grid2{grid-template-columns:repeat(2,minmax(0,1fr))}#skandi-app-root .card{background:#fff;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;box-shadow:0 1px 2px rgba(0,35,70,.04)}#skandi-app-root .card-head{min-height:50px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid var(--line)}#skandi-app-root .card-head h2,#skandi-app-root .card-head h3{margin:0;font-size:14px}#skandi-app-root .card-head p{margin:2px 0 0;color:var(--muted);font-size:13px}#skandi-app-root .card-body{padding:14px}#skandi-app-root .kpi{padding:15px;min-height:116px}#skandi-app-root .kpi small{display:block;color:var(--muted);font-size:13px;text-transform:uppercase;font-weight:800}#skandi-app-root .kpi strong{display:block;margin-top:13px;font-size:27px;font-weight:500}#skandi-app-root .kpi span{display:block;margin-top:8px;color:var(--muted);font-size:13px}#skandi-app-root .status{display:inline-flex;align-items:center;min-height:22px;padding:0 8px;border-radius:12px;background:#eef3f7;color:#455a6d;font-size:13px;font-weight:800}#skandi-app-root .status.good{background:#edf8ed;color:var(--green)}#skandi-app-root .status.warn{background:#fff4e5;color:#9a4d00}#skandi-app-root .status.bad{background:#ffebeb;color:var(--red)}#skandi-app-root .notice{padding:12px;border:1px solid #b8d4f3;border-radius:6px;background:#eef7ff;color:#254b71}#skandi-app-root .notice.warn{border-color:#f2c076;background:#fff5e7;color:#754500}#skandi-app-root .section-gap{margin-top:14px}#skandi-app-root .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}#skandi-app-root .input,#skandi-app-root .select{min-height:34px;padding:0 9px;border:1px solid #8996a5;border-radius:4px;background:#fff;color:var(--text)}#skandi-app-root .input{min-width:220px}#skandi-app-root .table-wrap{overflow:auto}#skandi-app-root .table{width:100%;border-collapse:collapse;min-width:780px}#skandi-app-root .table th,#skandi-app-root .table td{padding:9px 10px;border-bottom:1px solid #e5e9ec;text-align:left;font-size:13px;vertical-align:middle}#skandi-app-root .table th{background:#f7f8f9;color:#53687b;text-transform:uppercase;font-size:13px;letter-spacing:.35px}#skandi-app-root .table tr[data-id]{cursor:pointer}#skandi-app-root .table tr[data-id]:hover{background:#f4f9fd}#skandi-app-root .table tr.selected{background:#eaf3fc}#skandi-app-root .form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}#skandi-app-root .field{display:flex;flex-direction:column;gap:5px}#skandi-app-root .field.full{grid-column:1/-1}#skandi-app-root .field label{font-size:13px;color:#53687b;text-transform:uppercase;font-weight:800}#skandi-app-root .field input,#skandi-app-root .field select,#skandi-app-root .field textarea{width:100%;min-height:36px;padding:7px 9px;border:1px solid #8996a5;border-radius:4px}#skandi-app-root .field textarea{min-height:76px}#skandi-app-root .summary{display:grid;gap:8px}#skandi-app-root .summary div{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid #edf0f2}#skandi-app-root .summary span{color:var(--muted)}#skandi-app-root .summary strong{text-align:right}#skandi-app-root .empty{padding:38px 20px;text-align:center;color:var(--muted)}#skandi-app-root .empty strong{display:block;color:var(--text);font-size:14px;margin-bottom:4px}#skandi-app-root .loading{position:fixed;inset:0;z-index:150;background:rgba(243,244,245,.86);display:grid;place-items:center}#skandi-app-root .spinner{width:34px;height:34px;border:4px solid #ccd8e3;border-top-color:var(--blue);border-radius:50%;animation:skandi-app-root-spin .8s linear infinite}@keyframes skandi-app-root-spin{to{transform:rotate(360deg)}}#skandi-app-root .toast{position:fixed;right:18px;bottom:18px;z-index:170;max-width:min(430px,calc(100vw - 36px));padding:12px 14px;background:#223548;color:#fff;border-radius:7px;box-shadow:0 14px 30px rgba(0,0,0,.2)}#skandi-app-root .scrim{display:none}
 @media(max-width:980px){#skandi-app-root .grid4{grid-template-columns:repeat(2,minmax(0,1fr))}#skandi-app-root .profile>div:last-child,#skandi-app-root .search{display:none}#skandi-app-root .sidebar{left:auto;right:0;transform:translateX(100%);border-right:0;border-left:1px solid var(--line)}body.menu-open #skandi-app-root .sidebar{transform:translateX(0)}#skandi-app-root .workspace{padding-left:0}#skandi-app-root .scrim{position:fixed;inset:var(--shell) 0 0;z-index:70;background:rgba(0,28,54,.42)}body.menu-open #skandi-app-root .scrim{display:block}#skandi-app-root .brand{min-width:0}#skandi-app-root .page-head{top:var(--shell)}}
 @media(max-width:620px){#skandi-app-root .shell{padding:0 9px}#skandi-app-root .brand span{display:none}#skandi-app-root .content{padding:13px 10px 30px}#skandi-app-root .page-head{padding:10px 12px;align-items:flex-start;flex-direction:column}#skandi-app-root .grid4,#skandi-app-root .grid2,#skandi-app-root .form{grid-template-columns:1fr}#skandi-app-root .field.full{grid-column:auto}#skandi-app-root .toolbar{flex-direction:column;align-items:stretch}#skandi-app-root .input,#skandi-app-root .select,#skandi-app-root .toolbar .btn{width:100%;min-width:0}#skandi-app-root .actions{width:100%}#skandi-app-root .actions .btn{flex:1}}
+
+@media(max-width:620px){
+ #skandi-app-root .shell .menu{min-width:44px;min-height:44px}#skandi-app-root .sidebar{width:min(310px,88%);bottom:0}#skandi-app-root .nav-btn{min-height:44px}#skandi-app-root .card{border-radius:11px}#skandi-app-root .card-head{gap:8px;flex-wrap:wrap}#skandi-app-root .card-body{min-width:0}#skandi-app-root .toolbar .btn,#skandi-app-root .actions .btn{min-height:44px}#skandi-app-root .input,#skandi-app-root .select,#skandi-app-root .field input,#skandi-app-root .field select,#skandi-app-root .field textarea{font-size:16px}#skandi-app-root .table-wrap{max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+}
 </style>
 <style data-skandi-part="shell">/* Shared compiled shell. Every family uses the same mobile scroll area and tab bar. */
 :root {
@@ -688,6 +699,13 @@ html, body { width: 100% !important; margin: 0 !important; max-width: none !impo
 .skandi-app-software span { color: #ffb454; }
 
 #skandi-shell-root small { font-size: max(13px, .875em); }
+
+@media (max-width: 1020px) {
+  [data-skandi-family="riaintra"] #skandi-mobile-nav-container { background:#092f51; }
+  [data-skandi-family="riaintra"] .skmn { background:#092f51; border-top:1px solid rgba(255,255,255,.14); }
+  [data-skandi-family="riaintra"] .skmn-btn { min-height:54px; }
+  [data-skandi-family="riaintra"] .skmn-btn[aria-current="page"] { color:#8fe0e4; }
+}
 </style>
 </head>
 <body>
@@ -786,7 +804,7 @@ html, body { width: 100% !important; margin: 0 !important; max-width: none !impo
   <div class="drawer-head"><div><img id="drawer-logo" class="drawer-logo" alt="" hidden=""><div class="eyebrow" id="drawer-brand">SKANDI TRAVELS</div><h2 id="drawer-title">Explore SKANDI</h2></div><button id="skandi-mobile-closeBtn" aria-label="Close menu" type="button"><svg viewBox="0 0 24 24"><path d="M5 5l14 14M19 5L5 19"></path></svg></button></div>
   <div class="drawer-scroll" id="drawerLinks"></div>
   <div class="drawer-foot" id="drawer-actions"><button type="button" class="drawer-cta secondary" id="profileLink">My Profile</button><button type="button" class="drawer-cta" id="searchLink">Search trips</button><button type="button" class="drawer-cta secondary" id="alexandraLink">Chat with Alexandra</button></div>
-  <div class="drawer-foot" id="staff-drawer-actions" hidden=""><button type="button" class="drawer-cta secondary" id="staffSignOut">Sign out</button></div>
+  <div class="drawer-foot" id="staff-drawer-actions" hidden=""><details class="staff-home-guide"><summary>Add RIAINTRA to your Home Screen</summary><p>On iPhone or iPad, open the Share menu in Safari and choose Add to Home Screen. On Android, open the browser menu and choose Add to Home screen or Install, if offered.</p><p>This adds a shortcut to RIAINTRA; an internet connection and a valid staff session are still required.</p></details><button type="button" class="drawer-cta secondary" id="staffSignOut">Sign out</button></div>
   <section id="chat" aria-label="Alexandra customer support"><div class="chat-log" id="chatLog" role="log" aria-live="polite"><div class="bubble">How can I help with your trip?</div></div><div id="chatStatus" role="status">SKANDI Customer Service</div><form class="chat-compose" id="chatForm"><input id="chatInput" type="text" maxlength="1000" autocomplete="off" placeholder="Write your message" aria-label="Message to Alexandra"><button type="submit">Send</button></form></section>
 </aside>
 <nav id="skandi-mobile-nav-root" class="skmn" role="group" aria-label="SKANDI mobile navigation">
@@ -1536,7 +1554,7 @@ window.addEventListener("message",event=>{const m=event.data||{};if(m.source!==P
 busy(true);post("PAYROLL_READY");
 setTimeout(()=>{if(!state.workspaceReceived)post("PAYROLL_REFRESH")},650);
 setTimeout(()=>{if(!state.workspaceReceived)post("PAYROLL_REFRESH")},2400);
-setTimeout(()=>{if(!state.workspaceReceived){busy(false);toast("Payroll could not synchronize with the Wix page bridge. Republish the Payroll page and verify staff access.")}},8000);
+setTimeout(()=>{if(!state.workspaceReceived){busy(false);toast("Payroll could not connect. Check your access or try again.")}},8000);
 })();
 
 

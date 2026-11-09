@@ -487,6 +487,15 @@
     @media (prefers-reduced-motion: reduce) {
       #skandi-app-root *, #skandi-app-root *::before, #skandi-app-root *::after { scroll-behavior: auto !important; transition-duration: 0s !important; }
     }
+
+/* A compact mobile welcome keeps the sign-in form close at hand. */
+@media(max-width:760px){
+  #skandi-app-root #login-left{padding-top:calc(18px + env(safe-area-inset-top,0px));padding-bottom:24px}
+  #skandi-app-root #login-tagline{font-size:max(13px, clamp(26px,7vw,34px));line-height:1.1}
+  #skandi-app-root #login-sub{line-height:1.5}
+  #skandi-app-root #login-right{padding-top:24px;padding-bottom:calc(28px + env(safe-area-inset-bottom,0px))}
+  #skandi-app-root #login-right input,#skandi-app-root #login-right button{min-height:44px}
+}
 </style>
 <style data-skandi-part="shell">/* Shared compiled shell. Every family uses the same mobile scroll area and tab bar. */
 :root {
@@ -603,6 +612,13 @@ html, body { width: 100% !important; margin: 0 !important; max-width: none !impo
 .skandi-app-software span { color: #ffb454; }
 
 #skandi-shell-root small { font-size: max(13px, .875em); }
+
+@media (max-width: 1020px) {
+  [data-skandi-family="riaintra"] #skandi-mobile-nav-container { background:#092f51; }
+  [data-skandi-family="riaintra"] .skmn { background:#092f51; border-top:1px solid rgba(255,255,255,.14); }
+  [data-skandi-family="riaintra"] .skmn-btn { min-height:54px; }
+  [data-skandi-family="riaintra"] .skmn-btn[aria-current="page"] { color:#8fe0e4; }
+}
 </style>
 </head>
 <body>

@@ -1112,6 +1112,13 @@ body.drawer-open #skandi-mobile-nav-container{min-height:100%;height:100%}
 
 #skandi-mobile-nav-container .drawer-logo { display: block; height: 19px; max-width: 145px; width: auto; }
 #skandi-mobile-nav-container .drawer-logo[hidden] { display: none; }
+
+/* Staff-only home screen guidance */
+#skandi-mobile-nav-container #staff-drawer-actions .staff-home-guide{color:#dceaf5;font-size:13px;line-height:1.45}
+#skandi-mobile-nav-container #staff-drawer-actions .staff-home-guide summary{min-height:44px;display:flex;align-items:center;cursor:pointer;font-weight:700;color:#f1f8ff}
+#skandi-mobile-nav-container #staff-drawer-actions .staff-home-guide summary::after{content:"+";margin-left:auto;font-size:20px}
+#skandi-mobile-nav-container #staff-drawer-actions .staff-home-guide[open] summary::after{content:"−"}
+#skandi-mobile-nav-container #staff-drawer-actions .staff-home-guide p{margin:0 0 10px}
 </style>
 <style data-skandi-part="skandi-collection">
 #skandi-app-root{
@@ -1984,6 +1991,13 @@ html, body { width: 100% !important; margin: 0 !important; max-width: none !impo
 .skandi-app-software span { color: #ffb454; }
 
 #skandi-shell-root small { font-size: max(13px, .875em); }
+
+@media (max-width: 1020px) {
+  [data-skandi-family="riaintra"] #skandi-mobile-nav-container { background:#092f51; }
+  [data-skandi-family="riaintra"] .skmn { background:#092f51; border-top:1px solid rgba(255,255,255,.14); }
+  [data-skandi-family="riaintra"] .skmn-btn { min-height:54px; }
+  [data-skandi-family="riaintra"] .skmn-btn[aria-current="page"] { color:#8fe0e4; }
+}
 </style>
 </head>
 <body>
@@ -2461,7 +2475,7 @@ html, body { width: 100% !important; margin: 0 !important; max-width: none !impo
   <div class="drawer-head"><div><img id="drawer-logo" class="drawer-logo" alt="" hidden=""><div class="eyebrow" id="drawer-brand">SKANDI TRAVELS</div><h2 id="drawer-title">Explore SKANDI</h2></div><button id="skandi-mobile-closeBtn" aria-label="Close menu" type="button"><svg viewBox="0 0 24 24"><path d="M5 5l14 14M19 5L5 19"></path></svg></button></div>
   <div class="drawer-scroll" id="drawerLinks"></div>
   <div class="drawer-foot" id="drawer-actions"><button type="button" class="drawer-cta secondary" id="profileLink">My Profile</button><button type="button" class="drawer-cta" id="searchLink">Search trips</button><button type="button" class="drawer-cta secondary" id="alexandraLink">Chat with Alexandra</button></div>
-  <div class="drawer-foot" id="staff-drawer-actions" hidden=""><button type="button" class="drawer-cta secondary" id="staffSignOut">Sign out</button></div>
+  <div class="drawer-foot" id="staff-drawer-actions" hidden=""><details class="staff-home-guide"><summary>Add RIAINTRA to your Home Screen</summary><p>On iPhone or iPad, open the Share menu in Safari and choose Add to Home Screen. On Android, open the browser menu and choose Add to Home screen or Install, if offered.</p><p>This adds a shortcut to RIAINTRA; an internet connection and a valid staff session are still required.</p></details><button type="button" class="drawer-cta secondary" id="staffSignOut">Sign out</button></div>
   <section id="chat" aria-label="Alexandra customer support"><div class="chat-log" id="chatLog" role="log" aria-live="polite"><div class="bubble">How can I help with your trip?</div></div><div id="chatStatus" role="status">SKANDI Customer Service</div><form class="chat-compose" id="chatForm"><input id="chatInput" type="text" maxlength="1000" autocomplete="off" placeholder="Write your message" aria-label="Message to Alexandra"><button type="submit">Send</button></form></section>
 </aside>
 <nav id="skandi-mobile-nav-root" class="skmn" role="group" aria-label="SKANDI mobile navigation">

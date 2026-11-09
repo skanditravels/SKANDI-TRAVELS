@@ -556,6 +556,13 @@ body.drawer-open #skandi-mobile-nav-container{min-height:100%;height:100%}
 
 #skandi-mobile-nav-container .drawer-logo { display: block; height: 19px; max-width: 145px; width: auto; }
 #skandi-mobile-nav-container .drawer-logo[hidden] { display: none; }
+
+/* Staff-only home screen guidance */
+#skandi-mobile-nav-container #staff-drawer-actions .staff-home-guide{color:#dceaf5;font-size:13px;line-height:1.45}
+#skandi-mobile-nav-container #staff-drawer-actions .staff-home-guide summary{min-height:44px;display:flex;align-items:center;cursor:pointer;font-weight:700;color:#f1f8ff}
+#skandi-mobile-nav-container #staff-drawer-actions .staff-home-guide summary::after{content:"+";margin-left:auto;font-size:20px}
+#skandi-mobile-nav-container #staff-drawer-actions .staff-home-guide[open] summary::after{content:"−"}
+#skandi-mobile-nav-container #staff-drawer-actions .staff-home-guide p{margin:0 0 10px}
 </style>
 <style data-skandi-part="docunet">
 #skandi-app-root{
@@ -766,6 +773,12 @@ body.night #skandi-app-root{--workspace:#202932;--paper:#18222b;color:#e7edf1}bo
 @media (max-width: 420px) {
   #skandi-app-root .status-bar { overflow-x: auto; }
 }
+
+@media(max-width:920px){
+ #skandi-app-root .app-shell{height:100%;min-height:0}#skandi-app-root .workspace{position:relative}#skandi-app-root .inspector:not(.hidden){position:absolute;top:0;right:0;bottom:0;width:min(340px,90%);z-index:65;box-shadow:-8px 0 24px #001a3440}#skandi-app-root .inspector-close{min-width:44px;min-height:44px}#skandi-app-root .inspector-head{min-height:44px}#skandi-app-root .inspector{grid-template-rows:44px minmax(0,1fr)}#skandi-app-root .global-toolbar,#skandi-app-root .document-tabs,#skandi-app-root .viewer-footer{overflow-x:auto;scrollbar-width:thin}#skandi-app-root .global-toolbar{min-height:44px}#skandi-app-root .tool-btn,#skandi-app-root .footer-btn,#skandi-app-root .sidebar-overlay-toggle{min-width:44px;min-height:40px}#skandi-app-root .document-page{line-height:1.55}
+}
+
+@media(max-width:920px){#skandi-app-root .global-toolbar .effectivity-group{display:flex;flex:0 0 auto}#skandi-app-root .global-toolbar #backBtn,#skandi-app-root .global-toolbar #forwardBtn{display:inline-flex}}
 </style>
 <style data-skandi-part="shell">/* Shared compiled shell. Every family uses the same mobile scroll area and tab bar. */
 :root {
@@ -882,6 +895,13 @@ html, body { width: 100% !important; margin: 0 !important; max-width: none !impo
 .skandi-app-software span { color: #ffb454; }
 
 #skandi-shell-root small { font-size: max(13px, .875em); }
+
+@media (max-width: 1020px) {
+  [data-skandi-family="riaintra"] #skandi-mobile-nav-container { background:#092f51; }
+  [data-skandi-family="riaintra"] .skmn { background:#092f51; border-top:1px solid rgba(255,255,255,.14); }
+  [data-skandi-family="riaintra"] .skmn-btn { min-height:54px; }
+  [data-skandi-family="riaintra"] .skmn-btn[aria-current="page"] { color:#8fe0e4; }
+}
 </style>
 </head>
 <body>
@@ -1131,7 +1151,7 @@ html, body { width: 100% !important; margin: 0 !important; max-width: none !impo
   <div class="drawer-head"><div><img id="drawer-logo" class="drawer-logo" alt="" hidden=""><div class="eyebrow" id="drawer-brand">SKANDI TRAVELS</div><h2 id="drawer-title">Explore SKANDI</h2></div><button id="skandi-mobile-closeBtn" aria-label="Close menu" type="button"><svg viewBox="0 0 24 24"><path d="M5 5l14 14M19 5L5 19"></path></svg></button></div>
   <div class="drawer-scroll" id="drawerLinks"></div>
   <div class="drawer-foot" id="drawer-actions"><button type="button" class="drawer-cta secondary" id="profileLink">My Profile</button><button type="button" class="drawer-cta" id="searchLink">Search trips</button><button type="button" class="drawer-cta secondary" id="alexandraLink">Chat with Alexandra</button></div>
-  <div class="drawer-foot" id="staff-drawer-actions" hidden=""><button type="button" class="drawer-cta secondary" id="staffSignOut">Sign out</button></div>
+  <div class="drawer-foot" id="staff-drawer-actions" hidden=""><details class="staff-home-guide"><summary>Add RIAINTRA to your Home Screen</summary><p>On iPhone or iPad, open the Share menu in Safari and choose Add to Home Screen. On Android, open the browser menu and choose Add to Home screen or Install, if offered.</p><p>This adds a shortcut to RIAINTRA; an internet connection and a valid staff session are still required.</p></details><button type="button" class="drawer-cta secondary" id="staffSignOut">Sign out</button></div>
   <section id="chat" aria-label="Alexandra customer support"><div class="chat-log" id="chatLog" role="log" aria-live="polite"><div class="bubble">How can I help with your trip?</div></div><div id="chatStatus" role="status">SKANDI Customer Service</div><form class="chat-compose" id="chatForm"><input id="chatInput" type="text" maxlength="1000" autocomplete="off" placeholder="Write your message" aria-label="Message to Alexandra"><button type="submit">Send</button></form></section>
 </aside>
 <nav id="skandi-mobile-nav-root" class="skmn" role="group" aria-label="SKANDI mobile navigation">
@@ -2045,7 +2065,7 @@ const document=new Proxy(window.document,{get(target,key){if(key==='getElementBy
     market:"USNYC",
     audience:"OPERATIONS",
     zoom:100,
-    inspectorOpen:true,
+    inspectorOpen: !(window.matchMedia && window.matchMedia("(max-width: 920px)").matches),
     searchQuery:"",
     commandSelection:0
   };
@@ -2383,7 +2403,7 @@ const document=new Proxy(window.document,{get(target,key){if(key==='getElementBy
   function closeCommand(){ $("commandBackdrop").classList.remove("open"); }
 
   function init(){
-    assignIcons(); bindEvents();
+    assignIcons(); bindEvents(); showInspector(state.inspectorOpen);
     manuals=[]; allSections=[]; state.openTabs=[]; state.activeManualId=""; state.activeSectionId="";
     $("documentTabs").innerHTML=""; $("libraryTree").innerHTML='<div class="result-empty">Loading assigned publications…</div>';
     $("documentPage").innerHTML='<h1>Loading DocuNet…</h1><p>Your assigned controlled documents are being synchronized.</p>';
