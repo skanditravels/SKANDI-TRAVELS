@@ -2770,9 +2770,9 @@ function buildLocationOptions(kind="destination"){
     type:"AIRPORT",value:String(a.iata||"").toUpperCase(),canonicalValue:String(a.iata||"").toUpperCase(),
     iata:String(a.iata||"").toUpperCase(),icao:String(a.icao||"").toUpperCase(),
     title:a.city||a.name||a.iata||"",city:a.city||"",airportName:a.name||"",country:a.country||"",
-    label:`${a.city||a.name||a.iata}${a.iata?` (${a.iata})`:""}`,
-    subtitle:[a.name,a.icao,a.country].filter(Boolean).join(" • "),
-    terms:[a.city,a.name,a.iata,a.icao,a.country].filter(Boolean)
+    label:`${a.name||a.city||a.iata}${a.iata?` (${a.iata})`:""}`,
+    subtitle:[a.country,/^(sweden|norway|denmark|se|no|dk)$/i.test(String(a.country||""))?"Scandinavia":"",a.city,a.name,a.icao,a.iata,a.cityCode].filter(Boolean).filter((value,index,all)=>all.indexOf(value)===index).join(" · "),
+    terms:[a.city,a.name,a.iata,a.icao,a.cityCode,a.country,/^(sweden|norway|denmark|se|no|dk)$/i.test(String(a.country||""))?"Scandinavia":""].filter(Boolean)
   })).filter(x=>x.value);
 
   // The same canonical catalogue powers every location field. For flight/departure
@@ -2804,6 +2804,8 @@ function buildLocationOptions(kind="destination"){
 function scoreLocationOption(item,query){
   const q=normalizeSearchText(query);
   if(!q)return item.type==="DESTINATION"||item.type==="AREA"?600:400;
+  const bracketed=String(query||"").match(/\(([A-Za-z]{3})\)/);
+  if(bracketed && [item.iata,item.value].some(value=>String(value||"").toUpperCase()===bracketed[1].toUpperCase()))return 1300;
   const compact=q.replace(/\s+/g,"");
   if([item.value,item.iata,item.icao].map(v=>normalizeSearchText(v).replace(/\s+/g,"")).includes(compact))return 1200;
   let best=-1;
@@ -2824,26 +2826,34 @@ function matchingLocationOptions(kind,query){
 function setupLocationSearch({inputId,valueId,boxId,kind="destination",iataId="",typeId="",valueMode="canonical"}){
   const input=$(inputId),hidden=$(valueId),box=$(boxId),iata=iataId?$(iataId):null,type=typeId?$(typeId):null;
   if(!input||!hidden||!box)return;
-  let matches=[],activeIndex=-1;
+  let matches=[],activeIndex=-1,remote=[],requestId="",placeTimer=null,remoteUnavailable=false;
+  const useProvider=kind==="flight";
+  const available=()=>{
+    const combined=useProvider?[...remote,...buildLocationOptions(kind)]:buildLocationOptions(kind),seen=new Set();
+    return combined.filter(item=>{const key=`${item.type}:${item.iata||item.value}`;if(seen.has(key))return false;seen.add(key);return true;});
+  };
   const close=()=>{box.classList.remove("active");input.setAttribute("aria-expanded","false");activeIndex=-1;};
   const render=()=>{
-    matches=matchingLocationOptions(kind,input.value);
+    matches=available().map(item=>({...item,_score:scoreLocationOption(item,input.value)})).filter(item=>item._score>=0).sort((a,b)=>b._score-a._score||String(a.title||"").localeCompare(String(b.title||""))).slice(0,10);
     const catalogueReady=(state.airports||[]).length>0||(state.searchDestinations||[]).length>0;
     box.innerHTML=matches.length?matches.map((item,index)=>`<button type="button" class="airport-option" role="option" data-index="${index}">
       <span class="airport-option-type">${esc(item.type==="AREA"?"RESORT":item.type)}</span>
       <span class="airport-option-copy"><strong>${esc(item.label||item.title||item.value)}</strong><small>${esc(item.subtitle||"")}</small></span>
-    </button>`).join(""):`<div style="padding:13px 14px;color:#667482;font-size:12px">${catalogueReady?"No matching locations":"Loading destinations and airports…"}</div>`;
+    </button>`).join(""):`<div style="padding:13px 14px;color:#667482;font-size:12px">${remoteUnavailable?"Airport search is unavailable. Try another search.":catalogueReady?"No matching locations":"Loading destinations and airports…"}</div>`;
+    if(remoteUnavailable&&matches.length)box.insertAdjacentHTML("beforeend",'<div style="padding:10px 14px;color:#667482;font-size:12px">Some locations could not be loaded. Saved locations are shown.</div>');
     box.classList.add("active");input.setAttribute("aria-expanded","true");
   };
   const choose=item=>{
     if(!item)return;
+    clearTimeout(placeTimer);requestId="";
+    if(useProvider)input.dataset.placeType=item.type==="CITY"?"CITY":"AIRPORT";
     input.value=item.label||item.title||item.value||"";hidden.value=valueMode==="iata"?(item.iata||item.value||""):(item.canonicalValue||item.value||"");
     if(iata)iata.value=item.iata||"";if(type)type.value=item.type||"";close();
   };
   const resolveExact=()=>{
     if(hidden.value)return true;
     const q=normalizeSearchText(input.value);if(!q)return false;
-    const exact=buildLocationOptions(kind).find(item=>[item.value,item.iata,item.icao,item.title,item.label].map(normalizeSearchText).includes(q));
+    const exact=available().find(item=>[item.value,item.iata,item.icao,item.title,item.label].map(normalizeSearchText).includes(q));
     if(exact){choose(exact);return true;}return false;
   };
   input.addEventListener("focus",()=>{
@@ -2852,7 +2862,16 @@ function setupLocationSearch({inputId,valueId,boxId,kind="destination",iataId=""
   });
   input.addEventListener("input",()=>{
     hidden.value="";if(iata)iata.value="";if(type)type.value="";
+    if(useProvider)delete input.dataset.placeType;
     if(!state.locationsLoaded)send("HOME_LOCATIONS_REQUEST",{});
+    if(useProvider){
+      clearTimeout(placeTimer);remote=[];remoteUnavailable=false;requestId="";
+      const query=input.value.trim();
+      if(query.length>=2){
+        requestId=`HOME-PLACES-${Date.now()}-${++requestSerial}`;const id=requestId;
+        placeTimer=setTimeout(()=>postToParent({source:SOURCE,type:"HOME_FLIGHT_PLACES_QUERY",payload:{inputId,query},requestId:id,timestamp:new Date().toISOString()}),350);
+      }
+    }
     render();
   });
   input.addEventListener("keydown",e=>{
@@ -2869,6 +2888,11 @@ function setupLocationSearch({inputId,valueId,boxId,kind="destination",iataId=""
   input.addEventListener("blur",()=>setTimeout(()=>{resolveExact();close();},120));
   input.__resolveLocationSelection=resolveExact;
   input.__refreshLocationSuggestions=render;
+  if(useProvider)input.__acceptFlightPlaces=message=>{
+    if(!requestId||message.requestId!==requestId||message.payload?.query!==input.value.trim())return;
+    remote=Array.isArray(message.payload?.items)?message.payload.items:[];remoteUnavailable=message.payload?.unavailable===true;
+    if(document.activeElement===input)render();
+  };
 }
 function ensureLocationSelection(inputId){
   const input=$(inputId);
@@ -3552,6 +3576,10 @@ function getFlightSearch(){
     tripType:"flightOnly",
     origin:$("fromIata").value,
     destination:$("toIata").value,
+    originType:$("from").dataset.placeType||"AIRPORT",
+    destinationType:$("to").dataset.placeType||"AIRPORT",
+    originLabel:$("from").value,
+    destinationLabel:$("to").value,
     departureDate:$("depart").value,
     returnDate:$("return").value,
     adults:state.adults,
@@ -3821,6 +3849,7 @@ window.addEventListener("message",event=>{
     if(!state.hasBootstrapped)requestBootstrap();
   }
   if(msg.type==="HOME_LOCATION_DATA"&&releaseRequest("locations",msg.requestId))renderLocationData(msg.payload||{});
+  if(msg.type==="HOME_FLIGHT_PLACES_RESULT")$(msg.payload?.inputId)?.__acceptFlightPlaces?.(msg);
   if(msg.type==="HOME_BOOTSTRAP_RESULT"&&msg.requestId===state.bootstrapId){
     releaseRequest("bootstrap",msg.requestId);
     clearInterval(readyTimer);readyTimer=null;state.hasBootstrapped=true;
@@ -3917,3 +3946,4 @@ if(typeof ResizeObserver==="function"){
 setTimeout(typeWriter, 1000);
 boot();
 initializeBridge();
+

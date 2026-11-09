@@ -6,7 +6,7 @@ import { APP_ROUTES } from "public/siteMap";
 
 const KEY = "SKANDI_BOOKING_SEARCH";
 const MAX_AGE = 2 * 60 * 60 * 1000;
-const strings = ["tripType","productType","accommodationType","origin","originIata","originLabel","departureLabel","destination","destinationIata","destinationLabel","destinationCode","destinationRegion","destinationType","destinationCountry","destinationCountrySlug","destinationSlug","destinationAreaSlug","countrySlug","areaSlug","hotelSlug","accommodationId","departureDate","returnDate","checkInDate","checkOutDate","travelClass","cabinClass","cabin","flightType","language","locale","currency","collectionLevel","skandiTier"];
+const strings = ["tripType","productType","accommodationType","origin","originIata","originLabel","originType","departureLabel","destination","destinationIata","destinationLabel","destinationCode","destinationRegion","destinationType","destinationCountry","destinationCountrySlug","destinationSlug","destinationAreaSlug","countrySlug","areaSlug","hotelSlug","accommodationId","departureDate","returnDate","checkInDate","checkOutDate","travelClass","cabinClass","cabin","flightType","language","locale","currency","collectionLevel","skandiTier"];
 export function normalizeBookingSearch(input = {}) {
   const search = {};
   for (const key of strings) if (typeof input[key] === "string") search[key] = input[key].trim().slice(0,240);
@@ -41,3 +41,4 @@ export function readBookingSearch(id) {
     return { ...stored, search:normalizeBookingSearch(stored.search) };
   } catch (_) { return null; }
 }
+

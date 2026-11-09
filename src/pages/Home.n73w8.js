@@ -5,6 +5,8 @@ import wixLocationFrontend from "wix-location-frontend";
 import wixWindowFrontend from "wix-window-frontend";
 import { startBookingSearch } from "public/bookingSearch";
 import { getHomeContent, getHomeSearchLocations, getHomeLivePrices } from "backend/SKANDI_CORE/homeContent.web";
+import { searchDuffelPlaces } from "backend/SKANDI_CORE/travelReference.web";
+import { formatFlightPlaces } from "public/flightPlaces";
 import { SITE_MAP, APP_ROUTES } from "public/siteMap";
 
 const HOME_EMBED_IDS = ["#htmlHome", "#htmlhome", "#home"];
@@ -220,6 +222,17 @@ async function handleHomeMessage(html, message) {
     case "HOME_LOCATIONS_REQUEST":
       await sendHomeLocations(html, message);
       return;
+    case "HOME_FLIGHT_PLACES_QUERY": {
+      const query = clean(payload.query, 120), inputId = clean(payload.inputId, 80);
+      if (!["from", "to"].includes(inputId) || query.length < 2) return;
+      try {
+        const result = await boundedRead(searchDuffelPlaces({query,limit:30}), 15000);
+        postToHtml(html, "HOME_FLIGHT_PLACES_RESULT", {inputId,query,items:formatFlightPlaces(result?.items)}, clean(message.requestId,160));
+      } catch (_) {
+        postToHtml(html, "HOME_FLIGHT_PLACES_RESULT", {inputId,query,items:[],unavailable:true}, clean(message.requestId,160));
+      }
+      return;
+    }
     case "HOME_SEARCH":
       await searchHome(html, message, payload);
       return;
@@ -332,3 +345,4 @@ $w.onReady(function () {
     routes:{ ...SITE_MAP, ...APP_ROUTES }, readyAt:new Date().toISOString()
   });
 });
+

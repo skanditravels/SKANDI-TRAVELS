@@ -2,6 +2,10 @@
 
 > Current document: `skandi-embeds/booking/references/skandi-booking-readme-md/README.md`. Original reference: `HTML_REF/skandi/Booking/README.md`.
 
+## INFO / LOG — 2026-11-09
+
+The embedded historical code and its earlier `booking-flow` path below are superseded by `skandi-embeds/booking/skandi-booking-flow.{html,css,js}`. Flight-only results now group complete provider itineraries and their available class/fare offers. The existing booking host validates selected IDs; new Duffel upsell requests are matched to the original full itinerary and search. A selected city code is distinguished from a selected airport throughout the cart validation. Flight details, connection times and total estimated CO₂ use provider data; missing meals and other facts are identified as unavailable. See the active Booking README for current behavior and live-verification requirements.
+
 
 - Source identity: `/HTML_REF/skandi/Booking/README.md` (authoritative consolidated-embed source). System: SKANDI.
 - Wix route: `/booking`. Wix controller: `/src/pages/Booking.e8twe.js`.
@@ -530,3 +534,4 @@ bindDelegated();renderStepper();el('root-offer').innerHTML='<div class="empty">C
 </body>
 </html>
 ```
+

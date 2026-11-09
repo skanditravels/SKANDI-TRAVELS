@@ -1,6 +1,8 @@
 // Flights page host. Inventory and cached fare content remain owned by Home's canonical facade.
 import { getHomeContent } from "backend/SKANDI_CORE/homeContent.web";
 import { startBookingSearch } from "public/bookingSearch";
+import { searchDuffelPlaces } from "backend/SKANDI_CORE/travelReference.web";
+import { formatFlightPlaces } from "public/flightPlaces";
 
 const clean = (value, max = 120) => String(value ?? "").trim().slice(0, max);
 const list = value => Array.isArray(value) ? value : [];
@@ -24,6 +26,15 @@ export function createFlightsPageHost({ post, navigate, settings }) {
     const type = clean(message.type, 80), payload = object(message.payload), requestId = clean(message.requestId, 160);
     const reply = (event, data = {}) => post(event, data, requestId);
     try {
+      if (type === "FLIGHTS_PLACES_QUERY") {
+        const query = clean(payload.query,120), inputId = clean(payload.inputId,80);
+        if (!["flight-from","flight-to"].includes(inputId) || query.length < 2) return;
+        try {
+          const result = await bounded(searchDuffelPlaces({query,limit:30}),15000);
+          reply("FLIGHTS_PLACES_RESULT",{inputId,query,items:formatFlightPlaces(result?.items)});
+        } catch (_) { reply("FLIGHTS_PLACES_RESULT",{inputId,query,items:[],unavailable:true}); }
+        return;
+      }
       if (type === "FLIGHTS_READY" || type === "FLIGHTS_REFRESH") {
         const preferences = settingsFor(settings());
         if (!contentJob || contentJob.language !== preferences.language) {
@@ -49,3 +60,4 @@ export function createFlightsPageHost({ post, navigate, settings }) {
     }
   };
 }
+
