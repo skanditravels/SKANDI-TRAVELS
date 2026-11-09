@@ -241,7 +241,7 @@ test('airline tier metadata uses published, visible canonical inventory and retu
 
 test('a recommendation metadata failure never suppresses live flight offers',async()=>{
   const source=await read('src/backend/SKANDI_CORE/customerBooking.js');
-  const ctx=vm.createContext({record:x=>x||{},unifiedTripType:()=> 'flightOnly',searchLiveFlightOffersCore:async()=>({items:[{id:'off_live'}]}),getPublicAirlineRecommendationTiersCore:async()=>{throw new Error('inventory unavailable')},publicFlightItems:x=>x.items,nowIso:()=> '2027-01-01',safeCode:x=>x,text:x=>String(x||'')});
+  const ctx=vm.createContext({console:{error(){}},record:x=>x||{},unifiedTripType:()=> 'flightOnly',searchLiveFlightOffersCore:async()=>({items:[{id:'off_live'}]}),getPublicAirlineRecommendationTiersCore:async()=>{throw new Error('inventory unavailable')},publicFlightItems:x=>x.items,nowIso:()=> '2027-01-01',safeCode:x=>x,text:x=>String(x||'')});
   vm.runInContext(functionSource(source,'searchUnifiedOffersCore')+';this.run=searchUnifiedOffersCore;',ctx);
   const out=await ctx.run({search:{}});assert.equal(out.items[0].id,'off_live');assert.equal(out.errors.length,0);assert.equal(out.recommendation.available,false);
   ctx.getPublicAirlineRecommendationTiersCore=async()=>[{code:'SK',tier:'PARTNER'}];const available=await ctx.run({search:{}});assert.equal(available.recommendation.available,true);assert.equal(available.recommendation.airlines[0].tier,'PARTNER');
@@ -256,4 +256,11 @@ test('compiled Booking page initializes and renders the new planner and filters'
   assert(sent.some(m=>m.type==='BOOKING_OFFER_READY'));
   dom.window.dispatchEvent(new dom.window.MessageEvent('message',{source:dom.window,data:{source:'SKANDI_WIX_PARENT',type:'BOOKING_SEARCH_RESULTS',payload:{search:{origin:'ARN',destination:'JFK',tripType:'flightOnly'},items:[sampleOffer('off_build')],errors:[]}}}));
   assert.match(dom.window.document.querySelector('.travel-planner').textContent,/Travel Planner/);assert(dom.window.document.querySelector('#filter-stops'));assert(dom.window.document.querySelector('[data-action="flight-classes"]'));assert.deepEqual(errors,[]);
+});
+
+
+test('refresh removes previous offers while replacement availability is loading',async t=>{
+  const {doc,host}=await bookingFrame(t),search={origin:'ARN',destination:'JFK',tripType:'flightOnly'};
+  host('BOOKING_SEARCH_RESULTS',{search,items:[sampleOffer('off_before_refresh')],errors:[]});assert.equal(doc.querySelectorAll('.flight-result').length,1);
+  host('BOOKING_SEARCH_LOADING',{search});assert.equal(doc.querySelectorAll('.flight-result').length,0);assert.match(doc.getElementById('root-offer').textContent,/Searching live availability/);
 });
