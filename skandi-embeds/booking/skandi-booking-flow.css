@@ -332,9 +332,10 @@ input,select,textarea,.field input,.field select,.qty{
 .suggestion-label{padding:9px 16px;border-bottom:1px solid #d9edf0;background:#eff9f9;color:#075c68;font-size:11px;font-weight:800;letter-spacing:.025em}
 .flight-result-main{grid-template-columns:110px minmax(0,1fr) 150px}
 .flight-airline{padding:16px 9px}
-.itinerary-leg{grid-template-columns:64px minmax(75px,1fr) minmax(75px,1fr) minmax(75px,1fr);padding:16px 13px;gap:8px}
+.itinerary-leg{grid-template-columns:76px minmax(75px,1fr) minmax(75px,1fr) minmax(75px,1fr);padding:16px 13px;gap:8px}
 .itinerary-time strong{font-size:20px}
 .flight-result-actions{padding:12px}
+.flight-result-actions .btn{white-space:nowrap;padding-inline:8px;font-size:12px}
 .flight-result-actions>strong{font-size:18px}
 .detail-intro,.flight-detail-heading{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
 .detail-intro{padding-bottom:12px;border-bottom:1px solid var(--sk-border);color:var(--sk-blue)}
