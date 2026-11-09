@@ -50,6 +50,12 @@ const page = (key, label, path, authority, sections = [], options = {}) => Objec
 // Only static Presentation Registry hooks are exposed as editable fields. Inventory, legal-policy bodies,
 // commerce data, bookings, customer data and provider-owned facts remain with their existing owners.
 export const EDITORIAL_PAGE_CATALOG = Object.freeze([
+  page("successFactors", "RIAINTRA · SuccessFactors", SITE_MAP.successFactors, "INTERNAL_PRESENTATION", [
+    section("riaintra-editorial", "Intranet imagery", [], [
+      Object.freeze({id:"riaintra-welcome",label:"Welcome image"}),
+      Object.freeze({id:"riaintra-team",label:"Our team image"})
+    ])
+  ]),
   page("home", "Home", SITE_MAP.home, "PUBLIC_PRESENTATION"),
   page("search", "Search", SITE_MAP.search, "PUBLIC_PRESENTATION", [
     section("search-hero", "Search hero", [field("search-hero-eyebrow","Eyebrow"),field("search-hero-h1","Headline"),field("search-hero-copy","Intro copy","LONG_TEXT")])

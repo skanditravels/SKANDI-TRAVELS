@@ -18,6 +18,7 @@ import { members, authentication as memberAuthentication } from "@wix/members";
 import { auth } from "@wix/essentials";
 import { authorization } from "wix-members-backend";
 import { secrets } from "wix-secrets-backend.v2";
+import { fetch } from "wix-fetch";
 import { SkandiError, errorCode } from "backend/SKANDI_CORE/platformErrors";
 import { dispatchHireAutomation, makeHireAutomationPayload } from "backend/SKANDI_CORE/hireAutomation";
 import {
@@ -41,6 +42,7 @@ const elevatedCreateMember = auth.elevate(members.createMember);
 const elevatedListMembers = auth.elevate(members.listMembers);
 const elevatedGetMember = auth.elevate(members.getMember);
 const elevatedGetSecret = auth.elevate(secrets.getSecretValue);
+const addressLookupWindows = new Map();
 const WIX_STAFF_ROLE_SECRET = "SKANDI_WIX_STAFF_ROLE_IDS";
 const COMPLETE_ONBOARDING_TASK = new Set(["COMPLETE", "COMPLETED", "DONE"]);
 const CANCELED_ONBOARDING_TASK = new Set(["CANCELLED", "CANCELED", "ARCHIVED"]);
@@ -188,7 +190,7 @@ const CORE_PROFILE_KEYS = new Set([
 ]);
 
 const SELF_PROFILE_KEYS = new Set([
-  "preferredName","phone","personalMobile","mobilePhone","personalPhone","homeAddressStreet","homeAddressCity","homeAddressState",
+  "preferredName","personalEmail","phone","personalMobile","mobilePhone","personalPhone","homeAddressStreet","homeAddressCity","homeAddressState",
   "homeAddressPostalCode","homeAddressCountry","emergencyContactName","emergencyContactRelationship","emergencyContactPhone"
 ]);
 
@@ -205,9 +207,26 @@ function hrProfilePatch(input = {}) {
     if (!/^[A-Za-z][A-Za-z0-9_]{0,80}$/.test(key)) continue;
     if (CORE_PROFILE_KEYS.has(key) || EXTERNAL_OWNED_PROFILE_KEYS.has(key)) continue;
     const clean = primitiveProfileValue(value);
+    if (["nationalIdLast4", "passportNumberLast4", "workPermitNumberLast4"].includes(key) && clean && !/^[a-z0-9]{4}$/i.test(String(clean))) {
+      throw new SkandiError("HR_DOCUMENT_LAST4_INVALID", "Enter only the last four letters or digits of the document number.");
+    }
+    if (["passportIssueDate", "passportExpiryDate", "workPermitIssueDate", "workPermitExpiryDate"].includes(key) && clean && (!/^\d{4}-\d{2}-\d{2}$/.test(String(clean)) || isoDateOnly(String(clean)) !== String(clean))) {
+      throw new SkandiError("HR_DOCUMENT_DATE_INVALID", "Enter a valid document date.");
+    }
     if (clean !== undefined) out[key] = clean;
   }
+  validateDocumentDateOrder(out, out);
   return out;
+}
+
+function validateDocumentDateOrder(profile = {}, changed = {}) {
+  for (const [issue, expiry] of [["passportIssueDate", "passportExpiryDate"], ["workPermitIssueDate", "workPermitExpiryDate"]]) {
+    if (!(issue in changed) && !(expiry in changed)) continue;
+    const issued = profile[issue], expires = profile[expiry];
+    if (issued && expires && /^\d{4}-\d{2}-\d{2}$/.test(String(issued)) && /^\d{4}-\d{2}-\d{2}$/.test(String(expires)) && issued > expires) {
+      throw new SkandiError("HR_DOCUMENT_DATE_ORDER", "The document expiry date must be on or after its issue date.");
+    }
+  }
 }
 
 function storedHrProfile(row = {}) {
@@ -245,6 +264,7 @@ function safeAgent(row = {}) {
   for (const key of ["wixMemberId", "wix_member_id", "memberId", "member_id", "contactId", "contact_id"]) delete stored[key];
   const agentUserUuid = text(row.id, 80);
   const agentId = normalizeSkId(row.agent_id || row.sk_id);
+  const personalEmail = text(row.payload?.successFactors?.personalEmail ?? stored.personalEmail ?? stored.primaryContactEmail ?? row.email, 320);
   return {
     ...stored,
     id: agentUserUuid,
@@ -258,7 +278,8 @@ function safeAgent(row = {}) {
     displayName: text(row.preferred_name || row.display_name || [row.first_name, row.last_name].filter(Boolean).join(" ") || row.sk_id, 180),
     fullName: text(row.preferred_name || row.display_name || [row.first_name, row.last_name].filter(Boolean).join(" ") || row.sk_id, 180),
     email: text(row.corporate_email_address || row.email, 320),
-    personalEmail: text(row.payload?.successFactors?.personalEmail || row.email, 320),
+    personalEmail,
+    primaryContactEmail: personalEmail,
     corporateEmail: text(row.corporate_email_address || row.email, 320),
     corporateEmailAddress: text(row.corporate_email_address || row.email, 320),
     badgePhotoUrl: text(row.badge_photo_url, 1500),
@@ -553,7 +574,7 @@ async function buildSuccessFactorsPortal(session) {
   return {
     ok: true, version: "SKANDI-SUCCESSFACTORS-v12",
     profile: {
-      ...storedHrProfile(agent), ...session.profile,
+      ...storedHrProfile(agent), ...session.profile, personalEmail: safeAgent(agent).personalEmail,
       permissions: stringArray(session.permissionKeys), permissionKeys: stringArray(session.permissionKeys),
       allowedApps: stringArray(session.allowedApps), permissionGroups: stringArray(session.permissionGroups),
       successFactorsAccess: {
@@ -654,6 +675,46 @@ export async function getSuccessFactorsDirectoryCore({ query = "" } = {}) {
   };
 }
 
+// Address results are used to populate a saved employee address. Mapbox's
+// permanent geocoding option is required for data that will be stored.
+export async function suggestSuccessFactorsAddressCore({ query = "", country = "" } = {}) {
+  const session = await requireStaffPortalSessionCore();
+  const search = text(query, 150);
+  if (search.length < 4 || search.includes(";") || search.split(/\s+/).length > 20) return { ok: true, items: [] };
+  const subject = text(session?.profile?.agentUserId || session?.profile?.id, 80);
+  if (!subject) throw new SkandiError("STAFF_AUTH_REQUIRED", "Sign in to use address search.");
+  const now = Date.now(), previous = addressLookupWindows.get(subject);
+  const window = previous && now - previous.startedAt < 60000 ? previous : { startedAt:now, count:0 };
+  if (window.count >= 30) throw new SkandiError("ADDRESS_LOOKUP_RATE_LIMIT", "Please wait a moment before searching again.");
+  window.count += 1; addressLookupWindows.set(subject, window);
+  if (addressLookupWindows.size > 5000) for (const [key, item] of addressLookupWindows) { if (now - item.startedAt >= 60000) addressLookupWindows.delete(key); }
+  let token;
+  try {
+    const secret = await elevatedGetSecret("SKANDI_MAPBOX_ADDRESS_TOKEN");
+    token = text(typeof secret === "string" ? secret : secret?.value, 2000);
+  } catch (_) { token = ""; }
+  if (!/^pk\.[A-Za-z0-9._-]+$/.test(token)) {
+    throw new SkandiError("ADDRESS_LOOKUP_UNAVAILABLE", "Address search is temporarily unavailable. Enter the address manually.");
+  }
+  const parameters = new URLSearchParams({ q: search, access_token: token, types: "address", autocomplete: "true", permanent: "true", limit: "5" });
+  if (/^[A-Za-z]{2}$/.test(String(country))) parameters.set("country", String(country).toUpperCase());
+  let response;
+  try { response = await fetch(`https://api.mapbox.com/search/geocode/v6/forward?${parameters}`, { method: "GET", headers: { Accept: "application/json" }, timeout: 8000 }); }
+  catch (_) { throw new SkandiError("ADDRESS_LOOKUP_UNAVAILABLE", "Address search is temporarily unavailable. Enter the address manually."); }
+  if (!response.ok) throw new SkandiError("ADDRESS_LOOKUP_UNAVAILABLE", "Address search is temporarily unavailable. Enter the address manually.");
+  const result = await response.json();
+  const items = (Array.isArray(result?.features) ? result.features : []).slice(0, 5).map((feature) => {
+    const p = feature?.properties || {}, context = p.context || {};
+    return {
+      label: text(p.full_address || [p.name, p.place_formatted].filter(Boolean).join(", "), 400),
+      street: text(p.name, 240), city: text(context.place?.name || context.locality?.name, 120),
+      state: text(context.region?.region_code || context.region?.name, 120),
+      postalCode: text(context.postcode?.name, 40), country: text(context.country?.name, 120)
+    };
+  }).filter((item) => item.label && item.street);
+  return { ok: true, items };
+}
+
 export async function saveSuccessFactorsSelfProfileCore(input = {}) {
   const session = await requireStaffPortalSessionCore();
   const agentUserId = text(session.profile?.agentUserId || session.profile?.id, 80);
@@ -665,8 +726,14 @@ export async function saveSuccessFactorsSelfProfileCore(input = {}) {
     const clean = primitiveProfileValue(input[key]);
     if (clean !== undefined) patch[key] = clean;
   }
+  if (Object.prototype.hasOwnProperty.call(input, "personalEmail")) {
+    const email = text(input.personalEmail, 320);
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new SkandiError("HR_PERSONAL_EMAIL_INVALID", "Enter a valid personal email address.");
+    delete patch.personalEmail;
+  }
   const saved = await patchAgentVersioned(target, (current) => {
     const body = { payload: mergedSuccessFactorsPayload(current, patch) };
+    if (Object.prototype.hasOwnProperty.call(input, "personalEmail")) body.payload.successFactors.personalEmail = text(input.personalEmail, 320);
     if (Object.prototype.hasOwnProperty.call(input, "preferredName")) {
       body.preferred_name = text(input.preferredName, 120) || null;
       body.display_name = body.preferred_name || [current.first_name,current.last_name].filter(Boolean).join(" ");
@@ -1271,6 +1338,7 @@ export async function createEmployeeCore(input = {}) {
           createdByAgentUserId: actorId,
           createdAt: now,
           source: "SUCCESSFACTORS",
+          ...(input.personalEmail ? { personalEmail } : {}),
           ...(input.wixLoginEmail ? { wixLoginEmail, personalEmail, workspaceProvisioningStatus: "PLANNED" } : {}),
           recruitingApplicantId: text(input.recruitingApplicantId, 80) || undefined,
           badge: { staffId: skId, template: "SKANDI_STANDARD", status: "NOT_REQUESTED", photoUrl: text(input.badgePhotoUrl || input.photoUrl, 1500), updatedAt: now },
@@ -1366,11 +1434,21 @@ export async function updateEmployeeCore(input = {}) {
   const preferred = body.preferred_name ?? target.preferred_name;
   body.display_name = preferred || [first, last].filter(Boolean).join(" ");
   const profilePatch = hrProfilePatch(input);
-  const effective = await patchAgentVersioned(target, (current) => ({
+  if (input.personalEmail !== undefined && input.personalEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(text(input.personalEmail, 320))) {
+    throw new SkandiError("HR_PERSONAL_EMAIL_INVALID", "Enter a valid personal email address.");
+  }
+  const effective = await patchAgentVersioned(target, (current) => {
+    validateDocumentDateOrder({ ...storedHrProfile(current), ...profilePatch }, profilePatch);
+    return {
     ...body,
     display_name: (body.preferred_name !== undefined ? body.preferred_name : current.preferred_name) || [body.first_name ?? current.first_name, body.last_name ?? current.last_name].filter(Boolean).join(" "),
-    ...(Object.keys(profilePatch).length ? { payload: mergedSuccessFactorsPayload(current, profilePatch) } : {})
-  }));
+    ...(Object.keys(profilePatch).length || input.personalEmail !== undefined ? { payload: (() => {
+      const payload = mergedSuccessFactorsPayload(current, profilePatch);
+      if (input.personalEmail !== undefined) payload.successFactors.personalEmail = text(input.personalEmail, 320);
+      return payload;
+    })() } : {})
+    };
+  });
 
   const linkedMemberId = text(effective.wix_member_id || effective.member_id, 120);
   let wixMemberSync = null;

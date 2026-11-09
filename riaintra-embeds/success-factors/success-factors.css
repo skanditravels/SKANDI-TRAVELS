@@ -3462,6 +3462,30 @@
     }
 
     .app-library-sections { display:grid; gap:26px; min-width:0; }
+    /* Compact application buttons and local action feedback. */
+    .launchpad-grid, .tool-section .launchpad-grid { grid-template-columns:repeat(auto-fit,minmax(min(100%,165px),1fr)); gap:10px; }
+    .app-tile, .tool-section .app-tile { min-height:132px; padding:12px; border-radius:12px; }
+    .app-tile::after { display:none; }
+    .tile-head { align-items:center; gap:6px; }
+    .tile-head .skandi-app-wordmark { min-height:48px; flex:1; padding:7px; font-size:13px; }
+    .sf-app-art { display:block; flex:1; min-width:0; height:49px; overflow:hidden; border-radius:7px; background:#102451; }
+    .sf-app-art img { display:block; width:100%; height:100%; object-fit:contain; }
+    .tile-copy, .app-tile .tile-copy { margin-top:8px; }
+    .tile-copy h3 { font-size:14px; }
+    .tile-copy p { -webkit-line-clamp:2; font-size:13px; line-height:1.35; }
+    .tile-footer { padding-top:6px; }
+    .sf-inline-error { display:block; flex-basis:100%; width:100%; margin-top:7px; color:#a61d24; font-size:13px; line-height:1.4; font-weight:600; }
+    .sf-address-results { display:grid; gap:2px; }
+    .sf-address-option { width:100%; padding:9px 10px; border:1px solid #d6e2eb; border-radius:6px; background:#fff; color:#16324d; text-align:left; cursor:pointer; }
+    .sf-address-option:hover, .sf-address-option:focus-visible { background:#eef6fb; outline:2px solid #1f6ba3; }
+    .sf-welcome-image { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; opacity:.4; pointer-events:none; }
+    .welcome-band > div, .welcome-band > aside { position:relative; z-index:1; }
+    .sf-team-image { display:block; width:100%; max-height:180px; object-fit:cover; border-radius:12px; margin-bottom:10px; }
+    @media(max-width:680px) {
+      .launchpad-grid, .tool-section .launchpad-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+      .app-tile, .tool-section .app-tile { min-height:130px; padding:10px; }
+    }
+    @media(max-width:330px) { .launchpad-grid, .tool-section .launchpad-grid { grid-template-columns:minmax(0,1fr); } }
     .app-group-section { min-width:0; }
     .app-group-heading { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:8px;
       padding:0 0 10px; margin-bottom:13px; border-bottom:1px solid #d5dadd; }

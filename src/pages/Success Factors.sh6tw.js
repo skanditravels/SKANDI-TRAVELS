@@ -38,6 +38,7 @@ import {
   saveRecruitingTraining,
   saveRecruitingVetting,
   saveSuccessFactorsSelfProfile,
+  suggestSuccessFactorsAddress,
   saveSuccessFactorsPortalState,
   scheduleRecruitingMaintenance,
   setEmployeeActive,
@@ -78,12 +79,18 @@ function cleanError(error) {
 }
 
 function employeeInput(item = {}) {
-  return {
+  const result = {
     ...item,
-    agentUserId: item.agentUserId || item.recordId || item.id || "",
-    corporateEmail: item.corporateEmail || item.corporateEmailAddress || item.workEmail || item.companyEmail || item.email || "",
-    badgePhotoUrl: item.badgePhotoUrl || item.photoUrl || ""
+    agentUserId: item.agentUserId || item.recordId || item.id || ""
   };
+  // An unrelated tab does not contain these fields. Omitting them preserves
+  // the existing account and photo rather than sending empty replacements.
+  const has = (key) => Object.prototype.hasOwnProperty.call(item, key);
+  if (["corporateEmail", "corporateEmailAddress", "workEmail", "companyEmail", "email"].some(has)) {
+    result.corporateEmail = item.corporateEmail || item.corporateEmailAddress || item.workEmail || item.companyEmail || item.email || "";
+  }
+  if (has("badgePhotoUrl") || has("photoUrl")) result.badgePhotoUrl = item.badgePhotoUrl || item.photoUrl || "";
+  return result;
 }
 
 function organizationInput(item = {}, agentUserId = "") {
@@ -217,9 +224,9 @@ function careerOk(message, result = {}) {
 function hireResultMessage(result = {}) {
   const state = result.hireAutomation?.state;
   const prefix = result.passwordSetupPending ? "Staff account created; password setup email needs attention. " : "";
-  if (state === "accepted") return prefix + (result.hireAutomation.contactLinked ? "Hire saved; Wix accepted the automation trigger." : "Hire saved; Wix accepted the trigger, but no verified Wix contact was linked.");
-  if (state === "not_configured") return prefix + "Hire saved; the Wix automation trigger ID is missing, invalid, or unavailable.";
-  if (state === "unconfirmed") return prefix + "Hire saved; Wix did not confirm the automation. Check automation history before retrying.";
+  if (state === "accepted") return prefix + (result.hireAutomation.contactLinked ? "Hire saved and the notification was queued." : "Hire saved, but the notification has no linked contact.");
+  if (state === "not_configured") return prefix + "Hire saved, but the notification is not configured.";
+  if (state === "unconfirmed") return prefix + "Hire saved; the notification was not confirmed. Check its history before retrying.";
   if (state === "sending" || state === "conflict") return prefix + "Hire saved; the automation attempt is in progress or the record changed. Refresh before retrying.";
   if (state === "already_hired") return prefix + "The candidate was already hired; no new automation was triggered.";
   if (state === "not_recorded") return prefix + "No hire automation event was recorded for this candidate.";
@@ -290,7 +297,12 @@ async function handleMessage(type, payload) {
       return;
     case "INTRANET_COLLEAGUES_REQUEST": {
       const result = await getSuccessFactorsDirectory(payload);
-      send("INTRANET_COLLEAGUES", { items: result.items || [] });
+      send("INTRANET_COLLEAGUES", { items: result.items || [], background: payload.background === true });
+      return;
+    }
+    case "HR_ADDRESS_SUGGEST": {
+      const result = await suggestSuccessFactorsAddress({ query: payload.query, country: payload.country });
+      send("HR_ADDRESS_SUGGESTIONS", { items: result.items || [], requestId: payload.requestId });
       return;
     }
     case "INTRANET_PROFILE_SAVE": {
@@ -523,7 +535,7 @@ $w.onReady(function () {
     } catch (error) {
       const safe = cleanError(error);
       const responseType = type.startsWith("CAREERS_") ? "CAREERS_ERROR" : type.startsWith("INTRANET_") ? "INTRANET_ERROR" : "HR_ERROR";
-      send(responseType, { action: type, requestId: payload.requestId, ...safe });
+      send(responseType, { action: type, requestId: payload.requestId, background: payload.background === true, ...safe });
     }
   });
 

@@ -8677,3 +8677,7 @@ This reference is documentation, not a runtime import. Install the HTML below in
 </html>
 ```
 
+## INFO / LOG — 2026-11-09
+
+The HTML above remains a historical reference. The active SuccessFactors HTML, CSS and JavaScript triplet, Wix controller, shared site map and `SKANDI_CORE` services contain the current implementation. The workspace update adds organization-dependent employment fields, validated identity fields, staff-authorized address suggestions, cross-tab drafts, inline errors, staggered background loading, refresh preservation and Media Control image slots. See the active source README for setup and verification. Do not replace the active source with this historical payload.
+

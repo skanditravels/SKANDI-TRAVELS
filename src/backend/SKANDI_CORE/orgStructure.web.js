@@ -35,6 +35,7 @@ import {
   saveRecruitingTrainingCore,
   saveRecruitingVettingCore,
   saveSuccessFactorsSelfProfileCore,
+  suggestSuccessFactorsAddressCore,
   saveSuccessFactorsPortalStateCore,
   scheduleRecruitingMaintenanceCore,
   setEmployeeActiveCore,
@@ -63,6 +64,10 @@ export const getSuccessFactorsPortalBootstrap = webMethod(Permissions.SiteMember
 
 export const getSuccessFactorsDirectory = webMethod(Permissions.SiteMember, async (payload) => {
   return getSuccessFactorsDirectoryCore(input(payload));
+});
+
+export const suggestSuccessFactorsAddress = webMethod(Permissions.SiteMember, async (payload) => {
+  return suggestSuccessFactorsAddressCore(input(payload));
 });
 
 export const saveSuccessFactorsSelfProfile = webMethod(Permissions.SiteMember, async (payload) => {
