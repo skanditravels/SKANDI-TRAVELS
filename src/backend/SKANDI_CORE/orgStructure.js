@@ -19,6 +19,7 @@ import { auth } from "@wix/essentials";
 import { authorization } from "wix-members-backend";
 import { secrets } from "wix-secrets-backend.v2";
 import { SkandiError, errorCode } from "backend/SKANDI_CORE/platformErrors";
+import { dispatchHireAutomation, makeHireAutomationPayload } from "backend/SKANDI_CORE/hireAutomation";
 import {
   firstRow,
   isoDateOnly,
@@ -1533,8 +1534,8 @@ export async function getRecruitingBootstrapCore() {
   return {
     ok: true,
     canManage,
-    candidates: candidates.map(safeRecruitingCandidate),
-    applicants: candidates.map(safeRecruitingCandidate),
+    candidates: candidates.map(row => safeRecruitingCandidate(row, { includeOffer: canManage && canManageHr(session) })),
+    applicants: candidates.map(row => safeRecruitingCandidate(row, { includeOffer: canManage && canManageHr(session) })),
     positions,
     jobPostings: positions,
     interviews,
@@ -1571,14 +1572,107 @@ function generateBusinessKey(prefix) {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
 }
 
-function safeRecruitingCandidate(row = {}) {
+function safeRecruitingCandidate(row = {}, { includeOffer = false } = {}) {
   const hidden = new Set(["wix_member_id", "wixMemberId", "member_id", "memberId", "contact_id", "contactId"]);
+  if (!includeOffer) hidden.add("offerDetails");
   function scrub(value) {
     if (Array.isArray(value)) return value.map(scrub);
     if (!value || typeof value !== "object") return value;
     return Object.fromEntries(Object.entries(value).filter(([key]) => !hidden.has(key)).map(([key, item]) => [key, scrub(item)]));
   }
   return scrub(row);
+}
+
+const OFFER_FIELD_LIMITS = Object.freeze({
+  offer_date:32, candidate_first_name:120, candidate_full_name:240, legal_employer:240, operating_brand:180,
+  job_title:180, department:180, reports_to:180, employment_type:80, start_date:32, work_location:240,
+  schedule:600, travel:600, responsibilities:3000, base_pay:240, payday:240, classification:40,
+  additional_pay:3000, benefits:3000, acceptance_deadline:32, contact_name:180, contact_email:320,
+  contact_phone:80, signer_name:180, signer_title:180
+});
+const OPTIONAL_OFFER_FIELDS = new Set(["operating_brand", "contact_phone"]);
+
+function normalizeHireOffer(input, candidate) {
+  if (input === null || input === undefined) return null;
+  if (!input || typeof input !== "object" || Array.isArray(input)) throw new SkandiError("HR_OFFER_INVALID", "Offer details are invalid.");
+  const result = {};
+  for (const [key, limit] of Object.entries(OFFER_FIELD_LIMITS)) {
+    if (input[key] !== undefined && typeof input[key] !== "string") throw new SkandiError("HR_OFFER_INVALID", "Offer details must be text.");
+    const raw = String(input[key] || "").trim();
+    if (raw.length > limit || (!OPTIONAL_OFFER_FIELDS.has(key) && !raw)) throw new SkandiError("HR_OFFER_INCOMPLETE", "Complete the offer letter fields before hiring.");
+    result[key] = raw;
+  }
+  const same = (a,b) => String(a || "").trim().replace(/\s+/g," ").toLocaleLowerCase() === String(b || "").trim().replace(/\s+/g," ").toLocaleLowerCase();
+  const expectedName = [candidate.first_name, candidate.last_name].filter(Boolean).join(" ");
+  if (!same(result.candidate_first_name, candidate.first_name) || !same(result.candidate_full_name, expectedName)) {
+    throw new SkandiError("HR_OFFER_CANDIDATE_MISMATCH", "The offer name does not match the selected candidate.", { publicMessage:"The offer name must match the selected candidate. Correct the letter or candidate record before hiring." });
+  }
+  for (const key of ["offer_date", "start_date", "acceptance_deadline"]) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(result[key]) || isoDateOnly(result[key]) !== result[key]) throw new SkandiError("HR_OFFER_DATE_INVALID", "An offer date is invalid.");
+  }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(result.contact_email)) throw new SkandiError("HR_OFFER_EMAIL_INVALID", "The offer contact email is invalid.");
+  if (!["Exempt", "Nonexempt"].includes(result.classification)) throw new SkandiError("HR_OFFER_CLASSIFICATION_INVALID", "The offer classification is invalid.");
+  return result;
+}
+
+// Claim a persisted hire event before calling Wix. This is deliberately a
+// manual-retry workflow: a timeout can mean Wix accepted an event even when
+// the caller never received an acknowledgement.
+async function dispatchRecruitingHireAutomation(candidate, actorId) {
+  const currentPayload = { ...portalObject(candidate.payload) };
+  const onboarding = { ...portalObject(currentPayload.staffOnboarding) };
+  const event = { ...portalObject(onboarding.hireAutomation) };
+  if (!event.eventId) return { state:"not_recorded" };
+  if (event.state === "accepted") return { state:"accepted", contactLinked:event.contactLinked === true };
+  if (event.state === "sending" && Date.now() - Date.parse(event.attemptedAt || "") < 300000) return { state:"sending" };
+  const sending = { ...event, state:"sending", attemptedAt:new Date().toISOString() };
+  onboarding.hireAutomation = sending;
+  currentPayload.staffOnboarding = onboarding;
+  const claimed = firstRow(await restRequest({
+    table:"career_applicant_accounts", method:"PATCH",
+    query:{ id:`eq.${candidate.id}`, status:"eq.hired", updated_at:candidate.updated_at ? `eq.${candidate.updated_at}` : "is.null" },
+    body:{ payload:currentPayload, updated_at:new Date().toISOString() }
+  }));
+  if (!claimed) return { state:"conflict" };
+  let delivery = { state:"unconfirmed", contactLinked:false };
+  try {
+    let employee = { sk_id:onboarding.skId || "", corporate_email_address:onboarding.corporateEmail || "" };
+    if (UUID.test(String(onboarding.agentUserId || ""))) {
+      const row = firstRow(await select("agent_users", { select:"id,sk_id,corporate_email_address,contact_id", id:`eq.${onboarding.agentUserId}`, limit:1 }));
+      if (row) employee = row;
+    }
+    const positionId = text(candidate.position_id, 120);
+    const position = positionId ? firstRow(await select("career_positions", { select:"position_id,title,department,location,employment_type", position_id:`eq.${positionId}`, limit:1 })) || {} : {};
+    const payload = makeHireAutomationPayload({ candidate, employee, position, event, offer:onboarding.offerDetails || null });
+    delivery = await dispatchHireAutomation(payload);
+  } catch (_) {
+    delivery = { state:"unconfirmed", contactLinked:false };
+  }
+  const finalPayload = { ...portalObject(claimed.payload) };
+  const finalOnboarding = { ...portalObject(finalPayload.staffOnboarding) };
+  finalOnboarding.hireAutomation = { ...sending, state:delivery.state, contactLinked:delivery.contactLinked === true, completedAt:new Date().toISOString() };
+  finalPayload.staffOnboarding = finalOnboarding;
+  try {
+    const marked = firstRow(await restRequest({
+      table:"career_applicant_accounts", method:"PATCH",
+      query:{ id:`eq.${candidate.id}`, status:"eq.hired", updated_at:claimed.updated_at ? `eq.${claimed.updated_at}` : "is.null" },
+      body:{ payload:finalPayload, updated_at:new Date().toISOString() }
+    }));
+    if (!marked) return { state:"unconfirmed", contactLinked:delivery.contactLinked === true };
+  } catch (_) { return { state:"unconfirmed", contactLinked:delivery.contactLinked === true }; }
+  await recruitingAudit(actorId, "HIRE_AUTOMATION_ATTEMPTED", "candidate", candidate.applicant_id || candidate.id, { eventId:event.eventId, state:delivery.state });
+  return delivery;
+}
+
+export async function retryRecruitingHireAutomationCore({ id = "" } = {}) {
+  const session = await requireRecruiting({ manage:true });
+  await requireHr({ manage:true });
+  const cleanId = text(id, 80);
+  if (!UUID.test(cleanId)) throw new SkandiError("RECRUITING_CANDIDATE_NOT_FOUND", "Candidate not found.");
+  const candidate = firstRow(await select("career_applicant_accounts", { select:"*", id:`eq.${cleanId}`, limit:1 }));
+  if (!candidate || upper(candidate.status, 80) !== "HIRED") throw new SkandiError("HR_HIRE_AUTOMATION_CANDIDATE_REQUIRED", "Only a hired candidate can be retried.");
+  const hireAutomation = await dispatchRecruitingHireAutomation(candidate, text(session.profile?.agentUserId || session.profile?.id, 80) || null);
+  return { ok:true, candidate:safeRecruitingCandidate(candidate), hireAutomation };
 }
 
 export async function saveRecruitingCandidateCore(input = {}) {
@@ -1614,12 +1708,12 @@ export async function saveRecruitingCandidateCore(input = {}) {
   await recruitingAudit(actorId, id ? "CANDIDATE_UPDATED" : "CANDIDATE_CREATED", "candidate", saved?.applicant_id || applicantId, { status: body.status, positionId: body.position_id });
   if (wantsHire) {
     if (!saved?.id) throw new SkandiError("RECRUITING_CANDIDATE_SAVE_FAILED", "Candidate could not be saved.");
-    return updateRecruitingCandidateStageCore({ id:saved.id, status:"hired", staffEmail:input.staffEmail });
+    return updateRecruitingCandidateStageCore({ id:saved.id, status:"hired", staffEmail:input.staffEmail, offerDetails:input.offerDetails });
   }
   return { ok: true, candidate: safeRecruitingCandidate(saved || { id, ...body }) };
 }
 
-export async function updateRecruitingCandidateStageCore({ id = "", status = "", staffEmail = "" } = {}) {
+export async function updateRecruitingCandidateStageCore({ id = "", status = "", staffEmail = "", offerDetails = null } = {}) {
   const session = await requireRecruiting({ manage: true });
   const actorId = text(session.profile?.agentUserId || session.profile?.id, 80) || null;
   const cleanId = text(id, 80), cleanStatus = text(status, 80);
@@ -1633,6 +1727,8 @@ export async function updateRecruitingCandidateStageCore({ id = "", status = "",
     return {ok:true,candidate:safeRecruitingCandidate(saved)};
   }
   await requireHr({ manage:true });
+  const isNewHire = upper(candidate.status, 80) !== "HIRED";
+  const preparedOffer = normalizeHireOffer(offerDetails, candidate);
   const loginEmail = normalizeCorporateEmail(staffEmail || candidate.email);
   const personalEmail = normalizeCorporateEmail(candidate.email);
   const corporateEmail = plannedCorporateEmail(candidate.first_name, candidate.last_name);
@@ -1667,11 +1763,24 @@ export async function updateRecruitingCandidateStageCore({ id = "", status = "",
   }
   if (!memberId || (existingCandidateMember && memberId !== existingCandidateMember)) throw new SkandiError("HR_WIX_MEMBER_PROVISION_INCOMPLETE", "Staff account could not be verified.");
   const payload = candidate.payload && typeof candidate.payload === "object" ? {...candidate.payload} : {};
-  payload.staffOnboarding = {...(payload.staffOnboarding || {}),agentUserId:employee?.id || matched?.id,skId:employee?.skId || matched?.sk_id,corporateEmail:matched?.corporate_email_address || corporateEmail,workspaceProvisioningStatus:"PLANNED",passwordSetupPending};
+  const existingOnboarding = { ...portalObject(payload.staffOnboarding) };
+  if (isNewHire && !preparedOffer) delete existingOnboarding.offerDetails;
+  const hiredAt = new Date().toISOString();
+  payload.staffOnboarding = {
+    ...existingOnboarding, agentUserId:employee?.id || matched?.id, skId:employee?.skId || matched?.sk_id,
+    corporateEmail:matched?.corporate_email_address || corporateEmail, workspaceProvisioningStatus:"PLANNED", passwordSetupPending,
+    ...(preparedOffer ? { offerDetails:preparedOffer } : {}),
+    ...(isNewHire ? { hireAutomation:{ eventId:`hire:${cleanId}:${Date.now()}`, occurredAt:hiredAt, state:"pending" } } : {})
+  };
   const saved = firstRow(await restRequest({table:"career_applicant_accounts",method:"PATCH",query:{id:`eq.${cleanId}`,status:`eq.${candidate.status}`},body:{status:"hired",wix_member_id:memberId,payload,updated_at:new Date().toISOString()}}));
   if (!saved) throw new SkandiError("RECRUITING_HIRE_RETRY", "Candidate changed during staff provisioning.", {publicMessage:"The staff account was created, but the candidate changed. Refresh and retry."});
   await recruitingAudit(actorId,"CANDIDATE_HIRED","candidate",saved.applicant_id || cleanId,{status:"hired",skId:employee?.skId || ""});
-  return {ok:true,candidate:safeRecruitingCandidate(saved),employee,passwordSetupPending};
+  let hireAutomation = { state:"already_hired" };
+  if (isNewHire) {
+    try { hireAutomation = await dispatchRecruitingHireAutomation(saved, actorId); }
+    catch (_) { hireAutomation = { state:"unconfirmed" }; }
+  }
+  return {ok:true,candidate:safeRecruitingCandidate(saved),employee,passwordSetupPending,hireAutomation};
 }
 
 export async function saveRecruitingPositionCore(input = {}) {
@@ -2186,3 +2295,4 @@ export async function getManagerCandidatesCore({ roleId = "", baseCode = "" } = 
 
   return { ok: true, managerRoleId, reportsToTitle: text(role.reports_to_title, 180), candidates };
 }
+

@@ -1901,6 +1901,11 @@
       animation: dialogIn 180ms ease;
     }
 
+    .dialog.sf-offer-dialog {
+      width: min(1380px, 100%);
+      max-height: calc(100vh - 40px);
+    }
+
     .dialog-header {
       display: flex;
       align-items: flex-start;
@@ -3464,3 +3469,4 @@
     .app-group-heading span { color:#5c7185; font-size:12px; }
     .app-group-section[hidden] { display:none!important; }
   
+

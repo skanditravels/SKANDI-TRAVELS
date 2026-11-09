@@ -1,3 +1,375 @@
   <div id="portal"></div>
   <div id="modalRoot"></div>
   <div id="toastRegion" class="toast-region" aria-live="polite" aria-atomic="true"></div>
+
+
+<template id="sfOfferComposerTemplate">
+<style id="sfo-offer-styles">
+    :host, :root {
+      color-scheme: light;
+      --navy: #022e64;
+      --navy-dark: #072441;
+      --blue: #1f6ba3;
+      --aqua: #5fc7cf;
+      --ink: #1e2e41;
+      --muted: #586c7f;
+      --line: #dce5ed;
+      --ice: #f5f7fb;
+      --white: #fff;
+      font-family: Inter, Avenir, "Segoe UI", Arial, sans-serif;
+      color: var(--ink);
+      font-synthesis: none;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #eef3f7; line-height: 1.5; }
+    button, input, select, textarea { font: inherit; }
+    button { cursor: pointer; }
+    :focus-visible { outline: 3px solid #2788bd; outline-offset: 3px; }
+
+    .app-header { background: #e4efff; color: var(--navy); border-bottom: 1px solid #cfdeee; }
+    .app-header-inner {
+      max-width: 1700px; margin: 0 auto; padding: 20px 34px;
+      display: flex; align-items: center; justify-content: space-between; gap: 24px;
+    }
+    .brand-word { font-weight: 800; letter-spacing: .075em; font-size: 1.15rem; }
+    .brand-group { font-weight: 600; font-size: .69rem; letter-spacing: .15em; margin-left: 7px; }
+    .header-description { font-size: .8rem; color: #475c72; letter-spacing: .035em; }
+    .workspace {
+      max-width: 1700px; margin: 0 auto; padding: 30px 34px 46px;
+      display: grid; grid-template-columns: minmax(340px, 450px) minmax(0, 1fr);
+      gap: 30px; align-items: start;
+    }
+    .editor, .preview-column { min-width: 0; }
+    .editor {
+      background: white; border: 1px solid var(--line); border-radius: 8px;
+      box-shadow: 0 8px 30px rgba(11, 39, 68, .04); overflow: hidden;
+    }
+    .editor-heading { padding: 26px 26px 20px; border-bottom: 1px solid var(--line); }
+    .eyebrow { font-size: .69rem; font-weight: 750; color: var(--blue); text-transform: uppercase; letter-spacing: .15em; }
+    .editor-heading h1 { margin: 7px 0 6px; color: var(--navy); font-size: 1.45rem; line-height: 1.2; letter-spacing: -.02em; }
+    .editor-heading p { color: var(--muted); font-size: .86rem; margin: 0; }
+    .notice { margin-top: 18px; padding: 11px 13px; background: #eff7f8; border-left: 3px solid #51aeb8; color: #214453; font-size: .79rem; }
+    .editor-form { padding: 5px 26px 26px; }
+    fieldset { border: 0; margin: 0; padding: 21px 0 0; }
+    fieldset + fieldset { margin-top: 18px; border-top: 1px solid var(--line); }
+    legend { float: left; width: 100%; padding: 0 0 10px; margin: 0; color: var(--navy); font-weight: 750; font-size: .96rem; }
+    .fields { clear: both; display: grid; grid-template-columns: 1fr 1fr; gap: 13px 12px; }
+    .field { min-width: 0; }
+    .field.wide { grid-column: 1 / -1; }
+    label { display: block; margin-bottom: 5px; color: #334a60; font-size: .77rem; font-weight: 700; }
+    .required-mark { color: #aa4a24; }
+    input, select, textarea {
+      width: 100%; min-width: 0; border: 1px solid #c7d4df; border-radius: 4px;
+      padding: 9px 10px; background: white; color: var(--ink); font-size: .83rem; line-height: 1.35;
+    }
+    input, select { min-height: 39px; }
+    textarea { resize: vertical; min-height: 76px; }
+    input::placeholder, textarea::placeholder { color: #8998a6; opacity: 1; }
+    [aria-invalid="true"] { border-color: #a93f31; }
+    .field-note { color: var(--muted); font-size: .73rem; margin: 5px 0 0; }
+    .editor-bottom { margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--line); }
+    .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+    .action {
+      min-height: 43px; border: 1px solid var(--navy); border-radius: 4px;
+      padding: 9px 10px; background: var(--navy); color: white; font-weight: 700; font-size: .79rem;
+    }
+    .action.secondary { color: var(--navy); background: white; }
+    .action:hover { background: #104579; }
+    .action.secondary:hover { background: #edf4f8; }
+    .status { margin: 10px 0 0; color: #8b3025; font-size: .79rem; min-height: 1.2em; }
+    .privacy, .review-note { color: var(--muted); font-size: .76rem; line-height: 1.5; margin: 12px 0 0; }
+    .review-note { border-top: 1px solid var(--line); padding-top: 12px; }
+    .preview-heading { max-width: 8.5in; margin: 1px auto 12px; display: flex; align-items: end; justify-content: space-between; gap: 16px; }
+    .preview-heading h2 { margin: 0; font-size: .95rem; color: var(--navy); }
+    .preview-heading span { color: var(--muted); font-size: .76rem; text-align: right; }
+
+    /* Candidate-facing document, styled after the SKANDI invoice reference.
+       These styles are also included in each downloaded letter. */
+    .letter-sheet {
+      max-width: 8.5in; min-height: 11in; margin: 0 auto; padding: .42in;
+      background: white; border: 1px solid #dce5eb; box-shadow: 0 10px 35px rgba(7,36,65,.09);
+      color: #111; font-family: Arial, "Liberation Sans", sans-serif;
+      font-size: 9.3pt; line-height: 1.42; overflow-wrap: anywhere;
+    }
+    .letter-masthead {
+      display: flex; align-items: flex-start; justify-content: space-between; gap: 24px;
+      min-height: 1.38in; padding: 23px 22px 22px;
+      background: linear-gradient(110deg, #dbe8ff 0%, #f3f8ff 100%);
+      border-bottom: 1px solid #dce6f0; break-inside: avoid;
+    }
+    .letter-brand { color: var(--navy); line-height: 1; }
+    .letter-brand strong { font-size: 17pt; font-weight: 800; letter-spacing: .055em; }
+    .letter-brand span { font-size: 7.5pt; font-weight: 700; letter-spacing: .13em; margin-left: 5px; }
+    .letter-department { margin-top: 7px; color: #52677d; font-size: 7pt; font-weight: 700; letter-spacing: .08em; }
+    .masthead-copy { max-width: 62%; text-align: right; color: var(--navy); }
+    .letter-title { margin: 0 0 6px; font-size: 25pt; font-weight: 750; line-height: 1.1; letter-spacing: -.025em; }
+    .letter-subtitle { font-size: 12pt; font-weight: 700; }
+    .letter-kicker { margin-top: 8px; color: #58616c; font-size: 8pt; font-style: italic; }
+    .letter-sheet p { margin: 0 0 8px; }
+    .letter-sheet h2, .letter-sheet h3 { color: var(--navy); line-height: 1.25; break-after: avoid; }
+    .welcome-block { margin-top: 25px; padding: 11px 0 12px; border-top: 2px solid var(--navy); border-bottom: 1px solid #dce4eb; break-inside: avoid; }
+    .welcome-block h2 { margin: 0 0 5px; font-size: 11pt; }
+    .welcome-block p { color: #333; font-size: 8.7pt; margin: 0; }
+    .summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .35in; margin-top: 23px; }
+    .summary-block { min-width: 0; break-inside: avoid; }
+    .summary-block + .summary-block { margin-top: 19px; }
+    .summary-label { margin: 0 0 8px; color: var(--navy); font-size: 9.5pt; font-weight: 700; letter-spacing: .025em; text-transform: uppercase; }
+    .summary-name { font-size: 10pt; font-weight: 700; margin-bottom: 7px; }
+    .summary-lines { margin: 0; }
+    .summary-row { display: grid; grid-template-columns: minmax(83px, .9fr) minmax(0, 1.1fr); gap: 8px; margin: 0 0 5px; break-inside: avoid; }
+    .summary-row dt { color: #414141; }
+    .summary-row dd { margin: 0; font-weight: 700; white-space: pre-wrap; }
+    .section-bar { display: flex; justify-content: space-between; align-items: end; gap: 12px; border-bottom: 2px solid var(--navy); margin: 23px 0 7px; padding-bottom: 3px; break-after: avoid; }
+    .section-bar h2 { margin: 0; font-size: 10.5pt; }
+    .section-bar span { color: #4d4d4d; font-size: 8pt; text-align: right; }
+    .terms-header { display: grid; grid-template-columns: 1.43in minmax(0, 1fr); gap: 10px; padding: 7px 8px; background: var(--navy); color: white; font-size: 7.6pt; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; break-after: avoid; }
+    .details { margin: 0; }
+    .detail-row { display: grid; grid-template-columns: 1.43in minmax(0, 1fr); gap: 10px; padding: 7px 8px; border-bottom: 1px solid #dedede; break-inside: avoid; }
+    .detail-row dt { font-weight: 700; color: #111; }
+    .detail-row dd { margin: 0; white-space: pre-wrap; }
+    .letter-sheet .multiline { white-space: pre-wrap; }
+    .placeholder { color: #8c5422; }
+    .term-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 13px; }
+    .term-card { padding: 12px 13px; border: 1px solid #dce4ed; break-inside: avoid; }
+    .term-card h3 { margin: 0 0 7px; font-size: 9.6pt; }
+    .term-card p { color: #3f3f3f; font-size: 8.5pt; margin: 0; }
+    .term-card p + p { margin-top: 7px; }
+    .acceptance-box { padding: 12px 13px; border: 1px solid #dce4ed; border-radius: 7px; background: #f0f2f6; break-inside: avoid; }
+    .acceptance-box p { color: #333; font-size: 8.7pt; }
+    .acceptance-box p:last-child { margin-bottom: 0; }
+    .signature-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .5in; margin-top: 24px; break-inside: avoid; }
+    .signature-title { color: var(--navy); font-weight: 700; margin-bottom: 26px; }
+    .signature-line { border-top: 1px solid #344b5f; padding-top: 5px; color: #5a6c7e; font-size: 8.5pt; }
+    .signature-details { margin-top: 8px; line-height: 1.35; }
+    .letter-footer { margin-top: 30px; padding-top: 9px; border-top: 2px solid var(--navy); color: #4d4d4d; font-size: 8pt; }
+    body.exported { background: white; }
+    body.exported .letter-sheet { margin: 25px auto; }
+    @media (max-width: 1050px) {
+      .workspace { grid-template-columns: minmax(0, 1fr); max-width: 850px; }
+      .preview-column { margin-top: 3px; }
+    }
+    @media (max-width: 560px) {
+      .app-header-inner { padding: 16px 18px; }
+      .header-description { display: none; }
+      .workspace { padding: 16px 12px 30px; gap: 22px; }
+      .editor-heading { padding: 22px 19px 17px; }
+      .editor-form { padding: 4px 19px 22px; }
+      .fields { grid-template-columns: 1fr; }
+      .field.wide { grid-column: auto; }
+      .preview-heading { align-items: start; }
+      .letter-sheet { padding: 22px 17px; min-height: 0; font-size: 9.3pt; }
+      .letter-masthead { padding: 19px 15px; gap: 12px; min-height: 1.2in; }
+      .letter-brand strong { font-size: 13pt; }
+      .letter-brand span { font-size: 6.5pt; }
+      .letter-title { font-size: 19pt; }
+      .letter-subtitle { font-size: 10pt; }
+      .summary-grid, .term-grid { grid-template-columns: 1fr; gap: 16px; }
+      .terms-header, .detail-row { grid-template-columns: minmax(90px, 1fr) minmax(0, 1.7fr); gap: 7px; }
+      .signature-grid { gap: 20px; }
+    }
+    @page { size: letter; margin: .38in .42in .48in; }
+    @media print {
+      :root { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+      body, body.exported { background: white; }
+      .app-header, .editor, .preview-heading, .no-print { display: none !important; }
+      .workspace { display: block; padding: 0; margin: 0; max-width: none; }
+      .preview-column { margin: 0; }
+      .letter-sheet, body.exported .letter-sheet {
+        max-width: none; min-height: 0; margin: 0; padding: 0; border: 0; box-shadow: none; font-size: 9.1pt;
+      }
+      .letter-masthead { min-height: 1.35in; padding: 20px; }
+      .letter-title { font-size: 25pt; margin: 0 0 6px; }
+      .letter-subtitle { font-size: 12pt; }
+      .welcome-block { margin-top: 22px; }
+      .summary-grid, .term-grid { grid-template-columns: 1fr 1fr; }
+      .summary-grid { gap: .35in; }
+      .term-grid { gap: 13px; }
+      .terms-header, .detail-row { grid-template-columns: 1.43in minmax(0, 1fr); gap: 10px; }
+      .detail-row { padding: 6px 8px; }
+      .print-next-page { break-before: page; page-break-before: always; }
+      .signature-grid { gap: .5in; margin-top: 20px; }
+      .letter-footer { margin-top: 24px; }
+    }
+  
+    :host { display:block; color:#1e2e41; font-family: Inter, Avenir, "Segoe UI", Arial, sans-serif; }
+    .sfo-surface { background:#eef3f7; min-height:100%; }
+    @media print { :host, .sfo-surface { display:block; background:#fff; } }
+</style>
+<div class="sfo-surface">
+  <header class="app-header">
+    <div class="app-header-inner">
+      <div><span class="brand-word">SKANDI</span><span class="brand-group">GROUP</span></div>
+      <div class="header-description">People &amp; Culture &nbsp; / &nbsp; Employment offer</div>
+    </div>
+  </header>
+
+  <main class="workspace">
+    <aside class="editor" aria-labelledby="sfo-editor-title">
+      <div class="editor-heading">
+        <div class="eyebrow">New York employment</div>
+        <h1 id="sfo-editor-title">Prepare an offer</h1>
+        <p>Enter the hiring details to create a letter for your candidate.</p>
+        <div class="notice">Complete every required field before printing or downloading the letter.</div>
+      </div>
+      <form id="sfo-offer-form" class="editor-form" autocomplete="off" novalidate>
+        <fieldset>
+          <legend>Candidate and employer</legend>
+          <div class="fields">
+            <div class="field"><label for="sfo-offer-date">Letter date <span class="required-mark">*</span></label><input id="sfo-offer-date" name="offer_date" type="date" required></div>
+            <div class="field"><label for="sfo-candidate-first">Candidate first name <span class="required-mark">*</span></label><input id="sfo-candidate-first" name="candidate_first_name" required placeholder="First name"></div>
+            <div class="field wide"><label for="sfo-candidate-full">Candidate full name <span class="required-mark">*</span></label><input id="sfo-candidate-full" name="candidate_full_name" required placeholder="First and last name"></div>
+            <div class="field wide"><label for="sfo-employer">Legal employer name <span class="required-mark">*</span></label><input id="sfo-employer" name="legal_employer" required placeholder="Full registered legal name"></div>
+            <div class="field wide"><label for="sfo-brand">Operating branch <span class="field-note">(optional)</span></label><select id="sfo-brand" name="operating_brand"><option value="">No separate operating name</option><option value="SKANDI Group">SKANDI Group</option><option value="SKANDI Travels">SKANDI Travels</option></select><p class="field-note">Select the applicable brand, if different from the legal employer.</p></div>
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend>Position and schedule</legend>
+          <div class="fields">
+            <div class="field wide"><label for="sfo-job-title">Job title <span class="required-mark">*</span></label><input id="sfo-job-title" name="job_title" required placeholder="Position title"></div>
+            <div class="field"><label for="sfo-department">Department <span class="required-mark">*</span></label><input id="sfo-department" name="department" required placeholder="Department"></div>
+            <div class="field"><label for="sfo-manager">Reports to <span class="required-mark">*</span></label><input id="sfo-manager" name="reports_to" required placeholder="Manager or title"></div>
+            <div class="field"><label for="sfo-employment-type">Employment type <span class="required-mark">*</span></label><input id="sfo-employment-type" name="employment_type" required placeholder="e.g., Full-time"></div>
+            <div class="field"><label for="sfo-start-date">Start date <span class="required-mark">*</span></label><input id="sfo-start-date" name="start_date" type="date" required></div>
+            <div class="field wide"><label for="sfo-work-location">Work location <span class="required-mark">*</span></label><input id="sfo-work-location" name="work_location" required placeholder="Primary worksite or remote arrangement"></div>
+            <div class="field wide"><label for="sfo-schedule">Expected schedule <span class="required-mark">*</span></label><input id="sfo-schedule" name="schedule" required placeholder="Days, hours and expected hours per week"></div>
+            <div class="field wide"><label for="sfo-travel">Required travel <span class="required-mark">*</span></label><input id="sfo-travel" name="travel" required placeholder="Travel requirements or None"></div>
+            <div class="field wide"><label for="sfo-responsibilities">Principal responsibilities <span class="required-mark">*</span></label><textarea id="sfo-responsibilities" name="responsibilities" required placeholder="Briefly describe the role and its main responsibilities."></textarea></div>
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend>Compensation and benefits</legend>
+          <div class="fields">
+            <div class="field wide"><label for="sfo-base-pay">Base pay <span class="required-mark">*</span></label><input id="sfo-base-pay" name="base_pay" required placeholder="e.g., $28.00 per hour or $65,000 per year"></div>
+            <div class="field wide"><label for="sfo-payday">Pay frequency and regular payday <span class="required-mark">*</span></label><input id="sfo-payday" name="payday" required placeholder="e.g., Weekly, each Friday"></div>
+            <div class="field wide"><label for="sfo-classification">Overtime classification <span class="required-mark">*</span></label><select id="sfo-classification" name="classification" required><option value="">Select the applicable classification</option><option value="Nonexempt">Nonexempt</option><option value="Exempt">Exempt</option></select><p class="field-note">Determine classification under applicable law.</p></div>
+            <div class="field wide"><label for="sfo-additional-pay">Additional compensation <span class="required-mark">*</span></label><textarea id="sfo-additional-pay" name="additional_pay" required placeholder="Bonus or commission terms and plan, or None"></textarea></div>
+            <div class="field wide"><label for="sfo-benefits">Benefits and paid time off <span class="required-mark">*</span></label><textarea id="sfo-benefits" name="benefits" required placeholder="Describe benefits, eligibility, paid time off and relevant plan or policy documents."></textarea></div>
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend>Acceptance and signatures</legend>
+          <div class="fields">
+            <div class="field"><label for="sfo-deadline">Acceptance deadline <span class="required-mark">*</span></label><input id="sfo-deadline" name="acceptance_deadline" type="date" required></div>
+            <div class="field"><label for="sfo-contact-name">Contact name <span class="required-mark">*</span></label><input id="sfo-contact-name" name="contact_name" required placeholder="Hiring contact"></div>
+            <div class="field wide"><label for="sfo-contact-email">Contact email <span class="required-mark">*</span></label><input id="sfo-contact-email" name="contact_email" type="email" required placeholder="name@company.com"></div>
+            <div class="field wide"><label for="sfo-contact-phone">Contact phone <span class="field-note">(optional)</span></label><input id="sfo-contact-phone" name="contact_phone" type="tel" placeholder="Phone number"></div>
+            <div class="field"><label for="sfo-signer-name">Company signer <span class="required-mark">*</span></label><input id="sfo-signer-name" name="signer_name" required placeholder="Full name"></div>
+            <div class="field"><label for="sfo-signer-title">Signer title <span class="required-mark">*</span></label><input id="sfo-signer-title" name="signer_title" required placeholder="Title"></div>
+          </div>
+        </fieldset>
+        <div class="editor-bottom">
+          <div class="actions">
+            <button class="action" id="sfo-print-button" type="button">Print / Save PDF</button>
+            <button class="action secondary" id="sfo-download-button" type="button">Download letter HTML</button>
+          </div>
+          <p class="status" id="sfo-form-status" role="status" aria-live="polite"></p>
+          <p class="privacy">This page does not upload or store your entries. Downloaded files and printed copies contain the information you enter.</p>
+          <p class="review-note">Have the offer reviewed for the role and location. Provide the applicable New York pay-rate notice at hire; this letter does not contain every required notice field.</p>
+        </div>
+      </form>
+    </aside>
+
+    <section class="preview-column" aria-labelledby="sfo-preview-title">
+      <div class="preview-heading"><h2 id="sfo-preview-title">Letter preview</h2><span>Updates as you enter the details</span></div>
+      <article class="letter-sheet" id="sfo-letter" aria-label="Employment offer letter">
+        <header class="letter-masthead">
+          <div class="letter-brand"><div><strong>SKANDI</strong><span>GROUP</span></div><div class="letter-department">PEOPLE &amp; CULTURE</div></div>
+          <div class="masthead-copy">
+            <h1 class="letter-title">Offer Letter</h1>
+            <div class="letter-subtitle">Offer of Employment</div>
+            <div class="letter-kicker">An employment offer prepared by SKANDI People &amp; Culture.</div>
+          </div>
+        </header>
+        <section class="welcome-block">
+          <h2>Dear <span data-slot="candidate_first_name" data-placeholder="[Candidate first name]"></span>,</h2>
+          <p>On behalf of <span data-slot="legal_employer" data-placeholder="[Legal employer name]"></span><span id="sfo-brand-clause"></span>, I am pleased to offer you the position of <span data-slot="job_title" data-placeholder="[Job title]"></span>. We look forward to the possibility of welcoming you to SKANDI.</p>
+        </section>
+
+        <div class="summary-grid">
+          <div>
+            <section class="summary-block">
+              <h2 class="summary-label">Offered to</h2>
+              <div class="summary-name" data-slot="candidate_full_name" data-placeholder="[Candidate full name]"></div>
+              <dl class="summary-lines">
+                <div class="summary-row"><dt>Position:</dt><dd data-slot="job_title" data-placeholder="[Job title]"></dd></div>
+                <div class="summary-row"><dt>Department:</dt><dd data-slot="department" data-placeholder="[Department]"></dd></div>
+                <div class="summary-row"><dt>Reports to:</dt><dd data-slot="reports_to" data-placeholder="[Manager or title]"></dd></div>
+              </dl>
+            </section>
+            <section class="summary-block">
+              <h2 class="summary-label">Employer</h2>
+              <div class="summary-name" data-slot="legal_employer" data-placeholder="[Legal employer name]"></div>
+              <p>SKANDI Group<br>People &amp; Culture</p>
+            </section>
+          </div>
+          <div>
+            <section class="summary-block">
+              <h2 class="summary-label">Offer details</h2>
+              <dl class="summary-lines">
+                <div class="summary-row"><dt>Offer date:</dt><dd data-slot="offer_date" data-placeholder="[Letter date]"></dd></div>
+                <div class="summary-row"><dt>Start date:</dt><dd data-slot="start_date" data-placeholder="[Start date]"></dd></div>
+                <div class="summary-row"><dt>Employment type:</dt><dd data-slot="employment_type" data-placeholder="[Employment type]"></dd></div>
+                <div class="summary-row"><dt>Work location:</dt><dd data-slot="work_location" data-placeholder="[Work location]"></dd></div>
+                <div class="summary-row"><dt>Classification:</dt><dd data-slot="classification" data-placeholder="[Exempt or nonexempt]"></dd></div>
+              </dl>
+            </section>
+          </div>
+        </div>
+
+        <section>
+          <div class="section-bar"><h2>Position and Compensation</h2><span>Working arrangements and pay</span></div>
+          <div class="terms-header"><span>Details</span><span>Terms</span></div>
+          <dl class="details">
+            <div class="detail-row"><dt>Schedule</dt><dd data-slot="schedule" data-placeholder="[Expected schedule]"></dd></div>
+            <div class="detail-row"><dt>Travel</dt><dd data-slot="travel" data-placeholder="[Travel requirements]"></dd></div>
+            <div class="detail-row"><dt>Base pay</dt><dd data-slot="base_pay" data-placeholder="[Base pay]"></dd></div>
+            <div class="detail-row"><dt>Payday</dt><dd data-slot="payday" data-placeholder="[Pay frequency and payday]"></dd></div>
+            <div class="detail-row"><dt>Classification</dt><dd data-slot="classification" data-placeholder="[Exempt or nonexempt]"></dd></div>
+            <div class="detail-row"><dt>Additional pay</dt><dd data-slot="additional_pay" data-placeholder="[Additional compensation]"></dd></div>
+            <div class="detail-row"><dt>Responsibilities</dt><dd class="multiline" data-slot="responsibilities" data-placeholder="[Describe the principal duties and responsibilities]"></dd></div>
+          </dl>
+        </section>
+
+        <section class="print-next-page">
+          <div class="section-bar"><h2>Employment Terms</h2><span>Compensation, policies and conditions</span></div>
+          <div class="term-grid">
+            <section class="term-card">
+              <h3>Compensation</h3>
+              <p>Your pay is subject to required tax withholding and other authorized deductions. If you are classified as nonexempt, you will be paid for all hours worked, including overtime as required by law. Please record all hours worked, including overtime whether or not it was approved in advance.</p>
+            </section>
+            <section class="term-card">
+              <h3>Benefits and Paid Time Off</h3>
+              <p><span class="multiline" data-slot="benefits" data-placeholder="[Describe benefits, eligibility and paid time off]"></span> Leave and benefits are subject to applicable plan terms, company policies and law.</p>
+            </section>
+            <section class="term-card">
+              <h3>Employment Relationship</h3>
+              <p>Your employment is at will. You or the Company may end the employment relationship at any time, with or without cause or advance notice, subject to applicable law. This letter does not guarantee employment for any particular duration.</p>
+            </section>
+            <section class="term-card">
+              <h3>Authorization and Company Policies</h3>
+              <p>This offer is contingent on verification of your identity and authorization to work in the United States, as required by law. We will provide Form I-9 instructions as part of onboarding.</p>
+              <p>You will receive the SKANDI Employee Handbook and applicable policies during onboarding. You are expected to follow those policies and protect customer, employee and company information. Nothing in this letter limits your right to discuss wages or working conditions, report concerns to a government agency, or exercise other rights protected by law.</p>
+            </section>
+          </div>
+        </section>
+
+        <section>
+          <div class="section-bar"><h2>Accepting Your Offer</h2><span>Return by the date shown below</span></div>
+          <div class="acceptance-box">
+            <p>Please sign and return this letter by <span data-slot="acceptance_deadline" data-placeholder="[Acceptance deadline]"></span> to <span data-slot="contact_name" data-placeholder="[Contact name]"></span> at <span data-slot="contact_email" data-placeholder="[Contact email]"></span>. If you have questions about the offer, please contact <span data-slot="contact_name" data-placeholder="[Contact name]"></span> at <span data-slot="contact_email" data-placeholder="[Contact email]"></span><span id="sfo-phone-clause"></span>.</p>
+            <p>We look forward to the opportunity to work with you.</p>
+          </div>
+        </section>
+
+        <div class="signature-grid">
+          <div><div class="signature-title">For the Company</div><div class="signature-line">Signature &nbsp; | &nbsp; Date: __________________</div><div class="signature-details"><span data-slot="signer_name" data-placeholder="[Authorized representative]"></span><br><span data-slot="signer_title" data-placeholder="[Title]"></span><br><span data-slot="legal_employer" data-placeholder="[Legal employer name]"></span></div></div>
+          <div><div class="signature-title">Accepted by</div><div class="signature-line">Signature &nbsp; | &nbsp; Date: __________________</div><div class="signature-details"><span data-slot="candidate_full_name" data-placeholder="[Candidate full name]"></span></div></div>
+        </div>
+        <footer class="letter-footer">SKANDI Group &nbsp; &middot; &nbsp; People &amp; Culture</footer>
+      </article>
+      <noscript><p class="no-print">Enable JavaScript to fill in and download this template.</p></noscript>
+    </section>
+  </main>
+
+</div>
+</template>

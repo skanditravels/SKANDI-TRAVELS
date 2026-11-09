@@ -26,6 +26,7 @@ import {
   publishRecruitingPosition,
   requestRecruitingDocument,
   resendRecruitingDocumentPacket,
+  retryRecruitingHireAutomation,
   resolveRecruitingGap,
   saveBadgeControl,
   saveRecruitingCandidate,
@@ -211,6 +212,18 @@ async function sendRecruitingBootstrap(type = "CAREERS_DATA") {
 
 function careerOk(message, result = {}) {
   send("CAREERS_ACTION_OK", { ok: true, message, ...result });
+}
+
+function hireResultMessage(result = {}) {
+  const state = result.hireAutomation?.state;
+  const prefix = result.passwordSetupPending ? "Staff account created; password setup email needs attention. " : "";
+  if (state === "accepted") return prefix + (result.hireAutomation.contactLinked ? "Hire saved; Wix accepted the automation trigger." : "Hire saved; Wix accepted the trigger, but no verified Wix contact was linked.");
+  if (state === "not_configured") return prefix + "Hire saved; the Wix automation trigger ID is missing, invalid, or unavailable.";
+  if (state === "unconfirmed") return prefix + "Hire saved; Wix did not confirm the automation. Check automation history before retrying.";
+  if (state === "sending" || state === "conflict") return prefix + "Hire saved; the automation attempt is in progress or the record changed. Refresh before retrying.";
+  if (state === "already_hired") return prefix + "The candidate was already hired; no new automation was triggered.";
+  if (state === "not_recorded") return prefix + "No hire automation event was recorded for this candidate.";
+  return result.employee?.skId ? prefix + `Staff account linked. SK-ID: ${result.employee.skId}` : "Candidate saved.";
 }
 
 function careerUnsupported(message) {
@@ -399,12 +412,17 @@ async function handleMessage(type, payload) {
       return;
     case "CAREERS_SAVE_CANDIDATE": {
       const result = await saveRecruitingCandidate(payload.item || payload);
-      careerOk(result.passwordSetupPending ? `Staff account created. SK-ID: ${result.employee?.skId || ""}. Password setup email failed; use Forgot password.` : result.employee?.skId ? `Staff account linked. SK-ID: ${result.employee.skId}` : "Candidate saved.", result);
+      careerOk(hireResultMessage(result), result);
       return;
     }
     case "CAREERS_MOVE_CANDIDATE_STAGE": {
-      const result = await updateRecruitingCandidateStage({ id: payload.candidateId, status: payload.targetStage, staffEmail: payload.staffEmail });
-      careerOk(result.passwordSetupPending ? `Staff account created. SK-ID: ${result.employee?.skId || ""}. Password setup email failed; use Forgot password.` : result.employee?.skId ? `Staff account linked. SK-ID: ${result.employee.skId}` : "Candidate stage updated.", result);
+      const result = await updateRecruitingCandidateStage({ id: payload.candidateId, status: payload.targetStage, staffEmail: payload.staffEmail, offerDetails:payload.offerDetails });
+      careerOk(result.hireAutomation ? hireResultMessage(result) : "Candidate stage updated.", result);
+      return;
+    }
+    case "CAREERS_RETRY_HIRE_AUTOMATION": {
+      const result = await retryRecruitingHireAutomation({ id:payload.candidateId });
+      careerOk(hireResultMessage(result), result);
       return;
     }
     case "CAREERS_SAVE_JOB_POSTING":
@@ -520,3 +538,4 @@ $w.onReady(function () {
     rosterOwner: APP_ROUTES.myRoster
   });
 });
+
