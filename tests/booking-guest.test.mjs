@@ -419,3 +419,20 @@ test('a card verification return restores the cart only with its same-tab capabi
   assert.ok(page.messages.some(m=>m.type==='PAYMENT_SESSION_LOADED'));
   assert.equal(store.get('SKANDI_BOOKING_CART_TOKEN'),'a'.repeat(64));
 });
+
+test('choosing a different offer creates a different guest capability', async () => {
+  const store=new Map(),tokens=[];
+  let count=0;
+  const page=await hostHarness({searchId:'search-1'},store,{
+    searchUnifiedOffers:async()=>({items:[{id:'off_1',itemType:'flight'},{id:'off_2',itemType:'flight'}]}),
+    beginGuestBookingSession:async()=>({cartToken:(++count===1?'a':'b').repeat(64)}),
+    createBookingCartFromOffer:async input=>{tokens.push(input.cartToken);return {cartId:input.offer.id,cartToken:input.cartToken}},
+    loadBookingCart:async input=>({cartId:input.cartId,status:'Open',productType:'FLIGHT_ONLY'})
+  });
+  await page.host.startFromLocation();
+  await page.host.handleMessage({source:'SKANDI_BOOKING_OFFER',type:'BOOKING_OFFER_READY'});
+  await page.host.handleMessage({source:'SKANDI_BOOKING_OFFER',type:'BOOKING_SEARCH_SELECT',offerId:'off_1'});
+  await page.host.handleMessage({source:'SKANDI_BOOKING_OFFER',type:'BOOKING_BACK_TO_RESULTS'});
+  await page.host.handleMessage({source:'SKANDI_BOOKING_OFFER',type:'BOOKING_SEARCH_SELECT',offerId:'off_2'});
+  assert.deepEqual(tokens,['a'.repeat(64),'b'.repeat(64)]);
+});

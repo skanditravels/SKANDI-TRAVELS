@@ -152,14 +152,16 @@ async function selectOffer(msg){
   const id=text(msg.offerId||msg.payload?.offerId);
   const item=currentSearch?.items?.find(x=>text(x.id||x.staySearchResultId)===id);
   if(!item)throw Object.assign(new Error('That offer is no longer available. Refresh the search.'),{code:'BOOKING_LIVE_OFFER_INVALID'});
-  if(!cartToken){
+  if(!cartToken||text(session.getItem('SKANDI_BOOKING_GUEST_OFFER'))!==id){
     const started=await bounded(beginGuestBookingSession());
     if(!/^[a-f0-9]{64}$/.test(text(started?.cartToken)))throw new Error('Your secure booking session could not be started. Please try again.');
     persistCart('',started.cartToken);
+    session.setItem('SKANDI_BOOKING_GUEST_OFFER',id);
   }
   const result=await bounded(createBookingCartFromOffer({offer:item,search:searchContext.search,cartToken}),80000);
   if(!result?.cartId)throw new Error('A booking could not be created. Verify My Booking before selecting another offer.');
   persistCart(result.cartId,result.cartToken||'');selectedSearchItem=item;
+  if(!result.cartToken)session.removeItem('SKANDI_BOOKING_GUEST_OFFER');
   await goStep('offer');
 }
 function routeForPath(path){
@@ -285,7 +287,7 @@ function announceReady(){
 async function startSearch(searchId){
   const next=readBookingSearch(text(searchId));
   if(!next)throw Object.assign(new Error('Your search has expired. Return to Home and start a new search.'),{code:'BOOKING_SEARCH_EXPIRED'});
-  searchContext=next;persistCart('');currentSearch=null;selectedSearchItem=null;searchJob=null;upsellJobs.clear();startupError='';step='offer';startupDone=true;
+  searchContext=next;persistCart('');session.removeItem('SKANDI_BOOKING_GUEST_OFFER');currentSearch=null;selectedSearchItem=null;searchJob=null;upsellJobs.clear();startupError='';step='offer';startupDone=true;
   try{locationApi.queryParams?.remove(['cartId','cartToken']);locationApi.queryParams?.add({step:'offer',searchId:text(searchId)})}catch(_){}
   if(ready)await goStep('offer',{silentUrl:true});
 }
@@ -304,6 +306,7 @@ async function startFromLocation(){
       // Keep an unclaimed capability so retry after a lost response can recover
       // the same cart. A new search with an old cart starts a fresh session.
       persistCart('',restoredCart?'':restoredToken);
+      if(restoredCart)session.removeItem('SKANDI_BOOKING_GUEST_OFFER');
     }else persistCart(restoredCart,restoredToken);
     if(cartId){
       const c=await withLoginCart(cart);
