@@ -3,7 +3,7 @@
 > Current document: `riaintra-embeds/riaintra/references/riaintra-riaintra-login-md/README.md`. Original reference: `HTML_REF/riaintra/RIAINTRA Login.md`.
 
 
-- 2026-10-30 — RIAINTRA login uses riaHeader; its unassigned Group endorsement mark remains [LEAVE_PLACEHOLDER].
+- 2026-10-30 — RIAINTRA login used `riaHeader`; the Group endorsement was unassigned. **Superseded 2026-11-09:** the active source uses `groupMemberWhite` from the shared master assets.
 
 ## CHANGE LOG (append-only)
 
@@ -21,13 +21,13 @@
 - **Canonical auth core:** `src/backend/SKANDI_CORE/staffAuth.js` (unchanged)
 - **Ownership:** login/session handled by Wix Members and canonical SKANDI staff-auth core; no provider/database logic in HTML
 - **Page identity:** `SKANDI_STAFF_LOGIN`; **parent identity:** `SKANDI_WIX_PARENT`
-- **Inbound parent messages:** `STAFF_LOGIN_PROGRESS`, `STAFF_LOGIN_OK`, `STAFF_LOGIN_ERROR`, `STAFF_LOGIN_NOTICE`
-- **Outbound messages:** `STAFF_LOGIN_READY`, `STAFF_LOGIN_REQUEST` with `{ skId, password }` and `requestId`, `STAFF_FORGOT_PASSWORD` with `requestId`
-- **Contract IDs retained:** `login-view`, `login-left`, `login-right`, `login-card-wrap`, `login-drop-btn`, `login-card`, `login-form`, `login-username`, `login-password`, `login-submit`, `forgot-password`, `login-error`, `login-notice`, `clock`, `SK-logo`
+- **Inbound parent messages:** `SKANDI_MASTER_CONFIG`, `STAFF_LOGIN_PROGRESS`, `STAFF_LOGIN_OK`, `STAFF_LOGIN_ERROR`, `STAFF_LOGIN_NOTICE`
+- **Outbound messages:** `MASTER_CONFIG_REQUEST`, `STAFF_LOGIN_READY`, `STAFF_LOGIN_REQUEST` with `{ skId, password }` and `requestId`, `STAFF_FORGOT_PASSWORD` with `requestId`
+- **Contract IDs retained:** `login-view`, `login-left`, `login-right`, `login-card-wrap`, `login-card`, `login-form`, `login-username`, `login-password`, `login-submit`, `forgot-password`, `login-error`, `login-notice`, `clock`, `SK-logo`
 - **Status:** STATICALLY VERIFIED for local HTML and message contract; REQUIRES LIVE TEST for Wix iOS/Android container behavior and authentication
-- **Source of truth for this prepared replacement:** complete user-supplied staff-login HTML on 2026-10-19, preserved authentication bridge script with presentation-only updates
+- **Active runtime source:** `riaintra-embeds/riaintra/riaintra.html`, `riaintra.css`, and `riaintra.js`, compiled by the current website builder. The complete standalone HTML below is the preserved historical 2026-10-19 reference, not the active source; its older interaction and installation details are superseded where they disagree with the current source and this log.
 - **Source-registry limitation:** no pre-existing login-page HTML_REF located on GitHub `main` using name/content searches or candidate canonical paths. This is a **new reference mirror**, not an overwrite of an inspected prior INFO / LOG history. Reconcile before adding if a separate unsynced canonical record exists.
-- **Wix publication:** replace contents of existing HTML component `#staffLoginEmbed` (not controller/backend); publish Wix site, test real sign-in and reset flows. GitHub/Drive/Wix not modified by package preparation.
+- **Wix publication:** the existing receiver in `#staffLoginEmbed` loads the compiled GitHub build. Publish the connected Wix site if its source changed; an HTML embed replacement is not needed when the current receiver is already installed. Test real sign-in and reset flows in Wix.
 
 ## LOG (chronological)
 - **2026-10-19 — Split-screen redesign prepared:** corporate SKANDI navy left panel and white right-hand login. Existing SK-ID validation, `requestId` correlation, message identities, Wix-authentication ownership and password-reset bridge preserved. Credentials remain transmitted only through the existing parent message contract. Login form is immediately visible, without a separate reveal step. Added client-side password visibility toggle, public support and policy links from verified site-map routes. No backend or permission change.
@@ -38,7 +38,9 @@
 
 - **2026-10-29 — Wix deployment lint repair:** The site master registers the existing RIAINTRA `pagehide` and `pageshow` lifecycle listeners on the browser `window` object instead of `globalThis`, which is not recognized by the Wix page-code lint environment. Logout and typed-login behavior is unchanged. STATICALLY VERIFIED; REQUIRES LIVE TEST in Wix.
 
-## COMPLETE WIX HTML EMBED
+- **2026-11-09 — Login branding and form clarity:** The active source binds the RIAINTRA and SKANDI Group member wordmarks to `MASTER_CONFIG.brand.assets.logos.riaHeader` and `groupMemberWhite`, respectively. Logos become visible after loading, recover after an image failure, and use accessible text while unavailable. Removed the redundant sign-in scroll button because the form is already present. Replaced the repeated initial session notice with a quiet inactivity note next to the form. Staff sign-in, session, password reset, permissions, routes, receiver and backend contracts are unchanged. STATICALLY VERIFIED with the compiled login and synthetic bridge tests; REQUIRES LIVE TEST for actual authentication and password reset.
+
+## HISTORICAL COMPLETE WIX HTML EMBED (SUPERSEDED)
 
 ~~~html
 <!DOCTYPE html>

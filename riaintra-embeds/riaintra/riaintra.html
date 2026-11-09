@@ -7,7 +7,8 @@
         <div id="login-left">
           <header id="app-header">
             <div id="SK-logo">
-               <img data-master-logo="riaHeader" alt="RIAINTRA logo">
+              <img data-master-logo="riaHeader" alt="RIAINTRA" hidden>
+              <span class="brand-wordmark-fallback" data-logo-fallback="riaHeader">RIAINTRA</span>
               <div id="SK-logo-text">
                 <span>SKANDI STAFF PORTAL</span>
               </div>
@@ -18,12 +19,14 @@
             <p class="brand-eyebrow">The SKANDI internal network</p>
             <h1 id="login-tagline">One team.<br>One connected <em>workspace.</em></h1>
             <p id="login-sub">Your gateway to the tools, people and operations that keep SKANDI moving—across every team and destination.</p>
-            <button type="button" id="login-drop-btn">Go to staff sign in <span class="arrow" aria-hidden="true">→</span></button>
           </div>
           <div class="brand-bottom">
             <div class="brand-bottom-copy">
               <div id="SK-logo-endorsement">
-                 <img data-master-logo="[LEAVE_PLACEHOLDER]" alt="A SKANDI GROUP MEMBER"><div id="SK-logo-text-endorsement">· INTERNAL SYSTEMS</div></div>
+                <img data-master-logo="groupMemberWhite" alt="A SKANDI Group member" hidden>
+                <span class="brand-endorsement-fallback" data-logo-fallback="groupMemberWhite">A SKANDI Group member</span>
+                <div id="SK-logo-text-endorsement">· INTERNAL SYSTEMS</div>
+              </div>
               <div>For authorized staff use only.</div>
             </div>
             <div id="header-meta"><span id="clock">LOCAL TIME</span></div>
@@ -67,6 +70,7 @@
                   </div>
 
                   <button type="submit" id="login-submit">Sign in to RIAINTRA</button>
+                  <p class="login-security">For your security, your session ends after 30 minutes of inactivity.</p>
                   <div class="login-actions">
                     <button type="button" id="forgot-password" class="link-button">Forgot your password?</button>
                   </div>
