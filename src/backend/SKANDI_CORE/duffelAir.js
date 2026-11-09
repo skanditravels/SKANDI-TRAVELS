@@ -597,6 +597,14 @@ export async function refreshDuffelOfferCore({ offerId } = {}) {
   return { offer: normalizeOffer(await getRawOffer(offerId, { services: true })) };
 }
 
+export async function getDuffelUpsellOffersCore({ offerId } = {}) {
+  const id = resourceId(offerId, "off_", "offer");
+  const response = await duffelRequest(`/air/offers/${encodeURIComponent(id)}/upsell_offers`, {
+    method: "POST", timeoutMs: 45000, retrySafe: false
+  });
+  return { offers: arr(response.data).filter(offer => !offer.partial).slice(0, 60).map(normalizeOffer) };
+}
+
 export async function priceDuffelOfferCore({ offerId, services = [] } = {}) {
   return { offer: normalizeOffer(await priceRawOffer(offerId, services)) };
 }
@@ -775,3 +783,4 @@ export async function confirmDuffelOrderCancellationCore({ cancellationId } = {}
   const order = cancellation.orderId ? (await getDuffelOrderCore({ orderIdOrReference: cancellation.orderId })).order : null;
   return { cancellation, order, customerRefundRequired: Number(cancellation.refundAmount || 0) > 0 };
 }
+

@@ -54,16 +54,22 @@ export function toDuffelOfferSearch(input = {}) {
   const slices = arr(source.slices).length ? source.slices : [{
     origin: source.origin || source.from,
     destination: source.destination || source.to,
+    originType: source.originType,
+    destinationType: source.destinationType,
     departureDate: source.departureDate || source.departure_date
   }, ...(source.returnDate ? [{
     origin: source.destination || source.to,
     destination: source.origin || source.from,
+    originType: source.destinationType,
+    destinationType: source.originType,
     departureDate: source.returnDate
   }] : [])];
   if (slices.length < 1 || slices.length > 2) throw bookingError("INVALID_SLICES", "Use one-way or return flight search.");
   const normalizedSlices = slices.map((slice) => ({
     origin: iata(slice.origin, "Origin"),
     destination: iata(slice.destination, "Destination"),
+    originType: upper(slice.originType, 20) === "CITY" ? "CITY" : "AIRPORT",
+    destinationType: upper(slice.destinationType, 20) === "CITY" ? "CITY" : "AIRPORT",
     departureDate: isoDate(slice.departureDate, "departure date", { future: true })
   }));
   if (normalizedSlices.some(s => s.origin === s.destination)) throw bookingError("INVALID_ROUTE", "Origin and destination must be different.");
@@ -120,6 +126,8 @@ export function mapOfferForHome(offer = {}, searchContext = {}) {
     provider: "Duffel",
     totalAmount: offer.totalAmount,
     totalCurrency: offer.totalCurrency,
+    totalEmissionsKg: offer.totalEmissionsKg ?? null,
+    conditions: offer.conditions || {},
     expiresAt: offer.expiresAt,
     owner: offer.owner,
     origin: first.origin,
@@ -138,6 +146,7 @@ export function mapOfferForCart(offer = {}) {
     id: offer.id,
     totalAmount: offer.totalAmount,
     totalCurrency: offer.totalCurrency,
+    totalEmissionsKg: offer.totalEmissionsKg ?? null,
     taxAmount: offer.taxAmount,
     taxCurrency: offer.taxCurrency,
     expiresAt: offer.expiresAt,
@@ -155,6 +164,33 @@ export function mapOfferForCart(offer = {}) {
   };
 }
 
+// A city IATA code is valid when the provider identifies the returned airport
+// as belonging to that city. An airport code never matches a different airport.
+function placeMatches(place, expected, expectedType) {
+  const wanted = upper(expected, 3);
+  if (upper(place?.iataCode, 3) === wanted) return true;
+  return upper(expectedType, 20) === 'CITY' && [place?.iataCityCode, place?.city?.iataCode].some(value => value && upper(value, 3) === wanted);
+}
+
+export function flightJourneyKey(offer = {}) {
+  const slices = arr(offer.slices);
+  if (!slices.length) return "";
+  const keys = slices.map(slice => {
+    const segments = arr(slice.segments);
+    if (!segments.length) return null;
+    const values = segments.map(segment => {
+      const carrier = upper(segment.marketingCarrier?.iataCode, 3);
+      const number = text(segment.marketingFlightNumber, 20);
+      const origin = upper(segment.origin?.iataCode, 3), destination = upper(segment.destination?.iataCode, 3);
+      const departure = text(segment.departingAt, 50), arrival = text(segment.arrivingAt, 50);
+      if (!carrier || !number || !origin || !destination || !departure || !arrival) return null;
+      return [carrier,number,origin,destination,departure,arrival];
+    });
+    return values.some(value => !value) ? null : values;
+  });
+  return keys.some(value => !value) ? "" : JSON.stringify(keys);
+}
+
 export function assertOfferMatchesSearch(offer = {}, searchContext = {}) {
   const slices = arr(offer.slices);
   const expected = arr(searchContext.slices);
@@ -162,7 +198,10 @@ export function assertOfferMatchesSearch(offer = {}, searchContext = {}) {
   if (slices.length !== expected.length) throw bookingError("OFFER_ROUTE_MISMATCH", "The live airline offer no longer matches the selected journey.");
   expected.forEach((e, i) => {
     const s = slices[i] || {};
-    if (upper(s.origin?.iataCode, 3) !== upper(e.origin, 3) || upper(s.destination?.iataCode, 3) !== upper(e.destination, 3)) {
+    const segments = arr(s.segments);
+    const actualOrigin = segments[0]?.origin || s.origin;
+    const actualDestination = segments[segments.length - 1]?.destination || s.destination;
+    if (!placeMatches(actualOrigin, e.origin, e.originType) || !placeMatches(actualDestination, e.destination, e.destinationType)) {
       throw bookingError("OFFER_ROUTE_MISMATCH", "The airline offer route changed. Search again.");
     }
     const date = String(s.segments?.[0]?.departingAt || "").slice(0, 10);
@@ -304,3 +343,4 @@ export function toPublicCart(row = {}, sensitive = null) {
     travelers: sensitive ? travelerTriggerProjection(sensitive.passengers || sensitive.guests || (sensitive.driver ? [sensitive.driver] : [])) : undefined
   };
 }
+

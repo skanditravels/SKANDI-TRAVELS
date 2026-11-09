@@ -6,7 +6,7 @@ import { readBookingSearch } from 'public/bookingSearch';
 import { openCustomerLogin } from 'public/customerAuthUi';
 import { SITE_MAP, APP_ROUTES, isSafeInternalRoute } from 'public/siteMap';
 import {
-  searchUnifiedOffers, createBookingCartFromOffer, loadBookingCart,
+  searchUnifiedOffers, getFlightUpsells, createBookingCartFromOffer, loadBookingCart,
   acceptBookingOffer, loadBookingExtras, storeBookingExtras,
   loadSignatureTransfers, storeSignatureTransfer, saveBookingTravelers,
   saveHotelGuests, loadBookingRequirements, refreshBookingRequirements,
@@ -21,6 +21,7 @@ const STEP_ORDER=['offer','extras','hotels','transfer','upsell','apis','seats','
 const MUTATIONS=new Set(['BOOKING_SEARCH_SELECT','BOOKING_OFFER_ACCEPTED','BOOKING_EXTRAS_SAVE','SIGNATURE_TRANSFER_SELECT','SIGNATURE_TRANSFER_SKIP','APIS_SAVE_AND_CONTINUE','SEATMAP_SAVE','SEATMAP_SKIP','PAYMENT_COMMIT']);
 let html=null, locationApi=null, onReturnHome=()=>{}, searchContext=null, cartId='', cartToken='', step='offer', ready=false, startupDone=false, startupError='', currentSearch=null, inFlight=false, paymentInFlight=false, lastResponse=null;
 let searchJob=null, selectedSearchItem=null;
+const upsellJobs=new Map();
 
 const text=(x='')=>String(x??'');
 function bookingError(error){
@@ -140,6 +141,7 @@ async function searchOffers(force=false){
     if(searchJob!==promise)return;
     if(!Array.isArray(result?.items))throw new Error('No valid live search result was returned.');
     currentSearch={items:result.items,search:searchContext.search,errors:result.errors||[]};
+    upsellJobs.clear();
     send('BOOKING_SEARCH_RESULTS',currentSearch);
   }finally{if(searchJob===promise)searchJob=null}
 }
@@ -193,6 +195,24 @@ async function processMessage(msg){
     return goStep(allowedStep(step,c));
   }
   if(t==='BOOKING_SEARCH_REFRESH'&&!cartId)return searchOffers(true);
+  if(t==='BOOKING_UPSELL_REQUEST'&&step==='offer'&&!cartId){
+    const offerId=text(msg.offerId), current=currentSearch;
+    const item=current?.items?.find(x=>text(x.id)===offerId && text(x.itemType).toLowerCase()==='flight');
+    if(!item)return;
+    if(!upsellJobs.has(offerId)) upsellJobs.set(offerId,bounded(getFlightUpsells({offerId,search:current.search}),55000));
+    try {
+      const result=await upsellJobs.get(offerId);
+      if(current!==currentSearch)return;
+      const items=Array.isArray(result?.items)?result.items:[];
+      const existing=new Set(current.items.map(x=>text(x.id)));
+      for(const next of items)if(next?.id&&!existing.has(text(next.id))){current.items.push(next);existing.add(text(next.id))}
+      send('BOOKING_UPSELL_RESULT',{offerId,items,available:result?.available!==false});
+    } catch(error) {
+      upsellJobs.delete(offerId);
+      if(current===currentSearch)send('BOOKING_UPSELL_RESULT',{offerId,items:[],error:bookingError(error)});
+    }
+    return;
+  }
   if(t==='BOOKING_BACK_TO_RESULTS'&&searchContext){
     persistCart('');selectedSearchItem=null;
     try{locationApi.queryParams?.remove(['cartId','cartToken'])}catch(_){}
@@ -259,7 +279,7 @@ function announceReady(){
 async function startSearch(searchId){
   const next=readBookingSearch(text(searchId));
   if(!next)throw Object.assign(new Error('Your search has expired. Return to Home and start a new search.'),{code:'BOOKING_SEARCH_EXPIRED'});
-  searchContext=next;persistCart('');currentSearch=null;selectedSearchItem=null;searchJob=null;startupError='';step='offer';startupDone=true;
+  searchContext=next;persistCart('');currentSearch=null;selectedSearchItem=null;searchJob=null;upsellJobs.clear();startupError='';step='offer';startupDone=true;
   try{locationApi.queryParams?.remove(['cartId','cartToken']);locationApi.queryParams?.add({step:'offer',searchId:text(searchId)})}catch(_){}
   if(ready)await goStep('offer',{silentUrl:true});
 }
@@ -297,3 +317,4 @@ async function handleMessage(msg){
   finally{if(mutation)inFlight=false}
 }
 function reportError(error){errorToUi(error,false)}
+

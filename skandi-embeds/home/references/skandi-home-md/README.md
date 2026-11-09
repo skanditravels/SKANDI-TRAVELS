@@ -2,6 +2,10 @@
 
 > Current document: `skandi-embeds/home/references/skandi-home-md/README.md`. Original reference: `HTML_REF/skandi/Home.md`.
 
+## INFO / LOG — 2026-11-09
+
+The historical Duffel Explorer component below is not the active Home search implementation. The current Home source is `skandi-embeds/home/skandi-home.{html,css,js}`, connected through `src/pages/Home.n73w8.js`. Its flight-only From/To fields now display provider-supplied airport and multi-airport-city suggestions with search details, and pass both the selected code and whether it is a city or airport to the existing booking flow. The historical component and its old installation notes are retained for provenance.
+
 
 - **Source file:** `/HTML_REF/skandi/Home Duffel Flight Explorer.md`
 - **Display / page name:** Home · Duffel Flight Explorer
@@ -156,3 +160,4 @@ post('HOME_DUFFEL_READY');
 </html>
 
 ```
+

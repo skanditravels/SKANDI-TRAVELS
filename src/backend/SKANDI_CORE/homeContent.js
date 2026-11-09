@@ -584,7 +584,8 @@ function airportDto(record) {
     id: record.id,
     type: "AIRPORT",
     iata,
-    icao: upper(details.icao, 4),
+    icao: upper(details.icao || details.icaoCode || details.duffel?.icaoCode, 4),
+    cityCode: upper(details.iataCityCode || details.duffel?.iataCityCode || details.cityResource?.iataCode, 3),
     code: iata,
     title: clean(record.name, 500),
     name: clean(record.name, 500),
@@ -615,6 +616,7 @@ async function readAirportFallback() {
         type: "AIRPORT",
         iata,
         icao: upper(row.icao, 4),
+        cityCode: upper(row.inventory_details?.iataCityCode || row.payload?.duffel?.normalized?.iataCityCode || row.payload?.duffel?.raw?.iata_city_code, 3),
         code: iata,
         title,
         name: title,
@@ -1045,3 +1047,4 @@ export async function getHomeLivePricesCore(input = {}) {
     return { card:noLivePrice(card) };
   }
 }
+

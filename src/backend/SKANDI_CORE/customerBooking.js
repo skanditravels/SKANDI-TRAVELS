@@ -7,6 +7,7 @@
 import {
   searchDuffelOffersCore,
   refreshDuffelOfferCore,
+  getDuffelUpsellOffersCore,
   priceDuffelOfferCore,
   getDuffelSeatMapsCore,
   prepareDuffelPaymentCore,
@@ -54,6 +55,7 @@ import {
   mapOfferForHome,
   mapOfferForCart,
   assertOfferMatchesSearch,
+  flightJourneyKey,
   buildDuffelPassengers,
   toDuffelOrderPassengers,
   travelerTriggerProjection,
@@ -86,6 +88,10 @@ function decimal(value) {
 function numberValue(value) {
   const n = Number(value ?? 0);
   return Number.isFinite(n) ? n : 0;
+}
+function hasValidFlightPrice(offer = {}) {
+  const value = offer.totalAmount;
+  return value !== null && value !== undefined && value !== "" && Number.isFinite(Number(value)) && Number(value) >= 0 && /^[A-Z]{3}$/.test(String(offer.totalCurrency || '').trim().toUpperCase());
 }
 function publicFlightItems(result = {}, search = {}) {
   return arr(result.items).map(item => ({
@@ -273,7 +279,7 @@ export async function searchLiveFlightOffersCore(input = {}) {
   const normalized = toDuffelOfferSearch(input.search || input);
   const result = await searchDuffelOffersCore(normalized.coreRequest);
   const items = arr(result.offers)
-    .filter(offer => !offer.isExpired)
+    .filter(offer => !offer.isExpired && hasValidFlightPrice(offer))
     .sort((a, b) => Number(a.totalAmount || 0) - Number(b.totalAmount || 0))
     .slice(0, 50)
     .map(offer => mapOfferForHome(offer, normalized.searchContext));
@@ -289,6 +295,25 @@ export async function searchLiveFlightOffersCore(input = {}) {
       correlationId: result.correlationId || null
     }
   };
+}
+
+export async function getFlightUpsellsCore(input = {}) {
+  const offerId = text(input.offerId, 180);
+  if (!/^off_[A-Za-z0-9_]+$/.test(offerId)) throw bookingError("INVALID_OFFER_ID", "The selected flight offer is invalid.");
+  const normalized = toDuffelOfferSearch(input.search || {});
+  const original = (await refreshDuffelOfferCore({offerId})).offer;
+  assertOfferMatchesSearch(original, normalized.searchContext);
+  const key = flightJourneyKey(original);
+  if (!key) return {items:[], available:false};
+  let result;
+  try { result = await getDuffelUpsellOffersCore({offerId}); }
+  catch (error) {
+    if (String(error?.code || '').toUpperCase() === 'UNSUPPORTED_ACTION') return {items:[], available:false};
+    throw error;
+  }
+  const matches = arr(result.offers).filter(offer => !offer.isExpired && hasValidFlightPrice(offer) && flightJourneyKey(offer) === key);
+  for (const offer of matches) assertOfferMatchesSearch(offer, normalized.searchContext);
+  return {items:publicFlightItems({items:matches.map(offer => mapOfferForHome(offer, normalized.searchContext))}, input.search),available:true};
 }
 
 
@@ -1837,3 +1862,4 @@ export async function cancelCustomerCarBookingCore(context, input = {}) {
     throw bookingError("BOOKING_RECONCILIATION_REQUIRED", "The rental cancellation needs review before any further action. Do not submit it again.", 409);
   }
 }
+

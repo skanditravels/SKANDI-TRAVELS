@@ -1002,7 +1002,7 @@ async function handleMasterMessage(embed, message = {}) {
     return true;
   }
 
-  if (source === FLIGHTS_SOURCE && ["FLIGHTS_READY", "FLIGHTS_REFRESH", "FLIGHTS_SEARCH"].includes(type)) {
+  if (source === FLIGHTS_SOURCE && ["FLIGHTS_READY", "FLIGHTS_REFRESH", "FLIGHTS_SEARCH", "FLIGHTS_PLACES_QUERY"].includes(type)) {
     if ("#" + String(embed.id || "").replace(/^#/, "") !== FLIGHTS_EMBED_ID) return true;
     const identity = compiledIdentity(embed);
     if (!identity.allowed || identity.key !== "flights") return true;
@@ -1601,3 +1601,4 @@ $w.onReady(async function () {
   setTimeout(async () => { wireAllHtmlComponents(); await applyChromeVisibility(); await syncMobileFooterGate({ force:true }); pushConfigToAll(); if (!isInternalPath()) pushConsentStateToAll(); }, 250);
   setTimeout(async () => { wireAllHtmlComponents(); await applyChromeVisibility(); await syncMobileFooterGate({ force:true }); pushConfigToAll(); if (!isInternalPath()) pushConsentStateToAll(); }, 1200);
 });
+

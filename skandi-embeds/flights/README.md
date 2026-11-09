@@ -12,3 +12,6 @@
 ## CHANGE LOG
 
 - 2026-11-05 — Added a dedicated flight-only landing page, Home-style search and the existing session-based `/booking` handoff. Added cached flight-only offers, a last-minute section, destination and travel-resource cards, presentation hooks, and the route/component-restricted master host. New Wix page and receiver installation are required.
+
+- 2026-11-09 — Airport fields combine existing published airport inventory with debounced Duffel place suggestions. A multi-airport city and each airport keep distinct IATA codes and types through the booking handoff; helpers show available country, region and airport codes. `FLIGHTS_PLACES_QUERY` and `FLIGHTS_PLACES_RESULT` use the existing master host, correlated request IDs and a bounded read. No new data owner or receiver is introduced. The live `/flights` route and its current content loaded when inspected on 2026-11-09, superseding the 2026-11-05 installation observation; the updated suggestion flow still requires live verification after publication.
+

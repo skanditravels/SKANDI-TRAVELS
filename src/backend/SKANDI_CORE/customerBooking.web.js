@@ -6,6 +6,7 @@ import { Permissions, webMethod } from "@wix/web-methods";
 import { currentMember } from "wix-members-backend";
 import {
   searchLiveFlightOffersCore,
+  getFlightUpsellsCore,
   searchUnifiedOffersCore,
   createBookingCartFromOfferCore,
   createFlightCartCore,
@@ -115,6 +116,7 @@ async function confirmedMemberCall(handler, input = {}) {
 }
 
 export const searchLiveFlightOffers = webMethod(Permissions.Anyone, (input = {}) => publicCall(searchLiveFlightOffersCore, input));
+export const getFlightUpsells = webMethod(Permissions.Anyone, (input = {}) => publicCall(getFlightUpsellsCore, input));
 export const searchUnifiedOffers = webMethod(Permissions.Anyone, (input = {}) => publicCall(searchUnifiedOffersCore, input));
 export const createBookingCartFromOffer = webMethod(Permissions.Anyone, async (input = {}) => {
   try { return await createBookingCartFromOfferCore(await optionalMemberContext(), input || {}); }
@@ -167,3 +169,4 @@ export const refreshBookingRequirements = webMethod(Permissions.SiteMember, (inp
 export const createCarComponentClientKey = webMethod(Permissions.SiteMember, (input = {}) => memberCall(() => createCarComponentClientKeyCore(), input));
 export const loadCustomerCarBooking = webMethod(Permissions.SiteMember, (input = {}) => memberCall(loadCustomerCarBookingCore, input));
 export const cancelCustomerCarBooking = webMethod(Permissions.SiteMember, (input = {}) => memberCall(cancelCustomerCarBookingCore, input));
+
