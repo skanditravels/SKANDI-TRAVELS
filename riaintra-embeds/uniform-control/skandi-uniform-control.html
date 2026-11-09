@@ -201,6 +201,7 @@ const subTabsConfig = {
 
 function App() {
   const [activeMainTab, setActiveMainTab] = useState('inventory');
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [activeSubTabs, setActiveSubTabs] = useState({
     home:'Dashboard', products:'Style Catalog', inventory:'Stock Matrix', orders:'Order Fulfillment', purchasing:'Purchase Orders', employees:'Employee Profiles'
   });
@@ -257,7 +258,7 @@ function App() {
     post('UNIFORM_ADMIN_READY',{});
     const t1=setTimeout(()=>{if(!bootstrapped.current) refresh('');},400);
     const t2=setTimeout(()=>{if(!bootstrapped.current) refresh('');},1800);
-     const t3=setTimeout(()=>{if(!bootstrapped.current){setIsSyncing(false);setError('Uniform Control could not synchronize with the Wix page bridge. Confirm your staff access and republish the Uniform Control page.');}},9000);
+     const t3=setTimeout(()=>{if(!bootstrapped.current){setIsSyncing(false);setError('Uniform Control could not connect. Check your access or try again.');}},9000);
     return ()=>{window.removeEventListener('message',onMessage); clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); pending.current.forEach(p=>clearTimeout(p.timer)); pending.current.clear();};
   },[]);
 
@@ -296,7 +297,7 @@ function App() {
     return qok&&cok&&sok&&seasonOk&&vendorOk;
   }),[catalog,query,filters]);
 
-  const handleMainTabChange=tab=>{setActiveMainTab(tab);setSelectedRows([]);};
+  const handleMainTabChange=tab=>{setActiveMainTab(tab);setMobileFiltersOpen(false);setSelectedRows([]);};
   const handleSubTabChange=sub=>{setActiveSubTabs(p=>({...p,[activeMainTab]:sub}));setSelectedRows([]);};
   const toggleRow=id=>setSelectedRows(p=>p.includes(id)?p.filter(x=>x!==id):[...p,id]);
   const toggleAll=ids=>setSelectedRows(p=>p.length===ids.length?[]:ids);
@@ -318,9 +319,9 @@ function App() {
 
   function SidebarFilter(){
     const [open,setOpen]=useState({category:true,season:true,vendor:true,status:true});
-    const sec=(key,title,body)=><div className="filter-section"><div className="filter-header" onClick={()=>setOpen(p=>({...p,[key]:!p[key]}))}><span className="filter-title">{title}</span><Icon name={open[key]?'chevron-up':'chevron-down'} size={14}/></div>{open[key]&&<div className="filter-body">{body}</div>}</div>;
+    const sec=(key,title,body)=><div className="filter-section"><button type="button" className="filter-header" aria-expanded={open[key]} onClick={()=>setOpen(p=>({...p,[key]:!p[key]}))}><span className="filter-title">{title}</span><Icon name={open[key]?'chevron-up':'chevron-down'} size={14}/></button>{open[key]&&<div className="filter-body">{body}</div>}</div>;
     const cb=(type,label,val)=><label key={`${type}-${val}`} className="filter-checkbox"><input type="checkbox" checked={filters[type].includes(val)} onChange={()=>toggleFilter(type,val)}/>{label}</label>;
-    return <aside className="am-sidebar"><div className="am-sidebar-header"><span className="am-sidebar-title">Filters</span><span style={{fontSize:'9px',color:'var(--am-blue)',cursor:'pointer'}} onClick={()=>setFilters({categories:[],status:[],season:[],supplier:[]})}>Reset</span></div>
+    return <aside id="uniform-mobile-filters" className={`am-sidebar ${mobileFiltersOpen ? "mobile-open" : ""}`}><div className="am-sidebar-header"><span className="am-sidebar-title">Filters</span><button type="button" className="mobile-filter-close" onClick={()=>setMobileFiltersOpen(false)}>Close</button><span style={{fontSize:'9px',color:'var(--am-blue)',cursor:'pointer'}} onClick={()=>setFilters({categories:[],status:[],season:[],supplier:[]})}>Reset</span></div>
       {sec('category','Category',categories.filter(c=>c.active!==false).map(c=>cb('categories',c.title||c.categoryKey,c.categoryKey)))}
       {sec('season','Season',seasons.length?seasons.map(s=>cb('season',s,s)):<span style={{color:'var(--am-text-light)'}}>No season metadata</span>)}
       {sec('vendor','Vendor',suppliers.length?suppliers.map(s=>cb('supplier',s,s)):<span style={{color:'var(--am-text-light)'}}>No supplier metadata</span>)}
@@ -561,26 +562,27 @@ function App() {
         <UniformLogo url={logoUrl} />
 
         <div style={{height:'16px'}}></div>
-        <div className={`nav-item ${activeMainTab === 'home' ? 'active' : ''}`} onClick={() => handleMainTabChange('home')}><Icon name="layout-dashboard"/></div>
+        <button type="button" aria-label="Dashboard" className={`nav-item ${activeMainTab === 'home' ? 'active' : ''}`} onClick={() => handleMainTabChange('home')}><Icon name="layout-dashboard"/></button>
 
-        <div className={`nav-item ${activeMainTab === 'products' ? 'active' : ''}`} onClick={() => handleMainTabChange('products')}><Icon name="layers"/></div>
-        <div className={`nav-item ${activeMainTab === 'inventory' ? 'active' : ''}`} onClick={() => handleMainTabChange('inventory')}><Icon name="package"/></div>
-        <div className={`nav-item ${activeMainTab === 'purchasing' ? 'active' : ''}`} onClick={() => handleMainTabChange('purchasing')}><Icon name="file-text"/></div>
-        <div className={`nav-item ${activeMainTab === 'orders' ? 'active' : ''}`} onClick={() => handleMainTabChange('orders')}><Icon name="shopping-bag"/></div>
-        <div className={`nav-item ${activeMainTab === 'employees' ? 'active' : ''}`} onClick={() => handleMainTabChange('employees')}><Icon name="users"/></div>
+        <button type="button" aria-label="Products" className={`nav-item ${activeMainTab === 'products' ? 'active' : ''}`} onClick={() => handleMainTabChange('products')}><Icon name="layers"/></button>
+        <button type="button" aria-label="Inventory" className={`nav-item ${activeMainTab === 'inventory' ? 'active' : ''}`} onClick={() => handleMainTabChange('inventory')}><Icon name="package"/></button>
+        <button type="button" aria-label="Purchasing" className={`nav-item ${activeMainTab === 'purchasing' ? 'active' : ''}`} onClick={() => handleMainTabChange('purchasing')}><Icon name="file-text"/></button>
+        <button type="button" aria-label="Orders" className={`nav-item ${activeMainTab === 'orders' ? 'active' : ''}`} onClick={() => handleMainTabChange('orders')}><Icon name="shopping-bag"/></button>
+        <button type="button" aria-label="Employees" className={`nav-item ${activeMainTab === 'employees' ? 'active' : ''}`} onClick={() => handleMainTabChange('employees')}><Icon name="users"/></button>
       </nav>
 
       {(activeMainTab === 'products' || activeMainTab === 'employees') && <SidebarFilter />}
 
       <main className="main-content">
         <div className="top-tabs-bar">
+          {(activeMainTab === 'products' || activeMainTab === 'employees') && <button type="button" className="mobile-filter-toggle" aria-controls="uniform-mobile-filters" aria-expanded={mobileFiltersOpen} onClick={()=>setMobileFiltersOpen(open=>!open)}>Filters</button>}
           <div className="tabs-container">
             {subTabsConfig[activeMainTab]?.map(subTab => (
               <button key={subTab} className={`am-tab ${activeSubTabs[activeMainTab] === subTab ? 'active' : ''}`} onClick={() => handleSubTabChange(subTab)}>{subTab}</button>
             ))}
           </div>
           <div style={{height:'100%',display:'flex',alignItems:'center',gap:'8px',paddingLeft:'12px'}}>
-            <span style={{fontSize:'9px',fontWeight:'800',color:isSyncing?'#a15c00':error?'#b42318':'#18794e'}}>{isSyncing?'SYNCING':error?'ERROR':'LIVE'}</span>
+            <span style={{fontSize:'9px',fontWeight:'800',color:isSyncing?'#a15c00':error?'#b42318':'#18794e'}}>{isSyncing?'Updating…':error?'Connection issue':''}</span>
             <span className="mono" style={{fontSize:'9px',color:'var(--am-text-light)'}}>{data.version||'B-011 UNIFORM'}</span>
           </div>
         </div>

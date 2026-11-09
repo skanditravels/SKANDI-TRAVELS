@@ -43,3 +43,12 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.app{height:100v
   .summary b { font-size: 21px; }
   .tmain h1 { font-size: 17px; }
 }
+
+.mobile-desk-btn,.mobile-desk-close{display:none}
+@media(max-width:850px){
+ .app{position:relative;height:100%;min-height:0}.top>div:not(.qtop):not(.ctop){overflow-x:auto;padding:0 6px;gap:5px}.mobile-desk-btn,.mobile-desk-close{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:0 9px;color:#075c7d;font-weight:700;white-space:nowrap}.search{min-width:160px}.queue,.ctx{position:absolute;top:48px;bottom:0;width:min(340px,90%);z-index:80;box-shadow:0 8px 28px #001a3440;overflow:auto}.queue{left:0}.ctx{right:0}.app.mobile-queue-open .queue{display:flex}.app.mobile-context-open .ctx{display:flex!important}.mobile-desk-close{flex:0 0 auto;justify-content:flex-end;width:100%;background:#fff;border-bottom:1px solid var(--line)}.qcontrols input,.qcontrols select{min-height:44px}.qitem{min-height:60px}.ctabs{min-height:44px}.ctabs button{min-height:44px}.work{min-width:0}.tabs{overflow-x:auto}.body{min-width:0;overflow:auto}
+}
+
+@media(min-width:851px) and (max-width:1160px){
+ .app{position:relative;height:100%;min-height:0}.top>div:not(.qtop):not(.ctop){overflow-x:auto}.mobile-desk-btn#mobileContextBtn{display:inline-flex;align-items:center;min-height:44px;padding:0 8px;color:#075c7d;font-weight:700;white-space:nowrap}.mobile-desk-close{display:flex;justify-content:flex-end;min-height:44px;width:100%;padding:0 10px;background:#fff;color:#075c7d;font-weight:700}.app.mobile-context-open .ctx{display:flex!important;position:absolute;top:54px;right:0;bottom:0;width:min(340px,90%);z-index:80;box-shadow:-8px 0 28px #001a3440}
+}

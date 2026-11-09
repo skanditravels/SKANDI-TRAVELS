@@ -1,5 +1,7 @@
 # Uniform Control — INFO / LOG
 
+- 2026-11-09 — Phone layout uses an on-demand filter drawer, accessible labeled navigation controls and responsive work tables. The current source triplet supersedes the historical HTML below; existing staff access and data actions are unchanged.
+
 - Route `/riaintra/success-factors/uniform/admin-control`; component `#uniformControlEmbed`; Wix page controller `Uniform Control.yx92b.js`.
 - 2026-11-05 — Recovered the existing Uniform Control HTML from the Wix Studio editor; the separate Uniform Center historical reference remains unchanged. JSX remains in its Babel script to preserve execution order. Source capture represents the editor state and does not establish what is published live. Staff authorization and data actions require live verification.
 

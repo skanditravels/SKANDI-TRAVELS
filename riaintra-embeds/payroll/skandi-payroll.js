@@ -28,5 +28,5 @@ window.addEventListener("message",event=>{const m=event.data||{};if(m.source!==P
 busy(true);post("PAYROLL_READY");
 setTimeout(()=>{if(!state.workspaceReceived)post("PAYROLL_REFRESH")},650);
 setTimeout(()=>{if(!state.workspaceReceived)post("PAYROLL_REFRESH")},2400);
-setTimeout(()=>{if(!state.workspaceReceived){busy(false);toast("Payroll could not synchronize with the Wix page bridge. Republish the Payroll page and verify staff access.")}},8000);
+setTimeout(()=>{if(!state.workspaceReceived){busy(false);toast("Payroll could not connect. Check your access or try again.")}},8000);
 })();

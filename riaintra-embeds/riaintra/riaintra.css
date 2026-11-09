@@ -476,3 +476,12 @@
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0s !important; }
     }
+
+/* A compact mobile welcome keeps the sign-in form close at hand. */
+@media(max-width:760px){
+  #login-left{padding-top:calc(18px + env(safe-area-inset-top,0px));padding-bottom:24px}
+  #login-tagline{font-size:clamp(26px,7vw,34px);line-height:1.1}
+  #login-sub{line-height:1.5}
+  #login-right{padding-top:24px;padding-bottom:calc(28px + env(safe-area-inset-bottom,0px))}
+  #login-right input,#login-right button{min-height:44px}
+}

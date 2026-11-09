@@ -6,6 +6,8 @@
 
 ## CHANGE LOG (append-only)
 
+- 2026-11-09 — The active source triplet supersedes the historical HTML below for the phone workspace. It restores only an allowlisted non-sensitive workspace view, scoped to the authenticated employee; it does not cache HR records, credentials or draft contents.
+
 - 2026-11-08 — Restored the Node crypto `randomInt` import used by SK-ID allocation after the staff-onboarding merge. SK-ID format, collision handling and the historical embed remain unchanged. Source verification only; Wix rebuild and live onboarding verification are required.
 
 - 2026-10-30 — Removed the embedded Wix logo URL from the staff ID card and retained its unassigned asset slot as [LEAVE_PLACEHOLDER].

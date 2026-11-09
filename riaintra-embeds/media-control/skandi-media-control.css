@@ -1513,3 +1513,7 @@ textarea{min-height:74px!important;padding:7px 8px!important;line-height:1.45}
   .mm-brand-copy b, .mm-brand-copy span { white-space: normal; overflow-wrap: anywhere; }
   .mm-context-actions { flex-wrap: wrap; }
 }
+
+@media(max-width:760px){
+ .mm-modules,.toolbar,.mm-context-actions{scrollbar-width:thin}.mm-module,.mm-context-actions button,.toolbar button{min-height:44px}.mm-contextbar{gap:8px}.panel-view.active{min-width:0}.split,.stack,.mm-context-actions{min-width:0}.table-wrap{max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}.mm-page-style-grid,.template-grid{gap:8px}
+}

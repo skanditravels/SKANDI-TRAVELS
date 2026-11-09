@@ -1606,3 +1606,5 @@ post("AGENT_READY", { tickets: db.tickets.length, activeQueue: S.view, session: 
 </body>
 </html>
 ```
+
+- 2026-11-09 — Narrow screens can open the existing case queue and context as mutually exclusive drawers and return to the dashboard. Tablet widths expose the previously hidden context panel. The drawers use the existing ticket data and bridge; they do not add local case storage.

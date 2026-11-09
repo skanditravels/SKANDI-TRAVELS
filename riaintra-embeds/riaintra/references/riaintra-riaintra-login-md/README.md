@@ -7,6 +7,8 @@
 
 ## CHANGE LOG (append-only)
 
+- 2026-11-09 — The current source triplet supersedes the historical login markup for mobile spacing. Shared staff navigation supplies honest home-screen shortcut instructions; no standalone installation or offline support was added.
+
 - 2026-10-28 UTC — Updated `riaintra-embeds/riaintra/riaintra.receiver.html` to follow the current shared receiver pattern with page-specific startup, progress and failure messages for **RIAINTRA Staff Login** (`/riaintra`). The expected route matches `src/public/siteMap.js`; master-page handshake, staff authorization, manifest/SHA-256 checks and nested-iframe rejection remain intact.
 
 

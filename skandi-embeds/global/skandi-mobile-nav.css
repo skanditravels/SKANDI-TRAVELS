@@ -151,3 +151,10 @@ body.drawer-open{min-height:100%;height:100%}
 
 .drawer-logo { display: block; height: 19px; max-width: 145px; width: auto; }
 .drawer-logo[hidden] { display: none; }
+
+/* Staff-only home screen guidance */
+#staff-drawer-actions .staff-home-guide{color:#dceaf5;font-size:13px;line-height:1.45}
+#staff-drawer-actions .staff-home-guide summary{min-height:44px;display:flex;align-items:center;cursor:pointer;font-weight:700;color:#f1f8ff}
+#staff-drawer-actions .staff-home-guide summary::after{content:"+";margin-left:auto;font-size:20px}
+#staff-drawer-actions .staff-home-guide[open] summary::after{content:"−"}
+#staff-drawer-actions .staff-home-guide p{margin:0 0 10px}
