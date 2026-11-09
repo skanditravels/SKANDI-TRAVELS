@@ -36,7 +36,21 @@ export const listDuffelAirports = publicMethod(listDuffelAirportsCore);
 export const getDuffelAirport = publicMethod(getDuffelAirportCore);
 export const listDuffelCities = publicMethod(listDuffelCitiesCore);
 export const getDuffelCity = publicMethod(getDuffelCityCore);
-export const searchDuffelPlaces = publicMethod(searchDuffelPlacesCore);
+// Keep this export as a direct webMethod declaration so Wix can register it
+// for the public flight-search host. The input remains filtered by the same
+// public-safe boundary used for the other reference-data methods.
+export const searchDuffelPlaces = webMethod(ANYONE, async value => {
+  try {
+    return await searchDuffelPlacesCore(input(value));
+  } catch (error) {
+    console.error("[Flight place lookup]", {
+      code: String(error?.code || "LOOKUP_FAILED").slice(0, 80),
+      status: Number(error?.status) || null,
+      name: String(error?.name || "Error").slice(0, 80)
+    });
+    throw error;
+  }
+});
 export const listDuffelHotelBrands = publicMethod(listDuffelHotelBrandsCore);
 export const getDuffelHotelBrand = publicMethod(getDuffelHotelBrandCore);
 export const listDuffelHotelChains = publicMethod(listDuffelHotelChainsCore);
@@ -46,3 +60,4 @@ export const getDuffelAirLoyaltyProgramme = publicMethod(getDuffelAirLoyaltyProg
 export const listDuffelStayLoyaltyProgrammes = publicMethod(listDuffelStayLoyaltyProgrammesCore);
 export const searchDuffelAccommodationSuggestions = publicMethod(searchDuffelAccommodationSuggestionsCore);
 export const getDuffelAccommodation = publicMethod(getDuffelAccommodationCore);
+
