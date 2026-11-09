@@ -32,7 +32,14 @@ export function createFlightsPageHost({ post, navigate, settings }) {
         try {
           const result = await bounded(searchDuffelPlaces({query,limit:30}),15000);
           reply("FLIGHTS_PLACES_RESULT",{inputId,query,items:formatFlightPlaces(result?.items)});
-        } catch (_) { reply("FLIGHTS_PLACES_RESULT",{inputId,query,items:[],unavailable:true}); }
+        } catch (error) {
+          console.warn("[Flight place lookup unavailable]", {
+            name: clean(error?.name || "Error", 80),
+            code: clean(error?.code || "", 80),
+            message: clean(error?.message || "", 200)
+          });
+          reply("FLIGHTS_PLACES_RESULT",{inputId,query,items:[],unavailable:true});
+        }
         return;
       }
       if (type === "FLIGHTS_READY" || type === "FLIGHTS_REFRESH") {
