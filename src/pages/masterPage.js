@@ -603,8 +603,18 @@ function currentPathString() {
   // route in SITE_MAP is "/". Resolve the explicit homepage marker first so
   // compiledIdentity can find the verified Home integration and receiver.
   if (page.isHomePage) return SITE_MAP.home;
-  if (page.url && page.url.startsWith("/")) return page.url.split("?")[0].replace(/\/+$/, "") || "/";
+  // Wix router paths can exclude their prefix. Resolve the two registered
+  // authentication-system pages from the prefix and path before using the
+  // page's relative URL, which can also omit that prefix.
   const path = wixLocationFrontend.path || [];
+  const prefix = String(wixLocationFrontend.prefix || "").trim().toLowerCase();
+  if (prefix === "auth" && Array.isArray(path)) {
+    const segments = path.map(part => String(part)).filter(Boolean);
+    if (String(segments[0] || "").toLowerCase() !== prefix) segments.unshift(prefix);
+    const routed = resolveBuildRoute("/" + segments.join("/"));
+    if (routed && (routed.key === "accessRestricted" || routed.key === "expiredResetLink")) return routed.route;
+  }
+  if (page.url && page.url.startsWith("/")) return page.url.split("?")[0].replace(/\/+$/, "") || "/";
   return "/" + path.join("/");
 }
 function normalizePath(path = "") {

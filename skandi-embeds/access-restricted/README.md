@@ -15,3 +15,4 @@
 ## CHANGE LOG
 
 - 2026-11-09 — Added the Access Restricted page, the verified `/auth/access-restricted` route and `#html1` integration, editable presentation fields and allowlisted navigation through the page controller. The original Git-tracked page controller did not exist; the Wix editor displayed only the default Velo reference comment. No existing authentication or authorization policy was altered.
+- 2026-11-09 — The shared master controller now recognizes this page when Wix supplies `auth` as a router prefix separate from the location path. Existing route and component checks are unchanged; live Wix verification remains required.
