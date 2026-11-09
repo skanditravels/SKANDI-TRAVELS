@@ -29,6 +29,10 @@ const str = (value, limit = 1200) => text(value, limit)
   .trim();
 const asLine = parts => parts.map(v => str(v, 200)).filter(Boolean).join(" · ");
 const safeIso = value => str(value, 50);
+const triggerTimestamp = value => {
+  const timestamp = Date.parse(str(value, 50));
+  return Number.isFinite(timestamp) ? new Date(timestamp).toISOString().replace(/\.\d{3}Z$/, "Z") : "";
+};
 const eq = value => `eq.${String(value ?? "")}`;
 
 function error(code, message) {
@@ -137,6 +141,8 @@ function confirmedPayload(row, cart, contactId, memberId) {
   const transfer = object(cart.transfer);
   const transferDescription = sourceValue(transfer.title, transfer.name, transfer.description, transfer.serviceName);
   const amount = price(row.total, row.currency);
+  const confirmationDate = triggerTimestamp(payload.flow?.confirmedAt || row.updated_at);
+  const bookingDate = triggerTimestamp(row.created_at || payload.flow?.createdAt || row.updated_at).slice(0, 10);
   if (status !== "Confirmed" || !email || !reference || !paymentStatus) {
     throw error("BOOKING_EMAIL_SOURCE_INCOMPLETE", "Confirmed booking requires a verified email and reference.");
   }
@@ -161,8 +167,8 @@ function confirmedPayload(row, cart, contactId, memberId) {
     supplierReference: providerRef,
     customerEmail: email,
     productType: sourceValue(payload.productType, "SKANDI booking"),
-    confirmationDate: safeIso(payload.flow?.confirmedAt || row.updated_at),
-    bookingDate: safeIso(row.created_at || payload.flow?.createdAt || row.updated_at),
+    ...(confirmationDate ? {confirmationDate} : {}),
+    ...(bookingDate ? {bookingDate} : {}),
     flightDetails: segments.length ? segments.join(" | ") : "Not part of this booking",
     travelerDetails: travelers.length ? travelers.join(" | ") : "Contact SKANDI for traveler details",
     hotelDetails: hotelSummary(cart) || "Not part of this booking",

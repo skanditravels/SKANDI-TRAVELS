@@ -8,13 +8,13 @@ export async function verifyGuestConfirmationDiagnostic() {
   const secret = await elevate(secrets.getSecretValue)("SKANDI_BOOKING_CONFIRMATION_TRIGGER_ID");
   const triggerId = typeof secret === "string" ? secret : secret?.value ?? secret?.secretValue ?? secret?.secret?.value;
   const payload = {
-    bookingId: "TEST-ONLY-VELO-NO-RESERVATION",
-    bookingReference: "TEST-ONLY-VELO-NO-RESERVATION",
+    bookingId: "TEST-ONLY-VELO-FIXED-NO-RESERVATION",
+    bookingReference: "TEST-ONLY-VELO-FIXED-NO-RESERVATION",
     supplierReference: "TEST-ONLY",
     customerEmail: "contact@skanditravels.com",
     productType: "TEST FLIGHT ONLY",
-    confirmationDate: "2026-11-09T22:30:00.000Z",
-    bookingDate: "2026-11-09T22:30:00.000Z",
+    confirmationDate: "2026-11-09T22:30:00Z",
+    bookingDate: "2026-11-09",
     flightDetails: "TEST ONLY: Stockholm (ARN) to New York (JFK); fictional flight. No reservation exists.",
     travelerDetails: "TEST TRAVELER — fictional guest, not an actual passenger",
     hotelDetails: "Not part of this test",
