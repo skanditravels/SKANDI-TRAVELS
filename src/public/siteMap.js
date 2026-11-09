@@ -10,7 +10,7 @@ export const SITE_MAP = Object.freeze({
   travelInfo: "/travel-info", transfers: "/travel-info?section=transfers", skandiCollection: "/skandi-collection",
   voy: "/voy-magazine", club: "/skandi-club", clubLogin: "/skandi-club/login", forgotPassword: "/forgot-password",
   about: "/about", support: "/about/support", newsroom: "/about/news-room",
-  accessRestricted: "/auth/access-restricted",
+  accessRestricted: "/auth/access-restricted", expiredResetLink: "/auth/expired-reset-link",
   theStore: "/the-store", storeCheckout: "/the-store/store-checkout",
   storeConfirmation: "/the-store/store-checkout/order-confirmation", ourNetwork: "/destinations",
   legal: "/about/legal", policies: "/about/legal/policies", cookiePreferences: "/about/legal/cookie-preferences", riaintra: "/riaintra",
@@ -98,6 +98,17 @@ export const EDITORIAL_PAGE_CATALOG = Object.freeze([
       field("access-restricted-detail", "Explanation", "LONG_TEXT"),
       field("access-restricted-home", "Homepage button"),
       field("access-restricted-support", "Support button")
+    ])
+  ], { presentationRuntime:true }),
+  page("expiredResetLink", "Expired Reset Link", SITE_MAP.expiredResetLink, "CUSTOMER_AUTH", [
+    section("expired-reset-link-main", "Expired link message", [
+      field("expired-reset-link-eyebrow", "Eyebrow"),
+      field("expired-reset-link-title", "Headline"),
+      field("expired-reset-link-intro", "Intro"),
+      field("expired-reset-link-detail", "Explanation", "LONG_TEXT"),
+      field("expired-reset-link-new-link", "New link button"),
+      field("expired-reset-link-login", "Login button"),
+      field("expired-reset-link-back", "Go back button")
     ])
   ], { presentationRuntime:true }),
   page("myProfile", "My Profile", APP_ROUTES.myProfile, "CUSTOMER_PROFILE"),
@@ -193,6 +204,12 @@ export function isSafeInternalRoute(value){const path=String(value||"").trim();c
 // Compiler integration bindings. No route strings are duplicated here.
 // Source-verified controller contracts; Wix element installation still requires live verification.
 export const PAGE_BUILD_INTEGRATIONS = Object.freeze({
+  "expiredResetLink": {
+    "controller": "src/pages/Expired Reset Link.anxhe.js",
+    "embedIds": ["#expiredResetEmbed"],
+    "sources": ["SKANDI_EXPIRED_RESET_LINK"],
+    "note": "Wix authentication-system page: add #expiredResetEmbed and install the universal receiver."
+  },
   "accessRestricted": {
     "controller": "src/pages/Access Restricted.m6vln.js",
     "embedIds": ["#html1"],
