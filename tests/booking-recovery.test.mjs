@@ -75,4 +75,7 @@ test('the booking confirmation dependency is declared and locked', async () => {
   assert.equal(pkg.dependencies['@wix/automations'], '1.0.503');
   assert.equal(lock.packages[''].dependencies['@wix/automations'], pkg.dependencies['@wix/automations']);
   assert.equal(lock.packages['node_modules/@wix/automations'].version, pkg.dependencies['@wix/automations']);
+  const wixLock = (await read('wix.lock')).replace(/\\\r?\n/g, '');
+  const siteDependencies = wixLock.slice(wixLock.indexOf('["user-code", ['));
+  assert.match(siteDependencies, /\["@wix\/automations", "npm:1\.0\.503"\]/);
 });
