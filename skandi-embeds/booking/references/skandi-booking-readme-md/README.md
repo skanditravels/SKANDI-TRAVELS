@@ -544,4 +544,4 @@ bindDelegated();renderStepper();el('root-offer').innerHTML='<div class="empty">C
 
 ### Current implementation note — 2026-11-09
 
-The historical implementation above is retained as a reference and is superseded by the booking source triplet and skandi-embeds/booking/README.md. The current change adds guest-scoped cart access, checkout resumption and duplicate-order protections. Guest payment remains gated on an active, verified booking-confirmation automation; consult the current README for the runtime contract and outstanding deployment verification.
+The historical implementation above is retained as a reference and is superseded by the booking source triplet and skandi-embeds/booking/README.md. The current change adds guest-scoped cart access, checkout resumption and duplicate-order protections. Guest payment remains gated on an active, verified booking-confirmation automation; the current backend formats trigger dates to match the configured Wix schema. Consult the current README for the runtime contract and outstanding deployment verification.
