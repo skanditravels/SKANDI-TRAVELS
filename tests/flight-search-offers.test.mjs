@@ -107,12 +107,14 @@ function sampleOffer(id,cabin='economy',fare='Light',amount=400){
 
 test('one itinerary groups bookable fares, preserves return routing and shows verified segment details',async t=>{
   const {doc,sent,host}=await bookingFrame(t),first=sampleOffer('off_light'),second=sampleOffer('off_standard','economy','Standard',500);
+  for(const item of [first,second])item.slices[0].segments[0].operatingCarrier={iataCode:'D8',name:'SAS Connect'};
   host('BOOKING_SEARCH_RESULTS',{search:{origin:'STO',destination:'NYC',tripType:'flightOnly'},items:[first,second],errors:[]});
   assert.equal(doc.querySelectorAll('.flight-result').length,1);
   const rows=[...doc.querySelectorAll('.itinerary-leg')];assert.equal(rows.length,2);
   assert.match(rows[0].textContent,/ARN/);assert.match(rows[0].textContent,/JFK/);assert.match(rows[1].textContent,/JFK/);assert.match(rows[1].textContent,/ARN/);
   doc.querySelector('[data-action="flight-details"]').click();
   assert.match(doc.querySelector('.flight-details').textContent,/Airbus A320neo/);
+  assert.match(doc.querySelector('.flight-details').textContent,/Operated by SAS Connect/);
   assert.match(doc.querySelector('.flight-details').textContent,/1h 30m transfer/);
   assert.match(doc.querySelector('.flight-details').textContent,/Meal included/);
   assert.match(doc.querySelector('.flight-details').textContent,/390 kg for all travelers/);
@@ -128,9 +130,10 @@ test('upsell cabins are selectable only when returned and missing details are no
   host('BOOKING_SEARCH_RESULTS',{search:{origin:'ARN',destination:'JFK',tripType:'flightOnly'},items:[base],errors:[]});
   doc.querySelector('[data-action="flight-details"]').click();assert.match(doc.querySelector('.flight-details').textContent,/Meal information not provided/);assert.match(doc.querySelector('.flight-details').textContent,/CO₂ estimate not provided/);
   doc.querySelector('[data-action="flight-classes"]').click();assert.equal(doc.querySelectorAll('[data-action="choose-cabin"]').length,1);
-  host('BOOKING_UPSELL_RESULT',{offerId:'off_base',available:true,items:[sampleOffer('off_business','business','Business Flex',1200)]});
+  const business=sampleOffer('off_business','business','Business Flex',1200);business.totalEmissionsKg='550';
+  host('BOOKING_UPSELL_RESULT',{offerId:'off_base',available:true,items:[business]});
   assert.equal(doc.querySelectorAll('[data-action="choose-cabin"]').length,2);
-  doc.querySelector('[data-cabin="business"]').click();assert.match(doc.querySelector('.fare-options').textContent,/Business Flex/);
+  doc.querySelector('[data-cabin="business"]').click();assert.match(doc.querySelector('.fare-options').textContent,/Business Flex/);assert.match(doc.querySelector('.flight-details').textContent,/550 kg for all travelers/);
   doc.querySelector('[data-action="select-offer"][data-id="off_business"]').click();assert.equal(sent.at(-1).offerId,'off_business');
 });
 
