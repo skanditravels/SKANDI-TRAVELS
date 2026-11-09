@@ -380,6 +380,7 @@ export async function searchUnifiedOffersCore(input = {}) {
     ]);
     if (flights.status === "fulfilled") items.push(...publicFlightItems(flights.value, search));
     else errors.push({ source: "flight", code: safeCode(flights.reason?.code || "FLIGHT_SEARCH_FAILED"), message: text(flights.reason?.publicMessage || flights.reason?.message || "Live flight search is unavailable.", 300) });
+    if (tiers.status === "rejected") console.error("[SKANDI][Booking] Airline recommendation inventory unavailable", { code: safeCode(tiers.reason?.code || "AIRLINE_TIER_LOOKUP_FAILED") });
     recommendation = tiers.status === "fulfilled"
       ? { available: true, airlines: tiers.value }
       : { available: false, airlines: [] };
