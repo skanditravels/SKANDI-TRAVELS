@@ -2351,20 +2351,21 @@ html, body { width: 100% !important; margin: 0 !important; max-width: none !impo
 </div>
 
 <header class="mm-appbar" aria-label="Media Control">
-  <div class="mm-brand"><span class="mm-brand-mark" aria-hidden="true">M</span><div class="mm-brand-copy"><b>MEDIA CONTROL</b><span>Your content workspace</span></div></div>
-  <button class="mc-mobile-menu" id="mobileMenuBtn" type="button" aria-label="Open workspace menu" aria-controls="mcSidebar" aria-expanded="false"><span aria-hidden="true">☰</span> Menu</button>
+  <button class="mc-mobile-menu" id="mobileMenuBtn" type="button" aria-label="Open workspace menu" aria-controls="mcSidebar" aria-expanded="false"><span aria-hidden="true">☰</span><span class="mc-menu-button-label">Menu</span></button>
+  <div class="mm-brand"><span class="mm-brand-mark" aria-hidden="true">M</span><div class="mm-brand-copy"><b>MEDIA CONTROL</b><span>SKANDI · Digital content</span></div></div>
   <div class="mm-account"><div class="mm-account-badge" id="mmUserInitials">SK</div><div><b id="mmUserName">SKANDI Editor</b><span id="mmUserRole">Editorial access</span></div></div>
 </header>
 <div class="app">
   <header class="header" hidden><button id="moduleHeaderMobileMenuBtn" type="button">Menu</button><span id="sessionLine"><span id="clock">--:--</span></span></header>
   <div class="shell mc-shell">
-    <aside class="sidebar mc-sidebar" id="mcSidebar" aria-label="Media Control navigation">
-      <div class="mc-menu-heading"><span>WORKSPACES</span><button type="button" id="mcCloseMenu" class="mc-close-menu" aria-label="Close workspace menu">×</button></div>
+    <aside class="sidebar mc-sidebar" id="mcSidebar" role="dialog" aria-modal="true" aria-labelledby="mcMenuTitle" aria-hidden="true" inert>
+      <div class="mc-menu-heading"><div><span class="mc-menu-kicker">SKANDI</span><strong id="mcMenuTitle">Media Control</strong><small>Content workspace</small></div><button type="button" id="mcCloseMenu" class="mc-close-menu" aria-label="Close workspace menu">×</button></div>
+      <label class="mc-menu-search"><span>Find a workspace</span><input id="mcMenuSearch" type="search" placeholder="Search workspaces" autocomplete="off"></label>
       <nav class="mm-modules" id="mmModules" aria-label="Workspaces"></nav>
       <nav id="nav" class="mc-subnav" aria-label="Workspace sections"></nav>
     </aside>
     <main class="workspace mc-workspace">
-      <section class="mm-contextbar" aria-label="Current workspace"><div><p class="mm-breadcrumb" id="mmBreadcrumb">Media Control</p><h1 id="mmPageTitle">Overview</h1></div></section>
+      <section class="mm-contextbar" aria-label="Current workspace"><div><p class="mm-breadcrumb" id="mmBreadcrumb">Media Control</p><h1 id="mmPageTitle" tabindex="-1">Overview</h1></div></section>
       <div class="toolbar mc-toolbar">
         <label class="mc-search-label" for="globalQuery">Search this section</label><input class="input search" id="globalQuery" type="search" placeholder="Search" />
         <button class="btn primary" data-action="save-current" hidden>Save current</button>
@@ -2375,7 +2376,7 @@ html, body { width: 100% !important; margin: 0 !important; max-width: none !impo
     </main>
   </div>
 </div>
-<div class="drawer-overlay" id="drawerOverlay"></div>
+<div class="drawer-overlay" id="mcDrawerOverlay" aria-hidden="true"></div>
 <div class="toast" id="toast"></div>
 <div class="modalOverlay" id="modalOverlay">
   <div class="modal">
@@ -2430,10 +2431,10 @@ function status(msg,mode=""){const el=$("statusLine");if(!el)return;const show=B
 function loadLocal(){try{const raw=localStorage.getItem(STORAGE_KEY)||localStorage.getItem(LEGACY_STORAGE_KEY)||"{}";const saved=JSON.parse(raw);return {activeModule:String(saved.activeModule||""),activePanel:String(saved.activePanel||""),selectedIssueId:String(saved.selectedIssueId||""),selectedPageId:String(saved.selectedPageId||""),selectedArticleId:String(saved.selectedArticleId||"")}}catch(_){return {}}}
 function saveLocal(){try{const {activeModule,activePanel,selectedIssueId,selectedPageId,selectedArticleId}=state;localStorage.setItem(STORAGE_KEY,JSON.stringify({activeModule,activePanel,selectedIssueId,selectedPageId,selectedArticleId}))}catch(_){/* Preferences are optional; server data remains authoritative. */}}
 const baseState={
-  session:{}, voyLoaded:false, libraryLoaded:false, activeModule:"overview", activePanel:"controlhome", selectedIssueId:"", selectedPageId:"", selectedArticleId:"",
+  session:{}, voyLoaded:false, voyIssuesLoaded:false, voyArticlesLoaded:false, libraryLoaded:false, activeModule:"overview", activePanel:"controlhome", selectedIssueId:"", selectedPageId:"", selectedArticleId:"",
   issues:[], pages:[], articles:[], categories:[], banners:[], travelCards:[], assets:[], libraryAssets:[], assetResults:[],
   campaigns:[], approvals:[], connectors:{}, destinationResearch:null, seoResult:null, apiStatus:[],
-  newsroomPosts:[], newsroomCategories:[], newsroomMedia:[], pressContacts:[], editingPostId:"", editingContactId:"",
+  newsroomPosts:[], newsroomCategories:[], newsroomMedia:[], pressContacts:[], newsroomLoaded:false, editingPostId:"", editingContactId:"",
   brandKit:{name:"SKANDI VOY",tone:"Premium, warm, practical and commercially sharp",fonts:"Montserrat / Tahoma",colors:"#022e64, #0b3a7a, #5FC7CF, #ffffff",requiredWords:"SKANDI Travels, curated, destination, experience",blockedWords:"cheap, guaranteed, best in the world",defaultCta:"Explore destination"},
   qualityResult:null, brandGuardResult:null, printQa:null, distributionKit:null, distributionKits:[],
   catalog:[], editorialSelection:{planPageKey:"",copyPageKey:"",copySectionId:"",copyFieldId:"",mediaPageKey:"",mediaSectionId:"",mediaSlotId:"",releasePageKey:""},
@@ -2609,6 +2610,7 @@ function init(){
 }
 function renderModules(){
   const host=$("mmModules");if(!host)return;
+  host.hidden=Boolean($("mcMenuSearch")?.value.trim());
   host.innerHTML=modules.map(m=>`<button class="mm-module ${state.activeModule===m.id?"active":""}" type="button" data-module="${m.id}" ${state.activeModule===m.id?'aria-current="page"':""}><span class="mc-module-icon" aria-hidden="true">${esc(m.icon)}</span><span>${esc(m.title)}</span></button>`).join("");
   const module=modules.find(m=>m.id===state.activeModule)||modules[0];
   const panel=panels.find(p=>p[0]===state.activePanel);
@@ -2618,6 +2620,12 @@ function renderModules(){
   const searchable=["issues","articles"].includes(state.activePanel);if(toolbar)toolbar.hidden=!searchable&&module.id!=="voy";if(search){search.hidden=!searchable;search.placeholder=state.activePanel==="issues"?"Search issues":"Search articles";search.setAttribute("aria-label",search.placeholder)}const label=toolbar?.querySelector(".mc-search-label");if(label)label.hidden=!searchable;if(preview)preview.hidden=module.id!=="voy";
 }
 function renderNav(){
+  const query=String($("mcMenuSearch")?.value||"").trim().toLocaleLowerCase();
+  if(query){
+    const results=modules.flatMap(module=>module.panels.map(id=>({module,panel:panels.find(p=>p[0]===id)}))).filter(({module,panel})=>panel&&`${module.title} ${panel[1]}`.toLocaleLowerCase().includes(query));
+    $("nav").innerHTML=`<div class="mc-subnav-heading">SEARCH RESULTS</div>`+(results.length?results.map(({module,panel})=>`<button type="button" class="nav-btn" data-panel="${esc(panel[0])}"><span>${esc(panel[1])}<small>${esc(module.title)}</small></span></button>`).join(""):'<p class="mc-menu-empty">No workspaces match your search.</p>');
+    renderModules();return;
+  }
   const module=modules.find(m=>m.id===state.activeModule)||modules[0];
   $("nav").innerHTML=module.panels.length>1?`<div class="mc-subnav-heading">${esc(module.title)}</div>`+module.panels.map(id=>panels.find(p=>p[0]===id)).filter(Boolean).map(p=>`<button type="button" class="nav-btn ${state.activePanel===p[0]?"active":""}" data-panel="${p[0]}" ${state.activePanel===p[0]?'aria-current="page"':""}><span>${esc(p[1])}</span></button>`).join(""):"";
   renderModules();
@@ -2635,6 +2643,7 @@ function renderAll(){
 }
 function setPanel(panel){
   if(!panels.some(p=>p[0]===panel))return;
+  const menuWasOpen=document.body.classList.contains("mobile-drawer-open");
   const current=modules.find(m=>m.id===state.activeModule);
   if(!current?.panels.includes(panel)){
     state.activeModule=modules.find(m=>m.panels.includes(panel))?.id||"overview";
@@ -2643,15 +2652,18 @@ function setPanel(panel){
   closeMobileMenu();
   document.querySelectorAll(".panel-view").forEach(v=>v.classList.toggle("active",v.id===`panel-${panel}`));
   renderAll();
+  if(menuWasOpen)$("mmPageTitle")?.focus();
   post("VOY_ADMIN_PANEL_CHANGED",{panel});
 }
 function setModule(moduleId){
   const module=modules.find(m=>m.id===moduleId);if(!module)return;
+  const menuWasOpen=document.body.classList.contains("mobile-drawer-open");
   state.activeModule=module.id;
   if(!module.panels.includes(state.activePanel))state.activePanel=module.panels[0];
   if(module.panels.length===1)closeMobileMenu();
   document.querySelectorAll(".panel-view").forEach(v=>v.classList.toggle("active",v.id===`panel-${state.activePanel}`));
   renderAll();
+  if(menuWasOpen){if(module.panels.length>1)$("nav")?.querySelector("button")?.focus();else $("mmPageTitle")?.focus()}
   post("VOY_ADMIN_PANEL_CHANGED",{module:module.id,panel:state.activePanel});
 }
 function currentIssue(){
@@ -2743,14 +2755,21 @@ function exportEditorialSnapshot(){const payload={exportedAt:new Date().toISOStr
 function renderControlHome(){
   const host=$("panel-controlhome");if(!host)return;
   const cards=[
-    ["websiteeditor","Website editor","Edit page layouts, text, links and presentation images.","Edit website"],
-    ["assets","Asset Library","Find, upload and organize approved media for your content.","Open library"],
-    ["issues","VOY Magazine","Create issues, arrange pages and prepare your next edition.","Manage VOY"],
-    ["pressreleases","Newsroom","Create and manage published company announcements.","Open newsroom"],
-    ["campaign","Marketing","Manage campaigns, banners and travel cards.","View marketing"],
-    ["contentaudit","Content review","Check presentation records and identify issues before release.","Review content"]
+    ["websiteeditor","01","Website","Page layouts, copy and presentation media.","Open editor"],
+    ["assets","02","Asset Library","Find and manage the media used across your content.","Open library"],
+    ["issues","03","VOY Magazine","Plan editions, pages and editorial assignments.","Manage VOY"],
+    ["pressreleases","04","Newsroom","Prepare and manage company announcements.","Open newsroom"],
+    ["campaign","05","Marketing","Manage campaigns, banners and travel cards.","View campaigns"],
+    ["contentaudit","06","Review & release","Review content and presentation before publication.","Review content"]
   ];
-  host.innerHTML=`<section class="mc-welcome"><div><p class="mc-eyebrow">SKANDI CONTENT WORKSPACE</p><h2>Everything you need to manage your content.</h2><p>Choose a workspace to edit the website, manage your media, or create and review publications.</p></div></section><div class="mc-card-grid">${cards.map(([id,title,description,cta])=>`<article class="mc-card"><h3>${esc(title)}</h3><p>${esc(description)}</p><button type="button" data-panel="${id}">${esc(cta)} <span aria-hidden="true">→</span></button></article>`).join("")}</div><p class="mc-ownership">Website presentation is managed here. Product, booking and other operational information continues to come from its existing source.</p>`;
+  const issue=currentIssue();
+  const metrics=[
+    ["issues","VOY issues",state.voyIssuesLoaded?state.issues.length:"—"],
+    ["articles","Article briefs",state.voyArticlesLoaded?state.articles.length:"—"],
+    ["assets","Loaded assets",state.libraryLoaded?state.libraryAssets.length:"—"],
+    ["pressreleases","Newsroom posts",state.newsroomLoaded?state.newsroomPosts.length:"—"]
+  ];
+  host.innerHTML=`<section class="mc-overview-head"><div><p class="mc-eyebrow">SKANDI DIGITAL CONTENT</p><h2>Your content, in one workspace.</h2><p>Manage website presentation, media, VOY, newsroom and marketing from one place.</p></div><button class="btn" type="button" data-panel="api">Connections <span aria-hidden="true">↗</span></button></section><div class="mc-overview-metrics" aria-label="Workspace overview">${metrics.map(([id,label,value])=>`<button type="button" class="mc-overview-metric" data-panel="${id}"><span>${esc(label)}</span><strong data-mc-count="${id}">${esc(value)}</strong><small>Open workspace <span aria-hidden="true">→</span></small></button>`).join("")}</div><div class="mc-overview-layout"><section class="mc-workspaces"><div class="mc-section-head"><div><p class="mc-section-kicker">WORKSPACES</p><h3>Manage content</h3></div><span>Choose where to work</span></div><div class="mc-card-grid">${cards.map(([id,number,title,description,cta])=>`<article class="mc-card"><span class="mc-card-number">${number}</span><h3>${esc(title)}</h3><p>${esc(description)}</p><button type="button" data-panel="${id}">${esc(cta)} <span aria-hidden="true">→</span></button></article>`).join("")}</div></section><aside class="mc-production-summary"><p class="mc-section-kicker">VOY PRODUCTION</p><h3>${esc(issue?.edition||issue?.title||"No issue selected")}</h3><p>${issue?esc(issue.title||"Continue working on this edition."):"Create or select an issue to start planning your magazine."}</p><div class="mc-production-links"><button type="button" data-panel="issues">Issues <span aria-hidden="true">→</span></button><button type="button" data-panel="builder">Magazine builder <span aria-hidden="true">→</span></button><button type="button" data-panel="articles">Article briefs <span aria-hidden="true">→</span></button></div><div class="mc-production-divider"></div><p class="mc-section-kicker">EDITORIAL TOOLS</p><div class="mc-production-links"><button type="button" data-panel="research">Destination research <span aria-hidden="true">→</span></button><button type="button" data-panel="emailstudio">Email studio <span aria-hidden="true">→</span></button><button type="button" data-panel="api">Connections <span aria-hidden="true">→</span></button></div></aside></div><p class="mc-ownership">Website presentation is managed here. Product, booking and other operational information remains with its existing owner.</p>`;
 }
 function renderDashboard(){
   const issue=currentIssue();
@@ -3540,12 +3559,35 @@ document.addEventListener("input",e=>{
   if(e.target.id==="webContentValue"&&$("webContentCount"))$("webContentCount").textContent=String(e.target.value||"").length;
 });
 $("globalQuery").addEventListener("input",()=>renderAll());
-function closeMobileMenu(){document.body.classList.remove("mobile-drawer-open");$("mobileMenuBtn")?.setAttribute("aria-expanded","false")}
-$("mobileMenuBtn").addEventListener("click",()=>{const open=!document.body.classList.contains("mobile-drawer-open");document.body.classList.toggle("mobile-drawer-open",open);$("mobileMenuBtn").setAttribute("aria-expanded",String(open))});
-$("mcCloseMenu").addEventListener("click",closeMobileMenu);
-$("drawerOverlay").addEventListener("click",closeMobileMenu);
+function closeMobileMenu(restoreFocus=false){
+  document.body.classList.remove("mobile-drawer-open");
+  const sidebar=$("mcSidebar"),toggle=$("mobileMenuBtn"),search=$("mcMenuSearch");
+  sidebar?.setAttribute("aria-hidden","true");sidebar?.setAttribute("inert","");
+  toggle?.setAttribute("aria-expanded","false");toggle?.setAttribute("aria-label","Open workspace menu");
+  if(search?.value){search.value="";renderNav()}
+  if(restoreFocus)toggle?.focus();
+}
+function openWorkspaceMenu(){
+  const sidebar=$("mcSidebar"),toggle=$("mobileMenuBtn");
+  document.body.classList.add("mobile-drawer-open");sidebar?.removeAttribute("inert");sidebar?.setAttribute("aria-hidden","false");
+  toggle?.setAttribute("aria-expanded","true");toggle?.setAttribute("aria-label","Close workspace menu");
+  $("mcMenuSearch")?.focus();
+}
+$("mobileMenuBtn").addEventListener("click",()=>{if(document.body.classList.contains("mobile-drawer-open"))closeMobileMenu(true);else openWorkspaceMenu()});
+$("mcCloseMenu").addEventListener("click",()=>closeMobileMenu(true));
+$("mcDrawerOverlay").addEventListener("click",()=>closeMobileMenu(true));
+$("mcMenuSearch").addEventListener("input",renderNav);
 document.addEventListener("SKANDI_MEDIA_SHOW_ASSETS",()=>setPanel("assets"));
-document.addEventListener("keydown",event=>{if(event.key==="Escape")closeMobileMenu()});
+document.addEventListener("keydown",event=>{
+  if(!document.body.classList.contains("mobile-drawer-open"))return;
+  if(event.key==="Escape"){event.preventDefault();closeMobileMenu(true);return}
+  if(event.key!=="Tab")return;
+  const menu=$("mcSidebar"),focusable=[...menu.querySelectorAll('button:not([disabled]),input:not([disabled]),a[href]')].filter(el=>!el.closest('[hidden]'));
+  if(!focusable.length)return;
+  const first=focusable[0],last=focusable[focusable.length-1],active=document.activeElement;
+  if(event.shiftKey&&(active===first||!menu.contains(active))){event.preventDefault();last.focus()}
+  else if(!event.shiftKey&&(active===last||!menu.contains(active))){event.preventDefault();first.focus()}
+});
 window.addEventListener("message",e=>{
   const m=e.data||{};if(e.source!==window.parent||m.source!==PARENT)return;const p=m.payload||{};
   if(m.type==="INTERNAL_CHROME_BOOTSTRAP"){
@@ -3553,11 +3595,12 @@ window.addEventListener("message",e=>{
     if($("mmUserName"))$("mmUserName").textContent=name;if($("mmUserRole"))$("mmUserRole").textContent=profile.position||profile.jobTitle||profile.role||"Editorial access";if($("mmUserInitials"))$("mmUserInitials").textContent=name.split(/\s+/).slice(0,2).map(x=>x[0]).join("").toUpperCase()||"SK";return;
   }
   if(m.type==="MEDIA_CONTROL_EDITORIAL_CATALOG"){state.catalog=Array.isArray(p.pages)?p.pages:[];ensureCatalogSelections();if($("mmSyncState"))$("mmSyncState").textContent="Catalog";renderAll();return}
-  if(m.type==="MEDIA_CONTROL_LIBRARY"){state.libraryAssets=Array.isArray(p.assets)?p.assets:state.libraryAssets;state.libraryLoaded=true;return}
+  if(m.type==="MEDIA_CONTROL_LIBRARY"){if(Array.isArray(p.assets)){state.libraryAssets=p.assets;state.libraryLoaded=true;const count=$("panel-controlhome")?.querySelector('[data-mc-count="assets"]');if(count)count.textContent=String(state.libraryAssets.length)}return}
   if(m.type==="MEDIA_CONTROL_ERROR"){if(!p.requestId)actionError(p.message||"Media Control action failed.");return}
-  if(m.type==="VOY_ADMIN_BOOTSTRAP_RESULT"){state={...state,...p,voyLoaded:true};status("Loaded VOY data.","ok");if($("mmSyncState"))$("mmSyncState").textContent="Live";renderAll();return}
+  if(m.type==="VOY_ADMIN_BOOTSTRAP_RESULT"){state={...state,...p,voyLoaded:true,voyIssuesLoaded:Array.isArray(p.issues),voyArticlesLoaded:Array.isArray(p.articles)};status("Loaded VOY data.","ok");if($("mmSyncState"))$("mmSyncState").textContent="Live";renderAll();return}
   if(m.type==="NEWSROOM_ADMIN_BOOTSTRAP"||m.type==="NEWSROOM_ADMIN_DATA"){
     const d=p.data||p;
+    if(Array.isArray(d.posts)||Array.isArray(d.newsroomPosts))state.newsroomLoaded=true;
     state.newsroomPosts=d.posts||d.newsroomPosts||state.newsroomPosts;
     state.newsroomCategories=d.categories||d.newsroomCategories||state.newsroomCategories;
     state.newsroomMedia=d.mediaAssets||d.media||d.assets||state.newsroomMedia;
@@ -4059,6 +4102,102 @@ window.SKANDIEmailStudioHostMount();
  body.voy-printing #voy-print-root .voyp{height:100%!important;min-height:0!important;print-color-adjust:exact;-webkit-print-color-adjust:exact}
  @page{size:A4;margin:0}
 }
+
+/* Media Control: a full-width publishing workspace with one slide-out menu. */
+#skandi-shell-root #skandi-app-root{background:#eef2f6}
+#skandi-shell-root #skandi-app-root .mm-appbar{position:sticky;top:0;z-index:80;min-height:56px;padding:0 20px;gap:12px;background:#062f63;border-bottom:1px solid #032349;color:#fff}
+#skandi-shell-root #skandi-app-root .mm-brand{flex:1;min-width:0;gap:10px;color:#fff}
+#skandi-shell-root #skandi-app-root .mm-brand-mark{width:31px;height:31px;border:1px solid #98c5da;border-radius:3px!important;background:#fff;color:#08356a;font-size:16px}
+#skandi-shell-root #skandi-app-root .mm-brand-copy b{color:#fff;font-size:13px;letter-spacing:.1em}
+#skandi-shell-root #skandi-app-root .mm-brand-copy span{color:#c5d9e9;font-size:13px}
+#skandi-shell-root #skandi-app-root .mm-account{color:#fff}
+#skandi-shell-root #skandi-app-root .mm-account b{color:#fff}
+#skandi-shell-root #skandi-app-root .mm-account span{color:#c5d9e9}
+#skandi-shell-root #skandi-app-root .mm-account-badge{background:#e4f3f6;color:#12375e}
+#skandi-shell-root #skandi-app-root .mc-mobile-menu{display:inline-flex!important;align-items:center;justify-content:center;gap:8px;flex:none;min-height:40px;padding:0 11px;border:1px solid #6586a7;border-radius:4px;background:transparent;color:#fff;font-weight:700}
+#skandi-shell-root #skandi-app-root .mc-mobile-menu:hover{background:#174979}
+#skandi-shell-root #skandi-app-root .mc-shell{display:block!important;min-height:calc(100vh - 56px)!important;overflow:visible!important;background:#eef2f6!important}
+#skandi-shell-root #skandi-app-root .mc-sidebar{display:block!important;position:fixed!important;inset:0 auto 0 0!important;z-index:12000!important;width:min(340px,90vw)!important;min-width:0!important;min-height:0!important;height:100vh!important;height:100dvh!important;max-height:none!important;overflow-y:auto!important;padding:16px 14px max(24px,env(safe-area-inset-bottom))!important;transform:translateX(-105%)!important;visibility:hidden;background:#fff!important;border:0!important;box-shadow:8px 0 28px #001b3438!important;transition:transform .2s ease,visibility .2s ease}
+body.mobile-drawer-open #skandi-shell-root #skandi-app-root .mc-sidebar{transform:translateX(0)!important;visibility:visible}
+#skandi-shell-root #skandi-app-root .drawer-overlay{display:block!important;position:fixed;inset:0;z-index:11999;background:#001a3499;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .2s ease,visibility .2s ease}
+body.mobile-drawer-open #skandi-shell-root #skandi-app-root .drawer-overlay{opacity:1;visibility:visible;pointer-events:auto}
+#skandi-shell-root #skandi-app-root .mc-menu-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;padding:5px 4px 15px 9px;color:#123d68;letter-spacing:0}
+#skandi-shell-root #skandi-app-root .mc-menu-heading strong,#skandi-shell-root #skandi-app-root .mc-menu-heading small,#skandi-shell-root #skandi-app-root .mc-menu-kicker{display:block}
+#skandi-shell-root #skandi-app-root .mc-menu-heading strong{margin:3px 0;font-size:19px;letter-spacing:-.02em}
+#skandi-shell-root #skandi-app-root .mc-menu-heading small{color:#697f91;font-size:13px;font-weight:500}
+#skandi-shell-root #skandi-app-root .mc-menu-kicker{color:#54718c;font-size:13px;font-weight:800;letter-spacing:.13em}
+#skandi-shell-root #skandi-app-root .mc-close-menu{display:inline-flex!important;align-items:center;justify-content:center;flex:none;width:42px;height:42px;border:1px solid #d8e3ec;border-radius:4px;background:#fff;color:#153f69;font-size:25px;line-height:1}
+#skandi-shell-root #skandi-app-root .mc-menu-search{display:grid;gap:5px;margin:0 4px 14px;color:#50687f;font-size:13px;font-weight:700}
+#skandi-shell-root #skandi-app-root .mc-menu-search input{width:100%;min-height:43px;padding:9px 11px;border:1px solid #cbd9e5;border-radius:4px;background:#f8fafc;color:#1d3e5a;font:inherit;font-size:14px}
+#skandi-shell-root #skandi-app-root .mm-modules[hidden]{display:none!important}
+#skandi-shell-root #skandi-app-root .mm-modules{gap:3px}
+#skandi-shell-root #skandi-app-root .mm-module{min-height:42px;border-radius:4px!important;color:#294964;font-size:13px}
+#skandi-shell-root #skandi-app-root .mm-module.active{background:#e5f0f8;border-left:3px solid #0b5a93;color:#062f63;padding-left:7px}
+#skandi-shell-root #skandi-app-root .mc-module-icon{width:26px;height:26px;border-radius:3px;background:#eff5fa;color:#1c6188}
+#skandi-shell-root #skandi-app-root .mc-subnav{margin:12px 0 0;padding-top:12px;border-top:1px solid #dfe8ef}
+#skandi-shell-root #skandi-app-root .mc-subnav-heading{padding:3px 10px 8px;color:#71869a;font-size:13px;letter-spacing:.1em}
+#skandi-shell-root #skandi-app-root .nav-btn{min-height:40px!important;border-radius:4px!important}
+#skandi-shell-root #skandi-app-root .nav-btn.active{background:#edf5fa!important;color:#073b6c!important}
+#skandi-shell-root #skandi-app-root .nav-btn small{display:block;margin-top:2px;color:#718598;font-size:13px;font-weight:400}
+#skandi-shell-root #skandi-app-root .mc-menu-empty{padding:6px 10px;color:#667b8d;font-size:13px;line-height:1.4}
+#skandi-shell-root #skandi-app-root .mc-workspace{width:100%;background:#eef2f6!important}
+#skandi-shell-root #skandi-app-root .mm-contextbar{min-height:70px;padding:12px 24px;border-bottom:1px solid #d6e1eb;background:#fff}
+#skandi-shell-root #skandi-app-root .mm-breadcrumb{margin:0 0 4px;color:#71869a;font-size:13px;font-weight:700;letter-spacing:.09em}
+#skandi-shell-root #skandi-app-root .mm-contextbar h1{margin:0;color:#123b6b;font-size:21px;letter-spacing:-.02em}
+#skandi-shell-root #skandi-app-root .mm-contextbar h1:focus{outline:none}
+#skandi-shell-root #skandi-app-root .mc-toolbar{padding:9px 24px!important;border:0!important;border-bottom:1px solid #dce5ed!important;background:#fff!important}
+#skandi-shell-root #skandi-app-root .panel-view.active{padding:18px 24px 30px!important;background:#eef2f6!important}
+#skandi-shell-root #skandi-app-root .mc-workspace .panel,#skandi-shell-root #skandi-app-root .mc-workspace .admin-row,#skandi-shell-root #skandi-app-root .mc-workspace .kpi,#skandi-shell-root #skandi-app-root .mc-workspace .status-card,#skandi-shell-root #skandi-app-root .mc-workspace .voy-tool-card,#skandi-shell-root #skandi-app-root .mc-workspace .qa-card{border:1px solid #d7e2eb!important;border-radius:5px!important;box-shadow:0 1px 3px #062c4e0a!important}
+#skandi-shell-root #skandi-app-root .mc-workspace .empty{border:1px dashed #d3e0e9!important;border-radius:5px!important;background:#f8fafc!important;color:#60778a!important}
+#skandi-shell-root #skandi-app-root .mc-overview-head{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:22px 24px;border:1px solid #d7e2eb;border-top:3px solid #0b5c93;background:#fff}
+#skandi-shell-root #skandi-app-root .mc-eyebrow,#skandi-shell-root #skandi-app-root .mc-section-kicker{margin:0 0 7px;color:#637e96;font-size:13px;font-weight:800;letter-spacing:.12em}
+#skandi-shell-root #skandi-app-root .mc-overview-head h2{margin:0;color:#103d70;font-size:max(13px, clamp(21px,2.3vw,27px));letter-spacing:-.025em}
+#skandi-shell-root #skandi-app-root .mc-overview-head p:last-child{margin:7px 0 0;color:#5c7286;font-size:13px;line-height:1.5}
+#skandi-shell-root #skandi-app-root .mc-overview-head .btn{flex:none;min-height:40px;border-color:#a8bfce;color:#0b4d78;font-weight:700}
+#skandi-shell-root #skandi-app-root .mc-overview-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+#skandi-shell-root #skandi-app-root .mc-overview-metric{display:grid;gap:5px;min-width:0;padding:15px 16px;border:1px solid #d7e2eb;border-left:3px solid #5fc7cf;background:#fff;color:#536c80;text-align:left}
+#skandi-shell-root #skandi-app-root .mc-overview-metric>span{font-size:13px;font-weight:700}
+#skandi-shell-root #skandi-app-root .mc-overview-metric strong{color:#123e70;font-size:24px;line-height:1.1}
+#skandi-shell-root #skandi-app-root .mc-overview-metric small{color:#6b8090;font-size:13px}
+#skandi-shell-root #skandi-app-root .mc-overview-metric:hover{border-color:#78b3cd;background:#f8fcff}
+#skandi-shell-root #skandi-app-root .mc-overview-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(230px,300px);gap:12px;align-items:start}
+#skandi-shell-root #skandi-app-root .mc-workspaces,#skandi-shell-root #skandi-app-root .mc-production-summary{min-width:0;padding:18px;border:1px solid #d7e2eb;background:#fff}
+#skandi-shell-root #skandi-app-root .mc-section-head{display:flex;align-items:end;justify-content:space-between;gap:8px;margin-bottom:13px}
+#skandi-shell-root #skandi-app-root .mc-section-head h3,#skandi-shell-root #skandi-app-root .mc-production-summary h3{margin:0;color:#123d6e;font-size:16px}
+#skandi-shell-root #skandi-app-root .mc-section-head>span{color:#71869a;font-size:13px}
+#skandi-shell-root #skandi-app-root .mc-card-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+#skandi-shell-root #skandi-app-root .mc-card{position:relative;display:flex;flex-direction:column;min-height:145px;padding:15px;border:1px solid #dce6ee;border-radius:4px;background:#fbfcfe}
+#skandi-shell-root #skandi-app-root .mc-card-number{align-self:flex-start;margin-bottom:10px;color:#5493ad;font-size:13px;font-weight:800;letter-spacing:.1em}
+#skandi-shell-root #skandi-app-root .mc-card h3{margin:0 0 6px;color:#123e70;font-size:14px}
+#skandi-shell-root #skandi-app-root .mc-card p{flex:1;margin:0 0 10px;color:#60788b;font-size:13px;line-height:1.5}
+#skandi-shell-root #skandi-app-root .mc-card button{align-self:flex-start;min-height:34px;padding:0;border:0;background:transparent;color:#075a86;font-size:13px;font-weight:750;text-align:left}
+#skandi-shell-root #skandi-app-root .mc-production-summary>p:not(.mc-section-kicker){margin:8px 0 14px;color:#60788b;font-size:13px;line-height:1.5}
+#skandi-shell-root #skandi-app-root .mc-production-links{display:grid}
+#skandi-shell-root #skandi-app-root .mc-production-links button{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:39px;padding:7px 0;border:0;border-bottom:1px solid #e5edf3;background:transparent;color:#204e74;font-size:13px;font-weight:700;text-align:left}
+#skandi-shell-root #skandi-app-root .mc-production-divider{height:1px;margin:18px 0;background:#dce6ee}
+#skandi-shell-root #skandi-app-root .mc-ownership{margin:2px 0;color:#647a8d;font-size:13px;line-height:1.5}
+#skandi-shell-root #skandi-app-root .mc-sidebar button:focus-visible,#skandi-shell-root #skandi-app-root .mc-sidebar input:focus-visible,#skandi-shell-root #skandi-app-root .mc-mobile-menu:focus-visible,#skandi-shell-root #skandi-app-root .mc-overview-metric:focus-visible,#skandi-shell-root #skandi-app-root .mc-card button:focus-visible,#skandi-shell-root #skandi-app-root .mc-production-links button:focus-visible{outline:3px solid #48b9cf;outline-offset:2px}
+@media(max-width:1050px){#skandi-shell-root #skandi-app-root .mc-card-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:760px){
+ #skandi-shell-root #skandi-app-root .mm-appbar{min-height:52px;padding:0 12px;gap:9px}
+ #skandi-shell-root #skandi-app-root .mm-brand-copy span{display:none}
+ #skandi-shell-root #skandi-app-root .mc-mobile-menu{min-height:44px;padding:0 10px}
+ #skandi-shell-root #skandi-app-root .mm-contextbar{min-height:62px;padding:11px 15px}
+ #skandi-shell-root #skandi-app-root .mm-contextbar h1{font-size:19px}
+ #skandi-shell-root #skandi-app-root .mc-toolbar{padding:9px 14px!important}
+ #skandi-shell-root #skandi-app-root .panel-view.active{padding:12px 12px 24px!important}
+ #skandi-shell-root #skandi-app-root .mc-overview-head{align-items:flex-start;flex-direction:column;padding:17px}
+ #skandi-shell-root #skandi-app-root .mc-overview-metrics{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+ #skandi-shell-root #skandi-app-root .mc-overview-metric{padding:12px;min-height:98px}
+ #skandi-shell-root #skandi-app-root .mc-overview-layout{grid-template-columns:minmax(0,1fr)}
+ #skandi-shell-root #skandi-app-root .mc-workspaces,#skandi-shell-root #skandi-app-root .mc-production-summary{padding:14px}
+ #skandi-shell-root #skandi-app-root .mc-card-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+ #skandi-shell-root #skandi-app-root .mc-card{min-height:155px;padding:12px}
+ #skandi-shell-root #skandi-app-root .mc-section-head>span{display:none}
+ #skandi-shell-root #skandi-app-root .mc-workspace .btn{min-height:44px}
+}
+@media(max-width:340px){#skandi-shell-root #skandi-app-root .mc-card-grid{grid-template-columns:minmax(0,1fr)}#skandi-shell-root #skandi-app-root .mc-card{min-height:0}}
+@media(prefers-reduced-motion:reduce){#skandi-shell-root #skandi-app-root .mc-sidebar,#skandi-shell-root #skandi-app-root .drawer-overlay{transition:none}}
 </style>
 <script>window.SKANDIWebsiteDesignRuntime = function () {
   'use strict';
@@ -4428,7 +4567,7 @@ window.addEventListener('message',event=>{
 const cards=[['wikimedia','Wikimedia Commons','Editorial image discovery'],['openverse','Openverse','Openly licensed image discovery'],['fontsource','Fontsource','Website font discovery'],['canva','Canva','SKANDI brand templates'],['research','Wikipedia','Destination research sources'],['search-console','Google Search Console','Search performance for SKANDI Travels']];
 function connectionView(host){
   if(host.dataset.mounted)return;host.dataset.mounted='1';
-  host.innerHTML=`<section class="mi-intro"><h2>Connections</h2><p>Test a service to see its current response. The result applies to this session.</p></section><div class="mi-grid">${cards.map(([id,name,description])=>`<article class="mi-card" data-mi-card="${id}"><h3>${name}</h3><p>${description}</p><div class="mi-state" data-mi-state>Not tested</div><button type="button" class="btn" data-mi-test="${id}">Test connection</button><span data-mi-error role="alert"></span>${id==='canva'?'<button type="button" class="btn primary" data-mi-canva>Browse templates</button><div data-mi-canva-results></div>':''}${id==='search-console'?'<button type="button" class="btn primary" data-mi-search-report>View search report</button><div data-mi-search-results></div>':''}</article>`).join('')}</div><p class="mi-help">Writing suggestions are available from the page and article editors. Image optimization and other providers are not configured in this workspace.</p>`;
+  host.innerHTML=`<section class="mi-intro"><h2>Connections</h2><p>Test a service to see its current response. The result applies to this session.</p></section><div class="mi-grid">${cards.map(([id,name,description])=>`<article class="mi-card" data-mi-card="${id}"><h3>${name}</h3><p>${description}</p><div class="mi-state" data-mi-state>Not tested</div><button type="button" class="btn" data-mi-test="${id}">Test connection</button><span data-mi-error role="alert"></span>${id==='canva'?'<button type="button" class="btn primary" data-mi-canva>Browse templates</button><div data-mi-canva-results></div>':''}${id==='search-console'?'<button type="button" class="btn primary" data-mi-search-report>View search report</button><div data-mi-search-results></div>':''}</article>`).join('')}<article class="mi-card" data-mi-card="travelbriefing"><h3>TravelBriefing</h3><p>Country information</p><div class="mi-state">Not connected</div><p>Provider access and integration details need to be verified before this service can be used.</p></article></div><p class="mi-help">Writing suggestions are available from the page and article editors. Image optimization and other providers are not configured in this workspace.</p>`;
 }
 function researchView(host){
  if(host.dataset.mounted)return;host.dataset.mounted='1';

@@ -3237,8 +3237,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/media-control/skandi-media-control.receiver.html",
       "receiverFile": "riaintra-embeds/media-control/skandi-media-control.receiver.html",
-      "sha256": "e7c2005385a7f2505dbea2f7403aec42a70d0a363469ea2e083c326738798655",
-      "bytes": 560560
+      "sha256": "f202254ea7e4e3318d2bc15198acd6f971c6aece1471c181995bb77edf5b031e",
+      "bytes": 578871
     },
     {
       "key": "storeControl",
