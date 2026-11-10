@@ -28,6 +28,8 @@ test('integration failures cross Wix as fixed safe messages without leaking raw 
   const failed = await unknown({action:'TEST_MEDIA_CONNECTOR'});
   assert.equal(failed.error.code, 'MEDIA_CONTROL_INTEGRATION_FAILED');
   assert.doesNotMatch(JSON.stringify(failed), /private provider detail/);
+  const inherited = dispatcher({testMediaConnectorCore:async()=>{throw Object.assign(new Error('private'), {code:'toString'})}});
+  assert.equal((await inherited({action:'TEST_MEDIA_CONNECTOR'})).error.code, 'MEDIA_CONTROL_INTEGRATION_FAILED');
 });
 
 test('integration success and existing non-integration exception behavior are preserved', async()=>{
