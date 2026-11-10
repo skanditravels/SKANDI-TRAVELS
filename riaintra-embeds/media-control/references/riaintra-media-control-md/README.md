@@ -5,6 +5,8 @@
 
 ## INFO / LOG
 
+- 2026-11-10 — A live desktop check found that a legacy internal-chrome `overflow:hidden` rule prevented the document from scrolling even though the Media Control workspace extended below the viewport. The active page stylesheet now restores document scrolling at the desktop shell breakpoint and retains the shared mobile app scroll area. Application typography, controls and surfaces were refreshed and the VOY template grid was made responsive; magazine template styling and the historical HTML payload below remain unchanged. Build and live verification are separate.
+
 - 2026-11-10 — Active source now uses a compact publishing dashboard and a slide-out, searchable application menu at all viewport sizes. It preserves the existing shared RIAINTRA chrome, controllers, authorization and content owners. Wikipedia remains the existing unauthenticated read-only research source. TravelBriefing is listed as not connected because its domain and API contract could not be verified; it is not a travel-document authority. Historical HTML below is retained as history and is not the active source. Interface references included Mirabel's production view and [Digital Media Manager production walkthrough](https://www.youtube.com/watch?v=n4m8tk6vC9Q). Live responsive and Wix verification remain separate from source tests.
 
 - 2026-11-10 — The active sidecars replace the placeholder connector matrix with real checks and add staff-authorized editorial integration paths and browser PDF printing. The historical payload below remains unchanged; current setup and live-test limits are documented in `docs/media-control-website-editor.md`.
