@@ -3122,9 +3122,11 @@
       "messages": [
         "ARCHIVE_ASSET",
         "CHECK_DUPLICATE",
+        "CREATE_EDITORIAL_SUGGESTION",
         "FINALIZE_UPLOAD",
         "GET_ACCESS_URL",
         "GET_HOME_CARD_MANAGER",
+        "GET_SEARCH_CONSOLE_REPORT",
         "GET_WEBSITE_DESIGN",
         "GET_WEBSITE_FONT",
         "GET_WEBSITE_PREVIEW",
@@ -3135,6 +3137,7 @@
         "INTERNAL_LOGOUT",
         "INTERNAL_NAVIGATE",
         "LIST_ASSETS",
+        "LIST_CANVA_TEMPLATES",
         "MEDIA_CONTROL_ACCESS_URL",
         "MEDIA_CONTROL_ACCESS_URL_RESULT",
         "MEDIA_CONTROL_ACTION_FAILED",
@@ -3177,6 +3180,7 @@
         "PACKAGE_PREPARED",
         "PREPARE_UPLOAD",
         "REGISTER_USAGE",
+        "RESEARCH_DESTINATION",
         "SAVE_HOME_CARD_MANAGER",
         "SAVE_WEBSITE_DESIGN",
         "SEARCH_MEDIA_SOURCES",
@@ -3184,6 +3188,7 @@
         "SKANDI_MEDIA_CONTROL",
         "SKANDI_NEWSROOM_CONTROL",
         "SKANDI_WIX_PARENT",
+        "TEST_MEDIA_CONNECTOR",
         "VOY_",
         "VOY_ADMIN_ARCHIVED",
         "VOY_ADMIN_ARCHIVE_ISSUE",
@@ -3232,8 +3237,8 @@
       "blockers": [],
       "receiver": "skandi-embeds/media-control/skandi-media-control.receiver.html",
       "receiverFile": "riaintra-embeds/media-control/skandi-media-control.receiver.html",
-      "sha256": "4f72b9f35534aedec81d41e952d23f5740ab65734dc10609b301153b463e4034",
-      "bytes": 552339
+      "sha256": "e7c2005385a7f2505dbea2f7403aec42a70d0a363469ea2e083c326738798655",
+      "bytes": 560560
     },
     {
       "key": "storeControl",
